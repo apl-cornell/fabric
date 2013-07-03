@@ -52,7 +52,8 @@ import fabric.util.Map;
  * <code>Worker.getStore()</code> interface. For each remote store, there should
  * be at most one <code>RemoteStore</code> object representing that store.
  */
-public class RemoteStore extends RemoteNode implements Store, Serializable {
+public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
+    Serializable {
   /**
    * A queue of fresh object identifiers.
    */

@@ -224,7 +224,7 @@ public final class TransactionManager {
    * stores that were contacted.
    */
   public void abortTransaction() {
-    abortTransaction(Collections.<RemoteNode> emptySet());
+    abortTransaction(Collections.<RemoteNode<?>> emptySet());
   }
 
   /**
@@ -232,7 +232,7 @@ public final class TransactionManager {
    *          a set of nodes that don't need to be contacted because they
    *          already know about the abort.
    */
-  private void abortTransaction(Set<RemoteNode> abortedNodes) {
+  private void abortTransaction(Set<RemoteNode<?>> abortedNodes) {
     Set<Store> storesToContact;
     List<RemoteWorker> workersToContact;
     if (current.tid.depth == 0) {
@@ -474,9 +474,9 @@ public final class TransactionManager {
    */
   private void sendPrepareMessages(final long commitTime, Set<Store> stores,
       List<RemoteWorker> workers) {
-    final Map<RemoteNode, TransactionPrepareFailedException> failures =
+    final Map<RemoteNode<?>, TransactionPrepareFailedException> failures =
         Collections
-            .synchronizedMap(new HashMap<RemoteNode, TransactionPrepareFailedException>());
+            .synchronizedMap(new HashMap<RemoteNode<?>, TransactionPrepareFailedException>());
 
     synchronized (current.commitState) {
       switch (current.commitState.value) {
@@ -554,9 +554,9 @@ public final class TransactionManager {
                   }
                 }
               } catch (TransactionPrepareFailedException e) {
-                failures.put((RemoteNode) store, e);
+                failures.put((RemoteNode<?>) store, e);
               } catch (UnreachableNodeException e) {
-                failures.put((RemoteNode) store,
+                failures.put((RemoteNode<?>) store,
                     new TransactionPrepareFailedException("Unreachable store"));
               }
             }
@@ -591,7 +591,7 @@ public final class TransactionManager {
       String logMessage =
           "Transaction tid=" + current.tid.topTid + ":  prepare failed.";
 
-      for (Map.Entry<RemoteNode, TransactionPrepareFailedException> entry : failures
+      for (Map.Entry<RemoteNode<?>, TransactionPrepareFailedException> entry : failures
           .entrySet()) {
         if (entry.getKey() instanceof RemoteStore) {
           // Remove old objects from our cache.
@@ -670,10 +670,10 @@ public final class TransactionManager {
       }
     }
 
-    final List<RemoteNode> unreachable =
-        Collections.synchronizedList(new ArrayList<RemoteNode>());
-    final List<RemoteNode> failed =
-        Collections.synchronizedList(new ArrayList<RemoteNode>());
+    final List<RemoteNode<?>> unreachable =
+        Collections.synchronizedList(new ArrayList<RemoteNode<?>>());
+    final List<RemoteNode<?>> failed =
+        Collections.synchronizedList(new ArrayList<RemoteNode<?>>());
     List<Future<?>> futures =
         new ArrayList<Future<?>>(stores.size() + workers.size());
 
@@ -772,7 +772,7 @@ public final class TransactionManager {
    *          the set of nodes that have reported failure.
    */
   private void sendAbortMessages(Set<Store> stores, List<RemoteWorker> workers,
-      Set<RemoteNode> fails) {
+      Set<RemoteNode<?>> fails) {
     for (Store store : stores)
       if (!fails.contains(store)) {
         try {
@@ -1108,8 +1108,8 @@ public final class TransactionManager {
   public boolean checkForStaleObjects() {
     Set<Store> stores = current.storesToCheckFreshness();
     int numNodesToContact = stores.size() + current.workersCalled.size();
-    final List<RemoteNode> nodesWithStaleObjects =
-        Collections.synchronizedList(new ArrayList<RemoteNode>(
+    final List<RemoteNode<?>> nodesWithStaleObjects =
+        Collections.synchronizedList(new ArrayList<RemoteNode<?>>(
             numNodesToContact));
     List<Future<?>> futures = new ArrayList<Future<?>>(numNodesToContact);
 
@@ -1140,7 +1140,7 @@ public final class TransactionManager {
             public void runImpl() {
               LongKeyMap<Integer> reads = current.getReadsForStore(store, true);
               if (store.checkForStaleObjects(reads))
-                nodesWithStaleObjects.add((RemoteNode) store);
+                nodesWithStaleObjects.add((RemoteNode<?>) store);
             }
           };
 

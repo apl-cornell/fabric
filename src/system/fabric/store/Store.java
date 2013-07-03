@@ -143,14 +143,14 @@ class Store extends MessageToStoreHandler {
 
   private SubServerSocketFactory createSocketFactory(KeyMaterial keys) {
     try {
-      Protocol authProt;
+      Protocol<RemoteWorker> authProt;
       if (config.useSSL)
-        authProt = new HandshakeAuthenticated(keys);
-      else authProt = new HandshakeBogus(this.config.name, STORE_PRINCIPAL);
+        authProt = new HandshakeAuthenticated<>(keys);
+      else authProt = new HandshakeBogus<>(this.config.name, STORE_PRINCIPAL);
 
-      Protocol handshake =
-          new HandshakeComposite(authProt, new HandshakeUnauthenticated(
-              this.config.name));
+      Protocol<RemoteWorker> handshake =
+          new HandshakeComposite<>(authProt,
+              new HandshakeUnauthenticated<RemoteWorker>(this.config.name));
       NameService nameService = new TransitionalNameService();
 
       return new SubServerSocketFactory(handshake, nameService, PortType.STORE);
@@ -164,8 +164,9 @@ class Store extends MessageToStoreHandler {
   // ////////////////////////////////////////////////////////////////////////////
 
   @Override
-  public AbortTransactionMessage.Response handle(RemoteIdentity client,
-      AbortTransactionMessage message) throws AccessException {
+  public AbortTransactionMessage.Response handle(
+      RemoteIdentity<RemoteWorker> client, AbortTransactionMessage message)
+      throws AccessException {
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
         "Handling Abort Message from {0} for tid={1}",
         nameOf(client.principal), message.tid.topTid);
@@ -178,7 +179,7 @@ class Store extends MessageToStoreHandler {
    * Processes the given request for new OIDs.
    */
   @Override
-  public AllocateMessage.Response handle(RemoteIdentity client,
+  public AllocateMessage.Response handle(RemoteIdentity<RemoteWorker> client,
       AllocateMessage msg) throws AccessException {
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
         "Handling Allocate Message from {0}", nameOf(client.principal));
@@ -191,8 +192,9 @@ class Store extends MessageToStoreHandler {
    * Processes the given commit request
    */
   @Override
-  public CommitTransactionMessage.Response handle(RemoteIdentity client,
-      CommitTransactionMessage message) throws TransactionCommitFailedException {
+  public CommitTransactionMessage.Response handle(
+      RemoteIdentity<RemoteWorker> client, CommitTransactionMessage message)
+      throws TransactionCommitFailedException {
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
         "Handling Commit Message from {0} for tid={1}",
         nameOf(client.principal), message.transactionID);
@@ -205,8 +207,9 @@ class Store extends MessageToStoreHandler {
    * Processes the given PREPARE request.
    */
   @Override
-  public PrepareTransactionMessage.Response handle(RemoteIdentity client,
-      PrepareTransactionMessage msg) throws TransactionPrepareFailedException {
+  public PrepareTransactionMessage.Response handle(
+      RemoteIdentity<RemoteWorker> client, PrepareTransactionMessage msg)
+      throws TransactionPrepareFailedException {
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
         "Handling Prepare Message, worker={0}, tid={1}",
         nameOf(client.principal), msg.tid);
@@ -221,14 +224,13 @@ class Store extends MessageToStoreHandler {
    * Processes the given read request.
    */
   @Override
-  public ReadMessage.Response handle(RemoteIdentity client, ReadMessage msg)
-      throws AccessException {
+  public ReadMessage.Response handle(RemoteIdentity<RemoteWorker> client,
+      ReadMessage msg) throws AccessException {
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
         "Handling Read Message from {0}, onum={1}", nameOf(client.principal),
         msg.onum);
 
-    ObjectGroup group =
-        tm.getGroup(client.principal, (RemoteWorker) client.node, msg.onum);
+    ObjectGroup group = tm.getGroup(client.principal, client.node, msg.onum);
     return new ReadMessage.Response(group);
   }
 
@@ -236,13 +238,13 @@ class Store extends MessageToStoreHandler {
    * Processes the given dissemination-read request.
    */
   @Override
-  public DissemReadMessage.Response handle(RemoteIdentity client,
+  public DissemReadMessage.Response handle(RemoteIdentity<RemoteWorker> client,
       DissemReadMessage msg) throws AccessException {
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
         "Handling DissemRead message from {0}, onum={1}",
         nameOf(client.principal), msg.onum);
 
-    ObjectGlob glob = tm.getGlob(msg.onum, (RemoteWorker) client.node);
+    ObjectGlob glob = tm.getGlob(msg.onum, client.node);
     return new DissemReadMessage.Response(glob);
   }
 
@@ -250,8 +252,8 @@ class Store extends MessageToStoreHandler {
    * Processes the given request for the store's SSL certificate chain.
    */
   @Override
-  public GetCertChainMessage.Response handle(RemoteIdentity client,
-      GetCertChainMessage msg) {
+  public GetCertChainMessage.Response handle(
+      RemoteIdentity<RemoteWorker> client, GetCertChainMessage msg) {
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
         "Handling request for SSL cert chain, worker={0}",
         nameOf(client.principal));
@@ -263,8 +265,9 @@ class Store extends MessageToStoreHandler {
    * Processes the given request for a new node principal
    */
   @Override
-  public MakePrincipalMessage.Response handle(RemoteIdentity client,
-      MakePrincipalMessage msg) throws FabricGeneralSecurityException {
+  public MakePrincipalMessage.Response handle(
+      RemoteIdentity<RemoteWorker> client, MakePrincipalMessage msg)
+      throws FabricGeneralSecurityException {
     // Note: p should always be null.
 
     // Get the store's node object and its signing key.
@@ -304,8 +307,9 @@ class Store extends MessageToStoreHandler {
    * Processes the given staleness check request.
    */
   @Override
-  public StalenessCheckMessage.Response handle(RemoteIdentity client,
-      StalenessCheckMessage message) throws AccessException {
+  public StalenessCheckMessage.Response handle(
+      RemoteIdentity<RemoteWorker> client, StalenessCheckMessage message)
+      throws AccessException {
     STORE_REQUEST_LOGGER.log(Level.FINER,
         "Handling Staleness Check Message from {0}", nameOf(client.principal));
 

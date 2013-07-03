@@ -37,7 +37,6 @@ import fabric.common.net.SubServerSocketFactory;
 import fabric.common.net.SubSocketFactory;
 import fabric.common.net.handshake.HandshakeAuthenticated;
 import fabric.common.net.handshake.HandshakeBogus;
-import fabric.common.net.handshake.HandshakeComposite;
 import fabric.common.net.handshake.HandshakeUnauthenticated;
 import fabric.common.net.handshake.Protocol;
 import fabric.common.net.naming.NameService;
@@ -108,13 +107,13 @@ public final class Worker {
   protected final LocalStore localStore;
 
   /** A subsocket factory for unauthenticated connections to stores. */
-  public final SubSocketFactory unauthToStore;
+  public final SubSocketFactory<RemoteStore> unauthToStore;
 
   /** A subsocket factory for authenticated connections to stores. */
-  public final SubSocketFactory authToStore;
+  public final SubSocketFactory<RemoteStore> authToStore;
 
   /** A subsocket factory for authenticated connections to workers */
-  public final SubSocketFactory authToWorker;
+  public final SubSocketFactory<RemoteWorker> authToWorker;
 
   /** The subserversocket factory */
   public final SubServerSocketFactory authFromAll;
@@ -224,24 +223,32 @@ public final class Worker {
     NameService nameService = new TransitionalNameService();
 
     // initialize the various socket factories
-    Protocol authProt;
-    if (config.useSSL)
-      authProt = new HandshakeAuthenticated(config.getKeyMaterial());
-    else authProt = new HandshakeBogus();
+    final Protocol<RemoteStore> authenticateToStoreProtocol;
+    final Protocol<RemoteWorker> authenticateToWorkerProtocol;
+    if (config.useSSL) {
+      authenticateToStoreProtocol =
+          new HandshakeAuthenticated<>(config.getKeyMaterial());
+      authenticateToWorkerProtocol =
+          new HandshakeAuthenticated<>(config.getKeyMaterial());
+    } else {
+      authenticateToStoreProtocol = new HandshakeBogus<>();
+      authenticateToWorkerProtocol = new HandshakeBogus<>();
+    }
 
-    Protocol authenticateProtocol = new HandshakeComposite(authProt);
-    Protocol nonAuthenticateProtocol =
-        new HandshakeComposite(new HandshakeUnauthenticated(config.name));
+    Protocol<RemoteStore> nonAuthenticateProtocol =
+        new HandshakeUnauthenticated<>(config.name);
 
     this.authToStore =
-        new SubSocketFactory(authenticateProtocol, nameService, PortType.STORE);
+        new SubSocketFactory<>(authenticateToStoreProtocol, nameService,
+            PortType.STORE);
     this.authToWorker =
-        new SubSocketFactory(authenticateProtocol, nameService, PortType.WORKER);
+        new SubSocketFactory<>(authenticateToWorkerProtocol, nameService,
+            PortType.WORKER);
     this.unauthToStore =
-        new SubSocketFactory(nonAuthenticateProtocol, nameService,
+        new SubSocketFactory<>(nonAuthenticateProtocol, nameService,
             PortType.STORE);
     this.authFromAll =
-        new SubServerSocketFactory(authenticateProtocol, nameService,
+        new SubServerSocketFactory(authenticateToWorkerProtocol, nameService,
             PortType.WORKER);
 
     this.remoteCallManager = new RemoteCallManager(this);

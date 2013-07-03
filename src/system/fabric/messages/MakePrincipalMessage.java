@@ -9,6 +9,7 @@ import java.security.cert.X509Certificate;
 import fabric.common.exceptions.FabricGeneralSecurityException;
 import fabric.common.exceptions.ProtocolError;
 import fabric.common.net.RemoteIdentity;
+import fabric.worker.remote.RemoteWorker;
 
 public final class MakePrincipalMessage extends
     Message<MakePrincipalMessage.Response, FabricGeneralSecurityException> {
@@ -58,8 +59,9 @@ public final class MakePrincipalMessage extends
   // ////////////////////////////////////////////////////////////////////////////
 
   @Override
-  public Response dispatch(RemoteIdentity client, MessageHandler handler)
-      throws ProtocolError, FabricGeneralSecurityException {
+  public Response dispatch(RemoteIdentity<RemoteWorker> client,
+      MessageHandler handler) throws ProtocolError,
+      FabricGeneralSecurityException {
     return handler.handle(client, this);
   }
 

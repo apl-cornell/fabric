@@ -8,6 +8,7 @@ import fabric.common.net.RemoteIdentity;
 import fabric.messages.ObjectUpdateMessage.Response;
 import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
+import fabric.worker.remote.RemoteWorker;
 
 /**
  * This abstract class acts as a visitor for MessagesToStore. It also documents
@@ -29,70 +30,78 @@ public abstract class MessageToStoreHandler extends AbstractMessageServer {
 
   @Override
   public abstract AbortTransactionMessage.Response handle(
-      RemoteIdentity client, AbortTransactionMessage msg)
+      RemoteIdentity<RemoteWorker> client, AbortTransactionMessage msg)
       throws AccessException;
 
   @Override
-  public abstract AllocateMessage.Response handle(RemoteIdentity client,
-      AllocateMessage msg) throws AccessException;
+  public abstract AllocateMessage.Response handle(
+      RemoteIdentity<RemoteWorker> client, AllocateMessage msg)
+      throws AccessException;
 
   @Override
   public abstract CommitTransactionMessage.Response handle(
-      RemoteIdentity client, CommitTransactionMessage msg)
+      RemoteIdentity<RemoteWorker> client, CommitTransactionMessage msg)
       throws TransactionCommitFailedException;
 
   @Override
-  public abstract DissemReadMessage.Response handle(RemoteIdentity client,
-      DissemReadMessage msg) throws AccessException;
+  public abstract DissemReadMessage.Response handle(
+      RemoteIdentity<RemoteWorker> client, DissemReadMessage msg)
+      throws AccessException;
 
   @Override
-  public abstract GetCertChainMessage.Response handle(RemoteIdentity client,
-      GetCertChainMessage msg);
+  public abstract GetCertChainMessage.Response handle(
+      RemoteIdentity<RemoteWorker> client, GetCertChainMessage msg);
 
   @Override
   public abstract PrepareTransactionMessage.Response handle(
-      RemoteIdentity client, PrepareTransactionMessage msg)
+      RemoteIdentity<RemoteWorker> client, PrepareTransactionMessage msg)
       throws TransactionPrepareFailedException;
 
   @Override
-  public abstract ReadMessage.Response handle(RemoteIdentity client,
-      ReadMessage msg) throws AccessException;
+  public abstract ReadMessage.Response handle(
+      RemoteIdentity<RemoteWorker> client, ReadMessage msg)
+      throws AccessException;
 
   @Override
-  public abstract MakePrincipalMessage.Response handle(RemoteIdentity client,
-      MakePrincipalMessage msg) throws FabricGeneralSecurityException;
+  public abstract MakePrincipalMessage.Response handle(
+      RemoteIdentity<RemoteWorker> client, MakePrincipalMessage msg)
+      throws FabricGeneralSecurityException;
 
   @Override
-  public abstract StalenessCheckMessage.Response handle(RemoteIdentity client,
-      StalenessCheckMessage msg) throws AccessException;
+  public abstract StalenessCheckMessage.Response handle(
+      RemoteIdentity<RemoteWorker> client, StalenessCheckMessage msg)
+      throws AccessException;
 
   @Override
-  public final Response handle(RemoteIdentity client, ObjectUpdateMessage msg)
-      throws ProtocolError {
+  public final Response handle(RemoteIdentity<RemoteWorker> client,
+      ObjectUpdateMessage msg) throws ProtocolError {
     throw error(msg);
   }
 
   @Override
   public final fabric.messages.DirtyReadMessage.Response handle(
-      RemoteIdentity client, DirtyReadMessage msg) throws ProtocolError {
+      RemoteIdentity<RemoteWorker> client, DirtyReadMessage msg)
+      throws ProtocolError {
     throw error(msg);
   }
 
   @Override
   public final fabric.messages.RemoteCallMessage.Response handle(
-      RemoteIdentity client, RemoteCallMessage msg) throws ProtocolError {
+      RemoteIdentity<RemoteWorker> client, RemoteCallMessage msg)
+      throws ProtocolError {
     throw error(msg);
   }
 
   @Override
   public final fabric.messages.TakeOwnershipMessage.Response handle(
-      RemoteIdentity client, TakeOwnershipMessage msg) throws ProtocolError {
+      RemoteIdentity<RemoteWorker> client, TakeOwnershipMessage msg)
+      throws ProtocolError {
     throw error(msg);
   }
 
   @Override
   public final fabric.messages.InterWorkerStalenessMessage.Response handle(
-      RemoteIdentity client, InterWorkerStalenessMessage msg)
+      RemoteIdentity<RemoteWorker> client, InterWorkerStalenessMessage msg)
       throws ProtocolError {
     throw error(msg);
   }

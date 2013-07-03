@@ -4,13 +4,13 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 
 import fabric.common.net.SubServerSocketFactory.Acceptor;
+import fabric.worker.remote.RemoteWorker;
 
 /**
  * Server-side multiplexed socket implementation. The API mirrors that of
  * java.net.ServerSocket.
  * 
  * @see java.net.ServerSocket
- * @author mdgeorge
  */
 public class SubServerSocket {
   // ////////////////////////////////////////////////////////////////////////////
@@ -23,7 +23,7 @@ public class SubServerSocket {
   }
 
   /** @see java.net.ServerSocket#accept() */
-  public SubSocket accept() throws IOException {
+  public SubSocket<RemoteWorker> accept() throws IOException {
     return state.accept();
   }
 
@@ -62,7 +62,7 @@ public class SubServerSocket {
     protected Exception cause = null;
 
     /** @see SubServerSocket#accept() */
-    public SubSocket accept() throws IOException {
+    public SubSocket<RemoteWorker> accept() throws IOException {
       throw new IOException("Cannot accept a connection because server socket "
           + this, cause);
     }
@@ -121,7 +121,7 @@ public class SubServerSocket {
     }
 
     @Override
-    public SubSocket accept() {
+    public SubSocket<RemoteWorker> accept() {
       return queue.accept();
     }
 

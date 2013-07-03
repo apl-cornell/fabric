@@ -186,7 +186,8 @@ public class BdbDB extends ObjectDB {
   }
 
   @Override
-  public void commit(final long tid, final RemoteIdentity workerIdentity,
+  public void commit(final long tid,
+      final RemoteIdentity<RemoteWorker> workerIdentity,
       final SubscriptionManager sm) {
     STORE_DB_LOGGER.finer("Bdb commit begin tid " + tid);
 
@@ -227,7 +228,7 @@ public class BdbDB extends ObjectDB {
       long onum = o.getOnum();
 
       // Remove any cached globs containing the old version of this object.
-      notifyCommittedUpdate(sm, onum, (RemoteWorker) workerIdentity.node);
+      notifyCommittedUpdate(sm, onum, workerIdentity.node);
 
       // Update the version-number cache.
       cacheVersionNumber(onum, o.getVersion());

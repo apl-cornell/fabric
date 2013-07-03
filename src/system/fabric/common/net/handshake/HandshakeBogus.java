@@ -17,8 +17,11 @@ import fabric.worker.remote.RemoteWorker;
 
 /**
  * A handshake protocol with bogus authentication for testing purposes.
+ * 
+ * @param <Node> the type of node at the remote endpoint.
  */
-public class HandshakeBogus implements Protocol {
+public class HandshakeBogus<Node extends RemoteNode<Node>> implements
+    Protocol<Node> {
 
   // /////////////////////////////
   // Protocol
@@ -76,7 +79,7 @@ public class HandshakeBogus implements Protocol {
   }
 
   @Override
-  public ShakenSocket initiate(RemoteNode node, Socket s) throws IOException {
+  public ShakenSocket<Node> initiate(Node node, Socket s) throws IOException {
     DataInputStream in = new DataInputStream(s.getInputStream());
     DataOutputStream out = new DataOutputStream(s.getOutputStream());
 
@@ -84,12 +87,12 @@ public class HandshakeBogus implements Protocol {
     out.writeUTF(Worker.getWorker().getName());
     writePrincipal(out);
 
-    return new ShakenSocket(node.name, new RemoteIdentity(node,
+    return new ShakenSocket<>(node.name, new RemoteIdentity<>(node,
         readPrincipal(in)), s);
   }
 
   @Override
-  public ShakenSocket receive(Socket s) throws IOException {
+  public ShakenSocket<RemoteWorker> receive(Socket s) throws IOException {
     DataInputStream in = new DataInputStream(s.getInputStream());
     DataOutputStream out = new DataOutputStream(s.getOutputStream());
 
@@ -98,7 +101,7 @@ public class HandshakeBogus implements Protocol {
     writePrincipal(out);
 
     RemoteWorker remoteWorker = Worker.getWorker().getWorker(remoteWorkerName);
-    return new ShakenSocket(name, new RemoteIdentity(remoteWorker,
+    return new ShakenSocket<>(name, new RemoteIdentity<>(remoteWorker,
         readPrincipal(in)), s);
   }
 

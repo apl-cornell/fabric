@@ -19,10 +19,10 @@ import fabric.net.RemoteNode;
  * A factory for creating SubSockets. The factory decorates a
  * javax.net.SocketFactory, which is used for creating the underlying channels.
  * 
- * @author mdgeorge
+ * @param <Node> the type of node at the remote endpoint.
  */
-public final class SubSocketFactory {
-  private final Protocol protocol;
+public final class SubSocketFactory<Node extends RemoteNode<Node>> {
+  private final Protocol<Node> protocol;
   private final NameService nameService;
   private final PortType portType;
   private final Map<String, ClientChannel> channels;
@@ -34,7 +34,7 @@ public final class SubSocketFactory {
    * to share channels (as these channels may have different underlying socket
    * implementations).
    */
-  public SubSocketFactory(Protocol protocol, NameService nameService,
+  public SubSocketFactory(Protocol<Node> protocol, NameService nameService,
       PortType portType) {
     this(protocol, nameService, portType, Channel.DEFAULT_MAX_OPEN_CONNECTIONS);
   }
@@ -45,7 +45,7 @@ public final class SubSocketFactory {
    * to share channels (as these channels may have different underlying socket
    * implementations).
    */
-  public SubSocketFactory(Protocol protocol, NameService nameService,
+  public SubSocketFactory(Protocol<Node> protocol, NameService nameService,
       PortType portType, int maxOpenConnectionsPerChannel) {
     this.protocol = protocol;
     this.nameService = nameService;
@@ -57,16 +57,16 @@ public final class SubSocketFactory {
   /**
    * Create an unconnected socket.
    */
-  public SubSocket createSocket() {
-    return new SubSocket(this);
+  public SubSocket<Node> createSocket() {
+    return new SubSocket<>(this);
   }
 
   /**
    * Convenience method. Resolves the name using the NameService and calls
    * createSocket.
    */
-  public SubSocket createSocket(RemoteNode node) throws IOException {
-    SubSocket result = createSocket();
+  public SubSocket<Node> createSocket(Node node) throws IOException {
+    SubSocket<Node> result = createSocket();
     result.connect(node);
     return result;
   }
@@ -75,7 +75,7 @@ public final class SubSocketFactory {
    * return a channel associated with the given node, creating it if
    * necessary.
    */
-  ClientChannel getChannel(RemoteNode node) throws IOException {
+  ClientChannel getChannel(Node node) throws IOException {
     synchronized (channels) {
       ClientChannel result = channels.get(node.name);
       if (null == result) {
@@ -104,7 +104,7 @@ public final class SubSocketFactory {
    * 
    * @author mdgeorge
    */
-  class ClientChannel extends Channel {
+  class ClientChannel extends Channel<Node> {
     /**
      * The name of the remote endpoint. This is a key for
      * SubSocketFactory.this.channels.
@@ -117,7 +117,7 @@ public final class SubSocketFactory {
     /**
      * @param host the host at the remote endpoint.
      */
-    public ClientChannel(RemoteNode host, Socket s, int maxOpenConnections)
+    public ClientChannel(Node host, Socket s, int maxOpenConnections)
         throws IOException {
       super(protocol.initiate(host, s), maxOpenConnections);
 

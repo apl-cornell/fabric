@@ -84,7 +84,7 @@ public class MemoryDB extends ObjectDB {
   }
 
   @Override
-  public void commit(long tid, RemoteIdentity workerIdentity,
+  public void commit(long tid, RemoteIdentity<RemoteWorker> workerIdentity,
       SubscriptionManager sm) throws AccessException {
     PendingTransaction tx = remove(workerIdentity.principal, tid);
 
@@ -93,7 +93,7 @@ public class MemoryDB extends ObjectDB {
       objectTable.put(o.getOnum(), o);
 
       // Remove any cached globs containing the old version of this object.
-      notifyCommittedUpdate(sm, o.getOnum(), (RemoteWorker) workerIdentity.node);
+      notifyCommittedUpdate(sm, o.getOnum(), workerIdentity.node);
     }
   }
 

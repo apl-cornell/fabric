@@ -8,6 +8,7 @@ import fabric.messages.AllocateMessage.Response;
 import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.remote.RemoteCallException;
+import fabric.worker.remote.RemoteWorker;
 import fabric.worker.transaction.TakeOwnershipFailedException;
 
 /**
@@ -30,72 +31,80 @@ public abstract class MessageToWorkerHandler extends AbstractMessageServer {
 
   @Override
   public abstract AbortTransactionMessage.Response handle(
-      RemoteIdentity client, AbortTransactionMessage msg)
+      RemoteIdentity<RemoteWorker> client, AbortTransactionMessage msg)
       throws AccessException;
 
   @Override
   public abstract CommitTransactionMessage.Response handle(
-      RemoteIdentity client, CommitTransactionMessage msg)
+      RemoteIdentity<RemoteWorker> client, CommitTransactionMessage msg)
       throws TransactionCommitFailedException;
 
   @Override
-  public abstract ObjectUpdateMessage.Response handle(RemoteIdentity client,
-      ObjectUpdateMessage msg);
+  public abstract ObjectUpdateMessage.Response handle(
+      RemoteIdentity<RemoteWorker> client, ObjectUpdateMessage msg);
 
   @Override
   public abstract PrepareTransactionMessage.Response handle(
-      RemoteIdentity client, PrepareTransactionMessage msg)
+      RemoteIdentity<RemoteWorker> client, PrepareTransactionMessage msg)
       throws TransactionPrepareFailedException;
 
   @Override
-  public abstract DirtyReadMessage.Response handle(RemoteIdentity client,
-      DirtyReadMessage msg) throws AccessException;
+  public abstract DirtyReadMessage.Response handle(
+      RemoteIdentity<RemoteWorker> client, DirtyReadMessage msg)
+      throws AccessException;
 
   @Override
-  public abstract RemoteCallMessage.Response handle(RemoteIdentity client,
-      RemoteCallMessage msg) throws RemoteCallException;
+  public abstract RemoteCallMessage.Response handle(
+      RemoteIdentity<RemoteWorker> client, RemoteCallMessage msg)
+      throws RemoteCallException;
 
   @Override
-  public abstract TakeOwnershipMessage.Response handle(RemoteIdentity client,
-      TakeOwnershipMessage msg) throws TakeOwnershipFailedException;
+  public abstract TakeOwnershipMessage.Response handle(
+      RemoteIdentity<RemoteWorker> client, TakeOwnershipMessage msg)
+      throws TakeOwnershipFailedException;
 
   @Override
   public abstract InterWorkerStalenessMessage.Response handle(
-      RemoteIdentity client, InterWorkerStalenessMessage msg);
+      RemoteIdentity<RemoteWorker> client, InterWorkerStalenessMessage msg);
 
   @Override
-  public final Response handle(RemoteIdentity client, AllocateMessage msg)
-      throws ProtocolError {
+  public final Response handle(RemoteIdentity<RemoteWorker> client,
+      AllocateMessage msg) throws ProtocolError {
     throw error(msg);
   }
 
   @Override
   public final fabric.messages.DissemReadMessage.Response handle(
-      RemoteIdentity client, DissemReadMessage msg) throws ProtocolError {
+      RemoteIdentity<RemoteWorker> client, DissemReadMessage msg)
+      throws ProtocolError {
     throw error(msg);
   }
 
   @Override
   public fabric.messages.GetCertChainMessage.Response handle(
-      RemoteIdentity client, GetCertChainMessage msg) throws ProtocolError {
+      RemoteIdentity<RemoteWorker> client, GetCertChainMessage msg)
+      throws ProtocolError {
     throw error(msg);
   }
 
   @Override
-  public fabric.messages.ReadMessage.Response handle(RemoteIdentity client,
-      ReadMessage msg) throws ProtocolError {
+  public fabric.messages.ReadMessage.Response handle(
+      RemoteIdentity<RemoteWorker> client, ReadMessage msg)
+      throws ProtocolError {
     throw error(msg);
   }
 
   @Override
   public fabric.messages.MakePrincipalMessage.Response handle(
-      RemoteIdentity client, MakePrincipalMessage msg) throws ProtocolError {
+      RemoteIdentity<RemoteWorker> client, MakePrincipalMessage msg)
+      throws ProtocolError {
     throw error(msg);
   }
 
   @Override
   public fabric.messages.StalenessCheckMessage.Response handle(
-      RemoteIdentity client, StalenessCheckMessage msg) throws ProtocolError {
+      RemoteIdentity<RemoteWorker> client, StalenessCheckMessage msg)
+      throws ProtocolError {
     throw error(msg);
   }
 

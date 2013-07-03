@@ -13,6 +13,7 @@ import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.lang.Object._Impl;
 import fabric.worker.TransactionPrepareFailedException;
+import fabric.worker.remote.RemoteWorker;
 
 /**
  * A <code>PrepareTransactionMessage</code> represents a transaction request to
@@ -112,7 +113,7 @@ public class PrepareTransactionMessage
   // ////////////////////////////////////////////////////////////////////////////
 
   @Override
-  public Response dispatch(RemoteIdentity client, MessageHandler h)
+  public Response dispatch(RemoteIdentity<RemoteWorker> client, MessageHandler h)
       throws TransactionPrepareFailedException {
     return h.handle(client, this);
   }

@@ -19,19 +19,17 @@ import java.util.logging.Level;
 
 import fabric.common.Logging;
 import fabric.common.exceptions.NotImplementedException;
-import fabric.common.net.SubServerSocketFactory.Acceptor.ConnectionQueue;
 import fabric.common.net.handshake.Protocol;
 import fabric.common.net.handshake.ShakenSocket;
 import fabric.common.net.naming.NameService;
 import fabric.common.net.naming.NameService.PortType;
 import fabric.common.net.naming.SocketAddress;
+import fabric.worker.remote.RemoteWorker;
 
 /**
  * factory for creating SubServerSockets. This class decorates a
  * javax.net.ServerSocketFactory, which is used for instantiating the underlying
  * channels.
- * 
- * @author mdgeorge
  */
 public class SubServerSocketFactory {
   // ////////////////////////////////////////////////////////////////////////////
@@ -46,8 +44,8 @@ public class SubServerSocketFactory {
    *          the ServerSocketFactory that will be used to create the
    *          ServerSockets used to implement SubServerSockets returned by this
    */
-  public SubServerSocketFactory(Protocol handshake, NameService nameService,
-      PortType portType) {
+  public SubServerSocketFactory(Protocol<RemoteWorker> handshake,
+      NameService nameService, PortType portType) {
     this(handshake, nameService, portType, Channel.DEFAULT_MAX_OPEN_CONNECTIONS);
   }
 
@@ -59,8 +57,9 @@ public class SubServerSocketFactory {
    *          the ServerSocketFactory that will be used to create the
    *          ServerSockets used to implement SubServerSockets returned by this
    */
-  public SubServerSocketFactory(Protocol handshake, NameService nameService,
-      PortType portType, int maxOpenConnectionsPerChannel) {
+  public SubServerSocketFactory(Protocol<RemoteWorker> handshake,
+      NameService nameService, PortType portType,
+      int maxOpenConnectionsPerChannel) {
     this.handshake = handshake;
     this.nameService = nameService;
     this.portType = portType;
@@ -101,7 +100,7 @@ public class SubServerSocketFactory {
   // implementation //
   // ////////////////////////////////////////////////////////////////////////////
 
-  private final Protocol handshake;
+  private final Protocol<RemoteWorker> handshake;
   private final NameService nameService;
   private final PortType portType;
   private final Map<SocketAddress, Acceptor> acceptors;
@@ -128,7 +127,8 @@ public class SubServerSocketFactory {
     }
 
     a = new Acceptor(addr);
-    ConnectionQueue result = a.makeQueue(name, backlog);
+    SubServerSocketFactory.Acceptor.ConnectionQueue result =
+        a.makeQueue(name, backlog);
     a.start();
     acceptors.put(addr, a);
 
@@ -195,7 +195,7 @@ public class SubServerSocketFactory {
 
         s.setTcpNoDelay(true);
 
-        ShakenSocket conn = handshake.receive(s);
+        ShakenSocket<RemoteWorker> conn = handshake.receive(s);
 
         ConnectionQueue queue;
         synchronized (queues) {
@@ -289,13 +289,13 @@ public class SubServerSocketFactory {
       private final Set<ServerChannel> channels;
 
       /* queue of connections that are ready to be accepted by a SubServerSocket */
-      private final BlockingQueue<SubSocket> connections;
+      private final BlockingQueue<SubSocket<RemoteWorker>> connections;
 
       ConnectionQueue(String name, int size) {
         this.name = name;
 
         this.channels = new HashSet<ServerChannel>();
-        this.connections = new ArrayBlockingQueue<SubSocket>(size);
+        this.connections = new ArrayBlockingQueue<>(size);
       }
 
       /** cleanup when associated SubServerSocket is closed. */
@@ -304,7 +304,7 @@ public class SubServerSocketFactory {
       }
 
       /** wait for an incoming SubSocket connection */
-      SubSocket accept() {
+      SubSocket<RemoteWorker> accept() {
         try {
           return connections.take();
         } catch (InterruptedException e) {
@@ -316,14 +316,14 @@ public class SubServerSocketFactory {
        * create a new ServerChannel (in response to a new incoming socket
        * connection)
        */
-      void open(ShakenSocket s) throws IOException {
+      void open(ShakenSocket<RemoteWorker> s) throws IOException {
         synchronized (channels) {
           channels.add(new ServerChannel(s));
         }
       }
 
       /** receive an incoming subsocket connection */
-      private void receive(SubSocket s) {
+      private void receive(SubSocket<RemoteWorker> s) {
         try {
           connections.put(s);
         } catch (InterruptedException e) {
@@ -347,8 +347,8 @@ public class SubServerSocketFactory {
        * 
        * @author mdgeorge
        */
-      class ServerChannel extends Channel {
-        ServerChannel(ShakenSocket sock) throws IOException {
+      class ServerChannel extends Channel<RemoteWorker> {
+        ServerChannel(ShakenSocket<RemoteWorker> sock) throws IOException {
           super(sock, maxOpenConnectionsPerChannel);
 
           setName("demultiplexer for " + toString());
@@ -361,7 +361,7 @@ public class SubServerSocketFactory {
         @Override
         protected Connection accept(int sequence) throws IOException {
           Connection result = new Connection(sequence);
-          SubSocket socket = new SubSocket(result);
+          SubSocket<RemoteWorker> socket = new SubSocket<>(result);
           receive(socket);
           return result;
         }

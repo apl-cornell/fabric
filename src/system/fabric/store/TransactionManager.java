@@ -63,7 +63,7 @@ public class TransactionManager {
   /**
    * Execute the commit phase of two phase commit.
    */
-  public void commitTransaction(RemoteIdentity workerIdentity,
+  public void commitTransaction(RemoteIdentity<RemoteWorker> workerIdentity,
       long transactionID) throws TransactionCommitFailedException {
     try {
       database.commit(transactionID, workerIdentity, sm);

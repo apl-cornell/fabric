@@ -411,8 +411,9 @@ public abstract class ObjectDB {
    * @throws AccessException
    *           if the principal differs from the caller of prepare()
    */
-  public abstract void commit(long tid, RemoteIdentity workerIdentity,
-      SubscriptionManager sm) throws AccessException;
+  public abstract void commit(long tid,
+      RemoteIdentity<RemoteWorker> workerIdentity, SubscriptionManager sm)
+      throws AccessException;
 
   /**
    * Causes the objects prepared in transaction [tid] to be discarded.

@@ -7,6 +7,7 @@ import java.io.IOException;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.AccessException;
 import fabric.common.net.RemoteIdentity;
+import fabric.worker.remote.RemoteWorker;
 
 public class AbortTransactionMessage extends
     Message<AbortTransactionMessage.Response, AccessException> {
@@ -36,7 +37,7 @@ public class AbortTransactionMessage extends
   // ////////////////////////////////////////////////////////////////////////////
 
   @Override
-  public Response dispatch(RemoteIdentity client, MessageHandler h)
+  public Response dispatch(RemoteIdentity<RemoteWorker> client, MessageHandler h)
       throws AccessException {
     return h.handle(client, this);
   }

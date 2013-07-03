@@ -6,7 +6,7 @@ import fabric.net.RemoteNode;
 /**
  * A pair consisting of a remote node and its authenticated principal, if any. 
  */
-public class RemoteIdentity<Node extends RemoteNode> {
+public class RemoteIdentity<Node extends RemoteNode<Node>> {
   /**
    * The remote node. Can be used to contact the remote endpoint.
    */
