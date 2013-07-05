@@ -1,0 +1,4 @@
+public interface Test {
+//     void m{p->;p<-}(principal{p->;p<-} p, Object{p->;p<-}o);
+     void m{*lbl}(label {*lbl} lbl, Object{*lbl}o);
+}
