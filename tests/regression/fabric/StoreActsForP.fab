@@ -1,0 +1,15 @@
+package auth;
+
+public class StoreActsForP[principal P] {
+    private principal{P→} sessionPrincipal;
+    
+    public final java.lang.Object{P→} invoke{P→}() where caller(P), endorse({P→;P←}) {
+      // add the session principal as a delegate to the principal P.
+      final DelegatingPrincipal u = (DelegatingPrincipal) P;
+      // The solver does not know "for all p, p.store$ actsfor p".
+      //if (u != null) u.addDelegatesTo(endorse(sessionPrincipal, {P:} to {P:;P!:}));
+      // asserting this explicitly works
+      if (u != null && u.store$ actsfor u) u.addDelegatesTo(endorse(sessionPrincipal, {P:} to {P:;P!:}));
+      return null;
+    }
+}
