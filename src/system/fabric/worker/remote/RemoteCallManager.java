@@ -1,22 +1,15 @@
 package fabric.worker.remote;
 
 import java.lang.reflect.InvocationTargetException;
-import java.security.InvalidKeyException;
-import java.security.SignatureException;
 import java.text.MessageFormat;
-import java.util.ArrayList;
 import java.util.List;
 
 import fabric.common.AuthorizationUtil;
-import fabric.common.ObjectGroup;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.ProtocolError;
 import fabric.common.net.RemoteIdentity;
 import fabric.common.net.SubServerSocket;
 import fabric.common.net.SubServerSocketFactory;
-import fabric.common.util.LongKeyMap;
-import fabric.dissemination.ObjectGlob;
-import fabric.dissemination.WarrantyGlob;
 import fabric.lang.Object._Impl;
 import fabric.lang.Object._Proxy;
 import fabric.lang.security.Label;
@@ -49,11 +42,13 @@ import fabric.worker.transaction.TransactionRegistry;
 public class RemoteCallManager extends MessageToWorkerHandler {
 
   private final SubServerSocketFactory factory;
+  private final InProcessRemoteWorker inProcessRemoteWorker;
 
   public RemoteCallManager(Worker worker) {
     super(worker.config.name);
 
     this.factory = worker.authFromAll;
+    this.inProcessRemoteWorker = worker.inProcessRemoteWorker;
   }
 
   @Override
@@ -332,31 +327,14 @@ public class RemoteCallManager extends MessageToWorkerHandler {
     final List<Long> response;
 
     if (objectUpdateMessage.groups == null) {
-      response = new ArrayList<Long>();
-
-      RemoteStore store = worker.getStore(objectUpdateMessage.store);
-      for (LongKeyMap.Entry<ObjectGlob> entry : objectUpdateMessage.globs
-          .entrySet()) {
-        long onum = entry.getKey();
-        ObjectGlob glob = entry.getValue();
-        try {
-          glob.verifySignature(store.getPublicKey());
-
-          if (worker.updateCaches(store, onum, glob)) {
-            response.add(onum);
-          }
-        } catch (InvalidKeyException e) {
-          e.printStackTrace();
-        } catch (SignatureException e) {
-          e.printStackTrace();
-        }
-      }
+      response =
+          inProcessRemoteWorker.notifyObjectUpdates(objectUpdateMessage.store,
+              objectUpdateMessage.globs);
     } else {
       RemoteStore store = worker.getStore(client.node.name);
-      for (ObjectGroup group : objectUpdateMessage.groups) {
-        worker.updateCache(store, group);
-      }
-      response = worker.findOnumsInCache(store, objectUpdateMessage.onums);
+      response =
+          inProcessRemoteWorker.notifyObjectUpdates(store,
+              objectUpdateMessage.onums, objectUpdateMessage.groups);
     }
 
     return new ObjectUpdateMessage.Response(response);
@@ -367,36 +345,19 @@ public class RemoteCallManager extends MessageToWorkerHandler {
       RemoteIdentity<RemoteWorker> client, WarrantyRefreshMessage message)
       throws ProtocolError {
 
-    Worker worker = Worker.getWorker();
     List<Long> response;
-
     if (message.warranties == null) {
       // Message was sent to dissemination node.
       // Forward through dissemination layer.
-      response = new ArrayList<Long>();
-
-      RemoteStore store = worker.getStore(message.store);
-      for (LongKeyMap.Entry<WarrantyGlob> entry : message.warrantyGlobs
-          .entrySet()) {
-        long onum = entry.getKey();
-        WarrantyGlob glob = entry.getValue();
-
-        try {
-          glob.verifySignature(store.getPublicKey());
-
-          if (worker.updateCaches(store, onum, glob)) {
-            response.add(onum);
-          }
-        } catch (InvalidKeyException e) {
-          e.printStackTrace();
-        } catch (SignatureException e) {
-          e.printStackTrace();
-        }
-      }
+      response =
+          inProcessRemoteWorker.notifyWarrantyRefresh(message.store,
+              message.warrantyGlobs);
     } else {
       // Message was sent to worker. Update local state.
       RemoteStore store = Worker.getWorker().getStore(client.node.name);
-      response = store.updateWarranties(message.warranties);
+      response =
+          inProcessRemoteWorker
+              .notifyWarrantyRefresh(store, message.warranties);
     }
 
     return new WarrantyRefreshMessage.Response(response);

@@ -20,12 +20,12 @@ public class FabricFieldInstance_c extends JifFieldInstance_c implements
   protected ConfPolicy accessLabel;
 
   @Override
-  public ConfPolicy accessLabel() {
+  public ConfPolicy accessPolicy() {
     return accessLabel;
   }
 
   @Override
-  public void setAccessLabel(ConfPolicy accessLabel) {
+  public void setAccessPolicy(ConfPolicy accessLabel) {
     this.accessLabel = accessLabel;
   }
 

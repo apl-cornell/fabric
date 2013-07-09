@@ -24,8 +24,10 @@ import polyglot.types.Flags;
 import polyglot.types.SemanticException;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
+import polyglot.visit.NodeVisitor;
 import fabil.ast.FabILNodeFactory;
 import fabil.types.FabILTypeSystem;
+import fabric.ast.AccessPolicy;
 import fabric.types.FabricClassType;
 import fabric.types.FabricParsedClassType_c;
 import fabric.types.FabricTypeSystem;
@@ -34,6 +36,15 @@ import fabric.visit.FabricToFabilRewriter;
 public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
   public static final String jifConstructorTranslatedName(ClassType ct) {
     return ClassDeclToJavaExt_c.constructorTranslatedName(ct);
+  }
+
+  @Override
+  public NodeVisitor toJavaEnter(JifToJavaRewriter rw) throws SemanticException {
+    rw = (JifToJavaRewriter) super.toJavaEnter(rw);
+    ClassDecl cd = (ClassDecl) node();
+    for (ClassMember cm : cd.body().members())
+      if (cm instanceof AccessPolicy) return rw.bypass(cm);
+    return rw;
   }
 
   @Override
@@ -58,7 +69,8 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
         nf.Call(Position.compilerGenerated(), worker,
             nf.Id(Position.compilerGenerated(), "getWorker"))));
 
-    members.addAll(cd.body().members());
+    for (ClassMember cm : cd.body().members())
+      if (!(cm instanceof AccessPolicy)) members.add(cm);
 
     return cd.body(cd.body().members(members));
   }

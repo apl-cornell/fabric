@@ -62,6 +62,7 @@ import fabric.lang.security.NodePrincipal;
 import fabric.net.RemoteNode;
 import fabric.worker.admin.WorkerAdmin;
 import fabric.worker.admin.WorkerNotRunningException;
+import fabric.worker.remote.InProcessRemoteWorker;
 import fabric.worker.remote.RemoteCallManager;
 import fabric.worker.remote.RemoteWorker;
 import fabric.worker.shell.ChainedCommandSource;
@@ -131,6 +132,8 @@ public final class Worker {
   protected final NodePrincipal principal;
 
   private final RemoteCallManager remoteCallManager;
+
+  public final InProcessRemoteWorker inProcessRemoteWorker;
 
   public static final Random RAND = new Random();
 
@@ -250,6 +253,9 @@ public final class Worker {
             PortType.WORKER);
 
     this.remoteCallManager = new RemoteCallManager(this);
+
+    this.inProcessRemoteWorker = new InProcessRemoteWorker(this);
+    this.remoteWorkers.put(config.name, inProcessRemoteWorker);
 
     // Initialize the fetch manager.
     try {

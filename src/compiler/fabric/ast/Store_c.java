@@ -87,9 +87,9 @@ public class Store_c extends Expr_c implements Store {
     if (type().isCanonical()) return this;
 
     Type t = expr.type();
-    if (!t.isReference())
-      throw new SemanticException("Cannot get store of non reference type.");
     FabricTypeSystem ts = (FabricTypeSystem) tc.typeSystem();
+    if (!t.isReference() && !t.equals(ts.Label()) && !t.equals(ts.Principal()))
+      throw new SemanticException("Cannot get store of non reference type.");
 
     return isLocalStore(ts.isTransient(t)).type(ts.Store());
   }

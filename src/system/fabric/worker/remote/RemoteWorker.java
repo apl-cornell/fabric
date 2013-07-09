@@ -52,7 +52,7 @@ import fabric.worker.transaction.TransactionRegistry;
  * For each remote worker, there should be at most one <code>RemoteWorker</code>
  * object representing that worker.
  */
-public final class RemoteWorker extends RemoteNode<RemoteWorker> {
+public class RemoteWorker extends RemoteNode<RemoteWorker> {
 
   private transient final SubSocketFactory<RemoteWorker> subSocketFactory;
 
@@ -61,9 +61,17 @@ public final class RemoteWorker extends RemoteNode<RemoteWorker> {
    * RemoteWorker, use fabric.worker.Worker.getWorker() instead.
    */
   public RemoteWorker(String name) {
-    super(name);
+    this(name, Worker.getWorker().authToWorker);
+  }
 
-    this.subSocketFactory = Worker.getWorker().authToWorker;
+  RemoteWorker(Worker worker) {
+    this(worker.getName(), worker.authToWorker);
+  }
+
+  private RemoteWorker(String name,
+      SubSocketFactory<RemoteWorker> subSocketFactory) {
+    super(name);
+    this.subSocketFactory = subSocketFactory;
   }
 
   public Object issueRemoteCall(_Proxy receiver, String methodName,

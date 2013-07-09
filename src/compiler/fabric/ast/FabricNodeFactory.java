@@ -23,6 +23,8 @@ import codebases.ast.CodebaseNodeFactory;
  * NodeFactory for fabric extension.
  */
 public interface FabricNodeFactory extends JifNodeFactory, CodebaseNodeFactory {
+  AccessPolicy AccessPolicy(Position pos, LabelNode ln);
+
   Atomic Atomic(Position pos, List<Stmt> statements);
 
   AmbNewFabricArray AmbNewFabricArray(Position pos, TypeNode base,

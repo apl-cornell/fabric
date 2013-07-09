@@ -4,6 +4,7 @@ import jif.types.ConstArrayType_c;
 import jif.types.label.ConfPolicy;
 import jif.types.label.Label;
 import polyglot.types.FieldInstance;
+import polyglot.types.SemanticException;
 import polyglot.types.Type;
 import polyglot.util.Position;
 
@@ -15,7 +16,7 @@ import polyglot.util.Position;
  */
 public class FabricArrayType_c extends ConstArrayType_c implements
     FabricArrayType {
-
+  protected ConfPolicy accessPolicy;
   protected boolean isNative;
 
   public FabricArrayType_c(FabricTypeSystem ts, Position pos, Type base,
@@ -35,10 +36,11 @@ public class FabricArrayType_c extends ConstArrayType_c implements
   }
 
   @Override
-  public ConfPolicy accessPolicy() {
+  public ConfPolicy accessPolicy() throws SemanticException {
     // TODO: access policy of an array is just the confidentiality component of
-    // the update label.
-    return ts().confProjection(updateLabel());
+    // the update label. Syntax needs to be extended to explicitly specify.
+    if (accessPolicy == null) accessPolicy = defaultAccessPolicy();
+    return accessPolicy;
   }
 
   private FabricTypeSystem ts() {
@@ -57,5 +59,9 @@ public class FabricArrayType_c extends ConstArrayType_c implements
       lengthField = lengthField.flags(lengthField.flags().clearFinal());
       fields.set(0, lengthField);
     }
+  }
+
+  protected ConfPolicy defaultAccessPolicy() {
+    return ts().confProjection(updateLabel());
   }
 }

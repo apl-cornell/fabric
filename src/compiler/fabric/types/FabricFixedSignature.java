@@ -7,6 +7,8 @@ import polyglot.ast.FieldDecl;
 import polyglot.types.Type;
 import fabric.ast.FabricFieldDecl;
 
+//TODO: This "default signature" design pattern is unevenly applied. 
+//      We should either pull in all the default to this class or eliminate it.
 public class FabricFixedSignature extends FixedSignature implements
     FabricDefaultSignature {
 
@@ -18,9 +20,9 @@ public class FabricFixedSignature extends FixedSignature implements
   }
 
   @Override
-  public Label defaultAccessLabel(FieldDecl fd) {
+  public Label defaultAccessPolicy(FieldDecl fd) {
     FabricFieldDecl ffd = (FabricFieldDecl) fd;
-    LabelNode ln = ffd.accessLabel();
+    LabelNode ln = ffd.accessPolicy();
     if (ln == null) {
       FabricFieldInstance fi = (FabricFieldInstance) ffd.fieldInstance();
       Type t = fi.type();
