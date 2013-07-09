@@ -60,6 +60,7 @@ import fabric.lang.security.NodePrincipal;
 import fabric.net.RemoteNode;
 import fabric.worker.admin.WorkerAdmin;
 import fabric.worker.admin.WorkerNotRunningException;
+import fabric.worker.remote.InProcessRemoteWorker;
 import fabric.worker.remote.RemoteCallManager;
 import fabric.worker.remote.RemoteWorker;
 import fabric.worker.shell.ChainedCommandSource;
@@ -129,6 +130,8 @@ public final class Worker {
   protected final NodePrincipal principal;
 
   private final RemoteCallManager remoteCallManager;
+
+  public final InProcessRemoteWorker inProcessRemoteWorker;
 
   public static final Random RAND = new Random();
 
@@ -219,7 +222,11 @@ public final class Worker {
 
     this.stores = new ConcurrentHashMap<String, RemoteStore>();
     if (initStoreSet != null) this.stores.putAll(initStoreSet);
+
     this.remoteWorkers = new ConcurrentHashMap<String, RemoteWorker>();
+    this.inProcessRemoteWorker = new InProcessRemoteWorker(this);
+    this.remoteWorkers.put(config.name, inProcessRemoteWorker);
+
     this.localStore = new LocalStore();
 
     NameService nameService = new TransitionalNameService();
