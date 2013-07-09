@@ -333,6 +333,14 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
   }
 
   @Override
+  public AccessPolicy AccessPolicy(Position pos, LabelNode ln) {
+    AccessPolicy n = new AccessPolicy_c(pos, ln);
+    n = (AccessPolicy) n.ext(fabricExtFactory().extAccessPolicy());
+    n = (AccessPolicy) n.del(fabricDelFactory().delAccessPolicy());
+    return n;
+  }
+
+  @Override
   public ClassBody ClassBody(Position pos, List<ClassMember> members) {
     ClassBody n = new ClassBody_c(pos, CollectionUtil.nonNullList(members));
     n = (ClassBody) n.ext(extFactory().extClassBody());
@@ -427,4 +435,5 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
 
     return result;
   }
+
 }

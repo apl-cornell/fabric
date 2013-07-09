@@ -21,7 +21,7 @@ public class FabricFieldDecl_c extends FieldDecl_c implements FabricFieldDecl {
   }
 
   @Override
-  public LabelNode accessLabel() {
+  public LabelNode accessPolicy() {
     return this.accessLabel;
   }
 

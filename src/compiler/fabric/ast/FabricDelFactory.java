@@ -34,4 +34,9 @@ public interface FabricDelFactory extends JifDelFactory {
    */
   JL delStore();
 
+  /**
+   * @return
+   */
+  JL delAccessPolicy();
+
 }

@@ -6,6 +6,6 @@ import polyglot.ast.FieldDecl;
 
 public interface FabricDefaultSignature extends DefaultSignature {
 
-  public Label defaultAccessLabel(FieldDecl fd);
+  public Label defaultAccessPolicy(FieldDecl fd);
 
 }

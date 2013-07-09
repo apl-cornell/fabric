@@ -8,6 +8,7 @@ import jif.types.JifTypeSystem;
 import jif.types.label.ConfPolicy;
 import jif.types.label.Label;
 import polyglot.types.ClassType;
+import polyglot.types.SemanticException;
 import polyglot.util.Position;
 import codebases.types.CodebaseClassType;
 
@@ -17,6 +18,8 @@ public class FabricSubstClassType_c extends JifSubstClassType_c implements
       JifSubst subst) {
     super(ts, pos, base, subst);
   }
+
+  protected ConfPolicy accessPolicy;
 
   @Override
   public Label updateLabel() {
@@ -29,7 +32,17 @@ public class FabricSubstClassType_c extends JifSubstClassType_c implements
   }
 
   @Override
-  public ConfPolicy accessPolicy() {
+  public ConfPolicy accessPolicy() throws SemanticException {
+    if (accessPolicy == null) accessPolicy = defaultAccessPolicy();
+    return accessPolicy;
+  }
+
+  @Override
+  public URI canonicalNamespace() {
+    return ((CodebaseClassType) base).canonicalNamespace();
+  }
+
+  protected ConfPolicy defaultAccessPolicy() throws SemanticException {
     FabricParsedClassType base = (FabricParsedClassType) base();
     ConfPolicy c = base.accessPolicy();
     if (c == null) return null;
@@ -38,10 +51,4 @@ public class FabricSubstClassType_c extends JifSubstClassType_c implements
     JifSubst subst = (JifSubst) subst();
     return subst.substLabel(l).confProjection();
   }
-
-  @Override
-  public URI canonicalNamespace() {
-    return ((CodebaseClassType) base).canonicalNamespace();
-  }
-
 }

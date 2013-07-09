@@ -1,7 +1,7 @@
 package fabric.extension;
 
 import jif.extension.JifFieldDeclDel;
-import jif.types.label.Label;
+import jif.types.label.ConfPolicy;
 import polyglot.ast.Node;
 import polyglot.types.SemanticException;
 import polyglot.visit.AmbiguityRemover;
@@ -18,21 +18,21 @@ public class FabricFieldDeclDel extends JifFieldDeclDel {
     FabricFieldInstance ffi = (FabricFieldInstance) n.fieldInstance();
     FabricTypeSystem fts = (FabricTypeSystem) ar.typeSystem();
     FabricDefaultSignature fds = fts.fabricDefaultSignature();
-    Label Li;
-    if (n.accessLabel() == null) {
-      Li = fds.defaultAccessLabel(n);
+    ConfPolicy Li;
+    if (n.accessPolicy() == null) {
+      Li = fds.defaultAccessPolicy(n).confProjection();
     } else {
-      Li = n.accessLabel().label();
+      Li = n.accessPolicy().label().confProjection();
     }
-    if (fts.containsThisLabel(Li)) {
-      throw new SemanticException(
-          "Access label cannot contain \"this\" label.", n.position());
-    }
-
     // TODO: it seems fishy that Li can be null even if accessLabel is not null,
     // but it happens (in r3139 while building MapServ for example).
-    ffi.setAccessLabel(Li == null ? null : Li.confProjection());
+    if (!fts.accessPolicyValid(Li)) {
+      throw new SemanticException(
+          "Access policies may only contain static elements like (principal or label) parameters and constants.",
+          n.position());
+    }
+
+    ffi.setAccessPolicy(Li);
     return n.fieldInstance(ffi);
   }
-
 }

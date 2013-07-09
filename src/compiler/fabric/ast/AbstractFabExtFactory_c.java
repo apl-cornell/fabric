@@ -256,4 +256,31 @@ public class AbstractFabExtFactory_c extends AbstractJifExtFactory_c implements
     return postExtExpr(e);
   }
 
+  @Override
+  public Ext extAccessPolicy() {
+    Ext e = extAccessPolicyImpl();
+    if (nextExtFactory() != null
+        && nextExtFactory() instanceof FabricExtFactory) {
+      FabricExtFactory nextFac = (FabricExtFactory) nextExtFactory();
+      Ext e2 = nextFac.extAccessPolicy();
+      e = composeExts(e, e2);
+    }
+    return postExtAccessPolicy(e);
+  }
+
+  /**
+   * @param e
+   * @return
+   */
+  protected Ext postExtAccessPolicy(Ext e) {
+    return postExtNode(e);
+  }
+
+  /**
+   * @return
+   */
+  protected Ext extAccessPolicyImpl() {
+    return extNodeImpl();
+  }
+
 }

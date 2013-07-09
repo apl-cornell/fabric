@@ -178,6 +178,11 @@ public class FabricJifExtFactory_c extends JifExtFactory_c implements
   }
 
   @Override
+  public Ext extAccessPolicy() {
+    return new AccessPolicyJifExt_c(new CannotAccessPolicyToFabilExt_c());
+  }
+
+  @Override
   public Ext extFabricArrayInit() {
     return extArrayInit();
   }
