@@ -40,7 +40,7 @@ public class InProcessRemoteWorker extends RemoteWorker {
   private final InProcessStore inProcessStore;
 
   public InProcessRemoteWorker(Worker worker) {
-    super(worker.getName());
+    super(worker);
     this.worker = worker;
 
     RemoteStore store = worker.getStore(name);

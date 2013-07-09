@@ -222,11 +222,7 @@ public final class Worker {
 
     this.stores = new ConcurrentHashMap<String, RemoteStore>();
     if (initStoreSet != null) this.stores.putAll(initStoreSet);
-
     this.remoteWorkers = new ConcurrentHashMap<String, RemoteWorker>();
-    this.inProcessRemoteWorker = new InProcessRemoteWorker(this);
-    this.remoteWorkers.put(config.name, inProcessRemoteWorker);
-
     this.localStore = new LocalStore();
 
     NameService nameService = new TransitionalNameService();
@@ -255,6 +251,9 @@ public final class Worker {
             PortType.WORKER);
 
     this.remoteCallManager = new RemoteCallManager(this);
+
+    this.inProcessRemoteWorker = new InProcessRemoteWorker(this);
+    this.remoteWorkers.put(config.name, inProcessRemoteWorker);
 
     // Initialize the fetch manager.
     try {
