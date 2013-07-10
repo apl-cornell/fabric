@@ -250,10 +250,10 @@ public final class Worker {
         new SubServerSocketFactory(authenticateToWorkerProtocol, nameService,
             PortType.WORKER);
 
-    this.remoteCallManager = new RemoteCallManager(this);
-
     this.inProcessRemoteWorker = new InProcessRemoteWorker(this);
     this.remoteWorkers.put(config.name, inProcessRemoteWorker);
+
+    this.remoteCallManager = new RemoteCallManager(this);
 
     // Initialize the fetch manager.
     try {
