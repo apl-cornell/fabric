@@ -33,9 +33,9 @@ import codebases.types.CodebaseClassType;
 public class FabricParsedClassType_c extends JifParsedPolyType_c implements
     FabricParsedClassType {
   private transient Label singleFieldLabel = null;
-  private transient ConfPolicy accessPolicy = null;
   private transient boolean fieldLabelFound = false;
 
+  private ConfPolicy accessPolicy = null;
   protected URI canonical_ns = null;
   protected Set<CodebaseClassType> namespaceDependencies;
 
