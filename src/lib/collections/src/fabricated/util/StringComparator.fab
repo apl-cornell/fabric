@@ -1,0 +1,17 @@
+package fabricated.util;
+
+public class StringComparator[label L] implements Comparator[L] {
+  public boolean{L} equals{L}(Object{L} a, Object{L} b) throws (ClassCastException{L}, NullPointerException{L}) {
+      String as = (String)a;
+      String bs = (String)b;
+      return as.equals(bs);
+  }
+  public int{L} compare{L}(Object{L} a, Object{L} b) throws (UnsupportedOperationException{L},ClassCastException{L}, NullPointerException{L}) {
+      String as = (String)a;
+      String bs = (String)b;
+      return as.compareTo(bs);
+  }
+  public int{L} hashCode{L}(Object{L} a) throws (UnsupportedOperationException{L},ClassCastException{L}, NullPointerException{L}) {
+      return ((String)a).hashCode();
+  } 
+}

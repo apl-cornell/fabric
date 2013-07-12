@@ -2,6 +2,7 @@ package hello;
 
 import sif.servlet.*;
 import auth.*;
+import auth.html.*;
 import fabric.util.Map;
 import fabricated.util.List;
 import fabricated.util.ListIterator;
@@ -10,7 +11,7 @@ import fabricated.util.ConcurrentModificationException;
 import fabricated.util.Comparator;
 import javax.servlet.ServletException;
 
-public class HelloServlet extends AuthServlet[HelloEP] authority (HelloEP) {
+public class HelloServlet extends HTMLAuthServlet[HelloEP] authority (HelloEP) {
 
 	final Store{this}@{*->} localStore;
 	final Store{this}@{*->} helloStore;

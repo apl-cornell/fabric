@@ -1,34 +1,33 @@
-package auth;
+package auth.html;
 
 import javax.servlet.ServletException;
 import sif.servlet.*;
 import sif.html.*;
+import auth.*;
 
-public class CreateUserAction[principal servP] extends AbstractAction[servP] {
+public class LoginAction[principal servP] extends AbstractAction[servP] {
     final AuthenticatedAction[servP]{this}@{⊤→} successAction;
     final Input[servP]{this}@{⊤→} inpUserID;
     final Input[servP]{this}@{⊤→} inpPassword;
-    final Input[servP]{this}@{⊤→} inpConfirm;
     
-    public CreateUserAction(Servlet[servP]{this} servlet,
+    public LoginAction(HTMLServlet[servP]{this} servlet,
                        AuthenticatedAction[servP]{this} successAction, 
                        principal{this} session) {
         this.successAction = successAction;
         this.inpUserID = new Input[servP](servlet, new label {session←});
         this.inpPassword = new Input[servP](servlet, new label {session:;session←});
-        this.inpConfirm = new Input[servP](servlet, new label {session:;session←});
         super();
         initFields(servlet);
     }
 
-    public final void invoke{*lbl}(label{*lbl} lbl, Request[servP]{*lbl} req) 
-    throws (ServletException{*lbl;req.session←})
-        where caller(req.session),
-        lbl <= {⊤→req.session} {
-
+    public final void invoke{*lbl}(label{*lbl} lbl, Request[servP]{*lbl} _req) 
+    throws (ServletException{*lbl;_req.session←})
+        where caller(_req.session),
+        lbl <= {⊤→_req.session} {
+        final HTMLRequest[servP] req = (HTMLRequest[servP]) _req;
         Servlet[servP] servlet_ = getServlet();
-        if (!(servlet_ instanceof AuthServlet[servP])) throw new ServletException("Error processing request");
-        final AuthServlet[servP] servlet = (AuthServlet[servP])servlet_;
+        if (!(servlet_ instanceof HTMLAuthServlet[servP])) throw new ServletException("Error processing request");
+        final HTMLAuthServlet[servP] servlet = (HTMLAuthServlet[servP])servlet_;
         if (req == null) throw new ServletException("Error processing request");
         final SessionState state_ = req.getSessionState(lbl);
         if ( lbl <= new label {state_.store$→} ) {
@@ -44,7 +43,6 @@ public class CreateUserAction[principal servP] extends AbstractAction[servP] {
                         final label sessLbl = new label {req.session→;req.session←};
                         if (lbl <= sessLbl && inpPassword != null && inpUserID != null 
                                 && inpUserID.inputLbl <= sessLbl && inpPassword.inputLbl equiv sessLbl 
-                                && inpConfirm.inputLbl equiv sessLbl 
                                 && new label {*lbl; req.session←} <= inpUserID.inputLbl) {
                             producePage(new label {*lbl;req.session←}, req, servlet, state, null, null);
                         }
@@ -62,8 +60,8 @@ public class CreateUserAction[principal servP] extends AbstractAction[servP] {
     }
     
     protected void producePage{*lbl}(label{*lbl} lbl,
-                                           Request[servP]{*lbl} req,
-                                           Servlet[servP]{*lbl} servlet,
+                                           HTMLRequest[servP]{*lbl} req,
+                                           HTMLServlet[servP]{*lbl} servlet,
                                            AuthSessState{*lbl} state,
                                            String{*lbl} uidError, 
                                            String{*lbl} passwdError) 
@@ -72,17 +70,14 @@ public class CreateUserAction[principal servP] extends AbstractAction[servP] {
                    {req.session←} <= lbl,
                    {*this.inpUserID.inputLbl} <= {req.session:;req.session←},
                    {*this.inpPassword.inputLbl} <= {req.session:;req.session←},
-                   {*this.inpConfirm.inputLbl} <= {req.session:;req.session←},
                    lbl <= {*this.inpUserID.inputLbl},
-                   lbl <= {*this.inpConfirm.inputLbl},
                    {req.session:;req.session←} <= {*this.inpPassword.inputLbl},
                    caller(req.session)
     {
         Node[lbl, lbl] userIDText = desc(lbl, "User ID:");
         Node[lbl, lbl] passwordText = desc(lbl, "Password:");
-        Node[lbl, lbl] confirmText = desc(lbl, "Confirm:");
-        Node[lbl, lbl] welcomeText = new Paragraph[lbl, lbl]("Enter username and password");
-        String title = "Create User";
+        Node[lbl, lbl] welcomeText = new Paragraph[lbl, lbl]("Please login");
+        String title = "Login";
         Node[lbl, lbl] banner = createBanner(lbl, title);
 
         if (req == null || servlet == null || state == null) return;
@@ -92,14 +87,14 @@ public class CreateUserAction[principal servP] extends AbstractAction[servP] {
                 inpNode(lbl, new TextInput[servP, lbl, lbl](inpUserID, 40, defaultUserID), uidError))));
         entries = entries.append(lbl, lbl, new TRow[lbl, lbl](lbl, lbl, new NodeList[lbl, lbl](lbl, lbl, passwordText,
                 inpNode(lbl, new PasswordInput[servP, lbl, lbl](inpPassword, 40, ""), passwdError))));
-        entries = entries.append(lbl, lbl, new TRow[lbl, lbl](lbl, lbl, new NodeList[lbl, lbl](lbl, lbl, confirmText,
-                inpNode(lbl, new PasswordInput[servP, lbl, lbl](inpConfirm, 40, ""), passwdError))));
-        entries = entries.append(lbl, lbl, new TRow[lbl, lbl](lbl, lbl,
-                new TCell[lbl, lbl](lbl, lbl, new SubmitButton[servP, lbl, lbl](servlet, lbl, "Create A User"))));
-        Node[lbl, lbl] form = servlet.createForm(lbl, lbl, new SubmitNewUserAction[servP](servlet, this),
+        entries = entries == null?null:entries.append(lbl, lbl, new TRow[lbl, lbl](lbl, lbl,
+                new TCell[lbl, lbl](lbl, lbl, new SubmitButton[servP, lbl, lbl](servlet, lbl, "Login"))));
+        Node[lbl, lbl] form = servlet.createForm(lbl, lbl, new SubmitLoginAction[servP](servlet, this),
                                                                 lbl, lbl, 
                                                                 new Table[lbl, lbl](lbl, lbl, entries)); 
-        Node[lbl, lbl] content = new NodeList[lbl, lbl](lbl, lbl, banner, createBody(lbl, lbl, new NodeList[lbl, lbl](lbl, lbl, welcomeText, form)));
+        Node[lbl, lbl] createNew = new Hyperlink(new CreateUserAction[servP](servlet, successAction, req.session), "Create new user"); 
+        Node[lbl, lbl] createNewPara = new Paragraph[lbl, lbl](createNew);
+        Node[lbl, lbl] content = new NodeList[lbl, lbl](lbl, lbl, banner, createBody(lbl, lbl, new NodeList[lbl, lbl](lbl, lbl, welcomeText, form, createNewPara)));
         servlet.createPage(req, title, lbl, lbl, content);
     }
         
@@ -121,10 +116,10 @@ public class CreateUserAction[principal servP] extends AbstractAction[servP] {
     }
 }
 
-class SubmitNewUserAction[principal servP] extends AbstractAction[servP] {
-    private final CreateUserAction[servP]{this}@{⊤→} createUserAct;
-    public SubmitNewUserAction(Servlet[servP]{this} s, CreateUserAction[servP]{this} createUserAct) {
-        this.createUserAct = createUserAct;
+class SubmitLoginAction[principal servP] extends AbstractAction[servP] {
+    private final LoginAction[servP]{this}@{⊤→} loginAct;
+    public SubmitLoginAction(HTMLServlet[servP]{this} s, LoginAction[servP]{this} loginAct) {
+        this.loginAct = loginAct;
         super();
         initFields(s);
     }
@@ -171,24 +166,25 @@ class SubmitNewUserAction[principal servP] extends AbstractAction[servP] {
             lbl <= {⊤→req.session},
             req.session equiv state.sessionPrincipal
     {
-        if (req == null || servlet == null || state == null) 
+        if (req == null || servlet == null || state == null 
+            || !(servlet instanceof HTMLAuthServlet[servP])) 
             throw new ServletException("invalid args");
         
-        if (createUserAct == null) throw new ServletException("createUserAct is null!");
+        if (loginAct == null) throw new ServletException("loginAct is null!");
         
         if (lbl <= new label{req.session→}) {
-                this.submit(lbl, req, servlet, state);
+                this.submit(lbl, (HTMLRequest[servP])req, (HTMLAuthServlet[servP])servlet, state);
         }
         else {
             String lblString = null;
                 lblString = LabelUtil.toString(lbl);
-            throw new ServletException("SubmitNewUserAction.invokeSessImpl: lbl is too high: " + lblString);
+            throw new ServletException("SubmitLoginAction.invokeSessImpl: lbl is too high: " + lblString);
         }
     }
     
     protected void submit{*lbl}(label{*lbl} lbl,
-                                Request[servP]{*lbl} req,
-                                AuthServlet[servP]{*lbl} servlet,
+                                HTMLRequest[servP]{*lbl} req,
+                                HTMLAuthServlet[servP]{*lbl} servlet,
                                 AuthSessState{*lbl} state) 
         throws (ServletException{*lbl;req.session←})
         where req.session equiv state.sessionPrincipal,
@@ -204,32 +200,29 @@ class SubmitNewUserAction[principal servP] extends AbstractAction[servP] {
             return;
         } else return;
 
-        if (createUserAct == null 
-                || createUserAct.successAction == null 
-                || createUserAct.inpUserID == null 
-                || createUserAct.inpPassword == null
-                || createUserAct.inpConfirm == null) return;
+        if (loginAct == null || loginAct.successAction == null || 
+                loginAct.inpUserID == null || loginAct.inpPassword == null) return;
 
         ServletException ex = null;
         // user has submitted username and password.
         // extract data from request
+        if (loginAct.inpUserID == null || loginAct.inpPassword == null) {
+            return;
+        }
         final label sessLbl = new label{req.session→;req.session←};
-        if (createUserAct.inpUserID.inputLbl <= sessLbl && 
-                createUserAct.inpConfirm.inputLbl <= sessLbl &&
-                createUserAct.inpPassword.inputLbl <= sessLbl &&
-                new label {*lbl; req.session←} <= createUserAct.inpUserID.inputLbl &&
+        if (loginAct.inpUserID.inputLbl <= sessLbl && 
+                loginAct.inpPassword.inputLbl <= sessLbl &&
+                new label {*lbl; req.session←} <= loginAct.inpUserID.inputLbl &&
                 lbl <= new label {req.session→;req.session←} &&
-                sessLbl <= createUserAct.inpConfirm.inputLbl &&
-                sessLbl <= createUserAct.inpPassword.inputLbl) {
-            String userID = req.getParam(createUserAct.inpUserID);
-            String password = req.getParam(createUserAct.inpPassword);
-            String confirm = req.getParam(createUserAct.inpConfirm);
+                sessLbl <= loginAct.inpPassword.inputLbl) {
+            String userID = req.getParam(loginAct.inpUserID);
+            String password = req.getParam(loginAct.inpPassword);
             
             // validate data
             String uidErr = null;
             String passwordErr = null;
             
-            principal _loginUser = servlet.lookupUserID(userID, req.session);
+            final principal loginUser = servlet.lookupUserID(userID, req.session);
             
             if (userID == null || userID.length() == 0) {
                 // invalid user ID
@@ -239,32 +232,25 @@ class SubmitNewUserAction[principal servP] extends AbstractAction[servP] {
                 // invalid password
                 passwordErr = "Please enter a password.";                
             }
-            else if (_loginUser != null) {
-                // user exists
-                passwordErr = "Sorry! That username is already taken.";
-            }
-            else if (!password.equals(confirm)) {
+            else if (loginUser == null) {
                 // unknown user or incorrect password 
-                passwordErr = "Passwords do not match.";
+                passwordErr = "Unknown or incorrect username and password.";
             }
             else {
-                //now create user and login.
-                passwordErr = runClosure(req, userID, (SessionPrincipal)req.session, password);
-                	//success! lookup again.
+                passwordErr = runClosure(req, loginUser, (SessionPrincipal)req.session, password);
             }
-            final principal loginUser = servlet.lookupUserID(userID, req.session);
             if (uidErr != null || passwordErr != null) {
                 // there were errors, send the user back to the login page.
                 // DOWNGRADE REASON: The PC depends here on confidential info (i.e., the password). 
                 // We're prepared to declassify that the logon failed.
                 declassify ({*lbl;req.session←}) { // declassify the fact that the uid/password was wrong.
-                    createUserAct.producePage(new label {*lbl;req.session←}, req, servlet, state, 
+                    loginAct.producePage(new label {*lbl;req.session←}, req, servlet, state, 
                                          declassify(uidErr, {*lbl;req.session←}), 
                                          declassify(passwordErr, {*lbl;req.session←}));
                 }
             }
             else {// FIXME: Fix this downgrade mess
-                // successfully added!
+                // successful login!
                 // set the current user in the session state, and send the user
                 // back to the return action. 
                 // DOWNGRADE REASON: The current user is publically readable info. Here, we
@@ -285,11 +271,11 @@ class SubmitNewUserAction[principal servP] extends AbstractAction[servP] {
                             catch (NullPointerException e) {}
 
                             final label newLbl = new label {*lbl; session←};
-                            final CreateUserAction[servP] createUserAct = this.createUserAct;
-                            if (createUserAct != null && createUserAct.successAction != null &&
+                            final LoginAction[servP] loginAct = this.loginAct;
+                            if (loginAct != null && loginAct.successAction != null &&
                                     session actsfor logU) {
                                 try {
-                                    createUserAct.successAction.invokeImpl(newLbl, req, servlet, state, logU);
+                                    loginAct.successAction.invokeImpl(newLbl, req, servlet, state, logU);
                                 }
                                 catch (ServletException e) {
                                     ex = e;
@@ -304,45 +290,34 @@ class SubmitNewUserAction[principal servP] extends AbstractAction[servP] {
     }        
     
     private String{req.session→;req.session←} runClosure{req.session:;req.session←}(Request[servP]{req.session→;req.session←} req,
-            String{req.session:;req.session←} userID,
+            principal{req.session→;req.session←} loginUser,
             SessionPrincipal{req.session:;req.session←} sp,
             String{req.session:;req.session←} password) 
      where caller(req.session) {
         // DOWNGRADE REASON: Has effects at level {loginUser:}, which we need to hide away, since
         // session does not yet act for loginUser.
-        declassify ({req.session←}) {
-        	Servlet[servP] servlet_ = getServlet();
-        	//if (!(servlet_ instanceof AuthServlet[servP])) throw new ServletException("Error processing request");
-        	final AuthServlet[servP] servlet = (AuthServlet[servP])servlet_;
-
+        declassify ({req.session←}) { 
+            final principal logUser = declassify(loginUser, {req.session←});
             FabricWorker worker = FabricWorker.getWorker();
             if (worker == null) return null;
             
             final Store{req.session←} localStore = worker.getLocalStore();
- 
-        	principal loginUser = null;
-			try {
-				loginUser = servlet.createUser(userID, password, req.session);
-			} catch (ServletException{req.session←} e) {
-				//HACK
+//            SessionPrincipal spdeclass = SessionPrincipal.declassifySP(sp, session);
+			SessionPrincipal spdeclass = declassify(sp, {req.session→;req.session←} to {req.session←});
+			LoginClosure[logUser] lc = new LoginClosure[logUser]{req.session←}@localStore(spdeclass);
+			Capability[logUser, {logUser→}] cap = 
+				PrincipalUtil.authorize(logUser, 
+						declassify(password, {req.session←}),
+						lc,
+						new label {logUser→});
+			if (cap == null) {                                                
+				return "Unknown or incorrect username and password.";
 			}
-            final principal logUser = declassify(loginUser, {req.session←});
-           
-            SessionPrincipal spdeclass = declassify(sp, {req.session→;req.session←} to {req.session←});
-            LoginClosure[logUser] lc = new LoginClosure[logUser]{req.session←}@localStore(spdeclass);
-            Capability[logUser, {logUser→}] cap = 
-                PrincipalUtil.authorize(logUser, 
-                        declassify(password, {req.session←}),
-                        lc,
-                        new label {logUser→});
-            if (cap == null) {                                                
-                return "Unknown or incorrect username and password.";
-            }
-            // successful login!                        
-            // loginUser delegates authority to the session principal 
-            cap.invoke();
-        }
-        return null;
-     }       
+			// successful login!                        
+			// loginUser delegates authority to the session principal 
+			cap.invoke();
+		}
+		return null;
+	 }       
 }
 

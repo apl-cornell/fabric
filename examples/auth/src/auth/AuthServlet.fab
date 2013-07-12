@@ -1,32 +1,15 @@
 package auth;
 
-import sif.servlet.Servlet;
+import sif.servlet.HTMLServlet;
 import sif.servlet.Request;
 
 import javax.servlet.ServletException;
 
+public nonfabric interface AuthServlet[principal servP] {
+    @{servP->}
+    public principal{p:;p!:} createUser{p:; p!:}( String{p:; p!:} userID, String{p:; p!:} password, principal{p:; p!:} p)
+        throws ServletException where caller(p);    
 
-public abstract class AuthServlet[principal servP] extends Servlet[servP] {
-    
-    public AuthServlet() throws ServletException {
-        
-    }
-    
-    public principal{p:;p!:} createUser{p:; p!:}(
-            String{p:; p!:} userID,
-            String{p:; p!:} password,
-            principal{p:; p!:} p)
-        throws ServletException
-        where caller(p) {
-        throw new ServletException("Not supported");
-	}
-    
-    public abstract principal{p:;p!:} lookupUserID{p:; p!:}(
-            String{p:; p!:} userID,
-            principal{p:; p!:} p)
-        throws ServletException
-        where caller(p);
-    
-    protected abstract String defaultActionName(Request[servP] req);
-    
+    public principal{p:;p!:} lookupUserID{p:; p!:}(String{p:; p!:} userID, principal {p:; p!:} p) 
+		throws ServletException where caller(p);
 }

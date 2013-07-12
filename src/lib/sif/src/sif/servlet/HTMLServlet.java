@@ -2,22 +2,33 @@ package sif.servlet;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
-import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import sif.html.Body;
+import sif.html.Form;
+import sif.html.Head;
+import sif.html.Header;
+import sif.html.Hyperlink;
+import sif.html.HyperlinkRequest;
+import sif.html.Input;
+import sif.html.Node;
+import sif.html.NodeList;
+import sif.html.Page;
+import sif.html.Paragraph;
+import sif.html.Pre;
+import sif.html.PrecomputedPage;
+import sif.html.Text;
 import fabric.lang.security.Label;
 import fabric.lang.security.LabelUtil;
 import fabric.lang.security.Principal;
-import fabric.lang.security.PrincipalUtil;
 import fabric.worker.Store;
 import fabric.worker.Worker;
 
@@ -26,77 +37,106 @@ import fabric.worker.Worker;
 /** A servlet contains the information that is shared across users and sessions.
  * It converts between the Java HttpServlet request processing style and this one. */
 
-abstract public class Servlet extends HttpServlet {
-
-  protected Map<String, Action> startActions;
-  private ThreadLocal<Nonce> nonce;
-
-  protected final Principal servletP;
-
-  static final int DEBUG_LEVEL = -1;
-  public static final PrintStream DEBUG = System.err;
-
-  protected Servlet(Principal servletP) {
-    this.servletP = servletP;
+abstract public class HTMLServlet extends Servlet {
+  protected HTMLServlet(Principal servletP) {
+    super(servletP);
   }
 
-  @Override
-  public final void init(ServletConfig sc) throws ServletException {
-    super.init(sc);
-    nonce = new ThreadLocal<Nonce>() {
-      @Override
-      protected Nonce initialValue() {
-        try {
-          return new Nonce(Servlet.this);
-        } catch (ServletException e) {
-          throw new RuntimeException(e);
-        }
+  public final void createPage(HTMLRequest req, String title, Label cL,
+      Label cE, Node body) {
+    String style_sheet = getInitParameter("style_sheet_url");
+    style_sheet = relURLToAbsURL(style_sheet, req);
+    String scriptFile = getInitParameter("javascript_url");
+    scriptFile = relURLToAbsURL(scriptFile, req);
+
+    String colorCoding = getInitParameter("color_coding");
+    String colorCodingFile;
+    if (colorCoding != null && colorCoding.equals("true")) {
+      colorCodingFile = relURLToAbsURL("../preamble.js", req);
+    } else {
+      colorCodingFile = null;
+    }
+
+    Page p =
+        new Page(cL, cE, cL, cE, new Head(cL, cE, title, style_sheet,
+            scriptFile, colorCodingFile), new Body(cL, cE, cL, cE, body));
+
+    req.setReturnPage(p);
+  }
+
+  public final void createPage(HTMLRequest req, String title, Label preL,
+      Label preE, PrecomputedPage pp, Label dynL, Label dynE, NodeList args) {
+
+    String style_sheet = getInitParameter("style_sheet_url");
+    style_sheet = relURLToAbsURL(style_sheet, req);
+    String scriptFile = getInitParameter("javascript_url");
+    scriptFile = relURLToAbsURL(scriptFile, req);
+    String colorCoding = getInitParameter("color_coding");
+    String colorCodingFile;
+    if (colorCoding != null && colorCoding.equals("true")) {
+      colorCodingFile = relURLToAbsURL("../preamble.js", req);
+    } else {
+      colorCodingFile = null;
+    }
+
+    req.setReturnPage(pp, args, new Head(dynL, dynE, title, style_sheet,
+        scriptFile, colorCodingFile));
+  }
+
+  private static String relURLToAbsURL(String url, Request req) {
+    if (url != null && url.indexOf("://") < 0) {
+      // url isn't the full path. Prefix it with
+      // the context URL
+      String contextURL = req.contextURL();
+      if (!contextURL.endsWith("/")) {
+        contextURL += "/";
       }
-    };
+      url = contextURL + url;
+    }
+    return url;
 
-    startActions = new HashMap<String, Action>();
-    this.jif$invokeDefConstructor();
-
-    initialize();
   }
 
-  /**
-   * Place holder for the method to invoke the default constructor of
-   * Jif subclasses of this class.
+  public final Node createForm(Label L, Label E, Action action, Label cL,
+      Label cE, Node body) {
+    return new Form(servletP, L, E, action, cL, cE, body);
+  }
+
+  /** checkLoad implements load checking for the servlet. This
+   * behavior is supplied by the servlet implementation. A typical
+   * implementation would be to compare concurrentRequests() against some
+   * specified maximum.
+   * @return null if load is acceptable, or else the page to be returned as an
+   * error message.
    */
-  protected void jif$invokeDefConstructor() throws ServletException {
-    throw new ServletException("Jif subclasses of Servlet must have "
-        + "a default constructor, i.e., a constructor "
-        + "with no formal arguments.");
+  protected Node checkLoad(Request req) throws ServletException {
+    return null;
   }
-
-  public abstract void initialize() throws ServletException;
 
   @Override
-  public void doGet(HttpServletRequest request, HttpServletResponse response)
-      throws IOException, ServletException {
+  public final void doGet(HttpServletRequest request,
+      HttpServletResponse response) throws IOException, ServletException {
     long time_start = System.currentTimeMillis();
     long time_page = 0;
 
     PrintWriter rw = response.getWriter();
     try {
-      //response.setContentType("text/html");
-      //if (request.getCharacterEncoding() == null)
-      //    request.setCharacterEncoding("ISO-8859-1");
+      response.setContentType("text/html");
+      if (request.getCharacterEncoding() == null)
+        request.setCharacterEncoding("ISO-8859-1");
 
-      Request req = new Request(this, request);
+      HTMLRequest req = new HTMLRequest(this, request);
 
-      handleRequest(req);
+      producePage(req);
 
       if (debug(1)) {
         DEBUG.println("*** writing return page");
       }
 
-      if (debug(1)) {
-        time_page = System.currentTimeMillis();
-      }
+      time_page = System.currentTimeMillis();
 
-      //req.writeReturnPage(rw, colorCoding);
+      String colorCoding = getInitParameter("color_coding");
+      req.writeReturnPage(rw, colorCoding);
       if (debug(1)) {
         DEBUG.println("*** available actions are: "
             + getSessionActions(req.request));
@@ -107,6 +147,7 @@ abstract public class Servlet extends HttpServlet {
       if (debug(1)) {
         DEBUG.println("*** finished doGet");
         long time_end = System.currentTimeMillis();
+
         DEBUG.println(" Total " + (time_end - time_start)
             + "  JSF_and_Action  " + (time_page - time_start)
             + " HTML_Rendering " + (time_end - time_page));
@@ -114,9 +155,10 @@ abstract public class Servlet extends HttpServlet {
     }
   }
 
-  private final void handleRequest(final Request req) throws IOException,
+  private final void producePage(final HTMLRequest req) throws IOException,
       ServletException {
     LabeledAction laction = null;
+
     String action_name = req.action_name();
 
     if (action_name != null) {
@@ -150,8 +192,14 @@ abstract public class Servlet extends HttpServlet {
             + " with label " + laction.L);
       }
       if (debug(2)) {
+        // time the invocation of the action
         DEBUG.print(laction.a.getName() + " " + laction.a.getClass() + " ");
+//                long clear = LabelUtil._Impl.getAndClearTime();
+//                long time_start = System.currentTimeMillis();
         laction.a.invoke(laction.L, req);
+//                long time_end = System.currentTimeMillis();
+//                clear = LabelUtil._Impl.getAndClearTime();
+//                DEBUG.print("Action " + (time_end - time_start) + " Dynamic_Security " + clear + " ");
       } else {
         final LabeledAction laction_ = laction;
         Worker.runInSubTransaction(new Worker.Code<Void>() {
@@ -179,15 +227,16 @@ abstract public class Servlet extends HttpServlet {
     }
 
     // TODO KV: Replace the null label with something more sensible
-//    if (!req.returnPageSet()) {
-//      reportError(sessionPrincipalLabel(req.session), req,
-//          "Error handling request", "Error Handling Request",
-//          "The servlet did not generate any output for your request. "
-//              + "This probably means that your request was ill-formed.");
-//
-//    }
+    if (!req.returnPageSet()) {
+      reportError(sessionPrincipalLabel(req.session), req,
+          "Error handling request", "Error Handling Request",
+          "The servlet did not generate any output for your request. "
+              + "This probably means that your request was ill-formed.");
+
+    }
   }
 
+  @Override
   Label trustedBySessionLabel(final Request req) {
     return Worker.runInSubTransaction(new fabric.worker.Worker.Code<Label>() {
       @Override
@@ -199,6 +248,7 @@ abstract public class Servlet extends HttpServlet {
     });
   }
 
+  @Override
   Label trustedBySessionLabel(final SessionPrincipal session) {
     return Worker.runInSubTransaction(new fabric.worker.Worker.Code<Label>() {
       @Override
@@ -212,6 +262,7 @@ abstract public class Servlet extends HttpServlet {
   /**
    * @throws ServletException
    */
+  @Override
   protected void invalidActionRequested(Request req, String action_name)
       throws ServletException {
     if (action_name == null) {
@@ -272,6 +323,7 @@ abstract public class Servlet extends HttpServlet {
    * @return the default action, used if the request does not specify an
    *         action.
    */
+  @Override
   protected Action defaultAction(Request req) {
     return null;
   }
@@ -285,189 +337,72 @@ abstract public class Servlet extends HttpServlet {
    * @return the default action name, used if the request does not specify an
    *         action.
    */
+  @Override
   protected String defaultActionName(Request req) {
     return null;
   }
 
+  @Override
   protected void reportError(Label lbl, Request req, String title,
       String header, String explanation) throws ServletException {
     reportError(lbl, req, title, header, explanation, null);
   }
 
+  @Override
   protected void reportError(Label lbl, Request req, String title,
       String header, String explanation, Throwable t) throws ServletException {
+    Node stackTrace;
     if (t != null) {
       ByteArrayOutputStream bs = new ByteArrayOutputStream();
       PrintWriter pw = new PrintWriter(bs);
-      //XXX: LEAK
       t.printStackTrace(pw);
       pw.flush();
+      stackTrace =
+          new Pre(lbl, lbl, lbl, lbl, new Text(lbl, lbl, new String(
+              bs.toByteArray()).replaceAll("\r\n", "\n")));
+    } else {
+      stackTrace = new Text(lbl, lbl, "");
     }
-    // TODO: find an error action and invoke
-  }
+    Node content =
+        new NodeList(lbl, lbl, lbl, lbl, new Paragraph(lbl, lbl, lbl, lbl,
+            new Text(lbl, lbl, explanation)), stackTrace);
 
-  public Action findStartAction(String action_name) {
-    if (startActions.containsKey(action_name)) {
-      return startActions.get(action_name);
+    Label none = LabelUtil._Impl.noComponents();
+    Action a = findDefaultAction(req);
+    if (a != null) {
+      String url = req.contextURL();
+      content =
+          new NodeList(none, none, none, none, content, new Paragraph(none,
+              none, none, none, new Hyperlink(servletP, none, none, url,
+                  "Return")));
     }
-    return null;
+    createPage((HTMLRequest) req, title, none, none, new NodeList(none, none,
+        none, none, new Header(lbl, lbl, 1, header), content));
   }
 
-  public Action findStartAction(Request req, String action_name) {
-    return findStartAction(action_name);
-  }
-
-  public Action findDefaultAction(Request req) {
-    String def_action_name = this.defaultActionName(req);
-    if (def_action_name == null) {
-      return this.defaultAction(req);
-    }
-    LabeledAction la = findAction(req, def_action_name);
-    if (la != null) return la.a;
-    return null;
-  }
-
-  /**
-   * Override to make final.
+  /** Construct a node that contains an invocation of this servlet with the
+   * named request and the inputs provided.
+   * @param inputs : (Input or string of Input name)-> String
+   * @param req : the request that initiated this
+   * @return a new node.
    */
-  @Override
-  public String getInitParameter(String name) {
-    return super.getInitParameter(name);
+  public final Node createRequest(Label L, Label E, Action a,
+      fabricated.util.Map inputs, Label cL, Label cE, Node body) {
+    return new HyperlinkRequest(servletP, L, E, a, inputs, cL, cE, body);
   }
 
-  /** These servlets currently do not distinguish between GET and POST requests. */
-  @Override
-  public final void doPost(HttpServletRequest req, HttpServletResponse res)
-      throws IOException, ServletException {
-    doGet(req, res);
-  }
-
-  public abstract String getPrivateHostID() throws ServletException;
-
-  public String addAction(Action a, Label L, Request req) {
-    LabeledAction la = new LabeledAction(a, L);
-    String name = generateNonce();
-    getSessionActions(req.request).put(name, la);
-    return name;
-  }
-
-  public final void addStartAction(Action a) {
-    startActions.put(a.getExtName(), a);
-  }
-
-  public final Name generateName() {
-    return nonce.get().generate();
-  }
-
-  public final String generateNonce() {
-    return nonce.get().generate().toHex();
-  }
-
-//  /** Construct a node that contains an invocation of this servlet with the
-//   * named request and the inputs provided.
-//   * @param inputs : (Input or string of Input name)-> String
-//   * @param req : the request that initiated this
-//   * @return a new node.
-//   */
-//  public final Node createRequest(Label L, Label E, Action a,
-//      fabricated.util.Map inputs, Label cL, Label cE, Node body) {
-//    return new HyperlinkRequest(servletP, L, E, a, inputs, cL, cE, body);
-//  }
-
-  public String createRequestURL(String actionName, fabricated.util.Map inputs,
-      Request req) {
-    StringWriter w = new StringWriter();
-    w.write(req.servletURL());
-    w.write("?action=");
-    w.write(HTMLWriter.escape_URI(actionName));
-
-    if (inputs != null)
-      for (fabricated.util.Iterator i = inputs.entrySet().iterator(); i
-          .hasNext();) {
-        fabricated.util.MapEntry entry = (fabricated.util.MapEntry) i.next();
-        if (entry.getKey().$unwrap() instanceof String
-            && entry.getValue().$unwrap() instanceof String) {
-          String inputName = (String) entry.getKey().$unwrap();
-          String val = (String) entry.getValue().$unwrap();
-          w.write("&");
-          w.write(inputName);
-          w.write("=");
-          w.write(HTMLWriter.escape_URI(val));
-        } else throw new Error("Expected String but got "
-            + entry.getKey().getClass() + "," + entry.getValue().getClass());
-      }
-    return w.toString();
-  }
-
-  protected Label sessionPrincipalLabel(final SessionPrincipal pp) {
-    return Worker.runInSubTransaction(new fabric.worker.Worker.Code<Label>() {
-      @Override
-      public Label run() {
-        Store local = Worker.getWorker().getLocalStore();
-        return LabelUtil._Impl.readerPolicyLabel(local, pp, pp);
-      }
-    });
-  }
-
-  protected SessionState createSessionState(fabric.lang.security.Label lbl,
-      String id, sif.servlet.SessionPrincipal prin) {
-    throw new Error("Only applications can create a session state");
-  }
-
-  protected SessionPrincipal createSessionPrincipal(String id) {
-    throw new Error("Only applications can create a session principal");
-  }
-
-  /**
-   * Return a Label representing the upper bound on the output channel for
-   * the Request request.
+  /** The set of (non-nonce generated) input names used so far. Each 
+   * such input must have
+   * a unique name, ensuring that the program doesn't receive
+   * data on one input that was intended for another input with
+   * a different label. 
    */
-  public static Label getOutputChannelBound(Request request) {
-    return getOutputChannelBound(request.session);
-  }
+  private Set<String> inputNames = new HashSet<String>();
 
-  public static Label getOutputChannelBound(final Principal session) {
-    return Worker.runInSubTransaction(new fabric.worker.Worker.Code<Label>() {
-      @Override
-      public Label run() {
-        Store local = Worker.getWorker().getLocalStore();
-        return LabelUtil._Impl.toLabel(local,
-            PrincipalUtil._Impl.readableByPrinPolicy(local, session));
-      }
-    });
-    //return LabelUtil.privacyPolicyLabel(session, Collections.EMPTY_LIST);
-  }
-
-  public static final boolean debug(int i) {
-    return i <= DEBUG_LEVEL;
-  }
-
-  static class LabeledAction /*implements java.io.Serializable*/{ // XXX Labels are not seriablizable
-    LabeledAction(Action a, Label L) {
-      this.a = a;
-      this.L = L;
-    }
-
-    @Override
-    public String toString() {
-      return "(" + a + "; " + L + ")";
-    }
-
-    public final Action a;
-    public final Label L;
-
-    @Override
-    public boolean equals(Object o) {
-      if (o instanceof LabeledAction) {
-        LabeledAction that = (LabeledAction) o;
-        return that.a == a && that.L == L;
-      }
-      return false;
-    }
-
-    @Override
-    public int hashCode() {
-      return (a == null ? 0 : a.hashCode()) ^ (L == null ? 0 : L.hashCode());
-    }
+  public void addNamedInput(Input input) {
+    String name = input.getName();
+    if (inputNames.contains(name))
+      throw new Error("Duplicate input name: " + name);
+    inputNames.add(name);
   }
 }

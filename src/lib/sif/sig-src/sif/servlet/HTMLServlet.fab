@@ -1,0 +1,52 @@
+package sif.servlet;
+
+import java.io.*;
+import javax.servlet.ServletException;
+import sif.html.*;
+import fabricated.util.Map;
+
+/** A servlet contains the information that is shared across users and sessions.
+ * It converts between the Java HttpServlet request processing style and this one. */
+
+abstract public class HTMLServlet[principal servletP] extends Servlet[servletP] {    
+    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;        
+    private static int __JIF_SAFE_CONSTRUCTORS$20050907 = 0;
+    private static int __JIF_PARAMS_RUNTIME_REPRESENTED$20051007 = 0;
+
+    public native final void createPage{*:req.session}(
+            Request[servletP]{*:req.session} req, 
+            String{*:req.session} title, 
+            label cL,
+            label cE,
+            Node[cL,cE] body) where {*cL;*cE} <= {⊤→req.session}, {body} <= {*cE};
+
+    public native final void createPage{*:req.session}(
+            Request[servletP]{*dynL;*preL} req, 
+            String{*dynL;*preL} title, 
+            label{*preL} preL,
+            label{*preL} preE,
+            PrecomputedPage[preL, preE] pp,
+            label{*dynL} dynL,
+            label{*dynL} dynE,
+            NodeList[dynL, dynE] args) where {*preL;*preE;*dynL;*dynE} <= {*:req.session}, {pp} <= {*preE}, {args} <= {*dynE};
+
+    public native final Node[L, E]{L;E;action;body} 
+                             createForm(label L, label E,  
+                                        Action[servletP]{*L} action, 
+                                        label cL, label cE,
+                                        Node[cL,cE]{*L} body)  where {*cL} <= {*L}, {*E;body} <= {*cE};
+
+    /** Construct a node that contains an invocation of this servlet with the
+     * named request and the inputs provided.
+     * @param inputs : InputName -> String
+     * @param req : the request that initiated this
+     * @return a new node.
+     */
+    public native final Node[L, E]{L;E;a; body} 
+                      createRequest(label L, label E, 
+                                    Action[servletP]{*L} a, 
+                                    Map[{servletP:;servletP!:;*L}]{*L} inputs, 
+                                    label cL, label cE,
+                                    Node[cL,cE]{*L} body)  where {*cL} <= {*L}, {*E;body} <= {*cE};
+    
+}
