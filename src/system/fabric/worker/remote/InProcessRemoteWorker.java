@@ -108,8 +108,7 @@ public class InProcessRemoteWorker extends RemoteWorker {
 
   @Override
   public Principal getPrincipal() {
-    // XXX Does this actually happen?
-    throw new NotImplementedException();
+    return worker.getPrincipal();
   }
 
   @Override

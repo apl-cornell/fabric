@@ -1,9 +1,10 @@
-package auth;
+package auth.html;
 
 import javax.servlet.ServletException;
 
 import sif.servlet.*;
 import sif.html.*;
+import auth.*;
 
 /**
  * Extend this class to create actions that are protected by login requirement
@@ -29,7 +30,7 @@ abstract public class AuthenticatedAction[principal servP] extends AbstractActio
                                 (label{*lbl} lbl,
                                  Request[servP]{*lbl} req,
                                  AuthenticatedAction[servP]{*lbl} successAction,
-                                 AuthServlet[servP]{*lbl} servlet)
+                                 HTMLAuthServlet[servP]{*lbl} servlet)
     throws (ServletException{*lbl;req.session←})
     where caller(req.session),
     lbl <= {⊤→req.session}
@@ -78,10 +79,10 @@ abstract public class AuthenticatedAction[principal servP] extends AbstractActio
             final SessionState state_ = req.getSessionState(lbl);
             if ( lbl <= new label {/*⊤→*/state_.store$→} ) {
                 if (servlet_ == null || state_ == null ||
-                        !(servlet_ instanceof AuthServlet[servP]) ||
+                        !(servlet_ instanceof HTMLAuthServlet[servP]) ||
                         !(state_ instanceof AuthSessState))
                     throw new ServletException("Error processing request");
-                final AuthServlet[servP] servlet = (AuthServlet[servP])servlet_;
+                final HTMLAuthServlet[servP] servlet = (HTMLAuthServlet[servP])servlet_;
                 final AuthSessState state = (AuthSessState)state_;
                 if ( lbl <= new label {/*⊤→*/state.store$→} ) {
                 
