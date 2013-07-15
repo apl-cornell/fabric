@@ -1,6 +1,7 @@
 package fabric.worker.transaction;
 
 import static fabric.common.Logging.SEMANTIC_WARRANTY_LOGGER;
+import static fabric.common.Logging.WORKER_TRANSACTION_LOGGER;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -14,6 +15,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Queue;
 import java.util.Set;
+import java.util.logging.Level;
 
 import fabric.common.Logging;
 import fabric.common.SemanticWarranty;
@@ -755,7 +757,16 @@ public final class Log {
         if (log.child != null) toFlag.add(log.child);
         if (log.retrySignal == null || log.retrySignal.isDescendantOf(tid)) {
           log.retrySignal = tid;
-          log.thread.interrupt();
+          // XXX This was here to unblock a thread that may have been waiting on
+          // XXX a lock. Commented out because it was causing a bunch of
+          // XXX InterruptedExceptions and ClosedByInterruptExceptions that
+          // XXX weren't being handled properly. This includes improper or
+          // XXX insufficient handling by Java code in the examples (e.g.,
+          // XXX Jetty).
+          // XXX Instead, when a thread is blocked waiting on an object lock, we
+          // XXX spin once a second to check the retry signal.
+
+          // log.thread.interrupt();
         }
       }
     }
@@ -1231,8 +1242,8 @@ public final class Log {
     Threading.scheduleAt(commitTime, new Runnable() {
       @Override
       public void run() {
-        Logging.WORKER_TRANSACTION_LOGGER
-            .finer("Updating data structures for commit of tid " + tid);
+        Logging.log(WORKER_TRANSACTION_LOGGER, Level.FINER,
+            "Updating data structures for commit of tid {0}", tid);
 
         // Insert memoized calls into the local call cache
         for (Map.Entry<CallInstance, SemanticWarrantyRequest> e : requests

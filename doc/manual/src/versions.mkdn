@@ -1,6 +1,11 @@
 Version history {#versions}
 ===============
 
+Version 0.2.1 (Jun 2013)
+-------------
+Issued fresh node certificates for examples. The old ones had expired.
+
+
 Version 0.2.0 (Oct 2012)
 -------------
 * Support for mobile code @cite mobile-fabric-2012

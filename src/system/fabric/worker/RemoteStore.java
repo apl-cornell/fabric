@@ -23,7 +23,7 @@ import fabric.common.SemanticWarranty;
 import fabric.common.SerializedObject;
 import fabric.common.TransactionID;
 import fabric.common.VersionWarranty;
-import fabric.common.WarrantyRefreshGroup;
+import fabric.common.WarrantyGroup;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.FabricGeneralSecurityException;
 import fabric.common.exceptions.FabricRuntimeException;
@@ -35,6 +35,7 @@ import fabric.common.util.ConcurrentLongKeyMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.Pair;
 import fabric.dissemination.ObjectGlob;
+import fabric.dissemination.WarrantyGlob;
 import fabric.lang.Object;
 import fabric.lang.Object._Impl;
 import fabric.lang.security.NodePrincipal;
@@ -67,7 +68,8 @@ import fabric.worker.transaction.TransactionManager;
  * <code>Worker.getStore()</code> interface. For each remote store, there should
  * be at most one <code>RemoteStore</code> object representing that store.
  */
-public class RemoteStore extends RemoteNode implements Store, Serializable {
+public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
+    Serializable {
   /**
    * A queue of fresh object identifiers.
    */
@@ -238,7 +240,7 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
    */
   private ObjectCache.Entry fetchObject(boolean useDissem, long onum)
       throws AccessException {
-    ObjectGroup g;
+    Pair<ObjectGroup, WarrantyGroup> g;
     if (useDissem) {
       g = Worker.getWorker().fetchManager().fetch(this, onum);
     } else {
@@ -257,7 +259,8 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
    * @throws FetchException
    *           if there was an error while fetching the object from the store.
    */
-  public ObjectGroup readObjectFromStore(long onum) throws AccessException {
+  public Pair<ObjectGroup, WarrantyGroup> readObjectFromStore(long onum)
+      throws AccessException {
     ReadMessage.Response response =
         send(Worker.getWorker().authToStore, new ReadMessage(onum));
     return response.group;
@@ -269,18 +272,21 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
    * @param onum
    *          The object number to fetch.
    */
-  public final ObjectGlob readEncryptedObjectFromStore(long onum)
+  public Pair<ObjectGlob, WarrantyGlob> readEncryptedObjectFromStore(long onum)
       throws AccessException {
     DissemReadMessage.Response response =
         send(Worker.getWorker().unauthToStore, new DissemReadMessage(onum));
 
     PublicKey key = getPublicKey();
     try {
-      response.glob.verifySignature(key);
+      response.globs.first.verifySignature(key);
+      if (response.globs.second != null) {
+        response.globs.second.verifySignature(key);
+      }
     } catch (GeneralSecurityException e) {
       return null;
     }
-    return response.glob;
+    return response.globs;
   }
 
   /**
@@ -466,13 +472,21 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
   /**
    * Updates the worker's cache of objects that originate from this store. If an
    * object with the given onum exists in cache, it is evicted and replaced with
-   * the given serialized object.
+   * the given serialized object. If the object does not exist in cache, then
+   * the cache is not updated.
    * 
-   * @return true iff the cache had an existing entry for the object (regardless
-   *          of whether such an entry was replaced).
+   * @return true iff the cache was updated.
    */
   public boolean updateCache(Pair<SerializedObject, VersionWarranty> update) {
     return cache.update(this, update);
+  }
+
+  /**
+   * Adds the given object to the cache. If a cache entry already exists, it is
+   * replaced.
+   */
+  public void forceCache(Pair<SerializedObject, VersionWarranty> obj) {
+    cache.forcePut(this, obj);
   }
 
   /**
@@ -480,7 +494,7 @@ public class RemoteStore extends RemoteNode implements Store, Serializable {
    * 
    * @return the set of onums for which a cache entry was found.
    */
-  public List<Long> updateWarranties(WarrantyRefreshGroup warranties) {
+  public List<Long> updateWarranties(WarrantyGroup warranties) {
     return cache.update(this, warranties);
   }
 

@@ -21,14 +21,15 @@ import fabric.common.Logging;
 import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.NotImplementedException;
 import fabric.common.net.handshake.ShakenSocket;
+import fabric.net.RemoteNode;
 
 /**
  * A channel manages a single socket, allowing it to be multiplexed across
  * multiple SubSockets.
  * 
- * @author mdgeorge
+ * @param <Node> the type of node at the remote endpoint.
  */
-abstract class Channel extends Thread {
+abstract class Channel<Node extends RemoteNode<Node>> extends Thread {
   static final int DEFAULT_MAX_OPEN_CONNECTIONS = 50;
 
   private final DataOutputStream out;
@@ -44,7 +45,7 @@ abstract class Channel extends Thread {
    * Maximum size of <code>connections</code>.
    */
   private final int maxOpenConnections;
-  private final RemoteIdentity remoteIdentity;
+  private final RemoteIdentity<Node> remoteIdentity;
 
   // channel protocol:
   //
@@ -60,7 +61,8 @@ abstract class Channel extends Thread {
    * @param maxOpenConnections if zero, then an unlimited number of open
    *          connections is permitted on this channel.
    */
-  protected Channel(ShakenSocket s, int maxOpenConnections) throws IOException {
+  protected Channel(ShakenSocket<Node> s, int maxOpenConnections)
+      throws IOException {
     setDaemon(true);
 
     if (maxOpenConnections < 0) {
@@ -257,7 +259,7 @@ abstract class Channel extends Thread {
       return "stream " + streamID + " on " + Channel.this.toString();
     }
 
-    public RemoteIdentity getRemoteIdentity() {
+    public RemoteIdentity<Node> getRemoteIdentity() {
       return Channel.this.remoteIdentity;
     }
 

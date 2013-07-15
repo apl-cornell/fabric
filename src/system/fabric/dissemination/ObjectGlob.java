@@ -12,9 +12,8 @@ import java.util.logging.Level;
 import fabric.common.Logging;
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
-import fabric.common.VersionWarranty;
-import fabric.common.util.Pair;
 import fabric.lang.security.Label;
+import fabric.worker.RemoteStore;
 import fabric.worker.Store;
 
 /**
@@ -42,16 +41,15 @@ public class ObjectGlob extends AbstractGlob<ObjectGroup> {
   @Override
   protected void verifyNoSignatureRequired(ObjectGroup group)
       throws SignatureException {
-    for (Pair<SerializedObject, VersionWarranty> pair : group.objects()
-        .values()) {
-      if (pair.first.getUpdateLabelOnum() != EMPTY_LABEL)
+    for (SerializedObject obj : group.objects().values()) {
+      if (obj.getUpdateLabelOnum() != EMPTY_LABEL)
         throw new SignatureException("Failed to verify signature");
     }
   }
 
   private static Label getLabel(Store store, ObjectGroup group) {
     SerializedObject obj =
-        group.objects().entrySet().iterator().next().getValue().first;
+        group.objects().entrySet().iterator().next().getValue();
     return new Label._Proxy(store, obj.getUpdateLabelOnum());
   }
 
@@ -73,5 +71,10 @@ public class ObjectGlob extends AbstractGlob<ObjectGroup> {
     }
 
     return result;
+  }
+
+  @Override
+  public boolean updateCache(Cache dissemCache, RemoteStore store, long onum) {
+    return dissemCache.updateEntry(store, onum, this);
   }
 }

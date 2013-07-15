@@ -1,6 +1,7 @@
 package hello;
 
 import auth.*;
+import auth.html.*;
 import sif.servlet.*;
 import sif.html.*;
 
@@ -40,12 +41,12 @@ public class FrontPage extends AuthenticatedAction[HelloEP] {
 				}
 				
 				NodeList content = new NodeList(lbl, lbl, new Paragraph(lbl, lbl, new Text("Username: "+username)));
-				Action[HelloEP] logoff = servlet.findStartAction(req, "logoff");
+				Action[HelloEP] logoff = helloServlet.findStartAction(req, "logoff");
 				TRow iconBar = TRow.create( new NodeList(new Hyperlink(logoff, new Img("LogoffIcon.gif", "icon"))));
 				TRow textBar = TRow.create( new NodeList(new Text("Logoff")));
 				Table optionBar = new Table("viewOptions", null, new NodeList(iconBar, textBar));
 				content = content==null ? null : content.append(lbl, lbl, new Paragraph(optionBar));
-				servlet.createPage(req, "auth-hello webapp", lbl, lbl, 
+				helloServlet.createPage((HTMLRequest[HelloEP])req, "auth-hello webapp", lbl, lbl, 
 						new NodeList[lbl,lbl](lbl, lbl, createBanner(lbl, "Welcome"), lbl, lbl, createBody(lbl, lbl, content)));
 			}
 		}

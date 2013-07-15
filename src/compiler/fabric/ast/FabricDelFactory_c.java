@@ -264,4 +264,9 @@ public class FabricDelFactory_c extends JifDelFactory_c implements
     return delNode();
   }
 
+  @Override
+  public JL delAccessPolicy() {
+    return delNode();
+  }
+
 }

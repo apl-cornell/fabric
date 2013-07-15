@@ -14,6 +14,7 @@ import fabric.common.util.Pair;
 import fabric.lang.Object._Impl;
 import fabric.worker.Store;
 import fabric.worker.Worker;
+import fabric.worker.remote.RemoteWorker;
 
 /**
  * Represents a request from a worker to read an object owned by another worker.
@@ -75,7 +76,7 @@ public class DirtyReadMessage extends
   // ////////////////////////////////////////////////////////////////////////////
 
   @Override
-  public Response dispatch(RemoteIdentity client, MessageHandler h)
+  public Response dispatch(RemoteIdentity<RemoteWorker> client, MessageHandler h)
       throws ProtocolError, AccessException {
     return h.handle(client, this);
   }

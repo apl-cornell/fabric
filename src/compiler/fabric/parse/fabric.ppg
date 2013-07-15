@@ -234,11 +234,9 @@ non terminal Stmt   abort_stmt, retry_stmt;
 non terminal Worker local_worker;
 non terminal RemoteWorkerGetter remote_worker;
 non terminal FabricArrayInit fabric_array_initializer;
-non terminal LabelNode access_label_opt;
 non terminal List codebase_declarations_opt, codebase_declarations;
 non terminal CodebaseDecl codebase_declaration;
 non terminal Store store_expr;
-non terminal Expr accesspath_expr;
 
 start with goal;
 
@@ -431,6 +429,23 @@ extend accesspath_no_id ::=
             :}
 	;
 	    
+	    	    
+////////////////////////////////////////////////////////////////////////
+// Class definitions may include an explicit "access label"           //
+////////////////////////////////////////////////////////////////////////	    
+extend class_member_declaration ::=
+		AT:a label:b
+            {: List l = new LinkedList<ClassMember>();
+	           l.add(parser.nf.AccessPolicy(parser.pos(a,b), b));
+               RESULT = l; :}
+	; 
+	
+extend interface_member_declaration ::=
+		AT:a label:b
+            {: List l = new LinkedList<ClassMember>();
+	           l.add(parser.nf.AccessPolicy(parser.pos(a,b), b));
+               RESULT = l; :}
+	;   	  
 ////////////////////////////////////////////////////////////////////////
 // Field Declarations now use an optional "access label"              //
 ////////////////////////////////////////////////////////////////////////

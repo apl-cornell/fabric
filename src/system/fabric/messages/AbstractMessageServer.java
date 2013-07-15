@@ -14,6 +14,7 @@ import fabric.common.exceptions.InternalError;
 import fabric.common.net.RemoteIdentity;
 import fabric.common.net.SubServerSocket;
 import fabric.common.net.SubSocket;
+import fabric.worker.remote.RemoteWorker;
 
 /**
  * Abstracts a server loop that listens for and processes messages from the
@@ -48,7 +49,7 @@ public abstract class AbstractMessageServer implements Runnable, MessageHandler 
       // The main server loop.
       while (true) {
         // Accept a connection and handle it.
-        final SubSocket connection = server.accept();
+        final SubSocket<RemoteWorker> connection = server.accept();
 
         Threading.getPool()
             .submit(
@@ -56,7 +57,7 @@ public abstract class AbstractMessageServer implements Runnable, MessageHandler 
                     "Fabric network message handler thread") {
                   @Override
                   protected void runImpl() {
-                    RemoteIdentity client;
+                    RemoteIdentity<RemoteWorker> client;
                     try {
                       client = connection.getRemoteIdentity();
                     } catch (IOException e) {

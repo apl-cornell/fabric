@@ -8,7 +8,7 @@ import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
 import fabric.common.TransactionID;
 import fabric.common.VersionWarranty;
-import fabric.common.WarrantyRefreshGroup;
+import fabric.common.WarrantyGroup;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.InternalError;
@@ -18,7 +18,7 @@ import fabric.common.net.SubSocketFactory;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.Pair;
 import fabric.dissemination.ObjectGlob;
-import fabric.dissemination.WarrantyRefreshGlob;
+import fabric.dissemination.WarrantyGlob;
 import fabric.lang.Object._Impl;
 import fabric.lang.Object._Proxy;
 import fabric.lang.security.Principal;
@@ -52,18 +52,26 @@ import fabric.worker.transaction.TransactionRegistry;
  * For each remote worker, there should be at most one <code>RemoteWorker</code>
  * object representing that worker.
  */
-public final class RemoteWorker extends RemoteNode {
+public class RemoteWorker extends RemoteNode<RemoteWorker> {
 
-  private transient final SubSocketFactory subSocketFactory;
+  private transient final SubSocketFactory<RemoteWorker> subSocketFactory;
 
   /**
    * This should only be called by fabric.worker.Worker. If you want a
    * RemoteWorker, use fabric.worker.Worker.getWorker() instead.
    */
   public RemoteWorker(String name) {
-    super(name);
+    this(name, Worker.getWorker().authToWorker);
+  }
 
-    this.subSocketFactory = Worker.getWorker().authToWorker;
+  RemoteWorker(Worker worker) {
+    this(worker.getName(), worker.authToWorker);
+  }
+
+  private RemoteWorker(String name,
+      SubSocketFactory<RemoteWorker> subSocketFactory) {
+    super(name);
+    this.subSocketFactory = subSocketFactory;
   }
 
   public Object issueRemoteCall(_Proxy receiver, String methodName,
@@ -178,7 +186,7 @@ public final class RemoteWorker extends RemoteNode {
   @Override
   public Principal getPrincipal() {
     try {
-      SubSocket socket = getSocket(subSocketFactory);
+      SubSocket<RemoteWorker> socket = getSocket(subSocketFactory);
       Principal principal = socket.getPrincipal();
       recycle(subSocketFactory, socket);
       return principal;
@@ -250,7 +258,7 @@ public final class RemoteWorker extends RemoteNode {
   /**
    * Notifies the worker that a list of warranties has been updated.
    */
-  public List<Long> notifyWarrantyRefresh(WarrantyRefreshGroup warranties) {
+  public List<Long> notifyWarrantyRefresh(WarrantyGroup warranties) {
     WarrantyRefreshMessage.Response response;
     try {
       response = send(new WarrantyRefreshMessage(warranties));
@@ -266,7 +274,7 @@ public final class RemoteWorker extends RemoteNode {
    * groups has been updated.
    */
   public List<Long> notifyWarrantyRefresh(String store,
-      LongKeyMap<WarrantyRefreshGlob> updates) {
+      LongKeyMap<WarrantyGlob> updates) {
     WarrantyRefreshMessage.Response response;
     try {
       response = send(new WarrantyRefreshMessage(store, updates));

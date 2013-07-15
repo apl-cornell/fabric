@@ -7,6 +7,7 @@ import java.security.cert.Certificate;
 
 import fabric.common.exceptions.ProtocolError;
 import fabric.common.net.RemoteIdentity;
+import fabric.worker.remote.RemoteWorker;
 
 /**
  * A request to get the certificate chain that certifies a store's public SSL
@@ -39,7 +40,7 @@ public class GetCertChainMessage extends
   // ////////////////////////////////////////////////////////////////////////////
 
   @Override
-  public Response dispatch(RemoteIdentity client, MessageHandler h)
+  public Response dispatch(RemoteIdentity<RemoteWorker> client, MessageHandler h)
       throws ProtocolError {
     return h.handle(client, this);
   }

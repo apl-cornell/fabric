@@ -4,12 +4,16 @@ import java.io.IOException;
 import java.util.Properties;
 
 import fabric.common.ObjectGroup;
+import fabric.common.WarrantyGroup;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
+import fabric.common.util.Pair;
+import fabric.dissemination.AbstractGlob;
 import fabric.dissemination.Cache;
 import fabric.dissemination.DummyFetchManager;
 import fabric.dissemination.FetchManager;
 import fabric.dissemination.ObjectGlob;
+import fabric.dissemination.WarrantyGlob;
 import fabric.worker.memoize.WarrantiedCallResult;
 import fabric.worker.RemoteStore;
 import fabric.worker.Worker;
@@ -39,8 +43,9 @@ public class PastryFetchManager implements FetchManager {
   }
 
   @Override
-  public ObjectGroup fetch(RemoteStore c, long onum) throws AccessException {
-    ObjectGlob glob;
+  public Pair<ObjectGroup, WarrantyGroup> fetch(RemoteStore c, long onum)
+      throws AccessException {
+    Pair<ObjectGlob, WarrantyGlob> glob;
     try {
       glob = node.disseminator().fetch(c, onum);
     } catch (DisseminationTimeoutException e) {
@@ -51,7 +56,14 @@ public class PastryFetchManager implements FetchManager {
       return fallback.fetch(c, onum);
     }
 
-    return glob.decrypt();
+    ObjectGroup resultObjectGroup = glob.first.decrypt();
+    WarrantyGroup resultWarrantyGroup = null;
+    if (glob.second != null) {
+      // Decrypt the warranties.
+      resultWarrantyGroup = glob.second.decrypt();
+    }
+
+    return new Pair<>(resultObjectGroup, resultWarrantyGroup);
   }
 
   @Override
@@ -66,7 +78,8 @@ public class PastryFetchManager implements FetchManager {
   }
 
   @Override
-  public boolean updateCaches(RemoteStore store, long onum, ObjectGlob update) {
+  public boolean updateCaches(RemoteStore store, long onum,
+      AbstractGlob<?> update) {
     return node.disseminator.updateCaches(store, onum, update);
   }
 

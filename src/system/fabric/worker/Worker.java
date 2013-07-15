@@ -45,9 +45,11 @@ import fabric.common.net.handshake.Protocol;
 import fabric.common.net.naming.NameService;
 import fabric.common.net.naming.NameService.PortType;
 import fabric.common.net.naming.TransitionalNameService;
+import fabric.common.util.LongIterator;
+import fabric.common.util.LongSet;
 import fabric.common.util.Pair;
+import fabric.dissemination.AbstractGlob;
 import fabric.dissemination.FetchManager;
-import fabric.dissemination.ObjectGlob;
 import fabric.lang.FabricClassLoader;
 import fabric.lang.Object;
 import fabric.lang.WrappedJavaInlineable;
@@ -58,9 +60,11 @@ import fabric.lang.security.Label;
 import fabric.lang.security.LabelCache;
 import fabric.lang.security.LabelUtil;
 import fabric.lang.security.NodePrincipal;
+import fabric.net.RemoteNode;
 import fabric.worker.admin.WorkerAdmin;
 import fabric.worker.admin.WorkerNotRunningException;
 import fabric.worker.memoize.CallInstance;
+import fabric.worker.remote.InProcessRemoteWorker;
 import fabric.worker.remote.RemoteCallManager;
 import fabric.worker.remote.RemoteWorker;
 import fabric.worker.shell.ChainedCommandSource;
@@ -110,13 +114,13 @@ public final class Worker {
   protected final LocalStore localStore;
 
   /** A subsocket factory for unauthenticated connections to stores. */
-  public final SubSocketFactory unauthToStore;
+  public final SubSocketFactory<RemoteStore> unauthToStore;
 
   /** A subsocket factory for authenticated connections to stores. */
-  public final SubSocketFactory authToStore;
+  public final SubSocketFactory<RemoteStore> authToStore;
 
   /** A subsocket factory for authenticated connections to workers */
-  public final SubSocketFactory authToWorker;
+  public final SubSocketFactory<RemoteWorker> authToWorker;
 
   /** The subserversocket factory */
   public final SubServerSocketFactory authFromAll;
@@ -130,6 +134,8 @@ public final class Worker {
   protected final NodePrincipal principal;
 
   private final RemoteCallManager remoteCallManager;
+
+  public final InProcessRemoteWorker inProcessRemoteWorker;
 
   public static final Random RAND = new Random();
 
@@ -226,25 +232,30 @@ public final class Worker {
     NameService nameService = new TransitionalNameService();
 
     // initialize the various socket factories
-    Protocol authProt;
-    if (config.useSSL)
-      authProt = new HandshakeAuthenticated(config.getKeyMaterial());
-    else authProt = new HandshakeBogus();
+    final Protocol<RemoteStore> authenticateToStoreProtocol =
+        makeAuthenticateProtocol(config.getKeyMaterial());
+    final Protocol<RemoteWorker> authenticateToWorkerProtocol =
+        makeAuthenticateProtocol(config.getKeyMaterial());
 
-    Protocol authenticateProtocol = new HandshakeComposite(authProt);
-    Protocol nonAuthenticateProtocol =
-        new HandshakeComposite(new HandshakeUnauthenticated(config.name));
+    Protocol<RemoteStore> nonAuthenticateProtocol =
+        new HandshakeComposite<>(new HandshakeUnauthenticated<RemoteStore>(
+            config.name));
 
     this.authToStore =
-        new SubSocketFactory(authenticateProtocol, nameService, PortType.STORE);
+        new SubSocketFactory<>(authenticateToStoreProtocol, nameService,
+            PortType.STORE);
     this.authToWorker =
-        new SubSocketFactory(authenticateProtocol, nameService, PortType.WORKER);
+        new SubSocketFactory<>(authenticateToWorkerProtocol, nameService,
+            PortType.WORKER);
     this.unauthToStore =
-        new SubSocketFactory(nonAuthenticateProtocol, nameService,
+        new SubSocketFactory<>(nonAuthenticateProtocol, nameService,
             PortType.STORE);
     this.authFromAll =
-        new SubServerSocketFactory(authenticateProtocol, nameService,
+        new SubServerSocketFactory(authenticateToWorkerProtocol, nameService,
             PortType.WORKER);
+
+    this.inProcessRemoteWorker = new InProcessRemoteWorker(this);
+    this.remoteWorkers.put(config.name, inProcessRemoteWorker);
 
     this.remoteCallManager = new RemoteCallManager(this);
 
@@ -265,6 +276,16 @@ public final class Worker {
     this.principal =
         initializePrincipal(config.homeStore, principalOnum,
             this.config.getKeyMaterial());
+  }
+
+  private <Node extends RemoteNode<Node>> Protocol<Node> makeAuthenticateProtocol(
+      KeyMaterial key) throws GeneralSecurityException {
+    final Protocol<Node> protocol;
+    if (config.useSSL)
+      protocol = new HandshakeAuthenticated<Node>(config.getKeyMaterial());
+    else protocol = new HandshakeBogus<>();
+
+    return new HandshakeComposite<>(protocol);
   }
 
   /**
@@ -362,30 +383,44 @@ public final class Worker {
   }
 
   /**
-   * Updates the dissemination and worker caches with the given object glob.
+   * Updates the dissemination and worker caches with the given glob.
    * 
    * @return true iff either of the caches were updated.
    */
-  public boolean updateCaches(RemoteStore store, long onum, ObjectGlob update) {
+  public boolean updateCaches(RemoteStore store, long onum,
+      AbstractGlob<?> update) {
     return fetchManager.updateCaches(store, onum, update);
   }
 
   /**
-   * Updates the worker cache with the given object group. Only old versions of
-   * objects replaced; new objects are not added to the cache if older versions
-   * don't already exist in cache.
+   * Updates the worker cache with the given object group. If the cache contains
+   * an old version of any object in the group, then the cache is updated with
+   * the entire group. Otherwise, the cache is not updated.
    * 
    * @return true iff the cache was updated.
    */
   public boolean updateCache(RemoteStore store, ObjectGroup group) {
-    boolean result = false;
-    for (Pair<SerializedObject, VersionWarranty> obj : group.objects().values()) {
-      // Because of short-circuiting, order of disjuncts matter here.
-      result = store.updateCache(obj) || result;
-      TransactionManager.abortReaders(store, obj.first.getOnum());
+    if (!hasOnumsInCache(store, group.objects().keySet())) return false;
+
+    for (SerializedObject obj : group.objects().values()) {
+      long onum = obj.getOnum();
+      store.forceCache(new Pair<>(obj, VersionWarranty.EXPIRED_WARRANTY));
+
+      TransactionManager.abortReaders(store, onum);
     }
 
-    return result;
+    return true;
+  }
+
+  /**
+   * Determines whether any of a given set of onums are resident in cache.
+   */
+  private boolean hasOnumsInCache(RemoteStore store, LongSet onums) {
+    for (LongIterator it = onums.iterator(); it.hasNext();) {
+      if (store.readFromCache(it.next()) != null) return true;
+    }
+
+    return false;
   }
 
   /**

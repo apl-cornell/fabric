@@ -1,24 +1,17 @@
 package fabric.worker.remote;
 
 import java.lang.reflect.InvocationTargetException;
-import java.security.InvalidKeyException;
-import java.security.SignatureException;
 import java.text.MessageFormat;
 import java.util.HashMap;
-import java.util.ArrayList;
 import java.util.List;
 
 import fabric.common.AuthorizationUtil;
 import fabric.common.SemanticWarranty;
-import fabric.common.ObjectGroup;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.ProtocolError;
 import fabric.common.net.RemoteIdentity;
 import fabric.common.net.SubServerSocket;
 import fabric.common.net.SubServerSocketFactory;
-import fabric.common.util.LongKeyMap;
-import fabric.dissemination.ObjectGlob;
-import fabric.dissemination.WarrantyRefreshGlob;
 import fabric.lang.Object._Impl;
 import fabric.lang.Object._Proxy;
 import fabric.lang.security.Label;
@@ -52,11 +45,13 @@ import fabric.worker.transaction.TransactionRegistry;
 public class RemoteCallManager extends MessageToWorkerHandler {
 
   private final SubServerSocketFactory factory;
+  private final InProcessRemoteWorker inProcessRemoteWorker;
 
   public RemoteCallManager(Worker worker) {
     super(worker.config.name);
 
     this.factory = worker.authFromAll;
+    this.inProcessRemoteWorker = worker.inProcessRemoteWorker;
   }
 
   @Override
@@ -65,7 +60,8 @@ public class RemoteCallManager extends MessageToWorkerHandler {
   }
 
   @Override
-  public RemoteCallMessage.Response handle(final RemoteIdentity client,
+  public RemoteCallMessage.Response handle(
+      final RemoteIdentity<RemoteWorker> client,
       final RemoteCallMessage remoteCallMessage) throws RemoteCallException {
     // We assume that this thread's transaction manager is free (i.e., it's not
     // managing any tranaction's log) at the start of the method and ensure that
@@ -145,7 +141,8 @@ public class RemoteCallManager extends MessageToWorkerHandler {
    * worker's TransactionManager is associated with a null log.
    */
   @Override
-  public AbortTransactionMessage.Response handle(RemoteIdentity client,
+  public AbortTransactionMessage.Response handle(
+      RemoteIdentity<RemoteWorker> client,
       AbortTransactionMessage abortTransactionMessage) {
     // XXX TODO Security checks.
     Log log =
@@ -161,7 +158,8 @@ public class RemoteCallManager extends MessageToWorkerHandler {
   }
 
   @Override
-  public PrepareTransactionWritesMessage.Response handle(RemoteIdentity client,
+  public PrepareTransactionWritesMessage.Response handle(
+      RemoteIdentity<RemoteWorker> client,
       PrepareTransactionWritesMessage message)
       throws TransactionPrepareFailedException {
     // XXX TODO Security checks.
@@ -189,7 +187,8 @@ public class RemoteCallManager extends MessageToWorkerHandler {
   }
 
   @Override
-  public PrepareTransactionReadsMessage.Response handle(RemoteIdentity client,
+  public PrepareTransactionReadsMessage.Response handle(
+      RemoteIdentity<RemoteWorker> client,
       PrepareTransactionReadsMessage message)
       throws TransactionPrepareFailedException {
     // XXX TODO Security checks.
@@ -223,7 +222,8 @@ public class RemoteCallManager extends MessageToWorkerHandler {
    * worker's TransactionManager is associated with a null log.
    */
   @Override
-  public CommitTransactionMessage.Response handle(RemoteIdentity client,
+  public CommitTransactionMessage.Response handle(
+      RemoteIdentity<RemoteWorker> client,
       CommitTransactionMessage commitTransactionMessage)
       throws TransactionCommitFailedException {
     // XXX TODO Security checks.
@@ -251,7 +251,7 @@ public class RemoteCallManager extends MessageToWorkerHandler {
   }
 
   @Override
-  public DirtyReadMessage.Response handle(RemoteIdentity client,
+  public DirtyReadMessage.Response handle(RemoteIdentity<RemoteWorker> client,
       DirtyReadMessage readMessage) {
     Log log = TransactionRegistry.getInnermostLog(readMessage.tid.topTid);
     if (log == null) return new DirtyReadMessage.Response(null);
@@ -282,8 +282,9 @@ public class RemoteCallManager extends MessageToWorkerHandler {
   }
 
   @Override
-  public TakeOwnershipMessage.Response handle(RemoteIdentity client,
-      TakeOwnershipMessage msg) throws TakeOwnershipFailedException {
+  public TakeOwnershipMessage.Response handle(
+      RemoteIdentity<RemoteWorker> client, TakeOwnershipMessage msg)
+      throws TakeOwnershipFailedException {
     Log log = TransactionRegistry.getInnermostLog(msg.tid.topTid);
     if (log == null)
       throw new TakeOwnershipFailedException(MessageFormat.format(
@@ -326,74 +327,53 @@ public class RemoteCallManager extends MessageToWorkerHandler {
   }
 
   @Override
-  public ObjectUpdateMessage.Response handle(RemoteIdentity client,
+  public ObjectUpdateMessage.Response handle(
+      RemoteIdentity<RemoteWorker> client,
       ObjectUpdateMessage objectUpdateMessage) {
 
     Worker worker = Worker.getWorker();
     final List<Long> response;
 
     if (objectUpdateMessage.groups == null) {
-      response = new ArrayList<Long>();
-
-      RemoteStore store = worker.getStore(objectUpdateMessage.store);
-      for (LongKeyMap.Entry<ObjectGlob> entry : objectUpdateMessage.globs
-          .entrySet()) {
-        long onum = entry.getKey();
-        ObjectGlob glob = entry.getValue();
-        try {
-          glob.verifySignature(store.getPublicKey());
-
-          if (worker.updateCaches(store, onum, glob)) {
-            response.add(onum);
-          }
-        } catch (InvalidKeyException e) {
-          e.printStackTrace();
-        } catch (SignatureException e) {
-          e.printStackTrace();
-        }
-      }
+      response =
+          inProcessRemoteWorker.notifyObjectUpdates(objectUpdateMessage.store,
+              objectUpdateMessage.globs);
     } else {
       RemoteStore store = worker.getStore(client.node.name);
-      for (ObjectGroup group : objectUpdateMessage.groups) {
-        worker.updateCache(store, group);
-      }
-      response = worker.findOnumsInCache(store, objectUpdateMessage.onums);
+      response =
+          inProcessRemoteWorker.notifyObjectUpdates(store,
+              objectUpdateMessage.onums, objectUpdateMessage.groups);
     }
 
     return new ObjectUpdateMessage.Response(response);
   }
 
   @Override
-  public WarrantyRefreshMessage.Response handle(RemoteIdentity client,
-      WarrantyRefreshMessage message) throws ProtocolError {
+  public WarrantyRefreshMessage.Response handle(
+      RemoteIdentity<RemoteWorker> client, WarrantyRefreshMessage message)
+      throws ProtocolError {
 
-    Worker worker = Worker.getWorker();
     List<Long> response;
-
     if (message.warranties == null) {
       // Message was sent to dissemination node.
       // Forward through dissemination layer.
-      response = new ArrayList<Long>();
-
-      RemoteStore store = worker.getStore(message.store);
-      for (LongKeyMap.Entry<WarrantyRefreshGlob> entry : message.warrantyGlobs
-          .entrySet()) {
-        long onum = entry.getKey();
-        WarrantyRefreshGlob glob = entry.getValue();
-
-        // TODO: finish me.
-      }
+      response =
+          inProcessRemoteWorker.notifyWarrantyRefresh(message.store,
+              message.warrantyGlobs);
     } else {
       // Message was sent to worker. Update local state.
       RemoteStore store = Worker.getWorker().getStore(client.node.name);
-      response = store.updateWarranties(message.warranties);
+      response =
+          inProcessRemoteWorker
+              .notifyWarrantyRefresh(store, message.warranties);
     }
 
     return new WarrantyRefreshMessage.Response(response);
   }
 
   @Override
-  public InterWorkerStalenessMessage.Response handle(RemoteIdentity client,
+  public InterWorkerStalenessMessage.Response handle(
+      RemoteIdentity<RemoteWorker> client,
       InterWorkerStalenessMessage stalenessCheckMessage) {
 
     TransactionID tid = stalenessCheckMessage.tid;

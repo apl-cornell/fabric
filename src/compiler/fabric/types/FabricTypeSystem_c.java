@@ -28,23 +28,34 @@ import jif.types.ParamInstance;
 import jif.types.Solver;
 import jif.types.hierarchy.LabelEnv;
 import jif.types.label.AccessPath;
+import jif.types.label.AccessPathThis;
 import jif.types.label.AccessPathUninterpreted;
 import jif.types.label.ArgLabel;
 import jif.types.label.ConfPolicy;
+import jif.types.label.ConfProjectionPolicy;
 import jif.types.label.ConfProjectionPolicy_c;
 import jif.types.label.IntegPolicy;
 import jif.types.label.IntegProjectionPolicy_c;
+import jif.types.label.JoinConfPolicy;
 import jif.types.label.JoinConfPolicy_c;
 import jif.types.label.JoinLabel;
 import jif.types.label.Label;
+import jif.types.label.MeetConfPolicy;
 import jif.types.label.MeetLabel;
 import jif.types.label.PairLabel;
+import jif.types.label.ParamLabel;
 import jif.types.label.ProviderLabel;
+import jif.types.label.ReaderPolicy;
 import jif.types.label.ThisLabel;
+import jif.types.principal.BottomPrincipal;
+import jif.types.principal.ConjunctivePrincipal;
+import jif.types.principal.DisjunctivePrincipal;
 import jif.types.principal.DynamicPrincipal;
 import jif.types.principal.ExternalPrincipal;
 import jif.types.principal.ExternalPrincipal_c;
+import jif.types.principal.ParamPrincipal;
 import jif.types.principal.Principal;
+import jif.types.principal.TopPrincipal;
 import polyglot.ast.Expr;
 import polyglot.ext.param.types.Subst;
 import polyglot.frontend.ExtensionInfo;
@@ -741,6 +752,72 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
     return false;
   }
 
+  @Override
+  public boolean accessPolicyValid(ConfPolicy pol) throws SemanticException {
+    if (pol instanceof ConfProjectionPolicy) {
+      ConfProjectionPolicy_c cpp = (ConfProjectionPolicy_c) pol;
+      return accessPolicyValid(cpp.label());
+    } else if (pol instanceof JoinConfPolicy) {
+      JoinConfPolicy jcp = (JoinConfPolicy) pol;
+      for (ConfPolicy p : jcp.joinComponents())
+        if (!accessPolicyValid(p)) return false;
+    } else if (pol instanceof MeetConfPolicy) {
+      MeetConfPolicy mcp = (MeetConfPolicy) pol;
+      for (ConfPolicy p : mcp.meetComponents())
+        if (!accessPolicyValid(p)) return false;
+    } else if (pol instanceof ReaderPolicy) {
+      ReaderPolicy rp = (ReaderPolicy) pol;
+      return accessPolicyValid(rp.owner()) && accessPolicyValid(rp.reader());
+    }
+    // TODO: verify other cases are either impossible or valid.
+    return false;
+  }
+
+  protected boolean accessPolicyValid(Label label) throws SemanticException {
+    if (label instanceof MeetLabel) {
+      MeetLabel ml = (MeetLabel) label;
+      for (Label l : ml.meetComponents())
+        if (!accessPolicyValid(l)) return false;
+    } else if (label instanceof JoinLabel) {
+      JoinLabel jl = (JoinLabel) label;
+      for (Label l : jl.joinComponents())
+        if (!accessPolicyValid(l)) return false;
+    } else if (label instanceof PairLabel) {
+      PairLabel pair = (PairLabel) label;
+      return accessPolicyValid(pair.confPolicy());
+    } else if (label instanceof ParamLabel || label instanceof ThisLabel
+        || label instanceof ProviderLabel) {
+      return true;
+    }
+    // TODO: verify other cases are either impossible or valid.
+    return false;
+  }
+
+  protected boolean accessPolicyValid(Principal p) throws SemanticException {
+    if (p instanceof ConjunctivePrincipal) {
+      ConjunctivePrincipal cp = (ConjunctivePrincipal) p;
+      for (Principal pp : cp.conjuncts())
+        if (!accessPolicyValid(pp)) return false;
+    } else if (p instanceof DisjunctivePrincipal) {
+      DisjunctivePrincipal cp = (DisjunctivePrincipal) p;
+      for (Principal pp : cp.disjuncts())
+        if (!accessPolicyValid(pp)) return false;
+    } else if (p instanceof ParamPrincipal || p instanceof ExternalPrincipal
+        || p instanceof BottomPrincipal || p instanceof TopPrincipal) {
+      return true;
+    } else if (p instanceof DynamicPrincipal) {
+      DynamicPrincipal dp = (DynamicPrincipal) p;
+      if (dp.path() instanceof AccessPathStore) {
+        AccessPathStore aps = (AccessPathStore) dp.path();
+        // Store principals are the only dynamic principals 
+        // that can appear in access labels, but the path
+        // must be a this path.
+        return aps.path() instanceof AccessPathThis;
+      }
+    }
+    return false;
+  }
+
   // array type constructors ///////////////////////////////////////////////////
 
   @Override
@@ -1062,5 +1139,11 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
     } catch (SemanticException e) {
       throw new InternalCompilerError("Unexpected semantic exception", e);
     }
+  }
+
+  @Override
+  public AccessPolicyInstance accessPolicyInstance(Position pos,
+      ParsedClassType ct, ConfPolicy policy) {
+    return new AccessPolicyInstance_c(pos, ct, policy);
   }
 }

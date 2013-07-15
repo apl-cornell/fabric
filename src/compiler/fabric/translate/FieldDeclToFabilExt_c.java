@@ -15,7 +15,7 @@ public class FieldDeclToFabilExt_c extends FieldDeclToJavaExt_c {
     // skip fields used for polyglot metadata
     if (node() instanceof FabricFieldDecl) {
       FabricFieldDecl f = (FabricFieldDecl) node();
-      return rw.bypass(f.accessLabel());
+      return rw.bypass(f.accessPolicy());
     } else return rw;
   }
 

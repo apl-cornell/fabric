@@ -25,6 +25,7 @@ import fabric.common.net.RemoteIdentity;
 import fabric.lang.Object._Proxy;
 import fabric.worker.Store;
 import fabric.worker.Worker;
+import fabric.worker.remote.RemoteWorker;
 
 /**
  * Messages provide an interface for serializing requests and responses. The
@@ -80,7 +81,7 @@ public abstract class Message<R extends Message.Response, E extends FabricExcept
    * @throws IOException
    *           in the event of a communications failure.
    */
-  public final R send(SubSocket s) throws IOException, E {
+  public final R send(SubSocket<?> s) throws IOException, E {
     DataInputStream in = new DataInputStream(s.getInputStream());
     DataOutputStream out = new DataOutputStream(s.getOutputStream());
 
@@ -127,8 +128,8 @@ public abstract class Message<R extends Message.Response, E extends FabricExcept
    *          the handler to which this message is to be dispatched.
    * @throws
    */
-  public abstract R dispatch(RemoteIdentity client, MessageHandler handler)
-      throws ProtocolError, E;
+  public abstract R dispatch(RemoteIdentity<RemoteWorker> client,
+      MessageHandler handler) throws ProtocolError, E;
 
   /**
    * Read a Message from the given <code>DataInput</code>

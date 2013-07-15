@@ -232,7 +232,7 @@ public class BdbDB extends ObjectDB {
 
   @Override
   public void scheduleCommit(long tid, long commitTime,
-      RemoteIdentity workerIdentity, SubscriptionManager sm) {
+      RemoteIdentity<RemoteWorker> workerIdentity, SubscriptionManager sm) {
     scheduleCommit(tid, commitTime, workerIdentity, sm, true);
   }
 
@@ -242,8 +242,8 @@ public class BdbDB extends ObjectDB {
    *          purposes.
    */
   private void scheduleCommit(final long tid, final long commitTime,
-      final RemoteIdentity workerIdentity, final SubscriptionManager sm,
-      boolean logCommitTime) {
+      final RemoteIdentity<RemoteWorker> workerIdentity,
+      final SubscriptionManager sm, boolean logCommitTime) {
     long commitDelay = commitTime - System.currentTimeMillis();
     STORE_DB_LOGGER
         .finer("Scheduling Bdb commit for tid " + tid + " to run at "
@@ -314,7 +314,7 @@ public class BdbDB extends ObjectDB {
 
           if (update.second == UpdateType.WRITE) {
             // Remove any cached globs containing the old version of this object.
-            notifyCommittedUpdate(sm, onum, (RemoteWorker) workerIdentity.node);
+            notifyCommittedUpdate(sm, onum, workerIdentity.node);
           }
 
           // Update caches.
@@ -585,8 +585,8 @@ public class BdbDB extends ObjectDB {
         .entrySet()) {
       long commitTime = entry.getKey();
       for (Pair<Long, Principal> tid : entry.getValue()) {
-        scheduleCommit(tid.first, commitTime, new RemoteIdentity(null,
-            tid.second), sm, false);
+        scheduleCommit(tid.first, commitTime, new RemoteIdentity<RemoteWorker>(
+            null, tid.second), sm, false);
       }
     }
   }

@@ -151,13 +151,13 @@ public class TransactionPrepareFailedException extends FabricException
    * XXX: This could use a comment.
    */
   public TransactionPrepareFailedException(
-      Map<RemoteNode, TransactionPrepareFailedException> failures) {
+      Map<RemoteNode<?>, TransactionPrepareFailedException> failures) {
     this.versionConflicts = null;
     this.callConflictUpdates = null;
     this.callConflicts = null;
 
     messages = new ArrayList<String>();
-    for (Map.Entry<RemoteNode, TransactionPrepareFailedException> entry : failures
+    for (Map.Entry<RemoteNode<?>, TransactionPrepareFailedException> entry : failures
         .entrySet()) {
       TransactionPrepareFailedException exn = entry.getValue();
 

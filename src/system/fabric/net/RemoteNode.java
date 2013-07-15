@@ -7,7 +7,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.LinkedBlockingDeque;
 
-import fabric.common.KeyMaterial;
 import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.NotImplementedException;
 import fabric.common.net.SubSocket;
@@ -18,13 +17,14 @@ import fabric.messages.Message;
 /**
  * Abstracts remote stores and remote workers.
  */
-public abstract class RemoteNode implements Serializable {
+public abstract class RemoteNode<This extends RemoteNode<This>> implements
+    Serializable {
   /**
    * The node's Fabric node name. (Likely different from its DNS host name.)
    */
   public final String name;
 
-  private transient final ConcurrentMap<SubSocketFactory, BlockingDeque<SubSocket>> subSocketCache;
+  private transient final ConcurrentMap<SubSocketFactory<This>, BlockingDeque<SubSocket<This>>> subSocketCache;
 
   /**
    * Maximum number of cached subsocket connections.
@@ -33,8 +33,7 @@ public abstract class RemoteNode implements Serializable {
 
   protected RemoteNode(String name) {
     this.name = name;
-    this.subSocketCache =
-        new ConcurrentHashMap<SubSocketFactory, BlockingDeque<SubSocket>>(2);
+    this.subSocketCache = new ConcurrentHashMap<>(2);
   }
 
   /**
@@ -47,37 +46,41 @@ public abstract class RemoteNode implements Serializable {
 
   public abstract Principal getPrincipal();
 
-  private BlockingDeque<SubSocket> getSocketDeque(SubSocketFactory factory) {
-    BlockingDeque<SubSocket> result = subSocketCache.get(factory);
+  private BlockingDeque<SubSocket<This>> getSocketDeque(
+      SubSocketFactory<This> factory) {
+    BlockingDeque<SubSocket<This>> result = subSocketCache.get(factory);
     if (result != null) return result;
 
-    result = new LinkedBlockingDeque<SubSocket>(MAX_QUEUE_SIZE);
-    BlockingDeque<SubSocket> existing =
+    result = new LinkedBlockingDeque<>(MAX_QUEUE_SIZE);
+    BlockingDeque<SubSocket<This>> existing =
         subSocketCache.putIfAbsent(factory, result);
 
     if (existing != null) return existing;
     return result;
   }
 
-  protected SubSocket getSocket(SubSocketFactory factory) throws IOException {
-    BlockingDeque<SubSocket> queue = getSocketDeque(factory);
+  protected SubSocket<This> getSocket(SubSocketFactory<This> factory)
+      throws IOException {
+    BlockingDeque<SubSocket<This>> queue = getSocketDeque(factory);
 
-    SubSocket result = queue.poll();
+    SubSocket<This> result = queue.poll();
     if (result != null) return result;
 
-    return factory.createSocket(this);
+    @SuppressWarnings("unchecked")
+    This this_ = (This) this;
+    return factory.createSocket(this_);
   }
 
-  protected void recycle(SubSocketFactory factory, SubSocket socket)
+  protected void recycle(SubSocketFactory<This> factory, SubSocket<This> socket)
       throws IOException {
-    BlockingDeque<SubSocket> queue = getSocketDeque(factory);
+    BlockingDeque<SubSocket<This>> queue = getSocketDeque(factory);
     if (!queue.offer(socket)) socket.close();
   }
 
   protected <R extends Message.Response, E extends FabricException> R send(
-      SubSocketFactory subSocketFactory, Message<R, E> message) throws E {
+      SubSocketFactory<This> subSocketFactory, Message<R, E> message) throws E {
     try {
-      SubSocket socket = getSocket(subSocketFactory);
+      SubSocket<This> socket = getSocket(subSocketFactory);
       try {
         return message.send(socket);
       } catch (IOException e) {
@@ -91,9 +94,5 @@ public abstract class RemoteNode implements Serializable {
     } catch (IOException e) {
       throw new NotImplementedException(e);
     }
-  }
-
-  public static SubSocketFactory createAuthFactory(KeyMaterial... keys) {
-    throw new NotImplementedException();
   }
 }

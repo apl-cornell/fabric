@@ -12,6 +12,7 @@ import jif.types.principal.Principal;
 import polyglot.ast.Expr;
 import polyglot.types.ClassType;
 import polyglot.types.Flags;
+import polyglot.types.ParsedClassType;
 import polyglot.types.ReferenceType;
 import polyglot.types.SemanticException;
 import polyglot.types.Type;
@@ -158,5 +159,21 @@ public interface FabricTypeSystem extends JifTypeSystem, CodebaseTypeSystem {
    */
   AccessPath storeAccessPathFor(Expr ref, JifContext context)
       throws SemanticException;
+
+  /**
+   * @param pol
+   * @return
+   * @throws SemanticException
+   */
+  boolean accessPolicyValid(ConfPolicy pol) throws SemanticException;
+
+  /**
+   * @param pos
+   * @param ct
+   * @param policy
+   * @return
+   */
+  AccessPolicyInstance accessPolicyInstance(Position pos, ParsedClassType ct,
+      ConfPolicy policy);
 
 }

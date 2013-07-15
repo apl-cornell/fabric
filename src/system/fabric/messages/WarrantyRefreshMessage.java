@@ -6,13 +6,14 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import fabric.common.WarrantyRefreshGroup;
+import fabric.common.WarrantyGroup;
 import fabric.common.exceptions.ProtocolError;
 import fabric.common.net.RemoteIdentity;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
-import fabric.dissemination.WarrantyRefreshGlob;
+import fabric.dissemination.WarrantyGlob;
 import fabric.messages.Message.NoException;
+import fabric.worker.remote.RemoteWorker;
 
 /**
  * Represents push notification that warranties have been refreshed.
@@ -24,12 +25,12 @@ public class WarrantyRefreshMessage extends
   // ////////////////////////////////////////////////////////////////////////////
 
   public final String store;
-  public final WarrantyRefreshGroup warranties;
+  public final WarrantyGroup warranties;
 
-  public final LongKeyMap<WarrantyRefreshGlob> warrantyGlobs;
+  public final LongKeyMap<WarrantyGlob> warrantyGlobs;
 
-  private WarrantyRefreshMessage(String store, WarrantyRefreshGroup warranties,
-      LongKeyMap<WarrantyRefreshGlob> warrantyGlobs) {
+  private WarrantyRefreshMessage(String store, WarrantyGroup warranties,
+      LongKeyMap<WarrantyGlob> warrantyGlobs) {
     super(MessageType.WARRANTY_REFRESH, NoException.class);
     this.store = store;
     this.warranties = warranties;
@@ -47,7 +48,7 @@ public class WarrantyRefreshMessage extends
    *          object's onum.
    */
   public WarrantyRefreshMessage(String store,
-      LongKeyMap<WarrantyRefreshGlob> warrantyGlobs) {
+      LongKeyMap<WarrantyGlob> warrantyGlobs) {
     this(store, null, warrantyGlobs);
   }
 
@@ -57,7 +58,7 @@ public class WarrantyRefreshMessage extends
    * @param warranties
    *          the set of refreshed warranties.
    */
-  public WarrantyRefreshMessage(WarrantyRefreshGroup warranties) {
+  public WarrantyRefreshMessage(WarrantyGroup warranties) {
     this(null, warranties, null);
   }
 
@@ -78,7 +79,7 @@ public class WarrantyRefreshMessage extends
   // ////////////////////////////////////////////////////////////////////////////
 
   @Override
-  public Response dispatch(RemoteIdentity client, MessageHandler h)
+  public Response dispatch(RemoteIdentity<RemoteWorker> client, MessageHandler h)
       throws ProtocolError, fabric.messages.Message.NoException {
     return h.handle(client, this);
   }
@@ -95,10 +96,9 @@ public class WarrantyRefreshMessage extends
 
       // Write out warranty groups.
       out.writeInt(warrantyGlobs.size());
-      for (LongKeyMap.Entry<WarrantyRefreshGlob> entry : warrantyGlobs
-          .entrySet()) {
+      for (LongKeyMap.Entry<WarrantyGlob> entry : warrantyGlobs.entrySet()) {
         long onum = entry.getKey();
-        WarrantyRefreshGlob glob = entry.getValue();
+        WarrantyGlob glob = entry.getValue();
 
         out.writeLong(onum);
         glob.write(out);
@@ -120,16 +120,16 @@ public class WarrantyRefreshMessage extends
       // Read in the warranty groups.
       // XXX should decrypt and verify once we encrypt and sign this
       int mapSize = in.readInt();
-      this.warrantyGlobs = new LongKeyHashMap<WarrantyRefreshGlob>(mapSize);
+      this.warrantyGlobs = new LongKeyHashMap<WarrantyGlob>(mapSize);
       for (int i = 0; i < mapSize; i++) {
         long onum = in.readLong();
-        WarrantyRefreshGlob glob = new WarrantyRefreshGlob(in);
+        WarrantyGlob glob = new WarrantyGlob(in);
         warrantyGlobs.put(onum, glob);
       }
     } else {
       this.store = null;
       this.warrantyGlobs = null;
-      this.warranties = new WarrantyRefreshGroup(in);
+      this.warranties = new WarrantyGroup(in);
     }
   }
 

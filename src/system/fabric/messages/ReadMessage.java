@@ -5,9 +5,12 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import fabric.common.ObjectGroup;
+import fabric.common.WarrantyGroup;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.ProtocolError;
 import fabric.common.net.RemoteIdentity;
+import fabric.common.util.Pair;
+import fabric.worker.remote.RemoteWorker;
 
 /**
  * A <code>ReadMessage</code> represents a request from a worker to read an
@@ -32,9 +35,9 @@ public class ReadMessage extends Message<ReadMessage.Response, AccessException> 
 
   public static class Response implements Message.Response {
 
-    public final ObjectGroup group;
+    public final Pair<ObjectGroup, WarrantyGroup> group;
 
-    public Response(ObjectGroup group) {
+    public Response(Pair<ObjectGroup, WarrantyGroup> group) {
       this.group = group;
     }
 
@@ -45,7 +48,7 @@ public class ReadMessage extends Message<ReadMessage.Response, AccessException> 
   // ////////////////////////////////////////////////////////////////////////////
 
   @Override
-  public Response dispatch(RemoteIdentity client, MessageHandler h)
+  public Response dispatch(RemoteIdentity<RemoteWorker> client, MessageHandler h)
       throws ProtocolError, AccessException {
     return h.handle(client, this);
   }
@@ -68,13 +71,25 @@ public class ReadMessage extends Message<ReadMessage.Response, AccessException> 
   protected void writeResponse(DataOutput out, Response r) throws IOException {
     if (r.group != null) {
       out.writeBoolean(true);
-      r.group.write(out);
+      r.group.first.write(out);
+
+      if (r.group.second != null) {
+        out.writeBoolean(true);
+        r.group.second.write(out);
+      } else out.writeBoolean(false);
     } else out.writeBoolean(false);
   }
 
   @Override
   protected Response readResponse(DataInput in) throws IOException {
-    ObjectGroup group = in.readBoolean() ? new ObjectGroup(in) : null;
+    Pair<ObjectGroup, WarrantyGroup> group = null;
+    if (in.readBoolean()) {
+      ObjectGroup objectGroup = new ObjectGroup(in);
+      WarrantyGroup warrantyGroup =
+          in.readBoolean() ? new WarrantyGroup(in) : null;
+      group = new Pair<>(objectGroup, warrantyGroup);
+    }
+
     return new Response(group);
   }
 }

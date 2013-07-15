@@ -17,4 +17,3 @@ BIN_DIR="$(dirname $0)"
 "${BIN_DIR}/run-in-xterm" "Bob" \
   "${BIN_DIR}/start-store bob $@" &
 
-#--debug --debug-port 6666 --trace-objects 

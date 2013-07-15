@@ -11,7 +11,7 @@ import fabric.common.SerializedObject;
 import fabric.common.Surrogate;
 import fabric.common.VersionWarranty;
 import fabric.common.VersionWarranty.Binding;
-import fabric.common.WarrantyRefreshGroup;
+import fabric.common.WarrantyGroup;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongHashSet;
 import fabric.common.util.LongIterator;
@@ -365,6 +365,11 @@ public final class ObjectCache {
     return entry;
   }
 
+  /**
+   * Adds the given impl to the cache. If a different impl already exists in
+   * cache, then an internal error results, indicating that an invariant was
+   * probably broken, resulting in a cache conflict.
+   */
   void put(Object._Impl impl) {
     long onum = impl.$getOnum();
 
@@ -381,6 +386,10 @@ public final class ObjectCache {
   }
 
   /**
+   * If there is not already an entry for the given object's onum, add the given
+   * object to the cache. If an entry already exists in cache, then an internal
+   * error results, indicating that an invariant was probably broken.
+   * 
    * @return the Entry inserted into the cache.
    */
   Entry put(Store store, Pair<SerializedObject, VersionWarranty> obj) {
@@ -421,11 +430,16 @@ public final class ObjectCache {
    * @param onum the onum of the entry to return. This should be a member of the
    *          given group.
    */
-  Entry put(Store store, ObjectGroup group, long onum) {
+  Entry put(Store store, Pair<ObjectGroup, WarrantyGroup> group, long onum) {
     Entry result = null;
-    for (Pair<SerializedObject, VersionWarranty> obj : group.objects().values()) {
-      Entry curEntry = putIfAbsent(store, obj, true);
-      if (result == null && onum == obj.first.getOnum()) {
+    for (SerializedObject obj : group.first.objects().values()) {
+      long curOnum = obj.getOnum();
+
+      VersionWarranty warranty = VersionWarranty.EXPIRED_WARRANTY;
+      if (group.second != null) warranty = group.second.get(curOnum);
+
+      Entry curEntry = putIfAbsent(store, new Pair<>(obj, warranty), true);
+      if (result == null && onum == curOnum) {
         result = curEntry;
       }
     }
@@ -435,17 +449,45 @@ public final class ObjectCache {
   }
 
   /**
+   * Adds the given object to the cache. If a cache entry already exists, it is
+   * replaced.
+   */
+  void forcePut(Store store, Pair<SerializedObject, VersionWarranty> obj) {
+    update(store, obj, false);
+  }
+
+  /**
    * Updates the cache with the given serialized object. If an object with the
    * given onum exists in cache, it is evicted and the given update is placed in
-   * the cache.
+   * the cache. If the object does not exist in cache, then the cache is not
+   * updated.
    * 
-   * @return true iff the cache had an existing entry for the object (regardless
-   *          of whether such an entry was replaced).
+   * @return true iff the cache was updated.
    */
   boolean update(Store store, Pair<SerializedObject, VersionWarranty> update) {
+    return update(store, update, true);
+  }
+
+  /**  
+   * Updates the cache with the given serialized object. If
+   * <code>replaceOnly</code> is true, then the cache is only updated if an
+   * object with the given onum exists in cache. The existing object is evicted,
+   * and the given update is placed in the cache.
+   * 
+   * @return true iff the cache was updated.
+   */
+  boolean update(Store store, Pair<SerializedObject, VersionWarranty> update,
+      boolean replaceOnly) {
     long onum = update.first.getOnum();
     Entry curEntry = entries.get(onum);
-    if (curEntry == null || curEntry.isEvicted()) return false;
+
+    if (curEntry == null) {
+      if (replaceOnly) return false;
+      putIfAbsent(store, update, true);
+      return true;
+    }
+
+    if (replaceOnly && curEntry.isEvicted()) return false;
 
     curEntry.evict();
     Entry newEntry = new Entry(store, update);
@@ -458,7 +500,7 @@ public final class ObjectCache {
    * 
    * @return the set of onums for which a cache entry was found.
    */
-  public List<Long> update(RemoteStore store, WarrantyRefreshGroup warranties) {
+  public List<Long> update(RemoteStore store, WarrantyGroup warranties) {
     List<Long> result = new ArrayList<Long>();
     for (Binding update : warranties) {
       long onum = update.onum;

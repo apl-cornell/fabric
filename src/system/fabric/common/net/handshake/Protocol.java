@@ -4,8 +4,12 @@ import java.io.IOException;
 import java.net.Socket;
 
 import fabric.net.RemoteNode;
+import fabric.worker.remote.RemoteWorker;
 
-public interface Protocol {
+/**
+ * @param <Node> the type of node at the remote endpoint.
+ */
+public interface Protocol<Node extends RemoteNode<Node>> {
   /**
    * Initiates a handshake with a remote host at the given address.
    * 
@@ -14,7 +18,7 @@ public interface Protocol {
    * @param s
    *          the socket on which to initiate a handshake.
    */
-  ShakenSocket initiate(RemoteNode remoteNode, Socket s) throws IOException;
+  ShakenSocket<Node> initiate(Node remoteNode, Socket s) throws IOException;
 
   /**
    * Receives a handshake via the given socket.
@@ -24,6 +28,6 @@ public interface Protocol {
    * @param s
    *          the socket on which to receive a handshake.
    */
-  ShakenSocket receive(Socket s) throws IOException;
+  ShakenSocket<RemoteWorker> receive(Socket s) throws IOException;
 
 }

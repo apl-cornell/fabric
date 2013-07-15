@@ -61,7 +61,7 @@ public abstract class Traversal {
             this.visitBenchmark(b);
           }            
           long end   = System.currentTimeMillis();
-          accumTime += end - start;
+          accumTime = accumTime + end - start;
         }
 
         System.out.println();

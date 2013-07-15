@@ -7,7 +7,10 @@ import java.io.IOException;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.ProtocolError;
 import fabric.common.net.RemoteIdentity;
+import fabric.common.util.Pair;
 import fabric.dissemination.ObjectGlob;
+import fabric.dissemination.WarrantyGlob;
+import fabric.worker.remote.RemoteWorker;
 
 /**
  * A <code>DissemReadMessage</code> represents a request from a dissemination
@@ -34,10 +37,10 @@ public final class DissemReadMessage extends
 
   public static class Response implements Message.Response {
 
-    public final ObjectGlob glob;
+    public final Pair<ObjectGlob, WarrantyGlob> globs;
 
-    public Response(ObjectGlob glob) {
-      this.glob = glob;
+    public Response(Pair<ObjectGlob, WarrantyGlob> glob) {
+      this.globs = glob;
     }
 
   }
@@ -47,7 +50,7 @@ public final class DissemReadMessage extends
   // ////////////////////////////////////////////////////////////////////////////
 
   @Override
-  public Response dispatch(RemoteIdentity client, MessageHandler h)
+  public Response dispatch(RemoteIdentity<RemoteWorker> client, MessageHandler h)
       throws ProtocolError, AccessException {
     return h.handle(client, this);
   }
@@ -68,13 +71,18 @@ public final class DissemReadMessage extends
 
   @Override
   protected Response readResponse(DataInput in) throws IOException {
-    ObjectGlob glob = new ObjectGlob(in);
-    return new Response(glob);
+    ObjectGlob objectGlob = new ObjectGlob(in);
+    WarrantyGlob warrantyGlob = in.readBoolean() ? new WarrantyGlob(in) : null;
+    return new Response(new Pair<>(objectGlob, warrantyGlob));
   }
 
   @Override
   protected void writeResponse(DataOutput out, Response r) throws IOException {
-    r.glob.write(out);
+    r.globs.first.write(out);
+    if (r.globs.second != null) {
+      out.writeBoolean(true);
+      r.globs.second.write(out);
+    } else out.writeBoolean(false);
   }
 
 }

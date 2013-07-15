@@ -16,6 +16,7 @@ import fabric.common.net.RemoteIdentity;
 import fabric.lang.Object._Proxy;
 import fabric.lang.security.Principal;
 import fabric.worker.remote.RemoteCallException;
+import fabric.worker.remote.RemoteWorker;
 import fabric.worker.remote.WriterMap;
 
 public class RemoteCallMessage extends
@@ -79,7 +80,7 @@ public class RemoteCallMessage extends
   //////////////////////////////////////////////////////////////////////////////
 
   @Override
-  public Response dispatch(RemoteIdentity client, MessageHandler h)
+  public Response dispatch(RemoteIdentity<RemoteWorker> client, MessageHandler h)
       throws ProtocolError, RemoteCallException {
     return h.handle(client, this);
   }

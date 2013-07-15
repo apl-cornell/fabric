@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Set;
 
 import fabric.common.Logging;
+import fabric.common.ObjectGroup;
+import fabric.common.WarrantyGroup;
 import fabric.common.exceptions.AccessException;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
@@ -20,11 +22,85 @@ import fabric.worker.Worker;
  * when needed.
  */
 public class Cache {
+  public static class Entry {
+    public final ObjectGlob objectGlob;
+    public final WarrantyGlob warrantyGlob;
+
+    /**
+     * Memoized pair of (objectGlob, warrantyGlob).
+     */
+    private Pair<ObjectGlob, WarrantyGlob> globs;
+
+    private int level;
+    private int frequency;
+
+    private Entry(ObjectGlob glob) {
+      this.objectGlob = glob;
+      this.warrantyGlob = null;
+    }
+
+    private Entry(ObjectGlob objectGlob, WarrantyGlob warrantyGlob) {
+      this.objectGlob = objectGlob;
+      this.warrantyGlob = warrantyGlob;
+    }
+
+    public boolean isOlderThan(ObjectGlob g) {
+      return objectGlob.isOlderThan(g);
+    }
+
+    public boolean isOlderThan(WarrantyGlob g) {
+      if (warrantyGlob != null) return warrantyGlob.isOlderThan(g);
+
+      return objectGlob.isOlderThan(g);
+    }
+
+    public Entry update(ObjectGlob g) {
+      Entry result = new Entry(g);
+      copyDissemStatsTo(result);
+      return result;
+    }
+
+    public Entry update(WarrantyGlob g) {
+      Entry result = new Entry(objectGlob, g);
+      copyDissemStatsTo(result);
+      return result;
+    }
+
+    public int level() {
+      return level;
+    }
+
+    public void touch() {
+      frequency++;
+    }
+
+    private void copyDissemStatsTo(Entry dest) {
+      dest.level = level;
+      dest.frequency = frequency;
+    }
+
+    public Pair<ObjectGlob, WarrantyGlob> getGlobs() {
+      if (globs == null) {
+        globs = new Pair<>(objectGlob, warrantyGlob);
+      }
+
+      return globs;
+    }
+
+    public Pair<ObjectGroup, WarrantyGroup> decrypt() {
+      ObjectGroup objectGroup = objectGlob.decrypt();
+
+      WarrantyGroup warrantyGroup = null;
+      if (warrantyGlob != null) warrantyGroup = warrantyGlob.decrypt();
+
+      return new Pair<>(objectGroup, warrantyGroup);
+    }
+  }
 
   /**
    * Cache of globs, indexed by the oid of the glob's head object.
    */
-  private final fabric.common.util.Cache<Pair<RemoteStore, Long>, ObjectGlob> map;
+  private final fabric.common.util.Cache<Pair<RemoteStore, Long>, Entry> map;
 
   /**
    * The set of fetch locks. Used to prevent threads from concurrently
@@ -34,11 +110,11 @@ public class Cache {
 
   private class FetchLock {
     private boolean ready = false;
-    private ObjectGlob glob = null;
+    private Entry result = null;
   }
 
   public Cache() {
-    this.map = new fabric.common.util.Cache<Pair<RemoteStore, Long>, ObjectGlob>();
+    this.map = new fabric.common.util.Cache<>();
     this.fetchLocks = new OidKeyHashMap<Cache.FetchLock>();
   }
 
@@ -51,7 +127,7 @@ public class Cache {
    *          the onum of the object.
    * @return the glob, if it is in the cache; null otherwise.
    */
-  public ObjectGlob get(RemoteStore store, long onum) {
+  public Entry get(RemoteStore store, long onum) {
     return get(store, onum, false);
   }
 
@@ -68,11 +144,11 @@ public class Cache {
    * @return the glob, or null if fetch is false and glob does not exists in
    *         cache.
    */
-  public ObjectGlob get(RemoteStore store, long onum, boolean fetch) {
+  public Entry get(RemoteStore store, long onum, boolean fetch) {
     Pair<RemoteStore, Long> key = new Pair<RemoteStore, Long>(store, onum);
 
-    ObjectGlob g = map.get(key);
-    if (g != null || !fetch) return g;
+    Entry entry = map.get(key);
+    if (entry != null || !fetch) return entry;
 
     // Need to fetch. Check the object table in case some other thread fetched
     // the object while we weren't looking. Use fetchLocks as a mutex to
@@ -81,7 +157,7 @@ public class Cache {
     FetchLock fetchLock;
     boolean needToFetch = false;
     synchronized (fetchLocks) {
-      ObjectGlob result = map.get(key);
+      Entry result = map.get(key);
       if (result != null) return result;
 
       // Object not in cache. Get/create a mutex for fetching the object.
@@ -96,7 +172,7 @@ public class Cache {
     synchronized (fetchLock) {
       if (needToFetch) {
         // We are responsible for fetching the object.
-        fetchLock.glob = fetch(key);
+        fetchLock.result = fetch(key);
         fetchLock.ready = true;
 
         // Object now cached. Remove our mutex from fetchLocks.
@@ -117,15 +193,15 @@ public class Cache {
         }
       }
 
-      return fetchLock.glob;
+      return fetchLock.result;
     }
   }
 
   /**
    * Fetches a glob from the store and caches it.
    */
-  private ObjectGlob fetch(Pair<RemoteStore, Long> oid) {
-    ObjectGlob g = null;
+  private Entry fetch(Pair<RemoteStore, Long> oid) {
+    Pair<ObjectGlob, WarrantyGlob> g = null;
     RemoteStore store = oid.first;
     long onum = oid.second;
 
@@ -134,82 +210,137 @@ public class Cache {
     } catch (AccessException e) {
     }
 
-    if (g != null) {
-      while (true) {
-        ObjectGlob old = get(store, onum);
-
-        if (old == null || old.isOlderThan(g)) {
-          if (!map.replace(oid, old, g)) {
-            // Value got replaced while we weren't looking. Try again.
-            continue;
-          }
-        } else {
-          g = old;
-        }
-
-        break;
-      }
-    }
-
-    return g;
+    if (g == null) return null;
+    return put(store, onum, g);
   }
 
   /**
-   * Put given glob into the cache.
+   * Puts the given globs into the cache.
    * 
    * @param store
    *          the store of the object.
    * @param onum
    *          the onum of the object.
-   * @param g
-   *          the glob.
+   * @param globs
+   *          the globs.
    */
-  public void put(RemoteStore store, long onum, ObjectGlob g) {
+  public Entry put(RemoteStore store, long onum,
+      Pair<ObjectGlob, WarrantyGlob> globs) {
     Pair<RemoteStore, Long> key = new Pair<RemoteStore, Long>(store, onum);
 
+    Entry entry = put(key, globs.first, false);
+    if (entry != null && globs.second != null) {
+      return put(key, globs.second);
+    }
+
+    return entry;
+  }
+
+  /**
+   * Incorporates the given glob into the cache.
+   * 
+   * @return the resulting cache entry.
+   */
+  private Entry put(Pair<RemoteStore, Long> oid, ObjectGlob g,
+      boolean replaceOnly) {
+    RemoteStore store = oid.first;
+    long onum = oid.second;
+
     while (true) {
-      ObjectGlob old = get(store, onum);
+      final Entry currentEntry = get(store, onum);
 
-      if (old == null || old.isOlderThan(g)) {
-        if (map.replace(key, old, g)) break;
+      if (currentEntry == null) {
+        // No existing entry.
+        if (replaceOnly) return null;
 
-        // Value got replaced while we weren't looking. Try again.
+        // Add a new entry.
+        final Entry newEntry = new Entry(g);
+        if (map.putIfAbsent(oid, newEntry) == null) return newEntry;
+
+        // An entry was added while we weren't looking. Try again.
         continue;
       }
 
-      break;
+      // See if the existing entry is older than what we got.
+      if (currentEntry.isOlderThan(g)) {
+        // Existing entry is older, so replace it.
+        Entry newEntry = currentEntry.update(g);
+        if (map.replace(oid, currentEntry, newEntry)) {
+          return newEntry;
+        }
+
+        // Entry was replaced while we weren't looking. Try again.
+        continue;
+      }
+
+      return currentEntry;
     }
   }
 
   /**
-   * Updates the dissemination and worker cache with the given glob. If the
-   * caches do not have entries for the given oid, then nothing is changed.
+   * Incorporates the given warranty glob into the cache.
    * 
-   * @return true iff there was a cache entry for the given oid.
+   * @return the resulting cache entry. This can be null if no entry exists for
+   *          the given oid.
+   */
+  private Entry put(Pair<RemoteStore, Long> oid, WarrantyGlob g) {
+    RemoteStore store = oid.first;
+    long onum = oid.second;
+
+    while (true) {
+      Entry currentEntry = get(store, onum);
+
+      if (currentEntry == null) return null;
+
+      // See if the existing entry is older than what we got.
+      if (currentEntry.isOlderThan(g)) {
+        // Existing entry is older, so replace it.
+        Entry newEntry = currentEntry.update(g);
+        if (map.replace(oid, currentEntry, newEntry)) {
+          return newEntry;
+        }
+
+        // Entry was replaced while we weren't looking. Try again.
+        continue;
+      }
+
+      return currentEntry;
+    }
+  }
+
+  /**
+   * Updates the dissemination and worker cache with the given object glob. If
+   * the caches do not have entries for the given glob, then nothing is changed.
+   * 
+   * @return true iff either of the caches was changed.
    */
   public boolean updateEntry(RemoteStore store, long onum, ObjectGlob g) {
     // Update the local worker's cache.
     // XXX What happens if the worker isn't trusted to decrypt the glob?
-    boolean result = Worker.getWorker().updateCache(store, g.decrypt());
+    boolean workerCacheUpdated =
+        Worker.getWorker().updateCache(store, g.decrypt());
 
     Pair<RemoteStore, Long> key = new Pair<RemoteStore, Long>(store, onum);
 
-    while (true) {
-      ObjectGlob old = get(store, onum);
-      if (old == null) return result;
+    return put(key, g, true) != null || workerCacheUpdated;
+  }
 
-      if (old.isOlderThan(g)) {
-        old.copyDissemStateTo(g);
-        if (map.replace(key, old, g)) break;
+  /**
+   * Updates the dissemination and worker cache with the given warranty glob. If
+   * the caches do not have entries for the given glob, then nothing is changed.
+   * 
+   * @return true iff either of the caches was changed.
+   */
+  public boolean updateEntry(RemoteStore store, long onum, WarrantyGlob glob) {
+    // Update the local worker's cache.
+    // XXX What happens if the worker isn't trusted to decrypt the glob?
+    boolean workerCacheUpdated =
+        !store.updateWarranties(glob.decrypt()).isEmpty();
 
-        // Value got replaced while we weren't looking. Try again.
-        continue;
-      }
+    // Update the dissemination cache.
+    Pair<RemoteStore, Long> key = new Pair<RemoteStore, Long>(store, onum);
 
-      break;
-    }
-
-    return true;
+    return put(key, glob) != null || workerCacheUpdated;
   }
 
   /**
@@ -223,9 +354,9 @@ public class Cache {
         new HashSet<Pair<Pair<RemoteStore, Long>, Long>>();
 
     for (Pair<RemoteStore, Long> key : map.keys()) {
-      ObjectGlob glob = map.get(key);
+      Entry glob = map.get(key);
       if (glob != null)
-        result.add(new Pair<Pair<RemoteStore, Long>, Long>(key, glob
+        result.add(new Pair<Pair<RemoteStore, Long>, Long>(key, glob.objectGlob
             .getTimestamp()));
     }
 
@@ -252,22 +383,22 @@ public class Cache {
         @Override
         public int compare(Pair<Pair<RemoteStore, Long>, Long> o1,
             Pair<Pair<RemoteStore, Long>, Long> o2) {
-          ObjectGlob g1 = map.get(o1.first);
-          ObjectGlob g2 = map.get(o2.first);
+          Entry entry1 = map.get(o1.first);
+          Entry entry2 = map.get(o2.first);
 
-          if (g1 == g2) {
+          if (entry1 == entry2) {
             return 0;
           }
 
-          if (g1 == null) {
+          if (entry1 == null) {
             return 1;
           }
 
-          if (g2 == null) {
+          if (entry2 == null) {
             return -1;
           }
 
-          return g2.frequency() - g1.frequency();
+          return entry2.frequency - entry1.frequency;
         }
       };
 

@@ -16,6 +16,7 @@ import fabric.common.util.LongKeyMap;
 import fabric.worker.memoize.CallInstance;
 import fabric.worker.memoize.WarrantiedCallResult;
 import fabric.worker.TransactionPrepareFailedException;
+import fabric.worker.remote.RemoteWorker;
 
 /**
  * A <code>PrepareTransactionReadsMessage</code> represents a transaction
@@ -85,7 +86,7 @@ public class PrepareTransactionReadsMessage extends
   // ////////////////////////////////////////////////////////////////////////////
 
   @Override
-  public Response dispatch(RemoteIdentity client, MessageHandler h)
+  public Response dispatch(RemoteIdentity<RemoteWorker> client, MessageHandler h)
       throws TransactionPrepareFailedException {
     return h.handle(client, this);
   }

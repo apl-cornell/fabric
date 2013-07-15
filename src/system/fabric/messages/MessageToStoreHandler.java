@@ -4,6 +4,7 @@ import fabric.common.Logging;
 import fabric.common.exceptions.ProtocolError;
 import fabric.common.net.RemoteIdentity;
 import fabric.messages.ObjectUpdateMessage.Response;
+import fabric.worker.remote.RemoteWorker;
 
 /**
  * This abstract class acts as a visitor for MessagesToStore. It also documents
@@ -24,38 +25,42 @@ public abstract class MessageToStoreHandler extends AbstractMessageServer {
   }
 
   @Override
-  public final Response handle(RemoteIdentity client, ObjectUpdateMessage msg)
-      throws ProtocolError {
+  public final Response handle(RemoteIdentity<RemoteWorker> client,
+      ObjectUpdateMessage msg) throws ProtocolError {
     throw error(msg);
   }
 
   @Override
   public fabric.messages.WarrantyRefreshMessage.Response handle(
-      RemoteIdentity client, WarrantyRefreshMessage msg) throws ProtocolError {
+      RemoteIdentity<RemoteWorker> client, WarrantyRefreshMessage msg)
+      throws ProtocolError {
     throw error(msg);
   }
 
   @Override
   public final fabric.messages.DirtyReadMessage.Response handle(
-      RemoteIdentity client, DirtyReadMessage msg) throws ProtocolError {
+      RemoteIdentity<RemoteWorker> client, DirtyReadMessage msg)
+      throws ProtocolError {
     throw error(msg);
   }
 
   @Override
   public final fabric.messages.RemoteCallMessage.Response handle(
-      RemoteIdentity client, RemoteCallMessage msg) throws ProtocolError {
+      RemoteIdentity<RemoteWorker> client, RemoteCallMessage msg)
+      throws ProtocolError {
     throw error(msg);
   }
 
   @Override
   public final fabric.messages.TakeOwnershipMessage.Response handle(
-      RemoteIdentity client, TakeOwnershipMessage msg) throws ProtocolError {
+      RemoteIdentity<RemoteWorker> client, TakeOwnershipMessage msg)
+      throws ProtocolError {
     throw error(msg);
   }
 
   @Override
   public final fabric.messages.InterWorkerStalenessMessage.Response handle(
-      RemoteIdentity client, InterWorkerStalenessMessage msg)
+      RemoteIdentity<RemoteWorker> client, InterWorkerStalenessMessage msg)
       throws ProtocolError {
     throw error(msg);
   }

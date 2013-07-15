@@ -4,6 +4,7 @@ import fabric.common.Logging;
 import fabric.common.exceptions.ProtocolError;
 import fabric.common.net.RemoteIdentity;
 import fabric.messages.AllocateMessage.Response;
+import fabric.worker.remote.RemoteWorker;
 
 /**
  * This abstract class acts as a visitor for MessagesToWorker. It also documents
@@ -24,20 +25,22 @@ public abstract class MessageToWorkerHandler extends AbstractMessageServer {
   }
 
   @Override
-  public final Response handle(RemoteIdentity client, AllocateMessage msg)
-      throws ProtocolError {
+  public final Response handle(RemoteIdentity<RemoteWorker> client,
+      AllocateMessage msg) throws ProtocolError {
     throw error(msg);
   }
 
   @Override
   public final fabric.messages.DissemReadMessage.Response handle(
-      RemoteIdentity client, DissemReadMessage msg) throws ProtocolError {
+      RemoteIdentity<RemoteWorker> client, DissemReadMessage msg)
+      throws ProtocolError {
     throw error(msg);
   }
 
   @Override
   public fabric.messages.GetCertChainMessage.Response handle(
-      RemoteIdentity client, GetCertChainMessage msg) throws ProtocolError {
+      RemoteIdentity<RemoteWorker> client, GetCertChainMessage msg)
+      throws ProtocolError {
     throw error(msg);
   }
 
@@ -48,20 +51,23 @@ public abstract class MessageToWorkerHandler extends AbstractMessageServer {
   }
 
   @Override
-  public fabric.messages.ReadMessage.Response handle(RemoteIdentity client,
-      ReadMessage msg) throws ProtocolError {
+  public fabric.messages.ReadMessage.Response handle(
+      RemoteIdentity<RemoteWorker> client, ReadMessage msg)
+      throws ProtocolError {
     throw error(msg);
   }
 
   @Override
   public fabric.messages.MakePrincipalMessage.Response handle(
-      RemoteIdentity client, MakePrincipalMessage msg) throws ProtocolError {
+      RemoteIdentity<RemoteWorker> client, MakePrincipalMessage msg)
+      throws ProtocolError {
     throw error(msg);
   }
 
   @Override
   public fabric.messages.StalenessCheckMessage.Response handle(
-      RemoteIdentity client, StalenessCheckMessage msg) throws ProtocolError {
+      RemoteIdentity<RemoteWorker> client, StalenessCheckMessage msg)
+      throws ProtocolError {
     throw error(msg);
   }
 

@@ -1,7 +1,7 @@
 package fabric.dissemination.pastry.messages;
 
-import rice.p2p.commonapi.Message;
 import rice.p2p.commonapi.NodeHandle;
+import fabric.dissemination.pastry.Disseminator;
 
 /**
  * This should be sent when aggregation of object popularity data is to be
@@ -22,6 +22,11 @@ public class Aggregate implements Message {
   @Override
   public int getPriority() {
     return LOW_PRIORITY;
+  }
+
+  @Override
+  public void dispatch(Disseminator disseminator) {
+    // TODO Auto-generated method stub
   }
 
 }

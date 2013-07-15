@@ -14,6 +14,7 @@ import fabric.common.net.RemoteIdentity;
 import fabric.worker.memoize.CallInstance;
 import fabric.worker.memoize.SemanticWarrantyRequest;
 import fabric.worker.TransactionCommitFailedException;
+import fabric.worker.remote.RemoteWorker;
 
 public class CommitTransactionMessage
     extends
@@ -67,7 +68,7 @@ public class CommitTransactionMessage
   // ////////////////////////////////////////////////////////////////////////////
 
   @Override
-  public Response dispatch(RemoteIdentity client, MessageHandler h)
+  public Response dispatch(RemoteIdentity<RemoteWorker> client, MessageHandler h)
       throws TransactionCommitFailedException {
     return h.handle(client, this);
   }

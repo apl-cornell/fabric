@@ -9,7 +9,6 @@ import java.util.Set;
 import jif.types.ActsForConstraint;
 import jif.types.ActsForParam;
 import jif.types.Assertion;
-import jif.types.JifConstructorInstance;
 import jif.types.JifMethodInstance;
 import jif.types.JifParsedPolyType_c;
 import jif.types.LabelLeAssertion;
@@ -20,7 +19,6 @@ import jif.types.label.Label;
 import jif.types.label.ThisLabel;
 import jif.types.principal.Principal;
 import polyglot.frontend.Source;
-import polyglot.types.ConstructorInstance;
 import polyglot.types.DeserializedClassInitializer;
 import polyglot.types.FieldInstance;
 import polyglot.types.LazyClassInitializer;
@@ -35,9 +33,9 @@ import codebases.types.CodebaseClassType;
 public class FabricParsedClassType_c extends JifParsedPolyType_c implements
     FabricParsedClassType {
   private transient Label singleFieldLabel = null;
-  private transient ConfPolicy accessPolicy = null;
   private transient boolean fieldLabelFound = false;
 
+  private ConfPolicy accessPolicy = null;
   protected URI canonical_ns = null;
   protected Set<CodebaseClassType> namespaceDependencies;
 
@@ -195,47 +193,65 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements
    * concerned.
    */
   @Override
-  public ConfPolicy accessPolicy() {
+  public ConfPolicy accessPolicy() throws SemanticException {
+    if (accessPolicy == null) accessPolicy = defaultAccessPolicy();
+    return accessPolicy;
+  }
+
+  @Override
+  public void setAccessPolicy(ConfPolicy policy) throws SemanticException {
+    if (accessPolicy != null)
+      throw new SemanticException("Duplicate access policy.", policy.position());
+    accessPolicy = policy;
+  }
+
+  protected ConfPolicy defaultAccessPolicy() throws SemanticException {
     FabricTypeSystem ts = (FabricTypeSystem) typeSystem();
+    ConfPolicy accessPolicy = null;
+    if (ts.FObject().equals(this))
+      accessPolicy = ts.bottomConfPolicy(Position.compilerGenerated());
+    else if (ts.isFabricInterface(this)) {
+      FabricClassType superType = (FabricClassType) superType();
+//      if (superType.accessPolicy() == null) superType.setDefaultAccessPolicy();
+      accessPolicy = superType.accessPolicy();
+      for (MethodInstance mi : (List<MethodInstance>) methods()) {
+        if (mi.flags().isStatic()) continue;
+        JifMethodInstance jmi = (JifMethodInstance) mi;
+        ConfPolicy beginConf = ts.confProjection(jmi.pcBound());
+        if (beginConf == null) continue;
 
-    if (accessPolicy == null) {
-      if (ts.FObject().equals(this))
-        accessPolicy = ts.bottomConfPolicy(Position.compilerGenerated());
-      else if (ts.isFabricInterface(this)) {
-        accessPolicy = ((FabricClassType) superType()).accessPolicy();
-
-        for (ConstructorInstance ci : (List<ConstructorInstance>) constructors()) {
-          JifConstructorInstance jci = (JifConstructorInstance) ci;
-          ConfPolicy beginConf = ts.confProjection(jci.pcBound());
-          if (beginConf == null) continue;
-          accessPolicy = ts.join(accessPolicy, beginConf);
+        if (!ts.accessPolicyValid(beginConf)) {
+          throw new SemanticException("Default access policy for "
+              + this.name() + " contains variable components from method "
+              + jmi.signature() + ". "
+              + " Must specify an access policy explicitly.");
         }
-        for (MethodInstance mi : (List<MethodInstance>) methods()) {
-          if (mi.flags().isStatic()) continue;
-          JifMethodInstance jmi = (JifMethodInstance) mi;
-          ConfPolicy beginConf = ts.confProjection(jmi.pcBound());
-          if (beginConf == null) continue;
-          accessPolicy = ts.join(accessPolicy, beginConf);
-        }
-      } else if (!ts.isFabricClass(this))
-        // There is no access channel since it is not a persistent object
-        accessPolicy = ts.topConfPolicy(Position.compilerGenerated());
-      else {
-        accessPolicy = ((FabricClassType) superType()).accessPolicy();
-        for (FieldInstance fi : fields()) {
-          if (fi.flags().isStatic()) continue;
-          FabricFieldInstance ffi = (FabricFieldInstance) fi;
-          Type t = fi.type();
-          if (ts.isLabeled(t)) {
-            ConfPolicy tslabel = ffi.accessLabel();
-            accessPolicy = ts.join(accessPolicy, tslabel);
+        accessPolicy = ts.join(accessPolicy, beginConf);
+      }
+    } else if (!ts.isFabricClass(this))
+      // There is no access channel since it is not a persistent object
+      accessPolicy = ts.topConfPolicy(Position.compilerGenerated());
+    else {
+      FabricClassType superType = (FabricClassType) superType();
+//      if (superType.accessPolicy() == null) superType.setDefaultAccessPolicy();
+      accessPolicy = superType.accessPolicy();
+      for (FieldInstance fi : fields()) {
+        if (fi.flags().isStatic()) continue;
+        FabricFieldInstance ffi = (FabricFieldInstance) fi;
+        Type t = fi.type();
+        if (ts.isLabeled(t)) {
+          ConfPolicy facc = ffi.accessPolicy();
+          if (!ts.accessPolicyValid(facc)) {
+            throw new SemanticException("Access policy for " + this.name()
+                + " contains variable components from field " + ffi.name()
+                + ". " + " Must specify an access policy explicitly.");
           }
+          accessPolicy = ts.join(accessPolicy, facc);
         }
       }
-
-      accessPolicy = (ConfPolicy) accessPolicy.simplify();
     }
 
+    accessPolicy = (ConfPolicy) accessPolicy.simplify();
     return accessPolicy;
   }
 
@@ -272,4 +288,5 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements
   public Collection<CodebaseClassType> namespaceDependencies() {
     return namespaceDependencies;
   }
+
 }

@@ -14,7 +14,7 @@ package fabric.common;
 public class Version {
   private int major = 0;
   private int minor = 2;
-  private int patch = 0;
+  private int patch = 1;
 
   public int major() { return major; }
   public int minor() { return minor; }
@@ -22,6 +22,6 @@ public class Version {
 
   @Override
   public String toString() {
-    return "0.2.0 (2012-10-16 08:29:46 EDT)";
+    return "0.2.1 (2013-06-22 01:53:21 EDT)";
   }
 }

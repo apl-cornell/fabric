@@ -8,7 +8,7 @@ import jif.types.label.ConfPolicy;
  */
 
 public interface FabricFieldInstance extends jif.types.JifFieldInstance {
-  ConfPolicy accessLabel();
+  ConfPolicy accessPolicy();
 
-  void setAccessLabel(ConfPolicy accessLabel);
+  void setAccessPolicy(ConfPolicy accessLabel);
 }

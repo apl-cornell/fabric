@@ -11,20 +11,25 @@ import fabric.common.SemanticWarranty;
 import fabric.common.SerializedObject;
 import fabric.common.TransactionID;
 import fabric.common.VersionWarranty;
+import fabric.common.WarrantyGroup;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.net.RemoteIdentity;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.Pair;
+import fabric.dissemination.ObjectGlob;
+import fabric.dissemination.WarrantyGlob;
 import fabric.lang.Object._Impl;
 import fabric.worker.memoize.CallInstance;
 import fabric.worker.memoize.SemanticWarrantyRequest;
 import fabric.worker.memoize.WarrantiedCallResult;
+import fabric.store.db.GroupContainer;
 import fabric.worker.RemoteStore;
 import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.Worker;
+import fabric.worker.remote.RemoteWorker;
 
 /**
  * In-process implementation of the Store interface for use when a worker is
@@ -37,7 +42,7 @@ public class InProcessStore extends RemoteStore {
 
   protected final TransactionManager tm;
   protected final SurrogateManager sm;
-  protected RemoteIdentity localWorkerIdentity;
+  protected RemoteIdentity<RemoteWorker> localWorkerIdentity;
 
   public InProcessStore(String name, Store c) {
     super(name, c.publicKey);
@@ -48,11 +53,11 @@ public class InProcessStore extends RemoteStore {
     localWorkerIdentity = null;
   }
 
-  private RemoteIdentity localWorkerIdentity() {
+  private RemoteIdentity<RemoteWorker> localWorkerIdentity() {
     if (localWorkerIdentity == null) {
       Worker worker = Worker.getWorker();
       localWorkerIdentity =
-          new RemoteIdentity(worker.getLocalWorker(), worker.getPrincipal());
+          new RemoteIdentity<>(worker.getLocalWorker(), worker.getPrincipal());
     }
     return localWorkerIdentity;
   }
@@ -133,13 +138,27 @@ public class InProcessStore extends RemoteStore {
   }
 
   @Override
-  public ObjectGroup readObjectFromStore(long onum) throws AccessException {
+  public Pair<ObjectGroup, WarrantyGroup> readObjectFromStore(long onum)
+      throws AccessException {
+    // First, create an object group containing just the requested object.
     LongKeyMap<SerializedObject> map = new LongKeyHashMap<SerializedObject>();
     SerializedObject obj = tm.read(onum);
     if (obj == null) throw new AccessException(this, onum);
     map.put(onum, obj);
 
-    return new ObjectGroup(map);
+    ObjectGroup objectGroup = new ObjectGroup(map);
+
+    // Next, get a warranty group for the onum.
+    GroupContainer groupContainer = tm.getGroupContainer(onum);
+    WarrantyGroup warrantyGroup = groupContainer.getWarranties();
+
+    return new Pair<>(objectGroup, warrantyGroup);
+  }
+
+  @Override
+  public Pair<ObjectGlob, WarrantyGlob> readEncryptedObjectFromStore(long onum)
+      throws AccessException {
+    return tm.getGlobs(onum, localWorkerIdentity().node);
   }
 
   @Override

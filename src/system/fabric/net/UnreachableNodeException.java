@@ -7,9 +7,9 @@ import fabric.common.exceptions.FabricRuntimeException;
  * to connect to a remote node has failed.
  */
 public class UnreachableNodeException extends FabricRuntimeException {
-  private RemoteNode node;
+  private RemoteNode<?> node;
 
-  public UnreachableNodeException(RemoteNode node) {
+  public UnreachableNodeException(RemoteNode<?> node) {
     this.node = node;
   }
 
