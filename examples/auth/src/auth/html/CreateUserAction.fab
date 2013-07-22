@@ -25,7 +25,7 @@ public class CreateUserAction[principal servP] extends AbstractAction[servP] {
     public final void invoke{*lbl}(label{*lbl} lbl, Request[servP]{*lbl} _req) 
     throws (ServletException{*lbl;_req.session←})
         where caller(_req.session),
-        lbl <= {⊤→_req.session} {
+        lbl <= {_req.session→} {
 		final HTMLRequest[servP] req = (HTMLRequest[servP]) _req;
         Servlet[servP] servlet_ = getServlet();
         if (!(servlet_ instanceof HTMLAuthServlet[servP])) throw new ServletException("Error processing request");
@@ -35,7 +35,7 @@ public class CreateUserAction[principal servP] extends AbstractAction[servP] {
         if ( lbl <= new label {state_.store$→} ) {
             if (!(state_ instanceof AuthSessState)) throw new ServletException("Incorrect session state");
             final AuthSessState state = (AuthSessState)state_;
-            if ( lbl <= new label {⊤→state.store$} ) {
+            if ( lbl <= new label {state.store$→} ) {
             
                 if (servlet == null || state == null) throw new ServletException("Error processing request");
 
@@ -69,14 +69,14 @@ public class CreateUserAction[principal servP] extends AbstractAction[servP] {
                                            String{*lbl} uidError, 
                                            String{*lbl} passwdError) 
              where req.session equiv state.sessionPrincipal,
-                   lbl <= {⊤→req.session},
+                   lbl <= {req.session→},
                    {req.session←} <= lbl,
-                   {*this.inpUserID.inputLbl} <= {req.session:;req.session←},
-                   {*this.inpPassword.inputLbl} <= {req.session:;req.session←},
-                   {*this.inpConfirm.inputLbl} <= {req.session:;req.session←},
+                   {*this.inpUserID.inputLbl} <= {req.session→;req.session←},
+                   {*this.inpPassword.inputLbl} <= {req.session→;req.session←},
+                   {*this.inpConfirm.inputLbl} <= {req.session→;req.session←},
                    lbl <= {*this.inpUserID.inputLbl},
                    lbl <= {*this.inpConfirm.inputLbl},
-                   {req.session:;req.session←} <= {*this.inpPassword.inputLbl},
+                   {req.session→;req.session←} <= {*this.inpPassword.inputLbl},
                    caller(req.session)
     {
         Node[lbl, lbl] userIDText = desc(lbl, "User ID:");
@@ -131,13 +131,13 @@ class SubmitNewUserAction[principal servP] extends AbstractAction[servP] {
     }
     
     public final void invoke{*lbl}(label{*lbl} lbl, Request[servP]{*lbl} req) 
-    throws (ServletException{*lbl;*:req.session;req.session←})
+    throws (ServletException{*lbl;req.session←})
         where caller(req.session),
-        lbl <= {*:req.session} {
+        lbl <= {req.session→} {
 
         Servlet[servP] servlet_ = getServlet();
         AuthServlet[servP] servlet;
-        if (lbl <= new label {⊤→servlet_.store$}) {
+        if (lbl <= new label {servlet_.store$→}) {
             try { servlet = (AuthServlet[servP])servlet_; } catch (ClassCastException e) {throw new ServletException("Error processing request");}
             if (req == null) throw new ServletException("Error processing request");
             final SessionState state_ = req.getSessionState(lbl);
@@ -169,7 +169,7 @@ class SubmitNewUserAction[principal servP] extends AbstractAction[servP] {
                                           AuthSessState{*lbl} state) 
         throws (ServletException{*lbl;req.session←})
             where caller(req.session),
-            lbl <= {⊤→req.session},
+            lbl <= {req.session→},
             req.session equiv state.sessionPrincipal
     {
         if (req == null || servlet == null || state == null
@@ -194,7 +194,7 @@ class SubmitNewUserAction[principal servP] extends AbstractAction[servP] {
                                 AuthSessState{*lbl} state) 
         throws (ServletException{*lbl;req.session←})
         where req.session equiv state.sessionPrincipal,
-              lbl <= {⊤→req.session},
+              lbl <= {req.session→},
               caller(req.session)
     {
  

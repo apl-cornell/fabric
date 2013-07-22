@@ -1,0 +1,167 @@
+package groups;
+
+import sif.servlet.*;
+import auth.*;
+import auth.rest.*;
+import auth.util.*;
+import fabricated.util.Map;
+import fabricated.util.HashMap;
+import fabricated.util.NoSuchElementException;
+import fabricated.util.ConcurrentModificationException;
+import fabricated.util.Comparator;
+import javax.servlet.ServletException;
+
+public class GroupServlet extends Servlet[HelloEP] implements AuthServlet[HelloEP] authority (HelloEP) {
+
+	final Store{this}@{*->} localStore;
+	final Store{this}@{*->} helloStore;
+
+	public GroupServlet{HelloEP→}() throws ServletException {
+	   super();
+	   localStore = worker$.getLocalStore();
+	   helloStore = worker$.getStore(Config.helloStoreName);
+	}
+
+	public void initialize{HelloEP→; HelloEP←}() throws ServletException {
+	  atomic {
+	    final principal p = HelloEP;
+	    addStartAction(new FrontPageAction[p](this));
+	    addStartAction(new LoginAction[p](this));
+	    addStartAction(new LogoffAction[p](this));
+	    addStartAction(new CreateUserAction[p](this));
+	  }
+	}
+	
+        public String defaultContentType() {
+          return "application/json";
+        }
+        
+        public String getPrivateHostID() throws ServletException {
+		return "";
+	}
+
+	protected String defaultActionName(Request[HelloEP] req) {
+		return Config.defaultActionName;
+	} 
+
+	protected AuthSessState{*lbl} createSessionState{*lbl}(label{*lbl} lbl,
+			String{*lbl} id, SessionPrincipal{*lbl} session) {
+		atomic {
+			if (localStore != null && localStore equiv worker$ &&
+	                    lbl <= new label {⊤→worker$} && new label {⊤←worker$} <= lbl) {
+				return new AuthSessState@localStore(id, session);
+			}
+		}
+		// XXX: lame. really should error here.
+		return null;
+	}
+
+	protected SessionPrincipal createSessionPrincipal(String{⊥→;⊤←} id) {
+		SessionPrincipal toReturn = null;
+		atomic {
+			if (helloStore != null) {
+				toReturn = new SessionPrincipal@helloStore(id);
+			}
+		}
+		return toReturn;
+	}
+
+	public principal{p->; p<-} createUser{p->; p<-} (String{p->; p<-} uid, 
+                                                     String{p->; p<-} password, 
+                                                     principal{p->; p<-} p)
+		throws ServletException
+		where caller(p), authority (HelloEP)
+	{
+		int pc_caller = 0;
+		declassify ({pc_caller} meet {_->_}) {
+			fabric.util.Map rootMap = helloStore.getRoot();
+			if (rootMap == null) {
+				throw new ServletException("Store not acceesible");
+			}
+			Map[{HelloEP->;HelloEP<-}] allUsers = null;
+			
+			Object obj = rootMap.get(Config.usersMapKey);
+			if (obj instanceof Map[{HelloEP->; HelloEP<-}]) {
+				allUsers = (Map[{HelloEP->; HelloEP<-}])obj;
+			}
+			if (allUsers == null) {
+				throw new ServletException("Cannot fetch the collection of users from store");
+			}
+			return addUserToMap(allUsers , uid, password, p);
+		}
+    }
+
+	private principal{p->;p<-} addUserToMap{p->; p<-} (Map[{HelloEP->;HelloEP<-}]{p->; p<-} allUsers, String{p->; p<-} uid, String{p->; p<-} password, principal{p->; p<-} p)
+		where caller(p, HelloEP),
+			  endorse({p->; HelloEP<-})
+	{
+		declassify({HelloEP<-}) {
+			Map[{HelloEP->; HelloEP<-}] users = declassify(endorse(allUsers, {p->; HelloEP<-}), {HelloEP<-});
+			String userID = declassify(endorse(uid, {p->; HelloEP<-}), {HelloEP<-});
+			String _password = declassify(endorse(password, {p->; HelloEP<-}), {HelloEP<-});
+			GroupUser{HelloEP<-} ret = new GroupUser@helloStore(userID, _password);
+			users.put(userID, ret);
+
+			declassify( {p->; p<-;HelloEP<-}) {
+				endorse({p->; p<-}) {
+					GroupUser{p->;p<-} theUser = declassify(endorse(ret, {p->; p<-}), {p->; p<-;HelloEP<-});
+					return theUser;
+				}
+			}
+		}
+	}
+
+	public principal{p->; p<-} lookupUserID{p->; p<-} (String{p->; p<-} uid, principal{p->; p<-} p)
+		throws ServletException
+		where caller(p),
+			  authority (HelloEP)
+	{
+		int pc_caller = 0;
+		declassify ({pc_caller} meet {_->_}) {
+			fabric.util.Map rootMap = helloStore.getRoot();
+			if (rootMap == null) {
+				throw new ServletException("Store not acceesible");
+			}
+			Map[{HelloEP->;HelloEP<-}] allUsers = null;
+			Object obj = rootMap.get(Config.usersMapKey);
+			if (obj instanceof Map[{HelloEP->; HelloEP<-}]) {
+				allUsers = (Map[{HelloEP->; HelloEP<-}])obj;
+			}
+			
+			if (allUsers == null) {
+				throw new ServletException("Cannot fetch the collection of users from store");
+			}
+			return findUserInMap(allUsers, uid, p);
+		}
+	}
+
+	private principal{p->;p<-} findUserInMap{p->; p<-} (Map[{HelloEP->; HelloEP<-}]{p->; p<-} allUsers, String{p->; p<-} uid, principal{p->; p<-} p)
+		where caller(p, HelloEP),
+			  endorse({p->; p<- meet HelloEP<-})
+	{
+		declassify({p<- meet HelloEP<-}) {
+		    GroupUser{p->;p<-} ret = null;
+			Map[{HelloEP->; HelloEP<-}] users = declassify(endorse(allUsers, {p->; p<- meet HelloEP<-}), {p<- meet HelloEP<-});
+			String userID = declassify(endorse(uid, {p->; p<- meet HelloEP<-}), {p<- meet HelloEP<-});
+            final Object o = users.get(userID);
+			if (o != null && new label {HelloEP->; HelloEP<-} <= new label {o.store$->}) {
+				if (o instanceof GroupUser) {
+					final GroupUser u = (GroupUser) o;
+					if (new label {HelloEP->; HelloEP<-} <= new label {u.store$->}) {
+						if (u.name().equals(userID)) {
+		    				declassify({p->}) { endorse({p->;p<-}) { ;
+								 ret = declassify(endorse( u,{HelloEP->;p->;p<-}), {p->});
+		    				}}
+						}
+					}
+				}
+			}
+		    declassify({p->}) {
+		    endorse({p->;p<-}) { 
+                    return ret;
+		    	}
+		    }
+		}
+	}
+}
+

@@ -1,11 +1,15 @@
 package sif.servlet;
 
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.FileItemFactory;
@@ -23,19 +27,24 @@ import fabric.lang.security.Label;
  * and requests that are part of an existing session.
  */
 public class Request {
+  public final static int HTTP_OK = 200;
+  public final static int HTTP_FORBIDDEN = 403;
+
   public final Servlet servlet;
   public final SessionPrincipal session;
   public final Label bnd; // upper bound on the output channel
   final HttpServletRequest request;
+  final HttpServletResponse response;
 
   private boolean isMultipart;
   private Map<String, String> parameterMap;
   protected Map<String, FileItem> fileMap = Collections.EMPTY_MAP;
 
-  Request(Servlet srv, HttpServletRequest req) {
+  Request(Servlet srv, HttpServletRequest req, HttpServletResponse resp) {
     servlet = srv;
     request = req;
-    session = this.getSessionState(null).sessionPrincipal();
+    response = resp;
+    session = getSessionState(null).sessionPrincipal();
     bnd = Servlet.getOutputChannelBound(this);
 
     this.isMultipart = FileUploadBase.isMultipartContent(req);
@@ -76,6 +85,10 @@ public class Request {
   }
 
   public String getParam(String name) {
+    return getParam(null, name);
+  }
+
+  public String getParam(Label lbl, String name) {
     Object p = parameterMap.get(name);
     if (p == null) return null;
     if (p instanceof String)
@@ -88,7 +101,7 @@ public class Request {
   }
 
   public String action_name() {
-    return getParam("action");
+    return getParam(null, "action");
   }
 
   public String remoteAddr() {
@@ -122,9 +135,24 @@ public class Request {
     return result;
   }
 
-//    public SessionState getSessionState() {
-//      return getSessionState(LabelUtil._Impl.noComponents());
-//    }
+  public PrintWriter getResponseWriter() throws IOException {
+    return response.getWriter();
+  }
+
+  public String getResponseContentType() {
+    return response.getContentType();
+  }
+
+  public void setResponseContentType(String type) throws ServletException {
+    // only set safe types from Fabric
+    if (servlet.isSafeContentType(type)) {
+      response.setContentType(type);
+    } else throw new ServletException("Prohibited content type: " + type);
+  }
+
+  public void setResponseStatus(int code) {
+    response.setStatus(code);
+  }
 
   public void invalidateSession() {
     request.getSession().invalidate();

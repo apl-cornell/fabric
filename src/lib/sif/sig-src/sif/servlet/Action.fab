@@ -22,10 +22,10 @@ abstract public class Action[principal servletP] extends java.lang.Object {
      * The invoke method must either throw an exception, or call the
      * createPage method of Servlet.
      */
-    abstract public void invoke{*lbl}(label{*lbl} lbl, Request[servletP]{*lbl} req) 
-    throws (ServletException{*:req.session})
+    abstract public void invoke{*lbl}(label{*lbl} lbl, Request[servletP]{*lbl} req)
+   throws (ServletException{*lbl;req.session←})
     where caller(req.session),
-          lbl <= {*:req.session};
+          lbl <= {req.session→};
 
     public native Servlet[servletP]{this} getServlet();
 }

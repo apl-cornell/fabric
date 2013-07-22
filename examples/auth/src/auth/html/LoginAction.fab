@@ -21,9 +21,9 @@ public class LoginAction[principal servP] extends AbstractAction[servP] {
     }
 
     public final void invoke{*lbl}(label{*lbl} lbl, Request[servP]{*lbl} _req) 
-    throws (ServletException{*lbl;_req.session←})
+        throws (ServletException{*lbl;_req.session←})
         where caller(_req.session),
-        lbl <= {⊤→_req.session} {
+        lbl <= {_req.session→} {
         final HTMLRequest[servP] req = (HTMLRequest[servP]) _req;
         Servlet[servP] servlet_ = getServlet();
         if (!(servlet_ instanceof HTMLAuthServlet[servP])) throw new ServletException("Error processing request");
@@ -125,13 +125,13 @@ class SubmitLoginAction[principal servP] extends AbstractAction[servP] {
     }
     
     public final void invoke{*lbl}(label{*lbl} lbl, Request[servP]{*lbl} req) 
-    throws (ServletException{*lbl;*:req.session;req.session←})
+    throws (ServletException{*lbl;req.session←})
         where caller(req.session),
-        lbl <= {*:req.session} {
+        lbl <= {req.session→} {
 
         Servlet[servP] servlet_ = getServlet();
         AuthServlet[servP] servlet;
-        if (lbl <= new label {⊤→servlet_.store$}) {
+        if (lbl <= new label {servlet_.store$→}) {
             try { servlet = (AuthServlet[servP])servlet_; } catch (ClassCastException e) {throw new ServletException("Error processing request");}
             if (req == null) throw new ServletException("Error processing request");
             final SessionState state_ = req.getSessionState(lbl);
@@ -163,7 +163,7 @@ class SubmitLoginAction[principal servP] extends AbstractAction[servP] {
                                           AuthSessState{*lbl} state) 
         throws (ServletException{*lbl;req.session←})
             where caller(req.session),
-            lbl <= {⊤→req.session},
+            lbl <= {req.session→},
             req.session equiv state.sessionPrincipal
     {
         if (req == null || servlet == null || state == null 
@@ -188,14 +188,14 @@ class SubmitLoginAction[principal servP] extends AbstractAction[servP] {
                                 AuthSessState{*lbl} state) 
         throws (ServletException{*lbl;req.session←})
         where req.session equiv state.sessionPrincipal,
-              lbl <= {⊤→req.session},
+              lbl <= {req.session→},
               caller(req.session)
     {
  
         if (req == null || servlet == null || state == null) 
             return;
-        if (lbl <= new label {req.store$->}
-           && lbl <= new label {req.session->}) {
+        if (lbl <= new label {req.store$→}
+           && lbl <= new label {req.session→}) {
           if (!(req.session instanceof SessionPrincipal))
             return;
         } else return;
@@ -291,8 +291,8 @@ class SubmitLoginAction[principal servP] extends AbstractAction[servP] {
     
     private String{req.session→;req.session←} runClosure{req.session:;req.session←}(Request[servP]{req.session→;req.session←} req,
             principal{req.session→;req.session←} loginUser,
-            SessionPrincipal{req.session:;req.session←} sp,
-            String{req.session:;req.session←} password) 
+            SessionPrincipal{req.session→;req.session←} sp,
+            String{req.session→;req.session←} password) 
      where caller(req.session) {
         // DOWNGRADE REASON: Has effects at level {loginUser:}, which we need to hide away, since
         // session does not yet act for loginUser.

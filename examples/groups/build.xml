@@ -1,0 +1,92 @@
+<!--
+  This is the Apache Ant build file for the Fabric groups example
+-->
+
+<project name="groups" default="build-all" basedir=".">
+  <description>
+    Build Fabric port of the SIF groups example
+  </description>
+
+  <!--
+  ****************************************************************************
+    Global properties for this build.
+  ****************************************************************************
+  -->
+
+  <import file="${basedir}/../../common.xml" />
+  <import file="${basedir}/../../src/lib/sif/common.xml" />
+  <import file="${basedir}/../../src/lib/collections/common.xml" />
+  <import file="${basedir}/../auth/common.xml" />
+
+  <dirname property="groups.home" file="${ant.file.groups}" />
+
+  <!--
+  ****************************************************************************
+    Targets for cleaning up the directory tree.
+  ****************************************************************************
+  -->
+
+  <target name="clean" description="Removes generated files">
+    <delete dir="${groups.home}/classes"/>
+  </target>
+
+  <target name="clobber" depends="clean"
+          description="Removes generated files and state of stores">
+    <delete dir="${groups.home}/var"/>
+  </target>
+
+  <!--
+  ****************************************************************************
+    Compilation targets.
+  ****************************************************************************
+  -->
+
+  <target name="build-all" depends="build-groups" />
+  <target name="all" depends="build-all" />
+
+  <target name="build-groups" depends="sif, auth"
+          description="Builds the SIF groups example">
+    <fabc dest="${groups.home}/classes">
+      <arg value="-sourcepath" /> <arg value="${groups.home}/src" />
+      <arg value="-cp" />         <arg pathref="auth.classpath" />
+      <arg value="-cp"         /> <arg pathref="collections.classpath" />
+      <arg value="-cp"         /> <arg pathref="lib.classpath" />
+      <arg value="-addsigcp"   /> <arg pathref="sif.sigcp"/>
+      <arg value="-addbootcp"         /> <arg pathref="sif.classpath" />
+      <arg value="-trusted-providers"/>
+      <!--
+      <arg value="-rdebug" />
+      <arg value="-report" /> <arg value="resolver=5"/>
+      <arg line="-report resolver=4"/>
+        <arg value="-debugpositions"/>
+        <arg value="-report" /> <arg value="frontend=1"/>
+        <arg value="-report" /> <arg value="solver=5" />
+        <arg value="-dump"   /> <arg value="FabricToFabilRewriter"/>
+        <arg value="-dump"   /> <arg value="PrincipalCastAdder"/>
+        <arg value="-report" /> <arg value="visit=2"/>
+        <arg value="-report" /> <arg value="labelEnv=5" />
+        <arg value="-print"  /> <arg value="RemoteCallWrapperUpdater"/>
+        <arg value="-print"  /> <arg value="FieldLabelResolver"/>
+        <arg value="-report" /> <arg value="error=5"/>
+        <arg value="-report" /> <arg value="errors=5"/>
+        <arg value="-report" /> <arg value="debug=5" />
+      -->
+      <fileset dir="${groups.home}/src" includes="**/*.fab" />
+    </fabc>
+
+    <filc dest="${groups.home}/classes">
+      <arg value="-sourcepath" /> <arg value="${groups.home}/src" /> 
+      <arg value="-addsigcp"   /> <arg pathref="sif.sigcp"/>
+      <arg value="-cp"         /> <arg pathref="sif.classpath" />
+      <arg value="-cp" /> <arg value="${groups.home}/classes" /> 
+      <arg value="-cp" />         <arg pathref="auth.classpath" />
+      <arg value="-cp"         /> <arg pathref="collections.classpath" />
+      <fileset dir="${groups.home}/src" includes="**/*.fil" />
+    </filc>
+  </target>
+
+</project>
+
+<!--
+vim: ts=2 sw=2 et ai
+-->

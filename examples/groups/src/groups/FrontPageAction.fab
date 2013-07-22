@@ -1,0 +1,94 @@
+package groups;
+
+import auth.*;
+import auth.rest.*;
+import sif.servlet.*;
+
+import javax.servlet.ServletException;
+
+import java.io.PrintWriter;
+import java.io.IOException;
+
+public class FrontPageAction[principal Serv] extends AuthenticatedAction[Serv] {
+
+        public FrontPageAction{Serv→;Serv←}(Servlet[Serv]{this} m) {
+	  super("frontPage", m);
+	}
+	  
+	public void invokeImpl{*lbl}(label{*lbl} lbl,
+	    Request[Serv]{*lbl} req,
+	    AuthServlet[Serv]{*lbl} servlet,
+	    AuthSessState{*lbl} state,
+	    principal{*lbl} currentUser) 
+	        throws (ServletException{*lbl;req.session←})
+                where caller(req.session),
+                lbl <= {req.session→},
+                req.session equiv state.sessionPrincipal,
+                req.session actsfor currentUser
+        {
+          atomic {
+            try {
+              PrintWriter w = req.getResponseWriter();
+              w.println("{\"balance\":1000.21,\"num\":100,\"nickname\":null,\"is_vip\":true,\"name\":\"foo\"}");
+              w.close();
+            } catch (IOException e) {
+              throw new Error("Problem getting writer");
+            }
+          }
+	}
+
+//	public void invokeImpl{*lbl}(label{*lbl} lbl,
+//                                      Request[Serv]{*lbl} req,
+//                                      AuthServlet[Serv]{*lbl} servlet,
+//                                      AuthSessState{*lbl} state,
+//                                      principal{*lbl} currentUser):{*lbl}
+//		where caller(req.session),
+//			  lbl <= {⊤→req.session},
+//			  req.session equiv state.sessionPrincipal,
+//			  req.session actsfor currentUser
+//	{	
+//		atomic {
+//			if (new label {*lbl;_<-_} <= new label {state.store$->}) {
+//				if (req == null || servlet == null || state == null || !(servlet instanceof GroupServlet) ||
+//						!(state instanceof AuthSessState) || !(currentUser instanceof GroupUser)) {
+//					throw new Error("invalid args");
+//				}
+//				
+//				final GroupServlet groupServlet = (GroupServlet) servlet;
+//				final AuthSessState helloSessState = (AuthSessState) state;
+//				final GroupUser cu = (GroupUser) currentUser;
+//				
+//				if (lbl <= new label {cu←}) {
+//				
+//					String username = "";
+//					if (lbl <= new label {cu.store$->}) {
+//						username = cu.name();
+//					} else {
+//						throw new Error("T must flow to lbl");
+//					}
+//					
+//					final Store store = worker$.getStore(Config.helloStoreName);
+//					final label userLabel = new label {cu<-}@store;
+//					final label publicEditable = new label {⊥→;⊥←}@store;
+//					final label totalPrivate = new label {cu→;cu←}@store;
+//					try {
+//					  PrintWriter w = req.getWriter();
+//					  w.println("FOO BAR BAZ");
+//					  w.close();
+//					} catch (IOException e) {
+//					  throw new Error("Problem getting writer");
+//					}
+//					if (store actsfor cu) {
+//						
+//						//NodeList content = new NodeList(userLabel, userLabel, new Paragraph(userLabel, userLabel, new Text("Hello "+username+ "! Please select an article:")));
+//						//servlet.createPage(req, "Wiki", userLabel, userLabel, 
+//						//		new NodeList[userLabel,userLabel](userLabel, userLabel, 
+//						//				createBanner(userLabel, "Fabric Wiki"),  userLabel, userLabel, createBody(userLabel, userLabel, content)));
+//					}
+//				}
+//			}
+//		}
+//	}
+
+}
+

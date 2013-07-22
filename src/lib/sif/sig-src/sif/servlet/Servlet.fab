@@ -13,7 +13,7 @@ abstract public class Servlet[principal servletP] extends java.lang.Object {
     private static int __JIF_SAFE_CONSTRUCTORS$20050907 = 0;
     private static int __JIF_PARAMS_RUNTIME_REPRESENTED$20051007 = 0;
 
-    public abstract void initialize{servletP:; servletP!:}() throws ServletException;
+    public abstract void initialize{servletP→; servletP!:}() throws ServletException;
     
     /**
      * If the request does not specify an action name, and there is no default
@@ -24,7 +24,7 @@ abstract public class Servlet[principal servletP] extends java.lang.Object {
      * @return the default action, used if the request does not specify an
      *         action.
      */
-    protected native Action[servletP]{servletP:;req} defaultAction(Request[servletP] req);
+    protected native Action[servletP]{servletP→;req} defaultAction(Request[servletP] req);
     
     /**
      * If the request does not specify an action name, 
@@ -35,16 +35,16 @@ abstract public class Servlet[principal servletP] extends java.lang.Object {
      * @return the default action name, used if the request does not specify an
      *         action.
      */
-    protected native String{servletP:;req} defaultActionName(Request[servletP] req);
+    protected native String{servletP→;req} defaultActionName(Request[servletP] req);
 
-    public native final String{servletP:;p} initParameter(String p);
+    public native final String{servletP→;p} initParameter(String p);
     
     public abstract String getPrivateHostID() throws ServletException;
     
-    public native  void addStartAction{servletP:;servletP!:}(Action[servletP]{servletP:;servletP!:} a); 
+    public native  void addStartAction{servletP→;servletP!:}(Action[servletP]{servletP→;servletP!:} a); 
     
-    public native final Action[servletP]{servletP:;servletP!:;action_name} findStartAction(String action_name);
-    public native final Action[servletP]{req;action_name} findStartAction(Request[servletP]{*:req.session} req, String{*:req.session} action_name);
+    public native final Action[servletP]{servletP→;servletP!:;action_name} findStartAction(String action_name);
+    public native final Action[servletP]{req;action_name} findStartAction(Request[servletP]{req.session→} req, String{req.session→} action_name);
 
     public native final String{*!:*} generateNonce();       
     protected native SessionState{*lbl} createSessionState{*lbl}(label{*lbl} lbl, String{*lbl} id);

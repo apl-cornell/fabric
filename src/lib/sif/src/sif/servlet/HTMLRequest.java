@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.io.PrintWriter;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.fileupload.FileItem;
 
@@ -32,8 +33,8 @@ public class HTMLRequest extends Request {
   private NodeList precomputedPageArgs;
   private Head precomputedPageHead;
 
-  HTMLRequest(Servlet srv, HttpServletRequest req) {
-    super(srv, req);
+  HTMLRequest(Servlet srv, HttpServletRequest req, HttpServletResponse resp) {
+    super(srv, req, resp);
   }
 
   public String getParam(Input inp) {

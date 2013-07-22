@@ -1,0 +1,8 @@
+package auth.rest;
+
+import javax.servlet.ServletException;
+import sif.servlet.*;
+import sif.html.*;
+
+abstract public class AbstractAction[principal servP] extends Action[servP] {
+}

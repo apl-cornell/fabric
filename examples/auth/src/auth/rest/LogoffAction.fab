@@ -1,9 +1,10 @@
-package auth.html;
+package auth.rest;
 
 import javax.servlet.ServletException;
+import java.io.PrintWriter;
+import java.io.IOException;
 
 import sif.servlet.*;
-import sif.html.*;
 import auth.*;
 
 public class LogoffAction[principal servP] extends AbstractAction[servP] {
@@ -17,44 +18,31 @@ public class LogoffAction[principal servP] extends AbstractAction[servP] {
         where caller(req.session),
         lbl <= {req.session→} {
         if (req == null)    throw new ServletException("Error processing request");
-        Servlet[servP] servlet_ = getServlet();
+        Servlet[servP] servlet = getServlet();
         final SessionState state_ = req.getSessionState(lbl);
         if (lbl <= new label{state_.store$→}) {          
-          if (!(servlet_ instanceof HTMLAuthServlet[servP]) 
-                || !(state_ instanceof AuthSessState)) 
+          if (!(state_ instanceof AuthSessState)) 
               throw new ServletException("Error processing request");
-          
           final AuthSessState state = (AuthSessState)state_;
-          final HTMLAuthServlet[servP] servlet = (HTMLAuthServlet[servP])servlet_;
-          if (state == null || servlet == null)    throw new ServletException("Error processing request");
-  
           atomic {
-              final HTMLRequest[servP] _req = (HTMLRequest[servP]) req;
-              Action[servP] a = servlet.findStartAction(req, servlet.defaultActionName(req));
-  //            if (!ensureLoggedIn(lbl, _req, a)) return;
-  
               final label newLbl = new label {*lbl; req.session!:};
   
               if (req.session equiv state.sessionPrincipal) {
                   final principal{req.session←;*lbl} currentUser = state.currentUser();
-                  
                   if (currentUser != null && 
                           req.session actsfor currentUser && 
                           currentUser.store$ actsfor currentUser && 
                           lbl <= new label {currentUser→;currentUser←}) {
                       ((DelegatingPrincipal)currentUser).removeDelegatesTo(req.session);
                   }
-                  
                   // invalidate the session.
                   req.invalidateSession();
-                  
-                  // produce the goodbye page.
-                  String title = "Goodbye";
-                  Paragraph[newLbl, newLbl] para = new Paragraph[newLbl, newLbl]("You have succesfully logged off.");
-                  NodeList[newLbl, newLbl] content = new NodeList[newLbl, newLbl](newLbl, newLbl, para); 
-                  content = content==null?null:content.append(newLbl, newLbl, new Hyperlink[servP, newLbl, newLbl](req.contextURL(), "Login again"));
-                  content = new NodeList[newLbl, newLbl](newLbl, newLbl, createBanner(newLbl, title), createBody(newLbl, newLbl, content));
-                  servlet.createPage(_req, title, newLbl, newLbl, content);        
+                  try {
+                    PrintWriter w = req.getResponseWriter();
+                    w.println("\"User logged off.\"");
+                  } catch (IOException e) {
+                    throw new Error("Problem getting writer");
+                  }
               }
               else {
                   throw new ServletException("req.session not equivalent to state.sessionPrincipal"); 

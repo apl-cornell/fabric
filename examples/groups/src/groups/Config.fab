@@ -1,0 +1,30 @@
+package groups;
+
+public final class Config {
+	/**
+	 * Name of store
+	 */
+	public static final String {*<-} helloStoreName = "hello";
+	
+	/**
+	 * Name of worker
+	 */
+	public static final String {*<-} helloWebWorkerName = "helloweb";
+
+	/**
+	 * The key in the root map for finding the hello servlet principal
+	 */
+	public static final String {*<-} helloPrincipalMapKey = "helloPrincipal";
+	
+	/**
+	 * The name of the default action of the hello servlet
+	 */
+	public static final String {*<-} defaultActionName = "frontPage";
+
+	/**
+	 * The key in the root map for finding the collection of all users
+	 */
+	public static final String {*<-} usersMapKey = "users";
+}
+						
+

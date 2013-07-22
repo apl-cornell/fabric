@@ -48,10 +48,10 @@
     <fabc dest="${auth.home}/classes">
       <arg value="-sourcepath" /> <arg value="${auth.home}/src" />
       <arg value="-cp"/> <arg pathref="collections.classpath"/>
-      <arg value="-cp"/> <arg pathref="sif.classpath"/>
       <arg value="-cp"/> <arg pathref="lib.classpath"/>
       <arg value="-cp"/> <arg value="${auth.home}/classes"/>
       <arg value="-addsigcp"/> <arg pathref="sif.sigcp"/>
+      <arg value="-addbootcp"/> <arg pathref="sif.classpath"/>
       <arg value="-trusted-providers"/>
       <fileset dir="${auth.home}/src" includes="**/*.fab"/>
     </fabc>

@@ -1,0 +1,70 @@
+package groups;
+
+import auth.User;
+import auth.util.UserComparator;
+import fabric.principals.*;
+import fabric.util.Map;
+import fabricated.util.List;
+import fabricated.util.HashMap;
+import fabricated.util.Comparator;
+import fabricated.util.ListIterator;
+import fabricated.util.StringComparator;
+
+public class Create {
+
+	public static void main(String[] args) {
+		atomic {
+			RemoteWorker helloWorker = Worker.getWorker().getWorker(Config.helloStoreName);
+			Store helloStore = Worker.getWorker().getStore(Config.helloStoreName);
+			Create cr = new Create@helloStore().hello$Create$();
+			cr.create@helloWorker(args);
+		}
+	}
+
+	public Create hello$Create$() {
+		fabric$lang$Object$();
+		return this;
+	}
+
+	public Object $initLabels() {
+		this.$updateLabel = LabelUtil.noComponents();
+		this.$accessPolicy = LabelUtil.bottomConf();
+		return this;
+	}
+
+	public void create(String[] args) {
+		atomic {
+			Store helloStore = Worker.getWorker().getStore(Config.helloStoreName);
+			RemoteWorker helloWebWorker = Worker.getWorker().getWorker(Config.helloWebWorkerName);
+			AbstractPrincipal helloPrin = HelloEP.getInstance();
+
+			ConfPolicy helloSecret = LabelUtil.readerPolicy(helloStore, helloPrin, helloPrin); // {HelloEP->}
+			IntegPolicy helloTrusted = LabelUtil.writerPolicy(helloStore, helloPrin, helloPrin); // {HelloEP<-}
+
+			Label helloUserLabel = LabelUtil.toLabel(helloStore, helloSecret, helloTrusted);
+
+			// create the collection of all hello users
+			StringComparator scomp = new StringComparator@helloStore(helloUserLabel).fabricated$util$StringComparator$();
+			UserComparator ucomp = new UserComparator@helloStore(helloUserLabel).auth$util$UserComparator$();
+			HashMap users = new HashMap@helloStore(helloUserLabel).fabricated$util$HashMap$(scomp, ucomp);
+			GroupUser alice = new GroupUser@helloStore().groups$GroupUser$("alice", "password");
+			GroupUser bob = new GroupUser@helloStore().groups$GroupUser$("bob", "password");
+            users.put("alice", alice);
+            users.put("bob", bob);
+
+			// delegate the servlet principal to worker and store
+			alice.addDelegatesTo(helloPrin);
+			bob.addDelegatesTo(helloPrin);
+
+			// delegate the servlet principal to worker and store
+			helloPrin.addDelegatesTo(helloStore.getPrincipal());
+			helloPrin.addDelegatesTo(helloWebWorker.getPrincipal());
+
+			// add objects to the root map
+			Map root = helloStore.getRoot();
+			root.put(Config.helloPrincipalMapKey, helloPrin);
+			root.put(Config.usersMapKey, users);
+		}
+	}
+
+}

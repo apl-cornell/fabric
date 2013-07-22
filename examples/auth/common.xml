@@ -10,6 +10,10 @@
     <pathelement path="${auth.home}/src" />
   </path>
 
+  <path id="auth.classpath">
+    <pathelement path="${auth.home}/classes" />
+  </path>
+  
   <target name="auth">
     <subant target="all">
       <fileset dir="${auth.home}" includes="build.xml" />

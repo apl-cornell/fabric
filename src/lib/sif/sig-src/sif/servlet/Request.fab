@@ -1,7 +1,12 @@
 package sif.servlet;
 
 import fabric.lang.security.Principal;
+
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintWriter;
+
+import sif.html.Input;
 
 /**
  * This is a Jif signature for the Request class
@@ -11,12 +16,20 @@ public class Request[principal servletP] extends java.lang.Object {
     private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
     private static int __JIF_PARAMS_RUNTIME_REPRESENTED$20051007 = 0;
 
+    public final static int HTTP_OK = 200;
+    public final static int HTTP_FORBIDDEN = 403;
+
     public final Servlet[servletP]{this}@{⊤→} servlet;
     public final principal{this}@{⊤→}  session; // principal for the current session
         
 //    private Request() {  this.servlet = null; this.session = (Principal)null; }
     
     public native String{this} contextURL();
+    public native String{*lbl;session←} getParam(label{*lbl} lbl, String{*lbl} name);
+
     public native SessionState getSessionState(label lbl);
-    public native void invalidateSession{*:session;session:}();
+    public native void invalidateSession{session→}();
+    public native PrintWriter[{session→}] getResponseWriter{session→}() throws (IOException{session←});
+    public native void setResponseStatus{session→}(int{session→} code);
+
 }
