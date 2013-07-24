@@ -5,6 +5,7 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import fabric.common.RefTypeEnum;
 import fabric.common.util.Pair;
@@ -122,6 +123,16 @@ public interface _floatArray extends Object {
     @Override
     public Object $initLabels() {
       return $getProxy();
+    }
+
+    public _floatArray._Impl $makeSemiDeepCopy(_floatArray._Impl copy,
+        Map<Long, Object> oldSet, Map<Long, Object> oldToNew) {
+      oldToNew.put(this.$getOnum(), copy);
+      copy.value = new float[this.value.length];
+      for (int i = 0; i < this.value.length; i++) {
+        copy.value[i] = this.value[i];
+      }
+      return copy;
     }
   }
 

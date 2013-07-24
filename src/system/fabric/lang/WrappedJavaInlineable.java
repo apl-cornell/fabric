@@ -155,4 +155,11 @@ public class WrappedJavaInlineable<T> implements JavaInlineable {
   public void $forceRenumber(long onum) {
     throw new InternalError("Unsupported operation");
   }
+
+  @Override
+  public Object $makeSemiDeepCopy(Object copy, Map<Long,Object> oldSet,
+      Map<Long,Object> oldToNew) {
+    throw new InternalError("$makeSemiDeepCopy should not be called"
+        + " on a wrapped inlineable!");
+  }
 }

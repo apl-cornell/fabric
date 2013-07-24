@@ -103,6 +103,10 @@ public interface Object {
   @Deprecated
   void $forceRenumber(long onum);
 
+  /** Takes an object and copys state of this object into it. */
+  Object $makeSemiDeepCopy(Object copy, Map<Long, Object> oldSet,
+      Map<Long, Object> oldToNew);
+
   /**
    * _Proxy objects behave like regular objects by delegating to _Impl objects,
    * pointed to by a soft reference. This class abstracts away the code for
@@ -375,6 +379,12 @@ public interface Object {
     @Override
     public final void $forceRenumber(long onum) {
       fetch().$forceRenumber(onum);
+    }
+
+    @Override
+    public Object $makeSemiDeepCopy(Object copy, Map<Long, Object> oldSet,
+        Map<Long, Object> oldToNew) {
+      return fetch().$makeSemiDeepCopy(copy.fetch(), oldSet, oldToNew);
     }
 
     /**
@@ -913,6 +923,13 @@ public interface Object {
       long oldOnum = $ref.onum;
       this.$ref.onum = onum;
       TransactionRegistry.renumberObject($ref.store, oldOnum, onum);
+    }
+
+    @Override
+    public Object $makeSemiDeepCopy(Object copy, Map<Long, Object> oldSet,
+        Map<Long, Object> oldToNew) {
+      oldToNew.put($ref.onum, copy.fetch());
+      return copy;
     }
 
     /**

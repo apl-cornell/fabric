@@ -7,9 +7,11 @@ import polyglot.ast.Ext;
 import polyglot.ast.Node;
 import polyglot.types.SemanticException;
 import fabil.visit.AtomicRewriter;
+import fabil.visit.CopyConstructorRewriter;
 import fabil.visit.LabelAssigner;
 import fabil.visit.LocationAssigner;
 import fabil.visit.MemoizedMethodRewriter;
+import fabil.visit.NoArgConstructorWriter;
 import fabil.visit.ProxyRewriter;
 import fabil.visit.RemoteCallRewriter;
 import fabil.visit.StaticInitializerCollector;
@@ -19,6 +21,17 @@ import fabil.visit.ThreadRewriter;
  * The interface for all Fabric extension nodes.
  */
 public interface FabILExt extends Ext {
+
+  /**
+   * Used by <code>CopyConstructorRewriter</code> to insert a copy constructor
+   * into each FabIL class definition.
+   */
+  public Node addCopyConstructor(CopyConstructorRewriter ccr);
+
+  /**
+   * Create a new no-argument constructor if one did not previously exist.
+   */
+  public Node addNoArgumentConstructor(NoArgConstructorWriter nacw);
 
   /**
    * Used by <code>StaticInitializerCollector</code>.

@@ -189,6 +189,35 @@ public interface _ObjectArray<T extends Object> extends Object {
     public Object $initLabels() {
       return $getProxy();
     }
+
+    public _ObjectArray._Impl<T> $makeSemiDeepCopy(_ObjectArray._Impl<T> copy,
+        Map<Long, Object> oldSet, Map<Long, Object> oldToNew) {
+      oldToNew.put($getOnum(), copy);
+      super.$makeSemiDeepCopy(copy, oldSet, oldToNew);
+      copy.value = new Object[this.value.length];
+      for (int i = 0; i < this.get$length(); i++) {
+        T ithItem = this.get(i);
+        if (oldSet.containsKey(ithItem.$getOnum())) {
+          if (oldToNew.containsKey(ithItem.$getOnum())) {
+            copy.set(i, (T) oldToNew.get(ithItem.$getOnum()));
+          } else {
+            T ithCopy = null;
+            try {
+              ithCopy = (T)
+                ithItem.getClass().getConstructor(Store.class).newInstance(ithItem.$getStore());
+                ithItem.$makeSemiDeepCopy(ithCopy, oldSet, oldToNew);
+            } catch (Exception e) {
+              System.err.println("Ran into issue instantiating copy"
+                 + " of an element in the array!");
+              System.err.println(e.getMessage());
+            }
+          }
+        } else {
+          copy.set(i, this.get(i));
+        }
+      }
+      return copy;
+    }
   }
 
   public static class _Proxy<T extends Object> extends Object._Proxy implements
