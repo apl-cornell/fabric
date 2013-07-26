@@ -291,7 +291,7 @@ public final class TransactionManager {
 
     WORKER_TRANSACTION_LOGGER.log(Level.INFO, "{0} aborting", current);
     // Assume only one thread will be executing this.
-    HOTOS_LOGGER.log(Level.INFO, "aborting {0}", current);
+    HOTOS_LOGGER.log(Level.FINEST, "aborting {0}", current);
 
     // Set the retry flag in all our children.
     current.flagRetry();
@@ -361,7 +361,7 @@ public final class TransactionManager {
   public void commitTransactionAt(long commitTime, boolean ignoreRetrySignal) {
     WORKER_TRANSACTION_LOGGER.log(Level.FINEST, "{0} attempting to commit",
         current);
-    HOTOS_LOGGER.log(Level.INFO, "preparing {0}", current);
+    HOTOS_LOGGER.log(Level.FINEST, "preparing {0}", current);
 
     // Assume only one thread will be executing this.
 
@@ -449,7 +449,7 @@ public final class TransactionManager {
     // Send commit messages to our cohorts.
     sendCommitMessagesAndCleanUp(stores, workers);
 
-    HOTOS_LOGGER.log(Level.INFO, "committed {0}", HOTOS_current);
+    HOTOS_LOGGER.log(Level.FINEST, "committed {0}", HOTOS_current);
   }
 
   /**
@@ -1197,7 +1197,7 @@ public final class TransactionManager {
       Logging.log(WORKER_TRANSACTION_LOGGER, Level.FINEST,
           "{0} started subtx {1} in thread {2}", current.parent, current,
           Thread.currentThread());
-      HOTOS_LOGGER.log(Level.INFO, "started {0}", current);
+      HOTOS_LOGGER.log(Level.FINEST, "started {0}", current);
     } finally {
       Timing.BEGIN.end();
     }
