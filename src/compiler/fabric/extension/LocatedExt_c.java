@@ -4,20 +4,24 @@ import jif.types.ConstraintMessage;
 import jif.types.JifContext;
 import jif.types.LabelConstraint;
 import jif.types.NamedLabel;
+import jif.types.label.AccessPath;
 import jif.types.label.Label;
 import jif.types.principal.Principal;
 import jif.visit.LabelChecker;
 import polyglot.ast.Expr;
-import polyglot.ast.Node;
 import polyglot.types.SemanticException;
 import polyglot.util.CodeWriter;
+import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
 import fabric.types.FabricContext;
 import fabric.types.FabricTypeSystem;
 
 /**
- * This class provides common functionality to the New and NewArray for managing
- * a location field
+ * A located expressions is any allocation that may be assigned a location.
+ * This includes Fabric classes, arrays, labels, and principals.  
+ * 
+ * The default location of a located expression is the location of the enclosing instance.  
+ * In static or non-Fabric contexts, a location must always be specified.
  */
 public abstract class LocatedExt_c extends NodeExt_c implements FabricExt {
   protected Expr location;
@@ -62,6 +66,17 @@ public abstract class LocatedExt_c extends NodeExt_c implements FabricExt {
   protected abstract Label referenceLabel(FabricContext ctx);
 
   /**
+   * Returns true if this located expression requires a location.  
+   * @param ts
+   * @return
+   */
+  protected boolean requiresLocation(FabricTypeSystem ts) {
+    // Only New expressions for non-Fabric types do not require
+    // locations.
+    return true;
+  }
+
+  /**
    * Checks that the location is compatible with the <code>objectLabel</code>
    * and <code>accessLabel</code>
    * 
@@ -70,25 +85,42 @@ public abstract class LocatedExt_c extends NodeExt_c implements FabricExt {
    * @param accessLabel
    */
   public void labelCheck(LabelChecker lc, final Label objectLabel,
-      final Label accessLabel) throws SemanticException {
-    Node n = node();
+      final Label accessLabel, final Label referenceLabel)
+      throws SemanticException {
+    Expr n = (Expr) node();
+    Position pos = n.position();
+    FabricTypeSystem ts = (FabricTypeSystem) lc.typeSystem();
+    if (requiresLocation(ts)) {
+      Principal _storeP = storePrincipal();
+      if (_storeP == null && location() != null)
+        throw new InternalCompilerError(
+            "Have location, but store principal is null!", pos);
+      if (location() == null) {
+        if (lc.context().inStaticContext())
+          // allocation to local worker. safe to treat as top?
+          _storeP = ts.topPrincipal(pos);
+//          _storeP = ts.workerLocalPrincipal(pos);
+        else {
+          AccessPath storeap =
+              ts.currentStoreAccessPathFor(lc.context().currentClass(),
+                  lc.jifContext());
+          _storeP = ts.dynamicPrincipal(pos, storeap);
+        }
+      }
+      final Principal storeP = _storeP;
 
-    // TODO if storePrincipal() returns null, then the store principal of the
-    // containing class should be used.
-
-    // TODO: if location == null, then we need to do something fancy.
-    if (location() != null && objectLabel != null) {
-      FabricTypeSystem ts = (FabricTypeSystem) lc.typeSystem();
       JifContext A = lc.jifContext();
       A = (JifContext) n.del().enterScope(A);
+      AccessPath newStore = ts.storeAccessPathFor(n, A);
+      A.addEquiv(ts.dynamicPrincipal(pos, newStore), storeP);
 
       lc.constrain(
           new NamedLabel("access label", accessLabel),
           LabelConstraint.LEQ,
-          new NamedLabel("{*->store}", ts.pairLabel(Position
-              .compilerGenerated(), ts.readerPolicy(
+          new NamedLabel("{*->store}", ts.pairLabel(
               Position.compilerGenerated(),
-              ts.topPrincipal(Position.compilerGenerated()), storePrincipal()),
+              ts.readerPolicy(Position.compilerGenerated(),
+                  ts.topPrincipal(Position.compilerGenerated()), storeP),
               ts.topIntegPolicy(Position.compilerGenerated()))), A.labelEnv(),
           n.position(), new ConstraintMessage() {
             @Override
@@ -105,10 +137,10 @@ public abstract class LocatedExt_c extends NodeExt_c implements FabricExt {
       lc.constrain(
           new NamedLabel("object update label", objectLabel),
           LabelConstraint.LEQ,
-          new NamedLabel("{*->store}", ts.pairLabel(Position
-              .compilerGenerated(), ts.readerPolicy(
+          new NamedLabel("{*->store}", ts.pairLabel(
               Position.compilerGenerated(),
-              ts.topPrincipal(Position.compilerGenerated()), storePrincipal()),
+              ts.readerPolicy(Position.compilerGenerated(),
+                  ts.topPrincipal(Position.compilerGenerated()), storeP),
               ts.topIntegPolicy(Position.compilerGenerated()))), A.labelEnv(),
           n.position(), new ConstraintMessage() {
             @Override
@@ -119,7 +151,7 @@ public abstract class LocatedExt_c extends NodeExt_c implements FabricExt {
             @Override
             public String detailMsg() {
               return "The object being created on the store "
-                  + storePrincipal().toString()
+                  + storeP.toString()
                   + " should be readable by the store's principal";
             }
 
@@ -132,11 +164,11 @@ public abstract class LocatedExt_c extends NodeExt_c implements FabricExt {
           });
 
       lc.constrain(
-          new NamedLabel("{*<-store}", ts.pairLabel(Position
-              .compilerGenerated(), ts.bottomConfPolicy(Position
-              .compilerGenerated()), ts.writerPolicy(
+          new NamedLabel("{*<-store}", ts.pairLabel(
               Position.compilerGenerated(),
-              ts.topPrincipal(Position.compilerGenerated()), storePrincipal()))),
+              ts.bottomConfPolicy(Position.compilerGenerated()),
+              ts.writerPolicy(Position.compilerGenerated(),
+                  ts.topPrincipal(Position.compilerGenerated()), storeP))),
           LabelConstraint.LEQ, new NamedLabel("object update label",
               objectLabel), A.labelEnv(), n.position(),
           new ConstraintMessage() {
@@ -148,7 +180,7 @@ public abstract class LocatedExt_c extends NodeExt_c implements FabricExt {
             @Override
             public String detailMsg() {
               return "The object being created on the store "
-                  + storePrincipal().toString()
+                  + storeP.toString()
                   + " should be writeable by the store's principal";
             }
 
@@ -163,15 +195,14 @@ public abstract class LocatedExt_c extends NodeExt_c implements FabricExt {
       // Label on the reference to the new object should be enforceable by
       // store.
       // ////////////////////////////////////////////////////////////////////////
-      final Label referenceLabel = referenceLabel((FabricContext) A);
 
       lc.constrain(
           new NamedLabel("label on new allocation", referenceLabel),
           LabelConstraint.LEQ,
-          new NamedLabel("{*->store}", ts.pairLabel(Position
-              .compilerGenerated(), ts.readerPolicy(
+          new NamedLabel("{*->store}", ts.pairLabel(
               Position.compilerGenerated(),
-              ts.topPrincipal(Position.compilerGenerated()), storePrincipal()),
+              ts.readerPolicy(Position.compilerGenerated(),
+                  ts.topPrincipal(Position.compilerGenerated()), storeP),
               ts.topIntegPolicy(Position.compilerGenerated()))), A.labelEnv(),
           n.position(), new ConstraintMessage() {
             @Override
@@ -183,7 +214,7 @@ public abstract class LocatedExt_c extends NodeExt_c implements FabricExt {
             @Override
             public String detailMsg() {
               return "The reference to the object being created on the store "
-                  + storePrincipal().toString()
+                  + storeP.toString()
                   + " should be readable by the store's principal";
             }
 
@@ -195,7 +226,6 @@ public abstract class LocatedExt_c extends NodeExt_c implements FabricExt {
                   + "the store's principal joined with the top integrity label";
             }
           });
-
     }
   }
 }

@@ -1,17 +1,20 @@
 package fabric.extension;
 
-import jif.ast.Jif_c;
+import jif.extension.CallHelper;
 import jif.extension.JifNewExt;
 import jif.translate.ToJavaExt;
+import jif.types.JifConstructorInstance;
 import jif.types.label.AccessPath;
 import jif.types.label.Label;
 import jif.visit.LabelChecker;
 import polyglot.ast.New;
 import polyglot.ast.Node;
+import polyglot.types.ClassType;
 import polyglot.types.SemanticException;
 import polyglot.types.Type;
 import fabric.ast.FabricUtil;
 import fabric.types.FabricClassType;
+import fabric.types.FabricContext;
 import fabric.types.FabricTypeSystem;
 
 public class NewJifExt_c extends JifNewExt {
@@ -34,26 +37,59 @@ public class NewJifExt_c extends JifNewExt {
       FabricTypeSystem ts = (FabricTypeSystem) lc.typeSystem();
 
       Label accessLabel = ts.toLabel(ct.accessPolicy());
-      AccessPath storeap;
+      AccessPath storeap = null;
       if (ext.location() != null)
         storeap = ts.exprToAccessPath(ext.location(), lc.jifContext());
-      else storeap = null;
+      else if (ts.isFabricClass(newType)) {
+        if (lc.context().inStaticContext()) {
+          // allocation to local worker. safe to treat as top?
+          // then no check is necessary
+          return n;
+//          storeap = ts.workerLocalAccessPath(n.position());
+        } else {
+          storeap =
+              ts.currentStoreAccessPathFor(lc.context().currentClass(),
+                  lc.jifContext());
+        }
+      }
+      Label newLabel =
+          ts.freshLabelVariable(n.position(), "new" + ct.name(),
+              "label of the reference to the newly created " + ct.name()
+                  + " object, at " + n.position());
+      ClassType unlblCt = (ClassType) ts.unlabel(n.type());
+
+      CallHelper ch =
+          lc.createCallHelper(newLabel, n, unlblCt,
+              (JifConstructorInstance) n.constructorInstance(), n.arguments(),
+              n.position());
 
       if (accessLabel != null) {
-        accessLabel =
-            StoreInstantiator.instantiate(accessLabel, lc.jifContext(), n,
-                newType.toReference(), Jif_c.getPathMap(n).NV(), storeap);
+        accessLabel = ch.instantiate(lc.jifContext(), accessLabel);
+//        StoreInstantiator.instantiate(accessLabel, lc.jifContext(), n,
+//            newType.toReference(), Jif_c.getPathMap(n).NV(), storeap);
       }
 
       Label objectLabel = ct.updateLabel();
 
       if (objectLabel != null) {
-        objectLabel =
-            StoreInstantiator.instantiate(objectLabel, lc.jifContext(), n,
-                newType.toReference(), Jif_c.getPathMap(n).NV(), storeap);
+        objectLabel = ch.instantiate(lc.jifContext(), objectLabel);
+
+//        objectLabel =
+//            StoreInstantiator.instantiate(objectLabel, lc.jifContext(), n,
+//                newType.toReference(), Jif_c.getPathMap(n).NV(), storeap);
       }
 
-      ext.labelCheck(lc, objectLabel, accessLabel);
+      Label referenceLabel =
+          ext.referenceLabel((FabricContext) lc.jifContext());
+
+      if (referenceLabel != null) {
+        referenceLabel = ch.instantiate(lc.jifContext(), referenceLabel);
+
+//        StoreInstantiator.instantiate(referenceLabel, lc.jifContext(), n,
+//            newType.toReference(), Jif_c.getPathMap(n).NV(), storeap);
+      }
+
+      ext.labelCheck(lc, objectLabel, accessLabel, referenceLabel);
     }
 
     return n;

@@ -1,10 +1,20 @@
 package fabric.visit;
 
+import java.util.List;
+
 import jif.ast.JifMethodDecl;
+import jif.extension.CallHelper;
+import jif.types.JifProcedureInstance;
+import jif.types.label.Label;
 import jif.visit.LabelChecker;
+import polyglot.ast.Expr;
 import polyglot.ast.NodeFactory;
+import polyglot.ast.Receiver;
 import polyglot.frontend.Job;
+import polyglot.types.ReferenceType;
 import polyglot.types.TypeSystem;
+import polyglot.util.Position;
+import fabric.extension.FabricCallHelper;
 import fabric.types.SilenceableSolverGLB;
 
 public class FabricLabelChecker extends LabelChecker {
@@ -25,4 +35,29 @@ public class FabricLabelChecker extends LabelChecker {
     }
     return n;
   }
+
+  //XXX: CallHelper has some really bad design patterns.
+  //     Lots of static calls make it very difficult to extend.
+  @Override
+  public CallHelper createCallHelper(Label receiverLabel, Receiver receiver,
+      ReferenceType calleeContainer, JifProcedureInstance pi,
+      List<Expr> actualArgs, Position position) {
+    return new FabricCallHelper(receiverLabel, receiver, calleeContainer, pi,
+        actualArgs, position);
+  }
+
+  @Override
+  public CallHelper createCallHelper(Label receiverLabel,
+      ReferenceType calleeContainer, JifProcedureInstance pi,
+      List<Expr> actualArgs, Position position) {
+    return createCallHelper(receiverLabel, null, calleeContainer, pi,
+        actualArgs, position);
+  }
+
+  @Override
+  protected Object clone() throws CloneNotSupportedException {
+    // TODO Auto-generated method stub
+    return super.clone();
+  }
+
 }

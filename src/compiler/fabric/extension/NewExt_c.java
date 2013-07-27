@@ -9,6 +9,12 @@ import fabric.types.FabricTypeSystem;
 public class NewExt_c extends LocatedExt_c implements FabricExt {
 
   @Override
+  protected boolean requiresLocation(FabricTypeSystem ts) {
+    New n = (New) node();
+    return ts.isFabricClass(n.type());
+  }
+
+  @Override
   protected Label referenceLabel(FabricContext ctx) {
     New n = (New) node();
     FabricTypeSystem ts = (FabricTypeSystem) ctx.typeSystem();

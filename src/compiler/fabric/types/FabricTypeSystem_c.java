@@ -28,6 +28,7 @@ import jif.types.ParamInstance;
 import jif.types.Solver;
 import jif.types.hierarchy.LabelEnv;
 import jif.types.label.AccessPath;
+import jif.types.label.AccessPathLocal;
 import jif.types.label.AccessPathThis;
 import jif.types.label.AccessPathUninterpreted;
 import jif.types.label.ArgLabel;
@@ -57,6 +58,7 @@ import jif.types.principal.ParamPrincipal;
 import jif.types.principal.Principal;
 import jif.types.principal.TopPrincipal;
 import polyglot.ast.Expr;
+import polyglot.ast.New;
 import polyglot.ext.param.types.Subst;
 import polyglot.frontend.ExtensionInfo;
 import polyglot.frontend.Source;
@@ -93,8 +95,9 @@ import codebases.types.CBPackage_c;
 import codebases.types.CBPlaceHolder_c;
 import codebases.types.CodebaseResolver;
 import codebases.types.NamespaceResolver;
-import fabric.ast.FabricNodeFactory;
+import fabric.ast.FabricUtil;
 import fabric.ast.RemoteWorkerGetter;
+import fabric.extension.NewExt_c;
 import fabric.lang.Codebase;
 import fabric.lang.security.LabelUtil;
 import fabric.lang.security.NodePrincipal;
@@ -343,6 +346,11 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
   }
 
   @Override
+  public AccessPath workerLocalAccessPath(Position pos) {
+    return new AccessPathLocal(workerLocalInstance(), "worker$", pos);
+  }
+
+  @Override
   public Principal storePrincipal(fabric.ast.Store store,
       FabricContext context, Position pos) throws SemanticException {
     AccessPath ap = exprToAccessPath(store, context);
@@ -368,6 +376,11 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
     if (e instanceof fabric.ast.Store) {
       fabric.ast.Store store = (fabric.ast.Store) e;
       return isFinalAccessExpr(store.expr());
+    } else if (e instanceof New) {
+      // treat New expressions as "constant" 
+      // this aids instantiation of Store
+      // principals in prodecure signatures.
+      return true;
     }
     return super.isFinalAccessExpr(e);
   }
@@ -378,9 +391,24 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
     if (e instanceof RemoteWorkerGetter) {
       throw new UnsupportedOperationException(
           "RemoteWorker access paths not yet supported");
+    } else if (e instanceof New) {
+      // support instantiation of this.store$ in constructors 
+      New nw = (New) e;
+      FabricTypeSystem ts = (FabricTypeSystem) context.typeSystem();
+      ClassType ct = (ClassType) ts.unlabel(nw.type());
+      NewExt_c ext = (NewExt_c) FabricUtil.fabricExt(nw);
+      if (ext.location() == null) {
+        return new AccessPathNew(nw, ct, currentStoreAccessPathFor(
+            context.currentClass(), context), nw.position());
+      } else {
+        return new AccessPathNew(nw, ct, exprToAccessPath(ext.location(),
+            context), nw.position());
+      }
     } else if (e instanceof fabric.ast.Store) {
       fabric.ast.Store st = (fabric.ast.Store) e;
-
+      // if we wanted to allow "new C().store$" then we need to
+      // check whether st.expr is a New expr. 
+      // This doesn't seem useful, though.
       return new AccessPathStore(exprToAccessPath(st.expr(), context), Store(),
           st.position());
     }
@@ -391,15 +419,22 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
   public AccessPath storeAccessPathFor(Expr ref, JifContext context)
       throws SemanticException {
     AccessPath storeap;
-    FabricNodeFactory nf = (FabricNodeFactory) extensionInfo().nodeFactory();
     Position pos = Position.compilerGenerated();
     if (isFinalAccessExpr(ref)) {
       storeap =
           new AccessPathStore(exprToAccessPath(ref, context), Store(), pos);
     } else {
-      storeap = new AccessPathUninterpreted(nf.Store(pos, ref), pos);
+      storeap =
+          new AccessPathUninterpreted(String.valueOf(ref) + ".store$", pos);
     }
     return storeap;
+  }
+
+  @Override
+  public AccessPath currentStoreAccessPathFor(ClassType ct, JifContext context)
+      throws SemanticException {
+    Position pos = Position.compilerGenerated();
+    return new AccessPathStore(new AccessPathThis(ct, pos), Store(), pos);
   }
 
   @Override
