@@ -19,23 +19,26 @@ public class BankPrincipal extends ExternalPrincipal {
   // XXX Can we label this method any which way we want, since it won't
   // be invoked from Fabric code??
   // XXX Where will the declassification w.r.t. password happen?
-  public boolean{authPrf; closure; lb; *lb; executeNow; this; this→; this←}
-  isAuthorized{⊥→; this←}(java.lang.Object{this→} authPrf, 
-          fabric.lang.security.Closure[this, lb]{this→} closure,
-          label{this→} lb,
-          boolean{this→} executeNow) where authority (this) 
+  public boolean{authPrf; closure; lb; *lb; executeNow; this; this←}
+  isAuthorized{this→;this←}(java.lang.Object authPrf,
+             Closure[this, lb] closure,
+             label lb,
+             boolean executeNow)
+    where authority (this),
+        {authPrf;closure;lb;executeNow} <= lb,
+        lb <= {this→}
   {
-      if (closure instanceof LoginClosure[this] && authPrf instanceof String) {
+      if (authPrf instanceof String) {
           String passwd = (String)authPrf;
           if (pass == null) return false;
           String myPass = pass.password;
 
           if (myPass == passwd || (myPass != null && myPass.equals(passwd))) {
               // password supplied agrees with this password!
-              return true;
+              declassify ({*lb;this←}) { return true; }
           }
       }
-      return false;
+      declassify ({*lb;this←}) { return false; }
   }
   
   

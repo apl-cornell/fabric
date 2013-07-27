@@ -1,0 +1,252 @@
+package groups;
+
+import fabricated.util.*;
+
+/**
+ * A group is a principal object that delegates to each of its members.  
+ * 
+ * A group is parameterized by an owner; only the owner may change the group
+ * membership.  The owner acts for the group, but is not listed as a member
+ * (unless explicitly added).
+ * 
+ * L must be at most as secret as this->.  This supports confidential groups while
+ *   ensuring that members must be able to read the group list (anything else would require
+ *   declassification to whenever the list was checked).
+ *
+ * L cannot be more trusted than this<-.  This supports "open" groups that principals may
+ * add themselves to, but ensures that the 
+ */
+public class Group extends Principal {
+  public final String{this} @ {*→store$} name;
+  public final label{this} @ {*→store$} lbl;
+  protected final Set[{*lbl;owner←}]/*principal*/{this} @ {*→store$} members;
+  public final Principal{this} @ {*→store$} owner;
+  public final GroupPrincipal{this} @ {*→store$} group;
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Group constructors                                                       //
+  //////////////////////////////////////////////////////////////////////////////    
+//  public static Group create{owner←}(Store theStore, label lbl, Principal owner, String name)
+//      throws (Exception{*lbl;owner←})
+//      where caller(owner),
+//      theStore actsfor owner,
+//      lbl <= {owner→;owner←},
+//      {lbl; owner; name; theStore} <= {*lbl;owner←}
+//  {
+//    /* Must downgrade here since lbl >> mlbl */
+//    final Principal{owner←} _owner = declassify(owner, {owner←});
+//    final Store{owner←} _theStore = declassify(theStore, {owner←});
+//    if (lbl <= new label{*->_theStore}) {
+//      final String{owner←} _name = declassify(name, {owner←});
+//      final label{owner←} _lbl = declassify(lbl, {owner←});
+//      declassify ({_owner←}) {
+//        final GroupPrincipal{_owner←} inner = declassify(new GroupPrincipal@_theStore(_name, _owner), {_owner←});
+//        if (_lbl <= new label{*->_theStore}
+//            && _owner actsfor inner) {
+//          final label{owner←} mlbl = new label {{*_lbl;_owner←} meet {inner→;_owner←}}@_theStore;
+//          return new Group@_theStore(_name, mlbl, _owner, inner);
+//        } else throw new Error("impossible");
+//      }
+//    } else throw new Error("ugh");
+//  }
+  //////////////////////////////////////////////////////////////////////////////
+  // Group constructors                                                       //
+  //////////////////////////////////////////////////////////////////////////////    
+  public static Group create{owner←}(Store store, label lbl, Principal owner, String name)
+      throws (Exception{*lbl;owner←})
+      where caller(owner),
+      store actsfor owner,
+//      lbl <= {*→store},
+      lbl <= {_→_},
+      {*←store} <= lbl,
+//      lbl <= {owner→;owner←},
+        lbl <= {_→;owner←},
+      {lbl; owner; name; store} <= {*lbl;owner←}
+  {
+      /* Must downgrade here since lbl >> mlbl */
+      final Principal{owner←} _owner = declassify(owner, {owner←});
+      final Store{owner←} _store = declassify(store, {owner←});
+//      if (lbl <= new label{*->_store}) {
+        final String{owner←} _name = declassify(name, {owner←});
+        final label{owner←} _lbl = declassify(lbl, {owner←});
+        declassify ({_owner←}) {
+          final GroupPrincipal{_owner←} inner = declassify(new GroupPrincipal@_store(_name, _owner), {_owner←});
+          if (_lbl <= new label{*->_store}
+          && _owner actsfor inner) {
+            final label{owner←} mt = new label {{*_lbl} meet {inner→;*←}}@_store;
+            final label{owner←} mlbl = new label {*mt; _owner←}@_store;
+            if (new label {*mlbl;_owner←} <= new label{*->_store})
+              return new Group@_store(_name, mlbl, _owner, inner);
+            else throw new Error("ugh");
+          } else throw new Error("impossible");
+        }
+//      } else throw new Error("ugh");
+  }
+
+  /**
+   * Create a new group with the given name and the default maximum size.
+   * The most restrictive label that makes any sense is {group->;owner<-}
+   */
+  protected Group{*glbl;owner←}(String name, label glbl, Principal owner, GroupPrincipal inner)
+    throws (Exception{*glbl;owner←}) 
+    where caller(owner),
+    owner actsfor inner,
+    {*glbl;owner←} <= {*->this.store$},
+        glbl <= {_->; inner<-},
+//    glbl <= {inner->; inner<-},
+    {glbl; owner; inner; name} <= {*glbl;owner←}
+  {
+    this.name = name;
+    this.owner = owner; 
+    this.lbl = glbl;
+    members = new HashSet/*principal*/@store$(new PrincipalComparator());
+    group = inner; 
+    super();
+    inner.setGroup(this);
+    if (glbl <= new label{this→} && new label{this←} <= glbl)
+      ;//ok
+    else
+      throw new IllegalArgumentException("Invalid label for Group " + name);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Group membership operations                                              //
+  //////////////////////////////////////////////////////////////////////////////
+  public void add{*lbl;owner←}(Principal{*lbl;owner←} p)  where authority (this) {
+    if (lbl <= new label {p.store$→}) { 
+      if (store$ equiv members.store$   // class invariant
+          && store$ equiv group.store$  // class invariant
+          && group.store$ actsfor group // should be unnecessary
+          && owner actsfor group        // class invariant
+          && this equiv group           // class invariant
+          && new label{*lbl;owner←} <= new label {store$→} // class invariant?
+          && lbl <= new label {group→;group←}) { // class invariant?
+        members.add(p);
+        group.addDelegatesTo(p);
+      } else throw new Error("impossible");
+    } // TODO: else?
+  }
+
+  public void remove{*lbl;owner←}(Principal{*lbl;owner←} p) where authority (this) {
+    if (lbl <= new label {p.store$→}) { 
+      if (store$ equiv members.store$   // class invariant
+          && store$ equiv group.store$  // class invariant
+          && group.store$ actsfor group // should be unnecessary
+          && owner actsfor group        // class invariant
+          && this equiv group           // class invariant
+          && new label{*lbl;owner←} <= new label {store$→} // class invariant?
+          && lbl <= new label {group→;group←}) { // class invariant?
+        members.remove(p);
+        group.removeDelegatesTo(p);
+      } else throw new Error("impossible");
+    } // TODO: else?
+  }
+
+  public Iterator[{*lbl;owner←}]{*lbl;owner←} iterator{*lbl;owner←}() {
+    //TODO: should not allow it.remove() or other mods.
+    if (store$ equiv members.store$) {
+      return members.iterator();
+    } else throw new Error("impossible");
+  }
+  
+  public boolean{*lbl;owner←} contains{*lbl;owner←}(Principal{*lbl;owner←} p) {
+    if (lbl <= new label {p.store$→}) {
+      if (store$ equiv members.store$) {
+        return members.contains(p);
+      } else throw new Error("impossible");
+    }
+    //TODO else?
+    return false;
+  }
+
+  /** 
+   * TODO: delegatesTo should probably have begin label store$-> 
+   *       - otherwise there would be circular dependencies when making
+   *         dynamic checks 
+   */
+  public boolean{this; p; this←} delegatesTo{this→}(principal{this→} p) {
+    if (p == this || p == group) return true;
+    
+    if (store$ actsfor this //should be unnecessary
+        && group equiv this 
+        && store$ equiv group.store$) {
+      return group.delegatesTo(p);
+    } else throw new Error("impossible");
+  }
+
+  public String{this; this←} name() {
+    return name;
+  }
+
+  public boolean{this; p; this←} equals{this→}(Principal{this→} p) { 
+    if (p == this || p == group) return true;
+    return false;
+  }
+
+  public boolean{authPrf; closure; lb; *lb; executeNow; this; this←}
+  isAuthorized{this→;this←}(java.lang.Object authPrf,
+             Closure[this, {*lb}] closure,
+             label lb,
+             boolean executeNow)
+    where authority (this),
+        {authPrf;closure;lb;executeNow} <= lb,
+        lb <= {this→}
+  {
+    return false;
+  }
+
+  public ActsForProof{this; c; p; searchState; this←; p←; c}
+  findProofUpto{this→;this←}(Store c, Principal p, java.lang.Object searchState)
+    where {c;p;searchState} <= {this→}
+  {
+    if (store$ actsfor this //should be unnecessary
+        && group equiv this 
+        && store$ equiv group.store$) {
+      return group.findProofUpto(c, p, searchState);
+    } else throw new Error("impossible");
+  }
+    
+  public ActsForProof{this; c; q; searchState; q←; this←; c}
+  findProofDownto{this→;this←}(Store c, Principal q, java.lang.Object searchState)
+      where {c;q;searchState} <= {this→}
+  {
+    if (store$ actsfor this //should be unnecessary
+        && group equiv this 
+        && store$ equiv group.store$) {
+      return group.findProofDownto(c, q, searchState);
+    } else throw new Error("impossible");
+  }     
+}
+
+class GroupPrincipal extends AbstractPrincipal {
+  private Group{this→;this←}@{store$→} group;
+
+  public GroupPrincipal(String{this} name) {
+    super(name);
+  }
+
+  public GroupPrincipal(String{this} name, Principal{this} owner) {
+      super(name, owner);
+  }
+  // TODO:
+  public void addDelegatesTo{this→;this←}(Principal{this→;this←} p) where caller (this)
+  {
+    throw new Error("Attempting to add delegate to inner GroupPrincipal " + name());
+  }
+
+  public void removeDelegatesTo{this→;this←}(Principal{this→;this←} p) where caller (this)
+  {
+    throw new Error("Attempting to remove delegate from inner GroupPrincipal " + name());
+  }
+  
+  public void setGroup{this→;this←}(Group{this→;this←} g) where caller(this) {
+    if (group == null) {
+      group = g;
+      /*super.*/addDelegatesTo(g);
+    }
+  }
+}
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/

@@ -3,11 +3,11 @@ package groups;
 import auth.*;
 
 public class GroupUser extends User {
-	public GroupUser(String{this} name, String{this} password) where authority (this) {
-		super(name, password);
-	}
+  public GroupUser(String{this} name, String{this} password) where authority (this) {
+    super(name, password);
+  }
     
-    public String{this} toJson() {
-        return "{ \"name\" : \"" + name() + "\"}"; 
-	}
+  public String{this;this←} toJson() {
+    return "{ \"name\" : \"" + name() + "\"}"; 
+  }
 }

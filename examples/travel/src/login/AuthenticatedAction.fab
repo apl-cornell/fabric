@@ -25,65 +25,61 @@ abstract public class AuthenticatedAction[principal servP] extends AbstractActio
      * @return false if the user is not logged in, true otherwise.
      * @throws ServletException
      */
-    protected boolean{*lbl;req.session←} ensureLoggedIn{*lbl}
+    protected boolean{*lbl} ensureLoggedIn{*lbl}
                                 (label{*lbl} lbl,
                                  Request[servP]{*lbl} req,
                                  AuthenticatedAction[servP]{*lbl} successAction,
-                                 AbstractServlet[servP]{*lbl} servlet)
+                                 HTMLAuthServlet[servP]{*lbl} servlet)
     throws (ServletException{*lbl;req.session←})
     where caller(req.session),
-    lbl <= {⊤→req.session}
+    lbl <= {req.session→}
     {
         if (req == null) return false;
-        ServletException{*lbl;req.session!:} ex = null;
-        boolean{*lbl;req.session!:} ret = true;
-        try {
-            final SessionState tmp = req.getSessionState(lbl);
-            AuthSessState tmp2 = null;
-            if ( lbl <= new label {⊤→tmp.store$} ) {
-                tmp2 = (AuthSessState)tmp;
-                final AuthSessState state = tmp2;
-                
-                if ( lbl <= new label {⊤→state.store$} ) {
-                    final LoginAction[servP] la = new LoginAction[servP](servlet, successAction, req.session);
+        ServletException{*lbl;req.session←} ex = null;
+        boolean{*lbl;req.session←} ret = true;
+        final SessionState tmp = req.getSessionState(lbl);
+        AuthSessState tmp2 = null;
+        if ( lbl <= new label {tmp.store$→} ) {
+            tmp2 = (AuthSessState)tmp;
+            final AuthSessState state = tmp2;
+            
+            if ( lbl <= new label {state.store$→} ) {
+                final LoginAction[servP] la = new LoginAction[servP](servlet, successAction, req.session);
 
-                    if (state != null && state.currentUser() == null
-                            && new label {req.session←} <= lbl
-                            && state.sessionPrincipal equiv req.session) {
-                        // not logged in yet.
-                        try {
-                            la.invoke(lbl, req);
-                            ret = false;
-                        }
-                        catch (ServletException e) {
-                            ex = e;
-                        }
+                if (state != null && state.currentUser() == null
+                        && new label {req.session←} <= lbl
+                        && state.sessionPrincipal equiv req.session) {
+                    // not logged in yet.
+                    try {
+                        la.invoke(lbl, req);
+                        ret = false;
+                    }
+                    catch (ServletException e) {
+                        ex = e;
                     }
                 }
             }
-            
         }
-        catch (ClassCastException impossible) {  }
         if (ex != null) throw ex;
         return ret;
     }
     
     public final void invoke{*lbl}(label{*lbl} lbl, Request[servP]{*lbl} req) 
-    throws (ServletException{*lbl;*:req.session;req.session!:})
+        throws (ServletException{*lbl;req.session←})
         where caller(req.session),
-        lbl <= {*:req.session} {
+        lbl <= {req.session→} {
         if (req == null) throw new ServletException("Error processing request");
         Servlet[servP] servlet_ = getServlet();
         atomic {
             final SessionState state_ = req.getSessionState(lbl);
-            if ( lbl <= new label {⊤→state_.store$} ) {
+            if ( lbl <= new label {state_.store$→} ) {
                 if (servlet_ == null || state_ == null ||
-                        !(servlet_ instanceof AbstractServlet[servP]) ||
+                        !(servlet_ instanceof HTMLAuthServlet[servP]) ||
                         !(state_ instanceof AuthSessState))
                     throw new ServletException("Error processing request");
-                final AbstractServlet[servP] servlet = (AbstractServlet[servP])servlet_;
+                final HTMLAuthServlet[servP] servlet = (HTMLAuthServlet[servP])servlet_;
                 final AuthSessState state = (AuthSessState)state_;
-                if ( lbl <= new label {⊤→state.store$} ) {
+                if ( lbl <= new label {state.store$→} ) {
                 
                     if (state == null || servlet == null) return;
 
@@ -105,14 +101,14 @@ abstract public class AuthenticatedAction[principal servP] extends AbstractActio
     
     public void callWrapper{*lbl}(label{*lbl} lbl,
             Request[servP]{*lbl} req,
-            Servlet[servP]{*lbl} servlet,
+            HTMLAuthServlet[servP]{*lbl} servlet,
             AuthSessState{*lbl} state) 
-                throws (ServletException{*lbl;req.session!:})
+                throws (ServletException{*lbl;req.session←})
                 where caller(req.session),
-                lbl <= {⊤→req.session},
+                lbl <= {req.session→},
                 {req.session←} <= lbl,
                 req.session equiv state.sessionPrincipal,
-                lbl <= {⊤→state.store$} {
+                lbl <= {state.store$→} {
         if (state == null || req == null) return;
         final principal currentUser = state.currentUser();
         if (req.session actsfor currentUser) {
@@ -122,14 +118,13 @@ abstract public class AuthenticatedAction[principal servP] extends AbstractActio
           
     public abstract void invokeImpl{*lbl}(label{*lbl} lbl,
                                       Request[servP]{*lbl} req,
-                                      Servlet[servP]{*lbl} servlet,
+                                      HTMLAuthServlet[servP]{*lbl} servlet,
                                       AuthSessState{*lbl} state,
                                       principal{*lbl} currentUser) 
-        throws (ServletException{*lbl;req.session←})
+      throws (ServletException{*lbl;req.session←})
           where caller(req.session),
-          lbl <= {⊤→req.session},
+          lbl <= {req.session→},
           req.session equiv state.sessionPrincipal,
           req.session actsfor currentUser;
-
 }
 

@@ -42,8 +42,10 @@ public class LogoffAction[principal servP] extends AbstractAction[servP] {
                           req.session actsfor currentUser && 
                           currentUser.store$ actsfor currentUser && 
                           lbl <= new label {currentUser→;currentUser←}) {
-                      ((DelegatingPrincipal)currentUser).removeDelegatesTo(req.session);
-                  }
+                      if (new label {currentUser→} <= new label {req.session.store$→})
+                          ((DelegatingPrincipal)currentUser).removeDelegatesTo(req.session);
+                      //TODO: else?
+                  } //TODO: else?
                   
                   // invalidate the session.
                   req.invalidateSession();

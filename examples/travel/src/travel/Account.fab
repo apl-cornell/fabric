@@ -47,7 +47,7 @@ public class Account[principal bank]  { // on bank store and worker
         super();
     }
     
-    public String{bank←} name{⊥→}() {
+    public String{user←;bank←} name{⊥→}() {
         if (user == null) return "";
         return user.name();
     }

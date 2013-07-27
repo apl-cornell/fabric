@@ -3,7 +3,6 @@ package groups;
 import sif.servlet.*;
 import auth.*;
 import auth.rest.*;
-import auth.util.*;
 import fabricated.util.Map;
 import fabricated.util.HashMap;
 import fabricated.util.NoSuchElementException;
@@ -139,29 +138,30 @@ public class GroupServlet extends Servlet[HelloEP] implements AuthServlet[HelloE
 		where caller(p, HelloEP),
 			  endorse({p->; p<- meet HelloEP<-})
 	{
-		declassify({p<- meet HelloEP<-}) {
-		    GroupUser{p->;p<-} ret = null;
-			Map[{HelloEP->; HelloEP<-}] users = declassify(endorse(allUsers, {p->; p<- meet HelloEP<-}), {p<- meet HelloEP<-});
-			String userID = declassify(endorse(uid, {p->; p<- meet HelloEP<-}), {p<- meet HelloEP<-});
-            final Object o = users.get(userID);
-			if (o != null && new label {HelloEP->; HelloEP<-} <= new label {o.store$->}) {
-				if (o instanceof GroupUser) {
-					final GroupUser u = (GroupUser) o;
-					if (new label {HelloEP->; HelloEP<-} <= new label {u.store$->}) {
-						if (u.name().equals(userID)) {
-		    				declassify({p->}) { endorse({p->;p<-}) { ;
-								 ret = declassify(endorse( u,{HelloEP->;p->;p<-}), {p->});
-		    				}}
-						}
-					}
-				}
-			}
-		    declassify({p->}) {
-		    endorse({p->;p<-}) { 
-                    return ret;
-		    	}
-		    }
-		}
+	  declassify({p<- meet HelloEP<-}) {
+	    GroupUser{p->;p<-} ret = null;
+	    Map[{HelloEP->; HelloEP<-}] users = declassify(endorse(allUsers, {p->; p<- meet HelloEP<-}), {p<- meet HelloEP<-});
+	    String userID = declassify(endorse(uid, {p->; p<- meet HelloEP<-}), {p<- meet HelloEP<-});
+	    final Object o = users.get(userID);
+	    if (o != null && new label {HelloEP->; HelloEP<-} <= new label {o.store$->}) {
+	      if (o instanceof GroupUser) {
+	        final GroupUser u = (GroupUser) o;
+	        if (HelloEP actsfor u
+	            && new label {HelloEP->; HelloEP<-} <= new label {u.store$->}) {
+	          if (u.name().equals(userID)) {
+	            declassify({p->}) { endorse({p->;p<-}) { ;
+	            ret = declassify(endorse( u,{HelloEP->;p->;p<-}), {p->});
+	            }}
+	          }
+	        }
+	      }
+	    }
+	    declassify({p->}) {
+	      endorse({p->;p<-}) { 
+	        return ret;
+	      }
+	    }
+	  }
 	}
 }
 

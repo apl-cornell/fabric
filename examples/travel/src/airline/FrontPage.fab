@@ -5,6 +5,7 @@ import javax.servlet.ServletException;
 import sif.html.*;
 import sif.servlet.Action;
 import sif.servlet.Request;
+import sif.servlet.HTMLRequest;
 import sif.servlet.Servlet;
 import fabric.util.Map;
 
@@ -24,7 +25,7 @@ public class FrontPage extends AuthenticatedAction[AirlinePrincipal] authority (
     
     public final void invokeImpl{*lbl}(label{*lbl} lbl,
             Request[AirlinePrincipal]{*lbl} req,
-            Servlet[AirlinePrincipal]{*lbl} servlet,
+            HTMLAuthServlet[AirlinePrincipal]{*lbl} servlet,
             AuthSessState{*lbl} state,
             principal{*lbl} currentUser) 
             throws (ServletException{*lbl;req.session←})
@@ -71,7 +72,7 @@ public class FrontPage extends AuthenticatedAction[AirlinePrincipal] authority (
                             new TRow[ap, ap](new TCell[ap, ap](msg)));
                     entries = entries==null?null:entries.append(
                             new TRow[lblt, ap](new TCell[lblt, ap](ticks)));
-                    m.createPage(req, "Airline Home Page", lblt, ap,
+                    m.createPage((HTMLRequest)req, "Airline Home Page", lblt, ap,
                             new NodeList[lblt,ap](ap, ap, createBanner(ap, "Welcome to the Acme Airline Information System"),
                                     lblt, ap, new Table[lblt, ap](entries)));
                 }

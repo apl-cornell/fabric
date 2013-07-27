@@ -1,7 +1,6 @@
 package groups;
 
 import auth.User;
-import auth.util.UserComparator;
 import fabric.principals.*;
 import fabric.util.Map;
 import fabricated.util.List;
@@ -9,6 +8,7 @@ import fabricated.util.HashMap;
 import fabricated.util.Comparator;
 import fabricated.util.ListIterator;
 import fabricated.util.StringComparator;
+import fabricated.util.PrincipalComparator;
 
 public class Create {
 
@@ -45,7 +45,7 @@ public class Create {
 
 			// create the collection of all hello users
 			StringComparator scomp = new StringComparator@helloStore(helloUserLabel).fabricated$util$StringComparator$();
-			UserComparator ucomp = new UserComparator@helloStore(helloUserLabel).auth$util$UserComparator$();
+			PrincipalComparator ucomp = new PrincipalComparator@helloStore(helloUserLabel).fabricated$util$PrincipalComparator$();
 			HashMap users = new HashMap@helloStore(helloUserLabel).fabricated$util$HashMap$(scomp, ucomp);
 			GroupUser alice = new GroupUser@helloStore().groups$GroupUser$("alice", "password");
 			GroupUser bob = new GroupUser@helloStore().groups$GroupUser$("bob", "password");

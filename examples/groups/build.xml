@@ -54,8 +54,9 @@
       <arg value="-addsigcp"   /> <arg pathref="sif.sigcp"/>
       <arg value="-addbootcp"         /> <arg pathref="sif.classpath" />
       <arg value="-trusted-providers"/>
+      <arg value="-simpleoutput"/>
       <!--
-      <arg value="-rdebug" />
+      <arg value="-rdebug"/>
       <arg value="-report" /> <arg value="resolver=5"/>
       <arg line="-report resolver=4"/>
         <arg value="-debugpositions"/>

@@ -1,12 +1,12 @@
 package login;
 
-import sif.servlet.Servlet;
+import sif.servlet.HTMLServlet;
 import sif.servlet.Request;
 
 import javax.servlet.ServletException;
 
 
-public abstract class AbstractServlet[principal servP] extends Servlet[servP] {
+public abstract class AbstractServlet[principal servP] extends HTMLAuthServlet[servP] {
     
     public AbstractServlet() throws ServletException {
         
