@@ -84,6 +84,7 @@ public abstract class AbstractPrincipal extends DelegatingPrincipal {
     }
 
     public ActsForProof findProofUpto(Store store, Principal p, Object searchState) {
+        // What is the point of the store param if we don't use it to allocate?
         LocalStore localStore = Worker.getWorker().getLocalStore();
         Iterator i = this.superiors.keySet().iterator();
         while(i.hasNext()) {

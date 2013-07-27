@@ -65,18 +65,12 @@ public class NewJifExt_c extends JifNewExt {
 
       if (accessLabel != null) {
         accessLabel = ch.instantiate(lc.jifContext(), accessLabel);
-//        StoreInstantiator.instantiate(accessLabel, lc.jifContext(), n,
-//            newType.toReference(), Jif_c.getPathMap(n).NV(), storeap);
       }
 
       Label objectLabel = ct.updateLabel();
 
       if (objectLabel != null) {
         objectLabel = ch.instantiate(lc.jifContext(), objectLabel);
-
-//        objectLabel =
-//            StoreInstantiator.instantiate(objectLabel, lc.jifContext(), n,
-//                newType.toReference(), Jif_c.getPathMap(n).NV(), storeap);
       }
 
       Label referenceLabel =
@@ -84,9 +78,6 @@ public class NewJifExt_c extends JifNewExt {
 
       if (referenceLabel != null) {
         referenceLabel = ch.instantiate(lc.jifContext(), referenceLabel);
-
-//        StoreInstantiator.instantiate(referenceLabel, lc.jifContext(), n,
-//            newType.toReference(), Jif_c.getPathMap(n).NV(), storeap);
       }
 
       ext.labelCheck(lc, objectLabel, accessLabel, referenceLabel);

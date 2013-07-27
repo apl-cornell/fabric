@@ -6,6 +6,7 @@ import jif.types.LabelConstraint;
 import jif.types.NamedLabel;
 import jif.types.label.AccessPath;
 import jif.types.label.Label;
+import jif.types.principal.DynamicPrincipal;
 import jif.types.principal.Principal;
 import jif.visit.LabelChecker;
 import polyglot.ast.Expr;
@@ -91,28 +92,33 @@ public abstract class LocatedExt_c extends NodeExt_c implements FabricExt {
     Position pos = n.position();
     FabricTypeSystem ts = (FabricTypeSystem) lc.typeSystem();
     if (requiresLocation(ts)) {
-      Principal _storeP = storePrincipal();
+      DynamicPrincipal _storeP = (DynamicPrincipal) storePrincipal();
+      AccessPath storeap;
       if (_storeP == null && location() != null)
         throw new InternalCompilerError(
             "Have location, but store principal is null!", pos);
       if (location() == null) {
         if (lc.context().inStaticContext())
           // allocation to local worker. safe to treat as top?
-          _storeP = ts.topPrincipal(pos);
+          // just return 
+          return;
 //          _storeP = ts.workerLocalPrincipal(pos);
         else {
-          AccessPath storeap =
+          storeap =
               ts.currentStoreAccessPathFor(lc.context().currentClass(),
                   lc.jifContext());
           _storeP = ts.dynamicPrincipal(pos, storeap);
         }
+      } else {
+        storeap = _storeP.path();
       }
       final Principal storeP = _storeP;
 
       JifContext A = lc.jifContext();
       A = (JifContext) n.del().enterScope(A);
       AccessPath newStore = ts.storeAccessPathFor(n, A);
-      A.addEquiv(ts.dynamicPrincipal(pos, newStore), storeP);
+      A.addDefinitionalEquiv(ts.dynamicPrincipal(pos, newStore), storeP);
+      A.addDefinitionalAssertionEquiv(newStore, storeap);
 
       lc.constrain(
           new NamedLabel("access label", accessLabel),

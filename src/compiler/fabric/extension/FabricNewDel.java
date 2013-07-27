@@ -46,10 +46,14 @@ public class FabricNewDel extends JL_c {
     NewExt_c ext = (NewExt_c) FabricUtil.fabricExt(n);
     FabricTypeSystem ts = (FabricTypeSystem) tc.typeSystem();
     if (ext.location() != null) {
-      if (!ts.isSubtype(ext.location().type(), ts.Store())) {
+      if (!ts.isSubtype(ext.location().type(), ts.Store()))
         throw new SemanticException("The location needs to be a Store.", ext
             .location().position());
-      }
+      if (!ts.isFinalAccessExpr(ext.location()))
+        throw new SemanticException(
+            "The location must be a final access path.", ext.location()
+                .position());
+
       JifContext context = (JifContext) tc.context();
       ext =
           (NewExt_c) ext.storePrincipal(ts.exprToPrincipal(ts, ext.location(),

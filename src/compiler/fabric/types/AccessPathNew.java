@@ -68,7 +68,6 @@ public class AccessPathNew extends AccessPathRoot {
       AccessPathNew that = (AccessPathNew) o;
       if (this.node == that.node || this.node == null || that.node == null)
         return true;
-      // return true if this.ct <= that.ct or that.ct <= this.ct
       return this.node.equals(that.node);
     }
     return false;
