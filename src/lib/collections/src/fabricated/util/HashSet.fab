@@ -1,0 +1,211 @@
+package fabricated.util;
+
+/**
+ * This class provides a HashMap-backed implementation of the Set interface.
+ * <p>
+ *
+ * Most operations are O(1), assuming no hash collisions.  In the worst
+ * case (where all hashes collide), operations are O(n). Setting the
+ * initial capacity too low will force many resizing operations, but
+ * setting the initial capacity too high (or loadfactor too low) leads
+ * to wasted memory and slower iteration.
+ * <p>
+ *
+ * HashSet accepts the null key and null values.  It is not synchronized,
+ * so if you need multi-threaded access, consider using:<br>
+ * <code>Set s = Collections.synchronizedSet(new HashSet(...));</code>
+ * <p>
+ *
+ * The iterators are <i>fail-fast</i>, meaning that any structural
+ * modification, except for <code>remove()</code> called on the iterator
+ * itself, cause the iterator to throw a
+ * {@link ConcurrentModificationException} rather than exhibit
+ * non-deterministic behavior.
+ *
+ * @author Jon Zeppieri
+ * @author Eric Blake (ebb9@email.byu.edu)
+ * @see Collection
+ * @see Set
+ * @see TreeSet
+ * @see Collections#synchronizedSet(Set)
+ * @see HashMap
+ * @see LinkedHashSet
+ * @since 1.2
+ * @status updated to 1.4
+ */
+public class HashSet[label L] extends AbstractSet[L]
+  implements Set[L]//, Cloneable, Serializable
+{
+  /**
+   * Default number of buckets. This is the value the JDK 1.3 uses. Some
+   * early documentation specified this value as 101. That is incorrect.
+   * Package visible for use by HashSet.
+   */
+  static final int{*<-} DEFAULT_CAPACITY = 11;
+
+  /**
+   * The default load factor; this is explicitly specified by the spec.
+   * Package visible for use by HashSet.
+   */
+  static final float{*<-} DEFAULT_LOAD_FACTOR = 0.75f;
+
+  /**
+   * The HashMap which backs this Set.
+   */
+  private HashMap[L]{L} map;
+
+  /**
+   * Construct a new, empty HashSet whose backing HashMap has the default
+   * capacity (11) and loadFacor (0.75).
+   */
+  public HashSet{L}(Comparator[L]{L} compare) throws (IllegalArgumentException{L})
+  {
+    this(compare, DEFAULT_CAPACITY, DEFAULT_LOAD_FACTOR);
+  }
+
+  /**
+   * Construct a new, empty HashSet whose backing HashMap has the supplied
+   * capacity and the default load factor (0.75).
+   *
+   * @param initialCapacity the initial capacity of the backing HashMap
+   * @throws IllegalArgumentException if the capacity is negative
+   */
+  public HashSet{L}(Comparator[L]{L} compare,  
+      int{L} initialCapacity) throws (IllegalArgumentException{L})
+  {
+    this(compare, initialCapacity, DEFAULT_LOAD_FACTOR);
+  }
+
+  /**
+   * Construct a new, empty HashSet whose backing HashMap has the supplied
+   * capacity and load factor.
+   *
+   * @param initialCapacity the initial capacity of the backing HashMap
+   * @param loadFactor the load factor of the backing HashMap
+   * @throws IllegalArgumentException if either argument is negative, or
+   *         if loadFactor is POSITIVE_INFINITY or NaN
+   */
+  public HashSet{L}(Comparator[L]{L} compare, 
+      int{L} initialCapacity, float{L} loadFactor) throws (IllegalArgumentException{L})
+  {
+    super(compare);
+    map = init(initialCapacity, loadFactor);
+  }
+
+  /**
+   * Construct a new HashSet with the same elements as are in the supplied
+   * collection (eliminating any duplicates, of course). The backing storage
+   * has twice the size of the collection, or the default size of 11,
+   * whichever is greater; and the default load factor (0.75).
+   *
+   * @param c a collection of initial set elements
+   * @throws NullPointerException if c is null
+   */
+  public HashSet{L}(Comparator[L]{L} compare, Collection[L]{L} c)
+      throws (UnsupportedOperationException{L}, ClassCastException{L}, 
+          IllegalArgumentException{L}, NullPointerException{L})
+  {
+    this(compare, Math.max(2 * c.size(), HashMap.DEFAULT_CAPACITY));
+    try {
+      addAll(c);
+    } catch (IllegalStateException e) {
+      throw new Error("impossible");
+    }
+  }
+
+  /**
+   * Adds the given Object to the set if it is not already in the Set.
+   * This set permits a null element.
+   *
+   * @param o the Object to add to this Set
+   * @return true if the set did not already contain o
+   */
+  public boolean{L} add{L}(Object{L} o)
+  {
+    return map.put(o, "") == null;
+  }
+
+  /**
+   * Empties this Set of all elements; this takes constant time.
+   */
+  public void clear{L}()
+  {
+    map.clear();
+  }
+
+  /**
+   * Returns true if the supplied element is in this Set.
+   *
+   * @param o the Object to look for
+   * @return true if it is in the set
+   */
+  public boolean{L} contains{L}(Object{L} o)
+  {
+    return map.containsKey(o);
+  }
+
+  /**
+   * Returns true if this set has no elements in it.
+   *
+   * @return <code>size() == 0</code>.
+   */
+  public boolean{L} isEmpty{L}()
+  {
+    return map.size == 0;
+  }
+
+  /**
+   * Returns an Iterator over the elements of this Set, which visits the
+   * elements in no particular order.  For this class, the Iterator allows
+   * removal of elements. The iterator is fail-fast, and will throw a
+   * ConcurrentModificationException if the set is modified externally.
+   *
+   * @return a set iterator
+   * @see ConcurrentModificationException
+   */
+  public Iterator[L]{L} iterator{L}()
+  {
+    return map.iterator(HashMap.KEYS);
+  }
+
+  public Iterator[L]{L} iterator{L}(Store{L} store) where L <= {*<-store}, {*->store} <= L
+  {
+    // Avoid creating intermediate keySet() object by using non-public API.
+    return map.iterator(store, HashMap.KEYS);
+  }
+
+  /**
+   * Removes the supplied Object from this Set if it is in the Set.
+   *
+   * @param o the object to remove
+   * @return true if an element was removed
+   */
+  public boolean{L} remove{L}(Object{L} o) throws (UnsupportedOperationException{L}, 
+    ClassCastException{L}, NullPointerException{L}) 
+  {
+    return (map.remove(o) != null);
+  }
+
+  /**
+   * Returns the number of elements in this Set (its cardinality).
+   *
+   * @return the size of the set
+   */
+  public int{L} size{L}()
+  {
+    return map.size;
+  }
+
+  /**
+   * Helper method which initializes the backing Map. Overridden by
+   * LinkedHashSet for correct semantics.
+   *
+   * @param capacity the initial capacity
+   * @param load the initial load factor
+   * @return the backing HashMap
+   */
+  HashMap[L]{L} init{L}(int{L} capacity, float{L} load)
+  {
+    return new HashMap[L](compare, compare, capacity, load);
+  }
+}
