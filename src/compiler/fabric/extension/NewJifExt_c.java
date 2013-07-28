@@ -4,14 +4,17 @@ import jif.extension.CallHelper;
 import jif.extension.JifNewExt;
 import jif.translate.ToJavaExt;
 import jif.types.JifConstructorInstance;
+import jif.types.JifContext;
 import jif.types.label.AccessPath;
 import jif.types.label.Label;
+import jif.types.principal.DynamicPrincipal;
 import jif.visit.LabelChecker;
 import polyglot.ast.New;
 import polyglot.ast.Node;
 import polyglot.types.ClassType;
 import polyglot.types.SemanticException;
 import polyglot.types.Type;
+import polyglot.util.Position;
 import fabric.ast.FabricUtil;
 import fabric.types.FabricClassType;
 import fabric.types.FabricContext;
@@ -24,8 +27,29 @@ public class NewJifExt_c extends JifNewExt {
 
   @Override
   public Node labelCheck(LabelChecker lc) throws SemanticException {
-    New n = (New) super.labelCheck(lc);
+    New n = (New) node();
     NewExt_c ext = (NewExt_c) FabricUtil.fabricExt(n);
+    FabricTypeSystem ts = (FabricTypeSystem) lc.typeSystem();
+    JifContext context = lc.context();
+
+    // add helpful equivalences to the environment
+    DynamicPrincipal storePrincipal = (DynamicPrincipal) ext.storePrincipal();
+    if (!ext.requiresLocation(ts)
+        || storePrincipal.equals(ts.workerLocalPrincipal(Position
+            .compilerGenerated()))) {
+      // allocations to the local worker are always safe.
+      return super.labelCheck(lc);
+    }
+
+    AccessPath storeap = storePrincipal.path();
+    AccessPath newStore = ts.storeAccessPathFor(n, context);
+    context.addDefinitionalEquiv(
+        ts.dynamicPrincipal(Position.compilerGenerated(), newStore),
+        storePrincipal);
+    context.addDefinitionalAssertionEquiv(newStore, storeap);
+
+    n = (New) super.labelCheck(lc);
+    ext = (NewExt_c) FabricUtil.fabricExt(n);
 
     Type newType = n.objectType().type();
     // Bypass check if this is a principal object. This condition will be
@@ -34,24 +58,9 @@ public class NewJifExt_c extends JifNewExt {
         && !newType.isSubtype(((FabricTypeSystem) lc.typeSystem())
             .DelegatingPrincipal())) {
       FabricClassType ct = (FabricClassType) newType;
-      FabricTypeSystem ts = (FabricTypeSystem) lc.typeSystem();
 
       Label accessLabel = ts.toLabel(ct.accessPolicy());
-      AccessPath storeap = null;
-      if (ext.location() != null)
-        storeap = ts.exprToAccessPath(ext.location(), lc.jifContext());
-      else if (ts.isFabricClass(newType)) {
-        if (lc.context().inStaticContext()) {
-          // allocation to local worker. safe to treat as top?
-          // then no check is necessary
-          return n;
-//          storeap = ts.workerLocalAccessPath(n.position());
-        } else {
-          storeap =
-              ts.currentStoreAccessPathFor(lc.context().currentClass(),
-                  lc.jifContext());
-        }
-      }
+
       Label newLabel =
           ts.freshLabelVariable(n.position(), "new" + ct.name(),
               "label of the reference to the newly created " + ct.name()

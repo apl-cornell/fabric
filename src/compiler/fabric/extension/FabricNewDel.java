@@ -3,12 +3,16 @@ package fabric.extension;
 import java.util.List;
 
 import jif.types.JifContext;
+import jif.types.label.AccessPath;
+import jif.types.principal.DynamicPrincipal;
 import polyglot.ast.Expr;
 import polyglot.ast.JL_c;
+import polyglot.ast.New;
 import polyglot.ast.Node;
 import polyglot.types.SemanticException;
 import polyglot.types.Type;
 import polyglot.types.TypeSystem;
+import polyglot.util.Position;
 import polyglot.visit.AmbiguityRemover;
 import polyglot.visit.NodeVisitor;
 import polyglot.visit.TypeChecker;
@@ -42,23 +46,42 @@ public class FabricNewDel extends JL_c {
 
   @Override
   public Node typeCheck(TypeChecker tc) throws SemanticException {
-    Node n = super.typeCheck(tc);
+    New n = (New) super.typeCheck(tc);
     NewExt_c ext = (NewExt_c) FabricUtil.fabricExt(n);
     FabricTypeSystem ts = (FabricTypeSystem) tc.typeSystem();
-    if (ext.location() != null) {
-      if (!ts.isSubtype(ext.location().type(), ts.Store()))
-        throw new SemanticException("The location needs to be a Store.", ext
-            .location().position());
-      if (!ts.isFinalAccessExpr(ext.location()))
-        throw new SemanticException(
-            "The location must be a final access path.", ext.location()
-                .position());
+    JifContext context = (JifContext) tc.context();
 
-      JifContext context = (JifContext) tc.context();
-      ext =
-          (NewExt_c) ext.storePrincipal(ts.exprToPrincipal(ts, ext.location(),
-              context));
-      n = FabricUtil.updateFabricExt(n, ext);
+    if (ext.requiresLocation(ts)) {
+      if (ext.location() != null) {
+        if (!ts.isSubtype(ext.location().type(), ts.Store()))
+          throw new SemanticException("The location needs to be a Store.", ext
+              .location().position());
+        if (!ts.isFinalAccessExpr(ext.location()))
+          throw new SemanticException(
+              "The location must be a final access path.", ext.location()
+                  .position());
+        ext =
+            (NewExt_c) ext.storePrincipal((DynamicPrincipal) ts
+                .exprToPrincipal(ts, ext.location(), context));
+        n = (New) FabricUtil.updateFabricExt(n, ext);
+
+      } else {
+        if (tc.context().inStaticContext()) {
+          // allocation to local worker.
+          ext =
+              (NewExt_c) ext.storePrincipal((DynamicPrincipal) ts
+                  .workerLocalPrincipal(Position.compilerGenerated()));
+          n = (New) FabricUtil.updateFabricExt(n, ext);
+        } else {
+          AccessPath storeap =
+              ts.currentStoreAccessPathFor(tc.context().currentClass(),
+                  (JifContext) tc.context());
+          ext =
+              (NewExt_c) ext.storePrincipal(ts.dynamicPrincipal(
+                  Position.compilerGenerated(), storeap));
+          n = (New) FabricUtil.updateFabricExt(n, ext);
+        }
+      }
     }
     return n;
   }

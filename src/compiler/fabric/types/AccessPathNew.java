@@ -4,7 +4,6 @@ import jif.types.hierarchy.LabelEnv;
 import jif.types.label.AccessPath;
 import jif.types.label.AccessPathRoot;
 import jif.types.label.AccessPathThis;
-import polyglot.ast.New;
 import polyglot.types.ClassType;
 import polyglot.types.Type;
 import polyglot.util.Position;
@@ -15,16 +14,14 @@ import polyglot.util.Position;
 public class AccessPathNew extends AccessPathRoot {
 
   protected ClassType ct;
-  protected New node;
   protected AccessPath location;
 
   /**
    * @param pos
    */
-  protected AccessPathNew(New n, ClassType ct, AccessPath location, Position pos) {
+  protected AccessPathNew(ClassType ct, AccessPath location, Position pos) {
     super(pos);
     this.ct = ct;
-    this.node = n;
     this.location = location;
   }
 
@@ -66,9 +63,9 @@ public class AccessPathNew extends AccessPathRoot {
   public boolean equals(Object o) {
     if (o instanceof AccessPathNew) {
       AccessPathNew that = (AccessPathNew) o;
-      if (this.node == that.node || this.node == null || that.node == null)
+      if (this.ct == that.ct || this.ct == null || that.ct == null)
         return true;
-      return this.node.equals(that.node);
+      return this.ct.equals(that.ct);
     }
     return false;
   }

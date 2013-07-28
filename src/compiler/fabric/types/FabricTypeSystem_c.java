@@ -354,7 +354,6 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
   public Principal storePrincipal(fabric.ast.Store store,
       FabricContext context, Position pos) throws SemanticException {
     AccessPath ap = exprToAccessPath(store, context);
-//    AccessPathStore storeap = new AccessPathStore(ap, Store(), pos);
     return dynamicPrincipal(pos, ap);
   }
 
@@ -398,11 +397,11 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
       ClassType ct = (ClassType) ts.unlabel(nw.type());
       NewExt_c ext = (NewExt_c) FabricUtil.fabricExt(nw);
       if (ext.location() == null) {
-        return new AccessPathNew(nw, ct, currentStoreAccessPathFor(
+        return new AccessPathNew(ct, currentStoreAccessPathFor(
             context.currentClass(), context), nw.position());
       } else {
-        return new AccessPathNew(nw, ct, exprToAccessPath(ext.location(),
-            context), nw.position());
+        return new AccessPathNew(ct, exprToAccessPath(ext.location(), context),
+            nw.position());
       }
     } else if (e instanceof fabric.ast.Store) {
       fabric.ast.Store st = (fabric.ast.Store) e;

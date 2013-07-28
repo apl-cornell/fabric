@@ -26,61 +26,29 @@ public class Group extends Principal {
   //////////////////////////////////////////////////////////////////////////////
   // Group constructors                                                       //
   //////////////////////////////////////////////////////////////////////////////    
-//  public static Group create{owner←}(Store theStore, label lbl, Principal owner, String name)
-//      throws (Exception{*lbl;owner←})
-//      where caller(owner),
-//      theStore actsfor owner,
-//      lbl <= {owner→;owner←},
-//      {lbl; owner; name; theStore} <= {*lbl;owner←}
-//  {
-//    /* Must downgrade here since lbl >> mlbl */
-//    final Principal{owner←} _owner = declassify(owner, {owner←});
-//    final Store{owner←} _theStore = declassify(theStore, {owner←});
-//    if (lbl <= new label{*->_theStore}) {
-//      final String{owner←} _name = declassify(name, {owner←});
-//      final label{owner←} _lbl = declassify(lbl, {owner←});
-//      declassify ({_owner←}) {
-//        final GroupPrincipal{_owner←} inner = declassify(new GroupPrincipal@_theStore(_name, _owner), {_owner←});
-//        if (_lbl <= new label{*->_theStore}
-//            && _owner actsfor inner) {
-//          final label{owner←} mlbl = new label {{*_lbl;_owner←} meet {inner→;_owner←}}@_theStore;
-//          return new Group@_theStore(_name, mlbl, _owner, inner);
-//        } else throw new Error("impossible");
-//      }
-//    } else throw new Error("ugh");
-//  }
-  //////////////////////////////////////////////////////////////////////////////
-  // Group constructors                                                       //
-  //////////////////////////////////////////////////////////////////////////////    
-  public static Group create{owner←}(Store store, label lbl, Principal owner, String name)
+  public static Group create{*lbl;owner←}(Store store, label lbl, Principal owner, String name)
       throws (Exception{*lbl;owner←})
       where caller(owner),
       store actsfor owner,
-//      lbl <= {*→store},
-      lbl <= {_→_},
+      lbl <= {*→store},
       {*←store} <= lbl,
-//      lbl <= {owner→;owner←},
-        lbl <= {_→;owner←},
+      lbl <= {owner→;owner←},
       {lbl; owner; name; store} <= {*lbl;owner←}
   {
       /* Must downgrade here since lbl >> mlbl */
       final Principal{owner←} _owner = declassify(owner, {owner←});
       final Store{owner←} _store = declassify(store, {owner←});
-//      if (lbl <= new label{*->_store}) {
         final String{owner←} _name = declassify(name, {owner←});
         final label{owner←} _lbl = declassify(lbl, {owner←});
         declassify ({_owner←}) {
           final GroupPrincipal{_owner←} inner = declassify(new GroupPrincipal@_store(_name, _owner), {_owner←});
-          if (_lbl <= new label{*->_store}
-          && _owner actsfor inner) {
-            final label{owner←} mt = new label {{*_lbl} meet {inner→;*←}}@_store;
-            final label{owner←} mlbl = new label {*mt; _owner←}@_store;
+          if (_lbl <= new label{*->_store} && _owner actsfor inner) {
+            final label{owner←} mlbl = new label {{*_lbl;_owner←} meet {inner→;_owner←}}@_store;
             if (new label {*mlbl;_owner←} <= new label{*->_store})
               return new Group@_store(_name, mlbl, _owner, inner);
             else throw new Error("ugh");
           } else throw new Error("impossible");
         }
-//      } else throw new Error("ugh");
   }
 
   /**
@@ -92,8 +60,7 @@ public class Group extends Principal {
     where caller(owner),
     owner actsfor inner,
     {*glbl;owner←} <= {*->this.store$},
-        glbl <= {_->; inner<-},
-//    glbl <= {inner->; inner<-},
+    glbl <= {inner->; inner<-},
     {glbl; owner; inner; name} <= {*glbl;owner←}
   {
     this.name = name;

@@ -4,7 +4,6 @@ import jif.types.ConstraintMessage;
 import jif.types.JifContext;
 import jif.types.LabelConstraint;
 import jif.types.NamedLabel;
-import jif.types.label.AccessPath;
 import jif.types.label.Label;
 import jif.types.principal.DynamicPrincipal;
 import jif.types.principal.Principal;
@@ -43,6 +42,10 @@ public abstract class LocatedExt_c extends NodeExt_c implements FabricExt {
   }
 
   public LocatedExt_c storePrincipal(Principal p) {
+    if (!(p.isTopPrincipal() || p instanceof DynamicPrincipal))
+      throw new InternalCompilerError(
+          "storePrincipal must be top or a dynamic principal.");
+
     LocatedExt_c result = (LocatedExt_c) this.copy();
     result.storePrincipal = p;
     return result;
@@ -92,33 +95,18 @@ public abstract class LocatedExt_c extends NodeExt_c implements FabricExt {
     Position pos = n.position();
     FabricTypeSystem ts = (FabricTypeSystem) lc.typeSystem();
     if (requiresLocation(ts)) {
-      DynamicPrincipal _storeP = (DynamicPrincipal) storePrincipal();
-      AccessPath storeap;
-      if (_storeP == null && location() != null)
+      Principal _storeP = storePrincipal();
+      if (_storeP == null)
         throw new InternalCompilerError(
-            "Have location, but store principal is null!", pos);
-      if (location() == null) {
-        if (lc.context().inStaticContext())
-          // allocation to local worker. safe to treat as top?
-          // just return 
-          return;
-//          _storeP = ts.workerLocalPrincipal(pos);
-        else {
-          storeap =
-              ts.currentStoreAccessPathFor(lc.context().currentClass(),
-                  lc.jifContext());
-          _storeP = ts.dynamicPrincipal(pos, storeap);
-        }
-      } else {
-        storeap = _storeP.path();
-      }
-      final Principal storeP = _storeP;
+            "Needs location, but store principal is null!", pos);
+      if (_storeP.isTopPrincipal()
+          || ts.workerLocalPrincipal(pos).equals(_storeP))
+      // allocation to local worker. just return 
+        return;
 
+      final DynamicPrincipal storeP = (DynamicPrincipal) _storeP;
       JifContext A = lc.jifContext();
       A = (JifContext) n.del().enterScope(A);
-      AccessPath newStore = ts.storeAccessPathFor(n, A);
-      A.addDefinitionalEquiv(ts.dynamicPrincipal(pos, newStore), storeP);
-      A.addDefinitionalAssertionEquiv(newStore, storeap);
 
       lc.constrain(
           new NamedLabel("access label", accessLabel),
