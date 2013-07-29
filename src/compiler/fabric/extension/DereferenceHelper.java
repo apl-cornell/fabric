@@ -83,7 +83,7 @@ public class DereferenceHelper {
     Label objLabel = Jif_c.getPathMap(ref).NV();
     Label pc = ts.join(Jif_c.getPathMap(ref).N(), A.currentCodePCBound());
     AccessPath storeap = ts.storeAccessPathFor(ref, A);
-    if (ts.descendsFrom(targetType, ts.DelegatingPrincipal())) {
+    if (ts.descendsFrom(targetType, ts.PrincipalClass())) {
       if (ts.isFinalAccessExpr(ref)) {
         // this.store >= this holds true for all principals
         A.addActsFor(ts.dynamicPrincipal(pos, storeap),

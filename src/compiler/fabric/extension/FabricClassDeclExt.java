@@ -113,7 +113,7 @@ public class FabricClassDeclExt extends JifClassDeclExt {
       // ({*<-store$} <= object label) holds true everywhere
       A.addAssertionLE(topStoreIntegLabel, pct.updateLabel());
 
-      if (ts.descendsFrom(ct, ts.DelegatingPrincipal())) {
+      if (ts.descendsFrom(ct, ts.PrincipalClass())) {
         // this.store >= this holds true for all principals
         A.addActsFor(ts.dynamicPrincipal(pos, new AccessPathStore(
             new AccessPathThis(ct, pos), ts.Store(), pos)), ts
