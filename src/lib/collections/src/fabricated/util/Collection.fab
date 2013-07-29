@@ -17,7 +17,7 @@ public interface Collection[label L] {
     boolean{L} isEmpty{L}();
     
     Iterator[L]{L} iterator{L}();
-    Iterator[L]{L} iterator{L}(Store{L} store) where L <= {*<-store}, {*->store} <= L;
+    Iterator[L]{L} iterator{L}(Store{L} store) where {*<-store} <= L, L <= {*->store};
 
     Object{L}[]{L} toArray{L}();
     Object{L}[]{L} toArray{L}(Store{L} store);

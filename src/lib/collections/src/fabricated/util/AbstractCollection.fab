@@ -20,12 +20,12 @@ public abstract class AbstractCollection[label L] implements Collection[L] {
     }
 
     public abstract Iterator[L]{L} iterator{L}();
-    public abstract Iterator[L]{L} iterator{L}(Store{L} store) where L <= {*<-store}, {*->store} <= L;
+    public abstract Iterator[L]{L} iterator{L}(Store{L} store) where {*<-store} <= L, L <= {*->store};
 
     public Object{L}[]{L} toArray{L}()
     {
       final Store localStore = worker$.getLocalStore();
-      if (L <= new label {*<-localStore} && new label {*->localStore} <= L) {
+      if (new label {*<-localStore} <= L  && L <= new label {*->localStore}) {
         Iterator itr = iterator(localStore);
         int size = size();
         Object{L}[] a = new Object[size];
@@ -41,7 +41,7 @@ public abstract class AbstractCollection[label L] implements Collection[L] {
     public Object{L}[]{L} toArray{L}(Store store)
     {
       final Store localStore = worker$.getLocalStore();
-      if (L <= new label {*<-localStore} && new label {*->localStore} <= L) {
+      if (new label {*<-localStore} <= L  && L <= new label {*->localStore}) {
         Iterator itr = iterator(localStore);
         int size = size();
         Object{L}[] a = new Object[size]@store;
@@ -55,7 +55,7 @@ public abstract class AbstractCollection[label L] implements Collection[L] {
         
     public boolean{L} contains{L}(Object{L} o) throws (ClassCastException{L}, NullPointerException{L}) {
       final Store localStore = worker$.getLocalStore();
-      if (L <= new label {*<-localStore} && new label {*->localStore} <= L) {
+      if (new label {*<-localStore} <= L  && L <= new label {*->localStore}) {
         Iterator itr = iterator(localStore);
         while (itr.hasNext()) {
           if (compare.equals(o, itr.next()))
@@ -77,7 +77,7 @@ public abstract class AbstractCollection[label L] implements Collection[L] {
     public boolean{L} remove{L}(Object{L} o) throws (UnsupportedOperationException{L}, 
         ClassCastException{L}, NullPointerException{L}) {
       final Store localStore = worker$.getLocalStore();
-      if (L <= new label {*<-localStore} && new label {*->localStore} <= L) {
+      if (new label {*<-localStore} <= L  && L <= new label {*->localStore}) {
         Iterator itr = iterator(localStore);
         while (itr.hasNext()) {
           if (compare.equals(o, itr.next())) {
@@ -94,7 +94,7 @@ public abstract class AbstractCollection[label L] implements Collection[L] {
     public boolean{L} containsAll{L}(Collection[L]{L} c) throws (ClassCastException{L}, NullPointerException{L}) {
         if (c == null) throw new NullPointerException();
         final Store localStore = worker$.getLocalStore();
-        if (L <= new label {*<-localStore} && new label {*->localStore} <= L) {
+        if (new label {*<-localStore} <= L  && L <= new label {*->localStore}) {
           Iterator itr = iterator(localStore);
           while (itr.hasNext()) {
             if (!contains(itr.next())) {
@@ -113,7 +113,7 @@ public abstract class AbstractCollection[label L] implements Collection[L] {
         IllegalStateException{L}) {
       
       final Store localStore = worker$.getLocalStore();
-      if (L <= new label {*<-localStore} && new label {*->localStore} <= L) {
+      if (new label {*<-localStore} <= L  && L <= new label {*->localStore}) {
         Iterator itr = iterator(localStore);
         boolean modified = false;
         int pos = c.size();
@@ -131,7 +131,7 @@ public abstract class AbstractCollection[label L] implements Collection[L] {
         NullPointerException{L}) {
       
       final Store localStore = worker$.getLocalStore();
-      if (L <= new label {*<-localStore} && new label {*->localStore} <= L) {
+      if (new label {*<-localStore} <= L  && L <= new label {*->localStore}) {
         Iterator itr = iterator(localStore);
         boolean modified = false;
         int pos = size();
@@ -153,7 +153,7 @@ public abstract class AbstractCollection[label L] implements Collection[L] {
         NullPointerException{L}) {
       
       final Store localStore = worker$.getLocalStore();
-      if (L <= new label {*<-localStore} && new label {*->localStore} <= L) {
+      if (new label {*<-localStore} <= L  && L <= new label {*->localStore}) {
         Iterator itr = iterator(localStore);
         boolean modified = false;
         int pos = size();
@@ -171,7 +171,7 @@ public abstract class AbstractCollection[label L] implements Collection[L] {
     
     public void clear{L}() throws (UnsupportedOperationException{L}) {
       final Store localStore = worker$.getLocalStore();
-      if (L <= new label {*<-localStore} && new label {*->localStore} <= L) {
+      if (new label {*<-localStore} <= L  && L <= new label {*->localStore}) {
         Iterator itr = iterator(localStore);
         
         while (itr.hasNext()) {
@@ -183,26 +183,4 @@ public abstract class AbstractCollection[label L] implements Collection[L] {
         throw new Error("Cannot create iterator on local store.");
 
     }
-    
-//    public String{L} toString() {
-//        String s = "[";
-//        int i = 0;
-//
-//        while (i < size()) {
-//            try {
-//                JifObject[L] obj = get(i);                
-//                if (obj == this) {
-//                    s += "(this Collection)";
-//                }
-//                else {
-//                    s += (obj==null?"null":obj.toString());
-//                }
-//                if (++i < size()) s += ", ";
-//            }
-//            catch (IndexOutOfBoundsException e) {}
-//        }
-//        s = s + "]";
-//        return s;
-//    }
-
 }

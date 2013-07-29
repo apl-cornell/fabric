@@ -167,8 +167,7 @@ public class HashSet[label L] extends AbstractSet[L]
   {
     return map.iterator(HashMap.KEYS);
   }
-
-  public Iterator[L]{L} iterator{L}(Store{L} store) where L <= {*<-store}, {*->store} <= L
+  public Iterator[L]{L} iterator{L}(Store{L} store) where {*<-store} <= L, L <= {*->store}
   {
     // Avoid creating intermediate keySet() object by using non-public API.
     return map.iterator(store, HashMap.KEYS);
