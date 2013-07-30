@@ -28,23 +28,22 @@ public class Group[principal O] extends Principal authority (O) {
 
   /**
    * Create a new group with the given name and the default maximum size.
-   * The most restrictive label that makes any sense is {group->;owner<-}
+   * The most restrictive label that makes any sense is {owner->;owner<-}, 
+   * 
    */
-  protected Group{*glbl}(String name, label glbl, Principal owner) 
+  protected Group{*glbl}(label glbl, Principal owner, String name) : {*lbl}
     throws (Exception{*glbl}) 
     where caller(owner),
-    {owner->} <= glbl,
+    {owner←} <= glbl,
     glbl <= {owner→;owner←},
     {glbl; owner; name} <= {*glbl}
   {
-    this.name = name;
+    this.lbl = declassify(new label {{*glbl;owner←} meet {this→;owner←}}, 
+          {owner;glbl} meet {});
+    this.name = declassify(endorse(name, {name} meet {⊤→⊤;owner←}), {name} meet {});
 //    this.owner = owner;     
-    this.lbl = new label {{*glbl;owner←} meet {this→;owner←}};
-//    this.lbl = glbl;
-    members = new HashSet/*principal*/(new PrincipalComparator());
-//    group = inner; 
+    members = new HashSet/*Principal*/(new PrincipalComparator());
     super();
-//    inner.setGroup(this);
   }
 
   //////////////////////////////////////////////////////////////////////////////

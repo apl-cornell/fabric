@@ -3,7 +3,6 @@ package fabric.types;
 import jif.types.hierarchy.LabelEnv;
 import jif.types.label.AccessPath;
 import jif.types.label.AccessPathRoot;
-import jif.types.label.AccessPathThis;
 import polyglot.types.ClassType;
 import polyglot.types.Type;
 import polyglot.util.Position;
@@ -61,6 +60,10 @@ public class AccessPathNew extends AccessPathRoot {
 
   @Override
   public boolean equals(Object o) {
+    //XXX: This is not really correct.  Two independent new
+    //     expressions might be considered equivalent 
+    //     with this definition. Really need an 'instance' for
+    //     each new to distinguish them.
     if (o instanceof AccessPathNew) {
       AccessPathNew that = (AccessPathNew) o;
       if (this.ct == that.ct || this.ct == null || that.ct == null)
@@ -73,9 +76,6 @@ public class AccessPathNew extends AccessPathRoot {
   @Override
   public boolean equivalentTo(AccessPath p, LabelEnv env) {
     if (this == p || equals(p)) return true;
-    if (p instanceof AccessPathThis) {
-      return p.type().equals(ct);
-    }
     return false;
   }
 

@@ -16,6 +16,7 @@ import polyglot.types.SemanticException;
 import polyglot.types.Type;
 import polyglot.util.Position;
 import fabric.ast.FabricUtil;
+import fabric.types.AccessPathStore;
 import fabric.types.FabricClassType;
 import fabric.types.FabricContext;
 import fabric.types.FabricTypeSystem;
@@ -43,6 +44,13 @@ public class NewJifExt_c extends JifNewExt {
 
     AccessPath storeap = storePrincipal.path();
     AccessPath newStore = ts.storeAccessPathFor(n, context);
+    if (!newStore.isUninterpreted()) {
+      AccessPathStore aps = (AccessPathStore) newStore;
+      // Lookup all final access paths reachable and add them to the
+      // environment if they have constant initializers
+      ts.processFAP(n.type().toReference(), aps.path(), context);
+    }
+
     context.addDefinitionalEquiv(
         ts.dynamicPrincipal(Position.compilerGenerated(), newStore),
         storePrincipal);
