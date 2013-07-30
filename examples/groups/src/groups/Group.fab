@@ -1,5 +1,6 @@
 package groups;
 
+import fabric.lang.security.Principal;
 import fabricated.util.*;
 
 /**
@@ -38,7 +39,7 @@ public class Group[principal O] extends Principal authority (O) {
     glbl <= {owner→;owner←},
     {glbl; owner; name} <= {*glbl}
   {
-    this.lbl = declassify(new label {{*glbl;owner←} meet {this→;owner←}}, 
+    this.lbl = declassify(new label {{*glbl;owner←} meet {this→;owner←}}@store$, 
           {owner;glbl} meet {});
     this.name = declassify(endorse(name, {name} meet {⊤→⊤;owner←}), {name} meet {});
 //    this.owner = owner;     
@@ -54,7 +55,7 @@ public class Group[principal O] extends Principal authority (O) {
         && new label{*lbl} <= new label {store$→}) // class invariant?
     {
       members.add(p);
-    } else throw new Error("impossible");
+    } else throw new Error("Group:57:impossible");
   }
 
   public void remove{*lbl}(Principal{*lbl} p) where authority (this), lbl <= {p.store$→}  {
@@ -62,19 +63,19 @@ public class Group[principal O] extends Principal authority (O) {
         && new label{*lbl} <= new label {store$→}) // class invariant?
     {
       members.remove(p);
-    } else throw new Error("impossible");
+    } else throw new Error("Group:65:impossible");
   }
 
   public Iterator[{*lbl}]{*lbl} iterator{*lbl}() {
     if (store$ equiv members.store$) {
       return members.iterator();
-    } else throw new Error("impossible");
+    } else throw new Error("Group:71:impossible");
   }
   
   public Iterator[{*lbl}]{*lbl} iterator{{*lbl}}(Store{{*lbl}} store) where lbl <= {*<-store}, {*->store} <= lbl {
     if (store$ equiv members.store$) {
       return members.iterator(store);
-    } else throw new Error("impossible");
+    } else throw new Error("Group:77:impossible");
   }
 
   public boolean{*lbl;p} contains{*lbl}(Principal p) where authority(O), {p} <= {owner→} {
@@ -90,13 +91,14 @@ public class Group[principal O] extends Principal authority (O) {
             return members.contains(declassify(endorse(p, {p;this;*lbl} meet {⊤→⊤;owner←}), {p;this;*lbl;owner←} meet {}));
           }
         }
-      } else throw new Error("impossible");
+      } else throw new Error("Group:93:impossible");
     }
     return false;
   }
 
   public boolean{this; p; this←} delegatesTo{this→}(principal{this→} p) where authority(O) {
-    if (p == this 
+    if (p == O
+        || p == this 
         || p == owner
         || p == store$
         || p == worker$) 
@@ -113,7 +115,7 @@ public class Group[principal O] extends Principal authority (O) {
           return declassify (endorse(contains(_p), {this; p; this←; *lbl}), {{this; p; this←} meet {}}) ;      
         }
       }
-    } else throw new Error("impossible");
+    } else throw new Error("Group:116:impossible");
   }
 
   public String{this; this←} name() {
@@ -154,9 +156,30 @@ public class Group[principal O] extends Principal authority (O) {
           && local actsfor this) {                    //
         final Store _c = declassify(c, {{*lbl;this←;c} meet {}});
         final Principal _p = declassify(p, {{*lbl;this←;p} meet {}});
+
         declassify({*lbl;this←}) {
-          final label lblconf = new label {{*lbl} meet {*->}};
+          final label lblconf = new label {{*lbl} meet {*->}};          
           endorse({owner←;*lblconf}) {
+            // check the built-in delegations first
+            principal{this} native[] defaults = new principal native[] { O, (principal)this, 
+                (principal)owner, (principal)store$.getPrincipal(), (principal)worker$.getPrincipal()};
+            for(int i = 0; i < defaults.length; i++) {
+              final Principal s = defaults[i];
+              ActsForProof _prf = PrincipalUtil.findActsForProof(_c, _p, s, searchState); 
+              ActsForProof prf = endorse(_prf, {owner←;*lblconf});
+              if (prf != null) {
+                if (s actsfor this) {
+                  // declassify to public. Return value will be protected at least at
+                  // the reference label.
+                  ActsForProof afPrf = new TransitiveProof@local(prf, s, new DelegatesProof@local(s, this));
+                    declassify ({{*lbl;this←} meet {this←}}) {
+                      return declassify(endorse(afPrf, {owner←;this→}), {{*lbl;this←;s←} meet {this←;s←}});
+                    }
+                } else throw new Error("1 what?!");
+              }
+            }
+            
+            // check the group members
             Iterator[{*lbl}] i = members.iterator(local);
             while(i.hasNext()) {
               final Object o = i.next();
@@ -172,13 +195,13 @@ public class Group[principal O] extends Principal authority (O) {
                       declassify ({{*lbl;this←} meet {this←}}) {
                         return declassify(endorse(afPrf, {owner←;this→}), {{*lbl;this←;s←} meet {this←;s←}});
                       }
-                  }
+                  } else throw new Error("2 what?!");
                 }
               }
             }
           }
         }
-      } else throw new Error("impossible");
+      } else throw new Error("Group:181:impossible");
       // declassify to public. Return value will be protected at least at
       // the reference label.
       endorse({owner←;this→}) {
@@ -186,43 +209,24 @@ public class Group[principal O] extends Principal authority (O) {
           return null;
         }
       }
-    } else throw new Error("impossible");
+    } else throw new Error("Group:189:impossible");
   }
     
   public ActsForProof{this; c; q; searchState; q←; this←; c}
   findProofDownto{this→;this←}(Store c, Principal q, java.lang.Object searchState)
       where authority(this), {c;q;searchState} <= {this→}
   {
-      if (owner actsfor this                    //class invariant
-          && new label {owner←} <= lbl
-          && lbl <= new label{this→;owner←}) { //class invariant  
-        declassify ({{*lbl;this←} meet {this←}}) {
-          return null;
-        }
-      } else throw new Error("impossible");
+      if (owner actsfor this) {                    //class invariant
+        if (new label {owner←} <= lbl) {
+          if (lbl <= new label{this→;owner←}) { //class invariant  
+            declassify ({{*lbl;this←} meet {this←}}) {
+              return null;
+            }
+          } else throw new Error("Group:202:impossible");
+        } else throw new Error("Group:203:impossible: " + LabelUtil.toString(lbl));
+      } else throw new Error("Group:204:impossible");
   }
 }
-
-class GroupPrincipal extends AbstractPrincipal {
-  public GroupPrincipal(String{this} name) {
-    super(name);
-  }
-
-  public GroupPrincipal(String{this} name, Principal{this} owner) {
-      super(name, owner);
-  }
-  // TODO:
-  public void addDelegatesTo{this→;this←}(Principal{this→;this←} p) where caller (this)
-  {
-    throw new Error("Attempting to add delegate to inner GroupPrincipal " + name());
-  }
-
-  public void removeDelegatesTo{this→;this←}(Principal{this→;this←} p) where caller (this)
-  {
-    throw new Error("Attempting to remove delegate from inner GroupPrincipal " + name());
-  }
-}
-
 /*
 ** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
 */

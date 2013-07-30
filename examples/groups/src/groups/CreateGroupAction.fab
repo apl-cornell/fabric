@@ -1,0 +1,90 @@
+package groups;
+
+import auth.*;
+import auth.rest.*;
+import sif.servlet.*;
+
+import javax.servlet.ServletException;
+
+import java.io.PrintWriter;
+import java.io.IOException;
+
+public class CreateGroupAction[principal Serv] extends AuthenticatedAction[Serv] {
+
+    final String{this}@{Serv→} nameParam;
+    final String{this}@{Serv→} typeParam;
+    
+    public CreateGroupAction(Servlet[Serv]{this} s) {      
+      this(s, "name", "type");
+    }
+
+    public CreateGroupAction(Servlet[Serv]{this} s, String{this} nameParam, String{this} typeParam) {      
+      this(s, "creategroup", nameParam, typeParam);
+    }
+    
+    public CreateGroupAction(Servlet[Serv]{this} s, String{this} name, String{this} nameParam, String{this} typeParam) {      
+      this.nameParam = nameParam;
+      this.typeParam = typeParam;
+      super(name, s);
+    }
+	  
+    public void invokeImpl{*lbl}(label{*lbl} lbl,
+        Request[Serv]{*lbl} req,
+        AuthServlet[Serv]{*lbl} servlet,
+        AuthSessState{*lbl} state,
+        principal{*lbl} currentUser) 
+            throws (ServletException{*lbl;req.session←})
+            where caller(req.session),
+            lbl <= {req.session→},
+            req.session equiv state.sessionPrincipal,
+            req.session actsfor currentUser
+    {
+      atomic {
+        ServletException se = null;
+        try {
+          final GroupUser guser = (GroupUser) currentUser; 
+          String name = req.getParam(lbl, nameParam); 
+          String type = req.getParam(lbl, typeParam); 
+          PrintWriter w = req.getResponseWriter();
+          try {
+            if (type.equals("private")) {
+              if (lbl <= new label{guser→;guser←}) {
+                guser.createPrivateGroup(name);
+                w.println("\"created private group " + name + "\"");
+              } else {
+                se = new ServletException("lbl is too restrictive");
+              }
+            }
+            else if (type.equals("public")) {
+              if (lbl <= new label{guser←}) {
+                guser.createPublicGroup(name);
+                w.println("\"created public group " + name + "\"");
+              } else {
+                se = new ServletException("lbl is too restrictive");
+              }
+            }
+            else {
+              se = new ServletException("unknown type");              
+            }
+          } catch (Exception e) {
+              se = new ServletException(e);
+          }
+          
+        } catch (IOException e) {
+          se = new ServletException(e);
+        }
+        endorse({req.session→;req.session←}) {
+          declassify ({*lbl;req.session←}) {              
+            ServletException{*lbl;req.session←} _se =  declassify(endorse(se,{req.session→;req.session←}),{*lbl;req.session←});            
+            if (_se != null) {  
+                  throw _se;
+            }
+            else {
+              return;
+            }  
+          }
+        }
+      }
+    }
+}
+

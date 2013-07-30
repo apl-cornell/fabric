@@ -7,14 +7,15 @@ public class GroupUser extends User {
   protected Map[{this←}]{this←}@{⊤→this.store$} publicGroups;
   protected Map[{this→;this←}]{this→;this←}@{⊤→this.store$} privateGroups;
   
-  public GroupUser{this}(String{this} name, String{this} password) where authority (this) {
+  public GroupUser{this}(principal{this} servP, String{this} name, String{this} password) where authority (this) {
     super(name, password);
     endorse ({this←}) {
       try {
         publicGroups = new HashMap(new StringComparator(), new PrincipalComparator());
         privateGroups = new HashMap(new StringComparator(), new PrincipalComparator());
+        addDelegatesTo(servP);
       } catch (Exception e) {
-        throw new Error("impossible", e);
+        throw new Error("GroupUser: impossible", e);
       }
     }
   }
@@ -22,7 +23,10 @@ public class GroupUser extends User {
   public Group[this]{this←} createPublicGroup{this←}(String{this←} name) throws (Exception{this←}) 
   where authority(this)    
   {
-    Group g = createGroup(new label{this←}, name);
+    // for some reason, the @ store is required here...
+    // maybe the default location for labels is screwy?
+    final label lbl = new label{this←}@store$;
+    Group g = createGroup(lbl, name);
     publicGroups.put(name, g);
     return g;
   }
@@ -30,7 +34,10 @@ public class GroupUser extends User {
   public Group[this]{this→;this←} createPrivateGroup{this→;this←}(String{this→;this←} name) throws (Exception{this→;this←}) 
   where authority(this)      
   {
-    Group g = createGroup(new label{this→;this←}, name);
+    // for some reason, the @ store is required here...
+    // maybe the default location for labels is screwy?
+    final label lbl = new label{this→;this←}@store$;    
+    Group g = createGroup(lbl, name);
     privateGroups.put(name, g);
     return g;
   }
@@ -43,11 +50,12 @@ public class GroupUser extends User {
   {
     try {
       if (name == null) throw new NullPointerException();
-      final Group g = new Group(lbl, this, name);
+      final Group[this] g = new Group[this](lbl, this, name);
       if (g.lbl <= lbl) return g;
     } catch (Exception e) {
+      throw new Error("GroupUser:50:impossible", e);
     }
-    throw new Error("impossible");
+    throw new Error("GroupUser:51:impossible");
   }
 
   public String{this;this←} toJson() {

@@ -24,10 +24,12 @@ public class GroupServlet extends Servlet[HelloEP] implements AuthServlet[HelloE
 	public void initialize{HelloEP→; HelloEP←}() throws ServletException {
 	  atomic {
 	    final principal p = HelloEP;
-	    addStartAction(new FrontPageAction[p](this));
 	    addStartAction(new LoginAction[p](this));
 	    addStartAction(new LogoffAction[p](this));
 	    addStartAction(new CreateUserAction[p](this));
+
+	    addStartAction(new FrontPageAction[p](this));
+	    addStartAction(new CreateGroupAction[p](this));
 	  }
 	}
 	
@@ -94,20 +96,21 @@ public class GroupServlet extends Servlet[HelloEP] implements AuthServlet[HelloE
 		where caller(p, HelloEP),
 			  endorse({p->; HelloEP<-})
 	{
-		declassify({HelloEP<-}) {
-			Map[{HelloEP->; HelloEP<-}] users = declassify(endorse(allUsers, {p->; HelloEP<-}), {HelloEP<-});
-			String userID = declassify(endorse(uid, {p->; HelloEP<-}), {HelloEP<-});
-			String _password = declassify(endorse(password, {p->; HelloEP<-}), {HelloEP<-});
-			GroupUser{HelloEP<-} ret = new GroupUser@helloStore(userID, _password);
-			users.put(userID, ret);
-
-			declassify( {p->; p<-;HelloEP<-}) {
-				endorse({p->; p<-}) {
-					GroupUser{p->;p<-} theUser = declassify(endorse(ret, {p->; p<-}), {p->; p<-;HelloEP<-});
-					return theUser;
-				}
-			}
-		}
+	  declassify({HelloEP<-}) {
+	    Map[{HelloEP->; HelloEP<-}] users = declassify(endorse(allUsers, {p->; HelloEP<-}), {HelloEP<-});
+	    String userID = declassify(endorse(uid, {p->; HelloEP<-}), {HelloEP<-});
+	    String _password = declassify(endorse(password, {p->; HelloEP<-}), {HelloEP<-});
+	    final GroupUser{HelloEP<-} ret = new GroupUser@helloStore(HelloEP, userID, _password);
+	    if (HelloEP actsfor ret) ; else throw new Error("HELLOep doesn't act for ret");
+	    users.put(userID, ret);
+	    
+	    declassify( {p->; p<-;HelloEP<-}) {
+	      endorse({p->; p<-}) {
+	        GroupUser{p->;p<-} theUser = declassify(endorse(ret, {p->; p<-}), {p->; p<-;HelloEP<-});
+	        return theUser;
+	      }
+	    }
+	  }
 	}
 
 	public principal{p->; p<-} lookupUserID{p->; p<-} (String{p->; p<-} uid, principal{p->; p<-} p)
@@ -115,23 +118,23 @@ public class GroupServlet extends Servlet[HelloEP] implements AuthServlet[HelloE
 		where caller(p),
 			  authority (HelloEP)
 	{
-		int pc_caller = 0;
-		declassify ({pc_caller} meet {_->_}) {
-			fabric.util.Map rootMap = helloStore.getRoot();
-			if (rootMap == null) {
-				throw new ServletException("Store not acceesible");
-			}
-			Map[{HelloEP->;HelloEP<-}] allUsers = null;
-			Object obj = rootMap.get(Config.usersMapKey);
-			if (obj instanceof Map[{HelloEP->; HelloEP<-}]) {
-				allUsers = (Map[{HelloEP->; HelloEP<-}])obj;
-			}
-			
-			if (allUsers == null) {
-				throw new ServletException("Cannot fetch the collection of users from store");
-			}
-			return findUserInMap(allUsers, uid, p);
-		}
+	  int pc_caller = 0;
+	  declassify ({pc_caller} meet {_->_}) {
+	    fabric.util.Map rootMap = helloStore.getRoot();
+	    if (rootMap == null) {
+	      throw new ServletException("Store not acceesible");
+	    }
+	    Map[{HelloEP->;HelloEP<-}] allUsers = null;
+	    Object obj = rootMap.get(Config.usersMapKey);
+	    if (obj instanceof Map[{HelloEP->; HelloEP<-}]) {
+	      allUsers = (Map[{HelloEP->; HelloEP<-}])obj;
+	    }
+	    
+	    if (allUsers == null) {
+	      throw new ServletException("Cannot fetch the collection of users from store");
+	    }
+	    return findUserInMap(allUsers, uid, p);
+	  }
 	}
 
 	private principal{p->;p<-} findUserInMap{p->; p<-} (Map[{HelloEP->; HelloEP<-}]{p->; p<-} allUsers, String{p->; p<-} uid, principal{p->; p<-} p)
@@ -153,6 +156,8 @@ public class GroupServlet extends Servlet[HelloEP] implements AuthServlet[HelloE
 	            ret = declassify(endorse( u,{HelloEP->;p->;p<-}), {p->});
 	            }}
 	          }
+	        } else { 
+	          throw new Error("HelloEP doesn't act for user"); 
 	        }
 	      }
 	    }

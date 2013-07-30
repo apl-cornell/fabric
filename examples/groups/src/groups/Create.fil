@@ -47,10 +47,10 @@ public class Create {
 			StringComparator scomp = new StringComparator@helloStore(helloUserLabel).fabricated$util$StringComparator$();
 			PrincipalComparator ucomp = new PrincipalComparator@helloStore(helloUserLabel).fabricated$util$PrincipalComparator$();
 			HashMap users = new HashMap@helloStore(helloUserLabel).fabricated$util$HashMap$(scomp, ucomp);
-			GroupUser alice = new GroupUser@helloStore().groups$GroupUser$("alice", "password");
-			GroupUser bob = new GroupUser@helloStore().groups$GroupUser$("bob", "password");
-            users.put("alice", alice);
-            users.put("bob", bob);
+			GroupUser alice = new GroupUser@helloStore().groups$GroupUser$(helloPrin, "alice", "password");
+			GroupUser bob = new GroupUser@helloStore().groups$GroupUser$(helloPrin, "bob", "password");
+                        users.put("alice", alice);
+                        users.put("bob", bob);
 
 			// delegate the servlet principal to worker and store
 			alice.addDelegatesTo(helloPrin);

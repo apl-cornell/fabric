@@ -95,7 +95,6 @@ public class CreateUserAction[principal servP] extends AbstractAction[servP] {
             else {
                 //now create user and login.
                 passwordErr = runClosure(req, userID, (SessionPrincipal)req.session, password);
-                	//success! lookup again.
             }
             final principal loginUser = servlet.lookupUserID(userID, req.session);
             if (uidErr != null || passwordErr != null) {
@@ -171,11 +170,11 @@ public class CreateUserAction[principal servP] extends AbstractAction[servP] {
             final Store{req.session←} localStore = worker.getLocalStore();
  
         	principal loginUser = null;
-			try {
-				loginUser = servlet.createUser(userID, password, req.session);
-			} catch (ServletException{req.session←} e) {
-				//HACK
-			}
+        	try {
+        	  loginUser = servlet.createUser(userID, password, req.session);
+        	} catch (ServletException{req.session←} e) {
+                  return "Unknown error.";
+        	}
             final principal logUser = declassify(loginUser, {req.session←});
            
             SessionPrincipal spdeclass = declassify(sp, {req.session→;req.session←} to {req.session←});
