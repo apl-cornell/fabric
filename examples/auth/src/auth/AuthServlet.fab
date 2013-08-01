@@ -6,7 +6,7 @@ import sif.servlet.Request;
 import javax.servlet.ServletException;
 
 public nonfabric interface AuthServlet[principal servP] {
-    @{servP->}
+    @{*->}
     public principal{p:;p!:} createUser{p:; p!:}( String{p:; p!:} userID, String{p:; p!:} password, principal{p:; p!:} p)
         throws ServletException where caller(p);    
 
