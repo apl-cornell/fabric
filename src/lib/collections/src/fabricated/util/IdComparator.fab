@@ -10,6 +10,6 @@ public class IdComparator[label L] implements Comparator[L] {
   }
 
   public int{L} hashCode{L}(Object{L} a) throws (UnsupportedOperationException{L},ClassCastException{L}, NullPointerException{L}) {
-      return Ref.hash(a);
+      return Object.oidHashCode(a);
   }
 }
