@@ -1,0 +1,15 @@
+package fabricated.util;
+
+public class IdComparator[label L] implements Comparator[L] {
+  public boolean{L} equals{L}(Object{L} a, Object{L} b) throws (ClassCastException{L}, NullPointerException{L}) {
+      return a == b;
+  }
+
+  public int{L} compare{L}(Object{L} a, Object{L} b) throws (UnsupportedOperationException{L},ClassCastException{L}, NullPointerException{L}) {
+      throw new UnsupportedOperationException();
+  }
+
+  public int{L} hashCode{L}(Object{L} a) throws (UnsupportedOperationException{L},ClassCastException{L}, NullPointerException{L}) {
+      return Ref.hash(a);
+  }
+}

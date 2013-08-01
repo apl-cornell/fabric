@@ -1,0 +1,7 @@
+package fabric.lang;
+
+import fabric.worker.Store;
+
+public class Ref {
+  public static native int hash(fabric.lang.Object ref); 
+}
