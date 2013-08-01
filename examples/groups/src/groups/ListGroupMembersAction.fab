@@ -1,0 +1,135 @@
+package groups;
+
+import auth.*;
+import auth.rest.*;
+import sif.servlet.*;
+import fabricated.util.Iterator;
+
+import javax.servlet.ServletException;
+
+import java.io.PrintWriter;
+import java.io.IOException;
+
+public class ListGroupMembersAction[principal Serv] extends AuthenticatedAction[Serv] {
+
+    final String{this}@{Serv→} groupParam;
+    final String{this}@{Serv→} typeParam;
+
+    public ListGroupMembersAction(Servlet[Serv]{this} s) {
+      this(s, "group", "type");
+    }
+
+    public ListGroupMembersAction(Servlet[Serv]{this} s, String{this} groupParam, String{this} typeParam) {
+      this(s, "list", groupParam, typeParam);
+    }
+    
+    public ListGroupMembersAction(Servlet[Serv]{this} s, String{this} name, 
+        String{this} groupParam, String{this} typeParam) {
+      this.groupParam = groupParam;
+      this.typeParam = typeParam;
+      super(name, s);
+    }
+	  
+    public void invokeImpl{*lbl}(label{*lbl} lbl,
+        Request[Serv]{*lbl} req,
+        AuthServlet[Serv]{*lbl} servlet,
+        AuthSessState{*lbl} state,
+        principal{*lbl} currentUser) 
+            throws (ServletException{*lbl;req.session←})
+            where caller(req.session),
+            lbl <= {req.session→},
+            req.session equiv state.sessionPrincipal,
+            req.session actsfor currentUser
+    {
+      atomic {
+        String err = null;
+        PrintWriter[{req.session→}]{*lbl;req.session←} w = null;
+        try {
+          final GroupUser guser = (GroupUser) currentUser; 
+          String groupName = req.getParam(lbl, groupParam); 
+          String type = req.getParam(lbl, typeParam); 
+          w = req.getResponseWriter();
+
+          if (groupName == null || groupName.length() == 0) {
+            err = "Unknown group.";
+          }
+          
+          if (lbl <= new label{req.session→;req.session←}) {  
+              //get group
+              Group group = null;
+              if (type.equals("private")) {
+                if (lbl <= new label{guser→;guser←}) {  
+                  group = guser.getGroup(new label{guser→;guser←}, groupName);
+                } else {
+                  err = "lbl is too restrictive";
+                }
+              } else if (type.equals("public")) {
+                if (lbl <= new label{guser←}) {
+                  group = guser.getGroup(new label{guser←}, groupName);
+                } else {
+                  err = "lbl is too restrictive";
+                }
+              }
+              else
+                err = "Unknown group type.";
+              
+              if (err == null) {
+                if (group == null)
+                  err = "Unknown group.";
+              }
+              
+              final Group _group = group;
+              if (_group.lbl <= new label{req.session→}) {
+                if (err == null) {
+                  declassify({*_group.lbl;guser←}) {
+                    final GroupUser _guser = declassify(guser, {*_group.lbl;guser←});
+                    final Group __group = declassify(_group, {*_group.lbl;guser←});
+                    if (__group.lbl <= new label{__group.store$→;_guser←}
+                    && new label{_guser←} <= __group.lbl) {
+                      final Store localStore = worker$.getLocalStore();
+                      if (__group.lbl <=  new label{localStore→}
+                          && new label{localStore←} <= __group.lbl) {
+                        Iterator/*Principal*/ it = __group.iterator(localStore);
+                        String members = "[";
+                        while (it.hasNext()) {
+                          final Object o = it.next();
+                          if (__group.lbl <= new label {o.store$->}) {
+                            final Principal p = (Principal) o;                            
+                            members += "\"" + p.name() + "\"";
+                            if (it.hasNext()) 
+                              members += ",";                          
+                          } else throw new Error("impossible");
+                        }
+                        members += "]";
+                        w.println(members);
+                      } else throw new Error("impossible");
+                    } else throw new Error("impossible");
+                  }
+                }
+                
+                endorse({*lbl;*_group.lbl;req.session→} meet {*->;req.session←}) {
+                  declassify ({*lbl;req.session←}) {  
+                    String{*lbl;req.session←} _err =  declassify(endorse(err,{req.session→;req.session←}),{*lbl;req.session←}); 
+                    if (w == null) 
+                      throw new ServletException(_err);
+                    else if ( _err != null) {              
+                      w.println("\""+ _err +"\"");
+                      return;
+                    }
+                    else {
+                      return;
+                    }  
+                  }
+                }
+              } else throw new Error("impossible");
+              
+            } else {
+              throw new ServletException("lbl is too restrictive");
+            }
+        } catch (IOException e) {
+          throw new ServletException(e);
+        }
+      }
+    }
+}
+

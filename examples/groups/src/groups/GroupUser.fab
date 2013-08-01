@@ -11,15 +11,44 @@ public class GroupUser extends User {
     super(name, password);
     endorse ({this←}) {
       try {
-        publicGroups = new HashMap(new StringComparator(), new PrincipalComparator());
-        privateGroups = new HashMap(new StringComparator(), new PrincipalComparator());
+        // the exceptions thrown by these constructors prevent us from making these
+        // fields final....
+        publicGroups = new HashMap(new StringComparator(), new IdComparator());
+        privateGroups = new HashMap(new StringComparator(), new IdComparator());
         addDelegatesTo(servP);
       } catch (Exception e) {
         throw new Error("GroupUser: impossible", e);
       }
     }
+    
   }
-  
+
+  public Group[this]{*lbl} getGroup{*lbl}(label{*lbl} lbl, String{*lbl} name)  
+  where authority(this)    
+  {
+    //TODO: rethink this implementation some...    
+      if (lbl <= new label{this←}
+          && new label{this←} <= lbl) {
+        final Map publicGroups = this.publicGroups;
+        if (publicGroups.store$ equiv store$) {
+          final Object g = publicGroups.get(name);
+          if (lbl <= new label {g.store$→}) 
+            return (Group[this]) g;
+          else throw new Error("impossible");
+        } else throw new Error("impossible");
+      } else if (lbl <= new label{this→;this←}
+                 && new label{this→;this←} <= lbl) {
+        final Map privateGroups = this.privateGroups;
+        if(privateGroups.store$ equiv store$) {
+          final Object g = privateGroups.get(name);
+          if (lbl <= new label {g.store$→}) 
+            return (Group[this]) g;
+          else throw new Error("impossible");
+        } else throw new Error("impossible");
+      }
+      return null;
+  }
+
   public Group[this]{this←} createPublicGroup{this←}(String{this←} name) throws (Exception{this←}) 
   where authority(this)    
   {

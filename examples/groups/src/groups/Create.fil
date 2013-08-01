@@ -8,7 +8,7 @@ import fabricated.util.HashMap;
 import fabricated.util.Comparator;
 import fabricated.util.ListIterator;
 import fabricated.util.StringComparator;
-import fabricated.util.PrincipalComparator;
+import fabricated.util.IdComparator;
 
 public class Create {
 
@@ -45,7 +45,7 @@ public class Create {
 
 			// create the collection of all hello users
 			StringComparator scomp = new StringComparator@helloStore(helloUserLabel).fabricated$util$StringComparator$();
-			PrincipalComparator ucomp = new PrincipalComparator@helloStore(helloUserLabel).fabricated$util$PrincipalComparator$();
+			IdComparator ucomp = new IdComparator@helloStore(helloUserLabel).fabricated$util$IdComparator$();
 			HashMap users = new HashMap@helloStore(helloUserLabel).fabricated$util$HashMap$(scomp, ucomp);
 			GroupUser alice = new GroupUser@helloStore().groups$GroupUser$(helloPrin, "alice", "password");
 			GroupUser bob = new GroupUser@helloStore().groups$GroupUser$(helloPrin, "bob", "password");

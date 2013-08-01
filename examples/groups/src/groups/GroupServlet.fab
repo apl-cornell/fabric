@@ -27,9 +27,11 @@ public class GroupServlet extends Servlet[HelloEP] implements AuthServlet[HelloE
 	    addStartAction(new LoginAction[p](this));
 	    addStartAction(new LogoffAction[p](this));
 	    addStartAction(new CreateUserAction[p](this));
-
+	    
 	    addStartAction(new FrontPageAction[p](this));
+	    addStartAction(new ListGroupMembersAction[p](this));
 	    addStartAction(new CreateGroupAction[p](this));
+	    addStartAction(new AddToGroupAction[p](this));
 	  }
 	}
 	

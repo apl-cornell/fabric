@@ -43,27 +43,34 @@ public class Group[principal O] extends Principal authority (O) {
           {owner;glbl} meet {});
     this.name = declassify(endorse(name, {name} meet {⊤→⊤;owner←}), {name} meet {});
 //    this.owner = owner;     
-    members = new HashSet/*Principal*/(new PrincipalComparator());
+    members = new HashSet/*Principal*/(new IdComparator());
     super();
   }
 
   //////////////////////////////////////////////////////////////////////////////
   // Group membership operations                                              //
   //////////////////////////////////////////////////////////////////////////////
-  public void add{*lbl}(Principal{*lbl} p) where authority (this), lbl <= {p.store$→} {
-    if (store$ equiv members.store$   // class invariant
-        && new label{*lbl} <= new label {store$→}) // class invariant?
-    {
-      members.add(p);
-    } else throw new Error("Group:57:impossible");
+  public void add{*lbl}(Principal{*lbl} p) where authority (this) {
+    // we have not yet delegated to p or p's store, so we have to declassify 
+    if (lbl <= new label{this→;owner←}) { //class invariant
+      declassify ({*lbl} meet {p.store$→}) {
+        if (store$ equiv members.store$   // class invariant
+            && new label{*lbl} <= new label {store$→}) // class invariant?
+        {
+          members.add(p);
+        } else throw new Error("Group:57:impossible");
+      }
+    } else throw new Error("Group:63:impossible");
   }
 
-  public void remove{*lbl}(Principal{*lbl} p) where authority (this), lbl <= {p.store$→}  {
-    if (store$ equiv members.store$   // class invariant
-        && new label{*lbl} <= new label {store$→}) // class invariant?
-    {
-      members.remove(p);
-    } else throw new Error("Group:65:impossible");
+  public void remove{*lbl}(Principal{*lbl} p) where authority (this) {
+    if (lbl <= new label{p.store$→}) {
+      if (store$ equiv members.store$   // class invariant
+          && new label{*lbl} <= new label {store$→}) // class invariant?
+      {
+        members.remove(p);
+      } else throw new Error("Group:65:impossible");
+    } // otherwise, p cannot be in members 
   }
 
   public Iterator[{*lbl}]{*lbl} iterator{*lbl}() {
@@ -72,7 +79,7 @@ public class Group[principal O] extends Principal authority (O) {
     } else throw new Error("Group:71:impossible");
   }
   
-  public Iterator[{*lbl}]{*lbl} iterator{{*lbl}}(Store{{*lbl}} store) where lbl <= {*<-store}, {*->store} <= lbl {
+  public Iterator[{*lbl}]{*lbl} iterator{{*lbl}}(Store{{*lbl}} store) where {*<-store} <= lbl, lbl <= {*->store} {
     if (store$ equiv members.store$) {
       return members.iterator(store);
     } else throw new Error("Group:77:impossible");
