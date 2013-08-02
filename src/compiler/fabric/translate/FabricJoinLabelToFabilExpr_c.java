@@ -24,7 +24,8 @@ public class FabricJoinLabelToFabilExpr_c extends JoinLabelToJavaExpr_c {
     }
 
     boolean simplify = true;
-    if (rw.context().currentCode() instanceof ConstructorInstance)
+    if (rw.context().currentCode() instanceof ConstructorInstance
+        && rw.currentClass().isSubtype(rw.jif_ts().PrincipalClass()))
       simplify = false;
 
     LinkedList<Label> l = new LinkedList<Label>(L.joinComponents());
