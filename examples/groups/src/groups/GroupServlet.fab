@@ -10,20 +10,20 @@ import fabricated.util.ConcurrentModificationException;
 import fabricated.util.Comparator;
 import javax.servlet.ServletException;
 
-public class GroupServlet extends Servlet[HelloEP] implements AuthServlet[HelloEP] authority (HelloEP) {
+public class GroupServlet extends Servlet[worker$] implements AuthServlet[worker$] authority (worker$) {
 
 	final Store{this}@{*->} localStore;
 	final Store{this}@{*->} helloStore;
 
-	public GroupServlet{HelloEP→}() throws ServletException {
+	public GroupServlet{worker$→}() throws ServletException {
 	   super();
 	   localStore = worker$.getLocalStore();
 	   helloStore = worker$.getStore(Config.helloStoreName);
 	}
 
-	public void initialize{HelloEP→; HelloEP←}() throws ServletException {
+	public void initialize{worker$→; worker$←}() throws ServletException {
 	  atomic {
-	    final principal p = HelloEP;
+	    final principal p = worker$;
 	    addStartAction(new LoginAction[p](this));
 	    addStartAction(new LogoffAction[p](this));
 	    addStartAction(new CreateUserAction[p](this));
@@ -43,7 +43,7 @@ public class GroupServlet extends Servlet[HelloEP] implements AuthServlet[HelloE
 		return "";
 	}
 
-	protected String defaultActionName(Request[HelloEP] req) {
+	protected String defaultActionName(Request[worker$] req) {
 		return Config.defaultActionName;
 	} 
 
@@ -73,7 +73,7 @@ public class GroupServlet extends Servlet[HelloEP] implements AuthServlet[HelloE
                                                      String{p->; p<-} password, 
                                                      principal{p->; p<-} p)
 		throws ServletException
-		where caller(p), authority (HelloEP)
+		where caller(p), authority (worker$)
 	{
 		int pc_caller = 0;
 		declassify ({pc_caller} meet {_->_}) {
@@ -81,11 +81,11 @@ public class GroupServlet extends Servlet[HelloEP] implements AuthServlet[HelloE
 			if (rootMap == null) {
 				throw new ServletException("Store not acceesible");
 			}
-			Map[{HelloEP->;HelloEP<-}] allUsers = null;
+			Map[{worker$->;worker$<-}] allUsers = null;
 			
 			Object obj = rootMap.get(Config.usersMapKey);
-			if (obj instanceof Map[{HelloEP->; HelloEP<-}]) {
-				allUsers = (Map[{HelloEP->; HelloEP<-}])obj;
+			if (obj instanceof Map[{worker$->; worker$<-}]) {
+				allUsers = (Map[{worker$->; worker$<-}])obj;
 			}
 			if (allUsers == null) {
 				throw new ServletException("Cannot fetch the collection of users from store");
@@ -94,21 +94,21 @@ public class GroupServlet extends Servlet[HelloEP] implements AuthServlet[HelloE
 		}
     }
 
-	private principal{p->;p<-} addUserToMap{p->; p<-} (Map[{HelloEP->;HelloEP<-}]{p->; p<-} allUsers, String{p->; p<-} uid, String{p->; p<-} password, principal{p->; p<-} p)
-		where caller(p, HelloEP),
-			  endorse({p->; HelloEP<-})
+	private principal{p->;p<-} addUserToMap{p->; p<-} (Map[{worker$->;worker$<-}]{p->; p<-} allUsers, String{p->; p<-} uid, String{p->; p<-} password, principal{p->; p<-} p)
+		where caller(p, worker$),
+			  endorse({p->; worker$<-})
 	{
-	  declassify({HelloEP<-}) {
-	    Map[{HelloEP->; HelloEP<-}] users = declassify(endorse(allUsers, {p->; HelloEP<-}), {HelloEP<-});
-	    String userID = declassify(endorse(uid, {p->; HelloEP<-}), {HelloEP<-});
-	    String _password = declassify(endorse(password, {p->; HelloEP<-}), {HelloEP<-});
-	    final GroupUser{HelloEP<-} ret = new GroupUser@helloStore(HelloEP, userID, _password);
-	    if (HelloEP actsfor ret) ; else throw new Error("HELLOep doesn't act for ret");
+	  declassify({worker$<-}) {
+	    Map[{worker$->; worker$<-}] users = declassify(endorse(allUsers, {p->; worker$<-}), {worker$<-});
+	    String userID = declassify(endorse(uid, {p->; worker$<-}), {worker$<-});
+	    String _password = declassify(endorse(password, {p->; worker$<-}), {worker$<-});
+	    final GroupUser{worker$<-} ret = new GroupUser@helloStore(worker$, userID, _password);
+	    if (worker$ actsfor ret) ; else throw new Error("worker$ doesn't act for ret");
 	    users.put(userID, ret);
 	    
-	    declassify( {p->; p<-;HelloEP<-}) {
+	    declassify( {p->; p<-;worker$<-}) {
 	      endorse({p->; p<-}) {
-	        GroupUser{p->;p<-} theUser = declassify(endorse(ret, {p->; p<-}), {p->; p<-;HelloEP<-});
+	        GroupUser{p->;p<-} theUser = declassify(endorse(ret, {p->; p<-}), {p->; p<-;worker$<-});
 	        return theUser;
 	      }
 	    }
@@ -118,7 +118,7 @@ public class GroupServlet extends Servlet[HelloEP] implements AuthServlet[HelloE
 	public principal{p->; p<-} lookupUserID{p->; p<-} (String{p->; p<-} uid, principal{p->; p<-} p)
 		throws ServletException
 		where caller(p),
-			  authority (HelloEP)
+			  authority (worker$)
 	{
 	  int pc_caller = 0;
 	  declassify ({pc_caller} meet {_->_}) {
@@ -126,10 +126,10 @@ public class GroupServlet extends Servlet[HelloEP] implements AuthServlet[HelloE
 	    if (rootMap == null) {
 	      throw new ServletException("Store not acceesible");
 	    }
-	    Map[{HelloEP->;HelloEP<-}] allUsers = null;
+	    Map[{worker$->;worker$<-}] allUsers = null;
 	    Object obj = rootMap.get(Config.usersMapKey);
-	    if (obj instanceof Map[{HelloEP->; HelloEP<-}]) {
-	      allUsers = (Map[{HelloEP->; HelloEP<-}])obj;
+	    if (obj instanceof Map[{worker$->; worker$<-}]) {
+	      allUsers = (Map[{worker$->; worker$<-}])obj;
 	    }
 	    
 	    if (allUsers == null) {
@@ -139,27 +139,27 @@ public class GroupServlet extends Servlet[HelloEP] implements AuthServlet[HelloE
 	  }
 	}
 
-	private principal{p->;p<-} findUserInMap{p->; p<-} (Map[{HelloEP->; HelloEP<-}]{p->; p<-} allUsers, String{p->; p<-} uid, principal{p->; p<-} p)
-		where caller(p, HelloEP),
-			  endorse({p->; p<- meet HelloEP<-})
+	private principal{p->;p<-} findUserInMap{p->; p<-} (Map[{worker$->; worker$<-}]{p->; p<-} allUsers, String{p->; p<-} uid, principal{p->; p<-} p)
+		where caller(p, worker$),
+			  endorse({p->; p<- meet worker$<-})
 	{
-	  declassify({p<- meet HelloEP<-}) {
+	  declassify({p<- meet worker$<-}) {
 	    GroupUser{p->;p<-} ret = null;
-	    Map[{HelloEP->; HelloEP<-}] users = declassify(endorse(allUsers, {p->; p<- meet HelloEP<-}), {p<- meet HelloEP<-});
-	    String userID = declassify(endorse(uid, {p->; p<- meet HelloEP<-}), {p<- meet HelloEP<-});
+	    Map[{worker$->; worker$<-}] users = declassify(endorse(allUsers, {p->; p<- meet worker$<-}), {p<- meet worker$<-});
+	    String userID = declassify(endorse(uid, {p->; p<- meet worker$<-}), {p<- meet worker$<-});
 	    final Object o = users.get(userID);
-	    if (o != null && new label {HelloEP->; HelloEP<-} <= new label {o.store$->}) {
+	    if (o != null && new label {worker$->; worker$<-} <= new label {o.store$->}) {
 	      if (o instanceof GroupUser) {
 	        final GroupUser u = (GroupUser) o;
-	        if (HelloEP actsfor u
-	            && new label {HelloEP->; HelloEP<-} <= new label {u.store$->}) {
+	        if (worker$ actsfor u
+	            && new label {worker$->; worker$<-} <= new label {u.store$->}) {
 	          if (u.name().equals(userID)) {
 	            declassify({p->}) { endorse({p->;p<-}) { ;
-	            ret = declassify(endorse( u,{HelloEP->;p->;p<-}), {p->});
+	            ret = declassify(endorse( u,{worker$->;p->;p<-}), {p->});
 	            }}
 	          }
 	        } else { 
-	          throw new Error("HelloEP doesn't act for user"); 
+	          throw new Error("worker$ doesn't act for user"); 
 	        }
 	      }
 	    }

@@ -1,7 +1,7 @@
 package groups;
 
 import auth.User;
-import fabric.principals.*;
+//import fabric.principals.*;
 import fabric.util.Map;
 import fabricated.util.List;
 import fabricated.util.HashMap;
@@ -36,7 +36,7 @@ public class Create {
 		atomic {
 			Store helloStore = Worker.getWorker().getStore(Config.helloStoreName);
 			RemoteWorker helloWebWorker = Worker.getWorker().getWorker(Config.helloWebWorkerName);
-			AbstractPrincipal helloPrin = HelloEP.getInstance();
+			AbstractPrincipal helloPrin = Worker.getWorker().getPrincipal();//HelloEP.getInstance();
 
 			ConfPolicy helloSecret = LabelUtil.readerPolicy(helloStore, helloPrin, helloPrin); // {HelloEP->}
 			IntegPolicy helloTrusted = LabelUtil.writerPolicy(helloStore, helloPrin, helloPrin); // {HelloEP<-}
