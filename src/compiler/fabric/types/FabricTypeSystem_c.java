@@ -28,7 +28,6 @@ import jif.types.ParamInstance;
 import jif.types.Solver;
 import jif.types.hierarchy.LabelEnv;
 import jif.types.label.AccessPath;
-import jif.types.label.AccessPathLocal;
 import jif.types.label.AccessPathThis;
 import jif.types.label.AccessPathUninterpreted;
 import jif.types.label.ArgLabel;
@@ -347,7 +346,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
 
   @Override
   public AccessPath workerLocalAccessPath(Position pos) {
-    return new AccessPathLocal(workerLocalInstance(), "worker$", pos);
+    return new AccessPathLocalWorker(workerLocalInstance(), pos);
   }
 
   @Override
@@ -390,6 +389,8 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
     if (e instanceof RemoteWorkerGetter) {
       throw new UnsupportedOperationException(
           "RemoteWorker access paths not yet supported");
+    } else if (e instanceof fabric.ast.Worker) {
+      return workerLocalAccessPath(e.position());
     } else if (e instanceof New) {
       // support instantiation of this.store$ in constructors 
       New nw = (New) e;
