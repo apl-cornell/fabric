@@ -4,7 +4,6 @@ import java.util.List;
 
 import jif.types.JifContext;
 import jif.types.label.AccessPath;
-import jif.types.principal.DynamicPrincipal;
 import polyglot.ast.Expr;
 import polyglot.ast.JL_c;
 import polyglot.ast.New;
@@ -61,16 +60,16 @@ public class FabricNewDel extends JL_c {
               "The location must be a final access path.", ext.location()
                   .position());
         ext =
-            (NewExt_c) ext.storePrincipal((DynamicPrincipal) ts
-                .exprToPrincipal(ts, ext.location(), context));
+            (NewExt_c) ext.storePrincipal(ts.exprToPrincipal(ts,
+                ext.location(), context));
         n = (New) FabricUtil.updateFabricExt(n, ext);
 
       } else {
         if (tc.context().inStaticContext()) {
           // allocation to local worker.
           ext =
-              (NewExt_c) ext.storePrincipal((DynamicPrincipal) ts
-                  .workerLocalPrincipal(Position.compilerGenerated()));
+              (NewExt_c) ext.storePrincipal(ts.workerLocalPrincipal(Position
+                  .compilerGenerated()));
           n = (New) FabricUtil.updateFabricExt(n, ext);
         } else {
           AccessPath storeap =
