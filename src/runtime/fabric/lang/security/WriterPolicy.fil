@@ -117,20 +117,36 @@ public class WriterPolicy extends AbstractPolicy implements IntegPolicy {
     return str;
   }
 
-  public IntegPolicy join(Store store, IntegPolicy p, Set s) {
-    return LabelUtil.join(store, this, p, s);
+  public IntegPolicy join(Store store, IntegPolicy p, java.util.Set/*<DelegationPair>*/ s) {
+    return join(store, p, s, true);
   }
-
-  public IntegPolicy meet(Store store, IntegPolicy p, Set s) {
-    return LabelUtil.meet(store, this, p, s);
+  
+  public IntegPolicy meet(Store store, IntegPolicy p, java.util.Set/*<DelegationPair>*/ s) {
+      return meet(store, p, s, true);
   }
-
+  
   public IntegPolicy join(Store store, IntegPolicy p) {
-    return LabelUtil.join(store, this, p);
+      return join(store, p, true);
   }
-
+  
   public IntegPolicy meet(Store store, IntegPolicy p) {
-    return LabelUtil.meetPol(store, this, p);
+      return meet(store, p, true);
+  }
+  
+  public IntegPolicy join(Store store, IntegPolicy p, boolean simplify) {
+      return LabelUtil.join(store, this, p, simplify);
+  }
+  
+  public IntegPolicy meet(Store store, IntegPolicy p, boolean simplify) {
+      return LabelUtil.meet(store, this, p, simplify);
+  }
+  
+  public IntegPolicy join(Store store, IntegPolicy p, java.util.Set/*<DelegationPair>*/ s, boolean simplify) {
+      return LabelUtil.join(store, this, p, s, simplify);
+  }
+  
+  public IntegPolicy meet(Store store, IntegPolicy p, java.util.Set/*<DelegationPair>*/ s, boolean simplify) {
+      return LabelUtil.meet(store, this, p, s, simplify);
   }
 
   public Object $initLabels() {

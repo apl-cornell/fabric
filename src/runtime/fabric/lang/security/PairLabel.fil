@@ -79,11 +79,19 @@ public final class PairLabel implements Label {
   }
 
   public final Label join(Store store, Label l) {
-    return LabelUtil.join(store, this, l);
+    return LabelUtil.join(store, this, l, true);
   }
 
   public Label meet(Store store, Label l) {
-    return LabelUtil.meet(store, this, l);
+    return LabelUtil.meet(store, this, l, true);
+  }
+
+  public final Label join(Store store, Label l, boolean simplify) {
+    return LabelUtil.join(store, this, l, simplify);
+  }
+
+  public Label meet(Store store, Label l, boolean simplify) {
+    return LabelUtil.meet(store, this, l, simplify);
   }
 
   public ConfPolicy confPolicy() {
