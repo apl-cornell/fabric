@@ -25,6 +25,7 @@ public class CreateUserAction[principal servP] extends AbstractAction[servP] {
     public final void invoke{*lbl}(label{*lbl} lbl, Request[servP]{*lbl} _req) 
     throws (ServletException{*lbl;_req.session←})
         where caller(_req.session),
+        servP actsfor _req.session,
         lbl <= {_req.session→} {
 		final HTMLRequest[servP] req = (HTMLRequest[servP]) _req;
         Servlet[servP] servlet_ = getServlet();
@@ -133,6 +134,7 @@ class SubmitNewUserAction[principal servP] extends AbstractAction[servP] {
     public final void invoke{*lbl}(label{*lbl} lbl, Request[servP]{*lbl} req) 
     throws (ServletException{*lbl;req.session←})
         where caller(req.session),
+        servP actsfor req.session,
         lbl <= {req.session→} {
 
         Servlet[servP] servlet_ = getServlet();
@@ -170,6 +172,7 @@ class SubmitNewUserAction[principal servP] extends AbstractAction[servP] {
         throws (ServletException{*lbl;req.session←})
             where caller(req.session),
             lbl <= {req.session→},
+            servP actsfor req.session,
             req.session equiv state.sessionPrincipal
     {
         if (req == null || servlet == null || state == null
@@ -195,6 +198,7 @@ class SubmitNewUserAction[principal servP] extends AbstractAction[servP] {
         throws (ServletException{*lbl;req.session←})
         where req.session equiv state.sessionPrincipal,
               lbl <= {req.session→},
+              servP actsfor req.session,
               caller(req.session)
     {
  
@@ -309,7 +313,7 @@ class SubmitNewUserAction[principal servP] extends AbstractAction[servP] {
             String{req.session:;req.session←} userID,
             SessionPrincipal{req.session:;req.session←} sp,
             String{req.session:;req.session←} password) 
-     where caller(req.session) {
+     where caller(req.session), servP actsfor req.session {
         // DOWNGRADE REASON: Has effects at level {loginUser:}, which we need to hide away, since
         // session does not yet act for loginUser.
         declassify ({req.session←}) {
@@ -325,7 +329,7 @@ class SubmitNewUserAction[principal servP] extends AbstractAction[servP] {
         	principal loginUser = null;
 			try {
 				loginUser = servlet.createUser(userID, password, req.session);
-			} catch (ServletException{req.session←} e) {
+			} catch (ServletException e) {
 				//HACK
 			}
             final principal logUser = declassify(loginUser, {req.session←});

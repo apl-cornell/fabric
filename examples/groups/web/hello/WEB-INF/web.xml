@@ -19,8 +19,17 @@
       </init-param>
 -->
       <init-param>
+	    <param-name>store</param-name>
+	    <param-value>hello</param-value>
+
 	    <param-name>worker</param-name>
 	    <param-value>helloweb</param-value>
+
+	    <param-name>defaultActionName</param-name>
+	    <param-value>login</param-value>
+
+	    <param-name>usersMapKey</param-name>
+	    <param-value>users</param-value>
       </init-param>      
     
       <init-param>

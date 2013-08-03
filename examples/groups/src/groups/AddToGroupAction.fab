@@ -89,7 +89,10 @@ public class AddToGroupAction[principal Serv] extends AuthenticatedAction[Serv] 
                 //lookup id
                 endorse({req.session→;req.session←}) {  
                   try {
-                    member = (GroupUser) servlet.lookupUserID(memberID, req.session);
+                    if (Serv actsfor req.session)
+                      member = (GroupUser) servlet.lookupUserID(memberID, req.session);
+                    else 
+                      throw new ServletException("Invalid session principal!");
                     if (member == null) 
                       err = "Unknown user ID.";
                   } catch (ServletException e) {

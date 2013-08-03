@@ -25,6 +25,7 @@ abstract public class Action[principal servletP] extends java.lang.Object {
     abstract public void invoke{*lbl}(label{*lbl} lbl, Request[servletP]{*lbl} req)
    throws (ServletException{*lbl;req.session←})
     where caller(req.session),
+          servletP actsfor req.session,
           lbl <= {req.session→};
 
     public native Servlet[servletP]{this} getServlet();

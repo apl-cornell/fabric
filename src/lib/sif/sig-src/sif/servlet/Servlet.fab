@@ -2,6 +2,7 @@ package sif.servlet;
 
 import java.io.*;
 import javax.servlet.ServletException;
+import javax.servlet.ServletConfig;
 import sif.html.*;
 import fabricated.util.Map;
 
@@ -13,8 +14,9 @@ abstract public class Servlet[principal servletP] extends java.lang.Object {
     private static int __JIF_SAFE_CONSTRUCTORS$20050907 = 0;
     private static int __JIF_PARAMS_RUNTIME_REPRESENTED$20051007 = 0;
 
-    public abstract void initialize{servletP→; servletP!:}() throws ServletException;
-    
+    public native void initialize{servletP→; servletP←}() throws (ServletException{worker$→; worker$←});
+    public native void initialize{servletP→; servletP←}(ServletConfig{servletP→; servletP←} sc) throws (ServletException{worker$→; worker$←});
+
     /**
      * If the request does not specify an action name, and there is no default
      * action name, this method is called to get a default action to invoke. May return
@@ -41,12 +43,12 @@ abstract public class Servlet[principal servletP] extends java.lang.Object {
     
     public abstract String getPrivateHostID() throws ServletException;
     
-    public native  void addStartAction{servletP→;servletP!:}(Action[servletP]{servletP→;servletP!:} a); 
+    public native  void addStartAction{servletP→;servletP←}(Action[servletP]{servletP→;servletP←} a); 
     
-    public native final Action[servletP]{servletP→;servletP!:;action_name} findStartAction(String action_name);
+    public native final Action[servletP]{servletP→;servletP←;action_name} findStartAction(String action_name);
     public native final Action[servletP]{req;action_name} findStartAction(Request[servletP]{req.session→} req, String{req.session→} action_name);
 
-    public native final String{*!:*} generateNonce();       
+    public native final String{⊤←⊤} generateNonce();       
     protected native SessionState{*lbl} createSessionState{*lbl}(label{*lbl} lbl, String{*lbl} id);
     
 }

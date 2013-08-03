@@ -29,7 +29,7 @@ public class LoginAction[principal servP] extends AbstractAction[servP] {
   public void invoke{*lbl}(label{*lbl} lbl, Request[servP]{*lbl} req)
     throws (ServletException{*lbl;req.session←})
     where caller(req.session),
-//    servP actsfor req.session,
+    servP actsfor req.session,
     lbl <= {req.session→} 
   {
       Servlet[servP] servlet_ = getServlet();
@@ -59,17 +59,20 @@ public class LoginAction[principal servP] extends AbstractAction[servP] {
       throws (ServletException{*lbl;req.session←})
       where req.session equiv state.sessionPrincipal,
             lbl <= {req.session→},
+            servP actsfor req.session,
             caller(req.session)
   {
-    if (lbl <= new label {servP→}) { // can this be eliminated?
-      if (lbl <= new label {req.session→;req.session←}) {
-        String userID = req.getParam(lbl, userParam);
-        String password = req.getParam(lbl, pwdParam);
-            
-        // validate data
-        String uidErr = null;
-        String passwordErr = null;
-        
+    ServletException se = null;
+    try {
+      String userID = req.getParam(lbl, userParam);
+      String password = req.getParam(lbl, pwdParam);
+          
+      // validate data
+      String uidErr = null;
+      String passwordErr = null;
+      
+      if (lbl <= new label {req.session→;req.session←}) { // prevent untrusted lookups
+
         final principal loginUser = servlet.lookupUserID(userID, req.session);
         
         if (userID == null || userID.length() == 0) {
@@ -94,7 +97,7 @@ public class LoginAction[principal servP] extends AbstractAction[servP] {
           declassify ({*lbl;req.session←}) { // declassify the fact that the uid/password was wrong.
             try {
               req.setResponseStatus(Request.HTTP_FORBIDDEN);
-
+  
               PrintWriter w = req.getResponseWriter();
               if (uidErr != null) {
                 String _uidErr = declassify(endorse(uidErr, {req.session→;req.session←}), {*lbl;req.session←});
@@ -133,10 +136,16 @@ public class LoginAction[principal servP] extends AbstractAction[servP] {
             }
           }
         }
-        return;
-      }
-    }           
-    throw new Error("Unknown failure.");
+      } //TODO lbl too restrictive
+    } catch (ServletException e) {
+      se = e;
+    }
+    declassify({*lbl;req.session←}) {
+      ServletException _se = declassify(se, {*lbl;req.session←});
+      if (_se != null)
+        throw _se;
+      else return;
+    }
   }        
   
   private String{req.session→;req.session←} runClosure{req.session→;req.session←}(Request[servP]{req.session→;req.session←} req,

@@ -66,7 +66,7 @@ abstract public class Servlet extends HttpServlet {
     startActions = new HashMap<String, Action>();
     this.jif$invokeDefConstructor();
 
-    initialize();
+    initialize(sc);
   }
 
   /**
@@ -79,7 +79,12 @@ abstract public class Servlet extends HttpServlet {
         + "with no formal arguments.");
   }
 
-  public abstract void initialize() throws ServletException;
+  public void initialize() throws ServletException {    
+  }
+
+  public void initialize(ServletConfig sc) throws ServletException {
+    initialize();
+  }
 
   @Override
   public void doGet(HttpServletRequest request, HttpServletResponse response)
