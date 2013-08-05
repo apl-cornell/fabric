@@ -598,7 +598,7 @@ public interface Object {
 
     @Override
     public int oidHashCode() {
-      return this.$getProxy().hashCode();
+      return this.$getProxy().oidHashCode();
     }
 
     /**
