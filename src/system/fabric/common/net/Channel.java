@@ -8,6 +8,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.net.SocketException;
@@ -31,6 +32,7 @@ import fabric.net.RemoteNode;
  */
 abstract class Channel<Node extends RemoteNode<Node>> extends Thread {
   static final int DEFAULT_MAX_OPEN_CONNECTIONS = 50;
+  private static final boolean USE_COMPRESSION = false;
 
   private final DataOutputStream out;
   private final DataInputStream in;
@@ -73,13 +75,21 @@ abstract class Channel<Node extends RemoteNode<Node>> extends Thread {
     this.sock = s.sock;
     this.remoteIdentity = s.remoteIdentity;
 
+    OutputStream out = this.sock.getOutputStream();
+    InputStream in = this.sock.getInputStream();
+
+    if (USE_COMPRESSION) {
+      out = new GZIPOutputStream(out, true);
+      in = new GZIPInputStream(in);
+    }
+
     this.out =
-        new DataOutputStream(new BufferedOutputStream(new GZIPOutputStream(
-            this.sock.getOutputStream(), true), sock.getSendBufferSize()));
+        new DataOutputStream(new BufferedOutputStream(out,
+            sock.getSendBufferSize()));
 
     this.in =
-        new DataInputStream(new BufferedInputStream(new GZIPInputStream(
-            this.sock.getInputStream()), sock.getReceiveBufferSize()));
+        new DataInputStream(new BufferedInputStream(in,
+            sock.getReceiveBufferSize()));
 
     this.connections = new HashMap<Integer, Connection>();
     this.maxOpenConnections = maxOpenConnections;
