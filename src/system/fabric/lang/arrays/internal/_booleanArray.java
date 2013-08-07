@@ -125,14 +125,30 @@ public interface _booleanArray extends Object {
       return $getProxy();
     }
 
-    public _booleanArray._Impl $makeSemiDeepCopy(_booleanArray._Impl copy,
-        Map<Long, Object> oldSet, Map<Long, Object> oldToNew) {
-      oldToNew.put(this.$getOnum(), copy);
+    @Override
+    public _booleanArray $makeSemiDeepCopy(Map<Long, Object> oldSet,
+        Map<Long, Object> oldToNew) {
+      _booleanArray._Impl copy = null;
+      if (oldToNew.containsKey(this.$getOnum())) {
+        copy = (_booleanArray._Impl) oldToNew.get(this.$getOnum());
+      } else {
+        copy = (_booleanArray._Impl) this.$makeBlankCopy().fetch();
+        oldToNew.put(this.$getOnum(), copy);
+      }
+      super.$makeSemiDeepCopy(oldSet, oldToNew);
       copy.value = new boolean[this.value.length];
       for (int i = 0; i < this.value.length; i++) {
         copy.value[i] = this.value[i];
       }
-      return copy;
+      return copy.$makeProxy();
+    }
+
+    @Override
+    public _booleanArray $makeBlankCopy() {
+      return new _booleanArray._Impl(this.$getStore(),
+                                     this.get$$updateLabel(),
+                                     this.get$$accessPolicy(),
+                                     this.value.length).$makeProxy();
     }
   }
 

@@ -45,7 +45,6 @@ import fabil.visit.AtomicMethodRewriter;
 import fabil.visit.AtomicRewriter;
 import fabil.visit.ClassHashGenerator;
 import fabil.visit.ClassReferencesCollector;
-import fabil.visit.CopyConstructorRewriter;
 import fabil.visit.InlineableWrapper;
 import fabil.visit.JavaSkeletonCreator;
 import fabil.visit.LabelAssigner;
@@ -369,6 +368,7 @@ public class FabILScheduler extends JLScheduler implements CBScheduler {
         l.add(WrapInlineables(job));
         l.add(RewriteStoreGetters(job));
         l.add(PrincipalsDelegated(job));
+        l.add(NoArgConstructor(job));
 
         if (extInfo.getOptions().optLevel() > 0) {
           l.add(ReadWriteChecked(job));
@@ -384,26 +384,12 @@ public class FabILScheduler extends JLScheduler implements CBScheduler {
 
   public Goal NoArgConstructor(final Job job) {
     Goal g =
-        internGoal(new VisitorGoal(job, new NoArgConstructorWriter(
-                (ExtensionInfo) job.extensionInfo())) {
+        internGoal(new VisitorGoal(job, new NoArgConstructorWriter(job)) {
           @Override
           public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
             List<Goal> l = new ArrayList<Goal>();
             l.add(TypesInitialized(job));
             l.addAll(super.prerequisiteGoals(scheduler));
-            return l;
-          }
-        });
-
-    return g;
-  }
-
-  public Goal CopyConstructor(final Job job) {
-    Goal g =
-        internGoal(new VisitorGoal(job, new CopyConstructorRewriter(job)) {
-          @Override
-          public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
-            List<Goal> l = new ArrayList<Goal>();
             return l;
           }
         });
@@ -538,7 +524,6 @@ public class FabILScheduler extends JLScheduler implements CBScheduler {
         List<Goal> l = new ArrayList<Goal>();
         l.addAll(super.prerequisiteGoals(scheduler));
         if (!extInfo.getOptions().signatureMode()) {
-          l.add(CopyConstructor(job));
           l.add(RewriteProxies(job));
           l.add(RewriteProviders(job));
           l.add(RewriteAtomic(job));

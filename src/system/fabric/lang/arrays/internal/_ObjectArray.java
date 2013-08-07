@@ -190,10 +190,17 @@ public interface _ObjectArray<T extends Object> extends Object {
       return $getProxy();
     }
 
-    public _ObjectArray._Impl<T> $makeSemiDeepCopy(_ObjectArray._Impl<T> copy,
-        Map<Long, Object> oldSet, Map<Long, Object> oldToNew) {
-      oldToNew.put($getOnum(), copy);
-      super.$makeSemiDeepCopy(copy, oldSet, oldToNew);
+    @Override
+    public _ObjectArray<T> $makeSemiDeepCopy(Map<Long, Object> oldSet,
+        Map<Long, Object> oldToNew) {
+      _ObjectArray._Impl<T> copy = null;
+      if (oldToNew.containsKey(this.$getOnum())) {
+        copy = (_ObjectArray._Impl<T>) oldToNew.get(this.$getOnum());
+      } else {
+        copy = (_ObjectArray._Impl<T>) this.$makeBlankCopy().fetch();
+        oldToNew.put(this.$getOnum(), copy);
+      }
+      super.$makeSemiDeepCopy(oldSet, oldToNew);
       copy.value = new Object[this.value.length];
       for (int i = 0; i < this.get$length(); i++) {
         T ithItem = this.get(i);
@@ -201,22 +208,22 @@ public interface _ObjectArray<T extends Object> extends Object {
           if (oldToNew.containsKey(ithItem.$getOnum())) {
             copy.set(i, (T) oldToNew.get(ithItem.$getOnum()));
           } else {
-            T ithCopy = null;
-            try {
-              ithCopy = (T)
-                ithItem.getClass().getConstructor(Store.class).newInstance(ithItem.$getStore());
-                ithItem.$makeSemiDeepCopy(ithCopy, oldSet, oldToNew);
-            } catch (Exception e) {
-              System.err.println("Ran into issue instantiating copy"
-                 + " of an element in the array!");
-              System.err.println(e.getMessage());
-            }
+            copy.set(i, (T) ithItem.$makeSemiDeepCopy(oldSet, oldToNew));
           }
         } else {
           copy.set(i, this.get(i));
         }
       }
-      return copy;
+      return copy.$makeProxy();
+    }
+
+    @Override
+    public _ObjectArray<T> $makeBlankCopy() {
+      return new _ObjectArray._Impl<T>(this.$getStore(),
+                                       this.get$$updateLabel(),
+                                       this.get$$accessPolicy(),
+                                       this.proxyType,
+                                       this.value.length).$makeProxy();
     }
   }
 

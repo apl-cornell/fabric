@@ -4,7 +4,6 @@ import polyglot.ast.Ext_c;
 import polyglot.ast.Node;
 import polyglot.types.SemanticException;
 import fabil.visit.AtomicRewriter;
-import fabil.visit.CopyConstructorRewriter;
 import fabil.visit.LabelAssigner;
 import fabil.visit.LocationAssigner;
 import fabil.visit.MemoizedMethodRewriter;
@@ -15,11 +14,6 @@ import fabil.visit.StaticInitializerCollector;
 import fabil.visit.ThreadRewriter;
 
 public class FabILExt_c extends Ext_c implements FabILExt {
-
-  @Override
-  public Node addCopyConstructor(CopyConstructorRewriter ccr) {
-    return node();
-  }
 
   @Override
   public Node addNoArgumentConstructor(NoArgConstructorWriter nacw) {

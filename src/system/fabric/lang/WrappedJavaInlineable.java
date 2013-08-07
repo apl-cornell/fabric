@@ -157,9 +157,15 @@ public class WrappedJavaInlineable<T> implements JavaInlineable {
   }
 
   @Override
-  public Object $makeSemiDeepCopy(Object copy, Map<Long,Object> oldSet,
+  public WrappedJavaInlineable<T> $makeSemiDeepCopy(Map<Long,Object> oldSet,
       Map<Long,Object> oldToNew) {
     throw new InternalError("$makeSemiDeepCopy should not be called"
+        + " on a wrapped inlineable!");
+  }
+
+  @Override
+  public Object $makeBlankCopy() {
+    throw new InternalError("$makeBlankCopy should not be called"
         + " on a wrapped inlineable!");
   }
 }

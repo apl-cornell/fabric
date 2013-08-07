@@ -27,7 +27,6 @@ import polyglot.ast.NodeFactory;
 import polyglot.ast.Stmt;
 import polyglot.ast.TypeNode;
 import polyglot.qq.QQ;
-import polyglot.types.ArrayType;
 import polyglot.types.ClassType;
 import polyglot.types.Flags;
 import polyglot.types.MethodInstance;
@@ -35,11 +34,9 @@ import polyglot.types.PrimitiveType;
 import polyglot.types.SemanticException;
 import polyglot.types.Type;
 import polyglot.util.Position;
-import polyglot.visit.TypeChecker;
 
 import fabil.types.FabILFlags;
 import fabil.types.FabILTypeSystem;
-import fabil.visit.CopyConstructorRewriter;
 import fabil.visit.MemoizedMethodRewriter;
 import fabil.visit.NoArgConstructorWriter;
 import fabil.visit.ProxyRewriter;
@@ -383,6 +380,10 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     // Create the $copyAppStateFrom method.
     ClassMember copyAppStateFrom = makeCopyAppStateFrom(pr, members);
     if (copyAppStateFrom != null) members.add(copyAppStateFrom);
+
+    // Create the $makeSemiDeepCopy method.
+    ClassMember copyConstructor = makeCopyConstructor(pr, members);
+    if (copyConstructor != null) members.add(copyConstructor);
 
     // Create the class declaration.
     ClassDecl result =
@@ -926,7 +927,6 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
   @Override
   public Node rewriteMemoizedMethods(MemoizedMethodRewriter mmr) {
     ClassDecl cd = node();
-    QQ qq = mmr.qq();
 
     // Gather all memoized methods (static or not)
     List<MethodDecl> memoizedMethods =
@@ -977,8 +977,9 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
       NodeFactory nf = nacw.nodeFactory();
       FabILTypeSystem ts = nacw.typeSystem();
       Position cg = Position.compilerGenerated();
+
+      //Make constructor with no arguments.
       ArrayList<Stmt> body = new ArrayList<Stmt>();
-      //TODO: UGLY
       body.add(nf.SuperCall(
             cg, new ArrayList<Expr>()).constructorInstance(
                                         ts.constructorInstance(cg,
@@ -999,55 +1000,91 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
                                Flags.PUBLIC,
                                new ArrayList<Type>(),
                                new ArrayList<Type>()));
+      cd.type().addConstructor(noArgCons.constructorInstance());
       cd = cd.body(cd.body().addMember(noArgCons));
+
+      //Now add factory method to use dynamically.
+      ArrayList<Stmt> factoryBody = new ArrayList<Stmt>();
+      factoryBody.add(
+          nf.Return(cg,
+            nf.New(cg, nf.CanonicalTypeNode(cg, cd.type()),
+              new ArrayList<Expr>()).type(cd.type())));
+      MethodDecl factoryMethod =
+        nf.MethodDecl(cg,
+                      Flags.PUBLIC,
+                      nf.CanonicalTypeNode(cg, cd.type()),
+                      nf.Id(cg, "$makeBlankCopy"),
+                      new ArrayList<Formal>(),
+                      new ArrayList<TypeNode>(),
+                      nf.Block(cg, factoryBody));
+      factoryMethod = factoryMethod.methodInstance(
+          ts.methodInstance(cg,
+                            cd.type(),
+                            Flags.PUBLIC,
+                            cd.type(),
+                            "$makeBlankCopy",
+                            new ArrayList<Type>(),
+                            new ArrayList<Type>()));
+      cd = cd.body(cd.body().addMember(factoryMethod));
+      cd.type().addMethod(factoryMethod.methodInstance());
     }
     return cd;
   }
 
-  @Override
-  public Node addCopyConstructor(CopyConstructorRewriter ccr) {
+  private MethodDecl makeCopyConstructor(ProxyRewriter pr,
+      List<ClassMember> members) {
     ClassDecl cd = node();
-    QQ qq = ccr.qq();
-    NodeFactory nf = ccr.nodeFactory();
-    FabILTypeSystem ts = ccr.typeSystem();
+    FabILTypeSystem ts = pr.typeSystem();
+    QQ qq = pr.qq();
+    NodeFactory nf = pr.nodeFactory();
     Position cg = Position.compilerGenerated();
 
-    String bodyStr = "{\n"
-                   + "  oldToNew.put(this.$getOnum(), copy);\n"
-                   + "  super.$makeSemiDeepCopy(copy, oldSet, oldToNew);\n";
-    for (ClassMember cm : cd.body().members()) {
+    ArrayList<Stmt> bodyStmts = new ArrayList<Stmt>();
+    bodyStmts.add(qq.parseStmt(cd.type().toString() + "._Impl copy = null;"));
+    bodyStmts.add(qq.parseStmt(
+            "if (oldToNew.containsKey(this.$getOnum())) {\n"
+          + "  copy = (" + cd.type().toString()
+              + "._Impl) oldToNew.get(this.$getOnum());\n"
+          + "} else {\n"
+          + "  copy = (" + cd.type().toString()
+              + "._Impl) this.$makeBlankCopy().fetch();\n"
+          + "  oldToNew.put(this.$getOnum(), copy);\n"
+          + "}"));
+    bodyStmts.add(qq.parseStmt(
+          "super.$makeSemiDeepCopy(oldSet, oldToNew);"));
+    for (ClassMember cm : members) {
       if (!(cm instanceof FieldDecl)) continue;
       FieldDecl fd = (FieldDecl) cm;
-      if (!fd.declType().isSubtype(ts.FObject())) {
-        bodyStr += "  copy." + fd.id() + " = this." + fd.id() + ";\n";
+      if (fd.flags().isStatic()) continue;
+      if (!ts.isFabricClass(fd.declType()) || ts.isJavaInlineable(fd.declType())) {
+        bodyStmts.add(qq.parseStmt(
+              "copy." + fd.id() + " = this." + fd.id() + ";"));
       } else {
-        String constructorStr = fd.declType().toString() + "()";
-        if (fd.declType().isArray()) {
-          constructorStr = ((ArrayType) fd.declType()).base().toString();
-          constructorStr += "[this." + fd.id() + ".length]";
-        }
-        bodyStr +=
-          "  if (oldSet.containsValue(this." + fd.id() + ")) {\n"
-        + "    if (oldMap.containsKey(this." + fd.id() + ".$getOnum())) {\n"
-        + "      copy." + fd.id() + " = oldMap.get(this." + fd.id() + ".$getOnum());\n"
-        + "    } else {\n"
-        + "      copy." + fd.id() + " = new " + constructorStr + ";\n"
-        + "      this." + fd.id() + ".$makeSemiDeepCopy(copy." + fd.id() + ");\n"
-        + "    }\n"
+        String bodyStr =
+          "if (oldSet.containsKey(this." + fd.id() + ".$getOnum())) {\n"
+        + "  if (oldToNew.containsKey(this." + fd.id() + ".$getOnum())) {\n"
+        + "    copy." + fd.id() + " = (%T) oldToNew.get(this." + fd.id() + ".$getOnum());\n"
         + "  } else {\n"
-        + "    copy." + fd.id() + " = this." + fd.id() + ";\n"
-        + "  }\n";
+        + "    copy." + fd.id() + " = (%T) this." + fd.id() + ".$makeSemiDeepCopy(oldSet, oldToNew);\n"
+        + "  }\n"
+        + "} else {\n"
+        + "  copy." + fd.id() + " = this." + fd.id() + ";\n"
+        + "}";
+        bodyStmts.add(qq.parseStmt(bodyStr, fd.type(), fd.type()));
       }
     }
-    bodyStr += "}";
+    bodyStmts.add(qq.parseStmt("return (%T) copy.$makeProxy();", cd.type()));
 
     ArrayList<Formal> copyFormals = new ArrayList<Formal>();
     ArrayList<Type> argTypes = new ArrayList<Type>();
     Formal arg1 = nf.Formal(cg,
                             Flags.NONE,
-                            nf.AmbTypeNode(cg, nf.Id(cg, cd.type().name())),
-                            nf.Id(cg, "copy"));
-    Type arg1Type = cd.type();
+                            nf.TypeNodeFromQualifiedName(cg, "java.util.Map"),
+                            nf.Id(cg, "oldSet"));
+    Type arg1Type = null;
+    try {
+      arg1Type = ts.typeForName("java.util.Map");
+    } catch (SemanticException e) { }
     arg1 = arg1.localInstance(ts.localInstance(cg, Flags.NONE,
                                                arg1Type, arg1.name()));
     copyFormals.add(arg1);
@@ -1055,8 +1092,8 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
 
     Formal arg2 = nf.Formal(cg,
                             Flags.NONE,
-                            nf.AmbTypeNode(cg, nf.Id(cg, "java.util.Map")),
-                            nf.Id(cg, "oldSet"));
+                            nf.TypeNodeFromQualifiedName(cg, "java.util.Map"),
+                            nf.Id(cg, "oldToNew"));
     Type arg2Type = null;
     try {
       arg2Type = ts.typeForName("java.util.Map");
@@ -1066,40 +1103,15 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     copyFormals.add(arg2);
     argTypes.add(arg2Type);
 
-    Formal arg3 = nf.Formal(cg,
-                            Flags.NONE,
-                            nf.AmbTypeNode(cg, nf.Id(cg, "java.util.Map")),
-                            nf.Id(cg, "oldToNew"));
-    Type arg3Type = null;
-    try {
-      arg3Type = ts.typeForName("java.util.Map");
-    } catch (SemanticException e) { }
-    arg3 = arg3.localInstance(ts.localInstance(cg, Flags.NONE,
-                                               arg3Type, arg3.name()));
-    copyFormals.add(arg3);
-    argTypes.add(arg3Type);
-
-    ArrayList<Stmt> bodyStmts = new ArrayList<Stmt>();
-    bodyStmts.add(qq.parseStmt(bodyStr));
-
     MethodDecl copyMethod = nf.MethodDecl(cg,
                                           Flags.PUBLIC,
-                                          nf.AmbTypeNode(cg,
-                                            nf.Id(cg, cd.type().name())),
-                                          "$makeSemiDeepCopy",
+                                          nf.CanonicalTypeNode(cg, cd.type()),
+                                          nf.Id(cg, "$makeSemiDeepCopy"),
                                           copyFormals,
                                           new ArrayList<TypeNode>(),
                                           nf.Block(cg, bodyStmts));
-    copyMethod = copyMethod.methodInstance(
-        ts.methodInstance(cg,
-                          cd.type(),
-                          Flags.PUBLIC,
-                          cd.type(),
-                          "$makeSemiDeepCopy",
-                          argTypes,
-                          new ArrayList<Type>()));
 
-    return cd;
+    return copyMethod;
   }
 
   @Override

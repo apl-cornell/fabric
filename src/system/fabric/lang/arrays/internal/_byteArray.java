@@ -125,14 +125,30 @@ public interface _byteArray extends Object {
       return $getProxy();
     }
 
-    public _byteArray._Impl $makeSemiDeepCopy(_byteArray._Impl copy,
-        Map<Long, Object> oldSet, Map<Long, Object> oldToNew) {
-      oldToNew.put(this.$getOnum(), copy);
+    @Override
+    public _byteArray $makeSemiDeepCopy(Map<Long, Object> oldSet,
+        Map<Long, Object> oldToNew) {
+      _byteArray._Impl copy = null;
+      if (oldToNew.containsKey(this.$getOnum())) {
+        copy = (_byteArray._Impl) oldToNew.get(this.$getOnum());
+      } else {
+        copy = (_byteArray._Impl) this.$makeBlankCopy().fetch();
+        oldToNew.put(this.$getOnum(), copy);
+      }
+      super.$makeSemiDeepCopy(oldSet, oldToNew);
       copy.value = new byte[this.value.length];
       for (int i = 0; i < this.value.length; i++) {
         copy.value[i] = this.value[i];
       }
-      return copy;
+      return copy.$makeProxy();
+    }
+
+    @Override
+    public _byteArray $makeBlankCopy() {
+      return new _byteArray._Impl(this.$getStore(),
+                                  this.get$$updateLabel(),
+                                  this.get$$accessPolicy(),
+                                  this.value.length).$makeProxy();
     }
   }
 

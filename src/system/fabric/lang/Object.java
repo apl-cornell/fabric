@@ -104,8 +104,11 @@ public interface Object {
   void $forceRenumber(long onum);
 
   /** Takes an object and copys state of this object into it. */
-  Object $makeSemiDeepCopy(Object copy, Map<Long, Object> oldSet,
+  Object $makeSemiDeepCopy(Map<Long, Object> oldSet,
       Map<Long, Object> oldToNew);
+
+  /** Takes an object and copys state of this object into it. */
+  Object $makeBlankCopy();
 
   /**
    * _Proxy objects behave like regular objects by delegating to _Impl objects,
@@ -382,9 +385,14 @@ public interface Object {
     }
 
     @Override
-    public Object $makeSemiDeepCopy(Object copy, Map<Long, Object> oldSet,
+    public Object $makeSemiDeepCopy(Map<Long, Object> oldSet,
         Map<Long, Object> oldToNew) {
-      return fetch().$makeSemiDeepCopy(copy.fetch(), oldSet, oldToNew);
+      return fetch().$makeSemiDeepCopy(oldSet, oldToNew);
+    }
+
+    @Override
+    public Object $makeBlankCopy() {
+      return fetch().$makeBlankCopy();
     }
 
     /**
@@ -926,10 +934,16 @@ public interface Object {
     }
 
     @Override
-    public Object $makeSemiDeepCopy(Object copy, Map<Long, Object> oldSet,
+    public Object $makeSemiDeepCopy(Map<Long, Object> oldSet,
         Map<Long, Object> oldToNew) {
-      oldToNew.put($ref.onum, copy.fetch());
-      return copy;
+      Object._Impl copy = (Object._Impl) this.$makeBlankCopy().fetch();
+      oldToNew.put($ref.onum, copy);
+      return copy.$makeProxy();
+    }
+
+    @Override
+    public Object $makeBlankCopy() {
+      return new _Impl($ref.store).$makeProxy();
     }
 
     /**

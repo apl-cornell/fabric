@@ -123,14 +123,30 @@ public interface _intArray extends Object {
       return $getProxy();
     }
 
-    public _intArray._Impl $makeSemiDeepCopy(_intArray._Impl copy,
-        Map<Long, Object> oldSet, Map<Long, Object> oldToNew) {
-      oldToNew.put(this.$getOnum(), copy);
+    @Override
+    public _intArray $makeSemiDeepCopy(Map<Long, Object> oldSet,
+        Map<Long, Object> oldToNew) {
+      _intArray._Impl copy = null;
+      if (oldToNew.containsKey(this.$getOnum())) {
+        copy = (_intArray._Impl) oldToNew.get(this.$getOnum());
+      } else {
+        copy = (_intArray._Impl) this.$makeBlankCopy().fetch();
+        oldToNew.put(this.$getOnum(), copy);
+      }
+      super.$makeSemiDeepCopy(oldSet, oldToNew);
       copy.value = new int[this.value.length];
       for (int i = 0; i < this.value.length; i++) {
         copy.value[i] = this.value[i];
       }
-      return copy;
+      return copy.$makeProxy();
+    }
+
+    @Override
+    public _intArray $makeBlankCopy() {
+      return new _intArray._Impl(this.$getStore(),
+                                 this.get$$updateLabel(),
+                                 this.get$$accessPolicy(),
+                                 this.value.length).$makeProxy();
     }
   }
 

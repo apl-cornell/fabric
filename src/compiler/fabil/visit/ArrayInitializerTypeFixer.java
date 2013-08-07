@@ -15,6 +15,7 @@ public class ArrayInitializerTypeFixer extends AscriptionVisitor {
 
   @Override
   public Expr ascribe(Expr e, Type toType) {
+    if (e.type() == null) e.prettyPrint(System.err);
     if (e.type().isNull()) e = e.type(toType);
     return e;
   }

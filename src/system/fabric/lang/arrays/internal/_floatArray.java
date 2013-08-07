@@ -125,14 +125,30 @@ public interface _floatArray extends Object {
       return $getProxy();
     }
 
-    public _floatArray._Impl $makeSemiDeepCopy(_floatArray._Impl copy,
-        Map<Long, Object> oldSet, Map<Long, Object> oldToNew) {
-      oldToNew.put(this.$getOnum(), copy);
+    @Override
+    public _floatArray $makeSemiDeepCopy(Map<Long, Object> oldSet,
+        Map<Long, Object> oldToNew) {
+      _floatArray._Impl copy = null;
+      if (oldToNew.containsKey(this.$getOnum())) {
+        copy = (_floatArray._Impl) oldToNew.get(this.$getOnum());
+      } else {
+        copy = (_floatArray._Impl) this.$makeBlankCopy().fetch();
+        oldToNew.put(this.$getOnum(), copy);
+      }
+      super.$makeSemiDeepCopy(oldSet, oldToNew);
       copy.value = new float[this.value.length];
       for (int i = 0; i < this.value.length; i++) {
         copy.value[i] = this.value[i];
       }
-      return copy;
+      return copy.$makeProxy();
+    }
+
+    @Override
+    public _floatArray $makeBlankCopy() {
+      return new _floatArray._Impl(this.$getStore(),
+                                   this.get$$updateLabel(),
+                                   this.get$$accessPolicy(),
+                                   this.value.length).$makeProxy();
     }
   }
 
