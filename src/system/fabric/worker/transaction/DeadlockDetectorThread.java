@@ -117,10 +117,17 @@ public class DeadlockDetectorThread extends Thread {
    */
   private Set<Set<Log>> findCycles(Log curLog, LongKeyMap<Log> pathToTid,
       LongSet topLevelTidsVisited, Set<Set<Log>> cyclesFound, Set<Log> requests) {
-    long curTopTid = curLog.getTid().topTid;
     // Remove the current TID from the set of deadlock-detection requests, since
     // we are handling it now.
     requests.remove(curLog);
+
+    TransactionID curTid = curLog.getTid();
+    if (curTid == null) {
+      // Transaction was committed/aborted.
+      return cyclesFound;
+    }
+
+    long curTopTid = curTid.topTid;
 
     // Check for cycle.
     if (pathToTid.containsKey(curTopTid)) {
