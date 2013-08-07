@@ -1,6 +1,7 @@
 package fabric.lang;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.WeakHashMap;
 
 import fabric.common.exceptions.InternalError;
@@ -157,7 +158,7 @@ public class WrappedJavaInlineable<T> implements JavaInlineable {
   }
 
   @Override
-  public WrappedJavaInlineable<T> $makeSemiDeepCopy(Map<Long,Object> oldSet,
+  public WrappedJavaInlineable<T> $makeSemiDeepCopy(Set<Long> oldSet,
       Map<Long,Object> oldToNew) {
     throw new InternalError("$makeSemiDeepCopy should not be called"
         + " on a wrapped inlineable!");

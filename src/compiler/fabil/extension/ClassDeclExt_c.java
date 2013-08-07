@@ -1061,7 +1061,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
               "copy." + fd.id() + " = this." + fd.id() + ";"));
       } else {
         String bodyStr =
-          "if (oldSet.containsKey(this." + fd.id() + ".$getOnum())) {\n"
+          "if (oldSet.contains(this." + fd.id() + ".$getOnum())) {\n"
         + "  if (oldToNew.containsKey(this." + fd.id() + ".$getOnum())) {\n"
         + "    copy." + fd.id() + " = (%T) oldToNew.get(this." + fd.id() + ".$getOnum());\n"
         + "  } else {\n"
@@ -1079,7 +1079,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     ArrayList<Type> argTypes = new ArrayList<Type>();
     Formal arg1 = nf.Formal(cg,
                             Flags.NONE,
-                            nf.TypeNodeFromQualifiedName(cg, "java.util.Map"),
+                            nf.TypeNodeFromQualifiedName(cg, "java.util.Set"),
                             nf.Id(cg, "oldSet"));
     Type arg1Type = null;
     try {

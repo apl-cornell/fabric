@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import fabric.common.RefTypeEnum;
 import fabric.common.exceptions.InternalError;
@@ -191,7 +192,7 @@ public interface _ObjectArray<T extends Object> extends Object {
     }
 
     @Override
-    public _ObjectArray<T> $makeSemiDeepCopy(Map<Long, Object> oldSet,
+    public _ObjectArray<T> $makeSemiDeepCopy(Set<Long> oldSet,
         Map<Long, Object> oldToNew) {
       _ObjectArray._Impl<T> copy = null;
       if (oldToNew.containsKey(this.$getOnum())) {
@@ -204,7 +205,7 @@ public interface _ObjectArray<T extends Object> extends Object {
       copy.value = new Object[this.value.length];
       for (int i = 0; i < this.get$length(); i++) {
         T ithItem = this.get(i);
-        if (oldSet.containsKey(ithItem.$getOnum())) {
+        if (oldSet.contains(ithItem.$getOnum())) {
           if (oldToNew.containsKey(ithItem.$getOnum())) {
             copy.set(i, (T) oldToNew.get(ithItem.$getOnum()));
           } else {

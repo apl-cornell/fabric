@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import fabric.common.Logging;
 import fabric.common.NSUtil;
@@ -104,8 +105,7 @@ public interface Object {
   void $forceRenumber(long onum);
 
   /** Takes an object and copys state of this object into it. */
-  Object $makeSemiDeepCopy(Map<Long, Object> oldSet,
-      Map<Long, Object> oldToNew);
+  Object $makeSemiDeepCopy(Set<Long> oldSet, Map<Long, Object> oldToNew);
 
   /** Takes an object and copys state of this object into it. */
   Object $makeBlankCopy();
@@ -385,7 +385,7 @@ public interface Object {
     }
 
     @Override
-    public Object $makeSemiDeepCopy(Map<Long, Object> oldSet,
+    public Object $makeSemiDeepCopy(Set<Long> oldSet,
         Map<Long, Object> oldToNew) {
       return fetch().$makeSemiDeepCopy(oldSet, oldToNew);
     }
@@ -934,7 +934,7 @@ public interface Object {
     }
 
     @Override
-    public Object $makeSemiDeepCopy(Map<Long, Object> oldSet,
+    public Object $makeSemiDeepCopy(Set<Long> oldSet,
         Map<Long, Object> oldToNew) {
       Object._Impl copy = (Object._Impl) this.$makeBlankCopy().fetch();
       oldToNew.put($ref.onum, copy);
