@@ -53,10 +53,11 @@
       <arg value="-cp"         /> <arg pathref="lib.classpath" />
       <arg value="-addsigcp"   /> <arg pathref="sif.sigcp"/>
       <arg value="-addbootcp"         /> <arg pathref="sif.classpath" />
-      <arg value="-trusted-providers"/>
+      <arg value="-auth-from-provider"/>
       <!--
-      <arg value="-simpleoutput"/>
+      <arg value="-trusted-providers"/>
       <arg value="-rdebug"/>
+      <arg value="-simpleoutput"/>
       <arg value="-report" /> <arg value="resolver=5"/>
       <arg line="-report resolver=4"/>
         <arg value="-debugpositions"/>

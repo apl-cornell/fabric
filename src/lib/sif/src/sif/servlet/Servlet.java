@@ -117,6 +117,8 @@ abstract public class Servlet extends HttpServlet {
       if (debug(1)) {
         time_page = System.currentTimeMillis();
       }
+    } catch (Throwable e) {
+      throw e;
     } finally {
       if (rw != null) rw.close();
       if (debug(1)) {
@@ -173,7 +175,11 @@ abstract public class Servlet extends HttpServlet {
         Worker.runInSubTransaction(new Worker.Code<Void>() {
           @Override
           public Void run() throws ServletException {
-            laction_.a.invoke(laction_.L, req);
+            try {
+              laction_.a.invoke(laction_.L, req);
+            } catch (Throwable e) {
+              throw e;
+            }
             return null;
           }
         });
@@ -193,15 +199,6 @@ abstract public class Servlet extends HttpServlet {
           "Failure: Servlet Exception",
           "An unexpected exception occurred during servlet processing: ", t);
     }
-
-    // TODO KV: Replace the null label with something more sensible
-//    if (!req.returnPageSet()) {
-//      reportError(sessionPrincipalLabel(req.session), req,
-//          "Error handling request", "Error Handling Request",
-//          "The servlet did not generate any output for your request. "
-//              + "This probably means that your request was ill-formed.");
-//
-//    }
   }
 
   Label trustedBySessionLabel(final Request req) {

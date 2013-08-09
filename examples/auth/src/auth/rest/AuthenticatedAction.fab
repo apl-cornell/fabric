@@ -10,12 +10,12 @@ import java.io.IOException;
 /**
  * Extend this class to create actions that are protected by login requirement
  */
- public abstract class AuthenticatedAction[principal servP] extends AbstractAction[servP] {
-    public AuthenticatedAction(Servlet[servP] m) {
+ public abstract class AuthenticatedAction[principal Serv] extends AbstractAction[Serv] {
+    public AuthenticatedAction(Servlet[Serv] m) {
         super();
         initFields(m);
     }
-    public AuthenticatedAction(String name, Servlet[servP] m) {
+    public AuthenticatedAction(String name, Servlet[Serv] m) {
         super();
         initFields(name, m);
     }
@@ -29,11 +29,12 @@ import java.io.IOException;
      */
     protected boolean{*lbl} ensureLoggedIn{*lbl}
                                 (label{*lbl} lbl,
-                                 Request[servP]{*lbl} req,
-                                 AuthServlet[servP]{*lbl} servlet,
+                                 Request[Serv]{*lbl} req,
+                                 AuthServlet[Serv]{*lbl} servlet,
                                  AuthSessState{*lbl} state)
     throws (ServletException{*lbl;req.session←})
     where caller(req.session),
+    Serv actsfor req.session,
     lbl <= {req.session→},
     req.session equiv state.sessionPrincipal
     {
@@ -47,12 +48,15 @@ import java.io.IOException;
         throw new ServletException("access policy failure");
     }
     
-    public final void invoke{*lbl}(label{*lbl} lbl, Request[servP]{*lbl} req) 
+    public final void invoke{*lbl}(label{*lbl} lbl, Request[Serv]{*lbl} req) 
         throws (ServletException{*lbl;req.session←})
         where caller(req.session),
+        Serv actsfor req.session,
+        {Serv←} <= {this},
+        {req.session←} <= lbl,
         lbl <= {req.session→} {
       atomic {
-        Servlet[servP] servlet_ = getServlet();
+        Servlet[Serv] servlet_ = getServlet();
         final SessionState state_ = req.getSessionState(lbl);
         if (lbl <= new label {servlet_.store$→}) {
           if (lbl <= new label {state_.store$→}) {
@@ -81,11 +85,13 @@ import java.io.IOException;
     }
     
     public void forbidden{*lbl}(label{*lbl} lbl,
-                                  Request[servP]{*lbl} req,
-                                  AuthServlet[servP]{*lbl} servlet,
+                                  Request[Serv]{*lbl} req,
+                                  AuthServlet[Serv]{*lbl} servlet,
                                   AuthSessState{*lbl} state)
       throws (ServletException{*lbl;req.session←})
       where caller(req.session),
+      Serv actsfor req.session,
+      {req.session←} <= lbl,
       lbl <= {req.session→},
       req.session equiv state.sessionPrincipal 
     {
@@ -100,12 +106,15 @@ import java.io.IOException;
     }
     
     public abstract void invokeImpl{*lbl}(label{*lbl} lbl,
-                                      Request[servP]{*lbl} req,
-                                      AuthServlet[servP]{*lbl} servlet,
+                                      Request[Serv]{*lbl} req,
+                                      AuthServlet[Serv]{*lbl} servlet,
                                       AuthSessState{*lbl} state,
                                       principal{*lbl} currentUser) 
           throws (ServletException{*lbl;req.session←})
           where caller(req.session),
+          Serv actsfor req.session,
+          {Serv←} <= {this},
+          {req.session←} <= lbl,
           lbl <= {req.session→},
           req.session equiv state.sessionPrincipal,
           req.session actsfor currentUser;

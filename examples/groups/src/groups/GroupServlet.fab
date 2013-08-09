@@ -14,7 +14,10 @@ import fabricated.util.IdComparator;
 import javax.servlet.ServletException;
 import javax.servlet.ServletConfig;
 
-public class GroupServlet extends Servlet[worker$] implements AuthServlet[worker$] authority (worker$) {
+public class GroupServlet extends Servlet[worker$] implements AuthServlet[worker$] where 
+  {*provider;*CreateGroupAction.provider;*ListGroupMembersAction.provider;
+   *AddToGroupAction.provider;*GroupUser.provider;*Group.provider} <= {worker$←}
+{
 
 	/*final*/ Store{⊥→;worker$←}@{⊤→} groupStore;/*label should be this*/
 	/*final*/ String{⊥→;worker$←}@{⊤→} defaultActionName;/*label should be this*/
@@ -25,14 +28,13 @@ public class GroupServlet extends Servlet[worker$] implements AuthServlet[worker
 	}
 
 	public void initialize{worker$→;worker$←}(ServletConfig{worker$→;worker$←} sc)
-	    throws (ServletException{worker$→; worker$←}) where authority(worker$) {
+	    throws (ServletException{worker$→; worker$←}) {
 	  atomic {
 	    super.initialize(sc);
 	    addStartAction(new LoginAction[worker$](this));
 	    addStartAction(new LogoffAction[worker$](this));
 	    addStartAction(new CreateUserAction[worker$](this));
 	    
-	    addStartAction(new FrontPageAction[worker$](this));
 	    addStartAction(new ListGroupMembersAction[worker$](this));
 	    addStartAction(new CreateGroupAction[worker$](this));
 	    addStartAction(new AddToGroupAction[worker$](this));
@@ -94,7 +96,7 @@ public class GroupServlet extends Servlet[worker$] implements AuthServlet[worker
                                                      String{p->; p<-} password, 
                                                      principal{p->; p<-} p) 
 		throws (ServletException{p->; p<-})
-		where caller(p), authority (worker$), worker$ actsfor p
+		where caller(p) /*, authority (worker$)*/, worker$ actsfor p
 	{
 		int pc_caller = 0;
 	        final Store groupStore = this.groupStore;
@@ -139,7 +141,7 @@ public class GroupServlet extends Servlet[worker$] implements AuthServlet[worker
 
 	public principal{p->; p<-} lookupUserID{p->; p<-} (String{p->; p<-} uid, principal{p->; p<-} p) 
 		throws (ServletException{p->; p<-})
-		where caller(p), authority (worker$), worker$ actsfor p
+		where caller(p), /*authority (worker$),*/ worker$ actsfor p
 	{
 	  int pc_caller = 0;
 	  final Store groupStore = this.groupStore;
@@ -162,8 +164,8 @@ public class GroupServlet extends Servlet[worker$] implements AuthServlet[worker
 	}
 
 	private principal{p->;p<-} findUserInMap{p->; p<-} (Map[{worker$->; worker$<-}]{p->; p<-} allUsers, String{p->; p<-} uid, principal{p->; p<-} p)
-		where caller(p, worker$),
-			  endorse({p->; p<- meet worker$<-})
+		where caller(p, worker$), worker$ actsfor p,
+		endorse({p->; p<- meet worker$<-})
 	{
 	  declassify({p<- meet worker$<-}) {
 	    GroupUser{p->;p<-} ret = null;

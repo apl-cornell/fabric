@@ -10,21 +10,22 @@ import javax.servlet.ServletException;
 import java.io.PrintWriter;
 import java.io.IOException;
 
-public class ListGroupMembersAction[principal Serv] extends AuthenticatedAction[Serv] {
-
+public class ListGroupMembersAction[principal Serv] extends AuthenticatedAction[Serv] 
+    where {*provider;*GroupUser.provider;*Group.provider} <= {worker$←}, worker$ actsfor Serv // better to only need Serv here.    
+{
     final String{this}@{Serv→} groupParam;
     final String{this}@{Serv→} typeParam;
 
-    public ListGroupMembersAction(Servlet[Serv]{this} s) {
+    public ListGroupMembersAction(Servlet[Serv]{this} s) where {Serv←} <= {this} {
       this(s, "group", "type");
     }
 
-    public ListGroupMembersAction(Servlet[Serv]{this} s, String{this} groupParam, String{this} typeParam) {
+    public ListGroupMembersAction(Servlet[Serv]{this} s, String{this} groupParam, String{this} typeParam) where {Serv←} <= {this} {
       this(s, "list", groupParam, typeParam);
     }
     
     public ListGroupMembersAction(Servlet[Serv]{this} s, String{this} name, 
-        String{this} groupParam, String{this} typeParam) {
+        String{this} groupParam, String{this} typeParam) where {Serv←} <= {this} {
       this.groupParam = groupParam;
       this.typeParam = typeParam;
       super(name, s);
@@ -37,7 +38,10 @@ public class ListGroupMembersAction[principal Serv] extends AuthenticatedAction[
         principal{*lbl} currentUser) 
             throws (ServletException{*lbl;req.session←})
             where caller(req.session),
+            Serv actsfor req.session,
+            {req.session←} <= lbl,
             lbl <= {req.session→},
+            {Serv←} <= {this},
             req.session equiv state.sessionPrincipal,
             req.session actsfor currentUser
     {

@@ -7,7 +7,7 @@ import javax.servlet.ServletException;
 
 public nonfabric interface AuthServlet[principal servP] {
     @{*->}
-    public principal{p→;p←} createUser{p→; p←}( String{p→; p←} userID, String{p→; p←} password, principal{p→; p←} p)
+    public principal{p→;p←} createUser{p→; p←}(String{p→; p←} userID, String{p→; p←} password, principal{p→; p←} p)
         throws (ServletException{p->; p<-}) where caller(p), servP actsfor p;    
 
     public principal{p→;p←} lookupUserID{p→; p←}(String{p→; p←} userID, principal {p→; p←} p) 

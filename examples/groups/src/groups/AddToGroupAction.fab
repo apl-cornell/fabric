@@ -9,23 +9,24 @@ import javax.servlet.ServletException;
 import java.io.PrintWriter;
 import java.io.IOException;
 
-public class AddToGroupAction[principal Serv] extends AuthenticatedAction[Serv] {
-
+public class AddToGroupAction[principal Serv] extends AuthenticatedAction[Serv] 
+    where {*provider;*GroupUser.provider;*Group.provider} <= {worker$←}, worker$ actsfor Serv // better to only need Serv here.
+{
     final String{this}@{Serv→} groupParam;
     final String{this}@{Serv→} userParam;
     final String{this}@{Serv→} typeParam;
 
-    public AddToGroupAction(Servlet[Serv]{this} s) {      
+    public AddToGroupAction(Servlet[Serv]{this} s) where {Serv←} <= {this} {      
       this(s, "group", "user", "type");
     }
 
     public AddToGroupAction(Servlet[Serv]{this} s, String{this} groupParam, 
-        String{this} userParam, String{this} typeParam) {      
+        String{this} userParam, String{this} typeParam) where {Serv←} <= {this} {      
       this(s, "addtogroup", groupParam, userParam, typeParam);
     }
     
     public AddToGroupAction(Servlet[Serv]{this} s, String{this} name, 
-        String{this} groupParam, String{this} userParam, String{this} typeParam) {      
+        String{this} groupParam, String{this} userParam, String{this} typeParam) where {Serv←} <= {this} {      
       this.groupParam = groupParam;
       this.userParam = userParam;
       this.typeParam = typeParam;
@@ -39,7 +40,10 @@ public class AddToGroupAction[principal Serv] extends AuthenticatedAction[Serv] 
         principal{*lbl} currentUser) 
             throws (ServletException{*lbl;req.session←})
             where caller(req.session),
+            Serv actsfor req.session,
+            {req.session←} <= lbl,
             lbl <= {req.session→},
+            {Serv←} <= {this},
             req.session equiv state.sessionPrincipal,
             req.session actsfor currentUser
     {

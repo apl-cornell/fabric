@@ -9,25 +9,28 @@ import javax.servlet.ServletException;
 import java.io.PrintWriter;
 import java.io.IOException;
 
-public class CreateGroupAction[principal Serv] extends AuthenticatedAction[Serv] {
+public class CreateGroupAction[principal Serv] extends AuthenticatedAction[Serv] 
+    where {*provider;*GroupUser.provider;*Group.provider} <= {worker$←}, worker$ actsfor Serv // better to only need Serv here.
+ {
 
     final String{this}@{Serv→} nameParam;
     final String{this}@{Serv→} typeParam;
     
-    public CreateGroupAction(Servlet[Serv]{this} s) {      
+    public CreateGroupAction(Servlet[Serv]{this} s) where {Serv←} <= {this}
+    {    
       this(s, "name", "type");
     }
 
-    public CreateGroupAction(Servlet[Serv]{this} s, String{this} nameParam, String{this} typeParam) {      
+    public CreateGroupAction(Servlet[Serv]{this} s, String{this} nameParam, String{this} typeParam) where {Serv←} <= {this} {      
       this(s, "creategroup", nameParam, typeParam);
     }
     
-    public CreateGroupAction(Servlet[Serv]{this} s, String{this} name, String{this} nameParam, String{this} typeParam) {      
+    public CreateGroupAction(Servlet[Serv]{this} s, String{this} name, String{this} nameParam, String{this} typeParam) where {Serv←} <= {this} {      
       this.nameParam = nameParam;
       this.typeParam = typeParam;
       super(name, s);
     }
-	  
+
     public void invokeImpl{*lbl}(label{*lbl} lbl,
         Request[Serv]{*lbl} req,
         AuthServlet[Serv]{*lbl} servlet,
@@ -35,7 +38,10 @@ public class CreateGroupAction[principal Serv] extends AuthenticatedAction[Serv]
         principal{*lbl} currentUser) 
             throws (ServletException{*lbl;req.session←})
             where caller(req.session),
+            Serv actsfor req.session,
+            {req.session←} <= lbl,
             lbl <= {req.session→},
+            {Serv←} <= {this},
             req.session equiv state.sessionPrincipal,
             req.session actsfor currentUser
     {
