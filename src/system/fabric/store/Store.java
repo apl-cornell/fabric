@@ -227,9 +227,8 @@ class Store extends MessageToStoreHandler {
         prepareTransaction(client.principal, msg.tid, msg.commitTime,
             msg.serializedCreates, msg.serializedWrites, msg.reads);
     Logging.log(HOTOS_LOGGER, Level.INFO,
-        "Handled Prepare Message, worker={0}, tid={1}, result={2}",
-        nameOf(client.principal), msg.tid,
-        Boolean.valueOf(subTransactionCreated));
+        "Handled Prepare Message, worker={0}, tid={1}",
+        nameOf(client.principal), msg.tid);
     return new PrepareTransactionMessage.Response(subTransactionCreated);
   }
 
