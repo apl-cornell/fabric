@@ -10,13 +10,14 @@ import auth.*;
  * Extend this class to create actions that are protected by login requirement
  */
 abstract public class AuthenticatedAction[principal servP] extends AbstractAction[servP] {
-    public AuthenticatedAction(Servlet[servP] m) {
-        super();
-        initFields(m);
+    @{store$→}
+
+    public AuthenticatedAction(Servlet[servP]{this} m) throws NullPointerException where {servP←} <= {this} {
+        super(m);
     }
-    public AuthenticatedAction(String name, Servlet[servP] m) {
-        super();
-        initFields(name, m);
+
+    public AuthenticatedAction(String{this} name, Servlet[servP]{this} m) throws NullPointerException where {servP←} <= {this} {
+        super(name, m);
     }
     
     /**
@@ -30,37 +31,36 @@ abstract public class AuthenticatedAction[principal servP] extends AbstractActio
                                 (label{*lbl} lbl,
                                  Request[servP]{*lbl} req,
                                  AuthenticatedAction[servP]{*lbl} successAction,
-                                 HTMLAuthServlet[servP]{*lbl} servlet)
+                                 HTMLAuthServlet[servP]{*lbl} servlet, 
+                                 AuthSessState{*lbl} state)
     throws (ServletException{*lbl;req.session←})
     where caller(req.session),
+    servP actsfor req.session,
+    req.session equiv state.sessionPrincipal,
     lbl <= {req.session→}
     {
         if (req == null) return false;
         ServletException{*lbl;req.session←} ex = null;
         boolean{*lbl;req.session←} ret = true;
-        final SessionState tmp = req.getSessionState(lbl);
-        AuthSessState tmp2 = null;
-        if ( lbl <= new label {tmp.store$→} ) {
-            tmp2 = (AuthSessState)tmp;
-            final AuthSessState state = tmp2;
-            
-            if ( lbl <= new label {state.store$→} ) {
-                final LoginAction[servP] la = new LoginAction[servP](servlet, successAction, req.session);
+        if ( lbl <= new label {state.store$→}
+              && store$ actsfor servP                  
+              && lbl <= new label {store$→}) {
+          final LoginAction[servP] la = new LoginAction[servP](servlet, successAction, req.session);
 
-                if (state != null && state.currentUser() == null
-                        && new label {req.session←} <= lbl
-                        && state.sessionPrincipal equiv req.session) {
-                    // not logged in yet.
-                    try {
-                        la.invoke(lbl, req);
-                        ret = false;
-                    }
-                    catch (ServletException e) {
-                        ex = e;
-                    }
-                }
-            }
-        }
+          if (state != null && state.currentUser() == null
+                  && lbl <= new label {la.store$→}
+                  && new label {req.session←} <= lbl
+                  && state.sessionPrincipal equiv req.session) {
+              // not logged in yet.
+              try {
+                  la.invoke(lbl, req);
+                  ret = false;
+              }
+              catch (ServletException e) {
+                  ex = e;
+              }
+          }
+        } else throw new Error("impossible");
         if (ex != null) throw ex;
         return ret;
     }
@@ -68,9 +68,10 @@ abstract public class AuthenticatedAction[principal servP] extends AbstractActio
     public final void invoke{*lbl}(label{*lbl} lbl, Request[servP]{*lbl} req) 
         throws (ServletException{*lbl;req.session←})
         where caller(req.session),
+        servP actsfor req.session,
         lbl <= {req.session→} {
         if (req == null) throw new ServletException("Error processing request");
-        Servlet[servP] servlet_ = getServlet();
+        Servlet[servP] servlet_ = req.servlet;
         atomic {
             final SessionState state_ = req.getSessionState(lbl);
             if ( lbl <= new label {state_.store$→} ) {
@@ -80,23 +81,23 @@ abstract public class AuthenticatedAction[principal servP] extends AbstractActio
                     throw new ServletException("Error processing request");
                 final HTMLAuthServlet[servP] servlet = (HTMLAuthServlet[servP])servlet_;
                 final AuthSessState state = (AuthSessState)state_;
-                if ( lbl <= new label {state.store$→} ) {
-                
+                if (lbl <= new label {state.store$→} 
+                    && lbl <= new label{store$→}) {                
                     if (state == null || servlet == null) return;
 
                     // Check if someone is logged in. If not, then the login page is created.
                     // Simply returning will display that login page
-                    if (!ensureLoggedIn(lbl, req, this, servlet)) return;
-                    final label newLbl = new label {*lbl; req.session!:};
                     if (req.session equiv state.sessionPrincipal)
                     {
-                        callWrapper(newLbl, req, servlet, state);
+                      if (!ensureLoggedIn(lbl, req, this, servlet, state)) return;
+                      final label newLbl = new label {*lbl; req.session!:};
+                      callWrapper(newLbl, req, servlet, state);
                     }
                     else {
                         throw new ServletException("req.session not equivalent to state.sessionPrincipal"); 
                     }
-                }
-            }
+                } else throw new Error("access error 1");
+            } else throw new Error("access error 2");
         }
     }
     

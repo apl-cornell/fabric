@@ -15,25 +15,26 @@ import travel.Config;
 import travel.Account;
 import travel.Tickets;
 
-import login.*;
-
+import auth.*;
+import auth.html.*;
 
 public class FrontPage extends AuthenticatedAction[AirlinePrincipal] authority (AirlinePrincipal) {
-    public FrontPage(AirlineMain{this} m) throws ServletException {
+    public FrontPage(AirlineMain{this} m)
+      throws NullPointerException where {AirlinePrincipal←} <= {this} {
         super("frontpage", m);
     }
     
-    public final void invokeImpl{*lbl}(label{*lbl} lbl,
-            Request[AirlinePrincipal]{*lbl} req,
-            HTMLAuthServlet[AirlinePrincipal]{*lbl} servlet,
-            AuthSessState{*lbl} state,
-            principal{*lbl} currentUser) 
-            throws (ServletException{*lbl;req.session←})
-            where caller(req.session),
-            lbl <= {⊤→req.session},
-            req.session equiv state.sessionPrincipal,
-            req.session actsfor currentUser {
-
+    public void invokeImpl{*lbl}(label{*lbl} lbl,
+        Request[AirlinePrincipal]{*lbl} req,
+        AuthServlet[AirlinePrincipal]{*lbl} servlet,
+        AuthSessState{*lbl} state,
+        principal{*lbl} currentUser) 
+      throws (ServletException{*lbl;req.session←})
+      where caller(req.session),
+      lbl <= {req.session→},
+      req.session equiv state.sessionPrincipal,
+      req.session actsfor currentUser {
+        
         if (servlet == null || !(servlet instanceof AirlineMain)) throw new ServletException("No servlet available"); 
         if (req == null || state == null || currentUser == null) throw new ServletException("Error processing request"); 
         AirlineMain m = (AirlineMain)servlet;

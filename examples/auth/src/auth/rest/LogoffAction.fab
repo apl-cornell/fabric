@@ -8,9 +8,9 @@ import sif.servlet.*;
 import auth.*;
 
 public class LogoffAction[principal servP] extends AbstractAction[servP] {
-    public LogoffAction(Servlet[servP]{this} servlet) {
-        super();
-        initFields("logoff",servlet);
+    public LogoffAction(Servlet[servP]{this} servlet)       
+      throws NullPointerException where {servP←} <= {this} {      
+        super("logoff",servlet);
     }
 
     public final void invoke{*lbl}(label{*lbl} lbl, Request[servP]{*lbl} req) 
@@ -18,7 +18,7 @@ public class LogoffAction[principal servP] extends AbstractAction[servP] {
         where caller(req.session),
         lbl <= {req.session→} {
         if (req == null)    throw new ServletException("Error processing request");
-        Servlet[servP] servlet = getServlet();
+        Servlet[servP] servlet = req.servlet;        
         final SessionState state_ = req.getSessionState(lbl);
         if (lbl <= new label{state_.store$→}) {          
           if (!(state_ instanceof AuthSessState)) 

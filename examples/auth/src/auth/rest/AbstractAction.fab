@@ -4,5 +4,15 @@ import javax.servlet.ServletException;
 import sif.servlet.*;
 import sif.html.*;
 
-abstract public class AbstractAction[principal servP] extends Action[servP] {
+abstract public class AbstractAction[principal Serv] extends Action[Serv] {
+  
+  protected AbstractAction{this}(Servlet[Serv]{this} s) 
+      throws NullPointerException where {Serv←} <= {this} {
+    super(s);
+  }
+
+  protected AbstractAction{this}(String{this} n, Servlet[Serv]{this} s) 
+      throws NullPointerException where {Serv←} <= {this} {
+    super(n);
+  }
 }

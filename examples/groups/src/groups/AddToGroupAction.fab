@@ -16,17 +16,23 @@ public class AddToGroupAction[principal Serv] extends AuthenticatedAction[Serv]
     final String{this}@{Serv→} userParam;
     final String{this}@{Serv→} typeParam;
 
-    public AddToGroupAction(Servlet[Serv]{this} s) where {Serv←} <= {this} {      
+    public AddToGroupAction(Servlet[Serv]{this} s) 
+      throws NullPointerException where {Serv←} <= {this}
+    {      
       this(s, "group", "user", "type");
     }
 
     public AddToGroupAction(Servlet[Serv]{this} s, String{this} groupParam, 
-        String{this} userParam, String{this} typeParam) where {Serv←} <= {this} {      
+        String{this} userParam, String{this} typeParam) 
+      throws NullPointerException where {Serv←} <= {this}
+    {      
       this(s, "addtogroup", groupParam, userParam, typeParam);
     }
     
     public AddToGroupAction(Servlet[Serv]{this} s, String{this} name, 
-        String{this} groupParam, String{this} userParam, String{this} typeParam) where {Serv←} <= {this} {      
+        String{this} groupParam, String{this} userParam, String{this} typeParam) 
+      throws NullPointerException where {Serv←} <= {this}
+    {
       this.groupParam = groupParam;
       this.userParam = userParam;
       this.typeParam = typeParam;

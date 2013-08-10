@@ -5,11 +5,14 @@ package sif.servlet;
  */
 public final class SessionPrincipal extends AbstractPrincipal {
     
-    public SessionPrincipal(String sessionId) {
-//        super("Session: " + sessionId);
-        // TODO Correct the signatures for principals and call super correctly
-        super("session");
+    public SessionPrincipal(String{this} sessionId) {
+        super("Session: " + sessionId);
     }
+    
+    public SessionPrincipal(String{this} sessionId, Principal{this} superior) {
+      super("Session: " + sessionId);
+    }
+
     
     public static SessionPrincipal{P←} declassifySP{P←}(SessionPrincipal{P→;P←} sp_, 
             principal{P←} P)
@@ -17,7 +20,7 @@ public final class SessionPrincipal extends AbstractPrincipal {
 //    	final SessionPrincipal[{P→;P←}]{P←} sp = declassify(sp_, {P→;P←} to {P←});
 //    	if (sp == null) return null;
 //    	final SessionState[{P←}]{P←} ss = SessionState.declassifySS(sp.session, P);
-//    	return new SessionPrincipal[{P←}](ss);
+//    	return new SessionPrincipal[{P←}](ss); 
         return null;
         // TODO
     }

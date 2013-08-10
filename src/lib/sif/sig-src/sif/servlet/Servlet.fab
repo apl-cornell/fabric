@@ -48,7 +48,8 @@ abstract public class Servlet[principal servletP] extends java.lang.Object {
     public native final Action[servletP]{servletP→;servletP←;action_name} findStartAction(String action_name);
     public native final Action[servletP]{req;action_name} findStartAction(Request[servletP]{req.session→} req, String{req.session→} action_name);
 
-    public native final String{⊤←⊤} generateNonce();       
+    public native final String{servletP←} generateNonce();       
+    public native final Name{servletP←} generateName();       
     protected native SessionState{*lbl} createSessionState{*lbl}(label{*lbl} lbl, String{*lbl} id);
     
 }

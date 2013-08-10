@@ -31,30 +31,33 @@ public class GroupServlet extends Servlet[worker$] implements AuthServlet[worker
 	    throws (ServletException{worker$→; worker$←}) {
 	  atomic {
 	    super.initialize(sc);
-	    addStartAction(new LoginAction[worker$](this));
-	    addStartAction(new LogoffAction[worker$](this));
-	    addStartAction(new CreateUserAction[worker$](this));
-	    
-	    addStartAction(new ListGroupMembersAction[worker$](this));
-	    addStartAction(new CreateGroupAction[worker$](this));
-	    addStartAction(new AddToGroupAction[worker$](this));
-	    declassify({worker$←}) {
-	      ServletConfig _sc = declassify(sc, {worker$←});
-	      String groupStoreName = declassify(_sc.getInitParameter("store"), {worker$←});	   
-	      groupStore = worker$.getStore(groupStoreName);
-
-	      usersMapKey = declassify(_sc.getInitParameter("usersMapKey"), {worker$←});	   
-	      defaultActionName = declassify(_sc.getInitParameter("defaultAction"), {worker$←});		      
-	    }
-	    final Store groupStore = this.groupStore;
-	    if (groupStore actsfor worker$) {
-              fabric.util.Map rootMap = groupStore.getRoot();
-              Object obj = rootMap.get(usersMapKey);
-              if (obj == null) 
-                rootMap.put(usersMapKey, new HashMap@groupStore(new StringComparator@groupStore(), new IdComparator@groupStore()));
-	    } else throw new ServletException("Store " + groupStore.name() + " must be trusted by worker " + worker$.getName());
+	    final Store localStore = worker$.getLocalStore();
+	    if (localStore actsfor worker$) {
+	      addStartAction(new LoginAction[worker$]@localStore(this));
+	      addStartAction(new LogoffAction[worker$]@localStore(this));
+	      addStartAction(new CreateUserAction[worker$]@localStore(this));
+        	    
+	      addStartAction(new ListGroupMembersAction[worker$]@localStore(this));
+	      addStartAction(new CreateGroupAction[worker$]@localStore(this));
+	      addStartAction(new AddToGroupAction[worker$]@localStore(this));
+	      declassify({worker$←}) {
+	        ServletConfig _sc = declassify(sc, {worker$←});
+	        String groupStoreName = declassify(_sc.getInitParameter("store"), {worker$←});	   
+	        groupStore = worker$.getStore(groupStoreName);
+	        
+	        usersMapKey = declassify(_sc.getInitParameter("usersMapKey"), {worker$←});	   
+	        defaultActionName = declassify(_sc.getInitParameter("defaultAction"), {worker$←});		      
+	      }
+	      final Store groupStore = this.groupStore;
+    	      if (groupStore actsfor worker$) {
+    	        fabric.util.Map rootMap = groupStore.getRoot();
+    	        Object obj = rootMap.get(usersMapKey);
+    	        if (obj == null) 
+    	          rootMap.put(usersMapKey, new HashMap@groupStore(new StringComparator@groupStore(), new IdComparator@groupStore()));
+    	      } else throw new ServletException("Store " + groupStore.name() + " must be trusted by worker " + worker$.getName());
+            } else throw new ServletException("Store " + store$.name() + " must be trusted by worker " + worker$.getName());
 	  }
-	}
+  	}
 	
         public String defaultContentType() {
           return "application/json";
@@ -86,7 +89,7 @@ public class GroupServlet extends Servlet[worker$] implements AuthServlet[worker
 	  SessionPrincipal toReturn = null;
 	  atomic {
 	    if (groupStore != null) {
-	      toReturn = new SessionPrincipal@groupStore(id);
+	      toReturn = new SessionPrincipal@groupStore(id, worker$.getPrincipal());
 	    }
 	  }
 	  return toReturn;

@@ -4,7 +4,7 @@ import fabric.util.Map;
 import travel.Config;
 import fabric.worker.Store;
 
-import login.LoginClosure;
+import auth.LoginClosure;
 
 public class BankPrincipal extends ExternalPrincipal {
 

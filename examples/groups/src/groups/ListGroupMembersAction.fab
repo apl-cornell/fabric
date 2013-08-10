@@ -16,16 +16,22 @@ public class ListGroupMembersAction[principal Serv] extends AuthenticatedAction[
     final String{this}@{Serv→} groupParam;
     final String{this}@{Serv→} typeParam;
 
-    public ListGroupMembersAction(Servlet[Serv]{this} s) where {Serv←} <= {this} {
+    public ListGroupMembersAction(Servlet[Serv]{this} s)       
+        throws NullPointerException where {Serv←} <= {this}
+    {
       this(s, "group", "type");
     }
 
-    public ListGroupMembersAction(Servlet[Serv]{this} s, String{this} groupParam, String{this} typeParam) where {Serv←} <= {this} {
+    public ListGroupMembersAction(Servlet[Serv]{this} s, String{this} groupParam, String{this} typeParam)       
+        throws NullPointerException where {Serv←} <= {this}
+    {
       this(s, "list", groupParam, typeParam);
     }
     
     public ListGroupMembersAction(Servlet[Serv]{this} s, String{this} name, 
-        String{this} groupParam, String{this} typeParam) where {Serv←} <= {this} {
+        String{this} groupParam, String{this} typeParam)      
+      throws NullPointerException where {Serv←} <= {this}
+    {
       this.groupParam = groupParam;
       this.typeParam = typeParam;
       super(name, s);

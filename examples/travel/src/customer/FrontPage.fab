@@ -14,9 +14,9 @@ import travel.Config;
 
 
 public class FrontPage extends CustomerAction authority (CustomerPrincipal) {
-    public FrontPage(CustomerMain{this} m) throws ServletException {
-        super();
-        initFields("frontpage", m);
+    public FrontPage(CustomerMain{this} m) 
+      throws NullPointerException where {CustomerPrincipal←} <= {this} {
+        super("frontpage", m);
     }
     
    public final void invoke{*lbl}(label{*lbl} lbl, Request[CustomerPrincipal]{*lbl} req)
@@ -24,7 +24,7 @@ public class FrontPage extends CustomerAction authority (CustomerPrincipal) {
     where caller(req.session),
           lbl <= {req.session→}
    {
-        HTMLServlet[CustomerPrincipal] s = (HTMLServlet) getServlet();
+        HTMLServlet[CustomerPrincipal] s = (HTMLServlet) req.servlet;
         if (s == null || !(s instanceof CustomerMain)) throw new ServletException("No servlet available"); 
         if (req == null) throw new ServletException("No request available"); 
         CustomerMain m = (CustomerMain)s;
@@ -37,7 +37,8 @@ public class FrontPage extends CustomerAction authority (CustomerPrincipal) {
 
 
             final label amtLbl = new label {BankPrincipal→AirlinePrincipal,CustomerPrincipal; BankPrincipal←; CustomerPrincipal←};
-            if (lbl <= new label {CustomerPrincipal←}) {
+            if (lbl <= new label {CustomerPrincipal←}
+                && new label {CustomerPrincipal←} <= lbl) {
                 InputNode amountInput = new TextInput[CustomerPrincipal, lbl, lbl]
                                                       (m, amtLbl, 20, "");
                 Text msg = new Text[lbl,lbl]("Enter Payment Amount for Ticket");

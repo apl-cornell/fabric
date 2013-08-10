@@ -17,10 +17,11 @@ public class StartTransaction extends CustomerAction {
 
     final Input[CustomerPrincipal]{CustomerPrincipal←} inp;
     
-    public StartTransaction(CustomerMain{this} m, Input[CustomerPrincipal]{CustomerPrincipal←} inp) throws ServletException {
+    public StartTransaction(CustomerMain{this} m, Input[CustomerPrincipal]{CustomerPrincipal←} inp) 
+        throws NullPointerException where {CustomerPrincipal←} <= {this}
+    {
         this.inp = inp;
-        super();
-        initFields("starttx", m);
+        super("starttx", m);
     }
     
    public final void invoke{*lbl}(label{*lbl} lbl, Request[CustomerPrincipal]{*lbl} _req)
@@ -29,7 +30,7 @@ public class StartTransaction extends CustomerAction {
           lbl <= {_req.session→}
    {
         final HTMLRequest req = (HTMLRequest) _req;
-        HTMLServlet[CustomerPrincipal] servlet = (HTMLServlet) getServlet();
+        HTMLServlet[CustomerPrincipal] servlet = (HTMLServlet) req.servlet;
         if (servlet == null || !(servlet instanceof CustomerMain)) throw new ServletException("No servlet available"); 
         if (req == null) throw new ServletException("No request available"); 
         CustomerMain m = (CustomerMain)servlet;

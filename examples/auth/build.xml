@@ -52,7 +52,7 @@
       <arg value="-cp"/> <arg value="${auth.home}/classes"/>
       <arg value="-addsigcp"/> <arg pathref="sif.sigcp"/>
       <arg value="-addbootcp"/> <arg pathref="sif.classpath"/>
-      <arg value="-trusted-providers"/>
+      <!----><arg value="-trusted-providers"/>
       <fileset dir="${auth.home}/src" includes="**/*.fab"/>
     </fabc>
 

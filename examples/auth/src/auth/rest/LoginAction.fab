@@ -11,19 +11,21 @@ public class LoginAction[principal servP] extends AbstractAction[servP] {
   final String{this}@{servP→} userParam;
   final String{this}@{servP→} pwdParam;
 
-  public LoginAction(Servlet[servP]{this} s) {      
+  public LoginAction(Servlet[servP]{this} s) 
+      throws NullPointerException where {servP←} <= {this} {      
     this(s, "user", "pass");
   }
 
-  public LoginAction(Servlet[servP]{this} s, String{this} userParam, String{this} pwdParam) {      
+  public LoginAction(Servlet[servP]{this} s, String{this} userParam, String{this} pwdParam) 
+      throws NullPointerException where {servP←} <= {this} {      
     this(s, "login", userParam, pwdParam);
   }
   
-  public LoginAction(Servlet[servP]{this} s, String{this} name, String{this} userParam, String{this} pwdParam) {      
+  public LoginAction(Servlet[servP]{this} s, String{this} name, String{this} userParam, String{this} pwdParam) 
+      throws NullPointerException where {servP←} <= {this} {      
     this.userParam = userParam;
     this.pwdParam = pwdParam;
-    super();
-    initFields(name, s);
+    super(name, s);
   }
   
   public void invoke{*lbl}(label{*lbl} lbl, Request[servP]{*lbl} req)
@@ -32,7 +34,7 @@ public class LoginAction[principal servP] extends AbstractAction[servP] {
     servP actsfor req.session,
     lbl <= {req.session→} 
   {
-      Servlet[servP] servlet_ = getServlet();
+      Servlet[servP] servlet_ = req.servlet;
       final SessionState state_ = req.getSessionState(lbl);      
       if (lbl <= new label {⊤→servlet_.store$} 
            && lbl <= new label {state_.store$→}) {        
