@@ -22,12 +22,14 @@ import polyglot.ast.Formal;
 import polyglot.ast.Id;
 import polyglot.ast.Initializer;
 import polyglot.ast.MethodDecl;
+import polyglot.ast.New;
 import polyglot.ast.Node;
 import polyglot.ast.NodeFactory;
 import polyglot.ast.Stmt;
 import polyglot.ast.TypeNode;
 import polyglot.qq.QQ;
 import polyglot.types.ClassType;
+import polyglot.types.ConstructorInstance;
 import polyglot.types.Flags;
 import polyglot.types.MethodInstance;
 import polyglot.types.PrimitiveType;
@@ -964,55 +966,74 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
   @Override
   public Node addNoArgumentConstructor(NoArgConstructorWriter nacw) {
     ClassDecl cd = node();
-    for (ClassMember cm : cd.body().members()) {
-      if (cm instanceof ConstructorDecl) {
-        ConstructorDecl consdecl = (ConstructorDecl) cm;
-        if (consdecl.formals().size() == 0) {
-          return cd;
-        }
-      }
-    }
-
-    if (!cd.flags().isInterface()) {
+    FabILTypeSystem ts = nacw.typeSystem();
+    if (!cd.flags().isInterface() && ts.isFabricClass(cd.type()) &&
+        !cd.flags().isAbstract()) {
       NodeFactory nf = nacw.nodeFactory();
-      FabILTypeSystem ts = nacw.typeSystem();
       Position cg = Position.compilerGenerated();
 
       //Make constructor with no arguments.
-      ArrayList<Stmt> body = new ArrayList<Stmt>();
-      body.add(nf.SuperCall(
-            cg, new ArrayList<Expr>()).constructorInstance(
-                                        ts.constructorInstance(cg,
-                                          cd.type().superType().toClass(),
-                                          Flags.PUBLIC,
-                                          new ArrayList<Type>(),
-                                          new ArrayList<Type>())));
-      ConstructorDecl noArgCons =
-        nf.ConstructorDecl(cg,
-                            Flags.PUBLIC,
-                            nf.Id(cg, cd.name()),
-                            new ArrayList<Formal>(),
-                            new ArrayList<TypeNode>(),
-                            nf.Block(cg, body));
-      noArgCons = noArgCons.constructorInstance(
-        ts.constructorInstance(cg,
-                               cd.type(),
-                               Flags.PUBLIC,
-                               new ArrayList<Type>(),
-                               new ArrayList<Type>()));
-      cd.type().addConstructor(noArgCons.constructorInstance());
-      cd = cd.body(cd.body().addMember(noArgCons));
+      boolean needsNoArg = true;
+      ConstructorInstance noArgIns = null;
+      for (ClassMember cm : cd.body().members()) {
+        if (cm instanceof ConstructorDecl) {
+          ConstructorDecl consDecl = (ConstructorDecl) cm;
+          if (consDecl.formals().size() == 0) {
+            needsNoArg = false;
+            noArgIns = consDecl.constructorInstance();
+            break;
+          }
+        }
+      }
+
+      if (needsNoArg) {
+        ArrayList<Stmt> body = new ArrayList<Stmt>();
+        body.add(nf.SuperCall(
+              cg, new ArrayList<Expr>()).constructorInstance(
+                                          ts.constructorInstance(cg,
+                                            cd.type().superType().toClass(),
+                                            Flags.PUBLIC,
+                                            new ArrayList<Type>(),
+                                            new ArrayList<Type>())));
+        ConstructorDecl noArgCons =
+          nf.ConstructorDecl(cg,
+                              Flags.PUBLIC,
+                              nf.Id(cg, cd.name()),
+                              new ArrayList<Formal>(),
+                              new ArrayList<TypeNode>(),
+                              nf.Block(cg, body));
+        noArgCons = noArgCons.constructorInstance(
+          ts.constructorInstance(cg,
+                                 cd.type(),
+                                 Flags.PUBLIC,
+                                 new ArrayList<Type>(),
+                                 new ArrayList<Type>()));
+        noArgIns = noArgCons.constructorInstance();
+        cd = cd.body(cd.body().addMember(noArgCons));
+        cd.type().addConstructor(noArgCons.constructorInstance());
+      }
 
       //Now add factory method to use dynamically.
+      New newCall = null;
+      if (cd.type().isInnerClass()) {
+        //If it's an inner class, you need a qualifier for later compiler passes
+        //to operate correctly.
+        newCall = nf.New(cg,
+                         nf.This(cg, nf.CanonicalTypeNode(cg, cd.type().container())),
+                         nf.CanonicalTypeNode(cg, cd.type()),
+                         new ArrayList<Expr>());
+      } else {
+        newCall = nf.New(cg,
+                         nf.CanonicalTypeNode(cg, cd.type()),
+                         new ArrayList<Expr>());
+      }
+      newCall = (New) newCall.constructorInstance(noArgIns).type(cd.type());
       ArrayList<Stmt> factoryBody = new ArrayList<Stmt>();
-      factoryBody.add(
-          nf.Return(cg,
-            nf.New(cg, nf.CanonicalTypeNode(cg, cd.type()),
-              new ArrayList<Expr>()).type(cd.type())));
+      factoryBody.add(nf.Return(cg, newCall));
       MethodDecl factoryMethod =
         nf.MethodDecl(cg,
                       Flags.PUBLIC,
-                      nf.CanonicalTypeNode(cg, cd.type()),
+                      nf.CanonicalTypeNode(cg, ts.FObject()),
                       nf.Id(cg, "$makeBlankCopy"),
                       new ArrayList<Formal>(),
                       new ArrayList<TypeNode>(),
@@ -1021,7 +1042,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
           ts.methodInstance(cg,
                             cd.type(),
                             Flags.PUBLIC,
-                            cd.type(),
+                            ts.FObject(),
                             "$makeBlankCopy",
                             new ArrayList<Type>(),
                             new ArrayList<Type>()));
@@ -1052,23 +1073,54 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
           + "}"));
     bodyStmts.add(qq.parseStmt(
           "super.$makeSemiDeepCopy(oldSet, oldToNew);"));
+
+    Set<String> hasSet = new HashSet<String>();
+    for (ClassMember cm : members) {
+      if (!(cm instanceof MethodDecl)) continue;
+      MethodDecl md = (MethodDecl) cm;
+      if (md.name().startsWith("set$")) {
+        hasSet.add(md.name().substring(4));
+      }
+    }
+
     for (ClassMember cm : members) {
       if (!(cm instanceof FieldDecl)) continue;
       FieldDecl fd = (FieldDecl) cm;
       if (fd.flags().isStatic()) continue;
       if (!ts.isFabricClass(fd.declType()) || ts.isJavaInlineable(fd.declType())) {
-        bodyStmts.add(qq.parseStmt(
-              "copy." + fd.id() + " = this." + fd.id() + ";"));
-      } else {
+        if (hasSet.contains(fd.name())) {
+          bodyStmts.add(qq.parseStmt(
+                "copy.set$" + fd.id() + "(this.get$" + fd.id() + "());"));
+        } else {
+          bodyStmts.add(qq.parseStmt(
+                "copy." + fd.id() + " = this.get$" + fd.id() + "();"));
+        }
+      } else if (hasSet.contains(fd.name())) {
         String bodyStr =
-          "if (oldSet.contains(this." + fd.id() + ".$getOnum())) {\n"
-        + "  if (oldToNew.containsKey(this." + fd.id() + ".$getOnum())) {\n"
-        + "    copy." + fd.id() + " = (%T) oldToNew.get(this." + fd.id() + ".$getOnum());\n"
+          "if (this.get$" + fd.id() + "() == null) {\n"
+        + "  copy.set$" + fd.id() + "(null);\n"
+        + "} else if (oldSet.contains(this.get$" + fd.id() + "().$getOnum())) {\n"
+        + "  if (oldToNew.containsKey(this.get$" + fd.id() + "().$getOnum())) {\n"
+        + "    copy.set$" + fd.id() + "((%T) oldToNew.get(this.get$" + fd.id() + "().$getOnum()));\n"
         + "  } else {\n"
-        + "    copy." + fd.id() + " = (%T) this." + fd.id() + ".$makeSemiDeepCopy(oldSet, oldToNew);\n"
+        + "    copy.set$" + fd.id() + "((%T) this.get$" + fd.id() + "().$makeSemiDeepCopy(oldSet, oldToNew));\n"
         + "  }\n"
         + "} else {\n"
-        + "  copy." + fd.id() + " = this." + fd.id() + ";\n"
+        + "  copy.set$" + fd.id() + "(this.get$" + fd.id() + "());\n"
+        + "}";
+        bodyStmts.add(qq.parseStmt(bodyStr, fd.type(), fd.type()));
+      } else {
+        String bodyStr =
+          "if (this.get$" + fd.id() + "() == null) {\n"
+        + "  copy." + fd.id() + " = null;\n"
+        + "} else if (oldSet.contains(this.get$" + fd.id() + "().$getOnum())) {\n"
+        + "  if (oldToNew.containsKey(this.get$" + fd.id() + "().$getOnum())) {\n"
+        + "    copy." + fd.id() + " = (%T) oldToNew.get(this.get$" + fd.id() + "().$getOnum());\n"
+        + "  } else {\n"
+        + "    copy." + fd.id() + " = (%T) this.get$" + fd.id() + "().$makeSemiDeepCopy(oldSet, oldToNew);\n"
+        + "  }\n"
+        + "} else {\n"
+        + "  copy." + fd.id() + " = this.get$" + fd.id() + "();\n"
         + "}";
         bodyStmts.add(qq.parseStmt(bodyStr, fd.type(), fd.type()));
       }

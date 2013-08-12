@@ -560,10 +560,12 @@ public class TransactionManager {
    * @param id
    *          The id for the call instance.
    */
-  public WarrantiedCallResult getCall(Principal principal, CallInstance id)
-      throws AccessException {
-    WarrantiedCallResult result = semanticWarranties.get(id);
-    if (result == null) throw new AccessException(
+  public Pair<WarrantiedCallResult, LongSet> getCall(Principal principal,
+      CallInstance id) throws AccessException {
+    Pair<WarrantiedCallResult, LongSet> result = 
+      new Pair<WarrantiedCallResult, LongSet>(semanticWarranties.get(id),
+          semanticWarranties.getCreates(id));
+    if (result.first == null) throw new AccessException(
         "AccessDenied, could not find call id " + id.toString());
     return result;
   }

@@ -205,7 +205,9 @@ public interface _ObjectArray<T extends Object> extends Object {
       copy.value = new Object[this.value.length];
       for (int i = 0; i < this.get$length(); i++) {
         T ithItem = this.get(i);
-        if (oldSet.contains(ithItem.$getOnum())) {
+        if (ithItem == null) {
+          copy.set(i, null);
+        } else if (oldSet.contains(ithItem.$getOnum())) {
           if (oldToNew.containsKey(ithItem.$getOnum())) {
             copy.set(i, (T) oldToNew.get(ithItem.$getOnum()));
           } else {

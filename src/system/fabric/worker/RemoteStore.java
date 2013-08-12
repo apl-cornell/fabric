@@ -10,6 +10,8 @@ import java.security.PublicKey;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
@@ -33,6 +35,7 @@ import fabric.common.exceptions.RuntimeFetchException;
 import fabric.common.util.ConcurrentLongKeyHashMap;
 import fabric.common.util.ConcurrentLongKeyMap;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.LongIterator;
 import fabric.common.util.Pair;
 import fabric.dissemination.ObjectGlob;
 import fabric.dissemination.WarrantyGlob;
@@ -345,8 +348,8 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
 
     result = callCache.get(call);
     if (result != null) {
-      /*if (current == null || !result.warranty.expired(true) ||
-          current.useStaleWarranties) {*/
+      //if (current == null || !result.warranty.expired(true) ||
+          //current.useStaleWarranties) {
       if (!result.warranty.expired(true)) {
         SEMANTIC_WARRANTY_LOGGER.finer("Call " + call + " found in local call cache: " + result);
         return result;
@@ -398,6 +401,19 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
     SEMANTIC_WARRANTY_LOGGER.finest("Asking store " + name() + " for call " + id);
     ReuseCallMessage.Response response =
         send(Worker.getWorker().authToStore, new ReuseCallMessage(id));
+    /*
+    Set<Long> createSet = new HashSet<Long>();
+    for (LongIterator iter = response.creates.iterator();
+        iter.hasNext();) {
+      createSet.add(iter.next());
+    }
+    if (createSet.contains(response.result.value.$getOnum())) {
+      fabric.lang.Object copy =
+        response.result.value.$makeSemiDeepCopy(createSet, new HashMap<Long,
+            fabric.lang.Object>());
+      return new WarrantiedCallResult(copy, response.result.warranty);
+    }
+    */
     return response.result;
   }
 

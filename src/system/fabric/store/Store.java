@@ -44,6 +44,7 @@ import fabric.common.net.naming.NameService.PortType;
 import fabric.common.net.naming.TransitionalNameService;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.LongSet;
 import fabric.common.util.Pair;
 import fabric.dissemination.ObjectGlob;
 import fabric.dissemination.WarrantyGlob;
@@ -290,8 +291,8 @@ class Store extends MessageToStoreHandler {
     SEMANTIC_WARRANTY_LOGGER.finer("Handling Reuse Call Message from " +
         nameOf(client.principal) + ", call=" + msg.call);
 
-    WarrantiedCallResult result = tm.getCall(client.principal, msg.call);
-    return new ReuseCallMessage.Response(result);
+    Pair<WarrantiedCallResult, LongSet> result = tm.getCall(client.principal, msg.call);
+    return new ReuseCallMessage.Response(result.first, result.second);
   }
 
   /**

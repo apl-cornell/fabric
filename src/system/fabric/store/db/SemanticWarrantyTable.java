@@ -194,7 +194,6 @@ public class SemanticWarrantyTable {
   /**
    * Get the warranty + call value for the given call.
    */
-  // TODO: Copy construction for non-store items.
   public final WarrantiedCallResult get(CallInstance id) {
     lockTable.putIfAbsent(id, new Object());
     synchronized (lockTable.get(id)) {
@@ -204,6 +203,16 @@ public class SemanticWarrantyTable {
         return null;
       return new WarrantiedCallResult(valueTable.get(id),
           warrantyTable.get(id));
+    }
+  }
+
+  /**
+   * Get the set of oids created during the last recording of the given call.
+   */
+  public final LongSet getCreates(CallInstance id) {
+    lockTable.putIfAbsent(id, new Object());
+    synchronized (lockTable.get(id)) {
+      return dependencyTable.getCreates(id);
     }
   }
 
@@ -480,6 +489,7 @@ public class SemanticWarrantyTable {
    */
   private long scheduleWriteOn(CallInstance call) {
     lockTable.putIfAbsent(call, new Object());
+    SEMANTIC_WARRANTY_LOGGER.finest("Scheduling write on call " + call);
     synchronized (lockTable.get(call)) {
       // Handle propogating this up the graph.
       long longest = warrantyTable.get(call).expiry();
@@ -519,9 +529,6 @@ public class SemanticWarrantyTable {
    * onums that is longer than the given commitTime.  Also performs any
    * bookkeeping associated with write events (like removing stale call values).
    */
-  // TODO: Oh god this needs a rewrite.
-  // Also, this needs to be fixed to properly lock and handle the transition
-  // between different dependencies.
   // XXX: For now, going back to blocking everything.
   public Pair<SemanticWarranty, Collection<SerializedObject>>
     prepareWrites(final Collection<SerializedObject> writes, final
