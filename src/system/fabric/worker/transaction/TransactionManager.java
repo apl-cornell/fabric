@@ -130,6 +130,11 @@ public final class TransactionManager {
   static final OidKeyHashMap<ReadMapEntry> readMap =
       new OidKeyHashMap<ReadMapEntry>();
 
+  public static boolean haveReaders(Store store, long onum) {
+    ReadMapEntry entry = readMap.get(store, onum);
+    return entry != null && !entry.readLocks.isEmpty();
+  }
+
   public static void abortReaders(Store store, long onum) {
     ReadMapEntry entry = readMap.get(store, onum);
     if (entry != null) entry.abortReaders();
