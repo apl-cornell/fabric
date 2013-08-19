@@ -1126,8 +1126,13 @@ public final class TransactionManager {
    * with it (so it's not a SemanticWarranty request).
    */
   public void setSemanticWarrantyValue(fabric.lang.Object v) {
-    SEMANTIC_WARRANTY_LOGGER.finest("Call: " + current.semanticWarrantyCall
-        + " gets value " + v.$getOnum());
+    if (!(v instanceof WrappedJavaInlineable)) {
+      SEMANTIC_WARRANTY_LOGGER.finest("Call: " + current.semanticWarrantyCall +
+          " gets value " + v.$getOnum());
+    } else {
+      SEMANTIC_WARRANTY_LOGGER.finest("Call: " + current.semanticWarrantyCall +
+          " gets value " + ((WrappedJavaInlineable<?>) v).$unwrap());
+    }
     if (!(v instanceof WrappedJavaInlineable)) v = v.fetch();
     current.semanticWarrantyValue = v;
   }

@@ -348,9 +348,9 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
 
     result = callCache.get(call);
     if (result != null) {
-      //if (current == null || !result.warranty.expired(true) ||
-          //current.useStaleWarranties) {
-      if (!result.warranty.expired(true)) {
+      if (current == null || !result.warranty.expired(true) ||
+          current.useStaleWarranties) {
+      //if (!result.warranty.expired(true)) {
         SEMANTIC_WARRANTY_LOGGER.finer("Call " + call + " found in local call cache: " + result);
         return result;
       } else {

@@ -3,6 +3,8 @@
 	<name>semantic_warranties</name>
 	<comment></comment>
 	<projects>
+		<project>jif</project>
+		<project>polyglot</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

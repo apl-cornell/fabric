@@ -28,7 +28,7 @@ import fabric.worker.Worker;
 /**
  * Represents a unique memoizable call in the Fabric system.
  */
-public class CallInstance implements Serializable {
+public class CallInstance implements Serializable, Comparable<CallInstance> {
 
   public Object target;
   public String method;
@@ -209,5 +209,11 @@ public class CallInstance implements Serializable {
   private void readObjectNoData(ObjectInputStream in) throws
     ObjectStreamException {
       throw new ObjectStreamException() {};
+  }
+
+  @Override
+  public int compareTo(CallInstance other) {
+    if (other.hashCode() == hashCode()) return 0;
+    return other.hashCode() > hashCode() ? -1 : 1;
   }
 }
