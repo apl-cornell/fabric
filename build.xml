@@ -74,7 +74,7 @@
 
   <!-- RCS root locations -->
   <property name="svn.root.fabric"
-      value="https://forge.cornell.edu/svn/repos/fabric/trunk"/>
+      value="https://forge.cornell.edu/svn/repos/fabric/branches/mss-release"/>
   <property name="cvs.root.jif"
       value=":ext:gforge.cis.cornell.edu:/cvsroot/jif"/>
   <property name="cvs.root.polyglot"
@@ -700,7 +700,6 @@
       this way because we won't have Polyglot's build.properties file if we're
       only building against polyglot.jar.
     -->
-    <antcall target="mkdir-tmp" />
     <echo file="${tmp}/VersionInfo.java">
 import polyglot.frontend.JLVersion;
 import jif.Version;
@@ -1546,7 +1545,7 @@ public class Version {
       name - the name of the module to check out
   -->
   <target name="cvs-checkout">
-    <cvs command="checkout ${name}" quiet="true" cvsRsh="ssh" cvsRoot="${root}"
+    <cvs command="checkout -D '2013/06/22 03:56:00' ${name}" quiet="true" cvsRsh="ssh" cvsRoot="${root}"
         dest="${tmp}" failonerror="true" />
   </target>
 
