@@ -341,6 +341,8 @@ public class TransactionManager {
             break;
           case DENIED:
             SEMANTIC_WARRANTY_LOGGER.finest("Prepare Calls failed due to inability to extend!");
+            // Remove this call from the worker's cache, it's going to change.
+            staleWars.add(call);
             throw new TransactionPrepareFailedException(conflictWars, staleWars,
                 "Could not extend for " + call);
         }
