@@ -173,10 +173,6 @@ class Store extends MessageToStoreHandler {
         nameOf(client.principal), message.tid.topTid);
 
     tm.abortTransaction(client.principal, message.tid.topTid);
-
-    Logging.log(HOTOS_LOGGER, Level.INFO,
-        "Handled Abort Message, worker={0}, tid={1}", nameOf(client.principal),
-        message.tid.topTid);
     return new AbortTransactionMessage.Response();
   }
 
@@ -205,10 +201,6 @@ class Store extends MessageToStoreHandler {
         nameOf(client.principal), message.transactionID);
 
     tm.commitTransaction(client, message.transactionID);
-
-    Logging.log(HOTOS_LOGGER, Level.INFO,
-        "Handled Commit Message, worker={0}, tid={1}",
-        nameOf(client.principal), message.transactionID);
     return new CommitTransactionMessage.Response();
   }
 
@@ -226,9 +218,6 @@ class Store extends MessageToStoreHandler {
     boolean subTransactionCreated =
         prepareTransaction(client.principal, msg.tid, msg.commitTime,
             msg.serializedCreates, msg.serializedWrites, msg.reads);
-    Logging.log(HOTOS_LOGGER, Level.INFO,
-        "Handled Prepare Message, worker={0}, tid={1}",
-        nameOf(client.principal), msg.tid);
     return new PrepareTransactionMessage.Response(subTransactionCreated);
   }
 
