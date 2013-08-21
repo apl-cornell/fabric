@@ -34,7 +34,6 @@ import fabric.common.TransactionID;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongKeyMap;
-import fabric.common.util.OidKeyHashMap;
 import fabric.lang.Object._Impl;
 import fabric.lang.Object._Proxy;
 import fabric.lang.security.Label;
@@ -43,7 +42,6 @@ import fabric.net.RemoteNode;
 import fabric.net.UnreachableNodeException;
 import fabric.store.InProcessStore;
 import fabric.worker.AbortException;
-import fabric.worker.FabricSoftRef;
 import fabric.worker.RemoteStore;
 import fabric.worker.Store;
 import fabric.worker.TransactionAbortingException;
@@ -127,59 +125,18 @@ public final class TransactionManager {
   // Proxy objects aren't used here because doing so would result in calls to
   // hashcode() and equals() on such objects, resulting in fetching the
   // corresponding Impls from the store.
-  static final OidKeyHashMap<ReadMapEntry> readMap =
-      new OidKeyHashMap<ReadMapEntry>();
+  static final ReadMap readMap = new ReadMap();
 
   public static boolean haveReaders(Store store, long onum) {
-    ReadMapEntry entry = readMap.get(store, onum);
-    return entry != null && !entry.readLocks.isEmpty();
+    return readMap.haveReaders(store, onum);
   }
 
   public static void abortReaders(Store store, long onum) {
-    ReadMapEntry entry = readMap.get(store, onum);
-    if (entry != null) entry.abortReaders();
+    readMap.abortReaders(store, onum);
   }
 
-  public static ReadMapEntry getReadMapEntry(_Impl impl, long expiry) {
-    FabricSoftRef ref = impl.$ref;
-
-    // Optimization: if the impl lives on the local store, it will never be
-    // evicted, so no need to store the entry in the read map.
-    if (ref.store.isLocalStore()) return new ReadMapEntry(impl, expiry);
-
-    while (true) {
-      ReadMapEntry result;
-      synchronized (readMap) {
-        result = readMap.get(ref.store, ref.onum);
-        if (result == null) {
-          result = new ReadMapEntry(impl, expiry);
-          readMap.put(ref.store, ref.onum, result);
-          return result;
-        }
-      }
-
-      synchronized (result) {
-        synchronized (readMap) {
-          // Make sure we still have the right entry.
-          if (result != readMap.get(ref.store, ref.onum)) continue;
-
-          result.obj = impl.$ref;
-          result.pinCount++;
-          result.promise = result.promise > expiry ? result.promise : expiry;
-          int ver = impl.$getVersion();
-          if (ver == result.versionNumber) return result;
-
-          // Version numbers don't match. Retry all other transactions.
-          // XXX What if we just read in an older copy of the object?
-          for (Log reader : result.readLocks) {
-            reader.flagRetry();
-          }
-
-          result.versionNumber = ver;
-          return result;
-        }
-      }
-    }
+  public static ReadMap.Entry getReadMapEntry(_Impl impl, long expiry) {
+    return readMap.getEntry(impl);
   }
 
   private static final Map<Thread, TransactionManager> instanceMap =
@@ -438,9 +395,6 @@ public final class TransactionManager {
     }
 
     // Commit top-level transaction.
-
-    // Remove and unlock reads that have valid promises on them
-    current.removePromisedReads(commitTime);
 
     // Go through the transaction log and figure out the stores we need to
     // contact.
@@ -971,10 +925,10 @@ public final class TransactionManager {
           hadToWait = true;
         } else {
           // Restart any incompatible readers.
-          ReadMapEntry readMapEntry = obj.$readMapEntry;
+          ReadMap.Entry readMapEntry = obj.$readMapEntry;
           if (readMapEntry != null) {
             synchronized (readMapEntry) {
-              for (Log lock : readMapEntry.readLocks) {
+              for (Log lock : readMapEntry.getReaders()) {
                 if (!current.isDescendantOf(lock)) {
                   Logging.log(WORKER_TRANSACTION_LOGGER, Level.FINEST,
                       "{0} wants to write {1}/" + obj.$getOnum()

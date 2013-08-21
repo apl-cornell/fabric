@@ -33,7 +33,7 @@ import fabric.worker.Store;
 import fabric.worker.Worker;
 import fabric.worker.remote.RemoteWorker;
 import fabric.worker.transaction.Log;
-import fabric.worker.transaction.ReadMapEntry;
+import fabric.worker.transaction.ReadMap;
 import fabric.worker.transaction.TransactionManager;
 import fabric.worker.transaction.TransactionRegistry;
 
@@ -476,7 +476,7 @@ public interface Object {
      * 
      * @see fabric.worker.transaction.TransactionManager#readMap
      */
-    public ReadMapEntry $readMapEntry;
+    public final ReadMap.Entry $readMapEntry;
 
     /**
      * The number of threads waiting on this object.

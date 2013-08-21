@@ -144,8 +144,24 @@ public final class ConcurrentOidKeyHashMap<V> implements
     if (submap == null) return null;
 
     V result = submap.remove(onum);
-    if (submap.isEmpty()) map.remove(store, submap);
+    // Disabled due to possible race.
+//    if (submap.isEmpty()) map.remove(store, submap);
     return result;
+  }
+
+  public boolean remove(Store store, long onum, V value) {
+    ConcurrentLongKeyMap<V> submap = map.get(store);
+    if (submap == null) return false;
+
+    boolean result = submap.remove(onum, value);
+    // Disabled due to possible race.
+//    if (submap.isEmpty()) map.remove(store, submap);
+    return result;
+  }
+
+  public boolean replace(Store store, long onum, V oldValue, V newValue) {
+    ConcurrentLongKeyMap<V> submap = map.get(store);
+    return submap != null && submap.replace(onum, oldValue, newValue);
   }
 
   public Set<Store> storeSet() {

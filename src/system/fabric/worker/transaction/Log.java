@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
@@ -20,6 +19,7 @@ import fabric.common.util.WeakReferenceArrayList;
 import fabric.lang.Object._Impl;
 import fabric.lang.security.LabelCache;
 import fabric.lang.security.SecurityCache;
+import fabric.worker.FabricSoftRef;
 import fabric.worker.Store;
 import fabric.worker.Worker;
 import fabric.worker.remote.RemoteWorker;
@@ -75,12 +75,12 @@ public final class Log {
   // Proxy objects aren't used for keys here because doing so would result in
   // calls to hashcode() and equals() on such objects, resulting in fetching the
   // corresponding Impls from the store.
-  protected final OidKeyHashMap<ReadMapEntry> reads;
+  protected final OidKeyHashMap<ReadMap.Entry> reads;
 
   /**
    * Reads on objects that have been read by an ancestor transaction.
    */
-  protected final List<ReadMapEntry> readsReadByParent;
+  protected final List<ReadMap.Entry> readsReadByParent;
 
   /**
    * A collection of all objects created in this transaction or completed
@@ -194,8 +194,8 @@ public final class Log {
     this.child = null;
     this.thread = Thread.currentThread();
     this.retrySignal = parent == null ? null : parent.retrySignal;
-    this.reads = new OidKeyHashMap<ReadMapEntry>();
-    this.readsReadByParent = new ArrayList<ReadMapEntry>();
+    this.reads = new OidKeyHashMap<ReadMap.Entry>();
+    this.readsReadByParent = new ArrayList<ReadMap.Entry>();
     this.creates = new ArrayList<_Impl>();
     this.localStoreCreates = new WeakReferenceArrayList<_Impl>();
     this.writes = new ArrayList<_Impl>();
@@ -287,8 +287,8 @@ public final class Log {
   Set<Store> storesToCheckFreshness() {
     Set<Store> result = new HashSet<Store>();
     result.addAll(reads.storeSet());
-    for (ReadMapEntry entry : readsReadByParent) {
-      result.add(entry.obj.store);
+    for (ReadMap.Entry entry : readsReadByParent) {
+      result.add(entry.getStore());
     }
 
     return result;
@@ -303,17 +303,18 @@ public final class Log {
    */
   LongKeyMap<Integer> getReadsForStore(Store store, boolean includeModified) {
     LongKeyMap<Integer> result = new LongKeyHashMap<Integer>();
-    LongKeyMap<ReadMapEntry> submap = reads.get(store);
+    LongKeyMap<ReadMap.Entry> submap = reads.get(store);
     if (submap == null) return result;
 
-    for (LongKeyMap.Entry<ReadMapEntry> entry : submap.entrySet()) {
-      result.put(entry.getKey(), entry.getValue().versionNumber);
+    for (LongKeyMap.Entry<ReadMap.Entry> entry : submap.entrySet()) {
+      result.put(entry.getKey(), entry.getValue().getVersionNumber());
     }
 
     if (parent != null) {
-      for (ReadMapEntry entry : readsReadByParent) {
-        if (store.equals(entry.obj.store)) {
-          result.put(entry.obj.onum, entry.versionNumber);
+      for (ReadMap.Entry entry : readsReadByParent) {
+        FabricSoftRef entryRef = entry.getRef();
+        if (store.equals(entryRef.store)) {
+          result.put(entryRef.onum, entry.getVersionNumber());
         }
       }
     }
@@ -424,13 +425,13 @@ public final class Log {
    */
   void abort() {
     // Release read locks.
-    for (LongKeyMap<ReadMapEntry> submap : reads) {
-      for (ReadMapEntry entry : submap.values()) {
+    for (LongKeyMap<ReadMap.Entry> submap : reads) {
+      for (ReadMap.Entry entry : submap.values()) {
         entry.releaseLock(this);
       }
     }
 
-    for (ReadMapEntry entry : readsReadByParent)
+    for (ReadMap.Entry entry : readsReadByParent)
       entry.releaseLock(this);
 
     // Roll back writes and release write locks.
@@ -490,13 +491,13 @@ public final class Log {
     }
 
     // Merge reads and transfer read locks.
-    for (LongKeyMap<ReadMapEntry> submap : reads) {
-      for (ReadMapEntry entry : submap.values()) {
+    for (LongKeyMap<ReadMap.Entry> submap : reads) {
+      for (ReadMap.Entry entry : submap.values()) {
         parent.transferReadLock(this, entry);
       }
     }
 
-    for (ReadMapEntry entry : readsReadByParent) {
+    for (ReadMap.Entry entry : readsReadByParent) {
       entry.releaseLock(this);
     }
 
@@ -594,8 +595,8 @@ public final class Log {
    */
   void commitTopLevel() {
     // Release read locks.
-    for (LongKeyMap<ReadMapEntry> submap : reads) {
-      for (ReadMapEntry entry : submap.values()) {
+    for (LongKeyMap<ReadMap.Entry> submap : reads) {
+      for (ReadMap.Entry entry : submap.values()) {
         entry.releaseLock(this);
       }
     }
@@ -618,7 +619,7 @@ public final class Log {
         obj.$writeLockHolder = null;
         obj.$writeLockStackTrace = null;
         obj.$version++;
-        obj.$readMapEntry.versionNumber++;
+        obj.$readMapEntry.incrementVersion();
         obj.$isOwned = false;
 
         // Discard one layer of history.
@@ -642,7 +643,7 @@ public final class Log {
       obj.$writeLockHolder = null;
       obj.$writeLockStackTrace = null;
       obj.$version = 1;
-      obj.$readMapEntry.versionNumber = 1;
+      obj.$readMapEntry.incrementVersion();
       obj.$isOwned = false;
     }
 
@@ -653,32 +654,20 @@ public final class Log {
   /**
    * Transfers a read lock from a child transaction.
    */
-  private void transferReadLock(Log child, ReadMapEntry readMapEntry) {
+  private void transferReadLock(Log child, ReadMap.Entry readMapEntry) {
     // If we already have a read lock, return; otherwise, register a read lock.
-    boolean lockedByAncestor = false;
-    synchronized (readMapEntry) {
-      // Release child's read lock.
-      readMapEntry.readLocks.remove(child);
-
-      // Scan the list for an existing read lock. At the same time, check if
-      // any of our ancestors already has a read lock.
-      for (Log cur : readMapEntry.readLocks) {
-        if (cur == this) {
-          // We already have a lock; nothing to do.
-          return;
-        }
-
-        if (!lockedByAncestor && isDescendantOf(cur)) lockedByAncestor = true;
-      }
-
-      readMapEntry.readLocks.add(this);
+    Boolean lockedByAncestor = readMapEntry.transferLockToParent(child);
+    if (lockedByAncestor == null) {
+      // We already had a lock; nothing to do.
+      return;
     }
 
     // Only record the read in this transaction if none of our ancestors have
     // read this object.
     if (!lockedByAncestor) {
+      FabricSoftRef ref = readMapEntry.getRef();
       synchronized (reads) {
-        reads.put(readMapEntry.obj.store, readMapEntry.obj.onum, readMapEntry);
+        reads.put(ref.store, ref.onum, readMapEntry);
       }
     } else {
       readsReadByParent.add(readMapEntry);
@@ -694,12 +683,12 @@ public final class Log {
   void acquireReadLock(_Impl obj) {
     // If we already have a read lock, return; otherwise, register a read
     // lock.
-    ReadMapEntry readMapEntry = obj.$readMapEntry;
+    ReadMap.Entry readMapEntry = obj.$readMapEntry;
     boolean lockedByAncestor = false;
     synchronized (readMapEntry) {
       // Scan the list for an existing read lock. At the same time, check if
       // any of our ancestors already has a read lock.
-      for (Log cur : readMapEntry.readLocks) {
+      for (Log cur : readMapEntry.getReaders()) {
         if (cur == this) {
           // We already have a lock; nothing to do.
           return;
@@ -708,7 +697,7 @@ public final class Log {
         if (!lockedByAncestor && isDescendantOf(cur)) lockedByAncestor = true;
       }
 
-      readMapEntry.readLocks.add(this);
+      readMapEntry.addLock(this);
     }
 
     if (obj.$writer != this) {
@@ -740,31 +729,6 @@ public final class Log {
 
   public Log getChild() {
     return child;
-  }
-
-  void removePromisedReads(long commitTime) {
-    // Generics. Ugh.
-
-    Iterator<LongKeyMap<ReadMapEntry>> outer = reads.iterator();
-    while (outer.hasNext()) {
-      Collection<ReadMapEntry> values = outer.next().values();
-
-      Iterator<ReadMapEntry> inner = values.iterator();
-      while (inner.hasNext()) {
-        ReadMapEntry entry = inner.next();
-
-        if (entry.promise > commitTime) {
-          entry.releaseLock(this);
-          inner.remove();
-        }
-      }
-
-      if (values.isEmpty()) outer.remove();
-    }
-
-    // sanity check
-    if (!readsReadByParent.isEmpty())
-      throw new InternalError("something was read by a non-existent parent");
   }
 
   /**
@@ -814,7 +778,7 @@ public final class Log {
    */
   @Deprecated
   public void renumberObject(Store store, long onum, long newOnum) {
-    ReadMapEntry entry = reads.remove(store, onum);
+    ReadMap.Entry entry = reads.remove(store, onum);
     if (entry != null) {
       reads.put(store, newOnum, entry);
     }
