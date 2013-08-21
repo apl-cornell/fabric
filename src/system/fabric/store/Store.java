@@ -1,6 +1,5 @@
 package fabric.store;
 
-import static fabric.common.Logging.HOTOS_LOGGER;
 import static fabric.common.Logging.STORE_REQUEST_LOGGER;
 import static fabric.common.ONumConstants.STORE_PRINCIPAL;
 
