@@ -5,8 +5,11 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -30,19 +33,29 @@ abstract public class Servlet extends HttpServlet {
 
   protected Map<String, Action> startActions;
   private ThreadLocal<Nonce> nonce;
+  private Set<String> safeContentTypes;
 
   protected final Principal servletP;
 
-  static final int DEBUG_LEVEL = -1;
+  static final int DEBUG_LEVEL = 1;
   public static final PrintStream DEBUG = System.err;
 
   protected Servlet(Principal servletP) {
     this.servletP = servletP;
   }
 
+  public Principal servletPrincipal() {
+    return servletP;
+  }
+  
   @Override
   public final void init(ServletConfig sc) throws ServletException {
     super.init(sc);
+    Set<String> contentTypes = new LinkedHashSet<String>();
+    contentTypes.add("text/plain");
+    contentTypes.add("application/json");
+    safeContentTypes = Collections.unmodifiableSet(contentTypes);
+    //others?
     nonce = new ThreadLocal<Nonce>() {
       @Override
       protected Nonce initialValue() {
@@ -57,7 +70,7 @@ abstract public class Servlet extends HttpServlet {
     startActions = new HashMap<String, Action>();
     this.jif$invokeDefConstructor();
 
-    initialize();
+    initialize(sc);
   }
 
   /**
@@ -70,7 +83,12 @@ abstract public class Servlet extends HttpServlet {
         + "with no formal arguments.");
   }
 
-  public abstract void initialize() throws ServletException;
+  public void initialize() throws ServletException {    
+  }
+
+  public void initialize(ServletConfig sc) throws ServletException {
+    initialize();
+  }
 
   @Override
   public void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -80,28 +98,31 @@ abstract public class Servlet extends HttpServlet {
 
     PrintWriter rw = response.getWriter();
     try {
-      //response.setContentType("text/html");
-      //if (request.getCharacterEncoding() == null)
-      //    request.setCharacterEncoding("ISO-8859-1");
+      // 'safe' content types:
+      // text/plain
+      // json
+      // --
+      // html is not
+      // xml is not
 
-      Request req = new Request(this, request);
+      if (request.getCharacterEncoding() == null)
+        request.setCharacterEncoding("ISO-8859-1");
+
+      Request req = new Request(this, request, response);
+
+      req.setResponseContentType(defaultContentType());
+
+      if (debug(1)) {
+        DEBUG.println("*** handling request");
+      }
 
       handleRequest(req);
 
       if (debug(1)) {
-        DEBUG.println("*** writing return page");
-      }
-
-      if (debug(1)) {
         time_page = System.currentTimeMillis();
       }
-
-      //req.writeReturnPage(rw, colorCoding);
-      if (debug(1)) {
-        DEBUG.println("*** available actions are: "
-            + getSessionActions(req.request));
-
-      }
+    } catch (Throwable e) {
+      throw e;
     } finally {
       if (rw != null) rw.close();
       if (debug(1)) {
@@ -114,8 +135,9 @@ abstract public class Servlet extends HttpServlet {
     }
   }
 
-  private final void handleRequest(final Request req) throws IOException,
+  protected final void handleRequest(final Request req) throws IOException,
       ServletException {
+    //'producePage'
     LabeledAction laction = null;
     String action_name = req.action_name();
 
@@ -157,7 +179,11 @@ abstract public class Servlet extends HttpServlet {
         Worker.runInSubTransaction(new Worker.Code<Void>() {
           @Override
           public Void run() throws ServletException {
-            laction_.a.invoke(laction_.L, req);
+            try {
+              laction_.a.invoke(laction_.L, req);
+            } catch (Throwable e) {
+              throw e;
+            }
             return null;
           }
         });
@@ -177,15 +203,6 @@ abstract public class Servlet extends HttpServlet {
           "Failure: Servlet Exception",
           "An unexpected exception occurred during servlet processing: ", t);
     }
-
-    // TODO KV: Replace the null label with something more sensible
-//    if (!req.returnPageSet()) {
-//      reportError(sessionPrincipalLabel(req.session), req,
-//          "Error handling request", "Error Handling Request",
-//          "The servlet did not generate any output for your request. "
-//              + "This probably means that your request was ill-formed.");
-//
-//    }
   }
 
   Label trustedBySessionLabel(final Request req) {
@@ -297,11 +314,12 @@ abstract public class Servlet extends HttpServlet {
   protected void reportError(Label lbl, Request req, String title,
       String header, String explanation, Throwable t) throws ServletException {
     if (t != null) {
-      ByteArrayOutputStream bs = new ByteArrayOutputStream();
-      PrintWriter pw = new PrintWriter(bs);
-      //XXX: LEAK
-      t.printStackTrace(pw);
-      pw.flush();
+      System.err.println(t.getMessage());
+//      ByteArrayOutputStream bs = new ByteArrayOutputStream();
+//      PrintWriter pw = new PrintWriter(bs);
+//      //XXX: LEAK
+//      t.printStackTrace(pw);
+//      pw.flush();      
     }
     // TODO: find an error action and invoke
   }
@@ -319,6 +337,7 @@ abstract public class Servlet extends HttpServlet {
 
   public Action findDefaultAction(Request req) {
     String def_action_name = this.defaultActionName(req);
+
     if (def_action_name == null) {
       return this.defaultAction(req);
     }
@@ -469,5 +488,18 @@ abstract public class Servlet extends HttpServlet {
     public int hashCode() {
       return (a == null ? 0 : a.hashCode()) ^ (L == null ? 0 : L.hashCode());
     }
+
+  }
+
+  public String defaultContentType() {
+    return "text/plain";
+  }
+
+  /**
+   * @param type
+   * @return
+   */
+  public boolean isSafeContentType(String type) {
+    return safeContentTypes.contains(type);
   }
 }

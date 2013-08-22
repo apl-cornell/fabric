@@ -10,16 +10,25 @@ public interface IntegPolicy extends Policy {
    * Return the join of this policy and p. The set s contains all delegations
    * (i.e., DelegationPairs) that this join result depends upon.
    */
-  IntegPolicy join(Store store, IntegPolicy p, Set/* <DelegationPair> */dependencies);
+  IntegPolicy join(Store store, IntegPolicy p, java.util.Set/* <DelegationPair> */dependencies);
   
   /**
    * Return the meet of this policy and p. The set s contains all delegations
    * (i.e., DelegationPairs) that this meet result depends upon.
    */
-  IntegPolicy meet(Store store, IntegPolicy p, Set/* <DelegationPair> */dependencies);
+  IntegPolicy meet(Store store, IntegPolicy p, java.util.Set/* <DelegationPair> */dependencies);
   
   IntegPolicy join(Store store, IntegPolicy p);
 
   IntegPolicy meet(Store store, IntegPolicy p);
 
+  IntegPolicy join(Store store, IntegPolicy p, boolean simplify);
+
+  IntegPolicy meet(Store store, IntegPolicy p, boolean simplify);
+
+  IntegPolicy join(Store store, IntegPolicy p, java.util.Set/*<DelegationPair>*/ dependencies,
+          boolean simplify);
+
+  IntegPolicy meet(Store store, IntegPolicy p, java.util.Set/*<DelegationPair>*/ dependencies,
+          boolean simplify);
 }

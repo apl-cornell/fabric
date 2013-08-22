@@ -22,99 +22,8 @@ public final class LabelUtil {
     fabric$lang$Object$();
     return this;
   }
-
-// ALL STATS-RELATED STUFF HAS BEEN DISABLED DUE TO BOOTSTRAPPING ISSUES.
-// (How would we create the label of the Stats object?)  -MJL 
-//  /*
-//   * fields and class for collecting timing statistics. timing statistics are
-//   * collected on a per-thread basis.
-//   */
-//  private static class Stats {
-//    private long totalTime = 0;
-//    private long enterStartTime = 0;
-//    private int callStackCount = 0;
-//    private int callCount = 0;
-//    private int topCallCount = 0;
-//  }
-//
-//  private static ThreadLocal statsPerThread = new ThreadLocal() {
-//    protected Object initialValue() {
-//      Store store = Worker.getWorker().getLocalStore();
-//      return (Stats) new Stats@store().fabric$lang$security$LabelUtil$Stats$();
-//    }
-//  };
-//  public static final boolean COUNT_TIME = false;
   
   public static final LocalStore localStore = Worker.getWorker().getLocalStore();
-
-  /*
-   * Record that we are entering a section of code that we want to record the
-   * timing of.
-   */
-//  static void enterTiming() {
-//    if (COUNT_TIME) {
-//      Stats stats = (Stats) statsPerThread.get();
-//      stats.callCount++;
-//      if (stats.callStackCount++ == 0) {
-//        stats.topCallCount++;
-//        stats.enterStartTime = System.currentTimeMillis();
-//      }
-//    }
-//  }
-
-  /*
-   * Record that we are exiting a section of code that we want to record the
-   * timing of.
-   */
-//  static void exitTiming() {
-//    if (COUNT_TIME) {
-//      Stats stats = (Stats) statsPerThread.get();
-//      if ((--stats.callStackCount) == 0) {
-//        stats.totalTime += (System.currentTimeMillis() - stats.enterStartTime);
-//      }
-//    }
-//  }
-
-  /*
-   * Return the total time spent by the current thread in code we recorded the
-   * timing of, since the last time this method was called, and/or the thread
-   * created (whichever was last). Also clears the total time recorded for this
-   * thread.
-   */
-//  public static long getAndClearTime() {
-//    long r = -1;
-//    if (COUNT_TIME) {
-//      Stats stats = (Stats) statsPerThread.get();
-//      r = stats.totalTime;
-//      stats.totalTime = 0;
-//    }
-//    return r;
-//  }
-
-  /*
-   * Return the total count of calls to enterTiming() since the last time this
-   * method was called, and/or the thread created (whichever was last). Also
-   * clears the total time recorded for this thread.
-   */
-//  public static int getAndClearCount() {
-//    int r = -1;
-//    if (COUNT_TIME) {
-//      Stats stats = (Stats) statsPerThread.get();
-//      r = stats.callCount;
-//      stats.callCount = 0;
-//    }
-//    return r;
-//  }
-
-//  public static int getAndClearTopCount() {
-//    int r = -1;
-//    if (COUNT_TIME) {
-//      Stats stats = (Stats) statsPerThread.get();
-//      r = stats.topCallCount;
-//      stats.topCallCount = 0;
-//    }
-//    return r;
-//  }
 
   public static Label noComponents() {
     return localStore.getEmptyLabel();
@@ -140,27 +49,8 @@ public final class LabelUtil {
     return localStore.getTopIntegPolicy();
   }
 
-//XXX: What is the purpose of these?
-//  public static ConfPolicy bottomConf(Store store) {
-//	  return localStore.getBottomConfidPolicy();
-//  }
-//
-//  public static ConfPolicy topConf(Store store) {
-//	  return localStore.getTopConfidPolicy();
-//  }
-//
-//  public static IntegPolicy topInteg(Store store) {
-//	  return localStore.getTopIntegPolicy();
-//  }
-//  
-//  public static IntegPolicy bottomInteg(Store store) {
-//      return localStore.getBottomIntegPolicy();
-//  }
-
   public static ConfPolicy readerPolicy(Store store, Principal owner,
       Principal reader) {
-//    try {
-//      enterTiming();
       SecurityCache cache = TransactionManager.getInstance().getSecurityCache();
       Triple triple = new Triple(owner, reader, store);
       ConfPolicy result = cache.getReaderPolicy(triple);
@@ -169,20 +59,12 @@ public final class LabelUtil {
       result = (ReaderPolicy) new ReaderPolicy@store().fabric$lang$security$ReaderPolicy$(owner, reader);
       cache.putReaderPolicy(triple, result);
       return result;
-//    } finally {
-//      exitTiming();
-//    }
   }
 
   public static ConfPolicy readerPolicy(Store store, Principal owner,
       Collection/* <Principal> */readers) {
-//    try {
-//      enterTiming();
       return readerPolicy(store, owner,
           PrincipalUtil.disjunction(store, readers));
-//    } finally {
-//      exitTiming();
-//    }
   }
 
   /**
@@ -190,24 +72,14 @@ public final class LabelUtil {
    */
   public static ConfPolicy readerPolicy(Store store, Label lbl,
       Principal owner, Principal[] readers) {
-//    try {
-//      enterTiming();
       if (readers == null)
         return readerPolicy(store, owner, Collections.EMPTY_SET);
       return readerPolicy(store, owner, Arrays.asList(readers));
-//    } finally {
-//      exitTiming();
-//    }
   }
 
   public static ConfPolicy readerPolicy(Store store, Principal owner,
       PrincipalSet writers) {
-//    try {
-//      enterTiming();
       return readerPolicy(store, owner, writers.getSet());
-//    } finally {
-//      exitTiming();
-//    }
   }
 
   public static Label readerPolicyLabel(Principal owner, Principal reader) {
@@ -216,25 +88,15 @@ public final class LabelUtil {
   
   public static Label readerPolicyLabel(Store store, Principal owner,
       Principal reader) {
-//    try {
-//      enterTiming();
       return toLabel(store, readerPolicy(store, owner, reader));
-//    } finally {
-//      exitTiming();
-//    }
   }
 
   public static Label readerPolicyLabel(Store store, Principal owner,
       Collection/* <Principal> */readers) {
-//    try {
-//      enterTiming();
       Label l =
           toLabel(store, readerPolicy(store, owner,
               PrincipalUtil.disjunction(store, readers)));
       return l;
-//    } finally {
-//      exitTiming();
-//    }
   }
 
   /**
@@ -242,30 +104,18 @@ public final class LabelUtil {
    */
   public static Label readerPolicyLabel(Store store, Label lbl,
       Principal owner, Principal[] readers) {
-//    try {
-//      enterTiming();
       if (readers == null)
         return readerPolicyLabel(store, owner, Collections.EMPTY_SET);
       return readerPolicyLabel(store, owner, Arrays.asList(readers));
-//    } finally {
-//      exitTiming();
-//    }
   }
 
   public static Label readerPolicyLabel(Store store, Principal owner,
       PrincipalSet readers) {
-//    try {
-//      enterTiming();
       return readerPolicyLabel(store, owner, PrincipalUtil.disjunction(store,
           readers.getSet()));
-//    } finally {
-//      exitTiming();
-//    }
   }
 
   public static IntegPolicy writerPolicy(Store store, Principal owner, Principal writer) {
-//    try {
-//      enterTiming();
       SecurityCache cache = TransactionManager.getInstance().getSecurityCache();
       Triple triple = new Triple(owner, writer, store);
       IntegPolicy result = cache.getWriterPolicy(triple);
@@ -274,39 +124,21 @@ public final class LabelUtil {
       result = (WriterPolicy) new WriterPolicy@store().fabric$lang$security$WriterPolicy$(owner, writer);
       cache.putWriterPolicy(triple, result);
       return result;
-//    } finally {
-//      exitTiming();
-//    }
   }
 
   public static IntegPolicy writerPolicy(Store store, Principal owner,
       Collection/* <Principal> */writers) {
-//    try {
-//      enterTiming();
       return writerPolicy(store, owner, PrincipalUtil.disjunction(store, writers));
-//    } finally {
-//      exitTiming();
-//    }
   }
 
   public static Label writerPolicyLabel(Store store, Principal owner, Principal writer) {
-//    try {
-//      enterTiming();
       return toLabel(store, writerPolicy(store, owner, writer));
-//    } finally {
-//      exitTiming();
-//    }
   }
 
   public static Label writerPolicyLabel(Store store, Principal owner,
       Collection/* <Principal> */writers) {
-//    try {
-//      enterTiming();
       return toLabel(store, writerPolicy(store, owner,
           PrincipalUtil.disjunction(store, writers)));
-//    } finally {
-//      exitTiming();
-//    }
   }
 
   /**
@@ -314,14 +146,9 @@ public final class LabelUtil {
    */
   public static Label writerPolicyLabel(Store store, Label lbl, Principal owner,
       Principal[] writers) {
-//    try {
-//      enterTiming();
       if (writers == null)
         return writerPolicyLabel(store, owner, Collections.EMPTY_SET);
       return writerPolicyLabel(store, owner, Arrays.asList(writers));
-//    } finally {
-//      exitTiming();
-//    }
   }
 
   /**
@@ -329,29 +156,17 @@ public final class LabelUtil {
    */
   public static IntegPolicy writerPolicy(Store store, Label lbl, Principal owner,
       Principal[] writers) {
-//    try {
-//      enterTiming();
       if (writers == null)
         return writerPolicy(store, owner, Collections.EMPTY_SET);
       return writerPolicy(store, owner, Arrays.asList(writers));
-//    } finally {
-//      exitTiming();
-//    }
   }
 
   public static IntegPolicy writerPolicy(Store store, Principal owner,
       PrincipalSet writers) {
-//    try {
-//      enterTiming();
       return writerPolicy(store, owner, writers.getSet());
-//    } finally {
-//      exitTiming();
-//    }
   }
 
   public static Label toLabel(Store store, ConfPolicy cPolicy, IntegPolicy iPolicy) {
-//    try {
-//      enterTiming();
       if (cPolicy == null || iPolicy == null)
         throw new NullPointerException@localStore();
       
@@ -363,27 +178,14 @@ public final class LabelUtil {
       result = (Label) new PairLabel@store().fabric$lang$security$PairLabel$(cPolicy, iPolicy);
       cache.putLabel(triple, result);
       return result;
-//    } finally {
-//      exitTiming();
-//    }
   }
 
   public static Label toLabel(Store store, ConfPolicy policy) {
-//    try {
-//      enterTiming();
       return toLabel(store, policy, topInteg());
-//    } finally {
-//      exitTiming();
-//    }
   }
 
   public static Label toLabel(Store store, IntegPolicy policy) {
-//    try {
-//      enterTiming();
       return toLabel(store, bottomConf(), policy);
-//    } finally {
-//      exitTiming();
-//    }
   }
   
   // lift takes a policy and creates a pair label with the other
@@ -391,13 +193,16 @@ public final class LabelUtil {
   public static Label liftToLabel(Store store, ConfPolicy policy) {
       return toLabel(store, policy, bottomInteg());
   }
+  
   public static Label liftToLabel(Store store, IntegPolicy policy) {
       return toLabel(store, bottomConf(), policy);
   }
   
   public static Label join(Store store, Label l1, Label l2) {
-//    try {
-//      enterTiming();
+    return join(store, l1, l2, true);
+  }
+  
+  public static Label join(Store store, Label l1, Label l2, boolean simplify) {
       SecurityCache cache = TransactionManager.getInstance().getSecurityCache();
       if (l1 == null) return l2;
       if (l2 == null) return l1;
@@ -411,8 +216,9 @@ public final class LabelUtil {
           PairLabel pl2 = (PairLabel) l2;
           java.util.Set dependencies = new java.util.HashSet();
           result =
-              (PairLabel) new PairLabel@store().fabric$lang$security$PairLabel$(pl1.confPolicy().join(store, pl2.confPolicy(), dependencies),
-                  pl1.integPolicy().join(store, pl2.integPolicy(), dependencies));
+              (PairLabel) new PairLabel@store().fabric$lang$security$PairLabel$(
+                  pl1.confPolicy().join(store, pl2.confPolicy(), dependencies/*, simplify*/),
+                  pl1.integPolicy().join(store, pl2.integPolicy(), dependencies/*, simplify*/));
           cache.putLabelJoin(triple, result, dependencies);
         }
         return result;
@@ -420,23 +226,13 @@ public final class LabelUtil {
       }
       // error! non pair labels!
       return null;
-//    } finally {
-//      exitTiming();
-//    }
   }
-
-  public static Label meetLbl(Store store, Label l1, Label l2) {
-//    try {
-//      enterTiming();
-      return meet(store, l1, l2);
-//    } finally {
-//      exitTiming();
-//    }
-  }
-
+  
   public static Label meet(Store store, Label l1, Label l2) {
-//    try {
-//      enterTiming();
+    return meet(store, l1, l2, true);
+  }
+  
+  public static Label meet(Store store, Label l1, Label l2, boolean simplify) {
       SecurityCache cache = TransactionManager.getInstance().getSecurityCache();
       if (l1 == null) return l2;
       if (l2 == null) return l1;
@@ -450,8 +246,9 @@ public final class LabelUtil {
           PairLabel pl2 = (PairLabel) l2;
           java.util.Set dependencies = new java.util.HashSet();
           result =
-              (PairLabel) new PairLabel@store().fabric$lang$security$PairLabel$(pl1.confPolicy().meet(store, pl2.confPolicy(), dependencies),
-                  pl1.integPolicy().meet(store, pl2.integPolicy(), dependencies));
+              (PairLabel) new PairLabel@store().fabric$lang$security$PairLabel$(
+                  pl1.confPolicy().meet(store, pl2.confPolicy(), dependencies, simplify),
+                  pl1.integPolicy().meet(store, pl2.integPolicy(), dependencies, simplify));
           cache.putLabelMeet(triple, result, dependencies);
         }
         return result;
@@ -459,24 +256,22 @@ public final class LabelUtil {
 
       // error! non pair labels!
       return null;
-//    } finally {
-//      exitTiming();
-//    }
   }
 
   public static ConfPolicy join(Store store, ConfPolicy p1, ConfPolicy p2) {
-//  try {
-//  enterTiming();
-      return join(store, p1, p2, new java.util.HashSet());
-//    } finally {
-//    exitTiming();
-//  }
+      return join(store, p1, p2, new java.util.HashSet(), true);
+  }
+
+  public static ConfPolicy join(Store store, ConfPolicy p1, ConfPolicy p2, boolean simplify) {
+    return join(store, p1, p2, new java.util.HashSet(), true);
+  }
+    
+  public static ConfPolicy join(Store store, ConfPolicy p1, ConfPolicy p2, java.util.Set/* <DelegationPair> */s) {
+    return join(store, p1, p2, s, true);
   }
 
   protected static ConfPolicy join(Store store, ConfPolicy p1, ConfPolicy p2,
-      java.util.Set/* <DelegationPair> */s) {
-//    try {
-//      enterTiming();
+      java.util.Set/* <DelegationPair> */s, boolean simplify) {
       SecurityCache cache = TransactionManager.getInstance().getSecurityCache();
       Triple triple = SecurityCache.canonicalize(p1, p2, store);
       Pair cacheEntry = cache.getPolicyJoin(triple);
@@ -497,7 +292,8 @@ public final class LabelUtil {
         comps.add(p2);
       }
       java.util.Set/*<DelegationPair>*/ deps = new java.util.HashSet();
-      comps = simplifyJoin(store, comps, deps);
+      if (simplify)
+        comps = simplifyJoin(store, comps, deps);
 
       ConfPolicy result;
       if (comps.size() == 1) {
@@ -508,26 +304,22 @@ public final class LabelUtil {
       
       cache.putPolicyJoin(triple, result, deps);
       s.addAll(deps);
-      return result;
-      
-//    } finally {
-//      exitTiming();
-//    }
-
+      return result;     
   }
 
   public static IntegPolicy join(Store store, IntegPolicy p1, IntegPolicy p2) {
-//    try {
-//      enterTiming();
-      return join(store, p1, p2, new java.util.HashSet/* <DelegationPair> */());
-//    } finally {
-//      exitTiming();
-//    }
+      return join(store, p1, p2, new java.util.HashSet/* <DelegationPair> */(), true);
+  }
+  
+  public static IntegPolicy join(Store store, IntegPolicy p1, IntegPolicy p2, boolean simplify) {
+    return join(store, p1, p2, new java.util.HashSet/* <DelegationPair> */(), simplify);
   }
 
   static IntegPolicy join(Store store, IntegPolicy p1, IntegPolicy p2, java.util.Set/* <DelegationPair> */s) {
-//    try {
-//      enterTiming();
+    return join(store, p1, p2, s, true);
+  }
+ 
+  static IntegPolicy join(Store store, IntegPolicy p1, IntegPolicy p2, java.util.Set/* <DelegationPair> */s, boolean simplify) {
       SecurityCache cache = TransactionManager.getInstance().getSecurityCache();
       Triple triple = SecurityCache.canonicalize(p1, p2, store);
       Pair cacheEntry = cache.getPolicyJoin(triple);
@@ -548,7 +340,9 @@ public final class LabelUtil {
         comps.add(p2);
       }
       java.util.Set/*<DelegationPair>*/ deps = new java.util.HashSet();
-      comps = simplifyJoin(store, comps, deps);
+      
+      if (simplify)
+        comps = simplifyJoin(store, comps, deps);
 
       IntegPolicy result;
       if (comps.size() == 1) {
@@ -560,25 +354,22 @@ public final class LabelUtil {
       cache.putPolicyJoin(triple, result, deps);
       s.addAll(deps);
       return result;
-//    } finally {
-//      exitTiming();
-//    }
-
   }
-
-  public static ConfPolicy meetPol(Store store, ConfPolicy p1, ConfPolicy p2) {
-//    try {
-//      enterTiming();
-      return meet(store, p1, p2, new java.util.HashSet/* <DelegationPair> */());
-//    } finally {
-//      exitTiming();
-//    }
+  
+  public static ConfPolicy meet(Store store, ConfPolicy p1, ConfPolicy p2) {
+    return meet(store, p1, p2,  new java.util.HashSet/* <DelegationPair> */(), true);
+  }
+  
+  public static ConfPolicy meet(Store store, ConfPolicy p1, ConfPolicy p2, boolean simplify) {
+    return meet(store, p1, p2,  new java.util.HashSet/* <DelegationPair> */(), simplify);
+  }
+  
+  public static ConfPolicy meet(Store store, ConfPolicy p1, ConfPolicy p2, java.util.Set/* <DelegationPair> */s) {
+    return meet(store, p1, p2, s, true);
   }
 
   protected static ConfPolicy meet(Store store, ConfPolicy p1, ConfPolicy p2,
-      java.util.Set/* <DelegationPair> */s) {
-//    try {
-//      enterTiming();
+      java.util.Set/* <DelegationPair> */s, boolean simplify) {
       SecurityCache cache = TransactionManager.getInstance().getSecurityCache();
       Triple triple = SecurityCache.canonicalize(p1, p2, store);
       Pair cacheEntry = cache.getPolicyMeet(triple);
@@ -599,7 +390,8 @@ public final class LabelUtil {
         comps.add(p2);
       }
       java.util.Set/*<DelegationPair>*/ deps = new java.util.HashSet();
-      comps = simplifyMeet(store, comps, deps);
+      if (simplify)
+        comps = simplifyMeet(store, comps, deps);
 
       ConfPolicy result;
       if (comps.size() == 1) {
@@ -611,21 +403,21 @@ public final class LabelUtil {
       cache.putPolicyMeet(triple, result, deps);
       s.addAll(deps);
       return result;
-//    } finally {
-//      exitTiming();
-//    }
   }
 
-  public static IntegPolicy meetPol(Store store, IntegPolicy p1, IntegPolicy p2) {
-//    try {
-//      enterTiming();
-      return meet(store, p1, p2, new java.util.HashSet/* <DelegationPair> */());
-//    } finally {
-//      exitTiming();
-//    }
+  public static IntegPolicy meet(Store store, IntegPolicy p1, IntegPolicy p2) {
+    return meet(store, p1, p2, new java.util.HashSet/* <DelegationPair> */());
+  }
+  
+  public static IntegPolicy meet(Store store, IntegPolicy p1, IntegPolicy p2, boolean simplify) {
+    return meet(store, p1, p2, new java.util.HashSet/* <DelegationPair> */(), simplify);
   }
 
   static IntegPolicy meet(Store store, IntegPolicy p1, IntegPolicy p2, java.util.Set/* <DelegationPair> */s) {
+    return meet(store, p1, p2, s, true);
+  }
+  
+  static IntegPolicy meet(Store store, IntegPolicy p1, IntegPolicy p2, java.util.Set/* <DelegationPair> */s, boolean simplify) {
 //    try {
 //      enterTiming();
       SecurityCache cache = TransactionManager.getInstance().getSecurityCache();
@@ -648,7 +440,9 @@ public final class LabelUtil {
         comps.add(p2);
       }
       java.util.Set/*<DelegationPair>*/ deps = new java.util.HashSet();
-      comps = simplifyMeet(store, comps, deps);
+     
+      if (simplify)
+        comps = simplifyMeet(store, comps, deps);
 
       IntegPolicy result;
       if (comps.size() == 1) {
@@ -660,48 +454,27 @@ public final class LabelUtil {
       cache.putPolicyMeet(triple, result, deps);
       s.addAll(deps);
       return result;
-//    } finally {
-//      exitTiming();
-//    }
-
   }
 
   public static boolean equivalentTo(Label l1, Label l2) {
-//    try {
-//      enterTiming();
       if (l1 == l2 || (l1 != null && l1.equals(l2))) return true;
       return relabelsTo(l1, l2) && relabelsTo(l2, l1);
-//    } finally {
-//      exitTiming();
-//    }
   }
 
   public static boolean isReadableBy(Label lbl, Principal p) {
-//    try {
-//      enterTiming();
       Label L = toLabel(localStore, PrincipalUtil.readableByPrinPolicy(localStore, p));
       return relabelsTo(lbl, L);
-//    } finally {
-//      exitTiming();
-//    }
   }
   
   public static boolean isWritableBy(Label lbl, Principal p) {
-//    try {
-//      enterTiming();
       Label L = toLabel(localStore, PrincipalUtil.writableByPrinPolicy(localStore, p));
       return relabelsTo(L, lbl);
-//    } finally {
-//      exitTiming();
-//    }
   }
 
   /**
    * @return true iff from <= to in the information-flow ordering.
    */
   public static boolean relabelsTo(Label from, Label to) {
-//    try {
-//      enterTiming();
       if (from == null || to == null) return false;
       if (from == to || from.equals(to)) return true;
       
@@ -718,42 +491,22 @@ public final class LabelUtil {
         cache.addTrueLabelRelabel(pair, dependencies);
       }
       return result;
-//    } finally {
-//      exitTiming();
-//    }
   }
   
   public static boolean acts_for(Label actor, Principal granter) {
-//      try {
-//          enterTiming();
           return actsFor(actor, granter);
-//      } finally {
-//          exitTiming();
-//      }
   }
 
   public static boolean actsFor(Label actor, Principal granter) {
-//    try {
-//      enterTiming();
       Label L = toLabel(localStore, topConf(), writerPolicy(localStore, granter, granter));
       return relabelsTo(actor, L);
-//    } finally {
-//      exitTiming();
-//    }
   }
 
   public static boolean relabelsTo(Policy from, Policy to) {
-//    try {
-//      enterTiming();
       return relabelsTo(from, to, new java.util.HashSet/* <DelegationPair> */());
-//    } finally {
-//      exitTiming();
-//    }
   }
 
   public static boolean relabelsTo(Policy from, Policy to, java.util.Set/* <DelegationPair> */s) {
-//    try {
-//      enterTiming();
       if (from == null || to == null) return false;
       if (from == to || from.equals(to)) return true;
       
@@ -774,9 +527,6 @@ public final class LabelUtil {
         s.addAll(dependencies);
       }
       return result;
-//    } finally {
-//      exitTiming();
-//    }
   }
 
   public static String stringValue(Label lb) {

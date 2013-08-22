@@ -38,7 +38,7 @@ public class Meet extends AbstractPrincipal {
   );
 
   public native
-  ActsForProof[{s→}] {this; p; this←; p←;s}
+  ActsForProof {this; p; this←; p←;s}
   findProofUpto
   {          // side effects:
     _→;this← // TODO

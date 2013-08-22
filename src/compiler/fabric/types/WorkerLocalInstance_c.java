@@ -2,6 +2,7 @@ package fabric.types;
 
 import jif.types.JifLocalInstance_c;
 import jif.types.JifTypeSystem;
+import jif.types.label.Label;
 import polyglot.types.Flags;
 import polyglot.types.Type;
 import polyglot.util.Position;
@@ -22,4 +23,9 @@ public class WorkerLocalInstance_c extends JifLocalInstance_c implements
     return ((FabricTypeSystem) ts).workerLocalInstance();
   }
 
+  @Override
+  public Label label() {
+    FabricTypeSystem ts = (FabricTypeSystem) this.ts;
+    return ts.bottomLabel();
+  }
 }

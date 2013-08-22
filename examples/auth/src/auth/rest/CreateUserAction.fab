@@ -1,0 +1,214 @@
+package auth.rest;
+
+import javax.servlet.ServletException;
+import java.io.IOException;
+import java.io.PrintWriter;
+import sif.servlet.*;
+import auth.*;
+
+public class CreateUserAction[principal servP] extends AbstractAction[servP] {
+    final String{this}@{servP→} userParam;
+    final String{this}@{servP→} pwdParam;
+    
+    public CreateUserAction(Servlet[servP]{this} s) 
+        throws NullPointerException where {servP←} <= {this} {      
+      this(s, "user", "pass");
+    }
+
+    public CreateUserAction(Servlet[servP]{this} s, String{this} userParam, String{this} pwdParam) 
+        throws NullPointerException where {servP←} <= {this} {      
+      this(s, "adduser", userParam, pwdParam);
+    }
+    
+    public CreateUserAction(Servlet[servP]{this} s, String{this} name, String{this} userParam, String{this} pwdParam) 
+        throws NullPointerException where {servP←} <= {this} {      
+      this.userParam = userParam;
+      this.pwdParam = pwdParam;
+      super(name, s);
+    }
+
+    public final void invoke{*lbl}(label{*lbl} lbl, Request[servP]{*lbl} req) 
+    throws (ServletException{*lbl;req.session←})
+        where caller(req.session),
+        servP actsfor req.session,
+        lbl <= {req.session→} {
+
+        Servlet[servP] servlet_ = req.servlet;
+        AuthServlet[servP] servlet;
+        if (lbl <= new label {servlet_.store$→}) {
+            try { servlet = (AuthServlet[servP])servlet_; } catch (ClassCastException e) {throw new ServletException("Error processing request");}
+            if (req == null) throw new ServletException("Error processing request");
+            final SessionState state_ = req.getSessionState(lbl);
+
+            if (lbl <= new label {state_.store$→}) {
+                try {
+                    final AuthSessState state = (AuthSessState)state_;  
+                    if (servlet == null || state == null) throw new ServletException("Error processing request");
+
+                    atomic {
+                        final label newLbl = new label {*lbl; req.session←};
+
+                        if (req.session equiv state.sessionPrincipal) {
+                            this.invokeImpl(newLbl, req, servlet, state);
+                        }
+                        else {
+                            throw new ServletException("req.session not equivalent to state.sessionPrincipal"); 
+                        }
+                    }
+                } catch (ClassCastException e) {throw new ServletException("Incorrect session state");}
+            }
+        }
+    }
+
+    public void invokeImpl{*lbl}(label{*lbl} lbl,
+                                          Request[servP]{*lbl} req,
+                                          AuthServlet[servP]{*lbl} servlet,
+                                          AuthSessState{*lbl} state)  
+        throws (ServletException{*lbl;req.session←})
+            where caller(req.session),
+            lbl <= {req.session→},
+            servP actsfor req.session,
+            req.session equiv state.sessionPrincipal
+    {
+      // user has submitted username and password.
+      // extract data from request
+      final label sessLbl = new label{req.session→;req.session←};
+      String userID = req.getParam(lbl, userParam);
+      String password = req.getParam(lbl, pwdParam);
+      
+      // validate data
+      String uidErr = null;
+      String passwordErr = null;
+      ServletException se = null;
+      try {
+        if (lbl <= new label {req.session→;req.session←}) { // prevent untrusted lookups
+          principal _loginUser = servlet.lookupUserID(userID, req.session);
+        
+          if (userID == null || userID.length() == 0) {
+              // invalid user ID
+              uidErr = "Invalid user ID.";                
+          }
+          else if (password == null || password.length() == 0) {
+              // invalid password
+              passwordErr = "Please enter a password.";                
+          }
+          else if (_loginUser != null) {
+              // user exists
+              passwordErr = "Sorry! That username is already taken.";
+          }
+          else {
+              //now create user and login.
+              passwordErr = runClosure(req, userID, (SessionPrincipal)req.session, password);
+          }
+        
+          final principal loginUser = servlet.lookupUserID(userID, req.session);
+          if (uidErr != null || passwordErr != null) {
+              // there were errors, send the user back to the login page.
+              // DOWNGRADE REASON: The PC depends here on confidential info (i.e., the password). 
+              // We're prepared to declassify that the logon failed.
+              declassify ({*lbl;req.session←}) { // declassify the fact that the uid/password was wrong.
+               //ERROR
+                try {
+                  req.setResponseStatus(Request.HTTP_FORBIDDEN);
+    
+                  PrintWriter w = req.getResponseWriter();
+                  if (uidErr != null) {
+                    String _uidErr = declassify(endorse(uidErr, {req.session→;req.session←}), {*lbl;req.session←});
+                    w.println("\"" + _uidErr + "\"");
+                  } else  {
+                    String _passwordErr = declassify(endorse(passwordErr, {req.session→;req.session←}), {*lbl;req.session←});
+                    w.println("\"" + _passwordErr + "\"");
+                  }
+                } catch (IOException e) {
+                  throw new Error("Problem getting writer");
+                }
+              }
+          }
+          else {// FIXME: Fix this downgrade mess
+              // successfully added!
+              // set the current user in the session state, and send the user
+              // back to the return action. 
+              // DOWNGRADE REASON: The current user is publically readable info. Here, we
+              // depend on confidential information, i.e. the password. But we're happy to declassify
+              // the fact that the user has logged on successfully.
+              declassify({req.session→;req.session←} to {req.session←}) {                     
+                  final principal{req.session←} session = declassify(req.session, {req.session→;req.session←} to {req.session←});
+                  if (session equiv req.session) {
+                      declassify({req.session→;req.session←} to {req.session←}) {                     
+                          final principal logU = declassify(endorse(loginUser, {session→;session←}), {session←});
+                          final AuthSessState state_ = 
+                              declassify(state, {session→;session←} to {session←});
+                          if (state_.sessionPrincipal equiv session) { // NPE thrown here!!
+                              state_.currentUser(logU);
+                          }
+                          //Success
+                          req.setResponseStatus(Request.HTTP_OK);
+                          try {
+                            PrintWriter w = req.getResponseWriter();
+                            w.println("\"User " + userID + " created and logged in.\"");
+                          } catch (IOException e) {
+                            throw new Error("Problem getting writer");
+                          }
+                      }
+                  } else throw new Error("impossible");
+              }
+          }
+        }
+      } catch (ServletException e) {
+        se = e;
+      }
+
+      declassify({*lbl;req.session←}) {
+        ServletException _se = declassify(se, {*lbl;req.session←});
+        if (_se != null)
+          throw _se;
+        else return;
+      }
+    }
+    
+    private String{req.session→;req.session←} runClosure{req.session:;req.session←}(Request[servP]{req.session→;req.session←} req,
+            String{req.session:;req.session←} userID,
+            SessionPrincipal{req.session:;req.session←} sp,
+            String{req.session:;req.session←} password) 
+     where caller(req.session), servP actsfor req.session {
+        // DOWNGRADE REASON: Has effects at level {loginUser:}, which we need to hide away, since
+        // session does not yet act for loginUser.
+        declassify ({req.session←}) {
+        	Servlet[servP] servlet_ = req.servlet;
+        	//if (!(servlet_ instanceof AuthServlet[servP])) throw new ServletException("Error processing request");
+        	final AuthServlet[servP] servlet = (AuthServlet[servP])servlet_;
+
+            FabricWorker worker = FabricWorker.getWorker();
+            if (worker == null) return null;
+            
+            final Store{req.session←} localStore = worker.getLocalStore();
+ 
+        	principal loginUser = null;
+        	try {
+        	  loginUser = servlet.createUser(userID, password, req.session);
+        	} catch (ServletException e) {
+        	  // HACK!
+        	}
+            final principal logUser = declassify(loginUser, {req.session←});
+           
+            SessionPrincipal spdeclass = declassify(sp, {req.session→;req.session←} to {req.session←});
+            if (localStore actsfor logUser) {
+              LoginClosure[logUser] lc = new LoginClosure[logUser]{req.session←}@localStore(spdeclass);
+              Capability[logUser, {logUser→}] cap = 
+                  PrincipalUtil.authorize(logUser, 
+                          declassify(password, {req.session←}),
+                          lc,
+                          new label {logUser→});
+              if (cap == null) {                                                
+                  return "Unknown or incorrect username and password.";
+              }
+              // successful login!                        
+              // loginUser delegates authority to the session principal 
+              cap.invoke();
+            } else throw new Error("impossible");
+        }
+        return null;
+     } 
+
+}
+

@@ -126,7 +126,7 @@ public interface Set[label L] {
    *
    * @return a set iterator
    */
-  Iterator[L]{L} iterator{L}(Store{L} store) where L <= {*<-store}, {*->store} <= L;
+  Iterator[L]{L} iterator{L}(Store{L} store) where {*<-store} <= L, L <= {*->store};
 
   /**
    * Removes the specified element from this set (optional operation). If

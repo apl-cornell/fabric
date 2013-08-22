@@ -37,6 +37,13 @@ public abstract class AbstractPrincipal extends DelegatingPrincipal {
         this.name = name;
 		return this;
     }
+    
+    protected AbstractPrincipal fabric$lang$security$AbstractPrincipal$(String name, Principal superior) {
+      fabric$lang$security$AbstractPrincipal$(name);
+      addDelegatesTo(superior);
+      return this;
+    }
+
 
     public String name() {
         return name;
@@ -77,6 +84,7 @@ public abstract class AbstractPrincipal extends DelegatingPrincipal {
     }
 
     public ActsForProof findProofUpto(Store store, Principal p, Object searchState) {
+        // What is the point of the store param if we don't use it to allocate?
         LocalStore localStore = Worker.getWorker().getLocalStore();
         Iterator i = this.superiors.keySet().iterator();
         while(i.hasNext()) {

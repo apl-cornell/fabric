@@ -1,0 +1,121 @@
+package auth.rest;
+
+import javax.servlet.ServletException;
+
+import sif.servlet.*;
+import auth.*;
+import java.io.PrintWriter;
+import java.io.IOException;
+
+/**
+ * Extend this class to create actions that are protected by login requirement
+ */
+ public abstract class AuthenticatedAction[principal Serv] extends AbstractAction[Serv] {
+    public AuthenticatedAction(Servlet[Serv]{this} m) throws NullPointerException where {Serv←} <= {this}  {
+        super(m);
+    }
+    public AuthenticatedAction(String{this} name, Servlet[Serv]{this} m) throws NullPointerException where {Serv←} <= {this}  {
+        super(name, m);
+    }
+    
+    /**
+     * Ensure that there is a logged in user.
+     * 
+     * @param req the Request
+     * @return false if the user is not logged in, true otherwise.
+     * @throws ServletException
+     */
+    protected boolean{*lbl} ensureLoggedIn{*lbl}
+                                (label{*lbl} lbl,
+                                 Request[Serv]{*lbl} req,
+                                 AuthServlet[Serv]{*lbl} servlet,
+                                 AuthSessState{*lbl} state)
+    throws (ServletException{*lbl;req.session←})
+    where caller(req.session),
+    Serv actsfor req.session,
+    lbl <= {req.session→},
+    req.session equiv state.sessionPrincipal
+    {
+        if ( lbl <= new label {state.store$→} ) {
+          if (state != null && state.currentUser() == null
+              && new label {req.session←} <= lbl)
+            return false;
+          else 
+            return true;
+        }
+        throw new ServletException("access policy failure");
+    }
+    
+    public final void invoke{*lbl}(label{*lbl} lbl, Request[Serv]{*lbl} req) 
+        throws (ServletException{*lbl;req.session←})
+        where caller(req.session),
+        Serv actsfor req.session,
+        {Serv←} <= {this},
+        {req.session←} <= lbl,
+        lbl <= {req.session→} {
+      atomic {
+        Servlet[Serv] servlet_ = req.servlet;
+        final SessionState state_ = req.getSessionState(lbl);
+        if (lbl <= new label {servlet_.store$→}) {
+          if (lbl <= new label {state_.store$→}) {
+              // Check if someone is logged in. 
+            final AuthSessState state = (AuthSessState)state_;
+            final AuthServlet servlet = (AuthServlet) servlet_;
+            if (req.session equiv state.sessionPrincipal) {
+              final label newLbl = new label {*lbl; req.session←};
+              if (ensureLoggedIn(newLbl, req, servlet, state)) {
+                final principal{*newLbl} currentUser = state.currentUser();
+                if (req.session actsfor currentUser) {
+                  invokeImpl(newLbl, req, servlet, state, currentUser);
+                  return;
+                }
+              }
+              else {
+                // otherwise, forbidden
+                forbidden(newLbl, req, servlet, state);
+                return;
+              }
+            } else throw new Error("state.sessionPrincipal and req.session are not equivalent!");
+          }
+        }
+      }
+      throw new Error("access policy failure");
+    }
+    
+    public void forbidden{*lbl}(label{*lbl} lbl,
+                                  Request[Serv]{*lbl} req,
+                                  AuthServlet[Serv]{*lbl} servlet,
+                                  AuthSessState{*lbl} state)
+      throws (ServletException{*lbl;req.session←})
+      where caller(req.session),
+      Serv actsfor req.session,
+      {req.session←} <= lbl,
+      lbl <= {req.session→},
+      req.session equiv state.sessionPrincipal 
+    {
+      //If not, then return error.
+      try {
+        req.setResponseStatus(Request.HTTP_FORBIDDEN);
+        PrintWriter w = req.getResponseWriter();
+        w.println("\"Not logged in.\"");
+      } catch (IOException e) {
+        throw new ServletException(e);
+      }
+    }
+    
+    public abstract void invokeImpl{*lbl}(label{*lbl} lbl,
+                                      Request[Serv]{*lbl} req,
+                                      AuthServlet[Serv]{*lbl} servlet,
+                                      AuthSessState{*lbl} state,
+                                      principal{*lbl} currentUser) 
+          throws (ServletException{*lbl;req.session←})
+          where caller(req.session),
+          Serv actsfor req.session,
+          {Serv←} <= {this},
+          {req.session←} <= lbl,
+          lbl <= {req.session→},
+          req.session equiv state.sessionPrincipal,
+          req.session actsfor currentUser;
+
+}
+

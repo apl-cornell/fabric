@@ -60,6 +60,7 @@ import fabric.worker.remote.RemoteWorker;
  */
 public abstract class ObjectDB {
   private static final int INITIAL_OBJECT_VERSION_NUMBER = 1;
+  private static final boolean ENABLE_OBJECT_UPDATES = false;
 
   private static final int MAX_WARRANTY_LENGTH = 1000;
 
@@ -737,7 +738,6 @@ public abstract class ObjectDB {
     // Remove from the glob table the glob associated with the onum.
     LongSet groupOnums = objectGrouper.removeGroup(onum);
 
-    // Notify the subscription manager that the group has been updated.
     LongSet updatedOnums = new LongHashSet();
     updatedOnums.add(onum);
     if (groupOnums != null) {
@@ -747,6 +747,11 @@ public abstract class ObjectDB {
 
         updatedOnums.add(relatedOnum);
       }
+    }
+
+    if (ENABLE_OBJECT_UPDATES) {
+      // Notify the subscription manager that the group has been updated.
+      sm.notifyUpdate(updatedOnums, worker);
     }
 
     // Notify the warranty issuer.

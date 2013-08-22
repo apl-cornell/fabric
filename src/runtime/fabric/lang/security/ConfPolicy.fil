@@ -10,11 +10,21 @@ public interface ConfPolicy extends Policy {
    * Returns the join of this policy and p. The set s contains all delegations
    * (i.e., DelegationPairs) that this join result depends upon.
    */
-  ConfPolicy join(Store store, ConfPolicy p, Set/* <DelegationPair> */dependencies);
+  ConfPolicy join(Store store, ConfPolicy p, java.util.Set/* <DelegationPair> */dependencies);
 
-  ConfPolicy meet(Store store, ConfPolicy p, Set/* <DelegationPair> */dependencies);
+  ConfPolicy meet(Store store, ConfPolicy p, java.util.Set/* <DelegationPair> */dependencies);
 
   ConfPolicy join(Store store, ConfPolicy p);
 
   ConfPolicy meet(Store store, ConfPolicy p);
+
+  ConfPolicy join(Store store, ConfPolicy p, boolean simplify);
+
+  ConfPolicy meet(Store store, ConfPolicy p, boolean simplify);
+
+  ConfPolicy join(Store store, ConfPolicy p, java.util.Set/*<DelegationPair>*/ dependencies,
+          boolean simplify);
+
+  ConfPolicy meet(Store store, ConfPolicy p, java.util.Set/*<DelegationPair>*/ dependencies,
+          boolean simplify);
 }

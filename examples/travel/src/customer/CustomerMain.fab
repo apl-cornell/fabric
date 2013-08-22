@@ -4,13 +4,14 @@ import travel.Config;
 import travel.Broker;
 import fabric.util.Map;
 import sif.servlet.Servlet;
+import sif.servlet.HTMLServlet;
 import sif.servlet.Request;
 import sif.servlet.SessionState;
 import sif.servlet.SessionPrincipal;
 
 import javax.servlet.ServletException;
 
-public final class CustomerMain extends Servlet[CustomerPrincipal] {
+public final class CustomerMain extends HTMLServlet[CustomerPrincipal] {
   final Store{this}@{⊤→} localStore;
   final Store{this}@{⊤→} brokerstore;
   final principal{this}@{⊤→} broker;
@@ -46,7 +47,13 @@ public final class CustomerMain extends Servlet[CustomerPrincipal] {
     
   public void initialize{CustomerPrincipal:;CustomerPrincipal!:}()
       throws ServletException {
-      addStartAction(new FrontPage(this));
+    atomic {
+      final Store localStore = worker$.getLocalStore();
+      if (localStore actsfor worker$
+          && worker$ actsfor CustomerPrincipal) {
+        addStartAction(new FrontPage@localStore(this));
+      } else throw new Error("impossible!");
+    }
   }
 
   public String getPrivateHostID() throws ServletException {
@@ -74,8 +81,8 @@ public final class CustomerMain extends Servlet[CustomerPrincipal] {
   protected SessionPrincipal createSessionPrincipal(String{broker→;broker←} id) {
     SessionPrincipal toReturn = null;
     atomic {
-      if (brokerstore != null && brokerstore equiv broker) {
-	toReturn = new SessionPrincipal@brokerstore(id);
+      if (brokerstore != null && brokerstore actsfor broker) {
+	toReturn = new SessionPrincipal@brokerstore(id, (Principal)CustomerPrincipal);
       }
     }
     return toReturn;

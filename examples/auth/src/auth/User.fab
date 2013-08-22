@@ -1,6 +1,5 @@
 package auth;
 
-import auth.util.UserComparator;
 import fabricated.util.Comparator;
 
 public class User extends AbstractPrincipal {
@@ -9,31 +8,29 @@ public class User extends AbstractPrincipal {
 
 	public User(String{this} name, String{this} password) {
 		this.password = password;
-		super(name);        
+		super(name);
 	}
 
 	// XXX Can we label this method any which way we want, since it won't
 	// be invoked from Fabric code??
 	// XXX Where will the declassification w.r.t. password happen?
-	public boolean{authPrf; closure; lb; *lb; executeNow; this; this→; this←}
-	isAuthorized{⊥→; this←}(java.lang.Object{this→} authPrf, 
-			fabric.lang.security.Closure[this, lb]{this→} closure,
-			label{this→} lb,
-			boolean{this→} executeNow) where authority (this) 
+    public boolean{authPrf; closure; lb; *lb; executeNow; this; this←}
+    isAuthorized{this→;this←}(java.lang.Object authPrf,
+               Closure[this, lb] closure,
+               label lb,
+               boolean executeNow)
+      where authority (this),
+          {authPrf;closure;lb;executeNow} <= lb,
+          lb <= {this→}
 	{
-		if (closure instanceof LoginClosure[this] && authPrf instanceof String) {
-			String proof = (String)authPrf;
+		if (authPrf instanceof String) {
+		  String proof = (String)authPrf;
 
-			if (this.password == proof || (this.password != null && this.password.equals(proof))) {
-				// password supplied agrees with this password!
-				return true;
-			}
-		}
+		  if (this.password == proof || (this.password != null && this.password.equals(proof))) {
+		  	// password supplied agrees with this password!
+		  	return true;
+		  }
+        }
 		return false;
 	}
-
-	public static Comparator[lbl]{*lbl} getComparator{*lbl}(label{*lbl} lbl) {
-		return new UserComparator[lbl]();
-	}
-
 }

@@ -488,21 +488,38 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
   /**
    * Updates the worker's cache of objects that originate from this store. If an
    * object with the given onum exists in cache, it is evicted and replaced with
-   * the given serialized object. If the object does not exist in cache, then
-   * the cache is not updated.
-   * 
-   * @return true iff the cache was updated.
+   * the given serialized object; any transactions using the object are aborted
+   * and retried. If the object does not exist in cache, then the cache is not
+   * updated.
    */
-  public boolean updateCache(Pair<SerializedObject, VersionWarranty> update) {
-    return cache.update(this, update);
+  public void updateCache(Pair<SerializedObject, VersionWarranty> update) {
+    cache.update(this, update);
   }
 
   /**
    * Adds the given object to the cache. If a cache entry already exists, it is
-   * replaced.
+   * replaced. Any transactions currently using the object are aborted and
+   * retried.
    */
-  public void forceCache(Pair<SerializedObject, VersionWarranty> obj) {
+  void forceCache(Pair<SerializedObject, VersionWarranty> obj) {
     cache.forcePut(this, obj);
+  }
+  
+  /**
+   * Updates the worker cache with the given object, as follows:
+   * <ul>
+   * <li>If the cache contains a deserialized copy of an old version of the
+   * object, then that old version is replaced with a serialized copy of the new
+   * version. Transactions using the object are aborted and retried.
+   * <li>If the cache contains a serialized copy of an old version of the
+   * object, then that old version is evicted.
+   * </ul>
+   * 
+   * @return true iff after this update operation, the cache contains the
+   *     object.
+   */
+  boolean updateOrEvict(SerializedObject obj) {
+    return cache.updateOrEvict(this, obj);
   }
 
   /**

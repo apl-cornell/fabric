@@ -1,0 +1,13 @@
+public class Catch01[principal P, principal Q] {
+  public int{Q->} get{Q->}() { return 0; }
+  public void m{P->}(Catch01[P,Q]{P->} c) throws (Exception{P->}) {
+      if (P equiv Q) {
+        // uncomment to compile 
+        final int/*{P->}*/ i = get();
+     	if (i < 0)
+     	    throw new Exception();
+     	else
+     	    return;
+      }
+  }
+}

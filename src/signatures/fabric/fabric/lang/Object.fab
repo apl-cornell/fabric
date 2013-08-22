@@ -6,4 +6,6 @@ public class Object {
   
   public static native void _npe{*lbl}(final label lbl) : {*lbl}
     throws (NullPointerException{*lbl});
+
+  public static native int oidHashCode(Object o);
 }

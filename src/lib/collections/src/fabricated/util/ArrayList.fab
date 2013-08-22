@@ -324,7 +324,7 @@ public class ArrayList[label L] extends AbstractList[L] implements List[L], Rand
     int _index = index;
     checkBoundInclusive(_index);
     final Store localStore = worker$.getLocalStore();
-    if (L <= new label {*<-localStore} && new label {*->localStore} <= L) {
+    if (new label {*<-localStore} <= L  && L <= new label {*->localStore}) {
       Iterator itr = iterator(localStore);
       int csize = c.size();
   

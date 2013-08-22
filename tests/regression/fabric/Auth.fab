@@ -1,0 +1,10 @@
+public class Auth[principal Creator, principal P] {
+  @{store$->}
+  public void foo() where caller(Creator) { }
+  public void bar{store$->}() 
+  { 
+    final Auth a = new Auth[null, P]();
+    if (store$ equiv a.store$)
+       a.foo();
+  }
+}

@@ -45,8 +45,6 @@ import fabric.common.net.handshake.Protocol;
 import fabric.common.net.naming.NameService;
 import fabric.common.net.naming.NameService.PortType;
 import fabric.common.net.naming.TransitionalNameService;
-import fabric.common.util.LongIterator;
-import fabric.common.util.LongSet;
 import fabric.common.util.Pair;
 import fabric.dissemination.AbstractGlob;
 import fabric.dissemination.FetchManager;
@@ -393,34 +391,33 @@ public final class Worker {
   }
 
   /**
-   * Updates the worker cache with the given object group. If the cache contains
-   * an old version of any object in the group, then the cache is updated with
-   * the entire group. Otherwise, the cache is not updated.
+   * Updates the worker cache with the given object group, as follows:
+   * <ul>
+   * <li>If the cache contains a deserialized copy of an old version of any
+   * object in the group, then that old version is replaced with a serialized
+   * copy of the new version.
+   * <li>If the cache contains a serialized copy of an old version of any object
+   * in the group, then that old version is evicted.
+   * </ul>
    * 
-   * @return true iff the cache was updated.
+   * Transactions using any updated object are aborted and retried.
+   * 
+   * @return true iff after this update operation, the cache contains any member
+   *     of the group.
    */
   public boolean updateCache(RemoteStore store, ObjectGroup group) {
-    if (!hasOnumsInCache(store, group.objects().keySet())) return false;
-
+    // XXX FIXME
+    boolean result = false;
     for (SerializedObject obj : group.objects().values()) {
-      long onum = obj.getOnum();
-      store.forceCache(new Pair<>(obj, VersionWarranty.EXPIRED_WARRANTY));
-
-      TransactionManager.abortReaders(store, onum);
+      if (TransactionManager.haveReaders(store, obj.getOnum())) {
+        store.forceCache(new Pair<>(obj, VersionWarranty.EXPIRED_WARRANTY));
+        result = true;
+      } else if (store.updateOrEvict(obj)) {
+        result = true;
+      }
     }
 
-    return true;
-  }
-
-  /**
-   * Determines whether any of a given set of onums are resident in cache.
-   */
-  private boolean hasOnumsInCache(RemoteStore store, LongSet onums) {
-    for (LongIterator it = onums.iterator(); it.hasNext();) {
-      if (store.readFromCache(it.next()) != null) return true;
-    }
-
-    return false;
+    return result;
   }
 
   /**

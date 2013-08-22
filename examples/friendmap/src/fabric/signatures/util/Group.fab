@@ -129,7 +129,7 @@ where
    * See Principal.findProofUpto.
    */
   public native
-  ActsForProof[{*→s;*←s}] {this; p; this←; p←;s} // TODO
+  ActsForProof {this; p; this←; p←;s} // TODO
   findProofUpto
   {            // side effects:
     *→s;*←this // TODO

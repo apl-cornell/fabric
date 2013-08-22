@@ -40,7 +40,6 @@ import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
-import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
 import fabric.lang.WrappedJavaInlineable;
 import fabric.lang.Object._Impl;
@@ -51,7 +50,6 @@ import fabric.net.RemoteNode;
 import fabric.net.UnreachableNodeException;
 import fabric.store.InProcessStore;
 import fabric.worker.AbortException;
-import fabric.worker.FabricSoftRef;
 import fabric.worker.RemoteStore;
 import fabric.worker.Store;
 import fabric.worker.TransactionAbortingException;
@@ -139,57 +137,19 @@ public final class TransactionManager {
   // Proxy objects aren't used here because doing so would result in calls to
   // hashcode() and equals() on such objects, resulting in fetching the
   // corresponding Impls from the store.
-  static final OidKeyHashMap<ReadMapEntry> readMap =
-      new OidKeyHashMap<ReadMapEntry>();
+  static final ReadMap readMap = new ReadMap();
 
-  public static void abortReaders(Store store, long onum) {
-    ReadMapEntry entry = readMap.get(store, onum);
-    if (entry != null) entry.abortReaders();
+  public static boolean haveReaders(Store store, long onum) {
+    return readMap.haveReaders(store, onum);
   }
 
-  public static ReadMapEntry getReadMapEntry(_Impl impl,
+  public static void abortReaders(Store store, long onum) {
+    readMap.abortReaders(store, onum);
+  }
+
+  public static ReadMap.Entry getReadMapEntry(_Impl impl,
       VersionWarranty warranty) {
-    FabricSoftRef ref = impl.$ref;
-
-    // Optimization: if the impl lives on the local store, it will never be
-    // evicted, so no need to store the entry in the read map.
-    if (ref.store.isLocalStore()) return new ReadMapEntry(impl, warranty);
-
-    while (true) {
-      ReadMapEntry result;
-      synchronized (readMap) {
-        result = readMap.get(ref.store, ref.onum);
-        if (result == null) {
-          result = new ReadMapEntry(impl, warranty);
-          readMap.put(ref.store, ref.onum, result);
-          return result;
-        }
-      }
-
-      synchronized (result) {
-        synchronized (readMap) {
-          // Make sure we still have the right entry.
-          if (result != readMap.get(ref.store, ref.onum)) continue;
-
-          result.obj = impl.$ref;
-          result.pinCount++;
-          result.warranty =
-              result.warranty.expiresAfter(warranty) ? result.warranty
-                  : warranty;
-          int ver = impl.$getVersion();
-          if (ver == result.versionNumber) return result;
-
-          // Version numbers don't match. Retry all other transactions.
-          // XXX What if we just read in an older copy of the object?
-          for (Log reader : result.readLocks) {
-            reader.flagRetry();
-          }
-
-          result.versionNumber = ver;
-          return result;
-        }
-      }
-    }
+    return readMap.getEntry(impl, warranty);
   }
 
   private static final Map<Thread, TransactionManager> instanceMap =
@@ -291,7 +251,7 @@ public final class TransactionManager {
 
     WORKER_TRANSACTION_LOGGER.log(Level.INFO, "{0} aborting", current);
 
-    HOTOS_LOGGER.log(Level.INFO, "aborting {0}", current);
+    HOTOS_LOGGER.log(Level.FINEST, "aborting {0}", current);
 
     // Assume only one thread will be executing this.
 
@@ -355,7 +315,7 @@ public final class TransactionManager {
   private void commitTransaction(boolean ignoreRetrySignal) {
     WORKER_TRANSACTION_LOGGER.log(Level.FINEST, "{0} attempting to commit",
         current);
-    HOTOS_LOGGER.log(Level.INFO, "preparing {0}", current);
+    HOTOS_LOGGER.log(Level.FINEST, "preparing {0}", current);
 
     // Assume only one thread will be executing this.
 
@@ -435,9 +395,9 @@ public final class TransactionManager {
         .entrySet()) {
       SemanticWarrantyRequest req = entry.getValue();
       // reads
-      for (Entry<Store, LongKeyMap<ReadMapEntry>> readEntry : req.reads.nonNullEntrySet()) {
-        for (ReadMapEntry read : readEntry.getValue().values()) {
-          current.reads.put(read.obj.store, read.obj.onum, read);
+      for (Entry<Store, LongKeyMap<ReadMap.Entry>> readEntry : req.reads.nonNullEntrySet()) {
+        for (ReadMap.Entry read : readEntry.getValue().values()) {
+          current.reads.put(read.getStore(), read.getRef().onum, read);
         }
       }
 
@@ -468,7 +428,7 @@ public final class TransactionManager {
     // Send commit messages to our cohorts.
     sendCommitMessagesAndCleanUp(commitTime);
 
-    HOTOS_LOGGER.log(Level.INFO, "committed {0}", HOTOS_current);
+    HOTOS_LOGGER.log(Level.FINEST, "committed {0}", HOTOS_current);
   }
 
   /**
@@ -655,6 +615,7 @@ public final class TransactionManager {
         }
       }
       WORKER_TRANSACTION_LOGGER.fine(logMessage);
+      HOTOS_LOGGER.info("Prepare failed.");
 
       synchronized (current.commitState) {
         current.commitState.value = PREPARE_FAILED;
@@ -1267,10 +1228,10 @@ public final class TransactionManager {
           hadToWait = true;
         } else {
           // Restart any incompatible readers.
-          ReadMapEntry readMapEntry = obj.$readMapEntry;
+          ReadMap.Entry readMapEntry = obj.$readMapEntry;
           if (readMapEntry != null) {
             synchronized (readMapEntry) {
-              for (Log lock : readMapEntry.readLocks) {
+              for (Log lock : readMapEntry.getReaders()) {
                 if (!current.isDescendantOf(lock)) {
                   Logging.log(WORKER_TRANSACTION_LOGGER, Level.FINEST,
                       "{0} wants to write {1}/" + obj.$getOnum()
@@ -1522,7 +1483,7 @@ public final class TransactionManager {
       Logging.log(WORKER_TRANSACTION_LOGGER, Level.FINEST,
           "{0} started subtx {1} in thread {2}", current.parent, current,
           Thread.currentThread());
-      HOTOS_LOGGER.log(Level.INFO, "started {0}", current);
+      HOTOS_LOGGER.log(Level.FINEST, "started {0}", current);
     } finally {
       Timing.BEGIN.end();
     }

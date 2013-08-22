@@ -593,7 +593,7 @@ public class HashMap[label L] extends AbstractMap[L]
    * @param type {@link #KEYS}, {@link #VALUES}, or {@link #ENTRIES}
    * @return the appropriate iterator
    */
-  Iterator[L]{L} iterator{L}(Store{L} store, int{L} type) where L <= {*<-store}, {*->store} <= L
+  Iterator[L]{L} iterator{L}(Store{L} store, int{L} type) where {*<-store} <= L, L <= {*->store}
   {
     return new HashIterator@store(this, type);
   }
@@ -694,8 +694,7 @@ class HashEntrySet[label L] extends AbstractSet[L] {
   {
     return map.iterator(AbstractMap.ENTRIES);
   }
-
-  public Iterator[L]{L} iterator{L}(Store{L} store) where L <= {*<-store}, {*->store} <= L
+  public Iterator[L]{L} iterator{L}(Store{L} store) where {*<-store} <= L, L <= {*->store}
   {
     return map.iterator(store, AbstractMap.ENTRIES);
   }

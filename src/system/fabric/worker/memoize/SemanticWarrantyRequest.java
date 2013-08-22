@@ -16,7 +16,7 @@ import fabric.common.util.OidKeyHashMap;
 import fabric.common.TransactionID;
 import fabric.lang.Object;
 import fabric.lang.Object._Impl;
-import fabric.worker.transaction.ReadMapEntry;
+import fabric.worker.transaction.ReadMap;
 import fabric.worker.Store;
 
 /**
@@ -29,7 +29,7 @@ public class SemanticWarrantyRequest {
   public final CallInstance call;
   public final Object value;
 
-  public final OidKeyHashMap<ReadMapEntry> reads;
+  public final OidKeyHashMap<ReadMap.Entry> reads;
   public final OidKeyHashMap<_Impl> creates;
 
   public final LongSet readOnums;
@@ -39,14 +39,14 @@ public class SemanticWarrantyRequest {
   public TransactionID id;
 
   public SemanticWarrantyRequest(CallInstance call, Object value,
-      OidKeyHashMap<ReadMapEntry> reads, OidKeyHashMap<_Impl> creates,
+      OidKeyHashMap<ReadMap.Entry> reads, OidKeyHashMap<_Impl> creates,
       Map<CallInstance, WarrantiedCallResult> calls, TransactionID id) {
     this(call, value, reads, creates, calls);
     this.id = id;
   }
 
   public SemanticWarrantyRequest(CallInstance call, Object value,
-      OidKeyHashMap<ReadMapEntry> reads, OidKeyHashMap<_Impl> creates,
+      OidKeyHashMap<ReadMap.Entry> reads, OidKeyHashMap<_Impl> creates,
       Map<CallInstance, WarrantiedCallResult> calls) {
     this.call = call;
     this.value = value;
@@ -91,9 +91,9 @@ public class SemanticWarrantyRequest {
     (new CallResult(value)).write(out);
 
     out.writeInt(reads.size());
-    for (Entry<Store, LongKeyMap<ReadMapEntry>> entry : reads.nonNullEntrySet())
-      for (ReadMapEntry read : entry.getValue().values())
-        out.writeLong(read.obj.onum);
+    for (Entry<Store, LongKeyMap<ReadMap.Entry>> entry : reads.nonNullEntrySet())
+      for (ReadMap.Entry read : entry.getValue().values())
+        out.writeLong(read.getRef().onum);
 
     out.writeInt(creates.size());
     for (Entry<Store, LongKeyMap<_Impl>> entry : creates.nonNullEntrySet())

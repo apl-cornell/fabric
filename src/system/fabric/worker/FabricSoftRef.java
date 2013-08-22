@@ -5,7 +5,7 @@ import java.lang.ref.SoftReference;
 
 import fabric.common.Logging;
 import fabric.lang.Object._Impl;
-import fabric.worker.transaction.ReadMapEntry;
+import fabric.worker.transaction.ReadMap;
 
 public class FabricSoftRef extends SoftReference<_Impl> {
 
@@ -16,9 +16,9 @@ public class FabricSoftRef extends SoftReference<_Impl> {
     new RefCollector().start();
   }
 
-  public Store store;
+  public final Store store;
   public long onum;
-  public ReadMapEntry readMapEntry;
+  private ReadMap.Entry readMapEntry;
 
   public FabricSoftRef(Store store, long onum, _Impl impl) {
     super(impl, queue);
@@ -42,7 +42,11 @@ public class FabricSoftRef extends SoftReference<_Impl> {
     if (readMapEntry != null && readMapEntry.depin()) readMapEntry = null;
   }
 
-  public void readMapEntry(ReadMapEntry readMapEntry) {
+  public ReadMap.Entry readMapEntry() {
+    return readMapEntry;
+  }
+
+  public void readMapEntry(ReadMap.Entry readMapEntry) {
     this.readMapEntry = readMapEntry;
   }
 

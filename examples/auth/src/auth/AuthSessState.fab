@@ -29,7 +29,7 @@ public class AuthSessState extends SessionState {
         return currentUser;
     }
     
-    public void currentUser{sessionPrincipal←}(principal{sessionPrincipal!:} cu) 
+    public void currentUser{sessionPrincipal←}(principal{sessionPrincipal←} cu) 
     {
         this.currentUser = cu;
     }

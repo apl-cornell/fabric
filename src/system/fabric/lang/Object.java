@@ -35,7 +35,7 @@ import fabric.worker.Store;
 import fabric.worker.Worker;
 import fabric.worker.remote.RemoteWorker;
 import fabric.worker.transaction.Log;
-import fabric.worker.transaction.ReadMapEntry;
+import fabric.worker.transaction.ReadMap;
 import fabric.worker.transaction.TransactionManager;
 import fabric.worker.transaction.TransactionRegistry;
 
@@ -81,6 +81,9 @@ public interface Object {
 
   /** Whether this object has the same identity as another object. */
   boolean idEquals(Object o);
+
+  /** A hash of the object's oid. */
+  int oidHashCode();
 
   /** Unwraps a wrapped Java inlineable. */
   java.lang.Object $unwrap();
@@ -243,6 +246,24 @@ public interface Object {
     public final boolean idEquals(Object other) {
       return this.$getStore() == other.$getStore()
           && this.$getOnum() == other.$getOnum();
+    }
+
+    @Override
+    public final int oidHashCode() {
+      long onum = this.$getOnum();
+      if (ONumConstants.isGlobalConstant(onum)) return (int) onum;
+
+      Store store = this.$getStore();
+      return store.hashCode() ^ (int) onum;
+    }
+
+    /**
+     * This static version of oidHashCode is to be used by Fabric programs. It
+     * launders the dereference of <code>o</code> to prevent the Fabric type
+     * system from thinking the object will be fetched, when it really won't be.
+     */
+    public static int oidHashCode(Object o) {
+      return Object._Impl.oidHashCode(o);
     }
 
     @Override
@@ -472,7 +493,7 @@ public interface Object {
      * 
      * @see fabric.worker.transaction.TransactionManager#readMap
      */
-    public ReadMapEntry $readMapEntry;
+    public final ReadMap.Entry $readMapEntry;
 
     /**
      * The number of threads waiting on this object.
@@ -519,7 +540,7 @@ public interface Object {
     }
 
     public final VersionWarranty $versionWarranty() {
-      return $readMapEntry.warranty();
+      return $readMapEntry.getWarranty();
     }
 
     /**
@@ -590,11 +611,25 @@ public interface Object {
     }
 
     /**
-     * Default hashCode implementation uses the OID to compute the hash value.
+     * Default hashCode implementation uses oidHashCode().
      */
     @Override
     public int hashCode() {
-      return (int) $getOnum();
+      return oidHashCode();
+    }
+
+    @Override
+    public int oidHashCode() {
+      return this.$getProxy().oidHashCode();
+    }
+
+    /**
+     * This static version of oidHashCode is to be used by Fabric programs. It
+     * launders the dereference of <code>o</code> to prevent the Fabric type
+     * system from thinking the object will be fetched, when it really won't be.
+     */
+    public static int oidHashCode(Object o) {
+      return o == null ? 0 : o.oidHashCode();
     }
 
     /**

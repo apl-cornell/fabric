@@ -1,0 +1,201 @@
+package groups;
+
+import sif.servlet.*;
+import auth.*;
+import auth.rest.*;
+import fabricated.util.Map;
+import fabricated.util.HashMap;
+import fabricated.util.NoSuchElementException;
+import fabricated.util.ConcurrentModificationException;
+import fabricated.util.Comparator;
+import fabricated.util.StringComparator;
+import fabricated.util.IdComparator;
+
+import javax.servlet.ServletException;
+import javax.servlet.ServletConfig;
+
+public class GroupServlet extends Servlet[worker$] implements AuthServlet[worker$] where 
+  {*provider;*CreateGroupAction.provider;*ListGroupMembersAction.provider;
+   *AddToGroupAction.provider;*GroupUser.provider;*Group.provider} <= {worker$←}
+{
+
+	/*final*/ Store{⊥→;worker$←}@{⊤→} groupStore;/*label should be this*/
+	/*final*/ String{⊥→;worker$←}@{⊤→} defaultActionName;/*label should be this*/
+	/*final*/ String{⊥→;worker$←}@{⊤→} usersMapKey;/*label should be this*/
+
+	public GroupServlet{worker$→}() throws ServletException {
+	   super();
+	}
+
+	public void initialize{worker$→;worker$←}(ServletConfig{worker$→;worker$←} sc)
+	    throws (ServletException{worker$→; worker$←}) {
+	  atomic {
+	    super.initialize(sc);
+	    final Store localStore = worker$.getLocalStore();
+	    if (localStore actsfor worker$) {
+	      addStartAction(new LoginAction[worker$]@localStore(this));
+	      addStartAction(new LogoffAction[worker$]@localStore(this));
+	      addStartAction(new CreateUserAction[worker$]@localStore(this));
+        	    
+	      addStartAction(new ListGroupMembersAction[worker$]@localStore(this));
+	      addStartAction(new CreateGroupAction[worker$]@localStore(this));
+	      addStartAction(new AddToGroupAction[worker$]@localStore(this));
+	      declassify({worker$←}) {
+	        ServletConfig _sc = declassify(sc, {worker$←});
+	        String groupStoreName = declassify(_sc.getInitParameter("store"), {worker$←});	   
+	        groupStore = worker$.getStore(groupStoreName);
+	        
+	        usersMapKey = declassify(_sc.getInitParameter("usersMapKey"), {worker$←});	   
+	        defaultActionName = declassify(_sc.getInitParameter("defaultAction"), {worker$←});		      
+	      }
+	      final Store groupStore = this.groupStore;
+    	      if (groupStore actsfor worker$) {
+    	        fabric.util.Map rootMap = groupStore.getRoot();
+    	        Object obj = rootMap.get(usersMapKey);
+    	        if (obj == null) 
+    	          rootMap.put(usersMapKey, new HashMap@groupStore(new StringComparator@groupStore(), new IdComparator@groupStore()));
+    	      } else throw new ServletException("Store " + groupStore.name() + " must be trusted by worker " + worker$.getName());
+            } else throw new ServletException("Store " + store$.name() + " must be trusted by worker " + worker$.getName());
+	  }
+  	}
+	
+        public String defaultContentType() {
+          return "application/json";
+        }
+        
+        public String getPrivateHostID() throws ServletException {
+		return "";
+	}
+
+	protected String{worker$→;req} defaultActionName(Request[worker$] req) {
+		return defaultActionName;
+	} 
+
+	protected AuthSessState{*lbl} createSessionState{*lbl}(label{*lbl} lbl,
+			String{*lbl} id, SessionPrincipal{*lbl} session) {
+	  final Store localStore = worker$.getLocalStore();
+	  atomic {
+	    if (localStore != null && localStore equiv worker$ &&
+	        lbl <= new label {⊤→worker$} && new label {⊤←worker$} <= lbl) {
+	      return new AuthSessState@localStore(id, session);
+	    }
+	  }
+	  // XXX: lame. really should error here.
+	  return null;
+	}
+
+	protected SessionPrincipal{worker$←} createSessionPrincipal{worker$←}(String{⊥→;⊤←} id) {
+	  final Store groupStore = this.groupStore;
+	  SessionPrincipal toReturn = null;
+	  atomic {
+	    if (groupStore != null) {
+	      toReturn = new SessionPrincipal@groupStore(id, worker$.getPrincipal());
+	    }
+	  }
+	  return toReturn;
+	}
+
+	public principal{p->; p<-} createUser{p->; p<-} (String{p->; p<-} uid, 
+                                                     String{p->; p<-} password, 
+                                                     principal{p->; p<-} p) 
+		throws (ServletException{p->; p<-})
+		where caller(p) /*, authority (worker$)*/, worker$ actsfor p
+	{
+		int pc_caller = 0;
+	        final Store groupStore = this.groupStore;
+		declassify ({pc_caller} meet {_->_}) {
+			fabric.util.Map rootMap = groupStore.getRoot();
+			if (rootMap == null) {
+				throw new ServletException("Store not acceesible");
+			}
+			Map[{worker$->;worker$<-}] allUsers = null;
+			
+			Object obj = rootMap.get(usersMapKey);
+			if (obj instanceof Map[{worker$->; worker$<-}]) {
+				allUsers = (Map[{worker$->; worker$<-}])obj;
+			}
+			if (allUsers == null) {
+				throw new ServletException("Cannot fetch the collection of users from store");
+			}
+			return addUserToMap(allUsers , uid, password, p);
+		}
+        }
+
+	private principal{p->;p<-} addUserToMap{p->; p<-} (Map[{worker$->;worker$<-}]{p->; p<-} allUsers, String{p->; p<-} uid, String{p->; p<-} password, principal{p->; p<-} p)
+		where caller(worker$), worker$ actsfor p, endorse({p->; worker$<-})
+	{
+	  final Store groupStore = this.groupStore;
+	  declassify({worker$<-}) {
+	    Map[{worker$->; worker$<-}] users = declassify(endorse(allUsers, {p->; worker$<-}), {worker$<-});
+	    String userID = declassify(endorse(uid, {p->; worker$<-}), {worker$<-});
+	    String _password = declassify(endorse(password, {p->; worker$<-}), {worker$<-});
+	    final GroupUser{worker$<-} ret = new GroupUser@groupStore(worker$, userID, _password);
+	    if (worker$ actsfor ret) ; else throw new Error("worker$ doesn't act for ret");
+	    users.put(userID, ret);
+	    
+	    declassify( {p->; p<-;worker$<-}) {
+	      endorse({p->; p<-}) {
+	        GroupUser{p->;p<-} theUser = declassify(endorse(ret, {p->; p<-}), {p->; p<-;worker$<-});
+	        return theUser;
+	      }
+	    }
+	  }
+	}
+
+	public principal{p->; p<-} lookupUserID{p->; p<-} (String{p->; p<-} uid, principal{p->; p<-} p) 
+		throws (ServletException{p->; p<-})
+		where caller(p), /*authority (worker$),*/ worker$ actsfor p
+	{
+	  int pc_caller = 0;
+	  final Store groupStore = this.groupStore;
+	  declassify ({pc_caller} meet {_->_}) {
+	    fabric.util.Map rootMap = groupStore.getRoot();
+	    if (rootMap == null) {
+	      throw new ServletException("Store not acceesible");
+	    }
+	    Map[{worker$->;worker$<-}] allUsers = null;
+	    Object obj = rootMap.get(usersMapKey);
+	    if (obj instanceof Map[{worker$->; worker$<-}]) {
+	      allUsers = (Map[{worker$->; worker$<-}])obj;
+	    }
+	    
+	    if (allUsers == null) {
+	      throw new ServletException("Cannot fetch the collection of users from store");
+	    }
+	    return findUserInMap(allUsers, uid, p);
+	  }
+	}
+
+	private principal{p->;p<-} findUserInMap{p->; p<-} (Map[{worker$->; worker$<-}]{p->; p<-} allUsers, String{p->; p<-} uid, principal{p->; p<-} p)
+		where caller(p, worker$), worker$ actsfor p,
+		endorse({p->; p<- meet worker$<-})
+	{
+	  declassify({p<- meet worker$<-}) {
+	    GroupUser{p->;p<-} ret = null;
+	    Map[{worker$->; worker$<-}] users = declassify(endorse(allUsers, {p->; p<- meet worker$<-}), {p<- meet worker$<-});
+	    String userID = declassify(endorse(uid, {p->; p<- meet worker$<-}), {p<- meet worker$<-});
+	    final Object o = users.get(userID);
+	    if (o != null && new label {worker$->; worker$<-} <= new label {o.store$->}) {
+	      if (o instanceof GroupUser) {
+	        final GroupUser u = (GroupUser) o;
+	        if (worker$ actsfor u
+	            && new label {worker$->; worker$<-} <= new label {u.store$->}) {
+	          if (u.name().equals(userID)) {
+	            declassify({p->}) { endorse({p->;p<-}) { ;
+	            ret = declassify(endorse( u,{worker$->;p->;p<-}), {p->});
+	            }}
+	          }
+	        } else { 
+	          throw new Error("worker$ doesn't act for user"); 
+	        }
+	      }
+	    }
+	    declassify({p->}) {
+	      endorse({p->;p<-}) { 
+	        return ret;
+	      }
+	    }
+	  }
+	}
+}
+

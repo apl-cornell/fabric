@@ -1,0 +1,14 @@
+public class WorkerParam implements I[worker$] {
+	public void initialize{worker$→; worker$←}() {
+	  atomic {
+	    C c = new C[worker$]();
+	  }
+	}
+}
+
+interface I[principal P] {
+}
+
+class C[principal W] {
+   public C() {}
+}

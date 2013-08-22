@@ -23,6 +23,7 @@ import fabric.lang.Object;
 import fabric.lang.Object._Impl;
 import fabric.lang.security.ConfPolicy;
 import fabric.lang.security.Label;
+import fabric.worker.transaction.TransactionManager;
 
 /**
  * A per-store object cache. This class is thread safe.
@@ -252,8 +253,19 @@ public final class ObjectCache {
     }
 
     /**
+     * Obtains the object's version number. (Returns null if this entry has been
+     * evicted.)
+     */
+    public synchronized Integer getVersion() {
+      if (next != null) return next.getVersion();
+      if (impl != null) return impl.$version;
+      if (serialized != null) return serialized.first.getVersion();
+      return null;
+    }
+
+    /**
      * Obtains a reference to the object's update label. (Returns null if this
-     * entry has been evicted.
+     * entry has been evicted.)
      */
     public synchronized Label getLabel() {
       if (isEvicted()) return null;
@@ -270,7 +282,7 @@ public final class ObjectCache {
 
     /**
      * Obtains a reference to the object's access policy. (Returns null if this
-     * entry has been evicted.
+     * entry has been evicted.)
      */
     public synchronized ConfPolicy getAccessPolicy() {
       if (isEvicted()) return null;
@@ -288,7 +300,7 @@ public final class ObjectCache {
 
     /**
      * Obtains a reference to the object's exact proxy. (Returns null if this
-     * entry has been evicted.
+     * entry has been evicted.)
      */
     public synchronized Object._Proxy getProxy() {
       if (isEvicted()) return null;
@@ -450,7 +462,8 @@ public final class ObjectCache {
 
   /**
    * Adds the given object to the cache. If a cache entry already exists, it is
-   * replaced.
+   * replaced, and any transactions currently using the object are aborted and
+   * retried.
    */
   void forcePut(Store store, Pair<SerializedObject, VersionWarranty> obj) {
     update(store, obj, false);
@@ -459,39 +472,67 @@ public final class ObjectCache {
   /**
    * Updates the cache with the given serialized object. If an object with the
    * given onum exists in cache, it is evicted and the given update is placed in
-   * the cache. If the object does not exist in cache, then the cache is not
+   * the cache; any transactions currently using the replaced object are aborted
+   * and retried. If the object does not exist in cache, then the cache is not
    * updated.
-   * 
-   * @return true iff the cache was updated.
    */
-  boolean update(Store store, Pair<SerializedObject, VersionWarranty> update) {
-    return update(store, update, true);
+  void update(Store store, Pair<SerializedObject, VersionWarranty> update) {
+    update(store, update, true);
   }
 
   /**  
    * Updates the cache with the given serialized object. If
    * <code>replaceOnly</code> is true, then the cache is only updated if an
    * object with the given onum exists in cache. The existing object is evicted,
-   * and the given update is placed in the cache.
-   * 
-   * @return true iff the cache was updated.
+   * and the given update is placed in the cache. If the cache is updated, then
+   * any transactions currently using the object are aborted and retried.
    */
-  boolean update(Store store, Pair<SerializedObject, VersionWarranty> update,
+  void update(Store store, Pair<SerializedObject, VersionWarranty> update,
       boolean replaceOnly) {
     long onum = update.first.getOnum();
     Entry curEntry = entries.get(onum);
 
     if (curEntry == null) {
-      if (replaceOnly) return false;
-      putIfAbsent(store, update, true);
-      return true;
+      if (!replaceOnly) putIfAbsent(store, update, true);
+      return;
     }
 
-    if (replaceOnly && curEntry.isEvicted()) return false;
+    if (replaceOnly && curEntry.isEvicted()) return;
+
+    // Check if object in current entry is an older version.
+    if (curEntry.getVersion() >= update.first.getVersion()) return;
 
     curEntry.evict();
     Entry newEntry = new Entry(store, update);
     entries.replace(onum, curEntry, newEntry);
+
+    TransactionManager.abortReaders(store, update.first.getOnum());
+  }
+
+  /**
+   * Updates the cache with the given object, as follows:
+   * <ul>
+   * <li>If the cache contains a deserialized copy of an old version of the
+   * object, then that old version is replaced with a serialized copy of the new
+   * version. Transactions using the updated object are aborted and retried.
+   * <li>If the cache contains a serialized copy of an old version of the
+   * object, then that old version is evicted.
+   * </ul>
+   * 
+   * @return true iff after this update operation, the cache contains the
+   *     object.
+   */
+  boolean updateOrEvict(Store store, SerializedObject obj) {
+    long onum = obj.getOnum();
+    Entry curEntry = entries.get(onum);
+    if (curEntry == null) return false;
+
+    if (curEntry.getImpl(false) == null) {
+      curEntry.evict();
+      return false;
+    }
+
+    forcePut(store, new Pair<>(obj, VersionWarranty.EXPIRED_WARRANTY));
     return true;
   }
 

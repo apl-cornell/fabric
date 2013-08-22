@@ -1,0 +1,263 @@
+package groups;
+
+import fabric.lang.security.Principal;
+import fabricated.util.*;
+
+/**
+ * A group is a principal object that delegates to each of its members.  
+ * 
+ * A group is parameterized by an owner; only the owner may change the group
+ * membership.  The owner acts for the group, but is not listed as a member
+ * (unless explicitly added).
+ * 
+ * L must be at most as secret as this->.  This supports confidential groups while
+ *   ensuring that members must be able to read the group list (anything else would require
+ *   declassification to whenever the list was checked).
+ *
+ * L cannot be more trusted than owner<-.  This supports "open" groups that principals
+ * may add themselves to as well as groups only the owner may add members to.
+ * 
+ * The confidentiality of a group is enforced primarily via its reference label. 
+ * Although the contains method returns a value labeled at *lbl, the contents 
+ * of group may also be learned via delegatesTo and findActsForProofUpTo. 
+ *  The confidentiality of those return values depends on the reference label.
+ */
+public class Group extends Principal where provider <= {worker$←} { // better: provider <= {owner←}
+  public final String{this} @ {*→store$} name;
+  public final label{this} @ {*→store$} lbl;
+  protected final Set[{*lbl}]/*principal*/{this} @ {*→store$} members;
+  public final Principal{this} @ {*→store$} owner;
+
+  /**
+   * Create a new group with the given name and the default maximum size.
+   * The most restrictive label that makes any sense is {owner->;owner<-}, 
+   * 
+   */
+  protected Group{*glbl}(label glbl, Principal owner, String name) : {*lbl}
+    throws (Exception{*glbl}) 
+    where caller(owner),
+    worker$ actsfor owner,
+    {owner←} <= glbl,
+    glbl <= {owner→;owner←},
+    {glbl; owner; name} <= {*glbl}
+  {
+    this.lbl = declassify(new label {{*glbl;owner←} meet {this→;owner←}}@store$, 
+          {owner;glbl;*provider} meet {});
+    this.owner = declassify(endorse(owner, {owner;*provider} meet {⊤→⊤;owner←;*provider}), {owner;*provider} meet {});
+    this.name = declassify(endorse(name, {name;*provider} meet {⊤→⊤;owner←;*provider}), {name;*provider} meet {});
+    members = new HashSet/*Principal*/(new IdComparator());
+    super();
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Group membership operations                                              //
+  //////////////////////////////////////////////////////////////////////////////
+  public void add{*lbl}(Principal{*lbl} p)
+  {
+    if (worker$ actsfor owner 
+        && owner actsfor this) {
+      // we have not yet delegated to p or p's store, so we have to declassify 
+      if (lbl <= new label{this→;owner←}) { //class invariant
+        declassify ({*lbl} meet {p.store$→}) {
+          if (store$ equiv members.store$   // class invariant
+              && worker$ actsfor owner      // class invariant
+              && owner actsfor this         // class invariant
+              && new label{owner←} <= lbl  //class invariant
+              && lbl <= new label{this→;owner←} //class invariant
+              && new label{*lbl} <= new label {store$→}) // class invariant?
+          {
+            members.add(p);
+          } else throw new Error("Group:68:impossible");
+        }
+      } else throw new Error("Group:70:impossible");
+    } else throw new Error("Group:71:impossible");
+  }
+
+  public void remove{*lbl}(Principal{*lbl} p) 
+  {
+    if (lbl <= new label{p.store$→}) {
+      if (store$ equiv members.store$   // class invariant
+          && worker$ actsfor owner      // class invariant
+          && owner actsfor this         // class invariant
+          && new label{owner←} <= lbl  //class invariant
+          && lbl <= new label{this→;owner←} //class invariant
+          && new label{*lbl} <= new label {store$→}) // class invariant?
+      {
+        members.remove(p);
+      } else throw new Error("Group:65:impossible");
+    } // otherwise, p cannot be in members 
+  }
+
+  public Iterator[{*lbl}]{*lbl} iterator{*lbl}() 
+  {
+    if (store$ equiv members.store$
+        && worker$ actsfor owner      // class invariant
+        && owner actsfor this         // class invariant
+        && new label{owner←} <= lbl  //class invariant
+        && lbl <= new label{this→;owner←} //class invariant
+        && new label{*lbl} <= new label {store$→}) // class invariant?
+    {
+      return members.iterator();
+    } else throw new Error("Group:98:impossible");
+  }
+  
+  public Iterator[{*lbl}]{*lbl} iterator{{*lbl}}(Store{{*lbl}} store)
+    where {*<-store} <= lbl, lbl <= {*->store}
+  {
+    if (store$ equiv members.store$
+        && worker$ actsfor owner      // class invariant
+        && owner actsfor this         // class invariant
+        && new label{owner←} <= lbl  //class invariant
+        && lbl <= new label{this→;owner←} //class invariant
+        && new label{*lbl} <= new label {store$→}) // class invariant?
+    {
+      return members.iterator(store);
+    } else throw new Error("Group:77:impossible");
+  }
+
+  public boolean{*lbl;p} contains{*lbl}(Principal p) 
+    where {p} <= {owner→}
+  {
+    if (lbl <= new label {p.store$→}) { // invariant: true for all members
+      if (owner actsfor this              // class invariant 
+          && worker$ actsfor owner      // class invariant
+          && store$ equiv members.store$     // class invariant   
+          && new label {owner←} <= lbl       // class invariant 
+          && lbl <= new label{this→;owner←} //class invariant
+         ) { // class invariant 
+        endorse({p;*lbl} meet {⊤→⊤;owner←}) {
+          declassify({p;*lbl} meet {owner←}) {
+            return members.contains(declassify(endorse(p, {p;this;*lbl} meet {⊤→⊤;owner←}), {p;this;*lbl;owner←} meet {}));
+          }
+        }
+      } else throw new Error("Group:93:impossible");
+    }
+    return false;
+  }
+
+  public boolean{this; p; this←} delegatesTo{this→}(principal{this→} p) {
+    if (p == this 
+        || p == owner
+        || p == store$
+        || p == worker$)
+      return true;
+    final int pc_caller = 0;
+    if (owner actsfor this // class inv
+        && worker$ actsfor owner      // class invariant
+        && store$ actsfor this //should be unnecessary
+        && new label {owner←} <= lbl     //class invariant
+        && lbl <= new label{this→;owner←} //class invariant
+        ) {
+      Principal _p = declassify(endorse((Principal) p, {this;p;pc_caller;owner←}), {{this;pc_caller;p;owner←} meet {}});
+      endorse({this→;owner←}) {
+        declassify ({{*lbl;owner←} meet {}}) {
+          return declassify (endorse(contains(_p), {this; p; this←; *lbl}), {{this; p; this←} meet {}}) ;      
+        }
+      }
+    } else throw new Error("Group:116:impossible");
+  }
+
+  public String{this; this←} name() {
+    return name;
+  }
+
+  public boolean{this; p; this←} equals{this→}(Principal{this→} p) { 
+    if (p == this) return true;
+    return false;
+  }
+
+  public boolean{authPrf; closure; lb; *lb; executeNow; this; this←}
+  isAuthorized{this→;this←}(java.lang.Object authPrf,
+             Closure[this, {*lb}] closure,
+             label lb,
+             boolean executeNow)
+    where /*authority(this),*/
+        {authPrf;closure;lb;executeNow} <= lb,
+        lb <= {this→}
+  {
+    return false;
+  }
+
+  public ActsForProof{this; c; p; searchState; this←; p←}
+  findProofUpto{this→;this←}(Store c, Principal p, java.lang.Object searchState)
+    where {c;p;searchState} <= {this→}
+  {
+    if (store$ actsfor this //should be unnecessary
+        && owner actsfor this //class invariant
+        && worker$ actsfor owner      // class invariant
+        && lbl <= new label{this→;owner←} //class invariant
+        && store$ equiv members.store$) // class invariant
+    {
+      final Store local = worker$.getLocalStore();
+      if (new label {owner←} <= lbl // class inv
+          && new label {*lbl} <= new label {*→local}  //worker store is essentially top
+          && new label {*←local} <= new label {*lbl} //
+          && local actsfor this) {                    //
+        final Store _c = declassify(c, {{*lbl;this←;c} meet {}});
+        final Principal _p = declassify(p, {{*lbl;this←;p} meet {}});
+
+        declassify({*lbl;this←}) {
+          final label lblconf = new label {{*lbl} meet {*->}};          
+          endorse({owner←;*lblconf}) {
+            // check the built-in delegations first
+            Principal{this;*lblconf} native[] defaults = new Principal native[] { /*O,*/ this, 
+                owner, store$.getPrincipal(), worker$.getPrincipal()};
+            for(int i = 0; i < defaults.length; i++) {
+              final Principal s = defaults[i];
+              ActsForProof _prf = PrincipalUtil.findActsForProof(_c, _p, s, searchState); 
+              ActsForProof prf = endorse(_prf, {owner←;*lblconf});
+              if (prf != null) {
+                if (s actsfor this) {
+                  // declassify to public. Return value will be protected at least at
+                  // the reference label.
+                  ActsForProof afPrf = new TransitiveProof@local(prf, s, new DelegatesProof@local(s, this));
+                    declassify ({{*lbl;this←} meet {this←}}) {
+                      return declassify(endorse(afPrf, {owner←;this→}), {{*lbl;this←;s←} meet {this←;s←}});
+                    }
+                } else throw new Error("1 what?!");
+              }
+            }
+            
+            // check the group members
+            Iterator[{*lbl}] i = members.iterator(local);
+            while(i.hasNext()) {
+              final Object o = i.next();
+              if (lbl <= new label {o.store$→}) { // class invariant            
+                final Principal s = (Principal) o;
+                ActsForProof _prf = PrincipalUtil.findActsForProof(_c, _p, s, searchState); 
+                ActsForProof prf = endorse(_prf, {owner←;*lblconf});
+                if (prf != null) {
+                  if (s actsfor this) {
+                    // declassify to public. Return value will be protected at least at
+                    // the reference label.
+                    ActsForProof afPrf = new TransitiveProof@local(prf, s, new DelegatesProof@local(s, this));
+                      declassify ({{*lbl;this←} meet {this←}}) {
+                        return declassify(endorse(afPrf, {owner←;this→}), {{*lbl;this←;s←} meet {this←;s←}});
+                      }
+                  } else throw new Error("2 what?!");
+                }
+              }
+            }
+          }
+        }
+      } else throw new Error("Group:181:impossible");
+      // declassify to public. Return value will be protected at least at
+      // the reference label.
+      endorse({owner←;this→}) {
+        declassify ({{*lbl;owner←} meet {owner←}}) {
+          return null;
+        }
+      }
+    } else throw new Error("Group:189:impossible");
+  }
+    
+  public ActsForProof{this; c; q; searchState; q←; this←; c}
+  findProofDownto{this→;this←}(Store c, Principal q, java.lang.Object searchState)
+      where {c;q;searchState} <= {this→}
+  {
+        return null;
+  }
+}
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/

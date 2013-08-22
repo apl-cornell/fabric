@@ -11,7 +11,7 @@ import fabricated.util.ConcurrentModificationException;
 import fabricated.util.Comparator;
 import javax.servlet.ServletException;
 
-public class HelloServlet extends HTMLAuthServlet[HelloEP] authority (HelloEP) {
+public class HelloServlet extends HTMLAuthServlet[worker$] authority (worker$) {
 
 	final Store{this}@{*->} localStore;
 	final Store{this}@{*->} helloStore;
@@ -22,8 +22,8 @@ public class HelloServlet extends HTMLAuthServlet[HelloEP] authority (HelloEP) {
 		super();
 	}
 
-	public void initialize{HelloEP:; HelloEP!:}() throws ServletException {
-		addStartAction(new LogoffAction[HelloEP](this));
+	public void initialize{worker$:; worker$!:}() throws ServletException {
+		addStartAction(new LogoffAction[worker$](this));
 		addStartAction(new FrontPage(this));
 	}
 
@@ -31,7 +31,7 @@ public class HelloServlet extends HTMLAuthServlet[HelloEP] authority (HelloEP) {
 		return "";
 	}
 
-	protected String defaultActionName(Request[HelloEP] req) {
+	protected String defaultActionName(Request[worker$] req) {
 		return Config.defaultActionName;
 	} 
 
@@ -60,7 +60,7 @@ public class HelloServlet extends HTMLAuthServlet[HelloEP] authority (HelloEP) {
 	public principal{p->; p<-} lookupUserID{p->; p<-} (String{p->; p<-} uid, principal{p->; p<-} p)
 		throws ServletException
 		where caller(p),
-			  authority (HelloEP)
+			  authority (worker$)
 	{
 		int pc_caller = 0;
 		declassify ({pc_caller} meet {_->_}) {
@@ -68,10 +68,10 @@ public class HelloServlet extends HTMLAuthServlet[HelloEP] authority (HelloEP) {
 			if (rootMap == null) {
 				throw new ServletException("Store not acceesible");
 			}
-			List[{HelloEP->;HelloEP<-}] allUsers = null;
+			List[{worker$->;worker$<-}] allUsers = null;
 			Object obj = rootMap.get(Config.usersMapKey);
-			if (obj instanceof List[{HelloEP->; HelloEP<-}]) {
-				allUsers = (List[{HelloEP->; HelloEP<-}])obj;
+			if (obj instanceof List[{worker$->; worker$<-}]) {
+				allUsers = (List[{worker$->; worker$<-}])obj;
 			}
 			
 			if (allUsers == null) {
@@ -81,22 +81,22 @@ public class HelloServlet extends HTMLAuthServlet[HelloEP] authority (HelloEP) {
 		}
 	}
 
-	private principal{p->;p<-} findUserInList{p->; p<-} (List[{HelloEP->; HelloEP<-}]{p->; p<-} allUsers, String{p->; p<-} uid, principal{p->; p<-} p)
-		where caller(p, HelloEP),
-			  endorse({p->; p<- meet HelloEP<-})
+	private principal{p->;p<-} findUserInList{p->; p<-} (List[{worker$->; worker$<-}]{p->; p<-} allUsers, String{p->; p<-} uid, principal{p->; p<-} p)
+		where caller(p, worker$),
+			  endorse({p->; p<- meet worker$<-})
 	{
-		declassify({p<- meet HelloEP<-}) {
-			List[{HelloEP->; HelloEP<-}] users = declassify(endorse(allUsers, {p->; p<- meet HelloEP<-}), {p<- meet HelloEP<-});
-			String userID = declassify(endorse(uid, {p->; p<- meet HelloEP<-}), {p<- meet HelloEP<-});
+		declassify({p<- meet worker$<-}) {
+			List[{worker$->; worker$<-}] users = declassify(endorse(allUsers, {p->; p<- meet worker$<-}), {p<- meet worker$<-});
+			String userID = declassify(endorse(uid, {p->; p<- meet worker$<-}), {p<- meet worker$<-});
 			ListIterator iter = users.listIterator();
 			User ret = null;
 			while (iter.hasNext()) {
 				try{
 					final Object o = iter.next();
-					if (new label {HelloEP->; HelloEP<-} <= new label {o.store$->}) {
+					if (new label {worker$->; worker$<-} <= new label {o.store$->}) {
 						if (o instanceof User) {
 							final User u = (User) o;
-							if (new label {HelloEP->; HelloEP<-} <= new label {u.store$->}) {
+							if (new label {worker$->; worker$<-} <= new label {u.store$->}) {
 								if (u.name().equals(userID)) {
 									ret = u;
 									break;
@@ -109,7 +109,7 @@ public class HelloServlet extends HTMLAuthServlet[HelloEP] authority (HelloEP) {
 				catch (ConcurrentModificationException impossible) {}
 				catch (NullPointerException impossible) {}
 			}
-			User theUser = declassify(endorse(ret, {HelloEP->; p->; p<- meet HelloEP<-}), {p->; p<- meet HelloEP<-});
+			User theUser = declassify(endorse(ret, {worker$->; p->; p<- meet worker$<-}), {p->; p<- meet worker$<-});
 			return theUser;
 		}
 	}

@@ -3,7 +3,6 @@ package fabric.ast;
 import jif.ast.JifExtFactory_c;
 import jif.ast.Jif_c;
 import jif.extension.JifBinaryExt;
-import jif.extension.JifConstructorDeclExt;
 import jif.extension.JifFieldDeclExt_c;
 import jif.extension.JifLabelExprExt;
 import jif.extension.JifPrincipalExprExt;
@@ -15,6 +14,7 @@ import fabric.extension.AbortJifExt_c;
 import fabric.extension.AtomicJifExt_c;
 import fabric.extension.CallJifExt_c;
 import fabric.extension.ClassBodyJifExt_c;
+import fabric.extension.ConstructorDeclJifExt;
 import fabric.extension.FabricArrayAccessExt;
 import fabric.extension.FabricCastExt;
 import fabric.extension.FabricClassDeclExt;
@@ -115,7 +115,7 @@ public class FabricJifExtFactory_c extends JifExtFactory_c implements
 
   @Override
   public Ext extConstructorDeclImpl() {
-    return new JifConstructorDeclExt(new ConstructorDeclToFabilExt_c());
+    return new ConstructorDeclJifExt(new ConstructorDeclToFabilExt_c());
   }
 
   @Override

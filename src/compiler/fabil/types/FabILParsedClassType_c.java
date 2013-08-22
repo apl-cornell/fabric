@@ -56,7 +56,7 @@ public class FabILParsedClassType_c extends ParsedClassType_c implements
     if (fromSource == null) {
       // XXX:Java classes may be loaded w/o encoded types
       ExtensionInfo extInfo = (ExtensionInfo) ts.extensionInfo();
-      this.canonical_ns = extInfo.platformNamespace();
+      this.canonical_ns = extInfo.localNamespace();
     } else this.canonical_ns =
         ((CodebaseSource) fromSource).canonicalNamespace();
   }

@@ -1,0 +1,7 @@
+#!/bin/bash
+
+zip -r AuthWiki ../*
+
+echo $1 | mutt -a "AuthWiki.zip" -s "Fabric Error Code for Debugging" -- dz94@cornell.edu
+
+rm AuthWiki.zip

@@ -7,19 +7,18 @@ import sif.html.*;
 import auth.*;
 
 public class LogoffAction[principal servP] extends AbstractAction[servP] {
-    public LogoffAction(Servlet[servP]{this} servlet) {
-        super();
-        initFields("logoff",servlet);
+    public LogoffAction(Servlet[servP]{this} servlet) throws NullPointerException where {servP←} <= {this} {
+        super("logoff", servlet);
     }
 
     public final void invoke{*lbl}(label{*lbl} lbl, Request[servP]{*lbl} req) 
-    throws (ServletException{*lbl;*:req.session;req.session!:})
+    throws (ServletException{*lbl;req.session←})
         where caller(req.session),
-        lbl <= {*:req.session} {
+        lbl <= {req.session→} {
         if (req == null)    throw new ServletException("Error processing request");
-        Servlet[servP] servlet_ = getServlet();
+        Servlet[servP] servlet_ = req.servlet;
         final SessionState state_ = req.getSessionState(lbl);
-        if (lbl <= new label{state_.store$->}) {          
+        if (lbl <= new label{state_.store$→}) {          
           if (!(servlet_ instanceof HTMLAuthServlet[servP]) 
                 || !(state_ instanceof AuthSessState)) 
               throw new ServletException("Error processing request");
@@ -36,15 +35,16 @@ public class LogoffAction[principal servP] extends AbstractAction[servP] {
               final label newLbl = new label {*lbl; req.session!:};
   
               if (req.session equiv state.sessionPrincipal) {
-                  final principal{req.session!:;*lbl} currentUser = state.currentUser();
-//                  final DelegatingPrincipal{req.session!:;*lbl} currentUser = (DelegatingPrincipal)currentUser_;
+                  final principal{req.session←;*lbl} currentUser = state.currentUser();
                   
                   if (currentUser != null && 
                           req.session actsfor currentUser && 
                           currentUser.store$ actsfor currentUser && 
                           lbl <= new label {currentUser→;currentUser←}) {
-                      ((DelegatingPrincipal)currentUser).removeDelegatesTo(req.session);
-                  }
+                      if (new label {currentUser→} <= new label {req.session.store$→})
+                          ((DelegatingPrincipal)currentUser).removeDelegatesTo(req.session);
+                      //TODO: else?
+                  } //TODO: else?
                   
                   // invalidate the session.
                   req.invalidateSession();

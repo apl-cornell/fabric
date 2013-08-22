@@ -1,0 +1,55 @@
+package auth.rest;
+
+import javax.servlet.ServletException;
+import java.io.PrintWriter;
+import java.io.IOException;
+
+import sif.servlet.*;
+import auth.*;
+
+public class LogoffAction[principal servP] extends AbstractAction[servP] {
+    public LogoffAction(Servlet[servP]{this} servlet)       
+      throws NullPointerException where {servP←} <= {this} {      
+        super("logoff",servlet);
+    }
+
+    public final void invoke{*lbl}(label{*lbl} lbl, Request[servP]{*lbl} req) 
+    throws (ServletException{*lbl;req.session←})
+        where caller(req.session),
+        lbl <= {req.session→} {
+        if (req == null)    throw new ServletException("Error processing request");
+        Servlet[servP] servlet = req.servlet;        
+        final SessionState state_ = req.getSessionState(lbl);
+        if (lbl <= new label{state_.store$→}) {          
+          if (!(state_ instanceof AuthSessState)) 
+              throw new ServletException("Error processing request");
+          final AuthSessState state = (AuthSessState)state_;
+          atomic {
+              final label newLbl = new label {*lbl; req.session!:};
+  
+              if (req.session equiv state.sessionPrincipal) {
+                  final principal{req.session←;*lbl} currentUser = state.currentUser();
+                  if (currentUser != null && 
+                          req.session actsfor currentUser && 
+                          currentUser.store$ actsfor currentUser && 
+                          lbl <= new label {currentUser→;currentUser←}) {
+                      if (new label {currentUser→} <= new label {req.session.store$→})
+                          ((DelegatingPrincipal)currentUser).removeDelegatesTo(req.session);
+                      //TODO: else?
+                  } //TODO: else?
+                  // invalidate the session.
+                  req.invalidateSession();
+                  try {
+                    PrintWriter w = req.getResponseWriter();
+                    w.println("\"User logged off.\"");
+                  } catch (IOException e) {
+                    throw new Error("Problem getting writer");
+                  }
+              }
+              else {
+                  throw new ServletException("req.session not equivalent to state.sessionPrincipal"); 
+              }
+        }
+      }
+    }
+}

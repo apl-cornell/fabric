@@ -42,5 +42,14 @@ public class Object extends java.lang.Object {
    * generated code.
    */
   public static native void _npe(Label lbl) throws NullPointerException;
+
+  public native int oidHashCode();
+  
+  /**
+   * This version of oidHashCode launders the dereference of <code>o</code>
+   * to prevent the Fabric type system from thinking the object will be
+   * fetched, when it really won't be.
+   */
+  public static native int oidHashCode(Object o);
 }
 

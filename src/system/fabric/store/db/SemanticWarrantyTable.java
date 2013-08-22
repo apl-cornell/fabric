@@ -38,7 +38,7 @@ import fabric.lang.WrappedJavaInlineable;
 import fabric.worker.memoize.CallInstance;
 import fabric.worker.memoize.SemanticWarrantyRequest;
 import fabric.worker.memoize.WarrantiedCallResult;
-import fabric.worker.transaction.ReadMapEntry;
+import fabric.worker.transaction.ReadMap;
 import fabric.worker.transaction.TransactionManager;
 import fabric.worker.AbortException;
 import fabric.worker.Store;
@@ -1121,10 +1121,10 @@ public class SemanticWarrantyTable {
               // Add sub calls
               parentReq.calls.putAll(req.calls);
               // Add reads
-              for (Map.Entry<Store, LongKeyMap<ReadMapEntry>> entry :
+              for (Map.Entry<Store, LongKeyMap<ReadMap.Entry>> entry :
                   req.reads.nonNullEntrySet())
-                for (ReadMapEntry read : entry.getValue().values())
-                  parentReq.reads.put(read.obj.store, read.obj.onum, read);
+                for (ReadMap.Entry read : entry.getValue().values())
+                  parentReq.reads.put(read.getStore(), read.getRef().onum, read);
               // Add creates
               for (Map.Entry<Store, LongKeyMap<_Impl>> entry :
                   req.creates.nonNullEntrySet())
