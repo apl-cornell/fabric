@@ -162,6 +162,8 @@ public final class LocalStore implements Store, Serializable {
       result = cur.getRequestResult(call);
     }
     if (result == null) result = callCache.get(call);
+    
+    // TODO: actually check the store itself.
     SEMANTIC_WARRANTY_LOGGER.finer("Call " + call + " found in local store: " +
         result);
     return result;
