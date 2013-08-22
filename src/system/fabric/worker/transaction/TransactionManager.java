@@ -565,6 +565,7 @@ public final class TransactionManager {
         }
       }
       WORKER_TRANSACTION_LOGGER.fine(logMessage);
+      HOTOS_LOGGER.info("Prepare failed.");
 
       synchronized (current.commitState) {
         current.commitState.value = PREPARE_FAILED;
