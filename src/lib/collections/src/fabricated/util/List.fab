@@ -31,5 +31,5 @@ public interface List[label L] extends Collection[L] {
 
     ListIterator[L]{L} listIterator{L}();
     ListIterator[L]{L} listIterator{L}(int{L} index) throws (IndexOutOfBoundsException{L});
-    ListIterator[L]{L} listIterator{L}(Store{L} store, int{L} index) throws (IndexOutOfBoundsException{L}) where L <= {*<-store}, {*->store} <= L;
+    ListIterator[L]{L} listIterator{L}(Store{L} store, int{L} index) throws (IndexOutOfBoundsException{L}) where {*<-store} <= L, L <= {*->store};   
 }

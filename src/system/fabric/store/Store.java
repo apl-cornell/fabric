@@ -1,5 +1,6 @@
 package fabric.store;
 
+import static fabric.common.Logging.HOTOS_LOGGER;
 import static fabric.common.Logging.STORE_REQUEST_LOGGER;
 import static fabric.common.ONumConstants.STORE_PRINCIPAL;
 
@@ -177,6 +178,10 @@ class Store extends MessageToStoreHandler {
         nameOf(client.principal), message.tid.topTid);
 
     tm.abortTransaction(client.principal, message.tid.topTid);
+
+    Logging.log(HOTOS_LOGGER, Level.INFO,
+        "Handled Abort Message, worker={0}, tid={1}", nameOf(client.principal),
+        message.tid.topTid);
     return new AbortTransactionMessage.Response();
   }
 
@@ -203,7 +208,12 @@ class Store extends MessageToStoreHandler {
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
         "Handling Commit Message from {0} for tid={1}, commitTime={2}",
         nameOf(client.principal), message.transactionID, message.commitTime);
+
     tm.commitTransaction(client, message.transactionID, message.commitTime);
+
+    Logging.log(HOTOS_LOGGER, Level.INFO,
+        "Handled Commit Message, worker={0}, tid={1}",
+        nameOf(client.principal), message.transactionID);
     return new CommitTransactionMessage.Response();
   }
 
@@ -221,6 +231,10 @@ class Store extends MessageToStoreHandler {
     long minCommitTime =
         prepareTransactionWrites(client.principal, msg.tid,
             msg.serializedCreates, msg.serializedWrites);
+
+    Logging.log(HOTOS_LOGGER, Level.INFO,
+        "Handled PrepareWrites Message, worker={0}, tid={1}",
+        nameOf(client.principal), msg.tid);
     return new PrepareTransactionWritesMessage.Response(minCommitTime);
   }
 
@@ -237,6 +251,9 @@ class Store extends MessageToStoreHandler {
 
     LongKeyMap<VersionWarranty> newWarranties =
         prepareTransactionReads(client, msg.tid, msg.reads, msg.commitTime);
+    Logging.log(HOTOS_LOGGER, Level.INFO,
+        "Handled PrepareReads Message, worker={0}, tid={1}",
+        nameOf(client.principal), msg.tid);
     return new PrepareTransactionReadsMessage.Response(newWarranties);
   }
 

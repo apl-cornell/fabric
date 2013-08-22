@@ -111,6 +111,11 @@ public class WrappedJavaInlineable<T> implements JavaInlineable {
   }
 
   @Override
+  public int oidHashCode() {
+    throw new InternalError("WrappedJavaInlineables don't have oids.");
+  }
+
+  @Override
   public fabric.lang.Object._Proxy $getProxy() {
     throw new InternalError("WrappedJavaInlineables don't have proxies.");
   }

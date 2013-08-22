@@ -1,0 +1,16 @@
+#!/bin/bash
+
+BIN_DIR="$(dirname $0)"
+
+# Start the store.
+"${BIN_DIR}/run-in-xterm" "Hello store" "${BIN_DIR}/start-store hello" &
+
+# Wait for the stores to start up.
+echo "Press ENTER when the stores are ready."
+echo "You should see console prompts in each window: 'hello>'"
+read -r
+
+# Start the worker.
+"${BIN_DIR}/run-in-xterm" "Hello webapp worker" \
+  "${BIN_DIR}/start-worker helloweb" &
+

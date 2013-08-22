@@ -125,7 +125,7 @@ abstract public class HTMLServlet extends Servlet {
       if (request.getCharacterEncoding() == null)
         request.setCharacterEncoding("ISO-8859-1");
 
-      HTMLRequest req = new HTMLRequest(this, request);
+      HTMLRequest req = new HTMLRequest(this, request, response);
 
       producePage(req);
 

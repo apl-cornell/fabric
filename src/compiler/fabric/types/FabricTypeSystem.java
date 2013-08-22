@@ -42,6 +42,13 @@ public interface FabricTypeSystem extends JifTypeSystem, CodebaseTypeSystem {
    */
   Principal workerLocalPrincipal(Position pos);
 
+  /**
+   * Constructs an AccessPath for the local worker. 
+   * @param position
+   * @return
+   */
+  AccessPath workerLocalAccessPath(Position position);
+
   WorkerLocalInstance workerLocalInstance();
 
   FabricDefaultSignature fabricDefaultSignature();
@@ -150,6 +157,15 @@ public interface FabricTypeSystem extends JifTypeSystem, CodebaseTypeSystem {
    */
   Principal remoteWorkerPrincipal(RemoteWorkerGetter worker,
       FabricContext context, Position pos) throws SemanticException;
+
+  /**
+   * @param ct
+   * @param context
+   * @return
+   * @throws SemanticException
+   */
+  AccessPath currentStoreAccessPathFor(ClassType ct, JifContext context)
+      throws SemanticException;
 
   /**
    * @param ref

@@ -1,7 +1,10 @@
 package fabric.dissemination.pastry.messages;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
+import java.security.DigestException;
 import java.security.GeneralSecurityException;
+import java.security.MessageDigest;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -10,6 +13,10 @@ import java.util.Set;
 import rice.p2p.commonapi.NodeHandle;
 import rice.p2p.commonapi.rawserialization.InputBuffer;
 import rice.p2p.commonapi.rawserialization.OutputBuffer;
+import rice.p2p.util.Base64;
+import fabric.common.Crypto;
+import fabric.common.SerializationUtil;
+import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
@@ -62,16 +69,34 @@ public class Replicate extends AbstractRawMessage {
 
   @Override
   public String toString() {
-    String s = "Replicate " + level + " [";
+    // Instead of including the string representation of skip, use a secure
+    // hash. Pastry calls toString() when this message is sent and uses the
+    // result as a key in a hash map. Using the secure hash avoids creating an
+    // overly large string that would then need to be GCed.
+    return "Replicate " + level + " [skipDigest=" + skipDigest() + "]";
+  }
 
-    for (Store store : skip.storeSet()) {
-      for (LongKeyMap.Entry<Long> entry : skip.get(store).entrySet()) {
-        s +=
-            "(" + store + ", " + entry.getKey() + ", " + entry.getValue() + ")";
+  private static final Charset UTF8_CHARSET = Charset.forName("UTF-8");
+
+  private String skipDigest() {
+    try {
+      byte[] buf = new byte[256];
+      MessageDigest md = Crypto.digestInstance();
+      for (Store store : skip.storeSet()) {
+        md.update(store.name().getBytes(UTF8_CHARSET));
+
+        for (LongKeyMap.Entry<Long> entry : skip.get(store).entrySet()) {
+          SerializationUtil.setLongAt(buf, 0, entry.getKey());
+          SerializationUtil.setLongAt(buf, 8, entry.getValue());
+          md.update(buf, 0, 16);
+        }
       }
-    }
 
-    return s + "]";
+      md.digest(buf, 0, 256);
+      return Base64.encodeBytes(buf);
+    } catch (DigestException e) {
+      throw new InternalError(e);
+    }
   }
 
   @Override

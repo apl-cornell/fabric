@@ -9,7 +9,6 @@ import polyglot.ast.Term;
 import polyglot.ast.Term_c;
 import polyglot.types.MemberInstance;
 import polyglot.types.SemanticException;
-import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
 import polyglot.visit.CFGBuilder;
 import polyglot.visit.NodeVisitor;
@@ -97,11 +96,12 @@ public class AccessPolicy_c extends Term_c implements AccessPolicy {
     if (ct == null) {
       return this;
     }
-    if (!policy.label().isCanonical())
-      throw new InternalCompilerError("Access policy is not canonical");
-    ConfPolicy pol = ts.confProjection(policy.label());
-    AccessPolicyInstance api = ts.accessPolicyInstance(position(), ct, pol);
-    ct.setAccessPolicy(pol);
-    return accessPolicyInstance(api);
+
+    if (accessPolicyInstance == null || !accessPolicyInstance.isCanonical()) {
+      ConfPolicy pol = ts.confProjection(policy.label());
+      AccessPolicyInstance api = ts.accessPolicyInstance(position(), ct, pol);
+      ct.setAccessPolicy(pol);
+      return accessPolicyInstance(api);
+    } else return this;
   }
 }

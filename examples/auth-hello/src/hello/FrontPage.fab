@@ -7,15 +7,15 @@ import sif.html.*;
 
 import javax.servlet.ServletException;
 
-public class FrontPage extends AuthenticatedAction[HelloEP] {
+public class FrontPage extends AuthenticatedAction[worker$] {
 
-	public FrontPage (Servlet[HelloEP] m) {
+	public FrontPage (Servlet[worker$] m) {
 		super("frontPage", m);
 	}
 
 	public void invokeImpl{*lbl}(label{*lbl} lbl,
-                                      Request[HelloEP]{*lbl} req,
-                                      AuthServlet[HelloEP]{*lbl} servlet,
+                                      Request[worker$]{*lbl} req,
+                                      AuthServlet[worker$]{*lbl} servlet,
                                       AuthSessState{*lbl} state,
                                       principal{*lbl} currentUser) 
         throws (ServletException{*lbl;req.session←})
@@ -41,12 +41,12 @@ public class FrontPage extends AuthenticatedAction[HelloEP] {
 				}
 				
 				NodeList content = new NodeList(lbl, lbl, new Paragraph(lbl, lbl, new Text("Username: "+username)));
-				Action[HelloEP] logoff = helloServlet.findStartAction(req, "logoff");
+				Action[worker$] logoff = helloServlet.findStartAction(req, "logoff");
 				TRow iconBar = TRow.create( new NodeList(new Hyperlink(logoff, new Img("LogoffIcon.gif", "icon"))));
 				TRow textBar = TRow.create( new NodeList(new Text("Logoff")));
 				Table optionBar = new Table("viewOptions", null, new NodeList(iconBar, textBar));
 				content = content==null ? null : content.append(lbl, lbl, new Paragraph(optionBar));
-				helloServlet.createPage((HTMLRequest[HelloEP])req, "auth-hello webapp", lbl, lbl, 
+				helloServlet.createPage((HTMLRequest[worker$])req, "auth-hello webapp", lbl, lbl, 
 						new NodeList[lbl,lbl](lbl, lbl, createBanner(lbl, "Welcome"), lbl, lbl, createBody(lbl, lbl, content)));
 			}
 		}

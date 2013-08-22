@@ -1,0 +1,154 @@
+package groups;
+
+import auth.*;
+import auth.rest.*;
+import sif.servlet.*;
+
+import javax.servlet.ServletException;
+
+import java.io.PrintWriter;
+import java.io.IOException;
+
+public class AddToGroupAction[principal Serv] extends AuthenticatedAction[Serv] 
+    where {*provider;*GroupUser.provider;*Group.provider} <= {worker$←}, worker$ actsfor Serv // better to only need Serv here.
+{
+    final String{this}@{Serv→} groupParam;
+    final String{this}@{Serv→} userParam;
+    final String{this}@{Serv→} typeParam;
+
+    public AddToGroupAction(Servlet[Serv]{this} s) 
+      throws NullPointerException where {Serv←} <= {this}
+    {      
+      this(s, "group", "user", "type");
+    }
+
+    public AddToGroupAction(Servlet[Serv]{this} s, String{this} groupParam, 
+        String{this} userParam, String{this} typeParam) 
+      throws NullPointerException where {Serv←} <= {this}
+    {      
+      this(s, "addtogroup", groupParam, userParam, typeParam);
+    }
+    
+    public AddToGroupAction(Servlet[Serv]{this} s, String{this} name, 
+        String{this} groupParam, String{this} userParam, String{this} typeParam) 
+      throws NullPointerException where {Serv←} <= {this}
+    {
+      this.groupParam = groupParam;
+      this.userParam = userParam;
+      this.typeParam = typeParam;
+      super(name, s);
+    }
+	  
+    public void invokeImpl{*lbl}(label{*lbl} lbl,
+        Request[Serv]{*lbl} req,
+        AuthServlet[Serv]{*lbl} servlet,
+        AuthSessState{*lbl} state,
+        principal{*lbl} currentUser) 
+            throws (ServletException{*lbl;req.session←})
+            where caller(req.session),
+            Serv actsfor req.session,
+            {req.session←} <= lbl,
+            lbl <= {req.session→},
+            {Serv←} <= {this},
+            req.session equiv state.sessionPrincipal,
+            req.session actsfor currentUser
+    {
+      atomic {
+        String err = null;
+        PrintWriter[{req.session→}]{*lbl;req.session←} w = null;
+        try {
+          final GroupUser guser = (GroupUser) currentUser; 
+          String groupName = req.getParam(lbl, groupParam); 
+          String memberID = req.getParam(lbl, userParam); 
+          String type = req.getParam(lbl, typeParam); 
+          w = req.getResponseWriter();
+
+          if (memberID == null || memberID.length() == 0) {
+            err = "Unknown user ID.";
+          }
+          if (groupName == null || groupName.length() == 0) {
+            err = "Unknown group.";
+          }
+          
+          if (lbl <= new label{req.session→;req.session←}) {  
+              //get group
+              Group group = null;
+              if (type.equals("private")) {
+                if (lbl <= new label{guser→;guser←}) {  
+                  group = guser.getGroup(new label{guser→;guser←}, groupName);
+                } else {
+                  err = "lbl is too restrictive";
+                }
+              } else if (type.equals("public")) {
+                if (lbl <= new label{guser←}) {
+                  group = guser.getGroup(new label{guser←}, groupName);
+                } else {
+                  err = "lbl is too restrictive";
+                }
+              }
+              else
+                err = "Unknown group type.";
+              
+              if (err == null) {
+                if (group == null)
+                  err = "Unknown group.";
+              }
+              
+              GroupUser member = null;
+              if (err == null) {
+                //lookup id
+                endorse({req.session→;req.session←}) {  
+                  try {
+                    if (Serv actsfor req.session)
+                      member = (GroupUser) servlet.lookupUserID(memberID, req.session);
+                    else 
+                      throw new ServletException("Invalid session principal!");
+                    if (member == null) 
+                      err = "Unknown user ID.";
+                  } catch (ServletException e) {
+
+                    err = e.getMessage();
+                  }
+                }
+              }
+              final Group _group = group;
+              if (_group.lbl <= new label{req.session→}) {
+                if (err == null) {
+                  declassify({*_group.lbl;guser←}) {
+                    final GroupUser _guser = declassify(guser, {*_group.lbl;guser←});
+                    final Group __group = declassify(_group, {*_group.lbl;guser←});
+                    final GroupUser _member = declassify(member, {*_group.lbl;guser←});
+                    if (__group.lbl <= new label{__group.store$→;_guser←}
+                    && new label{_guser←} <= __group.lbl) {
+                      __group.add(_member);
+                      w.println("\"Added user "+ memberID  + " to group " + groupName +"\"");
+                    } else throw new Error("impossible");
+                  }
+                } 
+              
+                endorse({req.session→;req.session←}) {
+                  declassify ({*lbl;req.session←}) {  
+                    String{*lbl;req.session←} _err =  declassify(endorse(err,{req.session→;req.session←}),{*lbl;req.session←}); 
+                    if (w == null) 
+                      throw new ServletException(_err);
+                    else if ( _err != null) {              
+                      w.println("\""+ _err +"\"");
+                      return;
+                    }
+                    else {
+                      return;
+                    }  
+                  }
+                }
+              } else throw new Error("impossible");
+              
+            } else {
+              throw new ServletException("lbl is too restrictive");
+            }
+        } catch (IOException e) {
+          throw new ServletException(e);
+        }
+      }
+    }
+}
+

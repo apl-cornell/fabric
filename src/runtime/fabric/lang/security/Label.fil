@@ -18,6 +18,10 @@ public interface Label {
 
   Label meet(Store store, Label l);
 
+  Label join(Store store, Label l, boolean simplify);
+
+  Label meet(Store store, Label l, boolean simplify);
+
   ConfPolicy confPolicy();
 
   IntegPolicy integPolicy();

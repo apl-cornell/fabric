@@ -5,33 +5,42 @@ package fabric.lang.security;
  * It provides convenience methods for delgating authority to superiors.
  */
 public abstract class AbstractPrincipal extends DelegatingPrincipal {
-        
+    @{store$→}
+
     protected AbstractPrincipal(String{this} name) {
     }
+    
+    protected AbstractPrincipal(String{this} name, principal{this} superior) {
+    }
 
-    public native String{this} name();
+    public native String{this; this←} name();
     
-    public native boolean{this;p;this!:} delegatesTo(principal p);
+    public native boolean{this; p; this←} delegatesTo{this→}(principal{this→} p);
 
-    public native void addDelegatesTo{this:;this!:}(principal{this:;this!:} p) where caller (this);    
+    public native boolean{this; p; this←} equals{this→}(Principal{this→} p);
+      
+    public native boolean{authPrf; closure; lb; *lb; executeNow; this; this←}
+      isAuthorized{this→;this←}(java.lang.Object authPrf,
+                 Closure[this, lb] closure,
+                 label lb,
+                 boolean executeNow)
+      where authority (this),
+          {authPrf;closure;lb;executeNow} <= lb,
+          lb <= {this→};
 
-    public native void removeDelegatesTo{this:;this!:}(principal{this:;this!:} p) where caller (this);
+    public native ActsForProof{this; c; p; searchState; p←; this←}
+      findProofUpto{this→;this←}(Store c, Principal p, 
+          java.lang.Object searchState)  
+      where {c;p;searchState} <= {this→};
+    
+    public native ActsForProof{this; c; q; searchState; q←; this←}
+      findProofDownto{this→;this←}(Store c, Principal q, 
+          java.lang.Object searchState)
+      where {c;q;searchState} <= {this→};
+    
+    public native void addDelegatesTo{this→;this←}(Principal{this→;this←} p) where caller (this); 
+    public native void removeDelegatesTo{this→;this←}(Principal{this→;this←} p) where caller (this); 
 
-    protected native boolean{this;p;this!:} superiorsContains(Principal p) where authority (this);
-    
-    public native boolean{authPrf; closure; lb; *lb; executeNow; this; this→; this←}
-      isAuthorized{⊥→; this←}(java.lang.Object{this→} authPrf, 
-                Closure[this, lb]{this→} closure,
-                label{this→} lb,
-                boolean{this→} executeNow) where authority (this);
-    
-    
-    public native ActsForProof[{c→}]{this;q;this!:;q!:;c} findProofDownto(Store c, Principal q, java.lang.Object searchState);
-    
-    public native ActsForProof[{c→}]{this;p;this!:;p!:;c} findProofUpto{this!:}(Store c, Principal p, java.lang.Object searchState) where authority (this);
-    
-    public native boolean equals(Object o);
-    
-    public native boolean equals(Principal p);
-    
+    protected native boolean{this; p; this←} 
+      superiorsContains{this→;this←}(Principal{this→} p) where authority (this);
 }

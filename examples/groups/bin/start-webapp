@@ -1,0 +1,7 @@
+#!/bin/bash
+
+APP_HOME="$(dirname $0)/.."
+BIN_DIR="$(dirname $0)"
+
+"${BIN_DIR}/start-worker" helloweb --debug --debug-port 8085 "${APP_HOME}/web/hello" --port 8080 &
+

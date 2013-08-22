@@ -1,0 +1,105 @@
+package groups;
+
+import auth.*;
+import fabricated.util.*;
+
+public class GroupUser extends User where {*provider;*Group.provider} <= {worker$←}
+{
+  protected Map[{this←}]{this←}@{⊤→this.store$} publicGroups;
+  protected Map[{this→;this←}]{this→;this←}@{⊤→this.store$} privateGroups;
+  
+  public GroupUser{this}(principal{this} servP, String{this} name, String{this} password) 
+    where {worker$←} <= {this}, {this}<={worker$→}
+  {
+    super(name, password);
+    try {
+      // the exceptions thrown by these constructors prevent us from making these
+      // fields final....
+      endorse({this;this←} meet {*→;this←}) {
+        declassify({this←}) {
+          publicGroups = declassify(new HashMap(new StringComparator(), new IdComparator()), {this←});
+          privateGroups = declassify( new HashMap(new StringComparator(), new IdComparator()), {this→;this←});
+          addDelegatesTo(servP);
+        }
+      }
+    } catch (Exception e) {
+      throw new Error("GroupUser:27: impossible", e);
+    }   
+  }
+
+  public Group{*lbl} getGroup{*lbl}(label{*lbl} lbl, String{*lbl} name)  
+    where {this←} <= lbl, lbl <= {this→}
+  {
+      if (worker$ actsfor this) {
+        //TODO: rethink this implementation some...    
+        if (lbl <= new label{this←}
+            && new label{this←} <= lbl) {
+          final Map publicGroups = this.publicGroups;
+          if (publicGroups.store$ equiv store$) {
+            final Object g = publicGroups.get(name);
+            if (g == null) return null;
+            if (lbl <= new label {g.store$→}) 
+              return (Group) g;
+            else throw new Error("impossible");
+          } else throw new Error("impossible");
+        } else if (lbl <= new label{this→;this←}
+                   && new label{this→;this←} <= lbl) {
+          final Map privateGroups = this.privateGroups;
+          if(privateGroups.store$ equiv store$) {
+            final Object g = privateGroups.get(name);
+            if (g == null) return null;
+            if (lbl <= new label {g.store$→}) 
+              return (Group) g;
+            else throw new Error("impossible");
+          } else throw new Error("impossible");
+        }
+      }
+      return null;
+  }
+
+  public Group{this←} createPublicGroup{this←}(String{this←} name) throws (Exception{this←}) 
+    where worker$ actsfor this
+  {
+//    if (worker$ actsfor this) {  
+      // for some reason, the @ store is required here...
+      // maybe the default location for labels is screwy?
+      final label lbl = new label{this←}@store$;
+      Group g = createGroup(lbl, name);
+      publicGroups.put(name, g);
+      return g;
+//    } else throw new Error("GroupUser:65:impossible");
+  }
+
+  public Group{this→;this←} createPrivateGroup{this→;this←}(String{this→;this←} name) throws (Exception{this→;this←}) 
+    where worker$ actsfor this
+  {
+//    if (worker$ actsfor this) {    
+      // for some reason, the @ store is required here...
+      // maybe the default location for labels is screwy?
+      final label lbl = new label{this→;this←}@store$;    
+      Group g = createGroup(lbl, name);
+      privateGroups.put(name, g);
+      return g;
+//    } else throw new Error("GroupUser:65:impossible");
+  }
+
+  public Group{*lbl} createGroup{*lbl}(label lbl, String name) throws (Exception{*lbl}) 
+  where     {this←} <= lbl,
+    lbl <= {this→;this←},
+    {lbl; name} <= {*lbl}, 
+    worker$ actsfor this
+  {
+    try {
+      if (name == null) throw new NullPointerException();
+      final Group g = new Group(lbl, this, name);
+      if (g.lbl <= lbl) return g;
+    } catch (Exception e) {
+      throw new Error("GroupUser:50:impossible", e);
+    }
+    throw new Error("GroupUser:51:impossible");
+  }
+
+  public String{this;this←} toJson() {
+    return "{ \"name\" : \"" + name() + "\"}"; 
+  }
+}

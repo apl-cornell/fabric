@@ -5,6 +5,7 @@ import javax.servlet.ServletException;
 import sif.html.*;
 import sif.servlet.Action;
 import sif.servlet.Request;
+import sif.servlet.HTMLRequest;
 import sif.servlet.Servlet;
 import fabric.util.Map;
 
@@ -13,29 +14,30 @@ import travel.Broker;
 import travel.Config;
 import travel.Account;
 
-import login.*;
-
+import auth.*;
+import auth.html.*;
 
 public class FrontPage extends AuthenticatedAction[BankPrincipal] authority (BankPrincipal) {
-    public FrontPage(BankMain{this} m) throws ServletException {
+    public FrontPage(BankMain{this} m)         
+      throws NullPointerException where {BankPrincipal←} <= {this} {
         super("frontpage", m);
     }
 
     public final void invokeImpl{*lbl}(label{*lbl} lbl,
-            Request[BankPrincipal]{*lbl} req,
-            Servlet[BankPrincipal]{*lbl} servlet,
+            Request[BankPrincipal]{*lbl} _req,
+            AuthServlet[BankPrincipal]{*lbl} servlet,
             AuthSessState{*lbl} state,
             principal{*lbl} currentUser) 
-            throws (ServletException{*lbl;req.session←})
-            where caller(req.session),
-            lbl <= {⊤→req.session},
-            req.session equiv state.sessionPrincipal,
-            req.session actsfor currentUser {
+            throws (ServletException{*lbl;_req.session←})
+            where caller(_req.session),
+            lbl <= {⊤→_req.session},
+            _req.session equiv state.sessionPrincipal,
+            _req.session actsfor currentUser {
 
         if (servlet == null || !(servlet instanceof BankMain)) throw new ServletException("No servlet available"); 
-        if (req == null || state == null || currentUser == null) throw new ServletException("Error processing request"); 
+        if (_req == null || state == null || currentUser == null) throw new ServletException("Error processing request"); 
         BankMain m = (BankMain)servlet;
-
+        final HTMLRequest req = (HTMLRequest) _req;
         atomic {
             // Display the front page only for the bank principal
             if (currentUser equiv BankPrincipal
@@ -73,8 +75,12 @@ public class FrontPage extends AuthenticatedAction[BankPrincipal] authority (Ban
                         airlineAccount.user equiv AirlinePrincipal &&
                         customerAccount.user equiv CustomerPrincipal) {
                     Text msg = new Text[bp,bp]("The following are the accounts maintained by the Acme Bank");
-                    Text name1 = new Text(airlineAccount.name() + ": ");
-                    Text name2 = new Text(customerAccount.name() + ": ");
+                    // Must endorse name of principals since they only have the 
+                    // integrity of the principals themselves.
+                    String{*bp} aName = endorse(airlineAccount.name(), {*bp});
+                    String{*bp} cName = endorse(customerAccount.name(), {*bp});
+                    Text name1 = new Text(aName);
+                    Text name2 = new Text(cName);
                     Text value1 = new Text[lbla,bp](Float.toString(airlineAccount.balance()));
                     Text value2 = new Text[lblc,bp](Float.toString(customerAccount.balance()));
                     NodeList[lblca, bp] entries = NodeList.EMPTY();

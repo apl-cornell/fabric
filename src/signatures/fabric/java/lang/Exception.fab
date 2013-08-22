@@ -22,4 +22,6 @@ public class Exception extends Throwable {
     public Exception(Throwable{this} cause) {
         super(cause);
     }
+    
+    public native String{this} getMessage();
 }

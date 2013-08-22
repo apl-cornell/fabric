@@ -11,8 +11,11 @@ import jif.types.LabelConstraint;
 import jif.types.NamedLabel;
 import jif.types.PrincipalConstraint;
 import jif.types.label.AccessPathThis;
+import jif.types.label.ConfPolicy;
+import jif.types.label.IntegPolicy;
 import jif.types.label.Label;
 import jif.types.label.ProviderLabel;
+import jif.types.principal.DynamicPrincipal;
 import jif.types.principal.Principal;
 import jif.visit.LabelChecker;
 import polyglot.ast.ClassBody;
@@ -81,20 +84,41 @@ public class FabricClassDeclExt extends JifClassDeclExt {
     // Enter scope
     A = (JifContext) n.del().enterScope(A);
     lc = lc.context(A);
-
-    // Access label checks
-    Label classAccessLabel = ts.toLabel(pct.accessPolicy());
-
-    // ({this} <= access label) holds true at all access sites
-    A.addAssertionLE(ts.thisLabel(ct), classAccessLabel);
-    if (ts.descendsFrom(ct, ts.DelegatingPrincipal())) {
-      // this.store >= this holds true for all principals
-      Position pos = Position.compilerGenerated();
-      A.addActsFor(ts.dynamicPrincipal(pos, new AccessPathStore(
-          new AccessPathThis(ct, pos), ts.Store(), pos)), ts.dynamicPrincipal(
-          pos, new AccessPathThis(ct, pos)));
-    }
     if (ts.isFabricClass(pct)) {
+      // Access label checks
+      Position pos = Position.compilerGenerated();
+      Label classAccessLabel = ts.toLabel(pct.accessPolicy());
+
+      DynamicPrincipal storePrincipal =
+          ts.dynamicPrincipal(pos, ts.currentStoreAccessPathFor(pct, A));
+
+      ConfPolicy topStoreConfPol =
+          ts.readerPolicy(pos, ts.topPrincipal(pos), storePrincipal);
+      Label topStoreConfLabel = ts.toLabel(topStoreConfPol);
+
+      IntegPolicy topStoreIntegPol =
+          ts.writerPolicy(pos, ts.topPrincipal(pos), storePrincipal);
+      Label topStoreIntegLabel =
+          ts.pairLabel(pos, ts.bottomConfPolicy(pos), topStoreIntegPol);
+
+      // ({this} <= access label) holds true everywhere
+      A.addAssertionLE(ts.thisLabel(ct), classAccessLabel);
+
+      // (access label <= {*->store$}) holds true everywhere
+      A.addAssertionLE(classAccessLabel, topStoreConfLabel);
+
+      // (object label <= {*->store$}) holds true everywhere
+      A.addAssertionLE(pct.updateLabel(), topStoreConfLabel);
+
+      // ({*<-store$} <= object label) holds true everywhere
+      A.addAssertionLE(topStoreIntegLabel, pct.updateLabel());
+
+      if (ts.descendsFrom(ct, ts.PrincipalClass())) {
+        // this.store >= this holds true for all principals
+        A.addActsFor(ts.dynamicPrincipal(pos, new AccessPathStore(
+            new AccessPathThis(ct, pos), ts.Store(), pos)), ts
+            .dynamicPrincipal(pos, new AccessPathThis(ct, pos)));
+      }
       // check that the access label has the top integrity label, i.e. it only
       // has a meaningful confidentiality component
       lc.constrain(
@@ -124,26 +148,27 @@ public class FabricClassDeclExt extends JifClassDeclExt {
             }
           });
 
-    }
+      //}
 
-    // Provider label checks
-    final ProviderLabel provider = ct.provider();
-    NamedLabel namedProvider =
-        new NamedLabel(provider.toString(), "provider of "
-            + provider.classType().fullName(), provider);
-    lc.constrain(namedProvider, authPrincipal, A.labelEnv(), n.position(),
-        new ConstraintMessage() {
-          @Override
-          public String msg() {
-            return provider + " must act for " + authPrincipal;
-          }
+      // Provider label checks
+      final ProviderLabel provider = ct.provider();
+      NamedLabel namedProvider =
+          new NamedLabel(provider.toString(), "provider of "
+              + provider.classType().fullName(), provider);
+      lc.constrain(namedProvider, authPrincipal, A.labelEnv(), n.position(),
+          new ConstraintMessage() {
+            @Override
+            public String msg() {
+              return provider + " must act for " + authPrincipal;
+            }
 
-          @Override
-          public String detailMsg() {
-            return provider + " is the provider of " + ct
-                + " but does not have authority to act for " + authPrincipal;
-          }
-        });
+            @Override
+            public String detailMsg() {
+              return provider + " is the provider of " + ct
+                  + " but does not have authority to act for " + authPrincipal;
+            }
+          });
+    } // end isFabricClass checks
 
     // label check class conformance
     labelCheckClassConformance(ct, lc);
@@ -155,5 +180,4 @@ public class FabricClassDeclExt extends JifClassDeclExt {
     n = lc.leavingClassDecl((JifClassDecl) n.body(body));
     return n;
   }
-
 }

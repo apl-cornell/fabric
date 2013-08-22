@@ -1,13 +1,14 @@
 package hello;
 
 import sif.servlet.Servlet;
+import sif.servlet.HTMLServlet;
 import sif.servlet.Request;
 import sif.servlet.SessionState;
 import sif.servlet.SessionPrincipal;
 
 import javax.servlet.ServletException;
 
-public final class Main extends Servlet[HelloServEP] {
+public final class Main extends HTMLServlet[HelloServEP] {
     final Store{this}@{} localStore;
     public Main() throws ServletException {
         FabricWorker cl = FabricWorker.getWorker();
@@ -19,12 +20,14 @@ public final class Main extends Servlet[HelloServEP] {
     }
     
     public void initialize{HelloServEP:;HelloServEP!:}() throws ServletException {
-        addStartAction(new StartAction(this));
-//        HelloAction2 ha = new HelloAction2(this);
-//        addStartAction(ha);
-//        HelloAction2.precomputePage(this, ha);
-    }
-    
+      atomic {
+        final Store localStore = worker$.getLocalStore();
+        if (localStore actsfor worker$
+            && worker$ actsfor HelloServEP) {
+          addStartAction(new StartAction@localStore(this));
+        } else throw new Error("impossible!");
+      }
+    }    
     
     public String getPrivateHostID() throws ServletException {
         return "";
