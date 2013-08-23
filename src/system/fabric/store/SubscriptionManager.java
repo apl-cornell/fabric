@@ -310,7 +310,7 @@ public class SubscriptionManager extends FabricThread.Impl {
 
         // Encrypt the group.
         WarrantyGlob updateGlob =
-            new WarrantyGlob(store, signingKey, updateGroup);
+            new WarrantyGlob(groupContainer.getLabel(), signingKey, updateGroup);
 
         // Add to the dissemUpdateMap.
         for (RemoteWorker dissemNode : dissemNodes) {
