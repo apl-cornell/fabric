@@ -497,10 +497,12 @@ public final class ObjectCache {
       return;
     }
 
-    if (replaceOnly && curEntry.isEvicted()) return;
+    Integer curVersion = curEntry.getVersion();
+    boolean curEntryEvicted = curVersion == null;
+    if (replaceOnly && curEntryEvicted) return;
 
     // Check if object in current entry is an older version.
-    if (curEntry.getVersion() >= update.first.getVersion()) return;
+    if (curVersion >= update.first.getVersion()) return;
 
     curEntry.evict();
     Entry newEntry = new Entry(store, update);
