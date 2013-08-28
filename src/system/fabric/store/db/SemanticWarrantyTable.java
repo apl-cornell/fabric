@@ -1178,9 +1178,7 @@ public class SemanticWarrantyTable {
                     getCallChecker(uncertainCalls, changed, creates, writes));
 
             // Get the result
-            Map<CallInstance, SemanticWarrantyRequest> newUpdates =
-                check.get(deadline - System.currentTimeMillis(),
-                    TimeUnit.MILLISECONDS);
+            Map<CallInstance, SemanticWarrantyRequest> newUpdates = check.get();
             // Fix it up so we separate what's changed from what wasn't
             Set<CallInstance> newChanged = patchUpUpdates(newUpdates);
             // Remove all the calls that we were able to check out
@@ -1197,15 +1195,6 @@ public class SemanticWarrantyTable {
             return true;
           }
         }
-      } catch (TimeoutException e) {
-        // We didn't learn anything but we are going to assume the call
-        // changed in this case.
-        //
-        // Honestly it doesn't matter because this would mean that we reached
-        // the time we were going to suggest for commit anyways.
-        SEMANTIC_WARRANTY_LOGGER
-            .finest("CALL CHECK FOR " + call + " TIMED OUT");
-        return true;
       } catch (ExecutionException | InterruptedException e) {
         // XXX: Is this the right thing to do?
         System.err.println(e.getMessage());
@@ -1535,10 +1524,10 @@ public class SemanticWarrantyTable {
    * onums that is longer than the given commitTime.  Also performs any
    * bookkeeping associated with write events (like removing stale call values).
    */
-  public Pair<SemanticWarranty, Collection<SerializedObject>> prepareWrites(
-      final Collection<SerializedObject> writes,
-      final Collection<SerializedObject> creates, final long transactionID,
-      long commitTime, final String storeName) {
+  public Pair<SemanticWarranty, Collection<SerializedObject>>
+    prepareWrites(Collection<SerializedObject> writes,
+        Collection<SerializedObject> creates, long transactionID,
+        long commitTime, final String storeName) {
     // XXX: Pretty sure we're not actually being safe about lock order here...
     // need a way to ensure we don't accidentally operate on an ancestor of one
     // of the other calls first...
@@ -1572,14 +1561,6 @@ public class SemanticWarrantyTable {
         longest = longest > suggestedTime ? longest : suggestedTime;
       }
       // XXX: What about calls that remain uncertain by the end of that pass?
-
-      // Collect everything else that will need to be created for the
-      // transaction.
-      for (Map.Entry<CallInstance, SemanticWarrantyRequest> entry : updates
-          .entrySet())
-        for (LongKeyMap<_Impl> createMap : entry.getValue().creates)
-          for (_Impl create : createMap.values())
-            newCreates.add(new SerializedObject(create));
 
       // Schedule the write/update
       for (CallInstance call : affectedCalls) {
