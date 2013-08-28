@@ -1070,18 +1070,11 @@ public class SemanticWarrantyTable {
       TransactionManager tm = TransactionManager.getInstance();
       // Ensure that we don't reuse calls we're uncertain of or we know for a
       // fact will not be correct now.
-      //
       tm.getCurrentLog().blockedWarranties.addAll(uncertainCalls);
-      // TODO: Might be better if we insert the changed calls to allow for
-      // faster processing.
-      tm.getCurrentLog().blockedWarranties.addAll(changes.keySet());
+      // Insert already checked calls to allow for faster processing.
+      tm.getCurrentLog().addRequests(updates);
+      tm.getCurrentLog().addRequests(changes);
       tm.getCurrentLog().useStaleWarranties = false;
-      ArrayList<_Impl> deserializedCreates =
-          new ArrayList<_Impl>(creates.size());
-      for (SerializedObject o : creates)
-        deserializedCreates.add(o.deserialize(localStore,
-            new VersionWarranty(0)));
-      tm.getCurrentLog().addCreates(deserializedCreates);
 
       // Load up state from writes
       for (SerializedObject obj : writes) {
@@ -1089,10 +1082,11 @@ public class SemanticWarrantyTable {
             obj.deserialize(localStore, new VersionWarranty(0)));
       }
 
-      SEMANTIC_WARRANTY_LOGGER.finest("BEGINNING RECOMPUTATION OF " + call);
       // Rerun the call.
+      SEMANTIC_WARRANTY_LOGGER.finest("BEGINNING RECOMPUTATION OF " + call);
       call.runCall();
       SEMANTIC_WARRANTY_LOGGER.finest("DONE RECOMPUTING CALL " + call);
+
       Map<CallInstance, SemanticWarrantyRequest> updatedRequests =
           new HashMap<CallInstance, SemanticWarrantyRequest>();
       for (CallInstance checkcall : uncertainCalls) {

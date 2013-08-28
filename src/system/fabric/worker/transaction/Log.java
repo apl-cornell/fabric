@@ -369,14 +369,6 @@ public final class Log {
   }
 
   /**
-   * Add a bunch of creates at once.  This should only be called from the call
-   * checking code on the store.
-   */
-  public void addCreates(Collection<_Impl> added) {
-    creates.addAll(added);
-  }
-
-  /**
    * Get create for the given oid.  THIS SHOULD ONLY BE CALLED BY
    * Object._Proxy.fetchEntry.
    */
@@ -731,6 +723,16 @@ public final class Log {
     for (SemanticWarrantyRequest r : requests.values())
       if (requestLocations.get(r.call) == store) reqSet.add(r);
     return reqSet;
+  }
+
+  /**
+   * Add all entries from the given request map to the current requests pool.
+   *
+   * XXX: THIS IS A HACK FOR CALL CHECKING.  THIS SHOULD NOT BE USED _ANYWHERE_
+   * ELSE.
+   */
+  public void addRequests(Map<CallInstance, SemanticWarrantyRequest> updates) {
+    requests.putAll(updates);
   }
 
   /**
