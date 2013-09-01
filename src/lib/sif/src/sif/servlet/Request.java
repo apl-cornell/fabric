@@ -129,9 +129,6 @@ public class Request {
       SessionPrincipal sessionPrin = servlet.createSessionPrincipal(id);
       Label initLbl = servlet.trustedBySessionLabel(sessionPrin);
       result = servlet.createSessionState(initLbl, id, sessionPrin);
-//      if (!sessionPrin.delegatesTo(servlet.servletPrincipal())) {
-//        throw new Error("Invalid session principal: must delegate to " + servlet.servletPrincipal());
-//      }
       request.getSession(true).setAttribute("session_state", result);
     }
 

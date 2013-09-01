@@ -1,9 +1,8 @@
-package auth.html;
+package login;
 
 import javax.servlet.ServletException;
 import sif.servlet.*;
 import sif.html.*;
-import auth.*;
 
 public class LoginAction[principal servP] extends AbstractAction[servP] {
     final AuthenticatedAction[servP]{this}@{⊤→} successAction;
@@ -92,9 +91,7 @@ public class LoginAction[principal servP] extends AbstractAction[servP] {
         Node[lbl, lbl] form = servlet.createForm(lbl, lbl, new SubmitLoginAction[servP](servlet, this),
                                                                 lbl, lbl, 
                                                                 new Table[lbl, lbl](lbl, lbl, entries)); 
-        Node[lbl, lbl] createNew = new Hyperlink(new CreateUserAction[servP](servlet, successAction, req.session), "Create new user"); 
-        Node[lbl, lbl] createNewPara = new Paragraph[lbl, lbl](createNew);
-        Node[lbl, lbl] content = new NodeList[lbl, lbl](lbl, lbl, banner, createBody(lbl, lbl, new NodeList[lbl, lbl](lbl, lbl, welcomeText, form, createNewPara)));
+        Node[lbl, lbl] content = new NodeList[lbl, lbl](lbl, lbl, banner, createBody(lbl, lbl, new NodeList[lbl, lbl](lbl, lbl, welcomeText, form)));
         servlet.createPage(req, title, lbl, lbl, content);
     }
         
@@ -130,9 +127,9 @@ class SubmitLoginAction[principal servP] extends AbstractAction[servP] {
         lbl <= {req.session→} {
 
         Servlet[servP] servlet_ = getServlet();
-        AuthServlet[servP] servlet;
+        HTMLAuthServlet[servP] servlet;
         if (lbl <= new label {servlet_.store$→}) {
-            try { servlet = (AuthServlet[servP])servlet_; } catch (ClassCastException e) {throw new ServletException("Error processing request");}
+            try { servlet = (HTMLAuthServlet[servP])servlet_; } catch (ClassCastException e) {throw new ServletException("Error processing request");}
             if (req == null) throw new ServletException("Error processing request");
             final SessionState state_ = req.getSessionState(lbl);
 
@@ -159,7 +156,7 @@ class SubmitLoginAction[principal servP] extends AbstractAction[servP] {
 
     public void invokeImpl{*lbl}(label{*lbl} lbl,
                                           Request[servP]{*lbl} req,
-                                          AuthServlet[servP]{*lbl} servlet,
+                                          HTMLAuthServlet[servP]{*lbl} servlet,
                                           AuthSessState{*lbl} state) 
         throws (ServletException{*lbl;req.session←})
             where caller(req.session),

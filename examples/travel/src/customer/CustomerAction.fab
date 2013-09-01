@@ -9,17 +9,6 @@ import sif.servlet.Servlet;
 
 
 public abstract class CustomerAction extends Action[CustomerPrincipal] {
-  
-    protected CustomerAction(Servlet[CustomerPrincipal]{this} servlet) 
-        throws NullPointerException where {CustomerPrincipal←} <= {this} {
-        super(servlet);
-    }
-    
-    protected CustomerAction(String{this} n, Servlet[CustomerPrincipal]{this} servlet)
-        throws NullPointerException where {CustomerPrincipal←} <= {this} {
-      super(n);
-    }
-
     // 2 methods copied from UAction.fab
     /** 
      * Utility method to create a Table with class "banner" and containing

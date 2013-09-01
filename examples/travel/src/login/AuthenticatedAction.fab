@@ -1,10 +1,9 @@
-package auth.html;
+package login;
 
 import javax.servlet.ServletException;
 
 import sif.servlet.*;
 import sif.html.*;
-import auth.*;
 
 /**
  * Extend this class to create actions that are protected by login requirement
@@ -102,7 +101,7 @@ abstract public class AuthenticatedAction[principal servP] extends AbstractActio
     
     public void callWrapper{*lbl}(label{*lbl} lbl,
             Request[servP]{*lbl} req,
-            AuthServlet[servP]{*lbl} servlet,
+            HTMLAuthServlet[servP]{*lbl} servlet,
             AuthSessState{*lbl} state) 
                 throws (ServletException{*lbl;req.session←})
                 where caller(req.session),
@@ -119,7 +118,7 @@ abstract public class AuthenticatedAction[principal servP] extends AbstractActio
           
     public abstract void invokeImpl{*lbl}(label{*lbl} lbl,
                                       Request[servP]{*lbl} req,
-                                      AuthServlet[servP]{*lbl} servlet,
+                                      HTMLAuthServlet[servP]{*lbl} servlet,
                                       AuthSessState{*lbl} state,
                                       principal{*lbl} currentUser) 
       throws (ServletException{*lbl;req.session←})

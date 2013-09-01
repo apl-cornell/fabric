@@ -4,7 +4,7 @@ import fabric.util.Map;
 import travel.Config;
 import fabric.worker.Store;
 
-import auth.LoginClosure;
+import login.LoginClosure;
 
 public class AirlinePrincipal extends ExternalPrincipal {
      

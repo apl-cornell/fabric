@@ -1,4 +1,4 @@
-package auth.html;
+package login;
 
 import javax.servlet.ServletException;
 import sif.servlet.*;

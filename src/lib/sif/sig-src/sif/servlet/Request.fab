@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
 
+import sif.html.Input;
+
 /**
  * This is a Jif signature for the Request class
  *

@@ -9,10 +9,9 @@ import sif.servlet.SessionState;
 import sif.servlet.SessionPrincipal;
 
 import javax.servlet.ServletException;
-import auth.*;
-import auth.html.HTMLAuthServlet;
+import login.*;
 
-public final class AirlineMain extends HTMLAuthServlet[AirlinePrincipal] {
+public final class AirlineMain extends AbstractServlet[AirlinePrincipal] {
   final Store{this}@{⊤→} localStore;
   final Store{this}@{⊤→} brokerstore;
   final principal{this}@{⊤→} broker;
@@ -43,15 +42,9 @@ public final class AirlineMain extends HTMLAuthServlet[AirlinePrincipal] {
     super();
   }
     
-  public void initialize{AirlinePrincipal:;AirlinePrincipal!:}()
+  public void initialize{AirlinePrincipal→;AirlinePrincipal←}()
       throws ServletException {
-    atomic {
-      final Store localStore = worker$.getLocalStore();
-      if (localStore actsfor worker$
-          && worker$ actsfor AirlinePrincipal) {
-        addStartAction(new FrontPage@localStore(this));
-      } else throw new Error("impossible!");
-    }
+      addStartAction(new FrontPage(this));
   }
 
   public String getPrivateHostID() throws ServletException {
@@ -77,14 +70,14 @@ public final class AirlineMain extends HTMLAuthServlet[AirlinePrincipal] {
 
   // This method will only be called by the runtime
   // The id can have a bottom label, since it is a random number   
-  protected SessionPrincipal createSessionPrincipal{⊥→;⊤←}(String{⊥→;⊤←} id) {
+  protected SessionPrincipal createSessionPrincipal(String{⊥→;⊤←} id) {
+    SessionPrincipal toReturn = null;
     atomic {
       if (brokerstore != null) {
-        final SessionPrincipal toReturn = new SessionPrincipal@brokerstore(id, (Principal)AirlinePrincipal);
-        return toReturn;
+	toReturn = new SessionPrincipal@brokerstore(id);
       }
     }
-    return null;
+    return toReturn;
   }
 
   /**

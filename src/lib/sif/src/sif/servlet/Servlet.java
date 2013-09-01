@@ -44,10 +44,6 @@ abstract public class Servlet extends HttpServlet {
     this.servletP = servletP;
   }
 
-  public Principal servletPrincipal() {
-    return servletP;
-  }
-  
   @Override
   public final void init(ServletConfig sc) throws ServletException {
     super.init(sc);

@@ -47,13 +47,7 @@ public final class CustomerMain extends HTMLServlet[CustomerPrincipal] {
     
   public void initialize{CustomerPrincipal:;CustomerPrincipal!:}()
       throws ServletException {
-    atomic {
-      final Store localStore = worker$.getLocalStore();
-      if (localStore actsfor worker$
-          && worker$ actsfor CustomerPrincipal) {
-        addStartAction(new FrontPage@localStore(this));
-      } else throw new Error("impossible!");
-    }
+      addStartAction(new FrontPage(this));
   }
 
   public String getPrivateHostID() throws ServletException {
@@ -81,8 +75,8 @@ public final class CustomerMain extends HTMLServlet[CustomerPrincipal] {
   protected SessionPrincipal createSessionPrincipal(String{broker→;broker←} id) {
     SessionPrincipal toReturn = null;
     atomic {
-      if (brokerstore != null && brokerstore actsfor broker) {
-	toReturn = new SessionPrincipal@brokerstore(id, (Principal)CustomerPrincipal);
+      if (brokerstore != null && brokerstore equiv broker) {
+	toReturn = new SessionPrincipal@brokerstore(id);
       }
     }
     return toReturn;

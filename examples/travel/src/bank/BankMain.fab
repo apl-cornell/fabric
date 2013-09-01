@@ -9,10 +9,9 @@ import sif.servlet.SessionState;
 import sif.servlet.SessionPrincipal;
 
 import javax.servlet.ServletException;
-import auth.*;
-import auth.html.*;
+import login.*;
 
-public final class BankMain extends HTMLAuthServlet[BankPrincipal] {
+public final class BankMain extends AbstractServlet[BankPrincipal] {
   final Store{this}@{⊤→} localStore;
   final Store{this}@{⊤→} brokerstore;
   final principal{this}@{⊤→} broker;
@@ -46,13 +45,7 @@ public final class BankMain extends HTMLAuthServlet[BankPrincipal] {
     
   public void initialize{BankPrincipal:;BankPrincipal!:}()
       throws ServletException {
-    atomic {
-      final Store localStore = worker$.getLocalStore();
-      if (localStore actsfor worker$
-          && worker$ actsfor BankPrincipal) {
-        addStartAction(new FrontPage@localStore(this));
-      } else throw new Error("impossible!");
-    }
+      addStartAction(new FrontPage(this));
   }
 
   public String getPrivateHostID() throws ServletException {
@@ -80,14 +73,10 @@ public final class BankMain extends HTMLAuthServlet[BankPrincipal] {
   // This method will only be called by the runtime
   // The id can have a bottom label, since it is a random number 
   // that was just created  
-
-  // This method will only be called by the runtime
-  // The id can have a bottom label, since it is a random number   
-  protected SessionPrincipal createSessionPrincipal{⊥→;⊤←}(String{⊥→;⊤←} id) {
+  protected SessionPrincipal createSessionPrincipal(String{⊥→;⊤←} id) {
     atomic {
       if (brokerstore != null) {
-        final SessionPrincipal toReturn = new SessionPrincipal@brokerstore(id, (Principal)BankPrincipal);
-        return toReturn;
+	return new SessionPrincipal@brokerstore(id);
       }
     }
     return null;
