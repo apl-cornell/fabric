@@ -1,0 +1,45 @@
+package javafx.scene.control;
+
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.BooleanPropertyBase;
+import javafx.event.ActionEvent;
+import javafx.scene.Node;
+
+public class Button[label Term] extends ButtonBase[Term] {
+
+    /**
+     * Creates a button with an empty string for its label.
+     */
+    public native Button{Term}();
+
+    /**
+     * Creates a button with the specified text as its label.
+     *
+     * @param text A text string for its label.
+     */
+    public native Button{Term}(String{Term} text);
+
+    /**
+     * Creates a button with the specified text and icon for its label.
+     *
+     * @param text A text string for its label.
+     * @param graphic the icon for its label.
+     */
+    public native Button{Term}(String{Term} text, Node[Term]{Term} graphic);
+
+    /**
+     * A default Button is the button that receives
+     * a keyboard VK_ENTER press, if no other node in the scene consumes it.
+     */
+    public native final void setDefaultButton{Term}(boolean{Term} value);
+    public native final boolean{Term} isDefaultButton();
+
+    /**
+     * A Cancel Button is the button that receives
+     * a keyboard VK_ESC press, if no other node in the scene consumes it.
+     */
+    public native final void setCancelButton{Term}(boolean{Term} value);
+    public native final boolean{Term} isCancelButton();
+
+    public native void fire{Term}(); 
+}

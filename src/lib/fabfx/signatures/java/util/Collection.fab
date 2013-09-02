@@ -1,0 +1,40 @@
+package java.util;
+	
+/**
+ * A collection of Fabric objects.
+ *
+ * The parameter L is the label for the amount of information obtained by 
+ * knowing what objects are contained in this collection.
+ * 
+ * Note that since checking equality on objects may result in a fetch, stores 
+ * of objects contained in a collection must be trusted with information up 
+ * to L.
+ */
+public interface Collection[label L] {
+    int{L} size();
+    boolean{L} isEmpty();
+    Iterator[L]{L} iterator();
+    Object{L} native[] {L} toArray();
+    boolean{L;o} contains(Object o) throws (ClassCastException{L;o}, NullPointerException{L;o});
+     
+    boolean{L} add{L}(Object{L} o) throws (UnsupportedOperationException{L}, 
+        ClassCastException{L}, NullPointerException{L}, IllegalArgumentException{L}, 
+        IllegalStateException{L});
+    
+    boolean{L} remove{L}(Object{L} o) throws (UnsupportedOperationException{L}, 
+        ClassCastException{L}, NullPointerException{L});
+
+    boolean{L;c} containsAll(Collection[L] c) throws (ClassCastException{L;c}, NullPointerException{L;c});    
+   
+    boolean{L} addAll{L}(Collection[L]{L} c) throws (UnsupportedOperationException{L}, 
+        ClassCastException{L}, NullPointerException{L}, IllegalArgumentException{L}, 
+        IllegalStateException{L});
+
+    boolean{L} removeAll{L}(Collection[L]{L} c) throws (UnsupportedOperationException{L}, 
+        ClassCastException{L}, NullPointerException{L});
+    
+    boolean{L} retainAll{L}(Collection[L]{L} c) throws (UnsupportedOperationException{L}, 
+        ClassCastException{L}, NullPointerException{L});
+
+    void clear{L}() throws (UnsupportedOperationException{L});
+}

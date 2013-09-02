@@ -1,0 +1,4 @@
+package javafx.application;
+
+public abstract class Application[principal P, label Init, label Term] {
+}

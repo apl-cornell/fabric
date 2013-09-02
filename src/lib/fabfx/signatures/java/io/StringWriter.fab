@@ -1,0 +1,23 @@
+/*
+ * This is a Jif signature for the Java class. It provides Jif label
+ * annotations for the Java class, allowing it to be usable by Jif
+ * code. There is no automated check that the signature provided here
+ * agrees with the actual Java code.
+ * */
+package java.io;
+
+public class StringWriter[label L] extends Writer[L] {
+    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+
+    public StringWriter() {    }
+
+    public StringWriter(int{L} initialSize) {    }
+
+    public native String{L} toString();
+    public native StringBuffer[L]{this} getBuffer();
+    
+    native public void write{L}(char{L}[]{L} cbuf, int{L} off, int{L} len):{L} throws IOException, NullPointerException;
+    native public void flush{L}():{L} throws IOException;
+    native public void close{L}():{L} throws IOException;
+    
+}

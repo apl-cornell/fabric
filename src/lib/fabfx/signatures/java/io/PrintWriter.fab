@@ -1,0 +1,51 @@
+/*
+ * This is a Jif signature for the Java class. It provides Jif label
+ * annotations for the Java class, allowing it to be usable by Jif
+ * code. There is no automated check that the signature provided here
+ * agrees with the actual Java code.
+ * */
+package java.io;
+
+public class PrintWriter[label L] extends Writer[L] {
+    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+
+    public PrintWriter(Writer[L]{L} out) { }
+
+    public PrintWriter(Writer[L]{L} out, boolean{L} autoFlush) { }
+    public PrintWriter(OutputStream[L]{L} out) { }
+    public PrintWriter(OutputStream[L]{L} out, boolean{L} autoFlush) { }
+//    public PrintWriter(String fileName) throws FileNotFoundException {
+//    public PrintWriter(String fileName, String csn) throws FileNotFoundException, UnsupportedEncodingException {
+//    public PrintWriter(File file) throws FileNotFoundException {
+//    public PrintWriter(File file, String csn) throws FileNotFoundException, UnsupportedEncodingException {
+    native public void write{L}(char{L}[]{L} cbuf, int{L} off, int{L} len):{L} throws IOException, NullPointerException;
+    native public void flush{L}():{L} throws IOException;
+    native public void close{L}():{L} throws IOException;
+    
+    public native boolean{L} checkError();
+    public native void print{L}(boolean{L} b);
+    public native void print{L}(char{L} c);
+    public native void print{L}(int{L} i);
+    public native void print{L}(long{L} l);
+    public native void print{L}(float{L} f);
+    public native void print{L}(double{L} d);
+    public native void print{L}(char{L}[]{L} s);
+    public native void print{L}(String{L} s);
+//        public native void print{L}(Object{L} obj);
+    public native void println{L}();
+    public native void println{L}(boolean{L} x);
+    public native void println{L}(char{L} x);
+    public native void println{L}(int{L} x);
+    public native void println{L}(long{L} x);
+    public native void println{L}(float{L} x);
+    public native void println{L}(double{L} x);
+    public native void println{L}(char{L}[]{L} x);
+    public native void println{L}(String{L} x);
+//        public native void println{L}(Object{L} x);
+
+
+//    public PrintWriter printf(String format, Object ... args) {
+//    public PrintWriter printf(Locale l, String format, Object ... args) {
+//    public PrintWriter format(String format, Object ... args) {
+//    public PrintWriter format(Locale l, String format, Object ... args) {
+}

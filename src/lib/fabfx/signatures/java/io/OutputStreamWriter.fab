@@ -1,0 +1,20 @@
+/*
+ * This is a Jif signature for the Java class. It provides Jif label
+ * annotations for the Java class, allowing it to be usable by Jif
+ * code. There is no automated check that the signature provided here
+ * agrees with the actual Java code.
+ * */
+package java.io;
+
+public class OutputStreamWriter[label L] extends Writer[L] {
+    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+
+//    public OutputStreamWriter(OutputStream out, String charsetName) throws UnsupportedEncodingException { }
+    public OutputStreamWriter(OutputStream[L]{L} out) { }
+//    public OutputStreamWriter(OutputStream out, Charset cs) { }
+//    public OutputStreamWriter(OutputStream out, CharsetEncoder enc) { }
+//    public String getEncoding();
+    native public void write{L}(char{L}[]{L} cbuf, int{L} off, int{L} len):{L} throws IOException, NullPointerException;
+    native public void flush{L}():{L} throws IOException;
+    native public void close{L}():{L} throws IOException;
+}
