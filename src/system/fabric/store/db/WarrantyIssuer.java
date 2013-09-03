@@ -1,9 +1,10 @@
 package fabric.store.db;
 
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 
 import fabric.common.Logging;
+import fabric.common.PIDController;
+import fabric.common.Warranty;
 import fabric.common.util.Cache;
 
 /**
@@ -11,128 +12,172 @@ import fabric.common.util.Cache;
  * this information to decide how long issued warranties should last.
  */
 public class WarrantyIssuer<K> {
-  private class HistoryEntry {
+
+  // BEGIN TUNING PARAMETERS /////////////////////////////////////////////////
+
+  /**
+   * Parameter for low-pass filtering the error derivatives in the PID
+   * controller. Higher values result in more filtering.
+   */
+  private static final double PID_DERIV_ALPHA = 0.0;
+
+  /**
+   * Proportional gain for the PID controller.
+   */
+  private static final double PID_KP = 1.0;
+
+  /**
+   * Integral gain for the PID controller.
+   */
+  private static final double PID_KI = 1.0;
+
+  /**
+   * Derivative gain for the PID controller.
+   */
+  private static final double PID_KD = 1.0;
+
+  /**
+   * The base commit latency, in milliseconds.
+   */
+  private static final long BASE_COMMIT_LATENCY = 100;
+
+  /**
+   * The minimum length of time (in milliseconds) for which each issued warranty
+   * should be valid.
+   */
+  private static final int MIN_WARRANTY_LENGTH = 250;
+
+  /**
+   * The maximum length of time (in milliseconds) for which each issued warranty
+   * should be valid.
+   */
+  private static final int MAX_WARRANTY_LENGTH = 1000;
+
+  /**
+   * The decay rate for the exponential average when calculating the rate of
+   * read prepares. Lower values result in slower adaptation to changes in
+   * the read-prepare rate.
+   */
+  private static final double READ_PREPARE_ALPHA = 0.25;
+
+  /**
+   * The length of the time window over which to calculate the rate of
+   * read prepares, in milliseconds.
+   */
+  private static final long READ_PREPARE_WINDOW_LENGTH = 1000;
+
+  // END TUNING PARAMETERS ///////////////////////////////////////////////////
+
+  private class Entry {
     final K key;
 
     /**
-     * A bit vector indicating write activity. The bit in the 2^n position
-     * indicates that a write-prepare was attempted between n and n+1 minutes
-     * ago.
+     * The time at which this object was created, in milliseconds since the
+     * epoch.
      */
-    short writeHistory;
+    final long createTime;
 
     /**
-     * A timestamp on the write history. If this is N minutes old, then the
-     * write history needs to be left-shifted by N bits to account for the
-     * passage of time.
+     * The total accumulated time spent in write delays, in milliseconds.
      */
-    long writeHistoryTime;
+    long accumWriteDelayTime;
 
     /**
-     * An object for obtaining exclusive access to writeHistory.
+     * Tracks the latest warranty-expiry time that delayed a write prepare.
      */
-    final Object writeHistoryMutex;
+    long lastWriteDelayExpiryTime;
 
     /**
-     * The expiry time for the warranty last suggested.
+     * A mutex for manipulating the write-delay metrics.
      */
-    long lastSuggestionExpiry;
+    final Object writeDelayMutex;
 
     /**
-     * The length of the warranty last suggested.
+     * The start of the current time window over which the rate of read prepares
+     * is being calculated, in milliseconds since the epoch.
      */
-    int lastSuggestionLength;
+    long windowStartTime;
 
     /**
-     * The length of the next warranty to be suggested.
+     * The number of read prepares observed during the current time window.
      */
-    int nextSuggestionLength;
+    int numReadPrepares;
 
     /**
-     * Flag for signalling that the next suggestion length is already double the
-     * current suggestion length.
+     * The accumulated read-prepare rate, as measured before the start of the
+     * current window.
      */
-    final AtomicBoolean nextSuggestionDoubled;
+    double readPrepareRate;
 
     /**
-     * Flag for signalling that a read-prepare notification is being processed.
+     * A mutex for manipulating the read-prepare metrics.
      */
-    final AtomicBoolean notifyReadPrepareFlag;
+    final Object readPrepareMutex;
 
-    public HistoryEntry(K key) {
+    /**
+     * The PID controller for suggesting warranty lengths.
+     */
+    final PIDController pidController;
+
+    public Entry(K key) {
+      final long now = System.currentTimeMillis();
+
       this.key = key;
-      this.writeHistoryTime = System.currentTimeMillis();
-      this.writeHistory = 0;
-      this.lastSuggestionExpiry = 0;
-      this.lastSuggestionLength = minWarrantyLength;
-      this.nextSuggestionLength = minWarrantyLength;
-      this.nextSuggestionDoubled = new AtomicBoolean(false);
-      this.notifyReadPrepareFlag = new AtomicBoolean(false);
-      this.writeHistoryMutex = new Object();
-    }
+      this.createTime = now;
+      this.accumWriteDelayTime = 0;
+      this.lastWriteDelayExpiryTime = 0;
+      this.writeDelayMutex = new Object();
 
-    /**
-     * Updates the writeHistory as necessary to account for the passage of time.
-     */
-    private void updateWriteHistory() {
-      synchronized (writeHistoryMutex) {
-        long now = System.currentTimeMillis();
-        int shiftAmount = (int) (now - writeHistoryTime) / 60000;
-        if (shiftAmount == 0) return;
+      this.windowStartTime = now;
+      this.numReadPrepares = 0;
+      this.readPrepareRate = 0.0;
+      this.readPrepareMutex = new Object();
 
-        writeHistory <<= shiftAmount;
-        writeHistoryTime = now;
-      }
+      this.pidController = new PIDController(PID_KP, PID_KI, PID_KD);
+      this.pidController.setAlpha(PID_DERIV_ALPHA);
+      this.pidController.setOutputRange(0, MAX_WARRANTY_LENGTH);
+      this.pidController.setSetpoint(BASE_COMMIT_LATENCY);
     }
 
     /**
      * Notifies of a read-prepare event.
      */
     void notifyReadPrepare(long commitTime) {
-      // Do nothing if the next suggestion has already been doubled or if some
-      // other thread is already processing a read-prepare notification.
-      if (nextSuggestionDoubled.get() || notifyReadPrepareFlag.getAndSet(true))
-        return;
+      synchronized (readPrepareMutex) {
+        fixReadPrepareWindow();
+        numReadPrepares++;
+      }
+    }
 
-      // Make sure the commit time is not in the past. (For read-only
-      // transactions, the commit time might be 0.)
-      long now = System.currentTimeMillis();
-      if (commitTime < now) commitTime = now;
+    /**
+     * Updates the time window over which the read-prepare rate is calculated.
+     * 
+     * @return the current time, in milliseconds since the epoch.
+     */
+    long fixReadPrepareWindow() {
+      synchronized (readPrepareMutex) {
+        final long now = System.currentTimeMillis();
 
-      synchronized (this) {
-        Logging.log(Logging.HOTOS_LOGGER, Level.FINER,
-            "read prepare @{0} nextSuggestionLength={1} maxWarrantyLength={2}",
-            key, nextSuggestionLength, maxWarrantyLength);
-        // Ignore this if we're already issuing the maximum-length warranty.
-        if (nextSuggestionLength >= maxWarrantyLength) return;
+        final long timeElapsed = now - windowStartTime;
+        if (timeElapsed < READ_PREPARE_WINDOW_LENGTH) return now;
 
-        // Ignore this if the last-suggested warranty covers the commitTime.
-        if (lastSuggestionExpiry > commitTime) {
-          Logging.log(Logging.HOTOS_LOGGER, Level.FINER,
-              "last suggestion not yet expired for @{0}", key);
-          return;
+        // Need to start a new window.
+        int numWindowsElapsed =
+            (int) (timeElapsed / READ_PREPARE_WINDOW_LENGTH);
+        readPrepareRate =
+            readPrepareRate * (1 - READ_PREPARE_ALPHA)
+                + (numReadPrepares / READ_PREPARE_WINDOW_LENGTH)
+                * READ_PREPARE_ALPHA;
+
+        // Account for possibility of more than one window having elapsed.
+        for (int i = 1; i < numWindowsElapsed; i++) {
+          readPrepareRate *= 1 - READ_PREPARE_ALPHA;
         }
 
-        // Double the suggestion length.
-        nextSuggestionLength = 2 * lastSuggestionLength;
-        nextSuggestionDoubled.set(true);
-        Logging.log(Logging.HOTOS_LOGGER, Level.FINER,
-            "doubling next suggested length for @{0}", key);
-
-//        // If this prepare could have been avoided if the last-suggested warranty
-//        // were twice as long, then double the suggestion length.
-//        if (lastSuggestionExpiry + lastSuggestionLength > now) {
-//          nextSuggestionLength = 2 * lastSuggestionLength;
-//          nextSuggestionDoubled.set(true);
-//          Logging.log(Logging.HOTOS_LOGGER, Level.FINER,
-//              "doubling next suggested length for @{0}", onum);
-//        } else {
-//          Logging.log(Logging.HOTOS_LOGGER, Level.FINER,
-//              "keeping next suggested length for @{0}", onum);
-//        }
+        windowStartTime += numWindowsElapsed * READ_PREPARE_WINDOW_LENGTH;
+        numReadPrepares = 0;
+        return now;
       }
-
-      notifyReadPrepareFlag.set(false);
     }
 
     /**
@@ -144,11 +189,48 @@ public class WarrantyIssuer<K> {
     /**
      * Notifies of a prepare event.
      */
-    void notifyWritePrepare() {
-      synchronized (writeHistoryMutex) {
-        updateWriteHistory();
-        writeHistory |= 0x0001;
-        Logging.log(Logging.HOTOS_LOGGER, Level.FINER, "writing @{0}", key);
+    void notifyWritePrepare(Warranty warranty) {
+      Logging.log(Logging.HOTOS_LOGGER, Level.FINER, "writing @{0}", key);
+
+      synchronized (writeDelayMutex) {
+        long warrantyExpiry = warranty.expiry();
+        if (warrantyExpiry <= lastWriteDelayExpiryTime) return;
+
+        long now = System.currentTimeMillis();
+
+        // Calculate accumulated write-delay time.
+        if (lastWriteDelayExpiryTime <= now) {
+          accumWriteDelayTime += warrantyExpiry - now;
+        } else {
+          // Previous warranty hasn't expired yet. Assume previous prepare was
+          // aborted and just add the extra delay incurred by the newer
+          // warranty.
+          accumWriteDelayTime += warrantyExpiry - lastWriteDelayExpiryTime;
+        }
+
+        lastWriteDelayExpiryTime = warrantyExpiry;
+      }
+    }
+
+    double getReadPrepareRate() {
+      synchronized (readPrepareMutex) {
+        long now = fixReadPrepareWindow();
+
+        // Return a weighted average of the accumulated read-prepare rate and
+        // the current read-prepare rate. The weight is READ_PREPARE_ALPHA,
+        // adjusted by the age of the current window.
+        long windowAge = now - windowStartTime;
+        double alpha =
+            READ_PREPARE_ALPHA * windowAge / READ_PREPARE_WINDOW_LENGTH;
+        return readPrepareRate * (1 - alpha) + (numReadPrepares / windowAge)
+            * alpha;
+      }
+    }
+
+    double getWriteDelayFactor() {
+      synchronized (writeDelayMutex) {
+        long now = System.currentTimeMillis();
+        return accumWriteDelayTime / (now - createTime);
       }
     }
 
@@ -157,80 +239,30 @@ public class WarrantyIssuer<K> {
      * 
      * @return the time at which the warranty should expire.
      */
-    synchronized Long suggestWarranty(long expiry) {
-      int writeHistory;
-      synchronized (writeHistoryMutex) {
-        updateWriteHistory();
-        writeHistory = this.writeHistory;
-      }
+    Long suggestWarranty(long expiry) {
+      double rho = getReadPrepareRate();
+      double omega = getWriteDelayFactor();
 
-      // Use the writeHistory's Hamming weight to determine the maximum length
-      // of the suggested warranty.
-      int weight = Integer.bitCount(writeHistory & 0xffff);
-      Logging.log(Logging.HOTOS_LOGGER, Level.FINER,
-          "@{0} writeHistory={1} weight={2}", key, writeHistory, weight);
-      int maxSuggestionLength = maxWarrantyLength >>> weight;
-      Logging.log(Logging.HOTOS_LOGGER, Level.FINER,
-          "@{0} maxSuggestionLength={1}", key, maxSuggestionLength);
-      if (maxSuggestionLength < minWarrantyLength) {
-        // Writes occurring too frequently.
-        lastSuggestionExpiry = 0;
-        lastSuggestionLength = minWarrantyLength;
-        nextSuggestionLength = minWarrantyLength;
-        nextSuggestionDoubled.set(false);
-        return null;
-      }
+      double input = rho < Double.MIN_VALUE ? Double.MAX_VALUE : omega / rho;
+      long warrantyLength = (long) pidController.setInput(input);
 
-      lastSuggestionLength =
-          (nextSuggestionLength < maxSuggestionLength) ? nextSuggestionLength
-              : maxSuggestionLength;
-      Logging.log(Logging.HOTOS_LOGGER, Level.FINER, "@{0} suggesting {1}",
-          key, lastSuggestionLength);
-      lastSuggestionExpiry = expiry + lastSuggestionLength;
-      nextSuggestionDoubled.set(false);
-      return lastSuggestionExpiry;
+      if (warrantyLength < MIN_WARRANTY_LENGTH) return null;
+      return expiry + warrantyLength;
     }
   }
 
   /**
-   * The minimum length of time (in milliseconds) for which each issued warranty
-   * should be valid.
-   */
-  private final int minWarrantyLength;
-
-  /**
-   * The maximum length of time (in milliseconds) for which each issued warranty
-   * should be valid.
-   */
-  private final int maxWarrantyLength;
-
-  /**
    * Maps onums to <code>HistoryEntry</code>s.
    */
-  private final Cache<K, HistoryEntry> history;
+  private final Cache<K, Entry> history;
 
-  /**
-   * @param minWarrantyLength
-   *         the minimum length of time (in milliseconds) for which each issued
-   *         warranty should be valid.
-   *         
-   * @param maxWarrantyLength
-   *         the maximum length of time (in milliseconds) for which each issued
-   *         warranty should be valid.
-   */
-  protected WarrantyIssuer(int minWarrantyLength, int maxWarrantyLength) {
-    this.minWarrantyLength = minWarrantyLength;
-    this.maxWarrantyLength = maxWarrantyLength;
-    this.history = new Cache<K, HistoryEntry>();
-
-    // Sanity check.
-    if (minWarrantyLength > maxWarrantyLength)
-      throw new InternalError("minWarrantyLength > maxWarrantyLength");
+  protected WarrantyIssuer() {
+    this.history = new Cache<K, Entry>();
   }
 
-  private HistoryEntry getEntry(K key) {
-    HistoryEntry entry = new HistoryEntry(key);
-    HistoryEntry existingEntry = history.putIfAbsent(key, entry);
+  private Entry getEntry(K key) {
+    Entry entry = new Entry(key);
+    Entry existingEntry = history.putIfAbsent(key, entry);
     return existingEntry == null ? entry : existingEntry;
   }
 
@@ -254,9 +286,12 @@ public class WarrantyIssuer<K> {
    * Notifies that a write has been prepared, preventing further writes from
    * being prepared until the corresponding transaction either commits or
    * aborts.
+   * 
+   * @param warranty the warranty that existed on the given key when the write
+   *          was prepared.
    */
-  public void notifyWritePrepare(K key) {
-    getEntry(key).notifyWritePrepare();
+  public void notifyWritePrepare(K key, Warranty warranty) {
+    getEntry(key).notifyWritePrepare(warranty);
   }
 
   /**

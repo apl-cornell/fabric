@@ -63,8 +63,6 @@ public abstract class ObjectDB {
   private static final boolean ENABLE_OBJECT_UPDATES = false;
   private static final boolean ENABLE_WARRANTY_REFRESHES = true;
 
-  private static final int MAX_WARRANTY_LENGTH = 1000;
-
   private final WarrantyIssuer<Long> warrantyIssuer;
 
   /**
@@ -260,7 +258,7 @@ public abstract class ObjectDB {
     this.longestWarranty = new VersionWarranty[] { new VersionWarranty(0) };
     this.versionWarrantyTable =
         new WarrantyTable<Long, VersionWarranty>(new VersionWarranty(0));
-    this.warrantyIssuer = new WarrantyIssuer<Long>(250, MAX_WARRANTY_LENGTH);
+    this.warrantyIssuer = new WarrantyIssuer<Long>();
   }
 
   /**
@@ -420,7 +418,7 @@ public abstract class ObjectDB {
       obj.setVersion(storeVersion + 1);
 
       // Notify the warranty issuer.
-      warrantyIssuer.notifyWritePrepare(onum);
+      warrantyIssuer.notifyWritePrepare(onum, warranty);
 
       return warranty;
     }
