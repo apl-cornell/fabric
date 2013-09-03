@@ -5,7 +5,9 @@ package fabric.common;
  */
 public class PIDController {
   // This class is based on code originally published in 2008 by the FIRST
-  // Robotics Competition under a BSD licence.
+  // Robotics Competition under a three-clause BSD licence, as well as code
+  // released under GPLv3 from the Arduino PID Library by Brett Beauregard
+  // <br3ttb@gmail.com>.
 
   /**
    * Proportional gain.
@@ -38,12 +40,6 @@ public class PIDController {
   private double sp;
 
   /**
-   * The current error between the setpoint and the process variable (input).
-   * <code>curErr = sp - pv</code>.
-   */
-  private double curError;
-
-  /**
    * The current error derivative.
    */
   private double errorDerivative;
@@ -68,9 +64,11 @@ public class PIDController {
   private double previousError;
 
   /**
-   * The sum of the errors for use in the integral calculation.
+   * The current integral term. This is already weighted by kI and is restricted
+   * to be at least <code>minimumOutput</code> and at most
+   * <code>maximumOutput</code>.
    */
-  private double errorIntegral;
+  private double integralTerm;
 
   /**
    * The controller's manipulated variable (output).
@@ -92,9 +90,8 @@ public class PIDController {
     this.maximumOutput = 1.0;
     this.minimumOutput = -1.0;
     this.previousError = 0.0;
-    this.errorIntegral = 0.0;
+    this.integralTerm = 0.0;
     this.sp = 0.0;
-    this.curError = 0.0;
     this.errorDerivative = 0.0;
     this.alpha = 0.0;
     this.mv = 0.0;
@@ -195,16 +192,19 @@ public class PIDController {
     long dt = sampleTime - lastPVSampleTime;
 
     if (dt > 0) {
-      curError = sp - pv;
-      errorIntegral += curError * dt;
-      errorDerivative =
-          (1 - alpha) * errorDerivative + alpha * (curError - previousError)
-              / dt;
+      double error = sp - pv;
+      integralTerm += error * dt * kI;
+      if (integralTerm > maximumOutput)
+        integralTerm = maximumOutput;
+      else if (integralTerm < minimumOutput) integralTerm = minimumOutput;
 
-      mv = kP * curError + kI * errorIntegral + kD * errorDerivative;
+      errorDerivative =
+          (1 - alpha) * errorDerivative + alpha * (error - previousError) / dt;
+
+      mv = kP * error + integralTerm + kD * errorDerivative;
 
       // Set up for the next cycle.
-      previousError = curError;
+      previousError = error;
       lastPVSampleTime = sampleTime;
     }
 
