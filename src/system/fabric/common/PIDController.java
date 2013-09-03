@@ -45,7 +45,8 @@ public class PIDController {
   private double errorDerivative;
 
   /**
-   * Tuning parameter for low-pass-filtering the derivative calculation.
+   * Tuning parameter for low-pass-filtering the derivative calculation. Higher
+   * values result in more filtering.
    */
   private double alpha;
 
@@ -150,7 +151,8 @@ public class PIDController {
   }
 
   /**
-   * Sets the alpha parameter for low-pass-filtering the error derivatives.
+   * Sets the alpha parameter for low-pass filtering the error derivatives.
+   * Higher values result in more filtering.
    */
   public void setAlpha(double alpha) {
     this.alpha = alpha;
@@ -199,7 +201,7 @@ public class PIDController {
       else if (integralTerm < minimumOutput) integralTerm = minimumOutput;
 
       errorDerivative =
-          (1 - alpha) * errorDerivative + alpha * (error - previousError) / dt;
+          alpha * errorDerivative + (1 - alpha) * (error - previousError) / dt;
 
       mv = kP * error + integralTerm + kD * errorDerivative;
 
