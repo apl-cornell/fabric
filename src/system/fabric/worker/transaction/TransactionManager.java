@@ -323,7 +323,6 @@ public final class TransactionManager {
   public void commitTransactionAt(long commitTime, boolean ignoreRetrySignal) {
     WORKER_TRANSACTION_LOGGER.log(Level.FINEST, "{0} attempting to commit",
         current);
-    HOTOS_LOGGER.log(Level.FINEST, "preparing {0}", current);
 
     // Assume only one thread will be executing this.
 
@@ -353,7 +352,6 @@ public final class TransactionManager {
     WORKER_TRANSACTION_LOGGER.log(Level.FINEST, "{0} committing", current);
 
     Log parent = current.parent;
-    Log HOTOS_current = current;
     if (current.tid.parent != null) {
       try {
         Timing.SUBTX.begin();
@@ -395,6 +393,8 @@ public final class TransactionManager {
     }
 
     // Commit top-level transaction.
+    Log HOTOS_current = current;
+    HOTOS_LOGGER.log(Level.INFO, "preparing tid {0}", current);
 
     // Go through the transaction log and figure out the stores we need to
     // contact.
@@ -408,7 +408,7 @@ public final class TransactionManager {
     // Send commit messages to our cohorts.
     sendCommitMessagesAndCleanUp(stores, workers);
 
-    HOTOS_LOGGER.log(Level.FINEST, "committed {0}", HOTOS_current);
+    HOTOS_LOGGER.log(Level.INFO, "committed tid {0}", HOTOS_current);
   }
 
   /**
