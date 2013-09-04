@@ -170,16 +170,14 @@ public class TransactionManager {
       SEMANTIC_WARRANTY_LOGGER.finest(
           String.format("Checking calls for %x that would delay longer than %d ms",
             tid, currentProposedTime - currentTime));
-      Pair<SemanticWarranty, Collection<SerializedObject>> callPrepareResp =
+      Pair<SemanticWarranty, Set<SemanticWarrantyRequest>> callPrepareResp =
         semanticWarranties.prepareWrites(req.writes, req.creates, tid,
             currentProposedTime, database.getName());
 
       SemanticWarranty longestCallWarranty = callPrepareResp.first;
-      Collection<SerializedObject> additionalCreates = callPrepareResp.second;
-      // Prepare additional creates.
-      for (SerializedObject o : additionalCreates) {
-        database.registerUpdate(tid, worker, o, versionConflicts, CREATE);
-      }
+      Set<SemanticWarrantyRequest> additionalStuff = callPrepareResp.second;
+      // TODO: Prepare additional creates and writes.  Send back additional
+      // reads(/calls?) and their warranties.
 
       STORE_TRANSACTION_LOGGER.fine("Prepared writes for transaction " + tid);
 
@@ -191,9 +189,11 @@ public class TransactionManager {
       return longestWarranty == null ? 0 : longestWarranty.expiry();
     } catch (TransactionPrepareFailedException e) {
       database.abortPrepareWrites(tid, worker);
+      semanticWarranties.abort(tid);
       throw e;
     } catch (RuntimeException e) {
       e.printStackTrace();
+      semanticWarranties.abort(tid);
       database.abortPrepareWrites(tid, worker);
       throw e;
     }
@@ -420,7 +420,6 @@ public class TransactionManager {
           "Proposing SemanticWarranty for CallInstance " + r.call);
 
       // Get a proposal for a warranty
-      //semanticWarranties.notifyReadPrepare(r.call);
       SemanticWarranty proposed = semanticWarranties.requestWarranty(tid, r);
       SEMANTIC_WARRANTY_LOGGER.finer(r.call.toString()
           + " was proposed a warranty to expire in " + (proposed.expiry() -
