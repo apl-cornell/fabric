@@ -426,7 +426,8 @@ class Store extends MessageToStoreHandler {
    * Handles the <code>SemanticWarrantyRequest</code> for a transaction.
    */
   private Map<CallInstance, SemanticWarranty> prepareTransactionRequests(Principal p,
-      long tid, Set<SemanticWarrantyRequest> requests) {
+      long tid, Set<SemanticWarrantyRequest> requests) throws
+    TransactionPrepareFailedException {
       /* throws TransactionPrepareFailedException { */
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
         "Handling PrepareRequests Message from {0}, tid={1}", nameOf(p), tid);
