@@ -394,7 +394,7 @@ public final class TransactionManager {
 
     // Commit top-level transaction.
     Log HOTOS_current = current;
-    HOTOS_LOGGER.log(Level.INFO, "preparing tid {0}", current);
+    final long prepareStart = System.currentTimeMillis();
 
     // Go through the transaction log and figure out the stores we need to
     // contact.
@@ -408,7 +408,9 @@ public final class TransactionManager {
     // Send commit messages to our cohorts.
     sendCommitMessagesAndCleanUp(stores, workers);
 
-    HOTOS_LOGGER.log(Level.INFO, "committed tid {0}", HOTOS_current);
+    final long commitLatency = System.currentTimeMillis() - prepareStart;
+    HOTOS_LOGGER.log(Level.INFO, "committed tid {0} (latency {1} ms)",
+        new Object[] { HOTOS_current, commitLatency });
   }
 
   /**
@@ -432,7 +434,7 @@ public final class TransactionManager {
    *           if the prepare fails.
    */
   private void sendPrepareMessages(final long commitTime, Set<Store> stores,
-      List<RemoteWorker> workers) {
+      List<RemoteWorker> workers) throws TransactionRestartingException {
     final Map<RemoteNode<?>, TransactionPrepareFailedException> failures =
         Collections
             .synchronizedMap(new HashMap<RemoteNode<?>, TransactionPrepareFailedException>());
