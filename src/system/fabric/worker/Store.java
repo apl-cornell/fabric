@@ -41,8 +41,8 @@ public interface Store extends Serializable {
    * @return a minimum commit time.
    */
   long prepareTransactionWrites(long tid, Collection<_Impl> toCreate,
-      Collection<_Impl> writes) throws UnreachableNodeException,
-      TransactionPrepareFailedException;
+      Collection<_Impl> writes, Set<SemanticWarrantyRequest> calls) throws
+    UnreachableNodeException, TransactionPrepareFailedException;
 
   /**
    * Notifies the store that the transaction is entering the read-prepare phase.
@@ -113,8 +113,7 @@ public interface Store extends Serializable {
    * @throws UnreachableNodeException
    * @throws TransactionCommitFailedException
    */
-  Map<CallInstance, SemanticWarranty> commitTransaction(long transactionID,
-      long commitTime, Set<SemanticWarrantyRequest> requests, boolean readOnly)
+  void commitTransaction(long transactionID, long commitTime, boolean readOnly)
     throws UnreachableNodeException, TransactionCommitFailedException;
 
   /**

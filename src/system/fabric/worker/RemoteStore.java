@@ -10,8 +10,6 @@ import java.security.PublicKey;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
@@ -35,7 +33,6 @@ import fabric.common.exceptions.RuntimeFetchException;
 import fabric.common.util.ConcurrentLongKeyHashMap;
 import fabric.common.util.ConcurrentLongKeyMap;
 import fabric.common.util.LongKeyMap;
-import fabric.common.util.LongIterator;
 import fabric.common.util.Pair;
 import fabric.dissemination.ObjectGlob;
 import fabric.dissemination.WarrantyGlob;
@@ -140,11 +137,12 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
 
   @Override
   public long prepareTransactionWrites(long tid,
-      Collection<Object._Impl> toCreate, Collection<Object._Impl> writes)
-      throws TransactionPrepareFailedException, UnreachableNodeException {
+      Collection<Object._Impl> toCreate, Collection<Object._Impl> writes,
+      Set<SemanticWarrantyRequest> calls) throws
+  TransactionPrepareFailedException, UnreachableNodeException {
     PrepareTransactionWritesMessage.Response respone =
         send(Worker.getWorker().authToStore,
-            new PrepareTransactionWritesMessage(tid, toCreate, writes));
+            new PrepareTransactionWritesMessage(tid, toCreate, writes, calls));
 
     return respone.minCommitTime;
   }
@@ -423,12 +421,11 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
   }
 
   @Override
-  public java.util.Map<CallInstance, SemanticWarranty> commitTransaction(
-      long transactionID, long commitTime, Set<SemanticWarrantyRequest>
-      requests, boolean readOnly) throws UnreachableNodeException,
+  public void commitTransaction(long transactionID, long commitTime,
+      boolean readOnly) throws UnreachableNodeException,
          TransactionCommitFailedException {
-    return send(Worker.getWorker().authToStore, new CommitTransactionMessage(
-          transactionID, commitTime, requests, readOnly)).getResults();
+    send(Worker.getWorker().authToStore,
+        new CommitTransactionMessage(transactionID, commitTime, readOnly));
   }
 
   @Override

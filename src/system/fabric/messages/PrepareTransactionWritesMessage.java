@@ -6,11 +6,18 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
+import fabric.common.SemanticWarranty;
 import fabric.common.SerializedObject;
 import fabric.common.net.RemoteIdentity;
 import fabric.lang.Object._Impl;
 import fabric.worker.TransactionPrepareFailedException;
+import fabric.worker.memoize.CallInstance;
+import fabric.worker.memoize.SemanticWarrantyRequest;
 import fabric.worker.remote.RemoteWorker;
 
 /**
@@ -55,23 +62,29 @@ public class PrepareTransactionWritesMessage
   public final Collection<SerializedObject> serializedWrites;
 
   /**
+   * The semantic warranties that were created and are being requested.
+   */
+  public final Set<SemanticWarrantyRequest> requests;
+
+  /**
    * Used to prepare transactions at remote workers.
    */
   public PrepareTransactionWritesMessage(long tid) {
-    this(tid, null, null);
+    this(tid, null, null, null);
   }
 
   /**
    * Only used by the worker.
    */
   public PrepareTransactionWritesMessage(long tid, Collection<_Impl> toCreate,
-      Collection<_Impl> writes) {
+      Collection<_Impl> writes, Set<SemanticWarrantyRequest> requests) {
     super(MessageType.PREPARE_TRANSACTION_WRITES,
         TransactionPrepareFailedException.class);
 
     this.tid = tid;
     this.creates = toCreate;
     this.writes = writes;
+    this.requests = requests;
     this.serializedCreates = null;
     this.serializedWrites = null;
   }
@@ -81,13 +94,17 @@ public class PrepareTransactionWritesMessage
   // ////////////////////////////////////////////////////////////////////////////
 
   public static class Response implements Message.Response {
+    public Map<CallInstance, SemanticWarranty> requestResults;
+
     public final long minCommitTime;
 
     /**
      * Creates a Response indicating a successful prepare.
      */
-    public Response(long minCommitTime) {
+    public Response(long minCommitTime,
+        Map<CallInstance, SemanticWarranty> requestResults) {
       this.minCommitTime = minCommitTime;
+      this.requestResults = requestResults;
     }
   }
 
@@ -127,6 +144,15 @@ public class PrepareTransactionWritesMessage
       for (_Impl impl : writes)
         SerializedObject.write(impl, out);
     }
+    
+    // Serialize requests.
+    if (requests == null) {
+      out.writeInt(0);
+    } else {
+      out.writeInt(requests.size());
+      for (SemanticWarrantyRequest r : requests)
+        r.write(out);
+    }
   }
 
   /* readMessage */
@@ -158,16 +184,41 @@ public class PrepareTransactionWritesMessage
       for (int i = 0; i < size; i++)
         serializedWrites.add(new SerializedObject(in));
     }
+
+    // Read requests
+    int requestsSize = in.readInt();
+    this.requests = new HashSet<SemanticWarrantyRequest>(requestsSize);
+    for (int i = 0; i < requestsSize; i++)
+      this.requests.add(new SemanticWarrantyRequest(in));
   }
 
   @Override
   protected void writeResponse(DataOutput out, Response r) throws IOException {
+    // Write commit time
     out.writeLong(r.minCommitTime);
+
+    // Write request responses
+    out.writeInt(r.requestResults.size());
+    for (Map.Entry<CallInstance, SemanticWarranty> e : r.requestResults.entrySet()) {
+      e.getKey().write(out);
+      out.writeLong(e.getValue().expiry());
+    }
   }
 
   @Override
   protected Response readResponse(DataInput in) throws IOException {
+    // Read the commit time
     long minCommitTime = in.readLong();
-    return new Response(minCommitTime);
+
+    // Read the request responses
+    int numResponses = in.readInt();
+    Map<CallInstance, SemanticWarranty> responses =
+      new HashMap<CallInstance, SemanticWarranty>(numResponses);
+    for (int i = 0; i < numResponses; i++) {
+      CallInstance call = new CallInstance(in);
+      responses.put(call, new SemanticWarranty(in.readLong()));
+    }
+
+    return new Response(minCommitTime, responses);
   }
 }

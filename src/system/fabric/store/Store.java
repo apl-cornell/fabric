@@ -216,12 +216,9 @@ class Store extends MessageToStoreHandler {
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
         "Handling Commit Message from {0} for tid={1}, commitTime={2}",
         nameOf(client.principal), message.transactionID, message.commitTime);
-    Map<CallInstance, SemanticWarranty> replies = prepareTransactionRequests(
-        client.principal, message.transactionID, message.requests,
-        message.commitTime);
     if (!message.readOnly)
       tm.commitTransaction(client, message.transactionID, message.commitTime);
-    return new CommitTransactionMessage.Response(replies);
+    return new CommitTransactionMessage.Response();
   }
 
   /**
@@ -238,7 +235,9 @@ class Store extends MessageToStoreHandler {
     long minCommitTime =
         prepareTransactionWrites(client.principal, msg.tid,
             msg.serializedCreates, msg.serializedWrites);
-    return new PrepareTransactionWritesMessage.Response(minCommitTime);
+    Map<CallInstance, SemanticWarranty> replies =
+      prepareTransactionRequests(client.principal, msg.tid, msg.requests);
+    return new PrepareTransactionWritesMessage.Response(minCommitTime, replies);
   }
 
   /**
@@ -427,11 +426,11 @@ class Store extends MessageToStoreHandler {
    * Handles the <code>SemanticWarrantyRequest</code> for a transaction.
    */
   private Map<CallInstance, SemanticWarranty> prepareTransactionRequests(Principal p,
-      long tid, Set<SemanticWarrantyRequest> requests, long commitTime) {
+      long tid, Set<SemanticWarrantyRequest> requests) {
       /* throws TransactionPrepareFailedException { */
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
         "Handling PrepareRequests Message from {0}, tid={1}", nameOf(p), tid);
-    return tm.prepareRequests(p, tid, requests, commitTime);
+    return tm.prepareRequests(p, tid, requests);
   }
 
   private String nameOf(Principal p) {

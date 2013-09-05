@@ -521,6 +521,8 @@ public final class TransactionManager {
               try {
                 Collection<_Impl> creates = current.getCreatesForStore(store);
                 Collection<_Impl> writes = current.getWritesForStore(store);
+                // TODO: Check for replies?
+                Set<SemanticWarrantyRequest> calls = current.getRequestsForStore(store);
 
                 if (WORKER_TRANSACTION_LOGGER.isLoggable(Level.FINE)) {
                   Logging.log(WORKER_TRANSACTION_LOGGER, Level.FINE,
@@ -535,7 +537,7 @@ public final class TransactionManager {
 
                 long response =
                     store.prepareTransactionWrites(current.tid.topTid, creates,
-                        writes);
+                        writes, calls);
 
                 synchronized (commitTime) {
                   if (response > commitTime[0]) commitTime[0] = response;
@@ -934,14 +936,10 @@ public final class TransactionManager {
             @Override
             public void runImpl() {
               try {
-                Map<CallInstance, SemanticWarranty> replies =
-                  store.commitTransaction(current.tid.topTid, commitTime,
-                      current.getRequestsForStore(store),
-                      !current.commitState.storesContacted.contains(store));
-                Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINER, "Transaction " +
-                    "{0} committed and generated {1} new semantic warranties.",
-                    current.tid.topTid, replies.size());
-                current.requestReplies.putAll(replies);
+                store.commitTransaction(current.tid.topTid, commitTime,
+                    !current.commitState.storesContacted.contains(store));
+                Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINER, "Transaction"
+                    + " {0} committed.", current.tid.topTid);
               } catch (TransactionCommitFailedException e) {
                 failed.add((RemoteStore) store);
               } catch (UnreachableNodeException e) {

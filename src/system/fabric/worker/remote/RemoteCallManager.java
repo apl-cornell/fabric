@@ -2,11 +2,9 @@ package fabric.worker.remote;
 
 import java.lang.reflect.InvocationTargetException;
 import java.text.MessageFormat;
-import java.util.HashMap;
 import java.util.List;
 
 import fabric.common.AuthorizationUtil;
-import fabric.common.SemanticWarranty;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.ProtocolError;
 import fabric.common.net.RemoteIdentity;
@@ -26,7 +24,6 @@ import fabric.messages.PrepareTransactionReadsMessage;
 import fabric.messages.PrepareTransactionWritesMessage;
 import fabric.messages.RemoteCallMessage;
 import fabric.messages.TakeOwnershipMessage;
-import fabric.worker.memoize.CallInstance;
 import fabric.messages.WarrantyRefreshMessage;
 import fabric.worker.RemoteStore;
 import fabric.worker.TransactionAtomicityViolationException;
@@ -183,7 +180,10 @@ public class RemoteCallManager extends MessageToWorkerHandler {
       tm.associateLog(null);
     }
 
-    return new PrepareTransactionWritesMessage.Response(minCommitTime);
+    /* TODO: Figure out if I should actually be passing back the results of
+     * requests to the remote caller... I don't think so?
+     */
+    return new PrepareTransactionWritesMessage.Response(minCommitTime, null);
   }
 
   @Override
@@ -211,9 +211,6 @@ public class RemoteCallManager extends MessageToWorkerHandler {
       tm.associateLog(null);
     }
 
-    /* TODO: Figure out if I should actually be passing back the results of
-     * requests to the remote caller... I don't think so?
-     */
     return new PrepareTransactionReadsMessage.Response();
   }
 
@@ -233,8 +230,7 @@ public class RemoteCallManager extends MessageToWorkerHandler {
     if (log == null) {
       // If no log exists, assume that another worker in the transaction has
       // already committed the requested transaction.
-      return new CommitTransactionMessage.Response(new HashMap<CallInstance,
-          SemanticWarranty>());
+      return new CommitTransactionMessage.Response();
     }
 
     TransactionManager tm = TransactionManager.getInstance();
@@ -246,8 +242,7 @@ public class RemoteCallManager extends MessageToWorkerHandler {
       throw new TransactionCommitFailedException("Atomicity violation");
     }
 
-    return new CommitTransactionMessage.Response(new HashMap<CallInstance,
-        SemanticWarranty>());
+    return new CommitTransactionMessage.Response();
   }
 
   @Override

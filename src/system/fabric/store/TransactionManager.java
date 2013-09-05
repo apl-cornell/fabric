@@ -382,7 +382,7 @@ public class TransactionManager {
    *          The worker requesting the prepare
    */
   public Map<CallInstance, SemanticWarranty> prepareRequests(Principal worker,
-      long tid, Set<SemanticWarrantyRequest> requests, long commitTime) {
+      long tid, Set<SemanticWarrantyRequest> requests) {
     /* Create the associated warranties and add these calls to the warranties
      * table.
      */ 
@@ -437,7 +437,6 @@ public class TransactionManager {
       }
     }
 
-    semanticWarranties.commit(tid, commitTime);
     return warranties;
   }
 

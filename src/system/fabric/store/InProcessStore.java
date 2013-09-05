@@ -72,16 +72,12 @@ public class InProcessStore extends RemoteStore {
   }
 
   @Override
-  public Map<CallInstance, SemanticWarranty> commitTransaction(long transactionID,
-      long commitTime, Set<SemanticWarrantyRequest> requests, boolean readOnly)
+  public void commitTransaction(long transactionID, long commitTime,
+      boolean readOnly)
   throws TransactionCommitFailedException {
-    Map<CallInstance, SemanticWarranty> replies =
-      tm.prepareRequests(Worker.getWorker().getPrincipal(), transactionID,
-          requests, commitTime);
     if (!readOnly)
       tm.commitTransaction(localWorkerIdentity(), transactionID,
           commitTime);
-    return replies;
   }
 
   @Override
@@ -95,7 +91,8 @@ public class InProcessStore extends RemoteStore {
 
   @Override
   public long prepareTransactionWrites(long tid, Collection<_Impl> toCreate,
-      Collection<_Impl> writes) throws TransactionPrepareFailedException {
+      Collection<_Impl> writes, Set<SemanticWarrantyRequest> calls) throws
+  TransactionPrepareFailedException {
     Collection<SerializedObject> serializedCreates =
         new ArrayList<SerializedObject>(toCreate.size());
     Collection<SerializedObject> serializedWrites =
@@ -119,7 +116,14 @@ public class InProcessStore extends RemoteStore {
     // Swizzle remote pointers.
     sm.createSurrogates(req);
 
-    return tm.prepareWrites(getPrincipal(), req);
+    // Prepare object writes
+    long commitTime = tm.prepareWrites(getPrincipal(), req);
+
+    // Handle call requests
+    Map<CallInstance, SemanticWarranty> callReplies =
+      tm.prepareRequests(Worker.getWorker().getPrincipal(), tid, calls);
+
+    return commitTime;
   }
 
   @Override
