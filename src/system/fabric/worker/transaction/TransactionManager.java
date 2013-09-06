@@ -46,6 +46,7 @@ import fabric.net.RemoteNode;
 import fabric.net.UnreachableNodeException;
 import fabric.store.InProcessStore;
 import fabric.worker.AbortException;
+import fabric.worker.LocalStore;
 import fabric.worker.RemoteStore;
 import fabric.worker.Store;
 import fabric.worker.TransactionAbortingException;
@@ -308,7 +309,6 @@ public final class TransactionManager {
   private void commitTransaction(boolean ignoreRetrySignal) {
     WORKER_TRANSACTION_LOGGER.log(Level.FINEST, "{0} attempting to commit",
         current);
-    HOTOS_LOGGER.log(Level.FINEST, "preparing {0}", current);
 
     // Assume only one thread will be executing this.
 
@@ -338,7 +338,6 @@ public final class TransactionManager {
     WORKER_TRANSACTION_LOGGER.log(Level.FINEST, "{0} committing", current);
 
     Log parent = current.parent;
-    Log HOTOS_current = current;
     if (current.tid.parent != null) {
       try {
         Timing.SUBTX.begin();
@@ -379,6 +378,10 @@ public final class TransactionManager {
     }
 
     // Commit top-level transaction.
+    Log HOTOS_current = current;
+    List<RemoteWorker> workers = current.workersCalled;
+    Set<Store> stores = current.storesRead(Long.MAX_VALUE).keySet();
+    final long prepareStart = System.currentTimeMillis();
 
     // Send prepare-write messages to our cohorts. If the prepare fails, this
     // will abort our portion of the transaction and throw a
@@ -393,8 +396,16 @@ public final class TransactionManager {
     // Send commit messages to our cohorts.
     sendCommitMessagesAndCleanUp(commitTime);
 
-    HOTOS_LOGGER.log(Level.FINEST, "committed {0}", HOTOS_current);
+    final long commitLatency = commitTime - prepareStart;
+    if (LOCAL_STORE == null) LOCAL_STORE = Worker.getWorker().getLocalStore();
+    if (workers.size() > 0 || stores.size() > 1 || stores.size() == 1
+        && !stores.contains(LOCAL_STORE)) {
+      HOTOS_LOGGER.log(Level.INFO, "committed tid {0} (latency {1} ms)",
+          new Object[] { HOTOS_current, commitLatency });
+    }
   }
+
+  private static LocalStore LOCAL_STORE;
 
   /**
    * Sends prepare-write messages to the cohorts. If any cohort fails to
