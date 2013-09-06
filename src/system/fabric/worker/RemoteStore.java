@@ -53,6 +53,7 @@ import fabric.messages.ReadMessage;
 import fabric.messages.StalenessCheckMessage;
 import fabric.net.RemoteNode;
 import fabric.net.UnreachableNodeException;
+import fabric.store.PrepareWritesResult;
 import fabric.util.Map;
 import fabric.worker.memoize.CallCache;
 import fabric.worker.memoize.CallInstance;
@@ -136,7 +137,7 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
   }
 
   @Override
-  public long prepareTransactionWrites(long tid,
+  public PrepareWritesResult prepareTransactionWrites(long tid,
       Collection<Object._Impl> toCreate, Collection<Object._Impl> writes,
       Set<SemanticWarrantyRequest> calls) throws
   TransactionPrepareFailedException, UnreachableNodeException {
@@ -144,7 +145,7 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
         send(Worker.getWorker().authToStore,
             new PrepareTransactionWritesMessage(tid, toCreate, writes, calls));
 
-    return respone.minCommitTime;
+    return respone.result;
   }
 
   @Override

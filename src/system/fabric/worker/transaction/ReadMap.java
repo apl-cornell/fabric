@@ -79,7 +79,7 @@ public final class ReadMap {
       return obj.store;
     }
 
-    synchronized int getVersionNumber() {
+    public synchronized int getVersionNumber() {
       return versionNumber;
     }
 

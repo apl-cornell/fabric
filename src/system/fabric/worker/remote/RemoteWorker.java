@@ -108,7 +108,7 @@ public class RemoteWorker extends RemoteNode<RemoteWorker> {
       throws UnreachableNodeException, TransactionPrepareFailedException {
     PrepareTransactionWritesMessage.Response response =
         send(new PrepareTransactionWritesMessage(tid));
-    return response.minCommitTime;
+    return response.result.commitTime;
   }
 
   public void prepareTransactionReads(long tid, long commitTime)

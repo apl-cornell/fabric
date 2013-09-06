@@ -90,8 +90,9 @@ public class InProcessStore extends RemoteStore {
   }
 
   @Override
-  public long prepareTransactionWrites(long tid, Collection<_Impl> toCreate,
-      Collection<_Impl> writes, Set<SemanticWarrantyRequest> calls) throws
+  public PrepareWritesResult prepareTransactionWrites(long tid,
+      Collection<_Impl> toCreate, Collection<_Impl> writes,
+      Set<SemanticWarrantyRequest> calls) throws
   TransactionPrepareFailedException {
     Collection<SerializedObject> serializedCreates =
         new ArrayList<SerializedObject>(toCreate.size());
@@ -117,13 +118,15 @@ public class InProcessStore extends RemoteStore {
     sm.createSurrogates(req);
 
     // Prepare object writes
-    long commitTime = tm.prepareWrites(getPrincipal(), req);
+    PrepareWritesResult result = tm.prepareWrites(getPrincipal(), req);
 
     // Handle call requests
     Map<CallInstance, SemanticWarranty> callReplies =
       tm.prepareRequests(Worker.getWorker().getPrincipal(), tid, calls);
 
-    return commitTime;
+    result.callResults.putAll(callReplies);
+
+    return result;
   }
 
   @Override

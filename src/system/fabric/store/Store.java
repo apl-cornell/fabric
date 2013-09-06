@@ -232,12 +232,14 @@ class Store extends MessageToStoreHandler {
         "Handling Prepare-Writes Message, worker={0}, tid={1}",
         nameOf(client.principal), msg.tid);
 
-    long minCommitTime =
-        prepareTransactionWrites(client.principal, msg.tid,
-            msg.serializedCreates, msg.serializedWrites);
+    PrepareWritesResult writeResult = prepareTransactionWrites(client.principal,
+        msg.tid, msg.serializedCreates, msg.serializedWrites);
+
     Map<CallInstance, SemanticWarranty> replies =
       prepareTransactionRequests(client.principal, msg.tid, msg.requests);
-    return new PrepareTransactionWritesMessage.Response(minCommitTime, replies);
+
+    writeResult.callResults.putAll(replies);
+    return new PrepareTransactionWritesMessage.Response(writeResult);
   }
 
   /**
@@ -395,10 +397,10 @@ class Store extends MessageToStoreHandler {
   /**
    * @return the transaction's minimum commit time.
    */
-  private long prepareTransactionWrites(Principal p, long tid,
+  private PrepareWritesResult prepareTransactionWrites(Principal p, long tid,
       Collection<SerializedObject> serializedCreates,
-      Collection<SerializedObject> serializedWrites)
-      throws TransactionPrepareFailedException {
+      Collection<SerializedObject> serializedWrites) throws
+    TransactionPrepareFailedException {
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
         "Handling PrepareWrites Message from {0}, tid={1}", nameOf(p), tid);
 

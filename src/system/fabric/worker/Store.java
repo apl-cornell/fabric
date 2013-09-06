@@ -15,6 +15,7 @@ import fabric.common.util.Pair;
 import fabric.lang.Object._Impl;
 import fabric.lang.security.NodePrincipal;
 import fabric.net.UnreachableNodeException;
+import fabric.store.PrepareWritesResult;
 import fabric.worker.memoize.CallInstance;
 import fabric.worker.memoize.WarrantiedCallResult;
 import fabric.worker.memoize.SemanticWarrantyRequest;
@@ -40,8 +41,9 @@ public interface Store extends Serializable {
    * 
    * @return a minimum commit time.
    */
-  long prepareTransactionWrites(long tid, Collection<_Impl> toCreate,
-      Collection<_Impl> writes, Set<SemanticWarrantyRequest> calls) throws
+  PrepareWritesResult prepareTransactionWrites(long tid,
+      Collection<_Impl> toCreate, Collection<_Impl> writes,
+      Set<SemanticWarrantyRequest> calls) throws
     UnreachableNodeException, TransactionPrepareFailedException;
 
   /**

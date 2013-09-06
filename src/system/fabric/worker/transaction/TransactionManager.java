@@ -49,6 +49,7 @@ import fabric.lang.security.SecurityCache;
 import fabric.net.RemoteNode;
 import fabric.net.UnreachableNodeException;
 import fabric.store.InProcessStore;
+import fabric.store.PrepareWritesResult;
 import fabric.worker.AbortException;
 import fabric.worker.RemoteStore;
 import fabric.worker.Store;
@@ -535,12 +536,15 @@ public final class TransactionManager {
                 if (!store.isLocalStore() && creates.size() + writes.size() > 0)
                   readOnly.set(false);
 
-                long response =
-                    store.prepareTransactionWrites(current.tid.topTid, creates,
-                        writes, calls);
+                PrepareWritesResult response =
+                  store.prepareTransactionWrites(current.tid.topTid, creates,
+                      writes, calls);
+
+                // TODO: Use the other parts of the response.
 
                 synchronized (commitTime) {
-                  if (response > commitTime[0]) commitTime[0] = response;
+                  if (response.commitTime > commitTime[0])
+                    commitTime[0] = response.commitTime;
                 }
               } catch (TransactionPrepareFailedException e) {
                 failures.put((RemoteNode<?>) store, e);

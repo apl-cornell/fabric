@@ -35,6 +35,7 @@ import fabric.common.util.LongSet;
 import fabric.common.util.Pair;
 import fabric.dissemination.ObjectGlob;
 import fabric.dissemination.WarrantyGlob;
+import fabric.lang.Object._Impl;
 import fabric.lang.security.Label;
 import fabric.lang.security.Principal;
 import fabric.store.db.GroupContainer;
@@ -46,6 +47,7 @@ import fabric.worker.AbortException;
 import fabric.worker.memoize.CallInstance;
 import fabric.worker.memoize.SemanticWarrantyRequest;
 import fabric.worker.memoize.WarrantiedCallResult;
+import fabric.worker.transaction.ReadMap;
 import fabric.worker.Store;
 import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
@@ -112,13 +114,15 @@ public class TransactionManager {
    * Executes the PREPARE_WRITES phase of the three-phase commit.
    * 
    * @return a minimum commit time, specifying a time after which the warranties
-   *     on all modified objects will expire.
+   * on all modified objects will expire, and the additional reads and
+   * warrantied calls the transaction needs to use to support any call updates
+   * this transaction will trigger.
    * @throws TransactionPrepareFailedException
    *           If the transaction would cause a conflict or if the worker is
    *           insufficiently privileged to execute the transaction.
    */
-  public long prepareWrites(Principal worker, PrepareWritesRequest req)
-      throws TransactionPrepareFailedException {
+  public PrepareWritesResult prepareWrites(Principal worker,
+      PrepareWritesRequest req) throws TransactionPrepareFailedException {
     final long tid = req.tid;
     VersionWarranty longestWarranty = null;
 
@@ -168,26 +172,66 @@ public class TransactionManager {
       SEMANTIC_WARRANTY_LOGGER.finest(
           String.format("Checking calls for %x that would delay longer than %d ms",
             tid, currentProposedTime - currentTime));
-      Pair<SemanticWarranty, Set<SemanticWarrantyRequest>> callPrepareResp =
-        semanticWarranties.prepareWrites(req.writes, req.creates, tid,
-            currentProposedTime, database.getName());
+      Pair<SemanticWarranty, Map<CallInstance, SemanticWarrantyRequest>>
+        callPrepareResp = semanticWarranties.prepareWrites(req.writes,
+            req.creates, tid, currentProposedTime, database.getName());
 
       SemanticWarranty longestCallWarranty = callPrepareResp.first;
-      Set<SemanticWarrantyRequest> additionalStuff = callPrepareResp.second;
-      // TODO: Prepare additional creates and writes.  Send back additional
-      // reads(/calls?) and their warranties.
+      Map<CallInstance, SemanticWarrantyRequest> updates =
+        callPrepareResp.second;
 
-      STORE_TRANSACTION_LOGGER.fine("Prepared writes for transaction " + tid);
+      // TODO: Send back additional reads(/calls?) and their warranties.
+      LongKeyMap<Pair<Integer, VersionWarranty>> addedReads =
+        new LongKeyHashMap<Pair<Integer, VersionWarranty>>();
+      Map<CallInstance, WarrantiedCallResult> addedCalls =
+        new HashMap<CallInstance, WarrantiedCallResult>();
+      for (SemanticWarrantyRequest update : updates.values()) {
+        // Register additional creates
+        for (LongKeyMap<_Impl> submap : update.creates) {
+          for (_Impl create : submap.values()) {
+            database.registerUpdate(tid, worker, new SerializedObject(create),
+                versionConflicts, CREATE);
+          }
+        }
+
+        // Collect reads and their warranties for the worker
+        for (LongKeyMap<ReadMap.Entry> submap : update.reads) {
+          for (ReadMap.Entry read : submap.values()) {
+            addedReads.put(read.getRef().onum,
+                new Pair<Integer, VersionWarranty>(read.getVersionNumber(),
+                                                    read.getWarranty()));
+          }
+        }
+
+        // Collect calls and their warranties for the worker
+        addedCalls.putAll(update.calls);
+      }
+      
+      // Don't worry about calls we're updating.
+      for (CallInstance updatingCall : updates.keySet()) {
+        addedCalls.remove(updatingCall);
+      }
 
       database.finishPrepareWrites(tid, worker);
 
+      STORE_TRANSACTION_LOGGER.fine("Prepared writes for transaction " + tid);
+
+      // Ugh this is ugly.
       if (longestCallWarranty != null
           && (longestWarranty == null
             || longestCallWarranty.expiry() > longestWarranty.expiry())) {
-        return longestCallWarranty.expiry();
+        PrepareWritesResult writeResult =
+          new PrepareWritesResult(longestCallWarranty.expiry(), addedReads,
+              addedCalls, new HashMap<CallInstance, SemanticWarranty>());
+        return writeResult;
       }
 
-      return longestWarranty == null ? 0 : longestWarranty.expiry();
+      long longest = longestWarranty == null ? 0 : longestWarranty.expiry();
+
+      PrepareWritesResult writeResult = new PrepareWritesResult(longest,
+          addedReads, addedCalls,
+          new HashMap<CallInstance, SemanticWarranty>());
+      return writeResult;
     } catch (TransactionPrepareFailedException e) {
       database.abortPrepareWrites(tid, worker);
       semanticWarranties.abort(tid);

@@ -13,11 +13,17 @@ import java.util.Set;
 
 import fabric.common.SemanticWarranty;
 import fabric.common.SerializedObject;
+import fabric.common.VersionWarranty;
 import fabric.common.net.RemoteIdentity;
+import fabric.common.util.LongKeyHashMap;
+import fabric.common.util.LongKeyMap;
+import fabric.common.util.Pair;
 import fabric.lang.Object._Impl;
+import fabric.store.PrepareWritesResult;
 import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.memoize.CallInstance;
 import fabric.worker.memoize.SemanticWarrantyRequest;
+import fabric.worker.memoize.WarrantiedCallResult;
 import fabric.worker.remote.RemoteWorker;
 
 /**
@@ -94,17 +100,13 @@ public class PrepareTransactionWritesMessage
   // ////////////////////////////////////////////////////////////////////////////
 
   public static class Response implements Message.Response {
-    public Map<CallInstance, SemanticWarranty> requestResults;
-
-    public final long minCommitTime;
+    public final PrepareWritesResult result;
 
     /**
      * Creates a Response indicating a successful prepare.
      */
-    public Response(long minCommitTime,
-        Map<CallInstance, SemanticWarranty> requestResults) {
-      this.minCommitTime = minCommitTime;
-      this.requestResults = requestResults;
+    public Response(PrepareWritesResult result) {
+      this.result = result;
     }
   }
 
@@ -194,31 +196,11 @@ public class PrepareTransactionWritesMessage
 
   @Override
   protected void writeResponse(DataOutput out, Response r) throws IOException {
-    // Write commit time
-    out.writeLong(r.minCommitTime);
-
-    // Write request responses
-    out.writeInt(r.requestResults.size());
-    for (Map.Entry<CallInstance, SemanticWarranty> e : r.requestResults.entrySet()) {
-      e.getKey().write(out);
-      out.writeLong(e.getValue().expiry());
-    }
+    r.result.write(out);
   }
 
   @Override
   protected Response readResponse(DataInput in) throws IOException {
-    // Read the commit time
-    long minCommitTime = in.readLong();
-
-    // Read the request responses
-    int numResponses = in.readInt();
-    Map<CallInstance, SemanticWarranty> responses =
-      new HashMap<CallInstance, SemanticWarranty>(numResponses);
-    for (int i = 0; i < numResponses; i++) {
-      CallInstance call = new CallInstance(in);
-      responses.put(call, new SemanticWarranty(in.readLong()));
-    }
-
-    return new Response(minCommitTime, responses);
+    return new Response(new PrepareWritesResult(in));
   }
 }

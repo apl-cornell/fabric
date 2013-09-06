@@ -28,6 +28,7 @@ import fabric.lang.security.LabelUtil;
 import fabric.lang.security.NodePrincipal;
 import fabric.lang.security.Principal;
 import fabric.lang.security.PrincipalUtil.TopPrincipal;
+import fabric.store.PrepareWritesResult;
 import fabric.util.HashMap;
 import fabric.util.Map;
 import fabric.worker.memoize.CallCache;
@@ -64,12 +65,12 @@ public final class LocalStore implements Store, Serializable {
   private Set<Pair<Principal, Principal>> localDelegates;
 
   @Override
-  public long prepareTransactionWrites(long tid,
+  public PrepareWritesResult prepareTransactionWrites(long tid,
       Collection<Object._Impl> toCreate, Collection<Object._Impl> writes,
       Set<SemanticWarrantyRequest> calls) {
     // TODO: Currently we don't handle local memoized calls.
     WORKER_LOCAL_STORE_LOGGER.fine("Local transaction preparing writes");
-    return 0;
+    return new PrepareWritesResult(0, null, null, null);
   }
 
   @Override

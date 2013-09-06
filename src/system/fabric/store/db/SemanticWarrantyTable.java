@@ -1234,7 +1234,7 @@ public class SemanticWarrantyTable {
    * onums that is longer than the given commitTime.  Also performs any
    * bookkeeping associated with write events (like removing stale call values).
    */
-  public Pair<SemanticWarranty, Set<SemanticWarrantyRequest>>
+  public Pair<SemanticWarranty, Map<CallInstance, SemanticWarrantyRequest>>
     prepareWrites(Collection<SerializedObject> writes,
         Collection<SerializedObject> creates, long transactionID,
         long commitTime, final String storeName) throws
@@ -1291,12 +1291,11 @@ public class SemanticWarrantyTable {
       }
     }
 
-    Set<SemanticWarrantyRequest> updateSet =
-      new HashSet<SemanticWarrantyRequest>(updates.values());
-    updateSet.addAll(changes.values());
+    updates.putAll(changes);
 
-    return new Pair<SemanticWarranty, Set<SemanticWarrantyRequest>>(new
-        SemanticWarranty(longest), updateSet);
+    return
+      new Pair<SemanticWarranty, Map<CallInstance, SemanticWarrantyRequest>>(
+          new SemanticWarranty(longest), updates);
   }
 
   /**

@@ -25,6 +25,7 @@ import fabric.messages.PrepareTransactionWritesMessage;
 import fabric.messages.RemoteCallMessage;
 import fabric.messages.TakeOwnershipMessage;
 import fabric.messages.WarrantyRefreshMessage;
+import fabric.store.PrepareWritesResult;
 import fabric.worker.RemoteStore;
 import fabric.worker.TransactionAtomicityViolationException;
 import fabric.worker.TransactionCommitFailedException;
@@ -183,7 +184,8 @@ public class RemoteCallManager extends MessageToWorkerHandler {
     /* TODO: Figure out if I should actually be passing back the results of
      * requests to the remote caller... I don't think so?
      */
-    return new PrepareTransactionWritesMessage.Response(minCommitTime, null);
+    return new PrepareTransactionWritesMessage.Response(new
+        PrepareWritesResult(minCommitTime, null, null, null));
   }
 
   @Override
