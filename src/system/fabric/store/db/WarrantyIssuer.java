@@ -220,6 +220,7 @@ public class WarrantyIssuer<K> {
         // the current read-prepare rate. The weight is READ_PREPARE_ALPHA,
         // adjusted by the age of the current window.
         long windowAge = now - windowStartTime;
+        if (windowAge == 0) windowAge = 1;
         double alpha =
             READ_PREPARE_ALPHA * windowAge / READ_PREPARE_WINDOW_LENGTH;
         return readPrepareRate * (1 - alpha) + (numReadPrepares / windowAge)
@@ -230,6 +231,8 @@ public class WarrantyIssuer<K> {
     double getWriteDelayFactor() {
       synchronized (writeDelayMutex) {
         long now = System.currentTimeMillis();
+        if (now == createTime) return 0;
+
         return accumWriteDelayTime / (now - createTime);
       }
     }
