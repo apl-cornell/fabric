@@ -203,7 +203,9 @@ public class PIDController {
       errorDerivative =
           alpha * errorDerivative + (1 - alpha) * (error - previousError) / dt;
 
-      mv = kP * error + integralTerm + kD * errorDerivative;
+      mv =
+          kP * error + integralTerm + kD * errorDerivative
+              + (maximumOutput + minimumOutput) / 2.0;
 
       // Set up for the next cycle.
       previousError = error;
@@ -217,6 +219,10 @@ public class PIDController {
       mv = minimumOutput;
     }
 
+    return mv;
+  }
+
+  public double getOutput() {
     return mv;
   }
 }
