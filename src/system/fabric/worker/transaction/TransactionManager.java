@@ -42,6 +42,7 @@ import fabric.net.RemoteNode;
 import fabric.net.UnreachableNodeException;
 import fabric.store.InProcessStore;
 import fabric.worker.AbortException;
+import fabric.worker.LocalStore;
 import fabric.worker.RemoteStore;
 import fabric.worker.Store;
 import fabric.worker.TransactionAbortingException;
@@ -409,9 +410,15 @@ public final class TransactionManager {
     sendCommitMessagesAndCleanUp(stores, workers);
 
     final long commitLatency = System.currentTimeMillis() - prepareStart;
-    HOTOS_LOGGER.log(Level.INFO, "committed tid {0} (latency {1} ms)",
-        new Object[] { HOTOS_current, commitLatency });
+    if (LOCAL_STORE == null) LOCAL_STORE = Worker.getWorker().getLocalStore();
+    if (workers.size() > 0 || stores.size() != 1
+        || !stores.contains(LOCAL_STORE)) {
+      HOTOS_LOGGER.log(Level.INFO, "committed tid {0} (latency {1} ms)",
+          new Object[] { HOTOS_current, commitLatency });
+    }
   }
+
+  private static LocalStore LOCAL_STORE;
 
   /**
    * Sends prepare messages to the cohorts. Also sends abort messages if any
