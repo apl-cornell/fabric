@@ -55,8 +55,6 @@ import fabric.worker.remote.RemoteWorker;
  */
 public abstract class ObjectDB {
   private static final int INITIAL_OBJECT_VERSION_NUMBER = 1;
-  private static final boolean ENABLE_OBJECT_UPDATES = false;
-
   /**
    * The store's name.
    */
@@ -473,7 +471,7 @@ public abstract class ObjectDB {
     // Remove from the glob table the glob associated with the onum.
     LongSet groupOnums = objectGrouper.removeGroup(onum);
 
-    if (ENABLE_OBJECT_UPDATES) {
+    if (SubscriptionManager.ENABLE_OBJECT_UPDATES) {
       // Notify the subscription manager that the group has been updated.
       LongSet updatedOnums = new LongHashSet();
       updatedOnums.add(onum);

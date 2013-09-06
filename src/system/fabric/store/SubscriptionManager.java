@@ -210,6 +210,8 @@ public class SubscriptionManager extends FabricThread.Impl {
    */
   private final TransactionManager tm;
 
+  public static final boolean ENABLE_OBJECT_UPDATES = false;
+
   /**
    * @param tm
    *          The transaction manager corresponding to the store for which
@@ -262,6 +264,8 @@ public class SubscriptionManager extends FabricThread.Impl {
    * particular worker.
    */
   public void notifyUpdate(LongSet onums, RemoteWorker worker) {
+    if (!ENABLE_OBJECT_UPDATES) return;
+
     notificationQueue.offer(new ObjectUpdateEvent(onums, worker));
   }
 }
