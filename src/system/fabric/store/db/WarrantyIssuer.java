@@ -1,5 +1,7 @@
 package fabric.store.db;
 
+import static fabric.common.Logging.HOTOS_LOGGER;
+
 import java.util.logging.Level;
 
 import fabric.common.Logging;
@@ -24,22 +26,22 @@ public class WarrantyIssuer<K> {
   /**
    * Proportional gain for the PID controller.
    */
-  private static final double PID_KP = 1.0;
+  private static final double PID_KP = 5;
 
   /**
    * Integral gain for the PID controller.
    */
-  private static final double PID_KI = 1.0;
+  private static final double PID_KI = 0;
 
   /**
    * Derivative gain for the PID controller.
    */
-  private static final double PID_KD = 1.0;
+  private static final double PID_KD = 0;
 
   /**
    * The base commit latency, in milliseconds.
    */
-  private static final long BASE_COMMIT_LATENCY = 100;
+  private static final long BASE_COMMIT_LATENCY = 250;
 
   /**
    * The minimum length of time (in milliseconds) for which each issued warranty
@@ -166,7 +168,7 @@ public class WarrantyIssuer<K> {
             (int) (timeElapsed / READ_PREPARE_WINDOW_LENGTH);
         readPrepareRate =
             readPrepareRate * (1 - READ_PREPARE_ALPHA)
-                + (numReadPrepares / READ_PREPARE_WINDOW_LENGTH)
+                + ((double) numReadPrepares / READ_PREPARE_WINDOW_LENGTH)
                 * READ_PREPARE_ALPHA;
 
         // Account for possibility of more than one window having elapsed.
@@ -190,7 +192,7 @@ public class WarrantyIssuer<K> {
      * Notifies of a prepare event.
      */
     void notifyWritePrepare(Warranty warranty) {
-      Logging.log(Logging.HOTOS_LOGGER, Level.FINER, "writing @{0}", key);
+      Logging.log(HOTOS_LOGGER, Level.FINER, "writing @{0}", key);
 
       synchronized (writeDelayMutex) {
         long warrantyExpiry = warranty.expiry();
@@ -200,7 +202,7 @@ public class WarrantyIssuer<K> {
 
         // Calculate accumulated write-delay time.
         if (lastWriteDelayExpiryTime <= now) {
-          accumWriteDelayTime += warrantyExpiry - now;
+          accumWriteDelayTime += Math.max(0, warrantyExpiry - now);
         } else {
           // Previous warranty hasn't expired yet. Assume previous prepare was
           // aborted and just add the extra delay incurred by the newer
@@ -223,8 +225,8 @@ public class WarrantyIssuer<K> {
         if (windowAge == 0) windowAge = 1;
         double alpha =
             READ_PREPARE_ALPHA * windowAge / READ_PREPARE_WINDOW_LENGTH;
-        return readPrepareRate * (1 - alpha) + (numReadPrepares / windowAge)
-            * alpha;
+        return readPrepareRate * (1 - alpha) + alpha * numReadPrepares
+            / windowAge;
       }
     }
 
@@ -233,7 +235,7 @@ public class WarrantyIssuer<K> {
         long now = System.currentTimeMillis();
         if (now == createTime) return 0;
 
-        return accumWriteDelayTime / (now - createTime);
+        return (double) accumWriteDelayTime / (now - createTime);
       }
     }
 
@@ -247,9 +249,23 @@ public class WarrantyIssuer<K> {
       double omega = getWriteDelayFactor();
 
       double input = rho < Double.MIN_VALUE ? Double.MAX_VALUE : omega / rho;
+      input = Math.min(input, 2.0 * BASE_COMMIT_LATENCY);
+      HOTOS_LOGGER
+          .log(
+              Level.INFO,
+              "onum = {0}, accumWriteDelay = {4}, numReadPrepares = {5}, p = {2}, w = {3}, current pid output = {6}, pid input = {1}",
+              new Object[] { key, input, rho, omega, accumWriteDelayTime,
+                  numReadPrepares, pidController.getOutput() });
       long warrantyLength = (long) pidController.setInput(input);
 
-      if (warrantyLength < MIN_WARRANTY_LENGTH) return null;
+      if (warrantyLength < MIN_WARRANTY_LENGTH) {
+        HOTOS_LOGGER.log(Level.INFO, "Suggested 0 ms warranty for onum {0}.",
+            key);
+        return null;
+      } else {
+        HOTOS_LOGGER.log(Level.INFO, "Suggested {0} ms warranty for onum {1}.",
+            new Object[] { warrantyLength, key });
+      }
       return expiry + warrantyLength;
     }
   }
