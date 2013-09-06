@@ -5,12 +5,15 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import fabric.common.SemanticWarranty;
 import fabric.common.VersionWarranty;
-import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
+import fabric.worker.Store;
+import fabric.worker.Worker;
 import fabric.worker.memoize.CallInstance;
 import fabric.worker.memoize.WarrantiedCallResult;
 
@@ -20,12 +23,12 @@ import fabric.worker.memoize.WarrantiedCallResult;
  */
 public final class PrepareWritesResult {
   public final long commitTime;
-  public final LongKeyMap<Pair<Integer, VersionWarranty>> addedReads;
+  public final OidKeyHashMap<Pair<Integer, VersionWarranty>> addedReads;
   public final Map<CallInstance, WarrantiedCallResult> addedCalls;
   public final Map<CallInstance, SemanticWarranty> callResults;
 
   public PrepareWritesResult(long commitTime,
-      LongKeyMap<Pair<Integer, VersionWarranty>> addedReads,
+      OidKeyHashMap<Pair<Integer, VersionWarranty>> addedReads,
       Map<CallInstance, WarrantiedCallResult> addedCalls,
       Map<CallInstance, SemanticWarranty> callResults) {
     this.commitTime = commitTime;
@@ -41,13 +44,17 @@ public final class PrepareWritesResult {
     // Write added reads
     int addedReadsCount = in.readInt();
     this.addedReads =
-      new LongKeyHashMap<Pair<Integer, VersionWarranty>>(addedReadsCount);
+      new OidKeyHashMap<Pair<Integer, VersionWarranty>>();
     for (int i = 0; i < addedReadsCount; i++) {
-      long oid = in.readLong();
-      int version = in.readInt();
-      VersionWarranty warranty = new VersionWarranty(in.readLong());
-      this.addedReads.put(oid,
-          new Pair<Integer, VersionWarranty>(version, warranty));
+      Store s = Worker.getWorker().getStore(in.readUTF());
+      int submapCount = in.readInt();
+      for (int j = 0; j < submapCount; j++) {
+        long oid = in.readLong();
+        int version = in.readInt();
+        VersionWarranty warranty = new VersionWarranty(in.readLong());
+        this.addedReads.put(s, oid,
+            new Pair<Integer, VersionWarranty>(version, warranty));
+      }
     }
 
     // Write added calls
@@ -79,11 +86,16 @@ public final class PrepareWritesResult {
       out.writeInt(0);
     } else {
       out.writeInt(addedReads.size());
-      for (LongKeyMap.Entry<Pair<Integer, VersionWarranty>> entry :
-          addedReads.entrySet()) {
-        out.writeLong(entry.getKey());
-        out.writeInt(entry.getValue().first);
-        out.writeLong(entry.getValue().second.expiry());
+      for (Entry<Store, LongKeyMap<Pair<Integer, VersionWarranty>>> entry :
+          addedReads.nonNullEntrySet()) {
+        out.writeUTF(entry.getKey().name());
+        out.writeInt(entry.getValue().size());
+        for (LongKeyMap.Entry<Pair<Integer, VersionWarranty>> subEntry :
+            entry.getValue().entrySet()) {
+          out.writeLong(subEntry.getKey());
+          out.writeInt(subEntry.getValue().first);
+          out.writeLong(subEntry.getValue().second.expiry());
+        }
       }
     }
 

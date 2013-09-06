@@ -172,9 +172,9 @@ public class RemoteCallManager extends MessageToWorkerHandler {
       topTid = topTid.parent;
     tm.associateAndSyncLog(log, topTid);
 
-    long minCommitTime;
+    PrepareWritesResult result;
     try {
-      minCommitTime = tm.sendPrepareWriteMessages();
+      result = tm.sendPrepareWriteMessages();
     } catch (TransactionRestartingException e) {
       throw new TransactionPrepareFailedException(e);
     } finally {
@@ -184,8 +184,7 @@ public class RemoteCallManager extends MessageToWorkerHandler {
     /* TODO: Figure out if I should actually be passing back the results of
      * requests to the remote caller... I don't think so?
      */
-    return new PrepareTransactionWritesMessage.Response(new
-        PrepareWritesResult(minCommitTime, null, null, null));
+    return new PrepareTransactionWritesMessage.Response(result);
   }
 
   @Override

@@ -40,6 +40,7 @@ import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
 import fabric.lang.WrappedJavaInlineable;
 import fabric.lang.Object._Impl;
@@ -416,18 +417,22 @@ public final class TransactionManager {
     // will abort our portion of the transaction and throw a
     // TransactionRestartingException.
     long startTime = System.currentTimeMillis();
-    long commitTime = sendPrepareWriteMessages();
+    PrepareWritesResult writeResult = sendPrepareWriteMessages();
 
-    SEMANTIC_WARRANTY_LOGGER.finest("Delay since we began is " + (commitTime -
-          startTime) + "ms");
+    SEMANTIC_WARRANTY_LOGGER.finest("Delay since we began is " +
+        (writeResult.commitTime - startTime) + "ms");
+
+    // TODO: add in extra reads.
+    current.semanticWarrantiesUsed.putAll(writeResult.addedCalls);
+    current.requestReplies.putAll(writeResult.callResults);
 
     // Send prepare-read messages to our cohorts. If the prepare fails, this
     // will abort our portion of the transaction and throw a
     // TransactionRestartingException.
-    sendPrepareReadMessages(commitTime);
+    sendPrepareReadMessages(writeResult.commitTime);
 
     // Send commit messages to our cohorts.
-    sendCommitMessagesAndCleanUp(commitTime);
+    sendCommitMessagesAndCleanUp(writeResult.commitTime);
 
     HOTOS_LOGGER.log(Level.FINEST, "committed {0}", HOTOS_current);
   }
@@ -444,7 +449,7 @@ public final class TransactionManager {
    * @throws TransactionRestartingException
    *           if the prepare fails.
    */
-  public long sendPrepareWriteMessages() {
+  public PrepareWritesResult sendPrepareWriteMessages() {
     final AtomicBoolean readOnly = new AtomicBoolean(true);
 
     final Map<RemoteNode<?>, TransactionPrepareFailedException> failures =
@@ -459,7 +464,8 @@ public final class TransactionManager {
 
       case PREPARING:
       case PREPARED:
-        return current.commitState.commitTime;
+        return new PrepareWritesResult(current.commitState.commitTime, null,
+            null, null);
 
       case COMMITTING:
       case COMMITTED:
@@ -480,6 +486,18 @@ public final class TransactionManager {
     // synchronize on it.
     final long[] commitTime = new long[1];
     commitTime[0] = System.currentTimeMillis();
+
+    // Aggregated added reads
+    final OidKeyHashMap<Pair<Integer, VersionWarranty>> addedReads =
+      new OidKeyHashMap<Pair<Integer, VersionWarranty>>();
+
+    // Aggregated added calls
+    final Map<CallInstance, WarrantiedCallResult> addedCalls =
+      new HashMap<CallInstance, WarrantiedCallResult>();
+
+    // Aggregated request results.
+    final Map<CallInstance, SemanticWarranty> callResults =
+      new HashMap<CallInstance, SemanticWarranty>();
 
     // Go through each worker and send prepare messages in parallel.
     for (final RemoteWorker worker : current.workersCalled) {
@@ -522,7 +540,6 @@ public final class TransactionManager {
               try {
                 Collection<_Impl> creates = current.getCreatesForStore(store);
                 Collection<_Impl> writes = current.getWritesForStore(store);
-                // TODO: Check for replies?
                 Set<SemanticWarrantyRequest> calls = current.getRequestsForStore(store);
 
                 if (WORKER_TRANSACTION_LOGGER.isLoggable(Level.FINE)) {
@@ -540,11 +557,33 @@ public final class TransactionManager {
                   store.prepareTransactionWrites(current.tid.topTid, creates,
                       writes, calls);
 
-                // TODO: Use the other parts of the response.
-
                 synchronized (commitTime) {
                   if (response.commitTime > commitTime[0])
                     commitTime[0] = response.commitTime;
+                }
+
+                synchronized (addedReads) {
+                  if (response.addedReads != null) {
+                    for (Map.Entry<Store, LongKeyMap<Pair<Integer,
+                        VersionWarranty>>> submap :
+                        response.addedReads.nonNullEntrySet()) {
+                      for (LongKeyMap.Entry<Pair<Integer, VersionWarranty>> entry :
+                          submap.getValue().entrySet()) {
+                        addedReads.put(submap.getKey(), entry.getKey(),
+                            entry.getValue());
+                      }
+                    }
+                  }
+                }
+
+                synchronized (addedCalls) {
+                  if (response.addedCalls != null)
+                    addedCalls.putAll(response.addedCalls);
+                }
+
+                synchronized (callResults) {
+                  if (response.callResults != null)
+                    callResults.putAll(response.callResults);
                 }
               } catch (TransactionPrepareFailedException e) {
                 failures.put((RemoteNode<?>) store, e);
@@ -642,7 +681,8 @@ public final class TransactionManager {
       synchronized (current.commitState) {
         current.commitState.value = PREPARED;
         current.commitState.notifyAll();
-        return commitTime[0];
+        return new PrepareWritesResult(commitTime[0], addedReads, addedCalls,
+            callResults);
       }
     }
   }

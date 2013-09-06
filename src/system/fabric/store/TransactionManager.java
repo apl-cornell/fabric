@@ -32,6 +32,7 @@ import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongKeyMap.Entry;
 import fabric.common.util.LongSet;
+import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
 import fabric.dissemination.ObjectGlob;
 import fabric.dissemination.WarrantyGlob;
@@ -180,11 +181,12 @@ public class TransactionManager {
       Map<CallInstance, SemanticWarrantyRequest> updates =
         callPrepareResp.second;
 
-      // TODO: Send back additional reads(/calls?) and their warranties.
-      LongKeyMap<Pair<Integer, VersionWarranty>> addedReads =
-        new LongKeyHashMap<Pair<Integer, VersionWarranty>>();
+      OidKeyHashMap<Pair<Integer, VersionWarranty>> addedReads =
+        new OidKeyHashMap<Pair<Integer, VersionWarranty>>();
+
       Map<CallInstance, WarrantiedCallResult> addedCalls =
         new HashMap<CallInstance, WarrantiedCallResult>();
+
       for (SemanticWarrantyRequest update : updates.values()) {
         // Register additional creates
         for (LongKeyMap<_Impl> submap : update.creates) {
@@ -197,7 +199,7 @@ public class TransactionManager {
         // Collect reads and their warranties for the worker
         for (LongKeyMap<ReadMap.Entry> submap : update.reads) {
           for (ReadMap.Entry read : submap.values()) {
-            addedReads.put(read.getRef().onum,
+            addedReads.put(store, read.getRef().onum,
                 new Pair<Integer, VersionWarranty>(read.getVersionNumber(),
                                                     read.getWarranty()));
           }
