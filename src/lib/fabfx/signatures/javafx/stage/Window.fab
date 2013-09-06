@@ -1,0 +1,60 @@
+package javafx.stage;
+
+import javafx.event.EventTarget;
+
+public class Window[label Term] implements EventTarget[Term] {
+  public void sizeToScene{Term}();
+  public void centerOnScreen{Term}();
+  public final void setX{Term}(double{Term} x);
+  public final double{Term} getX();
+  public final void setY{Term}(double{Term} y);
+  public final double{Term} getY();
+  public final void setWidth{Term}(double{Term} w);
+  public final double getWidth{Term}();
+  public final void setHeight{Term}(double{Term} h);
+  public final double getHeight{Term}();
+  public final void setFocused{Term}(boolean{Term} b);
+  public final void requestFocus{Term}();
+  public final boolean{Term} isFocused();
+  //public final javafx.scene.Scene[?]{Term} getScene();
+  public final void setOpacity{Term}(double{Term} d);
+  public final double{Term} getOpacity();
+  public final boolean isShowing();
+  public void hide{Term}();
+
+  // These signatures would be trivial with method generics
+  //public final void setOnCloseRequest{Term}(javafx.event.EventHandler{Term}/*<javafx.stage.WindowEvent>*/ eh);
+  //public final javafx.event.EventHandler/*<javafx.stage.WindowEvent>*/ getOnCloseRequest();
+  //public final void setOnShowing(javafx.event.EventHandler{Term}/*<javafx.stage.WindowEvent>*/ eh);
+  //public final javafx.event.EventHandler/*<javafx.stage.WindowEvent>*/ getOnShowing();
+  //public final void setOnShown(javafx.event.EventHandler{Term}/*<javafx.stage.WindowEvent>*/ eh);
+  //public final javafx.event.EventHandler/*<javafx.stage.WindowEvent>*/ getOnShown();
+  //public final void setOnHiding(javafx.event.EventHandler{Term}/*<javafx.stage.WindowEvent>*/ eh);
+  //public final javafx.event.EventHandler/*<javafx.stage.WindowEvent>*/ getOnHiding();
+  //public final void setOnHidden(javafx.event.EventHandler{Term}/*<javafx.stage.WindowEvent>*/ eh);
+  //public final javafx.event.EventHandler{Term}/*<javafx.stage.WindowEvent>*/ getOnHidden();
+  //public final /*<T extends javafx/event/Event>*/ void addEventHandler{Term}(javafx.event.EventType{Term}/*<T>*/ et, javafx.event.EventHandler/*<? super T>*/ eh);
+  //public final /*<T extends javafx/event/Event>*/ void removeEventHandler{Term}(javafx.event.EventType{Term}/*<T>*/ et, javafx.event.EventHandler/*<? super T>*/ eh);
+  //public final /*<T extends javafx/event/Event>*/ void addEventFilter{Term}(javafx.event.EventType{Term}/*<T>*/ et, javafx.event.EventHandler/*<? super T>*/ eh);
+  //public final /*<T extends javafx/event/Event>*/ void removeEventFilter{Term}(javafx.event.EventType{Term}/*<T>*/ et, javafx.event.EventHandler/*<? super T>*/ eh);
+  //public final void fireEvent{Term}(javafx.event.Event{Term} e);
+
+  // TODO: support these eventually
+  //public final javafx.beans.property.ReadOnlyDoubleProperty xProperty();
+  //public final javafx.beans.property.ReadOnlyDoubleProperty yProperty();
+  //public final javafx.beans.property.ReadOnlyDoubleProperty widthProperty();
+  //public final javafx.beans.property.ReadOnlyDoubleProperty heightProperty();
+  //public final javafx.beans.property.ReadOnlyBooleanProperty focusedProperty();
+  //public final javafx.beans.property.ReadOnlyObjectProperty<javafx.scene.Scene> sceneProperty();
+  //public final javafx.beans.property.DoubleProperty opacityProperty();
+  //public final javafx.beans.property.ObjectProperty<javafx.event.EventHandler<javafx.stage.WindowEvent>> onCloseRequestProperty();
+  //public final javafx.beans.property.ObjectProperty<javafx.event.EventHandler<javafx.stage.WindowEvent>> onShowingProperty();
+  //public final javafx.beans.property.ObjectProperty<javafx.event.EventHandler<javafx.stage.WindowEvent>> onShownProperty();
+  //public final javafx.beans.property.ObjectProperty<javafx.event.EventHandler<javafx.stage.WindowEvent>> onHidingProperty();
+  //public final javafx.beans.property.ObjectProperty<javafx.event.EventHandler<javafx.stage.WindowEvent>> onHiddenProperty();
+  //public final javafx.beans.property.ReadOnlyBooleanProperty showingProperty();
+  //public final void setEventDispatcher(javafx.event.EventDispatcher);
+  //public final javafx.event.EventDispatcher getEventDispatcher();
+  //public final javafx.beans.property.ObjectProperty<javafx.event.EventDispatcher> eventDispatcherProperty();
+  //public javafx.event.EventDispatchChain buildEventDispatchChain(javafx.event.EventDispatchChain ec);
+}

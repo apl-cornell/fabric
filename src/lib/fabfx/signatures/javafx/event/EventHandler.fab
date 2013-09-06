@@ -1,0 +1,5 @@
+package javafx.event;
+
+public interface EventHandler[label L] /*extends EventListener?*/{
+    public void handle{L}(Event[L]{L} e);
+}

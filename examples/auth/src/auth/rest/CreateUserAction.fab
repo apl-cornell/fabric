@@ -10,21 +10,19 @@ public class CreateUserAction[principal servP] extends AbstractAction[servP] {
     final String{this}@{servP→} userParam;
     final String{this}@{servP→} pwdParam;
     
-    public CreateUserAction(Servlet[servP]{this} s) 
-        throws NullPointerException where {servP←} <= {this} {      
+    public CreateUserAction(Servlet[servP]{this} s) {      
       this(s, "user", "pass");
     }
 
-    public CreateUserAction(Servlet[servP]{this} s, String{this} userParam, String{this} pwdParam) 
-        throws NullPointerException where {servP←} <= {this} {      
+    public CreateUserAction(Servlet[servP]{this} s, String{this} userParam, String{this} pwdParam) {      
       this(s, "adduser", userParam, pwdParam);
     }
     
-    public CreateUserAction(Servlet[servP]{this} s, String{this} name, String{this} userParam, String{this} pwdParam) 
-        throws NullPointerException where {servP←} <= {this} {      
+    public CreateUserAction(Servlet[servP]{this} s, String{this} name, String{this} userParam, String{this} pwdParam) {      
       this.userParam = userParam;
       this.pwdParam = pwdParam;
-      super(name, s);
+      super();
+      initFields(name, s);
     }
 
     public final void invoke{*lbl}(label{*lbl} lbl, Request[servP]{*lbl} req) 
@@ -33,7 +31,7 @@ public class CreateUserAction[principal servP] extends AbstractAction[servP] {
         servP actsfor req.session,
         lbl <= {req.session→} {
 
-        Servlet[servP] servlet_ = req.servlet;
+        Servlet[servP] servlet_ = getServlet();
         AuthServlet[servP] servlet;
         if (lbl <= new label {servlet_.store$→}) {
             try { servlet = (AuthServlet[servP])servlet_; } catch (ClassCastException e) {throw new ServletException("Error processing request");}
@@ -174,7 +172,7 @@ public class CreateUserAction[principal servP] extends AbstractAction[servP] {
         // DOWNGRADE REASON: Has effects at level {loginUser:}, which we need to hide away, since
         // session does not yet act for loginUser.
         declassify ({req.session←}) {
-        	Servlet[servP] servlet_ = req.servlet;
+        	Servlet[servP] servlet_ = getServlet();
         	//if (!(servlet_ instanceof AuthServlet[servP])) throw new ServletException("Error processing request");
         	final AuthServlet[servP] servlet = (AuthServlet[servP])servlet_;
 

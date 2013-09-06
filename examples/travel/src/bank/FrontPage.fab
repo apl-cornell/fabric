@@ -14,18 +14,17 @@ import travel.Broker;
 import travel.Config;
 import travel.Account;
 
-import auth.*;
-import auth.html.*;
+import login.*;
+
 
 public class FrontPage extends AuthenticatedAction[BankPrincipal] authority (BankPrincipal) {
-    public FrontPage(BankMain{this} m)         
-      throws NullPointerException where {BankPrincipal←} <= {this} {
+    public FrontPage(BankMain{this} m) throws ServletException {
         super("frontpage", m);
     }
 
     public final void invokeImpl{*lbl}(label{*lbl} lbl,
             Request[BankPrincipal]{*lbl} _req,
-            AuthServlet[BankPrincipal]{*lbl} servlet,
+            HTMLAuthServlet[BankPrincipal]{*lbl} servlet,
             AuthSessState{*lbl} state,
             principal{*lbl} currentUser) 
             throws (ServletException{*lbl;_req.session←})

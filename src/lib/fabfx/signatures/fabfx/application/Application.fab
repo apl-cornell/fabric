@@ -1,0 +1,13 @@
+package fabfx.application;
+
+import javafx.stage.Stage;
+
+public abstract class Application[principal P, label Init, label Term] extends javafx.application.Application[P, Init, Term] {
+    public static void launch{Init}(String{Init}[]{Init} args);
+    public void initialize{Init}() (throws Exception{Term}); 
+    public abstract void start{Init}(Stage[Term]{Init} primaryStage) (throws Exception{Term}); 
+    public void stop{Term}() (throws Exception{Term}); 
+    //public final HostServices getHostServices();
+    //public final Parameters[Init]{Init} getParameters();
+    //public final void notifyPreloader(PreloaderNotification info);
+}

@@ -12,27 +12,25 @@ import sif.servlet.Servlet;
  * HelloAction.
  */
 public class StartAction extends Action[HelloServEP] {
-	public StartAction(Main m) throws NullPointerException where {HelloServEP←} <= {this}  {
-		super("greet");
+	public StartAction(Main m) throws ServletException {
+		super();
+		initFields("greet", m);
 	}
-        public void invoke{*lbl}(label{*lbl} lbl, Request[HelloServEP]{*lbl} req) throws (ServletException{*lbl;req.session←})
-        where caller(req.session),
-        HelloServEP actsfor req.session,
-          {HelloServEP←} <= {this},
-          {req.session←} <= lbl,
-          lbl <= {req.session→}
-      {
-            // create a session-specific HelloAction, and hand off control...
-            try {
-              atomic {
-                if (lbl <= new label {store$→}) {
-                  HelloAction ha = new HelloAction[lbl]((Main)req.servlet);
-                  ha.invoke(lbl, req);
-                } else throw new Error("impossible");
-              }
-            }
-            catch (ClassCastException impossible) { }
-            catch (NullPointerException impossible) { }
-      }
+
+	public void invoke{*lbl}(label{*lbl} lbl, Request[HelloServEP]{*lbl} req) 
+	throws (ServletException{*:req.session;req.session:})
+	where caller(req.session),
+	{*lbl} <= {*:req.session} 
+	{
+		// create a session-specific HelloAction, and hand off control...
+		try {
+			atomic {
+				HelloAction ha = new HelloAction[lbl]((Main)this.getServlet());
+				ha.invoke(lbl, req);
+			}
+		}
+		catch (ClassCastException impossible) { }
+		catch (NullPointerException impossible) { }
+	}
 }
 

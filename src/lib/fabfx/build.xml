@@ -1,0 +1,77 @@
+<!--
+  This is the Apache Ant build file for the Fabric FX library
+  implementation.
+-->
+
+<project name="fabfx" default="build-all" basedir=".">
+  <description>
+    Build file for the Fabric FX library.
+  </description>
+
+  <!--
+  ****************************************************************************
+    Global properties for this build.
+  ****************************************************************************
+  -->
+
+  <import file="../../../common.xml" />
+  <import file="common.xml" />
+
+  <!--
+  ****************************************************************************
+    Targets for cleaning up the directory tree.
+  ****************************************************************************
+  -->
+
+  <target name="clean" description="Removes generated files">
+    <delete dir="${fabfx.home}/classes"/>
+    <delete file="${jar.fabfx}"/>
+  </target>
+
+  <target name="clobber" depends="clean" />
+
+  <!--
+  ****************************************************************************
+    Compilation targets.
+  ****************************************************************************
+  -->
+
+  <target name="build"
+          description="Builds the Fabric FX package">
+    <mkdir dir="${fabfx.home}/classes" />
+    <fabc dest="${fabfx.home}/classes">
+      <arg value="-sourcepath"  /> <arg value="${fabfx.home}/src" />
+      <arg value="-cp"          /> <arg value="${fabfx.home}/classes" />
+      <arg value="-trusted-providers"/>
+      <arg value="-no-warnings"/>
+      <!-- 
+      <arg value="-rdebug"/>
+      -->
+
+      <fileset dir="${fabfx.home}/src" includes="**/*.fab" />
+    </fabc>
+  </target>
+
+  <target name="build-all" depends="build" />
+  <target name="all" depends="build-all" />
+
+  <!--
+  ****************************************************************************
+    Jar targets         
+  ****************************************************************************
+  -->
+
+  <uptodate property="jar.uptodate" targetfile="${jar.fabfx}">
+    <srcfiles dir="${fabfx.home}/src" />
+  </uptodate>
+
+  <target name="jar" unless="jar.uptodate" description="Create FabricFX library jar">
+    <antcall target="build-all" />
+    <jar jarfile="${jar.fabfx}" basedir="${fabfx.home}/classes" includes="**/*.class" />
+  </target>
+
+</project>
+
+<!--
+vim: ts=2 sw=2 ai et
+-->

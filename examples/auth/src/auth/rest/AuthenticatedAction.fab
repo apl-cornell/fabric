@@ -11,11 +11,13 @@ import java.io.IOException;
  * Extend this class to create actions that are protected by login requirement
  */
  public abstract class AuthenticatedAction[principal Serv] extends AbstractAction[Serv] {
-    public AuthenticatedAction(Servlet[Serv]{this} m) throws NullPointerException where {Serv←} <= {this}  {
-        super(m);
+    public AuthenticatedAction(Servlet[Serv] m) {
+        super();
+        initFields(m);
     }
-    public AuthenticatedAction(String{this} name, Servlet[Serv]{this} m) throws NullPointerException where {Serv←} <= {this}  {
-        super(name, m);
+    public AuthenticatedAction(String name, Servlet[Serv] m) {
+        super();
+        initFields(name, m);
     }
     
     /**
@@ -54,7 +56,7 @@ import java.io.IOException;
         {req.session←} <= lbl,
         lbl <= {req.session→} {
       atomic {
-        Servlet[Serv] servlet_ = req.servlet;
+        Servlet[Serv] servlet_ = getServlet();
         final SessionState state_ = req.getSessionState(lbl);
         if (lbl <= new label {servlet_.store$→}) {
           if (lbl <= new label {state_.store$→}) {

@@ -5,9 +5,7 @@ import javax.servlet.ServletException;
 import sif.html.*;
 import sif.servlet.Action;
 import sif.servlet.Request;
-import sif.servlet.HTMLRequest;
 import sif.servlet.Servlet;
-import sif.servlet.HTMLServlet;
 
 import java.io.*;
 
@@ -15,26 +13,25 @@ import java.io.*;
  * HelloAction is a session-specific action.
  */
 public class HelloAction[label T] extends Action[HelloServEP] {
-	public HelloAction{T}(Main{T} m) throws NullPointerException where {HelloServEP←;T} <= {this} {
-		this.nameInp = new Input[HelloServEP](m, new label {});
-		this.fileInp = new Input[HelloServEP](m, new label {});
-		super(m);               
+	public HelloAction{T}(Main{T} m) throws ServletException {
+		super();
+		atomic {
+			this.nameInp = new Input[HelloServEP](m, new label {});
+			this.fileInp = new Input[HelloServEP](m, new label {});
+		}
+		initFields(m);
 	}
 
 	final Input[HelloServEP]{T} nameInp;
 	final Input[HelloServEP]{T} fileInp;
 
-	public void invoke{*lbl}(label{*lbl} lbl, Request[HelloServEP]{*lbl} _req) throws (ServletException{*lbl;_req.session←})
-	  where caller(_req.session),
-	  HelloServEP actsfor _req.session,
-	    {HelloServEP←} <= {this},
-	    {_req.session←} <= lbl,
-	    lbl <= {_req.session→}
-	{
-	      HTMLServlet s = (HTMLServlet)_req.servlet;
-	      if (s == null || _req == null) return;
-	      if (T equiv lbl) {
-	        final HTMLRequest req = (HTMLRequest[HelloServEP]) _req;
+	public void invoke{*lbl}(label{*lbl} lbl, Request[HelloServEP]{*lbl} req) 
+	where caller(req.session),
+	{*lbl} <= {*:req.session} {
+		Servlet s = getServlet();       
+		if (s == null || req == null) return;
+		if (T equiv lbl) {
+
 			NodeList content = null;    
 
 			atomic {

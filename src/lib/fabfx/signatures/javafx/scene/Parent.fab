@@ -1,0 +1,103 @@
+package javafx.scene;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+
+public abstract class Parent[label Term] extends Node[Term] {
+    /**
+     * Gets the list of children of this {@code Parent}.
+     *
+     * <p>
+     * See the class documentation for {@link Node} for scene graph structure
+     * restrictions on setting a {@link Parent}'s children list.
+     * If these restrictions are violated by a change to the list of children,
+     * the change is ignored and the previous value of the children list is
+     * restored. An {@link IllegalArgumentException} is thrown in this case.
+     *
+     * <p>
+     * If this {@link Parent} node is attached to a {@link Scene}, then its
+     * list of children must only be modified on the JavaFX Application Thread.
+     * An {@link IllegalStateException} is thrown if this restriction is
+     * violated.
+     *
+     * @return the list of children of this {@code Parent}.
+     */
+    protected native ObservableList[Term]{Term} getChildren();
+
+    /**
+     * Gets the list of children of this {@code Parent} as a read-only
+     * list.
+     *
+     * @return read-only access to this parent's children ObservableList
+     */
+    @ReturnsUnmodifiableCollection
+    public ObservableList[Term]{Term} getChildrenUnmodifiable();
+
+    /**
+     * Gets the list of all managed children of this {@code Parent}.
+     *
+     * @param <E> the type of the children nodes
+     * @return list of all managed children in this parent
+     */
+    protected native /*<E extends Node>*/ List[Term]{Term}/*<E>*/ getManagedChildren();
+
+    protected native final void setNeedsLayout{Term}(boolean{Term} value); 
+
+    public native final boolean{Term} isNeedsLayout();
+
+    /**
+     * Requests a layout pass to be performed before the next scene is
+     * rendered. This is batched up asynchronously to happen once per
+     * "pulse", or frame of animation.
+     * <p>
+     * If this parent is either a layout root or unmanaged, then it will be
+     * added directly to the scene's dirty layout list, otherwise requestLayout
+     * will be invoked on its parent.
+     */
+    public native void requestLayout{Term}(); 
+
+    /**
+     * Calculates the minimum width of this {@code Parent}. The default
+     * implementation simply returns the pref width.
+     *
+     * @param height the height that should be used if min width depends
+     *      on it
+     * @return the calculated min width
+     */
+    protected native double{Term} computeMinWidth(double{Term} height);
+
+    protected native double{Term} computeMinHeight(double{Term} width);
+
+    /**
+     * Executes a top-down layout pass on the scene graph under this parent.
+     */
+    public native final void layout{Term}();
+
+    /**
+     * Invoked during the layout pass to layout the children in this
+     * {@code Parent}. By default it will only set the size of managed,
+     * resizable content to their preferred sizes and does not do any node
+     * positioning.
+     * <p>
+     * Subclasses should override this function to layout content as needed.
+     */
+    protected native void layoutChildren{Term}();
+
+    /**
+     * Gets an observable list of string URLs linking to the stylesheets to use 
+     * with this Parent's contents. For additional information about using CSS 
+     * with the scene graph, see the <a href="doc-files/cssref.html">CSS Reference
+     * Guide</a>.
+     *
+     * @return the list of stylesheets to use with this Parent
+     */
+    public native final ObservableList[Term]{Term}/*<String>*/ getStylesheets();
+    
+    /**
+     * Constructs a new {@code Parent}.
+     */
+    protected native Parent{Term}();
+}

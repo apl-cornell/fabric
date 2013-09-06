@@ -6,7 +6,6 @@ PATH="${FABRIC}/bin:${PATH}"
 
 CP="${APP_HOME}/classes"
 CP="${CP}:${FABRIC}/src/lib/sif/classes"
-CP="${CP}:${FABRIC}/examples/auth/classes"
 CP="${CP}:${FABRIC}/lib/fabric-sif.jar"
 
 export FABRIC_HOME="${APP_HOME}"

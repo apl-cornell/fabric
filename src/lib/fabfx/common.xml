@@ -1,0 +1,23 @@
+<project name="fabfx.common">
+  <description>
+    This is the include file for projects that build against the fabfx library.
+  </description>
+
+  <dirname property="fabfx.home" file="${ant.file.fabfx.common}" />
+
+  <property name="jar.fabfx" location="${fabric.home}/lib/fabric-fx.jar" />
+
+  <path id="fabfx.classpath">
+    <pathelement path="${jar.fabfx}" />
+  </path>
+
+  <target name="collections">
+    <subant target="jar">
+      <fileset dir="${fabfx.home}" includes="build.xml" />
+    </subant>
+  </target>
+</project>
+
+<!--
+vim: ts=2 sw=2 ai et
+-->
