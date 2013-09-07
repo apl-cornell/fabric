@@ -398,11 +398,16 @@ public final class TransactionManager {
 
     final long commitLatency =
         Math.max(commitTime, System.currentTimeMillis()) - prepareStart;
+    final long writeDelay =
+        Math.max(0, commitTime - System.currentTimeMillis());
     if (LOCAL_STORE == null) LOCAL_STORE = Worker.getWorker().getLocalStore();
     if (workers.size() > 0 || stores.size() > 1 || stores.size() == 1
         && !stores.contains(LOCAL_STORE)) {
-      HOTOS_LOGGER.log(Level.INFO, "committed tid {0} (latency {1} ms)",
-          new Object[] { HOTOS_current, commitLatency });
+      HOTOS_LOGGER
+          .log(
+              Level.INFO,
+              "committed tid {0} (latency {1} ms; write delay {2} ms)",
+              new Object[] { HOTOS_current, commitLatency, writeDelay });
     }
   }
 
