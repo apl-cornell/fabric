@@ -189,7 +189,7 @@ public class PIDController {
    * Computes the resulting manipulated variable value from the given process
    * variable. The result is always constrained to the current output range.
    */
-  public double setInput(double pv, long sampleTime) {
+  public synchronized double setInput(double pv, long sampleTime) {
     // Calculate the elapsed time since the last input.
     long dt = sampleTime - lastPVSampleTime;
 
