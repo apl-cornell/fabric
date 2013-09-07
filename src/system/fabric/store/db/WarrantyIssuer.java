@@ -193,6 +193,8 @@ public class WarrantyIssuer<K> {
      */
     void notifyWritePrepare(Warranty warranty) {
       Logging.log(HOTOS_LOGGER, Level.FINER, "writing @{0}", key);
+      HOTOS_LOGGER.log(Level.INFO, "writing {0}, warranty expires in {1} ms",
+          new Object[] { key, warranty.expiry() - System.currentTimeMillis() });
 
       synchronized (writeDelayMutex) {
         long warrantyExpiry = warranty.expiry();
@@ -250,23 +252,16 @@ public class WarrantyIssuer<K> {
 
       double input = rho < Double.MIN_VALUE ? Double.MAX_VALUE : omega / rho;
       input = Math.min(input, 2.0 * BASE_COMMIT_LATENCY);
-      HOTOS_LOGGER
-          .log(
-              Level.INFO,
-              "onum = {0}, accumWriteDelay = {4}, numReadPrepares = {5}, p = {2}, w = {3}, current pid output = {6}, pid input = {1}",
-              new Object[] { key, input, rho, omega, accumWriteDelayTime,
-                  numReadPrepares, pidController.getOutput() });
       long warrantyLength = (long) pidController.setInput(input);
 
-      if (warrantyLength < MIN_WARRANTY_LENGTH) {
-        HOTOS_LOGGER.log(Level.INFO, "Suggested 0 ms warranty for onum {0}.",
-            key);
-        return null;
-      } else {
-        HOTOS_LOGGER.log(Level.INFO, "Suggested {0} ms warranty for onum {1}.",
-            new Object[] { warrantyLength, key });
-      }
-      return expiry + warrantyLength;
+      if (accumWriteDelayTime > 0)
+        HOTOS_LOGGER.log(Level.INFO,
+            "onum = {0}, pid output = {2}, pid input = {1}", new Object[] {
+                key, input, warrantyLength });
+
+      if (warrantyLength < MIN_WARRANTY_LENGTH) return null;
+
+      return Math.max(expiry, System.currentTimeMillis()) + warrantyLength;
     }
   }
 
