@@ -21,22 +21,22 @@ public class WarrantyIssuer<K> {
    * Parameter for low-pass filtering the error derivatives in the PID
    * controller. Higher values result in more filtering.
    */
-  private static final double PID_DERIV_ALPHA = 0.0;
+  private static final double PID_DERIV_ALPHA = 0.011644;
 
   /**
    * Proportional gain for the PID controller.
    */
-  private static final double PID_KP = 5;
+  private static final double PID_KP = -1.448;
 
   /**
    * Integral gain for the PID controller.
    */
-  private static final double PID_KI = 0;
+  private static final double PID_KI = -3.6661;
 
   /**
    * Derivative gain for the PID controller.
    */
-  private static final double PID_KD = 0;
+  private static final double PID_KD = 49.3488;
 
   /**
    * The base commit latency, in milliseconds.
@@ -53,7 +53,7 @@ public class WarrantyIssuer<K> {
    * The maximum length of time (in milliseconds) for which each issued warranty
    * should be valid.
    */
-  private static final int MAX_WARRANTY_LENGTH = 1000;
+  private static final int MAX_WARRANTY_LENGTH = 5000;
 
   /**
    * The decay rate for the exponential average when calculating the rate of
@@ -247,11 +247,10 @@ public class WarrantyIssuer<K> {
      * @return the time at which the warranty should expire.
      */
     Long suggestWarranty(long expiry) {
-      double rho = getReadPrepareRate();
+      double rho = getReadPrepareRate() + Double.MIN_VALUE;
       double omega = getWriteDelayFactor();
 
-      double input = rho < Double.MIN_VALUE ? Double.MAX_VALUE : omega / rho;
-      input = Math.min(input, 2.0 * BASE_COMMIT_LATENCY);
+      double input = omega / rho;
       long warrantyLength = (long) pidController.setInput(input);
 
       if (accumWriteDelayTime > 0)
