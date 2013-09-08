@@ -380,6 +380,7 @@ public final class TransactionManager {
     // Commit top-level transaction.
     Log HOTOS_current = current;
     List<RemoteWorker> workers = current.workersCalled;
+    final boolean isReadOnly = current.writes.isEmpty();
     Set<Store> stores = current.storesRead(Long.MAX_VALUE).keySet();
     final long prepareStart = System.currentTimeMillis();
 
@@ -403,11 +404,14 @@ public final class TransactionManager {
     if (LOCAL_STORE == null) LOCAL_STORE = Worker.getWorker().getLocalStore();
     if (workers.size() > 0 || stores.size() > 1 || stores.size() == 1
         && !stores.contains(LOCAL_STORE)) {
-      HOTOS_LOGGER
-          .log(
-              Level.INFO,
-              "committed tid {0} (latency {1} ms; write delay {2} ms)",
-              new Object[] { HOTOS_current, commitLatency, writeDelay });
+      if (isReadOnly) {
+        HOTOS_LOGGER.log(Level.INFO, "committed tid {0} (latency {1} ms)",
+            new Object[] { HOTOS_current, commitLatency });
+      } else {
+        HOTOS_LOGGER.log(Level.INFO,
+            "committed tid {0} (latency {1} ms; write delay {2} ms)",
+            new Object[] { HOTOS_current, commitLatency, writeDelay });
+      }
     }
   }
 
