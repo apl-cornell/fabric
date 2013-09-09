@@ -307,14 +307,16 @@ public class SemanticWarrantyTable {
 
     /**
      * Add a new caller.
+     *
+     * Don't error in any case right now.  Might be better if we verify that a
+     * caller is only being added in the case of NOVALUE when it's being
+     * requested...
      */
     private void addCaller(CallInstance caller) {
       lock();
       try {
         switch (getStatus()) {
         case NOVALUE:
-          throw new InternalError(
-              "Attempt to add a caller to a valueless call!");
         case VALID:
         case STALE:
         default:
