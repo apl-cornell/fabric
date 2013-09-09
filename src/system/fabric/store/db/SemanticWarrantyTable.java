@@ -421,11 +421,11 @@ public class SemanticWarrantyTable {
       lock();
       try {
         switch (getStatus()) {
-        case NOVALUE:
-          throw new InternalError(
-              "Attempt to add a create to a valueless call!");
         case VALID:
         case STALE:
+          throw new InternalError(
+              "Attempt to add a create to a stored call!");
+        case NOVALUE:
         default:
           creates.add(onum);
           if (!creatorTable.containsKey(onum)) {
@@ -452,7 +452,8 @@ public class SemanticWarrantyTable {
      * that will be used for the call.
      */
     public SemanticWarranty request(SemanticWarrantyRequest req,
-        long transactionID) throws TransactionPrepareFailedException {
+        Set<CallInstance> previousRequests, long transactionID) throws
+      TransactionPrepareFailedException {
       this.lock();
       try {
         switch (getStatus()) {
@@ -474,35 +475,27 @@ public class SemanticWarrantyTable {
               throw new TransactionPrepareFailedException("Request for call " +
                   call + " depends on object " + onum +
                   " that has a write scheduled.");
-            } else {
-              Warranty objWar = database.getWarranty(onum);
-              if (objWar.expired(false)) continue;
-              warTime = objWar.expiry() < warTime ? objWar.expiry() : warTime;
             }
           }
           for (CallInstance c : req.calls.keySet()) {
-            try {
-              getInfo(c).writeLock();
-              getInfo(c).writeUnlock();
-            } catch (UnableToLockException e) {
-              SEMANTIC_WARRANTY_LOGGER.finest("Request for call " +
-                  call + " depends on call " + call +
-                  " that has a write scheduled.");
-              throw new TransactionPrepareFailedException( "Request for call " +
-                  call + " depends on call " + call +
-                  " that has a write scheduled.");
+            if (!previousRequests.contains(c)) {
+              try {
+                getInfo(c).writeLock();
+                getInfo(c).writeUnlock();
+              } catch (UnableToLockException e) {
+                SEMANTIC_WARRANTY_LOGGER.finest("Request for call " +
+                    call + " depends on call " + call +
+                    " that has a write scheduled.");
+                throw new TransactionPrepareFailedException( "Request for call " +
+                    call + " depends on call " + call +
+                    " that has a write scheduled.");
+              }
             }
-            long callTime = getInfo(c).getWarranty().expiry();
-            warTime = callTime < warTime ? callTime : warTime;
           }
 
           // Set warranty
           long suggestedTime = issuer.suggestWarranty(req.call);
-          if (suggestedTime < warTime) {
-            this.warranty = new SemanticWarranty(suggestedTime);
-          } else {
-            this.warranty = new SemanticWarranty(warTime);
-          }
+          this.warranty = new SemanticWarranty(suggestedTime);
 
           // Set value
           this.value = req.value;
@@ -1188,11 +1181,12 @@ public class SemanticWarrantyTable {
    * to become valid/expiring on the commit of the given transaction ID.
    */
   public SemanticWarranty requestWarranty(long transactionID,
-      SemanticWarrantyRequest req) throws TransactionPrepareFailedException {
+      SemanticWarrantyRequest req, Set<CallInstance> previousRequests) throws
+    TransactionPrepareFailedException {
     CallInfo info = getInfo(req.call);
     info.lock();
     try {
-      return info.request(req, transactionID);
+      return info.request(req, previousRequests, transactionID);
     } finally {
       info.unlock();
     }
