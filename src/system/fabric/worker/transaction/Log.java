@@ -514,39 +514,41 @@ public final class Log {
     }
 
     // Handle added reads from write prepare
-    for (Entry<Store, LongKeyMap<Pair<Integer, VersionWarranty>>> entry :
-        addedReads.nonNullEntrySet()) {
-      Store store = entry.getKey();
-      LongKeyMap<Integer> submap = null;
-      if (result.containsKey(store))
-        submap = result.get(store);
-      else
-        submap = new LongKeyHashMap<Integer>();
+    if (addedReads != null) {
+      for (Entry<Store, LongKeyMap<Pair<Integer, VersionWarranty>>> entry :
+          addedReads.nonNullEntrySet()) {
+        Store store = entry.getKey();
+        LongKeyMap<Integer> submap = null;
+        if (result.containsKey(store))
+          submap = result.get(store);
+        else
+          submap = new LongKeyHashMap<Integer>();
 
-      boolean isRemoteStore = !store.isLocalStore();
-      // Count total number of additional reads for the transaction.
-      int additions = 0;
+        boolean isRemoteStore = !store.isLocalStore();
+        // Count total number of additional reads for the transaction.
+        int additions = 0;
 
-      LongKeyMap<Pair<Integer, VersionWarranty>> readOnly =
-          filterModifiedReads(store, entry.getValue());
-      if (isRemoteStore) numTotalReads += readOnly.size();
+        LongKeyMap<Pair<Integer, VersionWarranty>> readOnly =
+            filterModifiedReads(store, entry.getValue());
+        if (isRemoteStore) numTotalReads += readOnly.size();
 
-      for (LongKeyMap.Entry<Pair<Integer, VersionWarranty>> subEntry :
-          readOnly.entrySet()) {
-        long onum = subEntry.getKey();
-        int objVersion = subEntry.getValue().first;
-        VersionWarranty objWarranty = subEntry.getValue().second;
+        for (LongKeyMap.Entry<Pair<Integer, VersionWarranty>> subEntry :
+            readOnly.entrySet()) {
+          long onum = subEntry.getKey();
+          int objVersion = subEntry.getValue().first;
+          VersionWarranty objWarranty = subEntry.getValue().second;
 
-        if (objWarranty.expiresAfter(commitState.commitTime, true)
-            && objWarranty.expiresBefore(commitTime, true)) {
-          submap.put(onum, objVersion);
-          additions += 1;
+          if (objWarranty.expiresAfter(commitState.commitTime, true)
+              && objWarranty.expiresBefore(commitTime, true)) {
+            submap.put(onum, objVersion);
+            additions += 1;
+          }
         }
-      }
 
-      if (!submap.isEmpty()) {
-        if (isRemoteStore) numReadsToPrepare += additions;
-        result.put(store, submap);
+        if (!submap.isEmpty()) {
+          if (isRemoteStore) numReadsToPrepare += additions;
+          result.put(store, submap);
+        }
       }
     }
 
