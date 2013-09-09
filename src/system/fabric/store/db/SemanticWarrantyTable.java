@@ -447,8 +447,12 @@ public class SemanticWarrantyTable {
       }
     }
 
-    public void request(SemanticWarrantyRequest req, long transactionID) throws
-      TransactionPrepareFailedException {
+    /**
+     * Request a new warranty for the given call request and return the warranty
+     * that will be used for the call.
+     */
+    public SemanticWarranty request(SemanticWarrantyRequest req,
+        long transactionID) throws TransactionPrepareFailedException {
       this.lock();
       try {
         switch (getStatus()) {
@@ -464,6 +468,9 @@ public class SemanticWarrantyTable {
           for (LongIterator iter = req.readOnums.iterator(); iter.hasNext();) {
             long onum = iter.next();
             if (database.isWritten(onum)) {
+              SEMANTIC_WARRANTY_LOGGER.finest("Request for call " +
+                  call + " depends on object " + onum +
+                  " that has a write scheduled.");
               throw new TransactionPrepareFailedException("Request for call " +
                   call + " depends on object " + onum +
                   " that has a write scheduled.");
@@ -478,6 +485,9 @@ public class SemanticWarrantyTable {
               getInfo(c).writeLock();
               getInfo(c).writeUnlock();
             } catch (UnableToLockException e) {
+              SEMANTIC_WARRANTY_LOGGER.finest("Request for call " +
+                  call + " depends on call " + call +
+                  " that has a write scheduled.");
               throw new TransactionPrepareFailedException( "Request for call " +
                   call + " depends on call " + call +
                   " that has a write scheduled.");
@@ -518,8 +528,12 @@ public class SemanticWarrantyTable {
 
           pendingTIDMap.putIfAbsent(transactionID, new HashSet<CallInstance>());
           pendingTIDMap.get(transactionID).add(this.call);
+
+          return warranty;
         }
       } catch (UnableToLockException e) {
+        SEMANTIC_WARRANTY_LOGGER.finest("Could not lock call " +
+            call + " for write");
         throw new TransactionPrepareFailedException("Could not lock call " +
             call + " for write");
       } finally {
@@ -857,6 +871,8 @@ public class SemanticWarrantyTable {
       try {
         writeLock();
       } catch (UnableToLockException e) {
+        SEMANTIC_WARRANTY_LOGGER.finest("Could not write lock dependent call " +
+            call);
         throw new TransactionPrepareFailedException("Could not write " + 
             "lock dependent call " + call);
       }
@@ -1176,8 +1192,7 @@ public class SemanticWarrantyTable {
     CallInfo info = getInfo(req.call);
     info.lock();
     try {
-      info.request(req, transactionID);
-      return info.getWarranty();
+      return info.request(req, transactionID);
     } finally {
       info.unlock();
     }

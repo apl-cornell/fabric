@@ -232,11 +232,11 @@ class Store extends MessageToStoreHandler {
         "Handling Prepare-Writes Message, worker={0}, tid={1}",
         nameOf(client.principal), msg.tid);
 
-    PrepareWritesResult writeResult = prepareTransactionWrites(client.principal,
-        msg.tid, msg.serializedCreates, msg.serializedWrites);
-
     Map<CallInstance, SemanticWarranty> replies =
       prepareTransactionRequests(client.principal, msg.tid, msg.requests);
+
+    PrepareWritesResult writeResult = prepareTransactionWrites(client.principal,
+        msg.tid, msg.serializedCreates, msg.serializedWrites);
 
     writeResult.callResults.putAll(replies);
     return new PrepareTransactionWritesMessage.Response(writeResult);
