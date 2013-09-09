@@ -429,6 +429,7 @@ public final class TransactionManager {
     // TODO: add in extra reads.
     current.semanticWarrantiesUsed.putAll(writeResult.addedCalls);
     current.requestReplies.putAll(writeResult.callResults);
+    current.addedReads = writeResult.addedReads;
 
     // Send prepare-read messages to our cohorts. If the prepare fails, this
     // will abort our portion of the transaction and throw a
@@ -439,9 +440,10 @@ public final class TransactionManager {
     sendCommitMessagesAndCleanUp(writeResult.commitTime);
 
     final long commitLatency =
-        Math.max(commitTime, System.currentTimeMillis()) - prepareStart;
+        Math.max(writeResult.commitTime,
+            System.currentTimeMillis()) - prepareStart;
     final long writeDelay =
-        Math.max(0, commitTime - System.currentTimeMillis());
+        Math.max(0, writeResult.commitTime - System.currentTimeMillis());
     if (LOCAL_STORE == null) LOCAL_STORE = Worker.getWorker().getLocalStore();
     if (workers.size() > 0 || stores.size() > 1 || stores.size() == 1
         && !stores.contains(LOCAL_STORE)) {

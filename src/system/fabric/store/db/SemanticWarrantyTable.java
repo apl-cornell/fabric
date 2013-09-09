@@ -44,9 +44,6 @@ import fabric.worker.TransactionPrepareFailedException;
  * supporting concurrent accesses.
  */
 public class SemanticWarrantyTable {
-  private static final int MIN_SEMANTIC_WARRANTY = 250;
-  private static final int MAX_SEMANTIC_WARRANTY = 1000;
-
   /**
    * Enumeration of states a call can be in.
    */
@@ -820,10 +817,14 @@ public class SemanticWarrantyTable {
      */
     // XXX: Ugh, if the sister method does not run, we're in trouble.
     public void lockForWritePrepare(Set<CallInstance> locksOwned) {
-      issuer.notifyWritePrepare(call);
       lock();
       try {
-        if (locksOwned.contains(call)) unlock(); else locksOwned.add(call);
+        if (locksOwned.contains(call)) {
+          unlock();
+        } else {
+          locksOwned.add(call);
+          issuer.notifyWritePrepare(call, warranty);
+        }
         switch (getStatus()) {
         case NOVALUE:
           throw new InternalError(
@@ -1122,8 +1123,7 @@ public class SemanticWarrantyTable {
     readersTable = new ConcurrentLongKeyHashMap<Set<CallInstance>>();
     creatorTable = new ConcurrentLongKeyHashMap<Set<CallInstance>>();
     issuer =
-        new WarrantyIssuer<CallInstance>(MIN_SEMANTIC_WARRANTY,
-            MAX_SEMANTIC_WARRANTY);
+        new WarrantyIssuer<CallInstance>();
     pendingTIDMap = new ConcurrentLongKeyHashMap<Set<CallInstance>>();
     updatingTIDMap = new ConcurrentLongKeyHashMap<Set<CallInstance>>();
     this.database = database;

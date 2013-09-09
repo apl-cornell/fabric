@@ -28,6 +28,7 @@ import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.OidKeyHashMap;
+import fabric.common.util.Pair;
 import fabric.common.util.WeakReferenceArrayList;
 import fabric.lang.Object._Impl;
 import fabric.lang.WrappedJavaInlineable;
@@ -195,6 +196,13 @@ public final class Log {
    * successfully finishing the commit phase.
    */
   protected final Map<CallInstance, SemanticWarranty> requestReplies;
+
+  /**
+   * Maps OIDs to the version number of the object and version warranty for
+   * objects read in call updates from write prepare.  This allows us to give
+   * back additional reads to check during the read prepare phase.
+   */
+  protected OidKeyHashMap<Pair<Integer, VersionWarranty>> addedReads;
 
   /**
    * Indicates the state of commit for the top-level transaction.
@@ -477,6 +485,7 @@ public final class Log {
     int numReadsToPrepare = 0;
     int numTotalReads = 0;
 
+    // Handle reads from the actual transaction
     for (Entry<Store, LongKeyMap<ReadMap.Entry>> entry : reads
         .nonNullEntrySet()) {
       Store store = entry.getKey();
@@ -500,6 +509,43 @@ public final class Log {
 
       if (!submap.isEmpty()) {
         if (isRemoteStore) numReadsToPrepare += submap.size();
+        result.put(store, submap);
+      }
+    }
+
+    // Handle added reads from write prepare
+    for (Entry<Store, LongKeyMap<Pair<Integer, VersionWarranty>>> entry :
+        addedReads.nonNullEntrySet()) {
+      Store store = entry.getKey();
+      LongKeyMap<Integer> submap = null;
+      if (result.containsKey(store))
+        submap = result.get(store);
+      else
+        submap = new LongKeyHashMap<Integer>();
+
+      boolean isRemoteStore = !store.isLocalStore();
+      // Count total number of additional reads for the transaction.
+      int additions = 0;
+
+      LongKeyMap<Pair<Integer, VersionWarranty>> readOnly =
+          filterModifiedReads(store, entry.getValue());
+      if (isRemoteStore) numTotalReads += readOnly.size();
+
+      for (LongKeyMap.Entry<Pair<Integer, VersionWarranty>> subEntry :
+          readOnly.entrySet()) {
+        long onum = subEntry.getKey();
+        int objVersion = subEntry.getValue().first;
+        VersionWarranty objWarranty = subEntry.getValue().second;
+
+        if (objWarranty.expiresAfter(commitState.commitTime, true)
+            && objWarranty.expiresBefore(commitTime, true)) {
+          submap.put(onum, objVersion);
+          additions += 1;
+        }
+      }
+
+      if (!submap.isEmpty()) {
+        if (isRemoteStore) numReadsToPrepare += additions;
         result.put(store, submap);
       }
     }
