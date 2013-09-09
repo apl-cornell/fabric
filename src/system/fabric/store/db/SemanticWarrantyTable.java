@@ -395,10 +395,10 @@ public class SemanticWarrantyTable {
       lock();
       try {
         switch (getStatus()) {
-        case NOVALUE:
-          throw new InternalError("Attempt to add a read to a valueless call!");
         case VALID:
         case STALE:
+          throw new InternalError("Attempt to add a read to a stored call!");
+        case NOVALUE:
         default:
           reads.add(onum);
           if (!readersTable.containsKey(onum)) {
