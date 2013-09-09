@@ -16,7 +16,6 @@
   <import file="../../common.xml" />
   <import file="${fabric.home}/src/lib/sif/common.xml" />
   <import file="${fabric.home}/src/lib/collections/common.xml" />
-  <import file="${fabric.home}/examples/auth/common.xml" />
 
   <dirname property="travel.home" file="${ant.file.travel}" />
 
@@ -44,12 +43,11 @@
   <target name="build-all" depends="build-travel" />
   <target name="all" depends="build-all" />
 
-  <target name="build-travel" depends="sif, auth"
+  <target name="build-travel" depends="sif"
           description="Builds the SIF Travel example">
     <fabc dest="${travel.home}/classes">
       <arg value="-sourcepath" /> <arg value="${travel.home}/src" />
       <arg value="-cp"         /> <arg pathref="sif.classpath" />
-      <arg value="-cp" />         <arg pathref="auth.classpath" />
       <arg value="-cp"         /> <arg pathref="collections.classpath" />
       <arg value="-cp"         /> <arg pathref="lib.classpath" />
       <arg value="-cp"         /> <arg value="${travel.home}/classes" />

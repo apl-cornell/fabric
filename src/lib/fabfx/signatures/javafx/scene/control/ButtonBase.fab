@@ -1,0 +1,69 @@
+package javafx.scene.control;
+
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ObjectPropertyBase;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
+import javafx.scene.Node;
+import com.sun.javafx.css.StyleManager;
+import javafx.beans.property.ReadOnlyBooleanProperty;
+import javafx.beans.property.ReadOnlyBooleanWrapper;
+
+/**
+ * Base class for button-like UI Controls, including Hyperlinks, Buttons,
+ * ToggleButtons, CheckBoxes, and RadioButtons. The primary contribution of
+ * ButtonBase is providing a consistent API for handling the concept of button
+ * "arming". In UIs, a button will typically only "fire" if some user gesture
+ * occurs while the button is "armed". For example, a Button may be armed if
+ * the mouse is pressed and the Button is enabled and the mouse is over the
+ * button. In such a situation, if the mouse is then released, then the Button
+ * is "fired", meaning its action takes place.
+ */
+
+public abstract class ButtonBase[label Term] extends Labeled[Term] {
+    /**
+     * Create a default ButtonBase with empty text.
+     */
+    public native ButtonBase{Term}(); 
+
+    /**
+     * Create a ButtonBase with the given text.
+     * @param text null text is treated as the empty string
+     */
+    public native ButtonBase{Term}(String{Term} text);
+
+    /**
+     * Create a ButtonBase with the given text and graphic.
+     * @param text null text is treated as the empty string
+     * @param graphic a null graphic is acceptable
+     */
+    public native ButtonBase{Term}(String{Term} text, Node{Term} graphic);    
+
+    /***************************************************************************
+     *                                                                         *
+     * Properties                                                              *
+     *                                                                         *
+     **************************************************************************/
+
+    /**
+     * The button's action, which is invoked whenever the button is fired. This
+     * may be due to the user clicking on the button with the mouse, or by
+     * a touch event, or by a key press, or if the developer programmatically
+     * invokes the {@link #fire()} method.
+     */
+    public native final EventHandler[Term]{Term}/*<ActionEvent>*/ getOnAction();
+    public native final void setOnAction{Term}(EventHandler[Term]{Term}/*<ActionEvent>*/ value);
+    //TODO:
+    // public native final void setOnAction{Term}(EventHandler[Event]{Term}/*<ActionEvent>*/ value) where Term <= Event;
+
+
+    /**
+     * Invoked when a user gesture indicates that an event for this
+     * {@code ButtonBase} should occur.
+     * <p>
+     * If invoked, this method will be executed regardless of the status of
+     * {@link #arm}.
+     * </p>
+     */
+    public abstract void fire{Term}();
+}

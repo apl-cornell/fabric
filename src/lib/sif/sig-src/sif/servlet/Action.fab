@@ -1,6 +1,7 @@
 package sif.servlet;
 
 import javax.servlet.ServletException;
+import sif.html.Page;
 
 /**
  *
@@ -8,7 +9,15 @@ import javax.servlet.ServletException;
  *
  */
 
-abstract public class Action[principal Serv] {
+abstract public class Action[principal Serv] extends java.lang.Object {
+    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+    private static int __JIF_SAFE_CONSTRUCTORS$20050907 = 0;
+
+    protected Action() { }
+
+    protected final native void initFields(Servlet[Serv] s);
+    protected final native void initFields(String n, Servlet[Serv] s);
+
     /**
      * The invoke method must either throw an exception, or call the
      * createPage method of Servlet.
@@ -21,4 +30,5 @@ abstract public class Action[principal Serv] {
           {req.session←} <= lbl,
           lbl <= {req.session→};
 
+    public native Servlet[Serv]{this} getServlet();
 }

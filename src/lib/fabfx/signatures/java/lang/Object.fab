@@ -1,0 +1,19 @@
+/*
+ * This is a Jif signature for the Java class. It provides Jif label
+ * annotations for the Java class, allowing it to be usable by Jif
+ * code. There is no automated check that the signature provided here
+ * agrees with the actual Java code.
+ */
+package java.lang;
+
+/**
+ * The Jif signature for java.lang.Object. 
+ *
+ * Most methods are not available. 
+ */
+public class Object {
+    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+    private static int __JIF_SAFE_CONSTRUCTORS$20050907 = 0;
+    public Object() { }
+    public native final Class{this} getClass();
+}

@@ -22,17 +22,11 @@
   <!-- fabric source directory -->
   <property name="fab-src" location="${sif.home}/fab-src" />
 
-  <!-- bootstrap source directory -->
-  <property name="boot-src" location="${sif.home}/boot-src" />
-
   <!-- java source directory -->
   <property name="src" location="${sif.home}/src" />
 
   <!-- directory for class file targets -->
   <property name="sif.classes" location="${sif.home}/classes" />
-
-  <!-- directory for class file targets -->
-  <property name="sif.boot-classes" location="${sif.home}/boot-classes" />
 
   <!-- directory for signature classes -->
   <property name="sif.sig-classes" location="${sif.home}/sig-classes" />
@@ -46,7 +40,6 @@
   <target name="clean" description="Removes generated files">
     <delete dir="${sif.classes}"/>
     <delete dir="${sif.sig-classes}"/>
-    <delete dir="${sif.boot-classes}"/>
     <delete file="${jar.sif}"/>
     <delete file="${jar.sif-sig}"/>
   </target>
@@ -90,24 +83,6 @@
     <!-- Create the build directory structures used by compile -->
     <mkdir dir="${sif.classes}" />
     <mkdir dir="${sif.sig-classes}" />
-    <mkdir dir="${sif.boot-classes}"/>
-  </target>
-
-  <target name="build-bootstrap-java" depends="init">
-    <javac source="1.7"
-           target="1.7"
-           srcdir="${boot-src}"
-           destdir="${sif.boot-classes}"
-           debug="true"
-           includeAntRuntime="false"
-           debuglevel="lines,vars,source">
-      <classpath>
-        <path refid="lib.classpath" />
-        <path refid="fabric.classpath" />
-        <path refid="collections.classpath" />
-      </classpath>
-      <include name="**/*.java"/>
-    </javac>
   </target>
 
   <target name="build-sif-java" depends="init, build-sif-fab">
@@ -135,18 +110,12 @@
     </filc>
   </target>
 
-  <target name="build-sif-fab" depends="init, build-sif-sig, build-bootstrap-java">
-    <delete file="${sif.sig-classes}/sif/servlet/Action.class"/>
-    <delete file="${sif.sig-classes}/sif/servlet/Action.java"/>
+  <target name="build-sif-fab" depends="init">
     <fabc dest="${sif.classes}">
       <arg value="-sourcepath" /> <arg value="${fab-src}"/>
       <arg value="-cp"/> <arg value="${sif.classes}"/>
-      <arg value="-cp"/> <arg pathref="lib.classpath"/>
-      <arg value="-cp"/> <arg value="${sif.boot-classes}"/>
       <arg value="-debugpositions"/>
       <arg value="-trusted-providers"/>
-      <arg line="-addsigcp ${sif.sig-classes}"/>
-      <arg line="-addfilsigcp ${sif.sig-classes}"/>
       <!--
       <arg value="-rdebug"/>
         <arg value="-report"/> <arg value="solver=5"/>

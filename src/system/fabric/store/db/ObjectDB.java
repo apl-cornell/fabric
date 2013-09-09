@@ -60,10 +60,6 @@ import fabric.worker.remote.RemoteWorker;
  */
 public abstract class ObjectDB {
   private static final int INITIAL_OBJECT_VERSION_NUMBER = 1;
-  private static final boolean ENABLE_OBJECT_UPDATES = false;
-
-  private static final int MAX_WARRANTY_LENGTH = 1000;
-
   private final WarrantyIssuer<Long> warrantyIssuer;
 
   /**
@@ -259,7 +255,7 @@ public abstract class ObjectDB {
     this.longestWarranty = new VersionWarranty[] { new VersionWarranty(0) };
     this.versionWarrantyTable =
         new WarrantyTable<Long, VersionWarranty>(new VersionWarranty(0));
-    this.warrantyIssuer = new WarrantyIssuer<Long>(250, MAX_WARRANTY_LENGTH);
+    this.warrantyIssuer = new WarrantyIssuer<Long>();
   }
 
   /**
@@ -419,7 +415,7 @@ public abstract class ObjectDB {
       obj.setVersion(storeVersion + 1);
 
       // Notify the warranty issuer.
-      warrantyIssuer.notifyWritePrepare(onum);
+      warrantyIssuer.notifyWritePrepare(onum, warranty);
 
       return warranty;
     }
@@ -749,14 +745,13 @@ public abstract class ObjectDB {
       }
     }
 
-    if (ENABLE_OBJECT_UPDATES) {
+    // Notify the warranty issuer.
+    warrantyIssuer.notifyWriteCommit(onum);
+
+    if (SubscriptionManager.ENABLE_OBJECT_UPDATES) {
       // Notify the subscription manager that the group has been updated.
       sm.notifyUpdate(updatedOnums, worker);
     }
-
-    // Notify the warranty issuer.
-    warrantyIssuer.notifyWriteCommit(onum);
-    sm.notifyUpdate(updatedOnums, worker);
   }
 
   /**

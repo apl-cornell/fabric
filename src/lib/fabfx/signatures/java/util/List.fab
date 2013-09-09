@@ -1,0 +1,34 @@
+package java.util;
+
+/**
+ * A list of Fabric objects.
+ */
+public interface List[label L] extends Collection[L] {
+  
+    Object{L;index} get(int index) throws (IndexOutOfBoundsException{L;index});
+    
+    Object{L} set{L}(int{L} index, Object{L} element) throws (UnsupportedOperationException{L}, 
+        ClassCastException{L}, NullPointerException{L}, IllegalArgumentException{L}, 
+        IndexOutOfBoundsException{L});
+	
+    void add{L}(int{L} index, Object{L} element) throws (UnsupportedOperationException{L}, 
+        ClassCastException{L}, NullPointerException{L}, IllegalArgumentException{L}, 
+        IndexOutOfBoundsException{L});
+    
+    Object{L} remove{L}(int{L} index) throws (UnsupportedOperationException{L}, 
+            IndexOutOfBoundsException{L});
+    
+    int{L;o} indexOf(Object o) throws (ClassCastException{L;o}, NullPointerException{L;o});
+
+    int{L;o} lastIndexOf(Object o) throws (ClassCastException{L;o}, NullPointerException{L;o});
+
+    boolean{L} addAll{L}(int{L} index, Collection[L]{L} c) throws (UnsupportedOperationException{L}, 
+        ClassCastException{L}, NullPointerException{L}, IllegalArgumentException{L}, 
+        IllegalStateException{L});
+
+    boolean{L;fromIndex;toIndex} subList(int fromIndex, int toIndex) throws (UnsupportedOperationException{L;fromIndex;toIndex}, 
+        IndexOutOfBoundsException{L;fromIndex;toIndex});
+
+    ListIterator[L]{L} listIterator();
+    ListIterator[L]{L;index} listIterator(int index) throws (IndexOutOfBoundsException{L;index});
+}

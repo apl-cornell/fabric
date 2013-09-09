@@ -24,14 +24,13 @@ public class WarrantyGlob extends AbstractGlob<WarrantyGroup> {
    * @param group
    *          The group to encapsulate.
    */
-  public WarrantyGlob(Store store, PrivateKey key, WarrantyGroup group) {
-    super(getLabel(store, group), key, group);
+  public WarrantyGlob(Store store, long labelOnum, PrivateKey key,
+      WarrantyGroup group) {
+    this(new Label._Proxy(store, labelOnum), key, group);
   }
 
-  private static Label getLabel(Store store, WarrantyGroup group) {
-    long memberOnum = group.iterator().next().onum;
-    fabric.lang.Object obj = new fabric.lang.Object._Proxy(store, memberOnum);
-    return obj.get$$updateLabel();
+  public WarrantyGlob(Label label, PrivateKey key, WarrantyGroup group) {
+    super(label, key, group);
   }
 
   @Override

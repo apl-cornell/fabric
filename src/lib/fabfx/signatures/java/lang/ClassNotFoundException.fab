@@ -1,0 +1,22 @@
+/*
+ * This is a Jif signature for the Java class. It provides Jif label
+ * annotations for the Java class, allowing it to be usable by Jif
+ * code. There is no automated check that the signature provided here
+ * agrees with the actual Java code.
+ */
+package java.lang;
+
+public class ClassNotFoundException extends Exception {
+    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+
+    public ClassNotFoundException() {
+	super();
+    }
+    public ClassNotFoundException(String{this} s) {
+	super(s);
+    }
+    public ClassNotFoundException(String{this} s, Throwable{this} ex) {
+	super(s);
+    }
+    public native Throwable{this} getException();
+}

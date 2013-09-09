@@ -310,7 +310,7 @@ public class SubscriptionManager extends FabricThread.Impl {
 
         // Encrypt the group.
         WarrantyGlob updateGlob =
-            new WarrantyGlob(store, signingKey, updateGroup);
+            new WarrantyGlob(groupContainer.getLabel(), signingKey, updateGroup);
 
         // Add to the dissemUpdateMap.
         for (RemoteWorker dissemNode : dissemNodes) {
@@ -370,6 +370,9 @@ public class SubscriptionManager extends FabricThread.Impl {
    */
   private final PrivateKey signingKey;
 
+  public static final boolean ENABLE_OBJECT_UPDATES = false;
+  public static final boolean ENABLE_WARRANTY_REFRESHES = true;
+
   /**
    * @param tm
    *          The transaction manager corresponding to the store for which
@@ -424,6 +427,8 @@ public class SubscriptionManager extends FabricThread.Impl {
    * particular worker.
    */
   public void notifyUpdate(LongSet onums, RemoteWorker worker) {
+    if (!ENABLE_OBJECT_UPDATES) return;
+
     notificationQueue.offer(new ObjectUpdateEvent(onums, worker));
   }
 
@@ -435,6 +440,8 @@ public class SubscriptionManager extends FabricThread.Impl {
    */
   public void notifyNewWarranties(Collection<Binding> newWarranties,
       RemoteWorker worker) {
+    if (!ENABLE_WARRANTY_REFRESHES) return;
+
     if (!newWarranties.isEmpty()) {
       notificationQueue.offer(new NewWarrantyEvent(newWarranties, worker));
     }

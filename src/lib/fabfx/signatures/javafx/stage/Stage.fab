@@ -1,0 +1,43 @@
+package javafx.stage.Stage;
+
+public class Stage[label Term] extends Window[Term] {
+    public Stage(); 
+    //public Stage(StageStyle{Term} style);
+    //final public void setScene{Term}(Scene{Term} value);
+    public final void show{Term}();
+    public void showAndWait{Term}() ;
+    //public final void initStyle{Term}(StageStyle{Term} style) ;
+    public final StageStyle{Term} getStyle() ;
+    //public final void initModality{Term}(Modality{Term} modality) ;
+    //public final Modality{Term} getModality() ;
+    //public final void initOwner{Term}(Window{Term} owner) ;
+    //public final Window{Term} getOwner() ;
+    public final void setFullScreen{Term}(boolean{Term} value) ;
+    public final boolean{Term} isFullScreen() ;
+    //public final ReadOnlyBooleanProperty{Term} fullScreenProperty() ;
+    //public final ObservableList{Term}/*<Image>*/ getIcons() ;
+    public final void setTitle{Term}(String{Term} value) ;
+    public final String{Term} getTitle() ;
+    //public final StringProperty{Term} titleProperty() ;
+    public final void setIconified{Term}(boolean{Term} value) ;
+    public final boolean{Term} isIconified() ;
+    //public final ReadOnlyBooleanProperty{Term} iconifiedProperty() ;
+    public final void setResizable{Term}(boolean{Term} value) ;
+    public final boolean{Term} isResizable() ;
+    //public final BooleanProperty{Term} resizableProperty() ;
+    public final void setMinWidth{Term}(double{Term} value) ;
+    public final double{Term} getMinWidth() ;
+    //public final DoubleProperty{Term} minWidthProperty() ;
+    public final void setMinHeight{Term}(double{Term} value) ;
+    public final double{Term} getMinHeight() ;
+    //public final DoubleProperty minHeightProperty() ;
+    public final void setMaxWidth{Term}(double{Term} value) ;
+    public final double{Term} getMaxWidth() ;
+    //public final DoubleProperty maxWidthProperty() ;
+    public final void setMaxHeight{Term}(double{Term} value) ;
+    public final double{Term} getMaxHeight() ;
+    //public final DoubleProperty maxHeightProperty() ;
+    public void toFront{Term}() ;
+    public void toBack{Term}() ;
+    public void close{Term}() ;
+}

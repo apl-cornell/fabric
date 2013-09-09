@@ -16,21 +16,16 @@ public class CreateGroupAction[principal Serv] extends AuthenticatedAction[Serv]
     final String{this}@{Serv→} nameParam;
     final String{this}@{Serv→} typeParam;
     
-    public CreateGroupAction(Servlet[Serv]{this} s)      
-      throws NullPointerException where {Serv←} <= {this}
+    public CreateGroupAction(Servlet[Serv]{this} s) where {Serv←} <= {this}
     {    
       this(s, "name", "type");
     }
 
-    public CreateGroupAction(Servlet[Serv]{this} s, String{this} nameParam, String{this} typeParam) 
-        throws NullPointerException where {Serv←} <= {this}
-    {      
+    public CreateGroupAction(Servlet[Serv]{this} s, String{this} nameParam, String{this} typeParam) where {Serv←} <= {this} {      
       this(s, "creategroup", nameParam, typeParam);
     }
     
-    public CreateGroupAction(Servlet[Serv]{this} s, String{this} name, String{this} nameParam, String{this} typeParam) 
-      throws NullPointerException where {Serv←} <= {this}
-    {      
+    public CreateGroupAction(Servlet[Serv]{this} s, String{this} name, String{this} nameParam, String{this} typeParam) where {Serv←} <= {this} {      
       this.nameParam = nameParam;
       this.typeParam = typeParam;
       super(name, s);

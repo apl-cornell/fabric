@@ -52,6 +52,7 @@ import fabric.net.UnreachableNodeException;
 import fabric.store.InProcessStore;
 import fabric.store.PrepareWritesResult;
 import fabric.worker.AbortException;
+import fabric.worker.LocalStore;
 import fabric.worker.RemoteStore;
 import fabric.worker.Store;
 import fabric.worker.TransactionAbortingException;
@@ -317,7 +318,6 @@ public final class TransactionManager {
   private void commitTransaction(boolean ignoreRetrySignal) {
     WORKER_TRANSACTION_LOGGER.log(Level.FINEST, "{0} attempting to commit",
         current);
-    HOTOS_LOGGER.log(Level.FINEST, "preparing {0}", current);
 
     // Assume only one thread will be executing this.
 
@@ -347,7 +347,6 @@ public final class TransactionManager {
     WORKER_TRANSACTION_LOGGER.log(Level.FINEST, "{0} committing", current);
 
     Log parent = current.parent;
-    Log HOTOS_current = current;
     if (current.tid.parent != null) {
       try {
         Timing.SUBTX.begin();
@@ -388,6 +387,11 @@ public final class TransactionManager {
     }
 
     // Commit top-level transaction.
+    Log HOTOS_current = current;
+    List<RemoteWorker> workers = current.workersCalled;
+    final boolean isReadOnly = current.writes.isEmpty();
+    Set<Store> stores = current.storesRead(Long.MAX_VALUE).keySet();
+    final long prepareStart = System.currentTimeMillis();
 
     // Create top level SemanticWarrantyRequest, if any.
     current.createCurrentRequest();
@@ -434,8 +438,25 @@ public final class TransactionManager {
     // Send commit messages to our cohorts.
     sendCommitMessagesAndCleanUp(writeResult.commitTime);
 
-    HOTOS_LOGGER.log(Level.FINEST, "committed {0}", HOTOS_current);
+    final long commitLatency =
+        Math.max(commitTime, System.currentTimeMillis()) - prepareStart;
+    final long writeDelay =
+        Math.max(0, commitTime - System.currentTimeMillis());
+    if (LOCAL_STORE == null) LOCAL_STORE = Worker.getWorker().getLocalStore();
+    if (workers.size() > 0 || stores.size() > 1 || stores.size() == 1
+        && !stores.contains(LOCAL_STORE)) {
+      if (isReadOnly) {
+        HOTOS_LOGGER.log(Level.INFO, "committed tid {0} (latency {1} ms)",
+            new Object[] { HOTOS_current, commitLatency });
+      } else {
+        HOTOS_LOGGER.log(Level.INFO,
+            "committed tid {0} (latency {1} ms; write delay {2} ms)",
+            new Object[] { HOTOS_current, commitLatency, writeDelay });
+      }
+    }
   }
+
+  private static LocalStore LOCAL_STORE;
 
   /**
    * Sends prepare-write messages to the cohorts. If any cohort fails to

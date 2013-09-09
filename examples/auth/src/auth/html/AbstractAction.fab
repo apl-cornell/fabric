@@ -5,18 +5,6 @@ import sif.servlet.*;
 import sif.html.*;
 
 abstract public class AbstractAction[principal servP] extends Action[servP] {
-    @{store$→}
-
-    protected AbstractAction(Servlet[servP]{this} servlet) 
-        throws NullPointerException where {servP←} <= {this} {
-        super(servlet);
-    }
-    
-    protected AbstractAction(String{this} n, Servlet[servP]{this} servlet)
-        throws NullPointerException where {servP←} <= {this} {
-      super(n);
-    }
-
     /**
      * Utility method to create a Table with class "banner" and containing
      * the specified text.

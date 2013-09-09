@@ -1,0 +1,25 @@
+package java.lang;
+
+/**
+ * Thrown to indicate that the requested operation is not supported.<p>
+ * This class is a member of the Jif Collections Framework
+ */
+
+public class UnsupportedOperationException extends RuntimeException {
+    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+    /**
+     * Constructs an UnsupportedOperationException with no detail message.
+     */
+    public UnsupportedOperationException() {
+    }
+
+    /**
+     * Constructs an UnsupportedOperationException with the specified
+     * detail message.
+     *
+     * @param message the detail message
+     */
+    public UnsupportedOperationException(String{this} message) {
+	super(message);
+    }
+}

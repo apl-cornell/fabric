@@ -19,6 +19,7 @@ import fabric.common.util.LongSet;
 import fabric.common.util.Pair;
 import fabric.dissemination.ObjectGlob;
 import fabric.dissemination.WarrantyGlob;
+import fabric.lang.security.Label;
 import fabric.lang.security.Principal;
 import fabric.store.TransactionManager;
 import fabric.worker.Store;
@@ -77,6 +78,10 @@ public final class GroupContainer extends ObjectGrouper.AbstractGroup {
     this.warranties = new ConcurrentLongKeyHashMap<>();
   }
 
+  public Label getLabel() {
+    return new Label._Proxy(store, labelOnum);
+  }
+
   /**
    * @param principal
    *          The principal accessing the group.
@@ -120,8 +125,8 @@ public final class GroupContainer extends ObjectGrouper.AbstractGroup {
   public Pair<ObjectGlob, WarrantyGlob> getGlobs() {
     WarrantyGroup warrantyGroup = getWarranties();
     WarrantyGlob warrantyGlob =
-        warrantyGroup == null ? null : new WarrantyGlob(store, signingKey,
-            warrantyGroup);
+        warrantyGroup == null ? null : new WarrantyGlob(store, labelOnum,
+            signingKey, warrantyGroup);
 
     return new Pair<>(getGlob(), warrantyGlob);
   }
