@@ -253,6 +253,12 @@ public class WarrantyIssuer<K> {
       double input = omega / rho;
       long warrantyLength = (long) pidController.setInput(input);
 
+      if (((Number) key).longValue() == 0) {
+        HOTOS_LOGGER.log(Level.INFO,
+            "onum = {0}, pid output = {2}, pid input = {1}", new Object[] {
+                key, input, warrantyLength });
+      }
+
       if (accumWriteDelayTime > 0)
         HOTOS_LOGGER.log(Level.INFO,
             "onum = {0}, pid output = {2}, pid input = {1}", new Object[] {
