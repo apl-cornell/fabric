@@ -49,13 +49,11 @@ public final class LocalStore implements Store, Serializable {
   private Set<Pair<Principal, Principal>> localDelegates;
 
   @Override
-  public boolean prepareTransaction(long tid,
-      Collection<Object._Impl> toCreate, LongKeyMap<Integer> reads,
-      Collection<Object._Impl> writes) {
+  public void prepareTransaction(long tid, Collection<Object._Impl> toCreate,
+      LongKeyMap<Integer> reads, Collection<Object._Impl> writes) {
     // Note: since we assume local single threading we can ignore reads
     // (conflicts are impossible)
     WORKER_LOCAL_STORE_LOGGER.fine("Local transaction preparing");
-    return false;
   }
 
   @Override

@@ -86,22 +86,9 @@ public class PrepareTransactionMessage
 
   public static class Response implements Message.Response {
     /**
-     * If the remote node is a store, this will indicate whether the worker
-     * should send a commit/abort message to the store's worker to commit/abort
-     * a sub-transaction. (This happens when Statistics objects are created
-     * during transaction prepare.)
-     */
-    public final boolean subTransactionCreated;
-
-    /**
      * Creates a Response indicating a successful prepare.
      */
     public Response() {
-      this(false);
-    }
-
-    public Response(boolean subTransactionCreated) {
-      this.subTransactionCreated = subTransactionCreated;
     }
   }
 
@@ -197,12 +184,10 @@ public class PrepareTransactionMessage
 
   @Override
   protected void writeResponse(DataOutput out, Response r) throws IOException {
-    out.writeBoolean(r.subTransactionCreated);
   }
 
   @Override
   protected Response readResponse(DataInput in) throws IOException {
-    boolean subTransactionCreated = in.readBoolean();
-    return new Response(subTransactionCreated);
+    return new Response();
   }
 }

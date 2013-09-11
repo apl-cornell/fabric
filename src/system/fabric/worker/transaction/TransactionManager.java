@@ -490,7 +490,6 @@ public final class TransactionManager {
     }
 
     // Go through each store and send prepare messages in parallel.
-    final Worker worker = Worker.getWorker();
     for (Iterator<Store> storeIt = stores.iterator(); storeIt.hasNext();) {
       final Store store = storeIt.next();
       NamedRunnable runnable =
@@ -502,16 +501,8 @@ public final class TransactionManager {
                 LongKeyMap<Integer> reads =
                     current.getReadsForStore(store, false);
                 Collection<_Impl> writes = current.getWritesForStore(store);
-                boolean subTransactionCreated =
-                    store.prepareTransaction(current.tid.topTid, creates,
-                        reads, writes);
-
-                if (subTransactionCreated) {
-                  RemoteWorker storeWorker = worker.getWorker(store.name());
-                  synchronized (current.workersCalled) {
-                    current.workersCalled.add(storeWorker);
-                  }
-                }
+                store.prepareTransaction(current.tid.topTid, creates, reads,
+                    writes);
               } catch (TransactionPrepareFailedException e) {
                 failures.put((RemoteNode<?>) store, e);
               } catch (UnreachableNodeException e) {

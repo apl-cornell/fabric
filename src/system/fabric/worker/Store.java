@@ -29,11 +29,8 @@ public interface Store extends Serializable {
 
   /**
    * Notifies the store that the transaction is entering the Prepare phase.
-   * 
-   * @return whether a subtransaction was created on the store as a result of
-   *         the prepare.
    */
-  boolean prepareTransaction(long tid, Collection<_Impl> toCreate,
+  void prepareTransaction(long tid, Collection<_Impl> toCreate,
       LongKeyMap<Integer> reads, Collection<_Impl> writes)
       throws UnreachableNodeException, TransactionPrepareFailedException;
 

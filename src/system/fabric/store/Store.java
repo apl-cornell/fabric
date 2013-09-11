@@ -214,10 +214,9 @@ class Store extends MessageToStoreHandler {
         "Handling Prepare Message, worker={0}, tid={1}",
         nameOf(client.principal), msg.tid);
 
-    boolean subTransactionCreated =
-        prepareTransaction(client.principal, msg.tid, msg.serializedCreates,
-            msg.serializedWrites, msg.reads);
-    return new PrepareTransactionMessage.Response(subTransactionCreated);
+    prepareTransaction(client.principal, msg.tid, msg.serializedCreates,
+        msg.serializedWrites, msg.reads);
+    return new PrepareTransactionMessage.Response();
   }
 
   /**
@@ -317,11 +316,7 @@ class Store extends MessageToStoreHandler {
         client.principal, message.versions));
   }
 
-  /**
-   * @return true iff a subtransaction was created for making Statistics
-   *         objects.
-   */
-  private boolean prepareTransaction(Principal p, long tid,
+  private void prepareTransaction(Principal p, long tid,
       Collection<SerializedObject> serializedCreates,
       Collection<SerializedObject> serializedWrites, LongKeyMap<Integer> reads)
       throws TransactionPrepareFailedException {
@@ -331,9 +326,7 @@ class Store extends MessageToStoreHandler {
 
     sm.createSurrogates(req);
 
-    boolean subTransactionCreated = tm.prepare(p, req);
-
-    return subTransactionCreated;
+    tm.prepare(p, req);
   }
 
   private String nameOf(Principal p) {

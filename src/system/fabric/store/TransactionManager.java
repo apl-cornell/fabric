@@ -102,15 +102,13 @@ public class TransactionManager {
    * 
    * @param worker
    *          The worker requesting the prepare
-   * @return whether a subtransaction was created for making Statistics objects.
    * @throws TransactionPrepareFailedException
    *           If the transaction would cause a conflict or if the worker is
    *           insufficiently privileged to execute the transaction.
    */
-  public boolean prepare(Principal worker, PrepareRequest req)
+  public void prepare(Principal worker, PrepareRequest req)
       throws TransactionPrepareFailedException {
     final long tid = req.tid;
-    boolean result = false;
 
     // First, check read and write permissions. We do this before we attempt to
     // do the actual prepare because we want to run the permissions check in a
@@ -162,8 +160,6 @@ public class TransactionManager {
       database.finishPrepare(tid, worker);
 
       STORE_TRANSACTION_LOGGER.fine("Prepared transaction " + tid);
-
-      return result;
     } catch (TransactionPrepareFailedException e) {
       database.abortPrepare(tid, worker);
       throw e;
