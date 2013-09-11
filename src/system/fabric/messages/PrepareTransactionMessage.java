@@ -27,7 +27,6 @@ public class PrepareTransactionMessage
   // ////////////////////////////////////////////////////////////////////////////
 
   public final long tid;
-  public final long commitTime;
   public final LongKeyMap<Integer> reads;
 
   /**
@@ -61,21 +60,19 @@ public class PrepareTransactionMessage
   /**
    * Used to prepare transactions at remote workers.
    */
-  public PrepareTransactionMessage(long tid, long commitTime) {
-    this(tid, commitTime, null, null, null);
+  public PrepareTransactionMessage(long tid) {
+    this(tid, null, null, null);
   }
 
   /**
    * Only used by the worker.
    */
-  public PrepareTransactionMessage(long tid, long commitTime,
-      Collection<_Impl> toCreate, LongKeyMap<Integer> reads,
-      Collection<_Impl> writes) {
+  public PrepareTransactionMessage(long tid, Collection<_Impl> toCreate,
+      LongKeyMap<Integer> reads, Collection<_Impl> writes) {
     super(MessageType.PREPARE_TRANSACTION,
         TransactionPrepareFailedException.class);
 
     this.tid = tid;
-    this.commitTime = commitTime;
     this.creates = toCreate;
     this.reads = reads;
     this.writes = writes;
@@ -127,9 +124,6 @@ public class PrepareTransactionMessage
     // Serialize tid.
     out.writeLong(tid);
 
-    // Serialize commitTime
-    out.writeLong(commitTime);
-
     // Serialize reads.
     if (reads == null) {
       out.writeInt(0);
@@ -169,7 +163,6 @@ public class PrepareTransactionMessage
 
     // Read the TID.
     this.tid = in.readLong();
-    this.commitTime = in.readLong();
 
     // Read reads.
     int size = in.readInt();

@@ -117,13 +117,13 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
    * Sends a PREPARE message to the store.
    */
   @Override
-  public boolean prepareTransaction(long tid, long commitTime,
+  public boolean prepareTransaction(long tid,
       Collection<Object._Impl> toCreate, LongKeyMap<Integer> reads,
       Collection<Object._Impl> writes)
       throws TransactionPrepareFailedException, UnreachableNodeException {
     PrepareTransactionMessage.Response response =
         send(Worker.getWorker().authToStore, new PrepareTransactionMessage(tid,
-            commitTime, toCreate, reads, writes));
+            toCreate, reads, writes));
 
     return response.subTransactionCreated;
   }

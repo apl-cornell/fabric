@@ -215,8 +215,8 @@ class Store extends MessageToStoreHandler {
         nameOf(client.principal), msg.tid);
 
     boolean subTransactionCreated =
-        prepareTransaction(client.principal, msg.tid, msg.commitTime,
-            msg.serializedCreates, msg.serializedWrites, msg.reads);
+        prepareTransaction(client.principal, msg.tid, msg.serializedCreates,
+            msg.serializedWrites, msg.reads);
     return new PrepareTransactionMessage.Response(subTransactionCreated);
   }
 
@@ -321,14 +321,13 @@ class Store extends MessageToStoreHandler {
    * @return true iff a subtransaction was created for making Statistics
    *         objects.
    */
-  private boolean prepareTransaction(Principal p, long tid, long commitTime,
+  private boolean prepareTransaction(Principal p, long tid,
       Collection<SerializedObject> serializedCreates,
       Collection<SerializedObject> serializedWrites, LongKeyMap<Integer> reads)
       throws TransactionPrepareFailedException {
 
     PrepareRequest req =
-        new PrepareRequest(tid, commitTime, serializedCreates,
-            serializedWrites, reads);
+        new PrepareRequest(tid, serializedCreates, serializedWrites, reads);
 
     sm.createSurrogates(req);
 

@@ -77,9 +77,9 @@ public class InProcessStore extends RemoteStore {
   }
 
   @Override
-  public boolean prepareTransaction(long tid, long commitTime,
-      Collection<_Impl> toCreate, LongKeyMap<Integer> reads,
-      Collection<_Impl> writes) throws TransactionPrepareFailedException {
+  public boolean prepareTransaction(long tid, Collection<_Impl> toCreate,
+      LongKeyMap<Integer> reads, Collection<_Impl> writes)
+      throws TransactionPrepareFailedException {
     Collection<SerializedObject> serializedCreates =
         new ArrayList<SerializedObject>(toCreate.size());
     Collection<SerializedObject> serializedWrites =
@@ -98,8 +98,7 @@ public class InProcessStore extends RemoteStore {
     }
 
     PrepareRequest req =
-        new PrepareRequest(tid, commitTime, serializedCreates,
-            serializedWrites, reads);
+        new PrepareRequest(tid, serializedCreates, serializedWrites, reads);
 
     // Swizzle remote pointers.
     sm.createSurrogates(req);

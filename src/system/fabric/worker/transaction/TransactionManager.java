@@ -303,7 +303,7 @@ public final class TransactionManager {
       TransactionRestartingException, TransactionAtomicityViolationException {
     Timing.COMMIT.begin();
     try {
-      commitTransactionAt(System.currentTimeMillis());
+      commitTransaction(false);
     } finally {
       Timing.COMMIT.end();
     }
@@ -313,15 +313,7 @@ public final class TransactionManager {
    * @throws TransactionRestartingException
    *           if the prepare fails.
    */
-  public void commitTransactionAt(long commitTime) {
-    commitTransactionAt(commitTime, false);
-  }
-
-  /**
-   * @throws TransactionRestartingException
-   *           if the prepare fails.
-   */
-  public void commitTransactionAt(long commitTime, boolean ignoreRetrySignal) {
+  public void commitTransaction(boolean ignoreRetrySignal) {
     WORKER_TRANSACTION_LOGGER.log(Level.FINEST, "{0} attempting to commit",
         current);
 
@@ -404,7 +396,7 @@ public final class TransactionManager {
 
     // Send prepare messages to our cohorts. This will also abort our portion of
     // the transaction if the prepare fails.
-    sendPrepareMessages(commitTime, stores, workers);
+    sendPrepareMessages(stores, workers);
 
     // Send commit messages to our cohorts.
     sendCommitMessagesAndCleanUp(stores, workers);
@@ -427,9 +419,8 @@ public final class TransactionManager {
    * @throws TransactionRestartingException
    *           if the prepare fails.
    */
-  public void sendPrepareMessages(long commitTime) {
-    sendPrepareMessages(commitTime, current.storesToContact(),
-        current.workersCalled);
+  public void sendPrepareMessages() {
+    sendPrepareMessages(current.storesToContact(), current.workersCalled);
   }
 
   /**
@@ -440,8 +431,8 @@ public final class TransactionManager {
    * @throws TransactionRestartingException
    *           if the prepare fails.
    */
-  private void sendPrepareMessages(final long commitTime, Set<Store> stores,
-      List<RemoteWorker> workers) throws TransactionRestartingException {
+  private void sendPrepareMessages(Set<Store> stores, List<RemoteWorker> workers)
+      throws TransactionRestartingException {
     final Map<RemoteNode<?>, TransactionPrepareFailedException> failures =
         Collections
             .synchronizedMap(new HashMap<RemoteNode<?>, TransactionPrepareFailedException>());
@@ -482,7 +473,7 @@ public final class TransactionManager {
             @Override
             protected void runImpl() {
               try {
-                worker.prepareTransaction(current.tid.topTid, commitTime);
+                worker.prepareTransaction(current.tid.topTid);
               } catch (UnreachableNodeException e) {
                 failures.put(worker, new TransactionPrepareFailedException(
                     "Unreachable worker"));
@@ -512,8 +503,8 @@ public final class TransactionManager {
                     current.getReadsForStore(store, false);
                 Collection<_Impl> writes = current.getWritesForStore(store);
                 boolean subTransactionCreated =
-                    store.prepareTransaction(current.tid.topTid, commitTime,
-                        creates, reads, writes);
+                    store.prepareTransaction(current.tid.topTid, creates,
+                        reads, writes);
 
                 if (subTransactionCreated) {
                   RemoteWorker storeWorker = worker.getWorker(store.name());
@@ -1286,7 +1277,7 @@ public final class TransactionManager {
     // transaction manager.
     TransactionID commonAncestor = log.getTid().getLowestCommonAncestor(tid);
     for (int i = log.getTid().depth; i > commonAncestor.depth; i--)
-      commitTransactionAt(System.currentTimeMillis());
+      commitTransaction(true);
 
     // Start new transactions if necessary.
     if (commonAncestor.depth != tid.depth) startTransaction(tid, true);

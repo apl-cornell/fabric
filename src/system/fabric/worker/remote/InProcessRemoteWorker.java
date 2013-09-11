@@ -57,8 +57,8 @@ public class InProcessRemoteWorker extends RemoteWorker {
   }
 
   @Override
-  public void prepareTransaction(long tid, long commitTime)
-      throws UnreachableNodeException, TransactionPrepareFailedException {
+  public void prepareTransaction(long tid) throws UnreachableNodeException,
+      TransactionPrepareFailedException {
     // XXX Does this actually happen?
     throw new NotImplementedException();
   }
