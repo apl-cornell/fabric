@@ -287,21 +287,15 @@ public final class Log {
   Map<Store, LongKeyMap<Integer>> storesRead(long commitTime) {
     Map<Store, LongKeyMap<Integer>> result =
         new HashMap<Store, LongKeyMap<Integer>>();
-    int numReadsToPrepare = 0;
-    int numTotalReads = 0;
-
     for (Entry<Store, LongKeyMap<ReadMap.Entry>> entry : reads
         .nonNullEntrySet()) {
       Store store = entry.getKey();
       LongKeyMap<Integer> submap = new LongKeyHashMap<Integer>();
-
-      boolean isRemoteStore = !store.isLocalStore();
-
-      LongKeyMap<ReadMap.Entry> readOnly =
+      LongKeyMap<ReadMap.Entry> readOnlyObjects =
           filterModifiedReads(store, entry.getValue());
-      if (isRemoteStore) numTotalReads += readOnly.size();
 
-      for (LongKeyMap.Entry<ReadMap.Entry> subEntry : readOnly.entrySet()) {
+      for (LongKeyMap.Entry<ReadMap.Entry> subEntry : readOnlyObjects
+          .entrySet()) {
         long onum = subEntry.getKey();
         ReadMap.Entry rme = subEntry.getValue();
 
@@ -312,13 +306,9 @@ public final class Log {
       }
 
       if (!submap.isEmpty()) {
-        if (isRemoteStore) numReadsToPrepare += submap.size();
         result.put(store, submap);
       }
     }
-
-    Logging.HOTOS_LOGGER.info("Read-preparing " + numReadsToPrepare
-        + " out of " + numTotalReads + " objects");
 
     return result;
   }

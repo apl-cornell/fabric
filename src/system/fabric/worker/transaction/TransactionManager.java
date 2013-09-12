@@ -692,11 +692,17 @@ public final class TransactionManager {
     // Go through each store and send prepare messages in parallel.
     Map<Store, LongKeyMap<Integer>> storesRead = current.storesRead(commitTime);
     current.commitState.commitTime = commitTime;
+    int numRemoteReadsPrepared = 0;
     for (Iterator<Entry<Store, LongKeyMap<Integer>>> entryIt =
         storesRead.entrySet().iterator(); entryIt.hasNext();) {
       Entry<Store, LongKeyMap<Integer>> entry = entryIt.next();
       final Store store = entry.getKey();
       final LongKeyMap<Integer> reads = entry.getValue();
+
+      if (!store.isLocalStore()) {
+        numRemoteReadsPrepared += reads.size();
+      }
+
       NamedRunnable runnable =
           new NamedRunnable("worker read-prepare to " + store.name()) {
             @Override
@@ -735,6 +741,19 @@ public final class TransactionManager {
         futures.add(Threading.getPool().submit(runnable));
       } else {
         runnable.run();
+      }
+    }
+
+    if (HOTOS_LOGGER.isLoggable(Level.INFO)) {
+      int numTotalRemoteReads = 0;
+      for (Store store : current.reads.storeSet()) {
+        if (store.isLocalStore()) continue;
+        numTotalRemoteReads += current.reads.get(store).size();
+      }
+
+      if (numTotalRemoteReads > 0) {
+        HOTOS_LOGGER.log(Level.INFO, "Prepared {0} out of {1} reads",
+            new Object[] { numRemoteReadsPrepared, numTotalRemoteReads });
       }
     }
 
