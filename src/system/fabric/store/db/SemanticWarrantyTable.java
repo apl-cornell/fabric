@@ -588,9 +588,13 @@ public class SemanticWarrantyTable {
           if (!compareValue(oldValue)) return SemanticExtendStatus.BAD_VERSION;
           // Update the warranty
           if (warranty.expiresBefore(newTime, true)) {
-            warranty = new SemanticWarranty(newTime);
-            // Update state back to valid.
-            setStatus(CallStatus.VALID);
+            if (nextUpdate == null) {
+              warranty = new SemanticWarranty(newTime);
+              // Update state back to valid.
+              setStatus(CallStatus.VALID);
+            } else {
+              return SemanticExtendStatus.DENIED;
+            }
           }
           return SemanticExtendStatus.OK;
         case VALID:
@@ -785,6 +789,17 @@ public class SemanticWarrantyTable {
         case VALID:
         default:
           SEMANTIC_WARRANTY_LOGGER.finest("CHECKING CALL " + call);
+
+          if (updates.containsKey(call)) {
+            SEMANTIC_WARRANTY_LOGGER.finest("CALL ALREADY CHECKED EARLIER AND" +
+                " WAS UNAFFECTED");
+            return false;
+          } else if (changes.containsKey(call)) {
+            SEMANTIC_WARRANTY_LOGGER.finest("CALL ALREADY CHECKED EARLIER AND" +
+                " WAS AFFECTED");
+            return true;
+          }
+
           Future<Map<CallInstance, SemanticWarrantyRequest>> check =
               Executors.newSingleThreadExecutor().submit(
                   getCallChecker(uncertainCalls, updates, changes, creates,
@@ -968,6 +983,7 @@ public class SemanticWarrantyTable {
           for (LongIterator iter = update.readOnums.iterator(); iter
               .hasNext();) {
             long read = iter.next();
+            readersTable.putIfAbsent(read, new HashSet<CallInstance>());
             readersTable.get(read).add(call);
           }
 
@@ -975,6 +991,7 @@ public class SemanticWarrantyTable {
           for (LongIterator iter = update.createOnums.iterator(); iter
               .hasNext();) {
             long create = iter.next();
+            creatorTable.putIfAbsent(create, new HashSet<CallInstance>());
             creatorTable.get(create).add(call);
           }
 
