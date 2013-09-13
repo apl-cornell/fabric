@@ -21,27 +21,27 @@ public class WarrantyIssuer<K> {
    * Parameter for low-pass filtering the error derivatives in the PID
    * controller. Higher values result in more filtering.
    */
-  private static final double PID_DERIV_ALPHA = 0.011644;
+  private static final double PID_DERIV_ALPHA = 0;
 
   /**
    * Proportional gain for the PID controller.
    */
-  private static final double PID_KP = -1.448;
+  private static final double PID_KP = 0.135132 * 100;
 
   /**
    * Integral gain for the PID controller.
    */
-  private static final double PID_KI = -3.6661;
+  private static final double PID_KI = 0 * 100;
 
   /**
    * Derivative gain for the PID controller.
    */
-  private static final double PID_KD = 49.3488;
+  private static final double PID_KD = 0 * 100;
 
   /**
    * The base commit latency, in milliseconds.
    */
-  private static final long BASE_COMMIT_LATENCY = 250;
+  private static final long BASE_COMMIT_LATENCY = (int) (0.118652 * 125);
 
   /**
    * The minimum length of time (in milliseconds) for which each issued warranty
@@ -53,14 +53,14 @@ public class WarrantyIssuer<K> {
    * The maximum length of time (in milliseconds) for which each issued warranty
    * should be valid.
    */
-  private static final int MAX_WARRANTY_LENGTH = 5000;
+  private static final int MAX_WARRANTY_LENGTH = (int) (0.641968 * 10000);
 
   /**
    * The decay rate for the exponential average when calculating the rate of
    * read prepares. Lower values result in slower adaptation to changes in
    * the read-prepare rate.
    */
-  private static final double READ_PREPARE_ALPHA = 0.25;
+  private static final double READ_PREPARE_ALPHA = 0.149780;
 
   /**
    * The length of the time window over which to calculate the rate of
