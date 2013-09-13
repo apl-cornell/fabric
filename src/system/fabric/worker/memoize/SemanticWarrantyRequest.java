@@ -51,12 +51,16 @@ public class SemanticWarrantyRequest {
     this.call = call;
     this.value = value;
     this.reads = reads;
+    this.readOnums = new LongHashSet();
+    for (Store s : reads.storeSet())
+      for (LongKeyMap.Entry<ReadMap.Entry> entry : reads.get(s).entrySet())
+        this.readOnums.add(entry.getKey());
     this.creates = creates;
+    this.createOnums = new LongHashSet(); 
+    for (Store s : creates.storeSet())
+      for (LongKeyMap.Entry<_Impl> entry : creates.get(s).entrySet())
+        this.createOnums.add(entry.getKey());
     this.calls = calls;
-
-    /* for store use only */
-    readOnums = null;
-    createOnums = null;
   }
 
   public SemanticWarrantyRequest(DataInput in) throws IOException {
