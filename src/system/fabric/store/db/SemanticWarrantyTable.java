@@ -544,7 +544,8 @@ public class SemanticWarrantyTable {
           writeUnlock();
           if (warranty.expired(true))
             setStatus(CallStatus.STALE);
-          else setStatus(CallStatus.VALID);
+          else
+            setStatus(CallStatus.VALID);
           break;
         case STALE:
         case VALID:
@@ -565,6 +566,7 @@ public class SemanticWarrantyTable {
         switch (getStatus()) {
         case NOVALUE:
           writeUnlock();
+          // TODO: reset state?
           break;
         case STALE:
         case VALID:
@@ -859,10 +861,14 @@ public class SemanticWarrantyTable {
         long longestSoFar, Map<CallInstance, SemanticWarrantyRequest> updates,
         Map<CallInstance, SemanticWarrantyRequest> changes,
         Collection<SerializedObject> creates,
-        Collection<SerializedObject> writes)
+        Collection<SerializedObject> writes,
+        Set<CallInstance> writeLocked)
         throws TransactionPrepareFailedException {
       try {
-        writeLock();
+        if (!writeLocked.contains(call)) {
+          writeLock();
+          writeLocked.add(call);
+        }
       } catch (UnableToLockException e) {
         SEMANTIC_WARRANTY_LOGGER.finest("Could not write lock dependent call "
             + call);
@@ -883,7 +889,7 @@ public class SemanticWarrantyTable {
           for (CallInstance parent : new TreeSet<CallInstance>(getCallers())) {
             long parentTime =
                 getInfo(parent).proposeWriteTime(uncertainCalls, longest,
-                    updates, changes, creates, writes);
+                    updates, changes, creates, writes, writeLocked);
             longest = parentTime > longest ? parentTime : longest;
           }
           return longest;
@@ -959,21 +965,21 @@ public class SemanticWarrantyTable {
         case VALID:
         default:
           // Defend the reads
-          for (LongIterator iter = nextUpdate.readOnums.iterator(); iter
+          for (LongIterator iter = update.readOnums.iterator(); iter
               .hasNext();) {
             long read = iter.next();
             readersTable.get(read).add(call);
           }
 
           // Defend the creates
-          for (LongIterator iter = nextUpdate.createOnums.iterator(); iter
+          for (LongIterator iter = update.createOnums.iterator(); iter
               .hasNext();) {
             long create = iter.next();
             creatorTable.get(create).add(call);
           }
 
           // Defend the subcalls
-          for (CallInstance subcall : nextUpdate.calls.keySet()) {
+          for (CallInstance subcall : update.calls.keySet()) {
             getInfo(subcall).addCaller(call);
           }
 
@@ -1273,6 +1279,7 @@ public class SemanticWarrantyTable {
 
     // Lock the calls.
     TreeSet<CallInstance> lockedCalls = new TreeSet<CallInstance>();
+    Set<CallInstance> writeLockedCalls = new HashSet<CallInstance>();
     try {
       for (CallInstance call : affectedCalls) {
         getInfo(call).lockForWritePrepare(lockedCalls);
@@ -1283,7 +1290,7 @@ public class SemanticWarrantyTable {
       for (CallInstance call : affectedCalls) {
         long suggestedTime =
             getInfo(call).proposeWriteTime(uncertainCalls, longest, updates,
-                changes, creates, writes);
+                changes, creates, writes, writeLockedCalls);
         longest = longest > suggestedTime ? longest : suggestedTime;
       }
 
@@ -1294,9 +1301,7 @@ public class SemanticWarrantyTable {
     } catch (TransactionPrepareFailedException e) {
       // Remove write locks for those we actually checked and therefore did
       // writeLock.
-      for (CallInstance writeLockedCall : updates.keySet())
-        getInfo(writeLockedCall).writeUnlock();
-      for (CallInstance writeLockedCall : changes.keySet())
+      for (CallInstance writeLockedCall : writeLockedCalls)
         getInfo(writeLockedCall).writeUnlock();
       throw e;
     } finally {
