@@ -162,10 +162,6 @@ public class TransactionManager {
         database.registerUpdate(tid, worker, o, versionConflicts, CREATE);
       }
 
-      if (!versionConflicts.isEmpty()) {
-        throw new TransactionPrepareFailedException(versionConflicts);
-      }
-
       // Double check calls.
       long currentTime = System.currentTimeMillis();
       long currentProposedTime =
@@ -173,13 +169,18 @@ public class TransactionManager {
       SEMANTIC_WARRANTY_LOGGER.finest(
           String.format("Checking calls for %x that would delay longer than %d ms",
             tid, currentProposedTime - currentTime));
-      Pair<SemanticWarranty, Map<CallInstance, SemanticWarrantyRequest>>
+      Pair<SemanticWarranty,
+           Pair<Map<CallInstance, SemanticWarrantyRequest>,
+                Map<CallInstance, SemanticWarrantyRequest>>>
         callPrepareResp = semanticWarranties.prepareWrites(req.writes,
             req.creates, tid, currentProposedTime, database.getName());
 
       SemanticWarranty longestCallWarranty = callPrepareResp.first;
       Map<CallInstance, SemanticWarrantyRequest> updates =
-        callPrepareResp.second;
+        callPrepareResp.second.first;
+      Map<CallInstance, SemanticWarrantyRequest> newCalls =
+        callPrepareResp.second.second;
+      updates.putAll(newCalls);
 
       OidKeyHashMap<Pair<Integer, VersionWarranty>> addedReads =
         new OidKeyHashMap<Pair<Integer, VersionWarranty>>();
@@ -208,15 +209,24 @@ public class TransactionManager {
         // Collect calls and their warranties for the worker
         addedCalls.putAll(update.calls);
       }
+
+      if (!versionConflicts.isEmpty()) {
+        throw new TransactionPrepareFailedException(versionConflicts);
+      }
       
-      // Don't worry about calls we're updating.
+      // Don't worry about calls we're updating or requesting.
       for (CallInstance updatingCall : updates.keySet()) {
         addedCalls.remove(updatingCall);
+      }
+
+      for (CallInstance newCall : newCalls.keySet()) {
+        semanticWarranties.requestWarranty(tid, newCalls.get(newCall), false);
       }
 
       database.finishPrepareWrites(tid, worker);
 
       STORE_TRANSACTION_LOGGER.fine("Prepared writes for transaction " + tid);
+      SEMANTIC_WARRANTY_LOGGER.fine("Prepared writes for transaction " + Long.toHexString(tid));
 
       // Ugh this is ugly.
       if (longestCallWarranty != null
@@ -240,8 +250,8 @@ public class TransactionManager {
       throw e;
     } catch (RuntimeException e) {
       e.printStackTrace();
-      semanticWarranties.abort(tid);
       database.abortPrepareWrites(tid, worker);
+      semanticWarranties.abort(tid);
       throw e;
     }
   }
@@ -470,7 +480,7 @@ public class TransactionManager {
 
         // Get a proposal for a warranty
         SemanticWarranty proposed = semanticWarranties.requestWarranty(tid, r,
-            warranties.keySet());
+            true);
         SEMANTIC_WARRANTY_LOGGER.finer(r.call.toString()
             + " was proposed a warranty to expire in " + (proposed.expiry() -
               System.currentTimeMillis()));

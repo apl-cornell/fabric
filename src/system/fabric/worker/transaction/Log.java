@@ -539,6 +539,14 @@ public final class Log {
   }
 
   /**
+   * Gets all SemanticWarrantyRequests.  THIS SHOULD ONLY BE USED BY THE STORE
+   * DURING CALL CHECKING.
+   */
+  public Map<CallInstance, SemanticWarrantyRequest> getAllRequests() {
+    return new HashMap<CallInstance, SemanticWarrantyRequest>(requests);
+  }
+
+  /**
    * Returns a mapping of stores to (mappings of onums to version numbers),
    * indicating those objects read (but not modified) by this transaction, whose
    * version warranties expire between commitState.commitTime (exclusive) and
