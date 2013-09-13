@@ -394,12 +394,21 @@ public final class TransactionManager {
     Set<Store> stores = current.storesToContact();
     List<RemoteWorker> workers = current.workersCalled;
 
+    // Determine whether to use the single-store optimization. The optimization
+    // is only used for non-distributed transactions that use objects from a
+    // single remote store.
+    int numRemoteStores = 0;
+    for (Store store : stores) {
+      if (!store.isLocalStore()) numRemoteStores++;
+    }
+    boolean singleStore = workers.isEmpty() && numRemoteStores == 1;
+
     // Send prepare messages to our cohorts. This will also abort our portion of
     // the transaction if the prepare fails.
-    sendPrepareMessages(stores, workers);
+    sendPrepareMessages(singleStore, stores, workers);
 
     // Send commit messages to our cohorts.
-    sendCommitMessagesAndCleanUp(stores, workers);
+    sendCommitMessagesAndCleanUp(singleStore, stores, workers);
 
     final long commitLatency = System.currentTimeMillis() - prepareStart;
     if (LOCAL_STORE == null) LOCAL_STORE = Worker.getWorker().getLocalStore();
@@ -413,14 +422,14 @@ public final class TransactionManager {
   private static LocalStore LOCAL_STORE;
 
   /**
-   * Sends prepare messages to the cohorts. Also sends abort messages if any
-   * cohort fails to prepare.
+   * Sends prepare messages to the cohorts in a distributed transaction. Also
+   * sends abort messages if any cohort fails to prepare.
    * 
    * @throws TransactionRestartingException
    *           if the prepare fails.
    */
   public void sendPrepareMessages() {
-    sendPrepareMessages(current.storesToContact(), current.workersCalled);
+    sendPrepareMessages(false, current.storesToContact(), current.workersCalled);
   }
 
   /**
@@ -431,7 +440,8 @@ public final class TransactionManager {
    * @throws TransactionRestartingException
    *           if the prepare fails.
    */
-  private void sendPrepareMessages(Set<Store> stores, List<RemoteWorker> workers)
+  private void sendPrepareMessages(final boolean singleStore,
+      Set<Store> stores, List<RemoteWorker> workers)
       throws TransactionRestartingException {
     final Map<RemoteNode<?>, TransactionPrepareFailedException> failures =
         Collections
@@ -501,8 +511,8 @@ public final class TransactionManager {
                 LongKeyMap<Integer> reads =
                     current.getReadsForStore(store, false);
                 Collection<_Impl> writes = current.getWritesForStore(store);
-                store.prepareTransaction(current.tid.topTid, creates, reads,
-                    writes);
+                store.prepareTransaction(current.tid.topTid, singleStore,
+                    creates, reads, writes);
               } catch (TransactionPrepareFailedException e) {
                 failures.put((RemoteNode<?>) store, e);
               } catch (UnreachableNodeException e) {
@@ -586,19 +596,20 @@ public final class TransactionManager {
   }
 
   /**
-   * Sends commit messages to the cohorts.
+   * Sends commit messages to the cohorts in a distributed transaction.
    */
   public void sendCommitMessagesAndCleanUp()
       throws TransactionAtomicityViolationException {
-    sendCommitMessagesAndCleanUp(current.storesToContact(),
+    sendCommitMessagesAndCleanUp(false, current.storesToContact(),
         current.workersCalled);
   }
 
   /**
    * Sends commit messages to the given set of stores and workers.
    */
-  private void sendCommitMessagesAndCleanUp(Set<Store> stores,
-      List<RemoteWorker> workers) throws TransactionAtomicityViolationException {
+  private void sendCommitMessagesAndCleanUp(boolean singleStore,
+      Set<Store> stores, List<RemoteWorker> workers)
+      throws TransactionAtomicityViolationException {
     synchronized (current.commitState) {
       switch (current.commitState.value) {
       case UNPREPARED:
@@ -621,80 +632,82 @@ public final class TransactionManager {
       }
     }
 
-    final List<RemoteNode<?>> unreachable =
-        Collections.synchronizedList(new ArrayList<RemoteNode<?>>());
-    final List<RemoteNode<?>> failed =
-        Collections.synchronizedList(new ArrayList<RemoteNode<?>>());
-    List<Future<?>> futures =
-        new ArrayList<Future<?>>(stores.size() + workers.size());
+    if (!singleStore) {
+      final List<RemoteNode<?>> unreachable =
+          Collections.synchronizedList(new ArrayList<RemoteNode<?>>());
+      final List<RemoteNode<?>> failed =
+          Collections.synchronizedList(new ArrayList<RemoteNode<?>>());
+      List<Future<?>> futures =
+          new ArrayList<Future<?>>(stores.size() + workers.size());
 
-    // Send commit messages to the workers in parallel.
-    for (final RemoteWorker worker : workers) {
-      NamedRunnable runnable = new NamedRunnable("worker commit to " + worker) {
-        @Override
-        public void runImpl() {
+      // Send commit messages to the workers in parallel.
+      for (final RemoteWorker worker : workers) {
+        NamedRunnable runnable =
+            new NamedRunnable("worker commit to " + worker) {
+              @Override
+              public void runImpl() {
+                try {
+                  worker.commitTransaction(current.tid.topTid);
+                } catch (UnreachableNodeException e) {
+                  unreachable.add(worker);
+                } catch (TransactionCommitFailedException e) {
+                  failed.add(worker);
+                }
+              }
+            };
+
+        futures.add(Threading.getPool().submit(runnable));
+      }
+
+      // Send commit messages to the stores in parallel.
+      for (Iterator<Store> storeIt = stores.iterator(); storeIt.hasNext();) {
+        final Store store = storeIt.next();
+        NamedRunnable runnable =
+            new NamedRunnable("worker commit to " + store.name()) {
+              @Override
+              public void runImpl() {
+                try {
+                  store.commitTransaction(current.tid.topTid);
+                } catch (TransactionCommitFailedException e) {
+                  failed.add((RemoteStore) store);
+                } catch (UnreachableNodeException e) {
+                  unreachable.add((RemoteStore) store);
+                }
+              }
+            };
+
+        // Optimization: only start in a new thread if there are more stores to
+        // contact and if it's a truly remote store (i.e., not in-process).
+        if (!(store instanceof InProcessStore || store.isLocalStore())
+            && storeIt.hasNext()) {
+          futures.add(Threading.getPool().submit(runnable));
+        } else {
+          runnable.run();
+        }
+      }
+
+      // Wait for replies.
+      for (Future<?> future : futures) {
+        while (true) {
           try {
-            worker.commitTransaction(current.tid.topTid);
-          } catch (UnreachableNodeException e) {
-            unreachable.add(worker);
-          } catch (TransactionCommitFailedException e) {
-            failed.add(worker);
+            future.get();
+            break;
+          } catch (InterruptedException e) {
+            Logging.logIgnoredInterruptedException(e);
+          } catch (ExecutionException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
           }
         }
-      };
-
-      futures.add(Threading.getPool().submit(runnable));
-    }
-
-    // Send commit messages to the stores in parallel.
-    for (Iterator<Store> storeIt = stores.iterator(); storeIt.hasNext();) {
-      final Store store = storeIt.next();
-      NamedRunnable runnable =
-          new NamedRunnable("worker commit to " + store.name()) {
-            @Override
-            public void runImpl() {
-              try {
-                store.commitTransaction(current.tid.topTid);
-              } catch (TransactionCommitFailedException e) {
-                failed.add((RemoteStore) store);
-              } catch (UnreachableNodeException e) {
-                unreachable.add((RemoteStore) store);
-              }
-            }
-          };
-
-      // Optimization: only start in a new thread if there are more stores to
-      // contact and if it's a truly remote store (i.e., not in-process).
-      if (!(store instanceof InProcessStore || store.isLocalStore())
-          && storeIt.hasNext()) {
-        futures.add(Threading.getPool().submit(runnable));
-      } else {
-        runnable.run();
       }
-    }
 
-    // Wait for replies.
-    for (Future<?> future : futures) {
-      while (true) {
-        try {
-          future.get();
-          break;
-        } catch (InterruptedException e) {
-          Logging.logIgnoredInterruptedException(e);
-        } catch (ExecutionException e) {
-          // TODO Auto-generated catch block
-          e.printStackTrace();
-        }
+      if (!(unreachable.isEmpty() && failed.isEmpty())) {
+        Logging.log(WORKER_TRANSACTION_LOGGER, Level.SEVERE,
+            "{0} error committing: atomicity violation "
+                + "-- failed: {1} unreachable: {2}", current, failed,
+            unreachable);
+        throw new TransactionAtomicityViolationException(failed, unreachable);
       }
-    }
-
-    if (!(unreachable.isEmpty() && failed.isEmpty())) {
-      Logging
-          .log(WORKER_TRANSACTION_LOGGER, Level.SEVERE,
-              "{0} error committing: atomicity violation "
-                  + "-- failed: {1} unreachable: {2}", current, failed,
-              unreachable);
-      throw new TransactionAtomicityViolationException(failed, unreachable);
     }
 
     // Update data structures to reflect successful commit.

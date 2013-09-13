@@ -30,9 +30,10 @@ public interface Store extends Serializable {
   /**
    * Notifies the store that the transaction is entering the Prepare phase.
    */
-  void prepareTransaction(long tid, Collection<_Impl> toCreate,
-      LongKeyMap<Integer> reads, Collection<_Impl> writes)
-      throws UnreachableNodeException, TransactionPrepareFailedException;
+  void prepareTransaction(long tid, boolean singleStore,
+      Collection<_Impl> toCreate, LongKeyMap<Integer> reads,
+      Collection<_Impl> writes) throws UnreachableNodeException,
+      TransactionPrepareFailedException;
 
   /**
    * Returns the cache entry for the given onum. If the object is not resident,

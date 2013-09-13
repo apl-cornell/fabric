@@ -27,6 +27,15 @@ public class PrepareTransactionMessage
   // ////////////////////////////////////////////////////////////////////////////
 
   public final long tid;
+
+  /**
+   * A flag to indicate whether objects from just a single (persistent) store
+   * are involved in this transaction. This is always false if the transaction
+   * is distributed. If this is true, then the store will commit the transaction
+   * as soon as it is prepared.
+   */
+  public final boolean singleStore;
+
   public final LongKeyMap<Integer> reads;
 
   /**
@@ -61,18 +70,20 @@ public class PrepareTransactionMessage
    * Used to prepare transactions at remote workers.
    */
   public PrepareTransactionMessage(long tid) {
-    this(tid, null, null, null);
+    this(tid, false, null, null, null);
   }
 
   /**
    * Only used by the worker.
    */
-  public PrepareTransactionMessage(long tid, Collection<_Impl> toCreate,
-      LongKeyMap<Integer> reads, Collection<_Impl> writes) {
+  public PrepareTransactionMessage(long tid, boolean singleStore,
+      Collection<_Impl> toCreate, LongKeyMap<Integer> reads,
+      Collection<_Impl> writes) {
     super(MessageType.PREPARE_TRANSACTION,
         TransactionPrepareFailedException.class);
 
     this.tid = tid;
+    this.singleStore = singleStore;
     this.creates = toCreate;
     this.reads = reads;
     this.writes = writes;
@@ -110,6 +121,9 @@ public class PrepareTransactionMessage
   protected void writeMessage(DataOutput out) throws IOException {
     // Serialize tid.
     out.writeLong(tid);
+
+    // Serialize single-store flag.
+    out.writeBoolean(singleStore);
 
     // Serialize reads.
     if (reads == null) {
@@ -150,6 +164,9 @@ public class PrepareTransactionMessage
 
     // Read the TID.
     this.tid = in.readLong();
+
+    // Read the single-store flag.
+    this.singleStore = in.readBoolean();
 
     // Read reads.
     int size = in.readInt();

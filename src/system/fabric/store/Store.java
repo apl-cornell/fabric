@@ -216,6 +216,16 @@ class Store extends MessageToStoreHandler {
 
     prepareTransaction(client.principal, msg.tid, msg.serializedCreates,
         msg.serializedWrites, msg.reads);
+
+    if (msg.singleStore) {
+      try {
+        tm.commitTransaction(client, msg.tid);
+      } catch (TransactionCommitFailedException e) {
+        // Shouldn't happen.
+        throw new InternalError("Single-store commit failed unexpectedly.", e);
+      }
+    }
+
     return new PrepareTransactionMessage.Response();
   }
 

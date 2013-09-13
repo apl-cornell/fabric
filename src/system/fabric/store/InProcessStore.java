@@ -77,9 +77,9 @@ public class InProcessStore extends RemoteStore {
   }
 
   @Override
-  public void prepareTransaction(long tid, Collection<_Impl> toCreate,
-      LongKeyMap<Integer> reads, Collection<_Impl> writes)
-      throws TransactionPrepareFailedException {
+  public void prepareTransaction(long tid, boolean singleStore,
+      Collection<_Impl> toCreate, LongKeyMap<Integer> reads,
+      Collection<_Impl> writes) throws TransactionPrepareFailedException {
     Collection<SerializedObject> serializedCreates =
         new ArrayList<SerializedObject>(toCreate.size());
     Collection<SerializedObject> serializedWrites =
@@ -104,6 +104,15 @@ public class InProcessStore extends RemoteStore {
     sm.createSurrogates(req);
 
     tm.prepare(Worker.getWorker().getPrincipal(), req);
+
+    if (singleStore) {
+      try {
+        commitTransaction(tid);
+      } catch (TransactionCommitFailedException e) {
+        // Shouldn't happen.
+        throw new InternalError("Single-store commit failed unexpectedly.", e);
+      }
+    }
   }
 
   @Override
