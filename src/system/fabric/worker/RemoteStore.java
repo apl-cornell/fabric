@@ -122,11 +122,11 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
   public long prepareTransactionWrites(long tid,
       Collection<Object._Impl> toCreate, Collection<Object._Impl> writes)
       throws TransactionPrepareFailedException, UnreachableNodeException {
-    PrepareTransactionWritesMessage.Response respone =
+    PrepareTransactionWritesMessage.Response response =
         send(Worker.getWorker().authToStore,
             new PrepareTransactionWritesMessage(tid, toCreate, writes));
 
-    return respone.minCommitTime;
+    return response.minCommitTime;
   }
 
   @Override
