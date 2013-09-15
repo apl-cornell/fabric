@@ -396,8 +396,10 @@ public final class TransactionManager {
     // Send commit messages to our cohorts.
     sendCommitMessagesAndCleanUp(commitTime);
 
-    final long commitLatency =
-        Math.max(commitTime, System.currentTimeMillis()) - prepareStart;
+    final long actualCommitTime =
+        Math.max(commitTime, System.currentTimeMillis());
+    ((FabricThread.Impl) Thread.currentThread()).commitTime = actualCommitTime;
+    final long commitLatency = actualCommitTime - prepareStart;
     final long writeDelay =
         Math.max(0, commitTime - System.currentTimeMillis());
     if (LOCAL_STORE == null) LOCAL_STORE = Worker.getWorker().getLocalStore();
