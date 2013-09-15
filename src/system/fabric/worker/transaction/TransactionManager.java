@@ -410,7 +410,9 @@ public final class TransactionManager {
     // Send commit messages to our cohorts.
     sendCommitMessagesAndCleanUp(singleStore, stores, workers);
 
-    final long commitLatency = System.currentTimeMillis() - prepareStart;
+    final long commitTime = System.currentTimeMillis();
+    ((FabricThread.Impl) Thread.currentThread()).commitTime = commitTime;
+    final long commitLatency = commitTime - prepareStart;
     if (LOCAL_STORE == null) LOCAL_STORE = Worker.getWorker().getLocalStore();
     if (workers.size() > 0 || stores.size() != 1
         || !stores.contains(LOCAL_STORE)) {
