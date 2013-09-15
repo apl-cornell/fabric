@@ -400,8 +400,7 @@ public final class TransactionManager {
         Math.max(commitTime, System.currentTimeMillis());
     Thread thread = Thread.currentThread();
     if (thread instanceof FabricThread)
-      ((FabricThread.Impl) Thread.currentThread()).commitTime =
-          actualCommitTime;
+      ((FabricThread.Impl) thread).commitTime = actualCommitTime;
     final long commitLatency = actualCommitTime - prepareStart;
     final long writeDelay =
         Math.max(0, commitTime - System.currentTimeMillis());
