@@ -411,7 +411,9 @@ public final class TransactionManager {
     sendCommitMessagesAndCleanUp(singleStore, stores, workers);
 
     final long commitTime = System.currentTimeMillis();
-    ((FabricThread.Impl) Thread.currentThread()).commitTime = commitTime;
+    Thread thread = Thread.currentThread();
+    if (thread instanceof FabricThread)
+      ((FabricThread.Impl) thread).commitTime = commitTime;
     final long commitLatency = commitTime - prepareStart;
     if (LOCAL_STORE == null) LOCAL_STORE = Worker.getWorker().getLocalStore();
     if (workers.size() > 0 || stores.size() != 1
