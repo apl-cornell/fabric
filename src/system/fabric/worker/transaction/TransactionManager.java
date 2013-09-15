@@ -23,7 +23,6 @@ import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 
 import fabric.common.FabricThread;
@@ -430,8 +429,6 @@ public final class TransactionManager {
    *           if the prepare fails.
    */
   public long sendPrepareWriteMessages() {
-    final AtomicBoolean readOnly = new AtomicBoolean(true);
-
     final Map<RemoteNode<?>, TransactionPrepareFailedException> failures =
         Collections
             .synchronizedMap(new HashMap<RemoteNode<?>, TransactionPrepareFailedException>());
@@ -515,9 +512,6 @@ public final class TransactionManager {
                       creates.size(), writes.size());
                 }
 
-                if (!store.isLocalStore() && creates.size() + writes.size() > 0)
-                  readOnly.set(false);
-
                 long response =
                     store.prepareTransactionWrites(current.tid.topTid, creates,
                         writes);
@@ -557,9 +551,6 @@ public final class TransactionManager {
         }
       }
     }
-
-    HOTOS_LOGGER.info("Transaction is "
-        + (readOnly.get() ? "read-only" : "read/write"));
 
     // Check for conflicts and unreachable stores/workers.
     if (!failures.isEmpty()) {
