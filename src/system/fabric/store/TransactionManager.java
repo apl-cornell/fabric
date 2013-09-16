@@ -27,6 +27,7 @@ import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.RuntimeFetchException;
 import fabric.common.net.RemoteIdentity;
+import fabric.common.util.LongHashSet;
 import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
@@ -184,6 +185,7 @@ public class TransactionManager {
 
       OidKeyHashMap<Pair<Integer, VersionWarranty>> addedReads =
         new OidKeyHashMap<Pair<Integer, VersionWarranty>>();
+      OidKeyHashMap<Store> addedCreates = new OidKeyHashMap<Store>();
 
       Map<CallInstance, WarrantiedCallResult> addedCalls =
         new HashMap<CallInstance, WarrantiedCallResult>();
@@ -194,6 +196,8 @@ public class TransactionManager {
           for (_Impl create : submap.values()) {
             database.registerUpdate(tid, worker, new SerializedObject(create),
                 versionConflicts, CREATE);
+            addedCreates.put(create.$getStore(), create.$getOnum(),
+                create.$getStore());
           }
         }
 
@@ -208,6 +212,13 @@ public class TransactionManager {
 
         // Collect calls and their warranties for the worker
         addedCalls.putAll(update.calls);
+      }
+
+      // Remove added reads on objects we created during call updates
+      for (LongKeyMap<Store> submap : addedCreates) {
+        for (LongKeyMap.Entry<Store> entry : submap.entrySet()) {
+          addedReads.remove(entry.getValue(), entry.getKey());
+        }
       }
 
       if (!versionConflicts.isEmpty()) {

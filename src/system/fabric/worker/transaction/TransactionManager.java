@@ -386,36 +386,16 @@ public final class TransactionManager {
       }
     }
 
-    // Commit top-level transaction.
-    Log HOTOS_current = current;
-    List<RemoteWorker> workers = current.workersCalled;
-    final boolean isReadOnly = current.writes.isEmpty();
-    Set<Store> stores = current.storesRead(Long.MAX_VALUE).keySet();
-    final long prepareStart = System.currentTimeMillis();
-
     // Create top level SemanticWarrantyRequest, if any.
     current.createCurrentRequest();
 
-    // Collect logs from nested semantic warranty requests
-    for (Entry<CallInstance, SemanticWarrantyRequest> entry : current.requests
-        .entrySet()) {
-      SemanticWarrantyRequest req = entry.getValue();
-      // reads
-      for (Entry<Store, LongKeyMap<ReadMap.Entry>> readEntry : req.reads.nonNullEntrySet()) {
-        for (ReadMap.Entry read : readEntry.getValue().values()) {
-          current.reads.put(read.getStore(), read.getRef().onum, read);
-        }
-      }
-
-      // creates
-      for (Entry<Store, LongKeyMap<_Impl>> createEntry : req.creates.nonNullEntrySet()) {
-        for (_Impl create : createEntry.getValue().values()) {
-          current.creates.add(create);
-        }
-      }
-
-      current.semanticWarrantiesUsed.putAll(req.calls);
-    }
+    // Commit top-level transaction.
+    Log HOTOS_current = current;
+    List<RemoteWorker> workers = current.workersCalled;
+    final boolean isReadOnly = current.writes.isEmpty() &&
+      current.getAllRequests().isEmpty();
+    Set<Store> stores = current.storesRead(Long.MAX_VALUE).keySet();
+    final long prepareStart = System.currentTimeMillis();
 
     // Send prepare-write messages to our cohorts. If the prepare fails, this
     // will abort our portion of the transaction and throw a

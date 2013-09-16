@@ -983,7 +983,7 @@ public class SemanticWarrantyTable {
 
         // Set new stuff up
         // Reads
-        reads.removeAll(reads);
+        reads.clear();
         for (LongIterator iter = nextUpdate.readOnums.iterator(); iter
             .hasNext();) {
           long read = iter.next();
@@ -991,7 +991,7 @@ public class SemanticWarrantyTable {
         }
 
         // Creates
-        creates.removeAll(creates);
+        creates.clear();
         for (LongIterator iter = nextUpdate.createOnums.iterator(); iter
             .hasNext();) {
           long create = iter.next();
@@ -999,7 +999,7 @@ public class SemanticWarrantyTable {
         }
 
         // Calls
-        calls.removeAll(calls);
+        calls.clear();
         for (CallInstance subCall : nextUpdate.calls.keySet()) {
           calls.add(subCall);
         }
