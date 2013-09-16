@@ -493,7 +493,11 @@ public class SemanticWarrantyTable {
           return SemanticExtendStatus.OK;
         case VALID:
           // Check what they think it is.
-          if (!compareValue(oldValue)) return SemanticExtendStatus.BAD_VERSION;
+          if (!compareValue(oldValue)) {
+            SEMANTIC_WARRANTY_LOGGER.finest("Old value was " +
+                oldValue + " and new value was " + value);
+            return SemanticExtendStatus.BAD_VERSION;
+          }
           // Update the warranty
           if (warranty.expiresBefore(newTime, true)) {
             // Check that we won't be extending past the next write.
@@ -1005,7 +1009,12 @@ public class SemanticWarrantyTable {
         }
 
         // Set value, warranty, and status
-        value = nextUpdate.value;
+        if (nextUpdate.value instanceof WrappedJavaInlineable) {
+          value = nextUpdate.value;
+        } else {
+          value = new _Proxy(nextUpdate.value.$getStore(),
+              nextUpdate.value.$getOnum());
+        }
         if (warranty.expired(true)) {
           setStatus(CallStatus.STALE);
         } else {
