@@ -1,6 +1,5 @@
 package fabric.worker;
 
-import static fabric.common.Logging.SEMANTIC_WARRANTY_LOGGER;
 import static fabric.common.Logging.TIMING_LOGGER;
 import static fabric.common.Logging.WORKER_LOGGER;
 

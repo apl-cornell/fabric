@@ -416,9 +416,6 @@ public final class Log {
    * the parent that read the given onum.
    */
   public void invalidateDependentRequests(long onum) {
-    SEMANTIC_WARRANTY_LOGGER.finest("Onum " + onum
-        + " written, dropping semantic warranties "
-        + "earlier in transaction that use it.");
     Set<CallInstance> dependencies = readDependencies.get(onum);
     if (dependencies == null) return;
     for (CallInstance id : dependencies)
@@ -931,7 +928,6 @@ public final class Log {
           localStoreCreates), createsInSubcalls);
     for (_Impl obj : chain2) {
       synchronized (obj) {
-        SEMANTIC_WARRANTY_LOGGER.finest("RELEASING CREATE: " + obj.$getOnum());
         obj.$writer = null;
         obj.$writeLockHolder = null;
         obj.$writeLockStackTrace = null;
@@ -1079,8 +1075,7 @@ public final class Log {
     // If we are here, then all reads, creates, call reuses, and results 
     // are on the target store. Now we can make a request object.
     SEMANTIC_WARRANTY_LOGGER.finest("Making request for "
-        + semanticWarrantyCall + " with " + callsForTargetStore.size()
-        + " calls");
+        + semanticWarrantyCall);
     SemanticWarrantyRequest req =
         new SemanticWarrantyRequest(semanticWarrantyCall,
             semanticWarrantyValue, readsForTargetStore, createsForTargetStore,

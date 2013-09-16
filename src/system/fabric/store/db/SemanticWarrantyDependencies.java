@@ -1,7 +1,5 @@
 package fabric.store.db;
 
-import static fabric.common.Logging.SEMANTIC_WARRANTY_LOGGER;
-
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.HashSet;
@@ -19,7 +17,6 @@ import fabric.worker.memoize.CallInstance;
  * caching.  Includes a mapping from CallInstances to their dependency sets and
  * from objects/CallInstances to a set of CallInstances that depend on them.
  */
-//TODO: This is not threadsafe.
 public class SemanticWarrantyDependencies {
   /**
    * Mapping from a CallInstance's id to the set of onums of objects read during
@@ -103,7 +100,6 @@ public class SemanticWarrantyDependencies {
     }
 
     for (CallInstance callId : calls) {
-      SEMANTIC_WARRANTY_LOGGER.finest("Call " + callId + " called by " + id);
       Set<CallInstance> users = callUsers.get(callId);
       if (users == null) {
         users = new HashSet<CallInstance>();

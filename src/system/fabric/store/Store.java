@@ -293,8 +293,8 @@ class Store extends MessageToStoreHandler {
   @Override
   public ReuseCallMessage.Response handle(RemoteIdentity client,
       ReuseCallMessage msg) throws AccessException {
-    SEMANTIC_WARRANTY_LOGGER.finer("Handling Reuse Call Message from " +
-        nameOf(client.principal) + ", call=" + msg.call);
+    SEMANTIC_WARRANTY_LOGGER.finest("Handling Reuse Call Message from " +
+        nameOf(client.principal) + " for call " + msg.call);
 
     Pair<WarrantiedCallResult, LongSet> result = tm.getCall(client.principal, msg.call);
     return new ReuseCallMessage.Response(result.first, result.second);

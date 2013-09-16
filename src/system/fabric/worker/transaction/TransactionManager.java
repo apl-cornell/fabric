@@ -993,8 +993,8 @@ public final class TransactionManager {
               try {
                 store.commitTransaction(current.tid.topTid, commitTime,
                     !current.commitState.storesContacted.contains(store));
-                Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINER, "Transaction"
-                    + " {0} committed.", current.tid.topTid);
+                Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+                    "Transaction {0} committed.", current.tid.topTid);
               } catch (TransactionCommitFailedException e) {
                 failed.add((RemoteStore) store);
               } catch (UnreachableNodeException e) {
