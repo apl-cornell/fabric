@@ -27,7 +27,6 @@ import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.RuntimeFetchException;
 import fabric.common.net.RemoteIdentity;
-import fabric.common.util.LongHashSet;
 import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
@@ -389,18 +388,13 @@ public class TransactionManager {
       for (CallInstance call : calls.keySet()) {
         semanticWarranties.notifyReadPrepare(call, commitTime);
         Pair<SemanticExtendStatus, WarrantiedCallResult> extResult =
-          semanticWarranties.extend(call, calls.get(call), commitTime);
+          semanticWarranties.extendForReadPrepare(call, calls.get(call),
+              commitTime);
         switch (extResult.first) {
           case OK:
-            SEMANTIC_WARRANTY_LOGGER.finest("At risk call " + call
-                + " extended for " +
-                (extResult.second.warranty.expiry() - calls.get(call).warranty.expiry())
-                + "ms");
             updatedWars.put(call, extResult.second.warranty);
             break;
           case BAD_VERSION:
-            SEMANTIC_WARRANTY_LOGGER.finest("At risk call " + call
-                + " had bad version!");
             if (extResult.second == null) {
               staleWars.addAll(semanticWarranties.getExpiredSubgraph(call));
             } else {
@@ -408,8 +402,6 @@ public class TransactionManager {
             }
             break;
           case DENIED:
-            SEMANTIC_WARRANTY_LOGGER.finest("Prepare Calls failed due to inability to extend!");
-            // Remove this call from the worker's cache, it's going to change.
             staleWars.add(call);
             throw new TransactionPrepareFailedException(conflictWars, staleWars,
                 "Could not extend for " + call);
@@ -642,7 +634,8 @@ public class TransactionManager {
   public Pair<WarrantiedCallResult, LongSet> getCall(Principal principal,
       CallInstance id) throws AccessException {
     Pair<WarrantiedCallResult, LongSet> result = 
-      new Pair<WarrantiedCallResult, LongSet>(semanticWarranties.get(id),
+      new Pair<WarrantiedCallResult, LongSet>(
+          semanticWarranties.fetchForWorker(id),
           semanticWarranties.getCreates(id));
     if (result.first == null) throw new AccessException(
         "AccessDenied, could not find call id " + id.toString());

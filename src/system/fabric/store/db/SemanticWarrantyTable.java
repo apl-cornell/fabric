@@ -472,8 +472,13 @@ public class SemanticWarrantyTable {
       }
     }
 
+    /**
+     * Extends the current warranty on the call.  First checks that the value
+     * provided is what we have in the table.  If this is for a read prepare,
+     * use the issuer to see about making an EVEN LONGER warranty.
+     */
     public SemanticExtendStatus extendWarranty(fabric.lang.Object oldValue,
-        long newTime) {
+        long commitTime, boolean readPrepare) {
       lock();
       try {
         switch (getStatus()) {
@@ -481,9 +486,14 @@ public class SemanticWarrantyTable {
           // Check what they think it is.
           if (!compareValue(oldValue)) return SemanticExtendStatus.BAD_VERSION;
           // Update the warranty
-          if (warranty.expiresBefore(newTime, true)) {
+          if (warranty.expiresBefore(commitTime, true)) {
             if (nextUpdate == null) {
-              warranty = new SemanticWarranty(newTime);
+              if (readPrepare) {
+                warranty = new SemanticWarranty(issuer.suggestWarranty(call,
+                      commitTime));
+              } else {
+                warranty = new SemanticWarranty(commitTime);
+              }
               // Update state back to valid.
               setStatus(CallStatus.VALID);
             } else {
@@ -499,10 +509,15 @@ public class SemanticWarrantyTable {
             return SemanticExtendStatus.BAD_VERSION;
           }
           // Update the warranty
-          if (warranty.expiresBefore(newTime, true)) {
+          if (warranty.expiresBefore(commitTime, true)) {
             // Check that we won't be extending past the next write.
             if (nextUpdate == null) {
-              warranty = new SemanticWarranty(newTime);
+              if (readPrepare) {
+                warranty = new SemanticWarranty(issuer.suggestWarranty(call,
+                      commitTime));
+              } else {
+                warranty = new SemanticWarranty(commitTime);
+              }
             } else {
               return SemanticExtendStatus.DENIED;
             }
@@ -511,6 +526,32 @@ public class SemanticWarrantyTable {
         case NOVALUE:
         default:
           return SemanticExtendStatus.DENIED;
+        }
+      } finally {
+        unlock();
+      }
+    }
+
+    /**
+     * Creates a new warranty on the call if the current one is expired (if
+     * possible).
+     */
+    public void updateWarranty() {
+      lock();
+      try {
+        switch (getStatus()) {
+        case STALE:
+          // Update the warranty if possible
+          if (nextUpdate == null) {
+            warranty = new SemanticWarranty(issuer.suggestWarranty(call));
+            // Update state back to valid.
+            setStatus(CallStatus.VALID);
+          }
+          return;
+        case VALID:
+        case NOVALUE:
+        default:
+          return;
         }
       } finally {
         unlock();
@@ -856,7 +897,7 @@ public class SemanticWarrantyTable {
               + "request being updated! " + call);
         }
         scheduleUpdateAt(transactionID, newRequest);
-        extendWarranty(value, time); // XXX: Check if that worked...
+        extendWarranty(value, time, false); // XXX: Check if that worked...
         break;
       }
     }
@@ -1074,7 +1115,7 @@ public class SemanticWarrantyTable {
   /**
    * Get the warranty + call value for the given call.
    */
-  public final WarrantiedCallResult get(CallInstance call) {
+  private WarrantiedCallResult get(CallInstance call) {
     CallInfo info = getInfo(call);
     info.lock();
     try {
@@ -1084,6 +1125,27 @@ public class SemanticWarrantyTable {
       case VALID:
       case STALE:
       default:
+        return new WarrantiedCallResult(info.getValue(), info.getWarranty());
+      }
+    } finally {
+      info.unlock();
+    }
+  }
+
+  /**
+   * Get the warranty + call value for the given call.
+   */
+  public final WarrantiedCallResult fetchForWorker(CallInstance call) {
+    CallInfo info = getInfo(call);
+    info.lock();
+    try {
+      switch (info.getStatus()) {
+      case NOVALUE:
+        return null;
+      case VALID:
+      case STALE:
+      default:
+        info.updateWarranty();
         return new WarrantiedCallResult(info.getValue(), info.getWarranty());
       }
     } finally {
@@ -1141,12 +1203,14 @@ public class SemanticWarrantyTable {
    * Extends the warranty for an id only if it currently has a specific
    * warrantied call result.
    */
-  public final Pair<SemanticExtendStatus, WarrantiedCallResult> extend(
-      CallInstance call, WarrantiedCallResult oldValue, long newTime) {
+  public final Pair<SemanticExtendStatus, WarrantiedCallResult>
+    extendForReadPrepare(CallInstance call, WarrantiedCallResult oldValue,
+        long newTime) {
     CallInfo info = getInfo(call);
     info.lock();
     try {
-      SemanticExtendStatus stat = info.extendWarranty(oldValue.value, newTime);
+      SemanticExtendStatus stat = info.extendWarranty(oldValue.value, newTime,
+          true);
       WarrantiedCallResult res = get(call);
       return new Pair<SemanticExtendStatus, WarrantiedCallResult>(stat, res);
     } finally {
