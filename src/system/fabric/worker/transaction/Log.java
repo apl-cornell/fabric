@@ -677,8 +677,6 @@ public final class Log {
     Logging.WORKER_TRANSACTION_LOGGER
         .finer("Scheduled commit for tid " + tid + " to run at "
             + new Date(commitTime) + " (in " + commitDelay + " ms)");
-    Logging.HOTOS_LOGGER.info("Commit delayed "
-        + (commitDelay < 0 ? 0 : commitDelay) + " ms");
     Threading.scheduleAt(commitTime, new Runnable() {
       @Override
       public void run() {
