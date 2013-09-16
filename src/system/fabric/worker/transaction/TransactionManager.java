@@ -24,7 +24,6 @@ import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 
 import fabric.common.FabricThread;
@@ -38,7 +37,6 @@ import fabric.common.TransactionID;
 import fabric.common.VersionWarranty;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
-import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
@@ -406,7 +404,6 @@ public final class TransactionManager {
     SEMANTIC_WARRANTY_LOGGER.finest("Delay since we began is " +
         (writeResult.commitTime - startTime) + "ms");
 
-    // TODO: add in extra reads.
     current.semanticWarrantiesUsed.putAll(writeResult.addedCalls);
     current.requestReplies.putAll(writeResult.callResults);
     current.addedReads = writeResult.addedReads;
@@ -419,9 +416,12 @@ public final class TransactionManager {
     // Send commit messages to our cohorts.
     sendCommitMessagesAndCleanUp(writeResult.commitTime);
 
-    final long commitLatency =
-        Math.max(writeResult.commitTime,
-            System.currentTimeMillis()) - prepareStart;
+    final long actualCommitTime =
+        Math.max(writeResult.commitTime, System.currentTimeMillis());
+    Thread thread = Thread.currentThread();
+    if (thread instanceof FabricThread)
+      ((FabricThread.Impl) thread).commitTime = actualCommitTime;
+    final long commitLatency = actualCommitTime - prepareStart;
     final long writeDelay =
         Math.max(0, writeResult.commitTime - System.currentTimeMillis());
     if (LOCAL_STORE == null) LOCAL_STORE = Worker.getWorker().getLocalStore();
@@ -453,8 +453,6 @@ public final class TransactionManager {
    *           if the prepare fails.
    */
   public PrepareWritesResult sendPrepareWriteMessages() {
-    final AtomicBoolean readOnly = new AtomicBoolean(true);
-
     final Map<RemoteNode<?>, TransactionPrepareFailedException> failures =
         Collections
             .synchronizedMap(new HashMap<RemoteNode<?>, TransactionPrepareFailedException>());
@@ -553,9 +551,6 @@ public final class TransactionManager {
                       creates.size(), writes.size());
                 }
 
-                if (!store.isLocalStore() && creates.size() + writes.size() > 0)
-                  readOnly.set(false);
-
                 PrepareWritesResult response =
                   store.prepareTransactionWrites(current.tid.topTid, creates,
                       writes, calls);
@@ -620,9 +615,6 @@ public final class TransactionManager {
         }
       }
     }
-
-    HOTOS_LOGGER.info("Transaction is "
-        + (readOnly.get() ? "read-only" : "read/write"));
 
     // Check for conflicts and unreachable stores/workers.
     if (!failures.isEmpty()) {
@@ -776,15 +768,18 @@ public final class TransactionManager {
     storesToContact.addAll(storesRead.keySet());
 
     current.commitState.commitTime = commitTime;
-    int count = 0;
-    for (Store store : storesToContact) {
-      count++;
-      LongKeyMap<Integer> tmpReads = storesRead.get(store);
-
-      final Store s = store;
-      final LongKeyMap<Integer> reads =
-          tmpReads != null ? tmpReads : new LongKeyHashMap<Integer>();
+    int numRemoteReadsPrepared = 0;
+    for (Iterator<Entry<Store, LongKeyMap<Integer>>> entryIt =
+        storesRead.entrySet().iterator(); entryIt.hasNext();) {
+      Entry<Store, LongKeyMap<Integer>> entry = entryIt.next();
+      final Store store = entry.getKey();
+      final LongKeyMap<Integer> reads = entry.getValue();
       final Map<CallInstance, WarrantiedCallResult> calls = current.getCallsForStore(store);
+
+      if (!store.isLocalStore()) {
+        numRemoteReadsPrepared += reads.size();
+      }
+
       NamedRunnable runnable =
           new NamedRunnable("worker read-prepare to " + store.name()) {
             @Override
@@ -794,25 +789,25 @@ public final class TransactionManager {
 	          Logging.log(WORKER_TRANSACTION_LOGGER, Level.FINE, "Preparing "
 	              + "reads for transaction {0} to {1}: {2} version warranties "
 	              + "will expire and {3} semantic warranties will expire",
-	              current.tid.topTid, s, reads.size(),
+	              current.tid.topTid, store, reads.size(),
 	              calls.size());
 	        }
 
                 Pair<LongKeyMap<VersionWarranty>, Map<CallInstance,
                   SemanticWarranty>> allNewWarranties =
-                    s.prepareTransactionReads(current.tid.topTid, reads, calls,
-                        commitTime);
+                    store.prepareTransactionReads(current.tid.topTid, reads,
+                        calls, commitTime);
     
                 // Prepare was successful. Update the objects' warranties.
                 SEMANTIC_WARRANTY_LOGGER.finest("Updating version warranties.");
-                current.updateVersionWarranties(s, allNewWarranties.first);
+                current.updateVersionWarranties(store, allNewWarranties.first);
                 // Update warranties on calls.
                 SEMANTIC_WARRANTY_LOGGER.finest("Updating semantic warranties.");
-                current.updateSemanticWarranties(s, allNewWarranties.second);
+                current.updateSemanticWarranties(store, allNewWarranties.second);
               } catch (TransactionPrepareFailedException e) {
-                failures.put((RemoteNode<?>) s, e);
+                failures.put((RemoteNode<?>) store, e);
               } catch (UnreachableNodeException e) {
-                failures.put((RemoteNode<?>) s,
+                failures.put((RemoteNode<?>) store,
                     new TransactionPrepareFailedException("Unreachable store"));
               }
             }
@@ -820,11 +815,24 @@ public final class TransactionManager {
 
       // Optimization: only start in a new thread if there are more ss to
       // contact and if it's a truly remote s (i.e., not in-process).
-      if (!(s instanceof InProcessStore || s.isLocalStore())
-          && count == storesToContact.size()) {
+      if (!(store instanceof InProcessStore || store.isLocalStore())
+          && entryIt.hasNext()) {
         futures.add(Threading.getPool().submit(runnable));
       } else {
         runnable.run();
+      }
+    }
+
+    if (HOTOS_LOGGER.isLoggable(Level.INFO)) {
+      int numTotalRemoteReads = 0;
+      for (Store store : current.reads.storeSet()) {
+        if (store.isLocalStore()) continue;
+        numTotalRemoteReads += current.reads.get(store).size();
+      }
+
+      if (numTotalRemoteReads > 0) {
+        HOTOS_LOGGER.log(Level.INFO, "Prepared {0} out of {1} reads",
+            new Object[] { numRemoteReadsPrepared, numTotalRemoteReads });
       }
     }
 

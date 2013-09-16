@@ -371,7 +371,7 @@ public class SubscriptionManager extends FabricThread.Impl {
   private final PrivateKey signingKey;
 
   public static final boolean ENABLE_OBJECT_UPDATES = false;
-  public static final boolean ENABLE_WARRANTY_REFRESHES = true;
+  public static final boolean ENABLE_WARRANTY_REFRESHES = false;
 
   /**
    * @param tm

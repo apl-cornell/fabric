@@ -31,7 +31,6 @@ import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
 import fabric.common.util.WeakReferenceArrayList;
 import fabric.lang.Object._Impl;
-import fabric.lang.WrappedJavaInlineable;
 import fabric.lang.security.LabelCache;
 import fabric.lang.security.SecurityCache;
 import fabric.worker.FabricSoftRef;
@@ -555,23 +554,17 @@ public final class Log {
   Map<Store, LongKeyMap<Integer>> storesRead(long commitTime) {
     Map<Store, LongKeyMap<Integer>> result =
         new HashMap<Store, LongKeyMap<Integer>>();
-    int numReadsToPrepare = 0;
-    int numTotalReads = 0;
-
     // Handle reads from the actual transaction
     Iterable<Entry<Store, LongKeyMap<ReadMap.Entry>>> chain =
       SysUtil.chain(reads.nonNullEntrySet(), readsInSubcalls.nonNullEntrySet());
     for (Entry<Store, LongKeyMap<ReadMap.Entry>> entry : chain) {
       Store store = entry.getKey();
       LongKeyMap<Integer> submap = new LongKeyHashMap<Integer>();
-
-      boolean isRemoteStore = !store.isLocalStore();
-
-      LongKeyMap<ReadMap.Entry> readOnly =
+      LongKeyMap<ReadMap.Entry> readOnlyObjects =
           filterModifiedReads(store, entry.getValue());
-      if (isRemoteStore) numTotalReads += readOnly.size();
 
-      for (LongKeyMap.Entry<ReadMap.Entry> subEntry : readOnly.entrySet()) {
+      for (LongKeyMap.Entry<ReadMap.Entry> subEntry : readOnlyObjects
+          .entrySet()) {
         long onum = subEntry.getKey();
         ReadMap.Entry rme = subEntry.getValue();
 
@@ -582,7 +575,6 @@ public final class Log {
       }
 
       if (!submap.isEmpty()) {
-        if (isRemoteStore) numReadsToPrepare += submap.size();
         result.put(store, submap);
       }
     }
@@ -597,13 +589,8 @@ public final class Log {
           submap = result.get(store);
         else submap = new LongKeyHashMap<Integer>();
 
-        boolean isRemoteStore = !store.isLocalStore();
-        // Count total number of additional reads for the transaction.
-        int additions = 0;
-
         LongKeyMap<Pair<Integer, VersionWarranty>> readOnly =
             filterModifiedReads(store, entry.getValue());
-        if (isRemoteStore) numTotalReads += readOnly.size();
 
         for (LongKeyMap.Entry<Pair<Integer, VersionWarranty>> subEntry : readOnly
             .entrySet()) {
@@ -614,19 +601,14 @@ public final class Log {
           if (objWarranty.expiresAfter(commitState.commitTime, true)
               && objWarranty.expiresBefore(commitTime, true)) {
             submap.put(onum, objVersion);
-            additions += 1;
           }
         }
 
         if (!submap.isEmpty()) {
-          if (isRemoteStore) numReadsToPrepare += additions;
           result.put(store, submap);
         }
       }
     }
-
-    Logging.HOTOS_LOGGER.info("Read-preparing " + numReadsToPrepare
-        + " out of " + numTotalReads + " objects");
 
     return result;
   }
@@ -1328,8 +1310,6 @@ public final class Log {
     Logging.WORKER_TRANSACTION_LOGGER
         .finer("Scheduled commit for tid " + tid + " to run at "
             + new Date(commitTime) + " (in " + commitDelay + " ms)");
-    Logging.HOTOS_LOGGER.info("Commit delayed "
-        + (commitDelay < 0 ? 0 : commitDelay) + " ms");
     Threading.scheduleAt(commitTime, new Runnable() {
       @Override
       public void run() {

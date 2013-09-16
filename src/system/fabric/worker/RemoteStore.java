@@ -141,14 +141,10 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
       Collection<Object._Impl> toCreate, Collection<Object._Impl> writes,
       Set<SemanticWarrantyRequest> calls) throws
   TransactionPrepareFailedException, UnreachableNodeException {
-    PrepareTransactionWritesMessage.Response respone =
+    PrepareTransactionWritesMessage.Response response =
         send(Worker.getWorker().authToStore,
             new PrepareTransactionWritesMessage(tid, toCreate, writes, calls));
-
-    SEMANTIC_WARRANTY_LOGGER.finest("Got response for write prepares on " +
-        "transaction " + Long.toHexString(tid));
-
-    return respone.result;
+    return response.result;
   }
 
   @Override
