@@ -145,6 +145,9 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
         send(Worker.getWorker().authToStore,
             new PrepareTransactionWritesMessage(tid, toCreate, writes, calls));
 
+    SEMANTIC_WARRANTY_LOGGER.finest("Got response for write prepares on " +
+        "transaction " + Long.toHexString(tid));
+
     return respone.result;
   }
 

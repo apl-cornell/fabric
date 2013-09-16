@@ -622,6 +622,8 @@ public class SemanticWarrantyTable {
 
       Map<CallInstance, SemanticWarrantyRequest> updatedRequests =
         current.getAllRequests();
+      for (CallInstance key : updatedRequests.keySet())
+        SEMANTIC_WARRANTY_LOGGER.finest("GOT AN UPDATE ON " + key);
       throw new CallCheckException(updatedRequests);
     }
 

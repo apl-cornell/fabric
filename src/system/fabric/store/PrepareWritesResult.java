@@ -85,7 +85,7 @@ public final class PrepareWritesResult {
     if (addedReads == null) {
       out.writeInt(0);
     } else {
-      out.writeInt(addedReads.size());
+      out.writeInt(addedReads.storeSet().size());
       for (Entry<Store, LongKeyMap<Pair<Integer, VersionWarranty>>> entry :
           addedReads.nonNullEntrySet()) {
         out.writeUTF(entry.getKey().name());

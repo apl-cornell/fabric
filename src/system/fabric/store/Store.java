@@ -239,7 +239,11 @@ class Store extends MessageToStoreHandler {
         msg.tid, msg.serializedCreates, msg.serializedWrites);
 
     writeResult.callResults.putAll(replies);
-    return new PrepareTransactionWritesMessage.Response(writeResult);
+    PrepareTransactionWritesMessage.Response res =
+      new PrepareTransactionWritesMessage.Response(writeResult);
+    STORE_REQUEST_LOGGER.finest("FINISHED PREPARING WRITES FOR TID " +
+        Long.toHexString(msg.tid));
+    return res;
   }
 
   /**
