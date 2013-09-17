@@ -484,7 +484,17 @@ public class SemanticWarrantyTable {
         switch (getStatus()) {
         case STALE:
           // Check what they think it is.
-          if (!compareValue(oldValue)) return SemanticExtendStatus.BAD_VERSION;
+          if (!compareValue(oldValue)) {
+            if (nextUpdate == null) {
+              if (readPrepare) {
+                // Call is being read, so make the warranty valid anyways.
+                warranty = new SemanticWarranty(issuer.suggestWarranty(call));
+                // Update state back to valid.
+                if (!warranty.expired(true)) setStatus(CallStatus.VALID);
+              }
+            }
+            return SemanticExtendStatus.BAD_VERSION;
+          }
           // Update the warranty
           if (warranty.expiresBefore(commitTime, true)) {
             if (nextUpdate == null) {
@@ -545,7 +555,7 @@ public class SemanticWarrantyTable {
           if (nextUpdate == null) {
             warranty = new SemanticWarranty(issuer.suggestWarranty(call));
             // Update state back to valid.
-            setStatus(CallStatus.VALID);
+            if (!warranty.expired(true)) setStatus(CallStatus.VALID);
           }
           return;
         case VALID:
