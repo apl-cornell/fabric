@@ -78,14 +78,14 @@ public class Test {
   }
 
   public static void main(String[] args) {
-    if (args.length != 2) System.exit(1); // TODO: Usage!
+    if (args.length != 1) System.exit(1);
     Test t = null;
     atomic {
       Store s = Config.STORE;
       t = (Test) s.getRoot().get("initialized");
     }
-    int n = Integer.parseInt(args[0]);
-    int msSleep = Integer.parseInt(args[1]);
+    int n = Config.getTopCount();
+    int msSleep = Integer.parseInt(args[0]);
     atomic {
       t.topAccounts(n);
     }

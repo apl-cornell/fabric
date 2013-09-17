@@ -13,7 +13,7 @@
   ****************************************************************************
   -->
 
-  <import file="../../common.xml" />
+  <import file="../../../../common.xml" />
 
   <dirname property="simple-memo-test.home" file="${ant.file.simple-memo-test}" />
 

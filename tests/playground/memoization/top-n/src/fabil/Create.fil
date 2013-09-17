@@ -1,0 +1,52 @@
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.util.Random;
+
+import fabric.util.Map;
+
+public class Create {
+  /**
+   * Populate the store with n users and pre-compute the memoized call for the
+   * top c users.
+   */
+  public static void populateUsers(int n, int c) {
+    Map m = Config.STORE.getRoot();
+    atomic {
+      if (m.containsKey("initialized")) return;
+    }
+    //System.out.println(m.size());
+    Store s = null;
+    atomic {
+      s = Config.STORE;
+      Random rnd = new Random(0xDEADBEEF);
+      for (int i = 0; i < n; i++) {
+        m.put(new Integer(i),
+              new TwooterAccount@s("UID" + i,
+                                    rnd.nextInt(n >> 1)).TwooterAccount$());
+      }
+      /* HACK */
+      m.put("user_count", new TwooterAccount@s("total", n).TwooterAccount$());
+      m.put("top_count", new TwooterAccount@s("top_count", c).TwooterAccount$());
+    }
+    Test t = null;
+    atomic {
+      t = new Test@s().Test$();
+      m.put("initialized", t);
+    }
+    atomic {
+      t.topAccounts(c);
+    }
+    System.out.println("done");
+  }
+
+  public static void main(String[] args) {
+    if (args.length > 2)
+      System.exit(1);
+    else if (args.length == 2)
+      populateUsers(Integer.parseInt(args[0]), Integer.parseInt(args[1]));
+    else if (args.length == 1)
+      populateUsers(Integer.parseInt(args[0]), Config.TOP_COUNT);
+    else
+      populateUsers(Config.NUM_USERS, Config.TOP_COUNT);
+  }
+}

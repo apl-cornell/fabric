@@ -416,9 +416,11 @@ public final class Log {
    * the parent that read the given onum.
    */
   public void invalidateDependentRequests(long onum) {
+    SEMANTIC_WARRANTY_LOGGER.finest("Onum " + onum + " written, invalidating" +
+        " calls that read this.");
     Set<CallInstance> dependencies = readDependencies.get(onum);
     if (dependencies == null) return;
-    for (CallInstance id : dependencies)
+    for (CallInstance id : new HashSet<CallInstance>(dependencies))
       removeRequest(id);
   }
 
@@ -431,7 +433,9 @@ public final class Log {
   private void removeRequest(CallInstance callId) {
     SemanticWarrantyRequest req = requests.get(callId);
 
-    SEMANTIC_WARRANTY_LOGGER.finer("Call " + req.call
+    if (req == null) return; // Request already removed.
+
+    SEMANTIC_WARRANTY_LOGGER.finest("Call " + req.call
         + " warranty request dropped");
 
     if (callDependencies.get(callId) != null
