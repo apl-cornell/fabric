@@ -88,6 +88,7 @@ public class Node {
 
   private void waitForReady() throws IOException {
     int spinCount = 0;
+    final long startTime = System.currentTimeMillis();
     synchronized (node) {
       while (!node.isReady() && !node.joinFailed()) {
         try {
@@ -104,6 +105,12 @@ public class Node {
 //          System.out.println("configuration parameter.");
         }
         if (spinCount % 20 == 0) {
+          if (System.currentTimeMillis() - startTime > 30000) {
+            // XXX
+            System.out.println("Waited 30 seconds, and still nothing. "
+                + "Giving up and killing worker.");
+            System.exit(1);
+          }
           System.out.println("Still waiting...");
         }
       }
