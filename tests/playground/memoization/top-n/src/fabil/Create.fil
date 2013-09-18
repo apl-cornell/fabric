@@ -5,48 +5,85 @@ import java.util.Random;
 import fabric.util.Map;
 
 public class Create {
+
+  /**
+   * Create configuration.
+   */
+  public static void configure(double writeRatio, int numUsers, int topCount,
+      int seed, double power) {
+    atomic {
+      Map m = Config.STORE.getRoot();
+      Store s = Config.STORE;
+      m.put("config", new Config@s(writeRatio, numUsers, topCount, seed,
+            power));
+    }
+  }
+
   /**
    * Populate the store with n users and pre-compute the memoized call for the
    * top c users.
    */
-  public static void populateUsers(int n, int c) {
+  public static void populateUsers() {
+    Store s = Config.STORE;
     Map m = Config.STORE.getRoot();
+    Config c = null;
+    
+    // Check if we've already initialized the database.
     atomic {
-      if (m.containsKey("initialized")) return;
+      if (m.containsKey("tester")) return;
+      c = (Config) m.get("config");
     }
-    //System.out.println(m.size());
-    Store s = null;
+
+    // Create users.
     atomic {
-      s = Config.STORE;
-      Random rnd = new Random(0xDEADBEEF);
-      for (int i = 0; i < n; i++) {
+      for (int i = 0; i < c.NUM_USERS; i++) {
         m.put(new Integer(i),
-              new TwooterAccount@s("UID" + i,
-                                    rnd.nextInt(n >> 1)).TwooterAccount$());
+            new TwooterAccount@s("UID" + i).TwooterAccount$());
       }
-      /* HACK */
-      m.put("user_count", new TwooterAccount@s("total", n).TwooterAccount$());
-      m.put("top_count", new TwooterAccount@s("top_count", c).TwooterAccount$());
     }
-    Test t = null;
+
+    // Initialize followers.
     atomic {
-      t = new Test@s().Test$();
-      m.put("initialized", t);
+      for (int i = 0; i < c.NUM_USERS; i++) {
+        TwooterAccount acct = (TwooterAccount) m.get(new Integer(i));
+        int numFollowers = randomNumberUsers(c.POWER, c.NUM_USERS, c.RAND);
+        for (int j = 0; j < numFollowers; j++) {
+          acct.addRandomFollower();
+        }
+      }
     }
+
+    // Create test object.
+    Tester t = null;
+    atomic {
+      t = new Tester@s().Tester$();
+      m.put("tester", t);
+    }
+    /*
     atomic {
       t.topAccounts(c);
     }
+    */
     System.out.println("done");
   }
 
+  /**
+   * Using a power law distribution with the given parameter, pick a number of
+   * users.
+   */
+  public static int randomNumberUsers(double power, int userCount, Random rand) {
+    return (int) Math.round(Math.pow(Math.pow(userCount, 1.0 + power) *
+          rand.nextDouble(), 1.0 / (power - 1.0)));
+  }
+
   public static void main(String[] args) {
-    if (args.length > 2)
+    // TODO: Usage
+    if (args.length != 5) {
       System.exit(1);
-    else if (args.length == 2)
-      populateUsers(Integer.parseInt(args[0]), Integer.parseInt(args[1]));
-    else if (args.length == 1)
-      populateUsers(Integer.parseInt(args[0]), Config.TOP_COUNT);
-    else
-      populateUsers(Config.NUM_USERS, Config.TOP_COUNT);
+    }
+    configure(Double.parseDouble(args[0]), Integer.parseInt(args[1]),
+        Integer.parseInt(args[2]), Integer.parseInt(args[3]),
+        Double.parseDouble(args[4]));
+    populateUsers();
   }
 }

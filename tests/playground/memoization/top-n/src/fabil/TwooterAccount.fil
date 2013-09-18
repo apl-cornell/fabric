@@ -1,17 +1,22 @@
+import fabric.util.Set;
+import fabric.util.HashSet;
+import java.util.Random;
+
 public class TwooterAccount {
 
   public final String name;
 
-  private int numberFollowers;
+  private final Set/*<TwooterAccount>*/ followers;
 
   public TwooterAccount(String name) {
+    Store s = Config.STORE;
     this.name = name;
-    this.numberFollowers = 0;
+    this.followers = new HashSet@s().fabric$util$HashSet$();
   }
 
-  public TwooterAccount(String name, int numberInitFollowers) {
+  public TwooterAccount(String name, Set followers) {
     this.name = name;
-    this.numberFollowers = numberInitFollowers;
+    this.followers = followers;
   }
 
   public TwooterAccount TwooterAccount$() {
@@ -20,18 +25,61 @@ public class TwooterAccount {
   }
 
   public int numFollowers() {
-    return numberFollowers;
+    return followers.size();
   }
 
-  public void addFollower() {
-    numberFollowers++;
+  public void addRandomFollower() {
+    atomic {
+      while (true) {
+        TwooterAccount candidate = getRandomTwooterAccount();
+        if (candidate == this) continue;
+        if (!followers.contains(candidate)) {
+          followers.add(candidate);
+          return;
+        }
+      }
+    }
   }
 
-  public void removeFollower() {
-    if (numberFollowers > 0) numberFollowers--;
+  public void removeRandomFollower() {
+    atomic {
+      followers.remove(getRandomFollower());
+    }
   }
 
-  public void setNumberFollowers(int n) {
-    numberFollowers = n;
+  /**
+   * Return a random TwooterAccount using a uniform distribution.
+   */
+  public static TwooterAccount getRandomTwooterAccount() {
+    atomic {
+      Config c = (Config) Config.STORE.getRoot().get("config");
+      return (TwooterAccount) Config.STORE.getRoot().get(
+          new Integer(c.RAND.nextInt(c.NUM_USERS)));
+    }
+  }
+
+  /**
+   * Return a random follower using a uniform distribution.
+   */
+  public TwooterAccount getRandomFollower() {
+    atomic {
+      Config c = (Config) Config.STORE.getRoot().get("config");
+      return (TwooterAccount)
+        followers.toArray()[c.RAND.nextInt(followers.size())];
+    }
+  }
+
+  /**
+   * Randomly either add or remove a follower.
+   */
+  public void randomlyUpdateFollowers() {
+    atomic {
+      Config c = (Config) Config.STORE.getRoot().get("config");
+      int choice = c.RAND.nextInt(2);
+      if (choice == 0)
+        addRandomFollower();
+      else 
+        removeRandomFollower();
+    }
   }
 }

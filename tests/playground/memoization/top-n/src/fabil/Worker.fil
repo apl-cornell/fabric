@@ -1,0 +1,58 @@
+import java.util.Random;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.ThreadFactory;
+
+/**
+ * Entry point for basic worker.
+ */
+public class Worker {
+  // Max 50 operations at a time.
+  private static final Semaphore sem = new Semaphore(50);
+  private static final Random randIDs = new Random(0xDEADBEEF);
+  private static ExecutorService threadPool = Executors.newCachedThreadPool(
+      new ThreadFactory() {
+        public Thread newThread(Runnable r) {
+          return new Thread(r);
+        }
+      }
+  );
+
+  public static boolean spawnNewThread(final Tester t) {
+    try {
+      sem.acquire();
+    } catch (InterruptedException e) {
+      return false;
+    }
+    threadPool.submit(new Runnable() {
+      public void run() {
+        try {
+          t.randomOperation(randIDs.nextLong());
+        } finally {
+          sem.release();
+        }
+      }
+    });
+    return true;
+  }
+
+  public static void main(String[] args) {
+    if (args.length != 1) System.exit(1);
+    Tester t = null;
+    atomic {
+      t = (Tester) Config.STORE.getRoot().get("tester");
+    }
+
+    long nextEventTime = 0l;
+    long nextArrvIncrTime = 0l;
+    long nextSpawnTime = 0l;
+
+    // TODO: Ramp up and sleep.
+    while (true) {
+      long now = System.currentTimeMillis();
+      spawnNewThread(t);
+      // TODO: Wait.
+    }
+  }
+}
