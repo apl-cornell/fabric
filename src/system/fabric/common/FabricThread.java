@@ -23,7 +23,7 @@ public interface FabricThread {
      * the application. This allows us to measure end-to-end application-level
      * transaction latency.
      */
-    public long commitTime;
+    public volatile long commitTime;
 
     public Impl() {
       setDaemon(true);
