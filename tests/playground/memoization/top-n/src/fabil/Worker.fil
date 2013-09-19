@@ -10,7 +10,7 @@ import java.util.concurrent.ThreadFactory;
 public class Worker {
   // Max 50 operations at a time.
   private static final Semaphore sem = new Semaphore(50);
-  private static final Random randIDs = new Random(0xDEADBEEF);
+  private static final Random rand = new Random(0xDEADBEEF);
   private static ExecutorService threadPool = Executors.newCachedThreadPool(
       new ThreadFactory() {
         public Thread newThread(Runnable r) {
@@ -25,34 +25,64 @@ public class Worker {
     } catch (InterruptedException e) {
       return false;
     }
-    threadPool.submit(new Runnable() {
-      public void run() {
-        try {
-          t.randomOperation(randIDs.nextLong());
-        } finally {
-          sem.release();
+    Runnable r = null;
+    atomic {
+      r = new Runnable() {
+        public void run() {
+          try {
+            t.randomOperation(rand);
+          } finally {
+            sem.release();
+          }
         }
-      }
-    });
+      };
+    }
+    threadPool.submit(r);
     return true;
   }
 
   public static void main(String[] args) {
-    if (args.length != 1) System.exit(1);
     Tester t = null;
+    Config c = null;
     atomic {
       t = (Tester) Config.STORE.getRoot().get("tester");
+      c = (Config) Config.STORE.getRoot().get("config");
     }
 
-    long nextEventTime = 0l;
-    long nextArrvIncrTime = 0l;
-    long nextSpawnTime = 0l;
+    long now = System.currentTimeMillis();
+    double arrivalRate = c.ARRIVAL_RATE;
+    long nextArrvIncrTime = System.currentTimeMillis() + c.INCR_INTERVAL_MS;
+    long nextSpawnTime = System.currentTimeMillis();
+    long nextEventTime = nextSpawnTime > nextArrvIncrTime
+      ? nextSpawnTime : nextArrvIncrTime;
 
     // TODO: Ramp up and sleep.
     while (true) {
-      long now = System.currentTimeMillis();
-      spawnNewThread(t);
-      // TODO: Wait.
+      now = System.currentTimeMillis();
+      // If it's time to increase the arrival rate, do that.
+      if (now >= nextArrvIncrTime) {
+        arrivalRate += c.ARRIVAL_INCR;
+      }
+      // If it's time to spawn a new operation, do that.
+      if (now >= nextSpawnTime) {
+        spawnNewThread(t);
+        nextSpawnTime = now + getArrivalInterval(c.ARRIVAL_RATE, rand);
+      }
+      // Wait until next change.
+      nextEventTime = nextSpawnTime > nextArrvIncrTime ? nextSpawnTime :
+        nextArrvIncrTime;
+      long sleepTime = nextEventTime - System.currentTimeMillis();
+      if (sleepTime > 0) {
+        try {
+          Thread.sleep(sleepTime);
+        } catch (InterruptedException e) {
+          System.exit(1);
+        }
+      }
     }
+  }
+
+  public static long getArrivalInterval(double arrivalRate, Random rand) {
+    return Math.round(-1000.0d * Math.log(rand.nextDouble()) / arrivalRate);
   }
 }

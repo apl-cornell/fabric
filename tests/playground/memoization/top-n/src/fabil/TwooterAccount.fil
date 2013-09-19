@@ -28,10 +28,10 @@ public class TwooterAccount {
     return followers.size();
   }
 
-  public void addRandomFollower() {
+  public void addRandomFollower(Random rand) {
     atomic {
       while (true) {
-        TwooterAccount candidate = getRandomTwooterAccount();
+        TwooterAccount candidate = getRandomTwooterAccount(rand);
         if (candidate == this) continue;
         if (!followers.contains(candidate)) {
           followers.add(candidate);
@@ -41,45 +41,43 @@ public class TwooterAccount {
     }
   }
 
-  public void removeRandomFollower() {
+  public void removeRandomFollower(Random rand) {
     atomic {
-      followers.remove(getRandomFollower());
+      followers.remove(getRandomFollower(rand));
     }
   }
 
   /**
    * Return a random TwooterAccount using a uniform distribution.
    */
-  public static TwooterAccount getRandomTwooterAccount() {
+  public static TwooterAccount getRandomTwooterAccount(Random rand) {
     atomic {
       Config c = (Config) Config.STORE.getRoot().get("config");
       return (TwooterAccount) Config.STORE.getRoot().get(
-          new Integer(c.RAND.nextInt(c.NUM_USERS)));
+          new Integer(rand.nextInt(c.NUM_USERS)));
     }
   }
 
   /**
    * Return a random follower using a uniform distribution.
    */
-  public TwooterAccount getRandomFollower() {
+  public TwooterAccount getRandomFollower(Random rand) {
     atomic {
-      Config c = (Config) Config.STORE.getRoot().get("config");
       return (TwooterAccount)
-        followers.toArray()[c.RAND.nextInt(followers.size())];
+        followers.toArray()[rand.nextInt(followers.size())];
     }
   }
 
   /**
    * Randomly either add or remove a follower.
    */
-  public void randomlyUpdateFollowers() {
+  public void randomlyUpdateFollowers(Random rand) {
     atomic {
-      Config c = (Config) Config.STORE.getRoot().get("config");
-      int choice = c.RAND.nextInt(2);
+      int choice = rand.nextInt(2);
       if (choice == 0)
-        addRandomFollower();
+        addRandomFollower(rand);
       else 
-        removeRandomFollower();
+        removeRandomFollower(rand);
     }
   }
 }

@@ -10,12 +10,11 @@ public class Create {
    * Create configuration.
    */
   public static void configure(double writeRatio, int numUsers, int topCount,
-      int seed, double power) {
+      double power) {
     atomic {
       Map m = Config.STORE.getRoot();
       Store s = Config.STORE;
-      m.put("config", new Config@s(writeRatio, numUsers, topCount, seed,
-            power));
+      m.put("config", new Config@s(writeRatio, numUsers, topCount, power).Config$());
     }
   }
 
@@ -44,11 +43,12 @@ public class Create {
 
     // Initialize followers.
     atomic {
+      Random rand = new Random(0xBEEFFEED);
       for (int i = 0; i < c.NUM_USERS; i++) {
         TwooterAccount acct = (TwooterAccount) m.get(new Integer(i));
-        int numFollowers = randomNumberUsers(c.POWER, c.NUM_USERS, c.RAND);
+        int numFollowers = randomNumberUsers(c.POWER, c.NUM_USERS, rand);
         for (int j = 0; j < numFollowers; j++) {
-          acct.addRandomFollower();
+          acct.addRandomFollower(rand);
         }
       }
     }
@@ -59,11 +59,9 @@ public class Create {
       t = new Tester@s().Tester$();
       m.put("tester", t);
     }
-    /*
     atomic {
-      t.topAccounts(c);
+      t.topAccounts(c.TOP_COUNT, c.NUM_USERS);
     }
-    */
     System.out.println("done");
   }
 
@@ -78,12 +76,11 @@ public class Create {
 
   public static void main(String[] args) {
     // TODO: Usage
-    if (args.length != 5) {
+    if (args.length != 4) {
       System.exit(1);
     }
     configure(Double.parseDouble(args[0]), Integer.parseInt(args[1]),
-        Integer.parseInt(args[2]), Integer.parseInt(args[3]),
-        Double.parseDouble(args[4]));
+        Integer.parseInt(args[2]), Double.parseDouble(args[3]));
     populateUsers();
   }
 }
