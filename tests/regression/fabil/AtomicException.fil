@@ -1,0 +1,10 @@
+import java.io.*;
+public class AtomicException {
+  public static void main(String[] args) {
+      try {
+        atomic {
+          FileOutputStream fos = new FileOutputStream("foo");
+        }
+      } catch (IOException e) { e.printStackTrace(); }
+  }
+}
