@@ -405,7 +405,6 @@ public final class Worker {
    *     of the group.
    */
   public boolean updateCache(RemoteStore store, ObjectGroup group) {
-    // XXX FIXME
     boolean result = false;
     for (SerializedObject obj : group.objects().values()) {
       if (TransactionManager.haveReaders(store, obj.getOnum())) {

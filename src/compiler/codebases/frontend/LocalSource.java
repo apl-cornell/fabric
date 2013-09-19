@@ -86,14 +86,14 @@ public class LocalSource extends UTF8FileSource implements CodebaseSource {
   public boolean equals(Object o) {
     if (o instanceof LocalSource) {
       LocalSource s = (LocalSource) o;
-      return toUri().equals(s.toUri());
+      return toUri().toString().equalsIgnoreCase(s.toUri().toString());
     }
     return false;
   }
 
   @Override
   public int hashCode() {
-    return toUri().hashCode();
+    return toUri().toString().toLowerCase().hashCode();
   }
 
   @Override
