@@ -719,7 +719,8 @@ public class SemanticWarrantyTable {
         Map<CallInstance, SemanticWarrantyRequest> changes,
         Map<CallInstance, SemanticWarrantyRequest> newCalls,
         Collection<SerializedObject> creates,
-        Collection<SerializedObject> writes, long deadline) {
+        Collection<SerializedObject> writes, long deadline) throws
+      TransactionPrepareFailedException {
       // This doesn't cause a deadlock with the spawned checking thread because
       // we explicitly don't try to re-use the value from the store for this
       // call.
@@ -776,9 +777,8 @@ public class SemanticWarrantyTable {
           return changes.containsKey(this.call);
         }
       } catch (ExecutionException | InterruptedException e) {
-        e.printStackTrace(System.err);
-        throw new InternalError("Call checking for " + call
-            + " ran into an exception: " + e.getMessage());
+        throw new TransactionPrepareFailedException("Call checking ran into an "
+            + "error! " + e.getMessage());
       } finally {
         unlock();
       }

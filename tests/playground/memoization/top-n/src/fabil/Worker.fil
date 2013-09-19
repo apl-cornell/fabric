@@ -9,7 +9,7 @@ import java.util.concurrent.ThreadFactory;
  */
 public class Worker {
   // Max 50 operations at a time.
-  private static final Semaphore sem = new Semaphore(50);
+  //private static final Semaphore sem = new Semaphore(50);
   private static final Random rand = new Random(0xDEADBEEF);
   private static ExecutorService threadPool = Executors.newCachedThreadPool(
       new ThreadFactory() {
@@ -20,20 +20,22 @@ public class Worker {
   );
 
   public static boolean spawnNewThread(final Tester t) {
+    /*
     try {
       sem.acquire();
     } catch (InterruptedException e) {
       return false;
     }
+    */
     Runnable r = null;
     atomic {
       r = new Runnable() {
         public void run() {
-          try {
+          //try {
             t.randomOperation(rand);
-          } finally {
-            sem.release();
-          }
+          //} finally {
+            //sem.release();
+          //}
         }
       };
     }
