@@ -18,14 +18,17 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import fabric.common.SemanticWarranty;
 import fabric.common.SerializedObject;
+import fabric.common.SysUtil;
 import fabric.common.Threading;
 import fabric.common.VersionWarranty;
 import fabric.common.util.ConcurrentLongKeyHashMap;
 import fabric.common.util.ConcurrentLongKeyMap;
 import fabric.common.util.LongHashSet;
 import fabric.common.util.LongIterator;
+import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
 import fabric.common.util.Pair;
+import fabric.lang.Object._Impl;
 import fabric.lang.Object._Proxy;
 import fabric.lang.WrappedJavaInlineable;
 import fabric.worker.AbortException;
@@ -660,14 +663,24 @@ public class SemanticWarrantyTable {
 
       // Load up state from writes
       for (SerializedObject obj : writes) {
-        (new _Proxy(localStore, obj.getOnum())).fetch().$copyAppStateFrom(
-            obj.deserialize(localStore, new VersionWarranty(0)));
+        tm.registerWrite(obj.deserialize(localStore, new VersionWarranty(0)));
       }
 
       // Load up state from creates
       for (SerializedObject obj : creates) {
-        (new _Proxy(localStore, obj.getOnum())).fetch().$copyAppStateFrom(
-            obj.deserialize(localStore, new VersionWarranty(0)));
+        SEMANTIC_WARRANTY_LOGGER.finest("Loading up create " + obj.getOnum());
+        tm.registerCreate(obj.deserialize(localStore, new VersionWarranty(0)));
+      }
+      for (SemanticWarrantyRequest req :
+          SysUtil.chain(SysUtil.chain(updates.values(), changes.values()),
+            newCalls.values())) {
+        for (LongKeyMap<_Impl> submap : req.creates) {
+          for (_Impl c : submap.values()) {
+            SEMANTIC_WARRANTY_LOGGER.finest("Loading up create from other " +
+                "request " + c.$getOnum());
+            tm.registerCreate(c);
+          }
+        }
       }
 
       // Rerun the call.

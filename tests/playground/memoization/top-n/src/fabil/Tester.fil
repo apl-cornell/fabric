@@ -75,23 +75,19 @@ public class Tester {
     return topAccountsBetween(n, 0, total);
   }
 
-  public memoized int foo(int n) {
-    return 1;
-  }
-
-  public void randomOperation(Random rand) {
+  public void randomOperation(Random rand, double writeRatio, int topCount) {
     long id = rand.nextLong();
     Logger HOTOS_LOGGER = Logger.getLogger("HOTOS");
+    double choice = rand.nextDouble();
     HOTOS_LOGGER.log(Level.INFO, "===started {0}===", String.valueOf(id));
     atomic {
       Config c = (Config) Config.STORE.getRoot().get("config");
-      double choice = rand.nextDouble();
-      if (choice <= c.WRITE_RATIO) {
+      if (choice <= writeRatio) {
         HOTOS_LOGGER.log(Level.INFO, "===write {0}===", String.valueOf(id));
         TwooterAccount.getRandomTwooterAccount(rand).randomlyUpdateFollowers(rand);
       } else {
         HOTOS_LOGGER.log(Level.INFO, "===read {0}===", String.valueOf(id));
-        topAccounts(c.TOP_COUNT, c.NUM_USERS);
+        topAccounts(topCount, c.NUM_USERS);
       }
     }
     HOTOS_LOGGER.log(Level.INFO, "===committed {0}===", String.valueOf(id));

@@ -3,18 +3,14 @@ import java.util.Random;
 public class Config {
   public static final Store STORE = Worker.getWorker().getStore("store");
 
-  public final double WRITE_RATIO;
   public final int NUM_USERS;
-  public final int TOP_COUNT;
   public final double POWER;
   public final double ARRIVAL_RATE = 2.0;
   public final double ARRIVAL_INCR = 0.5;
   public final long INCR_INTERVAL_MS = 5000;
 
-  public Config(double writeRatio, int numUsers, int topCount, double power) {
-    this.WRITE_RATIO = writeRatio;
+  public Config(int numUsers, double power) {
     this.NUM_USERS = numUsers;
-    this.TOP_COUNT = topCount;
     this.POWER = power;
   }
 

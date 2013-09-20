@@ -5,16 +5,21 @@ import java.util.Random;
 import fabric.util.Map;
 
 public class Create {
+  public static String USAGE =
+"USAGE: Create NUM_USERS P\n" +
+"\n" +
+"       Runs a worker to create the user database for the top n test with\n" +
+"       NUM_USERS users and using P for the power law parameter for the\n" +
+"       distribution of number of followers.";
 
   /**
    * Create configuration.
    */
-  public static void configure(double writeRatio, int numUsers, int topCount,
-      double power) {
+  public static void configure(int numUsers, double power) {
     atomic {
       Map m = Config.STORE.getRoot();
       Store s = Config.STORE;
-      m.put("config", new Config@s(writeRatio, numUsers, topCount, power).Config$());
+      m.put("config", new Config@s(numUsers, power).Config$());
     }
   }
 
@@ -59,9 +64,6 @@ public class Create {
       t = new Tester@s().Tester$();
       m.put("tester", t);
     }
-    atomic {
-      t.topAccounts(c.TOP_COUNT, c.NUM_USERS);
-    }
     System.out.println("done");
   }
 
@@ -75,12 +77,11 @@ public class Create {
   }
 
   public static void main(String[] args) {
-    // TODO: Usage
-    if (args.length != 4) {
+    if (args.length != 2) {
+      System.err.println(USAGE);
       System.exit(1);
     }
-    configure(Double.parseDouble(args[0]), Integer.parseInt(args[1]),
-        Integer.parseInt(args[2]), Double.parseDouble(args[3]));
+    configure(Integer.parseInt(args[0]), Double.parseDouble(args[1]));
     populateUsers();
   }
 }
