@@ -48,7 +48,7 @@ public class Worker {
     double writeRatio = 0;
     int topCount = 0;
     atomic {
-      rand = new Random(Integer.parseInt(args[0]));
+      rand = new Random(Long.parseLong(args[0]));
       writeRatio = Double.parseDouble(args[1]);
       topCount = Integer.parseInt(args[2]);
       t = (Tester) Config.STORE.getRoot().get("tester");

@@ -1,20 +1,22 @@
-import fabric.util.Set;
-import fabric.util.HashSet;
+import fabric.util.List;
+import fabric.util.ArrayList;
 import java.util.Random;
+import java.util.logging.Logger;
+import java.util.logging.Level;
 
 public class TwooterAccount {
 
   public final String name;
 
-  private final Set/*<TwooterAccount>*/ followers;
+  private final List/*<TwooterAccount>*/ followers;
 
   public TwooterAccount(String name) {
     Store s = Config.STORE;
     this.name = name;
-    this.followers = new HashSet@s().fabric$util$HashSet$();
+    this.followers = new ArrayList@s().fabric$util$ArrayList$();
   }
 
-  public TwooterAccount(String name, Set followers) {
+  public TwooterAccount(String name, List followers) {
     this.name = name;
     this.followers = followers;
   }
@@ -43,7 +45,8 @@ public class TwooterAccount {
 
   public void removeRandomFollower(Random rand) {
     atomic {
-      followers.remove(getRandomFollower(rand));
+      if (followers.size() == 0) return;
+      followers.remove(rand.nextInt(followers.size()));
     }
   }
 
@@ -59,25 +62,19 @@ public class TwooterAccount {
   }
 
   /**
-   * Return a random follower using a uniform distribution.
-   */
-  public TwooterAccount getRandomFollower(Random rand) {
-    atomic {
-      return (TwooterAccount)
-        followers.toArray()[rand.nextInt(followers.size())];
-    }
-  }
-
-  /**
    * Randomly either add or remove a follower.
    */
-  public void randomlyUpdateFollowers(Random rand) {
+  public void randomlyUpdateFollowers(Random rand, long id) {
     atomic {
+      Logger HOTOS_LOGGER = Logger.getLogger("HOTOS");
       int choice = rand.nextInt(2);
-      if (choice == 0)
+      if (choice == 0) {
+        HOTOS_LOGGER.log(Level.INFO, "==={0} adding===", String.valueOf(id));
         addRandomFollower(rand);
-      else 
+      } else {
+        HOTOS_LOGGER.log(Level.INFO, "==={0} removing===", String.valueOf(id));
         removeRandomFollower(rand);
+      }
     }
   }
 }
