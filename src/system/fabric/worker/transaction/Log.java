@@ -699,6 +699,8 @@ public final class Log {
           lockedByAncestor = true;
           break;
         }
+
+        curAncestor = curAncestor.parent;
       }
 
       readMapEntry.addLock(this);
