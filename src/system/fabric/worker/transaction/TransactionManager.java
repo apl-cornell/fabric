@@ -380,7 +380,9 @@ public final class TransactionManager {
     Log HOTOS_current = current;
     List<RemoteWorker> workers = current.workersCalled;
     final boolean isReadOnly = current.writes.isEmpty();
-    Set<Store> stores = current.storesRead(Long.MAX_VALUE).keySet();
+    Set<Store> stores =
+        new HashSet<>(current.storesRead(Long.MAX_VALUE).keySet());
+    stores.addAll(current.storesWritten());
     final long prepareStart = System.currentTimeMillis();
 
     // Send prepare-write messages to our cohorts. If the prepare fails, this
