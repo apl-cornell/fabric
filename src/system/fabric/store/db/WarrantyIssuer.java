@@ -5,7 +5,6 @@ import static fabric.common.Logging.HOTOS_LOGGER;
 import java.util.logging.Level;
 
 import fabric.common.Logging;
-import fabric.common.PIDController;
 import fabric.common.Warranty;
 import fabric.common.util.Cache;
 
@@ -18,30 +17,9 @@ public class WarrantyIssuer<K> {
   // BEGIN TUNING PARAMETERS /////////////////////////////////////////////////
 
   /**
-   * Parameter for low-pass filtering the error derivatives in the PID
-   * controller. Higher values result in more filtering.
-   */
-  private static final double PID_DERIV_ALPHA = 0;
-
-  /**
-   * Proportional gain for the PID controller.
-   */
-  private static final double PID_KP = 0.135132 * 100;
-
-  /**
-   * Integral gain for the PID controller.
-   */
-  private static final double PID_KI = 0 * 100;
-
-  /**
-   * Derivative gain for the PID controller.
-   */
-  private static final double PID_KD = 0 * 100;
-
-  /**
    * The base commit latency, in milliseconds.
    */
-  private static final long BASE_COMMIT_LATENCY = (int) (0.118652 * 125);
+  private static final long BASE_COMMIT_LATENCY = (int) (0.236450 * 1000);
 
   /**
    * The minimum length of time (in milliseconds) for which each issued warranty
@@ -53,20 +31,20 @@ public class WarrantyIssuer<K> {
    * The maximum length of time (in milliseconds) for which each issued warranty
    * should be valid.
    */
-  private static final int MAX_WARRANTY_LENGTH = (int) (0.641968 * 10000);
+  private static final int MAX_WARRANTY_LENGTH = (int) (0.683228 * 10000);
 
   /**
    * The decay rate for the exponential average when calculating the rate of
-   * read prepares. Lower values result in slower adaptation to changes in
-   * the read-prepare rate.
+   * read and write prepares. Lower values result in slower adaptation to
+   * changes in the prepare rates.
    */
-  private static final double READ_PREPARE_ALPHA = 0.149780;
+  private static final double PREPARE_ALPHA = .698486;
 
   /**
    * The length of the time window over which to calculate the rate of
-   * read prepares, in milliseconds.
+   * read and write prepares, in milliseconds.
    */
-  private static final long READ_PREPARE_WINDOW_LENGTH = 1000;
+  private static final long PREPARE_WINDOW_LENGTH = (int) (0.848755 * 100000);
 
   // END TUNING PARAMETERS ///////////////////////////////////////////////////
 
@@ -74,29 +52,8 @@ public class WarrantyIssuer<K> {
     final K key;
 
     /**
-     * The time at which this object was created, in milliseconds since the
-     * epoch.
-     */
-    final long createTime;
-
-    /**
-     * The total accumulated time spent in write delays, in milliseconds.
-     */
-    long accumWriteDelayTime;
-
-    /**
-     * Tracks the latest warranty-expiry time that delayed a write prepare.
-     */
-    long lastWriteDelayExpiryTime;
-
-    /**
-     * A mutex for manipulating the write-delay metrics.
-     */
-    final Object writeDelayMutex;
-
-    /**
-     * The start of the current time window over which the rate of read prepares
-     * is being calculated, in milliseconds since the epoch.
+     * The start of the current time window over which the rate of read and
+     * write prepares is being calculated, in milliseconds since the epoch.
      */
     long windowStartTime;
 
@@ -112,41 +69,40 @@ public class WarrantyIssuer<K> {
     double readPrepareRate;
 
     /**
-     * A mutex for manipulating the read-prepare metrics.
+     * The number of write prepares observed during the current time window.
      */
-    final Object readPrepareMutex;
+    int numWritePrepares;
 
     /**
-     * The PID controller for suggesting warranty lengths.
+     * The accumulated write-prepare rate, as measured before the start of the
+     * current window.
      */
-    final PIDController pidController;
+    double writePrepareRate;
+
+    /**
+     * A mutex for manipulating the read- and write-prepare metrics.
+     */
+    final Object prepareMutex;
 
     public Entry(K key) {
       final long now = System.currentTimeMillis();
 
       this.key = key;
-      this.createTime = now;
-      this.accumWriteDelayTime = 0;
-      this.lastWriteDelayExpiryTime = 0;
-      this.writeDelayMutex = new Object();
 
       this.windowStartTime = now;
       this.numReadPrepares = 0;
       this.readPrepareRate = 0.0;
-      this.readPrepareMutex = new Object();
-
-      this.pidController = new PIDController(PID_KP, PID_KI, PID_KD);
-      this.pidController.setAlpha(PID_DERIV_ALPHA);
-      this.pidController.setOutputRange(0, MAX_WARRANTY_LENGTH);
-      this.pidController.setSetpoint(BASE_COMMIT_LATENCY);
+      this.numWritePrepares = 0;
+      this.writePrepareRate = 0.0;
+      this.prepareMutex = new Object();
     }
 
     /**
      * Notifies of a read-prepare event.
      */
     void notifyReadPrepare(long commitTime) {
-      synchronized (readPrepareMutex) {
-        fixReadPrepareWindow();
+      synchronized (prepareMutex) {
+        fixPrepareWindow();
         numReadPrepares++;
       }
     }
@@ -156,28 +112,33 @@ public class WarrantyIssuer<K> {
      * 
      * @return the current time, in milliseconds since the epoch.
      */
-    long fixReadPrepareWindow() {
-      synchronized (readPrepareMutex) {
+    long fixPrepareWindow() {
+      synchronized (prepareMutex) {
         final long now = System.currentTimeMillis();
 
         final long timeElapsed = now - windowStartTime;
-        if (timeElapsed < READ_PREPARE_WINDOW_LENGTH) return now;
+        if (timeElapsed < PREPARE_WINDOW_LENGTH) return now;
 
         // Need to start a new window.
-        int numWindowsElapsed =
-            (int) (timeElapsed / READ_PREPARE_WINDOW_LENGTH);
+        int numWindowsElapsed = (int) (timeElapsed / PREPARE_WINDOW_LENGTH);
         readPrepareRate =
-            readPrepareRate * (1 - READ_PREPARE_ALPHA)
-                + ((double) numReadPrepares / READ_PREPARE_WINDOW_LENGTH)
-                * READ_PREPARE_ALPHA;
+            readPrepareRate * (1 - PREPARE_ALPHA)
+                + ((double) numReadPrepares / PREPARE_WINDOW_LENGTH)
+                * PREPARE_ALPHA;
+        writePrepareRate =
+            writePrepareRate * (1 - PREPARE_ALPHA)
+                + ((double) numWritePrepares / PREPARE_WINDOW_LENGTH)
+                * PREPARE_ALPHA;
 
         // Account for possibility of more than one window having elapsed.
         for (int i = 1; i < numWindowsElapsed; i++) {
-          readPrepareRate *= 1 - READ_PREPARE_ALPHA;
+          readPrepareRate *= 1 - PREPARE_ALPHA;
+          writePrepareRate *= 1 - PREPARE_ALPHA;
         }
 
-        windowStartTime += numWindowsElapsed * READ_PREPARE_WINDOW_LENGTH;
+        windowStartTime += numWindowsElapsed * PREPARE_WINDOW_LENGTH;
         numReadPrepares = 0;
+        numWritePrepares = 0;
         return now;
       }
     }
@@ -196,48 +157,28 @@ public class WarrantyIssuer<K> {
       HOTOS_LOGGER.log(Level.INFO, "writing {0}, warranty expires in {1} ms",
           new Object[] { key, warranty.expiry() - System.currentTimeMillis() });
 
-      synchronized (writeDelayMutex) {
-        long warrantyExpiry = warranty.expiry();
-        if (warrantyExpiry <= lastWriteDelayExpiryTime) return;
-
-        long now = System.currentTimeMillis();
-
-        // Calculate accumulated write-delay time.
-        if (lastWriteDelayExpiryTime <= now) {
-          accumWriteDelayTime += Math.max(0, warrantyExpiry - now);
-        } else {
-          // Previous warranty hasn't expired yet. Assume previous prepare was
-          // aborted and just add the extra delay incurred by the newer
-          // warranty.
-          accumWriteDelayTime += warrantyExpiry - lastWriteDelayExpiryTime;
-        }
-
-        lastWriteDelayExpiryTime = warrantyExpiry;
+      synchronized (prepareMutex) {
+        fixPrepareWindow();
+        numWritePrepares++;
       }
     }
 
-    double getReadPrepareRate() {
-      synchronized (readPrepareMutex) {
-        long now = fixReadPrepareWindow();
+    double getReadWritePrepareRatio() {
+      synchronized (prepareMutex) {
+        long now = fixPrepareWindow();
 
-        // Return a weighted average of the accumulated read-prepare rate and
-        // the current read-prepare rate. The weight is READ_PREPARE_ALPHA,
-        // adjusted by the age of the current window.
+        // Use a weighted average of the accumulated prepare rates and the
+        // current prepare rates. The weight is PREPARE_ALPHA, adjusted by the
+        // age of the current window.
         long windowAge = now - windowStartTime;
         if (windowAge == 0) windowAge = 1;
-        double alpha =
-            READ_PREPARE_ALPHA * windowAge / READ_PREPARE_WINDOW_LENGTH;
-        return readPrepareRate * (1 - alpha) + alpha * numReadPrepares
-            / windowAge;
-      }
-    }
-
-    double getWriteDelayFactor() {
-      synchronized (writeDelayMutex) {
-        long now = System.currentTimeMillis();
-        if (now == createTime) return 0;
-
-        return (double) accumWriteDelayTime / (now - createTime);
+        double alpha = PREPARE_ALPHA * windowAge / PREPARE_WINDOW_LENGTH;
+        double rho =
+            readPrepareRate * (1 - alpha) + alpha * numReadPrepares / windowAge;
+        double W =
+            writePrepareRate * (1 - alpha) + alpha * numWritePrepares
+                / windowAge;
+        return rho / (W + Double.MIN_VALUE);
       }
     }
 
@@ -247,22 +188,20 @@ public class WarrantyIssuer<K> {
      * @return the time at which the warranty should expire.
      */
     Long suggestWarranty(long expiry) {
-      double rho = getReadPrepareRate() + Double.MIN_VALUE;
-      double omega = getWriteDelayFactor();
+      double ratio = getReadWritePrepareRatio();
 
-      double input = omega / rho;
-      long warrantyLength = (long) pidController.setInput(input);
+      long warrantyLength =
+          Math.min((long) (2.0 * BASE_COMMIT_LATENCY * ratio),
+              MAX_WARRANTY_LENGTH);
 
       if (key instanceof Number && ((Number) key).longValue() == 0) {
-        HOTOS_LOGGER.log(Level.INFO,
-            "onum = {0}, pid output = {2}, pid input = {1}", new Object[] {
-                key, input, warrantyLength });
+        HOTOS_LOGGER.log(Level.INFO, "onum = {0}, warranty length = {1}",
+            new Object[] { key, warrantyLength });
       }
 
-      if (accumWriteDelayTime > 0)
-        HOTOS_LOGGER.log(Level.INFO,
-            "onum = {0}, pid output = {2}, pid input = {1}", new Object[] {
-                key, input, warrantyLength });
+      if (writePrepareRate > 0 || numWritePrepares > 0)
+        HOTOS_LOGGER.log(Level.INFO, "onum = {0}, warranty length = {1}",
+            new Object[] { key, warrantyLength });
 
       if (warrantyLength < MIN_WARRANTY_LENGTH) return null;
 
