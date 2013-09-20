@@ -80,19 +80,22 @@ public class Tester {
     Logger HOTOS_LOGGER = Logger.getLogger("HOTOS");
     HOTOS_LOGGER.log(Level.INFO, "===started {0}===", String.valueOf(id));
     long transactionSeed = rand.nextLong();
-    atomic {
-      Random tranRand = new Random(transactionSeed);
-      Config c = (Config) Config.STORE.getRoot().get("config");
-      double choice = tranRand.nextDouble();
-      if (choice <= writeRatio) {
-        HOTOS_LOGGER.log(Level.INFO, "===write {0}===", String.valueOf(id));
-        TwooterAccount.getRandomTwooterAccount(tranRand).randomlyUpdateFollowers(tranRand,
-            id);
-      } else {
-        HOTOS_LOGGER.log(Level.INFO, "===read {0}===", String.valueOf(id));
-        topAccounts(topCount, c.NUM_USERS);
+    try {
+      atomic {
+        Random tranRand = new Random(transactionSeed);
+        Config c = (Config) Config.STORE.getRoot().get("config");
+        double choice = tranRand.nextDouble();
+        if (choice <= writeRatio) {
+          HOTOS_LOGGER.log(Level.INFO, "===write {0}===", String.valueOf(id));
+          TwooterAccount.getRandomTwooterAccount(tranRand).randomlyUpdateFollowers(tranRand,
+              id);
+        } else {
+          HOTOS_LOGGER.log(Level.INFO, "===read {0}===", String.valueOf(id));
+          topAccounts(topCount, c.NUM_USERS);
+        }
       }
+    } finally {
+      HOTOS_LOGGER.log(Level.INFO, "===committed {0}===", String.valueOf(id));
     }
-    HOTOS_LOGGER.log(Level.INFO, "===committed {0}===", String.valueOf(id));
   }
 }

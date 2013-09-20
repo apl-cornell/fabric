@@ -3,6 +3,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadFactory;
+import java.util.logging.Logger;
+import java.util.logging.Level;
 
 /**
  * Entry point for basic worker.
@@ -14,6 +16,8 @@ public class Worker {
 "       Runs a worker thread for the top n test with the random seed SEED, \n" +
 "       write ratio WRITE, and N items grabbed for the top count.";
 
+  //public static Semaphore sem = new Semaphore(10);
+
   private static ExecutorService threadPool = Executors.newCachedThreadPool(
       new ThreadFactory() {
         public Thread newThread(Runnable r) {
@@ -24,11 +28,25 @@ public class Worker {
 
   public static boolean spawnNewThread(final Tester t, final Random rand,
       final double writeRatio, final int topCount) {
+    /*
+    try {
+      sem.acquire();
+    } catch (InterruptedException e) {
+      return false;
+    }
+    */
     Runnable r = null;
     atomic {
       r = new Runnable() {
         public void run() {
+          try {
             t.randomOperation(rand, writeRatio, topCount);
+          } catch (Throwable t) {
+            Logger HOTOS_LOGGER = Logger.getLogger("HOTOS");
+            HOTOS_LOGGER.log(Level.SEVERE, t.toString());
+          //} finally {
+            //sem.release();
+          }
         }
       };
     }
@@ -77,7 +95,7 @@ public class Worker {
       nextEventTime = nextSpawnTime > nextArrvIncrTime ? nextSpawnTime :
         nextArrvIncrTime;
       long sleepTime = nextEventTime - System.currentTimeMillis();
-      if (sleepTime > 0) {
+      if (sleepTime >= 0) {
         try {
           Thread.sleep(sleepTime);
         } catch (InterruptedException e) {
@@ -85,6 +103,16 @@ public class Worker {
         }
       }
     }
+    /*
+    while (true) {
+      try {
+        Thread.sleep(10000);
+      } catch (InterruptedException e) {
+        System.exit(1);
+      }
+      spawnNewThread(t, rand, writeRatio, topCount);
+    }
+    */
   }
 
   public static long getArrivalInterval(double arrivalRate, Random rand) {

@@ -935,8 +935,8 @@ public final class Log {
         obj.$writer = null;
         obj.$writeLockHolder = null;
         obj.$writeLockStackTrace = null;
-        obj.$version = 1;
-        obj.$readMapEntry.incrementVersion();
+        //obj.$version = 1;
+        //obj.$readMapEntry.incrementVersion();
         obj.$isOwned = false;
 
         // Signal any waiting readers/writers.
