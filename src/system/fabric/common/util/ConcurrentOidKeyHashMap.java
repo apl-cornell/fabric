@@ -68,6 +68,10 @@ public final class ConcurrentOidKeyHashMap<V> implements
     return submap != null && submap.containsKey(onum);
   }
 
+  public boolean containsKey(Oid oid) {
+    return containsKey(oid.store, oid.onum);
+  }
+
   /**
    * @return
    *     an entry set for the map. Omits the null-keyed entry.
@@ -83,6 +87,10 @@ public final class ConcurrentOidKeyHashMap<V> implements
   public V get(Store store, long onum) {
     ConcurrentLongKeyMap<V> submap = map.get(store);
     return submap == null ? null : submap.get(onum);
+  }
+
+  public V get(Oid oid) {
+    return get(oid.store, oid.onum);
   }
 
   public V put(Object obj, V val) {
@@ -117,8 +125,16 @@ public final class ConcurrentOidKeyHashMap<V> implements
     return ensureSubmap(store).put(onum, val);
   }
 
+  public V put(Oid oid, V val) {
+    return put(oid.store, oid.onum, val);
+  }
+
   public V putIfAbsent(Store store, long onum, V val) {
     return ensureSubmap(store).putIfAbsent(onum, val);
+  }
+
+  public V putIfAbsent(Oid oid, V val) {
+    return putIfAbsent(oid.store, oid.onum, val);
   }
 
   public V remove(Object obj) {
@@ -149,6 +165,10 @@ public final class ConcurrentOidKeyHashMap<V> implements
     return result;
   }
 
+  public V remove(Oid oid) {
+    return remove(oid.store, oid.onum);
+  }
+
   public boolean remove(Store store, long onum, V value) {
     ConcurrentLongKeyMap<V> submap = map.get(store);
     if (submap == null) return false;
@@ -159,9 +179,17 @@ public final class ConcurrentOidKeyHashMap<V> implements
     return result;
   }
 
+  public boolean remove(Oid oid, V value) {
+    return remove(oid.store, oid.onum, value);
+  }
+
   public boolean replace(Store store, long onum, V oldValue, V newValue) {
     ConcurrentLongKeyMap<V> submap = map.get(store);
     return submap != null && submap.replace(onum, oldValue, newValue);
+  }
+
+  public boolean replace(Oid oid, V oldValue, V newValue) {
+    return replace(oid.store, oid.onum, oldValue, newValue);
   }
 
   public Set<Store> storeSet() {
