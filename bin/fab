@@ -76,7 +76,7 @@ fi
 
 if [[ -f "${TOP}/lib/libjprofilerti.so" && -n "${profile_dir}" ]] ; then
   vmargs="${vmargs} -agentpath:${TOP}/lib/libjprofilerti.so=offline"
-  vmargs="${vmargs},id=152"
+  vmargs="${vmargs},id=153"
   vmargs="${vmargs},config=${TOP}/jprofiler-config.xml"
   vmargs="${vmargs} -Dfabric.profiling.dir=\"${profile_dir}\""
   vmargs="${vmargs} -Dfabric.profiling.interval=${profile_interval}"
