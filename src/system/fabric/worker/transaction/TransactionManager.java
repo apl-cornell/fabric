@@ -388,12 +388,6 @@ public final class TransactionManager {
     current.createCurrentRequest();
 
     // Commit top-level transaction.
-    Log HOTOS_current = current;
-    List<RemoteWorker> workers = current.workersCalled;
-    final boolean isReadOnly = current.writes.isEmpty() &&
-      current.getAllRequests().isEmpty();
-    Set<Store> stores = current.storesRead(Long.MAX_VALUE).keySet();
-    final long prepareStart = System.currentTimeMillis();
 
     // Send prepare-write messages to our cohorts. If the prepare fails, this
     // will abort our portion of the transaction and throw a
@@ -407,6 +401,13 @@ public final class TransactionManager {
     current.semanticWarrantiesUsed.putAll(writeResult.addedCalls);
     current.requestReplies.putAll(writeResult.callResults);
     current.addedReads = writeResult.addedReads;
+
+    Log HOTOS_current = current;
+    List<RemoteWorker> workers = current.workersCalled;
+    final boolean isReadOnly = current.writes.isEmpty() &&
+      current.getAllRequests().isEmpty();
+    Set<Store> stores = current.storesRead(Long.MAX_VALUE).keySet();
+    final long prepareStart = System.currentTimeMillis();
 
     // Send prepare-read messages to our cohorts. If the prepare fails, this
     // will abort our portion of the transaction and throw a

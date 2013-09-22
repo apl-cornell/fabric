@@ -386,7 +386,6 @@ public class TransactionManager {
         HashMap<CallInstance, WarrantiedCallResult>();
       Set<CallInstance> staleWars = new HashSet<CallInstance>();
       for (CallInstance call : calls.keySet()) {
-        semanticWarranties.notifyReadPrepare(call, commitTime);
         Pair<SemanticExtendStatus, WarrantiedCallResult> extResult =
           semanticWarranties.extendForReadPrepare(call, calls.get(call),
               commitTime);

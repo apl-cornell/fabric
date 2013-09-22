@@ -1390,6 +1390,9 @@ public final class Log {
 
         // Merge the security cache into the top-level label cache.
         securityCache.mergeWithTopLevel();
+
+        Logging.log(WORKER_TRANSACTION_LOGGER, Level.FINER,
+            "Updated data structures for commit of tid {0}", tid);
       }
     });
   }

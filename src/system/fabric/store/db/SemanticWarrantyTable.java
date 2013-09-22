@@ -2,9 +2,11 @@ package fabric.store.db;
 
 import static fabric.common.Logging.SEMANTIC_WARRANTY_LOGGER;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -86,11 +88,16 @@ public class SemanticWarrantyTable {
      */
     private final ReentrantLock lock = new ReentrantLock(true);
 
+    private List<StackTraceElement[]> lastLockingStack =
+        new ArrayList<StackTraceElement[]>();
+
     public void lock() {
       lock.lock();
+      lastLockingStack.add(Thread.currentThread().getStackTrace());
     }
 
     public void unlock() {
+      lastLockingStack.remove(lastLockingStack.size() - 1);
       lock.unlock();
     }
 
@@ -131,47 +138,15 @@ public class SemanticWarrantyTable {
     /**
      * The call's status.
      */
-    private CallStatus status = CallStatus.NOVALUE;
+    private boolean hasValue = false;
 
     /**
      * Get the call's status.
      */
     public CallStatus getStatus() {
-      lock();
-      try {
-        switch (status) {
-        case VALID:
-          if (warranty.expired(true)) setStatus(CallStatus.STALE);
-          return CallStatus.STALE;
-        case NOVALUE:
-        case STALE:
-        default:
-          return status;
-        }
-      } finally {
-        unlock();
-      }
-    }
-
-    /**
-     * Set the call's status.
-     */
-    public void setStatus(CallStatus newStatus) {
-      lock();
-      try {
-        switch (newStatus) {
-        case NOVALUE:
-          throw new InternalError("NOVALUE should not be transitioned to!");
-        case VALID:
-        case STALE:
-        default:
-          // Otherwise, just set the status to the desired new state.
-          status = newStatus;
-          break;
-        }
-      } finally {
-        unlock();
-      }
+      if (!hasValue) return CallStatus.NOVALUE;
+      if (warranty.expired(true)) return CallStatus.STALE;
+      return CallStatus.VALID;
     }
 
     /**
@@ -183,19 +158,14 @@ public class SemanticWarrantyTable {
      * Get the call's value.  Returns null if the call is expired.
      */
     public fabric.lang.Object getValue() {
-      lock();
-      try {
-        switch (getStatus()) {
-        case NOVALUE:
-          throw new InternalError(
-              "Attempt to read value of a call with no value!");
-        case VALID:
-        case STALE:
-        default:
-          return value;
-        }
-      } finally {
-        unlock();
+      switch (getStatus()) {
+      case NOVALUE:
+        throw new InternalError(
+            "Attempt to read value of a call with no value!");
+      case VALID:
+      case STALE:
+      default:
+        return value;
       }
     }
 
@@ -204,34 +174,29 @@ public class SemanticWarrantyTable {
      * agree, otherwise false.
      */
     public boolean compareValue(fabric.lang.Object otherVal) {
-      lock();
-      try {
-        switch (getStatus()) {
-        case NOVALUE:
-          return false; // No thing can equal nothing.
-        case VALID:
-        case STALE:
-        default:
-          if (value == null) {
-            // Check if they're both null
-            return otherVal == null;
-          } else if (otherVal instanceof WrappedJavaInlineable) {
-            // Check if they're both the same inlineable
-            if (value instanceof WrappedJavaInlineable) {
-              return otherVal.equals(value);
-            }
-            return false;
-          } else if (otherVal instanceof fabric.lang.Object._Proxy) {
-            // Check if they're the same object
-            if (value instanceof fabric.lang.Object._Proxy) {
-              return (otherVal.$getOnum() == value.$getOnum());
-            }
-            return false;
+      switch (getStatus()) {
+      case NOVALUE:
+        return false; // No thing can equal nothing.
+      case VALID:
+      case STALE:
+      default:
+        if (value == null) {
+          // Check if they're both null
+          return otherVal == null;
+        } else if (otherVal instanceof WrappedJavaInlineable) {
+          // Check if they're both the same inlineable
+          if (value instanceof WrappedJavaInlineable) {
+            return otherVal.equals(value);
+          }
+          return false;
+        } else if (otherVal instanceof fabric.lang.Object._Proxy) {
+          // Check if they're the same object
+          if (value instanceof fabric.lang.Object._Proxy) {
+            return (otherVal.$getOnum() == value.$getOnum());
           }
           return false;
         }
-      } finally {
-        unlock();
+        return false;
       }
     }
 
@@ -244,19 +209,14 @@ public class SemanticWarrantyTable {
      * Get the call's warranty.
      */
     public SemanticWarranty getWarranty() {
-      lock();
-      try {
-        switch (getStatus()) {
-        case NOVALUE:
-          throw new InternalError(
-              "Attempt to get warranty of call with no established value!");
-        case VALID:
-        case STALE:
-        default:
-          return warranty;
-        }
-      } finally {
-        unlock();
+      switch (getStatus()) {
+      case NOVALUE:
+        throw new InternalError(
+            "Attempt to get warranty of call with no established value!");
+      case VALID:
+      case STALE:
+      default:
+        return warranty;
       }
     }
 
@@ -272,18 +232,13 @@ public class SemanticWarrantyTable {
      * Get the calls that use this call.
      */
     public Set<CallInstance> getCallers() {
-      lock();
-      try {
-        switch (getStatus()) {
-        case NOVALUE:
-          throw new InternalError("Attempt to get callers of a valueless call!");
-        case VALID:
-        case STALE:
-        default:
-          return new HashSet<CallInstance>(callers);
-        }
-      } finally {
-        unlock();
+      switch (getStatus()) {
+      case NOVALUE:
+        throw new InternalError("Attempt to get callers of a valueless call!");
+      case VALID:
+      case STALE:
+      default:
+        return new HashSet<CallInstance>(callers);
       }
     }
 
@@ -292,18 +247,13 @@ public class SemanticWarrantyTable {
      */
     @SuppressWarnings("unused")
     public Set<CallInstance> getCalls() {
-      lock();
-      try {
-        switch (getStatus()) {
-        case NOVALUE:
-          throw new InternalError("Attempt to get calls of a valueless call!");
-        case VALID:
-        case STALE:
-        default:
-          return new HashSet<CallInstance>(calls);
-        }
-      } finally {
-        unlock();
+      switch (getStatus()) {
+      case NOVALUE:
+        throw new InternalError("Attempt to get calls of a valueless call!");
+      case VALID:
+      case STALE:
+      default:
+        return new HashSet<CallInstance>(calls);
       }
     }
 
@@ -315,17 +265,12 @@ public class SemanticWarrantyTable {
      * requested...
      */
     private void addCaller(CallInstance caller) {
-      lock();
-      try {
-        switch (getStatus()) {
-        case NOVALUE:
-        case VALID:
-        case STALE:
-        default:
-          callers.add(caller);
-        }
-      } finally {
-        unlock();
+      switch (getStatus()) {
+      case NOVALUE:
+      case VALID:
+      case STALE:
+      default:
+        callers.add(caller);
       }
     }
 
@@ -333,17 +278,12 @@ public class SemanticWarrantyTable {
      * Remove a caller.
      */
     private void removeCaller(CallInstance caller) {
-      lock();
-      try {
-        switch (getStatus()) {
-        case NOVALUE:
-        case VALID:
-        case STALE:
-        default:
-          callers.remove(caller);
-        }
-      } finally {
-        unlock();
+      switch (getStatus()) {
+      case NOVALUE:
+      case VALID:
+      case STALE:
+      default:
+        callers.remove(caller);
       }
     }
 
@@ -352,18 +292,13 @@ public class SemanticWarrantyTable {
      */
     @SuppressWarnings("unused")
     public LongSet getReads() {
-      lock();
-      try {
-        switch (getStatus()) {
-        case NOVALUE:
-          throw new InternalError("Attempt to get reads from a valueless call!");
-        case VALID:
-        case STALE:
-        default:
-          return new LongHashSet(reads);
-        }
-      } finally {
-        unlock();
+      switch (getStatus()) {
+      case NOVALUE:
+        throw new InternalError("Attempt to get reads from a valueless call!");
+      case VALID:
+      case STALE:
+      default:
+        return new LongHashSet(reads);
       }
     }
 
@@ -371,36 +306,34 @@ public class SemanticWarrantyTable {
      * Get the oids created during this call.
      */
     public LongSet getCreates() {
-      lock();
-      try {
-        switch (getStatus()) {
-        case NOVALUE:
-          throw new InternalError(
-              "Attempt to get creates from a valueless call!");
-        case VALID:
-        case STALE:
-        default:
-          return new LongHashSet(creates);
-        }
-      } finally {
-        unlock();
+      switch (getStatus()) {
+      case NOVALUE:
+        throw new InternalError(
+            "Attempt to get creates from a valueless call!");
+      case VALID:
+      case STALE:
+      default:
+        return new LongHashSet(creates);
       }
     }
 
     public CallInfo(CallInstance call) {
-      this.lock();
+      try {
+        this.writeLock();
+      } catch (UnableToLockException e) {
+        throw new InternalError("This shouldn't happen");
+      }
       try {
         this.call = call;
         this.value = null;
         this.warranty = new SemanticWarranty(0);
-        this.status = CallStatus.NOVALUE;
         this.callers = new HashSet<CallInstance>();
         this.calls = new HashSet<CallInstance>();
         this.creates = new LongHashSet();
         this.reads = new LongHashSet();
         this.nextUpdate = null;
       } finally {
-        this.unlock();
+        this.writeUnlock();
       }
     }
 
@@ -409,69 +342,67 @@ public class SemanticWarrantyTable {
      * that will be used for the call.
      */
     public SemanticWarranty request(SemanticWarrantyRequest req,
-        long transactionID, boolean useIssuer) throws
-      TransactionPrepareFailedException {
-      this.lock();
-      try {
+        long transactionID, boolean useIssuer)
+        throws TransactionPrepareFailedException {
         switch (getStatus()) {
         case VALID:
         case STALE:
         case NOVALUE:
         default:
-          writeLock();
-          //Check that dependencies aren't planning to update in the near future
-          for (LongIterator iter = req.readOnums.iterator(); iter.hasNext();) {
-            long onum = iter.next();
-            if (database.isWritten(onum)) {
-              SEMANTIC_WARRANTY_LOGGER.finest("Request for call " + call
-                  + " depends on object " + onum
-                  + " that has a write scheduled.");
-              throw new TransactionPrepareFailedException("Request for call "
-                  + call + " depends on object " + onum
-                  + " that has a write scheduled.");
-            }
-          }
-
-          updatingTIDMap.putIfAbsent(transactionID, new
-              HashSet<CallInstance>());
-
-          // Check calls
-          for (CallInstance c : req.calls.keySet()) {
-            if (!updatingTIDMap.get(transactionID).contains(c)) {
-              try {
-                getInfo(c).writeLock();
-                getInfo(c).writeUnlock();
-              } catch (UnableToLockException e) {
+          try {
+            writeLock();
+            //Check that dependencies aren't planning to update in the near future
+            for (LongIterator iter = req.readOnums.iterator(); iter.hasNext();) {
+              long onum = iter.next();
+              if (database.isWritten(onum)) {
                 SEMANTIC_WARRANTY_LOGGER.finest("Request for call " + call
-                    + " depends on call " + call
+                    + " depends on object " + onum
                     + " that has a write scheduled.");
+                writeUnlock();
                 throw new TransactionPrepareFailedException("Request for call "
-                    + call + " depends on call " + call
+                    + call + " depends on object " + onum
                     + " that has a write scheduled.");
               }
             }
+
+            updatingTIDMap
+                .putIfAbsent(transactionID, new HashSet<CallInstance>());
+
+            // Check calls
+            for (CallInstance c : req.calls.keySet()) {
+              if (!updatingTIDMap.get(transactionID).contains(c)) {
+                try {
+                  getInfo(c).writeLock();
+                  getInfo(c).writeUnlock();
+                } catch (UnableToLockException e) {
+                  SEMANTIC_WARRANTY_LOGGER.finest("Request for call " + call
+                      + " depends on call " + call
+                      + " that has a write scheduled.");
+                  writeUnlock();
+                  throw new TransactionPrepareFailedException("Request for call "
+                      + call + " depends on call " + call
+                      + " that has a write scheduled.");
+                }
+              }
+            }
+
+            // Set warranty
+            SemanticWarranty newWarranty = new SemanticWarranty(0);
+            if (useIssuer) {
+              long suggestedTime = issuer.suggestWarranty(req.call);
+              newWarranty = new SemanticWarranty(suggestedTime);
+            }
+
+            // Schedule the update
+            scheduleUpdateAt(transactionID, req, newWarranty);
+
+            return nextUpdateWarranty;
+          } catch (UnableToLockException e) {
+            SEMANTIC_WARRANTY_LOGGER.finest("Could not lock call " + call
+                + " for write");
+            throw new TransactionPrepareFailedException("Could not lock call "
+                + call + " for write");
           }
-
-          // Set warranty
-          if (useIssuer) {
-            long suggestedTime = issuer.suggestWarranty(req.call);
-            this.warranty = new SemanticWarranty(suggestedTime);
-          } else {
-            this.warranty = new SemanticWarranty(0);
-          }
-
-          // Schedule the update
-          scheduleUpdateAt(transactionID, req);
-
-          return warranty;
-        }
-      } catch (UnableToLockException e) {
-        SEMANTIC_WARRANTY_LOGGER.finest("Could not lock call " + call
-            + " for write");
-        throw new TransactionPrepareFailedException("Could not lock call "
-            + call + " for write");
-      } finally {
-        this.unlock();
       }
     }
 
@@ -482,66 +413,64 @@ public class SemanticWarrantyTable {
      */
     public SemanticExtendStatus extendWarranty(fabric.lang.Object oldValue,
         long commitTime, boolean readPrepare) {
-      lock();
-      try {
-        switch (getStatus()) {
-        case STALE:
-          // Check what they think it is.
-          if (!compareValue(oldValue)) {
-            if (nextUpdate == null) {
-              if (readPrepare) {
-                // Call is being read, so make the warranty valid anyways.
-                warranty = new SemanticWarranty(issuer.suggestWarranty(call));
-                // Update state back to valid.
-                if (!warranty.expired(true)) setStatus(CallStatus.VALID);
-              }
-            }
-            return SemanticExtendStatus.BAD_VERSION;
-          }
-          // Update the warranty
-          if (warranty.expiresBefore(commitTime, true)) {
-            if (nextUpdate == null) {
-              if (readPrepare) {
-                warranty = new SemanticWarranty(issuer.suggestWarranty(call,
-                      commitTime));
-              } else {
-                warranty = new SemanticWarranty(commitTime);
-              }
-              // Update state back to valid.
-              setStatus(CallStatus.VALID);
-            } else {
-              return SemanticExtendStatus.DENIED;
+      switch (getStatus()) {
+      case STALE:
+        // Check what they think it is.
+        if (!compareValue(oldValue)) {
+          if (readPrepare) {
+            try {
+              writeLock();
+              // Call is being read, so make the warranty valid anyways.
+              warranty = new SemanticWarranty(issuer.suggestWarranty(call));
+              writeUnlock();
+            } catch (UnableToLockException e) {
+              // This means we shouldn't extend the warranty.  Ignore it.
             }
           }
-          return SemanticExtendStatus.OK;
-        case VALID:
-          // Check what they think it is.
-          if (!compareValue(oldValue)) {
-            SEMANTIC_WARRANTY_LOGGER.finest("Old value was " +
-                oldValue + " and new value was " + value);
-            return SemanticExtendStatus.BAD_VERSION;
-          }
-          // Update the warranty
-          if (warranty.expiresBefore(commitTime, true)) {
-            // Check that we won't be extending past the next write.
-            if (nextUpdate == null) {
-              if (readPrepare) {
-                warranty = new SemanticWarranty(issuer.suggestWarranty(call,
-                      commitTime));
-              } else {
-                warranty = new SemanticWarranty(commitTime);
-              }
-            } else {
-              return SemanticExtendStatus.DENIED;
-            }
-          }
-          return SemanticExtendStatus.OK;
-        case NOVALUE:
-        default:
-          return SemanticExtendStatus.DENIED;
+          return SemanticExtendStatus.BAD_VERSION;
         }
-      } finally {
-        unlock();
+        // Update the warranty
+        if (warranty.expiresBefore(commitTime, true)) {
+          try {
+            writeLock();
+            if (readPrepare) {
+              warranty = new SemanticWarranty(issuer.suggestWarranty(call,
+                    commitTime));
+            } else {
+              warranty = new SemanticWarranty(commitTime);
+            }
+            writeUnlock();
+          } catch (UnableToLockException e) {
+            // There's a pending write.  Can't!
+            return SemanticExtendStatus.DENIED;
+          }
+        }
+        return SemanticExtendStatus.OK;
+      case VALID:
+        // Check what they think it is.
+        if (!compareValue(oldValue)) return SemanticExtendStatus.BAD_VERSION;
+        // Update the warranty
+        if (warranty.expiresBefore(commitTime, true)) {
+          // Check that we won't be extending past the next write.
+          try {
+            writeLock();
+            if (readPrepare) {
+              warranty =
+                  new SemanticWarranty(issuer.suggestWarranty(call,
+                      commitTime));
+            } else {
+              warranty = new SemanticWarranty(commitTime);
+            }
+            writeUnlock();
+          } catch (UnableToLockException e) {
+            // There's a pending write.  Can't!
+            return SemanticExtendStatus.DENIED;
+          }
+        }
+        return SemanticExtendStatus.OK;
+      case NOVALUE:
+      default:
+        return SemanticExtendStatus.DENIED;
       }
     }
 
@@ -550,24 +479,21 @@ public class SemanticWarrantyTable {
      * possible).
      */
     public void updateWarranty() {
-      lock();
-      try {
-        switch (getStatus()) {
-        case STALE:
-          // Update the warranty if possible
-          if (nextUpdate == null) {
-            warranty = new SemanticWarranty(issuer.suggestWarranty(call));
-            // Update state back to valid.
-            if (!warranty.expired(true)) setStatus(CallStatus.VALID);
-          }
-          return;
-        case VALID:
-        case NOVALUE:
-        default:
-          return;
+      switch (getStatus()) {
+      case STALE:
+        // Update the warranty if possible
+        try {
+          writeLock();
+          warranty = new SemanticWarranty(issuer.suggestWarranty(call));
+          writeUnlock();
+        } catch (UnableToLockException e) {
+          // Can't update, do nothing.
         }
-      } finally {
-        unlock();
+        return;
+      case VALID:
+      case NOVALUE:
+      default:
+        return;
       }
     }
 
@@ -575,32 +501,20 @@ public class SemanticWarrantyTable {
      * Find all calls that were used (directly or indirectly) by this call
      * (including itself) which are now expired.
      */
-    // XXX: not sure this makes any sense anymore...
     public Set<CallInstance> getExpiredCalls() {
       Set<CallInstance> expired = new HashSet<CallInstance>();
-      lock();
-      try {
-        switch (getStatus()) {
-        case NOVALUE:
-          expired.add(this.call);
-          Set<CallInstance> children = new TreeSet<CallInstance>(this.calls);
-          unlock();
-          try {
-            for (CallInstance child : children) {
-              expired.addAll(getExpiredSubgraph(child));
-            }
-          } finally {
-            // Re lock to match outer finally
-            lock();
-          }
-          // $FALL-THROUGH$
-        case VALID:
-        case STALE:
-        default:
-          return expired;
+      switch (getStatus()) {
+      case NOVALUE:
+        expired.add(this.call);
+        Set<CallInstance> children = new TreeSet<CallInstance>(this.calls);
+        for (CallInstance child : children) {
+          expired.addAll(getExpiredSubgraph(child));
         }
-      } finally {
-        unlock();
+        // $FALL-THROUGH$
+      case VALID:
+      case STALE:
+      default:
+        return expired;
       }
     }
 
@@ -623,8 +537,7 @@ public class SemanticWarrantyTable {
               @Override
               public Void run() {
                 checkCall(Worker.getWorker().getStore(database.getName()),
-                    uncertainCalls, updates, changes, newCalls, creates,
-                    writes);
+                    uncertainCalls, updates, changes, newCalls, creates, writes);
                 return null;
               }
             }, false);
@@ -671,13 +584,12 @@ public class SemanticWarrantyTable {
         SEMANTIC_WARRANTY_LOGGER.finest("Loading up create " + obj.getOnum());
         tm.registerCreate(obj.deserialize(localStore, new VersionWarranty(0)));
       }
-      for (SemanticWarrantyRequest req :
-          SysUtil.chain(SysUtil.chain(updates.values(), changes.values()),
-            newCalls.values())) {
+      for (SemanticWarrantyRequest req : SysUtil.chain(
+          SysUtil.chain(updates.values(), changes.values()), newCalls.values())) {
         for (LongKeyMap<_Impl> submap : req.creates) {
           for (_Impl c : submap.values()) {
-            SEMANTIC_WARRANTY_LOGGER.finest("Loading up create from other " +
-                "request " + c.$getOnum());
+            SEMANTIC_WARRANTY_LOGGER.finest("Loading up create from other "
+                + "request " + c.$getOnum());
             tm.registerCreate(c);
           }
         }
@@ -689,7 +601,7 @@ public class SemanticWarrantyTable {
       SEMANTIC_WARRANTY_LOGGER.finest("DONE RECOMPUTING CALL " + call);
 
       Map<CallInstance, SemanticWarrantyRequest> updatedRequests =
-        current.getAllRequests();
+          current.getAllRequests();
       for (CallInstance key : updatedRequests.keySet())
         SEMANTIC_WARRANTY_LOGGER.finest("GOT AN UPDATE ON " + key);
       throw new CallCheckException(updatedRequests);
@@ -732,12 +644,8 @@ public class SemanticWarrantyTable {
         Map<CallInstance, SemanticWarrantyRequest> changes,
         Map<CallInstance, SemanticWarrantyRequest> newCalls,
         Collection<SerializedObject> creates,
-        Collection<SerializedObject> writes, long deadline) throws
-      TransactionPrepareFailedException {
-      // This doesn't cause a deadlock with the spawned checking thread because
-      // we explicitly don't try to re-use the value from the store for this
-      // call.
-      lock();
+        Collection<SerializedObject> writes, long deadline)
+        throws TransactionPrepareFailedException {
       try {
         switch (getStatus()) {
         case NOVALUE:
@@ -751,24 +659,24 @@ public class SemanticWarrantyTable {
           SEMANTIC_WARRANTY_LOGGER.finest("CHECKING CALL " + call);
 
           if (updates.containsKey(call)) {
-            SEMANTIC_WARRANTY_LOGGER.finest("CALL ALREADY CHECKED EARLIER AND" +
-                " WAS UNAFFECTED");
+            SEMANTIC_WARRANTY_LOGGER.finest("CALL ALREADY CHECKED EARLIER AND"
+                + " WAS UNAFFECTED");
             return false;
           } else if (changes.containsKey(call)) {
-            SEMANTIC_WARRANTY_LOGGER.finest("CALL ALREADY CHECKED EARLIER AND" +
-                " WAS AFFECTED");
+            SEMANTIC_WARRANTY_LOGGER.finest("CALL ALREADY CHECKED EARLIER AND"
+                + " WAS AFFECTED");
             return true;
           }
 
           Future<Map<CallInstance, SemanticWarrantyRequest>> check =
               Executors.newSingleThreadExecutor().submit(
                   getCallChecker(uncertainCalls, updates, changes, newCalls,
-                    creates, writes));
+                      creates, writes));
 
           // Get the result
           Map<CallInstance, SemanticWarrantyRequest> newUpdates = check.get();
-          for (CallInstance call : new
-              HashSet<CallInstance>(newUpdates.keySet())) {
+          for (CallInstance call : new HashSet<CallInstance>(
+              newUpdates.keySet())) {
             if (getInfo(call).getStatus() == CallStatus.NOVALUE) {
               newCalls.put(call, newUpdates.get(call));
               newUpdates.remove(call);
@@ -790,10 +698,8 @@ public class SemanticWarrantyTable {
           return changes.containsKey(this.call);
         }
       } catch (ExecutionException | InterruptedException e) {
-        throw new TransactionPrepareFailedException("Call checking ran into an "
-            + "error! " + e.getMessage());
-      } finally {
-        unlock();
+        throw new TransactionPrepareFailedException(
+            "Call checking ran into an " + "error! " + e.getMessage());
       }
     }
 
@@ -806,32 +712,21 @@ public class SemanticWarrantyTable {
      *
      * Locks are unlocked in the writePrepare method after everything is done.
      */
-    // XXX: Ugh, if the sister method does not run, we're in trouble.
-    public void lockForWritePrepare(Set<CallInstance> locksOwned) {
-      lock();
-      try {
-        if (locksOwned.contains(call)) {
-          unlock();
-        } else {
-          locksOwned.add(call);
-          issuer.notifyWritePrepare(call, warranty);
+    public Set<CallInstance> getAffectedSet() {
+      Set<CallInstance> affected = new TreeSet<CallInstance>();
+      affected.add(call);
+      switch (getStatus()) {
+      case NOVALUE:
+        throw new InternalError(
+            "Trying to lock and compute a write time for a valueless call!");
+      case VALID:
+      case STALE:
+      default:
+        for (CallInstance parent : new TreeSet<CallInstance>(getCallers())) {
+          affected.addAll(getInfo(parent).getAffectedSet());
         }
-        switch (getStatus()) {
-        case NOVALUE:
-          throw new InternalError(
-              "Trying to lock and compute a write time for a valueless call!");
-        case VALID:
-        case STALE:
-        default:
-          for (CallInstance parent : new TreeSet<CallInstance>(getCallers())) {
-            getInfo(parent).lockForWritePrepare(locksOwned);
-          }
-        }
-      } catch (InternalError e) {
-        locksOwned.remove(call);
-        unlock();
-        throw e;
       }
+      return affected;
     }
 
     /**
@@ -844,8 +739,7 @@ public class SemanticWarrantyTable {
         Map<CallInstance, SemanticWarrantyRequest> changes,
         Map<CallInstance, SemanticWarrantyRequest> newCalls,
         Collection<SerializedObject> creates,
-        Collection<SerializedObject> writes,
-        Set<CallInstance> writeLocked)
+        Collection<SerializedObject> writes, Set<CallInstance> writeLocked)
         throws TransactionPrepareFailedException {
       try {
         if (!writeLocked.contains(call)) {
@@ -868,7 +762,7 @@ public class SemanticWarrantyTable {
         long longest =
             longestSoFar > warranty.expiry() ? longestSoFar : warranty.expiry();
         if (isAffectedBy(uncertainCalls, updates, changes, newCalls, creates,
-              writes, longest)) {
+            writes, longest)) {
           for (CallInstance parent : new TreeSet<CallInstance>(getCallers())) {
             long parentTime =
                 getInfo(parent).proposeWriteTime(uncertainCalls, longest,
@@ -919,8 +813,8 @@ public class SemanticWarrantyTable {
           throw new InternalError("Somehow have a call with no associated "
               + "request being updated! " + call);
         }
-        scheduleUpdateAt(transactionID, newRequest);
-        extendWarranty(value, time, false); // XXX: Check if that worked...
+        warranty = new SemanticWarranty(time);
+        scheduleUpdateAt(transactionID, newRequest, new SemanticWarranty(0));
         break;
       }
     }
@@ -933,59 +827,59 @@ public class SemanticWarrantyTable {
     private SemanticWarrantyRequest nextUpdate;
 
     /**
+     * Warranty to use for the next update.
+     *
+     * null if there isn't a known upcoming update.
+     */
+    private SemanticWarranty nextUpdateWarranty;
+
+    /**
      * Schedule update for the given commit.
      */
     //Currently checking for this before calling, but might be safer to check
     //here too.
     private void scheduleUpdateAt(long transactionID,
-        SemanticWarrantyRequest update) {
-      lock();
-      try {
-        switch (getStatus()) {
-        case NOVALUE:
-        case STALE:
-        case VALID:
-        default:
-          // Defend the reads
-          for (LongIterator iter = update.readOnums.iterator(); iter
-              .hasNext();) {
-            long read = iter.next();
-            readersTable.putIfAbsent(read, new HashSet<CallInstance>());
-            readersTable.get(read).add(call);
-          }
-
-          // Defend the creates
-          for (LongIterator iter = update.createOnums.iterator(); iter
-              .hasNext();) {
-            long create = iter.next();
-            creatorTable.putIfAbsent(create, new HashSet<CallInstance>());
-            creatorTable.get(create).add(call);
-          }
-
-          // Defend the subcalls
-          for (CallInstance subcall : update.calls.keySet()) {
-            getInfo(subcall).addCaller(call);
-          }
-
-          // Set the update
-          nextUpdate = update;
-
-          // Add this call to the update map for the transaction
-          updatingTIDMap
-              .putIfAbsent(transactionID, new HashSet<CallInstance>());
-          updatingTIDMap.get(transactionID).add(call);
+        SemanticWarrantyRequest update, SemanticWarranty updateWarranty) {
+      switch (getStatus()) {
+      case NOVALUE:
+      case STALE:
+      case VALID:
+      default:
+        // Defend the reads
+        for (LongIterator iter = update.readOnums.iterator(); iter.hasNext();) {
+          long read = iter.next();
+          readersTable.putIfAbsent(read, new HashSet<CallInstance>());
+          readersTable.get(read).add(call);
         }
-      } finally {
-        unlock();
+
+        // Defend the creates
+        for (LongIterator iter = update.createOnums.iterator(); iter
+            .hasNext();) {
+          long create = iter.next();
+          creatorTable.putIfAbsent(create, new HashSet<CallInstance>());
+          creatorTable.get(create).add(call);
+        }
+
+        // Defend the subcalls
+        for (CallInstance subcall : update.calls.keySet()) {
+          getInfo(subcall).addCaller(call);
+        }
+
+        // Set the update
+        nextUpdate = update;
+        nextUpdateWarranty = updateWarranty;
+
+        // Add this call to the update map for the transaction
+        updatingTIDMap
+            .putIfAbsent(transactionID, new HashSet<CallInstance>());
+        updatingTIDMap.get(transactionID).add(call);
       }
     }
 
     /**
      * Cancel an update from a transaction.
      */
-    //TODO: Do this by status
     public void removeUpdate() {
-      lock();
       try {
         // Make sure there was actually an update.
         if (nextUpdate == null) return;
@@ -1016,16 +910,13 @@ public class SemanticWarrantyTable {
       } finally {
         // Should have been write locked by the scheduled update.
         writeUnlock();
-        unlock();
       }
     }
 
     /**
      * Complete an update from a transaction.
      */
-    //TODO: Do this by status
     public void update() {
-      lock();
       try {
         issuer.notifyWriteCommit(call);
 
@@ -1076,21 +967,20 @@ public class SemanticWarrantyTable {
         if (nextUpdate.value instanceof WrappedJavaInlineable) {
           value = nextUpdate.value;
         } else {
-          value = new _Proxy(nextUpdate.value.$getStore(),
-              nextUpdate.value.$getOnum());
+          value =
+              new _Proxy(nextUpdate.value.$getStore(),
+                  nextUpdate.value.$getOnum());
         }
-        if (warranty.expired(true)) {
-          setStatus(CallStatus.STALE);
-        } else {
-          setStatus(CallStatus.VALID);
-        }
+
+        // Set warranty
+        warranty = nextUpdateWarranty;
 
         // Reset update to nothing.
         nextUpdate = null;
+        nextUpdateWarranty = null;
       } finally {
         // This should have been locked when the update was scheduled.
         writeUnlock();
-        unlock();
       }
     }
   }
@@ -1140,18 +1030,13 @@ public class SemanticWarrantyTable {
    */
   private WarrantiedCallResult get(CallInstance call) {
     CallInfo info = getInfo(call);
-    info.lock();
-    try {
-      switch (info.getStatus()) {
-      case NOVALUE:
-        return null;
-      case VALID:
-      case STALE:
-      default:
-        return new WarrantiedCallResult(info.getValue(), info.getWarranty());
-      }
-    } finally {
-      info.unlock();
+    switch (info.getStatus()) {
+    case NOVALUE:
+      return null;
+    case VALID:
+    case STALE:
+    default:
+      return new WarrantiedCallResult(info.getValue(), info.getWarranty());
     }
   }
 
@@ -1160,19 +1045,14 @@ public class SemanticWarrantyTable {
    */
   public final WarrantiedCallResult fetchForWorker(CallInstance call) {
     CallInfo info = getInfo(call);
-    info.lock();
-    try {
-      switch (info.getStatus()) {
-      case NOVALUE:
-        return null;
-      case VALID:
-      case STALE:
-      default:
-        info.updateWarranty();
-        return new WarrantiedCallResult(info.getValue(), info.getWarranty());
-      }
-    } finally {
-      info.unlock();
+    switch (info.getStatus()) {
+    case NOVALUE:
+      return null;
+    case VALID:
+    case STALE:
+    default:
+      info.updateWarranty();
+      return new WarrantiedCallResult(info.getValue(), info.getWarranty());
     }
   }
 
@@ -1199,15 +1079,10 @@ public class SemanticWarrantyTable {
    * to become valid/expiring on the commit of the given transaction ID.
    */
   public SemanticWarranty requestWarranty(long transactionID,
-      SemanticWarrantyRequest req, boolean getNonZeroWarranty) throws
-    TransactionPrepareFailedException {
+      SemanticWarrantyRequest req, boolean getNonZeroWarranty)
+      throws TransactionPrepareFailedException {
     CallInfo info = getInfo(req.call);
-    info.lock();
-    try {
-      return info.request(req, transactionID, getNonZeroWarranty);
-    } finally {
-      info.unlock();
-    }
+    return info.request(req, transactionID, getNonZeroWarranty);
   }
 
   /**
@@ -1226,19 +1101,15 @@ public class SemanticWarrantyTable {
    * Extends the warranty for an id only if it currently has a specific
    * warrantied call result.
    */
-  public final Pair<SemanticExtendStatus, WarrantiedCallResult>
-    extendForReadPrepare(CallInstance call, WarrantiedCallResult oldValue,
-        long newTime) {
+  public final Pair<SemanticExtendStatus, WarrantiedCallResult> extendForReadPrepare(
+      CallInstance call, WarrantiedCallResult oldValue, long newTime) {
+    SEMANTIC_WARRANTY_LOGGER.finer("Notifying read prepare on " + call);
+    issuer.notifyReadPrepare(call, newTime);
     CallInfo info = getInfo(call);
-    info.lock();
-    try {
-      SemanticExtendStatus stat = info.extendWarranty(oldValue.value, newTime,
-          true);
-      WarrantiedCallResult res = get(call);
-      return new Pair<SemanticExtendStatus, WarrantiedCallResult>(stat, res);
-    } finally {
-      info.unlock();
-    }
+    SemanticExtendStatus stat =
+        info.extendWarranty(oldValue.value, newTime, true);
+    WarrantiedCallResult res = get(call);
+    return new Pair<SemanticExtendStatus, WarrantiedCallResult>(stat, res);
   }
 
   /**
@@ -1250,29 +1121,15 @@ public class SemanticWarrantyTable {
   }
 
   /**
-   * Notifies the issuer of a read prepare extending the Semantic Warranty for
-   * the given call.
-   */
-  public void notifyReadPrepare(CallInstance call, long commitTime) {
-    SEMANTIC_WARRANTY_LOGGER.finer("Notifying read prepare on " + call);
-    issuer.notifyReadPrepare(call, commitTime);
-  }
-
-  /**
    * Provides the longest SemanticWarranty that depended on any of the given
    * onums that is longer than the given commitTime.  Also performs any
    * bookkeeping associated with write events (like removing stale call values).
    */
-  public Pair<SemanticWarranty,
-              Pair<Map<CallInstance, SemanticWarrantyRequest>,
-                   Map<CallInstance, SemanticWarrantyRequest>>> prepareWrites(
+  public Pair<SemanticWarranty, Pair<Map<CallInstance, SemanticWarrantyRequest>, Map<CallInstance, SemanticWarrantyRequest>>> prepareWrites(
       Collection<SerializedObject> writes,
       Collection<SerializedObject> creates, long transactionID,
       long commitTime, final String storeName)
       throws TransactionPrepareFailedException {
-    // XXX: Pretty sure we're not actually being safe about lock order here...
-    // need a way to ensure we don't accidentally operate on an ancestor of one
-    // of the other calls first...
     TreeSet<CallInstance> affectedCalls = new TreeSet<CallInstance>();
     for (SerializedObject obj : writes) {
       readersTable.putIfAbsent(obj.getOnum(), new HashSet<CallInstance>());
@@ -1290,15 +1147,14 @@ public class SemanticWarrantyTable {
         new HashMap<CallInstance, SemanticWarrantyRequest>();
 
     // Lock the calls.
-    TreeSet<CallInstance> lockedCalls = new TreeSet<CallInstance>();
     Set<CallInstance> writeLockedCalls = new HashSet<CallInstance>();
     try {
+      Set<CallInstance> uncertainCalls = new TreeSet<CallInstance>();
       for (CallInstance call : affectedCalls) {
-        getInfo(call).lockForWritePrepare(lockedCalls);
+        uncertainCalls.addAll(getInfo(call).getAffectedSet());
       }
 
       // Propose a time and check what will change.
-      Set<CallInstance> uncertainCalls = new HashSet<CallInstance>(lockedCalls);
       for (CallInstance call : affectedCalls) {
         long suggestedTime =
             getInfo(call).proposeWriteTime(uncertainCalls, longest, updates,
@@ -1316,11 +1172,6 @@ public class SemanticWarrantyTable {
       for (CallInstance writeLockedCall : writeLockedCalls)
         getInfo(writeLockedCall).writeUnlock();
       throw e;
-    } finally {
-      // Unlock calls locked during initial traversal
-      for (CallInstance call : lockedCalls) {
-        getInfo(call).unlock();
-      }
     }
 
     updates.putAll(changes);
@@ -1332,8 +1183,7 @@ public class SemanticWarrantyTable {
                 Map<CallInstance, SemanticWarrantyRequest>>>(
         new SemanticWarranty(longest),
         new Pair<Map<CallInstance, SemanticWarrantyRequest>,
-                 Map<CallInstance, SemanticWarrantyRequest>>(updates,
-                                                             newCalls));
+                Map<CallInstance, SemanticWarrantyRequest>>(updates, newCalls));
   }
 
   /**
