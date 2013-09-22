@@ -411,9 +411,7 @@ public final class TransactionManager {
     sendCommitMessagesAndCleanUp(singleStore, stores, workers);
 
     final long commitTime = System.currentTimeMillis();
-    Thread thread = Thread.currentThread();
-    if (thread instanceof FabricThread)
-      ((FabricThread.Impl) thread).commitTime = commitTime;
+    COMMIT_TIME.set(commitTime);
     final long commitLatency = commitTime - prepareStart;
     if (LOCAL_STORE == null) LOCAL_STORE = Worker.getWorker().getLocalStore();
     if (workers.size() > 0 || stores.size() != 1
@@ -422,6 +420,13 @@ public final class TransactionManager {
           new Object[] { HOTOS_current, commitLatency });
     }
   }
+
+  /**
+   * XXX Really gross HACK to make actual transaction commit times visible to
+   * the application. This allows us to measure end-to-end application-level
+   * transaction latency.
+   */
+  public static final ThreadLocal<Long> COMMIT_TIME = new ThreadLocal<>();
 
   private static LocalStore LOCAL_STORE;
 
