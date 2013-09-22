@@ -5,5 +5,10 @@ PATH="${PATH}:${APP_HOME}/../../../../bin"
 
 export FABRIC_HOME="${APP_HOME}"
 
-fab-store --jvm-cp "${APP_HOME}/classes" --app-home "${FABRIC_HOME}" --name store "$@"
+NAME=$1
+shift
 
+fab-store --jvm-cp "${APP_HOME}/classes" \
+	--app-home "${FABRIC_HOME}" \
+	--name "${NAME}" \
+	"$@"

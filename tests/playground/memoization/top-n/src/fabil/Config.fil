@@ -1,7 +1,7 @@
 import java.util.Random;
 
 public class Config {
-  public static final Store STORE = Worker.getWorker().getStore("store");
+  public static final Store STORE = Worker.getWorker().getStore("store00");
 
   public final int NUM_USERS;
   public final double POWER;
