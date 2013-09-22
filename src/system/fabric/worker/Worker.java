@@ -182,6 +182,12 @@ public final class Worker {
     Threading.getPool().execute(instance.remoteCallManager);
     instance.localStore.initialize();
 
+    // Load up the profiler.
+    try {
+      Class.forName("fabric.common.Profiling");
+    } catch (ClassNotFoundException e) {
+    }
+
     System.out.println("Worker started");
     TIMING_LOGGER.log(Level.INFO, "Worker started");
 
