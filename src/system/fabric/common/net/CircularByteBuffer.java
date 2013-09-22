@@ -242,7 +242,7 @@ public class CircularByteBuffer {
 
     /**
      * Advances the write pointer by n bytes and notifies readers that data is
-     * available to be read. It is assumed that n is at most the amout of space
+     * available to be read. It is assumed that n is at most the amount of space
      * available to be written.
      */
     private void seek(long length) {
