@@ -1,8 +1,11 @@
 package fabric.store.db;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
-import fabric.common.util.OidKeyHashMap;
+import fabric.common.util.Oid;
 import fabric.lang.security.Principal;
 
 /**
@@ -18,11 +21,11 @@ final class ObjectLocks {
    * Maps TIDs for the holders of read locks to the principal OIDs of the
    * workers in the transaction that have read locks on the object.
    */
-  LongKeyMap<OidKeyHashMap<Void>> readLocks;
+  LongKeyMap<List<Oid>> readLocks;
 
   ObjectLocks() {
     this.writeLock = null;
-    this.readLocks = new LongKeyHashMap<OidKeyHashMap<Void>>();
+    this.readLocks = new LongKeyHashMap<>();
   }
 
   /**
@@ -84,13 +87,13 @@ final class ObjectLocks {
       throw new UnableToLockException();
     }
 
-    OidKeyHashMap<Void> pins = readLocks.get(tid);
+    List<Oid> pins = readLocks.get(tid);
     if (pins == null) {
-      pins = new OidKeyHashMap<Void>();
+      pins = new LinkedList<>();
       readLocks.put(tid, pins);
     }
 
-    pins.put(worker, null);
+    pins.add(new Oid(worker.$getStore(), worker.$getOnum()));
   }
 
   /**
@@ -99,9 +102,9 @@ final class ObjectLocks {
    * @return true iff a lock was found for the given TID and worker.
    */
   synchronized boolean unlockForRead(long tid, Principal worker) {
-    OidKeyHashMap<Void> pins = readLocks.get(tid);
+    List<Oid> pins = readLocks.get(tid);
     if (pins != null) {
-      pins.remove(worker);
+      pins.remove(new Oid(worker.$getStore(), worker.$getOnum()));
       if (pins.isEmpty()) {
         readLocks.remove(tid);
         return true;

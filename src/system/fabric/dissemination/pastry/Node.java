@@ -105,9 +105,9 @@ public class Node {
 //          System.out.println("configuration parameter.");
         }
         if (spinCount % 20 == 0) {
-          if (System.currentTimeMillis() - startTime > 30000) {
+          if (System.currentTimeMillis() - startTime > 60000) {
             // XXX
-            System.out.println("Waited 30 seconds, and still nothing. "
+            System.out.println("Waited 60 seconds, and still nothing. "
                 + "Giving up and killing worker.");
             System.exit(1);
           }

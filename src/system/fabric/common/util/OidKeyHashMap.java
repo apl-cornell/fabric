@@ -58,6 +58,10 @@ public final class OidKeyHashMap<V> implements Iterable<LongKeyMap<V>> {
     return submap != null && submap.containsKey(onum);
   }
 
+  public boolean containsKey(Oid oid) {
+    return containsKey(oid.store, oid.onum);
+  }
+
   /**
    * @return
    *     an entry set for the map. Omits the null-keyed entry.
@@ -73,6 +77,10 @@ public final class OidKeyHashMap<V> implements Iterable<LongKeyMap<V>> {
   public V get(Store store, long onum) {
     LongKeyMap<V> submap = map.get(store);
     return submap == null ? null : submap.get(onum);
+  }
+
+  public V get(Oid oid) {
+    return get(oid.store, oid.onum);
   }
 
   public V put(Object obj, V val) {
@@ -96,6 +104,10 @@ public final class OidKeyHashMap<V> implements Iterable<LongKeyMap<V>> {
     return submap.put(onum, val);
   }
 
+  public V put(Oid oid, V val) {
+    return put(oid.store, oid.onum, val);
+  }
+
   public V remove(Object obj) {
     if (obj == null) {
       V result = nullEntry;
@@ -114,6 +126,10 @@ public final class OidKeyHashMap<V> implements Iterable<LongKeyMap<V>> {
     V result = submap.remove(onum);
     if (submap.isEmpty()) map.remove(store);
     return result;
+  }
+
+  public V remove(Oid oid) {
+    return remove(oid.store, oid.onum);
   }
 
   public Set<Store> storeSet() {

@@ -1441,15 +1441,21 @@ public final class Log {
     ReadMap.Entry readMapEntry = obj.$readMapEntry;
     boolean lockedByAncestor = false;
     synchronized (readMapEntry) {
-      // Scan the list for an existing read lock. At the same time, check if
-      // any of our ancestors already has a read lock.
-      for (Log cur : readMapEntry.getReaders()) {
-        if (cur == this) {
-          // We already have a lock; nothing to do.
-          return;
+      Set<Log> readers = readMapEntry.getReaders();
+      if (readers.contains(this)) {
+        // We already have a lock; nothing to do.
+        return;
+      }
+
+      // Check if any of our ancestors already has a read lock.
+      Log curAncestor = parent;
+      while (curAncestor != null) {
+        if (readers.contains(curAncestor)) {
+          lockedByAncestor = true;
+          break;
         }
 
-        if (!lockedByAncestor && isDescendantOf(cur)) lockedByAncestor = true;
+        curAncestor = curAncestor.parent;
       }
 
       readMapEntry.addLock(this);

@@ -18,13 +18,6 @@ public interface FabricThread {
   public static class Impl extends Thread implements FabricThread {
     private TransactionManager tm;
 
-    /**
-     * XXX Really gross HACK to make actual transaction commit times visible to
-     * the application. This allows us to measure end-to-end application-level
-     * transaction latency.
-     */
-    public long commitTime;
-
     public Impl() {
       setDaemon(true);
     }

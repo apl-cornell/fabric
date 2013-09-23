@@ -1,8 +1,8 @@
 package fabric.worker.transaction;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 import fabric.common.VersionWarranty;
 import fabric.common.util.ConcurrentOidKeyHashMap;
@@ -34,10 +34,10 @@ public final class ReadMap {
     private FabricSoftRef obj;
 
     /**
-     * The list of transaction logs that have read locks on the object
+     * The set of transaction logs that have read locks on the object
      * represented by this entry.
      */
-    private final List<Log> readLocks;
+    private final Set<Log> readLocks;
 
     /**
      * The version number on the object represented by this entry. 
@@ -59,7 +59,7 @@ public final class ReadMap {
       this.defunct = false;
       this.outer = outer;
       this.obj = obj.$ref;
-      this.readLocks = new ArrayList<>();
+      this.readLocks = new HashSet<>();
       this.versionNumber = obj.$version;
       this.warranty = expiry;
       this.pinCount = 1;
@@ -113,8 +113,8 @@ public final class ReadMap {
       return !readLocks.isEmpty();
     }
 
-    synchronized List<Log> getReaders() {
-      return Collections.unmodifiableList(readLocks);
+    synchronized Set<Log> getReaders() {
+      return Collections.unmodifiableSet(readLocks);
     }
 
     /**
@@ -149,24 +149,29 @@ public final class ReadMap {
     synchronized Boolean transferLockToParent(Log reader) {
       final Log child = reader;
       final Log parent = child.parent;
-      boolean lockedByAncestor = false;
 
       // Release child's read lock.
       readLocks.remove(child);
 
-      // Scan for an existing read lock. At the same time, check if any of the
-      // parent's ancestors already has a read lock.
-      for (Log cur : readLocks) {
-        if (cur == parent) {
-          // Parent already has a lock. Nothing to do.
-          return null;
-        }
-
-        lockedByAncestor |= parent.isDescendantOf(cur);
+      if (readLocks.contains(parent)) {
+        // Parent already has a lock. Nothing to do.
+        return null;
       }
 
+      // Transfer the read lock to the parent.
       readLocks.add(parent);
-      return lockedByAncestor;
+
+      // Check if any of the parent's ancestors already has a read lock.
+      Log curAncestor = parent.parent;
+      while (curAncestor != null) {
+        if (readLocks.contains(curAncestor)) {
+          return true;
+        }
+
+        curAncestor = curAncestor.parent;
+      }
+
+      return false;
     }
 
     /**

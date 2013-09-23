@@ -406,7 +406,9 @@ public final class TransactionManager {
     List<RemoteWorker> workers = current.workersCalled;
     final boolean isReadOnly = current.writes.isEmpty() &&
       current.getAllRequests().isEmpty();
-    Set<Store> stores = current.storesRead(Long.MAX_VALUE).keySet();
+    Set<Store> stores =
+        new HashSet<>(current.storesRead(Long.MAX_VALUE).keySet());
+    stores.addAll(current.storesWritten());
     final long prepareStart = System.currentTimeMillis();
 
     // Send prepare-read messages to our cohorts. If the prepare fails, this
@@ -419,9 +421,7 @@ public final class TransactionManager {
 
     final long actualCommitTime =
         Math.max(writeResult.commitTime, System.currentTimeMillis());
-    Thread thread = Thread.currentThread();
-    if (thread instanceof FabricThread)
-      ((FabricThread.Impl) thread).commitTime = actualCommitTime;
+    COMMIT_TIME.set(actualCommitTime);
     final long commitLatency = actualCommitTime - prepareStart;
     final long writeDelay =
         Math.max(0, writeResult.commitTime - System.currentTimeMillis());
@@ -438,6 +438,13 @@ public final class TransactionManager {
       }
     }
   }
+
+  /**
+   * XXX Really gross HACK to make actual transaction commit times visible to
+   * the application. This allows us to measure end-to-end application-level
+   * transaction latency.
+   */
+  public static final ThreadLocal<Long> COMMIT_TIME = new ThreadLocal<>();
 
   private static LocalStore LOCAL_STORE;
 
