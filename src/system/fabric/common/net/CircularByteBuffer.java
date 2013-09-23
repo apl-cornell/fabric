@@ -36,7 +36,7 @@ public class CircularByteBuffer {
   }
 
   public CircularByteBuffer(int capacity) {
-    this.buffer = new byte[capacity];
+    this.buffer = new byte[capacity + 1];
     this.readPos = 0;
     this.writePos = 0;
     this.inputStream = new InputStream();
