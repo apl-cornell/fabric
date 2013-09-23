@@ -58,8 +58,10 @@ public abstract class AbstractMessageServer implements Runnable, MessageHandler 
                   @Override
                   protected void runImpl() {
                     RemoteIdentity<RemoteWorker> client;
+                    final int streamID;
                     try {
                       client = connection.getRemoteIdentity();
+                      streamID = connection.getStreamID();
                     } catch (IOException e) {
                       throw new InternalError(e);
                     }
@@ -90,19 +92,20 @@ public abstract class AbstractMessageServer implements Runnable, MessageHandler 
                       } catch (IOException e1) {
                       }
                       Logging.NETWORK_CONNECTION_LOGGER.log(Level.INFO,
-                          "Connection reset ({0})", client);
+                          "Stream #{0} reset ({1})", new Object[] { streamID,
+                              client });
                     } catch (IOException e) {
                       try {
                         connection.close();
                       } catch (IOException e1) {
                       }
                       logger.log(Level.WARNING,
-                          "Network error while handling request", e);
+                          "Network error while handling request on stream #"
+                              + streamID, e);
                     } catch (RuntimeException e) {
-                      logger.log(
-                          Level.SEVERE,
-                          "Message-handler thread exited with exception: "
-                              + e.getMessage(), e);
+                      logger.log(Level.SEVERE,
+                          "Message-handler thread for stream #" + streamID
+                              + " exited with exception: " + e.getMessage(), e);
                     }
                   }
                 });
