@@ -359,8 +359,9 @@ public class SubServerSocketFactory {
          * acceptor
          */
         @Override
-        protected Connection accept(int sequence) throws IOException {
-          Connection result = new Connection(sequence);
+        protected Connection accept(int sequence, int minBufSize)
+            throws IOException {
+          Connection result = new Connection(sequence, minBufSize);
           SubSocket<RemoteWorker> socket = new SubSocket<>(result);
           receive(socket);
           return result;

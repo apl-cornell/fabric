@@ -10,7 +10,7 @@ import fabric.common.Logging;
  */
 public class CircularByteBuffer {
 
-  private static int DEFAULT_CAPACITY = 16 * 1024;
+  public static int DEFAULT_CAPACITY = 16 * 1024;
 
   /**
    * Backing buffer. Also acts as the lock.
