@@ -1,0 +1,4 @@
+public abstract class Abstract[label L] { 
+}
+
+class B[label M] extends Abstract[M] {}
