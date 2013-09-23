@@ -8,7 +8,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * Similar to java.io.PipedInputStream and java.io.PipedOutputStream, but
- * supports multithreaded use of each pipe endpoint.
+ * supports non-concurrent use of each pipe endpoint by multiple threads.
  */
 public class Pipe {
 
@@ -99,6 +99,8 @@ public class Pipe {
       while (true) {
         byte[] buffer = queue.poll();
         if (buffer == null) break;
+        if (buffer.length == 0) continue;
+
         buffers.add(buffer);
         available += buffer.length;
       }
