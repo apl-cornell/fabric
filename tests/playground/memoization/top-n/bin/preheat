@@ -1,9 +1,7 @@
 #!/bin/bash
 
-source defs
-
 APP_HOME="$(dirname $0)/.."
-PATH="${PATH}:${FABRIC}/bin"
+PATH="${PATH}:${APP_HOME}/../../../../bin"
 
 export FABRIC_HOME="${APP_HOME}"
 

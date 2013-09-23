@@ -12,7 +12,6 @@
     Global properties for this build.
   ****************************************************************************
   -->
-
   <import file="../../../../common.xml" />
 
   <dirname property="simple-memo-test.home" file="${ant.file.simple-memo-test}" />
