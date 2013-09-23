@@ -100,8 +100,9 @@ abstract class Channel<Node extends RemoteNode<Node>> extends Thread {
   @Override
   public abstract String toString();
 
-  /** called to create a Connection to an unknown stream id */
-  protected abstract Connection accept(int streamID) throws IOException;
+  /** Called to create a Connection to an unknown stream ID. */
+  protected abstract Connection accept(int streamID, int minBufSize)
+      throws IOException;
 
   /** called to clean up a channel that has been closed */
   protected abstract void cleanup();
@@ -145,25 +146,29 @@ abstract class Channel<Node extends RemoteNode<Node>> extends Thread {
 
   /** called on receipt of subsocket close message */
   private void recvClose(int streamID) throws IOException {
-    Connection listener = getReceiver(streamID);
+    Connection listener = getReceiver(streamID, 0);
     listener.receiveClose();
   }
 
   /** called on receipt of data message */
   private void recvData(int streamID, byte[] data) throws IOException {
-    Connection listener = getReceiver(streamID);
+    Connection listener = getReceiver(streamID, data.length);
     listener.receiveData(data);
   }
 
   /**
-   * returns the Connection associated with a given stream id, creating it if
-   * necessary
+   * Returns the Connection associated with a given stream id, creating it if
+   * necessary.
+   * 
+   * @param minBufSize if a Connection is created, its buffer will be at least
+   *          this large.
    */
-  private Connection getReceiver(int streamID) throws IOException {
+  private Connection getReceiver(int streamID, int minBufSize)
+      throws IOException {
     synchronized (connections) {
       Connection result = connections.get(streamID);
       if (result == null) {
-        result = accept(streamID);
+        result = accept(streamID, minBufSize);
       }
       return result;
     }
@@ -240,6 +245,10 @@ abstract class Channel<Node extends RemoteNode<Node>> extends Thread {
     private boolean locallyClosed;
 
     public Connection(int streamID) throws IOException {
+      this(streamID, CircularByteBuffer.DEFAULT_CAPACITY);
+    }
+
+    public Connection(int streamID, int minBufSize) throws IOException {
       this.locallyClosed = false;
 
       this.streamID = streamID;
@@ -247,7 +256,9 @@ abstract class Channel<Node extends RemoteNode<Node>> extends Thread {
           new BufferedOutputStream(new MuxedOutputStream(streamID),
               sock.getSendBufferSize() - STREAM_HEADER_SIZE);
 
-      CircularByteBuffer buf = new CircularByteBuffer();
+      CircularByteBuffer buf =
+          new CircularByteBuffer(Math.max(minBufSize,
+              CircularByteBuffer.DEFAULT_CAPACITY));
       this.in = buf.getInputStream();
       this.sink = buf.getOutputStream();
       synchronized (connections) {
