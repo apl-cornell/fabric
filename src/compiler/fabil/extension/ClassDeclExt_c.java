@@ -36,7 +36,6 @@ import polyglot.types.PrimitiveType;
 import polyglot.types.SemanticException;
 import polyglot.types.Type;
 import polyglot.util.Position;
-
 import fabil.types.FabILFlags;
 import fabil.types.FabILTypeSystem;
 import fabil.visit.MemoizedMethodRewriter;
@@ -384,8 +383,8 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     if (copyAppStateFrom != null) members.add(copyAppStateFrom);
 
     // Create the $makeSemiDeepCopy method.
-    ClassMember copyConstructor = makeCopyConstructor(pr, members);
-    if (copyConstructor != null) members.add(copyConstructor);
+//    ClassMember copyConstructor = makeCopyConstructor(pr, members);
+//    if (copyConstructor != null) members.add(copyConstructor);
 
     // Create the class declaration.
     ClassDecl result =
@@ -815,7 +814,8 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     QQ qq = mmr.qq();
     FabILTypeSystem ts = mmr.typeSystem();
 
-    Stmt body = qq.parseStmt("throw new InternalError(\"Unknown memoized call!\");");
+    Stmt body =
+        qq.parseStmt("throw new InternalError(\"Unknown memoized call!\");");
     for (MethodDecl method : methods) {
       String argsList = "";
       boolean first = true;
@@ -827,26 +827,27 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
         }
         first = false;
         if (formal.type().type().isPrimitive()) {
-          argsList += "(" + ts.wrapperTypeString((PrimitiveType) formal.type().type())
-            + ") arguments[" + count + "]";
+          argsList +=
+              "(" + ts.wrapperTypeString((PrimitiveType) formal.type().type())
+                  + ") arguments[" + count + "]";
         } else {
           argsList += "(" + formal.type() + ") arguments[" + count + "]";
         }
       }
 
-      String methodName = method.memberInstance().container().toString() + "." +
-        method.methodInstance().signature();
-      body = qq.parseStmt("if (methodName.equals(\"" + methodName +"\")) {\n"
-                        + "  return this." + method.name() + "$NonMemoized(" + argsList + ");\n"
-                        + "} else {\n"
-                        + "  %S\n"
-                        + "}", body);
+      String methodName =
+          method.memberInstance().container().toString() + "."
+              + method.methodInstance().signature();
+      body =
+          qq.parseStmt("if (methodName.equals(\"" + methodName + "\")) {\n"
+              + "  return this." + method.name() + "$NonMemoized(" + argsList
+              + ");\n" + "} else {\n" + "  %S\n" + "}", body);
     }
 
-    return (MethodDecl)
-      qq.parseMember("public java.lang.Object $callNonMemoized(String methodName, java.lang.Object[] arguments) {\n"
-                        + "  %S\n"
-                        + "}", body);
+    return (MethodDecl) qq
+        .parseMember(
+            "public java.lang.Object $callNonMemoized(String methodName, java.lang.Object[] arguments) {\n"
+                + "  %S\n" + "}", body);
   }
 
   private MethodDecl makeMemoizedMethod(MemoizedMethodRewriter mmr,
@@ -857,16 +858,17 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     FabILTypeSystem ts = mmr.typeSystem();
     Position CG = Position.compilerGenerated();
 
-    TypeNode callInstanceType = nf.TypeNodeFromQualifiedName(CG,
-        "fabric.worker.memoize.CallInstance");
-    TypeNode callResultType = nf.TypeNodeFromQualifiedName(CG,
-        "fabric.worker.memoize.WarrantiedCallResult");
+    TypeNode callInstanceType =
+        nf.TypeNodeFromQualifiedName(CG, "fabric.worker.memoize.CallInstance");
+    TypeNode callResultType =
+        nf.TypeNodeFromQualifiedName(CG,
+            "fabric.worker.memoize.WarrantiedCallResult");
     Type returnType = md.returnType().type();
     Type wrappedReturnType = returnType;
     if (returnType.isPrimitive()) {
       try {
-        wrappedReturnType = ts.typeForName(ts.wrapperTypeString((PrimitiveType)
-              returnType));
+        wrappedReturnType =
+            ts.typeForName(ts.wrapperTypeString((PrimitiveType) returnType));
       } catch (SemanticException e) {
         System.err.println("Tried to wrap type " + returnType);
       }
@@ -885,8 +887,10 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
         argList += f.name();
       }
 
-      finals.add(qq.parseStmt("final %T $arg" + count + " = %s;", f.type(), f.name()));
-      unpacks.add(qq.parseStmt("%T %s = $arg" + count + ";", f.type(), f.name()));
+      finals.add(qq.parseStmt("final %T $arg" + count + " = %s;", f.type(),
+          f.name()));
+      unpacks
+          .add(qq.parseStmt("%T %s = $arg" + count + ";", f.type(), f.name()));
 
       if (count != 0) {
         unwrappedArgList += ", ";
@@ -895,35 +899,40 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
 
       count++;
     }
-    finals.add(qq.parseStmt("final %T $oldThis = this;",
-          md.memberInstance().container()));
+    finals.add(qq.parseStmt("final %T $oldThis = this;", md.memberInstance()
+        .container()));
 
-    Stmt callCreate = qq.parseStmt("final %T $call = new %T(this, \""
-        + md.memberInstance().container().toString() + "."
-        + md.methodInstance().signature() + "\"" + argList + ");",
-        callInstanceType, callInstanceType);
+    Stmt callCreate =
+        qq.parseStmt("final %T $call = new %T(this, \""
+            + md.memberInstance().container().toString() + "."
+            + md.methodInstance().signature() + "\"" + argList + ");",
+            callInstanceType, callInstanceType);
 
     /* Handle lookup before computing */
-    Stmt callLookup = qq.parseStmt(
-        "%T $resultObj = this.$getStore().lookupCall($call);", callResultType);
-    Stmt callUnpack = qq.parseStmt(
-        "%T $cacheResult = (%T) $resultObj.value.fetch();", wrappedReturnType,
-        wrappedReturnType);
+    Stmt callLookup =
+        qq.parseStmt("%T $resultObj = this.$getStore().lookupCall($call);",
+            callResultType);
+    Stmt callUnpack =
+        qq.parseStmt("%T $cacheResult = (%T) $resultObj.value.fetch();",
+            wrappedReturnType, wrappedReturnType);
     if (returnType.isPrimitive()) {
-      callUnpack = qq.parseStmt("%T $cacheResult = (%T) "
-          + "fabric.lang.WrappedJavaInlineable.$unwrap($resultObj.value);",
-          wrappedReturnType, wrappedReturnType);
+      callUnpack =
+          qq.parseStmt("%T $cacheResult = (%T) "
+              + "fabric.lang.WrappedJavaInlineable.$unwrap($resultObj.value);",
+              wrappedReturnType, wrappedReturnType);
     }
 
-    Stmt checkLookup = qq.parseStmt("if ($resultObj != null) {\n"
-        + "  %S\n"
-        + "  fabric.worker.transaction.TransactionManager.getInstance().registerSemanticWarrantyUse($call, $resultObj);\n"
-        + "  return $cacheResult;\n"
-        + "} else {\n"
-        + "  return " + md.name() + "$NonMemoized(" + unwrappedArgList + ");\n"
-        + "}", callUnpack);
+    Stmt checkLookup =
+        qq.parseStmt(
+            "if ($resultObj != null) {\n"
+                + "  %S\n"
+                + "  fabric.worker.transaction.TransactionManager.getInstance().registerSemanticWarrantyUse($call, $resultObj);\n"
+                + "  return $cacheResult;\n" + "} else {\n" + "  return "
+                + md.name() + "$NonMemoized(" + unwrappedArgList + ");\n" + "}",
+            callUnpack);
 
-    return (MethodDecl) md.body(nf.Block(CG, callCreate, callLookup, checkLookup));
+    return (MethodDecl) md.body(nf.Block(CG, callCreate, callLookup,
+        checkLookup));
   }
 
   @Override
@@ -932,9 +941,9 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
 
     // Gather all memoized methods (static or not)
     List<MethodDecl> memoizedMethods =
-      new ArrayList<MethodDecl>(cd.body().members().size());
+        new ArrayList<MethodDecl>(cd.body().members().size());
     List<ClassMember> allMembers =
-      new ArrayList<ClassMember>(cd.body().members().size() + 2);
+        new ArrayList<ClassMember>(cd.body().members().size() + 2);
     for (ClassMember cm : cd.body().members()) {
       if (!(cm instanceof MethodDecl)) {
         allMembers.add(cm);
@@ -967,8 +976,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
   public Node addNoArgumentConstructor(NoArgConstructorWriter nacw) {
     ClassDecl cd = node();
     FabILTypeSystem ts = nacw.typeSystem();
-    if (!cd.flags().isInterface() && ts.isFabricClass(cd.type()) &&
-        !cd.flags().isAbstract()) {
+    if (!cd.flags().isInterface() && ts.isFabricClass(cd.type())) {
       NodeFactory nf = nacw.nodeFactory();
       Position cg = Position.compilerGenerated();
 
@@ -988,26 +996,16 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
 
       if (needsNoArg) {
         ArrayList<Stmt> body = new ArrayList<Stmt>();
-        body.add(nf.SuperCall(
-              cg, new ArrayList<Expr>()).constructorInstance(
-                                          ts.constructorInstance(cg,
-                                            cd.type().superType().toClass(),
-                                            Flags.PUBLIC,
-                                            new ArrayList<Type>(),
-                                            new ArrayList<Type>())));
+        body.add(nf.SuperCall(cg, new ArrayList<Expr>()).constructorInstance(
+            ts.constructorInstance(cg, cd.type().superType().toClass(),
+                Flags.PUBLIC, new ArrayList<Type>(), new ArrayList<Type>())));
         ConstructorDecl noArgCons =
-          nf.ConstructorDecl(cg,
-                              Flags.PUBLIC,
-                              nf.Id(cg, cd.name()),
-                              new ArrayList<Formal>(),
-                              new ArrayList<TypeNode>(),
-                              nf.Block(cg, body));
-        noArgCons = noArgCons.constructorInstance(
-          ts.constructorInstance(cg,
-                                 cd.type(),
-                                 Flags.PUBLIC,
-                                 new ArrayList<Type>(),
-                                 new ArrayList<Type>()));
+            nf.ConstructorDecl(cg, Flags.PUBLIC, nf.Id(cg, cd.name()),
+                new ArrayList<Formal>(), new ArrayList<TypeNode>(),
+                nf.Block(cg, body));
+        noArgCons =
+            noArgCons.constructorInstance(ts.constructorInstance(cg, cd.type(),
+                Flags.PUBLIC, new ArrayList<Type>(), new ArrayList<Type>()));
         noArgIns = noArgCons.constructorInstance();
         cd = cd.body(cd.body().addMember(noArgCons));
         cd.type().addConstructor(noArgCons.constructorInstance());
@@ -1018,34 +1016,27 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
       if (cd.type().isInnerClass()) {
         //If it's an inner class, you need a qualifier for later compiler passes
         //to operate correctly.
-        newCall = nf.New(cg,
-                         nf.This(cg, nf.CanonicalTypeNode(cg, cd.type().container())),
-                         nf.CanonicalTypeNode(cg, cd.type()),
-                         new ArrayList<Expr>());
+        newCall =
+            nf.New(cg,
+                nf.This(cg, nf.CanonicalTypeNode(cg, cd.type().container())),
+                nf.CanonicalTypeNode(cg, cd.type()), new ArrayList<Expr>());
       } else {
-        newCall = nf.New(cg,
-                         nf.CanonicalTypeNode(cg, cd.type()),
-                         new ArrayList<Expr>());
+        newCall =
+            nf.New(cg, nf.CanonicalTypeNode(cg, cd.type()),
+                new ArrayList<Expr>());
       }
       newCall = (New) newCall.constructorInstance(noArgIns).type(cd.type());
       ArrayList<Stmt> factoryBody = new ArrayList<Stmt>();
       factoryBody.add(nf.Return(cg, newCall));
       MethodDecl factoryMethod =
-        nf.MethodDecl(cg,
-                      Flags.PUBLIC,
-                      nf.CanonicalTypeNode(cg, ts.FObject()),
-                      nf.Id(cg, "$makeBlankCopy"),
-                      new ArrayList<Formal>(),
-                      new ArrayList<TypeNode>(),
-                      nf.Block(cg, factoryBody));
-      factoryMethod = factoryMethod.methodInstance(
-          ts.methodInstance(cg,
-                            cd.type(),
-                            Flags.PUBLIC,
-                            ts.FObject(),
-                            "$makeBlankCopy",
-                            new ArrayList<Type>(),
-                            new ArrayList<Type>()));
+          nf.MethodDecl(cg, Flags.PUBLIC,
+              nf.CanonicalTypeNode(cg, ts.FObject()),
+              nf.Id(cg, "$makeBlankCopy"), new ArrayList<Formal>(),
+              new ArrayList<TypeNode>(), nf.Block(cg, factoryBody));
+      factoryMethod =
+          factoryMethod.methodInstance(ts.methodInstance(cg, cd.type(),
+              Flags.PUBLIC, ts.FObject(), "$makeBlankCopy",
+              new ArrayList<Type>(), new ArrayList<Type>()));
       cd = cd.body(cd.body().addMember(factoryMethod));
       cd.type().addMethod(factoryMethod.methodInstance());
     }
@@ -1062,17 +1053,13 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
 
     ArrayList<Stmt> bodyStmts = new ArrayList<Stmt>();
     bodyStmts.add(qq.parseStmt(cd.type().toString() + "._Impl copy = null;"));
-    bodyStmts.add(qq.parseStmt(
-            "if (oldToNew.containsKey(this.$getOnum())) {\n"
-          + "  copy = (" + cd.type().toString()
-              + "._Impl) oldToNew.get(this.$getOnum());\n"
-          + "} else {\n"
-          + "  copy = (" + cd.type().toString()
-              + "._Impl) this.$makeBlankCopy().fetch();\n"
-          + "  oldToNew.put(this.$getOnum(), copy);\n"
-          + "}"));
-    bodyStmts.add(qq.parseStmt(
-          "super.$makeSemiDeepCopy(oldSet, oldToNew);"));
+    bodyStmts.add(qq.parseStmt("if (oldToNew.containsKey(this.$getOnum())) {\n"
+        + "  copy = (" + cd.type().toString()
+        + "._Impl) oldToNew.get(this.$getOnum());\n" + "} else {\n"
+        + "  copy = (" + cd.type().toString()
+        + "._Impl) this.$makeBlankCopy().fetch();\n"
+        + "  oldToNew.put(this.$getOnum(), copy);\n" + "}"));
+    bodyStmts.add(qq.parseStmt("super.$makeSemiDeepCopy(oldSet, oldToNew);"));
 
     Set<String> hasSet = new HashSet<String>();
     for (ClassMember cm : members) {
@@ -1087,41 +1074,43 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
       if (!(cm instanceof FieldDecl)) continue;
       FieldDecl fd = (FieldDecl) cm;
       if (fd.flags().isStatic()) continue;
-      if (!ts.isFabricClass(fd.declType()) || ts.isJavaInlineable(fd.declType())) {
+      if (!ts.isFabricClass(fd.declType())
+          || ts.isJavaInlineable(fd.declType())) {
         if (hasSet.contains(fd.name())) {
-          bodyStmts.add(qq.parseStmt(
-                "copy.set$" + fd.id() + "(this.get$" + fd.id() + "());"));
+          bodyStmts.add(qq.parseStmt("copy.set$" + fd.id() + "(this.get$"
+              + fd.id() + "());"));
         } else {
-          bodyStmts.add(qq.parseStmt(
-                "copy." + fd.id() + " = this.get$" + fd.id() + "();"));
+          bodyStmts.add(qq.parseStmt("copy." + fd.id() + " = this.get$"
+              + fd.id() + "();"));
         }
       } else if (hasSet.contains(fd.name())) {
         String bodyStr =
-          "if (this.get$" + fd.id() + "() == null) {\n"
-        + "  copy.set$" + fd.id() + "(null);\n"
-        + "} else if (oldSet.contains(this.get$" + fd.id() + "().$getOnum())) {\n"
-        + "  if (oldToNew.containsKey(this.get$" + fd.id() + "().$getOnum())) {\n"
-        + "    copy.set$" + fd.id() + "((%T) oldToNew.get(this.get$" + fd.id() + "().$getOnum()));\n"
-        + "  } else {\n"
-        + "    copy.set$" + fd.id() + "((%T) this.get$" + fd.id() + "().$makeSemiDeepCopy(oldSet, oldToNew));\n"
-        + "  }\n"
-        + "} else {\n"
-        + "  copy.set$" + fd.id() + "(this.get$" + fd.id() + "());\n"
-        + "}";
+            "if (this.get$" + fd.id() + "() == null) {\n" + "  copy.set$"
+                + fd.id() + "(null);\n"
+                + "} else if (oldSet.contains(this.get$" + fd.id()
+                + "().$getOnum())) {\n"
+                + "  if (oldToNew.containsKey(this.get$" + fd.id()
+                + "().$getOnum())) {\n" + "    copy.set$" + fd.id()
+                + "((%T) oldToNew.get(this.get$" + fd.id()
+                + "().$getOnum()));\n" + "  } else {\n" + "    copy.set$"
+                + fd.id() + "((%T) this.get$" + fd.id()
+                + "().$makeSemiDeepCopy(oldSet, oldToNew));\n" + "  }\n"
+                + "} else {\n" + "  copy.set$" + fd.id() + "(this.get$"
+                + fd.id() + "());\n" + "}";
         bodyStmts.add(qq.parseStmt(bodyStr, fd.type(), fd.type()));
       } else {
         String bodyStr =
-          "if (this.get$" + fd.id() + "() == null) {\n"
-        + "  copy." + fd.id() + " = null;\n"
-        + "} else if (oldSet.contains(this.get$" + fd.id() + "().$getOnum())) {\n"
-        + "  if (oldToNew.containsKey(this.get$" + fd.id() + "().$getOnum())) {\n"
-        + "    copy." + fd.id() + " = (%T) oldToNew.get(this.get$" + fd.id() + "().$getOnum());\n"
-        + "  } else {\n"
-        + "    copy." + fd.id() + " = (%T) this.get$" + fd.id() + "().$makeSemiDeepCopy(oldSet, oldToNew);\n"
-        + "  }\n"
-        + "} else {\n"
-        + "  copy." + fd.id() + " = this.get$" + fd.id() + "();\n"
-        + "}";
+            "if (this.get$" + fd.id() + "() == null) {\n" + "  copy." + fd.id()
+                + " = null;\n" + "} else if (oldSet.contains(this.get$"
+                + fd.id() + "().$getOnum())) {\n"
+                + "  if (oldToNew.containsKey(this.get$" + fd.id()
+                + "().$getOnum())) {\n" + "    copy." + fd.id()
+                + " = (%T) oldToNew.get(this.get$" + fd.id()
+                + "().$getOnum());\n" + "  } else {\n" + "    copy." + fd.id()
+                + " = (%T) this.get$" + fd.id()
+                + "().$makeSemiDeepCopy(oldSet, oldToNew);\n" + "  }\n"
+                + "} else {\n" + "  copy." + fd.id() + " = this.get$" + fd.id()
+                + "();\n" + "}";
         bodyStmts.add(qq.parseStmt(bodyStr, fd.type(), fd.type()));
       }
     }
@@ -1129,39 +1118,40 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
 
     ArrayList<Formal> copyFormals = new ArrayList<Formal>();
     ArrayList<Type> argTypes = new ArrayList<Type>();
-    Formal arg1 = nf.Formal(cg,
-                            Flags.NONE,
-                            nf.TypeNodeFromQualifiedName(cg, "java.util.Set"),
-                            nf.Id(cg, "oldSet"));
+    Formal arg1 =
+        nf.Formal(cg, Flags.NONE,
+            nf.TypeNodeFromQualifiedName(cg, "java.util.Set"),
+            nf.Id(cg, "oldSet"));
     Type arg1Type = null;
     try {
       arg1Type = ts.typeForName("java.util.Map");
-    } catch (SemanticException e) { }
-    arg1 = arg1.localInstance(ts.localInstance(cg, Flags.NONE,
-                                               arg1Type, arg1.name()));
+    } catch (SemanticException e) {
+    }
+    arg1 =
+        arg1.localInstance(ts.localInstance(cg, Flags.NONE, arg1Type,
+            arg1.name()));
     copyFormals.add(arg1);
     argTypes.add(arg1Type);
 
-    Formal arg2 = nf.Formal(cg,
-                            Flags.NONE,
-                            nf.TypeNodeFromQualifiedName(cg, "java.util.Map"),
-                            nf.Id(cg, "oldToNew"));
+    Formal arg2 =
+        nf.Formal(cg, Flags.NONE,
+            nf.TypeNodeFromQualifiedName(cg, "java.util.Map"),
+            nf.Id(cg, "oldToNew"));
     Type arg2Type = null;
     try {
       arg2Type = ts.typeForName("java.util.Map");
-    } catch (SemanticException e) { }
-    arg2 = arg2.localInstance(ts.localInstance(cg, Flags.NONE,
-                                               arg2Type, arg2.name()));
+    } catch (SemanticException e) {
+    }
+    arg2 =
+        arg2.localInstance(ts.localInstance(cg, Flags.NONE, arg2Type,
+            arg2.name()));
     copyFormals.add(arg2);
     argTypes.add(arg2Type);
 
-    MethodDecl copyMethod = nf.MethodDecl(cg,
-                                          Flags.PUBLIC,
-                                          nf.CanonicalTypeNode(cg, cd.type()),
-                                          nf.Id(cg, "$makeSemiDeepCopy"),
-                                          copyFormals,
-                                          new ArrayList<TypeNode>(),
-                                          nf.Block(cg, bodyStmts));
+    MethodDecl copyMethod =
+        nf.MethodDecl(cg, Flags.PUBLIC, nf.CanonicalTypeNode(cg, cd.type()),
+            nf.Id(cg, "$makeSemiDeepCopy"), copyFormals,
+            new ArrayList<TypeNode>(), nf.Block(cg, bodyStmts));
 
     return copyMethod;
   }
