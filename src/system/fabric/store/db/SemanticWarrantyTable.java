@@ -78,6 +78,18 @@ public class SemanticWarrantyTable {
   }
 
   /**
+   * Used for comparing call results.
+   */
+  private class CompareCheckException extends RuntimeException {
+    /* Result of the comparison */
+    public final boolean result;
+
+    public CompareCheckException(boolean result) {
+      this.result = result;
+    }
+  }
+
+  /**
    * Information associated with a specific call's warranty state.
    */
   private class CallInfo {
@@ -192,9 +204,21 @@ public class SemanticWarrantyTable {
         } else if (otherVal instanceof fabric.lang.Object._Proxy) {
           // Check if they're the same object
           if (value instanceof fabric.lang.Object._Proxy) {
-            return (otherVal.fetch().equals(value.fetch()));
+            try {
+              final fabric.lang.Object value1 = value;
+              final fabric.lang.Object value2 = otherVal;
+              Worker.runInTopLevelTransaction(new Code<Void>() {
+                @Override
+                public Void run() {
+                  throw new CompareCheckException(value1.equals(value2));
+                }
+              }, false);
+            } catch (AbortException e) {
+              if (e.getCause() instanceof CompareCheckException) {
+                return ((CompareCheckException) e.getCause()).result;
+              }
+            }
           }
-          return false;
         }
         return false;
       }
