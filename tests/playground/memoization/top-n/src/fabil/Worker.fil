@@ -28,13 +28,6 @@ public class Worker {
 
   public static boolean spawnNewThread(final Tester t, final Random rand,
       final double writeRatio, final int topCount) {
-    /*
-    try {
-      sem.acquire();
-    } catch (InterruptedException e) {
-      return false;
-    }
-    */
     Runnable r = null;
     atomic {
       r = new Runnable() {
@@ -44,6 +37,8 @@ public class Worker {
           } catch (Throwable t) {
             Logger HOTOS_LOGGER = Logger.getLogger("HOTOS");
             HOTOS_LOGGER.log(Level.SEVERE, t.toString());
+            HOTOS_LOGGER.log(Level.SEVERE, t.getMessage());
+            t.printStackTrace();
           //} finally {
             //sem.release();
           }
