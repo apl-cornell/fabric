@@ -101,8 +101,7 @@ abstract class Channel<Node extends RemoteNode<Node>> extends Thread {
   public abstract String toString();
 
   /** Called to create a Connection to an unknown stream ID. */
-  protected abstract Connection accept(int streamID, int minBufSize)
-      throws IOException;
+  protected abstract Connection accept(int streamID) throws IOException;
 
   /** called to clean up a channel that has been closed */
   protected abstract void cleanup();
@@ -146,29 +145,25 @@ abstract class Channel<Node extends RemoteNode<Node>> extends Thread {
 
   /** called on receipt of subsocket close message */
   private void recvClose(int streamID) throws IOException {
-    Connection listener = getReceiver(streamID, 0);
+    Connection listener = getReceiver(streamID);
     listener.receiveClose();
   }
 
   /** called on receipt of data message */
   private void recvData(int streamID, byte[] data) throws IOException {
-    Connection listener = getReceiver(streamID, data.length);
+    Connection listener = getReceiver(streamID);
     listener.receiveData(data);
   }
 
   /**
    * Returns the Connection associated with a given stream id, creating it if
    * necessary.
-   * 
-   * @param minBufSize if a Connection is created, its buffer will be at least
-   *          this large.
    */
-  private Connection getReceiver(int streamID, int minBufSize)
-      throws IOException {
+  private Connection getReceiver(int streamID) throws IOException {
     synchronized (connections) {
       Connection result = connections.get(streamID);
       if (result == null) {
-        result = accept(streamID, minBufSize);
+        result = accept(streamID);
       }
       return result;
     }
@@ -221,7 +216,7 @@ abstract class Channel<Node extends RemoteNode<Node>> extends Thread {
     /**
      * The application-facing input stream.
      */
-    final public CircularByteBuffer.InputStream in;
+    final public Pipe.InputStream in;
 
     /**
      * The application-facing output stream.
@@ -231,7 +226,7 @@ abstract class Channel<Node extends RemoteNode<Node>> extends Thread {
     /**
      * The output stream for sending data to the application.
      */
-    final public CircularByteBuffer.OutputStream sink;
+    final public Pipe.OutputStream sink;
 
     /**
      * Size of stream headers. Currently two ints: streamID and packet length.
@@ -245,10 +240,6 @@ abstract class Channel<Node extends RemoteNode<Node>> extends Thread {
     private boolean locallyClosed;
 
     public Connection(int streamID) throws IOException {
-      this(streamID, CircularByteBuffer.DEFAULT_CAPACITY);
-    }
-
-    public Connection(int streamID, int minBufSize) throws IOException {
       this.locallyClosed = false;
 
       this.streamID = streamID;
@@ -256,9 +247,7 @@ abstract class Channel<Node extends RemoteNode<Node>> extends Thread {
           new BufferedOutputStream(new MuxedOutputStream(streamID),
               sock.getSendBufferSize() - STREAM_HEADER_SIZE);
 
-      CircularByteBuffer buf =
-          new CircularByteBuffer(Math.max(minBufSize,
-              CircularByteBuffer.DEFAULT_CAPACITY));
+      Pipe buf = new Pipe();
       this.in = buf.getInputStream();
       this.sink = buf.getOutputStream();
       synchronized (connections) {
@@ -306,11 +295,7 @@ abstract class Channel<Node extends RemoteNode<Node>> extends Thread {
             e);
       }
 
-      try {
-        sink.close();
-      } catch (final IOException e) {
-        throw new InternalError("Internal pipe failed unexpectedly", e);
-      }
+      sink.close();
 
       sendClose(streamID);
     }
@@ -324,19 +309,17 @@ abstract class Channel<Node extends RemoteNode<Node>> extends Thread {
         connections.notifyAll();
       }
 
-      try {
-        sink.close();
-      } catch (final IOException e) {
-        throw new InternalError("Internal pipe failed unexpectedly", e);
-      }
+      sink.close();
     }
 
-    /** forward data to the reading thread */
+    /**
+     * Forwards the given buffer to the reading thread. The caller should not
+     * modify the buffer after calling this method.
+     */
     public synchronized void receiveData(byte[] b) throws IOException {
       if (!locallyClosed) {
         NETWORK_CHANNEL_LOGGER.fine("putting " + b.length + " bytes in pipe");
         sink.write(b);
-        sink.flush();
       } else {
         NETWORK_CHANNEL_LOGGER.fine("discarding " + b.length
             + " bytes (pipe closed)");

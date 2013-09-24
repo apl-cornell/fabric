@@ -133,8 +133,7 @@ public final class SubSocketFactory<Node extends RemoteNode<Node>> {
     }
 
     @Override
-    protected Connection accept(int sequence, int minBufSize)
-        throws IOException {
+    protected Connection accept(int sequence) throws IOException {
       throw new IOException("unexpected accept request on client channel");
     }
 
