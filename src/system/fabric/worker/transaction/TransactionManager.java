@@ -415,7 +415,8 @@ public final class TransactionManager {
     final long commitLatency = commitTime - prepareStart;
     if (LOCAL_STORE == null) LOCAL_STORE = Worker.getWorker().getLocalStore();
     if (workers.size() > 0 || stores.size() != 1
-        || !stores.contains(LOCAL_STORE)) {
+        || !stores.contains(LOCAL_STORE)
+        && !(stores.iterator().next() instanceof InProcessStore)) {
       HOTOS_LOGGER.log(Level.INFO, "committed tid {0} (latency {1} ms)",
           new Object[] { HOTOS_current, commitLatency });
     }
