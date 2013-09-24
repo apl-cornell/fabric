@@ -80,22 +80,25 @@ public class Tester {
     Logger HOTOS_LOGGER = Logger.getLogger("HOTOS");
     HOTOS_LOGGER.log(Level.INFO, "===started {0}===", String.valueOf(id));
     long transactionSeed = rand.nextLong();
+    isWrite = false;
     try {
       atomic {
         Random tranRand = new Random(transactionSeed);
         Config c = (Config) Config.STORE.getRoot().get("config");
         double choice = tranRand.nextDouble();
         if (choice <= writeRatio) {
-          HOTOS_LOGGER.log(Level.INFO, "===write {0}===", String.valueOf(id));
+          isWrite = true;
           TwooterAccount.getRandomTwooterAccount(tranRand).randomlyUpdateFollowers(tranRand,
               id);
         } else {
-          HOTOS_LOGGER.log(Level.INFO, "===read {0}===", String.valueOf(id));
           topAccounts(topCount, c.NUM_USERS);
         }
       }
     } finally {
-      HOTOS_LOGGER.log(Level.INFO, "===committed {0}===", String.valueOf(id));
+      String transactionType = isWrite ? "W" : "R";
+      Long commitTime = (Long) TransactionManager.COMMIT_TIME.get();
+      HOTOS_LOGGER.log(Level.INFO, "===committed {0} {1} at {2} ===",
+          String.valueOf(id), transactionType, commitTime);
     }
   }
 }
