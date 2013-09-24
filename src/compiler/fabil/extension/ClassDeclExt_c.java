@@ -915,7 +915,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     Stmt callUnpack =
         qq.parseStmt("%T $cacheResult = (%T) $resultObj.value.fetch();",
             wrappedReturnType, wrappedReturnType);
-    if (ts.isJavaInlineable(returnType)) {
+    if (ts.isJavaInlineable(wrappedReturnType)) {
       callUnpack =
           qq.parseStmt("%T $cacheResult = (%T) "
               + "fabric.lang.WrappedJavaInlineable.$unwrap($resultObj.value);",
