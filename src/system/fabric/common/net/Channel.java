@@ -31,7 +31,7 @@ import fabric.net.RemoteNode;
  * @param <Node> the type of node at the remote endpoint.
  */
 abstract class Channel<Node extends RemoteNode<Node>> extends Thread {
-  static final int DEFAULT_MAX_OPEN_CONNECTIONS = 50;
+  static final int DEFAULT_MAX_OPEN_CONNECTIONS = 0;
   private static final boolean USE_COMPRESSION = false;
 
   private final DataOutputStream out;
