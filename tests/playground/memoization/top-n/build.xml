@@ -2,9 +2,9 @@
   This is the Apache Ant build file for the Fabric readwritemix implementation.
 -->
 
-<project name="simple-memo-test" default="build-all" basedir=".">
+<project name="top-n" default="build-all" basedir=".">
   <description>
-    Fabric simple-memo-test build file
+    Fabric top-n build file
   </description>
 
   <!--
@@ -14,7 +14,7 @@
   -->
   <import file="../../../../common.xml" />
 
-  <dirname property="simple-memo-test.home" file="${ant.file.simple-memo-test}" />
+  <dirname property="top-n.home" file="${ant.file.top-n}" />
 
   <!--
   ****************************************************************************
@@ -23,12 +23,12 @@
   -->
 
   <target name="clean" description="Removes generated files">
-    <delete dir="${simple-memo-test.home}/classes"/>
+    <delete dir="${top-n.home}/classes"/>
   </target>
 
   <target name="clobber" depends="clean"
           description="Removes generated files and state of stores">
-    <delete dir="${simple-memo-test.home}/var"/>
+    <delete dir="${top-n.home}/var"/>
   </target>
 
   <!--
@@ -38,13 +38,15 @@
   -->
 
   <target name="build"
-      description="Builds the Fabric simple-memo-test implementation">
-    <mkdir dir="${simple-memo-test.home}/classes" />
+      description="Builds the Fabric top-n implementation">
+    <mkdir dir="${top-n.home}/classes" />
+    <javac source="1.6" target="1.6" srcdir="${top-n.home}/src/fabil" destdir="${top-n.home}/classes" includes="**/*.java" debug="on">
+    </javac>
     <apply executable="bash"
         parallel="true"
         failonerror="true"
-        dir="${simple-memo-test.home}"
-        dest="${simple-memo-test.home}/classes"
+        dir="${top-n.home}"
+        dest="${top-n.home}/classes"
         relative="false"
         skipemptyfilesets="true"
         vmlauncher="false">
@@ -58,7 +60,7 @@
       <arg value="classes" />
       <srcfile />
       <fileset dir="src/fabil">
-        <include name="*.fil" />
+        <include name="**/*.fil" />
       </fileset>
       <globmapper from="*.fil" to="*.class" />
     </apply>
