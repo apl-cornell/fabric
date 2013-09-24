@@ -64,7 +64,7 @@ public class Create {
       t = new Tester@s().Tester$();
       m.put("tester", t);
     }
-    System.out.println("done");
+    System.out.println("done " + t);
   }
 
   /**

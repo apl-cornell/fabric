@@ -103,16 +103,6 @@ public class Worker {
         }
       }
     }
-    /*
-    while (true) {
-      try {
-        Thread.sleep(10000);
-      } catch (InterruptedException e) {
-        System.exit(1);
-      }
-      spawnNewThread(t, rand, writeRatio, topCount);
-    }
-    */
   }
 
   public static long getArrivalInterval(double arrivalRate, Random rand) {
