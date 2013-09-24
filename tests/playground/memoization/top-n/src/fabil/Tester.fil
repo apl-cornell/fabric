@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.logging.Logger;
 import java.util.logging.Level;
 import java.util.Random;
+import fabric.worker.transaction.TransactionManager;
 
 public class Tester {
   public Tester() {
@@ -80,7 +81,7 @@ public class Tester {
     Logger HOTOS_LOGGER = Logger.getLogger("HOTOS");
     HOTOS_LOGGER.log(Level.INFO, "===started {0}===", String.valueOf(id));
     long transactionSeed = rand.nextLong();
-    isWrite = false;
+    boolean isWrite = false;
     try {
       atomic {
         Random tranRand = new Random(transactionSeed);
@@ -98,7 +99,11 @@ public class Tester {
       String transactionType = isWrite ? "W" : "R";
       Long commitTime = (Long) TransactionManager.COMMIT_TIME.get();
       HOTOS_LOGGER.log(Level.INFO, "===committed {0} {1} at {2} ===",
-          String.valueOf(id), transactionType, commitTime);
+          new java.lang.Object native[] {
+            String.valueOf(id),
+            transactionType,
+            commitTime
+          });
     }
   }
 }
