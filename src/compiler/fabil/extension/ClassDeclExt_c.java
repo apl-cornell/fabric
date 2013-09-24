@@ -881,7 +881,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     List<Stmt> unpacks = new ArrayList<Stmt>(md.formals().size());
     for (Formal f : md.formals()) {
       argList += ", ";
-      if (f.type().type().isPrimitive()) {
+      if (ts.isJavaInlineable(f.type().type())) {
         argList += "fabric.lang.WrappedJavaInlineable.$wrap(" + f.name() + ")";
       } else {
         argList += f.name();
@@ -915,7 +915,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     Stmt callUnpack =
         qq.parseStmt("%T $cacheResult = (%T) $resultObj.value.fetch();",
             wrappedReturnType, wrappedReturnType);
-    if (returnType.isPrimitive()) {
+    if (ts.isJavaInlineable(returnType)) {
       callUnpack =
           qq.parseStmt("%T $cacheResult = (%T) "
               + "fabric.lang.WrappedJavaInlineable.$unwrap($resultObj.value);",
