@@ -881,7 +881,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     List<Stmt> unpacks = new ArrayList<Stmt>(md.formals().size());
     for (Formal f : md.formals()) {
       argList += ", ";
-      if (ts.isJavaInlineable(f.type().type())) {
+      if (ts.isJavaInlineable(f.type().type()) || f.type().type().isPrimitive()) {
         argList += "fabric.lang.WrappedJavaInlineable.$wrap(" + f.name() + ")";
       } else {
         argList += f.name();
