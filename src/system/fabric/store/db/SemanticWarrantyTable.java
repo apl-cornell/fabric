@@ -192,7 +192,7 @@ public class SemanticWarrantyTable {
         } else if (otherVal instanceof fabric.lang.Object._Proxy) {
           // Check if they're the same object
           if (value instanceof fabric.lang.Object._Proxy) {
-            return (otherVal.$getOnum() == value.$getOnum());
+            return (otherVal.fetch().equals(value.fetch()));
           }
           return false;
         }

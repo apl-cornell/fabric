@@ -21,14 +21,14 @@ import fabric.common.util.Pair;
 import fabric.dissemination.ObjectGlob;
 import fabric.dissemination.WarrantyGlob;
 import fabric.lang.Object._Impl;
-import fabric.worker.memoize.CallInstance;
-import fabric.worker.memoize.SemanticWarrantyRequest;
-import fabric.worker.memoize.WarrantiedCallResult;
 import fabric.store.db.GroupContainer;
 import fabric.worker.RemoteStore;
 import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.Worker;
+import fabric.worker.memoize.CallInstance;
+import fabric.worker.memoize.SemanticWarrantyRequest;
+import fabric.worker.memoize.WarrantiedCallResult;
 import fabric.worker.remote.RemoteWorker;
 
 /**
@@ -73,11 +73,9 @@ public class InProcessStore extends RemoteStore {
 
   @Override
   public void commitTransaction(long transactionID, long commitTime,
-      boolean readOnly)
-  throws TransactionCommitFailedException {
+      boolean readOnly) throws TransactionCommitFailedException {
     if (!readOnly)
-      tm.commitTransaction(localWorkerIdentity(), transactionID,
-          commitTime);
+      tm.commitTransaction(localWorkerIdentity(), transactionID, commitTime);
   }
 
   @Override
@@ -92,8 +90,8 @@ public class InProcessStore extends RemoteStore {
   @Override
   public PrepareWritesResult prepareTransactionWrites(long tid,
       Collection<_Impl> toCreate, Collection<_Impl> writes,
-      Set<SemanticWarrantyRequest> calls) throws
-  TransactionPrepareFailedException {
+      Set<SemanticWarrantyRequest> calls)
+      throws TransactionPrepareFailedException {
     Collection<SerializedObject> serializedCreates =
         new ArrayList<SerializedObject>(toCreate.size());
     Collection<SerializedObject> serializedWrites =
@@ -117,12 +115,12 @@ public class InProcessStore extends RemoteStore {
     // Swizzle remote pointers.
     sm.createSurrogates(req);
 
-    // Prepare object writes
-    PrepareWritesResult result = tm.prepareWrites(getPrincipal(), req);
-
     // Handle call requests
     Map<CallInstance, SemanticWarranty> callReplies =
-      tm.prepareRequests(Worker.getWorker().getPrincipal(), tid, calls);
+        tm.prepareRequests(Worker.getWorker().getPrincipal(), tid, calls);
+
+    // Prepare object writes
+    PrepareWritesResult result = tm.prepareWrites(getPrincipal(), req);
 
     result.callResults.putAll(callReplies);
 
@@ -130,18 +128,17 @@ public class InProcessStore extends RemoteStore {
   }
 
   @Override
-  public Pair<LongKeyMap<VersionWarranty>, Map<CallInstance, SemanticWarranty>>
-  prepareTransactionReads(long tid, LongKeyMap<Integer> reads, Map<CallInstance,
-      WarrantiedCallResult> calls, long commitTime) throws
-  TransactionPrepareFailedException {
+  public Pair<LongKeyMap<VersionWarranty>, Map<CallInstance, SemanticWarranty>> prepareTransactionReads(
+      long tid, LongKeyMap<Integer> reads,
+      Map<CallInstance, WarrantiedCallResult> calls, long commitTime)
+      throws TransactionPrepareFailedException {
     LongKeyMap<VersionWarranty> updates =
-	tm.prepareReads(localWorkerIdentity(), tid, reads,
-                        commitTime);
+        tm.prepareReads(localWorkerIdentity(), tid, reads, commitTime);
     Map<CallInstance, SemanticWarranty> semUpdates =
-      tm.prepareCalls(Worker.getWorker().getPrincipal(), tid, calls,
-          commitTime);
-    return new Pair<LongKeyMap<VersionWarranty>, Map<CallInstance,
-           SemanticWarranty>>(updates, semUpdates);
+        tm.prepareCalls(Worker.getWorker().getPrincipal(), tid, calls,
+            commitTime);
+    return new Pair<LongKeyMap<VersionWarranty>, Map<CallInstance, SemanticWarranty>>(
+        updates, semUpdates);
   }
 
   @Override
