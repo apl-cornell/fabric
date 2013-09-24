@@ -44,6 +44,10 @@ public class SubSocket<Node extends RemoteNode<Node>> {
     state.connect(node);
   }
 
+  public synchronized final int getStreamID() throws IOException {
+    return state.getStreamID();
+  }
+
   public synchronized final RemoteIdentity<Node> getRemoteIdentity()
       throws IOException {
     return state.getRemoteIdentity();
@@ -103,6 +107,10 @@ public class SubSocket<Node extends RemoteNode<Node>> {
 
     void close() throws IOException {
       throw new IOException("Cannot close socket: " + this, cause);
+    }
+
+    int getStreamID() throws IOException {
+      throw new IOException("Cannot get stream ID: " + this, cause);
     }
 
     void connect(Node node) throws IOException {
@@ -193,6 +201,12 @@ public class SubSocket<Node extends RemoteNode<Node>> {
     @Override
     BufferedOutputStream getOutputStream() {
       return conn.out;
+    }
+
+    @Override
+    int getStreamID() {
+      // TODO Auto-generated method stub
+      return conn.streamID;
     }
 
     @Override

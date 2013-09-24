@@ -31,7 +31,7 @@ import fabric.net.RemoteNode;
  * @param <Node> the type of node at the remote endpoint.
  */
 abstract class Channel<Node extends RemoteNode<Node>> extends Thread {
-  static final int DEFAULT_MAX_OPEN_CONNECTIONS = 50;
+  static final int DEFAULT_MAX_OPEN_CONNECTIONS = 0;
   private static final boolean USE_COMPRESSION = false;
 
   private final DataOutputStream out;
@@ -100,7 +100,7 @@ abstract class Channel<Node extends RemoteNode<Node>> extends Thread {
   @Override
   public abstract String toString();
 
-  /** called to create a Connection to an unknown stream id */
+  /** Called to create a Connection to an unknown stream ID. */
   protected abstract Connection accept(int streamID) throws IOException;
 
   /** called to clean up a channel that has been closed */
@@ -156,8 +156,8 @@ abstract class Channel<Node extends RemoteNode<Node>> extends Thread {
   }
 
   /**
-   * returns the Connection associated with a given stream id, creating it if
-   * necessary
+   * Returns the Connection associated with a given stream id, creating it if
+   * necessary.
    */
   private Connection getReceiver(int streamID) throws IOException {
     synchronized (connections) {
@@ -216,7 +216,7 @@ abstract class Channel<Node extends RemoteNode<Node>> extends Thread {
     /**
      * The application-facing input stream.
      */
-    final public CircularByteBuffer.InputStream in;
+    final public Pipe.InputStream in;
 
     /**
      * The application-facing output stream.
@@ -226,7 +226,7 @@ abstract class Channel<Node extends RemoteNode<Node>> extends Thread {
     /**
      * The output stream for sending data to the application.
      */
-    final public CircularByteBuffer.OutputStream sink;
+    final public Pipe.OutputStream sink;
 
     /**
      * Size of stream headers. Currently two ints: streamID and packet length.
@@ -247,7 +247,7 @@ abstract class Channel<Node extends RemoteNode<Node>> extends Thread {
           new BufferedOutputStream(new MuxedOutputStream(streamID),
               sock.getSendBufferSize() - STREAM_HEADER_SIZE);
 
-      CircularByteBuffer buf = new CircularByteBuffer();
+      Pipe buf = new Pipe();
       this.in = buf.getInputStream();
       this.sink = buf.getOutputStream();
       synchronized (connections) {
@@ -295,11 +295,7 @@ abstract class Channel<Node extends RemoteNode<Node>> extends Thread {
             e);
       }
 
-      try {
-        sink.close();
-      } catch (final IOException e) {
-        throw new InternalError("Internal pipe failed unexpectedly", e);
-      }
+      sink.close();
 
       sendClose(streamID);
     }
@@ -313,19 +309,17 @@ abstract class Channel<Node extends RemoteNode<Node>> extends Thread {
         connections.notifyAll();
       }
 
-      try {
-        sink.close();
-      } catch (final IOException e) {
-        throw new InternalError("Internal pipe failed unexpectedly", e);
-      }
+      sink.close();
     }
 
-    /** forward data to the reading thread */
+    /**
+     * Forwards the given buffer to the reading thread. The caller should not
+     * modify the buffer after calling this method.
+     */
     public synchronized void receiveData(byte[] b) throws IOException {
       if (!locallyClosed) {
         NETWORK_CHANNEL_LOGGER.fine("putting " + b.length + " bytes in pipe");
         sink.write(b);
-        sink.flush();
       } else {
         NETWORK_CHANNEL_LOGGER.fine("discarding " + b.length
             + " bytes (pipe closed)");
