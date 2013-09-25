@@ -97,7 +97,7 @@ public class Tester {
           if (compare(tPrime, t) < 0) break;
         }
         if (j < 5) {
-          rtn.add(j, tPrime);
+          rtn.add(j, t);
           rtn.remove(5);
         }
       }
