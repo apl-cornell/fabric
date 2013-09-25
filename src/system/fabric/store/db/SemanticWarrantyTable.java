@@ -983,7 +983,8 @@ public class SemanticWarrantyTable {
         }
 
         // Set value, warranty, and status
-        if (nextUpdate.value instanceof WrappedJavaInlineable) {
+        if (nextUpdate.value == null
+            || nextUpdate.value instanceof WrappedJavaInlineable) {
           value = nextUpdate.value;
         } else {
           value =

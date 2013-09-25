@@ -1,5 +1,7 @@
 package fabric.worker.memoize;
 
+import static fabric.common.Logging.SEMANTIC_WARRANTY_LOGGER;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInput;
@@ -8,7 +10,6 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
-import static fabric.common.Logging.SEMANTIC_WARRANTY_LOGGER;
 import fabric.lang.Object;
 import fabric.lang.WrappedJavaInlineable;
 import fabric.worker.Store;
@@ -26,19 +27,20 @@ public class CallResult {
   }
 
   public CallResult(DataInput in) throws IOException {
-    boolean primitiveValue = in.readBoolean();
+    int valueType = in.readInt();
     Object value = null;
-    if (primitiveValue) {
+    if (valueType == 1) {
       byte[] inlinedData = new byte[in.readInt()];
       in.readFully(inlinedData);
       try {
-        value = WrappedJavaInlineable.$wrap((new ObjectInputStream(new
-                ByteArrayInputStream(inlinedData))).readObject());
+        value =
+            WrappedJavaInlineable.$wrap((new ObjectInputStream(
+                new ByteArrayInputStream(inlinedData))).readObject());
       } catch (ClassNotFoundException e) {
-        SEMANTIC_WARRANTY_LOGGER.finest(
-            "Couldn't read in supposedly inlineable object: " + e);
+        SEMANTIC_WARRANTY_LOGGER
+            .finest("Couldn't read in supposedly inlineable object: " + e);
       }
-    } else {
+    } else if (valueType == 2) {
       Store s = Worker.getWorker().getStore(in.readUTF());
       value = new Object._Proxy(s, in.readLong());
     }
@@ -46,8 +48,10 @@ public class CallResult {
   }
 
   public void write(DataOutput out) throws IOException {
-    if (value instanceof WrappedJavaInlineable) {
-      out.writeBoolean(true);
+    if (value == null) {
+      out.writeInt(0);
+    } else if (value instanceof WrappedJavaInlineable) {
+      out.writeInt(1);
 
       ByteArrayOutputStream bos = new ByteArrayOutputStream();
       ObjectOutputStream objOut = new ObjectOutputStream(bos);
@@ -58,7 +62,7 @@ public class CallResult {
       out.writeInt(objData.length);
       out.write(objData);
     } else {
-      out.writeBoolean(false);
+      out.writeInt(2);
       out.writeUTF(value.$getStore().name());
       out.writeLong(value.$getOnum());
     }
