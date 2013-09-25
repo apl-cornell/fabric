@@ -44,7 +44,7 @@ public abstract class AbstractMessageServer implements Runnable, MessageHandler 
 
     try {
       // Start listening.
-      server.bind(name, -1);
+      server.bind(name);
 
       // The main server loop.
       while (true) {
