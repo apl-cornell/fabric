@@ -80,11 +80,12 @@ public class Worker {
       // If it's time to increase the arrival rate, do that.
       if (now >= nextArrvIncrTime) {
         arrivalRate += c.ARRIVAL_INCR;
+        nextArrvIncrTime = now + c.INCR_INTERVAL_MS;
       }
       // If it's time to spawn a new operation, do that.
       if (now >= nextSpawnTime) {
         spawnNewThread(t, rand, writeRatio, topCount);
-        nextSpawnTime = now + getArrivalInterval(c.ARRIVAL_RATE, rand);
+        nextSpawnTime = now + getArrivalInterval(arrivalRate, rand);
       }
       // Wait until next change.
       nextEventTime = nextSpawnTime < nextArrvIncrTime ? nextSpawnTime :
