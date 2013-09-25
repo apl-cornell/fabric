@@ -913,7 +913,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
         qq.parseStmt("%T $resultObj = this.$getStore().lookupCall($call);",
             callResultType);
     Stmt callUnpack =
-        qq.parseStmt("%T $cacheResult = (%T) $resultObj.value.fetch();",
+        qq.parseStmt("%T $cacheResult = (%T) $resultObj.value;",
             wrappedReturnType, wrappedReturnType);
     if (ts.isJavaInlineable(wrappedReturnType)) {
       callUnpack =
