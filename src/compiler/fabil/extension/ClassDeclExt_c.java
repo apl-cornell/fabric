@@ -914,26 +914,26 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
             callResultType);
     Stmt callUnpack =
         qq.parseStmt("if ($resultObj.value == null) {\n"
-                    +"  %T $cacheResult = (%T) $resultObj.value;\n"
+                    +"  $cacheResult = (%T) $resultObj.value;\n"
                     +"} else {\n"
-                    +"  %T $cacheResult = (%T) $resultObj.value.$getProxy();\n"
-                    +"}\n",
-            wrappedReturnType, wrappedReturnType);
+                    +"  $cacheResult = (%T) $resultObj.value.$getProxy();\n"
+                    +"}\n", wrappedReturnType, wrappedReturnType);
     if (ts.isJavaInlineable(wrappedReturnType)) {
       callUnpack =
-          qq.parseStmt("%T $cacheResult = (%T) "
+          qq.parseStmt("$cacheResult = (%T) "
               + "fabric.lang.WrappedJavaInlineable.$unwrap($resultObj.value);",
-              wrappedReturnType, wrappedReturnType);
+              wrappedReturnType);
     }
 
     Stmt checkLookup =
         qq.parseStmt(
             "if ($resultObj != null) {\n"
+                + "  %T $cacheResult;\n"
                 + "  %S\n"
                 + "  fabric.worker.transaction.TransactionManager.getInstance().registerSemanticWarrantyUse($call, $resultObj);\n"
                 + "  return $cacheResult;\n" + "} else {\n" + "  return "
                 + md.name() + "$NonMemoized(" + unwrappedArgList + ");\n" + "}",
-            callUnpack);
+            wrappedReturnType, callUnpack);
 
     return (MethodDecl) md.body(nf.Block(CG, callCreate, callLookup,
         checkLookup));
