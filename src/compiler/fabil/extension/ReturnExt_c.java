@@ -3,7 +3,6 @@ package fabil.extension;
 import polyglot.ast.Node;
 import polyglot.ast.Return;
 import polyglot.qq.QQ;
-
 import fabil.visit.MemoizedMethodRewriter;
 
 public class ReturnExt_c extends FabILExt_c {
@@ -14,20 +13,26 @@ public class ReturnExt_c extends FabILExt_c {
       QQ qq = mmr.qq();
       //Wrap it up for the value to be stored, if it's an inlineable
       //XXX: This isn't currently handling Strings... does that matter?
-      if (mmr.currentMethod().returnType().type().isPrimitive()) {
+      if (mmr.currentMethod().returnType().type().isPrimitive()
+          || mmr.typeSystem().isJavaInlineable(
+              mmr.currentMethod().returnType().type())) {
         // TODO: Verify that the cast is valid before blindly adding it in to
         // the generated code.
-        return qq.parseStmt("{\n"
-            + "  $result = fabric.lang.WrappedJavaInlineable.$wrap((%T) %E);\n"
-            + "  fabric.worker.transaction.TransactionManager.getInstance().setSemanticWarrantyValue((fabric.lang.Object) $result.fetch());\n"
-            + "  return fabric.lang.WrappedJavaInlineable.$unwrap($result);\n"
-            + "}", mmr.currentMethod().returnType(), rtn.expr());
+        return qq
+            .parseStmt(
+                "{\n"
+                    + "  $result = fabric.lang.WrappedJavaInlineable.$wrap((%T) %E);\n"
+                    + "  fabric.worker.transaction.TransactionManager.getInstance().setSemanticWarrantyValue((fabric.lang.Object) $result);\n"
+                    + "  return fabric.lang.WrappedJavaInlineable.$unwrap($result);\n"
+                    + "}", mmr.currentMethod().returnType(), rtn.expr());
       } else {
-        return qq.parseStmt("{\n"
-            + "  $result = %E;\n"
-            + "  fabric.worker.transaction.TransactionManager.getInstance().setSemanticWarrantyValue((fabric.lang.Object) $result.fetch());\n"
-            + "  return fabric.lang.WrappedJavaInlineable.$unwrap($result);\n"
-            + "}", rtn.expr());
+        return qq
+            .parseStmt(
+                "{\n"
+                    + "  $result = %E;\n"
+                    + "  fabric.worker.transaction.TransactionManager.getInstance().setSemanticWarrantyValue((fabric.lang.Object) $result);\n"
+                    + "  return fabric.lang.WrappedJavaInlineable.$unwrap($result);\n"
+                    + "}", rtn.expr());
       }
     }
     return rtn;
@@ -38,4 +43,3 @@ public class ReturnExt_c extends FabILExt_c {
     return (Return) super.node();
   }
 }
-
