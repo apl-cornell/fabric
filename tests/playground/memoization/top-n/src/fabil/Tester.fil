@@ -120,7 +120,7 @@ public class Tester {
           TwooterAccount.getRandomTwooterAccount(tranRand).randomlyUpdateFollowers(tranRand,
               id);
         } else {
-          topAccounts(topCount, c.NUM_USERS);
+          topAccountsDirect(topCount, c.NUM_USERS);
         }
       }
     } finally {
