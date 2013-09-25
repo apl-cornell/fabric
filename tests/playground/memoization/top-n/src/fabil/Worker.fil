@@ -16,8 +16,6 @@ public class Worker {
 "       Runs a worker thread for the top n test with the random seed SEED, \n" +
 "       write ratio WRITE, and N items grabbed for the top count.";
 
-  //public static Semaphore sem = new Semaphore(10);
-
   private static ExecutorService threadPool = Executors.newCachedThreadPool(
       new ThreadFactory() {
         public Thread newThread(Runnable r) {
@@ -39,8 +37,6 @@ public class Worker {
             HOTOS_LOGGER.log(Level.SEVERE, t.toString());
             HOTOS_LOGGER.log(Level.SEVERE, t.getMessage());
             t.printStackTrace();
-          //} finally {
-            //sem.release();
           }
         }
       };
@@ -87,10 +83,10 @@ public class Worker {
         nextSpawnTime = now + getArrivalInterval(c.ARRIVAL_RATE, rand);
       }
       // Wait until next change.
-      nextEventTime = nextSpawnTime > nextArrvIncrTime ? nextSpawnTime :
+      nextEventTime = nextSpawnTime < nextArrvIncrTime ? nextSpawnTime :
         nextArrvIncrTime;
       long sleepTime = nextEventTime - System.currentTimeMillis();
-      if (sleepTime >= 0) {
+      if (sleepTime > 0) {
         try {
           Thread.sleep(sleepTime);
         } catch (InterruptedException e) {
