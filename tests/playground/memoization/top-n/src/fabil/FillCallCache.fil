@@ -3,6 +3,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadFactory;
+import java.util.logging.Logger;
+import java.util.logging.Level;
 
 /**
  * Preheats the store's call cache for testing.
@@ -23,9 +25,12 @@ public class FillCallCache {
     Tester t = null;
     Config c = null;
     int topCount = 0;
+    Logger HOTOS_LOGGER = null;
     atomic {
       topCount = Integer.parseInt(args[0]);
       t = (Tester) Config.STORE.getRoot().get("tester");
+      HOTOS_LOGGER = Logger.getLogger("HOTOS");
+      HOTOS_LOGGER.log(Level.INFO, "T IS " + t);
       c = (Config) Config.STORE.getRoot().get("config");
     }
 
