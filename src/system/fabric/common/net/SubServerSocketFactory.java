@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 
 import fabric.common.Logging;
@@ -85,7 +86,8 @@ public class SubServerSocketFactory {
    * @param name
    *          the local name
    * @param backlog
-   *          the number of waiting connections to allow on this socket
+   *          the number of waiting connections to allow on this socket. If
+   *          non-positive, unlimited waiting connections are allowed.
    * @see javax.net.ServerSocketFactory#createServerSocket(int, int,
    *      InetAddress)
    */
@@ -111,7 +113,8 @@ public class SubServerSocketFactory {
    * resolve the name to an address.
    * 
    * @param backlog
-   *          the size of the queue
+   *          the size of the queue. If non-positive, an unbounded queue is
+   *          created.
    * @throws IOException
    *           if a queue with the given name already exists
    */
@@ -170,7 +173,8 @@ public class SubServerSocketFactory {
      * Creates a ConnectionQueue for the given name on this acceptor.
      * 
      * @param size
-     *          the size of the queue
+     *          the size of the queue. If non-positive, an unbounded queue is
+     *          created.
      * @throws IOException
      *           if the queue already exists
      */
@@ -288,14 +292,22 @@ public class SubServerSocketFactory {
       /* children */
       private final Set<ServerChannel> channels;
 
-      /* queue of connections that are ready to be accepted by a SubServerSocket */
+      /** queue of connections that are ready to be accepted by a SubServerSocket */
       private final BlockingQueue<SubSocket<RemoteWorker>> connections;
 
+      /**
+       * @param size if non-positive, an unbounded buffer of incoming
+       *          connections is used.
+       */
       ConnectionQueue(String name, int size) {
         this.name = name;
 
         this.channels = new HashSet<ServerChannel>();
-        this.connections = new ArrayBlockingQueue<>(size);
+        if (size > 0) {
+          this.connections = new ArrayBlockingQueue<>(size);
+        } else {
+          this.connections = new LinkedBlockingQueue<>();
+        }
       }
 
       /** cleanup when associated SubServerSocket is closed. */

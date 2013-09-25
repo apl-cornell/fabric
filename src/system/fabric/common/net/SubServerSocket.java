@@ -32,7 +32,13 @@ public class SubServerSocket {
     bind(name, 50);
   }
 
-  /** @see java.net.ServerSocket#bind(java.net.SocketAddress, int) */
+  /**
+   * @see java.net.ServerSocket#bind(java.net.SocketAddress, int)
+   * 
+   * @param backlog
+   *          the size of the queue. If non-positive, an unbounded queue is
+   *          created.
+   */
   public void bind(String name, int backlog) throws IOException {
     state.bind(name, backlog);
   }
@@ -67,7 +73,13 @@ public class SubServerSocket {
           + this, cause);
     }
 
-    /** @see SubServerSocket#bind(InetSocketAddress, int) */
+    /**
+     * @see SubServerSocket#bind(InetSocketAddress, int)
+     * 
+     * @param backlog
+     *          the size of the queue. If non-positive, an unbounded queue is
+     *          created.
+     */
     public void bind(String name, int backlog) throws IOException {
       throw new IOException("Cannot bind to local address " + name
           + " because server socket " + this, cause);
