@@ -987,9 +987,7 @@ public class SemanticWarrantyTable {
             || nextUpdate.value instanceof WrappedJavaInlineable) {
           value = nextUpdate.value;
         } else {
-          value =
-              new _Proxy(nextUpdate.value.$getStore(),
-                  nextUpdate.value.$getOnum());
+          value = nextUpdate.value.$getProxy();
         }
 
         // Set warranty

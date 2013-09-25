@@ -42,7 +42,7 @@ public class CallResult {
       }
     } else if (valueType == 2) {
       Store s = Worker.getWorker().getStore(in.readUTF());
-      value = new Object._Proxy(s, in.readLong());
+      value = new Object._Proxy(s, in.readLong()).$getProxy();
     }
     this.value = value;
   }
