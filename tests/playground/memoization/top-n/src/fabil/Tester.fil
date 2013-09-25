@@ -82,22 +82,23 @@ public class Tester {
     atomic {
       List rtn = new LinkedList@s().fabric$util$LinkedList$();
       for (int i = 0; i < n; i++) {
-        rtn.add(s.getRoot().get(new Integer(i)));
+        TwooterAccount t = (TwooterAccount) s.getRoot().get(new Integer(i));
+        int j = 0;
+        for (j = 0; j < rtn.size(); j++) {
+          if (compare(((TwooterAccount) rtn.get(j)), t) < 0) break;
+        }
+        rtn.add(j, t);
       }
-      Collections.sort(rtn);
       for (int i = n; i < total; i++) {
         TwooterAccount t = (TwooterAccount) s.getRoot().get(new Integer(i));
-        for (int j = 4; j >= 0; j--) {
+        int j = 0;
+        for (j = 0; j < 4; j++) {
           TwooterAccount tPrime = (TwooterAccount) rtn.get(j);
-          if (compare(tPrime, t) >= 0) {
-            rtn.add(j + 1, t);
-            rtn.remove(5);
-            break;
-          } else if (j == 0) {
-            rtn.add(j, t);
-            rtn.remove(5);
-            break;
-          }
+          if (compare(tPrime, t) < 0) break;
+        }
+        if (j < 5) {
+          rtn.add(j, t);
+          rtn.remove(5);
         }
       }
       return rtn;
