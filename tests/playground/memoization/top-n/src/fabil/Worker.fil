@@ -87,10 +87,10 @@ public class Worker {
         nextSpawnTime = now + getArrivalInterval(c.ARRIVAL_RATE, rand);
       }
       // Wait until next change.
-      nextEventTime = nextSpawnTime > nextArrvIncrTime ? nextSpawnTime :
+      nextEventTime = nextSpawnTime < nextArrvIncrTime ? nextSpawnTime :
         nextArrvIncrTime;
       long sleepTime = nextEventTime - System.currentTimeMillis();
-      if (sleepTime >= 0) {
+      if (sleepTime > 0) {
         try {
           Thread.sleep(sleepTime);
         } catch (InterruptedException e) {
