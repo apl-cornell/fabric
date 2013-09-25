@@ -450,6 +450,9 @@
   <!-- Compiles the Top N test -->
   <target name="top-n" depends="build-all"
       description="Builds the top-n test application">
+    <subant target="clobber">
+      <fileset dir="${top-n}" includes="build.xml" />
+    </subant>
     <subant target="build-all">
       <fileset dir="${top-n}" includes="build.xml" />
     </subant>
