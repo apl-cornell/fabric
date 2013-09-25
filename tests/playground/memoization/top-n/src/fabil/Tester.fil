@@ -111,28 +111,25 @@ public class Tester {
     HOTOS_LOGGER.log(Level.INFO, "===started {0}===", String.valueOf(id));
     long transactionSeed = rand.nextLong();
     boolean isWrite = false;
-    try {
-      atomic {
-        Random tranRand = new Random(transactionSeed);
-        Config c = (Config) Config.STORE.getRoot().get("config");
-        double choice = tranRand.nextDouble();
-        if (choice <= writeRatio) {
-          isWrite = true;
-          TwooterAccount.getRandomTwooterAccount(tranRand).randomlyUpdateFollowers(tranRand,
-              id);
-        } else {
-          topAccountsDirect(topCount, c.NUM_USERS);
-        }
+    atomic {
+      Random tranRand = new Random(transactionSeed);
+      Config c = (Config) Config.STORE.getRoot().get("config");
+      double choice = tranRand.nextDouble();
+      if (choice <= writeRatio) {
+        isWrite = true;
+        TwooterAccount.getRandomTwooterAccount(tranRand).randomlyUpdateFollowers(tranRand,
+            id);
+      } else {
+        topAccountsDirect(topCount, c.NUM_USERS);
       }
-    } finally {
-      String transactionType = isWrite ? "W" : "R";
-      Long commitTime = (Long) TransactionManager.COMMIT_TIME.get();
-      HOTOS_LOGGER.log(Level.INFO, "===committed {0} {1} at {2} ===",
-          new java.lang.Object native[] {
-            String.valueOf(id),
-            transactionType,
-            commitTime
-          });
     }
+    String transactionType = isWrite ? "W" : "R";
+    Long commitTime = (Long) TransactionManager.COMMIT_TIME.get();
+    HOTOS_LOGGER.log(Level.INFO, "===committed {0} {1} at {2} ===",
+        new java.lang.Object native[] {
+          String.valueOf(id),
+          transactionType,
+          commitTime
+        });
   }
 }
