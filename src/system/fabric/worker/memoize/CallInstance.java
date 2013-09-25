@@ -75,7 +75,7 @@ public class CallInstance implements Serializable, Comparable<CallInstance> {
 
   public CallInstance(DataInput in) throws IOException {
     Store s = Worker.getWorker().getStore(in.readUTF());
-    Object targetObj = new Object._Proxy(s, in.readLong()).$getProxy();
+    Object targetObj = new Object._Proxy(s, in.readLong());
 
     String methodName = in.readUTF();
 
@@ -98,7 +98,7 @@ public class CallInstance implements Serializable, Comparable<CallInstance> {
         }
       } else if (type == 2) {
         Store argStore = Worker.getWorker().getStore(in.readUTF());
-        argsArray[i] = new Object._Proxy(argStore, in.readLong()).$getProxy();
+        argsArray[i] = new Object._Proxy(argStore, in.readLong());
       } else {
         throw new InternalError("This should not happen!");
       }
