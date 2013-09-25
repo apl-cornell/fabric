@@ -1,7 +1,9 @@
 package fabric.worker.memoize;
 
-import java.io.ByteArrayOutputStream;
+import static fabric.common.Logging.SEMANTIC_WARRANTY_LOGGER;
+
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.DataInput;
 import java.io.DataInputStream;
 import java.io.DataOutput;
@@ -19,7 +21,6 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 
-import static fabric.common.Logging.SEMANTIC_WARRANTY_LOGGER;
 import fabric.lang.Object;
 import fabric.lang.WrappedJavaInlineable;
 import fabric.worker.Store;
@@ -42,16 +43,20 @@ public class CallInstance implements Serializable, Comparable<CallInstance> {
       MessageDigest algorithm = MessageDigest.getInstance("MD5");
       algorithm.reset();
       algorithm.update(method.getBytes("UTF-8"));
-      algorithm.update(ByteBuffer.allocate(8).putLong(target.$getOnum()).array());
+      algorithm.update(ByteBuffer.allocate(8).putLong(target.$getOnum())
+          .array());
       for (Object arg : arguments) {
-        if (arg instanceof WrappedJavaInlineable) {
+        if (arg == null) {
+          algorithm.update((byte) 2);
+        } else if (arg instanceof WrappedJavaInlineable) {
           algorithm.update((byte) 0);
           //I need to double check that this is the same across all instances of
           //any primitive's wrapper type.
           algorithm.update(arg.$unwrap().toString().getBytes("UTF-8"));
         } else {
           algorithm.update((byte) 1);
-          algorithm.update(ByteBuffer.allocate(8).putLong(arg.$getOnum()).array());
+          algorithm.update(ByteBuffer.allocate(8).putLong(arg.$getOnum())
+              .array());
         }
       }
       idVal = algorithm.digest();
@@ -61,7 +66,7 @@ public class CallInstance implements Serializable, Comparable<CallInstance> {
     return idVal;
   }
 
-  public CallInstance(Object target, String method, Object...  arguments) {
+  public CallInstance(Object target, String method, Object... arguments) {
     this.target = target;
     this.method = method;
     this.arguments = arguments;
@@ -77,24 +82,30 @@ public class CallInstance implements Serializable, Comparable<CallInstance> {
     int numArgs = in.readInt();
     Object[] argsArray = new Object[numArgs];
     for (int i = 0; i < numArgs; i++) {
-      if (in.readBoolean()) {
+      int type = in.readInt();
+      if (type == 0) {
+        argsArray[i] = null;
+      } else if (type == 1) {
         byte[] inlinedData = new byte[in.readInt()];
         in.readFully(inlinedData);
         try {
-          argsArray[i] = WrappedJavaInlineable.$wrap((new ObjectInputStream(new
-                  ByteArrayInputStream(inlinedData))).readObject());
+          argsArray[i] =
+              WrappedJavaInlineable.$wrap((new ObjectInputStream(
+                  new ByteArrayInputStream(inlinedData))).readObject());
         } catch (ClassNotFoundException e) {
-          SEMANTIC_WARRANTY_LOGGER.finest(
-              "Couldn't read in supposedly inlineable object: " + e);
+          SEMANTIC_WARRANTY_LOGGER
+              .finest("Couldn't read in supposedly inlineable object: " + e);
         }
-      } else {
+      } else if (type == 2) {
         Store argStore = Worker.getWorker().getStore(in.readUTF());
         argsArray[i] = new Object._Proxy(argStore, in.readLong());
+      } else {
+        throw new InternalError("This should not happen!");
       }
     }
 
     this.target = targetObj;
-    this.method = methodName; 
+    this.method = methodName;
     this.arguments = argsArray;
     this.id = generateId(targetObj, methodName, argsArray);
   }
@@ -107,8 +118,10 @@ public class CallInstance implements Serializable, Comparable<CallInstance> {
 
     out.writeInt(arguments.length);
     for (Object arg : arguments) {
-      if (arg instanceof WrappedJavaInlineable) {
-        out.writeBoolean(true);
+      if (arg == null) {
+        out.writeInt(0);
+      } else if (arg instanceof WrappedJavaInlineable) {
+        out.writeInt(1);
 
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         ObjectOutputStream objOut = new ObjectOutputStream(bos);
@@ -119,7 +132,7 @@ public class CallInstance implements Serializable, Comparable<CallInstance> {
         out.writeInt(objData.length);
         out.write(objData);
       } else {
-        out.writeBoolean(false);
+        out.writeInt(2);
         out.writeUTF(arg.$getStore().name());
         out.writeLong(arg.$getOnum());
       }
@@ -135,7 +148,9 @@ public class CallInstance implements Serializable, Comparable<CallInstance> {
         result += ", ";
       }
       first = false;
-      if (arg instanceof WrappedJavaInlineable) {
+      if (arg == null) {
+        result += "null";
+      } else if (arg instanceof WrappedJavaInlineable) {
         result += arg.$unwrap().toString();
       } else {
         result += "OBJ" + arg.$getOnum();
@@ -166,8 +181,9 @@ public class CallInstance implements Serializable, Comparable<CallInstance> {
   public java.lang.Object runCall() {
     Class<?> c = target.fetch().getClass();
     try {
-      Method m = c.getMethod("$callNonMemoized", String.class,
-          java.lang.Object[].class);
+      Method m =
+          c.getMethod("$callNonMemoized", String.class,
+              java.lang.Object[].class);
 
       java.lang.Object[] fetchedArgs = new java.lang.Object[arguments.length];
       for (int i = 0; i < arguments.length; i++) {
@@ -179,18 +195,19 @@ public class CallInstance implements Serializable, Comparable<CallInstance> {
 
       return m.invoke(target.fetch(), method, fetchedArgs);
     } catch (NoSuchMethodException e) {
-      throw new InternalError("NoSuchMethodException running call " + toString()
-          + ": " + e.getMessage());
+      throw new InternalError("NoSuchMethodException running call "
+          + toString() + ": " + e.getMessage());
     } catch (IllegalAccessException e) {
-      throw new InternalError("IllegalAccessException running call " +
-          toString() + ": " + e.getMessage());
+      throw new InternalError("IllegalAccessException running call "
+          + toString() + ": " + e.getMessage());
     } catch (InvocationTargetException e) {
       e.getTargetException().printStackTrace();
-      throw new InternalError("InvocationTargetException running call " +
-          toString() + ":\n\t" + e.getTargetException() + "\n\t" + method + "\n\t" + c.getName());
+      throw new InternalError("InvocationTargetException running call "
+          + toString() + ":\n\t" + e.getTargetException() + "\n\t" + method
+          + "\n\t" + c.getName());
     }
   }
-  
+
   private void writeObject(ObjectOutputStream out) throws IOException {
     DataOutputStream outD = new DataOutputStream(out);
     write(outD);
@@ -198,7 +215,7 @@ public class CallInstance implements Serializable, Comparable<CallInstance> {
   }
 
   private void readObject(ObjectInputStream in) throws IOException,
-          ClassNotFoundException {
+      ClassNotFoundException {
     CallInstance copy = new CallInstance(new DataInputStream(in));
     this.target = copy.target;
     this.method = copy.method;
@@ -206,9 +223,10 @@ public class CallInstance implements Serializable, Comparable<CallInstance> {
     this.id = copy.id;
   }
 
-  private void readObjectNoData(ObjectInputStream in) throws
-    ObjectStreamException {
-      throw new ObjectStreamException() {};
+  private void readObjectNoData(ObjectInputStream in)
+      throws ObjectStreamException {
+    throw new ObjectStreamException() {
+    };
   }
 
   @Override
