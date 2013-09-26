@@ -5,9 +5,6 @@ public class Config {
 
   public final int NUM_USERS;
   public final double POWER;
-  public final double ARRIVAL_RATE = 2.0;
-  public final double ARRIVAL_INCR = 0.5;
-  public final long INCR_INTERVAL_MS = 5000;
 
   public Config(int numUsers, double power) {
     this.NUM_USERS = numUsers;
