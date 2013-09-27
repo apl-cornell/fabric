@@ -27,8 +27,8 @@ public class CallResult {
   }
 
   public CallResult(DataInput in) throws IOException {
-    int valueType = in.readInt();
     Object value = null;
+    int valueType = in.readInt();
     if (valueType == 1) {
       byte[] inlinedData = new byte[in.readInt()];
       in.readFully(inlinedData);

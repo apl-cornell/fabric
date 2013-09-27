@@ -5,14 +5,10 @@ import static fabric.common.Logging.SEMANTIC_WARRANTY_LOGGER;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInput;
-import java.io.DataInputStream;
 import java.io.DataOutput;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.ObjectStreamException;
-import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -29,7 +25,7 @@ import fabric.worker.Worker;
 /**
  * Represents a unique memoizable call in the Fabric system.
  */
-public class CallInstance implements Serializable, Comparable<CallInstance> {
+public class CallInstance implements Comparable<CallInstance> {
 
   public Object target;
   public String method;
@@ -206,27 +202,6 @@ public class CallInstance implements Serializable, Comparable<CallInstance> {
           + toString() + ":\n\t" + e.getTargetException() + "\n\t" + method
           + "\n\t" + c.getName());
     }
-  }
-
-  private void writeObject(ObjectOutputStream out) throws IOException {
-    DataOutputStream outD = new DataOutputStream(out);
-    write(outD);
-    outD.flush();
-  }
-
-  private void readObject(ObjectInputStream in) throws IOException,
-      ClassNotFoundException {
-    CallInstance copy = new CallInstance(new DataInputStream(in));
-    this.target = copy.target;
-    this.method = copy.method;
-    this.arguments = copy.arguments;
-    this.id = copy.id;
-  }
-
-  private void readObjectNoData(ObjectInputStream in)
-      throws ObjectStreamException {
-    throw new ObjectStreamException() {
-    };
   }
 
   @Override
