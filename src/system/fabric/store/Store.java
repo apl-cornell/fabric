@@ -232,8 +232,14 @@ class Store extends MessageToStoreHandler {
         "Handling Prepare-Writes Message, worker={0}, tid={1}",
         nameOf(client.principal), msg.tid);
 
+    SEMANTIC_WARRANTY_LOGGER.finest("Preparing " + msg.requests.size()
+        + " semantic warranty requests");
+
     Map<CallInstance, SemanticWarranty> replies =
       prepareTransactionRequests(client.principal, msg.tid, msg.requests);
+
+    SEMANTIC_WARRANTY_LOGGER.finest("Returning " + replies.size() +
+        " request replies");
 
     PrepareWritesResult writeResult = prepareTransactionWrites(client.principal,
         msg.tid, msg.serializedCreates, msg.serializedWrites);

@@ -37,6 +37,7 @@ import fabric.common.util.Pair;
 import fabric.dissemination.ObjectGlob;
 import fabric.dissemination.WarrantyGlob;
 import fabric.lang.Object._Impl;
+import fabric.lang.WrappedJavaInlineable;
 import fabric.lang.security.Label;
 import fabric.lang.security.Principal;
 import fabric.store.db.GroupContainer;
@@ -412,9 +413,17 @@ public class TransactionManager {
         String msg = "Prepare Calls failed due to " + conflictWars.size()
           + " conflicting and " + staleWars.size() + " stale call values:\n";
         msg += "Conflicting...\n";
-        for (Map.Entry<CallInstance, WarrantiedCallResult> entry : conflictWars.entrySet())
-          msg += "\t" + entry.getKey() + " = " + entry.getValue().value.$getOnum() + " (" +
-            (entry.getValue().warranty.expiry() - currentTime) + ")\n";
+        for (Map.Entry<CallInstance, WarrantiedCallResult> entry : conflictWars.entrySet()) {
+          if (entry.getValue().value instanceof WrappedJavaInlineable) {
+            msg += "\t" + entry.getKey() + " = " +
+              entry.getValue().value.$unwrap() + " (" +
+              (entry.getValue().warranty.expiry() - currentTime) + ")\n";
+          } else {
+            msg += "\t" + entry.getKey() + " = " +
+              entry.getValue().value.$getOnum() + " (" +
+              (entry.getValue().warranty.expiry() - currentTime) + ")\n";
+          }
+        }
         msg += "Stale...\n";
         for (CallInstance call : staleWars)
           msg += "\t" + call + "\n";
