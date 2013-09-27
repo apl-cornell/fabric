@@ -139,11 +139,9 @@ public abstract class Message<R extends Message.Response, E extends FabricExcept
    *           the <code>DataInput</code> provided.
    */
   public static Message<?, ?> receive(DataInput in) throws IOException {
-    byte msgType = 0;
     Message<?, ?> m = null;
     try {
-      msgType = in.readByte();
-      MessageType messageType = MessageType.values()[msgType];
+      MessageType messageType = MessageType.values()[in.readByte()];
 
       m = messageType.parse(in);
 
@@ -153,7 +151,7 @@ public abstract class Message<R extends Message.Response, E extends FabricExcept
       return m;
 
     } catch (final ArrayIndexOutOfBoundsException e) {
-      throw new IOException("Unrecognized message type: " + msgType);
+      throw new IOException("Unrecognized message");
     }
   }
 
