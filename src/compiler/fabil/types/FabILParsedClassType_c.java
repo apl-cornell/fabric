@@ -17,6 +17,8 @@ import polyglot.types.Type;
 import polyglot.types.TypeSystem;
 import polyglot.util.InternalCompilerError;
 import codebases.frontend.CodebaseSource;
+import codebases.types.CBLazyClassInitializer;
+import codebases.types.ClassFile;
 import fabil.ExtensionInfo;
 import fabil.visit.ClassHashGenerator;
 import fabil.visit.ProviderRewriter;
@@ -51,14 +53,9 @@ public class FabILParsedClassType_c extends ParsedClassType_c implements
   }
 
   public FabILParsedClassType_c(TypeSystem ts, LazyClassInitializer init,
-      Source fromSource) {
+      Source fromSource, URI ns) {
     super(ts, init, fromSource);
-    if (fromSource == null) {
-      // XXX:Java classes may be loaded w/o encoded types
-      ExtensionInfo extInfo = (ExtensionInfo) ts.extensionInfo();
-      this.canonical_ns = extInfo.localNamespace();
-    } else this.canonical_ns =
-        ((CodebaseSource) fromSource).canonicalNamespace();
+    this.canonical_ns = ns;
   }
 
   @Override
@@ -179,7 +176,7 @@ public class FabILParsedClassType_c extends ParsedClassType_c implements
 
     } else {
       // Type was probably obtained from a Java class file. Hash the bytecode.
-      FabILLazyClassInitializer init = (FabILLazyClassInitializer) init();
+      CBLazyClassInitializer init = (CBLazyClassInitializer) init();
       ClassFile classFile = init.classFile();
       digest.update(classFile.getHash());
     }

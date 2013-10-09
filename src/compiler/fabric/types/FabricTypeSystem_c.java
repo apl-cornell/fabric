@@ -88,12 +88,14 @@ import polyglot.util.StringUtil;
 import codebases.frontend.CodebaseSource;
 import codebases.types.CBClassContextResolver;
 import codebases.types.CBImportTable;
+import codebases.types.CBLazyClassInitializer;
 import codebases.types.CBPackage;
 import codebases.types.CBPackageContextResolver;
 import codebases.types.CBPackage_c;
 import codebases.types.CBPlaceHolder_c;
 import codebases.types.CodebaseResolver;
 import codebases.types.NamespaceResolver;
+import fabric.FabricOptions;
 import fabric.ast.FabricUtil;
 import fabric.ast.RemoteWorkerGetter;
 import fabric.extension.NewExt_c;
@@ -140,6 +142,11 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
   }
 
   @Override
+  public fabric.ExtensionInfo extensionInfo() {
+    return extInfo;
+  }
+
+  @Override
   public ClassType fatalException() {
     return load("fabric.common.exceptions.ApplicationError");
   }
@@ -156,12 +163,15 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
   }
 
   protected void initResolvers() {
+    FabricOptions opt = extInfo.getOptions();
+    boolean loadRaw = opt.skipLabelChecking;
+
     namespaceResolvers = new HashMap<URI, NamespaceResolver>();
     platformResolver = namespaceResolver(extInfo.platformNamespace());
-    platformResolver.loadRawClasses(false);
+    platformResolver.loadRawClasses(loadRaw);
 
     applicationResolver = namespaceResolver(extInfo.localNamespace());
-    applicationResolver.loadRawClasses(false);
+    applicationResolver.loadRawClasses(loadRaw);
   }
 
   @Override
@@ -283,7 +293,22 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
   @Override
   public ParsedClassType createClassType(LazyClassInitializer init,
       Source fromSource) {
-    return new FabricParsedClassType_c(this, init, fromSource);
+    if (fromSource == null) {
+      if (extInfo.getJifOptions().skipLabelChecking)
+        // local raw class file.
+        return createClassType(init, fromSource, extInfo.localNamespace());
+      else throw new InternalCompilerError(
+          "Attempting to create class type for raw class!");
+    } else {
+      URI ns = ((CodebaseSource) fromSource).canonicalNamespace();
+      return createClassType(init, fromSource, ns);
+    }
+  }
+
+  @Override
+  public ParsedClassType createClassType(LazyClassInitializer init,
+      Source fromSource, URI ns) {
+    return new FabricParsedClassType_c(this, init, fromSource, ns);
   }
 
   @Override
@@ -1002,9 +1027,9 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
   @Override
   public ClassFileLazyClassInitializer classFileLazyClassInitializer(
       ClassFile clazz) {
-    throw new UnsupportedOperationException(
-        "Fabric doesn't support raw classes");
-    // return new FabILLazyClassInitializer(clazz, this);
+//    throw new UnsupportedOperationException(
+//        "Fabric doesn't support raw classes");
+    return new CBLazyClassInitializer((codebases.types.ClassFile) clazz, this);
   }
 
   // / Deprecated/Unsupported methods
