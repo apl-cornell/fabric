@@ -29,6 +29,7 @@ import polyglot.types.TypeSystem;
 import polyglot.visit.DataFlow;
 import polyglot.visit.FlowGraph;
 import polyglot.visit.FlowGraph.EdgeKey;
+import polyglot.visit.FlowGraph.Peer;
 import fabil.ast.Atomic;
 import fabil.extension.CallExt_c;
 import fabil.extension.FieldAssignExt_c;
@@ -63,8 +64,8 @@ public class ReadWriteChecker extends DataFlow<ReadWriteChecker.DataFlowItem> {
   }
 
   @Override
-  protected DataFlowItem confluence(List<DataFlowItem> items, Term node,
-      boolean entry, FlowGraph<DataFlowItem> graph) {
+  protected DataFlowItem confluence(List<DataFlowItem> items,
+      Peer<DataFlowItem> peer, FlowGraph<DataFlowItem> graph) {
     DataFlowItem out = null;
 
     for (Object o : items) {
@@ -86,11 +87,11 @@ public class ReadWriteChecker extends DataFlow<ReadWriteChecker.DataFlowItem> {
 
   @Override
   protected Map<EdgeKey, DataFlowItem> flow(DataFlowItem in,
-      FlowGraph<DataFlowItem> graph, Term n, boolean entry,
-      Set<EdgeKey> edgeKeys) {
+      FlowGraph<DataFlowItem> graph, Peer<DataFlowItem> peer) {
     DataFlowItem out = in;
 
-    if (entry) {
+    final Term n = peer.node();
+    if (peer.isEntry()) {
       if (n instanceof Atomic) {
         // inside a sub-atomic block, we need to register writes again, so here
         // we conservatively kill all writes. ideally, when we return to the
@@ -155,7 +156,7 @@ public class ReadWriteChecker extends DataFlow<ReadWriteChecker.DataFlowItem> {
       }
     }
 
-    return itemToMap(out, edgeKeys);
+    return itemToMap(out, peer.succEdgeKeys());
   }
 
   private boolean isThis(Node n) {
