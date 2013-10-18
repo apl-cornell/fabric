@@ -165,7 +165,7 @@ public class Pipe {
         int available = available();
         if (available > 0) {
           // Bytes are available. Ensure curBuf[readPos] is the next one.
-          if (readPos == curBuf.length) {
+          if (curBuf == null || readPos == curBuf.length) {
             readPos = 0;
             dequeue();
           }
