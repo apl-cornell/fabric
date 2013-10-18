@@ -1,10 +1,9 @@
 package fabric.common.net;
 
 import java.io.IOException;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Similar to java.io.PipedInputStream and java.io.PipedOutputStream, but
@@ -13,6 +12,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class Pipe {
 
   private final BlockingQueue<byte[]> queue;
+  private final AtomicInteger bytesInQueue;
 
   private InputStream inputStream;
 
@@ -20,6 +20,7 @@ public class Pipe {
 
   public Pipe() {
     this.queue = new LinkedBlockingQueue<>();
+    this.bytesInQueue = new AtomicInteger(0);
     this.inputStream = new InputStream();
     this.outputStream = new OutputStream();
   }
@@ -34,22 +35,20 @@ public class Pipe {
 
   public class InputStream extends java.io.InputStream {
     private boolean isClosed;
-    private final List<byte[]> buffers;
+    private byte[] curBuf;
     private int readPos;
-    private int available;
 
     private InputStream() {
       this.isClosed = false;
-      this.buffers = new LinkedList<>();
+      this.curBuf = null;
       this.readPos = 0;
-      this.available = 0;
     }
 
     @Override
     public int read() throws IOException {
       if (waitForBytes() < 1) return -1;
 
-      int result = buffers.get(0)[readPos] & 0xff;
+      int result = curBuf[readPos] & 0xff;
       seek(1);
       return result;
     }
@@ -64,11 +63,12 @@ public class Pipe {
       if (len <= 0) return 0;
 
       int available = waitForBytes();
-      int result = Math.min(len, available);
+      if (available == -1) return -1;
+
+      final int result = Math.min(len, available);
       int lenCopied = 0;
 
       while (lenCopied != result) {
-        byte[] curBuf = buffers.get(0);
         int bytesToCopy = Math.min(result - lenCopied, curBuf.length - readPos);
         System.arraycopy(curBuf, readPos, b, off, bytesToCopy);
 
@@ -86,6 +86,8 @@ public class Pipe {
       if (n <= 0) return 0;
 
       int available = waitForBytes();
+      if (available == -1) return -1;
+
       long result = Math.min(n, available);
       seek(result);
       return result;
@@ -95,17 +97,14 @@ public class Pipe {
     public int available() throws IOException {
       ensureOpen();
 
-      // Pull buffers off the queue.
-      while (true) {
-        byte[] buffer = queue.poll();
-        if (buffer == null) break;
-        if (buffer.length == 0) continue;
-
-        buffers.add(buffer);
-        available += buffer.length;
+      int availableInCurBuf;
+      if (curBuf == null) {
+        availableInCurBuf = 0;
+      } else {
+        availableInCurBuf = curBuf.length - readPos;
       }
 
-      return available;
+      return availableInCurBuf + bytesInQueue.get();
     }
 
     @Override
@@ -114,22 +113,45 @@ public class Pipe {
     }
 
     /**
-     * Seeks over the next n bytes and notifies writers that space has been
-     * freed. It is assumed that n is at most the number of bytes available to
-     * be read.
+     * Seeks over the next <code>length</code> bytes. It is assumed that length
+     * ≤ available() and curBuf != null. If length &lt; available, ensures the
+     * next byte to read is curBuf[readPos].
      */
-    private void seek(long length) {
+    private void seek(long length) throws IOException {
+      final long bytesRemaining = available() - length;
       readPos += length;
-      available -= length;
-      while (readPos != 0 && readPos >= buffers.get(0).length) {
-        byte[] spentBuffer = buffers.remove(0);
-        readPos -= spentBuffer.length;
+
+      while (readPos > curBuf.length) {
+        readPos -= curBuf.length;
+        dequeue();
+      }
+
+      // Dequeue again if we're at the end of curBuf and there are more bytes
+      // available.
+      if (readPos == curBuf.length && bytesRemaining > 0) {
+        readPos = 0;
+        dequeue();
+      }
+    }
+
+    /**
+     * Dequeues arrays until a non-empty array is found.
+     */
+    private void dequeue() throws IOException {
+      try {
+        do {
+          curBuf = queue.take();
+        } while (curBuf.length == 0);
+        bytesInQueue.addAndGet(-curBuf.length);
+      } catch (InterruptedException e) {
+        throw new IOException("Blocked read was interrupted");
       }
     }
 
     /**
      * Blocks until at least one byte is available to be read or the end of
      * stream is reached (i.e., the corresponding output stream is closed).
+     * Ensures the next byte to read (if any) is curBuf[readPos].
      * 
      * @return
      *          The number of bytes available to be read without blocking. If
@@ -141,15 +163,21 @@ public class Pipe {
     private int waitForBytes() throws IOException {
       while (true) {
         int available = available();
-        if (available > 0) return available;
+        if (available > 0) {
+          // Bytes are available. Ensure curBuf[readPos] is the next one.
+          if (readPos == curBuf.length) {
+            readPos = 0;
+            dequeue();
+          }
+          return available;
+        }
+
         if (outputStream.isClosed) return -1;
 
         try {
-          byte[] buffer = queue.take();
-          if (buffer.length == 0) continue;
-
-          buffers.add(buffer);
-          this.available += buffer.length;
+          curBuf = queue.take();
+          if (curBuf.length > 0) bytesInQueue.addAndGet(-curBuf.length);
+          readPos = 0;
         } catch (InterruptedException e) {
           throw new IOException("Blocked read was interrupted");
         }
@@ -157,7 +185,7 @@ public class Pipe {
     }
 
     /**
-     * Ensures this input stream is open.
+     * Throws an exception if this input stream is closed.
      */
     private void ensureOpen() throws IOException {
       if (isClosed) {
@@ -179,6 +207,7 @@ public class Pipe {
      */
     public void write(byte[] b) throws IOException {
       ensureOpen();
+      bytesInQueue.addAndGet(b.length);
       queue.add(b);
     }
 
@@ -188,8 +217,8 @@ public class Pipe {
     }
 
     /**
-     * Ensures this output stream and the corresponding input stream are both
-     * open.
+     * Throws an exception if either of this output stream or the corresponding
+     * input stream is closed.
      */
     private void ensureOpen() throws IOException {
       if (isClosed) {
