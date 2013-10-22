@@ -30,7 +30,7 @@ public class TransactionPrepareFailedException extends FabricException
    * A set of objects used by the transaction and were out of date.
    */
   public LongKeyMap<Pair<SerializedObject, VersionWarranty>> versionConflicts;
-  
+
   /**
    * A set of calls used by the transaction that were out of date and the store
    * had a fresh value for.
@@ -174,8 +174,7 @@ public class TransactionPrepareFailedException extends FabricException
         new LongKeyHashMap<Pair<SerializedObject, VersionWarranty>>();
     this.callConflictUpdates =
         new HashMap<CallInstance, WarrantiedCallResult>();
-    this.callConflicts =
-        new HashSet<CallInstance>();
+    this.callConflicts = new HashSet<CallInstance>();
 
     messages = new ArrayList<String>();
     for (TransactionPrepareFailedException exc : causes) {
@@ -185,8 +184,7 @@ public class TransactionPrepareFailedException extends FabricException
       if (exc.callConflictUpdates != null)
         callConflictUpdates.putAll(exc.callConflictUpdates);
 
-      if (exc.callConflicts != null)
-        callConflicts.addAll(exc.callConflicts);
+      if (exc.callConflicts != null) callConflicts.addAll(exc.callConflicts);
 
       if (exc.messages != null) messages.addAll(exc.messages);
     }
@@ -207,8 +205,7 @@ public class TransactionPrepareFailedException extends FabricException
 
   public TransactionPrepareFailedException(
       Map<CallInstance, WarrantiedCallResult> callConflictUpdates,
-      Set<CallInstance> callConflicts,
-      String message) {
+      Set<CallInstance> callConflicts, String message) {
     messages = java.util.Collections.singletonList(message);
     this.versionConflicts = null;
     this.callConflictUpdates = callConflictUpdates;
@@ -218,8 +215,7 @@ public class TransactionPrepareFailedException extends FabricException
   public TransactionPrepareFailedException(
       LongKeyMap<Pair<SerializedObject, VersionWarranty>> versionConflicts,
       Map<CallInstance, WarrantiedCallResult> callConflictUpdates,
-      Set<CallInstance> callConflicts,
-      String message) {
+      Set<CallInstance> callConflicts, String message) {
     messages = java.util.Collections.singletonList(message);
     this.versionConflicts = versionConflicts;
     this.callConflictUpdates = callConflictUpdates;
@@ -229,8 +225,7 @@ public class TransactionPrepareFailedException extends FabricException
   public TransactionPrepareFailedException(
       LongKeyMap<Pair<SerializedObject, VersionWarranty>> versionConflicts,
       Map<CallInstance, WarrantiedCallResult> callConflictUpdates,
-      Set<CallInstance> callConflicts,
-      List<String> messages) {
+      Set<CallInstance> callConflicts, List<String> messages) {
     this.messages = messages;
     this.versionConflicts = versionConflicts;
     this.callConflictUpdates = callConflictUpdates;

@@ -211,7 +211,6 @@ public class CallInstance implements Serializable, Comparable<CallInstance> {
   private void writeObject(ObjectOutputStream out) throws IOException {
     DataOutputStream outD = new DataOutputStream(out);
     write(outD);
-    outD.flush();
   }
 
   private void readObject(ObjectInputStream in) throws IOException,

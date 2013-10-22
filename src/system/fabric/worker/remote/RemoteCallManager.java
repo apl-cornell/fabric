@@ -176,7 +176,7 @@ public class RemoteCallManager extends MessageToWorkerHandler {
     try {
       result = tm.sendPrepareWriteMessages();
     } catch (TransactionRestartingException e) {
-      throw new TransactionPrepareFailedException(e);
+      throw new TransactionPrepareFailedException(e.getMessage());
     } finally {
       tm.associateLog(null);
     }
@@ -207,7 +207,7 @@ public class RemoteCallManager extends MessageToWorkerHandler {
     try {
       tm.sendPrepareReadMessages(message.commitTime);
     } catch (TransactionRestartingException e) {
-      throw new TransactionPrepareFailedException(e);
+      throw new TransactionPrepareFailedException(e.getMessage());
     } finally {
       tm.associateLog(null);
     }
