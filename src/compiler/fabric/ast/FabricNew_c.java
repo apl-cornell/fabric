@@ -25,10 +25,10 @@ public class FabricNew_c extends JifNew_c {
     FabricExt fabExt = FabricUtil.fabricExt(this);
     Expr location = ((LocatedExt_c) fabExt).location();
     if (qualifier != null) {
-      v.visitCFG(qualifier, tn, ENTRY);
+      v.visitCFG(qualifier, objectType, ENTRY);
     }
 
-    Term last = tn;
+    Term last = objectType;
     // if (label != null) {
     // v.visitCFG(last, label, ENTRY);
     // last = label;

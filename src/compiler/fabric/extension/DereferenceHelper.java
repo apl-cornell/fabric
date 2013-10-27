@@ -1,6 +1,6 @@
 package fabric.extension;
 
-import jif.ast.Jif_c;
+import jif.ast.JifExt_c;
 import jif.types.ConstraintMessage;
 import jif.types.JifContext;
 import jif.types.LabelConstraint;
@@ -80,8 +80,8 @@ public class DereferenceHelper {
 
     // check that the pc and ref label can flow to the access label
     JifContext A = lc.context();
-    Label objLabel = Jif_c.getPathMap(ref).NV();
-    Label pc = ts.join(Jif_c.getPathMap(ref).N(), A.currentCodePCBound());
+    Label objLabel = JifExt_c.getPathMap(ref).NV();
+    Label pc = ts.join(JifExt_c.getPathMap(ref).N(), A.currentCodePCBound());
     AccessPath storeap = ts.storeAccessPathFor(ref, A);
     if (ts.descendsFrom(targetType, ts.PrincipalClass())) {
       if (ts.isFinalAccessExpr(ref)) {
