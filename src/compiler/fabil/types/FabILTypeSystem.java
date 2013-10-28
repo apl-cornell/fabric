@@ -9,7 +9,6 @@ import polyglot.util.Position;
 import codebases.types.CodebaseTypeSystem;
 
 public interface FabILTypeSystem extends TypeSystem, CodebaseTypeSystem {
-
   // TODO: fabric.worker or fabric.lang?
   /**
    * return the ClassType corresponding to

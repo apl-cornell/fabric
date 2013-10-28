@@ -1,4 +1,4 @@
-package fabil.types;
+package codebases.types;
 
 import java.io.IOException;
 import java.security.MessageDigest;
@@ -12,6 +12,7 @@ import fabric.common.Crypto;
  * Just like Polyglot's ClassFile, except this carries a secure hash of the
  * class's bytecode.
  */
+
 public class ClassFile_c extends polyglot.types.reflect.ClassFile_c implements
     ClassFile {
 

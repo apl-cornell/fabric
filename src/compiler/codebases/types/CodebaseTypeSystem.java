@@ -4,8 +4,10 @@ import java.net.URI;
 
 import polyglot.frontend.ExtensionInfo;
 import polyglot.frontend.Source;
+import polyglot.types.LazyClassInitializer;
 import polyglot.types.Named;
 import polyglot.types.Package;
+import polyglot.types.ParsedClassType;
 import polyglot.types.SemanticException;
 import polyglot.types.TypeSystem;
 import fabric.lang.Codebase;
@@ -33,4 +35,12 @@ public interface CodebaseTypeSystem extends TypeSystem {
 
   Codebase codebaseFromNS(URI namespace);
 
+  /**
+   * @param init
+   * @param fromSource
+   * @param ns
+   * @return
+   */
+  ParsedClassType createClassType(LazyClassInitializer init, Source fromSource,
+      URI ns);
 }

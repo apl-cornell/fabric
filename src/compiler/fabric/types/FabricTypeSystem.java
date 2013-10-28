@@ -19,6 +19,7 @@ import polyglot.types.Type;
 import polyglot.util.Position;
 import codebases.frontend.CodebaseSource;
 import codebases.types.CodebaseTypeSystem;
+import fabric.ExtensionInfo;
 import fabric.ast.RemoteWorkerGetter;
 import fabric.ast.Store;
 
@@ -191,5 +192,9 @@ public interface FabricTypeSystem extends JifTypeSystem, CodebaseTypeSystem {
    */
   AccessPolicyInstance accessPolicyInstance(Position pos, ParsedClassType ct,
       ConfPolicy policy);
+
+  /** Return the language extension this type system is for. */
+  @Override
+  ExtensionInfo extensionInfo();
 
 }

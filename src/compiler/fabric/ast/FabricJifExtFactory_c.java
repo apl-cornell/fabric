@@ -1,7 +1,7 @@
 package fabric.ast;
 
 import jif.ast.JifExtFactory_c;
-import jif.ast.Jif_c;
+import jif.ast.JifExt_c;
 import jif.extension.JifBinaryExt;
 import jif.extension.JifFieldDeclExt_c;
 import jif.extension.JifLabelExprExt;
@@ -135,7 +135,7 @@ public class FabricJifExtFactory_c extends JifExtFactory_c implements
 
   @Override
   protected Ext extPackageNodeImpl() {
-    return new Jif_c(new PackageNodeToFabilExt_c());
+    return new JifExt_c(new PackageNodeToFabilExt_c());
   }
 
   @Override
@@ -204,12 +204,12 @@ public class FabricJifExtFactory_c extends JifExtFactory_c implements
 
   @Override
   public Ext extCodebaseNode() {
-    return new Jif_c(new CodebaseNodeToFabilExt_c());
+    return new JifExt_c(new CodebaseNodeToFabilExt_c());
   }
 
   @Override
   public Ext extCodebaseDecl() {
-    return new Jif_c(new CodebaseDeclToFabilExt_c());
+    return new JifExt_c(new CodebaseDeclToFabilExt_c());
   }
 
   @Override

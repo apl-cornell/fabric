@@ -39,8 +39,10 @@ import polyglot.types.reflect.ClassFileLazyClassInitializer;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
 import polyglot.util.StringUtil;
+import codebases.frontend.CodebaseSource;
 import codebases.types.CBClassContextResolver;
 import codebases.types.CBImportTable;
+import codebases.types.CBLazyClassInitializer;
 import codebases.types.CBPackage;
 import codebases.types.CBPackageContextResolver;
 import codebases.types.CBPackage_c;
@@ -210,7 +212,19 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
   @Override
   public ParsedClassType createClassType(LazyClassInitializer init,
       Source fromSource) {
-    return new FabILParsedClassType_c(this, init, fromSource);
+    if (fromSource == null) {
+      // local raw class file.
+      return createClassType(init, fromSource, extInfo.localNamespace());
+    } else {
+      URI ns = ((CodebaseSource) fromSource).canonicalNamespace();
+      return createClassType(init, fromSource, ns);
+    }
+  }
+
+  @Override
+  public ParsedClassType createClassType(LazyClassInitializer init,
+      Source fromSource, URI ns) {
+    return new FabILParsedClassType_c(this, init, fromSource, ns);
   }
 
   @Override
@@ -573,7 +587,7 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
   @Override
   public ClassFileLazyClassInitializer classFileLazyClassInitializer(
       ClassFile clazz) {
-    return new FabILLazyClassInitializer((fabil.types.ClassFile) clazz, this);
+    return new CBLazyClassInitializer((codebases.types.ClassFile) clazz, this);
   }
 
   // / Deprecated/Unsupported methods

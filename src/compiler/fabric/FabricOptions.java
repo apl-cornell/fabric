@@ -190,6 +190,11 @@ public class FabricOptions extends JifOptions {
         List<URI> path = NSUtil.processPathString(args[index]);
         return createArg(index + 1, path);
       }
+
+      @Override
+      public Arg<List<URI>> defaultArg() {
+        return createDefault(NSUtil.processPathString(jvmbootclasspath()));
+      }
     });
     flags.add(new OptFlag<List<URI>>("-addbootcp", "<path>",
         "prepend <path> to the bootclasspath") {
@@ -282,6 +287,7 @@ public class FabricOptions extends JifOptions {
 
     OptFlag.removeFlag("-untrusted-providers", flags);
     OptFlag.removeFlag("-fail-on-exception", flags);
+
   }
 
   @Override

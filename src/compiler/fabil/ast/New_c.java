@@ -53,11 +53,11 @@ public class New_c extends polyglot.ast.New_c implements New, Annotated {
    */
   protected New_c reconstruct(Expr qualifier, TypeNode tn,
       List<Expr> arguments, ClassBody body, Expr location) {
-    if (qualifier != this.qualifier || tn != this.tn
+    if (qualifier != this.qualifier || tn != this.objectType
         || !CollectionUtil.equals(arguments, this.arguments)
         || body != this.body || location != this.location) {
       New_c n = (New_c) copy();
-      n.tn = tn;
+      n.objectType = tn;
       n.qualifier = qualifier;
       n.arguments = ListUtil.copy(arguments, true);
       n.body = body;
@@ -72,7 +72,7 @@ public class New_c extends polyglot.ast.New_c implements New, Annotated {
   @Override
   public New_c visitChildren(NodeVisitor v) {
     Expr qualifier = (Expr) visitChild(this.qualifier, v);
-    TypeNode tn = (TypeNode) visitChild(this.tn, v);
+    TypeNode tn = (TypeNode) visitChild(this.objectType, v);
     List<Expr> arguments = visitList(this.arguments, v);
     ClassBody body = (ClassBody) visitChild(this.body, v);
     Expr location = (Expr) visitChild(this.location, v);
@@ -98,10 +98,10 @@ public class New_c extends polyglot.ast.New_c implements New, Annotated {
   @Override
   public <T> List<T> acceptCFG(CFGBuilder<?> v, List<T> succs) {
     if (qualifier != null) {
-      v.visitCFG(qualifier, tn, ENTRY);
+      v.visitCFG(qualifier, objectType, ENTRY);
     }
 
-    Term last = tn;
+    Term last = objectType;
 
     if (location != null) {
       v.visitCFG(last, location, ENTRY);
@@ -161,7 +161,7 @@ public class New_c extends polyglot.ast.New_c implements New, Annotated {
   @Override
   public Node copy(NodeFactory nf) {
     FabILNodeFactory filNf = (FabILNodeFactory) nf;
-    return filNf.New(this.position, this.qualifier, this.tn, this.location,
-        this.arguments, this.body);
+    return filNf.New(this.position, this.qualifier, this.objectType,
+        this.location, this.arguments, this.body);
   }
 }
