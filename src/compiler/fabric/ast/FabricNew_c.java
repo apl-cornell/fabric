@@ -15,9 +15,9 @@ import fabric.extension.LocatedExt_c;
 
 public class FabricNew_c extends JifNew_c {
 
-  public FabricNew_c(Position pos, TypeNode tn, List<Expr> arguments,
-      ClassBody body) {
-    super(pos, tn, arguments, body);
+  public FabricNew_c(Position pos, Expr outer, TypeNode tn,
+      List<Expr> arguments, ClassBody body) {
+    super(pos, outer, tn, arguments, body);
   }
 
   @Override
