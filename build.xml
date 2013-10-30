@@ -124,7 +124,10 @@
 
     <!-- Check for presence of JDK. -->
     <condition property="jdk.exists" value="true">
+     <or>
       <available file="${jdk.home}/bin/javac" />
+      <available file="${jdk.home}/bin/javac.exe" />
+     </or>
     </condition>
 
     <!-- Check for presence of Polyglot. -->
