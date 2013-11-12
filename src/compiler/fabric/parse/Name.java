@@ -53,6 +53,7 @@ public class Name extends jif.parse.Name {
         parser.nf.Id(pos, name));
   }
 
+  @Override
   public QualifierNode toQualifier() throws Exception {
     if (prefix == null) {
       FabricNodeFactory nf = (FabricNodeFactory) parser.nf;
