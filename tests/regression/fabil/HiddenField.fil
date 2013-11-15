@@ -1,0 +1,6 @@
+public class A {
+  int f;
+}
+class B extends A {
+  String f;
+} 
