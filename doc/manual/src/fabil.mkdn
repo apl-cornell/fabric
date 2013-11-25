@@ -122,9 +122,9 @@ translates the above class into the following FabIL class:
         Colour c;
 
         NCPoint geometry$NCPoint$(String name, int x, int y, Colour c) {
-          this.name = name; // initialize "final" fields
+          this.name = name;      // initialize "final" fields
           geometry$Point$(x,y);  // call super class's initializer
-          this.c = c;       // initialize other fields
+          this.c = c;            // initialize other fields
           return this;
         }
 
