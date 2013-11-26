@@ -79,8 +79,8 @@
   <!-- RCS root locations -->
   <property name="svn.root.fabric"
       value="https://forge.cornell.edu/svn/repos/fabric/trunk"/>
-  <property name="cvs.root.jif"
-      value=":ext:gforge.cis.cornell.edu:/cvsroot/jif"/>
+  <property name="git.root.jif"
+      value="https://apl.cs.cornell.edu/git/jif.git"/>
   <property name="cvs.root.polyglot"
       value=":ext:gforge.cis.cornell.edu:/cvsroot/polyglot"/>
 
@@ -938,7 +938,8 @@ public class Version {
   ****************************************************************************
   -->
 
-  <target name="manual" depends="check-for-doxygen,keyword-filter">
+  <target name="manual" depends="check-for-doxygen,keyword-filter"
+      description="Builds the Fabric manual">
     <!-- Delete old output. -->
     <delete dir="${manual.html}"/>
     <delete file="${manual.pdf}"/>
@@ -1526,10 +1527,10 @@ public class Version {
     Checks out and builds Jif in the tmp directory.
   -->
   <target name="build-jif-rcs" depends="build-polyglot-rcs" if="${use-jif-rcs}">
-    <!-- Check out Jif from CVS. -->
-    <antcall target="cvs-checkout">
+    <!-- Check out Jif from Git. -->
+    <antcall target="git-clone">
       <param name="name" value="jif" />
-      <param name="root" value="${cvs.root.jif}" />
+      <param name="root" value="${git.root.jif}" />
     </antcall>
 
     <!-- Copy Polyglot tarballs. -->
@@ -1579,6 +1580,22 @@ public class Version {
   <target name="svn-checkout">
     <exec executable="svn" failonerror="true">
       <arg value="co" />
+      <arg value="-q" />
+      <arg value="${root}" />
+      <arg value="${tmp}/${name}" />
+    </exec>
+  </target>
+
+  <!--
+    Clones a fresh copy of a project from Git into ${tmp}.
+
+    Parameters:
+      root - the Git URL to check out
+      name - the name of the destination in ${tmp}.
+  -->
+  <target name="git-clone">
+    <exec executable="git" failonerror="true">
+      <arg value="clone" />
       <arg value="-q" />
       <arg value="${root}" />
       <arg value="${tmp}/${name}" />
