@@ -1,5 +1,5 @@
-Compiling and publishing programs {#compiling}
-=================================
+Compiling and publishing Fabric programs {#compiling}
+========================================
 
 Compiling
 ---------

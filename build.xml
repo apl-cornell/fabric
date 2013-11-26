@@ -75,8 +75,8 @@
   <!-- RCS root locations -->
   <property name="svn.root.fabric"
       value="https://forge.cornell.edu/svn/repos/fabric/trunk"/>
-  <property name="cvs.root.jif"
-      value=":ext:gforge.cis.cornell.edu:/cvsroot/jif"/>
+  <property name="git.root.jif"
+      value="https://apl.cs.cornell.edu/git/jif.git"/>
   <property name="cvs.root.polyglot"
       value=":ext:gforge.cis.cornell.edu:/cvsroot/polyglot"/>
 
@@ -694,13 +694,12 @@
   <!--
     Configures properties for dependency versions.
   -->
-  <target name="configure-dependency-versions">
+  <target name="configure-dependency-versions" depends="mkdir-tmp">
     <!--
       Generate code that will determine Polyglot and Jif versions. This is done
       this way because we won't have Polyglot's build.properties file if we're
       only building against polyglot.jar.
     -->
-    <antcall target="mkdir-tmp" />
     <echo file="${tmp}/VersionInfo.java">
 import polyglot.frontend.JLVersion;
 import jif.Version;
@@ -919,7 +918,8 @@ public class Version {
   ****************************************************************************
   -->
 
-  <target name="manual" depends="check-for-doxygen,keyword-filter">
+  <target name="manual" depends="check-for-doxygen,keyword-filter"
+      description="Builds the Fabric manual">
     <!-- Delete old output. -->
     <delete dir="${manual.html}"/>
     <delete file="${manual.pdf}"/>
@@ -1020,11 +1020,9 @@ public class Version {
     </antcall>
   </target>
 
-  <target name="jar-tools" depends="tools"
+  <target name="jar-tools" depends="tools,mkdir-tmp"
       description="Builds Jar files for all the Fabric tools">
     <!-- Create the jar's directory structure in a temporary directory. --> 
-    <antcall target="mkdir-tmp" />
-
     <copy todir="${tmp}">
       <fileset dir="${tools}">
         <!-- Store browser -->
@@ -1440,8 +1438,7 @@ public class Version {
   <!--
     Ensures there is a built copy of Jif in the tmp directory.
   -->
-  <target name="build-jif" depends="get-jif-download-version">
-    <antcall target="mkdir-tmp" />
+  <target name="build-jif" depends="get-jif-download-version,mkdir-tmp">
     <antcall target="build-polyglot-rcs"/>
     <antcall target="build-jif-rcs"/>
     <antcall target="download-jif"/>
@@ -1507,10 +1504,10 @@ public class Version {
     Checks out and builds Jif in the tmp directory.
   -->
   <target name="build-jif-rcs" depends="build-polyglot-rcs" if="${use-jif-rcs}">
-    <!-- Check out Jif from CVS. -->
-    <antcall target="cvs-checkout">
+    <!-- Check out Jif from Git. -->
+    <antcall target="git-clone">
       <param name="name" value="jif" />
-      <param name="root" value="${cvs.root.jif}" />
+      <param name="root" value="${git.root.jif}" />
     </antcall>
 
     <!-- Copy Polyglot tarballs. -->
@@ -1566,9 +1563,26 @@ public class Version {
     </exec>
   </target>
 
-  <target name="mkdir-tmp">
+  <!--
+    Clones a fresh copy of a project from Git into ${tmp}.
+
+    Parameters:
+      root - the Git URL to check out
+      name - the name of the destination in ${tmp}.
+  -->
+  <target name="git-clone">
+    <exec executable="git" failonerror="true">
+      <arg value="clone" />
+      <arg value="-q" />
+      <arg value="${root}" />
+      <arg value="${tmp}/${name}" />
+    </exec>
+  </target>
+
+  <target name="mkdir-tmp" unless="tmp-is-made">
     <antcall target="rmdir-tmp" />
     <mkdir dir="${tmp}" />
+    <property name="tmp-is-made" value="true"/>
   </target>
 
   <target name="rmdir-tmp">
