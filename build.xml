@@ -713,13 +713,12 @@
   <!--
     Configures properties for dependency versions.
   -->
-  <target name="configure-dependency-versions">
+  <target name="configure-dependency-versions" depends="mkdir-tmp">
     <!--
       Generate code that will determine Polyglot and Jif versions. This is done
       this way because we won't have Polyglot's build.properties file if we're
       only building against polyglot.jar.
     -->
-    <antcall target="mkdir-tmp" />
     <echo file="${tmp}/VersionInfo.java">
 import polyglot.frontend.JLVersion;
 import jif.Version;
@@ -1040,11 +1039,9 @@ public class Version {
     </antcall>
   </target>
 
-  <target name="jar-tools" depends="tools"
+  <target name="jar-tools" depends="tools,mkdir-tmp"
       description="Builds Jar files for all the Fabric tools">
     <!-- Create the jar's directory structure in a temporary directory. --> 
-    <antcall target="mkdir-tmp" />
-
     <copy todir="${tmp}">
       <fileset dir="${tools}">
         <!-- Store browser -->
@@ -1460,8 +1457,7 @@ public class Version {
   <!--
     Ensures there is a built copy of Jif in the tmp directory.
   -->
-  <target name="build-jif" depends="get-jif-download-version">
-    <antcall target="mkdir-tmp" />
+  <target name="build-jif" depends="get-jif-download-version,mkdir-tmp">
     <antcall target="build-polyglot-rcs"/>
     <antcall target="build-jif-rcs"/>
     <antcall target="download-jif"/>
@@ -1602,9 +1598,10 @@ public class Version {
     </exec>
   </target>
 
-  <target name="mkdir-tmp">
+  <target name="mkdir-tmp" unless="tmp-is-made">
     <antcall target="rmdir-tmp" />
     <mkdir dir="${tmp}" />
+    <property name="tmp-is-made" value="true"/>
   </target>
 
   <target name="rmdir-tmp">
