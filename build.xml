@@ -74,7 +74,7 @@
 
   <!-- RCS root locations -->
   <property name="svn.root.fabric"
-      value="https://forge.cornell.edu/svn/repos/fabric/trunk"/>
+      value="https://forge.cornell.edu/svn/repos/fabric/branches/0.2.2"/>
   <property name="git.root.jif"
       value="https://apl.cs.cornell.edu/git/jif.git"/>
   <property name="cvs.root.polyglot"
@@ -85,6 +85,12 @@
       value="http://www.cs.cornell.edu/jif/releases/jif-"/>
   <property name="jif.url.suffix"
       value=".zip"/>
+
+  <!-- Polyglot distribution location -->
+  <property name="polyglot.url.prefix"
+      value="http://www.cs.cornell.edu/Projects/polyglot/src/polyglot-"/>
+  <property name="polyglot.url.suffix"
+      value="-src.tar.gz"/>
 
   <!-- Jar files -->
   <property name="jar.base" location="${lib}/fabric.jar" />
@@ -1442,6 +1448,16 @@ public class Version {
     <antcall target="build-polyglot-rcs"/>
     <antcall target="build-jif-rcs"/>
     <antcall target="download-jif"/>
+
+    <condition property="polyglot-needed" value="true">
+      <not>
+        <resourceexists>
+          <file file="${tmp}/jif/lib/polyglot.jar"/>
+        </resourceexists>
+      </not>
+    </condition>
+
+    <antcall target="download-polyglot"/>
   </target>
 
   <!--
@@ -1481,6 +1497,50 @@ public class Version {
     <move file="${tmp}/jif-${jif.download.version}" tofile="${tmp}/jif"/>
   </target>
 
+  <!--
+    Asks the user for the version of Poylglot to build against. This is
+    intended to run when Jif is downloaded, but was not packaged with Polyglot.
+
+    ${polyglot.download.version} will be the version of Polyglot to be
+    downloaded.
+  -->
+  <target name="get-polyglot-download-version"
+      depends="configure-dependency-versions"
+      unless="${use-jif-rcs}" if="${polyglot-needed}">
+    <echo message="Jif was not packaged with Polyglot."/>
+    <echo message="Downloading Polyglot separately."/>
+    <input message="Polyglot version to download?"
+        defaultvalue="${polyglot.version}"
+        addproperty="polyglot.download.version"/>
+  </target>
+
+  <!--
+    Downloads and extracts Polyglot in the tmp directory, then copies the
+    Polyglot libraries into ${tmp}/jif/lib.
+
+    This is intended to run when Jif is downloaded, but was not packaged with
+    Polyglot.
+  -->
+  <target name="download-polyglot" depends="get-polyglot-download-version"
+      unless="${use-jif-rcs}" if="${polyglot-needed}">
+    <property name="polyglot.download.url"
+        value="${polyglot.url.prefix}${polyglot.download.version}${polyglot.url.suffix}"/>
+    <get src="${polyglot.download.url}" dest="${tmp}/polyglot.tar.gz"
+        verbose="on"/>
+    <gunzip src="${tmp}/polyglot.tar.gz"/>
+    <untar src="${tmp}/polyglot.tar" dest="${tmp}"/>
+    <move file="${tmp}/polyglot-${polyglot.download.version}-src"
+        tofile="${tmp}/polyglot"/>
+    <copy todir="${tmp}/jif/lib">
+      <fileset dir="${tmp}/polyglot/lib">
+        <include name="polyglot.jar"/>
+        <include name="ppg.jar" />
+        <include name="pth.jar" />
+        <include name="JFlex.jar" />
+        <include name="java_cup.jar" />
+      </fileset>
+    </copy>
+  </target>
 
   <!--
     Checks out and builds Polyglot in the tmp directory.
