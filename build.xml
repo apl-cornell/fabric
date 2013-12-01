@@ -1184,7 +1184,8 @@ public class Version {
 
     <!-- XXX HACK: Fix paths in the authwiki example. -->
     <replace dir="${tmp}/fabric/examples/authwiki"
-        token="../fabric/trunk">
+        token="../fabric/trunk"
+        value="../..">
       <include name="**" />
     </replace>
 
