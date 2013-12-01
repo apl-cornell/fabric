@@ -1491,6 +1491,7 @@ public class Version {
       <tarfileset dir="${examples}" prefix="fabric-${fabric.version}/examples"
           filemode="755">
         <include name="auction/bin/**" />
+        <include name="authwiki/bin/**" />
         <include name="blog/bin/**" />
         <include name="friendmap/bin/**" />
         <include name="hello/bin/**" />
