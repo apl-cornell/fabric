@@ -17,11 +17,11 @@ public class StartAction extends Action[HelloServEP] {
 		initFields("greet", m);
 	}
 
-	public void invoke{*lbl}(label{*lbl} lbl, Request[HelloServEP]{*lbl} req) 
-	throws (ServletException{*:req.session;req.session:})
-	where caller(req.session),
-	{*lbl} <= {*:req.session} 
-	{
+	public void invoke{*lbl}(label{*lbl} lbl, Request[HelloServEP]{*lbl} req)
+	    throws (ServletException{*lbl;req.session←})
+	    where caller(req.session),
+	      lbl <= {req.session→} {
+
 		// create a session-specific HelloAction, and hand off control...
 		try {
 			atomic {

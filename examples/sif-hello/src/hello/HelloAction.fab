@@ -4,6 +4,8 @@ import javax.servlet.ServletException;
 
 import sif.html.*;
 import sif.servlet.Action;
+import sif.servlet.HTMLRequest;
+import sif.servlet.HTMLServlet;
 import sif.servlet.Request;
 import sif.servlet.Servlet;
 
@@ -25,10 +27,13 @@ public class HelloAction[label T] extends Action[HelloServEP] {
 	final Input[HelloServEP]{T} nameInp;
 	final Input[HelloServEP]{T} fileInp;
 
-	public void invoke{*lbl}(label{*lbl} lbl, Request[HelloServEP]{*lbl} req) 
-	where caller(req.session),
-	{*lbl} <= {*:req.session} {
-		Servlet s = getServlet();       
+	public void invoke{*lbl}(label{*lbl} lbl, Request[HelloServEP]{*lbl} _req):
+				{*lbl;_req.session←}
+			where caller(_req.session),
+				lbl <= {_req.session→} {
+
+		final HTMLRequest[HelloServEP] req = (HTMLRequest[HelloServEP]) _req;
+		HTMLServlet s = (HTMLServlet) getServlet();       
 		if (s == null || req == null) return;
 		if (T equiv lbl) {
 
