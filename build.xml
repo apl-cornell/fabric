@@ -1739,7 +1739,7 @@ public class Version {
 
     <!-- Next, find the most recent hash occurring before the given date. -->
     <exec executable="git"
-        dir="${tmp}/jif"
+        dir="${tmp}/${name}"
         failonerror="true"
         outputproperty="git-hash">
       <arg value="rev-list" />
