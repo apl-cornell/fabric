@@ -1463,6 +1463,7 @@ public class Version {
         <include name="auction/etc/**" />
         <include name="auction/src/**" />
         <include name="auth/**" />
+        <include name="authwiki/**" />
         <include name="blog/**" />
         <include name="friendmap/README" />
         <include name="friendmap/build.xml" />
