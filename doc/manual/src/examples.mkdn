@@ -33,6 +33,9 @@ pre-configured. We briefly list the examples here.
       social network and a mapping service to map a friend's confidential
       location.
 
+  - `examples/authwiki`:
+      A simple wiki written entirely in Fabric.
+
   - `examples/OO7`:
       This is an implementation of the OO7 Object Oriented Database
       Benchmark @cite oo7. It is written using FabIL, the intermediate
