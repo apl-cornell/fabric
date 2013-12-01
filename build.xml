@@ -1749,7 +1749,7 @@ public class Version {
     </exec>
 
     <!-- Finally, check out that particular revision. -->
-    <exec executable="git" dir="${tmp}/jif" failonerror="true">
+    <exec executable="git" dir="${tmp}/${name}" failonerror="true">
       <arg value="checkout" />
       <arg value="${git-hash}" />
     </exec>
