@@ -78,7 +78,7 @@
 
   <!-- RCS root locations -->
   <property name="svn.root.fabric"
-      value="https://forge.cornell.edu/svn/repos/fabric/trunk"/>
+      value="https://forge.cornell.edu/svn/repos/fabric"/>
   <property name="git.root.jif"
       value="https://apl.cs.cornell.edu/git/jif.git"/>
   <property name="cvs.root.polyglot"
@@ -89,6 +89,12 @@
       value="http://www.cs.cornell.edu/jif/releases/jif-"/>
   <property name="jif.url.suffix"
       value=".zip"/>
+
+  <!-- Polyglot distribution location -->
+  <property name="polyglot.url.prefix"
+      value="http://www.cs.cornell.edu/Projects/polyglot/src/polyglot-"/>
+  <property name="polyglot.url.suffix"
+      value="-src.tar.gz"/>
 
   <!-- Jar files -->
   <property name="jar.base" location="${lib}/fabric.jar" />
@@ -1105,11 +1111,13 @@ public class Version {
     <echo message=" - Examples build and run" />
     <echo message=" - CHANGES file up-to-date" />
     <echo message=" - Version bump" />
-    <echo message="" />
-    <echo message="When satisfied, integrate the distribution package and" />
-    <echo message="manual into your working copy of the website:" />
-    <echo message="" />
+    <echo />
+    <echo message="When satisfied, you can integrate the distribution" />
+    <echo message="package and manual into your working copy of the" />
+    <echo message="website:" />
+    <echo />
     <echo message="  bin/ship-dist fabric-${fabric.version}.tar.gz" />
+    <antcall target="snapshot-warning" />
   </target>
 
   <!--
@@ -1117,15 +1125,72 @@ public class Version {
     Distribution helper targets.
   -->
 
+  <!--
+    Prints a warning to not make the distribution public if it's built against
+    a snapshot copy of Jif.
+  -->
+  <target name="snapshot-warning" if="${use-jif-rcs}">
+    <echo message="***********"/>
+    <echo message="  WARNING"/>
+    <echo message="***********"/>
+    <echo message="The distribution just built was made against a SNAPSHOT"/>
+    <echo message="copy of Jif. It is therefore NOT recommended that this"/>
+    <echo message="distribution be made public."/>
+  </target>
+
+  <!--
+    Asks the user for Fabric-snapshot information.
+
+    ${fabric.snapshot.branch} will specify the branch to use.
+    ${fabric.snapshot.timestamp} will specify the time and date at which to
+    snapshot.
+  -->
+  <target name="get-fabric-snapshot-info" depends="get-current-fabric-branch">
+    <input message="Fabric branch to snapshot (e.g., branches/0.2.2)?"
+        defaultvalue="${fabric.current.branch}"
+        addproperty="fabric.snapshot.branch"/>
+    <tstamp>
+      <format property="default-snapshot" timezone="America/New_York"
+          pattern="yyyy-MM-dd HH:mm:ss" />
+    </tstamp>
+    <input message="Time and date to snapshot?"
+        defaultvalue="${default-snapshot}"
+        addproperty="fabric.snapshot.timestamp"/>
+  </target>
+
+  <!--
+    Determines the name of the current Fabric branch and puts it in
+    ${fabric.current.branch}.
+  -->
+  <target name="get-current-fabric-branch">
+    <exec executable="bash"
+        dir="${fabric.home}"
+        error="/dev/null"
+        outputproperty="get-branch-output">
+      <arg value="-c"/>
+      <arg value="svn info | grep '^Relative URL: ' | sed 's|^Relative URL: \^/||'"/>
+    </exec>
+
+    <condition property="fabric.current.branch"
+        value="${get-branch-output}"
+        else="trunk">
+      <not>
+        <equals arg1="${get-branch-output}" arg2=""/>
+      </not>
+    </condition>
+  </target>
+
   <!-- Creates the distribution tarball from CVS and SVN. -->
   <target name="dist-tarball"
-      depends="configure-buildstring,build-jif">
+      depends="configure-buildstring,get-fabric-snapshot-info,build-jif">
     <!-- build-jif should have set up the tmp directory already. -->
 
     <!-- Check out Fabric from SVN. -->
     <antcall target="svn-checkout">
       <param name="name" value="fabric" />
-      <param name="root" value="${svn.root.fabric}" />
+      <param name="root"
+          value="${svn.root.fabric}/${fabric.snapshot.branch}" />
+      <param name="date" value="${fabric.snapshot.timestamp}" />
     </antcall>
 
     <!-- Configure the scratch copy. -->
@@ -1402,6 +1467,8 @@ public class Version {
         <include name="auction/build.xml" />
         <include name="auction/etc/**" />
         <include name="auction/src/**" />
+        <include name="auth/**" />
+        <include name="authwiki/**" />
         <include name="blog/**" />
         <include name="friendmap/README" />
         <include name="friendmap/build.xml" />
@@ -1457,11 +1524,11 @@ public class Version {
   <!--
     Ensures there is a built copy of Jif in the tmp directory.
   -->
-  <target name="build-jif" depends="get-jif-download-version,mkdir-tmp">
-    <antcall target="build-polyglot-rcs"/>
-    <antcall target="build-jif-rcs"/>
-    <antcall target="download-jif"/>
-  </target>
+  <target name="build-jif"
+      depends="ask-jif-download-or-rcs,
+          build-jif-rcs,
+          download-jif,
+          download-polyglot"/>
 
   <!--
     Asks the user for the version of Jif to build against.
@@ -1471,45 +1538,130 @@ public class Version {
     be downloaded.
   -->
   <target name="get-jif-download-version"
-      depends="ask-jif-rcs,configure-dependency-versions"
+      depends="ask-jif-download-or-rcs,configure-dependency-versions"
       unless="${use-jif-rcs}">
     <input message="Jif version to download?"
         defaultvalue="${jif.version}"
         addproperty="jif.download.version"/>
   </target>
 
-  <target name="ask-jif-rcs">
-    <input message="Build against Jif HEAD?"
-        validargs="y,n" defaultvalue="n"
-        addproperty="do.jif-rcs"/>
+  <!--
+    Asks the user for the RCS snapshot information to use for Jif.
+
+    ${jif.snapshot.branch} will specify the branch to use.
+    ${jif.snapshot.timestamp} will specify the time and date at which to
+    snapshot.
+  -->
+  <target name="get-jif-snapshot-info"
+      depends="ask-jif-download-or-rcs"
+      if="${use-jif-rcs}">
+    <input message="Jif branch to snapshot?"
+        defaultvalue="master"
+        addproperty="jif.snapshot.branch"/>
+    <input message="Time and date to snapshot?"
+        defaultvalue="${fabric.snapshot.timestamp}"
+        addproperty="jif.snapshot.timestamp"/>
+  </target>
+
+  <!--
+    Asks the user whether to download or snapshot Jif.
+
+    ${use-jif-rcs} will be a boolean indicating whether RCS should be used.
+  -->
+  <target name="ask-jif-download-or-rcs">
+    <echo message="*********************************************************"/>
+    <echo message="Fabric is packaged with a copy of Jif. This can be either"/>
+    <echo message="downloaded from the Jif website, or a development"/>
+    <echo message="snapshot obtained directly from git."/>
+    <echo/>
+    <echo message="For public releases, (D)ownload is highly recommended."/>
+    <echo message="*********************************************************"/>
+    <echo message="${mooooo}" />
+    <input message="(D)ownload or (S)napshot?"
+        validargs="d,s" defaultvalue="d"
+        addproperty="input.jif-download-or-snapshot"/>
 
     <condition property="use-jif-rcs">
-      <equals arg1="y" arg2="${do.jif-rcs}"/>
+      <equals arg1="s" arg2="${input.jif-download-or-snapshot}"/>
     </condition>
   </target>
 
   <!--
     Downloads and extracts Jif in the tmp directory.
   -->
-  <target name="download-jif" depends="get-jif-download-version"
+  <target name="download-jif" depends="mkdir-tmp,get-jif-download-version"
       unless="${use-jif-rcs}">
     <property name="jif.download.url"
         value="${jif.url.prefix}${jif.download.version}${jif.url.suffix}"/>
     <get src="${jif.download.url}" dest="${tmp}/jif.zip" verbose="on"/>
     <unzip src="${tmp}/jif.zip" dest="${tmp}"/>
     <move file="${tmp}/jif-${jif.download.version}" tofile="${tmp}/jif"/>
+
+    <condition property="polyglot-needed" value="true">
+      <not>
+        <resourceexists>
+          <file file="${tmp}/jif/lib/polyglot.jar"/>
+        </resourceexists>
+      </not>
+    </condition>
   </target>
 
+  <!--
+    Asks the user for the version of Poylglot to build against. This is
+    intended to run when Jif is downloaded, but was not packaged with Polyglot.
+
+    ${polyglot.download.version} will be the version of Polyglot to be
+    downloaded.
+  -->
+  <target name="get-polyglot-download-version"
+      depends="configure-dependency-versions"
+      unless="${use-jif-rcs}" if="${polyglot-needed}">
+    <echo message="Jif was not packaged with Polyglot."/>
+    <echo message="Downloading Polyglot separately."/>
+    <input message="Polyglot version to download?"
+        defaultvalue="${polyglot.version}"
+        addproperty="polyglot.download.version"/>
+  </target>
+
+  <!--
+    Downloads and extracts Polyglot in the tmp directory, then copies the
+    Polyglot libraries into ${tmp}/jif/lib.
+
+    This is intended to run when Jif is downloaded, but was not packaged with
+    Polyglot.
+  -->
+  <target name="download-polyglot"
+      depends="get-polyglot-download-version,download-jif"
+      unless="${use-jif-rcs}" if="${polyglot-needed}">
+    <property name="polyglot.download.url"
+        value="${polyglot.url.prefix}${polyglot.download.version}${polyglot.url.suffix}"/>
+    <get src="${polyglot.download.url}" dest="${tmp}/polyglot.tar.gz"
+        verbose="on"/>
+    <gunzip src="${tmp}/polyglot.tar.gz"/>
+    <untar src="${tmp}/polyglot.tar" dest="${tmp}"/>
+    <move file="${tmp}/polyglot-${polyglot.download.version}-src"
+        tofile="${tmp}/polyglot"/>
+    <copy todir="${tmp}/jif/lib">
+      <fileset dir="${tmp}/polyglot/lib">
+        <include name="polyglot.jar"/>
+        <include name="ppg.jar" />
+        <include name="pth.jar" />
+        <include name="JFlex.jar" />
+        <include name="java_cup.jar" />
+      </fileset>
+    </copy>
+  </target>
 
   <!--
     Checks out and builds Polyglot in the tmp directory.
   -->
-  <target name="build-polyglot-rcs" depends="get-jif-download-version"
+  <target name="build-polyglot-rcs" depends="mkdir-tmp,get-jif-snapshot-info"
       if="${use-jif-rcs}">
     <!-- Check out Polyglot from CVS. -->
     <antcall target="cvs-checkout">
       <param name="name" value="polyglot" />
       <param name="root" value="${cvs.root.polyglot}" />
+      <param name="date" value="${jif.snapshot.timestamp}" />
     </antcall>
 
     <!-- Build Polyglot jars. -->
@@ -1527,6 +1679,8 @@ public class Version {
     <antcall target="git-clone">
       <param name="name" value="jif" />
       <param name="root" value="${git.root.jif}" />
+      <param name="branch" value="${jif.snapshot.branch}" />
+      <param name="date" value="${jif.snapshot.timestamp}" />
     </antcall>
 
     <!-- Copy Polyglot tarballs. -->
@@ -1560,10 +1714,11 @@ public class Version {
     Parameters:
       root - the CVS root
       name - the name of the module to check out
+      date - check out the most recent revision no later than the given date
   -->
   <target name="cvs-checkout">
-    <cvs command="checkout ${name}" quiet="true" cvsRsh="ssh" cvsRoot="${root}"
-        dest="${tmp}" failonerror="true" />
+    <cvs command="checkout -D '${date}' ${name}" quiet="true" cvsRsh="ssh"
+        cvsRoot="${root}" dest="${tmp}" failonerror="true" />
   </target>
 
   <!--
@@ -1572,11 +1727,13 @@ public class Version {
     Parameters:
       root - the SVN URL to check out
       name - the name of the destination in ${tmp}.
+      date - check out the most recent revision no later than the given date
   -->
   <target name="svn-checkout">
     <exec executable="svn" failonerror="true">
       <arg value="co" />
       <arg value="-q" />
+      <arg value="-r" /> <arg value="{${date}}" />
       <arg value="${root}" />
       <arg value="${tmp}/${name}" />
     </exec>
@@ -1588,13 +1745,33 @@ public class Version {
     Parameters:
       root - the Git URL to check out
       name - the name of the destination in ${tmp}.
+      branch - the branch to check out
+      date - check out the most recent revision no later than the given date
   -->
   <target name="git-clone">
+    <!-- First, clone. -->
     <exec executable="git" failonerror="true">
       <arg value="clone" />
       <arg value="-q" />
       <arg value="${root}" />
       <arg value="${tmp}/${name}" />
+    </exec>
+
+    <!-- Next, find the most recent hash occurring before the given date. -->
+    <exec executable="git"
+        dir="${tmp}/${name}"
+        failonerror="true"
+        outputproperty="git-hash">
+      <arg value="rev-list" />
+      <arg value="-n" /> <arg value="1" />
+      <arg value="--before=${date}" />
+      <arg value="${branch}" />
+    </exec>
+
+    <!-- Finally, check out that particular revision. -->
+    <exec executable="git" dir="${tmp}/${name}" failonerror="true">
+      <arg value="checkout" />
+      <arg value="${git-hash}" />
     </exec>
   </target>
 
