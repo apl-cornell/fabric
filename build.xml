@@ -1126,9 +1126,9 @@ public class Version {
     ${fabric.snapshot.timestamp} will specify the time and date at which to
     snapshot.
   -->
-  <target name="get-fabric-snapshot-info">
+  <target name="get-fabric-snapshot-info" depends="get-current-fabric-branch">
     <input message="Fabric branch to snapshot (e.g., branches/0.2.2)?"
-        defaultvalue="trunk"
+        defaultvalue="${fabric.current.branch}"
         addproperty="fabric.snapshot.branch"/>
     <tstamp>
       <format property="default-snapshot" timezone="America/New_York"
@@ -1137,6 +1137,28 @@ public class Version {
     <input message="Time and date to snapshot?"
         defaultvalue="${default-snapshot}"
         addproperty="fabric.snapshot.timestamp"/>
+  </target>
+
+  <!--
+    Determines the name of the current Fabric branch and puts it in
+    ${fabric.current.branch}.
+  -->
+  <target name="get-current-fabric-branch">
+    <exec executable="bash"
+        dir="${fabric.home}"
+        error="/dev/null"
+        outputproperty="get-branch-output">
+      <arg value="-c"/>
+      <arg value="svn info | grep '^Relative URL: ' | sed 's|^Relative URL: \^/||'"/>
+    </exec>
+
+    <condition property="fabric.current.branch"
+        value="${get-branch-output}"
+        else="trunk">
+      <not>
+        <equals arg1="${get-branch-output}" arg2=""/>
+      </not>
+    </condition>
   </target>
 
   <!-- Creates the distribution tarball from CVS and SVN. -->
@@ -1426,6 +1448,7 @@ public class Version {
         <include name="auction/build.xml" />
         <include name="auction/etc/**" />
         <include name="auction/src/**" />
+        <include name="auth/**" />
         <include name="blog/**" />
         <include name="friendmap/README" />
         <include name="friendmap/build.xml" />
