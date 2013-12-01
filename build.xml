@@ -1174,6 +1174,20 @@ public class Version {
       <param name="date" value="${fabric.snapshot.timestamp}" />
     </antcall>
 
+    <!-- XXX HACK: Overlay the authwiki example. -->
+    <antcall target="git-clone">
+      <param name="name" value="fabric/examples/authwiki" />
+      <param name="root" value="https://apl.cs.cornell.edu/git/authwiki.git" />
+      <param name="branch" value="master" />
+      <param name="date" value="${fabric.snapshot.timestamp}" />
+    </antcall>
+
+    <!-- XXX HACK: Fix paths in the authwiki example. -->
+    <replace dir="${tmp}/fabric/examples/authwiki"
+        token="../fabric/trunk">
+      <include name="**" />
+    </replace>
+
     <!-- Configure the scratch copy. -->
     <concat destfile="${tmp}/fabric/config.properties" append="no">
       jif.home=${tmp}/fabric
