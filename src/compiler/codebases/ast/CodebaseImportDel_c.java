@@ -3,7 +3,7 @@ package codebases.ast;
 import java.net.URI;
 
 import polyglot.ast.Import;
-import polyglot.ast.JL_c;
+import polyglot.ast.JLDel_c;
 import polyglot.ast.Node;
 import polyglot.main.Options;
 import polyglot.types.ClassType;
@@ -18,7 +18,7 @@ import codebases.types.CodebaseContext;
 import codebases.types.CodebaseTypeSystem;
 import codebases.visit.CodebaseTranslator;
 
-public class CodebaseImportDel_c extends JL_c {
+public class CodebaseImportDel_c extends JLDel_c {
   protected URI ns;
   protected ClassType ct;
 

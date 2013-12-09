@@ -1,0 +1,167 @@
+The Fabric intermediate language {#fabil}
+================================
+
+Fabric's intermediate language, FabIL, is a Java dialect for writing programs
+that can run on the Fabric runtime system. As its name suggests, it is
+internally used by the Fabric compiler as an intermediate language. Therefore,
+FabIL is lower-level than the full Fabric language and does not enforce
+information-flow security. FabIL is exposed as a separate language with its own
+compiler, `filc`. Portions of the Fabric runtime is written in FabIL.
+
+Like Fabric, FabIL supports using and creating
+[persistent objects] (@ref persistent-objects) on remote stores,
+[nested transactions] (@ref transactions), and
+[remote method calls] (@ref remote-calls). Mobile code is not supported,
+however.
+
+There are two primary differences between Fabric and FabIL. First, whereas
+Fabric has types labelled with policies for information-flow security, FabIL
+does not. In this respect, FabIL is more closely related to Java than it is to
+Fabric. The second difference is in how objects are constructed. Although FabIL
+programs do not enforce information-flow security, they do create full-fledged
+Fabric objects, which have labels. To support this, FabIL has:
+* an API for [creating label objects] (@ref fabil-creating-labels),
+* syntax for [specifying labels on arrays] (@ref fabil-array-construction), and
+* an [object-construction convention] (@ref fabil-constructor-protocol) that
+  must be followed.
+
+Creating label objects @anchor fabil-creating-labels
+----------------------
+
+While Fabric has built-in syntax for labels, FabIL does not. Instead, labels in
+FabIL are constructed explicitly through the API provided by the library class
+`fabric.lang.security.LabelUtil`, which exposes several static methods for
+constructing label objects.
+
+### Pre-built labels and policies
+
+Method signature | Description
+---------------- | -----------
+`Label noComponents()`       | Returns the label `{⊥→⊥ ; ⊥←⊥}`.
+`ConfPolicy bottomConf()`    | Returns the confidentiality policy `{⊥→⊥}`.
+`ConfPolicy topConf()`       | Returns the confidentiality policy `{⊤→⊤}`.
+`IntegPolicy bottomInteg()`  | Returns the integrity policy `{⊤←⊤}`.
+`IntegPolicy topInteg()`     | Returns the integrity policy `{⊥←⊥}`.
+
+### Creating policies
+
+Method signature | Description
+---------------- | -----------
+`ConfPolicy readerPolicy(Store store, Principal owner, Principal reader)` | Creates and returns the confidentiality policy `{owner→reader}`, allocated on `store`.
+`IntegPolicy writerPolicy(Store store, Principal owner, Principal writer)` | Creates and returns the integrity policy `{owner←writer}`, allocated on `store`.
+`ConfPolicy join(Store store, ConfPolicy p1, ConfPolicy p2)` | Creates and returns the confidentiality policy `p1 ⊔ p2`, allocated on `store`.
+`ConfPolicy meet(Store store, ConfPolicy p1, ConfPolicy p2)` | Creates and returns the confidentiality policy `p1 ⊓ p2`, allocated on `store`.
+`IntegPolicy join(Store store, IntegPolicy p1, IntegPolicy p2)` | Creates and returns the integrity policy `p1 ⊔ p2`, allocated on `store`.
+`IntegPolicy meet(Store store, IntegPolicy p1, IntegPolicy p2)` | Creates and returns the integrity policy `p1 ⊓ p2`, allocated on `store`.
+
+### Creating labels
+
+Method signature | Description
+---------------- | -----------
+`Label readerPolicyLabel(Store store, Principal owner, Principal reader)` | Creates and returns the label `{owner→reader ; ⊥←⊥}`, allocated on `store`.
+`Label writerPolicyLabel(Store store, Principal owner, Principal writer)` | Creates and returns the label `{⊥→⊥ ; owner←writer}`, allocated on `store`.
+`Label toLabel(Store store, ConfPolicy cPolicy, IntegPolicy iPolicy)` | Creates and returns the label `{cPolicy ; iPolicy}`, allocated on `store`.
+`Label join(Store store, Label l1, Label l2)` | Creates and returns the label `l1 ⊔ l2`, allocated on `store`.
+`Label meet(Store store, Label l1, Label l2)` | Creates and returns the label `l1 ⊓ l2`, allocated on `store`.
+
+Constructing arrays @anchor fabil-array-construction
+-------------------
+
+In FabIL, arrays are created by specifying their label and a store to store
+them. For example:
+~~~
+      Store store = Worker.getWorker().getStore("storename");
+      Label lbl = LabelUtil.noComponents();
+      int[] array = new int[5] ~lbl @store;
+~~~
+The `~lbl` component of the `new` expression gives the name of a variable
+containing the label for the array. If the label is not specified, the array is
+created with the same label as the object `this`. Like in Fabric, the `@store`
+component gives the store on which to create the array; if it is omitted, the
+array is created on the same store as `this`.
+
+Object-construction convention @anchor fabil-constructor-protocol
+------------------------------
+
+Fabric ensures that final fields really are final: it should not be possible to
+observe final fields of an object before they have been initialized. This
+property, inherited from Jif, is important because final fields of type `label`
+or `principal` may be used in security policies. It also has implications for
+how constructors are written in Fabric and, consequentially, FabIL.
+
+To ensure that final fields really are final, Fabric constructors must
+initialize all final fields before calling the superclass constructor. For
+example, a class in Fabric might look like the following:
+~~~
+      package geometry;
+
+      class NCPoint extends Point {
+        final String{} name;
+        Colour{} c;
+
+        NCPoint(String name, int x, int y, Colour c) {
+          this.name = name; // Initialize all final fields.
+          super(x,y);       // Then call super class's constructor.
+          this.c = c;
+        }
+      }
+~~~
+
+In Java, no code is allowed to precede the call to the superclass constructor.
+Therefore, operationally, Fabric separates the _allocation_ of objects from
+their _initialization_. This means that when a Fabric class is translated to
+FabIL, no explicit constructors are created. Instead, Fabric constructors are
+translated into _initializer methods_. For example, the Fabric compiler
+translates the above class into the following FabIL class:
+
+~~~
+      package geometry;
+
+      class NCPoint extends Point {
+        String name; // intended to be final
+        Colour c;
+
+        NCPoint geometry$NCPoint$(String name, int x, int y, Colour c) {
+          this.name = name;      // initialize "final" fields
+          geometry$Point$(x,y);  // call super class's initializer
+          this.c = c;            // initialize other fields
+          return this;
+        }
+
+        // Specifies the object's label and access policy. Called by the
+        // initializer for fabric.lang.Object.
+        public Object $initLabels() {
+          this.$updateLabel = LabelUtil.noComponents();
+          this.$accessPolicy = LabelUtil.bottomConf();
+          return this;
+        }
+      }
+~~~
+
+To be compatible with Fabric, programs written in FabIL should follow this same
+convention. There are a few things to note:
+
+  * Although the field `name` is intended to be final, its `final` flag is
+    removed.
+  * No constructors are declared. Instead, the class has the initializer method
+    `geometry$NCPoint$`, which implements the constructor's functionality. The
+    call to the superclass's constructor is turned into a call to the
+    appropriate initializer method in the superclass.
+  * The name of the initializer method is derived from the fully qualified name
+    of the class: dots are replaced with dollars, and an extra dollar is
+    appended at the end.
+  * The method `$initLabels()` is declared for specifying the object's label
+    and access policy. This can depend on the object's "final" fields, because
+    this method is called by the initializer for fabric.lang.Object, after all
+    of the "final" fields are initialized.
+  * Initializer methods and `$initLabels()` return `this`.
+
+Object construction is done in two stages. First, the implicit default
+constructor is called to allocate the object. Then, the desired initializer
+method is called to initialize the object:
+~~~
+  new NCPoint().geometry$NCPoint$("origin", 0, 0, Colour.BLACK)
+~~~
+
+The FabIL compiler does not enforce any aspect of this convention. It is up to
+the programmer to ensure that this convention is followed.

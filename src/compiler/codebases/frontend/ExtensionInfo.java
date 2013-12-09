@@ -9,8 +9,8 @@ import java.util.Map;
 import javax.tools.FileObject;
 
 import codebases.types.CBTypeEncoder;
+import codebases.types.ClassFile;
 import codebases.types.CodebaseTypeSystem;
-import fabil.types.ClassFile;
 import fabric.worker.Store;
 
 /**

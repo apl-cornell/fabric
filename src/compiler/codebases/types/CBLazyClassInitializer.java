@@ -1,4 +1,4 @@
-package fabil.types;
+package codebases.types;
 
 import java.util.ArrayList;
 import java.util.StringTokenizer;
@@ -15,8 +15,6 @@ import polyglot.types.reflect.ClassFileLazyClassInitializer;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.StringUtil;
 import codebases.frontend.ExtensionInfo;
-import codebases.types.CodebaseTypeSystem;
-import codebases.types.NamespaceResolver;
 
 /**
  * This class is basically identical to it's superclass with calls to
@@ -24,18 +22,13 @@ import codebases.types.NamespaceResolver;
  * 
  * @author owen
  */
-// protected List interfaces;
-// protected List methods;
-// protected List fields;
-// protected List constructors;
-
-public class FabILLazyClassInitializer extends ClassFileLazyClassInitializer {
+public class CBLazyClassInitializer extends ClassFileLazyClassInitializer {
   private CodebaseTypeSystem ts;
   private ExtensionInfo extInfo;
   private NamespaceResolver localResolver;
   protected ClassFile classFile;
 
-  public FabILLazyClassInitializer(ClassFile file, CodebaseTypeSystem ts) {
+  public CBLazyClassInitializer(ClassFile file, CodebaseTypeSystem ts) {
     super(file, ts);
     this.ts = ts;
     this.extInfo = (ExtensionInfo) ts.extensionInfo();
@@ -95,7 +88,7 @@ public class FabILLazyClassInitializer extends ClassFileLazyClassInitializer {
       Report.report(2, "creating ClassType for " + name);
 
     // Create the ClassType.
-    FabILParsedClassType ct = (FabILParsedClassType) ts.createClassType(this);
+    ParsedClassType ct = ts.createClassType(this);
     ct.flags(ts.flagsForBits(clazz.getModifiers()));
     ct.position(position());
 

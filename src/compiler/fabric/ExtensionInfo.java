@@ -35,12 +35,12 @@ import codebases.frontend.CodebaseSource;
 import codebases.frontend.LocalSource;
 import codebases.frontend.RemoteSource;
 import codebases.types.CBTypeEncoder;
+import codebases.types.ClassFile;
+import codebases.types.ClassFile_c;
 import codebases.types.CodebaseResolver;
 import codebases.types.CodebaseTypeSystem;
 import codebases.types.NamespaceResolver;
 import codebases.types.SimpleResolver;
-import fabil.types.ClassFile;
-import fabil.types.ClassFile_c;
 import fabil.types.FabILTypeSystem;
 import fabric.ast.FabricNodeFactory;
 import fabric.ast.FabricNodeFactory_c;
@@ -60,6 +60,7 @@ import fabric.worker.Store;
  */
 public class ExtensionInfo extends jif.ExtensionInfo implements
     codebases.frontend.ExtensionInfo {
+
   /*
    * Note: jif.ExtensionInfo has a jif.OutputExtensionInfo field jlext. The only
    * unoverridden place this is used is in a call to initCompiler, so it should

@@ -1,42 +1,42 @@
 package fabric.ast;
 
 import jif.ast.JifDelFactory;
-import polyglot.ast.JL;
+import polyglot.ast.JLDel;
 
 /** Factory for delegates for all of the AST nodes in the Fabric language. */
 public interface FabricDelFactory extends JifDelFactory {
-  JL delAbortStmt();
+  JLDel delAbortStmt();
 
-  JL delAtomic();
+  JLDel delAtomic();
 
-  JL delAmbNewFabricArray();
+  JLDel delAmbNewFabricArray();
 
-  JL delWorker();
+  JLDel delWorker();
 
-  JL delFabricArrayInit();
+  JLDel delFabricArrayInit();
 
-  JL delFabricArrayTypeNode();
+  JLDel delFabricArrayTypeNode();
 
-  JL delNewFabricArray();
+  JLDel delNewFabricArray();
 
-  JL delRemoteWorkerGetter();
+  JLDel delRemoteWorkerGetter();
 
-  JL delRetryStmt();
+  JLDel delRetryStmt();
 
-  JL delCodebaseNode();
+  JLDel delCodebaseNode();
 
-  JL delCodebaseDecl();
+  JLDel delCodebaseDecl();
 
-  JL delPrincipalExpr();
-
-  /**
-   * @return
-   */
-  JL delStore();
+  JLDel delPrincipalExpr();
 
   /**
    * @return
    */
-  JL delAccessPolicy();
+  JLDel delStore();
+
+  /**
+   * @return
+   */
+  JLDel delAccessPolicy();
 
 }

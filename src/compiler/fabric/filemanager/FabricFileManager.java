@@ -23,7 +23,7 @@ import polyglot.frontend.Source;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.StringUtil;
 import codebases.frontend.ExtensionInfo;
-import fabil.types.ClassFile;
+import codebases.types.ClassFile;
 import fabric.common.NSUtil;
 import fabric.lang.Codebase;
 import fabric.lang.FClass;

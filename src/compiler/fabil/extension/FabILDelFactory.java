@@ -1,20 +1,20 @@
 package fabil.extension;
 
 import polyglot.ast.DelFactory;
-import polyglot.ast.JL;
+import polyglot.ast.JLDel;
 
 public interface FabILDelFactory extends DelFactory {
 
-  JL delFabricArrayTypeNode();
+  JLDel delFabricArrayTypeNode();
 
-  JL delFabricArrayInit();
+  JLDel delFabricArrayInit();
 
-  JL delProviderLabel();
+  JLDel delProviderLabel();
 
-  JL delCodebaseNode();
+  JLDel delCodebaseNode();
 
-  JL delCodebaseDecl();
+  JLDel delCodebaseDecl();
 
-  JL delCodebaseTypeNode();
+  JLDel delCodebaseTypeNode();
 
 }

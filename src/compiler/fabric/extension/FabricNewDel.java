@@ -2,11 +2,12 @@ package fabric.extension;
 
 import java.util.List;
 
+import jif.extension.JifNewDel;
 import jif.types.JifContext;
 import jif.types.label.AccessPath;
 import polyglot.ast.Expr;
-import polyglot.ast.JL_c;
 import polyglot.ast.New;
+import polyglot.ast.NewOps;
 import polyglot.ast.Node;
 import polyglot.types.SemanticException;
 import polyglot.types.Type;
@@ -18,7 +19,7 @@ import polyglot.visit.TypeChecker;
 import fabric.ast.FabricUtil;
 import fabric.types.FabricTypeSystem;
 
-public class FabricNewDel extends JL_c {
+public class FabricNewDel extends JifNewDel implements NewOps {
   @Override
   public Node visitChildren(NodeVisitor v) {
     Node n = super.visitChildren(v);

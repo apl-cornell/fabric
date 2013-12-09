@@ -27,7 +27,6 @@ import polyglot.types.SemanticException;
 import polyglot.types.Type;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
-import codebases.frontend.CodebaseSource;
 import codebases.types.CodebaseClassType;
 
 public class FabricParsedClassType_c extends JifParsedPolyType_c implements
@@ -44,11 +43,9 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements
   }
 
   public FabricParsedClassType_c(FabricTypeSystem ts,
-      LazyClassInitializer init, Source fromSource) {
+      LazyClassInitializer init, Source fromSource, URI ns) {
     super(ts, init, fromSource);
-    if (fromSource == null)
-      throw new NullPointerException("fromSource cannot be null!");
-    this.canonical_ns = ((CodebaseSource) fromSource).canonicalNamespace();
+    this.canonical_ns = ns;
   }
 
   @Override
@@ -273,9 +270,15 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements
   public URI canonicalNamespace() {
     // HACK superclass constructor accesses canonical namespace before it can be
     // initialized.
-    if (canonical_ns == null)
-      canonical_ns = ((CodebaseSource) fromSource).canonicalNamespace();
-
+//    if (canonical_ns == null) {
+//      if (fromSource == null) {
+//        // XXX:Java classes may be loaded w/o encoded types
+//        ExtensionInfo extInfo = (ExtensionInfo) ts.extensionInfo();
+//        this.canonical_ns = extInfo.unsafeNamespace();
+//      } else {
+//        canonical_ns = ((CodebaseSource) fromSource).canonicalNamespace();
+//      }
+//    }
     return canonical_ns;
   }
 
