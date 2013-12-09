@@ -1,7 +1,7 @@
 package jpa2fab.del;
 
 import polyglot.ast.Import;
-import polyglot.ast.JL;
+import polyglot.ast.JLDel;
 import polyglot.util.CodeWriter;
 import polyglot.visit.PrettyPrinter;
 import codebases.ast.CodebaseImportDel_c;
@@ -9,7 +9,7 @@ import codebases.ast.CodebaseImportDel_c;
 /**
  * 
  */
-public class ImportDel extends CodebaseImportDel_c implements JL {
+public class ImportDel extends CodebaseImportDel_c implements JLDel {
   @Override
   public void prettyPrint(CodeWriter w, PrettyPrinter tr) {
     Import im = (Import) node();

@@ -3,8 +3,8 @@ package jpa2fab.del;
 import java.util.Iterator;
 
 import polyglot.ast.Expr;
-import polyglot.ast.JL;
-import polyglot.ast.JL_c;
+import polyglot.ast.JLDel;
+import polyglot.ast.JLDel_c;
 import polyglot.ast.Node_c;
 import polyglot.util.CodeWriter;
 import polyglot.visit.PrettyPrinter;
@@ -14,7 +14,7 @@ import fabil.ast.New;
 /**
  * 
  */
-public class NewDel extends JL_c implements JL {
+public class NewDel extends JLDel_c implements JLDel {
   @Override
   public void translate(CodeWriter w, Translator tr) {
     New n = node();
