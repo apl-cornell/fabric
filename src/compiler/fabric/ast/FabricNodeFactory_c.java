@@ -237,7 +237,7 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
     if (outer != null)
       throw new InternalCompilerError("Fabric does not support inner classes.");
 
-    New n = new FabricNew_c(pos, objectType, args, body);
+    New n = new FabricNew_c(pos, outer, objectType, args, body);
     n = (New) n.ext(extFactory().extNew());
     n = (New) n.del(delFactory().delNew());
     return n;

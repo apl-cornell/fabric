@@ -288,6 +288,7 @@ public final class NSUtil {
    * @return true if path contains any remote references
    */
   public static List<URI> processPathString(String path) {
+    // XXX This breaks in the presence of Windows paths.
     List<URI> locations = new ArrayList<URI>();
     while (!path.isEmpty()) {
       String remaining = "";

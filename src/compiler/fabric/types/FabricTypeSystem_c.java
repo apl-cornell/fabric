@@ -64,7 +64,6 @@ import polyglot.frontend.Source;
 import polyglot.types.AccessControlResolver;
 import polyglot.types.CachingResolver;
 import polyglot.types.ClassType;
-import polyglot.types.Context;
 import polyglot.types.FieldInstance;
 import polyglot.types.Flags;
 import polyglot.types.ImportTable;
@@ -513,7 +512,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
   }
 
   @Override
-  public Context createContext() {
+  public FabricContext createContext() {
     return new FabricContext_c(this, jlts);
   }
 

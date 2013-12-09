@@ -1,7 +1,7 @@
 package fabric.extension;
 
 import polyglot.ast.Expr;
-import polyglot.ast.JL_c;
+import polyglot.ast.JLDel_c;
 import polyglot.ast.Node;
 import polyglot.types.SemanticException;
 import polyglot.visit.NodeVisitor;
@@ -9,7 +9,7 @@ import polyglot.visit.TypeChecker;
 import fabric.ast.FabricUtil;
 import fabric.types.FabricTypeSystem;
 
-public class FabricPrincipalExprDel extends JL_c {
+public class FabricPrincipalExprDel extends JLDel_c {
   @Override
   public Node visitChildren(NodeVisitor v) {
     Node n = super.visitChildren(v);
