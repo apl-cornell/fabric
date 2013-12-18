@@ -111,9 +111,21 @@ public class InProcessStore extends RemoteStore {
 
   @Override
   public LongKeyMap<VersionWarranty> prepareTransactionReads(long tid,
-      LongKeyMap<Integer> reads, long commitTime)
+      boolean readOnly, LongKeyMap<Integer> reads, long commitTime)
       throws TransactionPrepareFailedException {
-    return tm.prepareReads(localWorkerIdentity(), tid, reads, commitTime);
+    LongKeyMap<VersionWarranty> result =
+        tm.prepareReads(localWorkerIdentity(), tid, reads, commitTime);
+
+    if (readOnly) {
+      try {
+        commitTransaction(tid, commitTime);
+      } catch (TransactionCommitFailedException e) {
+        // Shouldn't happen.
+        throw new InternalError("Single-phase commit failed unexpectedly.", e);
+      }
+    }
+
+    return result;
   }
 
   @Override

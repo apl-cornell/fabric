@@ -279,6 +279,14 @@ public final class Log {
   }
 
   /**
+   * @return true if the transaction is not distributed and neither creates nor
+   *         modifies objects on remote stores.
+   */
+  public boolean isReadOnly() {
+    return writes.isEmpty() && creates.isEmpty() && workersCalled.isEmpty();
+  }
+
+  /**
    * Returns a mapping of stores to (mappings of onums to version numbers),
    * indicating those objects read (but not modified) by this transaction, whose
    * version warranties expire between commitState.commitTime (exclusive) and

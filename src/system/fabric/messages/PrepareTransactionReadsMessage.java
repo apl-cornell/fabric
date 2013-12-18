@@ -24,30 +24,39 @@ public class PrepareTransactionReadsMessage
 
   public final long tid;
   public final long commitTime;
+
+  /**
+   * A flag to indicate whether the transaction is read-only. A transaction is
+   * read-only if it does not modify any persistent objects. If this value is
+   * true, then the store will commit the transaction as soon as it is prepared.
+   */
+  public final boolean readOnly;
+
   public final LongKeyMap<Integer> reads;
 
   /**
    * Used to prepare transactions at remote workers.
    */
   public PrepareTransactionReadsMessage(long tid, long commitTime) {
-    this(tid, commitTime, null);
+    this(tid, commitTime, false, null);
   }
 
   /**
    * Only used by the worker.
    */
-  public PrepareTransactionReadsMessage(long tid, LongKeyMap<Integer> reads,
-      long commitTime) {
-    this(tid, commitTime, reads);
+  public PrepareTransactionReadsMessage(long tid, boolean readOnly,
+      LongKeyMap<Integer> reads, long commitTime) {
+    this(tid, commitTime, readOnly, reads);
   }
 
   private PrepareTransactionReadsMessage(long tid, long commitTime,
-      LongKeyMap<Integer> reads) {
+      boolean readOnly, LongKeyMap<Integer> reads) {
     super(MessageType.PREPARE_TRANSACTION_READS,
         TransactionPrepareFailedException.class);
 
     this.tid = tid;
     this.commitTime = commitTime;
+    this.readOnly = readOnly;
     this.reads = reads;
   }
 
@@ -87,6 +96,9 @@ public class PrepareTransactionReadsMessage
     out.writeLong(tid);
     out.writeLong(commitTime);
 
+    // Serialize read-only flag.
+    out.writeBoolean(readOnly);
+
     // Serialize reads.
     if (reads == null) {
       out.writeInt(0);
@@ -107,6 +119,9 @@ public class PrepareTransactionReadsMessage
     // Read the TID and commit time.
     this.tid = in.readLong();
     this.commitTime = in.readLong();
+
+    // Read the read-only flag.
+    this.readOnly = in.readBoolean();
 
     // Read reads.
     int size = in.readInt();

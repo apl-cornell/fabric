@@ -379,7 +379,8 @@ public final class TransactionManager {
     // Commit top-level transaction.
     Log HOTOS_current = current;
     List<RemoteWorker> workers = current.workersCalled;
-    final boolean isReadOnly = current.writes.isEmpty();
+    final boolean isWriteFree = current.writes.isEmpty();
+    final boolean readOnly = current.isReadOnly();
     Set<Store> stores =
         new HashSet<>(current.storesRead(Long.MAX_VALUE).keySet());
     stores.addAll(current.storesWritten());
@@ -393,10 +394,10 @@ public final class TransactionManager {
     // Send prepare-read messages to our cohorts. If the prepare fails, this
     // will abort our portion of the transaction and throw a
     // TransactionRestartingException.
-    sendPrepareReadMessages(commitTime);
+    sendPrepareReadMessages(readOnly, commitTime);
 
     // Send commit messages to our cohorts.
-    sendCommitMessagesAndCleanUp(commitTime);
+    sendCommitMessagesAndCleanUp(readOnly, commitTime);
 
     final long actualCommitTime =
         Math.max(commitTime, System.currentTimeMillis());
@@ -408,7 +409,7 @@ public final class TransactionManager {
     if (workers.size() > 0 || stores.size() > 1 || stores.size() == 1
         && !stores.contains(LOCAL_STORE)
         && !(stores.iterator().next() instanceof InProcessStore)) {
-      if (isReadOnly) {
+      if (isWriteFree) {
         HOTOS_LOGGER.log(Level.INFO, "committed tid {0} (latency {1} ms)",
             new Object[] { HOTOS_current, commitLatency });
       } else {
@@ -623,7 +624,8 @@ public final class TransactionManager {
    * @throws TransactionRestartingException
    *           if the prepare fails.
    */
-  public void sendPrepareReadMessages(final long commitTime) {
+  public void sendPrepareReadMessages(final boolean readOnly,
+      final long commitTime) {
     final Map<RemoteNode<?>, TransactionPrepareFailedException> failures =
         Collections
             .synchronizedMap(new HashMap<RemoteNode<?>, TransactionPrepareFailedException>());
@@ -723,8 +725,8 @@ public final class TransactionManager {
                 }
 
                 LongKeyMap<VersionWarranty> newWarranties =
-                    store.prepareTransactionReads(current.tid.topTid, reads,
-                        commitTime);
+                    store.prepareTransactionReads(current.tid.topTid, readOnly,
+                        reads, commitTime);
 
                 // Prepare was successful. Update the objects' warranties.
                 current.updateVersionWarranties(store, newWarranties);
@@ -826,8 +828,8 @@ public final class TransactionManager {
   /**
    * Sends commit messages to the cohorts.
    */
-  public void sendCommitMessagesAndCleanUp(final long commitTime)
-      throws TransactionAtomicityViolationException {
+  public void sendCommitMessagesAndCleanUp(final boolean readOnly,
+      final long commitTime) throws TransactionAtomicityViolationException {
     synchronized (current.commitState) {
       switch (current.commitState.value) {
       case UNPREPARED:
@@ -850,81 +852,83 @@ public final class TransactionManager {
       }
     }
 
-    final List<RemoteNode<?>> unreachable =
-        Collections.synchronizedList(new ArrayList<RemoteNode<?>>());
-    final List<RemoteNode<?>> failed =
-        Collections.synchronizedList(new ArrayList<RemoteNode<?>>());
-    List<Future<?>> futures =
-        new ArrayList<Future<?>>(current.commitState.storesContacted.size()
-            + current.workersCalled.size());
+    if (!readOnly) {
+      final List<RemoteNode<?>> unreachable =
+          Collections.synchronizedList(new ArrayList<RemoteNode<?>>());
+      final List<RemoteNode<?>> failed =
+          Collections.synchronizedList(new ArrayList<RemoteNode<?>>());
+      List<Future<?>> futures =
+          new ArrayList<Future<?>>(current.commitState.storesContacted.size()
+              + current.workersCalled.size());
 
-    // Send commit messages to the workers in parallel.
-    for (final RemoteWorker worker : current.workersCalled) {
-      NamedRunnable runnable = new NamedRunnable("worker commit to " + worker) {
-        @Override
-        public void runImpl() {
+      // Send commit messages to the workers in parallel.
+      for (final RemoteWorker worker : current.workersCalled) {
+        NamedRunnable runnable =
+            new NamedRunnable("worker commit to " + worker) {
+              @Override
+              public void runImpl() {
+                try {
+                  worker.commitTransaction(current.tid.topTid, commitTime);
+                } catch (UnreachableNodeException e) {
+                  unreachable.add(worker);
+                } catch (TransactionCommitFailedException e) {
+                  failed.add(worker);
+                }
+              }
+            };
+
+        futures.add(Threading.getPool().submit(runnable));
+      }
+
+      // Send commit messages to the stores in parallel.
+      for (Iterator<Store> storeIt =
+          current.commitState.storesContacted.iterator(); storeIt.hasNext();) {
+        final Store store = storeIt.next();
+        NamedRunnable runnable =
+            new NamedRunnable("worker commit to " + store.name()) {
+              @Override
+              public void runImpl() {
+                try {
+                  store.commitTransaction(current.tid.topTid, commitTime);
+                } catch (TransactionCommitFailedException e) {
+                  failed.add((RemoteStore) store);
+                } catch (UnreachableNodeException e) {
+                  unreachable.add((RemoteStore) store);
+                }
+              }
+            };
+
+        // Optimization: only start in a new thread if there are more stores to
+        // contact and if it's a truly remote store (i.e., not in-process).
+        if (!(store instanceof InProcessStore || store.isLocalStore())
+            && storeIt.hasNext()) {
+          futures.add(Threading.getPool().submit(runnable));
+        } else {
+          runnable.run();
+        }
+      }
+
+      // Wait for replies.
+      for (Future<?> future : futures) {
+        while (true) {
           try {
-            worker.commitTransaction(current.tid.topTid, commitTime);
-          } catch (UnreachableNodeException e) {
-            unreachable.add(worker);
-          } catch (TransactionCommitFailedException e) {
-            failed.add(worker);
+            future.get();
+            break;
+          } catch (InterruptedException e) {
+            Logging.logIgnoredInterruptedException(e);
+          } catch (ExecutionException e) {
+            e.printStackTrace();
           }
         }
-      };
-
-      futures.add(Threading.getPool().submit(runnable));
-    }
-
-    // Send commit messages to the stores in parallel.
-    for (Iterator<Store> storeIt =
-        current.commitState.storesContacted.iterator(); storeIt.hasNext();) {
-      final Store store = storeIt.next();
-      NamedRunnable runnable =
-          new NamedRunnable("worker commit to " + store.name()) {
-            @Override
-            public void runImpl() {
-              try {
-                store.commitTransaction(current.tid.topTid, commitTime);
-              } catch (TransactionCommitFailedException e) {
-                failed.add((RemoteStore) store);
-              } catch (UnreachableNodeException e) {
-                unreachable.add((RemoteStore) store);
-              }
-            }
-          };
-
-      // Optimization: only start in a new thread if there are more stores to
-      // contact and if it's a truly remote store (i.e., not in-process).
-      if (!(store instanceof InProcessStore || store.isLocalStore())
-          && storeIt.hasNext()) {
-        futures.add(Threading.getPool().submit(runnable));
-      } else {
-        runnable.run();
       }
-    }
 
-    // Wait for replies.
-    for (Future<?> future : futures) {
-      while (true) {
-        try {
-          future.get();
-          break;
-        } catch (InterruptedException e) {
-          Logging.logIgnoredInterruptedException(e);
-        } catch (ExecutionException e) {
-          e.printStackTrace();
-        }
+      if (!(unreachable.isEmpty() && failed.isEmpty())) {
+        Logging.log(WORKER_TRANSACTION_LOGGER, Level.SEVERE,
+            "{0} error committing: atomicity violation "
+                + "-- failed: {1} unreachable: {2}", current, failed,
+            unreachable);
+        throw new TransactionAtomicityViolationException(failed, unreachable);
       }
-    }
-
-    if (!(unreachable.isEmpty() && failed.isEmpty())) {
-      Logging
-          .log(WORKER_TRANSACTION_LOGGER, Level.SEVERE,
-              "{0} error committing: atomicity violation "
-                  + "-- failed: {1} unreachable: {2}", current, failed,
-              unreachable);
-      throw new TransactionAtomicityViolationException(failed, unreachable);
     }
 
     // Update data structures to reflect successful commit.

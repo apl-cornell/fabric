@@ -238,6 +238,16 @@ class Store extends MessageToStoreHandler {
 
     LongKeyMap<VersionWarranty> newWarranties =
         prepareTransactionReads(client, msg.tid, msg.reads, msg.commitTime);
+
+    if (msg.readOnly) {
+      try {
+        tm.commitTransaction(client, msg.tid, msg.commitTime);
+      } catch (TransactionCommitFailedException e) {
+        // Shouldn't happen.
+        throw new InternalError("Single-phase commit failed unexpectedly.", e);
+      }
+    }
+
     return new PrepareTransactionReadsMessage.Response(newWarranties);
   }
 
