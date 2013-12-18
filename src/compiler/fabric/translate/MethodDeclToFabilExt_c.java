@@ -45,7 +45,7 @@ public class MethodDeclToFabilExt_c extends MethodDeclToJavaExt_c {
     if (shouldGuard) {
       b = super.guardWithConstraints(rw, b);
     }
-    return ((FabILNodeFactory) rw.java_nf()).Atomic(b.position(),
-        b.statements());
+    return ((FabILNodeFactory) rw.java_nf()).Atomic(
+        Position.compilerGenerated(), b.statements());
   }
 }
