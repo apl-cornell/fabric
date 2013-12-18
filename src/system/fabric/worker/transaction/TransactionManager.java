@@ -252,6 +252,8 @@ public final class TransactionManager {
       workersToContact = current.workersCalled;
     }
 
+    boolean readOnly = current.isReadOnly();
+
     WORKER_TRANSACTION_LOGGER.log(Level.INFO, "{0} aborting", current);
     // Assume only one thread will be executing this.
     HOTOS_LOGGER.log(Level.FINEST, "aborting {0}", current);
@@ -265,7 +267,8 @@ public final class TransactionManager {
     sendAbortMessages(storesToContact, workersToContact, abortedNodes);
     current.abort();
     WORKER_TRANSACTION_LOGGER.log(Level.INFO, "{0} aborted", current);
-    HOTOS_LOGGER.log(Level.INFO, "aborted {0}", current);
+    HOTOS_LOGGER.log(Level.INFO, "aborted {0} " + (readOnly ? "R" : "W"),
+        current);
 
     if (current.tid.depth == 0) {
       // Aborted a top-level transaction. Remove from the transaction registry.
