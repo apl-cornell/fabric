@@ -36,6 +36,13 @@ public class PrepareTransactionMessage
    */
   public final boolean singleStore;
 
+  /**
+   * A flag to indicate whether the transaction is read-only. A transaction is
+   * read-only if it does not modify any persistent objects. If this value is
+   * true, then the store will commit the transaction as soon as it is prepared.
+   */
+  public final boolean readOnly;
+
   public final LongKeyMap<Integer> reads;
 
   /**
@@ -70,20 +77,21 @@ public class PrepareTransactionMessage
    * Used to prepare transactions at remote workers.
    */
   public PrepareTransactionMessage(long tid) {
-    this(tid, false, null, null, null);
+    this(tid, false, false, null, null, null);
   }
 
   /**
    * Only used by the worker.
    */
   public PrepareTransactionMessage(long tid, boolean singleStore,
-      Collection<_Impl> toCreate, LongKeyMap<Integer> reads,
+      boolean readOnly, Collection<_Impl> toCreate, LongKeyMap<Integer> reads,
       Collection<_Impl> writes) {
     super(MessageType.PREPARE_TRANSACTION,
         TransactionPrepareFailedException.class);
 
     this.tid = tid;
     this.singleStore = singleStore;
+    this.readOnly = readOnly;
     this.creates = toCreate;
     this.reads = reads;
     this.writes = writes;
@@ -124,6 +132,9 @@ public class PrepareTransactionMessage
 
     // Serialize single-store flag.
     out.writeBoolean(singleStore);
+
+    // Serialize read-only flag.
+    out.writeBoolean(readOnly);
 
     // Serialize reads.
     if (reads == null) {
@@ -167,6 +178,9 @@ public class PrepareTransactionMessage
 
     // Read the single-store flag.
     this.singleStore = in.readBoolean();
+
+    // Read the read-only flag.
+    this.readOnly = in.readBoolean();
 
     // Read reads.
     int size = in.readInt();

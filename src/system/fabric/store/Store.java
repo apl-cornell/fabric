@@ -217,7 +217,7 @@ class Store extends MessageToStoreHandler {
     prepareTransaction(client.principal, msg.tid, msg.serializedCreates,
         msg.serializedWrites, msg.reads);
 
-    if (msg.singleStore) {
+    if (msg.singleStore || msg.readOnly) {
       try {
         tm.commitTransaction(client, msg.tid);
       } catch (TransactionCommitFailedException e) {

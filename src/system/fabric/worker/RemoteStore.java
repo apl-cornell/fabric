@@ -118,11 +118,11 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
    */
   @Override
   public void prepareTransaction(long tid, boolean singleStore,
-      Collection<Object._Impl> toCreate, LongKeyMap<Integer> reads,
-      Collection<Object._Impl> writes)
+      boolean readOnly, Collection<Object._Impl> toCreate,
+      LongKeyMap<Integer> reads, Collection<Object._Impl> writes)
       throws TransactionPrepareFailedException, UnreachableNodeException {
     send(Worker.getWorker().authToStore, new PrepareTransactionMessage(tid,
-        singleStore, toCreate, reads, writes));
+        singleStore, readOnly, toCreate, reads, writes));
   }
 
   @Override

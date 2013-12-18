@@ -78,7 +78,7 @@ public class InProcessStore extends RemoteStore {
 
   @Override
   public void prepareTransaction(long tid, boolean singleStore,
-      Collection<_Impl> toCreate, LongKeyMap<Integer> reads,
+      boolean readOnly, Collection<_Impl> toCreate, LongKeyMap<Integer> reads,
       Collection<_Impl> writes) throws TransactionPrepareFailedException {
     Collection<SerializedObject> serializedCreates =
         new ArrayList<SerializedObject>(toCreate.size());
@@ -105,7 +105,7 @@ public class InProcessStore extends RemoteStore {
 
     tm.prepare(Worker.getWorker().getPrincipal(), req);
 
-    if (singleStore) {
+    if (singleStore || readOnly) {
       try {
         commitTransaction(tid);
       } catch (TransactionCommitFailedException e) {

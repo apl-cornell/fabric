@@ -258,6 +258,14 @@ public final class Log {
   }
 
   /**
+   * @return true if the transaction is not distributed and neither creates nor
+   *         modifies objects on remote stores.
+   */
+  public boolean isReadOnly() {
+    return writes.isEmpty() && creates.isEmpty() && workersCalled.isEmpty();
+  }
+
+  /**
    * Returns a set of stores affected by this transaction. This is the set of
    * stores to contact when preparing and committing a transaction.
    */

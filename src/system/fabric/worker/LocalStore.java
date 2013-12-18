@@ -50,8 +50,8 @@ public final class LocalStore implements Store, Serializable {
 
   @Override
   public void prepareTransaction(long tid, boolean singleStore,
-      Collection<Object._Impl> toCreate, LongKeyMap<Integer> reads,
-      Collection<Object._Impl> writes) {
+      boolean readOnly, Collection<Object._Impl> toCreate,
+      LongKeyMap<Integer> reads, Collection<Object._Impl> writes) {
     // Note: since we assume local single threading we can ignore reads
     // (conflicts are impossible)
     WORKER_LOCAL_STORE_LOGGER.fine("Local transaction preparing");

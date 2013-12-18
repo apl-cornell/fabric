@@ -402,13 +402,14 @@ public final class TransactionManager {
       if (!store.isLocalStore()) numRemoteStores++;
     }
     boolean singleStore = workers.isEmpty() && numRemoteStores == 1;
+    boolean readOnly = current.isReadOnly();
 
     // Send prepare messages to our cohorts. This will also abort our portion of
     // the transaction if the prepare fails.
-    sendPrepareMessages(singleStore, stores, workers);
+    sendPrepareMessages(singleStore, readOnly, stores, workers);
 
     // Send commit messages to our cohorts.
-    sendCommitMessagesAndCleanUp(singleStore, stores, workers);
+    sendCommitMessagesAndCleanUp(singleStore, readOnly, stores, workers);
 
     final long commitTime = System.currentTimeMillis();
     COMMIT_TIME.set(commitTime);
@@ -439,7 +440,8 @@ public final class TransactionManager {
    *           if the prepare fails.
    */
   public void sendPrepareMessages() {
-    sendPrepareMessages(false, current.storesToContact(), current.workersCalled);
+    sendPrepareMessages(false, false, current.storesToContact(),
+        current.workersCalled);
   }
 
   /**
@@ -451,7 +453,7 @@ public final class TransactionManager {
    *           if the prepare fails.
    */
   private void sendPrepareMessages(final boolean singleStore,
-      Set<Store> stores, List<RemoteWorker> workers)
+      final boolean readOnly, Set<Store> stores, List<RemoteWorker> workers)
       throws TransactionRestartingException {
     final Map<RemoteNode<?>, TransactionPrepareFailedException> failures =
         Collections
@@ -522,7 +524,7 @@ public final class TransactionManager {
                     current.getReadsForStore(store, false);
                 Collection<_Impl> writes = current.getWritesForStore(store);
                 store.prepareTransaction(current.tid.topTid, singleStore,
-                    creates, reads, writes);
+                    readOnly, creates, reads, writes);
               } catch (TransactionPrepareFailedException e) {
                 failures.put((RemoteNode<?>) store, e);
               } catch (UnreachableNodeException e) {
@@ -610,7 +612,7 @@ public final class TransactionManager {
    */
   public void sendCommitMessagesAndCleanUp()
       throws TransactionAtomicityViolationException {
-    sendCommitMessagesAndCleanUp(false, current.storesToContact(),
+    sendCommitMessagesAndCleanUp(false, false, current.storesToContact(),
         current.workersCalled);
   }
 
@@ -618,7 +620,7 @@ public final class TransactionManager {
    * Sends commit messages to the given set of stores and workers.
    */
   private void sendCommitMessagesAndCleanUp(boolean singleStore,
-      Set<Store> stores, List<RemoteWorker> workers)
+      boolean readOnly, Set<Store> stores, List<RemoteWorker> workers)
       throws TransactionAtomicityViolationException {
     synchronized (current.commitState) {
       switch (current.commitState.value) {
@@ -642,7 +644,7 @@ public final class TransactionManager {
       }
     }
 
-    if (!singleStore) {
+    if (!singleStore && !readOnly) {
       final List<RemoteNode<?>> unreachable =
           Collections.synchronizedList(new ArrayList<RemoteNode<?>>());
       final List<RemoteNode<?>> failed =
