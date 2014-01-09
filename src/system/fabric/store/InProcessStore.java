@@ -117,12 +117,11 @@ public class InProcessStore extends RemoteStore {
         tm.prepareReads(localWorkerIdentity(), tid, reads, commitTime);
 
     if (readOnly) {
-      try {
-        commitTransaction(tid, commitTime);
-      } catch (TransactionCommitFailedException e) {
-        // Shouldn't happen.
-        throw new InternalError("Single-phase commit failed unexpectedly.", e);
-      }
+      // Optimization for read-only transaction: commit the transaction right
+      // away.
+
+      // Nothing to commit -- warranties have already been extended during the
+      // prepare phase.
     }
 
     return result;
