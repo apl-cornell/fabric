@@ -13,7 +13,6 @@ import fabric.common.Resources;
 import fabric.common.SerializedObject;
 import fabric.common.Threading;
 import fabric.common.exceptions.AccessException;
-import fabric.common.exceptions.InternalError;
 import fabric.common.net.RemoteIdentity;
 import fabric.common.util.ConcurrentLongKeyHashMap;
 import fabric.common.util.ConcurrentLongKeyMap;
@@ -93,6 +92,15 @@ public class MemoryDB extends ObjectDB {
   public void scheduleCommit(final long tid, long commitTime,
       final RemoteIdentity<RemoteWorker> workerIdentity,
       final SubscriptionManager sm) {
+    // Only need to schedule a commit if there are pending updates. Reads are
+    // handled by extending warranties on the objects read, which is done during
+    // the read-prepare phase.
+    OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
+    if (submap == null) return;
+    synchronized (submap) {
+      if (!submap.containsKey(workerIdentity.principal)) return;
+    }
+
     long commitDelay = commitTime - System.currentTimeMillis();
     STORE_DB_LOGGER
         .finer("Scheduling commit for tid " + Long.toHexString(tid)
@@ -102,12 +110,7 @@ public class MemoryDB extends ObjectDB {
     Threading.scheduleAt(commitTime, new Runnable() {
       @Override
       public void run() {
-        PendingTransaction tx;
-        try {
-          tx = remove(workerIdentity.principal, tid);
-        } catch (AccessException e) {
-          throw new InternalError(e);
-        }
+        PendingTransaction tx = remove(workerIdentity.principal, tid);
 
         // merge in the objects
         for (Pair<SerializedObject, UpdateType> update : tx.modData) {
@@ -177,13 +180,9 @@ public class MemoryDB extends ObjectDB {
    * Helper method to check permissions and update the pending object table for
    * a commit or roll-back.
    */
-  private PendingTransaction remove(Principal worker, long tid)
-      throws AccessException {
+  private PendingTransaction remove(Principal worker, long tid) {
     OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
-    if (submap == null) {
-      throw new AccessException("Invalid transaction id: "
-          + Long.toHexString(tid));
-    }
+    if (submap == null) return null;
 
     PendingTransaction tx;
     synchronized (submap) {
@@ -191,10 +190,7 @@ public class MemoryDB extends ObjectDB {
       if (submap.isEmpty()) pendingByTid.remove(tid, submap);
     }
 
-    if (tx == null) {
-      throw new AccessException("Invalid transaction id: "
-          + Long.toHexString(tid));
-    }
+    if (tx == null) return null;
 
     // XXX Check if the worker acts for the owner.
 
