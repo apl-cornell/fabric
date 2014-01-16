@@ -92,9 +92,20 @@ public class MemoryDB extends ObjectDB {
   public void scheduleCommit(final long tid, long commitTime,
       final RemoteIdentity<RemoteWorker> workerIdentity,
       final SubscriptionManager sm) {
+    // Only need to schedule a commit if there are pending updates. Reads are
+    // handled by extending warranties on the objects read, which is done during
+    // the read-prepare phase.
+    OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
+    if (submap == null) return;
+    synchronized (submap) {
+      if (!submap.containsKey(workerIdentity.principal)) return;
+    }
+
     long commitDelay = commitTime - System.currentTimeMillis();
-    STORE_DB_LOGGER.finer("Scheduling commit for tid " + tid + " to run at "
-        + new Date(commitTime) + " (in " + commitDelay + " ms)");
+    STORE_DB_LOGGER
+        .finer("Scheduling commit for tid " + Long.toHexString(tid)
+            + " to run at " + new Date(commitTime) + " (in " + commitDelay
+            + " ms)");
 
     Threading.scheduleAt(commitTime, new Runnable() {
       @Override

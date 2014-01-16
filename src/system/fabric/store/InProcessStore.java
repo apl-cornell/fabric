@@ -129,14 +129,23 @@ public class InProcessStore extends RemoteStore {
 
   @Override
   public Pair<LongKeyMap<VersionWarranty>, Map<CallInstance, SemanticWarranty>> prepareTransactionReads(
-      long tid, LongKeyMap<Integer> reads,
-      Map<CallInstance, WarrantiedCallResult> calls, long commitTime)
-      throws TransactionPrepareFailedException {
+      long tid, boolean readOnly, LongKeyMap<Integer> reads,
+      Map<CallInstance, WarrantiedCallResult> calls, long commitTime) throws
+  TransactionPrepareFailedException {
     LongKeyMap<VersionWarranty> updates =
         tm.prepareReads(localWorkerIdentity(), tid, reads, commitTime);
     Map<CallInstance, SemanticWarranty> semUpdates =
         tm.prepareCalls(Worker.getWorker().getPrincipal(), tid, calls,
             commitTime);
+
+    if (readOnly) {
+      // Optimization for read-only transaction: commit the transaction right
+      // away.
+
+      // Nothing to commit -- warranties have already been extended during the
+      // prepare phase.
+    }
+
     return new Pair<LongKeyMap<VersionWarranty>, Map<CallInstance, SemanticWarranty>>(
         updates, semUpdates);
   }

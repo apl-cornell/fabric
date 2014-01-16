@@ -412,6 +412,7 @@ public final class Log {
   }
 
   /**
+<<<<<<< .working
    * Handles invalidation of all semantic warranty requests made previously by
    * the parent that read the given onum.
    */
@@ -544,6 +545,15 @@ public final class Log {
    */
   public Map<CallInstance, SemanticWarrantyRequest> getAllRequests() {
     return new HashMap<CallInstance, SemanticWarrantyRequest>(requests);
+  }
+
+  /**
+   * @return true if the transaction is not distributed and neither creates nor
+   *         modifies objects on remote stores.
+   */
+  public boolean isReadOnly() {
+    return writes.isEmpty() && creates.isEmpty() && workersCalled.isEmpty() &&
+      requests.isEmpty();
   }
 
   /**

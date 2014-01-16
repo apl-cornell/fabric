@@ -104,7 +104,8 @@ public class TransactionManager {
     try {
       database.commit(transactionID, commitTime, workerIdentity, sm);
       semanticWarranties.commit(transactionID, commitTime);
-      STORE_TRANSACTION_LOGGER.fine("Committed transaction " + transactionID);
+      STORE_TRANSACTION_LOGGER.fine("Committed transaction "
+          + Long.toHexString(transactionID));
     } catch (final RuntimeException e) {
       throw new TransactionCommitFailedException(
           "something went wrong; store experienced a runtime exception during "

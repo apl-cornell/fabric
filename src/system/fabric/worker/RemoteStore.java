@@ -150,12 +150,14 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
   @Override
   public Pair<LongKeyMap<VersionWarranty>, java.util.Map<CallInstance,
          SemanticWarranty>> prepareTransactionReads(long tid,
-             LongKeyMap<Integer> reads, java.util.Map<CallInstance,
-             WarrantiedCallResult> calls, long commitTime) throws
-           TransactionPrepareFailedException, UnreachableNodeException {
+             boolean readOnly, LongKeyMap<Integer> reads,
+             java.util.Map<CallInstance, WarrantiedCallResult> calls, long
+             commitTime) throws TransactionPrepareFailedException,
+         UnreachableNodeException {
     PrepareTransactionReadsMessage.Response response =
-        send(Worker.getWorker().authToStore,
-            new PrepareTransactionReadsMessage(tid, reads, calls, commitTime));
+      send(Worker.getWorker().authToStore,
+          new PrepareTransactionReadsMessage(tid, readOnly, reads, calls,
+            commitTime));
     return new Pair<LongKeyMap<VersionWarranty>, java.util.Map<CallInstance,
            SemanticWarranty>>(response.newWarranties,
                response.newSemWarranties);
@@ -501,7 +503,7 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
   void forceCache(Pair<SerializedObject, VersionWarranty> obj) {
     cache.forcePut(this, obj);
   }
-  
+
   /**
    * Updates the worker cache with the given object, as follows:
    * <ul>

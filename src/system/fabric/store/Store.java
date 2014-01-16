@@ -289,6 +289,14 @@ class Store extends MessageToStoreHandler {
     }
     if (error != null) throw error;
 
+    if (msg.readOnly) {
+      // Optimization for read-only transaction: commit the transaction right
+      // away.
+
+      // Nothing to commit -- warranties have already been extended during the
+      // prepare phase.
+    }
+
     return new PrepareTransactionReadsMessage.Response(newWarranties,
         newSemWarranties);
   }
