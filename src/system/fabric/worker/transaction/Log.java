@@ -325,6 +325,22 @@ public final class Log {
     this.writes = new ArrayList<_Impl>();
     this.localStoreWrites = new WeakReferenceArrayList<_Impl>();
     this.workersCalled = new ArrayList<RemoteWorker>();
+    // Don't add the call if the arguments aren't on the same store as the
+    // target.
+    if (semanticWarrantyCall != null) {
+      Store targetStore = semanticWarrantyCall.target.$getStore();
+      if (targetStore.isLocalStore()) {
+        semanticWarrantyCall = null;
+      } else {
+        for (fabric.lang.Object arg : semanticWarrantyCall.arguments) {
+          if (arg.$getStore().isLocalStore() ||
+              !arg.$getStore().equals(targetStore)) {
+            semanticWarrantyCall = null;
+            break;
+          }
+        }
+      }
+    }
     this.semanticWarrantyCall = semanticWarrantyCall;
     this.semanticWarrantiesUsed =
         new HashMap<CallInstance, WarrantiedCallResult>();
