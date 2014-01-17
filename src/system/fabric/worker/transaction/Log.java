@@ -1016,15 +1016,17 @@ public final class Log {
 
     Store targetStore = semanticWarrantyCall.target.$getStore();
 
-    // Check that we aren't accidentally making a call that has local target or
-    // arguments.
+    // Check that we aren't accidentally making a call that has local target
     if (targetStore.isLocalStore()) {
       SEMANTIC_WARRANTY_LOGGER.finer("Semantic warranty request for "
           + semanticWarrantyCall + " aborted due to local target!");
       return;
     }
+
+    // Check that none of the arguments are local
     for (fabric.lang.Object arg : semanticWarrantyCall.arguments) {
       if (!(arg instanceof WrappedJavaInlineable) &&
+          arg != null &&
           (arg.$getStore().isLocalStore() ||
            !arg.$getStore().equals(targetStore))) {
         SEMANTIC_WARRANTY_LOGGER.finer("Semantic warranty request for " +
