@@ -31,6 +31,7 @@ import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
 import fabric.common.util.WeakReferenceArrayList;
 import fabric.lang.Object._Impl;
+import fabric.lang.WrappedJavaInlineable;
 import fabric.lang.security.LabelCache;
 import fabric.lang.security.SecurityCache;
 import fabric.worker.FabricSoftRef;
@@ -333,8 +334,9 @@ public final class Log {
         semanticWarrantyCall = null;
       } else {
         for (fabric.lang.Object arg : semanticWarrantyCall.arguments) {
-          if (arg.$getStore().isLocalStore() ||
-              !arg.$getStore().equals(targetStore)) {
+          if (!(arg instanceof WrappedJavaInlineable) &&
+              (arg.$getStore().isLocalStore() ||
+               !arg.$getStore().equals(targetStore))) {
             semanticWarrantyCall = null;
             break;
           }
