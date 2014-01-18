@@ -1,0 +1,75 @@
+<!--
+  This is the Apache Ant build file for the Fabric readwritemix implementation.
+-->
+
+<project name="simple-memo-test" default="build-all" basedir=".">
+  <description>
+    Fabric simple-memo-test build file
+  </description>
+
+  <!--
+  ****************************************************************************
+    Global properties for this build.
+  ****************************************************************************
+  -->
+
+  <import file="../../../../common.xml" />
+
+  <dirname property="simple-memo-test.home" file="${ant.file.simple-memo-test}" />
+
+  <!--
+  ****************************************************************************
+    Targets for cleaning up the directory tree.
+  ****************************************************************************
+  -->
+
+  <target name="clean" description="Removes generated files">
+    <delete dir="${simple-memo-test.home}/classes"/>
+  </target>
+
+  <target name="clobber" depends="clean"
+          description="Removes generated files and state of stores">
+    <delete dir="${simple-memo-test.home}/var"/>
+  </target>
+
+  <!--
+  ****************************************************************************
+    Compilation targets.
+  ****************************************************************************
+  -->
+
+  <target name="build"
+      description="Builds the Fabric simple-memo-test implementation">
+    <mkdir dir="${simple-memo-test.home}/classes" />
+    <apply executable="bash"
+        parallel="true"
+        failonerror="true"
+        dir="${simple-memo-test.home}"
+        dest="${simple-memo-test.home}/classes"
+        relative="false"
+        skipemptyfilesets="true"
+        vmlauncher="false">
+      <arg value="${filc}" />
+      <arg line="${debug.flag}" />
+      <arg value="-d" />
+      <arg value="classes" />
+      <arg value="-sourcepath" />
+      <arg value="src/fabil" />
+      <arg value="-cp" />
+      <arg value="classes" />
+      <srcfile />
+      <fileset dir="src/fabil">
+        <include name="*.fil" />
+      </fileset>
+      <globmapper from="*.fil" to="*.class" />
+    </apply>
+  </target>
+
+  <target name="build-all" depends="build" />
+  <target name="all" depends="build-all" />
+
+</project>
+
+<!--
+vim: ts=2 sw=2 ai et
+-->
