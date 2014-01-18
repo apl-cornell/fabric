@@ -188,6 +188,9 @@ public final class Log {
   /**
    * Set of CallInstance ids for semantic warranties used during this
    * transaction that are not used by another call.
+   *
+   * Think of this as calls used but we don't want counting as dependencies of
+   * any currently computing calls.
    */
   protected final Map<CallInstance, WarrantiedCallResult> callsInSubcalls;
 
@@ -877,10 +880,12 @@ public final class Log {
       requestsSet.add(req.call);
     Map<CallInstance, WarrantiedCallResult> callSet =
         new HashMap<CallInstance, WarrantiedCallResult>();
-    for (CallInstance c : SysUtil.chain(semanticWarrantiesUsed.keySet(),
-          callsInSubcalls.keySet()))
+    for (CallInstance c : semanticWarrantiesUsed.keySet())
       if (c.target.$getStore() == store && !requestsSet.contains(c))
         callSet.put(c, semanticWarrantiesUsed.get(c));
+    for (CallInstance c : callsInSubcalls.keySet())
+      if (c.target.$getStore() == store && !requestsSet.contains(c))
+        callSet.put(c, callsInSubcalls.get(c));
     return callSet;
   }
 

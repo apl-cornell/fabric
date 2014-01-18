@@ -4,27 +4,25 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 import fabric.common.SemanticWarranty;
 import fabric.common.VersionWarranty;
 import fabric.common.net.RemoteIdentity;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
+import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.memoize.CallInstance;
 import fabric.worker.memoize.WarrantiedCallResult;
-import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.remote.RemoteWorker;
 
 /**
  * A <code>PrepareTransactionReadsMessage</code> represents a transaction
  * PREPARE_READS request to a remote node.
  */
-public class PrepareTransactionReadsMessage extends
-  Message<PrepareTransactionReadsMessage.Response,
-  TransactionPrepareFailedException> {
+public class PrepareTransactionReadsMessage
+    extends
+    Message<PrepareTransactionReadsMessage.Response, TransactionPrepareFailedException> {
   // ////////////////////////////////////////////////////////////////////////////
   // message contents //
   // ////////////////////////////////////////////////////////////////////////////
@@ -59,8 +57,8 @@ public class PrepareTransactionReadsMessage extends
   }
 
   private PrepareTransactionReadsMessage(long tid, long commitTime,
-      boolean readOnly, LongKeyMap<Integer> reads, Map<CallInstance,
-      WarrantiedCallResult> calls) {
+      boolean readOnly, LongKeyMap<Integer> reads,
+      Map<CallInstance, WarrantiedCallResult> calls) {
     super(MessageType.PREPARE_TRANSACTION_READS,
         TransactionPrepareFailedException.class);
 
@@ -84,8 +82,8 @@ public class PrepareTransactionReadsMessage extends
       this.newSemWarranties = null;
     }
 
-    public Response(LongKeyMap<VersionWarranty> newWarranties, Map<CallInstance,
-        SemanticWarranty> newSemWarranties) {
+    public Response(LongKeyMap<VersionWarranty> newWarranties,
+        Map<CallInstance, SemanticWarranty> newSemWarranties) {
       this.newWarranties = newWarranties;
       this.newSemWarranties = newSemWarranties;
     }
@@ -182,7 +180,8 @@ public class PrepareTransactionReadsMessage extends
       out.writeInt(0);
     } else {
       out.writeInt(r.newSemWarranties.size());
-      for (Map.Entry<CallInstance, SemanticWarranty> entry : r.newSemWarranties.entrySet()) {
+      for (Map.Entry<CallInstance, SemanticWarranty> entry : r.newSemWarranties
+          .entrySet()) {
         entry.getKey().write(out);
         out.writeLong(entry.getValue().expiry());
       }
