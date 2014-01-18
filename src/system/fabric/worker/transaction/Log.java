@@ -694,8 +694,17 @@ public final class Log {
         .entrySet()) {
       CallInstance call = entry.getKey();
       SemanticWarranty warr = entry.getValue();
-      WarrantiedCallResult update =
+      WarrantiedCallResult update = null;
+      if (semanticWarrantiesUsed.containsKey(call)) {
+        update =
           new WarrantiedCallResult(semanticWarrantiesUsed.get(call).value, warr);
+      } else if (callsInSubcalls.containsKey(call)) {
+        update =
+          new WarrantiedCallResult(callsInSubcalls.get(call).value, warr);
+      } else {
+        throw new InternalError("Tried to update a semantic warranty that " +
+            "wasn't used in this transaction.");
+      }
       store.insertResult(call, update);
     }
   }
