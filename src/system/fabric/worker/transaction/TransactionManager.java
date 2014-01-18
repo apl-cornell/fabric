@@ -1173,7 +1173,7 @@ public final class TransactionManager {
           + " gets value null");
     } else if (!(v instanceof WrappedJavaInlineable)) {
       SEMANTIC_WARRANTY_LOGGER.finest("Call: " + current.semanticWarrantyCall
-          + " gets value " + v.$getOnum());
+          + " gets value " + v.$getOnum() + "@" + v.$getStore().name());
     } else {
       SEMANTIC_WARRANTY_LOGGER.finest("Call: " + current.semanticWarrantyCall
           + " gets value " + ((WrappedJavaInlineable<?>) v).$unwrap());

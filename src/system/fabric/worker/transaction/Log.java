@@ -1179,16 +1179,12 @@ public final class Log {
     for (LongKeyMap<ReadMap.Entry> submap :
         SysUtil.chain(reads, readsInSubcalls)) {
       for (ReadMap.Entry entry : submap.values()) {
-        if (readsReadByParent.contains(entry)) {
-          entry.releaseLock(this);
-        } else {
           parent.transferReadLock(this, entry);
-        }
       }
+    }
 
-      for (ReadMap.Entry entry : readsReadByParent) {
-        entry.releaseLock(this);
-      }
+    for (ReadMap.Entry entry : readsReadByParent) {
+      entry.releaseLock(this);
     }
 
     // Pass up subcall reads
