@@ -181,7 +181,7 @@ public class FabILScheduler extends JLScheduler implements CBScheduler {
           public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
             List<Goal> l = new ArrayList<Goal>();
             l.add(TypeChecked(job));
-            //l.add(NoArgConstructor(job));
+            l.add(NoArgConstructor(job));
 
             if (extInfo.getOptions().optLevel() > 0) {
               l.add(TypeCheckedAfterFlatten(job));
@@ -241,7 +241,7 @@ public class FabILScheduler extends JLScheduler implements CBScheduler {
         List<Goal> l = new ArrayList<Goal>();
         l.add(FindUpdatedVariables(job));
         l.add(RewriteAtomicMethods(job));
-        //l.add(NoArgConstructor(job));
+        l.add(NoArgConstructor(job));
         return l;
       }
     });
@@ -369,7 +369,7 @@ public class FabILScheduler extends JLScheduler implements CBScheduler {
         l.add(WrapInlineables(job));
         l.add(RewriteStoreGetters(job));
         l.add(PrincipalsDelegated(job));
-        //l.add(NoArgConstructor(job));
+        l.add(NoArgConstructor(job));
 
         if (extInfo.getOptions().optLevel() > 0) {
           l.add(ReadWriteChecked(job));
