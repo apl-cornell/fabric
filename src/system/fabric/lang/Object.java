@@ -9,7 +9,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import fabric.common.Logging;
 import fabric.common.NSUtil;
@@ -21,6 +20,8 @@ import fabric.common.VersionWarranty;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.RuntimeFetchException;
+import fabric.common.util.LongKeyMap;
+import fabric.common.util.LongSet;
 import fabric.common.util.Pair;
 import fabric.lang.arrays.internal._InternalArrayImpl;
 import fabric.lang.security.ConfPolicy;
@@ -108,7 +109,7 @@ public interface Object {
   void $forceRenumber(long onum);
 
   /** Takes an object and copys state of this object into it. */
-  Object $makeSemiDeepCopy(Set<Long> oldSet, Map<Long, Object> oldToNew);
+  Object $makeSemiDeepCopy(LongSet oldSet, LongKeyMap<Object> oldToNew);
 
   /** Takes an object and copys state of this object into it. */
   Object $makeBlankCopy();
@@ -406,8 +407,8 @@ public interface Object {
     }
 
     @Override
-    public Object $makeSemiDeepCopy(Set<Long> oldSet,
-        Map<Long, Object> oldToNew) {
+    public Object $makeSemiDeepCopy(LongSet oldSet,
+        LongKeyMap<Object> oldToNew) {
       return fetch().$makeSemiDeepCopy(oldSet, oldToNew);
     }
 
@@ -969,8 +970,8 @@ public interface Object {
     }
 
     @Override
-    public Object $makeSemiDeepCopy(Set<Long> oldSet,
-        Map<Long, Object> oldToNew) {
+    public Object $makeSemiDeepCopy(LongSet oldSet,
+        LongKeyMap<Object> oldToNew) {
       Object._Impl copy = (Object._Impl) this.$makeBlankCopy().fetch();
       oldToNew.put($ref.onum, copy);
       return copy.$makeProxy();

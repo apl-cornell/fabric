@@ -25,7 +25,7 @@ public final class CallCache {
   }
 
   public void put(CallInstance call, WarrantiedCallResult result) {
-    if (result.warranty == null) {
+    if (result.getWarranty() == null) {
       throw new InternalError("Tried to add a call with no warranty!");
     }
     callTable.put(call, result);

@@ -1125,11 +1125,11 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     ArrayList<Type> argTypes = new ArrayList<Type>();
     Formal arg1 =
         nf.Formal(cg, Flags.NONE,
-            nf.TypeNodeFromQualifiedName(cg, "java.util.Set"),
+            nf.TypeNodeFromQualifiedName(cg, "fabric.common.util.LongSet"),
             nf.Id(cg, "oldSet"));
     Type arg1Type = null;
     try {
-      arg1Type = ts.typeForName("java.util.Map");
+      arg1Type = ts.typeForName("fabric.common.util.LongSet");
     } catch (SemanticException e) {
     }
     arg1 =
@@ -1140,11 +1140,11 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
 
     Formal arg2 =
         nf.Formal(cg, Flags.NONE,
-            nf.TypeNodeFromQualifiedName(cg, "java.util.Map"),
+            nf.TypeNodeFromQualifiedName(cg, "fabric.common.util.LongKeyMap"),
             nf.Id(cg, "oldToNew"));
     Type arg2Type = null;
     try {
-      arg2Type = ts.typeForName("java.util.Map");
+      arg2Type = ts.typeForName("fabric.common.util.LongKeyMap");
     } catch (SemanticException e) {
     }
     arg2 =

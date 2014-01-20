@@ -31,7 +31,6 @@ import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
 import fabric.common.util.Pair;
 import fabric.lang.Object._Impl;
-import fabric.lang.Object._Proxy;
 import fabric.lang.WrappedJavaInlineable;
 import fabric.worker.AbortException;
 import fabric.worker.Store;
@@ -327,7 +326,7 @@ public class SemanticWarrantyTable {
     }
 
     /**
-     * Get the oids created during this call.
+     * Get the oids created during this call and any subcalls.
      */
     public LongSet getCreates() {
       switch (getStatus()) {
@@ -336,7 +335,11 @@ public class SemanticWarrantyTable {
       case VALID:
       case STALE:
       default:
-        return new LongHashSet(creates);
+        //TODO: This is safe, right?
+        LongSet createOids = new LongHashSet(creates);
+        for (CallInstance subcall : calls)
+          createOids.addAll(getInfo(subcall).getCreates());
+        return createOids;
       }
     }
 
@@ -1057,7 +1060,7 @@ public class SemanticWarrantyTable {
     case VALID:
     case STALE:
     default:
-      return new WarrantiedCallResult(info.getValue(), info.getWarranty());
+      return new WarrantiedCallResult(info.getValue(), info.getWarranty(), info.getCreates());
     }
   }
 
@@ -1073,7 +1076,7 @@ public class SemanticWarrantyTable {
     case STALE:
     default:
       info.updateWarranty();
-      return new WarrantiedCallResult(info.getValue(), info.getWarranty());
+      return new WarrantiedCallResult(info.getValue(), info.getWarranty(), info.getCreates());
     }
   }
 
@@ -1084,15 +1087,6 @@ public class SemanticWarrantyTable {
   private CallInfo getInfo(CallInstance call) {
     infoTable.putIfAbsent(call, new CallInfo(call));
     return infoTable.get(call);
-  }
-
-  /**
-   * Get the set of oids created during the last recording of the given call.
-   */
-  public final LongSet getCreates(CallInstance call) {
-    CallInfo info = getInfo(call);
-    if (info.getStatus() == CallStatus.NOVALUE) return new LongHashSet();
-    return info.getCreates();
   }
 
   /**
@@ -1128,7 +1122,7 @@ public class SemanticWarrantyTable {
     issuer.notifyReadPrepare(call, newTime);
     CallInfo info = getInfo(call);
     SemanticExtendStatus stat =
-        info.extendWarranty(oldValue.value, newTime, true);
+        info.extendWarranty(oldValue.getValue(), newTime, true);
     WarrantiedCallResult res = get(call);
     return new Pair<SemanticExtendStatus, WarrantiedCallResult>(stat, res);
   }

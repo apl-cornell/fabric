@@ -11,6 +11,10 @@ import java.io.IOException;
 import java.io.Serializable;
 
 import fabric.common.SemanticWarranty;
+import fabric.common.util.LongHashSet;
+import fabric.common.util.LongIterator;
+import fabric.common.util.LongKeyHashMap;
+import fabric.common.util.LongSet;
 import fabric.lang.Object;
 import fabric.lang.WrappedJavaInlineable;
 
@@ -20,12 +24,53 @@ import fabric.lang.WrappedJavaInlineable;
  */
 public class WarrantiedCallResult implements Serializable {
   
-  public Object value;
-  public SemanticWarranty warranty;
+  private Object value;
+  private SemanticWarranty warranty;
+  private LongSet createOids;
 
-  public WarrantiedCallResult(Object value, SemanticWarranty warranty) {
+  public WarrantiedCallResult(Object value, SemanticWarranty warranty, LongSet creates) {
     this.value = value;
     this.warranty = warranty;
+    this.createOids = creates;
+  }
+  
+  /**
+   * Get the warranty for this call.
+   */
+  public SemanticWarranty getWarranty() {
+    return warranty;
+  }
+
+  /**
+   * Update the warranty for this call.
+   */
+  public void setWarranty(SemanticWarranty newWarranty) {
+    warranty = newWarranty;
+  }
+
+  /**
+   * Get the value for this call without making any copy.
+   */
+  public Object getValue() {
+    return value;
+  }
+
+  /**
+   * Get the value for this call.  Make a copy of the value if necessary.
+   */
+  public Object getValueCopy() {
+    // TODO: Make copy if necessary.
+    if (createOids.contains(value.$getOnum())) {
+      return value.$makeSemiDeepCopy(createOids, new LongKeyHashMap<Object>());
+    }
+    return value;
+  }
+
+  /**
+   * Get the LongSet of creates for this result.
+   */
+  public LongSet getCreates() {
+    return createOids;
   }
 
   /**
@@ -34,6 +79,10 @@ public class WarrantiedCallResult implements Serializable {
   public WarrantiedCallResult(DataInput in) throws IOException {
     warranty = new SemanticWarranty(in.readLong());
     value = new CallResult(in).value;
+    createOids = new LongHashSet();
+    int createCount = in.readInt();
+    for (int i = 0; i < createCount; i++)
+      createOids.add(in.readLong());
   }
 
   /**
@@ -42,6 +91,9 @@ public class WarrantiedCallResult implements Serializable {
   public void write(DataOutput out) throws IOException {
     out.writeLong(warranty.expiry());
     (new CallResult(value)).write(out);
+    out.writeInt(createOids.size());
+    for (LongIterator it = createOids.iterator(); it.hasNext();)
+      out.writeLong(it.next());
   }
 
   @Override
@@ -63,6 +115,7 @@ public class WarrantiedCallResult implements Serializable {
     WarrantiedCallResult copy = new WarrantiedCallResult(new DataInputStream(in));
     this.value = copy.value;
     this.warranty = copy.warranty;
+    this.createOids = copy.createOids;
   }
 
   private void readObjectNoData(ObjectInputStream in) throws

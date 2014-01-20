@@ -393,7 +393,7 @@ public class TransactionManager {
               commitTime);
         switch (extResult.first) {
           case OK:
-            updatedWars.put(call, extResult.second.warranty);
+            updatedWars.put(call, extResult.second.getWarranty());
             break;
           case BAD_VERSION:
             if (extResult.second == null) {
@@ -415,14 +415,14 @@ public class TransactionManager {
           + " conflicting and " + staleWars.size() + " stale call values:\n";
         msg += "Conflicting...\n";
         for (Map.Entry<CallInstance, WarrantiedCallResult> entry : conflictWars.entrySet()) {
-          if (entry.getValue().value instanceof WrappedJavaInlineable) {
+          if (entry.getValue().getValue() instanceof WrappedJavaInlineable) {
             msg += "\t" + entry.getKey() + " = " +
-              entry.getValue().value.$unwrap() + " (" +
-              (entry.getValue().warranty.expiry() - currentTime) + ")\n";
+              entry.getValue().getValue().$unwrap() + " (" +
+              (entry.getValue().getWarranty().expiry() - currentTime) + ")\n";
           } else {
             msg += "\t" + entry.getKey() + " = " +
-              entry.getValue().value.$getOnum() + " (" +
-              (entry.getValue().warranty.expiry() - currentTime) + ")\n";
+              entry.getValue().getValue().$getOnum() + " (" +
+              (entry.getValue().getWarranty().expiry() - currentTime) + ")\n";
           }
         }
         msg += "Stale...\n";
@@ -640,14 +640,12 @@ public class TransactionManager {
    * @param id
    *          The id for the call instance.
    */
-  public Pair<WarrantiedCallResult, LongSet> getCall(Principal principal,
+  public WarrantiedCallResult getCall(Principal principal,
       CallInstance id) throws AccessException {
-    Pair<WarrantiedCallResult, LongSet> result = 
-      new Pair<WarrantiedCallResult, LongSet>(
-          semanticWarranties.fetchForWorker(id),
-          semanticWarranties.getCreates(id));
-    if (result.first == null) throw new AccessException(
-        "AccessDenied, could not find call id " + id.toString());
+    WarrantiedCallResult result = semanticWarranties.fetchForWorker(id);
+    if (result == null)
+      throw new AccessException( "AccessDenied, could not find call id " +
+          id.toString());
     return result;
   }
 

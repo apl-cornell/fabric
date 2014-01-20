@@ -6,12 +6,10 @@ import java.io.IOException;
 
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.ProtocolError;
-import fabric.common.util.LongHashSet;
-import fabric.common.util.LongSet;
-import fabric.common.util.LongIterator;
 import fabric.common.net.RemoteIdentity;
 import fabric.worker.memoize.CallInstance;
 import fabric.worker.memoize.WarrantiedCallResult;
+import fabric.worker.remote.RemoteWorker;
 
 /**
  * A <code>ReuseCallMessage</code> represents a request from a worker to reuse a
@@ -39,11 +37,8 @@ public class ReuseCallMessage extends Message<ReuseCallMessage.Response,
 
     public final WarrantiedCallResult result;
 
-    public final LongSet creates;
-
-    public Response(WarrantiedCallResult result, LongSet creates) {
+    public Response(WarrantiedCallResult result) {
       this.result = result;
-      this.creates = creates;
     }
 
   }
@@ -53,7 +48,7 @@ public class ReuseCallMessage extends Message<ReuseCallMessage.Response,
   // ////////////////////////////////////////////////////////////////////////////
 
   @Override
-  public Response dispatch(RemoteIdentity client, MessageHandler h)
+  public Response dispatch(RemoteIdentity<RemoteWorker> client, MessageHandler h)
     throws ProtocolError, AccessException {
     return h.handle(client, this);
   }
@@ -78,25 +73,15 @@ public class ReuseCallMessage extends Message<ReuseCallMessage.Response,
     if (r.result != null) {
       out.writeBoolean(true);
       r.result.write(out);
-      out.writeInt(r.creates.size());
-      for (LongIterator iter = r.creates.iterator();
-          iter.hasNext();) {
-        out.writeLong(iter.next());
-      }
     } else out.writeBoolean(false);
   }
 
   @Override
   protected Response readResponse(DataInput in) throws IOException {
     WarrantiedCallResult result = null;
-    LongSet creates = new LongHashSet();
     if (in.readBoolean()) {
       result = new WarrantiedCallResult(in);
-      int count = in.readInt();
-      for (int i = 0; i < count; i++) {
-        creates.add(in.readLong());
-      }
     }
-    return new Response(result, creates);
+    return new Response(result);
   }
 }

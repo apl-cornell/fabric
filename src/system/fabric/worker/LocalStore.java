@@ -173,7 +173,7 @@ public final class LocalStore implements Store, Serializable {
   @Override
   public void insertResult(CallInstance call, WarrantiedCallResult result) {
     SEMANTIC_WARRANTY_LOGGER.finest("Putting call id: " + call.toString()
-        + " -> " + result.value);
+        + " -> " + result.getValue());
     callCache.put(call, result);
   }
 

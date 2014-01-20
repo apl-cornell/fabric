@@ -1,10 +1,11 @@
 package fabric.lang;
 
 import java.util.Map;
-import java.util.Set;
 import java.util.WeakHashMap;
 
 import fabric.common.exceptions.InternalError;
+import fabric.common.util.LongKeyMap;
+import fabric.common.util.LongSet;
 import fabric.lang.arrays.ObjectArray;
 import fabric.lang.security.ConfPolicy;
 import fabric.lang.security.Label;
@@ -163,8 +164,8 @@ public class WrappedJavaInlineable<T> implements JavaInlineable {
   }
 
   @Override
-  public WrappedJavaInlineable<T> $makeSemiDeepCopy(Set<Long> oldSet,
-      Map<Long,Object> oldToNew) {
+  public WrappedJavaInlineable<T> $makeSemiDeepCopy(LongSet oldSet,
+      LongKeyMap<Object> oldToNew) {
     throw new InternalError("$makeSemiDeepCopy should not be called"
         + " on a wrapped inlineable!");
   }

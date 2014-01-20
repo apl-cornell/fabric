@@ -27,6 +27,8 @@ import fabric.common.VersionWarranty;
 import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.LongHashSet;
+import fabric.common.util.LongSet;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
 import fabric.common.util.WeakReferenceArrayList;
@@ -416,7 +418,6 @@ public final class Log {
   }
 
   /**
-<<<<<<< .working
    * Handles invalidation of all semantic warranty requests made previously by
    * the parent that read the given onum.
    */
@@ -525,12 +526,30 @@ public final class Log {
   }
 
   /**
+   * Utility Method for getting the full set of creates for a given requested
+   * semantic warranty call.
+   *
+   * Returns null if the call is not a requested call.
+   */
+  private LongSet getAllRequestCreates(CallInstance call) {
+    if (requests.containsKey(call)) {
+      SemanticWarrantyRequest req = requests.get(call);
+      LongSet createOids = new LongHashSet(req.createOnums);
+      for (WarrantiedCallResult subcallResult : req.calls.values())
+        createOids.addAll(subcallResult.getCreates());
+    }
+    return null;
+  }
+
+  /**
    * Gets a result, if any, for a request we haven't pushed to the store yet
    */
   public WarrantiedCallResult getRequestResult(CallInstance call) {
     SemanticWarrantyRequest req = requests.get(call);
-    if (req != null)
-      return new WarrantiedCallResult(req.value, new SemanticWarranty(0));
+    if (req != null) {
+      return new WarrantiedCallResult(req.value, new SemanticWarranty(0),
+          getAllRequestCreates(call));
+    }
     if (req == null && parent != null) return parent.getRequestResult(call);
     return null;
   }
@@ -642,7 +661,7 @@ public final class Log {
       Store store = e.getKey().target.$getStore();
       CallInstance call = e.getKey();
       WarrantiedCallResult callRes = e.getValue();
-      if (callRes.warranty.expiresBefore(commitTime, true)
+      if (callRes.getWarranty().expiresBefore(commitTime, true)
           && !requests.containsKey(call)) {
         Set<CallInstance> requestsAtStore = result.get(store);
         if (requestsAtStore == null) {
@@ -696,11 +715,11 @@ public final class Log {
       SemanticWarranty warr = entry.getValue();
       WarrantiedCallResult update = null;
       if (semanticWarrantiesUsed.containsKey(call)) {
-        update =
-          new WarrantiedCallResult(semanticWarrantiesUsed.get(call).value, warr);
+        semanticWarrantiesUsed.get(call).setWarranty(warr);
+        update = semanticWarrantiesUsed.get(call);
       } else if (callsInSubcalls.containsKey(call)) {
-        update =
-          new WarrantiedCallResult(callsInSubcalls.get(call).value, warr);
+        callsInSubcalls.get(call).setWarranty(warr);
+        update = callsInSubcalls.get(call);
       } else {
         throw new InternalError("Tried to update a semantic warranty that " +
             "wasn't used in this transaction.");
@@ -1306,7 +1325,8 @@ public final class Log {
         requests.containsKey(semanticWarrantyCall)) {
       WarrantiedCallResult curCallResult =
           new WarrantiedCallResult(requests.get(semanticWarrantyCall).value,
-              new SemanticWarranty(0));
+              new SemanticWarranty(0),
+              getAllRequestCreates(semanticWarrantyCall));
       parent.semanticWarrantiesUsed.put(semanticWarrantyCall, curCallResult);
     }
 
@@ -1363,8 +1383,8 @@ public final class Log {
           if (requestReplies.get(id) != null) {
             requestLocations.get(id).insertResult(
                 id,
-                new WarrantiedCallResult(e.getValue().value, requestReplies
-                    .get(id)));
+                new WarrantiedCallResult(e.getValue().value,
+                  requestReplies.get(id), getAllRequestCreates(id)));
           }
         }
 

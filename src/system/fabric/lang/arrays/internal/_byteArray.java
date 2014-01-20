@@ -5,10 +5,10 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import fabric.common.RefTypeEnum;
+import fabric.common.util.LongKeyMap;
+import fabric.common.util.LongSet;
 import fabric.common.util.Pair;
 import fabric.lang.Object;
 import fabric.lang.security.ConfPolicy;
@@ -127,8 +127,8 @@ public interface _byteArray extends Object {
     }
 
     @Override
-    public _byteArray $makeSemiDeepCopy(Set<Long> oldSet,
-        Map<Long, Object> oldToNew) {
+    public _byteArray $makeSemiDeepCopy(LongSet oldSet,
+        LongKeyMap<Object> oldToNew) {
       _byteArray._Impl copy = null;
       if (oldToNew.containsKey(this.$getOnum())) {
         copy = (_byteArray._Impl) oldToNew.get(this.$getOnum());
