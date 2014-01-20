@@ -913,11 +913,9 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
         qq.parseStmt("%T $resultObj = this.$getStore().lookupCall($call);",
             callResultType);
     Stmt callUnpack =
-        qq.parseStmt("{\n"
-                    +"$cacheResult = (%T) $resultObj.getValueCopy();\n"
-                    +"if ($cacheResult != null) {\n"
-                    +"  $cacheResult = (%T) $resultObj.getValueCopy().$getProxy();\n"
-                    +"}\n}\n", wrappedReturnType, wrappedReturnType);
+        qq.parseStmt(
+            "$cacheResult = (%T) $resultObj.getValueCopy().$getProxy();\n",
+            wrappedReturnType, wrappedReturnType);
     if (ts.isJavaInlineable(wrappedReturnType)) {
       callUnpack =
           qq.parseStmt("$cacheResult = (%T) "
@@ -933,7 +931,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
                 + "  fabric.worker.transaction.TransactionManager.getInstance().registerSemanticWarrantyUse($call, $resultObj);\n"
                 + "  return $cacheResult;\n" + "} else {\n" + "  return "
                 + md.name() + "$NonMemoized(" + unwrappedArgList + ");\n" + "}",
-            wrappedReturnType, callUnpack);
+                wrappedReturnType, callUnpack);
 
     return (MethodDecl) md.body(nf.Block(CG, callCreate, callLookup,
         checkLookup));
