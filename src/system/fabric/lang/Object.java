@@ -972,8 +972,15 @@ public interface Object {
     @Override
     public Object $makeSemiDeepCopy(LongSet oldSet,
         LongKeyMap<Object> oldToNew) {
-      Object._Impl copy = (Object._Impl) this.$makeBlankCopy().fetch();
-      oldToNew.put($ref.onum, copy);
+      Object._Impl copy = null;
+      if (oldToNew.containsKey(this.$getOnum())) {
+        copy = (Object._Impl) oldToNew.get(this.$getOnum());
+      } else {
+        copy = (Object._Impl) this.$makeBlankCopy().fetch();
+        oldToNew.put(this.$getOnum(), copy);
+      }
+      copy.$updateLabel = this.$updateLabel;
+      copy.$accessPolicy = this.$accessPolicy;
       return copy.$makeProxy();
     }
 

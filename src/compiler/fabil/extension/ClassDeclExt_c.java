@@ -913,15 +913,15 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
         qq.parseStmt("%T $resultObj = this.$getStore().lookupCall($call);",
             callResultType);
     Stmt callUnpack =
-        qq.parseStmt("if ($resultObj.value == null) {\n"
-                    +"  $cacheResult = (%T) $resultObj.value;\n"
-                    +"} else {\n"
-                    +"  $cacheResult = (%T) $resultObj.value.$getProxy();\n"
-                    +"}\n", wrappedReturnType, wrappedReturnType);
+        qq.parseStmt("{\n"
+                    +"$cacheResult = (%T) $resultObj.getValueCopy();\n"
+                    +"if ($cacheResult != null) {\n"
+                    +"  $cacheResult = (%T) $resultObj.getValueCopy().$getProxy();\n"
+                    +"}\n}\n", wrappedReturnType, wrappedReturnType);
     if (ts.isJavaInlineable(wrappedReturnType)) {
       callUnpack =
           qq.parseStmt("$cacheResult = (%T) "
-              + "fabric.lang.WrappedJavaInlineable.$unwrap($resultObj.value);",
+              + "fabric.lang.WrappedJavaInlineable.$unwrap($resultObj.getValueCopy());",
               wrappedReturnType);
     }
 

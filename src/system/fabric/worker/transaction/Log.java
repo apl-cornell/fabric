@@ -537,6 +537,7 @@ public final class Log {
       LongSet createOids = new LongHashSet(req.createOnums);
       for (WarrantiedCallResult subcallResult : req.calls.values())
         createOids.addAll(subcallResult.getCreates());
+      return createOids;
     }
     return null;
   }

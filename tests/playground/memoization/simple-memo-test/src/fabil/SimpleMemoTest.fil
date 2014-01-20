@@ -20,6 +20,17 @@ public class SimpleMemoTest {
     public Msg(int id) {
       this.id = id;
     }
+
+    public boolean equals(Object o) {
+      if (o instanceof Msg) {
+        return ((Msg) o).id == this.id;
+      }
+      return false;
+    }
+
+    public int hashCode() {
+      return this.id;
+    }
   }
 
   public memoized Msg dumbestTestEver(Msg m) {
@@ -29,12 +40,12 @@ public class SimpleMemoTest {
 
   public memoized Msg foo(int n) {
     try { Thread.sleep(500); } catch (InterruptedException e) { }
-    return new Msg@s(n).SimpleMemoTest$Msg$().SimpleMemoTest$Msg$();
+    return new Msg@s(n).SimpleMemoTest$Msg$();
   }
 
   public memoized Msg localFoo(int n) {
     try { Thread.sleep(500); } catch (InterruptedException e) { }
-    return new Msg(n).SimpleMemoTest$Msg$().SimpleMemoTest$Msg$();
+    return new Msg(n).SimpleMemoTest$Msg$();
   }
 
   public memoized long fib(int n) {
@@ -50,11 +61,11 @@ public class SimpleMemoTest {
     SimpleMemoTest localSimpleMemoTest = null;
     Msg m = null;
     atomic {
-      testSimpleMemoTest = new SimpleMemoTest@s().SimpleMemoTest$().SimpleMemoTest$();
+      testSimpleMemoTest = new SimpleMemoTest@s().SimpleMemoTest$();
       localSimpleMemoTest = new SimpleMemoTest();
       System.out.println(testSimpleMemoTest);
       System.out.println(localSimpleMemoTest);
-      m = new Msg@s(20).SimpleMemoTest$Msg$().SimpleMemoTest$Msg$();
+      m = new Msg@s(20).SimpleMemoTest$Msg$();
       System.out.println(testSimpleMemoTest.dumbestTestEver(m));
       for (int i = 0; i < 10; i++) {
         System.out.println("testSimpleMemoTest.foo(" + i + "): " + testSimpleMemoTest.foo(i));
