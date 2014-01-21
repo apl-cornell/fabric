@@ -371,7 +371,7 @@ public class SubscriptionManager extends FabricThread.Impl {
   private final PrivateKey signingKey;
 
   public static final boolean ENABLE_OBJECT_UPDATES = false;
-  public static final boolean ENABLE_WARRANTY_REFRESHES = false;
+  public static final boolean ENABLE_REACTIVE_WARRANTY_REFRESHES = false;
 
   /**
    * @param tm
@@ -458,7 +458,7 @@ public class SubscriptionManager extends FabricThread.Impl {
       break;
 
     case REACTIVE:
-      if (!ENABLE_WARRANTY_REFRESHES) return;
+      if (!ENABLE_REACTIVE_WARRANTY_REFRESHES) return;
       break;
     }
 
