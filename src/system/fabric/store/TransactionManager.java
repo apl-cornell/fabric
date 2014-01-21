@@ -30,6 +30,7 @@ import fabric.dissemination.ObjectGlob;
 import fabric.dissemination.WarrantyGlob;
 import fabric.lang.security.Label;
 import fabric.lang.security.Principal;
+import fabric.store.SubscriptionManager.NotificationType;
 import fabric.store.db.GroupContainer;
 import fabric.store.db.ObjectDB;
 import fabric.store.db.ObjectDB.ExtendWarrantyStatus;
@@ -228,24 +229,26 @@ public class TransactionManager {
             continue;
 
           case DENIED:
-            sm.notifyNewWarranties(newWarranties, null);
+            sm.notifyNewWarranties(newWarranties, null,
+                NotificationType.REACTIVE);
             throw new TransactionPrepareFailedException(versionConflicts,
                 "Unable to extend warranty for object " + onum);
           }
         } catch (AccessException e) {
-          sm.notifyNewWarranties(newWarranties, null);
+          sm.notifyNewWarranties(newWarranties, null, NotificationType.REACTIVE);
           throw new TransactionPrepareFailedException(versionConflicts,
               e.getMessage());
         }
       }
 
       if (!versionConflicts.isEmpty()) {
-        sm.notifyNewWarranties(newWarranties, null);
+        sm.notifyNewWarranties(newWarranties, null, NotificationType.REACTIVE);
         throw new TransactionPrepareFailedException(versionConflicts);
       }
 
       STORE_TRANSACTION_LOGGER.fine("Prepared transaction " + tid);
-      sm.notifyNewWarranties(newWarranties, workerIdentity.node);
+      sm.notifyNewWarranties(newWarranties, workerIdentity.node,
+          NotificationType.REACTIVE);
       return prepareResult;
     } catch (TransactionPrepareFailedException e) {
       // Roll back the transaction.
@@ -422,7 +425,7 @@ public class TransactionManager {
       }
     }
 
-    sm.notifyNewWarranties(newWarranties, null);
+    sm.notifyNewWarranties(newWarranties, null, NotificationType.REACTIVE);
   }
 
   /**
@@ -487,7 +490,8 @@ public class TransactionManager {
       success = true;
     } finally {
       sm.notifyNewWarranties(newWarranties,
-          success ? (RemoteWorker) workerIdentity.node : null);
+          success ? (RemoteWorker) workerIdentity.node : null,
+          NotificationType.REACTIVE);
     }
 
     return result;

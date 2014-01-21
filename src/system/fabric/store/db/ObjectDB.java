@@ -29,6 +29,7 @@ import fabric.common.util.Pair;
 import fabric.lang.security.NodePrincipal;
 import fabric.lang.security.Principal;
 import fabric.store.SubscriptionManager;
+import fabric.store.SubscriptionManager.NotificationType;
 import fabric.store.TransactionManager;
 import fabric.worker.Store;
 import fabric.worker.TransactionPrepareFailedException;
@@ -540,7 +541,8 @@ public abstract class ObjectDB {
 
       scheduleCommit(tid, commitTime, workerIdentity, sm);
     } finally {
-      sm.notifyNewWarranties(newWarranties, workerIdentity.node);
+      sm.notifyNewWarranties(newWarranties, workerIdentity.node,
+          NotificationType.REACTIVE);
     }
   }
 

@@ -432,6 +432,19 @@ public class SubscriptionManager extends FabricThread.Impl {
     notificationQueue.offer(new ObjectUpdateEvent(onums, worker));
   }
 
+  public static enum NotificationType {
+    /**
+     * A notification for an event that was initiated by the store.
+     */
+    PROACTIVE,
+
+    /**
+     * A notification for an event that occurred in response to a request from
+     * a worker.
+     */
+    REACTIVE
+  }
+
   /**
    * Notifies the subscription manager that a new set of warranties has been
    * issued.
@@ -439,8 +452,15 @@ public class SubscriptionManager extends FabricThread.Impl {
    * @param worker the worker, if any, that already knows about the new warranties.
    */
   public void notifyNewWarranties(Collection<Binding> newWarranties,
-      RemoteWorker worker) {
-    if (!ENABLE_WARRANTY_REFRESHES) return;
+      RemoteWorker worker, NotificationType notificationType) {
+    switch (notificationType) {
+    case PROACTIVE:
+      break;
+
+    case REACTIVE:
+      if (!ENABLE_WARRANTY_REFRESHES) return;
+      break;
+    }
 
     if (!newWarranties.isEmpty()) {
       notificationQueue.offer(new NewWarrantyEvent(newWarranties, worker));
