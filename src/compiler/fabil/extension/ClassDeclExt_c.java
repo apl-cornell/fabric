@@ -383,8 +383,8 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     if (copyAppStateFrom != null) members.add(copyAppStateFrom);
 
     // Create the $makeSemiDeepCopy method.
-    ClassMember copyConstructor = makeCopyConstructor(pr, members);
-    if (copyConstructor != null) members.add(copyConstructor);
+    //ClassMember copyConstructor = makeCopyConstructor(pr, members);
+    //if (copyConstructor != null) members.add(copyConstructor);
 
     // Create the class declaration.
     ClassDecl result =

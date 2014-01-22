@@ -59,10 +59,10 @@ public class WarrantiedCallResult implements Serializable {
    * Get the value for this call.  Make a copy of the value if necessary.
    */
   public Object getValueCopy() {
-    if (!(value instanceof WrappedJavaInlineable) && (value != null) &&
-        createOids.contains(value.$getOnum())) {
-      return value.$makeSemiDeepCopy(createOids, new LongKeyHashMap<Object>());
-    }
+    //if (!(value instanceof WrappedJavaInlineable) && (value != null) &&
+        //createOids.contains(value.$getOnum())) {
+      //return value.$makeSemiDeepCopy(createOids, new LongKeyHashMap<Object>());
+    //}
     return value;
   }
 
