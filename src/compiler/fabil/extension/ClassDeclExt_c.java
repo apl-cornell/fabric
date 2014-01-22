@@ -978,8 +978,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
   public Node addNoArgumentConstructor(NoArgConstructorWriter nacw) {
     ClassDecl cd = node();
     FabILTypeSystem ts = nacw.typeSystem();
-    if (!cd.flags().isInterface() && !cd.flags().isAbstract() &&
-        ts.isFabricClass(cd.type())) {
+    if (!cd.flags().isInterface() && ts.isFabricClass(cd.type())) {
       NodeFactory nf = nacw.nodeFactory();
       Position cg = Position.compilerGenerated();
 
@@ -1014,34 +1013,38 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
         cd.type().addConstructor(noArgCons.constructorInstance());
       }
 
-      //Now add factory method to use dynamically.
-      New newCall = null;
-      if (cd.type().isInnerClass()) {
-        //If it's an inner class, you need a qualifier for later compiler passes
-        //to operate correctly.
-        newCall =
-            nf.New(cg,
-                nf.This(cg, nf.CanonicalTypeNode(cg, cd.type().container())),
-                nf.CanonicalTypeNode(cg, cd.type()), new ArrayList<Expr>());
-      } else {
-        newCall =
-            nf.New(cg, nf.CanonicalTypeNode(cg, cd.type()),
-                new ArrayList<Expr>());
+      // We shouldn't have to create copies of abstract classes directly, so
+      // this is fine.
+      if (!cd.flags().isAbstract()) {
+        //Now add factory method to use dynamically.
+        New newCall = null;
+        if (cd.type().isInnerClass()) {
+          //If it's an inner class, you need a qualifier for later compiler passes
+          //to operate correctly.
+          newCall =
+              nf.New(cg,
+                  nf.This(cg, nf.CanonicalTypeNode(cg, cd.type().container())),
+                  nf.CanonicalTypeNode(cg, cd.type()), new ArrayList<Expr>());
+        } else {
+          newCall =
+              nf.New(cg, nf.CanonicalTypeNode(cg, cd.type()),
+                  new ArrayList<Expr>());
+        }
+        newCall = (New) newCall.constructorInstance(noArgIns).type(cd.type());
+        ArrayList<Stmt> factoryBody = new ArrayList<Stmt>();
+        factoryBody.add(nf.Return(cg, newCall));
+        MethodDecl factoryMethod =
+            nf.MethodDecl(cg, Flags.PUBLIC,
+                nf.CanonicalTypeNode(cg, ts.FObject()),
+                nf.Id(cg, "$makeBlankCopy"), new ArrayList<Formal>(),
+                new ArrayList<TypeNode>(), nf.Block(cg, factoryBody));
+        factoryMethod =
+            factoryMethod.methodInstance(ts.methodInstance(cg, cd.type(),
+                Flags.PUBLIC, ts.FObject(), "$makeBlankCopy",
+                new ArrayList<Type>(), new ArrayList<Type>()));
+        cd = cd.body(cd.body().addMember(factoryMethod));
+        cd.type().addMethod(factoryMethod.methodInstance());
       }
-      newCall = (New) newCall.constructorInstance(noArgIns).type(cd.type());
-      ArrayList<Stmt> factoryBody = new ArrayList<Stmt>();
-      factoryBody.add(nf.Return(cg, newCall));
-      MethodDecl factoryMethod =
-          nf.MethodDecl(cg, Flags.PUBLIC,
-              nf.CanonicalTypeNode(cg, ts.FObject()),
-              nf.Id(cg, "$makeBlankCopy"), new ArrayList<Formal>(),
-              new ArrayList<TypeNode>(), nf.Block(cg, factoryBody));
-      factoryMethod =
-          factoryMethod.methodInstance(ts.methodInstance(cg, cd.type(),
-              Flags.PUBLIC, ts.FObject(), "$makeBlankCopy",
-              new ArrayList<Type>(), new ArrayList<Type>()));
-      cd = cd.body(cd.body().addMember(factoryMethod));
-      cd.type().addMethod(factoryMethod.methodInstance());
     }
     return cd;
   }

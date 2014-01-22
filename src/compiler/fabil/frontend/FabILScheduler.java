@@ -87,6 +87,7 @@ public class FabILScheduler extends JLScheduler implements CBScheduler {
     Goal g = internGoal(new VisitorGoal(job, new CBTypeBuilder(job, ts, nf)));
     try {
       addPrerequisiteDependency(g, Parsed(job));
+      //addPrerequisiteDependency(g, NoArgConstructor(job));
     } catch (CyclicDependencyException e) {
       throw new InternalCompilerError(e);
     }
@@ -388,7 +389,7 @@ public class FabILScheduler extends JLScheduler implements CBScheduler {
       @Override
       public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
         List<Goal> l = new ArrayList<Goal>();
-        //l.add(TypesInitialized(job));
+        l.add(TypeChecked(job));
         //l.addAll(super.prerequisiteGoals(scheduler));
         return l;
       }
