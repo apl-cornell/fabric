@@ -1,5 +1,7 @@
 package fabric.store.db;
 
+import static fabric.common.Logging.HOTOS_LOGGER;
+
 import java.io.DataOutput;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -8,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.logging.Level;
 
 import javax.security.auth.x500.X500Principal;
 
@@ -410,13 +413,19 @@ public abstract class ObjectDB {
       }
 
       // Obtain existing warranty.
-      VersionWarranty warranty = getWarranty(onum);
+      VersionWarranty warranty = versionWarrantyTable.get(onum);
+      HOTOS_LOGGER
+          .log(
+              Level.INFO,
+              "writing {0}, warranty expires in {1} ms",
+              new Object[] { onum,
+                  warranty.expiry() - System.currentTimeMillis() });
 
       // Update the version number on the prepared copy of the object.
       obj.setVersion(storeVersion + 1);
 
       // Notify the warranty issuer.
-      warrantyIssuer.notifyWritePrepare(onum, warranty);
+      warrantyIssuer.notifyWritePrepare(onum);
 
       return warranty;
     }
@@ -591,24 +600,6 @@ public abstract class ObjectDB {
    */
   public final GroupContainer readGroup(long onum) {
     return objectGrouper.getGroup(onum);
-  }
-
-  /**
-   * Returns the version warranty for the object stored at the given onum.
-   * 
-   * @return the version warranty. If no warranty has been issued, a really old
-   *       warranty will be returned.
-   */
-  public final VersionWarranty getWarranty(long onum) {
-    return versionWarrantyTable.get(onum);
-  }
-
-  /**
-   * Stores a version warranty for the object stored at the given onum.
-   */
-  protected final void putWarranty(long onum, VersionWarranty warranty) {
-    versionWarrantyTable.put(onum, warranty);
-    updateLongestWarranty(warranty);
   }
 
   private void updateLongestWarranty(VersionWarranty warranty) {

@@ -5,7 +5,6 @@ import static fabric.common.Logging.HOTOS_LOGGER;
 import java.util.logging.Level;
 
 import fabric.common.Logging;
-import fabric.common.Warranty;
 import fabric.common.util.Cache;
 
 /**
@@ -152,10 +151,8 @@ public class WarrantyIssuer<K> {
     /**
      * Notifies of a prepare event.
      */
-    void notifyWritePrepare(Warranty warranty) {
+    void notifyWritePrepare() {
       Logging.log(HOTOS_LOGGER, Level.FINER, "writing @{0}", key);
-      HOTOS_LOGGER.log(Level.INFO, "writing {0}, warranty expires in {1} ms",
-          new Object[] { key, warranty.expiry() - System.currentTimeMillis() });
 
       synchronized (prepareMutex) {
         fixPrepareWindow();
@@ -244,12 +241,9 @@ public class WarrantyIssuer<K> {
    * Notifies that a write has been prepared, preventing further writes from
    * being prepared until the corresponding transaction either commits or
    * aborts.
-   * 
-   * @param warranty the warranty that existed on the given key when the write
-   *          was prepared.
    */
-  public void notifyWritePrepare(K key, Warranty warranty) {
-    getEntry(key).notifyWritePrepare(warranty);
+  public void notifyWritePrepare(K key) {
+    getEntry(key).notifyWritePrepare();
   }
 
   /**
