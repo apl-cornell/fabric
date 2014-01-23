@@ -372,6 +372,7 @@ public class SubscriptionManager extends FabricThread.Impl {
 
   public static final boolean ENABLE_OBJECT_UPDATES = false;
   public static final boolean ENABLE_REACTIVE_WARRANTY_REFRESHES = false;
+  public static final boolean ENABLE_PROACTIVE_WARRANTY_REFRESHES = true;
 
   /**
    * @param tm
@@ -432,38 +433,29 @@ public class SubscriptionManager extends FabricThread.Impl {
     notificationQueue.offer(new ObjectUpdateEvent(onums, worker));
   }
 
-  public static enum NotificationType {
-    /**
-     * A notification for an event that was initiated by the store.
-     */
-    PROACTIVE,
-
-    /**
-     * A notification for an event that occurred in response to a request from
-     * a worker.
-     */
-    REACTIVE
-  }
-
   /**
    * Notifies the subscription manager that a new set of warranties has been
    * issued.
    * 
    * @param worker the worker, if any, that already knows about the new warranties.
    */
-  public void notifyNewWarranties(Collection<Binding> newWarranties,
-      RemoteWorker worker, NotificationType notificationType) {
-    switch (notificationType) {
-    case PROACTIVE:
-      break;
+  public void notifyNewWarranties(Collection<Binding> newProactiveWarranties,
+      Collection<Binding> newReactiveWarranties, RemoteWorker worker) {
+    int numNewWarrantiesToNotify = 0;
+    if (ENABLE_PROACTIVE_WARRANTY_REFRESHES)
+      numNewWarrantiesToNotify += newProactiveWarranties.size();
+    if (ENABLE_REACTIVE_WARRANTY_REFRESHES)
+      numNewWarrantiesToNotify += newReactiveWarranties.size();
 
-    case REACTIVE:
-      if (!ENABLE_REACTIVE_WARRANTY_REFRESHES) return;
-      break;
-    }
+    List<Binding> warrantiesToNotify =
+        new ArrayList<>(numNewWarrantiesToNotify);
+    if (ENABLE_PROACTIVE_WARRANTY_REFRESHES)
+      warrantiesToNotify.addAll(newProactiveWarranties);
+    if (ENABLE_REACTIVE_WARRANTY_REFRESHES)
+      warrantiesToNotify.addAll(newReactiveWarranties);
 
-    if (!newWarranties.isEmpty()) {
-      notificationQueue.offer(new NewWarrantyEvent(newWarranties, worker));
+    if (!warrantiesToNotify.isEmpty()) {
+      notificationQueue.offer(new NewWarrantyEvent(warrantiesToNotify, worker));
     }
   }
 }

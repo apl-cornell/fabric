@@ -53,11 +53,21 @@ public class WarrantyTable<K, V extends Warranty> {
     return result;
   }
 
+  final V putIfAbsent(K key, V warranty) {
+    sanityCheck(warranty);
+
+    long expiry = warranty.expiry();
+    long length = expiry - System.currentTimeMillis();
+    STORE_DB_LOGGER.finest("Adding warranty for " + key + "; expiry=" + expiry
+        + " (in " + length + " ms)");
+
+    V result = table.putIfAbsent(key, warranty);
+    if (result == null) addGCEntry(key, warranty);
+    return result;
+  }
+
   final void put(K key, V warranty) {
-    if (defaultWarranty.expiresAfter(warranty)) {
-      throw new InternalError("Attempted to insert a warranty that expires "
-          + "before the default warranty. This should not happen.");
-    }
+    sanityCheck(warranty);
 
     long expiry = warranty.expiry();
     long length = expiry - System.currentTimeMillis();
@@ -66,6 +76,13 @@ public class WarrantyTable<K, V extends Warranty> {
 
     table.put(key, warranty);
     addGCEntry(key, warranty);
+  }
+
+  protected void sanityCheck(V warranty) {
+    if (defaultWarranty.expiresAfter(warranty)) {
+      throw new InternalError("Attempted to insert a warranty that expires "
+          + "before the default warranty. This should not happen.");
+    }
   }
 
   private final void addGCEntry(K key, V warranty) {
@@ -116,6 +133,13 @@ public class WarrantyTable<K, V extends Warranty> {
    */
   void setDefaultWarranty(V warranty) {
     defaultWarranty = warranty;
+  }
+
+  /**
+   * Removes the entry for the given key from the table.
+   */
+  void remove(K key) {
+    table.remove(key);
   }
 
   /**

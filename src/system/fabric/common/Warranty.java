@@ -7,6 +7,12 @@ public abstract class Warranty implements Comparable<Warranty> {
   public static final long CLOCK_SKEW = 100;
 
   /**
+   * The period at which warranties should be proactively refreshed, in
+   * milliseconds. This should be larger than CLOCK_SKEW.
+   */
+  public static final long REFRESH_INTERVAL_MS = 2 * CLOCK_SKEW;
+
+  /**
    * Expiry time, in milliseconds since the epoch.
    */
   private final long expiry;

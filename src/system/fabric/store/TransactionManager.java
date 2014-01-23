@@ -30,7 +30,6 @@ import fabric.dissemination.ObjectGlob;
 import fabric.dissemination.WarrantyGlob;
 import fabric.lang.security.Label;
 import fabric.lang.security.Principal;
-import fabric.store.SubscriptionManager.NotificationType;
 import fabric.store.db.GroupContainer;
 import fabric.store.db.ObjectDB;
 import fabric.store.db.ObjectDB.ExtendWarrantyStatus;
@@ -199,7 +198,9 @@ public class TransactionManager {
           new LongKeyHashMap<VersionWarranty>();
 
       // This will store the new warranties we get.
-      List<VersionWarranty.Binding> newWarranties =
+      List<VersionWarranty.Binding> newProactiveWarranties =
+          new ArrayList<VersionWarranty.Binding>();
+      List<VersionWarranty.Binding> newReactiveWarranties =
           new ArrayList<VersionWarranty.Binding>();
 
       // Check reads
@@ -213,9 +214,15 @@ public class TransactionManager {
               database.extendWarrantyForReadPrepare(worker, onum, version,
                   commitTime);
           switch (status.first) {
-          case NEW:
-            newWarranties.add(status.second.new Binding(onum, version));
-            //$FALL-THROUGH$
+          case NEW_PROACTIVE:
+            newProactiveWarranties
+                .add(status.second.new Binding(onum, version));
+            prepareResult.put(onum, status.second);
+            break;
+          case NEW_REACTIVE:
+            newReactiveWarranties.add(status.second.new Binding(onum, version));
+            prepareResult.put(onum, status.second);
+            break;
           case OLD:
             prepareResult.put(onum, status.second);
             break;
@@ -229,26 +236,28 @@ public class TransactionManager {
             continue;
 
           case DENIED:
-            sm.notifyNewWarranties(newWarranties, null,
-                NotificationType.REACTIVE);
+            sm.notifyNewWarranties(newProactiveWarranties,
+                newReactiveWarranties, null);
             throw new TransactionPrepareFailedException(versionConflicts,
                 "Unable to extend warranty for object " + onum);
           }
         } catch (AccessException e) {
-          sm.notifyNewWarranties(newWarranties, null, NotificationType.REACTIVE);
+          sm.notifyNewWarranties(newProactiveWarranties, newReactiveWarranties,
+              null);
           throw new TransactionPrepareFailedException(versionConflicts,
               e.getMessage());
         }
       }
 
       if (!versionConflicts.isEmpty()) {
-        sm.notifyNewWarranties(newWarranties, null, NotificationType.REACTIVE);
+        sm.notifyNewWarranties(newProactiveWarranties, newReactiveWarranties,
+            null);
         throw new TransactionPrepareFailedException(versionConflicts);
       }
 
       STORE_TRANSACTION_LOGGER.fine("Prepared transaction " + tid);
-      sm.notifyNewWarranties(newWarranties, workerIdentity.node,
-          NotificationType.REACTIVE);
+      sm.notifyNewWarranties(newProactiveWarranties, newReactiveWarranties,
+          workerIdentity.node);
       return prepareResult;
     } catch (TransactionPrepareFailedException e) {
       // Roll back the transaction.
@@ -411,7 +420,9 @@ public class TransactionManager {
    * warranties for any objects whose warranty has expired.
    */
   public void refreshWarranties(LongKeyMap<Integer> onumsToVersions) {
-    List<VersionWarranty.Binding> newWarranties =
+    List<VersionWarranty.Binding> newProactiveWarranties =
+        new ArrayList<VersionWarranty.Binding>();
+    List<VersionWarranty.Binding> newReactiveWarranties =
         new ArrayList<VersionWarranty.Binding>();
 
     for (Entry<Integer> entry : onumsToVersions.entrySet()) {
@@ -419,13 +430,22 @@ public class TransactionManager {
       Pair<ExtendWarrantyStatus, VersionWarranty> refreshResult =
           database.refreshWarranty(onum);
 
-      if (refreshResult.first == ExtendWarrantyStatus.NEW) {
-        newWarranties.add(refreshResult.second.new Binding(onum, entry
+      switch (refreshResult.first) {
+      case NEW_PROACTIVE:
+        newProactiveWarranties.add(refreshResult.second.new Binding(onum, entry
             .getValue()));
+        break;
+      case NEW_REACTIVE:
+        newReactiveWarranties.add(refreshResult.second.new Binding(onum, entry
+            .getValue()));
+        break;
+      case BAD_VERSION:
+      case DENIED:
+      case OLD:
       }
     }
 
-    sm.notifyNewWarranties(newWarranties, null, NotificationType.REACTIVE);
+    sm.notifyNewWarranties(newProactiveWarranties, newReactiveWarranties, null);
   }
 
   /**
@@ -463,7 +483,9 @@ public class TransactionManager {
 
     List<Pair<SerializedObject, VersionWarranty>> result =
         new ArrayList<Pair<SerializedObject, VersionWarranty>>();
-    List<VersionWarranty.Binding> newWarranties =
+    List<VersionWarranty.Binding> newProactiveWarranties =
+        new ArrayList<VersionWarranty.Binding>();
+    List<VersionWarranty.Binding> newReactiveWarranties =
         new ArrayList<VersionWarranty.Binding>();
     boolean success = false;
 
@@ -481,17 +503,25 @@ public class TransactionManager {
           result.add(new Pair<SerializedObject, VersionWarranty>(obj,
               refreshWarrantyResult.second));
 
-          if (refreshWarrantyResult.first == ExtendWarrantyStatus.NEW) {
-            newWarranties.add(refreshWarrantyResult.second.new Binding(onum,
-                version));
+          switch (refreshWarrantyResult.first) {
+          case NEW_PROACTIVE:
+            newProactiveWarranties
+                .add(refreshWarrantyResult.second.new Binding(onum, version));
+            break;
+          case NEW_REACTIVE:
+            newReactiveWarranties.add(refreshWarrantyResult.second.new Binding(
+                onum, version));
+            break;
+          case BAD_VERSION:
+          case DENIED:
+          case OLD:
           }
         }
       }
       success = true;
     } finally {
-      sm.notifyNewWarranties(newWarranties,
-          success ? (RemoteWorker) workerIdentity.node : null,
-          NotificationType.REACTIVE);
+      sm.notifyNewWarranties(newProactiveWarranties, newReactiveWarranties,
+          success ? (RemoteWorker) workerIdentity.node : null);
     }
 
     return result;

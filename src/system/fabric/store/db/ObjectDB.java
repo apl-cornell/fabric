@@ -1,6 +1,8 @@
 package fabric.store.db;
 
 import static fabric.common.Logging.HOTOS_LOGGER;
+import static fabric.store.db.ObjectDB.ExtendWarrantyStatus.NEW_PROACTIVE;
+import static fabric.store.db.ObjectDB.ExtendWarrantyStatus.NEW_REACTIVE;
 
 import java.io.DataOutput;
 import java.io.IOException;
@@ -18,6 +20,7 @@ import fabric.common.FastSerializable;
 import fabric.common.ONumConstants;
 import fabric.common.SerializedObject;
 import fabric.common.VersionWarranty;
+import fabric.common.Warranty;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.net.RemoteIdentity;
@@ -32,7 +35,6 @@ import fabric.common.util.Pair;
 import fabric.lang.security.NodePrincipal;
 import fabric.lang.security.Principal;
 import fabric.store.SubscriptionManager;
-import fabric.store.SubscriptionManager.NotificationType;
 import fabric.store.TransactionManager;
 import fabric.worker.Store;
 import fabric.worker.TransactionPrepareFailedException;
@@ -217,9 +219,15 @@ public abstract class ObjectDB {
   protected final VersionWarranty[] longestWarranty;
 
   /**
-   * The table containing the version warranties that we've issued.
+   * The table containing the actual version warranties that we've issued.
    */
   protected final WarrantyTable<Long, VersionWarranty> versionWarrantyTable;
+
+  /**
+   * The table containing the version warranties that conceptually exist, but
+   * may not have been issued yet, due to proactive warranty refresh.
+   */
+  protected final WarrantyTable<Long, VersionWarranty> virtualVersionWarrantyTable;
 
   /**
    * <p>
@@ -259,6 +267,8 @@ public abstract class ObjectDB {
     this.longestWarranty = new VersionWarranty[] { new VersionWarranty(0) };
     this.versionWarrantyTable =
         new WarrantyTable<Long, VersionWarranty>(new VersionWarranty(0));
+    this.virtualVersionWarrantyTable =
+        new WarrantyTable<>(new VersionWarranty(0));
     this.warrantyIssuer = new WarrantyIssuer<Long>();
   }
 
@@ -288,10 +298,16 @@ public abstract class ObjectDB {
 
   public static enum ExtendWarrantyStatus {
     /**
-     * Indicates that a new warranty was created to satisfy an extend-warranty
-     * request.
+     * Indicates that a new virtual warranty was created to satisfy an
+     * extend-warranty request.
      */
-    NEW,
+    NEW_REACTIVE,
+
+    /**
+     * Indicates that a new warranty was created to satisfy an extend-warranty
+     * request, but an existing virtual warranty was sufficient for the request.
+     */
+    NEW_PROACTIVE,
 
     /**
      * Indicates that the existing warranty satisfied an extend-warranty
@@ -412,6 +428,9 @@ public abstract class ObjectDB {
         return VersionWarranty.EXPIRED_WARRANTY;
       }
 
+      // Cut short the virtual warranty.
+      virtualVersionWarrantyTable.remove(onum);
+
       // Obtain existing warranty.
       VersionWarranty warranty = versionWarrantyTable.get(onum);
       HOTOS_LOGGER
@@ -528,7 +547,9 @@ public abstract class ObjectDB {
   public final void commit(long tid, long commitTime,
       RemoteIdentity<RemoteWorker> workerIdentity, SubscriptionManager sm) {
     // Extend the version warranties for the updated objects.
-    List<VersionWarranty.Binding> newWarranties =
+    List<VersionWarranty.Binding> newProactiveWarranties =
+        new ArrayList<VersionWarranty.Binding>();
+    List<VersionWarranty.Binding> newReactiveWarranties =
         new ArrayList<VersionWarranty.Binding>();
     try {
       LongSet onums = removeWrittenOnumsByTid(tid, workerIdentity.principal);
@@ -537,21 +558,30 @@ public abstract class ObjectDB {
           long onum = it.next();
           Pair<ExtendWarrantyStatus, VersionWarranty> extendResult =
               extendWarranty(onum, commitTime, true, false, true);
-          if (extendResult.first == ExtendWarrantyStatus.NEW) {
-            try {
-              newWarranties.add(extendResult.second.new Binding(onum,
+          try {
+            switch (extendResult.first) {
+            case NEW_PROACTIVE:
+              newProactiveWarranties.add(extendResult.second.new Binding(onum,
                   getVersion(onum)));
-            } catch (AccessException e) {
-              throw new InternalError(e);
+              break;
+            case NEW_REACTIVE:
+              newReactiveWarranties.add(extendResult.second.new Binding(onum,
+                  getVersion(onum)));
+              break;
+            case OLD:
+            case BAD_VERSION:
+            case DENIED:
             }
+          } catch (AccessException e) {
+            throw new InternalError(e);
           }
         }
       }
 
       scheduleCommit(tid, commitTime, workerIdentity, sm);
     } finally {
-      sm.notifyNewWarranties(newWarranties, workerIdentity.node,
-          NotificationType.REACTIVE);
+      sm.notifyNewWarranties(newProactiveWarranties, newReactiveWarranties,
+          workerIdentity.node);
     }
   }
 
@@ -663,11 +693,46 @@ public abstract class ObjectDB {
         return EXTEND_WARRANTY_DENIED;
       }
 
+      // See if the virtual warranty needs to be extended.
+      VersionWarranty curVirtualWarranty =
+          virtualVersionWarrantyTable.get(onum);
+      final boolean canUseVirtualWarranty =
+          curVirtualWarranty != null
+              && (minExpiryStrict ? curVirtualWarranty
+                  .expiresAfterStrict(minExpiry) : curVirtualWarranty
+                  .expiresAfter(minExpiry, false));
+
       // Extend the object's warranty.
       long expiry = minExpiry;
-      if (extendBeyondMinExpiry) {
-        expiry = warrantyIssuer.suggestWarranty(onum, minExpiry);
+      boolean proactiveRefresh = true;
+      if (!canUseVirtualWarranty && extendBeyondMinExpiry) {
+        // Need a new virtual warranty.
+        proactiveRefresh = false;
+        VersionWarranty newVirtualWarranty =
+            new VersionWarranty(warrantyIssuer.suggestWarranty(onum, minExpiry));
+
+        // Add to virtual warranty table.
+        if (curVirtualWarranty == null) {
+          if (virtualVersionWarrantyTable.putIfAbsent(onum, newVirtualWarranty) != null)
+            continue;
+        } else {
+          if (!virtualVersionWarrantyTable.extend(onum, curVirtualWarranty,
+              newVirtualWarranty)) continue;
+        }
+
+        curVirtualWarranty = newVirtualWarranty;
       }
+
+      if (extendBeyondMinExpiry) {
+        // Ensure the new warranty lasts at least REFRESH_INTERVAL_MS long...
+        expiry =
+            Math.max(minExpiry, System.currentTimeMillis()
+                + Warranty.REFRESH_INTERVAL_MS);
+
+        // ...but not longer than the virtual warranty.
+        expiry = Math.min(expiry, curVirtualWarranty.expiry());
+      }
+
       VersionWarranty newWarranty = new VersionWarranty(expiry);
       if (expiry > System.currentTimeMillis()) {
         if (!versionWarrantyTable.extend(onum, curWarranty, newWarranty))
@@ -677,7 +742,7 @@ public abstract class ObjectDB {
       }
 
       return new Pair<ExtendWarrantyStatus, VersionWarranty>(
-          ExtendWarrantyStatus.NEW, newWarranty);
+          proactiveRefresh ? NEW_PROACTIVE : NEW_REACTIVE, newWarranty);
     }
   }
 
