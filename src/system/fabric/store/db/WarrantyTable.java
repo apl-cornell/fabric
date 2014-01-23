@@ -29,8 +29,7 @@ public class WarrantyTable<K, V extends Warranty> {
   private final Collector collector;
 
   /**
-   * Reverse mapping: maps version warranty expiry times (in buckets according
-   * to REVERSE_TABLE_BUCKET_SIZE) to corresponding onums.
+   * Priority-queue version of the table for ease of garbage collection.
    */
   private final PriorityBlockingQueue<Pair<K, V>> gcQueue;
 
