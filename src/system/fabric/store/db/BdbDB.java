@@ -56,7 +56,6 @@ import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
 import fabric.lang.FClass;
 import fabric.lang.security.Principal;
-import fabric.store.SubscriptionManager;
 import fabric.store.TransactionManager;
 import fabric.worker.Store;
 import fabric.worker.Worker;
@@ -232,8 +231,8 @@ public class BdbDB extends ObjectDB {
 
   @Override
   public void scheduleCommit(long tid, long commitTime,
-      RemoteIdentity<RemoteWorker> workerIdentity, SubscriptionManager sm) {
-    scheduleCommit(tid, commitTime, workerIdentity, sm, true);
+      RemoteIdentity<RemoteWorker> workerIdentity) {
+    scheduleCommit(tid, commitTime, workerIdentity, true);
   }
 
   /**
@@ -242,8 +241,7 @@ public class BdbDB extends ObjectDB {
    *          purposes.
    */
   private void scheduleCommit(final long tid, final long commitTime,
-      final RemoteIdentity<RemoteWorker> workerIdentity,
-      final SubscriptionManager sm, boolean logCommitTime) {
+      final RemoteIdentity<RemoteWorker> workerIdentity, boolean logCommitTime) {
     long commitDelay = commitTime - System.currentTimeMillis();
     STORE_DB_LOGGER
         .finer("Scheduling Bdb commit for tid " + tid + " to run at "
@@ -314,7 +312,7 @@ public class BdbDB extends ObjectDB {
 
           if (update.second == UpdateType.WRITE) {
             // Remove any cached globs containing the old version of this object.
-            notifyCommittedUpdate(sm, onum, workerIdentity.node);
+            notifyCommittedUpdate(onum, workerIdentity.node);
           }
 
           // Update caches.
@@ -580,13 +578,12 @@ public class BdbDB extends ObjectDB {
         });
 
     // Re-schedule commits.
-    SubscriptionManager sm = tm.subscriptionManager();
     for (Entry<Long, List<Pair<Long, Principal>>> entry : commitSchedule
         .entrySet()) {
       long commitTime = entry.getKey();
       for (Pair<Long, Principal> tid : entry.getValue()) {
         scheduleCommit(tid.first, commitTime, new RemoteIdentity<RemoteWorker>(
-            null, tid.second), sm, false);
+            null, tid.second), false);
       }
     }
   }

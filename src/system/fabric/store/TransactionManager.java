@@ -79,7 +79,7 @@ public class TransactionManager {
       long transactionID, long commitTime)
       throws TransactionCommitFailedException {
     try {
-      database.commit(transactionID, commitTime, workerIdentity, sm);
+      database.commit(transactionID, commitTime, workerIdentity);
       STORE_TRANSACTION_LOGGER.fine("Committed transaction "
           + Long.toHexString(transactionID));
     } catch (final RuntimeException e) {

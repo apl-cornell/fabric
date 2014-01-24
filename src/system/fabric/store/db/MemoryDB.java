@@ -21,7 +21,6 @@ import fabric.common.util.MutableLong;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
 import fabric.lang.security.Principal;
-import fabric.store.SubscriptionManager;
 import fabric.store.TransactionManager;
 import fabric.worker.remote.RemoteWorker;
 
@@ -90,8 +89,7 @@ public class MemoryDB extends ObjectDB {
 
   @Override
   public void scheduleCommit(final long tid, long commitTime,
-      final RemoteIdentity<RemoteWorker> workerIdentity,
-      final SubscriptionManager sm) {
+      final RemoteIdentity<RemoteWorker> workerIdentity) {
     // Only need to schedule a commit if there are pending updates. Reads are
     // handled by extending warranties on the objects read, which is done during
     // the read-prepare phase.
@@ -119,7 +117,7 @@ public class MemoryDB extends ObjectDB {
 
           if (update.second == UpdateType.WRITE) {
             // Remove any cached globs containing the old version of this object.
-            notifyCommittedUpdate(sm, o.getOnum(), workerIdentity.node);
+            notifyCommittedUpdate(o.getOnum(), workerIdentity.node);
           }
         }
       }
