@@ -731,6 +731,13 @@ public abstract class ObjectDB {
 
         // ...but not longer than the virtual warranty.
         expiry = Math.min(expiry, curVirtualWarranty.expiry());
+
+        // Also, if there isn't enough of the virtual warranty left over for
+        // another refresh period, just issue it all.
+        if (!curVirtualWarranty.expiresAfterStrict(expiry
+            + Warranty.REFRESH_INTERVAL_MS)) {
+          expiry = curVirtualWarranty.expiry();
+        }
       }
 
       VersionWarranty newWarranty = new VersionWarranty(expiry);
