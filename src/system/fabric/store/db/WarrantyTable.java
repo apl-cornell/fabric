@@ -11,6 +11,7 @@ import java.util.logging.Level;
 
 import fabric.common.Logging;
 import fabric.common.Warranty;
+import fabric.common.exceptions.InternalError;
 import fabric.common.util.Pair;
 
 /**
