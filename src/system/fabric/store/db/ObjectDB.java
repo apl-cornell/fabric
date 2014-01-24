@@ -19,6 +19,7 @@ import javax.security.auth.x500.X500Principal;
 import fabric.common.FastSerializable;
 import fabric.common.ONumConstants;
 import fabric.common.SerializedObject;
+import fabric.common.Threading;
 import fabric.common.VersionWarranty;
 import fabric.common.Warranty;
 import fabric.common.exceptions.AccessException;
@@ -669,8 +670,9 @@ public abstract class ObjectDB {
    *          warranty does not meet minExpiry and could not be renewed,
    *          EXTEND_WARRANTY_DENIED is returned.
    */
-  private Pair<ExtendWarrantyStatus, VersionWarranty> extendWarranty(long onum,
-      long minExpiry, boolean minExpiryStrict, boolean causedByWrite) {
+  private Pair<ExtendWarrantyStatus, VersionWarranty> extendWarranty(
+      final long onum, long minExpiry, boolean minExpiryStrict,
+      boolean causedByWrite) {
     while (true) {
       // Get the object's current warranty and determine whether it needs to be
       // extended.
@@ -703,6 +705,7 @@ public abstract class ObjectDB {
       // Extend the object's warranty.
       long expiry = minExpiry;
       boolean proactiveRefresh = true;
+      boolean needToScheduleNextRefresh = !causedByWrite;
       if (!canUseVirtualWarranty && !causedByWrite) {
         // Need a new virtual warranty.
         proactiveRefresh = false;
@@ -734,6 +737,7 @@ public abstract class ObjectDB {
         // another refresh period, just issue it all.
         if (!curVirtualWarranty.expiresAfterStrict(expiry
             + Warranty.REFRESH_INTERVAL_MS)) {
+          needToScheduleNextRefresh = false;
           expiry = curVirtualWarranty.expiry();
         }
       }
@@ -744,6 +748,23 @@ public abstract class ObjectDB {
           continue;
 
         updateLongestWarranty(newWarranty);
+      }
+
+      // If needed, schedule the next proactive refresh.
+      if (needToScheduleNextRefresh) {
+        // Schedule the refresh to happen CLOCK_SKEW ms before the warranty
+        // expires.
+        final long newWarrantyExpiry = newWarranty.expiry();
+        Threading.scheduleAt(newWarrantyExpiry - Warranty.CLOCK_SKEW,
+            new Runnable() {
+              @Override
+              public void run() {
+                long minExpiry =
+                    Math.max(System.currentTimeMillis(), newWarrantyExpiry)
+                        + Warranty.REFRESH_INTERVAL_MS;
+                extendWarranty(onum, minExpiry, true, false);
+              }
+            });
       }
 
       return new Pair<ExtendWarrantyStatus, VersionWarranty>(
