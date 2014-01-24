@@ -339,7 +339,7 @@ public abstract class ObjectDB {
       throws AccessException {
     warrantyIssuer.notifyReadPrepare(onum, commitTime);
     Pair<ExtendWarrantyStatus, VersionWarranty> newWarranty =
-        extendWarranty(onum, commitTime, true, true, false);
+        extendWarranty(onum, commitTime, true, false);
 
     if (newWarranty == EXTEND_WARRANTY_DENIED) return EXTEND_WARRANTY_DENIED;
     if (version != getVersion(onum)) return EXTEND_WARRANTY_BAD_VERSION;
@@ -557,7 +557,7 @@ public abstract class ObjectDB {
         for (LongIterator it = onums.iterator(); it.hasNext();) {
           long onum = it.next();
           Pair<ExtendWarrantyStatus, VersionWarranty> extendResult =
-              extendWarranty(onum, commitTime, true, false, true);
+              extendWarranty(onum, commitTime, true, true);
           try {
             switch (extendResult.first) {
             case NEW_PROACTIVE:
@@ -659,20 +659,18 @@ public abstract class ObjectDB {
    * @param minExpiryStrict whether to use strict comparisons when comparing the
    *          existing warranty with minExpiry. If this is false, clock skew
    *          will be taken into account.
-   * @param extendBeyondMinExpiry if this is true and the existing warranty
-   *          isn't sufficiently long to cover minExpiry, then the warranty will
-   *          be extended beyond minExpiry, if possible, according to what the
-   *          warrantyIssuer gives us.
-   * @param ignoreWriteLocks if true, then write locks will be ignored when
-   *          determining whether it is possible to extend the warranty.
+   * @param causedByWrite true iff the extend-warranty request was caused by
+   *          the object being written. If this is false and the existing
+   *          warranty isn't sufficiently long to cover minExpiry, then the
+   *          warranty will be extended beyond minExpiry, if possible, according
+   *          to what the warrantyIssuer gives us.
    *          
    * @return the resulting warranty, and whether it was extended. If the current
    *          warranty does not meet minExpiry and could not be renewed,
    *          EXTEND_WARRANTY_DENIED is returned.
    */
   private Pair<ExtendWarrantyStatus, VersionWarranty> extendWarranty(long onum,
-      long minExpiry, boolean minExpiryStrict, boolean extendBeyondMinExpiry,
-      boolean ignoreWriteLocks) {
+      long minExpiry, boolean minExpiryStrict, boolean causedByWrite) {
     while (true) {
       // Get the object's current warranty and determine whether it needs to be
       // extended.
@@ -688,7 +686,7 @@ public abstract class ObjectDB {
       }
 
       // Need to extend warranty.
-      if (!ignoreWriteLocks && isWritten(onum)) {
+      if (!causedByWrite && isWritten(onum)) {
         // Unable to extend.
         return EXTEND_WARRANTY_DENIED;
       }
@@ -705,7 +703,7 @@ public abstract class ObjectDB {
       // Extend the object's warranty.
       long expiry = minExpiry;
       boolean proactiveRefresh = true;
-      if (!canUseVirtualWarranty && extendBeyondMinExpiry) {
+      if (!canUseVirtualWarranty && !causedByWrite) {
         // Need a new virtual warranty.
         proactiveRefresh = false;
         VersionWarranty newVirtualWarranty =
@@ -723,7 +721,7 @@ public abstract class ObjectDB {
         curVirtualWarranty = newVirtualWarranty;
       }
 
-      if (extendBeyondMinExpiry) {
+      if (!causedByWrite) {
         // Ensure the new warranty lasts at least REFRESH_INTERVAL_MS long...
         expiry =
             Math.max(minExpiry, System.currentTimeMillis()
@@ -762,7 +760,7 @@ public abstract class ObjectDB {
    */
   public Pair<ExtendWarrantyStatus, VersionWarranty> refreshWarranty(long onum) {
     Pair<ExtendWarrantyStatus, VersionWarranty> result =
-        extendWarranty(onum, System.currentTimeMillis(), false, true, false);
+        extendWarranty(onum, System.currentTimeMillis(), false, false);
     if (result == EXTEND_WARRANTY_DENIED) {
       return new Pair<ExtendWarrantyStatus, VersionWarranty>(
           ExtendWarrantyStatus.OLD, versionWarrantyTable.get(onum));
