@@ -709,8 +709,14 @@ public abstract class ObjectDB {
       if (!canUseVirtualWarranty && !causedByWrite) {
         // Need a new virtual warranty.
         proactiveRefresh = false;
+
+        // Ensure the new virtual warranty covers both minExpiry and the
+        // existing virtual warranty (if any).
+        long curExpiry =
+            curVirtualWarranty == null ? 0 : curVirtualWarranty.expiry();
         VersionWarranty newVirtualWarranty =
-            new VersionWarranty(warrantyIssuer.suggestWarranty(onum, minExpiry));
+            new VersionWarranty(warrantyIssuer.suggestWarranty(onum,
+                Math.max(minExpiry, curExpiry)));
 
         // Add to virtual warranty table.
         if (curVirtualWarranty == null) {
