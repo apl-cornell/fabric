@@ -2,17 +2,21 @@ package fabric.store.db;
 
 import static fabric.common.Logging.STORE_DB_LOGGER;
 
-import java.util.Comparator;
+import java.util.Iterator;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 
 import fabric.common.Logging;
 import fabric.common.Warranty;
 import fabric.common.exceptions.InternalError;
-import fabric.common.util.Pair;
+import fabric.common.util.ConcurrentHashSet;
+import fabric.common.util.ConcurrentLongKeyHashMap;
+import fabric.common.util.ConcurrentLongKeyMap;
+import fabric.common.util.ConcurrentSet;
+import fabric.common.util.LongKeyMap.Entry;
 
 /**
  * A table containing version warranties, keyed by onum, and supporting
@@ -32,17 +36,13 @@ public class WarrantyTable<K, V extends Warranty> {
   /**
    * Priority-queue version of the table for ease of garbage collection.
    */
-  private final PriorityBlockingQueue<Pair<K, V>> gcQueue;
+  private final ConcurrentLongKeyMap<ConcurrentSet<K>> reverseTable;
+  private final int REVERSE_TABLE_BUCKET_SIZE = 5000;
 
   WarrantyTable(V defaultWarranty) {
     this.defaultWarranty = defaultWarranty;
     table = new ConcurrentHashMap<K, V>();
-    gcQueue = new PriorityBlockingQueue<>(11, new Comparator<Pair<K, V>>() {
-      @Override
-      public int compare(Pair<K, V> o1, Pair<K, V> o2) {
-        return Long.compare(o1.second.expiry(), o2.second.expiry());
-      }
-    });
+    reverseTable = new ConcurrentLongKeyHashMap<ConcurrentSet<K>>();
 
     collector = new Collector();
     collector.start();
@@ -63,7 +63,7 @@ public class WarrantyTable<K, V extends Warranty> {
         + " (in " + length + " ms)");
 
     V result = table.putIfAbsent(key, warranty);
-    if (result == null) addGCEntry(key, warranty);
+    if (result == null) addReverseEntry(key, warranty);
     return result;
   }
 
@@ -76,7 +76,7 @@ public class WarrantyTable<K, V extends Warranty> {
         + " (in " + length + " ms)");
 
     table.put(key, warranty);
-    addGCEntry(key, warranty);
+    addReverseEntry(key, warranty);
   }
 
   protected void sanityCheck(V warranty) {
@@ -86,8 +86,20 @@ public class WarrantyTable<K, V extends Warranty> {
     }
   }
 
-  private final void addGCEntry(K key, V warranty) {
-    gcQueue.add(new Pair<>(key, warranty));
+  private final void addReverseEntry(K key, V warranty) {
+    long warrantyBucket = warranty.expiry();
+    warrantyBucket +=
+        REVERSE_TABLE_BUCKET_SIZE - warrantyBucket % REVERSE_TABLE_BUCKET_SIZE;
+
+    while (true) {
+      ConcurrentSet<K> set = new ConcurrentHashSet<>();
+      ConcurrentSet<K> existingSet =
+          reverseTable.putIfAbsent(warrantyBucket, set);
+      if (existingSet != null) set = existingSet;
+
+      set.add(key);
+      if (reverseTable.get(warrantyBucket) == set) break;
+    }
 
     // Signal the collector thread that we have a new warranty.
     collector.signalNewWarranty();
@@ -123,7 +135,7 @@ public class WarrantyTable<K, V extends Warranty> {
       Logging.log(STORE_DB_LOGGER, Level.FINEST, "Extended warranty for {0}"
           + "; expiry={1} (in {2} ms)", key, expiry, length);
 
-      addGCEntry(key, newWarranty);
+      addReverseEntry(key, newWarranty);
     }
 
     return success;
@@ -164,27 +176,28 @@ public class WarrantyTable<K, V extends Warranty> {
     @Override
     public void run() {
       while (true) {
-        long nextExpiryTime;
-        // Loop until the GC queue is empty or there is an unexpired warranty at
-        // its head. All expired warranties that we encounter are GCed.
-        while (true) {
-          Pair<K, V> gcQueueHead = gcQueue.peek();
-          if (gcQueueHead == null || gcQueueHead.second.expired(false)) {
-            nextExpiryTime =
-                gcQueueHead == null ? Long.MAX_VALUE : gcQueueHead.second
-                    .expiry();
-            break;
-          }
+        long now = System.currentTimeMillis();
 
-          // GC.
-          gcQueueHead = gcQueue.poll();
-          if (gcQueueHead == null) {
-            throw new InternalError("Shouldn't happen.");
-          } else if (gcQueueHead.second.expired(false)) {
-            throw new InternalError("Shouldn't happen.");
-          }
+        long nextExpiryTime = Long.MAX_VALUE;
+        for (Iterator<Entry<ConcurrentSet<K>>> it =
+            reverseTable.entrySet().iterator(); it.hasNext();) {
+          Entry<ConcurrentSet<K>> entry = it.next();
+          long expiry = entry.getKey();
 
-          table.remove(gcQueueHead.first, gcQueueHead.second);
+          if (Warranty.isAfter(expiry, now, true)) {
+            // Warranty still valid. Update nextExpiryTime as necessary.
+            if (nextExpiryTime > expiry) nextExpiryTime = expiry;
+          } else {
+            // Warranty expired. Remove relevant entries from table.
+            it.remove();
+
+            Set<K> keys = entry.getValue();
+            for (K key : keys) {
+              Warranty warranty = table.get(key);
+              if (warranty == null || !warranty.expired(false)) continue;
+              table.remove(key, warranty);
+            }
+          }
         }
 
         // Wait until either the next warranty expires or we have more
