@@ -273,9 +273,10 @@ public abstract class ObjectDB {
     this.objectGrouper = new ObjectGrouper(this, privateKey);
     this.longestWarranty = new VersionWarranty[] { new VersionWarranty(0) };
     this.versionWarrantyTable =
-        new WarrantyTable<Long, VersionWarranty>(new VersionWarranty(0));
+        new WarrantyTable<Long, VersionWarranty>("actual", new VersionWarranty(
+            0));
     this.virtualVersionWarrantyTable =
-        new WarrantyTable<>(new VersionWarranty(0));
+        new WarrantyTable<>("virtual", new VersionWarranty(0));
     this.warrantyIssuer = new WarrantyIssuer<Long>();
     this.refreshThread = new WarrantyRefreshThread();
   }
@@ -715,8 +716,7 @@ public abstract class ObjectDB {
       // Extend the object's warranty.
       long expiry = minExpiry;
       boolean proactiveRefresh = true;
-      boolean needToScheduleNextRefresh = !causedByWrite;
-      if (!canUseVirtualWarranty && !causedByWrite) {
+      if (!canUseVirtualWarranty) {
         // Need a new virtual warranty.
         proactiveRefresh = false;
 
@@ -725,24 +725,36 @@ public abstract class ObjectDB {
               ExtendWarrantyStatus.OLD, curWarranty);
         }
 
-        // Ensure the new virtual warranty covers both minExpiry and the
-        // existing virtual warranty (if any).
         long curExpiry =
             curVirtualWarranty == null ? 0 : curVirtualWarranty.expiry();
-        VersionWarranty newVirtualWarranty =
-            new VersionWarranty(warrantyIssuer.suggestWarranty(onum,
-                Math.max(minExpiry, curExpiry)));
-
-        // Add to virtual warranty table.
-        if (curVirtualWarranty == null) {
-          if (virtualVersionWarrantyTable.putIfAbsent(onum, newVirtualWarranty) != null)
-            continue;
+        VersionWarranty newVirtualWarranty;
+        if (causedByWrite) {
+          // Extend the virtual warranty to cover the min expiry.
+          if (curExpiry < minExpiry) {
+            newVirtualWarranty = new VersionWarranty(minExpiry);
+          } else {
+            newVirtualWarranty = curVirtualWarranty;
+          }
         } else {
-          if (!virtualVersionWarrantyTable.extend(onum, curVirtualWarranty,
-              newVirtualWarranty)) continue;
+          // Ensure the new virtual warranty covers both minExpiry and the
+          // existing virtual warranty (if any).
+          newVirtualWarranty =
+              new VersionWarranty(warrantyIssuer.suggestWarranty(onum,
+                  Math.max(minExpiry, curExpiry)));
         }
 
-        curVirtualWarranty = newVirtualWarranty;
+        // Add to virtual warranty table.
+        if (newVirtualWarranty != curVirtualWarranty) {
+          if (curVirtualWarranty == null) {
+            if (virtualVersionWarrantyTable.putIfAbsent(onum,
+                newVirtualWarranty) != null) continue;
+          } else {
+            if (!virtualVersionWarrantyTable.extend(onum, curVirtualWarranty,
+                newVirtualWarranty)) continue;
+          }
+
+          curVirtualWarranty = newVirtualWarranty;
+        }
       }
 
       if (!causedByWrite) {
@@ -758,7 +770,6 @@ public abstract class ObjectDB {
         // another refresh period, just issue it all.
         if (!curVirtualWarranty.expiresAfterStrict(expiry
             + Warranty.REFRESH_INTERVAL_MS)) {
-          needToScheduleNextRefresh = false;
           expiry = curVirtualWarranty.expiry();
         }
       }
@@ -772,11 +783,12 @@ public abstract class ObjectDB {
       }
 
       // If needed, schedule the next proactive refresh.
-      if (needToScheduleNextRefresh) {
+      if (!causedByWrite && expiry < curVirtualWarranty.expiry()) {
         // Schedule the refresh to happen 1.5 CLOCK_SKEWs before the warranty
         // expires.
         refreshThread.submitRequest(newWarranty.expiry()
-            - (long) (1.5 * Warranty.CLOCK_SKEW), onum, expiry);
+            - (long) (1.5 * Warranty.CLOCK_SKEW), onum, expiry,
+            curVirtualWarranty.expiry());
       }
 
       return new Pair<ExtendWarrantyStatus, VersionWarranty>(
@@ -972,7 +984,7 @@ public abstract class ObjectDB {
    * Proactively refreshes warranties before they expire.
    */
   private final class WarrantyRefreshThread extends Thread {
-    final class QueueItem {
+    final class QueueItem implements Comparable<QueueItem> {
       final long onum;
 
       /**
@@ -985,10 +997,21 @@ public abstract class ObjectDB {
        */
       final long expiry;
 
-      QueueItem(long refreshTime, long onum, long expiry) {
+      /**
+       * The expiry time for the virtual warranty.
+       */
+      final long virtualExpiry;
+
+      QueueItem(long refreshTime, long onum, long expiry, long virtualExpiry) {
         this.refreshTime = refreshTime;
         this.onum = onum;
         this.expiry = expiry;
+        this.virtualExpiry = virtualExpiry;
+      }
+
+      @Override
+      public int compareTo(QueueItem other) {
+        return Long.compare(refreshTime, other.refreshTime);
       }
     }
 
@@ -1008,8 +1031,9 @@ public abstract class ObjectDB {
       start();
     }
 
-    public void submitRequest(long refreshTime, long onum, long expiry) {
-      refreshQueue.add(new QueueItem(refreshTime, onum, expiry));
+    public void submitRequest(long refreshTime, long onum, long expiry,
+        long virtualExpiry) {
+      refreshQueue.add(new QueueItem(refreshTime, onum, expiry, virtualExpiry));
       haveNewRequest.set(true);
     }
 
@@ -1030,6 +1054,12 @@ public abstract class ObjectDB {
                   request == null ? Long.MAX_VALUE : request.refreshTime;
               break;
             }
+
+            request = refreshQueue.remove();
+
+            // Ignore the request if we're so far behind that the virtual
+            // warranty has expired.
+            if (Warranty.isAfter(now, request.virtualExpiry, true)) continue;
 
             // Fulfill the refresh request.
             long minExpiry =

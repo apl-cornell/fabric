@@ -30,7 +30,7 @@ public class WarrantyIssuer<K> {
    * The maximum length of time (in milliseconds) for which each issued warranty
    * should be valid.
    */
-  private static final int MAX_WARRANTY_LENGTH = (int) (0.683228 * 10000);
+  public static final int MAX_WARRANTY_LENGTH = (int) (0.683228 * 10000);
 
   /**
    * The decay rate for the exponential average when calculating the rate of

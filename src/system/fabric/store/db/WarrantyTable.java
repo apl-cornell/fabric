@@ -33,13 +33,16 @@ public class WarrantyTable<K, V extends Warranty> {
 
   private final Collector collector;
 
+  private final String name;
+
   /**
    * Priority-queue version of the table for ease of garbage collection.
    */
   private final ConcurrentLongKeyMap<ConcurrentSet<K>> reverseTable;
   private final int REVERSE_TABLE_BUCKET_SIZE = 5000;
 
-  WarrantyTable(V defaultWarranty) {
+  WarrantyTable(String name, V defaultWarranty) {
+    this.name = name;
     this.defaultWarranty = defaultWarranty;
     table = new ConcurrentHashMap<K, V>();
     reverseTable = new ConcurrentLongKeyHashMap<ConcurrentSet<K>>();
@@ -59,8 +62,8 @@ public class WarrantyTable<K, V extends Warranty> {
 
     long expiry = warranty.expiry();
     long length = expiry - System.currentTimeMillis();
-    STORE_DB_LOGGER.finest("Adding warranty for " + key + "; expiry=" + expiry
-        + " (in " + length + " ms)");
+    STORE_DB_LOGGER.finest("Adding " + name + " warranty for " + key
+        + "; expiry=" + expiry + " (in " + length + " ms)");
 
     V result = table.putIfAbsent(key, warranty);
     if (result == null) addReverseEntry(key, warranty);
@@ -72,8 +75,8 @@ public class WarrantyTable<K, V extends Warranty> {
 
     long expiry = warranty.expiry();
     long length = expiry - System.currentTimeMillis();
-    STORE_DB_LOGGER.finest("Adding warranty for " + key + "; expiry=" + expiry
-        + " (in " + length + " ms)");
+    STORE_DB_LOGGER.finest("Adding " + name + " warranty for " + key
+        + "; expiry=" + expiry + " (in " + length + " ms)");
 
     table.put(key, warranty);
     addReverseEntry(key, warranty);
@@ -132,8 +135,9 @@ public class WarrantyTable<K, V extends Warranty> {
     if (success) {
       long expiry = newWarranty.expiry();
       long length = expiry - System.currentTimeMillis();
-      Logging.log(STORE_DB_LOGGER, Level.FINEST, "Extended warranty for {0}"
-          + "; expiry={1} (in {2} ms)", key, expiry, length);
+      Logging.log(STORE_DB_LOGGER, Level.FINEST,
+          "Extended {3} warranty for {0}" + "; expiry={1} (in {2} ms)", key,
+          expiry, length, name);
 
       addReverseEntry(key, newWarranty);
     }
