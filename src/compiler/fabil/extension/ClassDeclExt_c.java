@@ -914,7 +914,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
             callResultType);
     Stmt callUnpack =
         qq.parseStmt(
-            "$cacheResult = (%T) $resultObj.getValueCopy().$getProxy();\n",
+            "$cacheResult = (%T) $resultObj.getValueCopy();\n",
             wrappedReturnType, wrappedReturnType);
     if (ts.isJavaInlineable(wrappedReturnType)) {
       callUnpack =
