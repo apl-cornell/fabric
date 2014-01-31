@@ -224,15 +224,10 @@ public abstract class ObjectDB {
   protected final VersionWarranty[] longestWarranty;
 
   /**
-   * The table containing the actual version warranties that we've issued.
+   * The table containing the version warranties that we've issued, and their
+   * corresponding virtual warranties.
    */
-  protected final WarrantyTable<Long, VersionWarranty> versionWarrantyTable;
-
-  /**
-   * The table containing the version warranties that conceptually exist, but
-   * may not have been issued yet, due to proactive warranty refresh.
-   */
-  protected final WarrantyTable<Long, VersionWarranty> virtualVersionWarrantyTable;
+  protected final WarrantyTable<Long, VersionWarranty> warrantyTable;
 
   protected final WarrantyRefreshThread refreshThread;
 
@@ -272,11 +267,8 @@ public abstract class ObjectDB {
         new ConcurrentLongKeyHashMap<OidKeyHashMap<LongSet>>();
     this.objectGrouper = new ObjectGrouper(this, privateKey);
     this.longestWarranty = new VersionWarranty[] { new VersionWarranty(0) };
-    this.versionWarrantyTable =
-        new WarrantyTable<Long, VersionWarranty>("actual", new VersionWarranty(
-            0));
-    this.virtualVersionWarrantyTable =
-        new WarrantyTable<>("virtual", new VersionWarranty(0));
+    this.warrantyTable =
+        new WarrantyTable<Long, VersionWarranty>(new VersionWarranty(0));
     this.warrantyIssuer = new WarrantyIssuer<Long>();
     this.refreshThread = new WarrantyRefreshThread();
   }
@@ -438,10 +430,15 @@ public abstract class ObjectDB {
       }
 
       // Cut short the virtual warranty.
-      virtualVersionWarrantyTable.remove(onum);
+      WarrantyTable<Long, VersionWarranty>.Entry entry;
+      while (true) {
+        entry = warrantyTable.getEntry(onum);
+        if (entry == null) break;
+        if (entry.truncateVersionWarranty()) break;
+      }
 
       // Obtain existing warranty.
-      VersionWarranty warranty = versionWarrantyTable.get(onum);
+      VersionWarranty warranty = warrantyTable.getIssuedWarranty(onum);
       HOTOS_LOGGER
           .log(
               Level.INFO,
@@ -687,15 +684,19 @@ public abstract class ObjectDB {
     while (true) {
       // Get the object's current warranty and determine whether it needs to be
       // extended.
-      VersionWarranty curWarranty = versionWarrantyTable.get(onum);
+      WarrantyTable<Long, VersionWarranty>.Entry tableEntry =
+          warrantyTable.getEntry(onum);
+      VersionWarranty curIssuedWarranty =
+          tableEntry == null ? warrantyTable.getDefaultWarranty() : tableEntry
+              .issuedWarranty();
       if (minExpiryStrict) {
-        if (curWarranty.expiresAfterStrict(minExpiry))
+        if (curIssuedWarranty.expiresAfterStrict(minExpiry))
           return new Pair<ExtendWarrantyStatus, VersionWarranty>(
-              ExtendWarrantyStatus.OLD, curWarranty);
+              ExtendWarrantyStatus.OLD, curIssuedWarranty);
       } else {
-        if (curWarranty.expiresAfter(minExpiry, false))
+        if (curIssuedWarranty.expiresAfter(minExpiry, false))
           return new Pair<ExtendWarrantyStatus, VersionWarranty>(
-              ExtendWarrantyStatus.OLD, curWarranty);
+              ExtendWarrantyStatus.OLD, curIssuedWarranty);
       }
 
       // Need to extend warranty.
@@ -706,7 +707,7 @@ public abstract class ObjectDB {
 
       // See if the virtual warranty needs to be extended.
       VersionWarranty curVirtualWarranty =
-          virtualVersionWarrantyTable.get(onum);
+          tableEntry == null ? null : tableEntry.virtualWarranty();
       final boolean canUseVirtualWarranty =
           curVirtualWarranty != null
               && (minExpiryStrict ? curVirtualWarranty
@@ -722,37 +723,31 @@ public abstract class ObjectDB {
 
         if (!canExtendVirtual) {
           return new Pair<ExtendWarrantyStatus, VersionWarranty>(
-              ExtendWarrantyStatus.OLD, curWarranty);
+              ExtendWarrantyStatus.OLD, curIssuedWarranty);
         }
 
-        long curExpiry =
-            curVirtualWarranty == null ? 0 : curVirtualWarranty.expiry();
-        VersionWarranty newVirtualWarranty;
-        if (causedByWrite) {
-          // Extend the virtual warranty to cover the min expiry.
-          if (curExpiry < minExpiry) {
-            newVirtualWarranty = new VersionWarranty(minExpiry);
-          } else {
-            newVirtualWarranty = curVirtualWarranty;
-          }
-        } else {
-          // Ensure the new virtual warranty covers both minExpiry and the
-          // existing virtual warranty (if any).
-          newVirtualWarranty =
-              new VersionWarranty(warrantyIssuer.suggestWarranty(onum,
-                  Math.max(minExpiry, curExpiry)));
+        // Extend the virtual warranty to cover the min expiry, any previously
+        // issued warranty, and (if applicable) the warranty period suggested
+        // by the warranty issuer.
+        long curExpiry = curIssuedWarranty.expiry();
+        long newVirtualExpiry = Math.max(minExpiry, curExpiry);
+        if (!causedByWrite) {
+          newVirtualExpiry =
+              warrantyIssuer.suggestWarranty(onum, newVirtualExpiry);
         }
 
-        // Add to virtual warranty table.
-        if (newVirtualWarranty != curVirtualWarranty) {
-          if (curVirtualWarranty == null) {
-            if (virtualVersionWarrantyTable.putIfAbsent(onum,
-                newVirtualWarranty) != null) continue;
-          } else {
-            if (!virtualVersionWarrantyTable.extend(onum, curVirtualWarranty,
-                newVirtualWarranty)) continue;
-          }
-
+        if (tableEntry == null) {
+          // Add to warranty table.
+          curVirtualWarranty = new VersionWarranty(newVirtualExpiry);
+          tableEntry =
+              warrantyTable.putIfAbsentAndGet(onum, curVirtualWarranty);
+          if (tableEntry.virtualWarranty() != curVirtualWarranty) continue;
+        } else if (newVirtualExpiry != curVirtualWarranty.expiry()) {
+          // Update existing table entry.
+          VersionWarranty newVirtualWarranty =
+              new VersionWarranty(newVirtualExpiry);
+          if (!tableEntry.replaceVirtualWarranty(curVirtualWarranty,
+              newVirtualWarranty)) continue;
           curVirtualWarranty = newVirtualWarranty;
         }
       }
@@ -776,7 +771,7 @@ public abstract class ObjectDB {
 
       VersionWarranty newWarranty = new VersionWarranty(expiry);
       if (expiry > System.currentTimeMillis()) {
-        if (!versionWarrantyTable.extend(onum, curWarranty, newWarranty))
+        if (!tableEntry.replaceIssuedWarranty(curIssuedWarranty, newWarranty))
           continue;
 
         updateLongestWarranty(newWarranty);
@@ -808,7 +803,7 @@ public abstract class ObjectDB {
         extendWarranty(onum, System.currentTimeMillis(), false, false, true);
     if (result == EXTEND_WARRANTY_DENIED) {
       return new Pair<ExtendWarrantyStatus, VersionWarranty>(
-          ExtendWarrantyStatus.OLD, versionWarrantyTable.get(onum));
+          ExtendWarrantyStatus.OLD, warrantyTable.getIssuedWarranty(onum));
     }
 
     return result;

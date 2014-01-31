@@ -372,7 +372,7 @@ public class SubscriptionManager extends FabricThread.Impl {
 
   public static final boolean ENABLE_OBJECT_UPDATES = false;
   public static final boolean ENABLE_REACTIVE_WARRANTY_REFRESHES = false;
-  public static final boolean ENABLE_PROACTIVE_WARRANTY_REFRESHES = true;
+  public static final boolean ENABLE_PROACTIVE_WARRANTY_REFRESHES = false;
 
   /**
    * @param tm

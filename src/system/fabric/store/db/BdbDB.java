@@ -535,7 +535,7 @@ public class BdbDB extends ObjectDB {
                     addWrittenOnumByTid(tid, owner, onum);
 
                     // Restore the object's warranty.
-                    versionWarrantyTable.put(onum, warranty);
+                    warrantyTable.putIfAbsentAndGet(onum, warranty);
                   } else {
                     STORE_DB_LOGGER.finest("Recovered create for " + onum);
                   }
@@ -570,7 +570,7 @@ public class BdbDB extends ObjectDB {
             if (meta.get(txn, longestWarrantyEntry, data, LockMode.DEFAULT) == SUCCESS) {
               longestWarranty[0] =
                   new VersionWarranty(LongBinding.entryToLong(data));
-              versionWarrantyTable.setDefaultWarranty(longestWarranty[0]);
+              warrantyTable.setDefaultWarranty(longestWarranty[0]);
             }
 
             return commitSchedule;
