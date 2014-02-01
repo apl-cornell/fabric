@@ -322,6 +322,15 @@ public class BdbDB extends ObjectDB {
           cachedObjects.put(onum, o);
         }
 
+        // If we have a semantic warranites table initialized (which should
+        // always be true) then commit updates to the calls involved as well.
+        if (semanticWarranties != null) {
+          semanticWarranties.commit(tid);
+        } else {
+          throw new InternalError(
+              "Somehow we don't have a semantic warranties table!");
+        }
+
         STORE_DB_LOGGER.finer("Bdb commit success tid " + tid);
       }
     });

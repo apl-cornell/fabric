@@ -122,6 +122,15 @@ public class MemoryDB extends ObjectDB {
             notifyCommittedUpdate(sm, o.getOnum(), workerIdentity.node);
           }
         }
+
+        // If we have a semantic warranites table initialized (which should
+        // always be true) then commit updates to the calls involved as well.
+        if (semanticWarranties != null) {
+          semanticWarranties.commit(tid);
+        } else {
+          throw new InternalError(
+              "Somehow we don't have a semantic warranties table!");
+        }
       }
     });
   }

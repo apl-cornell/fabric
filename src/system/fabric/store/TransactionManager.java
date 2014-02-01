@@ -103,7 +103,6 @@ public class TransactionManager {
       throws TransactionCommitFailedException {
     try {
       database.commit(transactionID, commitTime, workerIdentity, sm);
-      semanticWarranties.commit(transactionID, commitTime);
       STORE_TRANSACTION_LOGGER.fine("Committed transaction "
           + Long.toHexString(transactionID));
     } catch (final RuntimeException e) {

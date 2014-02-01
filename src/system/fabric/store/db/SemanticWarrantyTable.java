@@ -1047,6 +1047,7 @@ public class SemanticWarrantyTable {
     issuer = new WarrantyIssuer<CallInstance>();
     updatingTIDMap = new ConcurrentLongKeyHashMap<Set<CallInstance>>();
     this.database = database;
+    this.database.setSemanticWarrantyTable(this);
   }
 
   /**
@@ -1098,18 +1099,6 @@ public class SemanticWarrantyTable {
       throws TransactionPrepareFailedException {
     CallInfo info = getInfo(req.call);
     return info.request(req, transactionID, getNonZeroWarranty);
-  }
-
-  /**
-   * Schedule a new semantic warranty to become active at the given time.
-   */
-  public void putAt(long commitTime, final CallInstance call) {
-    Threading.scheduleAt(commitTime, new Runnable() {
-      @Override
-      public void run() {
-        getInfo(call).update();
-      }
-    });
   }
 
   /**
@@ -1215,17 +1204,16 @@ public class SemanticWarrantyTable {
   }
 
   /**
-   * Commit any state associated with the given transactionID at the given
-   * commitTime.
+   * Commit any state associated with the given transactionID right now.
    */
-  public void commit(long transactionID, long commitTime) {
+  public void commit(long transactionID) {
     SEMANTIC_WARRANTY_LOGGER.finer(String.format(
         "Committing semantic warranty updates from %x", transactionID));
     // Add requests made by the original transaction
     Set<CallInstance> updates = updatingTIDMap.remove(transactionID);
     if (updates != null) {
       for (CallInstance call : updates) {
-        putAt(commitTime, call);
+        getInfo(call).update();
       }
     }
   }
