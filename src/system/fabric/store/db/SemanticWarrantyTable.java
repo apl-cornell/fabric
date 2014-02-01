@@ -901,111 +901,101 @@ public class SemanticWarrantyTable {
      * Cancel an update from a transaction.
      */
     public void removeUpdate() {
-      try {
-        // Make sure there was actually an update.
-        if (nextUpdate == null) return;
+      // Make sure there was actually an update.
+      if (nextUpdate == null) return;
 
-        // Handle reads
-        for (LongIterator iter = nextUpdate.readOnums.iterator(); iter
-            .hasNext();) {
-          long read = iter.next();
-          if (!reads.contains(read)) readersTable.get(read).remove(call);
-        }
-
-        // Handle creates
-        for (LongIterator iter = nextUpdate.createOnums.iterator(); iter
-            .hasNext();) {
-          long create = iter.next();
-          if (!creates.contains(create)) creatorTable.get(create).remove(call);
-        }
-
-        // Handle calls
-        for (CallInstance subCall : nextUpdate.calls.keySet()) {
-          if (!calls.contains(subCall)) {
-            getInfo(subCall).removeCaller(this.call);
-          }
-        }
-
-        // Remove the pending update
-        nextUpdate = null;
-        nextUpdateWarranty = null;
-      } finally {
-        // Should have been write locked by the scheduled update.
-        writeUnlock();
+      // Handle reads
+      for (LongIterator iter = nextUpdate.readOnums.iterator(); iter
+          .hasNext();) {
+        long read = iter.next();
+        if (!reads.contains(read)) readersTable.get(read).remove(call);
       }
+
+      // Handle creates
+      for (LongIterator iter = nextUpdate.createOnums.iterator(); iter
+          .hasNext();) {
+        long create = iter.next();
+        if (!creates.contains(create)) creatorTable.get(create).remove(call);
+      }
+
+      // Handle calls
+      for (CallInstance subCall : nextUpdate.calls.keySet()) {
+        if (!calls.contains(subCall)) {
+          getInfo(subCall).removeCaller(this.call);
+        }
+      }
+
+      // Remove the pending update
+      nextUpdate = null;
+      nextUpdateWarranty = null;
     }
 
     /**
      * Complete an update from a transaction.
      */
     public void update() {
-      try {
-        issuer.notifyWriteCommit(call);
+      issuer.notifyWriteCommit(call);
 
-        // Remove old stuff
-        // Reads
-        for (LongIterator iter = reads.iterator(); iter.hasNext();) {
-          long read = iter.next();
-          if (!nextUpdate.readOnums.contains(read))
-            readersTable.get(read).remove(call);
-        }
-
-        // Creates
-        for (LongIterator iter = creates.iterator(); iter.hasNext();) {
-          long create = iter.next();
-          if (!nextUpdate.createOnums.contains(create))
-            creatorTable.get(create).remove(call);
-        }
-
-        // Calls
-        for (CallInstance subCall : calls)
-          if (!nextUpdate.calls.containsKey(subCall))
-            getInfo(subCall).removeCaller(this.call);
-
-        // Set new stuff up
-        // Reads
-        reads.clear();
-        for (LongIterator iter = nextUpdate.readOnums.iterator(); iter
-            .hasNext();) {
-          long read = iter.next();
-          reads.add(read);
-        }
-
-        // Creates
-        creates.clear();
-        for (LongIterator iter = nextUpdate.createOnums.iterator(); iter
-            .hasNext();) {
-          long create = iter.next();
-          creates.add(create);
-        }
-
-        // Calls
-        calls.clear();
-        for (CallInstance subCall : nextUpdate.calls.keySet()) {
-          calls.add(subCall);
-        }
-
-        // Set value, warranty, and status
-        if (nextUpdate.value == null
-            || nextUpdate.value instanceof WrappedJavaInlineable) {
-          value = nextUpdate.value;
-        } else {
-          value = nextUpdate.value.$getProxy();
-        }
-
-        // Set warranty
-        warranty = nextUpdateWarranty;
-
-        // Mark as having a value now.
-        hasValue = true;
-
-        // Reset update to nothing.
-        nextUpdate = null;
-        nextUpdateWarranty = null;
-      } finally {
-        // This should have been locked when the update was scheduled.
-        writeUnlock();
+      // Remove old stuff
+      // Reads
+      for (LongIterator iter = reads.iterator(); iter.hasNext();) {
+        long read = iter.next();
+        if (!nextUpdate.readOnums.contains(read))
+          readersTable.get(read).remove(call);
       }
+
+      // Creates
+      for (LongIterator iter = creates.iterator(); iter.hasNext();) {
+        long create = iter.next();
+        if (!nextUpdate.createOnums.contains(create))
+          creatorTable.get(create).remove(call);
+      }
+
+      // Calls
+      for (CallInstance subCall : calls)
+        if (!nextUpdate.calls.containsKey(subCall))
+          getInfo(subCall).removeCaller(this.call);
+
+      // Set new stuff up
+      // Reads
+      reads.clear();
+      for (LongIterator iter = nextUpdate.readOnums.iterator(); iter
+          .hasNext();) {
+        long read = iter.next();
+        reads.add(read);
+      }
+
+      // Creates
+      creates.clear();
+      for (LongIterator iter = nextUpdate.createOnums.iterator(); iter
+          .hasNext();) {
+        long create = iter.next();
+        creates.add(create);
+      }
+
+      // Calls
+      calls.clear();
+      for (CallInstance subCall : nextUpdate.calls.keySet()) {
+        calls.add(subCall);
+      }
+
+      // Set value, warranty, and status
+      if (nextUpdate.value == null
+          || nextUpdate.value instanceof WrappedJavaInlineable) {
+        value = nextUpdate.value;
+      } else {
+        value = nextUpdate.value.$getProxy();
+      }
+
+      // Set warranty
+      warranty = nextUpdateWarranty;
+
+      // Mark as having a value now.
+      hasValue = true;
+
+      // Reset update to nothing.
+      nextUpdate = null;
+      nextUpdateWarranty = null;
     }
   }
 
@@ -1197,8 +1187,14 @@ public class SemanticWarrantyTable {
         "Aborting semantic warranty updates from %x", transactionID));
     Set<CallInstance> updates = updatingTIDMap.remove(transactionID);
     if (updates != null) {
-      for (CallInstance call : updates) {
-        getInfo(call).removeUpdate();
+      try {
+        for (CallInstance call : updates) {
+          getInfo(call).removeUpdate();
+        }
+      } finally {
+        for (CallInstance call : updates) {
+          getInfo(call).writeUnlock();
+        }
       }
     }
   }
@@ -1212,8 +1208,14 @@ public class SemanticWarrantyTable {
     // Add requests made by the original transaction
     Set<CallInstance> updates = updatingTIDMap.remove(transactionID);
     if (updates != null) {
-      for (CallInstance call : updates) {
-        getInfo(call).update();
+      try {
+        for (CallInstance call : updates) {
+          getInfo(call).update();
+        }
+      } finally {
+        for (CallInstance call : updates) {
+          getInfo(call).writeUnlock();
+        }
       }
     }
   }
