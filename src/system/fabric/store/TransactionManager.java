@@ -492,18 +492,39 @@ public class TransactionManager {
         // Get a proposal for a warranty
         SemanticWarranty proposed = semanticWarranties.requestWarranty(tid, r,
             true);
-        SEMANTIC_WARRANTY_LOGGER.finer(r.call.toString()
-            + " was proposed a warranty to expire in " + (proposed.expiry() -
-              System.currentTimeMillis()));
-        // Add it to the response set
-        warranties.put(r.call, proposed);
-        
-        //Update fringe
-        for (CallInstance c : new HashSet<CallInstance>(nonfringe)) {
-          simplifiedDepMap.get(c).remove(r.call);
-          if (simplifiedDepMap.get(c).isEmpty()) {
-            nonfringe.remove(c);
-            fringe.add(c);
+        if (proposed != null) {
+          SEMANTIC_WARRANTY_LOGGER.finer(r.call.toString()
+              + " was proposed a warranty to expire in " + (proposed.expiry() -
+                System.currentTimeMillis()));
+          // Add it to the response set
+          warranties.put(r.call, proposed);
+          
+          //Update fringe
+          for (CallInstance c : new HashSet<CallInstance>(nonfringe)) {
+            simplifiedDepMap.get(c).remove(r.call);
+            if (simplifiedDepMap.get(c).isEmpty()) {
+              nonfringe.remove(c);
+              fringe.add(c);
+            }
+          }
+        } else {
+          // We couldn't get that warranty... so don't even bother with other
+          // warranties that used it.  Oh well.
+          List<CallInstance> callsToDrop = new ArrayList<CallInstance>();
+          SEMANTIC_WARRANTY_LOGGER.finer(r.call.toString() +
+              " could not make a warranty.");
+          callsToDrop.add(r.call);
+          // Recursively remove stuff that used this.
+          while (!callsToDrop.isEmpty()) {
+            CallInstance callToDrop = callsToDrop.remove(0);
+            for (CallInstance c : new HashSet<CallInstance>(nonfringe)) {
+              if (simplifiedDepMap.get(c).contains(callToDrop)) {
+                nonfringe.remove(c);
+                SEMANTIC_WARRANTY_LOGGER.finer(c.toString() +
+                    " could not make a warranty.");
+                callsToDrop.add(c);
+              }
+            }
           }
         }
       }

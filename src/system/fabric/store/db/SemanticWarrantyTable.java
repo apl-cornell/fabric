@@ -366,6 +366,9 @@ public class SemanticWarrantyTable {
     /**
      * Request a new warranty for the given call request and return the warranty
      * that will be used for the call.
+     *
+     * If there is another transaction currently making/updating this warranty,
+     * then we don't make a warranty and return null.
      */
     public SemanticWarranty request(SemanticWarrantyRequest req,
         long transactionID, boolean useIssuer)
@@ -425,9 +428,8 @@ public class SemanticWarrantyTable {
           return nextUpdateWarranty;
         } catch (UnableToLockException e) {
           SEMANTIC_WARRANTY_LOGGER.finest("Could not lock call " + call
-              + " for write");
-          throw new TransactionPrepareFailedException("Could not lock call "
-              + call + " for write");
+              + " for write, no warranty created.");
+          return null;
         }
       }
     }
