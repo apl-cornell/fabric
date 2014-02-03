@@ -21,7 +21,6 @@ import java.util.concurrent.locks.ReentrantLock;
 import fabric.common.SemanticWarranty;
 import fabric.common.SerializedObject;
 import fabric.common.SysUtil;
-import fabric.common.Threading;
 import fabric.common.VersionWarranty;
 import fabric.common.util.ConcurrentLongKeyHashMap;
 import fabric.common.util.ConcurrentLongKeyMap;
@@ -194,28 +193,32 @@ public class SemanticWarrantyTable {
         if (value == null) {
           // Check if they're both null
           return otherVal == null;
-        } else if (otherVal instanceof WrappedJavaInlineable) {
+        } else if (otherVal instanceof WrappedJavaInlineable
+            && value instanceof WrappedJavaInlineable) {
           // Check if they're both the same inlineable
-          if (value instanceof WrappedJavaInlineable) {
-            return otherVal.equals(value);
-          }
-          return false;
-        } else if (otherVal instanceof fabric.lang.Object._Proxy) {
+          return otherVal.equals(value);
+        } else if (!(otherVal instanceof WrappedJavaInlineable)
+            && !(value instanceof WrappedJavaInlineable) && value != null
+            && otherVal != null) {
           // Check if they're the same object
-          if (value instanceof fabric.lang.Object._Proxy) {
-            try {
-              final fabric.lang.Object value1 = value;
-              final fabric.lang.Object value2 = otherVal;
-              Worker.runInTopLevelTransaction(new Code<Void>() {
-                @Override
-                public Void run() {
-                  throw new CompareCheckException(value1.equals(value2));
+          try {
+            final fabric.lang.Object value1 = value;
+            final fabric.lang.Object value2 = otherVal;
+            Worker.runInTopLevelTransaction(new Code<Void>() {
+              @Override
+              public Void run() {
+                boolean result = value1.equals(value2);
+                if (result) {
+                  SEMANTIC_WARRANTY_LOGGER.finest("Values are equal!");
+                } else {
+                  SEMANTIC_WARRANTY_LOGGER.finest("Values are not equal!");
                 }
-              }, false);
-            } catch (AbortException e) {
-              if (e.getCause() instanceof CompareCheckException) {
-                return ((CompareCheckException) e.getCause()).result;
+                throw new CompareCheckException(result);
               }
+            }, false);
+          } catch (AbortException e) {
+            if (e.getCause() instanceof CompareCheckException) {
+              return ((CompareCheckException) e.getCause()).result;
             }
           }
         }
@@ -476,7 +479,9 @@ public class SemanticWarrantyTable {
         return SemanticExtendStatus.OK;
       case VALID:
         // Check what they think it is.
-        if (!compareValue(oldValue)) return SemanticExtendStatus.BAD_VERSION;
+        if (!compareValue(oldValue)) {
+          return SemanticExtendStatus.BAD_VERSION;
+        }
         // Update the warranty
         if (warranty.expiresBefore(commitTime, true)) {
           // Check that we won't be extending past the next write.
@@ -907,8 +912,7 @@ public class SemanticWarrantyTable {
       if (nextUpdate == null) return;
 
       // Handle reads
-      for (LongIterator iter = nextUpdate.readOnums.iterator(); iter
-          .hasNext();) {
+      for (LongIterator iter = nextUpdate.readOnums.iterator(); iter.hasNext();) {
         long read = iter.next();
         if (!reads.contains(read)) readersTable.get(read).remove(call);
       }
@@ -961,8 +965,7 @@ public class SemanticWarrantyTable {
       // Set new stuff up
       // Reads
       reads.clear();
-      for (LongIterator iter = nextUpdate.readOnums.iterator(); iter
-          .hasNext();) {
+      for (LongIterator iter = nextUpdate.readOnums.iterator(); iter.hasNext();) {
         long read = iter.next();
         reads.add(read);
       }
@@ -1053,7 +1056,8 @@ public class SemanticWarrantyTable {
     case VALID:
     case STALE:
     default:
-      return new WarrantiedCallResult(info.getValue(), info.getWarranty(), info.getCreates());
+      return new WarrantiedCallResult(info.getValue(), info.getWarranty(),
+          info.getCreates());
     }
   }
 
@@ -1069,7 +1073,8 @@ public class SemanticWarrantyTable {
     case STALE:
     default:
       info.updateWarranty();
-      return new WarrantiedCallResult(info.getValue(), info.getWarranty(), info.getCreates());
+      return new WarrantiedCallResult(info.getValue(), info.getWarranty(),
+          info.getCreates());
     }
   }
 
