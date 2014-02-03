@@ -95,8 +95,9 @@ class WarrantyTable<K, V extends Warranty> {
       if (valid && STORE_DB_LOGGER.isLoggable(Level.FINEST)) {
         long expiry = newIssuedWarranty.expiry();
         long length = expiry - System.currentTimeMillis();
-        STORE_DB_LOGGER.finest("Extending issued warranty for " + key
-            + "; expiry=" + expiry + " (in " + length + " ms)");
+        Logging.log(STORE_DB_LOGGER, Level.FINEST,
+            "Extending issued warranty for {0}; expiry={1} (in {2} ms)", key,
+            expiry, length);
 
       }
       return valid;
