@@ -391,9 +391,11 @@ public class SemanticWarrantyTable {
                   + " depends on object " + onum
                   + " that has a write scheduled.");
               writeUnlock();
-              throw new TransactionPrepareFailedException("Request for call "
-                  + call + " depends on object " + onum
-                  + " that has a write scheduled.");
+              //throw new TransactionPrepareFailedException("Request for call "
+              //+ call + " depends on object " + onum
+              //+ " that has a write scheduled.");
+              // We just don't make a warranty.  Don't kill the transaction yet...
+              return null;
             }
           }
 
@@ -410,9 +412,11 @@ public class SemanticWarrantyTable {
                 SEMANTIC_WARRANTY_LOGGER.finest("Request for call " + call
                     + " depends on call " + c + " that has a write scheduled.");
                 writeUnlock();
-                throw new TransactionPrepareFailedException("Request for call "
-                    + call + " depends on call " + c
-                    + " that has a write scheduled.");
+                //throw new TransactionPrepareFailedException("Request for call "
+                //+ call + " depends on call " + c
+                //+ " that has a write scheduled.");
+                //We just don't make a warranty.  Don't kill the transaction yet...
+                return null;
               }
             }
           }
