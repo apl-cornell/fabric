@@ -1,21 +1,13 @@
 package fabric.store.db;
 
-import static fabric.common.Logging.HOTOS_LOGGER;
-import static fabric.store.db.ObjectDB.ExtendWarrantyStatus.NEW_PROACTIVE;
-import static fabric.store.db.ObjectDB.ExtendWarrantyStatus.NEW_REACTIVE;
-
 import java.io.DataOutput;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.security.PrivateKey;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.PriorityBlockingQueue;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.logging.Level;
 
 import javax.security.auth.x500.X500Principal;
 
@@ -23,7 +15,6 @@ import fabric.common.FastSerializable;
 import fabric.common.ONumConstants;
 import fabric.common.SerializedObject;
 import fabric.common.VersionWarranty;
-import fabric.common.Warranty;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.net.RemoteIdentity;
@@ -80,8 +71,6 @@ public abstract class ObjectDB {
    * The store's object grouper.
    */
   private final ObjectGrouper objectGrouper;
-
-  private SubscriptionManager sm;
 
   public static enum UpdateType {
     CREATE, WRITE
@@ -224,12 +213,9 @@ public abstract class ObjectDB {
   protected final VersionWarranty[] longestWarranty;
 
   /**
-   * The table containing the version warranties that we've issued, and their
-   * corresponding virtual warranties.
+   * The table containing the version warranties that we've issued.
    */
-  protected final WarrantyTable<Long, VersionWarranty> warrantyTable;
-
-  protected final WarrantyRefreshThread refreshThread;
+  protected final WarrantyTable<Long, VersionWarranty> versionWarrantyTable;
 
   /**
    * <p>
@@ -267,10 +253,9 @@ public abstract class ObjectDB {
         new ConcurrentLongKeyHashMap<OidKeyHashMap<LongSet>>();
     this.objectGrouper = new ObjectGrouper(this, privateKey);
     this.longestWarranty = new VersionWarranty[] { new VersionWarranty(0) };
-    this.warrantyTable =
+    this.versionWarrantyTable =
         new WarrantyTable<Long, VersionWarranty>(new VersionWarranty(0));
     this.warrantyIssuer = new WarrantyIssuer<Long>();
-    this.refreshThread = new WarrantyRefreshThread();
   }
 
   /**
@@ -299,16 +284,10 @@ public abstract class ObjectDB {
 
   public static enum ExtendWarrantyStatus {
     /**
-     * Indicates that a new virtual warranty was created to satisfy an
-     * extend-warranty request.
-     */
-    NEW_REACTIVE,
-
-    /**
      * Indicates that a new warranty was created to satisfy an extend-warranty
-     * request, but an existing virtual warranty was sufficient for the request.
+     * request.
      */
-    NEW_PROACTIVE,
+    NEW,
 
     /**
      * Indicates that the existing warranty satisfied an extend-warranty
@@ -340,7 +319,7 @@ public abstract class ObjectDB {
       throws AccessException {
     warrantyIssuer.notifyReadPrepare(onum, commitTime);
     Pair<ExtendWarrantyStatus, VersionWarranty> newWarranty =
-        extendWarranty(onum, commitTime, true, false, true);
+        extendWarranty(onum, commitTime, true, true, false);
 
     if (newWarranty == EXTEND_WARRANTY_DENIED) return EXTEND_WARRANTY_DENIED;
     if (version != getVersion(onum)) return EXTEND_WARRANTY_BAD_VERSION;
@@ -429,28 +408,14 @@ public abstract class ObjectDB {
         return VersionWarranty.EXPIRED_WARRANTY;
       }
 
-      // Cut short the virtual warranty.
-      WarrantyTable<Long, VersionWarranty>.Entry entry;
-      while (true) {
-        entry = warrantyTable.getEntry(onum);
-        if (entry == null) break;
-        if (entry.truncateVersionWarranty()) break;
-      }
-
       // Obtain existing warranty.
-      VersionWarranty warranty = warrantyTable.getIssuedWarranty(onum);
-      HOTOS_LOGGER
-          .log(
-              Level.INFO,
-              "writing {0}, warranty expires in {1} ms",
-              new Object[] { onum,
-                  warranty.expiry() - System.currentTimeMillis() });
+      VersionWarranty warranty = getWarranty(onum);
 
       // Update the version number on the prepared copy of the object.
       obj.setVersion(storeVersion + 1);
 
       // Notify the warranty issuer.
-      warrantyIssuer.notifyWritePrepare(onum);
+      warrantyIssuer.notifyWritePrepare(onum, warranty);
 
       return warranty;
     }
@@ -551,11 +516,9 @@ public abstract class ObjectDB {
    *          the remote worker that is performing the commit
    */
   public final void commit(long tid, long commitTime,
-      RemoteIdentity<RemoteWorker> workerIdentity) {
+      RemoteIdentity<RemoteWorker> workerIdentity, SubscriptionManager sm) {
     // Extend the version warranties for the updated objects.
-    List<VersionWarranty.Binding> newProactiveWarranties =
-        new ArrayList<VersionWarranty.Binding>();
-    List<VersionWarranty.Binding> newReactiveWarranties =
+    List<VersionWarranty.Binding> newWarranties =
         new ArrayList<VersionWarranty.Binding>();
     try {
       LongSet onums = removeWrittenOnumsByTid(tid, workerIdentity.principal);
@@ -563,31 +526,21 @@ public abstract class ObjectDB {
         for (LongIterator it = onums.iterator(); it.hasNext();) {
           long onum = it.next();
           Pair<ExtendWarrantyStatus, VersionWarranty> extendResult =
-              extendWarranty(onum, commitTime, true, true, true);
-          try {
-            switch (extendResult.first) {
-            case NEW_PROACTIVE:
-              newProactiveWarranties.add(extendResult.second.new Binding(onum,
+              extendWarranty(onum, commitTime, true, false, true);
+          if (extendResult.first == ExtendWarrantyStatus.NEW) {
+            try {
+              newWarranties.add(extendResult.second.new Binding(onum,
                   getVersion(onum)));
-              break;
-            case NEW_REACTIVE:
-              newReactiveWarranties.add(extendResult.second.new Binding(onum,
-                  getVersion(onum)));
-              break;
-            case OLD:
-            case BAD_VERSION:
-            case DENIED:
+            } catch (AccessException e) {
+              throw new InternalError(e);
             }
-          } catch (AccessException e) {
-            throw new InternalError(e);
           }
         }
       }
 
-      scheduleCommit(tid, commitTime, workerIdentity);
+      scheduleCommit(tid, commitTime, workerIdentity, sm);
     } finally {
-      sm.notifyNewWarranties(newProactiveWarranties, newReactiveWarranties,
-          workerIdentity.node);
+      sm.notifyNewWarranties(newWarranties, workerIdentity.node);
     }
   }
 
@@ -602,7 +555,7 @@ public abstract class ObjectDB {
    *          the remote worker that is performing the commit
    */
   protected abstract void scheduleCommit(long tid, long commitTime,
-      RemoteIdentity<RemoteWorker> workerIdentity);
+      RemoteIdentity<RemoteWorker> workerIdentity, SubscriptionManager sm);
 
   /**
    * Causes the objects prepared in transaction [tid] to be discarded.
@@ -638,6 +591,24 @@ public abstract class ObjectDB {
     return objectGrouper.getGroup(onum);
   }
 
+  /**
+   * Returns the version warranty for the object stored at the given onum.
+   * 
+   * @return the version warranty. If no warranty has been issued, a really old
+   *       warranty will be returned.
+   */
+  public final VersionWarranty getWarranty(long onum) {
+    return versionWarrantyTable.get(onum);
+  }
+
+  /**
+   * Stores a version warranty for the object stored at the given onum.
+   */
+  protected final void putWarranty(long onum, VersionWarranty warranty) {
+    versionWarrantyTable.put(onum, warranty);
+    updateLongestWarranty(warranty);
+  }
+
   private void updateLongestWarranty(VersionWarranty warranty) {
     synchronized (longestWarranty) {
       if (warranty.expiresAfter(longestWarranty[0])) {
@@ -665,129 +636,55 @@ public abstract class ObjectDB {
    * @param minExpiryStrict whether to use strict comparisons when comparing the
    *          existing warranty with minExpiry. If this is false, clock skew
    *          will be taken into account.
-   * @param causedByWrite true iff the extend-warranty request was caused by
-   *          the object being written. If this is false and the existing
-   *          warranty isn't sufficiently long to cover minExpiry, then the
-   *          warranty will be extended beyond minExpiry, if possible, according
-   *          to what the warrantyIssuer gives us.
-   * @param canExtendVirtual if the virtual warranty needs to be extended and
-   *          this is false, then the existing warranty will be returned
-   *          instead. Used for proactive refreshes.
+   * @param extendBeyondMinExpiry if this is true and the existing warranty
+   *          isn't sufficiently long to cover minExpiry, then the warranty will
+   *          be extended beyond minExpiry, if possible, according to what the
+   *          warrantyIssuer gives us.
+   * @param ignoreWriteLocks if true, then write locks will be ignored when
+   *          determining whether it is possible to extend the warranty.
    *          
    * @return the resulting warranty, and whether it was extended. If the current
    *          warranty does not meet minExpiry and could not be renewed,
    *          EXTEND_WARRANTY_DENIED is returned.
    */
-  private Pair<ExtendWarrantyStatus, VersionWarranty> extendWarranty(
-      final long onum, long minExpiry, boolean minExpiryStrict,
-      boolean causedByWrite, boolean canExtendVirtual) {
+  private Pair<ExtendWarrantyStatus, VersionWarranty> extendWarranty(long onum,
+      long minExpiry, boolean minExpiryStrict, boolean extendBeyondMinExpiry,
+      boolean ignoreWriteLocks) {
     while (true) {
       // Get the object's current warranty and determine whether it needs to be
       // extended.
-      WarrantyTable<Long, VersionWarranty>.Entry tableEntry =
-          warrantyTable.getEntry(onum);
-      VersionWarranty curIssuedWarranty =
-          tableEntry == null ? warrantyTable.getDefaultWarranty() : tableEntry
-              .issuedWarranty();
+      VersionWarranty curWarranty = versionWarrantyTable.get(onum);
       if (minExpiryStrict) {
-        if (curIssuedWarranty.expiresAfterStrict(minExpiry))
+        if (curWarranty.expiresAfterStrict(minExpiry))
           return new Pair<ExtendWarrantyStatus, VersionWarranty>(
-              ExtendWarrantyStatus.OLD, curIssuedWarranty);
+              ExtendWarrantyStatus.OLD, curWarranty);
       } else {
-        if (curIssuedWarranty.expiresAfter(minExpiry, false))
+        if (curWarranty.expiresAfter(minExpiry, false))
           return new Pair<ExtendWarrantyStatus, VersionWarranty>(
-              ExtendWarrantyStatus.OLD, curIssuedWarranty);
+              ExtendWarrantyStatus.OLD, curWarranty);
       }
 
       // Need to extend warranty.
-      if (!causedByWrite && isWritten(onum)) {
+      if (!ignoreWriteLocks && isWritten(onum)) {
         // Unable to extend.
         return EXTEND_WARRANTY_DENIED;
       }
 
-      // See if the virtual warranty needs to be extended.
-      VersionWarranty curVirtualWarranty =
-          tableEntry == null ? null : tableEntry.virtualWarranty();
-      final boolean canUseVirtualWarranty =
-          curVirtualWarranty != null
-              && (minExpiryStrict ? curVirtualWarranty
-                  .expiresAfterStrict(minExpiry) : curVirtualWarranty
-                  .expiresAfter(minExpiry, false));
-
       // Extend the object's warranty.
       long expiry = minExpiry;
-      boolean proactiveRefresh = true;
-      if (!canUseVirtualWarranty) {
-        // Need a new virtual warranty.
-        proactiveRefresh = false;
-
-        if (!canExtendVirtual) {
-          return new Pair<ExtendWarrantyStatus, VersionWarranty>(
-              ExtendWarrantyStatus.OLD, curIssuedWarranty);
-        }
-
-        // Extend the virtual warranty to cover the min expiry, any previously
-        // issued warranty, and (if applicable) the warranty period suggested
-        // by the warranty issuer.
-        long curExpiry = curIssuedWarranty.expiry();
-        long newVirtualExpiry = Math.max(minExpiry, curExpiry);
-        if (!causedByWrite) {
-          newVirtualExpiry =
-              warrantyIssuer.suggestWarranty(onum, newVirtualExpiry);
-        }
-
-        if (tableEntry == null) {
-          // Add to warranty table.
-          curVirtualWarranty = new VersionWarranty(newVirtualExpiry);
-          tableEntry =
-              warrantyTable.putIfAbsentAndGet(onum, curVirtualWarranty);
-          if (tableEntry.virtualWarranty() != curVirtualWarranty) continue;
-        } else if (newVirtualExpiry != curVirtualWarranty.expiry()) {
-          // Update existing table entry.
-          VersionWarranty newVirtualWarranty =
-              new VersionWarranty(newVirtualExpiry);
-          if (!tableEntry.replaceVirtualWarranty(curVirtualWarranty,
-              newVirtualWarranty)) continue;
-          curVirtualWarranty = newVirtualWarranty;
-        }
+      if (extendBeyondMinExpiry) {
+        expiry = warrantyIssuer.suggestWarranty(onum, minExpiry);
       }
-
-      if (!causedByWrite) {
-        // Ensure the new warranty lasts at least REFRESH_INTERVAL_MS long...
-        expiry =
-            Math.max(minExpiry, System.currentTimeMillis()
-                + Warranty.REFRESH_INTERVAL_MS);
-
-        // ...but not longer than the virtual warranty.
-        expiry = Math.min(expiry, curVirtualWarranty.expiry());
-
-        // Also, if there isn't enough of the virtual warranty left over for
-        // another refresh period, just issue it all.
-        if (!curVirtualWarranty.expiresAfterStrict(expiry
-            + Warranty.REFRESH_INTERVAL_MS)) {
-          expiry = curVirtualWarranty.expiry();
-        }
-      }
-
       VersionWarranty newWarranty = new VersionWarranty(expiry);
       if (expiry > System.currentTimeMillis()) {
-        if (!tableEntry.replaceIssuedWarranty(curIssuedWarranty, newWarranty))
+        if (!versionWarrantyTable.extend(onum, curWarranty, newWarranty))
           continue;
 
         updateLongestWarranty(newWarranty);
       }
 
-      // If needed, schedule the next proactive refresh.
-      if (!causedByWrite && expiry < curVirtualWarranty.expiry()) {
-        // Schedule the refresh to happen 1.5 CLOCK_SKEWs before the warranty
-        // expires.
-        refreshThread.submitRequest(newWarranty.expiry()
-            - (long) (1.5 * Warranty.CLOCK_SKEW), onum, expiry,
-            curVirtualWarranty.expiry());
-      }
-
       return new Pair<ExtendWarrantyStatus, VersionWarranty>(
-          proactiveRefresh ? NEW_PROACTIVE : NEW_REACTIVE, newWarranty);
+          ExtendWarrantyStatus.NEW, newWarranty);
     }
   }
 
@@ -800,10 +697,10 @@ public abstract class ObjectDB {
    */
   public Pair<ExtendWarrantyStatus, VersionWarranty> refreshWarranty(long onum) {
     Pair<ExtendWarrantyStatus, VersionWarranty> result =
-        extendWarranty(onum, System.currentTimeMillis(), false, false, true);
+        extendWarranty(onum, System.currentTimeMillis(), false, true, false);
     if (result == EXTEND_WARRANTY_DENIED) {
       return new Pair<ExtendWarrantyStatus, VersionWarranty>(
-          ExtendWarrantyStatus.OLD, warrantyTable.getIssuedWarranty(onum));
+          ExtendWarrantyStatus.OLD, versionWarrantyTable.get(onum));
     }
 
     return result;
@@ -832,7 +729,8 @@ public abstract class ObjectDB {
    * @param worker
    *          the worker that performed the update.
    */
-  protected final void notifyCommittedUpdate(long onum, RemoteWorker worker) {
+  protected final void notifyCommittedUpdate(SubscriptionManager sm, long onum,
+      RemoteWorker worker) {
     // Remove from the glob table the glob associated with the onum.
     LongSet groupOnums = objectGrouper.removeGroup(onum);
 
@@ -937,8 +835,6 @@ public abstract class ObjectDB {
    * they do not already exist in the database.
    */
   public final void ensureInit(TransactionManager tm) {
-    this.sm = tm.subscriptionManager();
-
     if (isInitialized()) {
       recoverState(tm);
       return;
@@ -977,126 +873,4 @@ public abstract class ObjectDB {
    */
   protected abstract void recoverState(TransactionManager tm);
 
-  /**
-   * Proactively refreshes warranties before they expire.
-   */
-  private final class WarrantyRefreshThread extends Thread {
-    final class QueueItem implements Comparable<QueueItem> {
-      final long onum;
-
-      /**
-       * The time at which the next warranty should be issued.
-       */
-      final long refreshTime;
-
-      /**
-       * The expiry time for the last warranty issued.
-       */
-      final long expiry;
-
-      /**
-       * The expiry time for the virtual warranty.
-       */
-      final long virtualExpiry;
-
-      QueueItem(long refreshTime, long onum, long expiry, long virtualExpiry) {
-        this.refreshTime = refreshTime;
-        this.onum = onum;
-        this.expiry = expiry;
-        this.virtualExpiry = virtualExpiry;
-      }
-
-      @Override
-      public int compareTo(QueueItem other) {
-        return Long.compare(refreshTime, other.refreshTime);
-      }
-    }
-
-    private final long MIN_SLEEP_TIME_MS = 100;
-    private final AtomicBoolean haveNewRequest;
-
-    /**
-     * Priority queue of requests.
-     */
-    private final PriorityBlockingQueue<QueueItem> refreshQueue;
-
-    WarrantyRefreshThread() {
-      super("Proactive warranty refresh thread");
-      this.setDaemon(true);
-      this.refreshQueue = new PriorityBlockingQueue<>();
-      this.haveNewRequest = new AtomicBoolean(false);
-      start();
-    }
-
-    public void submitRequest(long refreshTime, long onum, long expiry,
-        long virtualExpiry) {
-      refreshQueue.add(new QueueItem(refreshTime, onum, expiry, virtualExpiry));
-      haveNewRequest.set(true);
-    }
-
-    @Override
-    public void run() {
-      try {
-        while (true) {
-          long nextRefreshTime;
-          // Loop until the refresh queue is empty or the next refresh request is
-          // too far out.
-          List<VersionWarranty.Binding> newWarranties = new ArrayList<>();
-          while (true) {
-            QueueItem request = refreshQueue.peek();
-            long now = System.currentTimeMillis();
-            if (request == null
-                || request.refreshTime > now + MIN_SLEEP_TIME_MS) {
-              nextRefreshTime =
-                  request == null ? Long.MAX_VALUE : request.refreshTime;
-              break;
-            }
-
-            request = refreshQueue.remove();
-
-            // Ignore the request if we're so far behind that the virtual
-            // warranty has expired.
-            if (Warranty.isAfter(now, request.virtualExpiry, true)) continue;
-
-            // Fulfill the refresh request.
-            long minExpiry =
-                Math.max(now, request.expiry) + Warranty.REFRESH_INTERVAL_MS;
-            Pair<ExtendWarrantyStatus, VersionWarranty> result =
-                extendWarranty(request.onum, minExpiry, true, false, false);
-            if (result.first == NEW_PROACTIVE) {
-              try {
-                newWarranties.add(result.second.new Binding(request.onum,
-                    getVersion(request.onum)));
-              } catch (AccessException e) {
-                throw new InternalError();
-              }
-            }
-          }
-
-          // Notify subscribers of new warranties.
-          if (!newWarranties.isEmpty()) {
-            sm.notifyNewWarranties(newWarranties,
-                Collections.<VersionWarranty.Binding> emptyList(), null);
-          }
-
-          // Wait until either the next refresh time or we have more requests.
-          long waitTime = nextRefreshTime - System.currentTimeMillis();
-          waitTime -= waitTime % MIN_SLEEP_TIME_MS;
-          for (int timeWaited = 0; timeWaited < waitTime; timeWaited +=
-              MIN_SLEEP_TIME_MS) {
-            try {
-              Thread.sleep(MIN_SLEEP_TIME_MS);
-            } catch (InterruptedException e) {
-            }
-
-            if (haveNewRequest.getAndSet(false)) {
-              break;
-            }
-          }
-        }
-      } catch (Throwable e) {
-        e.printStackTrace();
-      }
-    }
-  }
 }

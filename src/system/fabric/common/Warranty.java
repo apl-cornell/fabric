@@ -1,19 +1,10 @@
 package fabric.common;
 
-import fabric.store.db.WarrantyIssuer;
-
 public abstract class Warranty implements Comparable<Warranty> {
   /**
    * Assumed maximum clock skew, in milliseconds.
    */
   public static final long CLOCK_SKEW = 100;
-
-  /**
-   * The period at which warranties should be proactively refreshed, in
-   * milliseconds. This should be larger than CLOCK_SKEW.
-   */
-  public static final long REFRESH_INTERVAL_MS =
-      WarrantyIssuer.MAX_WARRANTY_LENGTH;//500;
 
   /**
    * Expiry time, in milliseconds since the epoch.

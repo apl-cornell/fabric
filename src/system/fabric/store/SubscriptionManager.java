@@ -371,8 +371,7 @@ public class SubscriptionManager extends FabricThread.Impl {
   private final PrivateKey signingKey;
 
   public static final boolean ENABLE_OBJECT_UPDATES = false;
-  public static final boolean ENABLE_REACTIVE_WARRANTY_REFRESHES = false;
-  public static final boolean ENABLE_PROACTIVE_WARRANTY_REFRESHES = false;
+  public static final boolean ENABLE_WARRANTY_REFRESHES = false;
 
   /**
    * @param tm
@@ -439,23 +438,12 @@ public class SubscriptionManager extends FabricThread.Impl {
    * 
    * @param worker the worker, if any, that already knows about the new warranties.
    */
-  public void notifyNewWarranties(Collection<Binding> newProactiveWarranties,
-      Collection<Binding> newReactiveWarranties, RemoteWorker worker) {
-    int numNewWarrantiesToNotify = 0;
-    if (ENABLE_PROACTIVE_WARRANTY_REFRESHES)
-      numNewWarrantiesToNotify += newProactiveWarranties.size();
-    if (ENABLE_REACTIVE_WARRANTY_REFRESHES)
-      numNewWarrantiesToNotify += newReactiveWarranties.size();
+  public void notifyNewWarranties(Collection<Binding> newWarranties,
+      RemoteWorker worker) {
+    if (!ENABLE_WARRANTY_REFRESHES) return;
 
-    List<Binding> warrantiesToNotify =
-        new ArrayList<>(numNewWarrantiesToNotify);
-    if (ENABLE_PROACTIVE_WARRANTY_REFRESHES)
-      warrantiesToNotify.addAll(newProactiveWarranties);
-    if (ENABLE_REACTIVE_WARRANTY_REFRESHES)
-      warrantiesToNotify.addAll(newReactiveWarranties);
-
-    if (!warrantiesToNotify.isEmpty()) {
-      notificationQueue.offer(new NewWarrantyEvent(warrantiesToNotify, worker));
+    if (!newWarranties.isEmpty()) {
+      notificationQueue.offer(new NewWarrantyEvent(newWarranties, worker));
     }
   }
 }

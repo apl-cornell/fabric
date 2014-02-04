@@ -56,6 +56,7 @@ import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
 import fabric.lang.FClass;
 import fabric.lang.security.Principal;
+import fabric.store.SubscriptionManager;
 import fabric.store.TransactionManager;
 import fabric.worker.Store;
 import fabric.worker.Worker;
@@ -231,8 +232,8 @@ public class BdbDB extends ObjectDB {
 
   @Override
   public void scheduleCommit(long tid, long commitTime,
-      RemoteIdentity<RemoteWorker> workerIdentity) {
-    scheduleCommit(tid, commitTime, workerIdentity, true);
+      RemoteIdentity<RemoteWorker> workerIdentity, SubscriptionManager sm) {
+    scheduleCommit(tid, commitTime, workerIdentity, sm, true);
   }
 
   /**
@@ -241,7 +242,8 @@ public class BdbDB extends ObjectDB {
    *          purposes.
    */
   private void scheduleCommit(final long tid, final long commitTime,
-      final RemoteIdentity<RemoteWorker> workerIdentity, boolean logCommitTime) {
+      final RemoteIdentity<RemoteWorker> workerIdentity,
+      final SubscriptionManager sm, boolean logCommitTime) {
     long commitDelay = commitTime - System.currentTimeMillis();
     STORE_DB_LOGGER
         .finer("Scheduling Bdb commit for tid " + tid + " to run at "
@@ -312,7 +314,7 @@ public class BdbDB extends ObjectDB {
 
           if (update.second == UpdateType.WRITE) {
             // Remove any cached globs containing the old version of this object.
-            notifyCommittedUpdate(onum, workerIdentity.node);
+            notifyCommittedUpdate(sm, onum, workerIdentity.node);
           }
 
           // Update caches.
@@ -535,7 +537,7 @@ public class BdbDB extends ObjectDB {
                     addWrittenOnumByTid(tid, owner, onum);
 
                     // Restore the object's warranty.
-                    warrantyTable.putIfAbsentAndGet(onum, warranty);
+                    versionWarrantyTable.put(onum, warranty);
                   } else {
                     STORE_DB_LOGGER.finest("Recovered create for " + onum);
                   }
@@ -570,7 +572,7 @@ public class BdbDB extends ObjectDB {
             if (meta.get(txn, longestWarrantyEntry, data, LockMode.DEFAULT) == SUCCESS) {
               longestWarranty[0] =
                   new VersionWarranty(LongBinding.entryToLong(data));
-              warrantyTable.setDefaultWarranty(longestWarranty[0]);
+              versionWarrantyTable.setDefaultWarranty(longestWarranty[0]);
             }
 
             return commitSchedule;
@@ -578,12 +580,13 @@ public class BdbDB extends ObjectDB {
         });
 
     // Re-schedule commits.
+    SubscriptionManager sm = tm.subscriptionManager();
     for (Entry<Long, List<Pair<Long, Principal>>> entry : commitSchedule
         .entrySet()) {
       long commitTime = entry.getKey();
       for (Pair<Long, Principal> tid : entry.getValue()) {
         scheduleCommit(tid.first, commitTime, new RemoteIdentity<RemoteWorker>(
-            null, tid.second), false);
+            null, tid.second), sm, false);
       }
     }
   }
