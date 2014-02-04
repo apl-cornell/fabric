@@ -407,8 +407,8 @@ public final class TransactionManager {
 
     Log HOTOS_current = current;
     List<RemoteWorker> workers = current.workersCalled;
-    final boolean isWriteFree = current.writes.isEmpty() &&
-      current.getAllRequests().isEmpty();
+    final boolean isWriteFree =
+        current.writes.isEmpty() && current.getAllRequests().isEmpty();
     //TODO: Stare at this and make sure it's right.
     final boolean readOnly = current.isReadOnly();
     Set<Store> stores =
@@ -1158,6 +1158,7 @@ public final class TransactionManager {
    */
   public void registerSemanticWarrantyUse(CallInstance call,
       WarrantiedCallResult result) {
+    if (current == null) return; // All bets are off, just use the value optimistically...
     current.semanticWarrantiesUsed.put(call, result);
   }
 
