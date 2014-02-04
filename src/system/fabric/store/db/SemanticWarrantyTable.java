@@ -408,11 +408,10 @@ public class SemanticWarrantyTable {
                 getInfo(c).writeUnlock();
               } catch (UnableToLockException e) {
                 SEMANTIC_WARRANTY_LOGGER.finest("Request for call " + call
-                    + " depends on call " + call
-                    + " that has a write scheduled.");
+                    + " depends on call " + c + " that has a write scheduled.");
                 writeUnlock();
                 throw new TransactionPrepareFailedException("Request for call "
-                    + call + " depends on call " + call
+                    + call + " depends on call " + c
                     + " that has a write scheduled.");
               }
             }
