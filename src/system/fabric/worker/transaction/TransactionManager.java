@@ -416,13 +416,16 @@ public final class TransactionManager {
 
     final long commitTime = System.currentTimeMillis();
     COMMIT_TIME.set(commitTime);
-    final long commitLatency = commitTime - prepareStart;
-    if (LOCAL_STORE == null) LOCAL_STORE = Worker.getWorker().getLocalStore();
-    if (workers.size() > 0 || stores.size() != 1
-        || !stores.contains(LOCAL_STORE)
-        && !(stores.iterator().next() instanceof InProcessStore)) {
-      HOTOS_LOGGER.log(Level.INFO, "committed tid {0} (latency {1} ms)",
-          new Object[] { HOTOS_current, commitLatency });
+    if (HOTOS_LOGGER.isLoggable(Level.FINE)) {
+      final long commitLatency = commitTime - prepareStart;
+      if (LOCAL_STORE == null)
+        LOCAL_STORE = Worker.getWorker().getLocalStore();
+      if (workers.size() > 0 || stores.size() != 1
+          || !stores.contains(LOCAL_STORE)
+          && !(stores.iterator().next() instanceof InProcessStore)) {
+        Logging.log(HOTOS_LOGGER, Level.FINE,
+            "committed tid {0} (latency {1} ms)", HOTOS_current, commitLatency);
+      }
     }
   }
 
@@ -585,7 +588,7 @@ public final class TransactionManager {
         }
       }
       WORKER_TRANSACTION_LOGGER.fine(logMessage);
-      HOTOS_LOGGER.info("Prepare failed.");
+      HOTOS_LOGGER.fine("Prepare failed.");
 
       synchronized (current.commitState) {
         current.commitState.value = PREPARE_FAILED;
