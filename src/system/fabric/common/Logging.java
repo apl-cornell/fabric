@@ -251,14 +251,6 @@ public final class Logging {
   }
 
   /**
-   * Records that an InterruptedException was ignored.
-   */
-  public static void logIgnoredInterruptedException(InterruptedException e) {
-    INTERRUPTED_EXCEPTION_LOGGER.log(Level.FINEST,
-        "Ignored interrupted exception", e);
-  }
-
-  /**
    * Logs a message, with five object parameters.
    * 
    * @param logger
@@ -283,6 +275,14 @@ public final class Logging {
     if (!logger.isLoggable(level)) return;
     logger.log(level, msg, new Object[] { param1, param2, param3, param4,
         param5 });
+  }
+
+  /**
+   * Records that an InterruptedException was ignored.
+   */
+  public static void logIgnoredInterruptedException(InterruptedException e) {
+    INTERRUPTED_EXCEPTION_LOGGER.log(Level.FINEST,
+        "Ignored interrupted exception", e);
   }
 
   /**

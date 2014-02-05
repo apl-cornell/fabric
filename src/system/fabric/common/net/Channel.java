@@ -118,8 +118,8 @@ abstract class Channel<Node extends RemoteNode<Node>> extends Thread {
   /** send data */
   private void sendData(int streamID, byte[] data, int offset, int len)
       throws IOException {
-    NETWORK_CHANNEL_LOGGER.log(Level.FINE, "sending " + len
-        + " bytes of data on {0}", this);
+    Logging.log(NETWORK_CHANNEL_LOGGER, Level.FINE,
+        "sending {0} bytes of data on {1}", len, this);
 
     synchronized (out) {
       out.writeInt(streamID);
@@ -188,8 +188,8 @@ abstract class Channel<Node extends RemoteNode<Node>> extends Thread {
         byte[] buf = new byte[len];
         in.readFully(buf);
 
-        NETWORK_CHANNEL_LOGGER.log(Level.FINE, "received " + len
-            + " bytes on {0}", this);
+        Logging.log(NETWORK_CHANNEL_LOGGER, Level.FINE,
+            "received {0} bytes on {1}", len, this);
 
         recvData(streamID, buf);
       }
@@ -318,11 +318,12 @@ abstract class Channel<Node extends RemoteNode<Node>> extends Thread {
      */
     public synchronized void receiveData(byte[] b) throws IOException {
       if (!locallyClosed) {
-        NETWORK_CHANNEL_LOGGER.fine("putting " + b.length + " bytes in pipe");
+        NETWORK_CHANNEL_LOGGER.log(Level.FINE, "putting {0} bytes in pipe",
+            b.length);
         sink.write(b);
       } else {
-        NETWORK_CHANNEL_LOGGER.fine("discarding " + b.length
-            + " bytes (pipe closed)");
+        NETWORK_CHANNEL_LOGGER.log(Level.FINE,
+            "discarding {0} bytes (pipe closed)", b.length);
       }
     }
   }

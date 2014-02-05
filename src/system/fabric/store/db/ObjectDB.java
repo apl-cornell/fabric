@@ -743,21 +743,21 @@ public abstract class ObjectDB {
     // Remove from the glob table the glob associated with the onum.
     LongSet groupOnums = objectGrouper.removeGroup(onum);
 
-    LongSet updatedOnums = new LongHashSet();
-    updatedOnums.add(onum);
-    if (groupOnums != null) {
-      for (LongIterator onumIt = groupOnums.iterator(); onumIt.hasNext();) {
-        long relatedOnum = onumIt.next();
-        if (relatedOnum == onum) continue;
-
-        updatedOnums.add(relatedOnum);
-      }
-    }
-
     // Notify the warranty issuer.
     warrantyIssuer.notifyWriteCommit(onum);
 
     if (SubscriptionManager.ENABLE_OBJECT_UPDATES) {
+      LongSet updatedOnums = new LongHashSet();
+      updatedOnums.add(onum);
+      if (groupOnums != null) {
+        for (LongIterator onumIt = groupOnums.iterator(); onumIt.hasNext();) {
+          long relatedOnum = onumIt.next();
+          if (relatedOnum == onum) continue;
+
+          updatedOnums.add(relatedOnum);
+        }
+      }
+
       // Notify the subscription manager that the group has been updated.
       sm.notifyUpdate(updatedOnums, worker);
     }

@@ -1366,10 +1366,13 @@ public final class Log {
    * will be released after the given commit time.
    */
   void commitTopLevel(long commitTime) {
-    long commitDelay = commitTime - System.currentTimeMillis();
-    Logging.WORKER_TRANSACTION_LOGGER
-        .finer("Scheduled commit for tid " + tid + " to run at "
-            + new Date(commitTime) + " (in " + commitDelay + " ms)");
+    if (WORKER_TRANSACTION_LOGGER.isLoggable(Level.FINER)) {
+      long commitDelay = commitTime - System.currentTimeMillis();
+      Logging.log(WORKER_TRANSACTION_LOGGER, Level.FINER,
+          "Scheduled commit for tid {0} to run at {1} (in {2} ms)", tid,
+          new Date(commitTime), commitDelay);
+    }
+    
     Threading.scheduleAt(commitTime, new Runnable() {
       @Override
       public void run() {
