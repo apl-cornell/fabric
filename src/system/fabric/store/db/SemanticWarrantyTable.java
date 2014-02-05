@@ -101,8 +101,8 @@ public class SemanticWarrantyTable {
      */
     private final ReentrantLock lock = new ReentrantLock(true);
 
-    private List<StackTraceElement[]> lastLockingStack =
-        new ArrayList<StackTraceElement[]>();
+    //private List<StackTraceElement[]> lastLockingStack =
+        //new ArrayList<StackTraceElement[]>();
 
     public void lock() {
       lock.lock();
@@ -124,7 +124,7 @@ public class SemanticWarrantyTable {
       try {
         if (writeLocked) throw new UnableToLockException();
         writeLocked = true;
-        lastLockingStack.add(Thread.currentThread().getStackTrace());
+        //lastLockingStack.add(Thread.currentThread().getStackTrace());
       } finally {
         unlock();
       }
@@ -136,7 +136,7 @@ public class SemanticWarrantyTable {
     public void writeUnlock() {
       lock();
       try {
-        lastLockingStack.remove(lastLockingStack.size() - 1);
+        //lastLockingStack.remove(lastLockingStack.size() - 1);
         writeLocked = false;
       } finally {
         unlock();
@@ -784,7 +784,13 @@ public class SemanticWarrantyTable {
       case VALID:
       case STALE:
       default:
-        for (CallInstance parent : new TreeSet<CallInstance>(getCallers())) {
+        Set<CallInstance> callersCopy = null;
+        synchronized (callers) {
+          // Go around getCallers since this is used for proposing a write time,
+          // which will fail later on if this had no value...
+          callersCopy = new TreeSet<CallInstance>(callers);
+        }
+        for (CallInstance parent : callersCopy) {
           affected.addAll(getInfo(parent).getAffectedSet());
         }
       }
