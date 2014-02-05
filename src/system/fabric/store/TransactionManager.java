@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.logging.Level;
 
 import fabric.common.AuthorizationUtil;
 import fabric.common.ONumConstants;
@@ -57,7 +58,8 @@ public class TransactionManager {
   public void abortTransaction(Principal worker, long transactionID)
       throws AccessException {
     database.rollback(transactionID, worker);
-    STORE_TRANSACTION_LOGGER.fine("Aborted transaction " + transactionID);
+    STORE_TRANSACTION_LOGGER.log(Level.FINE, "Aborted transaction {0}",
+        transactionID);
   }
 
   /**
@@ -67,7 +69,8 @@ public class TransactionManager {
       long transactionID) throws TransactionCommitFailedException {
     try {
       database.commit(transactionID, workerIdentity, sm);
-      STORE_TRANSACTION_LOGGER.fine("Committed transaction " + transactionID);
+      STORE_TRANSACTION_LOGGER.log(Level.FINE, "Committed transaction {0}",
+          transactionID);
     } catch (final AccessException e) {
       throw new TransactionCommitFailedException("Insufficient Authorization");
     } catch (final RuntimeException e) {
@@ -159,7 +162,7 @@ public class TransactionManager {
       // readHistory.record(req);
       database.finishPrepare(tid, worker);
 
-      STORE_TRANSACTION_LOGGER.fine("Prepared transaction " + tid);
+      STORE_TRANSACTION_LOGGER.log(Level.FINE, "Prepared transaction {0}", tid);
     } catch (TransactionPrepareFailedException e) {
       database.abortPrepare(tid, worker);
       throw e;

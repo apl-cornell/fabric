@@ -1,9 +1,11 @@
 package fabric.worker;
 
+import static fabric.common.Logging.TIMING_LOGGER;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.logging.Level;
 
-import fabric.common.Logging;
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
 import fabric.common.Surrogate;
@@ -114,8 +116,8 @@ public final class ObjectCache {
       // XXX BEGIN HACK FOR OAKLAND 2012 TIMING STUFF
       boolean fclass = FClass.class.getName().equals(serialized.getClassName());
       if (fclass) {
-        Logging.TIMING_LOGGER.fine("Start deserializing FClass ("
-            + serialized.size() + " bytes)");
+        TIMING_LOGGER.log(Level.FINE, "Start deserializing FClass ({0} bytes)",
+            serialized.size());
       }
       try {
         // XXX END HACK FOR OAKLAND 2012 TIMING STUFF
@@ -127,8 +129,8 @@ public final class ObjectCache {
         // XXX BEGIN HACK FOR OAKLAND 2012 TIMING STUFF
       } finally {
         if (fclass) {
-          Logging.TIMING_LOGGER.fine("Done deserializing FClass ("
-              + ((FClass) next.impl).getName() + ")");
+          TIMING_LOGGER.log(Level.FINE, "Done deserializing FClass ({0})",
+              ((FClass) next.impl).getName());
         }
       }
       // XXX END HACK FOR OAKLAND 2012 TIMING STUFF

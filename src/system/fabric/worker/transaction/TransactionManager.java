@@ -837,10 +837,10 @@ public final class TransactionManager {
       while (obj.$writeLockHolder != null
           && !current.isDescendantOf(obj.$writeLockHolder)) {
         try {
-          Logging.log(WORKER_TRANSACTION_LOGGER, Level.FINEST, current
-              + "{0} wants to read {1}/" + obj.$getOnum()
-              + " ({2}); waiting on writer {3}", current, obj.$getStore(),
-              obj.getClass(), obj.$writeLockHolder);
+          Logging.log(WORKER_TRANSACTION_LOGGER, Level.FINEST,
+              "{0} wants to read {1}/{2} ({3}); waiting on writer {4}",
+              current, obj.$getStore(), obj.$getOnum(), obj.getClass(),
+              obj.$writeLockHolder);
           hadToWait = true;
           obj.$numWaiting++;
           current.setWaitsFor(obj.$writeLockHolder);
@@ -941,9 +941,9 @@ public final class TransactionManager {
         if (obj.$writeLockHolder != null
             && !current.isDescendantOf(obj.$writeLockHolder)) {
           Logging.log(WORKER_TRANSACTION_LOGGER, Level.FINEST,
-              "{0} wants to write {1}/" + obj.$getOnum()
-                  + " ({2}); waiting on writer {3}", current, obj.$getStore(),
-              obj.getClass(), obj.$writeLockHolder);
+              "{0} wants to write {1}/{2} ({3}); waiting on writer {4}",
+              current, obj.$getStore(), obj.$getOnum(), obj.getClass(),
+              obj.$writeLockHolder);
           waitsFor.add(obj.$writeLockHolder);
           hadToWait = true;
         } else {
@@ -954,9 +954,9 @@ public final class TransactionManager {
               for (Log lock : readMapEntry.getReaders()) {
                 if (!current.isDescendantOf(lock)) {
                   Logging.log(WORKER_TRANSACTION_LOGGER, Level.FINEST,
-                      "{0} wants to write {1}/" + obj.$getOnum()
-                          + " ({2}); aborting reader {3}", current,
-                      obj.$getStore(), obj.getClass(), lock);
+                      "{0} wants to write {1}/{2} ({3}); aborting reader {4}",
+                      current, obj.$getStore(), obj.$getOnum(), obj.getClass(),
+                      lock);
                   waitsFor.add(lock);
                   lock.flagRetry();
                 }

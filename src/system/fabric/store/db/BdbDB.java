@@ -182,14 +182,14 @@ public class BdbDB extends ObjectDB {
     });
 
     preparedTransactions.put(new ByteArray(key.getData()), pending);
-    STORE_DB_LOGGER.finer("Bdb prepare success tid " + tid);
+    STORE_DB_LOGGER.log(Level.FINER, "Bdb prepare success tid {0}", tid);
   }
 
   @Override
   public void commit(final long tid,
       final RemoteIdentity<RemoteWorker> workerIdentity,
       final SubscriptionManager sm) {
-    STORE_DB_LOGGER.finer("Bdb commit begin tid " + tid);
+    STORE_DB_LOGGER.log(Level.FINER, "Bdb commit begin tid {0}", tid);
 
     PendingTransaction pending =
         runInBdbTransaction(new Code<PendingTransaction, RuntimeException>() {
@@ -204,7 +204,8 @@ public class BdbDB extends ObjectDB {
                   new Serializer<SerializedObject>();
               for (SerializedObject o : pending.modData) {
                 long onum = o.getOnum();
-                STORE_DB_LOGGER.finest("Bdb committing onum " + onum);
+                STORE_DB_LOGGER.log(Level.FINEST, "Bdb committing onum {0}",
+                    onum);
 
                 DatabaseEntry onumData = new DatabaseEntry();
                 LongBinding.longToEntry(onum, onumData);
@@ -217,7 +218,8 @@ public class BdbDB extends ObjectDB {
 
               return pending;
             } else {
-              STORE_DB_LOGGER.warning("Bdb commit not found tid " + tid);
+              STORE_DB_LOGGER.log(Level.WARNING,
+                  "Bdb commit not found tid {0}", tid);
               throw new InternalError("Unknown transaction id " + tid);
             }
           }
@@ -235,12 +237,12 @@ public class BdbDB extends ObjectDB {
 
     }
 
-    STORE_DB_LOGGER.finer("Bdb commit success tid " + tid);
+    STORE_DB_LOGGER.log(Level.FINER, "Bdb commit success tid {0}", tid);
   }
 
   @Override
   public void rollback(final long tid, final Principal worker) {
-    STORE_DB_LOGGER.finer("Bdb rollback begin tid " + tid);
+    STORE_DB_LOGGER.log(Level.FINER, "Bdb rollback begin tid {0}", tid);
 
     runInBdbTransaction(new Code<Void, RuntimeException>() {
       @Override
@@ -250,12 +252,12 @@ public class BdbDB extends ObjectDB {
       }
     });
 
-    STORE_DB_LOGGER.finer("Bdb rollback success tid " + tid);
+    STORE_DB_LOGGER.log(Level.FINER, "Bdb rollback success tid {0}", tid);
   }
 
   @Override
   public SerializedObject read(final long onum) {
-    STORE_DB_LOGGER.finest("Bdb read onum " + onum);
+    STORE_DB_LOGGER.log(Level.FINEST, "Bdb read onum {0}", onum);
 
     return runInBdbTransaction(new Code<SerializedObject, RuntimeException>() {
       @Override
@@ -341,8 +343,8 @@ public class BdbDB extends ObjectDB {
               }
             });
 
-            STORE_DB_LOGGER.fine("Bdb reserved onums " + nextOnum + "--"
-                + lastReservedOnum);
+            Logging.log(STORE_DB_LOGGER, Level.FINE,
+                "Bdb reserved onums {0}--{1}", nextOnum, lastReservedOnum);
           }
 
           onums[i] = nextOnum.value++;

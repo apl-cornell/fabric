@@ -245,6 +245,31 @@ public final class Logging {
   }
 
   /**
+   * Logs a message, with four object parameters.
+   * 
+   * @param logger
+   *          The logger to log to
+   * @param level
+   *          One of the message level identifiers, e.g. SEVERE
+   * @param msg
+   *          The string message (or a key in the message catalog)
+   * @param param1
+   *          first parameter to the message
+   * @param param2
+   *          second parameter to the message
+   * @param param3
+   *          third parameter to the message
+   * @param param4
+   *          fourth parameter to the message
+   */
+  public static void log(Logger logger, Level level, String msg, Object param1,
+      Object param2, Object param3, Object param4, Object param5) {
+    if (!logger.isLoggable(level)) return;
+    logger.log(level, msg, new Object[] { param1, param2, param3, param4,
+        param5 });
+  }
+
+  /**
    * Records that an InterruptedException was ignored.
    */
   public static void logIgnoredInterruptedException(InterruptedException e) {
