@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.logging.Level;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -19,6 +20,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.locks.ReentrantLock;
 
+import fabric.common.Logging;
 import fabric.common.SemanticWarranty;
 import fabric.common.SerializedObject;
 import fabric.common.SysUtil;
@@ -405,9 +407,9 @@ public class SemanticWarrantyTable {
           for (LongIterator iter = req.readOnums.iterator(); iter.hasNext();) {
             long onum = iter.next();
             if (database.isWritten(onum)) {
-              SEMANTIC_WARRANTY_LOGGER.finest("Request for call " + call
-                  + " depends on object " + onum
-                  + " that has a write scheduled.");
+              Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+                  "Request for call {0} depends on object {1} that has a write scheduled.",
+                  call, onum);
               writeUnlock();
               //throw new TransactionPrepareFailedException("Request for call "
               //+ call + " depends on object " + onum
@@ -427,8 +429,9 @@ public class SemanticWarrantyTable {
                 getInfo(c).writeLock();
                 getInfo(c).writeUnlock();
               } catch (UnableToLockException e) {
-                SEMANTIC_WARRANTY_LOGGER.finest("Request for call " + call
-                    + " depends on call " + c + " that has a write scheduled.");
+                Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+                    "Request for call {0} depends on call {1} that has a write scheduled.",
+                    call, c);
                 writeUnlock();
                 //throw new TransactionPrepareFailedException("Request for call "
                 //+ call + " depends on call " + c
@@ -451,8 +454,8 @@ public class SemanticWarrantyTable {
 
           return nextUpdateWarranty;
         } catch (UnableToLockException e) {
-          SEMANTIC_WARRANTY_LOGGER.finest("Could not lock call " + call
-              + " for write, no warranty created.");
+          Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+              "Could not lock call {0} for write, no warranty created.", call);
           return null;
         }
       }
@@ -637,29 +640,33 @@ public class SemanticWarrantyTable {
 
       // Load up state from creates
       for (SerializedObject obj : creates) {
-        SEMANTIC_WARRANTY_LOGGER.finest("Loading up create " + obj.getOnum());
+        Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+            "Loading up create {0}", obj.getOnum());
         tm.registerCreate(obj.deserialize(localStore, new VersionWarranty(0)));
       }
       for (SemanticWarrantyRequest req : SysUtil.chain(
           SysUtil.chain(updates.values(), changes.values()), newCalls.values())) {
         for (LongKeyMap<_Impl> submap : req.creates) {
           for (_Impl c : submap.values()) {
-            SEMANTIC_WARRANTY_LOGGER.finest("Loading up create from other "
-                + "request " + c.$getOnum());
+            Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+                "Loading up create from other request {0}", c.$getOnum());
             tm.registerCreate(c);
           }
         }
       }
 
       // Rerun the call.
-      SEMANTIC_WARRANTY_LOGGER.finest("BEGINNING RECOMPUTATION OF " + call);
+      Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+          "BEGINNING RECOMPUTATION OF {0}", call);
       call.runCall();
-      SEMANTIC_WARRANTY_LOGGER.finest("DONE RECOMPUTING CALL " + call);
+      Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+          "DONE RECOMPUTING CALL {0}", call);
 
       Map<CallInstance, SemanticWarrantyRequest> updatedRequests =
           current.getAllRequests();
       for (CallInstance key : updatedRequests.keySet())
-        SEMANTIC_WARRANTY_LOGGER.finest("GOT AN UPDATE ON " + key);
+        Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+            "GOT AN UPDATE ON {0}", key);
       throw new CallCheckException(updatedRequests);
     }
 
@@ -712,15 +719,16 @@ public class SemanticWarrantyTable {
         case STALE:
         case VALID:
         default:
-          SEMANTIC_WARRANTY_LOGGER.finest("CHECKING CALL " + call);
+          Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+              "CHECKING CALL {0}", call);
 
           if (updates.containsKey(call)) {
-            SEMANTIC_WARRANTY_LOGGER.finest("CALL ALREADY CHECKED EARLIER AND"
-                + " WAS UNAFFECTED");
+            SEMANTIC_WARRANTY_LOGGER.finest(
+                "CALL ALREADY CHECKED EARLIER AND WAS UNAFFECTED");
             return false;
           } else if (changes.containsKey(call)) {
-            SEMANTIC_WARRANTY_LOGGER.finest("CALL ALREADY CHECKED EARLIER AND"
-                + " WAS AFFECTED");
+            SEMANTIC_WARRANTY_LOGGER.finest(
+                "CALL ALREADY CHECKED EARLIER AND WAS AFFECTED");
             return true;
           }
 
@@ -749,8 +757,8 @@ public class SemanticWarrantyTable {
           changes.putAll(newChanges);
           updates.putAll(newUpdates);
           // Answer is whether we saw a change or not
-          SEMANTIC_WARRANTY_LOGGER.finest("CALL CHECK FOR " + call
-              + " FINISHED");
+          Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+              "CALL CHECK FOR {0} FINISHED", call);
           return changes.containsKey(this.call);
         }
       } catch (ExecutionException | InterruptedException e) {
@@ -801,8 +809,8 @@ public class SemanticWarrantyTable {
           writeLocked.add(call);
         }
       } catch (UnableToLockException e) {
-        SEMANTIC_WARRANTY_LOGGER.finest("Could not write lock dependent call "
-            + call);
+        Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+            "Could not write lock dependent call {0}", call);
         throw new TransactionPrepareFailedException("Could not write "
             + "lock dependent call " + call);
       }
@@ -1149,7 +1157,8 @@ public class SemanticWarrantyTable {
    */
   public final Pair<SemanticExtendStatus, WarrantiedCallResult> extendForReadPrepare(
       CallInstance call, WarrantiedCallResult oldValue, long newTime) {
-    SEMANTIC_WARRANTY_LOGGER.finer("Notifying read prepare on " + call);
+    Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINER,
+        "Notifying read prepare on {0}", call);
     issuer.notifyReadPrepare(call, newTime);
     CallInfo info = getInfo(call);
     SemanticExtendStatus stat =
@@ -1223,8 +1232,9 @@ public class SemanticWarrantyTable {
     }
 
     updates.putAll(changes);
-    SEMANTIC_WARRANTY_LOGGER.finest("DONE CHECKING FOR UPDATES ON TRANSACTION "
-        + Long.toHexString(transactionID));
+    Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+        "DONE CHECKING FOR UPDATES ON TRANSACTION {0}",
+        Long.toHexString(transactionID));
 
     return new Pair<SemanticWarranty, Pair<Map<CallInstance, SemanticWarrantyRequest>, Map<CallInstance, SemanticWarrantyRequest>>>(
         new SemanticWarranty(longest),
@@ -1237,8 +1247,9 @@ public class SemanticWarrantyTable {
    * transaction abort.
    */
   public void abort(long transactionID) {
-    SEMANTIC_WARRANTY_LOGGER.finer(String.format(
-        "Aborting semantic warranty updates from %x", transactionID));
+    Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINER,
+        "Aborting semantic warranty updates from {0}",
+        Long.toHexString(transactionID));
     Set<CallInstance> updates = updatingTIDMap.remove(transactionID);
     if (updates != null) {
       try {
@@ -1257,8 +1268,9 @@ public class SemanticWarrantyTable {
    * Commit any state associated with the given transactionID right now.
    */
   public void commit(long transactionID) {
-    SEMANTIC_WARRANTY_LOGGER.finer(String.format(
-        "Committing semantic warranty updates from %x", transactionID));
+    Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINER,
+        "Committing semantic warranty updates from {0}",
+        Long.toHexString(transactionID));
     // Add requests made by the original transaction
     Set<CallInstance> updates = updatingTIDMap.remove(transactionID);
     if (updates != null) {

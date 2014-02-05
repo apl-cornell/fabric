@@ -20,7 +20,9 @@ import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
+import java.util.logging.Level;
 
+import fabric.common.Logging;
 import fabric.lang.Object;
 import fabric.lang.WrappedJavaInlineable;
 import fabric.worker.Store;
@@ -93,8 +95,8 @@ public class CallInstance implements Serializable, Comparable<CallInstance> {
               WrappedJavaInlineable.$wrap((new ObjectInputStream(
                   new ByteArrayInputStream(inlinedData))).readObject());
         } catch (ClassNotFoundException e) {
-          SEMANTIC_WARRANTY_LOGGER
-              .finest("Couldn't read in supposedly inlineable object: " + e);
+          Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+              "Couldn't read in supposedly inlineable object: {0}", e);
         }
       } else if (type == 2) {
         Store argStore = Worker.getWorker().getStore(in.readUTF());

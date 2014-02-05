@@ -14,6 +14,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 import java.util.Set;
+import java.util.logging.Level;
 
 import fabric.common.Crypto;
 import fabric.common.Logging;
@@ -328,7 +329,8 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
 
   @Override
   public WarrantiedCallResult lookupCall(CallInstance call) {
-    SEMANTIC_WARRANTY_LOGGER.finest("Looking up " + call + "...");
+    Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST, "Looking up {0} ...",
+        call);
 
     WarrantiedCallResult result = null;
 
@@ -336,22 +338,24 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
     if (current != null) {
       result = current.getRequestResult(call);
       if (result != null) {
-        SEMANTIC_WARRANTY_LOGGER.finest("Call " + call + " found in transaction log: " + result);
+        Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+            "Call {0} found in transaction log: {1}", call, result);
         return result;
       }
 
       if (current.blockedWarranties.contains(call)) {
-        SEMANTIC_WARRANTY_LOGGER.finest("Call " + call + " was blocked, probably for call checking!");
+        Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+            "Call {0} was blocked, probably for call checking!", call);
         return null;
       }
     }
 
     result = callCache.get(call);
     if (result != null) {
-      // XXX: Why am I checking for null transaction Log?
       if (current == null || !result.getWarranty().expired(true) ||
           current.useStaleWarranties) {
-        SEMANTIC_WARRANTY_LOGGER.finest("Call " + call + " found in local call cache: " + result);
+        Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+            "Call {0} found in local call cache: {1}", call, result);
         return result;
       } else {
         result = null;
@@ -363,10 +367,10 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
     try {
       result = reuseCallFromStore(call);
       if (result != null) {
-        // XXX: Why am I checking for null transaction Log?
         if (current == null || !result.getWarranty().expired(true) ||
             current.useStaleWarranties) {
-          SEMANTIC_WARRANTY_LOGGER.finest("Call " + call + " found at store: " + result);
+          Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+              "Call {0} found at store: {1}", call, result);
           return result;
         } else {
           result = null;
@@ -380,12 +384,14 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
 
   @Override
   public void insertResult(CallInstance call, WarrantiedCallResult result) {
-    SEMANTIC_WARRANTY_LOGGER.finest("Putting call:" + call.toString());
+    Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST, "Putting call: {0}",
+        call);
     callCache.put(call, result);
   }
 
   public void removeResult(CallInstance call) {
-    SEMANTIC_WARRANTY_LOGGER.finest("Removing call: " + call.toString());
+    Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST, "Removing call: {0}",
+        call);
     callCache.remove(call);
   }
 
@@ -399,22 +405,10 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
    *           if there was an error while fetching the object from the store.
    */
   public WarrantiedCallResult reuseCallFromStore(CallInstance id) throws AccessException {
-    SEMANTIC_WARRANTY_LOGGER.finest("Asking store " + name() + " for call " + id);
+    Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+        "Asking store {0} for call {1}", name(), id);
     ReuseCallMessage.Response response =
         send(Worker.getWorker().authToStore, new ReuseCallMessage(id));
-    /*
-    Set<Long> createSet = new HashSet<Long>();
-    for (LongIterator iter = response.creates.iterator();
-        iter.hasNext();) {
-      createSet.add(iter.next());
-    }
-    if (createSet.contains(response.result.value.$getOnum())) {
-      fabric.lang.Object copy =
-        response.result.value.$makeSemiDeepCopy(createSet, new HashMap<Long,
-            fabric.lang.Object>());
-      return new WarrantiedCallResult(copy, response.result.warranty);
-    }
-    */
     return response.result;
   }
 

@@ -9,7 +9,9 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.logging.Level;
 
+import fabric.common.Logging;
 import fabric.common.ONumConstants;
 import fabric.common.SemanticWarranty;
 import fabric.common.SerializedObject;
@@ -155,7 +157,8 @@ public final class LocalStore implements Store, Serializable {
 
   @Override
   public WarrantiedCallResult lookupCall(CallInstance call) {
-    SEMANTIC_WARRANTY_LOGGER.finest("Looking up call id: " + call.toString());
+    Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+        "Looking up call id: {0}", call);
 
     WarrantiedCallResult result = null;
     Log cur = TransactionManager.getInstance().getCurrentLog();
@@ -165,15 +168,15 @@ public final class LocalStore implements Store, Serializable {
     if (result == null) result = callCache.get(call);
     
     // TODO: actually check the store itself.
-    SEMANTIC_WARRANTY_LOGGER.finest("Call " + call + " found in local store: " +
-        result);
+    Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+        "Call {0} found in local store: {1}", call, result);
     return result;
   }
 
   @Override
   public void insertResult(CallInstance call, WarrantiedCallResult result) {
-    SEMANTIC_WARRANTY_LOGGER.finest("Putting call id: " + call.toString()
-        + " -> " + result.getValue());
+    Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+        "Putting call id: {0} -> {1}", call, result.getValue());
     callCache.put(call, result);
   }
 

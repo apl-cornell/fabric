@@ -422,8 +422,8 @@ public final class Log {
    * the parent that read the given onum.
    */
   public void invalidateDependentRequests(long onum) {
-    SEMANTIC_WARRANTY_LOGGER.finest("Onum " + onum + " written, invalidating" +
-        " calls that read this.");
+    Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+        "Onum {0} written, invalidating calls that read this.", onum);
     Set<CallInstance> dependencies = readDependencies.get(onum);
     if (dependencies == null) return;
     for (CallInstance id : new HashSet<CallInstance>(dependencies))
@@ -441,8 +441,8 @@ public final class Log {
 
     if (req == null) return; // Request already removed.
 
-    SEMANTIC_WARRANTY_LOGGER.finest("Call " + req.call
-        + " warranty request dropped");
+    Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+        "Call {0} warranty request dropped", req.call);
 
     if (callDependencies.get(callId) != null
         && callDependencies.get(callId).size() > 0) {
@@ -1052,8 +1052,9 @@ public final class Log {
 
     // Check that we aren't accidentally making a call that has local target
     if (targetStore.isLocalStore()) {
-      SEMANTIC_WARRANTY_LOGGER.finer("Semantic warranty request for "
-          + semanticWarrantyCall + " aborted due to local target!");
+      Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINER,
+          "Semantic warranty request for {0} aborted due to local target!",
+          semanticWarrantyCall);
       return;
     }
 
@@ -1063,8 +1064,9 @@ public final class Log {
           arg != null &&
           (arg.$getStore().isLocalStore() ||
            !arg.$getStore().equals(targetStore))) {
-        SEMANTIC_WARRANTY_LOGGER.finer("Semantic warranty request for " +
-            semanticWarrantyCall + " aborted due to local argument!");
+        Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINER,
+            "Semantic warranty request for {0} aborted due to local argument!",
+            semanticWarrantyCall);
         return;
       }
     }
@@ -1075,9 +1077,9 @@ public final class Log {
       writeCount += getWritesForStore(store).size();
 
     if (writeCount > 0) {
-      SEMANTIC_WARRANTY_LOGGER.finer("Semantic warranty request for "
-          + semanticWarrantyCall + " aborted due to writes during the call!");
-
+      Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINER,
+          "Semantic warranty request for {0} aborted due to writes during the call!",
+          semanticWarrantyCall);
       return;
     }
 
@@ -1089,9 +1091,9 @@ public final class Log {
         if (entry.getStore().equals(targetStore)) {
           readsForTargetStore.put(entry.getStore(), entry.getRef().onum, entry);
         } else if (!entry.getStore().isLocalStore()) {
-          SEMANTIC_WARRANTY_LOGGER.finer("Semantic warranty request for "
-              + semanticWarrantyCall + "aborted due to more than one remote"
-              + " store read during the call!");
+          Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINER,
+              "Semantic warranty request for {0} aborted due to more than one remote store read during the call!",
+              semanticWarrantyCall);
           return;
         }
       }
@@ -1100,9 +1102,9 @@ public final class Log {
       if (entry.getStore().equals(targetStore)) {
         readsForTargetStore.put(entry.getStore(), entry.getRef().onum, entry);
       } else if (!entry.getStore().isLocalStore()) {
-        SEMANTIC_WARRANTY_LOGGER.finer("Semantic warranty request for "
-            + semanticWarrantyCall + "aborted due to more than one remote"
-            + " store read during the call!");
+        Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINER,
+            "Semantic warranty request for {0} aborted due to more than one remote store read during the call!",
+            semanticWarrantyCall);
         return;
       }
     }
@@ -1113,10 +1115,9 @@ public final class Log {
       if (create.$getStore().equals(targetStore)) {
         createsForTargetStore.put(create, create);
       } else if (!create.$getStore().isLocalStore()) {
-        SEMANTIC_WARRANTY_LOGGER.finer("Semantic warranty request for "
-            + semanticWarrantyCall
-            + " aborted due to more than one remote store create "
-            + "during the call!");
+        Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINER,
+            "Semantic warranty request for {0} aborted due to more than one remote store create during the call!",
+            semanticWarrantyCall);
         return;
       }
     }
@@ -1132,18 +1133,17 @@ public final class Log {
       if (call.target.$getStore().equals(targetStore)) {
         callsForTargetStore.put(call, result);
       } else if (!call.target.$getStore().isLocalStore()) {
-        SEMANTIC_WARRANTY_LOGGER.finer("Semantic warranty request for "
-            + semanticWarrantyCall
-            + " aborted due to more than one remote store called "
-            + "during the call!");
+        Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINER,
+            "Semantic warranty request for {0} aborted due to more than one remote store called during the call!",
+            semanticWarrantyCall);
         return;
       }
     }
 
     // If we are here, then all reads, creates, call reuses, and results 
     // are on the target store. Now we can make a request object.
-    SEMANTIC_WARRANTY_LOGGER.finest("Making request for "
-        + semanticWarrantyCall);
+    Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+        "Making request for {0}", semanticWarrantyCall);
     SemanticWarrantyRequest req =
         new SemanticWarrantyRequest(semanticWarrantyCall,
             semanticWarrantyValue, readsForTargetStore, createsForTargetStore,

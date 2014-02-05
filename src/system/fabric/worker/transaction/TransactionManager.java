@@ -398,8 +398,8 @@ public final class TransactionManager {
     long startTime = System.currentTimeMillis();
     PrepareWritesResult writeResult = sendPrepareWriteMessages();
 
-    SEMANTIC_WARRANTY_LOGGER.finest("Delay since we began is "
-        + (writeResult.commitTime - startTime) + "ms");
+    Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+        "Delay since we began is {0}ms", (writeResult.commitTime - startTime));
 
     current.semanticWarrantiesUsed.putAll(writeResult.addedCalls);
     current.requestReplies.putAll(writeResult.callResults);
@@ -566,8 +566,8 @@ public final class TransactionManager {
                           + "{3} modified", current.tid.topTid, store,
                       creates.size(), writes.size());
                 }
-                SEMANTIC_WARRANTY_LOGGER.finest("Requesting " + calls.size()
-                    + " computationw warranties");
+                Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+                    "Requesting {0} computation warranties", calls.size());
 
                 PrepareWritesResult response =
                     store.prepareTransactionWrites(current.tid.topTid, creates,
@@ -823,8 +823,7 @@ public final class TransactionManager {
                 SEMANTIC_WARRANTY_LOGGER.finest("Updating version warranties.");
                 current.updateVersionWarranties(store, allNewWarranties.first);
                 // Update warranties on calls.
-                SEMANTIC_WARRANTY_LOGGER
-                    .finest("Updating semantic warranties.");
+                SEMANTIC_WARRANTY_LOGGER.finest("Updating semantic warranties.");
                 current
                     .updateSemanticWarranties(store, allNewWarranties.second);
               } catch (TransactionPrepareFailedException e) {
@@ -876,9 +875,9 @@ public final class TransactionManager {
     // Check for conflicts and unreachable stores/workers.
     if (!failures.isEmpty()) {
       String logMessage =
-          "Transaction tid=" + current.tid.topTid + ":  read-prepare failed.";
-
-      SEMANTIC_WARRANTY_LOGGER.finest(logMessage);
+        "Transaction tid=" + current.tid.topTid + ": read-prepare failed.";
+      Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+          "Transaction tid={0}: read-prepare failed.", current.tid.topTid);
 
       for (Map.Entry<RemoteNode<?>, TransactionPrepareFailedException> entry : failures
           .entrySet()) {
@@ -888,11 +887,12 @@ public final class TransactionManager {
           LongKeyMap<Pair<SerializedObject, VersionWarranty>> versionConflicts =
               entry.getValue().versionConflicts;
           if (versionConflicts != null) {
-            SEMANTIC_WARRANTY_LOGGER.finest("" + versionConflicts.size()
-                + " conflicted objects");
+            Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+                "{0} conflicted objects", versionConflicts.size());
             for (Pair<SerializedObject, VersionWarranty> obj : versionConflicts
                 .values()) {
-              SEMANTIC_WARRANTY_LOGGER.finest("\t" + obj.first.getOnum());
+              Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST, "\t{0}",
+                  obj.first.getOnum());
               store.updateCache(obj);
             }
           }
@@ -901,21 +901,23 @@ public final class TransactionManager {
           Map<CallInstance, WarrantiedCallResult> callConflictUpdates =
               entry.getValue().callConflictUpdates;
           if (callConflictUpdates != null) {
-            SEMANTIC_WARRANTY_LOGGER.finest("" + callConflictUpdates.size()
-                + " conflicted calls");
+            Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+                "{0} conflicted calls", callConflictUpdates.size());
             for (Map.Entry<CallInstance, WarrantiedCallResult> update : callConflictUpdates
                 .entrySet()) {
-              SEMANTIC_WARRANTY_LOGGER.finest("\t" + update.getKey());
+              Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST, "\t{0}",
+                  update.getKey());
               store.insertResult(update.getKey(), update.getValue());
             }
           }
 
           Set<CallInstance> callConflicts = entry.getValue().callConflicts;
           if (callConflicts != null) {
-            SEMANTIC_WARRANTY_LOGGER.finest("" + callConflicts.size()
-                + " expired calls");
+            Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+                "{0} expired calls", callConflicts.size());
             for (CallInstance call : callConflicts) {
-              SEMANTIC_WARRANTY_LOGGER.finest("\t" + call);
+              Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST, "\t{0}",
+                  call);
               store.removeResult(call);
             }
           }
@@ -1170,14 +1172,16 @@ public final class TransactionManager {
    */
   public void setSemanticWarrantyValue(fabric.lang.Object v) {
     if (v == null) {
-      SEMANTIC_WARRANTY_LOGGER.finest("Call: " + current.semanticWarrantyCall
-          + " gets value null");
+      Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+          "Call {0} gets value null", current.semanticWarrantyCall);
     } else if (!(v instanceof WrappedJavaInlineable)) {
-      SEMANTIC_WARRANTY_LOGGER.finest("Call: " + current.semanticWarrantyCall
-          + " gets value " + v.$getOnum() + "@" + v.$getStore().name());
+      Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+          "Call {0} gets value {1}@{2}", current.semanticWarrantyCall,
+          v.$getOnum(), v.$getStore().name());
     } else {
-      SEMANTIC_WARRANTY_LOGGER.finest("Call: " + current.semanticWarrantyCall
-          + " gets value " + ((WrappedJavaInlineable<?>) v).$unwrap());
+      Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+          "Call {0} gets value {1}", current.semanticWarrantyCall,
+          ((WrappedJavaInlineable<?>) v).$unwrap());
     }
     current.semanticWarrantyValue = v;
   }

@@ -15,8 +15,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
 
 import fabric.common.AuthorizationUtil;
+import fabric.common.Logging;
 import fabric.common.ONumConstants;
 import fabric.common.ObjectGroup;
 import fabric.common.SemanticWarranty;
@@ -167,9 +169,9 @@ public class TransactionManager {
       long currentTime = System.currentTimeMillis();
       long currentProposedTime =
         (longestWarranty == null ? 0 : longestWarranty.expiry());
-      SEMANTIC_WARRANTY_LOGGER.finest(
-          String.format("Checking calls for %x that would delay longer than %d ms",
-            tid, currentProposedTime - currentTime));
+      Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+          "Checking calls for {0} that would delay longer than {1} ms",
+          Long.toHexString(tid), currentProposedTime - currentTime);
       Pair<SemanticWarranty,
            Pair<Map<CallInstance, SemanticWarrantyRequest>,
                 Map<CallInstance, SemanticWarrantyRequest>>>
@@ -237,7 +239,6 @@ public class TransactionManager {
       database.finishPrepareWrites(tid, worker);
 
       STORE_TRANSACTION_LOGGER.fine("Prepared writes for transaction " + tid);
-      SEMANTIC_WARRANTY_LOGGER.fine("Prepared writes for transaction " + Long.toHexString(tid));
 
       // Ugh this is ugly.
       if (longestCallWarranty != null
@@ -486,16 +487,17 @@ public class TransactionManager {
 
       while (!fringe.isEmpty()) {
         SemanticWarrantyRequest r = reqMap.get(fringe.poll());
-        SEMANTIC_WARRANTY_LOGGER.finest(
-            "Proposing SemanticWarranty for CallInstance " + r.call);
+        Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+            "Proposing SemanticWarranty for CallInstance {0}", r.call);
 
         // Get a proposal for a warranty
         SemanticWarranty proposed = semanticWarranties.requestWarranty(tid, r,
             true);
         if (proposed != null) {
-          SEMANTIC_WARRANTY_LOGGER.finer(r.call.toString()
-              + " was proposed a warranty to expire in " + (proposed.expiry() -
-                System.currentTimeMillis()));
+          Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINER,
+              "{0} was proposed a warranty to expire in {1}",
+              r.call.toString(),
+              (proposed.expiry() - System.currentTimeMillis()));
           // Add it to the response set
           warranties.put(r.call, proposed);
           
@@ -511,8 +513,8 @@ public class TransactionManager {
           // We couldn't get that warranty... so don't even bother with other
           // warranties that used it.  Oh well.
           List<CallInstance> callsToDrop = new ArrayList<CallInstance>();
-          SEMANTIC_WARRANTY_LOGGER.finer(r.call.toString() +
-              " could not make a warranty.");
+          Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINER,
+              "{0} could not make a warranty.", r.call);
           callsToDrop.add(r.call);
           // Recursively remove stuff that used this.
           while (!callsToDrop.isEmpty()) {
@@ -520,8 +522,8 @@ public class TransactionManager {
             for (CallInstance c : new HashSet<CallInstance>(nonfringe)) {
               if (simplifiedDepMap.get(c).contains(callToDrop)) {
                 nonfringe.remove(c);
-                SEMANTIC_WARRANTY_LOGGER.finer(c.toString() +
-                    " could not make a warranty.");
+                Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINER,
+                    "{0} could not make a warranty.", c);
                 callsToDrop.add(c);
               }
             }

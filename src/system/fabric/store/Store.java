@@ -231,14 +231,14 @@ class Store extends MessageToStoreHandler {
         "Handling Prepare-Writes Message, worker={0}, tid={1}",
         nameOf(client.principal), msg.tid);
 
-    SEMANTIC_WARRANTY_LOGGER.finest("Preparing " + msg.requests.size()
-        + " semantic warranty requests");
+    Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+        "Preparing {0} semantic warranty requests", msg.requests.size());
 
     Map<CallInstance, SemanticWarranty> replies =
       prepareTransactionRequests(client.principal, msg.tid, msg.requests);
 
-    SEMANTIC_WARRANTY_LOGGER.finest("Returning " + replies.size() +
-        " request replies");
+    Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+        "Returning {0} request replies", replies.size());
 
     PrepareWritesResult writeResult = prepareTransactionWrites(client.principal,
         msg.tid, msg.serializedCreates, msg.serializedWrites);
@@ -306,8 +306,9 @@ class Store extends MessageToStoreHandler {
   @Override
   public ReuseCallMessage.Response handle(RemoteIdentity client,
       ReuseCallMessage msg) throws AccessException {
-    SEMANTIC_WARRANTY_LOGGER.finest("Handling Reuse Call Message from " +
-        nameOf(client.principal) + " for call " + msg.call);
+    Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+        "Handling Reuse Call Message from {0} for call {1}",
+        nameOf(client.principal), msg.call);
 
     WarrantiedCallResult result = tm.getCall(client.principal, msg.call);
     return new ReuseCallMessage.Response(result);
