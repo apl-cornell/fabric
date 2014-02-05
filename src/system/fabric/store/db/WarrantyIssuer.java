@@ -154,8 +154,11 @@ public class WarrantyIssuer<K> {
      */
     void notifyWritePrepare(Warranty warranty) {
       Logging.log(HOTOS_LOGGER, Level.FINER, "writing @{0}", key);
-      HOTOS_LOGGER.log(Level.INFO, "writing {0}, warranty expires in {1} ms",
-          new Object[] { key, warranty.expiry() - System.currentTimeMillis() });
+      if (HOTOS_LOGGER.isLoggable(Level.FINE)) {
+        Logging.log(HOTOS_LOGGER, Level.FINE,
+            "writing {0}, warranty expires in {1} ms", key, warranty.expiry()
+                - System.currentTimeMillis());
+      }
 
       synchronized (prepareMutex) {
         fixPrepareWindow();
@@ -194,14 +197,17 @@ public class WarrantyIssuer<K> {
           Math.min((long) (2.0 * BASE_COMMIT_LATENCY * ratio),
               MAX_WARRANTY_LENGTH);
 
-      if (key instanceof Number && ((Number) key).longValue() == 0) {
-        HOTOS_LOGGER.log(Level.INFO, "onum = {0}, warranty length = {1}",
-            new Object[] { key, warrantyLength });
-      }
+      if (HOTOS_LOGGER.isLoggable(Level.FINE)) {
+        if (key instanceof Number && ((Number) key).longValue() == 0) {
+          Logging.log(HOTOS_LOGGER, Level.FINE,
+              "onum = {0}, warranty length = {1}", key, warrantyLength);
+        }
 
-      if (writePrepareRate > 0 || numWritePrepares > 0)
-        HOTOS_LOGGER.log(Level.INFO, "onum = {0}, warranty length = {1}",
-            new Object[] { key, warrantyLength });
+        if (writePrepareRate > 0 || numWritePrepares > 0) {
+          Logging.log(HOTOS_LOGGER, Level.FINE,
+              "onum = {0}, warranty length = {1}", key, warrantyLength);
+        }
+      }
 
       if (warrantyLength < MIN_WARRANTY_LENGTH) return null;
 

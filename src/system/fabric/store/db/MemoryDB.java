@@ -7,7 +7,9 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.security.PrivateKey;
 import java.util.Date;
+import java.util.logging.Level;
 
+import fabric.common.Logging;
 import fabric.common.ONumConstants;
 import fabric.common.Resources;
 import fabric.common.SerializedObject;
@@ -101,11 +103,12 @@ public class MemoryDB extends ObjectDB {
       if (!submap.containsKey(workerIdentity.principal)) return;
     }
 
-    long commitDelay = commitTime - System.currentTimeMillis();
-    STORE_DB_LOGGER
-        .finer("Scheduling commit for tid " + Long.toHexString(tid)
-            + " to run at " + new Date(commitTime) + " (in " + commitDelay
-            + " ms)");
+    if (STORE_DB_LOGGER.isLoggable(Level.FINER)) {
+      long commitDelay = commitTime - System.currentTimeMillis();
+      Logging.log(STORE_DB_LOGGER, Level.FINER,
+          "Scheduling commit for tid {0} to run at {1} (in {2} ms)",
+          Long.toHexString(tid), new Date(commitTime), commitDelay);
+    }
 
     Threading.scheduleAt(commitTime, new Runnable() {
       @Override

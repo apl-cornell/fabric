@@ -405,20 +405,24 @@ public final class TransactionManager {
     final long actualCommitTime =
         Math.max(commitTime, System.currentTimeMillis());
     COMMIT_TIME.set(actualCommitTime);
-    final long commitLatency = actualCommitTime - prepareStart;
-    final long writeDelay =
-        Math.max(0, commitTime - System.currentTimeMillis());
-    if (LOCAL_STORE == null) LOCAL_STORE = Worker.getWorker().getLocalStore();
-    if (workers.size() > 0 || stores.size() > 1 || stores.size() == 1
-        && !stores.contains(LOCAL_STORE)
-        && !(stores.iterator().next() instanceof InProcessStore)) {
-      if (isWriteFree) {
-        HOTOS_LOGGER.log(Level.INFO, "committed tid {0} (latency {1} ms)",
-            new Object[] { HOTOS_current, commitLatency });
-      } else {
-        HOTOS_LOGGER.log(Level.INFO,
-            "committed tid {0} (latency {1} ms; write delay {2} ms)",
-            new Object[] { HOTOS_current, commitLatency, writeDelay });
+    if (HOTOS_LOGGER.isLoggable(Level.FINE)) {
+      final long commitLatency = actualCommitTime - prepareStart;
+      final long writeDelay =
+          Math.max(0, commitTime - System.currentTimeMillis());
+      if (LOCAL_STORE == null)
+        LOCAL_STORE = Worker.getWorker().getLocalStore();
+      if (workers.size() > 0 || stores.size() > 1 || stores.size() == 1
+          && !stores.contains(LOCAL_STORE)
+          && !(stores.iterator().next() instanceof InProcessStore)) {
+        if (isWriteFree) {
+          Logging.log(HOTOS_LOGGER, Level.FINE,
+              "committed tid {0} (latency {1} ms)", HOTOS_current,
+              commitLatency);
+        } else {
+          Logging.log(HOTOS_LOGGER, Level.FINE,
+              "committed tid {0} (latency {1} ms; write delay {2} ms)",
+              HOTOS_current, commitLatency, writeDelay);
+        }
       }
     }
   }
@@ -593,7 +597,7 @@ public final class TransactionManager {
         }
       }
       WORKER_TRANSACTION_LOGGER.fine(logMessage);
-      HOTOS_LOGGER.info("Prepare failed.");
+      HOTOS_LOGGER.fine("Prepare failed.");
 
       synchronized (current.commitState) {
         current.commitState.value = PREPARE_FAILED;
@@ -717,14 +721,10 @@ public final class TransactionManager {
             public void runImpl() {
               try {
                 if (WORKER_TRANSACTION_LOGGER.isLoggable(Level.FINE)) {
-                  Logging
-                      .log(
-                          WORKER_TRANSACTION_LOGGER,
-                          Level.FINE,
-                          "Preparing "
-                              + "reads for transaction {0} to {1}: {2} version warranties "
-                              + "will expire", current.tid.topTid, store,
-                          reads.size());
+                  Logging.log(WORKER_TRANSACTION_LOGGER, Level.FINE,
+                      "Preparing reads for transaction {0} to {1}: {2} version "
+                          + "warranties will expire", current.tid.topTid,
+                      store, reads.size());
                 }
 
                 LongKeyMap<VersionWarranty> newWarranties =
@@ -752,7 +752,7 @@ public final class TransactionManager {
       }
     }
 
-    if (HOTOS_LOGGER.isLoggable(Level.INFO)) {
+    if (HOTOS_LOGGER.isLoggable(Level.FINE)) {
       int numTotalRemoteReads = 0;
       for (Store store : current.reads.storeSet()) {
         if (store.isLocalStore()) continue;
@@ -760,8 +760,8 @@ public final class TransactionManager {
       }
 
       if (numTotalRemoteReads > 0) {
-        HOTOS_LOGGER.log(Level.INFO, "Prepared {0} out of {1} reads",
-            new Object[] { numRemoteReadsPrepared, numTotalRemoteReads });
+        Logging.log(HOTOS_LOGGER, Level.FINE, "Prepared {0} out of {1} reads",
+            numRemoteReadsPrepared, numTotalRemoteReads);
       }
     }
 
@@ -1042,10 +1042,10 @@ public final class TransactionManager {
       while (obj.$writeLockHolder != null
           && !current.isDescendantOf(obj.$writeLockHolder)) {
         try {
-          Logging.log(WORKER_TRANSACTION_LOGGER, Level.FINEST, current
-              + "{0} wants to read {1}/" + obj.$getOnum()
-              + " ({2}); waiting on writer {3}", current, obj.$getStore(),
-              obj.getClass(), obj.$writeLockHolder);
+          Logging.log(WORKER_TRANSACTION_LOGGER, Level.FINEST,
+              "{0} wants to read {1}/{2} ({3}); waiting on writer {4}",
+              current, obj.$getStore(), obj.$getOnum(), obj.getClass(),
+              obj.$writeLockHolder);
           hadToWait = true;
           obj.$numWaiting++;
           current.setWaitsFor(obj.$writeLockHolder);
@@ -1146,9 +1146,9 @@ public final class TransactionManager {
         if (obj.$writeLockHolder != null
             && !current.isDescendantOf(obj.$writeLockHolder)) {
           Logging.log(WORKER_TRANSACTION_LOGGER, Level.FINEST,
-              "{0} wants to write {1}/" + obj.$getOnum()
-                  + " ({2}); waiting on writer {3}", current, obj.$getStore(),
-              obj.getClass(), obj.$writeLockHolder);
+              "{0} wants to write {1}/{2} ({3}); waiting on writer {4}",
+              current, obj.$getStore(), obj.$getOnum(), obj.getClass(),
+              obj.$writeLockHolder);
           waitsFor.add(obj.$writeLockHolder);
           hadToWait = true;
         } else {
@@ -1159,9 +1159,9 @@ public final class TransactionManager {
               for (Log lock : readMapEntry.getReaders()) {
                 if (!current.isDescendantOf(lock)) {
                   Logging.log(WORKER_TRANSACTION_LOGGER, Level.FINEST,
-                      "{0} wants to write {1}/" + obj.$getOnum()
-                          + " ({2}); aborting reader {3}", current,
-                      obj.$getStore(), obj.getClass(), lock);
+                      "{0} wants to write {1}/{2} ({3}); aborting reader {4}",
+                      current, obj.$getStore(), obj.$getOnum(), obj.getClass(),
+                      lock);
                   waitsFor.add(lock);
                   lock.flagRetry();
                 }

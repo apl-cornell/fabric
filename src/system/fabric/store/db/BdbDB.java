@@ -227,7 +227,7 @@ public class BdbDB extends ObjectDB {
     });
 
     preparedTransactions.put(new ByteArray(key.getData()), pending);
-    STORE_DB_LOGGER.finer("Bdb prepare success tid " + tid);
+    STORE_DB_LOGGER.log(Level.FINER, "Bdb prepare success tid {0}", tid);
   }
 
   @Override
@@ -244,10 +244,12 @@ public class BdbDB extends ObjectDB {
   private void scheduleCommit(final long tid, final long commitTime,
       final RemoteIdentity<RemoteWorker> workerIdentity,
       final SubscriptionManager sm, boolean logCommitTime) {
-    long commitDelay = commitTime - System.currentTimeMillis();
-    STORE_DB_LOGGER
-        .finer("Scheduling Bdb commit for tid " + tid + " to run at "
-            + new Date(commitTime) + " (in " + commitDelay + " ms)");
+    if (STORE_DB_LOGGER.isLoggable(Level.FINER)) {
+      long commitDelay = commitTime - System.currentTimeMillis();
+      Logging.log(STORE_DB_LOGGER, Level.FINER,
+          "Scheduling Bdb commit for tid {0} to run at {1} (in {2} ms)", tid,
+          new Date(commitTime), commitDelay);
+    }
 
     // Record the commit time in BDB.
     final DatabaseEntry tidBdbKey =
@@ -268,7 +270,7 @@ public class BdbDB extends ObjectDB {
     Threading.scheduleAt(commitTime, new Runnable() {
       @Override
       public void run() {
-        STORE_DB_LOGGER.finer("Bdb commit begin tid " + tid);
+        STORE_DB_LOGGER.log(Level.FINER, "Bdb commit begin tid {0}", tid);
 
         PendingTransaction pending =
             runInBdbTransaction(new Code<PendingTransaction, RuntimeException>() {
@@ -288,7 +290,8 @@ public class BdbDB extends ObjectDB {
                   for (Pair<SerializedObject, UpdateType> update : pending.modData) {
                     SerializedObject o = update.first;
                     long onum = o.getOnum();
-                    STORE_DB_LOGGER.finest("Bdb committing onum " + onum);
+                    STORE_DB_LOGGER.log(Level.FINEST,
+                        "Bdb committing onum {0}", onum);
 
                     DatabaseEntry onumData = new DatabaseEntry();
                     LongBinding.longToEntry(onum, onumData);
@@ -301,7 +304,8 @@ public class BdbDB extends ObjectDB {
 
                   return pending;
                 } else {
-                  STORE_DB_LOGGER.warning("Bdb commit not found tid " + tid);
+                  STORE_DB_LOGGER.log(Level.WARNING,
+                      "Bdb commit not found tid {0}", tid);
                   throw new InternalError("Unknown transaction id " + tid);
                 }
               }
@@ -322,14 +326,14 @@ public class BdbDB extends ObjectDB {
           cachedObjects.put(onum, o);
         }
 
-        STORE_DB_LOGGER.finer("Bdb commit success tid " + tid);
+        STORE_DB_LOGGER.log(Level.FINER, "Bdb commit success tid {0}", tid);
       }
     });
   }
 
   @Override
   public void rollback(final long tid, final Principal worker) {
-    STORE_DB_LOGGER.finer("Bdb rollback begin tid " + tid);
+    STORE_DB_LOGGER.log(Level.FINER, "Bdb rollback begin tid {0}", tid);
 
     runInBdbTransaction(new Code<Void, RuntimeException>() {
       @Override
@@ -339,7 +343,7 @@ public class BdbDB extends ObjectDB {
       }
     });
 
-    STORE_DB_LOGGER.finer("Bdb rollback success tid " + tid);
+    STORE_DB_LOGGER.log(Level.FINER, "Bdb rollback success tid {0}", tid);
   }
 
   @Override
@@ -347,7 +351,7 @@ public class BdbDB extends ObjectDB {
     SerializedObject cached = cachedObjects.get(onum);
     if (cached != null) return cached;
 
-    STORE_DB_LOGGER.finest("Bdb read onum " + onum);
+    STORE_DB_LOGGER.log(Level.FINEST, "Bdb read onum {0}", onum);
 
     return runInBdbTransaction(new Code<SerializedObject, RuntimeException>() {
       @Override
@@ -431,8 +435,8 @@ public class BdbDB extends ObjectDB {
               }
             });
 
-            STORE_DB_LOGGER.fine("Bdb reserved onums " + nextOnum + "--"
-                + lastReservedOnum);
+            Logging.log(STORE_DB_LOGGER, Level.FINE,
+                "Bdb reserved onums {0}--{1}", nextOnum, lastReservedOnum);
           }
 
           onums[i] = nextOnum.value++;
@@ -521,9 +525,12 @@ public class BdbDB extends ObjectDB {
                 VersionWarranty warranty =
                     new VersionWarranty(LongBinding.entryToLong(data));
 
-                STORE_DB_LOGGER.finer("Recoving state for tid=" + tid
-                    + ", owner=" + owner.$getStore() + "/" + owner.$getOnum()
-                    + " (commit time=" + new Date(warranty.expiry()) + ")");
+                if (STORE_DB_LOGGER.isLoggable(Level.FINER)) {
+                  Logging.log(STORE_DB_LOGGER, Level.FINER,
+                      "Recoving state for tid={0}, owner={1}/{2} "
+                          + "(commit time={3})", tid, owner.$getStore(),
+                      owner.$getOnum(), new Date(warranty.expiry()));
+                }
 
                 // Loop through the updates for the current transaction.
                 for (Pair<SerializedObject, UpdateType> update : pending.modData) {
@@ -533,13 +540,15 @@ public class BdbDB extends ObjectDB {
                   writeLocks.put(onum, tid);
 
                   if (update.second == UpdateType.WRITE) {
-                    STORE_DB_LOGGER.finest("Recovered write to " + onum);
+                    STORE_DB_LOGGER.log(Level.FINEST, "Recovered write to {0}",
+                        onum);
                     addWrittenOnumByTid(tid, owner, onum);
 
                     // Restore the object's warranty.
                     versionWarrantyTable.put(onum, warranty);
                   } else {
-                    STORE_DB_LOGGER.finest("Recovered create for " + onum);
+                    STORE_DB_LOGGER.log(Level.FINEST,
+                        "Recovered create for {0}", onum);
                   }
                 }
               }

@@ -63,8 +63,8 @@ public class WarrantyTable<K, V extends Warranty> {
 
     long expiry = warranty.expiry();
     long length = expiry - System.currentTimeMillis();
-    STORE_DB_LOGGER.finest("Adding warranty for " + key + "; expiry=" + expiry
-        + " (in " + length + " ms)");
+    Logging.log(STORE_DB_LOGGER, Level.FINEST,
+        "Adding warranty for {0}; expiry={1} (in {2} ms)", key, expiry, length);
 
     table.put(key, warranty);
     addReverseEntry(key, warranty);

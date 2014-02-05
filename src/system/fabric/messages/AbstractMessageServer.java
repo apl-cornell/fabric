@@ -1,5 +1,7 @@
 package fabric.messages;
 
+import static fabric.common.Logging.NETWORK_CONNECTION_LOGGER;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;
@@ -91,9 +93,8 @@ public abstract class AbstractMessageServer implements Runnable, MessageHandler 
                         connection.close();
                       } catch (IOException e1) {
                       }
-                      Logging.NETWORK_CONNECTION_LOGGER.log(Level.INFO,
-                          "Stream #{0} reset ({1})", new Object[] { streamID,
-                              client });
+                      Logging.log(NETWORK_CONNECTION_LOGGER, Level.INFO,
+                          "Stream #{0} reset ({1})", streamID, client);
                     } catch (IOException e) {
                       try {
                         connection.close();

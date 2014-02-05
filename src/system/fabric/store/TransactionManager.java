@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.logging.Level;
 
 import fabric.common.AuthorizationUtil;
 import fabric.common.ONumConstants;
@@ -69,7 +70,8 @@ public class TransactionManager {
   public void abortTransaction(Principal worker, long transactionID)
       throws AccessException {
     database.abort(transactionID, worker);
-    STORE_TRANSACTION_LOGGER.fine("Aborted transaction " + transactionID);
+    STORE_TRANSACTION_LOGGER.log(Level.FINE, "Aborted transaction {0}",
+        transactionID);
   }
 
   /**
@@ -80,8 +82,10 @@ public class TransactionManager {
       throws TransactionCommitFailedException {
     try {
       database.commit(transactionID, commitTime, workerIdentity, sm);
-      STORE_TRANSACTION_LOGGER.fine("Committed transaction "
-          + Long.toHexString(transactionID));
+      if (STORE_TRANSACTION_LOGGER.isLoggable(Level.FINE)) {
+        STORE_TRANSACTION_LOGGER.log(Level.FINE, "Committed transaction {0}",
+            Long.toHexString(transactionID));
+      }
     } catch (final RuntimeException e) {
       throw new TransactionCommitFailedException(
           "something went wrong; store experienced a runtime exception during "
@@ -144,7 +148,8 @@ public class TransactionManager {
 
       database.finishPrepareWrites(tid, worker);
 
-      STORE_TRANSACTION_LOGGER.fine("Prepared writes for transaction " + tid);
+      STORE_TRANSACTION_LOGGER.log(Level.FINE,
+          "Prepared writes for transaction {0}", tid);
 
       return longestWarranty == null ? 0 : longestWarranty.expiry();
     } catch (TransactionPrepareFailedException e) {
@@ -244,7 +249,7 @@ public class TransactionManager {
         throw new TransactionPrepareFailedException(versionConflicts);
       }
 
-      STORE_TRANSACTION_LOGGER.fine("Prepared transaction " + tid);
+      STORE_TRANSACTION_LOGGER.log(Level.FINE, "Prepared transaction {0}", tid);
       sm.notifyNewWarranties(newWarranties, workerIdentity.node);
       return prepareResult;
     } catch (TransactionPrepareFailedException e) {

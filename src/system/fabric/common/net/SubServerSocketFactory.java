@@ -214,17 +214,16 @@ public class SubServerSocketFactory {
         queue.open(conn);
       } catch (SocketException e) {
         if ("Connection reset".equalsIgnoreCase(e.getMessage())) {
-          NETWORK_CONNECTION_LOGGER.log(Level.WARNING,
-              "{0} connection closed ({1})",
-              new Object[] { portType, s.getRemoteSocketAddress() });
+          Logging.log(NETWORK_CONNECTION_LOGGER, Level.WARNING,
+              "{0} connection closed ({1})", portType,
+              s.getRemoteSocketAddress());
           return;
         }
 
         throw new NotImplementedException(e);
       } catch (EOFException e) {
-        NETWORK_CONNECTION_LOGGER.log(Level.WARNING,
-            "{0} connection reset ({1})",
-            new Object[] { portType, s.getRemoteSocketAddress() });
+        Logging.log(NETWORK_CONNECTION_LOGGER, Level.WARNING,
+            "{0} connection reset ({1})", portType, s.getRemoteSocketAddress());
       } catch (IOException e) {
         // TODO: failed to initiate, close s.
         throw new NotImplementedException(e);
@@ -262,9 +261,9 @@ public class SubServerSocketFactory {
           }
         }
       } catch (BindException e) {
-        NETWORK_CONNECTION_LOGGER.log(Level.WARNING,
+        Logging.log(NETWORK_CONNECTION_LOGGER, Level.WARNING,
             "Unable to listen on {0}. {1}. Is the node already running?",
-            new Object[] { address, e.getMessage() });
+            address, e.getMessage());
       } catch (IOException exc) {
         // TODO
         throw new NotImplementedException(exc);
