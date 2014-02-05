@@ -4,6 +4,7 @@ import static fabric.common.Logging.SEMANTIC_WARRANTY_LOGGER;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -264,7 +265,9 @@ public class SemanticWarrantyTable {
       case VALID:
       case STALE:
       default:
-        return new HashSet<CallInstance>(callers);
+        synchronized (callers) {
+          return new HashSet<CallInstance>(callers);
+        }
       }
     }
 
@@ -279,7 +282,9 @@ public class SemanticWarrantyTable {
       case VALID:
       case STALE:
       default:
-        return new HashSet<CallInstance>(calls);
+        synchronized (calls) {
+          return new HashSet<CallInstance>(calls);
+        }
       }
     }
 
@@ -296,7 +301,9 @@ public class SemanticWarrantyTable {
       case VALID:
       case STALE:
       default:
-        callers.add(caller);
+        synchronized(callers) {
+          callers.add(caller);
+        }
       }
     }
 
@@ -309,7 +316,9 @@ public class SemanticWarrantyTable {
       case VALID:
       case STALE:
       default:
-        callers.remove(caller);
+        synchronized (callers) {
+          callers.remove(caller);
+        }
       }
     }
 
@@ -324,7 +333,9 @@ public class SemanticWarrantyTable {
       case VALID:
       case STALE:
       default:
-        return new LongHashSet(reads);
+        synchronized (reads) {
+          return new LongHashSet(reads);
+        }
       }
     }
 
@@ -339,8 +350,15 @@ public class SemanticWarrantyTable {
       case STALE:
       default:
         //TODO: This is safe, right?
-        LongSet createOids = new LongHashSet(creates);
-        for (CallInstance subcall : calls)
+        LongSet createOids = null;
+        Set<CallInstance> callsCopy = null;
+        synchronized (creates) {
+          createOids = new LongHashSet(creates);
+        }
+        synchronized (calls) {
+          callsCopy = new HashSet<CallInstance>(calls);
+        }
+        for (CallInstance subcall : callsCopy)
           createOids.addAll(getInfo(subcall).getCreates());
         return createOids;
       }
@@ -540,8 +558,11 @@ public class SemanticWarrantyTable {
       Set<CallInstance> expired = new HashSet<CallInstance>();
       switch (getStatus()) {
       case NOVALUE:
-        expired.add(this.call);
-        Set<CallInstance> children = new TreeSet<CallInstance>(this.calls);
+        expired.add(call);
+        Set<CallInstance> children = null;
+        synchronized (calls) {
+          children = new TreeSet<CallInstance>(calls);
+        }
         for (CallInstance child : children) {
           expired.addAll(getExpiredSubgraph(child));
         }
@@ -881,14 +902,16 @@ public class SemanticWarrantyTable {
         // Defend the reads
         for (LongIterator iter = update.readOnums.iterator(); iter.hasNext();) {
           long read = iter.next();
-          readersTable.putIfAbsent(read, new HashSet<CallInstance>());
+          readersTable.putIfAbsent(read,
+              Collections.synchronizedSet(new HashSet<CallInstance>()));
           readersTable.get(read).add(call);
         }
 
         // Defend the creates
         for (LongIterator iter = update.createOnums.iterator(); iter.hasNext();) {
           long create = iter.next();
-          creatorTable.putIfAbsent(create, new HashSet<CallInstance>());
+          creatorTable.putIfAbsent(create,
+              Collections.synchronizedSet(new HashSet<CallInstance>()));
           creatorTable.get(create).add(call);
         }
 
@@ -902,7 +925,8 @@ public class SemanticWarrantyTable {
         nextUpdateWarranty = updateWarranty;
 
         // Add this call to the update map for the transaction
-        updatingTIDMap.putIfAbsent(transactionID, new HashSet<CallInstance>());
+        updatingTIDMap.putIfAbsent(transactionID,
+            Collections.synchronizedSet(new HashSet<CallInstance>()));
         updatingTIDMap.get(transactionID).add(call);
       }
     }
@@ -917,20 +941,26 @@ public class SemanticWarrantyTable {
       // Handle reads
       for (LongIterator iter = nextUpdate.readOnums.iterator(); iter.hasNext();) {
         long read = iter.next();
-        if (!reads.contains(read)) readersTable.get(read).remove(call);
+        synchronized (reads) {
+          if (!reads.contains(read)) readersTable.get(read).remove(call);
+        }
       }
 
       // Handle creates
       for (LongIterator iter = nextUpdate.createOnums.iterator(); iter
           .hasNext();) {
         long create = iter.next();
-        if (!creates.contains(create)) creatorTable.get(create).remove(call);
+        synchronized (creates) {
+          if (!creates.contains(create)) creatorTable.get(create).remove(call);
+        }
       }
 
       // Handle calls
       for (CallInstance subCall : nextUpdate.calls.keySet()) {
-        if (!calls.contains(subCall)) {
-          getInfo(subCall).removeCaller(this.call);
+        synchronized (calls) {
+          if (!calls.contains(subCall)) {
+            getInfo(subCall).removeCaller(this.call);
+          }
         }
       }
 
@@ -947,44 +977,56 @@ public class SemanticWarrantyTable {
 
       // Remove old stuff
       // Reads
-      for (LongIterator iter = reads.iterator(); iter.hasNext();) {
-        long read = iter.next();
-        if (!nextUpdate.readOnums.contains(read))
-          readersTable.get(read).remove(call);
+      synchronized (reads) {
+        for (LongIterator iter = reads.iterator(); iter.hasNext();) {
+          long read = iter.next();
+          if (!nextUpdate.readOnums.contains(read))
+            readersTable.get(read).remove(call);
+        }
       }
 
       // Creates
-      for (LongIterator iter = creates.iterator(); iter.hasNext();) {
-        long create = iter.next();
-        if (!nextUpdate.createOnums.contains(create))
-          creatorTable.get(create).remove(call);
+      synchronized (creates) {
+        for (LongIterator iter = creates.iterator(); iter.hasNext();) {
+          long create = iter.next();
+          if (!nextUpdate.createOnums.contains(create))
+            creatorTable.get(create).remove(call);
+        }
       }
 
       // Calls
-      for (CallInstance subCall : calls)
-        if (!nextUpdate.calls.containsKey(subCall))
-          getInfo(subCall).removeCaller(this.call);
+      synchronized (calls) {
+        for (CallInstance subCall : calls)
+          if (!nextUpdate.calls.containsKey(subCall))
+            getInfo(subCall).removeCaller(this.call);
+      }
 
       // Set new stuff up
       // Reads
-      reads.clear();
-      for (LongIterator iter = nextUpdate.readOnums.iterator(); iter.hasNext();) {
-        long read = iter.next();
-        reads.add(read);
+      synchronized (reads) {
+        reads.clear();
+        for (LongIterator iter = nextUpdate.readOnums.iterator(); iter.hasNext();) {
+          long read = iter.next();
+          reads.add(read);
+        }
       }
 
       // Creates
-      creates.clear();
-      for (LongIterator iter = nextUpdate.createOnums.iterator(); iter
-          .hasNext();) {
-        long create = iter.next();
-        creates.add(create);
+      synchronized (creates) {
+        creates.clear();
+        for (LongIterator iter = nextUpdate.createOnums.iterator(); iter
+            .hasNext();) {
+          long create = iter.next();
+          creates.add(create);
+        }
       }
 
       // Calls
-      calls.clear();
-      for (CallInstance subCall : nextUpdate.calls.keySet()) {
-        calls.add(subCall);
+      synchronized (calls) {
+        calls.clear();
+        for (CallInstance subCall : nextUpdate.calls.keySet()) {
+          calls.add(subCall);
+        }
       }
 
       // Set value, warranty, and status
@@ -1136,9 +1178,11 @@ public class SemanticWarrantyTable {
       throws TransactionPrepareFailedException {
     TreeSet<CallInstance> affectedCalls = new TreeSet<CallInstance>();
     for (SerializedObject obj : writes) {
-      readersTable.putIfAbsent(obj.getOnum(), new HashSet<CallInstance>());
+      readersTable.putIfAbsent(obj.getOnum(),
+          Collections.synchronizedSet(new HashSet<CallInstance>()));
       affectedCalls.addAll(readersTable.get(obj.getOnum()));
-      creatorTable.putIfAbsent(obj.getOnum(), new HashSet<CallInstance>());
+      creatorTable.putIfAbsent(obj.getOnum(),
+          Collections.synchronizedSet(new HashSet<CallInstance>()));
       affectedCalls.addAll(creatorTable.get(obj.getOnum()));
     }
 
