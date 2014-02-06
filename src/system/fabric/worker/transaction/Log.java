@@ -528,18 +528,16 @@ public final class Log {
   /**
    * Utility Method for getting the full set of creates for a given requested
    * semantic warranty call.
-   *
-   * Returns null if the call is not a requested call.
    */
   private LongSet getAllRequestCreates(CallInstance call) {
-    if (requests.containsKey(call)) {
-      SemanticWarrantyRequest req = requests.get(call);
-      LongSet createOids = new LongHashSet(req.createOnums);
-      for (WarrantiedCallResult subcallResult : req.calls.values())
-        createOids.addAll(subcallResult.getCreates());
-      return createOids;
-    }
-    return null;
+    //if (requests.containsKey(call)) {
+    //  SemanticWarrantyRequest req = requests.get(call);
+    //  LongSet createOids = new LongHashSet(req.createOnums);
+    //  for (WarrantiedCallResult subcallResult : req.calls.values())
+    //    createOids.addAll(subcallResult.getCreates());
+    //  return createOids;
+    //}
+    return new LongHashSet();
   }
 
   /**
