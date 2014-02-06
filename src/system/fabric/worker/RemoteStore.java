@@ -371,6 +371,7 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
             current.useStaleWarranties) {
           Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
               "Call {0} found at store: {1}", call, result);
+          insertResult(call, result);
           return result;
         } else {
           result = null;
