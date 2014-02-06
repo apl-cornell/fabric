@@ -1115,8 +1115,10 @@ public class SemanticWarrantyTable {
     case VALID:
     case STALE:
     default:
+      //return new WarrantiedCallResult(info.getValue(), info.getWarranty(),
+          //info.getCreates());
       return new WarrantiedCallResult(info.getValue(), info.getWarranty(),
-          info.getCreates());
+          new LongHashSet());
     }
   }
 
@@ -1132,8 +1134,10 @@ public class SemanticWarrantyTable {
     case STALE:
     default:
       info.updateWarranty();
+      //return new WarrantiedCallResult(info.getValue(), info.getWarranty(),
+          //info.getCreates());
       return new WarrantiedCallResult(info.getValue(), info.getWarranty(),
-          info.getCreates());
+          new LongHashSet());
     }
   }
 
