@@ -236,6 +236,7 @@ public class TransactionManager {
       }
 
       for (CallInstance newCall : newCalls.keySet()) {
+        addedCalls.remove(newCall);
         semanticWarranties.requestWarranty(tid, newCalls.get(newCall), false);
       }
 
