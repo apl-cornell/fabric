@@ -455,95 +455,85 @@ public class TransactionManager {
    *          The worker requesting the prepare
    */
   public Map<CallInstance, SemanticWarranty> prepareRequests(Principal worker,
-      long tid, Set<SemanticWarrantyRequest> requests) throws
-    TransactionPrepareFailedException {
-    try {
-      /* Create the associated warranties and add these calls to the warranties
-       * table.
-       */ 
-      Map<CallInstance, SemanticWarranty> warranties =
-        new HashMap<CallInstance, SemanticWarranty>();
+      long tid, Set<SemanticWarrantyRequest> requests) {
+    /* Create the associated warranties and add these calls to the warranties
+     * table.
+     */ 
+    Map<CallInstance, SemanticWarranty> warranties =
+      new HashMap<CallInstance, SemanticWarranty>();
 
-      // Have to do a topologically sorted order of requests (so call dependencies
-      // have warranties already).
-      Map<CallInstance, Set<CallInstance>> simplifiedDepMap = new
-        HashMap<CallInstance, Set<CallInstance>>();
-      Map<CallInstance, SemanticWarrantyRequest> reqMap = new
-        HashMap<CallInstance, SemanticWarrantyRequest>(requests.size());
-      for (SemanticWarrantyRequest r : requests) {
-        reqMap.put(r.call, r);
-      }
-      for (SemanticWarrantyRequest r : requests) {
-        Set<CallInstance> depsInTable = new HashSet<CallInstance>();
-        for (CallInstance c : r.calls.keySet())
-          if (reqMap.containsKey(c))
-            depsInTable.add(c);
-        simplifiedDepMap.put(r.call, depsInTable);
-      }
+    // Have to do a topologically sorted order of requests (so call dependencies
+    // have warranties already).
+    Map<CallInstance, Set<CallInstance>> simplifiedDepMap = new
+      HashMap<CallInstance, Set<CallInstance>>();
+    Map<CallInstance, SemanticWarrantyRequest> reqMap = new
+      HashMap<CallInstance, SemanticWarrantyRequest>(requests.size());
+    for (SemanticWarrantyRequest r : requests) {
+      reqMap.put(r.call, r);
+    }
+    for (SemanticWarrantyRequest r : requests) {
+      Set<CallInstance> depsInTable = new HashSet<CallInstance>();
+      for (CallInstance c : r.calls.keySet())
+        if (reqMap.containsKey(c))
+          depsInTable.add(c);
+      simplifiedDepMap.put(r.call, depsInTable);
+    }
 
-      LinkedList<CallInstance> fringe = new LinkedList<CallInstance>();
-      Set<CallInstance> nonfringe = new HashSet<CallInstance>();
-      for (CallInstance k : simplifiedDepMap.keySet())
-        if (simplifiedDepMap.get(k).isEmpty())
-          fringe.add(k);
-        else
-          nonfringe.add(k);
+    LinkedList<CallInstance> fringe = new LinkedList<CallInstance>();
+    Set<CallInstance> nonfringe = new HashSet<CallInstance>();
+    for (CallInstance k : simplifiedDepMap.keySet())
+      if (simplifiedDepMap.get(k).isEmpty())
+        fringe.add(k);
+      else
+        nonfringe.add(k);
 
-      while (!fringe.isEmpty()) {
-        SemanticWarrantyRequest r = reqMap.get(fringe.poll());
-        Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
-            "Proposing SemanticWarranty for CallInstance {0}", r.call);
+    while (!fringe.isEmpty()) {
+      SemanticWarrantyRequest r = reqMap.get(fringe.poll());
+      Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+          "Proposing SemanticWarranty for CallInstance {0}", r.call);
 
-        // Get a proposal for a warranty
-        SemanticWarranty proposed = semanticWarranties.requestWarranty(tid, r,
-            true);
-        if (proposed != null) {
-          Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINER,
-              "{0} was proposed a warranty to expire in {1}",
-              r.call.toString(),
-              (proposed.expiry() - System.currentTimeMillis()));
-          // Add it to the response set
-          warranties.put(r.call, proposed);
-          
-          //Update fringe
-          for (CallInstance c : new HashSet<CallInstance>(nonfringe)) {
-            simplifiedDepMap.get(c).remove(r.call);
-            if (simplifiedDepMap.get(c).isEmpty()) {
-              nonfringe.remove(c);
-              fringe.add(c);
-            }
+      // Get a proposal for a warranty
+      SemanticWarranty proposed = semanticWarranties.requestWarranty(tid, r,
+          true);
+      if (proposed != null) {
+        Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINER,
+            "{0} was proposed a warranty to expire in {1}",
+            r.call.toString(),
+            (proposed.expiry() - System.currentTimeMillis()));
+        // Add it to the response set
+        warranties.put(r.call, proposed);
+        
+        //Update fringe
+        for (CallInstance c : new HashSet<CallInstance>(nonfringe)) {
+          simplifiedDepMap.get(c).remove(r.call);
+          if (simplifiedDepMap.get(c).isEmpty()) {
+            nonfringe.remove(c);
+            fringe.add(c);
           }
-        } else {
-          // We couldn't get that warranty... so don't even bother with other
-          // warranties that used it.  Oh well.
-          List<CallInstance> callsToDrop = new ArrayList<CallInstance>();
-          Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINER,
-              "{0} could not make a warranty.", r.call);
-          callsToDrop.add(r.call);
-          // Recursively remove stuff that used this.
-          while (!callsToDrop.isEmpty()) {
-            CallInstance callToDrop = callsToDrop.remove(0);
-            for (CallInstance c : new HashSet<CallInstance>(nonfringe)) {
-              if (simplifiedDepMap.get(c).contains(callToDrop)) {
-                nonfringe.remove(c);
-                Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINER,
-                    "{0} could not make a warranty.", c);
-                callsToDrop.add(c);
-              }
+        }
+      } else {
+        // We couldn't get that warranty... so don't even bother with other
+        // warranties that used it.  Oh well.
+        List<CallInstance> callsToDrop = new ArrayList<CallInstance>();
+        Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINER,
+            "{0} could not make a warranty.", r.call);
+        callsToDrop.add(r.call);
+        // Recursively remove stuff that used this.
+        while (!callsToDrop.isEmpty()) {
+          CallInstance callToDrop = callsToDrop.remove(0);
+          for (CallInstance c : new HashSet<CallInstance>(nonfringe)) {
+            if (simplifiedDepMap.get(c).contains(callToDrop)) {
+              nonfringe.remove(c);
+              Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINER,
+                  "{0} could not make a warranty.", c);
+              callsToDrop.add(c);
             }
           }
         }
       }
-
-      return warranties;
-    } catch (TransactionPrepareFailedException e) {
-      try {
-        abortTransaction(worker, tid);
-      } catch (AccessException ae) {
-        throw new InternalError(ae);
-      }
-      throw e;
     }
+
+    return warranties;
   }
 
   /**

@@ -2,12 +2,10 @@ package fabric.store.db;
 
 import static fabric.common.Logging.SEMANTIC_WARRANTY_LOGGER;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -69,14 +67,7 @@ public class SemanticWarrantyTable {
   /**
    * Used for checking if a call is updated by a set of writes.
    */
-  private class CallCheckException extends RuntimeException {
-    /* Calls that were ran during the run with their new requests. */
-    public Map<CallInstance, SemanticWarrantyRequest> updates;
-
-    public CallCheckException(Map<CallInstance, SemanticWarrantyRequest> updates) {
-      this.updates = updates;
-    }
-  }
+  private class CallCheckException extends RuntimeException { }
 
   /**
    * Used for comparing call results.
@@ -351,7 +342,6 @@ public class SemanticWarrantyTable {
       case VALID:
       case STALE:
       default:
-        //TODO: This is safe, right?
         LongSet createOids = null;
         Set<CallInstance> callsCopy = null;
         synchronized (creates) {
@@ -394,8 +384,7 @@ public class SemanticWarrantyTable {
      * then we don't make a warranty and return null.
      */
     public SemanticWarranty request(SemanticWarrantyRequest req,
-        long transactionID, boolean useIssuer)
-        throws TransactionPrepareFailedException {
+        long transactionID, boolean useIssuer) {
       switch (getStatus()) {
       case VALID:
       case STALE:
@@ -581,16 +570,16 @@ public class SemanticWarrantyTable {
      * Callable to use for checking the call (allowing us to set a time limit on
      * how long we check by submitting this for a time limited thread).
      */
-    private Callable<Map<CallInstance, SemanticWarrantyRequest>> getCallChecker(
+    private Callable<Void> getCallChecker(
         final Set<CallInstance> uncertainCalls,
         final Map<CallInstance, SemanticWarrantyRequest> updates,
         final Map<CallInstance, SemanticWarrantyRequest> changes,
         final Map<CallInstance, SemanticWarrantyRequest> newCalls,
         final Collection<SerializedObject> creates,
         final Collection<SerializedObject> writes) {
-      return new Callable<Map<CallInstance, SemanticWarrantyRequest>>() {
+      return new Callable<Void>() {
         @Override
-        public Map<CallInstance, SemanticWarrantyRequest> call() {
+        public Void call() {
           try {
             Worker.runInTopLevelTransaction(new Code<Void>() {
               @Override
@@ -602,8 +591,7 @@ public class SemanticWarrantyTable {
             }, false);
           } catch (AbortException e) {
             if (e.getCause() instanceof CallCheckException) {
-              CallCheckException c = (CallCheckException) e.getCause();
-              return c.updates;
+              return null;
             }
             throw e;
           }
@@ -664,36 +652,27 @@ public class SemanticWarrantyTable {
 
       Map<CallInstance, SemanticWarrantyRequest> updatedRequests =
           current.getAllRequests();
-      for (CallInstance key : updatedRequests.keySet())
+      for (CallInstance updatedCall : updatedRequests.keySet()) {
         Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
-            "GOT AN UPDATE ON {0}", key);
-      throw new CallCheckException(updatedRequests);
-    }
+            "GOT AN UPDATE ON {0}", updatedCall);
+        // Either way, the call is not uncertain anymore.
+        uncertainCalls.remove(updatedCall);
 
-    /**
-     * Take the update mapping from a call check and remove those that were
-     * changed from what we have in our table already.  Updates the updates map
-     * to no longer include the calls in the returned set.
-     */
-    private Map<CallInstance, SemanticWarrantyRequest> patchUpUpdates(
-        Map<CallInstance, SemanticWarrantyRequest> updates) {
-      Map<CallInstance, SemanticWarrantyRequest> callsCopy =
-          new HashMap<CallInstance, SemanticWarrantyRequest>(updates);
-      Map<CallInstance, SemanticWarrantyRequest> callsChanged =
-          new HashMap<CallInstance, SemanticWarrantyRequest>();
-
-      for (Map.Entry<CallInstance, SemanticWarrantyRequest> entry : callsCopy
-          .entrySet()) {
-        if (!updates.containsKey(entry.getKey())) continue;
-        SemanticWarrantyRequest req = entry.getValue();
-        CallInstance curCall = entry.getKey();
-        // If we didn't get the old value, move it into the changed map.
-        if (!getInfo(curCall).compareValue(req.value)) {
-          updates.remove(curCall);
-          callsChanged.put(curCall, req);
+        // If we don't have it, it's a new call.  Otherwise it's either an
+        // update (same value) or a change (different value).
+        if (getInfo(updatedCall).getStatus() == CallStatus.NOVALUE) {
+          newCalls.put(updatedCall, updatedRequests.get(updatedCall));
+        } else {
+          fabric.lang.Object newValue = updatedRequests.get(updatedCall).value;
+          fabric.lang.Object oldValue = getInfo(updatedCall).getValue();
+          if (!newValue.equals(oldValue)) {
+            changes.put(updatedCall, updatedRequests.get(updatedCall));
+          } else {
+            updates.put(updatedCall, updatedRequests.get(updatedCall));
+          }
         }
       }
-      return callsChanged;
+      throw new CallCheckException();
     }
 
     /**
@@ -732,30 +711,14 @@ public class SemanticWarrantyTable {
             return true;
           }
 
-          Future<Map<CallInstance, SemanticWarrantyRequest>> check =
+          Future<Void> check =
               Executors.newSingleThreadExecutor().submit(
                   getCallChecker(uncertainCalls, updates, changes, newCalls,
                       creates, writes));
 
-          // Get the result
-          Map<CallInstance, SemanticWarrantyRequest> newUpdates = check.get();
-          for (CallInstance call : new HashSet<CallInstance>(
-              newUpdates.keySet())) {
-            if (getInfo(call).getStatus() == CallStatus.NOVALUE) {
-              newCalls.put(call, newUpdates.get(call));
-              newUpdates.remove(call);
-            }
-          }
+          // Wait for the check to finish
+          check.get();
 
-          // Fix it up so we separate what's changed from what wasn't
-          Map<CallInstance, SemanticWarrantyRequest> newChanges =
-              patchUpUpdates(newUpdates);
-          // Remove all the calls that we were able to check out
-          uncertainCalls.removeAll(newUpdates.keySet());
-          uncertainCalls.removeAll(newChanges.keySet());
-          // Add to our "master" groups of things that changed or didn't
-          changes.putAll(newChanges);
-          updates.putAll(newUpdates);
           // Answer is whether we saw a change or not
           Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
               "CALL CHECK FOR {0} FINISHED", call);
@@ -1155,8 +1118,7 @@ public class SemanticWarrantyTable {
    * to become valid/expiring on the commit of the given transaction ID.
    */
   public SemanticWarranty requestWarranty(long transactionID,
-      SemanticWarrantyRequest req, boolean getNonZeroWarranty)
-      throws TransactionPrepareFailedException {
+      SemanticWarrantyRequest req, boolean getNonZeroWarranty) {
     CallInfo info = getInfo(req.call);
     return info.request(req, transactionID, getNonZeroWarranty);
   }
