@@ -87,7 +87,6 @@ public class Worker {
       if (now >= nextArrvIncrTime) {
         arrivalRate += arrivalDelta;
         nextArrvIncrTime = now + incrInterval;
-        nextArrvIncrTime = now + c.INCR_INTERVAL_MS;
       }
       // If it's time to spawn a new operation, do that.
       if (now >= nextSpawnTime) {
