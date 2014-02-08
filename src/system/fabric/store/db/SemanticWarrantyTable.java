@@ -916,6 +916,8 @@ public class SemanticWarrantyTable {
     //here too.
     private void scheduleUpdateAt(long transactionID,
         SemanticWarrantyRequest update, SemanticWarranty updateWarranty) {
+      Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+          "Scheduling update on {0} by {1}", call, transactionID);
       switch (getStatus()) {
       case NOVALUE:
       case STALE:
