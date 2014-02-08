@@ -266,7 +266,8 @@ public class SemanticWarrantyTable {
     public Set<CallInstance> getCallers() {
       switch (getStatus()) {
       case NOVALUE:
-        throw new InternalError("Attempt to get callers of a valueless call!");
+        throw new InternalError("Attempt to get callers of a valueless call: " +
+            call + "!");
       case VALID:
       case STALE:
       default:
@@ -283,7 +284,8 @@ public class SemanticWarrantyTable {
     public Set<CallInstance> getCalls() {
       switch (getStatus()) {
       case NOVALUE:
-        throw new InternalError("Attempt to get calls of a valueless call!");
+        throw new InternalError("Attempt to get calls of a valueless call: " +
+            call + "!");
       case VALID:
       case STALE:
       default:
@@ -334,7 +336,8 @@ public class SemanticWarrantyTable {
     public LongSet getReads() {
       switch (getStatus()) {
       case NOVALUE:
-        throw new InternalError("Attempt to get reads from a valueless call!");
+        throw new InternalError("Attempt to get reads from a valueless call: " +
+            call + "!");
       case VALID:
       case STALE:
       default:
@@ -350,7 +353,8 @@ public class SemanticWarrantyTable {
     public LongSet getCreates() {
       switch (getStatus()) {
       case NOVALUE:
-        throw new InternalError("Attempt to get creates from a valueless call!");
+        throw new InternalError("Attempt to get creates from a valueless call: "
+            + call + "!");
       case VALID:
       case STALE:
       default:
@@ -819,7 +823,8 @@ public class SemanticWarrantyTable {
       switch (getStatus()) {
       case NOVALUE:
         throw new InternalError(
-            "Attempting to propose a write time for a valueless call!");
+            "Attempting to propose a write time for a valueless call: " + call +
+            "!");
       case VALID:
       case STALE:
       default:
@@ -857,7 +862,8 @@ public class SemanticWarrantyTable {
       switch (getStatus()) {
       case NOVALUE:
         throw new InternalError(
-            "Attempting to schedule a write on a valueless call!");
+            "Attempting to schedule a write on a valueless call: " + call +
+            "!");
       case STALE:
       case VALID:
       default:
