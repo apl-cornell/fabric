@@ -637,7 +637,8 @@ public class SemanticWarrantyTable {
         for (LongKeyMap<_Impl> submap : req.creates) {
           for (_Impl c : submap.values()) {
             Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
-                "Loading up create {0} from {1}", c.$getOnum(), req.call);
+                "Loading up create {0} from {1} for check of {2}", c.$getOnum(),
+                req.call, call);
             tm.registerCreate(c);
           }
         }
@@ -654,7 +655,7 @@ public class SemanticWarrantyTable {
           current.getAllRequests();
       for (CallInstance updatedCall : updatedRequests.keySet()) {
         Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
-            "GOT AN UPDATE ON {0}", updatedCall);
+            "GOT AN UPDATE ON {0} when checking {1}", updatedCall, call);
         // Either way, the call is not uncertain anymore.
         uncertainCalls.remove(updatedCall);
 
@@ -662,7 +663,7 @@ public class SemanticWarrantyTable {
         // update (same value) or a change (different value).
         if (getInfo(updatedCall).getStatus() == CallStatus.NOVALUE) {
           Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
-              "{0} was new", updatedCall);
+              "{0} was new when checking {1}", updatedCall, call);
           newCalls.put(updatedCall, updatedRequests.get(updatedCall));
         } else {
           fabric.lang.Object newValue = updatedRequests.get(updatedCall).value;
@@ -670,11 +671,11 @@ public class SemanticWarrantyTable {
           if (!newValue.equals(oldValue)) {
             changes.put(updatedCall, updatedRequests.get(updatedCall));
             Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
-                "{0} was changed", updatedCall);
+                "{0} was changed when checking {1}", updatedCall, call);
           } else {
             updates.put(updatedCall, updatedRequests.get(updatedCall));
             Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
-                "{0} was unchanged", updatedCall);
+                "{0} was unchanged when checking {1}", updatedCall, call);
           }
         }
       }
