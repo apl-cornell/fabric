@@ -67,7 +67,19 @@ public class SemanticWarrantyTable {
   /**
    * Used for checking if a call is updated by a set of writes.
    */
-  private class CallCheckException extends RuntimeException { }
+  private class CallCheckException extends RuntimeException {
+    public final Map<CallInstance, SemanticWarrantyRequest> updates;
+    public final Map<CallInstance, SemanticWarrantyRequest> changes;
+    public final Map<CallInstance, SemanticWarrantyRequest> newCalls;
+
+    public CallCheckException(Map<CallInstance, SemanticWarrantyRequest> updates,
+        Map<CallInstance, SemanticWarrantyRequest> changes,
+        Map<CallInstance, SemanticWarrantyRequest> newCalls) {
+      this.updates = updates;
+      this.changes = changes;
+      this.newCalls = newCalls;
+    }
+  }
 
   /**
    * Used for comparing call results.
@@ -591,6 +603,13 @@ public class SemanticWarrantyTable {
             }, false);
           } catch (AbortException e) {
             if (e.getCause() instanceof CallCheckException) {
+              CallCheckException cce = (CallCheckException) e.getCause();
+              updates.putAll(cce.updates);
+              uncertainCalls.removeAll(cce.updates.keySet());
+              changes.putAll(cce.changes);
+              uncertainCalls.removeAll(cce.changes.keySet());
+              newCalls.putAll(cce.newCalls);
+              uncertainCalls.removeAll(cce.newCalls.keySet());
               return null;
             }
             throw e;
@@ -651,35 +670,39 @@ public class SemanticWarrantyTable {
       Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
           "DONE RECOMPUTING CALL {0}", call);
 
+      Map<CallInstance, SemanticWarrantyRequest> newUpdates =
+        new HashMap<CallInstance, SemanticWarrantyRequest>();
+      Map<CallInstance, SemanticWarrantyRequest> newChanges =
+        new HashMap<CallInstance, SemanticWarrantyRequest>();
+      Map<CallInstance, SemanticWarrantyRequest> newNewCalls =
+        new HashMap<CallInstance, SemanticWarrantyRequest>();
+
       Map<CallInstance, SemanticWarrantyRequest> updatedRequests =
           current.getAllRequests();
       for (CallInstance updatedCall : updatedRequests.keySet()) {
         Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
             "GOT AN UPDATE ON {0} when checking {1}", updatedCall, call);
-        // Either way, the call is not uncertain anymore.
-        uncertainCalls.remove(updatedCall);
-
         // If we don't have it, it's a new call.  Otherwise it's either an
         // update (same value) or a change (different value).
         if (getInfo(updatedCall).getStatus() == CallStatus.NOVALUE) {
           Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
               "{0} was new when checking {1}", updatedCall, call);
-          newCalls.put(updatedCall, updatedRequests.get(updatedCall));
+          newNewCalls.put(updatedCall, updatedRequests.get(updatedCall));
         } else {
           fabric.lang.Object newValue = updatedRequests.get(updatedCall).value;
           fabric.lang.Object oldValue = getInfo(updatedCall).getValue();
           if (!newValue.equals(oldValue)) {
-            changes.put(updatedCall, updatedRequests.get(updatedCall));
+            newChanges.put(updatedCall, updatedRequests.get(updatedCall));
             Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
                 "{0} was changed when checking {1}", updatedCall, call);
           } else {
-            updates.put(updatedCall, updatedRequests.get(updatedCall));
+            newUpdates.put(updatedCall, updatedRequests.get(updatedCall));
             Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
                 "{0} was unchanged when checking {1}", updatedCall, call);
           }
         }
       }
-      throw new CallCheckException();
+      throw new CallCheckException(newUpdates, newChanges, newNewCalls);
     }
 
     /**
