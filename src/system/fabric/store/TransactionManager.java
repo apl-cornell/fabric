@@ -235,10 +235,6 @@ public class TransactionManager {
         addedCalls.remove(updatingCall);
       }
 
-      for (CallInstance newCall : newCalls.keySet()) {
-        semanticWarranties.requestWarranty(tid, newCalls.get(newCall), false);
-      }
-
       database.finishPrepareWrites(tid, worker);
 
       STORE_TRANSACTION_LOGGER.log(Level.FINE,

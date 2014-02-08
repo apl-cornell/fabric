@@ -1243,6 +1243,16 @@ public class SemanticWarrantyTable {
         longest = longest > suggestedTime ? longest : suggestedTime;
       }
 
+      // Make sure we can make the new warranties.  Otherwise, we need to abort
+      // and retry.
+      for (CallInstance call : newCalls.keySet()) {
+        if (requestWarranty(transactionID, newCalls.get(call), false) == null) {
+          throw new TransactionPrepareFailedException(
+              "Could not create new call warranty " + call +
+              " for write update!");
+        }
+      }
+
       // Schedule the write/update
       for (CallInstance call : affectedCalls) {
         getInfo(call).scheduleWriteAt(longest, transactionID, updates, changes);
