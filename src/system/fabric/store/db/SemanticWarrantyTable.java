@@ -13,9 +13,6 @@ import java.util.logging.Level;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.locks.ReentrantLock;
 
 import fabric.common.Logging;
@@ -745,23 +742,15 @@ public class SemanticWarrantyTable {
             return true;
           }
 
-          Future<Void> check =
-              Executors.newSingleThreadExecutor().submit(
-                  getCallChecker(uncertainCalls, updates, changes, newCalls,
-                      creates, writes));
-
-          // Wait for the check to finish
-          check.get();
-
-          Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
-              "SANITY CHECK: {0}", check.isDone());
+          getCallChecker(uncertainCalls, updates, changes, newCalls, creates,
+              writes).call();
 
           // Answer is whether we saw a change or not
           Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
               "CALL CHECK FOR {0} FINISHED", call);
           return changes.containsKey(this.call);
         }
-      } catch (ExecutionException | InterruptedException e) {
+      } catch (Exception e) {
         throw new TransactionPrepareFailedException(
             "Call checking ran into an " + "error! " + e.getMessage());
       }
