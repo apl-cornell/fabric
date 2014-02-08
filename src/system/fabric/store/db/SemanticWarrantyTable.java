@@ -1206,6 +1206,11 @@ public class SemanticWarrantyTable {
       affectedCalls.addAll(creatorTable.get(obj.getOnum()));
     }
 
+    for (CallInstance affected : affectedCalls) {
+      Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+          "{0} was affected by {1}", affected, transactionID);
+    }
+
     long longest = commitTime;
     Map<CallInstance, SemanticWarrantyRequest> changes =
         new HashMap<CallInstance, SemanticWarrantyRequest>();
