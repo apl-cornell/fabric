@@ -661,14 +661,20 @@ public class SemanticWarrantyTable {
         // If we don't have it, it's a new call.  Otherwise it's either an
         // update (same value) or a change (different value).
         if (getInfo(updatedCall).getStatus() == CallStatus.NOVALUE) {
+          Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+              "{0} was new", updatedCall);
           newCalls.put(updatedCall, updatedRequests.get(updatedCall));
         } else {
           fabric.lang.Object newValue = updatedRequests.get(updatedCall).value;
           fabric.lang.Object oldValue = getInfo(updatedCall).getValue();
           if (!newValue.equals(oldValue)) {
             changes.put(updatedCall, updatedRequests.get(updatedCall));
+            Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+                "{0} was changed", updatedCall);
           } else {
             updates.put(updatedCall, updatedRequests.get(updatedCall));
+            Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+                "{0} was unchanged", updatedCall);
           }
         }
       }
