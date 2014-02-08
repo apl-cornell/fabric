@@ -812,7 +812,13 @@ public class SemanticWarrantyTable {
       try {
         if (!writeLocked.contains(call)) {
           writeLock();
+          Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+              "Write locked {0} to propose a write time.", call);
           writeLocked.add(call);
+        } else {
+          Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+              "{0} was already write locked before proposing a write time.",
+              call);
         }
       } catch (UnableToLockException e) {
         Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
