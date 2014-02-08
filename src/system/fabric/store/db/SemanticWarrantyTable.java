@@ -656,21 +656,19 @@ public class SemanticWarrantyTable {
         Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
             "GOT AN UPDATE ON {0}", updatedCall);
         // Either way, the call is not uncertain anymore.
-        if (uncertainCalls.contains(updatedCall)) {
-          uncertainCalls.remove(updatedCall);
+        uncertainCalls.remove(updatedCall);
 
-          // If we don't have it, it's a new call.  Otherwise it's either an
-          // update (same value) or a change (different value).
-          if (getInfo(updatedCall).getStatus() == CallStatus.NOVALUE) {
-            newCalls.put(updatedCall, updatedRequests.get(updatedCall));
+        // If we don't have it, it's a new call.  Otherwise it's either an
+        // update (same value) or a change (different value).
+        if (getInfo(updatedCall).getStatus() == CallStatus.NOVALUE) {
+          newCalls.put(updatedCall, updatedRequests.get(updatedCall));
+        } else {
+          fabric.lang.Object newValue = updatedRequests.get(updatedCall).value;
+          fabric.lang.Object oldValue = getInfo(updatedCall).getValue();
+          if (!newValue.equals(oldValue)) {
+            changes.put(updatedCall, updatedRequests.get(updatedCall));
           } else {
-            fabric.lang.Object newValue = updatedRequests.get(updatedCall).value;
-            fabric.lang.Object oldValue = getInfo(updatedCall).getValue();
-            if (!newValue.equals(oldValue)) {
-              changes.put(updatedCall, updatedRequests.get(updatedCall));
-            } else {
-              updates.put(updatedCall, updatedRequests.get(updatedCall));
-            }
+            updates.put(updatedCall, updatedRequests.get(updatedCall));
           }
         }
       }
