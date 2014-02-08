@@ -637,7 +637,7 @@ public class SemanticWarrantyTable {
         for (LongKeyMap<_Impl> submap : req.creates) {
           for (_Impl c : submap.values()) {
             Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
-                "Loading up create from other request {0}", c.$getOnum());
+                "Loading up create {0} from {1}", c.$getOnum(), req.call);
             tm.registerCreate(c);
           }
         }
