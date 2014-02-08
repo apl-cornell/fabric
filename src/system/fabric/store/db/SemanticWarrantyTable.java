@@ -122,7 +122,8 @@ public class SemanticWarrantyTable {
     public void writeLock() throws UnableToLockException {
       lock();
       try {
-        if (writeLocked) throw new UnableToLockException();
+        if (writeLocked)
+          throw new UnableToLockException();
         writeLocked = true;
         //lastLockingStack.add(Thread.currentThread().getStackTrace());
       } finally {
@@ -137,6 +138,8 @@ public class SemanticWarrantyTable {
       lock();
       try {
         //lastLockingStack.remove(lastLockingStack.size() - 1);
+        if (!writeLocked)
+          throw new InternalError("Write unlock on an already unlocked call!");
         writeLocked = false;
       } finally {
         unlock();
