@@ -677,6 +677,13 @@ public class SemanticWarrantyTable {
       Map<CallInstance, SemanticWarrantyRequest> updatedRequests =
           current.getAllRequests();
       for (CallInstance updatedCall : updatedRequests.keySet()) {
+        // Skip if we added this request...
+        if (newCalls.containsKey(updatedCall) ||
+            updates.containsKey(updatedCall) ||
+            changes.containsKey(updatedCall)) {
+          continue;
+        }
+
         Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
             "GOT AN UPDATE ON {0} when checking {1}", updatedCall, call);
         // If we don't have it, it's a new call.  Otherwise it's either an
