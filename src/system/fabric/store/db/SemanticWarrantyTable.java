@@ -820,9 +820,11 @@ public class SemanticWarrantyTable {
       }
       switch (getStatus()) {
       case NOVALUE:
-        throw new InternalError(
-            "Attempting to propose a write time for a valueless call: " + call +
-            "!");
+        // This could happen if we originally saw a call was affected and the
+        // update was cancelled before we got here.
+        writeLocked.remove(call);
+        writeUnlock();
+        return longestSoFar;
       case VALID:
       case STALE:
       default:
