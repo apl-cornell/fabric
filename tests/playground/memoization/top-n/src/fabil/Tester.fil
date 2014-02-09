@@ -76,6 +76,18 @@ public class Tester {
     return topAccountsBetween(n, 0, total);
   }
 
+  public void worstCase(Random rand) {
+    atomic {
+      List top5 = topAccounts(5, 1000);
+      TwooterAccount second = (TwooterAccount) top5.get(1);
+      TwooterAccount first = (TwooterAccount) top5.get(0);
+      int firstCount = first.numFollowers();
+      int secondCount = second.numFollowers();
+      for (int i = 0; i < (firstCount - secondCount) + 1; i++)
+        first.removeRandomFollower(rand);
+    }
+  }
+
   public void randomOperation(Random rand, double writeRatio, int topCount) {
     long id = rand.nextLong();
     Logger HOTOS_LOGGER = Logger.getLogger("HOTOS");
