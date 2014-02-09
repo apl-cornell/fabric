@@ -861,9 +861,12 @@ public class SemanticWarrantyTable {
         Map<CallInstance, SemanticWarrantyRequest> changes) {
       switch (getStatus()) {
       case NOVALUE:
-        throw new InternalError(
-            "Attempting to schedule a write on a valueless call: " + call +
-            "!");
+        if (updates.containsKey(call) || changes.containsKey(call)) {
+          throw new InternalError("Attempting to schedule a write on a " +
+              "valueless call: " + call + "!");
+        } else {
+          return;
+        }
       case STALE:
       case VALID:
       default:
