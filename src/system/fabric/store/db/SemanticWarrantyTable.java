@@ -600,7 +600,7 @@ public class SemanticWarrantyTable {
                 uncertainCalls, updates, changes, newCalls, creates, writes);
             return null;
           }
-        }, false);
+        }, true);
       } catch (AbortException e) {
         if (e.getCause() instanceof CallCheckException) {
           CallCheckException cce = (CallCheckException) e.getCause();
@@ -902,7 +902,8 @@ public class SemanticWarrantyTable {
     private void scheduleUpdateAt(long transactionID,
         SemanticWarrantyRequest update, SemanticWarranty updateWarranty) {
       Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
-          "Scheduling update on {0} by {1}", call, transactionID);
+          "Scheduling update on {0} by {1}", call,
+          Long.toHexString(transactionID));
       switch (getStatus()) {
       case NOVALUE:
       case STALE:
@@ -944,6 +945,8 @@ public class SemanticWarrantyTable {
      * Cancel an update from a transaction.
      */
     public void removeUpdate() {
+      Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+          "Aborting update to {0}", call);
       // Make sure there was actually an update.
       if (nextUpdate == null) return;
 
@@ -982,6 +985,8 @@ public class SemanticWarrantyTable {
      * Complete an update from a transaction.
      */
     public void update() {
+      Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+          "Completing update to {0}", call);
       issuer.notifyWriteCommit(call);
 
       // Remove old stuff
