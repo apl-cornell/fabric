@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.logging.Level;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.locks.ReentrantLock;
@@ -586,41 +585,35 @@ public class SemanticWarrantyTable {
      * Callable to use for checking the call (allowing us to set a time limit on
      * how long we check by submitting this for a time limited thread).
      */
-    private Callable<Void> getCallChecker(
+    private void checkCallOuter(
         final Set<CallInstance> uncertainCalls,
         final Map<CallInstance, SemanticWarrantyRequest> updates,
         final Map<CallInstance, SemanticWarrantyRequest> changes,
         final Map<CallInstance, SemanticWarrantyRequest> newCalls,
         final Collection<SerializedObject> creates,
         final Collection<SerializedObject> writes) {
-      return new Callable<Void>() {
-        @Override
-        public Void call() {
-          try {
-            Worker.runInTopLevelTransaction(new Code<Void>() {
-              @Override
-              public Void run() {
-                checkCall(Worker.getWorker().getStore(database.getName()),
-                    uncertainCalls, updates, changes, newCalls, creates, writes);
-                return null;
-              }
-            }, false);
-          } catch (AbortException e) {
-            if (e.getCause() instanceof CallCheckException) {
-              CallCheckException cce = (CallCheckException) e.getCause();
-              updates.putAll(cce.updates);
-              uncertainCalls.removeAll(cce.updates.keySet());
-              changes.putAll(cce.changes);
-              uncertainCalls.removeAll(cce.changes.keySet());
-              newCalls.putAll(cce.newCalls);
-              uncertainCalls.removeAll(cce.newCalls.keySet());
-              return null;
-            }
-            throw e;
+      try {
+        Worker.runInTopLevelTransaction(new Code<Void>() {
+          @Override
+          public Void run() {
+            checkCall(Worker.getWorker().getStore(database.getName()),
+                uncertainCalls, updates, changes, newCalls, creates, writes);
+            return null;
           }
-          return null;
+        }, false);
+      } catch (AbortException e) {
+        if (e.getCause() instanceof CallCheckException) {
+          CallCheckException cce = (CallCheckException) e.getCause();
+          updates.putAll(cce.updates);
+          uncertainCalls.removeAll(cce.updates.keySet());
+          changes.putAll(cce.changes);
+          uncertainCalls.removeAll(cce.changes.keySet());
+          newCalls.putAll(cce.newCalls);
+          uncertainCalls.removeAll(cce.newCalls.keySet());
+          return;
         }
-      };
+        throw e;
+      }
     }
 
     /**
@@ -745,8 +738,8 @@ public class SemanticWarrantyTable {
             return true;
           }
 
-          getCallChecker(uncertainCalls, updates, changes, newCalls, creates,
-              writes).call();
+          checkCallOuter(uncertainCalls, updates, changes, newCalls, creates,
+              writes);
 
           // Answer is whether we saw a change or not
           Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
