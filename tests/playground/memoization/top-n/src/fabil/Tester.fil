@@ -77,17 +77,27 @@ public class Tester {
   }
 
   public void worstCase(Random rand) {
+    long id = rand.nextLong();
+    Logger HOTOS_LOGGER = Logger.getLogger("HOTOS");
+    HOTOS_LOGGER.log(Level.INFO, "===started {0} at " + System.currentTimeMillis() + " ===", String.valueOf(id));
+    long transactionSeed = rand.nextLong();
     atomic {
-      List top5 = topAccounts(5, 1000);
+      Random tranRand = new Random(transactionSeed);
+      Config c = (Config) Config.STORE.getRoot().get("config");
+
+      List top5 = topAccounts(5, c.NUM_USERS);
       TwooterAccount second = (TwooterAccount) top5.get(1);
       TwooterAccount first = (TwooterAccount) top5.get(0);
       int firstCount = first.numFollowers();
       int secondCount = second.numFollowers();
       for (int i = 0; i < (firstCount - secondCount); i++) {
-        first.removeRandomFollower(rand);
-        second.addRandomFollower(rand);
+        first.removeRandomFollower(tranRand);
+        second.addRandomFollower(tranRand);
       }
     }
+    Long commitTime = (Long) TransactionManager.COMMIT_TIME.get();
+    HOTOS_LOGGER.log(Level.INFO, "===committed {0} {1} at {2} ===",
+        new java.lang.Object native[] { String.valueOf(id), "W", commitTime });
   }
 
   public void randomOperation(Random rand, double writeRatio, int topCount) {
