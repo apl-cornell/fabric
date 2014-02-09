@@ -83,8 +83,10 @@ public class Tester {
       TwooterAccount first = (TwooterAccount) top5.get(0);
       int firstCount = first.numFollowers();
       int secondCount = second.numFollowers();
-      for (int i = 0; i < (firstCount - secondCount) + 1; i++)
+      for (int i = 0; i < (firstCount - secondCount); i++) {
         first.removeRandomFollower(rand);
+        second.addRandomFollower(rand);
+      }
     }
   }
 
