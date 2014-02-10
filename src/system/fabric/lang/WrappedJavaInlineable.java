@@ -1,7 +1,8 @@
 package fabric.lang;
 
-import java.util.Map;
-import java.util.WeakHashMap;
+import java.util.concurrent.ConcurrentMap;
+
+import com.google.common.collect.MapMaker;
 
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongKeyMap;
@@ -22,8 +23,8 @@ public class WrappedJavaInlineable<T> implements JavaInlineable {
   /**
    * Maps ordinary Java objects to their JavaInlineable wrappers.
    */
-  private static final Map<java.lang.Object, WrappedJavaInlineable<?>> $wrappingMap =
-      new WeakHashMap<java.lang.Object, WrappedJavaInlineable<?>>();
+  private static final ConcurrentMap<java.lang.Object, WrappedJavaInlineable<?>> $wrappingMap =
+      new MapMaker().concurrencyLevel(16).weakKeys().makeMap();
 
   /**
    * Given an object that, in the Fabric type system, implements
@@ -33,12 +34,12 @@ public class WrappedJavaInlineable<T> implements JavaInlineable {
   public static final Object $wrap(java.lang.Object obj) {
     if (obj == null || obj instanceof Object) return (Object) obj;
 
-    if ($wrappingMap.containsKey(obj)) return $wrappingMap.get(obj);
-
-    WrappedJavaInlineable<?> result =
-        new WrappedJavaInlineable<java.lang.Object>(obj);
-    $wrappingMap.put(obj, result);
-    return result;
+    WrappedJavaInlineable<java.lang.Object> newWrapped =
+        new WrappedJavaInlineable<>(obj);
+    WrappedJavaInlineable<?> existing =
+        $wrappingMap.putIfAbsent(obj, newWrapped);
+    if (existing != null) return existing;
+    return newWrapped;
   }
 
   /**
