@@ -43,6 +43,7 @@ import fabric.worker.transaction.TransactionManager;
  * A table containing semantic warranties, keyed by CallInstance id, and
  * supporting concurrent accesses.
  */
+//TODO: Turn the sets in CallInfo into concurrent structures.
 public class SemanticWarrantyTable {
   /**
    * Enumeration of states a call can be in.
@@ -925,7 +926,8 @@ public class SemanticWarrantyTable {
         for (LongIterator iter = update.readOnums.iterator(); iter.hasNext();) {
           long read = iter.next();
           readersTable.putIfAbsent(read,
-              Collections.synchronizedSet(new HashSet<CallInstance>()));
+              Collections.newSetFromMap(
+                new ConcurrentHashMap<CallInstance, Boolean>()));
           readersTable.get(read).add(call);
         }
 
@@ -933,7 +935,8 @@ public class SemanticWarrantyTable {
         for (LongIterator iter = update.createOnums.iterator(); iter.hasNext();) {
           long create = iter.next();
           creatorTable.putIfAbsent(create,
-              Collections.synchronizedSet(new HashSet<CallInstance>()));
+              Collections.newSetFromMap(
+                new ConcurrentHashMap<CallInstance, Boolean>()));
           creatorTable.get(create).add(call);
         }
 
@@ -948,7 +951,8 @@ public class SemanticWarrantyTable {
 
         // Add this call to the update map for the transaction
         updatingTIDMap.putIfAbsent(transactionID,
-            Collections.synchronizedSet(new HashSet<CallInstance>()));
+            Collections.newSetFromMap(
+              new ConcurrentHashMap<CallInstance, Boolean>()));
         updatingTIDMap.get(transactionID).add(call);
       }
     }
@@ -1209,10 +1213,12 @@ public class SemanticWarrantyTable {
     TreeSet<CallInstance> affectedCalls = new TreeSet<CallInstance>();
     for (SerializedObject obj : writes) {
       readersTable.putIfAbsent(obj.getOnum(),
-          Collections.synchronizedSet(new HashSet<CallInstance>()));
+          Collections.newSetFromMap(
+            new ConcurrentHashMap<CallInstance, Boolean>()));
       affectedCalls.addAll(readersTable.get(obj.getOnum()));
       creatorTable.putIfAbsent(obj.getOnum(),
-          Collections.synchronizedSet(new HashSet<CallInstance>()));
+          Collections.newSetFromMap(
+            new ConcurrentHashMap<CallInstance, Boolean>()));
       affectedCalls.addAll(creatorTable.get(obj.getOnum()));
     }
 
