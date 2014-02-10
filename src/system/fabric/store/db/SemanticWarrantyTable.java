@@ -413,8 +413,8 @@ public class SemanticWarrantyTable {
             long onum = iter.next();
             if (database.isWritten(onum)) {
               Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
-                  "Request for call {0} depends on object {1} that has a write scheduled.",
-                  call, onum);
+                  "Request for call {0} by {2} depends on object {1} that has a write scheduled.",
+                  call, onum, Long.toHexString(transactionID));
               writeUnlock();
               //throw new TransactionPrepareFailedException("Request for call "
               //+ call + " depends on object " + onum
@@ -435,8 +435,8 @@ public class SemanticWarrantyTable {
                 getInfo(c).writeUnlock();
               } catch (UnableToLockException e) {
                 Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
-                    "Request for call {0} depends on call {1} that has a write scheduled.",
-                    call, c);
+                    "Request for call {0} by {2} depends on call {1} that has a write scheduled.",
+                    call, c, Long.toHexString(transactionID));
                 writeUnlock();
                 //throw new TransactionPrepareFailedException("Request for call "
                 //+ call + " depends on call " + c
@@ -460,7 +460,8 @@ public class SemanticWarrantyTable {
           return nextUpdateWarranty;
         } catch (UnableToLockException e) {
           Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
-              "Could not lock call {0} for write, no warranty created.", call);
+              "Could not lock call {0} for write, no warranty created by {1}.",
+              call, Long.toHexString(transactionID));
           return null;
         }
       }
@@ -1263,6 +1264,9 @@ public class SemanticWarrantyTable {
     } catch (TransactionPrepareFailedException e) {
       // Remove write locks for those we actually checked and therefore did
       // writeLock.
+      Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINE,
+          "Transaction write prepare by {0} failed during call checking: {1}",
+          Long.toHexString(transactionID), e.getMessage());
       for (CallInstance writeLockedCall : writeLockedCalls)
         getInfo(writeLockedCall).writeUnlock();
       throw e;
