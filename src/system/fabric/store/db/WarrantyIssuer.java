@@ -19,7 +19,7 @@ public class WarrantyIssuer<K> {
   /**
    * The base commit latency, in milliseconds.
    */
-  private static final long BASE_COMMIT_LATENCY = (int) (0.359982 * 1000);
+  private static final long BASE_COMMIT_LATENCY = (int) (0.236450 * 1000);
 
   /**
    * The minimum length of time (in milliseconds) for which each issued warranty
@@ -31,20 +31,20 @@ public class WarrantyIssuer<K> {
    * The maximum length of time (in milliseconds) for which each issued warranty
    * should be valid.
    */
-  private static final int MAX_WARRANTY_LENGTH = (int) (2.698060 * 10000);
+  private static final int MAX_WARRANTY_LENGTH = (int) (0.683228 * 10000);
 
   /**
    * The decay rate for the exponential average when calculating the rate of
    * read and write prepares. Lower values result in slower adaptation to
    * changes in the prepare rates.
    */
-  private static final double PREPARE_ALPHA = 0.466681;
+  private static final double PREPARE_ALPHA = .698486;
 
   /**
    * The length of the time window over which to calculate the rate of
    * read and write prepares, in milliseconds.
    */
-  private static final long PREPARE_WINDOW_LENGTH = (int) (.467751 * 100000);
+  private static final long PREPARE_WINDOW_LENGTH = (int) (0.848755 * 100000);
 
   // END TUNING PARAMETERS ///////////////////////////////////////////////////
 
