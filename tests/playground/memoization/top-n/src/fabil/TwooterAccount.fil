@@ -66,13 +66,13 @@ public class TwooterAccount {
    */
   public void randomlyUpdateFollowers(Random rand, long id) {
     atomic {
-      //Logger HOTOS_LOGGER = Logger.getLogger("HOTOS");
+      Logger HOTOS_LOGGER = Logger.getLogger("HOTOS");
       int choice = rand.nextInt(2);
       if (choice == 0) {
-        //HOTOS_LOGGER.log(Level.INFO, "==={0} adding===", String.valueOf(id));
+        HOTOS_LOGGER.log(Level.INFO, "===adding to " + name + " in {0}===", String.valueOf(id));
         addRandomFollower(rand);
       } else {
-        //HOTOS_LOGGER.log(Level.INFO, "==={0} removing===", String.valueOf(id));
+        HOTOS_LOGGER.log(Level.INFO, "===removing from " + name + " in {0}===", String.valueOf(id));
         removeRandomFollower(rand);
       }
     }
