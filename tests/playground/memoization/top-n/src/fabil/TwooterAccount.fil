@@ -33,12 +33,14 @@ public class TwooterAccount {
   public void addRandomFollower(Random rand, long id) {
     atomic {
       Logger HOTOS_LOGGER = Logger.getLogger("HOTOS");
+      int count = 0;
       while (true) {
+        count++;
         TwooterAccount candidate = getRandomTwooterAccount(rand);
         if (candidate == this) continue;
         if (!followers.contains(candidate)) {
           HOTOS_LOGGER.log(Level.INFO, "===adding " + candidate.name + " to " +
-              name + " in {0}===", String.valueOf(id));
+              name + " after " + count + " tries in {0}===", String.valueOf(id));
           followers.add(candidate);
           return;
         }
