@@ -106,7 +106,10 @@ public class Tester {
     HOTOS_LOGGER.log(Level.INFO, "===started {0} at " + System.currentTimeMillis() + " ===", String.valueOf(id));
     long transactionSeed = rand.nextLong();
     boolean isWrite = false;
+    java.util.Map countMap = new java.util.HashMap();
+    countMap.put("attempts", new Long(0));
     atomic {
+      countMap.put("attempts", new Long(1 + ((Long) countMap.get("attempts")).longValue()));
       Random tranRand = new Random(transactionSeed);
       Config c = (Config) Config.STORE.getRoot().get("config");
       double choice = tranRand.nextDouble();
@@ -125,6 +128,11 @@ public class Tester {
           String.valueOf(id),
           transactionType,
           commitTime
+        });
+    HOTOS_LOGGER.log(Level.INFO, "{0} took {1} attempts",
+        new java.lang.Object native[] {
+          String.valueOf(id),
+          (Long) countMap.get("attempts")
         });
   }
 }
