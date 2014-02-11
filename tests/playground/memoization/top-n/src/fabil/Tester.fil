@@ -91,8 +91,8 @@ public class Tester {
       int firstCount = first.numFollowers();
       int secondCount = second.numFollowers();
       for (int i = 0; i < (firstCount - secondCount); i++) {
-        first.removeRandomFollower(tranRand);
-        second.addRandomFollower(tranRand);
+        first.removeRandomFollower(tranRand, id);
+        second.addRandomFollower(tranRand, id);
       }
     }
     Long commitTime = (Long) TransactionManager.COMMIT_TIME.get();
