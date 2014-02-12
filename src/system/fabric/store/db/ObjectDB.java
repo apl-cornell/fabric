@@ -1,5 +1,7 @@
 package fabric.store.db;
 
+import static fabric.common.Logging.HOTOS_LOGGER;
+
 import java.io.DataOutput;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -8,10 +10,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.logging.Level;
 
 import javax.security.auth.x500.X500Principal;
 
 import fabric.common.FastSerializable;
+import fabric.common.Logging;
 import fabric.common.ONumConstants;
 import fabric.common.SerializedObject;
 import fabric.common.VersionWarranty;
@@ -391,6 +395,9 @@ public abstract class ObjectDB {
       return VersionWarranty.EXPIRED_WARRANTY;
 
     case WRITE:
+      // Notify the warranty issuer.
+      warrantyIssuer.notifyWritePrepare(onum);
+
       // Register the update.
       addWrittenOnumByTid(tid, worker, onum);
 
@@ -411,11 +418,14 @@ public abstract class ObjectDB {
       // Obtain existing warranty.
       VersionWarranty warranty = getWarranty(onum);
 
+      if (HOTOS_LOGGER.isLoggable(Level.FINE)) {
+        Logging.log(HOTOS_LOGGER, Level.FINE,
+            "writing {0}, warranty expires in {1} ms", onum, warranty.expiry()
+                - System.currentTimeMillis());
+      }
+
       // Update the version number on the prepared copy of the object.
       obj.setVersion(storeVersion + 1);
-
-      // Notify the warranty issuer.
-      warrantyIssuer.notifyWritePrepare(onum, warranty);
 
       return warranty;
     }
