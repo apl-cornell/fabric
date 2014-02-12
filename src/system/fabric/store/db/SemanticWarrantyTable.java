@@ -646,28 +646,28 @@ public class SemanticWarrantyTable {
 
       // Load up state from creates
       for (SerializedObject obj : creates) {
-        Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
-            "Loading up create {0}", obj.getOnum());
+        //Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+            //"Loading up create {0}", obj.getOnum());
         tm.registerCreate(obj.deserialize(localStore, new VersionWarranty(0)));
       }
       for (SemanticWarrantyRequest req : SysUtil.chain(
           SysUtil.chain(updates.values(), changes.values()), newCalls.values())) {
         for (LongKeyMap<_Impl> submap : req.creates) {
           for (_Impl c : submap.values()) {
-            Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
-                "Loading up create {0} from {1} for check of {2}", c.$getOnum(),
-                req.call, call);
+            //Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+                //"Loading up create {0} from {1} for check of {2}", c.$getOnum(),
+                //req.call, call);
             tm.registerCreate(c);
           }
         }
       }
 
       // Rerun the call.
-      Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
-          "BEGINNING RECOMPUTATION OF {0}", call);
+      //Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+          //"BEGINNING RECOMPUTATION OF {0}", call);
       call.runCall();
-      Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
-          "DONE RECOMPUTING CALL {0}", call);
+      //Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+          //"DONE RECOMPUTING CALL {0}", call);
 
       Map<CallInstance, SemanticWarrantyRequest> newUpdates =
         new HashMap<CallInstance, SemanticWarrantyRequest>();
@@ -806,8 +806,8 @@ public class SemanticWarrantyTable {
       try {
         if (!writeLocked.contains(call)) {
           writeLock();
-          Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
-              "Write locked {0} to propose a write time.", call);
+          //Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+              //"Write locked {0} to propose a write time.", call);
           writeLocked.add(call);
         } else {
           Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
@@ -830,6 +830,9 @@ public class SemanticWarrantyTable {
       case VALID:
       case STALE:
       default:
+        if (warranty.expiry() > longestSoFar)
+          Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+              "Call {0} extending commit time to {1}", call, warranty.expiry());
         long longest =
             longestSoFar > warranty.expiry() ? longestSoFar : warranty.expiry();
         if (isAffectedBy(uncertainCalls, updates, changes, newCalls, creates,
