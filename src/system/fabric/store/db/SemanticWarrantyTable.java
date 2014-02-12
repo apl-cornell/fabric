@@ -1274,8 +1274,8 @@ public class SemanticWarrantyTable {
 
     updates.putAll(changes);
     Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
-        "DONE CHECKING FOR UPDATES ON TRANSACTION {0}",
-        Long.toHexString(transactionID));
+        "DONE CHECKING FOR UPDATES ON TRANSACTION {0}, SUGGESTING ADDITIONAL DELAY OF {1}",
+        Long.toHexString(transactionID), longest - commitTime);
 
     return new Pair<SemanticWarranty, Pair<Map<CallInstance, SemanticWarrantyRequest>, Map<CallInstance, SemanticWarrantyRequest>>>(
         new SemanticWarranty(longest),
