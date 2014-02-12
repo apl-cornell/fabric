@@ -230,7 +230,7 @@ public class WarrantyIssuer<K> {
 
       if (warrantyLength < MIN_WARRANTY_LENGTH) return expiry;
 
-      return Math.max(expiry, System.currentTimeMillis()) + warrantyLength;
+      return Math.max(expiry, System.currentTimeMillis() + warrantyLength);
     }
   }
 
