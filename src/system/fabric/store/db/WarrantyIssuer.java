@@ -79,6 +79,13 @@ public class WarrantyIssuer<K> {
      */
     double writePrepareRate;
 
+    long lastReadPrepareTime;
+
+    /**
+     * Interval between the last two read prepares.
+     */
+    long readPrepareInterval;
+
     /**
      * A mutex for manipulating the read- and write-prepare metrics.
      */
@@ -95,6 +102,9 @@ public class WarrantyIssuer<K> {
       this.numWritePrepares = 0;
       this.writePrepareRate = 0.0;
       this.prepareMutex = new Object();
+
+      this.lastReadPrepareTime = now;
+      this.readPrepareInterval = Long.MAX_VALUE;
     }
 
     /**
@@ -104,6 +114,10 @@ public class WarrantyIssuer<K> {
       synchronized (prepareMutex) {
         fixPrepareWindow();
         numReadPrepares++;
+
+        long now = System.currentTimeMillis();
+        readPrepareInterval = now - lastReadPrepareTime;
+        lastReadPrepareTime = now;
       }
     }
 
@@ -190,7 +204,12 @@ public class WarrantyIssuer<K> {
      * 
      * @return the time at which the warranty should expire.
      */
-    Long suggestWarranty(long expiry) {
+    long suggestWarranty(long expiry) {
+      if (readPrepareInterval > 1000) {
+        // The object is too unpopular. Suggest the minimal expiry time.
+        return expiry;
+      }
+
       double ratio = getReadWritePrepareRatio();
 
       long warrantyLength =
@@ -209,9 +228,9 @@ public class WarrantyIssuer<K> {
         }
       }
 
-      if (warrantyLength < MIN_WARRANTY_LENGTH) return null;
+      if (warrantyLength < MIN_WARRANTY_LENGTH) return expiry;
 
-      return Math.max(expiry, System.currentTimeMillis()) + warrantyLength;
+      return Math.max(expiry, System.currentTimeMillis() + warrantyLength);
     }
   }
 
@@ -269,7 +288,6 @@ public class WarrantyIssuer<K> {
    * Suggests a warranty-expiry time beyond the given expiry time.
    */
   public long suggestWarranty(K key, long minExpiry) {
-    Long suggestion = getEntry(key).suggestWarranty(minExpiry);
-    return suggestion == null ? minExpiry : suggestion;
+    return getEntry(key).suggestWarranty(minExpiry);
   }
 }
