@@ -244,6 +244,10 @@ public class TransactionManager {
       if (longestCallWarranty != null
           && (longestWarranty == null
             || longestCallWarranty.expiresAfter(longestWarranty))) {
+        Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+            "Transaction {0} prepared writes to be done in {1} ms.",
+            Long.toHexString(tid), longestCallWarranty.expiry() -
+            System.currentTimeMillis());
         PrepareWritesResult writeResult =
           new PrepareWritesResult(longestCallWarranty.expiry(), addedReads,
               addedCalls, new HashMap<CallInstance, SemanticWarranty>());
@@ -251,6 +255,10 @@ public class TransactionManager {
       }
 
       long longest = longestWarranty == null ? 0 : longestWarranty.expiry();
+
+      Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+          "Transaction {0} prepared writes to be done in {1} ms.",
+          Long.toHexString(tid), longest - System.currentTimeMillis());
 
       PrepareWritesResult writeResult = new PrepareWritesResult(longest,
           addedReads, addedCalls,
@@ -281,6 +289,10 @@ public class TransactionManager {
       RemoteIdentity<RemoteWorker> workerIdentity, long tid,
       LongKeyMap<Integer> reads, long commitTime)
       throws TransactionPrepareFailedException {
+
+    Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+        "Transaction {0} preparing reads to be extended for {1} ms.",
+        Long.toHexString(tid), commitTime - System.currentTimeMillis());
 
     Principal worker = workerIdentity.principal;
 
