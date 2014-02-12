@@ -482,7 +482,10 @@ public class SemanticWarrantyTable {
             try {
               writeLock();
               // Call is being read, so make the warranty valid anyways.
-              warranty = new SemanticWarranty(issuer.suggestWarranty(call));
+              long newTime = issuer.suggestWarranty(call);
+              Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+                  "Extending warranty for call {0} by {1}ms", call, newTime - System.currentTimeMillis());
+              warranty = new SemanticWarranty(newTime);
               writeUnlock();
             } catch (UnableToLockException e) {
               // This means we shouldn't extend the warranty.  Ignore it.
@@ -495,9 +498,14 @@ public class SemanticWarrantyTable {
           try {
             writeLock();
             if (readPrepare) {
+              long newTime = issuer.suggestWarranty(call, commitTime);
+              Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+                  "Extending warranty for call {0} by {1}ms", call, newTime - System.currentTimeMillis());
               warranty =
-                  new SemanticWarranty(issuer.suggestWarranty(call, commitTime));
+                  new SemanticWarranty(newTime);
             } else {
+              Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+                  "Extending warranty for call {0} by {1}ms", call, commitTime - System.currentTimeMillis());
               warranty = new SemanticWarranty(commitTime);
             }
             writeUnlock();
@@ -518,9 +526,14 @@ public class SemanticWarrantyTable {
           try {
             writeLock();
             if (readPrepare) {
+              long newTime = issuer.suggestWarranty(call, commitTime);
+              Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+                  "Extending warranty for call {0} by {1}ms", call, newTime - System.currentTimeMillis());
               warranty =
-                  new SemanticWarranty(issuer.suggestWarranty(call, commitTime));
+                  new SemanticWarranty(newTime);
             } else {
+              Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+                  "Extending warranty for call {0} by {1}", call, commitTime - System.currentTimeMillis());
               warranty = new SemanticWarranty(commitTime);
             }
             writeUnlock();
@@ -546,7 +559,10 @@ public class SemanticWarrantyTable {
         // Update the warranty if possible
         try {
           writeLock();
-          warranty = new SemanticWarranty(issuer.suggestWarranty(call));
+          long newTime = issuer.suggestWarranty(call);
+          Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+              "Updating warranty for call {0} by {1}", call, newTime - System.currentTimeMillis());
+          warranty = new SemanticWarranty(newTime);
           writeUnlock();
         } catch (UnableToLockException e) {
           // Can't update, do nothing.
@@ -830,13 +846,13 @@ public class SemanticWarrantyTable {
       case VALID:
       case STALE:
       default:
-        if (warranty.expiry() > longestSoFar)
-          Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
-              "Call {0} extending commit time to {1}", call, warranty.expiry());
         long longest =
             longestSoFar > warranty.expiry() ? longestSoFar : warranty.expiry();
         if (isAffectedBy(uncertainCalls, updates, changes, newCalls, creates,
             writes, longest)) {
+          if (warranty.expiry() > longestSoFar)
+            Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+                "Call {0} extending commit time to {1}", call, warranty.expiry());
           for (CallInstance parent : new TreeSet<CallInstance>(getCallers())) {
             long parentTime =
                 getInfo(parent).proposeWriteTime(uncertainCalls, longest,
@@ -891,6 +907,8 @@ public class SemanticWarrantyTable {
           throw new InternalError("Somehow have a call with no associated "
               + "request being updated! " + call);
         }
+        Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+            "Extending warranty for call {0} by {1} for write.", call, time - System.currentTimeMillis());
         warranty = new SemanticWarranty(time);
         scheduleUpdateAt(transactionID, newRequest, new SemanticWarranty(0));
         break;
