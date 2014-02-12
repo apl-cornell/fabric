@@ -1244,7 +1244,8 @@ public class SemanticWarrantyTable {
       affectedCalls.addAll(creatorTable.get(obj.getOnum()));
     }
 
-    long longest = commitTime;
+    long curTime = System.currentTimeMillis();
+    long longest = commitTime > curTime ? commitTime : curTime;
     Map<CallInstance, SemanticWarrantyRequest> changes =
         new HashMap<CallInstance, SemanticWarrantyRequest>();
     Map<CallInstance, SemanticWarrantyRequest> updates =
@@ -1267,6 +1268,9 @@ public class SemanticWarrantyTable {
                 changes, newCalls, creates, writes, writeLockedCalls);
         longest = longest > suggestedTime ? longest : suggestedTime;
       }
+
+      curTime = System.currentTimeMillis();
+      longest = longest > curTime ? longest : curTime;
 
       // Make sure we can make the new warranties.  Otherwise, we need to abort
       // and retry.

@@ -243,7 +243,7 @@ public class TransactionManager {
       // Ugh this is ugly.
       if (longestCallWarranty != null
           && (longestWarranty == null
-            || longestCallWarranty.expiry() > longestWarranty.expiry())) {
+            || longestCallWarranty.expiresAfter(longestWarranty))) {
         PrepareWritesResult writeResult =
           new PrepareWritesResult(longestCallWarranty.expiry(), addedReads,
               addedCalls, new HashMap<CallInstance, SemanticWarranty>());
