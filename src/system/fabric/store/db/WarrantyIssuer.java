@@ -79,9 +79,17 @@ public class WarrantyIssuer<K> {
      */
     double writePrepareRate;
 
-    long warrantyFreeWindowStartTime;
-    int numWarrantyFreeReadPrepares;
-    double warrantyFreeReadPrepareRate;
+    long lastReadPrepareTime;
+
+    /**
+     * Interval between the last two read prepares.
+     */
+    long readPrepareInterval;
+
+    /**
+     * A mutex for manipulating the read- and write-prepare metrics.
+     */
+    final Object prepareMutex;
 
     public Entry(K key) {
       final long now = System.currentTimeMillis();
@@ -93,21 +101,24 @@ public class WarrantyIssuer<K> {
       this.readPrepareRate = 0.0;
       this.numWritePrepares = 0;
       this.writePrepareRate = 0.0;
+      this.prepareMutex = new Object();
 
-      this.warrantyFreeWindowStartTime = now;
-      this.numWarrantyFreeReadPrepares = 0;
-      this.warrantyFreeReadPrepareRate = 0.0;
+      this.lastReadPrepareTime = now;
+      this.readPrepareInterval = Long.MAX_VALUE;
     }
 
     /**
      * Notifies of a read-prepare event.
      */
-    synchronized void notifyReadPrepare(long commitTime) {
-      fixPrepareWindow();
-      numReadPrepares++;
+    void notifyReadPrepare(long commitTime) {
+      synchronized (prepareMutex) {
+        fixPrepareWindow();
+        numReadPrepares++;
 
-      if (System.currentTimeMillis() >= warrantyFreeWindowStartTime)
-        numWarrantyFreeReadPrepares++;
+        long now = System.currentTimeMillis();
+        readPrepareInterval = now - lastReadPrepareTime;
+        lastReadPrepareTime = now;
+      }
     }
 
     /**
@@ -115,53 +126,35 @@ public class WarrantyIssuer<K> {
      * 
      * @return the current time, in milliseconds since the epoch.
      */
-    synchronized long fixPrepareWindow() {
-      final long now = System.currentTimeMillis();
-      fixWarrantyFreePrepareWindow(now);
+    long fixPrepareWindow() {
+      synchronized (prepareMutex) {
+        final long now = System.currentTimeMillis();
 
-      final long timeElapsed = now - windowStartTime;
-      if (timeElapsed < PREPARE_WINDOW_LENGTH) return now;
+        final long timeElapsed = now - windowStartTime;
+        if (timeElapsed < PREPARE_WINDOW_LENGTH) return now;
 
-      // Need to start a new window.
-      int numWindowsElapsed = (int) (timeElapsed / PREPARE_WINDOW_LENGTH);
-      readPrepareRate =
-          readPrepareRate * (1 - PREPARE_ALPHA)
-              + ((double) numReadPrepares / PREPARE_WINDOW_LENGTH)
-              * PREPARE_ALPHA;
-      writePrepareRate =
-          writePrepareRate * (1 - PREPARE_ALPHA)
-              + ((double) numWritePrepares / PREPARE_WINDOW_LENGTH)
-              * PREPARE_ALPHA;
+        // Need to start a new window.
+        int numWindowsElapsed = (int) (timeElapsed / PREPARE_WINDOW_LENGTH);
+        readPrepareRate =
+            readPrepareRate * (1 - PREPARE_ALPHA)
+                + ((double) numReadPrepares / PREPARE_WINDOW_LENGTH)
+                * PREPARE_ALPHA;
+        writePrepareRate =
+            writePrepareRate * (1 - PREPARE_ALPHA)
+                + ((double) numWritePrepares / PREPARE_WINDOW_LENGTH)
+                * PREPARE_ALPHA;
 
-      // Account for possibility of more than one window having elapsed.
-      for (int i = 1; i < numWindowsElapsed; i++) {
-        readPrepareRate *= 1 - PREPARE_ALPHA;
-        writePrepareRate *= 1 - PREPARE_ALPHA;
+        // Account for possibility of more than one window having elapsed.
+        for (int i = 1; i < numWindowsElapsed; i++) {
+          readPrepareRate *= 1 - PREPARE_ALPHA;
+          writePrepareRate *= 1 - PREPARE_ALPHA;
+        }
+
+        windowStartTime += numWindowsElapsed * PREPARE_WINDOW_LENGTH;
+        numReadPrepares = 0;
+        numWritePrepares = 0;
+        return now;
       }
-
-      windowStartTime += numWindowsElapsed * PREPARE_WINDOW_LENGTH;
-      numReadPrepares = 0;
-      numWritePrepares = 0;
-      return now;
-    }
-
-    synchronized void fixWarrantyFreePrepareWindow(long now) {
-      final long timeElapsed = now - warrantyFreeWindowStartTime;
-      if (timeElapsed < PREPARE_WINDOW_LENGTH) return;
-
-      // Need to start a new window.
-      int numWindowsElapsed = (int) (timeElapsed / PREPARE_WINDOW_LENGTH);
-      warrantyFreeReadPrepareRate =
-          warrantyFreeReadPrepareRate * (1 - PREPARE_ALPHA)
-              + ((double) numWarrantyFreeReadPrepares / PREPARE_WINDOW_LENGTH)
-              * PREPARE_ALPHA;
-
-      // Account for possibility of more than one window having elapsed.
-      for (int i = 1; i < numWindowsElapsed; i++) {
-        warrantyFreeReadPrepareRate *= 1 - PREPARE_ALPHA;
-      }
-
-      numWarrantyFreeReadPrepares = 0;
     }
 
     /**
@@ -181,26 +174,29 @@ public class WarrantyIssuer<K> {
                 - System.currentTimeMillis());
       }
 
-      synchronized (this) {
+      synchronized (prepareMutex) {
         fixPrepareWindow();
         numWritePrepares++;
       }
     }
 
-    synchronized double getReadWritePrepareRatio() {
-      long now = fixPrepareWindow();
+    double getReadWritePrepareRatio() {
+      synchronized (prepareMutex) {
+        long now = fixPrepareWindow();
 
-      // Use a weighted average of the accumulated prepare rates and the
-      // current prepare rates. The weight is PREPARE_ALPHA, adjusted by the
-      // age of the current window.
-      long windowAge = now - windowStartTime;
-      if (windowAge == 0) windowAge = 1;
-      double alpha = PREPARE_ALPHA * windowAge / PREPARE_WINDOW_LENGTH;
-      double rho =
-          readPrepareRate * (1 - alpha) + alpha * numReadPrepares / windowAge;
-      double W =
-          writePrepareRate * (1 - alpha) + alpha * numWritePrepares / windowAge;
-      return rho / (W + Double.MIN_VALUE);
+        // Use a weighted average of the accumulated prepare rates and the
+        // current prepare rates. The weight is PREPARE_ALPHA, adjusted by the
+        // age of the current window.
+        long windowAge = now - windowStartTime;
+        if (windowAge == 0) windowAge = 1;
+        double alpha = PREPARE_ALPHA * windowAge / PREPARE_WINDOW_LENGTH;
+        double rho =
+            readPrepareRate * (1 - alpha) + alpha * numReadPrepares / windowAge;
+        double W =
+            writePrepareRate * (1 - alpha) + alpha * numWritePrepares
+                / windowAge;
+        return rho / (W + Double.MIN_VALUE);
+      }
     }
 
     /**
@@ -209,6 +205,11 @@ public class WarrantyIssuer<K> {
      * @return the time at which the warranty should expire.
      */
     long suggestWarranty(long expiry) {
+      if (readPrepareInterval > 1000) {
+        // The object is too unpopular. Suggest the minimal expiry time.
+        return expiry;
+      }
+
       double ratio = getReadWritePrepareRatio();
 
       long warrantyLength =
@@ -227,46 +228,9 @@ public class WarrantyIssuer<K> {
         }
       }
 
-      if (warrantyLength < MIN_WARRANTY_LENGTH) {
-        setWarrantyFreeWindowStartTime(expiry);
-        return expiry;
-      }
+      if (warrantyLength < MIN_WARRANTY_LENGTH) return expiry;
 
-      // Make sure the object is popular enough for a warranty.
-      synchronized (this) {
-        final long result;
-        if (getWarrantyFreeReadPrepareRate() > 1.0) {
-          result =
-              Math.max(expiry, System.currentTimeMillis()) + warrantyLength;
-        } else {
-          result = expiry;
-        }
-
-        setWarrantyFreeWindowStartTime(result);
-        return result;
-      }
-    }
-
-    synchronized double getWarrantyFreeReadPrepareRate() {
-      long now = System.currentTimeMillis();
-      fixWarrantyFreePrepareWindow(now);
-
-      // Use a weighted average of the accumulated prepare rate and the current
-      // prepare rate. The weight is PREPARE_ALPHA, adjusted by the age of the
-      // current window.
-      long windowAge = now - warrantyFreeWindowStartTime;
-      if (windowAge == 0) windowAge = 1;
-      double alpha = PREPARE_ALPHA * windowAge / PREPARE_WINDOW_LENGTH;
-      return warrantyFreeReadPrepareRate * (1 - alpha) + alpha
-          * numWarrantyFreeReadPrepares / windowAge;
-    }
-
-    synchronized void setWarrantyFreeWindowStartTime(long time) {
-      if (warrantyFreeWindowStartTime > time) return;
-
-      warrantyFreeWindowStartTime = 0;
-      numWarrantyFreeReadPrepares = 0;
-      warrantyFreeReadPrepareRate = 0.0;
+      return Math.max(expiry, System.currentTimeMillis()) + warrantyLength;
     }
   }
 
