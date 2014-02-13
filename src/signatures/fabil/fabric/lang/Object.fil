@@ -34,6 +34,9 @@ public class Object extends java.lang.Object {
    */
   public native Store $getStore();
   
+  /** The object's onum. */
+  public native long $getOnum();
+  
   /**
    * HUGE HACK. THIS SHOULD NOT BE HERE. TODO XXX. REMOVE AFTER SURROGATES PROBLEM IS FIXED.
    */
