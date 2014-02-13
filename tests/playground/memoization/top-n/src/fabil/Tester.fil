@@ -91,8 +91,8 @@ public class Tester {
       int firstCount = first.numFollowers();
       int secondCount = second.numFollowers();
       for (int i = 0; i < (firstCount - secondCount); i++) {
-        first.removeRandomFollower(tranRand, id);
-        second.addRandomFollower(tranRand, id);
+        first.removeRandomFollower(tranRand);
+        second.addRandomFollower(tranRand);
       }
     }
     Long commitTime = (Long) TransactionManager.COMMIT_TIME.get();
@@ -106,11 +106,11 @@ public class Tester {
     HOTOS_LOGGER.log(Level.INFO, "===started {0} at " + System.currentTimeMillis() + " ===", String.valueOf(id));
     long transactionSeed = rand.nextLong();
     boolean isWrite = false;
-    java.util.Map countMap = new java.util.HashMap();
-    countMap.put("attempts", new Long(0));
+    //java.util.Map countMap = new java.util.HashMap();
+    //countMap.put("attempts", new Long(0));
     atomic {
-      countMap.put("attempts", new Long(1 + ((Long) countMap.get("attempts")).longValue()));
-      HOTOS_LOGGER.log(Level.INFO, "attempting {0}", String.valueOf(id));
+      //countMap.put("attempts", new Long(1 + ((Long) countMap.get("attempts")).longValue()));
+      //HOTOS_LOGGER.log(Level.INFO, "attempting {0}", String.valueOf(id));
       Random tranRand = new Random(transactionSeed);
       Config c = (Config) Config.STORE.getRoot().get("config");
       double choice = tranRand.nextDouble();
@@ -130,10 +130,10 @@ public class Tester {
           transactionType,
           commitTime
         });
-    HOTOS_LOGGER.log(Level.INFO, "{0} took {1} attempts",
-        new java.lang.Object native[] {
-          String.valueOf(id),
-          (Long) countMap.get("attempts")
-        });
+    //HOTOS_LOGGER.log(Level.INFO, "{0} took {1} attempts",
+        //new java.lang.Object native[] {
+          //String.valueOf(id),
+          //(Long) countMap.get("attempts")
+        //});
   }
 }

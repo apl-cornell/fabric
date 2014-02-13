@@ -30,17 +30,12 @@ public class TwooterAccount {
     return followers.size();
   }
 
-  public void addRandomFollower(Random rand, long id) {
+  public void addRandomFollower(Random rand) {
     atomic {
-      Logger HOTOS_LOGGER = Logger.getLogger("HOTOS");
-      int count = 0;
       while (true) {
-        count++;
         TwooterAccount candidate = getRandomTwooterAccount(rand);
         if (candidate == this) continue;
         if (!followers.contains(candidate)) {
-          HOTOS_LOGGER.log(Level.INFO, "===adding " + candidate.name + " to " +
-              name + " after " + count + " tries in {0}===", String.valueOf(id));
           followers.add(candidate);
           return;
         }
@@ -48,14 +43,10 @@ public class TwooterAccount {
     }
   }
 
-  public void removeRandomFollower(Random rand, long id) {
+  public void removeRandomFollower(Random rand) {
     atomic {
-      Logger HOTOS_LOGGER = Logger.getLogger("HOTOS");
       if (followers.size() == 0) return;
-      TwooterAccount removed = (TwooterAccount)
-        followers.remove(rand.nextInt(followers.size()));
-      HOTOS_LOGGER.log(Level.INFO, "===removing " + removed.name + " from " +
-          name + " in {0}===", String.valueOf(id));
+      followers.remove(rand.nextInt(followers.size()));
     }
   }
 
@@ -77,9 +68,9 @@ public class TwooterAccount {
     atomic {
       int choice = rand.nextInt(2);
       if (choice == 0) {
-        addRandomFollower(rand, id);
+        addRandomFollower(rand);
       } else {
-        removeRandomFollower(rand, id);
+        removeRandomFollower(rand);
       }
     }
   }
