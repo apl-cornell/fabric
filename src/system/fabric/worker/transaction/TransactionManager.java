@@ -405,7 +405,8 @@ public final class TransactionManager {
     final long actualCommitTime =
         Math.max(commitTime, System.currentTimeMillis());
     COMMIT_TIME.set(actualCommitTime);
-    if (HOTOS_LOGGER.isLoggable(Level.FINE)) {
+    if (!isWriteFree && HOTOS_LOGGER.isLoggable(Level.INFO)
+        || HOTOS_LOGGER.isLoggable(Level.FINE)) {
       final long commitLatency = actualCommitTime - prepareStart;
       final long writeDelay =
           Math.max(0, commitTime - System.currentTimeMillis());
@@ -419,7 +420,7 @@ public final class TransactionManager {
               "committed tid {0} (latency {1} ms)", HOTOS_current,
               commitLatency);
         } else {
-          Logging.log(HOTOS_LOGGER, Level.FINE,
+          Logging.log(HOTOS_LOGGER, Level.INFO,
               "committed tid {0} (latency {1} ms; write delay {2} ms)",
               HOTOS_current, commitLatency, writeDelay);
         }
