@@ -157,6 +157,7 @@ public class TransactionManager {
 
       // Get suggested time based on writes.
       for (SerializedObject o : req.writes) {
+        VersionWarranty warranty = database.getWarranty(o.getOnum());
         if (longestWarranty == null || warranty.expiresAfter(longestWarranty))
           longestWarranty = warranty;
       }
