@@ -155,17 +155,10 @@ public class TransactionManager {
       LongKeyMap<Pair<SerializedObject, VersionWarranty>> versionConflicts =
           new LongKeyHashMap<Pair<SerializedObject, VersionWarranty>>();
 
-      // Prepare writes.
+      // Get suggested time based on writes.
       for (SerializedObject o : req.writes) {
-        VersionWarranty warranty =
-            database.registerUpdate(tid, worker, o, versionConflicts, WRITE);
         if (longestWarranty == null || warranty.expiresAfter(longestWarranty))
           longestWarranty = warranty;
-      }
-
-      // Prepare creates.
-      for (SerializedObject o : req.creates) {
-        database.registerUpdate(tid, worker, o, versionConflicts, CREATE);
       }
 
       // Double check calls.
@@ -180,6 +173,20 @@ public class TransactionManager {
                 Map<CallInstance, SemanticWarrantyRequest>>>
         callPrepareResp = semanticWarranties.prepareWrites(req.writes,
             req.creates, tid, currentProposedTime, database.getName());
+
+      // Prepare writes.
+      for (SerializedObject o : req.writes) {
+        VersionWarranty warranty =
+            database.registerUpdate(tid, worker, o, versionConflicts, WRITE);
+        if (longestWarranty == null || warranty.expiresAfter(longestWarranty))
+          longestWarranty = warranty;
+      }
+
+      // Prepare creates.
+      for (SerializedObject o : req.creates) {
+        database.registerUpdate(tid, worker, o, versionConflicts, CREATE);
+      }
+
 
       SemanticWarranty longestCallWarranty = callPrepareResp.first;
       Map<CallInstance, SemanticWarrantyRequest> updates =
