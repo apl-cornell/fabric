@@ -38,7 +38,6 @@ import fabric.common.VersionWarranty;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongKeyMap;
-import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
 import fabric.lang.Object._Impl;
 import fabric.lang.Object._Proxy;
@@ -401,9 +400,9 @@ public final class TransactionManager {
     Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
         "Delay since we began is {0}ms", (writeResult.commitTime - startTime));
 
-    current.semanticWarrantiesUsed.putAll(writeResult.addedCalls);
+    //current.semanticWarrantiesUsed.putAll(writeResult.addedCalls);
     current.requestReplies.putAll(writeResult.callResults);
-    current.addedReads = writeResult.addedReads;
+    //current.addedReads = writeResult.addedReads;
 
     Log HOTOS_current = current;
     List<RemoteWorker> workers = current.workersCalled;
@@ -483,8 +482,7 @@ public final class TransactionManager {
 
       case PREPARING:
       case PREPARED:
-        return new PrepareWritesResult(current.commitState.commitTime, null,
-            null, null);
+        return new PrepareWritesResult(current.commitState.commitTime, null);
 
       case COMMITTING:
       case COMMITTED:
@@ -505,14 +503,6 @@ public final class TransactionManager {
     // synchronize on it.
     final long[] commitTime = new long[1];
     commitTime[0] = System.currentTimeMillis();
-
-    // Aggregated added reads
-    final OidKeyHashMap<Pair<Integer, VersionWarranty>> addedReads =
-        new OidKeyHashMap<Pair<Integer, VersionWarranty>>();
-
-    // Aggregated added calls
-    final Map<CallInstance, WarrantiedCallResult> addedCalls =
-        new HashMap<CallInstance, WarrantiedCallResult>();
 
     // Aggregated request results.
     final Map<CallInstance, SemanticWarranty> callResults =
@@ -580,24 +570,6 @@ public final class TransactionManager {
                 synchronized (commitTime) {
                   if (response.commitTime > commitTime[0])
                     commitTime[0] = response.commitTime;
-                }
-
-                synchronized (addedReads) {
-                  if (response.addedReads != null) {
-                    for (Map.Entry<Store, LongKeyMap<Pair<Integer, VersionWarranty>>> submap : response.addedReads
-                        .nonNullEntrySet()) {
-                      for (LongKeyMap.Entry<Pair<Integer, VersionWarranty>> entry : submap
-                          .getValue().entrySet()) {
-                        addedReads.put(submap.getKey(), entry.getKey(),
-                            entry.getValue());
-                      }
-                    }
-                  }
-                }
-
-                synchronized (addedCalls) {
-                  if (response.addedCalls != null)
-                    addedCalls.putAll(response.addedCalls);
                 }
 
                 synchronized (callResults) {
@@ -697,8 +669,7 @@ public final class TransactionManager {
       synchronized (current.commitState) {
         current.commitState.value = PREPARED;
         current.commitState.notifyAll();
-        return new PrepareWritesResult(commitTime[0], addedReads, addedCalls,
-            callResults);
+        return new PrepareWritesResult(commitTime[0], callResults);
       }
     }
   }

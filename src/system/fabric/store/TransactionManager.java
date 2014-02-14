@@ -128,7 +128,7 @@ public class TransactionManager {
    *           If the transaction would cause a conflict or if the worker is
    *           insufficiently privileged to execute the transaction.
    */
-  public PrepareWritesResult prepareWrites(RemoteIdentity<RemoteWorker> workerIdentity,
+  public long prepareWrites(RemoteIdentity<RemoteWorker> workerIdentity,
       PrepareWritesRequest req) throws TransactionPrepareFailedException {
     final long tid = req.tid;
     VersionWarranty longestWarranty = null;
@@ -261,11 +261,7 @@ public class TransactionManager {
           "Transaction {0} prepared writes to be done in {1} ms.",
           Long.toHexString(tid), longest - System.currentTimeMillis());
 
-      PrepareWritesResult writeResult = new PrepareWritesResult(longest,
-          new OidKeyHashMap<Pair<Integer, VersionWarranty>>(),
-          new HashMap<CallInstance, WarrantiedCallResult>(),
-          new HashMap<CallInstance, SemanticWarranty>());
-      return writeResult;
+      return longest;
     } catch (TransactionPrepareFailedException e) {
       database.abortPrepareWrites(tid, worker);
       semanticWarranties.abort(tid);

@@ -240,10 +240,10 @@ class Store extends MessageToStoreHandler {
     Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
         "Returning {0} request replies", replies.size());
 
-    PrepareWritesResult writeResult = prepareTransactionWrites(client, msg.tid,
+    long commitTime = prepareTransactionWrites(client, msg.tid,
         msg.serializedCreates, msg.serializedWrites);
 
-    writeResult.callResults.putAll(replies);
+    PrepareWritesResult writeResult = new PrepareWritesResult(commitTime, replies);
     PrepareTransactionWritesMessage.Response res =
       new PrepareTransactionWritesMessage.Response(writeResult);
     STORE_REQUEST_LOGGER.finest("FINISHED PREPARING WRITES FOR TID " +
@@ -415,7 +415,7 @@ class Store extends MessageToStoreHandler {
   /**
    * @return the transaction's minimum commit time.
    */
-  private PrepareWritesResult prepareTransactionWrites(RemoteIdentity<RemoteWorker> r, long tid,
+  private long prepareTransactionWrites(RemoteIdentity<RemoteWorker> r, long tid,
       Collection<SerializedObject> serializedCreates,
       Collection<SerializedObject> serializedWrites) throws
     TransactionPrepareFailedException {
