@@ -240,8 +240,8 @@ class Store extends MessageToStoreHandler {
     Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
         "Returning {0} request replies", replies.size());
 
-    PrepareWritesResult writeResult = prepareTransactionWrites(client.principal,
-        msg.tid, msg.serializedCreates, msg.serializedWrites);
+    PrepareWritesResult writeResult = prepareTransactionWrites(client, msg.tid,
+        msg.serializedCreates, msg.serializedWrites);
 
     writeResult.callResults.putAll(replies);
     PrepareTransactionWritesMessage.Response res =
@@ -415,19 +415,20 @@ class Store extends MessageToStoreHandler {
   /**
    * @return the transaction's minimum commit time.
    */
-  private PrepareWritesResult prepareTransactionWrites(Principal p, long tid,
+  private PrepareWritesResult prepareTransactionWrites(RemoteIdentity<RemoteWorker> r, long tid,
       Collection<SerializedObject> serializedCreates,
       Collection<SerializedObject> serializedWrites) throws
     TransactionPrepareFailedException {
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
-        "Handling PrepareWrites Message from {0}, tid={1}", nameOf(p), tid);
+        "Handling PrepareWrites Message from {0}, tid={1}", nameOf(r.principal),
+        tid);
 
     PrepareWritesRequest req =
         new PrepareWritesRequest(tid, serializedCreates, serializedWrites);
 
     sm.createSurrogates(req);
 
-    return tm.prepareWrites(p, req);
+    return tm.prepareWrites(r, req);
   }
 
   private LongKeyMap<VersionWarranty> prepareTransactionReads(

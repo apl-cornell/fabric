@@ -128,10 +128,12 @@ public class TransactionManager {
    *           If the transaction would cause a conflict or if the worker is
    *           insufficiently privileged to execute the transaction.
    */
-  public PrepareWritesResult prepareWrites(Principal worker,
+  public PrepareWritesResult prepareWrites(RemoteIdentity<RemoteWorker> workerIdentity,
       PrepareWritesRequest req) throws TransactionPrepareFailedException {
     final long tid = req.tid;
     VersionWarranty longestWarranty = null;
+
+    Principal worker = workerIdentity.principal;
 
     // First, check write permissions. We do this before we attempt to do the
     // actual prepare because we want to run the permissions check in a
@@ -196,8 +198,7 @@ public class TransactionManager {
         callPrepareResp.second.second;
       updates.putAll(newCalls);
 
-      OidKeyHashMap<Pair<Integer, VersionWarranty>> addedReads =
-        new OidKeyHashMap<Pair<Integer, VersionWarranty>>();
+      OidKeyHashMap<Integer> addedReads = new OidKeyHashMap<Integer>();
       OidKeyHashMap<Store> addedCreates = new OidKeyHashMap<Store>();
 
       Map<CallInstance, WarrantiedCallResult> addedCalls =
@@ -217,9 +218,7 @@ public class TransactionManager {
         // Collect reads and their warranties for the worker
         for (LongKeyMap<ReadMap.Entry> submap : update.reads) {
           for (ReadMap.Entry read : submap.values()) {
-            addedReads.put(store, read.getRef().onum,
-                new Pair<Integer, VersionWarranty>(read.getVersionNumber(),
-                                                    read.getWarranty()));
+            addedReads.put(store, read.getRef().onum, read.getVersionNumber());
           }
         }
 
@@ -249,27 +248,22 @@ public class TransactionManager {
           "Prepared writes for transaction {0}", tid);
 
       // Ugh this is ugly.
+      long longest = longestWarranty == null ? 0 : longestWarranty.expiry();
       if (longestCallWarranty != null
-          && (longestWarranty == null
-            || longestCallWarranty.expiresAfter(longestWarranty))) {
-        Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
-            "Transaction {0} prepared writes to be done in {1} ms.",
-            Long.toHexString(tid), longestCallWarranty.expiry() -
-            System.currentTimeMillis());
-        PrepareWritesResult writeResult =
-          new PrepareWritesResult(longestCallWarranty.expiry(), addedReads,
-              addedCalls, new HashMap<CallInstance, SemanticWarranty>());
-        return writeResult;
+          && (longestCallWarranty.expiresAfter(longest, true))) {
+        longest = longestCallWarranty.expiry();
       }
 
-      long longest = longestWarranty == null ? 0 : longestWarranty.expiry();
+      prepareCalls(worker, tid, addedCalls, longest);
+      prepareReads(workerIdentity, tid, addedReads.get(store), longest);
 
       Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
           "Transaction {0} prepared writes to be done in {1} ms.",
           Long.toHexString(tid), longest - System.currentTimeMillis());
 
       PrepareWritesResult writeResult = new PrepareWritesResult(longest,
-          addedReads, addedCalls,
+          new OidKeyHashMap<Pair<Integer, VersionWarranty>>(),
+          new HashMap<CallInstance, WarrantiedCallResult>(),
           new HashMap<CallInstance, SemanticWarranty>());
       return writeResult;
     } catch (TransactionPrepareFailedException e) {
