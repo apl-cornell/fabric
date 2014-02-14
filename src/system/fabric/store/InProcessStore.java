@@ -120,11 +120,9 @@ public class InProcessStore extends RemoteStore {
         tm.prepareRequests(Worker.getWorker().getPrincipal(), tid, calls);
 
     // Prepare object writes
-    PrepareWritesResult result = tm.prepareWrites(getPrincipal(), req);
+    long commitTime = tm.prepareWrites(localWorkerIdentity(), req);
 
-    result.callResults.putAll(callReplies);
-
-    return result;
+    return new PrepareWritesResult(commitTime, callReplies);
   }
 
   @Override

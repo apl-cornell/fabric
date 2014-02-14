@@ -72,7 +72,7 @@ public final class LocalStore implements Store, Serializable {
       Set<SemanticWarrantyRequest> calls) {
     // TODO: Currently we don't handle local memoized calls.
     WORKER_LOCAL_STORE_LOGGER.fine("Local transaction preparing writes");
-    return new PrepareWritesResult(0, null, null, null);
+    return new PrepareWritesResult(0, null);
   }
 
   @Override
