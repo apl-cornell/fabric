@@ -18,7 +18,7 @@ public class WarrantyIssuer<K> {
   /**
    * The base commit latency, in milliseconds.
    */
-  private static final long BASE_COMMIT_LATENCY = (int) (0.236450 * 1000);
+  private static final long BASE_COMMIT_LATENCY = 250;
 
   /**
    * The minimum length of time (in milliseconds) for which each issued warranty
