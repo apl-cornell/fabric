@@ -1232,6 +1232,7 @@ public class SemanticWarrantyTable {
       Collection<SerializedObject> creates, long transactionID,
       long commitTime, final String storeName)
       throws TransactionPrepareFailedException {
+    long startTime = System.currentTimeMillis();
     TreeSet<CallInstance> affectedCalls = new TreeSet<CallInstance>();
     for (SerializedObject obj : writes) {
       readersTable.putIfAbsent(obj.getOnum(),
@@ -1299,8 +1300,8 @@ public class SemanticWarrantyTable {
 
     updates.putAll(changes);
     Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
-        "DONE CHECKING FOR UPDATES ON TRANSACTION {0}, SUGGESTING ADDITIONAL DELAY OF {1}",
-        Long.toHexString(transactionID), longest - commitTime);
+        "DONE CHECKING FOR UPDATES ON TRANSACTION {0}, SUGGESTING ADDITIONAL DELAY OF {1} after {2} ms of checking",
+        Long.toHexString(transactionID), longest - commitTime, System.currentTimeMillis() - startTime);
 
     return new Pair<SemanticWarranty, Pair<Map<CallInstance, SemanticWarrantyRequest>, Map<CallInstance, SemanticWarrantyRequest>>>(
         new SemanticWarranty(longest),
