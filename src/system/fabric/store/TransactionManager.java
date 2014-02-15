@@ -254,8 +254,13 @@ public class TransactionManager {
         longest = longestCallWarranty.expiry();
       }
 
-      prepareCalls(worker, tid, addedCalls, longest);
-      prepareReads(workerIdentity, tid, addedReads.get(store), longest);
+      if (addedCalls.size() != 0) {
+        prepareCalls(worker, tid, addedCalls, longest);
+      }
+      if (addedReads.get(store) != null) {
+        // Don't bother if there were no reads.
+        prepareReads(workerIdentity, tid, addedReads.get(store), longest);
+      }
 
       Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
           "Transaction {0} prepared writes to be done in {1} ms.",
