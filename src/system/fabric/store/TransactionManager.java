@@ -233,6 +233,11 @@ public class TransactionManager {
         }
       }
 
+      // Remove added reads on objects we wrote in this transaction...
+      for (SerializedObject o : req.writes) {
+        addedReads.remove(store, o.getOnum());
+      }
+
       if (!versionConflicts.isEmpty()) {
         throw new TransactionPrepareFailedException(versionConflicts);
       }
