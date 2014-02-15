@@ -173,6 +173,16 @@ public class InProcessStore extends RemoteStore {
   }
 
   @Override
+  public WarrantiedCallResult lookupCall(CallInstance call) {
+    // First argument isn't used...
+    try {
+      return tm.getCall(null, call);
+    } catch (AccessException e) {
+      return null;
+    }
+  }
+
+  @Override
   protected List<Pair<SerializedObject, VersionWarranty>> getStaleObjects(
       LongKeyMap<Integer> reads) {
     try {
