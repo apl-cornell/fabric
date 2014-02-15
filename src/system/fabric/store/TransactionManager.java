@@ -152,6 +152,11 @@ public class TransactionManager {
 
     database.beginPrepareWrites(tid, worker);
 
+    long longest = 0;
+    OidKeyHashMap<Integer> addedReads = new OidKeyHashMap<Integer>();
+    Map<CallInstance, WarrantiedCallResult> addedCalls =
+      new HashMap<CallInstance, WarrantiedCallResult>();
+
     try {
       // This will store the set of onums of objects that were out of date.
       LongKeyMap<Pair<SerializedObject, VersionWarranty>> versionConflicts =
@@ -190,7 +195,6 @@ public class TransactionManager {
         database.registerUpdate(tid, worker, o, versionConflicts, CREATE);
       }
 
-
       SemanticWarranty longestCallWarranty = callPrepareResp.first;
       Map<CallInstance, SemanticWarrantyRequest> updates =
         callPrepareResp.second.first;
@@ -198,11 +202,7 @@ public class TransactionManager {
         callPrepareResp.second.second;
       updates.putAll(newCalls);
 
-      OidKeyHashMap<Integer> addedReads = new OidKeyHashMap<Integer>();
       OidKeyHashMap<Store> addedCreates = new OidKeyHashMap<Store>();
-
-      Map<CallInstance, WarrantiedCallResult> addedCalls =
-        new HashMap<CallInstance, WarrantiedCallResult>();
 
       for (SemanticWarrantyRequest update : updates.values()) {
         // Register additional creates
@@ -243,31 +243,13 @@ public class TransactionManager {
       }
 
       // Ugh this is ugly.
-      long longest = longestWarranty == null ? 0 : longestWarranty.expiry();
+      longest = longestWarranty == null ? 0 : longestWarranty.expiry();
       if (longestCallWarranty != null
           && (longestCallWarranty.expiresAfter(longest, true))) {
         longest = longestCallWarranty.expiry();
       }
 
-      if (addedCalls.size() != 0) {
-        prepareCalls(worker, tid, addedCalls, longest);
-      }
-      if (addedReads.get(store) != null) {
-        // Don't bother if there were no reads.
-        prepareReads(workerIdentity, tid, addedReads.get(store), longest);
-      }
-
       database.finishPrepareWrites(tid, worker);
-
-      STORE_TRANSACTION_LOGGER.log(Level.FINE,
-          "Prepared writes for transaction {0}", tid);
-
-
-      Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
-          "Transaction {0} prepared writes to be done in {1} ms.",
-          Long.toHexString(tid), longest - System.currentTimeMillis());
-
-      return longest;
     } catch (TransactionPrepareFailedException e) {
       database.abortPrepareWrites(tid, worker);
       semanticWarranties.abort(tid);
@@ -278,6 +260,21 @@ public class TransactionManager {
       semanticWarranties.abort(tid);
       throw e;
     }
+
+    if (addedCalls.size() != 0)
+      prepareCalls(worker, tid, addedCalls, longest);
+    // Don't bother if there were no reads.
+    if (addedReads.get(store) != null)
+      prepareReads(workerIdentity, tid, addedReads.get(store), longest);
+
+    STORE_TRANSACTION_LOGGER.log(Level.FINE,
+        "Prepared writes for transaction {0}", tid);
+
+    Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+        "Transaction {0} prepared writes to be done in {1} ms.",
+        Long.toHexString(tid), longest - System.currentTimeMillis());
+
+    return longest;
   }
 
   /**
