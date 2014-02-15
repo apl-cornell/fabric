@@ -1399,7 +1399,7 @@ public final class TransactionManager {
         }
       } else {
         synchronized (current.creates) {
-          current.creates.add(obj);
+          current.creates.put(obj.$getOnum(), obj);
         }
       }
     }

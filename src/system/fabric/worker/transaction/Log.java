@@ -113,12 +113,12 @@ public final class Log {
    * don't count here. To keep them from being pinned, objects on local store
    * are not tracked here.
    */
-  protected final List<_Impl> creates;
+  protected final LongKeyMap<_Impl> creates;
 
   /**
    * Creates that were not made by memoized subcalls.
    */
-  protected final List<_Impl> createsInSubcalls;
+  protected final LongKeyMap<_Impl> createsInSubcalls;
 
   /**
    * Tracks objects created on local store. See <code>creates</code>.
@@ -325,8 +325,8 @@ public final class Log {
     this.reads = new OidKeyHashMap<ReadMap.Entry>();
     this.readsInSubcalls = new OidKeyHashMap<ReadMap.Entry>();
     this.readsReadByParent = new ArrayList<ReadMap.Entry>();
-    this.creates = new ArrayList<_Impl>();
-    this.createsInSubcalls = new ArrayList<_Impl>();
+    this.creates = new LongKeyHashMap<_Impl>();
+    this.createsInSubcalls = new LongKeyHashMap<_Impl>();
     this.localStoreCreates = new WeakReferenceArrayList<_Impl>();
     this.writes = new ArrayList<_Impl>();
     this.localStoreWrites = new WeakReferenceArrayList<_Impl>();
@@ -402,7 +402,8 @@ public final class Log {
   public _Impl getCreate(long oid) {
     Log cur = this;
     while (cur != null) {
-      for (_Impl create : SysUtil.chain(cur.creates, cur.createsInSubcalls))
+      for (_Impl create : SysUtil.chain(cur.creates.values(),
+            cur.createsInSubcalls.values()))
         if (create.$getOnum() == oid) return create;
       cur = cur.parent;
     }
@@ -491,8 +492,8 @@ public final class Log {
       // Remove creates
       for (Store s : req.creates.storeSet()) {
         for (_Impl obj : req.creates.get(s).values()) {
-          createsInSubcalls.remove(obj);
-          creates.add(obj);
+          createsInSubcalls.remove(obj.$getOnum());
+          creates.put(obj.$getOnum(), obj);
         }
       }
 
@@ -736,8 +737,8 @@ public final class Log {
       for (_Impl write : chain)
         map.remove(write.$getOnum());
     } else {
-      Iterable<_Impl> chain = SysUtil.chain(SysUtil.chain(writes, creates),
-          createsInSubcalls);
+      Iterable<_Impl> chain = SysUtil.chain(SysUtil.chain(writes,
+            creates.values()), createsInSubcalls.values());
       for (_Impl write : chain)
         if (write.$getStore() == store) map.remove(write.$getOnum());
     }
@@ -756,7 +757,8 @@ public final class Log {
       if (obj.$isOwned) result.add(obj.$getStore());
     }
 
-    for (_Impl obj : SysUtil.chain(creates, createsInSubcalls)) {
+    for (_Impl obj : SysUtil.chain(creates.values(),
+          createsInSubcalls.values())) {
       if (obj.$isOwned) result.add(obj.$getStore());
     }
 
@@ -818,7 +820,7 @@ public final class Log {
         for (_Impl create : curLog.localStoreCreates)
           result.remove(create.$getOnum());
       } else {
-        for (_Impl create : curLog.creates)
+        for (_Impl create : curLog.creates.values())
           if (create.$getStore() == store) result.remove(create.$getOnum());
       }
       curLog = curLog.parent;
@@ -849,7 +851,7 @@ public final class Log {
         if (obj.$getStore() == store && obj.$isOwned)
           result.put(obj.$getOnum(), obj);
 
-      for (_Impl create : SysUtil.chain(creates, createsInSubcalls))
+      for (_Impl create : SysUtil.chain(creates.values(), createsInSubcalls.values()))
         if (create.$getStore() == store) result.remove(create.$getOnum());
     }
 
@@ -869,7 +871,8 @@ public final class Log {
         result.put(obj.$getOnum(), obj);
       }
     } else {
-      for (_Impl obj : SysUtil.chain(creates, createsInSubcalls))
+      for (_Impl obj : SysUtil.chain(creates.values(),
+            createsInSubcalls.values()))
         if (obj.$getStore() == store && obj.$isOwned)
           result.put(obj.$getOnum(), obj);
     }
@@ -971,8 +974,8 @@ public final class Log {
     }
 
     // Release write locks on creates.
-    Iterable<_Impl> chain2 = SysUtil.chain(SysUtil.chain(creates,
-          localStoreCreates), createsInSubcalls);
+    Iterable<_Impl> chain2 = SysUtil.chain(SysUtil.chain(creates.values(),
+          localStoreCreates), createsInSubcalls.values());
     for (_Impl obj : chain2) {
       synchronized (obj) {
         obj.$writer = null;
@@ -1109,7 +1112,7 @@ public final class Log {
 
     // Check creates
     OidKeyHashMap<_Impl> createsForTargetStore = new OidKeyHashMap<_Impl>();
-    for (_Impl create : creates) {
+    for (_Impl create : creates.values()) {
       if (create.$getStore().equals(targetStore)) {
         createsForTargetStore.put(create, create);
       } else if (!create.$getStore().isLocalStore()) {
@@ -1172,8 +1175,8 @@ public final class Log {
         .nonNullEntrySet()) {
       for (_Impl create : entry.getValue().values()) {
         addReadDependency(create.$getOnum());
-        createsInSubcalls.add(create);
-        creates.remove(create);
+        createsInSubcalls.put(create.$getOnum(), create);
+        creates.remove(create.$getOnum());
       }
     }
 
@@ -1274,10 +1277,10 @@ public final class Log {
     }
 
     // Merge creates and transfer write locks.
-    List<_Impl> parentCreates = parent.creates;
+    LongKeyMap<_Impl> parentCreates = parent.creates;
     synchronized (parentCreates) {
-      for (_Impl obj : creates) {
-        parentCreates.add(obj);
+      for (_Impl obj : creates.values()) {
+        parentCreates.put(obj.$getOnum(), obj);
         obj.$writeLockHolder = parent;
       }
     }
@@ -1292,10 +1295,10 @@ public final class Log {
     }
 
     // Pass up subcall creates
-    List<_Impl> parentSubcallCreates = parent.createsInSubcalls;
+    LongKeyMap<_Impl> parentSubcallCreates = parent.createsInSubcalls;
     synchronized (parentSubcallCreates) {
-      for (_Impl obj : createsInSubcalls) {
-        parentSubcallCreates.add(obj);
+      for (_Impl obj : createsInSubcalls.values()) {
+        parentSubcallCreates.put(obj.$getOnum(), obj);
         obj.$writeLockHolder = parent;
       }
     }
@@ -1428,8 +1431,8 @@ public final class Log {
         }
 
         // Release write locks on created objects and set version numbers.
-        Iterable<_Impl> chain2 = SysUtil.chain(SysUtil.chain(creates,
-              localStoreCreates), createsInSubcalls);
+        Iterable<_Impl> chain2 = SysUtil.chain(SysUtil.chain(creates.values(),
+              localStoreCreates), createsInSubcalls.values());
         for (_Impl obj : chain2) {
           if (!obj.$isOwned) {
             // The cached object is out-of-date. Evict it.
