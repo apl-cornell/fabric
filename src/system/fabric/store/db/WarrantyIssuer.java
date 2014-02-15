@@ -18,7 +18,7 @@ public class WarrantyIssuer<K> {
   /**
    * The base commit latency, in milliseconds.
    */
-  private static final long BASE_COMMIT_LATENCY = (int) (0.236450 * 1000);
+  private static final long BASE_COMMIT_LATENCY = 250;
 
   /**
    * The minimum length of time (in milliseconds) for which each issued warranty
@@ -78,6 +78,13 @@ public class WarrantyIssuer<K> {
      */
     double writePrepareRate;
 
+    long lastReadPrepareTime;
+
+    /**
+     * Interval between the last two read prepares.
+     */
+    long readPrepareInterval;
+
     /**
      * A mutex for manipulating the read- and write-prepare metrics.
      */
@@ -94,6 +101,9 @@ public class WarrantyIssuer<K> {
       this.numWritePrepares = 0;
       this.writePrepareRate = 0.0;
       this.prepareMutex = new Object();
+
+      this.lastReadPrepareTime = now;
+      this.readPrepareInterval = Long.MAX_VALUE;
     }
 
     /**
@@ -103,6 +113,10 @@ public class WarrantyIssuer<K> {
       synchronized (prepareMutex) {
         fixPrepareWindow();
         numReadPrepares++;
+
+        long now = System.currentTimeMillis();
+        readPrepareInterval = now - lastReadPrepareTime;
+        lastReadPrepareTime = now;
       }
     }
 
@@ -184,25 +198,33 @@ public class WarrantyIssuer<K> {
      * 
      * @return the time at which the warranty should expire.
      */
-    Long suggestWarranty(long expiry) {
+    long suggestWarranty(long expiry) {
+      if (readPrepareInterval > 1000) {
+        // The object is too unpopular. Suggest the minimal expiry time.
+        return expiry;
+      }
+
       double ratio = getReadWritePrepareRatio();
 
       long warrantyLength =
           Math.min((long) (2.0 * BASE_COMMIT_LATENCY * ratio),
               MAX_WARRANTY_LENGTH);
 
-      if (key instanceof Number && ((Number) key).longValue() == 0) {
-        HOTOS_LOGGER.log(Level.INFO, "onum = {0}, warranty length = {1}",
-            new Object[] { key, warrantyLength });
+      if (HOTOS_LOGGER.isLoggable(Level.FINE)) {
+        if (key instanceof Number && ((Number) key).longValue() == 0) {
+          Logging.log(HOTOS_LOGGER, Level.FINE,
+              "onum = {0}, warranty length = {1}", key, warrantyLength);
+        }
+
+        if (writePrepareRate > 0 || numWritePrepares > 0) {
+          Logging.log(HOTOS_LOGGER, Level.FINE,
+              "onum = {0}, warranty length = {1}", key, warrantyLength);
+        }
       }
 
-      if (writePrepareRate > 0 || numWritePrepares > 0)
-        HOTOS_LOGGER.log(Level.INFO, "onum = {0}, warranty length = {1}",
-            new Object[] { key, warrantyLength });
+      if (warrantyLength < MIN_WARRANTY_LENGTH) return expiry;
 
-      if (warrantyLength < MIN_WARRANTY_LENGTH) return null;
-
-      return Math.max(expiry, System.currentTimeMillis()) + warrantyLength;
+      return Math.max(expiry, System.currentTimeMillis() + warrantyLength);
     }
   }
 
@@ -257,7 +279,6 @@ public class WarrantyIssuer<K> {
    * Suggests a warranty-expiry time beyond the given expiry time.
    */
   public long suggestWarranty(K key, long minExpiry) {
-    Long suggestion = getEntry(key).suggestWarranty(minExpiry);
-    return suggestion == null ? minExpiry : suggestion;
+    return getEntry(key).suggestWarranty(minExpiry);
   }
 }

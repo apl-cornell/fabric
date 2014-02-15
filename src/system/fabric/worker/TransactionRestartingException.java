@@ -18,6 +18,7 @@ public final class TransactionRestartingException extends
    *          identifies the transaction that is to be restarted.
    */
   public TransactionRestartingException(TransactionID tid) {
+    super("restarting " + tid);
     this.tid = tid;
   }
 }

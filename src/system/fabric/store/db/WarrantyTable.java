@@ -175,8 +175,8 @@ class WarrantyTable<K, V extends Warranty> {
 
     long expiry = virtualWarranty.expiry();
     long length = expiry - System.currentTimeMillis();
-    STORE_DB_LOGGER.finest("Adding virtual warranty for " + key + "; expiry="
-        + expiry + " (in " + length + " ms)");
+    Logging.log(STORE_DB_LOGGER, Level.FINEST,
+        "Adding virtual warranty for {0}; expiry={1} (in {2} ms)", key, expiry, length);
 
     Entry newEntry = new Entry(key, virtualWarranty);
     Entry result = table.putIfAbsent(key, newEntry);
