@@ -242,11 +242,6 @@ public class TransactionManager {
         addedCalls.remove(updatingCall);
       }
 
-      database.finishPrepareWrites(tid, worker);
-
-      STORE_TRANSACTION_LOGGER.log(Level.FINE,
-          "Prepared writes for transaction {0}", tid);
-
       // Ugh this is ugly.
       long longest = longestWarranty == null ? 0 : longestWarranty.expiry();
       if (longestCallWarranty != null
@@ -261,6 +256,12 @@ public class TransactionManager {
         // Don't bother if there were no reads.
         prepareReads(workerIdentity, tid, addedReads.get(store), longest);
       }
+
+      database.finishPrepareWrites(tid, worker);
+
+      STORE_TRANSACTION_LOGGER.log(Level.FINE,
+          "Prepared writes for transaction {0}", tid);
+
 
       Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
           "Transaction {0} prepared writes to be done in {1} ms.",
