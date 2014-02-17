@@ -772,8 +772,13 @@ public class SemanticWarrantyTable {
           return changes.containsKey(this.call);
         }
       } catch (Exception e) {
-        throw new TransactionPrepareFailedException(
-            "Call checking ran into an " + "error! " + e.getMessage());
+        Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.SEVERE,
+            "CALL CHECK FOR {0} HAD PROBLEMS: {1}", call, e.getMessage());
+        TransactionPrepareFailedException tpfe =
+          new TransactionPrepareFailedException("Call checking for " + call +
+              " ran into an " + "error! " + e.getMessage());
+        tpfe.initCause(e);
+        throw tpfe;
       }
     }
 
