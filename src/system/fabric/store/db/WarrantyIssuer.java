@@ -24,7 +24,7 @@ public class WarrantyIssuer<K> {
    * The minimum length of time (in milliseconds) for which each issued warranty
    * should be valid.
    */
-  private static final int MIN_WARRANTY_LENGTH = 6000;
+  private static final int MIN_WARRANTY_LENGTH = 1000;
 
   /**
    * The maximum length of time (in milliseconds) for which each issued warranty
@@ -199,7 +199,7 @@ public class WarrantyIssuer<K> {
      * @return the time at which the warranty should expire.
      */
     long suggestWarranty(long expiry) {
-      if (readPrepareInterval > 100) {
+      if (readPrepareInterval > 250) {
         // The object is too unpopular. Suggest the minimal expiry time.
         return expiry;
       }
