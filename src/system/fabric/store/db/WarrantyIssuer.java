@@ -45,6 +45,12 @@ public class WarrantyIssuer<K> {
    */
   private static final long PREPARE_WINDOW_LENGTH = (int) (.467751 * 100000);
 
+  /**
+   * The popularity cutoff. If the interval between consecutive read prepares is
+   * above this threshold, then no warranty will be issued for the object.
+   */
+  private static final int MAX_READ_PREP_INTERVAL = 250;
+
   // END TUNING PARAMETERS ///////////////////////////////////////////////////
 
   private class Entry {
@@ -199,7 +205,7 @@ public class WarrantyIssuer<K> {
      * @return the time at which the warranty should expire.
      */
     long suggestWarranty(long expiry) {
-      if (readPrepareInterval > 250) {
+      if (readPrepareInterval > MAX_READ_PREP_INTERVAL) {
         // The object is too unpopular. Suggest the minimal expiry time.
         return expiry;
       }
