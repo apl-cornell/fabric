@@ -24,26 +24,32 @@ public class WarrantyIssuer<K> {
    * The minimum length of time (in milliseconds) for which each issued warranty
    * should be valid.
    */
-  private static final int MIN_WARRANTY_LENGTH = 250;
+  private static final int MIN_WARRANTY_LENGTH = 1000;
 
   /**
    * The maximum length of time (in milliseconds) for which each issued warranty
    * should be valid.
    */
-  private static final int MAX_WARRANTY_LENGTH = (int) (0.683228 * 10000);
+  public static final int MAX_WARRANTY_LENGTH = (int) (2.698060 * 10000);
 
   /**
    * The decay rate for the exponential average when calculating the rate of
    * read and write prepares. Lower values result in slower adaptation to
    * changes in the prepare rates.
    */
-  private static final double PREPARE_ALPHA = .698486;
+  private static final double PREPARE_ALPHA = .466681;
 
   /**
    * The length of the time window over which to calculate the rate of
    * read and write prepares, in milliseconds.
    */
-  private static final long PREPARE_WINDOW_LENGTH = (int) (0.848755 * 100000);
+  private static final long PREPARE_WINDOW_LENGTH = (int) (.467751 * 100000);
+
+  /**
+   * The popularity cutoff. If the interval between consecutive read prepares is
+   * above this threshold, then no warranty will be issued for the object.
+   */
+  private static final int MAX_READ_PREP_INTERVAL = 250;
 
   // END TUNING PARAMETERS ///////////////////////////////////////////////////
 
@@ -199,7 +205,7 @@ public class WarrantyIssuer<K> {
      * @return the time at which the warranty should expire.
      */
     long suggestWarranty(long expiry) {
-      if (readPrepareInterval > 1000) {
+      if (readPrepareInterval > MAX_READ_PREP_INTERVAL) {
         // The object is too unpopular. Suggest the minimal expiry time.
         return expiry;
       }
@@ -263,9 +269,6 @@ public class WarrantyIssuer<K> {
    * Notifies that a write has been prepared, preventing further writes from
    * being prepared until the corresponding transaction either commits or
    * aborts.
-   * 
-   * @param warranty the warranty that existed on the given key when the write
-   *          was prepared.
    */
   public void notifyWritePrepare(K key) {
     getEntry(key).notifyWritePrepare();

@@ -170,7 +170,9 @@ public class PrepareTransactionWritesMessage
     // Read creates.
     int size = in.readInt();
     if (size == 0) {
-      serializedCreates = Collections.emptyList();
+      // XXX: this list must be mutable since it can be added
+      //      to by the surrogate manager
+      serializedCreates = new ArrayList<SerializedObject>(0);
     } else {
       serializedCreates = new ArrayList<SerializedObject>(size);
       for (int i = 0; i < size; i++)
