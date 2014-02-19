@@ -174,6 +174,9 @@ public interface Object {
         _Impl logImpl = cur.getCreate(ref.onum);
         if (logImpl != null)
           return logImpl.$cacheEntry;
+        logImpl = cur.fetchFromLookAside(ref.onum);
+        if (logImpl != null)
+          return logImpl.$cacheEntry;
       }
 
       // Check anchor.
