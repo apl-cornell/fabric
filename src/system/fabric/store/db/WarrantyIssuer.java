@@ -238,7 +238,10 @@ public class WarrantyIssuer<K> {
      * XXX gross hack for nsdi deadline
      */
     public void notifyWarrantedReads(int count) {
-      numReads += count;
+      synchronized (metricMutex) {
+        fixPrepareWindow();
+        numReads += count;
+      }
     }
   }
 
