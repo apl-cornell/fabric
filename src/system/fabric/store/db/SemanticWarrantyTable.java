@@ -209,34 +209,9 @@ public class SemanticWarrantyTable {
             && !(value instanceof WrappedJavaInlineable) && value != null
             && otherVal != null) {
           // Check if they're the same object
-          return value.idEquals(otherVal);
-        }
-        return false;
-      }
-    }
+          if (value.idEquals(otherVal)) return true;
 
-    /**
-     * Compare the current result with another value.  Return true if they
-     * agree, otherwise false.
-     */
-    public boolean compareValue(fabric.lang.Object otherVal) {
-      switch (getStatus()) {
-      case NOVALUE:
-        return false; // No thing can equal nothing.
-      case VALID:
-      case STALE:
-      default:
-        if (value == null) {
-          // Check if they're both null
-          return otherVal == null;
-        } else if (otherVal instanceof WrappedJavaInlineable
-            && value instanceof WrappedJavaInlineable) {
-          // Check if they're both the same inlineable
-          return otherVal.equals(value);
-        } else if (!(otherVal instanceof WrappedJavaInlineable)
-            && !(value instanceof WrappedJavaInlineable) && value != null
-            && otherVal != null) {
-          // Check if they're the same object
+          // Check if they're equivalent objects.
           try {
             final fabric.lang.Object value1 = value;
             final fabric.lang.Object value2 = otherVal;
