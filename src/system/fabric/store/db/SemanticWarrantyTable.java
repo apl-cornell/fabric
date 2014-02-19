@@ -187,6 +187,35 @@ public class SemanticWarrantyTable {
     }
 
     /**
+     * Compare the current result with another value for read prepare.  Return
+     * true if they agree, otherwise false.  Unlike the general compareValue,
+     * this does "reference" (onum and version) equality.
+     */
+    public boolean compareValueForReadPrepare(fabric.lang.Object otherVal) {
+      switch (getStatus()) {
+      case NOVALUE:
+        return false; // No thing can equal nothing.
+      case VALID:
+      case STALE:
+      default:
+        if (value == null) {
+          // Check if they're both null
+          return otherVal == null;
+        } else if (otherVal instanceof WrappedJavaInlineable
+            && value instanceof WrappedJavaInlineable) {
+          // Check if they're both the same inlineable
+          return otherVal.equals(value);
+        } else if (!(otherVal instanceof WrappedJavaInlineable)
+            && !(value instanceof WrappedJavaInlineable) && value != null
+            && otherVal != null) {
+          // Check if they're the same object
+          return value.idEquals(otherVal);
+        }
+        return false;
+      }
+    }
+
+    /**
      * Compare the current result with another value.  Return true if they
      * agree, otherwise false.
      */
@@ -479,12 +508,15 @@ public class SemanticWarrantyTable {
      * provided is what we have in the table.  If this is for a read prepare,
      * use the issuer to see about making an EVEN LONGER warranty.
      */
+    // TODO: Should probably have a better way to differentiate between an
+    // actual write operation going on and just having two different
+    // transactions extending out the warranty.
     public SemanticExtendStatus extendWarranty(fabric.lang.Object oldValue,
         long commitTime, boolean readPrepare) {
       switch (getStatus()) {
       case STALE:
         // Check what they think it is.
-        if (!compareValue(oldValue)) {
+        if (!compareValueForReadPrepare(oldValue)) {
           if (readPrepare) {
             long newTime = issuer.suggestWarranty(call);
             try {
@@ -524,7 +556,7 @@ public class SemanticWarrantyTable {
         return SemanticExtendStatus.OK;
       case VALID:
         // Check what they think it is.
-        if (!compareValue(oldValue)) {
+        if (!compareValueForReadPrepare(oldValue)) {
           return SemanticExtendStatus.BAD_VERSION;
         }
         // Update the warranty
