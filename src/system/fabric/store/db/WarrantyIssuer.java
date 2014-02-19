@@ -21,6 +21,13 @@ public class WarrantyIssuer<K> {
   private static final long BASE_COMMIT_LATENCY = 250;
 
   /**
+   * The network delay, in milliseconds.
+   */
+  private static final long NETWORK_LATENCY = 1;
+
+  private static final long TWO_P_N = 2 * BASE_COMMIT_LATENCY * NETWORK_LATENCY;
+
+  /**
    * The minimum length of time (in milliseconds) for which each issued warranty
    * should be valid.
    */
@@ -63,26 +70,26 @@ public class WarrantyIssuer<K> {
     long windowStartTime;
 
     /**
-     * The number of read prepares observed during the current time window.
+     * The number of reads during the current time window.
      */
-    int numReadPrepares;
+    int numReads;
 
     /**
-     * The accumulated read-prepare rate, as measured before the start of the
+     * The accumulated read rate, as measured before the start of the
      * current window.
      */
-    double readPrepareRate;
+    double readRate;
 
     /**
-     * The number of write prepares observed during the current time window.
+     * The number of writes during the current time window.
      */
-    int numWritePrepares;
+    int numWrites;
 
     /**
-     * The accumulated write-prepare rate, as measured before the start of the
+     * The accumulated write rate, as measured before the start of the
      * current window.
      */
-    double writePrepareRate;
+    double writeRate;
 
     long lastReadPrepareTime;
 
@@ -92,9 +99,9 @@ public class WarrantyIssuer<K> {
     long readPrepareInterval;
 
     /**
-     * A mutex for manipulating the read- and write-prepare metrics.
+     * A mutex for manipulating the read- and write-rate metrics.
      */
-    final Object prepareMutex;
+    final Object metricMutex;
 
     public Entry(K key) {
       final long now = System.currentTimeMillis();
@@ -102,11 +109,11 @@ public class WarrantyIssuer<K> {
       this.key = key;
 
       this.windowStartTime = now;
-      this.numReadPrepares = 0;
-      this.readPrepareRate = 0.0;
-      this.numWritePrepares = 0;
-      this.writePrepareRate = 0.0;
-      this.prepareMutex = new Object();
+      this.numReads = 0;
+      this.readRate = 0.0;
+      this.numWrites = 0;
+      this.writeRate = 0.0;
+      this.metricMutex = new Object();
 
       this.lastReadPrepareTime = now;
       this.readPrepareInterval = Long.MAX_VALUE;
@@ -116,9 +123,9 @@ public class WarrantyIssuer<K> {
      * Notifies of a read-prepare event.
      */
     void notifyReadPrepare(long commitTime) {
-      synchronized (prepareMutex) {
+      synchronized (metricMutex) {
         fixPrepareWindow();
-        numReadPrepares++;
+        numReads++;
 
         long now = System.currentTimeMillis();
         readPrepareInterval = now - lastReadPrepareTime;
@@ -132,7 +139,7 @@ public class WarrantyIssuer<K> {
      * @return the current time, in milliseconds since the epoch.
      */
     long fixPrepareWindow() {
-      synchronized (prepareMutex) {
+      synchronized (metricMutex) {
         final long now = System.currentTimeMillis();
 
         final long timeElapsed = now - windowStartTime;
@@ -140,24 +147,22 @@ public class WarrantyIssuer<K> {
 
         // Need to start a new window.
         int numWindowsElapsed = (int) (timeElapsed / PREPARE_WINDOW_LENGTH);
-        readPrepareRate =
-            readPrepareRate * (1 - PREPARE_ALPHA)
-                + ((double) numReadPrepares / PREPARE_WINDOW_LENGTH)
-                * PREPARE_ALPHA;
-        writePrepareRate =
-            writePrepareRate * (1 - PREPARE_ALPHA)
-                + ((double) numWritePrepares / PREPARE_WINDOW_LENGTH)
-                * PREPARE_ALPHA;
+        readRate =
+            readRate * (1 - PREPARE_ALPHA)
+                + ((double) numReads / PREPARE_WINDOW_LENGTH) * PREPARE_ALPHA;
+        writeRate =
+            writeRate * (1 - PREPARE_ALPHA)
+                + ((double) numWrites / PREPARE_WINDOW_LENGTH) * PREPARE_ALPHA;
 
         // Account for possibility of more than one window having elapsed.
         for (int i = 1; i < numWindowsElapsed; i++) {
-          readPrepareRate *= 1 - PREPARE_ALPHA;
-          writePrepareRate *= 1 - PREPARE_ALPHA;
+          readRate *= 1 - PREPARE_ALPHA;
+          writeRate *= 1 - PREPARE_ALPHA;
         }
 
         windowStartTime += numWindowsElapsed * PREPARE_WINDOW_LENGTH;
-        numReadPrepares = 0;
-        numWritePrepares = 0;
+        numReads = 0;
+        numWrites = 0;
         return now;
       }
     }
@@ -174,14 +179,14 @@ public class WarrantyIssuer<K> {
     void notifyWritePrepare() {
       Logging.log(HOTOS_LOGGER, Level.FINER, "writing @{0}", key);
 
-      synchronized (prepareMutex) {
+      synchronized (metricMutex) {
         fixPrepareWindow();
-        numWritePrepares++;
+        numWrites++;
       }
     }
 
-    double getReadWritePrepareRatio() {
-      synchronized (prepareMutex) {
+    double getReadWriteRatio() {
+      synchronized (metricMutex) {
         long now = fixPrepareWindow();
 
         // Use a weighted average of the accumulated prepare rates and the
@@ -190,12 +195,9 @@ public class WarrantyIssuer<K> {
         long windowAge = now - windowStartTime;
         if (windowAge == 0) windowAge = 1;
         double alpha = PREPARE_ALPHA * windowAge / PREPARE_WINDOW_LENGTH;
-        double rho =
-            readPrepareRate * (1 - alpha) + alpha * numReadPrepares / windowAge;
-        double W =
-            writePrepareRate * (1 - alpha) + alpha * numWritePrepares
-                / windowAge;
-        return rho / (W + Double.MIN_VALUE);
+        double R = readRate * (1 - alpha) + alpha * numReads / windowAge;
+        double W = writeRate * (1 - alpha) + alpha * numWrites / windowAge;
+        return R / (W + Double.MIN_VALUE);
       }
     }
 
@@ -210,11 +212,10 @@ public class WarrantyIssuer<K> {
         return expiry;
       }
 
-      double ratio = getReadWritePrepareRatio();
+      double ratio = getReadWriteRatio();
 
       long warrantyLength =
-          Math.min((long) (2.0 * BASE_COMMIT_LATENCY * ratio),
-              MAX_WARRANTY_LENGTH);
+          Math.min((long) Math.sqrt(TWO_P_N * ratio), MAX_WARRANTY_LENGTH);
 
       if (HOTOS_LOGGER.isLoggable(Level.FINE)) {
         if (key instanceof Number && ((Number) key).longValue() == 0) {
@@ -222,7 +223,7 @@ public class WarrantyIssuer<K> {
               "onum = {0}, warranty length = {1}", key, warrantyLength);
         }
 
-        if (writePrepareRate > 0 || numWritePrepares > 0) {
+        if (writeRate > 0 || numWrites > 0) {
           Logging.log(HOTOS_LOGGER, Level.FINE,
               "onum = {0}, warranty length = {1}", key, warrantyLength);
         }
@@ -237,7 +238,7 @@ public class WarrantyIssuer<K> {
      * XXX gross hack for nsdi deadline
      */
     public void notifyWarrantedReads(int count) {
-      numReadPrepares += count;
+      numReads += count;
     }
   }
 
