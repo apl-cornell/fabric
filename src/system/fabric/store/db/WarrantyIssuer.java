@@ -2,6 +2,7 @@ package fabric.store.db;
 
 import static fabric.common.Logging.HOTOS_LOGGER;
 
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 
 import fabric.common.Logging;
@@ -24,34 +25,43 @@ public class WarrantyIssuer<K> {
    * The minimum length of time (in milliseconds) for which each issued warranty
    * should be valid.
    */
-  private static final int MIN_WARRANTY_LENGTH = 1000;
+  private static final int MIN_WARRANTY_LENGTH = (int) (0.1 * 10000);
 
   /**
    * The maximum length of time (in milliseconds) for which each issued warranty
    * should be valid.
    */
-  public static final int MAX_WARRANTY_LENGTH = (int) (2.698060 * 10000);
+  public static final int MAX_WARRANTY_LENGTH = (int) (0.5 * 10000);
 
   /**
    * The decay rate for the exponential average when calculating the rate of
    * read and write prepares. Lower values result in slower adaptation to
    * changes in the prepare rates.
    */
-  private static final double PREPARE_ALPHA = .466681;
+  private static final double PREPARE_ALPHA = 0.466681;
 
   /**
    * The length of the time window over which to calculate the rate of
    * read and write prepares, in milliseconds.
    */
-  private static final long PREPARE_WINDOW_LENGTH = (int) (.467751 * 100000);
+  private static final long PREPARE_WINDOW_LENGTH = (int) (0.467751 * 100000);
 
   /**
    * The popularity cutoff. If the interval between consecutive read prepares is
    * above this threshold, then no warranty will be issued for the object.
    */
-  private static final int MAX_READ_PREP_INTERVAL = 250;
+  private static final int MAX_READ_PREP_INTERVAL = (int) (0.25 * 1000);
+
+  /**
+   * The cutoff for ρL². If the product of the read prepare rate and the square
+   * of the proposed warranty length is below this threshold, then no warranty
+   * will be issued for the object.
+   */
+  private static final int RHO_L_SQUARED_THRESHOLD = 250;
 
   // END TUNING PARAMETERS ///////////////////////////////////////////////////
+
+  static final AtomicInteger suggestionCount = new AtomicInteger(0);
 
   private class Entry {
     final K key;
@@ -69,7 +79,7 @@ public class WarrantyIssuer<K> {
 
     /**
      * The accumulated read-prepare rate, as measured before the start of the
-     * current window.
+     * current window, in prepares per millisecond.
      */
     double readPrepareRate;
 
@@ -80,14 +90,14 @@ public class WarrantyIssuer<K> {
 
     /**
      * The accumulated write-prepare rate, as measured before the start of the
-     * current window.
+     * current window, in prepares per millisecond.
      */
     double writePrepareRate;
 
     long lastReadPrepareTime;
 
     /**
-     * Interval between the last two read prepares.
+     * Interval between the last two read prepares, in milliseconds.
      */
     long readPrepareInterval;
 
@@ -180,25 +190,6 @@ public class WarrantyIssuer<K> {
       }
     }
 
-    double getReadWritePrepareRatio() {
-      synchronized (prepareMutex) {
-        long now = fixPrepareWindow();
-
-        // Use a weighted average of the accumulated prepare rates and the
-        // current prepare rates. The weight is PREPARE_ALPHA, adjusted by the
-        // age of the current window.
-        long windowAge = now - windowStartTime;
-        if (windowAge == 0) windowAge = 1;
-        double alpha = PREPARE_ALPHA * windowAge / PREPARE_WINDOW_LENGTH;
-        double rho =
-            readPrepareRate * (1 - alpha) + alpha * numReadPrepares / windowAge;
-        double W =
-            writePrepareRate * (1 - alpha) + alpha * numWritePrepares
-                / windowAge;
-        return rho / (W + Double.MIN_VALUE);
-      }
-    }
-
     /**
      * Suggests a warranty for the object beyond the given expiry time.
      * 
@@ -210,11 +201,33 @@ public class WarrantyIssuer<K> {
         return expiry;
       }
 
-      double ratio = getReadWritePrepareRatio();
+      // Get the read-write prepare ratio.
+      final double ratio;
+      final double rho;
+      synchronized (prepareMutex) {
+        long now = fixPrepareWindow();
+
+        // Use a weighted average of the accumulated prepare rates and the
+        // current prepare rates. The weight is PREPARE_ALPHA, adjusted by the
+        // age of the current window.
+        long windowAge = now - windowStartTime;
+        if (windowAge == 0) windowAge = 1;
+        double alpha = PREPARE_ALPHA * windowAge / PREPARE_WINDOW_LENGTH;
+        rho =
+            readPrepareRate * (1 - alpha) + alpha * numReadPrepares / windowAge;
+        double W =
+            writePrepareRate * (1 - alpha) + alpha * numWritePrepares
+                / windowAge;
+        ratio = rho / (W + Double.MIN_VALUE);
+      }
 
       long warrantyLength =
           Math.min((long) (2.0 * BASE_COMMIT_LATENCY * ratio),
               MAX_WARRANTY_LENGTH);
+
+      if (rho * warrantyLength * warrantyLength < RHO_L_SQUARED_THRESHOLD) {
+        return expiry;
+      }
 
       if (HOTOS_LOGGER.isLoggable(Level.FINE)) {
         if (key instanceof Number && ((Number) key).longValue() == 0) {
@@ -229,6 +242,10 @@ public class WarrantyIssuer<K> {
       }
 
       if (warrantyLength < MIN_WARRANTY_LENGTH) return expiry;
+
+      int count = suggestionCount.incrementAndGet();
+      if (count % 10000 == 0)
+        HOTOS_LOGGER.info("Warranties issued = " + count);
 
       return Math.max(expiry, System.currentTimeMillis() + warrantyLength);
     }
