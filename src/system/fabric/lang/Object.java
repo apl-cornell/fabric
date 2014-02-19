@@ -581,7 +581,10 @@ public interface Object {
      */
     @Override
     public boolean equals(Object o) {
-      return o.$getStore().equals($getStore()) && o.$getOnum() == $getOnum();
+      //ensure not a surrogate:
+      Object impl = o.fetch();
+      return impl.$getStore().equals($getStore())
+          && impl.$getOnum() == $getOnum();
     }
 
     /**
