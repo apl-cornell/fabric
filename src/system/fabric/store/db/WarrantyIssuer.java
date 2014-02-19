@@ -232,6 +232,13 @@ public class WarrantyIssuer<K> {
 
       return Math.max(expiry, System.currentTimeMillis() + warrantyLength);
     }
+
+    /**
+     * XXX gross hack for nsdi deadline
+     */
+    public void notifyWarrantedReads(int count) {
+      numReadPrepares += count;
+    }
   }
 
   /**
@@ -286,5 +293,12 @@ public class WarrantyIssuer<K> {
    */
   public long suggestWarranty(K key, long minExpiry) {
     return getEntry(key).suggestWarranty(minExpiry);
+  }
+
+  /**
+   * XXX gross hack for nsdi deadline
+   */
+  void notifyWarrantedReads(K key, int count) {
+    getEntry(key).notifyWarrantedReads(count);
   }
 }

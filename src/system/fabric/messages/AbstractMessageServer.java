@@ -16,6 +16,7 @@ import fabric.common.exceptions.InternalError;
 import fabric.common.net.RemoteIdentity;
 import fabric.common.net.SubServerSocket;
 import fabric.common.net.SubSocket;
+import fabric.common.util.LongKeyMap;
 import fabric.worker.remote.RemoteWorker;
 
 /**
@@ -36,6 +37,14 @@ public abstract class AbstractMessageServer implements Runnable, MessageHandler 
    * Creates and returns a SubServerSocket for listening to requests.
    */
   protected abstract SubServerSocket createServerSocket();
+
+  /**
+   * XXX gross hack for nsdi deadline
+   */
+  protected void updateReadCounts(LongKeyMap<Integer> warrantedReadCounts) {
+    // only valid on stores.
+    throw new InternalError();
+  }
 
   /**
    * The main execution body of a message processor node.
@@ -77,6 +86,9 @@ public abstract class AbstractMessageServer implements Runnable, MessageHandler 
 
                       while (true) {
                         Message<?, ?> message = Message.receive(in);
+                        if (message.warrantedReadCounts != null) {
+                          updateReadCounts(message.warrantedReadCounts);
+                        }
                         try {
                           Message.Response response =
                               message.dispatch(client,
