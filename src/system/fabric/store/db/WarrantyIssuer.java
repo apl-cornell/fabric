@@ -2,6 +2,7 @@ package fabric.store.db;
 
 import static fabric.common.Logging.HOTOS_LOGGER;
 
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 
 import fabric.common.Logging;
@@ -70,6 +71,17 @@ public class WarrantyIssuer<K> {
     long windowStartTime;
 
     /**
+     * The number of read prepares observed during the current time window.
+     */
+    int numReadPrepares;
+
+    /**
+     * The accumulated read-prepare rate, as measured before the start of the
+     * current window.
+     */
+    double readPrepareRate;
+
+    /**
      * The number of reads during the current time window.
      */
     int numReads;
@@ -99,7 +111,7 @@ public class WarrantyIssuer<K> {
     long readPrepareInterval;
 
     /**
-     * A mutex for manipulating the read- and write-rate metrics.
+     * A mutex for manipulating the read- and write-prepare/rate metrics.
      */
     final Object metricMutex;
 
@@ -109,10 +121,15 @@ public class WarrantyIssuer<K> {
       this.key = key;
 
       this.windowStartTime = now;
+
+      this.numReadPrepares = 0;
+      this.readPrepareRate = 0.0;
+
       this.numReads = 0;
       this.readRate = 0.0;
       this.numWrites = 0;
       this.writeRate = 0.0;
+
       this.metricMutex = new Object();
 
       this.lastReadPrepareTime = now;
@@ -126,6 +143,7 @@ public class WarrantyIssuer<K> {
       synchronized (metricMutex) {
         fixPrepareWindow();
         numReads++;
+        numReadPrepares++;
 
         long now = System.currentTimeMillis();
         readPrepareInterval = now - lastReadPrepareTime;
@@ -147,6 +165,10 @@ public class WarrantyIssuer<K> {
 
         // Need to start a new window.
         int numWindowsElapsed = (int) (timeElapsed / PREPARE_WINDOW_LENGTH);
+        readPrepareRate =
+            readPrepareRate * (1 - PREPARE_ALPHA)
+                + ((double) numReadPrepares / PREPARE_WINDOW_LENGTH)
+                * PREPARE_ALPHA;
         readRate =
             readRate * (1 - PREPARE_ALPHA)
                 + ((double) numReads / PREPARE_WINDOW_LENGTH) * PREPARE_ALPHA;
@@ -156,11 +178,13 @@ public class WarrantyIssuer<K> {
 
         // Account for possibility of more than one window having elapsed.
         for (int i = 1; i < numWindowsElapsed; i++) {
+          readPrepareRate *= 1 - PREPARE_ALPHA;
           readRate *= 1 - PREPARE_ALPHA;
           writeRate *= 1 - PREPARE_ALPHA;
         }
 
         windowStartTime += numWindowsElapsed * PREPARE_WINDOW_LENGTH;
+        numReadPrepares = 0;
         numReads = 0;
         numWrites = 0;
         return now;
@@ -197,7 +221,28 @@ public class WarrantyIssuer<K> {
         double alpha = PREPARE_ALPHA * windowAge / PREPARE_WINDOW_LENGTH;
         double R = readRate * (1 - alpha) + alpha * numReads / windowAge;
         double W = writeRate * (1 - alpha) + alpha * numWrites / windowAge;
-        return R / (W + Double.MIN_VALUE);
+
+        double result = R / (W + Double.MIN_VALUE);
+
+        int curCount = count.incrementAndGet();
+        if (curCount % 10000 == 0) {
+          double rho =
+              readPrepareRate * (1 - alpha) + alpha * numReadPrepares
+                  / windowAge;
+          double ratio = rho / (W + Double.MIN_VALUE);
+
+          HOTOS_LOGGER.info("warranty #" + curCount + ": 1. onum " + key);
+          HOTOS_LOGGER.info("warranty #" + curCount + ": 2. R = " + R);
+          HOTOS_LOGGER.info("warranty #" + curCount + ": 3. W = " + W);
+          HOTOS_LOGGER.info("warranty #" + curCount + ": 4. rho = " + rho);
+          HOTOS_LOGGER.info("warranty #" + curCount + ": 5. L (based on R) = "
+              + (long) Math.sqrt(TWO_P_N * result));
+          HOTOS_LOGGER.info("warranty #" + curCount
+              + ": 6. L (based on rho) = "
+              + (long) (2.0 * BASE_COMMIT_LATENCY * ratio));
+        }
+
+        return result;
       }
     }
 
@@ -244,6 +289,8 @@ public class WarrantyIssuer<K> {
       }
     }
   }
+
+  static final AtomicInteger count = new AtomicInteger(0);
 
   /**
    * Maps onums to <code>HistoryEntry</code>s.
