@@ -2,21 +2,13 @@ package fabric.store.db;
 
 import static fabric.common.Logging.STORE_DB_LOGGER;
 
-import java.util.Iterator;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 
 import fabric.common.Logging;
 import fabric.common.Warranty;
 import fabric.common.exceptions.InternalError;
-import fabric.common.util.ConcurrentHashSet;
-import fabric.common.util.ConcurrentLongKeyHashMap;
-import fabric.common.util.ConcurrentLongKeyMap;
-import fabric.common.util.ConcurrentSet;
-import fabric.common.util.LongKeyMap.Entry;
 
 /**
  * A table containing version warranties, keyed by onum, and supporting
@@ -31,22 +23,9 @@ public class WarrantyTable<K, V extends Warranty> {
 
   private final ConcurrentMap<K, V> table;
 
-  private final Collector collector;
-
-  /**
-   * Reverse mapping: maps version warranty expiry times (in buckets according
-   * to REVERSE_TABLE_BUCKET_SIZE) to corresponding onums.
-   */
-  private final ConcurrentLongKeyMap<ConcurrentSet<K>> reverseTable;
-  private final int REVERSE_TABLE_BUCKET_SIZE = 5000;
-
   WarrantyTable(V defaultWarranty) {
     this.defaultWarranty = defaultWarranty;
     table = new ConcurrentHashMap<K, V>();
-    reverseTable = new ConcurrentLongKeyHashMap<ConcurrentSet<K>>();
-
-    collector = new Collector();
-    collector.start();
   }
 
   final V get(K key) {
@@ -67,26 +46,6 @@ public class WarrantyTable<K, V extends Warranty> {
         "Adding warranty for {0}; expiry={1} (in {2} ms)", key, expiry, length);
 
     table.put(key, warranty);
-    addReverseEntry(key, warranty);
-  }
-
-  private final void addReverseEntry(K key, V warranty) {
-    long warrantyBucket = warranty.expiry();
-    warrantyBucket +=
-        REVERSE_TABLE_BUCKET_SIZE - warrantyBucket % REVERSE_TABLE_BUCKET_SIZE;
-
-    while (true) {
-      ConcurrentSet<K> set = new ConcurrentHashSet<>();
-      ConcurrentSet<K> existingSet =
-          reverseTable.putIfAbsent(warrantyBucket, set);
-      if (existingSet != null) set = existingSet;
-
-      set.add(key);
-      if (reverseTable.get(warrantyBucket) == set) break;
-    }
-
-    // Signal the collector thread that we have a new warranty.
-    collector.signalNewWarranty();
   }
 
   /**
@@ -118,8 +77,6 @@ public class WarrantyTable<K, V extends Warranty> {
       long length = expiry - System.currentTimeMillis();
       Logging.log(STORE_DB_LOGGER, Level.FINEST, "Extended warranty for {0}"
           + "; expiry={1} (in {2} ms)", key, expiry, length);
-
-      addReverseEntry(key, newWarranty);
     }
 
     return success;
@@ -130,68 +87,5 @@ public class WarrantyTable<K, V extends Warranty> {
    */
   void setDefaultWarranty(V warranty) {
     defaultWarranty = warranty;
-  }
-
-  /**
-   * GC thread for expired warranties.
-   */
-  private final class Collector extends Thread {
-    private final long MIN_WAIT_TIME = 1000;
-    private final AtomicBoolean haveNewWarranty;
-
-    public Collector() {
-      super("Warranty GC");
-      setDaemon(true);
-
-      this.haveNewWarranty = new AtomicBoolean(false);
-    }
-
-    private void signalNewWarranty() {
-      haveNewWarranty.set(true);
-    }
-
-    @Override
-    public void run() {
-      while (true) {
-        long now = System.currentTimeMillis();
-
-        long nextExpiryTime = Long.MAX_VALUE;
-        for (Iterator<Entry<ConcurrentSet<K>>> it =
-            reverseTable.entrySet().iterator(); it.hasNext();) {
-          Entry<ConcurrentSet<K>> entry = it.next();
-          long expiry = entry.getKey();
-
-          if (Warranty.isAfter(expiry, now, true)) {
-            // Warranty still valid. Update nextExpiryTime as necessary.
-            if (nextExpiryTime > expiry) nextExpiryTime = expiry;
-          } else {
-            // Warranty expired. Remove relevant entries from table.
-            it.remove();
-
-            Set<K> keys = entry.getValue();
-            for (K key : keys) {
-              Warranty warranty = table.get(key);
-              if (warranty == null || !warranty.expired(false)) continue;
-              table.remove(key, warranty);
-            }
-          }
-        }
-
-        // Wait until either the next warranty expires or we have more
-        // warranties.
-        long waitTime = nextExpiryTime - System.currentTimeMillis();
-        for (int timeWaited = 0; timeWaited < waitTime; timeWaited +=
-            MIN_WAIT_TIME) {
-          try {
-            Thread.sleep(MIN_WAIT_TIME);
-          } catch (InterruptedException e) {
-          }
-
-          if (haveNewWarranty.getAndSet(false)) {
-            break;
-          }
-        }
-      }
-    }
   }
 }
