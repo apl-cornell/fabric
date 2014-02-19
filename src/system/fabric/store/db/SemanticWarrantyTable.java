@@ -486,15 +486,15 @@ public class SemanticWarrantyTable {
         // Check what they think it is.
         if (!compareValue(oldValue)) {
           if (readPrepare) {
+            long newTime = issuer.suggestWarranty(call);
             try {
               writeLock();
+              warranty = new SemanticWarranty(newTime);
+              writeUnlock();
               // Call is being read, so make the warranty valid anyways.
-              long newTime = issuer.suggestWarranty(call);
               Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
                   "Extending warranty for call {0} by {1}ms", call, newTime
                       - System.currentTimeMillis());
-              warranty = new SemanticWarranty(newTime);
-              writeUnlock();
             } catch (UnableToLockException e) {
               // This means we shouldn't extend the warranty.  Ignore it.
             }
@@ -503,23 +503,21 @@ public class SemanticWarrantyTable {
         }
         // Update the warranty
         if (warranty.expiresBefore(commitTime, true)) {
+          long newTime = commitTime;
+          if (readPrepare) {
+            newTime = issuer.suggestWarranty(call, commitTime);
+          }
           try {
             writeLock();
-            if (readPrepare) {
-              long newTime = issuer.suggestWarranty(call, commitTime);
-              Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
-                  "Extending warranty for call {0} by {1}ms", call, newTime
-                      - System.currentTimeMillis());
-              warranty = new SemanticWarranty(newTime);
-            } else {
-              Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
-                  "Extending warranty for call {0} by {1}ms", call, commitTime
-                      - System.currentTimeMillis());
-              warranty = new SemanticWarranty(commitTime);
-            }
+            warranty = new SemanticWarranty(newTime);
             writeUnlock();
+            Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+                "Extending warranty for call {0} by {1}ms", call, newTime
+                    - System.currentTimeMillis());
           } catch (UnableToLockException e) {
             // There's a pending write.  Can't!
+            Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+                "DENIED EXTEND: COULD NOT LOCK STALE CALL {0}", call);
             return SemanticExtendStatus.DENIED;
           }
         }
@@ -532,29 +530,29 @@ public class SemanticWarrantyTable {
         // Update the warranty
         if (warranty.expiresBefore(commitTime, true)) {
           // Check that we won't be extending past the next write.
+          long newTime = commitTime;
+          if (readPrepare) {
+            newTime = issuer.suggestWarranty(call, commitTime);
+          }
           try {
             writeLock();
-            if (readPrepare) {
-              long newTime = issuer.suggestWarranty(call, commitTime);
-              Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
-                  "Extending warranty for call {0} by {1}ms", call, newTime
-                      - System.currentTimeMillis());
-              warranty = new SemanticWarranty(newTime);
-            } else {
-              Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
-                  "Extending warranty for call {0} by {1}", call, commitTime
-                      - System.currentTimeMillis());
-              warranty = new SemanticWarranty(commitTime);
-            }
+            warranty = new SemanticWarranty(newTime);
             writeUnlock();
+            Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+                "Extending warranty for call {0} by {1}", call, commitTime
+                    - System.currentTimeMillis());
           } catch (UnableToLockException e) {
             // There's a pending write.  Can't!
+            Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+                "DENIED EXTEND: COULD NOT LOCK VALID CALL {0}", call);
             return SemanticExtendStatus.DENIED;
           }
         }
         return SemanticExtendStatus.OK;
       case NOVALUE:
       default:
+        Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+            "DENIED EXTEND: CALL {0} HAS NO VALUE", call);
         return SemanticExtendStatus.DENIED;
       }
     }
@@ -567,14 +565,14 @@ public class SemanticWarrantyTable {
       switch (getStatus()) {
       case STALE:
         // Update the warranty if possible
+        long newTime = issuer.suggestWarranty(call);
         try {
           writeLock();
-          long newTime = issuer.suggestWarranty(call);
+          warranty = new SemanticWarranty(newTime);
+          writeUnlock();
           Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
               "Updating warranty for call {0} by {1}", call,
               newTime - System.currentTimeMillis());
-          warranty = new SemanticWarranty(newTime);
-          writeUnlock();
         } catch (UnableToLockException e) {
           // Can't update, do nothing.
         }
