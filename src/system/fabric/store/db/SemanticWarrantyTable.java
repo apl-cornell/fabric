@@ -162,7 +162,7 @@ public class SemanticWarrantyTable {
      */
     public CallStatus getStatus() {
       if (!hasValue) return CallStatus.NOVALUE;
-      if (warranty.expired(true)) return CallStatus.STALE;
+      if (issuer.get(call).expired(true)) return CallStatus.STALE;
       return CallStatus.VALID;
     }
 
@@ -240,14 +240,6 @@ public class SemanticWarrantyTable {
       }
     }
 
-    /**
-     * This call's warranty.
-     */
-    private SemanticWarranty warranty;
-
-    /**
-     * Get the call's warranty.
-     */
     public SemanticWarranty getWarranty() {
       switch (getStatus()) {
       case NOVALUE:
@@ -256,7 +248,7 @@ public class SemanticWarrantyTable {
       case VALID:
       case STALE:
       default:
-        return warranty;
+        return issuer.get(call);
       }
     }
 
@@ -389,7 +381,6 @@ public class SemanticWarrantyTable {
       try {
         this.call = call;
         this.value = null;
-        this.warranty = new SemanticWarranty(0);
         this.callers = new HashSet<CallInstance>();
         this.calls = new HashSet<CallInstance>();
         this.creates = new LongHashSet();
@@ -466,10 +457,12 @@ public class SemanticWarrantyTable {
             newWarranty = new SemanticWarranty(suggestedTime);
           }
 
-          // Schedule the update
-          scheduleUpdateAt(transactionID, req, newWarranty);
+          issuer.put(call, newWarranty);
 
-          return nextUpdateWarranty;
+          // Schedule the update
+          scheduleUpdateAt(transactionID, req);
+
+          return newWarranty;
         } catch (UnableToLockException e) {
           Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
               "Could not lock call {0} for write, no warranty created by {1}.",
@@ -497,7 +490,7 @@ public class SemanticWarrantyTable {
             long newTime = issuer.suggestWarranty(call);
             try {
               writeLock();
-              warranty = new SemanticWarranty(newTime);
+              issuer.put(call, new SemanticWarranty(newTime));
               writeUnlock();
               // Call is being read, so make the warranty valid anyways.
               Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
@@ -510,14 +503,14 @@ public class SemanticWarrantyTable {
           return SemanticExtendStatus.BAD_VERSION;
         }
         // Update the warranty
-        if (warranty.expiresBefore(commitTime, true)) {
+        if (getWarranty().expiresBefore(commitTime, true)) {
           long newTime = commitTime;
           if (readPrepare) {
             newTime = issuer.suggestWarranty(call, commitTime);
           }
           try {
             writeLock();
-            warranty = new SemanticWarranty(newTime);
+            issuer.put(call, new SemanticWarranty(newTime));
             writeUnlock();
             Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
                 "Extending warranty for call {0} by {1}ms", call, newTime
@@ -536,7 +529,7 @@ public class SemanticWarrantyTable {
           return SemanticExtendStatus.BAD_VERSION;
         }
         // Update the warranty
-        if (warranty.expiresBefore(commitTime, true)) {
+        if (getWarranty().expiresBefore(commitTime, true)) {
           // Check that we won't be extending past the next write.
           long newTime = commitTime;
           if (readPrepare) {
@@ -544,7 +537,7 @@ public class SemanticWarrantyTable {
           }
           try {
             writeLock();
-            warranty = new SemanticWarranty(newTime);
+            issuer.put(call, new SemanticWarranty(newTime));
             writeUnlock();
             Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
                 "Extending warranty for call {0} by {1}", call, commitTime
@@ -576,7 +569,7 @@ public class SemanticWarrantyTable {
         long newTime = issuer.suggestWarranty(call);
         try {
           writeLock();
-          warranty = new SemanticWarranty(newTime);
+          issuer.put(call, new SemanticWarranty(newTime));
           writeUnlock();
           Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
               "Updating warranty for call {0} by {1}", call,
@@ -858,13 +851,13 @@ public class SemanticWarrantyTable {
       case STALE:
       default:
         long longest =
-            longestSoFar > warranty.expiry() ? longestSoFar : warranty.expiry();
+            longestSoFar > getWarranty().expiry() ? longestSoFar : getWarranty().expiry();
         if (isAffectedBy(uncertainCalls, updates, changes, newCalls, creates,
             writes, longest)) {
-          if (warranty.expiry() > longestSoFar)
+          if (getWarranty().expiry() > longestSoFar)
             Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
                 "Call {0} extending commit time to {1}", call,
-                warranty.expiry());
+                getWarranty().expiry());
           for (CallInstance parent : new TreeSet<CallInstance>(getCallers())) {
             long parentTime =
                 getInfo(parent).proposeWriteTime(uncertainCalls, longest,
@@ -922,8 +915,8 @@ public class SemanticWarrantyTable {
         Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
             "Extending warranty for call {0} by {1} for write.", call, time
                 - System.currentTimeMillis());
-        warranty = new SemanticWarranty(time);
-        scheduleUpdateAt(transactionID, newRequest, new SemanticWarranty(0));
+        issuer.put(call, new SemanticWarranty(time));
+        scheduleUpdateAt(transactionID, newRequest);
         break;
       }
     }
@@ -936,19 +929,12 @@ public class SemanticWarrantyTable {
     private SemanticWarrantyRequest nextUpdate;
 
     /**
-     * Warranty to use for the next update.
-     *
-     * null if there isn't a known upcoming update.
-     */
-    private SemanticWarranty nextUpdateWarranty;
-
-    /**
      * Schedule update for the given commit.
      */
     //Currently checking for this before calling, but might be safer to check
     //here too.
     private void scheduleUpdateAt(long transactionID,
-        SemanticWarrantyRequest update, SemanticWarranty updateWarranty) {
+        SemanticWarrantyRequest update) {
       Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
           "Scheduling update on {0} by {1}", call,
           Long.toHexString(transactionID));
@@ -976,7 +962,6 @@ public class SemanticWarrantyTable {
 
         // Set the update
         nextUpdate = update;
-        nextUpdateWarranty = updateWarranty;
 
         // Add this call to the update map for the transaction
         updatingTIDMap.putIfAbsent(transactionID, Collections
@@ -1022,7 +1007,6 @@ public class SemanticWarrantyTable {
 
       // Remove the pending update
       nextUpdate = null;
-      nextUpdateWarranty = null;
     }
 
     /**
@@ -1096,15 +1080,11 @@ public class SemanticWarrantyTable {
         value = nextUpdate.value.$getProxy();
       }
 
-      // Set warranty
-      warranty = nextUpdateWarranty;
-
       // Mark as having a value now.
       hasValue = true;
 
       // Reset update to nothing.
       nextUpdate = null;
-      nextUpdateWarranty = null;
     }
   }
 
