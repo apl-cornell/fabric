@@ -282,7 +282,8 @@ class Store extends MessageToStoreHandler {
         List<String> msgs = new LinkedList<String>();
         if (error.messages != null) msgs.addAll(error.messages);
         if (e.messages != null) msgs.addAll(e.messages);
-        throw new TransactionPrepareFailedException(error.versionConflicts, e.callConflictUpdates, e.callConflicts, msgs);
+        throw new TransactionPrepareFailedException(error.versionConflicts,
+            e.callConflictUpdates, msgs);
       }
       throw e;
     }

@@ -398,7 +398,6 @@ public class TransactionManager {
         new HashMap<CallInstance, WarrantiedCallResult>();
       Map<CallInstance, WarrantiedCallResult> conflictWars =
         new HashMap<CallInstance, WarrantiedCallResult>();
-      Set<CallInstance> staleWars = new HashSet<CallInstance>();
       for (CallInstance call : calls.keySet()) {
         Pair<SemanticExtendStatus, WarrantiedCallResult> extResult =
           semanticWarranties.extendForReadPrepare(call, calls.get(call),
@@ -408,23 +407,18 @@ public class TransactionManager {
             updatedWars.put(call, extResult.second);
             break;
           case BAD_VERSION:
-            if (extResult.second == null) {
-              staleWars.addAll(semanticWarranties.getExpiredSubgraph(call));
-            } else {
-              conflictWars.put(call, extResult.second);
-            }
+            conflictWars.put(call, extResult.second);
             break;
           case DENIED:
-            staleWars.add(call);
-            throw new TransactionPrepareFailedException(conflictWars, staleWars,
+            throw new TransactionPrepareFailedException(conflictWars,
                 "Could not extend for " + call);
         }
       }
-      if (conflictWars.size() + staleWars.size() > 0) {
+      if (conflictWars.size() > 0) {
         SEMANTIC_WARRANTY_LOGGER.finest("Prepare Calls failed due to conflicting or stale call values!");
         long currentTime = System.currentTimeMillis();
         String msg = "Prepare Calls failed due to " + conflictWars.size()
-          + " conflicting and " + staleWars.size() + " stale call values:\n";
+          + " conflicting values:\n";
         msg += "Conflicting...\n";
         for (Map.Entry<CallInstance, WarrantiedCallResult> entry : conflictWars.entrySet()) {
           if (entry.getValue().getValue() instanceof WrappedJavaInlineable) {
@@ -437,11 +431,7 @@ public class TransactionManager {
               (entry.getValue().getWarranty().expiry() - currentTime) + ")\n";
           }
         }
-        msg += "Stale...\n";
-        for (CallInstance call : staleWars)
-          msg += "\t" + call + "\n";
-        throw new TransactionPrepareFailedException(conflictWars, staleWars,
-            msg);
+        throw new TransactionPrepareFailedException(conflictWars, msg);
       }
       SEMANTIC_WARRANTY_LOGGER.finest("Calls prepared!");
       return updatedWars;

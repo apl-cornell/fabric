@@ -635,12 +635,6 @@ public final class TransactionManager {
                 .entrySet())
               store.insertResult(callEntry.getKey(), callEntry.getValue());
           }
-
-          Set<CallInstance> callConflicts = entry.getValue().callConflicts;
-          if (callConflicts != null) {
-            for (CallInstance c : callConflicts)
-              store.removeResult(c);
-          }
         }
 
         if (WORKER_TRANSACTION_LOGGER.isLoggable(Level.FINE)) {
@@ -881,17 +875,6 @@ public final class TransactionManager {
               Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST, "\t{0}",
                   update.getKey());
               store.insertResult(update.getKey(), update.getValue());
-            }
-          }
-
-          Set<CallInstance> callConflicts = entry.getValue().callConflicts;
-          if (callConflicts != null) {
-            Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
-                "{0} expired calls", callConflicts.size());
-            for (CallInstance call : callConflicts) {
-              Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST, "\t{0}",
-                  call);
-              store.removeResult(call);
             }
           }
         }
