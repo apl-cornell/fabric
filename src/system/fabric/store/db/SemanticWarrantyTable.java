@@ -962,17 +962,13 @@ public class SemanticWarrantyTable {
         // Defend the reads
         for (LongIterator iter = update.readOnums.iterator(); iter.hasNext();) {
           long read = iter.next();
-          readersTable.putIfAbsent(read, Collections
-              .newSetFromMap(new ConcurrentHashMap<CallInstance, Boolean>()));
-          readersTable.get(read).add(call);
+          addReaderForOnum(read, call);
         }
 
         // Defend the creates
         for (LongIterator iter = update.createOnums.iterator(); iter.hasNext();) {
           long create = iter.next();
-          creatorTable.putIfAbsent(create, Collections
-              .newSetFromMap(new ConcurrentHashMap<CallInstance, Boolean>()));
-          creatorTable.get(create).add(call);
+          addCreatorForOnum(create, call);
         }
 
         // Defend the subcalls
@@ -1004,7 +1000,7 @@ public class SemanticWarrantyTable {
       for (LongIterator iter = nextUpdate.readOnums.iterator(); iter.hasNext();) {
         long read = iter.next();
         synchronized (reads) {
-          if (!reads.contains(read)) readersTable.get(read).remove(call);
+          if (!reads.contains(read)) removeReaderForOnum(read, call);
         }
       }
 
@@ -1013,7 +1009,7 @@ public class SemanticWarrantyTable {
           .hasNext();) {
         long create = iter.next();
         synchronized (creates) {
-          if (!creates.contains(create)) creatorTable.get(create).remove(call);
+          if (!creates.contains(create)) removeCreatorForOnum(create, call);
         }
       }
 
@@ -1045,7 +1041,7 @@ public class SemanticWarrantyTable {
         for (LongIterator iter = reads.iterator(); iter.hasNext();) {
           long read = iter.next();
           if (!nextUpdate.readOnums.contains(read))
-            readersTable.get(read).remove(call);
+            removeReaderForOnum(read, call);
         }
       }
 
@@ -1054,7 +1050,7 @@ public class SemanticWarrantyTable {
         for (LongIterator iter = creates.iterator(); iter.hasNext();) {
           long create = iter.next();
           if (!nextUpdate.createOnums.contains(create))
-            creatorTable.get(create).remove(call);
+            removeCreatorForOnum(create, call);
         }
       }
 
@@ -1153,6 +1149,68 @@ public class SemanticWarrantyTable {
     updatingTIDMap = new ConcurrentLongKeyHashMap<Set<CallInstance>>();
     this.database = database;
     this.database.setSemanticWarrantyTable(this);
+  }
+
+  private void addReaderForOnum(long onum, CallInstance reader) {
+    Set<CallInstance> blankSlate = Collections.newSetFromMap(
+          new ConcurrentHashMap<CallInstance, Boolean>());
+    blankSlate.add(reader);
+    Set<CallInstance> readerSet = readersTable.putIfAbsent(onum, blankSlate);
+    if (readerSet != null) {
+      synchronized (readerSet) {
+        readerSet.add(reader);
+      }
+    }
+  }
+
+  private void removeReaderForOnum(long onum, CallInstance reader) {
+    Set<CallInstance> readerSet = readersTable.get(onum);
+    if (readerSet != null) {
+      synchronized (readerSet) {
+        readerSet.remove(reader);
+        if (readerSet.size() == 0) {
+          readersTable.remove(onum, readerSet);
+        }
+      }
+    }
+  }
+
+  private Set<CallInstance> getReadersForOnum(long onum) {
+    Set<CallInstance> s = readersTable.get(onum);
+    // Make sure t
+    if (s != null) return Collections.unmodifiableSet(s);
+    return Collections.emptySet();
+  }
+
+  private void addCreatorForOnum(long onum, CallInstance creator) {
+    Set<CallInstance> blankSlate = Collections.newSetFromMap(
+          new ConcurrentHashMap<CallInstance, Boolean>());
+    blankSlate.add(creator);
+    Set<CallInstance> creatorSet = creatorTable.putIfAbsent(onum, blankSlate);
+    if (creatorSet != null) {
+      synchronized (creatorSet) {
+        creatorSet.add(creator);
+      }
+    }
+  }
+
+  private void removeCreatorForOnum(long onum, CallInstance creator) {
+    Set<CallInstance> creatorSet = creatorTable.get(onum);
+    if (creatorSet != null) {
+      synchronized (creatorSet) {
+        creatorSet.remove(creator);
+        if (creatorSet.size() == 0) {
+          creatorTable.remove(onum, creatorSet);
+        }
+      }
+    }
+  }
+
+  private Set<CallInstance> getCreatorsForOnum(long onum) {
+    Set<CallInstance> s = creatorTable.get(onum);
+    // Make sure t
+    if (s != null) return Collections.unmodifiableSet(s);
+    return Collections.emptySet();
   }
 
   /**
@@ -1257,12 +1315,12 @@ public class SemanticWarrantyTable {
     ObjectLookAsideMap createLookAside = new ObjectLookAsideMap();
     Store localStore = Worker.getWorker().getStore(database.getName());
     for (SerializedObject obj : writes) {
-      readersTable.putIfAbsent(obj.getOnum(), Collections
-          .newSetFromMap(new ConcurrentHashMap<CallInstance, Boolean>()));
-      affectedCalls.addAll(readersTable.get(obj.getOnum()));
-      creatorTable.putIfAbsent(obj.getOnum(), Collections
-          .newSetFromMap(new ConcurrentHashMap<CallInstance, Boolean>()));
-      affectedCalls.addAll(creatorTable.get(obj.getOnum()));
+      // Don't need to worry about the set changing, since the transaction being
+      // prepared has a write lock on this object.
+      affectedCalls.addAll(getReadersForOnum(obj.getOnum()));
+      // Don't need to worry about the set changing, since the transaction being
+      // prepared has a write lock on this object.
+      affectedCalls.addAll(getCreatorsForOnum(obj.getOnum()));
       writeLookAside.put(localStore, obj, new VersionWarranty(0));
     }
     for (SerializedObject obj : creates) {
