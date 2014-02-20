@@ -786,6 +786,18 @@ public abstract class ObjectDB {
   }
 
   /**
+   * Determines whether an onum has outstanding uncommitted changes.
+   * 
+   * @param onum
+   *          the object number in question
+   * @return true if the object has been changed by a transaction that hasn't
+   *         been committed or rolled back.
+   */
+  public final boolean isWrittenBy(long onum, Long tid) {
+    return tid.equals(writeLocks.get(onum));
+  }
+
+  /**
    * Adjusts writeLocks to account for the fact that the given transaction is
    * about to be committed or aborted.
    */

@@ -419,13 +419,11 @@ public class SemanticWarrantyTable {
           //Check that dependencies aren't planning to update in the near future
           for (LongIterator iter = req.readOnums.iterator(); iter.hasNext();) {
             long onum = iter.next();
-            if (database.isWritten(onum)) {
-              Logging
-                  .log(
-                      SEMANTIC_WARRANTY_LOGGER,
-                      Level.FINEST,
-                      "Request for call {0} by {2} depends on object {1} that has a write scheduled.",
-                      call, onum, Long.toHexString(transactionID));
+            if (database.isWritten(onum) &&
+                !database.isWrittenBy(onum, transactionID)) {
+              Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+                  "Request for call {0} by {2} depends on object {1} that has a write scheduled.",
+                  call, onum, Long.toHexString(transactionID));
               writeUnlock();
               //throw new TransactionPrepareFailedException("Request for call "
               //+ call + " depends on object " + onum
