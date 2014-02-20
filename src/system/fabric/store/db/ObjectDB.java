@@ -27,6 +27,7 @@ import fabric.common.util.ConcurrentLongKeyMap;
 import fabric.common.util.LongHashSet;
 import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.LongKeyMap.Entry;
 import fabric.common.util.LongSet;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
@@ -64,7 +65,6 @@ import fabric.worker.remote.RemoteWorker;
  */
 public abstract class ObjectDB {
   private static final int INITIAL_OBJECT_VERSION_NUMBER = 1;
-  private final WarrantyIssuer<Long> warrantyIssuer;
   // Needed to coordinate commits.
   protected SemanticWarrantyTable semanticWarranties;
 
@@ -221,7 +221,7 @@ public abstract class ObjectDB {
   /**
    * The table containing the version warranties that we've issued.
    */
-  protected final WarrantyTable<Long, VersionWarranty> versionWarrantyTable;
+  protected final WarrantyIssuer<Long, VersionWarranty> warrantyIssuer;
 
   /**
    * <p>
@@ -259,9 +259,8 @@ public abstract class ObjectDB {
         new ConcurrentLongKeyHashMap<OidKeyHashMap<LongSet>>();
     this.objectGrouper = new ObjectGrouper(this, privateKey);
     this.longestWarranty = new VersionWarranty[] { new VersionWarranty(0) };
-    this.versionWarrantyTable =
-        new WarrantyTable<Long, VersionWarranty>(new VersionWarranty(0));
-    this.warrantyIssuer = new WarrantyIssuer<Long>();
+    this.warrantyIssuer =
+        new WarrantyIssuer<Long, VersionWarranty>(new VersionWarranty(0));
   }
 
   /**
@@ -617,15 +616,7 @@ public abstract class ObjectDB {
    *       warranty will be returned.
    */
   public final VersionWarranty getWarranty(long onum) {
-    return versionWarrantyTable.get(onum);
-  }
-
-  /**
-   * Stores a version warranty for the object stored at the given onum.
-   */
-  protected final void putWarranty(long onum, VersionWarranty warranty) {
-    versionWarrantyTable.put(onum, warranty);
-    updateLongestWarranty(warranty);
+    return warrantyIssuer.get(onum);
   }
 
   private void updateLongestWarranty(VersionWarranty warranty) {
@@ -672,7 +663,7 @@ public abstract class ObjectDB {
     while (true) {
       // Get the object's current warranty and determine whether it needs to be
       // extended.
-      VersionWarranty curWarranty = versionWarrantyTable.get(onum);
+      VersionWarranty curWarranty = warrantyIssuer.get(onum);
       if (minExpiryStrict) {
         if (curWarranty.expiresAfterStrict(minExpiry))
           return new Pair<ExtendWarrantyStatus, VersionWarranty>(
@@ -696,8 +687,7 @@ public abstract class ObjectDB {
       }
       VersionWarranty newWarranty = new VersionWarranty(expiry);
       if (expiry > System.currentTimeMillis()) {
-        if (!versionWarrantyTable.extend(onum, curWarranty, newWarranty))
-          continue;
+        if (!warrantyIssuer.replace(onum, curWarranty, newWarranty)) continue;
 
         updateLongestWarranty(newWarranty);
       }
@@ -719,7 +709,7 @@ public abstract class ObjectDB {
         extendWarranty(onum, System.currentTimeMillis(), false, true, false);
     if (result == EXTEND_WARRANTY_DENIED) {
       return new Pair<ExtendWarrantyStatus, VersionWarranty>(
-          ExtendWarrantyStatus.OLD, versionWarrantyTable.get(onum));
+          ExtendWarrantyStatus.OLD, warrantyIssuer.get(onum));
     }
 
     return result;
@@ -904,4 +894,12 @@ public abstract class ObjectDB {
    */
   protected abstract void recoverState(TransactionManager tm);
 
+  /**
+   * XXX gross hack for nsdi deadline
+   */
+  public void updateReadCounts(LongKeyMap<Integer> warrantedReadCounts) {
+    for (Entry<Integer> entry : warrantedReadCounts.entrySet()) {
+      warrantyIssuer.notifyWarrantedReads(entry.getKey(), entry.getValue());
+    }
+  }
 }

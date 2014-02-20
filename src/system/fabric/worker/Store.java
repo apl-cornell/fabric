@@ -154,4 +154,9 @@ public interface Store extends Serializable {
    */
   public ObjectCache.Entry cache(Pair<SerializedObject, VersionWarranty> obj);
 
+  /**
+   * XXX gross hack for nsdi deadline
+   */
+  public void addWarrantedRead(long onum);
+
 }

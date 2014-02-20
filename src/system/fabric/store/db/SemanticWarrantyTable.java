@@ -1126,7 +1126,7 @@ public class SemanticWarrantyTable {
   /**
    * WarrantyIssuer for semantic warranties.
    */
-  private final WarrantyIssuer<CallInstance> issuer;
+  private final WarrantyIssuer<CallInstance, SemanticWarranty> issuer;
 
   /**
    * Table mapping from transactionIDs for pending transactions to sets of calls
@@ -1143,7 +1143,8 @@ public class SemanticWarrantyTable {
     infoTable = new ConcurrentHashMap<CallInstance, CallInfo>();
     readersTable = new ConcurrentLongKeyHashMap<Set<CallInstance>>();
     creatorTable = new ConcurrentLongKeyHashMap<Set<CallInstance>>();
-    issuer = new WarrantyIssuer<CallInstance>();
+    issuer = new WarrantyIssuer<CallInstance, SemanticWarranty>(
+        new SemanticWarranty(0));
     updatingTIDMap = new ConcurrentLongKeyHashMap<Set<CallInstance>>();
     this.database = database;
     this.database.setSemanticWarrantyTable(this);

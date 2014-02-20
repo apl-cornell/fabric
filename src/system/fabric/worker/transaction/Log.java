@@ -668,6 +668,9 @@ public final class Log {
         if (rme.getWarranty().expiresAfter(commitState.commitTime, true)
             && rme.getWarranty().expiresBefore(commitTime, true)) {
           submap.put(onum, rme.getVersionNumber());
+        } else {
+          // XXX gross hack for nsdi deadline
+          store.addWarrantedRead(onum);
         }
       }
 
@@ -1443,7 +1446,7 @@ public final class Log {
           "Scheduled commit for tid {0} to run at {1} (in {2} ms)", tid,
           new Date(commitTime), commitDelay);
     }
-    
+
     Threading.scheduleAt(commitTime, new Runnable() {
       @Override
       public void run() {
