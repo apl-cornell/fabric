@@ -13,7 +13,6 @@ import java.util.logging.Level;
 
 import fabric.common.Logging;
 import fabric.common.ONumConstants;
-import fabric.common.SemanticWarranty;
 import fabric.common.SerializedObject;
 import fabric.common.TransactionID;
 import fabric.common.VersionWarranty;
@@ -77,7 +76,7 @@ public final class LocalStore implements Store, Serializable {
 
   @Override
   public Pair<LongKeyMap<VersionWarranty>, java.util.Map<CallInstance,
-         SemanticWarranty>> prepareTransactionReads(long tid,
+         WarrantiedCallResult>> prepareTransactionReads(long tid,
              boolean readOnly, LongKeyMap<Integer> reads,
              java.util.Map<CallInstance, WarrantiedCallResult> calls, long
              commitTime) {
@@ -85,8 +84,8 @@ public final class LocalStore implements Store, Serializable {
     // (conflicts are impossible)
     WORKER_LOCAL_STORE_LOGGER.fine("Local transaction preparing reads");
     return new Pair<LongKeyMap<VersionWarranty>, java.util.Map<CallInstance,
-         SemanticWarranty>>(EMPTY_VERSION_WARRANTY_MAP, new
-             java.util.HashMap<CallInstance, SemanticWarranty>());
+         WarrantiedCallResult>>(EMPTY_VERSION_WARRANTY_MAP, new
+             java.util.HashMap<CallInstance, WarrantiedCallResult>());
   }
 
   private static final LongKeyMap<VersionWarranty> EMPTY_VERSION_WARRANTY_MAP =

@@ -272,8 +272,8 @@ class Store extends MessageToStoreHandler {
       error = e;
     }
 
-    Map<CallInstance, SemanticWarranty> newSemWarranties =
-      new HashMap<CallInstance, SemanticWarranty>();
+    Map<CallInstance, WarrantiedCallResult> newSemWarranties =
+      new HashMap<CallInstance, WarrantiedCallResult>();
     try {
       newSemWarranties.putAll(prepareTransactionCalls(client.principal, msg.tid,
             msg.calls, msg.commitTime));
@@ -437,7 +437,7 @@ class Store extends MessageToStoreHandler {
     return tm.prepareReads(client, tid, reads, commitTime);
   }
 
-  private Map<CallInstance, SemanticWarranty> prepareTransactionCalls(Principal
+  private Map<CallInstance, WarrantiedCallResult> prepareTransactionCalls(Principal
       p, long tid, Map<CallInstance, WarrantiedCallResult> calls, long
       commitTime) throws TransactionPrepareFailedException {
     return tm.prepareCalls(p, tid, calls, commitTime);

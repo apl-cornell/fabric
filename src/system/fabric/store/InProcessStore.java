@@ -126,13 +126,13 @@ public class InProcessStore extends RemoteStore {
   }
 
   @Override
-  public Pair<LongKeyMap<VersionWarranty>, Map<CallInstance, SemanticWarranty>> prepareTransactionReads(
+  public Pair<LongKeyMap<VersionWarranty>, Map<CallInstance, WarrantiedCallResult>> prepareTransactionReads(
       long tid, boolean readOnly, LongKeyMap<Integer> reads,
       Map<CallInstance, WarrantiedCallResult> calls, long commitTime) throws
   TransactionPrepareFailedException {
     LongKeyMap<VersionWarranty> updates =
         tm.prepareReads(localWorkerIdentity(), tid, reads, commitTime);
-    Map<CallInstance, SemanticWarranty> semUpdates =
+    Map<CallInstance, WarrantiedCallResult> semUpdates =
         tm.prepareCalls(Worker.getWorker().getPrincipal(), tid, calls,
             commitTime);
 
@@ -144,7 +144,7 @@ public class InProcessStore extends RemoteStore {
       // prepare phase.
     }
 
-    return new Pair<LongKeyMap<VersionWarranty>, Map<CallInstance, SemanticWarranty>>(
+    return new Pair<LongKeyMap<VersionWarranty>, Map<CallInstance, WarrantiedCallResult>>(
         updates, semUpdates);
   }
 

@@ -190,6 +190,9 @@ public class SemanticWarrantyTable {
      * Compare the current result with another value for read prepare.  Return
      * true if they agree, otherwise false.  Unlike the general compareValue,
      * this does "reference" (onum and version) equality.
+     *
+     * Use .equals() if the reference equality fails in case we're dealing with
+     * a surrogate or the value has changed due to a non-invalidating write...
      */
     public boolean compareValueForReadPrepare(fabric.lang.Object otherVal) {
       switch (getStatus()) {

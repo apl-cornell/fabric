@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import fabric.common.SemanticWarranty;
 import fabric.common.VersionWarranty;
 import fabric.common.net.RemoteIdentity;
 import fabric.common.util.LongKeyHashMap;
@@ -75,7 +74,7 @@ public class PrepareTransactionReadsMessage
 
   public static class Response implements Message.Response {
     public final LongKeyMap<VersionWarranty> newWarranties;
-    public final Map<CallInstance, SemanticWarranty> newSemWarranties;
+    public final Map<CallInstance, WarrantiedCallResult> newSemWarranties;
 
     public Response() {
       this.newWarranties = null;
@@ -83,7 +82,7 @@ public class PrepareTransactionReadsMessage
     }
 
     public Response(LongKeyMap<VersionWarranty> newWarranties,
-        Map<CallInstance, SemanticWarranty> newSemWarranties) {
+        Map<CallInstance, WarrantiedCallResult> newSemWarranties) {
       this.newWarranties = newWarranties;
       this.newSemWarranties = newSemWarranties;
     }
@@ -180,10 +179,10 @@ public class PrepareTransactionReadsMessage
       out.writeInt(0);
     } else {
       out.writeInt(r.newSemWarranties.size());
-      for (Map.Entry<CallInstance, SemanticWarranty> entry : r.newSemWarranties
-          .entrySet()) {
+      for (Map.Entry<CallInstance, WarrantiedCallResult> entry :
+          r.newSemWarranties.entrySet()) {
         entry.getKey().write(out);
-        out.writeLong(entry.getValue().expiry());
+        entry.getValue().write(out);
       }
     }
   }
@@ -198,11 +197,11 @@ public class PrepareTransactionReadsMessage
     }
 
     int semSize = in.readInt();
-    Map<CallInstance, SemanticWarranty> newSemWarranties =
-        new HashMap<CallInstance, SemanticWarranty>(semSize);
+    Map<CallInstance, WarrantiedCallResult> newSemWarranties =
+        new HashMap<CallInstance, WarrantiedCallResult>(semSize);
     for (int i = 0; i < semSize; i++) {
       CallInstance key = new CallInstance(in);
-      newSemWarranties.put(key, new SemanticWarranty(in.readLong()));
+      newSemWarranties.put(key, new WarrantiedCallResult(in));
     }
 
     return new Response(newWarranties, newSemWarranties);

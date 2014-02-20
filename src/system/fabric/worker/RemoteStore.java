@@ -150,7 +150,7 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
 
   @Override
   public Pair<LongKeyMap<VersionWarranty>, java.util.Map<CallInstance,
-         SemanticWarranty>> prepareTransactionReads(long tid,
+         WarrantiedCallResult>> prepareTransactionReads(long tid,
              boolean readOnly, LongKeyMap<Integer> reads,
              java.util.Map<CallInstance, WarrantiedCallResult> calls, long
              commitTime) throws TransactionPrepareFailedException,
@@ -160,7 +160,7 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
           new PrepareTransactionReadsMessage(tid, readOnly, reads, calls,
             commitTime));
     return new Pair<LongKeyMap<VersionWarranty>, java.util.Map<CallInstance,
-           SemanticWarranty>>(response.newWarranties,
+           WarrantiedCallResult>>(response.newWarranties,
                response.newSemWarranties);
   }
 

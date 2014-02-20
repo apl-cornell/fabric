@@ -51,7 +51,7 @@ public interface Store extends Serializable {
    * 
    * @return the set of new version warranties.
    */
-  Pair<LongKeyMap<VersionWarranty>, Map<CallInstance, SemanticWarranty>>
+  Pair<LongKeyMap<VersionWarranty>, Map<CallInstance, WarrantiedCallResult>>
     prepareTransactionReads(long tid, boolean readOnly, LongKeyMap<Integer>
         reads, Map<CallInstance, WarrantiedCallResult> calls, long commitTime)
     throws UnreachableNodeException, TransactionPrepareFailedException;

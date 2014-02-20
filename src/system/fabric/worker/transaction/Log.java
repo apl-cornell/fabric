@@ -771,23 +771,12 @@ public final class Log {
    * Update the warranties we needed to extend at the given store.
    */
   void updateSemanticWarranties(Store store,
-      Map<CallInstance, SemanticWarranty> newWarranties) {
-    for (Map.Entry<CallInstance, SemanticWarranty> entry : newWarranties
+      Map<CallInstance, WarrantiedCallResult> newWarranties) {
+    for (Map.Entry<CallInstance, WarrantiedCallResult> entry : newWarranties
         .entrySet()) {
       CallInstance call = entry.getKey();
-      SemanticWarranty warr = entry.getValue();
-      WarrantiedCallResult update = null;
-      if (semanticWarrantiesUsed.containsKey(call)) {
-        semanticWarrantiesUsed.get(call).setWarranty(warr);
-        update = semanticWarrantiesUsed.get(call);
-      } else if (callsInSubcalls.containsKey(call)) {
-        callsInSubcalls.get(call).setWarranty(warr);
-        update = callsInSubcalls.get(call);
-      } else {
-        throw new InternalError("Tried to update a semantic warranty that " +
-            "wasn't used in this transaction.");
-      }
-      store.insertResult(call, update);
+      WarrantiedCallResult value = entry.getValue();
+      store.insertResult(call, value);
     }
   }
 

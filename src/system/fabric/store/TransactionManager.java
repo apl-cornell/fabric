@@ -397,13 +397,14 @@ public class TransactionManager {
    *           If the transaction could not successfully extend the
    *           SemanticWarranty on any of the calls
    */
-  public Map<CallInstance, SemanticWarranty> prepareCalls(Principal worker, long
+  public Map<CallInstance, WarrantiedCallResult> prepareCalls(Principal worker, long
       tid, Map<CallInstance, WarrantiedCallResult> calls, long commitTime)
     throws TransactionPrepareFailedException {
     try {
-      Map<CallInstance, SemanticWarranty> updatedWars = new HashMap<CallInstance, SemanticWarranty>();
-      Map<CallInstance, WarrantiedCallResult> conflictWars = new
-        HashMap<CallInstance, WarrantiedCallResult>();
+      Map<CallInstance, WarrantiedCallResult> updatedWars =
+        new HashMap<CallInstance, WarrantiedCallResult>();
+      Map<CallInstance, WarrantiedCallResult> conflictWars =
+        new HashMap<CallInstance, WarrantiedCallResult>();
       Set<CallInstance> staleWars = new HashSet<CallInstance>();
       for (CallInstance call : calls.keySet()) {
         Pair<SemanticExtendStatus, WarrantiedCallResult> extResult =
@@ -411,7 +412,7 @@ public class TransactionManager {
               commitTime);
         switch (extResult.first) {
           case OK:
-            updatedWars.put(call, extResult.second.getWarranty());
+            updatedWars.put(call, extResult.second);
             break;
           case BAD_VERSION:
             if (extResult.second == null) {

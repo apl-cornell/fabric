@@ -787,7 +787,8 @@ public final class TransactionManager {
                           current.tid.topTid, store, reads.size(), calls.size());
                 }
 
-                Pair<LongKeyMap<VersionWarranty>, Map<CallInstance, SemanticWarranty>> allNewWarranties =
+                Pair<LongKeyMap<VersionWarranty>, Map<CallInstance,
+                  WarrantiedCallResult>> allNewWarranties =
                     store.prepareTransactionReads(current.tid.topTid, readOnly,
                         reads, calls, commitTime);
 
