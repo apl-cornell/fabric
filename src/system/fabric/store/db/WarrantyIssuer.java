@@ -110,11 +110,6 @@ public class WarrantyIssuer<K> {
      */
     long readPrepareInterval;
 
-    /**
-     * A mutex for manipulating the read- and write-prepare/rate metrics.
-     */
-    final Object metricMutex;
-
     public Entry(K key) {
       final long now = System.currentTimeMillis();
 
@@ -130,8 +125,6 @@ public class WarrantyIssuer<K> {
       this.numWrites = 0;
       this.writeRate = 0.0;
 
-      this.metricMutex = new Object();
-
       this.lastReadPrepareTime = now;
       this.readPrepareInterval = Long.MAX_VALUE;
     }
@@ -139,16 +132,14 @@ public class WarrantyIssuer<K> {
     /**
      * Notifies of a read-prepare event.
      */
-    void notifyReadPrepare(long commitTime) {
-      synchronized (metricMutex) {
-        fixPrepareWindow();
-        numReads++;
-        numReadPrepares++;
+    synchronized void notifyReadPrepare(long commitTime) {
+      fixPrepareWindow();
+      numReads++;
+      numReadPrepares++;
 
-        long now = System.currentTimeMillis();
-        readPrepareInterval = now - lastReadPrepareTime;
-        lastReadPrepareTime = now;
-      }
+      long now = System.currentTimeMillis();
+      readPrepareInterval = now - lastReadPrepareTime;
+      lastReadPrepareTime = now;
     }
 
     /**
@@ -156,39 +147,37 @@ public class WarrantyIssuer<K> {
      * 
      * @return the current time, in milliseconds since the epoch.
      */
-    long fixPrepareWindow() {
-      synchronized (metricMutex) {
-        final long now = System.currentTimeMillis();
+    synchronized long fixPrepareWindow() {
+      final long now = System.currentTimeMillis();
 
-        final long timeElapsed = now - windowStartTime;
-        if (timeElapsed < PREPARE_WINDOW_LENGTH) return now;
+      final long timeElapsed = now - windowStartTime;
+      if (timeElapsed < PREPARE_WINDOW_LENGTH) return now;
 
-        // Need to start a new window.
-        int numWindowsElapsed = (int) (timeElapsed / PREPARE_WINDOW_LENGTH);
-        readPrepareRate =
-            readPrepareRate * (1 - PREPARE_ALPHA)
-                + ((double) numReadPrepares / PREPARE_WINDOW_LENGTH)
-                * PREPARE_ALPHA;
-        readRate =
-            readRate * (1 - PREPARE_ALPHA)
-                + ((double) numReads / PREPARE_WINDOW_LENGTH) * PREPARE_ALPHA;
-        writeRate =
-            writeRate * (1 - PREPARE_ALPHA)
-                + ((double) numWrites / PREPARE_WINDOW_LENGTH) * PREPARE_ALPHA;
+      // Need to start a new window.
+      int numWindowsElapsed = (int) (timeElapsed / PREPARE_WINDOW_LENGTH);
+      readPrepareRate =
+          readPrepareRate * (1 - PREPARE_ALPHA)
+              + ((double) numReadPrepares / PREPARE_WINDOW_LENGTH)
+              * PREPARE_ALPHA;
+      readRate =
+          readRate * (1 - PREPARE_ALPHA)
+              + ((double) numReads / PREPARE_WINDOW_LENGTH) * PREPARE_ALPHA;
+      writeRate =
+          writeRate * (1 - PREPARE_ALPHA)
+              + ((double) numWrites / PREPARE_WINDOW_LENGTH) * PREPARE_ALPHA;
 
-        // Account for possibility of more than one window having elapsed.
-        for (int i = 1; i < numWindowsElapsed; i++) {
-          readPrepareRate *= 1 - PREPARE_ALPHA;
-          readRate *= 1 - PREPARE_ALPHA;
-          writeRate *= 1 - PREPARE_ALPHA;
-        }
-
-        windowStartTime += numWindowsElapsed * PREPARE_WINDOW_LENGTH;
-        numReadPrepares = 0;
-        numReads = 0;
-        numWrites = 0;
-        return now;
+      // Account for possibility of more than one window having elapsed.
+      for (int i = 1; i < numWindowsElapsed; i++) {
+        readPrepareRate *= 1 - PREPARE_ALPHA;
+        readRate *= 1 - PREPARE_ALPHA;
+        writeRate *= 1 - PREPARE_ALPHA;
       }
+
+      windowStartTime += numWindowsElapsed * PREPARE_WINDOW_LENGTH;
+      numReadPrepares = 0;
+      numReads = 0;
+      numWrites = 0;
+      return now;
     }
 
     /**
@@ -200,50 +189,44 @@ public class WarrantyIssuer<K> {
     /**
      * Notifies of a prepare event.
      */
-    void notifyWritePrepare() {
+    synchronized void notifyWritePrepare() {
       Logging.log(HOTOS_LOGGER, Level.FINER, "writing @{0}", key);
 
-      synchronized (metricMutex) {
-        fixPrepareWindow();
-        numWrites++;
-      }
+      fixPrepareWindow();
+      numWrites++;
     }
 
-    double getReadWriteRatio() {
-      synchronized (metricMutex) {
-        long now = fixPrepareWindow();
+    synchronized double getReadWriteRatio() {
+      long now = fixPrepareWindow();
 
-        // Use a weighted average of the accumulated prepare rates and the
-        // current prepare rates. The weight is PREPARE_ALPHA, adjusted by the
-        // age of the current window.
-        long windowAge = now - windowStartTime;
-        if (windowAge == 0) windowAge = 1;
-        double alpha = PREPARE_ALPHA * windowAge / PREPARE_WINDOW_LENGTH;
-        double R = readRate * (1 - alpha) + alpha * numReads / windowAge;
-        double W = writeRate * (1 - alpha) + alpha * numWrites / windowAge;
+      // Use a weighted average of the accumulated prepare rates and the
+      // current prepare rates. The weight is PREPARE_ALPHA, adjusted by the
+      // age of the current window.
+      long windowAge = now - windowStartTime;
+      if (windowAge == 0) windowAge = 1;
+      double alpha = PREPARE_ALPHA * windowAge / PREPARE_WINDOW_LENGTH;
+      double R = readRate * (1 - alpha) + alpha * numReads / windowAge;
+      double W = writeRate * (1 - alpha) + alpha * numWrites / windowAge;
 
-        double result = R / (W + Double.MIN_VALUE);
+      double result = R / (W + Double.MIN_VALUE);
 
-        int curCount = count.incrementAndGet();
-        if (curCount % 10000 == 0) {
-          double rho =
-              readPrepareRate * (1 - alpha) + alpha * numReadPrepares
-                  / windowAge;
-          double ratio = rho / (W + Double.MIN_VALUE);
+      int curCount = count.incrementAndGet();
+      if (curCount % 10000 == 0) {
+        double rho =
+            readPrepareRate * (1 - alpha) + alpha * numReadPrepares / windowAge;
+        double ratio = rho / (W + Double.MIN_VALUE);
 
-          HOTOS_LOGGER.info("warranty #" + curCount + ": 1. onum " + key);
-          HOTOS_LOGGER.info("warranty #" + curCount + ": 2. R = " + R);
-          HOTOS_LOGGER.info("warranty #" + curCount + ": 3. W = " + W);
-          HOTOS_LOGGER.info("warranty #" + curCount + ": 4. rho = " + rho);
-          HOTOS_LOGGER.info("warranty #" + curCount + ": 5. L (based on R) = "
-              + (long) Math.sqrt(TWO_P_N * result));
-          HOTOS_LOGGER.info("warranty #" + curCount
-              + ": 6. L (based on rho) = "
-              + (long) (2.0 * BASE_COMMIT_LATENCY * ratio));
-        }
-
-        return result;
+        HOTOS_LOGGER.info("warranty #" + curCount + ": 1. onum " + key);
+        HOTOS_LOGGER.info("warranty #" + curCount + ": 2. R = " + R);
+        HOTOS_LOGGER.info("warranty #" + curCount + ": 3. W = " + W);
+        HOTOS_LOGGER.info("warranty #" + curCount + ": 4. rho = " + rho);
+        HOTOS_LOGGER.info("warranty #" + curCount + ": 5. L (based on R) = "
+            + (long) Math.sqrt(TWO_P_N * result));
+        HOTOS_LOGGER.info("warranty #" + curCount + ": 6. L (based on rho) = "
+            + (long) (2.0 * BASE_COMMIT_LATENCY * ratio));
       }
+
+      return result;
     }
 
     /**
@@ -282,11 +265,9 @@ public class WarrantyIssuer<K> {
     /**
      * XXX gross hack for nsdi deadline
      */
-    public void notifyWarrantedReads(int count) {
-      synchronized (metricMutex) {
-        fixPrepareWindow();
-        numReads += count;
-      }
+    public synchronized void notifyWarrantedReads(int count) {
+      fixPrepareWindow();
+      numReads += count;
     }
   }
 
