@@ -31,7 +31,7 @@ public class WarrantyIssuer<K, V extends Warranty> {
   /**
    * The network delay, in milliseconds.
    */
-  private static final long NETWORK_LATENCY = 1;
+  private static final int NETWORK_LATENCY = 5;
 
   private static final long TWO_P_N = 2 * BASE_COMMIT_LATENCY * NETWORK_LATENCY;
 
@@ -55,12 +55,6 @@ public class WarrantyIssuer<K, V extends Warranty> {
   private static final double PREPARE_ALPHA = .466681;
 
   /**
-   * The length of the time window over which to calculate the rate of
-   * read and write prepares, in milliseconds.
-   */
-  private static final long PREPARE_WINDOW_LENGTH = (int) (.467751 * 100000);
-
-  /**
    * The popularity cutoff. If the interval between consecutive read prepares is
    * above this threshold, then no warranty will be issued for the object.
    */
@@ -76,7 +70,7 @@ public class WarrantyIssuer<K, V extends Warranty> {
 
   private class Entry {
     final K key;
-    V warrantyIssued;
+    volatile V warrantyIssued;
     SoftReference<Metrics> metrics;
 
     Entry(K key) {
@@ -91,13 +85,30 @@ public class WarrantyIssuer<K, V extends Warranty> {
 
     synchronized boolean replaceWarranty(V oldWarranty, V newWarranty) {
       boolean success = this.warrantyIssued.equals(oldWarranty);
-      if (success) this.warrantyIssued = newWarranty;
+      if (success) {
+        long now = System.currentTimeMillis();
+        if (!oldWarranty.expiresAfterStrict(now)) {
+          // Old warranty is expired, so this is the start of a new warranty
+          // period. Update the warranty start time.
+          Metrics metrics = getMetrics(false);
+          if (metrics != null) {
+            synchronized (metrics) {
+              metrics.foldWarrantyPeriod(now);
+              metrics.warrantyStartTime = now;
+              this.warrantyIssued = newWarranty;
+              return true;
+            }
+          }
+        }
+
+        this.warrantyIssued = newWarranty;
+      }
       return success;
     }
 
-    Metrics getMetrics() {
+    Metrics getMetrics(boolean createIfAbsent) {
       Metrics metrics = this.metrics.get();
-      if (metrics != null) return metrics;
+      if (metrics != null || !createIfAbsent) return metrics;
 
       synchronized (this) {
         metrics = this.metrics.get();
@@ -111,117 +122,139 @@ public class WarrantyIssuer<K, V extends Warranty> {
 
     private class Metrics {
       /**
-       * The start of the current time window over which the rate of read and
-       * write prepares is being calculated, in milliseconds since the epoch.
+       * The start of the current warranty period, in milliseconds since the
+       * epoch.
        */
-      long windowStartTime;
+      long warrantyStartTime;
 
       /**
-       * The number of read prepares observed during the current time window.
+       * The number of read prepares observed during the current warranty period.
        */
       int numReadPrepares;
 
       /**
-       * The accumulated read-prepare rate, as measured before the start of the
-       * current window.
+       * The time, in milliseconds since the epoch, of the last read prepare
+       * that occurred outside of a warranty period.
        */
-      double readPrepareRate;
-
-      /**
-       * The number of reads during the current time window.
-       */
-      int numReads;
-
-      /**
-       * The accumulated read rate, as measured before the start of the
-       * current window.
-       */
-      double readRate;
-
-      /**
-       * The number of writes during the current time window.
-       */
-      int numWrites;
-
-      /**
-       * The accumulated write rate, as measured before the start of the
-       * current window.
-       */
-      double writeRate;
-
       long lastReadPrepareTime;
 
       /**
-       * Interval between the last two read prepares.
+       * The moving average of (estimated) read intervals, in milliseconds.
        */
-      long readPrepareInterval;
+      int readInterval;
+
+      /**
+       * The time, in milliseconds since the epoch, of the last write prepare.
+       */
+      long lastWritePrepareTime;
+
+      /**
+       * The moving average of write-prepare intervals, in milliseconds.
+       */
+      int writeInterval;
+
+      long lastActualReadTime;
+      int actualReadInterval;
 
       public Metrics() {
         final long now = System.currentTimeMillis();
 
-        this.windowStartTime = now;
+        this.warrantyStartTime = now;
 
         this.numReadPrepares = 0;
-        this.readPrepareRate = 0.0;
-
-        this.numReads = 0;
-        this.readRate = 0.0;
-        this.numWrites = 0;
-        this.writeRate = 0.0;
-
         this.lastReadPrepareTime = now;
-        this.readPrepareInterval = Long.MAX_VALUE;
+        this.readInterval = Integer.MAX_VALUE;
+        this.lastWritePrepareTime = now;
+        this.writeInterval = Integer.MAX_VALUE;
+
+        this.lastActualReadTime = now;
+        this.actualReadInterval = Integer.MAX_VALUE;
+      }
+
+      /**
+       * If there have been no read prepares since the end of the last warranty
+       * period, then the reads counted during the warranty period is folded
+       * into readPrepareInterval, and the lastReadPrepareTime is set to the end
+       * of the warranty period. This method does nothing if the warranty period
+       * has not elapsed, if read prepares have been recorded since its end, or
+       * if no events occurred during the warranty period.
+       * 
+       * @param now the current time.
+       */
+      synchronized void foldWarrantyPeriod(long now) {
+        if (numReadPrepares == 0) return;
+
+        long warrantyExpiry = warrantyIssued.expiry();
+        if (warrantyExpiry > now) {
+          // In warranty.
+          return;
+        }
+
+        if (lastReadPrepareTime >= warrantyExpiry) {
+          // Events have occurred since warranty expiry.
+          return;
+        }
+
+        // Estimated average read interval during warranty period.
+        // XXX this seems like it will always be tiny
+        double curInterval = (double) NETWORK_LATENCY / numReadPrepares;
+
+        // Fold into readPrepareInterval.
+        if (readInterval == Integer.MAX_VALUE) {
+          readInterval = (int) curInterval;
+        } else {
+          readInterval =
+              (int) ((1.0 - PREPARE_ALPHA) * readInterval + PREPARE_ALPHA
+                  * curInterval);
+        }
+
+        // Finish up.
+        numReadPrepares = 0;
+        lastReadPrepareTime = warrantyExpiry;
       }
 
       /**
        * Notifies of a read-prepare event.
        */
-      synchronized void notifyReadPrepare(long commitTime) {
-        fixPrepareWindow();
-        numReads++;
-        numReadPrepares++;
-
+      synchronized void notifyReadPrepare() {
         long now = System.currentTimeMillis();
-        readPrepareInterval = now - lastReadPrepareTime;
-        lastReadPrepareTime = now;
-      }
+        long warrantyExpiry = warrantyIssued.expiry();
+        foldWarrantyPeriod(now);
 
-      /**
-       * Updates the time window over which the read-prepare rate is calculated.
-       * 
-       * @return the current time, in milliseconds since the epoch.
-       */
-      synchronized long fixPrepareWindow() {
-        final long now = System.currentTimeMillis();
+        {
+          int curInterval = (int) (now - lastActualReadTime);
+          lastActualReadTime = now;
 
-        final long timeElapsed = now - windowStartTime;
-        if (timeElapsed < PREPARE_WINDOW_LENGTH) return now;
-
-        // Need to start a new window.
-        int numWindowsElapsed = (int) (timeElapsed / PREPARE_WINDOW_LENGTH);
-        readPrepareRate =
-            readPrepareRate * (1 - PREPARE_ALPHA)
-                + ((double) numReadPrepares / PREPARE_WINDOW_LENGTH)
-                * PREPARE_ALPHA;
-        readRate =
-            readRate * (1 - PREPARE_ALPHA)
-                + ((double) numReads / PREPARE_WINDOW_LENGTH) * PREPARE_ALPHA;
-        writeRate =
-            writeRate * (1 - PREPARE_ALPHA)
-                + ((double) numWrites / PREPARE_WINDOW_LENGTH) * PREPARE_ALPHA;
-
-        // Account for possibility of more than one window having elapsed.
-        for (int i = 1; i < numWindowsElapsed; i++) {
-          readPrepareRate *= 1 - PREPARE_ALPHA;
-          readRate *= 1 - PREPARE_ALPHA;
-          writeRate *= 1 - PREPARE_ALPHA;
+          if (actualReadInterval == Integer.MAX_VALUE) {
+            actualReadInterval = curInterval;
+          } else {
+            actualReadInterval =
+                (int) ((1.0 - PREPARE_ALPHA) * actualReadInterval + PREPARE_ALPHA
+                    * curInterval);
+          }
         }
 
-        windowStartTime += numWindowsElapsed * PREPARE_WINDOW_LENGTH;
-        numReadPrepares = 0;
-        numReads = 0;
-        numWrites = 0;
-        return now;
+        if (now < warrantyExpiry) {
+          // Warranty still in term. To account for long periods of inactivity
+          // before the start of the warranty, the first event during the
+          // warranty period counts as occurring outside the warranty.
+          if (lastReadPrepareTime >= warrantyStartTime) {
+            numReadPrepares++;
+            return;
+          }
+        }
+
+        // Not during warranty term. Roll directly into moving average.
+        int curInterval = (int) (now - lastReadPrepareTime);
+        lastReadPrepareTime = now;
+
+        if (readInterval == Integer.MAX_VALUE) {
+          readInterval = curInterval;
+        } else {
+          readInterval =
+              (int) ((1.0 - PREPARE_ALPHA) * readInterval + PREPARE_ALPHA
+                  * curInterval);
+        }
       }
 
       /**
@@ -236,43 +269,17 @@ public class WarrantyIssuer<K, V extends Warranty> {
       synchronized void notifyWritePrepare() {
         Logging.log(HOTOS_LOGGER, Level.FINER, "writing @{0}", key);
 
-        fixPrepareWindow();
-        numWrites++;
-      }
+        long now = System.currentTimeMillis();
+        int curInterval = (int) (now - lastWritePrepareTime);
+        lastWritePrepareTime = now;
 
-      synchronized double getReadWriteRatio() {
-        long now = fixPrepareWindow();
-
-        // Use a weighted average of the accumulated prepare rates and the
-        // current prepare rates. The weight is PREPARE_ALPHA, adjusted by the
-        // age of the current window.
-        long windowAge = now - windowStartTime;
-        if (windowAge == 0) windowAge = 1;
-        double alpha = PREPARE_ALPHA * windowAge / PREPARE_WINDOW_LENGTH;
-        double R = readRate * (1 - alpha) + alpha * numReads / windowAge;
-        double W = writeRate * (1 - alpha) + alpha * numWrites / windowAge;
-
-        double result = R / (W + Double.MIN_VALUE);
-
-        int curCount = count.incrementAndGet();
-        if (curCount % 10000 == 0) {
-          double rho =
-              readPrepareRate * (1 - alpha) + alpha * numReadPrepares
-                  / windowAge;
-          double ratio = rho / (W + Double.MIN_VALUE);
-
-          HOTOS_LOGGER.info("warranty #" + curCount + ": 1. onum " + key);
-          HOTOS_LOGGER.info("warranty #" + curCount + ": 2. R = " + R);
-          HOTOS_LOGGER.info("warranty #" + curCount + ": 3. W = " + W);
-          HOTOS_LOGGER.info("warranty #" + curCount + ": 4. rho = " + rho);
-          HOTOS_LOGGER.info("warranty #" + curCount + ": 5. L (based on R) = "
-              + (long) Math.sqrt(TWO_P_N * result));
-          HOTOS_LOGGER.info("warranty #" + curCount
-              + ": 6. L (based on rho) = "
-              + (long) (2.0 * BASE_COMMIT_LATENCY * ratio));
+        if (writeInterval == Integer.MAX_VALUE) {
+          writeInterval = curInterval;
+        } else {
+          writeInterval =
+              (int) ((1.0 - PREPARE_ALPHA) * writeInterval + PREPARE_ALPHA
+                  * curInterval);
         }
-
-        return result;
       }
 
       /**
@@ -281,12 +288,61 @@ public class WarrantyIssuer<K, V extends Warranty> {
        * @return the time at which the warranty should expire.
        */
       long suggestWarranty(long expiry) {
-        if (readPrepareInterval > MAX_READ_PREP_INTERVAL) {
+        // Snapshot state to avoid locking for too long.
+        final long readInterval;
+        final long writeInterval;
+        final long actualReadInterval;
+        synchronized (this) {
+          writeInterval = this.writeInterval;
+          actualReadInterval = this.actualReadInterval;
+
+          // Fudge read interval in case it's been a while since the last read
+          // prepare. Incorporate a phantom event if its interval is greater
+          // than the current readInterval value. This event occurs now or, if
+          // we're in a warranty period, at the start of the warranty.
+          final long now = System.currentTimeMillis();
+          final long phantomEventTime;
+          if (warrantyIssued.expiresAfterStrict(now)) {
+            phantomEventTime = warrantyStartTime;
+          } else {
+            phantomEventTime = now;
+          }
+
+          final long phantomEventInterval = now - phantomEventTime;
+
+          if (this.readInterval == Integer.MAX_VALUE) {
+            readInterval = phantomEventInterval;
+          } else if (lastReadPrepareTime + this.readInterval < phantomEventTime) {
+            readInterval =
+                (long) ((1.0 - PREPARE_ALPHA) * this.readInterval + PREPARE_ALPHA
+                    * phantomEventInterval);
+          } else {
+            readInterval = this.readInterval;
+          }
+        }
+
+        if (readInterval > MAX_READ_PREP_INTERVAL) {
           // The object is too unpopular. Suggest the minimal expiry time.
           return expiry;
         }
 
-        double ratio = getReadWriteRatio();
+        double ratio = writeInterval / (readInterval + Double.MIN_VALUE);
+
+        int curCount = count.incrementAndGet();
+        if (curCount % 10000 == 0) {
+          HOTOS_LOGGER.info("warranty #" + curCount + ": 1. onum " + key);
+          HOTOS_LOGGER.info("warranty #" + curCount + ": 2. readInterval = "
+              + this.readInterval);
+          HOTOS_LOGGER.info("warranty #" + curCount
+              + ": 3. actualReadInterval = " + this.actualReadInterval);
+          HOTOS_LOGGER.info("warranty #" + curCount + ": 4. L (est) = "
+              + (long) Math.sqrt(TWO_P_N * ratio));
+          HOTOS_LOGGER.info("warranty #"
+              + curCount
+              + ": 5. L (act) = "
+              + (long) Math.sqrt(TWO_P_N * writeInterval
+                  / (actualReadInterval + Double.MIN_VALUE)));
+        }
 
         long warrantyLength =
             Math.min((long) Math.sqrt(TWO_P_N * ratio), MAX_WARRANTY_LENGTH);
@@ -297,7 +353,7 @@ public class WarrantyIssuer<K, V extends Warranty> {
                 "onum = {0}, warranty length = {1}", key, warrantyLength);
           }
 
-          if (writeRate > 0 || numWrites > 0) {
+          if (writeInterval != Integer.MAX_VALUE) {
             Logging.log(HOTOS_LOGGER, Level.FINE,
                 "onum = {0}, warranty length = {1}", key, warrantyLength);
           }
@@ -312,8 +368,17 @@ public class WarrantyIssuer<K, V extends Warranty> {
        * XXX gross hack for nsdi deadline
        */
       public synchronized void notifyWarrantedReads(int count) {
-        fixPrepareWindow();
-        numReads += count;
+        long now = System.currentTimeMillis();
+        double curInterval = (double) (now - lastActualReadTime) / count;
+        lastActualReadTime = now;
+
+        if (actualReadInterval == Integer.MAX_VALUE) {
+          actualReadInterval = (int) curInterval;
+        } else {
+          actualReadInterval =
+              (int) ((1.0 - PREPARE_ALPHA) * actualReadInterval + PREPARE_ALPHA
+                  * curInterval);
+        }
       }
     }
   }
@@ -334,7 +399,7 @@ public class WarrantyIssuer<K, V extends Warranty> {
   }
 
   private Entry.Metrics getMetrics(K key) {
-    return getEntry(key).getMetrics();
+    return getEntry(key).getMetrics(true);
   }
 
   /**
@@ -405,8 +470,8 @@ public class WarrantyIssuer<K, V extends Warranty> {
    * Notifies that a read has been prepared, signalling that perhaps the
    * warranties issued should be longer.
    */
-  public void notifyReadPrepare(K key, long commitTime) {
-    getMetrics(key).notifyReadPrepare(commitTime);
+  public void notifyReadPrepare(K key) {
+    getMetrics(key).notifyReadPrepare();
   }
 
   /**
@@ -437,7 +502,7 @@ public class WarrantyIssuer<K, V extends Warranty> {
    * Suggests a warranty-expiry time beyond the given expiry time.
    */
   public long suggestWarranty(K key, long minExpiry) {
-    return getEntry(key).getMetrics().suggestWarranty(minExpiry);
+    return getEntry(key).getMetrics(true).suggestWarranty(minExpiry);
   }
 
   /**
