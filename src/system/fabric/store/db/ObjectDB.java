@@ -329,7 +329,7 @@ public abstract class ObjectDB {
   public final Pair<ExtendWarrantyStatus, VersionWarranty> extendWarrantyForReadPrepare(
       Principal worker, long onum, int version, long commitTime)
       throws AccessException {
-    warrantyIssuer.notifyReadPrepare(onum, commitTime);
+    warrantyIssuer.notifyReadPrepare(onum);
     Pair<ExtendWarrantyStatus, VersionWarranty> newWarranty =
         extendWarranty(onum, commitTime, true, true, false);
 
