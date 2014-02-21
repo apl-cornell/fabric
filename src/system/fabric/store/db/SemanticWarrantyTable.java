@@ -1256,7 +1256,7 @@ public class SemanticWarrantyTable {
       CallInstance call, WarrantiedCallResult oldValue, long newTime) {
     Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINER,
         "Notifying read prepare on {0}", call);
-    issuer.notifyReadPrepare(call, newTime);
+    issuer.notifyReadPrepare(call);
     CallInfo info = getInfo(call);
     SemanticExtendStatus stat;
     try {
