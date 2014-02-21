@@ -103,8 +103,7 @@ public class SemanticWarrantyTable {
      */
     private final ReentrantLock lock = new ReentrantLock(true);
 
-    //private List<StackTraceElement[]> lastLockingStack =
-    //new ArrayList<StackTraceElement[]>();
+    private StackTraceElement[] lastLockingStack = null;
 
     public void lock() {
       lock.lock();
@@ -126,7 +125,7 @@ public class SemanticWarrantyTable {
       try {
         if (writeLocked) throw new UnableToLockException();
         writeLocked = true;
-        //lastLockingStack.add(Thread.currentThread().getStackTrace());
+        lastLockingStack = Thread.currentThread().getStackTrace();
       } finally {
         unlock();
       }
@@ -141,6 +140,7 @@ public class SemanticWarrantyTable {
         //lastLockingStack.remove(lastLockingStack.size() - 1);
         if (!writeLocked)
           throw new InternalError("Write unlock on an already unlocked call!");
+        lastLockingStack = null;
         writeLocked = false;
       } finally {
         unlock();
@@ -517,8 +517,10 @@ public class SemanticWarrantyTable {
                     - System.currentTimeMillis());
           } catch (UnableToLockException e) {
             // There's a pending write.  Can't!
-            Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
-                "DENIED EXTEND: COULD NOT LOCK STALE CALL {0}", call);
+            String msg = "DENIED EXTEND: COULD NOT LOCK STALE CALL " + call;
+            for (StackTraceElement ste : lastLockingStack)
+              msg += "\n\t" + ste;
+            SEMANTIC_WARRANTY_LOGGER.finest(msg);
             return SemanticExtendStatus.DENIED;
           }
         }
@@ -544,8 +546,10 @@ public class SemanticWarrantyTable {
                     - System.currentTimeMillis());
           } catch (UnableToLockException e) {
             // There's a pending write.  Can't!
-            Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
-                "DENIED EXTEND: COULD NOT LOCK VALID CALL {0}", call);
+            String msg = "DENIED EXTEND: COULD NOT LOCK STALE CALL " + call;
+            for (StackTraceElement ste : lastLockingStack)
+              msg += "\n\t" + ste;
+            SEMANTIC_WARRANTY_LOGGER.finest(msg);
             return SemanticExtendStatus.DENIED;
           }
         }
@@ -728,16 +732,14 @@ public class SemanticWarrantyTable {
 
     /**
      * Check if the call value is changed given a set of updates.  Returns true
-     * if either the call is verified to be changed by the updates or if the
-     * current time reaches the given deadline time (in which case, we assume
-     * the value changes).
+     * if either the call is verified to be changed by the updates.
      */
     private boolean isAffectedBy(Set<CallInstance> uncertainCalls,
         Map<CallInstance, SemanticWarrantyRequest> updates,
         Map<CallInstance, SemanticWarrantyRequest> changes,
         Map<CallInstance, SemanticWarrantyRequest> newCalls,
         ObjectLookAsideMap creates,
-        ObjectLookAsideMap writes, long deadline)
+        ObjectLookAsideMap writes)
         throws TransactionPrepareFailedException {
       try {
         switch (getStatus()) {
@@ -850,10 +852,10 @@ public class SemanticWarrantyTable {
       case VALID:
       case STALE:
       default:
-        long longest =
-            longestSoFar > getWarranty().expiry() ? longestSoFar : getWarranty().expiry();
         if (isAffectedBy(uncertainCalls, updates, changes, newCalls, creates,
-            writes, longest)) {
+            writes)) {
+          long longest = longestSoFar > getWarranty().expiry() ? longestSoFar :
+            getWarranty().expiry();
           if (getWarranty().expiry() > longestSoFar)
             Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
                 "Call {0} extending commit time to {1}", call,
