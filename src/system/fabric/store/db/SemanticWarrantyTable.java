@@ -518,8 +518,8 @@ public class SemanticWarrantyTable {
           } catch (UnableToLockException e) {
             // There's a pending write.  Can't!
             String msg = "DENIED EXTEND: COULD NOT LOCK STALE CALL " + call;
-            for (StackTraceElement ste : lastLockingStack)
-              msg += "\n\t" + ste;
+            //for (StackTraceElement ste : lastLockingStack)
+              //msg += "\n\t" + ste;
             SEMANTIC_WARRANTY_LOGGER.finest(msg);
             return SemanticExtendStatus.DENIED;
           }
@@ -547,8 +547,8 @@ public class SemanticWarrantyTable {
           } catch (UnableToLockException e) {
             // There's a pending write.  Can't!
             String msg = "DENIED EXTEND: COULD NOT LOCK STALE CALL " + call;
-            for (StackTraceElement ste : lastLockingStack)
-              msg += "\n\t" + ste;
+            //for (StackTraceElement ste : lastLockingStack)
+              //msg += "\n\t" + ste;
             SEMANTIC_WARRANTY_LOGGER.finest(msg);
             return SemanticExtendStatus.DENIED;
           }
@@ -1257,7 +1257,8 @@ public class SemanticWarrantyTable {
       stat = info.extendWarranty(oldValue.getValue(), newTime, true);
     } catch (Exception e) {
       Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.SEVERE,
-          "Issue read preparing {0}", call);
+          "Issue read preparing {0}: {1}", call, e);
+      e.printStackTrace();
       throw e;
     }
     WarrantiedCallResult res = get(call);

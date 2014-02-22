@@ -438,6 +438,7 @@ public final class Log {
     _Impl result = writeLookAsideMap.get(oid);
     if (result != null) {
       if (!lookAsideWritesRegistered.contains(oid)) {
+        SEMANTIC_WARRANTY_LOGGER.finest("BLAH BLAH BLAH BLAH");
         TransactionManager.getInstance().registerWrite(result);
         lookAsideWritesRegistered.add(oid);
       }
@@ -446,6 +447,7 @@ public final class Log {
     result = createLookAsideMap.get(oid);
     if (result != null) {
       if (!lookAsideCreatesRegistered.contains(oid)) {
+        SEMANTIC_WARRANTY_LOGGER.finest("BLAH BLAH BLAH BLAH");
         TransactionManager.getInstance().registerCreate(result);
         lookAsideCreatesRegistered.add(oid);
       }
@@ -1148,6 +1150,9 @@ public final class Log {
     for (LongKeyMap<ReadMap.Entry> submap : reads) {
       for (ReadMap.Entry entry : submap.values()) {
         if (entry.getStore().equals(targetStore)) {
+          Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINER,
+              "Semantic warranty request for {0} reads {1}",
+              semanticWarrantyCall, entry.getRef().onum);
           readsForTargetStore.put(entry.getStore(), entry.getRef().onum, entry);
         } else if (!entry.getStore().isLocalStore()) {
           Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINER,
@@ -1159,6 +1164,9 @@ public final class Log {
     }
     for (ReadMap.Entry entry : readsReadByParent) {
       if (entry.getStore().equals(targetStore)) {
+        Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINER,
+            "Semantic warranty request for {0} also reads {1}",
+            semanticWarrantyCall, entry.getRef().onum);
         readsForTargetStore.put(entry.getStore(), entry.getRef().onum, entry);
       } else if (!entry.getStore().isLocalStore()) {
         Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINER,
@@ -1173,6 +1181,9 @@ public final class Log {
     for (_Impl create : creates.values()) {
       if (create.$getStore().equals(targetStore)) {
         if (!lookAsideCreatesRegistered.contains(create.$getOnum())) {
+          Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINER,
+              "Semantic warranty request for {0} creates {1}",
+              semanticWarrantyCall, create.$getOnum());
           createsForTargetStore.put(create, create);
         }
       } else if (!create.$getStore().isLocalStore() &&
@@ -1223,8 +1234,10 @@ public final class Log {
         addReadDependency(onum);
         if (reads.containsKey(s, onum)) {
           readsInSubcalls.put(s, onum, reads.get(s, onum));
+          Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINER, "REMOVING READ: {0} FOR CALL {1}", onum, semanticWarrantyCall);
           reads.remove(s, onum);
         } else if (readsReadByParent.contains(read)) {
+          Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINER, "READ BY PARENT BEING PUT IN SUBCALLS: {0} FOR CALL {1}", onum, semanticWarrantyCall);
           readsInSubcalls.put(s, onum, read);
         }
       }
@@ -1237,6 +1250,7 @@ public final class Log {
       for (_Impl create : entry.getValue().values()) {
         addReadDependency(create.$getOnum());
         createsInSubcalls.put(create.$getOnum(), create);
+        Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINER, "REMOVING CREATE: {0} FOR CALL {1}", create.$getOnum(), semanticWarrantyCall);
         creates.remove(create.$getOnum());
       }
     }
@@ -1272,22 +1286,28 @@ public final class Log {
     createCurrentRequest();
 
     // Merge reads and transfer read locks.
-    for (LongKeyMap<ReadMap.Entry> submap :
-        SysUtil.chain(reads, readsInSubcalls)) {
+    for (LongKeyMap<ReadMap.Entry> submap : reads) {
       for (ReadMap.Entry entry : submap.values()) {
-          parent.transferReadLock(this, entry);
+        Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINER, "TRANSFERRING READ LOCK: {0}", entry.getRef().onum);
+        parent.transferReadLock(this, entry);
       }
     }
 
     for (ReadMap.Entry entry : readsReadByParent) {
+      Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINER, "RELEASING READ LOCK: {0}", entry.getRef().onum);
       entry.releaseLock(this);
     }
 
     // Pass up subcall reads
-    for (Store s : readsInSubcalls.storeSet())
-      for (LongKeyMap.Entry<ReadMap.Entry> entry : readsInSubcalls.get(s)
-          .entrySet())
+    for (Store s : readsInSubcalls.storeSet()) {
+      for (LongKeyMap.Entry<ReadMap.Entry> entry :
+          readsInSubcalls.get(s).entrySet()) {
+        ReadMap.Entry read = entry.getValue();
         parent.readsInSubcalls.put(s, entry.getKey(), entry.getValue());
+        read.addLock(parent);
+        read.releaseLock(this);
+      }
+    }
 
     // Merge writes and transfer write locks.
     List<_Impl> parentWrites = parent.writes;
