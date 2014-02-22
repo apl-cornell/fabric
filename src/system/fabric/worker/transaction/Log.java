@@ -1177,8 +1177,6 @@ public final class Log {
       if (create.$getStore().equals(targetStore)) {
         if (!lookAsideCreatesRegistered.contains(create.$getOnum())) {
           createsForTargetStore.put(create, create);
-        } else {
-          readsForTargetStore.put(targetStore, create.$getOnum(), create.$readMapEntry);
         }
       } else if (!create.$getStore().isLocalStore() &&
           !lookAsideCreatesRegistered.contains(create.$getOnum())) {
