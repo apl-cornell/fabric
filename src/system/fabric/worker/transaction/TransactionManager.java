@@ -574,8 +574,11 @@ public final class TransactionManager {
                 }
 
                 synchronized (callResults) {
-                  if (response.callResults != null)
+                  if (response.callResults != null) {
+                    Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+                        "Got {0} computation warranties", response.callResults.size());
                     callResults.putAll(response.callResults);
+                  }
                 }
               } catch (TransactionPrepareFailedException e) {
                 failures.put((RemoteNode<?>) store, e);

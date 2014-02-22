@@ -1143,13 +1143,6 @@ public final class Log {
               "Semantic warranty request for {0} aborted due to writes during the call!",
               semanticWarrantyCall);
           return;
-        } else if (store == targetStore) {
-          readsForTargetStore.put(store, write.$getOnum(), write.$readMapEntry);
-        } else {
-          Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINER,
-              "Semantic warranty request for {0} aborted due to more than one remote store read during the call!",
-              semanticWarrantyCall);
-          return;
         }
       }
     }
