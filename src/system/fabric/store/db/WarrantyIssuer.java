@@ -47,11 +47,18 @@ public class WarrantyIssuer<K, V extends Warranty> {
   private static final int MAX_WARRANTY_LENGTH = 5000;
 
   /**
-   * The decay rate for the exponential average when calculating the rate of
-   * read and write prepares. Lower values result in slower adaptation to
+   * The decay rate for the exponential average when calculating the period of
+   * read and write prepares. Higher values result in slower adaptation to
    * changes in the prepare rates.
    */
-  private static final double PREPARE_ALPHA = .1;
+  private static final double PREPARE_ALPHA = .9;
+
+  /**
+   * The half life for determining the alpha to use for combining the first
+   * prepare interval after a warranty period. The alpha value used is
+   * determined by 2^(-L/HALF_LIFE).
+   */
+  private static final double HALF_LIFE = 5000;
 
   /**
    * The popularity cutoff. If the interval between consecutive read prepares is
@@ -60,6 +67,8 @@ public class WarrantyIssuer<K, V extends Warranty> {
   private static final int MAX_READ_PREP_INTERVAL = 250;
 
   // END TUNING PARAMETERS ///////////////////////////////////////////////////
+
+  private static final double NEG_DECAY_CONSTANT = -Math.log(2) / HALF_LIFE;
 
   /**
    * The default warranty for keys that aren't yet in the table. All warranties
@@ -93,6 +102,7 @@ public class WarrantyIssuer<K, V extends Warranty> {
 
             metrics.lastReadPrepareTime = expiry;
             metrics.numReadPrepares = 0;
+            metrics.lastWarrantyLength = expiry - System.currentTimeMillis();
             this.warrantyIssued = newWarranty;
             return true;
           }
@@ -126,6 +136,11 @@ public class WarrantyIssuer<K, V extends Warranty> {
       long lastReadPrepareTime;
 
       /**
+       * The length of the last warranty issued.
+       */
+      long lastWarrantyLength;
+
+      /**
        * The moving average of (estimated) read intervals, in milliseconds.
        */
       int readInterval;
@@ -141,7 +156,7 @@ public class WarrantyIssuer<K, V extends Warranty> {
       int writeInterval;
 
       /**
-       * The number of read prepares occured since the last warranty period.
+       * The number of read prepares occurred since the last warranty period.
        */
       int numReadPrepares;
 
@@ -149,6 +164,7 @@ public class WarrantyIssuer<K, V extends Warranty> {
         final long now = System.currentTimeMillis();
 
         this.lastReadPrepareTime = now;
+        this.lastWarrantyLength = 0;
         this.readInterval = Integer.MAX_VALUE;
         this.lastWritePrepareTime = now;
         this.writeInterval = Integer.MAX_VALUE;
@@ -174,9 +190,15 @@ public class WarrantyIssuer<K, V extends Warranty> {
         if (readInterval == Integer.MAX_VALUE) {
           readInterval = curInterval;
         } else {
+          final double alpha;
+          if (numReadPrepares == 1) {
+            // First read prepare after a warranty period.
+            alpha = Math.exp(NEG_DECAY_CONSTANT * lastWarrantyLength);
+          } else {
+            alpha = PREPARE_ALPHA;
+          }
           readInterval =
-              (int) ((1.0 - PREPARE_ALPHA) * readInterval + PREPARE_ALPHA
-                  * curInterval);
+              (int) (alpha * readInterval + (1.0 - alpha) * curInterval);
         }
       }
 
@@ -200,7 +222,7 @@ public class WarrantyIssuer<K, V extends Warranty> {
           writeInterval = curInterval;
         } else {
           writeInterval =
-              (int) ((1.0 - PREPARE_ALPHA) * writeInterval + PREPARE_ALPHA
+              (int) (PREPARE_ALPHA * writeInterval + (1.0 - PREPARE_ALPHA)
                   * curInterval);
         }
       }
@@ -260,8 +282,11 @@ public class WarrantyIssuer<K, V extends Warranty> {
   }
 
   private Entry getEntry(K key) {
+    Entry existingEntry = table.get(key);
+    if (existingEntry != null) return existingEntry;
+
     Entry entry = new Entry(key);
-    Entry existingEntry = table.putIfAbsent(key, entry);
+    existingEntry = table.putIfAbsent(key, entry);
     return existingEntry == null ? entry : existingEntry;
   }
 
