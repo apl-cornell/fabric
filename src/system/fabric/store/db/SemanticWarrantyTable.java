@@ -1298,10 +1298,18 @@ public class SemanticWarrantyTable {
     for (SerializedObject obj : writes) {
       // Don't need to worry about the set changing, since the transaction being
       // prepared has a write lock on this object.
-      affectedCalls.addAll(getReadersForOnum(obj.getOnum()));
+      for (CallInstance call : getReadersForOnum(obj.getOnum())) {
+        affectedCalls.add(call);
+        Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+            "Write on {0} affects {1}", obj.getOnum(), call);
+      }
       // Don't need to worry about the set changing, since the transaction being
       // prepared has a write lock on this object.
-      affectedCalls.addAll(getCreatorsForOnum(obj.getOnum()));
+      for (CallInstance call : getCreatorsForOnum(obj.getOnum())) {
+        affectedCalls.add(call);
+        Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+            "Write on {0} affects {1}", obj.getOnum(), call);
+      }
       writeLookAside.put(localStore, obj, new VersionWarranty(0));
     }
     for (SerializedObject obj : creates) {
