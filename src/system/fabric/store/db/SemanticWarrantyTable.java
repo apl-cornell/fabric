@@ -669,24 +669,18 @@ public class SemanticWarrantyTable {
       current.setWriteLookAsideMap(writes);
       current.setCreateLookAsideMap(creates);
 
+      // Load up state from previously checked calls
       for (SemanticWarrantyRequest req : SysUtil.chain(
           SysUtil.chain(updates.values(), changes.values()), newCalls.values())) {
         for (LongKeyMap<_Impl> submap : req.creates) {
           for (_Impl c : submap.values()) {
-            //Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
-            //"Loading up create {0} from {1} for check of {2}", c.$getOnum(),
-            //req.call, call);
             tm.registerCreate(c);
           }
         }
       }
 
       // Rerun the call.
-      //Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
-      //"BEGINNING RECOMPUTATION OF {0}", call);
       call.runCall();
-      //Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
-      //"DONE RECOMPUTING CALL {0}", call);
 
       Map<CallInstance, SemanticWarrantyRequest> newUpdates =
           new HashMap<CallInstance, SemanticWarrantyRequest>();
@@ -828,8 +822,6 @@ public class SemanticWarrantyTable {
       try {
         if (!writeLocked.contains(call)) {
           writeLock();
-          //Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
-          //"Write locked {0} to propose a write time.", call);
           writeLocked.add(call);
         } else {
           Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,

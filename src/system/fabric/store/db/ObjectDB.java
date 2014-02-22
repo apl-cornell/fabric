@@ -27,7 +27,6 @@ import fabric.common.util.ConcurrentLongKeyMap;
 import fabric.common.util.LongHashSet;
 import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyMap;
-import fabric.common.util.LongKeyMap.Entry;
 import fabric.common.util.LongSet;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
@@ -893,13 +892,4 @@ public abstract class ObjectDB {
    * Recovers the object database's in-memory state from stable storage.
    */
   protected abstract void recoverState(TransactionManager tm);
-
-  /**
-   * XXX gross hack for nsdi deadline
-   */
-  public void updateReadCounts(LongKeyMap<Integer> warrantedReadCounts) {
-    for (Entry<Integer> entry : warrantedReadCounts.entrySet()) {
-      warrantyIssuer.notifyWarrantedReads(entry.getKey(), entry.getValue());
-    }
-  }
 }

@@ -35,8 +35,6 @@ import fabric.common.exceptions.RuntimeFetchException;
 import fabric.common.net.SubSocketFactory;
 import fabric.common.util.ConcurrentLongKeyHashMap;
 import fabric.common.util.ConcurrentLongKeyMap;
-import fabric.common.util.LongIterator;
-import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.Pair;
 import fabric.dissemination.ObjectGlob;
@@ -135,27 +133,7 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
   protected <R extends Response, E extends FabricException> R send(
       SubSocketFactory<RemoteStore> subSocketFactory, Message<R, E> message)
       throws E {
-    // XXX gross hack for nsdi deadline
-    message.warrantedReadCounts = getWarrantedReadCounts();
     return super.send(subSocketFactory, message);
-  }
-
-  /**
-   * XXX gross hack for nsdi deadline
-   */
-  private LongKeyMap<Integer> getWarrantedReadCounts() {
-    LongKeyMap<Integer> result = new LongKeyHashMap<>();
-    for (LongIterator it = warrantedReadCounts.keySet().iterator(); it
-        .hasNext();) {
-      long onum = it.next();
-      Integer count = warrantedReadCounts.remove(onum);
-
-      if (count == null) continue;
-      result.put(onum, count);
-    }
-
-    if (result.size() == 0) return null;
-    return result;
   }
 
   @Override
@@ -167,21 +145,6 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
         throw new FabricRuntimeException(e);
       }
       return fresh_ids.poll();
-    }
-  }
-
-  /**
-   * XXX gross hack for nsdi deadline
-   */
-  public final ConcurrentLongKeyMap<Integer> warrantedReadCounts =
-      new ConcurrentLongKeyHashMap<Integer>();
-
-  @Override
-  public void addWarrantedRead(long onum) {
-    while (true) {
-      Integer existing = warrantedReadCounts.putIfAbsent(onum, 1);
-      if (existing == null) return;
-      if (warrantedReadCounts.replace(onum, existing, existing + 1)) return;
     }
   }
 

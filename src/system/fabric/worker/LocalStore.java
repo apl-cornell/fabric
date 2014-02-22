@@ -117,10 +117,6 @@ public final class LocalStore implements Store, Serializable {
     return readImplNoDissem(onum).$cacheEntry;
   }
 
-  @Override
-  public void addWarrantedRead(long onum) {
-  }
-
   private _Impl readImplNoDissem(long onum) {
     if (!ONumConstants.isGlobalConstant(onum))
       throw new InternalError("Not supported.");

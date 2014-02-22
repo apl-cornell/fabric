@@ -22,9 +22,6 @@ import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.ProtocolError;
 import fabric.common.net.SubSocket;
 import fabric.common.net.RemoteIdentity;
-import fabric.common.util.LongKeyHashMap;
-import fabric.common.util.LongKeyMap;
-import fabric.common.util.LongKeyMap.Entry;
 import fabric.lang.Object._Proxy;
 import fabric.worker.Store;
 import fabric.worker.Worker;
@@ -67,11 +64,6 @@ import fabric.worker.remote.RemoteWorker;
  */
 public abstract class Message<R extends Message.Response, E extends FabricException> {
 
-  /**
-   * XXX gross hack for nsdi deadline
-   */
-  public LongKeyMap<Integer> warrantedReadCounts;
-
   // ////////////////////////////////////////////////////////////////////////////
   // public API //
   // ////////////////////////////////////////////////////////////////////////////
@@ -95,15 +87,6 @@ public abstract class Message<R extends Message.Response, E extends FabricExcept
 
     // Write this message out.
     out.writeByte(messageType.ordinal());
-    if (warrantedReadCounts == null) {
-      out.writeInt(0);
-    } else {
-      out.writeInt(warrantedReadCounts.size());
-      for (Entry<Integer> entry : warrantedReadCounts.entrySet()) {
-        out.writeLong(entry.getKey());
-        out.writeInt(entry.getValue());
-      }
-    }
     writeMessage(out);
     out.flush();
 
@@ -159,9 +142,7 @@ public abstract class Message<R extends Message.Response, E extends FabricExcept
     Message<?, ?> m = null;
     try {
       MessageType messageType = MessageType.values()[in.readByte()];
-      LongKeyMap<Integer> warrantedReadCounts = getWarrantedReadCounts(in);
       m = messageType.parse(in);
-      m.warrantedReadCounts = warrantedReadCounts;
 
       Logging.log(NETWORK_MESSAGE_RECEIVE_LOGGER, Level.FINE, "Received {0}",
           messageType);
@@ -354,21 +335,6 @@ public abstract class Message<R extends Message.Response, E extends FabricExcept
   protected Message(MessageType messageType, Class<E> exceptionClass) {
     this.messageType = messageType;
     this.exceptionClass = exceptionClass;
-  }
-
-  /**
-   * XXX gross nsdi hack
-   */
-  protected static LongKeyMap<Integer> getWarrantedReadCounts(DataInput in)
-      throws IOException {
-    int size = in.readInt();
-    if (size == 0) return null;
-
-    LongKeyMap<Integer> result = new LongKeyHashMap<>(size);
-    for (int i = 0; i < size; i++) {
-      result.put(in.readLong(), in.readInt());
-    }
-    return result;
   }
 
   /**

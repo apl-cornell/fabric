@@ -6,7 +6,6 @@ import static fabric.common.Logging.STORE_DB_LOGGER;
 import java.lang.ref.SoftReference;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 
 import fabric.common.Logging;
@@ -146,9 +145,6 @@ public class WarrantyIssuer<K, V extends Warranty> {
        */
       int numReadPrepares;
 
-      long lastActualReadTime;
-      int actualReadInterval;
-
       public Metrics() {
         final long now = System.currentTimeMillis();
 
@@ -157,9 +153,6 @@ public class WarrantyIssuer<K, V extends Warranty> {
         this.lastWritePrepareTime = now;
         this.writeInterval = Integer.MAX_VALUE;
         this.numReadPrepares = 0;
-
-        this.lastActualReadTime = now;
-        this.actualReadInterval = Integer.MAX_VALUE;
       }
 
       /**
@@ -167,19 +160,6 @@ public class WarrantyIssuer<K, V extends Warranty> {
        */
       synchronized void notifyReadPrepare() {
         long now = System.currentTimeMillis();
-
-        {
-          int curInterval = (int) (now - lastActualReadTime);
-          lastActualReadTime = now;
-
-          if (actualReadInterval == Integer.MAX_VALUE) {
-            actualReadInterval = curInterval;
-          } else {
-            actualReadInterval =
-                (int) ((1.0 - PREPARE_ALPHA) * actualReadInterval + PREPARE_ALPHA
-                    * curInterval);
-          }
-        }
 
         if (lastReadPrepareTime > now) {
           // Warranty still in term. Do nothing.
@@ -234,14 +214,12 @@ public class WarrantyIssuer<K, V extends Warranty> {
         // Snapshot state to avoid locking for too long.
         final long readInterval;
         final long writeInterval;
-        final long actualReadInterval;
         synchronized (this) {
           // Only continue if we have enough samples since the last warranty
           // period.
           if (numReadPrepares < 10) return expiry;
 
           writeInterval = this.writeInterval;
-          actualReadInterval = this.actualReadInterval;
           readInterval = this.readInterval;
         }
 
@@ -251,19 +229,6 @@ public class WarrantyIssuer<K, V extends Warranty> {
         }
 
         double ratio = writeInterval / (readInterval + 1.0);
-
-        int curCount = count.incrementAndGet();
-        if (curCount % 10000 == 0) {
-          // onum, readInterval, actualReadInterval, writeInterval, L estimated,
-          // L actual
-          long lEst = (long) Math.sqrt(TWO_P_N * ratio);
-          long lAct =
-              (long) Math.sqrt(TWO_P_N * writeInterval
-                  / (actualReadInterval + Double.MIN_VALUE));
-          HOTOS_LOGGER.info("warranty #" + curCount + ": " + key + ","
-              + readInterval + "," + actualReadInterval + "," + writeInterval
-              + "," + lEst + "," + lAct);
-        }
 
         long warrantyLength =
             Math.min((long) Math.sqrt(TWO_P_N * ratio), MAX_WARRANTY_LENGTH);
@@ -284,27 +249,8 @@ public class WarrantyIssuer<K, V extends Warranty> {
 
         return Math.max(expiry, System.currentTimeMillis() + warrantyLength);
       }
-
-      /**
-       * XXX gross hack for nsdi deadline
-       */
-      public synchronized void notifyWarrantedReads(int count) {
-        long now = System.currentTimeMillis();
-        double curInterval = (double) (now - lastActualReadTime) / count;
-        lastActualReadTime = now;
-
-        if (actualReadInterval == Integer.MAX_VALUE) {
-          actualReadInterval = (int) curInterval;
-        } else {
-          actualReadInterval =
-              (int) ((1.0 - PREPARE_ALPHA) * actualReadInterval + PREPARE_ALPHA
-                  * curInterval);
-        }
-      }
     }
   }
-
-  static final AtomicInteger count = new AtomicInteger(0);
 
   private final ConcurrentMap<K, Entry> table;
 
@@ -424,12 +370,5 @@ public class WarrantyIssuer<K, V extends Warranty> {
    */
   public long suggestWarranty(K key, long minExpiry) {
     return getEntry(key).getMetrics(true).suggestWarranty(minExpiry);
-  }
-
-  /**
-   * XXX gross hack for nsdi deadline
-   */
-  void notifyWarrantedReads(K key, int count) {
-    getMetrics(key).notifyWarrantedReads(count);
   }
 }
