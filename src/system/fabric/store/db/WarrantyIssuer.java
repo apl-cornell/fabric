@@ -66,6 +66,12 @@ public class WarrantyIssuer<K, V extends Warranty> {
    */
   private static final int MAX_READ_PREP_INTERVAL = 250;
 
+  /**
+   * The number of samples to take after a warranty period before issuing
+   * another warranty.
+   */
+  private static final int SAMPLE_SIZE = 10;
+
   // END TUNING PARAMETERS ///////////////////////////////////////////////////
 
   private static final double NEG_DECAY_CONSTANT = -Math.log(2) / HALF_LIFE;
@@ -239,7 +245,7 @@ public class WarrantyIssuer<K, V extends Warranty> {
         synchronized (this) {
           // Only continue if we have enough samples since the last warranty
           // period.
-          if (numReadPrepares < 10) return expiry;
+          if (numReadPrepares < SAMPLE_SIZE) return expiry;
 
           writeInterval = this.writeInterval;
           readInterval = this.readInterval;
