@@ -237,11 +237,11 @@ class Store extends MessageToStoreHandler {
     Map<CallInstance, SemanticWarranty> replies =
       prepareTransactionRequests(client.principal, msg.tid, msg.requests);
 
-    Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
-        "Returning {0} request replies", replies.size());
-
     long commitTime = prepareTransactionWrites(client, msg.tid,
         msg.serializedCreates, msg.serializedWrites);
+
+    Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+        "Returning {0} request replies", replies.size());
 
     PrepareWritesResult writeResult = new PrepareWritesResult(commitTime, replies);
     PrepareTransactionWritesMessage.Response res =

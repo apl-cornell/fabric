@@ -829,8 +829,12 @@ public class SemanticWarrantyTable {
               call);
         }
       } catch (UnableToLockException e) {
+        String msg = "Could not write lock dependent call {0}";
+        if (lastLockingStack != null)
+          for (StackTraceElement ste : lastLockingStack)
+            msg += "\n\t" + ste;
         Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
-            "Could not write lock dependent call {0}", call);
+            msg, call);
         throw new TransactionPrepareFailedException("Could not write "
             + "lock dependent call " + call);
       }
@@ -1292,16 +1296,23 @@ public class SemanticWarrantyTable {
       // Don't need to worry about the set changing, since the transaction being
       // prepared has a write lock on this object.
       for (CallInstance call : getReadersForOnum(obj.getOnum())) {
-        affectedCalls.add(call);
-        Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
-            "Write on {0} affects {1}", obj.getOnum(), call);
+        // Don't check calls we're requesting...
+        if (!updatingTIDMap.containsKey(transactionID) ||
+            !updatingTIDMap.get(transactionID).contains(call)) {
+          affectedCalls.add(call);
+          Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+              "Write on {0} affects {1}", obj.getOnum(), call);
+        }
       }
       // Don't need to worry about the set changing, since the transaction being
       // prepared has a write lock on this object.
       for (CallInstance call : getCreatorsForOnum(obj.getOnum())) {
-        affectedCalls.add(call);
-        Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
-            "Write on {0} affects {1}", obj.getOnum(), call);
+        if (!updatingTIDMap.containsKey(transactionID) ||
+            !updatingTIDMap.get(transactionID).contains(call)) {
+          affectedCalls.add(call);
+          Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+              "Write on {0} affects {1}", obj.getOnum(), call);
+        }
       }
       writeLookAside.put(localStore, obj, new VersionWarranty(0));
     }
@@ -1323,7 +1334,12 @@ public class SemanticWarrantyTable {
     try {
       Set<CallInstance> uncertainCalls = new TreeSet<CallInstance>();
       for (CallInstance call : affectedCalls) {
-        uncertainCalls.addAll(getInfo(call).getAffectedSet());
+        for (CallInstance uncertain : getInfo(call).getAffectedSet()) {
+          if (!updatingTIDMap.containsKey(transactionID) ||
+              !updatingTIDMap.get(transactionID).contains(uncertain)) {
+            uncertainCalls.add(uncertain);
+          }
+        }
       }
 
       // Propose a time and check what will change.
