@@ -124,11 +124,6 @@ class Store extends MessageToStoreHandler {
     return socketFactory.createServerSocket();
   }
 
-  @Override
-  protected void updateReadCounts(LongKeyMap<Integer> warrantedReadCounts) {
-    os.updateReadCounts(warrantedReadCounts);
-  }
-
   public void shutdown() {
     try {
       os.close();

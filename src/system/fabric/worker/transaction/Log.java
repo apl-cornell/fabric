@@ -310,9 +310,6 @@ public final class Log {
         if (rme.getWarranty().expiresAfter(commitState.commitTime, true)
             && rme.getWarranty().expiresBefore(commitTime, true)) {
           submap.put(onum, rme.getVersionNumber());
-        } else {
-          // XXX gross hack for nsdi deadline
-          store.addWarrantedRead(onum);
         }
       }
 
