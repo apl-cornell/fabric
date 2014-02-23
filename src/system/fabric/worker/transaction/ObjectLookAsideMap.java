@@ -2,8 +2,7 @@ package fabric.worker.transaction;
 
 import fabric.common.SerializedObject;
 import fabric.common.VersionWarranty;
-import fabric.common.util.LongKeyMap;
-import fabric.common.util.LongKeyHashMap;
+import fabric.common.util.OidKeyHashMap;
 import fabric.lang.Object._Impl;
 import fabric.worker.Store;
 
@@ -39,27 +38,28 @@ public class ObjectLookAsideMap {
         deserialized = serialized.deserialize(store, warranty);
         isDeserialized = true;
       }
+      deserialized.$isLookAside = true;
       return deserialized;
     }
   }
 
-  private LongKeyMap<Entry> entryMap;
+  private OidKeyHashMap<Entry> entryMap;
 
   public ObjectLookAsideMap() {
-    entryMap = new LongKeyHashMap<Entry>();
+    entryMap = new OidKeyHashMap<Entry>();
   }
 
-  public _Impl get(long oid) {
-    Entry result = entryMap.get(oid);
+  public _Impl get(Store s, long onum) {
+    Entry result = entryMap.get(s, onum);
     if (result != null) return result.getObject();
     return null;
   }
 
   public void put(Store store, SerializedObject obj, VersionWarranty war) {
-    entryMap.put(obj.getOnum(), new Entry(store, obj, war));
+    entryMap.put(store, obj.getOnum(), new Entry(store, obj, war));
   }
 
   public void put(_Impl obj) {
-    entryMap.put(obj.$getOnum(), new Entry(obj));
+    entryMap.put(obj.$getStore(), obj.$getOnum(), new Entry(obj));
   }
 }

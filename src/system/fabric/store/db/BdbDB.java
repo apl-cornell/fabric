@@ -289,6 +289,7 @@ public class BdbDB extends ObjectDB {
                       new FSSerializer<SerializedObject>();
                   for (Pair<SerializedObject, UpdateType> update : pending.modData) {
                     SerializedObject o = update.first;
+                    o.setVersion(o.getVersion() + 1);
                     long onum = o.getOnum();
                     STORE_DB_LOGGER.log(Level.FINEST,
                         "Bdb committing onum {0}", onum);

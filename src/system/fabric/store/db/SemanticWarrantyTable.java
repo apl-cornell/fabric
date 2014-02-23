@@ -410,11 +410,14 @@ public class SemanticWarrantyTable {
           //Check that dependencies aren't planning to update in the near future
           for (LongIterator iter = req.readOnums.iterator(); iter.hasNext();) {
             long onum = iter.next();
-            if (database.isWritten(onum) &&
-                !database.isWrittenBy(onum, transactionID)) {
-              Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
-                  "Request for call {0} by {2} depends on object {1} that has a write scheduled.",
-                  call, onum, Long.toHexString(transactionID));
+            if (database.isWritten(onum)
+                && !database.isWrittenBy(onum, transactionID)) {
+              Logging
+                  .log(
+                      SEMANTIC_WARRANTY_LOGGER,
+                      Level.FINEST,
+                      "Request for call {0} by {2} depends on object {1} that has a write scheduled.",
+                      call, onum, Long.toHexString(transactionID));
               writeUnlock();
               //throw new TransactionPrepareFailedException("Request for call "
               //+ call + " depends on object " + onum
@@ -480,6 +483,9 @@ public class SemanticWarrantyTable {
     // TODO: Should probably have a better way to differentiate between an
     // actual write operation going on and just having two different
     // transactions extending out the warranty.
+    //
+    // TODO: Handle issue of extendingWarrantys on calls read during a
+    // transaction that also plans to update it...?
     public SemanticExtendStatus extendWarranty(fabric.lang.Object oldValue,
         long commitTime, boolean readPrepare) {
       switch (getStatus()) {
@@ -503,7 +509,7 @@ public class SemanticWarrantyTable {
           return SemanticExtendStatus.BAD_VERSION;
         }
         // Update the warranty
-        if (getWarranty().expiresBefore(commitTime, true)) {
+        if (getWarranty().expiresBefore(commitTime, false)) {
           long newTime = commitTime;
           if (readPrepare) {
             newTime = issuer.suggestWarranty(call, commitTime);
@@ -519,7 +525,7 @@ public class SemanticWarrantyTable {
             // There's a pending write.  Can't!
             String msg = "DENIED EXTEND: COULD NOT LOCK STALE CALL " + call;
             //for (StackTraceElement ste : lastLockingStack)
-              //msg += "\n\t" + ste;
+            //msg += "\n\t" + ste;
             SEMANTIC_WARRANTY_LOGGER.finest(msg);
             return SemanticExtendStatus.DENIED;
           }
@@ -531,7 +537,7 @@ public class SemanticWarrantyTable {
           return SemanticExtendStatus.BAD_VERSION;
         }
         // Update the warranty
-        if (getWarranty().expiresBefore(commitTime, true)) {
+        if (getWarranty().expiresBefore(commitTime, false)) {
           // Check that we won't be extending past the next write.
           long newTime = commitTime;
           if (readPrepare) {
@@ -548,7 +554,7 @@ public class SemanticWarrantyTable {
             // There's a pending write.  Can't!
             String msg = "DENIED EXTEND: COULD NOT LOCK STALE CALL " + call;
             //for (StackTraceElement ste : lastLockingStack)
-              //msg += "\n\t" + ste;
+            //msg += "\n\t" + ste;
             SEMANTIC_WARRANTY_LOGGER.finest(msg);
             return SemanticExtendStatus.DENIED;
           }
@@ -626,7 +632,8 @@ public class SemanticWarrantyTable {
         Worker.runInTopLevelTransaction(new Code<Void>() {
           @Override
           public Void run() {
-            checkCall(uncertainCalls, updates, changes, newCalls, creates, writes);
+            checkCall(uncertainCalls, updates, changes, newCalls, creates,
+                writes);
             return null;
           }
         }, true);
@@ -666,8 +673,7 @@ public class SemanticWarrantyTable {
       current.addRequests(newCalls);
 
       // Load up state from writes and creates
-      current.setWriteLookAsideMap(writes);
-      current.setCreateLookAsideMap(creates);
+      current.setLookAsideMaps(writes, creates);
 
       // Load up state from previously checked calls
       for (SemanticWarrantyRequest req : SysUtil.chain(
@@ -732,8 +738,7 @@ public class SemanticWarrantyTable {
         Map<CallInstance, SemanticWarrantyRequest> updates,
         Map<CallInstance, SemanticWarrantyRequest> changes,
         Map<CallInstance, SemanticWarrantyRequest> newCalls,
-        ObjectLookAsideMap creates,
-        ObjectLookAsideMap writes)
+        ObjectLookAsideMap creates, ObjectLookAsideMap writes)
         throws TransactionPrepareFailedException {
       try {
         switch (getStatus()) {
@@ -816,9 +821,8 @@ public class SemanticWarrantyTable {
         long longestSoFar, Map<CallInstance, SemanticWarrantyRequest> updates,
         Map<CallInstance, SemanticWarrantyRequest> changes,
         Map<CallInstance, SemanticWarrantyRequest> newCalls,
-        ObjectLookAsideMap creates,
-        ObjectLookAsideMap writes, Set<CallInstance> writeLocked)
-        throws TransactionPrepareFailedException {
+        ObjectLookAsideMap creates, ObjectLookAsideMap writes,
+        Set<CallInstance> writeLocked) throws TransactionPrepareFailedException {
       try {
         if (!writeLocked.contains(call)) {
           writeLock();
@@ -833,8 +837,7 @@ public class SemanticWarrantyTable {
         if (lastLockingStack != null)
           for (StackTraceElement ste : lastLockingStack)
             msg += "\n\t" + ste;
-        Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
-            msg, call);
+        Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST, msg, call);
         throw new TransactionPrepareFailedException("Could not write "
             + "lock dependent call " + call);
       }
@@ -850,12 +853,13 @@ public class SemanticWarrantyTable {
       default:
         if (isAffectedBy(uncertainCalls, updates, changes, newCalls, creates,
             writes)) {
-          long longest = longestSoFar > getWarranty().expiry() ? longestSoFar :
-            getWarranty().expiry();
+          long longest =
+              longestSoFar > getWarranty().expiry() ? longestSoFar
+                  : getWarranty().expiry();
           if (getWarranty().expiry() > longestSoFar)
             Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
-                "Call {0} extending commit time to {1}", call,
-                getWarranty().expiry());
+                "Call {0} extending commit time to {1}", call, getWarranty()
+                    .expiry());
           for (CallInstance parent : new TreeSet<CallInstance>(getCallers())) {
             long parentTime =
                 getInfo(parent).proposeWriteTime(uncertainCalls, longest,
@@ -1121,16 +1125,18 @@ public class SemanticWarrantyTable {
     infoTable = new ConcurrentHashMap<CallInstance, CallInfo>();
     readersTable = new ConcurrentLongKeyHashMap<Set<CallInstance>>();
     creatorTable = new ConcurrentLongKeyHashMap<Set<CallInstance>>();
-    issuer = new WarrantyIssuer<CallInstance, SemanticWarranty>(
-        new SemanticWarranty(0));
+    issuer =
+        new WarrantyIssuer<CallInstance, SemanticWarranty>(
+            new SemanticWarranty(0));
     updatingTIDMap = new ConcurrentLongKeyHashMap<Set<CallInstance>>();
     this.database = database;
     this.database.setSemanticWarrantyTable(this);
   }
 
   private void addReaderForOnum(long onum, CallInstance reader) {
-    Set<CallInstance> blankSlate = Collections.newSetFromMap(
-          new ConcurrentHashMap<CallInstance, Boolean>());
+    Set<CallInstance> blankSlate =
+        Collections
+            .newSetFromMap(new ConcurrentHashMap<CallInstance, Boolean>());
     blankSlate.add(reader);
     Set<CallInstance> readerSet = readersTable.putIfAbsent(onum, blankSlate);
     if (readerSet != null) {
@@ -1160,8 +1166,9 @@ public class SemanticWarrantyTable {
   }
 
   private void addCreatorForOnum(long onum, CallInstance creator) {
-    Set<CallInstance> blankSlate = Collections.newSetFromMap(
-          new ConcurrentHashMap<CallInstance, Boolean>());
+    Set<CallInstance> blankSlate =
+        Collections
+            .newSetFromMap(new ConcurrentHashMap<CallInstance, Boolean>());
     blankSlate.add(creator);
     Set<CallInstance> creatorSet = creatorTable.putIfAbsent(onum, blankSlate);
     if (creatorSet != null) {
@@ -1297,8 +1304,8 @@ public class SemanticWarrantyTable {
       // prepared has a write lock on this object.
       for (CallInstance call : getReadersForOnum(obj.getOnum())) {
         // Don't check calls we're requesting...
-        if (!updatingTIDMap.containsKey(transactionID) ||
-            !updatingTIDMap.get(transactionID).contains(call)) {
+        if (!updatingTIDMap.containsKey(transactionID)
+            || !updatingTIDMap.get(transactionID).contains(call)) {
           affectedCalls.add(call);
           Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
               "Write on {0} affects {1}", obj.getOnum(), call);
@@ -1307,8 +1314,8 @@ public class SemanticWarrantyTable {
       // Don't need to worry about the set changing, since the transaction being
       // prepared has a write lock on this object.
       for (CallInstance call : getCreatorsForOnum(obj.getOnum())) {
-        if (!updatingTIDMap.containsKey(transactionID) ||
-            !updatingTIDMap.get(transactionID).contains(call)) {
+        if (!updatingTIDMap.containsKey(transactionID)
+            || !updatingTIDMap.get(transactionID).contains(call)) {
           affectedCalls.add(call);
           Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
               "Write on {0} affects {1}", obj.getOnum(), call);
@@ -1335,8 +1342,8 @@ public class SemanticWarrantyTable {
       Set<CallInstance> uncertainCalls = new TreeSet<CallInstance>();
       for (CallInstance call : affectedCalls) {
         for (CallInstance uncertain : getInfo(call).getAffectedSet()) {
-          if (!updatingTIDMap.containsKey(transactionID) ||
-              !updatingTIDMap.get(transactionID).contains(uncertain)) {
+          if (!updatingTIDMap.containsKey(transactionID)
+              || !updatingTIDMap.get(transactionID).contains(uncertain)) {
             uncertainCalls.add(uncertain);
           }
         }
@@ -1346,7 +1353,8 @@ public class SemanticWarrantyTable {
       for (CallInstance call : affectedCalls) {
         long suggestedTime =
             getInfo(call).proposeWriteTime(uncertainCalls, longest, updates,
-                changes, newCalls, createLookAside, writeLookAside, writeLockedCalls);
+                changes, newCalls, createLookAside, writeLookAside,
+                writeLockedCalls);
         longest = longest > suggestedTime ? longest : suggestedTime;
       }
 

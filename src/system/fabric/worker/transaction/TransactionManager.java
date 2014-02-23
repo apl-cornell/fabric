@@ -1354,7 +1354,7 @@ public final class TransactionManager {
     }
 
     /* Invalidate semantic warranty requests of parent log. */
-    current.invalidateDependentRequests(obj.$getOnum());
+    current.invalidateDependentRequests(obj.$getStore(), obj.$getOnum());
 
     if (obj.$reader != current) {
       // Clear the read stamp -- the reader's read condition no longer holds.

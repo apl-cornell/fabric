@@ -153,7 +153,7 @@ public interface Object {
       while (true) {
         _Impl result = fetchEntry().getImpl(true);
         if (result != null) {
-          ref = result.$ref;
+          if (!result.$isLookAside) ref = result.$ref;
           return result;
         }
       }
@@ -172,11 +172,9 @@ public interface Object {
       Log cur = TransactionManager.getInstance().getCurrentLog();
       if (cur != null) {
         _Impl logImpl = cur.getCreate(ref.onum);
-        if (logImpl != null)
-          return logImpl.$cacheEntry;
-        logImpl = cur.fetchFromLookAside(ref.onum);
-        if (logImpl != null)
-          return logImpl.$cacheEntry;
+        if (logImpl != null) return logImpl.$cacheEntry;
+        _Impl lookAsideResult = cur.fetchFromLookAside(ref.store, ref.onum);
+        if (lookAsideResult != null) return lookAsideResult.$cacheEntry;
       }
 
       // Check anchor.
@@ -410,8 +408,7 @@ public interface Object {
     }
 
     @Override
-    public Object $makeSemiDeepCopy(LongSet oldSet,
-        LongKeyMap<Object> oldToNew) {
+    public Object $makeSemiDeepCopy(LongSet oldSet, LongKeyMap<Object> oldToNew) {
       return fetch().$makeSemiDeepCopy(oldSet, oldToNew);
     }
 
@@ -520,6 +517,11 @@ public interface Object {
     public final StackTraceElement[] $stackTrace;
 
     /**
+     * Indication of whether this is from the look aside map (for call checking in store write prepare).
+     */
+    public boolean $isLookAside;
+
+    /**
      * A private constructor for initializing transaction-management state.
      */
     private _Impl(Store store, long onum, int version, long expiry) {
@@ -537,6 +539,7 @@ public interface Object {
       this.$ref.readMapEntry(this.$readMapEntry);
       this.$isOwned = false;
       this.writerMapVersion = -1;
+      this.$isLookAside = false;
 
       if (TRACE_OBJECTS)
         this.$stackTrace = Thread.currentThread().getStackTrace();
@@ -976,8 +979,7 @@ public interface Object {
     }
 
     @Override
-    public Object $makeSemiDeepCopy(LongSet oldSet,
-        LongKeyMap<Object> oldToNew) {
+    public Object $makeSemiDeepCopy(LongSet oldSet, LongKeyMap<Object> oldToNew) {
       Object._Impl copy = null;
       if (oldToNew.containsKey(this.$getOnum())) {
         copy = (Object._Impl) oldToNew.get(this.$getOnum());

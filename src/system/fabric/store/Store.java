@@ -235,7 +235,7 @@ class Store extends MessageToStoreHandler {
         "Preparing {0} semantic warranty requests", msg.requests.size());
 
     long commitTime = prepareTransactionWrites(client, msg.tid,
-        msg.serializedCreates, msg.serializedWrites);
+        msg.serializedCreates, msg.serializedWrites, msg.requests);
 
     Map<CallInstance, SemanticWarranty> replies =
       prepareTransactionRequests(client.principal, msg.tid, msg.requests);
@@ -418,14 +418,15 @@ class Store extends MessageToStoreHandler {
    */
   private long prepareTransactionWrites(RemoteIdentity<RemoteWorker> r, long tid,
       Collection<SerializedObject> serializedCreates,
-      Collection<SerializedObject> serializedWrites) throws
+      Collection<SerializedObject> serializedWrites,
+      Collection<SemanticWarrantyRequest> calls) throws
     TransactionPrepareFailedException {
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
         "Handling PrepareWrites Message from {0}, tid={1}", nameOf(r.principal),
         tid);
 
     PrepareWritesRequest req =
-        new PrepareWritesRequest(tid, serializedCreates, serializedWrites);
+        new PrepareWritesRequest(tid, serializedCreates, serializedWrites, calls);
 
     sm.createSurrogates(req);
 

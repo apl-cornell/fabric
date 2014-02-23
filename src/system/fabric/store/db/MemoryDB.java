@@ -118,6 +118,7 @@ public class MemoryDB extends ObjectDB {
         // merge in the objects
         for (Pair<SerializedObject, UpdateType> update : tx.modData) {
           SerializedObject o = update.first;
+          o.setVersion(o.getVersion() + 1);
           objectTable.put(o.getOnum(), o);
 
           if (update.second == UpdateType.WRITE) {

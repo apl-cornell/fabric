@@ -398,7 +398,7 @@ public abstract class ObjectDB {
       }
 
       // Set the object's initial version number.
-      obj.setVersion(INITIAL_OBJECT_VERSION_NUMBER);
+      obj.setVersion(INITIAL_OBJECT_VERSION_NUMBER - 1);
       return VersionWarranty.EXPIRED_WARRANTY;
 
     case WRITE:
@@ -430,9 +430,6 @@ public abstract class ObjectDB {
             "writing {0}, warranty expires in {1} ms", onum, warranty.expiry()
                 - System.currentTimeMillis());
       }
-
-      // Update the version number on the prepared copy of the object.
-      obj.setVersion(storeVersion + 1);
 
       return warranty;
     }

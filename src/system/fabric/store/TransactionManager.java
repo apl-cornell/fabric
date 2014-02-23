@@ -228,8 +228,12 @@ public class TransactionManager {
         }
       }
 
-      // Remove added reads on objects we wrote in this transaction...
+      // Remove added reads on objects we wrote or created in this
+      // transaction...
       for (SerializedObject o : req.writes) {
+        addedReads.remove(store, o.getOnum());
+      }
+      for (SerializedObject o : req.creates) {
         addedReads.remove(store, o.getOnum());
       }
 
@@ -240,6 +244,11 @@ public class TransactionManager {
       // Don't worry about calls we're updating or requesting.
       for (CallInstance updatingCall : updates.keySet()) {
         addedCalls.remove(updatingCall);
+      }
+
+      // Don't worry about calls we're requesting in this prepare request
+      for (SemanticWarrantyRequest callRequest : req.calls) {
+        addedCalls.remove(callRequest.call);
       }
 
       // Ugh this is ugly.

@@ -110,7 +110,7 @@ public class InProcessStore extends RemoteStore {
     }
 
     PrepareWritesRequest req =
-        new PrepareWritesRequest(tid, serializedCreates, serializedWrites);
+        new PrepareWritesRequest(tid, serializedCreates, serializedWrites, calls);
 
     // Swizzle remote pointers.
     sm.createSurrogates(req);
