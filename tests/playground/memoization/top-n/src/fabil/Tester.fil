@@ -61,7 +61,7 @@ public class Tester {
         TwooterAccount foo = (TwooterAccount) s.getRoot().get(new Integer(i));
         int j = 0;
         for (j = 0; j < rtn.size(); j++)
-          if (((TwooterAccount) rtn.get(j)).numFollowers() < foo.numFollowers())
+          if (compare((TwooterAccount) rtn.get(j), foo) < 0)
             break;
         rtn.add(j, foo);
       }
