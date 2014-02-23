@@ -641,7 +641,7 @@ public final class Log {
    */
   public boolean isReadOnly() {
     return writes.isEmpty() && creates.isEmpty() && workersCalled.isEmpty() &&
-      requests.isEmpty();
+      requests.isEmpty() && createsInSubcalls.isEmpty();
   }
 
   /**
@@ -875,6 +875,8 @@ public final class Log {
           result.remove(create.$getOnum());
       } else {
         for (_Impl create : curLog.creates.values())
+          if (create.$getStore() == store) result.remove(create.$getOnum());
+        for (_Impl create : curLog.createsInSubcalls.values())
           if (create.$getStore() == store) result.remove(create.$getOnum());
       }
       curLog = curLog.parent;
