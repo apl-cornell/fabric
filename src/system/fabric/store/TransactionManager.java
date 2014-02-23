@@ -144,8 +144,10 @@ public class TransactionManager {
       try {
         checkPerms(worker, LongSet.EMPTY, req.writes);
       } catch (AccessException e) {
+        semanticWarranties.abort(tid);
         throw new TransactionPrepareFailedException(e.getMessage());
       } catch (AbortException e) {
+        semanticWarranties.abort(tid);
         throw new TransactionPrepareFailedException(e.getMessage());
       }
     }
