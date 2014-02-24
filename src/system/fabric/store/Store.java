@@ -236,6 +236,10 @@ class Store extends MessageToStoreHandler {
         "Handling Prepare Message, worker={0}, tid={1}",
         nameOf(client.principal), msg.tid);
 
+    if (count++ % 10000 == 0) {
+      Logging.HOTOS_LOGGER.info("Read prepare set size is " + msg.reads.size());
+    }
+
     LongKeyMap<VersionWarranty> newWarranties =
         prepareTransactionReads(client, msg.tid, msg.reads, msg.commitTime);
 
@@ -249,6 +253,8 @@ class Store extends MessageToStoreHandler {
 
     return new PrepareTransactionReadsMessage.Response(newWarranties);
   }
+
+  private static int count = 0;
 
   /**
    * Processes the given read request.
