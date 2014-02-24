@@ -23,43 +23,53 @@ public class WarrantyIssuer<K, V extends Warranty> {
   // BEGIN TUNING PARAMETERS /////////////////////////////////////////////////
 
   /**
-   * The base commit latency, in milliseconds.
-   */
-  private static final long BASE_COMMIT_LATENCY = 250;
-
-  /**
-   * The network delay, in milliseconds.
-   */
-  private static final int NETWORK_LATENCY = 5;
-
-  private static final long TWO_P_N = 2 * BASE_COMMIT_LATENCY * NETWORK_LATENCY;
-
-  /**
-   * The minimum length of time (in milliseconds) for which each issued warranty
-   * should be valid.
-   */
-  private static final int MIN_WARRANTY_LENGTH = 1000;
-
-  /**
    * The maximum length of time (in milliseconds) for which each issued warranty
    * should be valid.
    */
-  private static final int MAX_WARRANTY_LENGTH = 5000;
+  private static final int MAX_WARRANTY_LENGTH = 10000;
 
   /**
-   * The decay rate for the exponential average when calculating the rate of
-   * read and write prepares. Lower values result in slower adaptation to
+   * The decay rate for the exponential average when calculating the period of
+   * read and write prepares. Higher values result in slower adaptation to
    * changes in the prepare rates.
    */
-  private static final double PREPARE_ALPHA = .1;
+  private static final double PREPARE_ALPHA = .9;
 
   /**
-   * The popularity cutoff. If the interval between consecutive read prepares is
-   * above this threshold, then no warranty will be issued for the object.
+   * The half life for determining the alpha to use for combining the first
+   * prepare interval after a warranty period. The alpha value used is
+   * determined by 2^(-L/HALF_LIFE).
    */
-  private static final int MAX_READ_PREP_INTERVAL = 250;
+  private static final double HALF_LIFE = 5000;
+
+  /**
+   * The amount by which write intervals are scaled to determine warranty
+   * length.
+   */
+  private static final double K2 = 0.5;
+
+  /**
+   * The minimum read-to-write ratio. If the read-to-write ratio for an object
+   * is below this threshold, then no warranties will be issued for that object.
+   */
+  private static final double K3 = 2;
+
+  /**
+   * The number of samples to take after a warranty period before issuing
+   * another warranty.
+   */
+  public static final int SAMPLE_SIZE = 3;
 
   // END TUNING PARAMETERS ///////////////////////////////////////////////////
+
+  /**
+   * The popularity cutoff. If the average read interval of an object is above
+   * this threshold, then no warranties will be issued for that object.
+   */
+  private static final double MAX_READ_PREP_INTERVAL = MAX_WARRANTY_LENGTH
+      / (K2 * K3);
+
+  private static final double NEG_DECAY_CONSTANT = -Math.log(2) / HALF_LIFE;
 
   /**
    * The default warranty for keys that aren't yet in the table. All warranties
@@ -93,6 +103,7 @@ public class WarrantyIssuer<K, V extends Warranty> {
 
             metrics.lastReadPrepareTime = expiry;
             metrics.numReadPrepares = 0;
+            metrics.lastWarrantyLength = expiry - System.currentTimeMillis();
             this.warrantyIssued = newWarranty;
             return true;
           }
@@ -126,6 +137,11 @@ public class WarrantyIssuer<K, V extends Warranty> {
       long lastReadPrepareTime;
 
       /**
+       * The length of the last warranty issued.
+       */
+      long lastWarrantyLength;
+
+      /**
        * The moving average of (estimated) read intervals, in milliseconds.
        */
       int readInterval;
@@ -141,7 +157,7 @@ public class WarrantyIssuer<K, V extends Warranty> {
       int writeInterval;
 
       /**
-       * The number of read prepares occured since the last warranty period.
+       * The number of read prepares occurred since the last warranty period.
        */
       int numReadPrepares;
 
@@ -149,6 +165,7 @@ public class WarrantyIssuer<K, V extends Warranty> {
         final long now = System.currentTimeMillis();
 
         this.lastReadPrepareTime = now;
+        this.lastWarrantyLength = 0;
         this.readInterval = Integer.MAX_VALUE;
         this.lastWritePrepareTime = now;
         this.writeInterval = Integer.MAX_VALUE;
@@ -174,9 +191,15 @@ public class WarrantyIssuer<K, V extends Warranty> {
         if (readInterval == Integer.MAX_VALUE) {
           readInterval = curInterval;
         } else {
+          final double alpha;
+          if (numReadPrepares == 1) {
+            // First read prepare after a warranty period.
+            alpha = Math.exp(NEG_DECAY_CONSTANT * lastWarrantyLength);
+          } else {
+            alpha = PREPARE_ALPHA;
+          }
           readInterval =
-              (int) ((1.0 - PREPARE_ALPHA) * readInterval + PREPARE_ALPHA
-                  * curInterval);
+              (int) (alpha * readInterval + (1.0 - alpha) * curInterval);
         }
       }
 
@@ -200,7 +223,7 @@ public class WarrantyIssuer<K, V extends Warranty> {
           writeInterval = curInterval;
         } else {
           writeInterval =
-              (int) ((1.0 - PREPARE_ALPHA) * writeInterval + PREPARE_ALPHA
+              (int) (PREPARE_ALPHA * writeInterval + (1.0 - PREPARE_ALPHA)
                   * curInterval);
         }
       }
@@ -217,21 +240,45 @@ public class WarrantyIssuer<K, V extends Warranty> {
         synchronized (this) {
           // Only continue if we have enough samples since the last warranty
           // period.
-          if (numReadPrepares < 10) return expiry;
+          if (numReadPrepares < SAMPLE_SIZE) return expiry;
 
           writeInterval = this.writeInterval;
           readInterval = this.readInterval;
         }
 
+        final int curCount = count++;
+
         if (readInterval > MAX_READ_PREP_INTERVAL) {
           // The object is too unpopular. Suggest the minimal expiry time.
+          if (curCount % 10000 == 0) {
+            // onum, readInterval, actualReadInterval, writeInterval, warranty
+            HOTOS_LOGGER.info("warranty #" + curCount + ": " + key + ","
+                + readInterval + "," + writeInterval + ",unpopular");
+          }
           return expiry;
         }
 
         double ratio = writeInterval / (readInterval + 1.0);
 
+        if (ratio < K3) {
+          // Not enough reads per write. Suggest the minimal expiry time.
+          if (curCount % 10000 == 0) {
+            // onum, readInterval, actualReadInterval, writeInterval, warranty
+            HOTOS_LOGGER.info("warranty #" + curCount + ": " + key + ","
+                + readInterval + "," + writeInterval + ",low read-write");
+          }
+          return expiry;
+        }
+
+        if (curCount % 10000 == 0) {
+          // onum, readInterval, actualReadInterval, writeInterval, warranty
+          HOTOS_LOGGER
+              .info("warranty #" + curCount + ": " + key + "," + readInterval
+                  + "," + writeInterval + "," + (K2 * writeInterval));
+        }
+
         long warrantyLength =
-            Math.min((long) Math.sqrt(TWO_P_N * ratio), MAX_WARRANTY_LENGTH);
+            Math.min((long) (K2 * writeInterval), MAX_WARRANTY_LENGTH);
 
         if (HOTOS_LOGGER.isLoggable(Level.FINE)) {
           if (key instanceof Number && ((Number) key).longValue() == 0) {
@@ -245,12 +292,18 @@ public class WarrantyIssuer<K, V extends Warranty> {
           }
         }
 
-        if (warrantyLength < MIN_WARRANTY_LENGTH) return expiry;
+//        if (warrantyLength < MIN_WARRANTY_LENGTH) return expiry;
 
         return Math.max(expiry, System.currentTimeMillis() + warrantyLength);
       }
+
+      synchronized void setReadPrepareTime() {
+        lastReadPrepareTime = System.currentTimeMillis();
+      }
     }
   }
+
+  private static int count = 0;
 
   private final ConcurrentMap<K, Entry> table;
 
@@ -260,8 +313,11 @@ public class WarrantyIssuer<K, V extends Warranty> {
   }
 
   private Entry getEntry(K key) {
+    Entry existingEntry = table.get(key);
+    if (existingEntry != null) return existingEntry;
+
     Entry entry = new Entry(key);
-    Entry existingEntry = table.putIfAbsent(key, entry);
+    existingEntry = table.putIfAbsent(key, entry);
     return existingEntry == null ? entry : existingEntry;
   }
 
@@ -322,7 +378,7 @@ public class WarrantyIssuer<K, V extends Warranty> {
           length);
     }
 
-    table.get(key).setWarrantyIssued(warranty);
+    getEntry(key).setWarrantyIssued(warranty);
   }
 
   /**
@@ -369,6 +425,16 @@ public class WarrantyIssuer<K, V extends Warranty> {
    * Suggests a warranty-expiry time beyond the given expiry time.
    */
   public long suggestWarranty(K key, long minExpiry) {
-    return getEntry(key).getMetrics(true).suggestWarranty(minExpiry);
+    return getMetrics(key).suggestWarranty(minExpiry);
+  }
+
+  /**
+   * Updates the latest read-prepare time for the given object with the current
+   * time.
+   */
+  public void setReadPrepareTime(K key) {
+    Entry.Metrics metrics = getEntry(key).getMetrics(false);
+    if (metrics == null) return;
+    metrics.setReadPrepareTime();
   }
 }

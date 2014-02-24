@@ -566,7 +566,7 @@
   </target>
 
   <!-- Compiles the Fabric store -->
-  <target name="store" depends="init,native,fabil-runtime">
+  <target name="store" depends="LongKeyWarrantyIssuer,init,native,fabil-runtime">
     <javac source="1.7" target="1.7"
         srcdir="${system.src}" destdir="${classes}"
         includeAntRuntime="false" debug="on">
@@ -579,6 +579,18 @@
         <path refid="lib.classpath"/>
       </classpath>
     </javac>
+  </target>
+
+  <target name="LongKeyWarrantyIssuer">
+    <apply executable="bash"
+        failonerror="true"
+        dir="${system.src}/fabric/store/db"
+        relative="false"
+        skipemptyfilesets="true"
+        vmlauncher="false">
+      <arg value="${bin}/makeLongKeyWarrantyIssuer" />
+      <fileset dir="${system.src}/fabric/store/db/" includes="WarrantyIssuer.java" />
+    </apply>
   </target>
 
   <!-- Compiles the Fabric worker -->

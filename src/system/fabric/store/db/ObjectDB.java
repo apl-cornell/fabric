@@ -67,6 +67,18 @@ public abstract class ObjectDB {
   // Needed to coordinate commits.
   protected SemanticWarrantyTable semanticWarranties;
 
+  // Hack hack hack
+  private static final boolean ENABLE_WARRANTY_REFRESHES = false;
+
+  @SuppressWarnings("all")
+  private static class Ugh {
+    static {
+      if (ObjectDB.ENABLE_WARRANTY_REFRESHES != SubscriptionManager.ENABLE_WARRANTY_REFRESHES) {
+        throw new InternalError();
+      }
+    }
+  }
+
   /**
    * The store's name.
    */
@@ -220,7 +232,7 @@ public abstract class ObjectDB {
   /**
    * The table containing the version warranties that we've issued.
    */
-  protected final WarrantyIssuer<Long, VersionWarranty> warrantyIssuer;
+  protected final LongKeyWarrantyIssuer<VersionWarranty> warrantyIssuer;
 
   /**
    * <p>
@@ -259,7 +271,7 @@ public abstract class ObjectDB {
     this.objectGrouper = new ObjectGrouper(this, privateKey);
     this.longestWarranty = new VersionWarranty[] { new VersionWarranty(0) };
     this.warrantyIssuer =
-        new WarrantyIssuer<Long, VersionWarranty>(new VersionWarranty(0));
+        new LongKeyWarrantyIssuer<VersionWarranty>(new VersionWarranty(0));
   }
 
   /**
@@ -326,11 +338,24 @@ public abstract class ObjectDB {
    * @throws AccessException if no object exists at the given onum.
    */
   public final Pair<ExtendWarrantyStatus, VersionWarranty> extendWarrantyForReadPrepare(
-      Principal worker, long onum, int version, long commitTime)
-      throws AccessException {
-    warrantyIssuer.notifyReadPrepare(onum);
+      Pair<ExtendWarrantyStatus, VersionWarranty> resultObj, Principal worker,
+      long onum, int version, long commitTime) throws AccessException {
+    // First, check the object's popularity status. If it is too
+    // unpopular, don't bother notifying the warranty issuer about the read
+    // prepare, and don't extend beyond the requested commit time.
+    SerializedObject obj = read(onum);
+    if (obj == null) throw new AccessException(name, onum);
+    boolean unpopular = obj.getUnpopularity() > 2;
+    if (unpopular) {
+      obj.incrementUnpopularity(warrantyIssuer);
+    } else {
+      warrantyIssuer.notifyReadPrepare(onum);
+    }
+
+    final boolean extendBeyondCommitTime = !unpopular;
     Pair<ExtendWarrantyStatus, VersionWarranty> newWarranty =
-        extendWarranty(onum, commitTime, true, true, false);
+        extendWarranty(resultObj, onum, commitTime, true,
+            extendBeyondCommitTime, false);
 
     if (newWarranty == EXTEND_WARRANTY_DENIED) return EXTEND_WARRANTY_DENIED;
     if (version != getVersion(onum)) return EXTEND_WARRANTY_BAD_VERSION;
@@ -366,8 +391,9 @@ public abstract class ObjectDB {
    *          
    * @return the object's existing warranty.
    */
-  public final VersionWarranty registerUpdate(long tid, Principal worker,
-      SerializedObject obj,
+  public final VersionWarranty registerUpdate(
+      Pair<ExtendWarrantyStatus, VersionWarranty> scratchObj, long tid,
+      Principal worker, SerializedObject obj,
       LongKeyMap<Pair<SerializedObject, VersionWarranty>> versionConflicts,
       UpdateType updateType) throws TransactionPrepareFailedException {
     long onum = obj.getOnum();
@@ -416,7 +442,7 @@ public abstract class ObjectDB {
       int workerVersion = obj.getVersion();
       if (storeVersion != workerVersion) {
         Pair<ExtendWarrantyStatus, VersionWarranty> refreshWarrantyResult =
-            refreshWarranty(onum);
+            refreshWarranty(scratchObj, onum);
         versionConflicts.put(onum, new Pair<SerializedObject, VersionWarranty>(
             storeCopy, refreshWarrantyResult.second));
         return VersionWarranty.EXPIRED_WARRANTY;
@@ -533,20 +559,25 @@ public abstract class ObjectDB {
       RemoteIdentity<RemoteWorker> workerIdentity, SubscriptionManager sm) {
     // Extend the version warranties for the updated objects.
     List<VersionWarranty.Binding> newWarranties =
-        new ArrayList<VersionWarranty.Binding>();
+        ENABLE_WARRANTY_REFRESHES ? new ArrayList<VersionWarranty.Binding>()
+            : null;
     try {
       LongSet onums = removeWrittenOnumsByTid(tid, workerIdentity.principal);
       if (onums != null) {
+        Pair<ExtendWarrantyStatus, VersionWarranty> resultObj =
+            new Pair<ExtendWarrantyStatus, VersionWarranty>(null, null);
         for (LongIterator it = onums.iterator(); it.hasNext();) {
           long onum = it.next();
           Pair<ExtendWarrantyStatus, VersionWarranty> extendResult =
-              extendWarranty(onum, commitTime, true, false, true);
-          if (extendResult.first == ExtendWarrantyStatus.NEW) {
-            try {
-              newWarranties.add(extendResult.second.new Binding(onum,
-                  getVersion(onum)));
-            } catch (AccessException e) {
-              throw new InternalError(e);
+              extendWarranty(resultObj, onum, commitTime, true, false, true);
+          if (ENABLE_WARRANTY_REFRESHES) {
+            if (extendResult.first == ExtendWarrantyStatus.NEW) {
+              try {
+                newWarranties.add(extendResult.second.new Binding(onum,
+                    getVersion(onum)));
+              } catch (AccessException e) {
+                throw new InternalError(e);
+              }
             }
           }
         }
@@ -653,7 +684,8 @@ public abstract class ObjectDB {
    *          warranty does not meet minExpiry and could not be renewed,
    *          EXTEND_WARRANTY_DENIED is returned.
    */
-  private Pair<ExtendWarrantyStatus, VersionWarranty> extendWarranty(long onum,
+  private Pair<ExtendWarrantyStatus, VersionWarranty> extendWarranty(
+      Pair<ExtendWarrantyStatus, VersionWarranty> result, long onum,
       long minExpiry, boolean minExpiryStrict, boolean extendBeyondMinExpiry,
       boolean ignoreWriteLocks) {
     while (true) {
@@ -661,13 +693,17 @@ public abstract class ObjectDB {
       // extended.
       VersionWarranty curWarranty = warrantyIssuer.get(onum);
       if (minExpiryStrict) {
-        if (curWarranty.expiresAfterStrict(minExpiry))
-          return new Pair<ExtendWarrantyStatus, VersionWarranty>(
-              ExtendWarrantyStatus.OLD, curWarranty);
+        if (curWarranty.expiresAfterStrict(minExpiry)) {
+          result.first = ExtendWarrantyStatus.OLD;
+          result.second = curWarranty;
+          return result;
+        }
       } else {
-        if (curWarranty.expiresAfter(minExpiry, false))
-          return new Pair<ExtendWarrantyStatus, VersionWarranty>(
-              ExtendWarrantyStatus.OLD, curWarranty);
+        if (curWarranty.expiresAfter(minExpiry, false)) {
+          result.first = ExtendWarrantyStatus.OLD;
+          result.second = curWarranty;
+          return result;
+        }
       }
 
       // Need to extend warranty.
@@ -688,8 +724,9 @@ public abstract class ObjectDB {
         updateLongestWarranty(newWarranty);
       }
 
-      return new Pair<ExtendWarrantyStatus, VersionWarranty>(
-          ExtendWarrantyStatus.NEW, newWarranty);
+      result.first = ExtendWarrantyStatus.NEW;
+      result.second = newWarranty;
+      return result;
     }
   }
 
@@ -700,9 +737,11 @@ public abstract class ObjectDB {
    * write-locked, then a new warranty cannot be created, and the existing one
    * is returned.
    */
-  public Pair<ExtendWarrantyStatus, VersionWarranty> refreshWarranty(long onum) {
+  public Pair<ExtendWarrantyStatus, VersionWarranty> refreshWarranty(
+      Pair<ExtendWarrantyStatus, VersionWarranty> resultObj, long onum) {
     Pair<ExtendWarrantyStatus, VersionWarranty> result =
-        extendWarranty(onum, System.currentTimeMillis(), false, true, false);
+        extendWarranty(resultObj, onum, System.currentTimeMillis(), false,
+            true, false);
     if (result == EXTEND_WARRANTY_DENIED) {
       return new Pair<ExtendWarrantyStatus, VersionWarranty>(
           ExtendWarrantyStatus.OLD, warrantyIssuer.get(onum));

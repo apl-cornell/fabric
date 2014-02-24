@@ -62,6 +62,18 @@ import fabric.worker.remote.RemoteWorker;
 
 public class TransactionManager {
 
+  // Hack hack hack
+  private static final boolean ENABLE_WARRANTY_REFRESHES = false;
+
+  @SuppressWarnings("all")
+  private static class Ugh {
+    static {
+      if (TransactionManager.ENABLE_WARRANTY_REFRESHES != SubscriptionManager.ENABLE_WARRANTY_REFRESHES) {
+        throw new InternalError();
+      }
+    }
+  }
+
   /**
    * The object database of the store for which we're managing transactions.
    */
@@ -166,16 +178,20 @@ public class TransactionManager {
           new LongKeyHashMap<Pair<SerializedObject, VersionWarranty>>();
 
       // Prepare writes.
+      Pair<ExtendWarrantyStatus, VersionWarranty> scratchObj =
+          new Pair<ExtendWarrantyStatus, VersionWarranty>(null, null);
       for (SerializedObject o : req.writes) {
         VersionWarranty warranty =
-            database.registerUpdate(tid, worker, o, versionConflicts, WRITE);
+            database.registerUpdate(scratchObj, tid, worker, o,
+                versionConflicts, WRITE);
         if (longestWarranty == null || warranty.expiresAfter(longestWarranty))
           longestWarranty = warranty;
       }
 
       // Prepare creates.
       for (SerializedObject o : req.creates) {
-        database.registerUpdate(tid, worker, o, versionConflicts, CREATE);
+        database.registerUpdate(scratchObj, tid, worker, o, versionConflicts,
+            CREATE);
       }
 
       // Double check calls.
@@ -204,8 +220,8 @@ public class TransactionManager {
         // Register additional creates
         for (LongKeyMap<_Impl> submap : update.creates) {
           for (_Impl create : submap.values()) {
-            database.registerUpdate(tid, worker, new SerializedObject(create),
-                versionConflicts, CREATE);
+            database.registerUpdate(scratchObj, tid, worker, new
+                SerializedObject(create), versionConflicts, CREATE);
             addedCreates.put(create.$getStore(), create.$getOnum(),
                 create.$getStore());
           }
@@ -344,9 +360,12 @@ public class TransactionManager {
 
       // This will store the new warranties we get.
       List<VersionWarranty.Binding> newWarranties =
-          new ArrayList<VersionWarranty.Binding>();
+          ENABLE_WARRANTY_REFRESHES ? new ArrayList<VersionWarranty.Binding>()
+              : null;
 
       // Check reads
+      final Pair<ExtendWarrantyStatus, VersionWarranty> resultObj =
+          new Pair<ExtendWarrantyStatus, VersionWarranty>(null, null);
       for (LongKeyMap.Entry<Integer> entry : reads.entrySet()) {
         long onum = entry.getKey();
         int version = entry.getValue().intValue();
@@ -354,11 +373,13 @@ public class TransactionManager {
         // Attempt to extend the object's warranty.
         try {
           Pair<ExtendWarrantyStatus, VersionWarranty> status =
-              database.extendWarrantyForReadPrepare(worker, onum, version,
-                  commitTime);
+              database.extendWarrantyForReadPrepare(resultObj, worker, onum,
+                  version, commitTime);
           switch (status.first) {
           case NEW:
-            newWarranties.add(status.second.new Binding(onum, version));
+            if (ENABLE_WARRANTY_REFRESHES) {
+              newWarranties.add(status.second.new Binding(onum, version));
+            }
             //$FALL-THROUGH$
           case OLD:
             prepareResult.put(onum, status.second);
@@ -366,7 +387,7 @@ public class TransactionManager {
 
           case BAD_VERSION:
             SerializedObject obj = database.read(onum);
-            status = database.refreshWarranty(onum);
+            status = database.refreshWarranty(resultObj, onum);
             versionConflicts
                 .put(onum, new Pair<SerializedObject, VersionWarranty>(obj,
                     status.second));
@@ -728,16 +749,21 @@ public class TransactionManager {
    */
   public void refreshWarranties(LongKeyMap<Integer> onumsToVersions) {
     List<VersionWarranty.Binding> newWarranties =
-        new ArrayList<VersionWarranty.Binding>();
+        ENABLE_WARRANTY_REFRESHES ? new ArrayList<VersionWarranty.Binding>()
+            : null;
 
+    Pair<ExtendWarrantyStatus, VersionWarranty> resultObj =
+        new Pair<ExtendWarrantyStatus, VersionWarranty>(null, null);
     for (Entry<Integer> entry : onumsToVersions.entrySet()) {
       long onum = entry.getKey();
       Pair<ExtendWarrantyStatus, VersionWarranty> refreshResult =
-          database.refreshWarranty(onum);
+          database.refreshWarranty(resultObj, onum);
 
-      if (refreshResult.first == ExtendWarrantyStatus.NEW) {
-        newWarranties.add(refreshResult.second.new Binding(onum, entry
-            .getValue()));
+      if (ENABLE_WARRANTY_REFRESHES) {
+        if (refreshResult.first == ExtendWarrantyStatus.NEW) {
+          newWarranties.add(refreshResult.second.new Binding(onum, entry
+              .getValue()));
+        }
       }
     }
 
@@ -780,10 +806,13 @@ public class TransactionManager {
     List<Pair<SerializedObject, VersionWarranty>> result =
         new ArrayList<Pair<SerializedObject, VersionWarranty>>();
     List<VersionWarranty.Binding> newWarranties =
-        new ArrayList<VersionWarranty.Binding>();
+        ENABLE_WARRANTY_REFRESHES ? new ArrayList<VersionWarranty.Binding>()
+            : null;
     boolean success = false;
 
     try {
+      Pair<ExtendWarrantyStatus, VersionWarranty> resultObj =
+          new Pair<ExtendWarrantyStatus, VersionWarranty>(null, null);
       for (LongKeyMap.Entry<Integer> entry : versions.entrySet()) {
         long onum = entry.getKey();
         int version = entry.getValue();
@@ -791,15 +820,17 @@ public class TransactionManager {
         int curVersion = database.getVersion(onum);
         if (curVersion != version) {
           Pair<ExtendWarrantyStatus, VersionWarranty> refreshWarrantyResult =
-              database.refreshWarranty(onum);
+              database.refreshWarranty(resultObj, onum);
           SerializedObject obj = database.read(onum);
 
           result.add(new Pair<SerializedObject, VersionWarranty>(obj,
               refreshWarrantyResult.second));
 
-          if (refreshWarrantyResult.first == ExtendWarrantyStatus.NEW) {
-            newWarranties.add(refreshWarrantyResult.second.new Binding(onum,
-                version));
+          if (ENABLE_WARRANTY_REFRESHES) {
+            if (refreshWarrantyResult.first == ExtendWarrantyStatus.NEW) {
+              newWarranties.add(refreshWarrantyResult.second.new Binding(onum,
+                  version));
+            }
           }
         }
       }

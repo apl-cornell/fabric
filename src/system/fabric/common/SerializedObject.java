@@ -28,6 +28,8 @@ import fabric.lang.Object._Impl;
 import fabric.lang.Object._Proxy;
 import fabric.lang.security.ConfPolicy;
 import fabric.lang.security.Label;
+import fabric.store.db.LongKeyWarrantyIssuer;
+import fabric.store.db.WarrantyIssuer;
 import fabric.worker.LocalStore;
 import fabric.worker.Store;
 
@@ -128,6 +130,12 @@ public final class SerializedObject implements FastSerializable, Serializable {
   private ClassRef classRef;
 
   private static final RefTypeEnum[] refTypeEnums = RefTypeEnum.values();
+
+  /**
+   * A count of how many times the warranty issuer was skipped when
+   * write-preparing this object due to unpopularity.
+   */
+  private byte unpopularityCount;
 
   /**
    * Creates a serialized representation of the given object.
@@ -1148,4 +1156,36 @@ public final class SerializedObject implements FastSerializable, Serializable {
   public int size() {
     return objectData.length;
   }
+
+  public synchronized int getUnpopularity() {
+    return unpopularityCount;
+  }
+
+  public synchronized void resetUnpopularity() {
+    unpopularityCount = 0;
+  }
+
+  /**
+   * Increments the unpopularity counter. If the counter wraps around, then the
+   * object's last read-prepare time is updated.
+   */
+  public synchronized void incrementUnpopularity(
+      LongKeyWarrantyIssuer<?> warrantyIssuer) {
+    unpopularityCount =
+        (byte) ((unpopularityCount + 1) % (SAMPLE_SIZE + IGNORE_COUNT));
+    warrantyIssuer.setReadPrepareTime(getOnum());
+  }
+
+  private static final int SAMPLE_SIZE = 3;
+  private static final int IGNORE_COUNT = 16;
+
+  @SuppressWarnings("all")
+  private static class Ugh {
+    static {
+      if (SerializedObject.SAMPLE_SIZE != WarrantyIssuer.SAMPLE_SIZE) {
+        throw new InternalError();
+      }
+    }
+  }
+
 }

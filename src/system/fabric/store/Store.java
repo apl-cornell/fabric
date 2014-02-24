@@ -263,6 +263,11 @@ class Store extends MessageToStoreHandler {
         nameOf(client.principal), msg.tid);
 
     TransactionPrepareFailedException error = null;
+
+    if (count++ % 10000 == 0) {
+      Logging.HOTOS_LOGGER.info("Read prepare set size is " + msg.reads.size());
+    }
+
     LongKeyMap<VersionWarranty> newWarranties =
       new LongKeyHashMap<VersionWarranty>();
     try {
@@ -300,6 +305,8 @@ class Store extends MessageToStoreHandler {
     return new PrepareTransactionReadsMessage.Response(newWarranties,
         newSemWarranties);
   }
+
+  private static int count = 0;
 
   /**
    * Processes the given call request.
