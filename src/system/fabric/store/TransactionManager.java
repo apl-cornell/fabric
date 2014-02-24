@@ -358,7 +358,7 @@ public class TransactionManager {
             versionConflicts
                 .put(onum, new Pair<SerializedObject, VersionWarranty>(obj,
                     status.second));
-            Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST, "BAD VERSION ON {0} FOR {1}", onum, Long.toHexString(tid));
+            Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST, "BAD VERSION ON {0} FOR {1}: DB: {2}, US: {3}", onum, Long.toHexString(tid), obj.getVersion(), version);
             continue;
 
           case DENIED:
