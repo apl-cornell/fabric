@@ -1273,7 +1273,8 @@ public class SemanticWarrantyTable {
     issuer.notifyReadPrepare(call);
     // TODO: This is going to have false positives until I separate out things
     // that are changing value from things that are just changing dependencies.
-    if (updatingTIDMap.get(tid).contains(call)) {
+    if (updatingTIDMap.containsKey(tid) &&
+        updatingTIDMap.get(tid).contains(call)) {
       Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.SEVERE,
           "CALL {0} IS BEING READ REQUESTED BY TID {1} WHICH UPDATES IT", call,
           tid);
