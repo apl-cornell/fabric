@@ -589,7 +589,7 @@
         skipemptyfilesets="true"
         vmlauncher="false">
       <arg value="${bin}/makeLongKeyWarrantyIssuer" />
-      <fileset dir="${system.src}/fabric/store/db" includes="WarrantyIssuer.java" />
+      <fileset dir="${system.src}/fabric/store/db/" includes="WarrantyIssuer.java" />
     </apply>
   </target>
 
