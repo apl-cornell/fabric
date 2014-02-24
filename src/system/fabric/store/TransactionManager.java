@@ -358,10 +358,12 @@ public class TransactionManager {
             versionConflicts
                 .put(onum, new Pair<SerializedObject, VersionWarranty>(obj,
                     status.second));
+            Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST, "BAD VERSION ON {0} FOR {1}", onum, Long.toHexString(tid));
             continue;
 
           case DENIED:
             sm.notifyNewWarranties(newWarranties, null);
+            Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST, "DENIED EXTENSION ON {0} FOR {1}", onum, Long.toHexString(tid));
             throw new TransactionPrepareFailedException(versionConflicts,
                 "Unable to extend warranty for object " + onum);
           }
