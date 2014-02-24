@@ -52,6 +52,7 @@ import fabric.worker.memoize.CallInstance;
 import fabric.worker.memoize.SemanticWarrantyRequest;
 import fabric.worker.memoize.WarrantiedCallResult;
 import fabric.worker.transaction.ReadMap;
+import fabric.worker.RemoteStore;
 import fabric.worker.Store;
 import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
@@ -138,7 +139,7 @@ public class TransactionManager {
     // First, check write permissions. We do this before we attempt to do the
     // actual prepare because we want to run the permissions check in a
     // transaction outside of the worker's transaction.
-    Store store = Worker.getWorker().getStore(database.getName());
+    RemoteStore store = Worker.getWorker().getStore(database.getName());
     if (worker == null || worker.$getStore() != store
         || worker.$getOnum() != ONumConstants.STORE_PRINCIPAL) {
       try {
@@ -270,11 +271,22 @@ public class TransactionManager {
       throw e;
     }
 
-    if (addedCalls.size() != 0)
-      prepareCalls(worker, tid, addedCalls, longest);
-    // Don't bother if there were no reads.
-    if (addedReads.get(store) != null)
-      prepareReads(workerIdentity, tid, addedReads.get(store), longest);
+    try {
+      if (addedCalls.size() != 0)
+        prepareCalls(worker, tid, addedCalls, longest);
+      // Don't bother if there were no reads.
+      if (addedReads.get(store) != null)
+        prepareReads(workerIdentity, tid, addedReads.get(store), longest);
+    } catch (TransactionPrepareFailedException tpfe) {
+      // Don't need to worry about calls because inprocess store doesn't
+      // maintain a cache.  Need to update local cache of objects, however.
+      for (Pair<SerializedObject, VersionWarranty> conflict :
+          tpfe.versionConflicts.values())
+        store.updateCache(conflict);
+      throw new TransactionPrepareFailedException(
+          "Had problems with reads from call updates!");
+    }
+        
 
     STORE_TRANSACTION_LOGGER.log(Level.FINE,
         "Prepared writes for transaction {0}", tid);
