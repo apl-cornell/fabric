@@ -444,9 +444,6 @@ public class SemanticWarrantyTable {
                         "Request for call {0} by {2} depends on call {1} that has a write scheduled.",
                         call, c, Long.toHexString(transactionID));
                 writeUnlock();
-                //throw new TransactionPrepareFailedException("Request for call "
-                //+ call + " depends on call " + c
-                //+ " that has a write scheduled.");
                 //We just don't make a warranty.  Don't kill the transaction yet...
                 return null;
               }
@@ -465,6 +462,8 @@ public class SemanticWarrantyTable {
                 "Request for call {0} by {1} denied because the warranty in the " +
                 "table was not the default one!", call,
                 Long.toHexString(transactionID));
+            writeUnlock();
+            return null;
           }
 
           // Schedule the update
