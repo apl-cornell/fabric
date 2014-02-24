@@ -460,7 +460,12 @@ public class SemanticWarrantyTable {
             newWarranty = new SemanticWarranty(suggestedTime);
           }
 
-          issuer.put(call, newWarranty);
+          if (!issuer.replace(call, DEFAULT_SEM_WARRANTY, newWarranty)) {
+            Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+                "Request for call {0} by {1} denied because the warranty in the " +
+                "table was not the default one!", call,
+                Long.toHexString(transactionID));
+          }
 
           // Schedule the update
           scheduleUpdateAt(transactionID, req);
@@ -1106,6 +1111,11 @@ public class SemanticWarrantyTable {
   private final ConcurrentLongKeyMap<Set<CallInstance>> creatorTable;
 
   /**
+   * Default warranty to be used for the issuer.
+   */
+  private final SemanticWarranty DEFAULT_SEM_WARRANTY = new SemanticWarranty(0);
+
+  /**
    * WarrantyIssuer for semantic warranties.
    */
   private final WarrantyIssuer<CallInstance, SemanticWarranty> issuer;
@@ -1127,7 +1137,7 @@ public class SemanticWarrantyTable {
     creatorTable = new ConcurrentLongKeyHashMap<Set<CallInstance>>();
     issuer =
         new WarrantyIssuer<CallInstance, SemanticWarranty>(
-            new SemanticWarranty(0));
+            DEFAULT_SEM_WARRANTY);
     updatingTIDMap = new ConcurrentLongKeyHashMap<Set<CallInstance>>();
     this.database = database;
     this.database.setSemanticWarrantyTable(this);
