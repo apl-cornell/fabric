@@ -414,7 +414,7 @@ public class TransactionManager {
       for (CallInstance call : calls.keySet()) {
         Pair<SemanticExtendStatus, WarrantiedCallResult> extResult =
           semanticWarranties.extendForReadPrepare(call, calls.get(call),
-              commitTime);
+              commitTime, tid);
         switch (extResult.first) {
           case OK:
             updatedWars.put(call, extResult.second);

@@ -1267,10 +1267,19 @@ public class SemanticWarrantyTable {
    * warrantied call result.
    */
   public final Pair<SemanticExtendStatus, WarrantiedCallResult> extendForReadPrepare(
-      CallInstance call, WarrantiedCallResult oldValue, long newTime) {
+      CallInstance call, WarrantiedCallResult oldValue, long newTime, long tid) {
     Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINER,
         "Notifying read prepare on {0}", call);
     issuer.notifyReadPrepare(call);
+    // TODO: This is going to have false positives until I separate out things
+    // that are changing value from things that are just changing dependencies.
+    if (updatingTIDMap.get(tid).contains(call)) {
+      Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+          "CALL {0} IS BEING READ REQUESTED BY TID {1} WHICH UPDATES IT", call,
+          tid);
+      return new Pair<SemanticExtendStatus, WarrantiedCallResult>(
+          SemanticExtendStatus.DENIED, get(call));
+    }
     CallInfo info = getInfo(call);
     SemanticExtendStatus stat;
     try {
