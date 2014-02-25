@@ -172,7 +172,11 @@ public class Cache {
           "Access exception accessing fab://{0}/{1}", oid.first, oid.second);
     }
 
-    if (g == null) return null;
+    if (g == null) {
+      // TODO: Make the worker more robust against this. NPEs will arise when
+      // this return happens.
+      return null;
+    }
     return put(oid, g, false);
   }
 
