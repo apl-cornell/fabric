@@ -1496,7 +1496,9 @@ public class ConcurrentLongKeyHashMap<V> extends AbstractLongKeyMap<V>
   static {
     int ss, ts;
     try {
-      UNSAFE = sun.misc.Unsafe.getUnsafe();
+      Field f = Unsafe.class.getDeclaredField("theUnsafe");
+      f.setAccessible(true);
+      UNSAFE = (Unsafe) f.get(null);
       Class<?> tc = HashEntry[].class;
       Class<?> sc = Segment[].class;
       TBASE = UNSAFE.arrayBaseOffset(tc);
