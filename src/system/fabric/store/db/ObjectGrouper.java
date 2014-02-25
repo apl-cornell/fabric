@@ -248,7 +248,15 @@ public final class ObjectGrouper {
     // onum.
     if (partialGroup == null)
       partialGroup = getPartialGroup(headOnum, lock, null);
-    if (partialGroup == null) return null;
+    if (partialGroup == null) {
+      // No such group. Unlock and notify any waiting threads.
+      synchronized (lock) {
+        lock.group = null;
+        lock.status = GroupLock.Status.READY;
+        lock.notifyAll();
+      }
+      return null;
+    }
 
     // Add any small groups on the partial group's frontier.
     for (LongKeyMap.Entry<SerializedObject> entry : partialGroup.frontier
