@@ -322,6 +322,10 @@
         <include name="**/Lexer_c.java" />
         <include name="**/*_ppg.cup" />
       </fileset>
+
+      <fileset dir="${system.src}">
+        <include name="fabric/store/db/LongKeyWarrantyIssuer.java"/>
+      </fileset>
     </delete>
 
     <subant target="clobber">
@@ -534,10 +538,31 @@
     </touch>
   </target>
 
-  <target name="bootstrap-check">
+  <target name="bootstrap-check" depends="LongKeyWarrantyIssuer">
     <uptodate property="bootstrap.up-to-date" targetfile="${bootstrap.tstamp}">
       <srcfiles dir="${bootstrap.src}" includes="**" />
     </uptodate>
+  </target>
+
+  <target name="LongKeyWarrantyIssuer-check">
+    <uptodate property="LongKeyWarrantyIssuer.up-to-date"
+        srcfile="${system.src}/fabric/store/db/WarrantyIssuer.java"
+        targetfile="${system.src}/fabric/store/db/LongKeyWarrantyIssuer.java"/>
+  </target>
+
+  <target name="LongKeyWarrantyIssuer"
+      depends="LongKeyWarrantyIssuer-check"
+      unless="LongKeyWarrantyIssuer.up-to-date">
+    <apply executable="bash"
+        failonerror="true"
+        dir="${system.src}/fabric/store/db"
+        relative="false"
+        skipemptyfilesets="true"
+        vmlauncher="false">
+      <arg value="${bin}/makeLongKeyWarrantyIssuer" />
+      <fileset dir="${system.src}/fabric/store/db/"
+          includes="WarrantyIssuer.java" />
+    </apply>
   </target>
 
   <!-- Compiles the Fabric runtime classes that are implemented in Java -->
@@ -566,7 +591,7 @@
   </target>
 
   <!-- Compiles the Fabric store -->
-  <target name="store" depends="LongKeyWarrantyIssuer,init,native,fabil-runtime">
+  <target name="store" depends="init,native,fabil-runtime">
     <javac source="1.7" target="1.7"
         srcdir="${system.src}" destdir="${classes}"
         includeAntRuntime="false" debug="on">
@@ -579,18 +604,6 @@
         <path refid="lib.classpath"/>
       </classpath>
     </javac>
-  </target>
-
-  <target name="LongKeyWarrantyIssuer">
-    <apply executable="bash"
-        failonerror="true"
-        dir="${system.src}/fabric/store/db"
-        relative="false"
-        skipemptyfilesets="true"
-        vmlauncher="false">
-      <arg value="${bin}/makeLongKeyWarrantyIssuer" />
-      <fileset dir="${system.src}/fabric/store/db/" includes="WarrantyIssuer.java" />
-    </apply>
   </target>
 
   <!-- Compiles the Fabric worker -->
