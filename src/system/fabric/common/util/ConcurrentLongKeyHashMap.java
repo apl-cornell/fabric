@@ -37,6 +37,7 @@ package fabric.common.util;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.lang.reflect.Field;
 import java.util.AbstractCollection;
 import java.util.AbstractSet;
 import java.util.Collection;
@@ -49,6 +50,8 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.concurrent.locks.ReentrantLock;
+
+import sun.misc.Unsafe;
 
 /**
  * A hash table supporting full concurrency of retrievals and
@@ -235,7 +238,9 @@ public class ConcurrentLongKeyHashMap<V> extends AbstractLongKeyMap<V>
     static final long nextOffset;
     static {
       try {
-        UNSAFE = sun.misc.Unsafe.getUnsafe();
+        Field f = Unsafe.class.getDeclaredField("theUnsafe");
+        f.setAccessible(true);
+        UNSAFE = (Unsafe) f.get(null);
         Class<?> k = HashEntry.class;
         nextOffset = UNSAFE.objectFieldOffset(k.getDeclaredField("next"));
       } catch (Exception e) {
