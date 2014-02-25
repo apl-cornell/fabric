@@ -86,7 +86,11 @@ public class MemoryDB extends ObjectDB {
   @Override
   public void commit(long tid, RemoteIdentity<RemoteWorker> workerIdentity,
       SubscriptionManager sm) throws AccessException {
-    PendingTransaction tx = remove(workerIdentity.principal, tid);
+    OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
+    if (submap == null)
+      throw new AccessException("Invalid transaction id: " + tid);
+
+    PendingTransaction tx = submap.get(workerIdentity.principal);
 
     // merge in the objects
     for (SerializedObject o : tx.modData) {
@@ -95,6 +99,8 @@ public class MemoryDB extends ObjectDB {
       // Remove any cached globs containing the old version of this object.
       notifyCommittedUpdate(sm, o.getOnum(), workerIdentity.node);
     }
+
+    remove(workerIdentity.principal, tid);
   }
 
   @Override
