@@ -1,11 +1,14 @@
 package fabric.dissemination;
 
+import static fabric.common.Logging.WORKER_LOGGER;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Level;
 
 import fabric.common.Logging;
 import fabric.common.ObjectGroup;
@@ -208,9 +211,15 @@ public class Cache {
     try {
       g = store.readEncryptedObjectFromStore(onum);
     } catch (AccessException e) {
+      Logging.log(WORKER_LOGGER, Level.WARNING,
+          "Access exception accessing fab://{0}/{1}", oid.first, oid.second);
     }
 
-    if (g == null) return null;
+    if (g == null) {
+      // TODO: Make the worker more robust against this. NPEs will arise when
+      // this return happens.
+      return null;
+    }
     return put(store, onum, g);
   }
 
