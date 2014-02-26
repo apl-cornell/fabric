@@ -13,6 +13,7 @@ import javax.security.auth.x500.X500Principal;
 import fabric.common.FastSerializable;
 import fabric.common.ONumConstants;
 import fabric.common.SerializedObject;
+import fabric.common.SysUtil;
 import fabric.common.exceptions.AccessException;
 import fabric.common.net.RemoteIdentity;
 import fabric.common.util.ConcurrentLongKeyHashMap;
@@ -79,15 +80,21 @@ public abstract class ObjectDB {
     public final Collection<Long> reads;
 
     /**
-     * Objects that have been modified or created.
+     * Objects that have been created.
      */
-    public final Collection<SerializedObject> modData;
+    public final Collection<SerializedObject> creates;
+
+    /**
+     * Objects that have been modified.
+     */
+    public final Collection<SerializedObject> writes;
 
     PendingTransaction(long tid, Principal owner) {
       this.tid = tid;
       this.owner = owner;
-      this.reads = new ArrayList<Long>();
-      this.modData = new ArrayList<SerializedObject>();
+      this.reads = new ArrayList<>();
+      this.creates = new ArrayList<>();
+      this.writes = new ArrayList<>();
     }
 
     /**
@@ -108,11 +115,18 @@ public abstract class ObjectDB {
       for (int i = 0; i < size; i++)
         reads.add(in.readLong());
 
-      size = in.readInt();
-      this.modData = new ArrayList<SerializedObject>(size);
+      int createsSize = in.readInt();
+      this.creates = new ArrayList<>(createsSize);
+
+      int writesSize = in.readInt();
+      this.writes = new ArrayList<>(writesSize);
+
       if (in.readBoolean()) {
         for (int i = 0; i < size; i++)
-          modData.add(new SerializedObject(in));
+          creates.add(new SerializedObject(in));
+
+        for (int i = 0; i < size; i++)
+          writes.add(new SerializedObject(in));
       }
     }
 
@@ -123,17 +137,19 @@ public abstract class ObjectDB {
     public Iterator<Long> iterator() {
       return new Iterator<Long>() {
         private Iterator<Long> readIt = reads.iterator();
-        private Iterator<SerializedObject> modIt = modData.iterator();
+        private Iterator<SerializedObject> createIt = creates.iterator();
+        private Iterator<SerializedObject> writeIt = writes.iterator();
 
         @Override
         public boolean hasNext() {
-          return readIt.hasNext() || modIt.hasNext();
+          return readIt.hasNext() || createIt.hasNext() || writeIt.hasNext();
         }
 
         @Override
         public Long next() {
           if (readIt.hasNext()) return readIt.next();
-          return modIt.next().getOnum();
+          if (createIt.hasNext()) return createIt.next().getOnum();
+          return writeIt.next().getOnum();
         }
 
         @Override
@@ -153,7 +169,10 @@ public abstract class ObjectDB {
       // Indicate that contents of modData will follow.
       out.writeBoolean(true);
 
-      for (SerializedObject obj : modData)
+      for (SerializedObject obj : creates)
+        obj.write(out);
+
+      for (SerializedObject obj : writes)
         obj.write(out);
     }
 
@@ -184,7 +203,8 @@ public abstract class ObjectDB {
       for (Long onum : reads)
         out.writeLong(onum);
 
-      out.writeInt(modData.size());
+      out.writeInt(creates.size());
+      out.writeInt(writes.size());
     }
   }
 
@@ -321,12 +341,12 @@ public abstract class ObjectDB {
     // transaction has locked the object.
     OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
 
-    synchronized (submap) {
-      submap.get(worker).modData.add(obj);
-    }
-
     switch (mode) {
     case CREATE:
+      synchronized (submap) {
+        submap.get(worker).creates.add(obj);
+      }
+
       // Make sure the onum doesn't already exist in the database.
       if (exists(onum)) {
         throw new TransactionPrepareFailedException(versionConflicts, "Object "
@@ -335,9 +355,13 @@ public abstract class ObjectDB {
 
       // Set the object's initial version number.
       obj.setVersion(INITIAL_OBJECT_VERSION_NUMBER);
-      break;
+      return;
 
     case WRITE:
+      synchronized (submap) {
+        submap.get(worker).writes.add(obj);
+      }
+
       // Read the old copy from the database.
       SerializedObject storeCopy = read(onum);
 
@@ -351,11 +375,10 @@ public abstract class ObjectDB {
 
       // Update the version number on the prepared copy of the object.
       obj.setVersion(storeVersion + 1);
-      break;
-
-    default:
-      throw new InternalError("Unknown update mode.");
+      return;
     }
+
+    throw new InternalError("Unknown update mode.");
   }
 
   /**
@@ -545,7 +568,7 @@ public abstract class ObjectDB {
       }
     }
 
-    for (SerializedObject update : tx.modData) {
+    for (SerializedObject update : SysUtil.chain(tx.creates, tx.writes)) {
       long onum = update.getOnum();
       ObjectLocks locks = rwLocks.get(onum);
       if (locks != null) {

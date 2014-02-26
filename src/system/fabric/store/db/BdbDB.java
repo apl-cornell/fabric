@@ -38,6 +38,7 @@ import fabric.common.ONumConstants;
 import fabric.common.Resources;
 import fabric.common.SerializedObject;
 import fabric.common.Surrogate;
+import fabric.common.SysUtil;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.net.RemoteIdentity;
@@ -68,6 +69,11 @@ public class BdbDB extends ObjectDB {
    * Database containing prepared transactions.
    */
   private Database prepared;
+
+  /**
+   * Database containing objects created by prepared transactions.
+   */
+  private Database preparedCreates;
 
   /**
    * Database containing objects modified by prepared transactions.
@@ -129,6 +135,7 @@ public class BdbDB extends ObjectDB {
       meta = env.openDatabase(null, "meta", dbconf);
 
       dbconf.setSortedDuplicates(true);
+      preparedCreates = env.openDatabase(null, "preparedCreates", dbconf);
       preparedWrites = env.openDatabase(null, "preparedWrites", dbconf);
 
       initRwCount();
@@ -173,7 +180,11 @@ public class BdbDB extends ObjectDB {
 
         Serializer<SerializedObject> serializer =
             new Serializer<SerializedObject>();
-        for (SerializedObject obj : pending.modData) {
+        for (SerializedObject obj : pending.creates) {
+          data.setData(serializer.toBytes(obj));
+          preparedCreates.put(txn, key, data);
+        }
+        for (SerializedObject obj : pending.writes) {
           data.setData(serializer.toBytes(obj));
           preparedWrites.put(txn, key, data);
         }
@@ -202,7 +213,8 @@ public class BdbDB extends ObjectDB {
             if (pending != null) {
               Serializer<SerializedObject> serializer =
                   new Serializer<SerializedObject>();
-              for (SerializedObject o : pending.modData) {
+              for (SerializedObject o : SysUtil.chain(pending.creates,
+                  pending.writes)) {
                 long onum = o.getOnum();
                 STORE_DB_LOGGER.log(Level.FINEST, "Bdb committing onum {0}",
                     onum);
@@ -226,7 +238,7 @@ public class BdbDB extends ObjectDB {
         });
 
     // Fix up caches.
-    for (SerializedObject o : pending.modData) {
+    for (SerializedObject o : SysUtil.chain(pending.creates, pending.writes)) {
       long onum = o.getOnum();
 
       // Remove any cached globs containing the old version of this object.
@@ -363,6 +375,7 @@ public class BdbDB extends ObjectDB {
     try {
       if (db != null) db.close();
       if (prepared != null) prepared.close();
+      if (preparedCreates != null) preparedCreates.close();
       if (preparedWrites != null) preparedWrites.close();
       if (meta != null) meta.close();
       if (env != null) env.close();
@@ -436,16 +449,24 @@ public class BdbDB extends ObjectDB {
         && prepared.get(txn, bdbKey, data, LockMode.DEFAULT) == SUCCESS) {
       pending = toPendingTransaction(data.getData());
 
-      Cursor cursor = preparedWrites.openCursor(txn, null);
+      Cursor cursor = preparedCreates.openCursor(txn, null);
       for (OperationStatus result = cursor.getSearchKey(bdbKey, data, null); result == SUCCESS; result =
           cursor.getNextDup(bdbKey, data, null)) {
-        pending.modData.add(toSerializedObject(data.getData()));
+        pending.creates.add(toSerializedObject(data.getData()));
+      }
+      cursor.close();
+
+      cursor = preparedWrites.openCursor(txn, null);
+      for (OperationStatus result = cursor.getSearchKey(bdbKey, data, null); result == SUCCESS; result =
+          cursor.getNextDup(bdbKey, data, null)) {
+        pending.writes.add(toSerializedObject(data.getData()));
       }
       cursor.close();
     }
 
     if (pending == null) return null;
     prepared.delete(txn, bdbKey);
+    preparedCreates.delete(txn, bdbKey);
     preparedWrites.delete(txn, bdbKey);
 
     unpin(pending);

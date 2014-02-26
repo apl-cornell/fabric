@@ -10,6 +10,7 @@ import java.security.PrivateKey;
 import fabric.common.ONumConstants;
 import fabric.common.Resources;
 import fabric.common.SerializedObject;
+import fabric.common.SysUtil;
 import fabric.common.exceptions.AccessException;
 import fabric.common.net.RemoteIdentity;
 import fabric.common.util.ConcurrentLongKeyHashMap;
@@ -92,8 +93,9 @@ public class MemoryDB extends ObjectDB {
 
     PendingTransaction tx = submap.get(workerIdentity.principal);
 
-    // merge in the objects
-    for (SerializedObject o : tx.modData) {
+    // merge in the objects. We do creates before writes to avoid potential
+    // dangling references in update objects.
+    for (SerializedObject o : SysUtil.chain(tx.creates, tx.writes)) {
       objectTable.put(o.getOnum(), o);
 
       // Remove any cached globs containing the old version of this object.
