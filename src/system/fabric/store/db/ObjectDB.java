@@ -18,6 +18,7 @@ import fabric.common.FastSerializable;
 import fabric.common.Logging;
 import fabric.common.ONumConstants;
 import fabric.common.SerializedObject;
+import fabric.common.SysUtil;
 import fabric.common.VersionWarranty;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
@@ -102,14 +103,20 @@ public abstract class ObjectDB {
     public final Principal owner;
 
     /**
-     * Objects that have been modified or created.
+     * Objects that have been created.
      */
-    public final Collection<Pair<SerializedObject, UpdateType>> modData;
+    public final Collection<SerializedObject> creates;
+
+    /**
+     * Objects that have been modified.
+     */
+    public final Collection<SerializedObject> writes;
 
     PendingTransaction(long tid, Principal owner) {
       this.tid = tid;
       this.owner = owner;
-      this.modData = new ArrayList<Pair<SerializedObject, UpdateType>>();
+      this.creates = new ArrayList<>();
+      this.writes = new ArrayList<>();
     }
 
     /**
@@ -125,15 +132,18 @@ public abstract class ObjectDB {
         this.owner = null;
       }
 
-      int size = in.readInt();
-      this.modData = new ArrayList<Pair<SerializedObject, UpdateType>>(size);
+      int createsSize = in.readInt();
+      this.creates = new ArrayList<>(createsSize);
+
+      int writesSize = in.readInt();
+      this.writes = new ArrayList<>(writesSize);
+
       if (in.readBoolean()) {
-        for (int i = 0; i < size; i++) {
-          SerializedObject obj = new SerializedObject(in);
-          UpdateType updateType =
-              in.readBoolean() ? UpdateType.CREATE : UpdateType.WRITE;
-          modData.add(new Pair<SerializedObject, UpdateType>(obj, updateType));
-        }
+        for (int i = 0; i < createsSize; i++)
+          creates.add(new SerializedObject(in));
+
+        for (int i = 0; i < writesSize; i++)
+          writes.add(new SerializedObject(in));
       }
     }
 
@@ -143,17 +153,18 @@ public abstract class ObjectDB {
     @Override
     public Iterator<Long> iterator() {
       return new Iterator<Long>() {
-        private Iterator<Pair<SerializedObject, UpdateType>> modIt = modData
-            .iterator();
+        private Iterator<SerializedObject> createIt = creates.iterator();
+        private Iterator<SerializedObject> writeIt = writes.iterator();
 
         @Override
         public boolean hasNext() {
-          return modIt.hasNext();
+          return createIt.hasNext() || writeIt.hasNext();
         }
 
         @Override
         public Long next() {
-          return modIt.next().first.getOnum();
+          if (createIt.hasNext()) return createIt.next().getOnum();
+          return writeIt.next().getOnum();
         }
 
         @Override
@@ -173,10 +184,8 @@ public abstract class ObjectDB {
       // Indicate that contents of modData will follow.
       out.writeBoolean(true);
 
-      for (Pair<SerializedObject, UpdateType> obj : modData) {
-        obj.first.write(out);
-        out.writeBoolean(obj.second == UpdateType.CREATE);
-      }
+      for (SerializedObject obj : SysUtil.chain(creates, writes))
+        obj.write(out);
     }
 
     /**
@@ -202,7 +211,8 @@ public abstract class ObjectDB {
         out.writeLong(owner.$getOnum());
       }
 
-      out.writeInt(modData.size());
+      out.writeInt(creates.size());
+      out.writeInt(writes.size());
     }
   }
 
@@ -410,13 +420,12 @@ public abstract class ObjectDB {
     // transaction has updated the object.
     OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
 
-    synchronized (submap) {
-      submap.get(worker).modData.add(new Pair<SerializedObject, UpdateType>(
-          obj, updateType));
-    }
-
     switch (updateType) {
     case CREATE:
+      synchronized (submap) {
+        submap.get(worker).creates.add(obj);
+      }
+
       // Make sure the onum doesn't already exist in the database.
       if (exists(onum)) {
         throw new TransactionPrepareFailedException(versionConflicts, "Object "
@@ -428,6 +437,10 @@ public abstract class ObjectDB {
       return VersionWarranty.EXPIRED_WARRANTY;
 
     case WRITE:
+      synchronized (submap) {
+        submap.get(worker).writes.add(obj);
+      }
+
       // Notify the warranty issuer.
       warrantyIssuer.notifyWritePrepare(onum);
 
@@ -827,8 +840,8 @@ public abstract class ObjectDB {
    * about to be committed or aborted.
    */
   protected final void unpin(PendingTransaction tx) {
-    for (Pair<SerializedObject, UpdateType> update : tx.modData) {
-      long onum = update.first.getOnum();
+    for (SerializedObject update : SysUtil.chain(tx.creates, tx.writes)) {
+      long onum = update.getOnum();
       writeLocks.remove(onum, tx.tid);
     }
   }

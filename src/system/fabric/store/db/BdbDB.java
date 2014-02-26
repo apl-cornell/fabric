@@ -43,6 +43,7 @@ import fabric.common.ONumConstants;
 import fabric.common.Resources;
 import fabric.common.SerializedObject;
 import fabric.common.Surrogate;
+import fabric.common.SysUtil;
 import fabric.common.Threading;
 import fabric.common.VersionWarranty;
 import fabric.common.exceptions.AccessException;
@@ -79,6 +80,11 @@ public class BdbDB extends ObjectDB {
    * Database containing data for prepared but uncommitted transactions.
    */
   private Database prepared;
+
+  /**
+   * Database containing objects created by prepared transactions.
+   */
+  private Database preparedCreates;
 
   /**
    * Database containing objects modified by prepared transactions.
@@ -157,6 +163,7 @@ public class BdbDB extends ObjectDB {
       meta = env.openDatabase(null, "meta", dbconf);
 
       dbconf.setSortedDuplicates(true);
+      preparedCreates = env.openDatabase(null, "preparedCreates", dbconf);
       preparedWrites = env.openDatabase(null, "preparedWrites", dbconf);
 
       STORE_DB_LOGGER.info("Bdb databases opened");
@@ -216,8 +223,12 @@ public class BdbDB extends ObjectDB {
         DatabaseEntry data = new DatabaseEntry(toBytesNoModData(pending));
         prepared.put(txn, key, data);
 
-        ModDataSerializer serializer = new ModDataSerializer();
-        for (Pair<SerializedObject, UpdateType> obj : pending.modData) {
+        FSSerializer<SerializedObject> serializer = new FSSerializer<>();
+        for (SerializedObject obj : pending.creates) {
+          data.setData(serializer.toBytes(obj));
+          preparedCreates.put(txn, key, data);
+        }
+        for (SerializedObject obj : pending.writes) {
           data.setData(serializer.toBytes(obj));
           preparedWrites.put(txn, key, data);
         }
@@ -287,8 +298,8 @@ public class BdbDB extends ObjectDB {
                 if (pending != null) {
                   FSSerializer<SerializedObject> serializer =
                       new FSSerializer<SerializedObject>();
-                  for (Pair<SerializedObject, UpdateType> update : pending.modData) {
-                    SerializedObject o = update.first;
+                  for (SerializedObject o : SysUtil.chain(pending.creates,
+                      pending.writes)) {
                     o.setVersion(o.getVersion() + 1);
                     long onum = o.getOnum();
                     STORE_DB_LOGGER.log(Level.FINEST,
@@ -313,14 +324,20 @@ public class BdbDB extends ObjectDB {
             });
 
         // Fix up caches.
-        for (Pair<SerializedObject, UpdateType> update : pending.modData) {
-          SerializedObject o = update.first;
+        for (SerializedObject o : pending.creates) {
           long onum = o.getOnum();
 
-          if (update.second == UpdateType.WRITE) {
-            // Remove any cached globs containing the old version of this object.
-            notifyCommittedUpdate(sm, onum, workerIdentity.node);
-          }
+          // Update caches.
+          cacheVersionNumber(onum, o.getVersion());
+          cachedObjects.put(onum, o);
+        }
+
+        // Fix up caches.
+        for (SerializedObject o : pending.writes) {
+          long onum = o.getOnum();
+
+          // Remove any cached globs containing the old version of this object.
+          notifyCommittedUpdate(sm, onum, workerIdentity.node);
 
           // Update caches.
           cacheVersionNumber(onum, o.getVersion());
@@ -465,6 +482,7 @@ public class BdbDB extends ObjectDB {
     try {
       if (db != null) db.close();
       if (prepared != null) prepared.close();
+      if (preparedCreates != null) preparedCreates.close();
       if (preparedWrites != null) preparedWrites.close();
       if (commitTimes != null) commitTimes.close();
       if (meta != null) meta.close();
@@ -543,23 +561,28 @@ public class BdbDB extends ObjectDB {
                 }
 
                 // Loop through the updates for the current transaction.
-                for (Pair<SerializedObject, UpdateType> update : pending.modData) {
-                  long onum = update.first.getOnum();
+                for (SerializedObject update : pending.creates) {
+                  long onum = update.getOnum();
 
                   // Recover the transaction's write lock for the current update.
                   writeLocks.put(onum, tid);
 
-                  if (update.second == UpdateType.WRITE) {
-                    STORE_DB_LOGGER.log(Level.FINEST, "Recovered write to {0}",
-                        onum);
-                    addWrittenOnumByTid(tid, owner, onum);
+                  STORE_DB_LOGGER.log(Level.FINEST, "Recovered create for {0}",
+                      onum);
+                }
 
-                    // Restore the object's warranty.
-                    warrantyIssuer.put(onum, warranty);
-                  } else {
-                    STORE_DB_LOGGER.log(Level.FINEST,
-                        "Recovered create for {0}", onum);
-                  }
+                for (SerializedObject update : pending.writes) {
+                  long onum = update.getOnum();
+
+                  // Recover the transaction's write lock for the current update.
+                  writeLocks.put(onum, tid);
+
+                  STORE_DB_LOGGER.log(Level.FINEST, "Recovered write to {0}",
+                      onum);
+                  addWrittenOnumByTid(tid, owner, onum);
+
+                  // Restore the object's warranty.
+                  warrantyIssuer.put(onum, warranty);
                 }
               }
               preparedCursor.close();
@@ -638,16 +661,23 @@ public class BdbDB extends ObjectDB {
         && prepared.get(txn, bdbKey, data, LockMode.DEFAULT) == SUCCESS) {
       pending = toPendingTransaction(data.getData());
 
-      Cursor cursor = preparedWrites.openCursor(txn, null);
+      Cursor cursor = preparedCreates.openCursor(txn, null);
       for (OperationStatus result = cursor.getSearchKey(bdbKey, data, null); result == SUCCESS; result =
           cursor.getNextDup(bdbKey, data, null)) {
-        pending.modData.add(toModData(data.getData()));
+        pending.creates.add(toSerializedObject(data.getData()));
+      }
+
+      cursor = preparedWrites.openCursor(txn, null);
+      for (OperationStatus result = cursor.getSearchKey(bdbKey, data, null); result == SUCCESS; result =
+          cursor.getNextDup(bdbKey, data, null)) {
+        pending.writes.add(toSerializedObject(data.getData()));
       }
       cursor.close();
     }
 
     if (pending == null) return null;
     prepared.delete(txn, bdbKey);
+    preparedCreates.delete(txn, bdbKey);
     preparedWrites.delete(txn, bdbKey);
 
     unpin(pending);
@@ -855,31 +885,6 @@ public class BdbDB extends ObjectDB {
     @Override
     public void write(FS obj, ObjectOutputStream out) throws IOException {
       obj.write(out);
-    }
-  }
-
-  private static class ModDataSerializer extends
-      Serializer<Pair<SerializedObject, UpdateType>> {
-    @Override
-    public void write(Pair<SerializedObject, UpdateType> obj,
-        ObjectOutputStream out) throws IOException {
-      obj.first.write(out);
-      out.writeBoolean(obj.second == UpdateType.CREATE);
-    }
-  }
-
-  private static Pair<SerializedObject, UpdateType> toModData(byte[] data) {
-    try {
-      ByteArrayInputStream bis = new ByteArrayInputStream(data);
-      ObjectInputStream ois = new ObjectInputStream(bis);
-
-      SerializedObject obj = new SerializedObject(ois);
-      UpdateType updateType =
-          ois.readBoolean() ? UpdateType.CREATE : UpdateType.WRITE;
-
-      return new Pair<SerializedObject, UpdateType>(obj, updateType);
-    } catch (IOException e) {
-      throw new InternalError(e);
     }
   }
 
