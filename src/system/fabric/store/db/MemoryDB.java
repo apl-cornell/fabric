@@ -113,7 +113,8 @@ public class MemoryDB extends ObjectDB {
     Threading.scheduleAt(commitTime, new Runnable() {
       @Override
       public void run() {
-        PendingTransaction tx = remove(workerIdentity.principal, tid);
+        OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
+        PendingTransaction tx = submap.get(workerIdentity.principal);
 
         // merge in the objects
         for (Pair<SerializedObject, UpdateType> update : tx.modData) {
@@ -125,6 +126,7 @@ public class MemoryDB extends ObjectDB {
             notifyCommittedUpdate(sm, o.getOnum(), workerIdentity.node);
           }
         }
+        remove(workerIdentity.principal, tid);
       }
     });
   }
