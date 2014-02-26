@@ -21,7 +21,6 @@ import fabric.common.util.ConcurrentLongKeyMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.MutableLong;
 import fabric.common.util.OidKeyHashMap;
-import fabric.common.util.Pair;
 import fabric.lang.security.Principal;
 import fabric.store.SubscriptionManager;
 import fabric.store.TransactionManager;
@@ -116,16 +115,19 @@ public class MemoryDB extends ObjectDB {
         OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
         PendingTransaction tx = submap.get(workerIdentity.principal);
 
-        // merge in the objects
-        for (Pair<SerializedObject, UpdateType> update : tx.modData) {
-          SerializedObject o = update.first;
+        // merge in the objects. We do creates before writes to avoid potential
+        // dangling references in update objects.
+        for (SerializedObject o : tx.creates) {
+          objectTable.put(o.getOnum(), o);
+        }
+
+        for (SerializedObject o : tx.writes) {
           objectTable.put(o.getOnum(), o);
 
-          if (update.second == UpdateType.WRITE) {
-            // Remove any cached globs containing the old version of this object.
-            notifyCommittedUpdate(sm, o.getOnum(), workerIdentity.node);
-          }
+          // Remove any cached globs containing the old version of this object.
+          notifyCommittedUpdate(sm, o.getOnum(), workerIdentity.node);
         }
+
         remove(workerIdentity.principal, tid);
       }
     });
