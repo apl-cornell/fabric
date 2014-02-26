@@ -258,6 +258,7 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
     Pair<ObjectGroup, WarrantyGroup> g;
     if (useDissem) {
       g = Worker.getWorker().fetchManager().fetch(this, onum);
+      if (g == null) throw new AccessException(this, onum);
     } else {
       g = readObjectFromStore(onum);
     }

@@ -27,7 +27,9 @@ public class DummyFetchManager implements FetchManager {
   @Override
   public Pair<ObjectGroup, WarrantyGroup> fetch(RemoteStore store,
       long onum) {
-    return cache.get(store, onum, true).decrypt();
+    Cache.Entry entry = cache.get(store, onum, true);
+    if (entry == null) return null;
+    return entry.decrypt();
   }
 
   @Override
