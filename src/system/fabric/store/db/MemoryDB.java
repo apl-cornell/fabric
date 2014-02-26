@@ -123,6 +123,7 @@ public class MemoryDB extends ObjectDB {
         }
 
         for (SerializedObject o : tx.writes) {
+          o.setVersion(o.getVersion() + 1);
           objectTable.put(o.getOnum(), o);
 
           // Remove any cached globs containing the old version of this object.
