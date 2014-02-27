@@ -1,7 +1,7 @@
 #!/usr/bin/python
 ####
 # Counts and categorizes lines of code in the Fabric project that have changed
-# between trunk and a given branch.
+# between two different branches/tags.
 
 import collections, os, re, shutil, subprocess, sys
 
@@ -24,7 +24,7 @@ ignoreFilesRE = re.compile("""^.*/(
                             )$""", re.X)
 
 # Regexp for examples to include. All other examples will be ignored.
-includeExamplesRE = re.compile("""^\./fab-(trunk|branch)/examples/
+includeExamplesRE = re.compile("""^\./fab-(after|before)/examples/
       (auction|friendmap|imageapp)
     /src/.*$""", re.X)
 
@@ -93,14 +93,20 @@ categories['ImageApp example (Fabric)'] = ['examples/imageapp/src/fabric']
 
 ########################################################################
 
-if len(sys.argv) != 3:
+if len(sys.argv) - 1 != 4:
   # Print usage info.
   scriptName = re.match('^(?:.*/)?([^/]+)$', sys.argv[0]).group(1)
   print("""\
-Usage: %s BRANCH DATE
+Usage: %s BRANCH1 BRANCH2 DATE1 DATE2
   Determines the number of lines of code that have been added, modified and
-  deleted in Fabric trunk (relative to BRANCH), and in Jif HEAD (relative to
-  DATE).
+  deleted in Fabric BRANCH2 (relative to BRANCH1), and in Jif at DATE2
+  (relative to DATE1).
+
+  BRANCH1 and BRANCH2 specify directories under the repo root. Examples:
+
+    trunk
+    branches/promises
+    tags/fabric-0.2.0
 
   This script exports fresh working copies into a temporary directory. The only
   prerequisites for running this script are:
@@ -128,8 +134,10 @@ for i in range(len(catKey)):
                 + 'path "%s" in category "%s"' + '\n')
                 % (path1, catKey[i], path2, catKey[j]))
 
-branchName = sys.argv[1]
-date = sys.argv[2]
+branch1Name = sys.argv[1]
+branch2Name = sys.argv[2]
+date1 = sys.argv[3]
+date2 = sys.argv[4]
 
 try:
   if 'FABRIC_HOME' in os.environ:
@@ -152,82 +160,82 @@ os.mkdir('tmp')
 try: os.chdir('tmp')
 except OSError: sys.exit('error changing to FABRIC/tmp directory')
 
-# Export fab-branch/src.
-print('Exporting Fabric branch "%s" from svn...' % branchName)
+# Export fab-before/src.
+print('Exporting Fabric BRANCH1 "%s" from svn...' % branch1Name)
 if subprocess.call(['svn', 'export',
-      'https://forge.cornell.edu/svn/repos/fabric/branches/' + branchName +
-      '/src', 'fab-branch/src'], stdout=open(os.devnull, 'w')) != 0:
+      'https://forge.cornell.edu/svn/repos/fabric/%s/src' % branch1Name,
+      'fab-before/src'], stdout=open(os.devnull, 'w')) != 0:
   sys.exit(1)
 
-# Export fab-branch/examples.
+# Export fab-before/examples.
 if subprocess.call(['svn', 'export',
-      'https://forge.cornell.edu/svn/repos/fabric/branches/' + branchName +
-      '/examples', 'fab-branch/examples'], stdout=open(os.devnull, 'w')) != 0:
+      'https://forge.cornell.edu/svn/repos/fabric/%s/examples' % branch1Name,
+      'fab-before/examples'], stdout=open(os.devnull, 'w')) != 0:
   sys.exit(1)
 
-# Export fab-branch/lib.
+# Export fab-before/lib.
 if subprocess.call(['svn', 'export',
-      'https://forge.cornell.edu/svn/repos/fabric/branches/' + branchName +
-      '/lib', 'fab-branch/lib'], stdout=open(os.devnull, 'w')) != 0:
+      'https://forge.cornell.edu/svn/repos/fabric/%s/lib' % branch1Name,
+      'fab-before/lib'], stdout=open(os.devnull, 'w')) != 0:
   sys.exit(1)
 
-# Export fab-trunk/src.
-print('Exporting Fabric trunk from svn...')
+# Export fab-after/src.
+print('Exporting Fabric BRANCH2 "%s" from svn...' % branch2Name)
 if subprocess.call(['svn', 'export',
-      'https://forge.cornell.edu/svn/repos/fabric/trunk/src',
-      'fab-trunk/src'], stdout=open(os.devnull, 'w')) != 0:
+      'https://forge.cornell.edu/svn/repos/fabric/%s/src' % branch2Name,
+      'fab-after/src'], stdout=open(os.devnull, 'w')) != 0:
   sys.exit(1)
 
-# Export fab-trunk/examples.
+# Export fab-after/examples.
 if subprocess.call(['svn', 'export',
-      'https://forge.cornell.edu/svn/repos/fabric/trunk/examples',
-      'fab-trunk/examples'], stdout=open(os.devnull, 'w')) != 0:
+      'https://forge.cornell.edu/svn/repos/fabric/%s/examples' % branch2Name,
+      'fab-after/examples'], stdout=open(os.devnull, 'w')) != 0:
   sys.exit(1)
 
-# For jif-branch, use fab-branch/lib/jif, if it exists.
-if os.path.isdir('fab-branch/lib/jif/src'):
-  print('Using fab-branch/lib/jif for jif-branch')
-  shutil.move('fab-branch/lib/jif/src', 'jif-branch')
+# For jif-before, use fab-before/lib/jif, if it exists.
+if os.path.isdir('fab-before/lib/jif/src'):
+  print('Using fab-before/lib/jif for jif-before')
+  shutil.move('fab-before/lib/jif/src', 'jif-before')
 else:
-  # Export jif-branch.
-  print('Exporting Jif ("%s") from cvs...' % date)
+  # Export jif-before.
+  print('Exporting Jif BRANCH1 ("%s") from cvs...' % date1)
   if subprocess.call(['cvs', '-d', ':ext:gforge.cis.cornell.edu:/cvsroot/jif',
-        'export', '-D', date, '-d', 'jif-branch', 'jif/src'],
+        'export', '-D', date1, '-d', 'jif-before', 'jif/src'],
         stdout=open(os.devnull, 'w')) != 0:
     sys.exit(1)
 
-# Remove fab-branch/lib.
-try: shutil.rmtree('fab-branch/lib')
+# Remove fab-before/lib.
+try: shutil.rmtree('fab-before/lib')
 except OSError: pass
 
-# Export jif-trunk.
-print('Exporting Jif HEAD from cvs...')
+# Export jif-after.
+print('Exporting Jif BRANCH2 ("%s") from cvs...' % date2)
 if subprocess.call(['cvs', '-d', ':ext:gforge.cis.cornell.edu:/cvsroot/jif',
-      'export', '-r', 'HEAD', '-d', 'jif-trunk', 'jif/src'],
+      'export', '-D', date2, '-d', 'jif-after', 'jif/src'],
       stdout=open(os.devnull, 'w')) != 0:
   sys.exit(1)
 
-# Export polyglot-branch.
-print('Exporting Polyglot ("%s") from cvs...' % date)
+# Export polyglot-before.
+print('Exporting Polyglot BRANCH1 ("%s") from cvs...' % date1)
 if subprocess.call(['cvs',
       '-d', ':ext:gforge.cis.cornell.edu:/cvsroot/polyglot',
-      'export', '-D', date, '-d', 'polyglot-branch', 'polyglot/src'],
+      'export', '-D', date1, '-d', 'polyglot-before', 'polyglot/src'],
       stdout=open(os.devnull, 'w')) != 0:
   sys.exit(1)
 
-# Export polyglot-trunk.
-print('Exporting Polyglot HEAD from cvs...')
+# Export polyglot-after.
+print('Exporting Polyglot BRANCH2 ("%s") from cvs...' % date2)
 if subprocess.call(['cvs',
       '-d', ':ext:gforge.cis.cornell.edu:/cvsroot/polyglot',
-      'export', '-r', 'HEAD', '-d', 'polyglot-trunk', 'polyglot/src'],
+      'export', '-D', date2, '-d', 'polyglot-after', 'polyglot/src'],
       stdout=open(os.devnull, 'w')) != 0:
   sys.exit(1)
 
 # Construct the command to normalize sources.  While we do this, delete all
 # non-source files, and make sure the categories are exhaustive.
 normalizeCmd = ['../' + normalizeCode]
-examplesRE = re.compile('^\./fab-(trunk|branch)/examples/.*$')
-baseCompilersRE = re.compile('^\./(jif|polyglot)-(trunk|branch)/.*$')
+examplesRE = re.compile('^\./fab-(after|before)/examples/.*$')
+baseCompilersRE = re.compile('^\./(jif|polyglot)-(after|before)/.*$')
 for root, dirs, files in os.walk('.'):
   for filename in files:
     fullPath = os.path.join(root, filename)
@@ -251,7 +259,7 @@ for root, dirs, files in os.walk('.'):
     matched = False
     for cat, paths in categories.items():
       for path in paths:
-        matched = re.match('^\./fab-(branch|trunk)/' + path, fullPath) != None
+        matched = re.match('^\./fab-(before|after)/' + path, fullPath) != None
         if matched: break
       if matched: break
 
@@ -282,7 +290,7 @@ for base, cats in {
     for path in paths:
       # Get diff counts.
       output = subprocess.check_output(
-          'diff -urN %s-branch/"%s" %s-trunk/"%s" | diffstat -bms'
+          'diff -urN %s-before/"%s" %s-after/"%s" | diffstat -bms'
             % (base, path, base, path),
           shell=True).decode('utf-8')
 
@@ -295,7 +303,7 @@ for base, cats in {
 
       # Get line count.
       output = subprocess.check_output(
-        'find %s-trunk/"%s" -type f -print0 | wc -l --files0-from=- | tail -n 1'
+        'find %s-after/"%s" -type f -print0 | wc -l --files0-from=- | tail -n 1'
           % (base, path),
         shell=True).decode('utf-8')
       match = re.match('(\d+) total', output)
