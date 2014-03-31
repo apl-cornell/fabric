@@ -14,7 +14,7 @@
 	<key>BackgroundGraphic</key>
 	<dict>
 		<key>Bounds</key>
-		<string>{{0, 0}, {575.99998474121094, 733}}</string>
+		<string>{{0, 0}, {576.00002479553223, 733}}</string>
 		<key>Class</key>
 		<string>SolidGraphic</string>
 		<key>FontInfo</key>
@@ -60,7 +60,7 @@
 	<array>
 		<dict>
 			<key>Bounds</key>
-			<string>{{120.5, 332.5}, {203, 105}}</string>
+			<string>{{120.84500122070312, 359.99256702963623}, {203, 82}}</string>
 			<key>Class</key>
 			<string>ShapedGraphic</string>
 			<key>FitText</key>
@@ -110,6 +110,8 @@
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\qc
 
 \f0\i\fs144 \cf0 Fabric}</string>
+				<key>VerticalPad</key>
+				<integer>15</integer>
 			</dict>
 			<key>Wrap</key>
 			<string>NO</string>
@@ -244,7 +246,7 @@
 			<key>Points</key>
 			<array>
 				<string>{114, 438.5}</string>
-				<string>{328, 438.5}</string>
+				<string>{332.88287859285788, 438.5}</string>
 			</array>
 			<key>Style</key>
 			<dict>
@@ -352,7 +354,7 @@
 			<key>Points</key>
 			<array>
 				<string>{218, 314}</string>
-				<string>{218, 477}</string>
+				<string>{218, 478.3513513339359}</string>
 			</array>
 			<key>Style</key>
 			<dict>
@@ -419,7 +421,7 @@
 	<key>MasterSheets</key>
 	<array/>
 	<key>ModificationDate</key>
-	<string>2014-03-25 03:20:24 +0000</string>
+	<string>2014-03-31 22:17:47 +0000</string>
 	<key>Modifier</key>
 	<string>Andrew Myers</string>
 	<key>NotesVisible</key>
@@ -450,7 +452,7 @@
 		<key>NSPaperSize</key>
 		<array>
 			<string>size</string>
-			<string>{611.99998474121094, 792}</string>
+			<string>{612.00002479553223, 792}</string>
 		</array>
 		<key>NSPrintReverseOrientation</key>
 		<array>
@@ -500,7 +502,7 @@
 			</dict>
 		</array>
 		<key>Frame</key>
-		<string>{{965, 490}, {710, 888}}</string>
+		<string>{{12, 4}, {710, 874}}</string>
 		<key>ListView</key>
 		<true/>
 		<key>OutlineWidth</key>
@@ -514,7 +516,7 @@
 		<key>SidebarWidth</key>
 		<integer>120</integer>
 		<key>VisibleRegion</key>
-		<string>{{92.792791596926548, 213.96396120650539}, {259.00900567103281, 330.1801759249862}}</string>
+		<string>{{95.495494264798197, 213.96396120650539}, {259.00900567103287, 323.87386969995237}}</string>
 		<key>Zoom</key>
 		<real>2.2200000286102295</real>
 		<key>ZoomValues</key>
