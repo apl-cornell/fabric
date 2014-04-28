@@ -34,7 +34,7 @@ from the GNU General Public License) are enumerated below.
   JFlex is software developed by Gerwin Klein.
 
     Files:
-      lib/JFlex.jar
+      lib/jflex.jar
 
 
   CUP Parser Generator is software developed by Scott Hudson,

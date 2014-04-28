@@ -15,7 +15,7 @@ import jpa2fab.ext.JPA2FabILExtFactory_c;
 import polyglot.ast.NodeFactory;
 import polyglot.ext.jl5.ExtensionInfo;
 import polyglot.ext.jl5.JL5Options;
-import polyglot.ext.jl5.ast.JL5DelFactory_c;
+import polyglot.ext.jl5.ast.J5Lang_c;
 import polyglot.ext.jl5.ast.JL5ExtFactory_c;
 import polyglot.ext.jl5.ast.JL5NodeFactory_c;
 import polyglot.ext.jl5.types.JL5TypeSystem_c;
@@ -52,8 +52,8 @@ public class JPA2FabExtensionInfo extends ExtensionInfo {
 
   @Override
   protected NodeFactory createNodeFactory() {
-    return new JL5NodeFactory_c(
-        new JL5ExtFactory_c(new JPA2FabILExtFactory_c()), new JL5DelFactory_c());
+    return new JL5NodeFactory_c(J5Lang_c.instance, new JL5ExtFactory_c(
+        new JPA2FabILExtFactory_c()));
   }
 
   @Override

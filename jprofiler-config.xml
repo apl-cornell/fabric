@@ -255,7 +255,7 @@
         <classPathEntry path="/home/jed/work/fabric/classes" />
         <classPathEntry path="/home/jed/work/fabric/rt-classes" />
         <classPathEntry path="/home/jed/work/polyglot/classes" />
-        <classPathEntry path="/home/jed/work/polyglot/lib/JFlex.jar" />
+        <classPathEntry path="/home/jed/work/polyglot/lib/jflex.jar" />
         <classPathEntry path="/home/jed/work/polyglot/lib/java_cup.jar" />
         <classPathEntry path="/home/jed/work/jif/classes" />
         <classPathEntry path="/home/jed/work/fabric/lib/FreePastry-2.1.jar" />

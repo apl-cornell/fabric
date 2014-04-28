@@ -97,7 +97,7 @@
     <pathelement path="${polyglot.home}/lib/polyglot.jar" />
     <pathelement path="${polyglot.home}/lib/ppg.jar" />
     <pathelement path="${polyglot.home}/lib/java_cup.jar" />
-    <pathelement path="${polyglot.home}/lib/JFlex.jar" />
+    <pathelement path="${polyglot.home}/lib/jflex.jar" />
     <pathelement path="${jdk.home}/lib/tools.jar" />
   </path>
 

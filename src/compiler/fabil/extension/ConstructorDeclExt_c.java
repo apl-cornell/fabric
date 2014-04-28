@@ -22,7 +22,7 @@ public class ConstructorDeclExt_c extends ClassMemberExt_c {
   public List<ClassMember> implMember(ProxyRewriter pr, ClassDecl parent) {
     // TODO add Store parameters?
     ConstructorDecl node = (ConstructorDecl) node();
-    node = node.name("_Impl");
+    node = (ConstructorDecl) node.name("_Impl");
     return Collections.singletonList((ClassMember) node);
   }
 

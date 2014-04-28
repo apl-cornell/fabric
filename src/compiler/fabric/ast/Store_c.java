@@ -25,7 +25,7 @@ public class Store_c extends Expr_c implements Store {
   protected boolean isLocal;
 
   @Override
-  public Object copy() {
+  public Store copy() {
     Store s = (Store) super.copy();
     return s;
   }
@@ -66,7 +66,7 @@ public class Store_c extends Expr_c implements Store {
 
   @Override
   public Node visitChildren(NodeVisitor v) {
-    Expr e = (Expr) visitChild(this.expr, v);
+    Expr e = visitChild(this.expr, v);
     return this.expr(e);
   }
 

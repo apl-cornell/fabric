@@ -1213,7 +1213,7 @@ public class Version {
         <include name="polyglot.jar" />
         <include name="ppg.jar" />
         <include name="pth.jar" />
-        <include name="JFlex.jar" />
+        <include name="jflex.jar" />
         <include name="java_cup.jar" />
       </fileset>
     </copy>
@@ -1393,7 +1393,7 @@ public class Version {
           ********************************************************************
         -->
         <!-- JFlex -->
-        <include name="JFlex.jar" />
+        <include name="jflex.jar" />
         <!-- Java CUP -->
         <include name="java_cup.jar" />
         <!-- FreePastry -->
@@ -1647,7 +1647,7 @@ public class Version {
         <include name="polyglot.jar"/>
         <include name="ppg.jar" />
         <include name="pth.jar" />
-        <include name="JFlex.jar" />
+        <include name="jflex.jar" />
         <include name="java_cup.jar" />
       </fileset>
     </copy>
@@ -1691,7 +1691,7 @@ public class Version {
         <include name="polyglot.jar" />
         <include name="ppg.jar" />
         <include name="pth.jar" />
-        <include name="JFlex.jar" />
+        <include name="jflex.jar" />
         <include name="java_cup.jar" />
       </fileset>
     </copy>
@@ -1824,7 +1824,7 @@ public class Version {
 
   <target name="jflex-lexer" depends="jflex-lexer-deps"
       unless="jflex.lexer.up-to-date">
-    <java classname="JFlex.Main" fork="true" dir="${lexer.dir}"
+    <java classname="jflex.Main" fork="true" dir="${lexer.dir}"
         failonerror="true">
       <classpath refid="polyglot.classpath" />
       <arg value="${jflex.file}" />

@@ -1,19 +1,13 @@
-package fabric.ast;
+package fabric.extension;
 
 import java.util.List;
 
 import jif.ast.JifUtil;
 import polyglot.ast.ClassMember;
 import polyglot.ast.Node;
-import polyglot.util.Position;
 import polyglot.visit.NodeVisitor;
-import fabric.extension.ClassBodyJifExt_c;
 
-public class ClassBody_c extends polyglot.ast.ClassBody_c {
-
-  public ClassBody_c(Position pos, List<ClassMember> members) {
-    super(pos, members);
-  }
+public class ClassBodyExt_c extends NodeExt_c {
 
   @Override
   public Node visitChildren(NodeVisitor v) {

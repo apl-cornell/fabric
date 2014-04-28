@@ -3,10 +3,10 @@ package fabric.ast;
 import java.util.ArrayList;
 import java.util.List;
 
-import jif.ast.JifCall_c;
 import jif.types.JifContext;
 import jif.types.LabeledType;
 import jif.types.principal.Principal;
+import polyglot.ast.Call_c;
 import polyglot.ast.Expr;
 import polyglot.ast.Id;
 import polyglot.ast.Node;
@@ -14,13 +14,14 @@ import polyglot.ast.Receiver;
 import polyglot.types.ReferenceType;
 import polyglot.types.SemanticException;
 import polyglot.types.Type;
+import polyglot.util.Copy;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
 import polyglot.visit.NodeVisitor;
 import polyglot.visit.TypeChecker;
 import fabric.types.FabricTypeSystem;
 
-public class FabricCall_c extends JifCall_c implements FabricCall {
+public class FabricCall_c extends Call_c implements FabricCall {
   protected Expr remoteWorker;
   protected Principal remoteWorkerPrincipal;
 
@@ -34,15 +35,10 @@ public class FabricCall_c extends JifCall_c implements FabricCall {
     this.remoteWorker = remoteWorker;
   }
 
-  protected FabricCall_c reconstruct(Receiver target, Id name,
-      Expr remoteWorker, List<Expr> arguments) {
-    FabricCall_c n = (FabricCall_c) super.reconstruct(target, name, arguments);
-
-    if (remoteWorker != this.remoteWorker) {
-      n = (FabricCall_c) n.copy();
-      n.remoteWorker = remoteWorker;
-    }
-
+  protected <N extends FabricCall_c> N reconstruct(N n, Receiver target,
+      Id name, Expr remoteWorker, List<Expr> arguments) {
+    n = super.reconstruct(n, target, name, arguments);
+    n = remoteWorker(n, remoteWorker);
     return n;
   }
 
@@ -53,22 +49,23 @@ public class FabricCall_c extends JifCall_c implements FabricCall {
 
   @Override
   public FabricCall remoteWorker(Expr remoteWorker) {
-    if (remoteWorker == this.remoteWorker) {
-      return this;
-    }
+    return remoteWorker(this, remoteWorker);
+  }
 
-    FabricCall_c n = (FabricCall_c) this.copy();
+  protected <N extends FabricCall_c> N remoteWorker(N n, Expr remoteWorker) {
+    if (n.remoteWorker == remoteWorker) return n;
+    if (n == this) n = Copy.Util.copy(n);
     n.remoteWorker = remoteWorker;
     return n;
   }
 
   @Override
   public Node visitChildren(NodeVisitor v) {
-    Receiver target = (Receiver) visitChild(this.target, v);
-    Id name = (Id) visitChild(this.name, v);
-    Expr remoteWorker = (Expr) visitChild(this.remoteWorker, v);
+    Receiver target = visitChild(this.target, v);
+    Id name = visitChild(this.name, v);
+    Expr remoteWorker = visitChild(this.remoteWorker, v);
     List<Expr> arguments = visitList(this.arguments, v);
-    return reconstruct(target, name, remoteWorker, arguments);
+    return reconstruct(this, target, name, remoteWorker, arguments);
   }
 
   @Override

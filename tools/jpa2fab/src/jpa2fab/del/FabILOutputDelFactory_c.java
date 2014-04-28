@@ -16,11 +16,6 @@ public class FabILOutputDelFactory_c extends FabILDelFactory_c implements
   }
 
   @Override
-  protected JLDel delNewArrayImpl() {
-    return new NewArrayDel();
-  }
-
-  @Override
   protected JLDel delNewImpl() {
     return new NewDel();
   }

@@ -128,8 +128,7 @@ public class NewFabricArray_c extends NewArray_c implements NewFabricArray,
 
     if (!ts.isFabricType(result.baseType)) {
       throw new SemanticException(
-          "Non-Fabric objects cannot be stored in Fabric arrays.", node()
-              .position());
+          "Non-Fabric objects cannot be stored in Fabric arrays.", position());
     }
 
     if (location != null) {

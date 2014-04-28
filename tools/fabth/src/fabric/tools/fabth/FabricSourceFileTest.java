@@ -7,20 +7,12 @@ import polyglot.pth.SourceFileTest;
 import fabric.worker.Worker;
 
 public class FabricSourceFileTest extends SourceFileTest {
-  public FabricSourceFileTest(String filename) {
-    super(filename);
-  }
-
   public FabricSourceFileTest(List<String> filenames) {
     super(filenames);
   }
 
-  public FabricSourceFileTest(String[] filenames) {
-    super(filenames);
-  }
-
   @Override
-  protected void invokePolyglot(String[] files)
+  protected void invokePolyglot(List<String> files)
       throws polyglot.main.Main.TerminationException {
     File tmpdir = new File("pthOutput");
 
@@ -34,11 +26,11 @@ public class FabricSourceFileTest extends SourceFileTest {
 
     setDestDir(tmpdir.getPath());
 
-    String[] cmdLine = buildCmdLine(files);
+    List<String> cmdLine = buildCmdLine(files);
     fabric.Main fabricMain = new fabric.Main();
 
     try {
-      fabricMain.start(cmdLine, eq);
+      fabricMain.start(cmdLine.toArray(new String[cmdLine.size()]), eq);
     } finally {
       if (Main.options.shouldDeleteOutputFiles()) {
         deleteDir(tmpdir);

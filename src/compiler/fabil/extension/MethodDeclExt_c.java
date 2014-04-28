@@ -23,7 +23,7 @@ public class MethodDeclExt_c extends ClassMemberExt_c {
     MethodDecl result = node();
     if (!result.flags().isPrivate()) {
       Flags flags = ProxyRewriter.toPublic(result.flags());
-      result = result.flags(flags);
+      result = (MethodDecl) result.flags(flags);
     }
     if (result.flags().isNative()) result = (MethodDecl) result.body(null);
     return Collections.singletonList((ClassMember) result);

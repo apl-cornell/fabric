@@ -18,9 +18,10 @@ import polyglot.ast.Call;
 import polyglot.ast.CanonicalTypeNode;
 import polyglot.ast.ClassBody;
 import polyglot.ast.ClassDecl;
-import polyglot.ast.ClassMember;
 import polyglot.ast.Disamb;
 import polyglot.ast.Expr;
+import polyglot.ast.Ext;
+import polyglot.ast.ExtFactory;
 import polyglot.ast.Id;
 import polyglot.ast.Import;
 import polyglot.ast.New;
@@ -34,7 +35,6 @@ import polyglot.ast.TypeNode;
 import polyglot.types.Flags;
 import polyglot.types.Package;
 import polyglot.types.Type;
-import polyglot.util.CollectionUtil;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
 import codebases.ast.CBSourceFile_c;
@@ -237,8 +237,12 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
     if (outer != null)
       throw new InternalCompilerError("Fabric does not support inner classes.");
 
+    Ext ext = null;
+    for (ExtFactory extFactory : extFactory())
+      ext = composeExts(ext, extFactory.extNew());
+
     New n = new FabricNew_c(pos, outer, objectType, args, body);
-    n = (New) n.ext(extFactory().extNew());
+    n = (New) n.ext(ext);
     n = (New) n.del(delFactory().delNew());
     return n;
   }
@@ -300,11 +304,15 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
   @Override
   public ClassDecl ClassDecl(Position pos, Flags flags, Id name,
       TypeNode superClass, List<TypeNode> interfaces, ClassBody body) {
+    Ext ext = null;
+    for (ExtFactory extFactory : extFactory())
+      ext = composeExts(ext, extFactory.extClassDecl());
+
     ClassDecl n =
         new ClassDecl_c(pos, flags, name, Collections.<ParamDecl> emptyList(),
             superClass, interfaces, Collections.<PrincipalNode> emptyList(),
             Collections.<ConstraintNode<Assertion>> emptyList(), body);
-    n = (ClassDecl) n.ext(extFactory().extClassDecl());
+    n = (ClassDecl) n.ext(ext);
     n = (ClassDecl) n.del(delFactory().delClassDecl());
     return n;
   }
@@ -314,10 +322,14 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
       List<ParamDecl> params, TypeNode superClass, List<TypeNode> interfaces,
       List<PrincipalNode> authority,
       List<ConstraintNode<Assertion>> constraints, ClassBody body) {
+    Ext ext = null;
+    for (ExtFactory extFactory : extFactory())
+      ext = composeExts(ext, extFactory.extClassDecl());
+
     JifClassDecl n =
         new ClassDecl_c(pos, flags, name, params, superClass, interfaces,
             authority, constraints, body);
-    n = (JifClassDecl) n.ext(extFactory().extClassDecl());
+    n = (JifClassDecl) n.ext(ext);
     n = (JifClassDecl) n.del(delFactory().delClassDecl());
     return n;
   }
@@ -326,10 +338,18 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
   public FabricFieldDecl FabricFieldDecl(Position pos, Flags flags,
       TypeNode type, LabelNode accessLabel, Id name, Expr init) {
     FabricFieldDecl n =
-        new FabricFieldDecl_c(pos, flags, type, accessLabel, name, init);
-    n = (FabricFieldDecl) n.ext(extFactory().extFieldDecl());
-    n = (FabricFieldDecl) n.del(delFactory().delFieldDecl());
+        FabricFieldDecl(pos, flags, type, accessLabel, name, init, null,
+            extFactory());
+    n = del(n, delFactory().delFieldDecl());
     return n;
+  }
+
+  protected final FabricFieldDecl FabricFieldDecl(Position pos, Flags flags,
+      TypeNode type, LabelNode accessLabel, Id name, Expr init, Ext ext,
+      ExtFactory extFactory) {
+    for (ExtFactory ef : extFactory)
+      ext = composeExts(ext, ef.extFieldDecl());
+    return new FabricFieldDecl_c(pos, flags, type, accessLabel, name, init, ext);
   }
 
   @Override
@@ -337,14 +357,6 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
     AccessPolicy n = new AccessPolicy_c(pos, ln);
     n = (AccessPolicy) n.ext(fabricExtFactory().extAccessPolicy());
     n = (AccessPolicy) n.del(fabricDelFactory().delAccessPolicy());
-    return n;
-  }
-
-  @Override
-  public ClassBody ClassBody(Position pos, List<ClassMember> members) {
-    ClassBody n = new ClassBody_c(pos, CollectionUtil.nonNullList(members));
-    n = (ClassBody) n.ext(extFactory().extClassBody());
-    n = (ClassBody) n.del(delFactory().delClassBody());
     return n;
   }
 
@@ -361,8 +373,12 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
   @Override
   public Call Call(Position pos, Receiver target, Id name, Expr remoteWorker,
       List<Expr> args) {
+    Ext ext = null;
+    for (ExtFactory extFactory : extFactory())
+      ext = composeExts(ext, extFactory.extCall());
+
     Call n = new FabricCall_c(pos, target, name, remoteWorker, args);
-    n = (Call) n.ext(extFactory().extCall());
+    n = (Call) n.ext(ext);
     n = (Call) n.del(delFactory().delCall());
     return n;
   }
@@ -393,9 +409,13 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
   public SourceFile SourceFile(Position pos, PackageNode packageName,
       List<CodebaseDecl> codebases, List<Import> imports,
       List<TopLevelDecl> decls) {
+    Ext ext = null;
+    for (ExtFactory extFactory : extFactory())
+      ext = composeExts(ext, extFactory.extSourceFile());
+
     SourceFile sf =
         new CBSourceFile_c(pos, packageName, imports, codebases, decls);
-    sf = (SourceFile) sf.ext(jifExtFactory().extSourceFile());
+    sf = (SourceFile) sf.ext(ext);
     sf = (SourceFile) sf.del(delFactory().delSourceFile());
     return sf;
   }

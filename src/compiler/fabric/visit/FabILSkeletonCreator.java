@@ -39,7 +39,8 @@ public class FabILSkeletonCreator extends NodeVisitor {
           if (pd.body() != null) {
             pd = (MethodDecl) pd.body(null);
             // Make this method native if not already
-            if (!pd.flags().isNative()) pd = pd.flags(pd.flags().Native());
+            if (!pd.flags().isNative())
+              pd = (MethodDecl) pd.flags(pd.flags().Native());
           }
           stubmembers.add(pd);
         } else if (m instanceof ConstructorDecl) {
