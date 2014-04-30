@@ -4,6 +4,7 @@ import java.util.List;
 
 import polyglot.ast.ArrayInit_c;
 import polyglot.ast.Expr;
+import polyglot.ast.Ext;
 import polyglot.ast.Node;
 import polyglot.ast.NodeFactory;
 import polyglot.ast.Term;
@@ -19,6 +20,8 @@ import polyglot.visit.NodeVisitor;
 import polyglot.visit.TypeChecker;
 import fabil.types.FabILTypeSystem;
 
+//XXX Should be replaced with extension
+@Deprecated
 public class FabricArrayInit_c extends ArrayInit_c implements FabricArrayInit,
     Annotated {
 
@@ -26,9 +29,15 @@ public class FabricArrayInit_c extends ArrayInit_c implements FabricArrayInit,
   protected Expr label;
   protected Expr accessPolicy;
 
+  @Deprecated
   public FabricArrayInit_c(Position pos, List<Expr> elements, Expr label,
       Expr accessLabel, Expr location) {
-    super(pos, elements);
+    this(pos, elements, label, accessLabel, location, null);
+  }
+
+  public FabricArrayInit_c(Position pos, List<Expr> elements, Expr label,
+      Expr accessLabel, Expr location, Ext ext) {
+    super(pos, elements, ext);
 
     this.location = location;
     this.label = label;
@@ -98,9 +107,9 @@ public class FabricArrayInit_c extends ArrayInit_c implements FabricArrayInit,
   @Override
   public Node visitChildren(NodeVisitor v) {
     List<Expr> elements = visitList(this.elements, v);
-    Expr location = (Expr) visitChild(this.location, v);
-    Expr label = (Expr) visitChild(this.label, v);
-    Expr accessLabel = (Expr) visitChild(this.accessPolicy, v);
+    Expr location = visitChild(this.location, v);
+    Expr label = visitChild(this.label, v);
+    Expr accessLabel = visitChild(this.accessPolicy, v);
     return reconstruct(elements, location, label, accessLabel);
   }
 

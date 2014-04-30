@@ -3,6 +3,7 @@ package codebases.ast;
 import java.net.URI;
 import java.util.List;
 
+import polyglot.ast.Ext;
 import polyglot.ast.Import;
 import polyglot.ast.Node;
 import polyglot.ast.NodeFactory;
@@ -22,16 +23,23 @@ import codebases.types.CodebaseTypeSystem;
 
 /**
  * An extension of SourceFiles that supports codebases.
- * 
- * @author owen
  */
+//XXX Should be replaced with extension
+@Deprecated
 public class CBSourceFile_c extends SourceFile_c implements CBSourceFile {
   protected List<CodebaseDecl> codebases;
 
+  @Deprecated
   public CBSourceFile_c(Position pos, PackageNode package1,
       List<Import> imports, List<CodebaseDecl> codebaseDecls,
       List<TopLevelDecl> decls) {
-    super(pos, package1, imports, decls);
+    this(pos, package1, imports, codebaseDecls, decls, null);
+  }
+
+  public CBSourceFile_c(Position pos, PackageNode package1,
+      List<Import> imports, List<CodebaseDecl> codebaseDecls,
+      List<TopLevelDecl> decls, Ext ext) {
+    super(pos, package1, imports, decls, ext);
     this.codebases = codebaseDecls;
   }
 
@@ -58,7 +66,7 @@ public class CBSourceFile_c extends SourceFile_c implements CBSourceFile {
   /** Visit the children of the source file. */
   @Override
   public Node visitChildren(NodeVisitor v) {
-    PackageNode package_ = (PackageNode) visitChild(this.package_, v);
+    PackageNode package_ = visitChild(this.package_, v);
     List<CodebaseDecl> codebases = visitList(this.codebases, v);
     List<Import> imports = visitList(this.imports, v);
     List<TopLevelDecl> decls = visitList(this.decls, v);

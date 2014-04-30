@@ -3,6 +3,7 @@ package fabil.ast;
 import java.util.List;
 
 import polyglot.ast.Expr;
+import polyglot.ast.Ext;
 import polyglot.ast.NewArray_c;
 import polyglot.ast.Node;
 import polyglot.ast.NodeFactory;
@@ -21,6 +22,8 @@ import polyglot.visit.NodeVisitor;
 import polyglot.visit.TypeChecker;
 import fabil.types.FabILTypeSystem;
 
+// XXX Should be replaced with extension
+@Deprecated
 public class NewFabricArray_c extends NewArray_c implements NewFabricArray,
     Annotated {
 
@@ -28,10 +31,17 @@ public class NewFabricArray_c extends NewArray_c implements NewFabricArray,
   protected Expr location;
   protected Expr accessPolicy;
 
+  @Deprecated
   public NewFabricArray_c(Position pos, TypeNode baseType, List<Expr> dims,
       int addDims, FabricArrayInit init, Expr label, Expr accessLabel,
       Expr location) {
-    super(pos, baseType, dims, addDims, init);
+    this(pos, baseType, dims, addDims, init, label, accessLabel, location, null);
+  }
+
+  public NewFabricArray_c(Position pos, TypeNode baseType, List<Expr> dims,
+      int addDims, FabricArrayInit init, Expr label, Expr accessLabel,
+      Expr location, Ext ext) {
+    super(pos, baseType, dims, addDims, init, ext);
 
     this.location = location;
     this.label = label;
@@ -107,12 +117,12 @@ public class NewFabricArray_c extends NewArray_c implements NewFabricArray,
 
   @Override
   public Node visitChildren(NodeVisitor v) {
-    TypeNode baseType = (TypeNode) visitChild(this.baseType, v);
+    TypeNode baseType = visitChild(this.baseType, v);
     List<Expr> dims = visitList(this.dims, v);
     FabricArrayInit init = (FabricArrayInit) visitChild(this.init, v);
-    Expr location = (Expr) visitChild(this.location, v);
-    Expr label = (Expr) visitChild(this.label, v);
-    Expr accessLabel = (Expr) visitChild(this.accessPolicy, v);
+    Expr location = visitChild(this.location, v);
+    Expr label = visitChild(this.label, v);
+    Expr accessLabel = visitChild(this.accessPolicy, v);
     return reconstruct(baseType, dims, init, location, label, accessLabel);
   }
 

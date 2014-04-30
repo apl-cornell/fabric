@@ -5,6 +5,7 @@ import java.util.List;
 
 import polyglot.ast.Call_c;
 import polyglot.ast.Expr;
+import polyglot.ast.Ext;
 import polyglot.ast.Id;
 import polyglot.ast.Node;
 import polyglot.ast.Receiver;
@@ -15,17 +16,31 @@ import polyglot.visit.NodeVisitor;
 import polyglot.visit.TypeChecker;
 import fabil.types.FabILTypeSystem;
 
+//XXX Should be replaced with extension
+@Deprecated
 public class FabILCall_c extends Call_c implements FabILCall {
   protected Expr remoteWorker;
 
+  @Deprecated
   public FabILCall_c(Position pos, Receiver target, Id name,
       List<Expr> arguments) {
-    this(pos, target, name, null, arguments);
+    this(pos, target, name, arguments, null);
+  }
+
+  public FabILCall_c(Position pos, Receiver target, Id name,
+      List<Expr> arguments, Ext ext) {
+    this(pos, target, name, null, arguments, ext);
+  }
+
+  @Deprecated
+  public FabILCall_c(Position pos, Receiver target, Id name, Expr remoteWorker,
+      List<Expr> arguments) {
+    this(pos, target, name, remoteWorker, arguments, null);
   }
 
   public FabILCall_c(Position pos, Receiver target, Id name, Expr remoteWorker,
-      List<Expr> arguments) {
-    super(pos, target, name, arguments);
+      List<Expr> arguments, Ext ext) {
+    super(pos, target, name, arguments, ext);
     this.remoteWorker = remoteWorker;
   }
 

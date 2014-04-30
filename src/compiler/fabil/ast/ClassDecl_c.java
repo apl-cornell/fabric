@@ -3,6 +3,7 @@ package fabil.ast;
 import java.util.List;
 
 import polyglot.ast.ClassBody;
+import polyglot.ast.Ext;
 import polyglot.ast.Id;
 import polyglot.ast.TypeNode;
 import polyglot.frontend.MissingDependencyException;
@@ -17,11 +18,19 @@ import polyglot.visit.AmbiguityRemover;
 import fabil.types.FabILFlags;
 import fabil.types.FabILTypeSystem;
 
+// XXX Should be replaced with extension
+@Deprecated
 public class ClassDecl_c extends polyglot.ast.ClassDecl_c {
 
+  @Deprecated
   public ClassDecl_c(Position pos, Flags flags, Id name, TypeNode superClass,
       List<TypeNode> interfaces, ClassBody body) {
-    super(pos, flags, name, superClass, interfaces, body);
+    this(pos, flags, name, superClass, interfaces, body, null);
+  }
+
+  public ClassDecl_c(Position pos, Flags flags, Id name, TypeNode superClass,
+      List<TypeNode> interfaces, ClassBody body, Ext ext) {
+    super(pos, flags, name, superClass, interfaces, body, ext);
   }
 
   @Override

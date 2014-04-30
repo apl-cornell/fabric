@@ -6,7 +6,6 @@ import java.util.List;
 
 import polyglot.ast.ArrayAccess;
 import polyglot.ast.ArrayAccessAssign;
-import polyglot.ast.ArrayTypeNode;
 import polyglot.ast.Assign.Operator;
 import polyglot.ast.Call;
 import polyglot.ast.Cast;
@@ -15,6 +14,7 @@ import polyglot.ast.ClassDecl;
 import polyglot.ast.DelFactory;
 import polyglot.ast.Disamb;
 import polyglot.ast.Expr;
+import polyglot.ast.Ext;
 import polyglot.ast.ExtFactory;
 import polyglot.ast.Id;
 import polyglot.ast.Import;
@@ -73,18 +73,33 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
   public CodebaseNode CodebaseNode(Position pos, URI ns, String name,
       URI externalNS, Package package_) {
     CodebaseNode n = new CodebaseNode_c(pos, ns, name, externalNS, package_);
-    n = (CodebaseNode) n.ext(extFactory().extCodebaseNode());
-    n = (CodebaseNode) n.del(delFactory().delCodebaseNode());
+    n = del(n, delFactory().delCodebaseNode());
     return n;
+  }
+
+  protected final CodebaseNode CodeBaseNode(Position pos, URI ns, String name,
+      URI externalNS, Package package_, Ext ext, ExtFactory extFactory) {
+    // XXX TODO FIXME What's the new way of doing things?
+    for (ExtFactory ef : extFactory)
+      if (ef instanceof FabILExtFactory)
+        ext = composeExts(ext, ((FabILExtFactory) ef).extCodebaseNode());
+    return new CodebaseNode_c(pos, ns, name, externalNS, package_, ext);
   }
 
   @Override
   public ArrayAccessAssign ArrayAccessAssign(Position pos, ArrayAccess left,
       Operator op, Expr right) {
-    ArrayAccessAssign aaa = new ArrayAccessAssign_c(pos, left, op, right);
-    aaa = (ArrayAccessAssign) aaa.ext(extFactory().extArrayAccessAssign());
-    aaa = (ArrayAccessAssign) aaa.del(delFactory().delArrayAccessAssign());
+    ArrayAccessAssign aaa =
+        ArrayAccessAssign(pos, left, op, right, null, extFactory());
+    aaa = del(aaa, delFactory().delArrayAccessAssign());
     return aaa;
+  }
+
+  protected final ArrayAccessAssign FabILArrayAccessAssign(Position pos,
+      ArrayAccess left, Operator op, Expr right, Ext ext, ExtFactory extFactory) {
+    for (ExtFactory ef : extFactory)
+      ext = composeExts(ext, ef.extArrayAccessAssign());
+    return new ArrayAccessAssign_c(pos, left, op, right, ext);
   }
 
   @Override
@@ -96,51 +111,87 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
   public FabricArrayInit FabricArrayInit(Position pos, Expr label,
       Expr accessPolicy, Expr location, List<Expr> elements) {
     FabricArrayInit ai =
-        new FabricArrayInit_c(pos, elements, label, accessPolicy, location);
-    ai = (FabricArrayInit) ai.ext(extFactory().extFabricArrayInit());
-    ai = (FabricArrayInit) ai.del(delFactory().delFabricArrayInit());
+        FabricArrayInit(pos, label, accessPolicy, location, elements, null,
+            extFactory());
+    ai = del(ai, delFactory().delFabricArrayInit());
     return ai;
   }
 
-  @Override
-  public ArrayTypeNode ArrayTypeNode(Position pos, TypeNode base) {
-    // TODO Auto-generated method stub
-    return super.ArrayTypeNode(pos, base);
+  protected final FabricArrayInit FabricArrayInit(Position pos, Expr label,
+      Expr accessPolicy, Expr location, List<Expr> elements, Ext ext,
+      ExtFactory extFactory) {
+    // XXX TODO FIXME What's the new way of doing things?
+    for (ExtFactory ef : extFactory)
+      if (ef instanceof FabILExtFactory)
+        ext = composeExts(ext, ((FabILExtFactory) ef).extFabricArrayInit());
+    return new FabricArrayInit_c(pos, elements, label, accessPolicy, location,
+        ext);
   }
 
   @Override
   public FabricArrayTypeNode FabricArrayTypeNode(Position pos, TypeNode type) {
-    FabricArrayTypeNode atn = new FabricArrayTypeNode_c(pos, type);
-    atn = (FabricArrayTypeNode) atn.ext(extFactory().extFabricArrayTypeNode());
-    atn = (FabricArrayTypeNode) atn.del(delFactory().delFabricArrayTypeNode());
+    FabricArrayTypeNode atn =
+        FabricArrayTypeNode(pos, type, null, extFactory());
+    atn = del(atn, delFactory().delFabricArrayTypeNode());
     return atn;
+  }
+
+  protected final FabricArrayTypeNode FabricArrayTypeNode(Position pos,
+      TypeNode type, Ext ext, ExtFactory extFactory) {
+    // XXX TODO FIXME What's the new way of doing things?
+    for (ExtFactory ef : extFactory)
+      if (ef instanceof FabILExtFactory)
+        ext = composeExts(ext, ((FabILExtFactory) ef).extFabricArrayTypeNode());
+    return new FabricArrayTypeNode_c(pos, type, ext);
   }
 
   @Override
   public Atomic Atomic(Position pos, List<Stmt> statements) {
-    Atomic atomic = new Atomic_c(pos, statements);
-    atomic = (Atomic) atomic.ext(extFactory().extAtomic());
-    atomic = (Atomic) atomic.del(delFactory().delBlock());
+    Atomic atomic = Atomic(pos, statements, null, extFactory());
+    atomic = del(atomic, delFactory().delBlock());
     return atomic;
+  }
+
+  protected final Atomic Atomic(Position pos, List<Stmt> statements, Ext ext,
+      ExtFactory extFactory) {
+    // XXX TODO FIXME What's the new way of doing things?
+    for (ExtFactory ef : extFactory)
+      if (ef instanceof FabILExtFactory)
+        ext = composeExts(ext, ((FabILExtFactory) ef).extAtomic());
+    return new Atomic_c(pos, statements, ext);
   }
 
   @Override
   public Cast Cast(Position pos, TypeNode type, Expr expr) {
-    Cast cast = new Cast_c(pos, type, expr);
-    cast = (Cast) cast.ext(extFactory().extCast());
-    cast = (Cast) cast.del(delFactory().delCast());
+    Cast cast = FabILCast(pos, type, expr, null, extFactory());
+    cast = del(cast, delFactory().delCast());
     return cast;
+  }
+
+  protected final Cast FabILCast(Position pos, TypeNode type, Expr expr,
+      Ext ext, ExtFactory extFactory) {
+    for (ExtFactory ef : extFactory)
+      ext = composeExts(ext, ef.extCast());
+    return new Cast_c(pos, type, expr, ext);
   }
 
   @Override
   public ClassDecl ClassDecl(Position pos, Flags flags, Id name,
       TypeNode superClass, List<TypeNode> interfaces, ClassBody body) {
     ClassDecl n =
-        new ClassDecl_c(pos, flags, name, superClass,
-            CollectionUtil.nonNullList(interfaces), body);
-    n = (ClassDecl) n.ext(extFactory().extClassDecl());
-    n = (ClassDecl) n.del(delFactory().delClassDecl());
+        FabILClassDecl(pos, flags, name, superClass, interfaces, body, null,
+            extFactory());
+    n = del(n, delFactory().delClassDecl());
     return n;
+  }
+
+  protected final ClassDecl FabILClassDecl(Position pos, Flags flags, Id name,
+      TypeNode superClass, List<TypeNode> interfaces, ClassBody body, Ext ext,
+      ExtFactory extFactory) {
+    for (ExtFactory ef : extFactory)
+      ext = composeExts(ext, ef.extClassDecl());
+    return new ClassDecl_c(pos, flags, name, superClass,
+        CollectionUtil.nonNullList(interfaces), body, ext);
   }
 
   @Override
@@ -148,23 +199,41 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
       Expr accessPolicy, Expr location, List<Expr> dims, int addDims,
       FabricArrayInit init) {
     NewFabricArray result =
-        new NewFabricArray_c(pos, base, CollectionUtil.nonNullList(dims),
-            addDims, init, label, accessPolicy, location);
-    result = (NewFabricArray) result.ext(extFactory().extNewFabricArray());
-    result = (NewFabricArray) result.del(delFactory().delNewArray());
+        NewFabricArray(pos, base, label, accessPolicy, location, dims, addDims,
+            init, null, extFactory());
+    result = del(result, delFactory().delNewArray());
     return result;
+  }
+
+  protected final NewFabricArray NewFabricArray(Position pos, TypeNode base,
+      Expr label, Expr accessPolicy, Expr location, List<Expr> dims,
+      int addDims, FabricArrayInit init, Ext ext, ExtFactory extFactory) {
+    // XXX TODO FIXME What's the new way of doing things?
+    for (ExtFactory ef : extFactory)
+      if (ef instanceof FabILExtFactory)
+        ext = composeExts(ext, ((FabILExtFactory) ef).extNewFabricArray());
+    return new NewFabricArray_c(pos, base, CollectionUtil.nonNullList(dims),
+        addDims, init, label, accessPolicy, location, ext);
   }
 
   @Override
   public New New(Position pos, Expr outer, TypeNode objectType, Expr location,
       List<Expr> args, ClassBody body) {
     New n =
-        new New_c(pos, outer, objectType, CollectionUtil.nonNullList(args),
-            body, location);
-    n = (New) n.ext(extFactory().extNew());
-    n = (New) n.del(delFactory().delNew());
+        FabILNew(pos, outer, objectType, location, args, body, null,
+            extFactory());
+    n = del(n, delFactory().delNew());
 
     return n;
+  }
+
+  protected final New FabILNew(Position pos, Expr outer, TypeNode objectType,
+      Expr location, List<Expr> args, ClassBody body, Ext ext,
+      ExtFactory extFactory) {
+    for (ExtFactory ef : extFactory)
+      ext = composeExts(ext, ef.extNew());
+    return new New_c(pos, outer, objectType, CollectionUtil.nonNullList(args),
+        body, location, ext);
   }
 
   // Constructors with fewer arguments ////////////////////////////////////////
@@ -218,18 +287,34 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
 
   @Override
   public RetryStmt RetryStmt(Position pos) {
-    RetryStmt s = new RetryStmt_c(pos);
-    s = (RetryStmt) s.ext(extFactory().extRetry());
-    s = (RetryStmt) s.del(delFactory().delStmt());
+    RetryStmt s = RetryStmt(pos, null, extFactory());
+    s = del(s, delFactory().delStmt());
     return s;
+  }
+
+  protected final RetryStmt RetryStmt(Position pos, Ext ext,
+      ExtFactory extFactory) {
+    // XXX TODO FIXME What's the new way of doing things?
+    for (ExtFactory ef : extFactory)
+      if (ef instanceof FabILExtFactory)
+        ext = composeExts(ext, ((FabILExtFactory) ef).extRetry());
+    return new RetryStmt_c(pos, ext);
   }
 
   @Override
   public AbortStmt AbortStmt(Position pos) {
-    AbortStmt s = new AbortStmt_c(pos);
-    s = (AbortStmt) s.ext(extFactory().extAbort());
-    s = (AbortStmt) s.del(delFactory().delStmt());
+    AbortStmt s = AbortStmt(pos, null, extFactory());
+    s = del(s, delFactory().delStmt());
     return s;
+  }
+
+  protected final AbortStmt AbortStmt(Position pos, Ext ext,
+      ExtFactory extFactory) {
+    // XXX TODO FIXME What's the new way of doing things?
+    for (ExtFactory ef : extFactory)
+      if (ef instanceof FabILExtFactory)
+        ext = composeExts(ext, ((FabILExtFactory) ef).extAbort());
+    return new AbortStmt_c(pos, ext);
   }
 
   @Override
@@ -240,18 +325,33 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
   @Override
   public Call Call(Position pos, Receiver target, Id name, Expr remoteWorker,
       List<Expr> args) {
-    Call n = new FabILCall_c(pos, target, name, remoteWorker, args);
-    n = (Call) n.ext(extFactory().extCall());
-    n = (Call) n.del(delFactory().delCall());
+    Call n =
+        FabILCall(pos, target, name, remoteWorker, args, null, extFactory());
+    n = del(n, delFactory().delCall());
     return n;
+  }
+
+  protected final Call FabILCall(Position pos, Receiver target, Id name,
+      Expr remoteWorker, List<Expr> args, Ext ext, ExtFactory extFactory) {
+    for (ExtFactory ef : extFactory)
+      ext = composeExts(ext, ef.extCall());
+    return new FabILCall_c(pos, target, name, remoteWorker, args, ext);
   }
 
   @Override
   public StoreGetter StoreGetter(Position pos) {
-    StoreGetter n = new StoreGetter_c(pos);
-    n = (StoreGetter) n.ext(extFactory().extExpr());
-    n = (StoreGetter) n.del(delFactory().delExpr());
+    StoreGetter n = StoreGetter(pos, null, extFactory());
+    n = del(n, delFactory().delExpr());
     return n;
+  }
+
+  protected final StoreGetter StoreGetter(Position pos, Ext ext,
+      ExtFactory extFactory) {
+    // XXX TODO FIXME What's the new way of doing things?
+    for (ExtFactory ef : extFactory)
+      if (ef instanceof FabILExtFactory)
+        ext = composeExts(ext, ((FabILExtFactory) ef).extStoreGetter());
+    return new StoreGetter_c(pos, ext);
   }
 
   @Override
@@ -265,26 +365,50 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
       List<CodebaseDecl> codebases, List<Import> imports,
       List<TopLevelDecl> decls) {
     SourceFile sf =
-        new CBSourceFile_c(pos, packageName, imports, codebases, decls);
-    sf = (SourceFile) sf.ext(extFactory().extSourceFile());
-    sf = (SourceFile) sf.del(delFactory().delSourceFile());
+        SourceFile(pos, packageName, codebases, imports, decls, null,
+            extFactory());
+    sf = del(sf, delFactory().delSourceFile());
     return sf;
   }
 
+  protected final SourceFile SourceFile(Position pos, PackageNode packageName,
+      List<CodebaseDecl> codebases, List<Import> imports,
+      List<TopLevelDecl> decls, Ext ext, ExtFactory extFactory) {
+    for (ExtFactory ef : extFactory)
+      ext = composeExts(ext, ef.extSourceFile());
+    return new CBSourceFile_c(pos, packageName, imports, codebases, decls, ext);
+  }
+
   @Override
-  public ProviderLabel providerLabel(Position pos, TypeNode tn) {
-    ProviderLabel pl = new ProviderLabel_c(pos, tn);
-    pl = (ProviderLabel) pl.ext(extFactory().extProviderLabel());
-    pl = (ProviderLabel) pl.del(delFactory().delProviderLabel());
+  public ProviderLabel ProviderLabel(Position pos, TypeNode tn) {
+    ProviderLabel pl = ProviderLabel(pos, tn, null, extFactory());
+    pl = del(pl, delFactory().delProviderLabel());
     return pl;
+  }
+
+  protected final ProviderLabel ProviderLabel(Position pos, TypeNode tn,
+      Ext ext, ExtFactory extFactory) {
+    // XXX TODO FIXME What's the new way of doing things?
+    for (ExtFactory ef : extFactory)
+      if (ef instanceof FabILExtFactory)
+        ext = composeExts(ext, ((FabILExtFactory) ef).extProviderLabel());
+    return new ProviderLabel_c(pos, tn, ext);
   }
 
   @Override
   public CodebaseDecl CodebaseDecl(Position pos, polyglot.ast.Id name) {
-    CodebaseDecl n = new CodebaseDecl_c(pos, name);
-    n = (CodebaseDecl) n.ext(extFactory().extCodebaseDecl());
-    n = (CodebaseDecl) n.del(delFactory().delCodebaseDecl());
+    CodebaseDecl n = CodebaseDecl(pos, name, null, extFactory());
+    n = del(n, delFactory().delCodebaseDecl());
     return n;
+  }
+
+  protected final CodebaseDecl CodebaseDecl(Position pos, Id name, Ext ext,
+      ExtFactory extFactory) {
+    // XXX TODO FIXME What's the new way of doing things?
+    for (ExtFactory ef : extFactory)
+      if (ef instanceof FabILExtFactory)
+        ext = composeExts(ext, ((FabILExtFactory) ef).extCodebaseDecl());
+    return new CodebaseDecl_c(pos, name, ext);
   }
 
   @Override

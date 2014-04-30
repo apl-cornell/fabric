@@ -4,6 +4,7 @@ import java.util.List;
 
 import polyglot.ast.ClassBody;
 import polyglot.ast.Expr;
+import polyglot.ast.Ext;
 import polyglot.ast.Node;
 import polyglot.ast.NodeFactory;
 import polyglot.ast.Term;
@@ -20,13 +21,21 @@ import polyglot.visit.NodeVisitor;
 import polyglot.visit.TypeChecker;
 import fabil.types.FabILTypeSystem;
 
+//XXX Should be replaced with extension
+@Deprecated
 public class New_c extends polyglot.ast.New_c implements New, Annotated {
 
   protected Expr location;
 
+  @Deprecated
   public New_c(Position pos, Expr qualifier, TypeNode tn, List<Expr> arguments,
       ClassBody body, Expr location) {
-    super(pos, qualifier, tn, arguments, body);
+    this(pos, qualifier, tn, arguments, body, location, null);
+  }
+
+  public New_c(Position pos, Expr qualifier, TypeNode tn, List<Expr> arguments,
+      ClassBody body, Expr location, Ext ext) {
+    super(pos, qualifier, tn, arguments, body, ext);
 
     this.location = location;
   }
@@ -71,11 +80,11 @@ public class New_c extends polyglot.ast.New_c implements New, Annotated {
 
   @Override
   public New_c visitChildren(NodeVisitor v) {
-    Expr qualifier = (Expr) visitChild(this.qualifier, v);
-    TypeNode tn = (TypeNode) visitChild(this.objectType, v);
+    Expr qualifier = visitChild(this.qualifier, v);
+    TypeNode tn = visitChild(this.objectType, v);
     List<Expr> arguments = visitList(this.arguments, v);
-    ClassBody body = (ClassBody) visitChild(this.body, v);
-    Expr location = (Expr) visitChild(this.location, v);
+    ClassBody body = visitChild(this.body, v);
+    Expr location = visitChild(this.location, v);
 
     return reconstruct(qualifier, tn, arguments, body, location);
   }
@@ -131,7 +140,7 @@ public class New_c extends polyglot.ast.New_c implements New, Annotated {
     New_c nn = (New_c) super.disambiguateOverride(parent, ar);
 
     if (nn.location != null) {
-      nn = nn.location((Expr) nn.visitChild(nn.location, ar));
+      nn = nn.location(nn.visitChild(nn.location, ar));
     }
 
     // If we have an anonymous class implementing an interface, make its
@@ -152,7 +161,7 @@ public class New_c extends polyglot.ast.New_c implements New, Annotated {
     if (n == null) return null;
 
     if (n.location != null) {
-      n = n.location((Expr) n.visitChild(n.location, tc));
+      n = n.location(n.visitChild(n.location, tc));
     }
 
     return n;

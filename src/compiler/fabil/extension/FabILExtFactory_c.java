@@ -12,13 +12,6 @@ public class FabILExtFactory_c extends AbstractExtFactory_c implements
   @Override
   public Ext extFabricArrayTypeNode() {
     Ext e = extFabricArrayTypeNodeImpl();
-
-    FabILExtFactory nextExtFactory = (FabILExtFactory) nextExtFactory();
-    if (nextExtFactory != null) {
-      Ext e2 = nextExtFactory.extFabricArrayTypeNode();
-      e = composeExts(e, e2);
-    }
-
     return postExtFabricArrayTypeNode(e);
   }
 
@@ -34,12 +27,6 @@ public class FabILExtFactory_c extends AbstractExtFactory_c implements
   @Override
   public final Ext extAtomic() {
     Ext e = extAtomicImpl();
-
-    FabILExtFactory nextExtFactory = (FabILExtFactory) nextExtFactory();
-    if (nextExtFactory != null) {
-      Ext e2 = nextExtFactory.extAtomic();
-      e = composeExts(e, e2);
-    }
     return postExtAtomic(e);
   }
 
@@ -54,12 +41,6 @@ public class FabILExtFactory_c extends AbstractExtFactory_c implements
   @Override
   public final Ext extAbort() {
     Ext e = extAbortImpl();
-
-    FabILExtFactory nextExtFactory = (FabILExtFactory) nextExtFactory();
-    if (nextExtFactory != null) {
-      Ext e2 = nextExtFactory.extAbort();
-      e = composeExts(e, e2);
-    }
     return postExtAbort(e);
   }
 
@@ -74,12 +55,6 @@ public class FabILExtFactory_c extends AbstractExtFactory_c implements
   @Override
   public final Ext extRetry() {
     Ext e = extRetryImpl();
-
-    FabILExtFactory nextExtFactory = (FabILExtFactory) nextExtFactory();
-    if (nextExtFactory != null) {
-      Ext e2 = nextExtFactory.extRetry();
-      e = composeExts(e, e2);
-    }
     return postExtRetry(e);
   }
 
@@ -104,13 +79,6 @@ public class FabILExtFactory_c extends AbstractExtFactory_c implements
   @Override
   public final Ext extFabricArrayInit() {
     Ext e = extFabricArrayInitImpl();
-
-    FabILExtFactory nextExtFactory = (FabILExtFactory) nextExtFactory();
-    if (nextExtFactory != null) {
-      Ext e2 = nextExtFactory.extFabricArrayInit();
-      e = composeExts(e, e2);
-    }
-
     return postExtFabricArrayInit(e);
   }
 
@@ -203,15 +171,8 @@ public class FabILExtFactory_c extends AbstractExtFactory_c implements
   }
 
   @Override
-  public Ext extNewFabricArray() {
+  public final Ext extNewFabricArray() {
     Ext e = extNewFabricArrayImpl();
-
-    FabILExtFactory nextExtFactory = (FabILExtFactory) nextExtFactory();
-    if (nextExtFactory != null) {
-      Ext e2 = nextExtFactory.extNewFabricArray();
-      e = composeExts(e, e2);
-    }
-
     return postExtNewFabricArray(e);
   }
 
@@ -251,12 +212,6 @@ public class FabILExtFactory_c extends AbstractExtFactory_c implements
   @Override
   public final Ext extProviderLabel() {
     Ext e = extProviderLabelImpl();
-
-    FabILExtFactory nextExtFactory = (FabILExtFactory) nextExtFactory();
-    if (nextExtFactory != null) {
-      Ext e2 = nextExtFactory.extProviderLabel();
-      e = composeExts(e, e2);
-    }
     return postExtProviderLabel(e);
   }
 
@@ -269,18 +224,59 @@ public class FabILExtFactory_c extends AbstractExtFactory_c implements
   }
 
   @Override
-  public Ext extCodebaseNode() {
-    return extNode();
+  public final Ext extCodebaseNode() {
+    Ext e = extCodebaseNodeImpl();
+    return postExtCodebaseNode(e);
+  }
+
+  protected Ext extCodebaseNodeImpl() {
+    return extNodeImpl();
+  }
+
+  protected Ext postExtCodebaseNode(Ext ext) {
+    return postExtNode(ext);
   }
 
   @Override
-  public Ext extCodebaseDecl() {
-    return extNode();
+  public final Ext extCodebaseDecl() {
+    Ext e = extCodebaseDeclImpl();
+    return postExtCodebaseDecl(e);
+  }
+
+  protected Ext extCodebaseDeclImpl() {
+    return extNodeImpl();
+  }
+
+  protected Ext postExtCodebaseDecl(Ext ext) {
+    return postExtNode(ext);
   }
 
   @Override
-  public Ext extCodebaseTypeNode() {
-    return extCanonicalTypeNode();
+  public final Ext extCodebaseTypeNode() {
+    Ext e = extCodebaseTypeNodeImpl();
+    return postExtCodebaseTypeNode(e);
+  }
+
+  protected Ext extCodebaseTypeNodeImpl() {
+    return extCanonicalTypeNodeImpl();
+  }
+
+  protected Ext postExtCodebaseTypeNode(Ext ext) {
+    return postExtCanonicalTypeNode(ext);
+  }
+
+  @Override
+  public final Ext extStoreGetter() {
+    Ext e = extStoreGetterImpl();
+    return postExtStoreGetter(e);
+  }
+
+  protected Ext extStoreGetterImpl() {
+    return extExprImpl();
+  }
+
+  protected Ext postExtStoreGetter(Ext ext) {
+    return postExtExpr(ext);
   }
 
   @Override
