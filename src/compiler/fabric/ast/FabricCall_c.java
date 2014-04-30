@@ -8,6 +8,7 @@ import jif.types.LabeledType;
 import jif.types.principal.Principal;
 import polyglot.ast.Call_c;
 import polyglot.ast.Expr;
+import polyglot.ast.Ext;
 import polyglot.ast.Id;
 import polyglot.ast.Node;
 import polyglot.ast.Receiver;
@@ -21,17 +22,31 @@ import polyglot.visit.NodeVisitor;
 import polyglot.visit.TypeChecker;
 import fabric.types.FabricTypeSystem;
 
+//XXX Should be replaced with extension
+@Deprecated
 public class FabricCall_c extends Call_c implements FabricCall {
   protected Expr remoteWorker;
   protected Principal remoteWorkerPrincipal;
 
+  @Deprecated
   public FabricCall_c(Position pos, Receiver target, Id name, List<Expr> args) {
-    this(pos, target, name, null, args);
+    this(pos, target, name, args, null);
+  }
+
+  public FabricCall_c(Position pos, Receiver target, Id name, List<Expr> args,
+      Ext ext) {
+    this(pos, target, name, null, args, null);
+  }
+
+  @Deprecated
+  public FabricCall_c(Position pos, Receiver target, Id name,
+      Expr remoteWorker, List<Expr> args) {
+    this(pos, target, name, remoteWorker, args, null);
   }
 
   public FabricCall_c(Position pos, Receiver target, Id name,
-      Expr remoteWorker, List<Expr> args) {
-    super(pos, target, name, args);
+      Expr remoteWorker, List<Expr> args, Ext ext) {
+    super(pos, target, name, args, ext);
     this.remoteWorker = remoteWorker;
   }
 

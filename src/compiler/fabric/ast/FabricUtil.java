@@ -19,8 +19,8 @@ public class FabricUtil {
     return (FabricExt) ext;
   }
 
-  public static Node updateFabricExt(Node n, FabricExt fab) {
-    return n.ext(updateFabricExt(n.ext(), fab));
+  public static <N extends Node> N updateFabricExt(N n, FabricExt fab) {
+    return (N) n.ext(updateFabricExt(n.ext(), fab));
   }
 
   private static Ext updateFabricExt(Ext e, FabricExt fab) {

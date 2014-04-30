@@ -4,6 +4,7 @@ import java.util.List;
 
 import polyglot.ast.ArrayInit_c;
 import polyglot.ast.Expr;
+import polyglot.ast.Ext;
 import polyglot.ast.Node;
 import polyglot.ast.NodeFactory;
 import polyglot.types.Type;
@@ -14,15 +15,23 @@ import polyglot.util.Position;
 import polyglot.visit.NodeVisitor;
 import fabric.types.FabricTypeSystem;
 
+//XXX Should be replaced with extension
+@Deprecated
 public class FabricArrayInit_c extends ArrayInit_c implements FabricArrayInit {
   // XXX: this code copied from fabil.FabricArrayInit_c
 
   protected Expr location;
   protected Expr label;
 
+  @Deprecated
   public FabricArrayInit_c(Position pos, List<Expr> elements, Expr label,
       Expr location) {
-    super(pos, elements);
+    this(pos, elements, label, location, null);
+  }
+
+  public FabricArrayInit_c(Position pos, List<Expr> elements, Expr label,
+      Expr location, Ext ext) {
+    super(pos, elements, ext);
 
     this.location = location;
     this.label = label;
@@ -75,8 +84,8 @@ public class FabricArrayInit_c extends ArrayInit_c implements FabricArrayInit {
   @Override
   public Node visitChildren(NodeVisitor v) {
     List<Expr> elements = visitList(this.elements, v);
-    Expr location = (Expr) visitChild(this.location, v);
-    Expr label = (Expr) visitChild(this.label, v);
+    Expr location = visitChild(this.location, v);
+    Expr label = visitChild(this.label, v);
     return reconstruct(elements, location, label);
   }
 

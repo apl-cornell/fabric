@@ -15,9 +15,7 @@ import jif.ast.PrincipalExpr;
 import jif.ast.PrincipalNode;
 import jif.types.Assertion;
 import polyglot.ast.Call;
-import polyglot.ast.CanonicalTypeNode;
 import polyglot.ast.ClassBody;
-import polyglot.ast.ClassDecl;
 import polyglot.ast.Disamb;
 import polyglot.ast.Expr;
 import polyglot.ast.Ext;
@@ -34,7 +32,6 @@ import polyglot.ast.TopLevelDecl;
 import polyglot.ast.TypeNode;
 import polyglot.types.Flags;
 import polyglot.types.Package;
-import polyglot.types.Type;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
 import codebases.ast.CBSourceFile_c;
@@ -73,6 +70,10 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
     return new FabricDisamb_c();
   }
 
+  // ////////////////////////////////////////////////////////////////////////////
+  // new factory methods //
+  // ////////////////////////////////////////////////////////////////////////////
+
   @Override
   public CodebaseNode CodebaseNode(Position pos, URI ns, String name,
       URI externalNS) {
@@ -82,124 +83,207 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
   @Override
   public CodebaseNode CodebaseNode(Position pos, URI ns, String name,
       URI externalNS, Package package_) {
-    CodebaseNode n = new CodebaseNode_c(pos, ns, name, externalNS, package_);
-    n = (CodebaseNode) n.ext(fabricExtFactory().extCodebaseNode());
-    n = (CodebaseNode) n.del(fabricDelFactory().delCodebaseNode());
+    CodebaseNode n =
+        CodebaseNode(pos, ns, name, externalNS, package_, null, extFactory());
+    n = del(n, fabricDelFactory().delCodebaseNode());
     return n;
+  }
+
+  protected final CodebaseNode CodebaseNode(Position pos, URI ns, String name,
+      URI externalNS, Package package_, Ext ext, ExtFactory extFactory) {
+    // XXX TODO FIXME What's the new way of doing things?
+    for (ExtFactory ef : extFactory)
+      if (ef instanceof FabricExtFactory)
+        ext = composeExts(ext, ((FabricExtFactory) ef).extCodebaseNode());
+    return new CodebaseNode_c(pos, ns, name, externalNS, package_, ext);
   }
 
   @Override
   public CodebaseDecl CodebaseDecl(Position pos, Id name) {
-    CodebaseDecl n = new CodebaseDecl_c(pos, name);
-    n = (CodebaseDecl) n.ext(fabricExtFactory().extCodebaseDecl());
-    n = (CodebaseDecl) n.del(fabricDelFactory().delCodebaseDecl());
+    CodebaseDecl n = CodebaseDecl(pos, name, null, extFactory());
+    n = del(n, fabricDelFactory().delCodebaseDecl());
     return n;
   }
 
-  // ////////////////////////////////////////////////////////////////////////////
-  // new factory methods //
-  // ////////////////////////////////////////////////////////////////////////////
+  protected final CodebaseDecl CodebaseDecl(Position pos, Id name, Ext ext,
+      ExtFactory extFactory) {
+    // XXX TODO FIXME What's the new way of doing things?
+    for (ExtFactory ef : extFactory)
+      if (ef instanceof FabricExtFactory)
+        ext = composeExts(ext, ((FabricExtFactory) ef).extCodebaseDecl());
+    return new CodebaseDecl_c(pos, name, ext);
+  }
 
   @Override
   public Atomic Atomic(Position pos, List<Stmt> statements) {
-    Atomic result = new Atomic_c(pos, statements);
-    // note: this is correct. fabricExtFactory() is a factory that returns Jif
-    // extension objects with their ext() pointers referring to Fabric Ext
-    // objects, which is as it should be.
-    result = (Atomic) result.ext(fabricExtFactory().extAtomic());
-    result = (Atomic) result.del(fabricDelFactory().delAtomic());
+    Atomic result = Atomic(pos, statements, null, extFactory());
+    result = del(result, fabricDelFactory().delAtomic());
     return result;
+  }
+
+  protected final Atomic Atomic(Position pos, List<Stmt> statements, Ext ext,
+      ExtFactory extFactory) {
+    // XXX TODO FIXME What's the new way of doing things?
+    for (ExtFactory ef : extFactory)
+      if (ef instanceof FabricExtFactory)
+        ext = composeExts(ext, ((FabricExtFactory) ef).extAtomic());
+    return new Atomic_c(pos, statements, ext);
   }
 
   @Override
   public AmbNewFabricArray AmbNewFabricArray(Position pos, TypeNode base,
       Expr loc, Object expr, List<Expr> dims, int addDims) {
     AmbNewFabricArray result =
-        new AmbNewFabricArray_c(pos, base, loc, expr, dims, addDims);
-    result =
-        (AmbNewFabricArray) result.ext(fabricExtFactory()
-            .extAmbNewFabricArray());
-    result =
-        (AmbNewFabricArray) result.del(fabricDelFactory()
-            .delAmbNewFabricArray());
+        AmbNewFabricArray(pos, base, loc, expr, dims, addDims, null,
+            extFactory());
+    result = del(result, fabricDelFactory().delAmbNewFabricArray());
     return result;
+  }
+
+  protected final AmbNewFabricArray AmbNewFabricArray(Position pos,
+      TypeNode base, Expr loc, Object expr, List<Expr> dims, int addDims,
+      Ext ext, ExtFactory extFactory) {
+    // XXX TODO FIXME What's the new way of doing things?
+    for (ExtFactory ef : extFactory)
+      if (ef instanceof FabricExtFactory)
+        ext = composeExts(ext, ((FabricExtFactory) ef).extAmbNewFabricArray());
+    return new AmbNewFabricArray_c(pos, base, loc, expr, dims, addDims, ext);
   }
 
   @Override
   public RetryStmt RetryStmt(Position pos) {
-    RetryStmt s = new RetryStmt_c(pos);
-    s = (RetryStmt) s.ext(fabricExtFactory().extRetryStmt());
-    s = (RetryStmt) s.del(fabricDelFactory().delStmt());
+    RetryStmt s = RetryStmt(pos, null, extFactory());
+    s = del(s, fabricDelFactory().delStmt());
     return s;
+  }
+
+  protected final RetryStmt RetryStmt(Position pos, Ext ext,
+      ExtFactory extFactory) {
+    // XXX TODO FIXME What's the new way of doing things?
+    for (ExtFactory ef : extFactory)
+      if (ef instanceof FabricExtFactory)
+        ext = composeExts(ext, ((FabricExtFactory) ef).extRetryStmt());
+    return new RetryStmt_c(pos, ext);
   }
 
   @Override
   public AbortStmt AbortStmt(Position pos) {
-    AbortStmt s = new AbortStmt_c(pos);
-    s = (AbortStmt) s.ext(fabricExtFactory().extAbortStmt());
-    s = (AbortStmt) s.del(fabricDelFactory().delStmt());
+    AbortStmt s = AbortStmt(pos, null, extFactory());
+    s = del(s, fabricDelFactory().delStmt());
     return s;
+  }
+
+  protected final AbortStmt AbortStmt(Position pos, Ext ext,
+      ExtFactory extFactory) {
+    // XXX TODO FIXME What's the new way of doing things?
+    for (ExtFactory ef : extFactory)
+      if (ef instanceof FabricExtFactory)
+        ext = composeExts(ext, ((FabricExtFactory) ef).extAbortStmt());
+    return new AbortStmt_c(pos, ext);
   }
 
   @Override
   public Worker Worker(Position pos) {
-    Worker n = new Worker_c(pos, Id(pos, "worker$"));
-    n = (Worker) n.ext(fabricExtFactory().extWorker());
-    n = (Worker) n.del(fabricDelFactory().delWorker());
+    Worker n = Worker(pos, null, extFactory());
+    n = del(n, fabricDelFactory().delWorker());
     return n;
+  }
+
+  protected final Worker Worker(Position pos, Ext ext, ExtFactory extFactory) {
+    // XXX TODO FIXME What's the new way of doing things?
+    for (ExtFactory ef : extFactory)
+      if (ef instanceof FabricExtFactory)
+        ext = composeExts(ext, ((FabricExtFactory) ef).extWorker());
+    return new Worker_c(pos, Id(pos, "worker$"), ext);
   }
 
   @Override
   public Store Store(Position pos, Expr expr) {
-    Store n = new Store_c(pos, expr);
-    n = (Store) n.ext(fabricExtFactory().extStore());
-    n = (Store) n.del(fabricDelFactory().delStore());
+    Store n = Store(pos, expr, null, extFactory());
+    n = del(n, fabricDelFactory().delStore());
     return n;
+  }
+
+  protected final Store Store(Position pos, Expr expr, Ext ext,
+      ExtFactory extFactory) {
+    // XXX TODO FIXME What's the new way of doing things?
+    for (ExtFactory ef : extFactory)
+      if (ef instanceof FabricExtFactory)
+        ext = composeExts(ext, ((FabricExtFactory) ef).extStore());
+    return new Store_c(pos, expr, ext);
   }
 
   @Override
   public RemoteWorkerGetter RemoteWorkerGetter(Position pos, Expr remoteName) {
-    RemoteWorkerGetter n = new RemoteWorkerGetter_c(pos, remoteName);
-    // TODO add the real extension and delegation for RemoteWorkerGetter.
-    n = (RemoteWorkerGetter) n.ext(fabricExtFactory().extRemoteWorkerGetter());
-    n = (RemoteWorkerGetter) n.del(fabricDelFactory().delRemoteWorkerGetter());
+    RemoteWorkerGetter n =
+        RemoteWorkerGetter(pos, remoteName, null, extFactory());
+    n = del(n, fabricDelFactory().delRemoteWorkerGetter());
     return n;
+  }
+
+  protected final RemoteWorkerGetter RemoteWorkerGetter(Position pos,
+      Expr remoteName, Ext ext, ExtFactory extFactory) {
+    // XXX TODO FIXME What's the new way of doing things?
+    for (ExtFactory ef : extFactory)
+      if (ef instanceof FabricExtFactory)
+        ext = composeExts(ext, ((FabricExtFactory) ef).extRemoteWorkerGetter());
+    return new RemoteWorkerGetter_c(pos, remoteName, ext);
   }
 
   @Override
   public NewFabricArray NewFabricArray(Position pos, TypeNode base,
       Expr location, List<Expr> dims, int addDims, FabricArrayInit init) {
     NewFabricArray result =
-        new NewFabricArray_c(pos, base, dims, addDims, init);
-    result =
-        (NewFabricArray) result.ext(fabricExtFactory().extNewFabricArray());
-    result =
-        (NewFabricArray) result.del(fabricDelFactory().delNewFabricArray());
+        NewFabricArray(pos, base, location, dims, addDims, init, null,
+            extFactory());
+    result = del(result, fabricDelFactory().delNewFabricArray());
     return result;
   }
 
+  protected final NewFabricArray NewFabricArray(Position pos, TypeNode base,
+      Expr location, List<Expr> dims, int addDims, FabricArrayInit init,
+      Ext ext, ExtFactory extFactory) {
+    // XXX TODO FIXME What's the new way of doing things?
+    for (ExtFactory ef : extFactory)
+      if (ef instanceof FabricExtFactory)
+        ext = composeExts(ext, ((FabricExtFactory) ef).extNewFabricArray());
+    return new NewFabricArray_c(pos, base, dims, addDims, init, ext);
+  }
+
   @Override
-  public FabricArrayInit FabricArrayInit(Position position, Expr label,
+  public FabricArrayInit FabricArrayInit(Position pos, Expr label,
       Expr location, List<Expr> elements) {
     FabricArrayInit result =
-        new FabricArrayInit_c(position, elements, label, location);
-    result =
-        (FabricArrayInit) result.ext(fabricExtFactory().extFabricArrayInit());
-    result =
-        (FabricArrayInit) result.del(fabricDelFactory().delFabricArrayInit());
+        FabricArrayInit(pos, label, location, elements, null, extFactory());
+    result = del(result, fabricDelFactory().delFabricArrayInit());
     return result;
+  }
+
+  protected final FabricArrayInit FabricArrayInit(Position pos, Expr label,
+      Expr location, List<Expr> elements, Ext ext, ExtFactory extFactory) {
+    // XXX TODO FIXME What's the new way of doing things?
+    for (ExtFactory ef : extFactory)
+      if (ef instanceof FabricExtFactory)
+        ext = composeExts(ext, ((FabricExtFactory) ef).extFabricArrayInit());
+    return new FabricArrayInit_c(pos, elements, label, location, ext);
   }
 
   @Override
   public FabricArrayTypeNode FabricArrayTypeNode(Position pos, TypeNode type) {
-    FabricArrayTypeNode result = new FabricArrayTypeNode_c(pos, type);
-    result =
-        (FabricArrayTypeNode) result.ext(fabricExtFactory()
-            .extFabricArrayTypeNode());
-    result =
-        (FabricArrayTypeNode) result.del(fabricDelFactory()
-            .delFabricArrayTypeNode());
+    FabricArrayTypeNode result =
+        FabricArrayTypeNode(pos, type, null, extFactory());
+    result = del(result, fabricDelFactory().delFabricArrayTypeNode());
     return result;
+  }
+
+  protected final FabricArrayTypeNode FabricArrayTypeNode(Position pos,
+      TypeNode type, Ext ext, ExtFactory extFactory) {
+    // XXX TODO FIXME What's the new way of doing things?
+    for (ExtFactory ef : extFactory)
+      if (ef instanceof FabricExtFactory)
+        ext =
+            composeExts(ext, ((FabricExtFactory) ef).extFabricArrayTypeNode());
+    return new FabricArrayTypeNode_c(pos, type, ext);
   }
 
   // ////////////////////////////////////////////////////////////////////////////
@@ -209,7 +293,7 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
   @Override
   public New New(Position pos, TypeNode type, Expr location, List<Expr> args) {
     New result = New(pos, type, args);
-    result = (New) setLocation(result, location);
+    result = setLocation(result, location);
     return result;
   }
 
@@ -217,7 +301,7 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
   public New New(Position pos, TypeNode type, Expr location, List<Expr> args,
       polyglot.ast.ClassBody body) {
     New result = New(pos, type, args, body);
-    result = (New) setLocation(result, location);
+    result = setLocation(result, location);
     return result;
   }
 
@@ -225,33 +309,35 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
   public New New(Position pos, Expr outer, TypeNode objectType, Expr location,
       List<Expr> args) {
     New result = New(pos, outer, objectType, args, null);
-    result = (New) setLocation(result, location);
+    result = setLocation(result, location);
     return result;
   }
 
   @Override
   public New New(Position pos, Expr outer, TypeNode objectType,
       List<Expr> args, ClassBody body) {
+    New n = FabricNew(pos, outer, objectType, args, body, null, extFactory());
+    n = del(n, delFactory().delNew());
+    return n;
+  }
+
+  protected final New FabricNew(Position pos, Expr outer, TypeNode objectType,
+      List<Expr> args, ClassBody body, Ext ext, ExtFactory extFactory) {
     if (body != null)
       throw new InternalCompilerError("Fabric does not support inner classes.");
     if (outer != null)
       throw new InternalCompilerError("Fabric does not support inner classes.");
 
-    Ext ext = null;
-    for (ExtFactory extFactory : extFactory())
+    for (ExtFactory ef : extFactory)
       ext = composeExts(ext, extFactory.extNew());
-
-    New n = new FabricNew_c(pos, outer, objectType, args, body);
-    n = (New) n.ext(ext);
-    n = (New) n.del(delFactory().delNew());
-    return n;
+    return new FabricNew_c(pos, outer, objectType, args, body, ext);
   }
 
   @Override
   public New New(Position pos, Expr outer, TypeNode objectType, Expr location,
       List<Expr> args, polyglot.ast.ClassBody body) {
     New n = New(pos, outer, objectType, args, body);
-    n = (New) setLocation(n, location);
+    n = setLocation(n, location);
     return n;
   }
 
@@ -281,19 +367,20 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
 
   @Override
   public NewLabel NewLabel(Position pos, LabelNode label, Expr location) {
-    NewLabel result = super.NewLabel(pos, label);
-    result = (NewLabel) setLocation(result, location);
+    NewLabel result = NewLabel(pos, label);
+    result = setLocation(result, location);
     return result;
   }
 
   @Override
   public PrincipalExpr PrincipalExpr(Position pos, PrincipalNode principal,
       Expr location) {
-    PrincipalExpr n = super.PrincipalExpr(pos, principal);
+    PrincipalExpr n = PrincipalExpr(pos, principal);
+    // XXX yuck. This should be done by modifying Jif's del factory. 
     n =
         (PrincipalExpr) n.del(((FabricDelFactory) delFactory())
             .delPrincipalExpr());
-    n = (PrincipalExpr) setLocation(n, location);
+    n = setLocation(n, location);
     return n;
   }
 
@@ -302,36 +389,28 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
   // ////////////////////////////////////////////////////////////////////////////
 
   @Override
-  public ClassDecl ClassDecl(Position pos, Flags flags, Id name,
-      TypeNode superClass, List<TypeNode> interfaces, ClassBody body) {
-    Ext ext = null;
-    for (ExtFactory extFactory : extFactory())
-      ext = composeExts(ext, extFactory.extClassDecl());
-
-    ClassDecl n =
-        new ClassDecl_c(pos, flags, name, Collections.<ParamDecl> emptyList(),
-            superClass, interfaces, Collections.<PrincipalNode> emptyList(),
-            Collections.<ConstraintNode<Assertion>> emptyList(), body);
-    n = (ClassDecl) n.ext(ext);
-    n = (ClassDecl) n.del(delFactory().delClassDecl());
-    return n;
-  }
-
-  @Override
   public JifClassDecl JifClassDecl(Position pos, Flags flags, Id name,
       List<ParamDecl> params, TypeNode superClass, List<TypeNode> interfaces,
       List<PrincipalNode> authority,
       List<ConstraintNode<Assertion>> constraints, ClassBody body) {
-    Ext ext = null;
-    for (ExtFactory extFactory : extFactory())
-      ext = composeExts(ext, extFactory.extClassDecl());
-
     JifClassDecl n =
-        new ClassDecl_c(pos, flags, name, params, superClass, interfaces,
-            authority, constraints, body);
-    n = (JifClassDecl) n.ext(ext);
+        FabricClassDecl(pos, flags, name, params, superClass, interfaces,
+            authority, constraints, body, null, extFactory());
     n = (JifClassDecl) n.del(delFactory().delClassDecl());
     return n;
+  }
+
+  protected final JifClassDecl FabricClassDecl(Position pos, Flags flags,
+      Id name, List<ParamDecl> params, TypeNode superClass,
+      List<TypeNode> interfaces, List<PrincipalNode> authority,
+      List<ConstraintNode<Assertion>> constraints, ClassBody body, Ext ext,
+      ExtFactory extFactory) {
+    for (ExtFactory ef : extFactory)
+      ext = composeExts(ext, extFactory.extClassDecl());
+    return new ClassDecl_c(pos, flags, name,
+        Collections.<ParamDecl> emptyList(), superClass, interfaces,
+        Collections.<PrincipalNode> emptyList(),
+        Collections.<ConstraintNode<Assertion>> emptyList(), body, ext);
   }
 
   @Override
@@ -354,10 +433,18 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
 
   @Override
   public AccessPolicy AccessPolicy(Position pos, LabelNode ln) {
-    AccessPolicy n = new AccessPolicy_c(pos, ln);
-    n = (AccessPolicy) n.ext(fabricExtFactory().extAccessPolicy());
-    n = (AccessPolicy) n.del(fabricDelFactory().delAccessPolicy());
+    AccessPolicy n = AccessPolicy(pos, ln, null, extFactory());
+    n = del(n, fabricDelFactory().delAccessPolicy());
     return n;
+  }
+
+  protected final AccessPolicy AccessPolicy(Position pos, LabelNode ln,
+      Ext ext, ExtFactory extFactory) {
+    // XXX TODO FIXME What's the new way of doing things?
+    for (ExtFactory ef : extFactory)
+      if (ef instanceof FabricExtFactory)
+        ext = composeExts(ext, ((FabricExtFactory) ef).extAccessPolicy());
+    return new AccessPolicy_c(pos, ln, ext);
   }
 
   @Override
@@ -366,37 +453,51 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
   }
 
   @Override
-  public CanonicalTypeNode CanonicalTypeNode(Position pos, Type type) {
-    return super.CanonicalTypeNode(pos, type);
-  }
-
-  @Override
   public Call Call(Position pos, Receiver target, Id name, Expr remoteWorker,
       List<Expr> args) {
-    Ext ext = null;
-    for (ExtFactory extFactory : extFactory())
-      ext = composeExts(ext, extFactory.extCall());
-
-    Call n = new FabricCall_c(pos, target, name, remoteWorker, args);
-    n = (Call) n.ext(ext);
-    n = (Call) n.del(delFactory().delCall());
+    Call n =
+        FabricCall(pos, target, name, remoteWorker, args, null, extFactory());
+    n = del(n, delFactory().delCall());
     return n;
+  }
+
+  protected final Call FabricCall(Position pos, Receiver target, Id name,
+      Expr remoteWorker, List<Expr> args, Ext ext, ExtFactory extFactory) {
+    for (ExtFactory ef : extFactory)
+      ext = composeExts(ext, ef.extCall());
+    return new FabricCall_c(pos, target, name, remoteWorker, args, ext);
   }
 
   @Override
   public AmbPrincipalNode AmbPrincipalNode(Position pos, Expr expr) {
-    AmbPrincipalNode n = new FabricAmbPrincipalNode_c(pos, expr);
-    n = (AmbPrincipalNode) n.ext(jifExtFactory().extAmbPrincipalNode());
-    n = (AmbPrincipalNode) n.del(delFactory().delExpr());
+    AmbPrincipalNode n = FabricAmbPrincipalNode(pos, expr, null, extFactory());
+    n = del(n, delFactory().delExpr());
     return n;
+  }
+
+  protected final AmbPrincipalNode FabricAmbPrincipalNode(Position pos,
+      Expr expr, Ext ext, ExtFactory extFactory) {
+    // XXX TODO FIXME What's the new way of doing things?
+    for (ExtFactory ef : extFactory)
+      if (ef instanceof FabricExtFactory)
+        ext = composeExts(ext, ((FabricExtFactory) ef).extAmbPrincipalNode());
+    return new FabricAmbPrincipalNode_c(pos, expr, ext);
   }
 
   @Override
   public AmbPrincipalNode AmbPrincipalNode(Position pos, Id name) {
-    AmbPrincipalNode n = new FabricAmbPrincipalNode_c(pos, name);
-    n = (AmbPrincipalNode) n.ext(jifExtFactory().extAmbPrincipalNode());
-    n = (AmbPrincipalNode) n.del(delFactory().delExpr());
+    AmbPrincipalNode n = FabricAmbPrincipalNode(pos, name, null, extFactory());
+    n = del(n, delFactory().delExpr());
     return n;
+  }
+
+  protected final AmbPrincipalNode FabricAmbPrincipalNode(Position pos,
+      Id name, Ext ext, ExtFactory extFactory) {
+    // XXX TODO FIXME What's the new way of doing things?
+    for (ExtFactory ef : extFactory)
+      if (ef instanceof FabricExtFactory)
+        ext = composeExts(ext, ((FabricExtFactory) ef).extAmbPrincipalNode());
+    return new FabricAmbPrincipalNode_c(pos, name, ext);
   }
 
   @Override
@@ -409,21 +510,28 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
   public SourceFile SourceFile(Position pos, PackageNode packageName,
       List<CodebaseDecl> codebases, List<Import> imports,
       List<TopLevelDecl> decls) {
-    Ext ext = null;
-    for (ExtFactory extFactory : extFactory())
-      ext = composeExts(ext, extFactory.extSourceFile());
-
     SourceFile sf =
-        new CBSourceFile_c(pos, packageName, imports, codebases, decls);
-    sf = (SourceFile) sf.ext(ext);
+        CBSourceFile(pos, packageName, codebases, imports, decls, null,
+            extFactory());
     sf = (SourceFile) sf.del(delFactory().delSourceFile());
     return sf;
+  }
+
+  protected final SourceFile CBSourceFile(Position pos,
+      PackageNode packageName, List<CodebaseDecl> codebases,
+      List<Import> imports, List<TopLevelDecl> decls, Ext ext,
+      ExtFactory extFactory) {
+    for (ExtFactory ef : extFactory)
+      ext = composeExts(ext, ef.extSourceFile());
+
+    return new CBSourceFile_c(pos, packageName, imports, codebases, decls, ext);
   }
 
   // ////////////////////////////////////////////////////////////////////////////
   // private helper methods //
   // ////////////////////////////////////////////////////////////////////////////
 
+  @Deprecated
   private FabricDelFactory fabricDelFactory() {
     return (FabricDelFactory) this.delFactory();
   }
@@ -433,7 +541,7 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
   }
 
   /**
-   * Update the provided node with a given location.
+   * Updates the provided node with a given location.
    * 
    * @param result
    *          a Node having a LocatedExt as a Fabric extension
@@ -442,7 +550,7 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
    * @return a copy of <code>result</code> with the Fabric extension updated
    *         with the location
    */
-  protected Node setLocation(Node result, Expr location) {
+  private <N extends Node> N setLocation(N result, Expr location) {
     FabricExt fabExt = FabricUtil.fabricExt(result);
     // Ext jifExt = result.ext();
     // Ext fabExt = jifExt.ext();

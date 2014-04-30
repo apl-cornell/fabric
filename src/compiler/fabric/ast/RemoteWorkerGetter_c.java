@@ -4,6 +4,7 @@ import java.util.List;
 
 import polyglot.ast.Expr;
 import polyglot.ast.Expr_c;
+import polyglot.ast.Ext;
 import polyglot.ast.Node;
 import polyglot.ast.Term;
 import polyglot.types.SemanticException;
@@ -13,11 +14,18 @@ import polyglot.visit.NodeVisitor;
 import polyglot.visit.TypeChecker;
 import fabric.types.FabricTypeSystem;
 
+//XXX Should be replaced with extension
+@Deprecated
 public class RemoteWorkerGetter_c extends Expr_c implements RemoteWorkerGetter {
   protected Expr remoteWorkerName; // cannot be null
 
+  @Deprecated
   public RemoteWorkerGetter_c(Position pos, Expr remoteWorkerName) {
-    super(pos);
+    this(pos, remoteWorkerName, null);
+  }
+
+  public RemoteWorkerGetter_c(Position pos, Expr remoteWorkerName, Ext ext) {
+    super(pos, ext);
     this.remoteWorkerName = remoteWorkerName;
   }
 

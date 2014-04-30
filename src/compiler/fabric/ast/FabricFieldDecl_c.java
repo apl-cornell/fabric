@@ -11,6 +11,8 @@ import polyglot.types.Flags;
 import polyglot.util.Position;
 import polyglot.visit.NodeVisitor;
 
+// XXX Should be replaced with extension
+@Deprecated
 public class FabricFieldDecl_c extends FieldDecl_c implements FabricFieldDecl {
 
   protected LabelNode accessLabel;
