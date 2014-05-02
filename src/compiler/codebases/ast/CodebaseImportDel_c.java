@@ -40,18 +40,20 @@ public class CodebaseImportDel_c extends JLDel_c {
     // The first component of the type name must be a package or a codebase
     // alias.
     String pkgName = StringUtil.getFirstComponent(im.name());
-    URI import_ns;
 
-    Named nt = null;
-    import_ns = ts.namespaceResolver(ns).resolveCodebaseName(pkgName);
+    Named nt;
+    URI import_ns = ts.namespaceResolver(ns).resolveCodebaseName(pkgName);
     if (import_ns != null) {
       // The type must exist in import_ns
       nt = ts.forName(import_ns, StringUtil.removeFirstComponent(im.name()));
-    } else if (!ts.packageExists(ns, pkgName)) {
-      // Not an alias. Must be a package.
-      throw new SemanticException("Package \"" + pkgName + "\" not found.",
-          im.position());
     } else {
+      // Not an alias. Must be a package.
+      // Emulate base behaviour.
+      if (!ts.packageExists(ns, pkgName)) {
+        throw new SemanticException("Package \"" + pkgName + "\" not found.",
+            im.position());
+      }
+
       // The type must exist.
       nt = ts.forName(ns, im.name());
     }
