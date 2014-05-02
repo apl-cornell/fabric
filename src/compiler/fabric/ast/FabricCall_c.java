@@ -3,10 +3,10 @@ package fabric.ast;
 import java.util.ArrayList;
 import java.util.List;
 
+import jif.ast.JifCall_c;
 import jif.types.JifContext;
 import jif.types.LabeledType;
 import jif.types.principal.Principal;
-import polyglot.ast.Call_c;
 import polyglot.ast.Expr;
 import polyglot.ast.Ext;
 import polyglot.ast.Id;
@@ -24,7 +24,7 @@ import fabric.types.FabricTypeSystem;
 
 //XXX Should be replaced with extension
 @Deprecated
-public class FabricCall_c extends Call_c implements FabricCall {
+public class FabricCall_c extends JifCall_c implements FabricCall {
   protected Expr remoteWorker;
   protected Principal remoteWorkerPrincipal;
 

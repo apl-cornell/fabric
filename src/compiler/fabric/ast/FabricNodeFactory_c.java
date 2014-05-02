@@ -16,6 +16,7 @@ import jif.ast.PrincipalNode;
 import jif.types.Assertion;
 import polyglot.ast.Call;
 import polyglot.ast.ClassBody;
+import polyglot.ast.ClassMember;
 import polyglot.ast.Disamb;
 import polyglot.ast.Expr;
 import polyglot.ast.Ext;
@@ -377,9 +378,7 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
       Expr location) {
     PrincipalExpr n = PrincipalExpr(pos, principal);
     // XXX yuck. This should be done by modifying Jif's del factory. 
-    n =
-        (PrincipalExpr) n.del(((FabricDelFactory) delFactory())
-            .delPrincipalExpr());
+    n = del(n, ((FabricDelFactory) delFactory()).delPrincipalExpr());
     n = setLocation(n, location);
     return n;
   }
@@ -396,7 +395,7 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
     JifClassDecl n =
         FabricClassDecl(pos, flags, name, params, superClass, interfaces,
             authority, constraints, body, null, extFactory());
-    n = (JifClassDecl) n.del(delFactory().delClassDecl());
+    n = del(n, delFactory().delClassDecl());
     return n;
   }
 
@@ -409,6 +408,20 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
       ext = composeExts(ext, ef.extClassDecl());
     return new ClassDecl_c(pos, flags, name, params, superClass, interfaces,
         authority, constraints, body, ext);
+  }
+
+  @Override
+  public ClassBody ClassBody(Position pos, List<ClassMember> members) {
+    ClassBody n = FabricClassBody(pos, members, null, extFactory());
+    n = del(n, delFactory().delClassBody());
+    return n;
+  }
+
+  protected final ClassBody FabricClassBody(Position pos,
+      List<ClassMember> members, Ext ext, ExtFactory extFactory) {
+    for (ExtFactory ef : extFactory)
+      ext = composeExts(ext, ef.extClassBody());
+    return new FabricClassBody_c(pos, members, ext);
   }
 
   @Override
