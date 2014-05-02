@@ -1,7 +1,11 @@
 package codebases.ast;
 
 import java.net.URI;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import polyglot.ast.Ext;
 import polyglot.ast.Import;
@@ -11,6 +15,7 @@ import polyglot.ast.PackageNode;
 import polyglot.ast.SourceFile_c;
 import polyglot.ast.TopLevelDecl;
 import polyglot.types.ImportTable;
+import polyglot.types.Named;
 import polyglot.types.Package;
 import polyglot.types.SemanticException;
 import polyglot.util.CollectionUtil;
@@ -18,6 +23,7 @@ import polyglot.util.ListUtil;
 import polyglot.util.Position;
 import polyglot.visit.NodeVisitor;
 import polyglot.visit.TypeBuilder;
+import polyglot.visit.TypeChecker;
 import codebases.frontend.CodebaseSource;
 import codebases.types.CodebaseTypeSystem;
 
@@ -61,6 +67,76 @@ public class CBSourceFile_c extends SourceFile_c implements CBSourceFile {
     tb = tb.pushPackage(pkg);
     tb.setImportTable(it);
     return tb;
+  }
+
+  @Override
+  public Node typeCheck(TypeChecker tc) throws SemanticException {
+    // Override base type-checking behaviour to take namespaces into account.
+    // XXX This code was mostly copied from SourceFile_c.
+
+    Set<String> names = new HashSet<>();
+    boolean hasPublic = false;
+
+    for (TopLevelDecl d : decls) {
+      String s = d.name();
+
+      if (names.contains(s)) {
+        throw new SemanticException("Duplicate declaration: \"" + s + "\".",
+            d.position());
+      }
+
+      names.add(s);
+
+      if (d.flags().isPublic()) {
+        if (hasPublic) {
+          throw new SemanticException(
+              "The source contains more than one public declaration.",
+              d.position());
+        }
+
+        hasPublic = true;
+      }
+    }
+
+    CodebaseTypeSystem ts = (CodebaseTypeSystem) tc.typeSystem();
+    Map<String, Named> importedTypes = new HashMap<>();
+
+    for (Import i : imports) {
+      if (i.kind() != Import.SINGLE_TYPE) continue;
+
+      String s = i.name();
+      CodebaseImportDel_c del = (CodebaseImportDel_c) i.del();
+      Named named = del.lookupImport(ts);
+      String name = named.name();
+
+      // See JLS 2nd Ed. | 7.5.1.
+
+      // If two single-type-import declarations in the same compilation
+      // unit attempts to import types with the same simple name, then a
+      // compile-time error occurs, unless the two types are the same
+      // type.
+      if (importedTypes.containsKey(name)) {
+        Named importedType = importedTypes.get(name);
+        if (!ts.equals(named, importedType)) {
+          throw new SemanticException(name
+              + " is already defined in a single-type import as type "
+              + importedType + ".", i.position());
+        }
+      } else importedTypes.put(name, named);
+
+      // If another top level type with the same simple name is otherwise
+      // declared in the current compilation unit except by a
+      // type-import-on-demand declaration, then a compile-time-error
+      // occurs.
+      if (names.contains(name)) {
+        throw new SemanticException("The import " + s
+            + " conflicts with a type defined in the same file.", i.position());
+      }
+
+    }
+
+    return this;
+
   }
 
   /** Visit the children of the source file. */
