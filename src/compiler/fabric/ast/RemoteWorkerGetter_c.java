@@ -29,13 +29,10 @@ public class RemoteWorkerGetter_c extends Expr_c implements RemoteWorkerGetter {
     this.remoteWorkerName = remoteWorkerName;
   }
 
-  protected RemoteWorkerGetter reconstruct(Expr remoteWorkerName) {
-    if (this.remoteWorkerName != remoteWorkerName) {
-      RemoteWorkerGetter_c n = (RemoteWorkerGetter_c) copy();
-      n.remoteWorkerName = remoteWorkerName;
-      return n;
-    }
-    return this;
+  protected <N extends RemoteWorkerGetter_c> N reconstruct(N n,
+      Expr remoteWorkerName) {
+    n = remoteWorkerName(n, remoteWorkerName);
+    return n;
   }
 
   @Override
@@ -45,13 +42,21 @@ public class RemoteWorkerGetter_c extends Expr_c implements RemoteWorkerGetter {
 
   @Override
   public RemoteWorkerGetter remoteWorkerName(Expr expr) {
-    return reconstruct(expr);
+    return remoteWorkerName(this, expr);
+  }
+
+  protected <N extends RemoteWorkerGetter_c> N remoteWorkerName(N n,
+      Expr remoteWorkerName) {
+    if (n.remoteWorkerName == remoteWorkerName) return n;
+    n = copyIfNeeded(n);
+    n.remoteWorkerName = remoteWorkerName;
+    return n;
   }
 
   @Override
   public Node visitChildren(NodeVisitor v) {
     Expr remoteWorkerName = (Expr) this.remoteWorkerName.visit(v);
-    return reconstruct(remoteWorkerName);
+    return reconstruct(this, remoteWorkerName);
   }
 
   @Override

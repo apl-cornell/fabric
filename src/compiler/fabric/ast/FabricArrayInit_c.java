@@ -9,8 +9,6 @@ import polyglot.ast.Node;
 import polyglot.ast.NodeFactory;
 import polyglot.types.Type;
 import polyglot.types.TypeSystem;
-import polyglot.util.CollectionUtil;
-import polyglot.util.ListUtil;
 import polyglot.util.Position;
 import polyglot.visit.NodeVisitor;
 import fabric.types.FabricTypeSystem;
@@ -48,7 +46,12 @@ public class FabricArrayInit_c extends ArrayInit_c implements FabricArrayInit {
 
   @Override
   public FabricArrayInit_c location(Expr location) {
-    FabricArrayInit_c n = (FabricArrayInit_c) copy();
+    return location(this, location);
+  }
+
+  protected <N extends FabricArrayInit_c> N location(N n, Expr location) {
+    if (n.location == location) return n;
+    n = copyIfNeeded(n);
     n.location = location;
     return n;
   }
@@ -59,7 +62,12 @@ public class FabricArrayInit_c extends ArrayInit_c implements FabricArrayInit {
 
   @Override
   public FabricArrayInit_c label(Expr label) {
-    FabricArrayInit_c n = (FabricArrayInit_c) copy();
+    return label(this, label);
+  }
+
+  protected <N extends FabricArrayInit_c> N label(N n, Expr label) {
+    if (n.label == label) return n;
+    n = copyIfNeeded(n);
     n.label = label;
     return n;
   }
@@ -67,18 +75,12 @@ public class FabricArrayInit_c extends ArrayInit_c implements FabricArrayInit {
   /**
    * Reconstructs the initializer.
    */
-  protected FabricArrayInit_c reconstruct(List<Expr> elements, Expr location,
-      Expr label) {
-    if (!CollectionUtil.equals(elements, this.elements)
-        || location != this.location || label != this.label) {
-      FabricArrayInit_c n = (FabricArrayInit_c) copy();
-      n.elements = ListUtil.copy(elements, true);
-      n.location = location;
-      n.label = label;
-      return n;
-    }
-
-    return this;
+  protected <N extends FabricArrayInit_c> N reconstruct(N n,
+      List<Expr> elements, Expr location, Expr label) {
+    n = super.reconstruct(n, elements);
+    n = location(n, location);
+    n = label(n, label);
+    return n;
   }
 
   @Override
@@ -86,7 +88,7 @@ public class FabricArrayInit_c extends ArrayInit_c implements FabricArrayInit {
     List<Expr> elements = visitList(this.elements, v);
     Expr location = visitChild(this.location, v);
     Expr label = visitChild(this.label, v);
-    return reconstruct(elements, location, label);
+    return reconstruct(this, elements, location, label);
   }
 
   @Override

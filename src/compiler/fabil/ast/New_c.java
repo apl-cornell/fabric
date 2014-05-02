@@ -12,8 +12,6 @@ import polyglot.ast.Term_c;
 import polyglot.ast.TypeNode;
 import polyglot.types.ParsedClassType;
 import polyglot.types.SemanticException;
-import polyglot.util.CollectionUtil;
-import polyglot.util.ListUtil;
 import polyglot.util.Position;
 import polyglot.visit.AmbiguityRemover;
 import polyglot.visit.CFGBuilder;
@@ -52,7 +50,12 @@ public class New_c extends polyglot.ast.New_c implements New, Annotated {
 
   @Override
   public New_c location(Expr location) {
-    New_c n = (New_c) copy();
+    return location(this, location);
+  }
+
+  protected <N extends New_c> N location(N n, Expr location) {
+    if (n.location == location) return n;
+    n = copyIfNeeded(n);
     n.location = location;
     return n;
   }
@@ -60,22 +63,11 @@ public class New_c extends polyglot.ast.New_c implements New, Annotated {
   /**
    * Reconstructs the expression.
    */
-  protected New_c reconstruct(Expr qualifier, TypeNode tn,
+  protected <N extends New_c> N reconstruct(N n, Expr qualifier, TypeNode tn,
       List<Expr> arguments, ClassBody body, Expr location) {
-    if (qualifier != this.qualifier || tn != this.objectType
-        || !CollectionUtil.equals(arguments, this.arguments)
-        || body != this.body || location != this.location) {
-      New_c n = (New_c) copy();
-      n.objectType = tn;
-      n.qualifier = qualifier;
-      n.arguments = ListUtil.copy(arguments, true);
-      n.body = body;
-      n.location = location;
-
-      return n;
-    }
-
-    return this;
+    n = super.reconstruct(n, qualifier, tn, arguments, body);
+    n = location(n, location);
+    return n;
   }
 
   @Override
@@ -86,7 +78,7 @@ public class New_c extends polyglot.ast.New_c implements New, Annotated {
     ClassBody body = visitChild(this.body, v);
     Expr location = visitChild(this.location, v);
 
-    return reconstruct(qualifier, tn, arguments, body, location);
+    return reconstruct(this, qualifier, tn, arguments, body, location);
   }
 
   @Override

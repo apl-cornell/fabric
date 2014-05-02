@@ -14,8 +14,6 @@ import polyglot.types.ArrayType;
 import polyglot.types.SemanticException;
 import polyglot.types.Type;
 import polyglot.types.TypeSystem;
-import polyglot.util.CollectionUtil;
-import polyglot.util.ListUtil;
 import polyglot.util.Position;
 import polyglot.visit.CFGBuilder;
 import polyglot.visit.NodeVisitor;
@@ -64,20 +62,30 @@ public class NewFabricArray_c extends NewArray_c implements NewFabricArray,
   }
 
   @Override
-  public Expr accessLabel() {
-    return accessPolicy;
+  public NewFabricArray_c updateLabel(Expr label) {
+    return updateLabel(this, label);
   }
 
-  @Override
-  public NewFabricArray_c updateLabel(Expr label) {
-    NewFabricArray_c n = (NewFabricArray_c) copy();
+  protected <N extends NewFabricArray_c> N updateLabel(N n, Expr label) {
+    if (n.label == label) return n;
+    n = copyIfNeeded(n);
     n.label = label;
     return n;
   }
 
   @Override
+  public Expr accessPolicy() {
+    return accessPolicy;
+  }
+
+  @Override
   public NewFabricArray_c accessPolicy(Expr accessPolicy) {
-    NewFabricArray_c n = (NewFabricArray_c) copy();
+    return accessPolicy(this, accessPolicy);
+  }
+
+  protected <N extends NewFabricArray_c> N accessPolicy(N n, Expr accessPolicy) {
+    if (n.accessPolicy == accessPolicy) return n;
+    n = copyIfNeeded(n);
     n.accessPolicy = accessPolicy;
     return n;
   }
@@ -89,7 +97,12 @@ public class NewFabricArray_c extends NewArray_c implements NewFabricArray,
 
   @Override
   public NewFabricArray_c location(Expr location) {
-    NewFabricArray_c n = (NewFabricArray_c) copy();
+    return location(this, location);
+  }
+
+  protected <N extends NewFabricArray_c> N location(N n, Expr location) {
+    if (n.location == location) return n;
+    n = copyIfNeeded(n);
     n.location = location;
     return n;
   }
@@ -97,22 +110,14 @@ public class NewFabricArray_c extends NewArray_c implements NewFabricArray,
   /**
    * Reconstructs the expression.
    */
-  protected NewFabricArray_c reconstruct(TypeNode baseType, List<Expr> dims,
-      FabricArrayInit init, Expr location, Expr label, Expr accessLabel) {
-    if (baseType != this.baseType || !CollectionUtil.equals(dims, this.dims)
-        || init != this.init || location != this.location
-        || label != this.label || accessLabel != this.accessPolicy) {
-      NewFabricArray_c n = (NewFabricArray_c) copy();
-      n.baseType = baseType;
-      n.dims = ListUtil.copy(dims, true);
-      n.init = init;
-      n.location = location;
-      n.label = label;
-      n.accessPolicy = accessLabel;
-      return n;
-    }
-
-    return this;
+  protected <N extends NewFabricArray_c> N reconstruct(N n, TypeNode baseType,
+      List<Expr> dims, FabricArrayInit init, Expr location, Expr label,
+      Expr accessPolicy) {
+    n = super.reconstruct(n, baseType, dims, init);
+    n = location(n, location);
+    n = updateLabel(n, label);
+    n = accessPolicy(n, accessPolicy);
+    return n;
   }
 
   @Override
@@ -122,8 +127,9 @@ public class NewFabricArray_c extends NewArray_c implements NewFabricArray,
     FabricArrayInit init = (FabricArrayInit) visitChild(this.init, v);
     Expr location = visitChild(this.location, v);
     Expr label = visitChild(this.label, v);
-    Expr accessLabel = visitChild(this.accessPolicy, v);
-    return reconstruct(baseType, dims, init, location, label, accessLabel);
+    Expr accessPolicy = visitChild(this.accessPolicy, v);
+    return reconstruct(this, baseType, dims, init, location, label,
+        accessPolicy);
   }
 
   @Override

@@ -70,24 +70,16 @@ public class CBSourceFile_c extends SourceFile_c implements CBSourceFile {
     List<CodebaseDecl> codebases = visitList(this.codebases, v);
     List<Import> imports = visitList(this.imports, v);
     List<TopLevelDecl> decls = visitList(this.decls, v);
-    return reconstruct(package_, codebases, imports, decls);
+    return reconstruct(this, package_, codebases, imports, decls);
   }
 
   /** Reconstruct the source file. */
-  protected CBSourceFile_c reconstruct(PackageNode package_,
+  protected <N extends CBSourceFile_c> N reconstruct(N n, PackageNode package_,
       List<CodebaseDecl> codebases, List<Import> imports,
       List<TopLevelDecl> decls) {
-    if (package_ != this.package_
-        || !CollectionUtil.equals(imports, this.imports)
-        || !CollectionUtil.equals(decls, this.decls)
-        || !CollectionUtil.equals(codebases, this.codebases)) {
-      CBSourceFile_c n = (CBSourceFile_c) copy();
-      n.package_ = package_;
-      n.imports = ListUtil.copy(imports, true);
-      n.decls = ListUtil.copy(decls, true);
-      return n;
-    }
-    return this;
+    n = super.reconstruct(n, package_, imports, decls);
+    n = codebaseDecls(n, codebases);
+    return n;
   }
 
   @Override
@@ -97,8 +89,14 @@ public class CBSourceFile_c extends SourceFile_c implements CBSourceFile {
 
   @Override
   public CBSourceFile codebaseDecls(List<CodebaseDecl> codebaseDecls) {
-    CBSourceFile_c n = (CBSourceFile_c) copy();
-    n.codebases = codebaseDecls;
+    return codebaseDecls(this, codebaseDecls);
+  }
+
+  protected <N extends CBSourceFile_c> N codebaseDecls(N n,
+      List<CodebaseDecl> codebaseDecls) {
+    if (CollectionUtil.equals(n.codebases, codebases)) return n;
+    n = copyIfNeeded(n);
+    n.codebases = ListUtil.copy(codebases, true);
     return n;
   }
 
