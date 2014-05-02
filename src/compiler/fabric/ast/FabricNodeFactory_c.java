@@ -329,7 +329,7 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
       throw new InternalCompilerError("Fabric does not support inner classes.");
 
     for (ExtFactory ef : extFactory)
-      ext = composeExts(ext, extFactory.extNew());
+      ext = composeExts(ext, ef.extNew());
     return new FabricNew_c(pos, outer, objectType, args, body, ext);
   }
 
@@ -406,11 +406,9 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
       List<ConstraintNode<Assertion>> constraints, ClassBody body, Ext ext,
       ExtFactory extFactory) {
     for (ExtFactory ef : extFactory)
-      ext = composeExts(ext, extFactory.extClassDecl());
-    return new ClassDecl_c(pos, flags, name,
-        Collections.<ParamDecl> emptyList(), superClass, interfaces,
-        Collections.<PrincipalNode> emptyList(),
-        Collections.<ConstraintNode<Assertion>> emptyList(), body, ext);
+      ext = composeExts(ext, ef.extClassDecl());
+    return new ClassDecl_c(pos, flags, name, params, superClass, interfaces,
+        authority, constraints, body, ext);
   }
 
   @Override
