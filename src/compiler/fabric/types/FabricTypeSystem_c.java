@@ -707,13 +707,6 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
     return f;
   }
 
-  @Override
-  public Flags legalInterfaceFlags() {
-    Flags f = super.legalInterfaceFlags();
-    f = f.set(FabricFlags.NONFABRIC);
-    return f;
-  }
-
   // TODO: determine scenarios when this labels
   // can be used by the remote call wrapper
   @Override
