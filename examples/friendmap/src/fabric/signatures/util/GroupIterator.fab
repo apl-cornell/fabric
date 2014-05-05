@@ -14,10 +14,11 @@ where
   /**
    * Create a new iterator over g, which must be non-null.
    */
-  native GroupIterator
+  GroupIterator
   (
     Group[owner, A] {L} g
-  );
+  ){
+  }
 
 
   public native
