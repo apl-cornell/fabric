@@ -15,6 +15,11 @@ import fabric.extension.ClassBodyJifExt_c;
 @Deprecated
 public class FabricClassBody_c extends ClassBody_c {
 
+//  @Deprecated
+  public FabricClassBody_c(Position pos, List<ClassMember> members) {
+    this(pos, members, null);
+  }
+
   public FabricClassBody_c(Position pos, List<ClassMember> members, Ext ext) {
     super(pos, members, ext);
   }

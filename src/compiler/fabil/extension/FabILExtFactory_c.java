@@ -2,6 +2,7 @@ package fabil.extension;
 
 import polyglot.ast.AbstractExtFactory_c;
 import polyglot.ast.Ext;
+import polyglot.ast.ExtFactory;
 
 /**
  * Factory for FabIL extension nodes.
@@ -10,8 +11,15 @@ public class FabILExtFactory_c extends AbstractExtFactory_c implements
     FabILExtFactory {
 
   @Override
-  public Ext extFabricArrayTypeNode() {
+  public final Ext extFabricArrayTypeNode() {
     Ext e = extFabricArrayTypeNodeImpl();
+
+    ExtFactory nextEF = nextExtFactory();
+    if (nextEF instanceof FabILExtFactory) {
+      Ext e2 = ((FabILExtFactory) nextEF).extFabricArrayTypeNode();
+      e = composeExts(e, e2);
+    }
+
     return postExtFabricArrayTypeNode(e);
   }
 
@@ -27,6 +35,12 @@ public class FabILExtFactory_c extends AbstractExtFactory_c implements
   @Override
   public final Ext extAtomic() {
     Ext e = extAtomicImpl();
+
+    ExtFactory nextEF = nextExtFactory();
+    if (nextEF instanceof FabILExtFactory) {
+      Ext e2 = ((FabILExtFactory) nextEF).extAtomic();
+      e = composeExts(e, e2);
+    }
     return postExtAtomic(e);
   }
 
@@ -41,6 +55,12 @@ public class FabILExtFactory_c extends AbstractExtFactory_c implements
   @Override
   public final Ext extAbort() {
     Ext e = extAbortImpl();
+
+    ExtFactory nextEF = nextExtFactory();
+    if (nextEF instanceof FabILExtFactory) {
+      Ext e2 = ((FabILExtFactory) nextEF).extAbort();
+      e = composeExts(e, e2);
+    }
     return postExtAbort(e);
   }
 
@@ -55,6 +75,12 @@ public class FabILExtFactory_c extends AbstractExtFactory_c implements
   @Override
   public final Ext extRetry() {
     Ext e = extRetryImpl();
+
+    ExtFactory nextEF = nextExtFactory();
+    if (nextEF instanceof FabILExtFactory) {
+      Ext e2 = ((FabILExtFactory) nextEF).extRetry();
+      e = composeExts(e, e2);
+    }
     return postExtRetry(e);
   }
 
@@ -79,6 +105,13 @@ public class FabILExtFactory_c extends AbstractExtFactory_c implements
   @Override
   public final Ext extFabricArrayInit() {
     Ext e = extFabricArrayInitImpl();
+
+    ExtFactory nextEF = nextExtFactory();
+    if (nextEF instanceof FabILExtFactory) {
+      Ext e2 = ((FabILExtFactory) nextEF).extFabricArrayInit();
+      e = composeExts(e, e2);
+    }
+
     return postExtFabricArrayInit(e);
   }
 
@@ -98,6 +131,11 @@ public class FabILExtFactory_c extends AbstractExtFactory_c implements
   @Override
   protected Ext extCallImpl() {
     return new CallExt_c();
+  }
+
+  @Override
+  protected Ext extCaseImpl() {
+    return new CaseExt_c();
   }
 
   @Override
@@ -173,6 +211,13 @@ public class FabILExtFactory_c extends AbstractExtFactory_c implements
   @Override
   public final Ext extNewFabricArray() {
     Ext e = extNewFabricArrayImpl();
+
+    ExtFactory nextEF = nextExtFactory();
+    if (nextEF instanceof FabILExtFactory) {
+      Ext e2 = ((FabILExtFactory) nextEF).extNewFabricArray();
+      e = composeExts(e, e2);
+    }
+
     return postExtNewFabricArray(e);
   }
 
@@ -212,6 +257,12 @@ public class FabILExtFactory_c extends AbstractExtFactory_c implements
   @Override
   public final Ext extProviderLabel() {
     Ext e = extProviderLabelImpl();
+
+    ExtFactory nextEF = nextExtFactory();
+    if (nextEF instanceof FabILExtFactory) {
+      Ext e2 = ((FabILExtFactory) nextEF).extProviderLabel();
+      e = composeExts(e, e2);
+    }
     return postExtProviderLabel(e);
   }
 
@@ -226,6 +277,12 @@ public class FabILExtFactory_c extends AbstractExtFactory_c implements
   @Override
   public final Ext extCodebaseNode() {
     Ext e = extCodebaseNodeImpl();
+
+    ExtFactory nextEF = nextExtFactory();
+    if (nextEF instanceof FabILExtFactory) {
+      Ext e2 = ((FabILExtFactory) nextEF).extCodebaseNode();
+      e = composeExts(e, e2);
+    }
     return postExtCodebaseNode(e);
   }
 
@@ -240,6 +297,12 @@ public class FabILExtFactory_c extends AbstractExtFactory_c implements
   @Override
   public final Ext extCodebaseDecl() {
     Ext e = extCodebaseDeclImpl();
+
+    ExtFactory nextEF = nextExtFactory();
+    if (nextEF instanceof FabILExtFactory) {
+      Ext e2 = ((FabILExtFactory) nextEF).extCodebaseDecl();
+      e = composeExts(e, e2);
+    }
     return postExtCodebaseDecl(e);
   }
 
@@ -254,6 +317,12 @@ public class FabILExtFactory_c extends AbstractExtFactory_c implements
   @Override
   public final Ext extCodebaseTypeNode() {
     Ext e = extCodebaseTypeNodeImpl();
+
+    ExtFactory nextEF = nextExtFactory();
+    if (nextEF instanceof FabILExtFactory) {
+      Ext e2 = ((FabILExtFactory) nextEF).extCodebaseTypeNode();
+      e = composeExts(e, e2);
+    }
     return postExtCodebaseTypeNode(e);
   }
 
@@ -268,6 +337,12 @@ public class FabILExtFactory_c extends AbstractExtFactory_c implements
   @Override
   public final Ext extStoreGetter() {
     Ext e = extStoreGetterImpl();
+
+    ExtFactory nextEF = nextExtFactory();
+    if (nextEF instanceof FabILExtFactory) {
+      Ext e2 = ((FabILExtFactory) nextEF).extStoreGetter();
+      e = composeExts(e, e2);
+    }
     return postExtStoreGetter(e);
   }
 
@@ -277,11 +352,6 @@ public class FabILExtFactory_c extends AbstractExtFactory_c implements
 
   protected Ext postExtStoreGetter(Ext ext) {
     return postExtExpr(ext);
-  }
-
-  @Override
-  protected Ext extCaseImpl() {
-    return new CaseExt_c();
   }
 
 }
