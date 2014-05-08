@@ -14,11 +14,17 @@ public final class CheckBox extends InputNode {
     checked = checked_;
   }
 
+  public CheckBox(Principal servletP, Label L, Label E, String name,
+      boolean checked_) {
+    super(servletP, L, E, name);
+    checked = checked_;
+  }
+
   @Override
   void writeImpl(HTMLWriter p) {
     p.print("<input type=checkbox");
     p.print(" name=");
-    p.printq(input.getName());
+    p.printq(getName());
     p.print(" value=yes");
     if (checked) p.print(" checked");
     p.print(" />");

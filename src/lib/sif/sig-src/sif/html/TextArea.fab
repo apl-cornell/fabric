@@ -15,7 +15,7 @@ public final class TextArea[principal servletP, label L, label E] extends InputN
     private final int{L} rows;
     private final int{L} cols;
     private final String{L} initial_text;
-    
+
     public TextArea(Input[servletP]{L} input, int{L} rows, int{L} cols, String{L} initial) 
     where {L;E} <= {*input.inputLbl} {
         super(input);
@@ -26,6 +26,14 @@ public final class TextArea[principal servletP, label L, label E] extends InputN
     public TextArea{L}(Servlet[servletP]{L} s, label{L} inputLabel, int{L} rows, int{L} cols, String{L} initial) 
     where {L;E} <= {*inputLabel} {
         super(s, inputLabel);
+        this.rows = rows;
+        this.cols = cols;
+        initial_text = initial;
+    }
+
+    public TextArea(String{L} name, int{L} rows, int{L} cols, String{L} initial) 
+    {
+        super(name);
         this.rows = rows;
         this.cols = cols;
         initial_text = initial;

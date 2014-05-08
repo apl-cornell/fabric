@@ -32,6 +32,9 @@ public final class Form extends BlockContainer {
     }
     
     void writeContents(HTMLWriter p) {
+	// XXX Should check that the form contents doesn't contain any input
+	// nodes intended for off-site forms.
+
         // p.breakLine();
         if (contents != null)
             contents.write(p, this);

@@ -18,10 +18,15 @@ public final class RadioButton extends InputNode {
         checked = checked_;
     }
 
+    public RadioButton(Principal servletP, Label L, Label E, String name, String value, boolean checked_) {
+        super(servletP, L, E, name);
+        checked = checked_;
+    }
+
     void writeImpl(HTMLWriter p) {
         p.print("<input type=radio");
         p.print(" name=");
-        p.printq(input.getName());
+        p.printq(getName());
         if (checked) p.print(" checked");
         p.print(" />");
     }

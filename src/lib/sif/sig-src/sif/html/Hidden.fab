@@ -16,4 +16,9 @@ public final class Hidden[principal servletP, label L, label E] extends InputNod
         super(i);
         data = null; // dummy
     }
+    public Hidden(String{L} name, String{L} data_) 
+    {
+        super(name);
+        data = null; // dummy
+    }
 }

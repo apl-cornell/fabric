@@ -22,6 +22,12 @@ public class TextInput[principal servletP, label L, label E] extends InputNode[s
         this.size = size;
         initialText = initial;
     }
+    public TextInput(String{L} name, int{L} size, String{L} initial) 
+    {
+        super(name);
+        this.size = size;
+        initialText = initial;
+    }
     public final int{L} getSize() {
         return size;
     }
