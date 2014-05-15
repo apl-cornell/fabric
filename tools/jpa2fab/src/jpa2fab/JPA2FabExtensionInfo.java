@@ -22,6 +22,7 @@ import polyglot.ext.jl5.types.JL5TypeSystem_c;
 import polyglot.frontend.FileSource;
 import polyglot.frontend.Job;
 import polyglot.frontend.Scheduler;
+import polyglot.frontend.Source.Kind;
 import polyglot.frontend.TargetFactory;
 import polyglot.frontend.goals.Goal;
 import polyglot.main.OptFlag;
@@ -124,10 +125,10 @@ public class JPA2FabExtensionInfo extends ExtensionInfo {
   }
 
   @Override
-  public FileSource createFileSource(FileObject f, boolean user)
+  public FileSource createFileSource(FileObject f, Kind kind)
       throws IOException {
     URI ns = ((fabil.ExtensionInfo) outputExtensionInfo).localNamespace();
-    return new LocalSource(f, user, ns);
+    return new LocalSource(f, kind, ns);
   }
 
   @Override

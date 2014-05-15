@@ -21,14 +21,13 @@ public class RemoteSource extends UTF8FileSource implements CodebaseSource {
 
   protected Reader reader = null;
 
-  public RemoteSource(FileObject fo, FClass fcls, boolean userSpecified)
-      throws IOException {
-    this(fo, fcls, userSpecified, false);
+  public RemoteSource(FileObject fo, FClass fcls, Kind kind) throws IOException {
+    this(fo, fcls, kind, false);
   }
 
-  public RemoteSource(FileObject fo, FClass fcls, boolean userSpecified,
-      boolean publish) throws IOException {
-    super(fo, userSpecified);
+  public RemoteSource(FileObject fo, FClass fcls, Kind kind, boolean publish)
+      throws IOException {
+    super(fo, kind);
     this.fcls = fcls;
     this.namespace = NSUtil.namespace(fcls.getCodebase());
     this.publish = publish;
@@ -79,7 +78,8 @@ public class RemoteSource extends UTF8FileSource implements CodebaseSource {
   public Source derivedSource(final String name) {
     try {
       return new RemoteSource(new FabricFileObject(fcls,
-          NSUtil.absoluteName(fcls), name), fcls, user_specified, false);
+          NSUtil.absoluteName(fcls), name), fcls, Kind.COMPILER_GENERATED,
+          false);
     } catch (IOException e) {
       throw new InternalCompilerError(e);
     }
@@ -89,7 +89,8 @@ public class RemoteSource extends UTF8FileSource implements CodebaseSource {
   public Source publishedSource(final URI ns, final String name) {
     try {
       return new RemoteSource(new FabricFileObject(fcls,
-          NSUtil.absoluteName(fcls), name), fcls, user_specified, false) {
+          NSUtil.absoluteName(fcls), name), fcls, Kind.COMPILER_GENERATED,
+          false) {
         @Override
         public String path() {
           return ns.resolve(name).toString();
