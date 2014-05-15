@@ -1,8 +1,6 @@
 package fabric.types;
 
-import polyglot.types.Flags;
+import fabil.types.FabILFlags;
 
-public class FabricFlags extends Flags {
-  public static final Flags ATOMIC = createFlag("atomic", FINAL);
-  public static final Flags NONFABRIC = createFlag("nonfabric", FINAL);
+public class FabricFlags extends FabILFlags {
 }
