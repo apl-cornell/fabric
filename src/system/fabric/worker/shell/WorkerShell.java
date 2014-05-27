@@ -86,6 +86,31 @@ public class WorkerShell {
       }
     });
 
+    this.handlers.put("java", new CommandHandler("<APP> [ARG]...", "Executes "
+        + "the Java application APP in this worker, passing ARGs as "
+        + "command-line arguments.") {
+      @Override
+      public void handle(List<String> args) throws HandlerException {
+        if (args.size() == 0) {
+          throw new HandlerException("java: missing main class");
+        }
+
+        // Run a Java program.
+        String mainClassName = args.get(0);
+        String[] appArgs = new String[args.size() - 1];
+        for (int i = 0; i < appArgs.length; i++) {
+          appArgs[i] = args.get(i + 1);
+        }
+
+        try {
+          WorkerShell.this.worker.runJavaApp(mainClassName, appArgs);
+        } catch (Throwable e) {
+          throw new HandlerException("Exception encountered while running "
+              + mainClassName, e);
+        }
+      }
+    });
+
     this.handlers.put("time", new CommandHandler(
         "Times a worker shell command.") {
       @Override
