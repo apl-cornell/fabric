@@ -1153,7 +1153,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
         constructor =
             implClass.getConstructor(Store.class, long.class, int.class,
                 long.class, long.class, long.class, ObjectInput.class,
-                Iterator.class, Iterator.class);
+                Iterator.class, Iterator.class, Iterator.class);
         constructorTable.put(implClass, constructor);
       }
 
@@ -1161,7 +1161,8 @@ public final class SerializedObject implements FastSerializable, Serializable {
           (_Impl) constructor.newInstance(store, getOnum(), getVersion(),
               getExpiry(), getUpdateLabelOnum(), getAccessPolicyOnum(),
               new ObjectInputStream(getSerializedDataStream()),
-              getRefTypeIterator(), getIntraStoreRefIterator());
+              getRefTypeIterator(), getIntraStoreRefIterator(),
+              getInterStoreRefIterator());
 
       if (chaseSurrogates && (result instanceof Surrogate)) {
         // Chase the surrogate pointer.
