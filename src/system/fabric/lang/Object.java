@@ -568,7 +568,12 @@ public interface Object {
 
     @Override
     public Object fabric$lang$Object$() {
-      return $initLabels();
+      Object result = $initLabels();
+
+      // Register the new object with the transaction manager.
+      TransactionManager.getInstance().registerLabelsInitialized(this);
+
+      return result;
     }
 
     /**

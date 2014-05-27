@@ -794,10 +794,14 @@ public final class TransactionManager {
       // Own the object. The call to ensureOwnership is responsible for adding
       // the object to the set of created objects.
       ensureOwnership(obj);
-      current.writerMap.put(obj.$getProxy(), obj.get$$updateLabel());
     } finally {
       Timing.TXLOG.end();
     }
+  }
+
+  public void registerLabelsInitialized(_Impl obj) {
+    current.writerMap.put(obj.$getProxy(), Worker.getWorker().getLocalWorker());
+    current.writerMap.put(obj.$getProxy(), obj.get$$updateLabel());
   }
 
   public void registerRead(_Impl obj) {
@@ -1039,14 +1043,23 @@ public final class TransactionManager {
   private void ensureOwnership(_Impl obj) {
     if (obj.$isOwned) return;
 
-    // Check the writer map to see if another worker currently owns the object.
-    RemoteWorker owner = current.writerMap.getWriter(obj.$getProxy());
-    if (owner != null)
-      owner.takeOwnership(current.tid, obj.$getStore(), obj.$getOnum());
+    // Check the writer map to see if another worker currently owns the object,
+    // but only do so if the object's labels are initialized.
+    if (obj.$version != 0 || obj.get$$updateLabel() != null) {
+      RemoteWorker owner = current.writerMap.getWriter(obj.$getProxy());
+      if (owner != null)
+        owner.takeOwnership(current.tid, obj.$getStore(), obj.$getOnum());
+    }
 
     // We now own the object.
     obj.$isOwned = true;
-    current.writerMap.put(obj.$getProxy(), Worker.getWorker().getLocalWorker());
+
+    // Add the object to the writer map, but only do so if the object's labels
+    // are initialized.
+    if (obj.$version != 0 || obj.get$$updateLabel() != null) {
+      current.writerMap.put(obj.$getProxy(), Worker.getWorker()
+          .getLocalWorker());
+    }
 
     // If the object is fresh, add it to our set of creates.
     if (obj.$version == 0) {
@@ -1072,6 +1085,12 @@ public final class TransactionManager {
 
     // Set the update-map version stamp on the object.
     obj.writerMapVersion = current.writerMap.version;
+
+    if (obj.get$$updateLabel() == null) {
+      // Labels not initialized yet. Objects aren't added to the writer map
+      // until after label initialization, so no need to check the writer map.
+      return;
+    }
 
     // Check the writer map.
     RemoteWorker owner = current.writerMap.getWriter(obj.$getProxy());
