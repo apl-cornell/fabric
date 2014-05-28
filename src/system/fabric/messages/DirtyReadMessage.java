@@ -98,7 +98,7 @@ public class DirtyReadMessage extends
   protected void writeResponse(DataOutput out, Response r) throws IOException {
     if (r.obj != null) {
       out.writeBoolean(true);
-      out.writeUTF(store.name());
+      out.writeUTF(r.store.name());
       r.obj.write(out);
     } else {
       out.writeBoolean(false);
