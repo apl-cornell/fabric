@@ -52,7 +52,7 @@ public final class Log {
   /**
    * The sub-transaction.
    */
-  private Log child;
+  private Set<Log> children;
 
   /**
    * The thread that is running this transaction.
@@ -191,7 +191,7 @@ public final class Log {
       this.tid = tid;
     }
 
-    this.child = null;
+    this.children = new HashSet<Log>();
     this.thread = Thread.currentThread();
     this.retrySignal = parent == null ? null : parent.retrySignal;
     this.reads = new OidKeyHashMap<ReadMap.Entry>();
@@ -209,7 +209,7 @@ public final class Log {
         Timing.SUBTX.begin();
         this.writerMap = new WriterMap(parent.writerMap);
         synchronized (parent) {
-          parent.child = this;
+          parent.children.add(this);
         }
 
         commitState = parent.commitState;
@@ -409,7 +409,9 @@ public final class Log {
     while (!toFlag.isEmpty()) {
       Log log = toFlag.remove();
       synchronized (log) {
-        if (log.child != null) toFlag.add(log.child);
+        for (Log child : log.children) {
+          toFlag.add(child);
+        }
         if (log.retrySignal == null || log.retrySignal.isDescendantOf(tid)) {
           log.retrySignal = tid;
           // XXX This was here to unblock a thread that may have been waiting on
@@ -456,7 +458,7 @@ public final class Log {
     if (parent != null && parent.tid.equals(tid.parent)) {
       // The parent frame represents the parent transaction. Null out its child.
       synchronized (parent) {
-        parent.child = null;
+        parent.children.remove(this);
       }
     } else {
       // This frame will be reused to represent the parent transaction. Clear
@@ -592,7 +594,7 @@ public final class Log {
     }
 
     synchronized (parent) {
-      parent.child = null;
+      parent.children.remove(this);
     }
   }
 
@@ -741,8 +743,8 @@ public final class Log {
     return tid;
   }
 
-  public Log getChild() {
-    return child;
+  public Set<Log> getChildren() {
+    return Collections.unmodifiableSet(children);
   }
 
   /**
@@ -797,7 +799,9 @@ public final class Log {
       reads.put(store, newOnum, entry);
     }
 
-    if (child != null) child.renumberObject(store, onum, newOnum);
+    for (Log child : children) {
+      child.renumberObject(store, onum, newOnum);
+    }
   }
 
   @Override
