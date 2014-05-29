@@ -50,7 +50,7 @@ public final class Log {
   WriterMap writerMap;
 
   /**
-   * The sub-transaction.
+   * The sub-transactions.
    */
   private Set<Log> children;
 
@@ -66,6 +66,12 @@ public final class Log {
    * all child transactions are to be aborted.
    */
   volatile TransactionID retrySignal;
+
+  /**
+   * Set of threads that were started during this transaction.  These threads
+   * must not be active before the transaction either commits or aborts.
+   */
+  protected final Set<Thread> threadsStarted;
 
   /**
    * Maps OIDs to <code>readMap</code> entries for objects read in this
@@ -194,6 +200,7 @@ public final class Log {
     this.children = new HashSet<Log>();
     this.thread = Thread.currentThread();
     this.retrySignal = parent == null ? null : parent.retrySignal;
+    this.threadsStarted = new HashSet<Thread>();
     this.reads = new OidKeyHashMap<ReadMap.Entry>();
     this.readsReadByParent = new ArrayList<ReadMap.Entry>();
     this.creates = new ArrayList<_Impl>();
@@ -463,6 +470,7 @@ public final class Log {
     } else {
       // This frame will be reused to represent the parent transaction. Clear
       // out the log data structures.
+      threadsStarted.clear();
       reads.clear();
       readsReadByParent.clear();
       creates.clear();
@@ -737,6 +745,11 @@ public final class Log {
    * Blocks until all threads in <code>threads</code> are finished.
    */
   void waitForThreads() {
+    for (Thread started : threadsStarted) {
+      try {
+        started.join();
+      } catch (InterruptedException e) { }
+    }
   }
 
   public TransactionID getTid() {
