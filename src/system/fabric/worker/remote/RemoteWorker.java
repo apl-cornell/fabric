@@ -1,6 +1,7 @@
 package fabric.worker.remote;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.List;
 
 import fabric.common.ClassRef;
@@ -239,4 +240,23 @@ public class RemoteWorker extends RemoteNode<RemoteWorker> {
     return send(subSocketFactory, message);
   }
 
+  // ////////////////////////////////
+  // Java custom-serialization gunk
+  // ////////////////////////////////
+
+  private Object writeReplace() {
+    return new SerializationProxy(name);
+  }
+
+  static final class SerializationProxy implements Serializable {
+    private final String workerName;
+
+    public SerializationProxy(String workerName) {
+      this.workerName = workerName;
+    }
+
+    java.lang.Object readResolve() {
+      return Worker.getWorker().getWorker(workerName);
+    }
+  }
 }

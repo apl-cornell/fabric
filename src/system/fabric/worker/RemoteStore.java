@@ -76,7 +76,7 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
    */
   private transient PublicKey publicKey;
 
-  private class FetchLock {
+  private static class FetchLock {
     private volatile ObjectCache.Entry object;
     private volatile AccessException error;
   }
@@ -483,11 +483,11 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
   // Java custom-serialization gunk
   // ////////////////////////////////
 
-  public java.lang.Object writeReplace() {
+  private java.lang.Object writeReplace() {
     return new SerializationProxy(name);
   }
 
-  public static final class SerializationProxy implements Serializable {
+  protected static final class SerializationProxy implements Serializable {
     private final String storeName;
 
     public SerializationProxy(String storeName) {
