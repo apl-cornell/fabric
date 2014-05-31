@@ -1221,9 +1221,8 @@ public final class TransactionManager {
   public void registerThread(Thread thread) {
     Timing.TXLOG.begin();
     try {
-      // XXX Eventually, we will want to support threads in transactions.
       if (current != null)
-        throw new InternalError("Cannot create threads within transactions");
+        current.threadsStarted.add(thread);
 
       TransactionManager tm = new TransactionManager();
 

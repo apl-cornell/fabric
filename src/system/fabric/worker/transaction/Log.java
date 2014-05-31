@@ -25,6 +25,8 @@ import fabric.worker.Worker;
 import fabric.worker.remote.RemoteWorker;
 import fabric.worker.remote.WriterMap;
 
+// TODO: make sure this is thread safe.
+
 /**
  * Stores per-transaction information. Records the objects that are created,
  * read, and written during a single nested transaction.
