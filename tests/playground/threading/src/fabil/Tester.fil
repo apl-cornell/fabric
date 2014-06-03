@@ -37,8 +37,7 @@ public class Tester {
   }
 
   public static void main(String[] args) {
-    Tester t;
-
+    Tester t = null;
     atomic {
       t = new Tester@s().Tester$();
     }
