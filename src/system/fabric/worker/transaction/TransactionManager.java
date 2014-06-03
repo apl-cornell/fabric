@@ -171,6 +171,10 @@ public final class TransactionManager {
     this.current = null;
   }
 
+  public TransactionManager(Log current) {
+    this.current = current;
+  }
+
   private void checkRetrySignal() {
     if (current.retrySignal != null) {
       synchronized (current) {
@@ -1224,7 +1228,7 @@ public final class TransactionManager {
       if (current != null)
         current.threadsStarted.add(thread);
 
-      TransactionManager tm = new TransactionManager();
+      TransactionManager tm = new TransactionManager(current);
 
       if (thread instanceof FabricThread) {
         ((FabricThread) thread).setTransactionManager(tm);
