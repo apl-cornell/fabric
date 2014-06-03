@@ -1,0 +1,76 @@
+<!--
+  This is the Apache Ant build file for the Fabric readwritemix implementation.
+-->
+
+<project name="threading" default="build-all" basedir=".">
+  <description>
+    Fabric threading build file
+  </description>
+
+  <!--
+  ****************************************************************************
+    Global properties for this build.
+  ****************************************************************************
+  -->
+  <import file="../../../common.xml" />
+
+  <dirname property="threading.home" file="${ant.file.threading}" />
+
+  <!--
+  ****************************************************************************
+    Targets for cleaning up the directory tree.
+  ****************************************************************************
+  -->
+
+  <target name="clean" description="Removes generated files">
+    <delete dir="${threading.home}/classes"/>
+  </target>
+
+  <target name="clobber" depends="clean"
+          description="Removes generated files and state of stores">
+    <delete dir="${threading.home}/var"/>
+  </target>
+
+  <!--
+  ****************************************************************************
+    Compilation targets.
+  ****************************************************************************
+  -->
+
+  <target name="build"
+      description="Builds the Fabric threading implementation">
+    <mkdir dir="${threading.home}/classes" />
+    <javac source="1.6" target="1.6" srcdir="${threading.home}/src/fabil" destdir="${threading.home}/classes" includes="**/*.java" debug="on">
+    </javac>
+    <apply executable="bash"
+        parallel="true"
+        failonerror="true"
+        dir="${threading.home}"
+        dest="${threading.home}/classes"
+        relative="false"
+        skipemptyfilesets="true"
+        vmlauncher="false">
+      <arg value="${filc}" />
+      <arg line="${debug.flag}" />
+      <arg value="-d" />
+      <arg value="classes" />
+      <arg value="-sourcepath" />
+      <arg value="src/fabil" />
+      <arg value="-cp" />
+      <arg value="classes" />
+      <srcfile />
+      <fileset dir="src/fabil">
+        <include name="**/*.fil" />
+      </fileset>
+      <globmapper from="*.fil" to="*.class" />
+    </apply>
+  </target>
+
+  <target name="build-all" depends="build" />
+  <target name="all" depends="build-all" />
+
+</project>
+
+<!--
+vim: ts=2 sw=2 ai et
+-->

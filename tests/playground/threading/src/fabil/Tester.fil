@@ -1,0 +1,56 @@
+import fabric.util.Collections;
+import fabric.util.LinkedList;
+import fabric.util.List;
+import java.io.IOException;
+import java.util.logging.Logger;
+import java.util.logging.Level;
+import java.util.Random;
+import fabric.worker.transaction.TransactionManager;
+
+public class Tester {
+  public int x;
+
+  public static Store s = Worker.getWorker().getLocalStore();
+
+  public Tester Tester$() {
+    return this;
+  }
+
+  public static class IncrementRunnable implements Runnable {
+    private Tester t;
+
+    public IncrementRunnable Tester$IncrementRunnable$(final Tester t) {
+      this.t = t;
+      return this;
+    }
+
+    public void run() {
+      atomic {
+        try { Thread.sleep(1); } catch (InterruptedException e) { }
+        t.x = t.x + 1;
+      }
+    }
+  }
+
+  public static Thread getIncrementThread(final Tester t) {
+    return new Thread(new IncrementRunnable().Tester$IncrementRunnable$(t));
+  }
+
+  public static void main(String[] args) {
+    Tester t;
+
+    atomic {
+      t = new Tester@s().Tester$();
+    }
+
+    atomic {
+      Thread t1 = getIncrementThread(t);
+      Thread t2 = getIncrementThread(t);
+      t1.start();
+      t2.start();
+      System.out.println("WAT " + t.x);
+    }
+
+    System.out.println(t.x);
+  }
+}
