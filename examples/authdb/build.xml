@@ -1,5 +1,6 @@
 <!--
-  This is the Apache Ant build file for the Fabric authentication example
+  This is the Apache Ant build file for the Fabric authentication database
+  example.
 -->
 
 <project name="authdb" default="build-all" basedir=".">
@@ -18,6 +19,16 @@
 
   <dirname property="authdb.home" file="${ant.file.authdb}" />
 
+  <path id="java-classpath">
+    <pathelement path="${authdb.home}/classes"/>
+    <pathelement path="${fabric.home}/classes"/>
+    <pathelement path="${fabric.home}/rt-classes"/>
+    <fileset dir="${fabric.home}/lib">
+      <include name="fabric.jar"/>
+      <include name="fabric-rt.jar"/>
+    </fileset>
+  </path>
+
   <!--
   ****************************************************************************
     Targets for cleaning up the directory tree.
@@ -26,6 +37,7 @@
 
   <target name="clean" description="Removes generated files">
     <delete dir="${authdb.home}/classes"/>
+    <delete dir="${authdb.home}/var"/>
   </target>
 
   <target name="clobber" depends="clean"
@@ -41,7 +53,7 @@
   <target name="build-all" depends="build-authdb" />
   <target name="all" depends="build-all" />
 
-  <target name="build-authdb" depends="collections"
+  <target name="build-authdb"
           description="Builds the authentication database library">
     <fabc dest="${authdb.home}/classes">
       <arg value="-sourcepath" /> <arg value="${authdb.home}/src" />
@@ -52,11 +64,12 @@
       <fileset dir="${authdb.home}/src" includes="**/*.fab"/>
     </fabc>
 
-    <filc dest="${authdb.home}/classes">
-      <arg value="-sourcepath" /> <arg value="${authdb.home}/src" />
-      <arg value="-cp"/> <arg value="${authdb.home}/classes"/>
-      <fileset dir="${authdb.home}/src" includes="**/*.fil" />
-    </filc>
+    <javac
+        destdir="${authdb.home}/classes"
+        srcdir="${authdb.home}/src"
+        debug="on"
+        includes="**"
+        classpathref="java-classpath"/>
   </target>
 </project>
 

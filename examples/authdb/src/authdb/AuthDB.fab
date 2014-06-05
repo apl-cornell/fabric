@@ -8,7 +8,7 @@ import fabricated.util.StringComparator;
  * authP is a principal capable of querying and modifying the auth db.
  */
 public final class AuthDB[principal authP] {
-  private final Map[{this;authP→;authP←}]{authP→;authP←}@{authP→} db;
+  private final Map[{authP→;authP←}]{authP→;authP←}@{authP→} db;
 
   private AuthDB(Store{authP→;authP←} store):{authP→;authP←}
       throws UnsupportedOperationException, ClassCastException,
@@ -25,13 +25,15 @@ public final class AuthDB[principal authP] {
     final Store store = worker$.getStore(storeName);
 
     if (store actsfor authP) {
-      AuthDB[authP] result = (AuthDB[authP]) store.getRoot().get("authdb");
-      if (result == null) {
-	result = new AuthDB[authP]@store(store);
-	store.getRoot().put("authdb", result);
-      }
+      atomic {
+	AuthDB[authP] result = (AuthDB[authP]) store.getRoot().get("authdb");
+	if (result == null) {
+	  result = new AuthDB[authP]@store(store);
+	  store.getRoot().put("authdb", result);
+	}
 
-      return result;
+	return result;
+      }
     }
 
     throw new IllegalArgumentException("Specified store should act for authP; "
@@ -41,27 +43,47 @@ public final class AuthDB[principal authP] {
 
   public boolean{authP←} authenticate{authP→}(String{authP→} user,
       String{authP→} password) where caller(authP) {
-    endorse (password, {authP→} to {authP→;authP←})
+    // Endorse the PC to gain authP←.
+    endorse ({authP→} to {authP→;authP←}) {
+      // Endorse the password to gain authP← if it's not null.
+      endorse (password, {authP→} to {authP→;authP←})
       if (password != null) {
-	Object lookupResult =
-	  db.get(endorse(user, {authP→} to {authP→;authP←}));
+	atomic {
+	  Object lookupResult =
+	    db.get(endorse(user, {authP→} to {authP→;authP←}));
 
-	if (password.equals(lookupResult))
-	  declassify ({authP→} to {})
-	    endorse ({} to {authP←})
-	      return true;
+	  if (password.equals(lookupResult)) {
+	    // Downgrade the result.
+	    declassify ({authP→} to {})
+	      endorse ({} to {authP←})
+		return true;
+	  }
+	}
       }
+    }
 
+    // Downgrade the result.
     declassify ({authP→} to {})
       endorse ({} to {authP←})
 	return false;
   }
 
-  public void addUser(String user, String password) {
+  public void addUser{authP→;authP←}(String{authP→;authP←} user,
+      String{authP→;authP←} password) {
+    if (user != null && password != null) {
+      atomic {
+	db.put(user, password);
+      }
+    }
   }
 
 
-  public void removeUser(String user) {
+  public void removeUser{authP→;authP←}(String{authP→;authP←} user) {
+    if (user != null) {
+      atomic {
+	db.remove(user);
+      }
+    }
   }
 }
 
