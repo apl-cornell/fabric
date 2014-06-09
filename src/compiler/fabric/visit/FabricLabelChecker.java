@@ -26,7 +26,7 @@ public class FabricLabelChecker extends LabelChecker {
   @Override
   public JifMethodDecl leavingMethod(JifMethodDecl n) {
     if (solvePerMethod) {
-      // solving by class. We need to solve the constraints
+      // solving by method. We need to solve the constraints
       JifMethodDecl result = (JifMethodDecl) solveConstraints(n);
       if (!((SilenceableSolverGLB) solver()).isSolved()) {
         return null;
