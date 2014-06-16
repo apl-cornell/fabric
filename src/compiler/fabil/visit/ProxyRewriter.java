@@ -109,8 +109,7 @@ public class ProxyRewriter extends NodeVisitor {
   }
 
   public static Flags toInterface(Flags flags) {
-    return flags.clearAbstract().clearFinal().clearPrivate().Interface()
-        .Public();
+    return flags.clearAbstract().clearFinal().Interface();
   }
 
   /** Returns a shadow name for local variable l. */
