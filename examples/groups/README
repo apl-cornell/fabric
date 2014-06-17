@@ -11,15 +11,10 @@ groups Webapp Example
 
         $ bin/start-all
 
-  2. Add default users alice and bob to the worker store:
-  
-        $ bin/init-state
-  TODO: make this step unnecessary
-
-  3. Start the web server:
+  2. Start the web server:
 
         $ bin/start-webapp
-  4. Use curl or similar client to interact with the groups REST-style API:
+  3. Use curl or similar client to interact with the groups REST-style API:
      - create a user:
         curl --cookie-jar cookies 'http://localhost:8080/groups/sif?action=adduser&user=owen&pass=password'
      - login a user:
@@ -27,8 +22,8 @@ groups Webapp Example
      - access pages requiring authentication
         curl -b cookies http://localhost:8080/groups/sif?action="frontPage"  
      - logoff
-        curl -b cookies http://localhost:8080/groups/sif?action="frontPage"
-  5. Exit the store with the "exit" command in its console (you can also
+        curl -b cookies http://localhost:8080/groups/sif?action="logoff"
+  4. Exit the store with the "exit" command in its console (you can also
      use CTRL-D).
 
      You can clean up the store's persistent state by removing the 'var'
