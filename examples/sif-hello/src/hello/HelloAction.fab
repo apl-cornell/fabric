@@ -59,7 +59,7 @@ public class HelloAction[label T] extends Action[HelloServEP] {
 								}
 							}
 							catch (IOException ignore) { }
-							catch (NullPointerException ignore) { }
+							catch (NullPointerException{⊤→} ignore) { }
 
 							if (name == null || name.length() == 0) name = "world";
 
