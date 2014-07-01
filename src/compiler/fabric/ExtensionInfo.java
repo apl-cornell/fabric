@@ -253,10 +253,10 @@ public class ExtensionInfo extends jif.ExtensionInfo implements
   }
 
   @Override
-  public LabelChecker createLabelChecker(Job job, boolean solvePerClassBody,
-      boolean solvePerMethod, boolean doLabelSubst) {
+  public LabelChecker createLabelChecker(Job job, boolean warningsEnabled,
+      boolean solvePerClassBody, boolean solvePerMethod, boolean doLabelSubst) {
     return new FabricLabelChecker(job, typeSystem(), nodeFactory(),
-        solvePerClassBody, solvePerMethod, doLabelSubst);
+        warningsEnabled, solvePerClassBody, solvePerMethod, doLabelSubst);
   }
 
   @Override

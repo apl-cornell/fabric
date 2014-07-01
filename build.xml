@@ -77,12 +77,12 @@
   <property name="tmp" location="${fabric.home}/tmp"/>
 
   <!-- RCS root locations -->
-  <property name="svn.root.fabric"
-      value="https://forge.cornell.edu/svn/repos/fabric"/>
+  <property name="git.root.fabric"
+      value="${fabric.home}"/>
   <property name="git.root.jif"
-      value="https://apl.cs.cornell.edu/git/jif.git"/>
-  <property name="cvs.root.polyglot"
-      value=":ext:gforge.cis.cornell.edu:/cvsroot/polyglot"/>
+      value="https://apl.cs.cornell.edu/git/jif"/>
+  <property name="git.root.polyglot"
+      value="git@github.com:polyglot-compiler/polyglot"/>
 
   <!-- Jif distribution location -->
   <property name="jif.url.prefix"
@@ -1146,7 +1146,7 @@ public class Version {
     snapshot.
   -->
   <target name="get-fabric-snapshot-info" depends="get-current-fabric-branch">
-    <input message="Fabric branch to snapshot (e.g., branches/0.2.2)?"
+    <input message="Fabric branch to snapshot?"
         defaultvalue="${fabric.current.branch}"
         addproperty="fabric.snapshot.branch"/>
     <tstamp>
@@ -1166,30 +1166,22 @@ public class Version {
     <exec executable="bash"
         dir="${fabric.home}"
         error="/dev/null"
-        outputproperty="get-branch-output">
+        outputproperty="fabric.current.branch">
       <arg value="-c"/>
-      <arg value="svn info | grep '^Relative URL: ' | sed 's|^Relative URL: \^/||'"/>
+      <arg value="git rev-parse --abbrev-ref HEAD"/>
     </exec>
-
-    <condition property="fabric.current.branch"
-        value="${get-branch-output}"
-        else="trunk">
-      <not>
-        <equals arg1="${get-branch-output}" arg2=""/>
-      </not>
-    </condition>
   </target>
 
-  <!-- Creates the distribution tarball from CVS and SVN. -->
+  <!-- Creates the distribution tarball from Git. -->
   <target name="dist-tarball"
       depends="configure-buildstring,get-fabric-snapshot-info,build-jif">
     <!-- build-jif should have set up the tmp directory already. -->
 
-    <!-- Check out Fabric from SVN. -->
-    <antcall target="svn-checkout">
+    <!-- Check out Fabric from Git. -->
+    <antcall target="git-clone">
       <param name="name" value="fabric" />
-      <param name="root"
-          value="${svn.root.fabric}/${fabric.snapshot.branch}" />
+      <param name="root" value="${git.root.fabric}" />
+      <param name="branch" value="${fabric.snapshot.branch}" />
       <param name="date" value="${fabric.snapshot.timestamp}" />
     </antcall>
 
@@ -1559,6 +1551,9 @@ public class Version {
     <input message="Jif branch to snapshot?"
         defaultvalue="master"
         addproperty="jif.snapshot.branch"/>
+    <input message="Polyglot branch to snapshot?"
+        defaultvalue="master"
+        addproperty="polyglot.snapshot.branch"/>
     <input message="Time and date to snapshot?"
         defaultvalue="${fabric.snapshot.timestamp}"
         addproperty="jif.snapshot.timestamp"/>
@@ -1577,7 +1572,6 @@ public class Version {
     <echo/>
     <echo message="For public releases, (D)ownload is highly recommended."/>
     <echo message="*********************************************************"/>
-    <echo message="${mooooo}" />
     <input message="(D)ownload or (S)napshot?"
         validargs="d,s" defaultvalue="d"
         addproperty="input.jif-download-or-snapshot"/>
@@ -1658,10 +1652,11 @@ public class Version {
   -->
   <target name="build-polyglot-rcs" depends="mkdir-tmp,get-jif-snapshot-info"
       if="${use-jif-rcs}">
-    <!-- Check out Polyglot from CVS. -->
-    <antcall target="cvs-checkout">
+    <!-- Check out Polyglot from Git. -->
+    <antcall target="git-clone">
       <param name="name" value="polyglot" />
-      <param name="root" value="${cvs.root.polyglot}" />
+      <param name="root" value="${git.root.polyglot}" />
+      <param name="branch" value="${polyglot.snapshot.branch}" />
       <param name="date" value="${jif.snapshot.timestamp}" />
     </antcall>
 
@@ -1710,37 +1705,6 @@ public class Version {
   </target>
 
   <!--
-    Checks out a fresh copy of a project from CVS into ${tmp}.
-
-    Parameters:
-      root - the CVS root
-      name - the name of the module to check out
-      date - check out the most recent revision no later than the given date
-  -->
-  <target name="cvs-checkout">
-    <cvs command="checkout -D '${date}' ${name}" quiet="true" cvsRsh="ssh"
-        cvsRoot="${root}" dest="${tmp}" failonerror="true" />
-  </target>
-
-  <!--
-    Checks out a fresh copy of a project from SVN into ${tmp}.
-
-    Parameters:
-      root - the SVN URL to check out
-      name - the name of the destination in ${tmp}.
-      date - check out the most recent revision no later than the given date
-  -->
-  <target name="svn-checkout">
-    <exec executable="svn" failonerror="true">
-      <arg value="co" />
-      <arg value="-q" />
-      <arg value="-r" /> <arg value="{${date}}" />
-      <arg value="${root}" />
-      <arg value="${tmp}/${name}" />
-    </exec>
-  </target>
-
-  <!--
     Clones a fresh copy of a project from Git into ${tmp}.
 
     Parameters:
@@ -1758,7 +1722,13 @@ public class Version {
       <arg value="${tmp}/${name}" />
     </exec>
 
-    <!-- Next, find the most recent hash occurring before the given date. -->
+    <!-- Next, check out the requested branch. -->
+    <exec executable="git" dir="${tmp}/${name}" failonerror="true">
+      <arg value="checkout" />
+      <arg value="${branch}" />
+    </exec>
+
+    <!-- Now, find the most recent hash occurring before the given date. -->
     <exec executable="git"
         dir="${tmp}/${name}"
         failonerror="true"

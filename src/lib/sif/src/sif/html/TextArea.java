@@ -32,11 +32,19 @@ public final class TextArea extends InputNode {
     initial_text = initial;
   }
 
+  public TextArea(Principal servletP, Label L, Label E, String name, int rows,
+      int cols, String initial) {
+    super(servletP, L, E, name);
+    this.rows = rows;
+    this.cols = cols;
+    initial_text = initial;
+  }
+
   @Override
   void writeImpl(HTMLWriter p) {
     p.print("<textarea");
     p.print(" name=");
-    p.printq(input.getName());
+    p.printq(getName());
     p.print(" rows=");
     p.printq(rows);
     p.print(" cols=");

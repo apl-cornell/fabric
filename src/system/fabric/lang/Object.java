@@ -568,7 +568,12 @@ public interface Object {
 
     @Override
     public Object fabric$lang$Object$() {
-      return $initLabels();
+      Object result = $initLabels();
+
+      // Register the new object with the transaction manager.
+      TransactionManager.getInstance().registerLabelsInitialized(this);
+
+      return result;
     }
 
     /**
@@ -769,13 +774,16 @@ public interface Object {
      * @param intraStoreRefs
      *          An iterator of intra-store references, each represented by an
      *          onum.
+     * @param interStoreRefs
+     *          An iterator of inter-store references.
      * @throws IOException
      * @throws ClassNotFoundException
      */
     public _Impl(Store store, long onum, int version, long expiry,
         long updateLabel, long accessPolicy, ObjectInput serializedInput,
-        Iterator<RefTypeEnum> refTypes, Iterator<Long> intraStoreRefs)
-        throws IOException, ClassNotFoundException {
+        Iterator<RefTypeEnum> refTypes, Iterator<Long> intraStoreRefs,
+        Iterator<Pair<String, Long>> interStoreRefs) throws IOException,
+        ClassNotFoundException {
       this(store, onum, version, expiry);
       this.$updateLabel = new Label._Proxy(store, updateLabel);
       this.$accessPolicy = new ConfPolicy._Proxy(store, accessPolicy);
@@ -802,6 +810,8 @@ public interface Object {
      * @param intraStoreRefs
      *          An iterator of intra-store references, each represented by an
      *          onum.
+     * @param interStoreRefs
+     *          An iterator of inter-store references.
      * @throws ClassNotFoundException
      *           Thrown when the class for a wrapped object is unavailable.
      * @throws IOException
@@ -810,8 +820,9 @@ public interface Object {
      */
     protected static final Object $readRef(
         Class<? extends Object._Proxy> proxyClass, RefTypeEnum refType,
-        ObjectInput in, Store store, Iterator<Long> intraStoreRefs)
-        throws IOException, ClassNotFoundException {
+        ObjectInput in, Store store, Iterator<Long> intraStoreRefs,
+        Iterator<Pair<String, Long>> interStoreRefs) throws IOException,
+        ClassNotFoundException {
       switch (refType) {
       case NULL:
         return null;
@@ -834,9 +845,22 @@ public interface Object {
         }
 
       case REMOTE:
-        // These should have been swizzled by the store.
-        throw new InternalError(
-            "Unexpected remote object reference encountered during deserialization.");
+        try {
+          Constructor<? extends Object._Proxy> constructor =
+              constructorTable.get(proxyClass);
+          if (constructor == null) {
+            constructor = proxyClass.getConstructor(Store.class, long.class);
+            constructorTable.put(proxyClass, constructor);
+          }
+
+          Pair<String, Long> ref = interStoreRefs.next();
+          String storeName = ref.first;
+          long onum = ref.second;
+          return constructor.newInstance(
+              Worker.getWorker().getStore(storeName), onum);
+        } catch (Exception e) {
+          throw new InternalError(e);
+        }
       }
 
       throw new InternalError(

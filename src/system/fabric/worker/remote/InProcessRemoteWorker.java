@@ -32,12 +32,12 @@ import fabric.worker.Worker;
  */
 public class InProcessRemoteWorker extends RemoteWorker {
 
-  private final Worker worker;
+  private transient final Worker worker;
 
   /**
    * The local in-process store. This is null if there is no colocated store.
    */
-  private final InProcessStore inProcessStore;
+  private transient final InProcessStore inProcessStore;
 
   public InProcessRemoteWorker(Worker worker) {
     super(worker);
@@ -148,4 +148,7 @@ public class InProcessRemoteWorker extends RemoteWorker {
     throw new NotImplementedException();
   }
 
+  private Object writeReplace() {
+    return new SerializationProxy(name);
+  }
 }

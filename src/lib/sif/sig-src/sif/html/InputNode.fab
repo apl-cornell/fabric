@@ -16,17 +16,43 @@ public abstract class InputNode[principal servletP, label L, label E] extends No
     private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
     private static int __JIF_PARAMS_RUNTIME_REPRESENTED$20051007 = 0;
 
+    // Invariant: exactly one of input and name is null.
+    // For off-site forms, input must be null.
+    // For forms that submit back to the servlet, name must be null.
     public final Input[servletP]{L} input;
+    public final String{L} name;
     
+    /**
+     * Constructs an input node for a form that submits back to the servlet.
+     */
     InputNode(Input[servletP]{L} i) 
     where {L;E} <= {*i.inputLbl} {
         super();
         input = i;
+	name = null;
     }
-    
+
+    /**
+     * Constructs an input node for a form that submits back to the servlet.
+     */
     InputNode{L}(Servlet[servletP]{L} s, label{L} inputLabel) 
     where {L;E} <= {*inputLabel} {
         super();
         input = new Input[servletP](s, inputLabel);
+	name = null;
     }
+
+    /**
+     * Constructs an input node for an off-site form.
+     */
+    InputNode{L}(String{L} n) {
+	super();
+	input = null;
+	name = n;
+    }
+
+    // XXX The return label (copied from Input.getName()) doesn't seem right.
+    // Does this allow information to be laundered through the input name to
+    // obtain high integrity? -Jed
+    public final native String{servletP→;servletP←} getName();
 }

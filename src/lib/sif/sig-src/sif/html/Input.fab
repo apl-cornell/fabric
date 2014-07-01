@@ -30,6 +30,9 @@ public final class Input[principal servletP] extends java.lang.Object {
 	}
 
 	/** @return The name of the input. */
+	// XXX The return label doesn't seem right. Does this allow information
+	// to be laundered through the input name to obtain high integrity?
+	// -Jed
 	public native String{servletP:;servletP!:} getName();
 
 	public native final int{servletP:;servletP!:} hashCode();

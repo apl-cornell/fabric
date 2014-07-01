@@ -36,6 +36,13 @@ abstract public class HTMLServlet[principal servletP] extends Servlet[servletP] 
                                         label cL, label cE,
                                         Node[cL,cE]{*L} body)  where {*cL} <= {*L}, {*E;body} <= {*cE};
 
+    public native final Node[L, E]{L;E;action;body} 
+                             createOffsiteForm(label L, label E,  
+					       String{*L} action, 
+					       boolean{*L} useGetMethod,
+					       label cL, label cE,
+					       Node[cL,cE]{*L} body)  where {*cL} <= {*L}, {*E;body} <= {*cE};
+
     /** Construct a node that contains an invocation of this servlet with the
      * named request and the inputs provided.
      * @param inputs : InputName -> String

@@ -556,7 +556,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
         in.append("this." + f.name() + " = (" + f.declType().translate(null)
             + ") $readRef(" + f.declType().translate(null) + "._Proxy.class, "
             + "(fabric.common.RefTypeEnum) "
-            + "refTypes.next(), in, store, intraStoreRefs);");
+            + "refTypes.next(), in, store, intraStoreRefs, interStoreRefs);");
       }
     }
 
@@ -572,10 +572,12 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
         qq.parseMember(
             "public _Impl(fabric.worker.Store store, long onum, int version, "
                 + "long expiry, long label, long accessLabel, java.io.ObjectInput in, "
-                + "java.util.Iterator refTypes, java.util.Iterator intraStoreRefs) "
+                + "java.util.Iterator refTypes, java.util.Iterator intraStoreRefs, "
+                + "java.util.Iterator interStoreRefs) "
                 + "throws java.io.IOException, java.lang.ClassNotFoundException {"
-                + "super(store, onum, version, expiry, label, accessLabel, in, refTypes, intraStoreRefs);"
-                + in + " }", inSubst);
+                + "super(store, onum, version, expiry, label, accessLabel, in, "
+                + "refTypes, intraStoreRefs, interStoreRefs);" + in + " }",
+            inSubst);
     result.add(deserialize);
 
     return result;
