@@ -209,8 +209,6 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
 
     Queue<ClassType> toVisit = new LinkedList<ClassType>();
     Set<ClassType> visitedTypes = new HashSet<ClassType>();
-    visitedTypes.add(ts.Object());
-    visitedTypes.add(ts.FObject());
 
     // Maps method names to sets of formal argument types. This prevents us
     // from generating duplicate methods.
