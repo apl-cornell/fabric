@@ -16,9 +16,9 @@ groups Webapp Example
         $ bin/start-webapp
   3. Use curl or similar client to interact with the groups REST-style API:
      - create a user:
-        curl --cookie-jar cookies 'http://localhost:8080/groups/sif?action=adduser&user=owen&pass=password'
+        curl -c cookies 'http://localhost:8080/groups/sif?action=adduser&user=owen&pass=password'
      - login a user:
-        curl --cookie-jar cookies 'http://localhost:8080/groups/sif?action=login&user=owen&pass=password'
+        curl -c cookies 'http://localhost:8080/groups/sif?action=login&user=owen&pass=password'
      - access pages requiring authentication
         For instance, to create a public group and add a member try:
             curl -b cookies 'http://localhost:8080/groups/sif?action=creategroup&name=MyGroup&type=public'
@@ -26,7 +26,7 @@ groups Webapp Example
         Then list the group contents with: 
             curl -b cookies 'http://localhost:8080/groups/sif?action=list&group=MyGroup&type=public'
      - logoff
-        curl -b cookies http://localhost:8080/groups/sif?action="logoff"
+        curl -b cookies 'http://localhost:8080/groups/sif?action=logoff'
   4. Exit the store with the "exit" command in its console (you can also
      use CTRL-D).
 
@@ -34,10 +34,3 @@ groups Webapp Example
      directory:
 
         $ rm -rf var
-
-
-References
-----------
-[1] Stephen Chong, K. Vikram, Andrew C. Myers. SIF: Enforcing
-    Confidentiality and Integrity in Web Applications. Proc. USENIX
-    Security Symposium 2007, pages 1–16, August 2007.
