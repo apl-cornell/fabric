@@ -20,7 +20,11 @@ groups Webapp Example
      - login a user:
         curl --cookie-jar cookies 'http://localhost:8080/groups/sif?action=login&user=owen&pass=password'
      - access pages requiring authentication
-        curl -b cookies http://localhost:8080/groups/sif?action="frontPage"  
+        For instance, to create a public group and add a member try:
+            curl -b cookies 'http://localhost:8080/groups/sif?action=creategroup&name=MyGroup&type=public'
+            curl -b cookies 'http://localhost:8080/groups/sif?action=addtogroup&group=MyGroup&user=owen&type=public'
+        Then list the group contents with: 
+            curl -b cookies 'http://localhost:8080/groups/sif?action=list&group=MyGroup&type=public'
      - logoff
         curl -b cookies http://localhost:8080/groups/sif?action="logoff"
   4. Exit the store with the "exit" command in its console (you can also
