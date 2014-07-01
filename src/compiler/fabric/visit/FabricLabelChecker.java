@@ -19,8 +19,10 @@ import fabric.types.SilenceableSolverGLB;
 
 public class FabricLabelChecker extends LabelChecker {
   public FabricLabelChecker(Job job, TypeSystem ts, NodeFactory nf,
-      boolean solvePerClassBody, boolean solvePerMethod, boolean doLabelSubst) {
-    super(job, ts, nf, solvePerClassBody, solvePerMethod, doLabelSubst);
+      boolean warningsEnabled, boolean solvePerClassBody,
+      boolean solvePerMethod, boolean doLabelSubst) {
+    super(job, ts, nf, warningsEnabled, solvePerClassBody, solvePerMethod,
+        doLabelSubst);
   }
 
   @Override
