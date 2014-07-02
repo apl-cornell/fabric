@@ -94,7 +94,7 @@
   <property name="polyglot.url.prefix"
       value="http://www.cs.cornell.edu/Projects/polyglot/src/polyglot-"/>
   <property name="polyglot.url.suffix"
-      value="-src.tar.gz"/>
+      value="-src.zip"/>
 
   <!-- Jar files -->
   <property name="jar.base" location="${lib}/fabric.jar" />
@@ -1630,10 +1630,9 @@ public class Version {
       unless="${use-jif-rcs}" if="${polyglot-needed}">
     <property name="polyglot.download.url"
         value="${polyglot.url.prefix}${polyglot.download.version}${polyglot.url.suffix}"/>
-    <get src="${polyglot.download.url}" dest="${tmp}/polyglot.tar.gz"
+    <get src="${polyglot.download.url}" dest="${tmp}/polyglot.zip"
         verbose="on"/>
-    <gunzip src="${tmp}/polyglot.tar.gz"/>
-    <untar src="${tmp}/polyglot.tar" dest="${tmp}"/>
+    <unzip src="${tmp}/polyglot.zip" dest="${tmp}"/>
     <move file="${tmp}/polyglot-${polyglot.download.version}-src"
         tofile="${tmp}/polyglot"/>
     <copy todir="${tmp}/jif/lib">
