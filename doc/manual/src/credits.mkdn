@@ -2,23 +2,23 @@ Credits {#credits}
 =======
 The current Fabric developers are:
 
-  * [Jed Liu](http://www.cs.cornell.edu/~liujed/)
   * [Owen Arden](http://www.cs.cornell.edu/~owen/)
-  * Michael D. George
-  * [K. Vikram](http://www.cs.cornell.edu/~kvikram/)
-
-Tom Magrino helped test this release.
+  * [Jed Liu](http://www.cs.cornell.edu/~liujed/)
+  * [Tom Magrino](http://www.cs.cornell.edu/~tmagrino/)
 
 The Fabric project group is supervised by [Prof. Andrew C.
 Myers](http://www.cs.cornell.edu/andru/) at the [Cornell
 University](http://www.cornell.edu/) [Computer
 Science Department](http://www.cs.cornell.edu/).
 
-Past Fabric developers are:
+Past Fabric developers and contributors are:
 
-  * Lucas Waye
-  * [Danfeng Zhang](http://www.cs.cornell.edu/~dfzhang)
+  * [Michael D. George](http://www.cs.cornell.edu/~mdgeorge/)
   * [Xin Qi](https://sites.google.com/site/qixin99/)
+  * [Robert Soulé](http://www.inf.usi.ch/faculty/soule/)
+  * [K. Vikram](http://www.cs.cornell.edu/~kvikram/)
+  * [Lucas Waye](http://people.seas.harvard.edu/~lwaye/)
+  * [Danfeng Zhang](http://www.cs.cornell.edu/~dfzhang)
   * Xin Zheng
 
 [Nate Nystrom](http://www.inf.usi.ch/nystrom/) was involved in the early stages
@@ -26,6 +26,10 @@ of the Fabric project.
 
 [Steve Chong](http://people.seas.harvard.edu/~chong/) provided guidance on
 extending Jif and provided quick bug fixes to the base Jif compiler.
+
+Thanks also to Matthew Loring and
+[Isaac Sheff](http://www.cs.cornell.edu/~isheff/)
+for submitting bug reports.
 
 
 Sponsors
