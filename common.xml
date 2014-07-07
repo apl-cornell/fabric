@@ -67,8 +67,6 @@
     <arg value="-o"/> <arg value="pipefail"/>
     <arg value="readlink -f $(which javac) | sed '/\/bin\/javac$/{s|/bin/javac$||;q}; q1'"/>
   </exec>
-  <echo message="${jdk.home.detected}"/>
-  <echo message="${jdk.home.detect-result}"/>
   <condition property="jdk.home" value="${jdk.home.detected}">
     <and>
       <equals arg1="${jdk.home.detected-result}" arg2="0"/>
