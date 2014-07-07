@@ -62,7 +62,7 @@
   <exec executable="bash"
       failifexecutionfails="false"
       outputproperty="jdk.home.detected"
-      resultproperty="jdk.home.detect-result">
+      resultproperty="jdk.home.detected-result">
     <arg value="-c"/>
     <arg value="-o"/> <arg value="pipefail"/>
     <arg value="readlink -f $(which javac) | sed '/\/bin\/javac$/{s|/bin/javac$||;q}; q1'"/>
