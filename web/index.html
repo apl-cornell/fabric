@@ -120,16 +120,97 @@ reliability.
 </ul>
 </div>
 
-<h2>Mailing lists</h2>
+<h2>Mailing list</h2>
 
 <p>
-<a href="https://lists.cs.cornell.edu/mailman/listinfo/fabric-announce">
-Subscribe to fabric-announce</a>
-to be notified about new releases of Fabric and related announcements.
-<br>
-<a href="https://lists.cs.cornell.edu/mailman/listinfo/fabric-users">
-Subscribe to fabric-users</a>
-to participate in discussions about Fabric.
+Use the form below to join or leave the Fabric users mailing list. (Open
+subscription, low traffic.)
+
+<div id="mailing-list-div" style="margin-left: 1em; display: none">
+  <form>
+    Email address:
+    <input type="text" name="email" value="" size="20">
+    <input type="button" value="Join" onclick="joinMailingList(this.form)">
+    <input type="button" value="Leave" onclick="leaveMailingList(this.form)">
+  </form>
+</div>
+
+<div id="mailing-list-div-noscript" style="margin-left: 1em">
+  <p>Please turn on JavaScript to see the form.</p>
+  <p>
+    Alternatively, you can send mail to
+    <tt>fabric-users-l-request@cornell.edu</tt> with the subject line of
+    <tt>join</tt> or <tt>leave</tt>.
+  </p>
+</div>
+
+<script type="text/javascript">
+<!--
+  // Gunk for supporting the visually lightweight mailing list form.
+  document.getElementById("mailing-list-div-noscript").style.display = "none";
+  document.getElementById("mailing-list-div").style.display = "block";
+
+  function addHiddenInput(form, name, value) {
+    var input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = name;
+    input.value = value;
+    form.appendChild(input);
+  }
+
+  /**
+   * Returns a random 20-character alphanumeric string.
+   */
+  function genPasswd() {
+    var chars =
+      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890';
+    var result = '';
+    for (var i = 0; i < 20; i++)
+      result += chars[Math.floor(Math.random() * chars.length)];
+    return result;
+  }
+
+  /**
+   * Returns the URL to which the user will be redirected after submitting the
+   * form.
+   */
+  function getURL() {
+    if (document.location.protocol == 'file:')
+      return 'http://www.cs.cornell.edu/projects/fabric/';
+    return document.location;
+  }
+
+  function joinMailingList(form) {
+    form.method = 'POST';
+    form.action = 'https://www.list.cornell.edu:9443/subscribe/subscribe.tml';
+
+    var pass = genPasswd();
+    addHiddenInput(form, 'pw', pass);
+    addHiddenInput(form, 'pwv', pass);
+    addHiddenInput(form, 'list', 'fabric-users-l');
+    addHiddenInput(form, 'pw_required', 'T');
+    addHiddenInput(form, 'confirm', 'one');
+    addHiddenInput(form, 'showconfirm', 'T');
+    addHiddenInput(form, 'url', getURL());
+
+    form.submit();
+  }
+
+  function leaveMailingList(form) {
+    form.method = 'GET';
+    form.action = 'https://www.list.cornell.edu:9443/subscribe/unsubscribe.tml';
+
+    addHiddenInput(form, 'lists', 'fabric-users-l');
+    addHiddenInput(form, 'email_notification', 'T');
+    addHiddenInput(form, 'confirm_first', 'F');
+    addHiddenInput(form, 'showconfirm', 'T');
+    addHiddenInput(form, 'url', getURL());
+
+    form.submit();
+  }
+//-->
+</script>
+
 </p>
 
 <a name="publications">
