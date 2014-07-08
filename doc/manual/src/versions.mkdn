@@ -16,6 +16,7 @@ Version 0.2.2 (Jul 2014)
 
 * Updated to Jif 3.4.2 and Polyglot 2.6.1.
 
+
 Version 0.2.1 (Jun 2013)
 -------------
 Issued fresh node certificates for examples. The old ones had expired.
