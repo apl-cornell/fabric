@@ -69,10 +69,6 @@
   <!-- Tests directory -->
   <property name="tests" location="${fabric.home}/tests"/>
 
-  <!-- XXX: THIS IS A BIT OF A HACK -->
-  <!-- Top N directory -->
-  <property name="top-n" location="${fabric.home}/tests/playground/memoization/top-n"/>
-
   <!-- tmp directory (for creating the distribution) -->
   <property name="tmp" location="${fabric.home}/tmp"/>
 
@@ -449,18 +445,6 @@
       description="Builds the Fabric application examples">
     <subant target="build-all">
       <fileset dir="${examples}" includes="build.xml" />
-    </subant>
-  </target>
-
-  <!--XXX: This is a bit of a hack for the NSDI submission -->
-  <!-- Compiles the Top N test -->
-  <target name="top-n" depends="build-all"
-      description="Builds the top-n test application">
-    <subant target="clobber">
-      <fileset dir="${top-n}" includes="build.xml" />
-    </subant>
-    <subant target="build-all">
-      <fileset dir="${top-n}" includes="build.xml" />
     </subant>
   </target>
 
