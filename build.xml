@@ -1090,7 +1090,8 @@ public class Version {
     <!-- Output a checklist for verifying that the distribution is good. -->
     <echo message="Dist package created. Verify the following:" />
     <echo message=" - Examples build and run" />
-    <echo message=" - CHANGES and CREDITS are up-to-date" />
+    <echo message=" - CHANGES file is up-to-date" />
+    <echo message=" - CREDITS file is up-to-date, including funding support" />
     <echo message=" - Licensing information for 3rd-party software" />
     <echo message="   is up-to-date in COPYING" />
     <echo message=" - New features documented in manual" />
