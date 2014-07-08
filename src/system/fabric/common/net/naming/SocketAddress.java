@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -27,7 +27,7 @@ import java.net.InetSocketAddress;
  */
 public final class SocketAddress {
   private final InetAddress addr;
-  private final int         port;
+  private final int port;
 
   public SocketAddress(InetAddress addr, int port) {
     this.addr = addr;
@@ -45,39 +45,34 @@ public final class SocketAddress {
   public InetSocketAddress toInetSocketAddress() {
     return new InetSocketAddress(getAddress(), getPort());
   }
-  
+
   @Override
   public String toString() {
     String result = (this.addr == null) ? "" : this.addr.toString();
     return result + ":" + this.port;
   }
-  
+
   @Override
   public boolean equals(Object o) {
-    if (!(o instanceof SocketAddress))
-      return false;
+    if (!(o instanceof SocketAddress)) return false;
 
     SocketAddress other = (SocketAddress) o;
-    
-    if (this.port != other.port)
-      return false;
-    
-    if (null == this.addr && null == other.addr)
-      return true;
-    
-    if (null == this.addr || null == other.addr)
-      return false;
-    
+
+    if (this.port != other.port) return false;
+
+    if (null == this.addr && null == other.addr) return true;
+
+    if (null == this.addr || null == other.addr) return false;
+
     return this.addr.equals(other.addr);
   }
 
   @Override
   public int hashCode() {
     // TODO: perhaps this could be better
-    
-    if (null == this.addr)
-      return this.port;
-    
+
+    if (null == this.addr) return this.port;
+
     return this.addr.hashCode() ^ this.port;
   }
 }

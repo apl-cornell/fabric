@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -17,18 +17,21 @@ package fabric.ast;
 
 import java.util.List;
 
-import polyglot.ast.*;
+import polyglot.ast.ArrayInit_c;
+import polyglot.ast.Expr;
+import polyglot.ast.Node;
+import polyglot.ast.NodeFactory;
 import polyglot.types.Type;
 import polyglot.types.TypeSystem;
 import polyglot.util.CollectionUtil;
+import polyglot.util.ListUtil;
 import polyglot.util.Position;
-import polyglot.util.TypedList;
 import polyglot.visit.NodeVisitor;
 import fabric.types.FabricTypeSystem;
 
 public class FabricArrayInit_c extends ArrayInit_c implements FabricArrayInit {
   // XXX: this code copied from fabil.FabricArrayInit_c
-  
+
   protected Expr location;
   protected Expr label;
 
@@ -40,9 +43,8 @@ public class FabricArrayInit_c extends ArrayInit_c implements FabricArrayInit {
     this.label = label;
   }
 
-  @SuppressWarnings("unchecked")
   @Override
-  public FabricArrayInit elements(List elements) {
+  public FabricArrayInit elements(List<Expr> elements) {
     return (FabricArrayInit) super.elements(elements);
   }
 
@@ -50,6 +52,7 @@ public class FabricArrayInit_c extends ArrayInit_c implements FabricArrayInit {
     return location;
   }
 
+  @Override
   public FabricArrayInit_c location(Expr location) {
     FabricArrayInit_c n = (FabricArrayInit_c) copy();
     n.location = location;
@@ -60,6 +63,7 @@ public class FabricArrayInit_c extends ArrayInit_c implements FabricArrayInit {
     return label;
   }
 
+  @Override
   public FabricArrayInit_c label(Expr label) {
     FabricArrayInit_c n = (FabricArrayInit_c) copy();
     n.label = label;
@@ -74,7 +78,7 @@ public class FabricArrayInit_c extends ArrayInit_c implements FabricArrayInit {
     if (!CollectionUtil.equals(elements, this.elements)
         || location != this.location || label != this.label) {
       FabricArrayInit_c n = (FabricArrayInit_c) copy();
-      n.elements = TypedList.copyAndCheck(elements, Expr.class, true);
+      n.elements = ListUtil.copy(elements, true);
       n.location = location;
       n.label = label;
       return n;
@@ -83,7 +87,6 @@ public class FabricArrayInit_c extends ArrayInit_c implements FabricArrayInit {
     return this;
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public Node visitChildren(NodeVisitor v) {
     List<Expr> elements = visitList(this.elements, v);
@@ -97,7 +100,6 @@ public class FabricArrayInit_c extends ArrayInit_c implements FabricArrayInit {
     return ((FabricTypeSystem) ts).fabricArrayOf(position(), baseType);
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public Node copy(NodeFactory nf) {
     FabricNodeFactory fabNF = (FabricNodeFactory) nf;

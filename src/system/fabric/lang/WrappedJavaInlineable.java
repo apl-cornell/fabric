@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -18,13 +18,14 @@ package fabric.lang;
 import java.util.Map;
 import java.util.WeakHashMap;
 
-import fabric.worker.Store;
 import fabric.common.exceptions.InternalError;
 import fabric.lang.arrays.ObjectArray;
+import fabric.lang.security.ConfPolicy;
 import fabric.lang.security.Label;
+import fabric.worker.Store;
 
 public class WrappedJavaInlineable<T> implements JavaInlineable {
-  
+
   public final T obj;
 
   private WrappedJavaInlineable(T obj) {
@@ -68,71 +69,78 @@ public class WrappedJavaInlineable<T> implements JavaInlineable {
    * system's point of view.
    */
   public static ObjectArray $wrap(Store store, Label label,
-      java.lang.Object[] array) {
-    ObjectArray result = new ObjectArray._Impl(store, label, Object._Proxy.class,
-        array.length);
+      ConfPolicy accessPolicy, java.lang.Object[] array) {
+    ObjectArray result =
+        new ObjectArray._Impl(store, label, accessPolicy, Object._Proxy.class,
+            array.length);
     for (int i = 0; i < array.length; i++)
       result.set(i, $wrap(array[i]));
     return result;
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see fabric.lang.Object#$getStore()
-   */
+  @Override
   public Store $getStore() {
     throw new InternalError("WrappedJavaInlineables don't have stores.");
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see fabric.lang.Object#$getOnum()
-   */
+  @Override
   public long $getOnum() {
     throw new InternalError("WrappedJavaInlineables don't have onums.");
   }
 
-  public Label get$label() {
+  @Override
+  public Label get$$updateLabel() {
     throw new InternalError("WrappedJavaInlineables don't have labels.");
   }
 
-  public Label set$label(Label label) {
+  @Override
+  public Label set$$updateLabel(Label val) {
     throw new InternalError("WrappedJavaInlineables don't have labels.");
   }
-  
+
+  @Override
+  public ConfPolicy get$$accessPolicy() {
+    throw new InternalError(
+        "WrappedJavaInlineables don't have access policies.");
+  }
+
+  @Override
+  public ConfPolicy set$$accessPolicy(ConfPolicy val) {
+    throw new InternalError(
+        "WrappedJavaInlineables don't have access policies.");
+  }
+
+  @Override
+  public Object $initLabels() {
+    return this;
+  }
+
+  @Override
+  public Object fabric$lang$Object$() {
+    return this;
+  }
+
+  @Override
   public boolean idEquals(fabric.lang.Object other) {
     return obj == other;
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see fabric.lang.Object#$getProxy()
-   */
+  @Override
   public fabric.lang.Object._Proxy $getProxy() {
     throw new InternalError("WrappedJavaInlineables don't have proxies.");
   }
 
+  @Override
   public Object fetch() {
     return this;
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see fabric.lang.Object#$unwrap()
-   */
+  @Override
   public T $unwrap() {
     return obj;
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see fabric.lang.Object#equals(fabric.lang.Object)
-   */
+  @Override
   public boolean equals(Object o) {
     if (!(o instanceof WrappedJavaInlineable<?>)) return false;
     java.lang.Object obj = ((WrappedJavaInlineable<?>) o).obj;
@@ -140,11 +148,6 @@ public class WrappedJavaInlineable<T> implements JavaInlineable {
     return obj.equals(this.obj);
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see java.lang.Object#equals(java.lang.Object)
-   */
   @Override
   public boolean equals(java.lang.Object obj) {
     if (obj instanceof WrappedJavaInlineable<?>)
@@ -153,30 +156,22 @@ public class WrappedJavaInlineable<T> implements JavaInlineable {
     return obj.equals(this.obj);
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see java.lang.Object#hashCode()
-   */
   @Override
   public int hashCode() {
     return obj == null ? 0 : obj.hashCode();
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see java.lang.Object#toString()
-   */
   @Override
   public String toString() {
     return obj == null ? "null" : obj.toString();
   }
 
+  @Override
   public void $forceRenumber(long onum) {
     throw new InternalError("Unsupported operation");
   }
-  
+
+  @Override
   public Statistics createStatistics() {
     return DefaultStatistics.instance;
   }

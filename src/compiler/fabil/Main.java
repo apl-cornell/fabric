@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -15,19 +15,35 @@
  */
 package fabil;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import polyglot.main.Options;
+
 /**
  * Main is the main program of the compiler extension. It simply invokes
  * Polyglot's main, passing in the extension's ExtensionInfo.
  */
-public class Main {
+public class Main extends polyglot.main.Main {
   public static void main(String[] args) {
-    polyglot.main.Main polyglotMain = new polyglot.main.Main();
+    Main main = new Main();
 
     try {
-      polyglotMain.start(args, new fabil.ExtensionInfo());
+      main.start(args, new fabil.ExtensionInfo());
     } catch (polyglot.main.Main.TerminationException e) {
       System.err.println(e.getMessage());
       System.exit(1);
     }
+  }
+
+  @Override
+  protected List<String> getSystemJavacArgs(Options options) {
+    List<String> result =
+        new ArrayList<String>(super.getSystemJavacArgs(options));
+    result.add("-source");
+    result.add("1.6");
+    result.add("-target");
+    result.add("1.6");
+    return result;
   }
 }

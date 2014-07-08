@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -95,9 +95,10 @@ public class Random implements Serializable
    *
    * @see System#currentTimeMillis()
    */
-  public Random()
+  public Random fabric$util$Random$()
   {
-    this(System.currentTimeMillis());
+    fabric$util$Random$(System.currentTimeMillis());
+	return this;
   }
 
   /**
@@ -106,9 +107,11 @@ public class Random implements Serializable
    *
    * @param seed the initial seed
    */
-  public Random(long seed)
+  public Random fabric$util$Random$(long seed)
   {
+    fabric$lang$Object$();
     setSeed(seed);
+	return this;
   }
 
   /**
@@ -402,5 +405,15 @@ public int nextInt(int n)
     nextNextGaussian = v2 * norm;
     haveNextNextGaussian = true;
     return v1 * norm;
+  }
+
+  public Object $initLabels() {
+    // XXX What should this be?  Using completely permissive values for now.
+    // update label: {_ <-}
+    // access policy: {_ ->}
+    this.$updateLabel = LabelUtil.noComponents();
+    this.$accessPolicy = LabelUtil.bottomConf();
+
+    return this;
   }
 }

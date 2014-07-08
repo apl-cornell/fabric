@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -20,35 +20,25 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 
-import fabric.common.net.naming.SocketAddress;
-
-public class HandshakeUnauthenticated implements HandshakeProtocol {
+public class HandshakeUnauthenticated implements Protocol {
   //
   // an incredibly simple handshake:
   // client -> server : name
   //
-  
-  public ShakenSocket initiate(String name, SocketAddress addr) throws IOException {
-    Socket s = new Socket(addr.getAddress(), addr.getPort());
-    fixSocket(s);
-    
+
+  @Override
+  public ShakenSocket initiate(String name, Socket s) throws IOException {
     DataOutputStream out = new DataOutputStream(s.getOutputStream());
     out.writeUTF(name);
     out.flush();
     return new ShakenSocket(name, null, s);
   }
 
+  @Override
   public ShakenSocket receive(Socket s) throws IOException {
-    fixSocket(s);
-    
     DataInputStream in = new DataInputStream(s.getInputStream());
     String name = in.readUTF();
-    System.out.println(name + " [" + name.length() + "]");
     return new ShakenSocket(name, null, s);
   }
-  
-  private void fixSocket(Socket s) throws IOException {
-    s.setSoLinger(false, 0);
-    s.setTcpNoDelay(true);
-  }
+
 }

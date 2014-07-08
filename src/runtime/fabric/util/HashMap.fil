@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -106,7 +106,7 @@ public class HashMap extends AbstractMap
    * Package visible for use by HashSet.
    * @serial the load factor
    */
-  final float loadFactor;
+  /*final*/ float loadFactor;
 
   /**
    * Array containing the actual key-value mappings.
@@ -150,9 +150,10 @@ public class HashMap extends AbstractMap
      * @param key the key
      * @param value the value
      */
-    HashEntry(Object key, Object value)
+    HashEntry fabric$util$HashMap$HashEntry$(Object key, Object value)
     {
-      super(key, value);
+      fabric$util$AbstractMap$BasicMapEntry$(key, value);
+	  return this;
     }
 
     /**
@@ -174,15 +175,26 @@ public class HashMap extends AbstractMap
     {
       return value;
     }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
+    }
   }
 
   /**
    * Construct a new HashMap with the default capacity (11) and the default
    * load factor (0.75).
    */
-  public HashMap()
+  public HashMap fabric$util$HashMap$()
   {
-    this(DEFAULT_CAPACITY, DEFAULT_LOAD_FACTOR);
+    fabric$util$HashMap$(DEFAULT_CAPACITY, DEFAULT_LOAD_FACTOR);
+	return this;
   }
 
   /**
@@ -196,10 +208,11 @@ public class HashMap extends AbstractMap
    *        <b>NOTE: key / value pairs are not cloned in this constructor.</b>
    * @throws NullPointerException if m is null
    */
-  public HashMap(Map m)
+  public HashMap fabric$util$HashMap$(Map m)
   {
-    this(Math.max(m.size() * 2, DEFAULT_CAPACITY), DEFAULT_LOAD_FACTOR);
+    fabric$util$HashMap$(Math.max(m.size() * 2, DEFAULT_CAPACITY), DEFAULT_LOAD_FACTOR);
     putAll(m);
+	return this;
   }
 
   /**
@@ -209,9 +222,10 @@ public class HashMap extends AbstractMap
    * @param initialCapacity the initial capacity of this HashMap (&gt;=0)
    * @throws IllegalArgumentException if (initialCapacity &lt; 0)
    */
-  public HashMap(int initialCapacity)
+  public HashMap fabric$util$HashMap$(int initialCapacity)
   {
-    this(initialCapacity, DEFAULT_LOAD_FACTOR);
+    fabric$util$HashMap$(initialCapacity, DEFAULT_LOAD_FACTOR);
+	return this;
   }
 
   /**
@@ -222,8 +236,9 @@ public class HashMap extends AbstractMap
    * @throws IllegalArgumentException if (initialCapacity &lt; 0) ||
    *                                     ! (loadFactor &gt; 0.0)
    */
-  public HashMap(int initialCapacity, float loadFactor)
+  public HashMap fabric$util$HashMap$(int initialCapacity, float loadFactor)
   {
+      fabric$util$AbstractMap$();	
     if (initialCapacity < 0)
       throw new IllegalArgumentException("Illegal Capacity: "
                                          + initialCapacity);
@@ -232,9 +247,13 @@ public class HashMap extends AbstractMap
 
     if (initialCapacity == 0)
       initialCapacity = 1;
-    buckets = new HashEntry[initialCapacity];
+    
+    // XXX This label is wrong. HashMap should be parameterized
+    Label label = LabelUtil.noComponents();
+    buckets = new HashEntry[initialCapacity]~label;
     this.loadFactor = loadFactor;
     threshold = (int) (initialCapacity * loadFactor);
+	return this;
   }
 
   /**
@@ -480,7 +499,7 @@ public class HashMap extends AbstractMap
     if (keys == null)
       // Create an AbstractSet with custom implementations of those methods
       // that can be overridden easily and efficiently.
-      keys = new AbstractSet()
+      keys = (AbstractSet) new AbstractSet()
       {
 	public int size()
 	{
@@ -512,7 +531,17 @@ public class HashMap extends AbstractMap
 	  HashMap.this.remove(o);
 	  return oldsize != size;
 	}
-      };
+
+	public Object $initLabels() {
+	  // XXX What should this be?  Using completely permissive values for now.
+	  // update label: {_ <-}
+	  // access policy: {_ ->}
+	  this.$updateLabel = LabelUtil.noComponents();
+	  this.$accessPolicy = LabelUtil.bottomConf();
+
+	  return this;
+	}
+      }.fabric$util$AbstractSet$();
     return keys;
   }
 
@@ -531,7 +560,7 @@ public class HashMap extends AbstractMap
     if (values == null)
       // We don't bother overriding many of the optional methods, as doing so
       // wouldn't provide any significant performance advantage.
-      values = new AbstractCollection()
+      values = (AbstractCollection) new AbstractCollection()
       {
 	public int size()
 	{
@@ -548,7 +577,17 @@ public class HashMap extends AbstractMap
 	{
 	  HashMap.this.clear();
 	}
-      };
+
+	public Object $initLabels() {
+	  // XXX What should this be?  Using completely permissive values for now.
+	  // update label: {_ <-}
+	  // access policy: {_ ->}
+	  this.$updateLabel = LabelUtil.noComponents();
+	  this.$accessPolicy = LabelUtil.bottomConf();
+
+	  return this;
+	}
+      }.fabric$util$AbstractCollection$();
     return values;
   }
 
@@ -570,7 +609,7 @@ public class HashMap extends AbstractMap
     if (entries == null)
       // Create an AbstractSet with custom implementations of those methods
       // that can be overridden easily and efficiently.
-      entries = new AbstractSet()
+      entries = (AbstractSet) new AbstractSet()
       {
 	public int size()
 	{
@@ -603,7 +642,17 @@ public class HashMap extends AbstractMap
 	    }
 	  return false;
 	}
-      };
+
+	public Object $initLabels() {
+	  // XXX What should this be?  Using completely permissive values for now.
+	  // update label: {_ <-}
+	  // access policy: {_ ->}
+	  this.$updateLabel = LabelUtil.noComponents();
+	  this.$accessPolicy = LabelUtil.bottomConf();
+
+	  return this;
+	}
+      }.fabric$util$AbstractSet$();
     return entries;
   }
 
@@ -619,7 +668,7 @@ public class HashMap extends AbstractMap
    */
   void addEntry(Object key, Object value, int idx, boolean callRemove)
   {
-    HashEntry e = new HashEntry(key, value);
+    HashEntry e = (HashEntry) new HashEntry().fabric$util$HashMap$HashEntry$(key, value);
     e.next = buckets[idx];
     buckets[idx] = e;
   }
@@ -671,7 +720,7 @@ public class HashMap extends AbstractMap
    */
   Iterator iterator(fabric.worker.Store store, int type)
   {
-    return new HashIterator@store(type);
+    return (HashIterator) new HashIterator@store().fabric$util$HashMap$HashIterator$(type);
   }
 
   /**
@@ -797,7 +846,7 @@ public class HashMap extends AbstractMap
      * The type of this Iterator: {@link #KEYS}, {@link #VALUES},
      * or {@link #ENTRIES}.
      */
-    private final int type;
+    private /*final*/ int type;
     /**
      * The number of modifications to the backing HashMap that we know about.
      */
@@ -819,12 +868,14 @@ public class HashMap extends AbstractMap
      * Construct a new HashIterator with the supplied type.
      * @param type {@link #KEYS}, {@link #VALUES}, or {@link #ENTRIES}
      */
-    HashIterator(int type)
+    HashIterator fabric$util$HashMap$HashIterator$(int type)
     {
+	  fabric$lang$Object$();
       this.type = type;
       this.knownMod = modCount;
       this.count = size;
       this.idx = buckets.length;
+	  return this;
     }
 
     /**
@@ -880,5 +931,25 @@ public class HashMap extends AbstractMap
       last = null;
       knownMod++;
     }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
+    }
+  }
+
+  public Object $initLabels() {
+    // XXX What should this be?  Using completely permissive values for now.
+    // update label: {_ <-}
+    // access policy: {_ ->}
+    this.$updateLabel = LabelUtil.noComponents();
+    this.$accessPolicy = LabelUtil.bottomConf();
+
+    return this;
   }
 }

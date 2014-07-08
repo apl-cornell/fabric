@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -26,33 +26,24 @@ import fabil.visit.ProxyRewriter;
 
 public class TypeNodeExt_c extends FabILExt_c {
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see fabil.extension.FabILExt_c#rewriteProxies(fabil.visit.ProxyRewriter)
-   */
   @Override
   public Node rewriteProxies(ProxyRewriter pr) {
     TypeNode tn = node();
     Type type = tn.type();
-    
+
     // Only rewrite array types.
     if (!type.isArray()) return tn;
-    
+
     // Only rewrite Fabric arrays.
     FabILTypeSystem ts = pr.typeSystem();
     ArrayType at = type.toArray();
     if (!ts.isPureFabricType(at)) return tn;
-    
+
     NodeFactory nf = pr.nodeFactory();
-    return nf.CanonicalTypeNode(Position.compilerGenerated(), ts.toFabricRuntimeArray(at));
+    return nf.CanonicalTypeNode(Position.compilerGenerated(),
+        ts.toFabricRuntimeArray(at));
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see polyglot.ast.Ext_c#node()
-   */
   @Override
   public TypeNode node() {
     return (TypeNode) super.node();

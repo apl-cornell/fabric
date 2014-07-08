@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -28,17 +28,17 @@ public interface DataProvider {
    * @return root name of browser tree
    */
   public Object getRoot();
-  
+
   /**
    * @param obj object to find all children for
    * @return all children of obj
    */
   List<Object> getChildrenForNode(Object obj);
-  
+
   /**
    * @param obj object to get description for
    * @return description of obj
    */
   String getDescriptionForNode(Object obj);
-  
+
 }

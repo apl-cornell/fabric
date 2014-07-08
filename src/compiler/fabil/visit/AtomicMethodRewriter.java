@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -40,39 +40,40 @@ public class AtomicMethodRewriter extends NodeVisitor {
     this.nf = extInfo.nodeFactory();
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public Node override(Node parent, Node n) {
     if (n instanceof MethodDecl) {
       MethodDecl md = (MethodDecl) n;
       Flags f = md.flags();
-      
+
       if (f.contains(FabILFlags.ATOMIC)) {
         f = f.clear(FabILFlags.ATOMIC);
         md = md.flags(f);
         md.methodInstance().setFlags(f);
-        Block b = nf.Atomic(Position.compilerGenerated(), md.body().statements());
+        Block b =
+            nf.Atomic(Position.compilerGenerated(), md.body().statements());
         md = (MethodDecl) md.body(b);
-        
+
         return visitEdgeNoOverride(parent, md);
       }
     }
-    
+
     if (n instanceof ConstructorDecl) {
       ConstructorDecl cd = (ConstructorDecl) n;
       Flags f = cd.flags();
-      
+
       if (f.contains(FabILFlags.ATOMIC)) {
         f = f.clear(FabILFlags.ATOMIC);
         cd = cd.flags(f);
         cd.constructorInstance().setFlags(f);
-        Block b = nf.Atomic(Position.compilerGenerated(), cd.body().statements());
+        Block b =
+            nf.Atomic(Position.compilerGenerated(), cd.body().statements());
         cd = (ConstructorDecl) cd.body(b);
-        
+
         return visitEdgeNoOverride(parent, cd);
       }
     }
-    
+
     return null;
   }
 

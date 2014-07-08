@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -16,15 +16,16 @@
 package fabric.lang.security;
 
 /**
- * A proof that the principal "actor" may act for the principal "granter"
+ * A proof that the principal "actor" may act for the principal "granter".  AccessBound is an upper bound on
+ * the class's access label. 
  */
-public abstract class ActsForProof {
-    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+public abstract class ActsForProof[label AccessBound] {
+//    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
     
-    ActsForProof(principal{this} actor, principal{this} granter) {
+    ActsForProof(principal{this} actor, principal{this} granter): {AccessBound} {
     }
 
-    public native principal{this} getActor();
+    public native principal{this} getActor{AccessBound}();
 
-    public native principal{this} getGranter();
+    public native principal{this} getGranter{AccessBound}();
 }

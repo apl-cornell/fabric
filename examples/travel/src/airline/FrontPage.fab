@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -40,7 +40,7 @@ public class FrontPage extends AuthenticatedAction[AirlinePrincipal] authority (
     public final void invokeImpl{*lbl}(label{*lbl} lbl,
             Request[AirlinePrincipal]{*lbl} req,
             Servlet[AirlinePrincipal]{*lbl} servlet,
-            AuthSessState[lbl]{*lbl} state,
+            AuthSessState{*lbl} state,
             principal{*lbl} currentUser) 
             throws (ServletException{*lbl;req.session←})
             where caller(req.session),
@@ -54,7 +54,8 @@ public class FrontPage extends AuthenticatedAction[AirlinePrincipal] authority (
         
         atomic {
             // Display the front page only if the logged in user is the airline principal
-            if (currentUser equiv AirlinePrincipal) {
+            if (currentUser equiv AirlinePrincipal 
+                && lbl <= new label {AirlinePrincipal->}) {
                 FabricWorker w = worker$;
                 if (w == null) throw new ServletException("Internal Error");
                 final Store store = worker$.getStore(Config.airlineStoreName);

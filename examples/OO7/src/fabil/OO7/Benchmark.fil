@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -32,14 +32,14 @@ import fabric.util.HashMap;
 import fabric.worker.Store;
 import fabric.worker.Worker;
 
-import fabric.worker.debug.Timing;
+import fabric.common.Timing;
 
 public class Benchmark {
   // database parameters
-  private final static int LARGE  = 3;
-  private final static int MEDIUM = 2;
-  private final static int SMALL  = 1;
-  private final static int TINY   = 0;
+  private /*final*/ static int LARGE  = 3;
+  private /*final*/ static int MEDIUM = 2;
+  private /*final*/ static int SMALL  = 1;
+  private /*final*/ static int TINY   = 0;
 
   private final static Store local = Worker.getWorker().getLocalStore();
 
@@ -47,15 +47,15 @@ public class Benchmark {
   // means) but our implementation of static stuff makes it not matter yet
 
   //                            Database parameters                     TINY  SMALL  MEDIUM LARGE
-  private final static int[]    numAtomicPerComp = new int[]@local    { 20,   20,    200,   200    };
-  private final        int      numConnPerAtomic;                     
-  private final static int[]    documentSize     = new int[]@local    { 20,   2000,  20000, 20000  };
-  private final static double[] manualSize       = new double[]@local { 1e3,  1e5,   1e6,   1e6    };
-  private final static int[]    numCompPerModule = new int[]@local    { 5,    500,   500,   500    };
-  private final static int[]    numAssmPerAssm   = new int[]@local    { 3,    3,     3,     3      };
-  private final static int[]    numAssmLevels    = new int[]@local    { 3,    7,     7,     7      };
-  private final static int[]    numCompPerAssm   = new int[]@local    { 3,    3,     3,     3      };
-  private final static int[]    numModules       = new int[]@local    { 1,    1,     1,     10     };
+  private /*final*/ static int[]    numAtomicPerComp = new int[]@local    { 20,   20,    200,   200    };
+  private /*final*/        int      numConnPerAtomic;                     
+  private /*final*/ static int[]    documentSize     = new int[]@local    { 20,   2000,  20000, 20000  };
+  private /*final*/ static double[] manualSize       = new double[]@local { 1e3,  1e5,   1e6,   1e6    };
+  private /*final*/ static int[]    numCompPerModule = new int[]@local    { 5,    500,   500,   500    };
+  private /*final*/ static int[]    numAssmPerAssm   = new int[]@local    { 3,    3,     3,     3      };
+  private /*final*/ static int[]    numAssmLevels    = new int[]@local    { 3,    7,     7,     7      };
+  private /*final*/ static int[]    numCompPerAssm   = new int[]@local    { 3,    3,     3,     3      };
+  private /*final*/ static int[]    numModules       = new int[]@local    { 1,    1,     1,     10     };
 
   private static final Random rand = new Random();
 
@@ -140,10 +140,11 @@ public class Benchmark {
     * @param numConnPerAtomic the fan-out value (either 3, 6 or 9)
     */
   
-  public Benchmark(int scale,       int numConnPerAtomic,
+  public Benchmark OO7$Benchmark(int scale,       int numConnPerAtomic,
                    Store moduleStore, Store assemblyStore,
                    Store partStore,   Store documentStore)
          throws Exception {
+    fabric$lang$Object$();     
     this.moduleStore    = moduleStore;
     this.assemblyStore  = assemblyStore;
     this.partStore      = partStore;
@@ -153,14 +154,15 @@ public class Benchmark {
     this.numConnPerAtomic = numConnPerAtomic;
     
     // Initialize extents
-    this.atomicPartsById        = new HashMap@partStore();
-    //this.atomicPartsByBuildDate = new HashMap@partStore();
-    this.compositePartsById     = new HashMap@partStore();
-    //this.documentsByTitle       = new HashMap@documentStore();
-    this.documentsById          = new HashMap@documentStore();
-    this.baseAssembliesById     = new HashMap@assemblyStore();
-    this.complexAssembliesById  = new HashMap@assemblyStore();
-    this.modulesById            = new HashMap@moduleStore();
+    this.atomicPartsById        = (HashMap) new LinkedHashMap@partStore().fabric$util$LinkedHashMap$();
+    //this.atomicPartsByBuildDate = (HashMap) new LinkedHashMap@partStore().fabric$util$LinkedHashMap$();
+    this.compositePartsById     = (HashMap) new LinkedHashMap@partStore().fabric$util$LinkedHashMap$();
+    //this.documentsByTitle       = (HashMap) new LinkedHashMap@documentStore().fabric$util$LinkedHashMap$();
+    this.documentsById          = (HashMap) new LinkedHashMap@documentStore().fabric$util$LinkedHashMap$();
+    this.baseAssembliesById     = (HashMap) new LinkedHashMap@assemblyStore().fabric$util$LinkedHashMap$();
+    this.complexAssembliesById  = (HashMap) new LinkedHashMap@assemblyStore().fabric$util$LinkedHashMap$();
+    this.modulesById            = (HashMap) new LinkedHashMap@moduleStore().fabric$util$LinkedHashMap$();
+    return this;
   }
 
   protected Module createModule() throws Exception {
@@ -175,13 +177,13 @@ public class Benchmark {
       }
 
     atomic {
-      Module module = new Module@moduleStore(this);
+      Module module = (Module) new Module@moduleStore().OO7$Module(this);
       ComplexAssembly designRoot =
         (ComplexAssembly) createAssembly(module, numAssmLevels[scale],
             compositeParts);
 
       module.setDesignRoot(designRoot);
-      module.setManual(new Manual@documentStore((int) manualSize[scale]));
+      module.setManual((Manual) new Manual@documentStore().OO7$Manual((int) manualSize[scale]));
 
       return module;
     }
@@ -189,8 +191,8 @@ public class Benchmark {
 
   protected CompositePart createCompositePart() throws Exception {
     Store local = Worker.getWorker().getLocalStore();
-    CompositePart compositePart = new CompositePart@partStore(this);
-    compositePart.setDocumentation(new Document@documentStore(this, documentSize[scale]));
+    CompositePart compositePart = (CompositePart) new CompositePart@partStore().OO7$CompositePart(this);
+    compositePart.setDocumentation((Document) new Document@documentStore().OO7$Document(this, documentSize[scale]));
 
     AtomicPart[] parts = new AtomicPart[numAtomicPerComp[scale]]@local;
     for (int i = 0; i < parts.length; ++i) {
@@ -202,11 +204,11 @@ public class Benchmark {
     for (int i = 0; i < parts.length; ++i) {
       // Add a connection to i's neighbor
       Connection c =
-          new Connection@partStore(parts[i], parts[(i + 1) % parts.length]);
+          (Connection) new Connection@partStore().OO7$Connection(parts[i], parts[(i + 1) % parts.length]);
 
       // add random connections
       for (int j = 0; j < (numConnPerAtomic - 1); ++j) {
-        c = new Connection@partStore(parts[i], parts[rand.nextInt(parts.length)]);
+        c = (Connection) new Connection@partStore().OO7$Connection(parts[i], parts[rand.nextInt(parts.length)]);
       }
     }
 
@@ -214,7 +216,7 @@ public class Benchmark {
   }
 
   protected AtomicPart createAtomicPart(CompositePart parent) throws Exception {
-    AtomicPart result = new AtomicPart@partStore(this);
+    AtomicPart result = (AtomicPart) new AtomicPart@partStore().OO7$AtomicPart(this);
     result.setPartOf(parent);
 
     return result;
@@ -224,7 +226,7 @@ public class Benchmark {
       CompositePart[] available) throws Exception {
     if (level == 1) {
       // create base assembly
-      BaseAssembly result = new BaseAssembly@assemblyStore(this);
+      BaseAssembly result = (BaseAssembly) new BaseAssembly@assemblyStore().OO7$BaseAssembly(this);
       parent.addAssembly(result);
 
       for (int j = 0; j < numCompPerAssm[scale]; ++j) {
@@ -235,7 +237,7 @@ public class Benchmark {
       return result;
     } else {
       // create complex assembly
-      ComplexAssembly result = new ComplexAssembly@assemblyStore(this);
+      ComplexAssembly result = (ComplexAssembly) new ComplexAssembly@assemblyStore().OO7$ComplexAssembly(this);
       parent.addAssembly(result);
 
       for (int i = 0; i < numAssmPerAssm[scale]; ++i)
@@ -301,7 +303,7 @@ public class Benchmark {
 
 
       Benchmark b = null;
-      atomic { b = new Benchmark@store(scale, fanout, moduleStore, assemblyStore, partStore, documentStore); }
+      atomic { b = (Benchmark) new Benchmark@store().OO7$Benchmark(scale, fanout, moduleStore, assemblyStore, partStore, documentStore); }
       
       // Create content
       for (int i = 0; i < numModules[scale]; i++)

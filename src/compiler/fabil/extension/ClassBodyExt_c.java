@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -18,7 +18,16 @@ package fabil.extension;
 import java.util.ArrayList;
 import java.util.List;
 
-import polyglot.ast.*;
+import polyglot.ast.Assign;
+import polyglot.ast.ClassBody;
+import polyglot.ast.ClassMember;
+import polyglot.ast.Field;
+import polyglot.ast.FieldAssign;
+import polyglot.ast.FieldDecl;
+import polyglot.ast.Initializer;
+import polyglot.ast.Node;
+import polyglot.ast.Receiver;
+import polyglot.ast.Stmt;
 import polyglot.types.ClassType;
 import polyglot.types.Flags;
 import polyglot.util.Position;
@@ -29,7 +38,6 @@ import fabil.visit.StaticInitializerCollector;
 
 public class ClassBodyExt_c extends FabILExt_c {
 
-  @SuppressWarnings("unchecked")
   @Override
   public Node collectStaticInitializers(StaticInitializerCollector sc) {
     ClassBody body = node();
@@ -64,7 +72,7 @@ public class ClassBodyExt_c extends FabILExt_c {
           members.add(fieldDecl);
           continue;
         }
-        
+
         // Don't touch fields with Polyglot type info.
         if (fieldDecl.name().startsWith("jlc$")) {
           members.add(fieldDecl);
@@ -92,13 +100,13 @@ public class ClassBodyExt_c extends FabILExt_c {
 
       members.add(member);
     }
-    
+
     if (classType != null) {
       // Only translate Fabric classes.
       // XXX This is not quite right. We should be translating Java classes too,
       // but there's some wackiness going on with final fields.
       if (!ts.isFabricClass(classType)) return node();
-      
+
       // Don't translate interfaces.
       if (classType.flags().isInterface()) return node();
     }

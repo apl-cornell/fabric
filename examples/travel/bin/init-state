@@ -2,12 +2,12 @@
 
 APP_HOME="$(dirname $0)/.."
 FABRIC="${APP_HOME}/../.."
-PATH="${PATH}:${FABRIC}/bin"
+PATH="${FABRIC}/bin:${PATH}"
 
 CP="${APP_HOME}/classes"
 
 export FABRIC_HOME="${APP_HOME}"
 
-fab -classpath "${CP}" --name customer \
+fab --jvm-cp "${CP}" --app-home "${FABRIC_HOME}" --name customer \
   travel.Create broker bank airline bankweb airlineweb
 

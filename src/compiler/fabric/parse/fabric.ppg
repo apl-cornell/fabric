@@ -5,19 +5,25 @@ package fabric.parse;
 
 import fabric.ast.*;
 import jif.parse.*;
-import polyglot.parse.*;
 import fabric.types.FabricTypeSystem;
 import fabric.types.FabricFlags;
-import jif.parse.Name;
+import fabric.parse.Name;
+import codebases.ast.CodebaseDecl;
+import codebases.ast.CodebaseNode;
+import codebases.types.NamespaceResolver;
+import polyglot.types.Package;
+import java.net.URI;
 
 parser Grm extends jif.parse.Grm {:
     public final FabricTypeSystem ts;
     public final FabricNodeFactory nf;
+	public final URI ns;
 
-    public Grm(Lexer l, FabricTypeSystem t, FabricNodeFactory n, ErrorQueue q) {
+    public Grm(Lexer l, FabricTypeSystem t, FabricNodeFactory n, ErrorQueue q, URI ns) {
         super(l, t, n, q);
         ts = t;
         nf = n;
+        this.ns = ns; 
     }
 
     public TypeNode fabricArray(Position pos, TypeNode n, int dims) throws Exception {
@@ -41,7 +47,7 @@ parser Grm extends jif.parse.Grm {:
     public TypeNode javaArray(TypeNode n, int dims) throws Exception {
       return super.array(n, dims);
     }
-
+	
     /**
      * Converts an Amb a into an AST representing new a[][]...[]
      * @return either a NewFabricArray or an AmbNewFabricArray
@@ -72,7 +78,7 @@ parser Grm extends jif.parse.Grm {:
                                     ambNewArray.baseType(),
                                     loc,
                                     ambNewArray.expr(),
-                                    ambNewArray.dims(),
+                                    (List<Expr>)ambNewArray.dims(),
                                     ambNewArray.additionalDims());
       }
       else {
@@ -80,6 +86,137 @@ parser Grm extends jif.parse.Grm {:
         return null;
       }
     }
+
+	//Override methods in jif.ppg   
+    public PackageNode exprToPackage(Expr e) throws Exception {
+        throw new UnsupportedOperationException("Use exprToQualifier instead");
+    }
+    public QualifierNode exprToQualifier(Expr e) throws Exception {
+    
+        if (e instanceof Wrapper) {
+            //amb can/should only be a name
+        	if (((Wrapper) e).amb instanceof Name) {
+        	   Name n = (Name)((Wrapper) e).amb;
+               return n.toQualifier();
+        	}
+        	else die(pos(e));
+        }
+
+        if (e instanceof AmbExpr) {
+            AmbExpr a = (AmbExpr) e;
+            NamespaceResolver nr = ts.namespaceResolver(this.ns);
+	        //try to resolve name as a codebase alias
+            URI u = nr.resolveCodebaseName(a.name());
+            if (u != null)
+	            return nf.CodebaseNode(pos(e), this.ns, a.name(), u);
+            else
+                return nf.PackageNode(pos(e), ts.packageForName(this.ns, a.name()));
+        }
+
+        if (e instanceof Field) {
+            Field f = (Field) e;
+            QualifierNode pn = prefixToQualifier(f.target());
+            if (pn instanceof CodebaseNode) {
+            	//create a CodebaseNode if our prefix is a codebase
+            	CodebaseNode cn = (CodebaseNode) pn;
+            	Package pkg = ts.packageForName(cn.externalNamespace(), cn.package_(), f.name());
+            	return nf.CodebaseNode(pos(e), this.ns, cn.alias(), cn.externalNamespace(), pkg);
+            	
+            }
+            else if (pn instanceof PackageNode) {
+            	//otherwise, we create a PackageNode
+            	Package pkg = ((PackageNode)pn).package_();
+            	return nf.PackageNode(pos(e), ts.packageForName(this.ns, pkg, f.name()));
+            }
+        }
+
+        die(pos(e));
+        return null;
+    }
+	
+	public PackageNode prefixToPackage(Prefix p) throws Exception {
+	    throw new UnsupportedOperationException("Use prefixToQualifier instead");
+	}
+	
+    public QualifierNode prefixToQualifier(Prefix p) throws Exception {
+        if (p instanceof Expr) {
+            return exprToQualifier((Expr) p);
+        }
+
+        if (p instanceof AmbPrefix) {
+            AmbPrefix a = (AmbPrefix) p;
+            Prefix ap = a.prefix();
+            Package pkg = null;         
+            if (ap != null) {
+                QualifierNode pn = prefixToQualifier(ap);
+                if (pn instanceof CodebaseNode) {
+                	//If prefix is a CodebaseNode, create a new CodebaseNode 
+                	//	for the subpackage
+                	CodebaseNode cn = (CodebaseNode) pn;
+                	Package cbpkg = ts.packageForName(cn.externalNamespace(), cn.package_(), a.name());    	
+                 	return nf.CodebaseNode(pos(p), this.ns, cn.alias(), cn.externalNamespace(), cbpkg);
+                }
+                else if (pn instanceof PackageNode) {
+                	//otherwise get the package of the prefix
+            	    pkg = ((PackageNode)pn).package_();
+                }
+            }
+            else if (ap == null) {
+            	//If there is no prefix, see if there is a codebase alias for this name
+            	NamespaceResolver nr = ts.namespaceResolver(this.ns);
+            	URI u = nr.resolveCodebaseName(a.name());
+            	if (u != null)
+            	    return nf.CodebaseNode(pos(p), this.ns, a.name(), u);
+            }
+            //pkg is null or is the package of the prefix node
+            //the prefix is null and not a codebase alias, or not null and not a CodebaseNode
+            return nf.PackageNode(pos(p), ts.packageForName(this.ns, pkg, a.name()));
+        }
+
+        die(pos(p));
+        return null;
+    }
+        public TypeNode exprToUninstType(Expr e) throws Exception {
+        if (e instanceof Wrapper) {
+            return ((Wrapper) e).amb.toUnlabeledType();
+        }
+
+        if (e instanceof AmbExpr) {
+            AmbExpr a = (AmbExpr) e;
+            return nf.AmbTypeNode(pos(e), a.name());
+        }
+
+        if (e instanceof Field) {
+            Field f = (Field) e;
+            Receiver r = f.target();
+            return nf.AmbTypeNode(pos(e), prefixToQualifier(r), f.name());
+        }
+
+        die(pos(e));
+        return null;
+    }
+    public Expr receiverToExpr(AmbReceiver r) throws Exception {
+	    Position pos = r.position();
+	    String name = r.name();
+	    
+        if (r.prefix() == null) {
+            if ("this".equals(name)) {
+                return nf.This(pos);
+            }
+            Id id = nf.Id(pos, name);
+            return nf.AmbExpr(pos, id);
+        }
+
+        Id id = nf.Id(pos, name);
+
+        Expr target = null;
+        if (r.prefix() instanceof AmbReceiver) {
+            target = receiverToExpr((AmbReceiver) r.prefix());
+        } else target = (Expr) r.prefix();
+
+        return nf.Field(pos, target, id);
+    }
+    
 :};
 
 terminal Token AT;
@@ -87,7 +224,9 @@ terminal Token ATOMIC;
 terminal Token ABORT;
 terminal Token RETRY;
 terminal Token WORKER;
+terminal Token STORE;
 terminal Token NONFABRIC;
+terminal Token CODEBASE;
 
 non terminal Atomic atomic_statement;
 non terminal Expr   location_expr_opt, location_expr;
@@ -95,8 +234,123 @@ non terminal Stmt   abort_stmt, retry_stmt;
 non terminal Worker local_worker;
 non terminal RemoteWorkerGetter remote_worker;
 non terminal FabricArrayInit fabric_array_initializer;
+non terminal LabelNode access_label_opt;
+non terminal List codebase_declarations_opt, codebase_declarations;
+non terminal CodebaseDecl codebase_declaration;
+non terminal Store store_expr;
+non terminal Expr accesspath_expr;
 
 start with goal;
+
+////////////////////////////////////////////////////////////////////////
+// Disallow covariant labels                                          //
+////////////////////////////////////////////////////////////////////////
+
+drop { COVARIANT }
+
+override parameter ::=
+            // ParamDecl
+    LABEL:x IDENTIFIER:a
+        {: RESULT = parser.nf.ParamDecl(parser.pos(x, a),
+                                        ParamInstance.INVARIANT_LABEL,
+                                        parser.nf.Id(parser.pos(a), a.getIdentifier()));
+                                        :}
+    |   PRINCIPAL:x IDENTIFIER:a
+        {: RESULT = parser.nf.ParamDecl(parser.pos(x, a),
+                                        ParamInstance.PRINCIPAL,
+                                        parser.nf.Id(parser.pos(a), a.getIdentifier()));
+                                        :}
+    ;
+
+//////////////
+// Names 	//
+//////////////
+// The parser sometimes creates unambiguous package objects, 
+//	providing the namespace preserves this ability
+override simple_name ::=
+                    // Name
+        IDENTIFIER:a
+            {: RESULT = new Name(parser, parser.pos(a), parser.nf.Id(parser.pos(a), a.getIdentifier())); :}
+    ;
+    
+override qualified_name ::=
+                    // Name
+        name:a DOT IDENTIFIER:b
+            {: RESULT = new Name(parser, parser.pos(a, b), a, parser.nf.Id(parser.pos(b), b.getIdentifier())); :}
+    ;
+    
+override identifier_opt ::=
+                    // Name
+            {: RESULT = null; :}
+    |   IDENTIFIER:a
+            {: RESULT = new Name(parser, parser.pos(a),
+                parser.nf.Id(parser.pos(a), a.getIdentifier())); :}
+    ;
+
+////////////////////////////////////////////////////////////////////////
+// Codebases                                                          //
+////////////////////////////////////////////////////////////////////////
+
+override compilation_unit ::=
+                    // SourceFile
+        package_declaration_opt:a
+        codebase_declarations_opt:b
+        import_declarations_opt:c
+        type_declarations_opt:d
+            {: RESULT = parser.nf.SourceFile(new Position(parser.lexer.path(), parser.lexer.file()),
+					     a, b, c, d);
+	    :}
+    |   error
+        type_declarations_opt:c
+            {: RESULT = parser.nf.SourceFile(new Position(parser.lexer.path(), parser.lexer.file()),
+					     null, Collections.EMPTY_LIST, Collections.EMPTY_LIST, c);
+	    :}
+        ;
+codebase_declarations_opt ::=
+                    // List of CodebaseDecl
+        codebase_declarations:a
+            {: RESULT = a; :}
+    |
+            {: RESULT = new LinkedList<CodebaseDecl>(); :}
+    ;
+codebase_declarations ::=
+                    // List of CodebaseDecl
+        codebase_declaration:a
+            {: List l = new LinkedList<CodebaseDecl>();
+               l.add(a);
+               RESULT = l; :}
+    |   codebase_declarations:a codebase_declaration:b
+            {: RESULT = a;
+               a.add(b); :}
+    ;
+codebase_declaration ::=
+                    // CodebaseDecl
+        CODEBASE simple_name:a SEMICOLON
+            {: RESULT = parser.nf.CodebaseDecl(parser.pos(a), a.toIdentifier()); :}
+    ;
+
+override dynamic_label ::=
+        accesspath:a
+            {: RESULT = parser.nf.AmbDynamicLabelNode(parser.pos(a), a); :}
+    |   provider:a
+            {: RESULT = a; :}
+    |   accesspath_receiver:a DOT PROVIDER:b
+            {: TypeNode clazz;
+               if (a instanceof Expr) {
+                   clazz = parser.exprToUninstType((Expr) a);
+               } else if (a instanceof AmbReceiver) {
+                   AmbReceiver ar = (AmbReceiver) a;
+                   Prefix prefix = ar.prefix();
+                   QualifierNode pn = null;
+                   if (prefix != null) pn = parser.prefixToQualifier(ar.prefix());
+                   clazz = parser.nf.AmbTypeNode(parser.pos(a), pn, ar.name());
+               } else {
+                   clazz = null;
+                   parser.die(parser.pos(a));
+               }
+               RESULT = parser.nf.AmbProviderLabelNode(parser.pos(a, b), clazz);
+            :}
+    ;
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -138,7 +392,7 @@ extend modifier ::=
 // Local and remote workers                                           //
 ////////////////////////////////////////////////////////////////////////
 
-local_worker ::=
+local_worker ::= 
                     // Worker
         WORKER:a
             {: RESULT = parser.nf.Worker(parser.pos(a)); :}
@@ -149,17 +403,75 @@ remote_worker ::=
         WORKER:a LPAREN expression:b RPAREN:c
             {: RESULT = parser.nf.RemoteWorkerGetter(parser.pos(a, c), b); :}
     ;
+    
+store_expr ::=
+        STORE:a
+              {: RESULT = parser.nf.Store(parser.pos(a), parser.nf.This(parser.pos(a))); :}        
+        | primary_no_new_array:a DOT STORE:b
+              {: RESULT = parser.nf.Store(parser.pos(a, b), a); :}
+    ;
 
 extend primary_no_new_array ::=
         local_worker:a
             {: RESULT = a; :}
     |   remote_worker:a
             {: RESULT = a; :}
-    ;
-
+    |   store_expr:a
+    		{: RESULT = a; :}
+	;
+	
+extend reftype_or_expr ::=
+	     reftype_or_expr:a DOT STORE:b
+              {: RESULT = new AmbStore(a, parser, parser.pos(a, b)); :}
+	;
 extend principal_base ::=
         local_worker:a
             {: RESULT = parser.nf.AmbPrincipalNode(parser.pos(a), a); :}
+    |   remote_worker:a
+            {: RESULT = parser.nf.AmbPrincipalNode(parser.pos(a), a); :}
+    ;
+
+extend accesspath_no_id ::= 
+    	STORE:a
+            {: RESULT = parser.nf.Store(parser.pos(a), parser.nf.This(parser.pos(a))); :}    
+    |   accesspath_receiver:a DOT STORE:b
+            {: 
+              if (a instanceof Expr) {
+                RESULT = parser.nf.Store(parser.pos(a, b), (Expr)a);               
+              } else if (a instanceof AmbReceiver) {
+                // sigh.. convert back to expr              
+	            RESULT = parser.nf.Store(parser.pos(a, b), parser.receiverToExpr((AmbReceiver)a)); 
+	          } else {
+		        parser.die(parser.pos(a));
+	          }
+            :}
+	;
+	    
+////////////////////////////////////////////////////////////////////////
+// Field Declarations now use an optional "access label"              //
+////////////////////////////////////////////////////////////////////////
+
+override field_declaration ::=
+                    // List of ClassMember
+        modifiers_opt:a type:b AT label:al variable_declarators:c SEMICOLON:e
+            {: List l = new LinkedList<ClassMember>();
+               for (Iterator i = c.iterator(); i.hasNext(); ) {
+                   VarDeclarator d = (VarDeclarator) i.next();
+                   l.add(parser.nf.FabricFieldDecl(parser.pos(b, e),
+                                             a, parser.array(b, d.dims), al,
+                                             d.name, d.init));
+               }
+               RESULT = l; :}
+		|  modifiers_opt:a type:b variable_declarators:c SEMICOLON:e
+            {: List l = new LinkedList<ClassMember>();
+               for (Iterator i = c.iterator(); i.hasNext(); ) {
+                   VarDeclarator d = (VarDeclarator) i.next();
+                   l.add(parser.nf.FabricFieldDecl(parser.pos(b, e),
+                                             a, parser.array(b, d.dims), null,
+                                             d.name, d.init));
+               }
+               RESULT = l; :}
+               
     ;
 
 ////////////////////////////////////////////////////////////////////////
@@ -196,12 +508,20 @@ location_expr_opt ::=
             {: RESULT = null; :}
     |   AT name:a
             {: RESULT = a.toExpr(); :}
+    |   AT STORE:a
+            {: RESULT = parser.nf.Store(parser.pos(a), parser.nf.This(parser.pos(a))); :}        
+    |   AT name:a DOT STORE:b
+            {: RESULT = parser.nf.Store(parser.pos(a, b), a.toExpr()); :}
     ;
 
 location_expr ::=
                     // Expr
         AT name:a
             {: RESULT = a.toExpr(); :}
+    |   AT STORE:a
+            {: RESULT = parser.nf.Store(parser.pos(a), parser.nf.This(parser.pos(a))); :}        
+    |   AT name:a DOT STORE:b
+            {: RESULT = parser.nf.Store(parser.pos(a, b), a.toExpr()); :}
     ;
 
 override class_instance_creation_expression ::=
@@ -270,7 +590,7 @@ extend primary ::=
         NEW:n LABEL label:a location_expr_opt:loc
             {: RESULT = parser.nf.NewLabel(parser.pos(n, loc), a, loc); :}
     |   NEW:n PRINCIPAL location_expr_opt:loc LPAREN principal_disjunctive:a RPAREN:z
-            {: RESULT = parser.nf.PrincipalExpr(parser.pos(n, z), a); :}
+            {: RESULT = parser.nf.PrincipalExpr(parser.pos(n, z), a, loc); :}
 
     |   NEW:n objtype_or_expr:a dims_opt:b
             {: RESULT = parser.toNewFabricArray(parser.pos(n,a), a, b, null); :}

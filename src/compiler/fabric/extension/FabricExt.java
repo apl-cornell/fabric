@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -19,10 +19,10 @@ import jif.ast.Jif;
 import polyglot.ast.Ext;
 
 /**
- * This interface tags all fabric extension objects.  All FabricExt objects
+ * This interface tags all fabric extension objects. All FabricExt objects
  * should be the second extension of an ast node, i.e. if <code>n</code> is a
- * node, then <code>n.ext.ext</code> refers to the FabricExt object
- * (<code>n.ext</code> should be a {@link Jif}).
+ * node, then <code>n.ext.ext</code> refers to the FabricExt object (
+ * <code>n.ext</code> should be a {@link Jif}).
  * 
  * @author mdgeorge
  */

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -19,90 +19,63 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import fabric.worker.debug.Timing;
-import fabric.common.*;
+import fabric.common.TransactionID;
 import fabric.common.exceptions.AccessException;
-import fabric.common.exceptions.FabricException;
-import fabric.common.exceptions.InternalError;
-import fabric.common.exceptions.ProtocolError;
-import fabric.net.RemoteNode;
+import fabric.lang.security.Principal;
 
 public class AbortTransactionMessage extends
-    Message<RemoteNode, AbortTransactionMessage.Response> {
+    Message<AbortTransactionMessage.Response, AccessException> {
+  // ////////////////////////////////////////////////////////////////////////////
+  // message contents //
+  // ////////////////////////////////////////////////////////////////////////////
 
-  public static class Response implements Message.Response {
-    private Response() {
-    }
-
-    /**
-     * Deserialization constructor, used by the worker.
-     * 
-     * @param node
-     *          The node from which the response is being read.
-     * @param in
-     *          the input stream from which to read the response.
-     */
-    Response(RemoteNode node, DataInput in) {
-    }
-
-    /*
-     * (non-Javadoc)
-     * @see fabric.messages.Message.Response#write(java.io.ObjectOutputStream)
-     */
-    public void write(DataOutput out) {
-    }
-  }
-
-  /**
-   * The tid for the transaction that is aborting.
-   */
+  /** The tid for the transaction that is aborting. */
   public final TransactionID tid;
 
   public AbortTransactionMessage(TransactionID tid) {
-    super(MessageType.ABORT_TRANSACTION);
+    super(MessageType.ABORT_TRANSACTION, AccessException.class);
     this.tid = tid;
   }
 
-  /**
-   * Deserialization constructor.
-   */
+  // ////////////////////////////////////////////////////////////////////////////
+  // response contents //
+  // ////////////////////////////////////////////////////////////////////////////
+
+  public static class Response implements Message.Response {
+    public Response() {
+    }
+  }
+
+  // ////////////////////////////////////////////////////////////////////////////
+  // visitor methods //
+  // ////////////////////////////////////////////////////////////////////////////
+
+  @Override
+  public Response dispatch(Principal p, MessageHandler h)
+      throws AccessException {
+    return h.handle(p, this);
+  }
+
+  // ////////////////////////////////////////////////////////////////////////////
+  // serialization cruft //
+  // ////////////////////////////////////////////////////////////////////////////
+
+  @Override
+  protected void writeMessage(DataOutput out) throws IOException {
+    tid.write(out);
+  }
+
+  /* readMessage */
   protected AbortTransactionMessage(DataInput in) throws IOException {
     this(new TransactionID(in));
   }
 
   @Override
-  public Response dispatch(fabric.store.MessageHandlerThread w) throws AccessException,
-      ProtocolError {
-    w.handle(this);
+  protected void writeResponse(DataOutput out, Response r) {
+  }
+
+  @Override
+  protected Response readResponse(DataInput in) {
     return new Response();
   }
-
-  @Override
-  public Response dispatch(fabric.worker.remote.MessageHandlerThread handler)
-      throws ProtocolError {
-    handler.handle(this);
-    return new Response();
-  }
-
-  public Response send(RemoteNode node) {
-    try {
-      Timing.STORE.begin();
-      return send(node, true);
-    } catch (FabricException e) {
-      throw new InternalError(e);
-    } finally {
-      Timing.STORE.end();
-    }
-  }
-
-  @Override
-  public Response response(RemoteNode node, DataInput in) {
-    return new Response(node, in);
-  }
-
-  @Override
-  public void write(DataOutput out) throws IOException {
-    tid.write(out);
-  }
-
 }

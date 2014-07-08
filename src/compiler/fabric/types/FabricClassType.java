@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -16,21 +16,8 @@
 package fabric.types;
 
 import jif.types.JifClassType;
-import jif.types.label.Label;
+import codebases.types.CodebaseClassType;
 
-public interface FabricClassType extends JifClassType {
-  
-  /**
-   * Return the label associated with this class' fields, or null if this class
-   * has no fields.
-   */
-  Label defaultFieldLabel();
-  
-  
-  /**
-   * Same behavior as above, except change the field labels
-   * of Principal classes, so that they don't mention 'this'
-   */
-  Label defaultFabilFieldLabel();
-  
+public interface FabricClassType extends JifClassType, CodebaseClassType,
+    FabricReferenceType {
 }

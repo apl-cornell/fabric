@@ -1,0 +1,72 @@
+Social Mashup Example
+=====================
+
+This is the FriendMap example program. It enables Alice, a user of a social
+network, to use a mapping service to create a map that displays the location of
+one of her friends, Bob, while maintaining his location privacy. It
+demonstrates that it is possible to publish new code into Fabric and for other
+nodes to dynamically load it. This ability to load mobile code provides
+functionality similar that of JavaScript, but made more powerful because
+information flow control avoids the limitations imposed by overly restrictive
+same-origin policy.
+
+This directory contains the following sub-directories:
+
+  - src: source code for the FriendMap example
+  - bin: a collection of scripts for running the example
+  - etc: configuration files for the example's Fabric nodes
+
+
+Using
+-----
+This example uses five stores ("friendmap", "mapserv", "snapp", "alice",
+and "bob").
+
+  0. Start in the FriendMap example directory and build the principal
+     utilities:
+
+        $ cd $FABRIC/examples/friendmap
+        $ ant
+
+  1. Start up instances of the five stores. The 'start-all' script will
+     start each store in a separate xterm window:
+
+        $ bin/start-all
+
+     You can also use an xterm replacement (e.g., gnome-terminal or
+     konsole):
+
+        $ XTERM=gnome-terminal bin/start-all
+
+     Or, if you prefer, you can start each store individually in your
+     favourite terminal emulator:
+
+        $ bin/start-store snapp
+        $ bin/start-store mapserv
+        $ bin/start-store friendmap
+        $ bin/start-store alice
+        $ bin/start-store bob
+
+  2. If you are starting from fresh stores, you will need to initialize
+     the application state by following the next step. Otherwise, skip
+     to step 3 below.
+
+     Run the 'initialize' script to initialize the stores' state. This
+     will publish the example's code to the stores and initialize the
+     application's state.
+
+        $ bin/initialize
+
+  3. The 'friendmap' script will run the example. You should see in
+     alice's console a 10x10 map showing Bob's location.
+
+        $ bin/friendmap
+
+  4. Exit the stores with the "exit" command in each console (you can
+     also use CTRL-D).
+
+     You can clean up the stores' persistent state by removing 'var'
+     from the FriendMap example directory:
+
+        $ rm -rf var
+

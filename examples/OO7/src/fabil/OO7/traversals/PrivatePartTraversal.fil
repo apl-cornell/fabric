@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -25,6 +25,11 @@ import fabric.util.Iterator;
  *  parts in some way.
  */
 public abstract class PrivatePartTraversal extends Traversal {
+
+  public PrivatePartTraversal OO7$traversals$PrivatePartTraversal () {
+      OO7$traversals$Traversal();
+      return this;
+  }
 
   public void visitBenchmark (Benchmark b) {
     Iterator i = b.modulesById().values().iterator();

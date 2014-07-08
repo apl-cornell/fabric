@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -20,9 +20,9 @@ public class _charArray {
 
   public native char get(int i);
 
-  public _charArray(int length) {
+  public _charArray(Label updateLabel, ConfPolicy accessPolicy, int length) {
   }
 
-  public _charArray(char native[] value) {
+  public _charArray(Label updateLabel, ConfPolicy accessPolicy, char native[] value) {
   }
 }

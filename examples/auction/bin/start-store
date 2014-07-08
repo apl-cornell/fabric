@@ -1,0 +1,12 @@
+#!/bin/bash
+
+APP_HOME="$(dirname $0)/.."
+FABRIC="${APP_HOME}/../.."
+PATH="${FABRIC}/bin:${PATH}"
+
+CP="${APP_HOME}/classes"
+
+export FABRIC_HOME="${APP_HOME}"
+
+fab-store --jvm-cp "${CP}" --app-home "${FABRIC_HOME}" --name "$@"
+

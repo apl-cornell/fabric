@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -16,9 +16,9 @@
 package fabric.common.net;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 
 import fabric.common.net.SubServerSocketFactory.Acceptor;
-
 
 /**
  * Server-side multiplexed socket implementation. The API mirrors that of
@@ -28,13 +28,13 @@ import fabric.common.net.SubServerSocketFactory.Acceptor;
  * @author mdgeorge
  */
 public class SubServerSocket {
-  //////////////////////////////////////////////////////////////////////////////
-  // public API                                                               //
-  //////////////////////////////////////////////////////////////////////////////
+  // ////////////////////////////////////////////////////////////////////////////
+  // public API //
+  // ////////////////////////////////////////////////////////////////////////////
 
   /** @see SubServerSocketFactory */
   protected SubServerSocket(SubServerSocketFactory factory) {
-    this.state   = new Unbound(factory);
+    this.state = new Unbound(factory);
   }
 
   /** @see java.net.ServerSocket#accept() */
@@ -57,15 +57,15 @@ public class SubServerSocket {
     state.close();
   }
 
-  //////////////////////////////////////////////////////////////////////////////
-  // State design pattern implementation                                      //
-  //                                                                          //
-  //                 bind                  close                              //
-  //      unbound  --------->    bound    ------->  closed                    //
-  //         |                     |                  |                       //
-  //         +---------------------+------------------+---------------> error //
-  //                                                       exception          //
-  //////////////////////////////////////////////////////////////////////////////
+  // ////////////////////////////////////////////////////////////////////////////
+  // State design pattern implementation //
+  // //
+  // bind close //
+  // unbound ---------> bound -------> closed //
+  // | | | //
+  // +---------------------+------------------+---------------> error //
+  // exception //
+  // ////////////////////////////////////////////////////////////////////////////
 
   private State state;
 
@@ -78,17 +78,20 @@ public class SubServerSocket {
 
     /** @see SubServerSocket#accept() */
     public SubSocket accept() throws IOException {
-      throw new IOException("Cannot accept a connection because server socket " + this, cause);
+      throw new IOException("Cannot accept a connection because server socket "
+          + this, cause);
     }
 
     /** @see SubServerSocket#bind(InetSocketAddress, int) */
     public void bind(String name, int backlog) throws IOException {
-      throw new IOException("Cannot bind to local address " + name + " because server socket " + this, cause);
+      throw new IOException("Cannot bind to local address " + name
+          + " because server socket " + this, cause);
     }
 
     /** @see SubServerSocket#close() */
     public void close() throws IOException {
-      throw new IOException("Cannot close server socket because it " + this, cause);
+      throw new IOException("Cannot close server socket because it " + this,
+          cause);
     }
   }
 
@@ -96,19 +99,23 @@ public class SubServerSocket {
    * implementation of state methods in the unbound state.
    */
   private final class Unbound extends State {
-    @Override public String toString() { return "is unbound"; }
+    @Override
+    public String toString() {
+      return "is unbound";
+    }
 
     private final SubServerSocketFactory factory;
 
     @Override
     public void bind(String name, int backlog) throws IOException {
       try {
-	Acceptor.ConnectionQueue queue = factory.bind(name, backlog);
-	state = new Bound(queue);
+        Acceptor.ConnectionQueue queue = factory.bind(name, backlog);
+        state = new Bound(queue);
       } catch (final Exception exc) {
-	IOException wrapped = new IOException("failed to bind to local address " + name, exc);
-	state = new ErrorState(wrapped);
-	throw wrapped;
+        IOException wrapped =
+            new IOException("failed to bind to local address " + name, exc);
+        state = new ErrorState(wrapped);
+        throw wrapped;
       }
     }
 
@@ -123,19 +130,14 @@ public class SubServerSocket {
   private final class Bound extends State {
     final Acceptor.ConnectionQueue queue;
 
-    @Override public String toString() {
+    @Override
+    public String toString() {
       return "is bound to " + queue;
     }
 
     @Override
-    public SubSocket accept() throws IOException {
-      try {
-        return queue.accept();
-      } catch (IOException e) {
-        IOException wrapped = new IOException("failed to accept (socket " + this +")", e);
-        state = new ErrorState(wrapped);
-        throw wrapped;
-      }
+    public SubSocket accept() {
+      return queue.accept();
     }
 
     @Override
@@ -153,19 +155,23 @@ public class SubServerSocket {
    * implementation of state methods in the closed state.
    */
   private final class Closed extends State {
-    @Override public String toString() { return "is closed"; }
+    @Override
+    public String toString() {
+      return "is closed";
+    }
   }
 
   /**
    * implementation of state methods in an error state
    */
   private final class ErrorState extends State {
-    @Override public String toString() { return "has recieved an exception"; }
+    @Override
+    public String toString() {
+      return "has recieved an exception";
+    }
 
     public ErrorState(Exception exc) {
-      super();
       this.cause = exc;
     }
   }
 }
-

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -24,16 +24,17 @@ import fabric.util.*;
  * Jif.
  */
 public final class DisjunctivePrincipal extends Principal {
-  final Set disjuncts;
+  /*final*/ Set disjuncts;
   private Integer hashCode = null;
-  public static final Store localStore = Worker.getWorker().getLocalStore();
 
-  DisjunctivePrincipal(Set disjuncts) {
+  DisjunctivePrincipal fabric$lang$security$DisjunctivePrincipal$(Set disjuncts) {
     this.disjuncts = disjuncts;
+    fabric$lang$security$Principal$();
+    return this;
   }
 
   public String name() {
-    StringBuffer sb = new StringBuffer@localStore();
+    StringBuffer sb = new StringBuffer();
     for (Iterator iter = disjuncts.iterator(); iter.hasNext();) {
       Principal p = (Principal) iter.next();
       sb.append(PrincipalUtil.toString(p));
@@ -82,7 +83,7 @@ public final class DisjunctivePrincipal extends Principal {
 
   public ActsForProof findProofUpto(Store store, Principal p, java.lang.Object searchState) {
     if (delegatesTo(p)) {
-      return new DelegatesProof@store(p, this);
+      return (DelegatesProof) new DelegatesProof@store().fabric$lang$security$DelegatesProof$(p, this);
     }
     for (Iterator iter = disjuncts.iterator(); iter.hasNext();) {
       Principal witness = (Principal) iter.next();
@@ -90,15 +91,15 @@ public final class DisjunctivePrincipal extends Principal {
           PrincipalUtil.findActsForProof(store, p, witness, searchState);
       if (prf != null) {
         // have found a proof from p to witness.
-        DelegatesProof step = new DelegatesProof@store(witness, this);
-        return new TransitiveProof@store(prf, witness, step);
+        DelegatesProof step = (DelegatesProof) new DelegatesProof@store().fabric$lang$security$DelegatesProof$(witness, this);
+        return (TransitiveProof) new TransitiveProof@store().fabric$lang$security$TransitiveProof$(prf, witness, step);
       }
     }
     return null;
   }
 
   public ActsForProof findProofDownto(Store store, Principal q, java.lang.Object searchState) {
-    Map proofs = new HashMap@store();
+    Map proofs = (HashMap) new HashMap@store().fabric$util$HashMap$();
     for (Iterator iter = disjuncts.iterator(); iter.hasNext();) {
       Principal p = (Principal) iter.next();
       ActsForProof prf = PrincipalUtil.findActsForProof(store, p, q, searchState);
@@ -108,6 +109,16 @@ public final class DisjunctivePrincipal extends Principal {
 
     // proofs contains a proof for every disjunct,
     // which is sufficent for a proof for the disjunctive principal
-    return new FromDisjunctProof@store(this, q, proofs);
+    return (FromDisjunctProof) new FromDisjunctProof@store().fabric$lang$security$FromDisjunctProof$(this, q, proofs);
+  }
+
+  public Object $initLabels() {
+    // XXX What should this be?  Using completely permissive values for now.
+    // update label: {_ <-}
+    // access policy: {_ ->}
+    this.$updateLabel = LabelUtil.noComponents();
+    this.$accessPolicy = LabelUtil.bottomConf();
+
+    return this;
   }
 }

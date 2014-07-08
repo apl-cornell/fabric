@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -21,13 +21,17 @@ import polyglot.ast.Call;
 import polyglot.ast.Expr;
 import polyglot.ast.Receiver;
 import polyglot.qq.QQ;
-import polyglot.types.*;
+import polyglot.types.ClassType;
+import polyglot.types.Context;
+import polyglot.types.Flags;
+import polyglot.types.MethodInstance;
+import polyglot.types.SemanticException;
+import polyglot.types.Type;
 import polyglot.util.CodeWriter;
 import polyglot.util.Position;
 import fabil.ast.Annotated;
 import fabil.ast.FabILNodeFactory;
 import fabil.types.FabILTypeSystem;
-import fabil.visit.LabelAssigner;
 import fabil.visit.LocationAssigner;
 
 /**
@@ -35,52 +39,6 @@ import fabil.visit.LocationAssigner;
  * location fields.
  */
 public abstract class AnnotatedExt_c extends ExprExt_c {
-  @Override
-  public Annotated assignLabels(LabelAssigner la) throws SemanticException {
-    Annotated expr = node();
-    if (expr.label() != null) return expr;
-
-    FabILNodeFactory nf = la.nodeFactory();
-    FabILTypeSystem ts = la.typeSystem();
-    QQ qq = la.qq();
-
-    if (!ts.isFabricReference(expr.type())) return expr;
-
-    // Need a label. Use null by default for principal objects. The Principal
-    // constructor will fill in the appropriate label.
-    if (ts.isPrincipalClass(expr.type())) {
-      return (Annotated) expr.label(qq.parseExpr("null")).type(ts.Null());
-    }
-
-    // Need a label. By default, we use the same label as the context.
-    Context context = la.context();
-    ClassType currentClass = context.currentClass();
-    if (!ts.isFabricReference(currentClass)) {
-      throw new SemanticException("Missing label", expr.position());
-    }
-
-    Receiver receiver;
-    if (context.inStaticContext()) {
-      receiver =
-          nf.CanonicalTypeNode(Position.compilerGenerated(), currentClass);
-    } else {
-      receiver = qq.parseExpr("this").type(currentClass);
-    }
-
-    Position pos = Position.compilerGenerated();
-    Call defaultLabel = nf.Call(pos, receiver, nf.Id(pos, "get$label"));
-
-    Flags flags = Flags.NONE;
-    if (context.inStaticContext()) flags = Flags.STATIC;
-    
-    MethodInstance mi =
-        ts.methodInstance(pos, currentClass, flags, ts.Label(), "get$label",
-            Collections.emptyList(), Collections.emptyList());
-    defaultLabel = (Call) defaultLabel.type(ts.Label());
-    defaultLabel = defaultLabel.methodInstance(mi);
-    return expr.label(defaultLabel);
-  }
-
   @Override
   public Annotated assignLocations(LocationAssigner la)
       throws SemanticException {
@@ -116,7 +74,7 @@ public abstract class AnnotatedExt_c extends ExprExt_c {
 
     MethodInstance mi =
         ts.methodInstance(pos, currentClass, flags, ts.Store(), "$getStore",
-            Collections.emptyList(), Collections.emptyList());
+            Collections.<Type> emptyList(), Collections.<Type> emptyList());
     defaultLocation = (Call) defaultLocation.type(ts.Store());
     defaultLocation = defaultLocation.methodInstance(mi);
     return expr.location(defaultLocation);
@@ -126,7 +84,7 @@ public abstract class AnnotatedExt_c extends ExprExt_c {
   public Annotated node() {
     return (Annotated) super.node();
   }
-  
+
   @Override
   public void dump(CodeWriter w) {
     super.dump(w);
@@ -145,5 +103,5 @@ public abstract class AnnotatedExt_c extends ExprExt_c {
     w.write(")");
     w.end();
   }
-  
+
 }

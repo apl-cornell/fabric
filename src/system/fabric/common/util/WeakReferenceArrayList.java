@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -34,9 +34,10 @@ public class WeakReferenceArrayList<T> implements Iterable<T> {
 
   private int modCount;
 
-  @SuppressWarnings("unchecked")
   public WeakReferenceArrayList() {
-    data = new WeakReference[10];
+    @SuppressWarnings("unchecked")
+    WeakReference<T>[] tmp = new WeakReference[10];
+    data = tmp;
     size = 0;
     modCount = 0;
   }
@@ -80,7 +81,6 @@ public class WeakReferenceArrayList<T> implements Iterable<T> {
     size = compactedSize;
   }
 
-  @SuppressWarnings("unchecked")
   private void ensureCapacity(int minCapacity) {
     compactData();
 
@@ -89,6 +89,7 @@ public class WeakReferenceArrayList<T> implements Iterable<T> {
       int newCap = current * 2;
       if (minCapacity > newCap) newCap = minCapacity;
 
+      @SuppressWarnings("unchecked")
       WeakReference<T>[] newData = new WeakReference[newCap];
       for (int i = 0; i < size; i++) {
         newData[i] = data[i];
@@ -98,6 +99,7 @@ public class WeakReferenceArrayList<T> implements Iterable<T> {
     }
   }
 
+  @Override
   public Iterator<T> iterator() {
     return new Iterator<T>() {
       private int knownMod = modCount;
@@ -109,6 +111,7 @@ public class WeakReferenceArrayList<T> implements Iterable<T> {
         if (knownMod != modCount) throw new ConcurrentModificationException();
       }
 
+      @Override
       public boolean hasNext() {
         while (nextElement == null && position < size) {
           checkMod();
@@ -118,6 +121,7 @@ public class WeakReferenceArrayList<T> implements Iterable<T> {
         return nextElement != null;
       }
 
+      @Override
       public T next() {
         if (!hasNext()) throw new NoSuchElementException();
         T result = nextElement;
@@ -125,6 +129,7 @@ public class WeakReferenceArrayList<T> implements Iterable<T> {
         return result;
       }
 
+      @Override
       public void remove() {
         throw new UnsupportedOperationException();
       }

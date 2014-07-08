@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -30,8 +30,11 @@ public class Manual {
   char[] text;
   Module mod;
 
-  public Manual(int size) {
-    text = new char[size];
+  public Manual OO7$Manual(int size) {
+    fabric$lang$Object$();     
+    Label label = Worker.getWorker().getLocalStore().getEmptyLabel();
+    text = new char[size]~label;
+    return this;
   }
 
   public void setTitle(String title) {

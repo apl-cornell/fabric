@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -31,14 +31,14 @@ public class ObjectGroup {
   public ObjectGroup(LongKeyMap<SerializedObject> objects) {
     this.objects = objects;
   }
-  
+
   /**
    * The objects as a map from their onums to the objects.
    */
   public LongKeyMap<SerializedObject> objects() {
     return objects;
   }
-  
+
   /**
    * Serializes the group onto the given output stream.
    */
@@ -48,14 +48,14 @@ public class ObjectGroup {
       obj.write(out);
     }
   }
-  
+
   /**
    * Deserialization constructor.
    */
   public ObjectGroup(DataInput in) throws IOException {
     int groupSize = in.readInt();
     objects = new LongKeyHashMap<SerializedObject>(groupSize);
-    
+
     for (int i = 0; i < groupSize; i++) {
       SerializedObject obj = new SerializedObject(in);
       objects.put(obj.getOnum(), obj);

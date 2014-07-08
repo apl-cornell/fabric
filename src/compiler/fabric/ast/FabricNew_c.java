@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -17,37 +17,37 @@ package fabric.ast;
 
 import java.util.List;
 
-import fabric.extension.FabricExt;
-import fabric.extension.LocatedExt_c;
-
+import jif.ast.JifNew_c;
 import polyglot.ast.ClassBody;
 import polyglot.ast.Expr;
 import polyglot.ast.Term;
+import polyglot.ast.Term_c;
 import polyglot.ast.TypeNode;
 import polyglot.util.Position;
 import polyglot.visit.CFGBuilder;
-import jif.ast.JifNew_c;
+import fabric.extension.FabricExt;
+import fabric.extension.LocatedExt_c;
 
 public class FabricNew_c extends JifNew_c {
 
-  public FabricNew_c(Position pos, TypeNode tn, List arguments, ClassBody body) {
+  public FabricNew_c(Position pos, TypeNode tn, List<Expr> arguments,
+      ClassBody body) {
     super(pos, tn, arguments, body);
   }
-  
-  @SuppressWarnings("unchecked")
+
   @Override
-  public List acceptCFG(CFGBuilder v, List succs) {
+  public <T> List<T> acceptCFG(CFGBuilder<?> v, List<T> succs) {
     FabricExt fabExt = FabricUtil.fabricExt(this);
-    Expr location = ((LocatedExt_c)fabExt).location();
+    Expr location = ((LocatedExt_c) fabExt).location();
     if (qualifier != null) {
       v.visitCFG(qualifier, tn, ENTRY);
     }
 
     Term last = tn;
-//    if (label != null) {
-//      v.visitCFG(last, label, ENTRY);
-//      last = label;
-//    }
+    // if (label != null) {
+    // v.visitCFG(last, label, ENTRY);
+    // last = label;
+    // }
 
     if (location != null) {
       v.visitCFG(last, location, ENTRY);
@@ -60,7 +60,8 @@ public class FabricNew_c extends JifNew_c {
       v.visitCFG(body(), this, EXIT);
     } else {
       if (!arguments.isEmpty()) {
-        v.visitCFG(last, listChild(arguments, null), ENTRY);
+        v.visitCFG(last, Term_c.<Expr, Expr, Expr> listChild(arguments, null),
+            ENTRY);
         v.visitCFGList(arguments, this, EXIT);
       } else {
         v.visitCFG(last, this, EXIT);
@@ -69,6 +70,5 @@ public class FabricNew_c extends JifNew_c {
 
     return succs;
   }
-  
 
 }

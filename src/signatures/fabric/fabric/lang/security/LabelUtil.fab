@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -19,7 +19,7 @@ package fabric.lang.security;
  * Utility methods for labels.
  */
 public class LabelUtil {
-    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+//    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
     public static native label noComponents();
 
     public static native label{owner; readers; *lbl; lbl} 
@@ -29,11 +29,18 @@ public class LabelUtil {
        
     public static native ConfPolicy{owner; readers; *lbl; lbl} 
        readerPolicy(label lbl, principal owner, principal{*lbl}[] readers);
+
+    public static native ConfPolicy{owner; reader} 
+       readerPolicy(principal owner, principal reader);
        
     public static native IntegPolicy{owner; writers; *lbl; lbl} 
        writerPolicy(label lbl, principal owner, principal{*lbl}[] writers);
+
+    public static native IntegPolicy{owner; writer} 
+       writerPolicy(principal owner, principal writer);
        
     public static native label toLabel(ConfPolicy cPolicy, IntegPolicy iPolicy) throws (NullPointerException{cPolicy;iPolicy});
+    public static native label toLabel(ConfPolicy cPolicy) throws (NullPointerException{cPolicy});
        
     public static native label join(label l1, label l2);
     public static native label meetLbl(label l1, label l2); // "meet" is a keyword, and can't be used
@@ -46,6 +53,7 @@ public class LabelUtil {
 
     public static native boolean equivalentTo(label l1, label l2);
     public static native boolean relabelsTo(label fromLbl, label toLbl); 
+    public static native boolean acts_for(label actor, principal granter);
 
     public static native boolean isReadableBy(label lbl, principal p); 
     

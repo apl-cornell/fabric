@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -57,13 +57,13 @@ public class JavaArrayType_c extends ArrayType_c implements JavaArrayType {
 
   @Override
   public String toString() {
-      return base().toString() + " native[]";
+    return base().toString() + " native[]";
   }
 
   @Override
   public void print(CodeWriter w) {
-      base().print(w);
-      w.write("native[]");
+    base().print(w);
+    w.write("native[]");
   }
 
 }

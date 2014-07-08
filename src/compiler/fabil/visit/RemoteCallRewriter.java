@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -15,13 +15,13 @@
  */
 package fabil.visit;
 
-import fabil.ExtensionInfo;
-import fabil.extension.FabILExt;
-import fabil.types.FabILTypeSystem;
 import polyglot.ast.Node;
 import polyglot.ast.NodeFactory;
 import polyglot.qq.QQ;
 import polyglot.visit.NodeVisitor;
+import fabil.ExtensionInfo;
+import fabil.extension.FabILExt;
+import fabil.types.FabILTypeSystem;
 
 public class RemoteCallRewriter extends NodeVisitor {
   protected QQ qq;
@@ -42,7 +42,7 @@ public class RemoteCallRewriter extends NodeVisitor {
   public Node leave(Node old, Node n, NodeVisitor v) {
     return ext(n).rewriteRemoteCalls(this);
   }
-  
+
   /**
    * @return the qq
    */
@@ -53,7 +53,7 @@ public class RemoteCallRewriter extends NodeVisitor {
   public NodeFactory nodeFactory() {
     return nf;
   }
-  
+
   public FabILTypeSystem typeSystem() {
     return ts;
   }

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -30,11 +30,16 @@ import fabric.worker.Worker;
 public class T6 extends PrivatePartTraversal {
   private int result = 0;
 
+  public T6 OO7$traversals$T6() {
+      OO7$traversals$PrivatePartTraversal();
+      return this;
+  }
+
   public static void main(String[] args) {
     Store local = Worker.getWorker().getLocalStore();
     T6 t6 = null;
     atomic {
-      t6 = new T6@local();
+      t6 = (T6) new T6@local().OO7$traversals$T6();
     }
     t6.mainImpl(args);
   }

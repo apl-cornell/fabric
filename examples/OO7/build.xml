@@ -41,32 +41,21 @@
   <target name="build"
       description="Builds the Fabric OO7 implementation">
     <mkdir dir="${OO7.home}/classes" />
-    <apply executable="bash"
-        parallel="true"
-        failonerror="true"
-        dir="${OO7.home}"
-        dest="${OO7.home}/classes"
-        relative="false"
-        skipemptyfilesets="true"
-        vmlauncher="false">
-      <arg value="${filc}" />
-      <arg line="${debug.flag}" />
-      <arg value="-d" />
-      <arg value="classes" />
-      <arg value="-sourcepath" />
-      <arg value="src/fabil" />
-      <arg value="-cp" />
-      <arg value="classes" />
-      <srcfile />
+    <filc dest="${OO7.home}/classes">
+      <arg value="-sourcepath" /> <arg value="src/fabil" />
+      <arg value="-cp" /> <arg value="classes" />
       <fileset dir="src/fabil">
-	<include name="OO7/*.fil" />
-	<include name="OO7/traversals/*.fil" />
+        <include name="OO7/*.fil" />
+        <include name="OO7/traversals/*.fil" />
       </fileset>
-      <globmapper from="*.fil" to="*.class" />
-    </apply>
+    </filc>
   </target>
 
   <target name="build-all" depends="build" />
   <target name="all" depends="build-all" />
 
 </project>
+
+<!--
+vim: ts=2 sw=2 ai et
+-->

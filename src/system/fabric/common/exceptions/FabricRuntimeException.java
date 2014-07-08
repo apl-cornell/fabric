@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -23,7 +23,7 @@ public class FabricRuntimeException extends RuntimeException {
   public FabricRuntimeException(String message) {
     super(message);
   }
-  
+
   public FabricRuntimeException(Throwable cause) {
     super(cause);
   }

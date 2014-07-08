@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -15,21 +15,36 @@
  */
 package fabric.common;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInput;
+import java.io.DataInputStream;
+import java.io.DataOutput;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInput;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.lang.reflect.Constructor;
-import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
 
-import fabric.worker.LocalStore;
-import fabric.worker.Store;
-import fabric.worker.Worker;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.ComparablePair;
 import fabric.common.util.Pair;
-import fabric.lang.security.Label;
-import fabric.lang.Codebase;
-import fabric.lang.FabricClassLoader;
 import fabric.lang.Object._Impl;
+import fabric.lang.Object._Proxy;
+import fabric.lang.security.ConfPolicy;
+import fabric.lang.security.Label;
+import fabric.worker.LocalStore;
+import fabric.worker.Store;
 
 /**
  * <code>_Impl</code> objects are stored on stores in serialized form as
@@ -42,48 +57,107 @@ public final class SerializedObject implements FastSerializable, Serializable {
    * <li>long onum</li>
    * <li>int version number</li>
    * <li>long promise expiration</li>
-   * <li>byte whether the label pointer is an inter-store ref</li>
-   * <li>short label's store's name length (only present if inter-store)</li>
-   * <li>byte[] label's store's name data (only present if inter-store)</li>
-   * <li>long label's onum</li>
-   * <li>byte whether the class is a system class</li>
-   * <li>short codebase's store's name length (only present if not a system
-   * class)</li>
-   * <li>byte[] codebase's store's name data (only present if not a system
-   * class)</li>
-   * <li>long codebase's onum (only present if not a system class)</li>
-   * <li>short class name length</li>
-   * <li>byte[] class name data</li>
-   * <li>short class hash length</li>
-   * <li>byte[] class hash data</li>
+   * <li>byte[] update label pointer, consisting of:<ul>
+   *   <li>byte whether the update label pointer is an inter-store ref</li>
+   *   <li>short update label's store's name length (only present if inter-store)</li>
+   *   <li>byte[] update label's store's name data (only present if inter-store)</li>
+   *   <li>long update label's onum</li>
+   * </ul></li>
+   * <li>byte[] access policy pointer, consisting of:<ul>
+   *   <li>byte whether the access policy pointer is an inter-store ref</li>
+   *   <li>short access policy's store's name length (only present if inter-store)</li>
+   *   <li>byte[] access policy's store's name data (only present if inter-store)</li>
+   *   <li>long access policy's onum</li>
+   * </ul></li>
+   * <li>ClassRef object's class</li>
    * <li>int # ref types</li>
-   * <li>int # intra-store refs</li>
-   * <li>int serialized data length</li>
-   * <li>int # inter-store refs</li>
    * <li>byte[] ref type data</li>
+   * <li>int # intra-store refs</li>
    * <li>long[] intra-store refs</li>
-   * <li>byte[] serialized data</li>
+   * <li>int Java-serialized data length</li>
+   * <li>byte[] Java-serialized data</li>
+   * <li>int # inter-store refs</li>
    * <li>(utf*long)[] inter-store refs</li>
+   * <li>int index of beginning of data for access policy pointer</li>
+   * <li>int index of beginning of data for class ref</li>
+   * <li>int index of beginning of data for ref types</li>
+   * <li>int index of beginning of data for intra-store refs</li>
+   * <li>int index of beginning of Java-serialized data</li>
+   * <li>int index of beginning of data for inter-store refs</li>
    * </ul>
    */
   private byte[] objectData;
 
+  /** Index in objectData for object's onum. */
+  private static final int ONUM_OFFSET = 0;
+  private static final int ONUM_LENGTH = 8; // long
+
+  /** Index in objectData for object's version number. */
+  private static final int VERSION_OFFSET = ONUM_OFFSET + ONUM_LENGTH;
+  private static final int VERSION_LENGTH = 4; // int
+
+  /** Index in objectData for object's promise-expiration time. */
+  private static final int PROMISE_EXPIRY_OFFSET = VERSION_OFFSET
+      + VERSION_LENGTH;
+  private static final int PROMISE_EXPIRY_LENGTH = 8; // long
+
+  /** Index in objectData for update-label pointer. */
+  private static final int UPDATE_LABEL_OFFSET = PROMISE_EXPIRY_OFFSET
+      + PROMISE_EXPIRY_LENGTH;
+
+  //////////////////////////////////////////////////////////////////////////
+  //
+  // Offsets from end of serialized data. Note these are in backwards order,
+  // starting from the end of the objectData array.
+  //
+  //////////////////////////////////////////////////////////////////////////
+
+  private static final int INTERSTORE_REFS_POS_LENGTH = 4; // int
+  /** Offset from end of objectData for interstore-ref data. */
+  private static final int INTERSTORE_REFS_POS_OFFSET =
+      INTERSTORE_REFS_POS_LENGTH;
+
+  private static final int SERIALIZED_DATA_POS_LENGTH = 4; // int
+  /** Offset from end of objectData for Java-serialized data. */
+  private static final int SERIALIZED_DATA_POS_OFFSET =
+      INTERSTORE_REFS_POS_OFFSET + SERIALIZED_DATA_POS_LENGTH;
+
+  private static final int INTRASTORE_REFS_POS_LENGTH = 4; // int
+  /** Offset from end of objectData for intrastore-ref data. */
+  private static final int INTRASTORE_REFS_POS_OFFSET =
+      SERIALIZED_DATA_POS_OFFSET + INTRASTORE_REFS_POS_LENGTH;
+
+  private static final int REF_TYPES_POS_LENGTH = 4; // int
+  /** Offset from end of objectData for index of ref-types data. */
+  private static final int REF_TYPES_POS_OFFSET = INTRASTORE_REFS_POS_OFFSET
+      + REF_TYPES_POS_LENGTH;
+
+  private static final int CLASS_REF_POS_LENGTH = 4; // int
+  /** Offset from end of objectData for index of class-ref pointer. */
+  private static final int CLASS_REF_POS_OFFSET = REF_TYPES_POS_OFFSET
+      + CLASS_REF_POS_LENGTH;
+
+  private static final int ACCESS_POLICY_POS_LENGTH = 4; // int
+  /** Offset from end of objectData for index of access-policy pointer. */
+  private static final int ACCESS_POLICY_POS_OFFSET = CLASS_REF_POS_OFFSET
+      + ACCESS_POLICY_POS_LENGTH;
+
   /**
-   * The name of this object's class. This is filled in lazily from the data in
-   * objectData when getClassName() is called.
+   * The ClassRef for this object's class. This is filled in lazily from the
+   * data in objectData when getClassRef() is called.
    */
-  private String className;
+  private ClassRef classRef;
 
   private static final RefTypeEnum[] refTypeEnums = RefTypeEnum.values();
 
   /**
-   * Creates a serialized representation of the given object. This should only
-   * be used by fabric.store.InProcessStore and for debugging (worker.debug.*).
+   * Creates a serialized representation of the given object.
    * 
    * @param obj
    *          The object to serialize.
-   * @deprecated
+   * @deprecated This is method is rather inefficient. Use sparingly.
    */
+  @Deprecated
   public SerializedObject(_Impl obj) {
     try {
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -104,12 +178,13 @@ public final class SerializedObject implements FastSerializable, Serializable {
    * 
    * @param onum
    *          The local object number for the surrogate.
-   * @param label
+   * @param updateLabel
    *          The onum for the surrogate's label object.
    * @param remoteRef
    *          The name of the remote object being referred to.
    */
-  public SerializedObject(long onum, long label, Pair<String, Long> remoteRef) {
+  public SerializedObject(long onum, long updateLabel, long accessPolicy,
+      Pair<String, Long> remoteRef) {
     try {
       // Create a byte array containing the surrogate object's serialized data.
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -133,33 +208,60 @@ public final class SerializedObject implements FastSerializable, Serializable {
       // Promise expiry
       out.writeLong(0);
 
-      // Label reference.
+      // Update label reference.
       out.writeBoolean(false);
-      out.writeLong(label);
+      out.writeLong(updateLabel);
 
-      // system class == true
-      out.writeBoolean(true);
+      // Save the offset for the access policy reference.
+      out.flush();
+      int accessPolicyPos = baos.size();
 
-      // Class name.
-      byte[] className = Surrogate.class.getName().getBytes("UTF-8");
-      out.writeShort(className.length);
-      out.write(className);
+      // Access policy reference.
+      out.writeBoolean(false);
+      out.writeLong(accessPolicy);
 
-      // Class hash.
-      byte[] classHash = Util.hash(Surrogate.class);
-      out.writeShort(classHash.length);
-      out.write(classHash);
+      // Save the offset for the class ref.
+      out.flush();
+      int classRefPos = baos.size();
 
-      // Number of ref types and intra-store refs.
+      // Class ref.
+      ClassRef.SURROGATE.write(out);
+
+      // Save the offset for the ref-type data.
+      out.flush();
+      int refTypePos = baos.size();
+
+      // Number of ref types.
       out.writeInt(0);
+
+      // Save the offset for the intrastore-ref data.
+      out.flush();
+      int intrastoreRefPos = baos.size();
+
+      // Number of intra-store refs.
       out.writeInt(0);
+
+      // Save the offset for the Java-serialized data.
+      out.flush();
+      int serializedDataPos = baos.size();
 
       out.writeInt(serializedData.length);
+      out.write(serializedData);
+
+      // Save the offset for the interstore-ref data.
+      out.flush();
+      int interstoreRefPos = baos.size();
 
       // Number of inter-store refs.
       out.writeInt(0);
 
-      out.write(serializedData);
+      // Write out the offsets we've saved.
+      out.writeInt(accessPolicyPos);
+      out.writeInt(classRefPos);
+      out.writeInt(refTypePos);
+      out.writeInt(intrastoreRefPos);
+      out.writeInt(serializedDataPos);
+      out.writeInt(interstoreRefPos);
 
       out.flush();
       baos.flush();
@@ -173,11 +275,11 @@ public final class SerializedObject implements FastSerializable, Serializable {
    * @return the offset in objectData representing the start of the onum.
    */
   private final int onumPos() {
-    return 0;
+    return ONUM_OFFSET;
   }
 
   public long getOnum() {
-    return longAt(onumPos());
+    return SerializationUtil.longAt(objectData, onumPos());
   }
 
   /**
@@ -185,21 +287,21 @@ public final class SerializedObject implements FastSerializable, Serializable {
    *         number.
    */
   private final int versionPos() {
-    return onumPos() + 8;
+    return VERSION_OFFSET;
   }
 
   /**
    * @return the serialized object's version number.
    */
   public int getVersion() {
-    return intAt(versionPos());
+    return SerializationUtil.intAt(objectData, versionPos());
   }
 
   /**
    * Modifies the serialized object's version number.
    */
   public void setVersion(final int version) {
-    setIntAt(versionPos(), version);
+    SerializationUtil.setIntAt(objectData, versionPos(), version);
   }
 
   /**
@@ -207,14 +309,14 @@ public final class SerializedObject implements FastSerializable, Serializable {
    *         expiry
    */
   private final int expiryPos() {
-    return versionPos() + 4;
+    return PROMISE_EXPIRY_OFFSET;
   }
 
   /**
    * @return the serialized object's promise expiration time
    */
   public long getExpiry() {
-    return longAt(expiryPos());
+    return SerializationUtil.longAt(objectData, expiryPos());
   }
 
   /**
@@ -223,31 +325,50 @@ public final class SerializedObject implements FastSerializable, Serializable {
    * @param expiry
    */
   public void setExpiry(long expiry) {
-    setLongAt(expiryPos(), expiry);
+    SerializationUtil.setLongAt(objectData, expiryPos(), expiry);
+  }
+
+  /**
+   * Obtains an inter-store reference at the given position in the serialized
+   * data.
+   */
+  private ComparablePair<String, Long> getInterStoreRef(int refPos) {
+    int storeNameLength = SerializationUtil.unsignedShortAt(objectData, refPos);
+    int onumPos = refPos + 2 + storeNameLength;
+    DataInput in =
+        new DataInputStream(new ByteArrayInputStream(objectData, refPos,
+            onumPos));
+    try {
+      return new ComparablePair<String, Long>(in.readUTF(),
+          SerializationUtil.longAt(objectData, onumPos));
+    } catch (IOException e) {
+      throw new InternalError("Error while reading store name.", e);
+    }
   }
 
   /**
    * @return the offset in objectData representing the start of a boolean that
    *         indicates whether the label pointer is an inter-store reference.
    */
-  private final int isInterStoreLabelPos() {
-    return expiryPos() + 8;
+  private final int isInterStoreUpdateLabelPos() {
+    return UPDATE_LABEL_OFFSET;
   }
 
   /**
    * @return whether the reference to the serialized object's label is an
    *         inter-store reference.
    */
-  public boolean labelRefIsInterStore() {
-    return booleanAt(isInterStoreLabelPos());
+  public boolean updateLabelRefIsInterStore() {
+    return SerializationUtil
+        .booleanAt(objectData, isInterStoreUpdateLabelPos());
   }
 
   /**
    * @return the offset in objectData representing the start of the label
    *         reference.
    */
-  private final int labelPos() {
-    return isInterStoreLabelPos() + 1;
+  private final int updateLabelPos() {
+    return isInterStoreUpdateLabelPos() + 1;
   }
 
   /**
@@ -256,22 +377,11 @@ public final class SerializedObject implements FastSerializable, Serializable {
    *           if the serialized object has an intra-store reference to its
    *           label.
    */
-  public ComparablePair<String, Long> getInterStoreLabelRef() {
-    if (!labelRefIsInterStore())
+  public ComparablePair<String, Long> getInterStoreUpdateLabelRef() {
+    if (!updateLabelRefIsInterStore())
       throw new InternalError("Unsupported operation: Attempted to get an "
           + "inter-store reference to an intra-store label.");
-
-    int labelPos = labelPos();
-    int storeNameLength = unsignedShortAt(labelPos);
-    int onumPos = labelPos + 2 + storeNameLength;
-    DataInput in =
-        new DataInputStream(new ByteArrayInputStream(objectData, labelPos,
-            onumPos));
-    try {
-      return new ComparablePair<String, Long>(in.readUTF(), longAt(onumPos));
-    } catch (IOException e) {
-      throw new InternalError("Error while reading store name.", e);
-    }
+    return getInterStoreRef(updateLabelPos());
   }
 
   /**
@@ -280,120 +390,107 @@ public final class SerializedObject implements FastSerializable, Serializable {
    *           if the serialized object has an inter-store reference to its
    *           label.
    */
-  public long getLabelOnum() {
-    if (labelRefIsInterStore())
+  public long getUpdateLabelOnum() {
+    if (updateLabelRefIsInterStore())
       throw new InternalError("Unsupported operation: Attempted to get label "
           + "onum of an object whose inter-store references have not yet been "
-          + "swizzled." + getInterStoreLabelRef());
+          + "swizzled." + getInterStoreUpdateLabelRef());
 
-    return longAt(labelPos());
+    return SerializationUtil.longAt(objectData, updateLabelPos());
   }
 
   /**
    * @return the offset in objectData representing the start of a boolean that
-   *         indicates whether the object's class is a system class.
+   *         indicates whether the access policy pointer is an inter-store
+   *         reference.
    */
-  private final int isSystemClassPos() {
-    int labelPos = labelPos();
-    return labelPos + 8
-        + (labelRefIsInterStore() ? (unsignedShortAt(labelPos) + 2) : 0);
+  private final int isInterStoreAccessPolicyPos() {
+    return SerializationUtil.intAt(objectData, objectData.length
+        - ACCESS_POLICY_POS_OFFSET);
   }
 
   /**
-   * @return whether the class of the serialized object is a system class.
+   * @return whether the reference to the serialized object's access policy is
+   *         an inter-store reference.
    */
-  public boolean isSystemClass() {
-    return booleanAt(isSystemClassPos());
+  public boolean accessPolicyRefIsInterStore() {
+    return SerializationUtil.booleanAt(objectData,
+        isInterStoreAccessPolicyPos());
   }
 
   /**
-   * @return the offset in objectData representing the start of the object's
-   *         class's codebase reference.
+   * @return the offset in objectData representing the start of the label
+   *         reference.
    */
-  private final int codebasePos() {
-    return isSystemClassPos() + 1;
+  private final int accessPolicyPos() {
+    return isInterStoreAccessPolicyPos() + 1;
   }
 
   /**
-   * Maps class names to their deserialization constructors.
+   * @return an inter-store reference to the the serialized object's access
+   *         policy.
+   * @throws InternalError
+   *           if the serialized object has an intra-store reference to its
+   *           label.
    */
-  private static final Map<String, fabric.lang.Codebase> codebaseTable =
-      Collections.synchronizedMap(new HashMap<String, fabric.lang.Codebase>());
-
-  /**
-   * @return the codebase of the serialized object's class or null for system
-   *         classes.
-   */
-  public fabric.lang.Codebase getCodebase() {
-    if (isSystemClass()) return null;
-
-    int cbPos = codebasePos();
-    int storeNameLength = unsignedShortAt(cbPos);
-    int onumPos = cbPos + 2 + storeNameLength;
-    DataInput in =
-        new DataInputStream(
-            new ByteArrayInputStream(objectData, cbPos, onumPos));
-    try {
-      String cbStoreName = in.readUTF();
-      long cbOnum = longAt(onumPos);
-      String cbKey = "fab://" + cbStoreName + "/" + cbOnum;
-      fabric.lang.Codebase cb = codebaseTable.get(cbKey);
-
-      if (cb == null) {
-        Store cbStore = Worker.getWorker().getStore(cbStoreName);
-        cb =
-            (Codebase) fabric.lang.Object._Proxy
-                .$getProxy(new fabric.lang.Object._Proxy(cbStore, cbOnum));
-
-        codebaseTable.put(cbKey, cb);
-      }
-      return cb;
-    } catch (IOException e) {
-      throw new InternalError("Error while reading codebase oid.", e);
-    } catch (Exception e) {
-      throw new InternalError("Error while getting codebase", e);
-    }
+  public ComparablePair<String, Long> getInterStoreAccessPolicyRef() {
+    if (!accessPolicyRefIsInterStore())
+      throw new InternalError("Unsupported operation: Attempted to get an "
+          + "inter-store reference to an intra-store label.");
+    return getInterStoreRef(accessPolicyPos());
   }
 
   /**
-   * @return the offset in objectData representing the start of the class name.
+   * @return an intra-store reference to the serialized object's access policy.
+   * @throws InternalError
+   *           if the serialized object has an inter-store reference to its
+   *           label.
    */
-  private final int classNamePos() {
-    int offset = codebasePos();
-    return offset + (isSystemClass() ? 0 : (2 + unsignedShortAt(offset) + 8));
+  public long getAccessPolicyOnum() {
+    if (accessPolicyRefIsInterStore())
+      throw new InternalError(
+          "Unsupported operation: Attempted to get access "
+              + "policy onum of an object whose inter-store references have not yet "
+              + "been swizzled." + getInterStoreAccessPolicyRef());
+
+    return SerializationUtil.longAt(objectData, accessPolicyPos());
   }
 
   /**
-   * @return the serialized object's class name.
+   * @return the offset in objectData representing the start of the serialized
+   *         ClassRef for the object's class.
+   */
+  private final int classRefPos() {
+    return SerializationUtil.intAt(objectData, objectData.length
+        - CLASS_REF_POS_OFFSET);
+  }
+
+  /**
+   * @return a ClassRef for the object's class.
+   */
+  public ClassRef getClassRef() {
+    if (classRef != null) return classRef;
+    return classRef = ClassRef.deserialize(objectData, classRefPos());
+  }
+
+  /**
+   * @return the object's class's name.
    */
   public String getClassName() {
-    if (className == null) {
-      int classNamePos = classNamePos();
-      int length = unsignedShortAt(classNamePos);
-      try {
-        className = new String(objectData, classNamePos + 2, length, "UTF-8");
-      } catch (UnsupportedEncodingException e) {
-        throw new InternalError(e);
-      }
-    }
-
-    return className;
+    return ClassRef.getClassName(objectData, classRefPos());
   }
 
-  private final int classHashPos() {
-    int classNamePos = classNamePos();
-    return classNamePos + 2 + unsignedShortAt(classNamePos);
-  }
-
-  private boolean checkClassHash(byte[] hash) {
-    int classHashPos = classHashPos();
-    if (hash.length != unsignedShortAt(classHashPos)) return false;
-
-    for (int i = 0; i < hash.length; i++) {
-      if (hash[i] != objectData[classHashPos + i + 2]) return false;
+  /**
+   * Determines whether this object is a surrogate.
+   */
+  public boolean isSurrogate() {
+    if (classRef != null) {
+      return classRef.isSurrogate();
     }
 
-    return true;
+    // Class not loaded yet. Avoid loading by examining the serialized data
+    // directly.
+    return ClassRef.isSurrogate(objectData, classRefPos());
   }
 
   /**
@@ -402,8 +499,8 @@ public final class SerializedObject implements FastSerializable, Serializable {
    *         inter-store/intra-store/serialized).
    */
   private final int numRefTypesPos() {
-    int classHashPos = classHashPos();
-    return classHashPos + 2 + unsignedShortAt(classHashPos);
+    return SerializationUtil.intAt(objectData, objectData.length
+        - REF_TYPES_POS_OFFSET);
   }
 
   /**
@@ -411,49 +508,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
    *         RefTypeEnum.)
    */
   public final int getNumRefTypes() {
-    return intAt(numRefTypesPos());
-  }
-
-  /**
-   * @return the offset in objectData representing the start of an int
-   *         representing the number of intra-store references.
-   */
-  private final int numIntraStoreRefsPos() {
-    return numRefTypesPos() + 4;
-  }
-
-  /**
-   * @return the number of intra-store references in the serialized object.
-   */
-  public final int getNumIntraStoreRefs() {
-    return intAt(numIntraStoreRefsPos());
-  }
-
-  /**
-   * @return the offset in objectData representing the start of an int
-   *         representing the length of the data portion of the object.
-   */
-  private final int serializedDataLengthPos() {
-    return numIntraStoreRefsPos() + 4;
-  }
-
-  private final int serializedDataLength() {
-    return intAt(serializedDataLengthPos());
-  }
-
-  /**
-   * @return the offset in objectData representing the start of an int
-   *         representing the number of inter-store references.
-   */
-  private final int numInterStoreRefsPos() {
-    return serializedDataLengthPos() + 4;
-  }
-
-  /**
-   * @return the number of inter-store references in the serialized object.
-   */
-  public final int getNumInterStoreRefs() {
-    return intAt(numInterStoreRefsPos());
+    return SerializationUtil.intAt(objectData, numRefTypesPos());
   }
 
   /**
@@ -461,7 +516,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
    *         type (i.e., inter-store/intra-store/serialized) data.
    */
   private final int refTypesPos() {
-    return numInterStoreRefsPos() + 4;
+    return numRefTypesPos() + 4;
   }
 
   /**
@@ -472,17 +527,21 @@ public final class SerializedObject implements FastSerializable, Serializable {
     final int offset = refTypesPos();
 
     return new Iterator<RefTypeEnum>() {
-      int nextRefTypeNum = 0;
+      int cur = offset;
+      int finalOffset = offset + numRefTypes;
 
+      @Override
       public boolean hasNext() {
-        return nextRefTypeNum < numRefTypes;
+        return cur < finalOffset;
       }
 
+      @Override
       public RefTypeEnum next() {
         if (!hasNext()) throw new NoSuchElementException();
-        return refTypeEnums[objectData[offset + nextRefTypeNum++]];
+        return refTypeEnums[objectData[cur++]];
       }
 
+      @Override
       public void remove() {
         throw new UnsupportedOperationException();
       }
@@ -490,11 +549,27 @@ public final class SerializedObject implements FastSerializable, Serializable {
   }
 
   /**
+   * @return the offset in objectData representing the start of an int
+   *         representing the number of intra-store references.
+   */
+  private final int numIntraStoreRefsPos() {
+    return SerializationUtil.intAt(objectData, objectData.length
+        - INTRASTORE_REFS_POS_OFFSET);
+  }
+
+  /**
+   * @return the number of intra-store references in the serialized object.
+   */
+  public final int getNumIntraStoreRefs() {
+    return SerializationUtil.intAt(objectData, numIntraStoreRefsPos());
+  }
+
+  /**
    * @return the offset in objectData representing the start of the
    *         intra-store-reference data.
    */
   private final int intraStoreRefsPos() {
-    return refTypesPos() + getNumRefTypes();
+    return numIntraStoreRefsPos() + 4;
   }
 
   /**
@@ -505,17 +580,23 @@ public final class SerializedObject implements FastSerializable, Serializable {
     final int offset = intraStoreRefsPos();
 
     return new Iterator<Long>() {
-      int nextIntraStoreRefNum = 0;
+      int cur = offset;
+      int finalOffset = offset + 8 * numIntraStoreRefs;
 
+      @Override
       public boolean hasNext() {
-        return nextIntraStoreRefNum < numIntraStoreRefs;
+        return cur < finalOffset;
       }
 
+      @Override
       public Long next() {
         if (!hasNext()) throw new NoSuchElementException();
-        return longAt(offset + 8 * (nextIntraStoreRefNum++));
+        int pos = cur;
+        cur += 8;
+        return SerializationUtil.longAt(objectData, pos);
       }
 
+      @Override
       public void remove() {
         throw new UnsupportedOperationException();
       }
@@ -523,11 +604,24 @@ public final class SerializedObject implements FastSerializable, Serializable {
   }
 
   /**
+   * @return the offset in objectData representing the start of an int
+   *         representing the length of the data portion of the object.
+   */
+  private final int serializedDataLengthPos() {
+    return SerializationUtil.intAt(objectData, objectData.length
+        - SERIALIZED_DATA_POS_OFFSET);
+  }
+
+  private final int serializedDataLength() {
+    return SerializationUtil.intAt(objectData, serializedDataLengthPos());
+  }
+
+  /**
    * @return the offset in objectData representing the start of the serialized
    *         data.
    */
   private final int serializedDataPos() {
-    return intraStoreRefsPos() + 8 * getNumIntraStoreRefs();
+    return serializedDataLengthPos() + 4;
   }
 
   /**
@@ -535,9 +629,24 @@ public final class SerializedObject implements FastSerializable, Serializable {
    *         serialized object.
    */
   public InputStream getSerializedDataStream() {
-    int serializedDataLength = serializedDataLength();
     return new ByteArrayInputStream(objectData, serializedDataPos(),
-        serializedDataLength);
+        serializedDataLength());
+  }
+
+  /**
+   * @return the offset in objectData representing the start of an int
+   *         representing the number of inter-store references.
+   */
+  private final int numInterStoreRefsPos() {
+    return SerializationUtil.intAt(objectData, objectData.length
+        - INTERSTORE_REFS_POS_OFFSET);
+  }
+
+  /**
+   * @return the number of inter-store references in the serialized object.
+   */
+  public final int getNumInterStoreRefs() {
+    return SerializationUtil.intAt(objectData, numInterStoreRefsPos());
   }
 
   /**
@@ -545,7 +654,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
    *         reference data.
    */
   private final int interStoreRefsPos() {
-    return serializedDataPos() + serializedDataLength();
+    return numInterStoreRefsPos() + 4;
   }
 
   /**
@@ -558,12 +667,14 @@ public final class SerializedObject implements FastSerializable, Serializable {
     return new Iterator<ComparablePair<String, Long>>() {
       int nextInterStoreRefNum = 0;
       DataInput in = new DataInputStream(new ByteArrayInputStream(objectData,
-          offset, objectData.length - offset));
+          offset, objectData.length - ACCESS_POLICY_POS_OFFSET - offset));
 
+      @Override
       public boolean hasNext() {
         return nextInterStoreRefNum < numInterStoreRefs;
       }
 
+      @Override
       public ComparablePair<String, Long> next() {
         if (!hasNext()) throw new NoSuchElementException();
         nextInterStoreRefNum++;
@@ -574,6 +685,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
         }
       }
 
+      @Override
       public void remove() {
         throw new UnsupportedOperationException();
       }
@@ -593,27 +705,36 @@ public final class SerializedObject implements FastSerializable, Serializable {
       int numIntraStoreRefs = getNumIntraStoreRefs();
       Iterator<Long> intraStoreRefIt = intraStoreRefs.iterator();
 
-      // Write onum and version number.
-      out.write(objectData, 0, isInterStoreLabelPos());
+      // Write onum, version number, and promise expiry.
+      out.write(objectData, 0, isInterStoreUpdateLabelPos());
 
-      // Write the label reference.
+      // Write the update label reference.
       out.writeBoolean(false);
-      if (labelRefIsInterStore())
+      if (updateLabelRefIsInterStore())
         out.writeLong(intraStoreRefIt.next());
-      else out.writeLong(getLabelOnum());
+      else out.writeLong(getUpdateLabelOnum());
 
-      // Write the codebase information, class name and number of ref types.
-      out.write(objectData, isSystemClassPos(), numIntraStoreRefsPos()
-          - isSystemClassPos());
+      // Save the offset for the access policy reference.
+      out.flush();
+      int accessPolicyPos = baos.size();
 
-      // Write number of intra-store refs.
-      out.writeInt(getNumInterStoreRefs() + numIntraStoreRefs);
+      // Write the access policy reference.
+      out.writeBoolean(false);
+      if (accessPolicyRefIsInterStore())
+        out.writeLong(intraStoreRefIt.next());
+      else out.writeLong(getAccessPolicyOnum());
 
-      // Write length of serialized data.
-      out.write(objectData, serializedDataLengthPos(), 4);
+      // Save the offset for the access policy reference.
+      out.flush();
+      int newClassRefPos = baos.size();
 
-      // Write number of inter-store refs.
-      out.writeInt(0);
+      // Write the ClassRef and number of ref types.
+      int oldClassRefPos = classRefPos();
+      out.write(objectData, oldClassRefPos, refTypesPos() - oldClassRefPos);
+
+      // Save the offset for the ref-type data.
+      out.flush();
+      int refTypePos = baos.size() - 4;
 
       // Write ref type data.
       int numRefs = getNumRefTypes();
@@ -627,13 +748,40 @@ public final class SerializedObject implements FastSerializable, Serializable {
         offset++;
       }
 
+      // Save the offset for the intrastore-ref data.
+      out.flush();
+      int intrastoreRefPos = baos.size();
+
+      // Write number of intra-store refs.
+      out.writeInt(getNumInterStoreRefs() + numIntraStoreRefs);
+
       // Write intra-store refs.
       while (intraStoreRefIt.hasNext()) {
         out.writeLong(intraStoreRefIt.next());
       }
 
-      // Write serialized data.
-      out.write(objectData, serializedDataPos(), serializedDataLength());
+      // Save the offset for the Java-serialized data.
+      out.flush();
+      int serializedDataPos = baos.size();
+
+      // Write length of serialized data, and serialized data.
+      out.write(objectData, serializedDataLengthPos(),
+          serializedDataLength() + 4);
+
+      // Save the offset for the interstore-ref data.
+      out.flush();
+      int interstoreRefPos = baos.size();
+
+      // Write number of inter-store refs.
+      out.writeInt(0);
+
+      // Write the offsets we've saved.
+      out.writeInt(accessPolicyPos);
+      out.writeInt(newClassRefPos);
+      out.writeInt(refTypePos);
+      out.writeInt(intrastoreRefPos);
+      out.writeInt(serializedDataPos);
+      out.writeInt(interstoreRefPos);
 
       out.flush();
       baos.flush();
@@ -649,6 +797,113 @@ public final class SerializedObject implements FastSerializable, Serializable {
   }
 
   /**
+   * Wraps a DataOutput and counts the number of bytes written.
+   */
+  private static class CountingDataOutput implements DataOutput {
+    private final DataOutput out;
+    private int bytes;
+
+    private CountingDataOutput(DataOutput out) {
+      this.out = out;
+      this.bytes = 0;
+    }
+
+    public int getBytes() {
+      return bytes;
+    }
+
+    @Override
+    public void write(int b) throws IOException {
+      out.write(b);
+      bytes++;
+    }
+
+    @Override
+    public void write(byte[] b) throws IOException {
+      out.write(b);
+      bytes += b.length;
+    }
+
+    @Override
+    public void write(byte[] b, int off, int len) throws IOException {
+      out.write(b, off, len);
+      bytes += len;
+    }
+
+    @Override
+    public void writeBoolean(boolean v) throws IOException {
+      out.writeBoolean(v);
+      bytes++;
+    }
+
+    @Override
+    public void writeByte(int v) throws IOException {
+      out.writeByte(v);
+      bytes++;
+    }
+
+    @Override
+    public void writeShort(int v) throws IOException {
+      out.writeShort(v);
+      bytes += 2;
+    }
+
+    @Override
+    public void writeChar(int v) throws IOException {
+      out.writeChar(v);
+      bytes += 2;
+    }
+
+    @Override
+    public void writeInt(int v) throws IOException {
+      out.writeInt(v);
+      bytes += 4;
+    }
+
+    @Override
+    public void writeLong(long v) throws IOException {
+      out.writeLong(v);
+      bytes += 8;
+    }
+
+    @Override
+    public void writeFloat(float v) throws IOException {
+      out.writeFloat(v);
+      bytes += 4;
+    }
+
+    @Override
+    public void writeDouble(double v) throws IOException {
+      out.writeDouble(v);
+      bytes += 8;
+    }
+
+    @Override
+    public void writeBytes(String s) throws IOException {
+      out.writeBytes(s);
+      bytes += s.length();
+    }
+
+    @Override
+    public void writeChars(String s) throws IOException {
+      out.writeChars(s);
+      bytes += 2 * s.length();
+    }
+
+    @Override
+    public void writeUTF(String s) throws IOException {
+      ByteArrayOutputStream baos =
+          new ByteArrayOutputStream(2 + 3 * s.length());
+      DataOutput out = new DataOutputStream(baos);
+      out.writeUTF(s);
+
+      byte[] data = baos.toByteArray();
+      this.out.write(data);
+      bytes += data.length;
+    }
+  }
+
+  /**
    * Writes the given _Impl out to the given output stream. The behaviour of
    * this method should mirror write(DataOutput).
    * 
@@ -657,53 +912,90 @@ public final class SerializedObject implements FastSerializable, Serializable {
    * @see #SerializedObject(DataInput)
    */
   public static void write(_Impl impl, DataOutput out) throws IOException {
-    Label label = impl.get$label();
-    Store labelStore = label.$getStore();
-    long labelOnum = label.$getOnum();
-    boolean interStoreLabel =
-        !ONumConstants.isGlobalConstant(labelOnum)
-            && !impl.$getStore().equals(labelStore);
+    CountingDataOutput cdo = new CountingDataOutput(out);
+    out = cdo;
+
+    Label updateLabel = impl.get$$updateLabel();
+    Store updateLabelStore = updateLabel.$getStore();
+    long updateLabelOnum = updateLabel.$getOnum();
+    boolean interStoreUpdateLabel =
+        !ONumConstants.isGlobalConstant(updateLabelOnum)
+            && !impl.$getStore().equals(updateLabelStore);
 
     // Write out the object header.
     out.writeLong(impl.$getOnum());
     out.writeInt(impl.$version);
     out.writeLong(0);
-    out.writeBoolean(interStoreLabel);
-    if (interStoreLabel) {
-      if (labelStore instanceof LocalStore) {
+
+    // Write the update label
+    out.writeBoolean(interStoreUpdateLabel);
+    if (interStoreUpdateLabel) {
+      if (updateLabelStore instanceof LocalStore) {
         Class<?> objClass = impl.getClass();
-        String objStr = impl.toString();
-        throw new InternalError("Creating remote ref to local store.  Remote "
-            + "object has class " + objClass + ".  Its string representation "
-            + "is \"" + objStr + "\", and its label is local.");
+        String message =
+            "Creating remote ref to local store.  Remote object has class "
+                + objClass + " and its update label is local with onum "
+                + updateLabelOnum + ".";
+        if (impl.$stackTrace != null) {
+          message +=
+              "  A stack trace for the creation of the remote object follows.";
+          for (StackTraceElement e : impl.$stackTrace)
+            message += System.getProperty("line.separator") + "  " + e;
+
+          message +=
+              System.getProperty("line.separator")
+                  + "A stack trace for the creation of the local object follows.";
+          for (StackTraceElement e : ((_Impl) updateLabel.fetch()).$stackTrace)
+            message += System.getProperty("line.separator") + "  " + e;
+        }
+        throw new InternalError(message);
       }
-      out.writeUTF(labelStore.name());
+      out.writeUTF(updateLabelStore.name());
     }
-    out.writeLong(labelOnum);
+    out.writeLong(updateLabelOnum);
+
+    int accessPolicyPos = cdo.getBytes();
+
+    // Write the access policy
+    ConfPolicy accessPolicy = impl.get$$accessPolicy();
+    Store accessPolicyStore = accessPolicy.$getStore();
+    long accessPolicyOnum = accessPolicy.$getOnum();
+    boolean interStoreAccessLabel =
+        !ONumConstants.isGlobalConstant(accessPolicyOnum)
+            && !impl.$getStore().equals(accessPolicyStore);
+
+    out.writeBoolean(interStoreAccessLabel);
+    if (interStoreAccessLabel) {
+      if (accessPolicyStore instanceof LocalStore) {
+        Class<?> objClass = impl.getClass();
+        String message =
+            "Creating remote ref to local store.  Remote object has class "
+                + objClass + " and its access policy is local with onum "
+                + accessPolicyOnum + ".";
+        if (impl.$stackTrace != null) {
+          message +=
+              "  A stack trace for the creation of the remote object follows.";
+          for (StackTraceElement e : impl.$stackTrace)
+            message += System.getProperty("line.separator") + "  " + e;
+
+          message +=
+              System.getProperty("line.separator")
+                  + "A stack trace for the creation of the local object follows.";
+          for (StackTraceElement e : ((_Impl) updateLabel.fetch()).$stackTrace)
+            message += System.getProperty("line.separator") + "  " + e;
+        }
+        throw new InternalError(message);
+      }
+      out.writeUTF(accessPolicyStore.name());
+    }
+    out.writeLong(accessPolicyOnum);
+
+    int classRefPos = cdo.getBytes();
 
     // Write the object's type information
     Class<?> implClass = impl.getClass();
-    boolean isSystemClass =
-        !(implClass.getClassLoader() instanceof FabricClassLoader);
-    out.writeBoolean(isSystemClass);
-
-    // Write the codebase pointer.
-    if (!isSystemClass) {
-      FabricClassLoader cl = (FabricClassLoader) implClass.getClassLoader();
-      Codebase cb = cl.getCodebase();
-      byte[] storeName = cb.$getStore().name().getBytes("UTF-8");
-      out.writeShort(storeName.length);
-      out.write(storeName);
-      out.writeLong(cb.$getOnum());
-    }
-
-    // Write the classname.
-    byte[] className = implClass.getName().getBytes("UTF-8");
-    out.writeShort(className.length);
-    out.write(className);
-    byte[] hash = Util.hash(implClass);
-    out.writeShort(hash.length);
-    out.write(hash);
+    ClassRef classRef = ClassRef.makeRef(implClass.getEnclosingClass());
+    classRef.write(out);
 
     // Get the object to serialize itself into a bunch of buffers.
     ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -715,25 +1007,36 @@ public final class SerializedObject implements FastSerializable, Serializable {
     impl.$serialize(oos, refTypes, intraStoreRefs, interStoreRefs);
     oos.flush();
 
-    // Write the object's contents.
     byte[] serializedData = bos.toByteArray();
-    out.writeInt(refTypes.size());
-    out.writeInt(intraStoreRefs.size());
-    out.writeInt(serializedData.length);
-    out.writeInt(interStoreRefs.size());
 
+    // Write the object's contents.
+    int refTypePos = cdo.getBytes();
+    out.writeInt(refTypes.size());
     for (RefTypeEnum refType : refTypes)
       out.writeByte(refType.ordinal());
 
+    int intrastoreRefPos = cdo.getBytes();
+    out.writeInt(intraStoreRefs.size());
     for (Long onum : intraStoreRefs)
       out.writeLong(onum);
 
+    int serializedDataPos = cdo.getBytes();
+    out.writeInt(serializedData.length);
     out.write(serializedData);
 
+    int interstoreRefPos = cdo.getBytes();
+    out.writeInt(interStoreRefs.size());
     for (Pair<String, Long> oid : interStoreRefs) {
       out.writeUTF(oid.first);
       out.writeLong(oid.second);
     }
+
+    out.writeInt(accessPolicyPos);
+    out.writeInt(classRefPos);
+    out.writeInt(refTypePos);
+    out.writeInt(intrastoreRefPos);
+    out.writeInt(serializedDataPos);
+    out.writeInt(interstoreRefPos);
   }
 
   /**
@@ -744,6 +1047,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
    * @see SerializedObject#readImpl(Store, DataInput)
    * @see SerializedObject#SerializedObject(DataInput)
    */
+  @Override
   public void write(DataOutput out) throws IOException {
     out.write(objectData);
   }
@@ -762,111 +1066,76 @@ public final class SerializedObject implements FastSerializable, Serializable {
     DataOutputStream out = new DataOutputStream(bos);
 
     // The buffer for copying stuff.
-    byte[] buf = new byte[BUF_LEN];
+    byte[] buf = new byte[SerializationUtil.BUF_LEN];
 
     // Copy the onum, version number, and promise expiry.
-    in.readFully(buf, 0, 20);
-    out.write(buf, 0, 20);
+    in.readFully(buf, 0, UPDATE_LABEL_OFFSET);
+    out.write(buf, 0, UPDATE_LABEL_OFFSET);
 
-    // Copy the label pointer.
-    boolean isInterStoreLabel = in.readBoolean();
-    out.writeBoolean(isInterStoreLabel);
+    // Copy the update label pointer.
+    boolean isInterStoreUpdateLabel = in.readBoolean();
+    out.writeBoolean(isInterStoreUpdateLabel);
     int bytesToCopy = 8;
-    if (isInterStoreLabel) {
+    if (isInterStoreUpdateLabel) {
       int storeNameLength = in.readUnsignedShort();
       out.writeShort(storeNameLength);
       bytesToCopy += storeNameLength;
     }
-    copyBytes(in, out, bytesToCopy, buf);
+    SerializationUtil.copyBytes(in, out, bytesToCopy, buf);
 
-    // Copy codebase information.
-    boolean isSystemClass = in.readBoolean();
-    out.writeBoolean(isSystemClass);
-    
-    // Copy codebase pointer for non-system class
-    if (!isSystemClass) {
+    // Copy the access label pointer.
+    boolean isInterStoreAccessLabel = in.readBoolean();
+    out.writeBoolean(isInterStoreAccessLabel);
+    bytesToCopy = 8;
+    if (isInterStoreAccessLabel) {
       int storeNameLength = in.readUnsignedShort();
       out.writeShort(storeNameLength);
-      copyBytes(in, out, storeNameLength, buf);
-      
-      long cbOnum = in.readLong();
-      out.writeLong(cbOnum);
+      bytesToCopy += storeNameLength;
     }
+    SerializationUtil.copyBytes(in, out, bytesToCopy, buf);
 
-    // Copy the class name.
-    int classNameLength = in.readUnsignedShort();
-    out.writeShort(classNameLength);
-    copyBytes(in, out, classNameLength, buf);
-
-    // Copy the class hash.
-    int classHashLength = in.readUnsignedShort();
-    out.writeShort(classHashLength);
-    copyBytes(in, out, classHashLength, buf);
+    // Copy class information.
+    ClassRef.copySerialization(in, out, buf);
 
     // Copy the body.
     int numRefTypes = in.readInt();
     out.writeInt(numRefTypes);
+    SerializationUtil.copyBytes(in, out, numRefTypes, buf);
 
     int numIntraStoreRefs = in.readInt();
     out.writeInt(numIntraStoreRefs);
+    SerializationUtil.copyBytes(in, out, 8 * numIntraStoreRefs, buf);
 
     int serializedDataLength = in.readInt();
     out.writeInt(serializedDataLength);
+    SerializationUtil.copyBytes(in, out, serializedDataLength, buf);
 
     int numInterStoreRefs = in.readInt();
     out.writeInt(numInterStoreRefs);
-
-    copyBytes(in, out, numRefTypes + 8 * numIntraStoreRefs
-        + serializedDataLength, buf);
-
     for (int i = 0; i < numInterStoreRefs; i++) {
       // Copy an inter-store ref.
       int len = in.readUnsignedShort();
       out.writeShort(len);
-      copyBytes(in, out, len + 8, buf);
+      SerializationUtil.copyBytes(in, out, len + 8, buf);
     }
+
+    // Copy the offset data.
+    SerializationUtil.copyBytes(in, out, 4 * 6, buf);
 
     out.flush();
     bos.flush();
     this.objectData = bos.toByteArray();
   }
 
-  private static final int BUF_LEN = 128;
-  private static final byte BUF_LEN_LOG_2 = 7;
-  private static final byte BUF_LEN_MASK = 0x7f;
-
-  /**
-   * Copies the specified number of bytes from the given DataInput to the given
-   * DataOutput.
-   * 
-   * @param in
-   *          the DataInput to read from.
-   * @param out
-   *          the DataOutput to write to.
-   * @param length
-   *          the number of bytes to copy.
-   * @param buf
-   *          the buffer to use. Must be of length BUF_LEN.
-   */
-  private static final void copyBytes(DataInput in, DataOutput out, int length,
-      byte[] buf) throws IOException {
-    int numLoops = length >> BUF_LEN_LOG_2;
-    for (int count = 0; count < numLoops; count++) {
-      in.readFully(buf);
-      out.write(buf);
-    }
-    in.readFully(buf, 0, length & BUF_LEN_MASK);
-    out.write(buf, 0, length & BUF_LEN_MASK);
-  }
-
   /**
    * Maps class names to their deserialization constructors.
    */
-  private static final Map<String, Constructor<?>> constructorTable =
-      Collections.synchronizedMap(new HashMap<String, Constructor<?>>());
+  private static final Map<Class<? extends _Impl>, Constructor<?>> constructorTable =
+      Collections
+          .synchronizedMap(new HashMap<Class<? extends _Impl>, Constructor<?>>());
 
   /**
-   * Used by the worker to deserialize this object.
+   * Deserializes this object, traversing surrogates as necessary.
    * 
    * @param store
    *          The store on which this object lives.
@@ -875,113 +1144,56 @@ public final class SerializedObject implements FastSerializable, Serializable {
    *           Thrown when the class for this object is unavailable.
    */
   public _Impl deserialize(Store store) {
+    return deserialize(store, true);
+  }
+
+  /**
+   * Deserializes this object.
+   * 
+   * @param store
+   *          The store on which this object lives.
+   * @param chaseSurrogates
+   *          whether surrogates should be traversed.
+   * @return The deserialized object.
+   * @throws ClassNotFoundException
+   *           Thrown when the class for this object is unavailable.
+   */
+  public _Impl deserialize(Store store, boolean chaseSurrogates) {
     try {
-      String className = getClassName();
-      Codebase cb = getCodebase();
+      Class<? extends _Impl> implClass = getClassRef().toImplClass();
 
-      // Check the class hash before deserializing.
-      if (!checkClassHash(Util.hashClass(cb, className))) {
-        URL path = Util.locateClass(cb, className);
-        throw new InvalidClassException(className,
-            "A class of the same name was found, but its hash did not match "
-                + "the hash in the object fab://" + store.name() + "/"
-                + getOnum() + "\n" + "hash from: " + path);
-      }
-
-      // store system classes by name, fabric classes with codebase oid
-      String ctorkey;
-      if (cb == null)
-        ctorkey = className;
-      else
-      // qualify classname by codebase
-      ctorkey =
-          "fab://" + cb.$getStore().name() + "/" + cb.$getOnum() + "/"
-              + className;
-
-      Constructor<?> constructor = constructorTable.get(ctorkey);
+      Constructor<?> constructor = constructorTable.get(implClass);
 
       if (constructor == null) {
-        Class<?> c;
-        if (cb == null)
-          c = Class.forName(getClassName());
-        else c = FabricClassLoader.getClassLoader(cb).findClass(getClassName());
-
         constructor =
-            c.getConstructor(Store.class, long.class, int.class, long.class,
-                long.class, ObjectInput.class, Iterator.class, Iterator.class);
-        constructorTable.put(className, constructor);
+            implClass.getConstructor(Store.class, long.class, int.class,
+                long.class, long.class, long.class, ObjectInput.class,
+                Iterator.class, Iterator.class);
+        constructorTable.put(implClass, constructor);
       }
 
-      return (_Impl) constructor.newInstance(store, getOnum(), getVersion(),
-          getExpiry(), getLabelOnum(), new ObjectInputStream(
-              getSerializedDataStream()), getRefTypeIterator(),
-          getIntraStoreRefIterator());
+      _Impl result =
+          (_Impl) constructor.newInstance(store, getOnum(), getVersion(),
+              getExpiry(), getUpdateLabelOnum(), getAccessPolicyOnum(),
+              new ObjectInputStream(getSerializedDataStream()),
+              getRefTypeIterator(), getIntraStoreRefIterator());
+
+      if (chaseSurrogates && (result instanceof Surrogate)) {
+        // Chase the surrogate pointer.
+        Surrogate surrogate = (Surrogate) result;
+        return new _Proxy(surrogate.store, surrogate.onum).fetch();
+      }
+
+      return result;
     } catch (Exception e) {
       throw new InternalError(e);
     }
   }
 
   /**
-   * Returns the boolean at the given position in objectData.
+   * @return the size of this serialized object, in bytes.
    */
-  private final boolean booleanAt(int pos) {
-    return objectData[pos] == 1;
+  public int size() {
+    return objectData.length;
   }
-
-  /**
-   * Returns the unsigned short that starts at the given position in objectData.
-   */
-  private final int unsignedShortAt(int pos) {
-    return ((objectData[pos + 0] & 0xff) << 8)
-        | ((objectData[pos + 1] & 0xff) << 0);
-  }
-
-  /**
-   * Returns the int that starts at the given position in objectData.
-   */
-  private final int intAt(int pos) {
-    return ((objectData[pos + 0] & 0xff) << 24)
-        | ((objectData[pos + 1] & 0xff) << 16)
-        | ((objectData[pos + 2] & 0xff) << 8)
-        | ((objectData[pos + 3] & 0xff) << 0);
-  }
-
-  /**
-   * Sets the int that starts at the given position in objectData.
-   */
-  private final void setIntAt(int pos, int value) {
-    objectData[pos + 0] = (byte) (0xff & (value >> 24));
-    objectData[pos + 1] = (byte) (0xff & (value >> 16));
-    objectData[pos + 2] = (byte) (0xff & (value >> 8));
-    objectData[pos + 3] = (byte) (0xff & (value >> 0));
-  }
-
-  /**
-   * Returns the long that starts at the given position in objectData.
-   */
-  private final long longAt(int pos) {
-    return ((long) (objectData[pos + 0] & 0xff) << 56)
-        | ((long) (objectData[pos + 1] & 0xff) << 48)
-        | ((long) (objectData[pos + 2] & 0xff) << 40)
-        | ((long) (objectData[pos + 3] & 0xff) << 32)
-        | ((long) (objectData[pos + 4] & 0xff) << 24)
-        | ((long) (objectData[pos + 5] & 0xff) << 16)
-        | ((long) (objectData[pos + 6] & 0xff) << 8)
-        | ((long) (objectData[pos + 7] & 0xff) << 0);
-  }
-
-  /**
-   * Sets the long that starts at the given position in objectData.
-   */
-  private final void setLongAt(int pos, long value) {
-    objectData[pos + 0] = (byte) (0xff & (value >> 56));
-    objectData[pos + 1] = (byte) (0xff & (value >> 48));
-    objectData[pos + 2] = (byte) (0xff & (value >> 40));
-    objectData[pos + 3] = (byte) (0xff & (value >> 32));
-    objectData[pos + 4] = (byte) (0xff & (value >> 24));
-    objectData[pos + 5] = (byte) (0xff & (value >> 16));
-    objectData[pos + 6] = (byte) (0xff & (value >> 8));
-    objectData[pos + 7] = (byte) (0xff & (value >> 0));
-  }
-
 }

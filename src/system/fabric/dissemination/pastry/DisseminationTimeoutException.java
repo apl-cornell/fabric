@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -15,10 +15,10 @@
  */
 package fabric.dissemination.pastry;
 
-import fabric.common.exceptions.FetchException;
+import fabric.common.exceptions.FabricException;
 
 /**
  * Indicates that a fetch from the dissemination network took too long.
  */
-public class DisseminationTimeoutException extends FetchException {
+public class DisseminationTimeoutException extends FabricException {
 }

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -17,7 +17,7 @@ package sif.servlet;
 
 import java.io.*;
 import java.util.*;
-import fabric.util.Collections;
+//import fabricated.util.Collections;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -34,8 +34,6 @@ import fabric.lang.security.Principal;
 import fabric.lang.security.Label;
 import fabric.lang.security.PrincipalUtil;
 import fabric.lang.security.LabelUtil;
-import jif.lang.JifObject;
-import jif.lang.JifString;
 
 /** A servlet contains the information that is shared across users and sessions.
  * It converts between the Java HttpServlet request processing style and this one. */
@@ -92,7 +90,7 @@ abstract public class Servlet extends HttpServlet {
         
         String colorCoding = getInitParameter("color_coding");
         String colorCodingFile;
-        if(colorCoding!=null && colorCoding.equals("true")) {
+        if (colorCoding!=null && colorCoding.equals("true")) {
         	colorCodingFile = relURLToAbsURL("../preamble.js", req);
         } else {
         	colorCodingFile = null;
@@ -113,7 +111,7 @@ abstract public class Servlet extends HttpServlet {
         scriptFile = relURLToAbsURL(scriptFile, req);
         String colorCoding = getInitParameter("color_coding");
         String colorCodingFile;
-        if(colorCoding!=null && colorCoding.equals("true")) {
+        if (colorCoding!=null && colorCoding.equals("true")) {
         	colorCodingFile = relURLToAbsURL("../preamble.js", req);
         } else {
         	colorCodingFile = null;
@@ -157,7 +155,7 @@ abstract public class Servlet extends HttpServlet {
 //        long label_time = LabelUtil.singleton().getAndClearTime();
 //        int count = LabelUtil.singleton().getAndClearCount(), topCount = LabelUtil.singleton().getAndClearTopCount();
 
-//        if(label_time != 0 || count != 0 || topCount != 0) {
+//        if (label_time != 0 || count != 0 || topCount != 0) {
 //            System.err.println("SIF: Something is seriously wrong");
 //        }
 
@@ -211,7 +209,7 @@ abstract public class Servlet extends HttpServlet {
         }
     }
 
-    private final void producePage(Request req) throws IOException, ServletException {        
+    private final void producePage(final Request req) throws IOException, ServletException {        
         LabeledAction laction = null;
         //            if (false) { // debugging: dump parameter names
         //                String params = "";
@@ -246,7 +244,7 @@ abstract public class Servlet extends HttpServlet {
         else {
             Action a = this.findDefaultAction(req);
             if (a != null) {
-                if(req.isParamEmpty()) {
+                if (req.isParamEmpty()) {
                     // assuming that this is the first of a series of requests from the user, so there is no history
                     // and is trusted to have been sent by the session principal and not modified by anyone else
                     // ideally this might have to be 'met' with {servP!:} to ensure that servP believes so
@@ -281,7 +279,13 @@ abstract public class Servlet extends HttpServlet {
 //                DEBUG.print("Action " + (time_end - time_start) + " Dynamic_Security " + clear + " ");
             }
             else {
-                laction.a.invoke(laction.L, req);
+		final LabeledAction laction_ = laction;
+		Worker.runInSubTransaction(new Worker.Code<Void>() {
+		  public Void run() throws ServletException {
+		    laction_.a.invoke(laction_.L, req);
+		    return null;
+		  }
+		});
             }
 
         } 
@@ -484,33 +488,34 @@ abstract public class Servlet extends HttpServlet {
 
     /** Construct a node that contains an invocation of this servlet with the
      * named request and the inputs provided.
-     * @param inputs : (Input or JifString of Input name)-> String
+     * @param inputs : (Input or string of Input name)-> String
      * @param req : the request that initiated this
      * @return a new node.
      */
-    public final Node createRequest(Label L, Label E, Action a, jif.util.Map inputs, Label cL, Label cE, Node body) {        
+    public final Node createRequest(Label L, Label E, Action a, fabricated.util.Map inputs, Label cL, Label cE, Node body) {        
         return new HyperlinkRequest(servletP, L, E, a, inputs, cL, cE, body);
     }
 
-    public String createRequestURL(String actionName, jif.util.Map inputs, Request req) {
+    public String createRequestURL(String actionName, fabricated.util.Map inputs, Request req) {
         StringWriter w = new StringWriter();
         w.write(req.servletURL());
         w.write("?action=");
         w.write(HTMLWriter.escape_URI(actionName));
 
         if (inputs != null)
-            for (jif.util.Iterator i = inputs.keySet().iterator(); i.hasNext();) {
-                JifObject key = i.next();
-                if (key instanceof JifString) {
-                    JifString jkey = (JifString)key;
-                    String inputName = jkey.toString();
-                    JifString jval = (JifString)inputs.get(jkey);
-                    String val = jval.toString();
+            for (fabricated.util.Iterator i = inputs.entrySet().iterator(); i.hasNext();) {
+                fabricated.util.MapEntry entry= (fabricated.util.MapEntry) i.next();
+                if (entry.getKey().$unwrap() instanceof String
+                    && entry.getValue().$unwrap() instanceof String) {
+                	String inputName = (String) entry.getKey().$unwrap();
+                	String val = (String) entry.getValue().$unwrap();
                     w.write("&");
                     w.write(inputName);
                     w.write("=");
                     w.write(HTMLWriter.escape_URI(val));
                 }
+                else 
+                    throw new Error("Expected String but got " + entry.getKey().getClass()+ "," + entry.getValue().getClass());
             }
         return w.toString();
     }

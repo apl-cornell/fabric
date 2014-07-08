@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -18,7 +18,12 @@ package fabil.extension;
 import java.util.ArrayList;
 import java.util.List;
 
-import polyglot.ast.*;
+import polyglot.ast.Expr;
+import polyglot.ast.Field;
+import polyglot.ast.FieldAssign;
+import polyglot.ast.Id;
+import polyglot.ast.Receiver;
+import polyglot.ast.Special;
 import polyglot.types.Flags;
 import fabil.visit.ProxyRewriter;
 import fabil.visit.ReadWriteChecker.State;
@@ -31,11 +36,6 @@ public class FieldAssignExt_c extends ExprExt_c {
    */
   private State accessState;
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see fabil.extension.ExprExt_c#rewriteProxiesOverrideImpl(fabil.visit.ProxyRewriter)
-   */
   @Override
   public Expr rewriteProxiesOverrideImpl(ProxyRewriter pr) {
     FieldAssign assign = node();
@@ -62,7 +62,7 @@ public class FieldAssignExt_c extends ExprExt_c {
     if (flags.isFinal()) {
       // We need to rewrite the left-hand side if translating a static field.
       if (!flags.isStatic()) return assign.right(rhs);
-      
+
       Expr lhs = pr.qq().parseExpr("this." + name);
       return assign.left(lhs).right(rhs);
     }
@@ -86,21 +86,16 @@ public class FieldAssignExt_c extends ExprExt_c {
       subs.add(target);
     }
     subs.add(rhs);
-    
+
     String setterName = "set$" + name;
     if (target.type().isArray() && name.equals("length")) {
-      // Changing the length of an array.  The setter here is different.
+      // Changing the length of an array. The setter here is different.
       setterName = "setLength";
     }
 
     return pr.qq().parseExpr(quote + "." + setterName + "(%E)", subs);
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see polyglot.ast.Ext_c#node()
-   */
   @Override
   public FieldAssign node() {
     return (FieldAssign) super.node();

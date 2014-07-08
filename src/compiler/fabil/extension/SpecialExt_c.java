@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -23,18 +23,12 @@ import fabil.visit.ProxyRewriter;
 
 public class SpecialExt_c extends ExprExt_c {
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see fabil.extension.ExprExt_c#rewriteProxiesImpl(fabil.visit.ProxyRewriter)
-   */
   @Override
   protected Expr rewriteProxiesImpl(ProxyRewriter pr) {
     Special special = node();
-    
-    if (!pr.typeSystem().isFabricClass(special.type()))
-      return special;
-    
+
+    if (!pr.typeSystem().isFabricClass(special.type())) return special;
+
     TypeNode qualifier = special.qualifier();
     QQ qq = pr.qq();
     if (qualifier != null) {
@@ -48,11 +42,6 @@ public class SpecialExt_c extends ExprExt_c {
     return qq.parseExpr("(%T) %E.$getProxy()", special.type(), special);
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see fabil.extension.ExprExt_c#node()
-   */
   @Override
   public Special node() {
     return (Special) super.node();

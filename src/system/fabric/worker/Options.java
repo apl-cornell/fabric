@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -16,25 +16,35 @@
 package fabric.worker;
 
 import java.io.PrintStream;
+import java.util.Set;
 
-import fabric.common.exceptions.TerminationException;
+import fabric.common.Options.Flag.Kind;
+import fabric.common.Resources;
+import fabric.common.Timing;
 import fabric.common.exceptions.UsageError;
 
-import fabric.worker.debug.Timing;
-
 public class Options extends fabric.common.Options {
-  // The application to run and its parameters.
-  public String[] app;
+  /**
+   * The worker shell command to run.
+   */
+  public String[] cmd;
 
-  // This worker's name.
+  /**
+   * This worker's name.
+   */
   public String name;
 
-  // If creating a new principal, this is the store on which the principal will
-  // be created; otherwise, this is null.
-  public String store;
+  /**
+   * Whether the worker should stay running after executing the commands
+   * specified on the command line.
+   */
+  protected boolean keepOpen;
 
-  public int threadPool;
-  public int maxConnect;
+  /**
+   * Whether to have an interactive shell. A non-interactive shell this is
+   * useful when the worker is started with a disconnected stdin.
+   */
+  protected boolean interactiveShell;
 
   private Options() {
   }
@@ -43,43 +53,95 @@ public class Options extends fabric.common.Options {
     super(args);
   }
 
+  static void printUsage(PrintStream out, boolean showSecretMenu) {
+    new Options().usage(out, showSecretMenu);
+  }
+
+  @Override
+  protected void populateFlags(Set<Flag> flags) {
+    flags.add(new Flag("--name", null, "this worker's name", "$HOSTNAME") {
+      @Override
+      public int handle(String[] args, int index) {
+        Options.this.name = args[index];
+        return index + 1;
+      }
+    });
+
+    flags.add(new Flag("--keep-open", null,
+        "keep the worker running after executing CMD") {
+      @Override
+      public int handle(String[] args, int index) {
+        Options.this.keepOpen = true;
+        return index;
+      }
+    });
+
+    flags.add(new Flag("--no-shell", null, "disable the worker shell. This is "
+        + "useful when the worker is started with a disconnected stdin.") {
+      @Override
+      public int handle(String[] args, int index) {
+        Options.this.interactiveShell = false;
+        return index;
+      }
+    });
+
+    flags.add(new Flag(Kind.DEBUG, "--time", "<category>",
+        "enable timing of category") {
+      @Override
+      public int handle(String[] args, int index) throws UsageError {
+        if (index >= args.length) {
+          System.err.println(timeUsage());
+          throw new UsageError("Invalid timing category");
+        }
+
+        for (Timing t : Timing.values()) {
+          if (t.name().equalsIgnoreCase(args[index])) {
+            t.enabled = true;
+            return index + 1;
+          }
+        }
+        if (args[index].equalsIgnoreCase("all")) {
+          for (Timing t : Timing.values())
+            t.enabled = true;
+          return index + 1;
+        }
+
+        System.err.println(timeUsage());
+        throw new UsageError("Invalid timing category");
+      }
+    });
+  }
+
   @Override
   public void setDefaultValues() {
     this.name = System.getenv("HOSTNAME");
-    this.app = null;
-    this.store = null;
-    this.threadPool = 10;
-    this.maxConnect = 25;
+    this.cmd = null;
+    this.keepOpen = false;
+    this.interactiveShell = true;
+    // Default codeCache is set in validateOptions because it depends on name.
   }
 
   @Override
   public void validateOptions() throws UsageError {
-    if (null == this.name)
-      throw new UsageError("No worker name specified");
-  }
-  
-  public static void usage(PrintStream out) {
-    Options defaults = new Options();
+    if (null == this.name) throw new UsageError("No worker name specified");
 
-    out.println("Usage: fab [options] [app] [param...]");
-    out.println("where");
-    out.println("  [app] is the name of Fabric application's main class");
-    out.println("  [param...] are the parameters to the Fabric application");
-    out.println("and [options] includes:");
-    usageForFlag(out, "--name <name>", "this worker's name", "$HOSTNAME");
-    usageForFlag(out, "--pool <number>", "size of pool of threads for "
-        + "serving remote requests", defaults.threadPool);
-    usageForFlag(out, "--time <category>", "enable timing of category");
-    usageForFlag(out, "--conn <number>", "maximum number of simultaneous "
-        + "connections to support", defaults.maxConnect);
-    usageForFlag(out, "--make-principal <store>",
-        "create a new principal for this worker on the given store and exit");
-    usageForFlag(out, "--version", "print version info and exit");
-    usageForFlag(out, "--help", "print this message");
+    // Default codeCache is set here because it depends on name.
+    if (null == this.codeCache) {
+      this.codeCache = Resources.relpathRewrite("var", "cache", name);
+    }
   }
-  
+
+  @Override
+  public void usageHeader(PrintStream out) {
+    out.println("Usage: fab [options] [cmd...]");
+    out.println("where");
+    out.println("  [cmd...] is a command for the worker shell to execute");
+    out.println("and [options] includes:");
+  }
+
   private String timeUsage() {
-    StringBuffer message = new StringBuffer("possible categories for --time:\n");
+    StringBuffer message =
+        new StringBuffer("possible categories for --time:\n");
     message.append("all");
     for (Timing t : Timing.values()) {
       message.append(", ");
@@ -89,72 +151,10 @@ public class Options extends fabric.common.Options {
   }
 
   @Override
-  protected int parseCommand(String[] args, int index) throws UsageError {
-    int i = index;
-    if (args[i].equals("-h") || args[i].equals("-help")
-        || args[i].equals("--help")) {
-      throw new UsageError("", 0);
-    }
-
-    if (args[i].equals("--version")) {
-      throw new TerminationException(0);
-    }
-
-    if (args[i].equals("--name")) {
-      this.name = args[i + 1];
-      return i + 2;
-    }
-
-    if (args[i].equals("--pool")) {
-      i++;
-      try {
-        this.threadPool = new Integer(args[i]).intValue();
-      } catch (NumberFormatException e) {
-        throw new UsageError("Invalid argument: " + args[i]);
-      }
-      return i + 1;
-    }
-
-    if (args[i].equals("--conn")) {
-      i++;
-      try {
-        this.maxConnect = new Integer(args[i]).intValue();
-      } catch (NumberFormatException e) {
-        throw new UsageError("Invalid argument: " + args[i]);
-      }
-      return i + 1;
-    }
-
-    if (args[i].equals("--make-principal")) {
-      this.store = args[i + 1];
-      return i + 2;
-    }
-    
-    if (args[i].equals("--time")) {
-      if (i + 1 >= args.length) {
-        System.out.println(timeUsage());
-        throw new UsageError("Invalid timing category");
-      }
-      
-      for (Timing t : Timing.values()) {
-        if (t.name().equalsIgnoreCase(args[i + 1])) {
-          t.enabled = true;
-          return i + 2;
-        }
-      }
-      if (args[i + 1].equalsIgnoreCase("all")) {
-        for (Timing t : Timing.values())
-          t.enabled = true;
-        return i + 2;
-      }
-      
-      System.out.println(timeUsage());
-      throw new UsageError("Invalid timing category");
-    }
-
-    this.app = new String[args.length - i];
-    for (int idx = i; idx < args.length; idx++)
-      this.app[idx - i] = args[idx];
+  protected int defaultHandler(String[] args, int index) {
+    this.cmd = new String[args.length - index];
+    for (int idx = index; idx < args.length; idx++)
+      this.cmd[idx - index] = args[idx];
 
     return args.length;
   }

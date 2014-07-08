@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -15,14 +15,14 @@
  */
 package fabil.visit;
 
-import fabil.ExtensionInfo;
-import fabil.ast.FabILNodeFactory;
-import fabil.extension.FabILExt;
-import fabil.types.FabILTypeSystem;
 import polyglot.ast.Node;
 import polyglot.qq.QQ;
 import polyglot.types.ClassType;
 import polyglot.visit.NodeVisitor;
+import fabil.ExtensionInfo;
+import fabil.ast.FabILNodeFactory;
+import fabil.extension.FabILExt;
+import fabil.types.FabILTypeSystem;
 
 /**
  * Rewrites threads, hooking them into the worker transaction manager.

@@ -1,13 +1,12 @@
 Fabric GUI Browser
----------------------
+==================
 
-Fabric needed to be added to classpath, and all classes that will be browsed.
+A GUI for browsing a store's object database.
 
-java StoreBrowser [clientName] 
-Will not prompt for client name and will instead use the command line argument.
+Using
+-----
+Compile by running `ant` in the storebrowser directory.
 
-java StoreBrowser [clientName] [storeName]
-Will load the rootmap of the specified store without prompting for input.
+Run using the `store-browser` script in the top-level `bin` directory.
+For usage information, use the `--help` switch.
 
-java StoreBrowser [clientName] [storeName] [onum]
-Will load the object specified by the onum and storename only.

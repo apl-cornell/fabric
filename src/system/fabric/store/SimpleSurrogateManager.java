@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -15,18 +15,22 @@
  */
 package fabric.store;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
+import fabric.common.ONumConstants;
 import fabric.common.RefTypeEnum;
 import fabric.common.SerializedObject;
-import fabric.common.Util;
+import fabric.common.SysUtil;
 import fabric.common.util.ComparablePair;
 
 /**
  * This is a simple surrogate policy. It keeps no state between requests, and
  * simply creates lots of new surrogate objects.
- * 
- * @author mdgeorge
  */
 public class SimpleSurrogateManager implements SurrogateManager {
 
@@ -36,13 +40,15 @@ public class SimpleSurrogateManager implements SurrogateManager {
     this.tm = tm;
   }
 
-  @SuppressWarnings("unchecked")
+  @Override
   public void createSurrogates(PrepareRequest req) {
     Map<ComparablePair<String, Long>, Long> cache =
         new TreeMap<ComparablePair<String, Long>, Long>();
     Collection<SerializedObject> surrogates = new ArrayList<SerializedObject>();
 
-    for (SerializedObject obj : Util.chain(req.creates, req.writes)) {
+    @SuppressWarnings("unchecked")
+    Iterable<SerializedObject> chain = SysUtil.chain(req.creates, req.writes);
+    for (SerializedObject obj : chain) {
       Iterator<Long> intraStore = obj.getIntraStoreRefIterator();
       Iterator<ComparablePair<String, Long>> interStore =
           obj.getInterStoreRefIterator();
@@ -52,18 +58,39 @@ public class SimpleSurrogateManager implements SurrogateManager {
           new ArrayList<Long>(obj.getNumIntraStoreRefs()
               + obj.getNumInterStoreRefs() + 1);
 
-      long labelOnum;
-      if (obj.labelRefIsInterStore()) {
+      long updateLabelOnum;
+      if (obj.updateLabelRefIsInterStore()) {
         // Add a surrogate reference to the label.
-        ComparablePair<String, Long> ref = obj.getInterStoreLabelRef();
+        ComparablePair<String, Long> ref = obj.getInterStoreUpdateLabelRef();
 
-        labelOnum = tm.newOnums(1)[0];
-        surrogates.add(new SerializedObject(labelOnum, labelOnum, ref));
-        cache.put(ref, labelOnum);
+        updateLabelOnum = tm.newOnums(1)[0];
+        surrogates.add(new SerializedObject(updateLabelOnum, updateLabelOnum,
+            ONumConstants.BOTTOM_CONFIDENTIALITY, ref));
+        cache.put(ref, updateLabelOnum);
         hadRemotes = true;
-        newrefs.add(labelOnum);
+        newrefs.add(updateLabelOnum);
       } else {
-        labelOnum = obj.getLabelOnum();
+        updateLabelOnum = obj.getUpdateLabelOnum();
+      }
+
+      long accessPolicyOnum;
+      if (obj.updateLabelRefIsInterStore()) {
+        ComparablePair<String, Long> ref = obj.getInterStoreUpdateLabelRef();
+        Long cachedOnum = cache.get(ref);
+
+        if (cachedOnum == null) {
+          // Add a surrogate reference to the access policy.
+          accessPolicyOnum = tm.newOnums(1)[0];
+          surrogates.add(new SerializedObject(accessPolicyOnum,
+              ONumConstants.PUBLIC_READONLY_LABEL, accessPolicyOnum, ref));
+          cache.put(ref, accessPolicyOnum);
+        } else {
+          accessPolicyOnum = cachedOnum;
+        }
+        hadRemotes = true;
+        newrefs.add(accessPolicyOnum);
+      } else {
+        accessPolicyOnum = obj.getAccessPolicyOnum();
       }
 
       for (Iterator<RefTypeEnum> it = obj.getRefTypeIterator(); it.hasNext();) {
@@ -86,7 +113,8 @@ public class SimpleSurrogateManager implements SurrogateManager {
           if (onum == null) {
             // create surrogate
             onum = tm.newOnums(1)[0];
-            surrogates.add(new SerializedObject(onum, labelOnum, ref));
+            surrogates.add(new SerializedObject(onum, updateLabelOnum,
+                accessPolicyOnum, ref));
             cache.put(ref, onum);
           }
           hadRemotes = true;

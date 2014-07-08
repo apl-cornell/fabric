@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -17,18 +17,20 @@ package fabil.ast;
 
 import java.util.List;
 
-import fabil.types.FabILFlags;
-import fabil.types.FabILTypeSystem;
-
 import polyglot.ast.ClassBody;
 import polyglot.ast.Id;
 import polyglot.ast.TypeNode;
+import polyglot.frontend.MissingDependencyException;
+import polyglot.frontend.Scheduler;
+import polyglot.frontend.goals.Goal;
 import polyglot.main.Report;
 import polyglot.types.ClassType;
 import polyglot.types.Flags;
 import polyglot.types.SemanticException;
 import polyglot.util.Position;
 import polyglot.visit.AmbiguityRemover;
+import fabil.types.FabILFlags;
+import fabil.types.FabILTypeSystem;
 
 public class ClassDecl_c extends polyglot.ast.ClassDecl_c {
 
@@ -37,12 +39,36 @@ public class ClassDecl_c extends polyglot.ast.ClassDecl_c {
     super(pos, flags, name, superClass, interfaces, body);
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see polyglot.ast.ClassDecl_c#setSuperClass(polyglot.visit.AmbiguityRemover,
-   *      polyglot.ast.TypeNode)
-   */
+  @Override
+  protected ClassDecl_c disambiguateSupertypes(AmbiguityRemover ar)
+      throws SemanticException {
+    boolean supertypesResolved = true;
+
+    if (!type.supertypesResolved()) {
+      if (superClass != null && !superClass.isDisambiguated()) {
+        supertypesResolved = false;
+      }
+
+      for (TypeNode tn : interfaces) {
+        if (!tn.isDisambiguated()) {
+          supertypesResolved = false;
+        }
+      }
+
+      if (!supertypesResolved) {
+        Scheduler scheduler = ar.job().extensionInfo().scheduler();
+        Goal g = scheduler.SupertypesResolved(type);
+        throw new MissingDependencyException(g);
+      } else {
+        setSuperClass(ar, superClass);
+        setInterfaces(ar, interfaces);
+        type.setSupertypesResolved(true);
+      }
+    }
+
+    return this;
+  }
+
   @Override
   protected void setSuperClass(AmbiguityRemover ar, TypeNode superClass)
       throws SemanticException {
@@ -61,10 +87,9 @@ public class ClassDecl_c extends polyglot.ast.ClassDecl_c {
       if (flags().contains(FabILFlags.NONFABRIC)) {
         supType = ts.Object();
       }
-      
+
       if (Report.should_report(Report.types, 3))
-        Report.report(3, "setting superclass of " + type + " to "
-            + supType);
+        Report.report(3, "setting superclass of " + type + " to " + supType);
       type.superType(supType);
     }
   }

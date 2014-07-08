@@ -1,0 +1,70 @@
+/**
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
+ *
+ * This file is part of Fabric.
+ *
+ * Fabric is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * Fabric is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ */
+package bob;
+
+import snapp.Snapp;
+import snapp.User;
+import snapp.Location;
+import snapp.UserWrapper;
+import mapserv.MapServer;
+import util.AssertionFailedError;
+
+public class Init
+where
+  provider <= {*←},
+
+  snapp.User.provider        <= snapp.Snapp.provider, snapp.Snapp.provider <= snapp.User.provider,
+  snapp.UserWrapper.provider <= snapp.Snapp.provider, snapp.Snapp.provider <= snapp.UserWrapper.provider,
+  snapp.User.provider <= snapp.Location.provider,
+  snapp.Location.provider <= snapp.User.provider
+{
+  public static void main {*←} (String[] args) {
+    atomic {
+      final Store store = worker$.getStore("snapp");
+      final Snapp sn = (Snapp) store.getRoot().get("snapp");
+
+      if (store actsfor sn
+      &&  sn.store$ equiv store
+      &&  snapp.Snapp.provider <= new label {*←sn}@store
+      ) {
+
+        final User[worker$,sn]  userBob = sn.createUser("Bob", worker$);
+
+        if (userBob.p equiv new principal@store (worker$,sn)
+        &&  new label {*←sn}   <= userBob.locationLabel // TODO: store ≽ locLbl
+        &&  userBob.locationLabel <= new label {*→sn}   //
+        &&  new label {*←userBob.p} <= userBob.locationLabel
+        ) {
+
+          final UserWrapper[{*→sn}] aw = new UserWrapper[{*→sn}]@store (store, worker$, sn, userBob);
+          store.getRoot().put("bob", aw);
+
+          //final MapServer serv = (MapServer) store.getRoot().get("mapserv");
+          userBob.locationInfo.add(userBob.friends);
+   
+          userBob.location = new Location[userBob.locationLabel, {*→sn}]@store(3,3);
+        
+        } else throw new AssertionFailedError("userBob.p equiv (bob worker, snapp)");
+      } else throw new AssertionFailedError("store actsfor snapp");
+    }
+  }
+
+}
+
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -15,8 +15,19 @@
  */
 package fabric.lang.security;
 
+/**
+ * This represents the abstract notion of a delegating principal in Fabric. All
+ * application-defined principals in Fabric must inherit from this class.
+ * <code>AbstractPrincipal</code> is provided for convenience in extending this
+ * class.
+ * <p/>
+ * This class is separate from Principal because some built-in principals (e.g.,
+ * TopPrincipal, ConjunctivePrincipal, DisjunctivePrincipal) do not support the
+ * delegation functions <code>addDelegatesTo()</code> and
+ * <code>removeDelegatesTo</code>.
+ */
 public abstract class DelegatingPrincipal extends Principal {
-  
+  char{_->}@{this->} __dummy__;
   public abstract void addDelegatesTo{this:;this!:}(principal{this:;this!:} p) where caller (this);    
   public abstract void removeDelegatesTo{this:;this!:}(principal{this:;this!:} p) where caller (this);
   

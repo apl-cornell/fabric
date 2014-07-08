@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -15,8 +15,8 @@
  */
 package fabric.common;
 
-import java.util.Map;
 import java.util.HashMap;
+import java.util.Map;
 
 import javax.net.ssl.SSLSocketFactory;
 

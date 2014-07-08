@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -15,7 +15,9 @@
  */
 package fabric.worker;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 import fabric.common.SerializedObject;
 import fabric.common.exceptions.FabricException;
@@ -30,6 +32,11 @@ public class TransactionPrepareFailedException extends FabricException {
   public final LongKeyMap<SerializedObject> versionConflicts;
 
   public final List<String> messages;
+
+  public TransactionPrepareFailedException(TransactionRestartingException cause) {
+    this.messages = null;
+    this.versionConflicts = null;
+  }
 
   public TransactionPrepareFailedException(
       LongKeyMap<SerializedObject> versionConflicts) {

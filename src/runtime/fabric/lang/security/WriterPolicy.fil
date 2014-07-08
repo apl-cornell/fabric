@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -17,6 +17,7 @@ package fabric.lang.security;
 
 import fabric.worker.Worker;
 import fabric.worker.Store;
+import fabric.lang.security.Principal;
 import fabric.util.Iterator;
 import java.util.Set;
 import java.util.HashSet;
@@ -25,12 +26,14 @@ import java.util.HashSet;
  * This code is mostly copied from Jif.
  */
 public class WriterPolicy extends AbstractPolicy implements IntegPolicy {
-  private final Principal owner;
-  private final Principal writer;
+  private /*final*/ Principal owner;
+  private /*final*/ Principal writer;
 
-  public WriterPolicy(Principal owner, Principal writer) {
+  public WriterPolicy fabric$lang$security$WriterPolicy$(Principal owner, Principal writer) {
     this.owner = owner;
     this.writer = writer;
+    fabric$lang$security$AbstractPolicy$();
+    return this;
   }
 
   public Principal owner() {
@@ -58,7 +61,7 @@ public class WriterPolicy extends AbstractPolicy implements IntegPolicy {
       MeetPolicy mp = (MeetPolicy) p;
       // this <= p1 meet ... meet p2 if for all pi
       // this <= pi
-      Set temp = new HashSet@localStore();
+      Set temp = new HashSet();
       for (Iterator iter = mp.meetComponents().iterator(); iter.hasNext();) {
         Policy pi = (Policy) iter.next();
         if (!LabelUtil.relabelsTo(this, pi, temp)) return false;
@@ -133,31 +136,25 @@ public class WriterPolicy extends AbstractPolicy implements IntegPolicy {
     return LabelUtil.join(store, this, p, s);
   }
 
-  public IntegPolicy join(IntegPolicy p, Set s) {
-    return LabelUtil.join(this, p, s);
-  }
-
   public IntegPolicy meet(Store store, IntegPolicy p, Set s) {
     return LabelUtil.meet(store, this, p, s);
-  }
-
-  public IntegPolicy meet(IntegPolicy p, Set s) {
-    return LabelUtil.meet(this, p, s);
   }
 
   public IntegPolicy join(Store store, IntegPolicy p) {
     return LabelUtil.join(store, this, p);
   }
 
-  public IntegPolicy join(IntegPolicy p) {
-    return LabelUtil.join(this, p);
-  }
-
   public IntegPolicy meet(Store store, IntegPolicy p) {
     return LabelUtil.meetPol(store, this, p);
   }
 
-  public IntegPolicy meet(IntegPolicy p) {
-    return LabelUtil.meetPol(this, p);
+  public Object $initLabels() {
+    // XXX What should this be?  Using completely permissive values for now.
+    // update label: {_ <-}
+    // access policy: {_ ->}
+    this.$updateLabel = LabelUtil.noComponents();
+    this.$accessPolicy = LabelUtil.bottomConf();
+
+    return this;
   }
 }

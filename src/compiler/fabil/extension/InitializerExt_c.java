@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -27,12 +27,6 @@ import fabil.visit.ProxyRewriter;
 
 public class InitializerExt_c extends ClassMemberExt_c {
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see fabil.extension.ClassMemberExt_c#implMember(fabil.visit.ProxyRewriter,
-   *      polyglot.ast.ClassDecl)
-   */
   @Override
   public List<ClassMember> implMember(ProxyRewriter pr, ClassDecl parent) {
     Initializer init = node();
@@ -41,26 +35,16 @@ public class InitializerExt_c extends ClassMemberExt_c {
     return Collections.singletonList((ClassMember) init);
   }
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see fabil.extension.ClassMemberExt_c#staticImplInitMember(fabil.visit.ProxyRewriter)
-   */
   @Override
   public List<Stmt> staticImplInitMember(ProxyRewriter pr) {
     Initializer init = node();
     Flags flags = init.flags();
 
     if (!flags.isStatic()) return super.staticImplInitMember(pr);
-    
+
     return Collections.singletonList((Stmt) init.body());
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see polyglot.ast.Ext_c#node()
-   */
   @Override
   public Initializer node() {
     return (Initializer) super.node();

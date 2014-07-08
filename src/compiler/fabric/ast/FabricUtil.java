@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -21,8 +21,9 @@ import fabric.extension.FabricExt;
 
 public class FabricUtil {
   /**
-   * Gets the Fabric extension. 
-   * Note that Fabric extensions are NOT subclasses of Jif extensions.
+   * Gets the Fabric extension. Note that Fabric extensions are NOT subclasses
+   * of Jif extensions.
+   * 
    * @param n
    */
   public static FabricExt fabricExt(Node n) {
@@ -30,9 +31,9 @@ public class FabricUtil {
     while (ext != null && !(ext instanceof FabricExt)) {
       ext = ext.ext();
     }
-    return (FabricExt)ext;
+    return (FabricExt) ext;
   }
-  
+
   public static Node updateFabricExt(Node n, FabricExt fab) {
     return n.ext(updateFabricExt(n.ext(), fab));
   }

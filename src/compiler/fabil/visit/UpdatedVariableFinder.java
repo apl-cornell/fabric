@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -15,75 +15,82 @@
  */
 package fabil.visit;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
-import fabil.ast.Atomic;
-
-import polyglot.ast.*;
+import polyglot.ast.Block;
+import polyglot.ast.For;
+import polyglot.ast.ForInit;
+import polyglot.ast.Formal;
+import polyglot.ast.Local;
+import polyglot.ast.LocalAssign;
+import polyglot.ast.LocalDecl;
+import polyglot.ast.Node;
+import polyglot.ast.ProcedureDecl;
+import polyglot.ast.Stmt;
 import polyglot.types.LocalInstance;
 import polyglot.visit.NodeVisitor;
+import fabil.ast.Atomic;
 
 public class UpdatedVariableFinder extends NodeVisitor {
   protected Set<LocalInstance> declared = new HashSet<LocalInstance>();
   protected Set<LocalInstance> updated = new HashSet<LocalInstance>();
-  
-  @SuppressWarnings("unchecked")
+
   @Override
   public NodeVisitor enter(Node n) {
     if (n instanceof ProcedureDecl) {
-      UpdatedVariableFinder v = (UpdatedVariableFinder)this.copy();
+      UpdatedVariableFinder v = (UpdatedVariableFinder) this.copy();
       v.declared = new HashSet<LocalInstance>();
       v.updated = new HashSet<LocalInstance>();
-      
-      ProcedureDecl pd = (ProcedureDecl)n;
-      for (Formal f : (List<Formal>)pd.formals()) {
+
+      ProcedureDecl pd = (ProcedureDecl) n;
+      for (Formal f : pd.formals()) {
         v.declared.add(f.localInstance());
       }
-      
+
       return v;
-    }
-    else if (n instanceof Block) {
-      UpdatedVariableFinder v = (UpdatedVariableFinder)this.copy();
-      v.declared = new HashSet<LocalInstance>();
-      v.declared.addAll(declared);
-      
-      Block b = (Block)n;
-      for (Stmt s : (List<Stmt>)b.statements()) {
-        if (s instanceof LocalDecl) {
-          LocalDecl ld = (LocalDecl)s;
-          v.declared.add(ld.localInstance());
-        }
-      }
-      
-      return v;
-    }
-    else if (n instanceof For) {
-      UpdatedVariableFinder v = (UpdatedVariableFinder)this.copy();
+    } else if (n instanceof Block) {
+      UpdatedVariableFinder v = (UpdatedVariableFinder) this.copy();
       v.declared = new HashSet<LocalInstance>();
       v.declared.addAll(declared);
 
-      For f = (For)n;
-      for (Stmt s : (List<Stmt>)f.inits()) {
+      Block b = (Block) n;
+      for (Stmt s : b.statements()) {
         if (s instanceof LocalDecl) {
-          LocalDecl ld = (LocalDecl)s;
+          LocalDecl ld = (LocalDecl) s;
           v.declared.add(ld.localInstance());
         }
       }
-      
+
+      return v;
+    } else if (n instanceof For) {
+      UpdatedVariableFinder v = (UpdatedVariableFinder) this.copy();
+      v.declared = new HashSet<LocalInstance>();
+      v.declared.addAll(declared);
+
+      For f = (For) n;
+      for (ForInit s : f.inits()) {
+        if (s instanceof LocalDecl) {
+          LocalDecl ld = (LocalDecl) s;
+          v.declared.add(ld.localInstance());
+        }
+      }
+
       return v;
     }
-    
+
     return this;
   }
-  
+
   @Override
   public Node leave(Node old, Node n, NodeVisitor v) {
     if (n instanceof LocalAssign) {
-      Local l = (Local)((LocalAssign)n).left();
+      Local l = (Local) ((LocalAssign) n).left();
       updated.add(l.localInstance());
-    }
-    else if (n instanceof Atomic) {
-      Atomic a = (Atomic)n;
+    } else if (n instanceof Atomic) {
+      Atomic a = (Atomic) n;
       List<LocalInstance> updatedLocals = new ArrayList<LocalInstance>();
       for (LocalInstance li : updated) {
         if (declared.contains(li)) {
@@ -92,7 +99,7 @@ public class UpdatedVariableFinder extends NodeVisitor {
       }
       return a.updatedLocals(updatedLocals);
     }
-    
+
     return n;
   }
 }

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -29,18 +29,18 @@ import fabil.types.FabILTypeSystem;
  * Assigns object locations to all <code>new</code> expressions.
  */
 public class LabelAssigner extends ContextVisitor {
-  
+
   private QQ qq;
 
   public LabelAssigner(Job job, ExtensionInfo extInfo) {
     super(job, extInfo.typeSystem(), extInfo.nodeFactory());
     this.qq = new QQ(extInfo);
   }
-  
+
   public QQ qq() {
     return qq;
   }
-  
+
   @Override
   public FabILNodeFactory nodeFactory() {
     return (FabILNodeFactory) super.nodeFactory();

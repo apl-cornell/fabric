@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -13,8 +13,8 @@
  * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
  * details.
  */
-
 /**
  * Type system for the fabil language.
  */
 package fabil.types;
+

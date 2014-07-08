@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -26,17 +26,21 @@ import java.util.List;
 import fabric.common.Crypto;
 import fabric.common.RefTypeEnum;
 import fabric.common.util.Pair;
-import fabric.lang.security.PrincipalUtil.TopPrincipal;
+import fabric.lang.Object;
 import fabric.net.UnreachableNodeException;
 import fabric.worker.Store;
 import fabric.worker.Worker;
 import fabric.worker.transaction.TransactionManager;
 
 /**
- * This is implemented in Java so that the constructor can provide default
- * labels so that a Principal p can be labelled with {p→_; p←p}.
+ * This is implemented in Java so that the constructor can create a key pair for
+ * the principal.
  */
 public interface Principal extends fabric.lang.Object {
+  /**
+   * Jif initializer.
+   */
+  Principal fabric$lang$security$Principal$();
 
   String name();
 
@@ -68,40 +72,57 @@ public interface Principal extends fabric.lang.Object {
       super(store, onum);
     }
 
+    @Override
+    public Principal fabric$lang$security$Principal$() {
+      return ((Principal) fetch()).fabric$lang$security$Principal$();
+    }
+
+    @Override
     public String name() {
       return ((Principal) fetch()).name();
     }
 
+    @Override
     public boolean delegatesTo(Principal p) {
       return ((Principal) fetch()).delegatesTo(p);
     }
 
+    @Override
     public boolean equals(Principal p) {
       return ((Principal) fetch()).equals(p);
     }
 
+    @Override
     public boolean isAuthorized(java.lang.Object authPrf, Closure closure,
         Label lb, boolean executeNow) {
       return ((Principal) fetch()).isAuthorized(authPrf, closure, lb,
           executeNow);
     }
 
+    @Override
     public ActsForProof findProofUpto(Store store, Principal p,
         java.lang.Object searchState) {
       return ((Principal) fetch()).findProofUpto(store, p, searchState);
     }
 
+    @Override
     public ActsForProof findProofDownto(Store store, Principal q,
         java.lang.Object searchState) {
       return ((Principal) fetch()).findProofDownto(store, q, searchState);
     }
 
+    @Override
     public PublicKey getPublicKey() {
       return ((Principal) fetch()).getPublicKey();
     }
 
+    @Override
     public PrivateKeyObject getPrivateKeyObject() {
       return ((Principal) fetch()).getPrivateKeyObject();
+    }
+
+    public static Principal jif$cast$fabric_lang_security_Principal(Object o) {
+      return Principal._Impl.jif$cast$fabric_lang_security_Principal(o);
     }
   }
 
@@ -111,60 +132,62 @@ public interface Principal extends fabric.lang.Object {
     private PublicKey publicKey;
     private PrivateKeyObject privateKeyObject;
 
-    public _Impl(Store store, Label label) {
-      // If the given label is null, temporarily create the object with an
-      // overly restrictive label.
-      super(store, label == null ? Worker.getWorker().getLocalStore()
-          .getPublicReadonlyLabel() : label);
+    public _Impl(Store store) {
+      super(store);
+    }
 
+    @Override
+    public Object $initLabels() {
+      Store store = this.$getStore();
       Principal._Proxy thisProxy = (Principal._Proxy) this.$getProxy();
-      IntegPolicy integ =
-          LabelUtil._Impl.writerPolicy(store, thisProxy, thisProxy);
 
       // Always ensure that the principal can modify its own object.
-      // Because of bootstrapping issues, we special case the top principal.
-      if (!(this instanceof TopPrincipal)) {
-        // {this <- this}
-        ConfPolicy bottomConf =
-            Worker.getWorker().getLocalStore().getBottomConfidPolicy();
-        Label thisIntegLabel =
-            LabelUtil._Impl.toLabel(store, bottomConf, integ);
+      // {this <- this}
+      ConfPolicy bottomConf =
+          Worker.getWorker().getLocalStore().getBottomConfidPolicy();
+      IntegPolicy integ =
+          LabelUtil._Impl.writerPolicy(store, thisProxy, thisProxy);
+      Label thisIntegLabel = LabelUtil._Impl.toLabel(store, bottomConf, integ);
 
-        if (label == null) {
-          // Replace the temporary label with {this <- this}.
-          this.$label = thisIntegLabel;
-        } else {
-          // Join the given label with {this <- this}.
-          this.$label =
-              LabelUtil._Impl.join(this.$label.$getStore(), this.$label,
-                  thisIntegLabel);
-        }
-      }
+      this.set$$updateLabel(thisIntegLabel);
+      this.set$$accessPolicy(bottomConf);
 
+      return thisProxy;
+    }
+
+    @Override
+    public Principal fabric$lang$security$Principal$() {
+      fabric$lang$Object$();
       // Generate a new key pair for this principal.
       KeyPair keyPair = Crypto.genKeyPair();
       this.publicKey = keyPair.getPublic();
 
-      // Create the label {this->this; this<-this} for the private key object.
-      ConfPolicy conf =
-          LabelUtil._Impl.readerPolicy(store, thisProxy, thisProxy);
-      Label privateLabel = LabelUtil._Impl.toLabel(store, conf, integ);
       this.privateKeyObject =
-          new PrivateKeyObject._Impl(store, privateLabel, keyPair.getPrivate());
+          new PrivateKeyObject._Impl($getStore())
+              .fabric$lang$security$PrivateKeyObject$((Principal) $getProxy(),
+                  keyPair.getPrivate());
+
+      return (Principal) this.$getProxy();
     }
 
+    @Override
     abstract public String name();
 
+    @Override
     abstract public boolean delegatesTo(final Principal p);
 
+    @Override
     abstract public boolean equals(final Principal p);
 
+    @Override
     abstract public boolean isAuthorized(final java.lang.Object authPrf,
         final Closure closure, final Label lb, final boolean executeNow);
 
+    @Override
     abstract public ActsForProof findProofUpto(final Store store,
         final Principal p, final java.lang.Object searchState);
 
+    @Override
     abstract public ActsForProof findProofDownto(final Store store,
         final Principal q, final java.lang.Object searchState);
 
@@ -181,20 +204,28 @@ public interface Principal extends fabric.lang.Object {
     }
 
     public _Impl(Store store, long onum, int version, long expiry, long label,
-        ObjectInput in, Iterator<RefTypeEnum> refTypes,
+        long accessLabel, ObjectInput in, Iterator<RefTypeEnum> refTypes,
         Iterator<Long> intraStoreRefs) throws java.io.IOException,
         ClassNotFoundException {
-      super(store, onum, version, expiry, label, in, refTypes, intraStoreRefs);
+      super(store, onum, version, expiry, label, accessLabel, in, refTypes,
+          intraStoreRefs);
     }
 
+    @Override
     public final PublicKey getPublicKey() {
       TransactionManager.getInstance().registerRead(this);
       return publicKey;
     }
 
+    @Override
     public final PrivateKeyObject getPrivateKeyObject() {
       TransactionManager.getInstance().registerRead(this);
       return privateKeyObject;
+    }
+
+    public static Principal jif$cast$fabric_lang_security_Principal(Object o) {
+      //XXX: What is the right access label check??
+      return (Principal) fabric.lang.Object._Proxy.$getProxy(o);
     }
   }
 
@@ -224,8 +255,8 @@ public interface Principal extends fabric.lang.Object {
     class _Impl extends fabric.lang.Object._Impl implements
         fabric.lang.security.Principal._Static {
 
-      public _Impl(Store store, Label label) throws UnreachableNodeException {
-        super(store, label);
+      public _Impl(Store store) throws UnreachableNodeException {
+        super(store);
       }
 
       @Override

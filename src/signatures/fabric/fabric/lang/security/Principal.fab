@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -15,27 +15,32 @@
  */
 package fabric.lang.security;
 
+/**
+ * This represents the abstract notion of a principal in Fabric. All principals
+ * in Fabric must inherit from this class. Applications that wish to define
+ * their own Principal classes must extend DelegatingPrincipal.
+ */
 public abstract class Principal {
-    static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
-    
-    public abstract String{this} name();
-    
-    public abstract boolean{this; p; this←} delegatesTo(principal p);
-    
-    public abstract boolean equals(Principal p);
+//    static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+
+    public abstract String{this} name{⊥->}();
+
+    public abstract boolean{this; p; this←} delegatesTo{⊥->}(principal p);
+
+    public abstract boolean equals{⊥->}(Principal p);
 
     // XXX Can we label this method anywhich way we want, since it won't
     // be invoked from Fabric code??
     // XXX Where will the declassification w.r.t. password happen?
     public abstract boolean{authPrf; closure; lb; *lb; executeNow; this; this→; this←}
-	isAuthorized{this←}(java.lang.Object authPrf, 
-			    Closure[this, lb] closure,
-			    label lb,
-			    boolean executeNow) where authority (this);
+	isAuthorized{⊥->;this←}(java.lang.Object{this→} authPrf, 
+			    Closure[this, lb]{this→} closure,
+			    label{this→} lb,
+			    boolean{this→} executeNow) where authority (this);
+
+    public abstract ActsForProof[{c→;c←}]{this; p; this←; p←; c}
+	findProofUpto{⊥->;this←}(Store c, Principal p, java.lang.Object searchState);
     
-    public abstract ActsForProof{this; p; this←; p←}
-	findProofUpto{this←}(Store c, Principal p, java.lang.Object searchState);
-    
-    public abstract ActsForProof{this; q; q←; this←}
-	findProofDownto{this←}(Store c, Principal q, java.lang.Object searchState);    
+    public abstract ActsForProof[{c→;c←}]{this; q; q←; this←; c}
+	findProofDownto{⊥->;this←}(Store c, Principal q, java.lang.Object searchState);    
 }

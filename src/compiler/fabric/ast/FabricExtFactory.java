@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -15,19 +15,38 @@
  */
 package fabric.ast;
 
-import polyglot.ast.Ext;
 import jif.ast.JifExtFactory;
+import polyglot.ast.Ext;
 
-/** Factory for extensions for all of the AST nodes in the Fabric language.
- *  Note that the created extensions need not be <code>FabricExt</code>s. */
+/**
+ * Factory for extensions for all of the AST nodes in the Fabric language. Note
+ * that the created extensions need not be <code>FabricExt</code>s.
+ */
 public interface FabricExtFactory extends JifExtFactory {
   Ext extAbortStmt();
+
   Ext extAtomic();
+
   Ext extAmbNewFabricArray();
+
   Ext extWorker();
+
   Ext extFabricArrayInit();
+
   Ext extFabricArrayTypeNode();
+
   Ext extNewFabricArray();
+
   Ext extRemoteWorkerGetter();
+
   Ext extRetryStmt();
+
+  Ext extCodebaseNode();
+
+  Ext extCodebaseDecl();
+
+  /**
+   * @return
+   */
+  Ext extStore();
 }

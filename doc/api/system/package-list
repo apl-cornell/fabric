@@ -1,8 +1,6 @@
-fabric
 fabric.common
 fabric.common.exceptions
 fabric.common.net
-fabric.common.net.cleanup
 fabric.common.net.handshake
 fabric.common.net.naming
 fabric.common.util
@@ -18,7 +16,7 @@ fabric.net
 fabric.store
 fabric.store.db
 fabric.worker
-fabric.worker.debug
+fabric.worker.admin
 fabric.worker.remote
-fabric.worker.remote.messages
+fabric.worker.shell
 fabric.worker.transaction

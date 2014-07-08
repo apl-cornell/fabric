@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.security.SecureRandom;
 import java.util.Random;
-
 
 public class TransactionID implements FastSerializable, Serializable {
   /**
@@ -49,7 +48,7 @@ public class TransactionID implements FastSerializable, Serializable {
   public TransactionID() {
     this((TransactionID) null);
   }
-  
+
   /**
    * Creates a new top-level transaction id with the given id.
    */
@@ -59,6 +58,7 @@ public class TransactionID implements FastSerializable, Serializable {
 
   /**
    * Creates a new transaction ID that is a child of the given tid.
+   * 
    * @param parent
    */
   public TransactionID(TransactionID parent) {
@@ -86,6 +86,7 @@ public class TransactionID implements FastSerializable, Serializable {
     }
   }
 
+  @Override
   public void write(DataOutput out) throws IOException {
     out.writeBoolean(parent != null);
     if (parent != null) parent.write(out);
@@ -166,5 +167,11 @@ public class TransactionID implements FastSerializable, Serializable {
     }
 
     return ancestor1;
+  }
+
+  @Override
+  public String toString() {
+    String prefix = parent == null ? "" : (parent + ":");
+    return prefix + Long.toHexString(tid);
   }
 }

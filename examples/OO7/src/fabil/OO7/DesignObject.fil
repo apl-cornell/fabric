@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -31,14 +31,17 @@ public abstract class DesignObject {
   long    buildDate;
   boolean promise;
 
-  DesignObject(Benchmark db) {
-    this(db, true);
+  DesignObject OO7$DesignObject(Benchmark db) {
+    OO7$DesignObject(db, true);
+    return this;
   }
 
-  DesignObject(Benchmark db, boolean promise) {
+  DesignObject OO7$DesignObject(Benchmark db, boolean promise) {
+    fabric$lang$Object$();     
     this.id = db.newId();
     this.promise = promise;
     type = "";
+    return this;
   }
 
   public int id() {
@@ -59,7 +62,7 @@ public abstract class DesignObject {
   
   public Statistics createStatistics() {
   	if (promise)
-  	  return new OO7Statistics();
+  	  return (OO7Statistics) new OO7Statistics().OO7$OO7Statistics();
   	else
   	  return super.createStatistics();
   }

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -20,13 +20,13 @@ import java.net.Socket;
 import fabric.lang.security.Principal;
 
 public class ShakenSocket {
-  public final String    name;
+  public final String name;
   public final Principal principal;
-  public final Socket    sock;
-  
+  public final Socket sock;
+
   public ShakenSocket(String name, Principal principal, Socket sock) {
-    this.name      = name;
+    this.name = name;
     this.principal = principal;
-    this.sock      = sock;
+    this.sock = sock;
   }
 }

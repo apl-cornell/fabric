@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -15,9 +15,9 @@
  */
 package fabil.ast;
 
-import polyglot.ast.*;
+import polyglot.ast.Expr;
 
 // marker ast node that will be replaced with this.$getStore()
 public interface StoreGetter extends Expr {
-  
+
 }

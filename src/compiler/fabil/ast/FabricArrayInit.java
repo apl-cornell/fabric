@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -20,8 +20,17 @@ import java.util.List;
 import polyglot.ast.Expr;
 
 public interface FabricArrayInit extends Annotated, polyglot.ast.ArrayInit {
+  @Override
   FabricArrayInit elements(List<Expr> elements);
-  
+
+  @Override
   FabricArrayInit location(Expr location);
-  FabricArrayInit label(Expr label);
+
+  Expr updateLabel();
+
+  Expr accessPolicy();
+
+  FabricArrayInit updateLabel(Expr label);
+
+  FabricArrayInit accessPolicy(Expr accesslabel);
 }

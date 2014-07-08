@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -17,9 +17,9 @@ package fabric.common.exceptions;
 
 /**
  * This exception signals termination of the Fabric node. It should be used
- * instead of <code>System.exit</code> to allow Fabric to be started from
- * within a JVM that wasn't started specifically for Fabric, e.g., the Apache
- * ANT framework.
+ * instead of <code>System.exit</code> to allow Fabric to be started from within
+ * a JVM that wasn't started specifically for Fabric, e.g., the Apache ANT
+ * framework.
  */
 public class TerminationException extends RuntimeException {
   final public int exitCode;

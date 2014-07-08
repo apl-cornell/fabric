@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -16,11 +16,13 @@
 package OO7.traversals;
 import OO7.*;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.net.URI;
 import fabric.worker.Store;
 import fabric.worker.Worker;
 import fabric.util.Map;
-import fabric.worker.debug.Timing;
+import fabric.common.Timing;
 
 /*
  * Visitor interface for DesignObjects
@@ -32,6 +34,11 @@ public abstract class Traversal {
   public abstract void visitBaseAssembly    (BaseAssembly    ba);
   public abstract void visitAtomicPart      (AtomicPart      p);
   public abstract void visitCompositePart   (CompositePart   p);
+
+  public Traversal OO7$traversals$Traversal() {
+      fabric$lang$Object$();
+      return this;
+  }
 
   /** Handles loading the benchmark object and starting the traversal.  This
    *  method calls visitBenchmark(args[0]) */
@@ -45,12 +52,12 @@ public abstract class Traversal {
 
       URI    addr = new URI(args[0]);
       Store store = Worker.getWorker().getStore(addr.getHost());
-      Benchmark b = (Benchmark) ((Map) store.getRoot()).get(addr.getPath());
-
+      
       System.out.println();
       System.out.println("Cold stats:");
 
       Timing.reset();
+      Benchmark b = (Benchmark) ((Map) store.getRoot()).get(addr.getPath());
       atomic {
         this.visitBenchmark (b);
       }

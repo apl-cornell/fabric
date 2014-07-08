@@ -20,20 +20,26 @@ import jif.extension.JifBinaryDel;
 import java.util.*;
 import fabric.ast.*;
 import jif.parse.*;
-import polyglot.parse.*;
 import fabric.types.FabricTypeSystem;
 import fabric.types.FabricFlags;
-import jif.parse.Name;
+import fabric.parse.Name;
+import codebases.ast.CodebaseDecl;
+import codebases.ast.CodebaseNode;
+import codebases.types.NamespaceResolver;
+import polyglot.types.Package;
+import java.net.URI;
 
 parser Grm extends jif.parse.Grm {:
 
     public final FabricTypeSystem ts;
     public final FabricNodeFactory nf;
+	public final URI ns;
 
-    public Grm(Lexer l, FabricTypeSystem t, FabricNodeFactory n, ErrorQueue q) {
+    public Grm(Lexer l, FabricTypeSystem t, FabricNodeFactory n, ErrorQueue q, URI ns) {
         super(l, t, n, q);
         ts = t;
         nf = n;
+        this.ns = ns; 
     }
 
     public TypeNode fabricArray(Position pos, TypeNode n, int dims) throws Exception {
@@ -57,7 +63,7 @@ parser Grm extends jif.parse.Grm {:
     public TypeNode javaArray(TypeNode n, int dims) throws Exception {
       return super.array(n, dims);
     }
-
+	
     /**
      * Converts an Amb a into an AST representing new a[][]...[]
      * @return either a NewFabricArray or an AmbNewFabricArray
@@ -88,7 +94,7 @@ parser Grm extends jif.parse.Grm {:
                                     ambNewArray.baseType(),
                                     loc,
                                     ambNewArray.expr(),
-                                    ambNewArray.dims(),
+                                    (List<Expr>)ambNewArray.dims(),
                                     ambNewArray.additionalDims());
       }
       else {
@@ -96,6 +102,137 @@ parser Grm extends jif.parse.Grm {:
         return null;
       }
     }
+
+	//Override methods in jif.ppg   
+    public PackageNode exprToPackage(Expr e) throws Exception {
+        throw new UnsupportedOperationException("Use exprToQualifier instead");
+    }
+    public QualifierNode exprToQualifier(Expr e) throws Exception {
+    
+        if (e instanceof Wrapper) {
+            //amb can/should only be a name
+        	if (((Wrapper) e).amb instanceof Name) {
+        	   Name n = (Name)((Wrapper) e).amb;
+               return n.toQualifier();
+        	}
+        	else die(pos(e));
+        }
+
+        if (e instanceof AmbExpr) {
+            AmbExpr a = (AmbExpr) e;
+            NamespaceResolver nr = ts.namespaceResolver(this.ns);
+	        //try to resolve name as a codebase alias
+            URI u = nr.resolveCodebaseName(a.name());
+            if (u != null)
+	            return nf.CodebaseNode(pos(e), this.ns, a.name(), u);
+            else
+                return nf.PackageNode(pos(e), ts.packageForName(this.ns, a.name()));
+        }
+
+        if (e instanceof Field) {
+            Field f = (Field) e;
+            QualifierNode pn = prefixToQualifier(f.target());
+            if (pn instanceof CodebaseNode) {
+            	//create a CodebaseNode if our prefix is a codebase
+            	CodebaseNode cn = (CodebaseNode) pn;
+            	Package pkg = ts.packageForName(cn.externalNamespace(), cn.package_(), f.name());
+            	return nf.CodebaseNode(pos(e), this.ns, cn.alias(), cn.externalNamespace(), pkg);
+            	
+            }
+            else if (pn instanceof PackageNode) {
+            	//otherwise, we create a PackageNode
+            	Package pkg = ((PackageNode)pn).package_();
+            	return nf.PackageNode(pos(e), ts.packageForName(this.ns, pkg, f.name()));
+            }
+        }
+
+        die(pos(e));
+        return null;
+    }
+	
+	public PackageNode prefixToPackage(Prefix p) throws Exception {
+	    throw new UnsupportedOperationException("Use prefixToQualifier instead");
+	}
+	
+    public QualifierNode prefixToQualifier(Prefix p) throws Exception {
+        if (p instanceof Expr) {
+            return exprToQualifier((Expr) p);
+        }
+
+        if (p instanceof AmbPrefix) {
+            AmbPrefix a = (AmbPrefix) p;
+            Prefix ap = a.prefix();
+            Package pkg = null;         
+            if (ap != null) {
+                QualifierNode pn = prefixToQualifier(ap);
+                if (pn instanceof CodebaseNode) {
+                	//If prefix is a CodebaseNode, create a new CodebaseNode 
+                	//	for the subpackage
+                	CodebaseNode cn = (CodebaseNode) pn;
+                	Package cbpkg = ts.packageForName(cn.externalNamespace(), cn.package_(), a.name());    	
+                 	return nf.CodebaseNode(pos(p), this.ns, cn.alias(), cn.externalNamespace(), cbpkg);
+                }
+                else if (pn instanceof PackageNode) {
+                	//otherwise get the package of the prefix
+            	    pkg = ((PackageNode)pn).package_();
+                }
+            }
+            else if (ap == null) {
+            	//If there is no prefix, see if there is a codebase alias for this name
+            	NamespaceResolver nr = ts.namespaceResolver(this.ns);
+            	URI u = nr.resolveCodebaseName(a.name());
+            	if (u != null)
+            	    return nf.CodebaseNode(pos(p), this.ns, a.name(), u);
+            }
+            //pkg is null or is the package of the prefix node
+            //the prefix is null and not a codebase alias, or not null and not a CodebaseNode
+            return nf.PackageNode(pos(p), ts.packageForName(this.ns, pkg, a.name()));
+        }
+
+        die(pos(p));
+        return null;
+    }
+        public TypeNode exprToUninstType(Expr e) throws Exception {
+        if (e instanceof Wrapper) {
+            return ((Wrapper) e).amb.toUnlabeledType();
+        }
+
+        if (e instanceof AmbExpr) {
+            AmbExpr a = (AmbExpr) e;
+            return nf.AmbTypeNode(pos(e), a.name());
+        }
+
+        if (e instanceof Field) {
+            Field f = (Field) e;
+            Receiver r = f.target();
+            return nf.AmbTypeNode(pos(e), prefixToQualifier(r), f.name());
+        }
+
+        die(pos(e));
+        return null;
+    }
+    public Expr receiverToExpr(AmbReceiver r) throws Exception {
+	    Position pos = r.position();
+	    String name = r.name();
+	    
+        if (r.prefix() == null) {
+            if ("this".equals(name)) {
+                return nf.This(pos);
+            }
+            Id id = nf.Id(pos, name);
+            return nf.AmbExpr(pos, id);
+        }
+
+        Id id = nf.Id(pos, name);
+
+        Expr target = null;
+        if (r.prefix() instanceof AmbReceiver) {
+            target = receiverToExpr((AmbReceiver) r.prefix());
+        } else target = (Expr) r.prefix();
+
+        return nf.Field(pos, target, id);
+    }
+    
 
 :}
 scan with {: return nextSymbol(); :};
@@ -270,12 +407,13 @@ non terminal Expr constant_expression;
 terminal Token WHERE;
 terminal Token PRINCIPAL;
 terminal Token LABEL;
-terminal Token COVARIANT;
+
 terminal Token INVARIANT;
 terminal Token AUTHORITY;
 terminal Token CALLER;
 terminal Token ACTSFOR;
-terminal Token ACTSFOR_LOWER;
+terminal Token FLOWSTO;
+terminal Token ENFORCES;
 terminal Token EQUIV;
 terminal Token DECLASSIFY;
 terminal Token ENDORSE;
@@ -286,28 +424,33 @@ terminal Token RIGHTARROW;
 terminal Token LEFTARROW;
 terminal Token TOP;
 terminal Token BOTTOM;
+terminal Token TRUST_GTEQ;
+terminal Token INFO_LTEQ;
+terminal Token PROVIDER;
 non terminal DeclassifyExpr declassify;
 non terminal DeclassifyStmt declassify_statement;
 non terminal EndorseExpr endorse;
 non terminal EndorseStmt endorse_statement;
 non terminal LabelNode downgrade_to_label_opt;
 non terminal TypeNode labeled_primitive_type;
-non terminal LabelNode label, label_opt, return_label_opt, label_flexible;
+non terminal LabelNode label, label_opt, return_label_opt, label_flexible, dynamic_label, provider;
 non terminal List join_component_list;
 non terminal Object join_label_component;
 non terminal List meet_component_list;
 non terminal Object label_component;
 non terminal PolicyNode label_component_policy;
 non terminal PrincipalNode principal, principal_conjunctive, principal_disjunctive, principal_base;
-non terminal Token actsfor;
 non terminal Expr accesspath;
 non terminal Receiver accesspath_receiver;
 non terminal Expr accesspath_no_id;
 non terminal List principal_list, principal_list_opt;
 non terminal List parameters_opt, parameters;
 non terminal ParamDecl parameter;
-non terminal List constraints, constraints_opt;
+non terminal List procedure_constraints, procedure_constraints_opt;
 non terminal List authority, authority_opt;
+non terminal ConstraintNode procedure_constraint;
+non terminal List constraints, constraints_opt;
+non terminal Token flowsto;
 non terminal ConstraintNode constraint;
 non terminal Amb reftype_or_expr, objtype_or_expr;
 non terminal List param_or_expr_list;
@@ -320,13 +463,20 @@ terminal Token ATOMIC;
 terminal Token ABORT;
 terminal Token RETRY;
 terminal Token WORKER;
+terminal Token STORE;
 terminal Token NONFABRIC;
+terminal Token CODEBASE;
 non terminal Atomic atomic_statement;
 non terminal Expr location_expr_opt, location_expr;
 non terminal Stmt abort_stmt, retry_stmt;
 non terminal Worker local_worker;
 non terminal RemoteWorkerGetter remote_worker;
 non terminal FabricArrayInit fabric_array_initializer;
+non terminal LabelNode access_label_opt;
+non terminal List codebase_declarations_opt, codebase_declarations;
+non terminal CodebaseDecl codebase_declaration;
+non terminal Store store_expr;
+non terminal Expr accesspath_expr;
 
 
 start with goal;
@@ -444,23 +594,23 @@ name ::=
 
 simple_name ::=
     IDENTIFIER:a {:
-                 RESULT = new Name(parser, parser.pos(a), a.getIdentifier()); 
+                 RESULT = new Name(parser, parser.pos(a), parser.nf.Id(parser.pos(a), a.getIdentifier())); 
                  :};
 
 qualified_name ::=
     name:a DOT IDENTIFIER:b {:
-                            RESULT = new Name(parser, parser.pos(a, b), a, b.getIdentifier()); 
+                            RESULT = new Name(parser, parser.pos(a, b), a, parser.nf.Id(parser.pos(b), b.getIdentifier())); 
                             :};
 
 compilation_unit ::=
-    package_declaration_opt:a import_declarations_opt:b type_declarations_opt:c {:
-                                                                                RESULT = parser.nf.SourceFile(new Position(parser.lexer.path(), parser.lexer.file()),
-					     a, b, c);
+    package_declaration_opt:a codebase_declarations_opt:b import_declarations_opt:c type_declarations_opt:d {:
+                                                                                                            RESULT = parser.nf.SourceFile(new Position(parser.lexer.path(), parser.lexer.file()),
+					     a, b, c, d);
 	    
-                                                                                :}
+                                                                                                            :}
  |  error type_declarations_opt:c {:
                                   RESULT = parser.nf.SourceFile(new Position(parser.lexer.path(), parser.lexer.file()),
-					     null, Collections.EMPTY_LIST, c);
+					     null, Collections.EMPTY_LIST, Collections.EMPTY_LIST, c);
 	    
                                   :};
 
@@ -470,17 +620,15 @@ package_declaration_opt ::=
 
 import_declarations_opt ::=
     import_declarations:a {:  RESULT = a;  :}
- |  {:  RESULT = new TypedList(new LinkedList(), Import.class, false);  :};
+ |  {:  RESULT = new LinkedList<Import>();  :};
 
 type_declarations_opt ::=
     type_declarations:a {:  RESULT = a;  :}
- |  {:
-    RESULT = new TypedList(new LinkedList(), TopLevelDecl.class, false); 
-    :};
+ |  {:  RESULT = new LinkedList<TopLevelDecl>();  :};
 
 import_declarations ::=
     import_declaration:a {:
-                         List l = new TypedList(new LinkedList(), Import.class, false);
+                         List l = new LinkedList<Import>();
                l.add(a);
                RESULT = l; 
                          :}
@@ -491,7 +639,7 @@ import_declarations ::=
 
 type_declarations ::=
     type_declaration:a {:
-                       List l = new TypedList(new LinkedList(), TopLevelDecl.class, false);
+                       List l = new LinkedList<TopLevelDecl>();
                if (a != null)
                    l.add(a);
                RESULT = l; 
@@ -551,11 +699,11 @@ modifier ::=
  |  NONFABRIC:a {:  RESULT = FabricFlags.NONFABRIC;  :};
 
 class_declaration ::=
-    modifiers_opt:a CLASS:n IDENTIFIER:b parameters_opt:p super_opt:c interfaces_opt:d authority_opt:u class_body:e {:
-                                                                                                                    RESULT = parser.nf.JifClassDecl(parser.pos(n, b),
+    modifiers_opt:a CLASS:n IDENTIFIER:b parameters_opt:p super_opt:c interfaces_opt:d authority_opt:u constraints_opt:f class_body:e {:
+                                                                                                                                      RESULT = parser.nf.JifClassDecl(parser.pos(n, b),
                                                a, parser.nf.Id(parser.pos(b), b.getIdentifier()),
-                                               p, c, d, u, e); 
-                                                                                                                    :};
+                                               p, c, d, u, f, e); 
+                                                                                                                                      :};
 
 super ::=
     EXTENDS objtype_or_expr:a {:  RESULT = a.toUnlabeledType();  :};
@@ -568,12 +716,12 @@ interfaces ::=
     IMPLEMENTS interface_type_list:a {:  RESULT = a;  :};
 
 interfaces_opt ::=
-    {:  RESULT = new TypedList(new LinkedList(), TypeNode.class, false);  :}
+    {:  RESULT = new LinkedList<TypeNode>();  :}
  |  interfaces:a {:  RESULT = a;  :};
 
 interface_type_list ::=
     objtype_or_expr:a {:
-                      List l = new TypedList(new LinkedList(), TypeNode.class, false);
+                      List l = new LinkedList<TypeNode>();
                l.add(a.toUnlabeledType());
                RESULT = l; 
                       :}
@@ -588,7 +736,7 @@ class_body ::=
                                                     :};
 
 class_body_declarations_opt ::=
-    {:  RESULT = new TypedList(new LinkedList(), ClassMember.class, false);  :}
+    {:  RESULT = new LinkedList<ClassMember>();  :}
  |  class_body_declarations:a {:  RESULT = a;  :};
 
 class_body_declarations ::=
@@ -601,50 +749,60 @@ class_body_declarations ::=
 class_body_declaration ::=
     class_member_declaration:a {:  RESULT = a;  :}
  |  constructor_declaration:a {:
-                              List l = new TypedList(new LinkedList(), ClassMember.class, false);
+                              List l = new LinkedList<ClassMember>();
                l.add(a);
                RESULT = l; 
                               :}
  |  SEMICOLON {:
-              List l = new TypedList(new LinkedList(), ClassMember.class, false);
+              List l = new LinkedList<ClassMember>();
                RESULT = l; 
               :}
  |  error SEMICOLON:a {:
-                      List l = new TypedList(new LinkedList(), ClassMember.class, false);
+                      List l = new LinkedList<ClassMember>();
                RESULT = l; 
                       :}
  |  error LBRACE:a {:
-                   List l = new TypedList(new LinkedList(), ClassMember.class, false);
+                   List l = new LinkedList<ClassMember>();
                RESULT = l; 
                    :}
  |  block:a {:
-            
-              parser.report_error ("Jif does not currently support initializer blocks.", parser.pos(a));
-              if (true) throw new Exception();
            
+                parser.report_error ("Jif does not currently support initializer blocks.", parser.pos(a));
+                if (true) throw new Exception();
+            
             :}
  |  static_initializer:a {:
-                         
-              parser.report_error ("Jif does not currently support initializer blocks.", parser.pos(a));
-              if (true) throw new Exception();
-           
+                        
+                parser.report_error ("Jif does not currently support initializer blocks.", parser.pos(a));
+                if (true) throw new Exception();
+            
                          :};
 
 class_member_declaration ::=
     field_declaration:a {:  RESULT = a;  :}
  |  method_declaration:a {:
-                         List l = new TypedList(new LinkedList(), ClassMember.class, false);
+                         List l = new LinkedList<ClassMember>();
                l.add(a);
                RESULT = l; 
                          :};
 
 field_declaration ::=
-    modifiers_opt:a type:b variable_declarators:c SEMICOLON:e {:
-                                                              List l = new TypedList(new LinkedList(), ClassMember.class, false);
+    modifiers_opt:a type:b AT label:al variable_declarators:c SEMICOLON:e {:
+                                                                          List l = new LinkedList<ClassMember>();
                for (Iterator i = c.iterator(); i.hasNext(); ) {
                    VarDeclarator d = (VarDeclarator) i.next();
-                   l.add(parser.nf.FieldDecl(parser.pos(b, e),
-                                             a, parser.array(b, d.dims),
+                   l.add(parser.nf.FabricFieldDecl(parser.pos(b, e),
+                                             a, parser.array(b, d.dims), al,
+                                             d.name, d.init));
+               }
+               RESULT = l; 
+                                                                          :}
+ |  modifiers_opt:a type:b variable_declarators:c SEMICOLON:e {:
+                                                              List l = new LinkedList<ClassMember>();
+               for (Iterator i = c.iterator(); i.hasNext(); ) {
+                   VarDeclarator d = (VarDeclarator) i.next();
+                   l.add(parser.nf.FabricFieldDecl(parser.pos(b, e),
+                                             a, parser.array(b, d.dims), null,
                                              d.name, d.init));
                }
                RESULT = l; 
@@ -652,7 +810,7 @@ field_declaration ::=
 
 variable_declarators ::=
     variable_declarator:a {:
-                          List l = new TypedList(new LinkedList(), VarDeclarator.class, false);
+                          List l = new LinkedList<VarDeclarator>();
                l.add(a);
                RESULT = l; 
                           :}
@@ -686,31 +844,31 @@ method_declaration ::=
     method_header:a method_body:b {:  RESULT = (MethodDecl) a.body(b);  :};
 
 method_header ::=
-    modifiers_opt:a type:b IDENTIFIER:c label_opt:i LPAREN formal_parameter_list_opt:d RPAREN dims_opt:e return_label_opt:r throws_opt:f constraints_opt:w {:
-                                                                                                                                                           RESULT = parser.nf.JifMethodDecl(parser.pos(b,c,c), a,
+    modifiers_opt:a type:b IDENTIFIER:c label_opt:i LPAREN formal_parameter_list_opt:d RPAREN dims_opt:e return_label_opt:r throws_opt:f procedure_constraints_opt:w {:
+                                                                                                                                                                     RESULT = parser.nf.JifMethodDecl(parser.pos(b,c,c), a,
                         parser.array(b, e.intValue()),
                         parser.nf.Id(parser.pos(c), c.getIdentifier()),
                                                 i, d, r, f, w, null);
                if (i != null) parser.countAnnotation(parser.PC_BOUND_ANNOTATION, RESULT.position());
              
-                                                                                                                                                           :}
- |  modifiers_opt:a VOID:b IDENTIFIER:c label_opt:i LPAREN formal_parameter_list_opt:d RPAREN return_label_opt:r throws_opt:f constraints_opt:w {:
-                                                                                                                                                RESULT = parser.nf.JifMethodDecl(parser.pos(b,c), a,
+                                                                                                                                                                     :}
+ |  modifiers_opt:a VOID:b IDENTIFIER:c label_opt:i LPAREN formal_parameter_list_opt:d RPAREN return_label_opt:r throws_opt:f procedure_constraints_opt:w {:
+                                                                                                                                                          RESULT = parser.nf.JifMethodDecl(parser.pos(b,c), a,
                         parser.nf.CanonicalTypeNode(parser.pos(b),
                                    parser.ts.Void()),
                                    parser.nf.Id(parser.pos(c), c.getIdentifier()),
                                                 i, d, r, f, w, null);
                if (i != null) parser.countAnnotation(parser.PC_BOUND_ANNOTATION, RESULT.position());
             
-                                                                                                                                                :};
+                                                                                                                                                          :};
 
 formal_parameter_list_opt ::=
-    {:  RESULT = new TypedList(new LinkedList(), Formal.class, false);  :}
+    {:  RESULT = new LinkedList<Formal>();  :}
  |  formal_parameter_list:a {:  RESULT = a;  :};
 
 formal_parameter_list ::=
     formal_parameter:a {:
-                       List l = new TypedList(new LinkedList(), Formal.class, false);
+                       List l = new LinkedList<Formal>();
                l.add(a);
                RESULT = l; 
                        :}
@@ -730,7 +888,7 @@ formal_parameter ::=
                                             :};
 
 throws_opt ::=
-    {:  RESULT = new TypedList(new LinkedList(), TypeNode.class, false);  :}
+    {:  RESULT = new LinkedList<TypeNode>();  :}
  |  throws:a {:  RESULT = a;  :};
 
 throws ::=
@@ -739,7 +897,7 @@ throws ::=
 
 class_type_list ::=
     class_type:a {:
-                 List l = new TypedList(new LinkedList(), TypeNode.class, false);
+                 List l = new LinkedList<TypeNode>();
                l.add(a);
                RESULT = l; 
                  :}
@@ -756,8 +914,8 @@ static_initializer ::=
     STATIC block:a {:  RESULT = a;  :};
 
 constructor_declaration ::=
-    modifiers_opt:a reftype_or_expr:q LPAREN formal_parameter_list_opt:c RPAREN:y return_label_opt:r throws_opt:d constraints_opt:w constructor_body:e {:
-                                                                                                                                                       Id b; LabelNode i;
+    modifiers_opt:a reftype_or_expr:q LPAREN formal_parameter_list_opt:c RPAREN:y return_label_opt:r throws_opt:d procedure_constraints_opt:w constructor_body:e {:
+                                                                                                                                                                 Id b; LabelNode i;
                // Pick apart the reftype_or_expr node.
                // It can be either an identifier "a" or an
                // identifier and label "a{L}".
@@ -772,11 +930,11 @@ constructor_declaration ::=
            RESULT = parser.nf.JifConstructorDecl(parser.pos(q, y),
                              a, b, i, r, c, d, w, e); 
         
-                                                                                                                                                       :};
+                                                                                                                                                                 :};
 
 constructor_body ::=
     LBRACE:n explicit_constructor_invocation:a block_statements:b RBRACE:d {:
-                                                                           List l = new TypedList(new LinkedList(), Stmt.class, false);
+                                                                           List l = new LinkedList<Stmt>();
                l.add(a);
                l.addAll(b);
                RESULT = parser.nf.Block(parser.pos(n, d), l); 
@@ -785,13 +943,13 @@ constructor_body ::=
                                                         RESULT = parser.nf.Block(parser.pos(n, d), a); 
                                                         :}
  |  LBRACE:x block_statements:a explicit_super_constructor_invocation:b RBRACE:y {:
-                                                                                 List l = new TypedList(new LinkedList(), Stmt.class, false);
+                                                                                 List l = new LinkedList<Stmt>();
                l.addAll(a);
                l.add(b);
                RESULT = parser.nf.Block(parser.pos(x,y), l); 
                                                                                  :}
  |  LBRACE:x block_statements:a explicit_super_constructor_invocation:b block_statements:c RBRACE:y {:
-                                                                                                    List l = new TypedList(new LinkedList(), Stmt.class, false);
+                                                                                                    List l = new LinkedList<Stmt>();
                l.addAll(a);
                l.add(b);
                l.addAll(c);
@@ -806,7 +964,8 @@ constructor_body ::=
                       RESULT = parser.nf.Block(parser.pos(x,y),
                 parser.nf.SuperCall(parser.pos(x),
                 Collections.EMPTY_LIST)); 
-                      :};
+                      :}
+ |  SEMICOLON {:  RESULT = null;  :};
 
 explicit_constructor_invocation ::=
     explicit_super_constructor_invocation:a {:  RESULT = a;  :}
@@ -815,19 +974,21 @@ explicit_constructor_invocation ::=
                                                          :};
 
 interface_declaration ::=
-    modifiers_opt:a INTERFACE:n IDENTIFIER:b parameters_opt:p extends_interfaces_opt:d authority_opt:u interface_body:e {:
-                                                                                                                        RESULT = parser.nf.JifClassDecl(parser.pos(n,b),
-		    a.set(Flags.INTERFACE), parser.nf.Id(parser.pos(b), b.getIdentifier()),
-		    p, null, d, u, e); 
-                                                                                                                        :};
+    modifiers_opt:a INTERFACE:n IDENTIFIER:b parameters_opt:p extends_interfaces_opt:d authority_opt:u constraints_opt:f interface_body:e {:
+                                                                                                                                          RESULT = parser.nf.JifClassDecl(parser.pos(n,b),
+                                               a.set(Flags.INTERFACE),
+                                               parser.nf.Id(parser.pos(b),
+                                               b.getIdentifier()),
+                                               p, null, d, u, f, e); 
+                                                                                                                                          :};
 
 extends_interfaces_opt ::=
-    {:  RESULT = new TypedList(new LinkedList(), TypeNode.class, false);  :}
+    {:  RESULT = new LinkedList<TypeNode>();  :}
  |  extends_interfaces:a {:  RESULT = a;  :};
 
 extends_interfaces ::=
     EXTENDS objtype_or_expr:a {:
-                              List l = new TypedList(new LinkedList(), TypeNode.class, false);
+                              List l = new LinkedList<TypeNode>();
                l.add(a.toUnlabeledType());
                RESULT = l; 
                               :}
@@ -842,7 +1003,7 @@ interface_body ::=
                                                           :};
 
 interface_member_declarations_opt ::=
-    {:  RESULT = new TypedList(new LinkedList(), ClassMember.class, false);  :}
+    {:  RESULT = new LinkedList<ClassMember>();  :}
  |  interface_member_declarations:a {:  RESULT = a;  :};
 
 interface_member_declarations ::=
@@ -855,7 +1016,7 @@ interface_member_declarations ::=
 interface_member_declaration ::=
     constant_declaration:a {:  RESULT = a;  :}
  |  abstract_method_declaration:a {:
-                                  List l = new TypedList(new LinkedList(), ClassMember.class, false);
+                                  List l = new LinkedList<ClassMember>();
                l.add(a);
                RESULT = l; 
                                   :}
@@ -881,7 +1042,7 @@ array_initializer ::=
 
 variable_initializers ::=
     variable_initializer:a {:
-                           List l = new TypedList(new LinkedList(), Expr.class, false);
+                           List l = new LinkedList<Expr>();
            l.add(a);
            RESULT = l; 
                            :}
@@ -899,12 +1060,12 @@ block ::=
                    :};
 
 block_statements_opt ::=
-    {:  RESULT = new TypedList(new LinkedList(), Stmt.class, false);  :}
+    {:  RESULT = new LinkedList<Stmt>();  :}
  |  block_statements:a {:  RESULT = a;  :};
 
 block_statements ::=
     block_statement:a {:
-                      List l = new TypedList(new LinkedList(), Stmt.class, false);
+                      List l = new LinkedList<Stmt>();
                l.addAll(a);
                RESULT = l; 
                       :}
@@ -916,7 +1077,7 @@ block_statements ::=
 block_statement ::=
     local_variable_declaration_statement:a {:  RESULT = a;  :}
  |  statement:a {:
-                List l = new TypedList(new LinkedList(), Stmt.class, false);
+                List l = new LinkedList<Stmt>();
                l.add(a);
                RESULT = l; 
                 :};
@@ -1027,9 +1188,7 @@ switch_block ::=
                                                                   :}
  |  LBRACE switch_block_statement_groups:a RBRACE {:  RESULT = a;  :}
  |  LBRACE switch_labels:a RBRACE {:  RESULT = a;  :}
- |  LBRACE RBRACE {:
-                  RESULT = new TypedList(new LinkedList(), SwitchElement.class, false); 
-                  :};
+ |  LBRACE RBRACE {:  RESULT = new LinkedList<SwitchElement>();  :};
 
 switch_block_statement_groups ::=
     switch_block_statement_group:a {:  RESULT = a;  :}
@@ -1040,7 +1199,7 @@ switch_block_statement_groups ::=
 
 switch_block_statement_group ::=
     switch_labels:a block_statements:b {:
-                                       List l = new TypedList(new LinkedList(), SwitchElement.class, false);
+                                       List l = new LinkedList<SwitchElement>();
                l.addAll(a);
                l.add(parser.nf.SwitchBlock(parser.pos(a, b), b));
                RESULT = l; 
@@ -1048,7 +1207,7 @@ switch_block_statement_group ::=
 
 switch_labels ::=
     switch_label:a {:
-                   List l = new TypedList(new LinkedList(), Case.class, false);
+                   List l = new LinkedList<Case>();
                l.add(a);
                RESULT = l; 
                    :}
@@ -1087,19 +1246,19 @@ for_statement_no_short_if ::=
                                                                                                                        :};
 
 for_init_opt ::=
-    {:  RESULT = new TypedList(new LinkedList(), ForInit.class, false);  :}
+    {:  RESULT = new LinkedList<ForInit>();  :}
  |  for_init:a {:  RESULT = a;  :};
 
 for_init ::=
     statement_expression_list:a {:  RESULT = a;  :}
  |  local_variable_declaration:a {:
-                                 List l = new TypedList(new LinkedList(), ForInit.class, false);
+                                 List l = new LinkedList<ForInit>();
                l.addAll(a);
                RESULT = l; 
                                  :};
 
 for_update_opt ::=
-    {:  RESULT = new TypedList(new LinkedList(), ForUpdate.class, false);  :}
+    {:  RESULT = new LinkedList<ForUpdate>();  :}
  |  for_update:a {:  RESULT = a;  :};
 
 for_update ::=
@@ -1107,7 +1266,7 @@ for_update ::=
 
 statement_expression_list ::=
     statement_expression:a {:
-                           List l = new TypedList(new LinkedList(), Eval.class, false);
+                           List l = new LinkedList<Eval>();
                l.add(parser.nf.Eval(parser.pos(a), a));
                RESULT = l; 
                            :}
@@ -1119,8 +1278,8 @@ statement_expression_list ::=
 identifier_opt ::=
     {:  RESULT = null;  :}
  |  IDENTIFIER:a {:
-                 RESULT = new Name(parser, parser.pos(a), 
-                a.getIdentifier()); 
+                 RESULT = new Name(parser, parser.pos(a),
+                parser.nf.Id(parser.pos(a), a.getIdentifier())); 
                  :};
 
 break_statement ::=
@@ -1163,12 +1322,12 @@ try_statement ::=
                                           :};
 
 catches_opt ::=
-    {:  RESULT = new TypedList(new LinkedList(), Catch.class, false);  :}
+    {:  RESULT = new LinkedList<Catch>();  :}
  |  catches:a {:  RESULT = a;  :};
 
 catches ::=
     catch_clause:a {:
-                   List l = new TypedList(new LinkedList(), Catch.class, false);
+                   List l = new LinkedList<Catch>();
                l.add(a);
                RESULT = l; 
                    :}
@@ -1198,7 +1357,7 @@ primary ::=
                                               RESULT = parser.nf.NewLabel(parser.pos(n, loc), a, loc); 
                                               :}
  |  NEW:n PRINCIPAL location_expr_opt:loc LPAREN principal_disjunctive:a RPAREN:z {:
-                                                                                  RESULT = parser.nf.PrincipalExpr(parser.pos(n, z), a); 
+                                                                                  RESULT = parser.nf.PrincipalExpr(parser.pos(n, z), a, loc); 
                                                                                   :}
  |  NEW:n objtype_or_expr:a dims_opt:b {:
                                        RESULT = parser.toNewFabricArray(parser.pos(n,a), a, b, null); 
@@ -1211,7 +1370,8 @@ primary_no_new_array ::=
     array_access:a {:  RESULT = a;  :}
  |  primary_no_array:a {:  RESULT = a;  :}
  |  local_worker:a {:  RESULT = a;  :}
- |  remote_worker:a {:  RESULT = a;  :};
+ |  remote_worker:a {:  RESULT = a;  :}
+ |  store_expr:a {:  RESULT = a;  :};
 
 class_instance_creation_expression ::=
     NEW:x objtype_or_expr:a LPAREN argument_list_opt:b RPAREN:y {:
@@ -1236,12 +1396,12 @@ class_instance_creation_expression ::=
                                                                                             :};
 
 argument_list_opt ::=
-    {:  RESULT = new TypedList(new LinkedList(), Expr.class, false);  :}
+    {:  RESULT = new LinkedList<Expr>();  :}
  |  argument_list:a {:  RESULT = a;  :};
 
 argument_list ::=
     expression:a {:
-                 List l = new TypedList(new LinkedList(), Expr.class, false);
+                 List l = new LinkedList<Expr>();
                l.add(a);
                RESULT = l; 
                  :}
@@ -1281,7 +1441,7 @@ array_creation_expression ::=
 
 dim_exprs ::=
     dim_expr:a {:
-               List l = new TypedList(new LinkedList(), Expr.class, false);
+               List l = new LinkedList<Expr>();
                l.add(a);
                RESULT = l; 
                :}
@@ -1340,7 +1500,7 @@ array_access ::=
                     x = parser.nf.ArrayAccess(parser.pos(a,b), x, e);
                }
                RESULT = (ArrayAccess) x;
-	    
+            
                                    :};
 
 postfix_expression ::=
@@ -1473,11 +1633,16 @@ relational_expression ::=
  |  relational_expression:a INSTANCEOF reference_type:b {:
                                                         RESULT = parser.nf.Instanceof(parser.pos(a, b), a, b); 
                                                         :}
- |  relational_expression:a actsfor shift_expression:b {:
+ |  relational_expression:a ACTSFOR shift_expression:b {:
                                                       
                 RESULT = parser.nf.Binary(parser.pos(a, b), a, JifBinaryDel.ACTSFOR, b);
                 
                                                        :}
+ |  relational_expression:a TRUST_GTEQ shift_expression:b {:
+                                                         
+                RESULT = parser.nf.Binary(parser.pos(a, b), a, JifBinaryDel.ACTSFOR, b);
+                
+                                                          :}
  |  relational_expression:a EQUIV shift_expression:b {:
                                                     
                 RESULT = parser.nf.Binary(parser.pos(a, b), a, JifBinaryDel.EQUIV, b);
@@ -1583,7 +1748,13 @@ primary_no_array ::=
  |  field_access:a {:  RESULT = a;  :}
  |  method_invocation:a {:  RESULT = a;  :}
  |  declassify:a {:  RESULT = a;  :}
- |  endorse:a {:  RESULT = a;  :};
+ |  endorse:a {:  RESULT = a;  :}
+ |  provider:a {:  RESULT = parser.nf.NewLabel(parser.pos(a), a);  :}
+ |  reftype_or_expr:a DOT PROVIDER:b {:
+                                     RESULT = parser.nf.NewLabel(parser.pos(a, b),
+                   parser.nf.AmbProviderLabelNode(parser.pos(a, b), a.toType()));
+            
+                                     :};
 
 label ::=
     LBRACE:x RBRACE:y {:
@@ -1621,13 +1792,11 @@ label_opt ::=
 
 label_flexible ::=
     label:a {:  RESULT = a;  :}
- |  accesspath:a {:
-                 RESULT = parser.nf.AmbDynamicLabelNode(parser.pos(a), a); 
-                 :};
+ |  dynamic_label:a {:  RESULT = a;  :};
 
 join_component_list ::=
     join_label_component:a {:
-                           List l = new TypedList(new LinkedList(), Node.class, false);
+                           List l = new LinkedList<Node>();
                l.add(a);
                RESULT = l; 
                            :}
@@ -1660,15 +1829,17 @@ meet_component_list ::=
 
 label_component ::=
     label_component_policy:a {:  RESULT = a;  :}
- |  MULT:x accesspath:a {:
-                        RESULT = parser.nf.AmbDynamicLabelNode(parser.pos(x, a),
-						      a); 
-                        :}
+ |  MULT:x dynamic_label:a {:  RESULT = a.position(parser.pos(x, a));  :}
  |  THIS:a {:  RESULT = parser.nf.AmbThisLabelNode(parser.pos(a));  :}
  |  IDENTIFIER:a {:
                  RESULT = parser.nf.AmbVarLabelNode(parser.pos(a),
-						  parser.nf.Id(parser.pos(a), a.getIdentifier())); 
+                                                  parser.nf.Id(parser.pos(a), a.getIdentifier())); 
                  :};
+
+provider ::=
+    PROVIDER:a {:
+               RESULT = parser.nf.AmbVarLabelNode(parser.pos(a),parser.nf.Id(parser.pos(a), "provider")); 
+               :};
 
 rightarrow ::=
     COLON:a {:  RESULT = a;  :}
@@ -1689,15 +1860,12 @@ label_component_policy ::=
                                                                :};
 
 principal_list_opt ::=
-    {:
-    RESULT = new TypedList(new LinkedList(), PrincipalNode.class,
-				      false); 
-    :}
+    {:  RESULT = new LinkedList<PrincipalNode>();  :}
  |  principal_list:a {:  RESULT = a;  :};
 
 principal_list ::=
     principal_conjunctive:a {:
-                            List l = new TypedList(new LinkedList(), PrincipalNode.class, false);
+                            List l = new LinkedList<PrincipalNode>();
            l.add(a);
                RESULT = l; 
                             :}
@@ -1740,7 +1908,33 @@ principal_base ::=
  |  LPAREN:a principal_disjunctive:b RPAREN:c {:  RESULT = b;  :}
  |  local_worker:a {:
                    RESULT = parser.nf.AmbPrincipalNode(parser.pos(a), a); 
-                   :};
+                   :}
+ |  remote_worker:a {:
+                    RESULT = parser.nf.AmbPrincipalNode(parser.pos(a), a); 
+                    :};
+
+dynamic_label ::=
+    accesspath:a {:
+                 RESULT = parser.nf.AmbDynamicLabelNode(parser.pos(a), a); 
+                 :}
+ |  provider:a {:  RESULT = a;  :}
+ |  accesspath_receiver:a DOT PROVIDER:b {:
+                                         TypeNode clazz;
+               if (a instanceof Expr) {
+                   clazz = parser.exprToUninstType((Expr) a);
+               } else if (a instanceof AmbReceiver) {
+                   AmbReceiver ar = (AmbReceiver) a;
+                   Prefix prefix = ar.prefix();
+                   QualifierNode pn = null;
+                   if (prefix != null) pn = parser.prefixToQualifier(ar.prefix());
+                   clazz = parser.nf.AmbTypeNode(parser.pos(a), pn, ar.name());
+               } else {
+                   clazz = null;
+                   parser.die(parser.pos(a));
+               }
+               RESULT = parser.nf.AmbProviderLabelNode(parser.pos(a, b), clazz);
+            
+                                         :};
 
 accesspath ::=
     THIS:a {:   RESULT = parser.nf.This(parser.pos(a));   :}
@@ -1749,8 +1943,9 @@ accesspath ::=
                  :}
  |  accesspath_receiver:a DOT IDENTIFIER:b {:
                                            RESULT = parser.nf.Field(parser.pos(a, b),
-	                     a,
-			        b.getIdentifier()); 
+                                        a,
+                                        b.getIdentifier());
+            
                                            :};
 
 accesspath_receiver ::=
@@ -1760,15 +1955,31 @@ accesspath_receiver ::=
                  :}
  |  accesspath_receiver:a DOT IDENTIFIER:b {:
                                            RESULT = parser.nf.Field(parser.pos(a, b),
-	                     a,
-			        b.getIdentifier()); 
+                                        a,
+                                        b.getIdentifier());
+            
                                            :};
 
 accesspath_no_id ::=
     THIS:a {:   RESULT = parser.nf.This(parser.pos(a));   :}
  |  accesspath_receiver:a DOT IDENTIFIER:b {:
                                            RESULT = parser.nf.Field(parser.pos(a, b), a, b.getIdentifier()); 
-                                           :};
+                                           :}
+ |  STORE:a {:
+            RESULT = parser.nf.Store(parser.pos(a), parser.nf.This(parser.pos(a))); 
+            :}
+ |  accesspath_receiver:a DOT STORE:b {:
+                                      
+              if (a instanceof Expr) {
+                RESULT = parser.nf.Store(parser.pos(a, b), (Expr)a);               
+              } else if (a instanceof AmbReceiver) {
+                // sigh.. convert back to expr              
+	            RESULT = parser.nf.Store(parser.pos(a, b), parser.receiverToExpr((AmbReceiver)a)); 
+	          } else {
+		        parser.die(parser.pos(a));
+	          }
+            
+                                      :};
 
 labeled_primitive_type ::=
     primitive_type:a {:  RESULT = a;  :}
@@ -1803,10 +2014,7 @@ primitive_array_type ::=
                                                           :};
 
 authority_opt ::=
-    {:
-    RESULT = new TypedList(new LinkedList(), PrincipalNode.class,
-	       false); 
-    :}
+    {:  RESULT = new LinkedList<PrincipalNode>();  :}
  |  authority:a {:  RESULT = a;  :};
 
 authority ::=
@@ -1827,12 +2035,12 @@ explicit_super_constructor_invocation ::=
                                                           :};
 
 parameters_opt ::=
-    {:  RESULT = new TypedList(new LinkedList(), ParamDecl.class, false);  :}
+    {:  RESULT = new LinkedList<ParamDecl>();  :}
  |  LBRACK parameters:p RBRACK {:  RESULT = p;  :};
 
 parameters ::=
     parameter:a {:
-                List l = new TypedList(new LinkedList(), ParamDecl.class, false);
+                List l = new LinkedList<ParamDecl>();
                l.add(a);
                RESULT = l; 
                 :}
@@ -1846,12 +2054,6 @@ parameter ::=
                                         parser.nf.Id(parser.pos(a), a.getIdentifier()));
                                         
                          :}
- |  COVARIANT:x LABEL IDENTIFIER:a {:
-                                   RESULT = parser.nf.ParamDecl(parser.pos(x, a),
-                                        ParamInstance.COVARIANT_LABEL,
-                                        parser.nf.Id(parser.pos(a), a.getIdentifier()));
-                                        
-                                   :}
  |  PRINCIPAL:x IDENTIFIER:a {:
                              RESULT = parser.nf.ParamDecl(parser.pos(x, a),
                                         ParamInstance.PRINCIPAL,
@@ -1859,23 +2061,21 @@ parameter ::=
                                         
                              :};
 
-constraints_opt ::=
-    {:
-    RESULT = new TypedList(new LinkedList(), ConstraintNode.class, false); 
-    :}
- |  WHERE constraints:a {:  RESULT = a;  :};
+procedure_constraints_opt ::=
+    {:  RESULT = new LinkedList<ConstraintNode>();  :}
+ |  WHERE procedure_constraints:a {:  RESULT = a;  :};
 
-constraints ::=
-    constraint:a {:
-                 List l = new TypedList(new LinkedList(), ConstraintNode.class, false);
+procedure_constraints ::=
+    procedure_constraint:a {:
+                           List l = new LinkedList<ConstraintNode>();
                l.add(a); RESULT = l; 
-                 :}
- |  constraints:a COMMA constraint:b {:
-                                     RESULT = a;
+                           :}
+ |  procedure_constraints:a COMMA procedure_constraint:b {:
+                                                         RESULT = a;
                a.add(b); 
-                                     :};
+                                                         :};
 
-constraint ::=
+procedure_constraint ::=
     AUTHORITY:x LPAREN principal_list:a RPAREN:y {:
                                                  RESULT = parser.nf.AuthConstraintNode(parser.pos(x,y), a);
            parser.countAnnotation(parser.METHOD_AUTH_ANNOTATION, RESULT.position());
@@ -1891,26 +2091,59 @@ constraint ::=
            parser.countAnnotation(parser.METHOD_AUTO_ENDORSE_ANNOTATION, RESULT.position());
         
                                                :}
- |  principal:a actsfor principal:b {:
-                                    RESULT = parser.nf.ActsForConstraintNode(parser.pos(a,b), a, b);
+ |  constraint:a {:  RESULT = a;
+         :};
+
+constraints_opt ::=
+    {:  RESULT = new LinkedList<ConstraintNode>();  :}
+ |  WHERE constraints:a {:  RESULT = a;  :};
+
+constraints ::=
+    constraint:a {:
+                 List l = new LinkedList<ConstraintNode>();
+               l.add(a); RESULT = l; 
+                 :}
+ |  constraints:a COMMA constraint:b {:
+                                     RESULT = a;
+               a.add(b); 
+                                     :};
+
+constraint ::=
+    principal:a ACTSFOR principal:b {:
+                                    RESULT = parser.nf.PrincipalActsForPrincipalConstraintNode(parser.pos(a,b), a, b);
            parser.countAnnotation(parser.METHOD_ACTSFOR_ANNOTATION, RESULT.position());
         
                                     :}
+ |  principal:a TRUST_GTEQ principal:b {:
+                                       RESULT = parser.nf.PrincipalActsForPrincipalConstraintNode(parser.pos(a,b), a, b);
+           parser.countAnnotation(parser.METHOD_ACTSFOR_ANNOTATION, RESULT.position());
+        
+                                       :}
  |  principal:a EQUIV principal:b {:
-                                  RESULT = parser.nf.ActsForConstraintNode(parser.pos(a,b), a, b, true);
+                                  RESULT = parser.nf.PrincipalActsForPrincipalConstraintNode(parser.pos(a,b), a, b, true);
            parser.countAnnotation(parser.METHOD_ACTSFOR_ANNOTATION, RESULT.position());
         
                                   :}
- |  label_flexible:a LTEQ label_flexible:b {:
-                                           RESULT = parser.nf.LabelLeAssertionNode(parser.pos(a,b), a, b, false);
+ |  label_flexible:a flowsto label_flexible:b {:
+                                              RESULT = parser.nf.LabelLeAssertionNode(parser.pos(a,b), a, b, false);
            parser.countAnnotation(parser.METHOD_LABEL_ASSERTION_ANNOTATION, RESULT.position());
         
-                                           :}
+                                              :}
  |  label:a EQUIV label:b {:
                           RESULT = parser.nf.LabelLeAssertionNode(parser.pos(a,b), a, b, true);
            parser.countAnnotation(parser.METHOD_LABEL_ASSERTION_ANNOTATION, RESULT.position());
         
-                          :};
+                          :}
+ |  provider:a ACTSFOR principal:b {:
+                                   RESULT = parser.nf.LabelActsForPrincipalConstraintNode(parser.pos(a,b), a, b);
+           parser.countAnnotation(parser.METHOD_ACTSFOR_ANNOTATION, RESULT.position());
+        
+                                   :};
+
+flowsto ::=
+    FLOWSTO
+ |  INFO_LTEQ
+ |  LTEQ;
 
 declassify_statement ::=
     DECLASSIFY:n LPAREN label:b downgrade_to_label_opt:a RPAREN statement:c {:
@@ -1938,10 +2171,6 @@ downgrade_to_label_opt ::=
     TO label:a {:  RESULT = a;  :}
  |  {:  RESULT = null;  :};
 
-actsfor ::=
-    ACTSFOR
- |  ACTSFOR_LOWER;
-
 declassify ::=
     DECLASSIFY:x LPAREN expression:a COMMA label:c downgrade_to_label_opt:b RPAREN:y {:
                                                                                      RESULT = parser.nf.DeclassifyExpr(parser.pos(x,y), a, b==null?null:c, b==null?c:b); 
@@ -1956,9 +2185,9 @@ param_or_expr_list ::=
     expression:a {:  RESULT = parser.makeParamOrExprList(a);  :}
  |  label:a {:
             List l = new LinkedList();
-	       l.add(a);
-	       RESULT = l;
-	    
+               l.add(a);
+               RESULT = l;
+            
             :}
  |  param_or_expr_list:a COMMA simple_name:b {:  a.add(b); RESULT = a;  :}
  |  param_or_expr_list:a COMMA label:b {:  a.add(b); RESULT = a;  :}
@@ -2005,6 +2234,9 @@ reftype_or_expr ::=
  |  reftype_or_expr:a CONST LBRACK RBRACK:y {:
                                             RESULT = new Array(parser, parser.pos(a,y), a.toType(), true); 
                                             :}
+ |  reftype_or_expr:a DOT STORE:b {:
+                                  RESULT = new AmbStore(a, parser, parser.pos(a, b)); 
+                                  :}
  |  reftype_or_expr:a NATIVE LBRACK RBRACK:y {:
                                              RESULT = new Array(parser, parser.pos(a,y), a.toType(),
                                   /* isConst */ false, /* isNative */ true); 
@@ -2013,6 +2245,26 @@ reftype_or_expr ::=
                                                    RESULT = new Array(parser, parser.pos(a,y), a.toType(),
                                   /* isConst */ true, /* isNative */ true); 
                                                    :};
+
+codebase_declarations_opt ::=
+    codebase_declarations:a {:  RESULT = a;  :}
+ |  {:  RESULT = new LinkedList<CodebaseDecl>();  :};
+
+codebase_declarations ::=
+    codebase_declaration:a {:
+                           List l = new LinkedList<CodebaseDecl>();
+               l.add(a);
+               RESULT = l; 
+                           :}
+ |  codebase_declarations:a codebase_declaration:b {:
+                                                   RESULT = a;
+               a.add(b); 
+                                                   :};
+
+codebase_declaration ::=
+    CODEBASE simple_name:a SEMICOLON {:
+                                     RESULT = parser.nf.CodebaseDecl(parser.pos(a), a.toIdentifier()); 
+                                     :};
 
 atomic_statement ::=
     ATOMIC:n block:a {:
@@ -2033,12 +2285,32 @@ remote_worker ::=
                                           RESULT = parser.nf.RemoteWorkerGetter(parser.pos(a, c), b); 
                                           :};
 
+store_expr ::=
+    STORE:a {:
+            RESULT = parser.nf.Store(parser.pos(a), parser.nf.This(parser.pos(a))); 
+            :}
+ |  primary_no_new_array:a DOT STORE:b {:
+                                       RESULT = parser.nf.Store(parser.pos(a, b), a); 
+                                       :};
+
 location_expr_opt ::=
     {:  RESULT = null;  :}
- |  AT name:a {:  RESULT = a.toExpr();  :};
+ |  AT name:a {:  RESULT = a.toExpr();  :}
+ |  AT STORE:a {:
+               RESULT = parser.nf.Store(parser.pos(a), parser.nf.This(parser.pos(a))); 
+               :}
+ |  AT name:a DOT STORE:b {:
+                          RESULT = parser.nf.Store(parser.pos(a, b), a.toExpr()); 
+                          :};
 
 location_expr ::=
-    AT name:a {:  RESULT = a.toExpr();  :};
+    AT name:a {:  RESULT = a.toExpr();  :}
+ |  AT STORE:a {:
+               RESULT = parser.nf.Store(parser.pos(a), parser.nf.This(parser.pos(a))); 
+               :}
+ |  AT name:a DOT STORE:b {:
+                          RESULT = parser.nf.Store(parser.pos(a, b), a.toExpr()); 
+                          :};
 
 fabric_array_initializer ::=
     array_initializer:a {:

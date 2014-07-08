@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -27,7 +27,6 @@ import polyglot.util.Position;
 import fabil.visit.ProxyRewriter;
 
 public class ConstructorCallExt_c extends FabILExt_c {
-  @SuppressWarnings("unchecked")
   @Override
   public Node rewriteProxies(ProxyRewriter pr) {
     // Need to add a $location argument to super(...) and this(...) constructor
@@ -37,16 +36,16 @@ public class ConstructorCallExt_c extends FabILExt_c {
 
     // Ensure that we're translating a Fabric type.
     Type containerType = call.constructorInstance().container();
-//    if (!"java.lang.Object".equals(containerType.toString())
-//        && !pr.typeSystem().isFabricClass(containerType))
+
     if (!pr.typeSystem().isFabricClass(containerType))
       return super.rewriteProxies(pr);
 
     List<Expr> args = new LinkedList<Expr>(call.arguments());
-    args.add(0, nf.AmbExpr(Position.compilerGenerated(), nf.Id(Position
-        .compilerGenerated(), "$location")));
-    args.add(1, nf.AmbExpr(Position.compilerGenerated(), nf.Id(Position
-        .compilerGenerated(), "$label")));
+    args.add(
+        0,
+        nf.AmbExpr(Position.compilerGenerated(),
+            nf.Id(Position.compilerGenerated(), "$location")));
+
     return call.arguments(args);
   }
 

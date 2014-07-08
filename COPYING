@@ -1,8 +1,8 @@
 This release of the Fabric distribution is governed by the GNU
 Public License as described by the following copyright notice.
 
-Fabric
-Copyright (C) 2010 Fabric project group, Cornell University
+Fabric 0.2.0
+Copyright (C) 2010-2012 Fabric project group, Cornell University
 
 Fabric is free software: you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by
@@ -109,3 +109,4 @@ from the GNU General Public License) are enumerated below.
     Java Servlet API
       Files:
 	lib/jetty/servlet-api-*.jar
+

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -15,12 +15,12 @@
  */
 package fabric.common.net;
 
+import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 
 import fabric.common.net.naming.SocketAddress;
-
+import fabric.lang.security.Principal;
 
 /**
  * Client-side multiplexed socket implementation. The API mirrors that of
@@ -31,52 +31,75 @@ import fabric.common.net.naming.SocketAddress;
  * @author mdgeorge
  */
 public class SubSocket {
-  //////////////////////////////////////////////////////////////////////////////
-  // public API                                                               //
-  //////////////////////////////////////////////////////////////////////////////
+  // ////////////////////////////////////////////////////////////////////////////
+  // public API //
+  // ////////////////////////////////////////////////////////////////////////////
 
   /** @see SubSocketFactory */
   protected SubSocket(SubSocketFactory factory) {
-    this.state = new Unconnected(factory); 
+    this.state = new Unconnected(factory);
   }
 
   /**
-   * Create a connected SubSocket.  This is used internally by ServerChannels
-   * for accepting incoming streams.
-   */ 
+   * Create a connected SubSocket. This is used internally by ServerChannels for
+   * accepting incoming streams.
+   */
   SubSocket(Channel.Connection conn) {
     this.state = new Connected(conn);
   }
 
   /** @see java.net.Socket#close() */
-  public final void close() throws IOException {
+  public synchronized final void close() throws IOException {
     state.close();
   }
 
   /** @see java.net.Socket#connect(SocketAddress) */
-  public final void connect(String name) throws IOException {
+  public synchronized final void connect(String name) throws IOException {
     state.connect(name);
   }
 
-  /** @see java.net.Socket#getOutputStream() */
-  public final OutputStream getOutputStream() throws IOException {
+  /**
+   * Returns an output stream for this SubSocket. Buffering on this output
+   * stream should not be necessary.
+   * 
+   * @see java.net.Socket#getOutputStream()
+   */
+  public synchronized final BufferedOutputStream getOutputStream()
+      throws IOException {
     return state.getOutputStream();
   }
 
-  /** @see java.net.Socket#getInputStream() */
-  public final InputStream getInputStream() throws IOException {
+  /**
+   * Returns an input stream for this SubSocket. Buffering on this input stream
+   * should not be necessary.
+   * 
+   * @see java.net.Socket#getInputStream()
+   */
+  public synchronized final InputStream getInputStream() throws IOException {
     return state.getInputStream();
   }
 
-  //////////////////////////////////////////////////////////////////////////////
-  // State design pattern implementation                                      //
-  //                                                                          //
-  //                connect                close                              //
-  //  unconnected  --------->  connected  ------->  closed                    //
-  //       |                       |                  |                       //
-  //       +-----------------------+------------------+---------------> error //
-  //                                                       exception          //
-  //////////////////////////////////////////////////////////////////////////////
+  /**
+   * Return the Principal that represents the remote endpoint of the connection
+   */
+  public synchronized final Principal getPrincipal() throws IOException {
+    return state.getPrincipal();
+  }
+
+  @Override
+  public String toString() {
+    return state.toString();
+  }
+
+  // ////////////////////////////////////////////////////////////////////////////
+  // State design pattern implementation //
+  // //
+  // connect close //
+  // unconnected ---------> connected -------> closed //
+  // | | | //
+  // +-----------------------+------------------+---------------> error //
+  // exception //
+  // ////////////////////////////////////////////////////////////////////////////
 
   private State state;
 
@@ -84,47 +107,56 @@ public class SubSocket {
    * default implementations of state methods - throws errors or returns default
    * values as appropriate.
    */
-  protected abstract class State {
+  private abstract class State {
     protected Exception cause = null;
 
-    public void close() throws IOException {
-      throw new IOException("Cannot close socket: socket " + this, cause);
+    void close() throws IOException {
+      throw new IOException("Cannot close socket: " + this, cause);
     }
 
-    public void connect(String name) throws IOException {
-      throw new IOException("Cannot connect: socket " + this, cause);
+    void connect(String name) throws IOException {
+      throw new IOException("Cannot connect: " + this, cause);
     }
 
-    public InputStream getInputStream() throws IOException {
-      throw new IOException("Cannot get an input stream: socket " + this, cause);
+    InputStream getInputStream() throws IOException {
+      throw new IOException("Cannot get an input stream: " + this, cause);
     }
 
-    public OutputStream getOutputStream() throws IOException {
-      throw new IOException("Cannot get an output stream: socket " + this, cause);
+    BufferedOutputStream getOutputStream() throws IOException {
+      throw new IOException("Cannot get an output stream: " + this, cause);
+    }
+
+    Principal getPrincipal() throws IOException {
+      throw new IOException(
+          "There is no principal associated with the socket: " + this, cause);
     }
   }
 
   /**
    * implementation of methods in the Unconnected state
    */
-  protected final class Unconnected extends State {
+  private final class Unconnected extends State {
     private final SubSocketFactory factory;
 
-    @Override public String toString() { return "is unconnected"; }
+    @Override
+    public String toString() {
+      return "unconnected socket";
+    }
 
     @Override
-    public void connect(String name) throws IOException {
+    void connect(String name) throws IOException {
       try {
-        Channel.Connection conn = factory.getChannel(name).connect(); 
+        Channel.Connection conn = factory.getChannel(name).connect();
         state = new Connected(conn);
       } catch (final Exception exc) {
-        IOException wrapped = new IOException("failed to connect to " + name, exc);
+        IOException wrapped =
+            new IOException("failed to connect to \"" + name + "\"", exc);
         state = new ErrorState(wrapped);
         throw wrapped;
       }
     }
 
-    public Unconnected(SubSocketFactory factory) {
+    private Unconnected(SubSocketFactory factory) {
       this.factory = factory;
     }
   }
@@ -132,37 +164,43 @@ public class SubSocket {
   /**
    * implementation of methods in the Connected(channel) state
    */
-  protected final class Connected extends State {
-    final Channel.Connection   conn;
+  private final class Connected extends State {
+    final Channel.Connection conn;
 
     @Override
     public String toString() {
-      return "is connected (" + conn.toString() + ")";
+      return "connected socket (" + conn.toString() + ")";
     }
 
     @Override
-    public void close() throws IOException {
+    void close() throws IOException {
       try {
         conn.close();
         state = new Closed();
       } catch (final Exception exc) {
-        IOException wrapped = new IOException("failed to close connection", exc);
+        IOException wrapped =
+            new IOException("failed to close connection", exc);
         state = new ErrorState(wrapped);
         throw wrapped;
       }
     }
 
     @Override
-    public InputStream getInputStream() {
+    InputStream getInputStream() {
       return conn.in;
     }
 
     @Override
-    public OutputStream getOutputStream() {
+    BufferedOutputStream getOutputStream() {
       return conn.out;
     }
 
-    public Connected(Channel.Connection conn) {
+    @Override
+    Principal getPrincipal() {
+      return conn.getPrincipal();
+    }
+
+    Connected(Channel.Connection conn) {
       this.conn = conn;
     }
   }
@@ -170,20 +208,24 @@ public class SubSocket {
   /**
    * implementation of methods in the Closed state
    */
-  protected final class Closed extends State {
-    @Override public String toString() { return "is closed"; }
+  private final class Closed extends State {
+    @Override
+    public String toString() {
+      return "socket closed";
+    }
   }
 
   /**
    * implementations of methods in the Error state
    */
-  protected final class ErrorState extends State {
-    @Override public String toString() { return "has recieved an exception"; }
+  private final class ErrorState extends State {
+    @Override
+    public String toString() {
+      return "socket has received an exception";
+    }
 
-    public ErrorState(Exception exc) {
-      super();
+    private ErrorState(Exception exc) {
       cause = exc;
     }
   }
 }
-

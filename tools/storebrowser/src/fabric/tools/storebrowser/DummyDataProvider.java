@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -24,16 +24,18 @@ public class DummyDataProvider implements DataProvider {
   public Object getRoot() {
     return "fab://store0";
   }
-  
+
+  @Override
   public List<Object> getChildrenForNode(Object obj) {
-    if(obj.equals("fab://store0")) {
-      return Arrays.asList(new Object[] {"one", "two", "three"});
+    if (obj.equals("fab://store0")) {
+      return Arrays.asList(new Object[] { "one", "two", "three" });
     }
-    return Arrays.asList(new Object[] {"blah", "fang"});
+    return Arrays.asList(new Object[] { "blah", "fang" });
   }
-  
+
+  @Override
   public String getDescriptionForNode(Object obj) {
-	  return "info";
+    return "info";
   }
-  
+
 }

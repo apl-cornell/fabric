@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -15,55 +15,34 @@
  */
 package fabric.translate;
 
-import fabil.ast.FabILNodeFactory;
-import fabric.ast.FabricUtil;
-import fabric.extension.NewLabelExt_c;
-import fabric.visit.FabricToFabilRewriter;
-import polyglot.ast.*;
-import polyglot.types.SemanticException;
 import jif.translate.JifToJavaRewriter;
 import jif.translate.NewLabelToJavaExt_c;
+import polyglot.ast.Node;
+import polyglot.types.SemanticException;
+import polyglot.visit.NodeVisitor;
+import fabric.ast.FabricUtil;
+import fabric.extension.LocatedExt_c;
+import fabric.extension.NewLabelExt_c;
+import fabric.visit.FabricToFabilRewriter;
 
 public class NewLabelToFabilExt_c extends NewLabelToJavaExt_c {
-  @SuppressWarnings("unchecked")
+
+  @Override
+  public NodeVisitor toJavaEnter(JifToJavaRewriter rw) throws SemanticException {
+    FabricToFabilRewriter ffrw = (FabricToFabilRewriter) super.toJavaEnter(rw);
+    LocatedExt_c ext = (LocatedExt_c) FabricUtil.fabricExt(node());
+    return ffrw.pushLocation(ext.location());
+  }
+
   @Override
   public Node toJava(JifToJavaRewriter rw) throws SemanticException {
-    NewLabelExt_c ext = (NewLabelExt_c)FabricUtil.fabricExt(node());
-    Expr loc = ext.location();
-    
+    // toJava is called explicitly on label types, without actually visiting
+    // so we need to use this ugly hack to keep track of the proper location
+    // to assign to new label objects.
+    FabricToFabilRewriter ffrw = (FabricToFabilRewriter) rw;
+    NewLabelExt_c ext = (NewLabelExt_c) FabricUtil.fabricExt(node());
+    rw = ffrw.pushLocation(ext.location());
     Node n = super.toJava(rw);
-    
-    if (loc != null && n instanceof Call) {
-      // Add loc as the first parameter.
-      // Add this recursively for all parameters which are themselves instance of Call
-//      this.loc = loc;
-      Call c = (Call)n;
-//      return addLoc(c);
-
-      if (loc == null) loc = ((FabILNodeFactory)rw.nodeFactory()).StoreGetter(node().position());
-      if (loc != null) {
-        FabricToFabilRewriter ffrw = (FabricToFabilRewriter)rw;
-        return ffrw.updateLabelLocation(c, loc);
-      }
-    }
-
     return n;
   }
-  
-//  private Expr loc;
-//  private Call addLoc(Call c) {
-//    List<Expr> args = new ArrayList<Expr>(c.arguments().size() + 1);
-//    args.add(loc);
-//    for(Expr expr : (List<Expr>)c.arguments()) {
-//      Expr addExpr = expr;
-//      if(expr instanceof Call) {
-//        Call subcall = (Call) expr;
-//        addExpr = addLoc(subcall);
-//      }
-//      args.add(addExpr);
-//    }
-//    c = (Call)c.arguments(args);
-//    return c;
-//    
-//  }
 }

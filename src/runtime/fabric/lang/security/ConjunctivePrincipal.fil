@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -24,16 +24,17 @@ import fabric.util.*;
  * copied from Jif.
  */
 public final class ConjunctivePrincipal extends Principal {
-  final Set conjuncts;
+  /*final*/ Set conjuncts;
   private Integer hashCode;
-  public static final Store localStore = Worker.getWorker().getLocalStore();
 
-  ConjunctivePrincipal(Set conjuncts) {
+  ConjunctivePrincipal fabric$lang$security$ConjunctivePrincipal$(Set conjuncts) {
     this.conjuncts = conjuncts;
+    fabric$lang$security$Principal$();
+    return this;
   }
 
   public String name() {
-    StringBuffer sb = new StringBuffer@localStore();
+    StringBuffer sb = new StringBuffer();
     for (Iterator iter = conjuncts.iterator(); iter.hasNext();) {
       Principal p = (Principal) iter.next();
       sb.append(PrincipalUtil.toString(p));
@@ -83,7 +84,7 @@ public final class ConjunctivePrincipal extends Principal {
   }
 
   public ActsForProof findProofUpto(Store store, Principal p, java.lang.Object searchState) {
-    Map proofs = new HashMap@store();
+    Map proofs = (HashMap) new HashMap@store().fabric$util$HashMap$();
     for (Iterator iter = conjuncts.iterator(); iter.hasNext();) {
       Principal q = (Principal) iter.next();
       ActsForProof prf = PrincipalUtil.findActsForProof(store, p, q, searchState);
@@ -93,7 +94,7 @@ public final class ConjunctivePrincipal extends Principal {
 
     // proofs contains a proof for every conjunct,
     // which is sufficent for a proof to the conjunctive principal
-    return new ToConjunctProof@store(p, this, proofs);
+    return (ToConjunctProof) new ToConjunctProof@store().fabric$lang$security$ToConjunctProof$(p, this, proofs);
 
   }
 
@@ -104,10 +105,20 @@ public final class ConjunctivePrincipal extends Principal {
           PrincipalUtil.findActsForProof(store, witness, q, searchState);
       if (prf != null) {
         // have found a proof from witness to q
-        DelegatesProof step = new DelegatesProof@store(this, witness);
-        return new TransitiveProof@store(step, witness, prf);
+        DelegatesProof step = (DelegatesProof) new DelegatesProof@store().fabric$lang$security$DelegatesProof$(this, witness);
+        return (TransitiveProof) new TransitiveProof@store().fabric$lang$security$TransitiveProof$(step, witness, prf);
       }
     }
     return null;
+  }
+
+  public Object $initLabels() {
+    // XXX What should this be?  Using completely permissive values for now.
+    // update label: {_ <-}
+    // access policy: {_ ->}
+    this.$updateLabel = LabelUtil.noComponents();
+    this.$accessPolicy = LabelUtil.bottomConf();
+
+    return this;
   }
 }

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -15,7 +15,6 @@
  */
 package hello;
 
-import java.util.*;
 import sif.servlet.Servlet;
 import sif.servlet.Request;
 import sif.servlet.SessionState;
@@ -24,11 +23,11 @@ import sif.servlet.SessionPrincipal;
 import javax.servlet.ServletException;
 
 public final class Main extends Servlet[HelloServEP] {
-    final Store{this} localStore;
+    final Store{this}@{} localStore;
     public Main() throws ServletException {
         FabricWorker cl = FabricWorker.getWorker();
         Store lStore = null;        
-        if(cl != null) {
+        if (cl != null) {
             lStore = cl.getLocalStore();
         }
         localStore = lStore;
@@ -51,17 +50,16 @@ public final class Main extends Servlet[HelloServEP] {
     }
     
     // This method will only be called by the runtime
-    protected SessionState[lbl]{*lbl} createSessionState{*lbl}(label{*lbl} lbl,
+    protected SessionState{*lbl} createSessionState{*lbl}(label{*lbl} lbl,
             String{*lbl} id, SessionPrincipal{*lbl} session) {
-        SessionState[lbl] toReturn = null;
         atomic {
             if (localStore != null && localStore equiv worker$ &&
                     lbl <= new label {⊤→worker$} && 
                     new label {⊤←worker$} <= lbl) {
-                toReturn = new SessionState[lbl]@localStore(id, session);
+                return new SessionState@localStore(id, session);
             }
         }
-        return toReturn;
+        return null;
     }
     
     // This method will only be called by the runtime

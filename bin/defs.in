@@ -79,35 +79,84 @@ fi
 
 classpath="$(unixpath "${CLASSPATH}")"
 
-# Classpath for compiling FabIL applications.
-# Jar files should always appear *after* their corresponding class directories.
-FILC_CP="${TOP}/classes"
-FILC_CP="${FILC_CP}:${TOP}/lib/fabric.jar"
-FILC_CP="${FILC_CP}:${TOP}/rt-classes"
-FILC_CP="${FILC_CP}:${TOP}/lib/fabric-rt.jar"
-FILC_CP="${FILC_CP}:${POLYGLOT}/classes"
-FILC_CP="${FILC_CP}:${POLYGLOT}/lib/polyglot.jar"
-FILC_CP="${FILC_CP}:${POLYGLOT}/lib/java_cup.jar"
-FILC_CP="${FILC_CP}:${POLYGLOT}/lib/JFlex.jar"
+# Give the JVM more memory.
+vmargs="-Xmx1024M -Xms256M -Dfile.encoding=UTF-8"
 
-# Classpath for compiling Fabric applications.
-# Jar files should always appear *after* their corresponding class directories.
-FABC_CP="${FILC_CP}"
-FABC_CP="${FABC_CP}:${JIF}/classes"
-FABC_CP="${FABC_CP}:${JIF}/lib/jif.jar"
+####################
 
-# Classpath for running Fabric applications.
+# Common classpath for all parts of Fabric.
 # Jar files should always appear *after* their corresponding class directories.
-FABRIC_WORKER_CP="${TOP}/classes"
-FABRIC_WORKER_CP="${FABRIC_WORKER_CP}:${TOP}/lib/fabric.jar"
-FABRIC_WORKER_CP="${FABRIC_WORKER_CP}:${TOP}/rt-classes"
-FABRIC_WORKER_CP="${FABRIC_WORKER_CP}:${TOP}/lib/fabric-rt.jar"
-FABRIC_WORKER_CP="${FABRIC_WORKER_CP}:${TOP}/lib/FreePastry-2.1.jar"
+##########
+# Fabric
+COMMON_FABRIC_CP="${TOP}/classes"
+COMMON_FABRIC_CP="${COMMON_FABRIC_CP}:${TOP}/lib/fabric.jar"
+COMMON_FABRIC_CP="${COMMON_FABRIC_CP}:${TOP}/rt-classes"
+COMMON_FABRIC_CP="${COMMON_FABRIC_CP}:${TOP}/lib/fabric-rt.jar"
+# Polyglot
+COMMON_FABRIC_CP="${COMMON_FABRIC_CP}:${POLYGLOT}/classes"
+COMMON_FABRIC_CP="${COMMON_FABRIC_CP}:${POLYGLOT}/lib/polyglot.jar"
+COMMON_FABRIC_CP="${COMMON_FABRIC_CP}:${POLYGLOT}/lib/java_cup.jar"
+COMMON_FABRIC_CP="${COMMON_FABRIC_CP}:${POLYGLOT}/lib/JFlex.jar"
+# Jif
+COMMON_FABRIC_CP="${COMMON_FABRIC_CP}:${JIF}/classes"
+COMMON_FABRIC_CP="${COMMON_FABRIC_CP}:${JIF}/lib/jif.jar"
+# Pastry
+COMMON_FABRIC_CP="${COMMON_FABRIC_CP}:${TOP}/lib/FreePastry-2.1.jar"
+# BouncyCastle
+for i in "${TOP}"/lib/bcprov-*.jar ; do
+COMMON_FABRIC_CP="${COMMON_FABRIC_CP}:$i"
+done
+# Java libraries
+COMMON_FABRIC_CP="${COMMON_FABRIC_CP}:${JAVA_HOME}/lib/tools.jar"
 
-# Classpath for Fabric stores.
+# Common classpath for libraries used when running either the worker or the
+# store.
+##########
+# JLine
+COMMON_SYS_LIB_CP="${TOP}/lib/jline-0.9.94.jar"
+
+# JVM classpath for the FabIL compiler.
 # Jar files should always appear *after* their corresponding class directories.
-FABRIC_STORE_CP="${FABRIC_WORKER_CP}"
+FILC_CP="${COMMON_FABRIC_CP}"
+
+# JVM classpath for the Fabric compiler.
+# Jar files should always appear *after* their corresponding class directories.
+FABC_CP="${COMMON_FABRIC_CP}"
+
+# Path of platform classes for compiling Fabric applications.
+# Jar files should always appear *after* their corresponding class directories.
+FABRIC_BOOTCP="${TOP}/rt-classes"
+FABRIC_BOOTCP="${FABRIC_BOOTCP}:${TOP}/lib/fabric-rt.jar"
+FABRIC_BOOTCP="${FABRIC_BOOTCP}:${TOP}/classes"
+FABRIC_BOOTCP="${FABRIC_BOOTCP}:${TOP}/lib/fabric.jar"
+
+# Path of platform classes for compiling FabIL applications.
+# Jar files should always appear *after* their corresponding class directories.
+FABIL_BOOTCP="${TOP}/rt-classes"
+FABIL_BOOTCP="${FABIL_BOOTCP}:${TOP}/lib/fabric-rt.jar"
+FABIL_BOOTCP="${FABIL_BOOTCP}:${TOP}/classes"
+FABIL_BOOTCP="${FABIL_BOOTCP}:${TOP}/lib/fabric.jar"
+
+# JVM classpath for running a Fabric worker.
+# Jar files should always appear *after* their corresponding class directories.
+FABRIC_WORKER_CP="${COMMON_FABRIC_CP}"
+FABRIC_WORKER_CP="${FABRIC_WORKER_CP}:${COMMON_SYS_LIB_CP}"
+
+# JVM classpath for running a Fabric store.
+# Jar files should always appear *after* their corresponding class directories.
+FABRIC_STORE_CP="${COMMON_FABRIC_CP}"
+FABRIC_STORE_CP="${FABRIC_STORE_CP}:${COMMON_SYS_LIB_CP}"
+# BDB
 for i in "${TOP}"/lib/je-*.jar ; do
   FABRIC_STORE_CP="${FABRIC_STORE_CP}:$i"
 done
 
+# Signature classpath to use when compiling Fabric programs.
+# Jar files should always appear *after* their corresponding class directories.
+FABRIC_SIG_CP="${TOP}/sig-classes/fabric"
+FABRIC_SIG_CP="${FABRIC_SIG_CP}:${TOP}/lib/fabric-sig.jar"
+
+# Signature classpath to use when compiling FabIL programs.
+# Jar files should always appear *after* their corresponding class directories.
+FABIL_SIG_CP="${TOP}/sig-classes/fabil"
+FABIL_SIG_CP="${FABIL_SIG_CP}:${TOP}/lib/fabric-il-sig.jar"

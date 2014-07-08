@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -17,26 +17,27 @@ package fabric.store.db;
 
 import java.security.PrivateKey;
 
-import fabric.worker.Store;
 import fabric.common.AuthorizationUtil;
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongSet;
 import fabric.dissemination.Glob;
-import fabric.lang.security.NodePrincipal;
+import fabric.lang.security.Principal;
+import fabric.worker.Store;
 
 /**
- * Abstracts groups and globs.  This class is thread-safe.
+ * A group container contains a group or a glob, and supports converting between
+ * them. This class is thread-safe.
  */
-public final class GroupContainer {
+public final class GroupContainer extends GroupTable.Entry {
   private final Store store;
   private final long labelOnum;
   private final PrivateKey signingKey;
 
   private ObjectGroup group;
   private Glob glob;
-  
+
   /**
    * The set of onums for the objects contained in this group.
    */
@@ -47,11 +48,11 @@ public final class GroupContainer {
     this.signingKey = signingKey;
     this.group = group;
     this.glob = null;
-    
+
     this.onums = group.objects().keySet();
 
     for (SerializedObject obj : group.objects().values()) {
-      this.labelOnum = obj.getLabelOnum();
+      this.labelOnum = obj.getUpdateLabelOnum();
       return;
     }
 
@@ -64,7 +65,7 @@ public final class GroupContainer {
    *          The principal accessing the group.
    * @return null if the given principal is not allowed to read the group.
    */
-  public ObjectGroup getGroup(NodePrincipal principal) {
+  public ObjectGroup getGroup(Principal principal) {
     if (!AuthorizationUtil.isReadPermitted(principal, store, labelOnum))
       return null;
 

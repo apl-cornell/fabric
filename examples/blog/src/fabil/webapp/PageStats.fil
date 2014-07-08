@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -25,7 +25,10 @@ public class PageStats {
   public long appTime;
   public long transmissionTime;
 
-  public PageStats() {}
+  public PageStats webapp$PageStats$() {
+    fabric$lang$Object$();
+    return this;
+  }
 
   public int getNumReads() {
     return numReads;
@@ -70,7 +73,7 @@ public class PageStats {
 
   public static PageStats fromSerialized(String str) {
     String native[] splits = str.split(",");
-    PageStats stats = new PageStats();
+    PageStats stats = new PageStats().webapp$PageStats$();
     int i = 0;
     stats.numReads = Integer.parseInt(splits[i++]);
     stats.numUpdates = Integer.parseInt(splits[i++]);
@@ -80,6 +83,15 @@ public class PageStats {
     stats.pageLoadTime = Long.parseLong(splits[i++]);
     stats.appTime = Long.parseLong(splits[i++]);
     return stats;
+  }
+
+  public Object $initLabels() {
+    // update label: {_ <-}
+    // access policy: {_ ->}
+    this.$updateLabel = LabelUtil.noComponents();
+    this.$accessPolicy = LabelUtil.bottomConf();
+
+    return this;
   }
 
 }

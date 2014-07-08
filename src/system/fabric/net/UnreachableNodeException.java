@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -28,10 +28,6 @@ public class UnreachableNodeException extends FabricRuntimeException {
     this.node = node;
   }
 
-  /*
-   * (non-Javadoc)
-   * @see java.lang.Throwable#getMessage()
-   */
   @Override
   public String getMessage() {
     return "Unreachable node: " + node;

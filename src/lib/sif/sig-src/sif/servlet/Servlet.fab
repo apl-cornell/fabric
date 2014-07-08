@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -18,7 +18,7 @@ package sif.servlet;
 import java.io.*;
 import javax.servlet.ServletException;
 import sif.html.*;
-import jif.util.Map;
+import fabricated.util.Map;
 
 /** A servlet contains the information that is shared across users and sessions.
  * It converts between the Java HttpServlet request processing style and this one. */
@@ -64,7 +64,7 @@ abstract public class Servlet[principal servletP] extends java.lang.Object {
     public native final Node[L, E]{L;E;a; body} 
                       createRequest(label L, label E, 
                                     Action[servletP]{*L} a, 
-                                    Map[{servletP:;servletP!:;*L},{servletP:;servletP!:;*L}]{*L} inputs, 
+                                    Map[{servletP:;servletP!:;*L}]{*L} inputs, 
                                     label cL, label cE,
                                     Node[cL,cE]{*L} body)  where {*cL} <= {*L}, {*E;body} <= {*cE};
     
@@ -125,6 +125,6 @@ abstract public class Servlet[principal servletP] extends java.lang.Object {
 
     public native final String{*!:*} generateNonce();       
 //    protected native SessionState[{servletP:;servletP!:}]{servletP:;servletP!:} createSessionState(String id);
-    protected native SessionState[lbl]{*lbl} createSessionState{*lbl}(label{*lbl} lbl, String{*lbl} id);
+    protected native SessionState{*lbl} createSessionState{*lbl}(label{*lbl} lbl, String{*lbl} id);
     
 }

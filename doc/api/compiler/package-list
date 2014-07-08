@@ -1,3 +1,7 @@
+codebases.ast
+codebases.frontend
+codebases.types
+codebases.visit
 fabil
 fabil.ast
 fabil.extension
@@ -8,6 +12,7 @@ fabil.visit
 fabric
 fabric.ast
 fabric.extension
+fabric.filemanager
 fabric.parse
 fabric.translate
 fabric.types

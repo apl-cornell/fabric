@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -29,7 +29,7 @@ public final class SessionPrincipal extends AbstractPrincipal {
     public static SessionPrincipal{P←} declassifySP{P←}(SessionPrincipal{P→;P←} sp_, principal{P←} P)
     where caller(P) {
 //    	final SessionPrincipal[{P→;P←}]{P←} sp = declassify(sp_, {P→;P←} to {P←});
-//    	if(sp == null) return null;
+//    	if (sp == null) return null;
 //    	final SessionState[{P←}]{P←} ss = SessionState.declassifySS(sp.session, P);
 //    	return new SessionPrincipal[{P←}](ss);
         return null;

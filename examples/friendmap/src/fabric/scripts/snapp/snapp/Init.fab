@@ -1,0 +1,50 @@
+/**
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
+ *
+ * This file is part of Fabric.
+ *
+ * Fabric is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * Fabric is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ */
+package snapp;
+
+//import snapp.Snapp;
+//import snapp.User;
+//import snapp.Location; //Workaround for null provider bug. Comment out to re-introduce.
+//                       //TODO: smaller testcase.
+
+public class Init
+where
+    Snapp.provider <= User.provider,
+    User.provider <= Snapp.provider,
+    provider <= Snapp.provider,
+    User.provider <= Location.provider,
+    Location.provider <= User.provider,
+    
+    
+    // trusted classes are trusted
+    util.Delegator.provider     <= {*←},
+    util.GroupIterator.provider <= {*←},
+    util.Group.provider         <= {*←},
+    Snapp.provider              <= {*←}    
+{
+  public static void main{⊤←}(String[] args) {
+    atomic {
+      final Store store = worker$.getWorker().getStore("snapp");
+      final Snapp snapp = new Snapp@store("Snapp Principal Object", store);
+
+      store.getRoot().put("snapp", snapp);
+    }
+  }
+}
+
+/*
+** vim: ts=2 sw=2 et syntax=java
+*/

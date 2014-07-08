@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -18,18 +18,22 @@ package fabil.visit;
 import java.util.Collections;
 import java.util.List;
 
-import polyglot.ast.*;
+import polyglot.ast.Call;
+import polyglot.ast.Cast;
+import polyglot.ast.Expr;
+import polyglot.ast.Node;
+import polyglot.ast.Receiver;
 import polyglot.qq.QQ;
 import polyglot.types.ClassType;
 import polyglot.types.Flags;
 import polyglot.types.MethodInstance;
+import polyglot.types.Type;
 import polyglot.util.Position;
 import polyglot.visit.NodeVisitor;
 import fabil.ExtensionInfo;
 import fabil.ast.FabILNodeFactory;
 import fabil.ast.New;
 import fabil.types.FabILTypeSystem;
-import fabric.translate.ClassDeclToFabilExt_c;
 
 /**
  * Rewrites Principal constructor calls to add default delegations.
@@ -39,17 +43,23 @@ public class PrincipalDelegator extends NodeVisitor {
   protected FabILNodeFactory nf;
   protected QQ qq;
 
-  protected final ClassType delegatingPrincipal;
+  protected ClassType delegatingPrincipal;
 
   public PrincipalDelegator(ExtensionInfo extInfo) {
     this.ts = extInfo.typeSystem();
     this.nf = extInfo.nodeFactory();
     this.qq = new QQ(extInfo);
-
-    this.delegatingPrincipal = ts.DelegatingPrincipal();
   }
 
-  @SuppressWarnings("unchecked")
+  @Override
+  public NodeVisitor begin() {
+    // Wait until pass actually starts to access runtime type.
+    // This allows dependencies to be properly resolved and
+    // avoids bootstrapping issues.
+    this.delegatingPrincipal = ts.DelegatingPrincipal();
+    return super.begin();
+  }
+
   @Override
   public Node leave(Node old, Node n, NodeVisitor v) {
     if (n instanceof New) {
@@ -64,11 +74,11 @@ public class PrincipalDelegator extends NodeVisitor {
         call = (Call) call.type(delegatingPrincipal);
 
         MethodInstance mi =
-            ts.methodInstance(pos, delegatingPrincipal, Flags.PUBLIC
-                .set(Flags.STATIC), delegatingPrincipal,
-                "$addDefaultDelegates", Collections
-                    .singletonList(delegatingPrincipal), Collections
-                    .emptyList());
+            ts.methodInstance(pos, delegatingPrincipal,
+                Flags.PUBLIC.set(Flags.STATIC), delegatingPrincipal,
+                "$addDefaultDelegates",
+                Collections.singletonList((Type) delegatingPrincipal),
+                Collections.<Type> emptyList());
         call = call.methodInstance(mi);
 
         Cast cast = nf.Cast(pos, newCall.objectType(), call);
@@ -85,10 +95,10 @@ public class PrincipalDelegator extends NodeVisitor {
       if (!newCall.objectType().type().isSubtype(delegatingPrincipal))
         return super.leave(old, n, v);
 
-      String initName =
-          ClassDeclToFabilExt_c
-              .jifConstructorTranslatedName((ClassType) newCall.objectType()
-                  .type());
+      ClassType nct = ((ClassType) newCall.objectType().type());
+      // XXX: This replace must match
+      // ClassDeclToJavaExt_c.constructorTranslatedName
+      String initName = (nct.fullName() + ".").replace('.', '$');
       if (!call.name().equals(initName)) return super.leave(old, n, v);
 
       // Wrap around the Jif initializer call instead. We do this by mangling
@@ -107,5 +117,4 @@ public class PrincipalDelegator extends NodeVisitor {
 
     return super.leave(old, n, v);
   }
-
 }

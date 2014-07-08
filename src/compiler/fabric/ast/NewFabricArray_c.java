@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -18,13 +18,14 @@ package fabric.ast;
 import java.util.List;
 
 import polyglot.ast.ArrayInit;
+import polyglot.ast.Expr;
 import polyglot.ast.NewArray_c;
 import polyglot.ast.TypeNode;
 import polyglot.util.Position;
 
 public class NewFabricArray_c extends NewArray_c implements NewFabricArray {
 
-  public NewFabricArray_c(Position pos, TypeNode baseType, List dims,
+  public NewFabricArray_c(Position pos, TypeNode baseType, List<Expr> dims,
       int addDims, ArrayInit init) {
     super(pos, baseType, dims, addDims, init);
   }

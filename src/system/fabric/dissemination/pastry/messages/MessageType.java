@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -20,10 +20,10 @@ package fabric.dissemination.pastry.messages;
  * message type ids.
  */
 public class MessageType {
-  
+
   public static final short FETCH = 1;
   public static final short FETCH_REPLY = 2;
-  
+
   public static final short REPLICATE = 11;
   public static final short REPLICATE_REPLY = 12;
 

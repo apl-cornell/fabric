@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -18,8 +18,10 @@ package fabric.ast;
 import java.util.ArrayList;
 import java.util.List;
 
-import fabric.types.FabricTypeSystem;
-
+import jif.ast.JifCall_c;
+import jif.types.JifContext;
+import jif.types.LabeledType;
+import jif.types.principal.Principal;
 import polyglot.ast.Expr;
 import polyglot.ast.Id;
 import polyglot.ast.Node;
@@ -31,70 +33,66 @@ import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
 import polyglot.visit.NodeVisitor;
 import polyglot.visit.TypeChecker;
-import jif.ast.JifCall_c;
-import jif.ast.JifUtil;
-import jif.types.JifContext;
-import jif.types.LabeledType;
-import jif.types.principal.Principal;
+import fabric.types.FabricTypeSystem;
 
 public class FabricCall_c extends JifCall_c implements FabricCall {
   protected Expr remoteWorker;
   protected Principal remoteWorkerPrincipal;
-  
-  @SuppressWarnings("unchecked")
-  public FabricCall_c(Position pos, Receiver target, Id name, List args) {
+
+  public FabricCall_c(Position pos, Receiver target, Id name, List<Expr> args) {
     this(pos, target, name, null, args);
   }
 
-  @SuppressWarnings("unchecked")
-  public FabricCall_c(Position pos, Receiver target, Id name, Expr remoteWorker, List args) {
+  public FabricCall_c(Position pos, Receiver target, Id name,
+      Expr remoteWorker, List<Expr> args) {
     super(pos, target, name, args);
     this.remoteWorker = remoteWorker;
   }
-  
-  @SuppressWarnings("unchecked")
-  protected FabricCall_c reconstruct(Receiver target, Id name, Expr remoteWorker, List arguments) {
-    FabricCall_c n = (FabricCall_c)super.reconstruct(target, name, arguments);
-    
+
+  protected FabricCall_c reconstruct(Receiver target, Id name,
+      Expr remoteWorker, List<Expr> arguments) {
+    FabricCall_c n = (FabricCall_c) super.reconstruct(target, name, arguments);
+
     if (remoteWorker != this.remoteWorker) {
-      n = (FabricCall_c)n.copy();
+      n = (FabricCall_c) n.copy();
       n.remoteWorker = remoteWorker;
     }
-    
+
     return n;
   }
 
+  @Override
   public Expr remoteWorker() {
     return remoteWorker;
   }
-  
+
+  @Override
   public FabricCall remoteWorker(Expr remoteWorker) {
     if (remoteWorker == this.remoteWorker) {
       return this;
     }
-    
-    FabricCall_c n = (FabricCall_c)this.copy();
+
+    FabricCall_c n = (FabricCall_c) this.copy();
     n.remoteWorker = remoteWorker;
     return n;
   }
-  
-  @SuppressWarnings("unchecked")
+
   @Override
   public Node visitChildren(NodeVisitor v) {
     Receiver target = (Receiver) visitChild(this.target, v);
     Id name = (Id) visitChild(this.name, v);
     Expr remoteWorker = (Expr) visitChild(this.remoteWorker, v);
-    List arguments = visitList(this.arguments, v);
+    List<Expr> arguments = visitList(this.arguments, v);
     return reconstruct(target, name, remoteWorker, arguments);
   }
-  
+
   @Override
   public Node typeCheck(TypeChecker tc) throws SemanticException {
-    FabricCall c = (FabricCall)super.typeCheck(tc);
+    FabricCall c = (FabricCall) super.typeCheck(tc);
 
     if (c.remoteWorker() != null) {
-      FabricTypeSystem ts = (FabricTypeSystem)tc.typeSystem();
-      JifContext context = (JifContext)tc.context();
+      FabricTypeSystem ts = (FabricTypeSystem) tc.typeSystem();
+      JifContext context = (JifContext) tc.context();
 
       // The type must have a remote version.
       ReferenceType rcvrType;
@@ -107,30 +105,38 @@ public class FabricCall_c extends JifCall_c implements FabricCall {
       } else {
         throw new InternalCompilerError("Stupid compiler");
       }
-      List<Type> argTypes = new ArrayList<Type>(c.methodInstance().formalTypes().size() + 1);
+      List<Type> argTypes =
+          new ArrayList<Type>(c.methodInstance().formalTypes().size() + 1);
       argTypes.add(ts.Principal());
       argTypes.addAll(c.methodInstance().formalTypes());
       if (rcvrType.methods(c.name() + "_remote", argTypes).isEmpty()) {
-        // See RemoteCallWrapperAdder.java#leave for conditions for remotely callable methods
-        throw new SemanticException("Illegal remote call \"" + c + "\", " +
-        		            "because the dynamic label check might leak information." +
-                "\nAlso, make sure the method you are trying to call is public and not static or abstract.",
-        		            c.position());
+        // See RemoteCallWrapperAdder.java#leave for conditions for remotely
+        // callable methods
+        throw new SemanticException(
+            "Illegal remote call \""
+                + c
+                + "\", "
+                + "because the dynamic label check might leak information."
+                + "\nAlso, make sure the method you are trying to call is public and not static or abstract.",
+            c.position());
       }
-      
-      return c.remoteWorkerPrincipal(JifUtil.exprToPrincipal(ts, c.remoteWorker(), context));
+
+      return c.remoteWorkerPrincipal(ts.exprToPrincipal(ts, c.remoteWorker(),
+          context));
     }
-    
+
     return c;
   }
-  
+
+  @Override
   public Principal remoteWorkerPrincipal() {
     return remoteWorkerPrincipal;
   }
-  
+
+  @Override
   public FabricCall remoteWorkerPrincipal(Principal p) {
     if (p == remoteWorkerPrincipal) return this;
-    FabricCall_c n = (FabricCall_c)copy();
+    FabricCall_c n = (FabricCall_c) copy();
     n.remoteWorkerPrincipal = p;
     return n;
   }

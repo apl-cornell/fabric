@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -15,12 +15,13 @@
  */
 package fabric.ast;
 
-import polyglot.ast.Expr;
 import jif.ast.AmbNewArray;
+import polyglot.ast.Expr;
 
 public interface AmbNewFabricArray extends AmbNewArray {
-  
+
   public Expr location();
+
   public AmbNewFabricArray location(Expr loc);
 
 }

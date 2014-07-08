@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -16,6 +16,10 @@
 package OO7.traversals;
 
 public class Q1 {
+  public Q1 OO7$traversals$Q1() {
+      fabric$lang$Object$();
+      return this;
+  }
   /* TODO: extract into a separate traversal
   public void matchQuery() throws Exception {
     // generate a random list of objects to fetch

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -19,6 +19,8 @@ import java.io.*;
 
 public class Runtime[principal P]
 {
+    private int@{this.store$->} _FABRIC_ACCESS_POLICY;
+
     private Runtime(principal{this} pp) { }
 
     public static native Runtime[P]{P!:} getRuntime() throws SecurityException;

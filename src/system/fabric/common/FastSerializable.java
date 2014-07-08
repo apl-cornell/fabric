@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -20,8 +20,8 @@ import java.io.IOException;
 
 /**
  * A common interface for all classes that implement custom serialization. It's
- * called <code>FastSerializable</code> because Java serialization is so
- * frick'n slow.
+ * called <code>FastSerializable</code> because Java serialization is so frick'n
+ * slow.
  * <p>
  * (We'd call this "FabricSerializable", but then that kinda sounds like a
  * Fabric object that's somehow "serializable".)

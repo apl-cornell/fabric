@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -21,29 +21,25 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
 
-import fabric.worker.transaction.TransactionManager;
 import fabric.common.FabricThread;
 
 /**
  * The thread in which the Fabric program executes. This is here to ensure that
  * the program executes in a FabricThread.
  */
-public final class MainThread extends Thread implements FabricThread {
-  private TransactionManager tm;
-  private final Options opts;
+public final class MainThread extends FabricThread.Impl {
   private final Method main;
   private final Object args;
   private Throwable uncaughtException;
 
-  private MainThread(Options opts, Method main, Object args) {
+  private MainThread(Method main, Object args) {
     super("Main worker application");
-    this.tm = null;
-    this.opts = opts;
     this.main = main;
     this.args = args;
     this.uncaughtException = null;
 
     setUncaughtExceptionHandler(new UncaughtExceptionHandler() {
+      @Override
       public void uncaughtException(Thread t, Throwable e) {
         uncaughtException = e;
       }
@@ -54,7 +50,7 @@ public final class MainThread extends Thread implements FabricThread {
   public void run() {
     try {
       main.invoke(null, args);
-      
+
     } catch (InvocationTargetException e) {
       Throwable cause = e.getCause();
       // Trim the stack trace to omit stuff dealing with the worker framework.
@@ -62,10 +58,12 @@ public final class MainThread extends Thread implements FabricThread {
       for (StackTraceElement elt : cause.getStackTrace())
         trace.add(elt);
 
+      String mainClassName = main.getDeclaringClass().getName();
+
       for (ListIterator<StackTraceElement> it =
           trace.listIterator(trace.size()); it.hasPrevious();) {
         StackTraceElement elt = it.previous();
-        if (elt.getClassName().equals(opts.app[0] + "$_Impl")) break;
+        if (elt.getClassName().equals(mainClassName)) break;
         it.remove();
       }
 
@@ -77,9 +75,8 @@ public final class MainThread extends Thread implements FabricThread {
     }
   }
 
-  public static void invoke(Options opts, Method main, Object args)
-      throws Throwable {
-    MainThread thread = new MainThread(opts, main, args);
+  public static void invoke(Method main, Object args) throws Throwable {
+    MainThread thread = new MainThread(main, args);
     thread.start();
     while (true) {
       try {
@@ -91,23 +88,5 @@ public final class MainThread extends Thread implements FabricThread {
 
     Throwable uncaught = thread.uncaughtException;
     if (uncaught != null) throw uncaught;
-  }
-
-  /*
-   * (non-Javadoc)
-   * 
-   * @see fabric.common.FabricThread#getTransactionManager()
-   */
-  public final TransactionManager getTransactionManager() {
-    return tm;
-  }
-
-  /*
-   * (non-Javadoc)
-   * 
-   * @see fabric.common.FabricThread#setTransactionManager(fabric.worker.transaction.TransactionManager)
-   */
-  public final void setTransactionManager(TransactionManager tm) {
-    this.tm = tm;
   }
 }

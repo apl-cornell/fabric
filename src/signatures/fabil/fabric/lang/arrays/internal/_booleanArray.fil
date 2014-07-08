@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -20,9 +20,9 @@ public class _booleanArray {
 
   public native boolean get(int i);
 
-  public _booleanArray(int length) {
+  public _booleanArray(Label updateLabel, ConfPolicy accessPolicy, int length) {
   }
 
-  public _booleanArray(boolean native[] value) {
+  public _booleanArray(Label updateLabel, ConfPolicy accessPolicy, boolean native[] value) {
   }
 }

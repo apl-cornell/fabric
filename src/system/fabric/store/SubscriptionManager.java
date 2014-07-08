@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -20,22 +20,22 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import fabric.worker.remote.RemoteWorker;
 import fabric.common.FabricThread;
 import fabric.common.ObjectGroup;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongKeyCache;
 import fabric.common.util.Pair;
+import fabric.dissemination.Glob;
 import fabric.net.UnreachableNodeException;
 import fabric.store.db.GroupContainer;
-import fabric.dissemination.Glob;
+import fabric.worker.remote.RemoteWorker;
 
 /**
  * Keeps track of who's subscribed to what object. Handles subscriptions for a
  * single store.
  */
-public class SubscriptionManager extends FabricThread.AbstractImpl {
+public class SubscriptionManager extends FabricThread.Impl {
   /**
    * A set of onums that have been updated, paired with the worker that issued
    * the update.
@@ -109,8 +109,7 @@ public class SubscriptionManager extends FabricThread.AbstractImpl {
       GroupContainer groupContainer;
       Glob glob;
       try {
-        groupContainer =
-            tm.getGroupContainerAndSubscribe(onum, null, false, null);
+        groupContainer = tm.getGroupContainerAndSubscribe(onum);
         glob = groupContainer.getGlob();
       } catch (AccessException e) {
         throw new InternalError(e);

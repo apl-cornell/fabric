@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -86,7 +86,7 @@ public class Collections
    * An immutable, serializable, empty Set.
    * @see Serializable
    */
-  public static final Set EMPTY_SET = new EmptySet();
+  public static final Set EMPTY_SET = (EmptySet) new EmptySet().fabric$util$Collections$EmptySet$();
 
   /**
    * The implementation of {@link #EMPTY_SET}. This class name is required
@@ -105,8 +105,10 @@ public class Collections
     /**
      * A private constructor adds overhead.
      */
-    EmptySet()
+    EmptySet fabric$util$Collections$EmptySet$()
     {
+      fabric$util$AbstractSet$();
+	  return this;
     }
 
     /**
@@ -233,6 +235,16 @@ public class Collections
     {
       return "[]";
     }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
+    }
   } // class EmptySet
 
   /**
@@ -240,7 +252,7 @@ public class Collections
    * @see Serializable
    * @see RandomAccess
    */
-  public static final List EMPTY_LIST = new EmptyList();
+  public static final List EMPTY_LIST = (EmptyList) new EmptyList().fabric$util$Collections$EmptyList$();
 
   /**
    * The implementation of {@link #EMPTY_LIST}. This class name is required
@@ -259,8 +271,10 @@ public class Collections
     /**
      * A private constructor adds overhead.
      */
-    EmptyList()
+    EmptyList fabric$util$Collections$EmptyList$()
     {
+      fabric$util$AbstractList$();
+	  return this;
     }
 
     /**
@@ -412,13 +426,23 @@ public class Collections
     {
       return "[]";
     }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
+    }
   } // class EmptyList
 
   /**
    * An immutable, serializable, empty Map.
    * @see Serializable
    */
-  public static final Map EMPTY_MAP = new EmptyMap();
+  public static final Map EMPTY_MAP = (EmptyMap) new EmptyMap().fabric$util$Collections$EmptyMap$();
 
   /**
    * The implementation of {@link #EMPTY_MAP}. This class name is required
@@ -437,8 +461,10 @@ public class Collections
     /**
      * A private constructor adds overhead.
      */
-    EmptyMap()
+    EmptyMap fabric$util$Collections$EmptyMap$()
     {
+      fabric$util$AbstractMap$();
+	  return this;
     }
 
     /**
@@ -548,6 +574,16 @@ public class Collections
     public String toString()
     {
       return "[]";
+    }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
     }
   } // class EmptyMap
 
@@ -718,7 +754,7 @@ public class Collections
 //  public static Enumeration enumeration(Collection c)
 //  {
 //    final Iterator i = c.iterator(LOCAL_STORE);
-//    return new Enumeration()
+//    return (Enumeration) new Enumeration()
 //    {
 //      /**
 //       * Returns <code>true</code> if there are more elements to
@@ -742,7 +778,17 @@ public class Collections
 //      {
 //	return i.next();
 //      }
-//    };
+//
+//      public Object $initLabels() {
+//	// XXX What should this be?  Using completely permissive values for now.
+//	// update label: {_ <-}
+//	// access policy: {_ ->}
+//	this.$updateLabel = LabelUtil.noComponents();
+//	this.$accessPolicy = LabelUtil.bottomConf();
+//
+//  return this;
+//      }
+//    }.Enumeration$();
 //  }
 
   /**
@@ -820,7 +866,7 @@ public class Collections
    */
   public static ArrayList list(Enumeration e)
   {
-    ArrayList l = new ArrayList();
+    ArrayList l = (ArrayList) new ArrayList().fabric$util$ArrayList$();
     while (e.hasMoreElements())
       l.add(e.nextElement());
     return l;
@@ -931,7 +977,7 @@ public class Collections
    */
   public static List nCopies(final int n, final Object o)
   {
-    return new CopiesList(n, o);
+    return (CopiesList) new CopiesList().fabric$util$Collections$CopiesList$(n, o);
   }
 
   /**
@@ -952,13 +998,13 @@ public class Collections
      * The count of elements in this list.
      * @serial the list size
      */
-    private final int n;
+    private /*final*/ int n;
 
     /**
      * The repeated list element.
      * @serial the list contents
      */
-    private final Object element;
+    private /*final*/ Object element;
 
     /**
      * Constructs the list.
@@ -967,12 +1013,14 @@ public class Collections
      * @param o the object
      * @throws IllegalArgumentException if n &lt; 0
      */
-    CopiesList(int n, Object o)
+    CopiesList fabric$util$Collections$CopiesList$(int n, Object o)
     {
+      fabric$util$AbstractList$();
       if (n < 0)
-	throw new IllegalArgumentException();
+        throw new IllegalArgumentException();
       this.n = n;
       element = o;
+	  return this;
     }
 
     /**
@@ -1042,7 +1090,7 @@ public class Collections
     {
       if (from < 0 || to > n)
         throw new IndexOutOfBoundsException();
-      return new CopiesList(to - from, element);
+      return (CopiesList) new CopiesList().fabric$util$Collections$CopiesList$(to - from, element);
     }
 
     /**
@@ -1068,6 +1116,16 @@ public class Collections
         r.append(element).append(", ");
       r.append(element).append("}");
       return r.toString();
+    }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
     }
   } // class CopiesList
 
@@ -1116,11 +1174,11 @@ public class Collections
     ListIterator i2 = l.listIterator(LOCAL_STORE, pos2);
     while (pos1 < pos2)
       {
-	Object o = i1.next();
-	i1.set(i2.previous());
-	i2.set(o);
-	++pos1;
-	--pos2;
+        Object o = i1.next();
+        i1.set(i2.previous());
+        i2.set(o);
+        ++pos1;
+        --pos2;
       }
   }
 
@@ -1143,7 +1201,7 @@ public class Collections
   /**
    * The object for {@link #reverseOrder()}.
    */
-  private static final ReverseComparator rcInstance = new ReverseComparator();
+  private static final ReverseComparator rcInstance = (ReverseComparator) new ReverseComparator().fabric$util$Collections$ReverseComparator$();
 
   /**
    * The implementation of {@link #reverseOrder()}. This class name
@@ -1162,8 +1220,10 @@ public class Collections
     /**
      * A private constructor adds overhead.
      */
-    ReverseComparator()
+    ReverseComparator fabric$util$Collections$ReverseComparator$()
     {
+      fabric$lang$Object$();
+	  return this;
     }
 
     /**
@@ -1176,6 +1236,16 @@ public class Collections
     public int compare(Object a, Object b)
     {
       return ((Comparable) b).compareTo(a);
+    }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
     }
   }
 
@@ -1278,10 +1348,10 @@ public class Collections
     if (defaultRandom == null)
       {
         synchronized (Collections.class)
-	{
-	  if (defaultRandom == null)
-            defaultRandom = new Random();
-	}
+        {
+          if (defaultRandom == null)
+            defaultRandom = (Random) new Random().fabric$util$Random$();
+        }
       }
     shuffle(l, defaultRandom);
   }
@@ -1357,7 +1427,7 @@ public class Collections
    */
   public static Set singleton(Object o)
   {
-    return new SingletonSet(o);
+    return (SingletonSet) new SingletonSet().fabric$util$Collections$SingletonSet$(o);
   }
 
   /**
@@ -1379,15 +1449,17 @@ public class Collections
      * The single element; package visible for use in nested class.
      * @serial the singleton
      */
-    final Object element;
+    /*final*/ Object element;
 
     /**
      * Construct a singleton.
      * @param o the element
      */
-    SingletonSet(Object o)
+    SingletonSet fabric$util$Collections$SingletonSet$(Object o)
     {
+      fabric$util$AbstractSet$();
       element = o;
+	  return this;
     }
 
     /**
@@ -1404,32 +1476,32 @@ public class Collections
      */
     public Iterator iterator(fabric.worker.Store store)
     {
-      return new Iterator@store()
+      return (Iterator) new Iterator@store()
       {
-	/**
-	 * Flag to indicate whether or not the element has
-	 * been retrieved.
-	 */
+        /**
+         * Flag to indicate whether or not the element has
+         * been retrieved.
+         */
         private boolean hasNext = true;
 
-	/**
-	 * Returns <code>true</code> if elements still remain to be
-	 * iterated through.
-	 *
-	 * @return <code>true</code> if the element has not yet been returned.
-	 */
+        /**
+         * Returns <code>true</code> if elements still remain to be
+         * iterated through.
+         *
+         * @return <code>true</code> if the element has not yet been returned.
+         */
         public boolean hasNext()
         {
           return hasNext;
         }
 
-	/**
-	 * Returns the element.
-	 *
-	 * @return The element used by this singleton.
-	 * @throws NoSuchElementException if the object
-	 *         has already been retrieved.
-	 */ 
+        /**
+         * Returns the element.
+         *
+         * @return The element used by this singleton.
+         * @throws NoSuchElementException if the object
+         *         has already been retrieved.
+         */ 
         public Object next()
         {
           if (hasNext)
@@ -1441,20 +1513,30 @@ public class Collections
             throw new NoSuchElementException();
         }
 
-	/**
-	 * Removes the element from the singleton.
-	 * As this set is immutable, this will always
-	 * throw an exception.
-	 *
-	 * @throws UnsupportedOperationException as the
-	 *         singleton set doesn't support
-	 *         <code>remove()</code>.
-	 */
+        /**
+         * Removes the element from the singleton.
+         * As this set is immutable, this will always
+         * throw an exception.
+         *
+         * @throws UnsupportedOperationException as the
+         *         singleton set doesn't support
+         *         <code>remove()</code>.
+         */
         public void remove()
         {
           throw new UnsupportedOperationException();
         }
-      };
+
+        public Object $initLabels() {
+          // XXX What should this be?  Using completely permissive values for now.
+          // update label: {_ <-}
+          // access policy: {_ ->}
+          this.$updateLabel = LabelUtil.noComponents();
+          this.$accessPolicy = LabelUtil.bottomConf();
+
+          return this;
+        }
+      }.fabric$lang$Object$();
     }
 
     // The remaining methods are optional, but provide a performance
@@ -1517,6 +1599,16 @@ public class Collections
     {
       return "[" + element + "]";
     }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
+    }
   } // class SingletonSet
 
   /**
@@ -1531,7 +1623,7 @@ public class Collections
    */
   public static List singletonList(Object o)
   {
-    return new SingletonList(o);
+    return (SingletonList) new SingletonList().fabric$util$Collections$SingletonList$(o);
   }
 
   /**
@@ -1552,15 +1644,17 @@ public class Collections
      * The single element.
      * @serial the singleton
      */
-    private final Object element;
+    private /*final*/ Object element;
 
     /**
      * Construct a singleton.
      * @param o the element
      */
-    SingletonList(Object o)
+    SingletonList fabric$util$Collections$SingletonList$(Object o)
     {
+      fabric$util$AbstractList$();
       element = o;
+	  return this;
     }
 
     /**
@@ -1693,6 +1787,16 @@ public class Collections
     {
       return "[" + element + "]";
     }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
+    }
   } // class SingletonList
 
   /**
@@ -1707,7 +1811,7 @@ public class Collections
    */
   public static Map singletonMap(Object key, Object value)
   {
-    return new SingletonMap(key, value);
+    return (SingletonMap) new SingletonMap().fabric$util$Collections$SingletonMap$(key, value);
   }
 
   /**
@@ -1728,13 +1832,13 @@ public class Collections
      * The single key.
      * @serial the singleton key
      */
-    private final Object k;
+    private /*final*/ Object k;
 
     /**
      * The corresponding value.
      * @serial the singleton value
      */
-    private final Object v;
+    private /*final*/ Object v;
 
     /**
      * Cache the entry set.
@@ -1746,10 +1850,12 @@ public class Collections
      * @param key the key
      * @param value the value
      */
-    SingletonMap(Object key, Object value)
+    SingletonMap fabric$util$Collections$SingletonMap$(Object key, Object value)
     {
+      fabric$util$AbstractMap$();
       k = key;
       v = value;
+      return this;
     }
 
     /**
@@ -1760,22 +1866,32 @@ public class Collections
     public Set entrySet()
     {
       if (entries == null)
-        entries = singleton(new AbstractMap.BasicMapEntry(k, v)
+        entries = singleton((AbstractMap.BasicMapEntry) new AbstractMap.BasicMapEntry()
         {
-	  /**
-	   * Sets the value of the map entry to the supplied value.
-	   * An exception is always thrown, as the map is immutable.
-	   *
-	   * @param o The new value.
-	   * @return The old value.
-	   * @throws UnsupportedOperationException as setting the value
-	   *         is not supported.
-	   */
+          /**
+           * Sets the value of the map entry to the supplied value.
+           * An exception is always thrown, as the map is immutable.
+           *
+           * @param o The new value.
+           * @return The old value.
+           * @throws UnsupportedOperationException as setting the value
+           *         is not supported.
+           */
           public Object setValue(Object o)
           {
             throw new UnsupportedOperationException();
           }
-        });
+
+          public Object $initLabels() {
+            // XXX What should this be?  Using completely permissive values for now.
+            // update label: {_ <-}
+            // access policy: {_ ->}
+            this.$updateLabel = LabelUtil.noComponents();
+            this.$accessPolicy = LabelUtil.bottomConf();
+
+            return this;
+          }
+        }.fabric$util$AbstractMap$BasicMapEntry$(k,v));
       return entries;
     }
 
@@ -1872,6 +1988,16 @@ public class Collections
     public String toString()
     {
       return "{" + k + "=" + v + "}";
+    }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
     }
   } // class SingletonMap
 
@@ -1972,7 +2098,7 @@ public class Collections
 //   */
 //  public static Collection synchronizedCollection(Collection c)
 //  {
-//    return new SynchronizedCollection(c);
+//    return (SynchronizedCollection) new SynchronizedCollection().SynchronizedCollection$(c);
 //  }
 //
 //  /**
@@ -2163,7 +2289,7 @@ public class Collections
 //    {
 //      synchronized (mutex)
 //        {
-//          return new SynchronizedIterator@store(mutex, c.iterator(store));
+//          return (SynchronizedIterator) new SynchronizedIterator@store().SynchronizedIterator$(mutex, c.iterator(store));
 //        }
 //    }
 //
@@ -2171,7 +2297,7 @@ public class Collections
 //    {
 //      synchronized (mutex)
 //        {
-//          return new SynchronizedIterator@store(mutex, c.iterator(LOCAL_STORE));
+//          return (SynchronizedIterator) new SynchronizedIterator@store().SynchronizedIterator$(mutex, c.iterator(LOCAL_STORE));
 //        }
 //    }
 //
@@ -2431,8 +2557,8 @@ public class Collections
 //  public static List synchronizedList(List l)
 //  {
 //    if (l instanceof RandomAccess)
-//      return new SynchronizedRandomAccessList(l);
-//    return new SynchronizedList(l);
+//      return (SynchronizedRandomAccessList) new SynchronizedRandomAccessList().SynchronizedRandomAccessList$(l);
+//    return (SynchronizedList) new SynchronizedList().SynchronizedList$(l);
 //  }
 //
 //  /**
@@ -2642,7 +2768,7 @@ public class Collections
 //    {
 //      synchronized (mutex)
 //        {
-//          return new SynchronizedListIterator@store(mutex, list.listIterator(store));
+//          return (SynchronizedListIterator) new SynchronizedListIterator@store().SynchronizedListIterator$(mutex, list.listIterator(store));
 //        }
 //    }
 //
@@ -2667,7 +2793,7 @@ public class Collections
 //    {
 //      synchronized (mutex)
 //        {
-//          return new SynchronizedListIterator@store(mutex, list.listIterator(store, index));
+//          return (SynchronizedListIterator) new SynchronizedListIterator@store().SynchronizedListIterator$(mutex, list.listIterator(store, index));
 //        }
 //    }
 //
@@ -2738,7 +2864,7 @@ public class Collections
 //    {
 //      synchronized (mutex)
 //        {
-//          return new SynchronizedList(mutex, list.subList(fromIndex, toIndex));
+//          return (SynchronizedList) new SynchronizedList().SynchronizedList$(mutex, list.subList(fromIndex, toIndex));
 //        }
 //    }
 //  } // class SynchronizedList
@@ -2802,9 +2928,9 @@ public class Collections
 //    {
 //      synchronized (mutex)
 //        {
-//          return new SynchronizedRandomAccessList(mutex,
+//          return (SynchronizedRandomAccessList) new SynchronizedRandomAccessList(mutex,
 //                                                  list.subList(fromIndex,
-//                                                               toIndex));
+//                                                               toIndex)).$initLabels();
 //        }
 //    }
 //  } // class SynchronizedRandomAccessList
@@ -2981,7 +3107,7 @@ public class Collections
 //   */
 //  public static Map synchronizedMap(Map m)
 //  {
-//    return new SynchronizedMap(m);
+//    return (SynchronizedMap) new SynchronizedMap(m).$initLabels();
 //  }
 //
 //  /**
@@ -3224,7 +3350,7 @@ public class Collections
 //      if (entries == null)
 //        synchronized (mutex)
 //          {
-//            entries = new SynchronizedSet(mutex, m.entrySet())
+//            entries = (SynchronizedSet) new SynchronizedSet(mutex, m.entrySet())
 //            {
 //	      /**
 //	       * Returns an iterator over the set.  The iterator has no specific order,
@@ -3238,7 +3364,7 @@ public class Collections
 //              {
 //                synchronized (super.mutex)
 //                  {
-//                    return new SynchronizedIterator@store(super.mutex, c.iterator(store))
+//                    return (SynchronizedIterator) new SynchronizedIterator@store(super.mutex, c.iterator(store))
 //                    {
 //		      /**
 //		       * Retrieves the next map entry from the iterator.
@@ -3252,13 +3378,33 @@ public class Collections
 //                      {
 //                        synchronized (super.mutex)
 //                          {
-//                            return new SynchronizedMapEntry(super.next());
+//                            return (SynchronizedMapEntry) new SynchronizedMapEntry(super.next()).$initLabels();
 //                          }
 //                      }
-//                    };
+//
+//		      public Object $initLabels() {
+//			// XXX What should this be?  Using completely permissive values for now.
+//			// update label: {_ <-}
+//			// access policy: {_ ->}
+//			this.$updateLabel = LabelUtil.noComponents();
+//			this.$accessPolicy = LabelUtil.bottomConf();
+//
+//  return this;
+//		      }
+//                    }.$initLabels();
 //                  }
 //              }
-//            };
+//
+//	      public Object $initLabels() {
+//		// XXX What should this be?  Using completely permissive values for now.
+//		// update label: {_ <-}
+//		// access policy: {_ ->}
+//		this.$updateLabel = LabelUtil.noComponents();
+//		this.$accessPolicy = LabelUtil.bottomConf();
+//
+//  return this;
+//	      }
+//            }.$initLabels();
 //          }
 //      return entries;
 //    }
@@ -3351,7 +3497,7 @@ public class Collections
 //      if (keys == null)
 //        synchronized (mutex)
 //          {
-//            keys = new SynchronizedSet(mutex, m.keySet());
+//            keys = (SynchronizedSet) new SynchronizedSet(mutex, m.keySet()).$initLabels();
 //          }
 //      return keys;
 //    }
@@ -3477,7 +3623,7 @@ public class Collections
 //      if (values == null)
 //        synchronized (mutex)
 //          {
-//            values = new SynchronizedCollection(mutex, m.values());
+//            values = (SynchronizedCollection) new SynchronizedCollection(mutex, m.values()).$initLabels();
 //          }
 //      return values;
 //    }
@@ -3509,7 +3655,7 @@ public class Collections
 //   */
 //  public static Set synchronizedSet(Set s)
 //  {
-//    return new SynchronizedSet(s);
+//    return (SynchronizedSet) new SynchronizedSet(s).$initLabels();
 //  }
 //
 //  /**
@@ -3615,7 +3761,7 @@ public class Collections
 //   */
 //  public static SortedMap synchronizedSortedMap(SortedMap m)
 //  {
-//    return new SynchronizedSortedMap(m);
+//    return (SynchronizedSortedMap) new SynchronizedSortedMap(m).$initLabels();
 //  }
 //
 //  /**
@@ -3714,7 +3860,7 @@ public class Collections
 //    {
 //      synchronized (mutex)
 //        {
-//          return new SynchronizedSortedMap(mutex, sm.headMap(toKey));
+//          return (SynchronizedSortedMap) new SynchronizedSortedMap(mutex, sm.headMap(toKey)).$initLabels();
 //        }
 //    }
 //
@@ -3755,7 +3901,7 @@ public class Collections
 //    {
 //      synchronized (mutex)
 //        {
-//          return new SynchronizedSortedMap(mutex, sm.subMap(fromKey, toKey));
+//          return (SynchronizedSortedMap) new SynchronizedSortedMap(mutex, sm.subMap(fromKey, toKey)).$initLabels();
 //        }
 //    }
 //
@@ -3779,7 +3925,7 @@ public class Collections
 //    {
 //      synchronized (mutex)
 //        {
-//          return new SynchronizedSortedMap(mutex, sm.tailMap(fromKey));
+//          return (SynchronizedSortedMap) new SynchronizedSortedMap(mutex, sm.tailMap(fromKey)).$initLabels();
 //        }
 //    }
 //  } // class SynchronizedSortedMap
@@ -3811,7 +3957,7 @@ public class Collections
 //   */
 //  public static SortedSet synchronizedSortedSet(SortedSet s)
 //  {
-//    return new SynchronizedSortedSet(s);
+//    return (SynchronizedSortedSet) new SynchronizedSortedSet(s).$initLabels();
 //  }
 //
 //  /**
@@ -3910,7 +4056,7 @@ public class Collections
 //    {
 //      synchronized (mutex)
 //        {
-//          return new SynchronizedSortedSet(mutex, ss.headSet(toElement));
+//          return (SynchronizedSortedSet) new SynchronizedSortedSet(mutex, ss.headSet(toElement)).$initLabels();
 //        }
 //    }
 //
@@ -3951,8 +4097,8 @@ public class Collections
 //    {
 //      synchronized (mutex)
 //        {
-//          return new SynchronizedSortedSet(mutex,
-//                                           ss.subSet(fromElement, toElement));
+//          return (SynchronizedSortedSet) new SynchronizedSortedSet(mutex,
+//                                           ss.subSet(fromElement, toElement)).$initLabels();
 //        }
 //    }
 //
@@ -3976,7 +4122,7 @@ public class Collections
 //    {
 //      synchronized (mutex)
 //        {
-//          return new SynchronizedSortedSet(mutex, ss.tailSet(fromElement));
+//          return (SynchronizedSortedSet) new SynchronizedSortedSet().SynchronizedSortedSet$(mutex, ss.tailSet(fromElement));
 //        }
 //    }
 //  } // class SynchronizedSortedSet
@@ -4001,9 +4147,9 @@ public class Collections
    * @return a read-only view of the collection
    * @see Serializable
    */
-  public static Collection unmodifiableCollection(Collection c)
+  public static Collection unmodifiableCollection(Store store, Collection c)
   {
-    return new UnmodifiableCollection(c);
+    return (UnmodifiableCollection) new UnmodifiableCollection().fabric$util$Collections$UnmodifiableCollection$(c);
   }
 
   /**
@@ -4024,18 +4170,20 @@ public class Collections
      * The wrapped collection. Package visible for use by subclasses.
      * @serial the real collection
      */
-    final Collection c;
+    /*final*/ Collection c;
 
     /**
      * Wrap a given collection.
      * @param c the collection to wrap
      * @throws NullPointerException if c is null
      */
-    UnmodifiableCollection(Collection c)
+    UnmodifiableCollection fabric$util$Collections$UnmodifiableCollection$(Collection c)
     {
+      fabric$lang$Object$();
       this.c = c;
       if (c == null)
         throw new NullPointerException();
+      return this;
     }
 
     /**
@@ -4134,7 +4282,7 @@ public class Collections
      */
     public Iterator iterator(fabric.worker.Store store)
     {
-      return new UnmodifiableIterator@store(c.iterator(store));
+      return new UnmodifiableIterator@store().fabric$util$Collections$UnmodifiableIterator$(c.iterator(store));
     }
 
     public Iterator iterator()
@@ -4241,6 +4389,16 @@ public class Collections
     {
       return c.toString();
     }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
+    }
   } // class UnmodifiableCollection
 
   /**
@@ -4254,15 +4412,17 @@ public class Collections
     /**
      * The wrapped iterator.
      */
-    private final Iterator i;
+    private /*final*/ Iterator i;
 
     /**
      * Only trusted code creates a wrapper.
      * @param i the wrapped iterator
      */
-    UnmodifiableIterator(Iterator i)
+    UnmodifiableIterator fabric$util$Collections$UnmodifiableIterator$(Iterator i)
     {
+      fabric$lang$Object$();
       this.i = i;
+      return this;
     }
 
     /**
@@ -4300,6 +4460,16 @@ public class Collections
     {
       throw new UnsupportedOperationException();
     }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
+    }
   } // class UnmodifiableIterator
 
   /**
@@ -4321,11 +4491,11 @@ public class Collections
    * @see Serializable
    * @see RandomAccess
    */
-  public static List unmodifiableList(List l)
+  public static List unmodifiableList(Store store, List l)
   {
     if (l instanceof RandomAccess)
-      return new UnmodifiableRandomAccessList(l);
-    return new UnmodifiableList(l);
+      return (UnmodifiableRandomAccessList) new UnmodifiableRandomAccessList@store().fabric$util$Collections$UnmodifiableRandomAccessList$(l);
+    return (UnmodifiableList) new UnmodifiableList@store().fabric$util$Collections$UnmodifiableList$(l);
   }
 
   /**
@@ -4349,17 +4519,18 @@ public class Collections
      * excessive casting. Package visible for use by subclass.
      * @serial the wrapped list
      */
-    final List list;
+    /*final*/ List list;
 
     /**
      * Wrap a given list.
      * @param l the list to wrap
      * @throws NullPointerException if l is null
      */
-    UnmodifiableList(List l)
+    UnmodifiableList fabric$util$Collections$UnmodifiableList$(List l)
     {
-      super(l);
+      fabric$util$Collections$UnmodifiableCollection$(l);
       list = l;
+      return this;
     }
 
     /**
@@ -4472,7 +4643,7 @@ public class Collections
    */
     public ListIterator listIterator(fabric.worker.Store store)
     {
-      return new UnmodifiableListIterator@store(list.listIterator(store));
+      return (UnmodifiableListIterator) new UnmodifiableListIterator@store().fabric$util$Collections$UnmodifiableListIterator$(list.listIterator(store));
     }
 
   /**
@@ -4491,7 +4662,7 @@ public class Collections
    */
     public ListIterator listIterator(fabric.worker.Store store, int index)
     {
-      return new UnmodifiableListIterator@store(list.listIterator(store, index));
+      return (UnmodifiableListIterator) new UnmodifiableListIterator@store().fabric$util$Collections$UnmodifiableListIterator$(list.listIterator(store, index));
     }
 
     /**
@@ -4542,7 +4713,17 @@ public class Collections
      */
     public List subList(int fromIndex, int toIndex)
     {
-      return unmodifiableList(list.subList(fromIndex, toIndex));
+      return unmodifiableList($getStore(),list.subList(fromIndex, toIndex));
+    }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
     }
   } // class UnmodifiableList
 
@@ -4566,9 +4747,20 @@ public class Collections
      * @param l the list to wrap
      * @throws NullPointerException if l is null
      */
-    UnmodifiableRandomAccessList(List l)
+    UnmodifiableRandomAccessList fabric$util$Collections$UnmodifiableRandomAccessList$(List l)
     {
-      super(l);
+      fabric$util$Collections$UnmodifiableList$(l);
+	  return this;
+    }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
     }
   } // class UnmodifiableRandomAccessList
 
@@ -4584,16 +4776,17 @@ public class Collections
      * The wrapped iterator, stored both here and in the superclass to
      * avoid excessive casting.
      */
-    private final ListIterator li;
+    private /*final*/ ListIterator li;
 
     /**
      * Only trusted code creates a wrapper.
      * @param li the wrapped iterator
      */
-    UnmodifiableListIterator(ListIterator li)
+    UnmodifiableListIterator fabric$util$Collections$UnmodifiableListIterator$(ListIterator li)
     {
-      super(li);
+      fabric$util$Collections$UnmodifiableIterator$(li);
       this.li = li;
+      return this;
     }
 
     /**
@@ -4671,6 +4864,16 @@ public class Collections
     {
       throw new UnsupportedOperationException();
     }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
+    }
   } // class UnmodifiableListIterator
 
   /**
@@ -4690,9 +4893,9 @@ public class Collections
    * @return a read-only view of the map
    * @see Serializable
    */
-  public static Map unmodifiableMap(Map m)
+  public static Map unmodifiableMap(Store store, Map m)
   {
-    return new UnmodifiableMap(m);
+    return (UnmodifiableMap) new UnmodifiableMap@store().fabric$util$Collections$UnmodifiableMap$(m);
   }
 
   /**
@@ -4712,7 +4915,7 @@ public class Collections
      * The wrapped map.
      * @serial the real map
      */
-    private final Map m;
+    private /*final*/ Map m;
 
     /**
      * Cache the entry set.
@@ -4734,11 +4937,13 @@ public class Collections
      * @param m the map to wrap
      * @throws NullPointerException if m is null
      */
-    UnmodifiableMap(Map m)
+    UnmodifiableMap fabric$util$Collections$UnmodifiableMap$(Map m)
     {
+      fabric$lang$Object$();
       this.m = m;
       if (m == null)
         throw new NullPointerException();
+      return this;
     }
 
     /**
@@ -4800,7 +5005,7 @@ public class Collections
     public Set entrySet()
     {
       if (entries == null)
-        entries = new UnmodifiableEntrySet(m.entrySet());
+        entries = (UnmodifiableEntrySet) new UnmodifiableEntrySet().fabric$util$Collections$UnmodifiableEntrySet$(m.entrySet());
       return entries;
     }
 
@@ -4818,12 +5023,13 @@ public class Collections
       private static final class UnmodifiableMapEntry
           implements Map.Entry
       {
-        private final Map.Entry e;
+        private /*final*/ Map.Entry e;
 
-        private UnmodifiableMapEntry(Map.Entry e)
+        private UnmodifiableMapEntry fabric$util$Collections$UnmodifiableMapEntry$(Map.Entry e)
         {
-          super();
+          fabric$lang$Object$();
           this.e = e;
+          return this;
         }
 
         /**
@@ -4892,6 +5098,16 @@ public class Collections
         {
           return e.toString();
         }
+
+        public Object $initLabels() {
+          // XXX What should this be?  Using completely permissive values for now.
+          // update label: {_ <-}
+          // access policy: {_ ->}
+          this.$updateLabel = LabelUtil.noComponents();
+          this.$accessPolicy = LabelUtil.bottomConf();
+
+          return this;
+        }
       }
 
       /**
@@ -4903,29 +5119,40 @@ public class Collections
        * Wrap a given set.
        * @param s the set to wrap
        */
-      UnmodifiableEntrySet(Set s)
+      UnmodifiableEntrySet fabric$util$Collections$UnmodifiableEntrySet$(Set s)
       {
-        super(s);
+        fabric$util$Collections$UnmodifiableSet$(s);
+		return this;
       }
 
       // The iterator must return unmodifiable map entries.
       public Iterator iterator(fabric.worker.Store store)
       {
-        return new UnmodifiableIterator@store(c.iterator(store))
-	{
-	  /**
-	   * Obtains the next element from the underlying set of
-	   * map entries.
-	   *
-	   * @return the next element in the collection.
-	   * @throws NoSuchElementException if there are no more elements.
-	   */
+        return (UnmodifiableIterator) new UnmodifiableIterator@store()
+        {
+          /**
+           * Obtains the next element from the underlying set of
+           * map entries.
+           *
+           * @return the next element in the collection.
+           * @throws NoSuchElementException if there are no more elements.
+           */
           public Object next()
           {
             final Map.Entry e = (Map.Entry) super.next();
-            return new UnmodifiableMapEntry(e);
+            return (UnmodifiableMapEntry) new UnmodifiableMapEntry().fabric$util$Collections$UnmodifiableMapEntry$(e);
           }
-	};
+
+          public Object $initLabels() {
+            // XXX What should this be?  Using completely permissive values for now.
+            // update label: {_ <-}
+            // access policy: {_ ->}
+            this.$updateLabel = LabelUtil.noComponents();
+            this.$accessPolicy = LabelUtil.bottomConf();
+
+            return this;
+          }
+        }.fabric$util$Collections$UnmodifiableIterator$(c.iterator(store));
       }
 
       // The array returned is an array of UnmodifiableMapEntry instead of
@@ -4941,7 +5168,7 @@ public class Collections
             for (int i = 0; i < mapEntryResult.length; i++)
               {
                 Map.Entry r = (Map.Entry) mapEntryResult[i];
-                result[i] = new UnmodifiableMapEntry(r);
+                result[i] = (UnmodifiableMapEntry) new UnmodifiableMapEntry().fabric$util$Collections$UnmodifiableMapEntry$(r);
               }
           }
         return result;
@@ -4957,12 +5184,22 @@ public class Collections
           {
             for (int i = 0; i < array.length; i++)
               {
-                array[i] = new UnmodifiableMapEntry((Map.Entry) array[i]);
+                array[i] = (UnmodifiableMapEntry) new UnmodifiableMapEntry().fabric$util$Collections$UnmodifiableMapEntry$((Map.Entry) array[i]);
               }
           }
         return array;
       }
       
+
+      public Object $initLabels() {
+	// XXX What should this be?  Using completely permissive values for now.
+	// update label: {_ <-}
+	// access policy: {_ ->}
+	this.$updateLabel = LabelUtil.noComponents();
+	this.$accessPolicy = LabelUtil.bottomConf();
+
+	return this;
+      }
     } // class UnmodifiableEntrySet
 
     /**
@@ -5044,7 +5281,7 @@ public class Collections
     public Set keySet()
     {
       if (keys == null)
-        keys = new UnmodifiableSet(m.keySet());
+        keys = (UnmodifiableSet) new UnmodifiableSet().fabric$util$Collections$UnmodifiableSet$(m.keySet());
       return keys;
     }
 
@@ -5113,8 +5350,18 @@ public class Collections
     public Collection values()
     {
       if (values == null)
-        values = new UnmodifiableCollection(m.values());
+        values = (UnmodifiableCollection) new UnmodifiableCollection().fabric$util$Collections$UnmodifiableCollection$(m.values());
       return values;
+    }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
     }
   } // class UnmodifiableMap
 
@@ -5135,9 +5382,9 @@ public class Collections
    * @return a read-only view of the set
    * @see Serializable
    */
-  public static Set unmodifiableSet(Set s)
+  public static Set unmodifiableSet(Store store, Set s)
   {
-    return new UnmodifiableSet(s);
+    return (UnmodifiableSet) new UnmodifiableSet@store().fabric$util$Collections$UnmodifiableSet$(s);
   }
 
   /**
@@ -5159,9 +5406,10 @@ public class Collections
      * @param s the set to wrap
      * @throws NullPointerException if s is null
      */
-    UnmodifiableSet(Set s)
+    UnmodifiableSet fabric$util$Collections$UnmodifiableSet$(Set s)
     {
-      super(s);
+      fabric$util$Collections$UnmodifiableCollection$(s);
+      return this;
     }
 
     /**
@@ -5185,6 +5433,16 @@ public class Collections
     {
       return c.hashCode();
     }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
+    }
   } // class UnmodifiableSet
 
   /**
@@ -5204,9 +5462,9 @@ public class Collections
    * @return a read-only view of the map
    * @see Serializable
    */
-  public static SortedMap unmodifiableSortedMap(SortedMap m)
+  public static SortedMap unmodifiableSortedMap(Store store, SortedMap m)
   {
-    return new UnmodifiableSortedMap(m);
+    return (UnmodifiableSortedMap) new UnmodifiableSortedMap@store().fabric$util$Collections$UnmodifiableSortedMap$(m);
   }
 
   /**
@@ -5228,17 +5486,18 @@ public class Collections
      * excessive casting.
      * @serial the wrapped map
      */
-    private final SortedMap sm;
+    private /*final*/ SortedMap sm;
 
     /**
      * Wrap a given map.
      * @param sm the map to wrap
      * @throws NullPointerException if sm is null
      */
-    UnmodifiableSortedMap(SortedMap sm)
+    UnmodifiableSortedMap fabric$util$Collections$UnmodifiableSortedMap$(SortedMap sm)
     {
-      super(sm);
+      fabric$util$Collections$UnmodifiableMap$(sm);
       this.sm = sm;
+      return this;
     }
 
     /**
@@ -5287,7 +5546,7 @@ public class Collections
      */
     public SortedMap headMap(Object toKey)
     {
-      return new UnmodifiableSortedMap(sm.headMap(toKey));
+      return (UnmodifiableSortedMap) new UnmodifiableSortedMap().fabric$util$Collections$UnmodifiableSortedMap$(sm.headMap(toKey));
     }
 
     /**
@@ -5329,7 +5588,7 @@ public class Collections
      */
     public SortedMap subMap(Object fromKey, Object toKey)
     {
-      return new UnmodifiableSortedMap(sm.subMap(fromKey, toKey));
+      return (UnmodifiableSortedMap) new UnmodifiableSortedMap().fabric$util$Collections$UnmodifiableSortedMap$(sm.subMap(fromKey, toKey));
     }
 
     /**
@@ -5356,7 +5615,17 @@ public class Collections
      */
     public SortedMap tailMap(Object fromKey)
     {
-      return new UnmodifiableSortedMap(sm.tailMap(fromKey));
+      return (UnmodifiableSortedMap) new UnmodifiableSortedMap().fabric$util$Collections$UnmodifiableSortedMap$(sm.tailMap(fromKey));
+    }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
     }
   } // class UnmodifiableSortedMap
 
@@ -5377,9 +5646,9 @@ public class Collections
    * @return a read-only view of the set
    * @see Serializable
    */
-  public static SortedSet unmodifiableSortedSet(SortedSet s)
+  public static SortedSet unmodifiableSortedSet(Store store, SortedSet s)
   {
-    return new UnmodifiableSortedSet(s);
+    return (UnmodifiableSortedSet) new UnmodifiableSortedSet@store().fabric$util$Collections$UnmodifiableSortedSet$(s);
   }
 
   /**
@@ -5408,10 +5677,11 @@ public class Collections
      * @param ss the set to wrap
      * @throws NullPointerException if ss is null
      */
-    UnmodifiableSortedSet(SortedSet ss)
+    UnmodifiableSortedSet fabric$util$Collections$UnmodifiableSortedSet$(SortedSet ss)
     {
-      super(ss);
+      fabric$util$Collections$UnmodifiableSet$(ss);
       this.ss = ss;
+      return this;
     }
 
     /**
@@ -5462,7 +5732,7 @@ public class Collections
      */
     public SortedSet headSet(Object toElement)
     {
-      return new UnmodifiableSortedSet(ss.headSet(toElement));
+      return (UnmodifiableSortedSet) new UnmodifiableSortedSet().fabric$util$Collections$UnmodifiableSortedSet$(ss.headSet(toElement));
     }
 
     /**
@@ -5505,7 +5775,7 @@ public class Collections
      */
     public SortedSet subSet(Object fromElement, Object toElement)
     {
-      return new UnmodifiableSortedSet(ss.subSet(fromElement, toElement));
+      return (UnmodifiableSortedSet) new UnmodifiableSortedSet().fabric$util$Collections$UnmodifiableSortedSet$(ss.subSet(fromElement, toElement));
     }
 
     /**
@@ -5531,7 +5801,27 @@ public class Collections
      */
     public SortedSet tailSet(Object fromElement)
     {
-      return new UnmodifiableSortedSet(ss.tailSet(fromElement));
+      return (UnmodifiableSortedSet) new UnmodifiableSortedSet().fabric$util$Collections$UnmodifiableSortedSet$(ss.tailSet(fromElement));
+    }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
     }
   } // class UnmodifiableSortedSet
+
+  public Object $initLabels() {
+    // XXX What should this be?  Using completely permissive values for now.
+    // update label: {_ <-}
+    // access policy: {_ ->}
+    this.$updateLabel = LabelUtil.noComponents();
+    this.$accessPolicy = LabelUtil.bottomConf();
+
+    return this;
+  }
 } // class Collections

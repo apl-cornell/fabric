@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -21,12 +21,14 @@ import java.util.Set;
  * This code is mostly copied from Jif.
  */
 public abstract class ActsForProof {
-  private final Principal actor;
-  private final Principal granter;
+  private /*final*/ Principal actor;
+  private /*final*/ Principal granter;
 
-  ActsForProof(Principal actor, Principal granter) {
+  ActsForProof fabric$lang$security$ActsForProof$(Principal actor, Principal granter) {
     this.actor = actor;
     this.granter = granter;
+    fabric$lang$Object$();
+    return this;
   }
 
   public Principal getActor() {

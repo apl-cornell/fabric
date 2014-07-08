@@ -1,11 +1,36 @@
 # Fabric configuration properties.
 
-# Base directory of Jif installation
-#   Will override the value defined in environment variable $JIF.
-#   Must be an absolute path.
-jif.home=${env.HOME}/src/jif
 
-# Base directory of Polyglot installation
-#   Will override the value defined in environment variable $POLYGLOT
-#   Must be an absolute path.
-polyglot.home=${env.HOME}/src/polyglot
+# JDK installation directory
+#
+# This is optional. If not set, then the following values are used, in
+# order of precedence:
+#
+#   1. The jdk.home property from config.properties in Jif's source
+#      tree. (This does not exist when using Jif from a jar file.)
+#
+#   2. The JAVA_HOME environment variable.
+#
+#   3. Ant's built-in java.home property (on some systems, this points
+#      to the JRE, and not the JDK).
+#
+# The commented example below uses Ant's built-in java.home property.
+
+#jdk.home=${java.home}
+
+
+# Jif installation directory
+#
+# This is optional. By default, the copy of Jif included in the Fabric
+# distribution is used.
+
+#jif.home=${env.HOME}/jif
+
+
+# Polyglot installation directory
+#
+# This is optional. By default, the copy of Polyglot included in the
+# Fabric distribution is used.
+
+#polyglot.home=${env.HOME}/polyglot
+

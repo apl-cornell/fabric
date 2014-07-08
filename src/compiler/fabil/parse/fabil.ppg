@@ -10,16 +10,19 @@ import fabil.ast.FabricArrayTypeNode;
 import polyglot.parse.*;
 import fabil.types.FabILTypeSystem;
 import fabil.types.FabILFlags;
-import fabil.types.FabricArrayType;
+import fabil.parse.Name;
+import java.net.URI;
 
 parser Grm extends polyglot.parse.Grm {:
     public final FabILTypeSystem ts;
     public final FabILNodeFactory nf;
-
-    public Grm(Lexer l, TypeSystem t, NodeFactory n, ErrorQueue q) {
+	public final URI ns;
+	
+    public Grm(Lexer l, TypeSystem t, NodeFactory n, ErrorQueue q, URI ns) {
         super(l, t, n, q);
         ts = (FabILTypeSystem) t;
         nf = (FabILNodeFactory) n;
+		this.ns = ns; 
     }
     
     public TypeNode fabricArray(TypeNode n, int dims) throws Exception {
@@ -47,6 +50,8 @@ parser Grm extends polyglot.parse.Grm {:
       
       return super.array(n, dims);
     } 
+    
+
 :};
 
 terminal Token AT;
@@ -62,7 +67,30 @@ non terminal Stmt abort_stmt, retry_stmt;
 non terminal FabricArrayInit fabric_array_initializer;
 
 start with goal;
-
+//////////////
+// Names 	//
+//////////////
+// The parser sometimes creates unambiguous package objects, 
+//	providing the namespace preserves this ability
+override simple_name ::=
+                    // Name
+        IDENTIFIER:a
+            {: RESULT = new Name(parser.nf, parser.ts, parser.ns, parser.pos(a), parser.nf.Id(parser.pos(a), a.getIdentifier())); :}
+    ;
+    
+override qualified_name ::=
+                    // Name
+        name:a DOT IDENTIFIER:b
+            {: RESULT = new Name(parser.nf, parser.ts, parser.ns, parser.pos(a, b), a, parser.nf.Id(parser.pos(b), b.getIdentifier())); :}
+    ;
+    
+override identifier_opt ::=
+                    // Name
+            {: RESULT = null; :}
+    |   IDENTIFIER:a
+            {: RESULT = new Name(parser.nf, parser.ts, parser.ns, parser.pos(a),
+                parser.nf.Id(parser.pos(a), a.getIdentifier())); :}
+    ;
 
 ////////////////////////////////////////////////////////////////////////
 // Atomic Sections                                                    //
@@ -109,7 +137,17 @@ extend array_type ::=
     |   name:a NATIVE dims:b
             {: RESULT = parser.javaArray(a.toType(), b.intValue()); :}
     ;
-
+    
+extend cast_expression ::=
+                    // Cast
+        LPAREN:p primitive_type:a NATIVE dims:b RPAREN unary_expression:c
+            {: RESULT = parser.nf.Cast(parser.pos(p, c,a),
+                parser.javaArray(a, b.intValue()), c); :}
+    |   LPAREN:p name:a NATIVE dims:b RPAREN unary_expression_not_plus_minus:c
+            {: RESULT = parser.nf.Cast(parser.pos(p, c,a),
+                parser.javaArray(a.toType(), b.intValue()), c); :}
+    ;
+    
 ////////////////////////////////////////////////////////////////////////
 // Labels and locations for constructors                              //
 ////////////////////////////////////////////////////////////////////////
@@ -132,18 +170,18 @@ location_expr_opt ::=
 
 override class_instance_creation_expression ::=
                     // Expr
-        NEW:n class_type:a label_opt:l location_expr_opt:loc LPAREN argument_list_opt:b RPAREN:d
-            {: RESULT = parser.nf.New(parser.pos(n, d), a, l, loc, b); :}
-    |   NEW:n class_type:a label_opt:l location_expr_opt:loc LPAREN argument_list_opt:b RPAREN class_body:c
-            {: RESULT = parser.nf.New(parser.pos(n, c), a, l, loc, b, c); :}
-    |   primary_no_new_array:a DOT NEW simple_name:b label_opt:l location_expr_opt:loc LPAREN argument_list_opt:c RPAREN:d
-            {: RESULT = parser.nf.New(parser.pos(a, d), a, b.toType(), l, loc, c); :}
-    |   primary_no_new_array:a DOT NEW simple_name:b label_opt:l location_expr_opt:loc LPAREN argument_list_opt:c RPAREN class_body:d
-            {: RESULT = parser.nf.New(parser.pos(a, d), a, b.toType(), l, loc, c, d); :}
-    |   name:a DOT NEW simple_name:b label_opt:l location_expr_opt:loc LPAREN argument_list_opt:c RPAREN:d
-            {: RESULT = parser.nf.New(parser.pos(a, d), a.toExpr(), b.toType(), l, loc, c); :}
-    |   name:a DOT NEW simple_name:b label_opt:l location_expr_opt:loc LPAREN argument_list_opt:c RPAREN class_body:d
-            {: RESULT = parser.nf.New(parser.pos(a, d), a.toExpr(), b.toType(), l, loc, c, d); :}
+        NEW:n class_type:a location_expr_opt:loc LPAREN argument_list_opt:b RPAREN:d
+            {: RESULT = parser.nf.New(parser.pos(n, d), a, loc, b); :}
+    |   NEW:n class_type:a location_expr_opt:loc LPAREN argument_list_opt:b RPAREN class_body:c
+            {: RESULT = parser.nf.New(parser.pos(n, c), a, loc, b, c); :}
+    |   primary_no_new_array:a DOT NEW simple_name:b location_expr_opt:loc LPAREN argument_list_opt:c RPAREN:d
+            {: RESULT = parser.nf.New(parser.pos(a, d), a, b.toType(), loc, c); :}
+    |   primary_no_new_array:a DOT NEW simple_name:b location_expr_opt:loc LPAREN argument_list_opt:c RPAREN class_body:d
+            {: RESULT = parser.nf.New(parser.pos(a, d), a, b.toType(), loc, c, d); :}
+    |   name:a DOT NEW simple_name:b location_expr_opt:loc LPAREN argument_list_opt:c RPAREN:d
+            {: RESULT = parser.nf.New(parser.pos(a, d), a.toExpr(), b.toType(), loc, c); :}
+    |   name:a DOT NEW simple_name:b location_expr_opt:loc LPAREN argument_list_opt:c RPAREN class_body:d
+            {: RESULT = parser.nf.New(parser.pos(a, d), a.toExpr(), b.toType(), loc, c, d); :}
     ;
 
 override array_creation_expression ::=
@@ -152,25 +190,25 @@ override array_creation_expression ::=
             {: RESULT = parser.nf.NewArray(parser.pos(n, b), a, b,
                 c.intValue()); :}
     |   NEW:n primitive_type:a dim_exprs:b dims_opt:c label_opt:l location_expr_opt:loc
-            {: RESULT = parser.nf.NewFabricArray(parser.pos(n, b), a, l, loc, b,
+            {: RESULT = parser.nf.NewFabricArray(parser.pos(n, b), a, l, null, loc, b,
                 c.intValue()); :}
     |   NEW:n class_or_interface_type:a NATIVE dim_exprs:b dims_opt:c
             {: RESULT = parser.nf.NewArray(parser.pos(n, b), a, b,
                 c.intValue()); :}
     |   NEW:n class_or_interface_type:a dim_exprs:b dims_opt:c label_opt:l location_expr_opt:loc
-            {: RESULT = parser.nf.NewFabricArray(parser.pos(n, b), a, l, loc, b,
+            {: RESULT = parser.nf.NewFabricArray(parser.pos(n, b), a, l, null, loc, b,
                 c.intValue()); :}
     |   NEW:n primitive_type:a NATIVE dims:b array_initializer:c
             {: RESULT = parser.nf.NewArray(parser.pos(n, c), a,
                 b.intValue(), c); :}
     |   NEW:n primitive_type:a dims:b label_opt:l location_expr_opt:loc fabric_array_initializer:c
-            {: RESULT = parser.nf.NewFabricArray(parser.pos(n, c), a, l, loc,
+            {: RESULT = parser.nf.NewFabricArray(parser.pos(n, c), a, l, null, loc,
                 b.intValue(), c); :}
     |   NEW:n class_or_interface_type:a NATIVE dims:b array_initializer:c
             {: RESULT = parser.nf.NewArray(parser.pos(n, c), a,
                 b.intValue(), c); :}
     |   NEW:n class_or_interface_type:a dims:b label_opt:l location_expr_opt:loc fabric_array_initializer:c
-            {: RESULT = parser.nf.NewFabricArray(parser.pos(n, c), a, l, loc,
+            {: RESULT = parser.nf.NewFabricArray(parser.pos(n, c), a, l, null, loc,
                 b.intValue(), c); :}
     ;
 

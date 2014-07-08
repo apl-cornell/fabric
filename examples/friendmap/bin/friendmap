@@ -1,0 +1,11 @@
+#!/bin/bash
+
+BIN_DIR="$(dirname $0)"
+CB_DIR="${BIN_DIR}/../var/codebases"
+
+# Figure out codebase OID.
+ALICE_SCRIPTS_CB="$(cat "${CB_DIR}/alice-scripts.codebase" | sed 's/[<>]//g')"
+
+# Run the program.
+"${BIN_DIR}/start-worker" alice "${ALICE_SCRIPTS_CB}"alice.Run
+

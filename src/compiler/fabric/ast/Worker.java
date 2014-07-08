@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -15,7 +15,7 @@
  */
 package fabric.ast;
 
-import polyglot.ast.*;
+import polyglot.ast.Local;
 
 public interface Worker extends Local {
 

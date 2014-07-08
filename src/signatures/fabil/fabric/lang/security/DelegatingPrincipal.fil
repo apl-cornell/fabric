@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -16,6 +16,13 @@
 package fabric.lang.security;
 
 public abstract class DelegatingPrincipal extends Principal {
+  /**
+   * Jif initializer.
+   */
+  public native DelegatingPrincipal fabric$lang$security$DelegatingPrincipal$();
+
+  public static native DelegatingPrincipal jif$cast$fabric_lang_security_DelegatingPrincipal(Object o);
+  public static native boolean jif$Instanceof$fabric_lang_security_DelegatingPrincipal(Object o);
 
   public abstract void addDelegatesTo(final Principal p);
   

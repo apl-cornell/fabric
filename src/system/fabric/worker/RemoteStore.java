@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -15,28 +15,45 @@
  */
 package fabric.worker;
 
-import java.io.IOException;
 import java.io.ObjectStreamException;
-import java.lang.ref.ReferenceQueue;
-import java.lang.ref.SoftReference;
+import java.io.Serializable;
+import java.security.GeneralSecurityException;
+import java.security.Principal;
 import java.security.PublicKey;
 import java.security.cert.Certificate;
+import java.security.cert.X509Certificate;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
-import fabric.common.*;
-import fabric.common.exceptions.FabricException;
-import fabric.common.exceptions.FetchException;
+import fabric.common.Crypto;
+import fabric.common.ONumConstants;
+import fabric.common.ObjectGroup;
+import fabric.common.SerializedObject;
+import fabric.common.TransactionID;
+import fabric.common.exceptions.AccessException;
+import fabric.common.exceptions.FabricGeneralSecurityException;
+import fabric.common.exceptions.FabricRuntimeException;
 import fabric.common.exceptions.InternalError;
-import fabric.common.net.naming.SocketAddress;
-import fabric.common.util.*;
+import fabric.common.exceptions.NotImplementedException;
+import fabric.common.exceptions.RuntimeFetchException;
+import fabric.common.util.LongKeyHashMap;
+import fabric.common.util.LongKeyMap;
 import fabric.dissemination.Glob;
 import fabric.lang.Object;
 import fabric.lang.Object._Impl;
 import fabric.lang.security.NodePrincipal;
-import fabric.messages.*;
+import fabric.messages.AbortTransactionMessage;
+import fabric.messages.AllocateMessage;
+import fabric.messages.CommitTransactionMessage;
+import fabric.messages.DissemReadMessage;
+import fabric.messages.GetCertChainMessage;
+import fabric.messages.MakePrincipalMessage;
+import fabric.messages.Message.NoException;
+import fabric.messages.PrepareTransactionMessage;
+import fabric.messages.ReadMessage;
+import fabric.messages.StalenessCheckMessage;
 import fabric.net.RemoteNode;
 import fabric.net.UnreachableNodeException;
 import fabric.util.Map;
@@ -48,7 +65,7 @@ import fabric.util.Map;
  * <code>Worker.getStore()</code> interface. For each remote store, there should
  * be at most one <code>RemoteStore</code> object representing that store.
  */
-public class RemoteStore extends RemoteNode implements Store {
+public class RemoteStore extends RemoteNode implements Store, Serializable {
   /**
    * A queue of fresh object identifiers.
    */
@@ -57,7 +74,7 @@ public class RemoteStore extends RemoteNode implements Store {
   /**
    * The object table: locally resident objects.
    */
-  private transient final LongKeyMap<FabricSoftRef> objects;
+  private transient final ObjectCache cache;
 
   /**
    * The set of fetch locks. Used to prevent threads from concurrently
@@ -71,63 +88,21 @@ public class RemoteStore extends RemoteNode implements Store {
    */
   private transient PublicKey publicKey;
 
-  /**
-   * Cache of serialized objects that the store has sent us.
-   */
-  private transient final LongKeyMap<SerializedObjectSoftRef> serialized;
-  final transient ReferenceQueue<SerializedObject> serializedRefQueue;
-
-  /**
-   * A thread for removing entries from <code>serialized</code> as
-   * SerializedObjects are collected from memory.
-   */
-  private transient final SerializedCollector collector;
-
-  private class SerializedCollector extends Thread {
-    private final ReferenceQueue<SerializedObject> queue;
-    private boolean destroyed;
-
-    SerializedCollector() {
-      super("Serialized object collector for store " + name);
-      queue = new ReferenceQueue<SerializedObject>();
-      destroyed = false;
-    }
-
-    @Override
-    public void run() {
-      while (!destroyed) {
-        try {
-          SerializedObjectSoftRef ref =
-              (SerializedObjectSoftRef) queue.remove();
-
-          synchronized (serialized) {
-            serialized.remove(ref.onum);
-          }
-        } catch (InterruptedException e) {
-        }
-      }
-    }
-  }
-
   private class FetchLock {
-    private _Impl object;
-    private FetchException error;
+    private ObjectCache.Entry object;
+    private AccessException error;
   }
 
   /**
    * Creates a store representing the store at the given host name.
    */
   protected RemoteStore(String name) {
-    super(name, true);
+    super(name);
 
-    this.objects = new LongKeyHashMap<FabricSoftRef>();
+    this.cache = new ObjectCache(name);
     this.fetchLocks = new LongKeyHashMap<FetchLock>();
     this.fresh_ids = new LinkedList<Long>();
-    this.serialized = new LongKeyHashMap<SerializedObjectSoftRef>();
     this.publicKey = null;
-    this.serializedRefQueue = new ReferenceQueue<SerializedObject>();
-    this.collector = new SerializedCollector();
-    this.collector.start();
   }
 
   /**
@@ -138,81 +113,51 @@ public class RemoteStore extends RemoteNode implements Store {
     this.publicKey = key;
   }
 
-  /**
-   * Cleans up the SerializedObject collector thread.
-   */
   @Override
-  public void cleanup() {
-    super.cleanup();
-    collector.destroyed = true;
-    collector.interrupt();
-  }
-
   public synchronized long createOnum() throws UnreachableNodeException {
-    reserve(1);
+    try {
+      reserve(1);
+    } catch (AccessException e) {
+      throw new FabricRuntimeException(e);
+    }
     return fresh_ids.poll();
   }
 
   /**
    * Sends a PREPARE message to the store.
    */
-  public boolean prepareTransaction(boolean useAuthentication, long tid,
-      long commitTime, Collection<Object._Impl> toCreate,
-      LongKeyMap<Integer> reads, Collection<Object._Impl> writes)
+  @Override
+  public boolean prepareTransaction(long tid, long commitTime,
+      Collection<Object._Impl> toCreate, LongKeyMap<Integer> reads,
+      Collection<Object._Impl> writes)
       throws TransactionPrepareFailedException, UnreachableNodeException {
-    if (useAuthentication) {
-      PrepareTransactionMessage.Response response =
-          new PrepareTransactionMessage(tid, commitTime, toCreate, reads,
-              writes).send(this);
+    PrepareTransactionMessage.Response response =
+        send(Worker.getWorker().authToStore, new PrepareTransactionMessage(tid,
+            commitTime, toCreate, reads, writes));
 
-      return response.subTransactionCreated;
-    } else {
-      UnauthenticatedPrepareTransactionMessage.Response response =
-          new UnauthenticatedPrepareTransactionMessage(tid, commitTime,
-              toCreate, reads, writes).send(this);
-
-      if (!response.success)
-        throw new TransactionPrepareFailedException(response.versionConflicts,
-            response.message);
-
-      return response.subTransactionCreated;
-    }
+    return response.subTransactionCreated;
   }
 
-  /**
-   * Returns the requested _Impl object. If the object is not resident, it is
-   * fetched from the Store via dissemination.
-   * 
-   * @param onum
-   *          The identifier of the requested object
-   * @return The requested object
-   * @throws FabricException
-   */
-  public final Object._Impl readObject(long onum) throws FetchException {
+  @Override
+  public final ObjectCache.Entry readObject(long onum) throws AccessException {
     return readObject(true, onum);
   }
 
-  /*
-   * (non-Javadoc)
-   * @see fabric.worker.Store#readObjectNoDissem(long)
-   */
-  public final Object._Impl readObjectNoDissem(long onum) throws FetchException {
+  @Override
+  public final ObjectCache.Entry readObjectNoDissem(long onum)
+      throws AccessException {
     return readObject(false, onum);
   }
 
-  private final Object._Impl readObject(boolean useDissem, long onum)
-      throws FetchException {
-    // Intercept reads of global constants and redirect them to the local store.
-    if (ONumConstants.isGlobalConstant(onum))
-      return Worker.instance.localStore.readObject(onum);
-
-    // check object table. Use fetchlocks as a mutex for atomically checking the
-    // cache and creating a mutex for the object fetch in the event of a cache
-    // miss.
+  private final ObjectCache.Entry readObject(boolean useDissem, long onum)
+      throws AccessException {
+    // Check object table in case some other thread fetched the object while we
+    // weren't looking. Use fetchLocks as a mutex to atomically check the cache
+    // and create a mutex for the object fetch in the event of a cache miss.
     FetchLock fetchLock;
     boolean needToFetch = false;
     synchronized (fetchLocks) {
-      Object._Impl result = readObjectFromCache(onum);
+      ObjectCache.Entry result = readFromCache(onum);
       if (result != null) return result;
 
       // Object not found in cache. Get/create a mutex for fetching the object.
@@ -229,7 +174,7 @@ public class RemoteStore extends RemoteNode implements Store {
         // We are responsible for fetching the object.
         try {
           fetchLock.object = fetchObject(useDissem, onum);
-        } catch (FetchException e) {
+        } catch (AccessException e) {
           fetchLock.error = e;
         }
 
@@ -256,81 +201,33 @@ public class RemoteStore extends RemoteNode implements Store {
     }
   }
 
-  public Object._Impl readObjectFromCache(long onum) {
-    synchronized (objects) {
-      FabricSoftRef ref = objects.get(onum);
-      if (ref == null) return null;
-      return ref.get();
-    }
+  @Override
+  public ObjectCache.Entry readFromCache(long onum) {
+    return cache.get(onum);
   }
 
   /**
-   * Fetches the object from the serialized cache, or goes to the store if it is
-   * not present. Places the result in the object cache.
+   * Fetches the object from the store. Places the object in the object cache
+   * and returns the resulting cache entry.
    * 
    * @param useDissem
    *          Whether to use the dissemination network. If false, the
    *          dissemination network will be bypassed.
    * @param onum
    *          The object number to fetch
-   * @return The constructed _Impl
-   * @throws FabricException
+   * @return The cache entry for the object.
    */
-  private Object._Impl fetchObject(boolean useDissem, long onum)
-      throws FetchException {
-    Object._Impl result = null;
-    SoftReference<SerializedObject> serialRef;
-    // Lock the table to keep the serialized-reference collector from altering
-    // it.
-    synchronized (serialized) {
-      serialRef = serialized.remove(onum);
+  private ObjectCache.Entry fetchObject(boolean useDissem, long onum)
+      throws AccessException {
+    ObjectGroup g;
+    if (useDissem) {
+      g = Worker.getWorker().fetchManager().fetch(this, onum);
+    } else {
+      g = readObjectFromStore(onum);
     }
 
-    if (serialRef != null) {
-      SerializedObject serial = serialRef.get();
-      if (serial != null) result = serial.deserialize(this);
-    }
-
-    if (result == null) {
-      // no serial copy --- fetch from the network.
-      ObjectGroup g;
-      if (useDissem) {
-        g = Worker.getWorker().fetchManager().fetch(this, onum);
-      } else {
-        g = readObjectFromStore(onum);
-      }
-
-      // Lock the table to keep the serialized-reference collector from altering
-      // it.
-      synchronized (serialized) {
-        for (LongKeyMap.Entry<SerializedObject> entry : g.objects().entrySet()) {
-          long curOnum = entry.getKey();
-          SerializedObject curObj = entry.getValue();
-
-          if (curOnum == onum) {
-            result = curObj.deserialize(this);
-          } else {
-            // Add to the cache if object not already in memory.
-            serialized.put(entry.getKey(), new SerializedObjectSoftRef(this,
-                entry.getValue()));
-          }
-        }
-      }
-    }
-
-    while (result instanceof Surrogate) {
-      // XXX Track surrogates for reuse?
-      Surrogate surrogate = (Surrogate) result;
-      if (useDissem)
-        result = surrogate.store.readObject(surrogate.onum);
-      else result = surrogate.store.readObjectNoDissem(surrogate.onum);
-    }
-
-    synchronized (objects) {
-      objects.put(onum, result.$ref);
-    }
-
-    return result;
+    cache.put(this, g);
+    return cache.get(onum);
   }
 
   /**
@@ -342,8 +239,9 @@ public class RemoteStore extends RemoteNode implements Store {
    * @throws FetchException
    *           if there was an error while fetching the object from the store.
    */
-  public ObjectGroup readObjectFromStore(long onum) throws FetchException {
-    ReadMessage.Response response = new ReadMessage(onum).send(this);
+  public ObjectGroup readObjectFromStore(long onum) throws AccessException {
+    ReadMessage.Response response =
+        send(Worker.getWorker().authToStore, new ReadMessage(onum));
     return response.group;
   }
 
@@ -354,9 +252,16 @@ public class RemoteStore extends RemoteNode implements Store {
    *          The object number to fetch.
    */
   public final Glob readEncryptedObjectFromStore(long onum)
-      throws FetchException {
+      throws AccessException {
     DissemReadMessage.Response response =
-        new DissemReadMessage(onum).send(this);
+        send(Worker.getWorker().unauthToStore, new DissemReadMessage(onum));
+
+    PublicKey key = getPublicKey();
+    try {
+      response.glob.verifySignature(key);
+    } catch (GeneralSecurityException e) {
+      return null;
+    }
     return response.glob;
   }
 
@@ -379,52 +284,38 @@ public class RemoteStore extends RemoteNode implements Store {
    * @param num
    *          The number of objects to allocate
    */
-  protected void reserve(int num) throws UnreachableNodeException {
+  protected void reserve(int num) throws AccessException,
+      UnreachableNodeException {
     while (fresh_ids.size() < num) {
       // log.info("Requesting new onums, storeid=" + storeID);
       if (num < 512) num = 512;
-      AllocateMessage.Response response = new AllocateMessage(num).send(this);
+      AllocateMessage.Response response =
+          send(Worker.getWorker().authToStore, new AllocateMessage(num));
 
       for (long oid : response.oids)
         fresh_ids.add(oid);
     }
   }
 
-  /*
-   * (non-Javadoc)
-   * @see fabric.worker.Store#abortTransaction(long)
-   */
-  public void abortTransaction(boolean useAuthentication, TransactionID tid) {
-    if (useAuthentication)
-      new AbortTransactionMessage(tid).send(this);
-    else new UnauthenticatedAbortTransactionMessage(tid).send(this);
+  @Override
+  public void abortTransaction(TransactionID tid) throws AccessException {
+    send(Worker.getWorker().authToStore, new AbortTransactionMessage(tid));
   }
 
-  /*
-   * (non-Javadoc)
-   * @see fabric.worker.Store#commitTransaction(int)
-   */
-  public void commitTransaction(boolean useAuthentication, long transactionID)
+  @Override
+  public void commitTransaction(long transactionID)
       throws UnreachableNodeException, TransactionCommitFailedException {
-    if (useAuthentication) {
-      CommitTransactionMessage.Response response =
-          new CommitTransactionMessage(transactionID).send(this);
-      if (!response.success)
-        throw new TransactionCommitFailedException(response.message);
-    } else {
-      UnauthenticatedCommitTransactionMessage.Response response =
-          new UnauthenticatedCommitTransactionMessage(transactionID).send(this);
-      if (!response.success)
-        throw new TransactionCommitFailedException(response.message);
-    }
+    send(Worker.getWorker().authToStore, new CommitTransactionMessage(
+        transactionID));
   }
 
+  @Override
   public boolean checkForStaleObjects(LongKeyMap<Integer> reads) {
     List<SerializedObject> staleObjects = getStaleObjects(reads);
-    
+
     for (SerializedObject obj : staleObjects)
       updateCache(obj);
-    
+
     return !staleObjects.isEmpty();
   }
 
@@ -432,7 +323,12 @@ public class RemoteStore extends RemoteNode implements Store {
    * Helper for checkForStaleObjects.
    */
   protected List<SerializedObject> getStaleObjects(LongKeyMap<Integer> reads) {
-    return new StalenessCheckMessage(reads).send(this).staleObjects;
+    try {
+      return send(Worker.getWorker().authToStore, new StalenessCheckMessage(
+          reads)).staleObjects;
+    } catch (final AccessException e) {
+      throw new RuntimeFetchException(e);
+    }
   }
 
   @Override
@@ -440,14 +336,17 @@ public class RemoteStore extends RemoteNode implements Store {
     return "Store@" + name;
   }
 
+  @Override
   public Map getRoot() {
     return new Map._Proxy(this, ONumConstants.ROOT_MAP);
   }
 
+  @Override
   public NodePrincipal getPrincipal() {
     return new NodePrincipal._Proxy(this, ONumConstants.STORE_PRINCIPAL);
   }
 
+  @Override
   public final boolean isLocalStore() {
     return false;
   }
@@ -457,65 +356,34 @@ public class RemoteStore extends RemoteNode implements Store {
     return name.hashCode();
   }
 
-  /**
-   * Notifies that an object has been evicted from cache.
-   */
-  public boolean notifyEvict(long onum) {
-    synchronized (objects) {
-      FabricSoftRef r = objects.get(onum);
-
-      if (r != null && r.get() == null) {
-        objects.remove(onum);
-        return true;
-      }
-
-      return false;
-    }
-  }
-
+  @Override
   public boolean evict(long onum) {
-    synchronized (objects) {
-      FabricSoftRef r = objects.get(onum);
-      if (r == null) return false;
-      return r.evict();
-    }
+    return cache.evict(onum);
   }
 
   /**
    * Updates the worker's cache of objects that originate from this store. If an
-   * object with the given onum exists in cache, it is evicted and the given
-   * update is placed in the cache of serialized objects. Otherwise, the cache
-   * of serialized objects will only be updated if a pre-existing serialized
-   * object exits for the given onum.
+   * object with the given onum exists in cache, it is evicted and replaced with
+   * the given serialized object.
    * 
-   * @return true iff an _Impl with the given onum was evicted from cache.
+   * @return true iff an object with the given onum was evicted from cache.
    */
   public boolean updateCache(SerializedObject update) {
-    long onum = update.getOnum();
-
-    synchronized (objects) {
-      synchronized (serialized) {
-        boolean evicted = evict(onum);
-
-        if (evicted || serialized.containsKey(onum))
-          serialized.put(onum, new SerializedObjectSoftRef(this, update));
-
-        return evicted;
-      }
-    }
+    return cache.update(this, update);
   }
 
+  @Override
   public void cache(_Impl impl) {
     FabricSoftRef ref = impl.$ref;
     if (ref.store != this)
       throw new InternalError("Caching object at wrong store");
 
-    synchronized (objects) {
-      if (objects.get(ref.onum) != null)
-        throw new InternalError("Conflicting cache entry");
+    cache.put(impl);
+  }
 
-      objects.put(ref.onum, ref);
-    }
+  @Override
+  public ObjectCache.Entry cache(SerializedObject obj) {
+    return cache.put(this, obj);
   }
 
   /**
@@ -524,14 +392,23 @@ public class RemoteStore extends RemoteNode implements Store {
   public PublicKey getPublicKey() {
     if (publicKey == null) {
       // No key cached. Fetch the certificate chain from the store.
-      GetCertificateChainMessage.Response response =
-          new GetCertificateChainMessage().send(this);
+      GetCertChainMessage.Response response;
+      try {
+        response =
+            send(Worker.getWorker().authToStore, new GetCertChainMessage());
+      } catch (NoException e) {
+        // This is not possible.
+        throw new InternalError(e);
+      }
       Certificate[] certificateChain = response.certificateChain;
 
       // Validate the certificate chain.
-      if (Crypto.validateCertificateChain(certificateChain,
-          Worker.instance.keyStore)) {
+      try {
+        Crypto.validateCertificateChain(certificateChain,
+            Worker.instance.config.getKeyMaterial().getTrustedCerts());
         publicKey = certificateChain[0].getPublicKey();
+      } catch (GeneralSecurityException e) {
+        // do nothing
       }
     }
     return publicKey;
@@ -544,20 +421,67 @@ public class RemoteStore extends RemoteNode implements Store {
    * @see fabric.worker.Worker#clearCache()
    */
   public void clearCache() {
-    synchronized (objects) {
-      synchronized (serialized) {
-        LongSet onums = new LongHashSet(objects.keySet());
-        for (LongIterator it = onums.iterator(); it.hasNext();) {
-          evict(it.next());
-        }
-
-        serialized.clear();
-      }
-    }
+    cache.clear();
   }
 
-  @Override
-  protected SocketAddress lookup() throws IOException {
-    return Worker.getWorker().storeNameService.resolve(name);
+  /**
+   * Returns a certificate chain for a new principal object for the given worker
+   * key. This certificate chain is not guaranteed to end in a trusted root.
+   */
+  public X509Certificate[] makeWorkerPrincipal(Worker worker,
+      PublicKey workerKey) {
+    MakePrincipalMessage.Response response;
+    try {
+      response =
+          send(worker.unauthToStore, new MakePrincipalMessage(workerKey));
+    } catch (FabricGeneralSecurityException e) {
+      throw new NotImplementedException();
+    }
+
+    X509Certificate cert = response.cert;
+
+    // Check that the top certificate in the chain satisfies the following:
+    // - signed by the store
+    // - contains the worker's key
+
+    Principal issuerDN = cert.getIssuerDN();
+    // XXX This next line is really hacky.
+    if (!name.equals(Crypto.getCN(issuerDN.getName()))) {
+      throw new InternalError("Certificate signer (" + issuerDN.getName()
+          + ") does not match store (" + name + ")");
+    }
+
+    if (!cert.getPublicKey().equals(workerKey)) {
+      throw new InternalError("Key in certificate does not match worker key");
+    }
+
+    X509Certificate[] result =
+        new X509Certificate[response.certChain.length + 1];
+    result[0] = cert;
+    for (int i = 0; i < response.certChain.length; i++) {
+      result[i + 1] = response.certChain[i];
+    }
+
+    return result;
+  }
+
+  // ////////////////////////////////
+  // Java custom-serialization gunk
+  // ////////////////////////////////
+
+  public java.lang.Object writeReplace() {
+    return new SerializationProxy(name);
+  }
+
+  public static final class SerializationProxy implements Serializable {
+    private final String storeName;
+
+    public SerializationProxy(String storeName) {
+      this.storeName = storeName;
+    }
+
+    java.lang.Object readResolve() {
+      return Worker.getWorker().getStore(storeName);
+    }
   }
 }

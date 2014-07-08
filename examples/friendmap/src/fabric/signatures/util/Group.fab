@@ -1,0 +1,187 @@
+/**
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
+ *
+ * This file is part of Fabric.
+ *
+ * Fabric is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * Fabric is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ */
+package util;
+
+// TODO: label comments
+
+/**
+ * A group is a principal object that delegates to each of its members.  It
+ * also serves as a collection, so it can be iterated over, etc..
+ *
+ * A group is parameterized by an owner; only the owner may change the group
+ * membership.  The owner acts for the group, but is not listed as a member
+ * (unless explicitly added).
+ *
+ * TODO: Because of the absence of Fabric collections, this class uses a
+ * fixed-size array to hold the members, and the add() method throws an
+ * ArrayIndexOutOfBoundsException if the array is full.
+ */
+public class Group[principal groupOwner, label A]
+extends Delegator
+where
+  provider               <= {*←groupOwner},
+  GroupIterator.provider <= {*←groupOwner},
+
+  // general access label invariants:
+  {*←groupOwner} <= A
+{
+
+  private int {*←groupOwner}@{A} accessLabelKludge; 
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Group constructors                                                       //
+  //////////////////////////////////////////////////////////////////////////////
+
+  /**
+   * Create a new group with the given name and the default maximum size.
+   */
+  public native
+  Group
+  {           // side effects:
+    {this} //⊓  // fields are updated
+  }
+  (
+    final String {this} name
+  );
+
+  /**
+   * Create a new group with the given name and maximum size.
+   */
+  public native
+  Group
+  {           // side effects:
+    {this} ⊓  // fields are updated
+    {*→store$} // objects are created at store
+  }
+  (
+    final String {this} name,
+    final int    {this} maxSize
+  )
+  throws
+  (
+    NegativeArraySizeException{maxSize}
+  );
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Group membership operations                                              //
+  //////////////////////////////////////////////////////////////////////////////
+
+  /**
+   * Add a new member to the group.
+   */
+  public native
+  void
+  add
+  {                // side effects:
+    {*←groupOwner} // members set is updated
+  }
+  (
+    Principal{*←groupOwner} p
+  )
+  :{*←groupOwner}
+  throws
+    ArrayIndexOutOfBoundsException;
+
+  /**
+   * Remove a member of the group.  If the principal is not a member of the
+   * group, there is no effect.
+   */
+  public native
+  void
+  remove
+  {                // side effects:
+    {*←groupOwner} // members set is updated
+  }
+  (
+    Principal{*←groupOwner} p
+  );
+
+  /**
+   * Iterate over the members of the group.
+   */
+  public native
+  GroupIterator[groupOwner, l, A]
+  iterator
+  {    // side effects:
+    *l // TODO
+  }
+  (
+    final Store s,
+    final label l
+  );
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Principal methods                                                        //
+  //////////////////////////////////////////////////////////////////////////////
+
+  /**
+   * Return true if p is either groupOwner or is a member of the group.
+   */
+  public native
+  boolean {this;p;this←} // TODO
+  delegatesTo
+  { //side effects:
+    // TODO
+  }
+  (
+    principal p
+  );
+
+  /**
+   * See Principal.findProofUpto.
+   */
+  public native
+  ActsForProof[{*→s;*←s}] {this; p; this←; p←;s} // TODO
+  findProofUpto
+  {            // side effects:
+    *→s;*←this // TODO
+  }
+  (
+    Store s,
+    Principal p,
+    java.lang.Object searchState
+  );
+
+  public native
+  void
+  addDelegatesTo
+  {             // side effects:
+    this→;this← // TODO
+  }
+  (
+    principal{this→;this←} p
+  )
+  where
+    caller (this);
+
+
+  public native
+  void
+  removeDelegatesTo
+  {             // side effects:
+    this→;this← // TODO
+  }
+  (
+    principal{this:;this!:} p
+  )
+  where
+    caller (this);
+}
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/
+

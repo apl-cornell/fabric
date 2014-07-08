@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -23,44 +23,59 @@ import java.util.Properties;
 
 import fabric.worker.Worker;
 import fabric.worker.Store;
+import fabric.lang.security.ConfPolicy;
+import fabric.lang.security.Label;
+import fabric.util.Set;
+import fabric.util.HashSet;
 
 /**
- * A Fabric class; it has the bytecode of the java class and the codebase 
- * it is associated to.
+ * A Fabric class; it has the bytecode and source of the fabric class and the 
+ * codebase it is associated to.
  * 
  * @author Lucas Waye <lrw48@cornell.edu>
  */
 public class FClass {
-  byte[]   bytecode;
-  Codebase codebase;
-  String   name;
+  protected /*final*/ Codebase codebase;
+  protected /*final*/ Object staticInstance;
+  protected /*final*/ String   name;
+  protected /*final*/ String   source;
+  protected /*final*/ byte[]   bytecode;
   
-  public FClass(String name, byte[] bytecode) {
-    this.name = new String(name);
+  public FClass fabric$lang$FClass$(Label updateLabel, ConfPolicy accessPolicy, Codebase codebase,
+      String name, String source, byte[] bytecode) {
+	fabric$lang$Object$();
+    this.codebase = codebase;
+    this.name = name;
+    this.source = source;
     this.bytecode = bytecode;
-  }
-  
-  public String getName() {
-	  return name;
-  }
-  
-  /**
-   * Sets the codebase the class should be loaded in. Should only be set once.
-   */
-  public void setCodebase(Codebase c) {
-	  codebase = c;
+    this.$updateLabel = updateLabel;
+    this.$accessPolicy = accessPolicy;
+	return this;
   }
 
   public Codebase getCodebase() {
-	  return codebase;
+    return codebase;
+  }
+
+  public String getName() {
+    return name;
   }
   
+  public String getSource() {
+    return source;
+  }  
+    
   public byte[] getBytecode() {
-	  atomic {
-		  byte[] copy = new byte[bytecode.length];
-		  for (int i = 0; i < copy.length; i++)
-			  copy[i] = bytecode[i];
-		  return copy;
-	  }
+    atomic {
+      byte[] copy = new byte[bytecode.length];
+      for (int i = 0; i < copy.length; i++)
+        copy[i] = bytecode[i];
+      return copy;
+    }
+  }
+  
+  public Object $initLabels() {
+    // Handled by constructor.
+    return this;
   }
 }

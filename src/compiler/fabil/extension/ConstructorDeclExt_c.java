@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -32,13 +32,7 @@ import fabil.types.FabILTypeSystem;
 import fabil.visit.ProxyRewriter;
 
 public class ConstructorDeclExt_c extends ClassMemberExt_c {
-  
-  /*
-   * (non-Javadoc)
-   * 
-   * @see fabil.extension.ClassMemberExt#implMember(fabil.visit.ProxyRewriter,
-   *      polyglot.ast.ClassDecl)
-   */
+
   @Override
   public List<ClassMember> implMember(ProxyRewriter pr, ClassDecl parent) {
     // TODO add Store parameters?
@@ -47,12 +41,6 @@ public class ConstructorDeclExt_c extends ClassMemberExt_c {
     return Collections.singletonList((ClassMember) node);
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see fabil.extension.FabILExt_c#rewriteProxies(fabil.visit.ProxyRewriter)
-   */
-  @SuppressWarnings("unchecked")
   @Override
   public Node rewriteProxies(ProxyRewriter pr) {
     // Need to add a $location argument to the constructor declaration if the
@@ -67,10 +55,11 @@ public class ConstructorDeclExt_c extends ClassMemberExt_c {
     NodeFactory nf = pr.nodeFactory();
     Position pos = Position.compilerGenerated();
     List<Formal> formals = new LinkedList<Formal>(decl.formals());
-    formals.add(0, nf.Formal(pos, Flags.NONE, nf.TypeNodeFromQualifiedName(pos,
-        "fabric.worker.Store"), nf.Id(pos, "$location")));
-    formals.add(1, nf.Formal(pos, Flags.NONE, nf.TypeNodeFromQualifiedName(pos,
-        "fabric.lang.security.Label"), nf.Id(pos, "$label")));
+    formals.add(
+        0,
+        nf.Formal(pos, Flags.NONE,
+            nf.TypeNodeFromQualifiedName(pos, "fabric.worker.Store"),
+            nf.Id(pos, "$location")));
     return decl.formals(formals);
   }
 

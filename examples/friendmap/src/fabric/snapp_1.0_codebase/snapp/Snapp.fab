@@ -1,0 +1,93 @@
+/**
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
+ *
+ * This file is part of Fabric.
+ *
+ * Fabric is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * Fabric is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ */
+package snapp;
+
+import util.Delegator;
+import util.AssertionFailedError;
+import snapp.Location;
+
+/**
+ * An instance of Snapp corresponds to an instance of the Snapp social network.
+ */
+public class Snapp extends Delegator
+where
+  provider <= User.provider, User.provider <= provider,
+  User.provider <= Location.provider,
+  Location.provider <= User.provider,
+
+  // trusted classes are trusted
+  util.Delegator.provider     <= {*←},
+  util.GroupIterator.provider <= {*←},
+  util.Group.provider         <= {*←}
+{
+
+  /** This is a dummy field to set the object label. */
+  public final int {_→; _←} dummy = 0;
+
+  /**
+   * Create a new Snapp, operated by owner.
+   */
+  public
+  Snapp
+  {                // side effects:
+    {this}       ⊓ // supertype fields are set
+    {_→; *←this} ⊓ // fields are set
+    {*→store$}      // store is contacted
+  }
+  (
+    final String    name,
+    final principal owner
+  )
+  : {*provider}
+  where
+    // the parameters and code affect the assignment to the fields
+    {*provider; name; owner} <= {this},
+    // establish invariants
+//    store$ actsfor owner,
+    provider <= {⊤→store$}
+  {
+    super(name, owner);
+  }
+
+  public
+  User[owner,this] {*provider; _→; *←this; owner; this} // result is affected by code, fields, and args
+  createUser
+  {                      // side effects:
+    {_→; *←this,owner} ⊓ // new user object fields are updated
+    {*→this}             // this is accessed
+  }
+  (
+    final String    name,
+    final principal owner
+  )
+  : {*provider}
+  where
+    // TODO: store ≽ {_→; *←this,owner}@{*→this}
+    {_→; *←this,owner} <= {*→store$}, {*←store$} <= {_→; *←this,owner}, {*→this} <= {*→store$},
+
+    // code and args affect resulting User object
+    {*provider; name; owner} <= {_→; *←this,owner}
+  {
+    if (this.store$ actsfor this)
+      return new User[owner,this]@store$(name, store$);
+    else
+      throw new AssertionFailedError("73 Snapp.store should act for Snapp");
+  }
+}
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/

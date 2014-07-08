@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -23,12 +23,13 @@ import java.util.Set;
  * This code is mostly copied from Jif.
  */
 public final class ToConjunctProof extends ActsForProof {
-  private final Map conjunctProofs;
+  private /*final*/ Map conjunctProofs;
 
-  ToConjunctProof(Principal actor, ConjunctivePrincipal granter,
+  ToConjunctProof fabric$lang$security$ToConjunctProof$(Principal actor, ConjunctivePrincipal granter,
       Map conjunctProofs) {
-    super(actor, granter);
+    fabric$lang$security$ActsForProof$(actor, granter);
     this.conjunctProofs = conjunctProofs;
+    return this;
   }
 
   Map getConjunctProofs() {
@@ -42,5 +43,15 @@ public final class ToConjunctProof extends ActsForProof {
       ActsForProof pr = (ActsForProof) this.getConjunctProofs().get(conjunct);
       pr.gatherDelegationDependencies(s);
     }
+  }
+
+  public Object $initLabels() {
+    // XXX What should this be?  Using completely permissive values for now.
+    // update label: {_ <-}
+    // access policy: {_ ->}
+    this.$updateLabel = LabelUtil.noComponents();
+    this.$accessPolicy = LabelUtil.bottomConf();
+
+    return this;
   }
 }

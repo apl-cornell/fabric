@@ -1,0 +1,37 @@
+#!/bin/bash
+
+BIN_DIR="$(dirname $0)"
+CB_DIR="${BIN_DIR}/../var/codebases"
+
+# Publish the application code to the stores.
+echo "Publishing application code..."
+cd "${BIN_DIR}/.."
+ant publish-all
+cd - &>/dev/null
+
+# Figure out codebase OIDs.
+SNAPP_SCRIPTS_CB="$(cat "${CB_DIR}/snapp-scripts.codebase" | sed 's/[<>]//g')"
+MAPSERV_SCRIPTS_CB="$(cat "${CB_DIR}/mapserv-scripts.codebase" | sed 's/[<>]//g')"
+FRIENDMAP_SCRIPTS_CB="$(cat "${CB_DIR}/friendmap-scripts.codebase" | sed 's/[<>]//g')"
+ALICE_SCRIPTS_CB="$(cat "${CB_DIR}/alice-scripts.codebase" | sed 's/[<>]//g')"
+BOB_SCRIPTS_CB="$(cat "${CB_DIR}/bob-scripts.codebase" | sed 's/[<>]//g')"
+
+# Initialize application state.
+echo -e "\nInitializing application state on each store..."
+echo "  snapp..."
+"${BIN_DIR}/start-worker" snapp "${SNAPP_SCRIPTS_CB}"snapp.Init || exit -1 
+echo "  mapserv..."
+"${BIN_DIR}/start-worker" mapserv "${MAPSERV_SCRIPTS_CB}"mapserv.Init|| exit -1 
+echo "  friendmap..."
+"${BIN_DIR}/start-worker" friendmap "${FRIENDMAP_SCRIPTS_CB}"friendmap.Init|| exit -1 
+echo "  alice..."
+"${BIN_DIR}/start-worker" alice "${ALICE_SCRIPTS_CB}"alice.Init|| exit -1 
+echo "  bob..."
+"${BIN_DIR}/start-worker" bob "${BOB_SCRIPTS_CB}"bob.Init|| exit -1 
+echo -e "\nInitializing Alice's friend list..."
+"${BIN_DIR}/start-worker" alice "${ALICE_SCRIPTS_CB}"alice.AddFriends|| exit -1  
+echo -e "Initializing Bob's friend list..."
+"${BIN_DIR}/start-worker" bob "${BOB_SCRIPTS_CB}"bob.AddFriends|| exit -1 
+
+echo -e "\nInitialization complete."
+

@@ -106,11 +106,11 @@ import java.math.BigInteger;
 
         /* Jif-specific keywords */    
         keywords.put("actsFor",       new Integer(sym.ACTSFOR));
-        keywords.put("actsfor",       new Integer(sym.ACTSFOR_LOWER));
+        keywords.put("actsfor",       new Integer(sym.ACTSFOR));
         keywords.put("equiv",         new Integer(sym.EQUIV));
         keywords.put("authority",     new Integer(sym.AUTHORITY));
         keywords.put("caller",        new Integer(sym.CALLER));
-        keywords.put("covariant",     new Integer(sym.COVARIANT));
+//      keywords.put("covariant",     new Integer(sym.COVARIANT));
         keywords.put("invariant",     new Integer(sym.INVARIANT));
         keywords.put("declassify",    new Integer(sym.DECLASSIFY));
         keywords.put("endorse",       new Integer(sym.ENDORSE));
@@ -119,11 +119,15 @@ import java.math.BigInteger;
         keywords.put("principal",     new Integer(sym.PRINCIPAL));
         keywords.put("where",         new Integer(sym.WHERE));
         keywords.put("meet",          new Integer(sym.MEET));
+        
+        keywords.put("provider",     new Integer(sym.PROVIDER));                
 
         /* Fabric-specific keywords */
         keywords.put("atomic",        new Integer(sym.ATOMIC));
         keywords.put("worker$",       new Integer(sym.WORKER));
+       	keywords.put("store$",       new Integer(sym.STORE));        
         keywords.put("nonfabric",     new Integer(sym.NONFABRIC));
+        keywords.put("codebase",     new Integer(sym.CODEBASE));        
     }
 
     public String file() {

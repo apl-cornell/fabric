@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -15,7 +15,20 @@
  */
 package fabil.ast;
 
+import polyglot.ast.Expr;
+
 public interface NewFabricArray extends polyglot.ast.NewArray, Annotated {
+  @Override
   FabricArrayInit init();
+
+  @Override
   NewFabricArray init(polyglot.ast.ArrayInit init);
+
+  Expr updateLabel();
+
+  Expr accessLabel();
+
+  NewFabricArray updateLabel(Expr label);
+
+  NewFabricArray accessPolicy(Expr accessPolicy);
 }

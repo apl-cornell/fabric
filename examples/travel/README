@@ -1,12 +1,13 @@
 Airline Travel Webapp Example
 =============================
 
-This is a suite of web applications implemented on top of Fabric. It consists
-of three simple webapps: one for a customer to purchase airline tickets, one
-for an airline agent to examine the number of tickets sold, and one for a bank
-manager to examine account balances.
+This is a suite of web applications implemented on top of Fabric. It
+consists of three simple webapps: one for a customer to purchase airline
+tickets, one for an airline agent to examine the number of tickets sold,
+and one for a bank manager to examine account balances.
 
-These webapps are standalone, so they can be started without any extra programs.
+These webapps are standalone, so they can be started without any extra
+programs.
 
 This directory contains the following sub-directories:
 
@@ -15,107 +16,81 @@ This directory contains the following sub-directories:
   - etc: configuration files for the example's stores and workers
   - web: supporting files (HTML, CSS, etc.) for the webapps
 
-Compiling
----------
-To build the example, run 'ant' in the travel example directory:
-
-  $ ant
-
 
 Using
 -----
-This example uses three stores ("bank", "airline", and "broker") and three
-workers ("customer", "bankweb" and "airlineweb"). The stores have persistent
-application data and the workers each host a web application.
+This example uses three stores ("bank", "airline", and "broker") and
+three workers ("customer", "bankweb" and "airlineweb"). The stores have
+persistent application data and the workers each host a web application.
 
-  0. Start in the travel example directory:
+  0. Start in the travel example directory and compile the example:
 
       $ cd $FABRIC/examples/travel
+      $ ant
 
-  I. Start up all the stores and, if necessary, initialize their state:
+  I. Start all the nodes and, if necessary, initialize their state:
 
-    1. Start fresh instances of the broker, airline and bank stores. The
-       'start-all-stores' script will start each store in a separate xterm
-       window:
+    1. Start up the broker store, airline store, bank store, customer
+       worker, bankweb worker, and airlineweb worker. The 'start-all'
+       script will start each node in a separate xterm window:
 
-	  $ bin/start-all-stores
+	  $ bin/start-all
 
-       You can also use an xterm replacement (e.g., gnome-terminal or konsole):
+       You can also use an xterm replacement (e.g., gnome-terminal or
+       konsole):
 
-	  $ XTERM=gnome-terminal bin/start-all-stores
+	  $ XTERM=gnome-terminal bin/start-all
 
-       Or, if you prefer, you can start each store individually in your
+       Or, if you prefer, you can start each node individually in your
        favourite terminal emulator:
 
-	  $ bin/start-broker
-	  $ bin/start-airline
-	  $ bin/start-bank
+	  $ bin/start-store broker
+	  $ bin/start-store airline
+	  $ bin/start-store bank
+	  $ bin/start-worker customer
+	  $ bin/start-worker bankweb
+	  $ bin/start-worker airlineweb
 
-       If you are starting from fresh stores, you will need to initialize the
-       workers and the application state by following the next four steps.
-       Otherwise, skip to II below.
+    2. If you are starting from fresh stores, you will need to
+       initialize the application state. Otherwise, skip to II below.
 
-    2. Initialize the workers by creating their principal objects:
-       
-	  $ bin/init-workers
-
-    3. Start the dummy bankweb and airlineweb workers, to be used in the
-       initialization of the application state. The 'start-web-workers' script
-       will start each in a separate xterm window:
-
-	  $ bin/start-web-workers
-
-       You can also use an xterm replacement (e.g., gnome-terminal or konsole):
-
-	  $ XTERM=gnome-terminal bin/start-web-workers
-
-       Or, if you prefer, you can start each worker individually in your
-       favourite terminal emulator:
-
-	  $ bin/start-airlineweb
-	  $ bin/start-bankweb
-
-    4. Use the Create.fil program to initialize state on all stores. You can do
-       this by running the 'init-state' script:
+       Run the Create.fil program to initialize state on all stores. You
+       can do this by running the 'init-state' script:
 
 	  $ bin/init-state
 
-    5. Exit out of the airlineweb and bankweb workers by pressing CTRL-C in
-       their respective terminals.
+  II. Start the web applications by running the 'start-webapps' script:
 
-  II. Start the three workers with their corresponding web applications. The
-      'start-webapps' script will start each in a separate xterm window:
-
-	  $ bin/start-all-webapps
-
-      You can also use an xterm replacement (e.g., gnome-terminal or konsole):
-
-	  $ XTERM=gnome-terminal bin/start-all-webapps
-
-      Or, if you prefer, you can start each individually in your favourite
-      terminal emulator:
-
-	  $ bin/start-customer-webapp
-	  $ bin/start-bank-webapp
-	  $ bin/start-airline-webapp
+	  $ bin/start-webapps
 
       The customer application can be accessed at:
+       
 	http://localhost:8080/customer
 
       The bank application can be accessed at:
+
 	http://localhost:8081/bank
 
 	User: bank
-	Pass: knab
+	Pass: password
 
       The airline application can be accessed at:
+
 	http://localhost:8082/airline
 
 	User: airline
-	Pass: enilria
+	Pass: password
 
-  III. You can clean up the stores' persistent state by removing 'var' from the
-       travel example directory:
+  III. Exit the stores with the "exit" command in each console (you can
+       also use CTRL-D). Exit the workers with CTRL-C.
+
+       After exiting the nodes, you can demonstrate the application's
+       persistent state by starting up the nodes and running the
+       application again (steps I.1 and II).
+
+       While the nodes are shut down, you can clean up the stores'
+       persistent state by removing 'var' from the travel example
+       directory:
 
 	  $ rm -rf var
 

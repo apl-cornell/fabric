@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -21,7 +21,13 @@ package fabil.extension;
 import polyglot.ast.Ext;
 import polyglot.ast.Node;
 import polyglot.types.SemanticException;
-import fabil.visit.*;
+import fabil.visit.AtomicRewriter;
+import fabil.visit.LabelAssigner;
+import fabil.visit.LocationAssigner;
+import fabil.visit.ProxyRewriter;
+import fabil.visit.RemoteCallRewriter;
+import fabil.visit.StaticInitializerCollector;
+import fabil.visit.ThreadRewriter;
 
 /**
  * The interface for all Fabric extension nodes.

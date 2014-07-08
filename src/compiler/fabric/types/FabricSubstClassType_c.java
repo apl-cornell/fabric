@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -15,29 +15,48 @@
  */
 package fabric.types;
 
-import polyglot.types.ClassType;
-import polyglot.util.Position;
+import java.net.URI;
+
 import jif.types.JifSubst;
 import jif.types.JifSubstClassType_c;
 import jif.types.JifTypeSystem;
+import jif.types.label.ConfPolicy;
 import jif.types.label.Label;
+import polyglot.types.ClassType;
+import polyglot.util.Position;
+import codebases.types.CodebaseClassType;
 
-public class FabricSubstClassType_c extends JifSubstClassType_c implements FabricSubstType {
-  public FabricSubstClassType_c(JifTypeSystem ts, Position pos, ClassType base, JifSubst subst) {
+public class FabricSubstClassType_c extends JifSubstClassType_c implements
+    FabricSubstType {
+  public FabricSubstClassType_c(JifTypeSystem ts, Position pos, ClassType base,
+      JifSubst subst) {
     super(ts, pos, base, subst);
   }
-  
-  public Label defaultFieldLabel() {
-    FabricParsedClassType base = (FabricParsedClassType)base();
-    Label l = base.defaultFieldLabel();
+
+  @Override
+  public Label updateLabel() {
+    FabricParsedClassType base = (FabricParsedClassType) base();
+    Label l = base.updateLabel();
     if (l == null) return null;
-    
-    JifSubst subst = (JifSubst)subst();
-    return subst.substLabel(base.defaultFieldLabel());
+
+    JifSubst subst = (JifSubst) subst();
+    return subst.substLabel(base.updateLabel());
   }
 
-  public Label defaultFabilFieldLabel() {
-    // TODO Auto-generated method stub
-    return defaultFieldLabel();
+  @Override
+  public ConfPolicy accessPolicy() {
+    FabricParsedClassType base = (FabricParsedClassType) base();
+    ConfPolicy c = base.accessPolicy();
+    if (c == null) return null;
+    FabricTypeSystem fts = (FabricTypeSystem) ts;
+    Label l = fts.toLabel(c);
+    JifSubst subst = (JifSubst) subst();
+    return subst.substLabel(l).confProjection();
   }
+
+  @Override
+  public URI canonicalNamespace() {
+    return ((CodebaseClassType) base).canonicalNamespace();
+  }
+
 }

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -43,11 +43,11 @@ public class HelloAction[label T] extends Action[HelloServEP] {
 	public void invoke{*lbl}(label{*lbl} lbl, Request[HelloServEP]{*lbl} req) 
 	where caller(req.session),
 	{*lbl} <= {*:req.session} {
-		Servlet[HelloServEP] s = getServlet();       
+		Servlet s = getServlet();       
 		if (s == null || req == null) return;
 		if (T equiv lbl) {
 
-			NodeList[this.nameInp.inputLbl, lbl] content = null;    
+			NodeList content = null;    
 
 			atomic {
 			// extract the name, if it exists.        
@@ -71,26 +71,26 @@ public class HelloAction[label T] extends Action[HelloServEP] {
 
 							if (name == null || name.length() == 0) name = "world";
 
-							NodeList[this.nameInp.inputLbl, lbl] formEntries = 
+							NodeList formEntries = 
 								new NodeList(lbl, lbl, new Text("What is your good name? "), this.nameInp.inputLbl, lbl, new Br(),
-										nameInp.inputLbl, lbl, new TextInput(nameInp, 40, name), this.nameInp.inputLbl, lbl, new Br[this.nameInp.inputLbl, lbl](),
-										lbl, lbl, new Text[lbl, lbl]("Choose a (small) text file to upload and display: "), this.nameInp.inputLbl, lbl, new Br[this.nameInp.inputLbl, lbl](),
+										nameInp.inputLbl, lbl, new TextInput(nameInp, 40, name), this.nameInp.inputLbl, lbl, new Br(),
+										lbl, lbl, new Text("Choose a (small) text file to upload and display: "), this.nameInp.inputLbl, lbl, new Br(),
 										fileInp.inputLbl, lbl, new FileChooser(fileInp, 40), this.nameInp.inputLbl, lbl, new Br(),
-										lbl, lbl, new SubmitButton[HelloServEP, lbl, lbl](s, lbl, "Submit"));
-							Node[this.nameInp.inputLbl, lbl] form = s.createForm(this.nameInp.inputLbl, lbl, this, this.nameInp.inputLbl, lbl, formEntries);
+										lbl, lbl, new SubmitButton(s, lbl, "Submit"));
+							Node form = s.createForm(this.nameInp.inputLbl, lbl, this, this.nameInp.inputLbl, lbl, formEntries);
 
 							content =
-								new NodeList[this.nameInp.inputLbl, lbl](this.nameInp.inputLbl, lbl,
-										new Paragraph[this.nameInp.inputLbl, lbl](this.nameInp.inputLbl, lbl,
-												new NodeList[this.nameInp.inputLbl, lbl](lbl, lbl,
-														new Text[lbl, lbl]("Hello "),
-														this.nameInp.inputLbl, lbl, new Text[this.nameInp.inputLbl, lbl](name),
-														lbl, lbl, new Text[lbl, lbl](" !!!"))),
-														lbl, lbl, new HRule[lbl, lbl](),
-														this.nameInp.inputLbl, lbl, new Paragraph[this.nameInp.inputLbl, lbl](this.nameInp.inputLbl, lbl, form),
-														lbl, lbl, new HRule[lbl, lbl](),
-														lbl, lbl, new Paragraph[lbl, lbl]("File contents: "),
-														this.nameInp.inputLbl, lbl, new Paragraph[this.nameInp.inputLbl, lbl](this.nameInp.inputLbl, lbl, new Pre[this.nameInp.inputLbl, lbl](fileContents)));
+								new NodeList(this.nameInp.inputLbl, lbl,
+										new Paragraph(this.nameInp.inputLbl, lbl,
+												new NodeList(lbl, lbl,
+														new Text("Hello "),
+														this.nameInp.inputLbl, lbl, new Text(name),
+														lbl, lbl, new Text(" !!!"))),
+														lbl, lbl, new HRule(),
+														this.nameInp.inputLbl, lbl, new Paragraph(this.nameInp.inputLbl, lbl, form),
+														lbl, lbl, new HRule(),
+														lbl, lbl, new Paragraph("File contents: "),
+														this.nameInp.inputLbl, lbl, new Paragraph(this.nameInp.inputLbl, lbl, new Pre(fileContents)));
 							s.createPage(req, "Hello webapp", this.nameInp.inputLbl, lbl, content);
 						}
 					}
@@ -98,8 +98,8 @@ public class HelloAction[label T] extends Action[HelloServEP] {
 			}
 			catch (NullPointerException impossible) { }
 			}
-		}
 
+		}
 	}
 }
-
+// vim: ts=2

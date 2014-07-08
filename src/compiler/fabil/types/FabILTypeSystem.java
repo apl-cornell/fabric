@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -16,10 +16,14 @@
 package fabil.types;
 
 import polyglot.ast.TypeNode;
-import polyglot.types.*;
+import polyglot.types.ArrayType;
+import polyglot.types.ClassType;
+import polyglot.types.Type;
+import polyglot.types.TypeSystem;
 import polyglot.util.Position;
+import codebases.types.CodebaseTypeSystem;
 
-public interface FabILTypeSystem extends TypeSystem {
+public interface FabILTypeSystem extends TypeSystem, CodebaseTypeSystem {
 
   // TODO: fabric.worker or fabric.lang?
   /**
@@ -62,6 +66,9 @@ public interface FabILTypeSystem extends TypeSystem {
   /** The ClassType of fabric.lang.security.Label. */
   Type Label();
 
+  /** The ClassType of fabric.lang.security.ConfPolicy. */
+  Type ConfPolicy();
+
   ClassType InternalError();
 
   ClassType fabricRuntimeArrayOf(Type type);
@@ -69,12 +76,14 @@ public interface FabILTypeSystem extends TypeSystem {
   ClassType fabricRuntimeArrayImplOf(Type type);
 
   ClassType toFabricRuntimeArray(ArrayType type);
-  
+
   /**
    * Returns the compile-time representation of a Fabric array type.
    */
   FabricArrayType fabricArrayOf(Type baseType);
+
   FabricArrayType fabricArrayOf(Position pos, Type type);
+
   FabricArrayType fabricArrayOf(Type type, int dims);
 
   /**
@@ -184,9 +193,10 @@ public interface FabILTypeSystem extends TypeSystem {
    */
   boolean isCompiledByFabc(ClassType ct);
 
-  /**
-   * Sets the LoadedClassResolver to use when looking for Fabric runtime
-   * classes.
-   */
-  void setRuntimeClassResolver(LoadedClassResolver lcr);
+  // /**
+  // * Sets the LoadedClassResolver to use when looking for Fabric runtime
+  // * classes.
+  // */
+  // void setRuntimeClassResolver(LoadedClassResolver lcr);
+
 }

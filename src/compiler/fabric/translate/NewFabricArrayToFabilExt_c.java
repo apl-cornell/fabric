@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -17,15 +17,15 @@ package fabric.translate;
 
 import jif.translate.JifToJavaRewriter;
 import jif.translate.NewArrayToJavaExt_c;
+import jif.types.label.ConfPolicy;
 import jif.types.label.Label;
 import polyglot.ast.Expr;
-import polyglot.ast.NewArray;
 import polyglot.ast.Node;
 import polyglot.types.SemanticException;
 import polyglot.types.Type;
 import polyglot.visit.NodeVisitor;
-import fabil.ast.FabricArrayInit;
 import fabil.ast.FabILNodeFactory;
+import fabil.ast.FabricArrayInit;
 import fabric.ast.FabricUtil;
 import fabric.ast.NewFabricArray;
 import fabric.extension.NewFabricArrayExt_c;
@@ -43,7 +43,6 @@ public class NewFabricArrayToFabilExt_c extends NewArrayToJavaExt_c {
     return rw;
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public Node toJava(JifToJavaRewriter rw) throws SemanticException {
     NewFabricArray n = (NewFabricArray) node();
@@ -57,23 +56,28 @@ public class NewFabricArrayToFabilExt_c extends NewArrayToJavaExt_c {
       base = base.toArray().base();
     }
 
-    Label baseLabel = null;
-    if (base instanceof FabricClassType && ts.isFabricClass(base)) {
-      baseLabel = ((FabricClassType)base).defaultFieldLabel();
-    }
-    Expr labelExpr = null;
-    if (baseLabel != null) {
-      labelExpr = rw.labelToJava(baseLabel);
-      
-      Expr loc = ext.location();
-      if (loc == null) loc = nf.StoreGetter(n.position());
-      if (loc != null) {
-        FabricToFabilRewriter ffrw = (FabricToFabilRewriter)rw;
-        labelExpr = ffrw.updateLabelLocation(labelExpr, loc);
-      }
+    Expr labelloc = ext.location();
+    if (labelloc == null) labelloc = nf.StoreGetter(n.position());
+    // push the new location
+    rw = ((FabricToFabilRewriter) rw).pushLocation(labelloc);
+
+    Expr updateLabelExpr = null;
+    Expr accessPolicyExpr = null;
+
+    if (ts.isFabricClass(base)) {
+
+      Label baseLabel = ((FabricClassType) base).updateLabel();
+      updateLabelExpr = rw.labelToJava(baseLabel);
+
+      ConfPolicy accessPolicy = ((FabricClassType) base).accessPolicy();
+      Label accessLabel = ts.toLabel(accessPolicy);
+
+      accessPolicyExpr =
+          rw.qq().parseExpr("%E.confPolicy()", rw.labelToJava(accessLabel));
     }
 
-    return nf.NewFabricArray(n.position(), n.baseType(), labelExpr, ext.location(), n
-        .dims(), n.additionalDims(), (FabricArrayInit) n.init());
+    return nf.NewFabricArray(n.position(), n.baseType(), updateLabelExpr,
+        accessPolicyExpr, ext.location(), n.dims(), n.additionalDims(),
+        (FabricArrayInit) n.init());
   }
 }

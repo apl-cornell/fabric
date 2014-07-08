@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -15,7 +15,8 @@
  */
 package fabil.ast;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
 
 import polyglot.ast.Stmt_c;
 import polyglot.ast.Term;
@@ -29,19 +30,19 @@ public class RetryStmt_c extends Stmt_c implements RetryStmt {
     super(pos);
   }
 
-  @SuppressWarnings("rawtypes")
   @Override
-  public List acceptCFG(CFGBuilder v, List succs) {
+  public <T> List<T> acceptCFG(CFGBuilder<?> v, List<T> succs) {
     return Collections.EMPTY_LIST;
   }
 
+  @Override
   public Term firstChild() {
     return null;
   }
 
   @Override
   public void prettyPrint(CodeWriter w, PrettyPrinter tr) {
-      w.write("retry;");
+    w.write("retry;");
   }
 
   @Override

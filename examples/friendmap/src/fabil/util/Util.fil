@@ -1,0 +1,51 @@
+/**
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
+ *
+ * This file is part of Fabric.
+ *
+ * Fabric is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * Fabric is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ */
+package util;
+
+import java.io.PrintStream;
+import fabric.runtime.Runtime;
+
+public class Util {
+
+  /**
+   * Copy the contents of an array into another array with the given labels.
+   *
+   * @throws NullPointerException
+   *         if data is null
+   */
+  public static char[] copyArray(
+    final char[] data,
+    final Label l,
+    final Label m,
+    final Store s
+  ) throws NullPointerException {
+    final char[] result = new char[data.length]@s;
+
+    try {
+      for (int i = 0; i < data.length; i++)
+        result[i] = data[i];
+    } catch (final ArrayIndexOutOfBoundsException e) {
+      throw new AssertionFailedError().util$AssertionFailedError$("result and data have the same length.");
+    }
+
+    return result;
+  }
+}
+
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/

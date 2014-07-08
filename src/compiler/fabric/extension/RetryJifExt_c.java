@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -15,28 +15,28 @@
  */
 package fabric.extension;
 
-import fabric.ast.RetryStmt;
-import polyglot.ast.Node;
 import jif.extension.JifBranchExt;
 import jif.translate.ToJavaExt;
 import jif.types.JifContext;
 import jif.types.JifTypeSystem;
 import jif.types.PathMap;
 import jif.visit.LabelChecker;
+import polyglot.ast.Node;
+import fabric.ast.RetryStmt;
 
 public class RetryJifExt_c extends JifBranchExt {
   public RetryJifExt_c(ToJavaExt toJava) {
     super(toJava);
   }
-  
+
   @Override
   public Node labelCheckStmt(LabelChecker lc) {
-    RetryStmt retry = (RetryStmt)node();
-    
+    RetryStmt retry = (RetryStmt) node();
+
     JifTypeSystem ts = lc.jifTypeSystem();
     JifContext A = lc.jifContext();
-    A = (JifContext)retry.del().enterScope(A);
-    
+    A = (JifContext) retry.del().enterScope(A);
+
     PathMap X = ts.pathMap();
     // prevent the single path rule from being used.
     X = X.set(ts.gotoPath(retry.kind(), retry.label()), ts.topLabel());

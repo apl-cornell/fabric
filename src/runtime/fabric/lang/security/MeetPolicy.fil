@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -26,11 +26,13 @@ import fabric.util.*;
  */
 public abstract class MeetPolicy extends AbstractPolicy implements Policy {
   private Set components; // Set of Policies
-  public final Store localStore = Worker.getWorker().getLocalStore();
 
-  MeetPolicy(Set policies) {
+  MeetPolicy fabric$lang$security$MeetPolicy$(Set policies) {
+	fabric$lang$security$AbstractPolicy$();
     // Copy the contents into a linked hash set so we can sign these policies.
-    components = Collections.unmodifiableSet(new LinkedHashSet(policies));
+    components = Collections.unmodifiableSet($getStore(),
+	(LinkedHashSet) new LinkedHashSet().fabric$util$LinkedHashSet$(policies));
+	return this;
   }
 
   public Set meetComponents() {

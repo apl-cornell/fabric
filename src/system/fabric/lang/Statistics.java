@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -28,16 +28,17 @@ package fabric.lang;
  * </p>
  */
 public interface Statistics {
-  /** Called whenever a transaction that read  the object is committed */
+  /** Called whenever a transaction that read the object is committed */
   void commitRead();
-  
+
   /** Called whenever a transaction that wrote the object is committed */
   void commitWrote();
 
   /**
-   * Determine the duration of a promise to issue.  While a promise is
+   * Determine the duration of a promise to issue. While a promise is
    * outstanding, the store will not permit updates to the object to commit.
    * This allows read-only transactions to proceed without contacting the store.
+   * 
    * @return the duration, in milliseconds, of the promise.
    */
   int generatePromise();

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -15,7 +15,6 @@
  */
 package fabric.ast;
 
-import fabric.types.FabricTypeSystem;
 import polyglot.ast.ArrayTypeNode_c;
 import polyglot.ast.Node;
 import polyglot.ast.NodeFactory;
@@ -23,6 +22,7 @@ import polyglot.ast.TypeNode;
 import polyglot.util.Position;
 import polyglot.visit.AmbiguityRemover;
 import polyglot.visit.TypeBuilder;
+import fabric.types.FabricTypeSystem;
 
 public class FabricArrayTypeNode_c extends ArrayTypeNode_c implements
     FabricArrayTypeNode {
@@ -36,7 +36,6 @@ public class FabricArrayTypeNode_c extends ArrayTypeNode_c implements
     FabricNodeFactory fabricNodeFactory = (FabricNodeFactory) nf;
     return fabricNodeFactory.FabricArrayTypeNode(position, base);
   }
-  
 
   @Override
   public Node buildTypes(TypeBuilder tb) {
@@ -49,13 +48,11 @@ public class FabricArrayTypeNode_c extends ArrayTypeNode_c implements
     FabricTypeSystem ts = (FabricTypeSystem) ar.typeSystem();
     NodeFactory nf = ar.nodeFactory();
 
-    if (!base().isDisambiguated())
-      return this;
+    if (!base().isDisambiguated()) return this;
 
-    if (!base().type().isCanonical())
-      return this;
+    if (!base().type().isCanonical()) return this;
 
     return nf.CanonicalTypeNode(position(),
-                                ts.fabricArrayOf(position(), base().type()));
+        ts.fabricArrayOf(position(), base().type()));
   }
 }

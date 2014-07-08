@@ -1,0 +1,340 @@
+<!--
+  This is the Apache Ant build file for the Auction example
+-->
+
+<project name="auction" default="all" basedir=".">
+  <description>
+    Build auction example
+  </description>
+
+  <!--
+  ****************************************************************************
+    Global properties for this build.
+  ****************************************************************************
+  -->
+
+  <import file="../../common.xml" />
+
+  <dirname property="home" file="${ant.file}"/>
+  <property name="home.codebases" value="${home}/var/codebases"/>
+
+  <!-- Fabric source directories -->
+  <property name="broker.fab.src"
+      value="${home}/src/fabric/broker_codebase/"/>
+  <property name="airlineA.fab.src"
+      value="${home}/src/fabric/airlineA_codebase/"/>
+  <property name="airlineB.fab.src"
+      value="${home}/src/fabric/airlineB_codebase/"/>
+  <property name="user.fab.src"
+      value="${home}/src/fabric/user_codebase/"/>
+  <property name="airlineA2.fab.src"
+      value="${home}/src/fabric/airlineA2_codebase/"/>
+
+  <!-- FabIL source directories -->
+  <property name="broker.fil.src"
+      value="${home}/src/fabil/broker_codebase/"/>
+  <property name="airlineA.fil.src"
+      value="${home}/src/fabil/airlineA_codebase/"/>
+  <property name="airlineB.fil.src"
+      value="${home}/src/fabil/airlineB_codebase/"/>
+  <property name="user.fil.src"
+      value="${home}/src/fabil/user_codebase/"/>
+  <property name="airlineA2.fil.src"
+      value="${home}/src/fabil/airlineA2_codebase/"/>
+
+  <!-- Node names -->
+  <property name="broker" value="brokerStore"/>
+  <property name="airlineA" value="airlineAStore"/>
+  <property name="airlineB" value="airlineBStore"/>
+  <property name="user" value="userStore"/>
+  <property name="airlineA2" value="airlineAStore"/>
+
+  <!-- Codebase files -->
+  <property name="broker.codebase.file"
+      value="${home.codebases}/${broker}.codebase"/>
+  <property name="airlineA.codebase.file"
+      value="${home.codebases}/${airlineA}.codebase"/>
+  <property name="airlineB.codebase.file"
+      value="${home.codebases}/${airlineB}.codebase"/>
+  <property name="user.codebase.file"
+      value="${home.codebases}/${user}.codebase"/>
+  <property name="airlineA2.codebase.file"
+      value="${home.codebases}/${airlineA2}.codebase"/>
+
+  <!--
+  ****************************************************************************
+    Targets for cleaning up the directory tree.
+  ****************************************************************************
+  -->
+
+  <target name="clean" description="Removes generated files">
+    <delete dir="${home}/classes"/>
+  </target>
+
+  <target name="clobber" depends="clean"
+          description="Removes generated files and state of stores">
+    <delete dir="${home}/var"/>
+  </target>
+
+  <!--
+  ****************************************************************************
+    Compilation targets.
+  ****************************************************************************
+  -->
+
+  <target name="build-init" description="Build init classes">
+    <fabc dest="${home}/classes">
+      <fileset dir="${broker.fab.src}" includes="**/*.fab"/>
+    </fabc>
+
+    <filc dest="${home}/classes">
+      <arg value="-classpath" /> <arg value="${home}/classes"/>
+      <fileset dir="${broker.fil.src}" includes="**/*.fil" />
+      <fileset dir="${airlineA.fil.src}" includes="**/*.fil" />
+      <fileset dir="${airlineB.fil.src}" includes="**/*.fil" />
+      <fileset dir="${user.fil.src}" includes="**/*.fil" />
+    </filc>
+  </target>
+
+  <target name="build-local"
+      description="Builds the example locally, without publishing to Fabric">
+    <fabc dest="${home}/classes">
+      <arg value="-report" /> <arg value="profile=1" />
+      <!--
+      <arg value="-debugpositions"/>
+      <arg value="-trusted-providers"/>
+      <arg value="-rdebug"/>
+      <arg value="-report"/> <arg value="frontend=1"/>
+      <arg value="-dump"/> <arg value="FabricToFabilRewriter"/>
+      <arg value="-dump"/> <arg value="PrincipalCastAdder"/>
+      -->
+      <arg value="-classpath"/> <arg value="${home}/classes" />
+      <fileset dir="${broker.fab.src}" includes="**/*.fab" />
+      <fileset dir="${airlineA.fab.src}" includes="**/*.fab" />
+      <fileset dir="${airlineB.fab.src}" includes="**/*.fab" />
+      <fileset dir="${user.fab.src}" includes="**/*.fab" />
+    </fabc>
+  </target>
+
+  <!--
+  ****************************************************************************
+    Deployment targets.
+  ****************************************************************************
+  -->
+
+  <target name="publish-all"
+      depends="publish-broker,publish-airlineA,publish-airlineB,publish-user"
+      description="Publish all sources to Fabric">
+  </target>
+
+  <target name="publish-cb"
+      depends="publish-broker,publish-airlineA2,publish-airlineB,publish-user"
+      description="Publish all sources to Fabric (airlineA2 version)">
+  </target>
+
+  <target name="publish-broker" description="Publish broker source"
+      depends="check-broker" unless="broker.up-to-date">
+    <antcall target="publish">
+      <param name="provider" value="${broker}"/>
+      <param name="dest" value="${broker}"/>
+      <param name="codebase.dir" value="${broker.fab.src}"/>
+      <param name="target.codebasefile" value="${broker.codebase.file}"/>
+      <param name="publish.args" value=""/>
+    </antcall>
+    <uptodate property="broker.up-to-date" targetfile="${broker.codebase.file}">
+      <srcfiles dir="${broker.fab.src}" includes="**/*.fab" />
+    </uptodate>
+  </target>
+
+  <target name="publish-airlineA2" description="Publish Airline A2 source"
+      depends="check-airlineA" unless="airlineA.up-to-date">
+    <antcall target="publish">
+      <param name="provider" value="${airlineA2}"/>
+      <param name="dest" value="${airlineA2}"/>
+      <param name="codebase.dir" value="${airlineA2.fab.src}"/>
+      <param name="target.codebasefile" value="${airlineA2.codebase.file}"/>
+      <param name="publish.args"
+          value="-codebase-alias cb=fab://brokerStore/48/"/>
+    </antcall>
+    <uptodate property="airlineA2.up-to-date"
+        targetfile="${airlineA2.codebase.file}">
+      <srcfiles dir="${airlineA2.fab.src}" includes="**/*.fab" />
+    </uptodate>
+  </target>
+
+  <target name="publish-airlineA" description="Publish Airline A source"
+      depends="check-airlineA" unless="airlineA.up-to-date">
+    <antcall target="publish">
+      <param name="provider" value="${airlineA}"/>
+      <param name="dest" value="${airlineA}"/>
+      <param name="codebase.dir" value="${airlineA.fab.src}"/>
+      <param name="target.codebasefile" value="${airlineA.codebase.file}"/>
+      <param name="publish.args" value="-classpath @${broker.codebase.file}"/>
+    </antcall>
+    <uptodate property="airlineA.up-to-date"
+        targetfile="${airlineA.codebase.file}">
+      <srcfiles dir="${airlineA.fab.src}" includes="**/*.fab" />
+      <srcfiles file="${broker.codebase.file}"/>
+    </uptodate>
+  </target>
+
+  <target name="publish-airlineB" description="Publish Airline B source"
+      depends="check-airlineB"  unless="airlineB.up-to-date">
+    <antcall target="publish">
+      <param name="provider" value="${airlineB}"/>
+      <param name="dest" value="${airlineB}"/>
+      <param name="codebase.dir" value="${airlineB.fab.src}"/>
+      <param name="target.codebasefile" value="${airlineB.codebase.file}"/>
+      <param name="publish.args" value="-classpath @${broker.codebase.file}"/>
+    </antcall>
+    <uptodate property="airlineB.up-to-date"
+        targetfile="${airlineB.codebase.file}">
+      <srcfiles dir="${airlineB.fab.src}" includes="**/*.fab" />
+      <srcfiles file="${broker.codebase.file}"/>
+    </uptodate>
+  </target>
+
+  <target name="publish-user" description="Publish user source"
+      depends="check-user" unless="user.up-to-date">
+    <antcall target="publish">
+      <param name="provider" value="${user}"/>
+      <param name="dest" value="${user}"/>
+      <param name="codebase.dir" value="${user.fab.src}"/>
+      <param name="target.codebasefile" value="${user.codebase.file}"/>
+      <param name="publish.args" value="-classpath @${broker.codebase.file}"/>
+    </antcall>
+    <uptodate property="user.up-to-date" targetfile="${user.codebase.file}">
+      <srcfiles dir="${user.fab.src}" includes="**/*.fab" />
+      <srcfiles file="${broker.codebase.file}"/>
+    </uptodate>
+  </target>
+
+  <!--
+  ____________________________________________________________________________
+    Deployment helper targets.
+  -->
+
+  <target name="check-broker">
+    <uptodate property="broker.up-to-date"
+        targetfile="${broker.codebase.file}">
+      <srcfiles dir="${broker.fab.src}" includes="**/*.fab" />
+    </uptodate>
+  </target>
+
+  <target name="check-airlineA">
+    <uptodate property="airlineA.up-to-date"
+        targetfile="${airlineA.codebase.file}">
+      <srcfiles dir="${airlineA.fab.src}" includes="**/*.fab" />
+      <srcfiles file="${broker.codebase.file}"/>
+    </uptodate>
+  </target>
+
+  <target name="check-airlineB">
+    <uptodate property="airlineB.up-to-date"
+        targetfile="${airlineB.codebase.file}">
+      <srcfiles dir="${airlineB.fab.src}" includes="**/*.fab" />
+      <srcfiles file="${broker.codebase.file}"/>
+    </uptodate>
+  </target>
+
+  <target name="check-user">
+    <uptodate property="user.up-to-date" targetfile="${user.codebase.file}">
+      <srcfiles dir="${user.fab.src}" includes="**/*.fab" />
+      <srcfiles file="${broker.codebase.file}"/>
+    </uptodate>
+  </target>
+
+  <target name="publish" description="Publish Fabric source">
+    <fabc-in-worker
+        dest="${home.codebases}"
+        worker="${provider}"
+        app-home="${home}">
+      <env key="FABRIC_HOME" value="${home}"/>
+      <arg value="-publish-only" />
+      <arg value="-codebase-output-file"/> <arg value="${target.codebasefile}"/>
+      <arg value="-sourcepath" /> <arg value="${codebase.dir}" />
+      <arg value="-deststore" /> <arg value="${dest}" />
+      <arg line="${publish.args}"/>
+      <fileset dir="${codebase.dir}" includes="**/*.fab" />
+    </fabc-in-worker>
+  </target>
+
+  <!--
+  ****************************************************************************
+    Initialization targets.
+  ****************************************************************************
+  -->
+
+  <target name="init-local" depends="build-local">
+    <exec executable="bash" failonerror="true" >
+      <arg value="${home}/bin/start-worker"/>
+      <arg line="--name ${airlineA} auction.InitA"/>
+    </exec>
+
+    <exec executable="bash" failonerror="true" >
+      <arg value="${home}/bin/start-worker"/>
+      <arg line="--name ${airlineB} auction.InitB"/>
+    </exec>
+
+    <exec executable="bash" failonerror="true" >
+      <arg value="${home}/bin/start-worker"/>
+      <arg line="--name ${user} auction.InitUser"/>
+    </exec>
+  </target>
+
+  <target name="init-remote2" depends="load-codebases-cb">
+    <exec executable="bash" failonerror="true" >
+      <arg value="${home}/bin/start-worker"/>
+      <arg line="--name ${airlineA} ${airlineA.codebase}auction.InitA"/>
+    </exec>
+
+    <exec executable="bash" failonerror="true" >
+      <arg value="${home}/bin/start-worker"/>
+      <arg line="--name ${airlineB} ${airlineB.codebase}auction.InitB"/>
+    </exec>
+
+    <exec executable="bash" failonerror="true" >
+      <arg value="${home}/bin/start-worker"/>
+      <arg line="--name ${user} ${user.codebase}auction.InitUser"/>
+    </exec>
+  </target>
+
+  <target name="load-codebases-cb" depends="publish-cb">
+    <loadfile property="broker.codebase" srcFile="${broker.codebase.file}"
+        failonerror="false">
+      <filterchain>
+        <deletecharacters chars="&lt;&gt;"/>
+        <trim/>
+      </filterchain>
+    </loadfile>
+    <loadfile property="airlineA.codebase" srcFile="${airlineA.codebase.file}"
+        failonerror="false">
+      <filterchain>
+        <deletecharacters chars="&lt;&gt;"/>
+        <trim/>
+      </filterchain>
+    </loadfile>
+    <loadfile property="airlineB.codebase" srcFile="${airlineB.codebase.file}"
+        failonerror="false">
+      <filterchain>
+        <deletecharacters chars="&lt;&gt;"/>
+        <trim/>
+      </filterchain>
+    </loadfile>
+    <loadfile property="user.codebase" srcFile="${user.codebase.file}"
+        failonerror="false">
+      <filterchain>
+        <deletecharacters chars="&lt;&gt;"/>
+        <trim/>
+      </filterchain>
+    </loadfile>
+  </target>
+
+  <target name="build-all" depends="build-init"/>
+  <target name="all" depends="build-all"/>
+
+</project>
+
+<!--
+vim: ts=2 sw=2 et ai
+-->

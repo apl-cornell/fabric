@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -15,31 +15,108 @@
  */
 package fabric.visit;
 
+import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import jif.translate.JifToJavaRewriter;
-import jif.types.Param;
-import jif.types.label.Label;
-import polyglot.ast.Call;
+import polyglot.ast.ClassDecl;
 import polyglot.ast.Expr;
+import polyglot.ast.Node;
+import polyglot.ast.SourceFile;
+import polyglot.ast.TopLevelDecl;
 import polyglot.ast.TypeNode;
 import polyglot.frontend.Job;
+import polyglot.frontend.Source;
+import polyglot.main.Report;
 import polyglot.types.SemanticException;
 import polyglot.types.Type;
 import polyglot.util.Position;
+import codebases.ast.CBSourceFile;
+import codebases.frontend.CBJobExt;
+import codebases.frontend.CodebaseSource;
+import codebases.types.CodebaseClassType;
 import fabil.FabILOptions;
 import fabil.ast.FabILNodeFactory;
 import fabil.types.FabILTypeSystem;
+import fabric.ExtensionInfo;
 import fabric.ast.FabricNodeFactory;
+import fabric.common.NSUtil;
+import fabric.lang.Codebase;
+import fabric.types.FabricContext;
+import fabric.types.FabricSubstType;
 import fabric.types.FabricTypeSystem;
 
 public class FabricToFabilRewriter extends JifToJavaRewriter {
-  protected boolean principalExpected = false;
+  private static final Collection<String> TOPICS;
+  public static final String LABEL_INITIALIZER_METHOD_NAME = "$initLabels";
+  static {
+    TOPICS = new ArrayList<String>(2);
+    TOPICS.add("publish");
+    TOPICS.add("mobile");
+  }
+
+  // protected boolean principalExpected = false;
+
+  /** An expression used to instantiate the 'this' principal in static contexts */
+  protected Expr staticThisExpr;
 
   public FabricToFabilRewriter(Job job, FabricTypeSystem fab_ts,
       FabricNodeFactory fab_nf, fabil.ExtensionInfo fabil_ext) {
     super(job, fab_ts, fab_nf, fabil_ext);
+    this.job = job;
+  }
+
+  public Source createDerivedSource(CodebaseSource src, String newName) {
+    fabric.ExtensionInfo extInfo = (ExtensionInfo) job.extensionInfo();
+    FabricTypeSystem fab_ts = (FabricTypeSystem) jif_ts();
+    Source derived;
+    if (src.shouldPublish()
+        && extInfo.localNamespace().equals(src.canonicalNamespace())) {
+      // If the source we are deriving source is being published,
+      // we should use the published namespace.
+
+      Codebase cb = fab_ts.codebaseFromNS(src.canonicalNamespace());
+      URI published_ns = NSUtil.namespace(cb);
+      derived = src.publishedSource(published_ns, newName);
+    } else {
+      // Otherwise, we just create a derived source with a new name
+      derived = src.derivedSource(newName);
+    }
+    if (Report.should_report(TOPICS, 2)) {
+      Report.report(2, "Creating derived source " + derived + " from " + src);
+    }
+
+    return derived;
+  }
+
+  public boolean fabIsPublished() {
+    return ((CodebaseSource) job.source()).shouldPublish();
+  }
+
+  public FabricToFabilRewriter pushLocation(Expr location) {
+    FabricContext context = (FabricContext) context();
+    return (FabricToFabilRewriter) context(context.pushLocation(location));
+  }
+
+  public Expr currentLocation() {
+    Expr loc = ((FabricContext) context()).location();
+    if (loc == null) {
+      // XXX: this should only happen for runtime checks that need
+      // to create labels. They should *never* flow into persistent
+      // objects. How to check this?
+      loc = qq().parseExpr("Worker.getWorker().getLocalStore()");
+    }
+    return loc;
+  }
+
+  /**
+   * The full class path of the runtime principal utility.
+   */
+  public String runtimePrincipalUtil() {
+    return jif_ts().PrincipalUtilClassName();
   }
 
   @Override
@@ -49,8 +126,8 @@ public class FabricToFabilRewriter extends JifToJavaRewriter {
 
   @Override
   public TypeNode typeToJava(Type t, Position pos) throws SemanticException {
-    FabILNodeFactory fabil_nf  = (FabILNodeFactory) java_nf();
-    FabILTypeSystem  fabil_ts  = (FabILTypeSystem)  java_ts();
+    FabILNodeFactory fabil_nf = (FabILNodeFactory) java_nf();
+    FabILTypeSystem fabil_ts = (FabILTypeSystem) java_ts();
     FabricTypeSystem fabric_ts = (FabricTypeSystem) jif_ts();
 
     if (fabric_ts.typeEquals(t, fabric_ts.Worker())) {
@@ -60,74 +137,81 @@ public class FabricToFabilRewriter extends JifToJavaRewriter {
     if (fabric_ts.typeEquals(t, fabric_ts.RemoteWorker())) {
       return canonical(fabil_nf, fabil_ts.RemoteWorker(), pos);
     }
-    
+
     if (fabric_ts.isFabricArray(t)) {
-      return fabil_nf.FabricArrayTypeNode(pos, typeToJava(t.toArray().base(), pos));
+      return fabil_nf.FabricArrayTypeNode(pos,
+          typeToJava(t.toArray().base(), pos));
     }
 
+    if (t.isClass() && !fabric_ts.isLabel(t) && !fabric_ts.isPrincipal(t)) {
+      CodebaseClassType ct = (CodebaseClassType) t.toClass();
+      CBJobExt ext = (CBJobExt) job().ext();
+      if (ct instanceof FabricSubstType)
+        ct = (CodebaseClassType) ((FabricSubstType) ct).base();
+      if (ext.isExternal(ct)) {
+        String alias = ext.aliasFor(ct);
+        return fabil_nf.TypeNodeFromQualifiedName(pos, alias + "."
+            + t.toClass().fullName());
+      }
+    }
     return super.typeToJava(t, pos);
   }
 
   public boolean inSignatureMode() {
-    FabILOptions opts =
-        (FabILOptions) ((fabil.ExtensionInfo) java_ext).getOptions();
+    FabILOptions opts = ((fabil.ExtensionInfo) java_ext).getOptions();
     return opts.signatureMode();
   }
-  
-//private Expr loc;
-//private Call addLoc(Call c) {
-//  List<Expr> args = new ArrayList<Expr>(c.arguments().size() + 1);
-//  args.add(loc);
-//  for(Expr expr : (List<Expr>)c.arguments()) {
-//    Expr addExpr = expr;
-//    if(expr instanceof Call) {
-//      Call subcall = (Call) expr;
-//      addExpr = addLoc(subcall);
-//    }
-//    args.add(addExpr);
-//  }
-//  c = (Call)c.arguments(args);
-//  return c;
-//  
-//}
 
-  public Expr updateLabelLocation(Expr labelExpr, Expr locExpr) {
-    if (labelExpr instanceof Call && locExpr != null) {
-      Call c = (Call)labelExpr;
-      
-//      if(!c.target().toString().contains("LabelUtil") && !c.target().toString().contains("PrincipalUtil")) {
-//        System.out.println("Big problem in the compiler. Calling " + c.target().toString() + "." + c.name());
-//        return labelExpr;
-//      }
-      // XXX Hack
-      // Several special cases, for which no change should be made.
-      if (c.name().equals("getPrincipal") && c.arguments().size() == 0) {
-        return c;
+  @Override
+  public Node leavingSourceFile(SourceFile n) {
+    List<TopLevelDecl> l =
+        new ArrayList<TopLevelDecl>(n.decls().size()
+            + additionalClassDecls.size());
+    l.addAll(n.decls());
+    for (ClassDecl cd : additionalClassDecls) {
+      if (cd.flags().isPublic()) {
+        // cd is public, we will put it in its own source file.
+        SourceFile sf =
+            java_nf().SourceFile(Position.compilerGenerated(), n.package_(),
+//                Collections.<Import> emptyList(),
+                n.imports(), Collections.singletonList((TopLevelDecl) cd));
+
+        String newName =
+            cd.name() + "." + job.extensionInfo().defaultFileExtension();
+
+        CBSourceFile cbn = (CBSourceFile) n;
+        CodebaseSource source = (CodebaseSource) cbn.source();
+        Source derived = createDerivedSource(source, newName);
+        this.newSourceFiles.add(sf.source(derived));
+
+      } else {
+        // cd is not public; it's ok to put the class decl in the source file.
+        l.add(cd);
       }
-      
-      List<Expr> args = new ArrayList<Expr>(c.arguments().size() + 1);
-      args.add(locExpr);
-      for (Expr expr : (List<Expr>)c.arguments()) {
-        if (expr instanceof Call) {
-          args.add(updateLabelLocation(expr, locExpr));
-        }
-        else {
-          args.add(expr);
-        }
-      }
-      c = (Call)c.arguments(args);
-      return c;
     }
-    
-    return labelExpr;
+
+    this.additionalClassDecls.clear();
+    return n.decls(l);
   }
-  
-  public Expr paramToJava(Param param, Expr locExpr) throws SemanticException {
-    if (param instanceof Label) {
-      Expr labelExpr = labelToJava((Label)param);
-      return updateLabelLocation(labelExpr, locExpr);
-    }
-    
-    return super.paramToJava(param);
+
+  /**
+   * Provide an expression to instantiate "this" principals with in static contexts.
+   * This is primarily used to replace occurences of "this" in translated label
+   * expressions in the body of compiler-generated instanceof methods.
+   */
+  public void setStaticThisExpr(Expr e) {
+    staticThisExpr = e;
   }
+
+  /**
+   * Clear "this" principal expression.
+   */
+  public void clearStaticThisExpr() {
+    staticThisExpr = null;
+  }
+
+  public Expr staticThisExpr() {
+    return staticThisExpr;
+  }
+
 }

@@ -1,0 +1,96 @@
+/**
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
+ *
+ * This file is part of Fabric.
+ *
+ * Fabric is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * Fabric is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ */
+package util;
+
+public class Meet extends AbstractPrincipal {
+
+  public native
+  Meet
+  (
+    Store     {this} store,
+    Principal {this} left,
+    Principal {this} right
+  )
+  where
+    store actsfor (left,right);
+
+  public native
+  Meet
+  (
+    Store     {this} store,
+    String    {this} name,
+    Principal {this} left,
+    Principal {this} right
+  )
+  where
+    store actsfor (left,right);
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Principal methods                                                        //
+  //////////////////////////////////////////////////////////////////////////////
+
+  public native
+  boolean {this;p;this←}
+  delegatesTo
+  { // side effects:
+    // TODO
+  }
+  (
+    principal p
+  );
+
+  public native
+  ActsForProof[{s→}] {this; p; this←; p←;s}
+  findProofUpto
+  {          // side effects:
+    _→;this← // TODO
+  }
+  (
+    Store s,
+    Principal p,
+    java.lang.Object searchState
+  );
+
+  public native
+  void
+  addDelegatesTo
+  {             // side effects:
+    this→;this← // TODO
+  }
+  (
+    principal{this→;this←} p
+  )
+  where
+    caller (this);
+
+
+  public native
+  void
+  removeDelegatesTo
+  {             // side effects:
+    this→;this← // TODO
+  }
+  (
+    principal{this→;this←} p
+  )
+  where
+    caller (this);
+}
+
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -15,7 +15,7 @@
  */
 package travel;
 
-import jif.principals.*;
+import fabric.principals.*;
 import fabric.util.Map;
 
 public class Create {
@@ -103,10 +103,22 @@ public class Create {
             IntegPolicy bottomInteg = LabelUtil.bottomInteg(); 
             ConfPolicy bottomConf = LabelUtil.bottomConf();
             Label bottom = LabelUtil.toLabel(brokerStore, bottomConf, bottomInteg);
-            Create cr = new Create~bottom@brokerStore();
+            Create cr = new Create@brokerStore().travel$Create$();
             cr.create@brokerWorker(args);
         }
     }
+    
+    public Create travel$Create$() {
+        fabric$lang$Object$();
+        return this;
+    }
+    
+    public Object $initLabels() {
+        this.$updateLabel = LabelUtil.noComponents();
+        this.$accessPolicy = LabelUtil.bottomConf();
+        return this;
+    }
+    
     public void create(String[] args) {
         atomic {
             Store  brokerStore = Worker.getWorker().getStore(Config.brokerStoreName);
@@ -116,7 +128,13 @@ public class Create {
             AbstractPrincipal bank     = BankPrincipal.getInstance();
             AbstractPrincipal customer = CustomerPrincipal.getInstance();
             AbstractPrincipal airline  = AirlinePrincipal.getInstance();
-            Broker            broker   = new Broker@brokerStore(bank,customer);
+
+            Account  airlineAccount = new Account@bankStore(bank).travel$Account$(airline);
+            Account customerAccount = new Account@bankStore(bank).travel$Account$(customer);
+
+            Tickets tickets = new Tickets@airlineStore(bank,airline,customer).travel$Tickets$();
+            
+            Broker            broker   = new Broker@brokerStore(bank,customer).travel$Broker$(customerAccount, airlineAccount, tickets, airline);
 
             IntegPolicy brokerTrusted  = LabelUtil.writerPolicy(brokerStore,  broker, broker);   // {broker<-}
             IntegPolicy bankTrusted    = LabelUtil.writerPolicy(brokerStore,  bank,   bank);     // {bank<-}
@@ -127,11 +145,6 @@ public class Create {
             Label airlineLabel  = LabelUtil.toLabel(bankStore, airlineSecret,  bankTrusted);
             Label customerLabel = LabelUtil.toLabel(bankStore, customerSecret, bankTrusted);
             Label ticketsLabel  = LabelUtil.toLabel(airlineStore, airlineTrusted);
-
-            Account  airlineAccount = new Account~airlineLabel@bankStore (bank).travel$Account$(airline);
-            Account customerAccount = new Account~customerLabel@bankStore(bank).travel$Account$(customer);
-
-            Tickets tickets = new Tickets~ticketsLabel@airlineStore(bank,airline,customer).travel$Tickets$();
 
             // call broker constructor
             broker = broker.travel$Broker$(customerAccount,airlineAccount,tickets,airline);

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -23,15 +23,19 @@ package fabric.store;
  */
 public interface SurrogateManager {
   /**
-   * <p>Modify req so that all references are local. It should do so by creating
-   * or reusing surrogate objects for all of the non-local references. Any new
+   * <p>
+   * Modify req so that all references are local. It should do so by creating or
+   * reusing surrogate objects for all of the non-local references. Any new
    * surrogate objects should be added to the req.creates, while any read
-   * surrogate objects should be added to req.reads.</p>
-   * 
-   * <p> TODO: <ul>
-   *   <li>Add any required fields for authorization and surrogate policies</li>
-   *   <li>Need access to an object database to allocate new surrogate onums</li>
-   * </ul> </p>
+   * surrogate objects should be added to req.reads.
+   * </p>
+   * <p>
+   * TODO:
+   * <ul>
+   * <li>Add any required fields for authorization and surrogate policies</li>
+   * <li>Need access to an object database to allocate new surrogate onums</li>
+   * </ul>
+   * </p>
    * 
    * @param req
    *          the collections of objects created, modified, and read by this

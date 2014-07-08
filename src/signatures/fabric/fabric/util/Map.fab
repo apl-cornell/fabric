@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -16,7 +16,7 @@
 package fabric.util;
 
 public interface Map {
-	static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+//	static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
 
 	Object put(Object key, Object value);
 

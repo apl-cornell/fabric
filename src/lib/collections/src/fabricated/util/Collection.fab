@@ -1,0 +1,62 @@
+/**
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
+ *
+ * This file is part of Fabric.
+ *
+ * Fabric is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * Fabric is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ */
+package fabricated.util;
+	
+/**
+ * A collection of Fabric objects.
+ *
+ * The parameter L is the label for the amount of information obtained by 
+ * knowing what objects are contained in this collection.
+ * 
+ * Note that since checking equality on objects may result in a fetch, stores 
+ * of objects contained in a collection must be trusted with information up 
+ * to L.
+ */
+public interface Collection[label L] {
+    
+    int{L} size{L}();
+    
+    boolean{L} isEmpty{L}();
+    
+    Iterator[L]{L} iterator{L}();
+    Iterator[L]{L} iterator{L}(Store{L} store) where L <= {*<-store}, {*->store} <= L;
+
+    Object{L}[]{L} toArray{L}();
+    Object{L}[]{L} toArray{L}(Store{L} store);
+
+    boolean{L} contains{L}(Object{L} o) throws (ClassCastException{L}, NullPointerException{L});
+     
+    boolean{L} add{L}(Object{L} o) throws (UnsupportedOperationException{L}, 
+        ClassCastException{L}, NullPointerException{L}, IllegalArgumentException{L}, 
+        IllegalStateException{L});
+    
+    boolean{L} remove{L}(Object{L} o) throws (UnsupportedOperationException{L}, 
+        ClassCastException{L}, NullPointerException{L});
+
+    boolean{L} containsAll{L}(Collection[L]{L} c) throws (ClassCastException{L}, NullPointerException{L});    
+   
+    boolean{L} addAll{L}(Collection[L]{L} c) throws (UnsupportedOperationException{L}, 
+        ClassCastException{L}, NullPointerException{L}, IllegalArgumentException{L}, 
+        IllegalStateException{L});
+
+    boolean{L} removeAll{L}(Collection[L]{L} c) throws (UnsupportedOperationException{L}, 
+        ClassCastException{L}, NullPointerException{L});
+    
+    boolean{L} retainAll{L}(Collection[L]{L} c) throws (UnsupportedOperationException{L}, 
+        ClassCastException{L}, NullPointerException{L});
+
+    void clear{L}() throws (UnsupportedOperationException{L});
+}

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -15,19 +15,18 @@
  */
 package fabric.common.net;
 
+import static fabric.common.Logging.NETWORK_CONNECTION_LOGGER;
+
 import java.io.IOException;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
 
-import javax.net.SocketFactory;
-
-import fabric.common.net.Channel.Connection;
-import fabric.common.net.handshake.HandshakeProtocol;
-import fabric.common.net.handshake.ShakenSocket;
+import fabric.common.net.handshake.Protocol;
 import fabric.common.net.naming.NameService;
+import fabric.common.net.naming.NameService.PortType;
 import fabric.common.net.naming.SocketAddress;
-
 
 /**
  * A factory for creating SubSockets. The factory decorates a
@@ -36,20 +35,36 @@ import fabric.common.net.naming.SocketAddress;
  * @author mdgeorge
  */
 public final class SubSocketFactory {
-  private final HandshakeProtocol protocol;
-  private final NameService       nameService;
+  private final Protocol protocol;
+  private final NameService nameService;
+  private final PortType portType;
   private final Map<String, ClientChannel> channels;
+  private final int maxOpenConnectionsPerChannel;
 
   /**
-   * Create a new SubSocket factory that decorates the given SocketFactory.
-   * Note that SubSockets created from different SubSocketFactories will not
-   * attempt to share channels (as these channels may have different underlying
-   * socket implementations).
-   */ 
-  public SubSocketFactory(HandshakeProtocol protocol, NameService nameService) {
-    this.protocol    = protocol;
+   * Create a new SubSocket factory that decorates the given SocketFactory. Note
+   * that SubSockets created from different SubSocketFactories will not attempt
+   * to share channels (as these channels may have different underlying socket
+   * implementations).
+   */
+  public SubSocketFactory(Protocol protocol, NameService nameService,
+      PortType portType) {
+    this(protocol, nameService, portType, Channel.DEFAULT_MAX_OPEN_CONNECTIONS);
+  }
+
+  /**
+   * Create a new SubSocket factory that decorates the given SocketFactory. Note
+   * that SubSockets created from different SubSocketFactories will not attempt
+   * to share channels (as these channels may have different underlying socket
+   * implementations).
+   */
+  public SubSocketFactory(Protocol protocol, NameService nameService,
+      PortType portType, int maxOpenConnectionsPerChannel) {
+    this.protocol = protocol;
     this.nameService = nameService;
-    this.channels    = new HashMap<String, ClientChannel>();
+    this.portType = portType;
+    this.channels = new HashMap<String, ClientChannel>();
+    this.maxOpenConnectionsPerChannel = maxOpenConnectionsPerChannel;
   }
 
   /**
@@ -60,7 +75,7 @@ public final class SubSocketFactory {
   }
 
   /**
-   * Convenience method.  Resolves the name using the NameService and calls
+   * Convenience method. Resolves the name using the NameService and calls
    * createSocket.
    */
   public SubSocket createSocket(String name) throws IOException {
@@ -70,23 +85,35 @@ public final class SubSocketFactory {
   }
 
   /**
-   * return a channel associated with the given address, creating it if necessary.
+   * return a channel associated with the given address, creating it if
+   * necessary.
    */
-  synchronized ClientChannel getChannel(String name) throws IOException {
-    ClientChannel result = channels.get(name);
-    if (null == result) {
-      result = new ClientChannel(name, nameService.resolve(name));
-      channels.put(name, result);
-    }
+  ClientChannel getChannel(String name) throws IOException {
+    synchronized (channels) {
+      ClientChannel result = channels.get(name);
+      if (null == result) {
+        NETWORK_CONNECTION_LOGGER.log(Level.INFO,
+            "establishing new connection to \"{0}\"", name);
+        SocketAddress addr = nameService.resolve(name, portType);
 
-    return result;
+        Socket s = new Socket(addr.getAddress(), addr.getPort());
+        s.setSoLinger(false, 0);
+        s.setTcpNoDelay(true);
+
+        result = new ClientChannel(name, s, maxOpenConnectionsPerChannel);
+        channels.put(name, result);
+        NETWORK_CONNECTION_LOGGER.log(Level.INFO,
+            "connection to {0} established.", name);
+      }
+
+      return result;
+    }
   }
-  
-  
+
   /**
-   * Client channels are capable of making outgoing requests, but not of receiving
-   * new incoming requests.  They are only associated with a remote address, and
-   * have no distinguished local address.
+   * Client channels are capable of making outgoing requests, but not of
+   * receiving new incoming requests. They are only associated with a remote
+   * address, and have no distinguished local address.
    * 
    * @author mdgeorge
    */
@@ -94,40 +121,39 @@ public final class SubSocketFactory {
     /* key for SubSocketFactory.this.channels */
     private final String name;
 
-    /* the remote address */
-    private final SocketAddress addr;
-    
     /* the next sequence number to be created */
     private int nextSequenceNumber;
-    
-    public ClientChannel(String name, SocketAddress addr) throws IOException {
-      super(protocol.initiate(name, addr));
-      
-      this.addr          = addr;
-      this.name          = name;
+
+    public ClientChannel(String name, Socket s, int maxOpenConnections)
+        throws IOException {
+      super(protocol.initiate(name, s), maxOpenConnections);
+
+      this.name = name;
       nextSequenceNumber = 1;
-      
+
       setName("demultiplexer for " + toString());
     }
 
     /** initiate a new substream */
     public Connection connect() throws IOException {
-      return new Connection(nextSequenceNumber++); 
+      return new Connection(nextSequenceNumber++);
     }
 
     @Override
-    public Connection accept(int sequence) throws IOException {
+    protected Connection accept(int sequence) throws IOException {
       throw new IOException("unexpected accept request on client channel");
     }
-    
+
     @Override
-    public void cleanup() {
-      throw new NotImplementedException();
+    protected void cleanup() {
+      synchronized (SubSocketFactory.this.channels) {
+        SubSocketFactory.this.channels.remove(this);
+      }
     }
 
     @Override
     public String toString() {
-      return "channel to " + name + " [" + addr.toString() + "]";
+      return "channel to \"" + name + "\"";
     }
   }
 }

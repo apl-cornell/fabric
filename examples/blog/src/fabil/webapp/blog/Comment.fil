@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -19,20 +19,25 @@ import java.util.Date;
 
 public class Comment {
 
-  private final String username;
+  private /*final*/ String username;
   private String content;
-  private final Date creationTime;
-  private final int id;
+  private /*final*/ Date creationTime;
+  private /*final*/ int id;
   private static int counter = 0;
-  private final BlogPost post;
+  private /*final*/ BlogPost post;
 
-  public Comment(String username, String content, BlogPost post) {
-    Statistics.getInstance().registerCreate();
+  public Comment webapp$blog$Comment$(String username, String content, BlogPost post) {
     this.username = username;
-    this.content = content;
-    this.post = post;
     creationTime = new Date();
     id = ++counter;
+    this.post = post;
+
+    fabric$lang$Object$();
+
+    Statistics.getInstance().registerCreate();
+    this.content = content;
+
+    return this;
   }
 
   public String getUsername() {
@@ -63,6 +68,15 @@ public class Comment {
   public BlogPost getBlogPost() {
     Statistics.getInstance().registerRead(this);
     return post;
+  }
+
+  public Object $initLabels() {
+    // update label: {_ <-}
+    // access policy: {_ ->}
+    this.$updateLabel = LabelUtil.noComponents();
+    this.$accessPolicy = LabelUtil.bottomConf();
+
+    return this;
   }
 
 }

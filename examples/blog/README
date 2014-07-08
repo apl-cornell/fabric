@@ -1,69 +1,80 @@
 Blog Webapp Example
 ===================
 
-This is a blogging web application implemented on top of Fabric. It is a simple
-webapp that also has benchmarking tools. It is standalone, so it can be started
-without any extra programs. It has two components: the blog webapp (written in
-FabIL) and another webapp, called the client (written in Java), which can
-stress test the blog server.
+This example implements a blogging web application on top of Fabric.
+There are two components: the blog webapp server (written in FabIL) and
+a benchmarking client (written in Java) for stress-testing the server.
 
 This directory contains the following sub-directories:
 
-  - src/fabil: source code for the FabIL implementation of the blog example
-  - src/java: source code for the Java implementation of the blog example and
-	the stress-testing client
-  - bin: a collection of scripts for running the example
-  - etc: configuration files for the blog's store and worker
-
-
-Compiling
----------
-To build the example, run 'ant' in the blog example directory:
-
-  $ ant
+  - src/fabil:
+      source code for the FabIL implementation of the blog example
+  - src/java:
+      source code for the Java implementation of the blog example and
+      the stress-testing client
+  - bin:
+      a collection of scripts for running the example
+  - etc:
+      configuration files for the blog's store and worker
 
 
 Using
 -----
-This example uses a store named "blog-store" for storing the blog's data, and a
-worker named "blog-worker" for running the web frontend.
+This example uses a store named "blog-store" for storing the blog's
+data, and a worker named "blog-worker" for running the web frontend.
 
-  0. Begin in the blog example directory:
+  0. Begin in the blog example directory and compile the example:
 
 	$ cd $FABRIC/examples/blog
+	$ ant
 
-  1. Start the "blog-store" store that will be storing the blog's data:
+  1. Start the store and worker. The "blog-store" is the backing store
+     and "blog-worker" runs the application server. The 'start-all'
+     script will start these nodes in a separate xterm window:
 
-	$ bin/start-store
+	$ bin/start-all
 
-  2. If you are starting with a fresh store, you will need to initialize the
-     worker by creating its principal object on the store:
+     You can also use an xterm replacement (e.g., gnome-terminal or
+     konsole):
 
-	$ bin/init-worker
+        $ XTERM=gnome-terminal bin/start-all
 
-  3. Start a blog server. It will listen on port 8080.
+     Or, if you prefer, you can start each node individually in your
+     favourite terminal emulator:
 
+        $ bin/start-store
 	$ bin/start-blog
 
-  4. Access the blog by browsing to http://localhost:8080/web
+  2. Access the blog by browsing to http://localhost:8080/web
 
-  5. You can start a client by using the 'start-client' script:
+  3. You can start a benchmarking client by using the 'start-client'
+     script:
 
 	$ bin/start-client
 
-     Once the client is started, you can access it by browsing to
-     http://localhost:9000/web
+     Once the client is started, you can access it at:
 
-     The client will ask to be connected to a blog. To do so, give it the URL
-     http://localhost:8080
+        http://localhost:9000/web
 
-     Once the client is connected to the blog, you can run stress tests using
-     the "Debug" interface on the blog's webpage. (You may need to refresh the
-     page to see any newly connected clients.) Refresh the client's webpage to
-     see the status of any benchmark that you start.
+     The client will ask to be connected to a blog. To do so, give it
+     the URL http://localhost:8080
 
-     You can run multiple clients simultaneously by specifying different port
-     numbers. The client runs on port 9000 by default.
+     Once the client is connected to the blog, you can run stress tests
+     using the "Debug" interface, in the lower-right corner of the
+     blog's webpage. (You may need to refresh the page to see any newly
+     connected clients.) Refresh the client's webpage to see the status
+     of any benchmark that you start.
+
+     You can run multiple clients simultaneously by specifying different
+     port numbers. The client runs on port 9000 by default.
 
         $ bin/start-client 9001
+
+  4. Exit the store using the "exit" command in its console (you can
+     also use CTRL-D). Exit the worker and client with CTRL-C.
+
+     You can clean up the store's persistent state by removing 'var'
+     from the blog example directory:
+
+	$ rm -rf var
 

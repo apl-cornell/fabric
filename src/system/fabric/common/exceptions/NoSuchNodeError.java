@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -14,7 +14,6 @@
  * details.
  */
 package fabric.common.exceptions;
-
 
 /**
  * A <code>NoSuchNodeError</code> occurs when attempting to contact a worker or

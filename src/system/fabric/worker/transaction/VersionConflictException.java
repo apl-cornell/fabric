@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -19,8 +19,7 @@ import fabric.common.exceptions.FabricRuntimeException;
 import fabric.lang.Object._Impl;
 import fabric.lang.Object._Proxy;
 
-public final class VersionConflictException extends
-    FabricRuntimeException {
+public final class VersionConflictException extends FabricRuntimeException {
   public _Proxy reference;
 
   public VersionConflictException(_Impl obj) {

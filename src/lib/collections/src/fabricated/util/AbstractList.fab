@@ -1,0 +1,630 @@
+/**
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
+ *
+ * This file is part of Fabric.
+ *
+ * Fabric is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * Fabric is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ */
+package fabricated.util;
+
+/**
+ * Base implementation for List.
+ */
+public abstract class AbstractList[label L] extends AbstractCollection[L] implements List[L] {
+
+  /**
+   * A count of the number of structural modifications that have been made to
+   * the list (that is, insertions and removals). Structural modifications
+   * are ones which change the list size or affect how iterations would
+   * behave. This field is available for use by Iterator and ListIterator,
+   * in order to throw a {@link ConcurrentModificationException} in response
+   * to the next operation on the iterator. This <i>fail-fast</i> behavior
+   * saves the user from many subtle bugs otherwise possible from concurrent
+   * modification during iteration.
+   * <p>
+   *
+   * To make lists fail-fast, increment this field by just 1 in the
+   * <code>add(int, Object)</code> and <code>remove(int)</code> methods.
+   * Otherwise, this field may be ignored.
+   */
+  int{L} modCount;
+
+  /**
+   * The main constructor, for use by subclasses.
+   */
+  protected AbstractList{L}(Comparator[L]{L} compare) {
+    super(compare);
+  }
+    
+  /**
+   * Returns the elements at the specified position in the list.
+   *
+   * @param index the element to return
+   * @return the element at that position
+   * @throws IndexOutOfBoundsException if index &lt; 0 || index &gt;= size()
+   */
+  public abstract Object{L} get{L}(int{L} index) throws (IndexOutOfBoundsException{L});
+
+  /**
+   * Insert an element into the list at a given position (optional operation).
+   * This shifts all existing elements from that position to the end one
+   * index to the right.  This version of add has no return, since it is
+   * assumed to always succeed if there is no exception. This implementation
+   * always throws UnsupportedOperationException, and must be overridden to
+   * make a modifiable List.  If you want fail-fast iterators, be sure to
+   * increment modCount when overriding this.
+   *
+   * @param index the location to insert the item
+   * @param o the object to insert
+   * @throws UnsupportedOperationException if this list does not support the
+   *         add operation
+   * @throws IndexOutOfBoundsException if index &lt; 0 || index &gt; size()
+   * @throws ClassCastException if o cannot be added to this list due to its
+   *         type
+   * @throws IllegalArgumentException if o cannot be added to this list for
+   *         some other reason
+   * @see #modCount
+   */
+  public void add{L}(int{L} index, Object{L} element) throws (UnsupportedOperationException{L}, 
+      ClassCastException{L}, NullPointerException{L}, IllegalArgumentException{L}, 
+      IndexOutOfBoundsException{L}) {
+    throw new UnsupportedOperationException();
+  }
+
+  /**
+   * Add an element to the end of the list (optional operation). If the list
+   * imposes restraints on what can be inserted, such as no null elements,
+   * this should be documented. This implementation calls
+   * <code>add(size(), o);</code>, and will fail if that version does.
+   *
+   * @param o the object to add
+   * @return true, as defined by Collection for a modified list
+   * @throws UnsupportedOperationException if this list does not support the
+   *         add operation
+   * @throws ClassCastException if o cannot be added to this list due to its
+   *         type
+   * @throws IllegalArgumentException if o cannot be added to this list for
+   *         some other reason
+   * @see #add(int, Object)
+   */
+  public boolean{L} add{L}(Object{L} o) throws (UnsupportedOperationException{L}, 
+      ClassCastException{L}, NullPointerException{L}, IllegalArgumentException{L}) {
+    add(size(), o);
+    return true;
+  }
+  
+  /**
+   * Insert the contents of a collection into the list at a given position
+   * (optional operation). Shift all elements at that position to the right
+   * by the number of elements inserted. This operation is undefined if
+   * this list is modified during the operation (for example, if you try
+   * to insert a list into itself). This implementation uses the iterator of
+   * the collection, repeatedly calling add(int, Object); this will fail
+   * if add does. This can often be made more efficient.
+   *
+   * @param index the location to insert the collection
+   * @param c the collection to insert
+   * @return true if the list was modified by this action, that is, if c is
+   *         non-empty
+   * @throws UnsupportedOperationException if this list does not support the
+   *         addAll operation
+   * @throws IndexOutOfBoundsException if index &lt; 0 || index &gt; size()
+   * @throws ClassCastException if some element of c cannot be added to this
+   *         list due to its type
+   * @throws IllegalArgumentException if some element of c cannot be added
+   *         to this list for some other reason
+   * @throws NullPointerException if the specified collection is null
+   * @see #add(int, Object)
+   */
+  public boolean{L} addAll{L}(int{L} index, Collection[L]{L} c) throws (UnsupportedOperationException{L}, 
+      ClassCastException{L}, NullPointerException{L}, IllegalArgumentException{L}, 
+      IllegalStateException{L})
+  {
+    final Store localStore = worker$.getLocalStore();
+    if (L <= new label {*<-localStore} && new label {*->localStore} <= L) {
+      Iterator itr = c.iterator(localStore);
+      int size = c.size();
+      int i = index;
+      for (int pos = size; pos > 0; pos--)
+        add(i++, itr.next());
+      return size > 0;
+    }
+    else
+      throw new Error("Cannot create iterator on local store.");
+  }
+
+  /**
+   * Clear the list, such that a subsequent call to isEmpty() would return
+   * true (optional operation). This implementation calls
+   * <code>removeRange(0, size())</code>, so it will fail unless remove
+   * or removeRange is overridden.
+   *
+   * @throws UnsupportedOperationException if this list does not support the
+   *         clear operation
+   * @see #remove(int)
+   * @see #removeRange(int, int)
+   */
+  public void clear{L}() throws (UnsupportedOperationException{L})
+  {
+    removeRange(0, size());
+  }
+  
+  /**
+   * Obtain the first index at which a given object is to be found in this
+   * list. This implementation follows a listIterator(store) until a match is found,
+   * or returns -1 if the list end is reached.
+   *
+   * @param o the object to search for
+   * @return the least integer n such that <code>o == null ? get(n) == null :
+   *         o.equals(get(n))</code>, or -1 if there is no such index
+   */
+  public int{L} indexOf{L}(Object{L} o) throws (ClassCastException{L}, NullPointerException{L}) {
+    final Store localStore = worker$.getLocalStore();
+    if (L <= new label {*<-localStore} && new label {*->localStore} <= L) {
+      ListIterator itr = listIterator(localStore, 0);
+      int size = size();
+      for (int pos = 0; pos < size; pos++)
+        if (compare.equals(o, itr.next()))
+          return pos;
+      return -1;
+    }
+    else
+      throw new Error("Cannot create iterator on local store.");
+  }
+  
+  /**
+   * Obtain the first index at which a given object is to be found in this
+   * list. This implementation follows a listIterator(store) until a match is found,
+   * or returns -1 if the list end is reached.
+   *
+   * @param o the object to search for
+   * @return the least integer n such that <code>o == null ? get(n) == null :
+   *         o.equals(get(n))</code>, or -1 if there is no such index
+   */
+  public int{L} lastIndexOf{L}(Object{L} o) throws (ClassCastException{L}, NullPointerException{L}) {
+    int pos = size();
+    final Store localStore = worker$.getLocalStore();
+    if (L <= new label {*<-localStore} && new label {*->localStore} <= L) {
+      ListIterator itr = listIterator(localStore, 0);
+      while (--pos >= 0)
+        if (compare.equals(o, itr.previous()))
+          return pos;
+      return -1;
+    }
+    else
+      throw new Error("Cannot create iterator on local store.");
+  }
+  
+  /**
+   * Return an Iterator over this collection. The iterator must provide the
+   * hasNext and next methods and should in addition provide remove if the
+   * collection is modifiable.
+   *
+   * @return an iterator
+   */
+  public Iterator[L]{L} iterator{L}() {
+    return listIterator(0);
+  }
+
+  /**
+   * Return an Iterator over this collection. The iterator must provide the
+   * hasNext and next methods and should in addition provide remove if the
+   * collection is modifiable.
+   *
+   * @return an iterator
+   */
+  public Iterator[L]{L} iterator{L}(Store{L} store) where L <= {*<-store}, {*->store} <= L
+  {
+    return listIterator(store, 0);
+  }
+
+  /**
+   * Obtain a ListIterator over this list, starting at the beginning. This
+   * implementation returns listIterator(0).
+   *
+   * @return a ListIterator over the elements of this list, in order, starting
+   *         at the beginning
+   */
+  public ListIterator[L]{L} listIterator{L}() {
+    return listIterator(0);
+  }
+  
+  /**
+   * Obtain a ListIterator over this list, starting at a given position.
+   * A first call to next() would return the same as get(index), and a
+   * first call to previous() would return the same as get(index - 1).
+   * <p>
+   *
+   * This implementation uses size(), get(int), set(int, Object),
+   * add(int, Object), and remove(int) of the backing list, and does not
+   * support remove, set, or add unless the list does. This implementation
+   * is fail-fast if you correctly maintain modCount.
+   *
+   * @param index the position, between 0 and size() inclusive, to begin the
+   *        iteration from
+   * @return a ListIterator over the elements of this list, in order, starting
+   *         at index
+   * @throws IndexOutOfBoundsException if index &lt; 0 || index &gt; size()
+   * @see #modCount
+   */
+  public ListIterator[L]{L} listIterator{L}(int{L} index) throws (IndexOutOfBoundsException{L}) {
+    if (index < 0 || index > size())
+      throw new IndexOutOfBoundsException("Index: " + index + ", Size:"
+                                              + size());
+    return new AbstractListIterator(this, index);
+  }
+
+  /**
+   * Obtain a ListIterator over this list, starting at a given position.
+   * A first call to next() would return the same as get(index), and a
+   * first call to previous() would return the same as get(index - 1).
+   * <p>
+   *
+   * This implementation uses size(), get(int), set(int, Object),
+   * add(int, Object), and remove(int) of the backing list, and does not
+   * support remove, set, or add unless the list does. This implementation
+   * is fail-fast if you correctly maintain modCount.
+   *
+   * @param store where to create the list iterator object 
+   * @param index the position, between 0 and size() inclusive, to begin the
+   *        iteration from
+   * @return a ListIterator over the elements of this list, in order, starting
+   *         at index
+   * @throws IndexOutOfBoundsException if index &lt; 0 || index &gt; size()
+   * @see #modCount
+   */
+  public ListIterator[L]{L} listIterator{L}(Store{L} store, int{L} index) 
+      throws (IndexOutOfBoundsException{L}) where L <= {*<-store}, {*->store} <= L {
+    if (index < 0 || index > size())
+      throw new IndexOutOfBoundsException("Index: " + index + ", Size:"
+                                              + size());
+    return new AbstractListIterator@store(this, index);
+  }
+
+  /**
+   * Remove the element at a given position in this list (optional operation).
+   * Shifts all remaining elements to the left to fill the gap. This
+   * implementation always throws an UnsupportedOperationException.
+   * If you want fail-fast iterators, be sure to increment modCount when
+   * overriding this.
+   *
+   * @param index the position within the list of the object to remove
+   * @return the object that was removed
+   * @throws UnsupportedOperationException if this list does not support the
+   *         remove operation
+   * @throws IndexOutOfBoundsException if index &lt; 0 || index &gt;= size()
+   * @see #modCount
+   */
+  public Object{L} remove{L}(int{L} index) throws (UnsupportedOperationException{L}, 
+      IndexOutOfBoundsException{L}) {
+    throw new UnsupportedOperationException();
+  }
+  
+  /**
+   * Remove a subsection of the list. This is called by the clear and
+   * removeRange methods of the class which implements subList, which are
+   * difficult for subclasses to override directly. Therefore, this method
+   * should be overridden instead by the more efficient implementation, if one
+   * exists. Overriding this can reduce quadratic efforts to constant time
+   * in some cases!
+   * <p>
+   *
+   * This implementation first checks for illegal or out of range arguments. It
+   * then obtains a ListIterator over the list using listIterator(fromIndex).
+   * It then calls next() and remove() on this iterator repeatedly, toIndex -
+   * fromIndex times.
+   *
+   * @param fromIndex the index, inclusive, to remove from.
+   * @param toIndex the index, exclusive, to remove to.
+   * @throws UnsupportedOperationException if the list does
+   *         not support removing elements.
+   */
+  protected void removeRange{L}(int{L} fromIndex, int{L} toIndex) throws (
+      UnsupportedOperationException{L}, IndexOutOfBoundsException{L}) 
+  {
+    final Store localStore = worker$.getLocalStore();
+    if (L <= new label {*<-localStore} && new label {*->localStore} <= L) {
+      ListIterator itr = listIterator(localStore, fromIndex);
+      for (int index = fromIndex; index < toIndex; index++)
+        {
+          itr.next();
+          itr.remove();
+        }
+    }
+    else
+      throw new Error("Cannot create iterator on local store.");
+  }
+
+  /**
+   * Replace an element of this list with another object (optional operation).
+   * This implementation always throws an UnsupportedOperationException.
+   *
+   * @param index the position within this list of the element to be replaced
+   * @param o the object to replace it with
+   * @return the object that was replaced
+   * @throws UnsupportedOperationException if this list does not support the
+   *         set operation
+   * @throws IndexOutOfBoundsException if index &lt; 0 || index &gt;= size()
+   * @throws ClassCastException if o cannot be added to this list due to its
+   *         type
+   * @throws IllegalArgumentException if o cannot be added to this list for
+   *         some other reason
+   */
+  public Object{L} set{L}(int{L} index, Object{L} element) throws (UnsupportedOperationException{L}, 
+      ClassCastException{L}, NullPointerException{L}, IllegalArgumentException{L}, 
+      IndexOutOfBoundsException{L}) {
+    throw new UnsupportedOperationException();
+  }
+
+  /**
+   * Obtain a List view of a subsection of this list, from fromIndex
+   * (inclusive) to toIndex (exclusive). If the two indices are equal, the
+   * sublist is empty. The returned list should be modifiable if and only
+   * if this list is modifiable. Changes to the returned list should be
+   * reflected in this list. If this list is structurally modified in
+   * any way other than through the returned list, the result of any subsequent
+   * operations on the returned list is undefined.
+   * <p>
+   *
+   * This implementation returns a subclass of AbstractList. It stores, in
+   * private fields, the offset and size of the sublist, and the expected
+   * modCount of the backing list. If the backing list implements RandomAccess,
+   * the sublist will also.
+   * <p>
+   *
+   * The subclass's <code>set(int, Object)</code>, <code>get(int)</code>,
+   * <code>add(int, Object)</code>, <code>remove(int)</code>,
+   * <code>addAll(int, Collection)</code> and
+   * <code>removeRange(int, int)</code> methods all delegate to the
+   * corresponding methods on the backing abstract list, after
+   * bounds-checking the index and adjusting for the offset. The
+   * <code>addAll(Collection c)</code> method merely returns addAll(size, c).
+   * The <code>listIterator(Store, int)</code> method returns a "wrapper object"
+   * over a list iterator on the backing list, which is created with the
+   * corresponding method on the backing list. The <code>iterator(Store)</code>
+   * method merely returns listIterator(store), and the <code>size()</code> method
+   * merely returns the subclass's size field.
+   * <p>
+   *
+   * All methods first check to see if the actual modCount of the backing
+   * list is equal to its expected value, and throw a
+   * ConcurrentModificationException if it is not. 
+   *
+   * @param fromIndex the index that the returned list should start from
+   *        (inclusive)
+   * @param toIndex the index that the returned list should go to (exclusive)
+   * @return a List backed by a subsection of this list
+   * @throws IndexOutOfBoundsException if fromIndex &lt; 0
+   *         || toIndex &gt; size()
+   * @throws IllegalArgumentException if fromIndex &gt; toIndex
+   * @see ConcurrentModificationException
+   * @see RandomAccess
+   */
+  public boolean{L} subList{L}(int{L} fromIndex, int{L}toIndex) throws (UnsupportedOperationException{L}, 
+      IndexOutOfBoundsException{L})
+  {
+    throw new UnsupportedOperationException();
+    // This follows the specification of AbstractList, but is inconsistent
+    // with the one in List. Don't you love Sun's inconsistencies?
+//    if (fromIndex > toIndex)
+//      throw new IllegalArgumentException(fromIndex + " > " + toIndex);
+//    if (fromIndex < 0 || toIndex > size())
+//      throw new IndexOutOfBoundsException();
+//
+//    if (this instanceof RandomAccess)
+//      return new RandomAccessSubList(this, fromIndex, toIndex);
+//    return new SubList(this, fromIndex, toIndex);
+  }
+     
+}
+
+class AbstractListIterator[label L] implements ListIterator[L] {
+  /**
+   * 
+   */
+  private final int{L} index;
+
+  private final AbstractList[L]{L} al;
+  private int{L} knownMod;
+
+  private int{L} position;
+
+  private int{L} lastReturned = -1;
+
+  private int{L} size;
+
+  /**
+   * @param index
+   */
+  AbstractListIterator{L}(AbstractList[L]{L} al, int{L} index) throws (NullPointerException{L}) {
+    this.index = index;
+    position = index;
+    if (al == null) throw new NullPointerException();
+    this.al = al;
+    knownMod = al.modCount;
+    size = al.size();
+    super();
+  }
+
+  /**
+   * Checks for modifications made to the list from
+   * elsewhere while iteration is in progress.
+   *
+   * @throws ConcurrentModificationException if the
+   *         list has been modified elsewhere.
+   */
+  private void checkMod{L}() throws (ConcurrentModificationException{L})
+  {
+    if (knownMod != al.modCount)
+      throw new ConcurrentModificationException();
+  }
+
+  /**
+   * Tests to see if there are any more objects to
+   * return.
+   *
+   * @return True if the end of the list has not yet been
+   *         reached.
+   */
+  public boolean{L} hasNext{L}()
+  {
+    return position < size;
+  }
+
+  /**
+   * Tests to see if there are objects prior to the
+   * current position in the list.
+   *
+   * @return True if objects exist prior to the current
+   *         position of the iterator.
+   */
+  public boolean{L} hasPrevious{L}()
+  {
+    return position > 0;
+  }
+
+  /**
+   * Retrieves the next object from the list.
+   *
+   * @return The next object.
+   * @throws NoSuchElementException if there are no
+   *         more objects to retrieve.
+   * @throws ConcurrentModificationException if the
+   *         list has been modified elsewhere.
+   */
+  public Object{L} next{L}() throws (NoSuchElementException{L}, ConcurrentModificationException{L})
+  {
+    checkMod();
+    if (position == size)
+      throw new NoSuchElementException();
+    lastReturned = position;
+    return al.get(position++);
+  }
+
+  /**
+   * Retrieves the previous object from the list.
+   *
+   * @return The next object.
+   * @throws NoSuchElementException if there are no
+   *         previous objects to retrieve.
+   * @throws ConcurrentModificationException if the
+   *         list has been modified elsewhere.
+   */
+  public Object{L} previous{L}() throws (NoSuchElementException{L}, ConcurrentModificationException{L})
+  {
+    checkMod();
+    if (position == 0)
+      throw new NoSuchElementException();
+    lastReturned = --position;
+    return al.get(lastReturned);
+  }
+
+  /**
+   * Returns the index of the next element in the
+   * list, which will be retrieved by <code>next()</code>
+   *
+   * @return The index of the next element.
+   */
+  public int{L} nextIndex()
+  {
+    return position;
+  }
+
+  /**
+   * Returns the index of the previous element in the
+   * list, which will be retrieved by <code>previous()</code>
+   *
+   * @return The index of the previous element.
+   */
+  public int{L} previousIndex()
+  {
+    return position - 1;
+  }
+
+  /**
+  * Removes the last object retrieved by <code>next()</code>
+  * or <code>previous()</code> from the list, if the list
+  * supports object removal.
+  *
+  * @throws IllegalStateException if the iterator is positioned
+  *         before the start of the list or the last object has already
+  *         been removed.
+  * @throws UnsupportedOperationException if the list does
+  *         not support removing elements.
+  * @throws ConcurrentModificationException if the list
+  *         has been modified elsewhere.
+  */
+  public void remove{L}() throws (IllegalStateException{L}, UnsupportedOperationException{L}, 
+      ConcurrentModificationException{L})
+  {
+    checkMod();
+    if (lastReturned < 0)
+      throw new IllegalStateException();
+    al.remove(lastReturned);
+    size--;
+    position = lastReturned;
+    lastReturned = -1;
+    knownMod = al.modCount;
+  }
+
+  /**
+  * Replaces the last object retrieved by <code>next()</code>
+  * or <code>previous</code> with o, if the list supports object
+  * replacement and an add or remove operation has not already
+  * been performed.
+  *
+  * @throws IllegalStateException if the iterator is positioned
+  *         before the start of the list or the last object has already
+  *         been removed.
+  * @throws UnsupportedOperationException if the list doesn't support
+  *         the addition or removal of elements.
+  * @throws ClassCastException if the type of o is not a valid type
+  *         for this list.
+  * @throws IllegalArgumentException if something else related to o
+  *         prevents its addition.
+  * @throws ConcurrentModificationException if the list
+  *         has been modified elsewhere.
+  */
+  public void set{L}(Object{L} o) throws (UnsupportedOperationException{L}, ConcurrentModificationException{L},
+      ClassCastException{L}, IllegalArgumentException{L}, IllegalStateException{L})
+  {
+    checkMod();
+    if (lastReturned < 0)
+      throw new IllegalStateException();
+    al.set(lastReturned, o);
+  }
+
+  /**
+   * Adds the supplied object before the element that would be returned
+   * by a call to <code>next()</code>, if the list supports addition.
+   * 
+   * @param o The object to add to the list.
+   * @throws UnsupportedOperationException if the list doesn't support
+   *         the addition of new elements.
+   * @throws ClassCastException if the type of o is not a valid type
+   *         for this list.
+   * @throws IllegalArgumentException if something else related to o
+   *         prevents its addition.
+   * @throws ConcurrentModificationException if the list
+   *         has been modified elsewhere.
+   */
+  public void add{L}(Object{L} o) throws (UnsupportedOperationException{L}, ConcurrentModificationException{L},
+      ClassCastException{L}, IllegalArgumentException{L})
+  {
+    checkMod();
+    al.add(position++, o);
+    size++;
+    lastReturned = -1;
+    knownMod = al.modCount;
+  }
+
+}
+

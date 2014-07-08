@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -25,7 +25,7 @@ public class Transactions {
       BlogPost post = null;
       long start = 0;
       atomic {
-        post = new BlogPost~l@s(title, content);
+        post = new BlogPost@s().webapp$blog$BlogPost$(title, content);
         Blog.getInstance().addBlogPost(post);
         start = System.currentTimeMillis();
       }
@@ -44,7 +44,7 @@ public class Transactions {
       Comment c = null;
       long start = 0;
       atomic {
-        c = new Comment~l@store(username, content, post);
+        c = new Comment@store().webapp$blog$Comment$(username, content, post);
         post.addComment(c);
         Blog.getInstance().indexComment(c);
         start = System.currentTimeMillis();

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -22,7 +22,7 @@ public final class Form[principal servletP, label L, label E] extends BlockConta
     private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
     private static int __JIF_PARAMS_RUNTIME_REPRESENTED$20051007 = 0;
 
-    private final Action[servletP]{this} action;
+    private final Action[servletP]{L} action;
 
     public Form{L}(Action[servletP]{this} action_, 
             label cL, label cE, 

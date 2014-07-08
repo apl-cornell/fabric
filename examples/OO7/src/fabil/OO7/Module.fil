@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -34,11 +34,12 @@ public class Module extends DesignObject {
   LinkedList/*Assembly*/ assemblies;
   ComplexAssembly  designRoot;
 
-  public Module(Benchmark db) {
-    super(db);
+  public Module OO7$Module(Benchmark db) {
+    OO7$DesignObject(db);
     db.modulesById.put(new Integer(id()), this);
     
-    assemblies = new LinkedList();
+    assemblies = (LinkedList) new LinkedList().fabric$util$LinkedList$();
+    return this;
   }
 
   public void setManual(Manual x) {

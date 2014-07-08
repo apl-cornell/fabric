@@ -1,0 +1,103 @@
+/**
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
+ *
+ * This file is part of Fabric.
+ *
+ * Fabric is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * Fabric is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ */
+package util;
+
+public class Meet extends AbstractPrincipal {
+
+  protected Principal left;
+  protected Principal right;
+  protected Store     store;
+
+  public Meet util$Meet$(
+    Store     store,
+    String    name,
+    Principal left,
+    Principal right
+  )
+  {
+    if (left == null || right == null) throw new NullPointerException("Cannot create meet with null principal!");
+    this.left  = left;
+    this.right = right;
+    this.store = store;
+    fabric$lang$security$AbstractPrincipal$(name);
+    return this;
+  }
+
+  public Meet util$Meet$(
+    Store store,
+    Principal left,
+    Principal right
+  )
+  {
+    return util$Meet$(store, "(" + left.name() + ") meet (" + right.name() + ")", left, right);
+  }
+
+
+  public Meet() { super(); }
+
+  private void jif$init() { }
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Principal methods                                                        //
+  //////////////////////////////////////////////////////////////////////////////
+  public
+  boolean 
+  delegatesTo(Principal p)
+  {
+    return p == left || p == right;
+  }
+  
+  /**
+   * See Principal.findProofUpto.
+   */
+  public ActsForProof findProofUpto
+               (Store s, Principal p,
+                java.lang.Object searchState)
+  {
+    if (PrincipalUtil.actsFor(left, this)
+        && PrincipalUtil.actsFor(right, this)) {
+      ActsForProof leftProof =
+        PrincipalUtil.findActsForProof(s, p, left,  searchState);
+      ActsForProof rightProof =
+        PrincipalUtil.findActsForProof(s, p, right, searchState);
+
+      if (leftProof != null) {
+        DelegatesProof delProof =
+         (DelegatesProof) new DelegatesProof@s().fabric$lang$security$DelegatesProof$(left, this);
+        return
+          (TransitiveProof)
+            new TransitiveProof@s().fabric$lang$security$TransitiveProof$(leftProof,  left,  delProof);
+      }
+
+      if (rightProof != null) {
+        DelegatesProof delProof =
+          (DelegatesProof) new DelegatesProof@s().fabric$lang$security$DelegatesProof$(right, this);
+        return
+          (TransitiveProof)
+            new TransitiveProof@s().fabric$lang$security$TransitiveProof$(rightProof, right, delProof);
+      }
+      else
+        return null;
+
+    } else throw new AssertionFailedError().util$AssertionFailedError$("left and right act for meet");
+  }
+
+}
+
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/

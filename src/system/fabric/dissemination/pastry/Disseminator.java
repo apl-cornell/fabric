@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -26,7 +26,13 @@ import rice.Continuation;
 import rice.Executable;
 import rice.environment.Environment;
 import rice.environment.params.Parameters;
-import rice.p2p.commonapi.*;
+import rice.p2p.commonapi.Application;
+import rice.p2p.commonapi.Endpoint;
+import rice.p2p.commonapi.Id;
+import rice.p2p.commonapi.IdFactory;
+import rice.p2p.commonapi.Message;
+import rice.p2p.commonapi.NodeHandle;
+import rice.p2p.commonapi.RouteMessage;
 import rice.p2p.commonapi.rawserialization.InputBuffer;
 import rice.p2p.commonapi.rawserialization.MessageDeserializer;
 import rice.pastry.PastryNode;
@@ -36,10 +42,14 @@ import rice.pastry.routing.RouteSet;
 import rice.pastry.routing.RoutingTable;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
+import fabric.dissemination.Cache;
 import fabric.dissemination.Glob;
-import fabric.dissemination.pastry.messages.*;
+import fabric.dissemination.pastry.messages.AggregateInterval;
+import fabric.dissemination.pastry.messages.Fetch;
+import fabric.dissemination.pastry.messages.MessageType;
+import fabric.dissemination.pastry.messages.Replicate;
+import fabric.dissemination.pastry.messages.ReplicateInterval;
 import fabric.worker.RemoteStore;
-import fabric.worker.Store;
 import fabric.worker.Worker;
 
 /**
@@ -123,9 +133,11 @@ public class Disseminator implements Application {
 
   private static final Continuation<Object, Exception> halt =
       new Continuation<Object, Exception>() {
+        @Override
         public void receiveException(Exception result) {
         }
 
+        @Override
         public void receiveResult(Object result) {
         }
       };
@@ -162,6 +174,7 @@ public class Disseminator implements Application {
     return endpoint.getLocalNodeHandle();
   }
 
+  @Override
   public void deliver(Id id, Message msg) {
     if (msg instanceof Fetch) {
       fetch((Fetch) msg);
@@ -204,7 +217,7 @@ public class Disseminator implements Application {
     synchronized (f) {
       if (f.reply() == null) {
         // XXX hack: wait at most 1 second for dissemination network. after
-        // that, we will revert to direct store fetch
+        // that, we fall back to the next fetch manager.
         try {
           f.wait(1000);
         } catch (InterruptedException e) {
@@ -227,6 +240,7 @@ public class Disseminator implements Application {
     forward(msg); // caches glob
 
     process(new Executable<Void, RuntimeException>() {
+      @Override
       public Void execute() {
         Fetch f = null;
 
@@ -252,16 +266,12 @@ public class Disseminator implements Application {
    */
   protected void fetch(final Fetch msg) {
     process(new Executable<Void, RuntimeException>() {
+      @Override
       public Void execute() {
         Worker worker = Worker.getWorker();
         RemoteStore c = worker.getStore(msg.store());
         long onum = msg.onum();
-        Glob g = cache.get(c, onum);
-
-        if (g == null) {
-          g = cache.get(c, onum, true);
-        }
-
+        Glob g = cache.get(c, onum, true);
         reply(g, msg);
         return null;
       }
@@ -288,6 +298,7 @@ public class Disseminator implements Application {
    */
   protected void replicateInterval() {
     process(new Executable<Void, RuntimeException>() {
+      @Override
       public Void execute() {
         rice.pastry.Id me = (rice.pastry.Id) localHandle().getId();
         OidKeyHashMap<Long> skip;
@@ -360,7 +371,7 @@ public class Disseminator implements Application {
     rice.pastry.Id me = (rice.pastry.Id) localHandle().getId();
     OidKeyHashMap<Long> skip = new OidKeyHashMap<Long>();
 
-    for (Pair<Pair<Store, Long>, Long> k : cache.timestamps()) {
+    for (Pair<Pair<RemoteStore, Long>, Long> k : cache.timestamps()) {
       rice.pastry.Id id =
           (rice.pastry.Id) idf.buildId(k.first + "/" + k.second);
       boolean send = shouldReplicate(deciderId, me, id, level);
@@ -379,6 +390,7 @@ public class Disseminator implements Application {
    */
   protected void replicate(final Replicate msg) {
     process(new Executable<Void, RuntimeException>() {
+      @Override
       public Void execute() {
         NodeHandle sender = msg.sender();
         rice.pastry.Id senderId = (rice.pastry.Id) sender.getId();
@@ -387,10 +399,10 @@ public class Disseminator implements Application {
 
         rice.pastry.Id me = (rice.pastry.Id) localHandle().getId();
 
-        Map<Pair<Store, Long>, Glob> globs =
-            new HashMap<Pair<Store, Long>, Glob>();
+        Map<Pair<RemoteStore, Long>, Glob> globs =
+            new HashMap<Pair<RemoteStore, Long>, Glob>();
 
-        for (Pair<Pair<Store, Long>, Long> k : cache.sortedTimestamps()) {
+        for (Pair<Pair<RemoteStore, Long>, Long> k : cache.sortedTimestamps()) {
           Long skipTimestamp = skip.get(k.first.first, k.first.second);
           if (skipTimestamp != null && skipTimestamp >= k.second) {
             continue;
@@ -401,7 +413,7 @@ public class Disseminator implements Application {
           boolean send = shouldReplicate(me, senderId, id, level);
 
           if (send) {
-            RemoteStore c = (RemoteStore) k.first.first;
+            RemoteStore c = k.first.first;
             Long onum = k.first.second;
             Glob g = cache.get(c, onum);
             if (g.level() > level) continue;
@@ -456,9 +468,11 @@ public class Disseminator implements Application {
    */
   protected void replicate(final Replicate.Reply msg) {
     process(new Executable<Void, RuntimeException>() {
+      @Override
       public Void execute() {
-        for (Map.Entry<Pair<Store, Long>, Glob> e : msg.globs().entrySet()) {
-          RemoteStore c = (RemoteStore) e.getKey().first;
+        for (Map.Entry<Pair<RemoteStore, Long>, Glob> e : msg.globs()
+            .entrySet()) {
+          RemoteStore c = e.getKey().first;
           long onum = e.getKey().second;
           Glob g = e.getValue();
           cache.put(c, onum, g);
@@ -475,6 +489,7 @@ public class Disseminator implements Application {
     // object dissemination unilaterally.
   }
 
+  @Override
   public boolean forward(RouteMessage message) {
     try {
       Message m = message.getMessage(deserializer);
@@ -532,6 +547,7 @@ public class Disseminator implements Application {
     return true;
   }
 
+  @Override
   public void update(NodeHandle handle, boolean joined) {
     // nothing to do
   }
@@ -542,6 +558,7 @@ public class Disseminator implements Application {
    */
   private class Deserializer implements MessageDeserializer {
 
+    @Override
     public Message deserialize(InputBuffer buf, short type, int priority,
         NodeHandle sender) throws IOException {
       switch (type) {

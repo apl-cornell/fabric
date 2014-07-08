@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -23,18 +23,17 @@ import java.util.logging.LogRecord;
 public class ConsoleFormatter extends Formatter {
 
   private static String lineSeparator = System.getProperty("line.separator");
-  private static long   start         = -1;
-  private static int    tagWidth      = 13;
+  private static long start = -1;
+  private static int tagWidth = 13;
 
   @Override
   public String format(LogRecord record) {
-    if (start < 0)
-      start = record.getMillis();
-    
+    if (start < 0) start = record.getMillis();
+
     StringBuilder result = new StringBuilder();
     String level = record.getLevel().toString();
-    String time  = Long.toString(record.getMillis() - start);
-    
+    String time = Long.toString(record.getMillis() - start);
+
     result.append("[");
     result.append(level);
     result.append(":");

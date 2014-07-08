@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -15,7 +15,11 @@
  */
 package fabil.extension;
 
-import polyglot.ast.*;
+import polyglot.ast.ArrayTypeNode;
+import polyglot.ast.JL_c;
+import polyglot.ast.Node;
+import polyglot.ast.NodeFactory;
+import polyglot.ast.TypeNode;
 import polyglot.types.SemanticException;
 import polyglot.types.Type;
 import polyglot.visit.AmbiguityRemover;
@@ -46,12 +50,12 @@ public class FabricArrayTypeNodeDel_c extends JL_c {
 
     if (!ts.isFabricType(baseType)) {
       throw new SemanticException(
-          "Non-Fabric objects cannot be stored in Fabric arrays.", atn
-              .position());
+          "Non-Fabric objects cannot be stored in Fabric arrays.",
+          atn.position());
     }
 
-    return nf.CanonicalTypeNode(atn.position(), ts.fabricArrayOf(
-        atn.position(), baseType));
+    return nf.CanonicalTypeNode(atn.position(),
+        ts.fabricArrayOf(atn.position(), baseType));
   }
 
 }

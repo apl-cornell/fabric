@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -15,26 +15,43 @@
  */
 package fabric.dissemination;
 
-import java.io.*;
-import java.security.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInput;
+import java.io.DataInputStream;
+import java.io.DataOutput;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.security.GeneralSecurityException;
+import java.security.InvalidKeyException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.Signature;
+import java.security.SignatureException;
 
-import javax.crypto.*;
+import javax.crypto.Cipher;
+import javax.crypto.CipherInputStream;
+import javax.crypto.CipherOutputStream;
+import javax.crypto.SecretKey;
 
-import fabric.lang.security.Label;
-import fabric.worker.Worker;
-import fabric.worker.Store;
-import fabric.worker.Worker.Code;
-import fabric.common.*;
-import fabric.common.exceptions.BadSignatureException;
+import fabric.common.Crypto;
+import fabric.common.FastSerializable;
+import fabric.common.ObjectGroup;
+import fabric.common.SerializedObject;
 import fabric.common.exceptions.InternalError;
+import fabric.lang.security.Label;
 import fabric.lang.security.SecretKeyObject;
+import fabric.worker.Store;
+import fabric.worker.Worker;
+import fabric.worker.Worker.Code;
 
 /**
  * A glob is an ObjectGroup that has been encrypted and signed.
  */
 public class Glob implements FastSerializable {
   /**
-   * The time at which this glob was created.
+   * The time at which this glob was created. This acts as a version number.
    */
   private final long timestamp;
 
@@ -56,7 +73,7 @@ public class Glob implements FastSerializable {
   private final byte[] data;
 
   /**
-   * The signature on the version, keyOnum, iv, and data.
+   * The signature on the timestamp, keyObject OID, iv, and data.
    */
   private final byte[] signature;
 
@@ -119,7 +136,7 @@ public class Glob implements FastSerializable {
    * @throws SignatureException
    */
   private void updateSignature(Signature sig) throws SignatureException {
-    // Update with version number.
+    // Update with the timestamp (which acts as the version number).
     sig.update((byte) (timestamp >>> 56));
     sig.update((byte) (timestamp >>> 48));
     sig.update((byte) (timestamp >>> 40));
@@ -129,14 +146,14 @@ public class Glob implements FastSerializable {
     sig.update((byte) (timestamp >>> 8));
     sig.update((byte) timestamp);
 
-    // Update with keyObject pointer, if non-null.
+    // Update with keyObject OID, if non-null.
     if (keyObject != null) {
       try {
         sig.update(keyObject.$getStore().name().getBytes("UTF8"));
       } catch (UnsupportedEncodingException e) {
         throw new InternalError(e);
       }
-      
+
       long val = keyObject.$getOnum();
       sig.update((byte) (val >>> 56));
       sig.update((byte) (val >>> 48));
@@ -155,11 +172,12 @@ public class Glob implements FastSerializable {
     sig.update(data);
   }
 
-  private Cipher makeCipher(final SecretKeyObject keyObject, int opmode, byte[] iv)
-      throws GeneralSecurityException {
+  private Cipher makeCipher(final SecretKeyObject keyObject, int opmode,
+      byte[] iv) throws GeneralSecurityException {
     byte[] key = null;
     if (keyObject != null) {
       key = Worker.runInSubTransaction(new Code<SecretKey>() {
+        @Override
         public SecretKey run() {
           return keyObject.getKey();
         }
@@ -172,7 +190,7 @@ public class Glob implements FastSerializable {
   private Label getLabel(Store store, ObjectGroup group) {
     SerializedObject obj =
         group.objects().entrySet().iterator().next().getValue();
-    return new Label._Proxy(store, obj.getLabelOnum());
+    return new Label._Proxy(store, obj.getUpdateLabelOnum());
   }
 
   /** The dissemination level of the glob. 0 is replicated to all nodes. */
@@ -222,16 +240,18 @@ public class Glob implements FastSerializable {
     return timestamp < glob.timestamp;
   }
 
-  public boolean verifySignature(PublicKey key) throws SignatureException,
+  public void verifySignature(PublicKey key) throws SignatureException,
       InvalidKeyException {
     // Check the signature.
     Signature verifier = Crypto.signatureInstance();
     verifier.initVerify(key);
     updateSignature(verifier);
-    return verifier.verify(signature);
+    if (!verifier.verify(signature))
+      throw new SignatureException("Failed to verify signature");
   }
 
   /** Serializer. */
+  @Override
   public void write(DataOutput out) throws IOException {
     out.writeLong(timestamp);
     if (keyObject == null) {
@@ -263,8 +283,7 @@ public class Glob implements FastSerializable {
    *          The public key for verifying the signature. (If null, signature
    *          verification is bypassed.)
    */
-  public Glob(PublicKey key, DataInput in) throws IOException,
-      BadSignatureException {
+  public Glob(DataInput in) throws IOException {
     this.timestamp = in.readLong();
     if (in.readBoolean()) {
       Store store = Worker.getWorker().getStore(in.readUTF());
@@ -284,13 +303,6 @@ public class Glob implements FastSerializable {
 
     this.signature = new byte[in.readInt()];
     in.readFully(this.signature);
-
-    try {
-      if (key != null && !verifySignature(key))
-        throw new BadSignatureException();
-    } catch (GeneralSecurityException e) {
-      throw new InternalError(e);
-    }
   }
 
   /**

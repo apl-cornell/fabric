@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -17,10 +17,15 @@ package fabric.lang;
 
 public class DefaultStatistics implements Statistics {
 
-  public void commitRead()  { }
+  @Override
+  public void commitRead() {
+  }
 
-  public void commitWrote() { }
+  @Override
+  public void commitWrote() {
+  }
 
+  @Override
   public int generatePromise() {
     return 0;
   }

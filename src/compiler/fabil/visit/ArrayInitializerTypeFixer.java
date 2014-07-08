@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -28,12 +28,6 @@ public class ArrayInitializerTypeFixer extends AscriptionVisitor {
     super(job, ts, nf);
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see polyglot.visit.AscriptionVisitor#ascribe(polyglot.ast.Expr,
-   *      polyglot.types.Type)
-   */
   @Override
   public Expr ascribe(Expr e, Type toType) {
     if (e.type().isNull()) e = e.type(toType);

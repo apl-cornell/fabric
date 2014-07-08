@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -29,8 +29,9 @@ public abstract class Assembly extends DesignObject {
   ComplexAssembly superAssembly;
   Module          module;
 
-  public Assembly(Benchmark db) {
-    super(db);
+  public Assembly OO7$Assembly(Benchmark db) {
+    OO7$DesignObject(db);
+    return this;
   }
 
   public void setSuperAssembly(ComplexAssembly x) {

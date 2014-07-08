@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -28,7 +28,6 @@ import fabil.visit.ProxyRewriter;
 
 public class NewExt_c extends AnnotatedExt_c {
 
-  @SuppressWarnings("unchecked")
   @Override
   public Expr rewriteProxiesImpl(ProxyRewriter pr) {
     New call = node();
@@ -39,15 +38,13 @@ public class NewExt_c extends AnnotatedExt_c {
 
     // Only rewrite if instantiating a pure Fabric type.
     FabILTypeSystem ts = pr.typeSystem();
-    if (!ts.isPureFabricType(typeNode))
-      return super.rewriteProxiesImpl(pr);
+    if (!ts.isPureFabricType(typeNode)) return super.rewriteProxiesImpl(pr);
 
     List<Expr> newargs = new LinkedList<Expr>(call.arguments());
     newargs.add(0, call.location());
-    newargs.add(1, call.label());
 
     TypeNode implType =
-        nf.TypeNodeFromQualifiedName(typeNode.position(), type.fullName()
+        nf.TypeNodeFromQualifiedName(typeNode.position(), type.translate(null)
             + "._Impl");
     call = call.objectType(implType);
     call = (New) call.arguments(newargs);
@@ -59,5 +56,4 @@ public class NewExt_c extends AnnotatedExt_c {
   public New node() {
     return (New) super.node();
   }
-  
 }

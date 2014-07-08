@@ -1,0 +1,65 @@
+/**
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
+ *
+ * This file is part of Fabric.
+ *
+ * Fabric is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * Fabric is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ */
+package snapp;
+
+codebase snapp1;
+
+import util.Group;
+import util.AssertionFailedError;
+
+/**
+ * Version 2 of the User class.  Adds moods.
+ */
+public class User extends snapp1.User
+where
+  provider <= snapp1.User.provider, snapp1.User.provider <= provider,
+  provider <= Snapp.provider,             Snapp.provider <= provider,
+  provider <= Mood.provider,               Mood.provider <= provider
+{
+  public Mood {*moodLabel} mood;
+
+  public final Group [this] {this} moodInfo;
+
+  public final label {this} moodLabel;
+
+  public
+  UserV2 {this}
+  (
+    String    {this} name,
+    principal {this} owner,
+    Snapp     {this} network
+  )
+  throws NullPointerException
+  where
+    provider <= {this},
+    {this}   <= {owner,network←; owner&network→}
+  {
+    this.moodInfo   = new Group[this] (name + "'s mood readers");
+    this.moodLabel  = new label {this←; this.moodInfo→};
+
+    super(name, owner, network);
+
+    if (new label {owner,network←; owner&network→} <= this.moodLabel)
+      this.mood       = new Mood("indecisive");
+    else
+      throw new AssertionFailedError("43 owner and network can update the mood");
+  }
+}
+
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -23,17 +23,12 @@ import fabil.visit.ProxyRewriter;
 
 public class ArrayAccessAssignExt_c extends ExprExt_c {
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see fabil.extension.ExprExt_c#rewriteProxiesOverrideImpl(fabil.visit.ProxyRewriter)
-   */
   @Override
   public Expr rewriteProxiesOverrideImpl(ProxyRewriter rewriter) {
     ArrayAccessAssign assign = node();
     ArrayAccess left = (ArrayAccess) assign.left();
     Expr array = left.array();
-    
+
     // Only rewrite Fabric arrays.
     FabILTypeSystem ts = rewriter.typeSystem();
     if (!ts.isFabricType(array.type())) return null;
@@ -45,11 +40,6 @@ public class ArrayAccessAssignExt_c extends ExprExt_c {
     return rewriter.qq().parseExpr("%E.set(%E, %E)", array, index, right);
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see polyglot.ast.Ext_c#node()
-   */
   @Override
   public ArrayAccessAssign node() {
     return (ArrayAccessAssign) super.node();

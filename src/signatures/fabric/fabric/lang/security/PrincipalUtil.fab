@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -16,23 +16,24 @@
 package fabric.lang.security;
 
 public class PrincipalUtil {
-    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+//    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
 
     public static native boolean{p;q;q←} acts_for(Principal p, Principal q);
 
     public static native boolean{p;q;p←;q←} equivalentTo(Principal p, Principal q);
 
-    public static native ActsForProof{p;q;q←}
-	findActsForProof(Principal p, Principal q, java.lang.Object searchState);
+    public static native ActsForProof[{*→s;*←s}]{p;q;q←;s}
+	findActsForProof(Store s, Principal p, Principal q, java.lang.Object searchState);
 
-    public static native boolean verifyProof(ActsForProof{p;q;q←} proof, 
-                                             Principal p, Principal q);
+//    public static native boolean verifyProof(ActsForProof[{lbl}]{p;q;q←} proof, 
+//                                             Principal p, Principal q, label *lbl);
 
     public static native void notifyNewDelegation(Principal granter, Principal superior);
 
     public static native void notifyRevokeDelegation(Principal granter,
 						     Principal superior);
 
+    // This begin label should probably have side-effects at p
     public static native Capability[p, lb]
                 authorize(principal p, Object authPrf, Closure[p, lb] c, label lb);
                 

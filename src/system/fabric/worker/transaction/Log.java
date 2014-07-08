@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -15,21 +15,30 @@
  */
 package fabric.worker.transaction;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
+import java.util.Set;
 
+import fabric.common.SysUtil;
+import fabric.common.Timing;
 import fabric.common.TransactionID;
-import fabric.common.Util;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.WeakReferenceArrayList;
 import fabric.lang.Object._Impl;
+import fabric.lang.security.LabelCache;
 import fabric.lang.security.SecurityCache;
 import fabric.worker.Store;
 import fabric.worker.Worker;
-import fabric.worker.debug.Timing;
 import fabric.worker.remote.RemoteWorker;
-import fabric.worker.remote.UpdateMap;
+import fabric.worker.remote.WriterMap;
 
 /**
  * Stores per-transaction information. Records the objects that are created,
@@ -53,7 +62,7 @@ public final class Log {
   /**
    * A map indicating where to fetch objects from.
    */
-  UpdateMap updateMap;
+  WriterMap writerMap;
 
   /**
    * The sub-transaction.
@@ -68,8 +77,8 @@ public final class Log {
   /**
    * A flag indicating whether this transaction should abort or be retried. This
    * flag should be checked before each operation. This flag is set when it's
-   * non-null and indicates the transaction in the stack that is
-   * to be retried; all child transactions are to be aborted.
+   * non-null and indicates the transaction in the stack that is to be retried;
+   * all child transactions are to be aborted.
    */
   volatile TransactionID retrySignal;
 
@@ -128,7 +137,40 @@ public final class Log {
 
   public static class CommitState {
     public static enum Values {
-      UNPREPARED, PREPARING, PREPARED, PREPARE_FAILED, COMMITTING, COMMITTED, ABORTING, ABORTED
+      /**
+       * Signifies a transaction before it has been prepared or aborted.
+       */
+      UNPREPARED,
+      /**
+       * Signifies a transaction that is currently being prepared.
+       */
+      PREPARING,
+      /**
+       * Signifies a transaction that has successfully prepared, but has not yet
+       * been committed.
+       */
+      PREPARED,
+      /**
+       * Signifies a transaction that has failed to prepare, but has not yet
+       * been rolled back.
+       */
+      PREPARE_FAILED,
+      /**
+       * Signifies a transaction that is currently being committed.
+       */
+      COMMITTING,
+      /**
+       * Signifies a transaction that has been committed.
+       */
+      COMMITTED,
+      /**
+       * Signifies a transaction that is currently being aborted.
+       */
+      ABORTING,
+      /**
+       * Signifies a transaction that has been aborted.
+       */
+      ABORTED
     }
 
     public Values value = Values.UNPREPARED;
@@ -167,7 +209,7 @@ public final class Log {
     if (parent != null) {
       try {
         Timing.SUBTX.begin();
-        this.updateMap = new UpdateMap(parent.updateMap);
+        this.writerMap = new WriterMap(parent.writerMap);
         synchronized (parent) {
           parent.child = this;
         }
@@ -179,9 +221,11 @@ public final class Log {
         Timing.SUBTX.end();
       }
     } else {
-      this.updateMap = new UpdateMap(this.tid.topTid);
+      this.writerMap = new WriterMap(this.tid.topTid);
       commitState = new CommitState();
-      this.securityCache = new SecurityCache(null);
+
+      LabelCache labelCache = Worker.getWorker().labelCache;
+      this.securityCache = new SecurityCache(labelCache);
 
       // New top-level frame. Register it in the transaction registry.
       TransactionRegistry.register(this);
@@ -238,7 +282,7 @@ public final class Log {
 
     return result;
   }
-  
+
   /**
    * @return a set of stores to contact when checking for object freshness.
    */
@@ -248,7 +292,7 @@ public final class Log {
     for (ReadMapEntry entry : readsReadByParent) {
       result.add(entry.obj.store);
     }
-    
+
     return result;
   }
 
@@ -256,9 +300,9 @@ public final class Log {
    * Returns a map from onums to version numbers of objects read at the given
    * store. Reads on created objects are never included.
    * 
-   * @param includeModified whether to include reads on modified objects.
+   * @param includeModified
+   *          whether to include reads on modified objects.
    */
-  @SuppressWarnings("unchecked")
   LongKeyMap<Integer> getReadsForStore(Store store, boolean includeModified) {
     LongKeyMap<Integer> result = new LongKeyHashMap<Integer>();
     LongKeyMap<ReadMapEntry> submap = reads.get(store);
@@ -267,22 +311,28 @@ public final class Log {
     for (LongKeyMap.Entry<ReadMapEntry> entry : submap.entrySet()) {
       result.put(entry.getKey(), entry.getValue().versionNumber);
     }
-    
+
     if (parent != null) {
       for (ReadMapEntry entry : readsReadByParent) {
-        result.put(entry.obj.onum, entry.versionNumber);
+        if (store.equals(entry.obj.store)) {
+          result.put(entry.obj.onum, entry.versionNumber);
+        }
       }
     }
-    
+
     if (store.isLocalStore()) {
       Iterable<_Impl> writesToExclude =
-          includeModified ? Collections.EMPTY_LIST : localStoreWrites;
-      for (_Impl write : Util.chain(writesToExclude, localStoreCreates))
+          includeModified ? Collections.<_Impl> emptyList() : localStoreWrites;
+      @SuppressWarnings("unchecked")
+      Iterable<_Impl> chain = SysUtil.chain(writesToExclude, localStoreCreates);
+      for (_Impl write : chain)
         result.remove(write.$getOnum());
     } else {
       Iterable<_Impl> writesToExclude =
-          includeModified ? Collections.EMPTY_LIST : writes;
-      for (_Impl write : Util.chain(writesToExclude, creates))
+          includeModified ? Collections.<_Impl> emptyList() : writes;
+      @SuppressWarnings("unchecked")
+      Iterable<_Impl> chain = SysUtil.chain(writesToExclude, creates);
+      for (_Impl write : chain)
         if (write.$getStore() == store) result.remove(write.$getOnum());
     }
 
@@ -365,7 +415,6 @@ public final class Log {
    * Updates logs and data structures in <code>_Impl</code>s to abort this
    * transaction. All locks held by this transaction are released.
    */
-  @SuppressWarnings("unchecked")
   void abort() {
     // Release read locks.
     for (LongKeyMap<ReadMapEntry> submap : reads) {
@@ -378,7 +427,9 @@ public final class Log {
       entry.releaseLock(this);
 
     // Roll back writes and release write locks.
-    for (_Impl write : Util.chain(writes, localStoreWrites)) {
+    @SuppressWarnings("unchecked")
+    Iterable<_Impl> chain = SysUtil.chain(writes, localStoreWrites);
+    for (_Impl write : chain) {
       synchronized (write) {
         write.$copyStateFrom(write.$history);
 
@@ -405,9 +456,9 @@ public final class Log {
       securityCache.reset();
 
       if (parent != null) {
-        updateMap = new UpdateMap(parent.updateMap);
+        writerMap = new WriterMap(parent.writerMap);
       } else {
-        updateMap = new UpdateMap(tid.topTid);
+        writerMap = new WriterMap(tid.topTid);
       }
 
       if (retrySignal != null) {
@@ -520,9 +571,9 @@ public final class Log {
     // Replace the parent's security cache with the current cache.
     parent.securityCache.set((SecurityCache) securityCache);
 
-    // Merge the update map.
-    synchronized (parent.updateMap) {
-      parent.updateMap.putAll(updateMap);
+    // Merge the writer map.
+    synchronized (parent.writerMap) {
+      parent.writerMap.putAll(writerMap);
     }
 
     synchronized (parent) {
@@ -535,7 +586,6 @@ public final class Log {
    * transaction. Assumes this is a top-level transaction. All locks held by
    * this transaction are released.
    */
-  @SuppressWarnings("unchecked")
   void commitTopLevel() {
     // Release read locks.
     for (LongKeyMap<ReadMapEntry> submap : reads) {
@@ -549,7 +599,9 @@ public final class Log {
       throw new InternalError("something was read by a non-existent parent");
 
     // Release write locks and ownerships; update version numbers.
-    for (_Impl obj : Util.chain(writes, localStoreWrites)) {
+    @SuppressWarnings("unchecked")
+    Iterable<_Impl> chain = SysUtil.chain(writes, localStoreWrites);
+    for (_Impl obj : chain) {
       if (!obj.$isOwned) {
         // The cached object is out-of-date. Evict it.
         obj.$ref.evict();
@@ -559,6 +611,7 @@ public final class Log {
       synchronized (obj) {
         obj.$writer = null;
         obj.$writeLockHolder = null;
+        obj.$writeLockStackTrace = null;
         obj.$version++;
         obj.$readMapEntry.versionNumber++;
         obj.$isOwned = false;
@@ -572,7 +625,9 @@ public final class Log {
     }
 
     // Release write locks on created objects and set version numbers.
-    for (_Impl obj : Util.chain(creates, localStoreCreates)) {
+    @SuppressWarnings("unchecked")
+    Iterable<_Impl> chain2 = SysUtil.chain(creates, localStoreCreates);
+    for (_Impl obj : chain2) {
       if (!obj.$isOwned) {
         // The cached object is out-of-date. Evict it.
         obj.$ref.evict();
@@ -581,10 +636,14 @@ public final class Log {
 
       obj.$writer = null;
       obj.$writeLockHolder = null;
+      obj.$writeLockStackTrace = null;
       obj.$version = 1;
       obj.$readMapEntry.versionNumber = 1;
       obj.$isOwned = false;
     }
+
+    // Merge the security cache into the top-level label cache.
+    securityCache.mergeWithTopLevel();
   }
 
   /**
@@ -711,6 +770,7 @@ public final class Log {
    * 
    * @deprecated
    */
+  @Deprecated
   public void renumberObject(Store store, long onum, long newOnum) {
     ReadMapEntry entry = reads.remove(store, onum);
     if (entry != null) {
@@ -718,5 +778,10 @@ public final class Log {
     }
 
     if (child != null) child.renumberObject(store, onum, newOnum);
+  }
+
+  @Override
+  public String toString() {
+    return "[" + tid + "]";
   }
 }

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -15,27 +15,28 @@
  */
 package fabric.visit;
 
-import fabric.types.SilenceableSolverGLB;
+import jif.ast.JifMethodDecl;
+import jif.visit.LabelChecker;
 import polyglot.ast.NodeFactory;
 import polyglot.frontend.Job;
 import polyglot.types.TypeSystem;
-import jif.ast.JifMethodDecl;
-import jif.visit.LabelChecker;
+import fabric.types.SilenceableSolverGLB;
 
 public class FabricLabelChecker extends LabelChecker {
-  public FabricLabelChecker(Job job, TypeSystem ts, NodeFactory nf, boolean solvePerClassBody, boolean solvePerMethod, boolean doLabelSubst) {
+  public FabricLabelChecker(Job job, TypeSystem ts, NodeFactory nf,
+      boolean solvePerClassBody, boolean solvePerMethod, boolean doLabelSubst) {
     super(job, ts, nf, solvePerClassBody, solvePerMethod, doLabelSubst);
   }
-  
+
   @Override
   public JifMethodDecl leavingMethod(JifMethodDecl n) {
     if (solvePerMethod) {
-        // solving by class. We need to solve the constraints
-        JifMethodDecl result = (JifMethodDecl)solveConstraints(n);
-        if (!((SilenceableSolverGLB)solver()).isSolved()) {
-          return null;
-        }
-        return result;
+      // solving by class. We need to solve the constraints
+      JifMethodDecl result = (JifMethodDecl) solveConstraints(n);
+      if (!((SilenceableSolverGLB) solver()).isSolved()) {
+        return null;
+      }
+      return result;
     }
     return n;
   }

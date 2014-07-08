@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -21,9 +21,7 @@ import polyglot.ast.Expr;
  * Exprs that have label and location annotations should implement this.
  */
 public interface Annotated extends Expr {
-  Expr label();
   Expr location();
-  
-  Annotated label(Expr label);
+
   Annotated location(Expr location);
 }

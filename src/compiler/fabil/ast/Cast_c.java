@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -15,12 +15,12 @@
  */
 package fabil.ast;
 
-import fabil.types.FabILTypeSystem;
 import polyglot.ast.Expr;
 import polyglot.ast.TypeNode;
 import polyglot.types.Type;
 import polyglot.util.Position;
 import polyglot.visit.AscriptionVisitor;
+import fabil.types.FabILTypeSystem;
 
 public class Cast_c extends polyglot.ast.Cast_c {
 
@@ -28,12 +28,6 @@ public class Cast_c extends polyglot.ast.Cast_c {
     super(pos, castType, expr);
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see polyglot.ast.Cast_c#childExpectedType(polyglot.ast.Expr,
-   *      polyglot.visit.AscriptionVisitor)
-   */
   @Override
   public Type childExpectedType(Expr child, AscriptionVisitor av) {
     if (child == expr) {
@@ -42,7 +36,7 @@ public class Cast_c extends polyglot.ast.Cast_c {
       if (ts.isJavaInlineable(toType)) return ts.Object();
       if (ts.isFabricReference(toType)) return ts.FObject();
     }
-    
+
     return super.childExpectedType(child, av);
   }
 

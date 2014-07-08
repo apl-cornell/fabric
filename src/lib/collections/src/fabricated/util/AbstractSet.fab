@@ -1,0 +1,89 @@
+/**
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
+ *
+ * This file is part of Fabric.
+ *
+ * Fabric is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * Fabric is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ */
+package fabricated.util;
+
+/**
+ * An abstract implementation of Set to make it easier to create your own
+ * implementations. In order to create a Set, subclass AbstractSet and
+ * implement the same methods that are required for AbstractCollection
+ * (although these methods must of course meet the requirements that Set puts
+ * on them - specifically, no element may be in the set more than once). This
+ * class simply provides implementations of equals() and hashCode() to fulfil
+ * the requirements placed on them by the Set interface.
+ *
+ * @author Original author unknown
+ * @author Eric Blake (ebb9@email.byu.edu)
+ * @see Collection
+ * @see AbstractCollection
+ * @see Set
+ * @see HashSet
+ * @see TreeSet
+ * @see LinkedHashSet
+ * @since 1.2
+ * @status updated to 1.4
+ */
+public abstract class AbstractSet[label L] extends AbstractCollection[L] implements Set[L]
+{
+
+  /**
+   * The main constructor, for use by subclasses.
+   */
+  protected AbstractSet(Comparator[L]{L} compare)
+  {
+    super(compare);
+  }
+
+  /**
+   * Removes from this set all elements in the given collection (optional
+   * operation). This implementation uses <code>size()</code> to determine
+   * the smaller collection.  Then, if this set is smaller, it iterates
+   * over the set, calling Iterator.remove if the collection contains
+   * the element.  If this set is larger, it iterates over the collection,
+   * calling Set.remove for all elements in the collection. Note that
+   * this operation will fail if a remove methods is not supported.
+   *
+   * @param c the collection of elements to remove
+   * @return true if the set was modified as a result
+   * @throws UnsupportedOperationException if remove is not supported
+   * @throws NullPointerException if the collection is null
+   * @see AbstractCollection#remove(Object)
+   * @see Collection#contains(Object)
+   * @see Iterator#remove()
+   */
+  public boolean{L} removeAll{L}(Collection[L]{L} c) throws (UnsupportedOperationException{L}, 
+      ClassCastException{L}, NullPointerException{L})
+  {
+    int oldsize = size();
+    int count = c.size();
+    final Store localStore = worker$.getLocalStore();
+    if (L <= new label {*<-localStore} && new label {*->localStore} <= L) {    
+      Iterator itr;
+      if (oldsize < count)
+      {
+        for (itr = iterator(localStore), count = oldsize; count > 0; count--)
+          if (c.contains(itr.next()))
+            itr.remove();
+      }
+      else {
+        for (itr = c.iterator(localStore); count > 0; count--)
+          remove(itr.next());
+      }
+      return oldsize != size();
+    } 
+    else
+      throw new Error("Cannot create iterator on local store.");
+  }
+}

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -39,7 +39,7 @@ public class FrontPage extends AuthenticatedAction[BankPrincipal] authority (Ban
     public final void invokeImpl{*lbl}(label{*lbl} lbl,
             Request[BankPrincipal]{*lbl} req,
             Servlet[BankPrincipal]{*lbl} servlet,
-            AuthSessState[lbl]{*lbl} state,
+            AuthSessState{*lbl} state,
             principal{*lbl} currentUser) 
             throws (ServletException{*lbl;req.session←})
             where caller(req.session),
@@ -53,7 +53,8 @@ public class FrontPage extends AuthenticatedAction[BankPrincipal] authority (Ban
 
         atomic {
             // Display the front page only for the bank principal
-            if (currentUser equiv BankPrincipal) {
+            if (currentUser equiv BankPrincipal
+                && lbl <= new label {BankPrincipal->}) {
                 FabricWorker w = worker$;
                 if (w == null) throw new ServletException("Internal Error");
                 final Store store = worker$.getStore(Config.bankStoreName);

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -17,43 +17,30 @@ package fabric.ast;
 
 import java.util.List;
 
-import jif.types.label.Label;
-
-import fabric.ExtensionInfo;
-import fabric.FabricOptions;
-import fabric.types.FabricParsedClassType;
-import fabric.types.FabricTypeSystem;
-
+import jif.ast.ConstraintNode;
+import jif.ast.ParamDecl;
+import jif.ast.PrincipalNode;
+import jif.types.Assertion;
 import polyglot.ast.ClassBody;
-import polyglot.ast.ClassDecl;
-import polyglot.ast.ClassMember;
-import polyglot.ast.FieldDecl;
 import polyglot.ast.Id;
-import polyglot.ast.Node;
 import polyglot.ast.TypeNode;
 import polyglot.main.Report;
 import polyglot.types.Flags;
 import polyglot.types.SemanticException;
-import polyglot.types.Type;
 import polyglot.util.Position;
 import polyglot.visit.AmbiguityRemover;
-import polyglot.visit.TypeChecker;
+import fabric.types.FabricTypeSystem;
 
 public class ClassDecl_c extends jif.ast.JifClassDecl_c {
 
-  @SuppressWarnings("unchecked")
-  public ClassDecl_c(Position pos, Flags flags, Id name, List params,
-                     TypeNode superClass, List interfaces, List authority,
-                     ClassBody body) {
-    super(pos, flags, name, params, superClass, interfaces, authority, body);
+  public ClassDecl_c(Position pos, Flags flags, Id name,
+      List<ParamDecl> params, TypeNode superClass, List<TypeNode> interfaces,
+      List<PrincipalNode> authority,
+      List<ConstraintNode<Assertion>> constraints, ClassBody body) {
+    super(pos, flags, name, params, superClass, interfaces, authority,
+        constraints, body);
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see polyglot.ast.ClassDecl_c#setSuperClass(polyglot.visit.AmbiguityRemover,
-   *      polyglot.ast.TypeNode)
-   */
   @Override
   protected void setSuperClass(AmbiguityRemover ar, TypeNode superClass)
       throws SemanticException {
@@ -70,50 +57,9 @@ public class ClassDecl_c extends jif.ast.JifClassDecl_c {
       // is not the same as ts.Object() nor ts.FObject(). As such, the default
       // superclass is ts.FObject().
       if (Report.should_report(Report.types, 3))
-        Report.report(3, "setting superclass of " + type + " to "
-            + ts.FObject());
+        Report.report(3,
+            "setting superclass of " + type + " to " + ts.FObject());
       type.superType(ts.FObject());
     }
-  }
-  
-  @SuppressWarnings("unchecked")
-  @Override
-  public Node typeCheck(TypeChecker tc) throws SemanticException {
-    ClassDecl cd = (ClassDecl)super.typeCheck(tc);
-    FabricParsedClassType pct = (FabricParsedClassType)cd.type();
-    Label defaultFieldLabel = pct.defaultFieldLabel();
-    
-    FabricTypeSystem ts = (FabricTypeSystem)tc.typeSystem();
-    
-    if (!ts.isFabricClass(pct)) {
-      // No need to check Java classes implemented in Fabric.
-      return cd;
-    }
-    
-    for (ClassMember cm : (List<ClassMember>)cd.body().members()) {
-      if (cm instanceof FieldDecl) {
-        FieldDecl fd = (FieldDecl)cm;
-
-        // Skip static fields.
-        if (fd.flags().isStatic()) continue;
-        
-        // If this is a signature then dont' apply the default field restriction
-        FabricOptions opts = (FabricOptions) ((ExtensionInfo) tc.job().extensionInfo()).getOptions();
-        boolean sigMode = opts.signatureMode();
-        
-        Type ft = fd.type().type();
-        Label fl = ts.labelOfType(ft);
-        // TODO: Enable this for fabric signatures for fabil classes
-        // Disable for non fabric classes
-        if (ts.isFabricClass(ft) && !ts.equals(defaultFieldLabel, fl) && !sigMode) {
-          throw new SemanticException("The field " + fd.fieldInstance() + " has a different label than " +
-          		              "the default field label " + defaultFieldLabel + 
-          		              "of the class " + pct + ".",
-                                      fd.position());
-        }
-      }
-    }
-    
-    return cd;
   }
 }

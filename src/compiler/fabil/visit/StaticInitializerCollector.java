@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -26,7 +26,7 @@ import fabil.types.FabILTypeSystem;
  * atomic static initializer.
  */
 public class StaticInitializerCollector extends NodeVisitor {
-  
+
   protected FabILNodeFactory nf;
   protected FabILTypeSystem ts;
 

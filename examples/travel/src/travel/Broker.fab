@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -18,9 +18,9 @@ package travel;
 import fabric.util.Map;
 
 public class Broker[principal bank, principal customer] extends AbstractPrincipal { // on broker worker (and store)
-    final Account[bank]{this←} customerAcct;
-    final Account[bank]{this←} airlineAcct;
-    final principal{this←} airline;
+    final Account[bank]{this←}@{this.store$->} customerAcct;
+    final Account[bank]{this←}@{this.store$->} airlineAcct;
+    final principal{this←}@{this.store$->} airline;
     final Tickets[bank, airline, customer]{this←} custTickets;
 
     public boolean{bank->customerAcct.user; this←; bank<-; airline<-; customer←} coordinatePurchase{}(

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -26,22 +26,15 @@ public interface IntegPolicy extends Policy {
    * (i.e., DelegationPairs) that this join result depends upon.
    */
   IntegPolicy join(Store store, IntegPolicy p, Set/* <DelegationPair> */dependencies);
-
-  IntegPolicy join(IntegPolicy p, Set/* <DelegationPair> */dependencies);
-
+  
   /**
    * Return the meet of this policy and p. The set s contains all delegations
    * (i.e., DelegationPairs) that this meet result depends upon.
    */
   IntegPolicy meet(Store store, IntegPolicy p, Set/* <DelegationPair> */dependencies);
-
-  IntegPolicy meet(IntegPolicy p, Set/* <DelegationPair> */dependencies);
-
+  
   IntegPolicy join(Store store, IntegPolicy p);
-
-  IntegPolicy join(IntegPolicy p);
 
   IntegPolicy meet(Store store, IntegPolicy p);
 
-  IntegPolicy meet(IntegPolicy p);
 }

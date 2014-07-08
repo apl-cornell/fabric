@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -20,8 +20,11 @@ import java.util.List;
 import polyglot.ast.Expr_c;
 import polyglot.ast.Node;
 import polyglot.ast.Term;
+import polyglot.util.CodeWriter;
+import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
 import polyglot.visit.CFGBuilder;
+import polyglot.visit.PrettyPrinter;
 import polyglot.visit.TypeChecker;
 import fabil.types.FabILTypeSystem;
 
@@ -31,21 +34,26 @@ public class StoreGetter_c extends Expr_c implements StoreGetter {
     super(pos);
   }
 
-  @SuppressWarnings("rawtypes")
   @Override
-  public List acceptCFG(CFGBuilder v, List succs) {
+  public <T> List<T> acceptCFG(CFGBuilder<?> v, List<T> succs) {
     return succs;
   }
 
+  @Override
   public Term firstChild() {
     return null;
   }
-  
+
   /** Type check the expression. */
   @Override
   public Node typeCheck(TypeChecker tc) {
     FabILTypeSystem fts = (FabILTypeSystem) tc.typeSystem();
     return type(fts.Store());
-  }  
-  
+  }
+
+  @Override
+  public void prettyPrint(CodeWriter w, PrettyPrinter pp) {
+    throw new InternalCompilerError("StoreGetter should have been rewritten.");
+  }
+
 }

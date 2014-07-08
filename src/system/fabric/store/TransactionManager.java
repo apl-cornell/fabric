@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -18,18 +18,31 @@ package fabric.store;
 import static fabric.common.Logging.STORE_TRANSACTION_LOGGER;
 
 import java.security.PrivateKey;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
+import java.util.Random;
 
 import fabric.common.AuthorizationUtil;
 import fabric.common.ONumConstants;
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
 import fabric.common.exceptions.AccessException;
-import fabric.common.util.*;
+import fabric.common.util.LongHashSet;
+import fabric.common.util.LongIterator;
+import fabric.common.util.LongKeyHashMap;
+import fabric.common.util.LongKeyMap;
+import fabric.common.util.LongKeyMap.Entry;
+import fabric.common.util.LongSet;
+import fabric.common.util.Pair;
 import fabric.dissemination.Glob;
 import fabric.lang.Statistics;
 import fabric.lang.security.Label;
-import fabric.lang.security.NodePrincipal;
+import fabric.lang.security.Principal;
 import fabric.store.db.GroupContainer;
 import fabric.store.db.ObjectDB;
 import fabric.worker.Store;
@@ -37,12 +50,11 @@ import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.Worker;
 import fabric.worker.Worker.Code;
-import fabric.worker.remote.RemoteWorker;
 
 public class TransactionManager {
 
   private static final int INITIAL_OBJECT_VERSION_NUMBER = 1;
-  private static final int MAX_GROUP_SIZE = 75;
+  private static final int MIN_GROUP_SIZE = 75;
 
   private static final Random rand = new Random();
 
@@ -78,26 +90,23 @@ public class TransactionManager {
   /**
    * Instruct the transaction manager that the given transaction is aborting
    */
-  public void abortTransaction(NodePrincipal worker, long transactionID)
+  public void abortTransaction(Principal worker, long transactionID)
       throws AccessException {
     synchronized (database) {
       database.rollback(transactionID, worker);
-      STORE_TRANSACTION_LOGGER.fine("Aborted transaction "
-          + transactionID);
+      STORE_TRANSACTION_LOGGER.fine("Aborted transaction " + transactionID);
     }
   }
 
   /**
    * Execute the commit phase of two phase commit.
    */
-  public void commitTransaction(RemoteWorker workerNode,
-      NodePrincipal workerPrincipal, long transactionID)
+  public void commitTransaction(Principal workerPrincipal, long transactionID)
       throws TransactionCommitFailedException {
     synchronized (database) {
       try {
-        database.commit(transactionID, workerNode, workerPrincipal, sm);
-        STORE_TRANSACTION_LOGGER.fine("Committed transaction "
-            + transactionID);
+        database.commit(transactionID, workerPrincipal, sm);
+        STORE_TRANSACTION_LOGGER.fine("Committed transaction " + transactionID);
       } catch (final AccessException e) {
         throw new TransactionCommitFailedException("Insufficient Authorization");
       } catch (final RuntimeException e) {
@@ -138,7 +147,7 @@ public class TransactionManager {
    *           If the transaction would cause a conflict or if the worker is
    *           insufficiently privileged to execute the transaction.
    */
-  public boolean prepare(NodePrincipal worker, PrepareRequest req)
+  public boolean prepare(Principal worker, PrepareRequest req)
       throws TransactionPrepareFailedException {
     final long tid = req.tid;
     boolean result = false;
@@ -256,8 +265,8 @@ public class TransactionManager {
           try {
             curVersion = database.getVersion(onum);
           } catch (AccessException e) {
-            throw new TransactionPrepareFailedException(versionConflicts, e
-                .getMessage());
+            throw new TransactionPrepareFailedException(versionConflicts,
+                e.getMessage());
           }
           if (curVersion != version) {
             versionConflicts.put(onum, database.read(onum));
@@ -282,7 +291,7 @@ public class TransactionManager {
       synchronized (database) {
         database.finishPrepare(tid, worker);
       }
-      
+
       STORE_TRANSACTION_LOGGER.fine("Prepared transaction " + tid);
 
       return result;
@@ -302,12 +311,13 @@ public class TransactionManager {
 
   /**
    * Checks that the worker principal has permissions to read/write the given
-   * objects. If it doesn't, a AccessException is thrown.
+   * objects. If it doesn't, an AccessException is thrown.
    */
-  private void checkPerms(final NodePrincipal worker, final LongSet reads,
+  private void checkPerms(final Principal worker, final LongSet reads,
       final Collection<SerializedObject> writes) throws AccessException {
     // The code that does the actual checking.
     Code<AccessException> checker = new Code<AccessException>() {
+      @Override
       public AccessException run() {
         Store store = Worker.getWorker().getStore(database.getName());
 
@@ -317,13 +327,12 @@ public class TransactionManager {
           fabric.lang.Object storeCopy =
               new fabric.lang.Object._Proxy(store, onum);
 
-          Label label = storeCopy.get$label();
+          Label label = storeCopy.get$$updateLabel();
 
           // Check read permissions.
           if (!AuthorizationUtil.isReadPermitted(worker, label.$getStore(),
               label.$getOnum())) {
-            return new AccessException("Insufficient privileges to read "
-                + "object " + onum);
+            return new AccessException("read", worker, storeCopy);
           }
         }
 
@@ -333,13 +342,12 @@ public class TransactionManager {
           fabric.lang.Object storeCopy =
               new fabric.lang.Object._Proxy(store, onum);
 
-          Label label = storeCopy.get$label();
+          Label label = storeCopy.get$$updateLabel();
 
           // Check write permissions.
           if (!AuthorizationUtil.isWritePermitted(worker, label.$getStore(),
               label.$getOnum())) {
-            return new AccessException("Insufficient privileges to write "
-                + "object " + onum);
+            return new AccessException("write", worker, storeCopy);
           }
         }
 
@@ -347,13 +355,16 @@ public class TransactionManager {
       }
     };
 
-    AccessException failure = Worker.runInTransaction(null, checker);
+    AccessException failure = Worker.runInTopLevelTransaction(checker, true);
 
     if (failure != null) throw failure;
   }
 
   /**
-   * Returns a GroupContainer containing the specified object.
+   * Returns a GroupContainer containing the specified object. All surrogates
+   * referenced by any object in the group will also be in the group. This
+   * ensures that the worker will not reveal information when dereferencing
+   * surrogates.
    * 
    * @param handler
    *          Used to track read statistics. Can be null.
@@ -364,42 +375,29 @@ public class TransactionManager {
    *          True if the subscriber is a dissemination node; false if it's a
    *          worker.
    */
-  GroupContainer getGroupContainerAndSubscribe(long onum,
-      RemoteWorker subscriber, boolean dissemSubscribe, MessageHandlerThread handler)
+  GroupContainer getGroupContainerAndSubscribe(long onum)
       throws AccessException {
     GroupContainer container;
     synchronized (database) {
       container = database.getCachedGroupContainer(onum);
       if (container != null) {
-        if (subscriber != null)
-          sm.subscribe(onum, subscriber, dissemSubscribe);
+        // if (subscriber != null)
+        // sm.subscribe(onum, subscriber, dissemSubscribe);
         return container;
       }
+
+      // if (subscriber != null) sm.subscribe(onum, subscriber, dissemSubscribe);
+      GroupContainer group = makeGroup(onum);
+      if (group == null) throw new AccessException(database.getName(), onum);
+
+      return group;
     }
-
-    // XXX Ideally, the subscription registration should happen atomically with
-    // the read.
-    if (subscriber != null) sm.subscribe(onum, subscriber, dissemSubscribe);
-    ObjectGroup group = readGroup(onum, handler);
-    if (group == null) throw new AccessException(database.getName(), onum);
-
-    Store store = Worker.getWorker().getStore(database.getName());
-    container = new GroupContainer(store, signingKey, group);
-
-    // Cache the container.
-    synchronized (database) {
-      database.cacheGroupContainer(group.objects().keySet(), container);
-    }
-
-    if (handler != null) {
-      handler.getSession().recordGlobCreated(group.objects().size());
-    }
-
-    return container;
   }
 
   /**
-   * Returns a Glob containing the specified object.
+   * Returns a Glob containing the specified object. All surrogates referenced
+   * by any object in the group will also be in the group. This ensures that the
+   * worker will not reveal information when dereferencing surrogates.
    * 
    * @param subscriber
    *          If non-null, then the given worker will be subscribed to the
@@ -407,14 +405,15 @@ public class TransactionManager {
    * @param handler
    *          Used to track read statistics.
    */
-  public Glob getGlob(long onum, RemoteWorker subscriber,
-      MessageHandlerThread handler) throws AccessException {
-    return getGroupContainerAndSubscribe(onum, subscriber, true, handler)
-        .getGlob();
+  public Glob getGlob(long onum) throws AccessException {
+    return getGroupContainerAndSubscribe(onum).getGlob();
   }
 
   /**
-   * Returns an ObjectGroup containing the specified object.
+   * Returns an ObjectGroup containing the specified object. All surrogates
+   * referenced by any object in the group will also be in the group. This
+   * ensures that the worker will not reveal information when dereferencing
+   * surrogates.
    * 
    * @param principal
    *          The principal performing the read.
@@ -426,56 +425,118 @@ public class TransactionManager {
    * @param handler
    *          Used to track read statistics.
    */
-  public ObjectGroup getGroup(NodePrincipal principal, RemoteWorker subscriber,
-      long onum, MessageHandlerThread handler) throws AccessException {
-    ObjectGroup group =
-        getGroupContainerAndSubscribe(onum, subscriber, false, handler)
-            .getGroup(principal);
+  public ObjectGroup getGroup(Principal principal, long onum)
+      throws AccessException {
+    ObjectGroup group = getGroupContainerAndSubscribe(onum).getGroup(principal);
     if (group == null) throw new AccessException(database.getName(), onum);
     return group;
   }
 
   /**
-   * Reads a group of objects from the object database.
+   * Creates a group of objects from the object database. All surrogates
+   * referenced by any object in the group will also be in the group. This
+   * ensures that the worker will not reveal information when dereferencing
+   * surrogates.
    * 
    * @param onum
    *          The group's head object.
    * @param handler
    *          Used to track read statistics.
    */
-  private ObjectGroup readGroup(long onum, MessageHandlerThread handler) {
-    SerializedObject obj = read(onum);
+  private GroupContainer makeGroup(long onum) {
+    // Obtain a partial group for the object.
+    PartialObjectGroup partialGroup = readPartialGroup(onum);
+
+    for (Entry<SerializedObject> entry : partialGroup.frontier.entrySet()) {
+      long frontierOnum = entry.getKey();
+      if (database.getCachedGroupContainer(frontierOnum) != null) continue;
+
+      SerializedObject frontierObj = entry.getValue();
+      PartialObjectGroup frontierGroup =
+          readPartialGroup(frontierOnum, frontierObj);
+      if (frontierGroup.size() >= MIN_GROUP_SIZE) continue;
+
+      // Group on the frontier isn't big enough. Coalesce it with the group
+      // we're creating.
+      database.coalescePartialGroups(frontierGroup, partialGroup);
+    }
+
+    return database.promotePartialGroup(signingKey, partialGroup);
+  }
+
+  /**
+   * Returns a partial group of objects. A partial group is a group containing
+   * at most MIN_GROUP_SIZE objects, but may need to be grown because the object
+   * sub-graphs on the group's frontier may not be large enough to fill an
+   * entire group.
+   */
+  PartialObjectGroup readPartialGroup(long onum) {
+    return readPartialGroup(onum, null);
+  }
+
+  /**
+   * Returns a partial group of objects. A partial group is a group containing
+   * at most MIN_GROUP_SIZE objects, but may need to be grown because the object
+   * sub-graphs on the group's frontier may not be large enough to fill an
+   * entire group.
+   * 
+   * @param obj
+   *          The object corresponding to the given onum. If null, the object
+   *          will be read from the database.
+   */
+  private PartialObjectGroup readPartialGroup(long onum, SerializedObject obj) {
+    PartialObjectGroup partialGroup = database.getCachedPartialGroup(onum);
+    if (partialGroup != null) return partialGroup;
+
+    if (obj == null) obj = read(onum);
     if (obj == null) return null;
 
-    long headLabelOnum = obj.getLabelOnum();
+    long headLabelOnum = obj.getUpdateLabelOnum();
 
     LongKeyMap<SerializedObject> group =
-        new LongKeyHashMap<SerializedObject>(MAX_GROUP_SIZE);
+        new LongKeyHashMap<SerializedObject>(MIN_GROUP_SIZE);
+    LongKeyMap<SerializedObject> frontier =
+        new LongKeyHashMap<SerializedObject>();
+
+    // Number of non-surrogate objects in the group.
+    int groupSize = 0;
+
     Queue<SerializedObject> toVisit = new LinkedList<SerializedObject>();
     LongSet seen = new LongHashSet();
 
-    // Do a breadth-first traversal and add objects to an object group.
+    // Do a breadth-first traversal and add objects to the group.
     toVisit.add(obj);
     seen.add(onum);
     while (!toVisit.isEmpty()) {
-      SerializedObject curObj = toVisit.remove();
-      group.put(curObj.getOnum(), curObj);
+      SerializedObject curObject = toVisit.remove();
+      long curOnum = curObject.getOnum();
 
-      if (handler != null) {
-        handler.getSession().recordObjectSent(curObj.getClassName());
+      // Always add surrogates.
+      if (curObject.isSurrogate()) {
+        group.put(curOnum, curObject);
+        continue;
       }
 
-      if (group.size() == MAX_GROUP_SIZE) break;
+      // Ensure that the object hasn't been grouped already.
+      if (database.getCachedGroupID(curOnum) != null) continue;
 
-      for (Iterator<Long> it = curObj.getIntraStoreRefIterator(); it.hasNext();) {
+      if (groupSize >= MIN_GROUP_SIZE) {
+        // Partial group is full. Add the object to the partial group's
+        // frontier.
+        frontier.put(curOnum, curObject);
+        continue;
+      }
+
+      // Add object to partial group.
+      group.put(curOnum, curObject);
+      groupSize++;
+
+      // Visit links outgoing from the object.
+      for (Iterator<Long> it = curObject.getIntraStoreRefIterator(); it
+          .hasNext();) {
         long relatedOnum = it.next();
         if (seen.contains(relatedOnum)) continue;
         seen.add(relatedOnum);
-
-        // Ensure that the related object hasn't been globbed already.
-        synchronized (database) {
-          if (database.getCachedGroupContainer(relatedOnum) != null) continue;
-        }
 
         SerializedObject related = read(relatedOnum);
         if (related == null) continue;
@@ -483,14 +544,17 @@ public class TransactionManager {
         // Ensure that the related object's label is the same as the head
         // object's label. We could be smarter here, but to avoid calling into
         // the worker, let's hope pointer-equality is sufficient.
-        long relatedLabelOnum = related.getLabelOnum();
+        long relatedLabelOnum = related.getUpdateLabelOnum();
         if (headLabelOnum != relatedLabelOnum) continue;
 
         toVisit.add(related);
       }
     }
 
-    return new ObjectGroup(group);
+    PartialObjectGroup result =
+        new PartialObjectGroup(groupSize, group, frontier);
+    database.cachePartialGroup(result);
+    return result;
   }
 
   /**
@@ -512,7 +576,7 @@ public class TransactionManager {
       if (history != null) {
         int promise = history.generatePromise();
         if (promise > 0) {
-          NodePrincipal worker = Worker.getWorker().getPrincipal();
+          Principal worker = Worker.getWorker().getPrincipal();
           synchronized (database) {
             // create a promise
 
@@ -532,7 +596,7 @@ public class TransactionManager {
                 database.beginTransaction(tid, worker);
                 database.registerUpdate(tid, worker, newObj);
                 database.finishPrepare(tid, worker);
-                database.commit(tid, null, worker, sm);
+                database.commit(tid, worker, sm);
               } catch (AccessException exc) {
                 // TODO: this should probably use the store principal instead of
                 // the worker principal, and AccessExceptions should be
@@ -592,7 +656,7 @@ public class TransactionManager {
    * @throws AccessException
    *           if the principal is not allowed to create objects on this store.
    */
-  public long[] newOnums(NodePrincipal worker, int num) throws AccessException {
+  public long[] newOnums(Principal worker, int num) throws AccessException {
     synchronized (database) {
       return database.newOnums(num);
     }
@@ -612,21 +676,21 @@ public class TransactionManager {
    * Checks the given set of objects for staleness and returns a list of updates
    * for any stale objects found.
    */
-  @SuppressWarnings("unchecked")
-  List<SerializedObject> checkForStaleObjects(NodePrincipal worker,
+  List<SerializedObject> checkForStaleObjects(Principal worker,
       LongKeyMap<Integer> versions) throws AccessException {
     // First, check read and write permissions.
     Store store = Worker.getWorker().getStore(database.getName());
     if (worker == null || worker.$getStore() != store
         || worker.$getOnum() != ONumConstants.STORE_PRINCIPAL) {
-      checkPerms(worker, versions.keySet(), Collections.EMPTY_LIST);
+      checkPerms(worker, versions.keySet(),
+          Collections.<SerializedObject> emptyList());
     }
-    
+
     List<SerializedObject> result = new ArrayList<SerializedObject>();
     for (LongKeyMap.Entry<Integer> entry : versions.entrySet()) {
       long onum = entry.getKey();
       int version = entry.getValue();
-      
+
       synchronized (database) {
         int curVersion = database.getVersion(onum);
         if (curVersion != version) {
@@ -634,7 +698,7 @@ public class TransactionManager {
         }
       }
     }
-    
+
     return result;
   }
 

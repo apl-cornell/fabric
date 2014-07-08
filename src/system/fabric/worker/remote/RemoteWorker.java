@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -17,26 +17,39 @@ package fabric.worker.remote;
 
 import java.io.IOException;
 
+import fabric.common.ClassRef;
 import fabric.common.ObjectGroup;
+import fabric.common.SerializedObject;
 import fabric.common.TransactionID;
+import fabric.common.exceptions.AccessException;
+import fabric.common.exceptions.FabricException;
 import fabric.common.exceptions.InternalError;
-import fabric.common.net.naming.SocketAddress;
+import fabric.common.exceptions.NotImplementedException;
+import fabric.common.net.SubSocket;
+import fabric.common.net.SubSocketFactory;
+import fabric.common.util.Pair;
 import fabric.dissemination.Glob;
 import fabric.lang.Object._Impl;
 import fabric.lang.Object._Proxy;
-import fabric.lang.security.NodePrincipal;
+import fabric.lang.security.Principal;
 import fabric.messages.AbortTransactionMessage;
 import fabric.messages.CommitTransactionMessage;
+import fabric.messages.DirtyReadMessage;
+import fabric.messages.InterWorkerStalenessMessage;
+import fabric.messages.Message;
+import fabric.messages.Message.NoException;
 import fabric.messages.ObjectUpdateMessage;
 import fabric.messages.PrepareTransactionMessage;
+import fabric.messages.RemoteCallMessage;
+import fabric.messages.TakeOwnershipMessage;
 import fabric.net.RemoteNode;
 import fabric.net.UnreachableNodeException;
 import fabric.worker.Store;
 import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.Worker;
-import fabric.worker.remote.messages.*;
 import fabric.worker.transaction.Log;
+import fabric.worker.transaction.TakeOwnershipFailedException;
 import fabric.worker.transaction.TransactionManager;
 import fabric.worker.transaction.TransactionRegistry;
 
@@ -49,12 +62,16 @@ import fabric.worker.transaction.TransactionRegistry;
  */
 public final class RemoteWorker extends RemoteNode {
 
+  private transient final SubSocketFactory subSocketFactory;
+
   /**
    * This should only be called by fabric.worker.Worker. If you want a
    * RemoteWorker, use fabric.worker.Worker.getWorker() instead.
    */
   public RemoteWorker(String name) {
-    super(name, true);
+    super(name);
+
+    this.subSocketFactory = Worker.getWorker().authToWorker;
   }
 
   public Object issueRemoteCall(_Proxy receiver, String methodName,
@@ -64,38 +81,37 @@ public final class RemoteWorker extends RemoteNode {
     tm.registerRemoteCall(this);
 
     TransactionID tid = tm.getCurrentTid();
-    UpdateMap updateMap = tm.getUpdateMap();
+    WriterMap writerMap = tm.getWriterMap();
 
-    Class<?> receiverClass =
-        receiver.fetch().$getProxy().getClass().getEnclosingClass();
+    Class<? extends fabric.lang.Object> receiverClass =
+        (Class<? extends fabric.lang.Object>) receiver.fetch().$getProxy()
+            .getClass().getEnclosingClass();
+    ClassRef receiverClassRef = ClassRef.makeRef(receiverClass);
 
     RemoteCallMessage.Response response =
-        new RemoteCallMessage(tid, updateMap, receiverClass, receiver,
-            methodName, parameterTypes, args).send(this);
+        send(new RemoteCallMessage(tid, writerMap, receiverClassRef, receiver,
+            methodName, parameterTypes, args));
 
     // Commit any outstanding subtransactions that occurred as a result of the
     // remote call.
     Log innermost = TransactionRegistry.getInnermostLog(tid.topTid);
     tm.associateAndSyncLog(innermost, tid);
 
-    // Merge in the update map we got.
-    if (response.updateMap != null)
-      tm.getUpdateMap().putAll(response.updateMap);
+    // Merge in the writer map we got.
+    if (response.writerMap != null)
+      tm.getWriterMap().putAll(response.writerMap);
 
     return response.result;
   }
 
   public void prepareTransaction(long tid, long commitTime)
       throws UnreachableNodeException, TransactionPrepareFailedException {
-    new PrepareTransactionMessage(tid, commitTime).send(this);
+    send(new PrepareTransactionMessage(tid, commitTime));
   }
 
   public void commitTransaction(long tid) throws UnreachableNodeException,
       TransactionCommitFailedException {
-    CommitTransactionMessage.Response response =
-        new CommitTransactionMessage(tid).send(this);
-    if (!response.success)
-      throw new TransactionCommitFailedException(response.message);
+    send(new CommitTransactionMessage(tid));
   }
 
   /**
@@ -104,9 +120,9 @@ public final class RemoteWorker extends RemoteNode {
    * @param tid
    *          the tid for the transaction that is aborting.
    */
-  public void abortTransaction(TransactionID tid)
-      throws UnreachableNodeException {
-    new AbortTransactionMessage(tid).send(this);
+  public void abortTransaction(TransactionID tid) throws AccessException,
+      UnreachableNodeException {
+    send(new AbortTransactionMessage(tid));
   }
 
   /**
@@ -116,17 +132,27 @@ public final class RemoteWorker extends RemoteNode {
    *          the tid for the current transaction.
    */
   public void readObject(TransactionID tid, _Impl obj) {
-    _Impl remoteObj = readObject(tid, obj.$getStore(), obj.$getOnum());
+    Pair<Store, SerializedObject> remoteSerializedObj;
+    try {
+      remoteSerializedObj = readObject(tid, obj.$getStore(), obj.$getOnum());
+    } catch (AccessException e) {
+      throw new InternalError("Inter-worker object read failed.", e);
+    }
 
-    if (remoteObj == null)
+    if (remoteSerializedObj == null)
       throw new InternalError("Inter-worker object read failed.");
+
+    _Impl remoteObj =
+        remoteSerializedObj.second.deserialize(remoteSerializedObj.first);
     obj.$copyAppStateFrom(remoteObj);
   }
 
-  public _Impl readObject(TransactionID tid, Store store, long onum) {
-    ReadMessage.Response response =
-        new ReadMessage(tid, store, onum).send(this);
-    return response.obj;
+  public Pair<Store, SerializedObject> readObject(TransactionID tid,
+      Store store, long onum) throws AccessException {
+    DirtyReadMessage.Response response =
+        send(new DirtyReadMessage(tid, store, onum));
+    if (response.obj == null) return null;
+    return new Pair<Store, SerializedObject>(response.store, response.obj);
   }
 
   /**
@@ -136,40 +162,25 @@ public final class RemoteWorker extends RemoteNode {
    *          the tid for the current transaction.
    */
   public void takeOwnership(TransactionID tid, Store store, long onum) {
-    TakeOwnershipMessage.Response response =
-        new TakeOwnershipMessage(tid, store, onum).send(this);
-    if (!response.success) {
-      throw new InternalError("Unable to take ownership of object fab://"
-          + store.name() + "/" + onum + " from " + name + " -- either " + name
-          + " doesn't own the object or authorization has failed.");
+    try {
+      send(new TakeOwnershipMessage(tid, store, onum));
+    } catch (TakeOwnershipFailedException e) {
+      throw new InternalError(e);
     }
   }
 
   /**
    * @return the principal associated with the remote worker.
    */
-  public NodePrincipal getPrincipal() {
-    GetPrincipalMessage.Response response =
-        new GetPrincipalMessage().send(this);
-    final NodePrincipal principal = response.principal;
-    final String expectedPrincipalName;
+  public Principal getPrincipal() {
     try {
-      // Note: this check may not make sense anymore. -mdg
-      expectedPrincipalName = "cn=" + name;
-    } catch (IllegalStateException e) {
-      throw new InternalError(e);
-    }
-
-    boolean authenticated =
-        Worker.runInTransaction(null, new Worker.Code<Boolean>() {
-          public Boolean run() {
-            return principal.name().equals(expectedPrincipalName);
-          }
-        });
-
-    if (authenticated)
+      SubSocket socket = getSocket(subSocketFactory);
+      Principal principal = socket.getPrincipal();
+      recycle(subSocketFactory, socket);
       return principal;
-    else return null;
+    } catch (IOException e) {
+      throw new NotImplementedException(e);
+    }
   }
 
   @Override
@@ -184,8 +195,13 @@ public final class RemoteWorker extends RemoteNode {
    * @return whether the node is resubscribing to the object.
    */
   public boolean notifyObjectUpdate(String store, long onum, Glob glob) {
-    ObjectUpdateMessage.Response response =
-        new ObjectUpdateMessage(store, onum, glob).send(this);
+    ObjectUpdateMessage.Response response;
+    try {
+      response = send(new ObjectUpdateMessage(store, onum, glob));
+    } catch (NoException e) {
+      // This is not possible.
+      throw new InternalError(e);
+    }
     return response.resubscribe;
   }
 
@@ -195,8 +211,13 @@ public final class RemoteWorker extends RemoteNode {
    * @return whether the node is resubscribing to the object.
    */
   public boolean notifyObjectUpdate(long onum, ObjectGroup group) {
-    ObjectUpdateMessage.Response response =
-        new ObjectUpdateMessage(onum, group).send(this);
+    ObjectUpdateMessage.Response response;
+    try {
+      response = send(new ObjectUpdateMessage(onum, group));
+    } catch (NoException e) {
+      // This is not possible.
+      throw new InternalError(e);
+    }
     return response.resubscribe;
   }
 
@@ -205,13 +226,18 @@ public final class RemoteWorker extends RemoteNode {
    * up-to-date.
    */
   public boolean checkForStaleObjects(TransactionID tid) {
-    StalenessCheckMessage.Response response =
-        new StalenessCheckMessage(tid).send(this);
+    InterWorkerStalenessMessage.Response response;
+    try {
+      response = send(new InterWorkerStalenessMessage(tid));
+    } catch (NoException e) {
+      // This is not possible.
+      throw new InternalError(e);
+    }
     return response.result;
   }
 
-  @Override
-  protected SocketAddress lookup() throws IOException {
-    return Worker.getWorker().workerNameService.resolve(name);
+  private <R extends Message.Response, E extends FabricException> R send(
+      Message<R, E> message) throws E {
+    return send(subSocketFactory, message);
   }
 }

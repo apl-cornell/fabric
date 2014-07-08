@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -32,8 +32,8 @@ public class BlogServer {
     Server server = null;
     
     atomic {
-      server = new Server@store(8080);
-      WebAppContext webapp = new WebAppContext@store();
+      server = new Server(8080);
+      WebAppContext webapp = new WebAppContext();
       webapp.setContextPath("/");
       webapp.setWar(jetty_home + "/web");
       webapp.addServlet(BlogServlet.class, "/web");

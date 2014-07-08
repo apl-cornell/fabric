@@ -1,0 +1,43 @@
+/**
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
+ *
+ * This file is part of Fabric.
+ *
+ * Fabric is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * Fabric is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ */
+package auction;
+
+public final class Config {
+  public static final String{*!:} brokerStoreName = "brokerStore";
+  public static final String{*!:} airlineAStoreName = "airlineAStore";
+  public static final String{*!:} airlineBStoreName = "airlineBStore";
+  public static final String{*!:} userStoreName = "userStore";
+  
+  public static final String{*!:} brokerWorkerName = "brokerStore";
+  public static final String{*!:} airlineAWorkerName = "airlineAStore";
+  public static final String{*!:} airlineBWorkerName = "airlineBStore";
+  public static final String{*!:} userWorkerName = "userStore";
+
+  /**
+   * The key for the airlineA server object in the root map.
+   */
+  public static final String{*!:} airlineAServerName = "airlineAServer";
+  
+  /**
+   * The key for the airlineB server object in the root map.
+   */
+  public static final String{*!:} airlineBServerName = "airlineBServer";
+  
+  /**
+   * The key for the user object in the root map.
+   */
+  public static final String{*!:} userServerName = "userServer";
+}

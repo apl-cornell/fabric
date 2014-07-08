@@ -1,0 +1,33 @@
+/**
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
+ *
+ * This file is part of Fabric.
+ *
+ * Fabric is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * Fabric is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ */
+package fabric.lang.security;
+
+/**
+ * A proof that actor can act for granter, by showing that there is a principal
+ * p such that actor can act for p, and p can act for granter. 
+ */
+public final class TransitiveProof[label AccessBound] extends ActsForProof[AccessBound] {
+//    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+    private final ActsForProof[AccessBound]{AccessBound}@{AccessBound} actorToP;
+    private final ActsForProof[AccessBound]{AccessBound}@{AccessBound} pToGranter;
+    private final principal{AccessBound}@{AccessBound} p;
+    public TransitiveProof(ActsForProof[AccessBound]{this} actorToP, principal{this} p, ActsForProof[AccessBound]{this} pToGranter) {
+        super(p, p); // dummy
+        this.actorToP = actorToP;
+        this.pToGranter = pToGranter;
+        this.p = p;
+    }
+}

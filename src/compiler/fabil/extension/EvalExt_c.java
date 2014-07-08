@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -23,11 +23,6 @@ import fabil.visit.ProxyRewriter;
 
 public class EvalExt_c extends FabILExt_c {
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see fabil.extension.FabILExt_c#rewriteProxies(fabil.visit.ProxyRewriter)
-   */
   @Override
   public Node rewriteProxies(ProxyRewriter pr) {
     // Strip off any casts that may have been generated.
@@ -36,15 +31,10 @@ public class EvalExt_c extends FabILExt_c {
     while (expr instanceof Cast) {
       expr = ((Cast) expr).expr();
     }
-    
+
     return eval.expr(expr);
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see polyglot.ast.Ext_c#node()
-   */
   @Override
   public Eval node() {
     return (Eval) super.node();

@@ -1,0 +1,131 @@
+/**
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
+ *
+ * This file is part of Fabric.
+ *
+ * Fabric is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * Fabric is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ */
+package util;
+
+public class Meet extends AbstractPrincipal {
+
+  protected final Principal{this}@{this->} left;
+  protected final Principal{this}@{this->} right;
+
+  public
+  Meet
+  (
+    Principal {this} left,
+    Principal {this} right
+  )
+  {
+    final String leftName  = (left  == null ? "_" : left.name());
+    final String rightName = (right == null ? "_" : right.name());
+    final String fullName  = "(" + leftName + " meet " + rightName + ")";
+
+    this(name, left, right);
+  }
+
+  public
+  Meet
+  (
+    String    {this} name,
+    Principal {this} left,
+    Principal {this} right
+  )
+  {
+    this.left  = left;
+    this.right = right;
+
+    super(name);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Principal methods                                                        //
+  //////////////////////////////////////////////////////////////////////////////
+
+  public
+  boolean {this;p;this←}
+  delegatesTo
+  { // side effects:
+    // TODO
+  }
+  (
+    principal p
+  )
+  {
+    return p == left || p == right;
+  }
+
+  public
+  ActsForProof[{s→}] {this; p; this←; p←;s}
+  findProofUpto
+  {          // side effects:
+    _→;this← // TODO
+  }
+  (
+    Store s,
+    Principal p,
+    java.lang.Object searchState
+  )
+  {
+    if (left actsfor this && right actsfor this) {
+
+      ActsForProof leftProof  = PrincipalUtil.findActsForProof(p, left,  searchState);
+      ActsForProof rightProof = PrincipalUtil.findActsForProof(p, right, searchState);
+
+      if (leftProof != null)
+        return new TransitiveProof(leftProof,  left,  new DelegatesProof(left, this));
+      if (rightProof != null)
+        return new TransitiveProof(rightProof, right, new DelegatesProof(right, this));
+      else
+        return null;
+
+    } else throw new AssertionFailedError("left and right act for meet");
+  }
+
+
+  public
+  void
+  addDelegatesTo
+  {             // side effects:
+    this→;this← // TODO
+  }
+  (
+    principal{this→;this←} p
+  )
+  where
+    caller (this)
+  {
+    // TODO need to wipe out super.addDelegatesTo
+  }
+
+
+  public
+  void
+  removeDelegatesTo
+  {             // side effects:
+    this→;this← // TODO
+  }
+  (
+    principal{this→;this←} p
+  )
+  where
+    caller (this)
+  {
+    // TODO need to wipe out super.addDelegatesTo
+  }
+}
+
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/

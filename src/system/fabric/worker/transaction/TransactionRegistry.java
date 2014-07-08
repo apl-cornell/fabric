@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -15,10 +15,10 @@
  */
 package fabric.worker.transaction;
 
-import fabric.worker.Store;
 import fabric.common.TransactionID;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
+import fabric.worker.Store;
 
 /**
  * Holds a map from top-level transaction IDs to their logs.
@@ -97,6 +97,7 @@ public final class TransactionRegistry {
    * 
    * @deprecated
    */
+  @Deprecated
   public static void renumberObject(Store store, long onum, long newOnum) {
     for (Log log : registry.values()) {
       log.renumberObject(store, onum, newOnum);

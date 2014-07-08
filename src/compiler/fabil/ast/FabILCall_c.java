@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -18,13 +18,16 @@ package fabil.ast;
 import java.util.Iterator;
 import java.util.List;
 
-import fabil.types.FabILTypeSystem;
-
-import polyglot.ast.*;
+import polyglot.ast.Call_c;
+import polyglot.ast.Expr;
+import polyglot.ast.Id;
+import polyglot.ast.Node;
+import polyglot.ast.Receiver;
 import polyglot.types.SemanticException;
 import polyglot.util.Position;
 import polyglot.visit.NodeVisitor;
 import polyglot.visit.TypeChecker;
+import fabil.types.FabILTypeSystem;
 
 public class FabILCall_c extends Call_c implements FabILCall {
   protected Expr remoteWorker;
@@ -52,10 +55,12 @@ public class FabILCall_c extends Call_c implements FabILCall {
     return n;
   }
 
+  @Override
   public Expr remoteWorker() {
     return remoteWorker;
   }
 
+  @Override
   public FabILCall remoteWorker(Expr remoteWorker) {
     if (remoteWorker == this.remoteWorker) {
       return this;
@@ -66,7 +71,6 @@ public class FabILCall_c extends Call_c implements FabILCall {
     return n;
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public Node visitChildren(NodeVisitor v) {
     Receiver target = (Receiver) visitChild(this.target, v);
@@ -123,8 +127,7 @@ public class FabILCall_c extends Call_c implements FabILCall {
 
     int count = 0;
 
-    for (@SuppressWarnings("unchecked")
-    Iterator<Expr> i = arguments.iterator(); i.hasNext();) {
+    for (Iterator<Expr> i = arguments.iterator(); i.hasNext();) {
       if (count++ > 2) {
         sb.append("...");
         break;

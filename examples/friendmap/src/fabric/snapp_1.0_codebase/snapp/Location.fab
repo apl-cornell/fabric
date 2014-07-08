@@ -1,0 +1,55 @@
+/**
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
+ *
+ * This file is part of Fabric.
+ *
+ * Fabric is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * Fabric is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ */
+package snapp;
+
+// TODO: document labels
+
+/**
+ * A point on the plane.
+ *
+ * @param L the update label
+ * @param A the access label
+ */
+public class Location[label L, label A]
+where
+  // general constraint: update label ⊑ access label
+  L <= A,
+
+  // code can affect fields and field accesses
+  provider <= L,
+  provider <= A
+{
+  public float{L}@{A} x;
+  public float{L}@{A} y;
+
+  public
+  Location
+  {     // side effects:
+    L ⊓ // fields are updated
+    A   // this is accessed
+  }
+  (
+    int{L} x, int{L} y
+  )
+  {
+    this.x = x;
+    this.y = y;
+  }
+}
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/

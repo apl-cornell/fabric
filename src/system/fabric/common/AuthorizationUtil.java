@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -15,12 +15,12 @@
  */
 package fabric.common;
 
+import fabric.common.util.OidKeyHashMap;
 import fabric.lang.security.Label;
 import fabric.lang.security.LabelUtil;
-import fabric.worker.Worker;
+import fabric.lang.security.Principal;
 import fabric.worker.Store;
-import fabric.common.util.OidKeyHashMap;
-import fabric.lang.security.NodePrincipal;
+import fabric.worker.Worker;
 
 public class AuthorizationUtil {
 
@@ -42,9 +42,13 @@ public class AuthorizationUtil {
   private static final OidKeyHashMap<OidKeyHashMap<Void>> cachedWriteAuthorizations =
       new OidKeyHashMap<OidKeyHashMap<Void>>();
 
+  /**
+   * Return true if cache[label][<code>principal</code>] exists, where label is
+   * given by the Oid (<code>store</code>,<code>labelOnum</code>).
+   */
   private static boolean checkAuthorizationCache(
-      OidKeyHashMap<OidKeyHashMap<Void>> cache,
-      NodePrincipal principal, Store store, long labelOnum) {
+      OidKeyHashMap<OidKeyHashMap<Void>> cache, Principal principal,
+      Store store, long labelOnum) {
     OidKeyHashMap<Void> submap;
     synchronized (cache) {
       submap = cache.get(store, labelOnum);
@@ -57,7 +61,7 @@ public class AuthorizationUtil {
   }
 
   private static void cacheAuthorization(
-      OidKeyHashMap<OidKeyHashMap<Void>> cache, NodePrincipal principal,
+      OidKeyHashMap<OidKeyHashMap<Void>> cache, Principal principal,
       Store store, long labelOnum) {
     OidKeyHashMap<Void> submap;
     synchronized (cache) {
@@ -78,8 +82,8 @@ public class AuthorizationUtil {
    * the label at the given oid. This is run as a subtransaction of the current
    * transaction.
    */
-  public static boolean isReadPermitted(final NodePrincipal principal,
-      Store store, long labelOnum) {
+  public static boolean isReadPermitted(final Principal principal, Store store,
+      long labelOnum) {
     // Allow the store's worker principal to do anything. We use pointer
     // equality here to avoid having to call into the worker.
     if (principal == Worker.getWorker().getPrincipal()) return true;
@@ -90,6 +94,7 @@ public class AuthorizationUtil {
     // Call into the Jif label framework to perform the label check.
     final Label label = new Label._Proxy(store, labelOnum);
     boolean result = Worker.runInSubTransaction(new Worker.Code<Boolean>() {
+      @Override
       public Boolean run() {
         return LabelUtil._Impl.isReadableBy(label, principal);
       }
@@ -107,7 +112,7 @@ public class AuthorizationUtil {
    * the label at the given onum. This is run as a subtransaction of the current
    * transaction.
    */
-  public static boolean isWritePermitted(final NodePrincipal principal,
+  public static boolean isWritePermitted(final Principal principal,
       Store store, long labelOnum) {
     // Allow the store's worker principal to do anything. We use pointer
     // equality here to avoid having to call into the worker.
@@ -119,6 +124,7 @@ public class AuthorizationUtil {
     // Call into the Jif label framework to perform the label check.
     final Label label = new Label._Proxy(store, labelOnum);
     boolean result = Worker.runInSubTransaction(new Worker.Code<Boolean>() {
+      @Override
       public Boolean run() {
         return LabelUtil._Impl.isWritableBy(label, principal);
       }

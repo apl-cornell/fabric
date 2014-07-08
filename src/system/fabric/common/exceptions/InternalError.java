@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -34,7 +34,7 @@ public class InternalError extends Error {
     super(msg, cause);
     report();
   }
-  
+
   private void report() {
     System.err.println("Creating InternalError exception:");
     System.err.println("================ BEGIN STACK TRACE ================");

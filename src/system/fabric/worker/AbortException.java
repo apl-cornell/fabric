@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -16,7 +16,8 @@
 package fabric.worker;
 
 /**
- * An <code>AbortException</code> is thrown to indicate that a transaction was aborted.
+ * An <code>AbortException</code> is thrown to indicate that a transaction was
+ * aborted.
  */
 public class AbortException extends RuntimeException {
   public AbortException() {
@@ -28,5 +29,9 @@ public class AbortException extends RuntimeException {
 
   public AbortException(String message) {
     super(message);
+  }
+
+  public AbortException(String message, Throwable cause) {
+    super(message, cause);
   }
 }

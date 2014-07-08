@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -27,17 +27,9 @@ public interface ConfPolicy extends Policy {
    */
   ConfPolicy join(Store store, ConfPolicy p, Set/* <DelegationPair> */dependencies);
 
-  ConfPolicy join(ConfPolicy p, Set/* <DelegationPair> */dependencies);
-
   ConfPolicy meet(Store store, ConfPolicy p, Set/* <DelegationPair> */dependencies);
-
-  ConfPolicy meet(ConfPolicy p, Set/* <DelegationPair> */dependencies);
 
   ConfPolicy join(Store store, ConfPolicy p);
 
-  ConfPolicy join(ConfPolicy p);
-
   ConfPolicy meet(Store store, ConfPolicy p);
-
-  ConfPolicy meet(ConfPolicy p);
 }

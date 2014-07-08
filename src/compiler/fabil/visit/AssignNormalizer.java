@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -15,7 +15,11 @@
  */
 package fabil.visit;
 
-import polyglot.ast.*;
+import polyglot.ast.Assign;
+import polyglot.ast.Binary;
+import polyglot.ast.Expr;
+import polyglot.ast.Node;
+import polyglot.ast.NodeFactory;
 import polyglot.util.Position;
 import polyglot.visit.NodeVisitor;
 
@@ -30,12 +34,6 @@ public class AssignNormalizer extends NodeVisitor {
     this.nf = nf;
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see polyglot.visit.NodeVisitor#leave(polyglot.ast.Node, polyglot.ast.Node,
-   *      polyglot.visit.NodeVisitor)
-   */
   @Override
   public Node leave(Node old, Node n, NodeVisitor v) {
     if (!(n instanceof Assign)) return n;

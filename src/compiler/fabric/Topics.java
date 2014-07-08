@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -20,11 +20,13 @@ import polyglot.main.Report;
 /**
  * Extension information for ../../fabric extension.
  */
-@SuppressWarnings("unchecked")
 public class Topics {
-    public static final String fabric = "fabric";
-
-    static {
-        Report.topics.add(fabric);
-    }
+  public static final String fabric = "fabric";
+  public static final String mobile = "mobile";
+  public static final String profile = "profile";
+  static {
+    Report.topics.add(fabric);
+    Report.topics.add(mobile);
+    Report.topics.add(profile);
+  }
 }

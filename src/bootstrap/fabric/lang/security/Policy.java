@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -15,13 +15,20 @@
  */
 package fabric.lang.security;
 
-import fabric.worker.Store;
-import fabric.lang.Object;
+public interface Policy extends fabric.lang.Object {
 
-public interface Policy extends Object {
-  public static class _Proxy extends Object._Proxy implements Policy {
-    public _Proxy(Store store, long onum) {
+  boolean relabelsTo(fabric.lang.security.Policy p, java.util.Set s);
+
+  public static class _Proxy extends fabric.lang.Object._Proxy implements
+      fabric.lang.security.Policy {
+
+    @Override
+    native public boolean relabelsTo(fabric.lang.security.Policy arg1,
+        java.util.Set arg2);
+
+    public _Proxy(fabric.worker.Store store, long onum) {
       super(store, onum);
     }
   }
+
 }

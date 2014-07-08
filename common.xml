@@ -6,39 +6,59 @@
   <!-- set the prefix for accessing environment variables -->
   <property environment="env" />
 
+  <property name="build.sysclasspath" value="ignore" />
+
   <property file="${fabric.home}/config.properties" />
+  <property file="${fabric.home}/extra.properties" />
 
   <!-- Polyglot installation location -->
-  <!-- If it is not defined in the properties file, use the environment
-       variable $POLYGLOT. -->
-  <condition property="polyglot.home" value="${env.POLYGLOT}">
-    <and>
-      <isset property="env.POLYGLOT" />
-      <not>
-        <isset property="polyglot.home" />
-      </not>
-    </and>
-  </condition>
-  <!-- As a last resort, try to use polyglot.jar from distribution -->
+  <!-- If polyglot.home is not defined in the properties file, try to use
+       polyglot.jar from the distribution -->
   <condition property="polyglot.home" value="${fabric.home}">
     <not><isset property="polyglot.home" /></not>
   </condition>
 
+  <!-- Polyglot configuration file -->
+  <property file="${polyglot.home}/config.properties" prefix="polyglot" />
+
   <!-- Jif installation -->
-  <!-- If it is not defined in the properties file, use the environment
-       variable $JIF. -->
-  <condition property="jif.home" value="${env.JIF}">
-    <and>
-      <isset property="env.JIF" />
-      <not>
-        <isset property="jif.home" />
-      </not>
-    </and>
-  </condition>
-  <!-- As a last resort, try to use jif.jar from distribution -->
+  <!-- If jif.home is not defined in the properties file, try to use jif.jar
+       from the distribution -->
   <condition property="jif.home" value="${fabric.home}">
     <not><isset property="jif.home" /></not>
   </condition>
+
+  <!-- jif configuration file -->
+  <property file="${jif.home}/config.properties" prefix="jif" />
+
+  <!-- Java installation -->
+  <!-- First  choice: jdk.home in config.properties
+       Second choice: jdk.home in ${jif.home}/config.properties
+       Third  choice: JAVA_HOME environment variable
+       Fourth choice: Ant's built-in java.home
+  -->
+  <condition property="jdk.home" value="${jif.jdk.home}">
+    <and>
+      <isset property="jif.jdk.home" />
+      <not>
+        <isset property="jdk.home" />
+      </not>
+    </and>
+  </condition>
+  <condition property="jdk.home" value="${env.JAVA_HOME}">
+    <and>
+      <isset property="env.JAVA_HOME" />
+      <not>
+        <isset property="jdk.home" />
+      </not>
+    </and>
+  </condition>
+  <condition property="jdk.home" value="${java.home}">
+    <not>
+      <isset property="jdk.home" />
+    </not>
+  </condition>
+
 
   <!-- Directories for class file targets -->
   <property name="classes" location="${fabric.home}/classes"/>
@@ -53,8 +73,17 @@
   <!-- fabc executable -->
   <property name="fabc" location="${bin}/fabc" />
 
+  <!-- fabc-in-worker executable -->
+  <property name="fabc-in-worker" location="${bin}/fabc-in-worker" />
+
   <!-- filc executable -->
   <property name="filc" location="${bin}/filc" />
+
+  <!-- jifc executable -->
+  <property name="jifc" location="${jif.home}/bin/jifc"/>
+
+  <!-- jif executable -->
+  <property name="jif" location="${jif.home}/bin/jif"/>
 
   <!-- Debug flag to be passed to fabc and filc. -->
   <property name="debug.flag" value="-g" />
@@ -66,6 +95,7 @@
     <pathelement path="${polyglot.home}/lib/ppg.jar" />
     <pathelement path="${polyglot.home}/lib/java_cup.jar" />
     <pathelement path="${polyglot.home}/lib/JFlex.jar" />
+    <pathelement path="${jdk.home}/lib/tools.jar" />
   </path>
 
   <!-- Jif classpath -->
@@ -90,6 +120,115 @@
     <pathelement location="${runtime.classes}" />
     <pathelement location="${lib}/fabric-rt.jar" />
   </path>
+
+  <!-- Some useful Ant macros for invoking our compilers. -->
+  <macrodef name="fabc">
+    <attribute
+        name="dest"
+        description="The output directory."/>
+    <element name="extra-args" implicit="true"/>
+    <sequential>
+      <apply executable="bash"
+             parallel="true"
+             failonerror="true"
+             dest="@{dest}"
+             relative="false"
+             skipemptyfilesets="true"
+             vmlauncher="false">
+        <arg value="${fabc}"/>
+        <arg line="${debug.flag}"/>
+        <arg value="-d"/> <arg value="@{dest}"/>
+        <arg value="-e"/>
+        <arg value="-no-warnings"/>
+        <extra-args/>
+        <srcfile/>
+        <globmapper from="*.fab" to="*.class"/>
+      </apply>
+    </sequential>
+  </macrodef>
+
+  <macrodef name="fabc-in-worker">
+    <attribute
+        name="dest"
+        description="The output directory."/>
+    <attribute
+        name="worker"
+        description="The name of the worker."/>
+    <attribute
+        name="app-home"
+        description="The home directory of the application."/>
+    <element name="extra-args" implicit="true"/>
+    <sequential>
+      <apply executable="bash"
+             parallel="true"
+             failonerror="true"
+             dest="@{dest}"
+             relative="false"
+             skipemptyfilesets="true"
+             vmlauncher="false">
+        <arg value="${fabc-in-worker}"/>
+        <arg value="--name"/> <arg value="@{worker}"/>
+        <arg value="--app-home"/> <arg value="@{app-home}"/>
+        <arg line="${debug.flag}"/>
+        <arg value="-d"/> <arg value="@{dest}"/>
+        <arg value="-e"/>
+        <arg value="-no-warnings"/>
+        <extra-args/>
+        <srcfile/>
+        <globmapper from="*.fab" to="*.class"/>
+      </apply>
+    </sequential>
+  </macrodef>
+
+
+  <macrodef name="fabsigc">
+    <attribute
+        name="dest"
+        description="The output directory."/>
+    <element name="extra-args" implicit="true"/>
+    <sequential>
+      <fabc dest="@{dest}">
+        <arg value="-sig"/>
+        <extra-args/>
+      </fabc>
+    </sequential>
+  </macrodef>
+
+  <macrodef name="filc">
+    <attribute
+        name="dest"
+        description="The output directory."/>
+    <element name="extra-args" implicit="true"/>
+    <sequential>
+      <apply executable="bash"
+             parallel="true"
+             failonerror="true"
+             dest="@{dest}"
+             relative="false"
+             skipemptyfilesets="true"
+             vmlauncher="false">
+        <arg value="${filc}"/>
+        <arg line="${debug.flag}"/>
+        <arg value="-d"/> <arg value="@{dest}"/>
+        <extra-args/>
+        <srcfile/>
+        <globmapper from="*.fil" to="*.class"/>
+      </apply>
+    </sequential>
+  </macrodef>
+
+  <macrodef name="filsigc">
+    <attribute
+        name="dest"
+        description="The output directory."/>
+    <element name="extra-args" implicit="true"/>
+    <sequential>
+      <filc dest="@{dest}">
+        <arg value="-sig"/>
+        <extra-args/>
+      </filc>
+    </sequential>
+  </macrodef>
 </project>
 
 

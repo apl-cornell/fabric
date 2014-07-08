@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -17,23 +17,32 @@ package fabric.worker;
 
 import static fabric.common.Logging.WORKER_LOCAL_STORE_LOGGER;
 
+import java.io.NotSerializableException;
+import java.io.ObjectStreamException;
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
 import fabric.common.ONumConstants;
+import fabric.common.SerializedObject;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.Pair;
 import fabric.lang.Object;
 import fabric.lang.Object._Impl;
-import fabric.lang.security.*;
+import fabric.lang.security.ConfPolicy;
+import fabric.lang.security.IntegPolicy;
+import fabric.lang.security.Label;
+import fabric.lang.security.LabelUtil;
+import fabric.lang.security.NodePrincipal;
+import fabric.lang.security.Principal;
 import fabric.lang.security.PrincipalUtil.TopPrincipal;
 import fabric.util.HashMap;
 import fabric.util.Map;
 
-public final class LocalStore implements Store {
+public final class LocalStore implements Store, Serializable {
 
   private long freshOID = ONumConstants.FIRST_UNRESERVED;
 
@@ -46,36 +55,50 @@ public final class LocalStore implements Store {
   private Label emptyLabel;
   private Label publicReadonlyLabel;
 
+  /**
+   * Only used to obtain ObjectCache.Entry objects so we can satisfy the
+   * contract for readFromCache(long).
+   */
+  private final ObjectCache cache;
+
   private Set<Pair<Principal, Principal>> localDelegates;
 
-  public synchronized boolean prepareTransaction(boolean useAuthentication,
-      long tid, long commitTime, Collection<Object._Impl> toCreate,
-      LongKeyMap<Integer> reads, Collection<Object._Impl> writes) {
+  @Override
+  public boolean prepareTransaction(long tid, long commitTime,
+      Collection<Object._Impl> toCreate, LongKeyMap<Integer> reads,
+      Collection<Object._Impl> writes) {
     // Note: since we assume local single threading we can ignore reads
     // (conflicts are impossible)
     WORKER_LOCAL_STORE_LOGGER.fine("Local transaction preparing");
     return false;
   }
 
-  public synchronized void abortTransaction(boolean useAuthentication,
-      TransactionID tid) {
+  @Override
+  public void abortTransaction(TransactionID tid) {
     WORKER_LOCAL_STORE_LOGGER.fine("Local transaction aborting");
   }
 
-  public synchronized void commitTransaction(boolean useAuthentication,
-      long transactionID) {
+  @Override
+  public void commitTransaction(long transactionID) {
     WORKER_LOCAL_STORE_LOGGER.fine("Local transaction committing");
   }
 
+  @Override
   public synchronized long createOnum() {
     return freshOID++;
   }
 
-  public synchronized Object._Impl readObject(long onum) {
+  @Override
+  public ObjectCache.Entry readObject(long onum) {
     return readObjectNoDissem(onum);
   }
 
-  public synchronized Object._Impl readObjectNoDissem(long onum) {
+  @Override
+  public ObjectCache.Entry readObjectNoDissem(long onum) {
+    return readImplNoDissem(onum).$cacheEntry;
+  }
+
+  private _Impl readImplNoDissem(long onum) {
     if (!ONumConstants.isGlobalConstant(onum))
       throw new InternalError("Not supported.");
 
@@ -107,10 +130,12 @@ public final class LocalStore implements Store {
     throw new InternalError("Unknown global constant: onum " + onum);
   }
 
-  public Object._Impl readObjectFromCache(long onum) {
-    return readObject(onum);
+  @Override
+  public ObjectCache.Entry readFromCache(long onum) {
+    return cache.get(onum);
   }
-  
+
+  @Override
   public boolean checkForStaleObjects(LongKeyMap<Integer> reads) {
     return false;
   }
@@ -121,6 +146,7 @@ public final class LocalStore implements Store {
    * @see fabric.worker.Worker.getLocalStore
    */
   protected LocalStore() {
+    this.cache = new ObjectCache(name());
   }
 
   @Override
@@ -128,6 +154,7 @@ public final class LocalStore implements Store {
     return "LocalStore";
   }
 
+  @Override
   public Map getRoot() {
     return rootMap;
   }
@@ -172,14 +199,17 @@ public final class LocalStore implements Store {
     return publicReadonlyLabel;
   }
 
+  @Override
   public String name() {
     return "local";
   }
 
+  @Override
   public NodePrincipal getPrincipal() {
     return Worker.getWorker().getPrincipal();
   }
 
+  @Override
   public boolean isLocalStore() {
     return true;
   }
@@ -189,18 +219,21 @@ public final class LocalStore implements Store {
     return 0;
   }
 
-  public boolean notifyEvict(long onum) {
-    // nothing to do
-    return false;
-  }
-
+  @Override
   public boolean evict(long onum) {
     // nothing to do
     return false;
   }
 
+  @Override
   public void cache(_Impl impl) {
     // nothing to do
+  }
+
+  @Override
+  public ObjectCache.Entry cache(SerializedObject obj) {
+    throw new InternalError(
+        "Unexpected attempt to cache a serialized local-store object.");
   }
 
   public void initialize() {
@@ -213,6 +246,7 @@ public final class LocalStore implements Store {
         new Label._Proxy(LocalStore.this, ONumConstants.PUBLIC_READONLY_LABEL);
 
     Worker.runInSubTransaction(new Worker.Code<Void>() {
+      @Override
       @SuppressWarnings("deprecation")
       public Void run() {
         // Create global constant objects. We force renumbering on these because
@@ -222,14 +256,14 @@ public final class LocalStore implements Store {
 
         // Create the object representing the top principal.
         topPrincipal =
-            (Principal) new TopPrincipal._Impl(LocalStore.this,
-                publicReadonlyLabel).$getProxy();
+            new TopPrincipal._Impl(LocalStore.this)
+                .fabric$lang$security$PrincipalUtil$TopPrincipal$();
         topPrincipal.$forceRenumber(ONumConstants.TOP_PRINCIPAL);
 
         // Create the object representing the bottom confidentiality policy.
         bottomConfidPolicy =
-            LabelUtil._Impl
-                .readerPolicy(LocalStore.this, null, (Principal) null);
+            LabelUtil._Impl.readerPolicy(LocalStore.this, null,
+                (Principal) null);
         bottomConfidPolicy.$forceRenumber(ONumConstants.BOTTOM_CONFIDENTIALITY);
 
         // Create the object representing the bottom integrity policy.
@@ -252,8 +286,8 @@ public final class LocalStore implements Store {
 
         // Create the object representing the top integrity policy.
         topIntegPolicy =
-            LabelUtil._Impl
-                .writerPolicy(LocalStore.this, null, (Principal) null);
+            LabelUtil._Impl.writerPolicy(LocalStore.this, null,
+                (Principal) null);
         topIntegPolicy.$forceRenumber(ONumConstants.TOP_INTEGRITY);
 
         // Create the object representing the empty label.
@@ -265,20 +299,32 @@ public final class LocalStore implements Store {
         // Create the label {worker->_; worker<-_} for the root map.
         // No need to renumber this. References to the local store's root map
         // should not be leaking to remote stores.
-        Principal workerPrincipal = Worker.getWorker().getPrincipal();
-        ConfPolicy conf =
-            LabelUtil._Impl.readerPolicy(LocalStore.this, workerPrincipal,
-                (Principal) null);
-        IntegPolicy integ =
-            LabelUtil._Impl.writerPolicy(LocalStore.this, workerPrincipal,
-                (Principal) null);
-        Label label = LabelUtil._Impl.toLabel(LocalStore.this, conf, integ);
+        // XXX the above is not being done. HashMap needs to be parameterized on
+        // labels.
 
-        rootMap = (Map) new HashMap._Impl(LocalStore.this, label).$getProxy();
+        // Create root map.
+        rootMap = new HashMap._Impl(LocalStore.this).fabric$util$HashMap$();
         localDelegates = new HashSet<Pair<Principal, Principal>>();
 
         return null;
       }
     });
+
+    // Put global constants into the cache.
+    this.cache.put((_Impl) topPrincipal.fetch());
+    this.cache.put((_Impl) topConfidPolicy.fetch());
+    this.cache.put((_Impl) bottomConfidPolicy.fetch());
+    this.cache.put((_Impl) topIntegPolicy.fetch());
+    this.cache.put((_Impl) bottomIntegPolicy.fetch());
+    this.cache.put((_Impl) emptyLabel.fetch());
+    this.cache.put((_Impl) publicReadonlyLabel.fetch());
+  }
+
+  // ////////////////////////////////
+  // Java custom-serialization gunk
+  // ////////////////////////////////
+
+  private java.lang.Object writeReplace() throws ObjectStreamException {
+    throw new NotSerializableException();
   }
 }

@@ -1,0 +1,63 @@
+/**
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
+ *
+ * This file is part of Fabric.
+ *
+ * Fabric is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * Fabric is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ */
+package util;
+
+// TODO: access labels
+// TODO: comments
+
+public class GroupIterator[principal owner, label L, label A]
+where
+  {*←owner} <= L,
+  provider  <= {*←owner}
+{
+
+  private int {} @ {A} accessLabelKludge;
+
+  /**
+   * Create a new iterator over g, which must be non-null.
+   */
+  native GroupIterator
+  (
+    Group[owner, A] {L} g
+  );
+
+
+  public native
+  boolean {L}
+  hasNext
+  {     // side effects:
+    {A} // group is accessed
+  }
+  ();
+
+
+
+  public native
+  Principal {L}
+  next
+  {       // side effects:
+    {L} ⊓ // this is updated
+    {A}   // group is accessed
+  }
+  ():{L}
+  throws
+    NoSuchElementException;
+
+}
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/

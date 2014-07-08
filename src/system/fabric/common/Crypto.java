@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -16,18 +16,42 @@
 package fabric.common;
 
 import java.math.BigInteger;
-import java.security.*;
-import java.security.cert.*;
+import java.security.GeneralSecurityException;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.SecureRandom;
+import java.security.Security;
+import java.security.Signature;
+import java.security.cert.CertPath;
+import java.security.cert.CertPathValidator;
 import java.security.cert.Certificate;
+import java.security.cert.CertificateFactory;
+import java.security.cert.PKIXParameters;
+import java.security.cert.TrustAnchor;
+import java.security.cert.X509Certificate;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Set;
 
-import javax.crypto.*;
+import javax.crypto.Cipher;
+import javax.crypto.KeyGenerator;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.NullCipher;
+import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
+import javax.naming.InvalidNameException;
+import javax.naming.ldap.LdapName;
 
 import org.bouncycastle.asn1.x509.X509Name;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.x509.X509V3CertificateGenerator;
 
 import fabric.common.exceptions.InternalError;
@@ -52,6 +76,7 @@ public final class Crypto {
   private static final SecureRandom random = new SecureRandom();
 
   static {
+    Security.addProvider(new BouncyCastleProvider());
     secretKeyGen = secretKeyGenInstance();
     publicKeyGen = publicKeyGenInstance();
   }
@@ -155,48 +180,57 @@ public final class Crypto {
   /**
    * Validates the given certificate chain against the given trust store.
    */
-  public static boolean validateCertificateChain(
-      Certificate[] certificateChain, KeyStore trustStore) {
-    try {
-      PKIXParameters params = new PKIXParameters(trustStore);
-      params.setRevocationEnabled(false);
-      CertificateFactory certFactory = CertificateFactory.getInstance("X509");
-      CertPath certPath =
-          certFactory.generateCertPath(Arrays.asList(certificateChain));
-      CertPathValidator pathValidator = CertPathValidator.getInstance("PKIX");
-      pathValidator.validate(certPath, params);
-      return true;
-    } catch (KeyStoreException e) {
-    } catch (CertificateException e) {
-    } catch (NoSuchAlgorithmException e) {
-    } catch (CertPathValidatorException e) {
-    } catch (InvalidAlgorithmParameterException e) {
-    }
-    
-    return false;
+  public static void validateCertificateChain(Certificate[] certificateChain,
+      Set<TrustAnchor> trustStore) throws GeneralSecurityException {
+    PKIXParameters params = new PKIXParameters(trustStore);
+    params.setSigProvider(BouncyCastleProvider.PROVIDER_NAME);
+    params.setRevocationEnabled(false);
+    CertificateFactory certFactory = CertificateFactory.getInstance("X509");
+    CertPath certPath =
+        certFactory.generateCertPath(Arrays.asList(certificateChain));
+    CertPathValidator pathValidator = CertPathValidator.getInstance("PKIX");
+    pathValidator.validate(certPath, params);
   }
-  
+
   /**
-   * generates a certificate, signed by the issuer, binding the subject's name
+   * Generates a certificate, signed by the issuer, binding the subject's name
    * to their public key.
    */
-  public X509Certificate createCertificate(
-      String subjectName, PublicKey subjectKey,
-      String issuerName, PrivateKey issuerKey) throws GeneralSecurityException {
-    
+  public static X509Certificate createCertificate(String subjectName,
+      PublicKey subjectKey, String issuerName, PrivateKey issuerKey)
+      throws GeneralSecurityException {
+
     Calendar expiry = Calendar.getInstance();
     expiry.add(Calendar.YEAR, 1);
-    
+
     X509V3CertificateGenerator certGen = new X509V3CertificateGenerator();
-    
+
     certGen.setSerialNumber(BigInteger.valueOf(System.currentTimeMillis()));
     certGen.setIssuerDN(new X509Name("CN=" + issuerName));
     certGen.setSubjectDN(new X509Name("CN=" + subjectName));
-    certGen.setSignatureAlgorithm("SHA1WithRSAEncryption");
+    certGen.setSignatureAlgorithm("SHA1withRSA");
     certGen.setPublicKey(subjectKey);
     certGen.setNotBefore(new Date(System.currentTimeMillis()));
     certGen.setNotAfter(expiry.getTime());
-    
+
     return certGen.generate(issuerKey);
+  }
+
+  /**
+   * Extracts the CN component of a Distinguished Name.
+   */
+  public static String getCN(String dn) {
+    try {
+      LdapName ldapName = new LdapName(dn);
+      for (int i = 0; i < ldapName.size(); i++) {
+        String component = ldapName.get(i);
+        if (component.substring(0, 3).equalsIgnoreCase("cn=")) {
+          return component.substring(3);
+        }
+      }
+    } catch (InvalidNameException e) {
+    }
+
+    return null;
   }
 }

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -25,7 +25,7 @@ class Balance[principal bank, principal user] { // on bank store and worker
     // the account balance
     // Since the user trusts the bank to manage its account it does not specify any policy on this
     // The bank does not allow anyone else to modify. It allows only its user to read.
-    float{bank←; bank→user} value = 100000;
+    float{bank←; bank→user}@{bank→} value = 100000;
 
     // Debits a specified amount from this account
     // The begin label allows only the bank to influence the decision to debit.
@@ -53,20 +53,21 @@ class Balance[principal bank, principal user] { // on bank store and worker
 
 // XXX Why do we have an Account class when Balance is good enough?
 public class Account[principal bank]  { // on bank store and worker
-    public final Principal{bank←} user;
-    final Balance[bank,user] {bank←} balance;
+    public final Principal{bank←}@{bank→} user;
+    final Balance[bank,user] {bank←}@{bank→} balance;
 
     Account(principal{bank←} user_) {
         user = user_;
         balance = new Balance(); // @ bank store
+        super();
     }
     
-    public String{bank←} name() {
+    public String{bank←} name{⊥→}() {
         if (user == null) return "";
         return user.name();
     }
     
-    public float{bank←; bank→user} balance() {
+    public float{bank←; bank→user} balance{bank→}() {
         if (balance == null) return 0;
         return balance.value;
     }

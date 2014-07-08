@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -20,9 +20,22 @@ import polyglot.ast.ExtFactory;
 
 public interface FabILExtFactory extends ExtFactory {
   Ext extAtomic();
+
   Ext extRetry();
+
   Ext extAbort();
+
   Ext extFabricArrayTypeNode();
+
   Ext extNewFabricArray();
+
   Ext extFabricArrayInit();
+
+  Ext extProviderLabel();
+
+  Ext extCodebaseNode();
+
+  Ext extCodebaseDecl();
+
+  Ext extCodebaseTypeNode();
 }

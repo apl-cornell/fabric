@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -39,9 +39,6 @@ public final class Select extends InputNode {
         selected = selected_;    
     }
 
-    /* (non-Javadoc)
-     * @see servlet.Node#write(servlet.HTMLWriter)
-     */
     void writeImpl(HTMLWriter p) {
         // TODO Auto-generated method stub
         p.begin(2);

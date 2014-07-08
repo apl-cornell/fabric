@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -43,14 +43,13 @@ public final class PrepareRequest {
 
   /** Create a PrepareRequest with the provided fields */
   public PrepareRequest(long tid, long commitTime,
-                        Collection<SerializedObject> creates,
-                        Collection<SerializedObject> writes,
-                        LongKeyMap<Integer> reads) {
-    this.tid     = tid;
-    this.commitTime    = commitTime;
+      Collection<SerializedObject> creates,
+      Collection<SerializedObject> writes, LongKeyMap<Integer> reads) {
+    this.tid = tid;
+    this.commitTime = commitTime;
     this.creates = creates;
-    this.writes  = writes;
-    this.reads   = reads;
+    this.writes = writes;
+    this.reads = reads;
   }
 
 }

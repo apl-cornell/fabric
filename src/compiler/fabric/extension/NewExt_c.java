@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -15,5 +15,21 @@
  */
 package fabric.extension;
 
+import jif.types.JifConstructorInstance;
+import jif.types.label.Label;
+import polyglot.ast.New;
+import fabric.types.FabricContext;
+import fabric.types.FabricTypeSystem;
+
 public class NewExt_c extends LocatedExt_c implements FabricExt {
+
+  @Override
+  protected Label referenceLabel(FabricContext ctx) {
+    New n = (New) node();
+    FabricTypeSystem ts = (FabricTypeSystem) ctx.typeSystem();
+    JifConstructorInstance ci =
+        (JifConstructorInstance) n.constructorInstance();
+    return ts.join(ctx.pc(), ci.returnLabel());
+  }
+
 }

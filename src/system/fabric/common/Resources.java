@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -18,24 +18,29 @@
  */
 package fabric.common;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 /**
  * Manages the loading of configuration files
  */
 public class Resources {
-  public static String relpathRewrite(String...relpath) {
+  public static String relpathRewrite(String... relpath) {
     String filename = prefix;
     for (String name : relpath)
       filename += File.separator + name;
-    
+
     return filename;
   }
-  
+
   public static File getFile(String... relpath) {
     return new File(relpathRewrite(relpath));
   }
-  
+
   public static InputStream readFile(String... relpath) throws IOException {
     return new FileInputStream(relpathRewrite(relpath));
   }

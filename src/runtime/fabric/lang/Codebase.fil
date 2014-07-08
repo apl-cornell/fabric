@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -17,6 +17,9 @@ package fabric.lang;
 
 import java.io.IOException;
 import java.util.Properties;
+
+import fabric.lang.security.ConfPolicy;
+import fabric.lang.security.Label;
 import fabric.util.Collections;
 import fabric.util.HashMap;
 import fabric.util.Map;
@@ -24,7 +27,7 @@ import fabric.util.Iterator;
 
 /**
  * A codebase is a Fabric object that provides a mapping from fully qualified 
- * class names to Fabric class objects. 
+ * fabric class names to Fabric FClass objects. 
  * 
  * @author Lucas Waye <lrw48@cornell.edu>
  */
@@ -33,37 +36,52 @@ public class Codebase {
   /** All of the classes in the codebase **/
   private Map/*String, FClass*/ classes;
   
+  /** All of the explicit codebases referred to in this codebase **/
+  private Map/*String, Codebase*/ codebases;
+
+  /**
+   * @param  name
+   *    a fabric name
+   * @return
+   *    the associated FClass, or null if there is none
+   */
   FClass resolveClassName(String name) {
     return (FClass)classes.get(name);
   }
+  
+  Codebase resolveCodebaseName(String name) {
+    return (Codebase)codebases.get(name);
+  }
+  
+  void addCodebaseName(String name, Codebase codebase) {
+    codebases.put(name, codebase);
+  }
+  
+  public Codebase fabric$lang$Codebase$(Label updateLabel, ConfPolicy accessPolicy) {
+    return fabric$lang$Codebase$(updateLabel, accessPolicy, (Map) new HashMap().fabric$util$HashMap$());
+  }	
+	
+  public Codebase fabric$lang$Codebase$(Label updateLabel, ConfPolicy accessPolicy,
+      Map/* String, FClass */classes) {
+    fabric$lang$Object$();
+    this.classes = (Map) new HashMap().fabric$util$HashMap$(classes);
+    codebases = (Map) new HashMap().fabric$util$HashMap$();
+    this.$updateLabel = updateLabel;
+    this.$accessPolicy = accessPolicy;
+    return this;
+  }
+  
+  /* Should only be called at compile time */
+  public void insertClass(String name, FClass fcls) {
+    classes.put(name, fcls);
+  }
 
-  public Class toJavaClass(String name) {
-	  	FClass c = resolveClassName(name);
-	  	if (c == null)
-	  		return null;
-	  	
-	  	if (c.getCodebase().equals(this))
-	  		return c.getCodebase().getClassLoader().getJavaClass(c);
-	  	else
-	  		return c.getCodebase().toJavaClass(name);
-  }
-  
-  FabricClassLoader getClassLoader() {
-    return FabricClassLoader.getClassLoader(this);
-  }
-  
-  public Codebase(Map/*String, FClass*/ classes) {
-    this.classes = new HashMap(classes);
-  }
-  
   public Map/*String, FClass*/ getClasses() {
-	atomic {
-		return Collections.unmodifiableMap(classes);
-	}
+    return classes;
   }
   
-  public FClass getClass(String s) {
-	  return (FClass)classes.get(s);
+  public Object $initLabels() {
+    // Initialized in constructor.
+    return this;
   }
-  
 }

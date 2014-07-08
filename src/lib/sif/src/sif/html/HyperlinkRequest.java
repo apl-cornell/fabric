@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -20,14 +20,15 @@ import sif.servlet.HTMLWriter;
 import fabric.lang.security.Label;
 import fabric.lang.security.Principal;
 import fabric.lang.security.PrincipalUtil;
+import fabricated.util.Map;
 
 /**
  *
  * A Hyperlink Request -- an "a href=....?p=v" tag.
  */
 public final class HyperlinkRequest extends Hyperlink {
-    final jif.util.Map inputs;
-    public HyperlinkRequest(Principal servletP, Label L, Label E, Action a, jif.util.Map inputs, Label cL, Label cE, Node n) {
+    final Map inputs;
+    public HyperlinkRequest(Principal servletP, Label L, Label E, Action a, Map inputs, Label cL, Label cE, Node n) {
         super(servletP, L, E, a, cL, cE, n);
         this.inputs = inputs;
     }
@@ -36,7 +37,7 @@ public final class HyperlinkRequest extends Hyperlink {
         p.printHyperlinkRequestURL(this.action, this); 
     }
     
-    public jif.util.Map getInputs() {
+    public Map getInputs() {
         return inputs;
     }
     public static boolean jif$Instanceof(Principal P, Label l, Label e, Object o) {

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -15,9 +15,29 @@
  */
 package fabric.util;
 
-import fabric.lang.Object;
+public interface Iterator extends fabric.lang.Object {
 
-public interface Iterator extends Object {
   boolean hasNext();
-  Object next();
+
+  fabric.lang.Object next();
+
+  void remove();
+
+  public static class _Proxy extends fabric.lang.Object._Proxy implements
+      fabric.util.Iterator {
+
+    @Override
+    native public boolean hasNext();
+
+    @Override
+    native public fabric.lang.Object next();
+
+    @Override
+    native public void remove();
+
+    public _Proxy(fabric.worker.Store store, long onum) {
+      super(store, onum);
+    }
+  }
+
 }

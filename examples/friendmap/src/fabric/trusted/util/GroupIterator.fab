@@ -1,0 +1,84 @@
+/**
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
+ *
+ * This file is part of Fabric.
+ *
+ * Fabric is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * Fabric is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ */
+package util;
+
+// TODO: access labels
+// TODO: comments
+
+public class GroupIterator[principal owner, label L]
+where
+  {*←owner} <= L,
+  provider <= {*←owner}
+{
+
+  private final Group[owner] {L} g;
+  private       int          {L} i;
+
+  /**
+   * Create a new iterator over g, which must be non-null.
+   */
+  GroupIterator
+  (
+    Group[owner] {L} g
+  )
+  {
+    if (g == null)
+      throw new AssertionFailedError("g must be non-null");
+
+    this.g = g;
+    this.i = 0;
+  }
+
+
+  public
+  boolean {L}
+  hasNext()
+  {
+    if (this.g == null)
+      throw new AssertionFailedError("g must be non-null");
+
+    return this.i < this.g.size;
+  }
+
+  public
+  Principal {L}
+  next
+  {   // side effects:
+    L // TODO
+  }
+  ():{L}
+  throws
+    NoSuchElementException
+  {
+    if (!this.hasNext())
+      throw new NoSuchElementException();
+
+    try {
+
+      return this.g.members[this.i++];
+
+    } catch (NullPointerException e) {
+      throw new AssertionFailedError("g must be non-null");
+
+    } catch (ArrayIndexOutOfBoundsException e) {
+      throw new AssertionFailedError("this.hasNext() but index is off-the-end");
+    }
+  }
+}
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/

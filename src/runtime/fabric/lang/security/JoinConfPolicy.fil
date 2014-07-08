@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -22,39 +22,34 @@ import fabric.util.*;
  * from Jif.
  */
 public final class JoinConfPolicy extends JoinPolicy implements ConfPolicy {
-  JoinConfPolicy(Set policies) {
-    super(policies);
+  JoinConfPolicy fabric$lang$security$JoinConfPolicy$(Set policies) {
+    fabric$lang$security$JoinPolicy$(policies);
+	return this;
   }
 
   public ConfPolicy join(Store store, ConfPolicy p, java.util.Set s) {
     return LabelUtil.join(store, this, p, s);
   }
 
-  public ConfPolicy join(ConfPolicy p, java.util.Set s) {
-    return LabelUtil.join(this, p, s);
-  }
-
   public ConfPolicy meet(Store store, ConfPolicy p, java.util.Set s) {
     return LabelUtil.meet(store, this, p, s);
-  }
-
-  public ConfPolicy meet(ConfPolicy p, java.util.Set s) {
-    return LabelUtil.meet(this, p, s);
   }
 
   public ConfPolicy join(Store store, ConfPolicy p) {
     return LabelUtil.join(store, this, p);
   }
 
-  public ConfPolicy join(ConfPolicy p) {
-    return LabelUtil.join(this, p);
-  }
-
   public ConfPolicy meet(Store store, ConfPolicy p) {
     return LabelUtil.meetPol(store, this, p);
   }
 
-  public ConfPolicy meet(ConfPolicy p) {
-    return LabelUtil.meetPol(this, p);
+  public Object $initLabels() {
+    // XXX What should this be?  Using completely permissive values for now.
+    // update label: {_ <-}
+    // access policy: {_ ->}
+    this.$updateLabel = LabelUtil.noComponents();
+    this.$accessPolicy = LabelUtil.bottomConf();
+
+    return this;
   }
 }

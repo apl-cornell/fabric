@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -18,26 +18,31 @@ package fabric.store.db;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.security.PrivateKey;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 
 import javax.security.auth.x500.X500Principal;
 
-import fabric.lang.security.Label;
-import fabric.lang.security.PairLabel;
-import fabric.lang.security.ReaderPolicy;
-import fabric.lang.security.WriterPolicy;
-import fabric.worker.Worker;
-import fabric.worker.Store;
-import fabric.worker.remote.RemoteWorker;
 import fabric.common.FastSerializable;
 import fabric.common.ONumConstants;
+import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
 import fabric.common.exceptions.AccessException;
-import fabric.common.util.*;
-import fabric.store.SubscriptionManager;
+import fabric.common.util.LongIterator;
+import fabric.common.util.LongKeyHashMap;
+import fabric.common.util.LongKeyMap;
+import fabric.common.util.LongKeyMap.Entry;
+import fabric.common.util.MutableInteger;
+import fabric.common.util.OidKeyHashMap;
+import fabric.common.util.Pair;
 import fabric.lang.security.NodePrincipal;
+import fabric.lang.security.Principal;
+import fabric.store.PartialObjectGroup;
+import fabric.store.SubscriptionManager;
+import fabric.worker.Store;
+import fabric.worker.Worker;
 
 /**
  * <p>
@@ -58,15 +63,13 @@ import fabric.lang.security.NodePrincipal;
  * </p>
  * <p>
  * All ObjectDB implementations should provide a constructor which takes the
- * name of the store and opens the appropriate back-end database if it exists, or
- * creates it if it doesn't exist.
+ * name of the store and opens the appropriate back-end database if it exists,
+ * or creates it if it doesn't exist.
  * </p>
  */
 public abstract class ObjectDB {
 
   protected final String name;
-  private NodePrincipal storePrincipal;
-  private Label publicReadonlyLabel;
   private long nextGlobID;
 
   /**
@@ -78,10 +81,10 @@ public abstract class ObjectDB {
   private final LongKeyMap<Long> globIDByOnum;
 
   /**
-   * Maps globIDs to GroupContainers and the number of times the GroupContainer
-   * is referenced in globIDByOnum.
+   * Maps globIDs to entries (either GroupContainers or PartialObjectGroups) and
+   * the number of times the entry is referenced in globIDByOnum.
    */
-  private final GroupContainerTable globTable;
+  private final GroupTable globTable;
 
   /**
    * The data stored for a partially prepared transaction.
@@ -89,7 +92,7 @@ public abstract class ObjectDB {
   protected static final class PendingTransaction implements FastSerializable,
       Iterable<Long> {
     public final long tid;
-    public final NodePrincipal owner;
+    public final Principal owner;
     public final Collection<Long> reads;
 
     /**
@@ -97,7 +100,7 @@ public abstract class ObjectDB {
      */
     public final Collection<SerializedObject> modData;
 
-    PendingTransaction(long tid, NodePrincipal owner) {
+    PendingTransaction(long tid, Principal owner) {
       this.tid = tid;
       this.owner = owner;
       this.reads = new ArrayList<Long>();
@@ -112,7 +115,7 @@ public abstract class ObjectDB {
 
       if (in.readBoolean()) {
         Store store = Worker.getWorker().getStore(in.readUTF());
-        this.owner = new NodePrincipal._Proxy(store, in.readLong());
+        this.owner = new Principal._Proxy(store, in.readLong());
       } else {
         this.owner = null;
       }
@@ -131,20 +134,24 @@ public abstract class ObjectDB {
     /**
      * Returns an iterator of onums involved in this transaction.
      */
+    @Override
     public Iterator<Long> iterator() {
       return new Iterator<Long>() {
         private Iterator<Long> readIt = reads.iterator();
         private Iterator<SerializedObject> modIt = modData.iterator();
 
+        @Override
         public boolean hasNext() {
           return readIt.hasNext() || modIt.hasNext();
         }
 
+        @Override
         public Long next() {
           if (readIt.hasNext()) return readIt.next();
           return modIt.next().getOnum();
         }
 
+        @Override
         public void remove() {
           throw new UnsupportedOperationException();
         }
@@ -154,6 +161,7 @@ public abstract class ObjectDB {
     /**
      * Serializes this object out to the given output stream.
      */
+    @Override
     public void write(DataOutput out) throws IOException {
       out.writeLong(tid);
 
@@ -204,7 +212,7 @@ public abstract class ObjectDB {
     this.pendingByTid = new LongKeyHashMap<OidKeyHashMap<PendingTransaction>>();
     this.rwLocks = new LongKeyHashMap<Pair<Long, LongKeyMap<MutableInteger>>>();
     this.globIDByOnum = new LongKeyHashMap<Long>();
-    this.globTable = new GroupContainerTable();
+    this.globTable = new GroupTable();
     this.nextGlobID = 0;
   }
 
@@ -216,7 +224,7 @@ public abstract class ObjectDB {
    * @throws AccessException
    *           if the worker has insufficient privileges.
    */
-  public final void beginTransaction(long tid, NodePrincipal worker)
+  public final void beginTransaction(long tid, Principal worker)
       throws AccessException {
     OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
     if (submap == null) {
@@ -230,7 +238,7 @@ public abstract class ObjectDB {
   /**
    * Registers that a transaction has read an object.
    */
-  public final void registerRead(long tid, NodePrincipal worker, long onum) {
+  public final void registerRead(long tid, Principal worker, long onum) {
     addReadLock(onum, tid);
     pendingByTid.get(tid).get(worker).reads.add(onum);
   }
@@ -245,7 +253,7 @@ public abstract class ObjectDB {
    * @param obj
    *          the updated object.
    */
-  public final void registerUpdate(long tid, NodePrincipal worker,
+  public final void registerUpdate(long tid, Principal worker,
       SerializedObject obj) {
     addWriteLock(obj.getOnum(), tid);
     pendingByTid.get(tid).get(worker).modData.add(obj);
@@ -291,7 +299,7 @@ public abstract class ObjectDB {
    * Rolls back a partially prepared transaction. (i.e., one for which
    * finishPrepare() has yet to be called.)
    */
-  public final void abortPrepare(long tid, NodePrincipal worker) {
+  public final void abortPrepare(long tid, Principal worker) {
     OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
     unpin(submap.remove(worker));
     if (submap.isEmpty()) pendingByTid.remove(tid);
@@ -311,7 +319,7 @@ public abstract class ObjectDB {
    * failure.
    * </p>
    */
-  public abstract void finishPrepare(long tid, NodePrincipal worker);
+  public abstract void finishPrepare(long tid, Principal worker);
 
   /**
    * Cause the objects prepared in transaction [tid] to be committed. The
@@ -326,9 +334,8 @@ public abstract class ObjectDB {
    * @throws AccessException
    *           if the principal differs from the caller of prepare()
    */
-  public abstract void commit(long tid, RemoteWorker workerNode,
-      NodePrincipal workerPrincipal, SubscriptionManager sm)
-      throws AccessException;
+  public abstract void commit(long tid, Principal workerPrincipal,
+      SubscriptionManager sm) throws AccessException;
 
   /**
    * Cause the objects prepared in transaction [tid] to be discarded.
@@ -340,7 +347,7 @@ public abstract class ObjectDB {
    * @throws AccessException
    *           if the principal differs from the caller of prepare()
    */
-  public abstract void rollback(long tid, NodePrincipal worker)
+  public abstract void rollback(long tid, Principal worker)
       throws AccessException;
 
   /**
@@ -366,32 +373,100 @@ public abstract class ObjectDB {
   }
 
   /**
+   * Given the ID of the group to which the given onum belongs. Null is returned
+   * if no such group exists.
+   */
+  public final Long getCachedGroupID(long onum) {
+    return globIDByOnum.get(onum);
+  }
+
+  private final GroupTable.Entry getGroupTableEntry(long onum) {
+    Long groupID = getCachedGroupID(onum);
+    if (groupID == null) return null;
+    return globTable.getContainer(groupID);
+  }
+
+  /**
+   * Gives the cached partial group for the given onum. Null is returned if no
+   * such partial group exists.
+   */
+  public final PartialObjectGroup getCachedPartialGroup(long onum) {
+    GroupTable.Entry entry = getGroupTableEntry(onum);
+    if (entry instanceof PartialObjectGroup) return (PartialObjectGroup) entry;
+    return null;
+  }
+
+  /**
    * Returns the cached GroupContainer containing the given onum. Null is
    * returned if no such GroupContainer exists.
    */
   public final GroupContainer getCachedGroupContainer(long onum) {
-    Long globID = globIDByOnum.get(onum);
-    if (globID == null) return null;
-    return globTable.getContainer(globID);
+    GroupTable.Entry entry = getGroupTableEntry(onum);
+    if (entry instanceof GroupContainer) return (GroupContainer) entry;
+    return null;
   }
 
   /**
-   * Inserts the given group container into the cache for the given onums.
+   * Inserts the given partial group into the cache.
    */
-  public final void cacheGroupContainer(LongSet onums, GroupContainer container) {
-    // Get a new ID for the glob and insert into the glob table.
-    long globID = nextGlobID++;
-    globTable.put(globID, container, onums.size());
+  public final void cachePartialGroup(PartialObjectGroup partialGroup) {
+    // Get a new ID for the partial group.
+    long groupID = nextGlobID++;
 
-    // Establish globID bindings for all onums we're given.
-    for (LongIterator it = onums.iterator(); it.hasNext();) {
-      long onum = it.next();
+    partialGroup.setID(groupID);
 
-      Long oldGlobID = globIDByOnum.put(onum, globID);
-      if (oldGlobID == null) continue;
+    // Establish groupID bindings for all non-surrogate onums we're given.
+    for (Entry<SerializedObject> entry : partialGroup.objects.entrySet()) {
+      SerializedObject obj = entry.getValue();
+      if (obj.isSurrogate()) {
+        continue;
+      }
 
-      globTable.unpin(oldGlobID);
+      // Establish groupID binding for the non-surrogate object.
+      long onum = entry.getKey();
+      Long oldGroupID = globIDByOnum.put(onum, groupID);
+      if (oldGroupID != null) {
+        globTable.unpin(oldGroupID);
+      }
     }
+
+    if (partialGroup.size() > 0) {
+      // Insert into the group table.
+      globTable.put(groupID, partialGroup, partialGroup.size());
+    }
+  }
+
+  /**
+   * Coalesces one partial group into another.
+   */
+  public void coalescePartialGroups(PartialObjectGroup from,
+      PartialObjectGroup to) {
+    long fromID = from.groupID();
+    long toID = to.groupID();
+
+    globTable.remove(fromID);
+
+    for (LongIterator it = from.objects.keySet().iterator(); it.hasNext();) {
+      long onum = it.next();
+      Long oldGroupID = globIDByOnum.put(onum, toID);
+      if (oldGroupID != null && oldGroupID != fromID)
+        globTable.unpin(oldGroupID);
+    }
+
+    to.mergeFrom(from);
+    if (to.size() > 0) globTable.put(toID, to, to.size());
+  }
+
+  public GroupContainer promotePartialGroup(PrivateKey signingKey,
+      PartialObjectGroup partialGroup) {
+    ObjectGroup group = new ObjectGroup(partialGroup.objects);
+    Store store = Worker.getWorker().getStore(getName());
+    GroupContainer result = new GroupContainer(store, signingKey, group);
+    if (partialGroup.size() > 0) {
+      globTable.put(partialGroup.groupID(), result, partialGroup.size());
+    }
+
+    return result;
   }
 
   /**
@@ -404,17 +479,30 @@ public abstract class ObjectDB {
    * @param worker
    *          the worker that performed the update.
    */
-  protected final void notifyCommittedUpdate(SubscriptionManager sm, long onum,
-      RemoteWorker worker) {
+  protected final void notifyCommittedUpdate(SubscriptionManager sm, long onum) {
     // Remove from the glob table the glob associated with the onum.
     Long globID = globIDByOnum.remove(onum);
     GroupContainer group = null;
     if (globID != null) {
-      group = globTable.remove(globID);
+      GroupTable.Entry entry = globTable.remove(globID);
+      // Clean out entries in globIDByOnum that refer to the entry we just
+      // removed.
+      if (entry instanceof GroupContainer) {
+        group = (GroupContainer) entry;
+        for (LongIterator it = group.onums.iterator(); it.hasNext();) {
+          globIDByOnum.remove(it.next());
+        }
+      } else {
+        PartialObjectGroup partialGroup = (PartialObjectGroup) entry;
+        for (LongIterator it = partialGroup.objects.keySet().iterator(); it
+            .hasNext();) {
+          globIDByOnum.remove(it.next());
+        }
+      }
     }
 
     // Notify the subscription manager that the group has been updated.
-    sm.notifyUpdate(onum, worker);
+    // sm.notifyUpdate(onum, worker);
     if (group != null) {
       for (LongIterator onumIt = group.onums.iterator(); onumIt.hasNext();) {
         long relatedOnum = onumIt.next();
@@ -422,7 +510,7 @@ public abstract class ObjectDB {
 
         Long relatedGlobId = globIDByOnum.get(relatedOnum);
         if (relatedGlobId != null && relatedGlobId == globID) {
-          sm.notifyUpdate(relatedOnum, worker);
+          // sm.notifyUpdate(relatedOnum, worker);
         }
       }
     }
@@ -546,33 +634,28 @@ public abstract class ObjectDB {
    * creates, for example, the name-service map and the store's principal, if
    * they do not already exist in the database.
    */
-  @SuppressWarnings("deprecation")
   public final void ensureInit() {
     if (isInitialized()) return;
 
     final Store store = Worker.getWorker().getStore(name);
 
     Worker.runInSubTransaction(new Worker.Code<Void>() {
+      @SuppressWarnings("deprecation")
+      @Override
       public Void run() {
         // No need to initialize global constants here, as those objects will be
         // supplied by the workers' local store.
         String principalName = new X500Principal("CN=" + name).getName();
         NodePrincipal._Impl principal =
-            new NodePrincipal._Impl(store, null, principalName);
+            (NodePrincipal._Impl) new NodePrincipal._Impl(store)
+                .fabric$lang$security$NodePrincipal$(principalName).fetch();
         principal.$forceRenumber(ONumConstants.STORE_PRINCIPAL);
 
         // Create the label {store->_; store<-_} for the root map.
-        ReaderPolicy confid =
-            (ReaderPolicy) new ReaderPolicy._Impl(store, publicReadonlyLabel(),
-                storePrincipal(), null).$getProxy();
-        WriterPolicy integ =
-            (WriterPolicy) new WriterPolicy._Impl(store, publicReadonlyLabel(),
-                storePrincipal(), null).$getProxy();
-        Label label =
-            (Label) new PairLabel._Impl(store, null, confid, integ).$getProxy();
-
+        // XXX above not done. HashMap needs to be parameterized on labels.
         fabric.util.HashMap._Impl map =
-            new fabric.util.HashMap._Impl(store, label);
+            (fabric.util.HashMap._Impl) new fabric.util.HashMap._Impl(store)
+                .fabric$util$HashMap$().fetch();
         map.$forceRenumber(ONumConstants.ROOT_MAP);
 
         return null;
@@ -580,26 +663,6 @@ public abstract class ObjectDB {
     });
 
     setInitialized();
-  }
-
-  private final NodePrincipal storePrincipal() {
-    if (storePrincipal == null) {
-      Store store = Worker.getWorker().getStore(name);
-      storePrincipal =
-          new NodePrincipal._Proxy(store, ONumConstants.STORE_PRINCIPAL);
-    }
-
-    return storePrincipal;
-  }
-
-  private final Label publicReadonlyLabel() {
-    if (publicReadonlyLabel == null) {
-      Store store = Worker.getWorker().getStore(name);
-      publicReadonlyLabel =
-          new Label._Proxy(store, ONumConstants.PUBLIC_READONLY_LABEL);
-    }
-
-    return publicReadonlyLabel;
   }
 
 }

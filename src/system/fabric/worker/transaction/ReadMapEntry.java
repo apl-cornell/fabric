@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -18,24 +18,29 @@ package fabric.worker.transaction;
 import java.util.ArrayList;
 import java.util.List;
 
-import fabric.worker.FabricSoftRef;
 import fabric.lang.Object._Impl;
+import fabric.worker.FabricSoftRef;
+import fabric.worker.ObjectCache;
 
 public final class ReadMapEntry {
   FabricSoftRef obj;
   List<Log> readLocks;
-  int  versionNumber;
+  int versionNumber;
   long promise;
+
+  /**
+   * The number of _Impls that have a reference to this object.
+   */
   int pinCount;
 
   ReadMapEntry(_Impl obj, long expiry) {
     this.obj = obj.$ref;
     this.readLocks = new ArrayList<Log>();
     this.versionNumber = obj.$version;
-    this.promise  = expiry;
+    this.promise = expiry;
     this.pinCount = 1;
   }
-  
+
   /**
    * Removes the lock owned by the given transaction log.
    */
@@ -47,9 +52,10 @@ public final class ReadMapEntry {
 
     signalObject();
   }
-  
+
   /**
    * Does garbage collection when pin count is 0.
+   * 
    * @return whether garbage collection was performed.
    */
   private boolean unpin() {
@@ -63,9 +69,10 @@ public final class ReadMapEntry {
     }
     return false;
   }
-  
+
   /**
    * Decrements pin count by 1 and does garbage collection if possible.
+   * 
    * @return whether the entry was removed from the read map.
    */
   public synchronized boolean depin() {
@@ -75,19 +82,19 @@ public final class ReadMapEntry {
 
   /**
    * Signals the object corresponding to this entry (if the object is resident
-   * in memory).
-   * 
-   * After signalling, this method clears the $reader stamp of the object.
+   * in memory). After signalling, this method clears the $reader stamp of the
+   * object.
    */
   void signalObject() {
     _Impl obj = this.obj.get();
     if (obj == null) {
       // Object evicted from cache.
-      
+
       // If object was a local-store object, it doesn't exist anymore.
       if (this.obj.store.isLocalStore()) return;
-      
-      obj = this.obj.store.readObjectFromCache(this.obj.onum);
+
+      ObjectCache.Entry entry = this.obj.store.readFromCache(this.obj.onum);
+      obj = entry.getImpl(false);
       if (obj == null) return;
 
       synchronized (this) {

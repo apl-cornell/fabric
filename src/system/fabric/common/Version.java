@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -28,7 +28,7 @@ package fabric.common;
  */
 public class Version {
   private int major = 0;
-  private int minor = 1;
+  private int minor = 2;
   private int patch = 0;
 
   public int major() { return major; }
@@ -37,6 +37,6 @@ public class Version {
 
   @Override
   public String toString() {
-    return "0.1.0 (2010-08-30 19:13:38)";
+    return "0.2.0 (2012-10-24 18:40:54 EDT)";
   }
 }

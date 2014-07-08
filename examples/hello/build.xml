@@ -40,26 +40,13 @@
 
   <target name="build"
           description="Builds the Hello World example">
-    <apply executable="bash"
-           parallel="true"
-           failonerror="true"
-           dir="${hello.home}"
-           dest="${hello.home}/classes"
-           relative="false"
-           skipemptyfilesets="true"
-           vmlauncher="false">
-      <arg value="${fabric.home}/bin/fabc"/>
-      <arg value="-g"/>
-      <arg value="-e"/>
-      <arg value="-d"          /> <arg value="${hello.home}/classes"/>
+    <fabc dest="${hello.home}/classes">
       <arg value="-sourcepath" /> <arg value="${hello.home}/src" />
       <arg value="-cp"         /> <arg value="${hello.home}/classes" />
-      <arg value="-e"/>
-      <srcfile />
+      <arg value="-trusted-providers" />
 
       <fileset dir="${hello.home}/src" includes="**/*.fab" />
-      <globmapper from="*.fab" to="*.class" />
-    </apply>
+    </fabc>
   </target>
 
   <target name="build-all" depends="build" />

@@ -1,0 +1,223 @@
+/**
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
+ *
+ * This file is part of Fabric.
+ *
+ * Fabric is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * Fabric is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ */
+package fabricated.util;
+
+/**
+ * Base implementation for Collection.
+ */
+public abstract class AbstractCollection[label L] implements Collection[L] {
+    protected Comparator[L]{L} compare;
+    /**
+     * Sole constructor.  (For invocation by subclass constructors, typically
+     * implicit.)
+     */
+    protected AbstractCollection{L}(Comparator[L]{L} compare) {
+      this.compare = compare;
+    }
+
+    public abstract int{L} size{L}();
+
+    public boolean{L} isEmpty{L}() {
+      return size() == 0;
+    }
+
+    public abstract Iterator[L]{L} iterator{L}();
+    public abstract Iterator[L]{L} iterator{L}(Store{L} store) where L <= {*<-store}, {*->store} <= L;
+
+    public Object{L}[]{L} toArray{L}()
+    {
+      final Store localStore = worker$.getLocalStore();
+      if (L <= new label {*<-localStore} && new label {*->localStore} <= L) {
+        Iterator itr = iterator(localStore);
+        int size = size();
+        Object{L}[] a = new Object[size];
+        for (int pos = 0; pos < size; pos++)
+          a[pos] = itr.next();
+        return a;
+      }
+      else
+        throw new Error("Cannot create iterator on local store.");
+
+    }
+    
+    public Object{L}[]{L} toArray{L}(Store store)
+    {
+      final Store localStore = worker$.getLocalStore();
+      if (L <= new label {*<-localStore} && new label {*->localStore} <= L) {
+        Iterator itr = iterator(localStore);
+        int size = size();
+        Object{L}[] a = new Object[size]@store;
+        for (int pos = 0; pos < size; pos++)
+          a[pos] = itr.next();
+        return a;
+      }
+      else 
+        throw new Error("Cannot create iterator on local store.");      
+    }
+        
+    public boolean{L} contains{L}(Object{L} o) throws (ClassCastException{L}, NullPointerException{L}) {
+      final Store localStore = worker$.getLocalStore();
+      if (L <= new label {*<-localStore} && new label {*->localStore} <= L) {
+        Iterator itr = iterator(localStore);
+        while (itr.hasNext()) {
+          if (compare.equals(o, itr.next()))
+            return true;
+        }
+        return false;
+      }
+      else 
+        throw new Error("Cannot create iterator on local store.");
+    }
+
+    public boolean{L} add{L}(Object{L} o) throws (UnsupportedOperationException{L}, 
+        ClassCastException{L}, NullPointerException{L}, IllegalArgumentException{L}, 
+        IllegalStateException{L}) {
+        throw new UnsupportedOperationException("Method add(Object) is unsupported " +
+        		"in fabric.util.AbstractCollection.");
+    }
+    
+    public boolean{L} remove{L}(Object{L} o) throws (UnsupportedOperationException{L}, 
+        ClassCastException{L}, NullPointerException{L}) {
+      final Store localStore = worker$.getLocalStore();
+      if (L <= new label {*<-localStore} && new label {*->localStore} <= L) {
+        Iterator itr = iterator(localStore);
+        while (itr.hasNext()) {
+          if (compare.equals(o, itr.next())) {
+            itr.remove();
+            return true;
+          }
+        }
+        return false;
+      }
+      else
+        throw new Error("Cannot create iterator on local store.");
+    }
+
+    public boolean{L} containsAll{L}(Collection[L]{L} c) throws (ClassCastException{L}, NullPointerException{L}) {
+        if (c == null) throw new NullPointerException();
+        final Store localStore = worker$.getLocalStore();
+        if (L <= new label {*<-localStore} && new label {*->localStore} <= L) {
+          Iterator itr = iterator(localStore);
+          while (itr.hasNext()) {
+            if (!contains(itr.next())) {
+              return false;
+            }
+          }
+          return true;
+        }
+        else 
+          throw new Error("Cannot create iterator on local store.");
+    }
+
+    public boolean{L} addAll{L}(Collection[L]{L} c) throws (
+        UnsupportedOperationException{L}, ClassCastException{L}, 
+        NullPointerException{L}, IllegalArgumentException{L}, 
+        IllegalStateException{L}) {
+      
+      final Store localStore = worker$.getLocalStore();
+      if (L <= new label {*<-localStore} && new label {*->localStore} <= L) {
+        Iterator itr = iterator(localStore);
+        boolean modified = false;
+        int pos = c.size();
+        while (--pos >= 0)
+          modified |= add(itr.next());
+        
+        return modified;
+      }
+      else
+        throw new Error("Cannot create iterator on local store.");
+    }
+
+    public boolean{L} removeAll{L}(Collection[L]{L} c) throws (
+        UnsupportedOperationException{L}, ClassCastException{L}, 
+        NullPointerException{L}) {
+      
+      final Store localStore = worker$.getLocalStore();
+      if (L <= new label {*<-localStore} && new label {*->localStore} <= L) {
+        Iterator itr = iterator(localStore);
+        boolean modified = false;
+        int pos = size();
+        while (--pos >= 0)
+          if (c.contains(itr.next()))
+            {
+              itr.remove();
+              modified = true;
+            }
+        return modified;
+      } 
+      else
+        throw new Error("Cannot create iterator on local store.");
+
+    }
+
+    public boolean{L} retainAll{L}(Collection[L]{L} c) throws (
+        UnsupportedOperationException{L}, ClassCastException{L}, 
+        NullPointerException{L}) {
+      
+      final Store localStore = worker$.getLocalStore();
+      if (L <= new label {*<-localStore} && new label {*->localStore} <= L) {
+        Iterator itr = iterator(localStore);
+        boolean modified = false;
+        int pos = size();
+        while (--pos >= 0)
+          if (!c.contains(itr.next()))
+            {
+              itr.remove();
+              modified = true;
+            }
+        return modified;
+      }
+      else
+        throw new Error("Cannot create iterator on local store.");
+    }
+    
+    public void clear{L}() throws (UnsupportedOperationException{L}) {
+      final Store localStore = worker$.getLocalStore();
+      if (L <= new label {*<-localStore} && new label {*->localStore} <= L) {
+        Iterator itr = iterator(localStore);
+        
+        while (itr.hasNext()) {
+          itr.next();
+          itr.remove();
+        }
+      }
+      else
+        throw new Error("Cannot create iterator on local store.");
+
+    }
+    
+//    public String{L} toString() {
+//        String s = "[";
+//        int i = 0;
+//
+//        while (i < size()) {
+//            try {
+//                JifObject[L] obj = get(i);                
+//                if (obj == this) {
+//                    s += "(this Collection)";
+//                }
+//                else {
+//                    s += (obj==null?"null":obj.toString());
+//                }
+//                if (++i < size()) s += ", ";
+//            }
+//            catch (IndexOutOfBoundsException e) {}
+//        }
+//        s = s + "]";
+//        return s;
+//    }
+
+}

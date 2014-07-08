@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -19,7 +19,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import polyglot.ast.*;
+import polyglot.ast.ClassBody;
+import polyglot.ast.ClassDecl;
+import polyglot.ast.ClassMember;
+import polyglot.ast.FieldDecl;
+import polyglot.ast.Node;
+import polyglot.ast.TypeNode;
 import polyglot.visit.NodeVisitor;
 
 /**
@@ -33,11 +38,11 @@ public class SignatureCleaner extends NodeVisitor {
     if (n instanceof ClassDecl) {
       // Remove extends and implements clauses.
       ClassDecl decl = (ClassDecl) n;
-      decl = decl.interfaces(Collections.emptyList());
+      decl = decl.interfaces(Collections.<TypeNode> emptyList());
       decl = decl.superClass(null);
       return decl;
     }
-    
+
     if (n instanceof ClassBody) {
       // Remove everything except Polyglot's type info and nested classes.
       ClassBody body = (ClassBody) n;
@@ -48,7 +53,7 @@ public class SignatureCleaner extends NodeVisitor {
           members.add(member);
           continue;
         }
-        
+
         if (member instanceof FieldDecl) {
           FieldDecl field = (FieldDecl) member;
           if (field.name().startsWith("jlc$")) {
@@ -57,10 +62,10 @@ public class SignatureCleaner extends NodeVisitor {
           }
         }
       }
-      
+
       return body.members(members);
     }
-    
+
     return n;
   }
 

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -15,11 +15,30 @@
  */
 package fabric.types;
 
-import polyglot.types.MethodInstance;
-import jif.types.JifParsedPolyType;
-import jif.types.label.Label;
+import java.net.URI;
+import java.util.Collection;
+import java.util.Set;
 
-public interface FabricParsedClassType extends JifParsedPolyType, FabricClassType {
-  Label defaultFieldLabel();
+import jif.types.JifParsedPolyType;
+import polyglot.types.MethodInstance;
+import codebases.types.CodebaseClassType;
+
+public interface FabricParsedClassType extends JifParsedPolyType,
+    FabricClassType, CodebaseClassType {
+
   void removeMethod(MethodInstance mi);
+
+  void setCanonicalNamespace(URI ns);
+
+  /**
+   * @param Namespace
+   *          dependencies
+   */
+  void setNamespaceDependencies(Set<CodebaseClassType> dependencies);
+
+  /**
+   * @return
+   */
+  Collection<CodebaseClassType> namespaceDependencies();
+
 }

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -18,15 +18,21 @@ package fabric.lang.arrays.internal;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
-import fabric.worker.Store;
-import fabric.worker.transaction.TransactionManager;
 import fabric.common.RefTypeEnum;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.Pair;
 import fabric.lang.Object;
+import fabric.lang.security.ConfPolicy;
 import fabric.lang.security.Label;
+import fabric.worker.Store;
+import fabric.worker.Worker;
+import fabric.worker.transaction.TransactionManager;
 
 public interface _ObjectArray<T extends Object> extends Object {
   int get$length();
@@ -48,15 +54,18 @@ public interface _ObjectArray<T extends Object> extends Object {
      * Creates a new object array at the given Store with the given length.
      * 
      * @param store
-     *                The store on which to allocate the array.
+     *          The store on which to allocate the array.
      * @param length
-     *                The length of the array.
+     *          The length of the array.
      */
-    public _Impl(Store store, Label label,
+    public _Impl(Store store, Label updateLabel, ConfPolicy accessPolicy,
         Class<? extends Object._Proxy> proxyType, int length) {
-      super(store, label);
+      super(store);
       this.proxyType = getProxy(proxyType);
       value = new Object[length];
+
+      set$$updateLabel(updateLabel);
+      set$$accessPolicy(accessPolicy);
     }
 
     /**
@@ -64,33 +73,39 @@ public interface _ObjectArray<T extends Object> extends Object {
      * array.
      * 
      * @param store
-     *                The store on which to allocate the array.
+     *          The store on which to allocate the array.
      * @param value
-     *                The backing array to use.
+     *          The backing array to use.
      */
-    public _Impl(Store store, Label label,
+    public _Impl(Store store, Label updateLabel, ConfPolicy accessPolicy,
         Class<? extends Object._Proxy> proxyType, T[] value) {
-      super(store, label);
+      super(store);
       this.proxyType = getProxy(proxyType);
       this.value = value;
+
+      set$$updateLabel(updateLabel);
+      set$$accessPolicy(accessPolicy);
     }
 
     /**
      * Used for deserializing.
      */
-    @SuppressWarnings("unchecked")
-    public _Impl(Store store, long onum, int version, long expiry, long label, ObjectInput in,
-        Iterator<RefTypeEnum> refTypes, Iterator<Long> intraStoreRefs)
-        throws IOException, ClassNotFoundException {
-      super(store, onum, version, expiry, label, in, refTypes, intraStoreRefs);
-      proxyType = (Class<? extends Object._Proxy>) Class.forName(in.readUTF());
+    public _Impl(Store store, long onum, int version, long expiry, long label,
+        long accessLabel, ObjectInput in, Iterator<RefTypeEnum> refTypes,
+        Iterator<Long> intraStoreRefs) throws IOException,
+        ClassNotFoundException {
+      super(store, onum, version, expiry, label, accessLabel, in, refTypes,
+          intraStoreRefs);
+      proxyType =
+          (Class<? extends Object._Proxy>) Worker.getWorker().getClassLoader()
+              .loadClass(in.readUTF());
       value = new Object[in.readInt()];
       for (int i = 0; i < value.length; i++) {
         value[i] =
             $readRef(proxyType, refTypes.next(), in, store, intraStoreRefs);
       }
     }
-    
+
     private static final Map<Class<?>, Class<? extends fabric.lang.Object._Proxy>> proxyCache =
         Collections
             .synchronizedMap(new HashMap<Class<?>, Class<? extends fabric.lang.Object._Proxy>>());
@@ -103,14 +118,15 @@ public interface _ObjectArray<T extends Object> extends Object {
      * fabric.lang.arrays are implemented in Fabric, which isn't able to talk
      * about the _Proxy classes.
      */
-    @SuppressWarnings("unchecked")
     private Class<? extends fabric.lang.Object._Proxy> getProxy(Class<?> c) {
-      Class<? extends fabric.lang.Object._Proxy> result =
-        proxyCache.get(c);
+      Class<? extends fabric.lang.Object._Proxy> result = proxyCache.get(c);
       if (result != null) return result;
-      
+
       if (c.getSimpleName().equals("_Proxy")) {
-        result = (Class<? extends fabric.lang.Object._Proxy>) c;
+        @SuppressWarnings("unchecked")
+        Class<? extends fabric.lang.Object._Proxy> proxyClass =
+            (Class<? extends fabric.lang.Object._Proxy>) c;
+        result = proxyClass;
         proxyCache.put(c, result);
         return result;
       }
@@ -118,7 +134,10 @@ public interface _ObjectArray<T extends Object> extends Object {
       Class<?>[] classes = c.getClasses();
       for (Class<?> c_ : classes) {
         if (c_.getSimpleName().equals("_Proxy")) {
-          result = (Class<? extends fabric.lang.Object._Proxy>) c_;
+          @SuppressWarnings("unchecked")
+          Class<? extends fabric.lang.Object._Proxy> proxyClass =
+              (Class<? extends fabric.lang.Object._Proxy>) c_;
+          result = proxyClass;
           proxyCache.put(c, result);
           return result;
         }
@@ -127,74 +146,48 @@ public interface _ObjectArray<T extends Object> extends Object {
       throw new InternalError("Error finding _Proxy class in " + c);
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see fabric.lang.arrays.internal.ObjectArray#getLength()
-     */
+    @Override
     public int get$length() {
       TransactionManager.getInstance().registerRead(this);
       return value.length;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see fabric.lang.arrays.internal.ObjectArray#get(int)
-     */
-    @SuppressWarnings("unchecked")
+    @Override
     public T get(int i) {
       TransactionManager.getInstance().registerRead(this);
-      return (T) value[i];
+      @SuppressWarnings("unchecked")
+      T t = (T) value[i];
+      return t;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see fabric.lang.arrays.internal.ObjectArray#set(int, fabric.lang.Object)
-     */
-    @SuppressWarnings("unchecked")
+    @Override
     public T set(int i, T value) {
       boolean transactionCreated =
           TransactionManager.getInstance().registerWrite(this);
-      T result = (T) (this.value[i] = value);
+      this.value[i] = value;
       if (transactionCreated)
         TransactionManager.getInstance().commitTransaction();
-      return result;
+      return value;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see fabric.lang.Object._Impl#$copyAppStateFrom(fabric.lang.Object._Impl)
-     */
-    @SuppressWarnings("unchecked")
     @Override
     public void $copyAppStateFrom(Object._Impl other) {
       super.$copyAppStateFrom(other);
+      @SuppressWarnings("unchecked")
       _ObjectArray._Impl<T> src = (_ObjectArray._Impl<T>) other;
       value = src.value;
     }
 
+    @Override
     public void cloneValues() {
       value = value.clone();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see fabric.lang.Object._Impl#$makeProxy()
-     */
     @Override
     protected _ObjectArray._Proxy<T> $makeProxy() {
       return new _ObjectArray._Proxy<T>(this);
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see fabric.lang.Object._Impl#$serialize(java.io.ObjectOutput)
-     */
     @Override
     public void $serialize(ObjectOutput out, List<RefTypeEnum> refTypes,
         List<Long> intraStoreRefs, List<Pair<String, Long>> interStoreRefs)
@@ -202,9 +195,14 @@ public interface _ObjectArray<T extends Object> extends Object {
       super.$serialize(out, refTypes, intraStoreRefs, interStoreRefs);
       out.writeUTF(proxyType.getName());
       out.writeInt(value.length);
-      for (int i = 0; i < value.length; i++)
-        $writeRef($getStore(), value[i], refTypes, out, intraStoreRefs,
+      for (Object element : value)
+        $writeRef($getStore(), element, refTypes, out, intraStoreRefs,
             interStoreRefs);
+    }
+
+    @Override
+    public Object $initLabels() {
+      return $getProxy();
     }
   }
 
@@ -219,32 +217,17 @@ public interface _ObjectArray<T extends Object> extends Object {
       super(impl);
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see fabric.lang.arrays.internal.ObjectArray#getLength()
-     */
-    @SuppressWarnings("unchecked")
+    @Override
     public int get$length() {
       return ((_ObjectArray<T>) fetch()).get$length();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see fabric.lang.arrays.internal.ObjectArray#get(int)
-     */
-    @SuppressWarnings("unchecked")
+    @Override
     public T get(int i) {
       return ((_ObjectArray<T>) fetch()).get(i);
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see fabric.lang.arrays.internal.ObjectArray#set(int, fabric.lang.Object)
-     */
-    @SuppressWarnings("unchecked")
+    @Override
     public T set(int i, T value) {
       return ((_ObjectArray<T>) fetch()).set(i, value);
     }

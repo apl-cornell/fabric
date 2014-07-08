@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -89,9 +89,21 @@ public class LinkedList extends AbstractSequentialList
      * Construct an entry.
      * @param data the list element
      */
-    Entry(Object data)
+    Entry fabric$util$LinkedList$Entry$(Object data)
     {
+      fabric$lang$Object$();
       this.data = data;
+      return this;
+    }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
     }
   } // class Entry
 
@@ -190,8 +202,10 @@ public class LinkedList extends AbstractSequentialList
   /**
    * Create an empty linked list.
    */
-  public LinkedList()
+  public LinkedList fabric$util$LinkedList$()
   {
+    fabric$util$AbstractSequentialList$();
+    return this;
   }
 
   /**
@@ -201,9 +215,11 @@ public class LinkedList extends AbstractSequentialList
    * @param c the collection to populate this list from
    * @throws NullPointerException if c is null
    */
-  public LinkedList(Collection c)
+  public LinkedList fabric$util$LinkedList$(Collection c)
   {
+    fabric$util$AbstractSequentialList$();
     addAll(c);
+    return this;
   }
 
   /**
@@ -287,7 +303,7 @@ public class LinkedList extends AbstractSequentialList
    */
   public void addFirst(Object o)
   {
-    Entry e = new Entry(o);
+    Entry e = (Entry) new Entry().fabric$util$LinkedList$Entry$(o);
 
     modCount++;
     if (size == 0)
@@ -308,7 +324,7 @@ public class LinkedList extends AbstractSequentialList
    */
   public void addLast(Object o)
   {
-    addLastEntry(new Entry(o));
+    addLastEntry((Entry) new Entry().fabric$util$LinkedList$Entry$(o));
   }
 
   /**
@@ -367,7 +383,7 @@ public class LinkedList extends AbstractSequentialList
    */
   public boolean add(Object o)
   {
-    addLastEntry(new Entry(o));
+    addLastEntry((Entry) new Entry().fabric$util$LinkedList$Entry$(o));
     return true;
   }
 
@@ -444,7 +460,7 @@ public class LinkedList extends AbstractSequentialList
     // to the first entry, in order to deal with the case where (c == this).
     // [Actually, we don't have to handle this case to fufill the
     // contract for addAll(), but Sun's implementation appears to.]
-    Entry e = new Entry(itr.next());
+    Entry e = (Entry) new Entry().fabric$util$LinkedList$Entry$(itr.next());
     e.previous = before;
     Entry prev = e;
     Entry firstNew = e;
@@ -452,7 +468,7 @@ public class LinkedList extends AbstractSequentialList
     // Create and link all the remaining entries.
     for (int pos = 1; pos < csize; pos++)
       {
-        e = new Entry(itr.next());
+        e = (Entry) new Entry().fabric$util$LinkedList$Entry$(itr.next());
         e.previous = prev;
         prev.next = e;
         prev = e;
@@ -528,7 +544,7 @@ public class LinkedList extends AbstractSequentialList
   public void add(int index, Object o)
   {
     checkBoundsInclusive(index);
-    Entry e = new Entry(o);
+    Entry e = (Entry) new Entry().fabric$util$LinkedList$Entry$(o);
 
     if (index < size)
       {
@@ -614,7 +630,7 @@ public class LinkedList extends AbstractSequentialList
   public ListIterator listIterator(fabric.worker.Store store, int index)
   {
     checkBoundsInclusive(index);
-    return new LinkedListItr@store(index);
+    return (LinkedListItr) new LinkedListItr@store().fabric$util$LinkedList$LinkedListItr$(index);
   }
 
 //  /**
@@ -719,7 +735,7 @@ public class LinkedList extends AbstractSequentialList
     s.defaultReadObject();
     int i = s.readInt();
     while (--i >= 0)
-      addLastEntry(new Entry((Object) s.readObject()));
+      addLastEntry((Entry) new Entry().fabric$util$LinkedList$Entry$((Object) s.readObject()));
   }
 
   /**
@@ -751,8 +767,9 @@ public class LinkedList extends AbstractSequentialList
      *
      * @param index the initial index
      */
-    LinkedListItr(int index)
+    LinkedListItr fabric$util$LinkedList$LinkedListItr$(int index)
     {
+      fabric$lang$Object$();
       knownMod = modCount;
       if (index == size)
         {
@@ -765,6 +782,7 @@ public class LinkedList extends AbstractSequentialList
           previous = next.previous;
         }
       position = index;
+	  return this;
     }
 
     /**
@@ -892,7 +910,7 @@ public class LinkedList extends AbstractSequentialList
       knownMod++;
       size++;
       position++;
-      Entry e = new Entry(o);
+      Entry e = (Entry) new Entry().fabric$util$LinkedList$Entry$(o);
       e.previous = previous;
       e.next = next;
 
@@ -924,5 +942,25 @@ public class LinkedList extends AbstractSequentialList
         throw new IllegalStateException();
       lastReturned.data = o;
     }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
+    }
   } // class LinkedListItr
+
+  public Object $initLabels() {
+    // XXX What should this be?  Using completely permissive values for now.
+    // update label: {_ <-}
+    // access policy: {_ ->}
+    this.$updateLabel = LabelUtil.noComponents();
+    this.$accessPolicy = LabelUtil.bottomConf();
+
+    return this;
+  }
 }

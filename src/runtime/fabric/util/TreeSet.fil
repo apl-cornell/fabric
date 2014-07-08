@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -68,9 +68,11 @@ public class TreeSet extends AbstractSet
    *
    * @see Comparable
    */
-  public TreeSet()
+  public TreeSet fabric$util$TreeSet$()
   {
-    map = new TreeMap();
+    fabric$util$AbstractSet$();
+    map = (TreeMap) new TreeMap().fabric$util$TreeMap$();
+	return this;
   }
 
   /**
@@ -80,9 +82,11 @@ public class TreeSet extends AbstractSet
    *
    * @param comparator the Comparator this Set will use
    */
-  public TreeSet(Comparator comparator)
+  public TreeSet fabric$util$TreeSet$(Comparator comparator)
   {
-    map = new TreeMap(comparator);
+    fabric$util$AbstractSet$();
+    map = (TreeMap) new TreeMap().fabric$util$TreeMap$(comparator);
+	return this;
   }
 
   /**
@@ -97,10 +101,12 @@ public class TreeSet extends AbstractSet
    * @throws NullPointerException if the collection is null
    * @see Comparable
    */
-  public TreeSet(Collection collection)
+  public TreeSet fabric$util$TreeSet$(Collection collection)
   {
-    map = new TreeMap();
+    fabric$util$AbstractSet$();
+    map = (TreeMap) new TreeMap().fabric$util$TreeMap$();
     addAll(collection);
+	return this;
   }
 
   /**
@@ -112,11 +118,13 @@ public class TreeSet extends AbstractSet
    *        and will initialize itself with all its elements
    * @throws NullPointerException if sortedSet is null
    */
-  public TreeSet(SortedSet sortedSet)
+  public TreeSet fabric$util$TreeSet$(SortedSet sortedSet)
   {
-    map = new TreeMap(sortedSet.comparator());
+    fabric$util$AbstractSet$();
+    map = (TreeMap) new TreeMap().fabric$util$TreeMap$(sortedSet.comparator());
     Iterator itr = sortedSet.iterator(LOCAL_STORE);
     ((TreeMap) map).putKeysLinear(itr, sortedSet.size());
+	return this;
   }
 
   /**
@@ -125,9 +133,11 @@ public class TreeSet extends AbstractSet
    *
    * @param backingMap the submap
    */
-  private TreeSet(SortedMap backingMap)
+  private TreeSet fabric$util$TreeSet$(SortedMap backingMap)
   {
+    fabric$util$AbstractSet$();
     map = backingMap;
+	return this;
   }
 
   /**
@@ -221,7 +231,7 @@ public class TreeSet extends AbstractSet
    */
   public SortedSet headSet(Object to)
   {
-    return new TreeSet(map.headMap(to));
+    return (TreeSet) new TreeSet().fabric$util$TreeSet$(map.headMap(to));
   }
 
   /**
@@ -299,7 +309,7 @@ public class TreeSet extends AbstractSet
    */
   public SortedSet subSet(Object from, Object to)
   {
-    return new TreeSet(map.subMap(from, to));
+    return (TreeSet) new TreeSet().fabric$util$TreeSet$(map.subMap(from, to));
   }
 
   /**
@@ -319,6 +329,16 @@ public class TreeSet extends AbstractSet
    */
   public SortedSet tailSet(Object from)
   {
-    return new TreeSet(map.tailMap(from));
+    return (TreeSet) new TreeSet().fabric$util$TreeSet$(map.tailMap(from));
+  }
+
+  public Object $initLabels() {
+    // XXX What should this be?  Using completely permissive values for now.
+    // update label: {_ <-}
+    // access policy: {_ ->}
+    this.$updateLabel = LabelUtil.noComponents();
+    this.$accessPolicy = LabelUtil.bottomConf();
+
+    return this;
   }
 }

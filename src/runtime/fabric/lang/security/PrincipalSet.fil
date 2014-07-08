@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -24,12 +24,14 @@ import fabric.util.Set;
 public class PrincipalSet {
   private Set set;
 
-  public PrincipalSet() {
-    set = new LinkedHashSet();
+  public PrincipalSet fabric$lang$security$PrincipalSet$() {
+    fabric$lang$Object$();
+    set = (LinkedHashSet) new LinkedHashSet().fabric$util$LinkedHashSet$();
+    return this;
   }
 
   public PrincipalSet add(Principal p) {
-    PrincipalSet ps = new PrincipalSet();
+    PrincipalSet ps = (PrincipalSet) new PrincipalSet().fabric$lang$security$PrincipalSet$();
     ps.set.addAll(set);
     ps.set.add(p);
     return ps;
@@ -37,5 +39,15 @@ public class PrincipalSet {
 
   Set getSet() {
     return set;
+  }
+
+  public Object $initLabels() {
+    // XXX What should this be?  Using completely permissive values for now.
+    // update label: {_ <-}
+    // access policy: {_ ->}
+    this.$updateLabel = LabelUtil.noComponents();
+    this.$accessPolicy = LabelUtil.bottomConf();
+
+    return this;
   }
 }

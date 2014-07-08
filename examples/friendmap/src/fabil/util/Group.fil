@@ -1,0 +1,237 @@
+/**
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
+ *
+ * This file is part of Fabric.
+ *
+ * Fabric is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * Fabric is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ */
+package util;
+
+/**
+ * A group is a principal object that delegates to each of its members.  It
+ * also serves as a collection, so it can be iterated over, etc..
+ *
+ * A group is parameterized by an owner; only the owner may change the group
+ * membership.  The owner acts for the group, but is not listed as a member
+ * (unless explicitly added).
+ *
+ * TODO: Because of the absence of Fabric collections, this class uses a
+ * fixed-size array to hold the members, and the add() method throws an
+ * ArrayIndexOutOfBoundsException if the array is full.
+ */
+public class Group extends Delegator
+{
+  Principal[] members;
+  int   size = 0;
+  final private Principal jif$util_Group_groupOwner;
+  final private Label     jif$util_Group_A;
+
+  private final static int       SIZE = 100;
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Group constructors                                                       //
+  //////////////////////////////////////////////////////////////////////////////
+
+  /**
+   * Create a new group with the given name and the default maximum size.
+   */
+  public Group util$Group$(
+    final String  name
+  )
+  {
+    util$Delegator$(name, jif$util_Group_groupOwner);
+    this.members = new Principal[SIZE];
+    return this;
+  }
+
+  /**
+   * Create a new group with the given name and maximum size.
+   */
+  public Group util$Group$(
+    final String  name,
+    final int     maxSize
+  ) throws NegativeArraySizeException
+  {
+    util$Delegator$(name, jif$util_Group_groupOwner);
+    this.members = new Principal[maxSize];
+    return this;
+  }
+
+  public Group(final Principal p, final Label A) {
+    super();
+    this.jif$util_Group_groupOwner = p;
+    this.jif$util_Group_A          = A;
+  }
+
+  private void jif$init() { }
+
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Group membership operations                                              //
+  //////////////////////////////////////////////////////////////////////////////
+
+  /**
+   * Add a new member to the group.
+   */
+  public
+  void
+  add 
+  (
+    Principal p
+  )
+  throws ArrayIndexOutOfBoundsException
+  {
+    // invariant check
+    if (this.members == null)
+      throw new AssertionFailedError().util$AssertionFailedError$("this.members should always be non-null.");
+
+    // method implementation
+    if (size >= this.members.length)
+      throw new ArrayIndexOutOfBoundsException();
+
+    this.members[this.size++] = p;
+
+    PrincipalUtil.notifyNewDelegation(this,p);
+  }
+
+
+  /**
+   * Remove a member of the group.
+   */
+  public void remove (Principal p)
+  {
+    try
+    {
+      // method implementation
+      for (int i = 0; i < size; i++)
+        if (p == this.members[i])
+        {
+          // put last member into current slot and then resize
+          this.members[i]    = this.members[--size];
+          this.members[size] = null;
+        }
+
+      PrincipalUtil.notifyRevokeDelegation(this,p);
+
+    } catch (final ArrayIndexOutOfBoundsException e) {
+      throw new AssertionFailedError().util$AssertionFailedError$("this.size <= this.members.length");
+
+    } catch (final NullPointerException e) {
+      throw new AssertionFailedError().util$AssertionFailedError$("this.members should always be non-null.");
+    }
+  }
+
+
+  /**
+   * Iterate over the members of the group.
+   */
+  public
+  GroupIterator
+  iterator
+  (
+    final Store s,
+    final Label l
+  )
+  {
+    if (PrincipalUtil.actsFor(jif$util_Group_groupOwner, this)) {
+      final Group g = this;
+      GroupIterator result =
+        (GroupIterator)
+          new GroupIterator@s(jif$util_Group_groupOwner, l)
+            .util$GroupIterator$(g).$initLabels();
+      return result;
+    }
+    else
+      throw new AssertionFailedError().util$AssertionFailedError$("groupOwner must act for group");
+  }
+
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Principal methods                                                        //
+  //////////////////////////////////////////////////////////////////////////////
+
+  /**
+   * Return true if p acts for either groupOwner or a member of the group.
+   */
+  public boolean delegatesTo(Principal p) {
+    if (PrincipalUtil.actsFor(p, jif$util_Group_groupOwner))
+      return true;
+
+    if (PrincipalUtil.actsFor(jif$util_Group_groupOwner, this)) {
+      try {
+        for (int i = 0; i < this.size; i++)
+          if (PrincipalUtil.actsFor(p, this.members[i]))
+            return true;
+
+        return false;
+
+      } catch (final ArrayIndexOutOfBoundsException e) {
+        throw new AssertionFailedError().util$AssertionFailedError$("this.size <= this.members.length");
+
+      } catch (final NullPointerException e) {
+        throw new AssertionFailedError().util$AssertionFailedError$("this.members should always be non-null.");
+      }
+    }
+    else
+      throw new AssertionFailedError().util$AssertionFailedError$("this.groupOwner actsfor this");
+  }
+
+  /**
+   * See Principal.findProofUpto.
+   */
+  public ActsForProof findProofUpto
+               (Store s, Principal p,
+                java.lang.Object searchState)
+  {
+    if (PrincipalUtil.actsFor(jif$util_Group_groupOwner, this)) {
+      try
+      {
+
+        // search for a proof from any of our delegatees
+        for (int i = 0; i < size; i++) {
+          final Principal m = members[i];
+
+          if (PrincipalUtil.actsFor(m, this)) {
+            // find a proof and extend it to include the group
+            ActsForProof proof = PrincipalUtil.findActsForProof(s, p, m, searchState);
+            if (proof != null) {
+              DelegatesProof delProof =
+                (DelegatesProof)
+                  new DelegatesProof@s().fabric$lang$security$DelegatesProof$(m, this);
+                return
+                  (TransitiveProof)
+                    new TransitiveProof@s().fabric$lang$security$TransitiveProof$(proof, m, delProof);
+            }
+          }
+          else
+            throw new AssertionFailedError().util$AssertionFailedError$("this must delegate to all entries in the members array.");
+        }
+
+        // no proof could be found.
+        return null;
+
+      } catch (final ArrayIndexOutOfBoundsException e) {
+        throw new AssertionFailedError().util$AssertionFailedError$("this.size <= this.members.length");
+
+      } catch (final NullPointerException e) {
+        throw new AssertionFailedError().util$AssertionFailedError$("this.members should always be non-null.");
+      }
+
+    } else {
+      throw new AssertionFailedError().util$AssertionFailedError$("this must delegate to groupOwner");
+    }
+  }
+}
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/
+

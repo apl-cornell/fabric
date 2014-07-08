@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -30,9 +30,7 @@ public final class Class extends Node {
         class_ = c;
         node = n;
     }
-    /* (non-Javadoc)
-     * @see servlet.Node#write(servlet.HTMLWriter)
-     */
+
     void writeImpl(HTMLWriter p) {
         p.setClass(class_);
         if (node != null) node.write(p, this);

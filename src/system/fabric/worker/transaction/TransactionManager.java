@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -16,15 +16,31 @@
 package fabric.worker.transaction;
 
 import static fabric.common.Logging.WORKER_TRANSACTION_LOGGER;
-import static fabric.worker.transaction.Log.CommitState.Values.*;
+import static fabric.worker.transaction.Log.CommitState.Values.ABORTED;
+import static fabric.worker.transaction.Log.CommitState.Values.ABORTING;
+import static fabric.worker.transaction.Log.CommitState.Values.COMMITTED;
+import static fabric.worker.transaction.Log.CommitState.Values.COMMITTING;
+import static fabric.worker.transaction.Log.CommitState.Values.PREPARED;
+import static fabric.worker.transaction.Log.CommitState.Values.PREPARE_FAILED;
+import static fabric.worker.transaction.Log.CommitState.Values.PREPARING;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.WeakHashMap;
 import java.util.logging.Level;
 
 import fabric.common.FabricThread;
 import fabric.common.Logging;
 import fabric.common.SerializedObject;
+import fabric.common.Timing;
 import fabric.common.TransactionID;
+import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.OidKeyHashMap;
@@ -35,10 +51,18 @@ import fabric.lang.security.SecurityCache;
 import fabric.net.RemoteNode;
 import fabric.net.UnreachableNodeException;
 import fabric.store.InProcessStore;
-import fabric.worker.*;
-import fabric.worker.debug.Timing;
+import fabric.worker.AbortException;
+import fabric.worker.FabricSoftRef;
+import fabric.worker.RemoteStore;
+import fabric.worker.Store;
+import fabric.worker.TransactionAbortingException;
+import fabric.worker.TransactionAtomicityViolationException;
+import fabric.worker.TransactionCommitFailedException;
+import fabric.worker.TransactionPrepareFailedException;
+import fabric.worker.TransactionRestartingException;
+import fabric.worker.Worker;
 import fabric.worker.remote.RemoteWorker;
-import fabric.worker.remote.UpdateMap;
+import fabric.worker.remote.WriterMap;
 
 /**
  * Holds transaction management information for a single thread. Each thread has
@@ -88,6 +112,13 @@ public final class TransactionManager {
    * The innermost running transaction for the thread being managed.
    */
   private Log current;
+
+  /**
+   * A debugging switch for storing a stack trace each time a write lock is
+   * obtained. Enable this by passing "--trace-locks" as a command-line argument
+   * to the node.
+   */
+  public static boolean TRACE_WRITE_LOCKS = false;
 
   /**
    * A map from OIDs to a version number and a list of logs for transactions
@@ -186,17 +217,25 @@ public final class TransactionManager {
     }
   }
 
+  /**
+   * Aborts the transaction, recursing to any workers that were called, and any
+   * stores that were contacted.
+   */
   public void abortTransaction() {
-    abortTransaction(true);
+    abortTransaction(Collections.<RemoteNode> emptySet());
   }
 
   /**
-   * @param recurseToCohorts
-   *          true iff should send abort messages to stores and workers.
+   * @param abortedNodes
+   *          a set of nodes that don't need to be contacted because they
+   *          already know about the abort.
    */
-  private void abortTransaction(boolean recurseToCohorts) {
+  private void abortTransaction(Set<RemoteNode> abortedNodes) {
+    Set<Store> storesToContact;
+    List<RemoteWorker> workersToContact;
     if (current.tid.depth == 0) {
-      // Make sure no other thread is working on this transaction.
+      // Aborting a top-level transaction. Make sure no other thread is working
+      // on this transaction.
       synchronized (current.commitState) {
         while (current.commitState.value == PREPARING) {
           try {
@@ -207,13 +246,21 @@ public final class TransactionManager {
 
         switch (current.commitState.value) {
         case UNPREPARED:
+          current.commitState.value = ABORTING;
+          storesToContact = Collections.emptySet();
+          workersToContact = current.workersCalled;
+          break;
+
         case PREPARE_FAILED:
         case PREPARED:
           current.commitState.value = ABORTING;
+          storesToContact = current.storesToContact();
+          workersToContact = current.workersCalled;
           break;
 
         case PREPARING:
-          // We should've taken care of this case already.
+          // We should've taken care of this case already in the 'while' loop
+          // above.
           throw new InternalError();
 
         case COMMITTING:
@@ -226,8 +273,17 @@ public final class TransactionManager {
         case ABORTING:
         case ABORTED:
           return;
+
+        default:
+          // All cases should have been specified above.
+          throw new InternalError();
         }
       }
+    } else {
+      // Aborting a nested transaction. Only need to abort at the workers we've
+      // called.
+      storesToContact = Collections.emptySet();
+      workersToContact = current.workersCalled;
     }
 
     WORKER_TRANSACTION_LOGGER.warning(current + " aborting");
@@ -239,7 +295,7 @@ public final class TransactionManager {
     // Wait for all other threads to finish.
     current.waitForThreads();
 
-    if (recurseToCohorts) sendAbortMessages();
+    sendAbortMessages(storesToContact, workersToContact, abortedNodes);
     current.abort();
     WORKER_TRANSACTION_LOGGER.warning(current + " aborted");
 
@@ -272,50 +328,27 @@ public final class TransactionManager {
    */
   public void commitTransaction() throws AbortException,
       TransactionRestartingException, TransactionAtomicityViolationException {
-    commitTransaction(true);
-  }
-
-  /**
-   * Commits the transaction if possible; otherwise, aborts the transaction.
-   * 
-   * @param useAuthentication
-   *          whether to use an authenticated channel to talk to the store
-   * @throws AbortException
-   *           if the transaction was aborted.
-   * @throws TransactionRestartingException
-   *           if the transaction was aborted and needs to be retried.
-   */
-  public void commitTransaction(boolean useAuthentication)
-      throws AbortException, TransactionRestartingException,
-      TransactionAtomicityViolationException {
     Timing.COMMIT.begin();
     try {
-      commitTransactionAt(System.currentTimeMillis(), useAuthentication, false);
+      commitTransactionAt(System.currentTimeMillis());
     } finally {
       Timing.COMMIT.end();
     }
   }
 
-  public void commitTransactionAt(long commitTime) throws AbortException,
-      TransactionRestartingException {
-    commitTransactionAt(commitTime, true, false);
+  /**
+   * @throws TransactionRestartingException
+   *           if the prepare fails.
+   */
+  public void commitTransactionAt(long commitTime) {
+    commitTransactionAt(commitTime, false);
   }
 
   /**
-   * Commits the transaction if possible; otherwise, aborts the transaction.
-   * 
-   * @param useAuthentication
-   *          whether to use an authenticated channel to talk to the store
-   * @param ignoreRetrySignal
-   *          whether to ignore the retry signal
-   * @throws AbortException
-   *           if the transaction was aborted.
    * @throws TransactionRestartingException
-   *           if the transaction was aborted and needs to be retried.
+   *           if the prepare fails.
    */
-  private void commitTransactionAt(long commitTime, boolean useAuthentication,
-      boolean ignoreRetrySignal) throws AbortException,
-      TransactionRestartingException {
+  public void commitTransactionAt(long commitTime, boolean ignoreRetrySignal) {
     WORKER_TRANSACTION_LOGGER.log(Level.FINEST, "{0} attempting to commit",
         current);
     // Assume only one thread will be executing this.
@@ -397,30 +430,34 @@ public final class TransactionManager {
 
     // Send prepare messages to our cohorts. This will also abort our portion of
     // the transaction if the prepare fails.
-    sendPrepareMessages(useAuthentication, commitTime, stores, workers);
+    sendPrepareMessages(commitTime, stores, workers);
 
     // Send commit messages to our cohorts.
-    sendCommitMessagesAndCleanUp(useAuthentication, stores, workers);
+    sendCommitMessagesAndCleanUp(stores, workers);
   }
 
   /**
    * Sends prepare messages to the cohorts. Also sends abort messages if any
    * cohort fails to prepare.
+   * 
+   * @throws TransactionRestartingException
+   *           if the prepare fails.
    */
   public void sendPrepareMessages(long commitTime) {
-    sendPrepareMessages(true, commitTime, current.storesToContact(),
+    sendPrepareMessages(commitTime, current.storesToContact(),
         current.workersCalled);
   }
 
   /**
    * Sends prepare messages to the given set of stores and workers. If the
-   * prepare fails, the local portion of the transaction is rolled back.
+   * prepare fails, the local portion and given branch of the transaction is
+   * rolled back.
    * 
    * @throws TransactionRestartingException
    *           if the prepare fails.
    */
-  private void sendPrepareMessages(final boolean useAuthentication,
-      final long commitTime, Set<Store> stores, List<RemoteWorker> workers) {
+  private void sendPrepareMessages(final long commitTime, Set<Store> stores,
+      List<RemoteWorker> workers) {
     final Map<RemoteNode, TransactionPrepareFailedException> failures =
         Collections
             .synchronizedMap(new HashMap<RemoteNode, TransactionPrepareFailedException>());
@@ -430,21 +467,24 @@ public final class TransactionManager {
       case UNPREPARED:
         current.commitState.value = PREPARING;
         break;
+
       case PREPARING:
       case PREPARED:
         return;
+
       case COMMITTING:
       case COMMITTED:
         WORKER_TRANSACTION_LOGGER.log(Level.FINE,
             "Ignoring prepare request (transaction state = {0})",
             current.commitState.value);
         return;
+
       case PREPARE_FAILED:
+        throw new InternalError();
+
       case ABORTING:
       case ABORTED:
-        // XXX HACK UGLY
-        failures.put(null, null);
-        abortPrepare(failures);
+        throw new TransactionRestartingException(current.tid);
       }
     }
 
@@ -479,14 +519,15 @@ public final class TransactionManager {
     for (Iterator<Store> storeIt = stores.iterator(); storeIt.hasNext();) {
       final Store store = storeIt.next();
       Runnable runnable = new Runnable() {
+        @Override
         public void run() {
           try {
             Collection<_Impl> creates = current.getCreatesForStore(store);
             LongKeyMap<Integer> reads = current.getReadsForStore(store, false);
             Collection<_Impl> writes = current.getWritesForStore(store);
             boolean subTransactionCreated =
-                store.prepareTransaction(useAuthentication, current.tid.topTid,
-                    commitTime, creates, reads, writes);
+                store.prepareTransaction(current.tid.topTid, commitTime,
+                    creates, reads, writes);
 
             if (subTransactionCreated) {
               RemoteWorker storeWorker = worker.getWorker(store.name());
@@ -552,14 +593,21 @@ public final class TransactionManager {
       }
       WORKER_TRANSACTION_LOGGER.fine(logMessage);
 
-      sendAbortMessages(useAuthentication, stores, workers, failures.keySet());
-      
       synchronized (current.commitState) {
         current.commitState.value = PREPARE_FAILED;
         current.commitState.notifyAll();
       }
-      
-      abortPrepare(failures);
+
+      TransactionID tid = current.tid;
+
+      TransactionPrepareFailedException e =
+          new TransactionPrepareFailedException(failures);
+      Logging.log(WORKER_TRANSACTION_LOGGER, Level.WARNING,
+          "{0} error committing: prepare failed exception: {1}", current, e);
+
+      abortTransaction(failures.keySet());
+      throw new TransactionRestartingException(tid);
+
     } else {
       synchronized (current.commitState) {
         current.commitState.value = PREPARED;
@@ -569,35 +617,19 @@ public final class TransactionManager {
   }
 
   /**
-   * Aborts a failed prepare. Throws a TransactionRestartingException to
-   * indicate that the transaction should be restarted.
-   */
-  private void abortPrepare(Map<RemoteNode, TransactionPrepareFailedException> failures) {
-    failures.remove(null);
-    TransactionPrepareFailedException e =
-      new TransactionPrepareFailedException(failures);
-    Logging.log(WORKER_TRANSACTION_LOGGER, Level.WARNING,
-        "{0} error committing: prepare failed exception: {1}", current, e);
-    TransactionID tid = current.tid;
-    abortTransaction(false);
-    throw new TransactionRestartingException(tid);
-  }
-
-  /**
    * Sends commit messages to the cohorts.
    */
   public void sendCommitMessagesAndCleanUp()
       throws TransactionAtomicityViolationException {
-    sendCommitMessagesAndCleanUp(true, current.storesToContact(),
+    sendCommitMessagesAndCleanUp(current.storesToContact(),
         current.workersCalled);
   }
 
   /**
    * Sends commit messages to the given set of stores and workers.
    */
-  private void sendCommitMessagesAndCleanUp(final boolean useAuthentication,
-      Set<Store> stores, List<RemoteWorker> workers)
-      throws TransactionAtomicityViolationException {
+  private void sendCommitMessagesAndCleanUp(Set<Store> stores,
+      List<RemoteWorker> workers) throws TransactionAtomicityViolationException {
     synchronized (current.commitState) {
       switch (current.commitState.value) {
       case UNPREPARED:
@@ -649,9 +681,10 @@ public final class TransactionManager {
     for (Iterator<Store> storeIt = stores.iterator(); storeIt.hasNext();) {
       final Store store = storeIt.next();
       Runnable runnable = new Runnable() {
+        @Override
         public void run() {
           try {
-            store.commitTransaction(useAuthentication, current.tid.topTid);
+            store.commitTransaction(current.tid.topTid);
           } catch (TransactionCommitFailedException e) {
             failed.add((RemoteStore) store);
           } catch (UnreachableNodeException e) {
@@ -710,20 +743,8 @@ public final class TransactionManager {
   }
 
   /**
-   * Sends abort messages to all other nodes that were contacted during the
-   * transaction.
-   */
-  @SuppressWarnings("unchecked")
-  private void sendAbortMessages() {
-    sendAbortMessages(true, current.storesToContact(), current.workersCalled,
-        Collections.EMPTY_SET);
-  }
-
-  /**
    * Sends abort messages to those nodes that haven't reported failures.
    * 
-   * @param useAuthentication
-   *          whether to authenticate to the stores.
    * @param stores
    *          the set of stores involved in the transaction.
    * @param workers
@@ -731,14 +752,27 @@ public final class TransactionManager {
    * @param fails
    *          the set of nodes that have reported failure.
    */
-  private void sendAbortMessages(boolean useAuthentication, Set<Store> stores,
-      List<RemoteWorker> workers, Set<RemoteNode> fails) {
+  private void sendAbortMessages(Set<Store> stores, List<RemoteWorker> workers,
+      Set<RemoteNode> fails) {
     for (Store store : stores)
-      if (!fails.contains(store))
-        store.abortTransaction(useAuthentication, current.tid);
+      if (!fails.contains(store)) {
+        try {
+          store.abortTransaction(current.tid);
+        } catch (AccessException e) {
+          Logging.log(WORKER_TRANSACTION_LOGGER, Level.WARNING,
+              "Access error while aborting transaction: {0}", e);
+        }
+      }
 
     for (RemoteWorker worker : workers)
-      if (!fails.contains(worker)) worker.abortTransaction(current.tid);
+      if (!fails.contains(worker)) {
+        try {
+          worker.abortTransaction(current.tid);
+        } catch (AccessException e) {
+          Logging.log(WORKER_TRANSACTION_LOGGER, Level.WARNING,
+              "Access error while aborting transaction: {0}", e);
+        }
+      }
   }
 
   public void registerCreate(_Impl obj) {
@@ -753,11 +787,13 @@ public final class TransactionManager {
       // Grab a write lock on the object.
       obj.$writer = current;
       obj.$writeLockHolder = current;
+      if (TRACE_WRITE_LOCKS)
+        obj.$writeLockStackTrace = Thread.currentThread().getStackTrace();
 
       // Own the object. The call to ensureOwnership is responsible for adding
       // the object to the set of created objects.
       ensureOwnership(obj);
-      current.updateMap.put(obj.$getProxy(), obj.get$label());
+      current.writerMap.put(obj.$getProxy(), obj.get$$updateLabel());
     } finally {
       Timing.TXLOG.end();
     }
@@ -766,7 +802,7 @@ public final class TransactionManager {
   public void registerRead(_Impl obj) {
     synchronized (obj) {
       if (obj.$reader == current
-          && obj.$updateMapVersion == current.updateMap.version) return;
+          && obj.writerMapVersion == current.writerMap.version) return;
 
       // Nothing to do if we're not in a transaction.
       if (current == null) return;
@@ -816,7 +852,7 @@ public final class TransactionManager {
     obj.$reader = current;
 
     // Reset the object's update-map version stamp.
-    obj.$updateMapVersion = -1;
+    obj.writerMapVersion = -1;
 
     current.acquireReadLock(obj);
     if (hadToWait)
@@ -834,7 +870,7 @@ public final class TransactionManager {
 
     synchronized (obj) {
       if (obj.$writer == current
-          && obj.$updateMapVersion == current.updateMap.version && obj.$isOwned)
+          && obj.writerMapVersion == current.writerMap.version && obj.$isOwned)
         return needTransaction;
 
       try {
@@ -921,6 +957,8 @@ public final class TransactionManager {
     // write set.
     obj.$history = obj.clone();
     obj.$writeLockHolder = current;
+    if (TRACE_WRITE_LOCKS)
+      obj.$writeLockStackTrace = Thread.currentThread().getStackTrace();
 
     if (obj.$getStore().isLocalStore()) {
       synchronized (current.localStoreWrites) {
@@ -945,14 +983,14 @@ public final class TransactionManager {
   private void ensureOwnership(_Impl obj) {
     if (obj.$isOwned) return;
 
-    // Check the update map to see if another worker currently owns the object.
-    RemoteWorker owner = current.updateMap.getUpdate(obj.$getProxy());
+    // Check the writer map to see if another worker currently owns the object.
+    RemoteWorker owner = current.writerMap.getWriter(obj.$getProxy());
     if (owner != null)
       owner.takeOwnership(current.tid, obj.$getStore(), obj.$getOnum());
 
     // We now own the object.
     obj.$isOwned = true;
-    current.updateMap.put(obj.$getProxy(), Worker.getWorker().getLocalWorker());
+    current.writerMap.put(obj.$getProxy(), Worker.getWorker().getLocalWorker());
 
     // If the object is fresh, add it to our set of creates.
     if (obj.$version == 0) {
@@ -969,18 +1007,18 @@ public final class TransactionManager {
   }
 
   /**
-   * Checks the update map and fetches from the object's owner as necessary.
+   * Checks the writer map and fetches from the object's owner as necessary.
    * This method assumes we are synchronized on the object.
    */
   private void ensureObjectUpToDate(_Impl obj) {
     // Check the object's update-map version stamp.
-    if (obj.$updateMapVersion == current.updateMap.version) return;
+    if (obj.writerMapVersion == current.writerMap.version) return;
 
     // Set the update-map version stamp on the object.
-    obj.$updateMapVersion = current.updateMap.version;
+    obj.writerMapVersion = current.writerMap.version;
 
-    // Check the update map.
-    RemoteWorker owner = current.updateMap.getUpdate(obj.$getProxy());
+    // Check the writer map.
+    RemoteWorker owner = current.writerMap.getWriter(obj.$getProxy());
     if (owner == null || owner == Worker.getWorker().getLocalWorker()) return;
 
     // Need to fetch from the owner.
@@ -1023,6 +1061,7 @@ public final class TransactionManager {
     for (Iterator<Store> storeIt = stores.iterator(); storeIt.hasNext();) {
       final Store store = storeIt.next();
       Runnable runnable = new Runnable() {
+        @Override
         public void run() {
           LongKeyMap<Integer> reads = current.getReadsForStore(store, true);
           if (store.checkForStaleObjects(reads))
@@ -1160,9 +1199,9 @@ public final class TransactionManager {
     return current.tid;
   }
 
-  public UpdateMap getUpdateMap() {
+  public WriterMap getWriterMap() {
     if (current == null) return null;
-    return current.updateMap;
+    return current.writerMap;
   }
 
   /**
@@ -1171,14 +1210,17 @@ public final class TransactionManager {
    *         created by the current transaction and is owned by that worker.
    */
   public RemoteWorker getFetchWorker(_Proxy proxy) {
-    if (current == null || !current.updateMap.containsCreate(proxy))
+    if (current == null || !current.writerMap.containsCreate(proxy))
       return null;
-    Label label = current.updateMap.getCreate(proxy);
+    Label label = current.writerMap.getCreate(proxy);
 
-    return current.updateMap.getUpdate(proxy, label);
+    return current.writerMap.getWriter(proxy, label);
   }
 
   public SecurityCache getSecurityCache() {
+    if (current == null)
+      throw new InternalError(
+          "Application attempting to perform label operations outside of a transaction");
     return (SecurityCache) current.securityCache;
   }
 
@@ -1199,7 +1241,7 @@ public final class TransactionManager {
     // transaction manager.
     TransactionID commonAncestor = log.getTid().getLowestCommonAncestor(tid);
     for (int i = log.getTid().depth; i > commonAncestor.depth; i--)
-      commitTransactionAt(System.currentTimeMillis(), true, true);
+      commitTransactionAt(System.currentTimeMillis());
 
     // Start new transactions if necessary.
     if (commonAncestor.depth != tid.depth) startTransaction(tid, true);

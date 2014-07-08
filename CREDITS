@@ -1,32 +1,40 @@
+Credits
+=======
 The current Fabric developers are:
 
-  Jed Liu
-  Michael D. George
-  K. Vikram
-  Lucas Waye
-  Owen Arden
-  Danfeng Zhang
+  * Jed Liu
+  * Owen Arden
+  * Michael D. George
+  * K. Vikram
 
-The Fabric project group is supervised by Prof. Andrew C. Myers at
-the Cornell University Computer Science Department.
+Tom Magrino helped test this release.
+
+The Fabric project group is supervised by Prof. Andrew C. Myers at the
+Cornell University Computer Science Department.
 
 Past Fabric developers are:
 
-  Xin Qi
-  Xin Zheng
+  * Lucas Waye
+  * Danfeng Zhang
+  * Xin Qi
+  * Xin Zheng
 
 Nate Nystrom was involved in the early stages of the Fabric project.
 
-Steve Chong provided guidance on extending Jif and provided quick
-bug fixes to the base Jif compiler.
+Steve Chong provided guidance on extending Jif and provided quick bug
+fixes to the base Jif compiler.
 
-The development of the Fabric project has been supported by a number
-of funding sources, including:
 
-  * National Science Foundation grants 0430161 and 0627649
+Sponsors
+--------
+The development of the Fabric project has been supported by a number of
+funding sources, including:
+
+  * National Science Foundation grants 0430161, 0541217, 0627649, and
+    0964409
   * Microsoft Corporation
-  * AF-TRUST, which receives support from the DAF Air Force Office
-    of Scientific Research (FA9550-06-1-0244) and the NSF (0424422)
+  * AF-TRUST, which receives support from the DAF Air Force Office of
+    Scientific Research (FA9550-06-1-0244) and the NSF (0424422)
   * Air Force Research Laboratories NICECAP grant FA8750-08-2-0079
   * Office of Naval Research award N000140910652
 

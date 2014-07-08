@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -36,9 +36,7 @@ public class SpecialChar extends Node {
         super(L, E);
         name = "#" + n;
     }
-    /* (non-Javadoc)
-     * @see servlet.Node#write(servlet.HTMLWriter)
-     */
+
     final void writeImpl(HTMLWriter p) {
         p.print("&");
         p.print(name);

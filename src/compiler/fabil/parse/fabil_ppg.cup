@@ -15,17 +15,20 @@ import fabil.ast.FabricArrayTypeNode;
 import polyglot.parse.*;
 import fabil.types.FabILTypeSystem;
 import fabil.types.FabILFlags;
-import fabil.types.FabricArrayType;
+import fabil.parse.Name;
+import java.net.URI;
 
 parser Grm extends polyglot.parse.Grm {:
 
     public final FabILTypeSystem ts;
     public final FabILNodeFactory nf;
-
-    public Grm(Lexer l, TypeSystem t, NodeFactory n, ErrorQueue q) {
+	public final URI ns;
+	
+    public Grm(Lexer l, TypeSystem t, NodeFactory n, ErrorQueue q, URI ns) {
         super(l, t, n, q);
         ts = (FabILTypeSystem) t;
         nf = (FabILNodeFactory) n;
+		this.ns = ns; 
     }
     
     public TypeNode fabricArray(TypeNode n, int dims) throws Exception {
@@ -53,6 +56,8 @@ parser Grm extends polyglot.parse.Grm {:
       
       return super.array(n, dims);
     } 
+    
+
 
 :}
 scan with {: return nextSymbol(); :};
@@ -354,12 +359,12 @@ name ::=
 
 simple_name ::=
     IDENTIFIER:a {:
-                 RESULT = new Name(parser.nf, parser.ts, parser.pos(a), parser.nf.Id(parser.pos(a), a.getIdentifier())); 
+                 RESULT = new Name(parser.nf, parser.ts, parser.ns, parser.pos(a), parser.nf.Id(parser.pos(a), a.getIdentifier())); 
                  :};
 
 qualified_name ::=
     name:a DOT IDENTIFIER:b {:
-                            RESULT = new Name(parser.nf, parser.ts, parser.pos(a, b), a, parser.nf.Id(parser.pos(b), b.getIdentifier())); 
+                            RESULT = new Name(parser.nf, parser.ts, parser.ns, parser.pos(a, b), a, parser.nf.Id(parser.pos(b), b.getIdentifier())); 
                             :};
 
 compilation_unit ::=
@@ -380,17 +385,15 @@ package_declaration_opt ::=
 
 import_declarations_opt ::=
     import_declarations:a {:  RESULT = a;  :}
- |  {:  RESULT = new TypedList(new LinkedList(), Import.class, false);  :};
+ |  {:  RESULT = new LinkedList<Import>();  :};
 
 type_declarations_opt ::=
     type_declarations:a {:  RESULT = a;  :}
- |  {:
-    RESULT = new TypedList(new LinkedList(), TopLevelDecl.class, false); 
-    :};
+ |  {:  RESULT = new LinkedList<TopLevelDecl>();  :};
 
 import_declarations ::=
     import_declaration:a {:
-                         List l = new TypedList(new LinkedList(), Import.class, false);
+                         List l = new LinkedList<Import>();
                l.add(a);
                RESULT = l; 
                          :}
@@ -401,7 +404,7 @@ import_declarations ::=
 
 type_declarations ::=
     type_declaration:a {:
-                       List l = new TypedList(new LinkedList(), TopLevelDecl.class, false);
+                       List l = new LinkedList<TopLevelDecl>();
                if (a != null)
                    l.add(a);
                RESULT = l; 
@@ -477,12 +480,12 @@ interfaces ::=
     IMPLEMENTS interface_type_list:a {:  RESULT = a;  :};
 
 interfaces_opt ::=
-    {:  RESULT = new TypedList(new LinkedList(), TypeNode.class, false);  :}
+    {:  RESULT = new LinkedList<TypeNode>();  :}
  |  interfaces:a {:  RESULT = a;  :};
 
 interface_type_list ::=
     interface_type:a {:
-                     List l = new TypedList(new LinkedList(), TypeNode.class, false);
+                     List l = new LinkedList<TypeNode>();
                l.add(a);
                RESULT = l; 
                      :}
@@ -497,7 +500,7 @@ class_body ::=
                                                     :};
 
 class_body_declarations_opt ::=
-    {:  RESULT = new TypedList(new LinkedList(), ClassMember.class, false);  :}
+    {:  RESULT = new LinkedList<ClassMember>();  :}
  |  class_body_declarations:a {:  RESULT = a;  :};
 
 class_body_declarations ::=
@@ -510,55 +513,55 @@ class_body_declarations ::=
 class_body_declaration ::=
     class_member_declaration:a {:  RESULT = a;  :}
  |  static_initializer:a {:
-                         List l = new TypedList(new LinkedList(), ClassMember.class, false);
+                         List l = new LinkedList<ClassMember>();
                l.add(parser.nf.Initializer(parser.pos(a), Flags.STATIC, a));
                RESULT = l; 
                          :}
  |  constructor_declaration:a {:
-                              List l = new TypedList(new LinkedList(), ClassMember.class, false);
+                              List l = new LinkedList<ClassMember>();
                l.add(a);
                RESULT = l; 
                               :}
  |  block:a {:
-            List l = new TypedList(new LinkedList(), ClassMember.class, false);
+            List l = new LinkedList<ClassMember>();
                l.add(parser.nf.Initializer(parser.pos(a), Flags.NONE, a));
                RESULT = l; 
             :}
  |  SEMICOLON {:
-              List l = new TypedList(new LinkedList(), ClassMember.class, false);
+              List l = new LinkedList<ClassMember>();
                RESULT = l; 
               :}
  |  error SEMICOLON:a {:
-                      List l = new TypedList(new LinkedList(), ClassMember.class, false);
+                      List l = new LinkedList<ClassMember>();
                RESULT = l; 
                       :}
  |  error LBRACE:a {:
-                   List l = new TypedList(new LinkedList(), ClassMember.class, false);
+                   List l = new LinkedList<ClassMember>();
                RESULT = l; 
                    :};
 
 class_member_declaration ::=
     field_declaration:a {:  RESULT = a;  :}
  |  method_declaration:a {:
-                         List l = new TypedList(new LinkedList(), ClassMember.class, false);
+                         List l = new LinkedList<ClassMember>();
                l.add(a);
                RESULT = l; 
                          :}
  |  modifiers_opt:a CLASS:n IDENTIFIER:b super_opt:c interfaces_opt:d class_body:e {:
-                                                                                   List l = new TypedList(new LinkedList(), ClassMember.class, false);
+                                                                                   List l = new LinkedList<ClassMember>();
                l.add(parser.nf.ClassDecl(parser.pos(n, e),
                         a, parser.nf.Id(parser.pos(b), b.getIdentifier()), c, d, e));
                RESULT = l; 
                                                                                    :}
  |  interface_declaration:a {:
-                            List l = new TypedList(new LinkedList(), ClassMember.class, false);
+                            List l = new LinkedList<ClassMember>();
                l.add(a);
                RESULT = l; 
                             :};
 
 field_declaration ::=
     modifiers_opt:a type:b variable_declarators:c SEMICOLON:e {:
-                                                              List l = new TypedList(new LinkedList(), ClassMember.class, false);
+                                                              List l = new LinkedList<ClassMember>();
                for (Iterator i = c.iterator(); i.hasNext(); ) {
                    VarDeclarator d = (VarDeclarator) i.next();
                    l.add(parser.nf.FieldDecl(parser.pos(b, e),
@@ -570,7 +573,7 @@ field_declaration ::=
 
 variable_declarators ::=
     variable_declarator:a {:
-                          List l = new TypedList(new LinkedList(), VarDeclarator.class, false);
+                          List l = new LinkedList<VarDeclarator>();
                l.add(a);
                RESULT = l; 
                           :}
@@ -616,12 +619,12 @@ method_header ::=
                                                                                                  :};
 
 formal_parameter_list_opt ::=
-    {:  RESULT = new TypedList(new LinkedList(), Formal.class, false);  :}
+    {:  RESULT = new LinkedList<Formal>();  :}
  |  formal_parameter_list:a {:  RESULT = a;  :};
 
 formal_parameter_list ::=
     formal_parameter:a {:
-                       List l = new TypedList(new LinkedList(), Formal.class, false);
+                       List l = new LinkedList<Formal>();
                l.add(a);
                RESULT = l; 
                        :}
@@ -641,7 +644,7 @@ formal_parameter ::=
                                           :};
 
 throws_opt ::=
-    {:  RESULT = new TypedList(new LinkedList(), TypeNode.class, false);  :}
+    {:  RESULT = new LinkedList<TypeNode>();  :}
  |  throws:a {:  RESULT = a;  :};
 
 throws ::=
@@ -649,7 +652,7 @@ throws ::=
 
 class_type_list ::=
     class_type:a {:
-                 List l = new TypedList(new LinkedList(), TypeNode.class, false);
+                 List l = new LinkedList<TypeNode>();
                l.add(a);
                RESULT = l; 
                  :}
@@ -673,7 +676,7 @@ constructor_declaration ::=
 
 constructor_body ::=
     LBRACE:n explicit_constructor_invocation:a block_statements:b RBRACE:d {:
-                                                                           List l = new TypedList(new LinkedList(), Stmt.class, false);
+                                                                           List l = new LinkedList<Stmt>();
                l.add(a);
                l.addAll(b);
                RESULT = parser.nf.Block(parser.pos(n, d), l); 
@@ -714,12 +717,12 @@ interface_declaration ::=
                                                                                        :};
 
 extends_interfaces_opt ::=
-    {:  RESULT = new TypedList(new LinkedList(), TypeNode.class, false);  :}
+    {:  RESULT = new LinkedList<TypeNode>();  :}
  |  extends_interfaces:a {:  RESULT = a;  :};
 
 extends_interfaces ::=
     EXTENDS interface_type:a {:
-                             List l = new TypedList(new LinkedList(), TypeNode.class, false);
+                             List l = new LinkedList<TypeNode>();
                l.add(a);
                RESULT = l; 
                              :}
@@ -734,7 +737,7 @@ interface_body ::=
                                                           :};
 
 interface_member_declarations_opt ::=
-    {:  RESULT = new TypedList(new LinkedList(), ClassMember.class, false);  :}
+    {:  RESULT = new LinkedList<ClassMember>();  :}
  |  interface_member_declarations:a {:  RESULT = a;  :};
 
 interface_member_declarations ::=
@@ -747,17 +750,17 @@ interface_member_declarations ::=
 interface_member_declaration ::=
     constant_declaration:a {:  RESULT = a;  :}
  |  abstract_method_declaration:a {:
-                                  List l = new TypedList(new LinkedList(), ClassMember.class, false);
+                                  List l = new LinkedList<ClassMember>();
                l.add(a);
                RESULT = l; 
                                   :}
  |  class_declaration:a {:
-                        List l = new TypedList(new LinkedList(), ClassMember.class, false);
+                        List l = new LinkedList<ClassMember>();
                l.add(a);
                RESULT = l; 
                         :}
  |  interface_declaration:a {:
-                            List l = new TypedList(new LinkedList(), ClassMember.class, false);
+                            List l = new LinkedList<ClassMember>();
                l.add(a);
                RESULT = l; 
                             :}
@@ -783,7 +786,7 @@ array_initializer ::=
 
 variable_initializers ::=
     variable_initializer:a {:
-                           List l = new TypedList(new LinkedList(), Expr.class, false);
+                           List l = new LinkedList<Expr>();
            l.add(a);
            RESULT = l; 
                            :}
@@ -801,12 +804,12 @@ block ::=
                    :};
 
 block_statements_opt ::=
-    {:  RESULT = new TypedList(new LinkedList(), Stmt.class, false);  :}
+    {:  RESULT = new LinkedList<Stmt>();  :}
  |  block_statements:a {:  RESULT = a;  :};
 
 block_statements ::=
     block_statement:a {:
-                      List l = new TypedList(new LinkedList(), Stmt.class, false);
+                      List l = new LinkedList<Stmt>();
                l.addAll(a);
                RESULT = l; 
                       :}
@@ -818,12 +821,12 @@ block_statements ::=
 block_statement ::=
     local_variable_declaration_statement:a {:  RESULT = a;  :}
  |  statement:a {:
-                List l = new TypedList(new LinkedList(), Stmt.class, false);
+                List l = new LinkedList<Stmt>();
                l.add(a);
                RESULT = l; 
                 :}
  |  class_declaration:a {:
-                        List l = new TypedList(new LinkedList(), Stmt.class, false);
+                        List l = new LinkedList<Stmt>();
                l.add(parser.nf.LocalClassDecl(parser.pos(a), a));
                RESULT = l; 
                         :};
@@ -932,9 +935,7 @@ switch_block ::=
                                                                   :}
  |  LBRACE switch_block_statement_groups:a RBRACE {:  RESULT = a;  :}
  |  LBRACE switch_labels:a RBRACE {:  RESULT = a;  :}
- |  LBRACE RBRACE {:
-                  RESULT = new TypedList(new LinkedList(), SwitchElement.class, false); 
-                  :};
+ |  LBRACE RBRACE {:  RESULT = new LinkedList<SwitchElement>();  :};
 
 switch_block_statement_groups ::=
     switch_block_statement_group:a {:  RESULT = a;  :}
@@ -945,7 +946,7 @@ switch_block_statement_groups ::=
 
 switch_block_statement_group ::=
     switch_labels:a block_statements:b {:
-                                       List l = new TypedList(new LinkedList(), SwitchElement.class, false);
+                                       List l = new LinkedList<SwitchElement>();
                l.addAll(a);
                l.add(parser.nf.SwitchBlock(parser.pos(a, b), b));
                RESULT = l; 
@@ -953,7 +954,7 @@ switch_block_statement_group ::=
 
 switch_labels ::=
     switch_label:a {:
-                   List l = new TypedList(new LinkedList(), Case.class, false);
+                   List l = new LinkedList<Case>();
                l.add(a);
                RESULT = l; 
                    :}
@@ -992,19 +993,19 @@ for_statement_no_short_if ::=
                                                                                                                        :};
 
 for_init_opt ::=
-    {:  RESULT = new TypedList(new LinkedList(), ForInit.class, false);  :}
+    {:  RESULT = new LinkedList<ForInit>();  :}
  |  for_init:a {:  RESULT = a;  :};
 
 for_init ::=
     statement_expression_list:a {:  RESULT = a;  :}
  |  local_variable_declaration:a {:
-                                 List l = new TypedList(new LinkedList(), ForInit.class, false);
+                                 List l = new LinkedList<ForInit>();
                l.addAll(a);
                RESULT = l; 
                                  :};
 
 for_update_opt ::=
-    {:  RESULT = new TypedList(new LinkedList(), ForUpdate.class, false);  :}
+    {:  RESULT = new LinkedList<ForUpdate>();  :}
  |  for_update:a {:  RESULT = a;  :};
 
 for_update ::=
@@ -1012,7 +1013,7 @@ for_update ::=
 
 statement_expression_list ::=
     statement_expression:a {:
-                           List l = new TypedList(new LinkedList(), Eval.class, false);
+                           List l = new LinkedList<Eval>();
                l.add(parser.nf.Eval(parser.pos(a), a));
                RESULT = l; 
                            :}
@@ -1024,7 +1025,7 @@ statement_expression_list ::=
 identifier_opt ::=
     {:  RESULT = null;  :}
  |  IDENTIFIER:a {:
-                 RESULT = new Name(parser.nf, parser.ts, parser.pos(a),
+                 RESULT = new Name(parser.nf, parser.ts, parser.ns, parser.pos(a),
                 parser.nf.Id(parser.pos(a), a.getIdentifier())); 
                  :};
 
@@ -1068,12 +1069,12 @@ try_statement ::=
                                           :};
 
 catches_opt ::=
-    {:  RESULT = new TypedList(new LinkedList(), Catch.class, false);  :}
+    {:  RESULT = new LinkedList<Catch>();  :}
  |  catches:a {:  RESULT = a;  :};
 
 catches ::=
     catch_clause:a {:
-                   List l = new TypedList(new LinkedList(), Catch.class, false);
+                   List l = new LinkedList<Catch>();
                l.add(a);
                RESULT = l; 
                    :}
@@ -1127,32 +1128,32 @@ primary_no_new_array ::=
                       :};
 
 class_instance_creation_expression ::=
-    NEW:n class_type:a label_opt:l location_expr_opt:loc LPAREN argument_list_opt:b RPAREN:d {:
-                                                                                             RESULT = parser.nf.New(parser.pos(n, d), a, l, loc, b); 
-                                                                                             :}
- |  NEW:n class_type:a label_opt:l location_expr_opt:loc LPAREN argument_list_opt:b RPAREN class_body:c {:
-                                                                                                        RESULT = parser.nf.New(parser.pos(n, c), a, l, loc, b, c); 
-                                                                                                        :}
- |  primary_no_new_array:a DOT NEW simple_name:b label_opt:l location_expr_opt:loc LPAREN argument_list_opt:c RPAREN:d {:
-                                                                                                                       RESULT = parser.nf.New(parser.pos(a, d), a, b.toType(), l, loc, c); 
-                                                                                                                       :}
- |  primary_no_new_array:a DOT NEW simple_name:b label_opt:l location_expr_opt:loc LPAREN argument_list_opt:c RPAREN class_body:d {:
-                                                                                                                                  RESULT = parser.nf.New(parser.pos(a, d), a, b.toType(), l, loc, c, d); 
-                                                                                                                                  :}
- |  name:a DOT NEW simple_name:b label_opt:l location_expr_opt:loc LPAREN argument_list_opt:c RPAREN:d {:
-                                                                                                       RESULT = parser.nf.New(parser.pos(a, d), a.toExpr(), b.toType(), l, loc, c); 
-                                                                                                       :}
- |  name:a DOT NEW simple_name:b label_opt:l location_expr_opt:loc LPAREN argument_list_opt:c RPAREN class_body:d {:
-                                                                                                                  RESULT = parser.nf.New(parser.pos(a, d), a.toExpr(), b.toType(), l, loc, c, d); 
-                                                                                                                  :};
+    NEW:n class_type:a location_expr_opt:loc LPAREN argument_list_opt:b RPAREN:d {:
+                                                                                 RESULT = parser.nf.New(parser.pos(n, d), a, loc, b); 
+                                                                                 :}
+ |  NEW:n class_type:a location_expr_opt:loc LPAREN argument_list_opt:b RPAREN class_body:c {:
+                                                                                            RESULT = parser.nf.New(parser.pos(n, c), a, loc, b, c); 
+                                                                                            :}
+ |  primary_no_new_array:a DOT NEW simple_name:b location_expr_opt:loc LPAREN argument_list_opt:c RPAREN:d {:
+                                                                                                           RESULT = parser.nf.New(parser.pos(a, d), a, b.toType(), loc, c); 
+                                                                                                           :}
+ |  primary_no_new_array:a DOT NEW simple_name:b location_expr_opt:loc LPAREN argument_list_opt:c RPAREN class_body:d {:
+                                                                                                                      RESULT = parser.nf.New(parser.pos(a, d), a, b.toType(), loc, c, d); 
+                                                                                                                      :}
+ |  name:a DOT NEW simple_name:b location_expr_opt:loc LPAREN argument_list_opt:c RPAREN:d {:
+                                                                                           RESULT = parser.nf.New(parser.pos(a, d), a.toExpr(), b.toType(), loc, c); 
+                                                                                           :}
+ |  name:a DOT NEW simple_name:b location_expr_opt:loc LPAREN argument_list_opt:c RPAREN class_body:d {:
+                                                                                                      RESULT = parser.nf.New(parser.pos(a, d), a.toExpr(), b.toType(), loc, c, d); 
+                                                                                                      :};
 
 argument_list_opt ::=
-    {:  RESULT = new TypedList(new LinkedList(), Expr.class, false);  :}
+    {:  RESULT = new LinkedList<Expr>();  :}
  |  argument_list:a {:  RESULT = a;  :};
 
 argument_list ::=
     expression:a {:
-                 List l = new TypedList(new LinkedList(), Expr.class, false);
+                 List l = new LinkedList<Expr>();
                l.add(a);
                RESULT = l; 
                  :}
@@ -1167,7 +1168,7 @@ array_creation_expression ::=
                 c.intValue()); 
                                                          :}
  |  NEW:n primitive_type:a dim_exprs:b dims_opt:c label_opt:l location_expr_opt:loc {:
-                                                                                    RESULT = parser.nf.NewFabricArray(parser.pos(n, b), a, l, loc, b,
+                                                                                    RESULT = parser.nf.NewFabricArray(parser.pos(n, b), a, l, null, loc, b,
                 c.intValue()); 
                                                                                     :}
  |  NEW:n class_or_interface_type:a NATIVE dim_exprs:b dims_opt:c {:
@@ -1175,7 +1176,7 @@ array_creation_expression ::=
                 c.intValue()); 
                                                                   :}
  |  NEW:n class_or_interface_type:a dim_exprs:b dims_opt:c label_opt:l location_expr_opt:loc {:
-                                                                                             RESULT = parser.nf.NewFabricArray(parser.pos(n, b), a, l, loc, b,
+                                                                                             RESULT = parser.nf.NewFabricArray(parser.pos(n, b), a, l, null, loc, b,
                 c.intValue()); 
                                                                                              :}
  |  NEW:n primitive_type:a NATIVE dims:b array_initializer:c {:
@@ -1183,7 +1184,7 @@ array_creation_expression ::=
                 b.intValue(), c); 
                                                              :}
  |  NEW:n primitive_type:a dims:b label_opt:l location_expr_opt:loc fabric_array_initializer:c {:
-                                                                                               RESULT = parser.nf.NewFabricArray(parser.pos(n, c), a, l, loc,
+                                                                                               RESULT = parser.nf.NewFabricArray(parser.pos(n, c), a, l, null, loc,
                 b.intValue(), c); 
                                                                                                :}
  |  NEW:n class_or_interface_type:a NATIVE dims:b array_initializer:c {:
@@ -1191,13 +1192,13 @@ array_creation_expression ::=
                 b.intValue(), c); 
                                                                       :}
  |  NEW:n class_or_interface_type:a dims:b label_opt:l location_expr_opt:loc fabric_array_initializer:c {:
-                                                                                                        RESULT = parser.nf.NewFabricArray(parser.pos(n, c), a, l, loc,
+                                                                                                        RESULT = parser.nf.NewFabricArray(parser.pos(n, c), a, l, null, loc,
                 b.intValue(), c); 
                                                                                                         :};
 
 dim_exprs ::=
     dim_expr:a {:
-               List l = new TypedList(new LinkedList(), Expr.class, false);
+               List l = new LinkedList<Expr>();
                l.add(a);
                RESULT = l; 
                :}
@@ -1324,7 +1325,15 @@ cast_expression ::=
  |  LPAREN:p name:a dims:b RPAREN unary_expression_not_plus_minus:c {:
                                                                     RESULT = parser.nf.Cast(parser.pos(p, c,a),
                 parser.array(a.toType(), b.intValue()), c); 
-                                                                    :};
+                                                                    :}
+ |  LPAREN:p primitive_type:a NATIVE dims:b RPAREN unary_expression:c {:
+                                                                      RESULT = parser.nf.Cast(parser.pos(p, c,a),
+                parser.javaArray(a, b.intValue()), c); 
+                                                                      :}
+ |  LPAREN:p name:a NATIVE dims:b RPAREN unary_expression_not_plus_minus:c {:
+                                                                           RESULT = parser.nf.Cast(parser.pos(p, c,a),
+                parser.javaArray(a.toType(), b.intValue()), c); 
+                                                                           :};
 
 multiplicative_expression ::=
     unary_expression:a {:  RESULT = a;  :}

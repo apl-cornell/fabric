@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -18,10 +18,6 @@ package fabil.visit;
 import java.util.ArrayList;
 import java.util.List;
 
-import fabil.ExtensionInfo;
-import fabil.ast.Atomic;
-import fabil.extension.FabILExt;
-import fabil.types.FabILTypeSystem;
 import polyglot.ast.Expr;
 import polyglot.ast.IntLit;
 import polyglot.ast.MethodDecl;
@@ -34,6 +30,10 @@ import polyglot.types.MethodInstance;
 import polyglot.types.Type;
 import polyglot.util.Position;
 import polyglot.visit.NodeVisitor;
+import fabil.ExtensionInfo;
+import fabil.ast.Atomic;
+import fabil.extension.FabILExt;
+import fabil.types.FabILTypeSystem;
 
 /**
  * Rewrites the <code>atomic</code> construct.
@@ -42,63 +42,56 @@ public class AtomicRewriter extends NodeVisitor {
   protected QQ qq;
   protected NodeFactory nf;
   protected FabILTypeSystem ts;
-  protected Receiver    tm;
+  protected Receiver tm;
 
   public AtomicRewriter(ExtensionInfo extInfo) {
     this.qq = new QQ(extInfo);
     this.nf = extInfo.nodeFactory();
-    
+
     ts = extInfo.typeSystem();
     Position CG = Position.compilerGenerated();
-    this.tm = nf.Call(CG,
-                       nf.CanonicalTypeNode(CG, ts.TransactionManager()),
-                       nf.Id(CG, "getInstance"));
+    this.tm =
+        nf.Call(CG, nf.CanonicalTypeNode(CG, ts.TransactionManager()),
+            nf.Id(CG, "getInstance"));
   }
 
   protected FabILExt ext(Node n) {
     return (FabILExt) n.ext();
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see polyglot.visit.NodeVisitor#leave(polyglot.ast.Node, polyglot.ast.Node,
-   *      polyglot.visit.NodeVisitor)
-   */
-  @SuppressWarnings("unchecked")
   @Override
   public Node leave(Node old, Node n, NodeVisitor v) {
     Node result = ext(n).rewriteAtomic(this);
-    
+
     // XXX HACK!
     if (old instanceof MethodDecl) {
-      MethodDecl md = (MethodDecl)old;
+      MethodDecl md = (MethodDecl) old;
       MethodInstance mi = md.methodInstance();
-      
+
       if (mi != null && !mi.returnType().equals(ts.Void()) && md.body() != null) {
         boolean endWithAtomic = false;
-        for (Stmt s : (List<Stmt>)md.body().statements()) {
+        for (Stmt s : md.body().statements()) {
           if (s instanceof Atomic) {
             endWithAtomic = true;
-          }
-          else {
+          } else {
             endWithAtomic = false;
           }
         }
-        
+
         if (endWithAtomic) {
           // Add a dummy return statement to fool the Java flow checker.
           // It never executes.
-          MethodDecl newMd = (MethodDecl)result;
-          List<Stmt> stmts = new ArrayList<Stmt>(newMd.body().statements().size() + 1);
+          MethodDecl newMd = (MethodDecl) result;
+          List<Stmt> stmts =
+              new ArrayList<Stmt>(newMd.body().statements().size() + 1);
           stmts.addAll(newMd.body().statements());
-          stmts.add(nf.Return(Position.compilerGenerated(), 
-                       getDefaultValue(mi.returnType())));
+          stmts.add(nf.Return(Position.compilerGenerated(),
+              getDefaultValue(mi.returnType())));
           result = newMd.body(nf.Block(Position.compilerGenerated(), stmts));
         }
       }
     }
-    
+
     return result;
   }
 
@@ -112,11 +105,11 @@ public class AtomicRewriter extends NodeVisitor {
   public NodeFactory nodeFactory() {
     return nf;
   }
-  
+
   public FabILTypeSystem typeSystem() {
     return ts;
   }
-  
+
   // TODO: move this into atomicExt?
   public Receiver transactionManager() {
     return tm;
@@ -125,11 +118,9 @@ public class AtomicRewriter extends NodeVisitor {
   public Expr getDefaultValue(Type t) {
     if (t.equals(ts.Boolean())) {
       return nf.BooleanLit(Position.compilerGenerated(), false);
-    }
-    else if (t.isPrimitive()) {
+    } else if (t.isPrimitive()) {
       return nf.IntLit(Position.compilerGenerated(), IntLit.INT, 0);
-    }
-    else {
+    } else {
       return nf.NullLit(Position.compilerGenerated());
     }
   }

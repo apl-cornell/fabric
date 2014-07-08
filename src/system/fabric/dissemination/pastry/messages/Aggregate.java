@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -20,9 +20,7 @@ import rice.p2p.commonapi.NodeHandle;
 
 /**
  * This should be sent when aggregation of object popularity data is to be
- * performed.
- * 
- * Not currently used yet.
+ * performed. Not currently used yet.
  */
 public class Aggregate implements Message {
 
@@ -31,13 +29,14 @@ public class Aggregate implements Message {
   public Aggregate(NodeHandle sender) {
     this.sender = sender;
   }
-  
+
   public NodeHandle sender() {
     return sender;
   }
 
+  @Override
   public int getPriority() {
     return LOW_PRIORITY;
   }
-  
+
 }

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -87,20 +87,23 @@ public class ArrayList extends AbstractList
    * @param capacity initial capacity of this ArrayList
    * @throws IllegalArgumentException if capacity is negative
    */
-  public ArrayList(int capacity)
+  public ArrayList fabric$util$ArrayList$(int capacity)
   {
+    fabric$util$AbstractList$();
     // Must explicitly check, to get correct exception.
     if (capacity < 0)
       throw new IllegalArgumentException();
     data = new Object[capacity];
+    return this;
   }
 
   /**
    * Construct a new ArrayList with the default capacity (16).
    */
-  public ArrayList()
+  public ArrayList fabric$util$ArrayList$()
   {
-    this(DEFAULT_CAPACITY);
+    fabric$util$ArrayList$(DEFAULT_CAPACITY);
+    return this;
   }
 
   /**
@@ -111,10 +114,11 @@ public class ArrayList extends AbstractList
    * @param c the collection whose elements will initialize this list
    * @throws NullPointerException if c is null
    */
-  public ArrayList(Collection c)
+  public ArrayList fabric$util$ArrayList$(Collection c)
   {
-    this((int) (c.size() * 1.1f));
+    fabric$util$ArrayList$((int) (c.size() * 1.1f));
     addAll(c);
+    return this;
   }
 
   /**
@@ -554,4 +558,14 @@ public class ArrayList extends AbstractList
 //    for (int i = 0; i < size; i++)
 //      data[i] = s.readObject();
 //  }
+
+  public Object $initLabels() {
+    // XXX What should this be?  Using completely permissive values for now.
+    // update label: {_ <-}
+    // access policy: {_ ->}
+    this.$updateLabel = LabelUtil.noComponents();
+    this.$accessPolicy = LabelUtil.bottomConf();
+
+    return this;
+  }
 }

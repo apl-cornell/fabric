@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -28,11 +28,12 @@ import java.util.Set;
  * Jif.
  */
 public final class PairLabel implements Label {
-  private final ConfPolicy confPol;
-  private final IntegPolicy integPol;
-  private final SecretKeyObject keyObject;
+  private /*final*/ ConfPolicy confPol;
+  private /*final*/ IntegPolicy integPol;
+  private /*final*/ SecretKeyObject keyObject;
 
-  public PairLabel(ConfPolicy confPol, IntegPolicy integPol) {
+  public PairLabel fabric$lang$security$PairLabel$(ConfPolicy confPol, IntegPolicy integPol) {
+	fabric$lang$Object$();
     this.confPol = confPol;
     this.integPol = integPol;
     
@@ -45,8 +46,9 @@ public final class PairLabel implements Label {
     if (confPol == localStore.getBottomConfidPolicy()) {
       this.keyObject = null;
     } else {
-      this.keyObject = new SecretKeyObject~this();
+      this.keyObject = (SecretKeyObject) new SecretKeyObject().fabric$lang$security$SecretKeyObject$();
     }
+	return this;
   }
 
   public boolean relabelsTo(Label l, Set s) {
@@ -95,16 +97,8 @@ public final class PairLabel implements Label {
     return LabelUtil.join(store, this, l);
   }
 
-  public final Label join(Label l) {
-    return LabelUtil.join(this, l);
-  }
-
   public Label meet(Store store, Label l) {
     return LabelUtil.meet(store, this, l);
-  }
-
-  public Label meet(Label l) {
-    return LabelUtil.meet(this, l);
   }
 
   public ConfPolicy confPolicy() {
@@ -117,5 +111,15 @@ public final class PairLabel implements Label {
   
   public SecretKeyObject keyObject() {
     return keyObject;
+  }
+
+  public Object $initLabels() {
+    // XXX What should this be?  Using completely permissive values for now.
+    // update label: {_ <-}
+    // access policy: {_ ->}
+    this.$updateLabel = LabelUtil.noComponents();
+    this.$accessPolicy = LabelUtil.bottomConf();
+
+    return this;
   }
 }

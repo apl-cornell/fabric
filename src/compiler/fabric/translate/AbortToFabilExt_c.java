@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -15,17 +15,20 @@
  */
 package fabric.translate;
 
-import fabil.ast.FabILNodeFactory;
-import fabric.ast.AbortStmt;
-import polyglot.ast.Node;
-import polyglot.types.SemanticException;
 import jif.translate.JifToJavaRewriter;
 import jif.translate.ToJavaExt_c;
+import polyglot.ast.Node;
+import polyglot.types.SemanticException;
+import fabil.ast.FabILNodeFactory;
+import fabric.ast.AbortStmt;
 
 public class AbortToFabilExt_c extends ToJavaExt_c {
+  /**
+   * @throws SemanticException
+   */
   @Override
   public Node toJava(JifToJavaRewriter rw) throws SemanticException {
-    AbortStmt abort = (AbortStmt)node();
+    AbortStmt abort = (AbortStmt) node();
     return ((FabILNodeFactory) rw.java_nf()).AbortStmt(abort.position());
   }
 }

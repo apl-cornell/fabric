@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -32,12 +32,13 @@ public class BaseAssembly extends Assembly {
   LinkedList/*CompositePart*/ componentsPriv;
   LinkedList/*CompositePart*/ componentsShar;
 
-  public BaseAssembly(Benchmark db) {
-    super(db);
+  public BaseAssembly OO7$BaseAssembly(Benchmark db) {
+    OO7$Assembly(db);
     db.baseAssembliesById.put(new Integer(id()), this);
 
-    componentsPriv = new LinkedList();
-    componentsShar = new LinkedList();
+    componentsPriv = (LinkedList) new LinkedList().fabric$util$LinkedList$();
+    componentsShar = (LinkedList) new LinkedList().fabric$util$LinkedList$();
+    return this;
   }
 
   public void addComponentsPriv(CompositePart x) {

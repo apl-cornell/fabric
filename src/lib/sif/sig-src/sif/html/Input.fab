@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -28,7 +28,7 @@ public final class Input[principal servletP] extends java.lang.Object {
 
 	//    private final String{servletP:;servletP!:;this} name;
 
-	public final label{this} inputLbl;
+	public final label{this}@{⊤→} inputLbl;
 
 	/** Construct an input with an automatically generated name. */
 	public Input(Servlet[servletP]{this} s, label{this} inputLbl){

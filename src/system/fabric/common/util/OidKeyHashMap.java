@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -20,11 +20,11 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-import fabric.worker.Store;
 import fabric.lang.Object;
+import fabric.worker.Store;
 
 /**
- * A map keyed on OIDs.
+ * A map keyed on OIDs. Supports null keys.
  */
 public final class OidKeyHashMap<V> implements Iterable<LongKeyMap<V>> {
   Map<Store, LongKeyMap<V>> map;
@@ -63,8 +63,8 @@ public final class OidKeyHashMap<V> implements Iterable<LongKeyMap<V>> {
   }
 
   public boolean containsKey(Object obj) {
-    return obj == null ? hasNullEntry : containsKey(obj.$getStore(), obj
-        .$getOnum());
+    return obj == null ? hasNullEntry : containsKey(obj.$getStore(),
+        obj.$getOnum());
   }
 
   public boolean containsKey(Store store, long onum) {
@@ -126,6 +126,7 @@ public final class OidKeyHashMap<V> implements Iterable<LongKeyMap<V>> {
     return map.keySet();
   }
 
+  @Override
   public Iterator<LongKeyMap<V>> iterator() {
     return map.values().iterator();
   }
@@ -136,7 +137,7 @@ public final class OidKeyHashMap<V> implements Iterable<LongKeyMap<V>> {
 
   public int size() {
     int result = 0;
-    
+
     for (LongKeyMap<V> submap : this)
       result += submap.size();
 

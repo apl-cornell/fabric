@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -19,7 +19,9 @@ public class FabricWorker {
   private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
   private static int __JIF_SAFE_CONSTRUCTORS$20050907 = 0;
   
-  public final String name;
+  private int {_→}@{*→} accessLabelKludge;
+  
+  public native final String getName();
 
   public native Store getStore(String str);
   public native Store getLocalStore();

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -17,14 +17,20 @@ package fabil.ast;
 
 import java.util.List;
 
-import polyglot.ast.*;
+import polyglot.ast.Expr;
+import polyglot.ast.NewArray_c;
+import polyglot.ast.Node;
+import polyglot.ast.NodeFactory;
+import polyglot.ast.Term;
+import polyglot.ast.Term_c;
+import polyglot.ast.TypeNode;
 import polyglot.types.ArrayType;
 import polyglot.types.SemanticException;
 import polyglot.types.Type;
 import polyglot.types.TypeSystem;
 import polyglot.util.CollectionUtil;
+import polyglot.util.ListUtil;
 import polyglot.util.Position;
-import polyglot.util.TypedList;
 import polyglot.visit.CFGBuilder;
 import polyglot.visit.NodeVisitor;
 import polyglot.visit.TypeChecker;
@@ -35,13 +41,16 @@ public class NewFabricArray_c extends NewArray_c implements NewFabricArray,
 
   protected Expr label;
   protected Expr location;
+  protected Expr accessPolicy;
 
   public NewFabricArray_c(Position pos, TypeNode baseType, List<Expr> dims,
-      int addDims, FabricArrayInit init, Expr label, Expr location) {
+      int addDims, FabricArrayInit init, Expr label, Expr accessLabel,
+      Expr location) {
     super(pos, baseType, dims, addDims, init);
 
     this.location = location;
     this.label = label;
+    this.accessPolicy = accessLabel;
   }
 
   @Override
@@ -54,20 +63,36 @@ public class NewFabricArray_c extends NewArray_c implements NewFabricArray,
     return (NewFabricArray_c) super.init(init);
   }
 
-  public Expr label() {
+  @Override
+  public Expr updateLabel() {
     return label;
   }
 
-  public NewFabricArray_c label(Expr label) {
+  @Override
+  public Expr accessLabel() {
+    return accessPolicy;
+  }
+
+  @Override
+  public NewFabricArray_c updateLabel(Expr label) {
     NewFabricArray_c n = (NewFabricArray_c) copy();
     n.label = label;
     return n;
   }
 
+  @Override
+  public NewFabricArray_c accessPolicy(Expr accessPolicy) {
+    NewFabricArray_c n = (NewFabricArray_c) copy();
+    n.accessPolicy = accessPolicy;
+    return n;
+  }
+
+  @Override
   public Expr location() {
     return location;
   }
 
+  @Override
   public NewFabricArray_c location(Expr location) {
     NewFabricArray_c n = (NewFabricArray_c) copy();
     n.location = location;
@@ -78,23 +103,23 @@ public class NewFabricArray_c extends NewArray_c implements NewFabricArray,
    * Reconstructs the expression.
    */
   protected NewFabricArray_c reconstruct(TypeNode baseType, List<Expr> dims,
-      FabricArrayInit init, Expr location, Expr label) {
+      FabricArrayInit init, Expr location, Expr label, Expr accessLabel) {
     if (baseType != this.baseType || !CollectionUtil.equals(dims, this.dims)
         || init != this.init || location != this.location
-        || label != this.label) {
+        || label != this.label || accessLabel != this.accessPolicy) {
       NewFabricArray_c n = (NewFabricArray_c) copy();
       n.baseType = baseType;
-      n.dims = TypedList.copyAndCheck(dims, Expr.class, true);
+      n.dims = ListUtil.copy(dims, true);
       n.init = init;
       n.location = location;
       n.label = label;
+      n.accessPolicy = accessLabel;
       return n;
     }
 
     return this;
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public Node visitChildren(NodeVisitor v) {
     TypeNode baseType = (TypeNode) visitChild(this.baseType, v);
@@ -102,7 +127,8 @@ public class NewFabricArray_c extends NewArray_c implements NewFabricArray,
     FabricArrayInit init = (FabricArrayInit) visitChild(this.init, v);
     Expr location = (Expr) visitChild(this.location, v);
     Expr label = (Expr) visitChild(this.label, v);
-    return reconstruct(baseType, dims, init, location, label);
+    Expr accessLabel = (Expr) visitChild(this.accessPolicy, v);
+    return reconstruct(baseType, dims, init, location, label, accessLabel);
   }
 
   @Override
@@ -123,8 +149,8 @@ public class NewFabricArray_c extends NewArray_c implements NewFabricArray,
 
     if (location != null) {
       if (!ts.isImplicitCastValid(location.type(), ts.Store())) {
-        throw new SemanticException("Array location must be a store.", location
-            .position());
+        throw new SemanticException("Array location must be a store.",
+            location.position());
       }
     }
 
@@ -134,17 +160,28 @@ public class NewFabricArray_c extends NewArray_c implements NewFabricArray,
       }
     }
 
+    if (accessPolicy != null) {
+      if (!ts.isImplicitCastValid(accessPolicy.type(), ts.ConfPolicy())) {
+        throw new SemanticException("Invalid access policy.",
+            accessPolicy.position());
+      }
+    }
+
     return result;
   }
 
-  @SuppressWarnings("rawtypes")
   @Override
-  public List acceptCFG(CFGBuilder v, List succs) {
+  public <T> List<T> acceptCFG(CFGBuilder<?> v, List<T> succs) {
     if (init != null) {
       v.visitCFG(baseType, listChild(dims, init), ENTRY);
       v.visitCFGList(dims, init, ENTRY);
 
       Term last = init;
+      if (accessPolicy != null) {
+        v.visitCFG(last, accessPolicy, ENTRY);
+        last = accessPolicy;
+      }
+
       if (label != null) {
         v.visitCFG(last, label, ENTRY);
         last = label;
@@ -157,11 +194,21 @@ public class NewFabricArray_c extends NewArray_c implements NewFabricArray,
 
       v.visitCFG(last, this, EXIT);
     } else {
-      v.visitCFG(baseType, listChild(dims, null), ENTRY);
+      v.visitCFG(baseType, Term_c.<Expr, Expr, Expr> listChild(dims, null),
+          ENTRY);
       Term last = null;
 
+      if (accessPolicy != null) {
+        v.visitCFGList(dims, accessPolicy, ENTRY);
+        last = accessPolicy;
+      }
+
       if (label != null) {
-        v.visitCFGList(dims, label, ENTRY);
+        if (last == null) {
+          v.visitCFGList(dims, label, ENTRY);
+        } else {
+          v.visitCFG(last, label, ENTRY);
+        }
         last = label;
       }
 
@@ -182,12 +229,12 @@ public class NewFabricArray_c extends NewArray_c implements NewFabricArray,
     return succs;
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public Node copy(NodeFactory nf) {
     FabILNodeFactory filNf = (FabILNodeFactory) nf;
     return filNf.NewFabricArray(this.position, this.baseType, this.label,
-        this.location, this.dims, this.addDims, (FabricArrayInit) this.init);
+        this.accessPolicy, this.location, this.dims, this.addDims,
+        (FabricArrayInit) this.init);
   }
 
 }

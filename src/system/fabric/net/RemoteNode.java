@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -17,9 +17,17 @@ package fabric.net;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.HashMap;
+import java.util.Map;
 
-import fabric.common.exceptions.InternalError;
-import fabric.common.net.naming.SocketAddress;
+import fabric.common.KeyMaterial;
+import fabric.common.exceptions.FabricException;
+import fabric.common.exceptions.NotImplementedException;
+import fabric.common.net.SubSocket;
+import fabric.common.net.SubSocketFactory;
+import fabric.messages.Message;
 
 /**
  * Abstracts remote stores and remote workers.
@@ -30,33 +38,18 @@ public abstract class RemoteNode implements Serializable {
    */
   public final String name;
 
-  /**
-   * Whether the remote node supports unencrypted connections.
-   */
-  private transient final boolean supportsUnencrypted;
+  private transient final Map<SubSocketFactory, Deque<SubSocket>> subSocketCache;
 
   /**
-   * For communicating with the node over an SSL connection.
+   * Maximum number of cached subsocket connections.
    */
-  private transient CommManager sslCommManager;
+  private static final int MAX_QUEUE_SIZE = 10;
 
-  /**
-   * For communicating with the node over an unencrypted connection.
-   */
-  private transient CommManager unencryptedCommManager;
-
-  protected RemoteNode(String name, boolean supportsUnencrypted) {
+  protected RemoteNode(String name) {
     this.name = name;
-    this.sslCommManager = null;
-    this.unencryptedCommManager = null;
-    this.supportsUnencrypted = supportsUnencrypted;
+    this.subSocketCache = new HashMap<SubSocketFactory, Deque<SubSocket>>(2);
   }
 
-  /**
-   * @return
-   */
-  protected abstract SocketAddress lookup() throws IOException;
-  
   /**
    * @return the node's hostname.
    */
@@ -64,31 +57,56 @@ public abstract class RemoteNode implements Serializable {
     return name;
   }
 
-  /**
-   * @param useSSL
-   *          Whether SSL is being used. This is ignored if the node type
-   *          doesn't support non-SSL connections.
-   * @return the data I/O stream pair to use for communicating with the node.
-   */
-  public final Stream openStream(
-      boolean useSSL) {
-    if (useSSL) {
-      if (sslCommManager == null) sslCommManager = new CommManager(this, true);
-      return sslCommManager.openStream();
+  private Deque<SubSocket> getSocketDeque(SubSocketFactory factory) {
+    synchronized (subSocketCache) {
+      Deque<SubSocket> result = subSocketCache.get(factory);
+      if (result == null) {
+        result = new ArrayDeque<SubSocket>();
+        subSocketCache.put(factory, result);
+      }
+
+      return result;
     }
-
-    if (!supportsUnencrypted)
-      throw new InternalError(
-          "Attempted to establish an unencrypted connection to a node that "
-              + "does not support it.");
-
-    if (unencryptedCommManager == null)
-      unencryptedCommManager = new CommManager(this, false);
-    return unencryptedCommManager.openStream();
   }
 
-  public void cleanup() {
-    if (sslCommManager != null) sslCommManager.shutdown();
-    if (unencryptedCommManager != null) unencryptedCommManager.shutdown();
+  protected SubSocket getSocket(SubSocketFactory factory) throws IOException {
+    Deque<SubSocket> queue = getSocketDeque(factory);
+    synchronized (queue) {
+      if (queue.isEmpty()) return factory.createSocket(name);
+      return queue.pop();
+    }
+  }
+
+  protected void recycle(SubSocketFactory factory, SubSocket socket)
+      throws IOException {
+    Deque<SubSocket> queue = getSocketDeque(factory);
+    synchronized (queue) {
+      if (queue.size() < MAX_QUEUE_SIZE)
+        queue.addFirst(socket);
+      else socket.close();
+    }
+  }
+
+  protected <R extends Message.Response, E extends FabricException> R send(
+      SubSocketFactory subSocketFactory, Message<R, E> message) throws E {
+    try {
+      SubSocket socket = getSocket(subSocketFactory);
+      try {
+        return message.send(socket);
+      } catch (IOException e) {
+        socket = null;
+        throw e;
+      } finally {
+        if (socket != null) {
+          recycle(subSocketFactory, socket);
+        }
+      }
+    } catch (IOException e) {
+      throw new NotImplementedException(e);
+    }
+  }
+
+  public static SubSocketFactory createAuthFactory(KeyMaterial... keys) {
+    throw new NotImplementedException();
   }
 }

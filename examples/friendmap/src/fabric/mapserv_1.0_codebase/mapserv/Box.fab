@@ -1,0 +1,183 @@
+/**
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
+ *
+ * This file is part of Fabric.
+ *
+ * Fabric is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * Fabric is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ */
+package mapserv;
+
+/**
+ * Represents a Box in the x,y plane.  A point (x,y) is contained in the box if
+ * x ∈ [xmin, xmax) and y ∈ [ymin, ymax).
+ *
+ * @param L the update label of the object
+ * @param A the access label of the object
+ */
+public class Box [label L, label A] 
+where 
+	L <= A
+{
+
+  //////////////////////////////////////////////////////////////////////////////
+  // public fields                                                            //
+  //////////////////////////////////////////////////////////////////////////////
+
+  public float{L}@{A} xmin, ymin;
+  public float{L}@{A} xmax, ymax;
+
+  //////////////////////////////////////////////////////////////////////////////
+  // public methods                                                           //
+  //////////////////////////////////////////////////////////////////////////////
+
+  /**
+   * Create a new box
+   */
+  public
+  Box {L} // L because the fields are updated
+  (
+    float {L} xmin, float {L} ymin,
+    float {L} xmax, float {L} ymax
+  )
+  : {*provider}
+  where
+    provider <= L // code affects fields
+  {
+    this.xmin = xmin;
+    this.ymin = ymin;
+
+    this.xmax = xmax;
+    this.ymax = ymax;
+  }
+
+  /**
+   * Return true if this box contains (x,y).
+   */
+  public
+  boolean  {L;x;y;*provider} // fields, args, code affect result
+  contains {A}               // because fields are accessed
+  (
+    float{A} x,
+    float{A} y
+  )
+  : {*provider}
+  {
+    return xmin < x && x < xmax
+        && ymin < y && y < ymax;
+  }
+
+  /**
+   * Expand the bounding box so that it contains the given point.
+   */
+  public
+  void
+  expand
+  {       // side effects
+    {L} ⊓ // fields are updated
+    {A}   // fields are accessed
+  }
+  (
+    float {L} x, float {L} y
+  )
+  : {*provider}
+  where
+    provider <= L  // code affects fields
+  {
+    this.xmin = min(this.xmin, x);
+    this.ymin = min(this.ymin, y);
+    this.xmax = max(this.xmax, x);
+    this.ymax = max(this.ymax, y);
+  }
+
+  /**
+   * Return a box-local x-coordinate for the given global x-coordinate.
+   * If x is within the x boundaries of the box, then the result will be
+   * between 0 and 1.
+   */
+  public
+  float   {L;x;*provider} // fields, arg, code affect result
+  scale_x {A}   // fields are accessed
+  (
+    float x
+  )
+  : {*provider}
+  {
+    return (x - xmin) / (xmax - xmin);
+  }
+
+
+  /**
+   * Return a box-local y-coordinate for the given global y-coordinate.
+   * If y is within the y boundaries of the box, then the result will be
+   * between 0 and 1.
+   */
+  public
+  float   {L;y;*provider} // result affected by code, fields, y
+  scale_y {A}   // fields are accessed
+  (
+    float y
+  )
+  : {*provider}
+  {
+    return (y - ymin) / (ymax - ymin);
+  }
+
+
+  /**
+   * Create a deep copy of this on store s with label l.
+   */
+  public
+  Box[l,a] {L;l;a;*provider} // result affected by fields, arguments, code
+  copy
+  {         // side effects:
+    {*l}  ⊓ // fields of result are updated
+    {*→s} ⊓ // object is created at s
+    {A}     // fields are read
+  }
+  (
+    label l,
+    label a,
+    Store s
+  )
+  : {*provider}
+  where
+    l <= {*→s}, {*←s} <= l, a <= {*→s}, // TODO: s ≽ l@a
+    l <= a,                             // access labels must bound update labels
+
+    L        <= l, // because this object affects result fields
+    provider <= l, // code affects result fields
+    {l;a}    <= l  // labels affect type of object
+  {
+    return new Box[l,a]@s(this.xmin, this.ymin, this.xmax, this.ymax);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  // private helper methods                                                   //
+  //////////////////////////////////////////////////////////////////////////////
+
+  private static float min (float a, float b): {*provider} {
+    if (a < b)
+      return a;
+    else
+      return b;
+  }
+
+  private static float max (float a, float b): {*provider} {
+    if (a > b)
+      return a;
+    else
+      return b;
+  }
+}
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -21,11 +21,11 @@ import java.io.ObjectOutput;
 import java.util.Iterator;
 import java.util.List;
 
-import fabric.worker.Worker;
-import fabric.worker.Store;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.Pair;
 import fabric.lang.Object._Impl;
+import fabric.worker.Store;
+import fabric.worker.Worker;
 
 /**
  * Encapsulates an inter-store pointer.
@@ -41,36 +41,22 @@ public final class Surrogate extends _Impl {
    */
   public final long onum;
 
-  /**
-   * The host name of the store for the object being pointed to.
-   */
-  private final String storeName;
-
   public Surrogate(Store store, long onum, int version, long expiry,
-      long label, ObjectInput serializedInput, Iterator<RefTypeEnum> refTypes,
-      Iterator<Long> intraStoreRefs) throws IOException, ClassNotFoundException {
-    super(store, onum, version, expiry, label, serializedInput, refTypes, intraStoreRefs);
-    this.storeName = serializedInput.readUTF();
+      long label, long accessLabel, ObjectInput serializedInput,
+      Iterator<RefTypeEnum> refTypes, Iterator<Long> intraStoreRefs)
+      throws IOException, ClassNotFoundException {
+    super(store, onum, version, expiry, label, accessLabel, serializedInput,
+        refTypes, intraStoreRefs);
+    String storeName = serializedInput.readUTF();
     this.store = Worker.getWorker().getStore(storeName);
     this.onum = serializedInput.readLong();
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see fabric.lang.Object._Impl#$makeProxy()
-   */
   @Override
   protected _Proxy $makeProxy() {
     throw new InternalError("Attempted to make proxy for a surrogate.");
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see fabric.lang.Object._Impl#$serialize(java.io.ObjectOutput,
-   *      java.util.List, java.util.List, java.util.List)
-   */
   @Override
   public void $serialize(ObjectOutput out, List<RefTypeEnum> refTypes,
       List<Long> intraStoreRefs, List<Pair<String, Long>> interStoreRefs) {

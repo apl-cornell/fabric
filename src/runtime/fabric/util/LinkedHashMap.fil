@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -100,7 +100,7 @@ public class LinkedHashMap extends HashMap
    *
    * @serial true for access order traversal
    */
-  final boolean accessOrder;
+  /*final*/ boolean accessOrder;
 
   /**
    * Class to represent an entry in the hash table. Holds a single key-value
@@ -123,9 +123,9 @@ public class LinkedHashMap extends HashMap
      * @param key the key
      * @param value the value
      */
-    LinkedHashEntry(Object key, Object value)
+    LinkedHashEntry fabric$util$LinkedHashMap$LinkedHashEntry$(Object key, Object value)
     {
-      super(key, value);
+      fabric$util$HashMap$HashEntry$(key, value);
       if (root == null)
         {
           root = this;
@@ -137,6 +137,7 @@ public class LinkedHashMap extends HashMap
           pred.succ = this;
           root.pred = this;
         }
+      return this;
     }
 
     /**
@@ -193,16 +194,27 @@ public class LinkedHashMap extends HashMap
         }
       return value;
     }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
+    }
   } // class LinkedHashEntry
 
   /**
    * Construct a new insertion-ordered LinkedHashMap with the default
    * capacity (11) and the default load factor (0.75).
    */
-  public LinkedHashMap()
+  public LinkedHashMap fabric$util$LinkedHashMap$()
   {
-    super();
+    fabric$util$HashMap$();
     accessOrder = false;
+    return this;
   }
 
   /**
@@ -219,10 +231,11 @@ public class LinkedHashMap extends HashMap
    *          are not cloned in this constructor.</b>
    * @throws NullPointerException if m is null
    */
-  public LinkedHashMap(Map m)
+  public LinkedHashMap fabric$util$LinkedHashMap$(Map m)
   {
-    super(m);
+    fabric$util$HashMap$(m);
     accessOrder = false;
+    return this;
   }
 
   /**
@@ -232,10 +245,11 @@ public class LinkedHashMap extends HashMap
    * @param initialCapacity the initial capacity of this HashMap (&gt;= 0)
    * @throws IllegalArgumentException if (initialCapacity &lt; 0)
    */
-  public LinkedHashMap(int initialCapacity)
+  public LinkedHashMap fabric$util$LinkedHashMap$(int initialCapacity)
   {
-    super(initialCapacity);
+    fabric$util$HashMap$(initialCapacity);
     accessOrder = false;
+    return this;
   }
 
   /**
@@ -247,10 +261,11 @@ public class LinkedHashMap extends HashMap
    * @throws IllegalArgumentException if (initialCapacity &lt; 0) ||
    *                                     ! (loadFactor &gt; 0.0)
    */
-  public LinkedHashMap(int initialCapacity, float loadFactor)
+  public LinkedHashMap fabric$util$LinkedHashMap$(int initialCapacity, float loadFactor)
   {
-    super(initialCapacity, loadFactor);
+    fabric$util$HashMap$(initialCapacity, loadFactor);
     accessOrder = false;
+    return this;
   }
 
   /**
@@ -263,11 +278,12 @@ public class LinkedHashMap extends HashMap
    * @throws IllegalArgumentException if (initialCapacity &lt; 0) ||
    *                                     ! (loadFactor &gt; 0.0)
    */
-  public LinkedHashMap(int initialCapacity, float loadFactor,
+  public LinkedHashMap fabric$util$LinkedHashMap$(int initialCapacity, float loadFactor,
                        boolean accessOrder)
   {
-    super(initialCapacity, loadFactor);
+    fabric$util$HashMap$(initialCapacity, loadFactor);
     this.accessOrder = accessOrder;
+    return this;
   }
 
   /**
@@ -385,7 +401,7 @@ public class LinkedHashMap extends HashMap
    */
   void addEntry(Object key, Object value, int idx, boolean callRemove)
   {
-    LinkedHashEntry e = new LinkedHashEntry(key, value);
+    LinkedHashEntry e = (LinkedHashEntry) new LinkedHashEntry().fabric$util$LinkedHashMap$LinkedHashEntry$(key, value);
     e.next = buckets[idx];
     buckets[idx] = e;
     if (callRemove && removeEldestEntry(root))
@@ -413,7 +429,7 @@ public class LinkedHashMap extends HashMap
    */
   Iterator iterator(fabric.worker.Store store, final int type)
   {
-    return new LinkedHashIterator@store(type);
+    return (LinkedHashIterator) new LinkedHashIterator@store().fabric$util$LinkedHashMap$LinkedHashIterator$(type);
   }
   
   private final class LinkedHashIterator implements Iterator
@@ -427,12 +443,14 @@ public class LinkedHashMap extends HashMap
     /** The number of known modifications to the backing Map. */
     int knownMod;
     
-    final int type;
+    /*final*/ int type;
     
-    LinkedHashIterator(int type) {
+    LinkedHashIterator fabric$util$LinkedHashMap$LinkedHashIterator$(int type) {
+      fabric$lang$Object$();
       this.type = type;
       this.current = root;
       this.knownMod = modCount;
+      return this;
     }
 
     /**
@@ -480,5 +498,25 @@ public class LinkedHashMap extends HashMap
       last = null;
       knownMod++;
     }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
+    }
+  }
+
+  public Object $initLabels() {
+    // XXX What should this be?  Using completely permissive values for now.
+    // update label: {_ <-}
+    // access policy: {_ ->}
+    this.$updateLabel = LabelUtil.noComponents();
+    this.$accessPolicy = LabelUtil.bottomConf();
+
+    return this;
   }
 } // class LinkedHashMap

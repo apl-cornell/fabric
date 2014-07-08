@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -71,8 +71,10 @@ public abstract class AbstractList extends AbstractCollection implements List
   /**
    * The main constructor, for use by subclasses.
    */
-  protected AbstractList()
+  protected AbstractList fabric$util$AbstractList$()
   {
+    fabric$util$AbstractCollection$();
+	return this;
   }
 
   /**
@@ -281,26 +283,27 @@ while (i.hasNext())
   public Iterator iterator(fabric.worker.Store store)
   {
     // Bah, Sun's implementation forbids using listIterator(0).
-    return new AnonymousIterator@store();
+    return (AnonymousIterator) new AnonymousIterator@store().fabric$util$AbstractList$AnonymousIterator$();
   }
   
   private class AnonymousIterator implements Iterator {
-    
-    
-    final int initSize;
-    final int initModCount;
+
+
+    /*final*/ int initSize;
+    /*final*/ int initModCount;
     private int pos;
     private int size;
     private int last;
     private int knownMod;
-    
-    AnonymousIterator() {
+
+    AnonymousIterator fabric$util$AbstractList$AnonymousIterator$() {
       this.initSize = size();
       this.initModCount = modCount;
       this.pos = 0;
       this.size = initSize;
       this.last = -1;
       this.knownMod = initModCount;
+	  return this;
     }
 
     // This will get inlined, since it is private.
@@ -361,6 +364,16 @@ while (i.hasNext())
       last = -1;
       knownMod = modCount;
     }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
+    }
   }
 
   /**
@@ -417,7 +430,7 @@ while (i.hasNext())
       throw new IndexOutOfBoundsException("Index: " + index + ", Size:"
                                           + size());
 
-    return new AbstractListIterator@store(index);
+    return (AbstractListIterator) new AbstractListIterator@store().fabric$util$AbstractList$AbstractListIterator$(index);
   }
 
   /**
@@ -542,8 +555,8 @@ while (i.hasNext())
       throw new IndexOutOfBoundsException();
 
     if (this instanceof RandomAccess)
-      return new RandomAccessSubList(this, fromIndex, toIndex);
-    return new SubList(this, fromIndex, toIndex);
+      return (RandomAccessSubList) new RandomAccessSubList().fabric$util$AbstractList$RandomAccessSubList$(this, fromIndex, toIndex);
+    return (SubList) new SubList().fabric$util$AbstractList$SubList$(this, fromIndex, toIndex);
   }
 
   /**
@@ -553,7 +566,7 @@ while (i.hasNext())
     /**
      * 
      */
-    private final int index;
+    private /*final*/ int index;
 
     private int knownMod = modCount;
 
@@ -566,9 +579,11 @@ while (i.hasNext())
     /**
      * @param index
      */
-    private AbstractListIterator(int index) {
+    private AbstractListIterator fabric$util$AbstractList$AbstractListIterator$(int index) {
       this.index = index;
       position = index;
+      fabric$lang$Object$();
+      return this;
     }
 
     // This will get inlined, since it is private.
@@ -740,6 +755,16 @@ while (i.hasNext())
       lastReturned = -1;
       knownMod = modCount;
     }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
+    }
   }
 
   /**
@@ -752,6 +777,11 @@ while (i.hasNext())
    */
   private static class SubList extends AbstractList
   {
+    public SubList fabric$util$AbstractList$SubList$() {
+      fabric$util$AbstractList$();
+	  return this;
+    }
+
     /**
      * 
      */
@@ -759,19 +789,21 @@ while (i.hasNext())
       /**
        * 
        */
-      private final int index;
+      private /*final*/ int index;
 
-      private final ListIterator i;
+      private /*final*/ ListIterator i;
 
       private int position;
 
       /**
        * @param index
        */
-      private SubListIterator(int index) {
+      private SubListIterator fabric$util$AbstractList$SubListIterator$(int index) {
+        fabric$lang$Object$();
         this.index = index;
         i = backingList.listIterator(LOCAL_STORE, index + offset);
         position = index;
+		return this;
       }
 
       /**
@@ -916,13 +948,23 @@ while (i.hasNext())
         position++;
         modCount = backingList.modCount;
       }
+
+      public Object $initLabels() {
+	// XXX What should this be?  Using completely permissive values for now.
+	// update label: {_ <-}
+	// access policy: {_ ->}
+	this.$updateLabel = LabelUtil.noComponents();
+	this.$accessPolicy = LabelUtil.bottomConf();
+
+	return this;
+      }
     }
 
     // Package visible, for use by iterator.
     /** The original list. */
-    final AbstractList backingList;
+    /*final*/ AbstractList backingList;
     /** The index of the first element of the sublist. */
-    final int offset;
+    /*final*/ int offset;
     /** The size of the sublist. */
     int size;
 
@@ -933,12 +975,14 @@ while (i.hasNext())
      * @param fromIndex the lower bound, inclusive
      * @param toIndex the upper bound, exclusive
      */
-    SubList(AbstractList backing, int fromIndex, int toIndex)
+    SubList fabric$util$AbstractList$SubList$(AbstractList backing, int fromIndex, int toIndex)
     {
+      fabric$lang$Object$();
       backingList = backing;
       modCount = backing.modCount;
       offset = fromIndex;
       size = toIndex - fromIndex;
+	  return this;
     }
 
     /**
@@ -1176,7 +1220,17 @@ while (i.hasNext())
       checkMod();
       checkBoundsInclusive(index);
 
-      return new SubListIterator@store(index);
+      return (SubListIterator) new SubListIterator@store().fabric$util$AbstractList$SubListIterator$(index);
+    }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
     }
   } // class SubList
 
@@ -1196,9 +1250,20 @@ while (i.hasNext())
      * @param fromIndex the lower bound, inclusive
      * @param toIndex the upper bound, exclusive
      */
-    RandomAccessSubList(AbstractList backing, int fromIndex, int toIndex)
+    RandomAccessSubList fabric$util$AbstractList$RandomAccessSubList$(AbstractList backing, int fromIndex, int toIndex)
     {
-      super(backing, fromIndex, toIndex);
+      fabric$util$AbstractList$SubList$(backing, fromIndex, toIndex);
+	  return this;
+    }
+
+    public Object $initLabels() {
+      // XXX What should this be?  Using completely permissive values for now.
+      // update label: {_ <-}
+      // access policy: {_ ->}
+      this.$updateLabel = LabelUtil.noComponents();
+      this.$accessPolicy = LabelUtil.bottomConf();
+
+      return this;
     }
   } // class RandomAccessSubList
 

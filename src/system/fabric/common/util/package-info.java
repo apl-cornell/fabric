@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -17,3 +17,4 @@
  * Specialized utility classes for dealing with collections indexed by longs.
  */
 package fabric.common.util;
+

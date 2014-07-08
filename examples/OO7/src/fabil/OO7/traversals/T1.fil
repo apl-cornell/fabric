@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -20,6 +20,7 @@ import fabric.worker.Store;
 import fabric.worker.Worker;
 import fabric.util.Iterator;
 import fabric.util.HashMap;
+import fabric.util.LinkedHashMap;
 
 /** Traverse the assembly hierarchy.  As each base assembly is visited, visit
  * each of its unshared referenced parts.  As each composite part is visited,
@@ -30,11 +31,16 @@ public class T1 extends PrivatePartTraversal {
   HashMap visited = null;
   int     result  = 0;
 
+  public T1 OO7$traversals$T1() {
+      OO7$traversals$PrivatePartTraversal();
+      return this;
+  }
+
   public static void main(String[] args) {
     Store local = Worker.getWorker().getLocalStore();
     T1 t1 = null;
     atomic {
-      t1 = new T1@local();
+      t1 = (T1) new T1@local().OO7$traversals$T1();
     }
     t1.mainImpl(args);
   }
@@ -52,7 +58,7 @@ public class T1 extends PrivatePartTraversal {
 
   public void visitCompositePart (CompositePart p) {
     Store local = Worker.getWorker().getLocalStore();
-    visited = new HashMap@local();
+    visited = (HashMap) new LinkedHashMap@local().fabric$util$LinkedHashMap$();
     p.rootPart().accept(this);
     result += visited.size();
     visited = null;

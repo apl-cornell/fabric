@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -15,18 +15,17 @@
  */
 package fabric.translate;
 
-import fabil.ast.FabILNodeFactory;
-import polyglot.ast.Expr;
-import polyglot.types.SemanticException;
-import polyglot.util.Position;
 import jif.translate.ExprToJavaExt_c;
 import jif.translate.JifToJavaRewriter;
+import polyglot.ast.Expr;
+import polyglot.types.SemanticException;
 
 public class WorkerToFabilExt_c extends ExprToJavaExt_c {
+  /**
+   * @throws SemanticException
+   */
   @Override
   public Expr exprToJava(JifToJavaRewriter rw) throws SemanticException {
-    FabILNodeFactory nf = (FabILNodeFactory)rw.nodeFactory();
-//    return nf.Local(Position.compilerGenerated(), nf.Id(Position.compilerGenerated(), "worker$"));
-    return rw.qq().parseExpr("worker$");
+    return rw.qq().parseExpr("Worker.getWorker()");
   }
 }

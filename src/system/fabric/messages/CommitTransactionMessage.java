@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -19,107 +19,63 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import fabric.worker.debug.Timing;
-import fabric.worker.remote.MessageHandlerThread;
-import fabric.common.exceptions.FabricException;
-import fabric.common.exceptions.InternalError;
-import fabric.common.exceptions.ProtocolError;
-import fabric.net.RemoteNode;
-import fabric.net.UnreachableNodeException;
+import fabric.lang.security.Principal;
+import fabric.worker.TransactionCommitFailedException;
 
-public class CommitTransactionMessage extends
-    Message<RemoteNode, CommitTransactionMessage.Response> {
-
-  public static class Response implements Message.Response {
-    public final boolean success;
-    public final String message;
-
-    public Response(boolean success) {
-      this(success, null);
-    }
-
-    public Response(boolean success, String message) {
-      this.success = success;
-      this.message = message;
-    }
-
-    /**
-     * Deserialization constructor, used by the worker.
-     * 
-     * @param node
-     *          The node from which the response is being read.
-     * @param in
-     *          the input stream from which to read the response.
-     */
-    Response(RemoteNode node, DataInput in) throws IOException {
-      this.success = in.readBoolean();
-      if (in.readBoolean())
-        this.message = in.readUTF();
-      else this.message = null;
-    }
-
-    /*
-     * (non-Javadoc)
-     * @see fabric.messages.Message.Response#write(java.io.DataOutput)
-     */
-    public void write(DataOutput out) throws IOException {
-      out.writeBoolean(success);
-      if (message != null) {
-        out.writeBoolean(true);
-        out.writeUTF(message);
-      } else out.writeBoolean(false);
-    }
-  }
+public class CommitTransactionMessage
+    extends
+    Message<CommitTransactionMessage.Response, TransactionCommitFailedException> {
+  // ////////////////////////////////////////////////////////////////////////////
+  // message contents //
+  // ////////////////////////////////////////////////////////////////////////////
 
   public final long transactionID;
 
   public CommitTransactionMessage(long transactionID) {
-    super(MessageType.COMMIT_TRANSACTION);
+    super(MessageType.COMMIT_TRANSACTION,
+        TransactionCommitFailedException.class);
     this.transactionID = transactionID;
   }
 
-  /**
-   * Deserialization constructor.
-   */
+  // ////////////////////////////////////////////////////////////////////////////
+  // response contents //
+  // ////////////////////////////////////////////////////////////////////////////
+
+  public static class Response implements Message.Response {
+  }
+
+  // ////////////////////////////////////////////////////////////////////////////
+  // visitor methods //
+  // ////////////////////////////////////////////////////////////////////////////
+
+  @Override
+  public Response dispatch(Principal p, MessageHandler h)
+      throws TransactionCommitFailedException {
+    return h.handle(p, this);
+  }
+
+  // ////////////////////////////////////////////////////////////////////////////
+  // serialization cruft //
+  // ////////////////////////////////////////////////////////////////////////////
+
+  @Override
+  protected void writeMessage(DataOutput out) throws IOException {
+    out.writeLong(transactionID);
+  }
+
+  /* readMessage */
   protected CommitTransactionMessage(DataInput in) throws IOException {
     this(in.readLong());
   }
 
   @Override
-  public Response dispatch(fabric.store.MessageHandlerThread w) throws ProtocolError {
-    return w.handle(this);
+  protected void writeResponse(DataOutput out, Response r) {
+    // do nothing
   }
 
   @Override
-  public Response dispatch(MessageHandlerThread handler) throws ProtocolError {
-    return handler.handle(this);
-  }
-
-  public Response send(RemoteNode node) throws UnreachableNodeException {
-    try {
-      Timing.STORE.begin();
-      return super.send(node, true);
-    } catch (UnreachableNodeException e) {
-      throw e;
-    } catch (FabricException e) {
-      throw new InternalError("Unexpected response from node.", e);
-    } finally {
-      Timing.STORE.end();
-    }
-  }
-
-  @Override
-  public Response response(RemoteNode node, DataInput in) throws IOException {
-    return new Response(node, in);
-  }
-
-  /*
-   * (non-Javadoc)
-   * @see fabric.messages.Message#write(java.io.DataOutput)
-   */
-  @Override
-  public void write(DataOutput out) throws IOException {
-    out.writeLong(transactionID);
+  protected Response readResponse(DataInput in) {
+    return new Response();
   }
 
 }

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -22,11 +22,6 @@ import fabil.types.FabILTypeSystem;
 import fabil.visit.ProxyRewriter;
 
 public class CastExt_c extends ExprExt_c {
-  /*
-   * (non-Javadoc)
-   * 
-   * @see fabil.extension.ExprExt_c#rewriteProxiesImpl(fabil.visit.ProxyRewriter)
-   */
   @Override
   public Expr rewriteProxiesImpl(ProxyRewriter pr) {
     FabILTypeSystem ts = pr.typeSystem();
@@ -35,7 +30,7 @@ public class CastExt_c extends ExprExt_c {
 
     // Get the exact proxy before we cast.
     QQ qq = pr.qq();
-    return qq.parseExpr("(%T) fabric.lang.Object._Proxy.$getProxy(%E)", cast
-        .castType(), cast.expr());
+    return qq.parseExpr("(%T) fabric.lang.Object._Proxy.$getProxy(%E)",
+        cast.castType(), cast.expr());
   }
 }

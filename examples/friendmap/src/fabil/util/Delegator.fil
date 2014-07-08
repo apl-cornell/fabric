@@ -1,0 +1,95 @@
+/**
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
+ *
+ * This file is part of Fabric.
+ *
+ * Fabric is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * Fabric is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ */
+package util;
+
+/**
+ * Convenience principal class the delegates to a single owner.
+ */
+public class Delegator extends AbstractPrincipal {
+  protected String     name;
+  protected Principal  owner;
+
+  public Delegator util$Delegator$(
+    String     name,
+    Principal  owner
+  )
+  {
+    // these endorsements are safe, because owner ≽ this,
+    // and thus {owner←} ⊑ {this←}
+    // we just can't convince the compiler of this fact.
+
+    this.owner = owner;
+    this.name  = name;
+    this.fabric$lang$security$AbstractPrincipal$(name);
+    return this;
+  }
+  
+  public Delegator util$Delegator$(
+      String     name
+    )
+    {
+      // these endorsements are safe, because owner ≽ this,
+      // and thus {owner←} ⊑ {this←}
+      // we just can't convince the compiler of this fact.
+
+      this.owner = this.$getStore().getPrincipal();
+      this.name  = name;
+      this.fabric$lang$security$AbstractPrincipal$(name);
+      return this;
+    }
+
+  private void jif$init$() {}
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Principal methods                                                        //
+  //////////////////////////////////////////////////////////////////////////////
+
+  public boolean delegatesTo(Principal p)
+  {
+    return p == owner;
+  }
+
+  public ActsForProof findProofUpto(Store s, Principal p, java.lang.Object
+      searchState) {
+    if (PrincipalUtil.actsFor(owner, this)) {
+
+      ActsForProof proof =
+        PrincipalUtil.findActsForProof(s, p, owner, searchState);
+      if (proof != null) {
+        // Create proofParam: {*→s;*←s}
+        Principal storeP = s.getPrincipal();
+        ConfPolicy conf =
+          LabelUtil.readerPolicy(s, PrincipalUtil.topPrincipal(), storeP);
+        IntegPolicy integ =
+          LabelUtil.writerPolicy(s, PrincipalUtil.topPrincipal(), storeP);
+        Label proofParam = LabelUtil.toLabel(s, conf, integ);
+
+        DelegatesProof dp =
+          (DelegatesProof) new DelegatesProof@s().fabric$lang$security$DelegatesProof$(owner, this);
+        return
+          (TransitiveProof)
+            new TransitiveProof@s().fabric$lang$security$TransitiveProof$(proof, owner, dp);
+      } else
+        return null;
+
+    } else throw new AssertionFailedError().util$AssertionFailedError$("owner acts for delegator");
+  }
+}
+
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/

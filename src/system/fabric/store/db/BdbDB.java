@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -18,24 +18,41 @@ package fabric.store.db;
 import static com.sleepycat.je.OperationStatus.SUCCESS;
 import static fabric.common.Logging.STORE_DB_LOGGER;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.logging.Level;
 
-import com.sleepycat.je.*;
+import com.sleepycat.je.Cursor;
+import com.sleepycat.je.Database;
+import com.sleepycat.je.DatabaseConfig;
+import com.sleepycat.je.DatabaseEntry;
+import com.sleepycat.je.DatabaseException;
+import com.sleepycat.je.Environment;
+import com.sleepycat.je.EnvironmentConfig;
+import com.sleepycat.je.LockMode;
+import com.sleepycat.je.OperationStatus;
+import com.sleepycat.je.Transaction;
 
 import fabric.common.FastSerializable;
 import fabric.common.ONumConstants;
 import fabric.common.Resources;
 import fabric.common.SerializedObject;
+import fabric.common.Surrogate;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.Cache;
 import fabric.common.util.LongKeyCache;
 import fabric.common.util.OidKeyHashMap;
-import fabric.lang.security.NodePrincipal;
+import fabric.lang.FClass;
+import fabric.lang.security.Principal;
 import fabric.store.SubscriptionManager;
-import fabric.worker.remote.RemoteWorker;
 
 /**
  * An ObjectDB backed by a Berkeley Database.
@@ -125,7 +142,7 @@ public class BdbDB extends ObjectDB {
   }
 
   @Override
-  public void finishPrepare(long tid, NodePrincipal worker) {
+  public void finishPrepare(long tid, Principal worker) {
     // Copy the transaction data into BDB.
     OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
     PendingTransaction pending = submap.remove(worker);
@@ -147,8 +164,7 @@ public class BdbDB extends ObjectDB {
   }
 
   @Override
-  public void commit(long tid, RemoteWorker workerNode,
-      NodePrincipal workerPrincipal, SubscriptionManager sm) {
+  public void commit(long tid, Principal workerPrincipal, SubscriptionManager sm) {
     STORE_DB_LOGGER.finer("Bdb commit begin tid " + tid);
 
     try {
@@ -164,7 +180,7 @@ public class BdbDB extends ObjectDB {
           db.put(txn, onumData, objData);
 
           // Remove any cached globs containing the old version of this object.
-          notifyCommittedUpdate(sm, toLong(onumData.getData()), workerNode);
+          notifyCommittedUpdate(sm, toLong(onumData.getData()));
 
           // Update the version-number cache.
           cachedVersions.put(onum, o.getVersion());
@@ -187,7 +203,7 @@ public class BdbDB extends ObjectDB {
   }
 
   @Override
-  public void rollback(long tid, NodePrincipal worker) {
+  public void rollback(long tid, Principal worker) {
     STORE_DB_LOGGER.finer("Bdb rollback begin tid " + tid);
 
     try {
@@ -297,8 +313,10 @@ public class BdbDB extends ObjectDB {
     try {
       if (db != null) db.close();
       if (prepared != null) prepared.close();
+      if (meta != null) meta.close();
       if (env != null) env.close();
     } catch (DatabaseException e) {
+      e.printStackTrace();
     }
   }
 
@@ -358,8 +376,8 @@ public class BdbDB extends ObjectDB {
    * @throws DatabaseException
    *           if a database error occurs
    */
-  private PendingTransaction remove(NodePrincipal worker, Transaction txn,
-      long tid) throws DatabaseException {
+  private PendingTransaction remove(Principal worker, Transaction txn, long tid)
+      throws DatabaseException {
     byte[] key = toBytes(tid, worker);
     DatabaseEntry bdbKey = new DatabaseEntry(key);
     DatabaseEntry data = new DatabaseEntry();
@@ -378,16 +396,16 @@ public class BdbDB extends ObjectDB {
     return pending;
   }
 
-  private byte[] toBytes(boolean b) {
+  private static byte[] toBytes(boolean b) {
     byte[] result = { (byte) (b ? 1 : 0) };
     return result;
   }
 
-  private boolean toBoolean(byte[] data) {
+  private static boolean toBoolean(byte[] data) {
     return data[0] == 1;
   }
 
-  private byte[] toBytes(long i) {
+  private static byte[] toBytes(long i) {
     byte[] data = new byte[8];
 
     for (int j = 0; j < 8; j++) {
@@ -398,7 +416,7 @@ public class BdbDB extends ObjectDB {
     return data;
   }
 
-  private byte[] toBytes(long tid, NodePrincipal worker) {
+  private static byte[] toBytes(long tid, Principal worker) {
     try {
       ByteArrayOutputStream bos = new ByteArrayOutputStream();
       DataOutputStream dos = new DataOutputStream(bos);
@@ -414,7 +432,7 @@ public class BdbDB extends ObjectDB {
     }
   }
 
-  private long toLong(byte[] data) {
+  private static long toLong(byte[] data) {
     long i = 0;
 
     for (int j = 0; j < 8; j++) {
@@ -425,7 +443,7 @@ public class BdbDB extends ObjectDB {
     return i;
   }
 
-  private byte[] toBytes(FastSerializable obj) {
+  private static byte[] toBytes(FastSerializable obj) {
     try {
       ByteArrayOutputStream bos = new ByteArrayOutputStream();
       ObjectOutputStream oos = new ObjectOutputStream(bos);
@@ -437,7 +455,7 @@ public class BdbDB extends ObjectDB {
     }
   }
 
-  private PendingTransaction toPendingTransaction(byte[] data) {
+  private static PendingTransaction toPendingTransaction(byte[] data) {
     try {
       ByteArrayInputStream bis = new ByteArrayInputStream(data);
       ObjectInputStream ois = new ObjectInputStream(bis);
@@ -447,13 +465,63 @@ public class BdbDB extends ObjectDB {
     }
   }
 
-  private SerializedObject toSerializedObject(byte[] data) {
+  private static SerializedObject toSerializedObject(byte[] data) {
     try {
       ByteArrayInputStream bis = new ByteArrayInputStream(data);
       ObjectInputStream ois = new ObjectInputStream(bis);
       return new SerializedObject(ois);
     } catch (IOException e) {
       throw new InternalError(e);
+    }
+  }
+
+  /**
+   * Dumps the contents of a BDB object database to stdout.
+   */
+  public static void main(String[] args) {
+    if (args.length != 1) {
+      System.err.println("Usage: fabric.store.db.BdbDB STORE_NAME");
+      System.err.println();
+      System.err.println("  Dumps a BDB object database in CSV format.");
+      return;
+    }
+
+    BdbDB db = new BdbDB(args[0]);
+    Cursor cursor = db.db.openCursor(null, null);
+    DatabaseEntry key = new DatabaseEntry();
+    DatabaseEntry value = new DatabaseEntry();
+
+    System.out.println("onum,class name,version number,update label onum,"
+        + "access label onum");
+    while (cursor.getNext(key, value, null) == OperationStatus.SUCCESS) {
+      SerializedObject obj = toSerializedObject(value.getData());
+      long onum = obj.getOnum();
+      String className = obj.getClassName();
+      int version = obj.getVersion();
+      long updateLabelOnum = obj.getUpdateLabelOnum();
+      long accessPolicyOnum = obj.getAccessPolicyOnum();
+      String extraInfo = "";
+      try {
+        // Get extra information on surrogates and FClasses.
+        // This code depends on the serialization format of those classes, and
+        // is therefore rather fragile.
+        if (Surrogate.class.getName().equals(className)) {
+          ObjectInputStream ois =
+              new ObjectInputStream(obj.getSerializedDataStream());
+          extraInfo = ",ref=" + ois.readUTF() + "/" + ois.readLong();
+        } else if (FClass.class.getName().equals(className)) {
+          ObjectInputStream ois =
+              new ObjectInputStream(obj.getSerializedDataStream());
+          extraInfo = ",name=" + ois.readObject();
+        }
+      } catch (IOException e) {
+        e.printStackTrace();
+      } catch (ClassNotFoundException e) {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
+      }
+      System.out.println(onum + "," + className + "," + version + ","
+          + updateLabelOnum + "," + accessPolicyOnum + extraInfo);
     }
   }
 

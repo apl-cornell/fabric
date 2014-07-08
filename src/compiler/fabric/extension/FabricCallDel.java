@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -15,15 +15,15 @@
  */
 package fabric.extension;
 
-import fabric.ast.Worker;
+import jif.extension.JifCallDel;
 import polyglot.ast.Call;
 import polyglot.ast.Receiver;
-import jif.extension.JifCallDel;
+import fabric.ast.Worker;
 
 public class FabricCallDel extends JifCallDel {
   @Override
   public boolean targetIsNeverNull() {
-    Receiver r = ((Call)node()).target();
+    Receiver r = ((Call) node()).target();
     return super.targetIsNeverNull() || r instanceof Worker;
   }
 }

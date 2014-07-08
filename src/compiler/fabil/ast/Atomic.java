@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -25,7 +25,10 @@ import polyglot.types.LocalInstance;
  */
 public interface Atomic extends Block {
   List<LocalInstance> updatedLocals();
+
   Atomic updatedLocals(List<LocalInstance> s);
+
   boolean mayAbort();
+
   Atomic mayAbort(boolean b);
 }

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010 Fabric project group, Cornell University
+ * Copyright (C) 2010-2012 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -17,25 +17,27 @@ package fabric.types;
 
 import java.util.Map;
 
-import polyglot.types.ClassType;
-
 import jif.types.JifClassType;
 import jif.types.JifSubst_c;
 import jif.types.JifTypeSystem;
+import jif.types.Param;
+import jif.types.ParamInstance;
+import polyglot.types.ClassType;
 
 public class FabricSubst_c extends JifSubst_c {
-  public FabricSubst_c(JifTypeSystem ts, Map subst, Map cache) {
-    super(ts, subst, cache);
+  public FabricSubst_c(JifTypeSystem ts,
+      Map<ParamInstance, ? extends Param> subst) {
+    super(ts, subst);
   }
-  
+
   @Override
   public ClassType substClassType(ClassType t) {
     // Don't bother trying to substitute into a non-Jif class.
-    if (! (t instanceof JifClassType)) {
-        return t;
+    if (!(t instanceof JifClassType)) {
+      return t;
     }
 
     return new FabricSubstClassType_c((JifTypeSystem) ts, t.position(),
-                                      (JifClassType) t, this);
+        (JifClassType) t, this);
   }
 }
