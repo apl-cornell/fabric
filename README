@@ -4,7 +4,7 @@ Fabric is a language and runtime system that supports secure federated
 distributed computing. This is a quick-start manual to get you started
 running some Fabric examples. A more detailed manual can be found in
 the doc/manual directory of this distribution, or on the web at
-<http://www.cs.cornell.edu/project/fabric/manual/0.2.0/html/>.
+<http://www.cs.cornell.edu/project/fabric/manual/0.2.1/html/>.
 
 More information about Fabric, including the latest release, can be
 found at the Fabric website <http://www.cs.cornell.edu/project/fabric/>.
@@ -26,7 +26,7 @@ Setting up Fabric
 
 Requirements
 ------------
-This Fabric distribution builds on Unix. Fabric 0.2.0 builds
+This Fabric distribution builds on Unix. Fabric 0.2.1 builds
 against Jif 3.4.0 and Polyglot 2.5.1, both
 included in the distribution. We recommend that you use Oracle JDK 6 or
 later; we have experienced problems with OpenJDK and with older
