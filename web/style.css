@@ -62,6 +62,7 @@ input.download-old {
     font-family: "Times New Roman", times, serif;
     padding-right: 2em;
     display: inline;
+    color: #558;
 }
 div.content h1 {
    color: white; background-color: #50a0c0;
