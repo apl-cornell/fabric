@@ -1,0 +1,48 @@
+/**
+ * Copyright (C) 2010 Fabric project group, Cornell University
+ *
+ * This file is part of Fabric.
+ *
+ * Fabric is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * Fabric is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ */
+package sif.servlet;
+
+import sif.html.*;
+import fabric.lang.security.Principal;
+import java.io.InputStream;
+
+/**
+ * This is a Jif signature for the Request class
+ *
+ */
+public final class Request[principal servletP] extends java.lang.Object {
+    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+
+    
+    public final Servlet[servletP]{this} servlet;
+    public final principal{this} session; // principal for the current session
+        
+    private Request() {  this.servlet = null; this.session = (Principal)null; }
+    
+    // the input from the client's browser would be labeled here
+    // i wonder when it would be dynamically labeled
+    public native String{*inp.inputLbl; inp; ⊤←session} getParam(Input[servletP] inp);
+    public native String{*eLbl;*n.input.inputLbl; n; *!:session} getParam(label{*lbl} lbl, label{*lbl} eLbl, InputNode[servletP, lbl, eLbl] n);
+    public native InputStream[{*inp.inputLbl; inp; *!:session}]{*inp.inputLbl; inp; *!:session} getFile(Input[servletP] inp);
+    public native InputStream[{*eLbl; *n.input.inputLbl; n; *!:session}]{*n.input.inputLbl; n; *!:session} getFile(label{*lbl} lbl, label{*lbl} eLbl, InputNode[servletP, lbl, eLbl] n);
+
+//      public native String action_name();
+//      public native String remoteAddr();
+//      public native String servletURL();
+    public native String{this} contextURL();
+    public native SessionState[lbl] getSessionState(label lbl);
+    public native void invalidateSession{*:session;session:}();
+}

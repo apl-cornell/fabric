@@ -1,0 +1,237 @@
+// Assumes polyglot.jar is in classpath
+include "polyglot/parse/java12.cup"
+
+package fabil.parse;
+
+import fabil.ast.Atomic;
+import fabil.ast.FabILNodeFactory;
+import fabil.ast.FabricArrayInit;
+import fabil.ast.FabricArrayTypeNode;
+import polyglot.parse.*;
+import fabil.types.FabILTypeSystem;
+import fabil.types.FabILFlags;
+import fabil.types.FabricArrayType;
+
+parser Grm extends polyglot.parse.Grm {:
+    public final FabILTypeSystem ts;
+    public final FabILNodeFactory nf;
+
+    public Grm(Lexer l, TypeSystem t, NodeFactory n, ErrorQueue q) {
+        super(l, t, n, q);
+        ts = (FabILTypeSystem) t;
+        nf = (FabILNodeFactory) n;
+    }
+    
+    public TypeNode fabricArray(TypeNode n, int dims) throws Exception {
+      if (dims <= 0) return n;
+      
+      if (n instanceof ArrayTypeNode && !(n instanceof FabricArrayTypeNode))
+        return javaArray(n, dims);
+      
+      if (n instanceof CanonicalTypeNode) {
+        Type t = ((CanonicalTypeNode) n).type();
+        return nf.CanonicalTypeNode(pos(n), ts.fabricArrayOf(t, dims));
+      }
+        
+      return nf.FabricArrayTypeNode(pos(n), fabricArray(n, dims - 1));
+    }
+    
+    public TypeNode array(TypeNode n, int dims) throws Exception {
+      return fabricArray(n, dims);
+    }
+    
+    public TypeNode javaArray(TypeNode n, int dims) throws Exception {
+      if (dims > 0 && n instanceof AmbTypeNode) {
+        return nf.ArrayTypeNode(pos(n), javaArray(n, dims - 1));
+      }
+      
+      return super.array(n, dims);
+    } 
+:};
+
+terminal Token AT;
+terminal Token ATOMIC;
+terminal Token ABORT;
+terminal Token RETRY;
+terminal Token NONFABRIC;
+
+non terminal Atomic atomic_statement;
+non terminal Expr location_expr_opt;
+non terminal Expr label_opt;
+non terminal Stmt abort_stmt, retry_stmt;
+non terminal FabricArrayInit fabric_array_initializer;
+
+start with goal;
+
+
+////////////////////////////////////////////////////////////////////////
+// Atomic Sections                                                    //
+////////////////////////////////////////////////////////////////////////
+
+extend statement_without_trailing_substatement ::=
+                    // Stmt
+        atomic_statement:a {: RESULT = a; :}
+    |   abort_stmt:a {: RESULT = a; :}
+    |   retry_stmt:a {: RESULT = a; :}
+    ;
+
+atomic_statement ::=
+                    // Atomic
+        ATOMIC:n block:a {: RESULT = parser.nf.Atomic(parser.pos(n,a), a.statements()); :};
+
+abort_stmt ::=
+					// AbortStmt
+		ABORT:a SEMICOLON:b
+			{: RESULT = parser.nf.AbortStmt(parser.pos(a, b)); :}
+	;
+	
+retry_stmt ::= 
+					// RetryStmt
+		RETRY:a SEMICOLON:b
+			{: RESULT = parser.nf.RetryStmt(parser.pos(a, b)); :}
+	;
+
+extend modifier ::=
+        ATOMIC:a
+            {: RESULT = FabILFlags.ATOMIC; :}
+    |   NONFABRIC:a
+    		{: RESULT = FabILFlags.NONFABRIC; :}
+    ;
+
+////////////////////////////////////////////////////////////////////////
+// Array types                                                        //
+////////////////////////////////////////////////////////////////////////
+
+extend array_type ::=
+                    // TypeNode
+        primitive_type:a NATIVE dims:b
+            {: RESULT = parser.javaArray(a, b.intValue()); :}
+    |   name:a NATIVE dims:b
+            {: RESULT = parser.javaArray(a.toType(), b.intValue()); :}
+    ;
+
+////////////////////////////////////////////////////////////////////////
+// Labels and locations for constructors                              //
+////////////////////////////////////////////////////////////////////////
+
+label_opt ::=
+		    // Expr
+            {: RESULT = null; :}
+    |   COMP name:l
+    	    {: RESULT = l.toExpr(); :}
+    |   COMP THIS:a
+    	    {: RESULT = parser.nf.This(parser.pos(a)); :}
+    ;
+
+location_expr_opt ::=
+                    // Expr
+            {: RESULT = null; :}
+    |   AT name:a
+            {: RESULT = a.toExpr(); :}
+    ;
+
+override class_instance_creation_expression ::=
+                    // Expr
+        NEW:n class_type:a label_opt:l location_expr_opt:loc LPAREN argument_list_opt:b RPAREN:d
+            {: RESULT = parser.nf.New(parser.pos(n, d), a, l, loc, b); :}
+    |   NEW:n class_type:a label_opt:l location_expr_opt:loc LPAREN argument_list_opt:b RPAREN class_body:c
+            {: RESULT = parser.nf.New(parser.pos(n, c), a, l, loc, b, c); :}
+    |   primary_no_new_array:a DOT NEW simple_name:b label_opt:l location_expr_opt:loc LPAREN argument_list_opt:c RPAREN:d
+            {: RESULT = parser.nf.New(parser.pos(a, d), a, b.toType(), l, loc, c); :}
+    |   primary_no_new_array:a DOT NEW simple_name:b label_opt:l location_expr_opt:loc LPAREN argument_list_opt:c RPAREN class_body:d
+            {: RESULT = parser.nf.New(parser.pos(a, d), a, b.toType(), l, loc, c, d); :}
+    |   name:a DOT NEW simple_name:b label_opt:l location_expr_opt:loc LPAREN argument_list_opt:c RPAREN:d
+            {: RESULT = parser.nf.New(parser.pos(a, d), a.toExpr(), b.toType(), l, loc, c); :}
+    |   name:a DOT NEW simple_name:b label_opt:l location_expr_opt:loc LPAREN argument_list_opt:c RPAREN class_body:d
+            {: RESULT = parser.nf.New(parser.pos(a, d), a.toExpr(), b.toType(), l, loc, c, d); :}
+    ;
+
+override array_creation_expression ::=
+                    // NewArray
+        NEW:n primitive_type:a NATIVE dim_exprs:b dims_opt:c
+            {: RESULT = parser.nf.NewArray(parser.pos(n, b), a, b,
+                c.intValue()); :}
+    |   NEW:n primitive_type:a dim_exprs:b dims_opt:c label_opt:l location_expr_opt:loc
+            {: RESULT = parser.nf.NewFabricArray(parser.pos(n, b), a, l, loc, b,
+                c.intValue()); :}
+    |   NEW:n class_or_interface_type:a NATIVE dim_exprs:b dims_opt:c
+            {: RESULT = parser.nf.NewArray(parser.pos(n, b), a, b,
+                c.intValue()); :}
+    |   NEW:n class_or_interface_type:a dim_exprs:b dims_opt:c label_opt:l location_expr_opt:loc
+            {: RESULT = parser.nf.NewFabricArray(parser.pos(n, b), a, l, loc, b,
+                c.intValue()); :}
+    |   NEW:n primitive_type:a NATIVE dims:b array_initializer:c
+            {: RESULT = parser.nf.NewArray(parser.pos(n, c), a,
+                b.intValue(), c); :}
+    |   NEW:n primitive_type:a dims:b label_opt:l location_expr_opt:loc fabric_array_initializer:c
+            {: RESULT = parser.nf.NewFabricArray(parser.pos(n, c), a, l, loc,
+                b.intValue(), c); :}
+    |   NEW:n class_or_interface_type:a NATIVE dims:b array_initializer:c
+            {: RESULT = parser.nf.NewArray(parser.pos(n, c), a,
+                b.intValue(), c); :}
+    |   NEW:n class_or_interface_type:a dims:b label_opt:l location_expr_opt:loc fabric_array_initializer:c
+            {: RESULT = parser.nf.NewFabricArray(parser.pos(n, c), a, l, loc,
+                b.intValue(), c); :}
+    ;
+
+fabric_array_initializer ::=
+		    // FabricArrayInit
+	array_initializer:a
+	    {: RESULT = parser.nf.FabricArrayInit(a.position(), a.elements()); :}
+    ;
+
+//
+// In order to prevent ambiguity, we disallow dereferencing (.) a new array:
+//   new Foo[]@a.b means new Foo[]@(a.b) rather than (new Foo[]@a).b
+// Note that this also disallows new Foo[].length which we could allow
+//
+// The following updated productions are to enforce this.
+//
+
+// class_instance_creation_expression modified above
+
+// field_access
+drop {
+    field_access ::=
+            primary:a DOT IDENTIFIER:b
+        ;
+}
+extend field_access ::=
+        primary_no_new_array:a DOT IDENTIFIER:b
+            {: RESULT = parser.nf.Field(parser.pos(a, b, b), a,
+                parser.nf.Id(parser.pos(b), b.getIdentifier())); :}
+    ;
+
+// method_invocation
+drop {
+    method_invocation ::=
+	        name LPAREN argument_list_opt RPAREN
+        |   primary DOT IDENTIFIER LPAREN argument_list_opt RPAREN
+        ;
+}
+
+extend method_invocation ::=
+                    // Call
+        name:a location_expr_opt:b LPAREN argument_list_opt:c RPAREN:d
+            {: RESULT = parser.nf.Call(parser.pos(a,d),
+                a.prefix == null ? null : a.prefix.toReceiver(),
+                a.name, b, c); :}
+    |   primary_no_new_array:a DOT IDENTIFIER:b location_expr_opt:c LPAREN argument_list_opt:d RPAREN:e
+            {: RESULT = parser.nf.Call(parser.pos(b,e), a,
+                parser.nf.Id(parser.pos(b), b.getIdentifier()), c, d); :}
+    ;
+
+// explicit_constructor_invocation
+// TODO: this doesn't seem right.
+drop {
+    explicit_constructor_invocation ::=
+            primary DOT THIS LPAREN argument_list_opt RPAREN SEMICOLON
+        |   primary DOT SUPER LPAREN argument_list_opt RPAREN SEMICOLON
+        ;
+}
+extend explicit_constructor_invocation ::=
+        primary_no_new_array:a DOT THIS:n LPAREN argument_list_opt:b RPAREN SEMICOLON:c
+            {: RESULT = parser.nf.ThisCall(parser.pos(a, c, n), a, b); :}
+    |   primary_no_new_array:a DOT SUPER:n LPAREN argument_list_opt:b RPAREN SEMICOLON:c
+            {: RESULT = parser.nf.SuperCall(parser.pos(a, c, n), a, b); :}
+    ;

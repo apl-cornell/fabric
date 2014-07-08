@@ -1,0 +1,51 @@
+/**
+ * Copyright (C) 2010 Fabric project group, Cornell University
+ *
+ * This file is part of Fabric.
+ *
+ * Fabric is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * Fabric is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ */
+package hello;
+
+import javax.servlet.ServletException;
+
+import sif.html.*;
+import sif.servlet.Action;
+import sif.servlet.Request;
+import sif.servlet.Servlet;
+
+/**
+ * The StartAction is a servlet-wide action, that creates a session-specific 
+ * HelloAction.
+ */
+public class StartAction extends Action[HelloServEP] {
+	public StartAction(Main m) throws ServletException {
+		super();
+		initFields("greet", m);
+	}
+
+	public void invoke{*lbl}(label{*lbl} lbl, Request[HelloServEP]{*lbl} req) 
+	throws (ServletException{*:req.session;req.session:})
+	where caller(req.session),
+	{*lbl} <= {*:req.session} 
+	{
+		// create a session-specific HelloAction, and hand off control...
+		try {
+			atomic {
+				HelloAction ha = new HelloAction[lbl]((Main)this.getServlet());
+				ha.invoke(lbl, req);
+			}
+		}
+		catch (ClassCastException impossible) { }
+		catch (NullPointerException impossible) { }
+	}
+}
+

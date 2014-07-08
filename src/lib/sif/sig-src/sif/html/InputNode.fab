@@ -1,0 +1,47 @@
+/**
+ * Copyright (C) 2010 Fabric project group, Cornell University
+ *
+ * This file is part of Fabric.
+ *
+ * Fabric is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * Fabric is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ */
+package sif.html;
+
+import sif.servlet.Servlet;
+
+/**
+ * @author andru
+ *
+ * An Input node is one that accepts user input. It
+ * must occur within a form. There are several kinds
+ * of Input nodes. Every input is associated with a
+ * servlet. Input nodes should result in HTML decorations
+ * that describe confidentiality requirements.
+ * XXX Currently this last is not implemented.
+ */
+public abstract class InputNode[principal servletP, label L, label E] extends Node[L,E] {
+    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+    private static int __JIF_PARAMS_RUNTIME_REPRESENTED$20051007 = 0;
+
+    public final Input[servletP]{L} input;
+    
+    InputNode(Input[servletP]{L} i) 
+    where {L;E} <= {*i.inputLbl} {
+        super();
+        input = i;
+    }
+    
+    InputNode{L}(Servlet[servletP]{L} s, label{L} inputLabel) 
+    where {L;E} <= {*inputLabel} {
+        super();
+        input = new Input[servletP](s, inputLabel);
+    }
+}

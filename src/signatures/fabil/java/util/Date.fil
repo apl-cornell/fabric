@@ -1,0 +1,53 @@
+/**
+ * Copyright (C) 2010 Fabric project group, Cornell University
+ *
+ * This file is part of Fabric.
+ *
+ * Fabric is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * Fabric is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ */
+package java.util;
+
+public class Date implements java.lang.Comparable, fabric.lang.JavaInlineable {
+  public Date() {}
+  public Date(long arg0) {}
+//  public Date(int arg0, int arg1, int arg2) {}
+//  public Date(int arg0, int arg1, int arg2, int arg3, int arg4) {}
+//  public Date(int arg0, int arg1, int arg2, int arg3, int arg4, int arg5) {}
+//  public Date(java.lang.String arg0) {}
+  public native int hashCode();
+  public native java.lang.Object clone();
+  public native int compareTo(java.util.Date arg0);
+  public native int compareTo(java.lang.Object arg0);
+  public native boolean equals(java.lang.Object arg0);
+  public native java.lang.String toString();
+//  public static native long parse(java.lang.String arg0);
+  public native boolean after(java.util.Date arg0);
+  public native boolean before(java.util.Date arg0);
+//  public native int getDate();
+  public native long getTime();
+//  public native void setTime(long arg0);
+//  public native int getHours();
+//  public native int getMinutes();
+//  public native int getMonth();
+//  public native int getSeconds();
+//  public native int getYear();
+//  public static native long UTC(int arg0, int arg1, int arg2, int arg3, int arg4, int arg5);
+//  public native int getDay();
+//  public native int getTimezoneOffset();
+//  public native void setDate(int arg0);
+//  public native void setHours(int arg0);
+//  public native void setMinutes(int arg0);
+//  public native void setMonth(int arg0);
+//  public native void setSeconds(int arg0);
+//  public native void setYear(int arg0);
+//  public native java.lang.String toGMTString();
+//  public native java.lang.String toLocaleString();
+}

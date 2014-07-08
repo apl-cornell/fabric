@@ -1,0 +1,44 @@
+/**
+ * Copyright (C) 2010 Fabric project group, Cornell University
+ *
+ * This file is part of Fabric.
+ *
+ * Fabric is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * Fabric is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ */
+package travel;
+
+import fabric.util.Map;
+
+public class Tickets[principal bank, principal airline, principal user]  { // on airline store and worker
+
+    int {airline←} num_tickets;
+    int {airline←} total_tickets;
+    Tickets{airline←}() {
+        num_tickets = 0;
+        total_tickets = 5;
+    }
+    
+    public int{airline←} getNumTickets() {
+        return num_tickets;
+    }
+    
+    public boolean{airline←} incTickets{airline←}() :{airline←} {
+        if (num_tickets < total_tickets) {
+            num_tickets++;
+            return true;
+        }
+        return false;
+    }
+    
+}
+
+//class PurchasingError extends Exception {
+//}

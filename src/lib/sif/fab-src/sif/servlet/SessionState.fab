@@ -1,0 +1,84 @@
+/**
+ * Copyright (C) 2010 Fabric project group, Cornell University
+ *
+ * This file is part of Fabric.
+ *
+ * Fabric is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * Fabric is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ */
+package sif.servlet;
+import fabric.lang.security.Principal;
+
+/**
+ * Global state for a single session.
+ */
+
+public class SessionState[covariant label T] {
+
+    // XXX Is it ok for this to be public?
+    public SessionState(String{T} sessionId_, SessionPrincipal{T} session) {
+//    	this.remote = new SSW[T](new SessionPrincipal[T](this), sessionId);
+        this.sessionPrincipal = session;
+        this.sessionId = sessionId_;
+    }
+    
+    protected SessionState(SessionPrincipal{T} session) {
+//    	this.remote = new SSW[T](new SessionPrincipal[T](this), "<uninitialized>");
+        this.sessionPrincipal = session;
+        this.sessionId = "<uninitialized>";
+    }
+    
+    public final SessionPrincipal{T} sessionPrincipal;
+    public final String{T}    sessionId;
+
+    public final String{T;this} getSessionId() {
+        return sessionId;
+    }
+
+    public final SessionPrincipal{T;this} sessionPrincipal() {
+        return sessionPrincipal;
+    }
+//    
+//    public final String{T;this} getSessionId() {
+//    	try {
+//    		return remote.sessionId;
+//    	} catch(NullPointerException e) {return null;} 
+//    }
+//
+//    public final Principal{T;this} sessionPrincipal() {
+//    	try {
+//    		return remote.sessionPrincipal;
+//    	} catch(NullPointerException e) {return null;}
+//    }
+//    
+    /** convenience method for non-fabric code */
+//    public static SessionState[lbl]{*lbl} createSessionState{*lbl}(
+//            label{*lbl} lbl, 
+//            String{*lbl} id,
+//            SessionPrincipal{*lbl} sp,
+//            Store store) {
+//    	atomic {
+//    		return new SessionState[lbl]@store(id, sp);
+//    	}
+//    }
+    
+//    public static SessionState[{P←}]{P←} declassifySS{P←}(SessionState[{P→;P←}]{P→;P←} ss_, principal{P←} P)
+//    where caller(P) {
+//    	final SessionState[{P→;P←}]{P←} ss = declassify(ss_, {P→;P←} to {P←});
+//    	if(ss == null) return null;
+//    	final SSW[{P→;P←}]{P←} ssremote = declassify(ss.remote, {P→;P←} to {P←});
+//    	if(ssremote == null) return null;
+//        final Principal{P←} sessionPrincipal = declassify(ssremote.sessionPrincipal, {P→;P←} to {P←});
+//        final String{P←}    sessionId = declassify(ssremote.sessionId, {P→;P←} to {P←});
+//        final SSW[{P←}] rem = new SSW[{P←}](sessionPrincipal, sessionId);
+//        return new SessionState[{P←}](rem);
+//        return null;
+//    }
+}

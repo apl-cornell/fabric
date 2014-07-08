@@ -1,0 +1,46 @@
+/**
+ * Copyright (C) 2010 Fabric project group, Cornell University
+ *
+ * This file is part of Fabric.
+ *
+ * Fabric is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * Fabric is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ */
+package OO7.traversals;
+
+public class Q1 {
+  /* TODO: extract into a separate traversal
+  public void matchQuery() throws Exception {
+    // generate a random list of objects to fetch
+    Store local = Worker.getWorker().getLocalStore();
+    int[] oids = new int[1000]@local;
+    Map atomicParts = atomicPartsById();
+
+    atomic {
+      for (int i = 0; i < oids.length; ++i)
+        oids[i] = rand.nextInt(atomicParts.size());
+    }
+
+    // access each
+    long time = System.currentTimeMillis();
+    for (int i = 0; i < oids.length; ++i) {
+      AtomicPart part = (AtomicPart) atomicParts.get(new Integer@local(oids[i]));
+      long x = part.x();
+    }
+    time = (System.currentTimeMillis() - time);
+    System.out.println("Millis: " + time);
+  }
+  */
+}
+
+/*
+** vim: ts=2 sw=2 et cindent cino=\:0 syntax=java
+*/
+

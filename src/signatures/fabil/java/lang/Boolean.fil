@@ -1,0 +1,47 @@
+/**
+ * Copyright (C) 2010 Fabric project group, Cornell University
+ *
+ * This file is part of Fabric.
+ *
+ * Fabric is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * Fabric is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ */
+package java.lang;
+
+public final class Boolean implements fabric.lang.JavaInlineable,
+    java.lang.Comparable {
+  public Boolean(boolean arg0) {
+  }
+
+  public Boolean(java.lang.String arg0) {
+  }
+
+  public native int hashCode();
+
+  public native int compareTo(java.lang.Boolean arg0);
+
+  public native int compareTo(java.lang.Object arg0);
+
+  public static native boolean getBoolean(java.lang.String arg0);
+
+  public native boolean equals(java.lang.Object arg0);
+
+  public static native java.lang.String toString(boolean arg0);
+
+  public native java.lang.String toString();
+
+  public static native java.lang.Boolean valueOf(boolean arg0);
+
+  public static native java.lang.Boolean valueOf(java.lang.String arg0);
+
+  public native boolean booleanValue();
+
+  public static native boolean parseBoolean(java.lang.String arg0);
+}

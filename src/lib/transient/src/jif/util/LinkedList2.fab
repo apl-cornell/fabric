@@ -1,0 +1,314 @@
+/**
+ * Copyright (C) 2010 Fabric project group, Cornell University
+ *
+ * This file is part of Fabric.
+ *
+ * Fabric is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * Fabric is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ */
+package jif.util;
+
+/**
+ * An implementation of List2, using a linked list to store the
+ * list elements.
+ */
+public class LinkedList2[label S, label C] extends AbstractList2[S,C]
+{
+    private LinkedListEntry2[S,C]{S} head;
+    private LinkedListEntry2[S,C]{S} tail;
+
+    public LinkedList2() {
+        head = null;
+        tail = null;
+        super();
+    }
+    
+    public void clear{S}() {
+    	head = null;
+    	tail = null;
+    }
+
+    public int{S} size() {
+        int s = 0;
+        
+        LinkedListEntry2[S,C] e = head;
+        while (e != null) {
+            e = e.next;
+            s++;
+        }
+        return s;
+    }
+
+    public boolean{S} add{S}(JifObject[C]{S} o) {
+        LinkedListEntry2[S,C]{S} n = new LinkedListEntry2[S,C]();
+        LinkedListEntry2[S,C]{S} m = tail; // use a local to avoid NPE
+        n.data = o;
+
+        if (m == null) {
+	    // first element in list
+	    head = tail = n;
+	    return true;
+        }
+	m.next = n;
+	n.prev = m;
+        tail = n;
+
+        return true;
+    }
+
+    	// The semantics of this method is to remove this particular object reference from the list
+    	// without looking at the value inside it. This is different from the standard remove method
+    	// available in Collections
+    public boolean{S} removeByRef{S}(JifObject[C]{S} o) {
+        LinkedListEntry2[S,C] e = head;
+        while (e != null) {
+            if (e.data == o) {
+                // remove it...
+                LinkedListEntry2[S,C] f = e.prev;
+                if (f != null) {
+                    f.next = e.next;
+                }
+                f = e.next;
+                if (f != null) {
+                    f.prev = e.prev;
+                }
+                if (tail == e) {
+                    tail = e.prev;
+                }
+                if (head == e) {
+                    head = e.next;
+                }
+                
+                return true;
+            }
+            e = e.next;
+        }
+        return false;
+    }
+
+        // The semantics of this method is to remove this particular object reference from the list
+        // without looking at the value inside it. This is different from the standard remove method
+        // available in Collections
+  public boolean{S} remove{S}(JifObject[C]{S} o) where {C} <= {S} {
+    LinkedListEntry2[S,C] e = head;
+    while (e != null) {
+        if (e.data == o || (o != null && o.equals(e.data))) {
+            // remove it...
+            LinkedListEntry2[S,C] f = e.prev;
+            if (f != null) {
+                f.next = e.next;
+            }
+            f = e.next;
+            if (f != null) {
+                f.prev = e.prev;
+            }
+            if (tail == e) {
+                tail = e.prev;
+            }
+            if (head == e) {
+                head = e.next;
+            }
+            
+            return true;
+        }
+        e = e.next;
+    }
+    return false;
+  }
+  
+    public JifObject[C]{S} remove{S}(int{S} index) throws (IndexOutOfBoundsException{S}) {
+        int s = 0;
+        int size = size();
+
+        if (index < 0 || index >= size) {
+            throw new IndexOutOfBoundsException();
+        }
+
+        LinkedListEntry2[S,C] e = head;
+        while (e != null && s != index) {
+            e = e.next;
+            s++;
+        }
+
+        if (e != null) {            
+            LinkedListEntry2[S,C] f = e.prev;
+            if (f != null) {
+                f.next = e.next;
+            }
+            f = e.next;
+            if (f != null) {
+                f.prev = e.prev;
+            }
+            if (tail == e) {
+                tail = e.prev;
+            }
+            if (head == e) {
+                head = e.next;
+            }
+        
+            return e.data;
+        }
+        // unreachable
+        return null;
+    }
+
+    public int{S;C} hashCode() {
+        int hashCode = 1;
+        LinkedListEntry2[S,C] e = head;
+        while (e != null) {
+            JifObject[C] mobj = e.data;
+            hashCode = 31*hashCode + (mobj==null ? 0 : mobj.hashCode());
+        }
+        return hashCode;
+    }
+
+    public JifObject[C]{S;index} get(int index):{S;index} throws (IndexOutOfBoundsException{S;index}) {
+        if (index < 0 || index >= size()) {
+            throw new IndexOutOfBoundsException();
+        }
+
+        int s = 0;
+        
+        LinkedListEntry2[S,C] e = head;
+        while (e != null) {
+            if (s == index) {
+                return e.data;
+            }
+            e = e.next;
+            s++;
+        }
+        // unreachable here
+        return null;
+    }
+
+    public JifObject[C]{S} getFirst():{S} throws (IndexOutOfBoundsException{S}) {
+        LinkedListEntry2[S,C] m = head;
+        if (m != null) {
+            return m.data;
+        }
+        throw new IndexOutOfBoundsException();
+    }
+
+    public JifObject[C]{S} getLast():{S} throws (IndexOutOfBoundsException{S}) {
+        LinkedListEntry2[S,C] m = tail;
+        if (m != null) {
+            return m.data;
+        }
+        throw new IndexOutOfBoundsException();
+    }
+
+
+    public JifObject[C]{S} set{S}(int{S} index, JifObject[C]{S} element):{S} throws (IndexOutOfBoundsException{S}) {
+        int s = 0;
+        
+        LinkedListEntry2[S,C] e = head;
+        while (e != null) {
+            if (s == index) {
+                JifObject[C] old = e.data;
+                e.data = element;
+                return old;
+            }
+            e = e.next;
+            s++;
+        }
+        throw new IndexOutOfBoundsException();
+    }
+
+    public void add{S}(int{S} index, JifObject[C]{S} element):{S} throws (IndexOutOfBoundsException{S}) {
+        LinkedListEntry2[S,C] n = new LinkedListEntry2[S,C]();
+        n.data = element;
+        
+        if (index == 0) {
+            // special case adding it to the beginning.
+            head = n;
+            if (tail == null) {
+                tail = n;
+            }
+            return;
+        }
+
+        int s = 0;
+        
+
+        LinkedListEntry2[S,C] e = head;
+        while (e != null) {
+            if (s == index) {
+                n.next = e;                
+                n.prev = e.prev;
+                
+                e.prev = n;
+                
+                LinkedListEntry2[S,C] p = n.prev; // use of local to avoid NPE
+                if (p != null) {
+                    p.next = e;
+                }
+                
+                if (n.next == null) {
+                    tail = n;
+                }
+                if (n.prev == null) {
+                    head = n;
+                }
+                
+                return;
+            }
+            if (s == index-1 && e.next == null) {
+                // the index == size()
+                n.next = null;
+                n.prev = e;
+                e.next = n;
+                tail = n;
+                return;
+            }
+            e = e.next;
+            s++;
+        }
+        throw new IndexOutOfBoundsException();
+    }
+
+
+    public int{S;C;o} indexOf(JifObject[C] o) {
+        int s = 0;
+        
+        LinkedListEntry2[S,C] e = head;
+        while (e != null) {
+            if (o == e.data || (o != null && o.equals(e.data))) {
+                return s;
+            }
+            e = e.next;
+            s++;
+        }
+        return -1;
+    }
+
+    public int{S;C;o} lastIndexOf(JifObject[C] o) {
+        int s = 0;
+        int last = -1;
+        
+        LinkedListEntry2[S,C] e = head;
+        while (e != null) {
+            if (o == e.data || (o != null && o.equals(e.data))) {
+                last = s;
+            }
+            e = e.next;
+            s++;
+        }
+        return last;
+    }
+
+}
+
+class LinkedListEntry2[label S, label C] {
+    LinkedListEntry2() {}
+    LinkedListEntry2[S,C]{S} next;
+    LinkedListEntry2[S,C]{S} prev;
+    JifObject[C]{S} data;
+}
+

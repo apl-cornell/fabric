@@ -1,0 +1,48 @@
+<!--
+  This is the Apache Ant build file for the Fabric libraries.
+-->
+
+<project name="fabric-libs" default="build-all" basedir=".">
+  <description>
+    Fabric libraries build file
+  </description>
+
+  <target name="build-all" depends="build" />
+  <target name="all" depends="build-all" />
+
+  <target name="clean"
+      description="Removes generated files">
+    <!-- Recursively call "clean" on subdirectories. -->
+    <subant target="clean">
+      <fileset dir="." includes="*/build.xml" />
+    </subant>
+  </target>
+
+  <!-- Makes the directory tree truly pristine. -->
+  <target name="clobber" depends="clean">
+    <!-- Recursively call "clobber" on subdirectories. -->
+    <subant target="clobber">
+      <fileset dir="." includes="*/build.xml" />
+    </subant>
+  </target>
+
+  <!-- Main target for compiling the Fabric libraries -->
+  <target name="build" description="Compiles the Fabric libraries">
+    <!-- Recursively call "build-all" on subdirectories. -->
+    <subant target="build-all">
+      <fileset dir="." includes="*/build.xml" />
+    </subant>
+  </target>
+
+  <!-- target for jarring the Fabric libraries -->
+  <target name="jar" description="Creates Fabric library jars">
+    <subant target="jar">
+      <fileset dir="." includes="*/build.xml" />
+    </subant>
+  </target>
+
+</project>
+
+<!--
+vim: ts=2 sw=2 ai et
+-->

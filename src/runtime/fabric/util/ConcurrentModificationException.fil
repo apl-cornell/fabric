@@ -1,0 +1,69 @@
+/**
+ * Copyright (C) 2010 Fabric project group, Cornell University
+ *
+ * This file is part of Fabric.
+ *
+ * Fabric is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * Fabric is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ */
+package fabric.util;
+
+/* Written using "Java Class Libraries", 2nd edition, ISBN 0-201-31002-3
+ * "The Java Language Specification", ISBN 0-201-63451-1
+ * plus online API docs for JDK 1.2 beta from http://www.javasoft.com.
+ */
+
+/**
+ * Exception that is thrown by the collections classes when it is detected that
+ * a modification has been made to a data structure when this is not allowed,
+ * such as when a collection is structurally modified while an Iterator is
+ * operating over it. In cases where this can be detected, a
+ * ConcurrentModificationException will be thrown. An Iterator that detects
+ * this condition is referred to as fail-fast. Notice that this can occur
+ * even in single-threaded designs, if you call methods out of order.
+ *
+ * @author Warren Levy (warrenl@cygnus.com)
+ * @author Eric Blake (ebb9@email.byu.edu)
+ * @see Collection
+ * @see Iterator
+ * @see ListIterator
+ * @see Vector
+ * @see LinkedList
+ * @see HashSet
+ * @see Hashtable
+ * @see TreeMap
+ * @see AbstractList
+ * @since 1.2
+ * @status updated to 1.4
+ */
+public class ConcurrentModificationException extends RuntimeException
+{
+  /**
+   * Compatible with JDK 1.2.
+   */
+  private static final long serialVersionUID = -3666751008965953603L;
+
+  /**
+   * Constructs a ConcurrentModificationException with no detail message.
+   */
+  public ConcurrentModificationException()
+  {
+  }
+
+  /**
+   * Constructs a ConcurrentModificationException with a detail message.
+   *
+   * @param detail the detail message for the exception
+   */
+  public ConcurrentModificationException(String detail)
+  {
+    super(detail);
+  }
+}

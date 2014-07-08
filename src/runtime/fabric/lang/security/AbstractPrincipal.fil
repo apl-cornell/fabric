@@ -1,0 +1,139 @@
+/**
+ * Copyright (C) 2010 Fabric project group, Cornell University
+ *
+ * This file is part of Fabric.
+ *
+ * Fabric is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * Fabric is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ */
+package fabric.lang.security;
+
+import fabric.util.Map;
+import fabric.util.HashMap;
+import fabric.util.Iterator;
+import java.lang.Object;
+
+
+/**
+ * This is an abstract implementation of the principal interface.
+ * It provides convenience methods for delgating authority to superiors.
+ * This class assumes that principals are equal if they are the same class
+ * with the same name.
+ */
+public abstract class AbstractPrincipal extends DelegatingPrincipal {
+    private String name;
+
+    private Map superiors; // treat this like a set
+
+    public AbstractPrincipal() {
+      super();
+      this.jif$init();
+    }
+    
+    private void jif$init() {
+      superiors = new HashMap();
+      
+    // XXX HACK Make read-only operations on principals really read-only. This
+    // creates the set view of the map's keys so that future calls to keySet()
+    // will not modify the hashmap object.
+    superiors.keySet();
+    }
+    
+    protected AbstractPrincipal fabric$lang$security$AbstractPrincipal$(final String name) {
+        { this.name = name; }
+        return this;
+    }
+    
+    protected AbstractPrincipal fabric$lang$security$AbstractPrincipal$(final String name, final fabric.lang.security.Principal p) {
+        { this.name = name; }
+        return this;
+    }
+    
+
+    protected AbstractPrincipal(String name) {
+        this();
+        this.name = name;
+    }
+
+    public String name() {
+        return name;
+    }
+
+    public boolean delegatesTo(Principal p) {
+        return superiorsContains(p);
+    }
+
+    public void addDelegatesTo(Principal p) {
+        if (this.superiors.put(p, this) == null) {
+            PrincipalUtil.notifyNewDelegation(this, p);
+        }
+    }
+    public void removeDelegatesTo(Principal p) {
+        if (this.superiors.remove(p) != null) {
+            PrincipalUtil.notifyRevokeDelegation(this, p);
+        }
+    }
+
+    protected boolean superiorsContains(Principal p) {
+        return this.superiors.containsKey(p);
+    }
+
+    public boolean isAuthorized(Object authPrf, 
+            Closure closure,
+            Label lb,
+            boolean executeNow) {
+        // The default is that this principal authorizes no closures.
+        return false;
+    }
+
+
+    public ActsForProof findProofDownto(Store store, Principal q, Object searchState) {    
+        // don't even try! We don't have any information
+        // about who we can act for.
+        return null;
+    }
+
+    public ActsForProof findProofUpto(Store store, Principal p, Object searchState) {
+        LocalStore localStore = Worker.getWorker().getLocalStore();
+        Iterator i = this.superiors.keySet().iterator();
+        while(i.hasNext()) {
+            Principal s = (Principal) i.next();
+            ActsForProof prf = PrincipalUtil.findActsForProof(store, p, s, searchState);            
+            if (prf != null) {
+                if (PrincipalUtil.actsFor(s, this)) {
+                    return new TransitiveProof@localStore(prf, s, new DelegatesProof@localStore(s, this));
+                }
+            }
+        }
+        return null;        
+    }
+
+    public int hashCode() {
+        return this.name == null ? 0 : this.name.hashCode();
+    }
+    
+    public boolean equals(fabric.lang.Object o) {
+        if (o instanceof Principal) {
+            Principal p = (Principal)o;
+            return (this.name == p.name() || (this.name != null && 
+                    this.name.equals(p.name()))) &&
+                    this.getClass() == p.getClass();        
+        }
+        return false;
+    }
+
+    public boolean equals(Principal p) {
+        if (p == null) return false;
+        return (this.name == p.name() || (this.name != null && 
+                this.name.equals(p.name()))) &&
+                this.getClass() == p.getClass();        
+    }
+
+}

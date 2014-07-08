@@ -1,0 +1,78 @@
+/**
+ * Copyright (C) 2010 Fabric project group, Cornell University
+ *
+ * This file is part of Fabric.
+ *
+ * Fabric is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * Fabric is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ */
+package java.lang;
+public final class Class
+    implements java.io.Serializable, java.lang.reflect.GenericDeclaration, java.lang.reflect.Type, java.lang.reflect.AnnotatedElement, fabric.lang.JavaInlineable {
+  public static native java.lang.Class forName(java.lang.String arg0);
+  public static native java.lang.Class forName(java.lang.String arg0, boolean arg1, java.lang.ClassLoader arg2);
+  public native boolean isAssignableFrom(java.lang.Class arg0);
+  public native boolean isInstance(java.lang.Object arg0);
+  public native int getModifiers();
+  public native boolean isInterface();
+  public native boolean isArray();
+  public native boolean isPrimitive();
+  public native java.lang.Class getSuperclass();
+  public native java.lang.Class getComponentType();
+  public native java.lang.String toString();
+  public native java.lang.String getName();
+  public native java.lang.Class asSubclass(java.lang.Class arg0);
+  public native java.lang.Object cast(java.lang.Object arg0);
+  public native boolean desiredAssertionStatus();
+  public native java.lang.annotation.Annotation getAnnotation(java.lang.Class arg0);
+  public native java.lang.annotation.Annotation native[] getAnnotations();
+  public native java.lang.String getCanonicalName();
+  public native java.lang.ClassLoader getClassLoader();
+  public native java.lang.Class native[] getClasses();
+  public native java.lang.reflect.Constructor getConstructor(java.lang.Class native[] arg0);
+  public native java.lang.reflect.Constructor native[] getConstructors();
+  public native java.lang.annotation.Annotation native[] getDeclaredAnnotations();
+  public native java.lang.Class native[] getDeclaredClasses();
+  public native java.lang.reflect.Constructor getDeclaredConstructor(java.lang.Class native[] arg0);
+  public native java.lang.reflect.Constructor native[] getDeclaredConstructors();
+  public native java.lang.reflect.Field getDeclaredField(java.lang.String arg0);
+  public native java.lang.reflect.Field native[] getDeclaredFields();
+  public native java.lang.reflect.Method getDeclaredMethod(java.lang.String arg0, java.lang.Class native[] arg1);
+  public native java.lang.reflect.Method native[] getDeclaredMethods();
+  public native java.lang.Class getDeclaringClass();
+  public native java.lang.Class getEnclosingClass();
+  public native java.lang.reflect.Constructor getEnclosingConstructor();
+  public native java.lang.reflect.Method getEnclosingMethod();
+  public native java.lang.Object native[] getEnumConstants();
+  public native java.lang.reflect.Field getField(java.lang.String arg0);
+  public native java.lang.reflect.Field native[] getFields();
+  public native java.lang.reflect.Type native[] getGenericInterfaces();
+  public native java.lang.reflect.Type getGenericSuperclass();
+  public native java.lang.Class native[] getInterfaces();
+  public native java.lang.reflect.Method getMethod(java.lang.String arg0, java.lang.Class native[] arg1);
+  public native java.lang.reflect.Method native[] getMethods();
+  public native java.lang.Package getPackage();
+  public native java.security.ProtectionDomain getProtectionDomain();
+  public native java.net.URL getResource(java.lang.String arg0);
+  public native java.io.InputStream getResourceAsStream(java.lang.String arg0);
+  public native java.lang.Object native[] getSigners();
+  public native java.lang.String getSimpleName();
+  public native java.lang.reflect.TypeVariable native[] getTypeParameters();
+  public native boolean isAnnotation();
+  public native boolean isAnnotationPresent(java.lang.Class arg0);
+  public native boolean isAnonymousClass();
+  public native boolean isEnum();
+  public native boolean isLocalClass();
+  public native boolean isMemberClass();
+  public native boolean isSynthetic();
+  public native java.lang.Object newInstance();
+  public native int hashCode();
+  public native boolean equals(java.lang.Object arg0);
+}

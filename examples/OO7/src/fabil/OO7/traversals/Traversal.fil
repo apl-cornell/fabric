@@ -1,0 +1,95 @@
+/**
+ * Copyright (C) 2010 Fabric project group, Cornell University
+ *
+ * This file is part of Fabric.
+ *
+ * Fabric is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * Fabric is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ */
+package OO7.traversals;
+import OO7.*;
+
+import java.net.URI;
+import fabric.worker.Store;
+import fabric.worker.Worker;
+import fabric.util.Map;
+import fabric.worker.debug.Timing;
+
+/*
+ * Visitor interface for DesignObjects
+ */
+public abstract class Traversal {
+  public abstract void visitBenchmark       (Benchmark       b);
+  public abstract void visitModule          (Module          m);
+  public abstract void visitComplexAssembly (ComplexAssembly ca);
+  public abstract void visitBaseAssembly    (BaseAssembly    ba);
+  public abstract void visitAtomicPart      (AtomicPart      p);
+  public abstract void visitCompositePart   (CompositePart   p);
+
+  /** Handles loading the benchmark object and starting the traversal.  This
+   *  method calls visitBenchmark(args[0]) */
+  public void mainImpl(String[] args) {
+    try {
+
+      if (args.length < 1) {
+        printUsage();
+        System.exit(1);
+      }
+
+      URI    addr = new URI(args[0]);
+      Store store = Worker.getWorker().getStore(addr.getHost());
+      Benchmark b = (Benchmark) ((Map) store.getRoot()).get(addr.getPath());
+
+      System.out.println();
+      System.out.println("Cold stats:");
+
+      Timing.reset();
+      atomic {
+        this.visitBenchmark (b);
+      }
+      Timing.printStats();
+
+      if (args.length >= 2 && args[1].equals("--hot")) {
+        int n = 3;
+        if (args.length >= 3) n = Integer.parseInt(args[2]);
+
+        long accumTime = 0;
+        Timing.reset();
+
+        for (int i = 0; i < n; i++) {
+          atomic {
+            long start = System.currentTimeMillis(); 
+            this.visitBenchmark(b);
+            long end   = System.currentTimeMillis();
+            accumTime += end - start;
+          }
+        }
+
+        System.out.println();
+        System.out.println("Average time: " + accumTime / n + "msec");
+        System.out.println("Hot stats (" + n + " runs):");
+
+        Timing.printStats();
+        Timing.reset();
+      }
+    } catch(Exception exc) {
+      exc.printStackTrace();
+      printUsage();
+    }
+  }
+
+  public void printUsage() {
+    System.out.println("usage: fab " + getClass().getName() + " fab://store/benchmark [--hot]");
+  }
+}
+
+/*
+** vim: ts=2 sw=2 cindent cino=\:0 et syntax=java
+*/

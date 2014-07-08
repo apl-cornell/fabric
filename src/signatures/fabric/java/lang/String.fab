@@ -1,0 +1,91 @@
+/**
+ * Copyright (C) 2010 Fabric project group, Cornell University
+ *
+ * This file is part of Fabric.
+ *
+ * Fabric is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * Fabric is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ */
+/*
+ * This is a Jif signature for the Java class. It provides Jif label
+ * annotations for the Java class, allowing it to be usable by Jif
+ * code. There is no automated check that the signature provided here
+ * agrees with the actual Java code.
+ */
+package java.lang;
+
+public final class String extends java.lang.Object implements java.io.Serializable, CharSequence /*,  Comparable*/ {
+    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+    public String() {  }
+
+    public String(String{this} original) { }
+
+    public String(char{this}[]{this} value) throws (NullPointerException{value}) { }
+    public String(char{this}[]{this} value, int{this} offset, int{this} count) throws (NullPointerException{value}, StringIndexOutOfBoundsException{this}) { }
+
+    public String(byte{this}[]{this} bytes, int{this} offset, int{this} length) throws (NullPointerException{bytes}) { }
+    public String(byte{this}[]{this} bytes) throws (NullPointerException{bytes}) { }
+    //    public String(StringBuffer{this} buffer) { }
+    public native int{this} length();
+    public native char{this; index} charAt(int index) throws (StringIndexOutOfBoundsException{this; index});
+    public native CharSequence{this;start;end} subSequence(int start, int end)  throws (IndexOutOfBoundsException{this;start;end});
+    public native void getChars{this}(int{this} srcBegin, int{this} srcEnd, char{this}[]{this} dst, int{this} dstBegin) throws (StringIndexOutOfBoundsException{this});
+    public native boolean{this; anObject} equals(java.lang.Object anObject);
+    public native boolean{this; anotherString} equalsIgnoreCase(String anotherString);
+    public native int{this; anotherString} compareTo(String anotherString) throws (NullPointerException{anotherString});
+    public native int{this; o} compareTo(java.lang.Object o) throws (ClassCastException{o}, NullPointerException{o});
+
+    public native int{this; str} compareToIgnoreCase(String str) throws (NullPointerException{str});
+    public native boolean{this; other; toffset; ooffset; len} regionMatches(int toffset, String other, int ooffset, 
+				 int len) throws (NullPointerException{other});
+    public native boolean{this; other; ignoreCase; toffset; ooffset; len} regionMatches(boolean ignoreCase,
+				         int toffset,
+			               String other, int ooffset, int len)
+                    throws (NullPointerException{other});
+    public native boolean{this; prefix; toffset} startsWith(String prefix, int toffset);
+    public native boolean{this; prefix} startsWith(String prefix);
+    public native boolean{this; suffix} endsWith(String suffix);
+    public native int{this} hashCode();
+    public native int{this; ch} indexOf(int ch);
+    public native int{this; ch; fromIndex} indexOf(int ch, int fromIndex);
+    public native int{this; ch} lastIndexOf(int ch);
+    public native int{this; ch; fromIndex} lastIndexOf(int ch, int fromIndex);
+    public native int{this; str} indexOf(String str) throws (NullPointerException{str});
+    public native int{this; str; fromIndex} indexOf(String str, int fromIndex) throws (NullPointerException{str});
+    public native int{this; str} lastIndexOf(String str) throws (NullPointerException{str});
+    public native int{this; str; fromIndex} lastIndexOf(String str, int fromIndex) throws (NullPointerException{str});
+    public native String{this; beginIndex} substring(int beginIndex) throws (StringIndexOutOfBoundsException{this; beginIndex});
+    public native String{this; beginIndex; endIndex} substring(int beginIndex, int endIndex) throws (StringIndexOutOfBoundsException{this; beginIndex; endIndex});
+
+    public native String{this;str} concat(String str) throws (NullPointerException{str});
+    public native String{this} replace(char{this} oldChar, char{this} newChar);
+    public native String{this} replaceAll(String{this} regex, String{this} replacement);    
+    public native byte{this}[]{this} getBytes();
+    //    public native String{this} toLowerCase(Locale locale);
+    public native String{this} toLowerCase();
+    //    public native String toUpperCase(Locale locale);
+    public native String{this} toUpperCase();
+    public native String{this} trim();
+    public native String{this} toString();
+    public native char{this}[]{this} toCharArray();
+//    public native static String{obj} valueOf(java.lang.Object obj);
+//    public native static String{data} valueOf(char{}[] data) throws (NullPointerException{data});
+//    public native static String{data;offset;count} valueOf(char{}[] data, int offset, int count) throws (NullPointerException{data});
+//    public native static String{data;offset;count} copyValueOf(char{}[] data, int{data} offset, int{data} count) throws (NullPointerException{data});
+//    public native static String{data} copyValueOf(char{}[] data) throws (NullPointerException{data});
+    public native static String{b} valueOf(boolean b);
+    public native static String{c} valueOf(char c);
+    public native static String{i} valueOf(int i);
+    public native static String{l} valueOf(long l);
+    public native static String{f} valueOf(float f);
+    public native static String{d} valueOf(double d);
+    //    public  native String intern();
+
+}

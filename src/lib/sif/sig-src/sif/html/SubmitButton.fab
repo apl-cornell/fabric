@@ -1,0 +1,36 @@
+/**
+ * Copyright (C) 2010 Fabric project group, Cornell University
+ *
+ * This file is part of Fabric.
+ *
+ * Fabric is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * Fabric is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ */
+package sif.html;
+
+import sif.servlet.Servlet;
+
+/**
+ * Signature for the SubmitButton class
+ */
+public final class SubmitButton[principal servletP, label L, label E] extends InputNode[servletP, L, E] {
+    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+    private static int __JIF_PARAMS_RUNTIME_REPRESENTED$20051007 = 0;
+    
+    public SubmitButton(Input[servletP]{L} input, String{L} name_) 
+    where {L;E} <= {*input.inputLbl} {
+        super(input);
+    }
+    public SubmitButton{L}(Servlet[servletP]{L} s, label{L} inputLabel, String{L} name_) 
+    where {L;E} <= {*inputLabel} {
+        super(s, inputLabel);
+    }
+
+}

@@ -1,0 +1,39 @@
+/**
+ * Copyright (C) 2010 Fabric project group, Cornell University
+ *
+ * This file is part of Fabric.
+ *
+ * Fabric is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * Fabric is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ */
+package java.lang;
+
+public abstract class Number implements fabric.lang.JavaInlineable {
+  public Number() {
+  }
+
+  public native byte byteValue();
+
+  public abstract double doubleValue();
+
+  public abstract float floatValue();
+
+  public abstract int intValue();
+
+  public abstract long longValue();
+
+  public native short shortValue();
+
+  public native int hashCode();
+
+  public native boolean equals(java.lang.Object arg0);
+
+  public native java.lang.String toString();
+}

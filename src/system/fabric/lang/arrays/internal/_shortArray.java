@@ -1,0 +1,192 @@
+/**
+ * Copyright (C) 2010 Fabric project group, Cornell University
+ *
+ * This file is part of Fabric.
+ *
+ * Fabric is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * Fabric is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ */
+package fabric.lang.arrays.internal;
+
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+import java.util.Iterator;
+import java.util.List;
+
+import fabric.worker.Store;
+import fabric.worker.transaction.TransactionManager;
+import fabric.common.RefTypeEnum;
+import fabric.common.util.Pair;
+import fabric.lang.Object;
+import fabric.lang.security.Label;
+
+public interface _shortArray extends Object {
+  int get$length();
+
+  short set(int i, short value);
+
+  short get(int i);
+
+  public static class _Impl extends Object._Impl implements _shortArray, _InternalArrayImpl {
+    private short[] value;
+
+    /**
+     * Creates a new short array at the given Store with the given length.
+     * 
+     * @param store
+     *                The store on which to allocate the array.
+     * @param length
+     *                The length of the array.
+     */
+    public _Impl(Store store, Label label, int length) {
+      this(store, label, new short[length]);
+    }
+
+    /**
+     * Creates a new short array at the given Store using the given backing
+     * array.
+     * 
+     * @param store
+     *                The store on which to allocate the array.
+     * @param value
+     *                The backing array to use.
+     */
+    public _Impl(Store store, Label label, short[] value) {
+      super(store, label);
+      this.value = value;
+    }
+
+    /**
+     * Used for deserializing.
+     */
+    public _Impl(Store store, long onum, int version, long expiry, long label,
+        ObjectInput in, Iterator<RefTypeEnum> refTypes,
+        Iterator<Long> intraStoreRefs) throws IOException,
+        ClassNotFoundException {
+      super(store, onum, version, expiry, label, in, refTypes, intraStoreRefs);
+      value = new short[in.readInt()];
+      for (int i = 0; i < value.length; i++)
+        value[i] = in.readShort();
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see fabric.lang.arrays.internal.shortArray#getLength()
+     */
+    public int get$length() {
+      TransactionManager.getInstance().registerRead(this);
+      return value.length;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see fabric.lang.arrays.internal.shortArray#get(int)
+     */
+    public short get(int i) {
+      TransactionManager.getInstance().registerRead(this);
+      return this.value[i];
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see fabric.lang.arrays.internal.shortArray#set(int, short)
+     */
+    public short set(int i, short value) {
+      boolean transactionCreated =
+          TransactionManager.getInstance().registerWrite(this);
+      short result = this.value[i] = value;
+      if (transactionCreated) TransactionManager.getInstance().commitTransaction();
+      return result;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see fabric.lang.Object._Impl#$copyAppStateFrom(fabric.lang.Object._Impl)
+     */
+    @Override
+    public void $copyAppStateFrom(Object._Impl other) {
+      super.$copyAppStateFrom(other);
+      _shortArray._Impl src = (_shortArray._Impl) other;
+      value = src.value;
+    }
+
+    public void cloneValues() {
+      value = value.clone();
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see fabric.lang.Object._Impl#$makeProxy()
+     */
+    @Override
+    protected _shortArray._Proxy $makeProxy() {
+      return new _shortArray._Proxy(this);
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see fabric.lang.Object._Impl#$serialize(java.io.ObjectOutput)
+     */
+    @Override
+    public void $serialize(ObjectOutput out, List<RefTypeEnum> refTypes,
+        List<Long> intraStoreRefs, List<Pair<String, Long>> interStoreRefs)
+        throws IOException {
+      super.$serialize(out, refTypes, intraStoreRefs, interStoreRefs);
+      out.writeInt(value.length);
+      for (int i = 0; i < value.length; i++)
+        out.writeShort(value[i]);
+    }
+  }
+
+  public static class _Proxy extends Object._Proxy implements _shortArray {
+
+    public _Proxy(Store store, long onum) {
+      super(store, onum);
+    }
+
+    public _Proxy(_shortArray._Impl impl) {
+      super(impl);
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see fabric.lang.arrays.internal.shortArray#getLength()
+     */
+    public int get$length() {
+      return ((_shortArray) fetch()).get$length();
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see fabric.lang.arrays.internal.shortArray#get(int)
+     */
+    public short get(int i) {
+      return ((_shortArray) fetch()).get(i);
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see fabric.lang.arrays.internal.shortArray#set(int, short)
+     */
+    public short set(int i, short value) {
+      return ((_shortArray) fetch()).set(i, value);
+    }
+  }
+}

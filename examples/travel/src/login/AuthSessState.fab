@@ -1,0 +1,84 @@
+/**
+ * Copyright (C) 2010 Fabric project group, Cornell University
+ *
+ * This file is part of Fabric.
+ *
+ * Fabric is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * Fabric is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ */
+package login;
+
+import sif.servlet.SessionState;
+import sif.servlet.SessionPrincipal;
+import jif.util.*;
+
+public class AuthSessState[covariant label T] extends SessionState[T] {
+    public final PrincipalWrapper[T]{T} wrapper;
+    
+    public AuthSessState(String{T} id, SessionPrincipal{T} session) {
+        wrapper = new PrincipalWrapper[T](new label {session←});
+    	super(id, session);
+    }
+    
+    public AuthSessState(SessionPrincipal{T} sp, 
+            String{T} si, 
+            PrincipalWrapper[T]{T} wrap) {
+    	this.wrapper = wrap;
+    	super(si, sp);
+    }
+    
+    public principal{T;sessionPrincipal←} currentUser() {
+    	try {
+    	    if (wrapper.lbl equiv new label {sessionPrincipal←}) {
+    	        principal{T;sessionPrincipal←} toReturn = wrapper.wrapwrap.currentUser; 
+                return toReturn;
+    	    } else {
+    	        return null;
+    	    }
+    	} catch (NullPointerException e) {return null;}
+    }
+    
+    void currentUser{sessionPrincipal←}(principal{sessionPrincipal!:} cu) 
+    where T <= {sessionPrincipal←} {
+    	try {
+    	    if (wrapper.lbl equiv new label {sessionPrincipal←}) {
+    	        wrapper.currentUser(cu);   
+    	    }
+    	} catch (NullPointerException e) {}
+    }
+    
+    public static AuthSessState[{P←}]{P←} declassifySS{P←}(
+            AuthSessState[{P→;P←}]{P→;P←} ss_, principal{P←} P)
+            where caller(P) {
+    	final AuthSessState[{P→;P←}]{P←} ss = declassify(ss_, {P→;P←} to {P←});
+    	if (ss == null) return null;
+        final SessionPrincipal{P←} sessionP = declassify(ss.sessionPrincipal, {P→;P←} to {P←});
+        final String{P←}    sessionId = declassify(ss.sessionId, {P→;P←} to {P←});
+        
+        // TODO Fix this compiler bug which requires assigning to temporary sswrapper_
+        PrincipalWrapper[{P→;P←}]{P→;P←} sswrapper_ = ss.wrapper;
+        final PrincipalWrapper[{P←;P→}]{P←} sswrapper = declassify(sswrapper_, {P→;P←} to {P←});
+        if (sswrapper == null) return null;
+        
+        final label{P←} lbl = declassify(sswrapper.lbl, {P→;P←} to {P←});
+        WrapperWrapper[lbl]{P←} wrapwrap = null;
+        WrapperWrapper[sswrapper.lbl]{P←;P→} wrapwrap_ = sswrapper.wrapwrap;
+        if (lbl equiv sswrapper.lbl) {
+            declassify({P→;P←} to {P←}) {
+                wrapwrap = declassify(wrapwrap_, {P→;P←} to {P←});
+            }
+        }
+        PrincipalWrapper[{P←}]{P←} newWrapper = new PrincipalWrapper[{P←}](lbl, wrapwrap);
+
+        final AuthSessState[{P←}]{P←} toReturn = new AuthSessState[{P←}](
+                sessionP, sessionId, newWrapper);
+        return toReturn;
+    }
+}

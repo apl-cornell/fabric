@@ -1,0 +1,56 @@
+/**
+ * Copyright (C) 2010 Fabric project group, Cornell University
+ *
+ * This file is part of Fabric.
+ *
+ * Fabric is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * Fabric is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ */
+package jif.principals;
+
+import fabric.util.Map;
+import jif.Config;
+
+public class HelloServEP extends ExternalPrincipal {
+  
+  public HelloServEP() {
+    super("hello");
+  }
+  
+  public static HelloServEP{⊤←} getInstance{⊤←}() {
+    atomic {
+      FabricWorker cl = FabricWorker.getWorker();
+      if (cl != null) {
+        final Store helloStore = cl.getStore(Config.helloStoreName);
+        if (helloStore != null) {
+          Map rootMap = helloStore.getRoot();
+          if (rootMap != null) {
+            Object obj = rootMap.get(Config.helloServPrincipalMapKey);
+            HelloServEP helloEP = null;
+            if (obj instanceof HelloServEP) {
+              helloEP = (HelloServEP) obj;
+            } else {
+              helloEP = new HelloServEP@helloStore();
+              rootMap.put(Config.helloServPrincipalMapKey, helloEP);
+            }
+            return helloEP;
+          }
+        }
+      }
+      
+      return null;
+    }
+  }
+
+  // Don't much care what store is, we're going to create it where we want
+  public static HelloServEP{⊤←} getInstance{⊤←}(Store store) {
+      return getInstance();
+  }
+}

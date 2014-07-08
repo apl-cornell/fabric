@@ -1,0 +1,115 @@
+/**
+ * Copyright (C) 2010 Fabric project group, Cornell University
+ *
+ * This file is part of Fabric.
+ *
+ * Fabric is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * Fabric is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ */
+package customer;
+
+import javax.servlet.ServletException;
+import travel.*;
+import fabric.util.Map;
+import travel.Broker;
+
+import sif.html.*;
+import sif.servlet.Action;
+import sif.servlet.Request;
+import sif.servlet.Servlet;
+
+
+public class StartTransaction extends CustomerAction {
+
+    final Input[CustomerPrincipal]{CustomerPrincipal←} inp;
+    
+    public StartTransaction(CustomerMain{this} m, Input[CustomerPrincipal]{CustomerPrincipal←} inp) throws ServletException {
+        this.inp = inp;
+        super();
+        initFields("starttx", m);
+    }
+    
+    public final void invoke{*lbl}(label{*lbl} lbl, Request[CustomerPrincipal]{*lbl} req) 
+    throws (ServletException{*lbl;⊤→req.session;req.session←})
+    where caller(req.session),
+    lbl <= {⊤→req.session} {
+
+        Servlet[CustomerPrincipal] servlet = getServlet();
+        if (servlet == null || !(servlet instanceof CustomerMain)) throw new ServletException("No servlet available"); 
+        if (req == null) throw new ServletException("No request available"); 
+        CustomerMain m = (CustomerMain)servlet;
+        
+        final Store bstore = worker$.getStore(Config.brokerStoreName);
+        FabricWorker local = FabricWorker.getWorker();
+        RemoteWorker bworkerprime = null;
+        if(local != null) {
+            bworkerprime = local.getWorker(Config.brokerStoreName);
+        }
+        final RemoteWorker bworker = bworkerprime;
+        
+        Map root = null;
+        if (bstore != null) {
+            root = (Map) bstore.getRoot();
+        }
+        if (root == null) return;
+        Broker[BankPrincipal, CustomerPrincipal] brokerInit = null;
+        Object obj = root.get(Config.brokerMapKey);
+        if (obj instanceof Broker[BankPrincipal, CustomerPrincipal]) {
+            brokerInit =
+                (Broker[BankPrincipal, CustomerPrincipal])obj;
+        }
+        final Broker[BankPrincipal, CustomerPrincipal] broker = brokerInit;
+        
+        String amountStr = req.getParam(inp);
+        boolean failure = false;
+        float amount = 0;
+        atomic {
+        try {
+            if (lbl <= new label {CustomerPrincipal←} &&
+                    inp.inputLbl <= new label {BankPrincipal→AirlinePrincipal,CustomerPrincipal; CustomerPrincipal←} &&
+                    req.session actsfor CustomerPrincipal) {
+                
+                try {
+                    amount = Float.parseFloat(amountStr);
+                } catch (NumberFormatException e) {
+                    amount = 0;
+                }
+                failure = !Main.startTx(amount, broker, bworker);
+            }
+        } catch (NullPointerException unlikely) {
+            failure = true;
+        }
+        
+        final label ll = new label 
+        {CustomerPrincipal→;BankPrincipal→CustomerPrincipal;broker←;BankPrincipal←;AirlinePrincipal←;CustomerPrincipal←; *lbl};
+        final label llprime = new label {CustomerPrincipal→;CustomerPrincipal←};
+        String message1 = failure?"Sorry, your purchase could not be performed":"Your purchase was successful";
+        String message2 = failure?"Unsuccessful Purchase":"Successful Purchase";
+
+        // print a page saying that purchase was successful
+        if (lbl <= llprime && req.session actsfor CustomerPrincipal) {
+            Text msg = new Text[ll, llprime](message1);
+            SubmitButton submit = new SubmitButton[CustomerPrincipal, ll, llprime](m, ll, "Back");
+            NodeList[ll, llprime] entries = NodeList.EMPTY();
+            entries = entries==null?null:entries.append(new TRow[ll, llprime](
+                    new NodeList[ll, llprime](msg)));
+            entries = entries==null?null:entries.append(new TRow[ll, llprime](
+                    new NodeList[ll, llprime](submit)));
+            Node[ll, llprime] form = servlet.createForm(ll, llprime, 
+                    m.findStartAction("frontpage"),
+                    ll, llprime,
+                    new Table[ll, llprime](entries));
+            servlet.createPage(req, message2, ll, llprime,
+                    new NodeList[ll,llprime](ll, llprime, createBody(ll, llprime, form)));
+        }
+        }
+    }
+    
+}

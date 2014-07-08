@@ -1,0 +1,53 @@
+/**
+ * Copyright (C) 2010 Fabric project group, Cornell University
+ *
+ * This file is part of Fabric.
+ *
+ * Fabric is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * Fabric is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ */
+package fabric.runtime;
+
+import java.io.*;
+
+public class Runtime[principal P]
+{
+    private Runtime(principal{this} pp) { }
+
+    public static native Runtime[P]{P!:} getRuntime() throws SecurityException;
+// TODO: Use JNI to support this    
+//    public static native principal{*!:*} user();
+//    public static native principal getUser(String username);
+
+//    public native FileOutputStream[{*L}]{P:;P!:} openFileWrite(String{*L} name, boolean{*L} append, label L)
+//	throws (IOException{*L;L}, SecurityException{*L;L});
+//    public native FileInputStream[{*L}]{P:;P!:} openFileRead(String{*L} name, label L)
+//	throws (FileNotFoundException{*L;L}, SecurityException{*L;L});
+
+    public native PrintStream[{*L}]{P:;P!:} stdout(label L) throws (SecurityException{*L;L});
+    public native InputStream[{*L}]{P:;P!:} stdin(label L) throws (SecurityException{*L;L});
+    public native PrintStream[{*L}]{P:;P!:} stderr(label L) throws (SecurityException{*L;L});
+
+    //the default label is {P:;_!:_} for output, {P:;P!:} for input 
+    public native PrintStream[{P:;_!:_}]{P:;P!:} err();
+    public native PrintStream[{P:;_!:_}]{P:;P!:} out();
+    public native InputStream[{P:;P!:}]{P:;P!:} in();
+    
+    // current time, but only to accuracy of the day.
+    public static native int{*!:*} currentYear();
+    public static native int{*!:*} currentMonth();
+    public static native int{*!:*} currentDayOfMonth();    
+    public static native int{*!:*} currentHour();
+    public static native int{*!:*} currentMinute();
+    
+    // sleep for approximately s seconds.
+    public static native void sleep(int s);
+}
+

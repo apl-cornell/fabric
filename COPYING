@@ -1,0 +1,111 @@
+This release of the Fabric distribution is governed by the GNU
+Public License as described by the following copyright notice.
+
+Fabric
+Copyright (C) 2010 Fabric project group, Cornell University
+
+Fabric is free software: you can redistribute it and/or modify it
+under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 2 of the License, or
+(at your option) any later version.
+
+Fabric is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+A copy of the GNU General Public License version 2 can be found in
+the file doc/licenses/gpl-2.txt, included in this distribution.
+
+This Fabric distribution includes several third-party libraries,
+some of which are NOT released under the GNU General Public License.
+These libraries and their corresponding licenses (where different
+from the GNU General Public License) are enumerated below.
+
+
+  GNU Classpath is software developed by the Free Software
+  Foundation.  It was modified by the Fabric project group at Cornell
+  University for use as part of the Fabric runtime system.
+
+    Files:
+      src/runtime/fabric/util/*.fil
+
+
+  JFlex is software developed by Gerwin Klein.
+
+    Files:
+      lib/JFlex.jar
+
+
+  CUP Parser Generator is software developed by Scott Hudson,
+  modified for the Polyglot extensible compiler framework by the
+  Polyglot project group at Cornell University and by IBM
+  Corporation.  It is released under the GNU Lesser General Public
+  License, version 2.1 or later.  A copy of this license can be
+  found in the file doc/licenses/lgpl-2.1.txt, included in this
+  distribution.
+
+    Files:
+      lib/java_cup.jar
+
+
+  FreePastry is software developed by Rice University and is
+  released under the FreePastry license.  A copy of this license can
+  be found in the file doc/licenses/free-pastry.txt, included in this
+  distribution.
+
+    Files:
+      lib/FreePastry-*.jar
+
+
+  Berkley DB Java Edition is software developed by Oracle
+  Corporation and is released under the Sleepycat License.  A copy
+  of this license can be found in the file
+  doc/licenses/sleepycat.txt, included in this distribution.
+
+    Files:
+      lib/je-*.jar
+      lib/src/je-*.tar.gz
+
+
+  Bouncy Castle Crypto API is software developed by The Legion of
+  the Bouncy Castle and is released under the MIT/X11 License.  A
+  copy of this license can be found in the file
+  doc/licenses/mit-xll.txt, included in this distribution.
+
+    Files:
+      lib/bcprov-*.jar
+
+
+  Jetty is software developed by the Eclipse Foundation and is
+  released under the Apache License 2.0 and the Eclipse Public
+  License 1.0.  A copy of these licenses can be found in the files
+  doc/licenses/apache-2.0.txt and doc/licenses/eclipse-1.0.html,
+  respectively, included in this distribution.
+
+    Files:
+      lib/jetty/jetty-*.jar
+      lib/jetty/jsp-*.jar
+
+
+  JDT Core is software developed by the Eclipse Foundation and is
+  released under the Eclipse Public License 1.0.  A copy of this
+  license can be found in the file doc/licenses/eclipse-1.0.html,
+  included in this distribution.
+
+    Files:
+      lib/jetty/core-*.jar
+
+
+  The following is software developed by the Apache Software
+  Foundation and is released under the Apache License 2.0.  A copy
+  of this license can be found in the file
+  doc/licenses/apache-2.0.txt, included in this distribution.
+
+    Apache Commons
+      Files:
+	lib/jetty/commons-*.jar
+
+    Java Servlet API
+      Files:
+	lib/jetty/servlet-api-*.jar

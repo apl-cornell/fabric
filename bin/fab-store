@@ -1,0 +1,34 @@
+#!/bin/bash
+
+# Wrapper script for fabric.store.Main, the Fabric store.
+
+source "$(dirname $0)/defs"
+
+while true; do
+  case "$1" in
+    "") break;;
+    -v) verbose="1"; shift;;
+    -classpath) EXTRACP=$2; shift; shift;;    
+    -j)
+            shift
+            vmargs="${vmargs} '$1'"
+            shift
+            ;;
+    --debug)
+            shift
+            vmargs="${vmargs} -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=3370"
+            ;;
+    *) args="${args} '$1'"; shift;;
+  esac
+done
+
+classpath="${FABRIC_STORE_CP}:${EXTRACP}:${classpath}"
+
+command="\"${JAVA}\" ${vmargs} -classpath \"$(fixpath ${classpath})\" fabric.store.Main ${args}"
+
+if [ -n "${verbose}" ]
+then
+  echo "${command}"
+fi
+
+eval "${command}"

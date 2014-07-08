@@ -1,0 +1,37 @@
+/**
+ * Copyright (C) 2010 Fabric project group, Cornell University
+ *
+ * This file is part of Fabric.
+ *
+ * Fabric is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * Fabric is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ */
+package fabric.lang.security;
+
+/**
+ * This code is mostly copied from Jif. See the documentation for the Jif source
+ * file, $JIF/sig-src/jif/lang/Principal.jif.
+ */
+public abstract class Principal {
+  public abstract String name();
+
+  public abstract boolean delegatesTo(final Principal p);
+
+  public abstract boolean equals(final Principal p);
+
+  public abstract boolean isAuthorized(final java.lang.Object authPrf,
+      final Closure closure, final Label lb, final boolean executeNow);
+
+  public abstract ActsForProof findProofUpto(final Store store,
+      final Principal p, final java.lang.Object searchState);
+
+  public abstract ActsForProof findProofDownto(final Store store,
+      final Principal q, final java.lang.Object searchState);
+}

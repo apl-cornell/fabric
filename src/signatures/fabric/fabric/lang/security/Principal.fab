@@ -1,0 +1,41 @@
+/**
+ * Copyright (C) 2010 Fabric project group, Cornell University
+ *
+ * This file is part of Fabric.
+ *
+ * Fabric is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * Fabric is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ */
+package fabric.lang.security;
+
+public abstract class Principal {
+    static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+    
+    public abstract String{this} name();
+    
+    public abstract boolean{this; p; this←} delegatesTo(principal p);
+    
+    public abstract boolean equals(Principal p);
+
+    // XXX Can we label this method anywhich way we want, since it won't
+    // be invoked from Fabric code??
+    // XXX Where will the declassification w.r.t. password happen?
+    public abstract boolean{authPrf; closure; lb; *lb; executeNow; this; this→; this←}
+	isAuthorized{this←}(java.lang.Object authPrf, 
+			    Closure[this, lb] closure,
+			    label lb,
+			    boolean executeNow) where authority (this);
+    
+    public abstract ActsForProof{this; p; this←; p←}
+	findProofUpto{this←}(Store c, Principal p, java.lang.Object searchState);
+    
+    public abstract ActsForProof{this; q; q←; this←}
+	findProofDownto{this←}(Store c, Principal q, java.lang.Object searchState);    
+}

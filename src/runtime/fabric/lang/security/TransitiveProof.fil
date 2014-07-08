@@ -1,0 +1,54 @@
+/**
+ * Copyright (C) 2010 Fabric project group, Cornell University
+ *
+ * This file is part of Fabric.
+ *
+ * Fabric is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * Fabric is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ */
+package fabric.lang.security;
+
+import java.util.Set;
+
+/**
+ * This code is mostly copied from Jif.
+ */
+public final class TransitiveProof extends ActsForProof {
+  private final ActsForProof actorToP;
+  private final ActsForProof pToGranter;
+  private final Principal p;
+
+  public TransitiveProof(ActsForProof actorToP, Principal p,
+      ActsForProof pToGranter) {
+    super(actorToP != null ? actorToP.getActor() : null,
+        pToGranter != null ? pToGranter.getGranter() : null);
+    this.actorToP = actorToP;
+    this.pToGranter = pToGranter;
+    this.p = p;
+  }
+
+  ActsForProof getActorToP() {
+    return actorToP;
+  }
+
+  ActsForProof getPToGranter() {
+    return pToGranter;
+  }
+
+  Principal getP() {
+    return p;
+  }
+
+  public void gatherDelegationDependencies(Set s) {
+    actorToP.gatherDelegationDependencies(s);
+    pToGranter.gatherDelegationDependencies(s);
+  }
+
+}

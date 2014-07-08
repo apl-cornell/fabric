@@ -1,0 +1,80 @@
+/**
+ * Copyright (C) 2010 Fabric project group, Cornell University
+ *
+ * This file is part of Fabric.
+ *
+ * Fabric is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * Fabric is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ */
+package sif.servlet;
+
+import org.eclipse.jetty.server.*;
+import org.eclipse.jetty.server.handler.*;
+import org.eclipse.jetty.webapp.WebAppContext;
+import org.eclipse.jetty.util.resource.Resource;
+import org.eclipse.jetty.xml.*;
+import java.io.File;
+
+public class StartWebapp {
+    
+    public static int port = 8080;
+    
+    // each args[i] is a directory that contains the
+    // compiled code of a SIF example, usually named 'web/'
+    public static void main(String[] args) throws Exception {
+        
+        int numApps = args.length;
+        
+        // first hunt for port number
+        for (int i = 0; i < args.length; i++) {
+            if (args[i].equals("--port")) {
+                port = Integer.parseInt(args[i+1]);
+                numApps -= 2;
+                break;
+            }
+        }
+        
+        Server server = new Server(port);
+        Handler native[] handlers = new Handler native[numApps];
+        
+        for (int i = 0; i < args.length; i++) {
+            String arg = args[i];
+            if (arg.equals("--port")) {
+                i++;
+                continue;
+            }
+            WebAppContext webapp = new WebAppContext();
+            webapp.setResourceBase(arg);
+
+            Resource webinf = webapp.getWebInf();
+            if (webinf != null && webinf.isDirectory()) {
+                Resource webxml = webinf.addPath("web.xml");
+                if(webxml.exists()) {
+                    XmlParser parser = new XmlParser();
+                    XmlParser.Node node = parser.parse(new File(webxml.getURI()));
+                    XmlParser.Node servlet = node.get("servlet");
+                    XmlParser.Node name = servlet.get("servlet-name");
+                    String appName = name.get(0).toString();
+                    webapp.setContextPath("/"+appName);
+                }
+            }
+            webapp.setParentLoaderPriority(true);
+            System.out.println("Starting http://localhost:" + port + webapp.getContextPath());
+            handlers[i] = webapp;
+        }
+
+        ContextHandlerCollection contexts = new ContextHandlerCollection();
+        contexts.setHandlers(handlers);
+        server.setHandler(contexts);
+        
+        server.start();
+        server.join();
+    }
+}

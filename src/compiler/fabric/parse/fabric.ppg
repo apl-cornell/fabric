@@ -1,0 +1,305 @@
+// Assumes jif.jar is in classpath
+include "jif/parse/jif.ppg"
+
+package fabric.parse;
+
+import fabric.ast.*;
+import jif.parse.*;
+import polyglot.parse.*;
+import fabric.types.FabricTypeSystem;
+import fabric.types.FabricFlags;
+import jif.parse.Name;
+
+parser Grm extends jif.parse.Grm {:
+    public final FabricTypeSystem ts;
+    public final FabricNodeFactory nf;
+
+    public Grm(Lexer l, FabricTypeSystem t, FabricNodeFactory n, ErrorQueue q) {
+        super(l, t, n, q);
+        ts = t;
+        nf = n;
+    }
+
+    public TypeNode fabricArray(Position pos, TypeNode n, int dims) throws Exception {
+      if (dims <= 0) return n;
+
+      if (n instanceof ArrayTypeNode && !(n instanceof FabricArrayTypeNode))
+        return javaArray(n, dims);
+
+      if (n instanceof CanonicalTypeNode) {
+        Type t = ((CanonicalTypeNode) n).type();
+        return nf.CanonicalTypeNode(pos(n), ts.fabricArrayOf(pos, t, dims));
+      }
+
+      return nf.FabricArrayTypeNode(pos(n), fabricArray(pos, n, dims - 1));
+    }
+
+    public TypeNode array(Position pos, TypeNode n, int dims) throws Exception {
+      return fabricArray(pos, n, dims);
+    }
+
+    public TypeNode javaArray(TypeNode n, int dims) throws Exception {
+      return super.array(n, dims);
+    }
+
+    /**
+     * Converts an Amb a into an AST representing new a[][]...[]
+     * @return either a NewFabricArray or an AmbNewFabricArray
+     */
+    public Expr toNewFabricArray(Position pos, Amb a, int dims, Expr loc)
+                throws Exception {
+      Expr            expr = a.toNewArray(pos, dims);
+      FabricArrayInit init = null;
+
+      if (expr instanceof NewArray) {
+        NewArray newArray = (NewArray) expr;
+
+        if (newArray.init() != null)
+          init = nf.FabricArrayInit(newArray.init().position(),
+                                    newArray.init().elements());
+
+        return nf.NewFabricArray(newArray.position(),
+                                 newArray.baseType(),
+                                 loc,
+                                 newArray.dims(),
+                                 newArray.additionalDims(),
+                                 init);
+      }
+      else if (expr instanceof AmbNewArray) {
+        AmbNewArray ambNewArray = (AmbNewArray) expr;
+        
+        return nf.AmbNewFabricArray(ambNewArray.position(),
+                                    ambNewArray.baseType(),
+                                    loc,
+                                    ambNewArray.expr(),
+                                    ambNewArray.dims(),
+                                    ambNewArray.additionalDims());
+      }
+      else {
+        die(pos);
+        return null;
+      }
+    }
+:};
+
+terminal Token AT;
+terminal Token ATOMIC;
+terminal Token ABORT;
+terminal Token RETRY;
+terminal Token WORKER;
+terminal Token NONFABRIC;
+
+non terminal Atomic atomic_statement;
+non terminal Expr   location_expr_opt, location_expr;
+non terminal Stmt   abort_stmt, retry_stmt;
+non terminal Worker local_worker;
+non terminal RemoteWorkerGetter remote_worker;
+non terminal FabricArrayInit fabric_array_initializer;
+
+start with goal;
+
+
+////////////////////////////////////////////////////////////////////////
+// Atomic Sections                                                    //
+////////////////////////////////////////////////////////////////////////
+
+extend statement_without_trailing_substatement ::=
+                    // Stmt
+        atomic_statement:a {: RESULT = a; :}
+    |   abort_stmt:a {: RESULT = a; :}
+    |   retry_stmt:a {: RESULT = a; :}
+    ;
+
+atomic_statement ::=
+                    // Atomic
+        ATOMIC:n block:a
+            {: RESULT = parser.nf.Atomic(parser.pos(n,a), a.statements()); :};
+
+abort_stmt ::=
+                    // AbortStmt
+        ABORT:a SEMICOLON:b
+            {: RESULT = parser.nf.AbortStmt(parser.pos(a, b)); :}
+    ;
+    
+retry_stmt ::= 
+                    // RetryStmt
+        RETRY:a SEMICOLON:b
+            {: RESULT = parser.nf.RetryStmt(parser.pos(a, b)); :}
+    ;
+
+extend modifier ::=
+        ATOMIC:a
+            {: RESULT = FabricFlags.ATOMIC; :}
+    |   NONFABRIC:a
+            {: RESULT = FabricFlags.NONFABRIC; :}
+    ;
+
+////////////////////////////////////////////////////////////////////////
+// Local and remote workers                                           //
+////////////////////////////////////////////////////////////////////////
+
+local_worker ::=
+                    // Worker
+        WORKER:a
+            {: RESULT = parser.nf.Worker(parser.pos(a)); :}
+    ;
+
+remote_worker ::=
+                    // RemoteWorkerGetter
+        WORKER:a LPAREN expression:b RPAREN:c
+            {: RESULT = parser.nf.RemoteWorkerGetter(parser.pos(a, c), b); :}
+    ;
+
+extend primary_no_new_array ::=
+        local_worker:a
+            {: RESULT = a; :}
+    |   remote_worker:a
+            {: RESULT = a; :}
+    ;
+
+extend principal_base ::=
+        local_worker:a
+            {: RESULT = parser.nf.AmbPrincipalNode(parser.pos(a), a); :}
+    ;
+
+////////////////////////////////////////////////////////////////////////
+// Array types                                                        //
+////////////////////////////////////////////////////////////////////////
+
+extend primitive_array_type ::=
+                    // TypeNode
+        labeled_primitive_type:a NATIVE LBRACK RBRACK:y
+            {: RESULT = new Array(parser, parser.pos(a,y), a,
+                                  /* isConst */ false, /* isNative */ true).toType(); :}
+    |   labeled_primitive_type:a NATIVE CONST LBRACK RBRACK:y
+            {: RESULT = new Array(parser, parser.pos(a,y), a, 
+                                  /* isConst */ true,  /* isNative */ true).toType(); :}
+    ;
+    
+extend reftype_or_expr ::=
+					// Amb
+        reftype_or_expr:a NATIVE LBRACK RBRACK:y
+            {: RESULT = new Array(parser, parser.pos(a,y), a.toType(),
+                                  /* isConst */ false, /* isNative */ true); :}
+    |   reftype_or_expr:a NATIVE CONST LBRACK RBRACK:y
+            {: RESULT = new Array(parser, parser.pos(a,y), a.toType(),
+                                  /* isConst */ true, /* isNative */ true); :}
+    ;
+
+
+////////////////////////////////////////////////////////////////////////
+// Locations for constructors                                         //
+////////////////////////////////////////////////////////////////////////
+
+location_expr_opt ::=
+                    // Expr
+            {: RESULT = null; :}
+    |   AT name:a
+            {: RESULT = a.toExpr(); :}
+    ;
+
+location_expr ::=
+                    // Expr
+        AT name:a
+            {: RESULT = a.toExpr(); :}
+    ;
+
+override class_instance_creation_expression ::=
+                    // Expr
+            NEW:x objtype_or_expr:a LPAREN argument_list_opt:b RPAREN:y 
+                {:  TypeNode tn = a.toUnlabeledType();
+                    RESULT = parser.nf.New(parser.pos(x,y), tn, (Expr) null, b); :}
+    |       NEW:x objtype_or_expr:a label:lab LPAREN argument_list_opt:b RPAREN:y 
+                {:  TypeNode tn = a.toUnlabeledType();
+                    if (lab != null)
+                        tn = parser.nf.LabeledTypeNode(parser.pos(a,lab), tn, lab);
+                    RESULT = parser.nf.New(parser.pos(x,y), tn, (Expr) null, b); :}
+    |       NEW:x objtype_or_expr:a location_expr:loc LPAREN argument_list_opt:b RPAREN:y 
+                {:  TypeNode tn = a.toUnlabeledType();
+                    RESULT = parser.nf.New(parser.pos(x,y), tn, loc, b); :}
+    |       NEW:x objtype_or_expr:a label:lab location_expr:loc LPAREN argument_list_opt:b RPAREN:y 
+                {:  TypeNode tn = a.toUnlabeledType();
+                    if (lab != null)
+                        tn = parser.nf.LabeledTypeNode(parser.pos(a,lab), tn, lab);
+                    RESULT = parser.nf.New(parser.pos(x,y), tn, loc, b); :}
+    ;
+
+override array_creation_expression ::=
+                    // NewArray
+    //  NEW objtype_or_expr dim_exprs dims_opt location_expr_opt
+    //      is a primary, since it can return an AmbNewArray, which is not a NewArray
+    //
+        NEW:n objtype_or_expr:a dims:b location_expr_opt:loc fabric_array_initializer:c 
+            {: RESULT = parser.nf.NewFabricArray(parser.pos(n,c), a.toType(), loc,
+                                       b.intValue(), c); :}
+    |   NEW:n primitive_type:a dim_exprs:b dims_opt:c location_expr_opt:loc
+            {: RESULT = parser.nf.NewFabricArray(parser.pos(n,b), a, loc, b,
+                                       c.intValue()); :}
+    |   NEW:n primitive_type:a dims:b location_expr_opt:loc fabric_array_initializer:c
+            {: RESULT = parser.nf.NewFabricArray(parser.pos(n,c), a, loc,
+                                       b.intValue(), c); :}
+    // native variants
+    |   NEW:n objtype_or_expr:a NATIVE dim_exprs:b dims_opt:c
+            {: RESULT = parser.nf.NewArray(parser.pos(n,c), a.toType(), b, c.intValue()); :}
+    |   NEW:n objtype_or_expr:a NATIVE dims:b array_initializer:c 
+            {: RESULT = parser.nf.NewArray(parser.pos(n,c), a.toType(),
+                                       b.intValue(), c); :}
+    |   NEW:n primitive_type:a NATIVE dim_exprs:b dims_opt:c
+            {: RESULT = parser.nf.NewArray(parser.pos(n,b), a, b,
+                                       c.intValue()); :}
+    |   NEW:n primitive_type:a NATIVE dims:b array_initializer:c
+            {: RESULT = parser.nf.NewArray(parser.pos(n,c), a,
+                                       b.intValue(), c); :}
+    ;
+
+fabric_array_initializer ::=
+                    // FabricArrayInit
+        array_initializer:a
+            {: RESULT = parser.nf.FabricArrayInit(a.position(), a.elements()); :}
+    ;
+
+drop {
+    primary ::=
+        NEW LABEL label
+    |   NEW objtype_or_expr dims_opt
+    |   NEW:n PRINCIPAL LPAREN principal_disjunctive:a RPAREN:z
+    ;
+}
+
+extend primary ::=
+        NEW:n LABEL label:a location_expr_opt:loc
+            {: RESULT = parser.nf.NewLabel(parser.pos(n, loc), a, loc); :}
+    |   NEW:n PRINCIPAL location_expr_opt:loc LPAREN principal_disjunctive:a RPAREN:z
+            {: RESULT = parser.nf.PrincipalExpr(parser.pos(n, z), a); :}
+
+    |   NEW:n objtype_or_expr:a dims_opt:b
+            {: RESULT = parser.toNewFabricArray(parser.pos(n,a), a, b, null); :}
+    |   NEW:n objtype_or_expr:a location_expr:loc dims_opt:b
+            {: RESULT = parser.toNewFabricArray(parser.pos(n,loc), a, b, loc); :}
+    ;
+
+////////////////////////////////////////////////////////////////////////
+// Locations for remote calls                                         //
+////////////////////////////////////////////////////////////////////////
+
+drop {
+    method_invocation ::=
+            reftype_or_expr:a LPAREN argument_list_opt:b RPAREN:y
+        |   primary_no_new_array:a DOT IDENTIFIER:b LPAREN argument_list_opt:c RPAREN:y
+        ;
+}
+
+extend method_invocation ::=
+                    // Call
+        reftype_or_expr:a location_expr_opt:b LPAREN argument_list_opt:c RPAREN:d 
+            {: if (! (a instanceof Name)) parser.die(parser.pos(a));
+               Name n = (Name) a;
+               RESULT = parser.nf.Call(parser.pos(a,d),
+                                       n.prefix == null ? null
+                                                        : n.prefix.toReceiver(),
+                                       parser.nf.Id(parser.pos(n), n.name), b, c); :}
+    |   primary_no_new_array:a DOT IDENTIFIER:b location_expr_opt:c LPAREN argument_list_opt:d RPAREN:e 
+            {: RESULT = parser.nf.Call(parser.pos(b,e), a,
+                                       parser.nf.Id(parser.pos(b), b.getIdentifier()), 
+                                       c, d); :}
+    ;

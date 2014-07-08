@@ -1,0 +1,46 @@
+/**
+ * Copyright (C) 2010 Fabric project group, Cornell University
+ *
+ * This file is part of Fabric.
+ *
+ * Fabric is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * Fabric is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ */
+package sif.servlet;
+
+import javax.servlet.ServletException;
+import sif.html.Page;
+
+/**
+ *
+ * This is the Jif signature for the class
+ *
+ */
+
+abstract public class Action[principal servletP] extends java.lang.Object {
+    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+    private static int __JIF_SAFE_CONSTRUCTORS$20050907 = 0;
+
+    protected Action() { }
+
+    protected final native void initFields(Servlet[servletP] s);
+    protected final native void initFields(String n, Servlet[servletP] s);
+
+    /**
+     * The invoke method must either throw an exception, or call the
+     * createPage method of Servlet.
+     */
+    abstract public void invoke{*lbl}(label{*lbl} lbl, Request[servletP]{*lbl} req) 
+    throws (ServletException{*:req.session})
+    where caller(req.session),
+          lbl <= {*:req.session};
+
+    public native Servlet[servletP]{this} getServlet();
+}

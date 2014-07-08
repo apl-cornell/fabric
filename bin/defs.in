@@ -1,0 +1,113 @@
+
+#
+# output paths compatible with the current platform
+#
+fixpath() {
+  windows=0
+
+  if [ `uname | grep -c CYGWIN` -ne 0 ]; then
+    windows=1
+  fi
+
+  cp="$1"
+
+  if [ "${windows}" = 1 ]; then 
+    cygpath -pw "${cp}"
+  else
+    echo "${cp}"
+  fi
+}
+
+#
+# output filenames compatible with the current platform
+#
+fixfilename() {
+  if [ `uname  | grep -c CYGWIN` -ne 0 ]; then
+    cygpath -w "$1"
+  else
+    echo "$1"
+  fi
+}
+
+#
+# output filenames compatible with unix syntax
+#
+unixfilename() {
+  windows=0
+
+  if [ `uname | grep -c CYGWIN` -ne 0 ]; then
+    windows=1
+  fi
+
+  cp="$1"
+
+  if [ "${windows}" = 1 ]; then 
+    cygpath -u "${cp}"
+  else
+    echo "${cp}"
+  fi
+}
+
+#
+# output paths compatible with unix syntax
+#
+unixpath() {
+  windows=0
+
+  if [ `uname | grep -c CYGWIN` -ne 0 ]; then
+    windows=1
+  fi
+
+  cp="$1"
+
+  if [ "${windows}" = 1 ]; then 
+    cygpath -pu "${cp}"
+  else
+    echo "${cp}"
+  fi
+}
+
+JAVA_HOME=$(unixfilename "@JAVA_HOME@")
+JAVA="${JAVA_HOME}/bin/java"
+TOP=$(unixfilename "@TOP@")
+POLYGLOT=$(unixfilename "@POLYGLOT@")
+JIF=$(unixfilename "@JIF@")
+
+if [ "${FABRIC_HOME}" == "" ]; then
+	export FABRIC_HOME="${TOP}"
+fi
+
+classpath="$(unixpath "${CLASSPATH}")"
+
+# Classpath for compiling FabIL applications.
+# Jar files should always appear *after* their corresponding class directories.
+FILC_CP="${TOP}/classes"
+FILC_CP="${FILC_CP}:${TOP}/lib/fabric.jar"
+FILC_CP="${FILC_CP}:${TOP}/rt-classes"
+FILC_CP="${FILC_CP}:${TOP}/lib/fabric-rt.jar"
+FILC_CP="${FILC_CP}:${POLYGLOT}/classes"
+FILC_CP="${FILC_CP}:${POLYGLOT}/lib/polyglot.jar"
+FILC_CP="${FILC_CP}:${POLYGLOT}/lib/java_cup.jar"
+FILC_CP="${FILC_CP}:${POLYGLOT}/lib/JFlex.jar"
+
+# Classpath for compiling Fabric applications.
+# Jar files should always appear *after* their corresponding class directories.
+FABC_CP="${FILC_CP}"
+FABC_CP="${FABC_CP}:${JIF}/classes"
+FABC_CP="${FABC_CP}:${JIF}/lib/jif.jar"
+
+# Classpath for running Fabric applications.
+# Jar files should always appear *after* their corresponding class directories.
+FABRIC_WORKER_CP="${TOP}/classes"
+FABRIC_WORKER_CP="${FABRIC_WORKER_CP}:${TOP}/lib/fabric.jar"
+FABRIC_WORKER_CP="${FABRIC_WORKER_CP}:${TOP}/rt-classes"
+FABRIC_WORKER_CP="${FABRIC_WORKER_CP}:${TOP}/lib/fabric-rt.jar"
+FABRIC_WORKER_CP="${FABRIC_WORKER_CP}:${TOP}/lib/FreePastry-2.1.jar"
+
+# Classpath for Fabric stores.
+# Jar files should always appear *after* their corresponding class directories.
+FABRIC_STORE_CP="${FABRIC_WORKER_CP}"
+for i in "${TOP}"/lib/je-*.jar ; do
+  FABRIC_STORE_CP="${FABRIC_STORE_CP}:$i"
+done
+

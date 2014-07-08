@@ -1,0 +1,58 @@
+#!/bin/bash
+
+# Wrapper script for running a servlet in a Fabric worker, using StartWebapp.fil
+
+source "$(dirname $0)/defs"
+
+while true; do
+  case "$1" in
+    "") break;;
+    -v) verbose="1"; shift;;
+    -cp) EXTRACP=$2; shift; shift;;
+    -classpath) EXTRACP=$2; shift; shift;;
+    -j)
+            shift
+            vmargs="${vmargs} '$1'"
+            shift
+            ;;
+    --port)
+            shift
+            port=$1
+            shift
+            ;;
+    --debug)
+            shift
+            vmargs="${vmargs} -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=3371"
+            ;;
+    --*)
+        args="${args} '$1'"; shift; args="${args} '$1'"; shift;;
+    *) args="${args} sif.servlet.StartWebapp $@"; break;;
+  esac
+done
+
+if [ -n "${port}" ]
+then
+  args="${args} --port ${port}"
+fi
+
+# Library dependencies.
+# Jar files should always appear *after* their corresponding class directories.
+LIBCP="${TOP}/src/lib/sif/classes"
+LIBCP="${LIBCP}:${TOP}/lib/fabric-sif.jar"
+LIBCP="${LIBCP}:${TOP}/src/lib/transient/classes"
+LIBCP="${LIBCP}:${TOP}/lib/fabric-transient.jar"
+for i in "${TOP}"/lib/jetty/*.jar ; do
+  LIBCP="${LIBCP}:$i"
+done
+
+classpath="${FABRIC_WORKER_CP}:${LIBCP}:${EXTRACP}:${classpath}"
+
+command="\"${JAVA}\" ${vmargs} -classpath \"$(fixpath ${classpath})\" fabric.worker.Worker ${args}"
+
+if [ -n "${verbose}" ]
+then
+  echo "${command}"
+fi
+
+eval "${command}"
+

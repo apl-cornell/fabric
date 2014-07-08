@@ -1,0 +1,105 @@
+/**
+ * Copyright (C) 2010 Fabric project group, Cornell University
+ *
+ * This file is part of Fabric.
+ *
+ * Fabric is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * Fabric is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ */
+package hello;
+
+import javax.servlet.ServletException;
+
+import sif.html.*;
+import sif.servlet.Action;
+import sif.servlet.Request;
+import sif.servlet.Servlet;
+
+import java.io.*;
+
+/**
+ * HelloAction is a session-specific action.
+ */
+public class HelloAction[label T] extends Action[HelloServEP] {
+	public HelloAction{T}(Main{T} m) throws ServletException {
+		super();
+		atomic {
+			this.nameInp = new Input[HelloServEP](m, new label {});
+			this.fileInp = new Input[HelloServEP](m, new label {});
+		}
+		initFields(m);
+	}
+
+	final Input[HelloServEP]{T} nameInp;
+	final Input[HelloServEP]{T} fileInp;
+
+	public void invoke{*lbl}(label{*lbl} lbl, Request[HelloServEP]{*lbl} req) 
+	where caller(req.session),
+	{*lbl} <= {*:req.session} {
+		Servlet[HelloServEP] s = getServlet();       
+		if (s == null || req == null) return;
+		if (T equiv lbl) {
+
+			NodeList[this.nameInp.inputLbl, lbl] content = null;    
+
+			atomic {
+			// extract the name, if it exists.        
+			try {
+				if (lbl <= this.nameInp.inputLbl && this.nameInp.inputLbl equiv this.fileInp.inputLbl) {
+					if (this.nameInp.inputLbl <= new label {*:req.session} && this.fileInp.inputLbl <= new label {*:req.session}) {
+						if (new label {*!:req.session} <= this.nameInp.inputLbl && new label {*!:req.session} <= this.fileInp.inputLbl) {
+							String name = req.getParam(nameInp);
+							String fileContents = "";
+
+							try {
+								InputStream file = req.getFile(fileInp);
+								BufferedReader br = 
+									new BufferedReader(new InputStreamReader(file));
+								while (br.ready()) {
+									fileContents += br.readLine() + "\n";
+								}
+							}
+							catch (IOException ignore) { }
+							catch (NullPointerException ignore) { }
+
+							if (name == null || name.length() == 0) name = "world";
+
+							NodeList[this.nameInp.inputLbl, lbl] formEntries = 
+								new NodeList(lbl, lbl, new Text("What is your good name? "), this.nameInp.inputLbl, lbl, new Br(),
+										nameInp.inputLbl, lbl, new TextInput(nameInp, 40, name), this.nameInp.inputLbl, lbl, new Br[this.nameInp.inputLbl, lbl](),
+										lbl, lbl, new Text[lbl, lbl]("Choose a (small) text file to upload and display: "), this.nameInp.inputLbl, lbl, new Br[this.nameInp.inputLbl, lbl](),
+										fileInp.inputLbl, lbl, new FileChooser(fileInp, 40), this.nameInp.inputLbl, lbl, new Br(),
+										lbl, lbl, new SubmitButton[HelloServEP, lbl, lbl](s, lbl, "Submit"));
+							Node[this.nameInp.inputLbl, lbl] form = s.createForm(this.nameInp.inputLbl, lbl, this, this.nameInp.inputLbl, lbl, formEntries);
+
+							content =
+								new NodeList[this.nameInp.inputLbl, lbl](this.nameInp.inputLbl, lbl,
+										new Paragraph[this.nameInp.inputLbl, lbl](this.nameInp.inputLbl, lbl,
+												new NodeList[this.nameInp.inputLbl, lbl](lbl, lbl,
+														new Text[lbl, lbl]("Hello "),
+														this.nameInp.inputLbl, lbl, new Text[this.nameInp.inputLbl, lbl](name),
+														lbl, lbl, new Text[lbl, lbl](" !!!"))),
+														lbl, lbl, new HRule[lbl, lbl](),
+														this.nameInp.inputLbl, lbl, new Paragraph[this.nameInp.inputLbl, lbl](this.nameInp.inputLbl, lbl, form),
+														lbl, lbl, new HRule[lbl, lbl](),
+														lbl, lbl, new Paragraph[lbl, lbl]("File contents: "),
+														this.nameInp.inputLbl, lbl, new Paragraph[this.nameInp.inputLbl, lbl](this.nameInp.inputLbl, lbl, new Pre[this.nameInp.inputLbl, lbl](fileContents)));
+							s.createPage(req, "Hello webapp", this.nameInp.inputLbl, lbl, content);
+						}
+					}
+				}
+			}
+			catch (NullPointerException impossible) { }
+			}
+		}
+
+	}
+}
+

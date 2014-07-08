@@ -1,0 +1,45 @@
+/**
+ * Copyright (C) 2010 Fabric project group, Cornell University
+ *
+ * This file is part of Fabric.
+ *
+ * Fabric is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * Fabric is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ */
+package fabric.lang.security;
+
+import java.util.Set;
+
+/**
+ * A Label is the runtime representation of a Fabric label. This code is mostly
+ * copied from Jif.
+ */
+public interface Label {
+  /**
+   * Returns true iff this <= l. If the method returns true, then s has all of
+   * the delegations (i.e., DelegationPairs) added to it that the result depends
+   * upon. If the method returns false, then s has no eleents added to it.
+   */
+  boolean relabelsTo(Label l, Set/* <DelegationPair> */s);
+
+  Label join(Store store, Label l);
+
+  Label join(Label l);
+
+  Label meet(Store store, Label l);
+
+  Label meet(Label l);
+
+  ConfPolicy confPolicy();
+
+  IntegPolicy integPolicy();
+  
+  SecretKeyObject keyObject();
+}

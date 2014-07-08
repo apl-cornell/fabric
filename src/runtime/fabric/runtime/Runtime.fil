@@ -1,0 +1,236 @@
+/**
+ * Copyright (C) 2010 Fabric project group, Cornell University
+ *
+ * This file is part of Fabric.
+ *
+ * Fabric is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * Fabric is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ */
+package fabric.runtime;
+
+import java.io.*;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
+import fabric.util.LinkedList;
+import fabric.worker.Store;
+import fabric.worker.Worker;
+
+/**
+ * The runtime interface between Fabric programs and the underlying system.
+ * Ported from Jif.
+ */
+public class Runtime {
+    /**
+     * The principal under whose authority the JVM is running.
+     */
+    private Principal dynp;
+    private Store local;
+
+    private Runtime(Principal p) {
+        this.dynp = p;
+        this.local = Worker.getWorker().getLocalStore();
+    }
+
+    /**
+     * Gets a <code>Runtime</code> object parameterized with the
+     * principal <code>p</code>.
+     */
+    public static Runtime getRuntime(Principal p) throws SecurityException {
+        //check if the current user can act for p
+// TODO: Still need to perform this check; but putting it off for now    	
+//        Principal user = user(p);
+//        if (!PrincipalUtil.actsFor(user, p)) {
+//            throw new SecurityException("The current user does not act for "
+//                    + p.name() + ".");
+//        }
+        return new Runtime(p);
+    }
+
+    /** Get the current user  */
+    public static Principal user(Principal parameter) {
+      return Worker.getWorker().getPrincipal();
+    }
+
+    private Label defaultOutputLabel() {
+        ConfPolicy cp = LabelUtil.readerPolicy(local, dynp, new LinkedList());
+        return LabelUtil.toLabel(cp);
+    }
+    private Label defaultInputLabel() {
+        IntegPolicy ip = LabelUtil.writerPolicy(local, dynp, new LinkedList());
+        return LabelUtil.toLabel(ip);
+    }
+
+// XXX The following is commented out until we port the FileSystem class from the Jif runtime. -MJL 
+//
+//    /**
+//     * Opens a file output stream to write a file with the specific <code>name</code>.
+//     *
+//     * @param name     the file name
+//     * @param append   if true, then bytes will be written to the end of the file
+//     *                 rather than the beginning
+//     * @param L        the label parameter of the resulting <code>FileOutputStream</code>
+//     *
+//     * @exception  FileNotFoundException
+//     *      if the file exists but is a directory rather than a regular file,
+//     *      does not exist but cannot be created, or cannot be opened for any
+//     *      other reason.
+//     *
+//     * @exception  SecurityException
+//     *      if <code>l</code> is unable to relabel to the Jif label derived from
+//     *      the ACL of the file.
+//     */
+//    public FileOutputStream openFileWrite(String name, boolean append, Label L)
+//            throws IOException, SecurityException {
+//        File f = new File(name);
+//        boolean existed = f.exists();
+//
+//        if (existed) {
+//            Label acLabel = FileSystem.labelOf(name);
+//            if (!LabelUtil.relabelsTo(L, acLabel)) {
+//                throw new SecurityException("The file " + name
+//                        + "doesn't have sufficient access restrictions.");
+//            }
+//        }
+//
+//        FileOutputStream fos = new FileOutputStream(name, append);
+//
+//        if (!existed) {
+//            fos.flush();
+////            FileSystem.setPolicy(name, (PrivacyPolicy)L.policy());
+//        }
+//        return fos;
+//    }
+//
+//    /** Opens a file input stream for reading from the file with the specific
+//     *  <code>name</code>.
+//     *
+//     *  @param name     the file name
+//     *  @param L        the the label parameter of the resulting <code>FileInputStream</code>
+//     *
+//     *  @exception  SecurityException
+//     *      if <code>l</code> is less restrictive than the Jif label derived from
+//     *      the ACL of the file.
+//     */
+//    public FileInputStream openFileRead(String name, Label L)
+//            throws FileNotFoundException, SecurityException {
+//        Label acLabel = FileSystem.labelOf(name);
+//        
+//        if (LabelUtil.relabelsTo(acLabel, L)) return new FileInputStream(name);
+//        
+//        throw new SecurityException("The file has label " + LabelUtil.stringValue(acLabel) + 
+//                                    ", which is more restrictive than " +
+//                                    L.toString());
+//    }
+
+    /**
+     * Gets the standard error output.
+     * The output channel is parameterized by <code>l</code>.
+     */
+    public PrintStream stderr(Label l) {
+        if (LabelUtil.relabelsTo(l, defaultOutputLabel())) return System.err;
+
+        throw new SecurityException("The standard error output is not "
+                + "sufficiently secure.");
+    }
+
+    /**
+     * Gets the standard output.
+     * This output channel is parameterized by <code>l</code>.
+     */
+    public PrintStream stdout(Label l) {
+        if (LabelUtil.relabelsTo(l, defaultOutputLabel())) return System.out;
+        throw new SecurityException("The standard output is not "
+                + "sufficiently secure.");
+    }
+
+    /**
+     * Gets the standard input.
+     * This input channel is parameterized by <code>l</code>.
+     */
+    public InputStream stdin(Label l) {
+        if (LabelUtil.relabelsTo(defaultInputLabel(), l)) return System.in;
+        
+        throw new SecurityException("The standard output is not "
+                + "sufficiently secure.");
+    }
+
+    /**
+     * Get the standard output parameterized by the default label, which
+     * has only one reader: the principal of this <code>Runtime</code> object.
+     */
+    public PrintStream out() {
+        return System.out;
+    }
+
+    /**
+     * Get the standard input parameterized by the default label, which
+     * has only one reader: the principal of this <code>Runtime</code> object.
+     */
+    public InputStream in() {
+        return System.in;
+    }
+
+    /**
+     * Get the standard error output parameterized by the default label, which
+     * has only one reader: the principal of this <code>Runtime</code> object.
+     */
+    public PrintStream err() {
+        return System.err;
+    }
+
+// XXX : Don't know if Fabric supports all this native stuff yet
+//    public static String currentUser() {
+//        if (_nativeOK) return currentUserImpl();
+//        return null;
+//    }
+//    private static native String currentUserImpl();
+
+    public static int currentYear(Principal dummy) {
+        return new GregorianCalendar().get(Calendar.YEAR);
+    }
+    public static int currentMonth(Principal dummy) {
+        return new GregorianCalendar().get(Calendar.MONTH) - Calendar.JANUARY + 1;
+    }
+    public static int currentDayOfMonth(Principal dummy) {
+        return new GregorianCalendar().get(Calendar.DAY_OF_MONTH);
+    }
+    public static int currentHour(Principal dummy) {
+        return new GregorianCalendar().get(Calendar.HOUR_OF_DAY);
+    }
+    public static int currentMinute(Principal dummy) {
+        return new GregorianCalendar().get(Calendar.MINUTE);
+    }
+    public static void sleep(Principal dummy, int s) {
+        try {
+            // add some noise...
+            double noise = 0.15; 
+            double multiplier = 1 + ((2 * Math.random() - 1) * noise); // = 1 plus or minus noise
+            long ms = (long)((long)s * 1000 * multiplier);
+            if (!Thread.interrupted()) {
+                Thread.sleep(ms);
+            }
+        }
+        catch (InterruptedException e) {
+            // ignore the interrupted exception
+        }
+    }
+    
+    private static boolean _nativeOK = true;
+    static {
+        try {
+            System.loadLibrary("jifrt");
+        }
+        catch (UnsatisfiedLinkError ule) {
+            // fail, but continue
+            _nativeOK = false;
+            // System.err.println(ule.getLocalizedMessage());
+        }
+    }   
+}

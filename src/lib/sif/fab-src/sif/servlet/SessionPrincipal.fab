@@ -1,0 +1,41 @@
+/**
+ * Copyright (C) 2010 Fabric project group, Cornell University
+ *
+ * This file is part of Fabric.
+ *
+ * Fabric is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * Fabric is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ */
+package sif.servlet;
+
+/**
+ * A session principal. This principal represents an HTTP session.
+ */
+public final class SessionPrincipal extends AbstractPrincipal {
+    
+    public SessionPrincipal(String sessionId) {
+//        super("Session: " + sessionId);
+        // TODO Correct the signatures for principals and call super correctly
+        super("session");
+    }
+    
+    public static SessionPrincipal{P←} declassifySP{P←}(SessionPrincipal{P→;P←} sp_, 
+            principal{P←} P)
+    where caller(P) {
+//    	final SessionPrincipal[{P→;P←}]{P←} sp = declassify(sp_, {P→;P←} to {P←});
+//    	if(sp == null) return null;
+//    	final SessionState[{P←}]{P←} ss = SessionState.declassifySS(sp.session, P);
+//    	return new SessionPrincipal[{P←}](ss);
+        return null;
+        // TODO
+    }
+    
+
+}

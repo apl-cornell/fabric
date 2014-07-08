@@ -1,0 +1,56 @@
+/**
+ * Copyright (C) 2010 Fabric project group, Cornell University
+ *
+ * This file is part of Fabric.
+ *
+ * Fabric is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * Fabric is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ */
+package sif.html;
+
+import sif.servlet.HTMLWriter;
+import fabric.lang.security.Label;
+import fabric.lang.security.Principal;
+
+/**
+ * A Radio Button input. Any of the radio buttons may be queried to find
+ * out the value of the button that was selected.
+ * 
+ * @author andru
+ *
+ */
+public final class RadioButton extends InputNode {
+    private final boolean checked;
+    public RadioButton(Principal servletP, Label L, Label E, Input i, String value, boolean checked_) {
+        super(servletP, L, E, i);		
+        checked = checked_;
+    }
+    /* (non-Javadoc)
+     * @see servlet.Node#write(servlet.HTMLWriter)
+     */
+    void writeImpl(HTMLWriter p) {
+        p.print("<input type=radio");
+        p.print(" name=");
+        p.printq(input.getName());
+        if (checked) p.print(" checked");
+        p.print(" />");
+    }
+    public static boolean jif$Instanceof(Principal P, Label l, Label e, Object o) {
+        return ((o instanceof RadioButton) && InputNode.jif$Instanceof(P, l, e, o));
+    }
+
+    public static RadioButton jif$cast$sif_html_RadioButton(Principal P, Label l, Label e, Object o) {
+        if (o == null) return null; 
+        if (jif$Instanceof(P, l, e, o))
+            return (RadioButton)o;
+        throw new ClassCastException();
+    }
+    
+}
