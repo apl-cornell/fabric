@@ -14,6 +14,7 @@ Science Department](http://www.cs.cornell.edu/).
 Past Fabric developers and contributors are:
 
   * [Michael D. George](http://www.cs.cornell.edu/~mdgeorge/)
+  * Samarth Lad
   * [Xin Qi](https://sites.google.com/site/qixin99/)
   * [Robert Soulé](http://www.inf.usi.ch/faculty/soule/)
   * [K. Vikram](http://www.cs.cornell.edu/~kvikram/)
