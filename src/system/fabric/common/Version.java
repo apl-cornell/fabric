@@ -22,6 +22,6 @@ public class Version {
 
   @Override
   public String toString() {
-    return "0.2.2 (2014-07-08 15:51:37 EDT)";
+    return "0.2.2 (2014-07-08 22:45:05 EDT)";
   }
 }
