@@ -51,23 +51,19 @@ public class Statistics {
     }
   }
 
-  public synchronized void registerUpdate(Object t) {
-    synchronized(updates) {
-      atomic {
-        updates.add(t);
-      }
+  public void registerUpdate(Object t) {
+    atomic {
+      updates.add(t);
     }
   }
 
-  public synchronized void registerCreate() {
+  public void registerCreate() {
     currentPage.numCreates++;
   }
 
-  public synchronized void registerRead(Object t) {
-    synchronized(reads) {
-      atomic {
-        reads.add(t);
-      }
+  public void registerRead(Object t) {
+    atomic {
+      reads.add(t);
     }
   }
 
