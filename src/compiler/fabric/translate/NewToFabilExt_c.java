@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -106,10 +106,7 @@ public class NewToFabilExt_c extends NewToJavaExt_c {
       String name = ClassDeclToFabilExt_c.jifConstructorTranslatedName(ct);
       New newExpr =
           nf.New(n.position(), n.qualifier(), n.objectType(), loc, paramargs);
-      if (ts.isFabricClass(ct))
-        return rw.qq().parseExpr("(%T) %E.%s(%LE)", n.objectType(), newExpr,
-            name, n.arguments());
-      else return rw.qq().parseExpr("(%T) %E.%s(%LE)", n.objectType(), newExpr,
+      return rw.qq().parseExpr("(%T) %E.%s(%LE)", n.objectType(), newExpr,
           name, n.arguments());
     } else {
       // ct represents params at runtime, but is a Java class with a

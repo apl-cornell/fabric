@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -49,15 +49,20 @@ import javax.security.auth.x500.X500Principal;
 import fabric.common.Crypto;
 import fabric.common.KeyMaterial;
 import fabric.common.Logging;
+import fabric.common.SysUtil;
+import fabric.common.net.RemoteIdentity;
 import fabric.lang.security.NodePrincipal;
+import fabric.net.RemoteNode;
 import fabric.worker.Store;
 import fabric.worker.Worker;
+import fabric.worker.remote.RemoteWorker;
 
 /**
  * @see https://apl.cs.cornell.edu/wiki/Fabric:Fabric_Communication_Layer
  * @author mdgeorge
  */
-public class HandshakeAuthenticated implements Protocol {
+public class HandshakeAuthenticated<Node extends RemoteNode<Node>> implements
+    Protocol<Node> {
 
   // ////////////////////////////////////////////////////////////////////////////
   // //
@@ -107,17 +112,19 @@ public class HandshakeAuthenticated implements Protocol {
   }
 
   @Override
-  public ShakenSocket initiate(String name, Socket s) throws IOException {
+  public ShakenSocket<Node> initiate(Node remoteNode, Socket s)
+      throws IOException {
     DataOutputStream clearOut = new DataOutputStream(s.getOutputStream());
-    clearOut.writeUTF(name);
+    clearOut.writeUTF(remoteNode.name);
     clearOut.flush();
 
     SSLSocket sock =
-        (SSLSocket) initiatorFactory.createSocket(s, name, s.getPort(), true);
+        (SSLSocket) initiatorFactory.createSocket(s, remoteNode.name,
+            s.getPort(), true);
     sock.setUseClientMode(true);
     sock.setNeedClientAuth(true);
     Logging.log(Logging.TIMING_LOGGER, Level.INFO,
-        "Establishing SSL connection to {0}", name);
+        "Establishing SSL connection to {0}", remoteNode.name);
     sock.startHandshake();
 
     // Check that the name in the peer's certificate matches the node we're
@@ -125,7 +132,7 @@ public class HandshakeAuthenticated implements Protocol {
     Certificate[] peerChain = sock.getSession().getPeerCertificates();
     X500Principal peerX500Principal =
         ((X509Certificate) peerChain[0]).getSubjectX500Principal();
-    if (!name.equals(Crypto.getCN(peerX500Principal.getName()))) {
+    if (!remoteNode.name.equals(Crypto.getCN(peerX500Principal.getName()))) {
       throw new IOException(
           "Peer used a certificate for the wrong X.500 principal");
     }
@@ -133,15 +140,13 @@ public class HandshakeAuthenticated implements Protocol {
     DataInputStream in = new DataInputStream(sock.getInputStream());
     X509Certificate[] peerPrincipalChain = readCertificateChain(in);
 
-    // validate peerPrincipalChain
-    validate(peerPrincipalChain, peerChain);
-
-    NodePrincipal peer = getPrincipal(peerPrincipalChain);
-    return new ShakenSocket(name, peer, sock);
+    RemoteIdentity<Node> peer =
+        getAndVerifyRemoteIdentity(remoteNode, peerPrincipalChain, peerChain);
+    return new ShakenSocket<>(remoteNode.name, peer, sock);
   }
 
   @Override
-  public ShakenSocket receive(Socket s) throws IOException {
+  public ShakenSocket<RemoteWorker> receive(Socket s) throws IOException {
     DataInputStream in = new DataInputStream(s.getInputStream());
     String name = in.readUTF();
     Receiver receiver = receivers.get(name);
@@ -160,9 +165,10 @@ public class HandshakeAuthenticated implements Protocol {
     writeCertificateChain(out, receiver.keys.getPrincipalChain());
     out.flush();
 
-    NodePrincipal peer = getPrincipal(sock.getSession().getPeerCertificates());
+    RemoteIdentity<RemoteWorker> peer =
+        getRemoteWorkerIdentity(sock.getSession().getPeerCertificates());
 
-    return new ShakenSocket(name, peer, sock);
+    return new ShakenSocket<>(name, peer, sock);
   }
 
   // ////////////////////////////////////////////////////////////////////////////
@@ -281,8 +287,8 @@ public class HandshakeAuthenticated implements Protocol {
   // private helper methods //
   // ////////////////////////////////////////////////////////////////////////////
 
-  private void validate(X509Certificate[] peerChain, Certificate[] sockChain)
-      throws IOException {
+  private RemoteIdentity<Node> getAndVerifyRemoteIdentity(Node remoteNode,
+      X509Certificate[] peerChain, Certificate[] sockChain) throws IOException {
     try {
       Crypto.validateCertificateChain(peerChain, initiatorTrust);
     } catch (GeneralSecurityException e) {
@@ -294,18 +300,44 @@ public class HandshakeAuthenticated implements Protocol {
     PublicKey sslKey = ((X509Certificate) sockChain[0]).getPublicKey();
     PublicKey certKey = peerChain[0].getPublicKey();
 
-    if (!sslKey.equals(certKey))
+    if (!sslKey.equals(certKey)) {
       throw new IOException("Failed to authenticate peer principal.");
+    }
+
+    String workerCN =
+        Crypto.getCN(peerChain[0].getSubjectX500Principal().getName());
+    try {
+      SysUtil.getPrincipalOnum(workerCN);
+      String certNodeName = SysUtil.getNodeName(workerCN);
+      if (!certNodeName.equals(remoteNode.name)) {
+        throw new IOException("Failed to authenticate peer principal.");
+      }
+    } catch (IllegalArgumentException e) {
+      throw new IOException("Failed to authenticate peer principal.", e);
+    }
+
+    return new RemoteIdentity<>(remoteNode, getPrincipal(peerChain));
+  }
+
+  private RemoteIdentity<RemoteWorker> getRemoteWorkerIdentity(
+      Certificate[] chain) {
+    X509Certificate head = (X509Certificate) chain[0];
+    String workerCN = Crypto.getCN(head.getSubjectX500Principal().getName());
+
+    String remoteWorkerName = SysUtil.getNodeName(workerCN);
+    RemoteWorker remoteWorker = Worker.getWorker().getWorker(remoteWorkerName);
+
+    return new RemoteIdentity<>(remoteWorker, getPrincipal(chain));
   }
 
   private NodePrincipal getPrincipal(Certificate[] chain) {
     X509Certificate head = (X509Certificate) chain[0];
     String storeName = Crypto.getCN(head.getIssuerX500Principal().getName());
-    String onum = Crypto.getCN(head.getSubjectX500Principal().getName());
+    String workerCN = Crypto.getCN(head.getSubjectX500Principal().getName());
 
     Store store = Worker.getWorker().getStore(storeName);
-
-    return new NodePrincipal._Proxy(store, Long.parseLong(onum));
+    long onum = SysUtil.getPrincipalOnum(workerCN);
+    return new NodePrincipal._Proxy(store, onum);
   }
 
   private static void writeCertificateChain(DataOutputStream out,

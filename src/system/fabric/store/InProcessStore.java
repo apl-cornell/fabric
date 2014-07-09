@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -24,13 +24,16 @@ import fabric.common.SerializedObject;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
+import fabric.common.net.RemoteIdentity;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
+import fabric.dissemination.ObjectGlob;
 import fabric.lang.Object._Impl;
 import fabric.worker.RemoteStore;
 import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.Worker;
+import fabric.worker.remote.RemoteWorker;
 
 /**
  * In-process implementation of the Store interface for use when a worker is
@@ -43,11 +46,25 @@ public class InProcessStore extends RemoteStore {
 
   protected final TransactionManager tm;
   protected final SurrogateManager sm;
+  protected RemoteIdentity<RemoteWorker> localWorkerIdentity;
 
   public InProcessStore(String name, Store c) {
     super(name, c.publicKey);
     tm = c.tm;
     sm = c.sm;
+
+    // This will be lazily populated.
+    localWorkerIdentity = null;
+  }
+
+  private RemoteIdentity<RemoteWorker> getLocalWorkerIdentity() {
+    if (localWorkerIdentity == null) {
+      Worker worker = Worker.getWorker();
+      localWorkerIdentity =
+          new RemoteIdentity<>(worker.getLocalWorker(), worker.getPrincipal());
+    }
+
+    return localWorkerIdentity;
   }
 
   @Override
@@ -62,7 +79,7 @@ public class InProcessStore extends RemoteStore {
   @Override
   public void commitTransaction(long transactionID)
       throws TransactionCommitFailedException {
-    tm.commitTransaction(Worker.getWorker().getPrincipal(), transactionID);
+    tm.commitTransaction(getLocalWorkerIdentity(), transactionID);
   }
 
   @Override
@@ -75,8 +92,8 @@ public class InProcessStore extends RemoteStore {
   }
 
   @Override
-  public boolean prepareTransaction(long tid, long commitTime,
-      Collection<_Impl> toCreate, LongKeyMap<Integer> reads,
+  public void prepareTransaction(long tid, boolean singleStore,
+      boolean readOnly, Collection<_Impl> toCreate, LongKeyMap<Integer> reads,
       Collection<_Impl> writes) throws TransactionPrepareFailedException {
     Collection<SerializedObject> serializedCreates =
         new ArrayList<SerializedObject>(toCreate.size());
@@ -96,13 +113,21 @@ public class InProcessStore extends RemoteStore {
     }
 
     PrepareRequest req =
-        new PrepareRequest(tid, commitTime, serializedCreates,
-            serializedWrites, reads);
+        new PrepareRequest(tid, serializedCreates, serializedWrites, reads);
 
     // Swizzle remote pointers.
     sm.createSurrogates(req);
 
-    return tm.prepare(Worker.getWorker().getPrincipal(), req);
+    tm.prepare(Worker.getWorker().getPrincipal(), req);
+
+    if (singleStore || readOnly) {
+      try {
+        commitTransaction(tid);
+      } catch (TransactionCommitFailedException e) {
+        // Shouldn't happen.
+        throw new InternalError("Single-store commit failed unexpectedly.", e);
+      }
+    }
   }
 
   @Override
@@ -115,6 +140,12 @@ public class InProcessStore extends RemoteStore {
   }
 
   @Override
+  public ObjectGlob readEncryptedObjectFromStore(long onum)
+      throws AccessException {
+    return tm.getGlob(onum, getLocalWorkerIdentity().node);
+  }
+
+  @Override
   protected List<SerializedObject> getStaleObjects(LongKeyMap<Integer> reads) {
     try {
       return tm.checkForStaleObjects(getPrincipal(), reads);
@@ -123,8 +154,7 @@ public class InProcessStore extends RemoteStore {
     }
   }
 
-  @Override
-  public java.lang.Object writeReplace() {
+  private Object writeReplace() {
     return new SerializationProxy(name);
   }
 

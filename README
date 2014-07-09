@@ -4,21 +4,19 @@ Fabric is a language and runtime system that supports secure federated
 distributed computing. This is a quick-start manual to get you started
 running some Fabric examples. A more detailed manual can be found in
 the doc/manual directory of this distribution, or on the web at
-<http://www.cs.cornell.edu/project/fabric/manual/0.2.1/html/>.
+<http://www.cs.cornell.edu/projects/fabric/manual/0.2.2/html/>.
 
 More information about Fabric, including the latest release, can be
-found at the Fabric website <http://www.cs.cornell.edu/project/fabric/>.
+found at the Fabric website
+<http://www.cs.cornell.edu/projects/fabric/>.
 
 User support and feedback
 -------------------------
 If you use Fabric, we'd appreciate your letting us know. We welcome
 comments, bug reports, and discussion about Fabric on the Fabric users
-mailing list <https://lists.cs.cornell.edu/mailman/listinfo/fabric-
-users>.
-
-Subscribe to fabric-announce to be notified about new releases of
-Fabric and related announcements:
-<https://lists.cs.cornell.edu/mailman/listinfo/fabric-announce>.
+mailing list <http://www.cs.cornell.edu/projects/fabric/#mailing-list>.
+This is a low-traffic mailing list, to which we will also post
+notifications of new releases of Fabric and other related announcements.
 
 
 Setting up Fabric
@@ -26,12 +24,24 @@ Setting up Fabric
 
 Requirements
 ------------
-This Fabric distribution builds on Unix. Fabric 0.2.1 builds
-against Jif 3.4.0 and Polyglot 2.5.1, both
-included in the distribution. We recommend that you use Oracle JDK 6 or
-later; we have experienced problems with OpenJDK and with older
-versions of Java. OpenSSL is used to sign certificates. Fabric is
-compiled with the Apache Ant build tool.
+This Fabric distribution builds on Linux and OS X. Fabric 0.2.2
+builds against Jif 3.4.2 and Polyglot 2.6.1. Both
+are included in the distribution. JDK 7 or later is required; we have
+tested with the Oracle and the OpenJDK implementations. OpenSSL is used
+to sign certificates. Fabric is compiled with the Apache Ant build tool.
+
+The following command will install the requisite tools on an Ubuntu
+12.04 or 14.04 system:
+
+  $ sudo apt-get install openjdk-7-jdk openssl ant
+
+
+Once the tools are installed, unpack the distribution in a location of
+your choice and change into the distribution directory:
+
+  $ tar zxf fabric-0.2.2.tar.gz
+  $ cd fabric-0.2.2
+
 
 
 Configuring
@@ -39,7 +49,7 @@ Configuring
 Before using Fabric, you must configure the scripts in the `bin`
 directory.  From the top-level directory, run:
 
-      $ ant bin
+  $ ant bin
 
 If the configurator is unable to find the JDK, Polyglot, or Jif, it
 will prompt you to set the appropriate properties in
@@ -48,8 +58,9 @@ will prompt you to set the appropriate properties in
 
 Building
 --------
-Fabric comes pre-compiled as Jar files in the `lib` directory. If you
-wish to rebuild Fabric, run `ant` from the top-level directory:
+_This step is optional._ Fabric comes pre-compiled as Jar files in the
+`lib` directory. However, if you wish to rebuild Fabric, run `ant` from
+the top-level directory:
 
   $ ant
 

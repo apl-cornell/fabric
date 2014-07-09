@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -21,6 +21,7 @@ import java.io.InputStream;
 
 import fabric.common.net.naming.SocketAddress;
 import fabric.lang.security.Principal;
+import fabric.net.RemoteNode;
 
 /**
  * Client-side multiplexed socket implementation. The API mirrors that of
@@ -28,15 +29,15 @@ import fabric.lang.security.Principal;
  * front-end API.
  * 
  * @see java.net.Socket
- * @author mdgeorge
+ * @param <Node> the type of node at the remote endpoint.
  */
-public class SubSocket {
+public class SubSocket<Node extends RemoteNode<Node>> {
   // ////////////////////////////////////////////////////////////////////////////
   // public API //
   // ////////////////////////////////////////////////////////////////////////////
 
   /** @see SubSocketFactory */
-  protected SubSocket(SubSocketFactory factory) {
+  protected SubSocket(SubSocketFactory<Node> factory) {
     this.state = new Unconnected(factory);
   }
 
@@ -44,7 +45,7 @@ public class SubSocket {
    * Create a connected SubSocket. This is used internally by ServerChannels for
    * accepting incoming streams.
    */
-  SubSocket(Channel.Connection conn) {
+  SubSocket(Channel<Node>.Connection conn) {
     this.state = new Connected(conn);
   }
 
@@ -54,8 +55,17 @@ public class SubSocket {
   }
 
   /** @see java.net.Socket#connect(SocketAddress) */
-  public synchronized final void connect(String name) throws IOException {
-    state.connect(name);
+  public synchronized final void connect(Node node) throws IOException {
+    state.connect(node);
+  }
+
+  public synchronized final int getStreamID() throws IOException {
+    return state.getStreamID();
+  }
+
+  public synchronized final RemoteIdentity<Node> getRemoteIdentity()
+      throws IOException {
+    return state.getRemoteIdentity();
   }
 
   /**
@@ -114,8 +124,16 @@ public class SubSocket {
       throw new IOException("Cannot close socket: " + this, cause);
     }
 
-    void connect(String name) throws IOException {
+    int getStreamID() throws IOException {
+      throw new IOException("Cannot get stream ID: " + this, cause);
+    }
+
+    void connect(Node node) throws IOException {
       throw new IOException("Cannot connect: " + this, cause);
+    }
+
+    RemoteIdentity<Node> getRemoteIdentity() throws IOException {
+      throw new IOException("Cannot get remote identity: " + this, cause);
     }
 
     InputStream getInputStream() throws IOException {
@@ -136,7 +154,7 @@ public class SubSocket {
    * implementation of methods in the Unconnected state
    */
   private final class Unconnected extends State {
-    private final SubSocketFactory factory;
+    private final SubSocketFactory<Node> factory;
 
     @Override
     public String toString() {
@@ -144,19 +162,19 @@ public class SubSocket {
     }
 
     @Override
-    void connect(String name) throws IOException {
+    void connect(Node node) throws IOException {
       try {
-        Channel.Connection conn = factory.getChannel(name).connect();
+        Channel<Node>.Connection conn = factory.getChannel(node).connect();
         state = new Connected(conn);
       } catch (final Exception exc) {
         IOException wrapped =
-            new IOException("failed to connect to \"" + name + "\"", exc);
+            new IOException("failed to connect to \"" + node.name + "\"", exc);
         state = new ErrorState(wrapped);
         throw wrapped;
       }
     }
 
-    private Unconnected(SubSocketFactory factory) {
+    private Unconnected(SubSocketFactory<Node> factory) {
       this.factory = factory;
     }
   }
@@ -165,7 +183,7 @@ public class SubSocket {
    * implementation of methods in the Connected(channel) state
    */
   private final class Connected extends State {
-    final Channel.Connection conn;
+    final Channel<Node>.Connection conn;
 
     @Override
     public String toString() {
@@ -186,6 +204,11 @@ public class SubSocket {
     }
 
     @Override
+    RemoteIdentity<Node> getRemoteIdentity() throws IOException {
+      return conn.getRemoteIdentity();
+    }
+
+    @Override
     InputStream getInputStream() {
       return conn.in;
     }
@@ -196,11 +219,17 @@ public class SubSocket {
     }
 
     @Override
-    Principal getPrincipal() {
-      return conn.getPrincipal();
+    int getStreamID() {
+      // TODO Auto-generated method stub
+      return conn.streamID;
     }
 
-    Connected(Channel.Connection conn) {
+    @Override
+    Principal getPrincipal() {
+      return conn.getRemoteIdentity().principal;
+    }
+
+    Connected(Channel<Node>.Connection conn) {
       this.conn = conn;
     }
   }

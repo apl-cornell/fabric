@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -22,7 +22,7 @@ import broker.Agent;
 import broker.User;
 import broker.UserAgent;
 
-class Main  {
+public class Main  {
     public static final void main{* <- }  (principal{*provider} p, String[] args)  throws SecurityException, IllegalArgumentException  
 		where caller(p), provider actsfor p, {*provider} <= {p<-}, 
 			{*provider} equiv {*AirlineExample.provider},

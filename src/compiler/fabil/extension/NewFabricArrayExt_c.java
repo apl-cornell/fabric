@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -49,7 +49,7 @@ public class NewFabricArrayExt_c extends AnnotatedExt_c {
     FabILTypeSystem ts = pr.typeSystem();
     if (!ts.isFabricArray(newArray.type())) return newArray;
 
-    if (newArray.dims().size() > 1)
+    if (newArray.numDims() > 1)
       throw new InternalCompilerError("Multidimensional arrays not supported.");
 
     if (newArray.dims().size() < 1)
@@ -69,7 +69,7 @@ public class NewFabricArrayExt_c extends AnnotatedExt_c {
     }
     return qq.parseExpr("(%T) new %T(%E, %E, %E, " + typeArg
         + "%E).$getProxy()", arrayType, arrayImplType, newArray.location(),
-        newArray.updateLabel(), newArray.accessLabel(), size);
+        newArray.updateLabel(), newArray.accessPolicy(), size);
   }
 
   @Override
@@ -152,7 +152,7 @@ public class NewFabricArrayExt_c extends AnnotatedExt_c {
 
   private NewFabricArray assignAccessPolicy(LabelAssigner la,
       NewFabricArray expr) {
-    if (expr.accessLabel() != null) return expr;
+    if (expr.accessPolicy() != null) return expr;
 
     FabILTypeSystem ts = la.typeSystem();
     QQ qq = la.qq();

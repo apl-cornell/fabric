@@ -14,6 +14,9 @@ app_home="$(dirname $0)/.."
 # default cache name is hostname
 cache_name="${HOSTNAME}"
 
+# Work around Java compiler/verifier bug.
+vmargs="-noverify"
+
 while true; do
   case "$1" in
     "") break;;
@@ -63,6 +66,11 @@ while true; do
       debug_suspend=y
       shift
       ;;      
+    --profile)
+      profile_dir="$2"
+      profile_interval="$3"
+      shift 3
+      ;;
     --*)
       args="${args} '$1' '$2'"
       shift 2
@@ -81,6 +89,14 @@ fi
 
 if [[ -n "${debug_suspend}" ]] ; then
   vmargs="${vmargs} ${debug_opts},address=${debug_port},suspend=${debug_suspend}"
+fi
+
+if [[ -f "${TOP}/lib/libjprofilerti.so" && -n "${profile_dir}" ]] ; then
+  vmargs="${vmargs} -agentpath:${TOP}/lib/libjprofilerti.so=offline"
+  vmargs="${vmargs},id=153"
+  vmargs="${vmargs},config=${TOP}/jprofiler-config.xml"
+  vmargs="${vmargs} -Dfabric.profiling.dir=\"${profile_dir}\""
+  vmargs="${vmargs} -Dfabric.profiling.interval=${profile_interval}"
 fi
 
 # Export location of config, etc, and var 

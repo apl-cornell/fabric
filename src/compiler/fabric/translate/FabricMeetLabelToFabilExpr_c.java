@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -23,7 +23,9 @@ import jif.translate.MeetLabelToJavaExpr_c;
 import jif.types.label.Label;
 import jif.types.label.MeetLabel;
 import polyglot.ast.Expr;
+import polyglot.types.ConstructorInstance;
 import polyglot.types.SemanticException;
+import polyglot.util.Position;
 import fabric.visit.FabricToFabilRewriter;
 
 public class FabricMeetLabelToFabilExpr_c extends MeetLabelToJavaExpr_c {
@@ -36,6 +38,11 @@ public class FabricMeetLabelToFabilExpr_c extends MeetLabelToJavaExpr_c {
       return rw.labelToJava(L.meetComponents().iterator().next());
     }
 
+    boolean simplify = true;
+    if (rw.context().currentCode() instanceof ConstructorInstance
+        && rw.currentClass().isSubtype(rw.jif_ts().PrincipalClass()))
+      simplify = false;
+
     LinkedList<Label> l = new LinkedList<Label>(L.meetComponents());
     Iterator<Label> iter = l.iterator();
     Label head = iter.next();
@@ -44,7 +51,10 @@ public class FabricMeetLabelToFabilExpr_c extends MeetLabelToJavaExpr_c {
       head = iter.next();
       Expr f = rw.labelToJava(head);
       Expr loc = ((FabricToFabilRewriter) rw).currentLocation();
-      e = rw.qq().parseExpr("%E.meet(%E, %E)", e, loc, f);
+      e =
+          rw.qq().parseExpr("%E.meet(%E, %E, %E)", e, loc, f,
+              rw.java_nf().BooleanLit(Position.compilerGenerated(), simplify));
+
     }
     return e;
   }

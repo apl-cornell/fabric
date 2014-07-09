@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -33,6 +33,7 @@ public final class TransactionRestartingException extends
    *          identifies the transaction that is to be restarted.
    */
   public TransactionRestartingException(TransactionID tid) {
+    super("restarting " + tid);
     this.tid = tid;
   }
 }

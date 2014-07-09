@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -79,14 +79,16 @@ public class Threading {
   }
 
   /**
-   * A ThreadFactory that creates FabricThread.Impls.
+   * A ThreadFactory that creates FabricThread.Impls for the thread pool.
    */
   private static class FabricThreadFactory implements ThreadFactory {
     private int nextID = 1;
+    private static ThreadGroup threadGroup = new ThreadGroup("Thread pool");
 
     @Override
     public synchronized Thread newThread(Runnable r) {
-      return new FabricThread.Impl(r, "Idle thread " + (nextID++));
+      return new FabricThread.Impl(threadGroup, r, "Thread-pool thread "
+          + (nextID++));
     }
   }
 
@@ -105,15 +107,22 @@ public class Threading {
   public static abstract class NamedRunnable implements Runnable {
     private String name;
 
+    private static final boolean SET_THREAD_NAME = false;
+
     public NamedRunnable(String name) {
       this.name = name;
     }
 
     @Override
     public final void run() {
-      Thread current = Thread.currentThread();
-      String oldName = current.getName();
-      current.setName(this.name);
+      Thread current = null;
+      String oldName = null;
+      if (SET_THREAD_NAME) {
+        current = Thread.currentThread();
+        oldName = current.getName();
+        current.setName(this.name);
+      }
+
       try {
         runImpl();
       } catch (RuntimeException e) {
@@ -121,7 +130,8 @@ public class Threading {
       } catch (Error e) {
         e.printStackTrace();
       }
-      current.setName(oldName);
+
+      if (SET_THREAD_NAME) current.setName(oldName);
     }
 
     protected abstract void runImpl();

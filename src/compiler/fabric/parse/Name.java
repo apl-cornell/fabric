@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -68,6 +68,7 @@ public class Name extends jif.parse.Name {
         parser.nf.Id(pos, name));
   }
 
+  @Override
   public QualifierNode toQualifier() throws Exception {
     if (prefix == null) {
       FabricNodeFactory nf = (FabricNodeFactory) parser.nf;

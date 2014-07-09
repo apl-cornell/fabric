@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -21,7 +21,8 @@ import java.io.IOException;
 import java.security.cert.Certificate;
 
 import fabric.common.exceptions.ProtocolError;
-import fabric.lang.security.Principal;
+import fabric.common.net.RemoteIdentity;
+import fabric.worker.remote.RemoteWorker;
 
 /**
  * A request to get the certificate chain that certifies a store's public SSL
@@ -54,8 +55,9 @@ public class GetCertChainMessage extends
   // ////////////////////////////////////////////////////////////////////////////
 
   @Override
-  public Response dispatch(Principal p, MessageHandler h) throws ProtocolError {
-    return h.handle(p, this);
+  public Response dispatch(RemoteIdentity<RemoteWorker> client, MessageHandler h)
+      throws ProtocolError {
+    return h.handle(client, this);
   }
 
   // ////////////////////////////////////////////////////////////////////////////

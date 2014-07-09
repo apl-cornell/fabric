@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -68,6 +68,10 @@ public class AccessPathStore extends AccessPath {
   public AccessPath subst(AccessPathRoot r, AccessPath e) {
     AccessPath newPath = path.subst(r, e);
     if (newPath == path) return this;
+    if (newPath instanceof AccessPathNew) {
+      AccessPathNew apn = (AccessPathNew) newPath;
+      return apn.location();
+    }
 
     return new AccessPathStore(newPath, storeType, position());
   }

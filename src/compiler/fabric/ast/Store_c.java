@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -20,6 +20,7 @@ import java.util.List;
 
 import polyglot.ast.Expr;
 import polyglot.ast.Expr_c;
+import polyglot.ast.Ext;
 import polyglot.ast.Node;
 import polyglot.ast.Special;
 import polyglot.ast.Term;
@@ -32,25 +33,26 @@ import polyglot.visit.NodeVisitor;
 import polyglot.visit.TypeChecker;
 import fabric.types.FabricTypeSystem;
 
-/**
- * 
- */
+//XXX Should be replaced with extension
+@Deprecated
 public class Store_c extends Expr_c implements Store {
   protected Expr expr;
   protected boolean isLocal;
 
-  @Override
-  public Object copy() {
-    Store s = (Store) super.copy();
-    return s;
+  @Deprecated
+  public Store_c(Position pos, Expr expr) {
+    this(pos, expr, null);
   }
 
-  /**
-   * @param pos
-   */
-  public Store_c(Position pos, Expr expr) {
-    super(pos);
+  public Store_c(Position pos, Expr expr, Ext ext) {
+    super(pos, ext);
     this.expr = expr;
+  }
+
+  @Override
+  public Store copy() {
+    Store s = (Store) super.copy();
+    return s;
   }
 
   @Override
@@ -81,7 +83,7 @@ public class Store_c extends Expr_c implements Store {
 
   @Override
   public Node visitChildren(NodeVisitor v) {
-    Expr e = (Expr) visitChild(this.expr, v);
+    Expr e = visitChild(this.expr, v);
     return this.expr(e);
   }
 
@@ -102,9 +104,9 @@ public class Store_c extends Expr_c implements Store {
     if (type().isCanonical()) return this;
 
     Type t = expr.type();
-    if (!t.isReference())
-      throw new SemanticException("Cannot get store of non reference type.");
     FabricTypeSystem ts = (FabricTypeSystem) tc.typeSystem();
+    if (!t.isReference() && !t.equals(ts.Label()) && !t.equals(ts.Principal()))
+      throw new SemanticException("Cannot get store of non reference type.");
 
     return isLocalStore(ts.isTransient(t)).type(ts.Store());
   }

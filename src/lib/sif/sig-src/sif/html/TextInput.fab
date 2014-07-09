@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -34,6 +34,12 @@ public class TextInput[principal servletP, label L, label E] extends InputNode[s
     public TextInput{L}(Servlet[servletP]{L} s, label{L} inputLabel, int{L} size, String{L} initial) 
         where {L;E} <= {*inputLabel} {
         super(s, inputLabel);
+        this.size = size;
+        initialText = initial;
+    }
+    public TextInput(String{L} name, int{L} size, String{L} initial) 
+    {
+        super(name);
         this.size = size;
         initialText = initial;
     }

@@ -35,7 +35,13 @@
   <!-- First  choice: jdk.home in config.properties
        Second choice: jdk.home in ${jif.home}/config.properties
        Third  choice: JAVA_HOME environment variable
-       Fourth choice: Ant's built-in java.home
+       Fourth choice: output of the BASH command (if successful):
+                        readlink -f $(which javac) \
+                          | sed '/\/bin\/javac$/{s|/bin/javac$||;q}; q1'
+                      (The above sed expression is the same as
+                      's|/bin/javac$||', except it returns with exit code 1 if
+                      the substitution is unsuccessful.)
+       Fifth  choice: Ant's built-in java.home
   -->
   <condition property="jdk.home" value="${jif.jdk.home}">
     <and>
@@ -48,6 +54,23 @@
   <condition property="jdk.home" value="${env.JAVA_HOME}">
     <and>
       <isset property="env.JAVA_HOME" />
+      <not>
+        <isset property="jdk.home" />
+      </not>
+    </and>
+  </condition>
+  <exec executable="bash"
+      failifexecutionfails="false"
+      outputproperty="jdk.home.detected"
+      resultproperty="jdk.home.detected-result">
+    <arg value="-c"/>
+    <arg value="-o"/> <arg value="pipefail"/>
+    <arg value="readlink -f $(which javac) | sed '/\/bin\/javac$/{s|/bin/javac$||;q}; q1'"/>
+  </exec>
+  <condition property="jdk.home" value="${jdk.home.detected}">
+    <and>
+      <equals arg1="${jdk.home.detected-result}" arg2="0"/>
+      <isset property="jdk.home.detected"/>
       <not>
         <isset property="jdk.home" />
       </not>
@@ -76,6 +99,9 @@
   <!-- fabc-in-worker executable -->
   <property name="fabc-in-worker" location="${bin}/fabc-in-worker" />
 
+  <!-- jpa2fab executable -->
+  <property name="jpa2fab" location="${fabric.home}/tools/jpa2fab/bin/jpa2fab" />
+
   <!-- filc executable -->
   <property name="filc" location="${bin}/filc" />
 
@@ -94,7 +120,7 @@
     <pathelement path="${polyglot.home}/lib/polyglot.jar" />
     <pathelement path="${polyglot.home}/lib/ppg.jar" />
     <pathelement path="${polyglot.home}/lib/java_cup.jar" />
-    <pathelement path="${polyglot.home}/lib/JFlex.jar" />
+    <pathelement path="${polyglot.home}/lib/jflex.jar" />
     <pathelement path="${jdk.home}/lib/tools.jar" />
   </path>
 
@@ -229,6 +255,29 @@
       </filc>
     </sequential>
   </macrodef>
+
+  <macrodef name="jpa2fab">
+    <attribute name="destdir" default="classes"/>
+    <element name="extra-args" implicit="true"/>
+    <sequential>
+      <apply executable="bash"
+             parallel="true"
+             failonerror="true"
+             dest="@{destdir}"
+             relative="false"
+             skipemptyfilesets="true"
+             vmlauncher="false">
+        <arg value="${jpa2fab}"/>
+        <arg line="${debug.flag}"/>
+        <arg value="-d"/> <arg value="@{destdir}"/>
+        <arg value="-output-fabil"/>
+        <extra-args/>
+        <srcfile/>
+        <globmapper from="*.java" to="*.fil"/>
+      </apply>
+    </sequential>
+  </macrodef>
+
 </project>
 
 

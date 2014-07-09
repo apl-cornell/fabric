@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -35,6 +35,7 @@ import polyglot.frontend.Job;
 import polyglot.frontend.JobExt;
 import polyglot.frontend.Parser;
 import polyglot.frontend.Scheduler;
+import polyglot.frontend.Source.Kind;
 import polyglot.frontend.TargetFactory;
 import polyglot.frontend.goals.Goal;
 import polyglot.lex.Lexer;
@@ -50,6 +51,8 @@ import codebases.frontend.CodebaseSource;
 import codebases.frontend.LocalSource;
 import codebases.frontend.RemoteSource;
 import codebases.types.CBTypeEncoder;
+import codebases.types.ClassFile;
+import codebases.types.ClassFile_c;
 import codebases.types.CodebaseResolver;
 import codebases.types.CodebaseTypeSystem;
 import codebases.types.NamespaceResolver;
@@ -59,8 +62,6 @@ import fabil.ast.FabILNodeFactory_c;
 import fabil.frontend.FabILScheduler;
 import fabil.parse.Grm;
 import fabil.parse.Lexer_c;
-import fabil.types.ClassFile;
-import fabil.types.ClassFile_c;
 import fabil.types.FabILTypeSystem;
 import fabil.types.FabILTypeSystem_c;
 import fabric.LocalResolver;
@@ -223,7 +224,7 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements
   }
 
   @Override
-  public FileSource createFileSource(FileObject f, boolean user)
+  public FileSource createFileSource(FileObject f, Kind kind)
       throws IOException {
     if (f instanceof FabricFileObject) {
       fabric.lang.Object obj = ((FabricFileObject) f).getData();
@@ -239,13 +240,13 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements
             + " is higher than the label of its codebase ");
       }
 
-      return new RemoteSource(f, fcls, user);
+      return new RemoteSource(f, fcls, kind);
     } else {
       if (Report.should_report(Report.loader, 2))
         Report.report(2, "Creating filesource from " + f);
       URI ns =
           getOptions().platformMode() ? platformNamespace() : localNamespace();
-      return new LocalSource(f, user, ns);
+      return new LocalSource(f, kind, ns);
     }
   }
 

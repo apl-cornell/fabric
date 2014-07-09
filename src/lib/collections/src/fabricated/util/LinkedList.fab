@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -125,7 +125,7 @@ public class LinkedList[label L] extends AbstractList[L]
       return listIterator();
     }
     
-    public  Iterator[L]{L} iterator{L}(Store{L} store) where L <= {*<-store}, {*->store} <= L      {
+    public  Iterator[L]{L} iterator{L}(Store{L} store) where {*<-store} <= L, L <= {*->store} {
       return listIterator(store, 0);
     }
 
@@ -265,7 +265,7 @@ public class LinkedList[label L] extends AbstractList[L]
     }
     
     public ListIterator[L]{L} listIterator{L}(Store{L} store, int{L} index) 
-        throws (IndexOutOfBoundsException{L}) where L <= {*<-store}, {*->store} <= L {
+        throws (IndexOutOfBoundsException{L}) where {*<-store} <= L , L <= {*->store} {
         return new LinkedListIterator@store(index, this);
     }
 }

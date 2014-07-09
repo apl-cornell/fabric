@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -404,7 +404,7 @@ public class ArrayList extends AbstractList
     int end = index + csize;
     if (size > 0 && index != size)
       Arrays.arraycopy(data, index, data, end, size - index);
-    size += csize;
+    size = size + csize;
     for ( ; index < end; index++)
       data[index] = itr.next();
     return csize > 0;
@@ -425,7 +425,7 @@ public class ArrayList extends AbstractList
       {
         modCount++;
         Arrays.arraycopy(data, toIndex, data, fromIndex, size - toIndex);
-        size -= change;
+        size = size - change;
       }
     else if (change < 0)
       throw new IndexOutOfBoundsException();
@@ -486,7 +486,7 @@ public class ArrayList extends AbstractList
     for (j = i++; i < size; i++)
       if (! c.contains(data[i]))
         data[j++] = data[i];
-    size -= i - j;
+    size = size - (i - j);
     return true;
   }
 
@@ -514,7 +514,7 @@ public class ArrayList extends AbstractList
     for (j = i++; i < size; i++)
       if (c.contains(data[i]))
         data[j++] = data[i];
-    size -= i - j;
+    size = size - (i - j);
     return true;
   }
 

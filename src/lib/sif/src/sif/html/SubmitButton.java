@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -15,8 +15,8 @@
  */
 package sif.html;
 
+import sif.servlet.HTMLServlet;
 import sif.servlet.HTMLWriter;
-import sif.servlet.Servlet;
 import fabric.lang.security.Label;
 import fabric.lang.security.Principal;
 
@@ -26,37 +26,47 @@ import fabric.lang.security.Principal;
  * A button that submits a form.
  */
 public final class SubmitButton extends InputNode {
-    private final String name;
+  private final String value;
 
-    public SubmitButton(Principal servletP, Label L, Label E, Input input, String name_) {
-        super(servletP, L, E, input);
-        name = name_;
-    }
-    public SubmitButton(Principal servletP, Label L, Label E, Servlet s, Label inputLabel, String name_) {
-        super(servletP, L, E, new Input(servletP, s, inputLabel));
-        name = name_;
-    }
+  public SubmitButton(Principal servletP, Label L, Label E, Input input,
+      String val) {
+    super(servletP, L, E, input);
+    value = val;
+  }
 
-    void writeImpl(HTMLWriter p) {
-        p.print("<input ");
-        p.begin();
-        p.print("type=submit class=submit value=");
-        p.printq(name);
-        p.print(" name=");
-        p.printq(input.getName());
-        p.end();
-        p.print(" />");
-    }
+  public SubmitButton(Principal servletP, Label L, Label E, HTMLServlet s,
+      Label inputLabel, String val) {
+    super(servletP, L, E, new Input(servletP, s, inputLabel));
+    value = val;
+  }
 
-    public static boolean jif$Instanceof(Principal P, Label l, Label e, Object o) {
-        return ((o instanceof SubmitButton) && InputNode.jif$Instanceof(P, l, e, o));
-    }
+  public SubmitButton(Principal servletP, Label L, Label E, String name,
+      String val) {
+    super(servletP, L, E, name);
+    value = val;
+  }
 
-    public static SubmitButton jif$cast$sif_html_SubmitButton(Principal P, Label l, Label e, Object o) {
-        if (o == null) return null; 
-        if (jif$Instanceof(P, l, e, o))
-            return (SubmitButton)o;
-        throw new ClassCastException();
-    }
+  @Override
+  void writeImpl(HTMLWriter p) {
+    p.print("<input ");
+    p.begin();
+    p.print("type=submit class=submit value=");
+    p.printq(value);
+    p.print(" name=");
+    p.printq(getName());
+    p.end();
+    p.print(" />");
+  }
+
+  public static boolean jif$Instanceof(Principal P, Label l, Label e, Object o) {
+    return ((o instanceof SubmitButton) && InputNode.jif$Instanceof(P, l, e, o));
+  }
+
+  public static SubmitButton jif$cast$sif_html_SubmitButton(Principal P,
+      Label l, Label e, Object o) {
+    if (o == null) return null;
+    if (jif$Instanceof(P, l, e, o)) return (SubmitButton) o;
+    throw new ClassCastException();
+  }
 
 }

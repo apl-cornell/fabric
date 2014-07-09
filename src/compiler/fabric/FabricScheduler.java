@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -239,7 +239,7 @@ public class FabricScheduler extends JifScheduler implements CBScheduler {
   private Goal preFClassGeneration = new Barrier("preFClassGeneration", this) {
     @Override
     public Goal goalForJob(Job job) {
-      Goal g = internGoal(new EmptyGoal(job));
+      Goal g = internGoal(new EmptyGoal(job, "preFClassGeneration"));
 
       try {
         addPrerequisiteDependency(g, TypeChecked(job));
@@ -269,7 +269,7 @@ public class FabricScheduler extends JifScheduler implements CBScheduler {
         // Cannot happen
         throw new InternalCompilerError(e);
       }
-    } else g = internGoal(new EmptyGoal(job));
+    } else g = internGoal(new EmptyGoal(job, "FClassGenerated"));
 
     return g;
   }

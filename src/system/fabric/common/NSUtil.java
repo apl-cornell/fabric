@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -303,6 +303,7 @@ public final class NSUtil {
    * @return true if path contains any remote references
    */
   public static List<URI> processPathString(String path) {
+    // XXX This breaks in the presence of Windows paths.
     List<URI> locations = new ArrayList<URI>();
     while (!path.isEmpty()) {
       String remaining = "";

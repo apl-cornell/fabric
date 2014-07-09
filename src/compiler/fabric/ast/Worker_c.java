@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -15,6 +15,7 @@
  */
 package fabric.ast;
 
+import polyglot.ast.Ext;
 import polyglot.ast.Id;
 import polyglot.ast.Local_c;
 import polyglot.ast.Node;
@@ -23,9 +24,16 @@ import polyglot.util.Position;
 import polyglot.visit.TypeChecker;
 import fabric.types.FabricTypeSystem;
 
+//XXX Should be replaced with extension
+@Deprecated
 public class Worker_c extends Local_c implements Worker {
+  @Deprecated
   public Worker_c(Position pos, Id workerId) {
-    super(pos, workerId);
+    this(pos, workerId, null);
+  }
+
+  public Worker_c(Position pos, Id workerId, Ext ext) {
+    super(pos, workerId, ext);
   }
 
   /**

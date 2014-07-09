@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -180,7 +180,8 @@ public class KeyMaterial {
     Principal subjectDN = principalChain[0].getSubjectX500Principal();
 
     String store = Crypto.getCN(issuerDN.getName());
-    long onum = Long.parseLong(Crypto.getCN(subjectDN.getName()));
+    String subjectCN = Crypto.getCN(subjectDN.getName());
+    long onum = SysUtil.getPrincipalOnum(subjectCN);
 
     // TODO Check that the principal is valid?
 

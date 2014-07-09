@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -19,7 +19,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
@@ -35,6 +34,7 @@ import fabric.common.util.WeakReferenceArrayList;
 import fabric.lang.Object._Impl;
 import fabric.lang.security.LabelCache;
 import fabric.lang.security.SecurityCache;
+import fabric.worker.FabricSoftRef;
 import fabric.worker.Store;
 import fabric.worker.Worker;
 import fabric.worker.remote.RemoteWorker;
@@ -90,12 +90,12 @@ public final class Log {
   // Proxy objects aren't used for keys here because doing so would result in
   // calls to hashcode() and equals() on such objects, resulting in fetching the
   // corresponding Impls from the store.
-  protected final OidKeyHashMap<ReadMapEntry> reads;
+  protected final OidKeyHashMap<ReadMap.Entry> reads;
 
   /**
    * Reads on objects that have been read by an ancestor transaction.
    */
-  protected final List<ReadMapEntry> readsReadByParent;
+  protected final List<ReadMap.Entry> readsReadByParent;
 
   /**
    * A collection of all objects created in this transaction or completed
@@ -179,6 +179,17 @@ public final class Log {
   public final AbstractSecurityCache securityCache;
 
   /**
+   * The time at which this subtransaction was started.
+   */
+  public final long startTime;
+
+  /**
+   * If a transaction T's log appears in this set, then this transaction is
+   * waiting for a lock that is held by transaction T.
+   */
+  private final Set<Log> waitsFor;
+
+  /**
    * Creates a new log with the given parent and the given transaction ID. The
    * TID for the parent and the given TID are assumed to be consistent. If the
    * given TID is null, a random tid is generated for the subtransaction.
@@ -198,13 +209,15 @@ public final class Log {
     this.child = null;
     this.thread = Thread.currentThread();
     this.retrySignal = parent == null ? null : parent.retrySignal;
-    this.reads = new OidKeyHashMap<ReadMapEntry>();
-    this.readsReadByParent = new ArrayList<ReadMapEntry>();
+    this.reads = new OidKeyHashMap<ReadMap.Entry>();
+    this.readsReadByParent = new ArrayList<ReadMap.Entry>();
     this.creates = new ArrayList<_Impl>();
     this.localStoreCreates = new WeakReferenceArrayList<_Impl>();
     this.writes = new ArrayList<_Impl>();
     this.localStoreWrites = new WeakReferenceArrayList<_Impl>();
     this.workersCalled = new ArrayList<RemoteWorker>();
+    this.startTime = System.currentTimeMillis();
+    this.waitsFor = new HashSet<Log>();
 
     if (parent != null) {
       try {
@@ -260,6 +273,14 @@ public final class Log {
   }
 
   /**
+   * @return true if the transaction is not distributed and neither creates nor
+   *         modifies objects on remote stores.
+   */
+  public boolean isReadOnly() {
+    return writes.isEmpty() && creates.isEmpty() && workersCalled.isEmpty();
+  }
+
+  /**
    * Returns a set of stores affected by this transaction. This is the set of
    * stores to contact when preparing and committing a transaction.
    */
@@ -289,8 +310,8 @@ public final class Log {
   Set<Store> storesToCheckFreshness() {
     Set<Store> result = new HashSet<Store>();
     result.addAll(reads.storeSet());
-    for (ReadMapEntry entry : readsReadByParent) {
-      result.add(entry.obj.store);
+    for (ReadMap.Entry entry : readsReadByParent) {
+      result.add(entry.getStore());
     }
 
     return result;
@@ -305,35 +326,40 @@ public final class Log {
    */
   LongKeyMap<Integer> getReadsForStore(Store store, boolean includeModified) {
     LongKeyMap<Integer> result = new LongKeyHashMap<Integer>();
-    LongKeyMap<ReadMapEntry> submap = reads.get(store);
+    LongKeyMap<ReadMap.Entry> submap = reads.get(store);
     if (submap == null) return result;
 
-    for (LongKeyMap.Entry<ReadMapEntry> entry : submap.entrySet()) {
-      result.put(entry.getKey(), entry.getValue().versionNumber);
+    for (LongKeyMap.Entry<ReadMap.Entry> entry : submap.entrySet()) {
+      result.put(entry.getKey(), entry.getValue().getVersionNumber());
     }
 
     if (parent != null) {
-      for (ReadMapEntry entry : readsReadByParent) {
-        if (store.equals(entry.obj.store)) {
-          result.put(entry.obj.onum, entry.versionNumber);
+      for (ReadMap.Entry entry : readsReadByParent) {
+        FabricSoftRef entryRef = entry.getRef();
+        if (store.equals(entryRef.store)) {
+          result.put(entryRef.onum, entry.getVersionNumber());
         }
       }
     }
 
-    if (store.isLocalStore()) {
-      Iterable<_Impl> writesToExclude =
-          includeModified ? Collections.<_Impl> emptyList() : localStoreWrites;
-      @SuppressWarnings("unchecked")
-      Iterable<_Impl> chain = SysUtil.chain(writesToExclude, localStoreCreates);
-      for (_Impl write : chain)
-        result.remove(write.$getOnum());
-    } else {
-      Iterable<_Impl> writesToExclude =
-          includeModified ? Collections.<_Impl> emptyList() : writes;
-      @SuppressWarnings("unchecked")
-      Iterable<_Impl> chain = SysUtil.chain(writesToExclude, creates);
-      for (_Impl write : chain)
-        if (write.$getStore() == store) result.remove(write.$getOnum());
+    Log curLog = this;
+    while (curLog != null) {
+      if (store.isLocalStore()) {
+        Iterable<_Impl> writesToExclude =
+            includeModified ? Collections.<_Impl> emptyList()
+                : curLog.localStoreWrites;
+        Iterable<_Impl> chain =
+            SysUtil.chain(writesToExclude, curLog.localStoreCreates);
+        for (_Impl write : chain)
+          result.remove(write.$getOnum());
+      } else {
+        Iterable<_Impl> writesToExclude =
+            includeModified ? Collections.<_Impl> emptyList() : curLog.writes;
+        Iterable<_Impl> chain = SysUtil.chain(writesToExclude, curLog.creates);
+        for (_Impl write : chain)
+          if (write.$getStore() == store) result.remove(write.$getOnum());
+      }
+      curLog = curLog.parent;
     }
 
     return result;
@@ -399,14 +425,19 @@ public final class Log {
       Log log = toFlag.remove();
       synchronized (log) {
         if (log.child != null) toFlag.add(log.child);
-        if (log.retrySignal == null || log.retrySignal.isDescendantOf(tid))
+        if (log.retrySignal == null || log.retrySignal.isDescendantOf(tid)) {
           log.retrySignal = tid;
-        // XXX This was here to unblock a thread that may have been waiting on a
-        // XXX lock. Commented out because it was causing a bunch of
-        // XXX InterruptedExceptions and ClosedByInterruptExceptions that
-        // XXX weren't being handled properly.
+          // XXX This was here to unblock a thread that may have been waiting on
+          // XXX a lock. Commented out because it was causing a bunch of
+          // XXX InterruptedExceptions and ClosedByInterruptExceptions that
+          // XXX weren't being handled properly. This includes improper or
+          // XXX insufficient handling by Java code in the examples (e.g.,
+          // XXX Jetty).
+          // XXX Instead, when a thread is blocked waiting on an object lock, we
+          // XXX spin once a second to check the retry signal.
 
-        // log.thread.interrupt();
+          // log.thread.interrupt();
+        }
       }
     }
   }
@@ -417,17 +448,16 @@ public final class Log {
    */
   void abort() {
     // Release read locks.
-    for (LongKeyMap<ReadMapEntry> submap : reads) {
-      for (ReadMapEntry entry : submap.values()) {
+    for (LongKeyMap<ReadMap.Entry> submap : reads) {
+      for (ReadMap.Entry entry : submap.values()) {
         entry.releaseLock(this);
       }
     }
 
-    for (ReadMapEntry entry : readsReadByParent)
+    for (ReadMap.Entry entry : readsReadByParent)
       entry.releaseLock(this);
 
     // Roll back writes and release write locks.
-    @SuppressWarnings("unchecked")
     Iterable<_Impl> chain = SysUtil.chain(writes, localStoreWrites);
     for (_Impl write : chain) {
       synchronized (write) {
@@ -484,13 +514,13 @@ public final class Log {
     }
 
     // Merge reads and transfer read locks.
-    for (LongKeyMap<ReadMapEntry> submap : reads) {
-      for (ReadMapEntry entry : submap.values()) {
+    for (LongKeyMap<ReadMap.Entry> submap : reads) {
+      for (ReadMap.Entry entry : submap.values()) {
         parent.transferReadLock(this, entry);
       }
     }
 
-    for (ReadMapEntry entry : readsReadByParent) {
+    for (ReadMap.Entry entry : readsReadByParent) {
       entry.releaseLock(this);
     }
 
@@ -588,8 +618,8 @@ public final class Log {
    */
   void commitTopLevel() {
     // Release read locks.
-    for (LongKeyMap<ReadMapEntry> submap : reads) {
-      for (ReadMapEntry entry : submap.values()) {
+    for (LongKeyMap<ReadMap.Entry> submap : reads) {
+      for (ReadMap.Entry entry : submap.values()) {
         entry.releaseLock(this);
       }
     }
@@ -599,7 +629,6 @@ public final class Log {
       throw new InternalError("something was read by a non-existent parent");
 
     // Release write locks and ownerships; update version numbers.
-    @SuppressWarnings("unchecked")
     Iterable<_Impl> chain = SysUtil.chain(writes, localStoreWrites);
     for (_Impl obj : chain) {
       if (!obj.$isOwned) {
@@ -613,7 +642,7 @@ public final class Log {
         obj.$writeLockHolder = null;
         obj.$writeLockStackTrace = null;
         obj.$version++;
-        obj.$readMapEntry.versionNumber++;
+        obj.$readMapEntry.incrementVersion();
         obj.$isOwned = false;
 
         // Discard one layer of history.
@@ -625,7 +654,6 @@ public final class Log {
     }
 
     // Release write locks on created objects and set version numbers.
-    @SuppressWarnings("unchecked")
     Iterable<_Impl> chain2 = SysUtil.chain(creates, localStoreCreates);
     for (_Impl obj : chain2) {
       if (!obj.$isOwned) {
@@ -638,7 +666,7 @@ public final class Log {
       obj.$writeLockHolder = null;
       obj.$writeLockStackTrace = null;
       obj.$version = 1;
-      obj.$readMapEntry.versionNumber = 1;
+      obj.$readMapEntry.incrementVersion();
       obj.$isOwned = false;
     }
 
@@ -649,32 +677,20 @@ public final class Log {
   /**
    * Transfers a read lock from a child transaction.
    */
-  private void transferReadLock(Log child, ReadMapEntry readMapEntry) {
+  private void transferReadLock(Log child, ReadMap.Entry readMapEntry) {
     // If we already have a read lock, return; otherwise, register a read lock.
-    boolean lockedByAncestor = false;
-    synchronized (readMapEntry) {
-      // Release child's read lock.
-      readMapEntry.readLocks.remove(child);
-
-      // Scan the list for an existing read lock. At the same time, check if
-      // any of our ancestors already has a read lock.
-      for (Log cur : readMapEntry.readLocks) {
-        if (cur == this) {
-          // We already have a lock; nothing to do.
-          return;
-        }
-
-        if (!lockedByAncestor && isDescendantOf(cur)) lockedByAncestor = true;
-      }
-
-      readMapEntry.readLocks.add(this);
+    Boolean lockedByAncestor = readMapEntry.transferLockToParent(child);
+    if (lockedByAncestor == null) {
+      // We already had a lock; nothing to do.
+      return;
     }
 
     // Only record the read in this transaction if none of our ancestors have
     // read this object.
     if (!lockedByAncestor) {
+      FabricSoftRef ref = readMapEntry.getRef();
       synchronized (reads) {
-        reads.put(readMapEntry.obj.store, readMapEntry.obj.onum, readMapEntry);
+        reads.put(ref.store, ref.onum, readMapEntry);
       }
     } else {
       readsReadByParent.add(readMapEntry);
@@ -690,21 +706,27 @@ public final class Log {
   void acquireReadLock(_Impl obj) {
     // If we already have a read lock, return; otherwise, register a read
     // lock.
-    ReadMapEntry readMapEntry = obj.$readMapEntry;
+    ReadMap.Entry readMapEntry = obj.$readMapEntry;
     boolean lockedByAncestor = false;
     synchronized (readMapEntry) {
-      // Scan the list for an existing read lock. At the same time, check if
-      // any of our ancestors already has a read lock.
-      for (Log cur : readMapEntry.readLocks) {
-        if (cur == this) {
-          // We already have a lock; nothing to do.
-          return;
-        }
-
-        if (!lockedByAncestor && isDescendantOf(cur)) lockedByAncestor = true;
+      Set<Log> readers = readMapEntry.getReaders();
+      if (readers.contains(this)) {
+        // We already have a lock; nothing to do.
+        return;
       }
 
-      readMapEntry.readLocks.add(this);
+      // Check if any of our ancestors already has a read lock.
+      Log curAncestor = parent;
+      while (curAncestor != null) {
+        if (readers.contains(curAncestor)) {
+          lockedByAncestor = true;
+          break;
+        }
+
+        curAncestor = curAncestor.parent;
+      }
+
+      readMapEntry.addLock(this);
     }
 
     if (obj.$writer != this) {
@@ -738,29 +760,42 @@ public final class Log {
     return child;
   }
 
-  void removePromisedReads(long commitTime) {
-    // Generics. Ugh.
-
-    Iterator<LongKeyMap<ReadMapEntry>> outer = reads.iterator();
-    while (outer.hasNext()) {
-      Collection<ReadMapEntry> values = outer.next().values();
-
-      Iterator<ReadMapEntry> inner = values.iterator();
-      while (inner.hasNext()) {
-        ReadMapEntry entry = inner.next();
-
-        if (entry.promise > commitTime) {
-          entry.releaseLock(this);
-          inner.remove();
-        }
-      }
-
-      if (values.isEmpty()) outer.remove();
+  /**
+   * Changes the waitsFor set to a singleton set containing the given log.
+   */
+  public void setWaitsFor(Log waitsFor) {
+    synchronized (this.waitsFor) {
+      this.waitsFor.clear();
+      this.waitsFor.add(waitsFor);
     }
+  }
 
-    // sanity check
-    if (!readsReadByParent.isEmpty())
-      throw new InternalError("something was read by a non-existent parent");
+  /**
+   * Changes the waitsFor set to contain exactly the elements of the given set.
+   */
+  public void setWaitsFor(Set<Log> waitsFor) {
+    synchronized (this.waitsFor) {
+      this.waitsFor.clear();
+      this.waitsFor.addAll(waitsFor);
+    }
+  }
+
+  /**
+   * Empties the waitsFor set.
+   */
+  public void clearWaitsFor() {
+    synchronized (this.waitsFor) {
+      this.waitsFor.clear();
+    }
+  }
+
+  /**
+   * Returns a copy of the waitsFor set.
+   */
+  public Set<Log> getWaitsFor() {
+    synchronized (this.waitsFor) {
+      return new HashSet<Log>(this.waitsFor);
+    }
   }
 
   /**
@@ -772,7 +807,7 @@ public final class Log {
    */
   @Deprecated
   public void renumberObject(Store store, long onum, long newOnum) {
-    ReadMapEntry entry = reads.remove(store, onum);
+    ReadMap.Entry entry = reads.remove(store, onum);
     if (entry != null) {
       reads.put(store, newOnum, entry);
     }

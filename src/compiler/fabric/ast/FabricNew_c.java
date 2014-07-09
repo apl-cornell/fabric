@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -20,6 +20,7 @@ import java.util.List;
 import jif.ast.JifNew_c;
 import polyglot.ast.ClassBody;
 import polyglot.ast.Expr;
+import polyglot.ast.Ext;
 import polyglot.ast.Term;
 import polyglot.ast.Term_c;
 import polyglot.ast.TypeNode;
@@ -28,11 +29,19 @@ import polyglot.visit.CFGBuilder;
 import fabric.extension.FabricExt;
 import fabric.extension.LocatedExt_c;
 
+//XXX Should be replaced with extension
+@Deprecated
 public class FabricNew_c extends JifNew_c {
 
-  public FabricNew_c(Position pos, TypeNode tn, List<Expr> arguments,
-      ClassBody body) {
-    super(pos, tn, arguments, body);
+  @Deprecated
+  public FabricNew_c(Position pos, Expr outer, TypeNode tn,
+      List<Expr> arguments, ClassBody body) {
+    this(pos, outer, tn, arguments, body, null);
+  }
+
+  public FabricNew_c(Position pos, Expr outer, TypeNode tn,
+      List<Expr> arguments, ClassBody body, Ext ext) {
+    super(pos, outer, tn, arguments, body, ext);
   }
 
   @Override
@@ -40,10 +49,10 @@ public class FabricNew_c extends JifNew_c {
     FabricExt fabExt = FabricUtil.fabricExt(this);
     Expr location = ((LocatedExt_c) fabExt).location();
     if (qualifier != null) {
-      v.visitCFG(qualifier, tn, ENTRY);
+      v.visitCFG(qualifier, objectType, ENTRY);
     }
 
-    Term last = tn;
+    Term last = objectType;
     // if (label != null) {
     // v.visitCFG(last, label, ENTRY);
     // last = label;

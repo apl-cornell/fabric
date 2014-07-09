@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -17,17 +17,18 @@ package util;
 
 public class Meet extends AbstractPrincipal {
 
-  public native
+  public
   Meet
   (
     Store     {this} store,
     Principal {this} left,
     Principal {this} right
   )
-  where
-    store actsfor (left,right);
+  where store actsfor (left,right) {
+    super(null);
+  }
 
-  public native
+  public
   Meet
   (
     Store     {this} store,
@@ -35,8 +36,9 @@ public class Meet extends AbstractPrincipal {
     Principal {this} left,
     Principal {this} right
   )
-  where
-    store actsfor (left,right);
+  where store actsfor (left,right) {
+    super(name);
+  }
 
   //////////////////////////////////////////////////////////////////////////////
   // Principal methods                                                        //
@@ -53,7 +55,7 @@ public class Meet extends AbstractPrincipal {
   );
 
   public native
-  ActsForProof[{s→}] {this; p; this←; p←;s}
+  ActsForProof {this; p; this←; p←;s}
   findProofUpto
   {          // side effects:
     _→;this← // TODO

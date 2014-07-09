@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -35,8 +35,8 @@ public class Document {
     this.id = db.newId();
     db.documentsById.put(new Integer(id()), this);
 
-    // TODO: generate different strings, and index
-    this.text = new char[size];
+	 this.title = db.randomString(16);
+	 this.text = db.randomChars(size);
   }
 
   public void setTitle(String title) {

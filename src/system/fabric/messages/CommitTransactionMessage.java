@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -19,8 +19,9 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import fabric.lang.security.Principal;
+import fabric.common.net.RemoteIdentity;
 import fabric.worker.TransactionCommitFailedException;
+import fabric.worker.remote.RemoteWorker;
 
 public class CommitTransactionMessage
     extends
@@ -49,9 +50,9 @@ public class CommitTransactionMessage
   // ////////////////////////////////////////////////////////////////////////////
 
   @Override
-  public Response dispatch(Principal p, MessageHandler h)
+  public Response dispatch(RemoteIdentity<RemoteWorker> client, MessageHandler h)
       throws TransactionCommitFailedException {
-    return h.handle(p, this);
+    return h.handle(client, this);
   }
 
   // ////////////////////////////////////////////////////////////////////////////

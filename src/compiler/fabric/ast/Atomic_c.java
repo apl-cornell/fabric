@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -19,20 +19,22 @@ import java.util.ArrayList;
 import java.util.List;
 
 import polyglot.ast.Block_c;
+import polyglot.ast.Ext;
 import polyglot.ast.Stmt;
 import polyglot.util.Position;
 import polyglot.visit.CFGBuilder;
 import fabric.visit.AbortRetryCollector;
 
+//XXX Should be replaced with extension
+@Deprecated
 public class Atomic_c extends Block_c implements Atomic {
-
+  @Deprecated
   public Atomic_c(Position pos, List<Stmt> statements) {
-    super(pos, statements);
+    this(pos, statements, null);
   }
 
-  @Override
-  public List<Stmt> statements() {
-    return super.statements();
+  public Atomic_c(Position pos, List<Stmt> statements, Ext ext) {
+    super(pos, statements, ext);
   }
 
   @Override

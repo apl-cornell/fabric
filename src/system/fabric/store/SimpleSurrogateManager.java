@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -17,16 +17,17 @@ package fabric.store;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 
 import fabric.common.ONumConstants;
 import fabric.common.RefTypeEnum;
 import fabric.common.SerializedObject;
 import fabric.common.SysUtil;
 import fabric.common.util.ComparablePair;
+import fabric.common.util.Pair;
 
 /**
  * This is a simple surrogate policy. It keeps no state between requests, and
@@ -42,11 +43,10 @@ public class SimpleSurrogateManager implements SurrogateManager {
 
   @Override
   public void createSurrogates(PrepareRequest req) {
-    Map<ComparablePair<String, Long>, Long> cache =
-        new TreeMap<ComparablePair<String, Long>, Long>();
+    // Maps remote refs -> surrogate onums.
+    Map<Pair<String, Long>, Long> cache = new HashMap<>();
     Collection<SerializedObject> surrogates = new ArrayList<SerializedObject>();
 
-    @SuppressWarnings("unchecked")
     Iterable<SerializedObject> chain = SysUtil.chain(req.creates, req.writes);
     for (SerializedObject obj : chain) {
       Iterator<Long> intraStore = obj.getIntraStoreRefIterator();
@@ -74,19 +74,13 @@ public class SimpleSurrogateManager implements SurrogateManager {
       }
 
       long accessPolicyOnum;
-      if (obj.updateLabelRefIsInterStore()) {
-        ComparablePair<String, Long> ref = obj.getInterStoreUpdateLabelRef();
-        Long cachedOnum = cache.get(ref);
+      if (obj.accessPolicyRefIsInterStore()) {
+        // Add a surrogate reference to the access policy.
+        ComparablePair<String, Long> ref = obj.getInterStoreAccessPolicyRef();
 
-        if (cachedOnum == null) {
-          // Add a surrogate reference to the access policy.
-          accessPolicyOnum = tm.newOnums(1)[0];
-          surrogates.add(new SerializedObject(accessPolicyOnum,
-              ONumConstants.PUBLIC_READONLY_LABEL, accessPolicyOnum, ref));
-          cache.put(ref, accessPolicyOnum);
-        } else {
-          accessPolicyOnum = cachedOnum;
-        }
+        accessPolicyOnum = tm.newOnums(1)[0];
+        surrogates.add(new SerializedObject(accessPolicyOnum,
+            ONumConstants.PUBLIC_READONLY_LABEL, accessPolicyOnum, ref));
         hadRemotes = true;
         newrefs.add(accessPolicyOnum);
       } else {

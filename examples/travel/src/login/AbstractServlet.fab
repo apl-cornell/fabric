@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -15,13 +15,13 @@
  */
 package login;
 
-import sif.servlet.Servlet;
+import sif.servlet.HTMLServlet;
 import sif.servlet.Request;
 
 import javax.servlet.ServletException;
 
 
-public abstract class AbstractServlet[principal servP] extends Servlet[servP] {
+public abstract class AbstractServlet[principal servP] extends HTMLAuthServlet[servP] {
     
     public AbstractServlet() throws ServletException {
         

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.logging.Level;
 
+import fabric.common.Logging;
 import fabric.common.Version;
 import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.TerminationException;
@@ -194,7 +195,7 @@ public class Node {
           t.join();
         }
       } catch (InterruptedException e) {
-        e.printStackTrace();
+        Logging.logIgnoredInterruptedException(e);
       } finally {
         worker.shutdown();
       }

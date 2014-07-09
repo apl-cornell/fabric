@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -339,7 +339,7 @@ public class ArrayList[label L] extends AbstractList[L] implements List[L], Rand
     int _index = index;
     checkBoundInclusive(_index);
     final Store localStore = worker$.getLocalStore();
-    if (L <= new label {*<-localStore} && new label {*->localStore} <= L) {
+    if (new label {*<-localStore} <= L  && L <= new label {*->localStore}) {
       Iterator itr = iterator(localStore);
       int csize = c.size();
   
@@ -349,7 +349,7 @@ public class ArrayList[label L] extends AbstractList[L] implements List[L], Rand
       int end = _index + csize;
       if (size > 0 && _index != size)
         Arrays.arraycopy(L, data, _index, data, end, size - _index);
-      size += csize;
+      size = size + csize;
       for ( ; _index < end; _index++)
         data[_index] = itr.next();
       return csize > 0;
@@ -374,7 +374,7 @@ public class ArrayList[label L] extends AbstractList[L] implements List[L], Rand
       {
         modCount++;
         Arrays.arraycopy(L, data, toIndex, data, fromIndex, size - toIndex);
-        size -= change;
+        size = size - change;
       }
     else if (change < 0)
       throw new IndexOutOfBoundsException();
@@ -434,7 +434,7 @@ public class ArrayList[label L] extends AbstractList[L] implements List[L], Rand
     for (j = i++; i < size; i++)
       if (! c.contains(data[i]))
         data[j++] = data[i];
-    size -= i - j;
+    size = size - (i - j);
     return true;
   }
 
@@ -461,7 +461,7 @@ public class ArrayList[label L] extends AbstractList[L] implements List[L], Rand
     for (j = i++; i < size; i++)
       if (c.contains(data[i]))
         data[j++] = data[i];
-    size -= i - j;
+    size = size - (i - j);
     return true;
   }
 

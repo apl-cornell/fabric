@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -24,7 +24,6 @@ import polyglot.util.Position;
 import codebases.types.CodebaseTypeSystem;
 
 public interface FabILTypeSystem extends TypeSystem, CodebaseTypeSystem {
-
   // TODO: fabric.worker or fabric.lang?
   /**
    * return the ClassType corresponding to

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -59,7 +59,7 @@ abstract public class AbstractAction[principal servP] extends Action[servP] {
     // find the default value if there is one stored in the request
     public static String{*dataLbl;*lbl;req.session!:} defaultValue{*lbl}(label{*lbl} lbl, 
                                                        label{*lbl} dataLbl, 
-                                                       Request[servP]{*lbl} req, 
+                                                       HTMLRequest[servP]{*lbl} req, 
                                                        String{*dataLbl;*lbl;req.session!:} dataValue, 
                                                        Input[servP]{*dataLbl;*lbl;req.session!:} inp) 
     {

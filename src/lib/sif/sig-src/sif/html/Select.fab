@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -31,5 +31,9 @@ public final class Select[principal servletP, label L, label E] extends InputNod
     public Select{L}(Servlet[servletP]{this} s, label{L} inputLabel, int{L} selected_, String{L}[]{L} options_) 
     where {L;E} <= {*inputLabel} {
         super(s, inputLabel);
+    }
+    public Select(String{L} name, int{L} selected_, String{L}[]{L} options_) 
+    {
+        super(name);
     }
 }

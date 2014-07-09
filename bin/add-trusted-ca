@@ -20,6 +20,10 @@ Options:
       the password for the keystore. This must be at least six characters long.
       If this is not provided on the command line, the user will be prompted
       for the password.
+
+  --no-prompt
+      If specified, the given certificate will be trusted without prompting the
+      user.
 EOF
   exit 1
 }
@@ -51,6 +55,10 @@ while true; do
       PASSWD="$1"
       shift || noArg pass
       ;;
+    --no-prompt)
+      shift
+      NO_PROMPT_OPT="-noprompt"
+      ;;
     -h|--help|-\?)
       usage
       ;;
@@ -72,9 +80,9 @@ ALIAS="$(openssl x509 -in "${CERT}" -subject_hash)"
 
 if [[ -z "${PASSWD}" ]] ; then
   keytool -importcert -alias "${ALIAS}" -file "${CERT}" \
-    -keystore "${KEYSTORE}"
+    -keystore "${KEYSTORE}" ${NO_PROMPT_OPT}
 else
   keytool -importcert -alias "${ALIAS}" -file "${CERT}" \
-    -keystore "${KEYSTORE}" -storepass "${PASSWD}"
+    -keystore "${KEYSTORE}" -storepass "${PASSWD}" ${NO_PROMPT_OPT}
 fi
 

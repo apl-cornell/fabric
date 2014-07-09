@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -22,6 +22,12 @@ import fabric.types.FabricContext;
 import fabric.types.FabricTypeSystem;
 
 public class NewExt_c extends LocatedExt_c implements FabricExt {
+
+  @Override
+  protected boolean requiresLocation(FabricTypeSystem ts) {
+    New n = (New) node();
+    return ts.isFabricClass(n.type());
+  }
 
   @Override
   protected Label referenceLabel(FabricContext ctx) {

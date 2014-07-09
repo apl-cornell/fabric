@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -2161,7 +2161,7 @@ public class Arrays {
     // better than I can, and if I try it will make it more confusing for
     // the JIT. First presort the array in chunks of length 6 with insertion
     // sort. A mergesort would give too much overhead for this length.
-    for (int chunk = _fromIndex; chunk < _toIndex; chunk += 6)
+    for (int chunk = _fromIndex; chunk < _toIndex; chunk = chunk + 6)
       {
         int end = Math.min(chunk + 6, _toIndex);
         for (int i = chunk + 1; i < end; i++)
@@ -2198,7 +2198,7 @@ public class Arrays {
     // The merges are done in this loop
     for (int size = 6; size < len; size <<= 1)
       {
-        for (int start = _fromIndex; start < _toIndex; start += size << 1)
+        for (int start = _fromIndex; start < _toIndex; start = start + (size << 1))
           {
             // mid is the start of the second sublist;
             // end the start of the next sublist (or end of array).
@@ -2253,8 +2253,8 @@ public class Arrays {
         t = src;
         src = dest;
         dest = t;
-        _fromIndex += srcDestDiff;
-        _toIndex += srcDestDiff;
+        _fromIndex = _fromIndex + srcDestDiff;
+        _toIndex = _toIndex + srcDestDiff;
         srcDestDiff = -srcDestDiff;
       }
 

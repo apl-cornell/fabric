@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -15,17 +15,22 @@
  */
 package fabric.dissemination;
 
+import static fabric.common.Logging.WORKER_LOGGER;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Level;
 
+import fabric.common.Logging;
 import fabric.common.exceptions.AccessException;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
 import fabric.worker.RemoteStore;
+import fabric.worker.Worker;
 
 /**
  * The cache object used by the disseminator to store globs. Essentially a
@@ -33,11 +38,44 @@ import fabric.worker.RemoteStore;
  * when needed.
  */
 public class Cache {
+  public static class Entry {
+    public final ObjectGlob objectGlob;
+
+    private int level;
+    private int frequency;
+
+    private Entry(ObjectGlob glob) {
+      this.objectGlob = glob;
+    }
+
+    public boolean isOlderThan(ObjectGlob g) {
+      return objectGlob.isOlderThan(g);
+    }
+
+    /**
+     * @param g
+     * @return
+     */
+    public Entry update(ObjectGlob g) {
+      Entry result = new Entry(g);
+      result.level = this.level;
+      result.frequency = this.frequency;
+      return result;
+    }
+
+    public int level() {
+      return level;
+    }
+
+    public void touch() {
+      frequency++;
+    }
+  }
 
   /**
    * Cache of globs, indexed by the oid of the glob's head object.
    */
-  private final fabric.common.util.Cache<Pair<RemoteStore, Long>, Glob> map;
+  private final fabric.common.util.Cache<Pair<RemoteStore, Long>, Entry> map;
 
   /**
    * The set of fetch locks. Used to prevent threads from concurrently
@@ -47,11 +85,11 @@ public class Cache {
 
   private class FetchLock {
     private boolean ready = false;
-    private Glob glob = null;
+    private Entry result = null;
   }
 
   public Cache() {
-    this.map = new fabric.common.util.Cache<Pair<RemoteStore, Long>, Glob>();
+    this.map = new fabric.common.util.Cache<>();
     this.fetchLocks = new OidKeyHashMap<Cache.FetchLock>();
   }
 
@@ -64,7 +102,7 @@ public class Cache {
    *          the onum of the object.
    * @return the glob, if it is in the cache; null otherwise.
    */
-  public Glob get(RemoteStore store, long onum) {
+  public Entry get(RemoteStore store, long onum) {
     return get(store, onum, false);
   }
 
@@ -81,13 +119,11 @@ public class Cache {
    * @return the glob, or null if fetch is false and glob does not exists in
    *         cache.
    */
-  public Glob get(RemoteStore store, long onum, boolean fetch) {
+  public Entry get(RemoteStore store, long onum, boolean fetch) {
     Pair<RemoteStore, Long> key = new Pair<RemoteStore, Long>(store, onum);
 
-    synchronized (map) {
-      Glob g = map.get(key);
-      if (g != null || !fetch) return g;
-    }
+    Entry entry = map.get(key);
+    if (entry != null || !fetch) return entry;
 
     // Need to fetch. Check the object table in case some other thread fetched
     // the object while we weren't looking. Use fetchLocks as a mutex to
@@ -96,7 +132,7 @@ public class Cache {
     FetchLock fetchLock;
     boolean needToFetch = false;
     synchronized (fetchLocks) {
-      Glob result = map.get(key);
+      Entry result = map.get(key);
       if (result != null) return result;
 
       // Object not in cache. Get/create a mutex for fetching the object.
@@ -111,7 +147,7 @@ public class Cache {
     synchronized (fetchLock) {
       if (needToFetch) {
         // We are responsible for fetching the object.
-        fetchLock.glob = fetch(key);
+        fetchLock.result = fetch(key);
         fetchLock.ready = true;
 
         // Object now cached. Remove our mutex from fetchLocks.
@@ -127,39 +163,36 @@ public class Cache {
           try {
             fetchLock.wait();
           } catch (InterruptedException e) {
-            e.printStackTrace();
+            Logging.logIgnoredInterruptedException(e);
           }
         }
       }
 
-      return fetchLock.glob;
+      return fetchLock.result;
     }
   }
 
   /**
    * Fetches a glob from the store and caches it.
    */
-  private Glob fetch(Pair<RemoteStore, Long> oid) {
-    Glob g = null;
+  private Entry fetch(Pair<RemoteStore, Long> oid) {
+    ObjectGlob g = null;
     RemoteStore store = oid.first;
     long onum = oid.second;
 
     try {
       g = store.readEncryptedObjectFromStore(onum);
     } catch (AccessException e) {
+      Logging.log(WORKER_LOGGER, Level.WARNING,
+          "Access exception accessing fab://{0}/{1}", oid.first, oid.second);
     }
 
-    if (g != null) {
-      Glob old = get(store, onum);
-
-      if (old == null || old.isOlderThan(g)) {
-        map.put(oid, g);
-      } else {
-        g = old;
-      }
+    if (g == null) {
+      // TODO: Make the worker more robust against this. NPEs will arise when
+      // this return happens.
+      return null;
     }
-
-    return g;
+    return put(oid, g, false);
   }
 
   /**
@@ -172,37 +205,67 @@ public class Cache {
    * @param g
    *          the glob.
    */
-  public void put(RemoteStore store, long onum, Glob g) {
+  public void put(RemoteStore store, long onum, ObjectGlob g) {
     Pair<RemoteStore, Long> key = new Pair<RemoteStore, Long>(store, onum);
+    put(key, g, false);
+  }
 
-    synchronized (map) {
-      Glob old = get(store, onum);
+  /**
+   * Incorporates the given glob into the cache.
+   * 
+   * @return the resulting cache entry.
+   */
+  private Entry put(Pair<RemoteStore, Long> oid, ObjectGlob g,
+      boolean replaceOnly) {
+    RemoteStore store = oid.first;
+    long onum = oid.second;
 
-      if (old == null || old.isOlderThan(g)) {
-        map.put(key, g);
+    while (true) {
+      Entry currentEntry = get(store, onum);
+
+      if (currentEntry == null) {
+        // No existing entry.
+        if (replaceOnly) return null;
+
+        // Add a new entry.
+        Entry newEntry = new Entry(g);
+        if (map.putIfAbsent(oid, newEntry) == null) return newEntry;
+
+        // An entry was added while we weren't looking. Try again.
+        continue;
       }
+
+      // See if the existing entry is older than what we got.
+      if (currentEntry.isOlderThan(g)) {
+        // Existing entry is older, so replace it.
+        Entry newEntry = currentEntry.update(g);
+        if (map.replace(oid, currentEntry, newEntry)) {
+          return newEntry;
+        }
+
+        // Entry was replaced while we weren't looking. Try again.
+        continue;
+      }
+
+      return currentEntry;
     }
   }
 
   /**
-   * Updates a cache entry with the given glob. If the cache has no entry for
-   * the given oid, then nothing is changed.
+   * Updates the dissemination and worker cache with the given object glob. If
+   * the caches do not have entries for the given glob, then nothing is changed.
    * 
-   * @return true iff there was a cache entry for the given oid.
+   * @return true iff either of the caches was changed.
    */
-  public boolean updateEntry(RemoteStore store, long onum, Glob g) {
+  public boolean updateEntry(RemoteStore store, long onum, ObjectGlob g) {
+    // Update the local worker's cache.
+    // XXX What happens if the worker isn't trusted to decrypt the glob?
+    boolean workerCacheUpdated =
+        Worker.getWorker().updateCache(store, g.decrypt());
+
     Pair<RemoteStore, Long> key = new Pair<RemoteStore, Long>(store, onum);
 
-    synchronized (map) {
-      Glob old = get(store, onum);
-      if (old == null) return false;
-
-      if (old.isOlderThan(g)) {
-        map.put(key, g);
-      }
-    }
-
-    return true;
+    return put(key, g, true) != null || workerCacheUpdated;
   }
 
   /**
@@ -216,9 +279,9 @@ public class Cache {
         new HashSet<Pair<Pair<RemoteStore, Long>, Long>>();
 
     for (Pair<RemoteStore, Long> key : map.keys()) {
-      Glob glob = map.get(key);
+      Entry glob = map.get(key);
       if (glob != null)
-        result.add(new Pair<Pair<RemoteStore, Long>, Long>(key, glob
+        result.add(new Pair<Pair<RemoteStore, Long>, Long>(key, glob.objectGlob
             .getTimestamp()));
     }
 
@@ -245,22 +308,22 @@ public class Cache {
         @Override
         public int compare(Pair<Pair<RemoteStore, Long>, Long> o1,
             Pair<Pair<RemoteStore, Long>, Long> o2) {
-          Glob g1 = map.get(o1.first);
-          Glob g2 = map.get(o2.first);
+          Entry entry1 = map.get(o1.first);
+          Entry entry2 = map.get(o2.first);
 
-          if (g1 == g2) {
+          if (entry1 == entry2) {
             return 0;
           }
 
-          if (g1 == null) {
+          if (entry1 == null) {
             return 1;
           }
 
-          if (g2 == null) {
+          if (entry2 == null) {
             return -1;
           }
 
-          return g2.frequency() - g1.frequency();
+          return entry2.frequency - entry1.frequency;
         }
       };
 

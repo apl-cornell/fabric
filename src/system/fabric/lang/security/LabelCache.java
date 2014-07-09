@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import fabric.common.Logging;
 import fabric.common.ONumConstants;
 import fabric.common.util.Pair;
 import fabric.common.util.Triple;
@@ -167,14 +168,14 @@ public class LabelCache {
       final Key key;
 
       private EntrySoftRef(Cache<K1, K2, P> cache, Key key, P value) {
-        super(value);
+        super(value, queue);
         this.cache = cache;
         this.key = key;
       }
     }
 
-    private static final ReferenceQueue<EntrySoftRef<?, ?, ?>> queue =
-        new ReferenceQueue<EntrySoftRef<?, ?, ?>>();
+    private static final ReferenceQueue<Object> queue =
+        new ReferenceQueue<Object>();
 
     static {
       new Collector().start();
@@ -225,6 +226,7 @@ public class LabelCache {
               }
             }
           } catch (InterruptedException e) {
+            Logging.logIgnoredInterruptedException(e);
           }
         }
       }

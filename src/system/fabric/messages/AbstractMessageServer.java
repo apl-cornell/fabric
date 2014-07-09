@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -15,16 +15,23 @@
  */
 package fabric.messages;
 
+import static fabric.common.Logging.NETWORK_CONNECTION_LOGGER;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.EOFException;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import fabric.common.Logging;
 import fabric.common.Threading;
 import fabric.common.exceptions.FabricException;
+import fabric.common.exceptions.InternalError;
+import fabric.common.net.RemoteIdentity;
 import fabric.common.net.SubServerSocket;
 import fabric.common.net.SubSocket;
+import fabric.worker.remote.RemoteWorker;
 
 /**
  * Abstracts a server loop that listens for and processes messages from the
@@ -59,7 +66,7 @@ public abstract class AbstractMessageServer implements Runnable, MessageHandler 
       // The main server loop.
       while (true) {
         // Accept a connection and handle it.
-        final SubSocket connection = server.accept();
+        final SubSocket<RemoteWorker> connection = server.accept();
 
         Threading.getPool()
             .submit(
@@ -67,6 +74,15 @@ public abstract class AbstractMessageServer implements Runnable, MessageHandler 
                     "Fabric network message handler thread") {
                   @Override
                   protected void runImpl() {
+                    RemoteIdentity<RemoteWorker> client;
+                    final int streamID;
+                    try {
+                      client = connection.getRemoteIdentity();
+                      streamID = connection.getStreamID();
+                    } catch (IOException e) {
+                      throw new InternalError(e);
+                    }
+
                     try {
                       // Handle the connection.
                       DataInputStream in =
@@ -78,7 +94,7 @@ public abstract class AbstractMessageServer implements Runnable, MessageHandler 
                         Message<?, ?> message = Message.receive(in);
                         try {
                           Message.Response response =
-                              message.dispatch(connection.getPrincipal(),
+                              message.dispatch(client,
                                   AbstractMessageServer.this);
                           message.respond(out, response);
                         } catch (FabricException e) {
@@ -87,13 +103,25 @@ public abstract class AbstractMessageServer implements Runnable, MessageHandler 
 
                         out.flush();
                       }
+                    } catch (EOFException e) {
+                      try {
+                        connection.close();
+                      } catch (IOException e1) {
+                      }
+                      Logging.log(NETWORK_CONNECTION_LOGGER, Level.INFO,
+                          "Stream #{0} reset ({1})", streamID, client);
                     } catch (IOException e) {
                       try {
                         connection.close();
                       } catch (IOException e1) {
                       }
                       logger.log(Level.WARNING,
-                          "Network error while handling request", e);
+                          "Network error while handling request on stream #"
+                              + streamID, e);
+                    } catch (RuntimeException e) {
+                      logger.log(Level.SEVERE,
+                          "Message-handler thread for stream #" + streamID
+                              + " exited with exception: " + e.getMessage(), e);
                     }
                   }
                 });

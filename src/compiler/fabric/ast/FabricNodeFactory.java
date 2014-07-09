@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -38,6 +38,8 @@ import codebases.ast.CodebaseNodeFactory;
  * NodeFactory for fabric extension.
  */
 public interface FabricNodeFactory extends JifNodeFactory, CodebaseNodeFactory {
+  AccessPolicy AccessPolicy(Position pos, LabelNode ln);
+
   Atomic Atomic(Position pos, List<Stmt> statements);
 
   AmbNewFabricArray AmbNewFabricArray(Position pos, TypeNode base,

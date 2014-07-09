@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -15,19 +15,14 @@
  */
 package fabric.types;
 
-import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import jif.ast.LabelActsForLabelConstraintNode;
-import jif.ast.LabelActsForPrincipalConstraintNode;
-import jif.ast.LabelNode;
 import jif.translate.ConjunctivePrincipalToJavaExpr_c;
 import jif.translate.LabelToJavaExpr;
 import jif.translate.PrincipalToJavaExpr;
@@ -45,32 +40,42 @@ import jif.types.ParamInstance;
 import jif.types.Solver;
 import jif.types.hierarchy.LabelEnv;
 import jif.types.label.AccessPath;
+import jif.types.label.AccessPathThis;
 import jif.types.label.AccessPathUninterpreted;
 import jif.types.label.ArgLabel;
 import jif.types.label.ConfPolicy;
+import jif.types.label.ConfProjectionPolicy;
 import jif.types.label.ConfProjectionPolicy_c;
 import jif.types.label.IntegPolicy;
 import jif.types.label.IntegProjectionPolicy_c;
+import jif.types.label.JoinConfPolicy;
 import jif.types.label.JoinConfPolicy_c;
 import jif.types.label.JoinLabel;
 import jif.types.label.Label;
+import jif.types.label.MeetConfPolicy;
 import jif.types.label.MeetLabel;
 import jif.types.label.PairLabel;
+import jif.types.label.ParamLabel;
 import jif.types.label.ProviderLabel;
+import jif.types.label.ReaderPolicy;
 import jif.types.label.ThisLabel;
+import jif.types.principal.BottomPrincipal;
+import jif.types.principal.ConjunctivePrincipal;
+import jif.types.principal.DisjunctivePrincipal;
 import jif.types.principal.DynamicPrincipal;
 import jif.types.principal.ExternalPrincipal;
 import jif.types.principal.ExternalPrincipal_c;
+import jif.types.principal.ParamPrincipal;
 import jif.types.principal.Principal;
+import jif.types.principal.TopPrincipal;
 import polyglot.ast.Expr;
+import polyglot.ast.New;
 import polyglot.ext.param.types.Subst;
 import polyglot.frontend.ExtensionInfo;
 import polyglot.frontend.Source;
-import polyglot.main.Report;
 import polyglot.types.AccessControlResolver;
 import polyglot.types.CachingResolver;
 import polyglot.types.ClassType;
-import polyglot.types.Context;
 import polyglot.types.FieldInstance;
 import polyglot.types.Flags;
 import polyglot.types.ImportTable;
@@ -88,21 +93,23 @@ import polyglot.types.TypeObject;
 import polyglot.types.TypeSystem;
 import polyglot.types.reflect.ClassFile;
 import polyglot.types.reflect.ClassFileLazyClassInitializer;
-import polyglot.util.CollectionUtil;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
 import polyglot.util.StringUtil;
 import codebases.frontend.CodebaseSource;
 import codebases.types.CBClassContextResolver;
 import codebases.types.CBImportTable;
+import codebases.types.CBLazyClassInitializer;
 import codebases.types.CBPackage;
 import codebases.types.CBPackageContextResolver;
 import codebases.types.CBPackage_c;
 import codebases.types.CBPlaceHolder_c;
 import codebases.types.CodebaseResolver;
 import codebases.types.NamespaceResolver;
-import fabric.ast.FabricNodeFactory;
+import fabric.FabricOptions;
+import fabric.ast.FabricUtil;
 import fabric.ast.RemoteWorkerGetter;
+import fabric.extension.NewExt_c;
 import fabric.lang.Codebase;
 import fabric.lang.security.LabelUtil;
 import fabric.lang.security.NodePrincipal;
@@ -117,9 +124,6 @@ import fabric.worker.Worker;
 
 public class FabricTypeSystem_c extends JifTypeSystem_c implements
     FabricTypeSystem {
-  private static final Collection<String> TOPICS = CollectionUtil.list(
-      Report.types, Report.resolver);
-
   protected Map<URI, NamespaceResolver> namespaceResolvers;
   protected NamespaceResolver platformResolver;
   protected NamespaceResolver applicationResolver;
@@ -149,6 +153,11 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
   }
 
   @Override
+  public fabric.ExtensionInfo extensionInfo() {
+    return extInfo;
+  }
+
+  @Override
   public ClassType fatalException() {
     return load("fabric.common.exceptions.ApplicationError");
   }
@@ -161,20 +170,19 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
     this.loadedResolver = null;
     this.systemResolver = null;
     this.extInfo = (fabric.ExtensionInfo) super.extInfo;
-    try {
-      initResolvers();
-    } catch (IOException e) {
-      throw new SemanticException("Could not initialize resolvers", e);
-    }
+    initResolvers();
   }
 
-  protected void initResolvers() throws IOException {
+  protected void initResolvers() {
+    FabricOptions opt = extInfo.getOptions();
+    boolean loadRaw = opt.skipLabelChecking;
+
     namespaceResolvers = new HashMap<URI, NamespaceResolver>();
     platformResolver = namespaceResolver(extInfo.platformNamespace());
-    platformResolver.loadRawClasses(false);
+    platformResolver.loadRawClasses(loadRaw);
 
     applicationResolver = namespaceResolver(extInfo.localNamespace());
-    applicationResolver.loadRawClasses(false);
+    applicationResolver.loadRawClasses(loadRaw);
   }
 
   @Override
@@ -296,7 +304,22 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
   @Override
   public ParsedClassType createClassType(LazyClassInitializer init,
       Source fromSource) {
-    return new FabricParsedClassType_c(this, init, fromSource);
+    if (fromSource == null) {
+      if (extInfo.getJifOptions().skipLabelChecking)
+        // local raw class file.
+        return createClassType(init, fromSource, extInfo.localNamespace());
+      else throw new InternalCompilerError(
+          "Attempting to create class type for raw class!");
+    } else {
+      URI ns = ((CodebaseSource) fromSource).canonicalNamespace();
+      return createClassType(init, fromSource, ns);
+    }
+  }
+
+  @Override
+  public ParsedClassType createClassType(LazyClassInitializer init,
+      Source fromSource, URI ns) {
+    return new FabricParsedClassType_c(this, init, fromSource, ns);
   }
 
   @Override
@@ -358,10 +381,14 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
   }
 
   @Override
+  public AccessPath workerLocalAccessPath(Position pos) {
+    return new AccessPathLocalWorker(workerLocalInstance(), pos);
+  }
+
+  @Override
   public Principal storePrincipal(fabric.ast.Store store,
       FabricContext context, Position pos) throws SemanticException {
     AccessPath ap = exprToAccessPath(store, context);
-//    AccessPathStore storeap = new AccessPathStore(ap, Store(), pos);
     return dynamicPrincipal(pos, ap);
   }
 
@@ -383,6 +410,11 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
     if (e instanceof fabric.ast.Store) {
       fabric.ast.Store store = (fabric.ast.Store) e;
       return isFinalAccessExpr(store.expr());
+    } else if (e instanceof New) {
+      // treat New expressions as "constant" 
+      // this aids instantiation of Store
+      // principals in prodecure signatures.
+      return true;
     }
     return super.isFinalAccessExpr(e);
   }
@@ -393,9 +425,26 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
     if (e instanceof RemoteWorkerGetter) {
       throw new UnsupportedOperationException(
           "RemoteWorker access paths not yet supported");
+    } else if (e instanceof fabric.ast.Worker) {
+      return workerLocalAccessPath(e.position());
+    } else if (e instanceof New) {
+      // support instantiation of this.store$ in constructors 
+      New nw = (New) e;
+      FabricTypeSystem ts = (FabricTypeSystem) context.typeSystem();
+      ClassType ct = (ClassType) ts.unlabel(nw.type());
+      NewExt_c ext = (NewExt_c) FabricUtil.fabricExt(nw);
+      if (ext.location() == null) {
+        return new AccessPathNew(ct, currentStoreAccessPathFor(
+            context.currentClass(), context), nw.position());
+      } else {
+        return new AccessPathNew(ct, exprToAccessPath(ext.location(), context),
+            nw.position());
+      }
     } else if (e instanceof fabric.ast.Store) {
       fabric.ast.Store st = (fabric.ast.Store) e;
-
+      // if we wanted to allow "new C().store$" then we need to
+      // check whether st.expr is a New expr. 
+      // This doesn't seem useful, though.
       return new AccessPathStore(exprToAccessPath(st.expr(), context), Store(),
           st.position());
     }
@@ -406,15 +455,22 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
   public AccessPath storeAccessPathFor(Expr ref, JifContext context)
       throws SemanticException {
     AccessPath storeap;
-    FabricNodeFactory nf = (FabricNodeFactory) extensionInfo().nodeFactory();
     Position pos = Position.compilerGenerated();
     if (isFinalAccessExpr(ref)) {
       storeap =
           new AccessPathStore(exprToAccessPath(ref, context), Store(), pos);
     } else {
-      storeap = new AccessPathUninterpreted(nf.Store(pos, ref), pos);
+      storeap =
+          new AccessPathUninterpreted(String.valueOf(ref) + ".store$", pos);
     }
     return storeap;
+  }
+
+  @Override
+  public AccessPath currentStoreAccessPathFor(ClassType ct, JifContext context)
+      throws SemanticException {
+    Position pos = Position.compilerGenerated();
+    return new AccessPathStore(new AccessPathThis(ct, pos), Store(), pos);
   }
 
   @Override
@@ -468,7 +524,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
   }
 
   @Override
-  public Context createContext() {
+  public FabricContext createContext() {
     return new FabricContext_c(this, jlts);
   }
 
@@ -478,7 +534,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
   }
 
   @Override
-  public Subst<ParamInstance, Param> subst(
+  protected Subst<ParamInstance, Param> substImpl(
       Map<ParamInstance, ? extends Param> substMap) {
     return new FabricSubst_c(this, substMap);
   }
@@ -666,13 +722,6 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
     return f;
   }
 
-  @Override
-  public Flags legalInterfaceFlags() {
-    Flags f = super.legalInterfaceFlags();
-    f = f.set(FabricFlags.NONFABRIC);
-    return f;
-  }
-
   // TODO: determine scenarios when this labels
   // can be used by the remote call wrapper
   @Override
@@ -691,11 +740,6 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
         hasThis |= containsThisLabel((Label) afc.actor());
 
       return hasThis;
-    } else if (as instanceof LabelActsForPrincipalConstraintNode) {
-      LabelActsForLabelConstraintNode laflcn =
-          (LabelActsForLabelConstraintNode) as;
-      LabelNode lhs = (LabelNode) laflcn.actor();
-      return containsThisLabel(lhs.label());
     }
 
     return false;
@@ -758,11 +802,72 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
         hasThis |= containsArgLabel((Label) afc.actor());
 
       return hasThis;
-    } else if (as instanceof LabelActsForPrincipalConstraintNode) {
-      LabelActsForLabelConstraintNode laflcn =
-          (LabelActsForLabelConstraintNode) as;
-      LabelNode lhs = (LabelNode) laflcn.actor();
-      return containsArgLabel(lhs.label());
+    }
+    return false;
+  }
+
+  @Override
+  public boolean accessPolicyValid(ConfPolicy pol) throws SemanticException {
+    if (pol instanceof ConfProjectionPolicy) {
+      ConfProjectionPolicy_c cpp = (ConfProjectionPolicy_c) pol;
+      return accessPolicyValid(cpp.label());
+    } else if (pol instanceof JoinConfPolicy) {
+      JoinConfPolicy jcp = (JoinConfPolicy) pol;
+      for (ConfPolicy p : jcp.joinComponents())
+        if (!accessPolicyValid(p)) return false;
+    } else if (pol instanceof MeetConfPolicy) {
+      MeetConfPolicy mcp = (MeetConfPolicy) pol;
+      for (ConfPolicy p : mcp.meetComponents())
+        if (!accessPolicyValid(p)) return false;
+    } else if (pol instanceof ReaderPolicy) {
+      ReaderPolicy rp = (ReaderPolicy) pol;
+      return accessPolicyValid(rp.owner()) && accessPolicyValid(rp.reader());
+    }
+    // TODO: verify other cases are either impossible or valid.
+    return false;
+  }
+
+  protected boolean accessPolicyValid(Label label) throws SemanticException {
+    if (label instanceof MeetLabel) {
+      MeetLabel ml = (MeetLabel) label;
+      for (Label l : ml.meetComponents())
+        if (!accessPolicyValid(l)) return false;
+    } else if (label instanceof JoinLabel) {
+      JoinLabel jl = (JoinLabel) label;
+      for (Label l : jl.joinComponents())
+        if (!accessPolicyValid(l)) return false;
+    } else if (label instanceof PairLabel) {
+      PairLabel pair = (PairLabel) label;
+      return accessPolicyValid(pair.confPolicy());
+    } else if (label instanceof ParamLabel || label instanceof ThisLabel
+        || label instanceof ProviderLabel) {
+      return true;
+    }
+    // TODO: verify other cases are either impossible or valid.
+    return false;
+  }
+
+  protected boolean accessPolicyValid(Principal p) throws SemanticException {
+    if (p instanceof ConjunctivePrincipal) {
+      ConjunctivePrincipal cp = (ConjunctivePrincipal) p;
+      for (Principal pp : cp.conjuncts())
+        if (!accessPolicyValid(pp)) return false;
+    } else if (p instanceof DisjunctivePrincipal) {
+      DisjunctivePrincipal cp = (DisjunctivePrincipal) p;
+      for (Principal pp : cp.disjuncts())
+        if (!accessPolicyValid(pp)) return false;
+    } else if (p instanceof ParamPrincipal || p instanceof ExternalPrincipal
+        || p instanceof BottomPrincipal || p instanceof TopPrincipal) {
+      return true;
+    } else if (p instanceof DynamicPrincipal) {
+      DynamicPrincipal dp = (DynamicPrincipal) p;
+      if (dp.path() instanceof AccessPathStore) {
+        AccessPathStore aps = (AccessPathStore) dp.path();
+        // Store principals are the only dynamic principals 
+        // that can appear in access labels, but the path
+        // must be a this path.
+        return aps.path() instanceof AccessPathThis;
+      }
     }
     return false;
   }
@@ -916,9 +1021,9 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
   @Override
   public ClassFileLazyClassInitializer classFileLazyClassInitializer(
       ClassFile clazz) {
-    throw new UnsupportedOperationException(
-        "Fabric doesn't support raw classes");
-    // return new FabILLazyClassInitializer(clazz, this);
+//    throw new UnsupportedOperationException(
+//        "Fabric doesn't support raw classes");
+    return new CBLazyClassInitializer((codebases.types.ClassFile) clazz, this);
   }
 
   // / Deprecated/Unsupported methods
@@ -1088,5 +1193,11 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
     } catch (SemanticException e) {
       throw new InternalCompilerError("Unexpected semantic exception", e);
     }
+  }
+
+  @Override
+  public AccessPolicyInstance accessPolicyInstance(Position pos,
+      ParsedClassType ct, ConfPolicy policy) {
+    return new AccessPolicyInstance_c(pos, ct, policy);
   }
 }

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -205,6 +205,11 @@ public class FabricOptions extends JifOptions {
         List<URI> path = NSUtil.processPathString(args[index]);
         return createArg(index + 1, path);
       }
+
+      @Override
+      public Arg<List<URI>> defaultArg() {
+        return createDefault(NSUtil.processPathString(jvmbootclasspath()));
+      }
     });
     flags.add(new OptFlag<List<URI>>("-addbootcp", "<path>",
         "prepend <path> to the bootclasspath") {
@@ -297,6 +302,7 @@ public class FabricOptions extends JifOptions {
 
     OptFlag.removeFlag("-untrusted-providers", flags);
     OptFlag.removeFlag("-fail-on-exception", flags);
+
   }
 
   @Override

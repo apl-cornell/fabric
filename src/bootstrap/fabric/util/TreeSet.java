@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -257,10 +257,11 @@ public interface TreeSet extends fabric.util.SortedSet, fabric.util.AbstractSet 
 
     public _Impl(fabric.worker.Store store, long onum, int version,
         long expiry, long label, long accessLabel, java.io.ObjectInput in,
-        java.util.Iterator refTypes, java.util.Iterator intraStoreRefs)
+        java.util.Iterator refTypes, java.util.Iterator intraStoreRefs,
+	java.util.Iterator interStoreRefs)
         throws java.io.IOException, java.lang.ClassNotFoundException {
       super(store, onum, version, expiry, label, accessLabel, in, refTypes,
-          intraStoreRefs);
+          intraStoreRefs, interStoreRefs);
     }
 
     @Override

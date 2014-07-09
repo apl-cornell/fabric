@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -17,33 +17,35 @@ package fabric.common.net;
 
 import static fabric.common.Logging.NETWORK_CONNECTION_LOGGER;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.net.BindException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 
+import fabric.common.Logging;
 import fabric.common.exceptions.NotImplementedException;
-import fabric.common.net.SubServerSocketFactory.Acceptor.ConnectionQueue;
 import fabric.common.net.handshake.Protocol;
 import fabric.common.net.handshake.ShakenSocket;
 import fabric.common.net.naming.NameService;
 import fabric.common.net.naming.NameService.PortType;
 import fabric.common.net.naming.SocketAddress;
+import fabric.worker.remote.RemoteWorker;
 
 /**
  * factory for creating SubServerSockets. This class decorates a
  * javax.net.ServerSocketFactory, which is used for instantiating the underlying
  * channels.
- * 
- * @author mdgeorge
  */
 public class SubServerSocketFactory {
   // ////////////////////////////////////////////////////////////////////////////
@@ -58,8 +60,8 @@ public class SubServerSocketFactory {
    *          the ServerSocketFactory that will be used to create the
    *          ServerSockets used to implement SubServerSockets returned by this
    */
-  public SubServerSocketFactory(Protocol handshake, NameService nameService,
-      PortType portType) {
+  public SubServerSocketFactory(Protocol<RemoteWorker> handshake,
+      NameService nameService, PortType portType) {
     this(handshake, nameService, portType, Channel.DEFAULT_MAX_OPEN_CONNECTIONS);
   }
 
@@ -71,8 +73,9 @@ public class SubServerSocketFactory {
    *          the ServerSocketFactory that will be used to create the
    *          ServerSockets used to implement SubServerSockets returned by this
    */
-  public SubServerSocketFactory(Protocol handshake, NameService nameService,
-      PortType portType, int maxOpenConnectionsPerChannel) {
+  public SubServerSocketFactory(Protocol<RemoteWorker> handshake,
+      NameService nameService, PortType portType,
+      int maxOpenConnectionsPerChannel) {
     this.handshake = handshake;
     this.nameService = nameService;
     this.portType = portType;
@@ -98,7 +101,8 @@ public class SubServerSocketFactory {
    * @param name
    *          the local name
    * @param backlog
-   *          the number of waiting connections to allow on this socket
+   *          the number of waiting connections to allow on this socket. If
+   *          non-positive, unlimited waiting connections are allowed.
    * @see javax.net.ServerSocketFactory#createServerSocket(int, int,
    *      InetAddress)
    */
@@ -113,7 +117,7 @@ public class SubServerSocketFactory {
   // implementation //
   // ////////////////////////////////////////////////////////////////////////////
 
-  private final Protocol handshake;
+  private final Protocol<RemoteWorker> handshake;
   private final NameService nameService;
   private final PortType portType;
   private final Map<SocketAddress, Acceptor> acceptors;
@@ -124,7 +128,8 @@ public class SubServerSocketFactory {
    * resolve the name to an address.
    * 
    * @param backlog
-   *          the size of the queue
+   *          the size of the queue. If non-positive, an unbounded queue is
+   *          created.
    * @throws IOException
    *           if a queue with the given name already exists
    */
@@ -140,7 +145,8 @@ public class SubServerSocketFactory {
     }
 
     a = new Acceptor(addr);
-    ConnectionQueue result = a.makeQueue(name, backlog);
+    SubServerSocketFactory.Acceptor.ConnectionQueue result =
+        a.makeQueue(name, backlog);
     a.start();
     acceptors.put(addr, a);
 
@@ -182,7 +188,8 @@ public class SubServerSocketFactory {
      * Creates a ConnectionQueue for the given name on this acceptor.
      * 
      * @param size
-     *          the size of the queue
+     *          the size of the queue. If non-positive, an unbounded queue is
+     *          created.
      * @throws IOException
      *           if the queue already exists
      */
@@ -207,7 +214,7 @@ public class SubServerSocketFactory {
 
         s.setTcpNoDelay(true);
 
-        ShakenSocket conn = handshake.receive(s);
+        ShakenSocket<RemoteWorker> conn = handshake.receive(s);
 
         ConnectionQueue queue;
         synchronized (queues) {
@@ -220,6 +227,18 @@ public class SubServerSocketFactory {
         }
 
         queue.open(conn);
+      } catch (SocketException e) {
+        if ("Connection reset".equalsIgnoreCase(e.getMessage())) {
+          Logging.log(NETWORK_CONNECTION_LOGGER, Level.WARNING,
+              "{0} connection closed ({1})", portType,
+              s.getRemoteSocketAddress());
+          return;
+        }
+
+        throw new NotImplementedException(e);
+      } catch (EOFException e) {
+        Logging.log(NETWORK_CONNECTION_LOGGER, Level.WARNING,
+            "{0} connection reset ({1})", portType, s.getRemoteSocketAddress());
       } catch (IOException e) {
         // TODO: failed to initiate, close s.
         throw new NotImplementedException(e);
@@ -240,17 +259,26 @@ public class SubServerSocketFactory {
     public void run() {
       ServerSocket sock = null;
       try {
-        sock = new ServerSocket(address.getPort(), 0, address.getAddress());
+        sock =
+            new ServerSocket(address.getPort(), 0,
+                InetAddress.getByAddress(new byte[] { 0, 0, 0, 0 }));
         while (true) {
           try {
-            recvConnection(sock.accept());
-          } catch (IOException e) {
-            recvException(e);
+            try {
+              recvConnection(sock.accept());
+            } catch (IOException e) {
+              recvException(e);
+            }
+          } catch (NotImplementedException e) {
+            // Something wasn't implemented. Dump a stack trace and continue
+            // listening.
+            e.printStackTrace();
           }
         }
       } catch (BindException e) {
-        System.err.println("WARNING: Unable to listen on " + address + ". "
-            + e.getMessage() + ". Is the node already running?");
+        Logging.log(NETWORK_CONNECTION_LOGGER, Level.WARNING,
+            "Unable to listen on {0}. {1}. Is the node already running?",
+            address, e.getMessage());
       } catch (IOException exc) {
         // TODO
         throw new NotImplementedException(exc);
@@ -278,14 +306,22 @@ public class SubServerSocketFactory {
       /* children */
       private final Set<ServerChannel> channels;
 
-      /* queue of connections that are ready to be accepted by a SubServerSocket */
-      private final BlockingQueue<SubSocket> connections;
+      /** queue of connections that are ready to be accepted by a SubServerSocket */
+      private final BlockingQueue<SubSocket<RemoteWorker>> connections;
 
+      /**
+       * @param size if non-positive, an unbounded buffer of incoming
+       *          connections is used.
+       */
       ConnectionQueue(String name, int size) {
         this.name = name;
 
         this.channels = new HashSet<ServerChannel>();
-        this.connections = new ArrayBlockingQueue<SubSocket>(size);
+        if (size > 0) {
+          this.connections = new ArrayBlockingQueue<>(size);
+        } else {
+          this.connections = new LinkedBlockingQueue<>();
+        }
       }
 
       /** cleanup when associated SubServerSocket is closed. */
@@ -294,7 +330,7 @@ public class SubServerSocketFactory {
       }
 
       /** wait for an incoming SubSocket connection */
-      SubSocket accept() {
+      SubSocket<RemoteWorker> accept() {
         try {
           return connections.take();
         } catch (InterruptedException e) {
@@ -306,19 +342,18 @@ public class SubServerSocketFactory {
        * create a new ServerChannel (in response to a new incoming socket
        * connection)
        */
-      void open(ShakenSocket s) throws IOException {
+      void open(ShakenSocket<RemoteWorker> s) throws IOException {
         synchronized (channels) {
           channels.add(new ServerChannel(s));
         }
       }
 
       /** receive an incoming subsocket connection */
-      private void receive(SubSocket s) {
+      private void receive(SubSocket<RemoteWorker> s) {
         try {
           connections.put(s);
         } catch (InterruptedException e) {
-          // TODO Auto-generated catch block
-          e.printStackTrace();
+          Logging.logIgnoredInterruptedException(e);
         }
       }
 
@@ -338,8 +373,8 @@ public class SubServerSocketFactory {
        * 
        * @author mdgeorge
        */
-      class ServerChannel extends Channel {
-        ServerChannel(ShakenSocket sock) throws IOException {
+      class ServerChannel extends Channel<RemoteWorker> {
+        ServerChannel(ShakenSocket<RemoteWorker> sock) throws IOException {
           super(sock, maxOpenConnectionsPerChannel);
 
           setName("demultiplexer for " + toString());
@@ -352,7 +387,7 @@ public class SubServerSocketFactory {
         @Override
         protected Connection accept(int sequence) throws IOException {
           Connection result = new Connection(sequence);
-          SubSocket socket = new SubSocket(result);
+          SubSocket<RemoteWorker> socket = new SubSocket<>(result);
           receive(socket);
           return result;
         }

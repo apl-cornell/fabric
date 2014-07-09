@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -48,7 +48,7 @@ import fabric.worker.Store;
 import fabric.worker.Worker;
 import fabric.worker.remote.RemoteWorker;
 import fabric.worker.transaction.Log;
-import fabric.worker.transaction.ReadMapEntry;
+import fabric.worker.transaction.ReadMap;
 import fabric.worker.transaction.TransactionManager;
 import fabric.worker.transaction.TransactionRegistry;
 
@@ -95,6 +95,9 @@ public interface Object {
   /** Whether this object has the same identity as another object. */
   boolean idEquals(Object o);
 
+  /** A hash of the object's oid. */
+  int oidHashCode();
+
   /** Unwraps a wrapped Java inlineable. */
   java.lang.Object $unwrap();
 
@@ -137,8 +140,7 @@ public interface Object {
     private transient final _Impl anchor;
 
     public _Proxy(Store store, long onum) {
-      if (store.isLocalStore() && onum != ONumConstants.EMPTY_LABEL
-          && onum != ONumConstants.PUBLIC_READONLY_LABEL)
+      if (store.isLocalStore() && !ONumConstants.isGlobalConstant(onum))
         throw new InternalError(
             "Attempted to create unresolved reference to a local object (onum="
                 + onum + ").");
@@ -248,6 +250,24 @@ public interface Object {
     public final boolean idEquals(Object other) {
       return this.$getStore() == other.$getStore()
           && this.$getOnum() == other.$getOnum();
+    }
+
+    @Override
+    public final int oidHashCode() {
+      long onum = this.$getOnum();
+      if (ONumConstants.isGlobalConstant(onum)) return (int) onum;
+
+      Store store = this.$getStore();
+      return store.hashCode() ^ (int) onum;
+    }
+
+    /**
+     * This static version of oidHashCode is to be used by Fabric programs. It
+     * launders the dereference of <code>o</code> to prevent the Fabric type
+     * system from thinking the object will be fetched, when it really won't be.
+     */
+    public static int oidHashCode(Object o) {
+      return Object._Impl.oidHashCode(o);
     }
 
     @Override
@@ -471,7 +491,7 @@ public interface Object {
      * 
      * @see fabric.worker.transaction.TransactionManager#readMap
      */
-    public ReadMapEntry $readMapEntry;
+    public final ReadMap.Entry $readMapEntry;
 
     /**
      * The number of threads waiting on this object.
@@ -563,7 +583,12 @@ public interface Object {
 
     @Override
     public Object fabric$lang$Object$() {
-      return $initLabels();
+      Object result = $initLabels();
+
+      // Register the new object with the transaction manager.
+      TransactionManager.getInstance().registerLabelsInitialized(this);
+
+      return result;
     }
 
     /**
@@ -580,15 +605,32 @@ public interface Object {
      */
     @Override
     public boolean equals(Object o) {
-      return o.$getStore().equals($getStore()) && o.$getOnum() == $getOnum();
+      //ensure not a surrogate:
+      Object impl = o.fetch();
+      return impl.$getStore().equals($getStore())
+          && impl.$getOnum() == $getOnum();
     }
 
     /**
-     * Default hashCode implementation uses the OID to compute the hash value.
+     * Default hashCode implementation uses oidHashCode().
      */
     @Override
     public int hashCode() {
-      return (int) $getOnum();
+      return oidHashCode();
+    }
+
+    @Override
+    public int oidHashCode() {
+      return this.$getProxy().oidHashCode();
+    }
+
+    /**
+     * This static version of oidHashCode is to be used by Fabric programs. It
+     * launders the dereference of <code>o</code> to prevent the Fabric type
+     * system from thinking the object will be fetched, when it really won't be.
+     */
+    public static int oidHashCode(Object o) {
+      return o == null ? 0 : o.oidHashCode();
     }
 
     /**
@@ -747,13 +789,16 @@ public interface Object {
      * @param intraStoreRefs
      *          An iterator of intra-store references, each represented by an
      *          onum.
+     * @param interStoreRefs
+     *          An iterator of inter-store references.
      * @throws IOException
      * @throws ClassNotFoundException
      */
     public _Impl(Store store, long onum, int version, long expiry,
         long updateLabel, long accessPolicy, ObjectInput serializedInput,
-        Iterator<RefTypeEnum> refTypes, Iterator<Long> intraStoreRefs)
-        throws IOException, ClassNotFoundException {
+        Iterator<RefTypeEnum> refTypes, Iterator<Long> intraStoreRefs,
+        Iterator<Pair<String, Long>> interStoreRefs) throws IOException,
+        ClassNotFoundException {
       this(store, onum, version, expiry);
       this.$updateLabel = new Label._Proxy(store, updateLabel);
       this.$accessPolicy = new ConfPolicy._Proxy(store, accessPolicy);
@@ -780,6 +825,8 @@ public interface Object {
      * @param intraStoreRefs
      *          An iterator of intra-store references, each represented by an
      *          onum.
+     * @param interStoreRefs
+     *          An iterator of inter-store references.
      * @throws ClassNotFoundException
      *           Thrown when the class for a wrapped object is unavailable.
      * @throws IOException
@@ -788,8 +835,9 @@ public interface Object {
      */
     protected static final Object $readRef(
         Class<? extends Object._Proxy> proxyClass, RefTypeEnum refType,
-        ObjectInput in, Store store, Iterator<Long> intraStoreRefs)
-        throws IOException, ClassNotFoundException {
+        ObjectInput in, Store store, Iterator<Long> intraStoreRefs,
+        Iterator<Pair<String, Long>> interStoreRefs) throws IOException,
+        ClassNotFoundException {
       switch (refType) {
       case NULL:
         return null;
@@ -812,9 +860,22 @@ public interface Object {
         }
 
       case REMOTE:
-        // These should have been swizzled by the store.
-        throw new InternalError(
-            "Unexpected remote object reference encountered during deserialization.");
+        try {
+          Constructor<? extends Object._Proxy> constructor =
+              constructorTable.get(proxyClass);
+          if (constructor == null) {
+            constructor = proxyClass.getConstructor(Store.class, long.class);
+            constructorTable.put(proxyClass, constructor);
+          }
+
+          Pair<String, Long> ref = interStoreRefs.next();
+          String storeName = ref.first;
+          long onum = ref.second;
+          return constructor.newInstance(
+              Worker.getWorker().getStore(storeName), onum);
+        } catch (Exception e) {
+          throw new InternalError(e);
+        }
       }
 
       throw new InternalError(

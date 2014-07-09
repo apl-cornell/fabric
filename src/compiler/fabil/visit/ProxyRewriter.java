@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -124,8 +124,7 @@ public class ProxyRewriter extends NodeVisitor {
   }
 
   public static Flags toInterface(Flags flags) {
-    return flags.clearAbstract().clearFinal().clearPrivate().Interface()
-        .Public();
+    return flags.clearAbstract().clearFinal().Interface();
   }
 
   /** Returns a shadow name for local variable l. */

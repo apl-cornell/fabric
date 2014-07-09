@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -21,8 +21,9 @@ import java.io.IOException;
 
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.ProtocolError;
-import fabric.dissemination.Glob;
-import fabric.lang.security.Principal;
+import fabric.common.net.RemoteIdentity;
+import fabric.dissemination.ObjectGlob;
+import fabric.worker.remote.RemoteWorker;
 
 /**
  * A <code>DissemReadMessage</code> represents a request from a dissemination
@@ -49,9 +50,9 @@ public final class DissemReadMessage extends
 
   public static class Response implements Message.Response {
 
-    public final Glob glob;
+    public final ObjectGlob glob;
 
-    public Response(Glob glob) {
+    public Response(ObjectGlob glob) {
       this.glob = glob;
     }
 
@@ -62,9 +63,9 @@ public final class DissemReadMessage extends
   // ////////////////////////////////////////////////////////////////////////////
 
   @Override
-  public Response dispatch(Principal p, MessageHandler h) throws ProtocolError,
-      AccessException {
-    return h.handle(p, this);
+  public Response dispatch(RemoteIdentity<RemoteWorker> client, MessageHandler h)
+      throws ProtocolError, AccessException {
+    return h.handle(client, this);
   }
 
   // ////////////////////////////////////////////////////////////////////////////
@@ -83,7 +84,7 @@ public final class DissemReadMessage extends
 
   @Override
   protected Response readResponse(DataInput in) throws IOException {
-    Glob glob = new Glob(in);
+    ObjectGlob glob = new ObjectGlob(in);
     return new Response(glob);
   }
 

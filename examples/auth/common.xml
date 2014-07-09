@@ -1,0 +1,27 @@
+<project name="auth.common">
+  <description>
+    This is the include file for projects that build against the auth library.
+  </description>
+
+  <!-- source directory -->
+  <dirname property="auth.home" file="${ant.file.auth.common}" />
+
+  <path id="auth.sourcepath">
+    <pathelement path="${auth.home}/src" />
+  </path>
+
+  <path id="auth.classpath">
+    <pathelement path="${auth.home}/classes" />
+  </path>
+  
+  <target name="auth">
+    <subant target="all">
+      <fileset dir="${auth.home}" includes="build.xml" />
+    </subant>
+  </target>
+
+</project>
+
+<!--
+vim: ts=2 sw=2 ai et
+-->

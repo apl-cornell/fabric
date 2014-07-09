@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -86,6 +86,12 @@ public final class Logging {
       .getLogger("fabric.worker.localstore");
 
   /**
+   * For deadlock-detection events on the worker.
+   */
+  public static final Logger WORKER_DEADLOCK_LOGGER = Logger
+      .getLogger("fabric.worker.deadlocks");
+
+  /**
    * For other worker-related events that don't fit into any other category. Use
    * sparingly.
    */
@@ -150,9 +156,20 @@ public final class Logging {
   public static final Logger TIMING_LOGGER = Logger.getLogger("fabric.timing");
 
   /**
+   * For ignored InterruptedExceptions.
+   */
+  public static final Logger INTERRUPTED_EXCEPTION_LOGGER = Logger
+      .getLogger("fabric.interruptedExceptions");
+
+  /**
    * For other events that don't fit into any other category. Use sparingly.
    */
   public static final Logger MISC_LOGGER = Logger.getLogger("fabric");
+
+  /**
+   * For HOTOS Logging.
+   */
+  public static final Logger HOTOS_LOGGER = Logger.getLogger("HOTOS");
 
   // //////////////////////////////////////////////////////////////////////////
   // HELPER METHODS
@@ -240,6 +257,39 @@ public final class Logging {
       Object param2, Object param3, Object param4) {
     if (!logger.isLoggable(level)) return;
     logger.log(level, msg, new Object[] { param1, param2, param3, param4 });
+  }
+
+  /**
+   * Logs a message, with four object parameters.
+   * 
+   * @param logger
+   *          The logger to log to
+   * @param level
+   *          One of the message level identifiers, e.g. SEVERE
+   * @param msg
+   *          The string message (or a key in the message catalog)
+   * @param param1
+   *          first parameter to the message
+   * @param param2
+   *          second parameter to the message
+   * @param param3
+   *          third parameter to the message
+   * @param param4
+   *          fourth parameter to the message
+   */
+  public static void log(Logger logger, Level level, String msg, Object param1,
+      Object param2, Object param3, Object param4, Object param5) {
+    if (!logger.isLoggable(level)) return;
+    logger.log(level, msg, new Object[] { param1, param2, param3, param4,
+        param5 });
+  }
+
+  /**
+   * Records that an InterruptedException was ignored.
+   */
+  public static void logIgnoredInterruptedException(InterruptedException e) {
+    INTERRUPTED_EXCEPTION_LOGGER.log(Level.FINEST,
+        "Ignored interrupted exception", e);
   }
 
   /**

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -23,10 +23,13 @@ import jif.types.JifTypeSystem;
 import jif.types.LabelSubstitution;
 import jif.types.label.AccessPath;
 import jif.types.label.AccessPathRoot;
+import jif.types.label.AccessPathThis;
 import jif.types.label.AccessPathUninterpreted;
 import jif.types.label.ArgLabel;
 import jif.types.label.Label;
+import jif.types.principal.Principal;
 import polyglot.ast.Expr;
+import polyglot.ast.New;
 import polyglot.types.ReferenceType;
 import polyglot.types.SemanticException;
 import polyglot.types.Type;
@@ -46,12 +49,37 @@ public class StoreInstantiator extends JifInstantiator {
     if (ts.isFinalAccessExprOrConst(receiverExpr, receiverType)) {
       receiverPath =
           ts.exprToAccessPath(receiverExpr, receiverType, callerContext);
+    } else if (receiverExpr instanceof New) {
+      receiverPath = new AccessPathThis(receiverType.toClass(), L.position());
     } else {
       receiverPath = new AccessPathUninterpreted(receiverExpr, L.position());
     }
     StoreInstantiator inst =
         new StoreInstantiator(receiverType, receiverLbl, receiverPath, null,
             null, null, null, null, callerContext, storePath);
+    return inst.instantiate(L);
+  }
+
+  public static Label instantiate(Label L, JifContext callerContext,
+      Expr receiverExpr, ReferenceType receiverType, Label receiverLbl,
+      AccessPath storePath, List<ArgLabel> formalArgLabels,
+      List<? extends Type> formalArgTypes,
+      List<? extends Label> actualArgLabels, List<Expr> actualArgExprs,
+      List<? extends Label> actualParamLabels) throws SemanticException {
+    JifTypeSystem ts = (JifTypeSystem) callerContext.typeSystem();
+    AccessPath receiverPath;
+    if (ts.isFinalAccessExprOrConst(receiverExpr, receiverType)) {
+      receiverPath =
+          ts.exprToAccessPath(receiverExpr, receiverType, callerContext);
+    } else if (receiverExpr instanceof New) {
+      receiverPath = new AccessPathThis(receiverType.toClass(), L.position());
+    } else {
+      receiverPath = new AccessPathUninterpreted(receiverExpr, L.position());
+    }
+    StoreInstantiator inst =
+        new StoreInstantiator(receiverType, receiverLbl, receiverPath,
+            formalArgLabels, formalArgTypes, actualArgLabels, actualArgExprs,
+            actualParamLabels, callerContext, storePath);
     return inst.instantiate(L);
   }
 
@@ -108,30 +136,67 @@ public class StoreInstantiator extends JifInstantiator {
     }
   }
 
-  /**
-   * @param entryLabel
-   * @param a
-   * @param target
-   * @param reference
-   * @param targetLabel
-   * @param formalLabels
-   * @param formalTypes
-   * @param actualLabels
-   * @param arguments
-   * @param emptyList
-   * @param storeap
-   * @return
-   * @throws SemanticException
-   */
-  public static Label instantiate(Label entryLabel, JifContext ctx,
-      Expr target, ReferenceType type, Label targetLabel,
-      List<ArgLabel> formalLabels, List<? extends Type> formalTypes,
-      List<Label> actualLabels, List<Expr> arguments,
+  public static Label instantiate(Label L, JifContext callerContext,
+      Expr receiverExpr, ReferenceType receiverType, Label receiverLabel,
+      List<ArgLabel> formalArgLabels, List<? extends Type> formalArgTypes,
+      List<Label> actualArgLabels, List<Expr> actualArgExprs,
       List<Label> actualParamLabels, AccessPath storeap)
       throws SemanticException {
-    return JifInstantiator.instantiate(entryLabel, ctx, target, type,
-        targetLabel, formalLabels, formalTypes, actualLabels, arguments,
-        actualParamLabels);
+    JifTypeSystem ts = (JifTypeSystem) callerContext.typeSystem();
+    AccessPath receiverPath;
+    if (ts.isFinalAccessExprOrConst(receiverExpr, receiverType)) {
+      receiverPath =
+          ts.exprToAccessPath(receiverExpr, receiverType, callerContext);
+    } else {
+      receiverPath = new AccessPathUninterpreted(receiverExpr, L.position());
+    }
+    StoreInstantiator inst =
+        new StoreInstantiator(receiverType, receiverLabel, receiverPath,
+            formalArgLabels, formalArgTypes, actualArgLabels, actualArgExprs,
+            actualParamLabels, callerContext, storeap);
+    return inst.instantiate(L);
+  }
+
+  public static Principal instantiate(Principal P, JifContext callerContext,
+      Expr receiverExpr, ReferenceType receiverType, Label receiverLabel,
+      List<ArgLabel> formalArgLabels, List<? extends Type> formalArgTypes,
+      List<Label> actualArgLabels, List<Expr> actualArgExprs,
+      List<Label> actualParamLabels, AccessPath storeap)
+      throws SemanticException {
+    JifTypeSystem ts = (JifTypeSystem) callerContext.typeSystem();
+    AccessPath receiverPath;
+    if (ts.isFinalAccessExprOrConst(receiverExpr, receiverType)) {
+      receiverPath =
+          ts.exprToAccessPath(receiverExpr, receiverType, callerContext);
+    } else {
+      receiverPath = new AccessPathUninterpreted(receiverExpr, P.position());
+    }
+    StoreInstantiator inst =
+        new StoreInstantiator(receiverType, receiverLabel, receiverPath,
+            formalArgLabels, formalArgTypes, actualArgLabels, actualArgExprs,
+            actualParamLabels, callerContext, storeap);
+    return inst.instantiate(P);
+  }
+
+  public static Type instantiate(Type t, JifContext callerContext,
+      Expr receiverExpr, ReferenceType receiverType, Label receiverLabel,
+      List<ArgLabel> formalArgLabels, List<? extends Type> formalArgTypes,
+      List<Label> actualArgLabels, List<Expr> actualArgExprs,
+      List<Label> actualParamLabels, AccessPath storeap)
+      throws SemanticException {
+    JifTypeSystem ts = (JifTypeSystem) callerContext.typeSystem();
+    AccessPath receiverPath;
+    if (ts.isFinalAccessExprOrConst(receiverExpr, receiverType)) {
+      receiverPath =
+          ts.exprToAccessPath(receiverExpr, receiverType, callerContext);
+    } else {
+      receiverPath = new AccessPathUninterpreted(receiverExpr, t.position());
+    }
+    StoreInstantiator inst =
+        new StoreInstantiator(receiverType, receiverLabel, receiverPath,
+            formalArgLabels, formalArgTypes, actualArgLabels, actualArgExprs,
+            actualParamLabels, callerContext, storeap);
+    return inst.instantiate(t);
   }
 
 }

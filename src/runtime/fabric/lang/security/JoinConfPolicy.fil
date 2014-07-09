@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -27,20 +27,36 @@ public final class JoinConfPolicy extends JoinPolicy implements ConfPolicy {
 	return this;
   }
 
-  public ConfPolicy join(Store store, ConfPolicy p, java.util.Set s) {
-    return LabelUtil.join(store, this, p, s);
+  public ConfPolicy join(Store store, ConfPolicy p, java.util.Set/*<DelegationPair>*/ s) {
+      return join(store, p, s, true);
   }
 
-  public ConfPolicy meet(Store store, ConfPolicy p, java.util.Set s) {
-    return LabelUtil.meet(store, this, p, s);
+  public ConfPolicy meet(Store store, ConfPolicy p, java.util.Set/*<DelegationPair>*/ s) {
+      return meet(store, p, s, true);
   }
 
   public ConfPolicy join(Store store, ConfPolicy p) {
-    return LabelUtil.join(store, this, p);
+      return join(store, p, true);
   }
 
   public ConfPolicy meet(Store store, ConfPolicy p) {
-    return LabelUtil.meetPol(store, this, p);
+      return meet(store, p, true);
+  }
+
+  public ConfPolicy join(Store store, ConfPolicy p, boolean simplify) {
+      return LabelUtil.join(store, this, p, simplify);
+  }
+
+  public ConfPolicy meet(Store store, ConfPolicy p, boolean simplify) {
+      return LabelUtil.meet(store, this, p, simplify);
+  }
+
+  public ConfPolicy join(Store store, ConfPolicy p, java.util.Set/*<DelegationPair>*/ s, boolean simplify) {
+      return LabelUtil.join(store, this, p, s, simplify);
+  }
+
+  public ConfPolicy meet(Store store, ConfPolicy p, java.util.Set/*<DelegationPair>*/ s, boolean simplify) {
+      return LabelUtil.meet(store, this, p, s, simplify);
   }
 
   public Object $initLabels() {

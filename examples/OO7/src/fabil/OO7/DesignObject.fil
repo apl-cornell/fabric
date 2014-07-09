@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -58,13 +58,6 @@ public abstract class DesignObject {
 
   public long buildDate() {
     return this.buildDate;
-  }
-  
-  public Statistics createStatistics() {
-  	if (promise)
-  	  return (OO7Statistics) new OO7Statistics().OO7$OO7Statistics();
-  	else
-  	  return super.createStatistics();
   }
   
   /*

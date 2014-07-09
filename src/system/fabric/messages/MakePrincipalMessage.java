@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -23,7 +23,8 @@ import java.security.cert.X509Certificate;
 
 import fabric.common.exceptions.FabricGeneralSecurityException;
 import fabric.common.exceptions.ProtocolError;
-import fabric.lang.security.Principal;
+import fabric.common.net.RemoteIdentity;
+import fabric.worker.remote.RemoteWorker;
 
 public final class MakePrincipalMessage extends
     Message<MakePrincipalMessage.Response, FabricGeneralSecurityException> {
@@ -73,9 +74,10 @@ public final class MakePrincipalMessage extends
   // ////////////////////////////////////////////////////////////////////////////
 
   @Override
-  public Response dispatch(Principal p, MessageHandler handler)
-      throws ProtocolError, FabricGeneralSecurityException {
-    return handler.handle(p, this);
+  public Response dispatch(RemoteIdentity<RemoteWorker> client,
+      MessageHandler handler) throws ProtocolError,
+      FabricGeneralSecurityException {
+    return handler.handle(client, this);
   }
 
   // ////////////////////////////////////////////////////////////////////////////

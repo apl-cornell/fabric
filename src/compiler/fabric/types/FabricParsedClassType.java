@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -20,7 +20,9 @@ import java.util.Collection;
 import java.util.Set;
 
 import jif.types.JifParsedPolyType;
+import jif.types.label.ConfPolicy;
 import polyglot.types.MethodInstance;
+import polyglot.types.SemanticException;
 import codebases.types.CodebaseClassType;
 
 public interface FabricParsedClassType extends JifParsedPolyType,
@@ -40,5 +42,11 @@ public interface FabricParsedClassType extends JifParsedPolyType,
    * @return
    */
   Collection<CodebaseClassType> namespaceDependencies();
+
+  /**
+   * @param confProjection
+   * @throws SemanticException 
+   */
+  void setAccessPolicy(ConfPolicy policy) throws SemanticException;
 
 }

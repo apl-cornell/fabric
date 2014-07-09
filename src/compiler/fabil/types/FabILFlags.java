@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -18,6 +18,6 @@ package fabil.types;
 import polyglot.types.Flags;
 
 public class FabILFlags extends Flags {
-  public static final Flags ATOMIC = createFlag("atomic", FINAL);
-  public static final Flags NONFABRIC = createFlag("nonfabric", FINAL);
+  public static final Flags ATOMIC = createFlag("atomic", null);
+  public static final Flags NONFABRIC = createFlag("nonfabric", null);
 }

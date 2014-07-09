@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -16,16 +16,23 @@
 package fabil.ast;
 
 import polyglot.ast.Expr;
+import polyglot.ast.Ext;
 import polyglot.ast.TypeNode;
 import polyglot.types.Type;
 import polyglot.util.Position;
 import polyglot.visit.AscriptionVisitor;
 import fabil.types.FabILTypeSystem;
 
+//XXX Should be replaced with extension
+@Deprecated
 public class Cast_c extends polyglot.ast.Cast_c {
-
+  @Deprecated
   public Cast_c(Position pos, TypeNode castType, Expr expr) {
-    super(pos, castType, expr);
+    this(pos, castType, expr, null);
+  }
+
+  public Cast_c(Position pos, TypeNode castType, Expr expr, Ext ext) {
+    super(pos, castType, expr, ext);
   }
 
   @Override

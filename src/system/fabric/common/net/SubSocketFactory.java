@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -21,21 +21,23 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 
 import fabric.common.net.handshake.Protocol;
 import fabric.common.net.naming.NameService;
 import fabric.common.net.naming.NameService.PortType;
 import fabric.common.net.naming.SocketAddress;
+import fabric.net.RemoteNode;
 
 /**
  * A factory for creating SubSockets. The factory decorates a
  * javax.net.SocketFactory, which is used for creating the underlying channels.
  * 
- * @author mdgeorge
+ * @param <Node> the type of node at the remote endpoint.
  */
-public final class SubSocketFactory {
-  private final Protocol protocol;
+public final class SubSocketFactory<Node extends RemoteNode<Node>> {
+  private final Protocol<Node> protocol;
   private final NameService nameService;
   private final PortType portType;
   private final Map<String, ClientChannel> channels;
@@ -47,7 +49,7 @@ public final class SubSocketFactory {
    * to share channels (as these channels may have different underlying socket
    * implementations).
    */
-  public SubSocketFactory(Protocol protocol, NameService nameService,
+  public SubSocketFactory(Protocol<Node> protocol, NameService nameService,
       PortType portType) {
     this(protocol, nameService, portType, Channel.DEFAULT_MAX_OPEN_CONNECTIONS);
   }
@@ -58,7 +60,7 @@ public final class SubSocketFactory {
    * to share channels (as these channels may have different underlying socket
    * implementations).
    */
-  public SubSocketFactory(Protocol protocol, NameService nameService,
+  public SubSocketFactory(Protocol<Node> protocol, NameService nameService,
       PortType portType, int maxOpenConnectionsPerChannel) {
     this.protocol = protocol;
     this.nameService = nameService;
@@ -70,40 +72,40 @@ public final class SubSocketFactory {
   /**
    * Create an unconnected socket.
    */
-  public SubSocket createSocket() {
-    return new SubSocket(this);
+  public SubSocket<Node> createSocket() {
+    return new SubSocket<>(this);
   }
 
   /**
    * Convenience method. Resolves the name using the NameService and calls
    * createSocket.
    */
-  public SubSocket createSocket(String name) throws IOException {
-    SubSocket result = createSocket();
-    result.connect(name);
+  public SubSocket<Node> createSocket(Node node) throws IOException {
+    SubSocket<Node> result = createSocket();
+    result.connect(node);
     return result;
   }
 
   /**
-   * return a channel associated with the given address, creating it if
+   * return a channel associated with the given node, creating it if
    * necessary.
    */
-  ClientChannel getChannel(String name) throws IOException {
+  ClientChannel getChannel(Node node) throws IOException {
     synchronized (channels) {
-      ClientChannel result = channels.get(name);
+      ClientChannel result = channels.get(node.name);
       if (null == result) {
         NETWORK_CONNECTION_LOGGER.log(Level.INFO,
-            "establishing new connection to \"{0}\"", name);
-        SocketAddress addr = nameService.resolve(name, portType);
+            "establishing new connection to \"{0}\"", node.name);
+        SocketAddress addr = nameService.resolve(node.name, portType);
 
         Socket s = new Socket(addr.getAddress(), addr.getPort());
         s.setSoLinger(false, 0);
         s.setTcpNoDelay(true);
 
-        result = new ClientChannel(name, s, maxOpenConnectionsPerChannel);
-        channels.put(name, result);
+        result = new ClientChannel(node, s, maxOpenConnectionsPerChannel);
+        channels.put(node.name, result);
         NETWORK_CONNECTION_LOGGER.log(Level.INFO,
-            "connection to {0} established.", name);
+            "connection to {0} established.", node.name);
       }
 
       return result;
@@ -117,26 +119,32 @@ public final class SubSocketFactory {
    * 
    * @author mdgeorge
    */
-  class ClientChannel extends Channel {
-    /* key for SubSocketFactory.this.channels */
+  class ClientChannel extends Channel<Node> {
+    /**
+     * The name of the remote endpoint. This is a key for
+     * SubSocketFactory.this.channels.
+     */
     private final String name;
 
     /* the next sequence number to be created */
-    private int nextSequenceNumber;
+    private AtomicInteger nextSequenceNumber;
 
-    public ClientChannel(String name, Socket s, int maxOpenConnections)
+    /**
+     * @param host the host at the remote endpoint.
+     */
+    public ClientChannel(Node host, Socket s, int maxOpenConnections)
         throws IOException {
-      super(protocol.initiate(name, s), maxOpenConnections);
+      super(protocol.initiate(host, s), maxOpenConnections);
 
-      this.name = name;
-      nextSequenceNumber = 1;
+      this.name = host.name;
+      nextSequenceNumber = new AtomicInteger(1);
 
       setName("demultiplexer for " + toString());
     }
 
     /** initiate a new substream */
     public Connection connect() throws IOException {
-      return new Connection(nextSequenceNumber++);
+      return new Connection(nextSequenceNumber.getAndIncrement());
     }
 
     @Override

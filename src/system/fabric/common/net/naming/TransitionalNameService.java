@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -95,9 +95,19 @@ public class TransitionalNameService implements NameService {
       throws IOException {
     SocketAddress result =
         entries.get(new Pair<String, PortType>(name, portType));
-    if (result == null) result = dns.localResolve(name, portType);
+    if (result != null) {
+      // If the result is a local loopback address, return the any address.
+      // Kinda hacky, but makes things easier to test.
+      if (result.getAddress().isLoopbackAddress()) {
+        return new SocketAddress(InetAddress.getByAddress(new byte[] { 0, 0, 0,
+            0 }), result.getPort());
+      }
 
-    return result;
+      return result;
+    }
+
+    // Fall back on DNS.
+    return dns.localResolve(name, portType);
   }
 
   @Override

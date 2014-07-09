@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -16,20 +16,20 @@
 package fabil.extension;
 
 import polyglot.ast.DelFactory;
-import polyglot.ast.JL;
+import polyglot.ast.JLDel;
 
 public interface FabILDelFactory extends DelFactory {
 
-  JL delFabricArrayTypeNode();
+  JLDel delFabricArrayTypeNode();
 
-  JL delFabricArrayInit();
+  JLDel delFabricArrayInit();
 
-  JL delProviderLabel();
+  JLDel delProviderLabel();
 
-  JL delCodebaseNode();
+  JLDel delCodebaseNode();
 
-  JL delCodebaseDecl();
+  JLDel delCodebaseDecl();
 
-  JL delCodebaseTypeNode();
+  JLDel delCodebaseTypeNode();
 
 }

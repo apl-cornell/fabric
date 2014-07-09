@@ -1,0 +1,32 @@
+/**
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
+ *
+ * This file is part of Fabric.
+ *
+ * Fabric is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * Fabric is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ */
+package fabricated.util;
+
+public class StringComparator[label L] implements Comparator[L] {
+  public boolean{L} equals{L}(Object{L} a, Object{L} b) throws (ClassCastException{L}, NullPointerException{L}) {
+      String as = (String)a;
+      String bs = (String)b;
+      return as.equals(bs);
+  }
+  public int{L} compare{L}(Object{L} a, Object{L} b) throws (UnsupportedOperationException{L},ClassCastException{L}, NullPointerException{L}) {
+      String as = (String)a;
+      String bs = (String)b;
+      return as.compareTo(bs);
+  }
+  public int{L} hashCode{L}(Object{L} a) throws (UnsupportedOperationException{L},ClassCastException{L}, NullPointerException{L}) {
+      return ((String)a).hashCode();
+  } 
+}

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -81,6 +81,6 @@ public interface FabILNodeFactory extends NodeFactory, CodebaseNodeFactory {
   /**
    * @return an AST node representing the provider label for the given type.
    */
-  ProviderLabel providerLabel(Position pos, TypeNode tn);
+  ProviderLabel ProviderLabel(Position pos, TypeNode tn);
 
 }

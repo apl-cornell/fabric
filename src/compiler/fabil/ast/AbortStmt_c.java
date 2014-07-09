@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -18,6 +18,7 @@ package fabil.ast;
 import java.util.Collections;
 import java.util.List;
 
+import polyglot.ast.Ext;
 import polyglot.ast.Stmt_c;
 import polyglot.ast.Term;
 import polyglot.util.CodeWriter;
@@ -25,9 +26,16 @@ import polyglot.util.Position;
 import polyglot.visit.CFGBuilder;
 import polyglot.visit.PrettyPrinter;
 
+//XXX Should be replaced with extension
+@Deprecated
 public class AbortStmt_c extends Stmt_c implements AbortStmt {
+  @Deprecated
   public AbortStmt_c(Position pos) {
-    super(pos);
+    this(pos, null);
+  }
+
+  public AbortStmt_c(Position pos, Ext ext) {
+    super(pos, ext);
   }
 
   @Override

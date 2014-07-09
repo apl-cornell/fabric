@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -60,7 +60,7 @@ public class MethodDeclToFabilExt_c extends MethodDeclToJavaExt_c {
     if (shouldGuard) {
       b = super.guardWithConstraints(rw, b);
     }
-    return ((FabILNodeFactory) rw.java_nf()).Atomic(b.position(),
-        b.statements());
+    return ((FabILNodeFactory) rw.java_nf()).Atomic(
+        Position.compilerGenerated(), b.statements());
   }
 }

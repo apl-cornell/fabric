@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -49,6 +49,21 @@ public interface FabricThread {
 
     public Impl(Runnable target, String name) {
       super(target, name);
+      setDaemon(true);
+    }
+
+    public Impl(ThreadGroup group, String name) {
+      super(group, name);
+      setDaemon(true);
+    }
+
+    public Impl(ThreadGroup group, Runnable target) {
+      super(group, target);
+      setDaemon(true);
+    }
+
+    public Impl(ThreadGroup group, Runnable target, String name) {
+      super(group, target, name);
       setDaemon(true);
     }
 

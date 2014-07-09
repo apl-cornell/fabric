@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -62,7 +62,7 @@ public class Account[principal bank]  { // on bank store and worker
         super();
     }
     
-    public String{bank←} name{⊥→}() {
+    public String{user←;bank←} name{⊥→}() {
         if (user == null) return "";
         return user.name();
     }

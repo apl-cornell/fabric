@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -217,13 +217,13 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
    * Generates proxy methods for methods contained in the given class type and
    * all the interfaces it implements.
    */
-  private List<ClassMember> makeProxyMethods(ProxyRewriter pr, ClassType ct) {
+  private List<ClassMember> makeProxyMethods(ProxyRewriter pr,
+      final ClassType ct) {
+    final FabILTypeSystem ts = pr.typeSystem();
     List<ClassMember> result = new ArrayList<ClassMember>();
 
     Queue<ClassType> toVisit = new LinkedList<ClassType>();
     Set<ClassType> visitedTypes = new HashSet<ClassType>();
-    visitedTypes.add(pr.typeSystem().Object());
-    visitedTypes.add(pr.typeSystem().FObject());
 
     // Maps method names to sets of formal argument types. This prevents us
     // from generating duplicate methods.
@@ -249,6 +249,9 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
         // will work correctly.
         if (mi.flags().isStatic()) continue;
 
+        // Don't count private methods either.
+        if (mi.flags().isPrivate()) continue;
+
         String name = mi.name();
         Set<List<? extends Type>> formalTypes = translatedInstances.get(name);
         if (formalTypes == null) {
@@ -269,6 +272,10 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
       List<? extends MethodInstance> methods = type.methods();
       for (MethodInstance mi : methods) {
         String name = mi.name();
+
+        // Don't generate proxies for private methods.
+        if (mi.flags().isPrivate()) continue;
+
         List<? extends Type> types = mi.formalTypes();
 
         // Ensure this isn't a duplicate method.
@@ -281,8 +288,12 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
         if (formalTypes.contains(types)) continue;
         formalTypes.add(types);
 
-        // Don't generate proxies for private methods.
-        if (!mi.flags().isPrivate()) result.add(makeProxyMethod(pr, mi));
+        // Don't generate proxies for methods that were already implemented by
+        // a super class.
+        if (ts.findImplementingMethod(ct.superType().toClass(), mi) != null)
+          continue;
+
+        result.add(makeProxyMethod(pr, mi));
       }
 
       toVisit.addAll((Collection<? extends ClassType>) type.interfaces());
@@ -560,7 +571,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
         in.append("this." + f.name() + " = (" + f.declType().translate(null)
             + ") $readRef(" + f.declType().translate(null) + "._Proxy.class, "
             + "(fabric.common.RefTypeEnum) "
-            + "refTypes.next(), in, store, intraStoreRefs);");
+            + "refTypes.next(), in, store, intraStoreRefs, interStoreRefs);");
       }
     }
 
@@ -576,10 +587,12 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
         qq.parseMember(
             "public _Impl(fabric.worker.Store store, long onum, int version, "
                 + "long expiry, long label, long accessLabel, java.io.ObjectInput in, "
-                + "java.util.Iterator refTypes, java.util.Iterator intraStoreRefs) "
+                + "java.util.Iterator refTypes, java.util.Iterator intraStoreRefs, "
+                + "java.util.Iterator interStoreRefs) "
                 + "throws java.io.IOException, java.lang.ClassNotFoundException {"
-                + "super(store, onum, version, expiry, label, accessLabel, in, refTypes, intraStoreRefs);"
-                + in + " }", inSubst);
+                + "super(store, onum, version, expiry, label, accessLabel, in, "
+                + "refTypes, intraStoreRefs, interStoreRefs);" + in + " }",
+            inSubst);
     result.add(deserialize);
 
     return result;

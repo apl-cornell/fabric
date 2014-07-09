@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -27,8 +27,8 @@ public class DerivedLocalSource extends LocalSource {
   private URI uri;
 
   protected DerivedLocalSource(String name, FileObject derivedFrom,
-      boolean userSpecified, URI namespace) throws IOException {
-    super(derivedFrom, userSpecified, namespace, false);
+      URI namespace) throws IOException {
+    super(derivedFrom, Kind.COMPILER_GENERATED, namespace, false);
     this.name = name;
   }
 

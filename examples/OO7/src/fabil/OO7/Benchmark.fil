@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -192,7 +192,9 @@ public class Benchmark {
   protected CompositePart createCompositePart() throws Exception {
     Store local = Worker.getWorker().getLocalStore();
     CompositePart compositePart = (CompositePart) new CompositePart@partStore().OO7$CompositePart(this);
-    compositePart.setDocumentation((Document) new Document@documentStore().OO7$Document(this, documentSize[scale]));
+    Document doc = (Document) new Document@documentStore().OO7$Document(this, documentSize[scale]);
+    compositePart.setDocumentation(doc);
+    doc.setPart(compositePart);
 
     AtomicPart[] parts = new AtomicPart[numAtomicPerComp[scale]]@local;
     for (int i = 0; i < parts.length; ++i) {
@@ -217,6 +219,8 @@ public class Benchmark {
 
   protected AtomicPart createAtomicPart(CompositePart parent) throws Exception {
     AtomicPart result = (AtomicPart) new AtomicPart@partStore().OO7$AtomicPart(this);
+    result.setX(rand.nextLong());
+    result.setY(rand.nextLong());
     result.setPartOf(parent);
 
     return result;
@@ -228,6 +232,7 @@ public class Benchmark {
       // create base assembly
       BaseAssembly result = (BaseAssembly) new BaseAssembly@assemblyStore().OO7$BaseAssembly(this);
       parent.addAssembly(result);
+      result.setModule(parent);
 
       for (int j = 0; j < numCompPerAssm[scale]; ++j) {
         int k = rand.nextInt(available.length);
@@ -239,9 +244,13 @@ public class Benchmark {
       // create complex assembly
       ComplexAssembly result = (ComplexAssembly) new ComplexAssembly@assemblyStore().OO7$ComplexAssembly(this);
       parent.addAssembly(result);
+      result.setModule(parent);
 
-      for (int i = 0; i < numAssmPerAssm[scale]; ++i)
-        result.addSubAssembly(createAssembly(parent, level - 1, available));
+      for (int i = 0; i < numAssmPerAssm[scale]; ++i) {
+    	Assembly asm = createAssembly(parent, level - 1, available);
+        result.addSubAssembly(asm);
+        asm.setSuperAssembly(result);
+      }
       return result;
     }
   }
@@ -341,6 +350,35 @@ public class Benchmark {
     System.out.println("  --parts      <host>   place the parts at the given store.");
     System.out.println("  --documents  <host>   place the documents at the given store.");
   }
+
+	// lifted from
+	// http://stackoverflow.com/questions/41107/how-to-generate-a-random-alpha-numeric-string-in-java
+	private static final char native[] symbols = new char native[36];
+
+	static {
+		for (int idx = 0; idx < 10; ++idx)
+			symbols[idx] = (char) ('0' + idx);
+		for (int idx = 10; idx < 36; ++idx)
+			symbols[idx] = (char) ('a' + idx - 10);
+	}
+
+	public String randomString(int size) {
+		return new String(randomNativeChars(size));
+	}
+
+	public char native[] randomNativeChars(int size) {
+		char native[] buf = new char native[size];
+		for (int idx = 0; idx < buf.length; ++idx)
+			buf[idx] = symbols[rand.nextInt(symbols.length)];
+		return buf;
+	}
+	
+	public char[] randomChars(int size) {
+	        char[] buf = new char[size];
+	        for (int idx = 0; idx < buf.length; ++idx)
+	                buf[idx] = symbols[rand.nextInt(symbols.length)];
+	        return buf;
+	}
 
 }
 

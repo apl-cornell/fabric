@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -94,11 +94,19 @@ public final class PairLabel implements Label {
   }
 
   public final Label join(Store store, Label l) {
-    return LabelUtil.join(store, this, l);
+    return LabelUtil.join(store, this, l, true);
   }
 
   public Label meet(Store store, Label l) {
-    return LabelUtil.meet(store, this, l);
+    return LabelUtil.meet(store, this, l, true);
+  }
+
+  public final Label join(Store store, Label l, boolean simplify) {
+    return LabelUtil.join(store, this, l, simplify);
+  }
+
+  public Label meet(Store store, Label l, boolean simplify) {
+    return LabelUtil.meet(store, this, l, simplify);
   }
 
   public ConfPolicy confPolicy() {

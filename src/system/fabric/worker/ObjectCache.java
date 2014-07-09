@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -15,29 +15,29 @@
  */
 package fabric.worker;
 
-import java.lang.ref.ReferenceQueue;
-import java.lang.ref.SoftReference;
+import static fabric.common.Logging.TIMING_LOGGER;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.logging.Level;
 
-import fabric.common.Logging;
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
 import fabric.common.Surrogate;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongHashSet;
 import fabric.common.util.LongIterator;
-import fabric.common.util.LongKeyHashMap;
-import fabric.common.util.LongKeyMap;
+import fabric.common.util.LongKeyCache;
 import fabric.common.util.LongSet;
 import fabric.lang.FClass;
 import fabric.lang.Object;
+import fabric.lang.Object._Impl;
 import fabric.lang.security.ConfPolicy;
 import fabric.lang.security.Label;
+import fabric.worker.transaction.TransactionManager;
 
 /**
- * A per-store object cache. This class is thread safe. Lock hierarchy:
- * ObjectCache.entries → EntrySoftRef → Entry
+ * A per-store object cache. This class is thread safe.
  */
 public final class ObjectCache {
   /**
@@ -131,20 +131,21 @@ public final class ObjectCache {
       // XXX BEGIN HACK FOR OAKLAND 2012 TIMING STUFF
       boolean fclass = FClass.class.getName().equals(serialized.getClassName());
       if (fclass) {
-        Logging.TIMING_LOGGER.fine("Start deserializing FClass ("
-            + serialized.size() + " bytes)");
+        TIMING_LOGGER.log(Level.FINE, "Start deserializing FClass ({0} bytes)",
+            serialized.size());
       }
       try {
         // XXX END HACK FOR OAKLAND 2012 TIMING STUFF
-        next = serialized.deserialize(store).$cacheEntry;
+        _Impl impl = serialized.deserialize(store);
+        next = impl.$cacheEntry;
         store = null;
         serialized = null;
-        snapNextLinks();
+        impl.$getStore().cache(impl);
         // XXX BEGIN HACK FOR OAKLAND 2012 TIMING STUFF
       } finally {
         if (fclass) {
-          Logging.TIMING_LOGGER.fine("Done deserializing FClass ("
-              + ((FClass) next.impl).getName() + ")");
+          TIMING_LOGGER.log(Level.FINE, "Done deserializing FClass ({0})",
+              ((FClass) next.impl).getName());
         }
       }
       // XXX END HACK FOR OAKLAND 2012 TIMING STUFF
@@ -196,6 +197,35 @@ public final class ObjectCache {
     }
 
     /**
+     * Evicts this entry (but does not remove it from its corresponding table).
+     */
+    private void evict() {
+      if (isLocalStoreObject()) {
+        throw new InternalError("Local-store objects cannot be evicted.");
+      }
+
+      if (isEvicted()) return;
+
+      Entry entry = this;
+      while (entry != null) {
+        synchronized (entry) {
+          if (entry.impl != null) {
+            entry.impl.$ref.clear();
+            entry.impl.$ref.depin();
+            entry.impl = null;
+          }
+
+          Entry next = entry.next;
+          entry.store = null;
+          entry.serialized = null;
+          entry.next = null;
+
+          entry = next;
+        }
+      }
+    }
+
+    /**
      * @param deserialize
      *          whether to deserialize this entry if it's <b>serialized</b>.
      * @return the Impl for this entry. This will be null if this entry is
@@ -209,8 +239,19 @@ public final class ObjectCache {
     }
 
     /**
+     * Obtains the object's version number. (Returns null if this entry has been
+     * evicted.)
+     */
+    public synchronized Integer getVersion() {
+      if (next != null) return next.getVersion();
+      if (impl != null) return impl.$version;
+      if (serialized != null) return serialized.getVersion();
+      return null;
+    }
+
+    /**
      * Obtains a reference to the object's update label. (Returns null if this
-     * entry has been evicted.
+     * entry has been evicted.)
      */
     public synchronized Label getLabel() {
       if (isEvicted()) return null;
@@ -227,7 +268,7 @@ public final class ObjectCache {
 
     /**
      * Obtains a reference to the object's access policy. (Returns null if this
-     * entry has been evicted.
+     * entry has been evicted.)
      */
     public synchronized ConfPolicy getAccessPolicy() {
       if (isEvicted()) return null;
@@ -244,7 +285,7 @@ public final class ObjectCache {
 
     /**
      * Obtains a reference to the object's exact proxy. (Returns null if this
-     * entry has been evicted.
+     * entry has been evicted.)
      */
     public synchronized Object._Proxy getProxy() {
       if (isEvicted()) return null;
@@ -288,119 +329,10 @@ public final class ObjectCache {
     }
   }
 
-  final class EntrySoftRef extends SoftReference<Entry> {
-    final long onum;
-
-    /**
-     * @param entry
-     *          assumed to be not <b>evicted</b>.
-     */
-    private EntrySoftRef(Entry entry) {
-      super(entry, refQueue);
-      if (entry.impl != null) {
-        this.onum = entry.impl.$getOnum();
-      } else {
-        this.onum = entry.serialized.getOnum();
-      }
-    }
-
-    private EntrySoftRef(Store store, SerializedObject obj) {
-      this(new Entry(store, obj));
-    }
-
-    private EntrySoftRef(Object._Impl obj) {
-      this(new Entry(obj));
-    }
-
-    /**
-     * Evicts the entry associated with this soft reference from the worker's
-     * cache.
-     * 
-     * @return true if the Entry object was still in memory.
-     */
-    private synchronized boolean evict() {
-      Entry entry = get();
-      if (entry == null) return false;
-
-      boolean result;
-      synchronized (entry) {
-        result = !entry.isEvicted();
-        if (entry.isLocalStoreObject()) {
-          throw new InternalError("evicting local store object");
-        }
-
-        clear();
-
-        while (entry != null) {
-          synchronized (entry) {
-            if (entry.impl != null) {
-              entry.impl.$ref.clear();
-              entry.impl.$ref.depin();
-              entry.impl = null;
-            }
-
-            Entry next = entry.next;
-            entry.store = null;
-            entry.serialized = null;
-            entry.next = null;
-
-            entry = next;
-          }
-        }
-
-        entries.remove(onum);
-      }
-
-      return result;
-    }
-  }
-
-  /**
-   * A thread for removing entries from <code>entries</code> as Entries are
-   * collected from memory.
-   */
-  private class Collector extends Thread {
-    private Collector(String storeName) {
-      super("ObjectCache collector for store " + storeName);
-      setDaemon(true);
-    }
-
-    @Override
-    public void run() {
-      while (true) {
-        EntrySoftRef ref = null;
-        try {
-          ref = (EntrySoftRef) refQueue.remove();
-        } catch (InterruptedException e) {
-        }
-
-        if (ref != null) {
-          // An entry object has been GCed. Remove the corresponding element
-          // from the entry table.
-          synchronized (entries) {
-            EntrySoftRef removed = entries.remove(ref.onum);
-            if (removed != ref) {
-              // Entry had been replaced since it was put on the ReferenceQueue.
-              // Undo the remove.
-              entries.put(ref.onum, removed);
-            }
-          }
-        }
-      }
-    }
-  }
-
-  private final ReferenceQueue<Entry> refQueue;
-
-  private final LongKeyMap<EntrySoftRef> entries;
+  private final LongKeyCache<Entry> entries;
 
   ObjectCache(String storeName) {
-    this.entries = new LongKeyHashMap<ObjectCache.EntrySoftRef>();
-    this.refQueue = new ReferenceQueue<Entry>();
-
-    // Start a thread that will remove entries from this.entries as
-    // Entries are collected from memory.
-    new Collector(storeName).start();
+    this.entries = new LongKeyCache<Entry>();
   }
 
   /**
@@ -408,96 +340,182 @@ public final class ObjectCache {
    * it is guaranteed to not be evicted.
    */
   Entry get(long onum) {
-    synchronized (entries) {
-      EntrySoftRef entrySoftRef = entries.get(onum);
-      if (entrySoftRef == null) return null;
+    Entry entry = entries.get(onum);
+    if (entry == null) return null;
 
-      Entry entry = entrySoftRef.get();
-
-      synchronized (entry) {
-        if (entry.isEvicted()) {
-          // Entry evicted. Remove from entries table.
-          entries.remove(onum);
-          return null;
-        }
-
-        entry.snapNextLinks();
-
-        if (entry.next != null) {
-          // Snap the link to the overriding entry.
-          entrySoftRef.clear();
-          entry = entry.next;
-          entries.put(onum, new EntrySoftRef(entry));
-        }
+    synchronized (entry) {
+      if (entry.isEvicted()) {
+        // Entry evicted. Remove from entries table.
+        entries.remove(onum, entry);
+        return null;
       }
 
-      return entry;
+      entry.snapNextLinks();
+
+      if (entry.next != null) {
+        // Snap the link to the overriding entry.
+        entries.replace(onum, entry, entry.next);
+        entry = entry.next;
+      }
     }
+
+    return entry;
   }
 
+  /**
+   * Adds the given impl to the cache. If a different impl already exists in
+   * cache, then an internal error results, indicating that an invariant was
+   * probably broken, resulting in a cache conflict.
+   */
   void put(Object._Impl impl) {
     long onum = impl.$getOnum();
 
-    synchronized (entries) {
-      EntrySoftRef existingRef = entries.get(onum);
-      if (existingRef != null) {
-        Entry existingEntry = existingRef.get();
-        if (impl.$cacheEntry == existingEntry) return;
-        if (existingEntry != null)
-          throw new InternalError("Conflicting cache entry");
+    while (true) {
+      Entry existingEntry = entries.putIfAbsent(onum, impl.$cacheEntry);
+      if (existingEntry == null) return;
+
+      if (existingEntry.getImpl(false) != impl) {
+        throw new InternalError("Conflicting cache entry");
       }
 
-      entries.put(onum, new EntrySoftRef(impl));
+      if (entries.replace(onum, existingEntry, impl.$cacheEntry)) return;
     }
   }
 
+  /**
+   * If there is not already an entry for the given object's onum, add the given
+   * object to the cache. If an entry already exists in cache, then an internal
+   * error results, indicating that an invariant was probably broken.
+   * 
+   * @return the Entry inserted into the cache.
+   */
   Entry put(Store store, SerializedObject obj) {
-    return put(store, obj, false);
+    return putIfAbsent(store, obj, false);
   }
 
-  private Entry put(Store store, SerializedObject obj, boolean silenceConflicts) {
+  /**
+   * If there is not already an entry for the given object's onum, add the given
+   * object to the cache.
+   * 
+   * @param silenceConflicts if this is false and an entry already exists for
+   *          the object, then an error is thrown.
+   * @return the resulting cache entry associated with the object's onum.
+   */
+  private Entry putIfAbsent(Store store, SerializedObject obj,
+      boolean silenceConflicts) {
     long onum = obj.getOnum();
 
-    synchronized (entries) {
-      EntrySoftRef existingRef = entries.get(onum);
-      if (existingRef != null) {
-        Entry existingEntry = existingRef.get();
-        if (existingEntry != null) {
-          if (!silenceConflicts) {
-            throw new InternalError("Conflicting cache entry");
-          }
-          return existingEntry;
-        }
+    Entry newEntry = new Entry(store, obj);
+    Entry existingEntry = entries.putIfAbsent(onum, newEntry);
+    if (existingEntry != null) {
+      if (!silenceConflicts) {
+        throw new InternalError("Conflicting cache entry");
       }
 
-      EntrySoftRef newRef = new EntrySoftRef(store, obj);
-      entries.put(onum, newRef);
-      return newRef.get();
+      return existingEntry;
     }
+
+    return newEntry;
   }
 
-  void put(Store store, ObjectGroup group) {
-    synchronized (entries) {
-      for (SerializedObject obj : group.objects().values()) {
-        put(store, obj, true);
+  /**
+   * Adds the contents of the given object group to the cache. Returns the entry
+   * for the given onum.
+   * 
+   * @param store the store from which the group was obtained.
+   * @param group the group to add to the cache.
+   * @param onum the onum of the entry to return. This should be a member of the
+   *          given group.
+   */
+  Entry put(Store store, ObjectGroup group, long onum) {
+    Entry result = null;
+    for (SerializedObject obj : group.objects().values()) {
+      Entry curEntry = putIfAbsent(store, obj, true);
+      if (result == null && onum == obj.getOnum()) {
+        result = curEntry;
       }
     }
+
+    if (result == null) throw new InternalError("Entry not found.");
+    return result;
+  }
+
+  /**
+   * Adds the given object to the cache. If a cache entry already exists, it is
+   * replaced, and any transactions currently using the object are aborted and
+   * retried.
+   */
+  void forcePut(Store store, SerializedObject obj) {
+    update(store, obj, false);
   }
 
   /**
    * Updates the cache with the given serialized object. If an object with the
    * given onum exists in cache, it is evicted and the given update is placed in
-   * the cache.
-   * 
-   * @return true iff an object with the given onum was evicted from cache.
+   * the cache; any transactions currently using the replaced object are aborted
+   * and retried. If the object does not exist in cache, then the cache is not
+   * updated.
    */
-  boolean update(Store store, SerializedObject update) {
-    synchronized (entries) {
-      boolean evicted = evict(update.getOnum());
+  void update(Store store, SerializedObject update) {
+    update(store, update, true);
+  }
 
-      if (evicted) put(store, update);
-      return evicted;
+  /**
+   * Updates the cache with the given serialized object. If
+   * <code>replaceOnly</code> is true, then the cache is only updated if an
+   * object with the given onum exists in cache. The existing object is evicted,
+   * and the given update is placed in the cache. If the cache is updated, then
+   * any transactions currently using the object are aborted and retried.
+   */
+  void update(Store store, SerializedObject update, boolean replaceOnly) {
+    long onum = update.getOnum();
+    Entry curEntry = entries.get(onum);
+
+    if (curEntry == null) {
+      if (!replaceOnly) putIfAbsent(store, update, true);
+      return;
     }
+
+    synchronized (curEntry) {
+      if (replaceOnly && curEntry.isEvicted()) return;
+
+      // Check if object in current entry is an older version.
+      if (curEntry.getVersion() >= update.getVersion()) return;
+
+      curEntry.evict();
+    }
+
+    Entry newEntry = new Entry(store, update);
+    entries.replace(onum, curEntry, newEntry);
+
+    TransactionManager.abortReaders(store, update.getOnum());
+  }
+
+  /**
+   * Updates the cache with the given object, as follows:
+   * <ul>
+   * <li>If the cache contains a deserialized copy of an old version of the
+   * object, then that old version is replaced with a serialized copy of the new
+   * version. Transactions using the updated object are aborted and retried.
+   * <li>If the cache contains a serialized copy of an old version of the
+   * object, then that old version is evicted.
+   * </ul>
+   * 
+   * @return true iff after this update operation, the cache contains the
+   *     object.
+   */
+  boolean updateOrEvict(Store store, SerializedObject obj) {
+    long onum = obj.getOnum();
+    Entry curEntry = entries.get(onum);
+    if (curEntry == null) return false;
+
+    if (curEntry.getImpl(false) == null) {
+      curEntry.evict();
+      return false;
+    }
+
+    forcePut(store, obj);
+    return true;
   }
 
   /**
@@ -505,20 +523,17 @@ public final class ObjectCache {
    * 
    * @return true iff an entry for the onum was found in cache.
    */
-  boolean evict(long onum) {
-    synchronized (entries) {
-      EntrySoftRef entry = entries.get(onum);
-      if (entry == null) return false;
-      return entry.evict();
-    }
+  void evict(long onum) {
+    Entry entry = entries.get(onum);
+    if (entry == null) return;
+    entry.evict();
+    entries.remove(onum, entry);
   }
 
   void clear() {
-    synchronized (entries) {
-      LongSet onums = new LongHashSet(entries.keySet());
-      for (LongIterator it = onums.iterator(); it.hasNext();) {
-        evict(it.next());
-      }
+    LongSet onums = new LongHashSet(entries.keySet());
+    for (LongIterator it = onums.iterator(); it.hasNext();) {
+      evict(it.next());
     }
   }
 }

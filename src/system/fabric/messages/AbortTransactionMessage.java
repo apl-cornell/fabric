@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -21,7 +21,8 @@ import java.io.IOException;
 
 import fabric.common.TransactionID;
 import fabric.common.exceptions.AccessException;
-import fabric.lang.security.Principal;
+import fabric.common.net.RemoteIdentity;
+import fabric.worker.remote.RemoteWorker;
 
 public class AbortTransactionMessage extends
     Message<AbortTransactionMessage.Response, AccessException> {
@@ -51,9 +52,9 @@ public class AbortTransactionMessage extends
   // ////////////////////////////////////////////////////////////////////////////
 
   @Override
-  public Response dispatch(Principal p, MessageHandler h)
+  public Response dispatch(RemoteIdentity<RemoteWorker> client, MessageHandler h)
       throws AccessException {
-    return h.handle(p, this);
+    return h.handle(client, this);
   }
 
   // ////////////////////////////////////////////////////////////////////////////

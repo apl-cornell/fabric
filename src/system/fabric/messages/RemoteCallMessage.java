@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -27,9 +27,11 @@ import java.lang.reflect.Method;
 import fabric.common.ClassRef;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.ProtocolError;
+import fabric.common.net.RemoteIdentity;
 import fabric.lang.Object._Proxy;
 import fabric.lang.security.Principal;
 import fabric.worker.remote.RemoteCallException;
+import fabric.worker.remote.RemoteWorker;
 import fabric.worker.remote.WriterMap;
 
 public class RemoteCallMessage extends
@@ -93,9 +95,9 @@ public class RemoteCallMessage extends
   //////////////////////////////////////////////////////////////////////////////
 
   @Override
-  public Response dispatch(Principal p, MessageHandler h) throws ProtocolError,
-      RemoteCallException {
-    return h.handle(p, this);
+  public Response dispatch(RemoteIdentity<RemoteWorker> client, MessageHandler h)
+      throws ProtocolError, RemoteCallException {
+    return h.handle(client, this);
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -219,8 +221,8 @@ public class RemoteCallMessage extends
       writeObject(out, r.result);
     }
 
-    out.writeBoolean(writerMap != null);
-    if (writerMap != null) writerMap.write(out);
+    out.writeBoolean(r.writerMap != null);
+    if (r.writerMap != null) r.writerMap.write(out);
   }
 
 }

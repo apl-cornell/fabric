@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -16,7 +16,7 @@
 package fabil.extension;
 
 import polyglot.ast.ArrayTypeNode;
-import polyglot.ast.JL_c;
+import polyglot.ast.JLDel_c;
 import polyglot.ast.Node;
 import polyglot.ast.NodeFactory;
 import polyglot.ast.TypeNode;
@@ -27,7 +27,7 @@ import polyglot.visit.TypeBuilder;
 import fabil.ast.FabricArrayTypeNode;
 import fabil.types.FabILTypeSystem;
 
-public class FabricArrayTypeNodeDel_c extends JL_c {
+public class FabricArrayTypeNodeDel_c extends JLDel_c {
 
   @Override
   public Node buildTypes(TypeBuilder tb) {

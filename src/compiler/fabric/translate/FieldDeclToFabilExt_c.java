@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -30,7 +30,7 @@ public class FieldDeclToFabilExt_c extends FieldDeclToJavaExt_c {
     // skip fields used for polyglot metadata
     if (node() instanceof FabricFieldDecl) {
       FabricFieldDecl f = (FabricFieldDecl) node();
-      return rw.bypass(f.accessLabel());
+      return rw.bypass(f.accessPolicy());
     } else return rw;
   }
 

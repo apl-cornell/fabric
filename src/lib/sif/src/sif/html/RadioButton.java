@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -33,10 +33,15 @@ public final class RadioButton extends InputNode {
         checked = checked_;
     }
 
+    public RadioButton(Principal servletP, Label L, Label E, String name, String value, boolean checked_) {
+        super(servletP, L, E, name);
+        checked = checked_;
+    }
+
     void writeImpl(HTMLWriter p) {
         p.print("<input type=radio");
         p.print(" name=");
-        p.printq(input.getName());
+        p.printq(getName());
         if (checked) p.print(" checked");
         p.print(" />");
     }

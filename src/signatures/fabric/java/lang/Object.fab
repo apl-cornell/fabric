@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -30,5 +30,4 @@ public class Object {
     private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
     private static int __JIF_SAFE_CONSTRUCTORS$20050907 = 0;
     public Object() { }
-    public native final Class{this} getClass();
 }

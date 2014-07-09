@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -476,7 +476,7 @@ public class LinkedList extends AbstractSequentialList
 
     // Link the new chain of entries into the list.
     modCount++;
-    size += csize;
+    size = size + csize;
     prev.next = after;
     if (after != null)
       after.previous = e;

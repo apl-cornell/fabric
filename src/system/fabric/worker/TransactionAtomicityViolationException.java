@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -22,11 +22,11 @@ import fabric.common.exceptions.InternalError;
 import fabric.net.RemoteNode;
 
 public class TransactionAtomicityViolationException extends InternalError {
-  public final List<RemoteNode> failed;
-  public final List<RemoteNode> unreachable;
+  public final List<RemoteNode<?>> failed;
+  public final List<RemoteNode<?>> unreachable;
 
-  public TransactionAtomicityViolationException(List<RemoteNode> failed,
-      List<RemoteNode> unreachable) {
+  public TransactionAtomicityViolationException(List<RemoteNode<?>> failed,
+      List<RemoteNode<?>> unreachable) {
     this.failed = Collections.unmodifiableList(failed);
     this.unreachable = Collections.unmodifiableList(unreachable);
   }

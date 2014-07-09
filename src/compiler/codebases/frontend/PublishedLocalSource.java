@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -23,8 +23,8 @@ import javax.tools.FileObject;
 public class PublishedLocalSource extends DerivedLocalSource {
 
   protected PublishedLocalSource(String name, FileObject derivedFrom,
-      boolean userSpecified, URI namespace) throws IOException {
-    super(name, derivedFrom, userSpecified, namespace);
+      URI namespace) throws IOException {
+    super(name, derivedFrom, namespace);
   }
 
   // Allow PublishedLocalSource to be equal to RemoteSource

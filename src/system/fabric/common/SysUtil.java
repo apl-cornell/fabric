@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -57,6 +57,26 @@ public final class SysUtil {
    */
   private static final int BUF_LEN = 4096;
 
+  public static String getNodeCN(String nodeName, long principalOnum) {
+    return principalOnum + ":" + nodeName;
+  }
+
+  public static long getPrincipalOnum(String nodeCN) {
+    try {
+      int idx = nodeCN.indexOf(':');
+      return Long.parseLong(nodeCN.substring(0, idx));
+    } catch (IndexOutOfBoundsException e) {
+      throw new IllegalArgumentException(e);
+    } catch (NumberFormatException e) {
+      throw new IllegalArgumentException(e);
+    }
+  }
+
+  public static String getNodeName(String nodeCN) {
+    int idx = nodeCN.indexOf(':');
+    return nodeCN.substring(idx + 1);
+  }
+
   /**
    * Generates a cryptographically secure hash of a platform class.
    * 
@@ -69,9 +89,10 @@ public final class SysUtil {
     boolean hashing_Impl = false;
     Class<?> ifaceClass = null;
 
-    // There are two cases here. If the class extends fabric.lang.Object and was
-    // compiled with filc/fabc, we use the compiler-generated hash. Otherwise,
-    // we hash the class's bytecode.
+    // There are three cases here. If the class extends fabric.lang.Object and
+    // was compiled with filc/fabc, we use the compiler-generated hash.
+    // Otherwise, if the class is java.lang.Object or java.lang.Cloneable, we
+    // hash its name. Otherwise, we hash the class's bytecode.
 
     if (fabric.lang.Object.class.isAssignableFrom(c)) {
       // We have a Fabric class. Use the filc/fabc-generated hash, if any. If we
@@ -101,56 +122,66 @@ public final class SysUtil {
       }
     }
 
-    // Class wasn't compiled by filc/fabc. Hash the bytecode instead.
+    // Class wasn't compiled by filc/fabc.
     String className = c.getName();
 
     CLASS_HASHING_LOGGER.log(Level.FINE, "Hashing platform class: {0}",
         className);
 
+    // Check the cache.
     byte[] result = classHashCache.get(className);
     if (result != null) {
       CLASS_HASHING_LOGGER.finer("  Hash found in cache");
       return result;
     }
 
+    // Not found in cache. Need to compute the hash.
     MessageDigest digest = Crypto.digestInstance();
 
-    ClassLoader classLoader;
-    if (Worker.isInitialized()) {
-      classLoader = Worker.getWorker().getClassLoader();
+    if (c.equals(java.lang.Object.class) || c.equals(java.lang.Cloneable.class)) {
+      // Have java.lang.Object or java.lang.Cloneable. Hash the class's name.
+      // This is a bit of a hack to get different versions of Java to play with
+      // each other.
+      digest.update(className.getBytes("UTF-8"));
     } else {
-      classLoader = c.getClassLoader();
+      // Hash the class's byte code.
+      ClassLoader classLoader;
+      if (Worker.isInitialized()) {
+        classLoader = Worker.getWorker().getClassLoader();
+      } else {
+        classLoader = c.getClassLoader();
+      }
+
+      if (classLoader == null) {
+        classLoader = ClassLoader.getSystemClassLoader();
+      }
+
+      String classFileName = className.replace('.', '/') + ".class";
+
+      if (CLASS_HASHING_LOGGER.isLoggable(Level.FINEST)) {
+        URL classResource = classLoader.getResource(classFileName);
+        Logging.log(CLASS_HASHING_LOGGER, Level.FINEST,
+            "  Using {0} to load class bytecode from {1}", classLoader,
+            classResource);
+      }
+
+      InputStream classIn = classLoader.getResourceAsStream(classFileName);
+
+      if (classIn == null) {
+        Logging.log(CLASS_HASHING_LOGGER, Level.WARNING,
+            "Unable to load {0} from {1} using {2}", className, classFileName,
+            classLoader);
+        throw new InternalError("Class not found: " + className);
+      }
+
+      byte[] buf = new byte[BUF_LEN];
+      int count = classIn.read(buf);
+      while (count != -1) {
+        digest.update(buf, 0, count);
+        count = classIn.read(buf);
+      }
+      classIn.close();
     }
-
-    if (classLoader == null) {
-      classLoader = ClassLoader.getSystemClassLoader();
-    }
-
-    String classFileName = className.replace('.', '/') + ".class";
-
-    if (CLASS_HASHING_LOGGER.isLoggable(Level.FINEST)) {
-      URL classResource = classLoader.getResource(classFileName);
-      Logging.log(CLASS_HASHING_LOGGER, Level.FINEST,
-          "  Using {0} to load class bytecode from {1}", classLoader,
-          classResource);
-    }
-
-    InputStream classIn = classLoader.getResourceAsStream(classFileName);
-
-    if (classIn == null) {
-      Logging.log(CLASS_HASHING_LOGGER, Level.WARNING,
-          "Unable to load {0} from {1} using {2}", className, classFileName,
-          classLoader);
-      throw new InternalError("Class not found: " + className);
-    }
-
-    byte[] buf = new byte[BUF_LEN];
-    int count = classIn.read(buf);
-    while (count != -1) {
-      digest.update(buf, 0, count);
-      count = classIn.read(buf);
-    }
-    classIn.close();
 
     if (!c.isInterface()) {
       // Include the super class.
@@ -275,6 +306,7 @@ public final class SysUtil {
    *          the iterables to chain
    * @return an object that can be used to traverse iters in order
    */
+  @SafeVarargs
   public static <T> Iterable<T> chain(final Iterable<T>... iters) {
     return new Iterable<T>() {
       @Override

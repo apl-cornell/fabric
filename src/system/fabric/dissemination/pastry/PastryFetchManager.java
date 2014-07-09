@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -21,9 +21,11 @@ import java.util.Properties;
 import fabric.common.ObjectGroup;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
+import fabric.dissemination.AbstractGlob;
+import fabric.dissemination.Cache;
 import fabric.dissemination.DummyFetchManager;
 import fabric.dissemination.FetchManager;
-import fabric.dissemination.Glob;
+import fabric.dissemination.ObjectGlob;
 import fabric.worker.RemoteStore;
 import fabric.worker.Worker;
 
@@ -39,13 +41,13 @@ import fabric.worker.Worker;
 public class PastryFetchManager implements FetchManager {
 
   private final Node node;
-  private final FetchManager fallback;
+  private final DummyFetchManager fallback;
 
   public PastryFetchManager(Worker worker, Properties dissemConfig) {
     try {
-      this.fallback = new DummyFetchManager(worker, dissemConfig);
-      this.node = new Node(dissemConfig); // start a new pastry node
-      worker.registerDisseminationCache(node.disseminator.cache);
+      Cache cache = new Cache();
+      this.fallback = new DummyFetchManager(worker, dissemConfig, cache);
+      this.node = new Node(dissemConfig, cache); // start a new pastry node
     } catch (IOException e) {
       throw new InternalError(e);
     }
@@ -53,7 +55,7 @@ public class PastryFetchManager implements FetchManager {
 
   @Override
   public ObjectGroup fetch(RemoteStore c, long onum) throws AccessException {
-    Glob glob;
+    ObjectGlob glob;
     try {
       glob = node.disseminator().fetch(c, onum);
     } catch (DisseminationTimeoutException e) {
@@ -64,12 +66,18 @@ public class PastryFetchManager implements FetchManager {
       return fallback.fetch(c, onum);
     }
 
-    return glob.decrypt(c);
+    return glob.decrypt();
   }
 
   @Override
   public void destroy() {
     node.destroy();
+  }
+
+  @Override
+  public boolean updateCaches(RemoteStore store, long onum,
+      AbstractGlob<?> update) {
+    return node.disseminator.updateCaches(store, onum, update);
   }
 
 }

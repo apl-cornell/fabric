@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -21,6 +21,6 @@ import polyglot.ast.FieldDecl;
 
 public interface FabricDefaultSignature extends DefaultSignature {
 
-  public Label defaultAccessLabel(FieldDecl fd);
+  public Label defaultAccessPolicy(FieldDecl fd);
 
 }

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -27,22 +27,24 @@ import javax.security.auth.x500.X500Principal;
 
 import fabric.common.FastSerializable;
 import fabric.common.ONumConstants;
-import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
+import fabric.common.SysUtil;
 import fabric.common.exceptions.AccessException;
+import fabric.common.net.RemoteIdentity;
+import fabric.common.util.ConcurrentLongKeyHashMap;
+import fabric.common.util.ConcurrentLongKeyMap;
+import fabric.common.util.LongHashSet;
 import fabric.common.util.LongIterator;
-import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
-import fabric.common.util.LongKeyMap.Entry;
-import fabric.common.util.MutableInteger;
+import fabric.common.util.LongSet;
 import fabric.common.util.OidKeyHashMap;
-import fabric.common.util.Pair;
 import fabric.lang.security.NodePrincipal;
 import fabric.lang.security.Principal;
-import fabric.store.PartialObjectGroup;
 import fabric.store.SubscriptionManager;
 import fabric.worker.Store;
+import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.Worker;
+import fabric.worker.remote.RemoteWorker;
 
 /**
  * <p>
@@ -63,28 +65,25 @@ import fabric.worker.Worker;
  * </p>
  * <p>
  * All ObjectDB implementations should provide a constructor which takes the
- * name of the store and opens the appropriate back-end database if it exists,
- * or creates it if it doesn't exist.
+ * name of the store and its private key, and opens the appropriate back-end
+ * database if it exists, or creates it if it doesn't exist.
  * </p>
  */
 public abstract class ObjectDB {
-
+  private static final int INITIAL_OBJECT_VERSION_NUMBER = 1;
+  /**
+   * The store's name.
+   */
   protected final String name;
-  private long nextGlobID;
 
   /**
-   * Maps object numbers to globIDs. The group container with ID
-   * globIDByOnum(onum) holds a copy of object onum. (globIDs really ought to be
-   * called group-container IDs, but we're sticking with globID for historical
-   * reasons and because it's shorter.)
+   * The store's object grouper.
    */
-  private final LongKeyMap<Long> globIDByOnum;
+  private final ObjectGrouper objectGrouper;
 
-  /**
-   * Maps globIDs to entries (either GroupContainers or PartialObjectGroups) and
-   * the number of times the entry is referenced in globIDByOnum.
-   */
-  private final GroupTable globTable;
+  public static enum UpdateMode {
+    CREATE, WRITE
+  }
 
   /**
    * The data stored for a partially prepared transaction.
@@ -96,15 +95,21 @@ public abstract class ObjectDB {
     public final Collection<Long> reads;
 
     /**
-     * Objects that have been modified or created.
+     * Objects that have been created.
      */
-    public final Collection<SerializedObject> modData;
+    public final Collection<SerializedObject> creates;
+
+    /**
+     * Objects that have been modified.
+     */
+    public final Collection<SerializedObject> writes;
 
     PendingTransaction(long tid, Principal owner) {
       this.tid = tid;
       this.owner = owner;
-      this.reads = new ArrayList<Long>();
-      this.modData = new ArrayList<SerializedObject>();
+      this.reads = new ArrayList<>();
+      this.creates = new ArrayList<>();
+      this.writes = new ArrayList<>();
     }
 
     /**
@@ -125,10 +130,19 @@ public abstract class ObjectDB {
       for (int i = 0; i < size; i++)
         reads.add(in.readLong());
 
-      size = in.readInt();
-      this.modData = new ArrayList<SerializedObject>(size);
-      for (int i = 0; i < size; i++)
-        modData.add(new SerializedObject(in));
+      int createsSize = in.readInt();
+      this.creates = new ArrayList<>(createsSize);
+
+      int writesSize = in.readInt();
+      this.writes = new ArrayList<>(writesSize);
+
+      if (in.readBoolean()) {
+        for (int i = 0; i < size; i++)
+          creates.add(new SerializedObject(in));
+
+        for (int i = 0; i < size; i++)
+          writes.add(new SerializedObject(in));
+      }
     }
 
     /**
@@ -138,17 +152,19 @@ public abstract class ObjectDB {
     public Iterator<Long> iterator() {
       return new Iterator<Long>() {
         private Iterator<Long> readIt = reads.iterator();
-        private Iterator<SerializedObject> modIt = modData.iterator();
+        private Iterator<SerializedObject> createIt = creates.iterator();
+        private Iterator<SerializedObject> writeIt = writes.iterator();
 
         @Override
         public boolean hasNext() {
-          return readIt.hasNext() || modIt.hasNext();
+          return readIt.hasNext() || createIt.hasNext() || writeIt.hasNext();
         }
 
         @Override
         public Long next() {
           if (readIt.hasNext()) return readIt.next();
-          return modIt.next().getOnum();
+          if (createIt.hasNext()) return createIt.next().getOnum();
+          return writeIt.next().getOnum();
         }
 
         @Override
@@ -163,6 +179,33 @@ public abstract class ObjectDB {
      */
     @Override
     public void write(DataOutput out) throws IOException {
+      writeCommon(out);
+
+      // Indicate that contents of modData will follow.
+      out.writeBoolean(true);
+
+      for (SerializedObject obj : creates)
+        obj.write(out);
+
+      for (SerializedObject obj : writes)
+        obj.write(out);
+    }
+
+    /**
+     * Serializes this PendingTransaction out to the given output stream, whilst
+     * omitting data about the objects that have been modified or created.
+     */
+    void writeNoModData(DataOutput out) throws IOException {
+      writeCommon(out);
+
+      // Indicate that contents of modData will not follow.
+      out.writeBoolean(false);
+    }
+
+    /**
+     * Writes everything but contents of modData.
+     */
+    private void writeCommon(DataOutput out) throws IOException {
       out.writeLong(tid);
 
       out.writeBoolean(owner != null);
@@ -175,9 +218,8 @@ public abstract class ObjectDB {
       for (Long onum : reads)
         out.writeLong(onum);
 
-      out.writeInt(modData.size());
-      for (SerializedObject obj : modData)
-        obj.write(out);
+      out.writeInt(creates.size());
+      out.writeInt(writes.size());
     }
   }
 
@@ -191,29 +233,20 @@ public abstract class ObjectDB {
    * Maps tids to principal oids to PendingTransactions.
    * </p>
    */
-  protected final LongKeyMap<OidKeyHashMap<PendingTransaction>> pendingByTid;
+  protected final ConcurrentLongKeyMap<OidKeyHashMap<PendingTransaction>> pendingByTid;
 
   /**
-   * <p>
-   * Tracks the read/write locks for each onum. Maps each onum to a pair. The
-   * first component of the pair is the tid for the write-lock holder. The
-   * second component is a map from the of tids for the read-lock holders to the
-   * number of workers in the transaction that have read locks on the onum.
-   * </p>
-   * <p>
-   * This should be recomputed from the set of prepared transactions when
-   * restoring from stable storage.
-   * </p>
+   * Maps onums to ObjectLocks. This should be recomputed from the set of
+   * prepared transactions when restoring from stable storage.
    */
-  protected final LongKeyMap<Pair<Long, LongKeyMap<MutableInteger>>> rwLocks;
+  protected final ConcurrentLongKeyMap<ObjectLocks> rwLocks;
 
-  protected ObjectDB(String name) {
+  protected ObjectDB(String name, PrivateKey privateKey) {
     this.name = name;
-    this.pendingByTid = new LongKeyHashMap<OidKeyHashMap<PendingTransaction>>();
-    this.rwLocks = new LongKeyHashMap<Pair<Long, LongKeyMap<MutableInteger>>>();
-    this.globIDByOnum = new LongKeyHashMap<Long>();
-    this.globTable = new GroupTable();
-    this.nextGlobID = 0;
+    this.pendingByTid =
+        new ConcurrentLongKeyHashMap<OidKeyHashMap<PendingTransaction>>();
+    this.rwLocks = new ConcurrentLongKeyHashMap<ObjectLocks>();
+    this.objectGrouper = new ObjectGrouper(this, privateKey);
   }
 
   /**
@@ -226,73 +259,153 @@ public abstract class ObjectDB {
    */
   public final void beginTransaction(long tid, Principal worker)
       throws AccessException {
-    OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
-    if (submap == null) {
-      submap = new OidKeyHashMap<PendingTransaction>();
-      pendingByTid.put(tid, submap);
+    // Ensure pendingByTid has a submap for the given TID.
+    while (true) {
+      OidKeyHashMap<PendingTransaction> submap =
+          new OidKeyHashMap<PendingTransaction>();
+      OidKeyHashMap<PendingTransaction> existingSubmap =
+          pendingByTid.putIfAbsent(tid, submap);
+      if (existingSubmap != null) submap = existingSubmap;
+
+      synchronized (submap) {
+        submap.put(worker, new PendingTransaction(tid, worker));
+      }
+
+      // Ensure the submap wasn't removed out from under us.
+      if (pendingByTid.get(tid) == submap) return;
     }
-
-    submap.put(worker, new PendingTransaction(tid, worker));
   }
 
   /**
-   * Registers that a transaction has read an object.
-   */
-  public final void registerRead(long tid, Principal worker, long onum) {
-    addReadLock(onum, tid);
-    pendingByTid.get(tid).get(worker).reads.add(onum);
-  }
-
-  /**
-   * Registers that a transaction has created or written to an object. This
-   * update will not become visible in the store until commit() is called for
-   * the transaction.
+   * Prepares a read against the database.
    * 
    * @param tid
-   *          the identifier for the transaction.
+   *          the identifier for the transaction preparing the read.
+   * @param worker
+   *          the worker preparing the read.
+   * @param onum
+   *          the object number that was read.
+   * @param version
+   *          the version that was read.
+   * @param versionConflicts
+   *          a map containing the transaction's version-conflict information.
+   *          If the object read was out of date, then a new entry will be added
+   *          to this map, binding the object's onum to its current version.
+   */
+  public final void prepareRead(long tid, Principal worker, long onum,
+      int version, LongKeyMap<SerializedObject> versionConflicts)
+      throws TransactionPrepareFailedException {
+    // First, lock the object.
+    try {
+      objectLocksFor(onum).lockForRead(tid, worker);
+    } catch (UnableToLockException e) {
+      throw new TransactionPrepareFailedException(versionConflicts, "Object "
+          + onum + " has been locked by an uncommitted transaction.");
+    }
+
+    // Register that the transaction has locked the object.
+    OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
+
+    synchronized (submap) {
+      submap.get(worker).reads.add(onum);
+    }
+
+    // Check version numbers.
+    int curVersion;
+    try {
+      curVersion = getVersion(onum);
+    } catch (AccessException e) {
+      throw new TransactionPrepareFailedException(versionConflicts,
+          e.getMessage());
+    }
+
+    if (curVersion != version) {
+      versionConflicts.put(onum, read(onum));
+    }
+  }
+
+  /**
+   * Prepares a create/write against the database.
+   * 
+   * @param tid
+   *          the identifier for the transaction preparing the create/write.
+   * @param worker
+   *          the worker preparing the create/write.
    * @param obj
-   *          the updated object.
+   *          the modified object.
+   * @param versionConflicts
+   *          a map containing the transaction's version-conflict information.
+   *          If the object modified was out of date, then a new entry will be
+   *          added to this map, binding the object's onum to its current
+   *          version.
    */
-  public final void registerUpdate(long tid, Principal worker,
-      SerializedObject obj) {
-    addWriteLock(obj.getOnum(), tid);
-    pendingByTid.get(tid).get(worker).modData.add(obj);
+  public final void prepareUpdate(long tid, Principal worker,
+      SerializedObject obj, LongKeyMap<SerializedObject> versionConflicts,
+      UpdateMode mode) throws TransactionPrepareFailedException {
+    long onum = obj.getOnum();
+
+    // First, lock the object.
+    try {
+      objectLocksFor(onum).lockForWrite(tid);
+    } catch (UnableToLockException e) {
+      throw new TransactionPrepareFailedException(versionConflicts, "Object "
+          + onum + " has been locked by an uncommitted transaction.");
+    }
+
+    // Record the updated object. Doing so will also register that the
+    // transaction has locked the object.
+    OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
+
+    switch (mode) {
+    case CREATE:
+      synchronized (submap) {
+        submap.get(worker).creates.add(obj);
+      }
+
+      // Make sure the onum doesn't already exist in the database.
+      if (exists(onum)) {
+        throw new TransactionPrepareFailedException(versionConflicts, "Object "
+            + onum + " already exists.");
+      }
+
+      // Set the object's initial version number.
+      obj.setVersion(INITIAL_OBJECT_VERSION_NUMBER);
+      return;
+
+    case WRITE:
+      synchronized (submap) {
+        submap.get(worker).writes.add(obj);
+      }
+
+      // Read the old copy from the database.
+      SerializedObject storeCopy = read(onum);
+
+      // Check version numbers.
+      int storeVersion = storeCopy.getVersion();
+      int workerVersion = obj.getVersion();
+      if (storeVersion != workerVersion) {
+        versionConflicts.put(onum, storeCopy);
+        return;
+      }
+
+      // Update the version number on the prepared copy of the object.
+      obj.setVersion(storeVersion + 1);
+      return;
+    }
+
+    throw new InternalError("Unknown update mode.");
   }
 
   /**
-   * Acquires a read lock on the given onum for the given transaction.
+   * Obtains the ObjectLocks for a given onum, creating one if it doesn't
+   * already exist.
    */
-  private void addReadLock(long onum, long tid) {
-    Pair<Long, LongKeyMap<MutableInteger>> locks = rwLocks.get(onum);
-    if (locks == null) {
-      locks =
-          new Pair<Long, LongKeyMap<MutableInteger>>(null,
-              new LongKeyHashMap<MutableInteger>());
-      rwLocks.put(onum, locks);
-    }
+  private ObjectLocks objectLocksFor(long onum) {
+    ObjectLocks newLocks = new ObjectLocks();
+    ObjectLocks curLocks = rwLocks.putIfAbsent(onum, newLocks);
 
-    MutableInteger pinCount = locks.second.get(tid);
-    if (pinCount == null) {
-      pinCount = new MutableInteger(0);
-      locks.second.put(tid, pinCount);
-    }
-
-    pinCount.value++;
-  }
-
-  /**
-   * Acquires a write lock on the given onum for the given transaction.
-   */
-  private void addWriteLock(long onum, long tid) {
-    Pair<Long, LongKeyMap<MutableInteger>> locks = rwLocks.get(onum);
-    if (locks == null) {
-      locks =
-          new Pair<Long, LongKeyMap<MutableInteger>>(null,
-              new LongKeyHashMap<MutableInteger>());
-      rwLocks.put(onum, locks);
-    }
-
-    locks.first = tid;
+    if (curLocks != null) return curLocks;
+    return newLocks;
   }
 
   /**
@@ -301,8 +414,11 @@ public abstract class ObjectDB {
    */
   public final void abortPrepare(long tid, Principal worker) {
     OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
-    unpin(submap.remove(worker));
-    if (submap.isEmpty()) pendingByTid.remove(tid);
+
+    synchronized (submap) {
+      unpin(submap.remove(worker));
+      if (submap.isEmpty()) pendingByTid.remove(tid, submap);
+    }
   }
 
   /**
@@ -322,23 +438,22 @@ public abstract class ObjectDB {
   public abstract void finishPrepare(long tid, Principal worker);
 
   /**
-   * Cause the objects prepared in transaction [tid] to be committed. The
+   * Causes the objects prepared in transaction [tid] to be committed. The
    * changes will hereafter be visible to read.
    * 
    * @param tid
    *          the transaction id
-   * @param workerNode
+   * @param workerIdentity
    *          the remote worker that is performing the commit
-   * @param workerPrincipal
-   *          the principal requesting the commit
    * @throws AccessException
    *           if the principal differs from the caller of prepare()
    */
-  public abstract void commit(long tid, Principal workerPrincipal,
-      SubscriptionManager sm) throws AccessException;
+  public abstract void commit(long tid,
+      RemoteIdentity<RemoteWorker> workerIdentity, SubscriptionManager sm)
+      throws AccessException;
 
   /**
-   * Cause the objects prepared in transaction [tid] to be discarded.
+   * Causes the objects prepared in transaction [tid] to be discarded.
    * 
    * @param tid
    *          the transaction id
@@ -351,13 +466,20 @@ public abstract class ObjectDB {
       throws AccessException;
 
   /**
-   * Return the object stored at a particular onum.
+   * Returns the object stored at a particular onum.
    * 
    * @param onum
    *          the identifier
    * @return the object or null if no object exists at the given onum
    */
   public abstract SerializedObject read(long onum);
+
+  /**
+   * Returns a GroupContainer for the object stored at a particular onum.
+   */
+  public final GroupContainer readGroup(long onum) {
+    return objectGrouper.getGroup(onum);
+  }
 
   /**
    * Returns the version number on the object stored at a particular onum.
@@ -369,104 +491,7 @@ public abstract class ObjectDB {
     SerializedObject obj = read(onum);
     if (obj == null) throw new AccessException(name, onum);
 
-    return read(onum).getVersion();
-  }
-
-  /**
-   * Given the ID of the group to which the given onum belongs. Null is returned
-   * if no such group exists.
-   */
-  public final Long getCachedGroupID(long onum) {
-    return globIDByOnum.get(onum);
-  }
-
-  private final GroupTable.Entry getGroupTableEntry(long onum) {
-    Long groupID = getCachedGroupID(onum);
-    if (groupID == null) return null;
-    return globTable.getContainer(groupID);
-  }
-
-  /**
-   * Gives the cached partial group for the given onum. Null is returned if no
-   * such partial group exists.
-   */
-  public final PartialObjectGroup getCachedPartialGroup(long onum) {
-    GroupTable.Entry entry = getGroupTableEntry(onum);
-    if (entry instanceof PartialObjectGroup) return (PartialObjectGroup) entry;
-    return null;
-  }
-
-  /**
-   * Returns the cached GroupContainer containing the given onum. Null is
-   * returned if no such GroupContainer exists.
-   */
-  public final GroupContainer getCachedGroupContainer(long onum) {
-    GroupTable.Entry entry = getGroupTableEntry(onum);
-    if (entry instanceof GroupContainer) return (GroupContainer) entry;
-    return null;
-  }
-
-  /**
-   * Inserts the given partial group into the cache.
-   */
-  public final void cachePartialGroup(PartialObjectGroup partialGroup) {
-    // Get a new ID for the partial group.
-    long groupID = nextGlobID++;
-
-    partialGroup.setID(groupID);
-
-    // Establish groupID bindings for all non-surrogate onums we're given.
-    for (Entry<SerializedObject> entry : partialGroup.objects.entrySet()) {
-      SerializedObject obj = entry.getValue();
-      if (obj.isSurrogate()) {
-        continue;
-      }
-
-      // Establish groupID binding for the non-surrogate object.
-      long onum = entry.getKey();
-      Long oldGroupID = globIDByOnum.put(onum, groupID);
-      if (oldGroupID != null) {
-        globTable.unpin(oldGroupID);
-      }
-    }
-
-    if (partialGroup.size() > 0) {
-      // Insert into the group table.
-      globTable.put(groupID, partialGroup, partialGroup.size());
-    }
-  }
-
-  /**
-   * Coalesces one partial group into another.
-   */
-  public void coalescePartialGroups(PartialObjectGroup from,
-      PartialObjectGroup to) {
-    long fromID = from.groupID();
-    long toID = to.groupID();
-
-    globTable.remove(fromID);
-
-    for (LongIterator it = from.objects.keySet().iterator(); it.hasNext();) {
-      long onum = it.next();
-      Long oldGroupID = globIDByOnum.put(onum, toID);
-      if (oldGroupID != null && oldGroupID != fromID)
-        globTable.unpin(oldGroupID);
-    }
-
-    to.mergeFrom(from);
-    if (to.size() > 0) globTable.put(toID, to, to.size());
-  }
-
-  public GroupContainer promotePartialGroup(PrivateKey signingKey,
-      PartialObjectGroup partialGroup) {
-    ObjectGroup group = new ObjectGroup(partialGroup.objects);
-    Store store = Worker.getWorker().getStore(getName());
-    GroupContainer result = new GroupContainer(store, signingKey, group);
-    if (partialGroup.size() > 0) {
-      globTable.put(partialGroup.groupID(), result, partialGroup.size());
-    }
-
-    return result;
+    return obj.getVersion();
   }
 
   /**
@@ -479,42 +504,26 @@ public abstract class ObjectDB {
    * @param worker
    *          the worker that performed the update.
    */
-  protected final void notifyCommittedUpdate(SubscriptionManager sm, long onum) {
+  protected final void notifyCommittedUpdate(SubscriptionManager sm, long onum,
+      RemoteWorker worker) {
     // Remove from the glob table the glob associated with the onum.
-    Long globID = globIDByOnum.remove(onum);
-    GroupContainer group = null;
-    if (globID != null) {
-      GroupTable.Entry entry = globTable.remove(globID);
-      // Clean out entries in globIDByOnum that refer to the entry we just
-      // removed.
-      if (entry instanceof GroupContainer) {
-        group = (GroupContainer) entry;
-        for (LongIterator it = group.onums.iterator(); it.hasNext();) {
-          globIDByOnum.remove(it.next());
-        }
-      } else {
-        PartialObjectGroup partialGroup = (PartialObjectGroup) entry;
-        for (LongIterator it = partialGroup.objects.keySet().iterator(); it
-            .hasNext();) {
-          globIDByOnum.remove(it.next());
+    LongSet groupOnums = objectGrouper.removeGroup(onum);
+
+    if (SubscriptionManager.ENABLE_OBJECT_UPDATES) {
+      // Notify the subscription manager that the group has been updated.
+      LongSet updatedOnums = new LongHashSet();
+      updatedOnums.add(onum);
+      if (groupOnums != null) {
+        for (LongIterator onumIt = groupOnums.iterator(); onumIt.hasNext();) {
+          long relatedOnum = onumIt.next();
+          if (relatedOnum == onum) continue;
+
+          updatedOnums.add(relatedOnum);
         }
       }
+
+      sm.notifyUpdate(updatedOnums, worker);
     }
-
-    // Notify the subscription manager that the group has been updated.
-    // sm.notifyUpdate(onum, worker);
-    if (group != null) {
-      for (LongIterator onumIt = group.onums.iterator(); onumIt.hasNext();) {
-        long relatedOnum = onumIt.next();
-        if (relatedOnum == onum) continue;
-
-        Long relatedGlobId = globIDByOnum.get(relatedOnum);
-        if (relatedGlobId != null && relatedGlobId == globID) {
-          // sm.notifyUpdate(relatedOnum, worker);
-        }
-      }
-    }
-
   }
 
   /**
@@ -527,18 +536,21 @@ public abstract class ObjectDB {
    *          the object number in question
    */
   public final boolean isPrepared(long onum, long tid) {
-    Pair<Long, LongKeyMap<MutableInteger>> locks = rwLocks.get(onum);
+    ObjectLocks locks = rwLocks.get(onum);
+
     if (locks == null) return false;
 
-    if (locks.first != null) return true;
+    synchronized (locks) {
+      if (locks.writeLock != null) return true;
 
-    if (locks.second.isEmpty()) return false;
-    if (locks.second.size() > 1) return true;
-    return !locks.second.containsKey(tid);
+      if (locks.readLocks.isEmpty()) return false;
+      if (locks.readLocks.size() > 1) return true;
+      return !locks.readLocks.containsKey(tid);
+    }
   }
 
   /**
-   * Determine whether an onum has outstanding uncommitted changes.
+   * Determines whether an onum has outstanding uncommitted changes.
    * 
    * @param onum
    *          the object number in question
@@ -546,8 +558,13 @@ public abstract class ObjectDB {
    *         been committed or rolled back.
    */
   public final boolean isWritten(long onum) {
-    Pair<Long, LongKeyMap<MutableInteger>> locks = rwLocks.get(onum);
-    return locks != null && locks.first != null;
+    ObjectLocks locks = rwLocks.get(onum);
+
+    if (locks == null) return false;
+
+    synchronized (locks) {
+      return locks.writeLock != null;
+    }
   }
 
   /**
@@ -556,30 +573,32 @@ public abstract class ObjectDB {
    */
   protected final void unpin(PendingTransaction tx) {
     for (long readOnum : tx.reads) {
-      Pair<Long, LongKeyMap<MutableInteger>> locks = rwLocks.get(readOnum);
+      ObjectLocks locks = rwLocks.get(readOnum);
+      if (locks != null) {
+        synchronized (locks) {
+          locks.unlockForRead(tx.tid, tx.owner);
 
-      MutableInteger pinCount = locks.second.get(tx.tid);
-      if (pinCount != null) {
-        pinCount.value--;
-        if (pinCount.value == 0) locks.second.remove(tx.tid);
+          if (!locks.isLocked()) rwLocks.remove(readOnum, locks);
+        }
       }
-
-      if (locks.first == null && locks.second.isEmpty())
-        rwLocks.remove(readOnum);
     }
 
-    for (SerializedObject update : tx.modData) {
+    for (SerializedObject update : SysUtil.chain(tx.creates, tx.writes)) {
       long onum = update.getOnum();
-      Pair<Long, LongKeyMap<MutableInteger>> locks = rwLocks.get(onum);
-      if (locks.first != null && locks.first == tx.tid) locks.first = null;
+      ObjectLocks locks = rwLocks.get(onum);
+      if (locks != null) {
+        synchronized (locks) {
+          locks.unlockForWrite(tx.tid);
 
-      if (locks.first == null && locks.second.isEmpty()) rwLocks.remove(onum);
+          if (!locks.isLocked()) rwLocks.remove(onum, locks);
+        }
+      }
     }
   }
 
   /**
    * <p>
-   * Return a set of onums that aren't currently occupied. The ObjectDB may
+   * Returns a set of onums that aren't currently occupied. The ObjectDB may
    * return the same onum more than once from this method, althogh doing so
    * would encourage collisions. There is no assumption of unpredictability or
    * randomness about the returned ids.
@@ -613,7 +632,7 @@ public abstract class ObjectDB {
   }
 
   /**
-   * Gracefully shutdown the object database.
+   * Gracefully shuts down the object database.
    * 
    * @throws IOException
    */

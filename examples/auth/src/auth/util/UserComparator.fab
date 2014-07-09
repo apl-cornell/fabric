@@ -1,0 +1,57 @@
+/**
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
+ *
+ * This file is part of Fabric.
+ *
+ * Fabric is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * Fabric is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ */
+package auth.util;
+
+import auth.User;
+
+import fabricated.util.Comparator;
+
+public class UserComparator[label L] implements Comparator[L] {
+
+	public UserComparator{L}() {}
+
+	public boolean{L} equals{L}(Object{L} a, Object{L} b) 
+		throws (ClassCastException{L}, NullPointerException{L}) 
+		{
+			if (L <= new label {a.store$->} && L <= new label {b.store$->}) {
+				if (a instanceof User && b instanceof User) {
+					final User userA = (User) a;
+					final User userB = (User) b;
+					if (L <= new label {userA.store$->} && L <= new label {userB.store$->}) {
+						return userA == userB;
+						//if (userA.name().equals(userB.name()))
+						//	return true;
+					}
+				}
+			}
+			return false;
+		}
+
+	public int{L} compare{L}(Object{L} a, Object{L} b)
+		throws (UnsupportedOperationException{L},ClassCastException{L}, NullPointerException{L})
+		{
+			//TODO umimplemented
+			return 0;
+		}
+
+	public int{L} hashCode{L}(Object{L} a) 
+		throws (UnsupportedOperationException{L},ClassCastException{L}, NullPointerException{L})
+		{
+			//TODO umimplemented
+			return 0;
+		}
+
+}

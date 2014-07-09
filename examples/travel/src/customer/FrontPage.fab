@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -20,7 +20,9 @@ import javax.servlet.ServletException;
 import sif.html.*;
 import sif.servlet.Action;
 import sif.servlet.Request;
+import sif.servlet.HTMLRequest;
 import sif.servlet.Servlet;
+import sif.servlet.HTMLServlet;
 
 import travel.Broker;
 import travel.Config;
@@ -32,12 +34,12 @@ public class FrontPage extends CustomerAction authority (CustomerPrincipal) {
         initFields("frontpage", m);
     }
     
-    public final void invoke{*lbl}(label{*lbl} lbl, Request[CustomerPrincipal]{*lbl} req) 
-    throws (ServletException{*lbl;⊤→req.session;req.session←})
-        where caller(req.session),
-        lbl <= {⊤→req.session} {
-
-        Servlet[CustomerPrincipal] s = getServlet();
+   public final void invoke{*lbl}(label{*lbl} lbl, Request[CustomerPrincipal]{*lbl} req)
+   throws (ServletException{*lbl;req.session←})
+    where caller(req.session),
+          lbl <= {req.session→}
+   {
+        HTMLServlet[CustomerPrincipal] s = (HTMLServlet) getServlet();
         if (s == null || !(s instanceof CustomerMain)) throw new ServletException("No servlet available"); 
         if (req == null) throw new ServletException("No request available"); 
         CustomerMain m = (CustomerMain)s;
@@ -65,7 +67,7 @@ public class FrontPage extends CustomerAction authority (CustomerPrincipal) {
                         lbl, lbl,
                         new Table[lbl, lbl](entries));
                 // XXX How come lbl <= ⊤→req.session is not required here?
-                s.createPage(req, "Customer Home Page", lbl, lbl,
+                s.createPage((HTMLRequest)req, "Customer Home Page", lbl, lbl,
                         new NodeList[lbl,lbl](lbl, lbl, createBanner(lbl, "Welcome to the Acme Flight Booking System"),
                                 lbl, lbl, createBody(lbl, lbl, form)));
             }

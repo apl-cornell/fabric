@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -1168,7 +1168,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
         constructor =
             implClass.getConstructor(Store.class, long.class, int.class,
                 long.class, long.class, long.class, ObjectInput.class,
-                Iterator.class, Iterator.class);
+                Iterator.class, Iterator.class, Iterator.class);
         constructorTable.put(implClass, constructor);
       }
 
@@ -1176,7 +1176,8 @@ public final class SerializedObject implements FastSerializable, Serializable {
           (_Impl) constructor.newInstance(store, getOnum(), getVersion(),
               getExpiry(), getUpdateLabelOnum(), getAccessPolicyOnum(),
               new ObjectInputStream(getSerializedDataStream()),
-              getRefTypeIterator(), getIntraStoreRefIterator());
+              getRefTypeIterator(), getIntraStoreRefIterator(),
+              getInterStoreRefIterator());
 
       if (chaseSurrogates && (result instanceof Surrogate)) {
         // Chase the surrogate pointer.

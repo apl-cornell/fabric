@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -38,15 +38,10 @@ public final class PrepareRequest {
   /** The object numbers and version numbers of the read objects */
   public final LongKeyMap<Integer> reads;
 
-  /** The commit time of the transaction, as proposed by the worker */
-  public final long commitTime;
-
   /** Create a PrepareRequest with the provided fields */
-  public PrepareRequest(long tid, long commitTime,
-      Collection<SerializedObject> creates,
+  public PrepareRequest(long tid, Collection<SerializedObject> creates,
       Collection<SerializedObject> writes, LongKeyMap<Integer> reads) {
     this.tid = tid;
-    this.commitTime = commitTime;
     this.creates = creates;
     this.writes = writes;
     this.reads = reads;

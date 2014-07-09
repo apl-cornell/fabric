@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -15,7 +15,7 @@
  */
 package fabric.dissemination.pastry.messages;
 
-import rice.p2p.commonapi.Message;
+import fabric.dissemination.pastry.Disseminator;
 
 /**
  * A self-scheduled message triggered once every replication interval.
@@ -25,6 +25,11 @@ public class ReplicateInterval implements Message {
   @Override
   public int getPriority() {
     return LOW_PRIORITY;
+  }
+
+  @Override
+  public void dispatch(Disseminator disseminator) {
+    disseminator.replicateInterval();
   }
 
 }

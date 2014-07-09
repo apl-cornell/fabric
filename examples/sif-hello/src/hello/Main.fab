@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -15,14 +15,14 @@
  */
 package hello;
 
-import sif.servlet.Servlet;
+import sif.servlet.HTMLServlet;
 import sif.servlet.Request;
 import sif.servlet.SessionState;
 import sif.servlet.SessionPrincipal;
 
 import javax.servlet.ServletException;
 
-public final class Main extends Servlet[HelloServEP] {
+public final class Main extends HTMLServlet[HelloServEP] {
     final Store{this}@{} localStore;
     public Main() throws ServletException {
         FabricWorker cl = FabricWorker.getWorker();

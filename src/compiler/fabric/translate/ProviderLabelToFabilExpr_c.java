@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -37,7 +37,7 @@ public class ProviderLabelToFabilExpr_c extends ProviderLabelToJavaExpr_c {
 
     Position pos = provider.position();
     if (pos == null) pos = Position.compilerGenerated();
-    return nf.providerLabel(pos, rw.typeToJava(provider.classType(), pos));
+    return nf.ProviderLabel(pos, rw.typeToJava(provider.classType(), pos));
   }
 
 }

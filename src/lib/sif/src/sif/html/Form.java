@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -47,6 +47,9 @@ public final class Form extends BlockContainer {
     }
     
     void writeContents(HTMLWriter p) {
+	// XXX Should check that the form contents doesn't contain any input
+	// nodes intended for off-site forms.
+
         // p.breakLine();
         if (contents != null)
             contents.write(p, this);

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -19,8 +19,13 @@ import static fabric.common.Logging.MISC_LOGGER;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 import rice.Continuation;
 import rice.Executable;
@@ -40,13 +45,17 @@ import rice.pastry.commonapi.PastryIdFactory;
 import rice.pastry.leafset.LeafSet;
 import rice.pastry.routing.RouteSet;
 import rice.pastry.routing.RoutingTable;
+import fabric.common.FastSerializable;
+import fabric.common.Logging;
+import fabric.common.util.Cache;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
-import fabric.dissemination.Cache;
-import fabric.dissemination.Glob;
+import fabric.dissemination.AbstractGlob;
+import fabric.dissemination.ObjectGlob;
+import fabric.dissemination.pastry.messages.AbstractUpdate;
 import fabric.dissemination.pastry.messages.AggregateInterval;
 import fabric.dissemination.pastry.messages.Fetch;
-import fabric.dissemination.pastry.messages.MessageType;
+import fabric.dissemination.pastry.messages.RawMessageType;
 import fabric.dissemination.pastry.messages.Replicate;
 import fabric.dissemination.pastry.messages.ReplicateInterval;
 import fabric.worker.RemoteStore;
@@ -59,27 +68,33 @@ import fabric.worker.Worker;
 public class Disseminator implements Application {
 
   /** The pastry node. */
-  protected PastryNode node;
+  protected final PastryNode node;
 
   /** The pastry endpoint. */
-  protected Endpoint endpoint;
+  protected final Endpoint endpoint;
 
   /** The pastry id generating factory. */
-  protected IdFactory idf;
+  protected final IdFactory idf;
 
-  protected int idDigits;
-  protected int baseBits;
+  protected final int idDigits;
+  protected final int baseBits;
 
   /** Random source for random ids. */
-  protected Random rand;
+  protected final Random rand;
 
   /** The cache of fetched objects. */
-  protected Cache cache;
+  protected final fabric.dissemination.Cache cache;
 
   /** Outstanding fetch messages awaiting replies. */
-  protected Map<Id, Fetch> outstanding;
+  protected final Cache<Id, Fetch> outstandingFetches;
 
-  protected MessageDeserializer deserializer;
+  /**
+   * Associates update-message IDs with the queues on which replies should be
+   * added.
+   */
+  private final Cache<Id, BlockingQueue<AbstractUpdate.Reply>> outstandingUpdates;
+
+  protected final MessageDeserializer deserializer;
 
   /** Replication interval, in milliseconds. */
   protected long REPLICATION_INTERVAL = 10 * 60 * 1000;
@@ -87,13 +102,17 @@ public class Disseminator implements Application {
   /** Aggregation interval, in milliseconds. */
   protected long AGGREGATION_INTERVAL = 20 * 60 * 1000;
 
+  /** The set of nodes subscribed to each OID. */
+  private final Cache<Pair<RemoteStore, Long>, Set<NodeHandle>> subscriptions;
+
   /**
    * Creates a disseminator attached to the given pastry node.
    * 
    * @param node
    *          PastryNode where the disseminator is to run.
    */
-  public Disseminator(PastryNode node) {
+  public Disseminator(PastryNode node, fabric.dissemination.Cache cache) {
+    this.subscriptions = new Cache<>();
     this.node = node;
     endpoint = node.buildEndpoint(this, null);
     deserializer = new Deserializer();
@@ -105,8 +124,9 @@ public class Disseminator implements Application {
     baseBits = rt.baseBitLength();
     idDigits = rt.numRows();
 
-    cache = new Cache();
-    outstanding = new HashMap<Id, Fetch>();
+    this.cache = cache;
+    outstandingFetches = new Cache<>();
+    outstandingUpdates = new Cache<>();
 
     Environment env = node.getEnvironment();
     Parameters params = env.getParameters();
@@ -176,19 +196,12 @@ public class Disseminator implements Application {
 
   @Override
   public void deliver(Id id, Message msg) {
-    if (msg instanceof Fetch) {
-      fetch((Fetch) msg);
-    } else if (msg instanceof Fetch.Reply) {
-      fetch((Fetch.Reply) msg);
-    } else if (msg instanceof ReplicateInterval) {
-      replicateInterval();
-    } else if (msg instanceof Replicate) {
-      replicate((Replicate) msg);
-    } else if (msg instanceof Replicate.Reply) {
-      replicate((Replicate.Reply) msg);
-    } else if (msg instanceof AggregateInterval) {
-      aggregateInterval();
+    if (msg instanceof fabric.dissemination.pastry.messages.Message) {
+      ((fabric.dissemination.pastry.messages.Message) msg).dispatch(this);
+      return;
     }
+
+    throw new InternalError("Unknown Pastry message: " + msg);
   }
 
   /**
@@ -197,21 +210,18 @@ public class Disseminator implements Application {
    * @throws DisseminationTimeoutException
    *           if the dissemination network takes too long.
    */
-  public Glob fetch(RemoteStore c, long onum)
+  public ObjectGlob fetch(RemoteStore c, long onum)
       throws DisseminationTimeoutException {
-    Glob g = cache.get(c, onum);
+    fabric.dissemination.Cache.Entry entry = cache.get(c, onum);
 
-    if (g != null) {
-      return g;
+    if (entry != null) {
+      return entry.objectGlob;
     }
 
     Id id = idf.buildRandomId(rand);
     Fetch f = new Fetch(localHandle(), id, c.name(), onum);
 
-    synchronized (outstanding) {
-      outstanding.put(id, f);
-    }
-
+    outstandingFetches.put(id, f);
     route(idf.buildId(f.toString()), f, null);
 
     synchronized (f) {
@@ -221,6 +231,7 @@ public class Disseminator implements Application {
         try {
           f.wait(1000);
         } catch (InterruptedException e) {
+          Logging.logIgnoredInterruptedException(e);
         }
       }
 
@@ -236,17 +247,13 @@ public class Disseminator implements Application {
    * Process a Fetch.Reply message. Saves the glob from the reply, and returns
    * it to the worker if it is waiting for this object.
    */
-  protected void fetch(final Fetch.Reply msg) {
+  public void fetch(final Fetch.Reply msg) {
     forward(msg); // caches glob
 
     process(new Executable<Void, RuntimeException>() {
       @Override
       public Void execute() {
-        Fetch f = null;
-
-        synchronized (outstanding) {
-          f = outstanding.remove(msg.id());
-        }
+        Fetch f = outstandingFetches.remove(msg.id());
 
         if (f != null) {
           synchronized (f) {
@@ -264,27 +271,170 @@ public class Disseminator implements Application {
    * Process the Fetch message. See if we have the object asked for. If so,
    * return it to sender via a Fetch.Reply message.
    */
-  protected void fetch(final Fetch msg) {
+  public void fetch(final Fetch msg) {
     process(new Executable<Void, RuntimeException>() {
       @Override
       public Void execute() {
         Worker worker = Worker.getWorker();
         RemoteStore c = worker.getStore(msg.store());
         long onum = msg.onum();
-        Glob g = cache.get(c, onum, true);
-        reply(g, msg);
+
+        // Subscribe the remote endpoint.
+        subscribe(msg.sender(), c, onum);
+
+        fabric.dissemination.Cache.Entry entry = cache.get(c, onum, true);
+        reply(entry, msg);
         return null;
       }
     });
   }
 
   /**
-   * Helper function. Reply to a Fetch message with given glob.
+   * Subscribes the given node to the given OID.
    */
-  protected void reply(Glob g, Fetch msg) {
-    g.touch();
-    Fetch.Reply r = new Fetch.Reply(msg, g);
+  private void subscribe(NodeHandle node, RemoteStore store, long onum) {
+    // Ignore the local node.
+    if (node.equals(localHandle())) return;
+
+    Pair<RemoteStore, Long> key = new Pair<>(store, onum);
+    while (true) {
+      Set<NodeHandle> subscribers = new HashSet<>();
+      Set<NodeHandle> existingSubscribers =
+          subscriptions.putIfAbsent(key, subscribers);
+      if (existingSubscribers != null) subscribers = existingSubscribers;
+
+      synchronized (subscribers) {
+        subscribers.add(node);
+        if (subscriptions.get(key) == subscribers) return;
+      }
+    }
+  }
+
+  /**
+   * Unsubscribes the given node from the given OID.
+   */
+  private void unsubscribe(NodeHandle node, RemoteStore store, long onum) {
+    Pair<RemoteStore, Long> key = new Pair<>(store, onum);
+    Set<NodeHandle> subscribers = subscriptions.get(key);
+    if (subscribers == null) return;
+
+    synchronized (subscribers) {
+      subscribers.remove(node);
+      if (subscribers.isEmpty()) subscriptions.remove(key, subscribers);
+    }
+  }
+
+  /**
+   * Helper function. Reply to a Fetch message with given cache entry.
+   */
+  protected void reply(fabric.dissemination.Cache.Entry entry, Fetch msg) {
+    entry.touch();
+    Fetch.Reply r = new Fetch.Reply(msg, entry.objectGlob);
     route(null, r, msg.sender());
+  }
+
+  /**
+   * Updates the dissemination and worker caches and pushes the update through
+   * the dissemination layer.
+   * 
+   * @return true iff there was a dissemination-cache entry for the given oid or
+   *          if the update was forwarded to another node.
+   */
+  <UpdateType extends FastSerializable> boolean updateCaches(RemoteStore store,
+      long onum, AbstractGlob<UpdateType> update) {
+    // Update the local caches.
+    boolean result = update.updateCache(cache, store, onum);
+
+    // Find the set of subscribers.
+    Set<NodeHandle> subscribers = subscriptions.get(new Pair<>(store, onum));
+    if (subscribers != null) {
+      int numSubscribers;
+      BlockingQueue<AbstractUpdate.Reply> replyQueue;
+      synchronized (subscribers) {
+        numSubscribers = subscribers.size();
+        if (numSubscribers == 0) return result;
+
+        replyQueue = new ArrayBlockingQueue<>(numSubscribers);
+
+        // Forward to subscribers.
+        for (NodeHandle subscriber : subscribers) {
+          Id id = idf.buildRandomId(rand);
+          AbstractUpdate<UpdateType> msg =
+              AbstractUpdate.getInstance(localHandle(), id, store.name(), onum,
+                  update);
+
+          // TODO: Set up a timeout mechanism that removes entries for dead nodes.
+          outstandingUpdates.put(id, replyQueue);
+
+          route(null, msg, subscriber);
+        }
+      }
+
+      // Wait until we know we're subscribed, we get all replies back, or our
+      // update messages time out.
+      // TODO: Set up a timeout mechanism that unsubscribes dead nodes.
+      for (int i = 0; !result && i < numSubscribers; i++) {
+        try {
+          // Wait at most one second for a reply.
+          AbstractUpdate.Reply reply = replyQueue.poll(1, TimeUnit.SECONDS);
+          result = reply != null && reply.resubscribe();
+        } catch (InterruptedException e) {
+          Logging.logIgnoredInterruptedException(e);
+        }
+      }
+
+    }
+
+    return result;
+  }
+
+  /**
+   * Processes the given UpdateCache message. Updates the local cache and
+   * forwards the update to any subscribers.
+   */
+  public <UpdateType extends FastSerializable> void updateCache(
+      final AbstractUpdate<UpdateType> msg) {
+    process(new Executable<Void, RuntimeException>() {
+      @Override
+      public Void execute() throws RuntimeException {
+        Worker worker = Worker.getWorker();
+        RemoteStore store = worker.getStore(msg.store());
+        long onum = msg.onum();
+        AbstractGlob<UpdateType> update = msg.update();
+
+        boolean result = updateCaches(store, onum, update);
+        AbstractUpdate.Reply reply =
+            new AbstractUpdate.Reply(localHandle(), msg, result);
+        route(null, reply, msg.sender());
+
+        return null;
+      }
+    });
+  }
+
+  /**
+   * Processes the given UpdateCache.Reply message.
+   */
+  public void updateCache(final AbstractUpdate.Reply msg) {
+    process(new Executable<Void, RuntimeException>() {
+      @Override
+      public Void execute() throws RuntimeException {
+        Worker worker = Worker.getWorker();
+        RemoteStore store = worker.getStore(msg.store());
+        long onum = msg.onum();
+        boolean resubscribe = msg.resubscribe();
+
+        if (!resubscribe) {
+          unsubscribe(msg.sender(), store, onum);
+        }
+
+        BlockingQueue<AbstractUpdate.Reply> responses =
+            outstandingUpdates.remove(msg.id());
+        if (responses != null) responses.offer(msg);
+
+        return null;
+      }
+    });
   }
 
   /**
@@ -296,7 +446,7 @@ public class Disseminator implements Application {
    * replicate message, a list of globs that this node already has is sent to
    * the decider, so that they are not sent again.
    */
-  protected void replicateInterval() {
+  public void replicateInterval() {
     process(new Executable<Void, RuntimeException>() {
       @Override
       public Void execute() {
@@ -388,7 +538,7 @@ public class Disseminator implements Application {
    * Processes a Replicate message. Sends back to the sender objects that should
    * be replicated to that node.
    */
-  protected void replicate(final Replicate msg) {
+  public void replicate(final Replicate msg) {
     process(new Executable<Void, RuntimeException>() {
       @Override
       public Void execute() {
@@ -399,8 +549,8 @@ public class Disseminator implements Application {
 
         rice.pastry.Id me = (rice.pastry.Id) localHandle().getId();
 
-        Map<Pair<RemoteStore, Long>, Glob> globs =
-            new HashMap<Pair<RemoteStore, Long>, Glob>();
+        Map<Pair<RemoteStore, Long>, ObjectGlob> globs =
+            new HashMap<Pair<RemoteStore, Long>, ObjectGlob>();
 
         for (Pair<Pair<RemoteStore, Long>, Long> k : cache.sortedTimestamps()) {
           Long skipTimestamp = skip.get(k.first.first, k.first.second);
@@ -415,10 +565,10 @@ public class Disseminator implements Application {
           if (send) {
             RemoteStore c = k.first.first;
             Long onum = k.first.second;
-            Glob g = cache.get(c, onum);
-            if (g.level() > level) continue;
+            fabric.dissemination.Cache.Entry entry = cache.get(c, onum);
+            if (entry.level() > level) continue;
 
-            globs.put(k.first, g);
+            globs.put(k.first, entry.objectGlob);
 
             // XXX hack. limit reply message to 10 globs at a time. don't want
             // the message to get so large that pastry rejects it.
@@ -466,15 +616,15 @@ public class Disseminator implements Application {
    * Processes a Replicate.Reply message, and adds objects in the reply to the
    * cache.
    */
-  protected void replicate(final Replicate.Reply msg) {
+  public void replicate(final Replicate.Reply msg) {
     process(new Executable<Void, RuntimeException>() {
       @Override
       public Void execute() {
-        for (Map.Entry<Pair<RemoteStore, Long>, Glob> e : msg.globs()
+        for (Map.Entry<Pair<RemoteStore, Long>, ObjectGlob> e : msg.globs()
             .entrySet()) {
           RemoteStore c = e.getKey().first;
           long onum = e.getKey().second;
-          Glob g = e.getValue();
+          ObjectGlob g = e.getValue();
           cache.put(c, onum, g);
         }
 
@@ -484,7 +634,7 @@ public class Disseminator implements Application {
   }
 
   /** Called once every aggregation interval. */
-  protected void aggregateInterval() {
+  public void aggregateInterval() {
     // TODO decide whether to aggregate or let nodes decide whether to increase
     // object dissemination unilaterally.
   }
@@ -514,16 +664,24 @@ public class Disseminator implements Application {
    * @return true if message should be further routed
    */
   protected boolean forward(Fetch msg) {
-    if (!msg.refresh()) {
-      Worker worker = Worker.getWorker();
-      RemoteStore c = worker.getStore(msg.store());
-      long onum = msg.onum();
-      Glob g = cache.get(c, onum);
+    Worker worker;
+    try {
+      worker = Worker.getWorker();
+    } catch (IllegalStateException e) {
+      // Worker not initialized yet.
+      return true;
+    }
 
-      if (g != null) {
-        reply(g, msg);
-        return false;
-      }
+    RemoteStore c = worker.getStore(msg.store());
+    long onum = msg.onum();
+    fabric.dissemination.Cache.Entry entry = cache.get(c, onum);
+
+    if (entry != null) {
+      // Subscribe the remote endpoint.
+      subscribe(msg.sender(), c, onum);
+
+      reply(entry, msg);
+      return false;
     }
 
     return true;
@@ -540,7 +698,7 @@ public class Disseminator implements Application {
     Worker worker = Worker.getWorker();
     RemoteStore c = worker.getStore(msg.store());
     long onum = msg.onum();
-    Glob g = msg.glob();
+    ObjectGlob g = msg.glob();
 
     if (g != null) cache.put(c, onum, g);
 
@@ -553,7 +711,7 @@ public class Disseminator implements Application {
   }
 
   /**
-   * Custom message deserializer for messages used by the pastry diseemination
+   * Custom message deserializer for messages used by the pastry dissemination
    * node.
    */
   private class Deserializer implements MessageDeserializer {
@@ -561,18 +719,12 @@ public class Disseminator implements Application {
     @Override
     public Message deserialize(InputBuffer buf, short type, int priority,
         NodeHandle sender) throws IOException {
-      switch (type) {
-      case MessageType.FETCH:
-        return new Fetch(buf, endpoint, sender);
-      case MessageType.FETCH_REPLY:
-        return new Fetch.Reply(buf, endpoint);
-      case MessageType.REPLICATE:
-        return new Replicate(buf, sender);
-      case MessageType.REPLICATE_REPLY:
-        return new Replicate.Reply(buf);
+      try {
+        RawMessageType messageType = RawMessageType.values()[type];
+        return messageType.parse(buf, endpoint, sender);
+      } catch (ArrayIndexOutOfBoundsException e) {
+        throw new IOException("Unrecognized message type: " + type);
       }
-
-      return null;
     }
 
   }

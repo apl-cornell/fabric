@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -45,11 +45,11 @@ public class TransactionPrepareFailedException extends FabricException {
   }
 
   public TransactionPrepareFailedException(
-      Map<RemoteNode, TransactionPrepareFailedException> failures) {
+      Map<RemoteNode<?>, TransactionPrepareFailedException> failures) {
     this.versionConflicts = null;
 
     messages = new ArrayList<String>();
-    for (Map.Entry<RemoteNode, TransactionPrepareFailedException> entry : failures
+    for (Map.Entry<RemoteNode<?>, TransactionPrepareFailedException> entry : failures
         .entrySet()) {
       TransactionPrepareFailedException exn = entry.getValue();
 

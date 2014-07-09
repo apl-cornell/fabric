@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -24,8 +24,8 @@ import java.util.Map;
 import javax.tools.FileObject;
 
 import codebases.types.CBTypeEncoder;
+import codebases.types.ClassFile;
 import codebases.types.CodebaseTypeSystem;
-import fabil.types.ClassFile;
 import fabric.worker.Store;
 
 /**

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -17,16 +17,25 @@ package fabric.common.net.handshake;
 
 import java.net.Socket;
 
-import fabric.lang.security.Principal;
+import fabric.common.net.RemoteIdentity;
+import fabric.net.RemoteNode;
 
-public class ShakenSocket {
+/**
+ * @param <Node> the type of node at the remote endpoint.
+ */
+public class ShakenSocket<Node extends RemoteNode<Node>> {
+  /**
+   * The name of the virtual server that received the connection.
+   */
   public final String name;
-  public final Principal principal;
+
+  public final RemoteIdentity<Node> remoteIdentity;
   public final Socket sock;
 
-  public ShakenSocket(String name, Principal principal, Socket sock) {
+  public ShakenSocket(String name, RemoteIdentity<Node> remoteIdentity,
+      Socket sock) {
     this.name = name;
-    this.principal = principal;
+    this.remoteIdentity = remoteIdentity;
     this.sock = sock;
   }
 }

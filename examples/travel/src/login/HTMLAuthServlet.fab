@@ -1,0 +1,48 @@
+/**
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
+ *
+ * This file is part of Fabric.
+ *
+ * Fabric is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * Fabric is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ */
+package login;
+
+import sif.servlet.HTMLServlet;
+import sif.servlet.Request;
+
+import javax.servlet.ServletException;
+
+
+public abstract class HTMLAuthServlet[principal servP] 
+	extends HTMLServlet[servP] { //implements AuthServlet[servP] {
+
+    public HTMLAuthServlet() throws ServletException {
+        
+    }
+
+    
+    public principal{p:;p!:} createUser{p:; p!:}(
+            String{p:; p!:} userID,
+            String{p:; p!:} password,
+            principal{p:; p!:} p)
+        throws ServletException
+        where caller(p) {
+        throw new ServletException("Unsupported");
+	}
+
+    public abstract principal{p:;p!:} lookupUserID{p:; p!:}(
+            String{p:; p!:} userID,
+            principal{p:; p!:} p)
+        throws ServletException
+        where caller(p);
+    
+        protected abstract String defaultActionName(Request[servP] req);
+}

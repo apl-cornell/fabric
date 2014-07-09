@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -17,6 +17,7 @@ package fabric.ast;
 
 import polyglot.ast.Ext;
 import polyglot.ast.ExtFactory;
+import fabric.extension.ClassBodyExt_c;
 import fabric.extension.FabricExt;
 import fabric.extension.NewExt_c;
 import fabric.extension.NewFabricArrayExt_c;
@@ -38,6 +39,11 @@ public class FabricFabExtFactory_c extends AbstractFabExtFactory_c {
 
   public FabricFabExtFactory_c(ExtFactory next) {
     super(next);
+  }
+
+  @Override
+  protected Ext extClassBodyImpl() {
+    return new ClassBodyExt_c();
   }
 
   @Override

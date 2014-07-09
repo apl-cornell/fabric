@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -44,11 +44,11 @@ public class Version extends polyglot.main.Version {
 
   @Override
   public int patch_level() {
-    return 1;
+    return 2;
   }
 
   @Override
   public String toString() {
-    return "0.2.1 (2013-06-22 02:26:12 EDT)";
+    return "0.2.2 (2014-07-08 22:46:41 EDT)";
   }
 }

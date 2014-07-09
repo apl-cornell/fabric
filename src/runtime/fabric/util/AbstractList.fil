@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -1143,7 +1143,7 @@ while (i.hasNext())
       checkMod();
 
       backingList.removeRange(offset + fromIndex, offset + toIndex);
-      size -= toIndex - fromIndex;
+      size = size - (toIndex - fromIndex);
       modCount = backingList.modCount;
     }
 
@@ -1170,7 +1170,7 @@ while (i.hasNext())
       checkBoundsInclusive(index);
       int csize = c.size();
       boolean result = backingList.addAll(offset + index, c);
-      size += csize;
+      size = size + csize;
       modCount = backingList.modCount;
       return result;
     }

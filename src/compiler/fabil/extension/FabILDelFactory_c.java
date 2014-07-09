@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -16,95 +16,95 @@
 package fabil.extension;
 
 import polyglot.ast.AbstractDelFactory_c;
-import polyglot.ast.JL;
+import polyglot.ast.JLDel;
 import codebases.ast.CodebaseImportDel_c;
 
 public class FabILDelFactory_c extends AbstractDelFactory_c implements
     FabILDelFactory {
 
   @Override
-  public final JL delFabricArrayTypeNode() {
-    JL e = delFabricArrayTypeNodeImpl();
+  public final JLDel delFabricArrayTypeNode() {
+    JLDel e = delFabricArrayTypeNodeImpl();
 
     FabILDelFactory nextDelFactory = (FabILDelFactory) nextDelFactory();
 
     if (nextDelFactory != null) {
-      JL e2 = nextDelFactory.delFabricArrayTypeNode();
+      JLDel e2 = nextDelFactory.delFabricArrayTypeNode();
       e = composeDels(e, e2);
     }
 
     return postDelFabricArrayTypeNode(e);
   }
 
-  protected JL delFabricArrayTypeNodeImpl() {
+  protected JLDel delFabricArrayTypeNodeImpl() {
     return new FabricArrayTypeNodeDel_c();
   }
 
-  protected JL postDelFabricArrayTypeNode(JL del) {
+  protected JLDel postDelFabricArrayTypeNode(JLDel del) {
     return postDelArrayTypeNode(del);
   }
 
   @Override
-  public final JL delFabricArrayInit() {
-    JL e = delFabricArrayInitImpl();
+  public final JLDel delFabricArrayInit() {
+    JLDel e = delFabricArrayInitImpl();
 
     FabILDelFactory nextDelFactory = (FabILDelFactory) nextDelFactory();
 
     if (nextDelFactory != null) {
-      JL e2 = nextDelFactory.delFabricArrayInit();
+      JLDel e2 = nextDelFactory.delFabricArrayInit();
       e = composeDels(e, e2);
     }
 
     return postDelFabricArrayInit(e);
   }
 
-  protected JL delFabricArrayInitImpl() {
+  protected JLDel delFabricArrayInitImpl() {
     return delArrayInitImpl();
   }
 
-  protected JL postDelFabricArrayInit(JL del) {
+  protected JLDel postDelFabricArrayInit(JLDel del) {
     return postDelArrayInit(del);
   }
 
   @Override
-  public final JL delProviderLabel() {
-    JL e = delProviderLabelImpl();
+  public final JLDel delProviderLabel() {
+    JLDel e = delProviderLabelImpl();
 
     FabILDelFactory nextDelFactory = (FabILDelFactory) nextDelFactory();
 
     if (nextDelFactory != null) {
-      JL e2 = nextDelFactory.delProviderLabel();
+      JLDel e2 = nextDelFactory.delProviderLabel();
       e = composeDels(e, e2);
     }
 
     return postDelProviderLabel(e);
   }
 
-  protected JL delProviderLabelImpl() {
+  protected JLDel delProviderLabelImpl() {
     return delExprImpl();
   }
 
-  protected JL postDelProviderLabel(JL del) {
+  protected JLDel postDelProviderLabel(JLDel del) {
     return postDelExpr(del);
   }
 
   @Override
-  protected JL delImportImpl() {
+  protected JLDel delImportImpl() {
     return new CodebaseImportDel_c();
   }
 
   @Override
-  public JL delCodebaseNode() {
+  public JLDel delCodebaseNode() {
     return delPackageNode();
   }
 
   @Override
-  public JL delCodebaseDecl() {
+  public JLDel delCodebaseDecl() {
     return delNode();
   }
 
   @Override
-  public JL delCodebaseTypeNode() {
+  public JLDel delCodebaseTypeNode() {
     return delCanonicalTypeNode();
   }
 }

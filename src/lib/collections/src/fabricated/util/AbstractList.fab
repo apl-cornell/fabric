@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -129,7 +129,7 @@ public abstract class AbstractList[label L] extends AbstractCollection[L] implem
       IllegalStateException{L})
   {
     final Store localStore = worker$.getLocalStore();
-    if (L <= new label {*<-localStore} && new label {*->localStore} <= L) {
+    if (new label {*<-localStore} <= L  && L <= new label {*->localStore}) {
       Iterator itr = c.iterator(localStore);
       int size = c.size();
       int i = index;
@@ -168,7 +168,7 @@ public abstract class AbstractList[label L] extends AbstractCollection[L] implem
    */
   public int{L} indexOf{L}(Object{L} o) throws (ClassCastException{L}, NullPointerException{L}) {
     final Store localStore = worker$.getLocalStore();
-    if (L <= new label {*<-localStore} && new label {*->localStore} <= L) {
+    if (new label {*<-localStore} <= L  && L <= new label {*->localStore}) {
       ListIterator itr = listIterator(localStore, 0);
       int size = size();
       for (int pos = 0; pos < size; pos++)
@@ -192,7 +192,7 @@ public abstract class AbstractList[label L] extends AbstractCollection[L] implem
   public int{L} lastIndexOf{L}(Object{L} o) throws (ClassCastException{L}, NullPointerException{L}) {
     int pos = size();
     final Store localStore = worker$.getLocalStore();
-    if (L <= new label {*<-localStore} && new label {*->localStore} <= L) {
+    if (new label {*<-localStore} <= L  && L <= new label {*->localStore}) {
       ListIterator itr = listIterator(localStore, 0);
       while (--pos >= 0)
         if (compare.equals(o, itr.previous()))
@@ -221,7 +221,7 @@ public abstract class AbstractList[label L] extends AbstractCollection[L] implem
    *
    * @return an iterator
    */
-  public Iterator[L]{L} iterator{L}(Store{L} store) where L <= {*<-store}, {*->store} <= L
+  public Iterator[L]{L} iterator{L}(Store{L} store) where {*<-store} <= L, L <= {*->store}
   {
     return listIterator(store, 0);
   }
@@ -282,7 +282,7 @@ public abstract class AbstractList[label L] extends AbstractCollection[L] implem
    * @see #modCount
    */
   public ListIterator[L]{L} listIterator{L}(Store{L} store, int{L} index) 
-      throws (IndexOutOfBoundsException{L}) where L <= {*<-store}, {*->store} <= L {
+      throws (IndexOutOfBoundsException{L}) where {*<-store} <= L, L <= {*->store} {
     if (index < 0 || index > size())
       throw new IndexOutOfBoundsException("Index: " + index + ", Size:"
                                               + size());
@@ -331,7 +331,7 @@ public abstract class AbstractList[label L] extends AbstractCollection[L] implem
       UnsupportedOperationException{L}, IndexOutOfBoundsException{L}) 
   {
     final Store localStore = worker$.getLocalStore();
-    if (L <= new label {*<-localStore} && new label {*->localStore} <= L) {
+    if (new label {*<-localStore} <= L  && L <= new label {*->localStore}) {
       ListIterator itr = listIterator(localStore, fromIndex);
       for (int index = fromIndex; index < toIndex; index++)
         {

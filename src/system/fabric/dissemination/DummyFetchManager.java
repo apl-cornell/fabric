@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -29,16 +29,28 @@ public class DummyFetchManager implements FetchManager {
   private Cache cache;
 
   public DummyFetchManager(Worker worker, Properties dissemConfig) {
-    this.cache = new Cache();
+    this(worker, dissemConfig, new Cache());
+  }
+
+  public DummyFetchManager(Worker worker, Properties dissemConfig, Cache cache) {
+    this.cache = cache;
   }
 
   @Override
   public ObjectGroup fetch(RemoteStore store, long onum) {
-    return cache.get(store, onum, true).decrypt(store);
+    Cache.Entry entry = cache.get(store, onum, true);
+    if (entry == null) return null;
+    return entry.objectGlob.decrypt();
   }
 
   @Override
   public void destroy() {
+  }
+
+  @Override
+  public boolean updateCaches(RemoteStore store, long onum,
+      AbstractGlob<?> update) {
+    return update.updateCache(cache, store, onum);
   }
 
 }

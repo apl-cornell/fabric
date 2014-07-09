@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -32,8 +32,8 @@ public class T1 extends PrivatePartTraversal {
   int     result  = 0;
 
   public T1 OO7$traversals$T1() {
-      OO7$traversals$PrivatePartTraversal();
-      return this;
+    OO7$traversals$PrivatePartTraversal();
+    return this;
   }
 
   public static void main(String[] args) {
@@ -60,7 +60,7 @@ public class T1 extends PrivatePartTraversal {
     Store local = Worker.getWorker().getLocalStore();
     visited = (HashMap) new LinkedHashMap@local().fabric$util$LinkedHashMap$();
     p.rootPart().accept(this);
-    result += visited.size();
+    result = result + visited.size();
     visited = null;
   }
 }

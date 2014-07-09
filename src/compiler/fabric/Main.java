@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -229,9 +229,9 @@ public class Main extends polyglot.main.Main {
     List<String> result =
         new ArrayList<String>(super.getSystemJavacArgs(options));
     result.add("-source");
-    result.add("1.6");
+    result.add("1.7");
     result.add("-target");
-    result.add("1.6");
+    result.add("1.7");
     return result;
   }
 

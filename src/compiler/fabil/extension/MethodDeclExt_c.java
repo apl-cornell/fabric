@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -38,7 +38,7 @@ public class MethodDeclExt_c extends ClassMemberExt_c {
     MethodDecl result = node();
     if (!result.flags().isPrivate()) {
       Flags flags = ProxyRewriter.toPublic(result.flags());
-      result = result.flags(flags);
+      result = (MethodDecl) result.flags(flags);
     }
     if (result.flags().isNative()) result = (MethodDecl) result.body(null);
     return Collections.singletonList((ClassMember) result);

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -27,37 +27,39 @@ public class LogoffAction[principal servP] extends AbstractAction[servP] {
     }
 
     public final void invoke{*lbl}(label{*lbl} lbl, Request[servP]{*lbl} req) 
-    throws (ServletException{*lbl;*:req.session;req.session!:})
+    throws (ServletException{*lbl;req.session←})
         where caller(req.session),
-        lbl <= {*:req.session} {
-
+        lbl <= {req.session→} {
         if (req == null)    throw new ServletException("Error processing request");
         Servlet[servP] servlet_ = getServlet();
         final SessionState state_ = req.getSessionState(lbl);
-        if (lbl <= new label{state_.store$->}) {          
-          if (!(servlet_ instanceof AbstractServlet[servP]) 
+        if (lbl <= new label{state_.store$→}) {          
+          if (!(servlet_ instanceof HTMLAuthServlet[servP]) 
                 || !(state_ instanceof AuthSessState)) 
               throw new ServletException("Error processing request");
           
           final AuthSessState state = (AuthSessState)state_;
-          final AbstractServlet[servP] servlet = (AbstractServlet[servP])servlet_;
+          final HTMLAuthServlet[servP] servlet = (HTMLAuthServlet[servP])servlet_;
           if (state == null || servlet == null)    throw new ServletException("Error processing request");
   
           atomic {
+              final HTMLRequest[servP] _req = (HTMLRequest[servP]) req;
               Action[servP] a = servlet.findStartAction(req, servlet.defaultActionName(req));
-  //            if (!ensureLoggedIn(lbl, req, a)) return;
+  //            if (!ensureLoggedIn(lbl, _req, a)) return;
   
               final label newLbl = new label {*lbl; req.session!:};
   
               if (req.session equiv state.sessionPrincipal) {
-                  final principal{req.session!:;*lbl} currentUser = state.currentUser();
-//                  final DelegatingPrincipal{req.session!:;*lbl} currentUser = (DelegatingPrincipal)currentUser_;
+                  final principal{req.session←;*lbl} currentUser = state.currentUser();
                   
                   if (currentUser != null && 
                           req.session actsfor currentUser && 
+                          currentUser.store$ actsfor currentUser && 
                           lbl <= new label {currentUser→;currentUser←}) {
-                      ((DelegatingPrincipal)currentUser).removeDelegatesTo(req.session);
-                  }
+                      if (new label {currentUser→} <= new label {req.session.store$→})
+                          ((DelegatingPrincipal)currentUser).removeDelegatesTo(req.session);
+                      //TODO: else?
+                  } //TODO: else?
                   
                   // invalidate the session.
                   req.invalidateSession();
@@ -68,7 +70,7 @@ public class LogoffAction[principal servP] extends AbstractAction[servP] {
                   NodeList[newLbl, newLbl] content = new NodeList[newLbl, newLbl](newLbl, newLbl, para); 
                   content = content==null?null:content.append(newLbl, newLbl, new Hyperlink[servP, newLbl, newLbl](req.contextURL(), "Login again"));
                   content = new NodeList[newLbl, newLbl](newLbl, newLbl, createBanner(newLbl, title), createBody(newLbl, newLbl, content));
-                  servlet.createPage(req, title, newLbl, newLbl, content);        
+                  servlet.createPage(_req, title, newLbl, newLbl, content);        
               }
               else {
                   throw new ServletException("req.session not equivalent to state.sessionPrincipal"); 

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -30,10 +30,14 @@ public final class Hidden extends InputNode {
         super(servletP, L, E, i);
         data = data_;
     }
+    public Hidden(Principal servletP, Label L, Label E, String name, String data_) {
+        super(servletP, L, E, name);
+        data = data_;
+    }
 
     void writeImpl(HTMLWriter p) {
         p.print("<input type=\"hidden\" name=");
-        p.printq(input.getName());
+        p.printq(getName());
         p.print(" value=");
         p.printq(data);
         p.print("/>");

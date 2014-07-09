@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -16,6 +16,8 @@
 package fabric.worker.shell;
 
 import java.util.List;
+
+import fabric.common.Logging;
 
 /**
  * A command source that blocks indefinitely when asked for a command.
@@ -37,6 +39,7 @@ public class DummyCommandSource extends CommandSource {
         condVar.wait();
       }
     } catch (InterruptedException e) {
+      Logging.logIgnoredInterruptedException(e);
     }
 
     return null;

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -23,25 +23,31 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
+import fabric.common.Logging;
 import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.NotImplementedException;
 import fabric.common.net.handshake.ShakenSocket;
-import fabric.lang.security.Principal;
+import fabric.net.RemoteNode;
 
 /**
  * A channel manages a single socket, allowing it to be multiplexed across
  * multiple SubSockets.
  * 
- * @author mdgeorge
+ * @param <Node> the type of node at the remote endpoint.
  */
-abstract class Channel extends Thread {
-  static final int DEFAULT_MAX_OPEN_CONNECTIONS = 50;
+abstract class Channel<Node extends RemoteNode<Node>> extends Thread {
+  static final int DEFAULT_MAX_OPEN_CONNECTIONS = 0;
+  private static final boolean USE_COMPRESSION = false;
 
   private final DataOutputStream out;
   private final DataInputStream in;
@@ -56,7 +62,7 @@ abstract class Channel extends Thread {
    * Maximum size of <code>connections</code>.
    */
   private final int maxOpenConnections;
-  private final Principal remotePrincipal;
+  private final RemoteIdentity<Node> remoteIdentity;
 
   // channel protocol:
   //
@@ -68,18 +74,36 @@ abstract class Channel extends Thread {
   // any unrecognized or previously closed stream ID should create a new stream
   // (thus the subsocket close message should be the last sent by a subsocket).
 
-  protected Channel(ShakenSocket s, int maxOpenConnections) throws IOException {
+  /**
+   * @param maxOpenConnections if zero, then an unlimited number of open
+   *          connections is permitted on this channel.
+   */
+  protected Channel(ShakenSocket<Node> s, int maxOpenConnections)
+      throws IOException {
     setDaemon(true);
 
+    if (maxOpenConnections < 0) {
+      throw new IllegalArgumentException(
+          "maxOpenConnections cannot be negative.");
+    }
+
     this.sock = s.sock;
-    this.remotePrincipal = s.principal;
+    this.remoteIdentity = s.remoteIdentity;
+
+    OutputStream out = this.sock.getOutputStream();
+    InputStream in = this.sock.getInputStream();
+
+    if (USE_COMPRESSION) {
+      out = new GZIPOutputStream(out, true);
+      in = new GZIPInputStream(in);
+    }
 
     this.out =
-        new DataOutputStream(new BufferedOutputStream(
-            this.sock.getOutputStream(), sock.getSendBufferSize()));
+        new DataOutputStream(new BufferedOutputStream(out,
+            sock.getSendBufferSize()));
 
     this.in =
-        new DataInputStream(new BufferedInputStream(this.sock.getInputStream(),
+        new DataInputStream(new BufferedInputStream(in,
             sock.getReceiveBufferSize()));
 
     this.connections = new HashMap<Integer, Connection>();
@@ -91,7 +115,7 @@ abstract class Channel extends Thread {
   @Override
   public abstract String toString();
 
-  /** called to create a Connection to an unknown stream id */
+  /** Called to create a Connection to an unknown stream ID. */
   protected abstract Connection accept(int streamID) throws IOException;
 
   /** called to clean up a channel that has been closed */
@@ -109,8 +133,8 @@ abstract class Channel extends Thread {
   /** send data */
   private void sendData(int streamID, byte[] data, int offset, int len)
       throws IOException {
-    NETWORK_CHANNEL_LOGGER.log(Level.FINE, "sending " + len
-        + " bytes of data on {0}", this);
+    Logging.log(NETWORK_CHANNEL_LOGGER, Level.FINE,
+        "sending {0} bytes of data on {1}", len, this);
 
     synchronized (out) {
       out.writeInt(streamID);
@@ -147,8 +171,8 @@ abstract class Channel extends Thread {
   }
 
   /**
-   * returns the Connection associated with a given stream id, creating it if
-   * necessary
+   * Returns the Connection associated with a given stream id, creating it if
+   * necessary.
    */
   private Connection getReceiver(int streamID) throws IOException {
     synchronized (connections) {
@@ -179,13 +203,20 @@ abstract class Channel extends Thread {
         byte[] buf = new byte[len];
         in.readFully(buf);
 
-        NETWORK_CHANNEL_LOGGER.log(Level.FINE, "received " + len
-            + " bytes on {0}", this);
+        Logging.log(NETWORK_CHANNEL_LOGGER, Level.FINE,
+            "received {0} bytes on {1}", len, this);
 
         recvData(streamID, buf);
       }
     } catch (final EOFException exc) {
       recvClose();
+    } catch (final SocketException e) {
+      if ("Connection reset".equalsIgnoreCase(e.getMessage())) {
+        NETWORK_CHANNEL_LOGGER.log(Level.FINE, "Connection reset", e);
+        recvClose();
+      } else {
+        throw new NotImplementedException(e);
+      }
     } catch (final IOException exc) {
       throw new NotImplementedException(exc);
     }
@@ -200,7 +231,7 @@ abstract class Channel extends Thread {
     /**
      * The application-facing input stream.
      */
-    final public CircularByteBuffer.InputStream in;
+    final public Pipe.InputStream in;
 
     /**
      * The application-facing output stream.
@@ -210,7 +241,7 @@ abstract class Channel extends Thread {
     /**
      * The output stream for sending data to the application.
      */
-    final public CircularByteBuffer.OutputStream sink;
+    final public Pipe.OutputStream sink;
 
     /**
      * Size of stream headers. Currently two ints: streamID and packet length.
@@ -231,14 +262,16 @@ abstract class Channel extends Thread {
           new BufferedOutputStream(new MuxedOutputStream(streamID),
               sock.getSendBufferSize() - STREAM_HEADER_SIZE);
 
-      CircularByteBuffer buf = new CircularByteBuffer();
+      Pipe buf = new Pipe();
       this.in = buf.getInputStream();
       this.sink = buf.getOutputStream();
       synchronized (connections) {
-        while (connections.size() >= maxOpenConnections) {
+        while (maxOpenConnections > 0
+            && connections.size() >= maxOpenConnections) {
           try {
             connections.wait();
           } catch (InterruptedException e) {
+            Logging.logIgnoredInterruptedException(e);
           }
         }
         connections.put(this.streamID, this);
@@ -251,8 +284,8 @@ abstract class Channel extends Thread {
       return "stream " + streamID + " on " + Channel.this.toString();
     }
 
-    public Principal getPrincipal() {
-      return Channel.this.remotePrincipal;
+    public RemoteIdentity<Node> getRemoteIdentity() {
+      return Channel.this.remoteIdentity;
     }
 
     /**
@@ -277,11 +310,7 @@ abstract class Channel extends Thread {
             e);
       }
 
-      try {
-        sink.close();
-      } catch (final IOException e) {
-        throw new InternalError("Internal pipe failed unexpectedly", e);
-      }
+      sink.close();
 
       sendClose(streamID);
     }
@@ -295,22 +324,21 @@ abstract class Channel extends Thread {
         connections.notifyAll();
       }
 
-      try {
-        sink.close();
-      } catch (final IOException e) {
-        throw new InternalError("Internal pipe failed unexpectedly", e);
-      }
+      sink.close();
     }
 
-    /** forward data to the reading thread */
+    /**
+     * Forwards the given buffer to the reading thread. The caller should not
+     * modify the buffer after calling this method.
+     */
     public synchronized void receiveData(byte[] b) throws IOException {
       if (!locallyClosed) {
-        NETWORK_CHANNEL_LOGGER.fine("putting " + b.length + " bytes in pipe");
+        NETWORK_CHANNEL_LOGGER.log(Level.FINE, "putting {0} bytes in pipe",
+            b.length);
         sink.write(b);
-        sink.flush();
       } else {
-        NETWORK_CHANNEL_LOGGER.fine("discarding " + b.length
-            + " bytes (pipe closed)");
+        NETWORK_CHANNEL_LOGGER.log(Level.FINE,
+            "discarding {0} bytes (pipe closed)", b.length);
       }
     }
   }

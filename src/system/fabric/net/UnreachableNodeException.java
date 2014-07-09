@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -22,9 +22,9 @@ import fabric.common.exceptions.FabricRuntimeException;
  * to connect to a remote node has failed.
  */
 public class UnreachableNodeException extends FabricRuntimeException {
-  private RemoteNode node;
+  private RemoteNode<?> node;
 
-  public UnreachableNodeException(RemoteNode node) {
+  public UnreachableNodeException(RemoteNode<?> node) {
     this.node = node;
   }
 

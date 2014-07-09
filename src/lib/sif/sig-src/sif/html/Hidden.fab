@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -29,6 +29,11 @@ public final class Hidden[principal servletP, label L, label E] extends InputNod
     public Hidden(Input[servletP]{L} i, String{L} data_) 
     where {L;E} <= {*i.inputLbl} {
         super(i);
+        data = null; // dummy
+    }
+    public Hidden(String{L} name, String{L} data_) 
+    {
+        super(name);
         data = null; // dummy
     }
 }

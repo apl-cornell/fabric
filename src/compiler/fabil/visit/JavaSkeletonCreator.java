@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -54,7 +54,8 @@ public class JavaSkeletonCreator extends NodeVisitor {
           MethodDecl pd = (MethodDecl) m;
           if (pd.body() != null) {
             pd = (MethodDecl) pd.body(null);
-            if (!pd.flags().isNative()) pd = pd.flags(pd.flags().Native());
+            if (!pd.flags().isNative())
+              pd = (MethodDecl) pd.flags(pd.flags().Native());
           }
           stubmembers.add(pd);
           // } else if (m instanceof ConstructorDecl) {

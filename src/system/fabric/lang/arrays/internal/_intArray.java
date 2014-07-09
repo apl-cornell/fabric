@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -74,10 +74,11 @@ public interface _intArray extends Object {
      */
     public _Impl(Store store, long onum, int version, long expiry, long label,
         long accessLabel, ObjectInput in, Iterator<RefTypeEnum> refTypes,
-        Iterator<Long> intraStoreRefs) throws IOException,
+        Iterator<Long> intraStoreRefs,
+        Iterator<Pair<String, Long>> interStoreRefs) throws IOException,
         ClassNotFoundException {
       super(store, onum, version, expiry, label, accessLabel, in, refTypes,
-          intraStoreRefs);
+          intraStoreRefs, interStoreRefs);
       value = new int[in.readInt()];
       for (int i = 0; i < value.length; i++)
         value[i] = in.readInt();

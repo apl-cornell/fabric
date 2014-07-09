@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -20,25 +20,47 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 
-public class HandshakeUnauthenticated implements Protocol {
+import fabric.common.net.RemoteIdentity;
+import fabric.net.RemoteNode;
+import fabric.worker.Worker;
+import fabric.worker.remote.RemoteWorker;
+
+public class HandshakeUnauthenticated<Node extends RemoteNode<Node>> implements
+    Protocol<Node> {
   //
   // an incredibly simple handshake:
   // client -> server : name
   //
+  private final String localName;
 
+  public HandshakeUnauthenticated(String localName) {
+    this.localName = localName;
+  }
+
+  /**
+   * @param remoteNode the node to connect to.
+   */
   @Override
-  public ShakenSocket initiate(String name, Socket s) throws IOException {
+  public ShakenSocket<Node> initiate(Node remoteNode, Socket s)
+      throws IOException {
     DataOutputStream out = new DataOutputStream(s.getOutputStream());
-    out.writeUTF(name);
+    out.writeUTF(remoteNode.name);
+    out.writeUTF(localName);
     out.flush();
-    return new ShakenSocket(name, null, s);
+    return new ShakenSocket<>(remoteNode.name, new RemoteIdentity<>(remoteNode,
+        null), s);
   }
 
   @Override
-  public ShakenSocket receive(Socket s) throws IOException {
+  public ShakenSocket<RemoteWorker> receive(Socket s) throws IOException {
     DataInputStream in = new DataInputStream(s.getInputStream());
+
     String name = in.readUTF();
-    return new ShakenSocket(name, null, s);
+
+    String remoteWorkerName = in.readUTF();
+    RemoteWorker remoteWorker = Worker.getWorker().getWorker(remoteWorkerName);
+
+    return new ShakenSocket<>(name, new RemoteIdentity<>(remoteWorker, null), s);
   }
 
 }

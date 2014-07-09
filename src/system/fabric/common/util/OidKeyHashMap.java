@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -72,6 +72,10 @@ public final class OidKeyHashMap<V> implements Iterable<LongKeyMap<V>> {
     return submap != null && submap.containsKey(onum);
   }
 
+  public boolean containsKey(Oid oid) {
+    return containsKey(oid.store, oid.onum);
+  }
+
   public V get(Object obj) {
     return obj == null ? nullEntry : get(obj.$getStore(), obj.$getOnum());
   }
@@ -79,6 +83,10 @@ public final class OidKeyHashMap<V> implements Iterable<LongKeyMap<V>> {
   public V get(Store store, long onum) {
     LongKeyMap<V> submap = map.get(store);
     return submap == null ? null : submap.get(onum);
+  }
+
+  public V get(Oid oid) {
+    return get(oid.store, oid.onum);
   }
 
   public V put(Object obj, V val) {
@@ -102,6 +110,10 @@ public final class OidKeyHashMap<V> implements Iterable<LongKeyMap<V>> {
     return submap.put(onum, val);
   }
 
+  public V put(Oid oid, V val) {
+    return put(oid.store, oid.onum, val);
+  }
+
   public V remove(Object obj) {
     if (obj == null) {
       V result = nullEntry;
@@ -122,6 +134,10 @@ public final class OidKeyHashMap<V> implements Iterable<LongKeyMap<V>> {
     return result;
   }
 
+  public V remove(Oid oid) {
+    return remove(oid.store, oid.onum);
+  }
+
   public Set<Store> storeSet() {
     return map.keySet();
   }
@@ -136,7 +152,7 @@ public final class OidKeyHashMap<V> implements Iterable<LongKeyMap<V>> {
   }
 
   public int size() {
-    int result = 0;
+    int result = hasNullEntry ? 1 : 0;
 
     for (LongKeyMap<V> submap : this)
       result += submap.size();

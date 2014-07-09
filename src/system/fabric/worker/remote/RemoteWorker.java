@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -16,6 +16,8 @@
 package fabric.worker.remote;
 
 import java.io.IOException;
+import java.io.Serializable;
+import java.util.List;
 
 import fabric.common.ClassRef;
 import fabric.common.ObjectGroup;
@@ -27,8 +29,9 @@ import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.NotImplementedException;
 import fabric.common.net.SubSocket;
 import fabric.common.net.SubSocketFactory;
+import fabric.common.util.LongKeyMap;
 import fabric.common.util.Pair;
-import fabric.dissemination.Glob;
+import fabric.dissemination.ObjectGlob;
 import fabric.lang.Object._Impl;
 import fabric.lang.Object._Proxy;
 import fabric.lang.security.Principal;
@@ -60,18 +63,26 @@ import fabric.worker.transaction.TransactionRegistry;
  * For each remote worker, there should be at most one <code>RemoteWorker</code>
  * object representing that worker.
  */
-public final class RemoteWorker extends RemoteNode {
+public class RemoteWorker extends RemoteNode<RemoteWorker> {
 
-  private transient final SubSocketFactory subSocketFactory;
+  private transient final SubSocketFactory<RemoteWorker> subSocketFactory;
 
   /**
    * This should only be called by fabric.worker.Worker. If you want a
    * RemoteWorker, use fabric.worker.Worker.getWorker() instead.
    */
   public RemoteWorker(String name) {
-    super(name);
+    this(name, Worker.getWorker().authToWorker);
+  }
 
-    this.subSocketFactory = Worker.getWorker().authToWorker;
+  RemoteWorker(Worker worker) {
+    this(worker.getName(), worker.authToWorker);
+  }
+
+  private RemoteWorker(String name,
+      SubSocketFactory<RemoteWorker> subSocketFactory) {
+    super(name);
+    this.subSocketFactory = subSocketFactory;
   }
 
   public Object issueRemoteCall(_Proxy receiver, String methodName,
@@ -104,9 +115,9 @@ public final class RemoteWorker extends RemoteNode {
     return response.result;
   }
 
-  public void prepareTransaction(long tid, long commitTime)
-      throws UnreachableNodeException, TransactionPrepareFailedException {
-    send(new PrepareTransactionMessage(tid, commitTime));
+  public void prepareTransaction(long tid) throws UnreachableNodeException,
+      TransactionPrepareFailedException {
+    send(new PrepareTransactionMessage(tid));
   }
 
   public void commitTransaction(long tid) throws UnreachableNodeException,
@@ -172,9 +183,10 @@ public final class RemoteWorker extends RemoteNode {
   /**
    * @return the principal associated with the remote worker.
    */
+  @Override
   public Principal getPrincipal() {
     try {
-      SubSocket socket = getSocket(subSocketFactory);
+      SubSocket<RemoteWorker> socket = getSocket(subSocketFactory);
       Principal principal = socket.getPrincipal();
       recycle(subSocketFactory, socket);
       return principal;
@@ -194,31 +206,33 @@ public final class RemoteWorker extends RemoteNode {
    * 
    * @return whether the node is resubscribing to the object.
    */
-  public boolean notifyObjectUpdate(String store, long onum, Glob glob) {
+  public List<Long> notifyObjectUpdates(String store,
+      LongKeyMap<ObjectGlob> updates) {
     ObjectUpdateMessage.Response response;
     try {
-      response = send(new ObjectUpdateMessage(store, onum, glob));
+      response = send(new ObjectUpdateMessage(store, updates));
     } catch (NoException e) {
       // This is not possible.
       throw new InternalError(e);
     }
-    return response.resubscribe;
+    return response.resubscriptions;
   }
 
   /**
-   * Notifies the worker that an object has been updated.
+   * Notifies the worker that a set of objects has been updated.
    * 
    * @return whether the node is resubscribing to the object.
    */
-  public boolean notifyObjectUpdate(long onum, ObjectGroup group) {
+  public List<Long> notifyObjectUpdates(List<Long> updatedOnums,
+      List<ObjectGroup> updates) {
     ObjectUpdateMessage.Response response;
     try {
-      response = send(new ObjectUpdateMessage(onum, group));
+      response = send(new ObjectUpdateMessage(updatedOnums, updates));
     } catch (NoException e) {
       // This is not possible.
       throw new InternalError(e);
     }
-    return response.resubscribe;
+    return response.resubscriptions;
   }
 
   /**
@@ -239,5 +253,25 @@ public final class RemoteWorker extends RemoteNode {
   private <R extends Message.Response, E extends FabricException> R send(
       Message<R, E> message) throws E {
     return send(subSocketFactory, message);
+  }
+
+  // ////////////////////////////////
+  // Java custom-serialization gunk
+  // ////////////////////////////////
+
+  private Object writeReplace() {
+    return new SerializationProxy(name);
+  }
+
+  static final class SerializationProxy implements Serializable {
+    private final String workerName;
+
+    public SerializationProxy(String workerName) {
+      this.workerName = workerName;
+    }
+
+    java.lang.Object readResolve() {
+      return Worker.getWorker().getWorker(workerName);
+    }
   }
 }

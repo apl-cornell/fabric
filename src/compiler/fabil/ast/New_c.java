@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -19,6 +19,7 @@ import java.util.List;
 
 import polyglot.ast.ClassBody;
 import polyglot.ast.Expr;
+import polyglot.ast.Ext;
 import polyglot.ast.Node;
 import polyglot.ast.NodeFactory;
 import polyglot.ast.Term;
@@ -26,8 +27,6 @@ import polyglot.ast.Term_c;
 import polyglot.ast.TypeNode;
 import polyglot.types.ParsedClassType;
 import polyglot.types.SemanticException;
-import polyglot.util.CollectionUtil;
-import polyglot.util.ListUtil;
 import polyglot.util.Position;
 import polyglot.visit.AmbiguityRemover;
 import polyglot.visit.CFGBuilder;
@@ -35,13 +34,21 @@ import polyglot.visit.NodeVisitor;
 import polyglot.visit.TypeChecker;
 import fabil.types.FabILTypeSystem;
 
+//XXX Should be replaced with extension
+@Deprecated
 public class New_c extends polyglot.ast.New_c implements New, Annotated {
 
   protected Expr location;
 
+  @Deprecated
   public New_c(Position pos, Expr qualifier, TypeNode tn, List<Expr> arguments,
       ClassBody body, Expr location) {
-    super(pos, qualifier, tn, arguments, body);
+    this(pos, qualifier, tn, arguments, body, location, null);
+  }
+
+  public New_c(Position pos, Expr qualifier, TypeNode tn, List<Expr> arguments,
+      ClassBody body, Expr location, Ext ext) {
+    super(pos, qualifier, tn, arguments, body, ext);
 
     this.location = location;
   }
@@ -58,7 +65,12 @@ public class New_c extends polyglot.ast.New_c implements New, Annotated {
 
   @Override
   public New_c location(Expr location) {
-    New_c n = (New_c) copy();
+    return location(this, location);
+  }
+
+  protected <N extends New_c> N location(N n, Expr location) {
+    if (n.location == location) return n;
+    n = copyIfNeeded(n);
     n.location = location;
     return n;
   }
@@ -66,33 +78,22 @@ public class New_c extends polyglot.ast.New_c implements New, Annotated {
   /**
    * Reconstructs the expression.
    */
-  protected New_c reconstruct(Expr qualifier, TypeNode tn,
+  protected <N extends New_c> N reconstruct(N n, Expr qualifier, TypeNode tn,
       List<Expr> arguments, ClassBody body, Expr location) {
-    if (qualifier != this.qualifier || tn != this.tn
-        || !CollectionUtil.equals(arguments, this.arguments)
-        || body != this.body || location != this.location) {
-      New_c n = (New_c) copy();
-      n.tn = tn;
-      n.qualifier = qualifier;
-      n.arguments = ListUtil.copy(arguments, true);
-      n.body = body;
-      n.location = location;
-
-      return n;
-    }
-
-    return this;
+    n = super.reconstruct(n, qualifier, tn, arguments, body);
+    n = location(n, location);
+    return n;
   }
 
   @Override
   public New_c visitChildren(NodeVisitor v) {
-    Expr qualifier = (Expr) visitChild(this.qualifier, v);
-    TypeNode tn = (TypeNode) visitChild(this.tn, v);
+    Expr qualifier = visitChild(this.qualifier, v);
+    TypeNode tn = visitChild(this.objectType, v);
     List<Expr> arguments = visitList(this.arguments, v);
-    ClassBody body = (ClassBody) visitChild(this.body, v);
-    Expr location = (Expr) visitChild(this.location, v);
+    ClassBody body = visitChild(this.body, v);
+    Expr location = visitChild(this.location, v);
 
-    return reconstruct(qualifier, tn, arguments, body, location);
+    return reconstruct(this, qualifier, tn, arguments, body, location);
   }
 
   @Override
@@ -113,10 +114,10 @@ public class New_c extends polyglot.ast.New_c implements New, Annotated {
   @Override
   public <T> List<T> acceptCFG(CFGBuilder<?> v, List<T> succs) {
     if (qualifier != null) {
-      v.visitCFG(qualifier, tn, ENTRY);
+      v.visitCFG(qualifier, objectType, ENTRY);
     }
 
-    Term last = tn;
+    Term last = objectType;
 
     if (location != null) {
       v.visitCFG(last, location, ENTRY);
@@ -146,7 +147,7 @@ public class New_c extends polyglot.ast.New_c implements New, Annotated {
     New_c nn = (New_c) super.disambiguateOverride(parent, ar);
 
     if (nn.location != null) {
-      nn = nn.location((Expr) nn.visitChild(nn.location, ar));
+      nn = nn.location(nn.visitChild(nn.location, ar));
     }
 
     // If we have an anonymous class implementing an interface, make its
@@ -167,7 +168,7 @@ public class New_c extends polyglot.ast.New_c implements New, Annotated {
     if (n == null) return null;
 
     if (n.location != null) {
-      n = n.location((Expr) n.visitChild(n.location, tc));
+      n = n.location(n.visitChild(n.location, tc));
     }
 
     return n;
@@ -176,7 +177,7 @@ public class New_c extends polyglot.ast.New_c implements New, Annotated {
   @Override
   public Node copy(NodeFactory nf) {
     FabILNodeFactory filNf = (FabILNodeFactory) nf;
-    return filNf.New(this.position, this.qualifier, this.tn, this.location,
-        this.arguments, this.body);
+    return filNf.New(this.position, this.qualifier, this.objectType,
+        this.location, this.arguments, this.body);
   }
 }

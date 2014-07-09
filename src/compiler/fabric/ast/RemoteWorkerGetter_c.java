@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -19,6 +19,7 @@ import java.util.List;
 
 import polyglot.ast.Expr;
 import polyglot.ast.Expr_c;
+import polyglot.ast.Ext;
 import polyglot.ast.Node;
 import polyglot.ast.Term;
 import polyglot.types.SemanticException;
@@ -28,21 +29,25 @@ import polyglot.visit.NodeVisitor;
 import polyglot.visit.TypeChecker;
 import fabric.types.FabricTypeSystem;
 
+//XXX Should be replaced with extension
+@Deprecated
 public class RemoteWorkerGetter_c extends Expr_c implements RemoteWorkerGetter {
   protected Expr remoteWorkerName; // cannot be null
 
+  @Deprecated
   public RemoteWorkerGetter_c(Position pos, Expr remoteWorkerName) {
-    super(pos);
+    this(pos, remoteWorkerName, null);
+  }
+
+  public RemoteWorkerGetter_c(Position pos, Expr remoteWorkerName, Ext ext) {
+    super(pos, ext);
     this.remoteWorkerName = remoteWorkerName;
   }
 
-  protected RemoteWorkerGetter reconstruct(Expr remoteWorkerName) {
-    if (this.remoteWorkerName != remoteWorkerName) {
-      RemoteWorkerGetter_c n = (RemoteWorkerGetter_c) copy();
-      n.remoteWorkerName = remoteWorkerName;
-      return n;
-    }
-    return this;
+  protected <N extends RemoteWorkerGetter_c> N reconstruct(N n,
+      Expr remoteWorkerName) {
+    n = remoteWorkerName(n, remoteWorkerName);
+    return n;
   }
 
   @Override
@@ -52,13 +57,21 @@ public class RemoteWorkerGetter_c extends Expr_c implements RemoteWorkerGetter {
 
   @Override
   public RemoteWorkerGetter remoteWorkerName(Expr expr) {
-    return reconstruct(expr);
+    return remoteWorkerName(this, expr);
+  }
+
+  protected <N extends RemoteWorkerGetter_c> N remoteWorkerName(N n,
+      Expr remoteWorkerName) {
+    if (n.remoteWorkerName == remoteWorkerName) return n;
+    n = copyIfNeeded(n);
+    n.remoteWorkerName = remoteWorkerName;
+    return n;
   }
 
   @Override
   public Node visitChildren(NodeVisitor v) {
     Expr remoteWorkerName = (Expr) this.remoteWorkerName.visit(v);
-    return reconstruct(remoteWorkerName);
+    return reconstruct(this, remoteWorkerName);
   }
 
   @Override

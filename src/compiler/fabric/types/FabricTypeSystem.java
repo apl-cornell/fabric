@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -27,12 +27,14 @@ import jif.types.principal.Principal;
 import polyglot.ast.Expr;
 import polyglot.types.ClassType;
 import polyglot.types.Flags;
+import polyglot.types.ParsedClassType;
 import polyglot.types.ReferenceType;
 import polyglot.types.SemanticException;
 import polyglot.types.Type;
 import polyglot.util.Position;
 import codebases.frontend.CodebaseSource;
 import codebases.types.CodebaseTypeSystem;
+import fabric.ExtensionInfo;
 import fabric.ast.RemoteWorkerGetter;
 import fabric.ast.Store;
 
@@ -55,6 +57,13 @@ public interface FabricTypeSystem extends JifTypeSystem, CodebaseTypeSystem {
    * @return
    */
   Principal workerLocalPrincipal(Position pos);
+
+  /**
+   * Constructs an AccessPath for the local worker. 
+   * @param position
+   * @return
+   */
+  AccessPath workerLocalAccessPath(Position position);
 
   WorkerLocalInstance workerLocalInstance();
 
@@ -166,6 +175,15 @@ public interface FabricTypeSystem extends JifTypeSystem, CodebaseTypeSystem {
       FabricContext context, Position pos) throws SemanticException;
 
   /**
+   * @param ct
+   * @param context
+   * @return
+   * @throws SemanticException
+   */
+  AccessPath currentStoreAccessPathFor(ClassType ct, JifContext context)
+      throws SemanticException;
+
+  /**
    * @param ref
    * @param context
    * @return
@@ -173,5 +191,25 @@ public interface FabricTypeSystem extends JifTypeSystem, CodebaseTypeSystem {
    */
   AccessPath storeAccessPathFor(Expr ref, JifContext context)
       throws SemanticException;
+
+  /**
+   * @param pol
+   * @return
+   * @throws SemanticException
+   */
+  boolean accessPolicyValid(ConfPolicy pol) throws SemanticException;
+
+  /**
+   * @param pos
+   * @param ct
+   * @param policy
+   * @return
+   */
+  AccessPolicyInstance accessPolicyInstance(Position pos, ParsedClassType ct,
+      ConfPolicy policy);
+
+  /** Return the language extension this type system is for. */
+  @Override
+  ExtensionInfo extensionInfo();
 
 }

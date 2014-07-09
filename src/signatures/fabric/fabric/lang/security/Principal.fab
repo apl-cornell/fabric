@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -21,26 +21,49 @@ package fabric.lang.security;
  * their own Principal classes must extend DelegatingPrincipal.
  */
 public abstract class Principal {
-//    static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
-
-    public abstract String{this} name{⊥->}();
-
-    public abstract boolean{this; p; this←} delegatesTo{⊥->}(principal p);
-
-    public abstract boolean equals{⊥->}(Principal p);
-
-    // XXX Can we label this method anywhich way we want, since it won't
-    // be invoked from Fabric code??
-    // XXX Where will the declassification w.r.t. password happen?
-    public abstract boolean{authPrf; closure; lb; *lb; executeNow; this; this→; this←}
-	isAuthorized{⊥->;this←}(java.lang.Object{this→} authPrf, 
-			    Closure[this, lb]{this→} closure,
-			    label{this→} lb,
-			    boolean{this→} executeNow) where authority (this);
-
-    public abstract ActsForProof[{c→;c←}]{this; p; this←; p←; c}
-	findProofUpto{⊥->;this←}(Store c, Principal p, java.lang.Object searchState);
+    @{store$→}
     
-    public abstract ActsForProof[{c→;c←}]{this; q; q←; this←; c}
-	findProofDownto{⊥->;this←}(Store c, Principal q, java.lang.Object searchState);    
+    // XXX: should this be final? what are the implications of 
+    //      overriding? What should the begin label be?
+    public abstract String{this; this←} name();
+
+    public abstract boolean{this; p; this←} delegatesTo{this→}(principal{this→} p);
+
+    public abstract boolean{this; p; this←} equals{this→}(Principal{this→} p);
+
+    /**
+     * Checks whether the <code>authPrf<code> provide sufficient proof of this
+     * principal's authority to execute the closure <code>closure</code>, and
+     * if so, returns true. In addition, if <code>executeNow</code> is true,
+     * the closure will be executed immediately.
+     *   For example, <code>authPrf<code> may be a password (or a password
+     * digest, or a certificate, etc.); this method will return true
+     * if that password matches the principal's password, and the closure
+     * is one that the principal expects to be asked to authorize (typically
+     * this is decided by inspecting the class of the closure).
+     */
+    public abstract boolean{authPrf; closure; lb; *lb; executeNow; this; this←}
+    isAuthorized{this→;this←}(java.lang.Object authPrf,
+               Closure[this, lb] closure,
+               label lb,
+               boolean executeNow)
+      where authority (this),
+          {authPrf;closure;lb;executeNow} <= lb,
+          lb <= {this→};
+     /**
+      * Search for a proof that the principal p can act for this principal.
+      * Return null if no such proof can be found.
+      */
+     public abstract ActsForProof{this; c; p; searchState; p←; this←}
+	findProofUpto{this→;this←}(Store c, Principal p, java.lang.Object searchState)
+	where {c;p;searchState} <= {this→};
+     
+     /**
+      * Search for a proof that this principal can act for the principal q.
+      * Return null if no such proof can be found.
+      */    
+     public abstract ActsForProof{this; c; q; searchState; q←; this←}
+	findProofDownto{this→;this←}(Store c, Principal q, java.lang.Object searchState)
+	where {c;q;searchState} <= {this→};
+
 }

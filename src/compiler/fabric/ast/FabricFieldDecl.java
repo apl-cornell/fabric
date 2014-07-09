@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -18,5 +18,7 @@ package fabric.ast;
 import jif.ast.LabelNode;
 
 public interface FabricFieldDecl extends polyglot.ast.FieldDecl {
-  public LabelNode accessLabel();
+  public LabelNode accessPolicy();
+
+  public FabricFieldDecl accessPolicy(LabelNode accessPolicy);
 }

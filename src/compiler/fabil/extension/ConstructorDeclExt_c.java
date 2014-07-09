@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -37,7 +37,7 @@ public class ConstructorDeclExt_c extends ClassMemberExt_c {
   public List<ClassMember> implMember(ProxyRewriter pr, ClassDecl parent) {
     // TODO add Store parameters?
     ConstructorDecl node = (ConstructorDecl) node();
-    node = node.name("_Impl");
+    node = (ConstructorDecl) node.name("_Impl");
     return Collections.singletonList((ClassMember) node);
   }
 

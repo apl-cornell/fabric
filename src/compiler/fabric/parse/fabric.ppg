@@ -234,11 +234,9 @@ non terminal Stmt   abort_stmt, retry_stmt;
 non terminal Worker local_worker;
 non terminal RemoteWorkerGetter remote_worker;
 non terminal FabricArrayInit fabric_array_initializer;
-non terminal LabelNode access_label_opt;
 non terminal List codebase_declarations_opt, codebase_declarations;
 non terminal CodebaseDecl codebase_declaration;
 non terminal Store store_expr;
-non terminal Expr accesspath_expr;
 
 start with goal;
 
@@ -247,20 +245,7 @@ start with goal;
 ////////////////////////////////////////////////////////////////////////
 
 drop { COVARIANT }
-
-override parameter ::=
-            // ParamDecl
-    LABEL:x IDENTIFIER:a
-        {: RESULT = parser.nf.ParamDecl(parser.pos(x, a),
-                                        ParamInstance.INVARIANT_LABEL,
-                                        parser.nf.Id(parser.pos(a), a.getIdentifier()));
-                                        :}
-    |   PRINCIPAL:x IDENTIFIER:a
-        {: RESULT = parser.nf.ParamDecl(parser.pos(x, a),
-                                        ParamInstance.PRINCIPAL,
-                                        parser.nf.Id(parser.pos(a), a.getIdentifier()));
-                                        :}
-    ;
+drop { parameter ::= COVARIANT LABEL IDENTIFIER; }
 
 //////////////
 // Names 	//
@@ -329,12 +314,9 @@ codebase_declaration ::=
             {: RESULT = parser.nf.CodebaseDecl(parser.pos(a), a.toIdentifier()); :}
     ;
 
-override dynamic_label ::=
-        accesspath:a
-            {: RESULT = parser.nf.AmbDynamicLabelNode(parser.pos(a), a); :}
-    |   provider:a
-            {: RESULT = a; :}
-    |   accesspath_receiver:a DOT PROVIDER:b
+drop { dynamic_label ::= accesspath_receiver DOT PROVIDER; }
+extend dynamic_label ::=
+        accesspath_receiver:a DOT PROVIDER:b
             {: TypeNode clazz;
                if (a instanceof Expr) {
                    clazz = parser.exprToUninstType((Expr) a);
@@ -447,6 +429,23 @@ extend accesspath_no_id ::=
             :}
 	;
 	    
+	    	    
+////////////////////////////////////////////////////////////////////////
+// Class definitions may include an explicit "access label"           //
+////////////////////////////////////////////////////////////////////////	    
+extend class_member_declaration ::=
+		AT:a label:b
+            {: List l = new LinkedList<ClassMember>();
+	           l.add(parser.nf.AccessPolicy(parser.pos(a,b), b));
+               RESULT = l; :}
+	; 
+	
+extend interface_member_declaration ::=
+		AT:a label:b
+            {: List l = new LinkedList<ClassMember>();
+	           l.add(parser.nf.AccessPolicy(parser.pos(a,b), b));
+               RESULT = l; :}
+	;   	  
 ////////////////////////////////////////////////////////////////////////
 // Field Declarations now use an optional "access label"              //
 ////////////////////////////////////////////////////////////////////////
@@ -462,7 +461,7 @@ override field_declaration ::=
                                              d.name, d.init));
                }
                RESULT = l; :}
-		|  modifiers_opt:a type:b variable_declarators:c SEMICOLON:e
+    |   modifiers_opt:a type:b variable_declarators:c SEMICOLON:e
             {: List l = new LinkedList<ClassMember>();
                for (Iterator i = c.iterator(); i.hasNext(); ) {
                    VarDeclarator d = (VarDeclarator) i.next();

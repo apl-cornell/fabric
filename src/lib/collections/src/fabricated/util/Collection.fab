@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -32,7 +32,7 @@ public interface Collection[label L] {
     boolean{L} isEmpty{L}();
     
     Iterator[L]{L} iterator{L}();
-    Iterator[L]{L} iterator{L}(Store{L} store) where L <= {*<-store}, {*->store} <= L;
+    Iterator[L]{L} iterator{L}(Store{L} store) where {*<-store} <= L, L <= {*->store};
 
     Object{L}[]{L} toArray{L}();
     Object{L}[]{L} toArray{L}(Store{L} store);

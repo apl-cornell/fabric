@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -22,7 +22,7 @@ import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongSet;
-import fabric.dissemination.Glob;
+import fabric.dissemination.ObjectGlob;
 import fabric.lang.security.Principal;
 import fabric.worker.Store;
 
@@ -30,13 +30,13 @@ import fabric.worker.Store;
  * A group container contains a group or a glob, and supports converting between
  * them. This class is thread-safe.
  */
-public final class GroupContainer extends GroupTable.Entry {
+public final class GroupContainer extends ObjectGrouper.AbstractGroup {
   private final Store store;
   private final long labelOnum;
   private final PrivateKey signingKey;
 
   private ObjectGroup group;
-  private Glob glob;
+  private ObjectGlob glob;
 
   /**
    * The set of onums for the objects contained in this group.
@@ -70,24 +70,29 @@ public final class GroupContainer extends GroupTable.Entry {
       return null;
 
     ObjectGroup group;
-    Glob glob;
+    ObjectGlob glob;
     synchronized (this) {
       group = this.group;
       glob = this.glob;
     }
 
     if (group != null) return group;
-    return glob.decrypt(store);
+    return glob.decrypt();
   }
 
-  public Glob getGlob() {
+  public ObjectGlob getGlob() {
     if (glob != null) return glob;
     synchronized (this) {
       if (glob == null) {
-        glob = new Glob(store, group, signingKey);
+        glob = new ObjectGlob(store, group, signingKey);
         group = null;
       }
       return glob;
     }
+  }
+
+  @Override
+  protected LongSet onums() {
+    return onums;
   }
 }

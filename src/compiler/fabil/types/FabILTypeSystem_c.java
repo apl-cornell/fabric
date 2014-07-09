@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -19,7 +19,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,7 +27,6 @@ import java.util.Set;
 import polyglot.ast.TypeNode;
 import polyglot.frontend.ExtensionInfo;
 import polyglot.frontend.Source;
-import polyglot.main.Report;
 import polyglot.types.AccessControlResolver;
 import polyglot.types.ArrayType;
 import polyglot.types.CachingResolver;
@@ -53,12 +51,13 @@ import polyglot.types.TypeObject;
 import polyglot.types.TypeSystem_c;
 import polyglot.types.reflect.ClassFile;
 import polyglot.types.reflect.ClassFileLazyClassInitializer;
-import polyglot.util.CollectionUtil;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
 import polyglot.util.StringUtil;
+import codebases.frontend.CodebaseSource;
 import codebases.types.CBClassContextResolver;
 import codebases.types.CBImportTable;
+import codebases.types.CBLazyClassInitializer;
 import codebases.types.CBPackage;
 import codebases.types.CBPackageContextResolver;
 import codebases.types.CBPackage_c;
@@ -70,9 +69,6 @@ import fabric.lang.Codebase;
 import fabric.worker.Worker;
 
 public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
-  private static final Collection<String> TOPICS = CollectionUtil.list(
-      Report.types, Report.resolver);
-
   private fabil.ExtensionInfo extInfo;
   protected Map<URI, NamespaceResolver> namespaceResolvers;
   protected NamespaceResolver platformResolver;
@@ -231,7 +227,19 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
   @Override
   public ParsedClassType createClassType(LazyClassInitializer init,
       Source fromSource) {
-    return new FabILParsedClassType_c(this, init, fromSource);
+    if (fromSource == null) {
+      // local raw class file.
+      return createClassType(init, fromSource, extInfo.localNamespace());
+    } else {
+      URI ns = ((CodebaseSource) fromSource).canonicalNamespace();
+      return createClassType(init, fromSource, ns);
+    }
+  }
+
+  @Override
+  public ParsedClassType createClassType(LazyClassInitializer init,
+      Source fromSource, URI ns) {
+    return new FabILParsedClassType_c(this, init, fromSource, ns);
   }
 
   @Override
@@ -255,9 +263,10 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
   // XXX: Why is this method here?
   protected List<? extends MethodInstance> findAcceptableMethods(
       ReferenceType container, String name, List<? extends Type> argTypes,
-      ClassType currClass) throws SemanticException {
+      ClassType currClass, boolean fromClient) throws SemanticException {
     List<? extends MethodInstance> result =
-        super.findAcceptableMethods(container, name, argTypes, currClass);
+        super.findAcceptableMethods(container, name, argTypes, currClass,
+            fromClient);
     if (isJavaInlineable(container)) {
       // Remove any methods from fabric.lang.Object. They don't really exist.
       for (MethodInstance mi : (List<MethodInstance>) FObject().methods()) {
@@ -494,13 +503,6 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
   }
 
   @Override
-  public Flags legalInterfaceFlags() {
-    Flags f = super.legalInterfaceFlags();
-    f = f.set(FabILFlags.NONFABRIC);
-    return f;
-  }
-
-  @Override
   public String translateClass(Resolver c, ClassType t) {
     // Fully qualify classes in fabric.lang.security.
     if (t.package_() != null) {
@@ -594,7 +596,7 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
   @Override
   public ClassFileLazyClassInitializer classFileLazyClassInitializer(
       ClassFile clazz) {
-    return new FabILLazyClassInitializer((fabil.types.ClassFile) clazz, this);
+    return new CBLazyClassInitializer((codebases.types.ClassFile) clazz, this);
   }
 
   // / Deprecated/Unsupported methods

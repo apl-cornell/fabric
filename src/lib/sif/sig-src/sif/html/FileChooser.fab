@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -33,5 +33,9 @@ public final class FileChooser[principal servletP, label L, label E] extends Inp
     public FileChooser{L}(Servlet[servletP]{L} s, label{L} inputLabel, int{L} size) 
     where {L;E} <= {*inputLabel} {
         super(s, inputLabel);
+    }
+    public FileChooser(String{L} name, int{L} size) 
+    where {L;E} <= {*input.inputLbl} { 
+        super(name);
     }
 }

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -21,9 +21,10 @@ import java.io.IOException;
 
 import fabric.common.TransactionID;
 import fabric.common.exceptions.ProtocolError;
-import fabric.lang.security.Principal;
+import fabric.common.net.RemoteIdentity;
 import fabric.worker.Store;
 import fabric.worker.Worker;
+import fabric.worker.remote.RemoteWorker;
 import fabric.worker.transaction.TakeOwnershipFailedException;
 
 /**
@@ -60,9 +61,9 @@ public class TakeOwnershipMessage extends
   // ////////////////////////////////////////////////////////////////////////////
 
   @Override
-  public Response dispatch(Principal p, MessageHandler h) throws ProtocolError,
-      TakeOwnershipFailedException {
-    return h.handle(p, this);
+  public Response dispatch(RemoteIdentity<RemoteWorker> worker, MessageHandler h)
+      throws ProtocolError, TakeOwnershipFailedException {
+    return h.handle(worker, this);
   }
 
   // ////////////////////////////////////////////////////////////////////////////

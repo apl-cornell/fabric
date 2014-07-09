@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -14,6 +14,9 @@
  * details.
  */
 package fabric.common.exceptions;
+
+import java.text.DateFormat;
+import java.util.Date;
 
 public class InternalError extends Error {
   public InternalError() {
@@ -36,7 +39,8 @@ public class InternalError extends Error {
   }
 
   private void report() {
-    System.err.println("Creating InternalError exception:");
+    System.err.println(DateFormat.getDateTimeInstance().format(new Date())
+        + " Creating InternalError exception:");
     System.err.println("================ BEGIN STACK TRACE ================");
     printStackTrace();
     System.err.println("================= END STACK TRACE =================");

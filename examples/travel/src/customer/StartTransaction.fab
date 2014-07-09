@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -23,7 +23,9 @@ import travel.Broker;
 import sif.html.*;
 import sif.servlet.Action;
 import sif.servlet.Request;
+import sif.servlet.HTMLRequest;
 import sif.servlet.Servlet;
+import sif.servlet.HTMLServlet;
 
 
 public class StartTransaction extends CustomerAction {
@@ -36,12 +38,13 @@ public class StartTransaction extends CustomerAction {
         initFields("starttx", m);
     }
     
-    public final void invoke{*lbl}(label{*lbl} lbl, Request[CustomerPrincipal]{*lbl} req) 
-    throws (ServletException{*lbl;⊤→req.session;req.session←})
-    where caller(req.session),
-    lbl <= {⊤→req.session} {
-
-        Servlet[CustomerPrincipal] servlet = getServlet();
+   public final void invoke{*lbl}(label{*lbl} lbl, Request[CustomerPrincipal]{*lbl} _req)
+   throws (ServletException{*lbl;_req.session←})
+    where caller(_req.session),
+          lbl <= {_req.session→}
+   {
+        final HTMLRequest req = (HTMLRequest) _req;
+        HTMLServlet[CustomerPrincipal] servlet = (HTMLServlet) getServlet();
         if (servlet == null || !(servlet instanceof CustomerMain)) throw new ServletException("No servlet available"); 
         if (req == null) throw new ServletException("No request available"); 
         CustomerMain m = (CustomerMain)servlet;

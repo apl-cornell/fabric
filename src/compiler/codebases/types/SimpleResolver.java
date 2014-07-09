@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -76,6 +76,7 @@ public class SimpleResolver extends NamespaceResolver_c {
     ClassFile clazz = null;
     ClassFile encodedClazz = null;
     if (load_enc) clazz = loadFile(name);
+
     if (clazz != null) {
       // Check for encoded type information.
       if (clazz.encodedClassType(version) != null) {
@@ -84,7 +85,8 @@ public class SimpleResolver extends NamespaceResolver_c {
         encodedClazz = clazz;
       }
       if (encodedClazz != null
-          && !name.replace(".", File.separator).equals(encodedClazz.name())) {
+          && !name.replaceAll("[.$]", File.separator).equals(
+              encodedClazz.name().replaceAll("[.$]", File.separator))) {
         if (Report.should_report(REPORT_TOPICS, 3))
           Report.report(3, "Not using " + encodedClazz.name()
               + "(case-insensitive filesystem?)");
@@ -119,7 +121,8 @@ public class SimpleResolver extends NamespaceResolver_c {
             encodedClazz = homeClazz;
           }
           if (encodedClazz != null
-              && !name.replace(".", File.separator).equals(encodedClazz.name())) {
+              && !name.replaceAll("[.$]", File.separator).equals(
+                  encodedClazz.name().replaceAll("[.$]", File.separator))) {
             if (Report.should_report(REPORT_TOPICS, 3))
               Report.report(3, "Not using " + encodedClazz.name()
                   + "(case-insensitive filesystem?)");

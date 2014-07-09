@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -22,6 +22,7 @@ import jif.ast.ParamDecl;
 import jif.ast.PrincipalNode;
 import jif.types.Assertion;
 import polyglot.ast.ClassBody;
+import polyglot.ast.Ext;
 import polyglot.ast.Id;
 import polyglot.ast.TypeNode;
 import polyglot.main.Report;
@@ -31,14 +32,24 @@ import polyglot.util.Position;
 import polyglot.visit.AmbiguityRemover;
 import fabric.types.FabricTypeSystem;
 
+//XXX Should be replaced with extension
+@Deprecated
 public class ClassDecl_c extends jif.ast.JifClassDecl_c {
-
+  @Deprecated
   public ClassDecl_c(Position pos, Flags flags, Id name,
       List<ParamDecl> params, TypeNode superClass, List<TypeNode> interfaces,
       List<PrincipalNode> authority,
       List<ConstraintNode<Assertion>> constraints, ClassBody body) {
+    this(pos, flags, name, params, superClass, interfaces, authority,
+        constraints, body, null);
+  }
+
+  public ClassDecl_c(Position pos, Flags flags, Id name,
+      List<ParamDecl> params, TypeNode superClass, List<TypeNode> interfaces,
+      List<PrincipalNode> authority,
+      List<ConstraintNode<Assertion>> constraints, ClassBody body, Ext ext) {
     super(pos, flags, name, params, superClass, interfaces, authority,
-        constraints, body);
+        constraints, body, ext);
   }
 
   @Override

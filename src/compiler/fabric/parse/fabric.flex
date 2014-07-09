@@ -11,9 +11,10 @@ import polyglot.util.Position;
 import polyglot.util.ErrorQueue;
 import polyglot.util.ErrorInfo;
 import polyglot.frontend.FileSource;
+import java.util.Map;
 import java.util.HashMap;
+import java.util.Collections;
 import java.math.BigInteger;
-
 
 @SuppressWarnings("all")
 %%
@@ -52,7 +53,11 @@ import java.math.BigInteger;
         this.keywords = new HashMap();
         init_keywords();
     }
-
+	
+	public Map keywords() {
+		return Collections.unmodifiableMap(keywords);
+	}
+	
     protected void init_keywords() {
         keywords.put("abstract",      new Integer(sym.ABSTRACT));
         keywords.put("assert",        new Integer(sym.ASSERT));
@@ -120,7 +125,7 @@ import java.math.BigInteger;
         keywords.put("where",         new Integer(sym.WHERE));
         keywords.put("meet",          new Integer(sym.MEET));
         
-        keywords.put("provider",     new Integer(sym.PROVIDER));                
+        keywords.put("provider",     new Integer(sym.PROVIDER));        
 
         /* Fabric-specific keywords */
         keywords.put("atomic",        new Integer(sym.ATOMIC));
@@ -201,7 +206,8 @@ import java.math.BigInteger;
                            "Illegal float literal \"" + yytext() + "\"", pos());
             }
             return new FloatLiteral(pos(), x.floatValue(), sym.FLOAT_LITERAL);
-        } catch (NumberFormatException e) {
+        }
+        catch (NumberFormatException e) {
             eq.enqueue(ErrorInfo.LEXICAL_ERROR,
                        "Illegal float literal \"" + yytext() + "\"", pos());
             return new FloatLiteral(pos(), 0f, sym.FLOAT_LITERAL);
@@ -413,17 +419,19 @@ OctalEscape = \\ [0-7]
     {WhiteSpace}                 { /* ignore */ }
 
     /* Jif extensions */
-    "\u2293" { return op(sym.MEET); }
-    "\u2294" { return op(sym.JOIN); }
-    "\u2190" { return op(sym.LEFTARROW); }
-    "\u2192" { return op(sym.RIGHTARROW); }
-    "\u22a4" { return op(sym.TOP);      }
-    "\u22a5" { return op(sym.BOTTOM);   }    
+    "\u2293" { return op(sym.MEET); }        /* ⊓ */
+    "\u2294" { return op(sym.JOIN); }        /* ⊔ */
+    "\u2190" { return op(sym.LEFTARROW); }   /* ← */
+    "\u2192" { return op(sym.RIGHTARROW); }  /* → */
+    "\u22a4" { return op(sym.TOP);      }    /* ⊤ */
+    "\u22a5" { return op(sym.BOTTOM);   }    /* ⊥ */
+    "\u227d" { return op(sym.TRUST_GTEQ);  } /* ≽ */
+    "\u2291" { return op(sym.INFO_LTEQ);   } /* ⊑ */
 }
 
 <TRADITIONAL_COMMENT> {
     "*/"                         { yybegin(YYINITIAL); }
-    .|\n                         { /* ignore */ }
+    [^]                          { /* ignore */ }
 }
 
 <END_OF_LINE_COMMENT> {
@@ -512,6 +520,6 @@ OctalEscape = \\ [0-7]
 }
 
 /* Fallthrough case: anything not matched above is an error */
-.|\n                             { eq.enqueue(ErrorInfo.LEXICAL_ERROR,
+[^]                              { eq.enqueue(ErrorInfo.LEXICAL_ERROR,
                                               "Illegal character \"" +
                                               yytext() + "\"", pos()); }

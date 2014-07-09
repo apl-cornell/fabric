@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.ListIterator;
 
 import fabric.common.FabricThread;
+import fabric.common.Logging;
 
 /**
  * The thread in which the Fabric program executes. This is here to ensure that
@@ -83,6 +84,7 @@ public final class MainThread extends FabricThread.Impl {
         thread.join();
         break;
       } catch (InterruptedException e) {
+        Logging.logIgnoredInterruptedException(e);
       }
     }
 

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -48,19 +48,21 @@ where
   /**
    * Create a new group with the given name and the default maximum size.
    */
-  public native
+  public
   Group
   {           // side effects:
     {this} //⊓  // fields are updated
   }
   (
     final String {this} name
-  );
+  ){
+    super(name, groupOwner);
+  }
 
   /**
    * Create a new group with the given name and maximum size.
    */
-  public native
+  public
   Group
   {           // side effects:
     {this} ⊓  // fields are updated
@@ -73,7 +75,9 @@ where
   throws
   (
     NegativeArraySizeException{maxSize}
-  );
+  ){
+    super(name, groupOwner);
+  }
 
   //////////////////////////////////////////////////////////////////////////////
   // Group membership operations                                              //
@@ -144,7 +148,7 @@ where
    * See Principal.findProofUpto.
    */
   public native
-  ActsForProof[{*→s;*←s}] {this; p; this←; p←;s} // TODO
+  ActsForProof {this; p; this←; p←;s} // TODO
   findProofUpto
   {            // side effects:
     *→s;*←this // TODO

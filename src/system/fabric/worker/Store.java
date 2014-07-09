@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -44,11 +44,8 @@ public interface Store extends Serializable {
 
   /**
    * Notifies the store that the transaction is entering the Prepare phase.
-   * 
-   * @return whether a subtransaction was created on the store as a result of
-   *         the prepare.
    */
-  boolean prepareTransaction(long tid, long commitTime,
+  void prepareTransaction(long tid, boolean singleStore, boolean readOnly,
       Collection<_Impl> toCreate, LongKeyMap<Integer> reads,
       Collection<_Impl> writes) throws UnreachableNodeException,
       TransactionPrepareFailedException;
@@ -124,10 +121,8 @@ public interface Store extends Serializable {
 
   /**
    * Evicts the object with the given onum from cache.
-   * 
-   * @return true iff the onum was found in cache.
    */
-  public boolean evict(long onum);
+  public void evict(long onum);
 
   /**
    * Adds the given object to the cache.

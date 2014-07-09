@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -72,7 +72,7 @@ public class CastToFabilExt_c extends CastToJavaExt_c {
     args.add(c.expr());
 
     FabricClassType fct = (FabricClassType) castType;
-    String jifImplClass = fct.name();
+    String jifImplClass = fct.fullName();
     if (fct.flags().isInterface()) {
       // use the full name for the interface, since the IMPL class
       // will not be in the import table.

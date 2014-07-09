@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -25,6 +25,7 @@ import polyglot.types.SemanticException;
 import polyglot.types.Type;
 import fabric.ast.FabricUtil;
 import fabric.types.FabricClassType;
+import fabric.types.FabricContext;
 import fabric.types.FabricTypeSystem;
 
 public class NewArrayJifExt_c extends JifNewArrayExt {
@@ -46,7 +47,10 @@ public class NewArrayJifExt_c extends JifNewArrayExt {
       // TODO: Implement access label checks for arrays
       FabricTypeSystem ts = (FabricTypeSystem) lc.typeSystem();
       Label accessLabel = ts.toLabel(ct.accessPolicy());
-      ext.labelCheck(lc, ct.updateLabel(), accessLabel);
+      Label referenceLabel = ext.referenceLabel((FabricContext) lc.context());
+      // XXX: this looks fishy to me. why are we using the base 
+      // type's update label to typecheck the array allocation? -oa      
+      ext.labelCheck(lc, ct.updateLabel(), accessLabel, referenceLabel);
     }
 
     return super.labelCheck(lc);

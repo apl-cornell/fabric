@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -23,10 +23,11 @@ import fabric.common.SerializedObject;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.ProtocolError;
+import fabric.common.net.RemoteIdentity;
 import fabric.lang.Object._Impl;
-import fabric.lang.security.Principal;
 import fabric.worker.Store;
 import fabric.worker.Worker;
+import fabric.worker.remote.RemoteWorker;
 
 /**
  * Represents a request from a worker to read an object owned by another worker.
@@ -86,9 +87,9 @@ public class DirtyReadMessage extends
   // ////////////////////////////////////////////////////////////////////////////
 
   @Override
-  public Response dispatch(Principal p, MessageHandler h) throws ProtocolError,
-      AccessException {
-    return h.handle(p, this);
+  public Response dispatch(RemoteIdentity<RemoteWorker> client, MessageHandler h)
+      throws ProtocolError, AccessException {
+    return h.handle(client, this);
   }
 
   // ////////////////////////////////////////////////////////////////////////////
@@ -112,7 +113,7 @@ public class DirtyReadMessage extends
   protected void writeResponse(DataOutput out, Response r) throws IOException {
     if (r.obj != null) {
       out.writeBoolean(true);
-      out.writeUTF(store.name());
+      out.writeUTF(r.store.name());
       r.obj.write(out);
     } else {
       out.writeBoolean(false);

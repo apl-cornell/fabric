@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -44,5 +44,13 @@ public interface FetchManager {
    * Called to destroy and clean up the fetch manager.
    */
   public void destroy();
+
+  /**
+   * Updates the dissemination and worker caches with the given glob.
+   * 
+   * @return true iff there was a dissemination-cache entry for the given oid.
+   */
+  public boolean updateCaches(RemoteStore store, long onum,
+      AbstractGlob<?> update);
 
 }

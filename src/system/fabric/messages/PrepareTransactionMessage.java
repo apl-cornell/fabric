@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -23,11 +23,12 @@ import java.util.Collection;
 import java.util.Collections;
 
 import fabric.common.SerializedObject;
+import fabric.common.net.RemoteIdentity;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.lang.Object._Impl;
-import fabric.lang.security.Principal;
 import fabric.worker.TransactionPrepareFailedException;
+import fabric.worker.remote.RemoteWorker;
 
 /**
  * A <code>PrepareTransactionMessage</code> represents a transaction request to
@@ -41,7 +42,22 @@ public class PrepareTransactionMessage
   // ////////////////////////////////////////////////////////////////////////////
 
   public final long tid;
-  public final long commitTime;
+
+  /**
+   * A flag to indicate whether objects from just a single (persistent) store
+   * are involved in this transaction. This is always false if the transaction
+   * is distributed. If this is true, then the store will commit the transaction
+   * as soon as it is prepared.
+   */
+  public final boolean singleStore;
+
+  /**
+   * A flag to indicate whether the transaction is read-only. A transaction is
+   * read-only if it does not modify any persistent objects. If this value is
+   * true, then the store will commit the transaction as soon as it is prepared.
+   */
+  public final boolean readOnly;
+
   public final LongKeyMap<Integer> reads;
 
   /**
@@ -75,21 +91,22 @@ public class PrepareTransactionMessage
   /**
    * Used to prepare transactions at remote workers.
    */
-  public PrepareTransactionMessage(long tid, long commitTime) {
-    this(tid, commitTime, null, null, null);
+  public PrepareTransactionMessage(long tid) {
+    this(tid, false, false, null, null, null);
   }
 
   /**
    * Only used by the worker.
    */
-  public PrepareTransactionMessage(long tid, long commitTime,
-      Collection<_Impl> toCreate, LongKeyMap<Integer> reads,
+  public PrepareTransactionMessage(long tid, boolean singleStore,
+      boolean readOnly, Collection<_Impl> toCreate, LongKeyMap<Integer> reads,
       Collection<_Impl> writes) {
     super(MessageType.PREPARE_TRANSACTION,
         TransactionPrepareFailedException.class);
 
     this.tid = tid;
-    this.commitTime = commitTime;
+    this.singleStore = singleStore;
+    this.readOnly = readOnly;
     this.creates = toCreate;
     this.reads = reads;
     this.writes = writes;
@@ -103,22 +120,9 @@ public class PrepareTransactionMessage
 
   public static class Response implements Message.Response {
     /**
-     * If the remote node is a store, this will indicate whether the worker
-     * should send a commit/abort message to the store's worker to commit/abort
-     * a sub-transaction. (This happens when Statistics objects are created
-     * during transaction prepare.)
-     */
-    public final boolean subTransactionCreated;
-
-    /**
      * Creates a Response indicating a successful prepare.
      */
     public Response() {
-      this(false);
-    }
-
-    public Response(boolean subTransactionCreated) {
-      this.subTransactionCreated = subTransactionCreated;
     }
   }
 
@@ -127,9 +131,9 @@ public class PrepareTransactionMessage
   // ////////////////////////////////////////////////////////////////////////////
 
   @Override
-  public Response dispatch(Principal p, MessageHandler h)
+  public Response dispatch(RemoteIdentity<RemoteWorker> client, MessageHandler h)
       throws TransactionPrepareFailedException {
-    return h.handle(p, this);
+    return h.handle(client, this);
   }
 
   // ////////////////////////////////////////////////////////////////////////////
@@ -141,8 +145,11 @@ public class PrepareTransactionMessage
     // Serialize tid.
     out.writeLong(tid);
 
-    // Serialize commitTime
-    out.writeLong(commitTime);
+    // Serialize single-store flag.
+    out.writeBoolean(singleStore);
+
+    // Serialize read-only flag.
+    out.writeBoolean(readOnly);
 
     // Serialize reads.
     if (reads == null) {
@@ -183,7 +190,12 @@ public class PrepareTransactionMessage
 
     // Read the TID.
     this.tid = in.readLong();
-    this.commitTime = in.readLong();
+
+    // Read the single-store flag.
+    this.singleStore = in.readBoolean();
+
+    // Read the read-only flag.
+    this.readOnly = in.readBoolean();
 
     // Read reads.
     int size = in.readInt();
@@ -198,7 +210,9 @@ public class PrepareTransactionMessage
     // Read creates.
     size = in.readInt();
     if (size == 0) {
-      serializedCreates = Collections.emptyList();
+      // XXX: this list must be mutable since it can be added
+      //      to by the surrogate manager
+      serializedCreates = new ArrayList<SerializedObject>(0);
     } else {
       serializedCreates = new ArrayList<SerializedObject>(size);
       for (int i = 0; i < size; i++)
@@ -218,12 +232,10 @@ public class PrepareTransactionMessage
 
   @Override
   protected void writeResponse(DataOutput out, Response r) throws IOException {
-    out.writeBoolean(r.subTransactionCreated);
   }
 
   @Override
   protected Response readResponse(DataInput in) throws IOException {
-    boolean subTransactionCreated = in.readBoolean();
-    return new Response(subTransactionCreated);
+    return new Response();
   }
 }

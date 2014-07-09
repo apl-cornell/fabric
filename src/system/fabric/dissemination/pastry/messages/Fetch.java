@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -23,14 +23,14 @@ import rice.p2p.commonapi.Id;
 import rice.p2p.commonapi.NodeHandle;
 import rice.p2p.commonapi.rawserialization.InputBuffer;
 import rice.p2p.commonapi.rawserialization.OutputBuffer;
-import rice.p2p.commonapi.rawserialization.RawMessage;
-import fabric.dissemination.Glob;
+import fabric.dissemination.ObjectGlob;
+import fabric.dissemination.pastry.Disseminator;
 import fabric.worker.Worker;
 
 /**
  * A Fetch message represents a request to fetch a particular object.
  */
-public class Fetch implements RawMessage {
+public class Fetch extends AbstractRawMessage {
 
   private transient final NodeHandle sender;
   private final Id id;
@@ -41,6 +41,7 @@ public class Fetch implements RawMessage {
   private transient Reply reply;
 
   public Fetch(NodeHandle sender, Id id, String store, long onum) {
+    super(RawMessageType.FETCH);
     this.sender = sender;
     this.id = id;
     this.store = store;
@@ -67,19 +68,6 @@ public class Fetch implements RawMessage {
     return onum;
   }
 
-  /**
-   * A hint as to whether we want to explicitly fetch the latest version from
-   * the store.
-   */
-  public boolean refresh() {
-    return refresh;
-  }
-
-  /** Set whether we want to refresh. */
-  public void refresh(boolean refresh) {
-    this.refresh = refresh;
-  }
-
   /** The reply message. */
   public Reply reply() {
     return reply;
@@ -96,13 +84,13 @@ public class Fetch implements RawMessage {
   }
 
   @Override
-  public String toString() {
-    return store + "/" + onum;
+  public void dispatch(Disseminator disseminator) {
+    disseminator.fetch(this);
   }
 
   @Override
-  public short getType() {
-    return MessageType.FETCH;
+  public String toString() {
+    return store + "/" + onum;
   }
 
   @Override
@@ -119,6 +107,7 @@ public class Fetch implements RawMessage {
    */
   public Fetch(InputBuffer buf, Endpoint endpoint, NodeHandle sender)
       throws IOException {
+    super(RawMessageType.FETCH);
     this.sender = sender;
     id = endpoint.readId(buf, buf.readShort());
     store = buf.readUTF();
@@ -130,14 +119,15 @@ public class Fetch implements RawMessage {
    * A reply to a Fetch message. Should carry the object requested by the
    * original fetch message.
    */
-  public static class Reply implements RawMessage {
+  public static class Reply extends AbstractRawMessage {
 
     private final Id id;
     private final String store;
     private final long onum;
-    private final Glob glob;
+    private final ObjectGlob glob;
 
-    public Reply(Fetch parent, Glob glob) {
+    public Reply(Fetch parent, ObjectGlob glob) {
+      super(RawMessageType.FETCH_REPLY);
       id = parent.id();
       store = parent.store();
       onum = parent.onum();
@@ -145,7 +135,7 @@ public class Fetch implements RawMessage {
     }
 
     /** The glob returned. */
-    public Glob glob() {
+    public ObjectGlob glob() {
       return glob;
     }
 
@@ -170,8 +160,8 @@ public class Fetch implements RawMessage {
     }
 
     @Override
-    public short getType() {
-      return MessageType.FETCH_REPLY;
+    public void dispatch(Disseminator disseminator) {
+      disseminator.fetch(this);
     }
 
     @Override
@@ -188,14 +178,16 @@ public class Fetch implements RawMessage {
      * Deserialization constructor.
      */
     public Reply(InputBuffer buf, Endpoint endpoint) throws IOException {
+      super(RawMessageType.FETCH_REPLY);
+
       DataInputBuffer in = new DataInputBuffer(buf);
       id = endpoint.readId(in, in.readShort());
       store = in.readUTF();
       onum = in.readLong();
 
-      Glob glob;
+      ObjectGlob glob;
       try {
-        glob = new Glob(in);
+        glob = new ObjectGlob(in);
         glob.verifySignature(Worker.getWorker().getStore(store).getPublicKey());
       } catch (GeneralSecurityException e) {
         glob = null;

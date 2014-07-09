@@ -9,14 +9,14 @@
 	</classpathentry>
 	<classpathentry kind="src" output="tools/code-normalizer/classes" path="tools/code-normalizer/src"/>
 	<classpathentry kind="src" output="tools/fabth/classes" path="tools/fabth/src"/>
-	<classpathentry kind="src" output="tools/net-perf/classes" path="tools/net-perf/src"/>
+	<!--classpathentry kind="src" output="tools/net-perf/classes" path="tools/net-perf/src"/-->
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/jif"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/polyglot"/>
-	<classpathentry kind="lib" path="lib/commons-fileupload-1.1.1.jar"/>
 	<classpathentry kind="lib" path="lib/FreePastry-2.1.jar"/>
 	<classpathentry kind="lib" path="lib/servlet-api.jar"/>
 	<classpathentry kind="lib" path="lib/bcprov-jdk15-145.jar"/>
+	<classpathentry kind="lib" path="lib/guava-14.0.1.jar"/>
 	<classpathentry kind="lib" path="lib/je-4.0.103.jar"/>
 	<classpathentry kind="lib" path="lib/jline-0.9.94.jar"/>
 	@TOOLS.JAR@

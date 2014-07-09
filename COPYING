@@ -1,8 +1,8 @@
 This release of the Fabric distribution is governed by the GNU
 Public License as described by the following copyright notice.
 
-Fabric 0.2.1
-Copyright (C) 2010-2013 Fabric project group, Cornell University
+Fabric 0.2.2
+Copyright (C) 2010-2014 Fabric project group, Cornell University
 
 Fabric is free software: you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by
@@ -29,12 +29,31 @@ from the GNU General Public License) are enumerated below.
 
     Files:
       src/runtime/fabric/util/*.fil
+      src/system/fabric/common/util/AbstractLongCollection.java
+      src/system/fabric/common/util/AbstractLongKeyMap.java
+      src/system/fabric/common/util/AbstractLongSet.java
+      src/system/fabric/common/util/LongCollection.java
+      src/system/fabric/common/util/LongHashSet.java
+      src/system/fabric/common/util/LongIterable.java
+      src/system/fabric/common/util/LongIterator.java
+      src/system/fabric/common/util/LongKeyHashMap.java
+      src/system/fabric/common/util/LongKeyMap.java
+      src/system/fabric/common/util/LongSet.java
 
 
   JFlex is software developed by Gerwin Klein.
 
     Files:
-      lib/JFlex.jar
+      lib/jflex.jar
+
+
+  OpenJDK 7 is software developed by Oracle. It was modified by the
+  Fabric project group at Cornell University for use as part of the
+  Fabric runtime system.
+
+    Files:
+      src/system/fabric/common/util/ConcurrentLongKeyMap.java
+      src/system/fabric/common/util/ConcurrentLongKeyHashMap.java
 
 
   CUP Parser Generator is software developed by Scott Hudson,
@@ -75,6 +94,14 @@ from the GNU General Public License) are enumerated below.
 
     Files:
       lib/bcprov-*.jar
+
+
+  Guava is software developed by Google and is released under the
+  Apache License 2.0.  A copy of this license can be found in the file
+  doc/licenses/apache-2.0.txt, included in this distribution.
+
+    Files:
+      lib/guava-*.jar
 
 
   Jetty is software developed by the Eclipse Foundation and is

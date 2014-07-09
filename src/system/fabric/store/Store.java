@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -33,9 +33,11 @@ import fabric.common.KeyMaterial;
 import fabric.common.Logging;
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
+import fabric.common.SysUtil;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.FabricGeneralSecurityException;
 import fabric.common.exceptions.InternalError;
+import fabric.common.net.RemoteIdentity;
 import fabric.common.net.SubServerSocket;
 import fabric.common.net.SubServerSocketFactory;
 import fabric.common.net.handshake.HandshakeAuthenticated;
@@ -47,7 +49,7 @@ import fabric.common.net.naming.NameService;
 import fabric.common.net.naming.NameService.PortType;
 import fabric.common.net.naming.TransitionalNameService;
 import fabric.common.util.LongKeyMap;
-import fabric.dissemination.Glob;
+import fabric.dissemination.ObjectGlob;
 import fabric.lang.security.NodePrincipal;
 import fabric.lang.security.Principal;
 import fabric.messages.AbortTransactionMessage;
@@ -65,6 +67,7 @@ import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.Worker;
 import fabric.worker.Worker.Code;
+import fabric.worker.remote.RemoteWorker;
 
 class Store extends MessageToStoreHandler {
   public final Node node;
@@ -100,8 +103,8 @@ class Store extends MessageToStoreHandler {
         for (int i = 0; i < certificateChain.length; i++)
           principalChain[i + 1] = certificateChain[i];
         principalChain[0] =
-            Crypto.createCertificate(Long.toString(STORE_PRINCIPAL), publicKey,
-                name, privateKey);
+            Crypto.createCertificate(SysUtil.getNodeCN(name, STORE_PRINCIPAL),
+                publicKey, name, privateKey);
         keyset.setPrincipalChain(principalChain);
       } catch (GeneralSecurityException e) {
         throw new InternalError(
@@ -113,7 +116,7 @@ class Store extends MessageToStoreHandler {
 
     this.node = node;
     this.os = loadStore();
-    this.tm = new TransactionManager(this.os, this.privateKey);
+    this.tm = new TransactionManager(this.os);
     this.sm = new SimpleSurrogateManager(tm);
   }
 
@@ -142,8 +145,10 @@ class Store extends MessageToStoreHandler {
     try {
       // construct ObjectDB with class specified by properties file
       final Class<?> osClass = Class.forName(config.backendClass);
-      final Constructor<?> osCons = osClass.getConstructor(String.class);
-      final ObjectDB os = (ObjectDB) osCons.newInstance(config.name);
+      final Constructor<?> osCons =
+          osClass.getConstructor(String.class, PrivateKey.class);
+      final ObjectDB os =
+          (ObjectDB) osCons.newInstance(config.name, this.privateKey);
 
       return os;
     } catch (Exception exc) {
@@ -153,13 +158,14 @@ class Store extends MessageToStoreHandler {
 
   private SubServerSocketFactory createSocketFactory(KeyMaterial keys) {
     try {
-      Protocol authProt;
+      Protocol<RemoteWorker> authProt;
       if (config.useSSL)
-        authProt = new HandshakeAuthenticated(keys);
-      else authProt = new HandshakeBogus(this.config.name, STORE_PRINCIPAL);
+        authProt = new HandshakeAuthenticated<>(keys);
+      else authProt = new HandshakeBogus<>(this.config.name, STORE_PRINCIPAL);
 
-      Protocol handshake =
-          new HandshakeComposite(authProt, new HandshakeUnauthenticated());
+      Protocol<RemoteWorker> handshake =
+          new HandshakeComposite<>(authProt,
+              new HandshakeUnauthenticated<RemoteWorker>(this.config.name));
       NameService nameService = new TransitionalNameService();
 
       return new SubServerSocketFactory(handshake, nameService, PortType.STORE);
@@ -173,14 +179,14 @@ class Store extends MessageToStoreHandler {
   // ////////////////////////////////////////////////////////////////////////////
 
   @Override
-  public AbortTransactionMessage.Response handle(Principal p,
-      AbortTransactionMessage message) throws AccessException {
-
+  public AbortTransactionMessage.Response handle(
+      RemoteIdentity<RemoteWorker> client, AbortTransactionMessage message)
+      throws AccessException {
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
-        "Handling Abort Message from {0} for tid={1}", nameOf(p),
-        message.tid.topTid);
+        "Handling Abort Message from {0} for tid={1}",
+        nameOf(client.principal), message.tid.topTid);
 
-    tm.abortTransaction(p, message.tid.topTid);
+    tm.abortTransaction(client.principal, message.tid.topTid);
     return new AbortTransactionMessage.Response();
   }
 
@@ -188,12 +194,12 @@ class Store extends MessageToStoreHandler {
    * Processes the given request for new OIDs.
    */
   @Override
-  public AllocateMessage.Response handle(Principal p, AllocateMessage msg)
-      throws AccessException {
+  public AllocateMessage.Response handle(RemoteIdentity<RemoteWorker> client,
+      AllocateMessage msg) throws AccessException {
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
-        "Handling Allocate Message from {0}", nameOf(p));
+        "Handling Allocate Message from {0}", nameOf(client.principal));
 
-    long[] onums = tm.newOnums(p, msg.num);
+    long[] onums = tm.newOnums(client.principal, msg.num);
     return new AllocateMessage.Response(onums);
   }
 
@@ -201,12 +207,14 @@ class Store extends MessageToStoreHandler {
    * Processes the given commit request
    */
   @Override
-  public CommitTransactionMessage.Response handle(Principal p,
-      CommitTransactionMessage message) throws TransactionCommitFailedException {
+  public CommitTransactionMessage.Response handle(
+      RemoteIdentity<RemoteWorker> client, CommitTransactionMessage message)
+      throws TransactionCommitFailedException {
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
-        "Handling Commit Message from {0} for tid={1}", nameOf(p),
-        message.transactionID);
-    tm.commitTransaction(p, message.transactionID);
+        "Handling Commit Message from {0} for tid={1}",
+        nameOf(client.principal), message.transactionID);
+
+    tm.commitTransaction(client, message.transactionID);
     return new CommitTransactionMessage.Response();
   }
 
@@ -214,26 +222,39 @@ class Store extends MessageToStoreHandler {
    * Processes the given PREPARE request.
    */
   @Override
-  public PrepareTransactionMessage.Response handle(Principal p,
-      PrepareTransactionMessage msg) throws TransactionPrepareFailedException {
+  public PrepareTransactionMessage.Response handle(
+      RemoteIdentity<RemoteWorker> client, PrepareTransactionMessage msg)
+      throws TransactionPrepareFailedException {
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
-        "Handling Prepare Message, worker={0}, tid={1}", nameOf(p), msg.tid);
-    boolean subTransactionCreated =
-        prepareTransaction(p, msg.tid, msg.commitTime, msg.serializedCreates,
-            msg.serializedWrites, msg.reads);
-    return new PrepareTransactionMessage.Response(subTransactionCreated);
+        "Handling Prepare Message, worker={0}, tid={1}",
+        nameOf(client.principal), msg.tid);
+
+    prepareTransaction(client.principal, msg.tid, msg.serializedCreates,
+        msg.serializedWrites, msg.reads);
+
+    if (msg.singleStore || msg.readOnly) {
+      try {
+        tm.commitTransaction(client, msg.tid);
+      } catch (TransactionCommitFailedException e) {
+        // Shouldn't happen.
+        throw new InternalError("Single-store commit failed unexpectedly.", e);
+      }
+    }
+
+    return new PrepareTransactionMessage.Response();
   }
 
   /**
    * Processes the given read request.
    */
   @Override
-  public ReadMessage.Response handle(Principal p, ReadMessage msg)
-      throws AccessException {
+  public ReadMessage.Response handle(RemoteIdentity<RemoteWorker> client,
+      ReadMessage msg) throws AccessException {
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
-        "Handling Read Message from {0}, onum={1}", nameOf(p), msg.onum);
+        "Handling Read Message from {0}, onum={1}", nameOf(client.principal),
+        msg.onum);
 
-    ObjectGroup group = tm.getGroup(p, msg.onum);
+    ObjectGroup group = tm.getGroup(client.principal, client.node, msg.onum);
     return new ReadMessage.Response(group);
   }
 
@@ -241,13 +262,13 @@ class Store extends MessageToStoreHandler {
    * Processes the given dissemination-read request.
    */
   @Override
-  public DissemReadMessage.Response handle(Principal p, DissemReadMessage msg)
-      throws AccessException {
+  public DissemReadMessage.Response handle(RemoteIdentity<RemoteWorker> client,
+      DissemReadMessage msg) throws AccessException {
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
-        "Handling DissemRead message from {0}, onum={1}", nameOf(p), msg.onum);
+        "Handling DissemRead message from {0}, onum={1}",
+        nameOf(client.principal), msg.onum);
 
-    Glob glob = tm.getGlob(msg.onum);
-
+    ObjectGlob glob = tm.getGlob(msg.onum, client.node);
     return new DissemReadMessage.Response(glob);
   }
 
@@ -255,10 +276,12 @@ class Store extends MessageToStoreHandler {
    * Processes the given request for the store's SSL certificate chain.
    */
   @Override
-  public GetCertChainMessage.Response handle(Principal p,
-      GetCertChainMessage msg) {
+  public GetCertChainMessage.Response handle(
+      RemoteIdentity<RemoteWorker> client, GetCertChainMessage msg) {
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
-        "Handling request for SSL cert chain, worker={0}", nameOf(p));
+        "Handling request for SSL cert chain, worker={0}",
+        nameOf(client.principal));
+
     return new GetCertChainMessage.Response(certificateChain);
   }
 
@@ -266,8 +289,9 @@ class Store extends MessageToStoreHandler {
    * Processes the given request for a new node principal
    */
   @Override
-  public MakePrincipalMessage.Response handle(Principal p,
-      MakePrincipalMessage msg) throws FabricGeneralSecurityException {
+  public MakePrincipalMessage.Response handle(
+      RemoteIdentity<RemoteWorker> client, MakePrincipalMessage msg)
+      throws FabricGeneralSecurityException {
     // Note: p should always be null.
 
     // Get the store's node object and its signing key.
@@ -287,12 +311,13 @@ class Store extends MessageToStoreHandler {
       }
     }, true);
 
-    // Create a certificate that binds the requester's key to the new principal
-    // object's OID.
+    // Create a certificate that binds the requester's key to both the
+    // requester's name and the new principal object's OID.
     X509Certificate cert;
     try {
       cert =
-          Crypto.createCertificate(Long.toString(principalOnum),
+          Crypto.createCertificate(
+              SysUtil.getNodeCN(client.node.name, principalOnum),
               msg.requesterKey, name, storeKey);
     } catch (GeneralSecurityException e) {
       throw new FabricGeneralSecurityException(e);
@@ -306,32 +331,27 @@ class Store extends MessageToStoreHandler {
    * Processes the given staleness check request.
    */
   @Override
-  public StalenessCheckMessage.Response handle(Principal p,
-      StalenessCheckMessage message) throws AccessException {
+  public StalenessCheckMessage.Response handle(
+      RemoteIdentity<RemoteWorker> client, StalenessCheckMessage message)
+      throws AccessException {
     STORE_REQUEST_LOGGER.log(Level.FINER,
-        "Handling Staleness Check Message from {0}", nameOf(p));
-    return new StalenessCheckMessage.Response(tm.checkForStaleObjects(p,
-        message.versions));
+        "Handling Staleness Check Message from {0}", nameOf(client.principal));
+
+    return new StalenessCheckMessage.Response(tm.checkForStaleObjects(
+        client.principal, message.versions));
   }
 
-  /**
-   * @return true iff a subtransaction was created for making Statistics
-   *         objects.
-   */
-  private boolean prepareTransaction(Principal p, long tid, long commitTime,
+  private void prepareTransaction(Principal p, long tid,
       Collection<SerializedObject> serializedCreates,
       Collection<SerializedObject> serializedWrites, LongKeyMap<Integer> reads)
       throws TransactionPrepareFailedException {
 
     PrepareRequest req =
-        new PrepareRequest(tid, commitTime, serializedCreates,
-            serializedWrites, reads);
+        new PrepareRequest(tid, serializedCreates, serializedWrites, reads);
 
     sm.createSurrogates(req);
 
-    boolean subTransactionCreated = tm.prepare(p, req);
-
-    return subTransactionCreated;
+    tm.prepare(p, req);
   }
 
   private String nameOf(Principal p) {

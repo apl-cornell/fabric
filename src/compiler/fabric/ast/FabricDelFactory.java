@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ * Copyright (C) 2010-2014 Fabric project group, Cornell University
  *
  * This file is part of Fabric.
  *
@@ -16,37 +16,42 @@
 package fabric.ast;
 
 import jif.ast.JifDelFactory;
-import polyglot.ast.JL;
+import polyglot.ast.JLDel;
 
 /** Factory for delegates for all of the AST nodes in the Fabric language. */
 public interface FabricDelFactory extends JifDelFactory {
-  JL delAbortStmt();
+  JLDel delAbortStmt();
 
-  JL delAtomic();
+  JLDel delAtomic();
 
-  JL delAmbNewFabricArray();
+  JLDel delAmbNewFabricArray();
 
-  JL delWorker();
+  JLDel delWorker();
 
-  JL delFabricArrayInit();
+  JLDel delFabricArrayInit();
 
-  JL delFabricArrayTypeNode();
+  JLDel delFabricArrayTypeNode();
 
-  JL delNewFabricArray();
+  JLDel delNewFabricArray();
 
-  JL delRemoteWorkerGetter();
+  JLDel delRemoteWorkerGetter();
 
-  JL delRetryStmt();
+  JLDel delRetryStmt();
 
-  JL delCodebaseNode();
+  JLDel delCodebaseNode();
 
-  JL delCodebaseDecl();
+  JLDel delCodebaseDecl();
 
-  JL delPrincipalExpr();
+  JLDel delPrincipalExpr();
 
   /**
    * @return
    */
-  JL delStore();
+  JLDel delStore();
+
+  /**
+   * @return
+   */
+  JLDel delAccessPolicy();
 
 }
