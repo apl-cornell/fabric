@@ -1312,7 +1312,8 @@ public class Version {
 
     <!-- Create actual tarball. -->
     <tar destfile="${fabric.home}/fabric-${fabric.version}.tar.gz"
-        compression="gzip">
+        compression="gzip"
+        longfile="posix">
       <!-- Include top-level files. -->
       <tarfileset dir="${fabric.home}" prefix="fabric-${fabric.version}">
         <include name="version.properties" />
