@@ -195,18 +195,18 @@ public class FabricFileManager extends polyglot.filemanager.ExtFileManager {
 
   @Override
   public FileSource fileSource(String fileName) throws IOException {
-    return fileSource(fileName, false);
+    return fileSource(fileName, Source.Kind.DEPENDENCY);
   }
 
   @Override
-  public FileSource fileSource(String fileName, boolean userSpecified)
+  public FileSource fileSource(String fileName, Source.Kind kind)
       throws IOException {
     URI u = URI.create(fileName);
     if (!u.isAbsolute())
       throw new InternalCompilerError("Expected absolute URI");
     JavaFileObject jfo = getJavaFileObject(u);
     if (jfo == null) throw new FileNotFoundException(fileName);
-    return extInfo.createFileSource(jfo, userSpecified);
+    return extInfo.createFileSource(jfo, kind);
   }
 
   /**

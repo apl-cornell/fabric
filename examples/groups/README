@@ -11,34 +11,26 @@ groups Webapp Example
 
         $ bin/start-all
 
-  2. Add default users alice and bob to the worker store:
-  
-        $ bin/init-state
-  TODO: make this step unnecessary
-
-  3. Start the web server:
+  2. Start the web server:
 
         $ bin/start-webapp
-  4. Use curl or similar client to interact with the groups REST-style API:
+  3. Use curl or similar client to interact with the groups REST-style API:
      - create a user:
-        curl --cookie-jar cookies 'http://localhost:8080/groups/sif?action=adduser&user=owen&pass=password'
+        curl -c cookies 'http://localhost:8080/groups/sif?action=adduser&user=owen&pass=password'
      - login a user:
-        curl --cookie-jar cookies 'http://localhost:8080/groups/sif?action=login&user=owen&pass=password'
+        curl -c cookies 'http://localhost:8080/groups/sif?action=login&user=owen&pass=password'
      - access pages requiring authentication
-        curl -b cookies http://localhost:8080/groups/sif?action="frontPage"  
+        For instance, to create a public group and add a member try:
+            curl -b cookies 'http://localhost:8080/groups/sif?action=creategroup&name=MyGroup&type=public'
+            curl -b cookies 'http://localhost:8080/groups/sif?action=addtogroup&group=MyGroup&user=owen&type=public'
+        Then list the group contents with: 
+            curl -b cookies 'http://localhost:8080/groups/sif?action=list&group=MyGroup&type=public'
      - logoff
-        curl -b cookies http://localhost:8080/groups/sif?action="frontPage"
-  5. Exit the store with the "exit" command in its console (you can also
+        curl -b cookies 'http://localhost:8080/groups/sif?action=logoff'
+  4. Exit the store with the "exit" command in its console (you can also
      use CTRL-D).
 
      You can clean up the store's persistent state by removing the 'var'
      directory:
 
         $ rm -rf var
-
-
-References
-----------
-[1] Stephen Chong, K. Vikram, Andrew C. Myers. SIF: Enforcing
-    Confidentiality and Integrity in Web Applications. Proc. USENIX
-    Security Symposium 2007, pages 1–16, August 2007.

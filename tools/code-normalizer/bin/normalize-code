@@ -9,7 +9,7 @@ CP="${APP_HOME}/classes"
 CP="${CP}:${POLYGLOT}/classes"
 CP="${CP}:${POLYGLOT}/lib/polyglot.jar"
 CP="${CP}:${POLYGLOT}/lib/java_cup.jar"
-CP="${CP}:${POLYGLOT}/lib/JFlex.jar"
+CP="${CP}:${POLYGLOT}/lib/jflex.jar"
 
 java -classpath "${CP}" codenormalizer.Main "$@"
 

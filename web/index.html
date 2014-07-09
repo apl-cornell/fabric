@@ -47,112 +47,214 @@ for information security. Strong consistency is ensured through a
 hierarchical two-phase commit protocol that respects information security.
 Fabric leverages peer-to-peer replication to provide high availability.
 </p>                         
-<p>
-The development of Fabric has been supported by NSF awards 0627649 and
-CCF-0964409, by ONR award N00014-09-1-0652, and by Air Force Research
-Laboratory award FA8750-08-2-0079.
-</p>
 
 <div>
 <h2>Documentation</h2>
 <p>
-<a href="manual/0.2.1/html/index.html">
-Fabric reference manual</a> (Version 0.2.1, June 2013) [ <a href="manual/0.2.1/manual.pdf">PDF</a> ]
+<a href="manual/0.2.2/html/index.html">
+Fabric reference manual</a> (Version 0.2.2, July 2014) [ <a href="manual/0.2.2/manual.pdf">PDF</a> ]
 </p>
 
 
 <div class="downloads">
 <a name="downloads">
 <h2>Downloads</h2></a>
-<p>Fabric 0.2.1 (June 2013) is a maintenance release that contains fresh SSL
-certificates for the nodes used in the examples. The old certificates had
-expired.
+<p>Fabric 0.2.2 (July 2014) has support for local deadlock detection, bug
+fixes, and performance improvements.
 </p>
 <form class="download" method="POST" 
-      action="http://www.cs.cornell.edu/w8/~andru/cgi-bin/download.pl"
-      enctype="multipart/form-data">
-<input type="hidden" name="package" value="Fabric 0.2.1">
-<!-- <input type="hidden" name="logo" value='<img class="logo" src="http://www.cs.cornell.edu/Projects/fabric/images/fabric-arch2.png">'> -->
-<input type="hidden" name="style"
-	 value="http://www.cs.cornell.edu/Projects/fabric/style.css">
-<input type="hidden" name="url"
-    value="http://www.cs.cornell.edu/Projects/fabric/releases/fabric-0.2.1.tar.gz">
-<input class="download" type="submit" value="Download Fabric 0.2.1" />
+    action="http://www.cs.cornell.edu/w8/~andru/cgi-bin/download.pl"
+    enctype="multipart/form-data">
+  <input type="hidden" name="package" value="Fabric 0.2.2">
+  <input type="hidden" name="style"
+      value="http://www.cs.cornell.edu/Projects/fabric/style.css">
+  <input type="hidden" name="url"
+      value="http://www.cs.cornell.edu/Projects/fabric/releases/fabric-0.2.2.tar.gz">
+  <input class="download" type="submit" value="Download Fabric 0.2.2" />
 </form>
 
 <p>
-The previous versions are still available:
+Previous versions also available:
 </p>
 <ul>
-<li>
-<form class="download-old" method="POST" 
-      action="http://www.cs.cornell.edu/w8/~andru/cgi-bin/download.pl"
-      enctype="multipart/form-data">
-<input type="hidden" name="package" value="Fabric 0.2.0">
-<!-- <input type="hidden" name="logo" value='<img class="logo" src="http://www.cs.cornell.edu/Projects/fabric/images/fabric-arch2.png">'> -->
-<input type="hidden" name="style"
-	 value="http://www.cs.cornell.edu/Projects/fabric/style.css">
-<input type="hidden" name="url"
-    value="http://www.cs.cornell.edu/Projects/fabric/releases/fabric-0.2.0.tar.gz">
-<input class="download-old" type="submit" value="Fabric 0.2.0" />
-</form>
-<span class="date">(October 2012)</span>
-<a href="manual/0.2.0/html/index.html">
-Reference manual</a> [ <a href="manual/0.2.0/manual.pdf">PDF</a> ]
-<ul>
-<li>This release incorporates the support for mobile code described in our
-Oakland '12 paper, along with many improvements to usability, performance, and
-reliability.
-</ul>
-<li>
-<form class="download-old" method="POST" 
-      action="http://www.cs.cornell.edu/w8/~andru/cgi-bin/download.pl"
-      enctype="multipart/form-data">
-<input type="hidden" name="package" value="Fabric 0.1.0">
-<!-- <input type="hidden" name="logo" value='<img class="logo" src="http://www.cs.cornell.edu/Projects/fabric/images/fabric-arch2.png">'> -->
-<input type="hidden" name="style"
-	 value="http://www.cs.cornell.edu/Projects/fabric/style.css">
-<input type="hidden" name="url"
-    value="http://www.cs.cornell.edu/Projects/fabric/releases/fabric-0.1.0.tar.gz">
-<input class="download-old" type="submit" value="Fabric 0.1.0" />
-</form>
-<span class="date">(September 2010)</span>
+  <li>
+    <form class="download-old" method="POST" 
+	action="http://www.cs.cornell.edu/w8/~andru/cgi-bin/download.pl"
+	enctype="multipart/form-data">
+      <input type="hidden" name="package" value="Fabric 0.2.1">
+      <input type="hidden" name="style"
+	  value="http://www.cs.cornell.edu/Projects/fabric/style.css">
+      <input type="hidden" name="url"
+	  value="http://www.cs.cornell.edu/Projects/fabric/releases/fabric-0.2.1.tar.gz">
+      <input class="download-old" type="submit" value="Fabric 0.2.1" />
+    </form>
+    <span class="date">(June 2013)</span>
+    <a href="manual/0.2.1/html/index.html">
+      Reference manual
+    </a> [ <a href="manual/0.2.1/manual.pdf">PDF</a> ]
+    <ul>
+      <li>A maintenance release that issued fresh SSL certificates for the
+      nodes used in the examples. The old certificates had expired.
+    </ul>
+  <li>
+    <form class="download-old" method="POST" 
+	action="http://www.cs.cornell.edu/w8/~andru/cgi-bin/download.pl"
+	enctype="multipart/form-data">
+      <input type="hidden" name="package" value="Fabric 0.2.0">
+      <input type="hidden" name="style"
+	  value="http://www.cs.cornell.edu/Projects/fabric/style.css">
+      <input type="hidden" name="url"
+	  value="http://www.cs.cornell.edu/Projects/fabric/releases/fabric-0.2.0.tar.gz">
+      <input class="download-old" type="submit" value="Fabric 0.2.0" />
+    </form>
+    <span class="date">(October 2012)</span>
+    <a href="manual/0.2.0/html/index.html">
+      Reference manual
+    </a> [ <a href="manual/0.2.0/manual.pdf">PDF</a> ]
+    <ul>
+      <li>This release incorporates the support for mobile code described in
+      our Oakland '12 paper, along with many improvements to usability,
+      performance, and reliability.
+    </ul>
+  <li>
+    <form class="download-old" method="POST" 
+	action="http://www.cs.cornell.edu/w8/~andru/cgi-bin/download.pl"
+	enctype="multipart/form-data">
+      <input type="hidden" name="package" value="Fabric 0.1.0">
+      <input type="hidden" name="style"
+	  value="http://www.cs.cornell.edu/Projects/fabric/style.css">
+      <input type="hidden" name="url"
+	  value="http://www.cs.cornell.edu/Projects/fabric/releases/fabric-0.1.0.tar.gz">
+      <input class="download-old" type="submit" value="Fabric 0.1.0" />
+    </form>
+    <span class="date">(September 2010)</span>
 </ul>
 </div>
 
-<h2>Mailing lists</h2>
+<a name="mailing-list"></a>
+<h2>Mailing list</h2>
 
 <p>
-<a href="https://lists.cs.cornell.edu/mailman/listinfo/fabric-announce">
-Subscribe to fabric-announce</a>
-to be notified about new releases of Fabric and related announcements.
-<br>
-<a href="https://lists.cs.cornell.edu/mailman/listinfo/fabric-users">
-Subscribe to fabric-users</a>
-to participate in discussions about Fabric.
+Use the form below to join or leave the Fabric users mailing list. (Open
+subscription, low traffic.)
+
+<div id="mailing-list-div" style="margin-left: 1em; display: none">
+  <form>
+    Email address:
+    <input type="text" name="email" value="" size="20">
+    <input type="button" value="Join" onclick="joinMailingList(this.form)">
+    <input type="button" value="Leave" onclick="leaveMailingList(this.form)">
+  </form>
+</div>
+
+<div id="mailing-list-div-noscript" style="margin-left: 1em">
+  <p>Please turn on JavaScript to see the form.</p>
+  <p>
+    Alternatively, you can send mail to
+    <tt>fabric-users-l-request@cornell.edu</tt> with the subject line of
+    <tt>join</tt> or <tt>leave</tt>.
+  </p>
+</div>
+
+<script type="text/javascript">
+<!--
+  // Gunk for supporting the visually lightweight mailing list form.
+  document.getElementById("mailing-list-div-noscript").style.display = "none";
+  document.getElementById("mailing-list-div").style.display = "block";
+
+  function addHiddenInput(form, name, value) {
+    var input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = name;
+    input.value = value;
+    form.appendChild(input);
+  }
+
+  /**
+   * Returns a random 20-character alphanumeric string.
+   */
+  function genPasswd() {
+    var chars =
+      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890';
+    var result = '';
+    for (var i = 0; i < 20; i++)
+      result += chars[Math.floor(Math.random() * chars.length)];
+    return result;
+  }
+
+  /**
+   * Returns the URL to which the user will be redirected after submitting the
+   * form.
+   */
+  function getURL() {
+    if (document.location.protocol == 'file:')
+      return 'http://www.cs.cornell.edu/projects/fabric/';
+    return document.location;
+  }
+
+  function joinMailingList(form) {
+    form.method = 'POST';
+    form.action = 'https://www.list.cornell.edu:9443/subscribe/subscribe.tml';
+
+    var pass = genPasswd();
+    addHiddenInput(form, 'pw', pass);
+    addHiddenInput(form, 'pwv', pass);
+    addHiddenInput(form, 'list', 'fabric-users-l');
+    addHiddenInput(form, 'pw_required', 'T');
+    addHiddenInput(form, 'confirm', 'one');
+    addHiddenInput(form, 'showconfirm', 'T');
+    addHiddenInput(form, 'url', getURL());
+
+    form.submit();
+  }
+
+  function leaveMailingList(form) {
+    form.method = 'GET';
+    form.action = 'https://www.list.cornell.edu:9443/subscribe/unsubscribe.tml';
+
+    addHiddenInput(form, 'lists', 'fabric-users-l');
+    addHiddenInput(form, 'email_notification', 'T');
+    addHiddenInput(form, 'confirm_first', 'F');
+    addHiddenInput(form, 'showconfirm', 'T');
+    addHiddenInput(form, 'url', getURL());
+
+    form.submit();
+  }
+//-->
+</script>
+
 </p>
 
 <a name="publications">
 <h2>Related peer-reviewed group publications</h2></a>
 <ol>
+<li><cite><a href="http://www.cs.cornell.edu/andru/papers/persist">
+Defining and enforcing referential security</a></cite><br>
+    <i>3rd Conference on Principles of Security and Trust</i>
+    (<a href="http://www.etaps.org/2014/post">POST'14</a>),
+    pp.&nbsp;199&ndash;219, April 2014.
+    Jed Liu and Andrew C. Myers.
+</li>
 <li><cite><a href="http://www.cs.cornell.edu/andru/papers/warranties">
 Warranties for faster strong consistency</a></cite><br>
     <i>11th USENIX Symposium on Networked Systems Design and Implementation</i>
     (<a href="https://www.usenix.org/conference/nsdi14">NSDI'14</a>),
-    to appear, April 2014.
+    pp.&nbsp;503&ndash;517, April 2014.
     Jed Liu, Tom Magrino, Owen Arden, Michael D. George, and Andrew C. Myers.
 </li>
 <li><cite><a href="http://www.cs.cornell.edu/andru/papers/pltiming.html">
     Language-based control and mitigation of timing channels</a></cite><br>
     <i>Proceedings of the 2012 ACM Conference on Programming Language
-    Design and Implementation</i> (PLDI'12), June 2012.
-Danfeng Zhang, Aslan Askarov, and Andrew C. Myers.
+    Design and Implementation</i>
+    (<a href="http://pldi12.cs.purdue.edu/">PLDI'12</a>),
+    pp.&nbsp;99&ndash;110, June 2012.
+    Danfeng Zhang, Aslan Askarov, and Andrew C. Myers.
 </li>
 <li><cite><a href="http://www.cs.cornell.edu/andru/papers/mobile.html">
     Sharing mobile code securely with information flow control</a></cite><br>
     <i>Proc. 33rd IEEE Symposium on Security and Privacy</i>
-    <a href="http://www.ieee-security.org/TC/SP2012/">
-    (Oakland'12)</a>, pp. 192&ndash;205,
+    (<a href="http://www.ieee-security.org/TC/SP2012/">Oakland'12</a>),
+    pp.&nbsp;192&ndash;205,
     May 2012. Owen Arden, Michael D. George, Jed Liu, K. Vikram, Aslan Askarov, Andrew C. Myers.
 </li>
 <li>
@@ -167,8 +269,9 @@ Danfeng Zhang, Aslan Askarov, and Andrew C. Myers.
    <a href="http://www.cs.cornell.edu/andru/papers/gentiming.html">
    Predictive mitigation of timing channels in interactive systems</a></cite><br>
         <i>Proceedings of the 18th
-        ACM Conference on Computer and Communications Security</i> (CCS'11), pages 563&ndash;574,
-        October 2011.
+        ACM Conference on Computer and Communications Security</i>
+	(<a href="http://www.sigsac.org/ccs/CCS2011/">CCS'11</a>),
+	pp.&nbsp;563&ndash;574, October 2011.
         Danfeng Zhang, Aslan Askarov,  and Andrew C. Myers.
 </li>
 <li>
@@ -177,15 +280,17 @@ Danfeng Zhang, Aslan Askarov, and Andrew C. Myers.
 
    Predictive black-box mitigation of timing channels</a></cite><br>
         <i>Proceedings of the 17th
-        ACM Conference on Computer and Communications Security</i> (CCS'10),
-        to appear, October 2010.
+        ACM Conference on Computer and Communications Security</i>
+	(<a href="http://www.sigsac.org/ccs/CCS2010/">CCS'10</a>),
+        pp.&nbsp;297&ndash;307, October 2010.
         Aslan Askarov, Danfeng Zhang, and Andrew C. Myers.
 </li>
 <li>
     <cite><a href="http://www.cs.cornell.edu/andru/papers/fabric-sosp09.html">
 	Fabric: A platform for secure distributed computation and storage</a></cite><br>
     <i>Proc. 22nd ACM Symposium on Operating Systems Principles</i>
-    <a href="http://www.sigops.org/sosp/sosp09/">(SOSP'09)</a>, pp. 321&ndash;334, October 2009.
+    (<a href="http://www.sigops.org/sosp/sosp09/">SOSP'09</a>),
+    pp.&nbsp;321&ndash;334, October 2009.
 	Jed Liu, Michael D. George, K. Vikram, Xin Qi, Lucas Waye,
 	and Andrew C. Myers.
 </li>
@@ -199,17 +304,42 @@ Danfeng Zhang, Aslan Askarov, and Andrew C. Myers.
   <li><a href="/projects/civitas">Civitas &mdash; secure internet voting</a>
 </ul>
 </div>
+
 <a name="people">
 <h2>Project members</h2></a>
 <ul>
-<li><a href="/andru">Andrew Myers</a> (faculty)</li>
-<li><a href="http://www.cornell.edu">Owen Arden</a></li>
-<li><a href="/~mdgeorge">Mike George</a></li>
-<li><a href="/~liujed">Jed Liu</a></li>
-<li><a href="/~kvikram">K. Vikram</a></li>
-<li><a href="http://www.cornell.edu">Danfeng Zhang</a></li>
+  <li><a href="/andru">Andrew Myers</a> (faculty)</li>
+  <li><a href="/~owen">Owen Arden</a></li>
+  <li><a href="/~liujed">Jed Liu</a></li>
+  <li><a href="/~tmagrino">Tom Magrino</a></li>
 </ul>
 
+<h2>Past contributors</h2></a>
+<ul>
+  <li><a href="/~mdgeorge">Michael D. George</a></li>
+  <li>Samarth Lad</li>
+  <li><a href="https://sites.google.com/site/qixin99/">Xin Qi</a></li>
+  <li>
+    <a href="http://www.inf.usi.ch/faculty/soule/">Robert Soul&eacute;</a>
+  </li>
+  <li><a href="/~kvikram">K. Vikram</a></li>
+  <li><a href="http://people.seas.harvard.edu/~lwaye/">Lucas Waye</a></i>
+  <li><a href="/~zhangdf">Danfeng Zhang</a></li>
+  <li>Xin Zheng
+</ul>
+
+<p class="sponsors">
+  The development of Fabric has been supported by a number of funding sources,
+  including
+  NSF awards 0627649 and CCF-0964409;
+  TRUST (Team for Research in Ubiquitous Secure Technology), which receives
+  support from the NSF (CCF-0424422);
+  ONR awards N00014-09-1-0652 and N00014-13-1-0089; and
+  Air Force Research Laboratory award FA8750-08-2-0079.
+
+  This work does not necessarily represent the opinions, expressed or implied,
+  of any of these sponsors.
+</p>
 
 </div> <!-- inset -->
 </div> <!-- content -->

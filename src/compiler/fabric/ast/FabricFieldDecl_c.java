@@ -2,6 +2,7 @@ package fabric.ast;
 
 import jif.ast.LabelNode;
 import polyglot.ast.Expr;
+import polyglot.ast.Ext;
 import polyglot.ast.FieldDecl_c;
 import polyglot.ast.Id;
 import polyglot.ast.Node;
@@ -10,43 +11,56 @@ import polyglot.types.Flags;
 import polyglot.util.Position;
 import polyglot.visit.NodeVisitor;
 
+// XXX Should be replaced with extension
+@Deprecated
 public class FabricFieldDecl_c extends FieldDecl_c implements FabricFieldDecl {
 
-  protected LabelNode accessLabel;
+  protected LabelNode accessPolicy;
+
+  @Deprecated
+  public FabricFieldDecl_c(Position pos, Flags flags, TypeNode type,
+      LabelNode accessPolicy, Id name, Expr init) {
+    this(pos, flags, type, accessPolicy, name, init, null);
+  }
 
   public FabricFieldDecl_c(Position pos, Flags flags, TypeNode type,
-      LabelNode accessLabel, Id name, Expr init) {
-    super(pos, flags, type, name, init);
-    this.accessLabel = accessLabel;
+      LabelNode accessPolicy, Id name, Expr init, Ext ext) {
+    super(pos, flags, type, name, init, ext);
+    this.accessPolicy = accessPolicy;
   }
 
   @Override
   public LabelNode accessPolicy() {
-    return this.accessLabel;
+    return this.accessPolicy;
+  }
+
+  @Override
+  public FabricFieldDecl accessPolicy(LabelNode accessPolicy) {
+    return accessPolicy(this, accessPolicy);
+  }
+
+  protected <N extends FabricFieldDecl_c> N accessPolicy(N n,
+      LabelNode accessPolicy) {
+    if (n.accessPolicy == accessPolicy) return n;
+    n = copyIfNeeded(n);
+    n.accessPolicy = accessPolicy;
+    return n;
   }
 
   @Override
   public Node visitChildren(NodeVisitor v) {
-    TypeNode type = (TypeNode) visitChild(this.type, v);
-    LabelNode accessLabel = (LabelNode) visitChild(this.accessLabel, v);
-    Id name = (Id) visitChild(this.name, v);
-    Expr init = (Expr) visitChild(this.init, v);
-    return reconstruct(type, accessLabel, name, init);
+    TypeNode type = visitChild(this.type, v);
+    LabelNode accessPolicy = visitChild(this.accessPolicy, v);
+    Id name = visitChild(this.name, v);
+    Expr init = visitChild(this.init, v);
+    return reconstruct(this, type, accessPolicy, name, init);
   }
 
-  protected FabricFieldDecl_c reconstruct(TypeNode type, LabelNode accessLabel,
-      Id name, Expr init) {
-    if (this.type != type || this.accessLabel != accessLabel
-        || this.name != name || this.init != init) {
-      FabricFieldDecl_c n = (FabricFieldDecl_c) copy();
-      n.type = type;
-      n.accessLabel = accessLabel;
-      n.name = name;
-      n.init = init;
-      return n;
-    }
-
-    return this;
+  protected <N extends FabricFieldDecl_c> N reconstruct(N n, TypeNode type,
+      LabelNode accessPolicy, Id name, Expr init) {
+    n = super.reconstruct(n, type, name, init);
+    n = accessPolicy(n, accessPolicy);
+    return n;
   }
 
 }

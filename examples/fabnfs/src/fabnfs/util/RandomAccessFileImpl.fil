@@ -32,7 +32,7 @@ public class RandomAccessFileImpl implements RandomAccessFile {
     }
 
     public void seek(long offset) {
-        currentPos += (int)offset;
+        currentPos = currentPos + ((int) offset);
     }
 
     public void write(byte native[] b, int off, int len) {

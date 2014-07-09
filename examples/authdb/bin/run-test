@@ -1,0 +1,11 @@
+#!/bin/bash
+
+APP_HOME="$(dirname $0)/.."
+
+export FABRIC_HOME="${APP_HOME}"
+FABRIC="${APP_HOME}/../.."
+
+source "${FABRIC}/bin/defs"
+
+java -cp "${FABRIC_WORKER_CP}:${FABRIC}/src/lib/collections/classes:${FABRIC}/lib/fabric-collections.jar:${APP_HOME}/classes" authdb.JavaAuthDB
+

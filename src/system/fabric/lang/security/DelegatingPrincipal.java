@@ -5,6 +5,7 @@ import java.io.ObjectInput;
 import java.util.Iterator;
 
 import fabric.common.RefTypeEnum;
+import fabric.common.util.Pair;
 import fabric.worker.Store;
 import fabric.worker.Worker;
 
@@ -65,10 +66,11 @@ public interface DelegatingPrincipal extends Principal {
 
     public _Impl(Store store, long onum, int version, long expiry, long label,
         long accessLabel, ObjectInput in, Iterator<RefTypeEnum> refTypes,
-        Iterator<Long> intraStoreRefs) throws IOException,
+        Iterator<Long> intraStoreRefs,
+        Iterator<Pair<String, Long>> interStoreRefs) throws IOException,
         ClassNotFoundException {
       super(store, onum, version, expiry, label, accessLabel, in, refTypes,
-          intraStoreRefs);
+          intraStoreRefs, interStoreRefs);
     }
 
     public static DelegatingPrincipal $addDefaultDelegates(DelegatingPrincipal p) {

@@ -190,10 +190,11 @@ public interface Principal extends fabric.lang.Object {
 
     public _Impl(Store store, long onum, int version, long expiry, long label,
         long accessLabel, ObjectInput in, Iterator<RefTypeEnum> refTypes,
-        Iterator<Long> intraStoreRefs) throws java.io.IOException,
-        ClassNotFoundException {
+        Iterator<Long> intraStoreRefs,
+        Iterator<Pair<String, Long>> interStoreRefs)
+        throws java.io.IOException, ClassNotFoundException {
       super(store, onum, version, expiry, label, accessLabel, in, refTypes,
-          intraStoreRefs);
+          intraStoreRefs, interStoreRefs);
     }
 
     @Override

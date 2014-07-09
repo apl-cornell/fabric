@@ -58,7 +58,7 @@ public final class BankMain extends AbstractServlet[BankPrincipal] {
   
   // TODO Provide default implementations for these 2 methods in Servlet.fab:
   // This method will only be called by the runtime
-  protected AuthSessState{*lbl} createSessionState{*lbl}(label{*lbl} lbl,
+  protected SessionState{*lbl} createSessionState{*lbl}(label{*lbl} lbl,
       String{*lbl} id, SessionPrincipal{*lbl} session) {
     AuthSessState toReturn = null;
     atomic {

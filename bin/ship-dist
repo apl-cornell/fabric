@@ -61,3 +61,6 @@ tar xf "${FILE}" \
 
 echo Files for release "${VERSION}" integrated into "${TOP}/web".
 echo Sanity check the changes in that directory before checking them in.
+echo
+echo When updating the home page to incorporate this version, ensure the
+echo list of project members and sponsors are up to date.

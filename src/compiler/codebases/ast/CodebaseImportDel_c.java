@@ -36,25 +36,7 @@ public class CodebaseImportDel_c extends JLDel_c {
     }
 
     // Must be importing a class, either as p.C, or as p.C.*
-
-    // The first component of the type name must be a package or a codebase
-    // alias.
-    String pkgName = StringUtil.getFirstComponent(im.name());
-    URI import_ns;
-
-    Named nt = null;
-    import_ns = ts.namespaceResolver(ns).resolveCodebaseName(pkgName);
-    if (import_ns != null) {
-      // The type must exist in import_ns
-      nt = ts.forName(import_ns, StringUtil.removeFirstComponent(im.name()));
-    } else if (!ts.packageExists(ns, pkgName)) {
-      // Not an alias. Must be a package.
-      throw new SemanticException("Package \"" + pkgName + "\" not found.",
-          im.position());
-    } else {
-      // The type must exist.
-      nt = ts.forName(ns, im.name());
-    }
+    Named nt = lookupImport(ts);
 
     // And the type must be accessible.
     if (nt instanceof Type) {
@@ -67,6 +49,35 @@ public class CodebaseImportDel_c extends JLDel_c {
     ct = (ClassType) nt;
 
     return im;
+  }
+
+  /**
+   * Codebase version of ts.forName(). Also ensures the first component of the
+   * imported name is either a package or a codebase alias.
+   */
+  public Named lookupImport(CodebaseTypeSystem ts) throws SemanticException {
+    final Import im = (Import) node();
+
+    // The first component of the type name must be a package or a codebase
+    // alias.
+    String pkgName = StringUtil.getFirstComponent(im.name());
+
+    URI import_ns = ts.namespaceResolver(ns).resolveCodebaseName(pkgName);
+    if (import_ns != null) {
+      // The type must exist in import_ns
+      return ts.forName(import_ns, StringUtil.removeFirstComponent(im.name()));
+    }
+
+    // Not an alias. Must be a package.
+    // Emulate base behaviour.
+    if (!ts.packageExists(ns, pkgName)) {
+      throw new SemanticException("Package \"" + pkgName + "\" not found.",
+          im.position());
+    }
+
+    // The type must exist.
+    return ts.forName(ns, im.name());
+
   }
 
   /** Write the import to an output file. */

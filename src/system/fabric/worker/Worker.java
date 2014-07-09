@@ -611,6 +611,22 @@ public final class Worker {
   }
 
   /**
+   * Runs the given Java program.
+   * 
+   * @param mainClassName
+   *          the application's main class.
+   * @param args
+   *          arguments to be passed to the application.
+   * @throws Throwable
+   */
+  public void runJavaApp(String mainClassName, final String[] args)
+      throws Throwable {
+    Class<?> mainClass = getClassLoader().loadClass(mainClassName);
+    Method main = mainClass.getMethod("main", String[].class);
+    MainThread.invoke(main, args);
+  }
+
+  /**
    * Executes the given code from within a new top-level Fabric transaction.
    * Should not be called by generated code. This is here to abstract away the
    * details of starting and finishing transactions.

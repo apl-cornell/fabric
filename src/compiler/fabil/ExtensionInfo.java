@@ -20,6 +20,7 @@ import polyglot.frontend.Job;
 import polyglot.frontend.JobExt;
 import polyglot.frontend.Parser;
 import polyglot.frontend.Scheduler;
+import polyglot.frontend.Source.Kind;
 import polyglot.frontend.TargetFactory;
 import polyglot.frontend.goals.Goal;
 import polyglot.lex.Lexer;
@@ -208,7 +209,7 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements
   }
 
   @Override
-  public FileSource createFileSource(FileObject f, boolean user)
+  public FileSource createFileSource(FileObject f, Kind kind)
       throws IOException {
     if (f instanceof FabricFileObject) {
       fabric.lang.Object obj = ((FabricFileObject) f).getData();
@@ -224,13 +225,13 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements
             + " is higher than the label of its codebase ");
       }
 
-      return new RemoteSource(f, fcls, user);
+      return new RemoteSource(f, fcls, kind);
     } else {
       if (Report.should_report(Report.loader, 2))
         Report.report(2, "Creating filesource from " + f);
       URI ns =
           getOptions().platformMode() ? platformNamespace() : localNamespace();
-      return new LocalSource(f, user, ns);
+      return new LocalSource(f, kind, ns);
     }
   }
 

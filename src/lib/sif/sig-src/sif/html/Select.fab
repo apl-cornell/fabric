@@ -17,4 +17,8 @@ public final class Select[principal servletP, label L, label E] extends InputNod
     where {L;E} <= {*inputLabel} {
         super(s, inputLabel);
     }
+    public Select(String{L} name, int{L} selected_, String{L}[]{L} options_) 
+    {
+        super(name);
+    }
 }

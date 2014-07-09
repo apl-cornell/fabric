@@ -61,10 +61,11 @@ public interface _doubleArray extends Object {
      */
     public _Impl(Store store, long onum, int version, long expiry, long label,
         long accessLabel, ObjectInput in, Iterator<RefTypeEnum> refTypes,
-        Iterator<Long> intraStoreRefs) throws IOException,
+        Iterator<Long> intraStoreRefs,
+        Iterator<Pair<String, Long>> interStoreRefs) throws IOException,
         ClassNotFoundException {
       super(store, onum, version, expiry, label, accessLabel, in, refTypes,
-          intraStoreRefs);
+          intraStoreRefs, interStoreRefs);
       value = new double[in.readInt()];
       for (int i = 0; i < value.length; i++)
         value[i] = in.readDouble();

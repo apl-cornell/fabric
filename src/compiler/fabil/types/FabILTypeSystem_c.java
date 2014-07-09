@@ -248,9 +248,10 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
   // XXX: Why is this method here?
   protected List<? extends MethodInstance> findAcceptableMethods(
       ReferenceType container, String name, List<? extends Type> argTypes,
-      ClassType currClass) throws SemanticException {
+      ClassType currClass, boolean fromClient) throws SemanticException {
     List<? extends MethodInstance> result =
-        super.findAcceptableMethods(container, name, argTypes, currClass);
+        super.findAcceptableMethods(container, name, argTypes, currClass,
+            fromClient);
     if (isJavaInlineable(container)) {
       // Remove any methods from fabric.lang.Object. They don't really exist.
       for (MethodInstance mi : (List<MethodInstance>) FObject().methods()) {
@@ -482,13 +483,6 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
   @Override
   public Flags legalTopLevelClassFlags() {
     Flags f = super.legalTopLevelClassFlags();
-    f = f.set(FabILFlags.NONFABRIC);
-    return f;
-  }
-
-  @Override
-  public Flags legalInterfaceFlags() {
-    Flags f = super.legalInterfaceFlags();
     f = f.set(FabILFlags.NONFABRIC);
     return f;
   }

@@ -569,6 +569,7 @@ public final class ObjectCache {
    */
   void evict(long onum) {
     Entry entry = entries.get(onum);
+    if (entry == null) return;
     entry.evict();
     entries.remove(onum, entry);
   }

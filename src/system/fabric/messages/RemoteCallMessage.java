@@ -206,8 +206,8 @@ public class RemoteCallMessage extends
       writeObject(out, r.result);
     }
 
-    out.writeBoolean(writerMap != null);
-    if (writerMap != null) writerMap.write(out);
+    out.writeBoolean(r.writerMap != null);
+    if (r.writerMap != null) r.writerMap.write(out);
   }
 
 }

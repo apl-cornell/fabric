@@ -1,6 +1,7 @@
 package fabil.ast;
 
 import polyglot.ast.ClassLit_c;
+import polyglot.ast.Ext;
 import polyglot.ast.Node;
 import polyglot.ast.NodeFactory;
 import polyglot.ast.TypeNode;
@@ -14,14 +15,17 @@ import fabil.types.FabILTypeSystem;
 /**
  * AST node implementation for representing the provider label for a class.
  */
+//XXX Should be replaced with extension
+@Deprecated
 public class ProviderLabel_c extends ClassLit_c implements ProviderLabel {
 
-  /**
-   * @param pos
-   * @param tn
-   */
+  @Deprecated
   public ProviderLabel_c(Position pos, TypeNode tn) {
-    super(pos, tn);
+    this(pos, tn, null);
+  }
+
+  public ProviderLabel_c(Position pos, TypeNode tn, Ext ext) {
+    super(pos, tn, ext);
   }
 
   @Override
@@ -46,6 +50,6 @@ public class ProviderLabel_c extends ClassLit_c implements ProviderLabel {
 
   @Override
   public Node copy(NodeFactory nf) {
-    return ((FabILNodeFactory) nf).providerLabel(this.position, this.typeNode);
+    return ((FabILNodeFactory) nf).ProviderLabel(this.position, this.typeNode);
   }
 }

@@ -69,7 +69,7 @@
       <manifest>
         <attribute name="Built-By" value="${user.name}"/>
         <attribute name="Class-Path" value="lib/FreePastry-2.1.jar 
-            lib/JFlex.jar lib/fabcoll.jar lib/fabric-rt.jar lib/fabric.jar 
+            lib/jflex.jar lib/fabcoll.jar lib/fabric-rt.jar lib/fabric.jar 
             lib/java_cup.jar lib/je-3.3.75.jar lib/jif.jar lib/polyglot.jar"/>
       </manifest>
       <fileset dir="${applet.src}" includes="JNLP-INF/**"/>

@@ -3,12 +3,25 @@ Setting up Fabric {#setup}
 
 Requirements
 ------------
-This Fabric distribution builds on Unix. Fabric @VERSION@ builds against Jif
-@JIF-VERSION@ and Polyglot @POLYGLOT-VERSION@, both included in the
-distribution. We recommend that you use Oracle JDK 6 or later; we have
-experienced problems with OpenJDK and with older versions of Java.
-[OpenSSL](http://www.openssl.org/) is used to sign certificates. Fabric is
-compiled with the [Apache Ant build tool](http://ant.apache.org/).
+This Fabric distribution builds on Linux and OS X. Fabric @VERSION@ builds
+against Jif @JIF-VERSION@ and Polyglot @POLYGLOT-VERSION@. Both are included
+in the distribution. JDK 7 or later is required; we have tested with the
+Oracle and the OpenJDK implementations. [OpenSSL](http://www.openssl.org/) is
+used to sign certificates. Fabric is compiled with the [Apache Ant build
+tool](http://ant.apache.org/).
+
+The following command will install the requisite tools on an Ubuntu 12.04 or
+14.04 system:
+~~~
+  $ sudo apt-get install openjdk-7-jdk openssl ant
+~~~
+
+Once the tools are installed, unpack the distribution in a location of your
+choice and change into the distribution directory:
+~~~
+  $ tar zxf fabric-@VERSION@.tar.gz
+  $ cd fabric-@VERSION@
+~~~
 
 
 Configuring
@@ -16,7 +29,7 @@ Configuring
 Before using Fabric, you must configure the scripts in the `bin`
 directory.  From the top-level directory, run:
 ~~~
-      $ ant bin
+  $ ant bin
 ~~~
 If the configurator is unable to find the JDK, Polyglot, or Jif, it will
 prompt you to set the appropriate properties in `config.properties`.
@@ -24,8 +37,9 @@ prompt you to set the appropriate properties in `config.properties`.
 
 Building
 --------
-Fabric comes pre-compiled as Jar files in the `lib` directory. If you
-wish to rebuild Fabric, run `ant` from the top-level directory:
+_This step is optional._ Fabric comes pre-compiled as Jar files in the `lib`
+directory. However, if you wish to rebuild Fabric, run `ant` from the
+top-level directory:
 ~~~
   $ ant
 ~~~

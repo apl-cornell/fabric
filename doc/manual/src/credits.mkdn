@@ -2,23 +2,24 @@ Credits {#credits}
 =======
 The current Fabric developers are:
 
-  * [Jed Liu](http://www.cs.cornell.edu/~liujed/)
   * [Owen Arden](http://www.cs.cornell.edu/~owen/)
-  * Michael D. George
-  * [K. Vikram](http://www.cs.cornell.edu/~kvikram/)
-
-Tom Magrino helped test this release.
+  * [Jed Liu](http://www.cs.cornell.edu/~liujed/)
+  * [Tom Magrino](http://www.cs.cornell.edu/~tmagrino/)
 
 The Fabric project group is supervised by [Prof. Andrew C.
 Myers](http://www.cs.cornell.edu/andru/) at the [Cornell
 University](http://www.cornell.edu/) [Computer
 Science Department](http://www.cs.cornell.edu/).
 
-Past Fabric developers are:
+Past Fabric developers and contributors are:
 
-  * Lucas Waye
-  * [Danfeng Zhang](http://www.cs.cornell.edu/~dfzhang)
+  * [Michael D. George](http://www.cs.cornell.edu/~mdgeorge/)
+  * Samarth Lad
   * [Xin Qi](https://sites.google.com/site/qixin99/)
+  * [Robert Soulé](http://www.inf.usi.ch/faculty/soule/)
+  * [K. Vikram](http://www.cs.cornell.edu/~kvikram/)
+  * [Lucas Waye](http://people.seas.harvard.edu/~lwaye/)
+  * [Danfeng Zhang](http://www.cs.cornell.edu/~dfzhang)
   * Xin Zheng
 
 [Nate Nystrom](http://www.inf.usi.ch/nystrom/) was involved in the early stages
@@ -26,6 +27,14 @@ of the Fabric project.
 
 [Steve Chong](http://people.seas.harvard.edu/~chong/) provided guidance on
 extending Jif and provided quick bug fixes to the base Jif compiler.
+
+Thanks also to Matthew Loring and
+[Isaac Sheff](http://www.cs.cornell.edu/~isheff/)
+for submitting bug reports.
+
+We thank [Hakim Weatherspoon](http://www.cs.cornell.edu/~hweather/) for the use
+of the Fractus cloud infrastructure for running the performance tests that
+helped improve this release.
 
 
 Sponsors
@@ -38,8 +47,12 @@ of funding sources, including:
   * Microsoft Corporation
   * AF-TRUST, which receives support from the DAF Air Force Office
     of Scientific Research (FA9550-06-1-0244) and the NSF (0424422)
-  * Air Force Research Laboratories NICECAP grant FA8750-08-2-0079
-  * Office of Naval Research award N000140910652
+  * U.S. Air Force Research Laboratories NICECAP grant FA8750-08-2-0079
+  * Office of Naval Research grants N00014-09-1-0652 and N00014-13-1-0089
+  * MURI grant FA9550-12-1-0400, administered by the U.S. Air Force
+  * an NDSEG fellowship
+
+Fractus is provided by an AFOSR DURIP award, grant FA2386-12-1-3008.
 
 This work does not necessarily represent the opinions, expressed or
 implied, of any of these sponsors.

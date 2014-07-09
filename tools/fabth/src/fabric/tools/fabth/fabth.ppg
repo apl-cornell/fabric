@@ -31,12 +31,7 @@ start with goal;
 override filetest ::=
         filename_list:a description_opt:b failure_set_opt:d
             {: SourceFileTest sft = null;
-               if (a.size() == 1) {
-                   sft = new FabricSourceFileTest((String)a.get(0));
-               }
-               else {
-                   sft = new FabricSourceFileTest(a);
-               }
+	       sft = new FabricSourceFileTest(a);
                sft.setDescription(b);
                sft.setExpectedFailures(d);
                RESULT = sft; :}	    

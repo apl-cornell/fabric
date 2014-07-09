@@ -6,7 +6,7 @@ public class SSW[label T] {
     public final String{T}    sessionId;
     public SSW(Principal{T} sessionPrincipal, String{T} sessionID) {
     	this.sessionPrincipal = sessionPrincipal;
-    	this.sessionId = sessionId;
+    	this.sessionId = sessionID;
 		super();
     }
 }

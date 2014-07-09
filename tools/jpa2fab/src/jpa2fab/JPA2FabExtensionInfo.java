@@ -15,13 +15,14 @@ import jpa2fab.ext.JPA2FabILExtFactory_c;
 import polyglot.ast.NodeFactory;
 import polyglot.ext.jl5.ExtensionInfo;
 import polyglot.ext.jl5.JL5Options;
-import polyglot.ext.jl5.ast.JL5DelFactory_c;
+import polyglot.ext.jl5.ast.J5Lang_c;
 import polyglot.ext.jl5.ast.JL5ExtFactory_c;
 import polyglot.ext.jl5.ast.JL5NodeFactory_c;
 import polyglot.ext.jl5.types.JL5TypeSystem_c;
 import polyglot.frontend.FileSource;
 import polyglot.frontend.Job;
 import polyglot.frontend.Scheduler;
+import polyglot.frontend.Source.Kind;
 import polyglot.frontend.TargetFactory;
 import polyglot.frontend.goals.Goal;
 import polyglot.main.OptFlag;
@@ -52,8 +53,8 @@ public class JPA2FabExtensionInfo extends ExtensionInfo {
 
   @Override
   protected NodeFactory createNodeFactory() {
-    return new JL5NodeFactory_c(
-        new JL5ExtFactory_c(new JPA2FabILExtFactory_c()), new JL5DelFactory_c());
+    return new JL5NodeFactory_c(J5Lang_c.instance, new JL5ExtFactory_c(
+        new JPA2FabILExtFactory_c()));
   }
 
   @Override
@@ -124,10 +125,10 @@ public class JPA2FabExtensionInfo extends ExtensionInfo {
   }
 
   @Override
-  public FileSource createFileSource(FileObject f, boolean user)
+  public FileSource createFileSource(FileObject f, Kind kind)
       throws IOException {
     URI ns = ((fabil.ExtensionInfo) outputExtensionInfo).localNamespace();
-    return new LocalSource(f, user, ns);
+    return new LocalSource(f, kind, ns);
   }
 
   @Override

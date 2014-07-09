@@ -161,8 +161,7 @@ public class InProcessStore extends RemoteStore {
     }
   }
 
-  @Override
-  public java.lang.Object writeReplace() {
+  private Object writeReplace() {
     return new SerializationProxy(name);
   }
 

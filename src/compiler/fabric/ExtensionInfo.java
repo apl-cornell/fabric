@@ -21,6 +21,7 @@ import polyglot.frontend.Job;
 import polyglot.frontend.JobExt;
 import polyglot.frontend.Parser;
 import polyglot.frontend.Scheduler;
+import polyglot.frontend.Source.Kind;
 import polyglot.frontend.TargetFactory;
 import polyglot.frontend.goals.Goal;
 import polyglot.lex.Lexer;
@@ -252,10 +253,10 @@ public class ExtensionInfo extends jif.ExtensionInfo implements
   }
 
   @Override
-  public LabelChecker createLabelChecker(Job job, boolean solvePerClassBody,
-      boolean solvePerMethod, boolean doLabelSubst) {
+  public LabelChecker createLabelChecker(Job job, boolean warningsEnabled,
+      boolean solvePerClassBody, boolean solvePerMethod, boolean doLabelSubst) {
     return new FabricLabelChecker(job, typeSystem(), nodeFactory(),
-        solvePerClassBody, solvePerMethod, doLabelSubst);
+        warningsEnabled, solvePerClassBody, solvePerMethod, doLabelSubst);
   }
 
   @Override
@@ -265,7 +266,7 @@ public class ExtensionInfo extends jif.ExtensionInfo implements
 
   @Override
   // TODO: support multiple local namespaces
-  public FileSource createFileSource(FileObject f, boolean user)
+  public FileSource createFileSource(FileObject f, Kind kind)
       throws IOException {
     if (f instanceof FabricFileObject) {
       fabric.lang.FClass fcls = ((FabricFileObject) f).getData();
@@ -276,11 +277,11 @@ public class ExtensionInfo extends jif.ExtensionInfo implements
             + " is higher than the label of its codebase ");
       }
 
-      return new RemoteSource(f, fcls, user);
+      return new RemoteSource(f, fcls, kind);
     } else {
       URI ns =
           getOptions().platformMode() ? platformNamespace() : localNamespace();
-      LocalSource src = new LocalSource(f, user, ns);
+      LocalSource src = new LocalSource(f, kind, ns);
       // Publish all local source unless we're in platform mode.
       // TODO: generalize and make this better. We should only publish
       // source in the sourcepath. Plus, the user may be re-publishing remote

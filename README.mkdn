@@ -4,20 +4,18 @@ Fabric is a language and runtime system that supports secure federated
 distributed computing. This is a quick-start manual to get you started
 running some Fabric examples. A more detailed manual can be found in
 the doc/manual directory of this distribution, or on the web at
-<http://www.cs.cornell.edu/project/fabric/manual/@VERSION@/html/>.
+<http://www.cs.cornell.edu/projects/fabric/manual/@VERSION@/html/>.
 
 More information about Fabric, including the latest release, can be
-found at the Fabric website <http://www.cs.cornell.edu/project/fabric/>.
+found at the Fabric website <http://www.cs.cornell.edu/projects/fabric/>.
 
 User support and feedback
 -------------------------
 If you use Fabric, we'd appreciate your letting us know. We welcome
 comments, bug reports, and discussion about Fabric on the Fabric users
-mailing list <https://lists.cs.cornell.edu/mailman/listinfo/fabric-users>.
-
-Subscribe to fabric-announce to be notified about new releases of Fabric
-and related announcements:
-<https://lists.cs.cornell.edu/mailman/listinfo/fabric-announce>.
+mailing list <http://www.cs.cornell.edu/projects/fabric/#mailing-list>.
+This is a low-traffic mailing list, to which we will also post
+notifications of new releases of Fabric and other related announcements.
 
 
 #include doc/manual/src/setup.mkdn

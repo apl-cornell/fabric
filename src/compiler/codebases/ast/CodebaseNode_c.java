@@ -2,6 +2,7 @@ package codebases.ast;
 
 import java.net.URI;
 
+import polyglot.ast.Ext;
 import polyglot.ast.Node;
 import polyglot.ast.NodeFactory;
 import polyglot.ast.PackageNode_c;
@@ -17,27 +18,38 @@ import codebases.types.CodebaseTypeSystem;
  * A CodebaseNode is a qualifier to a type in another namespace. CodebaseNodes
  * are syntactic 'aliases': they do not affect the type (like a package
  * qualifier would), only how the type is resolved.
- * 
- * @author owen
  */
-
+//XXX Should be replaced with extension
+@Deprecated
 public class CodebaseNode_c extends PackageNode_c implements CodebaseNode {
   protected URI namespace;
   protected String alias;
   protected URI externalNS;
 
+  @Deprecated
   public CodebaseNode_c(Position pos, URI namespace, String alias,
       URI externalNS) {
+    this(pos, namespace, alias, externalNS, (Ext) null);
+  }
+
+  public CodebaseNode_c(Position pos, URI namespace, String alias,
+      URI externalNS, Ext ext) {
     // XXX: PackageNode_c has an assertion that prevents package_ from being
     // null
     // but the implementation seems to allow it. For now, we ignore the
     // assertion and extend PackageNode_c
-    this(pos, namespace, alias, externalNS, null);
+    this(pos, namespace, alias, externalNS, null, null);
+  }
+
+  @Deprecated
+  public CodebaseNode_c(Position pos, URI namespace, String alias,
+      URI externalNS, Package package_) {
+    this(pos, namespace, alias, externalNS, package_, null);
   }
 
   public CodebaseNode_c(Position pos, URI namespace, String alias,
-      URI externalNS, Package package_) {
-    super(pos, package_);
+      URI externalNS, Package package_, Ext ext) {
+    super(pos, package_, ext);
     this.namespace = namespace;
     this.externalNS = externalNS;
     this.alias = alias;

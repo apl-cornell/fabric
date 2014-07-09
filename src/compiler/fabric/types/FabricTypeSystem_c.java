@@ -8,9 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import jif.ast.LabelActsForLabelConstraintNode;
-import jif.ast.LabelActsForPrincipalConstraintNode;
-import jif.ast.LabelNode;
 import jif.translate.ConjunctivePrincipalToJavaExpr_c;
 import jif.translate.LabelToJavaExpr;
 import jif.translate.PrincipalToJavaExpr;
@@ -522,7 +519,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
   }
 
   @Override
-  public Subst<ParamInstance, Param> subst(
+  protected Subst<ParamInstance, Param> substImpl(
       Map<ParamInstance, ? extends Param> substMap) {
     return new FabricSubst_c(this, substMap);
   }
@@ -710,13 +707,6 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
     return f;
   }
 
-  @Override
-  public Flags legalInterfaceFlags() {
-    Flags f = super.legalInterfaceFlags();
-    f = f.set(FabricFlags.NONFABRIC);
-    return f;
-  }
-
   // TODO: determine scenarios when this labels
   // can be used by the remote call wrapper
   @Override
@@ -735,11 +725,6 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
         hasThis |= containsThisLabel((Label) afc.actor());
 
       return hasThis;
-    } else if (as instanceof LabelActsForPrincipalConstraintNode) {
-      LabelActsForLabelConstraintNode laflcn =
-          (LabelActsForLabelConstraintNode) as;
-      LabelNode lhs = (LabelNode) laflcn.actor();
-      return containsThisLabel(lhs.label());
     }
 
     return false;
@@ -802,11 +787,6 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
         hasThis |= containsArgLabel((Label) afc.actor());
 
       return hasThis;
-    } else if (as instanceof LabelActsForPrincipalConstraintNode) {
-      LabelActsForLabelConstraintNode laflcn =
-          (LabelActsForLabelConstraintNode) as;
-      LabelNode lhs = (LabelNode) laflcn.actor();
-      return containsArgLabel(lhs.label());
     }
     return false;
   }
