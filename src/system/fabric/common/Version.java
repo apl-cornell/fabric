@@ -16,7 +16,7 @@ public class Version {
   private int major = 0;
   private int minor = 2;
   private int patch = 2;
-  private String branch = "";
+  private String branch = "warranties";
 
   public int major() { return major; }
   public int minor() { return minor; }
@@ -25,6 +25,6 @@ public class Version {
 
   @Override
   public String toString() {
-    return "0.2.2 (2014-07-08 22:45:05 EDT)";
+    return "0.2.2-warranties (2014-07-09 15:55:06 EDT)";
   }
 }
