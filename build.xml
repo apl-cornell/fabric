@@ -247,7 +247,27 @@
 
   <target name="configure-version" unless="fabric.version">
     <property file="${fabric.home}/version.properties" prefix="fabric" />
-    <property name="fabric.version" value="${fabric.version.major}.${fabric.version.minor}.${fabric.version.patch}" />
+    <!-- Handle branched versions. -->
+    <condition
+        property="fabric.version"
+        value="${fabric.version.major}.${fabric.version.minor}.${fabric.version.patch}-${fabric.version.branch}">
+      <and>
+        <isset property="fabric.version.branch"/>
+        <not>
+          <or>
+            <equals arg1="${fabric.version.branch}" arg2="" trim="true"/>
+            <equals arg1="${fabric.version.branch}" arg2="master"
+                trim="true"/>
+          </or>
+        </not>
+      </and>
+    </condition>
+    <!-- Handle unbranched versions. -->
+    <condition
+        property="fabric.version"
+        value="${fabric.version.major}.${fabric.version.minor}.${fabric.version.patch}">
+      <not><isset property="fabric.version"/></not>
+    </condition>
   </target>
 
   <target name="config.properties-check">
@@ -697,6 +717,22 @@
     <antcall target="gen-version" />
   </target>
 
+  <target name="mark-branch" depends="get-current-fabric-branch">
+    <!-- Ask for branch name. -->
+    <input message="Branch name?"
+        defaultvalue="${fabric.current.branch}"
+        addproperty="fabric.version.newbranch"/>
+
+    <propertyfile file="${fabric.home}/version.properties">
+      <entry key="version.branch" type="string"
+          value="${fabric.version.newbranch}"/>
+    </propertyfile>
+
+    <!-- Reread version info and regenerate version files -->
+    <antcall target="configure-buildstring" />
+    <antcall target="gen-version" />
+  </target>
+
   <!--
     Configures properties for dependency versions.
   -->
@@ -853,15 +889,18 @@ public class Version extends polyglot.main.Version {
  *   ant bump-major    (Bumps the major version number.)
  *   ant bump-minor    (Bumps the minor version number.)
  *   ant bump-patch    (Bumps the patch level.)
+ *   ant mark-branch   (Changes the branch name.)
  */
 public class Version {
   private int major = ${fabric.version.major};
   private int minor = ${fabric.version.minor};
   private int patch = ${fabric.version.patch};
+  private String branch = "${fabric.version.branch}";
 
   public int major() { return major; }
   public int minor() { return minor; }
   public int patch() { return patch; }
+  public String branch() { return branch; }
 
   @Override
   public String toString() {
