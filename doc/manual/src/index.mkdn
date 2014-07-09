@@ -1,5 +1,9 @@
 Introduction {#index}
 ============
+This is a branched release of Fabric that includes state warranties, as
+described in our paper "Warranties for Faster Strong Consistency",
+published in NSDI 2014 @cite warranties2014.
+
 Fabric is a language and runtime system that supports secure federated
 distributed computing. This manual briefly describes the contents of the
 Fabric distribution package, and should get you started with running
