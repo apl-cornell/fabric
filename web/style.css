@@ -41,28 +41,37 @@ div.content { margin: 0 auto; padding: 0; max-width:70em; }
 p.explanation { width: 80ex; padding: 25px}
 td.question {vertical-align: top; text-align: right; font-weight: bold }
 form.questionnaire {padding: 25px}
-form.download {margin: -2px -2px 0 -2px; display: inline}
-form.download-old {display: inline}
+form.download {
+    margin: -2px -2px 0 -2px;
+    display: inline-block;
+    width: 24em;
+}
+form.download-old {
+    display: inline-block;
+    width: 8em;
+    margin-top: 0.5ex;
+    margin-bottom: 0;
+}
 form.download input {margin: -6px -4px 0 4em; padding: 0}
 input.download {
     color: #558;
     font-weight: bold;
     font-size: 110%;
-    font-family: "Times New Roman", times, serif
-    padding-left: 6em;
+    font-family: "Times New Roman", times, serif;
 }
 input.download:hover, input.download-old:hover {
     color: #48f;
 }
 input.download-old {
     border: none;
+    padding: 0;
     background-color: transparent;
     font-size: 100%;
     font-weight: bold;
     font-family: "Times New Roman", times, serif;
-    padding-right: 2em;
     display: inline;
     color: #558;
+    cursor: pointer;
 }
 div.content h1 {
    color: white; background-color: #50a0c0;

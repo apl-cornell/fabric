@@ -49,18 +49,30 @@ Fabric leverages peer-to-peer replication to provide high availability.
 </p>                         
 
 <div>
+<!--
 <h2>Documentation</h2>
 <p>
-<a href="manual/0.2.2/html/index.html">
+<a href="manual/0.2.2/html/">
 Fabric reference manual</a> (Version 0.2.2, July 2014) [ <a href="manual/0.2.2/manual.pdf">PDF</a> ]
 </p>
+-->
 
 
 <div class="downloads">
 <a name="downloads">
-<h2>Downloads</h2></a>
-<p>Fabric 0.2.2 (July 2014) has support for local deadlock detection, bug
-fixes, and performance improvements.
+<h2>Releases</h2></a>
+<p>
+  In addition to the downloads below, the full Fabric release history is also
+  available on GitHub:
+
+  <a href="https://github.com/apl-cornell/fabric">
+    https://github.com/apl-cornell/fabric
+  </a>
+
+</p>
+
+<p>Fabric 0.2.2 has support for local deadlock detection, bug fixes, and
+performance improvements.
 </p>
 <form class="download" method="POST" 
     action="http://www.cs.cornell.edu/w8/~andru/cgi-bin/download.pl"
@@ -72,6 +84,28 @@ fixes, and performance improvements.
       value="http://www.cs.cornell.edu/Projects/fabric/releases/fabric-0.2.2.tar.gz">
   <input class="download" type="submit" value="Download Fabric 0.2.2" />
 </form>
+<span class="date">(July 2014)</span>
+<a href="manual/0.2.2/html/">
+  Reference manual
+</a> [ <a href="manual/0.2.2/manual.pdf">PDF</a> ]
+
+<p>There is also a branch of 0.2.2 that additionally incorporates support for
+state warranties, as described in our NSDI 2014 paper.
+</p>
+<form class="download" method="POST" 
+    action="http://www.cs.cornell.edu/w8/~andru/cgi-bin/download.pl"
+    enctype="multipart/form-data">
+  <input type="hidden" name="package" value="Fabric 0.2.2-warranties">
+  <input type="hidden" name="style"
+      value="http://www.cs.cornell.edu/Projects/fabric/style.css">
+  <input type="hidden" name="url"
+      value="http://www.cs.cornell.edu/Projects/fabric/releases/fabric-0.2.2-warranties.tar.gz">
+  <input class="download" type="submit" value="Download Fabric 0.2.2-warranties" />
+</form>
+<span class="date">(July 2014)</span>
+<a href="manual/0.2.2-warranties/html/">
+  Reference manual
+</a> [ <a href="manual/0.2.2-warranties/manual.pdf">PDF</a> ]
 
 <p>
 Previous versions also available:
@@ -89,7 +123,7 @@ Previous versions also available:
       <input class="download-old" type="submit" value="Fabric 0.2.1" />
     </form>
     <span class="date">(June 2013)</span>
-    <a href="manual/0.2.1/html/index.html">
+    <a href="manual/0.2.1/html/">
       Reference manual
     </a> [ <a href="manual/0.2.1/manual.pdf">PDF</a> ]
     <ul>
@@ -108,12 +142,12 @@ Previous versions also available:
       <input class="download-old" type="submit" value="Fabric 0.2.0" />
     </form>
     <span class="date">(October 2012)</span>
-    <a href="manual/0.2.0/html/index.html">
+    <a href="manual/0.2.0/html/">
       Reference manual
     </a> [ <a href="manual/0.2.0/manual.pdf">PDF</a> ]
     <ul>
       <li>This release incorporates the support for mobile code described in
-      our Oakland '12 paper, along with many improvements to usability,
+      our Oakland 2012 paper, along with many improvements to usability,
       performance, and reliability.
     </ul>
   <li>
