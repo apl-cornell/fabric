@@ -1123,81 +1123,12 @@ public class Version {
   ****************************************************************************
   -->
 
-  <!-- Main target for generating the Fabric distribution. -->
-  <target name="dist" depends="dist-tarball"
-      description="Generates the distribution">
-    <!-- Output a checklist for verifying that the distribution is good. -->
-    <echo message="Dist package created. Verify the following:" />
-    <echo message=" - Examples build and run" />
-    <echo message=" - CHANGES file is up-to-date" />
-    <echo message=" - CREDITS file is up-to-date, including funding support" />
-    <echo message=" - Licensing information for 3rd-party software" />
-    <echo message="   is up-to-date in COPYING" />
-    <echo message=" - New features documented in manual" />
-    <echo message=" - Version bump" />
-    <echo />
-    <echo message="When satisfied, you can integrate the distribution" />
-    <echo message="package and manual into your working copy of the" />
-    <echo message="website:" />
-    <echo />
-    <echo message="  bin/ship-dist fabric-${fabric.version}.tar.gz" />
-    <antcall target="snapshot-warning" />
-  </target>
-
   <!--
-  ____________________________________________________________________________
-    Distribution helper targets.
+    Main target for generating the Fabric distribution.
+    Creates the distribution tarball from Git.
   -->
-
-  <!--
-    Prints a warning to not make the distribution public if it's built against
-    a snapshot copy of Jif.
-  -->
-  <target name="snapshot-warning" if="${use-jif-rcs}">
-    <echo message="***********"/>
-    <echo message="  WARNING"/>
-    <echo message="***********"/>
-    <echo message="The distribution just built was made against a SNAPSHOT"/>
-    <echo message="copy of Jif. It is therefore NOT recommended that this"/>
-    <echo message="distribution be made public."/>
-  </target>
-
-  <!--
-    Asks the user for Fabric-snapshot information.
-
-    ${fabric.snapshot.branch} will specify the branch to use.
-    ${fabric.snapshot.timestamp} will specify the time and date at which to
-    snapshot.
-  -->
-  <target name="get-fabric-snapshot-info" depends="get-current-fabric-branch">
-    <input message="Fabric branch to snapshot?"
-        defaultvalue="${fabric.current.branch}"
-        addproperty="fabric.snapshot.branch"/>
-    <tstamp>
-      <format property="default-snapshot" timezone="America/New_York"
-          pattern="yyyy-MM-dd HH:mm:ss" />
-    </tstamp>
-    <input message="Time and date to snapshot?"
-        defaultvalue="${default-snapshot}"
-        addproperty="fabric.snapshot.timestamp"/>
-  </target>
-
-  <!--
-    Determines the name of the current Fabric branch and puts it in
-    ${fabric.current.branch}.
-  -->
-  <target name="get-current-fabric-branch">
-    <exec executable="bash"
-        dir="${fabric.home}"
-        error="/dev/null"
-        outputproperty="fabric.current.branch">
-      <arg value="-c"/>
-      <arg value="git rev-parse --abbrev-ref HEAD"/>
-    </exec>
-  </target>
-
-  <!-- Creates the distribution tarball from Git. -->
-  <target name="dist-tarball"
+  <target name="dist"
+      description="Generates the distribution"
       depends="configure-buildstring,get-fabric-snapshot-info,build-jif">
     <!-- build-jif should have set up the tmp directory already. -->
 
@@ -1256,6 +1187,61 @@ public class Version {
 
     <!-- Clean up. -->
     <antcall target="rmdir-tmp" />
+
+    <!-- Warn if we built against a snapshot of Jif. -->
+    <antcall target="snapshot-warning" />
+  </target>
+
+  <!--
+  ____________________________________________________________________________
+    Distribution helper targets.
+  -->
+
+  <!--
+    Prints a warning to not make the distribution public if it's built against
+    a snapshot copy of Jif.
+  -->
+  <target name="snapshot-warning" if="${use-jif-rcs}">
+    <echo message="***********"/>
+    <echo message="  WARNING"/>
+    <echo message="***********"/>
+    <echo message="The distribution just built was made against a SNAPSHOT"/>
+    <echo message="copy of Jif. It is therefore NOT recommended that this"/>
+    <echo message="distribution be made public."/>
+  </target>
+
+  <!--
+    Asks the user for Fabric-snapshot information.
+
+    ${fabric.snapshot.branch} will specify the branch to use.
+    ${fabric.snapshot.timestamp} will specify the time and date at which to
+    snapshot.
+  -->
+  <target name="get-fabric-snapshot-info" depends="get-current-fabric-branch">
+    <input message="Fabric branch to snapshot?"
+        defaultvalue="${fabric.current.branch}"
+        addproperty="fabric.snapshot.branch"/>
+    <tstamp>
+      <format property="default-snapshot" timezone="America/New_York"
+          pattern="yyyy-MM-dd HH:mm:ss" />
+    </tstamp>
+    <input message="Time and date to snapshot?"
+        defaultvalue="${default-snapshot}"
+        addproperty="fabric.snapshot.timestamp"/>
+  </target>
+
+  <!--
+    Determines the name of the current Fabric branch and puts it in
+    ${fabric.current.branch}.
+  -->
+  <target name="get-current-fabric-branch">
+    <exec executable="bash"
+        dir="${fabric.home}"
+        error="/dev/null"
+        outputproperty="fabric.current.branch">
+      <arg value="-c"/>
+      <arg value="git rev-parse --abbrev-ref HEAD"/>
+    </exec>
   </target>
 
   <!-- Stamps all source files with a copyright notice. -->
@@ -1541,6 +1527,22 @@ public class Version {
         <include name="collections/src/**/*.fab" />
       </tarfileset>
     </tar>
+
+    <!-- Output a checklist for verifying that the distribution is good. -->
+    <echo message="Dist package created. Verify the following:" />
+    <echo message=" - Examples build and run" />
+    <echo message=" - CHANGES file is up-to-date" />
+    <echo message=" - CREDITS file is up-to-date, including funding support" />
+    <echo message=" - Licensing information for 3rd-party software" />
+    <echo message="   is up-to-date in COPYING" />
+    <echo message=" - New features documented in manual" />
+    <echo message=" - Version bump" />
+    <echo />
+    <echo message="When satisfied, you can integrate the distribution" />
+    <echo message="package and manual into your working copy of the" />
+    <echo message="website:" />
+    <echo />
+    <echo message="  bin/ship-dist fabric-${fabric.version}.tar.gz" />
   </target>
 
   <!--
