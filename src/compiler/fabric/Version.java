@@ -34,6 +34,6 @@ public class Version extends polyglot.main.Version {
 
   @Override
   public String toString() {
-    return "0.2.2-warranties (2014-07-09 15:55:06 EDT)";
+    return "0.2.2-warranties (2014-07-10 12:16:18 EDT)";
   }
 }
