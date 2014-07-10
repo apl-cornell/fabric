@@ -1247,8 +1247,12 @@ public class Version {
     </antcall>
 
     <!-- Move the distribution tarball out of the scratch directory. -->
-    <move tofile="${fabric.home}/fabric-${fabric.version}.tar.gz"
-        file="${tmp}/fabric/fabric-${fabric.version}.tar.gz" />
+    <move todir="${fabric.home}">
+      <fileset dir="${tmp}/fabric">
+        <include name="fabric-?*.?*.?*.tar.gz"/>
+        <include name="fabric-?*.?*.?*-*.tar.gz"/>
+      </fileset>
+    </move>
 
     <!-- Clean up. -->
     <antcall target="rmdir-tmp" />
