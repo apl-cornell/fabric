@@ -35,18 +35,6 @@ h3 {
   margin-bottom: 5px;
 }
 
-div.two-col-left {
-  width: calc(50%-1em);
-  float: left;
-  padding-right: 1em;
-}
-
-div.two-col-right {
-  width: calc(50%-1em);
-  float: right;
-  padding-left: 1em;
-}
-
 #fabric-logo {
   height: 86px;
   display: inline-block;
@@ -187,8 +175,15 @@ input.download:hover {
   background: #194;
 }
 
+div.current-releases {
+  display: table;
+  width: 100%;
+}
+
 div.current-releases > div {
   padding-bottom: 1ex;
+  width: 50%;
+  display: table-cell;
 }
 
 table.previous-releases {
