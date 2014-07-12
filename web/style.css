@@ -70,6 +70,8 @@ div.top a:hover { color: #ffff80; }
 div.menu {
   display: table-cell;
   vertical-align: middle;
+  text-align: right;
+  margin: 0 0 0 auto;
   padding: 0 12px;
 }
 
