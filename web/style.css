@@ -270,6 +270,18 @@ body.download {
   margin: 0; padding: 0;
 }
 
+div.content h1 {
+  color: white;
+  background-color: #48C;
+  text-shadow: #102010 2px 2px 2px;
+  vertical-align: top;
+  margin: 0;
+  padding: 15px;
+  font-family: "Cronos Pro", "Trebuchet MS", "Lucida Sans", "Helvetica Neue",
+    Helvetica, Arial, sans-serif;
+  font-size: 45px;
+}
+
 p.explanation {
   width: 80ex;
   padding: 25px;
