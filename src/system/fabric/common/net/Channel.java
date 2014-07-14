@@ -27,7 +27,7 @@ import fabric.net.RemoteNode;
 /**
  * A channel manages a single socket, allowing it to be multiplexed across
  * multiple SubSockets.
- * 
+ *
  * @param <Node> the type of node at the remote endpoint.
  */
 abstract class Channel<Node extends RemoteNode<Node>> extends Thread {

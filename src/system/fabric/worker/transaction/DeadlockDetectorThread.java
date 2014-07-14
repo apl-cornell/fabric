@@ -93,7 +93,7 @@ public class DeadlockDetectorThread extends Thread {
 
   /**
    * Finds cycles in the waits-for graph.
-   * 
+   *
    * @param curLog
    *          the current node being visited.
    * @param pathToTid
@@ -106,14 +106,14 @@ public class DeadlockDetectorThread extends Thread {
    * @param topLevelTidsVisited
    *          the set of top-level TIDs that have been visited already
    *          (excluding that of curLog if this is the first time visiting
-   *          curLog's top-level TID). 
+   *          curLog's top-level TID).
    * @param cyclesFound
    *          the cycles found so far. Any cycles found during the call will be
    *          added to this set, and this set is returned.
    * @param requests
    *          the set of transaction logs for which deadlock-detection requests
    *          have been made.
-   *          
+   *
    * @return cyclesFound with any found cycles added.
    */
   private Set<Set<Log>> findCycles(Log curLog, LongKeyMap<Log> pathToTid,
@@ -189,7 +189,7 @@ public class DeadlockDetectorThread extends Thread {
 
   /**
    * Resolves deadlocks by aborting transactions.
-   * 
+   *
    * @param cycles
    *          the set of deadlocks, represented by the logs of transactions
    *          involved in waits-for cycles.

@@ -91,6 +91,7 @@ import codebases.types.CBPackage_c;
 import codebases.types.CBPlaceHolder_c;
 import codebases.types.CodebaseResolver;
 import codebases.types.NamespaceResolver;
+import fabil.types.FabILFlags;
 import fabric.FabricOptions;
 import fabric.ast.FabricUtil;
 import fabric.ast.RemoteWorkerGetter;
@@ -108,7 +109,7 @@ import fabric.worker.Store;
 import fabric.worker.Worker;
 
 public class FabricTypeSystem_c extends JifTypeSystem_c implements
-    FabricTypeSystem {
+FabricTypeSystem {
   protected Map<URI, NamespaceResolver> namespaceResolvers;
   protected NamespaceResolver platformResolver;
   protected NamespaceResolver applicationResolver;
@@ -359,8 +360,8 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
           wli.position(),
           readerPolicy(wli.position(), workerLocalPrincipal,
               bottomPrincipal(wli.position())),
-          writerPolicy(wli.position(), workerLocalPrincipal,
-              workerLocalPrincipal)));
+              writerPolicy(wli.position(), workerLocalPrincipal,
+                  workerLocalPrincipal)));
     }
     return workerLocalPrincipal;
   }
@@ -396,7 +397,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
       fabric.ast.Store store = (fabric.ast.Store) e;
       return isFinalAccessExpr(store.expr());
     } else if (e instanceof New) {
-      // treat New expressions as "constant" 
+      // treat New expressions as "constant"
       // this aids instantiation of Store
       // principals in prodecure signatures.
       return true;
@@ -413,7 +414,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
     } else if (e instanceof fabric.ast.Worker) {
       return workerLocalAccessPath(e.position());
     } else if (e instanceof New) {
-      // support instantiation of this.store$ in constructors 
+      // support instantiation of this.store$ in constructors
       New nw = (New) e;
       FabricTypeSystem ts = (FabricTypeSystem) context.typeSystem();
       ClassType ct = (ClassType) ts.unlabel(nw.type());
@@ -428,7 +429,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
     } else if (e instanceof fabric.ast.Store) {
       fabric.ast.Store st = (fabric.ast.Store) e;
       // if we wanted to allow "new C().store$" then we need to
-      // check whether st.expr is a New expr. 
+      // check whether st.expr is a New expr.
       // This doesn't seem useful, though.
       return new AccessPathStore(exprToAccessPath(st.expr(), context), Store(),
           st.position());
@@ -703,7 +704,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
   @Override
   public Flags legalTopLevelClassFlags() {
     Flags f = super.legalTopLevelClassFlags();
-    f = f.set(FabricFlags.NONFABRIC);
+    f = f.set(FabILFlags.NONFABRIC);
     return f;
   }
 
@@ -848,7 +849,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
       DynamicPrincipal dp = (DynamicPrincipal) p;
       if (dp.path() instanceof AccessPathStore) {
         AccessPathStore aps = (AccessPathStore) dp.path();
-        // Store principals are the only dynamic principals 
+        // Store principals are the only dynamic principals
         // that can appear in access labels, but the path
         // must be a this path.
         return aps.path() instanceof AccessPathThis;
@@ -862,8 +863,8 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
   @Override
   public FabricArrayType fabricArrayOf(Position pos, Type t) {
     return new FabricArrayType_c(this, pos, t,
-    /* isConst */false, /* isNonConst */true,
-    /* isNative */false);
+        /* isConst */false, /* isNonConst */true,
+        /* isNative */false);
   }
 
   @Override
@@ -881,8 +882,8 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
     }
 
     return new FabricArrayType_c(this, pos, type,
-    /* isConst */false, /* isNonConst */true,
-    /* isNative */true);
+        /* isConst */false, /* isNonConst */true,
+        /* isNative */true);
   }
 
   @Override
@@ -951,11 +952,11 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
         fabric.lang.security.Label lbl = defaultPublishingLabel();
         fabric.util.HashMap classes =
             new fabric.util.HashMap._Impl(dest).fabric$util$HashMap$(
-            /*
-             * // XXX when HashMap becomes parameterized, these will be the
-             * labels. , lbl, lbl.confPolicy()
-             */
-            );
+                /*
+                 * // XXX when HashMap becomes parameterized, these will be the
+                 * labels. , lbl, lbl.confPolicy()
+                 */
+                );
         new_codebase =
             new Codebase._Impl(dest).fabric$lang$Codebase$(lbl,
                 lbl.confPolicy(), classes);
@@ -1145,7 +1146,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
               if (cp instanceof ConfProjectionPolicy_c) {
                 ConfProjectionPolicy_c cpproj = (ConfProjectionPolicy_c) cp;
                 lifted
-                    .add(join(cpproj.label().subst(this), noComponentsLabel()));
+                .add(join(cpproj.label().subst(this), noComponentsLabel()));
               } else confpols.add(cp);
             }
             ConfPolicy new_jp = joinConfPolicy(jp.position(), confpols);

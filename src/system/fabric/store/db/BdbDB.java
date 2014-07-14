@@ -107,7 +107,7 @@ public class BdbDB extends ObjectDB {
   /**
    * Creates a new BdbStore for the store specified. A new database will be
    * created if it does not exist.
-   * 
+   *
    * @param name
    *          name of store to create store for.
    */
@@ -424,7 +424,7 @@ public class BdbDB extends ObjectDB {
   /**
    * Removes a PendingTransaction from the prepare log and returns it. If no
    * transaction with the given transaction id is found, null is returned.
-   * 
+   *
    * @param worker
    *          the principal under which this action is being executed.
    * @param txn

@@ -12,7 +12,7 @@ import fabric.common.net.RemoteIdentity;
 import fabric.worker.remote.RemoteWorker;
 
 public final class MakePrincipalMessage extends
-    Message<MakePrincipalMessage.Response, FabricGeneralSecurityException> {
+Message<MakePrincipalMessage.Response, FabricGeneralSecurityException> {
 
   // ////////////////////////////////////////////////////////////////////////////
   // message contents //

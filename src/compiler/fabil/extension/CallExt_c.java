@@ -47,10 +47,10 @@ public class CallExt_c extends ExprExt_c {
     if (accessState != null) {
       target = pr.replaceTarget(target, accessState);
     } else if (rewriteTarget) {
-      target = (Receiver) call.visitChild(target, pr);
+      target = call.visitChild(target, pr);
     }
 
-    Id name = (Id) call.visitChild(call.id(), pr);
+    Id name = call.visitChild(call.id(), pr);
     List<Expr> arguments = call.visitList(call.arguments(), pr);
 
     if (name.id().equals("getClass") && arguments.isEmpty()) {
@@ -152,7 +152,7 @@ public class CallExt_c extends ExprExt_c {
     target =
         rr.qq().parseExpr(
             "(" + ((ClassType) c.target().type()).translate(null)
-                + "._Proxy) %E", target);
+            + "._Proxy) %E", target);
     return nf.Call(Position.compilerGenerated(),
         target,
         // <name>_remote => <name>$remote

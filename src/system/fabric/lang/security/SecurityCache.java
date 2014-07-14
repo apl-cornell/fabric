@@ -595,7 +595,7 @@ public final class SecurityCache extends AbstractSecurityCache {
   void putPolicyJoin(Triple<Policy, Policy, Store> triple, Policy policy,
       Set<DelegationPair> deps) {
     policyJoins
-        .put(triple, new Pair<Policy, Set<DelegationPair>>(policy, deps));
+    .put(triple, new Pair<Policy, Set<DelegationPair>>(policy, deps));
 
     // Record that this join depends on the given set of dependencies.
     for (DelegationPair del : deps) {
@@ -629,7 +629,7 @@ public final class SecurityCache extends AbstractSecurityCache {
   void putPolicyMeet(Triple<Policy, Policy, Store> triple, Policy policy,
       Set<DelegationPair> deps) {
     policyMeets
-        .put(triple, new Pair<Policy, Set<DelegationPair>>(policy, deps));
+    .put(triple, new Pair<Policy, Set<DelegationPair>>(policy, deps));
 
     // Record that this meet depends on the given set of dependencies.
     for (DelegationPair del : deps) {

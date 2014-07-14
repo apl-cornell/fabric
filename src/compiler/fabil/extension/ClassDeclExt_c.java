@@ -62,7 +62,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
 
   /**
    * Returns the interface translation of the class declaration.
-   * 
+   *
    * @see fabil.extension.FabILExt_c#rewriteProxies(fabil.visit.ProxyRewriter)
    */
   @Override
@@ -73,7 +73,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
 
     // Only translate if we're processing a Fabric class.
     if (!pr.typeSystem().isFabricClass(classDecl.type()))
-    // Tag for type serialization.
+      // Tag for type serialization.
       return classDecl.ext(shouldSerializeType(true));
 
     NodeFactory nf = pr.nodeFactory();
@@ -194,7 +194,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     ClassDecl result =
         qq.parseDecl(
             "public static class _Proxy extends " + superClass.translate(null)
-                + "._Proxy implements %T {%LM}", classDecl.type(), members);
+            + "._Proxy implements %T {%LM}", classDecl.type(), members);
     return result.type(classDecl.type());
   }
 
@@ -390,7 +390,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     ClassDecl result =
         qq.parseDecl(
             flags + " class _Impl extends " + superClass.translate(null)
-                + "._Impl implements %T {%LM}", classType, members);
+            + "._Impl implements %T {%LM}", classType, members);
     return result.type(classDecl.type());
   }
 
@@ -577,7 +577,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
                 + "throws java.io.IOException, java.lang.ClassNotFoundException {"
                 + "super(store, onum, version, expiry, label, accessLabel, in, "
                 + "refTypes, intraStoreRefs, interStoreRefs);" + in + " }",
-            inSubst);
+                inSubst);
     result.add(deserialize);
 
     return result;
@@ -708,7 +708,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
         FieldDecl fd =
             nf.FieldDecl(Position.compilerGenerated(), Flags.STATIC.Public()
                 .Final(), nf.ArrayTypeNode(Position.compilerGenerated(),
-                tnClass), nf.Id(Position.compilerGenerated(), fieldName), init);
+                    tnClass), nf.Id(Position.compilerGenerated(), fieldName), init);
         members.add(fd);
 
         // Now create the wrapper method.
@@ -722,7 +722,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
           args = nf.NullLit(Position.compilerGenerated());
         } else {
           args = nf.NewArray(Position.compilerGenerated(), tnObject, 1, // one-dimensional
-                                                                        // array
+              // array
               nf.ArrayInit(Position.compilerGenerated(), locals));
         }
 

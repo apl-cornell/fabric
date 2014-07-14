@@ -75,7 +75,7 @@ public final class TransactionRegistry {
    * Goes through all transaction logs and performs an onum renumbering. This is
    * used by fabric.lang.Object.$forceRenumber. Do not call this unless you
    * really know what you are doing.
-   * 
+   *
    * @deprecated
    */
   @Deprecated

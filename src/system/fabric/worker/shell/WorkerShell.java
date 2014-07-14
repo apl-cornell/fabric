@@ -47,27 +47,27 @@ public class WorkerShell {
         new CommandHandler("<APP> [ARG]...",
             "Executes the Fabric application APP in this worker, passing ARGs "
                 + "as command-line arguments.") {
-          @Override
-          public void handle(List<String> args) throws HandlerException {
-            if (args.size() == 0) {
-              throw new HandlerException("run: missing main class");
-            }
+      @Override
+      public void handle(List<String> args) throws HandlerException {
+        if (args.size() == 0) {
+          throw new HandlerException("run: missing main class");
+        }
 
-            // Run a Fabric program.
-            String mainClassName = args.get(0);
-            String[] appArgs = new String[args.size() - 1];
-            for (int i = 0; i < appArgs.length; i++) {
-              appArgs[i] = args.get(i + 1);
-            }
+        // Run a Fabric program.
+        String mainClassName = args.get(0);
+        String[] appArgs = new String[args.size() - 1];
+        for (int i = 0; i < appArgs.length; i++) {
+          appArgs[i] = args.get(i + 1);
+        }
 
-            try {
-              WorkerShell.this.worker.runFabricApp(mainClassName, appArgs);
-            } catch (Throwable e) {
-              throw new HandlerException("Exception encountered while running "
-                  + mainClassName, e);
-            }
-          }
-        };
+        try {
+          WorkerShell.this.worker.runFabricApp(mainClassName, appArgs);
+        } catch (Throwable e) {
+          throw new HandlerException("Exception encountered while running "
+              + mainClassName, e);
+        }
+      }
+    };
 
     this.handlers.put("run", defaultHandler);
 

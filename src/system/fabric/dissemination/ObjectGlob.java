@@ -20,7 +20,7 @@ public class ObjectGlob extends AbstractGlob<ObjectGroup> {
 
   /**
    * Used by the store to encrypt and sign an object group.
-   * 
+   *
    * @param store
    *          The store at which the group resides.
    * @param group

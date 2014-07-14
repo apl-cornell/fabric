@@ -19,7 +19,7 @@ import fabric.worker.remote.RemoteWorker;
  * Represents push notification that an object has been updated.
  */
 public class ObjectUpdateMessage extends
-    Message<ObjectUpdateMessage.Response, fabric.messages.Message.NoException> {
+Message<ObjectUpdateMessage.Response, fabric.messages.Message.NoException> {
   // ////////////////////////////////////////////////////////////////////////////
   // message contents //
   // ////////////////////////////////////////////////////////////////////////////
@@ -45,7 +45,7 @@ public class ObjectUpdateMessage extends
 
   /**
    * Creates an object-update notification to be sent to a dissemination node.
-   * 
+   *
    * @param store
    *          the store from which the notification originated.
    * @param updates
@@ -58,9 +58,9 @@ public class ObjectUpdateMessage extends
 
   /**
    * Creates an object-update notification to be sent to a worker node.
-   * 
+   *
    * @param onums
-   *          the onums being updated to which the worker has subscribed. 
+   *          the onums being updated to which the worker has subscribed.
    * @param updates
    *          the set of object updates.
    */

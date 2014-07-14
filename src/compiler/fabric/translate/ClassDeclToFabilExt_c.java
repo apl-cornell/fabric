@@ -197,7 +197,7 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
 
   /**
    * Create a method for initializing update and access labels
-   * 
+   *
    * @throws SemanticException
    *           if the field or access label cannot be translated
    */
@@ -236,8 +236,8 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
       return cb.addMember(rw.qq().parseMember(
           "public Object %s() { " + "this.$updateLabel = %E;  "
               + "this.$accessPolicy = %E.confPolicy();" + "return this;" + "}",
-          FabricToFabilRewriter.LABEL_INITIALIZER_METHOD_NAME, updateLabelExpr,
-          accessLabelExpr));
+              FabricToFabilRewriter.LABEL_INITIALIZER_METHOD_NAME, updateLabelExpr,
+              accessLabelExpr));
     }
 
     return cb;

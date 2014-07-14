@@ -33,8 +33,8 @@ public class NewArrayJifExt_c extends JifNewArrayExt {
       FabricTypeSystem ts = (FabricTypeSystem) lc.typeSystem();
       Label accessLabel = ts.toLabel(ct.accessPolicy());
       Label referenceLabel = ext.referenceLabel((FabricContext) lc.context());
-      // XXX: this looks fishy to me. why are we using the base 
-      // type's update label to typecheck the array allocation? -oa      
+      // XXX: this looks fishy to me. why are we using the base
+      // type's update label to typecheck the array allocation? -oa
       ext.labelCheck(lc, ct.updateLabel(), accessLabel, referenceLabel);
     }
 

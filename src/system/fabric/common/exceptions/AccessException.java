@@ -36,7 +36,7 @@ public class AccessException extends FabricException {
     msg += "Principal " + accessor.name();
     msg +=
         " is not trusted to " + accessType + " object " + accessee.$getOnum()
-            + "@" + accessee.$getStore().name() + ".\n";
+        + "@" + accessee.$getStore().name() + ".\n";
     msg += "The object's label is " + accessee.get$$updateLabel() + ".\n";
     msg += "The object's type is  " + accessee.getClass() + ".\n";
     return msg;

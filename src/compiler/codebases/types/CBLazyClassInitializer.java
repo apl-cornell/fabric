@@ -19,7 +19,7 @@ import codebases.frontend.ExtensionInfo;
 /**
  * This class is basically identical to it's superclass with calls to
  * ts.systemResolver() replaced by calls to ts.platformResolver()
- * 
+ *
  * @author owen
  */
 public class CBLazyClassInitializer extends ClassFileLazyClassInitializer {

@@ -162,7 +162,7 @@ public class WriterMap implements FastSerializable {
   /**
    * This version of the lookup avoids having to fetch the proxy to determine
    * its label.
-   * 
+   *
    * @param label
    *          the label corresponding to the given proxy.
    */
@@ -258,7 +258,7 @@ public class WriterMap implements FastSerializable {
           Crypto.cipherInstance(Cipher.ENCRYPT_MODE, encryptKey, iv);
       Pair<byte[], byte[]> encHost =
           new Pair<byte[], byte[]>(iv, cipher.doFinal(worker.name.getBytes()));
-      writers.put(mapKey, encHost);
+          writers.put(mapKey, encHost);
     } catch (GeneralSecurityException e) {
       throw new InternalError(e);
     }

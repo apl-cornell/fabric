@@ -72,7 +72,7 @@ public class UpdatedVariableFinder extends NodeVisitor {
   @Override
   public Node leave(Node old, Node n, NodeVisitor v) {
     if (n instanceof LocalAssign) {
-      Local l = (Local) ((LocalAssign) n).left();
+      Local l = ((LocalAssign) n).left();
       updated.add(l.localInstance());
     } else if (n instanceof Atomic) {
       Atomic a = (Atomic) n;

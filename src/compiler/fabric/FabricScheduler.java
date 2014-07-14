@@ -261,11 +261,11 @@ public class FabricScheduler extends JifScheduler implements CBScheduler {
 
   private Goal allFClassesGenerated =
       new Barrier("allFClassesGenerated", this) {
-        @Override
-        public Goal goalForJob(Job j) {
-          return FClassGenerated(j);
-        }
-      };
+    @Override
+    public Goal goalForJob(Job j) {
+      return FClassGenerated(j);
+    }
+  };
 
   public Goal AllFClassesGenerated() {
     return allFClassesGenerated;

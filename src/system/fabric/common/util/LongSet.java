@@ -39,7 +39,7 @@ package fabric.common.util;
  * mutable object changes to become equal to another set element, you have
  * violated the contract. As a special case of this, a Set is not allowed to be
  * an element of itself, without risking undefined behavior.
- * 
+ *
  * @author Original author unknown
  * @author Eric Blake (ebb9@email.byu.edu)
  * @see LongCollection
@@ -53,7 +53,7 @@ public interface LongSet extends LongCollection {
    * <code>o == null ? e == null : o.equals(e)</code>. Sets need not permit all
    * values, and may document what exceptions will be thrown if a value is not
    * permitted.
-   * 
+   *
    * @param o
    *          the object to add
    * @return true if the object was not previously in the set
@@ -74,7 +74,7 @@ public interface LongSet extends LongCollection {
    * operation). If the argument is also a Set, this returns the mathematical
    * <i>union</i> of the two. The behavior is unspecified if the set is modified
    * while this is taking place.
-   * 
+   *
    * @param c
    *          the collection to add
    * @return true if the set changed as a result
@@ -95,7 +95,7 @@ public interface LongSet extends LongCollection {
   /**
    * Removes all elements from this set (optional operation). This set will be
    * empty afterwords, unless an exception occurs.
-   * 
+   *
    * @throws UnsupportedOperationException
    *           if this operation is not allowed
    */
@@ -105,7 +105,7 @@ public interface LongSet extends LongCollection {
   /**
    * Returns true if the set contains the specified element. In other words,
    * this looks for <code>o == null ? e == null : o.equals(e)</code>.
-   * 
+   *
    * @param o
    *          the object to look for
    * @return true if it is found in the set
@@ -120,7 +120,7 @@ public interface LongSet extends LongCollection {
   /**
    * Returns true if this set contains all elements in the specified collection.
    * If the argument is also a set, this is the <i>subset</i> relationship.
-   * 
+   *
    * @param c
    *          the collection to check membership in
    * @return true if all elements in this set are in c
@@ -140,7 +140,7 @@ public interface LongSet extends LongCollection {
    * Compares the specified object to this for equality. For sets, the object
    * must be a set, the two must have the same size, and every element in one
    * must be in the other.
-   * 
+   *
    * @param o
    *          the object to compare to
    * @return true if it is an equal set
@@ -151,7 +151,7 @@ public interface LongSet extends LongCollection {
   /**
    * Returns the hash code for this set. In order to satisfy the contract of
    * equals, this is the sum of the hashcode of all elements in the set.
-   * 
+   *
    * @return the sum of the hashcodes of all set elements
    * @see #equals(Object)
    */
@@ -160,7 +160,7 @@ public interface LongSet extends LongCollection {
 
   /**
    * Returns true if the set contains no elements.
-   * 
+   *
    * @return true if the set is empty
    */
   @Override
@@ -169,7 +169,7 @@ public interface LongSet extends LongCollection {
   /**
    * Returns an iterator over the set. The iterator has no specific order,
    * unless further specified.
-   * 
+   *
    * @return a set iterator
    */
   @Override
@@ -179,7 +179,7 @@ public interface LongSet extends LongCollection {
    * Removes the specified element from this set (optional operation). If an
    * element e exists, <code>o == null ? e == null : o.equals(e)</code>, it is
    * removed from the set.
-   * 
+   *
    * @param o
    *          the object to remove
    * @return true if the set changed (an object was removed)
@@ -198,7 +198,7 @@ public interface LongSet extends LongCollection {
    * Removes from this set all elements contained in the specified collection
    * (optional operation). If the argument is a set, this returns the
    * <i>asymmetric set difference</i> of the two sets.
-   * 
+   *
    * @param c
    *          the collection to remove from this set
    * @return true if this set changed as a result
@@ -220,7 +220,7 @@ public interface LongSet extends LongCollection {
    * Retains only the elements in this set that are also in the specified
    * collection (optional operation). If the argument is also a set, this
    * performs the <i>intersection</i> of the two sets.
-   * 
+   *
    * @param c
    *          the collection to keep
    * @return true if this set was modified
@@ -242,7 +242,7 @@ public interface LongSet extends LongCollection {
    * Returns the number of elements in the set. If there are more than
    * Integer.MAX_VALUE mappings, return Integer.MAX_VALUE. This is the
    * <i>cardinality</i> of the set.
-   * 
+   *
    * @return the number of elements
    */
   @Override
@@ -252,7 +252,7 @@ public interface LongSet extends LongCollection {
    * Returns an array containing the elements of this set. If the set makes a
    * guarantee about iteration order, the array has the same order. The array is
    * distinct from the set; modifying one does not affect the other.
-   * 
+   *
    * @return an array of this set's elements
    * @see #toArray(long[])
    */
@@ -266,7 +266,7 @@ public interface LongSet extends LongCollection {
    * build a new array. If the set makes a guarantee about iteration order, the
    * array has the same order. The array is distinct from the set; modifying one
    * does not affect the other.
-   * 
+   *
    * @param a
    *          the array to determine the return type; if it is big enough it is
    *          used and returned

@@ -137,7 +137,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
 
   /**
    * Creates a serialized representation of the given object.
-   * 
+   *
    * @param obj
    *          The object to serialize.
    * @deprecated This is method is rather inefficient. Use sparingly.
@@ -160,7 +160,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
 
   /**
    * Creates a serialized representation of a surrogate object.
-   * 
+   *
    * @param onum
    *          The local object number for the surrogate.
    * @param updateLabel
@@ -306,7 +306,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
 
   /**
    * Modifies the serialized object's promise expiry
-   * 
+   *
    * @param expiry
    */
   public void setExpiry(long expiry) {
@@ -891,7 +891,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
   /**
    * Writes the given _Impl out to the given output stream. The behaviour of
    * this method should mirror write(DataOutput).
-   * 
+   *
    * @see #write(DataOutput)
    * @see #readImpl(Store, DataInput)
    * @see #SerializedObject(DataInput)
@@ -905,7 +905,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
     long updateLabelOnum = updateLabel.$getOnum();
     boolean interStoreUpdateLabel =
         !ONumConstants.isGlobalConstant(updateLabelOnum)
-            && !impl.$getStore().equals(updateLabelStore);
+        && !impl.$getStore().equals(updateLabelStore);
 
     // Write out the object header.
     out.writeLong(impl.$getOnum());
@@ -929,7 +929,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
 
           message +=
               System.getProperty("line.separator")
-                  + "A stack trace for the creation of the local object follows.";
+              + "A stack trace for the creation of the local object follows.";
           for (StackTraceElement e : ((_Impl) updateLabel.fetch()).$stackTrace)
             message += System.getProperty("line.separator") + "  " + e;
         }
@@ -947,7 +947,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
     long accessPolicyOnum = accessPolicy.$getOnum();
     boolean interStoreAccessLabel =
         !ONumConstants.isGlobalConstant(accessPolicyOnum)
-            && !impl.$getStore().equals(accessPolicyStore);
+        && !impl.$getStore().equals(accessPolicyStore);
 
     out.writeBoolean(interStoreAccessLabel);
     if (interStoreAccessLabel) {
@@ -965,7 +965,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
 
           message +=
               System.getProperty("line.separator")
-                  + "A stack trace for the creation of the local object follows.";
+              + "A stack trace for the creation of the local object follows.";
           for (StackTraceElement e : ((_Impl) updateLabel.fetch()).$stackTrace)
             message += System.getProperty("line.separator") + "  " + e;
         }
@@ -1027,7 +1027,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
   /**
    * Writes this SerializedObject out to the given output stream. The behavior
    * of this method should mirror write(_Impl, DataOutput).
-   * 
+   *
    * @see SerializedObject#write(_Impl, DataOutput)
    * @see SerializedObject#readImpl(Store, DataInput)
    * @see SerializedObject#SerializedObject(DataInput)
@@ -1039,7 +1039,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
 
   /**
    * A deserialization constructor.
-   * 
+   *
    * @param in
    *          An input stream containing a serialized object.
    * @see #write(DataOutput)
@@ -1117,11 +1117,11 @@ public final class SerializedObject implements FastSerializable, Serializable {
    */
   private static final Map<Class<? extends _Impl>, Constructor<?>> constructorTable =
       Collections
-          .synchronizedMap(new HashMap<Class<? extends _Impl>, Constructor<?>>());
+      .synchronizedMap(new HashMap<Class<? extends _Impl>, Constructor<?>>());
 
   /**
    * Deserializes this object, traversing surrogates as necessary.
-   * 
+   *
    * @param store
    *          The store on which this object lives.
    * @return The deserialized object.
@@ -1134,7 +1134,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
 
   /**
    * Deserializes this object.
-   * 
+   *
    * @param store
    *          The store on which this object lives.
    * @param chaseSurrogates

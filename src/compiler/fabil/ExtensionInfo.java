@@ -61,7 +61,7 @@ import fabric.worker.Worker;
  * Extension information for FabIL extension.
  */
 public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements
-    codebases.frontend.ExtensionInfo {
+codebases.frontend.ExtensionInfo {
   protected static URI platform_ns = URI.create("fab:platform");
   protected static URI local_ns = URI.create("fab:local");
 
@@ -231,13 +231,13 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements
         Report.report(2, "Creating filesource from " + f);
       URI ns =
           getOptions().platformMode() ? platformNamespace() : localNamespace();
-      return new LocalSource(f, kind, ns);
+          return new LocalSource(f, kind, ns);
     }
   }
 
   /**
    * Creates namespace resolvers for FabIL namespaces.
-   * 
+   *
    * @param ns
    * @return
    */

@@ -252,7 +252,7 @@ public class CBImportTable extends ImportTable {
         } catch (NoClassException e) {
           // didn't find it
         }
-        // The class may be a static member class of another, 
+        // The class may be a static member class of another,
         lazyImportLongNameStaticMember(import_ns, first, longName);
 
       } catch (SemanticException e) {
@@ -326,7 +326,7 @@ public class CBImportTable extends ImportTable {
               // map.put(n, p); SC: no need to map n to the type
             }
           } else {
-            // t, whatever it is, is further qualified, but 
+            // t, whatever it is, is further qualified, but
             // should be, at least in Java, a ClassType.
             throw new InternalCompilerError("Qualified type \"" + t
                 + "\" is not a class type.", sourcePos);
@@ -385,7 +385,7 @@ public class CBImportTable extends ImportTable {
   /**
    * Returns the alias used to load type name, or null if name was not loaded
    * via a codebase alias.
-   * 
+   *
    * @param name
    * @return
    */

@@ -186,7 +186,7 @@ public class SimpleResolver extends NamespaceResolver_c {
   /**
    * Load a class file (with encoded type information) for class
    * <code>name</code>.
-   * 
+   *
    * @return ClassFile with encoded type info or null.
    */
   protected ClassFile loadFile(String name) {

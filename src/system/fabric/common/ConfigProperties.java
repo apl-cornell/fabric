@@ -128,8 +128,8 @@ public class ConfigProperties {
   public synchronized KeyMaterial getKeyMaterial() {
     if (this.keyMaterial == null)
       this.keyMaterial =
-          new KeyMaterial(this.name, this.certStoreName, this.keyStoreName,
-              this.password);
+      new KeyMaterial(this.name, this.certStoreName, this.keyStoreName,
+          this.password);
 
     return this.keyMaterial;
   }

@@ -141,7 +141,7 @@ public final class Worker {
    * Initializes the Fabric <code>Worker</code>. When connecting to a store, the
    * worker will retry each store node the specified number of times before
    * failing. A negative retry-count is interpreted as an infinite retry-count.
-   * 
+   *
    * @param principalOnum
    *          Gives the onum of the worker's principal if this worker is being
    *          initialized for a store; otherwise, this should be null.
@@ -263,7 +263,7 @@ public final class Worker {
     try {
       Constructor<FetchManager> fetchManagerConstructor =
           (Constructor<FetchManager>) Class.forName(config.dissemClass)
-              .getConstructor(Worker.class, Properties.class);
+          .getConstructor(Worker.class, Properties.class);
       this.fetchManager =
           fetchManagerConstructor.newInstance(this,
               config.disseminationProperties);
@@ -320,7 +320,7 @@ public final class Worker {
 
   /**
    * Returns the Singleton Worker instance.
-   * 
+   *
    * @return the Worker instance
    * @throws IllegalStateException
    *           if the Fabric worker is uninitialized
@@ -334,7 +334,7 @@ public final class Worker {
 
   /**
    * Returns a <code>Store</code> object representing the given store.
-   * 
+   *
    * @param name
    *          The store's host name.
    * @return The corresponding <code>Store</code> object.
@@ -384,7 +384,7 @@ public final class Worker {
 
   /**
    * Updates the dissemination and worker caches with the given glob.
-   * 
+   *
    * @return true iff either of the caches were updated.
    */
   public boolean updateCaches(RemoteStore store, long onum,
@@ -401,9 +401,9 @@ public final class Worker {
    * <li>If the cache contains a serialized copy of an old version of any object
    * in the group, then that old version is evicted.
    * </ul>
-   * 
+   *
    * Transactions using any updated object are aborted and retried.
-   * 
+   *
    * @return true iff after this update operation, the cache contains any member
    *     of the group.
    */
@@ -459,7 +459,7 @@ public final class Worker {
   }
 
   public static void initialize(String name) throws IllegalStateException,
-      IOException, InternalError, UsageError, GeneralSecurityException {
+  IOException, InternalError, UsageError, GeneralSecurityException {
     initialize(new ConfigProperties(name));
   }
 
@@ -576,7 +576,7 @@ public final class Worker {
 
   /**
    * Runs the given Fabric program.
-   * 
+   *
    * @param mainClassName
    *          the unmangled name of the application's main class.
    * @param args
@@ -611,7 +611,7 @@ public final class Worker {
 
   /**
    * Runs the given Java program.
-   * 
+   *
    * @param mainClassName
    *          the application's main class.
    * @param args
@@ -629,7 +629,7 @@ public final class Worker {
    * Executes the given code from within a new top-level Fabric transaction.
    * Should not be called by generated code. This is here to abstract away the
    * details of starting and finishing transactions.
-   * 
+   *
    * @param autoRetry
    *          whether the transaction should be automatically retried if it
    *          fails during commit
@@ -643,7 +643,7 @@ public final class Worker {
    * transaction fails, it will be automatically retried until it succeeds.
    * Should not be called by generated code. This is here to abstract away the
    * details of starting and finishing transactions.
-   * 
+   *
    * @param tid
    *          The parent transaction for the subtransaction that will be
    *          created.
@@ -656,7 +656,7 @@ public final class Worker {
    * Executes the given code from within a Fabric transaction. Should not be
    * called by generated code. This is here to abstract away the details of
    * starting and finishing transactions.
-   * 
+   *
    * @param tid
    *          The parent transaction for the subtransaction that will be
    *          created.
@@ -692,7 +692,7 @@ public final class Worker {
    * Executes the given code from within a Fabric subtransaction of the current
    * transaction. Should not be called by generated code. This is here to
    * abstract away the details of starting and finishing transactions.
-   * 
+   *
    * @param autoRetry
    *          whether the transaction should be automatically retried if it
    *          fails during commit
@@ -729,7 +729,7 @@ public final class Worker {
 
         TransactionID currentTid = tm.getCurrentTid();
         if (e.tid.isDescendantOf(currentTid))
-        // Restart this transaction.
+          // Restart this transaction.
           continue;
 
         // Need to restart a parent transaction.
@@ -764,7 +764,7 @@ public final class Worker {
             TransactionID currentTid = tm.getCurrentTid();
             if (currentTid == null || e.tid.isDescendantOf(currentTid)
                 && !currentTid.equals(e.tid))
-            // Restart the transaction just we tried to commit.
+              // Restart the transaction just we tried to commit.
               continue;
 
             // Need to restart a parent transaction.

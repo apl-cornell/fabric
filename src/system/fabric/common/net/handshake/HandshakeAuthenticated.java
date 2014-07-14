@@ -47,7 +47,7 @@ import fabric.worker.remote.RemoteWorker;
  * @author mdgeorge
  */
 public class HandshakeAuthenticated<Node extends RemoteNode<Node>> implements
-    Protocol<Node> {
+Protocol<Node> {
 
   // ////////////////////////////////////////////////////////////////////////////
   // //

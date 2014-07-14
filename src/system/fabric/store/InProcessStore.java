@@ -24,7 +24,7 @@ import fabric.worker.remote.RemoteWorker;
  * In-process implementation of the Store interface for use when a worker is
  * running in-process with a Store. The operations work directly on the Store's
  * TransactionManager object.
- * 
+ *
  * @author mdgeorge
  */
 public class InProcessStore extends RemoteStore {

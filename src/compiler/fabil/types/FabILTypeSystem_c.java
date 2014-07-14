@@ -531,7 +531,7 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
     platformResolver.loadRawClasses(true);
 
     fileManager
-        .setLocation(extInfo.getOptions().classpath, extInfo.classpath());
+    .setLocation(extInfo.getOptions().classpath, extInfo.classpath());
 
     fileManager.setLocation(extInfo.getOptions().source_path,
         extInfo.sourcepath());

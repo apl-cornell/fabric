@@ -126,7 +126,7 @@ public final class LocalStore implements Store, Serializable {
 
   /**
    * The singleton LocalStore object is managed by the Worker class.
-   * 
+   *
    * @see fabric.worker.Worker.getLocalStore
    */
   protected LocalStore() {
@@ -240,7 +240,7 @@ public final class LocalStore implements Store, Serializable {
         // Create the object representing the top principal.
         topPrincipal =
             new TopPrincipal._Impl(LocalStore.this)
-                .fabric$lang$security$PrincipalUtil$TopPrincipal$();
+        .fabric$lang$security$PrincipalUtil$TopPrincipal$();
         topPrincipal.$forceRenumber(ONumConstants.TOP_PRINCIPAL);
 
         // Create the object representing the bottom confidentiality policy.

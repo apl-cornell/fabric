@@ -17,7 +17,7 @@ import polyglot.types.Type;
 import fabric.ast.Store;
 
 /**
- * 
+ *
  */
 public class StoreJifExt_c extends JifExprExt implements Ext {
 

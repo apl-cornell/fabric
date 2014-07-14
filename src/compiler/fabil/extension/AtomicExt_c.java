@@ -133,73 +133,73 @@ public class AtomicExt_c extends FabILExt_c {
                 + "      break "
                 + label + ";\n" + "    }\n"
                 : "")
-            + "    catch (final fabric.worker.TransactionRestartingException "
-            + e
-            + ") {\n"
-            + "      "
-            + flag
-            + " = false;"
-            + "      fabric.common.TransactionID "
-            + currentTid
-            + " = \n"
-            + "        "
-            + tm
-            + ".getCurrentTid();\n"
-            + "      if ("
-            + e
-            + ".tid.isDescendantOf("
-            + currentTid
-            + "))\n"
-            + "        continue "
-            + label
-            + ";\n"
-            + "      if ("
-            + currentTid
-            + ".parent != null) throw "
-            + e
-            + ";\n"
-            + "      throw new InternalError(\"Something is broken with transaction management. Got a signal to restart a different transaction than the one being managed.\");\n"
-            + "    }\n"
-            + "    catch (final Throwable "
-            + e
-            + ") {\n"
-            + "      "
-            + flag
-            + " = false;\n"
-            + "      if ("
-            + tm
-            + ".checkForStaleObjects()) continue "
-            + label
-            + ";\n"
-            + "      throw new fabric.worker.AbortException("
-            + e
-            + ");\n"
-            + "    }\n"
-            + "    finally {\n"
-            + "      if ("
-            + flag
-            + ") {\n"
-            + "        try {\n"
-            + "          %S\n"
-            + "        }\n"
-            + "        catch (final fabric.worker.AbortException "
-            + e
-            + ") {\n"
-            + "          "
-            + flag
-            + " = false;\n"
-            + "        }\n"
-            + "        catch (final fabric.worker.TransactionRestartingException "
-            + e + ") {\n" + "          " + flag + " = false;\n"
-            + "          fabric.common.TransactionID " + currentTid + " = \n"
-            + "            " + tm + ".getCurrentTid();\n" + "          if ("
-            + currentTid + " == null || " + e + ".tid.isDescendantOf("
-            + currentTid + ")\n" + "              && !" + currentTid
-            + ".equals(" + e + ".tid))\n" + "            continue " + label
-            + ";\n" + "          throw " + e + ";\n" + "        }\n"
-            + "      }\n" + "      else {\n" + "        %S\n" + "      }"
-            + "      if (!" + flag + ") {\n" + "        %LS\n" + "      }\n"
-            + "    }\n" + "  }\n" + "}\n";
+                + "    catch (final fabric.worker.TransactionRestartingException "
+                + e
+                + ") {\n"
+                + "      "
+                + flag
+                + " = false;"
+                + "      fabric.common.TransactionID "
+                + currentTid
+                + " = \n"
+                + "        "
+                + tm
+                + ".getCurrentTid();\n"
+                + "      if ("
+                + e
+                + ".tid.isDescendantOf("
+                + currentTid
+                + "))\n"
+                + "        continue "
+                + label
+                + ";\n"
+                + "      if ("
+                + currentTid
+                + ".parent != null) throw "
+                + e
+                + ";\n"
+                + "      throw new InternalError(\"Something is broken with transaction management. Got a signal to restart a different transaction than the one being managed.\");\n"
+                + "    }\n"
+                + "    catch (final Throwable "
+                + e
+                + ") {\n"
+                + "      "
+                + flag
+                + " = false;\n"
+                + "      if ("
+                + tm
+                + ".checkForStaleObjects()) continue "
+                + label
+                + ";\n"
+                + "      throw new fabric.worker.AbortException("
+                + e
+                + ");\n"
+                + "    }\n"
+                + "    finally {\n"
+                + "      if ("
+                + flag
+                + ") {\n"
+                + "        try {\n"
+                + "          %S\n"
+                + "        }\n"
+                + "        catch (final fabric.worker.AbortException "
+                + e
+                + ") {\n"
+                + "          "
+                + flag
+                + " = false;\n"
+                + "        }\n"
+                + "        catch (final fabric.worker.TransactionRestartingException "
+                + e + ") {\n" + "          " + flag + " = false;\n"
+                + "          fabric.common.TransactionID " + currentTid + " = \n"
+                + "            " + tm + ".getCurrentTid();\n" + "          if ("
+                + currentTid + " == null || " + e + ".tid.isDescendantOf("
+                + currentTid + ")\n" + "              && !" + currentTid
+                + ".equals(" + e + ".tid))\n" + "            continue " + label
+                + ";\n" + "          throw " + e + ";\n" + "        }\n"
+                + "      }\n" + "      else {\n" + "        %S\n" + "      }"
+                + "      if (!" + flag + ") {\n" + "        %LS\n" + "      }\n"
+                + "    }\n" + "  }\n" + "}\n";
 
     return ar.qq().parseStmt(block, lds, begin, atomic.statements(), commit,
         abort, restores);

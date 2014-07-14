@@ -51,28 +51,28 @@ public class InProcessRemoteWorker extends RemoteWorker {
   @Override
   public Object issueRemoteCall(_Proxy receiver, String methodName,
       Class<?>[] parameterTypes, Object[] args)
-      throws UnreachableNodeException, RemoteCallException {
+          throws UnreachableNodeException, RemoteCallException {
     // XXX Does this actually happen?
     throw new NotImplementedException();
   }
 
   @Override
   public void prepareTransaction(long tid) throws UnreachableNodeException,
-      TransactionPrepareFailedException {
+  TransactionPrepareFailedException {
     // XXX Does this actually happen?
     throw new NotImplementedException();
   }
 
   @Override
   public void commitTransaction(long tid) throws UnreachableNodeException,
-      TransactionCommitFailedException {
+  TransactionCommitFailedException {
     // XXX Does this actually happen?
     throw new NotImplementedException();
   }
 
   @Override
   public void abortTransaction(TransactionID tid) throws AccessException,
-      UnreachableNodeException {
+  UnreachableNodeException {
     // XXX Does this actually happen?
     throw new NotImplementedException();
   }

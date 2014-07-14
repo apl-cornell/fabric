@@ -80,7 +80,7 @@ public class Cache {
 
   /**
    * Retrieves a glob from the cache, without trying to fetch it from the store.
-   * 
+   *
    * @param store
    *          the store of the object to retrieve.
    * @param onum
@@ -93,7 +93,7 @@ public class Cache {
 
   /**
    * Retrieves a glob from the cache or fetches it from the store.
-   * 
+   *
    * @param store
    *          the store of the object to retrieve.
    * @param onum
@@ -182,7 +182,7 @@ public class Cache {
 
   /**
    * Put given glob into the cache.
-   * 
+   *
    * @param store
    *          the store of the object.
    * @param onum
@@ -197,7 +197,7 @@ public class Cache {
 
   /**
    * Incorporates the given glob into the cache.
-   * 
+   *
    * @return the resulting cache entry.
    */
   private Entry put(Pair<RemoteStore, Long> oid, ObjectGlob g,
@@ -239,7 +239,7 @@ public class Cache {
   /**
    * Updates the dissemination and worker cache with the given object glob. If
    * the caches do not have entries for the given glob, then nothing is changed.
-   * 
+   *
    * @return true iff either of the caches was changed.
    */
   public boolean updateEntry(RemoteStore store, long onum, ObjectGlob g) {
@@ -290,26 +290,26 @@ public class Cache {
 
   private final Comparator<Pair<Pair<RemoteStore, Long>, Long>> TIMESTAMP_COMPARATOR =
       new Comparator<Pair<Pair<RemoteStore, Long>, Long>>() {
-        @Override
-        public int compare(Pair<Pair<RemoteStore, Long>, Long> o1,
-            Pair<Pair<RemoteStore, Long>, Long> o2) {
-          Entry entry1 = map.get(o1.first);
-          Entry entry2 = map.get(o2.first);
+    @Override
+    public int compare(Pair<Pair<RemoteStore, Long>, Long> o1,
+        Pair<Pair<RemoteStore, Long>, Long> o2) {
+      Entry entry1 = map.get(o1.first);
+      Entry entry2 = map.get(o2.first);
 
-          if (entry1 == entry2) {
-            return 0;
-          }
+      if (entry1 == entry2) {
+        return 0;
+      }
 
-          if (entry1 == null) {
-            return 1;
-          }
+      if (entry1 == null) {
+        return 1;
+      }
 
-          if (entry2 == null) {
-            return -1;
-          }
+      if (entry2 == null) {
+        return -1;
+      }
 
-          return entry2.frequency - entry1.frequency;
-        }
-      };
+      return entry2.frequency - entry1.frequency;
+    }
+  };
 
 }

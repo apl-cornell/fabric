@@ -34,7 +34,7 @@ import fabric.worker.remote.RemoteWorker;
  */
 public class SubscriptionManager extends FabricThread.Impl {
   private static abstract class NotificationEvent extends
-      Threading.NamedRunnable {
+  Threading.NamedRunnable {
     public NotificationEvent(String name) {
       super(name);
     }
@@ -240,7 +240,7 @@ public class SubscriptionManager extends FabricThread.Impl {
 
   /**
    * Subscribes the given worker to the given onum.
-   * 
+   *
    * @param dissemSubscribe
    *          If true, then the given subscriber will be subscribed as a
    *          dissemination node; otherwise it will be subscribed as a worker.

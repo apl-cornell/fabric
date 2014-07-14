@@ -31,7 +31,7 @@ public class CBClassContextResolver extends ClassContextResolver {
 
   /**
    * Find a type object in the context of the class.
-   * 
+   *
    * @param name
    *          The name to search for.
    */

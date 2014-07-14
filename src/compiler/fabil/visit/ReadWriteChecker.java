@@ -41,7 +41,7 @@ import fabil.types.FabILTypeSystem;
  * This dataflow analysis checks whether or not a local variable (or more
  * precisely what that variable points to) is guaranteed to have already been
  * read from or written to at a point in a method.
- * 
+ *
  * @author xinz
  */
 public class ReadWriteChecker extends DataFlow<ReadWriteChecker.DataFlowItem> {
@@ -115,7 +115,7 @@ public class ReadWriteChecker extends DataFlow<ReadWriteChecker.DataFlowItem> {
 
       if (n instanceof FieldAssign) {
         FieldAssign a = (FieldAssign) n;
-        Field f = (Field) a.left();
+        Field f = a.left();
         out = flowField(out, f, true);
       }
 
@@ -134,7 +134,7 @@ public class ReadWriteChecker extends DataFlow<ReadWriteChecker.DataFlowItem> {
 
       if (n instanceof LocalAssign) {
         LocalAssign a = (LocalAssign) n;
-        Local l = (Local) a.left();
+        Local l = a.left();
         Expr e = a.right();
 
         if (e instanceof Local) {
@@ -287,7 +287,7 @@ public class ReadWriteChecker extends DataFlow<ReadWriteChecker.DataFlowItem> {
 
       if (n instanceof FieldAssign) {
         FieldAssign a = (FieldAssign) n;
-        Field f = (Field) a.left();
+        Field f = a.left();
         Receiver e = f.target();
 
         if (ts.isPureFabricType(e.type())
@@ -295,7 +295,7 @@ public class ReadWriteChecker extends DataFlow<ReadWriteChecker.DataFlowItem> {
           if (e instanceof Local) {
             Local l = (Local) e;
             ((FieldAssignExt_c) a.ext())
-                .accessState(in.state(l.localInstance()));
+            .accessState(in.state(l.localInstance()));
           } else if (isThis(e)) {
             ((FieldAssignExt_c) a.ext()).accessState(in.state(null));
           }

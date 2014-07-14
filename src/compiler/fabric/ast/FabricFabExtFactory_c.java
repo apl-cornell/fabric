@@ -13,7 +13,7 @@ import fabric.extension.PrincipalExprExt_c;
 /**
  * This class constructs {@link FabricExt} objects for the Fabric language
  * constructs.
- * 
+ *
  * @author mdgeorge
  */
 public class FabricFabExtFactory_c extends AbstractFabExtFactory_c {

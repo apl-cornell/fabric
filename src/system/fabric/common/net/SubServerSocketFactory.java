@@ -40,7 +40,7 @@ public class SubServerSocketFactory {
   /**
    * Creates a new SubServerSocketFactory decorating the given
    * ServerSocketFactory.
-   * 
+   *
    * @param factory
    *          the ServerSocketFactory that will be used to create the
    *          ServerSockets used to implement SubServerSockets returned by this
@@ -53,7 +53,7 @@ public class SubServerSocketFactory {
   /**
    * Creates a new SubServerSocketFactory decorating the given
    * ServerSocketFactory.
-   * 
+   *
    * @param factory
    *          the ServerSocketFactory that will be used to create the
    *          ServerSockets used to implement SubServerSockets returned by this
@@ -82,7 +82,7 @@ public class SubServerSocketFactory {
   /**
    * create a server socket to await connections to the given local host name
    * and port number.
-   * 
+   *
    * @param name
    *          the local name
    * @param backlog
@@ -111,7 +111,7 @@ public class SubServerSocketFactory {
   /**
    * creates a new ConnectionQueue for the local name. Uses the name service to
    * resolve the name to an address.
-   * 
+   *
    * @param backlog
    *          the size of the queue. If non-positive, an unbounded queue is
    *          created.
@@ -152,7 +152,7 @@ public class SubServerSocketFactory {
    * producer-consumer of SubSockets (via the connected(s) and s accept()
    * methods) and runs a thread in the background which awaits incoming
    * connections and spawns new ServerChannels to handle them.
-   * 
+   *
    * @author mdgeorge
    */
   class Acceptor extends Thread {
@@ -171,7 +171,7 @@ public class SubServerSocketFactory {
 
     /**
      * Creates a ConnectionQueue for the given name on this acceptor.
-     * 
+     *
      * @param size
      *          the size of the queue. If non-positive, an unbounded queue is
      *          created.
@@ -355,7 +355,7 @@ public class SubServerSocketFactory {
        * A server channel is capable of receiving new incoming connections, but
        * not of making new outgoing connections. It is associated both with a
        * local SocketAddress (IP + port) and a remote IP address.
-       * 
+       *
        * @author mdgeorge
        */
       class ServerChannel extends Channel<RemoteWorker> {

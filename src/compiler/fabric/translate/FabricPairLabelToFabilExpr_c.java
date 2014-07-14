@@ -176,9 +176,9 @@ public class FabricPairLabelToFabilExpr_c extends PairLabelToJavaExpr_c {
           .qq()
           .parseExpr(rw.runtimeLabelUtil() + ".readerPolicy(%E, %E, %E)",
               store, owner, reader)
-          .position(
-              Position.compilerGenerated(p.toString() + ":"
-                  + p.position().toString()));
+              .position(
+                  Position.compilerGenerated(p.toString() + ":"
+                      + p.position().toString()));
     }
 
     if (p instanceof JoinPolicy_c) {

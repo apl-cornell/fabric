@@ -53,7 +53,7 @@ import fabric.util.Map;
  * be at most one <code>RemoteStore</code> object representing that store.
  */
 public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
-    Serializable {
+Serializable {
   /**
    * A queue of fresh object identifiers.
    */
@@ -120,7 +120,7 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
   public void prepareTransaction(long tid, boolean singleStore,
       boolean readOnly, Collection<Object._Impl> toCreate,
       LongKeyMap<Integer> reads, Collection<Object._Impl> writes)
-      throws TransactionPrepareFailedException, UnreachableNodeException {
+          throws TransactionPrepareFailedException, UnreachableNodeException {
     send(Worker.getWorker().authToStore, new PrepareTransactionMessage(tid,
         singleStore, readOnly, toCreate, reads, writes));
   }
@@ -195,7 +195,7 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
   /**
    * Fetches the object from the store. Places the object in the object cache
    * and returns the resulting cache entry.
-   * 
+   *
    * @param useDissem
    *          Whether to use the dissemination network. If false, the
    *          dissemination network will be bypassed.
@@ -218,7 +218,7 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
 
   /**
    * Goes to the store to get object.
-   * 
+   *
    * @param onum
    *          The object number to fetch
    * @return An ObjectGroup whose head object is the requested object.
@@ -233,7 +233,7 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
 
   /**
    * Called by dissemination to fetch an encrypted object from the store.
-   * 
+   *
    * @param onum
    *          The object number to fetch.
    */
@@ -255,7 +255,7 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
    * Looks up the actual Store object when this store is deserialized. While
    * this method is not explicitly called in the code, it is used by the Java
    * serialization framework when deserializing a Store object.
-   * 
+   *
    * @return The canonical Store object corresponding to this Store's onum
    * @throws ObjectStreamException
    */
@@ -266,12 +266,12 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
   /**
    * Ensure that a given number of objects can be created without contacting the
    * store.
-   * 
+   *
    * @param num
    *          The number of objects to allocate
    */
   protected void reserve(int num) throws AccessException,
-      UnreachableNodeException {
+  UnreachableNodeException {
     synchronized (fresh_ids) {
       while (fresh_ids.size() < num) {
         // log.info("Requesting new onums, storeid=" + storeID);
@@ -378,7 +378,7 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
    * <li>If the cache contains a serialized copy of an old version of the
    * object, then that old version is evicted.
    * </ul>
-   * 
+   *
    * @return true iff after this update operation, the cache contains the
    *     object.
    */
@@ -431,7 +431,7 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
   /**
    * Clears the worker's cache for this store. To be used for (performance)
    * testing only.
-   * 
+   *
    * @see fabric.worker.Worker#clearCache()
    */
   public void clearCache() {

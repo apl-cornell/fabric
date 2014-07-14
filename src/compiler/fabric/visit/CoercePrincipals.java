@@ -30,7 +30,7 @@ public class CoercePrincipals extends AscriptionVisitor {
     if (ts.isPrincipal(toType)
         && (ts.typeEquals(ts.Worker(), e.type())
             || ts.typeEquals(ts.RemoteWorker(), e.type()) || ts.typeEquals(
-            ts.Store(), e.type()))) {
+                ts.Store(), e.type()))) {
       Call result =
           nf.Call(e.position(), e,
               nf.Id(Position.compilerGenerated(), "getPrincipal"));

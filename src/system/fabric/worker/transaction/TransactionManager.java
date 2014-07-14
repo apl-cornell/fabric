@@ -233,7 +233,7 @@ public final class TransactionManager {
         case COMMITTED:
           // Too late to abort! We shouldn't really enter this situation.
           WORKER_TRANSACTION_LOGGER
-              .warning("Ignoring attempt to abort a committed transaction.");
+          .warning("Ignoring attempt to abort a committed transaction.");
           return;
 
         case ABORTING:
@@ -296,14 +296,14 @@ public final class TransactionManager {
 
   /**
    * Commits the transaction if possible; otherwise, aborts the transaction.
-   * 
+   *
    * @throws AbortException
    *           if the transaction was aborted.
    * @throws TransactionRestartingException
    *           if the transaction was aborted and needs to be retried.
    */
   public void commitTransaction() throws AbortException,
-      TransactionRestartingException, TransactionAtomicityViolationException {
+  TransactionRestartingException, TransactionAtomicityViolationException {
     Timing.COMMIT.begin();
     try {
       commitTransaction(false);
@@ -441,7 +441,7 @@ public final class TransactionManager {
   /**
    * Sends prepare messages to the cohorts in a distributed transaction. Also
    * sends abort messages if any cohort fails to prepare.
-   * 
+   *
    * @throws TransactionRestartingException
    *           if the prepare fails.
    */
@@ -454,16 +454,16 @@ public final class TransactionManager {
    * Sends prepare messages to the given set of stores and workers. If the
    * prepare fails, the local portion and given branch of the transaction is
    * rolled back.
-   * 
+   *
    * @throws TransactionRestartingException
    *           if the prepare fails.
    */
   private void sendPrepareMessages(final boolean singleStore,
       final boolean readOnly, Set<Store> stores, List<RemoteWorker> workers)
-      throws TransactionRestartingException {
+          throws TransactionRestartingException {
     final Map<RemoteNode<?>, TransactionPrepareFailedException> failures =
         Collections
-            .synchronizedMap(new HashMap<RemoteNode<?>, TransactionPrepareFailedException>());
+        .synchronizedMap(new HashMap<RemoteNode<?>, TransactionPrepareFailedException>());
 
     synchronized (current.commitState) {
       switch (current.commitState.value) {
@@ -498,22 +498,22 @@ public final class TransactionManager {
     for (final RemoteWorker worker : workers) {
       Threading.NamedRunnable runnable =
           new Threading.NamedRunnable("worker prepare to " + worker.name()) {
-            @Override
-            protected void runImpl() {
-              try {
-                worker.prepareTransaction(current.tid.topTid);
-              } catch (UnreachableNodeException e) {
-                failures.put(worker, new TransactionPrepareFailedException(
-                    "Unreachable worker"));
-              } catch (TransactionPrepareFailedException e) {
-                failures.put(worker,
-                    new TransactionPrepareFailedException(e.getMessage()));
-              } catch (TransactionRestartingException e) {
-                failures.put(worker, new TransactionPrepareFailedException(
-                    "transaction restarting"));
-              }
-            }
-          };
+        @Override
+        protected void runImpl() {
+          try {
+            worker.prepareTransaction(current.tid.topTid);
+          } catch (UnreachableNodeException e) {
+            failures.put(worker, new TransactionPrepareFailedException(
+                "Unreachable worker"));
+          } catch (TransactionPrepareFailedException e) {
+            failures.put(worker,
+                new TransactionPrepareFailedException(e.getMessage()));
+          } catch (TransactionRestartingException e) {
+            failures.put(worker, new TransactionPrepareFailedException(
+                "transaction restarting"));
+          }
+        }
+      };
       futures.add(Threading.getPool().submit(runnable));
     }
 
@@ -522,23 +522,23 @@ public final class TransactionManager {
       final Store store = storeIt.next();
       NamedRunnable runnable =
           new NamedRunnable("worker prepare to " + store.name()) {
-            @Override
-            public void runImpl() {
-              try {
-                Collection<_Impl> creates = current.getCreatesForStore(store);
-                LongKeyMap<Integer> reads =
-                    current.getReadsForStore(store, false);
-                Collection<_Impl> writes = current.getWritesForStore(store);
-                store.prepareTransaction(current.tid.topTid, singleStore,
-                    readOnly, creates, reads, writes);
-              } catch (TransactionPrepareFailedException e) {
-                failures.put((RemoteNode<?>) store, e);
-              } catch (UnreachableNodeException e) {
-                failures.put((RemoteNode<?>) store,
-                    new TransactionPrepareFailedException("Unreachable store"));
-              }
-            }
-          };
+        @Override
+        public void runImpl() {
+          try {
+            Collection<_Impl> creates = current.getCreatesForStore(store);
+            LongKeyMap<Integer> reads =
+                current.getReadsForStore(store, false);
+            Collection<_Impl> writes = current.getWritesForStore(store);
+            store.prepareTransaction(current.tid.topTid, singleStore,
+                readOnly, creates, reads, writes);
+          } catch (TransactionPrepareFailedException e) {
+            failures.put((RemoteNode<?>) store, e);
+          } catch (UnreachableNodeException e) {
+            failures.put((RemoteNode<?>) store,
+                new TransactionPrepareFailedException("Unreachable store"));
+          }
+        }
+      };
 
       // Optimization: only start in a new thread if there are more stores to
       // contact and if it's a truly remote store (i.e., not in-process).
@@ -627,7 +627,7 @@ public final class TransactionManager {
    */
   private void sendCommitMessagesAndCleanUp(boolean singleStore,
       boolean readOnly, Set<Store> stores, List<RemoteWorker> workers)
-      throws TransactionAtomicityViolationException {
+          throws TransactionAtomicityViolationException {
     synchronized (current.commitState) {
       switch (current.commitState.value) {
       case UNPREPARED:
@@ -662,17 +662,17 @@ public final class TransactionManager {
       for (final RemoteWorker worker : workers) {
         NamedRunnable runnable =
             new NamedRunnable("worker commit to " + worker) {
-              @Override
-              public void runImpl() {
-                try {
-                  worker.commitTransaction(current.tid.topTid);
-                } catch (UnreachableNodeException e) {
-                  unreachable.add(worker);
-                } catch (TransactionCommitFailedException e) {
-                  failed.add(worker);
-                }
-              }
-            };
+          @Override
+          public void runImpl() {
+            try {
+              worker.commitTransaction(current.tid.topTid);
+            } catch (UnreachableNodeException e) {
+              unreachable.add(worker);
+            } catch (TransactionCommitFailedException e) {
+              failed.add(worker);
+            }
+          }
+        };
 
         futures.add(Threading.getPool().submit(runnable));
       }
@@ -682,17 +682,17 @@ public final class TransactionManager {
         final Store store = storeIt.next();
         NamedRunnable runnable =
             new NamedRunnable("worker commit to " + store.name()) {
-              @Override
-              public void runImpl() {
-                try {
-                  store.commitTransaction(current.tid.topTid);
-                } catch (TransactionCommitFailedException e) {
-                  failed.add((RemoteStore) store);
-                } catch (UnreachableNodeException e) {
-                  unreachable.add((RemoteStore) store);
-                }
-              }
-            };
+          @Override
+          public void runImpl() {
+            try {
+              store.commitTransaction(current.tid.topTid);
+            } catch (TransactionCommitFailedException e) {
+              failed.add((RemoteStore) store);
+            } catch (UnreachableNodeException e) {
+              unreachable.add((RemoteStore) store);
+            }
+          }
+        };
 
         // Optimization: only start in a new thread if there are more stores to
         // contact and if it's a truly remote store (i.e., not in-process).
@@ -723,7 +723,7 @@ public final class TransactionManager {
         Logging.log(WORKER_TRANSACTION_LOGGER, Level.SEVERE,
             "{0} error committing: atomicity violation "
                 + "-- failed: {1} unreachable: {2}", current, failed,
-            unreachable);
+                unreachable);
         throw new TransactionAtomicityViolationException(failed, unreachable);
       }
     }
@@ -745,7 +745,7 @@ public final class TransactionManager {
 
   /**
    * Sends abort messages to those nodes that haven't reported failures.
-   * 
+   *
    * @param stores
    *          the set of stores involved in the transaction.
    * @param workers
@@ -891,7 +891,7 @@ public final class TransactionManager {
 
   /**
    * This should be called <i>before</i> the object is modified.
-   * 
+   *
    * @return whether a new (top-level) transaction was created.
    */
   public boolean registerWrite(_Impl obj) {
@@ -1009,7 +1009,7 @@ public final class TransactionManager {
 
     if (hadToWait)
       WORKER_TRANSACTION_LOGGER
-          .log(Level.FINEST, "{0} got write lock", current);
+      .log(Level.FINEST, "{0} got write lock", current);
 
     if (obj.$writeLockHolder == current) return;
 
@@ -1103,7 +1103,7 @@ public final class TransactionManager {
 
   /**
    * Checks whether any of the objects used by a transaction are stale.
-   * 
+   *
    * @return true iff stale objects were found
    */
   public boolean checkForStaleObjects() {
@@ -1118,17 +1118,17 @@ public final class TransactionManager {
     for (final RemoteWorker worker : current.workersCalled) {
       NamedRunnable runnable =
           new NamedRunnable("worker freshness check to " + worker.name()) {
-            @Override
-            public void runImpl() {
-              try {
-                if (worker.checkForStaleObjects(current.tid))
-                  nodesWithStaleObjects.add(worker);
-              } catch (UnreachableNodeException e) {
-                // Conservatively assume it had stale objects.
-                nodesWithStaleObjects.add(worker);
-              }
-            }
-          };
+        @Override
+        public void runImpl() {
+          try {
+            if (worker.checkForStaleObjects(current.tid))
+              nodesWithStaleObjects.add(worker);
+          } catch (UnreachableNodeException e) {
+            // Conservatively assume it had stale objects.
+            nodesWithStaleObjects.add(worker);
+          }
+        }
+      };
       futures.add(Threading.getPool().submit(runnable));
     }
 
@@ -1137,13 +1137,13 @@ public final class TransactionManager {
       final Store store = storeIt.next();
       NamedRunnable runnable =
           new NamedRunnable("worker freshness check to " + store.name()) {
-            @Override
-            public void runImpl() {
-              LongKeyMap<Integer> reads = current.getReadsForStore(store, true);
-              if (store.checkForStaleObjects(reads))
-                nodesWithStaleObjects.add((RemoteNode<?>) store);
-            }
-          };
+        @Override
+        public void runImpl() {
+          LongKeyMap<Integer> reads = current.getReadsForStore(store, true);
+          if (store.checkForStaleObjects(reads))
+            nodesWithStaleObjects.add((RemoteNode<?>) store);
+        }
+      };
 
       // Optimization: only start a new thread if there are more stores to
       // contact and if it's truly a remote store (i.e., not in-process).

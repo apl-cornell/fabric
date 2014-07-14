@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package fabil.extension;
 
@@ -37,7 +37,7 @@ public interface FabILExt extends Ext {
 
   /**
    * Used by ProxyRewriter to override the default visitor behaviour.
-   * 
+   *
    * @see polyglot.visit.NodeVisitor#override(Node)
    */
   public Node rewriteProxiesOverride(ProxyRewriter rewriter);

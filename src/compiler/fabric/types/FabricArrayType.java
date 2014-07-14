@@ -8,7 +8,7 @@ import jif.types.ConstArrayType;
  * FabricTypeSystem creates only FabricArrayTypes. In addition to the flags to
  * determine whether an ArrayType is const or not (inherited from
  * ConstArrayType), we add a flag to determine whether the ArrayType is native.
- * 
+ *
  * @author mdgeorge
  */
 public interface FabricArrayType extends ConstArrayType, FabricReferenceType {

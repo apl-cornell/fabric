@@ -1,6 +1,6 @@
 /**
  * Implementation of the Fabric networking layer.
- * 
+ *
  * <p>
  * Data-flow diagram:
  * <pre>

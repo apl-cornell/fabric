@@ -18,7 +18,7 @@ import polyglot.util.Position;
 import fabric.types.FabricTypeSystem;
 
 /**
- * 
+ *
  */
 public class FabricCallHelper extends CallHelper {
 
@@ -56,7 +56,7 @@ public class FabricCallHelper extends CallHelper {
         receiverLabel,
         getArgLabelsFromFormalTypes(pi.formalTypes(),
             (JifTypeSystem) pi.typeSystem(), pi.position()), pi.formalTypes(),
-        this.actualArgLabels, this.actualArgs, this.actualParamLabels, storeap);
+            this.actualArgLabels, this.actualArgs, this.actualParamLabels, storeap);
   }
 
   @Override
@@ -75,7 +75,7 @@ public class FabricCallHelper extends CallHelper {
         getArgLabelsFromFormalTypes(this.pi.formalTypes(),
             (JifTypeSystem) this.pi.typeSystem(), this.pi.position()), pi
             .formalTypes(), this.actualArgLabels, this.actualArgs,
-        this.actualParamLabels, storeap);
+            this.actualParamLabels, storeap);
   }
 
   @Override
@@ -92,7 +92,7 @@ public class FabricCallHelper extends CallHelper {
         receiverLabel,
         getArgLabelsFromFormalTypes(pi.formalTypes(),
             (JifTypeSystem) pi.typeSystem(), pi.position()), pi.formalTypes(),
-        this.actualArgLabels, this.actualArgs, this.actualParamLabels, storeap);
+            this.actualArgLabels, this.actualArgs, this.actualParamLabels, storeap);
   }
 
 }

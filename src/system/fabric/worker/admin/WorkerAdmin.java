@@ -28,12 +28,12 @@ import fabric.worker.shell.WorkerShell;
 public class WorkerAdmin {
   /**
    * Connects to a remote worker and executes commands via its admin port.
-   * 
+   *
    * @throws WorkerNotRunningException
    *           if no worker is listening on the admin port.
    */
   public static void connect(int adminPort, String[] cmd) throws UsageError,
-      WorkerNotRunningException {
+  WorkerNotRunningException {
     Socket socket = null;
     try {
       socket = new Socket((String) null, adminPort);

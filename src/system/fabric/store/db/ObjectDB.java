@@ -74,7 +74,7 @@ public abstract class ObjectDB {
    * The data stored for a partially prepared transaction.
    */
   protected static final class PendingTransaction implements FastSerializable,
-      Iterable<Long> {
+  Iterable<Long> {
     public final long tid;
     public final Principal owner;
     public final Collection<Long> reads;
@@ -236,7 +236,7 @@ public abstract class ObjectDB {
 
   /**
    * Opens a new transaction.
-   * 
+   *
    * @param worker
    *          the worker under whose authority the transaction is running.
    * @throws AccessException
@@ -263,7 +263,7 @@ public abstract class ObjectDB {
 
   /**
    * Prepares a read against the database.
-   * 
+   *
    * @param tid
    *          the identifier for the transaction preparing the read.
    * @param worker
@@ -279,7 +279,7 @@ public abstract class ObjectDB {
    */
   public final void prepareRead(long tid, Principal worker, long onum,
       int version, LongKeyMap<SerializedObject> versionConflicts)
-      throws TransactionPrepareFailedException {
+          throws TransactionPrepareFailedException {
     // First, lock the object.
     try {
       objectLocksFor(onum).lockForRead(tid, worker);
@@ -311,7 +311,7 @@ public abstract class ObjectDB {
 
   /**
    * Prepares a create/write against the database.
-   * 
+   *
    * @param tid
    *          the identifier for the transaction preparing the create/write.
    * @param worker
@@ -425,7 +425,7 @@ public abstract class ObjectDB {
   /**
    * Causes the objects prepared in transaction [tid] to be committed. The
    * changes will hereafter be visible to read.
-   * 
+   *
    * @param tid
    *          the transaction id
    * @param workerIdentity
@@ -435,11 +435,11 @@ public abstract class ObjectDB {
    */
   public abstract void commit(long tid,
       RemoteIdentity<RemoteWorker> workerIdentity, SubscriptionManager sm)
-      throws AccessException;
+          throws AccessException;
 
   /**
    * Causes the objects prepared in transaction [tid] to be discarded.
-   * 
+   *
    * @param tid
    *          the transaction id
    * @param worker
@@ -452,7 +452,7 @@ public abstract class ObjectDB {
 
   /**
    * Returns the object stored at a particular onum.
-   * 
+   *
    * @param onum
    *          the identifier
    * @return the object or null if no object exists at the given onum
@@ -468,7 +468,7 @@ public abstract class ObjectDB {
 
   /**
    * Returns the version number on the object stored at a particular onum.
-   * 
+   *
    * @throws AccessException
    *           if no object exists at the given onum.
    */
@@ -483,7 +483,7 @@ public abstract class ObjectDB {
    * Performs operations in response to a committed object update. Removes from
    * cache the glob associated with the onum and notifies the subscription
    * manager of the update.
-   * 
+   *
    * @param onum
    *          the onum of the object that was updated.
    * @param worker
@@ -516,7 +516,7 @@ public abstract class ObjectDB {
    * change or read. Outstanding uncommitted changes are always considered
    * conflicting. Outstanding uncommitted reads are considered conflicting if
    * they are by transactions whose tid is different from the one given.
-   * 
+   *
    * @param onum
    *          the object number in question
    */
@@ -536,7 +536,7 @@ public abstract class ObjectDB {
 
   /**
    * Determines whether an onum has outstanding uncommitted changes.
-   * 
+   *
    * @param onum
    *          the object number in question
    * @return true if the object has been changed by a transaction that hasn't
@@ -592,7 +592,7 @@ public abstract class ObjectDB {
    * The returned onums should be packed in the lower 48 bits. We assume that
    * the object database is never full, and can always provide new onums
    * </p>
-   * 
+   *
    * @param num
    *          the number of onums to return
    * @return num fresh onums
@@ -602,7 +602,7 @@ public abstract class ObjectDB {
   /**
    * Checks whether an object with the corresponding onum exists, in either
    * prepared or committed form.
-   * 
+   *
    * @param onum
    *          the onum of to check
    * @return true if an object exists for onum
@@ -618,7 +618,7 @@ public abstract class ObjectDB {
 
   /**
    * Gracefully shuts down the object database.
-   * 
+   *
    * @throws IOException
    */
   public abstract void close() throws IOException;
@@ -652,14 +652,14 @@ public abstract class ObjectDB {
         String principalName = new X500Principal("CN=" + name).getName();
         NodePrincipal._Impl principal =
             (NodePrincipal._Impl) new NodePrincipal._Impl(store)
-                .fabric$lang$security$NodePrincipal$(principalName).fetch();
+        .fabric$lang$security$NodePrincipal$(principalName).fetch();
         principal.$forceRenumber(ONumConstants.STORE_PRINCIPAL);
 
         // Create the label {store->_; store<-_} for the root map.
         // XXX above not done. HashMap needs to be parameterized on labels.
         fabric.util.HashMap._Impl map =
             (fabric.util.HashMap._Impl) new fabric.util.HashMap._Impl(store)
-                .fabric$util$HashMap$().fetch();
+        .fabric$util$HashMap$().fetch();
         map.$forceRenumber(ONumConstants.ROOT_MAP);
 
         return null;

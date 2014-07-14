@@ -14,7 +14,7 @@ import fabric.types.AccessPathStore;
 import fabric.types.FabricTypeSystem;
 
 /**
- * 
+ *
  */
 public class ConstructorDeclJifExt extends JifConstructorDeclExt implements Ext {
 
@@ -30,11 +30,11 @@ public class ConstructorDeclJifExt extends JifConstructorDeclExt implements Ext 
     FabricTypeSystem ts = (FabricTypeSystem) lc.typeSystem();
     Position pos = Position.compilerGenerated();
     if (ts.descendsFrom(ct, ts.PrincipalClass())) {
-      // worker$ actsfor this and store$ actsfor this 
+      // worker$ actsfor this and store$ actsfor this
       //  holds true for all principals
       A.addActsFor(ts.dynamicPrincipal(pos, new AccessPathStore(
           new AccessPathThis(ct, pos), ts.Store(), pos)), ts.dynamicPrincipal(
-          pos, new AccessPathThis(ct, pos)));
+              pos, new AccessPathThis(ct, pos)));
       A.addActsFor(ts.workerLocalPrincipal(pos),
           ts.dynamicPrincipal(pos, new AccessPathThis(ct, pos)));
     }

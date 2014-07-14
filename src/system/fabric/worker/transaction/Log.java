@@ -233,7 +233,7 @@ public final class Log {
   /**
    * Creates a nested transaction whose parent is the transaction with the given
    * log. The created transaction log is added to the parent's children.
-   * 
+   *
    * @param parent
    *          the log for the parent transaction or null if creating the log for
    *          a top-level transaction.
@@ -305,7 +305,7 @@ public final class Log {
   /**
    * Returns a map from onums to version numbers of objects read at the given
    * store. Reads on created objects are never included.
-   * 
+   *
    * @param includeModified
    *          whether to include reads on modified objects.
    */
@@ -333,16 +333,16 @@ public final class Log {
         Iterable<_Impl> writesToExclude =
             includeModified ? Collections.<_Impl> emptyList()
                 : curLog.localStoreWrites;
-        Iterable<_Impl> chain =
-            SysUtil.chain(writesToExclude, curLog.localStoreCreates);
-        for (_Impl write : chain)
-          result.remove(write.$getOnum());
+            Iterable<_Impl> chain =
+                SysUtil.chain(writesToExclude, curLog.localStoreCreates);
+            for (_Impl write : chain)
+              result.remove(write.$getOnum());
       } else {
         Iterable<_Impl> writesToExclude =
             includeModified ? Collections.<_Impl> emptyList() : curLog.writes;
-        Iterable<_Impl> chain = SysUtil.chain(writesToExclude, curLog.creates);
-        for (_Impl write : chain)
-          if (write.$getStore() == store) result.remove(write.$getOnum());
+            Iterable<_Impl> chain = SysUtil.chain(writesToExclude, curLog.creates);
+            for (_Impl write : chain)
+              if (write.$getStore() == store) result.remove(write.$getOnum());
       }
       curLog = curLog.parent;
     }
@@ -787,7 +787,7 @@ public final class Log {
    * Goes through this transaction log and performs an onum renumbering. This is
    * used by fabric.worker.TransactionRegistery.renumberObject. Do not call this
    * unless if you really know what you are doing.
-   * 
+   *
    * @deprecated
    */
   @Deprecated

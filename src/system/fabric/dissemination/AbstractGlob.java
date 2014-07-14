@@ -36,7 +36,7 @@ import fabric.worker.Worker.Code;
  * A glob represents data that has been encrypted and signed by a store.
  */
 public abstract class AbstractGlob<Payload extends FastSerializable> implements
-    FastSerializable {
+FastSerializable {
   /**
    * The time at which this glob was created. This acts as a version number.
    */
@@ -114,7 +114,7 @@ public abstract class AbstractGlob<Payload extends FastSerializable> implements
 
   /**
    * Updates the given signature with the data to be signed or verified.
-   * 
+   *
    * @throws SignatureException
    */
   private void updateSignature(Signature sig) throws SignatureException {
@@ -177,7 +177,7 @@ public abstract class AbstractGlob<Payload extends FastSerializable> implements
   }
 
   public void verifySignature(PublicKey key) throws SignatureException,
-      InvalidKeyException {
+  InvalidKeyException {
     if (signature.length == 0) {
       // No signature received. Verify that none was required.
       // XXX This is rather inefficient.
@@ -195,7 +195,7 @@ public abstract class AbstractGlob<Payload extends FastSerializable> implements
 
   /**
    * Verifies that the given payload does not require a signature.
-   * 
+   *
    * @throws SignatureException if the payload requires a signature.
    */
   protected abstract void verifyNoSignatureRequired(Payload payload)
@@ -283,7 +283,7 @@ public abstract class AbstractGlob<Payload extends FastSerializable> implements
   /**
    * Updates the worker and dissemination caches with this glob. If the caches
    * do not have entries for this glob, then nothing is changed.
-   * 
+   *
    * @return true iff either cache was changed.
    */
   public abstract boolean updateCache(Cache dissemCache, RemoteStore store,

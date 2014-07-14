@@ -52,7 +52,7 @@ public class CBSourceFile_c extends SourceFile_c implements CBSourceFile {
   /**
    * Build type objects for the source file. Set the visitor's import table
    * field before we recurse into the declarations.
-   * 
+   *
    * @throws SemanticException
    */
   @Override

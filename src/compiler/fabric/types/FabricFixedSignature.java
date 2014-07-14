@@ -7,10 +7,10 @@ import polyglot.ast.FieldDecl;
 import polyglot.types.Type;
 import fabric.ast.FabricFieldDecl;
 
-//TODO: This "default signature" design pattern is unevenly applied. 
+//TODO: This "default signature" design pattern is unevenly applied.
 //      We should either pull in all the default to this class or eliminate it.
 public class FabricFixedSignature extends FixedSignature implements
-    FabricDefaultSignature {
+FabricDefaultSignature {
 
   FabricTypeSystem fts;
 

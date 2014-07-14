@@ -57,7 +57,7 @@ public class ClassHashGenerator extends NodeVisitor {
 
         StringBuilder fieldDeclBuilder = new StringBuilder();
         fieldDeclBuilder
-            .append("public static final byte[] $classHash = new byte[] {");
+        .append("public static final byte[] $classHash = new byte[] {");
         for (int i = 0; i < hash.length; i++) {
           if (i > 0) fieldDeclBuilder.append(", ");
           fieldDeclBuilder.append(hash[i]);

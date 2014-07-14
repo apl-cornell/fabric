@@ -7,7 +7,7 @@ import java.net.InetSocketAddress;
  * This class encapsulates a host name and a port number. It is similar to
  * java.net.InetSocketAddress, except that it does not attempt to perform any
  * name resolution.
- * 
+ *
  * @author mdgeorge
  */
 public final class SocketAddress {

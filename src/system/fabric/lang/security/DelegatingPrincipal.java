@@ -20,7 +20,7 @@ public interface DelegatingPrincipal extends Principal {
   void removeDelegatesTo(Principal p);
 
   public static class _Proxy extends Principal._Proxy implements
-      DelegatingPrincipal {
+  DelegatingPrincipal {
 
     public _Proxy(DelegatingPrincipal._Impl impl) {
       super(impl);
@@ -58,7 +58,7 @@ public interface DelegatingPrincipal extends Principal {
   }
 
   public abstract static class _Impl extends Principal._Impl implements
-      DelegatingPrincipal {
+  DelegatingPrincipal {
 
     public _Impl(Store store) {
       super(store);

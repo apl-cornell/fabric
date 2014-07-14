@@ -24,7 +24,7 @@ public class TransitionalNameService implements NameService {
    * a name service entry for each file found, with the name given by the
    * filename (e.g foo for foo.properties), and address given by the PortType
    * argument
-   * 
+   *
    * @param portType
    *          the type of port number to read.
    */

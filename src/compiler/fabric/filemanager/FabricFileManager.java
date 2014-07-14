@@ -35,7 +35,7 @@ import fabric.util.Set;
 /**
  * FileManager implementation for Fabric - a class that provides input and
  * output access to the local file system and input access to the codebase.
- * 
+ *
  * TODO: store output files in Fabric. Support bytecode sharing between
  *      trusted principals
  */

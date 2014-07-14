@@ -23,7 +23,7 @@ public interface Statistics {
    * Determine the duration of a promise to issue. While a promise is
    * outstanding, the store will not permit updates to the object to commit.
    * This allows read-only transactions to proceed without contacting the store.
-   * 
+   *
    * @return the duration, in milliseconds, of the promise.
    */
   int generatePromise();

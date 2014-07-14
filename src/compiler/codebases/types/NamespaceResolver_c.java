@@ -227,7 +227,7 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
 
   /**
    * Check if a type object is in the cache, returning null if not.
-   * 
+   *
    * @param name
    *          The name to search for.
    */
@@ -328,8 +328,8 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
 
     }
     if (extInfo.extFileManager().caseInsensitive())
-    // Sigh... This source may have originally been enqueued under a
-    // case insensitive name.  Allow the TypeSystem to keep looking.
+      // Sigh... This source may have originally been enqueued under a
+      // case insensitive name.  Allow the TypeSystem to keep looking.
       throw new NoClassException(name);
 
     // The source has already been compiled, but the type was not created there.

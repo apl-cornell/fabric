@@ -163,7 +163,7 @@ public final class Logging {
   /**
    * Logs a message, with one object parameter. This is just here for
    * completeness.
-   * 
+   *
    * @param logger
    *          The logger to log to
    * @param level
@@ -180,7 +180,7 @@ public final class Logging {
 
   /**
    * Logs a message, with two object parameters.
-   * 
+   *
    * @param logger
    *          The logger to log to
    * @param level
@@ -200,7 +200,7 @@ public final class Logging {
 
   /**
    * Logs a message, with three object parameters.
-   * 
+   *
    * @param logger
    *          The logger to log to
    * @param level
@@ -222,7 +222,7 @@ public final class Logging {
 
   /**
    * Logs a message, with four object parameters.
-   * 
+   *
    * @param logger
    *          The logger to log to
    * @param level
@@ -246,7 +246,7 @@ public final class Logging {
 
   /**
    * Logs a message, with four object parameters.
-   * 
+   *
    * @param logger
    *          The logger to log to
    * @param level

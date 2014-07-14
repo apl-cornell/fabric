@@ -16,7 +16,7 @@ import fabric.lang.Codebase;
 import fabric.lang.security.Label;
 
 public class CodebaseResolver extends SimpleResolver implements
-    NamespaceResolver {
+NamespaceResolver {
   private static final Collection<String> TOPICS;
   static {
     TOPICS = new ArrayList<String>(2);

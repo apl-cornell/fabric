@@ -75,7 +75,7 @@ public class LongKeyCache<V> {
    *   else return cache.get(key);
    * </code>
    * except that the action is performed atomically.
-   * 
+   *
    * @return the previous value associated with the specified key, or null if
    *          there was no mapping for the key.
    */
@@ -95,7 +95,7 @@ public class LongKeyCache<V> {
    *   } else return null;
    * </code>
    * except that the action is performed atomically.
-   * 
+   *
    * @param key key with which the specified value is associated.
    * @param value value to be associated with the specified key.
    * @return the previous value associated with the specified key, or null if
@@ -124,7 +124,7 @@ public class LongKeyCache<V> {
    *   } else return false;
    * </code>
    * except that the action is performed atomically.
-   * 
+   *
    * @param key key with which the specified value is associated.
    * @param oldValue value expected to be associated with the specified key.
    * @param newValue value to be associated with the specified key.
@@ -158,7 +158,7 @@ public class LongKeyCache<V> {
    *   } else return false;
    * </code>
    * except that the action is performed atomically.
-   * 
+   *
    * @param key key with which the specified value is associated.
    * @param value value expected to be associated with the specified key.
    * @return true iff the value was removed.

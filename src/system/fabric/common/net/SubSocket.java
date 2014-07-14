@@ -12,7 +12,7 @@ import fabric.net.RemoteNode;
  * Client-side multiplexed socket implementation. The API mirrors that of
  * java.net.Socket. This class manages connection state, and provides a
  * front-end API.
- * 
+ *
  * @see java.net.Socket
  * @param <Node> the type of node at the remote endpoint.
  */
@@ -56,7 +56,7 @@ public class SubSocket<Node extends RemoteNode<Node>> {
   /**
    * Returns an output stream for this SubSocket. Buffering on this output
    * stream should not be necessary.
-   * 
+   *
    * @see java.net.Socket#getOutputStream()
    */
   public synchronized final BufferedOutputStream getOutputStream()
@@ -67,7 +67,7 @@ public class SubSocket<Node extends RemoteNode<Node>> {
   /**
    * Returns an input stream for this SubSocket. Buffering on this input stream
    * should not be necessary.
-   * 
+   *
    * @see java.net.Socket#getInputStream()
    */
   public synchronized final InputStream getInputStream() throws IOException {

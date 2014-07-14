@@ -34,7 +34,7 @@ public class CastToFabilExt_c extends CastToJavaExt_c {
     if (ts.isPrincipal(castType)
         && (ts.typeEquals(ts.Worker(), exprType) || ts.typeEquals(
             ts.RemoteWorker(), exprType))
-        || ts.typeEquals(ts.Store(), exprType)) {
+            || ts.typeEquals(ts.Store(), exprType)) {
       return nf.Call(c.position(), c.expr(),
           nf.Id(Position.compilerGenerated(), "getPrincipal"));
     }

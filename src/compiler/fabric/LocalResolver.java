@@ -16,7 +16,7 @@ import codebases.types.NamespaceResolver;
 import codebases.types.SimpleResolver;
 
 /**
- * 
+ *
  */
 public class LocalResolver extends SimpleResolver implements NamespaceResolver {
   private static final Collection<String> TOPICS;

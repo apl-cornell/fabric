@@ -15,7 +15,7 @@ import fabric.worker.Store;
  * A concurrent map keyed on OIDs. Supports null keys but not null values.
  */
 public final class ConcurrentOidKeyHashMap<V> implements
-    Iterable<ConcurrentLongKeyMap<V>> {
+Iterable<ConcurrentLongKeyMap<V>> {
   ConcurrentMap<Store, ConcurrentLongKeyMap<V>> map;
 
   volatile V nullEntry;

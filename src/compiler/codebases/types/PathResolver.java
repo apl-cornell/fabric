@@ -19,7 +19,7 @@ import fabric.lang.security.LabelUtil;
 import fabric.worker.Store;
 
 public class PathResolver extends NamespaceResolver_c implements
-    NamespaceResolver {
+NamespaceResolver {
   private static final Collection<String> TOPICS;
   static {
     TOPICS = new ArrayList<String>(2);
@@ -95,7 +95,7 @@ public class PathResolver extends NamespaceResolver_c implements
   /**
    * Specify whether to use raw class files to resolve names for all namespaces
    * in this path.
-   * 
+   *
    * @return previous value
    */
   @Override
@@ -111,7 +111,7 @@ public class PathResolver extends NamespaceResolver_c implements
   /**
    * Specify whether to use encoded class files to resolve names for all
    * namespaces in this path.
-   * 
+   *
    * @return previous value
    */
   @Override
@@ -127,7 +127,7 @@ public class PathResolver extends NamespaceResolver_c implements
   /**
    * Specify whether to use source files to resolve names for all namespaces in
    * this path.
-   * 
+   *
    * @return previous value
    */
   @Override

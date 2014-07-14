@@ -271,7 +271,7 @@ public abstract class Options {
 
     /**
      * Handles a usage flag.
-     * 
+     *
      * @param args
      *          Arguments from the command line.
      * @param index
@@ -306,7 +306,7 @@ public abstract class Options {
 
     /**
      * Outputs this flag and a description of its usage in a nice format.
-     * 
+     *
      * @param out
      *          output PrintStream
      */
@@ -377,7 +377,7 @@ public abstract class Options {
     });
 
     flags.add(new Flag(Kind.VERSION, new String[] { "--version", "-v",
-        "-version" }, null, "print version info") {
+    "-version" }, null, "print version info") {
       @Override
       public int handle(String[] args, int index) {
         System.out.println("Fabric version " + new Version());
@@ -458,16 +458,16 @@ public abstract class Options {
     });
 
     flags
-        .add(new Flag(Kind.SECRET,
-            new String[] { "--addbootcp", "-addbootcp" }, "<path>",
-            "additional directory for Fabric runtime classes; prepended to bootclasspath") {
-          @Override
-          public int handle(String[] args, int index) {
-            Options.this.bootcp =
-                args[index] + File.pathSeparator + Options.this.bootcp;
-            return index + 1;
-          }
-        });
+    .add(new Flag(Kind.SECRET,
+        new String[] { "--addbootcp", "-addbootcp" }, "<path>",
+        "additional directory for Fabric runtime classes; prepended to bootclasspath") {
+      @Override
+      public int handle(String[] args, int index) {
+        Options.this.bootcp =
+            args[index] + File.pathSeparator + Options.this.bootcp;
+        return index + 1;
+      }
+    });
 
     flags.add(new Flag(Kind.SECRET, "--output-to-fs", "",
         "A flag for putting .class files to the local file system") {
@@ -510,7 +510,7 @@ public abstract class Options {
 
   /**
    * Handles an argument that doesn't match any known flag.
-   * 
+   *
    * @param args
    *          Arguments from the command line.
    * @param index

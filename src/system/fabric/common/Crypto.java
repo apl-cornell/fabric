@@ -135,7 +135,7 @@ public final class Crypto {
 
   /**
    * Creates an initializes a new Cipher instance with the given parameters.
-   * 
+   *
    * @param opmode
    *          The mode of operation. One of the mode constants in Cipher.
    * @param key
@@ -183,7 +183,7 @@ public final class Crypto {
    */
   public static X509Certificate createCertificate(String subjectName,
       PublicKey subjectKey, String issuerName, PrivateKey issuerKey)
-      throws GeneralSecurityException {
+          throws GeneralSecurityException {
 
     Calendar expiry = Calendar.getInstance();
     expiry.add(Calendar.YEAR, 1);

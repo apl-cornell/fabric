@@ -18,7 +18,7 @@ import fabric.net.RemoteNode;
 /**
  * A factory for creating SubSockets. The factory decorates a
  * javax.net.SocketFactory, which is used for creating the underlying channels.
- * 
+ *
  * @param <Node> the type of node at the remote endpoint.
  */
 public final class SubSocketFactory<Node extends RemoteNode<Node>> {
@@ -101,7 +101,7 @@ public final class SubSocketFactory<Node extends RemoteNode<Node>> {
    * Client channels are capable of making outgoing requests, but not of
    * receiving new incoming requests. They are only associated with a remote
    * address, and have no distinguished local address.
-   * 
+   *
    * @author mdgeorge
    */
   class ClientChannel extends Channel<Node> {

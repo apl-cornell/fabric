@@ -198,8 +198,8 @@ public class FabILDisamb extends Disamb_c implements Disamb {
       if (ns != null)
         return nf.CodebaseNode(pos, namespace, name.id(), ns);
       else
-      // Must be a package then...
-      return nf.PackageNode(pos, ts.packageForName(namespace, name.id()));
+        // Must be a package then...
+        return nf.PackageNode(pos, ts.packageForName(namespace, name.id()));
     }
 
     return null;

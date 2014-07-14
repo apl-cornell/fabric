@@ -12,7 +12,7 @@ import fabric.worker.remote.RemoteWorker;
 public interface Protocol<Node extends RemoteNode<Node>> {
   /**
    * Initiates a handshake with a remote host at the given address.
-   * 
+   *
    * @param remoteNode
    *          the remote node to connect to.
    * @param s
@@ -22,7 +22,7 @@ public interface Protocol<Node extends RemoteNode<Node>> {
 
   /**
    * Receives a handshake via the given socket.
-   * 
+   *
    * @param remoteNode
    *          the node at the remote endpoint.
    * @param s

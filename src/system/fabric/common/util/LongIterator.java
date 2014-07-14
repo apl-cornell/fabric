@@ -34,7 +34,7 @@ package fabric.common.util;
  * optional remove method. Iterator is intended as a replacement for the
  * Enumeration interface of previous versions of Java, which did not have the
  * remove method and had less conveniently named methods.
- * 
+ *
  * @author Original author unknown
  * @author Eric Blake (ebb9@email.byu.edu)
  * @see LongCollection
@@ -44,14 +44,14 @@ public interface LongIterator {
   /**
    * Tests whether there are elements remaining in the collection. In other
    * words, calling <code>next()</code> will not throw an exception.
-   * 
+   *
    * @return true if there is at least one more element in the collection
    */
   boolean hasNext();
 
   /**
    * Obtain the next element in the collection.
-   * 
+   *
    * @return the next element in the collection
    * @throws NoSuchElementException
    *           if there are no more elements
@@ -63,7 +63,7 @@ public interface LongIterator {
    * (optional operation). This method can be called only once after each call
    * to <code>next()</code>. It does not affect what will be returned by
    * subsequent calls to next.
-   * 
+   *
    * @throws IllegalStateException
    *           if next has not yet been called or remove has already been called
    *           since the last call to next.

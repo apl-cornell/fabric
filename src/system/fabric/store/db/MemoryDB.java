@@ -50,7 +50,7 @@ public class MemoryDB extends ObjectDB {
   /**
    * Opens the store contained in file "var/storeName" if it exists, or an empty
    * store otherwise.
-   * 
+   *
    * @param name
    *          name of store to create database for.
    */

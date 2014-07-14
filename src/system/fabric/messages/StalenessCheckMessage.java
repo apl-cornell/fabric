@@ -19,7 +19,7 @@ import fabric.worker.remote.RemoteWorker;
  * whether a given set of objects is still fresh.
  */
 public final class StalenessCheckMessage extends
-    Message<StalenessCheckMessage.Response, AccessException> {
+Message<StalenessCheckMessage.Response, AccessException> {
 
   // ////////////////////////////////////////////////////////////////////////////
   // message contents //

@@ -166,7 +166,7 @@ public class RemoteCallWrapperUpdater extends NodeVisitor {
           } else if (as instanceof ActsForConstraint) {
             @SuppressWarnings("unchecked")
             ActsForConstraint<ActsForParam, ActsForParam> afc =
-                (ActsForConstraint<ActsForParam, ActsForParam>) as;
+            (ActsForConstraint<ActsForParam, ActsForParam>) as;
             ActsForParam actor = afc.actor();
             ActsForParam granter = afc.granter();
             if (actor instanceof Principal && granter instanceof Principal) {
@@ -175,9 +175,9 @@ public class RemoteCallWrapperUpdater extends NodeVisitor {
                       afc.position(),
                       nf.CanonicalPrincipalNode(actor.position(),
                           (Principal) actor),
-                      afc.isEquiv() ? JifBinaryDel.EQUIV : JifBinaryDel.ACTSFOR,
-                      nf.CanonicalPrincipalNode(granter.position(),
-                          (Principal) granter));
+                          afc.isEquiv() ? JifBinaryDel.EQUIV : JifBinaryDel.ACTSFOR,
+                              nf.CanonicalPrincipalNode(granter.position(),
+                                  (Principal) granter));
               labelComp =
                   nf.Binary(Position.compilerGenerated(), labelComp,
                       Binary.COND_AND, check);
@@ -185,15 +185,15 @@ public class RemoteCallWrapperUpdater extends NodeVisitor {
               Expr check =
                   nf.Binary(afc.position(), nf.LabelExpr(actor.position(),
                       (Label) actor), afc.isEquiv() ? JifBinaryDel.EQUIV
-                      : JifBinaryDel.ACTSFOR, nf.CanonicalPrincipalNode(
-                      granter.position(), (Principal) granter));
+                          : JifBinaryDel.ACTSFOR, nf.CanonicalPrincipalNode(
+                              granter.position(), (Principal) granter));
               labelComp =
                   nf.Binary(Position.compilerGenerated(), labelComp,
                       Binary.COND_AND, check);
             } else {
               throw new InternalCompilerError(afc.position(),
                   "Unexpected ActsForConstraint (" + actor.getClass()
-                      + " actsfor " + granter.getClass() + ").");
+                  + " actsfor " + granter.getClass() + ").");
             }
           } else if (as instanceof LabelLeAssertion) {
             LabelLeAssertion lla = (LabelLeAssertion) as;

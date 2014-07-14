@@ -7,7 +7,7 @@ import javax.tools.JavaFileManager.Location;
 import fabric.lang.Codebase;
 
 /**
- * 
+ *
  */
 public interface CodebaseLocation extends Location {
   /**

@@ -8,7 +8,7 @@ import polyglot.ast.ExtFactory;
  * Factory for FabIL extension nodes.
  */
 public class FabILExtFactory_c extends AbstractExtFactory_c implements
-    FabILExtFactory {
+FabILExtFactory {
 
   @Override
   public final Ext extFabricArrayTypeNode() {

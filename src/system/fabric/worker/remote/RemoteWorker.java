@@ -72,7 +72,7 @@ public class RemoteWorker extends RemoteNode<RemoteWorker> {
 
   public Object issueRemoteCall(_Proxy receiver, String methodName,
       Class<?>[] parameterTypes, Object[] args)
-      throws UnreachableNodeException, RemoteCallException {
+          throws UnreachableNodeException, RemoteCallException {
     TransactionManager tm = TransactionManager.getInstance();
     tm.registerRemoteCall(this);
 
@@ -81,7 +81,7 @@ public class RemoteWorker extends RemoteNode<RemoteWorker> {
 
     Class<? extends fabric.lang.Object> receiverClass =
         (Class<? extends fabric.lang.Object>) receiver.fetch().$getProxy()
-            .getClass().getEnclosingClass();
+        .getClass().getEnclosingClass();
     ClassRef receiverClassRef = ClassRef.makeRef(receiverClass);
 
     RemoteCallMessage.Response response =
@@ -101,29 +101,29 @@ public class RemoteWorker extends RemoteNode<RemoteWorker> {
   }
 
   public void prepareTransaction(long tid) throws UnreachableNodeException,
-      TransactionPrepareFailedException {
+  TransactionPrepareFailedException {
     send(new PrepareTransactionMessage(tid));
   }
 
   public void commitTransaction(long tid) throws UnreachableNodeException,
-      TransactionCommitFailedException {
+  TransactionCommitFailedException {
     send(new CommitTransactionMessage(tid));
   }
 
   /**
    * Informs the remote worker that a transaction is aborting.
-   * 
+   *
    * @param tid
    *          the tid for the transaction that is aborting.
    */
   public void abortTransaction(TransactionID tid) throws AccessException,
-      UnreachableNodeException {
+  UnreachableNodeException {
     send(new AbortTransactionMessage(tid));
   }
 
   /**
    * Reads the given object from the remote worker, updating the object's state.
-   * 
+   *
    * @param tid
    *          the tid for the current transaction.
    */
@@ -153,7 +153,7 @@ public class RemoteWorker extends RemoteNode<RemoteWorker> {
 
   /**
    * Unsets the ownership bit for the given object at the remote worker.
-   * 
+   *
    * @param tid
    *          the tid for the current transaction.
    */
@@ -188,7 +188,7 @@ public class RemoteWorker extends RemoteNode<RemoteWorker> {
   /**
    * Notifies the dissemination node at the given worker that an object has been
    * updated.
-   * 
+   *
    * @return whether the node is resubscribing to the object.
    */
   public List<Long> notifyObjectUpdates(String store,
@@ -205,7 +205,7 @@ public class RemoteWorker extends RemoteNode<RemoteWorker> {
 
   /**
    * Notifies the worker that a set of objects has been updated.
-   * 
+   *
    * @return whether the node is resubscribing to the object.
    */
   public List<Long> notifyObjectUpdates(List<Long> updatedOnums,

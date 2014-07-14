@@ -70,15 +70,15 @@ public class Node {
       bootHost = InetAddress.getLocalHost().getHostName();
     int bootPort =
         parts.length == 2 ? Integer.parseInt(parts[1]) : DEFAULT_PORT;
-    InetSocketAddress boot = new InetSocketAddress(bootHost, bootPort);
+        InetSocketAddress boot = new InetSocketAddress(bootHost, bootPort);
 
-    NodeIdFactory idf = new RandomNodeIdFactory(env);
-    pnf = new SocketPastryNodeFactory(idf, DEFAULT_PORT, env);
+        NodeIdFactory idf = new RandomNodeIdFactory(env);
+        pnf = new SocketPastryNodeFactory(idf, DEFAULT_PORT, env);
 
-    node = pnf.newNode(pnf.getNodeHandle(boot));
-    waitForReady(); // waits until the pastry node is actually set up
+        node = pnf.newNode(pnf.getNodeHandle(boot));
+        waitForReady(); // waits until the pastry node is actually set up
 
-    disseminator = new Disseminator(node, cache);
+        disseminator = new Disseminator(node, cache);
   }
 
   /** Returns the disseminator application of this node. */

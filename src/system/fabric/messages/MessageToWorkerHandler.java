@@ -15,12 +15,12 @@ import fabric.worker.transaction.TakeOwnershipFailedException;
  * This abstract class acts as a visitor for MessagesToWorker. It also documents
  * the list of all messages that a worker needs to be able to handle. The
  * methods all have the form: <br>
- * 
+ *
  * <pre>
  * public Response handle(Principal, Message)
  *   throws FabricException
  * </pre>
- * 
+ *
  * and there is one such method for each message type that the worker handles.
  */
 public abstract class MessageToWorkerHandler extends AbstractMessageServer {
@@ -32,12 +32,12 @@ public abstract class MessageToWorkerHandler extends AbstractMessageServer {
   @Override
   public abstract AbortTransactionMessage.Response handle(
       RemoteIdentity<RemoteWorker> client, AbortTransactionMessage msg)
-      throws AccessException;
+          throws AccessException;
 
   @Override
   public abstract CommitTransactionMessage.Response handle(
       RemoteIdentity<RemoteWorker> client, CommitTransactionMessage msg)
-      throws TransactionCommitFailedException;
+          throws TransactionCommitFailedException;
 
   @Override
   public abstract ObjectUpdateMessage.Response handle(
@@ -46,22 +46,22 @@ public abstract class MessageToWorkerHandler extends AbstractMessageServer {
   @Override
   public abstract PrepareTransactionMessage.Response handle(
       RemoteIdentity<RemoteWorker> client, PrepareTransactionMessage msg)
-      throws TransactionPrepareFailedException;
+          throws TransactionPrepareFailedException;
 
   @Override
   public abstract DirtyReadMessage.Response handle(
       RemoteIdentity<RemoteWorker> client, DirtyReadMessage msg)
-      throws AccessException;
+          throws AccessException;
 
   @Override
   public abstract RemoteCallMessage.Response handle(
       RemoteIdentity<RemoteWorker> client, RemoteCallMessage msg)
-      throws RemoteCallException;
+          throws RemoteCallException;
 
   @Override
   public abstract TakeOwnershipMessage.Response handle(
       RemoteIdentity<RemoteWorker> client, TakeOwnershipMessage msg)
-      throws TakeOwnershipFailedException;
+          throws TakeOwnershipFailedException;
 
   @Override
   public abstract InterWorkerStalenessMessage.Response handle(
@@ -76,35 +76,35 @@ public abstract class MessageToWorkerHandler extends AbstractMessageServer {
   @Override
   public final fabric.messages.DissemReadMessage.Response handle(
       RemoteIdentity<RemoteWorker> client, DissemReadMessage msg)
-      throws ProtocolError {
+          throws ProtocolError {
     throw error(msg);
   }
 
   @Override
   public fabric.messages.GetCertChainMessage.Response handle(
       RemoteIdentity<RemoteWorker> client, GetCertChainMessage msg)
-      throws ProtocolError {
+          throws ProtocolError {
     throw error(msg);
   }
 
   @Override
   public fabric.messages.ReadMessage.Response handle(
       RemoteIdentity<RemoteWorker> client, ReadMessage msg)
-      throws ProtocolError {
+          throws ProtocolError {
     throw error(msg);
   }
 
   @Override
   public fabric.messages.MakePrincipalMessage.Response handle(
       RemoteIdentity<RemoteWorker> client, MakePrincipalMessage msg)
-      throws ProtocolError {
+          throws ProtocolError {
     throw error(msg);
   }
 
   @Override
   public fabric.messages.StalenessCheckMessage.Response handle(
       RemoteIdentity<RemoteWorker> client, StalenessCheckMessage msg)
-      throws ProtocolError {
+          throws ProtocolError {
     throw error(msg);
   }
 

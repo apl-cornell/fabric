@@ -8,7 +8,7 @@ import polyglot.util.Position;
 import fabric.ast.FabricNodeFactory;
 
 /**
- * 
+ *
  */
 public class AmbStore extends Amb {
   public Amb expr;

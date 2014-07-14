@@ -28,9 +28,10 @@ import polyglot.types.Type;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
 import codebases.types.CodebaseClassType;
+import fabil.types.FabILFlags;
 
 public class FabricParsedClassType_c extends JifParsedPolyType_c implements
-    FabricParsedClassType {
+FabricParsedClassType {
   private transient Label singleFieldLabel = null;
   private transient boolean fieldLabelFound = false;
 
@@ -52,7 +53,7 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements
   public boolean descendsFromImpl(Type ancestor) {
     FabricTypeSystem ts = (FabricTypeSystem) typeSystem();
 
-    if (flags().contains(FabricFlags.NONFABRIC)
+    if (flags().contains(FabILFlags.NONFABRIC)
         && ts.typeEquals(ancestor, ts.FObject())) {
       // XXX nonfabric interfaces do not descend from fabric.lang.Object.
       return false;
@@ -158,7 +159,7 @@ public class FabricParsedClassType_c extends JifParsedPolyType_c implements
       if (constraint instanceof ActsForConstraint) {
         @SuppressWarnings("unchecked")
         ActsForConstraint<ActsForParam, ActsForParam> pi =
-            (ActsForConstraint<ActsForParam, ActsForParam>) constraint;
+        (ActsForConstraint<ActsForParam, ActsForParam>) constraint;
         ActsForParam actor = pi.actor();
         ActsForParam granter = pi.granter();
         if (actor instanceof Principal && granter instanceof Principal) {

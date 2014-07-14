@@ -8,7 +8,7 @@ import fabric.common.util.LongKeyMap;
 /**
  * A convenience class for grouping together the created, modified, and read
  * object sets of a prepare request.
- * 
+ *
  * @author mdgeorge
  */
 public final class PrepareRequest {

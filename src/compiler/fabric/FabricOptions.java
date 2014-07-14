@@ -233,7 +233,7 @@ public class FabricOptions extends JifOptions {
       }
     });
     flags.add(new OptFlag<Pair<String, URI>>(new String[] { "-codebase-alias",
-        "-cb-alias" }, "<name>",
+    "-cb-alias" }, "<name>",
         "The the destination store for published classes.") {
       @Override
       public Arg<Pair<String, URI>> handle(String[] args, int index)

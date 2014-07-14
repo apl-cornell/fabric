@@ -20,8 +20,8 @@ import fabric.worker.remote.RemoteWorker;
  * a store.
  */
 public class PrepareTransactionMessage
-    extends
-    Message<PrepareTransactionMessage.Response, TransactionPrepareFailedException> {
+extends
+Message<PrepareTransactionMessage.Response, TransactionPrepareFailedException> {
   // ////////////////////////////////////////////////////////////////////////////
   // message contents //
   // ////////////////////////////////////////////////////////////////////////////

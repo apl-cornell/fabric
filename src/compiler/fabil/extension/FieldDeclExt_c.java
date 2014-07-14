@@ -97,12 +97,12 @@ public class FieldDeclExt_c extends ClassMemberExt_c {
     // Make the method public, non-final, non-static and non-transient.
     flags =
         ProxyRewriter.toPublic(flags).clearTransient().clearFinal()
-            .clearStatic();
+        .clearStatic();
 
     // Figure out the call target for the delegates.
     String target =
         "((" + parent.type().translate(null) + (doStatic ? "._Static" : "")
-            + "._Impl) fetch())";
+        + "._Impl) fetch())";
 
     QQ qq = pr.qq();
     List<ClassMember> result = new ArrayList<ClassMember>(4);

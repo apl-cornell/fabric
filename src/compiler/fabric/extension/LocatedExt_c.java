@@ -18,9 +18,9 @@ import fabric.types.FabricTypeSystem;
 
 /**
  * A located expressions is any allocation that may be assigned a location.
- * This includes Fabric classes, arrays, labels, and principals.  
- * 
- * The default location of a located expression is the location of the enclosing instance.  
+ * This includes Fabric classes, arrays, labels, and principals.
+ *
+ * The default location of a located expression is the location of the enclosing instance.
  * In static or non-Fabric contexts, a location must always be specified.
  */
 public abstract class LocatedExt_c extends NodeExt_c implements FabricExt {
@@ -70,7 +70,7 @@ public abstract class LocatedExt_c extends NodeExt_c implements FabricExt {
   protected abstract Label referenceLabel(FabricContext ctx);
 
   /**
-   * Returns true if this located expression requires a location.  
+   * Returns true if this located expression requires a location.
    * @param ts
    * @return
    */
@@ -83,14 +83,14 @@ public abstract class LocatedExt_c extends NodeExt_c implements FabricExt {
   /**
    * Checks that the location is compatible with the <code>objectLabel</code>
    * and <code>accessLabel</code>
-   * 
+   *
    * @param lc
    * @param objectLabel
    * @param accessLabel
    */
   public void labelCheck(LabelChecker lc, final Label objectLabel,
       final Label accessLabel, final Label referenceLabel)
-      throws SemanticException {
+          throws SemanticException {
     Expr n = (Expr) node();
     Position pos = n.position();
     FabricTypeSystem ts = (FabricTypeSystem) lc.typeSystem();
@@ -101,7 +101,7 @@ public abstract class LocatedExt_c extends NodeExt_c implements FabricExt {
             "Needs location, but store principal is null!", pos);
       if (_storeP.isTopPrincipal()
           || ts.workerLocalPrincipal(pos).equals(_storeP))
-      // allocation to local worker. just return 
+        // allocation to local worker. just return
         return;
 
       final DynamicPrincipal storeP = (DynamicPrincipal) _storeP;
@@ -115,8 +115,8 @@ public abstract class LocatedExt_c extends NodeExt_c implements FabricExt {
               Position.compilerGenerated(),
               ts.readerPolicy(Position.compilerGenerated(),
                   ts.topPrincipal(Position.compilerGenerated()), storeP),
-              ts.topIntegPolicy(Position.compilerGenerated()))), A.labelEnv(),
-          n.position(), new ConstraintMessage() {
+                  ts.topIntegPolicy(Position.compilerGenerated()))), A.labelEnv(),
+                  n.position(), new ConstraintMessage() {
             @Override
             public String msg() {
               return "The store should be trusted enough to enforce the confidentiality"
@@ -135,8 +135,8 @@ public abstract class LocatedExt_c extends NodeExt_c implements FabricExt {
               Position.compilerGenerated(),
               ts.readerPolicy(Position.compilerGenerated(),
                   ts.topPrincipal(Position.compilerGenerated()), storeP),
-              ts.topIntegPolicy(Position.compilerGenerated()))), A.labelEnv(),
-          n.position(), new ConstraintMessage() {
+                  ts.topIntegPolicy(Position.compilerGenerated()))), A.labelEnv(),
+                  n.position(), new ConstraintMessage() {
             @Override
             public String msg() {
               return "L <= {*->store} for new C@store() where the update label of C is L.";
@@ -163,9 +163,9 @@ public abstract class LocatedExt_c extends NodeExt_c implements FabricExt {
               ts.bottomConfPolicy(Position.compilerGenerated()),
               ts.writerPolicy(Position.compilerGenerated(),
                   ts.topPrincipal(Position.compilerGenerated()), storeP))),
-          LabelConstraint.LEQ, new NamedLabel("object update label",
-              objectLabel), A.labelEnv(), n.position(),
-          new ConstraintMessage() {
+                  LabelConstraint.LEQ, new NamedLabel("object update label",
+                      objectLabel), A.labelEnv(), n.position(),
+                      new ConstraintMessage() {
             @Override
             public String msg() {
               return "{*<-store} <= L for new C@store() where the update label of C is L.";
@@ -197,8 +197,8 @@ public abstract class LocatedExt_c extends NodeExt_c implements FabricExt {
               Position.compilerGenerated(),
               ts.readerPolicy(Position.compilerGenerated(),
                   ts.topPrincipal(Position.compilerGenerated()), storeP),
-              ts.topIntegPolicy(Position.compilerGenerated()))), A.labelEnv(),
-          n.position(), new ConstraintMessage() {
+                  ts.topIntegPolicy(Position.compilerGenerated()))), A.labelEnv(),
+                  n.position(), new ConstraintMessage() {
             @Override
             public String msg() {
               return "L <= {*->store} for new C@store() where L is the label of "

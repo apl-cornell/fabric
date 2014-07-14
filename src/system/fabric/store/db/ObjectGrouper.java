@@ -449,7 +449,7 @@ public final class ObjectGrouper {
    * previously made groups have been GCed. The caller is responsible for
    * releasing the lock.
    * </p>
-   * 
+   *
    * @param lock
    *          The lock held for the given onum.
    * @param obj
@@ -543,7 +543,7 @@ public final class ObjectGrouper {
    *         onum so it can be added to a partial group that is being
    *         constructed. Otherwise, if ignorePartialGroups is true, an attempt
    *         will be made even if the onum is already in a partial group.
-   *          
+   *
    * @return if successful, the group's lock and the existing partial group, if
    *          one was already made. Null is returned if the locking operation
    *          was unsuccessful.
@@ -559,31 +559,31 @@ public final class ObjectGrouper {
         // First, ensure that there is a table entry for the given onum.
         GroupLock newEntryGroupLock =
             groupLock == null ? new GroupLock(onum) : groupLock;
-        Entry newEntry = new Entry(newEntryGroupLock);
-        entry = table.putIfAbsent(onum, newEntry);
-        if (entry == null) entry = newEntry;
+            Entry newEntry = new Entry(newEntryGroupLock);
+            entry = table.putIfAbsent(onum, newEntry);
+            if (entry == null) entry = newEntry;
 
-        AbstractGroup group;
-        synchronized (entry) {
-          group = entry.getGroup();
-          curLock = entry.getLock();
-        }
+            AbstractGroup group;
+            synchronized (entry) {
+              group = entry.getGroup();
+              curLock = entry.getLock();
+            }
 
-        if (!ignorePartialGroups && group != null
-            || group instanceof GroupContainer) {
-          // Group already exists.
-          return null;
-        }
+            if (!ignorePartialGroups && group != null
+                || group instanceof GroupContainer) {
+              // Group already exists.
+              return null;
+            }
 
-        if (curLock == null) {
-          // Entry had a full group that has been GCed. Remove the entry and start
-          // over.
-          table.remove(onum, entry);
-          continue;
-        }
+            if (curLock == null) {
+              // Entry had a full group that has been GCed. Remove the entry and start
+              // over.
+              table.remove(onum, entry);
+              continue;
+            }
 
-        // Have a proper entry now.
-        break;
+            // Have a proper entry now.
+            break;
       }
 
       while (true) {
