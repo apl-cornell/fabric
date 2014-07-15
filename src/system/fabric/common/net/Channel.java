@@ -91,7 +91,7 @@ abstract class Channel<Node extends RemoteNode<Node>> extends Thread {
         new DataInputStream(new BufferedInputStream(in,
             sock.getReceiveBufferSize()));
 
-    this.connections = new HashMap<Integer, Connection>();
+    this.connections = new HashMap<>();
     this.maxOpenConnections = maxOpenConnections;
 
     start();

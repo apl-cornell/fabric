@@ -65,10 +65,10 @@ public class WriterMap implements FastSerializable {
    *          part of.
    */
   public WriterMap(long tid) {
-    this.creates = new HashMap<Hash, Label>();
-    this.writers = new HashMap<Hash, Pair<byte[], byte[]>>();
-    this.readCache = new OidKeyHashMap<RemoteWorker>();
-    this.writeCache = new OidKeyHashMap<Pair<_Proxy, RemoteWorker>>();
+    this.creates = new HashMap<>();
+    this.writers = new HashMap<>();
+    this.readCache = new OidKeyHashMap<>();
+    this.writeCache = new OidKeyHashMap<>();
     this.version = 0;
     this.tid = tid;
   }
@@ -77,11 +77,10 @@ public class WriterMap implements FastSerializable {
    * Copy constructor.
    */
   public WriterMap(WriterMap map) {
-    this.creates = new HashMap<Hash, Label>(map.creates);
-    this.writers = new HashMap<Hash, Pair<byte[], byte[]>>(map.writers);
-    this.readCache = new OidKeyHashMap<RemoteWorker>(map.readCache);
-    this.writeCache =
-        new OidKeyHashMap<Pair<_Proxy, RemoteWorker>>(map.writeCache);
+    this.creates = new HashMap<>(map.creates);
+    this.writers = new HashMap<>(map.writers);
+    this.readCache = new OidKeyHashMap<>(map.readCache);
+    this.writeCache = new OidKeyHashMap<>(map.writeCache);
     this.version = map.version;
     this.tid = map.tid;
   }
@@ -132,7 +131,7 @@ public class WriterMap implements FastSerializable {
       byte[] data = new byte[in.readInt()];
       in.readFully(data);
 
-      writers.put(key, new Pair<byte[], byte[]>(iv, data));
+      writers.put(key, new Pair<>(iv, data));
     }
   }
 
@@ -216,7 +215,7 @@ public class WriterMap implements FastSerializable {
     if (ONumConstants.isGlobalConstant(proxy.$getOnum())
         || proxy.$getStore() instanceof LocalStore) return;
 
-    writeCache.put(proxy, new Pair<_Proxy, RemoteWorker>(proxy, worker));
+    writeCache.put(proxy, new Pair<>(proxy, worker));
     readCache.put(proxy, worker);
   }
 
@@ -257,8 +256,8 @@ public class WriterMap implements FastSerializable {
       Cipher cipher =
           Crypto.cipherInstance(Cipher.ENCRYPT_MODE, encryptKey, iv);
       Pair<byte[], byte[]> encHost =
-          new Pair<byte[], byte[]>(iv, cipher.doFinal(worker.name.getBytes()));
-          writers.put(mapKey, encHost);
+          new Pair<>(iv, cipher.doFinal(worker.name.getBytes()));
+      writers.put(mapKey, encHost);
     } catch (GeneralSecurityException e) {
       throw new InternalError(e);
     }

@@ -38,7 +38,7 @@ public class FabricToFabilRewriter extends JifToJavaRewriter {
   private static final Collection<String> TOPICS;
   public static final String LABEL_INITIALIZER_METHOD_NAME = "$initLabels";
   static {
-    TOPICS = new ArrayList<String>(2);
+    TOPICS = new ArrayList<>(2);
     TOPICS.add("publish");
     TOPICS.add("mobile");
   }
@@ -150,8 +150,7 @@ public class FabricToFabilRewriter extends JifToJavaRewriter {
   @Override
   public Node leavingSourceFile(SourceFile n) {
     List<TopLevelDecl> l =
-        new ArrayList<TopLevelDecl>(n.decls().size()
-            + additionalClassDecls.size());
+        new ArrayList<>(n.decls().size() + additionalClassDecls.size());
     l.addAll(n.decls());
     for (ClassDecl cd : additionalClassDecls) {
       if (cd.flags().isPublic()) {

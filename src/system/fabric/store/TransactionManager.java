@@ -134,8 +134,7 @@ public class TransactionManager {
 
     try {
       // This will store the set of onums of objects that were out of date.
-      LongKeyMap<SerializedObject> versionConflicts =
-          new LongKeyHashMap<SerializedObject>();
+      LongKeyMap<SerializedObject> versionConflicts = new LongKeyHashMap<>();
 
       // Prepare writes.
       for (SerializedObject o : req.writes) {
@@ -330,7 +329,7 @@ public class TransactionManager {
           Collections.<SerializedObject> emptyList());
     }
 
-    List<SerializedObject> result = new ArrayList<SerializedObject>();
+    List<SerializedObject> result = new ArrayList<>();
     for (LongKeyMap.Entry<Integer> entry : versions.entrySet()) {
       long onum = entry.getKey();
       int version = entry.getValue();

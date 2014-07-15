@@ -324,8 +324,8 @@ public final class SerializedObject implements FastSerializable, Serializable {
         new DataInputStream(new ByteArrayInputStream(objectData, refPos,
             onumPos));
     try {
-      return new ComparablePair<String, Long>(in.readUTF(),
-          SerializationUtil.longAt(objectData, onumPos));
+      return new ComparablePair<>(in.readUTF(), SerializationUtil.longAt(
+          objectData, onumPos));
     } catch (IOException e) {
       throw new InternalError("Error while reading store name.", e);
     }
@@ -664,7 +664,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
         if (!hasNext()) throw new NoSuchElementException();
         nextInterStoreRefNum++;
         try {
-          return new ComparablePair<String, Long>(in.readUTF(), in.readLong());
+          return new ComparablePair<>(in.readUTF(), in.readLong());
         } catch (IOException e) {
           throw new InternalError("Unexpected IO exception.", e);
         }
@@ -905,7 +905,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
     long updateLabelOnum = updateLabel.$getOnum();
     boolean interStoreUpdateLabel =
         !ONumConstants.isGlobalConstant(updateLabelOnum)
-        && !impl.$getStore().equals(updateLabelStore);
+            && !impl.$getStore().equals(updateLabelStore);
 
     // Write out the object header.
     out.writeLong(impl.$getOnum());
@@ -929,7 +929,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
 
           message +=
               System.getProperty("line.separator")
-              + "A stack trace for the creation of the local object follows.";
+                  + "A stack trace for the creation of the local object follows.";
           for (StackTraceElement e : ((_Impl) updateLabel.fetch()).$stackTrace)
             message += System.getProperty("line.separator") + "  " + e;
         }
@@ -947,7 +947,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
     long accessPolicyOnum = accessPolicy.$getOnum();
     boolean interStoreAccessLabel =
         !ONumConstants.isGlobalConstant(accessPolicyOnum)
-        && !impl.$getStore().equals(accessPolicyStore);
+            && !impl.$getStore().equals(accessPolicyStore);
 
     out.writeBoolean(interStoreAccessLabel);
     if (interStoreAccessLabel) {
@@ -965,7 +965,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
 
           message +=
               System.getProperty("line.separator")
-              + "A stack trace for the creation of the local object follows.";
+                  + "A stack trace for the creation of the local object follows.";
           for (StackTraceElement e : ((_Impl) updateLabel.fetch()).$stackTrace)
             message += System.getProperty("line.separator") + "  " + e;
         }
@@ -985,10 +985,9 @@ public final class SerializedObject implements FastSerializable, Serializable {
     // Get the object to serialize itself into a bunch of buffers.
     ByteArrayOutputStream bos = new ByteArrayOutputStream();
     ObjectOutputStream oos = new ObjectOutputStream(bos);
-    List<RefTypeEnum> refTypes = new ArrayList<RefTypeEnum>();
-    List<Long> intraStoreRefs = new ArrayList<Long>();
-    List<Pair<String, Long>> interStoreRefs =
-        new ArrayList<Pair<String, Long>>();
+    List<RefTypeEnum> refTypes = new ArrayList<>();
+    List<Long> intraStoreRefs = new ArrayList<>();
+    List<Pair<String, Long>> interStoreRefs = new ArrayList<>();
     impl.$serialize(oos, refTypes, intraStoreRefs, interStoreRefs);
     oos.flush();
 
@@ -1117,7 +1116,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
    */
   private static final Map<Class<? extends _Impl>, Constructor<?>> constructorTable =
       Collections
-      .synchronizedMap(new HashMap<Class<? extends _Impl>, Constructor<?>>());
+          .synchronizedMap(new HashMap<Class<? extends _Impl>, Constructor<?>>());
 
   /**
    * Deserializes this object, traversing surrogates as necessary.

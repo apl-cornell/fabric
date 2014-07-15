@@ -31,7 +31,7 @@ public class SignatureCleaner extends NodeVisitor {
     if (n instanceof ClassBody) {
       // Remove everything except Polyglot's type info and nested classes.
       ClassBody body = (ClassBody) n;
-      List<ClassMember> members = new ArrayList<ClassMember>();
+      List<ClassMember> members = new ArrayList<>();
       for (Object o : body.members()) {
         ClassMember member = (ClassMember) o;
         if (member instanceof ClassDecl) {

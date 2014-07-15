@@ -45,14 +45,13 @@ public class NamespaceChecker extends ErrorHandlingVisitor {
       FabricTypeSystem ts = (FabricTypeSystem) this.ts;
       URI src_ns = source.canonicalNamespace();
       NamespaceResolver resolver = ts.namespaceResolver(src_ns);
-      NamespaceResolver completeNamespace = (NamespaceResolver) resolver.copy();
+      NamespaceResolver completeNamespace = resolver.copy();
 
       if (Report.should_report(Topics.mobile, 3)) {
         Report.report(3, "Checking namespace consistency of " + source);
       }
 
-      Set<CodebaseClassType> seen =
-          new HashSet<CodebaseClassType>(jobExt.dependencies());
+      Set<CodebaseClassType> seen = new HashSet<>(jobExt.dependencies());
       for (CodebaseClassType dep : jobExt.dependencies()) {
         if (!(dep instanceof ParsedClassType)) {
           throw new InternalCompilerError("Expected ParsedClassType for " + dep
@@ -72,7 +71,7 @@ public class NamespaceChecker extends ErrorHandlingVisitor {
               "Namespace inconsistency for direct dependency.");
         }
 
-        Stack<CodebaseClassType> new_deps = new Stack<CodebaseClassType>();
+        Stack<CodebaseClassType> new_deps = new Stack<>();
         new_deps.addAll(directDependencies(dep));
         new_deps.removeAll(seen);
 

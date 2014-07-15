@@ -28,8 +28,8 @@ public class Atomic_c extends Block_c implements Atomic {
 
     // Find all the aborts and retries that are lexically enclosed in the
     // atomic blocks, and add appropriate edges.
-    List<AbortStmt> aborts = new ArrayList<AbortStmt>();
-    List<RetryStmt> retries = new ArrayList<RetryStmt>();
+    List<AbortStmt> aborts = new ArrayList<>();
+    List<RetryStmt> retries = new ArrayList<>();
 
     for (Stmt s : statements()) {
       AbortRetryCollector c = new AbortRetryCollector(aborts, retries);

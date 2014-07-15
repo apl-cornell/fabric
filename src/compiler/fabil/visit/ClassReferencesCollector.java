@@ -53,8 +53,8 @@ public class ClassReferencesCollector extends NodeVisitor {
   public ClassReferencesCollector(Job job, TypeSystem ts) {
     this.job = job;
     this.ts = (FabILTypeSystem) ts;
-    classes = new HashSet<String>(Arrays.asList(ALWAYS_REQUIRED_CLASSES));
-    nestedClasses = new HashMap<String, Set<String>>();
+    classes = new HashSet<>(Arrays.asList(ALWAYS_REQUIRED_CLASSES));
+    nestedClasses = new HashMap<>();
   }
 
   @Override
@@ -122,11 +122,9 @@ public class ClassReferencesCollector extends NodeVisitor {
     String result = deps.substring(0, deps.length() - 1);
     Properties p = new Properties();
     p.setProperty("dependencies", result);
-    try {
-      f.getParentFile().mkdirs();
-      FileOutputStream fs = new FileOutputStream(f);
+    f.getParentFile().mkdirs();
+    try (FileOutputStream fs = new FileOutputStream(f)) {
       p.store(fs, null);
-      fs.close();
     } catch (IOException e) {
       job.compiler()
       .errorQueue()
@@ -157,7 +155,7 @@ public class ClassReferencesCollector extends NodeVisitor {
           }
           nested = nestedClasses.get(ct.fullName());
           if (nested == null) {
-            nested = new HashSet<String>();
+            nested = new HashSet<>();
             nestedClasses.put(ct.fullName(), nested);
           }
         }

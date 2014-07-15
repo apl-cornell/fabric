@@ -91,7 +91,7 @@ public enum Timing {
       t.count = 0;
     }
 
-    scope = new Stack<Timing>();
+    scope = new Stack<>();
     scope.push(APP);
     APP.count = 1;
     stamp = System.currentTimeMillis();

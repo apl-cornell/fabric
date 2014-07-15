@@ -75,7 +75,7 @@ public class Cache {
 
   public Cache() {
     this.map = new fabric.common.util.Cache<>();
-    this.fetchLocks = new OidKeyHashMap<Cache.FetchLock>();
+    this.fetchLocks = new OidKeyHashMap<>();
   }
 
   /**
@@ -105,7 +105,7 @@ public class Cache {
    *         cache.
    */
   public Entry get(RemoteStore store, long onum, boolean fetch) {
-    Pair<RemoteStore, Long> key = new Pair<RemoteStore, Long>(store, onum);
+    Pair<RemoteStore, Long> key = new Pair<>(store, onum);
 
     Entry entry = map.get(key);
     if (entry != null || !fetch) return entry;
@@ -191,7 +191,7 @@ public class Cache {
    *          the glob.
    */
   public void put(RemoteStore store, long onum, ObjectGlob g) {
-    Pair<RemoteStore, Long> key = new Pair<RemoteStore, Long>(store, onum);
+    Pair<RemoteStore, Long> key = new Pair<>(store, onum);
     put(key, g, false);
   }
 
@@ -248,7 +248,7 @@ public class Cache {
     boolean workerCacheUpdated =
         Worker.getWorker().updateCache(store, g.decrypt());
 
-    Pair<RemoteStore, Long> key = new Pair<RemoteStore, Long>(store, onum);
+    Pair<RemoteStore, Long> key = new Pair<>(store, onum);
 
     return put(key, g, true) != null || workerCacheUpdated;
   }
@@ -260,14 +260,12 @@ public class Cache {
    * However, no synchronization is needed for working with the set.
    */
   public Set<Pair<Pair<RemoteStore, Long>, Long>> timestamps() {
-    Set<Pair<Pair<RemoteStore, Long>, Long>> result =
-        new HashSet<Pair<Pair<RemoteStore, Long>, Long>>();
+    Set<Pair<Pair<RemoteStore, Long>, Long>> result = new HashSet<>();
 
     for (Pair<RemoteStore, Long> key : map.keys()) {
       Entry glob = map.get(key);
       if (glob != null)
-        result.add(new Pair<Pair<RemoteStore, Long>, Long>(key, glob.objectGlob
-            .getTimestamp()));
+        result.add(new Pair<>(key, glob.objectGlob.getTimestamp()));
     }
 
     return result;
@@ -280,8 +278,7 @@ public class Cache {
    * backed by the underlying table.
    */
   public List<Pair<Pair<RemoteStore, Long>, Long>> sortedTimestamps() {
-    List<Pair<Pair<RemoteStore, Long>, Long>> k =
-        new ArrayList<Pair<Pair<RemoteStore, Long>, Long>>(timestamps());
+    List<Pair<Pair<RemoteStore, Long>, Long>> k = new ArrayList<>(timestamps());
 
     Collections.sort(k, TIMESTAMP_COMPARATOR);
 
@@ -290,26 +287,26 @@ public class Cache {
 
   private final Comparator<Pair<Pair<RemoteStore, Long>, Long>> TIMESTAMP_COMPARATOR =
       new Comparator<Pair<Pair<RemoteStore, Long>, Long>>() {
-    @Override
-    public int compare(Pair<Pair<RemoteStore, Long>, Long> o1,
-        Pair<Pair<RemoteStore, Long>, Long> o2) {
-      Entry entry1 = map.get(o1.first);
-      Entry entry2 = map.get(o2.first);
+        @Override
+        public int compare(Pair<Pair<RemoteStore, Long>, Long> o1,
+            Pair<Pair<RemoteStore, Long>, Long> o2) {
+          Entry entry1 = map.get(o1.first);
+          Entry entry2 = map.get(o2.first);
 
-      if (entry1 == entry2) {
-        return 0;
-      }
+          if (entry1 == entry2) {
+            return 0;
+          }
 
-      if (entry1 == null) {
-        return 1;
-      }
+          if (entry1 == null) {
+            return 1;
+          }
 
-      if (entry2 == null) {
-        return -1;
-      }
+          if (entry2 == null) {
+            return -1;
+          }
 
-      return entry2.frequency - entry1.frequency;
-    }
-  };
+          return entry2.frequency - entry1.frequency;
+        }
+      };
 
 }

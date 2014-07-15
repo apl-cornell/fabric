@@ -31,15 +31,14 @@ public class Cache<K, V> {
     }
   }
 
-  private static final ReferenceQueue<Object> queue =
-      new ReferenceQueue<Object>();
+  private static final ReferenceQueue<Object> queue = new ReferenceQueue<>();
 
   static {
     new Collector().start();
   }
 
   public Cache() {
-    this.map = new ConcurrentHashMap<K, ValueSoftRef<K, V>>();
+    this.map = new ConcurrentHashMap<>();
   }
 
   public void clear() {
@@ -61,8 +60,7 @@ public class Cache<K, V> {
   }
 
   public V put(K key, V value) {
-    ValueSoftRef<K, V> ref =
-        map.put(key, new ValueSoftRef<K, V>(this, key, value));
+    ValueSoftRef<K, V> ref = map.put(key, new ValueSoftRef<>(this, key, value));
     if (ref == null) return null;
     return ref.get();
   }
@@ -85,7 +83,7 @@ public class Cache<K, V> {
       ValueSoftRef<K, V> ref = map.get(key);
       if (ref == null) {
         // Didn't get anything, attempt to put.
-        ref = map.putIfAbsent(key, new ValueSoftRef<K, V>(this, key, value));
+        ref = map.putIfAbsent(key, new ValueSoftRef<>(this, key, value));
         if (ref == null) return null;
       }
 
@@ -94,7 +92,7 @@ public class Cache<K, V> {
       if (result != null) return result;
 
       // Found a broken soft ref. Attempt to replace.
-      if (map.replace(key, ref, new ValueSoftRef<K, V>(this, key, value)))
+      if (map.replace(key, ref, new ValueSoftRef<>(this, key, value)))
         return null;
 
       // Replacement failed. Start over.
@@ -122,7 +120,7 @@ public class Cache<K, V> {
       V curValue = null;
       if (curRef != null) curValue = curRef.get();
 
-      if (map.replace(key, curRef, new ValueSoftRef<K, V>(this, key, value))) {
+      if (map.replace(key, curRef, new ValueSoftRef<>(this, key, value))) {
         return curValue;
       }
     }
@@ -153,8 +151,7 @@ public class Cache<K, V> {
     }
 
     if (oldValue != curValue && !oldValue.equals(curValue)) return false;
-    return map
-        .replace(key, curRef, new ValueSoftRef<K, V>(this, key, newValue));
+    return map.replace(key, curRef, new ValueSoftRef<>(this, key, newValue));
   }
 
   public V remove(K key) {
@@ -197,7 +194,7 @@ public class Cache<K, V> {
    * synchronization is needed for working with the set.
    */
   public Set<K> keys() {
-    return new HashSet<K>(map.keySet());
+    return new HashSet<>(map.keySet());
   }
 
   private static final class Collector extends Thread {

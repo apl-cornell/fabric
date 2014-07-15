@@ -224,9 +224,9 @@ public final class Worker {
 
     fabric.common.Options.DEBUG_NO_SSL = !config.useSSL;
 
-    this.stores = new ConcurrentHashMap<String, RemoteStore>();
+    this.stores = new ConcurrentHashMap<>();
     if (initStoreSet != null) this.stores.putAll(initStoreSet);
-    this.remoteWorkers = new ConcurrentHashMap<String, RemoteWorker>();
+    this.remoteWorkers = new ConcurrentHashMap<>();
     this.localStore = new LocalStore();
 
     NameService nameService = new TransitionalNameService();
@@ -263,7 +263,7 @@ public final class Worker {
     try {
       Constructor<FetchManager> fetchManagerConstructor =
           (Constructor<FetchManager>) Class.forName(config.dissemClass)
-          .getConstructor(Worker.class, Properties.class);
+              .getConstructor(Worker.class, Properties.class);
       this.fetchManager =
           fetchManagerConstructor.newInstance(this,
               config.disseminationProperties);
@@ -282,7 +282,7 @@ public final class Worker {
       KeyMaterial key) throws GeneralSecurityException {
     final Protocol<Node> protocol;
     if (config.useSSL)
-      protocol = new HandshakeAuthenticated<Node>(config.getKeyMaterial());
+      protocol = new HandshakeAuthenticated<>(config.getKeyMaterial());
     else protocol = new HandshakeBogus<>();
 
     return new HandshakeComposite<>(protocol);
@@ -426,7 +426,7 @@ public final class Worker {
    * Detemines which of a given set of onums are resident in cache.
    */
   public List<Long> findOnumsInCache(RemoteStore store, List<Long> onums) {
-    List<Long> result = new ArrayList<Long>();
+    List<Long> result = new ArrayList<>();
     for (long onum : onums) {
       if (store.readFromCache(onum) != null) result.add(onum);
     }
@@ -459,7 +459,7 @@ public final class Worker {
   }
 
   public static void initialize(String name) throws IllegalStateException,
-  IOException, InternalError, UsageError, GeneralSecurityException {
+      IOException, InternalError, UsageError, GeneralSecurityException {
     initialize(new ConfigProperties(name));
   }
 
@@ -729,7 +729,7 @@ public final class Worker {
 
         TransactionID currentTid = tm.getCurrentTid();
         if (e.tid.isDescendantOf(currentTid))
-          // Restart this transaction.
+        // Restart this transaction.
           continue;
 
         // Need to restart a parent transaction.
@@ -764,7 +764,7 @@ public final class Worker {
             TransactionID currentTid = tm.getCurrentTid();
             if (currentTid == null || e.tid.isDescendantOf(currentTid)
                 && !currentTid.equals(e.tid))
-              // Restart the transaction just we tried to commit.
+            // Restart the transaction just we tried to commit.
               continue;
 
             // Need to restart a parent transaction.

@@ -72,7 +72,7 @@ public class RemoteWorker extends RemoteNode<RemoteWorker> {
 
   public Object issueRemoteCall(_Proxy receiver, String methodName,
       Class<?>[] parameterTypes, Object[] args)
-          throws UnreachableNodeException, RemoteCallException {
+      throws UnreachableNodeException, RemoteCallException {
     TransactionManager tm = TransactionManager.getInstance();
     tm.registerRemoteCall(this);
 
@@ -81,7 +81,7 @@ public class RemoteWorker extends RemoteNode<RemoteWorker> {
 
     Class<? extends fabric.lang.Object> receiverClass =
         (Class<? extends fabric.lang.Object>) receiver.fetch().$getProxy()
-        .getClass().getEnclosingClass();
+            .getClass().getEnclosingClass();
     ClassRef receiverClassRef = ClassRef.makeRef(receiverClass);
 
     RemoteCallMessage.Response response =
@@ -101,12 +101,12 @@ public class RemoteWorker extends RemoteNode<RemoteWorker> {
   }
 
   public void prepareTransaction(long tid) throws UnreachableNodeException,
-  TransactionPrepareFailedException {
+      TransactionPrepareFailedException {
     send(new PrepareTransactionMessage(tid));
   }
 
   public void commitTransaction(long tid) throws UnreachableNodeException,
-  TransactionCommitFailedException {
+      TransactionCommitFailedException {
     send(new CommitTransactionMessage(tid));
   }
 
@@ -117,7 +117,7 @@ public class RemoteWorker extends RemoteNode<RemoteWorker> {
    *          the tid for the transaction that is aborting.
    */
   public void abortTransaction(TransactionID tid) throws AccessException,
-  UnreachableNodeException {
+      UnreachableNodeException {
     send(new AbortTransactionMessage(tid));
   }
 
@@ -148,7 +148,7 @@ public class RemoteWorker extends RemoteNode<RemoteWorker> {
     DirtyReadMessage.Response response =
         send(new DirtyReadMessage(tid, store, onum));
     if (response.obj == null) return null;
-    return new Pair<Store, SerializedObject>(response.store, response.obj);
+    return new Pair<>(response.store, response.obj);
   }
 
   /**

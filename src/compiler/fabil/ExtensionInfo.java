@@ -61,7 +61,7 @@ import fabric.worker.Worker;
  * Extension information for FabIL extension.
  */
 public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements
-codebases.frontend.ExtensionInfo {
+    codebases.frontend.ExtensionInfo {
   protected static URI platform_ns = URI.create("fab:platform");
   protected static URI local_ns = URI.create("fab:local");
 
@@ -97,7 +97,7 @@ codebases.frontend.ExtensionInfo {
     extFM.setLocation(options.class_output,
         Collections.singleton(options.classOutputDirectory()));
 
-    List<File> platform_directories = new ArrayList<File>();
+    List<File> platform_directories = new ArrayList<>();
     platform_directories.addAll(options.signaturepath());
     platform_directories.addAll(options.bootclasspath());
     extFM.setLocation(options.bootclasspath, platform_directories);
@@ -114,7 +114,7 @@ codebases.frontend.ExtensionInfo {
         Collections.singletonList(opt.sourceOutputDirectory());
     extFM.setLocation(StandardLocation.SOURCE_PATH, sourcepath);
 
-    List<File> classpath = new ArrayList<File>();
+    List<File> classpath = new ArrayList<>();
     classpath.addAll(opt.bootclasspathDirectories());
     for (URI u : opt.classpathURIs()) {
       if (u.getScheme().equals("file")) {
@@ -231,7 +231,7 @@ codebases.frontend.ExtensionInfo {
         Report.report(2, "Creating filesource from " + f);
       URI ns =
           getOptions().platformMode() ? platformNamespace() : localNamespace();
-          return new LocalSource(f, kind, ns);
+      return new LocalSource(f, kind, ns);
     }
   }
 

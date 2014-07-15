@@ -94,13 +94,13 @@ public class CallJifExt_c extends JifCallExt {
       }
 
       List<? extends Type> formalTypes = mi.formalTypes();
-      List<ArgLabel> formalLabels = new ArrayList<ArgLabel>(formalTypes.size());
+      List<ArgLabel> formalLabels = new ArrayList<>(formalTypes.size());
       for (Type ft : formalTypes) {
         ArgLabel fl = (ArgLabel) ts.labelOfType(ft);
         formalLabels.add(fl);
       }
 
-      List<Label> actualLabels = new ArrayList<Label>(c.arguments().size());
+      List<Label> actualLabels = new ArrayList<>(c.arguments().size());
       labelCheckArgs(lc, c, actualLabels);
 
       Label entryLabel = mi.pcBound();
@@ -184,15 +184,15 @@ public class CallJifExt_c extends JifCallExt {
       lc.constrain(
           new NamedLabel("{C(m), *<-c}", ts.pairLabel(Position
               .compilerGenerated(), entryConfPolicy, ts.writerPolicy(
-                  Position.compilerGenerated(),
-                  ts.topPrincipal(Position.compilerGenerated()), remotePrincipal))),
-                  LabelConstraint.LEQ,
-                  new NamedLabel("[*->c, I(rv)]", ts.pairLabel(Position
-                      .compilerGenerated(), ts.readerPolicy(
-                          Position.compilerGenerated(),
-                          ts.topPrincipal(Position.compilerGenerated()), remotePrincipal),
-                          ts.integProjection(returnLabel))), A.labelEnv(), c.position(),
-                          new ConstraintMessage() {
+              Position.compilerGenerated(),
+              ts.topPrincipal(Position.compilerGenerated()), remotePrincipal))),
+          LabelConstraint.LEQ,
+          new NamedLabel("[*->c, I(rv)]", ts.pairLabel(Position
+              .compilerGenerated(), ts.readerPolicy(
+              Position.compilerGenerated(),
+              ts.topPrincipal(Position.compilerGenerated()), remotePrincipal),
+              ts.integProjection(returnLabel))), A.labelEnv(), c.position(),
+          new ConstraintMessage() {
             @Override
             public String msg() {
               return "Insecure remote method call: Either the callee worker is not allowed to read"
@@ -219,21 +219,21 @@ public class CallJifExt_c extends JifCallExt {
           for (Principal p : cc.principals()) {
             lc.constrain(remotePrincipal, PrincipalConstraint.ACTSFOR, p,
                 A.labelEnv(), c.position(), new ConstraintMessage() {
-              @Override
-              public String msg() {
-                return "The principal of the remote worker must act for every principal in the caller constraint.";
-              }
+                  @Override
+                  public String msg() {
+                    return "The principal of the remote worker must act for every principal in the caller constraint.";
+                  }
 
-              @Override
-              public String detailMsg() {
-                return "The principal of the remote worker must act for every principal in the caller constraint.";
-              }
+                  @Override
+                  public String detailMsg() {
+                    return "The principal of the remote worker must act for every principal in the caller constraint.";
+                  }
 
-              @Override
-              public String technicalMsg() {
-                return "c acts for p in obj.m@c(...) with the constraint caller(p)";
-              }
-            });
+                  @Override
+                  public String technicalMsg() {
+                    return "c acts for p in obj.m@c(...) with the constraint caller(p)";
+                  }
+                });
           }
         }
       }

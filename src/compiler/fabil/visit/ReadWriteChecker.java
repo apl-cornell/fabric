@@ -295,7 +295,7 @@ public class ReadWriteChecker extends DataFlow<ReadWriteChecker.DataFlowItem> {
           if (e instanceof Local) {
             Local l = (Local) e;
             ((FieldAssignExt_c) a.ext())
-            .accessState(in.state(l.localInstance()));
+                .accessState(in.state(l.localInstance()));
           } else if (isThis(e)) {
             ((FieldAssignExt_c) a.ext()).accessState(in.state(null));
           }
@@ -397,9 +397,9 @@ public class ReadWriteChecker extends DataFlow<ReadWriteChecker.DataFlowItem> {
     }
 
     public DataFlowItem(DataFlowItem i) {
-      resident = new HashSet<LocalInstance>(i.resident);
-      read = new HashSet<LocalInstance>(i.read);
-      written = new HashSet<LocalInstance>(i.written);
+      resident = new HashSet<>(i.resident);
+      read = new HashSet<>(i.read);
+      written = new HashSet<>(i.written);
     }
 
     /** Destructive meet of this item with another. */

@@ -10,7 +10,8 @@ import polyglot.util.Copy;
 import fabric.lang.Codebase;
 import fabric.lang.security.Label;
 
-public interface NamespaceResolver extends TopLevelResolver, Copy {
+public interface NamespaceResolver extends TopLevelResolver,
+    Copy<NamespaceResolver> {
 
   /**
    * Check if a type object is in the cache, returning null if not.

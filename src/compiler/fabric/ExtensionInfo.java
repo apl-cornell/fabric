@@ -60,7 +60,7 @@ import fabric.worker.Store;
  * Extension information for fabric extension.
  */
 public class ExtensionInfo extends jif.ExtensionInfo implements
-codebases.frontend.ExtensionInfo {
+    codebases.frontend.ExtensionInfo {
 
   /*
    * Note: jif.ExtensionInfo has a jif.OutputExtensionInfo field jlext. The only
@@ -110,13 +110,13 @@ codebases.frontend.ExtensionInfo {
     ((FabricFileManager) extFM).setLocation(options.classpath,
         options.classpathURIs());
     //Also load source from codebases
-    List<URI> sourcedirs = new ArrayList<URI>();
+    List<URI> sourcedirs = new ArrayList<>();
     for (URI cpdir : options.classpathURIs()) {
       if (cpdir.getScheme().equals("fab")) sourcedirs.add(cpdir);
     }
     sourcedirs.addAll(options.sourcepathURIs());
     ((FabricFileManager) extFM).setLocation(options.source_path, sourcedirs);
-    List<File> dirs = new ArrayList<File>();
+    List<File> dirs = new ArrayList<>();
     dirs.addAll(options.sigcp);
     dirs.addAll(options.bootclasspathDirectories());
     extFM.setLocation(options.bootclasspath, dirs);
@@ -137,7 +137,7 @@ codebases.frontend.ExtensionInfo {
         Collections.singletonList(opt.sourceOutputDirectory());
     extFM.setLocation(StandardLocation.SOURCE_PATH, sourcepath);
 
-    List<File> classpath = new ArrayList<File>();
+    List<File> classpath = new ArrayList<>();
     classpath.addAll(opt.bootclasspathDirectories());
     for (URI u : opt.classpathURIs()) {
       if (u.getScheme().equals("file")) {
@@ -281,13 +281,13 @@ codebases.frontend.ExtensionInfo {
     } else {
       URI ns =
           getOptions().platformMode() ? platformNamespace() : localNamespace();
-          LocalSource src = new LocalSource(f, kind, ns);
-          // Publish all local source unless we're in platform mode.
-          // TODO: generalize and make this better. We should only publish
-          // source in the sourcepath. Plus, the user may be re-publishing remote
-          // source with a new codebase.
-          src.setPublish(getOptions().publish());
-          return src;
+      LocalSource src = new LocalSource(f, kind, ns);
+      // Publish all local source unless we're in platform mode.
+      // TODO: generalize and make this better. We should only publish
+      // source in the sourcepath. Plus, the user may be re-publishing remote
+      // source with a new codebase.
+      src.setPublish(getOptions().publish());
+      return src;
     }
   }
 

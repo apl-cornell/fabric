@@ -46,7 +46,7 @@ public class SimpleResolver extends NamespaceResolver_c {
       NamespaceResolver parent, Map<String, URI> codebaseAliases) {
     super(extInfo, namespace, parent, codebaseAliases);
     fileManager = (FabricFileManager) extInfo.extFileManager();
-    noClassCache = new HashSet<String>();
+    noClassCache = new HashSet<>();
     this.ignore_mod_times = extInfo.getOptions().ignore_mod_times;
   }
 

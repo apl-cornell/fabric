@@ -286,10 +286,11 @@ public final class Logging {
 
       // Read the configuration.
       try {
-        InputStream in = new FileInputStream(configFile);
-        Properties p = new Properties();
-        p.load(in);
-        in.close();
+        final Properties p;
+        try (InputStream in = new FileInputStream(configFile)) {
+          p = new Properties();
+          p.load(in);
+        }
 
         // Make the log filename absolute if it isn't already.
         final String key = "java.util.logging.FileHandler.pattern";

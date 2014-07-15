@@ -50,7 +50,7 @@ public final class SubSocketFactory<Node extends RemoteNode<Node>> {
     this.protocol = protocol;
     this.nameService = nameService;
     this.portType = portType;
-    this.channels = new HashMap<String, ClientChannel>();
+    this.channels = new HashMap<>();
     this.maxOpenConnectionsPerChannel = maxOpenConnectionsPerChannel;
   }
 

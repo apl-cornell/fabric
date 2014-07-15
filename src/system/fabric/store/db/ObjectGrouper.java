@@ -149,8 +149,8 @@ public final class ObjectGrouper {
   public ObjectGrouper(ObjectDB database, PrivateKey signingKey) {
     this.database = database;
     this.signingKey = signingKey;
-    this.table = new ConcurrentLongKeyHashMap<Entry>();
-    this.queue = new ReferenceQueue<AbstractGroup>();
+    this.table = new ConcurrentLongKeyHashMap<>();
+    this.queue = new ReferenceQueue<>();
 
     new Collector().start();
   }
@@ -469,16 +469,14 @@ public final class ObjectGrouper {
 
     long headLabelOnum = obj.getUpdateLabelOnum();
 
-    LongKeyMap<SerializedObject> group =
-        new LongKeyHashMap<SerializedObject>(MIN_GROUP_SIZE);
-    LongKeyMap<SerializedObject> frontier =
-        new LongKeyHashMap<SerializedObject>();
+    LongKeyMap<SerializedObject> group = new LongKeyHashMap<>(MIN_GROUP_SIZE);
+    LongKeyMap<SerializedObject> frontier = new LongKeyHashMap<>();
 
     // Number of non-surrogate objects in the group.
     int groupSize = 0;
 
     // Do a breadth-first traversal and add objects to the group.
-    Queue<SerializedObject> toVisit = new LinkedList<SerializedObject>();
+    Queue<SerializedObject> toVisit = new LinkedList<>();
     toVisit.add(obj);
 
     LongSet seen = new LongHashSet();
@@ -559,37 +557,36 @@ public final class ObjectGrouper {
         // First, ensure that there is a table entry for the given onum.
         GroupLock newEntryGroupLock =
             groupLock == null ? new GroupLock(onum) : groupLock;
-            Entry newEntry = new Entry(newEntryGroupLock);
-            entry = table.putIfAbsent(onum, newEntry);
-            if (entry == null) entry = newEntry;
+        Entry newEntry = new Entry(newEntryGroupLock);
+        entry = table.putIfAbsent(onum, newEntry);
+        if (entry == null) entry = newEntry;
 
-            AbstractGroup group;
-            synchronized (entry) {
-              group = entry.getGroup();
-              curLock = entry.getLock();
-            }
+        AbstractGroup group;
+        synchronized (entry) {
+          group = entry.getGroup();
+          curLock = entry.getLock();
+        }
 
-            if (!ignorePartialGroups && group != null
-                || group instanceof GroupContainer) {
-              // Group already exists.
-              return null;
-            }
+        if (!ignorePartialGroups && group != null
+            || group instanceof GroupContainer) {
+          // Group already exists.
+          return null;
+        }
 
-            if (curLock == null) {
-              // Entry had a full group that has been GCed. Remove the entry and start
-              // over.
-              table.remove(onum, entry);
-              continue;
-            }
+        if (curLock == null) {
+          // Entry had a full group that has been GCed. Remove the entry and start
+          // over.
+          table.remove(onum, entry);
+          continue;
+        }
 
-            // Have a proper entry now.
-            break;
+        // Have a proper entry now.
+        break;
       }
 
       while (true) {
         if (curLock == groupLock) {
-          return new Pair<GroupLock, PartialObjectGroup>(groupLock,
-              (PartialObjectGroup) entry.getGroup());
+          return new Pair<>(groupLock, (PartialObjectGroup) entry.getGroup());
         }
 
         PartialObjectGroup existingGroup = null;
@@ -629,8 +626,7 @@ public final class ObjectGrouper {
           if (groupLock == null) {
             // Use the existing lock.
             curLock.status = GroupLock.Status.CLAIMED_FOR_PARTIAL_GROUP;
-            return new Pair<GroupLock, PartialObjectGroup>(curLock,
-                existingGroup);
+            return new Pair<>(curLock, existingGroup);
           }
 
           // Replace curLock with the groupLock.
@@ -638,8 +634,7 @@ public final class ObjectGrouper {
           curLock.replacement = groupLock;
           curLock.notifyAll();
 
-          return new Pair<GroupLock, PartialObjectGroup>(groupLock,
-              existingGroup);
+          return new Pair<>(groupLock, existingGroup);
         }
       }
     }

@@ -109,7 +109,7 @@ import fabric.worker.Store;
 import fabric.worker.Worker;
 
 public class FabricTypeSystem_c extends JifTypeSystem_c implements
-FabricTypeSystem {
+    FabricTypeSystem {
   protected Map<URI, NamespaceResolver> namespaceResolvers;
   protected NamespaceResolver platformResolver;
   protected NamespaceResolver applicationResolver;
@@ -163,7 +163,7 @@ FabricTypeSystem {
     FabricOptions opt = extInfo.getOptions();
     boolean loadRaw = opt.skipLabelChecking;
 
-    namespaceResolvers = new HashMap<URI, NamespaceResolver>();
+    namespaceResolvers = new HashMap<>();
     platformResolver = namespaceResolver(extInfo.platformNamespace());
     platformResolver.loadRawClasses(loadRaw);
 
@@ -274,7 +274,7 @@ FabricTypeSystem {
   @Override
   public List<String> defaultPackageImports() {
     // Include fabric.lang and fabric.worker as default imports.
-    List<String> result = new ArrayList<String>(5);
+    List<String> result = new ArrayList<>(5);
     result.add("fabric.lang");
     result.add("fabric.lang.security");
     result.add("fabric.worker");
@@ -360,8 +360,8 @@ FabricTypeSystem {
           wli.position(),
           readerPolicy(wli.position(), workerLocalPrincipal,
               bottomPrincipal(wli.position())),
-              writerPolicy(wli.position(), workerLocalPrincipal,
-                  workerLocalPrincipal)));
+          writerPolicy(wli.position(), workerLocalPrincipal,
+              workerLocalPrincipal)));
     }
     return workerLocalPrincipal;
   }
@@ -568,13 +568,13 @@ FabricTypeSystem {
     if (L instanceof ArgLabel) {
       return super.confProjection(((ArgLabel) L).upperBound());
     } else if (L instanceof MeetLabel) {
-      Set<ConfPolicy> confPols = new HashSet<ConfPolicy>();
+      Set<ConfPolicy> confPols = new HashSet<>();
       for (Label l : ((MeetLabel) L).meetComponents()) {
         confPols.add(representableConfProjection(l));
       }
       return meetConfPolicy(L.position(), confPols);
     } else if (L instanceof JoinLabel) {
-      Set<ConfPolicy> confPols = new HashSet<ConfPolicy>();
+      Set<ConfPolicy> confPols = new HashSet<>();
       for (Label l : ((JoinLabel) L).joinComponents()) {
         confPols.add(representableConfProjection(l));
       }
@@ -588,13 +588,13 @@ FabricTypeSystem {
     if (L instanceof ArgLabel) {
       return super.integProjection(((ArgLabel) L).upperBound());
     } else if (L instanceof MeetLabel) {
-      Set<IntegPolicy> integPols = new HashSet<IntegPolicy>();
+      Set<IntegPolicy> integPols = new HashSet<>();
       for (Label l : ((MeetLabel) L).meetComponents()) {
         integPols.add(representableIntegProjection(l));
       }
       return meetIntegPolicy(L.position(), integPols);
     } else if (L instanceof JoinLabel) {
-      Set<IntegPolicy> integPols = new HashSet<IntegPolicy>();
+      Set<IntegPolicy> integPols = new HashSet<>();
       for (Label l : ((JoinLabel) L).joinComponents()) {
         integPols.add(representableIntegProjection(l));
       }
@@ -863,8 +863,8 @@ FabricTypeSystem {
   @Override
   public FabricArrayType fabricArrayOf(Position pos, Type t) {
     return new FabricArrayType_c(this, pos, t,
-        /* isConst */false, /* isNonConst */true,
-        /* isNative */false);
+    /* isConst */false, /* isNonConst */true,
+    /* isNative */false);
   }
 
   @Override
@@ -882,8 +882,8 @@ FabricTypeSystem {
     }
 
     return new FabricArrayType_c(this, pos, type,
-        /* isConst */false, /* isNonConst */true,
-        /* isNative */true);
+    /* isConst */false, /* isNonConst */true,
+    /* isNative */true);
   }
 
   @Override
@@ -952,11 +952,11 @@ FabricTypeSystem {
         fabric.lang.security.Label lbl = defaultPublishingLabel();
         fabric.util.HashMap classes =
             new fabric.util.HashMap._Impl(dest).fabric$util$HashMap$(
-                /*
-                 * // XXX when HashMap becomes parameterized, these will be the
-                 * labels. , lbl, lbl.confPolicy()
-                 */
-                );
+            /*
+             * // XXX when HashMap becomes parameterized, these will be the
+             * labels. , lbl, lbl.confPolicy()
+             */
+            );
         new_codebase =
             new Codebase._Impl(dest).fabric$lang$Codebase$(lbl,
                 lbl.confPolicy(), classes);
@@ -1139,14 +1139,14 @@ FabricTypeSystem {
             conf = join(proj.label().subst(this), noComponentsLabel());
           } else if (c instanceof JoinConfPolicy_c) {
             JoinConfPolicy_c jp = (JoinConfPolicy_c) c;
-            Set<Label> lifted = new HashSet<Label>();
-            Set<ConfPolicy> confpols = new HashSet<ConfPolicy>();
+            Set<Label> lifted = new HashSet<>();
+            Set<ConfPolicy> confpols = new HashSet<>();
 
             for (ConfPolicy cp : jp.joinComponents()) {
               if (cp instanceof ConfProjectionPolicy_c) {
                 ConfProjectionPolicy_c cpproj = (ConfProjectionPolicy_c) cp;
                 lifted
-                .add(join(cpproj.label().subst(this), noComponentsLabel()));
+                    .add(join(cpproj.label().subst(this), noComponentsLabel()));
               } else confpols.add(cp);
             }
             ConfPolicy new_jp = joinConfPolicy(jp.position(), confpols);

@@ -53,7 +53,7 @@ import fabric.util.Map;
  * be at most one <code>RemoteStore</code> object representing that store.
  */
 public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
-Serializable {
+    Serializable {
   /**
    * A queue of fresh object identifiers.
    */
@@ -88,8 +88,8 @@ Serializable {
     super(name);
 
     this.cache = new ObjectCache(name);
-    this.fetchLocks = new ConcurrentLongKeyHashMap<FetchLock>();
-    this.fresh_ids = new LinkedList<Long>();
+    this.fetchLocks = new ConcurrentLongKeyHashMap<>();
+    this.fresh_ids = new LinkedList<>();
     this.publicKey = null;
   }
 
@@ -120,7 +120,7 @@ Serializable {
   public void prepareTransaction(long tid, boolean singleStore,
       boolean readOnly, Collection<Object._Impl> toCreate,
       LongKeyMap<Integer> reads, Collection<Object._Impl> writes)
-          throws TransactionPrepareFailedException, UnreachableNodeException {
+      throws TransactionPrepareFailedException, UnreachableNodeException {
     send(Worker.getWorker().authToStore, new PrepareTransactionMessage(tid,
         singleStore, readOnly, toCreate, reads, writes));
   }
@@ -271,7 +271,7 @@ Serializable {
    *          The number of objects to allocate
    */
   protected void reserve(int num) throws AccessException,
-  UnreachableNodeException {
+      UnreachableNodeException {
     synchronized (fresh_ids) {
       while (fresh_ids.size() < num) {
         // log.info("Requesting new onums, storeid=" + storeID);

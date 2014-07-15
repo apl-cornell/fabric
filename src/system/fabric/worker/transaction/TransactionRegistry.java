@@ -13,7 +13,7 @@ public final class TransactionRegistry {
    * Maps top-level transaction IDs to their top-level transaction logs.
    */
   private static final ConcurrentLongKeyMap<Log> registry =
-      new ConcurrentLongKeyHashMap<Log>();
+      new ConcurrentLongKeyHashMap<>();
 
   /**
    * Returns the top-level transaction log for the given top-level TID (or null

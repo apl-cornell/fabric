@@ -59,8 +59,7 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
     TypeNode worker =
         nf.CanonicalTypeNode(Position.compilerGenerated(), ts.Worker());
 
-    List<ClassMember> members =
-        new ArrayList<ClassMember>(cd.body().members().size() + 1);
+    List<ClassMember> members = new ArrayList<>(cd.body().members().size() + 1);
     members.add(nf.FieldDecl(
         Position.compilerGenerated(),
         Flags.FINAL.Static(),
@@ -189,7 +188,7 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
 
   @Override
   protected ClassBody addInitializer(ClassBody cb, JifToJavaRewriter rw) {
-    List<Stmt> inits = new ArrayList<Stmt>(rw.getInitializations());
+    List<Stmt> inits = new ArrayList<>(rw.getInitializations());
     rw.getInitializations().clear();
     return cb.addMember(rw.qq().parseMember("private void %s() { %LS }",
         INITIALIZATIONS_METHOD_NAME, inits));

@@ -84,16 +84,16 @@ FastSerializable {
     try {
       // Set up the crypto for encrypting the payload.
       Cipher cipher = makeCipher(keyObject, Cipher.ENCRYPT_MODE, iv);
-      ByteArrayOutputStream bos = new ByteArrayOutputStream();
-      CipherOutputStream cos = new CipherOutputStream(bos, cipher);
-      DataOutputStream out = new DataOutputStream(cos);
 
       // Encrypt the payload.
-      payload.write(out);
+      ByteArrayOutputStream bos = new ByteArrayOutputStream();
+      try (CipherOutputStream cos = new CipherOutputStream(bos, cipher);
+          DataOutputStream out = new DataOutputStream(cos)) {
+        payload.write(out);
+        out.flush();
+      }
 
       // Retrieve the encrypted blob.
-      out.flush();
-      cos.close();
       this.data = bos.toByteArray();
 
       if (label.$getOnum() == EMPTY_LABEL) {

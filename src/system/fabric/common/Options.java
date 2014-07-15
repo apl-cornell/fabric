@@ -255,7 +255,7 @@ public abstract class Options {
         String defaultValue) {
       this.kind = kind;
 
-      this.ids = new LinkedHashSet<String>(ids.length);
+      this.ids = new LinkedHashSet<>(ids.length);
       for (String flag : ids)
         this.ids.add(flag);
 
@@ -364,7 +364,7 @@ public abstract class Options {
   }
 
   protected Options() {
-    this.flags = new TreeSet<Flag>();
+    this.flags = new TreeSet<>();
 
     // By default, add help and version flags.
     flags.add(new Flag(Kind.HELP,
@@ -377,7 +377,7 @@ public abstract class Options {
     });
 
     flags.add(new Flag(Kind.VERSION, new String[] { "--version", "-v",
-    "-version" }, null, "print version info") {
+        "-version" }, null, "print version info") {
       @Override
       public int handle(String[] args, int index) {
         System.out.println("Fabric version " + new Version());
@@ -458,16 +458,16 @@ public abstract class Options {
     });
 
     flags
-    .add(new Flag(Kind.SECRET,
-        new String[] { "--addbootcp", "-addbootcp" }, "<path>",
-        "additional directory for Fabric runtime classes; prepended to bootclasspath") {
-      @Override
-      public int handle(String[] args, int index) {
-        Options.this.bootcp =
-            args[index] + File.pathSeparator + Options.this.bootcp;
-        return index + 1;
-      }
-    });
+        .add(new Flag(Kind.SECRET,
+            new String[] { "--addbootcp", "-addbootcp" }, "<path>",
+            "additional directory for Fabric runtime classes; prepended to bootclasspath") {
+          @Override
+          public int handle(String[] args, int index) {
+            Options.this.bootcp =
+                args[index] + File.pathSeparator + Options.this.bootcp;
+            return index + 1;
+          }
+        });
 
     flags.add(new Flag(Kind.SECRET, "--output-to-fs", "",
         "A flag for putting .class files to the local file system") {
@@ -490,7 +490,7 @@ public abstract class Options {
   }
 
   private void checkFlagConsistency() {
-    Set<String> flagIDs = new HashSet<String>();
+    Set<String> flagIDs = new HashSet<>();
     for (Flag flag : flags) {
       for (String id : flag.ids) {
         if (flagIDs.contains(id)) {

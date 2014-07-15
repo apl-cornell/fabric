@@ -103,7 +103,7 @@ public class FabricCall_c extends JifCall_c implements FabricCall {
         throw new InternalCompilerError("Stupid compiler");
       }
       List<Type> argTypes =
-          new ArrayList<Type>(c.methodInstance().formalTypes().size() + 1);
+          new ArrayList<>(c.methodInstance().formalTypes().size() + 1);
       argTypes.add(ts.Principal());
       argTypes.addAll(c.methodInstance().formalTypes());
       if (rcvrType.methods(c.name() + "_remote", argTypes).isEmpty()) {
@@ -115,7 +115,7 @@ public class FabricCall_c extends JifCall_c implements FabricCall {
                 + "\", "
                 + "because the dynamic label check might leak information."
                 + "\nAlso, make sure the method you are trying to call is public and not static or abstract.",
-                c.position());
+            c.position());
       }
 
       return c.remoteWorkerPrincipal(ts.exprToPrincipal(ts, c.remoteWorker(),

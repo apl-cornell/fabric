@@ -62,7 +62,7 @@ public class FieldAssignExt_c extends ExprExt_c {
     }
 
     String quote = "%T";
-    List<Object> subs = new ArrayList<Object>(2);
+    List<Object> subs = new ArrayList<>(2);
     if (flags.isStatic()) {
       quote += "._Static._Proxy.$instance";
       subs.add(field.fieldInstance().container());

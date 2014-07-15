@@ -138,14 +138,14 @@ public class Disseminator implements Application {
 
   private static final Continuation<Object, Exception> halt =
       new Continuation<Object, Exception>() {
-    @Override
-    public void receiveException(Exception result) {
-    }
+        @Override
+        public void receiveException(Exception result) {
+        }
 
-    @Override
-    public void receiveResult(Object result) {
-    }
-  };
+        @Override
+        public void receiveResult(Object result) {
+        }
+      };
 
   /**
    * Schedules a task on the task processing thread. When messages are received,
@@ -504,7 +504,7 @@ public class Disseminator implements Application {
    */
   private OidKeyHashMap<Long> skipSet(rice.pastry.Id deciderId, int level) {
     rice.pastry.Id me = (rice.pastry.Id) localHandle().getId();
-    OidKeyHashMap<Long> skip = new OidKeyHashMap<Long>();
+    OidKeyHashMap<Long> skip = new OidKeyHashMap<>();
 
     for (Pair<Pair<RemoteStore, Long>, Long> k : cache.timestamps()) {
       rice.pastry.Id id =
@@ -534,8 +534,7 @@ public class Disseminator implements Application {
 
         rice.pastry.Id me = (rice.pastry.Id) localHandle().getId();
 
-        Map<Pair<RemoteStore, Long>, ObjectGlob> globs =
-            new HashMap<Pair<RemoteStore, Long>, ObjectGlob>();
+        Map<Pair<RemoteStore, Long>, ObjectGlob> globs = new HashMap<>();
 
         for (Pair<Pair<RemoteStore, Long>, Long> k : cache.sortedTimestamps()) {
           Long skipTimestamp = skip.get(k.first.first, k.first.second);

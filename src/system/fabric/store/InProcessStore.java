@@ -81,9 +81,9 @@ public class InProcessStore extends RemoteStore {
       boolean readOnly, Collection<_Impl> toCreate, LongKeyMap<Integer> reads,
       Collection<_Impl> writes) throws TransactionPrepareFailedException {
     Collection<SerializedObject> serializedCreates =
-        new ArrayList<SerializedObject>(toCreate.size());
+        new ArrayList<>(toCreate.size());
     Collection<SerializedObject> serializedWrites =
-        new ArrayList<SerializedObject>(writes.size());
+        new ArrayList<>(writes.size());
 
     for (_Impl o : toCreate) {
       @SuppressWarnings("deprecation")
@@ -117,7 +117,7 @@ public class InProcessStore extends RemoteStore {
 
   @Override
   public ObjectGroup readObjectFromStore(long onum) throws AccessException {
-    LongKeyMap<SerializedObject> map = new LongKeyHashMap<SerializedObject>();
+    LongKeyMap<SerializedObject> map = new LongKeyHashMap<>();
     SerializedObject obj = tm.read(onum);
     if (obj == null) throw new AccessException(this, onum);
     map.put(onum, obj);

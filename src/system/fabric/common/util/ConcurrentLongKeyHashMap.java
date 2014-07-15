@@ -111,7 +111,7 @@ import sun.misc.Unsafe;
  * @param <V> the type of mapped values
  */
 public class ConcurrentLongKeyHashMap<V> extends AbstractLongKeyMap<V>
-implements ConcurrentLongKeyMap<V>, Serializable {
+    implements ConcurrentLongKeyMap<V>, Serializable {
   private static final long serialVersionUID = 7249069246763182397L;
 
   /*
@@ -329,306 +329,306 @@ implements ConcurrentLongKeyMap<V>, Serializable {
     static final int MAX_SCAN_RETRIES = Runtime.getRuntime()
         .availableProcessors() > 1 ? 64 : 1;
 
-        /**
-         * The per-segment table. Elements are accessed via
-         * entryAt/setEntryAt providing volatile semantics.
-         */
-        transient volatile HashEntry<V>[] table;
+    /**
+     * The per-segment table. Elements are accessed via
+     * entryAt/setEntryAt providing volatile semantics.
+     */
+    transient volatile HashEntry<V>[] table;
 
-        /**
-         * The number of elements. Accessed only either within locks
-         * or among other volatile reads that maintain visibility.
-         */
-        transient int count;
+    /**
+     * The number of elements. Accessed only either within locks
+     * or among other volatile reads that maintain visibility.
+     */
+    transient int count;
 
-        /**
-         * The total number of mutative operations in this segment.
-         * Even though this may overflows 32 bits, it provides
-         * sufficient accuracy for stability checks in CHM isEmpty()
-         * and size() methods.  Accessed only either within locks or
-         * among other volatile reads that maintain visibility.
-         */
-        transient int modCount;
+    /**
+     * The total number of mutative operations in this segment.
+     * Even though this may overflows 32 bits, it provides
+     * sufficient accuracy for stability checks in CHM isEmpty()
+     * and size() methods.  Accessed only either within locks or
+     * among other volatile reads that maintain visibility.
+     */
+    transient int modCount;
 
-        /**
-         * The table is rehashed when its size exceeds this threshold.
-         * (The value of this field is always <tt>(int)(capacity *
-         * loadFactor)</tt>.)
-         */
-        transient int threshold;
+    /**
+     * The table is rehashed when its size exceeds this threshold.
+     * (The value of this field is always <tt>(int)(capacity *
+     * loadFactor)</tt>.)
+     */
+    transient int threshold;
 
-        /**
-         * The load factor for the hash table.  Even though this value
-         * is same for all segments, it is replicated to avoid needing
-         * links to outer object.
-         * @serial
-         */
-        final float loadFactor;
+    /**
+     * The load factor for the hash table.  Even though this value
+     * is same for all segments, it is replicated to avoid needing
+     * links to outer object.
+     * @serial
+     */
+    final float loadFactor;
 
-        Segment(float lf, int threshold, HashEntry<V>[] tab) {
-          this.loadFactor = lf;
-          this.threshold = threshold;
-          this.table = tab;
-        }
+    Segment(float lf, int threshold, HashEntry<V>[] tab) {
+      this.loadFactor = lf;
+      this.threshold = threshold;
+      this.table = tab;
+    }
 
-        final V put(long key, int hash, V value, boolean onlyIfAbsent) {
-          HashEntry<V> node =
-              tryLock() ? null : scanAndLockForPut(key, hash, value);
-          V oldValue;
-          try {
-            HashEntry<V>[] tab = table;
-            int index = (tab.length - 1) & hash;
-            HashEntry<V> first = entryAt(tab, index);
-            for (HashEntry<V> e = first;;) {
-              if (e != null) {
-                long k;
-                if ((k = e.key) == key || (e.hash == hash && key == k)) {
-                  oldValue = e.value;
-                  if (!onlyIfAbsent) {
-                    e.value = value;
-                    ++modCount;
-                  }
-                  break;
-                }
-                e = e.next;
-              } else {
-                if (node != null)
-                  node.setNext(first);
-                else node = new HashEntry<V>(hash, key, value, first);
-                int c = count + 1;
-                if (c > threshold && tab.length < MAXIMUM_CAPACITY)
-                  rehash(node);
-                else setEntryAt(tab, index, node);
-                ++modCount;
-                count = c;
-                oldValue = null;
-                break;
-              }
-            }
-          } finally {
-            unlock();
-          }
-          return oldValue;
-        }
-
-        /**
-         * Doubles size of table and repacks entries, also adding the
-         * given node to new table
-         */
-        @SuppressWarnings("unchecked")
-        private void rehash(HashEntry<V> node) {
-          /*
-           * Reclassify nodes in each list to new table.  Because we
-           * are using power-of-two expansion, the elements from
-           * each bin must either stay at same index, or move with a
-           * power of two offset. We eliminate unnecessary node
-           * creation by catching cases where old nodes can be
-           * reused because their next fields won't change.
-           * Statistically, at the default threshold, only about
-           * one-sixth of them need cloning when a table
-           * doubles. The nodes they replace will be garbage
-           * collectable as soon as they are no longer referenced by
-           * any reader thread that may be in the midst of
-           * concurrently traversing table. Entry accesses use plain
-           * array indexing because they are followed by volatile
-           * table write.
-           */
-          HashEntry<V>[] oldTable = table;
-          int oldCapacity = oldTable.length;
-          int newCapacity = oldCapacity << 1;
-          threshold = (int) (newCapacity * loadFactor);
-          HashEntry<V>[] newTable = new HashEntry[newCapacity];
-          int sizeMask = newCapacity - 1;
-          for (int i = 0; i < oldCapacity; i++) {
-            HashEntry<V> e = oldTable[i];
-            if (e != null) {
-              HashEntry<V> next = e.next;
-              int idx = e.hash & sizeMask;
-              if (next == null) //  Single node on list
-                newTable[idx] = e;
-              else { // Reuse consecutive sequence at same slot
-                HashEntry<V> lastRun = e;
-                int lastIdx = idx;
-                for (HashEntry<V> last = next; last != null; last = last.next) {
-                  int k = last.hash & sizeMask;
-                  if (k != lastIdx) {
-                    lastIdx = k;
-                    lastRun = last;
-                  }
-                }
-                newTable[lastIdx] = lastRun;
-                // Clone remaining nodes
-                for (HashEntry<V> p = e; p != lastRun; p = p.next) {
-                  V v = p.value;
-                  int h = p.hash;
-                  int k = h & sizeMask;
-                  HashEntry<V> n = newTable[k];
-                  newTable[k] = new HashEntry<V>(h, p.key, v, n);
-                }
-              }
-            }
-          }
-          int nodeIndex = node.hash & sizeMask; // add the new node
-          node.setNext(newTable[nodeIndex]);
-          newTable[nodeIndex] = node;
-          table = newTable;
-        }
-
-        /**
-         * Scans for a node containing given key while trying to
-         * acquire lock, creating and returning one if not found. Upon
-         * return, guarantees that lock is held. UNlike in most
-         * methods, calls to method equals are not screened: Since
-         * traversal speed doesn't matter, we might as well help warm
-         * up the associated code and accesses as well.
-         *
-         * @return a new node if key not found, else null
-         */
-        private HashEntry<V> scanAndLockForPut(long key, int hash, V value) {
-          HashEntry<V> first = entryForHash(this, hash);
-          HashEntry<V> e = first;
-          HashEntry<V> node = null;
-          int retries = -1; // negative while locating node
-          while (!tryLock()) {
-            HashEntry<V> f; // to recheck first below
-            if (retries < 0) {
-              if (e == null) {
-                if (node == null) // speculatively create node
-                  node = new HashEntry<V>(hash, key, value, null);
-                retries = 0;
-              } else if (key == e.key)
-                retries = 0;
-              else e = e.next;
-            } else if (++retries > MAX_SCAN_RETRIES) {
-              lock();
-              break;
-            } else if ((retries & 1) == 0
-                && (f = entryForHash(this, hash)) != first) {
-              e = first = f; // re-traverse if entry changed
-              retries = -1;
-            }
-          }
-          return node;
-        }
-
-        /**
-         * Scans for a node containing the given key while trying to
-         * acquire lock for a remove or replace operation. Upon
-         * return, guarantees that lock is held.  Note that we must
-         * lock even if the key is not found, to ensure sequential
-         * consistency of updates.
-         */
-        private void scanAndLock(Object key, int hash) {
-          // similar to but simpler than scanAndLockForPut
-          HashEntry<V> first = entryForHash(this, hash);
-          HashEntry<V> e = first;
-          int retries = -1;
-          while (!tryLock()) {
-            HashEntry<V> f;
-            if (retries < 0) {
-              if (e == null || key.equals(e.key))
-                retries = 0;
-              else e = e.next;
-            } else if (++retries > MAX_SCAN_RETRIES) {
-              lock();
-              break;
-            } else if ((retries & 1) == 0
-                && (f = entryForHash(this, hash)) != first) {
-              e = first = f;
-              retries = -1;
-            }
-          }
-        }
-
-        /**
-         * Remove; match on key only if value null, else match both.
-         */
-        final V remove(long key, int hash, Object value) {
-          if (!tryLock()) scanAndLock(key, hash);
-          V oldValue = null;
-          try {
-            HashEntry<V>[] tab = table;
-            int index = (tab.length - 1) & hash;
-            HashEntry<V> e = entryAt(tab, index);
-            HashEntry<V> pred = null;
-            while (e != null) {
-              long k;
-              HashEntry<V> next = e.next;
-              if ((k = e.key) == key || (e.hash == hash && key == k)) {
-                V v = e.value;
-                if (value == null || value == v || value.equals(v)) {
-                  if (pred == null)
-                    setEntryAt(tab, index, next);
-                  else pred.setNext(next);
-                  ++modCount;
-                  --count;
-                  oldValue = v;
-                }
-                break;
-              }
-              pred = e;
-              e = next;
-            }
-          } finally {
-            unlock();
-          }
-          return oldValue;
-        }
-
-        final boolean replace(long key, int hash, V oldValue, V newValue) {
-          if (!tryLock()) scanAndLock(key, hash);
-          boolean replaced = false;
-          try {
-            HashEntry<V> e;
-            for (e = entryForHash(this, hash); e != null; e = e.next) {
-              long k;
-              if ((k = e.key) == key || (e.hash == hash && key == k)) {
-                if (oldValue.equals(e.value)) {
-                  e.value = newValue;
-                  ++modCount;
-                  replaced = true;
-                }
-                break;
-              }
-            }
-          } finally {
-            unlock();
-          }
-          return replaced;
-        }
-
-        final V replace(long key, int hash, V value) {
-          if (!tryLock()) scanAndLock(key, hash);
-          V oldValue = null;
-          try {
-            HashEntry<V> e;
-            for (e = entryForHash(this, hash); e != null; e = e.next) {
-              long k;
-              if ((k = e.key) == key || (e.hash == hash && key == k)) {
-                oldValue = e.value;
+    final V put(long key, int hash, V value, boolean onlyIfAbsent) {
+      HashEntry<V> node =
+          tryLock() ? null : scanAndLockForPut(key, hash, value);
+      V oldValue;
+      try {
+        HashEntry<V>[] tab = table;
+        int index = (tab.length - 1) & hash;
+        HashEntry<V> first = entryAt(tab, index);
+        for (HashEntry<V> e = first;;) {
+          if (e != null) {
+            long k;
+            if ((k = e.key) == key || (e.hash == hash && key == k)) {
+              oldValue = e.value;
+              if (!onlyIfAbsent) {
                 e.value = value;
                 ++modCount;
-                break;
+              }
+              break;
+            }
+            e = e.next;
+          } else {
+            if (node != null)
+              node.setNext(first);
+            else node = new HashEntry<>(hash, key, value, first);
+            int c = count + 1;
+            if (c > threshold && tab.length < MAXIMUM_CAPACITY)
+              rehash(node);
+            else setEntryAt(tab, index, node);
+            ++modCount;
+            count = c;
+            oldValue = null;
+            break;
+          }
+        }
+      } finally {
+        unlock();
+      }
+      return oldValue;
+    }
+
+    /**
+     * Doubles size of table and repacks entries, also adding the
+     * given node to new table
+     */
+    @SuppressWarnings("unchecked")
+    private void rehash(HashEntry<V> node) {
+      /*
+       * Reclassify nodes in each list to new table.  Because we
+       * are using power-of-two expansion, the elements from
+       * each bin must either stay at same index, or move with a
+       * power of two offset. We eliminate unnecessary node
+       * creation by catching cases where old nodes can be
+       * reused because their next fields won't change.
+       * Statistically, at the default threshold, only about
+       * one-sixth of them need cloning when a table
+       * doubles. The nodes they replace will be garbage
+       * collectable as soon as they are no longer referenced by
+       * any reader thread that may be in the midst of
+       * concurrently traversing table. Entry accesses use plain
+       * array indexing because they are followed by volatile
+       * table write.
+       */
+      HashEntry<V>[] oldTable = table;
+      int oldCapacity = oldTable.length;
+      int newCapacity = oldCapacity << 1;
+      threshold = (int) (newCapacity * loadFactor);
+      HashEntry<V>[] newTable = new HashEntry[newCapacity];
+      int sizeMask = newCapacity - 1;
+      for (int i = 0; i < oldCapacity; i++) {
+        HashEntry<V> e = oldTable[i];
+        if (e != null) {
+          HashEntry<V> next = e.next;
+          int idx = e.hash & sizeMask;
+          if (next == null) //  Single node on list
+            newTable[idx] = e;
+          else { // Reuse consecutive sequence at same slot
+            HashEntry<V> lastRun = e;
+            int lastIdx = idx;
+            for (HashEntry<V> last = next; last != null; last = last.next) {
+              int k = last.hash & sizeMask;
+              if (k != lastIdx) {
+                lastIdx = k;
+                lastRun = last;
               }
             }
-          } finally {
-            unlock();
+            newTable[lastIdx] = lastRun;
+            // Clone remaining nodes
+            for (HashEntry<V> p = e; p != lastRun; p = p.next) {
+              V v = p.value;
+              int h = p.hash;
+              int k = h & sizeMask;
+              HashEntry<V> n = newTable[k];
+              newTable[k] = new HashEntry<>(h, p.key, v, n);
+            }
           }
-          return oldValue;
         }
+      }
+      int nodeIndex = node.hash & sizeMask; // add the new node
+      node.setNext(newTable[nodeIndex]);
+      newTable[nodeIndex] = node;
+      table = newTable;
+    }
 
-        final void clear() {
+    /**
+     * Scans for a node containing given key while trying to
+     * acquire lock, creating and returning one if not found. Upon
+     * return, guarantees that lock is held. UNlike in most
+     * methods, calls to method equals are not screened: Since
+     * traversal speed doesn't matter, we might as well help warm
+     * up the associated code and accesses as well.
+     *
+     * @return a new node if key not found, else null
+     */
+    private HashEntry<V> scanAndLockForPut(long key, int hash, V value) {
+      HashEntry<V> first = entryForHash(this, hash);
+      HashEntry<V> e = first;
+      HashEntry<V> node = null;
+      int retries = -1; // negative while locating node
+      while (!tryLock()) {
+        HashEntry<V> f; // to recheck first below
+        if (retries < 0) {
+          if (e == null) {
+            if (node == null) // speculatively create node
+              node = new HashEntry<>(hash, key, value, null);
+            retries = 0;
+          } else if (key == e.key)
+            retries = 0;
+          else e = e.next;
+        } else if (++retries > MAX_SCAN_RETRIES) {
           lock();
-          try {
-            HashEntry<V>[] tab = table;
-            for (int i = 0; i < tab.length; i++)
-              setEntryAt(tab, i, null);
-            ++modCount;
-            count = 0;
-          } finally {
-            unlock();
+          break;
+        } else if ((retries & 1) == 0
+            && (f = entryForHash(this, hash)) != first) {
+          e = first = f; // re-traverse if entry changed
+          retries = -1;
+        }
+      }
+      return node;
+    }
+
+    /**
+     * Scans for a node containing the given key while trying to
+     * acquire lock for a remove or replace operation. Upon
+     * return, guarantees that lock is held.  Note that we must
+     * lock even if the key is not found, to ensure sequential
+     * consistency of updates.
+     */
+    private void scanAndLock(Object key, int hash) {
+      // similar to but simpler than scanAndLockForPut
+      HashEntry<V> first = entryForHash(this, hash);
+      HashEntry<V> e = first;
+      int retries = -1;
+      while (!tryLock()) {
+        HashEntry<V> f;
+        if (retries < 0) {
+          if (e == null || key.equals(e.key))
+            retries = 0;
+          else e = e.next;
+        } else if (++retries > MAX_SCAN_RETRIES) {
+          lock();
+          break;
+        } else if ((retries & 1) == 0
+            && (f = entryForHash(this, hash)) != first) {
+          e = first = f;
+          retries = -1;
+        }
+      }
+    }
+
+    /**
+     * Remove; match on key only if value null, else match both.
+     */
+    final V remove(long key, int hash, Object value) {
+      if (!tryLock()) scanAndLock(key, hash);
+      V oldValue = null;
+      try {
+        HashEntry<V>[] tab = table;
+        int index = (tab.length - 1) & hash;
+        HashEntry<V> e = entryAt(tab, index);
+        HashEntry<V> pred = null;
+        while (e != null) {
+          long k;
+          HashEntry<V> next = e.next;
+          if ((k = e.key) == key || (e.hash == hash && key == k)) {
+            V v = e.value;
+            if (value == null || value == v || value.equals(v)) {
+              if (pred == null)
+                setEntryAt(tab, index, next);
+              else pred.setNext(next);
+              ++modCount;
+              --count;
+              oldValue = v;
+            }
+            break;
+          }
+          pred = e;
+          e = next;
+        }
+      } finally {
+        unlock();
+      }
+      return oldValue;
+    }
+
+    final boolean replace(long key, int hash, V oldValue, V newValue) {
+      if (!tryLock()) scanAndLock(key, hash);
+      boolean replaced = false;
+      try {
+        HashEntry<V> e;
+        for (e = entryForHash(this, hash); e != null; e = e.next) {
+          long k;
+          if ((k = e.key) == key || (e.hash == hash && key == k)) {
+            if (oldValue.equals(e.value)) {
+              e.value = newValue;
+              ++modCount;
+              replaced = true;
+            }
+            break;
           }
         }
+      } finally {
+        unlock();
+      }
+      return replaced;
+    }
+
+    final V replace(long key, int hash, V value) {
+      if (!tryLock()) scanAndLock(key, hash);
+      V oldValue = null;
+      try {
+        HashEntry<V> e;
+        for (e = entryForHash(this, hash); e != null; e = e.next) {
+          long k;
+          if ((k = e.key) == key || (e.hash == hash && key == k)) {
+            oldValue = e.value;
+            e.value = value;
+            ++modCount;
+            break;
+          }
+        }
+      } finally {
+        unlock();
+      }
+      return oldValue;
+    }
+
+    final void clear() {
+      lock();
+      try {
+        HashEntry<V>[] tab = table;
+        for (int i = 0; i < tab.length; i++)
+          setEntryAt(tab, i, null);
+        ++modCount;
+        count = 0;
+      } finally {
+        unlock();
+      }
+    }
   }
 
   // Accessing segments
@@ -665,7 +665,7 @@ implements ConcurrentLongKeyMap<V>, Serializable {
       int threshold = (int) (cap * lf);
       HashEntry<V>[] tab = new HashEntry[cap];
       if ((seg = (Segment<V>) UNSAFE.getObjectVolatile(ss, u)) == null) { // recheck
-        Segment<V> s = new Segment<V>(lf, threshold, tab);
+        Segment<V> s = new Segment<>(lf, threshold, tab);
         while ((seg = (Segment<V>) UNSAFE.getObjectVolatile(ss, u)) == null) {
           if (UNSAFE.compareAndSwapObject(ss, u, null, seg = s)) break;
         }
@@ -735,7 +735,7 @@ implements ConcurrentLongKeyMap<V>, Serializable {
       cap <<= 1;
     // create segments and segments[0]
     Segment<V> s0 =
-        new Segment<V>(loadFactor, (int) (cap * loadFactor), new HashEntry[cap]);
+        new Segment<>(loadFactor, (int) (cap * loadFactor), new HashEntry[cap]);
     Segment<V>[] ss = new Segment[ssize];
     UNSAFE.putOrderedObject(ss, SBASE, s0); // ordered write of segments[0]
     this.segments = ss;
@@ -902,7 +902,7 @@ implements ConcurrentLongKeyMap<V>, Serializable {
       for (HashEntry<V> e =
           (HashEntry<V>) UNSAFE.getObjectVolatile(tab,
               ((long) (((tab.length - 1) & h)) << TSHIFT) + TBASE); e != null; e =
-              e.next) {
+          e.next) {
         long k;
         if ((k = e.key) == key || (e.hash == h && key == k)) return e.value;
       }
@@ -930,7 +930,7 @@ implements ConcurrentLongKeyMap<V>, Serializable {
       for (HashEntry<V> e =
           (HashEntry<V>) UNSAFE.getObjectVolatile(tab,
               ((long) (((tab.length - 1) & h)) << TSHIFT) + TBASE); e != null; e =
-              e.next) {
+          e.next) {
         long k;
         if ((k = e.key) == key || (e.hash == h && key == k)) return true;
       }
@@ -1276,7 +1276,7 @@ implements ConcurrentLongKeyMap<V>, Serializable {
   }
 
   final class ValueIterator extends HashIterator implements Iterator<V>,
-  Enumeration<V> {
+      Enumeration<V> {
     @Override
     public final V next() {
       return super.nextEntry().value;
@@ -1464,7 +1464,7 @@ implements ConcurrentLongKeyMap<V>, Serializable {
    */
   @SuppressWarnings("unchecked")
   private void readObject(java.io.ObjectInputStream s) throws IOException,
-  ClassNotFoundException {
+      ClassNotFoundException {
     s.defaultReadObject();
 
     // Re-initialize segments to be minimally sized, and let grow.

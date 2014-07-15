@@ -19,7 +19,7 @@ import fabric.worker.remote.RemoteWorker;
  * Represents push notification that an object has been updated.
  */
 public class ObjectUpdateMessage extends
-Message<ObjectUpdateMessage.Response, fabric.messages.Message.NoException> {
+    Message<ObjectUpdateMessage.Response, fabric.messages.Message.NoException> {
   // ////////////////////////////////////////////////////////////////////////////
   // message contents //
   // ////////////////////////////////////////////////////////////////////////////
@@ -131,13 +131,13 @@ Message<ObjectUpdateMessage.Response, fabric.messages.Message.NoException> {
       globs = null;
 
       int size = in.readInt();
-      onums = new ArrayList<Long>(size);
+      onums = new ArrayList<>(size);
       for (int i = 0; i < size; i++) {
         onums.add(in.readLong());
       }
 
       size = in.readInt();
-      groups = new ArrayList<ObjectGroup>(size);
+      groups = new ArrayList<>(size);
       for (int i = 0; i < size; i++) {
         groups.add(new ObjectGroup(in));
       }
@@ -148,7 +148,7 @@ Message<ObjectUpdateMessage.Response, fabric.messages.Message.NoException> {
       store = in.readUTF();
 
       int size = in.readInt();
-      globs = new LongKeyHashMap<ObjectGlob>(size);
+      globs = new LongKeyHashMap<>(size);
       for (int i = 0; i < size; i++) {
         long key = in.readLong();
         ObjectGlob glob = new ObjectGlob(in);
@@ -169,7 +169,7 @@ Message<ObjectUpdateMessage.Response, fabric.messages.Message.NoException> {
   @Override
   protected Response readResponse(DataInput in) throws IOException {
     int size = in.readInt();
-    List<Long> resubscribes = new ArrayList<Long>(size);
+    List<Long> resubscribes = new ArrayList<>(size);
     for (int i = 0; i < size; i++) {
       resubscribes.add(in.readLong());
     }

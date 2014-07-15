@@ -34,28 +34,13 @@ public class WorkerAdmin {
    */
   public static void connect(int adminPort, String[] cmd) throws UsageError,
   WorkerNotRunningException {
-    Socket socket = null;
-    try {
-      socket = new Socket((String) null, adminPort);
-    } catch (ConnectException e) {
-      throw new WorkerNotRunningException();
-    } catch (IOException e) {
-      throw new InternalError(e);
-    }
-
-    // Successfully connected. Ensure we have commands to run.
-    if (cmd == null) {
-      if (socket != null) {
-        try {
-          socket.close();
-        } catch (IOException e) {
-        }
+    try (Socket socket = new Socket((String) null, adminPort)) {
+      // Successfully connected. Ensure we have commands to run.
+      if (cmd == null) {
+        throw new UsageError(
+            "Worker already running. Must specify worker commands to execute.");
       }
-      throw new UsageError(
-          "Worker already running. Must specify worker commands to execute.");
-    }
 
-    try {
       // Send our commands over.
       DataOutputStream out =
           new DataOutputStream(new BufferedOutputStream(
@@ -68,7 +53,8 @@ public class WorkerAdmin {
 
       // Wait for the worker to finish running our commands.
       socket.getInputStream().read();
-      socket.close();
+    } catch (ConnectException e) {
+      throw new WorkerNotRunningException();
     } catch (IOException e) {
       throw new InternalError(e);
     }

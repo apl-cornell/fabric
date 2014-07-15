@@ -18,7 +18,7 @@ public class TwoKeyHashMap {
   public static <T, V> V put(Map<T, LongKeyHashMap<V>> map, T t, long u, V v) {
     LongKeyHashMap<V> inner = map.get(t);
     if (inner == null) {
-      inner = new LongKeyHashMap<V>();
+      inner = new LongKeyHashMap<>();
       map.put(t, inner);
     }
 

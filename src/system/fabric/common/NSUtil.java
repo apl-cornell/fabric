@@ -21,7 +21,7 @@ import fabric.worker.Store;
 import fabric.worker.Worker;
 
 public final class NSUtil {
-  private static List<String> TOPICS = new ArrayList<String>();
+  private static List<String> TOPICS = new ArrayList<>();
   static {
     TOPICS.add("nsutil");
   }
@@ -289,7 +289,7 @@ public final class NSUtil {
    */
   public static List<URI> processPathString(String path) {
     // XXX This breaks in the presence of Windows paths.
-    List<URI> locations = new ArrayList<URI>();
+    List<URI> locations = new ArrayList<>();
     while (!path.isEmpty()) {
       String remaining = "";
       if (path.startsWith("@")) {
@@ -302,9 +302,9 @@ public final class NSUtil {
 
           if (next_idx > 0) remaining = path.substring(next_idx + 1);
 
-          BufferedReader lr = new BufferedReader(new FileReader(pathFile));
-          path = lr.readLine();
-          lr.close();
+          try (BufferedReader lr = new BufferedReader(new FileReader(pathFile))) {
+            path = lr.readLine();
+          }
         } catch (FileNotFoundException e) {
           throw new InternalCompilerError(e);
         } catch (IOException e) {

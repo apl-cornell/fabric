@@ -139,7 +139,7 @@ public class CallExt_c extends ExprExt_c {
 
     NodeFactory nf = rr.nodeFactory();
 
-    List<Expr> args = new ArrayList<Expr>(c.arguments().size());
+    List<Expr> args = new ArrayList<>(c.arguments().size());
     // The first argument is changed from the local worker to the remote worker.
     args.add(c.remoteWorker());
     args.addAll(c.arguments());
@@ -152,7 +152,7 @@ public class CallExt_c extends ExprExt_c {
     target =
         rr.qq().parseExpr(
             "(" + ((ClassType) c.target().type()).translate(null)
-            + "._Proxy) %E", target);
+                + "._Proxy) %E", target);
     return nf.Call(Position.compilerGenerated(),
         target,
         // <name>_remote => <name>$remote

@@ -31,7 +31,7 @@ public class InstanceOfToFabilExt_c extends InstanceOfToJavaExt_c {
           .Instanceof(io.position(), io.expr(), io.compareType());
     }
 
-    List<Expr> args = new ArrayList<Expr>();
+    List<Expr> args = new ArrayList<>();
     if (((JifInstanceOfDel) io.del()).isToSubstJifClass()) {
       // add all the actual param expressions to args
       FabricSubstType t = (FabricSubstType) compareType;
@@ -53,7 +53,7 @@ public class InstanceOfToFabilExt_c extends InstanceOfToJavaExt_c {
     }
     return ffrw.qq().parseExpr(
         jifImplClass + "." + ClassDeclToJavaExt_c.INSTANCEOF_METHOD_NAME
-        + "(%LE)", (Object) args);
+            + "(%LE)", (Object) args);
   }
 
 }

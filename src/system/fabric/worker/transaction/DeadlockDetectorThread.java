@@ -60,7 +60,7 @@ public class DeadlockDetectorThread extends Thread {
     while (true) {
       try {
         // Wait for a request.
-        Set<Log> requests = new LinkedHashSet<Log>();
+        Set<Log> requests = new LinkedHashSet<>();
         requests.add(detectRequests.take());
 
         // Obtain all requests made thus far and iterate over them.
@@ -133,7 +133,7 @@ public class DeadlockDetectorThread extends Thread {
     // Check for cycle.
     if (pathToTid.containsKey(curTopTid)) {
       // Cycle detected. Add to the list of cycles found and return.
-      Set<Log> cycle = new HashSet<Log>();
+      Set<Log> cycle = new HashSet<>();
       cycle.add(curLog);
       for (Log pathElement : pathToTid.values()) {
         if (pathElement.getTid().topTid == curTopTid) {
@@ -198,8 +198,7 @@ public class DeadlockDetectorThread extends Thread {
     // Turn the set of cycles into a map from top-level TIDs to sorted multisets
     // of transaction logs. The multisets are sorted by transaction depth, outer
     // transactions first.
-    LongKeyMap<Multiset<Log>> logsByTopLevelTid =
-        new LongKeyHashMap<Multiset<Log>>();
+    LongKeyMap<Multiset<Log>> logsByTopLevelTid = new LongKeyHashMap<>();
     for (Set<Log> cycle : cycles) {
       for (Log log : cycle) {
         long topLevelTid = log.getTid().topTid;

@@ -224,7 +224,7 @@ public class LongHashSet extends AbstractLongSet implements LongSet // ,
    * @return the backing HashMap
    */
   LongKeyHashMap<String> init(int capacity, float load) {
-    return new LongKeyHashMap<String>(capacity, load);
+    return new LongKeyHashMap<>(capacity, load);
   }
 
   /**

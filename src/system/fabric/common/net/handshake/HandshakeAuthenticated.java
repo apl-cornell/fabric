@@ -47,7 +47,7 @@ import fabric.worker.remote.RemoteWorker;
  * @author mdgeorge
  */
 public class HandshakeAuthenticated<Node extends RemoteNode<Node>> implements
-Protocol<Node> {
+    Protocol<Node> {
 
   // ////////////////////////////////////////////////////////////////////////////
   // //
@@ -80,7 +80,7 @@ Protocol<Node> {
 
   public HandshakeAuthenticated(KeyMaterial... endpoints)
       throws GeneralSecurityException {
-    this.receivers = new HashMap<String, Receiver>(endpoints.length);
+    this.receivers = new HashMap<>(endpoints.length);
 
     for (KeyMaterial keys : endpoints) {
       SSLSocketFactory factory = createSSLFactory(keys);

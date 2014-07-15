@@ -194,15 +194,15 @@ public final class Log {
     this.child = null;
     this.thread = Thread.currentThread();
     this.retrySignal = parent == null ? null : parent.retrySignal;
-    this.reads = new OidKeyHashMap<ReadMap.Entry>();
-    this.readsReadByParent = new ArrayList<ReadMap.Entry>();
-    this.creates = new ArrayList<_Impl>();
-    this.localStoreCreates = new WeakReferenceArrayList<_Impl>();
-    this.writes = new ArrayList<_Impl>();
-    this.localStoreWrites = new WeakReferenceArrayList<_Impl>();
-    this.workersCalled = new ArrayList<RemoteWorker>();
+    this.reads = new OidKeyHashMap<>();
+    this.readsReadByParent = new ArrayList<>();
+    this.creates = new ArrayList<>();
+    this.localStoreCreates = new WeakReferenceArrayList<>();
+    this.writes = new ArrayList<>();
+    this.localStoreWrites = new WeakReferenceArrayList<>();
+    this.workersCalled = new ArrayList<>();
     this.startTime = System.currentTimeMillis();
-    this.waitsFor = new HashSet<Log>();
+    this.waitsFor = new HashSet<>();
 
     if (parent != null) {
       try {
@@ -270,7 +270,7 @@ public final class Log {
    * stores to contact when preparing and committing a transaction.
    */
   Set<Store> storesToContact() {
-    Set<Store> result = new HashSet<Store>();
+    Set<Store> result = new HashSet<>();
 
     result.addAll(reads.storeSet());
 
@@ -293,7 +293,7 @@ public final class Log {
    * @return a set of stores to contact when checking for object freshness.
    */
   Set<Store> storesToCheckFreshness() {
-    Set<Store> result = new HashSet<Store>();
+    Set<Store> result = new HashSet<>();
     result.addAll(reads.storeSet());
     for (ReadMap.Entry entry : readsReadByParent) {
       result.add(entry.getStore());
@@ -310,7 +310,7 @@ public final class Log {
    *          whether to include reads on modified objects.
    */
   LongKeyMap<Integer> getReadsForStore(Store store, boolean includeModified) {
-    LongKeyMap<Integer> result = new LongKeyHashMap<Integer>();
+    LongKeyMap<Integer> result = new LongKeyHashMap<>();
     LongKeyMap<ReadMap.Entry> submap = reads.get(store);
     if (submap == null) return result;
 
@@ -333,16 +333,16 @@ public final class Log {
         Iterable<_Impl> writesToExclude =
             includeModified ? Collections.<_Impl> emptyList()
                 : curLog.localStoreWrites;
-            Iterable<_Impl> chain =
-                SysUtil.chain(writesToExclude, curLog.localStoreCreates);
-            for (_Impl write : chain)
-              result.remove(write.$getOnum());
+        Iterable<_Impl> chain =
+            SysUtil.chain(writesToExclude, curLog.localStoreCreates);
+        for (_Impl write : chain)
+          result.remove(write.$getOnum());
       } else {
         Iterable<_Impl> writesToExclude =
             includeModified ? Collections.<_Impl> emptyList() : curLog.writes;
-            Iterable<_Impl> chain = SysUtil.chain(writesToExclude, curLog.creates);
-            for (_Impl write : chain)
-              if (write.$getStore() == store) result.remove(write.$getOnum());
+        Iterable<_Impl> chain = SysUtil.chain(writesToExclude, curLog.creates);
+        for (_Impl write : chain)
+          if (write.$getStore() == store) result.remove(write.$getOnum());
       }
       curLog = curLog.parent;
     }
@@ -357,7 +357,7 @@ public final class Log {
   Collection<_Impl> getWritesForStore(Store store) {
     // This should be a Set of _Impl, but we have a map indexed by OID to
     // avoid calling hashCode and equals on the _Impls.
-    LongKeyMap<_Impl> result = new LongKeyHashMap<_Impl>();
+    LongKeyMap<_Impl> result = new LongKeyHashMap<>();
 
     if (store.isLocalStore()) {
       for (_Impl obj : localStoreWrites) {
@@ -385,7 +385,7 @@ public final class Log {
   Collection<_Impl> getCreatesForStore(Store store) {
     // This should be a Set of _Impl, but to avoid calling methods on the
     // _Impls, we instead use a map keyed on OID.
-    LongKeyMap<_Impl> result = new LongKeyHashMap<_Impl>();
+    LongKeyMap<_Impl> result = new LongKeyHashMap<>();
 
     if (store.isLocalStore()) {
       for (_Impl obj : localStoreCreates) {
@@ -404,7 +404,7 @@ public final class Log {
    * Sets the retry flag on this and the logs of all sub-transactions.
    */
   public void flagRetry() {
-    Queue<Log> toFlag = new LinkedList<Log>();
+    Queue<Log> toFlag = new LinkedList<>();
     toFlag.add(this);
     while (!toFlag.isEmpty()) {
       Log log = toFlag.remove();
@@ -779,7 +779,7 @@ public final class Log {
    */
   public Set<Log> getWaitsFor() {
     synchronized (this.waitsFor) {
-      return new HashSet<Log>(this.waitsFor);
+      return new HashSet<>(this.waitsFor);
     }
   }
 

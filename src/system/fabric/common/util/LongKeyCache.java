@@ -27,15 +27,14 @@ public class LongKeyCache<V> {
     }
   }
 
-  private static final ReferenceQueue<Object> queue =
-      new ReferenceQueue<Object>();
+  private static final ReferenceQueue<Object> queue = new ReferenceQueue<>();
 
   static {
     new Collector().start();
   }
 
   public LongKeyCache() {
-    this.map = new ConcurrentLongKeyHashMap<ValueSoftRef<V>>();
+    this.map = new ConcurrentLongKeyHashMap<>();
   }
 
   public void clear() {
@@ -59,7 +58,7 @@ public class LongKeyCache<V> {
   public V put(long key, V value) {
     ValueSoftRef<V> ref = null;
     if (value != null) {
-      ref = new ValueSoftRef<V>(this, key, value);
+      ref = new ValueSoftRef<>(this, key, value);
     }
 
     ref = map.put(key, ref);
@@ -81,7 +80,7 @@ public class LongKeyCache<V> {
    */
   public V putIfAbsent(long key, V value) {
     ValueSoftRef<V> ref =
-        map.putIfAbsent(key, new ValueSoftRef<V>(this, key, value));
+        map.putIfAbsent(key, new ValueSoftRef<>(this, key, value));
     if (ref == null) return null;
     return ref.get();
   }
@@ -108,7 +107,7 @@ public class LongKeyCache<V> {
       if (curRef != null) curValue = curRef.get();
       if (curValue == null) return null;
 
-      if (map.replace(key, curRef, new ValueSoftRef<V>(this, key, value))) {
+      if (map.replace(key, curRef, new ValueSoftRef<>(this, key, value))) {
         return curValue;
       }
     }
@@ -139,7 +138,7 @@ public class LongKeyCache<V> {
     }
 
     if (oldValue != curValue && !oldValue.equals(curValue)) return false;
-    return map.replace(key, curRef, new ValueSoftRef<V>(this, key, newValue));
+    return map.replace(key, curRef, new ValueSoftRef<>(this, key, newValue));
   }
 
   public V remove(long key) {

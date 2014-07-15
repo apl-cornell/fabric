@@ -20,8 +20,8 @@ import fabric.worker.remote.RemoteWorker;
  * a store.
  */
 public class PrepareTransactionMessage
-extends
-Message<PrepareTransactionMessage.Response, TransactionPrepareFailedException> {
+    extends
+    Message<PrepareTransactionMessage.Response, TransactionPrepareFailedException> {
   // ////////////////////////////////////////////////////////////////////////////
   // message contents //
   // ////////////////////////////////////////////////////////////////////////////
@@ -185,9 +185,9 @@ Message<PrepareTransactionMessage.Response, TransactionPrepareFailedException> {
     // Read reads.
     int size = in.readInt();
     if (size == 0) {
-      reads = new LongKeyHashMap<Integer>();
+      reads = new LongKeyHashMap<>();
     } else {
-      reads = new LongKeyHashMap<Integer>(size);
+      reads = new LongKeyHashMap<>(size);
       for (int i = 0; i < size; i++)
         reads.put(in.readLong(), in.readInt());
     }
@@ -197,9 +197,9 @@ Message<PrepareTransactionMessage.Response, TransactionPrepareFailedException> {
     if (size == 0) {
       // XXX: this list must be mutable since it can be added
       //      to by the surrogate manager
-      serializedCreates = new ArrayList<SerializedObject>(0);
+      serializedCreates = new ArrayList<>(0);
     } else {
-      serializedCreates = new ArrayList<SerializedObject>(size);
+      serializedCreates = new ArrayList<>(size);
       for (int i = 0; i < size; i++)
         serializedCreates.add(new SerializedObject(in));
     }
@@ -209,7 +209,7 @@ Message<PrepareTransactionMessage.Response, TransactionPrepareFailedException> {
     if (size == 0) {
       serializedWrites = Collections.emptyList();
     } else {
-      serializedWrites = new ArrayList<SerializedObject>(size);
+      serializedWrites = new ArrayList<>(size);
       for (int i = 0; i < size; i++)
         serializedWrites.add(new SerializedObject(in));
     }

@@ -42,8 +42,8 @@ public class CBImportTable extends ImportTable {
     super(ts, pkg, source.name());
     this.ts = ts;
     this.ns = ns;
-    this.aliases = new HashSet<String>();
-    this.fromExternal = new HashMap<String, String>();
+    this.aliases = new HashSet<>();
+    this.fromExternal = new HashMap<>();
     //XXX: this is a little sleazy.
     this.jobExt = (CBJobExt) ts.extensionInfo().scheduler().currentJob().ext();
   }
@@ -119,8 +119,7 @@ public class CBImportTable extends ImportTable {
         }
       }
 
-      List<String> imports =
-          new ArrayList<String>(typeOnDemandImports.size() + 5);
+      List<String> imports = new ArrayList<>(typeOnDemandImports.size() + 5);
 
       imports.addAll(ts.defaultPackageImports());
       imports.addAll(typeOnDemandImports);
@@ -265,8 +264,8 @@ public class CBImportTable extends ImportTable {
       }
     }
 
-    lazyImports = new ArrayList<String>();
-    lazyImportPositions = new ArrayList<Position>();
+    lazyImports = new ArrayList<>();
+    lazyImportPositions = new ArrayList<>();
   }
 
   /**

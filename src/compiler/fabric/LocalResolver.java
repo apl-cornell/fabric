@@ -21,7 +21,7 @@ import codebases.types.SimpleResolver;
 public class LocalResolver extends SimpleResolver implements NamespaceResolver {
   private static final Collection<String> TOPICS;
   static {
-    TOPICS = new ArrayList<String>(2);
+    TOPICS = new ArrayList<>(2);
     TOPICS.add(Report.types);
     TOPICS.add(Report.resolver);
   }

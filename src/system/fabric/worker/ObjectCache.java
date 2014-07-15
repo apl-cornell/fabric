@@ -317,7 +317,7 @@ public final class ObjectCache {
   private final LongKeyCache<Entry> entries;
 
   ObjectCache(String storeName) {
-    this.entries = new LongKeyCache<Entry>();
+    this.entries = new LongKeyCache<>();
   }
 
   /**

@@ -14,8 +14,8 @@ public class CBJobExt implements JobExt {
   protected Map<CodebaseClassType, String> externalDeps;
 
   public CBJobExt() {
-    dependencies = new HashSet<CodebaseClassType>();
-    externalDeps = new HashMap<CodebaseClassType, String>();
+    dependencies = new HashSet<>();
+    externalDeps = new HashMap<>();
   }
 
   public boolean addDependency(CodebaseClassType ct) {

@@ -150,22 +150,21 @@ public final class SysUtil {
             classResource);
       }
 
-      InputStream classIn = classLoader.getResourceAsStream(classFileName);
+      try (InputStream classIn = classLoader.getResourceAsStream(classFileName)) {
+        if (classIn == null) {
+          Logging.log(CLASS_HASHING_LOGGER, Level.WARNING,
+              "Unable to load {0} from {1} using {2}", className,
+              classFileName, classLoader);
+          throw new InternalError("Class not found: " + className);
+        }
 
-      if (classIn == null) {
-        Logging.log(CLASS_HASHING_LOGGER, Level.WARNING,
-            "Unable to load {0} from {1} using {2}", className, classFileName,
-            classLoader);
-        throw new InternalError("Class not found: " + className);
+        byte[] buf = new byte[BUF_LEN];
+        int count = classIn.read(buf);
+        while (count != -1) {
+          digest.update(buf, 0, count);
+          count = classIn.read(buf);
+        }
       }
-
-      byte[] buf = new byte[BUF_LEN];
-      int count = classIn.read(buf);
-      while (count != -1) {
-        digest.update(buf, 0, count);
-        count = classIn.read(buf);
-      }
-      classIn.close();
     }
 
     if (!c.isInterface()) {

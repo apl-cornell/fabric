@@ -794,7 +794,7 @@ public interface Object {
      */
     private static final Map<Class<? extends Object._Proxy>, Constructor<? extends Object._Proxy>> constructorTable =
         Collections
-        .synchronizedMap(new HashMap<Class<? extends Object._Proxy>, Constructor<? extends Object._Proxy>>());
+            .synchronizedMap(new HashMap<Class<? extends Object._Proxy>, Constructor<? extends Object._Proxy>>());
 
     /**
      * A helper method for reading a pointer during object deserialization.
@@ -820,9 +820,9 @@ public interface Object {
      */
     protected static final Object $readRef(
         Class<? extends Object._Proxy> proxyClass, RefTypeEnum refType,
-            ObjectInput in, Store store, Iterator<Long> intraStoreRefs,
-            Iterator<Pair<String, Long>> interStoreRefs) throws IOException,
-            ClassNotFoundException {
+        ObjectInput in, Store store, Iterator<Long> intraStoreRefs,
+        Iterator<Pair<String, Long>> interStoreRefs) throws IOException,
+        ClassNotFoundException {
       switch (refType) {
       case NULL:
         return null;
@@ -941,8 +941,7 @@ public interface Object {
         throw new InternalError(message);
       }
       refType.add(RefTypeEnum.REMOTE);
-      interStoreRefs
-      .add(new Pair<String, Long>(p.ref.store.name(), p.ref.onum));
+      interStoreRefs.add(new Pair<>(p.ref.store.name(), p.ref.onum));
     }
 
     /**

@@ -31,7 +31,7 @@ public class JavaSkeletonCreator extends NodeVisitor {
     if (n instanceof ClassBody) {
       ClassDecl cd = (ClassDecl) parent;
       List<ClassMember> members = ((ClassBody) n).members();
-      List<ClassMember> stubmembers = new LinkedList<ClassMember>();
+      List<ClassMember> stubmembers = new LinkedList<>();
       for (ClassMember m : members) {
         if (m instanceof ClassDecl) {
           stubmembers.add(m);
@@ -60,7 +60,7 @@ public class JavaSkeletonCreator extends NodeVisitor {
       // The Impl class will be public and static.
       Flags flags = ProxyRewriter.toPublic(cd.flags()).Static();
 
-      List<ClassMember> proxyMembers = new LinkedList<ClassMember>();
+      List<ClassMember> proxyMembers = new LinkedList<>();
       if (!cd.flags().isInterface()) {
         ClassMember implConstr =
             qq.parseMember("public _Proxy(" + cd.id() + "._Impl impl) {"

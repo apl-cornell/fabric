@@ -66,7 +66,7 @@ public class SubServerSocketFactory {
     this.portType = portType;
     this.maxOpenConnectionsPerChannel = maxOpenConnectionsPerChannel;
 
-    this.acceptors = new HashMap<SocketAddress, Acceptor>();
+    this.acceptors = new HashMap<>();
   }
 
   /** create an unbound server socket. */
@@ -166,7 +166,7 @@ public class SubServerSocketFactory {
       super("connection dispatcher for " + addr);
 
       this.address = addr;
-      this.queues = new HashMap<String, ConnectionQueue>();
+      this.queues = new HashMap<>();
     }
 
     /**
@@ -242,11 +242,9 @@ public class SubServerSocketFactory {
      */
     @Override
     public void run() {
-      ServerSocket sock = null;
-      try {
-        sock =
-            new ServerSocket(address.getPort(), 0,
-                InetAddress.getByAddress(new byte[] { 0, 0, 0, 0 }));
+      try (ServerSocket sock =
+          new ServerSocket(address.getPort(), 0,
+              InetAddress.getByAddress(new byte[] { 0, 0, 0, 0 }))) {
         while (true) {
           try {
             try {
@@ -267,13 +265,6 @@ public class SubServerSocketFactory {
       } catch (IOException exc) {
         // TODO
         throw new NotImplementedException(exc);
-      } finally {
-        if (sock != null) {
-          try {
-            sock.close();
-          } catch (IOException e) {
-          }
-        }
       }
     }
 
@@ -301,7 +292,7 @@ public class SubServerSocketFactory {
       ConnectionQueue(String name, int size) {
         this.name = name;
 
-        this.channels = new HashSet<ServerChannel>();
+        this.channels = new HashSet<>();
         if (size > 0) {
           this.connections = new ArrayBlockingQueue<>(size);
         } else {
