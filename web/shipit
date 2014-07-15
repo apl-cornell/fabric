@@ -1,0 +1,21 @@
+#!/bin/sh
+dir=/usr/local/www/Projects/fabric
+
+if [ -z "$WEBHOST" ]; then
+    WEBHOST=hyena
+fi
+
+if [ -z "$real_web" ]; then
+    real_web=$WEBHOST:$dir
+fi
+
+git pull
+
+rsync "$@" -truvlC							      \
+              --exclude shipit						      \
+              --exclude '.*.swp'					      \
+              --exclude '.*.swo'					      \
+	      --exclude '.nfs*'						      \
+              --exclude '*~'						      \
+              --exclude '.*'						      \
+    ./ "$real_web"/
