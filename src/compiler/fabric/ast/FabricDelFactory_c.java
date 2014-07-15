@@ -6,6 +6,7 @@ import codebases.ast.CodebaseImportDel_c;
 import fabric.extension.FabricCallDel;
 import fabric.extension.FabricFieldDeclDel;
 import fabric.extension.FabricNewDel;
+import fabric.extension.FabricNewFabricArrayDel;
 import fabric.extension.FabricNewLabelDel;
 import fabric.extension.FabricPrincipalExprDel;
 
@@ -177,7 +178,7 @@ FabricDelFactory {
   }
 
   protected JLDel delNewFabricArrayImpl() {
-    return delNewArrayImpl();
+    return new FabricNewFabricArrayDel();
   }
 
   protected JLDel postDelNewFabricArray(JLDel e) {

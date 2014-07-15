@@ -157,11 +157,13 @@ FabricNodeFactory {
   @Override
   public NewFabricArray NewFabricArray(Position pos, TypeNode base,
       Expr location, List<Expr> dims, int addDims, FabricArrayInit init) {
-    // XXX location is dropped!
     NewFabricArray result =
         new NewFabricArray_c(pos, base, dims, addDims, init);
     result = ext(result, fabricExtFactory().extNewFabricArray());
     result = del(result, fabricDelFactory().delNewFabricArray());
+
+    LocatedExt_c ext = (LocatedExt_c) FabricUtil.fabricExt(result);
+    result = FabricUtil.updateFabricExt(result, ext.location(location));
     return result;
   }
 
