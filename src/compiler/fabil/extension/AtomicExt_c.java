@@ -38,8 +38,8 @@ public class AtomicExt_c extends FabILExt_c {
 
     FabILTypeSystem ts = ar.typeSystem();
 
-    List<Stmt> lds = new ArrayList<Stmt>();
-    List<Stmt> restores = new ArrayList<Stmt>();
+    List<Stmt> lds = new ArrayList<>();
+    List<Stmt> restores = new ArrayList<>();
 
     for (LocalInstance li : atomic.updatedLocals()) {
       Id lName = nf.Id(Position.compilerGenerated(), li.name());

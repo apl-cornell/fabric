@@ -28,7 +28,7 @@ import fabric.worker.shell.WorkerShell;
  * workers that run in the same process. It also acts as a container for those
  * stores and workers. It is responsible for setting them up and tearing them
  * down.
- * 
+ *
  * @author mdgeorge
  */
 public class Node {
@@ -52,7 +52,7 @@ public class Node {
   /**
    * Main entry point for the store. This method is useful for applications that
    * wish to embed a fabric store.
-   * 
+   *
    * @throws TerminationException
    *           to indicate that the store is shutting down
    */

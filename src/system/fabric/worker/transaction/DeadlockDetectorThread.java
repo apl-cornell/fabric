@@ -60,7 +60,7 @@ public class DeadlockDetectorThread extends Thread {
     while (true) {
       try {
         // Wait for a request.
-        Set<Log> requests = new LinkedHashSet<Log>();
+        Set<Log> requests = new LinkedHashSet<>();
         requests.add(detectRequests.take());
 
         // Obtain all requests made thus far and iterate over them.
@@ -93,7 +93,7 @@ public class DeadlockDetectorThread extends Thread {
 
   /**
    * Finds cycles in the waits-for graph.
-   * 
+   *
    * @param curLog
    *          the current node being visited.
    * @param pathToTid
@@ -106,14 +106,14 @@ public class DeadlockDetectorThread extends Thread {
    * @param topLevelTidsVisited
    *          the set of top-level TIDs that have been visited already
    *          (excluding that of curLog if this is the first time visiting
-   *          curLog's top-level TID). 
+   *          curLog's top-level TID).
    * @param cyclesFound
    *          the cycles found so far. Any cycles found during the call will be
    *          added to this set, and this set is returned.
    * @param requests
    *          the set of transaction logs for which deadlock-detection requests
    *          have been made.
-   *          
+   *
    * @return cyclesFound with any found cycles added.
    */
   private Set<Set<Log>> findCycles(Log curLog, LongKeyMap<Log> pathToTid,
@@ -133,7 +133,7 @@ public class DeadlockDetectorThread extends Thread {
     // Check for cycle.
     if (pathToTid.containsKey(curTopTid)) {
       // Cycle detected. Add to the list of cycles found and return.
-      Set<Log> cycle = new HashSet<Log>();
+      Set<Log> cycle = new HashSet<>();
       cycle.add(curLog);
       for (Log pathElement : pathToTid.values()) {
         if (pathElement.getTid().topTid == curTopTid) {
@@ -189,7 +189,7 @@ public class DeadlockDetectorThread extends Thread {
 
   /**
    * Resolves deadlocks by aborting transactions.
-   * 
+   *
    * @param cycles
    *          the set of deadlocks, represented by the logs of transactions
    *          involved in waits-for cycles.
@@ -198,8 +198,7 @@ public class DeadlockDetectorThread extends Thread {
     // Turn the set of cycles into a map from top-level TIDs to sorted multisets
     // of transaction logs. The multisets are sorted by transaction depth, outer
     // transactions first.
-    LongKeyMap<Multiset<Log>> logsByTopLevelTid =
-        new LongKeyHashMap<Multiset<Log>>();
+    LongKeyMap<Multiset<Log>> logsByTopLevelTid = new LongKeyHashMap<>();
     for (Set<Log> cycle : cycles) {
       for (Log log : cycle) {
         long topLevelTid = log.getTid().topTid;

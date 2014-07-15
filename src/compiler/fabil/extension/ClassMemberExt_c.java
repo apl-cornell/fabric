@@ -9,10 +9,10 @@ import polyglot.ast.Stmt;
 import fabil.visit.ProxyRewriter;
 
 /**
- * 
+ *
  */
 public abstract class ClassMemberExt_c extends FabILExt_c implements
-    ClassMemberExt {
+ClassMemberExt {
 
   @Override
   public List<ClassMember> implMember(ProxyRewriter pr, ClassDecl parent) {

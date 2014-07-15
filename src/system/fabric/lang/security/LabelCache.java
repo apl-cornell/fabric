@@ -61,13 +61,13 @@ public class LabelCache {
   private final Cache<Label, Label, Label> labelMeetCache;
 
   public LabelCache() {
-    this.readerPolicyCache = new Cache<Principal, Principal, ConfPolicy>();
-    this.writerPolicyCache = new Cache<Principal, Principal, IntegPolicy>();
-    this.policyJoinCache = new Cache<Policy, Policy, Policy>();
-    this.policyMeetCache = new Cache<Policy, Policy, Policy>();
-    this.toLabelCache = new Cache<ConfPolicy, IntegPolicy, Label>();
-    this.labelJoinCache = new Cache<Label, Label, Label>();
-    this.labelMeetCache = new Cache<Label, Label, Label>();
+    this.readerPolicyCache = new Cache<>();
+    this.writerPolicyCache = new Cache<>();
+    this.policyJoinCache = new Cache<>();
+    this.policyMeetCache = new Cache<>();
+    this.toLabelCache = new Cache<>();
+    this.labelJoinCache = new Cache<>();
+    this.labelMeetCache = new Cache<>();
   }
 
   private static final class Key {
@@ -159,8 +159,7 @@ public class LabelCache {
       }
     }
 
-    private static final ReferenceQueue<Object> queue =
-        new ReferenceQueue<Object>();
+    private static final ReferenceQueue<Object> queue = new ReferenceQueue<>();
 
     static {
       new Collector().start();
@@ -169,7 +168,7 @@ public class LabelCache {
     private final Map<Key, EntrySoftRef<K1, K2, P>> entries;
 
     Cache() {
-      this.entries = new HashMap<Key, EntrySoftRef<K1, K2, P>>();
+      this.entries = new HashMap<>();
     }
 
     public synchronized P get(Triple<K1, K2, Store> triple) {
@@ -183,8 +182,7 @@ public class LabelCache {
 
     public synchronized void put(Triple<K1, K2, Store> triple, P val) {
       Key key = new Key(triple);
-      EntrySoftRef<K1, K2, P> entry =
-          new EntrySoftRef<K1, K2, P>(Cache.this, key, val);
+      EntrySoftRef<K1, K2, P> entry = new EntrySoftRef<>(Cache.this, key, val);
       entries.put(key, entry);
     }
 

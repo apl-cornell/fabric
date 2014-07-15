@@ -137,7 +137,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
 
   /**
    * Creates a serialized representation of the given object.
-   * 
+   *
    * @param obj
    *          The object to serialize.
    * @deprecated This is method is rather inefficient. Use sparingly.
@@ -160,7 +160,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
 
   /**
    * Creates a serialized representation of a surrogate object.
-   * 
+   *
    * @param onum
    *          The local object number for the surrogate.
    * @param updateLabel
@@ -306,7 +306,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
 
   /**
    * Modifies the serialized object's promise expiry
-   * 
+   *
    * @param expiry
    */
   public void setExpiry(long expiry) {
@@ -324,8 +324,8 @@ public final class SerializedObject implements FastSerializable, Serializable {
         new DataInputStream(new ByteArrayInputStream(objectData, refPos,
             onumPos));
     try {
-      return new ComparablePair<String, Long>(in.readUTF(),
-          SerializationUtil.longAt(objectData, onumPos));
+      return new ComparablePair<>(in.readUTF(), SerializationUtil.longAt(
+          objectData, onumPos));
     } catch (IOException e) {
       throw new InternalError("Error while reading store name.", e);
     }
@@ -664,7 +664,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
         if (!hasNext()) throw new NoSuchElementException();
         nextInterStoreRefNum++;
         try {
-          return new ComparablePair<String, Long>(in.readUTF(), in.readLong());
+          return new ComparablePair<>(in.readUTF(), in.readLong());
         } catch (IOException e) {
           throw new InternalError("Unexpected IO exception.", e);
         }
@@ -891,7 +891,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
   /**
    * Writes the given _Impl out to the given output stream. The behaviour of
    * this method should mirror write(DataOutput).
-   * 
+   *
    * @see #write(DataOutput)
    * @see #readImpl(Store, DataInput)
    * @see #SerializedObject(DataInput)
@@ -985,10 +985,9 @@ public final class SerializedObject implements FastSerializable, Serializable {
     // Get the object to serialize itself into a bunch of buffers.
     ByteArrayOutputStream bos = new ByteArrayOutputStream();
     ObjectOutputStream oos = new ObjectOutputStream(bos);
-    List<RefTypeEnum> refTypes = new ArrayList<RefTypeEnum>();
-    List<Long> intraStoreRefs = new ArrayList<Long>();
-    List<Pair<String, Long>> interStoreRefs =
-        new ArrayList<Pair<String, Long>>();
+    List<RefTypeEnum> refTypes = new ArrayList<>();
+    List<Long> intraStoreRefs = new ArrayList<>();
+    List<Pair<String, Long>> interStoreRefs = new ArrayList<>();
     impl.$serialize(oos, refTypes, intraStoreRefs, interStoreRefs);
     oos.flush();
 
@@ -1027,7 +1026,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
   /**
    * Writes this SerializedObject out to the given output stream. The behavior
    * of this method should mirror write(_Impl, DataOutput).
-   * 
+   *
    * @see SerializedObject#write(_Impl, DataOutput)
    * @see SerializedObject#readImpl(Store, DataInput)
    * @see SerializedObject#SerializedObject(DataInput)
@@ -1039,7 +1038,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
 
   /**
    * A deserialization constructor.
-   * 
+   *
    * @param in
    *          An input stream containing a serialized object.
    * @see #write(DataOutput)
@@ -1121,7 +1120,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
 
   /**
    * Deserializes this object, traversing surrogates as necessary.
-   * 
+   *
    * @param store
    *          The store on which this object lives.
    * @return The deserialized object.
@@ -1134,7 +1133,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
 
   /**
    * Deserializes this object.
-   * 
+   *
    * @param store
    *          The store on which this object lives.
    * @param chaseSurrogates

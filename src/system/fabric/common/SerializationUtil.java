@@ -73,7 +73,7 @@ public final class SerializationUtil {
   /**
    * Copies the specified number of bytes from the given DataInput to the given
    * DataOutput.
-   * 
+   *
    * @param in
    *          the DataInput to read from.
    * @param out

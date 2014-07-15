@@ -18,7 +18,7 @@ import fabric.worker.remote.RemoteWorker;
  * Represents a request from a worker to read an object owned by another worker.
  */
 public class DirtyReadMessage extends
-    Message<DirtyReadMessage.Response, AccessException> {
+Message<DirtyReadMessage.Response, AccessException> {
   // ////////////////////////////////////////////////////////////////////////////
   // message contents //
   // ////////////////////////////////////////////////////////////////////////////

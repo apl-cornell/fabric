@@ -317,7 +317,7 @@ public final class ObjectCache {
   private final LongKeyCache<Entry> entries;
 
   ObjectCache(String storeName) {
-    this.entries = new LongKeyCache<Entry>();
+    this.entries = new LongKeyCache<>();
   }
 
   /**
@@ -371,7 +371,7 @@ public final class ObjectCache {
    * If there is not already an entry for the given object's onum, add the given
    * object to the cache. If an entry already exists in cache, then an internal
    * error results, indicating that an invariant was probably broken.
-   * 
+   *
    * @return the Entry inserted into the cache.
    */
   Entry put(Store store, SerializedObject obj) {
@@ -381,7 +381,7 @@ public final class ObjectCache {
   /**
    * If there is not already an entry for the given object's onum, add the given
    * object to the cache.
-   * 
+   *
    * @param silenceConflicts if this is false and an entry already exists for
    *          the object, then an error is thrown.
    * @return the resulting cache entry associated with the object's onum.
@@ -406,7 +406,7 @@ public final class ObjectCache {
   /**
    * Adds the contents of the given object group to the cache. Returns the entry
    * for the given onum.
-   * 
+   *
    * @param store the store from which the group was obtained.
    * @param group the group to add to the cache.
    * @param onum the onum of the entry to return. This should be a member of the
@@ -485,7 +485,7 @@ public final class ObjectCache {
    * <li>If the cache contains a serialized copy of an old version of the
    * object, then that old version is evicted.
    * </ul>
-   * 
+   *
    * @return true iff after this update operation, the cache contains the
    *     object.
    */
@@ -505,7 +505,7 @@ public final class ObjectCache {
 
   /**
    * Evicts the entry with the given onum from cache.
-   * 
+   *
    * @return true iff an entry for the onum was found in cache.
    */
   void evict(long onum) {

@@ -10,7 +10,7 @@ import fabric.lang.security.Label;
 /**
  * This resolver preempts lookups to inner by first using the platform resolver.
  * This ensures the platform classes cannot be redefined by a codebase.
- * 
+ *
  * @author owen
  */
 public class SafeResolver extends PathResolver implements NamespaceResolver {

@@ -17,11 +17,11 @@ import fabric.worker.remote.RemoteWorker;
 
 /**
  * A handshake protocol with bogus authentication for testing purposes.
- * 
+ *
  * @param <Node> the type of node at the remote endpoint.
  */
 public class HandshakeBogus<Node extends RemoteNode<Node>> implements
-    Protocol<Node> {
+Protocol<Node> {
 
   // /////////////////////////////
   // Protocol

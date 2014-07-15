@@ -46,17 +46,10 @@ public class ConfigProperties {
     //
 
     defaults = new Properties();
-    InputStream in = null;
-    try {
-      in = Resources.readFile("etc", "config.properties");
+    try (InputStream in = Resources.readFile("etc", "config.properties")) {
       defaults.load(in);
     } catch (IOException e) {
       // continue with system properties
-    } finally {
-      try {
-        in.close();
-      } catch (Exception e) {
-      }
     }
 
     for (Entry<Object, Object> e : defaults.entrySet())
@@ -128,8 +121,8 @@ public class ConfigProperties {
   public synchronized KeyMaterial getKeyMaterial() {
     if (this.keyMaterial == null)
       this.keyMaterial =
-          new KeyMaterial(this.name, this.certStoreName, this.keyStoreName,
-              this.password);
+      new KeyMaterial(this.name, this.certStoreName, this.keyStoreName,
+          this.password);
 
     return this.keyMaterial;
   }
@@ -146,9 +139,8 @@ public class ConfigProperties {
 
   private static Properties readProperties(String name) {
     Properties p = new Properties(defaults);
-    InputStream file = null;
-    try {
-      file = Resources.readFile("etc", "config", name + ".properties");
+    try (InputStream file =
+        Resources.readFile("etc", "config", name + ".properties")) {
       p.load(file);
       // load() does not trim whitespace from property values.
       for (String key : p.stringPropertyNames()) {
@@ -157,11 +149,6 @@ public class ConfigProperties {
       }
     } catch (IOException e) {
       // continue with defaults
-    } finally {
-      try {
-        file.close();
-      } catch (Exception e) {
-      }
     }
 
     return p;

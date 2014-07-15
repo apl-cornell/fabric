@@ -36,7 +36,7 @@ public class Main {
 
     // Construct a list of Files from the given arguments, ensuring we can read
     // each file.
-    List<File> files = new ArrayList<File>(args.length);
+    List<File> files = new ArrayList<>(args.length);
     for (String filename : args) {
       File file = new File(filename);
       if (!file.canRead()) {
@@ -58,48 +58,38 @@ public class Main {
   }
 
   public static void normalize(File file) {
-    Reader reader;
-    try {
-      reader = new FileReader(file);
+    try (Reader reader = new FileReader(file)) {
+      ErrorQueue eq = new SimpleErrorQueue();
+      Lexer lexer = new Lexer(reader, file.getPath(), eq);
+      Grm grm = new Grm(lexer, eq);
+
+      Symbol sym;
+      try {
+        sym = grm.parse();
+      } catch (IOException e) {
+        eq.enqueue(ErrorInfo.IO_ERROR, e.getMessage());
+        return;
+      } catch (RuntimeException e) {
+        throw e;
+      } catch (Exception e) {
+        eq.enqueue(ErrorInfo.SYNTAX_ERROR, e.getMessage());
+        return;
+      }
+
+      if (sym.value == null) {
+        System.err.println("Error parsing " + file);
+        return;
+      }
+
+      try (Writer writer = new FileWriter(file, false)) {
+        writer.write((String) sym.value);
+      } catch (IOException e) {
+        eq.enqueue(ErrorInfo.IO_ERROR, e.getMessage());
+      }
     } catch (FileNotFoundException e) {
       System.err.println("File not found: " + file);
       return;
-    }
-
-    ErrorQueue eq = new SimpleErrorQueue();
-    Lexer lexer = new Lexer(reader, file.getPath(), eq);
-    Grm grm = new Grm(lexer, eq);
-
-    Symbol sym;
-    try {
-      sym = grm.parse();
-    } catch (IOException e) {
-      eq.enqueue(ErrorInfo.IO_ERROR, e.getMessage());
-      return;
-    } catch (RuntimeException e) {
-      throw e;
-    } catch (Exception e) {
-      eq.enqueue(ErrorInfo.SYNTAX_ERROR, e.getMessage());
-      return;
-    }
-
-    try {
-      reader.close();
     } catch (IOException e) {
     }
-
-    if (sym.value == null) {
-      System.err.println("Error parsing " + file);
-      return;
-    }
-
-    try {
-      Writer writer = new FileWriter(file, false);
-      writer.write((String) sym.value);
-      writer.close();
-    } catch (IOException e) {
-      eq.enqueue(ErrorInfo.IO_ERROR, e.getMessage());
-    }
-
   }
 }

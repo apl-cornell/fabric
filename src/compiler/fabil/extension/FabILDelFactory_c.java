@@ -5,7 +5,7 @@ import polyglot.ast.JLDel;
 import codebases.ast.CodebaseImportDel_c;
 
 public class FabILDelFactory_c extends AbstractDelFactory_c implements
-    FabILDelFactory {
+FabILDelFactory {
 
   @Override
   public final JLDel delFabricArrayTypeNode() {

@@ -37,7 +37,7 @@ public class UnaryExt_c extends ExprExt_c {
       }
     }
 
-    Expr getter = (Expr) unary.visitChild(expr, rewriter);
+    Expr getter = unary.visitChild(expr, rewriter);
     if (getter instanceof Call) {
       Call getterCall = (Call) getter;
       if (op.isPrefix()) {

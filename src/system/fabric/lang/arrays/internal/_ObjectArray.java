@@ -37,7 +37,7 @@ public interface _ObjectArray<T extends Object> extends Object {
 
     /**
      * Creates a new object array at the given Store with the given length.
-     * 
+     *
      * @param store
      *          The store on which to allocate the array.
      * @param length
@@ -56,7 +56,7 @@ public interface _ObjectArray<T extends Object> extends Object {
     /**
      * Creates a new object array at the given Store using the given backing
      * array.
-     * 
+     *
      * @param store
      *          The store on which to allocate the array.
      * @param value
@@ -172,7 +172,7 @@ public interface _ObjectArray<T extends Object> extends Object {
 
     @Override
     protected _ObjectArray._Proxy<T> $makeProxy() {
-      return new _ObjectArray._Proxy<T>(this);
+      return new _ObjectArray._Proxy<>(this);
     }
 
     @Override

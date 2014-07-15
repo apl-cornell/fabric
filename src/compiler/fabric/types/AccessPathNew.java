@@ -8,7 +8,7 @@ import polyglot.types.Type;
 import polyglot.util.Position;
 
 /**
- * 
+ *
  */
 public class AccessPathNew extends AccessPathRoot {
 
@@ -61,7 +61,7 @@ public class AccessPathNew extends AccessPathRoot {
   @Override
   public boolean equals(Object o) {
     //XXX: This is not really correct.  Two independent new
-    //     expressions might be considered equivalent 
+    //     expressions might be considered equivalent
     //     with this definition. Really need an 'instance' for
     //     each new to distinguish them.
     if (o instanceof AccessPathNew) {

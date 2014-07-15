@@ -35,7 +35,7 @@ package fabric.common.util;
  * specifically, no element may be in the set more than once). This class simply
  * provides implementations of equals() and hashCode() to fulfil the
  * requirements placed on them by the Set interface.
- * 
+ *
  * @author Original author unknown
  * @author Eric Blake (ebb9@email.byu.edu)
  * @see LongCollection
@@ -45,7 +45,7 @@ package fabric.common.util;
  * @since 1.2
  */
 public abstract class AbstractLongSet extends AbstractLongCollection implements
-    LongSet {
+LongSet {
   /**
    * The main constructor, for use by subclasses.
    */
@@ -58,7 +58,7 @@ public abstract class AbstractLongSet extends AbstractLongCollection implements
    * true if so. Otherwise, if o is a Set and is the same size as this one, it
    * returns the result of calling containsAll on the given Set. Otherwise, it
    * returns false.
-   * 
+   *
    * @param o
    *          the Object to be tested for equality with this Set
    * @return true if the given object is equal to this Set
@@ -74,7 +74,7 @@ public abstract class AbstractLongSet extends AbstractLongCollection implements
    * hash codes of all its elements, except that the hash code of null is
    * defined to be zero. This implementation obtains an Iterator over the Set,
    * and sums the results.
-   * 
+   *
    * @return a hash code for this Set
    */
   @Override
@@ -95,7 +95,7 @@ public abstract class AbstractLongSet extends AbstractLongCollection implements
    * is larger, it iterates over the collection, calling Set.remove for all
    * elements in the collection. Note that this operation will fail if a remove
    * methods is not supported.
-   * 
+   *
    * @param c
    *          the collection of elements to remove
    * @return true if the set was modified as a result

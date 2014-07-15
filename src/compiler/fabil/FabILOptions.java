@@ -87,10 +87,10 @@ public class FabILOptions extends polyglot.main.Options {
 
   public FabILOptions(ExtensionInfo extension) {
     super(extension);
-    sigcp = new ArrayList<File>();
-    sourcepath_uris = new ArrayList<URI>();
-    classpath_uris = new ArrayList<URI>();
-    codebase_aliases = new HashMap<String, URI>();
+    sigcp = new ArrayList<>();
+    sourcepath_uris = new ArrayList<>();
+    classpath_uris = new ArrayList<>();
+    codebase_aliases = new HashMap<>();
   }
 
   @Override
@@ -192,11 +192,9 @@ public class FabILOptions extends polyglot.main.Options {
 
         String arg = args[index];
         if (arg.startsWith("@")) {
-          try {
-            BufferedReader lr =
-                new BufferedReader(new FileReader(arg.substring(1)));
+          try (BufferedReader lr =
+              new BufferedReader(new FileReader(arg.substring(1)))) {
             arg = lr.readLine();
-            lr.close();
           } catch (FileNotFoundException e) {
             throw new InternalCompilerError(e);
           } catch (IOException e) {
@@ -209,11 +207,9 @@ public class FabILOptions extends polyglot.main.Options {
         String cb = alias[1];
 
         if (cb.startsWith("@")) {
-          try {
-            BufferedReader lr =
-                new BufferedReader(new FileReader(alias[1].substring(1)));
+          try (BufferedReader lr =
+              new BufferedReader(new FileReader(alias[1].substring(1)))) {
             cb = lr.readLine().replaceAll("[<>]", "");
-            lr.close();
           } catch (FileNotFoundException e) {
             throw new InternalCompilerError(e);
           } catch (IOException e) {
@@ -225,7 +221,7 @@ public class FabILOptions extends polyglot.main.Options {
         if (uri.isOpaque() || !uri.isAbsolute())
           throw new UsageError("Invalid codebase reference in alias:" + arg);
 
-        return createArg(index + 1, new Pair<String, URI>(alias[0], uri));
+        return createArg(index + 1, new Pair<>(alias[0], uri));
       }
     });
     flags.add(new Switch("-generate-native-skeletons",
@@ -244,7 +240,7 @@ public class FabILOptions extends polyglot.main.Options {
       File f = new File(args[index]).getAbsoluteFile();
       u = NSUtil.file.resolve(f.toURI());
     }
-    Arg<URI> src = new Arg<URI>(index + 1, u);
+    Arg<URI> src = new Arg<>(index + 1, u);
     arguments.add(src);
     return src.next();
   }
@@ -402,7 +398,7 @@ public class FabILOptions extends polyglot.main.Options {
   }
 
   public static List<File> URIsToFiles(List<URI> uris) {
-    List<File> files = new ArrayList<File>(uris.size());
+    List<File> files = new ArrayList<>(uris.size());
     for (URI u : uris) {
       files.add(new File(u));
     }

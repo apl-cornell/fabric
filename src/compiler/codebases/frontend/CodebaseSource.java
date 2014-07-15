@@ -15,7 +15,7 @@ public interface CodebaseSource {
 
   /**
    * The short name of this source (i.e. its filename).
-   * 
+   *
    * @return
    */
   String name();
@@ -23,7 +23,7 @@ public interface CodebaseSource {
   /**
    * The canonical namespace of source is the namespace its dependencies are
    * resolved in.
-   * 
+   *
    * @return The canonical namespace of this source
    */
   URI canonicalNamespace();
@@ -36,7 +36,7 @@ public interface CodebaseSource {
    * ensure flexible handling between phases, we create a 'derived' source that
    * is backed by the link to the original resource, but permits a new job to be
    * scheduled.
-   * 
+   *
    * @param name
    * @return A source derived from this CodebaseSource with a new (short) name
    */
@@ -44,7 +44,7 @@ public interface CodebaseSource {
 
   /**
    * Create a derived source object with a new namespace and short name.
-   * 
+   *
    * @param namespace
    * @param name
    * @return
@@ -54,7 +54,7 @@ public interface CodebaseSource {
   /**
    * Whether a new class object should be published for this source file and
    * associated with the codebase representing the namespace.
-   * 
+   *
    * @return
    */
   boolean shouldPublish();

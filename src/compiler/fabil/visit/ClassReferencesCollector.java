@@ -29,19 +29,19 @@ import fabil.types.FabILTypeSystem;
 
 /**
  * Collects all types referenced by a class and outputs them to a file.
- * 
+ *
  * @author Lucas Waye <lrw48@cornell.edu>
  */
 public class ClassReferencesCollector extends NodeVisitor {
 
   /** The Java class suffixes for each Fabric class */
   private static final String[] GENERATED_CLASSES = new String[] { "",
-      "$_Proxy", "$_Impl", "$_Static", "$_Static$_Proxy", "$_Static$_Impl" };
+    "$_Proxy", "$_Impl", "$_Static", "$_Static$_Proxy", "$_Static$_Impl" };
 
   /** Objects referenced in the generated Java source */
   private static final String[] ALWAYS_REQUIRED_CLASSES = new String[] {
-      "fabric.net.UnreachableNodeException", "java.lang.Cloneable",
-      "java.lang.Object", };
+    "fabric.net.UnreachableNodeException", "java.lang.Cloneable",
+    "java.lang.Object", };
 
   private static final String PROPERTIES_EXTENSION = ".fabproperties";
 
@@ -53,8 +53,8 @@ public class ClassReferencesCollector extends NodeVisitor {
   public ClassReferencesCollector(Job job, TypeSystem ts) {
     this.job = job;
     this.ts = (FabILTypeSystem) ts;
-    classes = new HashSet<String>(Arrays.asList(ALWAYS_REQUIRED_CLASSES));
-    nestedClasses = new HashMap<String, Set<String>>();
+    classes = new HashSet<>(Arrays.asList(ALWAYS_REQUIRED_CLASSES));
+    nestedClasses = new HashMap<>();
   }
 
   @Override
@@ -97,7 +97,7 @@ public class ClassReferencesCollector extends NodeVisitor {
     for (String classSuffix : GENERATED_CLASSES) {
       StringBuilder path = new StringBuilder();
       path.append(basePath).append(classSuffix).append(".class")
-          .append(PROPERTIES_EXTENSION);
+      .append(PROPERTIES_EXTENSION);
       writeDependencies(new File(path.toString()));
     }
     /* write deps for any nested classes declared in this sourcefile */
@@ -122,16 +122,14 @@ public class ClassReferencesCollector extends NodeVisitor {
     String result = deps.substring(0, deps.length() - 1);
     Properties p = new Properties();
     p.setProperty("dependencies", result);
-    try {
-      f.getParentFile().mkdirs();
-      FileOutputStream fs = new FileOutputStream(f);
+    f.getParentFile().mkdirs();
+    try (FileOutputStream fs = new FileOutputStream(f)) {
       p.store(fs, null);
-      fs.close();
     } catch (IOException e) {
       job.compiler()
-          .errorQueue()
-          .enqueue(ErrorInfo.IO_ERROR,
-              "I/O error while writing dependencies: " + e.getMessage());
+      .errorQueue()
+      .enqueue(ErrorInfo.IO_ERROR,
+          "I/O error while writing dependencies: " + e.getMessage());
     }
   }
 
@@ -157,7 +155,7 @@ public class ClassReferencesCollector extends NodeVisitor {
           }
           nested = nestedClasses.get(ct.fullName());
           if (nested == null) {
-            nested = new HashSet<String>();
+            nested = new HashSet<>();
             nestedClasses.put(ct.fullName(), nested);
           }
         }

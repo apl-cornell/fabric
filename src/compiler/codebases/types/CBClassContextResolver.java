@@ -31,7 +31,7 @@ public class CBClassContextResolver extends ClassContextResolver {
 
   /**
    * Find a type object in the context of the class.
-   * 
+   *
    * @param name
    *          The name to search for.
    */
@@ -112,7 +112,7 @@ public class CBClassContextResolver extends ClassContextResolver {
 
     // Collect all members of the super types.
     // Use a Set to eliminate duplicates.
-    Set<Named> acceptable = new HashSet<Named>();
+    Set<Named> acceptable = new HashSet<>();
 
     if (type.superType() != null) {
       Type sup = type.superType();
@@ -140,7 +140,7 @@ public class CBClassContextResolver extends ClassContextResolver {
     if (acceptable.size() == 0) {
       throw new NoClassException(name, type);
     } else if (acceptable.size() > 1) {
-      Set<Type> containers = new HashSet<Type>(acceptable.size());
+      Set<Type> containers = new HashSet<>(acceptable.size());
       for (Named n : acceptable) {
         if (n instanceof MemberInstance) {
           MemberInstance mi = (MemberInstance) n;

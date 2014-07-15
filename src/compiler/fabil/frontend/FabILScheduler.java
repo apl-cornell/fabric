@@ -97,7 +97,7 @@ public class FabILScheduler extends JLScheduler implements CBScheduler {
             .extensionInfo().typeSystem(), job.extensionInfo().nodeFactory())) {
           @Override
           public Collection<Goal> prerequisiteGoals(Scheduler s) {
-            List<Goal> l = new ArrayList<Goal>();
+            List<Goal> l = new ArrayList<>();
             l.add(TypeChecked(job));
             return l;
           }
@@ -112,7 +112,7 @@ public class FabILScheduler extends JLScheduler implements CBScheduler {
             .extensionInfo().typeSystem(), job.extensionInfo().nodeFactory())) {
           @Override
           public Collection<Goal> prerequisiteGoals(Scheduler s) {
-            List<Goal> l = new ArrayList<Goal>();
+            List<Goal> l = new ArrayList<>();
             l.add(LoopsNormalized(job));
             return l;
           }
@@ -129,7 +129,7 @@ public class FabILScheduler extends JLScheduler implements CBScheduler {
         internGoal(new VisitorGoal(job, new AbortRetryChecker(job, ts, nf)) {
           @Override
           public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
-            List<Goal> l = new ArrayList<Goal>();
+            List<Goal> l = new ArrayList<>();
             l.add(TypesInitialized(job));
             return l;
           }
@@ -145,7 +145,7 @@ public class FabILScheduler extends JLScheduler implements CBScheduler {
     Goal g = internGoal(new polyglot.frontend.goals.TypeChecked(job, ts, nf) {
       @Override
       public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
-        List<Goal> l = new ArrayList<Goal>();
+        List<Goal> l = new ArrayList<>();
         l.add(ExpressionsFlattened(job));
         l.add(CheckAbortRetry(job));
         return l;
@@ -161,7 +161,7 @@ public class FabILScheduler extends JLScheduler implements CBScheduler {
         internGoal(new VisitorGoal(job, new ClassReferencesCollector(job, ts)) {
           @Override
           public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
-            List<Goal> l = new ArrayList<Goal>();
+            List<Goal> l = new ArrayList<>();
             l.add(Memoized(job));
             return l;
           }
@@ -177,7 +177,7 @@ public class FabILScheduler extends JLScheduler implements CBScheduler {
         internGoal(new VisitorGoal(job, new StaticInitializerCollector(nf, ts)) {
           @Override
           public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
-            List<Goal> l = new ArrayList<Goal>();
+            List<Goal> l = new ArrayList<>();
             l.add(TypeChecked(job));
 
             if (extInfo.getOptions().optLevel() > 0) {
@@ -197,7 +197,7 @@ public class FabILScheduler extends JLScheduler implements CBScheduler {
             (ExtensionInfo) job.extensionInfo())) {
           @Override
           public Collection<Goal> prerequisiteGoals(Scheduler s) {
-            List<Goal> l = new ArrayList<Goal>();
+            List<Goal> l = new ArrayList<>();
             l.add(CollectStaticInitializers(job));
             return l;
           }
@@ -210,7 +210,7 @@ public class FabILScheduler extends JLScheduler implements CBScheduler {
     Goal g = internGoal(new VisitorGoal(job, new UpdatedVariableFinder()) {
       @Override
       public Collection<Goal> prerequisiteGoals(Scheduler s) {
-        List<Goal> l = new ArrayList<Goal>();
+        List<Goal> l = new ArrayList<>();
         l.add(RewriteAtomicMethods(job));
         return l;
       }
@@ -235,7 +235,7 @@ public class FabILScheduler extends JLScheduler implements CBScheduler {
     Goal g = internGoal(new VisitorGoal(job, icr) {
       @Override
       public Collection<Goal> prerequisiteGoals(Scheduler s) {
-        List<Goal> l = new ArrayList<Goal>();
+        List<Goal> l = new ArrayList<>();
         l.add(FindUpdatedVariables(job));
         l.add(RewriteAtomicMethods(job));
         return l;
@@ -250,7 +250,7 @@ public class FabILScheduler extends JLScheduler implements CBScheduler {
             extInfo.typeSystem(), extInfo.nodeFactory())) {
           @Override
           public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
-            List<Goal> l = new ArrayList<Goal>();
+            List<Goal> l = new ArrayList<>();
             l.add(InnerClassesRemoved(job));
             return l;
           }
@@ -264,7 +264,7 @@ public class FabILScheduler extends JLScheduler implements CBScheduler {
             extInfo.typeSystem(), extInfo.nodeFactory())) {
           @Override
           public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
-            List<Goal> l = new ArrayList<Goal>();
+            List<Goal> l = new ArrayList<>();
             l.add(ExceptionsChecked(job));
             l.add(ExitPathsChecked(job));
             l.add(InitializationsChecked(job));
@@ -285,7 +285,7 @@ public class FabILScheduler extends JLScheduler implements CBScheduler {
             extInfo.typeSystem(), extInfo.nodeFactory())) {
           @Override
           public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
-            List<Goal> l = new ArrayList<Goal>();
+            List<Goal> l = new ArrayList<>();
             l.add(WrapInlineables(job));
             l.addAll(super.prerequisiteGoals(scheduler));
             return l;
@@ -302,7 +302,7 @@ public class FabILScheduler extends JLScheduler implements CBScheduler {
     Goal g = internGoal(new VisitorGoal(job, new LabelAssigner(job, extInfo)) {
       @Override
       public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
-        List<Goal> l = new ArrayList<Goal>();
+        List<Goal> l = new ArrayList<>();
         l.add(InnerClassesRemoved(job));
         l.addAll(super.prerequisiteGoals(scheduler));
         return l;
@@ -320,7 +320,7 @@ public class FabILScheduler extends JLScheduler implements CBScheduler {
         internGoal(new VisitorGoal(job, new LocationAssigner(job, extInfo)) {
           @Override
           public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
-            List<Goal> l = new ArrayList<Goal>();
+            List<Goal> l = new ArrayList<>();
             l.add(InnerClassesRemoved(job));
             l.addAll(super.prerequisiteGoals(scheduler));
             return l;
@@ -334,7 +334,7 @@ public class FabILScheduler extends JLScheduler implements CBScheduler {
     Goal g = internGoal(new VisitorGoal(job, new PrincipalDelegator(extInfo)) {
       @Override
       public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
-        List<Goal> l = new ArrayList<Goal>();
+        List<Goal> l = new ArrayList<>();
         // l.add(LocationsAssigned(job));
         l.add(RewriteStoreGetters(job));
         l.addAll(super.prerequisiteGoals(scheduler));
@@ -348,7 +348,7 @@ public class FabILScheduler extends JLScheduler implements CBScheduler {
     Goal g = internGoal(new VisitorGoal(job, new StoreGetterRewriter()) {
       @Override
       public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
-        List<Goal> l = new ArrayList<Goal>();
+        List<Goal> l = new ArrayList<>();
         l.add(LocationsAssigned(job));
         l.add(LabelsAssigned(job));
         // l.addAll(super.prerequisiteGoals(scheduler));
@@ -362,7 +362,7 @@ public class FabILScheduler extends JLScheduler implements CBScheduler {
     Goal g = internGoal(new VisitorGoal(job, new ProxyRewriter(extInfo)) {
       @Override
       public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
-        List<Goal> l = new ArrayList<Goal>();
+        List<Goal> l = new ArrayList<>();
         l.add(WrapInlineables(job));
         l.add(RewriteStoreGetters(job));
         // l.add(LocationsAssigned(job));
@@ -388,7 +388,7 @@ public class FabILScheduler extends JLScheduler implements CBScheduler {
     Goal g = internGoal(new VisitorGoal(job, new ProviderRewriter(extInfo)) {
       @Override
       public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
-        List<Goal> l = new ArrayList<Goal>();
+        List<Goal> l = new ArrayList<>();
         l.add(RewriteProxies(job));
         l.addAll(super.prerequisiteGoals(scheduler));
         return l;
@@ -403,7 +403,7 @@ public class FabILScheduler extends JLScheduler implements CBScheduler {
             (ExtensionInfo) job.extensionInfo())) {
           @Override
           public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
-            List<Goal> l = new ArrayList<Goal>();
+            List<Goal> l = new ArrayList<>();
             l.add(RewriteProxies(job));
             return l;
           }
@@ -419,7 +419,7 @@ public class FabILScheduler extends JLScheduler implements CBScheduler {
             (ExtensionInfo) job.extensionInfo())) {
           @Override
           public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
-            List<Goal> l = new ArrayList<Goal>();
+            List<Goal> l = new ArrayList<>();
             l.add(RewriteProxies(job));
             return l;
           }
@@ -434,7 +434,7 @@ public class FabILScheduler extends JLScheduler implements CBScheduler {
             (ExtensionInfo) job.extensionInfo())) {
           @Override
           public Collection<Goal> prerequisiteGoals(Scheduler s) {
-            List<Goal> l = new ArrayList<Goal>();
+            List<Goal> l = new ArrayList<>();
             l.add(RewriteAtomic(job));
             return l;
           }
@@ -449,7 +449,7 @@ public class FabILScheduler extends JLScheduler implements CBScheduler {
     Goal g = internGoal(new VisitorGoal(job, new Memoizer(job, ts, nf)) {
       @Override
       public Collection<Goal> prerequisiteGoals(Scheduler s) {
-        List<Goal> l = new ArrayList<Goal>();
+        List<Goal> l = new ArrayList<>();
         l.add(RewriteProxies(job));
         return l;
       }
@@ -463,7 +463,7 @@ public class FabILScheduler extends JLScheduler implements CBScheduler {
         internGoal(new VisitorGoal(job, new ClassHashGenerator(job, extInfo)) {
           @Override
           public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
-            List<Goal> l = new ArrayList<Goal>();
+            List<Goal> l = new ArrayList<>();
             l.add(RewriteProxies(job));
             return l;
           }
@@ -476,7 +476,7 @@ public class FabILScheduler extends JLScheduler implements CBScheduler {
     Goal g = internGoal(new VisitorGoal(job, new SignatureHashGenerator()) {
       @Override
       public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
-        List<Goal> l = new ArrayList<Goal>();
+        List<Goal> l = new ArrayList<>();
         l.add(TypeChecked(job));
         return l;
       }
@@ -491,7 +491,7 @@ public class FabILScheduler extends JLScheduler implements CBScheduler {
     Goal g = internGoal(new Serialized(job) {
       @Override
       public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
-        List<Goal> l = new ArrayList<Goal>();
+        List<Goal> l = new ArrayList<>();
         l.addAll(super.prerequisiteGoals(scheduler));
         if (!extInfo.getOptions().signatureMode()) {
           l.add(RewriteProxies(job));
@@ -533,7 +533,7 @@ public class FabILScheduler extends JLScheduler implements CBScheduler {
         internGoal(new VisitorGoal(job, new JavaSkeletonCreator(job, ts, nf)) {
           @Override
           public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
-            List<Goal> l = new ArrayList<Goal>();
+            List<Goal> l = new ArrayList<>();
             l.add(Parsed(job));
 
             // l.add(Memoized(job));
@@ -547,7 +547,7 @@ public class FabILScheduler extends JLScheduler implements CBScheduler {
     Goal g = internGoal(new VisitorGoal(job, new SignatureCleaner()) {
       @Override
       public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
-        List<Goal> l = new ArrayList<Goal>();
+        List<Goal> l = new ArrayList<>();
         l.addAll(super.prerequisiteGoals(scheduler));
         l.add(Serialized(job));
         return l;
@@ -576,7 +576,7 @@ public class FabILScheduler extends JLScheduler implements CBScheduler {
 
         // Compiling as a signature. Insert a pass to remove all non-signature
         // cruft
-        List<Goal> l = new ArrayList<Goal>();
+        List<Goal> l = new ArrayList<>();
         l.addAll(super.prerequisiteGoals(scheduler));
         l.add(SignatureClean(job));
         return l;

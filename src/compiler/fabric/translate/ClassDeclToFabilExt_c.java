@@ -59,8 +59,7 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
     TypeNode worker =
         nf.CanonicalTypeNode(Position.compilerGenerated(), ts.Worker());
 
-    List<ClassMember> members =
-        new ArrayList<ClassMember>(cd.body().members().size() + 1);
+    List<ClassMember> members = new ArrayList<>(cd.body().members().size() + 1);
     members.add(nf.FieldDecl(
         Position.compilerGenerated(),
         Flags.FINAL.Static(),
@@ -189,7 +188,7 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
 
   @Override
   protected ClassBody addInitializer(ClassBody cb, JifToJavaRewriter rw) {
-    List<Stmt> inits = new ArrayList<Stmt>(rw.getInitializations());
+    List<Stmt> inits = new ArrayList<>(rw.getInitializations());
     rw.getInitializations().clear();
     return cb.addMember(rw.qq().parseMember("private void %s() { %LS }",
         INITIALIZATIONS_METHOD_NAME, inits));
@@ -197,7 +196,7 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
 
   /**
    * Create a method for initializing update and access labels
-   * 
+   *
    * @throws SemanticException
    *           if the field or access label cannot be translated
    */
@@ -236,8 +235,8 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
       return cb.addMember(rw.qq().parseMember(
           "public Object %s() { " + "this.$updateLabel = %E;  "
               + "this.$accessPolicy = %E.confPolicy();" + "return this;" + "}",
-          FabricToFabilRewriter.LABEL_INITIALIZER_METHOD_NAME, updateLabelExpr,
-          accessLabelExpr));
+              FabricToFabilRewriter.LABEL_INITIALIZER_METHOD_NAME, updateLabelExpr,
+              accessLabelExpr));
     }
 
     return cb;

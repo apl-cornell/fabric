@@ -18,7 +18,7 @@ import fabric.types.FabricTypeSystem;
 import fabric.visit.FabricToFabilRewriter;
 
 public class PackageNodeToFabilExt_c extends PackageNodeToJavaExt_c implements
-    ToJavaExt {
+ToJavaExt {
 
   @Override
   public Node toJava(JifToJavaRewriter rw) throws SemanticException {

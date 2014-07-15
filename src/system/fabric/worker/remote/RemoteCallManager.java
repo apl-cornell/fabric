@@ -155,7 +155,7 @@ public class RemoteCallManager extends MessageToWorkerHandler {
   public PrepareTransactionMessage.Response handle(
       RemoteIdentity<RemoteWorker> client,
       PrepareTransactionMessage prepareTransactionMessage)
-      throws TransactionPrepareFailedException {
+          throws TransactionPrepareFailedException {
     // XXX TODO Security checks.
     Log log =
         TransactionRegistry.getInnermostLog(prepareTransactionMessage.tid);
@@ -188,11 +188,11 @@ public class RemoteCallManager extends MessageToWorkerHandler {
   public CommitTransactionMessage.Response handle(
       RemoteIdentity<RemoteWorker> client,
       CommitTransactionMessage commitTransactionMessage)
-      throws TransactionCommitFailedException {
+          throws TransactionCommitFailedException {
     // XXX TODO Security checks.
     Log log =
         TransactionRegistry
-            .getInnermostLog(commitTransactionMessage.transactionID);
+        .getInnermostLog(commitTransactionMessage.transactionID);
     if (log == null) {
       // If no log exists, assume that another worker in the transaction has
       // already committed the requested transaction.
@@ -245,7 +245,7 @@ public class RemoteCallManager extends MessageToWorkerHandler {
   @Override
   public TakeOwnershipMessage.Response handle(
       RemoteIdentity<RemoteWorker> client, TakeOwnershipMessage msg)
-      throws TakeOwnershipFailedException {
+          throws TakeOwnershipFailedException {
     Log log = TransactionRegistry.getInnermostLog(msg.tid.topTid);
     if (log == null)
       throw new TakeOwnershipFailedException(MessageFormat.format(

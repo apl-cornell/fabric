@@ -68,7 +68,7 @@ public class AtomicRewriter extends NodeVisitor {
           // It never executes.
           MethodDecl newMd = (MethodDecl) result;
           List<Stmt> stmts =
-              new ArrayList<Stmt>(newMd.body().statements().size() + 1);
+              new ArrayList<>(newMd.body().statements().size() + 1);
           stmts.addAll(newMd.body().statements());
           stmts.add(nf.Return(Position.compilerGenerated(),
               getDefaultValue(mi.returnType())));

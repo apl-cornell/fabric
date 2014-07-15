@@ -80,7 +80,7 @@ public class HandshakeAuthenticated<Node extends RemoteNode<Node>> implements
 
   public HandshakeAuthenticated(KeyMaterial... endpoints)
       throws GeneralSecurityException {
-    this.receivers = new HashMap<String, Receiver>(endpoints.length);
+    this.receivers = new HashMap<>(endpoints.length);
 
     for (KeyMaterial keys : endpoints) {
       SSLSocketFactory factory = createSSLFactory(keys);

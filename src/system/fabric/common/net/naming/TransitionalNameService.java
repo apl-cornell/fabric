@@ -24,7 +24,7 @@ public class TransitionalNameService implements NameService {
    * a name service entry for each file found, with the name given by the
    * filename (e.g foo for foo.properties), and address given by the PortType
    * argument
-   * 
+   *
    * @param portType
    *          the type of port number to read.
    */
@@ -34,7 +34,7 @@ public class TransitionalNameService implements NameService {
     //
     // load other properties files from the directory
     //
-    entries = new HashMap<Pair<String, PortType>, SocketAddress>();
+    entries = new HashMap<>();
     File directory = Resources.getFile("etc", "config");
     for (File f : directory.listFiles())
       if (f.getName().endsWith(".properties")) {
@@ -51,8 +51,8 @@ public class TransitionalNameService implements NameService {
 
         for (PortType portType : PortType.values()) {
           int port = portType.getPort(props);
-          this.entries.put(new Pair<String, NameService.PortType>(name,
-              portType), new SocketAddress(InetAddress.getByName(host), port));
+          this.entries.put(new Pair<>(name, portType), new SocketAddress(
+              InetAddress.getByName(host), port));
         }
       }
 
@@ -78,8 +78,7 @@ public class TransitionalNameService implements NameService {
   @Override
   public SocketAddress localResolve(String name, PortType portType)
       throws IOException {
-    SocketAddress result =
-        entries.get(new Pair<String, PortType>(name, portType));
+    SocketAddress result = entries.get(new Pair<>(name, portType));
     if (result != null) {
       // If the result is a local loopback address, return the any address.
       // Kinda hacky, but makes things easier to test.
@@ -98,8 +97,7 @@ public class TransitionalNameService implements NameService {
   @Override
   public SocketAddress resolve(String name, PortType portType)
       throws IOException {
-    SocketAddress result =
-        entries.get(new Pair<String, PortType>(name, portType));
+    SocketAddress result = entries.get(new Pair<>(name, portType));
     if (result == null) result = dns.resolve(name, portType);
 
     return result;

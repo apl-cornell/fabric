@@ -69,11 +69,11 @@ public class InlineableWrapper extends AscriptionVisitor {
     // Determine whether the expression e is indexing into a Fabric array.
     boolean isFabricArrayAccess =
         e instanceof ArrayAccess
-            && ((ArrayAccess) e).array().type() instanceof FabricArrayType;
+        && ((ArrayAccess) e).array().type() instanceof FabricArrayType;
 
     if (ts.isJavaInlineable(fromType)
-    // Stuff coming out of a Fabric array of inlineables will already be
-    // wrapped.
+        // Stuff coming out of a Fabric array of inlineables will already be
+        // wrapped.
         && !isFabricArrayAccess)
       fromInlineable = true;
     else if (ts.isFabricReference(fromType))

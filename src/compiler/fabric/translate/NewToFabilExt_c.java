@@ -73,7 +73,7 @@ public class NewToFabilExt_c extends NewToJavaExt_c {
       return n;
     }
 
-    List<Expr> paramargs = new ArrayList<Expr>();
+    List<Expr> paramargs = new ArrayList<>();
 
     if (ct instanceof JifSubstType
         && rw.jif_ts().isParamsRuntimeRep(((JifSubstType) ct).base())) {
@@ -97,7 +97,7 @@ public class NewToFabilExt_c extends NewToJavaExt_c {
       // ct represents params at runtime, but is a Java class with a
       // Jif signature.
       List<Expr> allArgs =
-          new ArrayList<Expr>(paramargs.size() + n.arguments().size());
+          new ArrayList<>(paramargs.size() + n.arguments().size());
       allArgs.addAll(paramargs);
       allArgs.addAll(n.arguments());
       return rw.qq().parseExpr("new %T(%LE)", n.objectType(), allArgs);

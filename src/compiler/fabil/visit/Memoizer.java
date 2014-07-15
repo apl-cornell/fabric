@@ -47,7 +47,7 @@ public class Memoizer extends NodeVisitor {
         // XXX Memoizer runs after ProxyRewriter, and only changes the _Impl
         // class.
         Memoizer v = (Memoizer) this.copy();
-        v.addedMembers = new ArrayList<ClassMember>();
+        v.addedMembers = new ArrayList<>();
         return v;
       }
     } else if (n instanceof MethodDecl) {
@@ -70,7 +70,7 @@ public class Memoizer extends NodeVisitor {
     if (n instanceof ClassDecl) {
       ClassDecl cd = (ClassDecl) n;
       if (mv.addedMembers != null && !mv.addedMembers.isEmpty()) {
-        List<ClassMember> members = new ArrayList<ClassMember>();
+        List<ClassMember> members = new ArrayList<>();
         members.addAll(cd.body().members());
         members.addAll(mv.addedMembers);
         return cd.body(cd.body().members(members));
@@ -117,7 +117,7 @@ public class Memoizer extends NodeVisitor {
             valueId);
     addedMembers.add(valueDecl);
 
-    List<Stmt> stmts = new ArrayList<Stmt>();
+    List<Stmt> stmts = new ArrayList<>();
 
     stmts.add(nf.If(
         Position.compilerGenerated(),

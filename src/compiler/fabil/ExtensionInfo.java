@@ -97,7 +97,7 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements
     extFM.setLocation(options.class_output,
         Collections.singleton(options.classOutputDirectory()));
 
-    List<File> platform_directories = new ArrayList<File>();
+    List<File> platform_directories = new ArrayList<>();
     platform_directories.addAll(options.signaturepath());
     platform_directories.addAll(options.bootclasspath());
     extFM.setLocation(options.bootclasspath, platform_directories);
@@ -114,7 +114,7 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements
         Collections.singletonList(opt.sourceOutputDirectory());
     extFM.setLocation(StandardLocation.SOURCE_PATH, sourcepath);
 
-    List<File> classpath = new ArrayList<File>();
+    List<File> classpath = new ArrayList<>();
     classpath.addAll(opt.bootclasspathDirectories());
     for (URI u : opt.classpathURIs()) {
       if (u.getScheme().equals("file")) {
@@ -237,7 +237,7 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements
 
   /**
    * Creates namespace resolvers for FabIL namespaces.
-   * 
+   *
    * @param ns
    * @return
    */

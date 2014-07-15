@@ -394,7 +394,7 @@ public class ConcurrentLongKeyHashMap<V> extends AbstractLongKeyMap<V>
           } else {
             if (node != null)
               node.setNext(first);
-            else node = new HashEntry<V>(hash, key, value, first);
+            else node = new HashEntry<>(hash, key, value, first);
             int c = count + 1;
             if (c > threshold && tab.length < MAXIMUM_CAPACITY)
               rehash(node);
@@ -463,7 +463,7 @@ public class ConcurrentLongKeyHashMap<V> extends AbstractLongKeyMap<V>
               int h = p.hash;
               int k = h & sizeMask;
               HashEntry<V> n = newTable[k];
-              newTable[k] = new HashEntry<V>(h, p.key, v, n);
+              newTable[k] = new HashEntry<>(h, p.key, v, n);
             }
           }
         }
@@ -494,7 +494,7 @@ public class ConcurrentLongKeyHashMap<V> extends AbstractLongKeyMap<V>
         if (retries < 0) {
           if (e == null) {
             if (node == null) // speculatively create node
-              node = new HashEntry<V>(hash, key, value, null);
+              node = new HashEntry<>(hash, key, value, null);
             retries = 0;
           } else if (key == e.key)
             retries = 0;
@@ -665,7 +665,7 @@ public class ConcurrentLongKeyHashMap<V> extends AbstractLongKeyMap<V>
       int threshold = (int) (cap * lf);
       HashEntry<V>[] tab = new HashEntry[cap];
       if ((seg = (Segment<V>) UNSAFE.getObjectVolatile(ss, u)) == null) { // recheck
-        Segment<V> s = new Segment<V>(lf, threshold, tab);
+        Segment<V> s = new Segment<>(lf, threshold, tab);
         while ((seg = (Segment<V>) UNSAFE.getObjectVolatile(ss, u)) == null) {
           if (UNSAFE.compareAndSwapObject(ss, u, null, seg = s)) break;
         }
@@ -735,7 +735,7 @@ public class ConcurrentLongKeyHashMap<V> extends AbstractLongKeyMap<V>
       cap <<= 1;
     // create segments and segments[0]
     Segment<V> s0 =
-        new Segment<V>(loadFactor, (int) (cap * loadFactor), new HashEntry[cap]);
+        new Segment<>(loadFactor, (int) (cap * loadFactor), new HashEntry[cap]);
     Segment<V>[] ss = new Segment[ssize];
     UNSAFE.putOrderedObject(ss, SBASE, s0); // ordered write of segments[0]
     this.segments = ss;

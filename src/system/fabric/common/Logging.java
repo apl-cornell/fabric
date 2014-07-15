@@ -163,7 +163,7 @@ public final class Logging {
   /**
    * Logs a message, with one object parameter. This is just here for
    * completeness.
-   * 
+   *
    * @param logger
    *          The logger to log to
    * @param level
@@ -180,7 +180,7 @@ public final class Logging {
 
   /**
    * Logs a message, with two object parameters.
-   * 
+   *
    * @param logger
    *          The logger to log to
    * @param level
@@ -200,7 +200,7 @@ public final class Logging {
 
   /**
    * Logs a message, with three object parameters.
-   * 
+   *
    * @param logger
    *          The logger to log to
    * @param level
@@ -222,7 +222,7 @@ public final class Logging {
 
   /**
    * Logs a message, with four object parameters.
-   * 
+   *
    * @param logger
    *          The logger to log to
    * @param level
@@ -246,7 +246,7 @@ public final class Logging {
 
   /**
    * Logs a message, with four object parameters.
-   * 
+   *
    * @param logger
    *          The logger to log to
    * @param level
@@ -286,10 +286,11 @@ public final class Logging {
 
       // Read the configuration.
       try {
-        InputStream in = new FileInputStream(configFile);
-        Properties p = new Properties();
-        p.load(in);
-        in.close();
+        final Properties p;
+        try (InputStream in = new FileInputStream(configFile)) {
+          p = new Properties();
+          p.load(in);
+        }
 
         // Make the log filename absolute if it isn't already.
         final String key = "java.util.logging.FileHandler.pattern";

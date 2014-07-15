@@ -182,42 +182,28 @@ public final class SecurityCache extends AbstractSecurityCache {
     this.parent = parent;
     this.topLevelCache = topLevelCache;
 
-    this.actsFor = new HashMap<ActsForPair, ActsForProof>();
-    this.notActsFor = new HashSet<ActsForPair>();
-    this.actsForDependencies = new HashMap<DelegationPair, Set<ActsForPair>>();
+    this.actsFor = new HashMap<>();
+    this.notActsFor = new HashSet<>();
+    this.actsForDependencies = new HashMap<>();
 
-    this.trueLabelRelabels = new HashSet<Pair<Label, Label>>();
-    this.falseLabelRelabels = new HashSet<Pair<Label, Label>>();
-    this.trueLabelRelabelsDependencies =
-        new HashMap<DelegationPair, Set<Pair<Label, Label>>>();
-    this.truePolicyRelabels =
-        new HashMap<Pair<Policy, Policy>, Set<DelegationPair>>();
-    this.falsePolicyRelabels = new HashSet<Pair<Policy, Policy>>();
-    this.truePolicyRelabelsDependencies =
-        new HashMap<DelegationPair, Set<Pair<Policy, Policy>>>();
+    this.trueLabelRelabels = new HashSet<>();
+    this.falseLabelRelabels = new HashSet<>();
+    this.trueLabelRelabelsDependencies = new HashMap<>();
+    this.truePolicyRelabels = new HashMap<>();
+    this.falsePolicyRelabels = new HashSet<>();
+    this.truePolicyRelabelsDependencies = new HashMap<>();
 
-    this.readerPolicies =
-        new HashMap<Triple<Principal, Principal, Store>, ConfPolicy>();
-    this.writerPolicies =
-        new HashMap<Triple<Principal, Principal, Store>, IntegPolicy>();
-    this.policyJoins =
-        new HashMap<Triple<Policy, Policy, Store>, Pair<Policy, Set<DelegationPair>>>();
-    this.policyJoinDependencies =
-        new HashMap<SecurityCache.DelegationPair, Set<Triple<Policy, Policy, Store>>>();
-    this.policyMeets =
-        new HashMap<Triple<Policy, Policy, Store>, Pair<Policy, Set<DelegationPair>>>();
-    this.policyMeetDependencies =
-        new HashMap<SecurityCache.DelegationPair, Set<Triple<Policy, Policy, Store>>>();
-    this.toLabelCache =
-        new HashMap<Triple<ConfPolicy, IntegPolicy, Store>, Label>();
-    this.labelJoins =
-        new HashMap<Triple<Label, Label, Store>, Pair<Label, Set<DelegationPair>>>();
-    this.labelMeets =
-        new HashMap<Triple<Label, Label, Store>, Pair<Label, Set<DelegationPair>>>();
-    this.labelJoinDependencies =
-        new HashMap<SecurityCache.DelegationPair, Set<Triple<Label, Label, Store>>>();
-    this.labelMeetDependencies =
-        new HashMap<SecurityCache.DelegationPair, Set<Triple<Label, Label, Store>>>();
+    this.readerPolicies = new HashMap<>();
+    this.writerPolicies = new HashMap<>();
+    this.policyJoins = new HashMap<>();
+    this.policyJoinDependencies = new HashMap<>();
+    this.policyMeets = new HashMap<>();
+    this.policyMeetDependencies = new HashMap<>();
+    this.toLabelCache = new HashMap<>();
+    this.labelJoins = new HashMap<>();
+    this.labelMeets = new HashMap<>();
+    this.labelJoinDependencies = new HashMap<>();
+    this.labelMeetDependencies = new HashMap<>();
   }
 
   @Override
@@ -277,7 +263,7 @@ public final class SecurityCache extends AbstractSecurityCache {
 
   private <T, U> void copyMapSet(Map<T, Set<U>> src, Map<T, Set<U>> dst) {
     for (Entry<T, Set<U>> entry : src.entrySet()) {
-      dst.put(entry.getKey(), new HashSet<U>(entry.getValue()));
+      dst.put(entry.getKey(), new HashSet<>(entry.getValue()));
     }
   }
 
@@ -420,7 +406,7 @@ public final class SecurityCache extends AbstractSecurityCache {
   void addActsForDependency(DelegationPair del, ActsForPair pair) {
     Set<ActsForPair> set = actsForDependencies.get(del);
     if (set == null) {
-      set = new HashSet<ActsForPair>();
+      set = new HashSet<>();
       actsForDependencies.put(del, set);
     }
     set.add(pair);
@@ -463,7 +449,7 @@ public final class SecurityCache extends AbstractSecurityCache {
       Pair<Label, Label> pair) {
     Set<Pair<Label, Label>> set = trueLabelRelabelsDependencies.get(del);
     if (set == null) {
-      set = new HashSet<Pair<Label, Label>>();
+      set = new HashSet<>();
       trueLabelRelabelsDependencies.put(del, set);
     }
     set.add(pair);
@@ -502,7 +488,7 @@ public final class SecurityCache extends AbstractSecurityCache {
       Pair<Policy, Policy> pair) {
     Set<Pair<Policy, Policy>> set = truePolicyRelabelsDependencies.get(del);
     if (set == null) {
-      set = new HashSet<Pair<Policy, Policy>>();
+      set = new HashSet<>();
       truePolicyRelabelsDependencies.put(del, set);
     }
     set.add(pair);
@@ -576,8 +562,7 @@ public final class SecurityCache extends AbstractSecurityCache {
       Triple<Policy, Policy, Store> triple) {
     Policy result = topLevelCache.getPolicyJoin(triple);
     if (result == null) return policyJoins.get(triple);
-    return new Pair<Policy, Set<DelegationPair>>(result,
-        Collections.<DelegationPair> emptySet());
+    return new Pair<>(result, Collections.<DelegationPair> emptySet());
   }
 
   /**
@@ -594,8 +579,7 @@ public final class SecurityCache extends AbstractSecurityCache {
    */
   void putPolicyJoin(Triple<Policy, Policy, Store> triple, Policy policy,
       Set<DelegationPair> deps) {
-    policyJoins
-        .put(triple, new Pair<Policy, Set<DelegationPair>>(policy, deps));
+    policyJoins.put(triple, new Pair<>(policy, deps));
 
     // Record that this join depends on the given set of dependencies.
     for (DelegationPair del : deps) {
@@ -611,7 +595,7 @@ public final class SecurityCache extends AbstractSecurityCache {
       Triple<Policy, Policy, Store> triple) {
     Set<Triple<Policy, Policy, Store>> set = policyJoinDependencies.get(del);
     if (set == null) {
-      set = new HashSet<Triple<Policy, Policy, Store>>();
+      set = new HashSet<>();
       policyJoinDependencies.put(del, set);
     }
     set.add(triple);
@@ -628,8 +612,7 @@ public final class SecurityCache extends AbstractSecurityCache {
 
   void putPolicyMeet(Triple<Policy, Policy, Store> triple, Policy policy,
       Set<DelegationPair> deps) {
-    policyMeets
-        .put(triple, new Pair<Policy, Set<DelegationPair>>(policy, deps));
+    policyMeets.put(triple, new Pair<>(policy, deps));
 
     // Record that this meet depends on the given set of dependencies.
     for (DelegationPair del : deps) {
@@ -641,7 +624,7 @@ public final class SecurityCache extends AbstractSecurityCache {
       Triple<Policy, Policy, Store> triple) {
     Set<Triple<Policy, Policy, Store>> set = policyMeetDependencies.get(del);
     if (set == null) {
-      set = new HashSet<Triple<Policy, Policy, Store>>();
+      set = new HashSet<>();
       policyMeetDependencies.put(del, set);
     }
     set.add(triple);
@@ -670,7 +653,7 @@ public final class SecurityCache extends AbstractSecurityCache {
 
   void putLabelJoin(Triple<Label, Label, Store> triple, Label label,
       Set<DelegationPair> deps) {
-    labelJoins.put(triple, new Pair<Label, Set<DelegationPair>>(label, deps));
+    labelJoins.put(triple, new Pair<>(label, deps));
 
     // Record that this join depends on the given set of dependencies.
     for (DelegationPair del : deps) {
@@ -689,7 +672,7 @@ public final class SecurityCache extends AbstractSecurityCache {
 
   void putLabelMeet(Triple<Label, Label, Store> triple, Label label,
       Set<DelegationPair> deps) {
-    labelMeets.put(triple, new Pair<Label, Set<DelegationPair>>(label, deps));
+    labelMeets.put(triple, new Pair<>(label, deps));
 
     // Record that this meet depends on the given set of dependencies.
     for (DelegationPair del : deps) {
@@ -701,7 +684,7 @@ public final class SecurityCache extends AbstractSecurityCache {
       Triple<Label, Label, Store> triple) {
     Set<Triple<Label, Label, Store>> set = labelJoinDependencies.get(del);
     if (set == null) {
-      set = new HashSet<Triple<Label, Label, Store>>();
+      set = new HashSet<>();
       labelJoinDependencies.put(del, set);
     }
     set.add(triple);
@@ -711,7 +694,7 @@ public final class SecurityCache extends AbstractSecurityCache {
       Triple<Label, Label, Store> triple) {
     Set<Triple<Label, Label, Store>> set = labelMeetDependencies.get(del);
     if (set == null) {
-      set = new HashSet<Triple<Label, Label, Store>>();
+      set = new HashSet<>();
       labelMeetDependencies.put(del, set);
     }
     set.add(triple);
@@ -719,8 +702,8 @@ public final class SecurityCache extends AbstractSecurityCache {
 
   static <T extends fabric.lang.Object, U> Triple<T, T, U> canonicalize(T x,
       T y, U z) {
-    if (compare(x, y) <= 0) return new Triple<T, T, U>(x, y, z);
-    return new Triple<T, T, U>(y, x, z);
+    if (compare(x, y) <= 0) return new Triple<>(x, y, z);
+    return new Triple<>(y, x, z);
   }
 
   private static int compare(fabric.lang.Object o1, fabric.lang.Object o2) {

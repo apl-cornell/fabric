@@ -110,13 +110,13 @@ public class ExtensionInfo extends jif.ExtensionInfo implements
     ((FabricFileManager) extFM).setLocation(options.classpath,
         options.classpathURIs());
     //Also load source from codebases
-    List<URI> sourcedirs = new ArrayList<URI>();
+    List<URI> sourcedirs = new ArrayList<>();
     for (URI cpdir : options.classpathURIs()) {
       if (cpdir.getScheme().equals("fab")) sourcedirs.add(cpdir);
     }
     sourcedirs.addAll(options.sourcepathURIs());
     ((FabricFileManager) extFM).setLocation(options.source_path, sourcedirs);
-    List<File> dirs = new ArrayList<File>();
+    List<File> dirs = new ArrayList<>();
     dirs.addAll(options.sigcp);
     dirs.addAll(options.bootclasspathDirectories());
     extFM.setLocation(options.bootclasspath, dirs);
@@ -137,7 +137,7 @@ public class ExtensionInfo extends jif.ExtensionInfo implements
         Collections.singletonList(opt.sourceOutputDirectory());
     extFM.setLocation(StandardLocation.SOURCE_PATH, sourcepath);
 
-    List<File> classpath = new ArrayList<File>();
+    List<File> classpath = new ArrayList<>();
     classpath.addAll(opt.bootclasspathDirectories());
     for (URI u : opt.classpathURIs()) {
       if (u.getScheme().equals("file")) {
@@ -298,7 +298,7 @@ public class ExtensionInfo extends jif.ExtensionInfo implements
 
   /**
    * Creates namespace resolvers for Fabric namespaces.
-   * 
+   *
    * @param ns
    * @return
    */

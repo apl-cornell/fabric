@@ -28,10 +28,10 @@ public class MethodDeclToFabilExt_c extends MethodDeclToJavaExt_c {
       If ifStmt = (If) md.body().statements().get(0);
       ifStmt =
           ifStmt
-              .alternative(rw
-                  .qq()
-                  .parseStmt(
-                      "throw new fabric.worker.remote.RemoteCallLabelCheckFailedException();"));
+          .alternative(rw
+              .qq()
+              .parseStmt(
+                  "throw new fabric.worker.remote.RemoteCallLabelCheckFailedException();"));
       return md.body(nf.Block(Position.compilerGenerated(), ifStmt));
     }
 

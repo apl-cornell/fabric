@@ -68,15 +68,13 @@ public class SubscriptionManager extends FabricThread.Impl {
     protected void handle() {
       // Go through the onums and figure out which workers are interested in
       // which updates.
-      Map<RemoteWorker, List<Long>> onumsToNotify =
-          new HashMap<RemoteWorker, List<Long>>();
-      Map<RemoteWorker, LongSet> groupedOnumsToSend =
-          new HashMap<RemoteWorker, LongSet>();
+      Map<RemoteWorker, List<Long>> onumsToNotify = new HashMap<>();
+      Map<RemoteWorker, LongSet> groupedOnumsToSend = new HashMap<>();
 
       Map<RemoteWorker, List<ObjectGroup>> workerNotificationMap =
-          new HashMap<RemoteWorker, List<ObjectGroup>>();
+          new HashMap<>();
       Map<RemoteWorker, LongKeyMap<ObjectGlob>> dissemNotificationMap =
-          new HashMap<RemoteWorker, LongKeyMap<ObjectGlob>>();
+          new HashMap<>();
 
       for (LongIterator it = onums.iterator(); it.hasNext();) {
         long onum = it.next();
@@ -110,7 +108,7 @@ public class SubscriptionManager extends FabricThread.Impl {
                 LongKeyMap<ObjectGlob> globs =
                     dissemNotificationMap.get(subscribingNode);
                 if (globs == null) {
-                  globs = new LongKeyHashMap<ObjectGlob>();
+                  globs = new LongKeyHashMap<>();
                   dissemNotificationMap.put(subscribingNode, globs);
                 }
 
@@ -119,7 +117,7 @@ public class SubscriptionManager extends FabricThread.Impl {
                 // Add onum to onumsToNotify.
                 List<Long> toNotify = onumsToNotify.get(subscribingNode);
                 if (toNotify == null) {
-                  toNotify = new ArrayList<Long>();
+                  toNotify = new ArrayList<>();
                   onumsToNotify.put(subscribingNode, toNotify);
                 }
                 toNotify.add(onum);
@@ -139,7 +137,7 @@ public class SubscriptionManager extends FabricThread.Impl {
                   List<ObjectGroup> groups =
                       workerNotificationMap.get(subscribingNode);
                   if (groups == null) {
-                    groups = new ArrayList<ObjectGroup>();
+                    groups = new ArrayList<>();
                     workerNotificationMap.put(subscribingNode, groups);
                   }
 
@@ -163,7 +161,7 @@ public class SubscriptionManager extends FabricThread.Impl {
         List<Long> updatedOnums = onumsToNotify.get(worker);
         List<Long> resubscriptions =
             worker.notifyObjectUpdates(updatedOnums, updates);
-        resubscriptions.retainAll(new HashSet<Long>(updatedOnums));
+        resubscriptions.retainAll(new HashSet<>(updatedOnums));
 
         // Resubscribe.
         for (long onum : resubscriptions) {
@@ -220,9 +218,9 @@ public class SubscriptionManager extends FabricThread.Impl {
   public SubscriptionManager(String store, TransactionManager tm) {
     super("subscription manager for store " + store);
     this.store = store;
-    this.notificationQueue = new ArrayBlockingQueue<NotificationEvent>(50);
+    this.notificationQueue = new ArrayBlockingQueue<>(50);
     this.tm = tm;
-    this.subscriptions = new LongKeyCache<Set<Pair<RemoteWorker, Boolean>>>();
+    this.subscriptions = new LongKeyCache<>();
 
     start();
   }
@@ -240,7 +238,7 @@ public class SubscriptionManager extends FabricThread.Impl {
 
   /**
    * Subscribes the given worker to the given onum.
-   * 
+   *
    * @param dissemSubscribe
    *          If true, then the given subscriber will be subscribed as a
    *          dissemination node; otherwise it will be subscribed as a worker.
@@ -248,14 +246,14 @@ public class SubscriptionManager extends FabricThread.Impl {
   public void subscribe(long onum, RemoteWorker worker, boolean dissemSubscribe) {
     Set<Pair<RemoteWorker, Boolean>> subscribers = subscriptions.get(onum);
     if (subscribers == null) {
-      subscribers = new HashSet<Pair<RemoteWorker, Boolean>>();
+      subscribers = new HashSet<>();
       Set<Pair<RemoteWorker, Boolean>> existing =
           subscriptions.putIfAbsent(onum, subscribers);
       if (existing != null) subscribers = existing;
     }
 
     synchronized (subscribers) {
-      subscribers.add(new Pair<RemoteWorker, Boolean>(worker, dissemSubscribe));
+      subscribers.add(new Pair<>(worker, dissemSubscribe));
     }
   }
 

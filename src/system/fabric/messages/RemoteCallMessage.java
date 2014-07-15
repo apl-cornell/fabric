@@ -20,7 +20,7 @@ import fabric.worker.remote.RemoteWorker;
 import fabric.worker.remote.WriterMap;
 
 public class RemoteCallMessage extends
-    Message<RemoteCallMessage.Response, RemoteCallException> {
+Message<RemoteCallMessage.Response, RemoteCallException> {
   //////////////////////////////////////////////////////////////////////////////
   // message  contents                                                        //
   //////////////////////////////////////////////////////////////////////////////

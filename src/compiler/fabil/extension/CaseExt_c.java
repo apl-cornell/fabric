@@ -10,7 +10,7 @@ import polyglot.util.InternalCompilerError;
 import fabil.visit.ProxyRewriter;
 
 /**
- * 
+ *
  */
 public class CaseExt_c extends FabILExt_c implements Ext {
 

@@ -45,7 +45,7 @@ import fabric.extension.LocatedExt_c;
  * NodeFactory for fabric extension.
  */
 public class FabricNodeFactory_c extends JifNodeFactory_c implements
-    FabricNodeFactory {
+FabricNodeFactory {
 
   // ////////////////////////////////////////////////////////////////////////////
   // public constructors //
@@ -267,7 +267,7 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
   public PrincipalExpr PrincipalExpr(Position pos, PrincipalNode principal,
       Expr location) {
     PrincipalExpr n = PrincipalExpr(pos, principal);
-    // XXX yuck. This should be done by modifying Jif's del factory. 
+    // XXX yuck. This should be done by modifying Jif's del factory.
     n = del(n, ((FabricDelFactory) delFactory()).delPrincipalExpr());
     n = setLocation(n, location);
     return n;
@@ -386,7 +386,7 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
 
   /**
    * Updates the provided node with a given location.
-   * 
+   *
    * @param result
    *          a Node having a LocatedExt as a Fabric extension
    * @param location

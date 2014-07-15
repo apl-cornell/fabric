@@ -49,7 +49,7 @@ public class Main extends polyglot.main.Main {
   protected static String[] buildArgs(FClass fcls) {
 
     Worker worker = Worker.getWorker();
-    List<String> args = new LinkedList<String>();
+    List<String> args = new LinkedList<>();
     args.add("-worker");
     args.add(worker.config.name);
 
@@ -170,7 +170,7 @@ public class Main extends polyglot.main.Main {
     System.setOut(out);
     System.setErr(out);
 
-    List<String> newArgs = new ArrayList<String>(args.size() + 2);
+    List<String> newArgs = new ArrayList<>(args.size() + 2);
     Worker worker = Worker.getWorker();
     // Set code cache first to allow it to be overridden
     if (worker.codeCache != null) {
@@ -211,8 +211,7 @@ public class Main extends polyglot.main.Main {
 
   @Override
   protected List<String> getSystemJavacArgs(Options options) {
-    List<String> result =
-        new ArrayList<String>(super.getSystemJavacArgs(options));
+    List<String> result = new ArrayList<>(super.getSystemJavacArgs(options));
     result.add("-source");
     result.add("1.7");
     result.add("-target");
@@ -229,7 +228,7 @@ public class Main extends polyglot.main.Main {
   @Override
   public void start(String[] argv, ExtensionInfo ext, ErrorQueue eq)
       throws TerminationException {
-    Set<String> source = new LinkedHashSet<String>();
+    Set<String> source = new LinkedHashSet<>();
     List<String> args = argsToList(argv);
     if (ext == null) {
       ext = getExtensionInfo(args);
@@ -377,7 +376,7 @@ public class Main extends polyglot.main.Main {
   protected void initializeStaticInstances(fabric.ExtensionInfo extInfo,
       Codebase cb) throws ClassNotFoundException {
     fabric.util.Map classes = cb.get$classes();
-    List<String> files = new ArrayList<String>();
+    List<String> files = new ArrayList<>();
     for (Iterator it =
         classes.keySet().iterator(Worker.getWorker().getLocalStore()); it
         .hasNext();) {
@@ -390,7 +389,7 @@ public class Main extends polyglot.main.Main {
   }
 
   private List<String> argsToList(String[] args) throws TerminationException {
-    LinkedList<String> ll = new LinkedList<String>();
+    LinkedList<String> ll = new LinkedList<>();
 
     for (String arg : args) {
       // special case for the @ command-line parameter

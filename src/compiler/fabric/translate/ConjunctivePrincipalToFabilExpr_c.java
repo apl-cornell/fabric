@@ -10,7 +10,7 @@ import polyglot.types.SemanticException;
 import fabric.visit.FabricToFabilRewriter;
 
 public class ConjunctivePrincipalToFabilExpr_c extends
-    ConjunctivePrincipalToJavaExpr_c {
+ConjunctivePrincipalToJavaExpr_c {
   @Override
   public Expr toJava(Principal principal, JifToJavaRewriter rw)
       throws SemanticException {

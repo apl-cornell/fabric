@@ -19,7 +19,7 @@ public class ClassBodyJifExt_c extends JifClassBodyExt {
 
   public ClassBodyJifExt_c(ToJavaExt toJava) {
     super(toJava);
-    this.remote_wrappers = new ArrayList<ClassMember>();
+    this.remote_wrappers = new ArrayList<>();
   }
 
   @Override
@@ -33,7 +33,7 @@ public class ClassBodyJifExt_c extends JifClassBodyExt {
     A.setCurrentCodePCBound(jts.notTaken());
     lc = lc.context(A);
 
-    List<ClassMember> members = new ArrayList<ClassMember>();
+    List<ClassMember> members = new ArrayList<>();
     // label check each member, but mute reporting of errors on
     // remote wrappers.
     for (ClassMember cm : n.members()) {
@@ -48,7 +48,7 @@ public class ClassBodyJifExt_c extends JifClassBodyExt {
       }
     }
 
-    List<ClassMember> new_wrappers = new ArrayList<ClassMember>();
+    List<ClassMember> new_wrappers = new ArrayList<>();
     SilenceableSolverGLB.mute(true);
     for (ClassMember cm : remoteWrappers()) {
       try {

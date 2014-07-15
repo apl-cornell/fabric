@@ -20,7 +20,7 @@ public class AuthorizationUtil {
    * because the transaction management is too slow (!!).
    */
   private static final ConcurrentOidKeyHashMap<ConcurrentOidKeyHashMap<Singleton>> cachedReadAuthorizations =
-      new ConcurrentOidKeyHashMap<ConcurrentOidKeyHashMap<Singleton>>();
+      new ConcurrentOidKeyHashMap<>();
 
   /**
    * This is the cache for authorizing writes. The keys in this map are label
@@ -29,7 +29,7 @@ public class AuthorizationUtil {
    * management is too slow (!!).
    */
   private static final ConcurrentOidKeyHashMap<ConcurrentOidKeyHashMap<Singleton>> cachedWriteAuthorizations =
-      new ConcurrentOidKeyHashMap<ConcurrentOidKeyHashMap<Singleton>>();
+      new ConcurrentOidKeyHashMap<>();
 
   /**
    * Return true if cache[label][<code>principal</code>] exists, where label is
@@ -45,8 +45,7 @@ public class AuthorizationUtil {
   private static void cacheAuthorization(
       ConcurrentOidKeyHashMap<ConcurrentOidKeyHashMap<Singleton>> cache,
       Principal principal, Store store, long labelOnum) {
-    ConcurrentOidKeyHashMap<Singleton> submap =
-        new ConcurrentOidKeyHashMap<Singleton>();
+    ConcurrentOidKeyHashMap<Singleton> submap = new ConcurrentOidKeyHashMap<>();
     ConcurrentOidKeyHashMap<Singleton> existing =
         cache.putIfAbsent(store, labelOnum, submap);
     if (existing != null) submap = existing;

@@ -18,7 +18,7 @@ import fabric.worker.Worker;
  * Represents a push notification that a glob has been updated.
  */
 public abstract class AbstractUpdate<UpdateType extends FastSerializable>
-    extends AbstractRawMessage {
+extends AbstractRawMessage {
 
   private transient final NodeHandle sender;
   private final Id id;

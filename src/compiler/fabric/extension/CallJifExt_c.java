@@ -94,13 +94,13 @@ public class CallJifExt_c extends JifCallExt {
       }
 
       List<? extends Type> formalTypes = mi.formalTypes();
-      List<ArgLabel> formalLabels = new ArrayList<ArgLabel>(formalTypes.size());
+      List<ArgLabel> formalLabels = new ArrayList<>(formalTypes.size());
       for (Type ft : formalTypes) {
         ArgLabel fl = (ArgLabel) ts.labelOfType(ft);
         formalLabels.add(fl);
       }
 
-      List<Label> actualLabels = new ArrayList<Label>(c.arguments().size());
+      List<Label> actualLabels = new ArrayList<>(c.arguments().size());
       labelCheckArgs(lc, c, actualLabels);
 
       Label entryLabel = mi.pcBound();

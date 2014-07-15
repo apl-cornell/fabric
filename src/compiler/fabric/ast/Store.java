@@ -3,7 +3,7 @@ package fabric.ast;
 import polyglot.ast.Expr;
 
 /**
- * 
+ *
  */
 public interface Store extends Expr {
 

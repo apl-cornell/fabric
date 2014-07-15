@@ -7,7 +7,6 @@ import polyglot.ast.Assign;
 import polyglot.ast.Expr;
 import polyglot.ast.Field;
 import polyglot.ast.FieldAssign;
-import polyglot.ast.Id;
 import polyglot.ast.Receiver;
 import polyglot.ast.Special;
 import polyglot.types.Flags;
@@ -25,7 +24,7 @@ public class FieldAssignExt_c extends ExprExt_c {
   @Override
   public Expr rewriteProxiesOverrideImpl(ProxyRewriter pr) {
     FieldAssign assign = node();
-    Field field = (Field) assign.left();
+    Field field = assign.left();
     Flags flags = field.flags();
     Receiver target = field.target();
     boolean rewriteTarget = true;
@@ -34,9 +33,9 @@ public class FieldAssignExt_c extends ExprExt_c {
       rewriteTarget =
           special.kind() != Special.THIS || special.qualifier() != null;
     }
-    if (rewriteTarget) target = (Receiver) field.visitChild(target, pr);
-    String name = ((Id) field.visitChild(field.id(), pr)).id();
-    Expr rhs = (Expr) field.visitChild(assign.right(), pr);
+    if (rewriteTarget) target = field.visitChild(target, pr);
+    String name = field.visitChild(field.id(), pr).id();
+    Expr rhs = field.visitChild(assign.right(), pr);
 
     // If not assigning to a pure Fabric object, keep it as an assignment.
     if (!pr.typeSystem().isPureFabricType(target.type()))
@@ -63,7 +62,7 @@ public class FieldAssignExt_c extends ExprExt_c {
     }
 
     String quote = "%T";
-    List<Object> subs = new ArrayList<Object>(2);
+    List<Object> subs = new ArrayList<>(2);
     if (flags.isStatic()) {
       quote += "._Static._Proxy.$instance";
       subs.add(field.fieldInstance().container());

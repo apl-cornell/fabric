@@ -53,7 +53,7 @@ import java.util.Set;
  * an UnsupportedOperationException. Note that some operations may be safe, such
  * as putAll(m) where m is empty, even if the operation would normally fail with
  * a non-empty argument.
- * 
+ *
  * @author Original author unknown
  * @author Eric Blake (ebb9@email.byu.edu)
  * @see LongKeyHashMap
@@ -64,7 +64,7 @@ import java.util.Set;
 public interface LongKeyMap<V> {
   /**
    * Remove all entries from this Map (optional operation).
-   * 
+   *
    * @throws UnsupportedOperationException
    *           if clear is not supported
    */
@@ -72,7 +72,7 @@ public interface LongKeyMap<V> {
 
   /**
    * Returns true if this contains a mapping for the given key.
-   * 
+   *
    * @param key
    *          the key to search for
    * @return true if the map contains the key
@@ -88,7 +88,7 @@ public interface LongKeyMap<V> {
    * other words, returns true if a value v exists where
    * <code>(value == null ? v == null : value.equals(v))</code>. This usually
    * requires linear time.
-   * 
+   *
    * @param value
    *          the value to search for
    * @return true if the map contains the value
@@ -108,7 +108,7 @@ public interface LongKeyMap<V> {
    * <code>Set.remove</code>, <code>removeAll</code>, <code>retainAll</code>,
    * and <code>clear</code>. Element addition, via <code>add</code> or
    * <code>addAll</code>, is not supported via this set.
-   * 
+   *
    * @return the set view of all mapping entries
    * @see LongKeyMap.Entry
    */
@@ -120,7 +120,7 @@ public interface LongKeyMap<V> {
    * is,<br>
    * <code>o instanceof Map && entrySet().equals(((Map) o).entrySet();</code>
    * This allows comparison of maps, regardless of implementation.
-   * 
+   *
    * @param o
    *          the object to be compared
    * @return true if the object equals this map
@@ -133,7 +133,7 @@ public interface LongKeyMap<V> {
    * Returns the value mapped by the given key. Returns <code>null</code> if
    * there is no mapping. However, in Maps that accept null values, you must
    * rely on <code>containsKey</code> to determine if a mapping exists.
-   * 
+   *
    * @param key
    *          the key to look up
    * @return the value associated with the key, or null if key not in map
@@ -150,7 +150,7 @@ public interface LongKeyMap<V> {
    * map already contains the key, its value is replaced. Be aware that in a map
    * that permits <code>null</code> values, a null return does not always imply
    * that the mapping was created.
-   * 
+   *
    * @param key
    *          the key to map
    * @param value
@@ -175,7 +175,7 @@ public interface LongKeyMap<V> {
    * each Map.Entry object in entrySet. This allows comparison of maps,
    * regardless of implementation, and satisfies the contract of
    * Object.hashCode.
-   * 
+   *
    * @return the hash code
    * @see LongKeyMap.Entry#hashCode()
    */
@@ -184,7 +184,7 @@ public interface LongKeyMap<V> {
 
   /**
    * Returns true if the map contains no mappings.
-   * 
+   *
    * @return true if the map is empty
    */
   boolean isEmpty();
@@ -198,7 +198,7 @@ public interface LongKeyMap<V> {
    * <code>removeAll</code>, <code>retainAll</code>, and <code>clear</code>.
    * Element addition, via <code>add</code> or <code>addAll</code>, is not
    * supported via this set.
-   * 
+   *
    * @return the set view of all keys
    */
   LongSet keySet();
@@ -206,7 +206,7 @@ public interface LongKeyMap<V> {
   /**
    * Copies all entries of the given map to this one (optional operation). If
    * the map already contains a key, its value is replaced.
-   * 
+   *
    * @param m
    *          the mapping to load into this map
    * @throws UnsupportedOperationException
@@ -227,7 +227,7 @@ public interface LongKeyMap<V> {
    * Removes the mapping for this key if present (optional operation). If the
    * key is not present, this returns null. Note that maps which permit null
    * values may also return null if the key was removed.
-   * 
+   *
    * @param o
    *          the key to remove
    * @return the value the key mapped to, or null if not present.
@@ -243,7 +243,7 @@ public interface LongKeyMap<V> {
   /**
    * Returns the number of key-value mappings in the map. If there are more than
    * Integer.MAX_VALUE mappings, return Integer.MAX_VALUE.
-   * 
+   *
    * @return the number of mappings
    */
   int size();
@@ -258,7 +258,7 @@ public interface LongKeyMap<V> {
    * <code>retainAll</code>, and <code>clear</code>. Element addition, via
    * <code>add</code> or <code>addAll</code>, is not supported via this
    * collection.
-   * 
+   *
    * @return the collection view of all values
    */
   Collection<V> values();
@@ -269,7 +269,7 @@ public interface LongKeyMap<V> {
    * objects are only valid for the duration of an iteration; in other words, if
    * you mess with one after modifying the map, you are asking for undefined
    * behavior.
-   * 
+   *
    * @author Original author unknown
    * @author Eric Blake (ebb9@email.byu.edu)
    * @see LongKeyMap
@@ -279,7 +279,7 @@ public interface LongKeyMap<V> {
   interface Entry<V> {
     /**
      * Get the key corresponding to this entry.
-     * 
+     *
      * @return the key
      */
     long getKey();
@@ -287,7 +287,7 @@ public interface LongKeyMap<V> {
     /**
      * Get the value corresponding to this entry. If you already called
      * Iterator.remove(), this is undefined.
-     * 
+     *
      * @return the value
      */
     V getValue();
@@ -296,7 +296,7 @@ public interface LongKeyMap<V> {
      * Replaces the value with the specified object (optional operation). This
      * writes through to the map, and is undefined if you already called
      * Iterator.remove().
-     * 
+     *
      * @param value
      *          the new value to store
      * @return the old value
@@ -316,14 +316,14 @@ public interface LongKeyMap<V> {
      * Returns the hash code of the entry. This is defined as the exclusive-or
      * of the hashcodes of the key and value (using 0 for <code>null</code>). In
      * other words, this must be:
-     * 
+     *
      <p>
-     * 
+     *
      * <pre>
      * (getKey() == null ? 0 : getKey().hashCode())
      *     &circ; (getValue() == null ? 0 : getValue().hashCode())
      * </pre>
-     * 
+     *
      * @return the hash code
      */
     @Override
@@ -333,9 +333,9 @@ public interface LongKeyMap<V> {
      * Compares the specified object with this entry. Returns true only if the
      * object is a mapping of identical key and value. In other words, this must
      * be:
-     * 
+     *
      <p>
-     * 
+     *
      * <pre>
      * (o instanceof Map.Entry)
      *     &amp;&amp; (getKey() == null ? ((Map.Entry) o).getKey() == null : getKey().equals(
@@ -343,7 +343,7 @@ public interface LongKeyMap<V> {
      *     &amp;&amp; (getValue() == null ? ((Map.Entry) o).getValue() == null : getValue()
      *         .equals(((Map.Entry) o).getValue()))
      * </pre>
-     * 
+     *
      * @param o
      *          the object to compare
      * @return <code>true</code> if it is equal

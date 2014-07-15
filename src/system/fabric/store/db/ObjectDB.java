@@ -111,7 +111,7 @@ public abstract class ObjectDB {
       }
 
       int size = in.readInt();
-      this.reads = new ArrayList<Long>(size);
+      this.reads = new ArrayList<>(size);
       for (int i = 0; i < size; i++)
         reads.add(in.readLong());
 
@@ -228,15 +228,14 @@ public abstract class ObjectDB {
 
   protected ObjectDB(String name, PrivateKey privateKey) {
     this.name = name;
-    this.pendingByTid =
-        new ConcurrentLongKeyHashMap<OidKeyHashMap<PendingTransaction>>();
-    this.rwLocks = new ConcurrentLongKeyHashMap<ObjectLocks>();
+    this.pendingByTid = new ConcurrentLongKeyHashMap<>();
+    this.rwLocks = new ConcurrentLongKeyHashMap<>();
     this.objectGrouper = new ObjectGrouper(this, privateKey);
   }
 
   /**
    * Opens a new transaction.
-   * 
+   *
    * @param worker
    *          the worker under whose authority the transaction is running.
    * @throws AccessException
@@ -246,8 +245,7 @@ public abstract class ObjectDB {
       throws AccessException {
     // Ensure pendingByTid has a submap for the given TID.
     while (true) {
-      OidKeyHashMap<PendingTransaction> submap =
-          new OidKeyHashMap<PendingTransaction>();
+      OidKeyHashMap<PendingTransaction> submap = new OidKeyHashMap<>();
       OidKeyHashMap<PendingTransaction> existingSubmap =
           pendingByTid.putIfAbsent(tid, submap);
       if (existingSubmap != null) submap = existingSubmap;
@@ -263,7 +261,7 @@ public abstract class ObjectDB {
 
   /**
    * Prepares a read against the database.
-   * 
+   *
    * @param tid
    *          the identifier for the transaction preparing the read.
    * @param worker
@@ -311,7 +309,7 @@ public abstract class ObjectDB {
 
   /**
    * Prepares a create/write against the database.
-   * 
+   *
    * @param tid
    *          the identifier for the transaction preparing the create/write.
    * @param worker
@@ -425,7 +423,7 @@ public abstract class ObjectDB {
   /**
    * Causes the objects prepared in transaction [tid] to be committed. The
    * changes will hereafter be visible to read.
-   * 
+   *
    * @param tid
    *          the transaction id
    * @param workerIdentity
@@ -439,7 +437,7 @@ public abstract class ObjectDB {
 
   /**
    * Causes the objects prepared in transaction [tid] to be discarded.
-   * 
+   *
    * @param tid
    *          the transaction id
    * @param worker
@@ -452,7 +450,7 @@ public abstract class ObjectDB {
 
   /**
    * Returns the object stored at a particular onum.
-   * 
+   *
    * @param onum
    *          the identifier
    * @return the object or null if no object exists at the given onum
@@ -468,7 +466,7 @@ public abstract class ObjectDB {
 
   /**
    * Returns the version number on the object stored at a particular onum.
-   * 
+   *
    * @throws AccessException
    *           if no object exists at the given onum.
    */
@@ -483,7 +481,7 @@ public abstract class ObjectDB {
    * Performs operations in response to a committed object update. Removes from
    * cache the glob associated with the onum and notifies the subscription
    * manager of the update.
-   * 
+   *
    * @param onum
    *          the onum of the object that was updated.
    * @param worker
@@ -516,7 +514,7 @@ public abstract class ObjectDB {
    * change or read. Outstanding uncommitted changes are always considered
    * conflicting. Outstanding uncommitted reads are considered conflicting if
    * they are by transactions whose tid is different from the one given.
-   * 
+   *
    * @param onum
    *          the object number in question
    */
@@ -536,7 +534,7 @@ public abstract class ObjectDB {
 
   /**
    * Determines whether an onum has outstanding uncommitted changes.
-   * 
+   *
    * @param onum
    *          the object number in question
    * @return true if the object has been changed by a transaction that hasn't
@@ -592,7 +590,7 @@ public abstract class ObjectDB {
    * The returned onums should be packed in the lower 48 bits. We assume that
    * the object database is never full, and can always provide new onums
    * </p>
-   * 
+   *
    * @param num
    *          the number of onums to return
    * @return num fresh onums
@@ -602,7 +600,7 @@ public abstract class ObjectDB {
   /**
    * Checks whether an object with the corresponding onum exists, in either
    * prepared or committed form.
-   * 
+   *
    * @param onum
    *          the onum of to check
    * @return true if an object exists for onum
@@ -618,7 +616,7 @@ public abstract class ObjectDB {
 
   /**
    * Gracefully shuts down the object database.
-   * 
+   *
    * @throws IOException
    */
   public abstract void close() throws IOException;

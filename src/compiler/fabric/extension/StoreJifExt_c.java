@@ -17,7 +17,7 @@ import polyglot.types.Type;
 import fabric.ast.Store;
 
 /**
- * 
+ *
  */
 public class StoreJifExt_c extends JifExprExt implements Ext {
 
@@ -43,7 +43,7 @@ public class StoreJifExt_c extends JifExprExt implements Ext {
     Expr expr = (Expr) lc.labelCheck(c.expr());
     PathMap Xe = getPathMap(expr);
 
-    List<Type> throwTypes = new ArrayList<Type>(fe.del().throwTypes(ts));
+    List<Type> throwTypes = new ArrayList<>(fe.del().throwTypes(ts));
     if (!c.exprIsNeverNull()) {
       // null pointer exception may be thrown.
       Type npe = ts.NullPointerException();

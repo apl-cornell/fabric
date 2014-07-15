@@ -8,7 +8,7 @@ import polyglot.types.TypeSystem;
 import polyglot.util.Position;
 
 /**
- * 
+ *
  */
 public class AccessPolicyInstance_c implements AccessPolicyInstance {
 

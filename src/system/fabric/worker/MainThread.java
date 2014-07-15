@@ -40,7 +40,7 @@ public final class MainThread extends FabricThread.Impl {
     } catch (InvocationTargetException e) {
       Throwable cause = e.getCause();
       // Trim the stack trace to omit stuff dealing with the worker framework.
-      List<StackTraceElement> trace = new ArrayList<StackTraceElement>();
+      List<StackTraceElement> trace = new ArrayList<>();
       for (StackTraceElement elt : cause.getStackTrace())
         trace.add(elt);
 

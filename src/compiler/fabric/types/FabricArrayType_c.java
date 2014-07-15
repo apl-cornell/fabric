@@ -10,12 +10,12 @@ import polyglot.util.Position;
 
 /**
  * The only ArrayType class created by the FabricTypeSystem.
- * 
+ *
  * @see FabricTypeSystem for further description
  * @author mdgeorge
  */
 public class FabricArrayType_c extends ConstArrayType_c implements
-    FabricArrayType {
+FabricArrayType {
   protected ConfPolicy accessPolicy;
   protected boolean isNative;
 

@@ -10,7 +10,7 @@ import fabric.common.net.RemoteIdentity;
 import fabric.worker.remote.RemoteWorker;
 
 public class AbortTransactionMessage extends
-    Message<AbortTransactionMessage.Response, AccessException> {
+Message<AbortTransactionMessage.Response, AccessException> {
   // ////////////////////////////////////////////////////////////////////////////
   // message contents //
   // ////////////////////////////////////////////////////////////////////////////

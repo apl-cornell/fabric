@@ -31,14 +31,14 @@ package fabric.common.util;
  * This interface is used to indicate that a given class can be iterated over.
  * The compiler uses this interface to determine which classes are suitable
  * targets of the <code>foreach</code> construct.
- * 
+ *
  * @author Tom Tromey <tromey@redhat.com>
  * @since 1.5
  */
 public interface LongIterable {
   /**
    * Returns an iterator for the collection.
-   * 
+   *
    * @return an iterator.
    */
   LongIterator iterator();

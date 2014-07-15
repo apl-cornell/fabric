@@ -7,7 +7,7 @@ import fabric.common.exceptions.FabricRuntimeException;
  * Indicates that the current transaction should be restarted.
  */
 public final class TransactionRestartingException extends
-    FabricRuntimeException {
+FabricRuntimeException {
   /**
    * Identifies the transaction that is to be restarted.
    */

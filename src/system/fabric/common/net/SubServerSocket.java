@@ -9,7 +9,7 @@ import fabric.worker.remote.RemoteWorker;
 /**
  * Server-side multiplexed socket implementation. The API mirrors that of
  * java.net.ServerSocket.
- * 
+ *
  * @see java.net.ServerSocket
  */
 public class SubServerSocket {
@@ -34,7 +34,7 @@ public class SubServerSocket {
 
   /**
    * @see java.net.ServerSocket#bind(java.net.SocketAddress, int)
-   * 
+   *
    * @param backlog
    *          the size of the queue. If non-positive, an unbounded queue is
    *          created.
@@ -75,7 +75,7 @@ public class SubServerSocket {
 
     /**
      * @see SubServerSocket#bind(InetSocketAddress, int)
-     * 
+     *
      * @param backlog
      *          the size of the queue. If non-positive, an unbounded queue is
      *          created.

@@ -31,11 +31,11 @@ public class ClassBodyExt_c extends FabILExt_c {
 
     // This will hold the statements in the body of the resulting static
     // initializer.
-    List<Stmt> initStmts = new ArrayList<Stmt>();
+    List<Stmt> initStmts = new ArrayList<>();
 
     ClassType classType = null;
 
-    List<ClassMember> members = new ArrayList<ClassMember>();
+    List<ClassMember> members = new ArrayList<>();
     for (Object obj : body.members()) {
       ClassMember member = (ClassMember) obj;
 

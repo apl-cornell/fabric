@@ -21,7 +21,7 @@ import fabric.worker.Store;
 import fabric.worker.Worker;
 
 public final class NSUtil {
-  private static List<String> TOPICS = new ArrayList<String>();
+  private static List<String> TOPICS = new ArrayList<>();
   static {
     TOPICS.add("nsutil");
   }
@@ -36,7 +36,7 @@ public final class NSUtil {
 
   /**
    * Creates a mangled Java package name from a Fabric codebase oid.
-   * 
+   *
    * @param codebase_oid
    *          The oid of a codebase
    * @return the parent package name for classes in the codebase
@@ -103,7 +103,7 @@ public final class NSUtil {
    * ClassLoader.loadClass(). If className is the absolute name of a published
    * Fabric class qualified by a fabric codebase URI, toJavaImplName will return
    * a mangled java name.
-   * 
+   *
    * @param className
    * @return
    */
@@ -116,7 +116,7 @@ public final class NSUtil {
 
   /**
    * Escapes characters that are legal in host names, but not in package names.
-   * 
+   *
    * @param name
    * @return
    */
@@ -165,7 +165,7 @@ public final class NSUtil {
 
   /**
    * Fetch the codebase object with the specified OID
-   * 
+   *
    * @param uri
    * @return
    */
@@ -193,7 +193,7 @@ public final class NSUtil {
   /**
    * Fetch the class object for an absolute classname of the form:
    * fab://store/codebase_onum/pkg.name
-   * 
+   *
    * @param uri
    * @return
    */
@@ -207,7 +207,7 @@ public final class NSUtil {
   /**
    * Returns false if <code>javaName</code> has a mangled codebase prefix,
    * otherwise the name refers to a platform class.
-   * 
+   *
    * @param javaName
    * @return
    */
@@ -258,11 +258,11 @@ public final class NSUtil {
   // group 4: $_Impl or $_Proxy or ""
   private static final Pattern javaNameRegex =
       Pattern
-          .compile("(?:\\$\\$(.*)\\.onum_(\\d*)\\$\\$\\.)?(.*?)([$.]_Static)?((?:[$.]_Impl)|(?:[$.]_Proxy)|)");
+      .compile("(?:\\$\\$(.*)\\.onum_(\\d*)\\$\\$\\.)?(.*?)([$.]_Static)?((?:[$.]_Impl)|(?:[$.]_Proxy)|)");
 
   /**
    * Return the namespace representing a codebase.
-   * 
+   *
    * @param o
    *          the codebase object.
    * @return the URI representing the codebase
@@ -289,7 +289,7 @@ public final class NSUtil {
    */
   public static List<URI> processPathString(String path) {
     // XXX This breaks in the presence of Windows paths.
-    List<URI> locations = new ArrayList<URI>();
+    List<URI> locations = new ArrayList<>();
     while (!path.isEmpty()) {
       String remaining = "";
       if (path.startsWith("@")) {
@@ -302,9 +302,9 @@ public final class NSUtil {
 
           if (next_idx > 0) remaining = path.substring(next_idx + 1);
 
-          BufferedReader lr = new BufferedReader(new FileReader(pathFile));
-          path = lr.readLine();
-          lr.close();
+          try (BufferedReader lr = new BufferedReader(new FileReader(pathFile))) {
+            path = lr.readLine();
+          }
         } catch (FileNotFoundException e) {
           throw new InternalCompilerError(e);
         } catch (IOException e) {

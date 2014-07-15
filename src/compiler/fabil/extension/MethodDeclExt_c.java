@@ -40,7 +40,7 @@ public class MethodDeclExt_c extends ClassMemberExt_c {
     // Interface methods must be public and cannot be final nor synchronized.
     flags =
         ProxyRewriter.toPublic(flags).clearFinal().clearSynchronized()
-            .clearNative();
+        .clearNative();
 
     // Clear out the method body.
     ClassMember result = (ClassMember) methodDecl.flags(flags).body(null);

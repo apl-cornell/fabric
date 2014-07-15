@@ -73,7 +73,7 @@ import java.util.Set;
  * except for <code>remove()</code> called on the iterator itself, cause the
  * iterator to throw a <code>ConcurrentModificationException</code> rather than
  * exhibit non-deterministic behavior.
- * 
+ *
  * @author Jon Zeppieri
  * @author Jochen Hoenicke
  * @author Bryce McKinlay
@@ -100,7 +100,7 @@ public class LongKeyHashMap<V> extends AbstractLongKeyMap<V> implements
   /**
    * The rounded product of the capacity and the load factor; when the number of
    * elements exceeds the threshold, the HashMap calls <code>rehash()</code>.
-   * 
+   *
    * @serial the threshold for rehashing
    */
   private int threshold;
@@ -108,7 +108,7 @@ public class LongKeyHashMap<V> extends AbstractLongKeyMap<V> implements
   /**
    * Load factor of this HashMap: used in computing the threshold. Package
    * visible for use by HashSet.
-   * 
+   *
    * @serial the load factor
    */
   final float loadFactor;
@@ -140,7 +140,7 @@ public class LongKeyHashMap<V> extends AbstractLongKeyMap<V> implements
   /**
    * Class to represent an entry in the hash table. Holds a single key-value
    * pair. Package visible for use by subclass.
-   * 
+   *
    * @author Eric Blake (ebb9@email.byu.edu)
    */
   static class HashEntry<V> extends AbstractLongKeyMap.SimpleEntry<V> {
@@ -151,7 +151,7 @@ public class LongKeyHashMap<V> extends AbstractLongKeyMap<V> implements
 
     /**
      * Simple constructor.
-     * 
+     *
      * @param key
      *          the key
      * @param value
@@ -172,7 +172,7 @@ public class LongKeyHashMap<V> extends AbstractLongKeyMap<V> implements
     /**
      * Called when this entry is removed from the map. This version simply
      * returns the value, but in LinkedHashMap, it must also do bookkeeping.
-     * 
+     *
      * @return the value of this key as it is removed
      */
     V cleanup() {
@@ -193,7 +193,7 @@ public class LongKeyHashMap<V> extends AbstractLongKeyMap<V> implements
    * greater of the size of <code>m</code> or the default of 11.
    * <p>
    * Every element in Map m will be put into this new HashMap.
-   * 
+   *
    * @param m
    *          a Map whose key / value pairs will be put into the new HashMap.
    *          <b>NOTE: key / value pairs are not cloned in this constructor.</b>
@@ -208,7 +208,7 @@ public class LongKeyHashMap<V> extends AbstractLongKeyMap<V> implements
   /**
    * Construct a new HashMap with a specific inital capacity and default load
    * factor of 1.
-   * 
+   *
    * @param initialCapacity
    *          the initial capacity of this HashMap (&gt;=0)
    * @throws IllegalArgumentException
@@ -220,7 +220,7 @@ public class LongKeyHashMap<V> extends AbstractLongKeyMap<V> implements
 
   /**
    * Construct a new HashMap with a specific inital capacity and load factor.
-   * 
+   *
    * @param initialCapacity
    *          the initial capacity (&gt;=0)
    * @param loadFactor
@@ -245,7 +245,7 @@ public class LongKeyHashMap<V> extends AbstractLongKeyMap<V> implements
 
   /**
    * Returns the number of kay-value mappings currently in this Map.
-   * 
+   *
    * @return the size
    */
   @Override
@@ -255,7 +255,7 @@ public class LongKeyHashMap<V> extends AbstractLongKeyMap<V> implements
 
   /**
    * Returns true if there are no key-value mappings currently in this Map.
-   * 
+   *
    * @return <code>size() == 0</code>
    */
   @Override
@@ -268,7 +268,7 @@ public class LongKeyHashMap<V> extends AbstractLongKeyMap<V> implements
    * <code>null</code> if the key maps to nothing. NOTE: Since the value could
    * also be null, you must use containsKey to see if this key actually maps to
    * something.
-   * 
+   *
    * @param key
    *          the key for which to fetch an associated value
    * @return what the key maps to, if present
@@ -289,7 +289,7 @@ public class LongKeyHashMap<V> extends AbstractLongKeyMap<V> implements
   /**
    * Returns true if the supplied object <code>equals()</code> a key in this
    * HashMap.
-   * 
+   *
    * @param key
    *          the key to search for in this HashMap
    * @return true if the key is in the table
@@ -311,7 +311,7 @@ public class LongKeyHashMap<V> extends AbstractLongKeyMap<V> implements
    * may be retrieved by any object which <code>equals()</code> this key. NOTE:
    * Since the prior value could also be null, you must first use containsKey if
    * you want to see if you are replacing the key's mapping.
-   * 
+   *
    * @param key
    *          the key used to locate the value
    * @param value
@@ -350,7 +350,7 @@ public class LongKeyHashMap<V> extends AbstractLongKeyMap<V> implements
   /**
    * Copies all elements of the given map into this hashtable. If this table
    * already has a mapping for a key, the new mapping replaces the current one.
-   * 
+   *
    * @param m
    *          the map to be hashed into this
    */
@@ -374,7 +374,7 @@ public class LongKeyHashMap<V> extends AbstractLongKeyMap<V> implements
    * unchanged, and <code>null</code> is returned. NOTE: Since the value could
    * also be null, you must use containsKey to see if you are actually removing
    * a mapping.
-   * 
+   *
    * @param key
    *          the key used to locate the value to remove
    * @return whatever the key mapped to, if present
@@ -416,7 +416,7 @@ public class LongKeyHashMap<V> extends AbstractLongKeyMap<V> implements
   /**
    * Returns true if this HashMap contains a value <code>o</code>, such that
    * <code>o.equals(value)</code>.
-   * 
+   *
    * @param value
    *          the value to search for in this HashMap
    * @return true if at least one key maps to the value
@@ -437,7 +437,7 @@ public class LongKeyHashMap<V> extends AbstractLongKeyMap<V> implements
   /**
    * Returns a shallow clone of this HashMap. The Map itself is cloned, but its
    * contents are not. This is O(n).
-   * 
+   *
    * @return the clone
    */
   @Override
@@ -463,7 +463,7 @@ public class LongKeyHashMap<V> extends AbstractLongKeyMap<V> implements
    * Returns a "set view" of this HashMap's keys. The set is backed by the
    * HashMap, so changes in one show up in the other. The set supports element
    * removal, but not element addition.
-   * 
+   *
    * @return a set view of the keys
    * @see #values()
    * @see #entrySet()
@@ -512,7 +512,7 @@ public class LongKeyHashMap<V> extends AbstractLongKeyMap<V> implements
    * Returns a "collection view" (or "bag view") of this HashMap's values. The
    * collection is backed by the HashMap, so changes in one show up in the
    * other. The collection supports element removal, but not element addition.
-   * 
+   *
    * @return a bag view of the values
    * @see #keySet()
    * @see #entrySet()
@@ -549,7 +549,7 @@ public class LongKeyHashMap<V> extends AbstractLongKeyMap<V> implements
    * <p>
    * Note that the iterators for all three views, from keySet(), entrySet(), and
    * values(), traverse the HashMap in the same sequence.
-   * 
+   *
    * @return a set view of the entries
    * @see #keySet()
    * @see #values()
@@ -598,7 +598,7 @@ public class LongKeyHashMap<V> extends AbstractLongKeyMap<V> implements
   /**
    * Helper method for put, that creates and adds a new Entry. This is
    * overridden in LinkedHashMap for bookkeeping purposes.
-   * 
+   *
    * @param key
    *          the key of the new Entry
    * @param value
@@ -610,7 +610,7 @@ public class LongKeyHashMap<V> extends AbstractLongKeyMap<V> implements
    * @see #put(long, Object)
    */
   void addEntry(long key, V value, int idx, boolean callRemove) {
-    HashEntry<V> e = new HashEntry<V>(key, value);
+    HashEntry<V> e = new HashEntry<>(key, value);
     e.next = buckets[idx];
     buckets[idx] = e;
   }
@@ -618,7 +618,7 @@ public class LongKeyHashMap<V> extends AbstractLongKeyMap<V> implements
   /**
    * Helper method for entrySet(), which matches both key and value
    * simultaneously.
-   * 
+   *
    * @param o
    *          the entry to match
    * @return the matching entry, if found, or null
@@ -642,7 +642,7 @@ public class LongKeyHashMap<V> extends AbstractLongKeyMap<V> implements
   /**
    * Helper method that returns an index in the buckets array for `key' based on
    * its hashCode(). Package visible for use by subclasses.
-   * 
+   *
    * @param key
    *          the key
    * @return the bucket number
@@ -654,14 +654,14 @@ public class LongKeyHashMap<V> extends AbstractLongKeyMap<V> implements
   /**
    * Generates a parameterized iterator. Must be overrideable, since
    * LinkedHashMap iterates in a different order.
-   * 
+   *
    * @param type
    *          {@link #KEYS}, {@link #VALUES}, or {@link #ENTRIES}
    * @return the appropriate iterator
    */
   <T> Iterator<T> iterator(int type) {
     // FIXME: bogus cast here.
-    return new HashIterator<T>(type);
+    return new HashIterator<>(type);
   }
 
   LongIterator keyIterator() {
@@ -672,7 +672,7 @@ public class LongKeyHashMap<V> extends AbstractLongKeyMap<V> implements
    * A simplified, more efficient internal implementation of putAll(). clone()
    * should not call putAll or put, in order to be compatible with the JDK
    * implementation with respect to subclasses.
-   * 
+   *
    * @param m
    *          the map to initialize this from
    */
@@ -722,7 +722,7 @@ public class LongKeyHashMap<V> extends AbstractLongKeyMap<V> implements
 
   /**
    * Serializes this object to the given stream.
-   * 
+   *
    * @param s
    *          the stream to write to
    * @throws IOException
@@ -749,7 +749,7 @@ public class LongKeyHashMap<V> extends AbstractLongKeyMap<V> implements
 
   /**
    * Deserializes this object from the given stream.
-   * 
+   *
    * @param s
    *          the stream to read from
    * @throws ClassNotFoundException
@@ -781,7 +781,7 @@ public class LongKeyHashMap<V> extends AbstractLongKeyMap<V> implements
   /**
    * Iterate over HashMap's entries. This implementation is parameterized to
    * give a sequential view of keys, values, or entries.
-   * 
+   *
    * @author Jon Zeppieri
    */
   private final class HashIterator<T> implements Iterator<T> {
@@ -809,7 +809,7 @@ public class LongKeyHashMap<V> extends AbstractLongKeyMap<V> implements
 
     /**
      * Construct a new HashIterator with the supplied type.
-     * 
+     *
      * @param type
      *          {@link #KEYS}, {@link #VALUES}, or {@link #ENTRIES}
      */
@@ -819,7 +819,7 @@ public class LongKeyHashMap<V> extends AbstractLongKeyMap<V> implements
 
     /**
      * Returns true if the Iterator has more elements.
-     * 
+     *
      * @return true if there are more elements
      */
     @Override
@@ -829,7 +829,7 @@ public class LongKeyHashMap<V> extends AbstractLongKeyMap<V> implements
 
     /**
      * Returns the next element in the Iterator's sequential view.
-     * 
+     *
      * @return the next element
      * @throws ConcurrentModificationException
      *           if the HashMap was modified
@@ -862,7 +862,7 @@ public class LongKeyHashMap<V> extends AbstractLongKeyMap<V> implements
     /**
      * Removes from the backing HashMap the last element which was fetched with
      * the <code>next()</code> method.
-     * 
+     *
      * @throws ConcurrentModificationException
      *           if the HashMap was modified
      * @throws IllegalStateException
@@ -882,7 +882,7 @@ public class LongKeyHashMap<V> extends AbstractLongKeyMap<V> implements
   /**
    * Iterate over HashMap's keys. This implementation is parameterized to give a
    * sequential view of keys, values, or entries.
-   * 
+   *
    * @author Jon Zeppieri
    */
   private final class KeyIterator implements LongIterator {
@@ -911,7 +911,7 @@ public class LongKeyHashMap<V> extends AbstractLongKeyMap<V> implements
 
     /**
      * Returns true if the Iterator has more elements.
-     * 
+     *
      * @return true if there are more elements
      */
     @Override
@@ -921,7 +921,7 @@ public class LongKeyHashMap<V> extends AbstractLongKeyMap<V> implements
 
     /**
      * Returns the next element in the Iterator's sequential view.
-     * 
+     *
      * @return the next element
      * @throws ConcurrentModificationException
      *           if the HashMap was modified
@@ -946,7 +946,7 @@ public class LongKeyHashMap<V> extends AbstractLongKeyMap<V> implements
     /**
      * Removes from the backing HashMap the last element which was fetched with
      * the <code>next()</code> method.
-     * 
+     *
      * @throws ConcurrentModificationException
      *           if the HashMap was modified
      * @throws IllegalStateException

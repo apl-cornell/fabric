@@ -28,7 +28,7 @@ public class FabricMeetLabelToFabilExpr_c extends MeetLabelToJavaExpr_c {
         && rw.currentClass().isSubtype(rw.jif_ts().PrincipalClass()))
       simplify = false;
 
-    LinkedList<Label> l = new LinkedList<Label>(L.meetComponents());
+    LinkedList<Label> l = new LinkedList<>(L.meetComponents());
     Iterator<Label> iter = l.iterator();
     Label head = iter.next();
     Expr e = rw.labelToJava(head);

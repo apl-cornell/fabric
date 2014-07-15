@@ -1,7 +1,7 @@
 package fabric.common.util;
 
 public class ComparablePair<T1 extends Comparable<T1>, T2 extends Comparable<T2>>
-    extends Pair<T1, T2> implements Comparable<ComparablePair<T1, T2>> {
+extends Pair<T1, T2> implements Comparable<ComparablePair<T1, T2>> {
   public ComparablePair(T1 first, T2 second) {
     super(first, second);
   }

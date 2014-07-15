@@ -45,7 +45,7 @@ public class ObjectUpdateMessage extends
 
   /**
    * Creates an object-update notification to be sent to a dissemination node.
-   * 
+   *
    * @param store
    *          the store from which the notification originated.
    * @param updates
@@ -58,9 +58,9 @@ public class ObjectUpdateMessage extends
 
   /**
    * Creates an object-update notification to be sent to a worker node.
-   * 
+   *
    * @param onums
-   *          the onums being updated to which the worker has subscribed. 
+   *          the onums being updated to which the worker has subscribed.
    * @param updates
    *          the set of object updates.
    */
@@ -131,13 +131,13 @@ public class ObjectUpdateMessage extends
       globs = null;
 
       int size = in.readInt();
-      onums = new ArrayList<Long>(size);
+      onums = new ArrayList<>(size);
       for (int i = 0; i < size; i++) {
         onums.add(in.readLong());
       }
 
       size = in.readInt();
-      groups = new ArrayList<ObjectGroup>(size);
+      groups = new ArrayList<>(size);
       for (int i = 0; i < size; i++) {
         groups.add(new ObjectGroup(in));
       }
@@ -148,7 +148,7 @@ public class ObjectUpdateMessage extends
       store = in.readUTF();
 
       int size = in.readInt();
-      globs = new LongKeyHashMap<ObjectGlob>(size);
+      globs = new LongKeyHashMap<>(size);
       for (int i = 0; i < size; i++) {
         long key = in.readLong();
         ObjectGlob glob = new ObjectGlob(in);
@@ -169,7 +169,7 @@ public class ObjectUpdateMessage extends
   @Override
   protected Response readResponse(DataInput in) throws IOException {
     int size = in.readInt();
-    List<Long> resubscribes = new ArrayList<Long>(size);
+    List<Long> resubscribes = new ArrayList<>(size);
     for (int i = 0; i < size; i++) {
       resubscribes.add(in.readLong());
     }

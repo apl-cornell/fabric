@@ -76,7 +76,7 @@ public final class StalenessCheckMessage extends
   private static LongKeyHashMap<Integer> readMap(DataInput in)
       throws IOException {
     int size = in.readInt();
-    LongKeyHashMap<Integer> versions = new LongKeyHashMap<Integer>(size);
+    LongKeyHashMap<Integer> versions = new LongKeyHashMap<>(size);
     for (int i = 0; i < size; i++)
       versions.put(in.readLong(), in.readInt());
 
@@ -94,7 +94,7 @@ public final class StalenessCheckMessage extends
   @Override
   protected Response readResponse(DataInput in) throws IOException {
     int size = in.readInt();
-    List<SerializedObject> staleObjects = new ArrayList<SerializedObject>(size);
+    List<SerializedObject> staleObjects = new ArrayList<>(size);
     for (int i = 0; i < size; i++) {
       staleObjects.add(new SerializedObject(in));
     }

@@ -23,7 +23,7 @@ import fabil.types.FabILTypeSystem;
 // XXX Should be replaced with extension
 @Deprecated
 public class NewFabricArray_c extends NewArray_c implements NewFabricArray,
-    Annotated {
+Annotated {
 
   protected Expr label;
   protected Expr location;

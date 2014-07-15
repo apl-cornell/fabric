@@ -64,7 +64,7 @@ public final class SysUtil {
 
   /**
    * Generates a cryptographically secure hash of a platform class.
-   * 
+   *
    * @param c
    *          the Class object for a class that is not stored in Fabric. If it's
    *          a Fabric class, this is the interface corresponding to the Fabric
@@ -86,7 +86,7 @@ public final class SysUtil {
       try {
         @SuppressWarnings("unchecked")
         Class<? extends fabric.lang.Object> fabricClass =
-            (Class<? extends fabric.lang.Object>) c;
+        (Class<? extends fabric.lang.Object>) c;
         return classHashFieldValue(fabricClass);
       } catch (NoSuchFieldException e) {
       } catch (SecurityException e) {
@@ -150,22 +150,21 @@ public final class SysUtil {
             classResource);
       }
 
-      InputStream classIn = classLoader.getResourceAsStream(classFileName);
+      try (InputStream classIn = classLoader.getResourceAsStream(classFileName)) {
+        if (classIn == null) {
+          Logging.log(CLASS_HASHING_LOGGER, Level.WARNING,
+              "Unable to load {0} from {1} using {2}", className,
+              classFileName, classLoader);
+          throw new InternalError("Class not found: " + className);
+        }
 
-      if (classIn == null) {
-        Logging.log(CLASS_HASHING_LOGGER, Level.WARNING,
-            "Unable to load {0} from {1} using {2}", className, classFileName,
-            classLoader);
-        throw new InternalError("Class not found: " + className);
+        byte[] buf = new byte[BUF_LEN];
+        int count = classIn.read(buf);
+        while (count != -1) {
+          digest.update(buf, 0, count);
+          count = classIn.read(buf);
+        }
       }
-
-      byte[] buf = new byte[BUF_LEN];
-      int count = classIn.read(buf);
-      while (count != -1) {
-        digest.update(buf, 0, count);
-        count = classIn.read(buf);
-      }
-      classIn.close();
     }
 
     if (!c.isInterface()) {
@@ -180,22 +179,22 @@ public final class SysUtil {
     // Include declared interfaces, if any.
     Class<?>[] interfaces =
         hashing_Impl ? ifaceClass.getInterfaces() : c.getInterfaces();
-    for (Class<?> iface : interfaces) {
-      // Assume the interface is also a platform class.
-      digest.update(hashPlatformClass(iface));
-    }
+        for (Class<?> iface : interfaces) {
+          // Assume the interface is also a platform class.
+          digest.update(hashPlatformClass(iface));
+        }
 
-    result = digest.digest();
+        result = digest.digest();
 
-    classHashCache.put(className, result);
+        classHashCache.put(className, result);
 
-    if (CLASS_HASHING_LOGGER.isLoggable(Level.FINEST)) {
-      String hash = new BigInteger(1, result).toString(16);
-      Logging.log(CLASS_HASHING_LOGGER, Level.FINEST, "  Hash for {0} is {1}",
-          className, hash);
-    }
+        if (CLASS_HASHING_LOGGER.isLoggable(Level.FINEST)) {
+          String hash = new BigInteger(1, result).toString(16);
+          Logging.log(CLASS_HASHING_LOGGER, Level.FINEST, "  Hash for {0} is {1}",
+              className, hash);
+        }
 
-    return result;
+        return result;
   }
 
   /**
@@ -230,7 +229,7 @@ public final class SysUtil {
 
   /**
    * Returns the _Impl class for the given Fabric class.
-   * 
+   *
    * @param clazz
    *          the Class object for a Fabric class. This is the interface
    *          corresponding to the Fabric type, and not the _Proxy or _Impl
@@ -271,12 +270,12 @@ public final class SysUtil {
    * <p>
    * Returns an iterable that iterates over the elements of the iterables passed
    * in. The common use is:
-   * 
+   *
    * <pre>
    * for (T o : Utils.chain(a, b, c))
    *  o.f()
    * </pre>
-   * 
+   *
    * which will call f() on each element of a, then each element of b, then each
    * element of c.
    * </p>
@@ -284,7 +283,7 @@ public final class SysUtil {
    * This is intended to be more efficient and easier than creating a new
    * collection containing the contents.
    * </p>
-   * 
+   *
    * @param <T>
    *          the types of the elements of the iterables
    * @param iters
@@ -353,7 +352,7 @@ public final class SysUtil {
    * Turns an array of bytes into an object using Java serialization.
    */
   public static Object deserialize(byte[] bytes) throws IOException,
-      ClassNotFoundException {
+  ClassNotFoundException {
     ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
     ObjectInputStream ois = new ObjectInputStream(bais);
     return ois.readObject();

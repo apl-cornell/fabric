@@ -21,7 +21,7 @@ import fabil.types.FabILTypeSystem;
 //XXX Should be replaced with extension
 @Deprecated
 public class FabricArrayInit_c extends ArrayInit_c implements FabricArrayInit,
-    Annotated {
+Annotated {
 
   protected Expr location;
   protected Expr label;

@@ -43,7 +43,7 @@ package fabric.common.util;
  * except for <code>remove()</code> called on the iterator itself, cause the
  * iterator to throw a <code>ConcurrentModificationException</code> rather than
  * exhibit non-deterministic behavior.
- * 
+ *
  * @author Jon Zeppieri
  * @author Eric Blake (ebb9@email.byu.edu)
  * @see LongCollection
@@ -71,7 +71,7 @@ public class LongHashSet extends AbstractLongSet implements LongSet // ,
   /**
    * Construct a new, empty HashSet whose backing HashMap has the supplied
    * capacity and the default load factor (0.75).
-   * 
+   *
    * @param initialCapacity
    *          the initial capacity of the backing HashMap
    * @throws IllegalArgumentException
@@ -84,7 +84,7 @@ public class LongHashSet extends AbstractLongSet implements LongSet // ,
   /**
    * Construct a new, empty HashSet whose backing HashMap has the supplied
    * capacity and load factor.
-   * 
+   *
    * @param initialCapacity
    *          the initial capacity of the backing HashMap
    * @param loadFactor
@@ -102,7 +102,7 @@ public class LongHashSet extends AbstractLongSet implements LongSet // ,
    * collection (eliminating any duplicates, of course). The backing storage has
    * twice the size of the collection, or the default size of 11, whichever is
    * greater; and the default load factor (0.75).
-   * 
+   *
    * @param c
    *          a collection of initial set elements
    * @throws NullPointerException
@@ -116,7 +116,7 @@ public class LongHashSet extends AbstractLongSet implements LongSet // ,
   /**
    * Adds the given Object to the set if it is not already in the Set. This set
    * permits a null element.
-   * 
+   *
    * @param v
    *          the Object to add to this Set
    * @return true if the set did not already contain v
@@ -157,7 +157,7 @@ public class LongHashSet extends AbstractLongSet implements LongSet // ,
 
   /**
    * Returns true if the supplied element is in this Set.
-   * 
+   *
    * @param v
    *          the long to look for
    * @return true if v is in the set
@@ -169,7 +169,7 @@ public class LongHashSet extends AbstractLongSet implements LongSet // ,
 
   /**
    * Returns true if this set has no elements in it.
-   * 
+   *
    * @return <code>size() == 0</code>.
    */
   @Override
@@ -183,7 +183,7 @@ public class LongHashSet extends AbstractLongSet implements LongSet // ,
    * removal of elements. The iterator is fail-fast, and will throw a
    * <code>ConcurrentModificationException</code> if the set is modified
    * externally.
-   * 
+   *
    * @return a set iterator
    */
   @Override
@@ -193,7 +193,7 @@ public class LongHashSet extends AbstractLongSet implements LongSet // ,
 
   /**
    * Removes the supplied Object from this Set if it is in the Set.
-   * 
+   *
    * @param v
    *          the long to remove
    * @return true if an element was removed
@@ -205,7 +205,7 @@ public class LongHashSet extends AbstractLongSet implements LongSet // ,
 
   /**
    * Returns the number of elements in this Set (its cardinality).
-   * 
+   *
    * @return the size of the set
    */
   @Override
@@ -216,7 +216,7 @@ public class LongHashSet extends AbstractLongSet implements LongSet // ,
   /**
    * Helper method which initializes the backing Map. Overridden by
    * LinkedHashSet for correct semantics.
-   * 
+   *
    * @param capacity
    *          the initial capacity
    * @param load
@@ -224,12 +224,12 @@ public class LongHashSet extends AbstractLongSet implements LongSet // ,
    * @return the backing HashMap
    */
   LongKeyHashMap<String> init(int capacity, float load) {
-    return new LongKeyHashMap<String>(capacity, load);
+    return new LongKeyHashMap<>(capacity, load);
   }
 
   /**
    * Serializes this object to the given stream.
-   * 
+   *
    * @param s
    *          the stream to write to
    * @throws IOException
@@ -248,7 +248,7 @@ public class LongHashSet extends AbstractLongSet implements LongSet // ,
 
   /**
    * Deserializes this object from the given stream.
-   * 
+   *
    * @param s
    *          the stream to read from
    * @throws ClassNotFoundException

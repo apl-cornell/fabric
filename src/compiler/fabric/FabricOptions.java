@@ -62,9 +62,9 @@ public class FabricOptions extends JifOptions {
 
   public FabricOptions(ExtensionInfo extension) {
     super(extension);
-    sourcepath_uris = new ArrayList<URI>();
-    classpath_uris = new ArrayList<URI>();
-    codebase_aliases = new HashMap<String, URI>();
+    sourcepath_uris = new ArrayList<>();
+    classpath_uris = new ArrayList<>();
+    codebase_aliases = new HashMap<>();
   }
 
 //  public FabricLocation source_output;
@@ -241,11 +241,9 @@ public class FabricOptions extends JifOptions {
 
         String arg = args[index];
         if (arg.startsWith("@")) {
-          try {
-            BufferedReader lr =
-                new BufferedReader(new FileReader(arg.substring(1)));
+          try (BufferedReader lr =
+              new BufferedReader(new FileReader(arg.substring(1)))) {
             arg = lr.readLine();
-            lr.close();
           } catch (FileNotFoundException e) {
             throw new InternalCompilerError(e);
           } catch (IOException e) {
@@ -258,11 +256,9 @@ public class FabricOptions extends JifOptions {
         String cb = alias[1];
 
         if (cb.startsWith("@")) {
-          try {
-            BufferedReader lr =
-                new BufferedReader(new FileReader(alias[1].substring(1)));
+          try (BufferedReader lr =
+              new BufferedReader(new FileReader(alias[1].substring(1)))) {
             cb = lr.readLine().replaceAll("[<>]", "");
-            lr.close();
           } catch (FileNotFoundException e) {
             throw new InternalCompilerError(e);
           } catch (IOException e) {
@@ -274,7 +270,7 @@ public class FabricOptions extends JifOptions {
         if (uri.isOpaque() || !uri.isAbsolute())
           throw new UsageError("Invalid codebase reference in alias:" + arg);
 
-        return createArg(index + 1, new Pair<String, URI>(alias[0], uri));
+        return createArg(index + 1, new Pair<>(alias[0], uri));
       }
     });
     flags.add(new Switch("-generate-native-skeletons",
@@ -302,7 +298,7 @@ public class FabricOptions extends JifOptions {
       }
       u = NSUtil.file.resolve(f.toURI());
     }
-    Arg<URI> src = new Arg<URI>(index + 1, u);
+    Arg<URI> src = new Arg<>(index + 1, u);
     arguments.add(src);
     return src.next();
   }
@@ -391,7 +387,7 @@ public class FabricOptions extends JifOptions {
   }
 
   public static List<File> URIsToFiles(List<URI> uris) {
-    List<File> files = new ArrayList<File>(uris.size());
+    List<File> files = new ArrayList<>(uris.size());
     for (URI u : uris) {
       files.add(new File(u));
     }
@@ -406,7 +402,7 @@ public class FabricOptions extends JifOptions {
    */
   public List<OptFlag.Arg<?>> fabilArgs(Set<OptFlag<?>> flags)
       throws UsageError {
-    List<Arg<?>> fabILArgs = new ArrayList<OptFlag.Arg<?>>();
+    List<Arg<?>> fabILArgs = new ArrayList<>();
 
     OptFlag<List<URI>> sigcp =
         (OptFlag<List<URI>>) OptFlag.lookupFlag("-sigcp", flags);

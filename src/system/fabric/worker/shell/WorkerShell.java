@@ -42,7 +42,7 @@ public class WorkerShell {
     this.out = System.out;
 
     // Set up the command handlers.
-    this.handlers = new TreeMap<String, CommandHandler>();
+    this.handlers = new TreeMap<>();
     this.defaultHandler =
         new CommandHandler("<APP> [ARG]...",
             "Executes the Fabric application APP in this worker, passing ARGs "
@@ -290,7 +290,7 @@ public class WorkerShell {
 
   public void run() {
     try {
-      List<String> commandLine = new ArrayList<String>();
+      List<String> commandLine = new ArrayList<>();
       while (true) {
         Logging.TIMING_LOGGER.log(Level.INFO, "waiting for command");
         commandLine = commandSource.getNextCommand(commandLine);

@@ -39,7 +39,7 @@ public class ConstructorDeclExt_c extends ClassMemberExt_c {
 
     NodeFactory nf = pr.nodeFactory();
     Position pos = Position.compilerGenerated();
-    List<Formal> formals = new LinkedList<Formal>(decl.formals());
+    List<Formal> formals = new LinkedList<>(decl.formals());
     formals.add(
         0,
         nf.Formal(pos, Flags.NONE,

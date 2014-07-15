@@ -112,7 +112,7 @@ public class RemoteWorker extends RemoteNode<RemoteWorker> {
 
   /**
    * Informs the remote worker that a transaction is aborting.
-   * 
+   *
    * @param tid
    *          the tid for the transaction that is aborting.
    */
@@ -123,7 +123,7 @@ public class RemoteWorker extends RemoteNode<RemoteWorker> {
 
   /**
    * Reads the given object from the remote worker, updating the object's state.
-   * 
+   *
    * @param tid
    *          the tid for the current transaction.
    */
@@ -148,12 +148,12 @@ public class RemoteWorker extends RemoteNode<RemoteWorker> {
     DirtyReadMessage.Response response =
         send(new DirtyReadMessage(tid, store, onum));
     if (response.obj == null) return null;
-    return new Pair<Store, SerializedObject>(response.store, response.obj);
+    return new Pair<>(response.store, response.obj);
   }
 
   /**
    * Unsets the ownership bit for the given object at the remote worker.
-   * 
+   *
    * @param tid
    *          the tid for the current transaction.
    */
@@ -188,7 +188,7 @@ public class RemoteWorker extends RemoteNode<RemoteWorker> {
   /**
    * Notifies the dissemination node at the given worker that an object has been
    * updated.
-   * 
+   *
    * @return whether the node is resubscribing to the object.
    */
   public List<Long> notifyObjectUpdates(String store,
@@ -205,7 +205,7 @@ public class RemoteWorker extends RemoteNode<RemoteWorker> {
 
   /**
    * Notifies the worker that a set of objects has been updated.
-   * 
+   *
    * @return whether the node is resubscribing to the object.
    */
   public List<Long> notifyObjectUpdates(List<Long> updatedOnums,

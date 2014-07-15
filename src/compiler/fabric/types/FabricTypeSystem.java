@@ -37,14 +37,14 @@ public interface FabricTypeSystem extends JifTypeSystem, CodebaseTypeSystem {
   /**
    * Constructs a principal for the local worker. Remote workers directly use
    * <code>DynamicPrincipal</code>.
-   * 
+   *
    * @param pos
    * @return
    */
   Principal workerLocalPrincipal(Position pos);
 
   /**
-   * Constructs an AccessPath for the local worker. 
+   * Constructs an AccessPath for the local worker.
    * @param position
    * @return
    */
