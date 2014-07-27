@@ -16,18 +16,18 @@ public abstract class HTMLAuthServlet[principal servP]
     }
 
     
-    public principal{p:;p!:} createUser{p:; p!:}(
-            String{p:; p!:} userID,
-            String{p:; p!:} password,
-            principal{p:; p!:} p)
+    public principal{p←;p→} createUser{p←; p→}(
+            String{p←; p→} userID,
+            String{p←; p→} password,
+            principal{p←; p→} p)
         throws ServletException
         where caller(p) {
         throw new ServletException("Unsupported");
 	}
 
-    public abstract principal{p:;p!:} lookupUserID{p:; p!:}(
-            String{p:; p!:} userID,
-            principal{p:; p!:} p)
+    public abstract principal{p←;p→} lookupUserID{p←; p→}(
+            String{p←; p→} userID,
+            principal{p←; p→} p)
         throws ServletException
         where caller(p);
     
