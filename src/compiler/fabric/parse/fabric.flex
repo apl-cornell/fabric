@@ -10,7 +10,7 @@ import polyglot.lex.*;
 import polyglot.util.Position;
 import polyglot.util.ErrorQueue;
 import polyglot.util.ErrorInfo;
-import polyglot.frontend.FileSource;
+import polyglot.frontend.Source;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Collections;
@@ -40,12 +40,12 @@ import java.math.BigInteger;
     ErrorQueue eq;
     HashMap keywords;
 
-    public Lexer_c(java.io.InputStream in, FileSource file, ErrorQueue eq) {
+    public Lexer_c(java.io.InputStream in, Source file, ErrorQueue eq) {
         this(new java.io.BufferedReader(new java.io.InputStreamReader(in)),
              file, eq);
     }
 
-    public Lexer_c(java.io.Reader reader, FileSource file, ErrorQueue eq) {
+    public Lexer_c(java.io.Reader reader, Source file, ErrorQueue eq) {
         this(reader);
         this.file = file.name();
         this.path = file.path();

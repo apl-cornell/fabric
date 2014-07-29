@@ -20,6 +20,7 @@ import polyglot.frontend.Job;
 import polyglot.frontend.JobExt;
 import polyglot.frontend.Parser;
 import polyglot.frontend.Scheduler;
+import polyglot.frontend.Source;
 import polyglot.frontend.Source.Kind;
 import polyglot.frontend.TargetFactory;
 import polyglot.frontend.goals.Goal;
@@ -166,7 +167,7 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements
   }
 
   @Override
-  public Parser parser(Reader reader, FileSource source, ErrorQueue eq) {
+  public Parser parser(Reader reader, Source source, ErrorQueue eq) {
     CodebaseSource src = (CodebaseSource) source;
     Lexer lexer = new Lexer_c(reader, source, eq);
     Grm grm = new Grm(lexer, ts, nf, eq, src.canonicalNamespace());
