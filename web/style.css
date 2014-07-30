@@ -65,13 +65,13 @@ div.top {
   vertical-align: bottom;
 }
 div#motto {
-    font-size: 150%;
+    font-size: 180%;
     text-shadow: none;
     color: white;
-    margin: 20px auto 0 330px;
-    padding: 10px;
+    margin: 10px auto 5px 330px;
+    padding: 5px;
     vertical-align: middle;
-    line-height: 24px;
+    line-height: 30px;
 }
 
 div.top a { color: white; }
