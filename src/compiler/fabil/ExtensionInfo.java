@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.tools.FileObject;
 import javax.tools.StandardLocation;
@@ -172,6 +173,11 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements
     Lexer lexer = new Lexer_c(reader, source, eq);
     Grm grm = new Grm(lexer, ts, nf, eq, src.canonicalNamespace());
     return new CupParser(grm, source, eq);
+  }
+
+  @Override
+  public Set<String> keywords() {
+    return new Lexer_c((Reader) null).keywords();
   }
 
   @Override

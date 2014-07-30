@@ -11,10 +11,11 @@ import polyglot.util.Position;
 import polyglot.util.ErrorQueue;
 import polyglot.util.ErrorInfo;
 import polyglot.frontend.Source;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Collections;
 import java.math.BigInteger;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 @SuppressWarnings("all")
 %%
@@ -53,11 +54,16 @@ import java.math.BigInteger;
         this.keywords = new HashMap();
         init_keywords();
     }
-	
-	public Map keywords() {
-		return Collections.unmodifiableMap(keywords);
+
+    public Set<String> keywords() {
+	if (keywords == null) {
+	    this.keywords = new HashMap<>();
+	    init_keywords();
 	}
-	
+
+	return Collections.unmodifiableSet(keywords.keySet());
+    }
+
     protected void init_keywords() {
         keywords.put("abstract",      new Integer(sym.ABSTRACT));
         keywords.put("assert",        new Integer(sym.ASSERT));
