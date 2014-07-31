@@ -62,7 +62,7 @@ import fabric.worker.Store;
  * Extension information for fabric extension.
  */
 public class ExtensionInfo extends jif.ExtensionInfo implements
-    codebases.frontend.ExtensionInfo {
+codebases.frontend.ExtensionInfo {
 
   /*
    * Note: jif.ExtensionInfo has a jif.OutputExtensionInfo field jlext. The only
@@ -184,7 +184,7 @@ public class ExtensionInfo extends jif.ExtensionInfo implements
 
   @Override
   public Set<String> keywords() {
-    return new Lexer_c((Reader) null).keywords();
+    return new Lexer_c(null).keywords();
   }
 
   @Override
@@ -288,13 +288,13 @@ public class ExtensionInfo extends jif.ExtensionInfo implements
     } else {
       URI ns =
           getOptions().platformMode() ? platformNamespace() : localNamespace();
-      LocalSource src = new LocalSource(f, kind, ns);
-      // Publish all local source unless we're in platform mode.
-      // TODO: generalize and make this better. We should only publish
-      // source in the sourcepath. Plus, the user may be re-publishing remote
-      // source with a new codebase.
-      src.setPublish(getOptions().publish());
-      return src;
+          LocalSource src = new LocalSource(f, kind, ns);
+          // Publish all local source unless we're in platform mode.
+          // TODO: generalize and make this better. We should only publish
+          // source in the sourcepath. Plus, the user may be re-publishing remote
+          // source with a new codebase.
+          src.setPublish(getOptions().publish());
+          return src;
     }
   }
 
