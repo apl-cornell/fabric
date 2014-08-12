@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Set;
 
 import polyglot.ast.Block;
+import polyglot.ast.Expr;
 import polyglot.ast.For;
 import polyglot.ast.ForInit;
 import polyglot.ast.Formal;
@@ -15,6 +16,8 @@ import polyglot.ast.LocalDecl;
 import polyglot.ast.Node;
 import polyglot.ast.ProcedureDecl;
 import polyglot.ast.Stmt;
+import polyglot.ast.Unary;
+import polyglot.ast.Unary.Operator;
 import polyglot.types.LocalInstance;
 import polyglot.visit.NodeVisitor;
 import fabil.ast.Atomic;
@@ -74,6 +77,12 @@ public class UpdatedVariableFinder extends NodeVisitor {
     if (n instanceof LocalAssign) {
       Local l = ((LocalAssign) n).left();
       updated.add(l.localInstance());
+    } else if (n instanceof Unary) {
+      Unary unary = (Unary) n;
+      Expr expr = unary.expr();
+      if (expr instanceof Local && isIncDec(unary)) {
+        updated.add(((Local) expr).localInstance());
+      }
     } else if (n instanceof Atomic) {
       Atomic a = (Atomic) n;
       List<LocalInstance> updatedLocals = new ArrayList<>();
@@ -86,5 +95,14 @@ public class UpdatedVariableFinder extends NodeVisitor {
     }
 
     return n;
+  }
+
+  /**
+   * @return true iff the given Unary is an increment/decrement operation.
+   */
+  private boolean isIncDec(Unary n) {
+    Operator o = n.operator();
+    return o == Unary.POST_DEC || o == Unary.POST_INC || o == Unary.PRE_DEC
+        || o == Unary.PRE_INC;
   }
 }
