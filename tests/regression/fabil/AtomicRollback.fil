@@ -1,0 +1,15 @@
+package fabil;
+
+public class AtomicRollback {
+  public static void main(String[] args) {
+      int i = 0;
+      int j = 0;
+	  atomic {
+        i++;
+        j = j + 1;
+        abort;
+	  }
+      System.out.println("i: " + i); 
+      System.out.println("j: " + j); 
+  }
+}
