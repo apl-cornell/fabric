@@ -6,6 +6,7 @@ import static fabric.common.Logging.WORKER_LOGGER;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.security.GeneralSecurityException;
 import java.security.PublicKey;
@@ -585,10 +586,36 @@ public final class Worker {
    */
   public void runFabricApp(String mainClassName, final String[] args)
       throws Throwable {
+
+    Method main = null;
+    Object receiver = null;
+
+    // Fabric compiler places static methods in the _Impl class
     Class<?> mainClass =
         getClassLoader().loadClass(NSUtil.toJavaImplName(mainClassName));
-    Method main =
-        mainClass.getMethod("main", new Class[] { ObjectArray.class });
+    for (Method m : mainClass.getMethods()) {
+      if (m.getName().equals("main") && m.getParameterTypes().length == 1
+          && m.getParameterTypes()[0].equals(ObjectArray.class)) {
+        main = m;
+        break;
+      }
+    }
+
+    if (main == null) {
+      // Support static methods defined in static impl class.
+      mainClass =
+          getClassLoader().loadClass(
+              NSUtil.toJavaStaticProxyName(mainClassName));
+      for (Method m : mainClass.getMethods()) {
+        if (m.getName().equals("main") && m.getParameterTypes().length == 1
+            && m.getParameterTypes()[0].equals(ObjectArray.class)) {
+          main = m;
+          break;
+        }
+      }
+      Field instanceField = mainClass.getField("$instance");
+      receiver = (Object) instanceField.get(null);
+    }
 
     final Store local = getLocalStore();
     final NodePrincipal workerPrincipal = getPrincipal();
@@ -606,7 +633,7 @@ public final class Worker {
       }
     });
 
-    MainThread.invoke(main, argsProxy);
+    MainThread.invoke(main, receiver, argsProxy);
   }
 
   /**
@@ -622,7 +649,7 @@ public final class Worker {
       throws Throwable {
     Class<?> mainClass = getClassLoader().loadClass(mainClassName);
     Method main = mainClass.getMethod("main", String[].class);
-    MainThread.invoke(main, args);
+    MainThread.invoke(main, null, args);
   }
 
   /**
