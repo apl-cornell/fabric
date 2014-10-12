@@ -99,7 +99,7 @@ public final class NSUtil {
   }
 
   /**
-   * Returns the Java name of a Fabric or FabIL class suitable for passing to
+   * Returns the Java _Impl class name of a Fabric or FabIL class suitable for passing to
    * ClassLoader.loadClass(). If className is the absolute name of a published
    * Fabric class qualified by a fabric codebase URI, toJavaImplName will return
    * a mangled java name.
@@ -108,9 +108,75 @@ public final class NSUtil {
    * @return
    */
   public static String toJavaImplName(String className) {
+    return toJavaName(className, "$_Impl");
+  }
+
+  /**
+   * Returns the Java _Proxy class name of a Fabric or FabIL class suitable for passing to
+   * ClassLoader.loadClass(). If className is the absolute name of a published
+   * Fabric class qualified by a fabric codebase URI, toJavaImplName will return
+   * a mangled java name.
+   *
+   * @param className
+   * @return
+   */
+  public static String toJavaProxyName(String className) {
+    return toJavaName(className, "$_Proxy");
+  }
+
+  /**
+   * Returns the Java _Static interface name of a Fabric or FabIL class suitable for passing to
+   * ClassLoader.loadClass(). If className is the absolute name of a published
+   * Fabric class qualified by a fabric codebase URI, toJavaImplName will return
+   * a mangled java name.
+   *
+   * @param className
+   * @return
+   */
+  public static String toJavaStaticName(String className) {
+    return toJavaName(className, "$_Static");
+  }
+
+  /**
+   * Returns the Java _Static._Impl class name of a Fabric or FabIL class suitable for passing to
+   * ClassLoader.loadClass(). If className is the absolute name of a published
+   * Fabric class qualified by a fabric codebase URI, toJavaImplName will return
+   * a mangled java name.
+   *
+   * @param className
+   * @return
+   */
+  public static String toJavaStaticImplName(String className) {
+    return toJavaName(className, "$_Static$_Impl");
+  }
+
+  /**
+   * Returns the Java _Static._Proxy class name of a Fabric or FabIL class suitable for passing to
+   * ClassLoader.loadClass(). If className is the absolute name of a published
+   * Fabric class qualified by a fabric codebase URI, toJavaImplName will return
+   * a mangled java name.
+   *
+   * @param className
+   * @return
+   */
+  public static String toJavaStaticProxyName(String className) {
+    return toJavaName(className, "$_Static$_Proxy");
+  }
+
+  /**
+   * Returns the Java name of a Fabric or FabIL class suitable for passing to
+   * ClassLoader.loadClass(). If className is the absolute name of a published
+   * Fabric class qualified by a fabric codebase URI, toJavaProxyName will return
+   * a mangled java name.
+   *
+   * @param className The Fabric or FabIL class name.
+   * @param suffix The Java inner class name desired. 
+   * @return
+   */
+  private static String toJavaName(String className, String suffix) {
     URI cls = URI.create(className);
     if (!cls.isAbsolute()) {
-      return className + "$_Impl";
+      return className + suffix;
     } else return javaImplName(cls);
   }
 
@@ -258,7 +324,7 @@ public final class NSUtil {
   // group 4: $_Impl or $_Proxy or ""
   private static final Pattern javaNameRegex =
       Pattern
-      .compile("(?:\\$\\$(.*)\\.onum_(\\d*)\\$\\$\\.)?(.*?)([$.]_Static)?((?:[$.]_Impl)|(?:[$.]_Proxy)|)");
+          .compile("(?:\\$\\$(.*)\\.onum_(\\d*)\\$\\$\\.)?(.*?)([$.]_Static)?((?:[$.]_Impl)|(?:[$.]_Proxy)|)");
 
   /**
    * Return the namespace representing a codebase.
