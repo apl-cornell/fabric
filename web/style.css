@@ -61,8 +61,8 @@ div.top {
 div#motto {
     width: 100%;
     font-size: 200%;
-    text-shadow: none;
-    color: #08f;
+    /* text-shadow: none;*/
+    color: #fff;
     font-weight: bold;
     margin: 10px auto 5px 130px;
     padding: 0 0 0 1em;
