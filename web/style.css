@@ -44,12 +44,8 @@ div.content {
 div.top {
   background: linear-gradient(left, white, blue);
   background: -webkit-linear-gradient(left, white, #08f);
-  <!--
-  background-image: url('images/fabric-grid.png');
-  background-repeat: no-repeat;
-  background-position: 12px center;
-  background-size: auto 150px;
-  -->
+  background: -moz-linear-gradient(left, white, #08f);
+  background: -o-linear-gradient(left, white, #08f);
   text-shadow: #102010 2px 2px 2px;
   padding: 11px 0;
   width: 100%;
