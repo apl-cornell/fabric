@@ -59,22 +59,28 @@ div.top {
   line-height: 18px;
   vertical-align: bottom;
 }
+
 div#motto {
-    width: 100%;
-    font-size: 200%;
-    color: #09c;
-    font-weight: bold;
-    margin: 10px auto 5px 130px;
-    padding: 0 0 0 1em;
-    vertical-align: middle;
-    line-height: 40px;
-    display: table-cell;
+  width: 100%;
+  font-size: 200%;
+  color: #09c;
+  font-weight: bold;
+  margin: 10px auto 5px 130px;
+  padding: 0 0 0 1em;
+  vertical-align: middle;
+  line-height: 40px;
+  display: table-cell;
 }
 
 div.top a { color: white; }
 div.top a:hover { color: #ffff80; }
 
-img#logo { width: 160px; display: table-cell; vertical-align: middle; margin: 0 auto 0 1em; }
+img#logo {
+  width: 160px;
+  display: table-cell;
+  vertical-align: middle;
+  margin: 0 auto 0 1em;
+}
 
 div.menu {
   display: table-cell;
