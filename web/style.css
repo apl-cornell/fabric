@@ -49,6 +49,7 @@ div.top {
   /* text-shadow: #102010 2px 2px 2px; */
   padding: 11px 0;
   width: 100%;
+  min-width: 730px;
   display: table;
 
   color: blue;
