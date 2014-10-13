@@ -74,7 +74,7 @@ div#motto {
 div.top a { color: white; }
 div.top a:hover { color: #ffff80; }
 
-img#logo { height: 120px; display: table-cell; vertical-align: middle; margin: 0 auto 0 1em; }
+img#logo { width: 160px; display: table-cell; vertical-align: middle; margin: 0 auto 0 1em; }
 
 div.menu {
   display: table-cell;
