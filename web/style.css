@@ -42,10 +42,10 @@ div.content {
 }
 
 div.top {
-  background: linear-gradient(left, white, blue);
-  background: -webkit-linear-gradient(left, white, #08f);
-  background: -moz-linear-gradient(left, white, #08f);
-  background: -o-linear-gradient(left, white, #08f);
+  background: -webkit-linear-gradient(left, white, #08f); /* Safari 5.1 - 6.0 */
+  background: -o-linear-gradient(right, white, #08f); /* Opera 11.1 - 12.0 */
+  background: -moz-linear-gradient(right, white, #08f); /* Firefox 3.6 - 15 */
+  background: linear-gradient(to right, white, #08f); /* standard syntax */
   text-shadow: #102010 2px 2px 2px;
   padding: 11px 0;
   width: 100%;
@@ -61,8 +61,8 @@ div.top {
 div#motto {
     width: 100%;
     font-size: 200%;
-    text-shadow: none;
-    color: #08f;
+    /* text-shadow: none;*/
+    color: #fff;
     font-weight: bold;
     margin: 10px auto 5px 130px;
     padding: 0 0 0 1em;
