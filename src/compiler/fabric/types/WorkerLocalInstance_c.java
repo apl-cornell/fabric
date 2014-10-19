@@ -12,7 +12,7 @@ import polyglot.util.Position;
  * the TypeSystem's workerLocalInstance
  */
 public class WorkerLocalInstance_c extends JifLocalInstance_c implements
-    WorkerLocalInstance {
+WorkerLocalInstance {
   public WorkerLocalInstance_c(JifTypeSystem ts, Position pos, Flags flags,
       Type type, String name) {
     super(ts, pos, flags, type, name);

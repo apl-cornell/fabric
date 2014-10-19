@@ -54,62 +54,62 @@ public abstract class AbstractMessageServer implements Runnable, MessageHandler 
         final SubSocket<RemoteWorker> connection = server.accept();
 
         Threading.getPool()
-            .submit(
-                new Threading.NamedRunnable(
-                    "Fabric network message handler thread") {
-                  @Override
-                  protected void runImpl() {
-                    RemoteIdentity<RemoteWorker> client;
-                    final int streamID;
+        .submit(
+            new Threading.NamedRunnable(
+                "Fabric network message handler thread") {
+              @Override
+              protected void runImpl() {
+                RemoteIdentity<RemoteWorker> client;
+                final int streamID;
+                try {
+                  client = connection.getRemoteIdentity();
+                  streamID = connection.getStreamID();
+                } catch (IOException e) {
+                  throw new InternalError(e);
+                }
+
+                try {
+                  // Handle the connection.
+                  DataInputStream in =
+                      new DataInputStream(connection.getInputStream());
+                  DataOutputStream out =
+                      new DataOutputStream(connection.getOutputStream());
+
+                  while (true) {
+                    Message<?, ?> message = Message.receive(in);
                     try {
-                      client = connection.getRemoteIdentity();
-                      streamID = connection.getStreamID();
-                    } catch (IOException e) {
-                      throw new InternalError(e);
+                      Message.Response response =
+                          message.dispatch(client,
+                              AbstractMessageServer.this);
+                      message.respond(out, response);
+                    } catch (FabricException e) {
+                      message.respond(out, e);
                     }
 
-                    try {
-                      // Handle the connection.
-                      DataInputStream in =
-                          new DataInputStream(connection.getInputStream());
-                      DataOutputStream out =
-                          new DataOutputStream(connection.getOutputStream());
-
-                      while (true) {
-                        Message<?, ?> message = Message.receive(in);
-                        try {
-                          Message.Response response =
-                              message.dispatch(client,
-                                  AbstractMessageServer.this);
-                          message.respond(out, response);
-                        } catch (FabricException e) {
-                          message.respond(out, e);
-                        }
-
-                        out.flush();
-                      }
-                    } catch (EOFException e) {
-                      try {
-                        connection.close();
-                      } catch (IOException e1) {
-                      }
-                      Logging.log(NETWORK_CONNECTION_LOGGER, Level.INFO,
-                          "Stream #{0} reset ({1})", streamID, client);
-                    } catch (IOException e) {
-                      try {
-                        connection.close();
-                      } catch (IOException e1) {
-                      }
-                      logger.log(Level.WARNING,
-                          "Network error while handling request on stream #"
-                              + streamID, e);
-                    } catch (RuntimeException e) {
-                      logger.log(Level.SEVERE,
-                          "Message-handler thread for stream #" + streamID
-                              + " exited with exception: " + e.getMessage(), e);
-                    }
+                    out.flush();
                   }
-                });
+                } catch (EOFException e) {
+                  try {
+                    connection.close();
+                  } catch (IOException e1) {
+                  }
+                  Logging.log(NETWORK_CONNECTION_LOGGER, Level.INFO,
+                      "Stream #{0} reset ({1})", streamID, client);
+                } catch (IOException e) {
+                  try {
+                    connection.close();
+                  } catch (IOException e1) {
+                  }
+                  logger.log(Level.WARNING,
+                      "Network error while handling request on stream #"
+                          + streamID, e);
+                } catch (RuntimeException e) {
+                  logger.log(Level.SEVERE,
+                      "Message-handler thread for stream #" + streamID
+                      + " exited with exception: " + e.getMessage(), e);
+                }
+              }
+            });
       }
     } catch (final IOException e) {
       logger.log(Level.WARNING, name + " (" + getClass().getSimpleName()

@@ -40,9 +40,9 @@ public class AbortJifExt_c extends JifBranchExt {
     lc.constrain(new NamedLabel("abort_pc",
         "the information that may be revealed " + "by control reaching abort",
         pc), LabelConstraint.LEQ, new NamedLabel("atomic_pc",
-        "upper bound on information that should be revealed "
-            + "by control reaching inside the atomic block", gotoLabel), A
-        .labelEnv(), abort.position(), new ConstraintMessage() {
+            "upper bound on information that should be revealed "
+                + "by control reaching inside the atomic block", gotoLabel), A
+                .labelEnv(), abort.position(), new ConstraintMessage() {
       @Override
       public String msg() {
         return "The information revealed by aborting an atomic block "

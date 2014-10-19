@@ -163,8 +163,7 @@ public class RemoteWorker extends RemoteNode<RemoteWorker> {
     DirtyReadMessage.Response response =
         send(new DirtyReadMessage(tid, store, onum));
     if (response.obj == null) return null;
-    return new Pair<Store, Pair<SerializedObject, VersionWarranty>>(
-        response.store, response.obj);
+    return new Pair<>(response.store, response.obj);
   }
 
   /**

@@ -38,7 +38,7 @@ public class Node {
     env = new Environment();
 
     // Some default environment values.
-    Map<String, String> defaults = new HashMap<String, String>();
+    Map<String, String> defaults = new HashMap<>();
     defaults.put("bootstrap", "localhost:" + DEFAULT_PORT);
     defaults.put("loglevel", "SEVERE");
     defaults.put("replication_interval", "300000");

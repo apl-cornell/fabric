@@ -43,7 +43,7 @@ public class CastToFabilExt_c extends CastToJavaExt_c {
       return rw.java_nf().Cast(c.position(), c.castType(), c.expr());
     }
 
-    List<Expr> args = new ArrayList<Expr>();
+    List<Expr> args = new ArrayList<>();
     if (((JifCastDel) c.del()).isToSubstJifClass()) {
       // add all the actual param expressions to args
       FabricSubstType t = (FabricSubstType) castType;

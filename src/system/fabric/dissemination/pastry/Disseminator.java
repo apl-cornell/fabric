@@ -94,7 +94,7 @@ public class Disseminator implements Application {
 
   /**
    * Creates a disseminator attached to the given pastry node.
-   * 
+   *
    * @param node
    *          PastryNode where the disseminator is to run.
    */
@@ -153,7 +153,7 @@ public class Disseminator implements Application {
    * Schedules a task on the task processing thread. When messages are received,
    * handlers should run on the processing thread so as not to block the message
    * receiving thread.
-   * 
+   *
    * @param task
    *          the task to run.
    */
@@ -164,7 +164,7 @@ public class Disseminator implements Application {
   /**
    * Routes a message on the pastry ring. At least one of id or hint must be
    * non-null.
-   * 
+   *
    * @param id
    *          The id of this message (hash value where it should be routed)
    * @param message
@@ -193,7 +193,7 @@ public class Disseminator implements Application {
 
   /**
    * Called by a FetchManager to fetch the specified object.
-   * 
+   *
    * @throws DisseminationTimeoutException
    *           if the dissemination network takes too long.
    */
@@ -323,7 +323,7 @@ public class Disseminator implements Application {
   /**
    * Updates the dissemination and worker caches and pushes the update through
    * the dissemination layer.
-   * 
+   *
    * @return true iff there was a dissemination-cache entry for the given oid or
    *          if the update was forwarded to another node.
    */
@@ -497,7 +497,7 @@ public class Disseminator implements Application {
   /**
    * Builds a set of (oid, glob timestamp) pairs that do not need to be sent
    * again by a decider.
-   * 
+   *
    * @param deciderId
    *          Pastry id of the decider.
    * @param level
@@ -506,7 +506,7 @@ public class Disseminator implements Application {
    */
   private OidKeyHashMap<Long> skipSet(rice.pastry.Id deciderId, int level) {
     rice.pastry.Id me = (rice.pastry.Id) localHandle().getId();
-    OidKeyHashMap<Long> skip = new OidKeyHashMap<Long>();
+    OidKeyHashMap<Long> skip = new OidKeyHashMap<>();
 
     for (Pair<Pair<RemoteStore, Long>, Long> k : cache.timestamps()) {
       rice.pastry.Id id =
@@ -578,7 +578,7 @@ public class Disseminator implements Application {
   /**
    * Determines whether a glob should be replicated from a decider to a receiver
    * based on the level at which we want to replicate the object.
-   * 
+   *
    * @param deciderId
    *          Pastry id of the decider.
    * @param receiverId
@@ -645,7 +645,7 @@ public class Disseminator implements Application {
   /**
    * See if we should keep routing the given Fetch message or if we can reply to
    * it using our cache.
-   * 
+   *
    * @param msg
    *          the Fetch message
    * @return true if message should be further routed
@@ -676,7 +676,7 @@ public class Disseminator implements Application {
 
   /**
    * Cache glob from Fetch.Reply if we don't already have it.
-   * 
+   *
    * @param msg
    *          the Fetch.Reply message
    * @return always true, indicating message should be further routed

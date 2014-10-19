@@ -29,7 +29,7 @@ import fabric.worker.remote.RemoteWorker;
  * In-process implementation of the Store interface for use when a worker is
  * running in-process with a Store. The operations work directly on the Store's
  * TransactionManager object.
- * 
+ *
  * @author mdgeorge
  */
 public class InProcessStore extends RemoteStore {
@@ -84,9 +84,9 @@ public class InProcessStore extends RemoteStore {
   public long prepareTransactionWrites(long tid, Collection<_Impl> toCreate,
       Collection<_Impl> writes) throws TransactionPrepareFailedException {
     Collection<SerializedObject> serializedCreates =
-        new ArrayList<SerializedObject>(toCreate.size());
+        new ArrayList<>(toCreate.size());
     Collection<SerializedObject> serializedWrites =
-        new ArrayList<SerializedObject>(writes.size());
+        new ArrayList<>(writes.size());
 
     for (_Impl o : toCreate) {
       @SuppressWarnings("deprecation")
@@ -131,7 +131,7 @@ public class InProcessStore extends RemoteStore {
   public Pair<ObjectGroup, WarrantyGroup> readObjectFromStore(long onum)
       throws AccessException {
     // First, create an object group containing just the requested object.
-    LongKeyMap<SerializedObject> map = new LongKeyHashMap<SerializedObject>();
+    LongKeyMap<SerializedObject> map = new LongKeyHashMap<>();
     SerializedObject obj = tm.read(onum);
     if (obj == null) throw new AccessException(this, onum);
     map.put(onum, obj);

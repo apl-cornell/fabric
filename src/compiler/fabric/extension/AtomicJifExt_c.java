@@ -43,13 +43,13 @@ public class AtomicJifExt_c extends JifBlockExt {
 
     lc.constrain(new NamedLabel("atomic_entry", "entry label of atomic block",
         entryPC), LabelConstraint.LEQ, new NamedLabel("atomic_block_pc",
-        "label of PC in the atomic block", L), A.labelEnv(), atomic.position(),
-        false, new ConstraintMessage() {
-          @Override
-          public String technicalMsg() {
-            return "_pc_(atomic {S}) <= _pc_(S)";
-          }
-        });
+            "label of PC in the atomic block", L), A.labelEnv(), atomic.position(),
+            false, new ConstraintMessage() {
+      @Override
+      public String technicalMsg() {
+        return "_pc_(atomic {S}) <= _pc_(S)";
+      }
+    });
 
     return super.labelCheckStmt(lc);
   }

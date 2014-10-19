@@ -13,7 +13,7 @@ import polyglot.util.Position;
 import codebases.types.CodebaseClassType;
 
 public class FabricSubstClassType_c extends JifSubstClassType_c implements
-    FabricSubstType {
+FabricSubstType {
   public FabricSubstClassType_c(JifTypeSystem ts, Position pos, ClassType base,
       JifSubst subst) {
     super(ts, pos, base, subst);

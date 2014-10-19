@@ -59,7 +59,7 @@ public class FabricAmbPrincipalNode_c extends AmbPrincipalNode_c {
       } else if (expr instanceof Store) {
         if (!ar.isASTDisambiguated(expr)) {
           ar.job().extensionInfo().scheduler().currentGoal()
-              .setUnreachableThisRun();
+          .setUnreachableThisRun();
           return this;
         }
 

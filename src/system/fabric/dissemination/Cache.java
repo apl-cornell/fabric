@@ -118,12 +118,12 @@ public class Cache {
 
   public Cache() {
     this.map = new fabric.common.util.Cache<>();
-    this.fetchLocks = new OidKeyHashMap<Cache.FetchLock>();
+    this.fetchLocks = new OidKeyHashMap<>();
   }
 
   /**
    * Retrieves a glob from the cache, without trying to fetch it from the store.
-   * 
+   *
    * @param store
    *          the store of the object to retrieve.
    * @param onum
@@ -136,7 +136,7 @@ public class Cache {
 
   /**
    * Retrieves a glob from the cache or fetches it from the store.
-   * 
+   *
    * @param store
    *          the store of the object to retrieve.
    * @param onum
@@ -148,7 +148,7 @@ public class Cache {
    *         cache.
    */
   public Entry get(RemoteStore store, long onum, boolean fetch) {
-    Pair<RemoteStore, Long> key = new Pair<RemoteStore, Long>(store, onum);
+    Pair<RemoteStore, Long> key = new Pair<>(store, onum);
 
     Entry entry = map.get(key);
     if (entry != null || !fetch) return entry;
@@ -235,7 +235,7 @@ public class Cache {
    */
   public Entry put(RemoteStore store, long onum,
       Pair<ObjectGlob, WarrantyGlob> globs) {
-    Pair<RemoteStore, Long> key = new Pair<RemoteStore, Long>(store, onum);
+    Pair<RemoteStore, Long> key = new Pair<>(store, onum);
 
     Entry entry = put(key, globs.first, false);
     if (entry != null && globs.second != null) {
@@ -247,7 +247,7 @@ public class Cache {
 
   /**
    * Incorporates the given glob into the cache.
-   * 
+   *
    * @return the resulting cache entry.
    */
   private Entry put(Pair<RemoteStore, Long> oid, ObjectGlob g,
@@ -320,7 +320,7 @@ public class Cache {
   /**
    * Updates the dissemination and worker cache with the given object glob. If
    * the caches do not have entries for the given glob, then nothing is changed.
-   * 
+   *
    * @return true iff either of the caches was changed.
    */
   public boolean updateEntry(RemoteStore store, long onum, ObjectGlob g) {
@@ -329,7 +329,7 @@ public class Cache {
     boolean workerCacheUpdated =
         Worker.getWorker().updateCache(store, g.decrypt());
 
-    Pair<RemoteStore, Long> key = new Pair<RemoteStore, Long>(store, onum);
+    Pair<RemoteStore, Long> key = new Pair<>(store, onum);
 
     return put(key, g, true) != null || workerCacheUpdated;
   }
@@ -359,14 +359,12 @@ public class Cache {
    * However, no synchronization is needed for working with the set.
    */
   public Set<Pair<Pair<RemoteStore, Long>, Long>> timestamps() {
-    Set<Pair<Pair<RemoteStore, Long>, Long>> result =
-        new HashSet<Pair<Pair<RemoteStore, Long>, Long>>();
+    Set<Pair<Pair<RemoteStore, Long>, Long>> result = new HashSet<>();
 
     for (Pair<RemoteStore, Long> key : map.keys()) {
       Entry glob = map.get(key);
       if (glob != null)
-        result.add(new Pair<Pair<RemoteStore, Long>, Long>(key, glob.objectGlob
-            .getTimestamp()));
+        result.add(new Pair<>(key, glob.objectGlob.getTimestamp()));
     }
 
     return result;
@@ -379,8 +377,7 @@ public class Cache {
    * backed by the underlying table.
    */
   public List<Pair<Pair<RemoteStore, Long>, Long>> sortedTimestamps() {
-    List<Pair<Pair<RemoteStore, Long>, Long>> k =
-        new ArrayList<Pair<Pair<RemoteStore, Long>, Long>>(timestamps());
+    List<Pair<Pair<RemoteStore, Long>, Long>> k = new ArrayList<>(timestamps());
 
     Collections.sort(k, TIMESTAMP_COMPARATOR);
 

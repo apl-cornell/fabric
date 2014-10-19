@@ -13,7 +13,7 @@ import fabric.types.FabricTypeSystem;
 //XXX Should be replaced with extension
 @Deprecated
 public class FabricArrayTypeNode_c extends ArrayTypeNode_c implements
-    FabricArrayTypeNode {
+FabricArrayTypeNode {
   @Deprecated
   public FabricArrayTypeNode_c(Position pos, TypeNode base) {
     this(pos, base, null);

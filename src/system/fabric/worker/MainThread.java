@@ -15,12 +15,18 @@ import fabric.common.Logging;
  */
 public final class MainThread extends FabricThread.Impl {
   private final Method main;
+  private final Object receiver;
   private final Object args;
   private Throwable uncaughtException;
 
   private MainThread(Method main, Object args) {
+    this(main, null, args);
+  }
+
+  private MainThread(Method main, Object receiver, Object args) {
     super("Main worker application");
     this.main = main;
+    this.receiver = receiver;
     this.args = args;
     this.uncaughtException = null;
 
@@ -35,12 +41,12 @@ public final class MainThread extends FabricThread.Impl {
   @Override
   public void run() {
     try {
-      main.invoke(null, args);
+      main.invoke(receiver, args);
 
     } catch (InvocationTargetException e) {
       Throwable cause = e.getCause();
       // Trim the stack trace to omit stuff dealing with the worker framework.
-      List<StackTraceElement> trace = new ArrayList<StackTraceElement>();
+      List<StackTraceElement> trace = new ArrayList<>();
       for (StackTraceElement elt : cause.getStackTrace())
         trace.add(elt);
 
@@ -61,8 +67,9 @@ public final class MainThread extends FabricThread.Impl {
     }
   }
 
-  public static void invoke(Method main, Object args) throws Throwable {
-    MainThread thread = new MainThread(main, args);
+  public static void invoke(Method main, Object receiver, Object args)
+      throws Throwable {
+    MainThread thread = new MainThread(main, receiver, args);
     thread.start();
     while (true) {
       try {

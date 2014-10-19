@@ -23,7 +23,7 @@ public class DNS implements NameService {
 
   public DNS() {
     ConfigProperties defaults = ConfigProperties.getDefaults();
-    this.defaultPorts = new HashMap<NameService.PortType, Integer>();
+    this.defaultPorts = new HashMap<>();
     for (PortType portType : PortType.values()) {
       this.defaultPorts.put(portType, portType.getPort(defaults));
     }
@@ -47,7 +47,7 @@ public class DNS implements NameService {
   private int getPort(String name, PortType portType) {
     try {
       // Look up the port number in DNS.
-      Hashtable<String, String> env = new Hashtable<String, String>(1);
+      Hashtable<String, String> env = new Hashtable<>(1);
       env.put("java.naming.factory.initial",
           "com.sun.jndi.dns.DnsContextFactory");
       DirContext dirContext = new InitialDirContext(env);

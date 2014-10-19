@@ -11,7 +11,7 @@ import polyglot.types.SemanticException;
 import codebases.types.CodebaseClassType;
 
 public interface FabricParsedClassType extends JifParsedPolyType,
-    FabricClassType, CodebaseClassType {
+FabricClassType, CodebaseClassType {
 
   void removeMethod(MethodInstance mi);
 
@@ -30,7 +30,7 @@ public interface FabricParsedClassType extends JifParsedPolyType,
 
   /**
    * @param confProjection
-   * @throws SemanticException 
+   * @throws SemanticException
    */
   void setAccessPolicy(ConfPolicy policy) throws SemanticException;
 

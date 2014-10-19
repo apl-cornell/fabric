@@ -11,7 +11,7 @@ import polyglot.types.SemanticException;
  * <code>SilenceableSolverGLB</code> can be muted, that is, not reporting any
  * error. TODO: this class seems totally broken, as it causes the solver to
  * swallow some but not all constraint solution failures.
- * 
+ *
  * @author qixin
  */
 public class SilenceableSolverGLB extends SolverGLB {
@@ -60,8 +60,8 @@ public class SilenceableSolverGLB extends SolverGLB {
             UnsatisfiableConstraintException e = reportError(eqn);
 
             System.err
-                .println("Runtime check does not type-check, due to the folloiwing:\n"
-                    + e.getMessage());
+            .println("Runtime check does not type-check, due to the folloiwing:\n"
+                + e.getMessage());
           }
 
           staticFailedConstraints.clear();

@@ -139,7 +139,7 @@ public class TransactionManager {
     try {
       // This will store the set of onums of objects that were out of date.
       LongKeyMap<Pair<SerializedObject, VersionWarranty>> versionConflicts =
-          new LongKeyHashMap<Pair<SerializedObject, VersionWarranty>>();
+          new LongKeyHashMap<>();
 
       // Prepare writes.
       Pair<ExtendWarrantyStatus, VersionWarranty> scratchObj =
@@ -360,7 +360,7 @@ public class TransactionManager {
    * referenced by any object in the group will also be in the group. This
    * ensures that the worker will not reveal information when dereferencing
    * surrogates.
-   * 
+   *
    * @param subscriber
    *          If non-null, then the given worker will be subscribed to the
    *          object and the object's group's warranties will be refreshed.
@@ -385,7 +385,7 @@ public class TransactionManager {
    * Returns a Glob containing the specified object. All surrogates referenced
    * by any object in the group will also be in the group. This ensures that the
    * worker will not reveal information when dereferencing surrogates.
-   * 
+   *
    * @param subscriber
    *          If non-null, then the given worker will be subscribed to the
    *          object as a dissemination node.
@@ -400,7 +400,7 @@ public class TransactionManager {
    * referenced by any object in the group will also be in the group. This
    * ensures that the worker will not reveal information when dereferencing
    * surrogates.
-   * 
+   *
    * @param principal
    *          The principal performing the read.
    * @param subscriber
@@ -489,11 +489,9 @@ public class TransactionManager {
           Collections.<SerializedObject> emptyList());
     }
 
-    List<Pair<SerializedObject, VersionWarranty>> result =
-        new ArrayList<Pair<SerializedObject, VersionWarranty>>();
-    List<VersionWarranty.Binding> newWarranties =
-        ENABLE_WARRANTY_REFRESHES ? new ArrayList<VersionWarranty.Binding>()
-            : null;
+    List<Pair<SerializedObject, VersionWarranty>> result = new ArrayList<>();
+    List<VersionWarranty.Binding> newWarranties = ENABLE_WARRANTY_REFRESHES ?
+      new ArrayList<VersionWarranty.Binding>() : null;
     boolean success = false;
 
     try {

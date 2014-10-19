@@ -235,7 +235,7 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
   @Override
   public List<String> defaultPackageImports() {
     // Include fabric.lang as a default import.
-    List<String> result = new ArrayList<String>(6);
+    List<String> result = new ArrayList<>(6);
     result.add("fabric.lang");
     result.add("fabric.lang.security");
     result.add("fabric.worker");
@@ -305,8 +305,7 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
     return fabricArrayType(pos, type);
   }
 
-  private Map<Type, FabricArrayType> fabricArrayTypeCache =
-      new HashMap<Type, FabricArrayType>();
+  private Map<Type, FabricArrayType> fabricArrayTypeCache = new HashMap<>();
 
   protected FabricArrayType fabricArrayType(Position pos, Type type) {
     FabricArrayType t = fabricArrayTypeCache.get(type);
@@ -511,7 +510,7 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
     this.loadedResolver = null;
     this.systemResolver = null;
     this.extInfo = (fabil.ExtensionInfo) extInfo;
-    namespaceResolvers = new HashMap<URI, NamespaceResolver>();
+    namespaceResolvers = new HashMap<>();
     try {
       initResolvers();
     } catch (IOException e) {
@@ -522,7 +521,7 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
   protected void initResolvers() throws IOException {
     FabricFileManager fileManager =
         (FabricFileManager) extInfo.extFileManager();
-    List<File> platform_directories = new ArrayList<File>();
+    List<File> platform_directories = new ArrayList<>();
     platform_directories.addAll(extInfo.getOptions().signaturepath());
     platform_directories.addAll(extInfo.bootclasspath());
     fileManager.setLocation(extInfo.getOptions().bootclasspath,

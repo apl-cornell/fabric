@@ -15,7 +15,7 @@ import polyglot.visit.AmbiguityRemover;
 //XXX Should be replaced with extension
 @Deprecated
 public class AmbNewFabricArray_c extends AmbNewArray_c implements
-    AmbNewFabricArray {
+AmbNewFabricArray {
 
   protected Expr loc;
 

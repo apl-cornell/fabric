@@ -31,7 +31,7 @@ public class CallToFabilExt_c extends CallToJavaExt_c {
       if (c.remoteWorker() != null) {
         result = (FabILCall) result.name(result.name() + "_remote");
         result = result.remoteWorker(c.remoteWorker());
-        List<Expr> args = new ArrayList<Expr>(result.arguments().size());
+        List<Expr> args = new ArrayList<>(result.arguments().size());
         // The first argument is actually a principal.
         args.add(nf.Call(Position.compilerGenerated(),
             rw.qq().parseExpr("worker$"),

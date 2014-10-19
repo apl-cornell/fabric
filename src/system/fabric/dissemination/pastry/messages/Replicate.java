@@ -128,7 +128,7 @@ public class Replicate extends AbstractRawMessage {
     this.sender = sender;
     level = buf.readInt();
     int numStores = buf.readInt();
-    skip = new OidKeyHashMap<Long>();
+    skip = new OidKeyHashMap<>();
 
     for (int i = 0; i < numStores; i++) {
       Store store = worker.getStore(buf.readUTF());

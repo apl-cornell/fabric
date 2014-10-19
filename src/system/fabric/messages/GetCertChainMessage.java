@@ -14,7 +14,7 @@ import fabric.worker.remote.RemoteWorker;
  * key.
  */
 public class GetCertChainMessage extends
-    Message<GetCertChainMessage.Response, fabric.messages.Message.NoException> {
+Message<GetCertChainMessage.Response, fabric.messages.Message.NoException> {
   // ////////////////////////////////////////////////////////////////////////////
   // message contents //
   // ////////////////////////////////////////////////////////////////////////////

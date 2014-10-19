@@ -23,8 +23,7 @@ public class Main extends polyglot.main.Main {
 
   @Override
   protected List<String> getSystemJavacArgs(Options options) {
-    List<String> result =
-        new ArrayList<String>(super.getSystemJavacArgs(options));
+    List<String> result = new ArrayList<>(super.getSystemJavacArgs(options));
     result.add("-source");
     result.add("1.7");
     result.add("-target");

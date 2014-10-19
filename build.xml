@@ -1852,6 +1852,7 @@ public class Version {
     <java classname="jflex.Main" fork="true" dir="${lexer.dir}"
         failonerror="true">
       <classpath refid="polyglot.classpath" />
+            <arg line="--noinputstreamctor" />
       <arg value="${jflex.file}" />
     </java>
   </target>

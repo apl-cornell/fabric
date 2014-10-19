@@ -70,7 +70,7 @@ public class NewFabricArrayExt_c extends AnnotatedExt_c {
       newArray = newArray.init(init);
 
       // Translation of initializer will be the array itself.
-      return (Expr) newArray.visitChild(init, rewriter);
+      return newArray.visitChild(init, rewriter);
     }
 
     return null;

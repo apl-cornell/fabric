@@ -66,24 +66,24 @@ public class RemoteCallWrapperAdder extends NodeVisitor {
           String cm_fmt =
               "%T " + md.name() + REMOTE_WRAPPER_SUFFIX + "(%LF) { %LS }";
 
-          List<Formal> formals = new ArrayList<Formal>(md.formals().size() + 1);
+          List<Formal> formals = new ArrayList<>(md.formals().size() + 1);
           formals.add(createWorkerFormal());
           formals.addAll(md.formals());
 
           String call_fmt = "%s(%LE);";
-          List<Expr> args = new ArrayList<Expr>(md.formals().size());
+          List<Expr> args = new ArrayList<>(md.formals().size());
           for (Formal formal : md.formals()) {
             Local l = nf.Local(Position.compilerGenerated(), formal.id());
             args.add(l);
           }
           Stmt call = qq.parseStmt(call_fmt, md.name(), args);
           Stmt thrw = qq.parseStmt("throw new NullPointerException();");
-          List<Stmt> stmts = new LinkedList<Stmt>();
+          List<Stmt> stmts = new LinkedList<>();
           stmts.add(call);
           stmts.add(thrw);
 
           List<TypeNode> throwTypes =
-              new ArrayList<TypeNode>(md.throwTypes().size() + 1);
+              new ArrayList<>(md.throwTypes().size() + 1);
           throwTypes.addAll(md.throwTypes());
 
           ClassMember newCM =
@@ -109,8 +109,8 @@ public class RemoteCallWrapperAdder extends NodeVisitor {
   }
 
   protected Formal createWorkerFormal() {
-    List<LabelComponentNode> components = new ArrayList<LabelComponentNode>(2);
-    List<PrincipalNode> writers = new ArrayList<PrincipalNode>();
+    List<LabelComponentNode> components = new ArrayList<>(2);
+    List<PrincipalNode> writers = new ArrayList<>();
 
     writers.add(nf.CanonicalPrincipalNode(Position.compilerGenerated(),
         ts.topPrincipal(Position.compilerGenerated())));

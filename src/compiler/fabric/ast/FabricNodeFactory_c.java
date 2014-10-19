@@ -45,7 +45,7 @@ import fabric.extension.LocatedExt_c;
  * NodeFactory for fabric extension.
  */
 public class FabricNodeFactory_c extends JifNodeFactory_c implements
-    FabricNodeFactory {
+FabricNodeFactory {
 
   // ////////////////////////////////////////////////////////////////////////////
   // public constructors //
@@ -157,11 +157,13 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
   @Override
   public NewFabricArray NewFabricArray(Position pos, TypeNode base,
       Expr location, List<Expr> dims, int addDims, FabricArrayInit init) {
-    // XXX location is dropped!
     NewFabricArray result =
         new NewFabricArray_c(pos, base, dims, addDims, init);
     result = ext(result, fabricExtFactory().extNewFabricArray());
     result = del(result, fabricDelFactory().delNewFabricArray());
+
+    LocatedExt_c ext = (LocatedExt_c) FabricUtil.fabricExt(result);
+    result = FabricUtil.updateFabricExt(result, ext.location(location));
     return result;
   }
 
@@ -267,7 +269,7 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
   public PrincipalExpr PrincipalExpr(Position pos, PrincipalNode principal,
       Expr location) {
     PrincipalExpr n = PrincipalExpr(pos, principal);
-    // XXX yuck. This should be done by modifying Jif's del factory. 
+    // XXX yuck. This should be done by modifying Jif's del factory.
     n = del(n, ((FabricDelFactory) delFactory()).delPrincipalExpr());
     n = setLocation(n, location);
     return n;
@@ -386,7 +388,7 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
 
   /**
    * Updates the provided node with a given location.
-   * 
+   *
    * @param result
    *          a Node having a LocatedExt as a Fabric extension
    * @param location

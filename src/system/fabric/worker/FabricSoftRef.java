@@ -9,8 +9,7 @@ import fabric.worker.transaction.ReadMap;
 
 public class FabricSoftRef extends SoftReference<_Impl> {
 
-  private static final ReferenceQueue<_Impl> queue =
-      new ReferenceQueue<_Impl>();
+  private static final ReferenceQueue<_Impl> queue = new ReferenceQueue<>();
 
   static {
     new RefCollector().start();

@@ -255,7 +255,7 @@ public abstract class Options {
         String defaultValue) {
       this.kind = kind;
 
-      this.ids = new LinkedHashSet<String>(ids.length);
+      this.ids = new LinkedHashSet<>(ids.length);
       for (String flag : ids)
         this.ids.add(flag);
 
@@ -271,7 +271,7 @@ public abstract class Options {
 
     /**
      * Handles a usage flag.
-     * 
+     *
      * @param args
      *          Arguments from the command line.
      * @param index
@@ -306,7 +306,7 @@ public abstract class Options {
 
     /**
      * Outputs this flag and a description of its usage in a nice format.
-     * 
+     *
      * @param out
      *          output PrintStream
      */
@@ -364,7 +364,7 @@ public abstract class Options {
   }
 
   protected Options() {
-    this.flags = new TreeSet<Flag>();
+    this.flags = new TreeSet<>();
 
     // By default, add help and version flags.
     flags.add(new Flag(Kind.HELP,
@@ -490,7 +490,7 @@ public abstract class Options {
   }
 
   private void checkFlagConsistency() {
-    Set<String> flagIDs = new HashSet<String>();
+    Set<String> flagIDs = new HashSet<>();
     for (Flag flag : flags) {
       for (String id : flag.ids) {
         if (flagIDs.contains(id)) {
@@ -510,7 +510,7 @@ public abstract class Options {
 
   /**
    * Handles an argument that doesn't match any known flag.
-   * 
+   *
    * @param args
    *          Arguments from the command line.
    * @param index

@@ -14,7 +14,7 @@ import fabric.worker.remote.RemoteWorker;
  * object IDs at a store.
  */
 public final class AllocateMessage extends
-    Message<AllocateMessage.Response, AccessException> {
+Message<AllocateMessage.Response, AccessException> {
 
   // ////////////////////////////////////////////////////////////////////////////
   // message contents //

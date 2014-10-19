@@ -58,7 +58,7 @@ public class PartialObjectGroup extends ObjectGrouper.AbstractGroup {
    * Adds a surrogate object to the group. The caller is responsible for
    * ensuring that the given arguments are consistent, and the given
    * SerializedObject represents a surrogate object.
-   * 
+   *
    * @param onum the surrogate object's onum.
    * @param obj the surrogate object.
    */

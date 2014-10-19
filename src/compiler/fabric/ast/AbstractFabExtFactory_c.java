@@ -11,7 +11,7 @@ import polyglot.ast.ExtFactory;
  * delegates to the factory method for its parent class's extension.
  */
 public class AbstractFabExtFactory_c extends AbstractJifExtFactory_c implements
-    FabricExtFactory {
+FabricExtFactory {
 
   public AbstractFabExtFactory_c() {
   }

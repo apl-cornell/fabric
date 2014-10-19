@@ -14,8 +14,8 @@ import fabric.worker.remote.RemoteWorker;
  * determine whether a transaction failed because of stale data.
  */
 public final class InterWorkerStalenessMessage
-    extends
-    Message<InterWorkerStalenessMessage.Response, fabric.messages.Message.NoException> {
+extends
+Message<InterWorkerStalenessMessage.Response, fabric.messages.Message.NoException> {
   // ////////////////////////////////////////////////////////////////////////////
   // message contents //
   // ////////////////////////////////////////////////////////////////////////////

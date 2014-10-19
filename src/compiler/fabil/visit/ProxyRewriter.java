@@ -36,8 +36,7 @@ public class ProxyRewriter extends NodeVisitor {
   protected FabILNodeFactory nf;
   protected FabILTypeSystem ts;
 
-  private final Stack<Map<LocalInstance, String>> shadowStack =
-      new Stack<Map<LocalInstance, String>>();
+  private final Stack<Map<LocalInstance, String>> shadowStack = new Stack<>();
   private boolean inConstructorCall;
 
   public ProxyRewriter(ExtensionInfo extInfo) {
@@ -159,7 +158,7 @@ public class ProxyRewriter extends NodeVisitor {
     }
 
     Block b = n.body();
-    List<Stmt> l = new ArrayList<Stmt>(b.statements());
+    List<Stmt> l = new ArrayList<>(b.statements());
 
     int i = 0;
     for (; i < l.size(); i++) {
@@ -176,7 +175,7 @@ public class ProxyRewriter extends NodeVisitor {
 
   private List<Stmt> shadowDecls() {
     Map<LocalInstance, String> shadows = shadowStack.peek();
-    List<Stmt> l = new ArrayList<Stmt>(shadows.size());
+    List<Stmt> l = new ArrayList<>(shadows.size());
 
     for (Map.Entry<LocalInstance, String> e : shadows.entrySet()) {
       LocalInstance li = e.getKey();
