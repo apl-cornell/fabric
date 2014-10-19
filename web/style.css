@@ -35,11 +35,6 @@ h3 {
   margin-bottom: 5px;
 }
 
-#fabric-logo {
-  height: 86px;
-  display: inline-block;
-}
-
 div.content {
   margin: 0 auto;
   min-width: 730px;
@@ -47,32 +42,60 @@ div.content {
 }
 
 div.top {
-  background-color: #48C;
-  background-image: url('images/fabric-logo2.png');
-  background-repeat: no-repeat;
-  background-position: 12px center;
-  background-size: auto 86px;
-  text-shadow: #102010 2px 2px 2px;
-  padding: 11px 0;
-  height: 86px;
+  background: -webkit-linear-gradient(#36a1ff, #08f); /* Safari 5.1 - 6.0 */
+  background: -o-linear-gradient(#36a1ff, #08f); /* Opera 11.1 - 12.0 */
+  background: -moz-linear-gradient(#36a1ff, #08f); /* Firefox 3.6 - 15 */
+  background: linear-gradient(#36a1ff, #08f); /* standard syntax */
   width: 100%;
+  min-width: 730px;
   display: table;
 
+  color: blue;
   font-family: "Cronos Pro", "Trebuchet MS", "Lucida Sans", "Helvetica Neue",
     Helvetica, Arial, sans-serif;
   font-size: 15px;
   line-height: 18px;
+  vertical-align: bottom;
+}
+
+div.motto {
+  width: 100%;
+  padding: 11px 0;
+  font-size: 200%;
+  color: #aef;
+  background: linear-gradient(#36a1ff, #08f);
+  font-weight: bold;
+  margin: 10px auto 5px 130px;
+  padding: 0 0 0 1em;
+  vertical-align: middle;
+  line-height: 40px;
+  display: table-cell;
+  text-shadow: rgba(0,0,0,0.5) 0 1px 1px;
 }
 
 div.top a { color: white; }
 div.top a:hover { color: #ffff80; }
+
+div.logo {
+  display: table-cell;
+  padding: 11px;
+  background: linear-gradient(#fcfeff, #f2f9ff);
+}
+
+img.logo {
+  width: 160px;
+  display: table-cell;
+  vertical-align: middle;
+}
 
 div.menu {
   display: table-cell;
   vertical-align: middle;
   text-align: right;
   margin: 0 0 0 auto;
-  padding: 0 12px;
+  padding: 11px 12px;
+  font-size: 120%;
+  line-height: 25px;
 }
 
 div.menu > ul {
@@ -164,8 +187,11 @@ form.download > ul > li:before {
 input.download {
   color: white;
   font-size: 16px;
+  background: -webkit-linear-gradient(#1a4, #164);
+  background: -o-linear-gradient(#1a4, #164);
+  background: -moz-linear-gradient(#1a4, #164);
+  background: linear-gradient(#1a4, #164);
   background-color: #184;
-  background-image: -moz-linear-gradient(center top, #1a4, #164);
   background-repeat: repeat-x;
   border: 1px solid #0d4d33;
   border-radius: 3px;

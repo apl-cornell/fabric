@@ -54,7 +54,7 @@ public class MemoryDB extends ObjectDB {
   /**
    * Opens the store contained in file "var/storeName" if it exists, or an empty
    * store otherwise.
-   * 
+   *
    * @param name
    *          name of store to create database for.
    */
@@ -72,12 +72,12 @@ public class MemoryDB extends ObjectDB {
       nextOnum = oin.readLong();
 
       int size = oin.readInt();
-      this.objectTable = new ConcurrentLongKeyHashMap<SerializedObject>(size);
+      this.objectTable = new ConcurrentLongKeyHashMap<>(size);
       for (int i = 0; i < size; i++)
         this.objectTable.put(oin.readLong(), new SerializedObject(oin));
     } catch (Exception e) {
       // TODO: distinguish invalid files from nonexistent
-      this.objectTable = new ConcurrentLongKeyHashMap<SerializedObject>();
+      this.objectTable = new ConcurrentLongKeyHashMap<>();
     }
 
     this.nextOnum = new MutableLong(nextOnum);
@@ -164,23 +164,23 @@ public class MemoryDB extends ObjectDB {
   public void close() throws IOException {
     // XXX TODO Save prepared txs to stable storage, implement finishPrepareWrites().
 
-    ObjectOutputStream oout =
-        new ObjectOutputStream(Resources.writeFile("var", name));
-    oout.writeBoolean(isInitialized);
+    try (ObjectOutputStream oout =
+        new ObjectOutputStream(Resources.writeFile("var", name))) {
+      oout.writeBoolean(isInitialized);
 
-    synchronized (nextOnum) {
-      oout.writeLong(nextOnum.value);
+      synchronized (nextOnum) {
+        oout.writeLong(nextOnum.value);
 
-      oout.writeInt(this.objectTable.size());
-      for (LongKeyMap.Entry<SerializedObject> entry : this.objectTable
-          .entrySet()) {
-        oout.writeLong(entry.getKey());
-        entry.getValue().write(oout);
+        oout.writeInt(this.objectTable.size());
+        for (LongKeyMap.Entry<SerializedObject> entry : this.objectTable
+            .entrySet()) {
+          oout.writeLong(entry.getKey());
+          entry.getValue().write(oout);
+        }
       }
-    }
 
-    oout.flush();
-    oout.close();
+      oout.flush();
+    }
   }
 
   /**

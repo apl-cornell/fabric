@@ -11,7 +11,7 @@ import polyglot.types.Type;
 import fabric.types.FabricReferenceType;
 
 /**
- * 
+ *
  */
 public class FabricArrayAccessExt extends JifArrayAccessExt {
 

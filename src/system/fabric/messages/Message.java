@@ -37,11 +37,11 @@ import fabric.worker.remote.RemoteWorker;
  * support this, each Message type is bound to a specific Response type. On the
  * sender side, this allows type safety in the <code>send</code> method, for
  * example:<br>
- * 
+ *
  * <pre>
  * ReadMessage.Response r = new ReadMessage(...).send(...);
  * </pre>
- * 
+ *
  * while on the receiver side, type safety is enforced by only accepting
  * <code>R</code> in the <code>respond(...)</code> method.
  * </p>
@@ -53,7 +53,7 @@ import fabric.worker.remote.RemoteWorker;
  * <code>CommitTransactionMessage</code>) go to both, and Java doesn't support
  * multiple inheritance.
  * </p>
- * 
+ *
  * @param <N>
  *          The kind of node that can send messages of this type.
  * @param <R>
@@ -74,7 +74,7 @@ public abstract class Message<R extends Message.Response, E extends FabricExcept
 
   /**
    * Sends this message to the given node and awaits a response.
-   * 
+   *
    * @return the reply from the node.
    * @throws E
    *           if an error occurs at the remote node while handling the message.
@@ -116,7 +116,7 @@ public abstract class Message<R extends Message.Response, E extends FabricExcept
 
   /**
    * Visitor method.
-   * 
+   *
    * @param client
    *          the node that is issuing the request.
    * @param handler
@@ -128,7 +128,7 @@ public abstract class Message<R extends Message.Response, E extends FabricExcept
 
   /**
    * Read a Message from the given <code>DataInput</code>
-   * 
+   *
    * @throws IOException
    *           If a malformed message is sent, or in the case of a failure in
    *           the <code>DataInput</code> provided.
@@ -151,7 +151,7 @@ public abstract class Message<R extends Message.Response, E extends FabricExcept
 
   /**
    * Send a successful response this message.
-   * 
+   *
    * @param out
    *          the channel on which to send the response
    * @param response
@@ -175,7 +175,7 @@ public abstract class Message<R extends Message.Response, E extends FabricExcept
 
   /**
    * Send a response to this message that indicates an exception.
-   * 
+   *
    * @param out
    *          the channel on which to send the response
    * @param e
@@ -315,7 +315,7 @@ public abstract class Message<R extends Message.Response, E extends FabricExcept
 
   /**
    * Constructs a message of the given <code>MessageType</code>
-   * 
+   *
    * @param exceptionClass
    *          TODO
    * @param exceptionClass
@@ -336,7 +336,7 @@ public abstract class Message<R extends Message.Response, E extends FabricExcept
 
   /**
    * Deserializes a fabric object reference.
-   * 
+   *
    * @param type
    *          The type of the reference being read. This must be the interface
    *          corresponding to the Fabric type, and not the _Proxy or _Impl
@@ -429,7 +429,7 @@ public abstract class Message<R extends Message.Response, E extends FabricExcept
 
   /**
    * Writes this message out on the given output stream.
-   * 
+   *
    * @throws IOException
    *           if the <code>DataOutput</code> fails.
    */
@@ -439,7 +439,7 @@ public abstract class Message<R extends Message.Response, E extends FabricExcept
    * Each subclass should have a constructor of the form: protected
    * Message(DataInput in) throws IOException that constructs a message of the
    * given type, reading the data from the provided <code>DataInput</code>.
-   * 
+   *
    * @throws IOException
    *           if the message is malformed, or if the <code>DataInput</code>
    *           fails.
@@ -450,7 +450,7 @@ public abstract class Message<R extends Message.Response, E extends FabricExcept
   /**
    * Creates a Response message of the appropriate type using the provided
    * <code>DataOutput</code>
-   * 
+   *
    * @throws IOException
    *           if the response is malformed, or if the <code>DataInput</code>
    *           fails.
@@ -460,7 +460,7 @@ public abstract class Message<R extends Message.Response, E extends FabricExcept
   /**
    * Writes a Response message of the appropriate type using the provided
    * <code>DataOutput</code>.
-   * 
+   *
    * @throws IOException
    *           if the <code>DataOutput</code> fails.
    */

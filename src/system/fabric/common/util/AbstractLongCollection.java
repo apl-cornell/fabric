@@ -44,7 +44,7 @@ package fabric.common.util;
  * The programmer should provide a no-argument constructor, and one that accepts
  * another Collection, as recommended by the Collection interface.
  * Unfortunately, there is no way to enforce this in Java.
- * 
+ *
  * @author Original author unknown
  * @author Bryce McKinlay
  * @author Eric Blake (ebb9@email.byu.edu)
@@ -54,7 +54,7 @@ package fabric.common.util;
  * @see AbstractLongSet
  */
 public abstract class AbstractLongCollection implements LongCollection,
-    LongIterable {
+LongIterable {
   /**
    * The main constructor, for use by subclasses.
    */
@@ -65,7 +65,7 @@ public abstract class AbstractLongCollection implements LongCollection,
    * Return an Iterator over this collection. The iterator must provide the
    * hasNext and next methods and should in addition provide remove if the
    * collection is modifiable.
-   * 
+   *
    * @return an iterator
    */
   @Override
@@ -74,7 +74,7 @@ public abstract class AbstractLongCollection implements LongCollection,
   /**
    * Return the number of elements in this collection. If there are more than
    * Integer.MAX_VALUE elements, return Integer.MAX_VALUE.
-   * 
+   *
    * @return the size
    */
   @Override
@@ -86,7 +86,7 @@ public abstract class AbstractLongCollection implements LongCollection,
    * the collection is to be modifiable. If the collection does not accept
    * duplicates, simply return false. Collections may specify limitations on
    * what may be added.
-   * 
+   *
    * @param o
    *          the object to add
    * @return true if the add operation caused the Collection to change
@@ -112,7 +112,7 @@ public abstract class AbstractLongCollection implements LongCollection,
    * the add method does). The behavior is unspecified if the specified
    * collection is modified during the iteration, including the special case of
    * trying addAll(this) on a non-empty collection.
-   * 
+   *
    * @param c
    *          the collection to add the elements of to this collection
    * @return true if the add operation caused the Collection to change
@@ -146,7 +146,7 @@ public abstract class AbstractLongCollection implements LongCollection,
    * UnsupportedOperationException if the Iterator's remove method does) until
    * there are no more elements to remove. Many implementations will have a
    * faster way of doing this.
-   * 
+   *
    * @throws UnsupportedOperationException
    *           if the Iterator returned by iterator does not provide an
    *           implementation of remove
@@ -169,7 +169,7 @@ public abstract class AbstractLongCollection implements LongCollection,
    * and iterates over it, testing each element for equality with the given
    * object. If it is equal, true is returned. Otherwise false is returned when
    * the end of the collection is reached.
-   * 
+   *
    * @param o
    *          the object to remove from this collection
    * @return true if this collection contains an object equal to o
@@ -188,7 +188,7 @@ public abstract class AbstractLongCollection implements LongCollection,
    * collection. This implementation iterates over the given collection, testing
    * whether each element is contained in this collection. If any one is not,
    * false is returned. Otherwise true is returned.
-   * 
+   *
    * @param c
    *          the collection to test against
    * @return true if this collection contains all the elements in the given
@@ -209,7 +209,7 @@ public abstract class AbstractLongCollection implements LongCollection,
   /**
    * Test whether this collection is empty. This implementation returns size()
    * == 0.
-   * 
+   *
    * @return true if this collection is empty.
    * @see #size()
    */
@@ -228,7 +228,7 @@ public abstract class AbstractLongCollection implements LongCollection,
    * method will fail with an UnsupportedOperationException if the Iterator's
    * remove method does). After the first element has been removed, true is
    * returned; if the end of the collection is reached, false is returned.
-   * 
+   *
    * @param o
    *          the object to remove from this collection
    * @return true if the remove operation caused the Collection to change, or
@@ -256,7 +256,7 @@ public abstract class AbstractLongCollection implements LongCollection,
    * collection. If so, it is removed by the Iterator's remove method (thus this
    * method will fail with an UnsupportedOperationException if the Iterator's
    * remove method does).
-   * 
+   *
    * @param c
    *          the collection to remove the elements of
    * @return true if the remove operation caused the Collection to change
@@ -279,7 +279,7 @@ public abstract class AbstractLongCollection implements LongCollection,
    * method will fail with an UnsupportedOperationException if the Iterator's
    * remove method does). This method is necessary for ArrayList, which cannot
    * publicly override removeAll but can optimize this call.
-   * 
+   *
    * @param c
    *          the collection to remove the elements of
    * @return true if the remove operation caused the Collection to change
@@ -309,7 +309,7 @@ public abstract class AbstractLongCollection implements LongCollection,
    * collection. If not, it is removed by the Iterator's remove method (thus
    * this method will fail with an UnsupportedOperationException if the
    * Iterator's remove method does).
-   * 
+   *
    * @param c
    *          the collection to retain the elements of
    * @return true if the remove operation caused the Collection to change
@@ -332,7 +332,7 @@ public abstract class AbstractLongCollection implements LongCollection,
    * this method will fail with an UnsupportedOperationException if the
    * Iterator's remove method does). This method is necessary for ArrayList,
    * which cannot publicly override retainAll but can optimize this call.
-   * 
+   *
    * @param c
    *          the collection to retain the elements of
    * @return true if the remove operation caused the Collection to change
@@ -361,7 +361,7 @@ public abstract class AbstractLongCollection implements LongCollection,
    * over the collection, setting each element of the array from the value
    * returned by the iterator. The returned array is safe, and is not backed by
    * the collection.
-   * 
+   *
    * @return an array containing the elements of this collection
    */
   @Override
@@ -388,7 +388,7 @@ public abstract class AbstractLongCollection implements LongCollection,
    * null, and the created array is returned. The returned array is safe; it is
    * not backed by the collection. Note that null may not mark the last element,
    * if the collection allows null elements.
-   * 
+   *
    * @param a
    *          the array to copy into, or of the correct run-time type
    * @return the array that was produced
@@ -419,7 +419,7 @@ public abstract class AbstractLongCollection implements LongCollection,
    * is returned by the iterator. "<this>" is inserted when the collection
    * contains itself (only works for direct containment, not for collections
    * inside collections).
-   * 
+   *
    * @return a String representation of the Collection
    */
   @Override
@@ -439,7 +439,7 @@ public abstract class AbstractLongCollection implements LongCollection,
 
   /**
    * Compare two objects according to Collection semantics.
-   * 
+   *
    * @param o1
    *          the first object
    * @param o2
@@ -454,7 +454,7 @@ public abstract class AbstractLongCollection implements LongCollection,
 
   /**
    * Hash an object according to Collection semantics.
-   * 
+   *
    * @param o
    *          the object to hash
    * @return o1 == null ? 0 : o1.hashCode()
@@ -467,7 +467,7 @@ public abstract class AbstractLongCollection implements LongCollection,
 
   /**
    * Hash an object according to Collection semantics.
-   * 
+   *
    * @param o
    *          the object to hash
    * @return o1 == null ? 0 : o1.hashCode()

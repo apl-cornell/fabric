@@ -27,15 +27,14 @@ public class LongKeyCache<V> {
     }
   }
 
-  private static final ReferenceQueue<Object> queue =
-      new ReferenceQueue<Object>();
+  private static final ReferenceQueue<Object> queue = new ReferenceQueue<>();
 
   static {
     new Collector().start();
   }
 
   public LongKeyCache() {
-    this.map = new ConcurrentLongKeyHashMap<ValueSoftRef<V>>();
+    this.map = new ConcurrentLongKeyHashMap<>();
   }
 
   public void clear() {
@@ -59,7 +58,7 @@ public class LongKeyCache<V> {
   public V put(long key, V value) {
     ValueSoftRef<V> ref = null;
     if (value != null) {
-      ref = new ValueSoftRef<V>(this, key, value);
+      ref = new ValueSoftRef<>(this, key, value);
     }
 
     ref = map.put(key, ref);
@@ -75,13 +74,13 @@ public class LongKeyCache<V> {
    *   else return cache.get(key);
    * </code>
    * except that the action is performed atomically.
-   * 
+   *
    * @return the previous value associated with the specified key, or null if
    *          there was no mapping for the key.
    */
   public V putIfAbsent(long key, V value) {
     ValueSoftRef<V> ref =
-        map.putIfAbsent(key, new ValueSoftRef<V>(this, key, value));
+        map.putIfAbsent(key, new ValueSoftRef<>(this, key, value));
     if (ref == null) return null;
     return ref.get();
   }
@@ -95,7 +94,7 @@ public class LongKeyCache<V> {
    *   } else return null;
    * </code>
    * except that the action is performed atomically.
-   * 
+   *
    * @param key key with which the specified value is associated.
    * @param value value to be associated with the specified key.
    * @return the previous value associated with the specified key, or null if
@@ -108,7 +107,7 @@ public class LongKeyCache<V> {
       if (curRef != null) curValue = curRef.get();
       if (curValue == null) return null;
 
-      if (map.replace(key, curRef, new ValueSoftRef<V>(this, key, value))) {
+      if (map.replace(key, curRef, new ValueSoftRef<>(this, key, value))) {
         return curValue;
       }
     }
@@ -124,7 +123,7 @@ public class LongKeyCache<V> {
    *   } else return false;
    * </code>
    * except that the action is performed atomically.
-   * 
+   *
    * @param key key with which the specified value is associated.
    * @param oldValue value expected to be associated with the specified key.
    * @param newValue value to be associated with the specified key.
@@ -139,7 +138,7 @@ public class LongKeyCache<V> {
     }
 
     if (oldValue != curValue && !oldValue.equals(curValue)) return false;
-    return map.replace(key, curRef, new ValueSoftRef<V>(this, key, newValue));
+    return map.replace(key, curRef, new ValueSoftRef<>(this, key, newValue));
   }
 
   public V remove(long key) {
@@ -158,7 +157,7 @@ public class LongKeyCache<V> {
    *   } else return false;
    * </code>
    * except that the action is performed atomically.
-   * 
+   *
    * @param key key with which the specified value is associated.
    * @param value value expected to be associated with the specified key.
    * @return true iff the value was removed.

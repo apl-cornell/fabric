@@ -42,7 +42,7 @@ import fabil.extension.FabILExtFactory_c;
  * NodeFactory for FabIL extension.
  */
 public class FabILNodeFactory_c extends NodeFactory_c implements
-    FabILNodeFactory {
+FabILNodeFactory {
 
   public FabILNodeFactory_c() {
     this(new FabILExtFactory_c(), new FabILDelFactory_c());

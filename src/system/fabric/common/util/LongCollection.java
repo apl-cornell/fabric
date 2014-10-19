@@ -51,7 +51,7 @@ package fabric.common.util;
  * creates an empty collection, and one which takes a Collection as an argument
  * and returns a collection containing the same elements (that is, creates a
  * copy of the argument using its own implementation).
- * 
+ *
  * @author Original author unknown
  * @author Eric Blake (ebb9@email.byu.edu)
  * @author Tom Tromey (tromey@redhat.com)
@@ -63,7 +63,7 @@ package fabric.common.util;
 public interface LongCollection extends LongIterable {
   /**
    * Add an element to this collection.
-   * 
+   *
    * @param o
    *          the object to add.
    * @return true if the collection was modified as a result of this action.
@@ -81,7 +81,7 @@ public interface LongCollection extends LongIterable {
 
   /**
    * Add the contents of a given collection to this collection.
-   * 
+   *
    * @param c
    *          the collection to add.
    * @return true if the collection was modified as a result of this action.
@@ -104,7 +104,7 @@ public interface LongCollection extends LongIterable {
   /**
    * Clear the collection, such that a subsequent call to isEmpty() would return
    * true.
-   * 
+   *
    * @throws UnsupportedOperationException
    *           if this collection does not support the clear operation.
    */
@@ -113,7 +113,7 @@ public interface LongCollection extends LongIterable {
   /**
    * Test whether this collection contains a given object as one of its
    * elements.
-   * 
+   *
    * @param o
    *          the element to look for.
    * @return true if this collection contains at least one element e such that
@@ -127,7 +127,7 @@ public interface LongCollection extends LongIterable {
 
   /**
    * Test whether this collection contains every element in a given collection.
-   * 
+   *
    * @param c
    *          the collection to test for.
    * @return true if for every element o in c, contains(o) would return true.
@@ -154,7 +154,7 @@ public interface LongCollection extends LongIterable {
    * obey the contract of the equals method of Object. In particular, care
    * should be taken to return false when o is a Set or a List, in order to
    * preserve the symmetry of the relation.
-   * 
+   *
    * @param o
    *          the object to compare to this collection.
    * @return true if the o is equal to this collection.
@@ -173,7 +173,7 @@ public interface LongCollection extends LongIterable {
    * obey the contract of the hashCode method of Object. Note that this method
    * renders it impossible to correctly implement both Set and List, as the
    * required implementations are mutually exclusive.
-   * 
+   *
    * @return a hash code for this collection.
    */
   @Override
@@ -181,14 +181,14 @@ public interface LongCollection extends LongIterable {
 
   /**
    * Test whether this collection is empty, that is, if size() == 0.
-   * 
+   *
    * @return true if this collection contains no elements.
    */
   boolean isEmpty();
 
   /**
    * Obtain an Iterator over this collection.
-   * 
+   *
    * @return an Iterator over the elements of this collection, in any order.
    */
   @Override
@@ -198,7 +198,7 @@ public interface LongCollection extends LongIterable {
    * Remove a single occurrence of an object from this collection. That is,
    * remove an element e, if one exists, such that <code>o == null ? e == null
    *   : o.equals(e)</code>.
-   * 
+   *
    * @param o
    *          the object to remove.
    * @return true if the collection changed as a result of this call, that is,
@@ -215,7 +215,7 @@ public interface LongCollection extends LongIterable {
   /**
    * Remove all elements of a given collection from this collection. That is,
    * remove every element e such that c.contains(e).
-   * 
+   *
    * @param c
    *          The collection of objects to be removed.
    * @return true if this collection was modified as a result of this call.
@@ -235,7 +235,7 @@ public interface LongCollection extends LongIterable {
   /**
    * Remove all elements of this collection that are not contained in a given
    * collection. That is, remove every element e such that !c.contains(e).
-   * 
+   *
    * @param c
    *          The collection of objects to be retained.
    * @return true if this collection was modified as a result of this call.
@@ -254,14 +254,14 @@ public interface LongCollection extends LongIterable {
 
   /**
    * Get the number of elements in this collection.
-   * 
+   *
    * @return the number of elements in the collection.
    */
   int size();
 
   /**
    * Copy the current contents of this collection into an array.
-   * 
+   *
    * @return an array of type Object[] and length equal to the size of this
    *         collection, containing the elements currently in this collection,
    *         in any order.
@@ -278,7 +278,7 @@ public interface LongCollection extends LongIterable {
    * returned. Note: The fact that the following element is set to null is only
    * useful if it is known that this collection does not contain any null
    * elements.
-   * 
+   *
    * @param a
    *          the array to copy this collection into.
    * @return an array containing the elements currently in this collection, in

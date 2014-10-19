@@ -103,7 +103,7 @@ public class FabILCall_c extends Call_c implements FabILCall {
         // The expression after @ has to be a RemoteWorker
         throw new SemanticException(
             "Remote method invocations expect remote workers.", c
-                .remoteWorker().position());
+            .remoteWorker().position());
       }
     }
 

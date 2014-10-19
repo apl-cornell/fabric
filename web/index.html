@@ -8,6 +8,14 @@
 
   <body>
     <div class="top">
+	<div class="logo">
+	  <img class="logo" alt="Fabric" src="images/fabric-grid.png">
+	</div>
+        <div class="motto">
+            strong security<br>
+            strong consistency<br>
+            open and decentralized
+        </div>
         <div class="menu">
           <ul>
             <li><a href="#downloads">Downloads</a></li>
@@ -22,7 +30,7 @@
       <div class="inset">
         <div class="intro">
           <img class="figure" width="305" height="355"
-              src="images/fabric-arch2.png" alt="Fabric architecture"/>
+              src="images/fabric-arch2.png" alt="Fabric architecture" />
 
           <form class="download" method="POST"
               action="http://www.cs.cornell.edu/w8/~andru/cgi-bin/download.pl"
@@ -45,26 +53,31 @@
           </form>
 
           <p>
-            Fabric is a federated, distributed system for securely and reliably
-            storing, sharing, and computing information. It is being developed
-            by the Applied Programming Languages Group at Cornell University.
+          Fabric is a high-level programming language for building open
+          distributed applications with strong security. Fabric enables
+          securely computing and storing information, and sharing code and data
+          across trust boundaries. It is being developed
+          by the Applied Programming Languages Group at Cornell University.
           </p>
 
           <p>
             Fabric presents a single-system image of all resources that can be
-            named by it, and provides security guarantees to mutually
-            distrusting principals using it, but it is a decentralized system
-            with no centralized security enforcement mechanism. Fabric provides
-            decentralized yet compositional security.
+            named by it, making programming easy. It is a decentralized system
+            with no central security enforcement mechanism, yet it provides
+            security guarantees to mutually distrusting users.  The key to
+            strong, compositional information security guarantees is the use
+            of information flow control.
           </p>
 
           <p>
-            The Fabric programming language, based on <a href="/jif">Jif</a>,
-            controls the placement of computation and data through type
-            annotations that set policies for information security. Strong
-            consistency is ensured through a hierarchical two-phase commit
-            protocol that respects information security. Fabric leverages
-            peer-to-peer replication to provide high availability.
+            Fabric's programming language, based on <a
+            href="/jif">Jif</a>, controls the placement of computation and
+            data through type annotations that set policies for information
+            security. Using information flow control, Fabric also makes
+            mobile code secure. Strong consistency is ensured through a hierarchical
+            two-phase commit protocol that respects information security.
+            Fabric also leverages peer-to-peer replication to provide high
+            availability.
           </p>                         
         </div> <!-- intro -->
 
@@ -73,7 +86,7 @@
             <a id="mailing-list"><h2>Mailing list</h2></a>
 
             <p>
-              sign up for news about fabric!
+              Sign up for news about Fabric!
             </p>
 
             <div id="mailing-list-div">
@@ -88,7 +101,7 @@
 
             <div id="mailing-list-div-noscript">
               <p>
-                send mail to
+                Send mail to
                 <a class="mailing-list"
                     href="mailto:fabric-users-l-request@cornell.edu?subject=join">
                   fabric-users-l-request@cornell.edu
@@ -249,6 +262,21 @@
           </a>
 
           <ol class="pub-list">
+            <li>
+	      <cite>
+		<a href="http://www.cs.cornell.edu/andru/papers/plas14/index.html">
+		  A language-based approach to secure quorum replication
+		</a>
+	      </cite>
+	      <div>
+                <span class="pub-title">
+		  9th ACM SIGPLAN Workshop on Programming Languages and
+		  Analysis for Security
+		</span> (<a href="http://researcher.watson.ibm.com/researcher/view_group.php?id=5237">PLAS 2014</a>),
+		July 2014.
+		Lantian Zheng and Andrew C. Myers.
+	      </div>
+            </li>
             <li>
               <cite>
                 <a href="http://www.cs.cornell.edu/andru/papers/persist">

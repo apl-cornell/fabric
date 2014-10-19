@@ -4,7 +4,7 @@ import fabric.lang.security.Principal;
 import fabric.net.RemoteNode;
 
 /**
- * A pair consisting of a remote node and its authenticated principal, if any. 
+ * A pair consisting of a remote node and its authenticated principal, if any.
  */
 public class RemoteIdentity<Node extends RemoteNode<Node>> {
   /**

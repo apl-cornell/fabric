@@ -43,7 +43,7 @@ public class TransactionID implements FastSerializable, Serializable {
 
   /**
    * Creates a new transaction ID that is a child of the given tid.
-   * 
+   *
    * @param parent
    */
   public TransactionID(TransactionID parent) {

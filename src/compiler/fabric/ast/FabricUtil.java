@@ -8,7 +8,7 @@ public class FabricUtil {
   /**
    * Gets the Fabric extension. Note that Fabric extensions are NOT subclasses
    * of Jif extensions.
-   * 
+   *
    * @param n
    */
   public static FabricExt fabricExt(Node n) {

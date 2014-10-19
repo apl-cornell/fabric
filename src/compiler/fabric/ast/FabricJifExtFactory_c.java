@@ -56,7 +56,7 @@ import fabric.translate.WorkerToFabilExt_c;
  * for atomic sections.
  */
 public class FabricJifExtFactory_c extends JifExtFactory_c implements
-    FabricExtFactory {
+FabricExtFactory {
   // ////////////////////////////////////////////////////////////////////////////
   // overridden Jif AST nodes (TODO: should be ext.del's?) //
   // ////////////////////////////////////////////////////////////////////////////

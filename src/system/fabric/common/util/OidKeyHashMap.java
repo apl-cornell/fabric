@@ -19,7 +19,7 @@ public final class OidKeyHashMap<V> implements Iterable<LongKeyMap<V>> {
   V nullEntry;
 
   public OidKeyHashMap() {
-    map = new HashMap<Store, LongKeyMap<V>>();
+    map = new HashMap<>();
     hasNullEntry = false;
     nullEntry = null;
   }
@@ -31,7 +31,7 @@ public final class OidKeyHashMap<V> implements Iterable<LongKeyMap<V>> {
     this();
 
     for (Map.Entry<Store, LongKeyMap<V>> entry : other.map.entrySet()) {
-      this.map.put(entry.getKey(), new LongKeyHashMap<V>(entry.getValue()));
+      this.map.put(entry.getKey(), new LongKeyHashMap<>(entry.getValue()));
     }
 
     this.hasNullEntry = other.hasNullEntry;
@@ -97,7 +97,7 @@ public final class OidKeyHashMap<V> implements Iterable<LongKeyMap<V>> {
   public V put(Store store, long onum, V val) {
     LongKeyMap<V> submap = map.get(store);
     if (submap == null) {
-      submap = new LongKeyHashMap<V>();
+      submap = new LongKeyHashMap<>();
       map.put(store, submap);
     }
 

@@ -18,7 +18,7 @@ import fabric.worker.remote.RemoteWorker;
  * receive the next update to the object.
  */
 public final class DissemReadMessage extends
-    Message<DissemReadMessage.Response, AccessException> {
+Message<DissemReadMessage.Response, AccessException> {
   // ////////////////////////////////////////////////////////////////////////////
   // message contents //
   // ////////////////////////////////////////////////////////////////////////////

@@ -8,7 +8,7 @@ import polyglot.ast.Expr;
 import polyglot.types.SemanticException;
 
 /**
- * 
+ *
  */
 public class FabExternalPrincipalToJavaExpr_c extends PrincipalToJavaExpr_c {
 

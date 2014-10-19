@@ -11,7 +11,7 @@ import polyglot.types.SemanticException;
 import fabric.types.FabricReferenceType;
 
 /**
- * 
+ *
  */
 public class FabricInstanceofExt extends JifInstanceofExt {
 

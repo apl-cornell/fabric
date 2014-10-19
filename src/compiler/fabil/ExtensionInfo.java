@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.tools.FileObject;
 import javax.tools.StandardLocation;
@@ -20,6 +21,7 @@ import polyglot.frontend.Job;
 import polyglot.frontend.JobExt;
 import polyglot.frontend.Parser;
 import polyglot.frontend.Scheduler;
+import polyglot.frontend.Source;
 import polyglot.frontend.Source.Kind;
 import polyglot.frontend.TargetFactory;
 import polyglot.frontend.goals.Goal;
@@ -61,7 +63,7 @@ import fabric.worker.Worker;
  * Extension information for FabIL extension.
  */
 public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements
-    codebases.frontend.ExtensionInfo {
+codebases.frontend.ExtensionInfo {
   protected static URI platform_ns = URI.create("fab:platform");
   protected static URI local_ns = URI.create("fab:local");
 
@@ -97,7 +99,7 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements
     extFM.setLocation(options.class_output,
         Collections.singleton(options.classOutputDirectory()));
 
-    List<File> platform_directories = new ArrayList<File>();
+    List<File> platform_directories = new ArrayList<>();
     platform_directories.addAll(options.signaturepath());
     platform_directories.addAll(options.bootclasspath());
     extFM.setLocation(options.bootclasspath, platform_directories);
@@ -114,7 +116,7 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements
         Collections.singletonList(opt.sourceOutputDirectory());
     extFM.setLocation(StandardLocation.SOURCE_PATH, sourcepath);
 
-    List<File> classpath = new ArrayList<File>();
+    List<File> classpath = new ArrayList<>();
     classpath.addAll(opt.bootclasspathDirectories());
     for (URI u : opt.classpathURIs()) {
       if (u.getScheme().equals("file")) {
@@ -166,11 +168,16 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements
   }
 
   @Override
-  public Parser parser(Reader reader, FileSource source, ErrorQueue eq) {
+  public Parser parser(Reader reader, Source source, ErrorQueue eq) {
     CodebaseSource src = (CodebaseSource) source;
     Lexer lexer = new Lexer_c(reader, source, eq);
     Grm grm = new Grm(lexer, ts, nf, eq, src.canonicalNamespace());
     return new CupParser(grm, source, eq);
+  }
+
+  @Override
+  public Set<String> keywords() {
+    return new Lexer_c(null).keywords();
   }
 
   @Override
@@ -231,13 +238,13 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements
         Report.report(2, "Creating filesource from " + f);
       URI ns =
           getOptions().platformMode() ? platformNamespace() : localNamespace();
-      return new LocalSource(f, kind, ns);
+          return new LocalSource(f, kind, ns);
     }
   }
 
   /**
    * Creates namespace resolvers for FabIL namespaces.
-   * 
+   *
    * @param ns
    * @return
    */

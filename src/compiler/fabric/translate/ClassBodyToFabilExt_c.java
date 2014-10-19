@@ -16,7 +16,7 @@ public class ClassBodyToFabilExt_c extends ClassBodyToJavaExt_c {
   @Override
   public Node toJava(JifToJavaRewriter rw) throws SemanticException {
     ClassBody cb = (ClassBody) node();
-    List<ClassMember> members = new ArrayList<ClassMember>(cb.members());
+    List<ClassMember> members = new ArrayList<>(cb.members());
     ClassBodyJifExt_c cb_ext = (ClassBodyJifExt_c) JifUtil.jifExt(cb);
     List<ClassMember> remote_wrappers = cb_ext.remoteWrappers();
     members.addAll(remote_wrappers);
