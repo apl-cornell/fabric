@@ -1,6 +1,10 @@
 package fabric.common;
 
-public abstract class Lease implements Comparable<Lease> {
+import fabric.worker.remote.RemoteWorker;
+import java.util.Collections;
+import java.util.Set;
+
+public abstract class Lease /*implements Comparable<Lease>*/ {
   /**
    * Assumed maximum clock skew, in milliseconds.
    */
@@ -17,31 +21,29 @@ public abstract class Lease implements Comparable<Lease> {
   private final boolean writeable;
 
   /**
+   * Set of RemoteWorkers that should be contacted in addition to the store
+   * during in-term write prepare.
+   */
+  private final Set<RemoteWorker> lessees;
+
+  /**
    * @param expiry expiry time, in milliseconds since the epoch.
    * @param writeable boolean indicating if the object under this lease may be
    * written during the term.
+   * @param lessees Set of RemoteWorker nodes which should be contacted on an
+   * in-term write prepare.
    */
-  public Lease(long expiry, boolean writeable) {
+  public Lease(long expiry, boolean writeable, Set<RemoteWorker> lessees) {
     this.expiry = expiry;
     this.writeable = writeable;
-  }
-
-  /**
-   * Provided to help with deserialization constructor of subclasses.
-   *
-   * @param writeable boolean indicating if the object under this lease may be
-   * written during the term.
-   */
-  protected Lease(boolean writeable) {
-    this.expiry = 0;
-    this.writeable = writeable;
+    this.lessees = lessees;
   }
   
-
   // Deserialization constructor.
   protected Lease() {
     this.expiry = 0;
     this.writeable = true;
+    this.lessees = Collections.emptySet();
   }
 
   /**
@@ -56,6 +58,13 @@ public abstract class Lease implements Comparable<Lease> {
    */
   public boolean writeable() {
     return writeable;
+  }
+
+  /**
+   * @return an unmodifiable view of the lessee set.
+   */
+  public Set<RemoteWorker> lessees() {
+    return Collections.unmodifiableSet(lessees);
   }
 
   /**
@@ -113,12 +122,16 @@ public abstract class Lease implements Comparable<Lease> {
   /**
    * Orders by expiry time.
    */
+  /*
+  Not totally convinced we need comparable, we'll see.  One issue is that it's
+  unclear how to compare same-time but different lessees...
   @Override
   public int compareTo(Lease o) {
     if (expiry > o.expiry) return 1;
     if (expiry < o.expiry) return -1;
     return 0;
   }
+  */
 
   /**
    * Determines whether time1 is before time2, taking clock skew into account.
