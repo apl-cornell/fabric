@@ -12,7 +12,7 @@ import polyglot.types.Type;
 import polyglot.util.Position;
 
 /**
- * 
+ *
  */
 public class AccessPathStore extends AccessPath {
   protected final AccessPath path;

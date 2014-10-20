@@ -18,10 +18,21 @@ public class Version {
   private int patch = 2;
   private String branch = "warranties";
 
-  public int major() { return major; }
-  public int minor() { return minor; }
-  public int patch() { return patch; }
-  public String branch() { return branch; }
+  public int major() {
+    return major;
+  }
+
+  public int minor() {
+    return minor;
+  }
+
+  public int patch() {
+    return patch;
+  }
+
+  public String branch() {
+    return branch;
+  }
 
   @Override
   public String toString() {

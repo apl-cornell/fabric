@@ -8,7 +8,7 @@ import polyglot.types.Type;
 import polyglot.util.Position;
 
 public class FabricFieldInstance_c extends JifFieldInstance_c implements
-    FabricFieldInstance {
+FabricFieldInstance {
 
   public FabricFieldInstance_c(FabricTypeSystem ts, Position pos,
       ReferenceType container, Flags flags, Type type, ConfPolicy accessLabel,

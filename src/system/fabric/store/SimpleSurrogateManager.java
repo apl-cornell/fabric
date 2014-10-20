@@ -30,7 +30,7 @@ public class SimpleSurrogateManager implements SurrogateManager {
   public void createSurrogates(PrepareWritesRequest req) {
     // Maps remote refs -> surrogate onums.
     Map<Pair<String, Long>, Long> cache = new HashMap<>();
-    Collection<SerializedObject> surrogates = new ArrayList<SerializedObject>();
+    Collection<SerializedObject> surrogates = new ArrayList<>();
 
     Iterable<SerializedObject> chain = SysUtil.chain(req.creates, req.writes);
     for (SerializedObject obj : chain) {
@@ -40,7 +40,7 @@ public class SimpleSurrogateManager implements SurrogateManager {
 
       boolean hadRemotes = false;
       List<Long> newrefs =
-          new ArrayList<Long>(obj.getNumIntraStoreRefs()
+          new ArrayList<>(obj.getNumIntraStoreRefs()
               + obj.getNumInterStoreRefs() + 1);
 
       long updateLabelOnum;

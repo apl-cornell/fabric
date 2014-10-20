@@ -22,7 +22,7 @@ public final class ConcurrentOidKeyHashMap<V> implements
   final ReentrantLock nullEntryLock;
 
   public ConcurrentOidKeyHashMap() {
-    map = new ConcurrentHashMap<Store, ConcurrentLongKeyMap<V>>();
+    map = new ConcurrentHashMap<>();
     nullEntry = null;
     nullEntryLock = new ReentrantLock();
   }
@@ -35,7 +35,7 @@ public final class ConcurrentOidKeyHashMap<V> implements
 
     for (Map.Entry<Store, ConcurrentLongKeyMap<V>> entry : other.map.entrySet()) {
       this.map.put(entry.getKey(),
-          new ConcurrentLongKeyHashMap<V>(entry.getValue()));
+          new ConcurrentLongKeyHashMap<>(entry.getValue()));
     }
 
     this.nullEntry = other.nullEntry;
@@ -115,7 +115,7 @@ public final class ConcurrentOidKeyHashMap<V> implements
     ConcurrentLongKeyMap<V> existing = map.get(store);
     if (existing != null) return existing;
 
-    ConcurrentLongKeyMap<V> newMap = new ConcurrentLongKeyHashMap<V>();
+    ConcurrentLongKeyMap<V> newMap = new ConcurrentLongKeyHashMap<>();
     existing = map.putIfAbsent(store, newMap);
 
     return existing == null ? newMap : existing;

@@ -18,7 +18,7 @@ import fabric.common.exceptions.InternalError;
 
 /**
  * This is the home for all things threading.
- * 
+ *
  * @author mdgeorge
  */
 public class Threading {
@@ -72,7 +72,7 @@ public class Threading {
 
   /**
    * Get the thread pool.
-   * 
+   *
    * @throws InternalError
    *           if the thread pool is not initialized.
    */
@@ -136,7 +136,7 @@ public class Threading {
    *   }
    * });
    * </code>
-   * 
+   *
    * @author mdgeorge
    */
   public static abstract class NamedRunnable implements Runnable {
@@ -183,7 +183,7 @@ public class Threading {
    *   }
    * });
    * </code>
-   * 
+   *
    * @author mdgeorge
    */
   public static abstract class NamedCallable<V> implements Callable<V> {

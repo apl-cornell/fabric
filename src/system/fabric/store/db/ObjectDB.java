@@ -271,15 +271,12 @@ public abstract class ObjectDB {
 
   protected ObjectDB(String name, PrivateKey privateKey) {
     this.name = name;
-    this.pendingByTid =
-        new ConcurrentLongKeyHashMap<OidKeyHashMap<PendingTransaction>>();
-    this.writeLocks = new ConcurrentLongKeyHashMap<Long>();
-    this.writtenOnumsByTid =
-        new ConcurrentLongKeyHashMap<OidKeyHashMap<LongSet>>();
+    this.pendingByTid = new ConcurrentLongKeyHashMap<>();
+    this.writeLocks = new ConcurrentLongKeyHashMap<>();
+    this.writtenOnumsByTid = new ConcurrentLongKeyHashMap<>();
     this.objectGrouper = new ObjectGrouper(this, privateKey);
     this.longestWarranty = new VersionWarranty[] { new VersionWarranty(0) };
-    this.warrantyIssuer =
-        new LongKeyWarrantyIssuer<VersionWarranty>(new VersionWarranty(0));
+    this.warrantyIssuer = new LongKeyWarrantyIssuer<>(new VersionWarranty(0));
   }
 
   /**
@@ -291,8 +288,7 @@ public abstract class ObjectDB {
   public final void beginPrepareWrites(long tid, Principal worker) {
     // Ensure pendingByTid has a submap for the given TID.
     while (true) {
-      OidKeyHashMap<PendingTransaction> submap =
-          new OidKeyHashMap<PendingTransaction>();
+      OidKeyHashMap<PendingTransaction> submap = new OidKeyHashMap<>();
       OidKeyHashMap<PendingTransaction> existingSubmap =
           pendingByTid.putIfAbsent(tid, submap);
       if (existingSubmap != null) submap = existingSubmap;
@@ -611,7 +607,7 @@ public abstract class ObjectDB {
 
   /**
    * Causes the objects prepared in transaction [tid] to be discarded.
-   * 
+   *
    * @param tid
    *          the transaction id
    * @param worker
@@ -629,7 +625,7 @@ public abstract class ObjectDB {
 
   /**
    * Returns the object stored at a particular onum.
-   * 
+   *
    * @param onum
    *          the identifier
    * @return the object or null if no object exists at the given onum
@@ -759,7 +755,7 @@ public abstract class ObjectDB {
 
   /**
    * Returns the version number on the object stored at a particular onum.
-   * 
+   *
    * @throws AccessException
    *           if no object exists at the given onum.
    */
@@ -774,7 +770,7 @@ public abstract class ObjectDB {
    * Performs operations in response to a committed object update. Removes from
    * cache the glob associated with the onum and notifies the subscription
    * manager of the update.
-   * 
+   *
    * @param onum
    *          the onum of the object that was updated.
    * @param worker
@@ -807,7 +803,7 @@ public abstract class ObjectDB {
 
   /**
    * Determines whether an onum has outstanding uncommitted changes.
-   * 
+   *
    * @param onum
    *          the object number in question
    * @return true if the object has been changed by a transaction that hasn't
@@ -839,7 +835,7 @@ public abstract class ObjectDB {
    * The returned onums should be packed in the lower 48 bits. We assume that
    * the object database is never full, and can always provide new onums
    * </p>
-   * 
+   *
    * @param num
    *          the number of onums to return
    * @return num fresh onums
@@ -849,7 +845,7 @@ public abstract class ObjectDB {
   /**
    * Checks whether an object with the corresponding onum exists, in either
    * prepared or committed form.
-   * 
+   *
    * @param onum
    *          the onum of to check
    * @return true if an object exists for onum
@@ -865,7 +861,7 @@ public abstract class ObjectDB {
 
   /**
    * Gracefully shuts down the object database.
-   * 
+   *
    * @throws IOException
    */
   public abstract void close() throws IOException;

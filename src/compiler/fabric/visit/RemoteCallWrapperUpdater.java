@@ -59,7 +59,7 @@ public class RemoteCallWrapperUpdater extends NodeVisitor {
 
       if (!ts.isFabricClass(pct)) {
         // Remove all the remote wrappers.
-        List<ClassMember> members = new ArrayList<ClassMember>();
+        List<ClassMember> members = new ArrayList<>();
         for (ClassMember cm : cd.body().members()) {
           if (cm instanceof MethodDecl) {
             MethodDecl md = (MethodDecl) cm;

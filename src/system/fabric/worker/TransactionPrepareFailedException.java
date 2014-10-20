@@ -35,7 +35,7 @@ public class TransactionPrepareFailedException extends FabricException {
       Map<RemoteNode<?>, TransactionPrepareFailedException> failures) {
     this.versionConflicts = null;
 
-    messages = new ArrayList<String>();
+    messages = new ArrayList<>();
     for (Map.Entry<RemoteNode<?>, TransactionPrepareFailedException> entry : failures
         .entrySet()) {
       TransactionPrepareFailedException exn = entry.getValue();
@@ -49,10 +49,9 @@ public class TransactionPrepareFailedException extends FabricException {
 
   public TransactionPrepareFailedException(
       List<TransactionPrepareFailedException> causes) {
-    this.versionConflicts =
-        new LongKeyHashMap<Pair<SerializedObject, VersionWarranty>>();
+    this.versionConflicts = new LongKeyHashMap<>();
 
-    messages = new ArrayList<String>();
+    messages = new ArrayList<>();
     for (TransactionPrepareFailedException exc : causes) {
       if (exc.versionConflicts != null)
         versionConflicts.putAll(exc.versionConflicts);

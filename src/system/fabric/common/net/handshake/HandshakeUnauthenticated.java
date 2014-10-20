@@ -11,7 +11,7 @@ import fabric.worker.Worker;
 import fabric.worker.remote.RemoteWorker;
 
 public class HandshakeUnauthenticated<Node extends RemoteNode<Node>> implements
-    Protocol<Node> {
+Protocol<Node> {
   //
   // an incredibly simple handshake:
   // client -> server : name

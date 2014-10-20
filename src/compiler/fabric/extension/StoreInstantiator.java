@@ -23,7 +23,7 @@ import polyglot.util.Position;
 import fabric.types.AccessPathStore;
 
 /**
- * 
+ *
  */
 public class StoreInstantiator extends JifInstantiator {
   public static Label instantiate(Label L, JifContext callerContext,
@@ -126,7 +126,7 @@ public class StoreInstantiator extends JifInstantiator {
       List<ArgLabel> formalArgLabels, List<? extends Type> formalArgTypes,
       List<Label> actualArgLabels, List<Expr> actualArgExprs,
       List<Label> actualParamLabels, AccessPath storeap)
-      throws SemanticException {
+          throws SemanticException {
     JifTypeSystem ts = (JifTypeSystem) callerContext.typeSystem();
     AccessPath receiverPath;
     if (ts.isFinalAccessExprOrConst(receiverExpr, receiverType)) {
@@ -147,7 +147,7 @@ public class StoreInstantiator extends JifInstantiator {
       List<ArgLabel> formalArgLabels, List<? extends Type> formalArgTypes,
       List<Label> actualArgLabels, List<Expr> actualArgExprs,
       List<Label> actualParamLabels, AccessPath storeap)
-      throws SemanticException {
+          throws SemanticException {
     JifTypeSystem ts = (JifTypeSystem) callerContext.typeSystem();
     AccessPath receiverPath;
     if (ts.isFinalAccessExprOrConst(receiverExpr, receiverType)) {
@@ -168,7 +168,7 @@ public class StoreInstantiator extends JifInstantiator {
       List<ArgLabel> formalArgLabels, List<? extends Type> formalArgTypes,
       List<Label> actualArgLabels, List<Expr> actualArgExprs,
       List<Label> actualParamLabels, AccessPath storeap)
-      throws SemanticException {
+          throws SemanticException {
     JifTypeSystem ts = (JifTypeSystem) callerContext.typeSystem();
     AccessPath receiverPath;
     if (ts.isFinalAccessExprOrConst(receiverExpr, receiverType)) {

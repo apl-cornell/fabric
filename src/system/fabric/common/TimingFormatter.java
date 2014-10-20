@@ -9,11 +9,11 @@ import fabric.worker.Worker;
 /**
  * A log formatter for outputting timing information as comma separated values.
  * The output is of the format
- * 
+ *
  * <pre>
  * [clock time in ms], [worker name], thread [thread ID], [message]
  * </pre>
- * 
+ *
  * @author mdgeorge
  */
 public final class TimingFormatter extends Formatter {

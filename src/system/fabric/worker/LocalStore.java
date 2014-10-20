@@ -138,7 +138,7 @@ public final class LocalStore implements Store, Serializable {
 
   /**
    * The singleton LocalStore object is managed by the Worker class.
-   * 
+   *
    * @see fabric.worker.Worker.getLocalStore
    */
   protected LocalStore() {
@@ -156,15 +156,15 @@ public final class LocalStore implements Store, Serializable {
   }
 
   public void addLocalDelegation(Principal p, Principal q) {
-    localDelegates.add(new Pair<Principal, Principal>(p, q));
+    localDelegates.add(new Pair<>(p, q));
   }
 
   public void removeLocalDelegation(Principal p, Principal q) {
-    localDelegates.remove(new Pair<Principal, Principal>(p, q));
+    localDelegates.remove(new Pair<>(p, q));
   }
 
   public boolean localDelegatesTo(Principal p, Principal q) {
-    return localDelegates.contains(new Pair<Principal, Principal>(p, q));
+    return localDelegates.contains(new Pair<>(p, q));
   }
 
   public Principal getTopPrincipal() {
@@ -299,7 +299,7 @@ public final class LocalStore implements Store, Serializable {
 
         // Create root map.
         rootMap = new HashMap._Impl(LocalStore.this).fabric$util$HashMap$();
-        localDelegates = new HashSet<Pair<Principal, Principal>>();
+        localDelegates = new HashSet<>();
 
         return null;
       }

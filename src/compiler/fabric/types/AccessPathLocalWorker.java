@@ -9,7 +9,7 @@ import jif.visit.LabelChecker;
 import polyglot.util.Position;
 
 /**
- * 
+ *
  */
 public class AccessPathLocalWorker extends AccessPathLocal {
 

@@ -10,11 +10,12 @@ import polyglot.util.Copy;
 import fabric.lang.Codebase;
 import fabric.lang.security.Label;
 
-public interface NamespaceResolver extends TopLevelResolver, Copy {
+public interface NamespaceResolver extends TopLevelResolver,
+    Copy<NamespaceResolver> {
 
   /**
    * Check if a type object is in the cache, returning null if not.
-   * 
+   *
    * @param name
    *          The name to search for.
    */
@@ -22,7 +23,7 @@ public interface NamespaceResolver extends TopLevelResolver, Copy {
 
   /**
    * Add an importable type object to the cache.
-   * 
+   *
    * @param name
    *          The name of the new type.
    * @param q
@@ -34,7 +35,7 @@ public interface NamespaceResolver extends TopLevelResolver, Copy {
 
   /**
    * Add a type object to the cache, regardless of whether it exists already.
-   * 
+   *
    * @param name
    *          The name of the new type.
    * @param q
@@ -49,7 +50,7 @@ public interface NamespaceResolver extends TopLevelResolver, Copy {
 
   /**
    * Get the URI of a codebase using a local alias.
-   * 
+   *
    * @throws SemanticException
    */
   URI resolveCodebaseName(String name);
@@ -58,7 +59,7 @@ public interface NamespaceResolver extends TopLevelResolver, Copy {
 
   /**
    * Find a type object in this namespace by name.
-   * 
+   *
    * @param name
    *          The name to search for.
    */
@@ -67,7 +68,7 @@ public interface NamespaceResolver extends TopLevelResolver, Copy {
 
   /**
    * Find a type object in this namespace by name.
-   * 
+   *
    * @param name
    *          The name to search for.
    */
@@ -75,7 +76,7 @@ public interface NamespaceResolver extends TopLevelResolver, Copy {
 
   /**
    * Check if a package exists.
-   * 
+   *
    * @param name
    *          The name to search for.
    */
@@ -84,28 +85,28 @@ public interface NamespaceResolver extends TopLevelResolver, Copy {
   /**
    * Specify whether to use encoded class files to resolve names in this
    * namespace.
-   * 
+   *
    * @return previous value
    */
   boolean loadEncodedClasses(boolean use);
 
   /**
    * Specify whether to use raw class files to resolve names in this namespace.
-   * 
+   *
    * @return previous value
    */
   boolean loadRawClasses(boolean use);
 
   /**
    * Specify whether to use raw class files to resolve names in this namespace.
-   * 
+   *
    * @return previous value
    */
   boolean loadSource(boolean use);
 
   /**
    * Returns codebase if this namespace is backed by a codebase, otherwise null.
-   * 
+   *
    * @return
    */
   Codebase codebase();
@@ -113,7 +114,7 @@ public interface NamespaceResolver extends TopLevelResolver, Copy {
   /**
    * An (flow-lattice) upper bound on the integrity and confidentiality of
    * resolution through this namespace.
-   * 
+   *
    * @return
    */
   Label label();

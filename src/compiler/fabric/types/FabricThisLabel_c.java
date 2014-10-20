@@ -8,7 +8,7 @@ import polyglot.util.Position;
 import fabric.translate.FabricThisLabelToFabilExpr_c;
 
 /**
- * 
+ *
  */
 public class FabricThisLabel_c extends ThisLabel_c implements ThisLabel {
 

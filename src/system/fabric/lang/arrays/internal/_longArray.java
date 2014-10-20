@@ -26,7 +26,7 @@ public interface _longArray extends Object {
 
     /**
      * Creates a new long array at the given Store with the given length.
-     * 
+     *
      * @param store
      *          The store on which to allocate the array.
      * @param length
@@ -39,7 +39,7 @@ public interface _longArray extends Object {
     /**
      * Creates a new long array at the given Store using the given backing
      * array.
-     * 
+     *
      * @param store
      *          The store on which to allocate the array.
      * @param value
@@ -110,7 +110,7 @@ public interface _longArray extends Object {
     @Override
     public void $serialize(ObjectOutput out, List<RefTypeEnum> refTypes,
         List<Long> intraStoreRefs, List<Pair<String, Long>> interStoreRefs)
-        throws IOException {
+            throws IOException {
       super.$serialize(out, refTypes, intraStoreRefs, interStoreRefs);
       out.writeInt(value.length);
       for (long element : value)

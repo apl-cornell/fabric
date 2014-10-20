@@ -90,10 +90,10 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
 
   public NamespaceResolver_c(ExtensionInfo extInfo, URI namespace,
       NamespaceResolver parent, Map<String, URI> aliases) {
-    this.cache = new HashMap<String, Importable>();
-    this.packages = new HashSet<String>();
-    this.noPackage = new HashSet<String>();
-    this.notFound = new HashMap<String, SemanticException>();
+    this.cache = new HashMap<>();
+    this.packages = new HashSet<>();
+    this.noPackage = new HashSet<>();
+    this.notFound = new HashMap<>();
     // A namespace URI must end with a '/' so we can properly
     // compare URI and create new ones using resolve()
     if (!namespace.isOpaque() //&& !namespace.isFileReference()
@@ -103,8 +103,8 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
     this.extInfo = extInfo;
     this.te = extInfo.typeEncoder();
     this.parent = parent;
-    this.aliasCache = new HashMap<String, URI>(aliases);
-    this.noAlias = new HashSet<String>();
+    this.aliasCache = new HashMap<>(aliases);
+    this.noAlias = new HashSet<>();
   }
 
   @Override
@@ -212,13 +212,13 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
   }
 
   @Override
-  public Object copy() {
+  public NamespaceResolver copy() {
     try {
       NamespaceResolver_c r = (NamespaceResolver_c) super.clone();
-      r.packages = new HashSet<String>(this.packages);
-      r.noPackage = new HashSet<String>(this.noPackage);
-      r.notFound = new HashMap<String, SemanticException>();
-      r.cache = new HashMap<String, Importable>(this.cache);
+      r.packages = new HashSet<>(this.packages);
+      r.noPackage = new HashSet<>(this.noPackage);
+      r.notFound = new HashMap<>();
+      r.cache = new HashMap<>(this.cache);
       return r;
     } catch (CloneNotSupportedException e) {
       throw new InternalCompilerError("clone failed");
@@ -227,7 +227,7 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
 
   /**
    * Check if a type object is in the cache, returning null if not.
-   * 
+   *
    * @param name
    *          The name to search for.
    */
@@ -328,8 +328,8 @@ public abstract class NamespaceResolver_c implements NamespaceResolver {
 
     }
     if (extInfo.extFileManager().caseInsensitive())
-    // Sigh... This source may have originally been enqueued under a
-    // case insensitive name.  Allow the TypeSystem to keep looking.
+      // Sigh... This source may have originally been enqueued under a
+      // case insensitive name.  Allow the TypeSystem to keep looking.
       throw new NoClassException(name);
 
     // The source has already been compiled, but the type was not created there.

@@ -36,7 +36,7 @@ public class FabricArrayInitExt_c extends AnnotatedExt_c {
     Expr location = arrayInit.location();
     Expr label = arrayInit.updateLabel();
 
-    List<Expr> newElements = new ArrayList<Expr>(arrayInit.elements().size());
+    List<Expr> newElements = new ArrayList<>(arrayInit.elements().size());
     for (Object e : arrayInit.elements()) {
       if (e instanceof FabricArrayInit) {
         FabricArrayInit ai = (FabricArrayInit) e;

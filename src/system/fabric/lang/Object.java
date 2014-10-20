@@ -100,7 +100,7 @@ public interface Object {
    * This method is used to initialize object databases with objects at
    * well-known onums (e.g., naming map and store principal).
    * </p>
-   * 
+   *
    * @deprecated
    */
   @Deprecated
@@ -381,7 +381,7 @@ public interface Object {
      * This method is used to initialize object databases with objects at
      * well-known onums (e.g., naming map and store principal).
      * </p>
-     * 
+     *
      * @deprecated
      */
     @Deprecated
@@ -464,7 +464,7 @@ public interface Object {
 
     /**
      * A reference to the global read list for this object.
-     * 
+     *
      * @see fabric.worker.transaction.TransactionManager#readMap
      */
     public final ReadMap.Entry $readMapEntry;
@@ -526,7 +526,7 @@ public interface Object {
 
     /**
      * Creates a new Fabric object that will reside on the given Store.
-     * 
+     *
      * @param store
      *          the location for the object
      */
@@ -715,7 +715,7 @@ public interface Object {
      * fields declared in this subclass. The order in which fields are written
      * must be fixed and the same as the order used by the deserialization
      * constructor.
-     * 
+     *
      * @param serializedOutput
      *          An output stream for writing serialized primitive values and
      *          inlined objects.
@@ -745,7 +745,7 @@ public interface Object {
      * first read inherited fields. It should then read the value of each
      * non-transient field declared in this subclass. The order in which fields
      * are presented is the same as the order used by $serialize.
-     * 
+     *
      * @param store
      *          The store on which the object lives.
      * @param onum
@@ -789,7 +789,7 @@ public interface Object {
 
     /**
      * A helper method for reading a pointer during object deserialization.
-     * 
+     *
      * @param proxyClass
      *          The expected proxy class for the reference being read.
      * @param refType
@@ -872,7 +872,7 @@ public interface Object {
 
     /**
      * A helper method for serializing a reference during object serialization.
-     * 
+     *
      * @param store
      *          The referring object's store.
      * @param obj
@@ -932,8 +932,7 @@ public interface Object {
         throw new InternalError(message);
       }
       refType.add(RefTypeEnum.REMOTE);
-      interStoreRefs
-          .add(new Pair<String, Long>(p.ref.store.name(), p.ref.onum));
+      interStoreRefs.add(new Pair<>(p.ref.store.name(), p.ref.onum));
     }
 
     /**
@@ -958,7 +957,7 @@ public interface Object {
      * This method is used to initialize object databases with objects at
      * well-known onums (e.g., naming map and store principal).
      * </p>
-     * 
+     *
      * @deprecated
      */
     @Deprecated
@@ -992,7 +991,7 @@ public interface Object {
 
       /**
        * Used to initialize the _Static._Proxy.$instance variables.
-       * 
+       *
        * @param c
        *          The class to instantiate.
        */

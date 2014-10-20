@@ -17,7 +17,7 @@ import fabric.worker.transaction.TakeOwnershipFailedException;
  * another worker.
  */
 public class TakeOwnershipMessage extends
-    Message<TakeOwnershipMessage.Response, TakeOwnershipFailedException> {
+Message<TakeOwnershipMessage.Response, TakeOwnershipFailedException> {
   // ////////////////////////////////////////////////////////////////////////////
   // message contents //
   // ////////////////////////////////////////////////////////////////////////////

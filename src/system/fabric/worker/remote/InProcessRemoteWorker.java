@@ -114,7 +114,7 @@ public class InProcessRemoteWorker extends RemoteWorker {
   @Override
   public List<Long> notifyObjectUpdates(String storeName,
       LongKeyMap<ObjectGlob> updates) {
-    List<Long> response = new ArrayList<Long>();
+    List<Long> response = new ArrayList<>();
 
     RemoteStore store = worker.getStore(storeName);
     PublicKey storeKey = store.getPublicKey();

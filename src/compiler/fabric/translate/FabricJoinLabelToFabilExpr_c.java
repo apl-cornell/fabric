@@ -28,7 +28,7 @@ public class FabricJoinLabelToFabilExpr_c extends JoinLabelToJavaExpr_c {
         && rw.currentClass().isSubtype(rw.jif_ts().PrincipalClass()))
       simplify = false;
 
-    LinkedList<Label> l = new LinkedList<Label>(L.joinComponents());
+    LinkedList<Label> l = new LinkedList<>(L.joinComponents());
     Iterator<Label> iter = l.iterator();
     Label head = iter.next();
     Expr e = rw.labelToJava(head);

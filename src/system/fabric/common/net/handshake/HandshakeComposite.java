@@ -15,7 +15,7 @@ import fabric.worker.remote.RemoteWorker;
  * @param <Node> the type of node at the remote endpoint.
  */
 public class HandshakeComposite<Node extends RemoteNode<Node>> implements
-    Protocol<Node> {
+Protocol<Node> {
 
   private Map<String, Protocol<Node>> handshakes;
   private Protocol<Node> outgoing;
@@ -44,7 +44,7 @@ public class HandshakeComposite<Node extends RemoteNode<Node>> implements
 
     Protocol<Node> protocol = this.handshakes.get(protName);
     if (null == protocol)
-    // TODO
+      // TODO
       throw new NotImplementedException(handshakes.keySet() + "||" + protName);
 
     return protocol.receive(s);

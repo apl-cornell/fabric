@@ -14,7 +14,7 @@ import fabric.common.Crypto;
  */
 
 public class ClassFile_c extends polyglot.types.reflect.ClassFile_c implements
-    ClassFile {
+ClassFile {
 
   protected byte[] hash;
 

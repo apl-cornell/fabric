@@ -44,7 +44,7 @@ import java.util.Set;
  * no-argument constructor, and a constructor which accepts another Map. Further
  * methods in this class may be overridden if you have a more efficient
  * implementation.
- * 
+ *
  * @author Original author unknown
  * @author Bryce McKinlay
  * @author Eric Blake (ebb9@email.byu.edu)
@@ -61,7 +61,7 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V> {
    * {@link Entry#setValue(Object) setValue(V)} for this class simply throws an
    * {@link UnsupportedOperationException}, thus preventing changes being made.
    * This is useful when a static thread-safe view of a map is required.
-   * 
+   *
    * @since 1.6
    */
   public static class SimpleImmutableEntry<V> implements Entry<V>, Serializable {
@@ -124,7 +124,7 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V> {
    * removal, these methods must be valid: <code>Iterator.remove</code>,
    * <code>Set.remove</code>, <code>removeAll</code>, <code>retainAll</code>,
    * and <code>clear</code>. Element addition is not supported via this set.
-   * 
+   *
    * @return the entry set
    * @see LongKeyMap.Entry
    */
@@ -137,7 +137,7 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V> {
    * permit clearing, then this will fail, too. Subclasses often override this
    * for efficiency. Your implementation of entrySet() should not call
    * <code>AbstractMap.clear</code> unless you want an infinite loop.
-   * 
+   *
    * @throws UnsupportedOperationException
    *           if <code>entrySet().clear()</code> does not support clearing.
    * @see LongSet#clear()
@@ -150,7 +150,7 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V> {
   /**
    * Create a shallow copy of this Map, no keys or values are copied. The
    * default implementation simply calls <code>super.clone()</code>.
-   * 
+   *
    * @return the shallow clone
    * @throws CloneNotSupportedException
    *           if a subclass is not Cloneable
@@ -171,7 +171,7 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V> {
    * implementation does a linear search, O(n), over the <code>entrySet()</code>
    * , returning <code>true</code> if a match is found, <code>false</code> if
    * the iteration ends. Many subclasses can implement this more efficiently.
-   * 
+   *
    * @param key
    *          the key to search for
    * @return true if the map contains the key
@@ -196,7 +196,7 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V> {
    * where <code>(value == null ? v == null :
    * value.equals(v))</code>. Subclasses are unlikely to implement this more
    * efficiently.
-   * 
+   *
    * @param value
    *          the value to search for
    * @return true if the map contains the value
@@ -216,7 +216,7 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V> {
    * <code>true</code> if the other object is a Map with the same mappings, that
    * is,<br>
    * <code>o instanceof Map && entrySet().equals(((Map) o).entrySet();</code>
-   * 
+   *
    * @param o
    *          the object to be compared
    * @return true if the object equals this map
@@ -234,7 +234,7 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V> {
    * rely on <code>containsKey</code> to determine if a mapping exists. This
    * iteration takes linear time, searching entrySet().iterator() of the key.
    * Many implementations override this method.
-   * 
+   *
    * @param key
    *          the key to look up
    * @return the value associated with the key, or null if key not in map
@@ -257,7 +257,7 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V> {
    * Returns the hash code for this map. As defined in Map, this is the sum of
    * all hashcodes for each Map.Entry object in entrySet, or basically
    * entrySet().hashCode().
-   * 
+   *
    * @return the hash code
    * @see LongKeyMap.Entry#hashCode()
    * @see LongSet#hashCode()
@@ -270,7 +270,7 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V> {
   /**
    * Returns true if the map contains no mappings. This is implemented by
    * <code>size() == 0</code>.
-   * 
+   *
    * @return true if the map is empty
    * @see #size()
    */
@@ -290,7 +290,7 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V> {
    * the Map's containsKey. The set is created on first use, and returned on
    * subsequent uses, although since no synchronization occurs, there is a
    * slight possibility of creating two sets.
-   * 
+   *
    * @return a Set view of the keys
    * @see LongSet#iterator()
    * @see #size()
@@ -302,7 +302,7 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V> {
     if (keys == null) keys = new AbstractLongSet() {
       /**
        * Retrieves the number of keys in the backing map.
-       * 
+       *
        * @return The number of keys.
        */
       @Override
@@ -312,7 +312,7 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V> {
 
       /**
        * Returns true if the backing map contains the supplied key.
-       * 
+       *
        * @param key
        *          The key to search for.
        * @return True if the key was found, false otherwise.
@@ -326,7 +326,7 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V> {
        * Returns an iterator which iterates over the keys in the backing map,
        * using a wrapper around the iterator returned by <code>entrySet()</code>
        * .
-       * 
+       *
        * @return An iterator over the keys.
        */
       @Override
@@ -341,7 +341,7 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V> {
           /**
            * Returns true if a call to <code>next()</code> will return another
            * key.
-           * 
+           *
            * @return True if the iterator has not yet reached the last key.
            */
           @Override
@@ -352,7 +352,7 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V> {
           /**
            * Returns the key from the next entry retrieved by the underlying
            * <code>entrySet()</code> iterator.
-           * 
+           *
            * @return The next key.
            */
           @Override
@@ -363,7 +363,7 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V> {
           /**
            * Removes the map entry which has a key equal to that returned by the
            * last call to <code>next()</code>.
-           * 
+           *
            * @throws UnsupportedOperationException
            *           if the map doesn't support removal.
            */
@@ -383,7 +383,7 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V> {
    * simply throws an UnsupportedOperationException. Be aware that in a map that
    * permits <code>null</code> values, a null return does not always imply that
    * the mapping was created.
-   * 
+   *
    * @param key
    *          the key to map
    * @param value
@@ -410,7 +410,7 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V> {
    * the map already contains a key, its value is replaced. This implementation
    * simply iterates over the map's entrySet(), calling <code>put</code>, so it
    * is not supported if puts are not.
-   * 
+   *
    * @param m
    *          the mapping to load into this map
    * @throws UnsupportedOperationException
@@ -445,7 +445,7 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V> {
    * null if the key was removed. If the entrySet does not support removal, this
    * will also fail. This is O(n), so many implementations override it for
    * efficiency.
-   * 
+   *
    * @param key
    *          the key to remove
    * @return the value the key mapped to, or null if not present. Null may also
@@ -475,7 +475,7 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V> {
    * Returns the number of key-value mappings in the map. If there are more than
    * Integer.MAX_VALUE mappings, return Integer.MAX_VALUE. This is implemented
    * as <code>entrySet().size()</code>.
-   * 
+   *
    * @return the number of mappings
    * @see Set#size()
    */
@@ -492,7 +492,7 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V> {
    * StringBuffer and iterates over the entrySet to build the String. Note that
    * this can fail with an exception if underlying keys or values complete
    * abruptly in toString().
-   * 
+   *
    * @return a String representation
    * @see AbstractLongKeyMap.SimpleEntry#toString()
    * @see AbstractLongKeyMap.SimpleImmutableEntry#toString()
@@ -524,7 +524,7 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V> {
    * to the Map's containsValue. The collection is created on first use, and
    * returned on subsequent uses, although since no synchronization occurs,
    * there is a slight possibility of creating two collections.
-   * 
+   *
    * @return a Collection view of the values
    * @see LongCollection#iterator()
    * @see #size()
@@ -536,7 +536,7 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V> {
     if (values == null) values = new AbstractCollection<V>() {
       /**
        * Returns the number of values stored in the backing map.
-       * 
+       *
        * @return The number of values.
        */
       @Override
@@ -546,7 +546,7 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V> {
 
       /**
        * Returns true if the backing map contains the supplied value.
-       * 
+       *
        * @param value
        *          The value to search for.
        * @return True if the value was found, false otherwise.
@@ -560,7 +560,7 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V> {
        * Returns an iterator which iterates over the values in the backing map,
        * by using a wrapper around the iterator returned by
        * <code>entrySet()</code>.
-       * 
+       *
        * @return An iterator over the values.
        */
       @Override
@@ -575,7 +575,7 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V> {
           /**
            * Returns true if a call to <code>next()</call> will
            * return another value.
-           * 
+           *
            * @return True if the iterator has not yet reached the last value.
            */
           @Override
@@ -586,7 +586,7 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V> {
           /**
            * Returns the value from the next entry retrieved by the underlying
            * <code>entrySet()</code> iterator.
-           * 
+           *
            * @return The next value.
            */
           @Override
@@ -597,7 +597,7 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V> {
           /**
            * Removes the map entry which has a key equal to that returned by the
            * last call to <code>next()</code>.
-           * 
+           *
            * @throws UnsupportedOperationException
            *           if the map doesn't support removal.
            */
@@ -613,7 +613,7 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V> {
 
   /**
    * Compare two objects according to Collection semantics.
-   * 
+   *
    * @param o1
    *          the first object
    * @param o2
@@ -628,7 +628,7 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V> {
 
   /**
    * Hash an object according to Collection semantics.
-   * 
+   *
    * @param o
    *          the object to hash
    * @return o1 == null ? 0 : o1.hashCode()
@@ -641,7 +641,7 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V> {
 
   /**
    * Hash an object according to Collection semantics.
-   * 
+   *
    * @param o
    *          the object to hash
    * @return o1 == null ? 0 : o1.hashCode()
@@ -656,7 +656,7 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V> {
    * A class which implements Map.Entry. It is shared by HashMap, TreeMap,
    * Hashtable, and Collections. It is not specified by the JDK, but makes life
    * much easier.
-   * 
+   *
    * @author Jon Zeppieri
    * @author Eric Blake (ebb9@email.byu.edu)
    * @since 1.6
@@ -675,7 +675,7 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V> {
 
     /**
      * Basic constructor initializes the fields.
-     * 
+     *
      * @param newKey
      *          the key
      * @param newValue
@@ -694,7 +694,7 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V> {
      * Compares the specified object with this entry. Returns true only if the
      * object is a mapping of identical key and value. In other words, this must
      * be:<br>
-     * 
+     *
      * <pre>
      * (o instanceof Map.Entry)
      *     &amp;&amp; (getKey() == null ? ((HashMap) o).getKey() == null : getKey().equals(
@@ -702,7 +702,7 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V> {
      *     &amp;&amp; (getValue() == null ? ((HashMap) o).getValue() == null : getValue()
      *         .equals(((HashMap) o).getValue()))
      * </pre>
-     * 
+     *
      * @param o
      *          the object to compare
      * @return <code>true</code> if it is equal
@@ -722,7 +722,7 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V> {
 
     /**
      * Get the key corresponding to this entry.
-     * 
+     *
      * @return the key
      */
     @Override
@@ -733,7 +733,7 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V> {
     /**
      * Get the value corresponding to this entry. If you already called
      * Iterator.remove(), the behavior undefined, but in this case it works.
-     * 
+     *
      * @return the value
      */
     @Override
@@ -745,12 +745,12 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V> {
      * Returns the hash code of the entry. This is defined as the exclusive-or
      * of the hashcodes of the key and value (using 0 for null). In other words,
      * this must be:<br>
-     * 
+     *
      * <pre>
      * (getKey() == null ? 0 : getKey().hashCode())
      *     &circ; (getValue() == null ? 0 : getValue().hashCode())
      * </pre>
-     * 
+     *
      * @return the hash code
      */
     @Override
@@ -763,7 +763,7 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V> {
      * Replaces the value with the specified object. This writes through to the
      * map, unless you have already called Iterator.remove(). It may be
      * overridden to restrict a null value.
-     * 
+     *
      * @param newVal
      *          the new value to store
      * @return the old value
@@ -787,7 +787,7 @@ public abstract class AbstractLongKeyMap<V> implements LongKeyMap<V> {
     /**
      * This provides a string representation of the entry. It is of the form
      * "key=value", where string concatenation is used on key and value.
-     * 
+     *
      * @return the string representation
      */
     @Override

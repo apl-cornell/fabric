@@ -22,8 +22,7 @@ public class ConstructorDeclToFabilExt_c extends ConstructorDeclToJavaExt_c {
         FabILNodeFactory nf = (FabILNodeFactory) rw.nodeFactory();
         // FabILTypeSystem ts = (FabILTypeSystem)rw.java_ts();
 
-        List<Stmt> stmts =
-            new ArrayList<Stmt>(md.body().statements().size() + 1);
+        List<Stmt> stmts = new ArrayList<>(md.body().statements().size() + 1);
 
         // TypeNode worker = nf.CanonicalTypeNode(Position.compilerGenerated(),
         // ts.Worker());

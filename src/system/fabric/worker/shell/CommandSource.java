@@ -26,14 +26,14 @@ public abstract class CommandSource {
 
   /**
    * Reports an error back to the user.
-   * 
+   *
    * @return whether the shell should exit.
    */
   public abstract boolean reportError(String message);
 
   /**
    * Reports an error back to the user.
-   * 
+   *
    * @return whether the shell should exit.
    */
   public boolean reportError(HandlerException e) {

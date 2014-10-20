@@ -13,7 +13,7 @@ public class StoreGetterRewriter extends NodeVisitor {
   Stack<Expr> locationStack;
 
   public StoreGetterRewriter() {
-    locationStack = new Stack<Expr>();
+    locationStack = new Stack<>();
   }
 
   @Override

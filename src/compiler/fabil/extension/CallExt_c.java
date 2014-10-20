@@ -47,10 +47,10 @@ public class CallExt_c extends ExprExt_c {
     if (accessState != null) {
       target = pr.replaceTarget(target, accessState);
     } else if (rewriteTarget) {
-      target = (Receiver) call.visitChild(target, pr);
+      target = call.visitChild(target, pr);
     }
 
-    Id name = (Id) call.visitChild(call.id(), pr);
+    Id name = call.visitChild(call.id(), pr);
     List<Expr> arguments = call.visitList(call.arguments(), pr);
 
     if (name.id().equals("getClass") && arguments.isEmpty()) {
@@ -139,7 +139,7 @@ public class CallExt_c extends ExprExt_c {
 
     NodeFactory nf = rr.nodeFactory();
 
-    List<Expr> args = new ArrayList<Expr>(c.arguments().size());
+    List<Expr> args = new ArrayList<>(c.arguments().size());
     // The first argument is changed from the local worker to the remote worker.
     args.add(c.remoteWorker());
     args.addAll(c.arguments());
