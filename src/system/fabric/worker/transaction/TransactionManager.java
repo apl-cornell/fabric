@@ -27,6 +27,7 @@ import java.util.logging.Level;
 
 import fabric.common.FabricThread;
 import fabric.common.Logging;
+import fabric.common.RWLease;
 import fabric.common.SerializedObject;
 import fabric.common.Threading;
 import fabric.common.Threading.NamedRunnable;
@@ -141,8 +142,8 @@ public final class TransactionManager {
   }
 
   public static ReadMap.Entry getReadMapEntry(_Impl impl,
-      VersionWarranty warranty) {
-    return readMap.getEntry(impl, warranty);
+      VersionWarranty warranty, RWLease lease) {
+    return readMap.getEntry(impl, warranty, lease);
   }
 
   private static final Map<Thread, TransactionManager> instanceMap =

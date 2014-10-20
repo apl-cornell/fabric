@@ -17,6 +17,15 @@ public class RWLease extends Lease {
   public RWLease(long expiry, Set<RemoteWorker> lessees) {
     super(expiry, true, lessees);
   }
+  
+  /**
+   * Constructor with no lessees.
+   *
+   * @param expiry expiry time, in milliseconds since the epoch.
+   */
+  public RWLease(long expiry) {
+    super(expiry, true, Collections.<RemoteWorker>emptySet());
+  }
 
   // Deserialization constructor.
   protected RWLease() {

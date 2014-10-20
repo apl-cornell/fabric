@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import fabric.common.VersionWarranty;
+import fabric.common.RWLease;
 import fabric.common.util.ConcurrentOidKeyHashMap;
 import fabric.lang.Object._Impl;
 import fabric.worker.FabricSoftRef;
@@ -50,18 +51,25 @@ public final class ReadMap {
     private VersionWarranty warranty;
 
     /**
+     * A read-write lease on this object.
+     */
+    private RWLease lease;
+
+    /**
      * Number of _Impls that have a reference to this entry. This is usually 1,
      * but can be more in certain transient states.
      */
     private int pinCount;
 
-    private Entry(ReadMap outer, _Impl obj, VersionWarranty expiry) {
+    private Entry(ReadMap outer, _Impl obj, VersionWarranty expiry,
+        RWLease lease) {
       this.defunct = false;
       this.outer = outer;
       this.obj = obj.$ref;
       this.readLocks = new HashSet<>();
       this.versionNumber = obj.$version;
       this.warranty = expiry;
+      this.lease = lease;
       this.pinCount = 1;
     }
 
@@ -99,6 +107,24 @@ public final class ReadMap {
     public synchronized boolean updateWarranty(VersionWarranty warranty) {
       if (warranty.expiresAfter(this.warranty)) {
         this.warranty = warranty;
+        return true;
+      }
+
+      return false;
+    }
+
+    public synchronized RWLease getLease() {
+      return lease;
+    }
+
+    /**
+     * Updates the lease for the object.
+     * 
+     * @return true if successful; false if we had a longer lease.
+     */
+    public synchronized boolean updateLease(RWLease lease) {
+      if (!this.lease.expiresAfter(lease)) {
+        this.lease = lease;
         return true;
       }
 
@@ -292,9 +318,9 @@ public final class ReadMap {
    * for an older version of the _Impl, then all readers of the old version are
    * aborted, and the existing Entry is replaced with a new Entry.
    */
-  Entry getEntry(_Impl impl, VersionWarranty warranty) {
+  Entry getEntry(_Impl impl, VersionWarranty warranty, RWLease lease) {
     FabricSoftRef ref = impl.$ref;
-    Entry newEntry = new Entry(this, impl, warranty);
+    Entry newEntry = new Entry(this, impl, warranty, lease);
 
     // Optimization: if the impl lives on the local store, it will never be
     // evicted, so no need to store the entry in the read map.

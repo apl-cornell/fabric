@@ -13,6 +13,7 @@ import java.util.Map;
 import fabric.common.Logging;
 import fabric.common.NSUtil;
 import fabric.common.ONumConstants;
+import fabric.common.RWLease;
 import fabric.common.RefTypeEnum;
 import fabric.common.SerializedObject;
 import fabric.common.Timing;
@@ -503,7 +504,8 @@ public interface Object {
       this.$ref = new FabricSoftRef(store, onum, this);
       this.$cacheEntry = new ObjectCache.Entry(this);
       this.$readMapEntry =
-          TransactionManager.getReadMapEntry(this, new VersionWarranty(expiry));
+          TransactionManager.getReadMapEntry(this, new VersionWarranty(expiry),
+              new RWLease(expiry));
       this.$ref.readMapEntry(this.$readMapEntry);
       this.$isOwned = false;
       this.writerMapVersion = -1;
