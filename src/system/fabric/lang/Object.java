@@ -519,6 +519,10 @@ public interface Object {
       return $readMapEntry.getWarranty();
     }
 
+    public final RWLease $rwlease() {
+      return $readMapEntry.getLease();
+    }
+
     /**
      * A debugging switch for storing a stack trace each time an _Impl is
      * created. This is enabled by passing "--trace-objects" as a command-line
