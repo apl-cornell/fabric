@@ -199,6 +199,8 @@ public class AccessMetrics<K> {
 
       lastReadPrepareTime = expiry;
       numReadPrepares = 0;
+      //XXX: I don't actually think the below is correct.
+      //      - Tom
       lastWarrantyLength = expiry - System.currentTimeMillis();
       return true;
     }
