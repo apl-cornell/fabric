@@ -19,4 +19,8 @@ public final class FileChooser[principal servletP, label L, label E] extends Inp
     where {L;E} <= {*inputLabel} {
         super(s, inputLabel);
     }
+    public FileChooser(String{L} name, int{L} size) 
+    where {L;E} <= {*input.inputLbl} { 
+        super(name);
+    }
 }

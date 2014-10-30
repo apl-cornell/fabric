@@ -1,0 +1,78 @@
+<!--
+  This is the Apache Ant build file for the Fabric authentication database
+  example.
+-->
+
+<project name="authdb" default="build-all" basedir=".">
+  <description>
+    Builds the authentication database library
+  </description>
+
+  <!--
+  ****************************************************************************
+    Global properties for this build.
+  ****************************************************************************
+  -->
+
+  <import file="../../common.xml" />
+  <import file="${fabric.home}/src/lib/collections/common.xml" />
+
+  <dirname property="authdb.home" file="${ant.file.authdb}" />
+
+  <path id="java-classpath">
+    <pathelement path="${authdb.home}/classes"/>
+    <pathelement path="${fabric.home}/classes"/>
+    <pathelement path="${fabric.home}/rt-classes"/>
+    <fileset dir="${fabric.home}/lib">
+      <include name="fabric.jar"/>
+      <include name="fabric-rt.jar"/>
+    </fileset>
+  </path>
+
+  <!--
+  ****************************************************************************
+    Targets for cleaning up the directory tree.
+  ****************************************************************************
+  -->
+
+  <target name="clean" description="Removes generated files">
+    <delete dir="${authdb.home}/classes"/>
+    <delete dir="${authdb.home}/var"/>
+  </target>
+
+  <target name="clobber" depends="clean"
+          description="Removes generated files">
+  </target>
+
+  <!--
+  ****************************************************************************
+    Compilation targets.
+  ****************************************************************************
+  -->
+
+  <target name="build-all" depends="build-authdb" />
+  <target name="all" depends="build-all" />
+
+  <target name="build-authdb"
+          description="Builds the authentication database library">
+    <fabc dest="${authdb.home}/classes">
+      <arg value="-sourcepath" /> <arg value="${authdb.home}/src" />
+      <arg value="-cp"/> <arg pathref="collections.classpath"/>
+      <arg value="-cp"/> <arg pathref="lib.classpath"/>
+      <arg value="-cp"/> <arg value="${authdb.home}/classes"/>
+      <arg value="-trusted-providers"/>
+      <fileset dir="${authdb.home}/src" includes="**/*.fab"/>
+    </fabc>
+
+    <javac
+        destdir="${authdb.home}/classes"
+        srcdir="${authdb.home}/src"
+        debug="on"
+        includes="**"
+        classpathref="java-classpath"/>
+  </target>
+</project>
+
+<!--
+vim: ts=2 sw=2 et ai
+-->

@@ -23,4 +23,6 @@ public interface FabILExtFactory extends ExtFactory {
   Ext extCodebaseDecl();
 
   Ext extCodebaseTypeNode();
+
+  Ext extStoreGetter();
 }

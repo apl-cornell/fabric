@@ -13,7 +13,6 @@ import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 
 import javax.tools.FileObject;
-import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import javax.tools.JavaFileObject.Kind;
 
@@ -35,7 +34,7 @@ import fabric.util.Set;
 /**
  * FileManager implementation for Fabric - a class that provides input and
  * output access to the local file system and input access to the codebase.
- * 
+ *
  * TODO: store output files in Fabric. Support bytecode sharing between
  *      trusted principals
  */
@@ -50,16 +49,16 @@ public class FabricFileManager extends polyglot.filemanager.ExtFileManager {
   public FabricFileManager(ExtensionInfo extInfo) {
     super(extInfo);
     this.extInfo = extInfo;
-    pathMap = new HashMap<Location, List<URI>>();
-    codebaseCache = new HashMap<URI, Codebase>();
+    pathMap = new HashMap<>();
+    codebaseCache = new HashMap<>();
 //    dirCache = new HashMap<URI, List<File>>();
-    nsClassLocation = new HashMap<URI, JavaFileManager.Location>();
+    nsClassLocation = new HashMap<>();
     nsClassLocation.put(extInfo.platformNamespace(),
         extInfo.getOptions().bootclasspath);
     nsClassLocation.put(extInfo.localNamespace(),
         extInfo.getOptions().classpath);
 
-    this.nsSrcLocation = new HashMap<URI, JavaFileManager.Location>();
+    this.nsSrcLocation = new HashMap<>();
     nsSrcLocation.put(extInfo.platformNamespace(),
         extInfo.getOptions().bootclasspath);
     nsSrcLocation.put(extInfo.localNamespace(),
@@ -195,18 +194,18 @@ public class FabricFileManager extends polyglot.filemanager.ExtFileManager {
 
   @Override
   public FileSource fileSource(String fileName) throws IOException {
-    return fileSource(fileName, false);
+    return fileSource(fileName, Source.Kind.DEPENDENCY);
   }
 
   @Override
-  public FileSource fileSource(String fileName, boolean userSpecified)
+  public FileSource fileSource(String fileName, Source.Kind kind)
       throws IOException {
     URI u = URI.create(fileName);
     if (!u.isAbsolute())
       throw new InternalCompilerError("Expected absolute URI");
     JavaFileObject jfo = getJavaFileObject(u);
     if (jfo == null) throw new FileNotFoundException(fileName);
-    return extInfo.createFileSource(jfo, userSpecified);
+    return extInfo.createFileSource(jfo, kind);
   }
 
   /**

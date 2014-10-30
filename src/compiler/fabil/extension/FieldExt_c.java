@@ -34,8 +34,8 @@ public class FieldExt_c extends ExprExt_c {
           special.kind() != Special.THIS || special.qualifier() != null;
     }
 
-    if (rewriteTarget) target = (Receiver) field.visitChild(target, pr);
-    Id name = (Id) field.visitChild(field.id(), pr);
+    if (rewriteTarget) target = field.visitChild(target, pr);
+    Id name = field.visitChild(field.id(), pr);
     field = field.target(target).id(name);
 
     return ((FieldExt_c) field.ext()).rewriteProxiesImpl(pr);

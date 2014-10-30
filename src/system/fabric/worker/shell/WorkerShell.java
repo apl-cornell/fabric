@@ -42,7 +42,7 @@ public class WorkerShell {
     this.out = System.out;
 
     // Set up the command handlers.
-    this.handlers = new TreeMap<String, CommandHandler>();
+    this.handlers = new TreeMap<>();
     this.defaultHandler =
         new CommandHandler("<APP> [ARG]...",
             "Executes the Fabric application APP in this worker, passing ARGs "
@@ -83,6 +83,31 @@ public class WorkerShell {
       @Override
       public void handle(List<String> args) throws HandlerException {
         throw new HandlerException("Not implemented yet!");
+      }
+    });
+
+    this.handlers.put("java", new CommandHandler("<APP> [ARG]...", "Executes "
+        + "the Java application APP in this worker, passing ARGs as "
+        + "command-line arguments.") {
+      @Override
+      public void handle(List<String> args) throws HandlerException {
+        if (args.size() == 0) {
+          throw new HandlerException("java: missing main class");
+        }
+
+        // Run a Java program.
+        String mainClassName = args.get(0);
+        String[] appArgs = new String[args.size() - 1];
+        for (int i = 0; i < appArgs.length; i++) {
+          appArgs[i] = args.get(i + 1);
+        }
+
+        try {
+          WorkerShell.this.worker.runJavaApp(mainClassName, appArgs);
+        } catch (Throwable e) {
+          throw new HandlerException("Exception encountered while running "
+              + mainClassName, e);
+        }
       }
     });
 
@@ -265,7 +290,7 @@ public class WorkerShell {
 
   public void run() {
     try {
-      List<String> commandLine = new ArrayList<String>();
+      List<String> commandLine = new ArrayList<>();
       while (true) {
         Logging.TIMING_LOGGER.log(Level.INFO, "waiting for command");
         commandLine = commandSource.getNextCommand(commandLine);

@@ -2,6 +2,7 @@ package fabric.ast;
 
 import jif.ast.AmbPrincipalNode_c;
 import polyglot.ast.Expr;
+import polyglot.ast.Ext;
 import polyglot.ast.Id;
 import polyglot.ast.Node;
 import polyglot.types.SemanticException;
@@ -13,16 +14,26 @@ import fabric.types.FabricTypeSystem;
 /**
  * In Fabric, objects of <code>Worker</code> and <code>RemoteWorker</code> are
  * treated as principals automatically.
- * 
- * @author qixin
  */
+//XXX Should be replaced with extension
+@Deprecated
 public class FabricAmbPrincipalNode_c extends AmbPrincipalNode_c {
+  @Deprecated
   public FabricAmbPrincipalNode_c(Position pos, Expr expr) {
-    super(pos, expr);
+    this(pos, expr, null);
   }
 
+  public FabricAmbPrincipalNode_c(Position pos, Expr expr, Ext ext) {
+    super(pos, expr, ext);
+  }
+
+  @Deprecated
   public FabricAmbPrincipalNode_c(Position pos, Id name) {
-    super(pos, name);
+    this(pos, name, null);
+  }
+
+  public FabricAmbPrincipalNode_c(Position pos, Id name, Ext ext) {
+    super(pos, name, ext);
   }
 
   @Override
@@ -48,7 +59,7 @@ public class FabricAmbPrincipalNode_c extends AmbPrincipalNode_c {
       } else if (expr instanceof Store) {
         if (!ar.isASTDisambiguated(expr)) {
           ar.job().extensionInfo().scheduler().currentGoal()
-              .setUnreachableThisRun();
+          .setUnreachableThisRun();
           return this;
         }
 

@@ -111,7 +111,7 @@ public class FabricScheduler extends JifScheduler implements CBScheduler {
         internGoal(new VisitorGoal(job, new RemoteCallWrapperAdder(job, ts, nf)) {
           @Override
           public Collection<Goal> prerequisiteGoals(Scheduler s) {
-            List<Goal> l = new ArrayList<Goal>();
+            List<Goal> l = new ArrayList<>();
             l.add(ExplicitSuperclassesAdded(job));
             return l;
           }
@@ -147,7 +147,7 @@ public class FabricScheduler extends JifScheduler implements CBScheduler {
             nf)) {
           @Override
           public Collection<Goal> prerequisiteGoals(Scheduler s) {
-            List<Goal> l = new ArrayList<Goal>();
+            List<Goal> l = new ArrayList<>();
             l.add(Disambiguated(job));
             return l;
           }
@@ -193,7 +193,7 @@ public class FabricScheduler extends JifScheduler implements CBScheduler {
       g = internGoal(new Serialized(job) {
         @Override
         public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
-          List<Goal> l = new ArrayList<Goal>();
+          List<Goal> l = new ArrayList<>();
           l.add(TypeChecked(job));
           l.add(ExceptionsChecked(job));
           l.add(NativeConstructorsAdded(job));
@@ -212,7 +212,7 @@ public class FabricScheduler extends JifScheduler implements CBScheduler {
         internGoal(new VisitorGoal(job, new CoercePrincipals(job, ts, nf)) {
           @Override
           public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
-            List<Goal> l = new ArrayList<Goal>();
+            List<Goal> l = new ArrayList<>();
             l.add(Serialized(job));
             return l;
           }
@@ -224,7 +224,7 @@ public class FabricScheduler extends JifScheduler implements CBScheduler {
   private Goal preFClassGeneration = new Barrier("preFClassGeneration", this) {
     @Override
     public Goal goalForJob(Job job) {
-      Goal g = internGoal(new EmptyGoal(job));
+      Goal g = internGoal(new EmptyGoal(job, "preFClassGeneration"));
 
       try {
         addPrerequisiteDependency(g, TypeChecked(job));
@@ -254,7 +254,7 @@ public class FabricScheduler extends JifScheduler implements CBScheduler {
         // Cannot happen
         throw new InternalCompilerError(e);
       }
-    } else g = internGoal(new EmptyGoal(job));
+    } else g = internGoal(new EmptyGoal(job, "FClassGenerated"));
 
     return g;
   }
@@ -326,7 +326,7 @@ public class FabricScheduler extends JifScheduler implements CBScheduler {
         internGoal(new VisitorGoal(job, new FabricExceptionChecker(job, ts, nf)) {
           @Override
           public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
-            List<Goal> l = new ArrayList<Goal>();
+            List<Goal> l = new ArrayList<>();
             l.add(scheduler.TypeChecked(job));
             l.add(scheduler.ReachabilityChecked(job));
             FabricScheduler s = (FabricScheduler) scheduler;
@@ -358,7 +358,7 @@ public class FabricScheduler extends JifScheduler implements CBScheduler {
     Goal g = internGoal(new AbstractGoal(job) {
       @Override
       public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
-        List<Goal> l = new ArrayList<Goal>();
+        List<Goal> l = new ArrayList<>();
         l.add(CreateFabILSkeleton(job));
         l.addAll(super.prerequisiteGoals(scheduler));
         return l;

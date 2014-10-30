@@ -1,0 +1,6 @@
+package fabric.net;
+
+public abstract class RemoteNode implements fabric.lang.JavaInlineable {
+  public abstract Principal getPrincipal();
+  public native final String name();
+}

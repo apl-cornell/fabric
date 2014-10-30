@@ -4,7 +4,6 @@ import fabric.worker.Worker;
 import fabric.worker.Store;
 import fabric.worker.transaction.TransactionManager;
 import fabric.lang.security.Principal;
-import fabric.lang.security.PrincipalUtil;
 import fabric.util.ArrayList;
 import fabric.util.Collection;
 import fabric.util.Map;

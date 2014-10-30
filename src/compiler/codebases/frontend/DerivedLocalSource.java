@@ -12,8 +12,8 @@ public class DerivedLocalSource extends LocalSource {
   private URI uri;
 
   protected DerivedLocalSource(String name, FileObject derivedFrom,
-      boolean userSpecified, URI namespace) throws IOException {
-    super(derivedFrom, userSpecified, namespace, false);
+      URI namespace) throws IOException {
+    super(derivedFrom, Kind.COMPILER_GENERATED, namespace, false);
     this.name = name;
   }
 

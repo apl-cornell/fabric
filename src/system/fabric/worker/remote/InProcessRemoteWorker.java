@@ -35,12 +35,12 @@ import fabric.worker.Worker;
  */
 public class InProcessRemoteWorker extends RemoteWorker {
 
-  private final Worker worker;
+  private transient final Worker worker;
 
   /**
    * The local in-process store. This is null if there is no colocated store.
    */
-  private final InProcessStore inProcessStore;
+  private transient final InProcessStore inProcessStore;
 
   public InProcessRemoteWorker(Worker worker) {
     super(worker);
@@ -54,7 +54,7 @@ public class InProcessRemoteWorker extends RemoteWorker {
   @Override
   public Object issueRemoteCall(_Proxy receiver, String methodName,
       Class<?>[] parameterTypes, Object[] args)
-      throws UnreachableNodeException, RemoteCallException {
+          throws UnreachableNodeException, RemoteCallException {
     // XXX Does this actually happen?
     throw new NotImplementedException();
   }
@@ -82,7 +82,7 @@ public class InProcessRemoteWorker extends RemoteWorker {
 
   @Override
   public void abortTransaction(TransactionID tid) throws AccessException,
-      UnreachableNodeException {
+  UnreachableNodeException {
     // XXX Does this actually happen?
     throw new NotImplementedException();
   }
@@ -114,7 +114,7 @@ public class InProcessRemoteWorker extends RemoteWorker {
   @Override
   public List<Long> notifyObjectUpdates(String storeName,
       LongKeyMap<ObjectGlob> updates) {
-    List<Long> response = new ArrayList<Long>();
+    List<Long> response = new ArrayList<>();
 
     RemoteStore store = worker.getStore(storeName);
     PublicKey storeKey = store.getPublicKey();
@@ -191,5 +191,9 @@ public class InProcessRemoteWorker extends RemoteWorker {
     }
 
     return result;
+  }
+
+  private Object writeReplace() {
+    return new SerializationProxy(name);
   }
 }

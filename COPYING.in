@@ -29,12 +29,31 @@ from the GNU General Public License) are enumerated below.
 
     Files:
       src/runtime/fabric/util/*.fil
+      src/system/fabric/common/util/AbstractLongCollection.java
+      src/system/fabric/common/util/AbstractLongKeyMap.java
+      src/system/fabric/common/util/AbstractLongSet.java
+      src/system/fabric/common/util/LongCollection.java
+      src/system/fabric/common/util/LongHashSet.java
+      src/system/fabric/common/util/LongIterable.java
+      src/system/fabric/common/util/LongIterator.java
+      src/system/fabric/common/util/LongKeyHashMap.java
+      src/system/fabric/common/util/LongKeyMap.java
+      src/system/fabric/common/util/LongSet.java
 
 
   JFlex is software developed by Gerwin Klein.
 
     Files:
-      lib/JFlex.jar
+      lib/jflex.jar
+
+
+  OpenJDK 7 is software developed by Oracle. It was modified by the
+  Fabric project group at Cornell University for use as part of the
+  Fabric runtime system.
+
+    Files:
+      src/system/fabric/common/util/ConcurrentLongKeyMap.java
+      src/system/fabric/common/util/ConcurrentLongKeyHashMap.java
 
 
   CUP Parser Generator is software developed by Scott Hudson,

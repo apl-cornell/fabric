@@ -6,7 +6,6 @@ import java.util.List;
 
 import polyglot.ast.ArrayAccess;
 import polyglot.ast.ArrayAccessAssign;
-import polyglot.ast.ArrayTypeNode;
 import polyglot.ast.Assign.Operator;
 import polyglot.ast.Call;
 import polyglot.ast.Cast;
@@ -43,7 +42,7 @@ import fabil.extension.FabILExtFactory_c;
  * NodeFactory for FabIL extension.
  */
 public class FabILNodeFactory_c extends NodeFactory_c implements
-    FabILNodeFactory {
+FabILNodeFactory {
 
   public FabILNodeFactory_c() {
     this(new FabILExtFactory_c(), new FabILDelFactory_c());
@@ -73,8 +72,8 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
   public CodebaseNode CodebaseNode(Position pos, URI ns, String name,
       URI externalNS, Package package_) {
     CodebaseNode n = new CodebaseNode_c(pos, ns, name, externalNS, package_);
-    n = (CodebaseNode) n.ext(extFactory().extCodebaseNode());
-    n = (CodebaseNode) n.del(delFactory().delCodebaseNode());
+    n = ext(n, extFactory().extCodebaseNode());
+    n = del(n, delFactory().delCodebaseNode());
     return n;
   }
 
@@ -82,8 +81,8 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
   public ArrayAccessAssign ArrayAccessAssign(Position pos, ArrayAccess left,
       Operator op, Expr right) {
     ArrayAccessAssign aaa = new ArrayAccessAssign_c(pos, left, op, right);
-    aaa = (ArrayAccessAssign) aaa.ext(extFactory().extArrayAccessAssign());
-    aaa = (ArrayAccessAssign) aaa.del(delFactory().delArrayAccessAssign());
+    aaa = ext(aaa, extFactory().extArrayAccessAssign());
+    aaa = del(aaa, delFactory().delArrayAccessAssign());
     return aaa;
   }
 
@@ -97,38 +96,32 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
       Expr accessPolicy, Expr location, List<Expr> elements) {
     FabricArrayInit ai =
         new FabricArrayInit_c(pos, elements, label, accessPolicy, location);
-    ai = (FabricArrayInit) ai.ext(extFactory().extFabricArrayInit());
-    ai = (FabricArrayInit) ai.del(delFactory().delFabricArrayInit());
+    ai = ext(ai, extFactory().extFabricArrayInit());
+    ai = del(ai, delFactory().delFabricArrayInit());
     return ai;
-  }
-
-  @Override
-  public ArrayTypeNode ArrayTypeNode(Position pos, TypeNode base) {
-    // TODO Auto-generated method stub
-    return super.ArrayTypeNode(pos, base);
   }
 
   @Override
   public FabricArrayTypeNode FabricArrayTypeNode(Position pos, TypeNode type) {
     FabricArrayTypeNode atn = new FabricArrayTypeNode_c(pos, type);
-    atn = (FabricArrayTypeNode) atn.ext(extFactory().extFabricArrayTypeNode());
-    atn = (FabricArrayTypeNode) atn.del(delFactory().delFabricArrayTypeNode());
+    atn = ext(atn, extFactory().extFabricArrayTypeNode());
+    atn = del(atn, delFactory().delFabricArrayTypeNode());
     return atn;
   }
 
   @Override
   public Atomic Atomic(Position pos, List<Stmt> statements) {
     Atomic atomic = new Atomic_c(pos, statements);
-    atomic = (Atomic) atomic.ext(extFactory().extAtomic());
-    atomic = (Atomic) atomic.del(delFactory().delBlock());
+    atomic = ext(atomic, extFactory().extAtomic());
+    atomic = del(atomic, delFactory().delBlock());
     return atomic;
   }
 
   @Override
   public Cast Cast(Position pos, TypeNode type, Expr expr) {
     Cast cast = new Cast_c(pos, type, expr);
-    cast = (Cast) cast.ext(extFactory().extCast());
-    cast = (Cast) cast.del(delFactory().delCast());
+    cast = ext(cast, extFactory().extCast());
+    cast = del(cast, delFactory().delCast());
     return cast;
   }
 
@@ -138,8 +131,8 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
     ClassDecl n =
         new ClassDecl_c(pos, flags, name, superClass,
             CollectionUtil.nonNullList(interfaces), body);
-    n = (ClassDecl) n.ext(extFactory().extClassDecl());
-    n = (ClassDecl) n.del(delFactory().delClassDecl());
+    n = ext(n, extFactory().extClassDecl());
+    n = del(n, delFactory().delClassDecl());
     return n;
   }
 
@@ -150,8 +143,8 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
     NewFabricArray result =
         new NewFabricArray_c(pos, base, CollectionUtil.nonNullList(dims),
             addDims, init, label, accessPolicy, location);
-    result = (NewFabricArray) result.ext(extFactory().extNewFabricArray());
-    result = (NewFabricArray) result.del(delFactory().delNewArray());
+    result = ext(result, extFactory().extNewFabricArray());
+    result = del(result, delFactory().delNewArray());
     return result;
   }
 
@@ -161,8 +154,8 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
     New n =
         new New_c(pos, outer, objectType, CollectionUtil.nonNullList(args),
             body, location);
-    n = (New) n.ext(extFactory().extNew());
-    n = (New) n.del(delFactory().delNew());
+    n = ext(n, extFactory().extNew());
+    n = del(n, delFactory().delNew());
 
     return n;
   }
@@ -219,16 +212,16 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
   @Override
   public RetryStmt RetryStmt(Position pos) {
     RetryStmt s = new RetryStmt_c(pos);
-    s = (RetryStmt) s.ext(extFactory().extRetry());
-    s = (RetryStmt) s.del(delFactory().delStmt());
+    s = ext(s, extFactory().extRetry());
+    s = del(s, delFactory().delStmt());
     return s;
   }
 
   @Override
   public AbortStmt AbortStmt(Position pos) {
     AbortStmt s = new AbortStmt_c(pos);
-    s = (AbortStmt) s.ext(extFactory().extAbort());
-    s = (AbortStmt) s.del(delFactory().delStmt());
+    s = ext(s, extFactory().extAbort());
+    s = del(s, delFactory().delStmt());
     return s;
   }
 
@@ -241,16 +234,16 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
   public Call Call(Position pos, Receiver target, Id name, Expr remoteWorker,
       List<Expr> args) {
     Call n = new FabILCall_c(pos, target, name, remoteWorker, args);
-    n = (Call) n.ext(extFactory().extCall());
-    n = (Call) n.del(delFactory().delCall());
+    n = ext(n, extFactory().extCall());
+    n = del(n, delFactory().delCall());
     return n;
   }
 
   @Override
   public StoreGetter StoreGetter(Position pos) {
     StoreGetter n = new StoreGetter_c(pos);
-    n = (StoreGetter) n.ext(extFactory().extExpr());
-    n = (StoreGetter) n.del(delFactory().delExpr());
+    n = ext(n, extFactory().extStoreGetter());
+    n = del(n, delFactory().delExpr());
     return n;
   }
 
@@ -266,24 +259,24 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
       List<TopLevelDecl> decls) {
     SourceFile sf =
         new CBSourceFile_c(pos, packageName, imports, codebases, decls);
-    sf = (SourceFile) sf.ext(extFactory().extSourceFile());
-    sf = (SourceFile) sf.del(delFactory().delSourceFile());
+    sf = ext(sf, extFactory().extSourceFile());
+    sf = del(sf, delFactory().delSourceFile());
     return sf;
   }
 
   @Override
-  public ProviderLabel providerLabel(Position pos, TypeNode tn) {
+  public ProviderLabel ProviderLabel(Position pos, TypeNode tn) {
     ProviderLabel pl = new ProviderLabel_c(pos, tn);
-    pl = (ProviderLabel) pl.ext(extFactory().extProviderLabel());
-    pl = (ProviderLabel) pl.del(delFactory().delProviderLabel());
+    pl = ext(pl, extFactory().extProviderLabel());
+    pl = del(pl, delFactory().delProviderLabel());
     return pl;
   }
 
   @Override
   public CodebaseDecl CodebaseDecl(Position pos, polyglot.ast.Id name) {
     CodebaseDecl n = new CodebaseDecl_c(pos, name);
-    n = (CodebaseDecl) n.ext(extFactory().extCodebaseDecl());
-    n = (CodebaseDecl) n.del(delFactory().delCodebaseDecl());
+    n = ext(n, extFactory().extCodebaseDecl());
+    n = del(n, delFactory().delCodebaseDecl());
     return n;
   }
 

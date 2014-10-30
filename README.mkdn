@@ -1,56 +1,63 @@
-Fabric
-======
+Fabric (with State Warranties)
+==============================
+This is a branched release of Fabric that includes state warranties, as
+described in our paper "Warranties for Faster Strong Consistency",
+published in NSDI 2014 [1].
+
 Fabric is a language and runtime system that supports secure federated
 distributed computing. This is a quick-start manual to get you started
 running some Fabric examples. A more detailed manual can be found in
 the doc/manual directory of this distribution, or on the web at
-<http://www.cs.cornell.edu/project/fabric/manual/@VERSION@/html/>.
+<http://www.cs.cornell.edu/projects/fabric/manual/@VERSION@/html/>.
 
 More information about Fabric, including the latest release, can be
-found at the Fabric website <http://www.cs.cornell.edu/project/fabric/>.
+found at the Fabric website <http://www.cs.cornell.edu/projects/fabric/>.
 
 User support and feedback
 -------------------------
 If you use Fabric, we'd appreciate your letting us know. We welcome
 comments, bug reports, and discussion about Fabric on the Fabric users
-mailing list <https://lists.cs.cornell.edu/mailman/listinfo/fabric-users>.
-
-Subscribe to fabric-announce to be notified about new releases of Fabric
-and related announcements:
-<https://lists.cs.cornell.edu/mailman/listinfo/fabric-announce>.
+mailing list <http://www.cs.cornell.edu/projects/fabric/#mailing-list>.
+This is a low-traffic mailing list, to which we will also post
+notifications of new releases of Fabric and other related announcements.
 
 
 #include doc/manual/src/setup.mkdn
 
 
 #include doc/manual/src/examples.mkdn
-  1=mobile-fabric-2012
-  2=fabric2009
-  3=sif2007
-  4=oo7
+  2=mobile-fabric-2012
+  3=fabric2009
+  4=sif2007
+  5=oo7
 
 
 References
 ==========
-[1] Owen Arden, Michael D. George, Jed Liu, K. Vikram, Aslan Askarov,
+[1] Jed Liu, Tom Magrino, Owen Arden, Michael D. George, Andrew C.
+    Myers. Warranties for faster strong consistency. 11th USENIX
+    Symposium on Networked Systems Design and Implementation (NSDI'14),
+    pp. 503–517, April 2014.
+
+[2] Owen Arden, Michael D. George, Jed Liu, K. Vikram, Aslan Askarov,
     and Andrew C. Myers. Sharing mobile code securely with information
     flow control. In Proc. IEEE 2012 Symposium on Security and Privacy,
     pages 191–205, San Francisco, CA, USA, May 2012. Software release at
     <http://www.cs.cornell.edu/projects/fabric/>.
 
-[2] Jed Liu, Michael D. George, K. Vikram, Xin Qi, Lucas Waye, and
+[3] Jed Liu, Michael D. George, K. Vikram, Xin Qi, Lucas Waye, and
     Andrew C. Myers. Fabric: A platform for secure distributed
     computation and storage. In Proc. 22nd ACM Symposium on Operating
     Systems Principles (SOSP), pages 321–334, Big Sky, MT, USA, October
     2009. Software release at
     <http://www.cs.cornell.edu/projects/fabric/>.
 
-[3] Stephen Chong, K. Vikram, and Andrew C. Myers. SIF: Enforcing
+[4] Stephen Chong, K. Vikram, and Andrew C. Myers. SIF: Enforcing
     confidentiality and integrity in web applications. In Proc. 16th
     USENIX Security Symposium, pages 1–16, Boston, MA, USA, August 2007.
     See <http://www.cs.cornell.edu/jif/sif/>.
 
-[4] Michael J. Carey, David J. DeWitt, and Jeffrey F. Naughton. The OO7
+[5] Michael J. Carey, David J. DeWitt, and Jeffrey F. Naughton. The OO7
     Benchmark. In Proc. ACM SIGMOD 1993 International Conference on
     Management of Data, pages 12-21, Washington, DC, USA, May 1993.
 

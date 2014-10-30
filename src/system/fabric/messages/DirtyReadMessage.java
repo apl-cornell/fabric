@@ -20,7 +20,7 @@ import fabric.worker.remote.RemoteWorker;
  * Represents a request from a worker to read an object owned by another worker.
  */
 public class DirtyReadMessage extends
-    Message<DirtyReadMessage.Response, AccessException> {
+Message<DirtyReadMessage.Response, AccessException> {
   // ////////////////////////////////////////////////////////////////////////////
   // message contents //
   // ////////////////////////////////////////////////////////////////////////////
@@ -102,7 +102,7 @@ public class DirtyReadMessage extends
   protected void writeResponse(DataOutput out, Response r) throws IOException {
     if (r.obj != null) {
       out.writeBoolean(true);
-      out.writeUTF(store.name());
+      out.writeUTF(r.store.name());
       r.obj.first.write(out);
       out.writeLong(r.obj.second.expiry());
     } else {

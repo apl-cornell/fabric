@@ -24,12 +24,12 @@ public interface _intArray extends Object {
   int get(int i);
 
   public static class _Impl extends Object._Impl implements _intArray,
-      _InternalArrayImpl {
+  _InternalArrayImpl {
     private int[] value;
 
     /**
      * Creates a new int array at the given Store with the given length.
-     * 
+     *
      * @param store
      *          The store on which to allocate the array.
      * @param length
@@ -41,7 +41,7 @@ public interface _intArray extends Object {
 
     /**
      * Creates a new int array at the given Store using the given backing array.
-     * 
+     *
      * @param store
      *          The store on which to allocate the array.
      * @param value
@@ -61,10 +61,11 @@ public interface _intArray extends Object {
      */
     public _Impl(Store store, long onum, int version, long expiry, long label,
         long accessLabel, ObjectInput in, Iterator<RefTypeEnum> refTypes,
-        Iterator<Long> intraStoreRefs) throws IOException,
+        Iterator<Long> intraStoreRefs,
+        Iterator<Pair<String, Long>> interStoreRefs) throws IOException,
         ClassNotFoundException {
       super(store, onum, version, expiry, label, accessLabel, in, refTypes,
-          intraStoreRefs);
+          intraStoreRefs, interStoreRefs);
       value = new int[in.readInt()];
       for (int i = 0; i < value.length; i++)
         value[i] = in.readInt();
@@ -112,7 +113,7 @@ public interface _intArray extends Object {
     @Override
     public void $serialize(ObjectOutput out, List<RefTypeEnum> refTypes,
         List<Long> intraStoreRefs, List<Pair<String, Long>> interStoreRefs)
-        throws IOException {
+            throws IOException {
       super.$serialize(out, refTypes, intraStoreRefs, interStoreRefs);
       out.writeInt(value.length);
       for (int element : value)

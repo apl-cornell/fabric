@@ -42,7 +42,7 @@ public class FieldDeclExt_c extends ClassMemberExt_c {
     // method.
     if (doStatic) fieldDecl = fieldDecl.init(null);
 
-    List<ClassMember> result = new ArrayList<ClassMember>();
+    List<ClassMember> result = new ArrayList<>();
     for (ClassMember m : accessors(pr))
       result.addAll(ext(m).implMember(pr, parent));
     result.add(fieldDecl.flags(flags).name(fieldName));
@@ -68,7 +68,7 @@ public class FieldDeclExt_c extends ClassMemberExt_c {
     // Omit static fields. These will be put in the _Static type.
     if (node().flags().isStatic()) return super.interfaceMember(pr, parent);
 
-    List<ClassMember> result = new ArrayList<ClassMember>();
+    List<ClassMember> result = new ArrayList<>();
     for (ClassMember m : accessors(pr))
       result.addAll(ext(m).interfaceMember(pr, parent));
     return result;
@@ -105,7 +105,7 @@ public class FieldDeclExt_c extends ClassMemberExt_c {
             + "._Impl) fetch())";
 
     QQ qq = pr.qq();
-    List<ClassMember> result = new ArrayList<ClassMember>(4);
+    List<ClassMember> result = new ArrayList<>(4);
     result.add(qq.parseMember(flags + " %T get$" + name + "() {" + "return "
         + target + ".get$" + name + "(); }", type));
 
@@ -139,7 +139,7 @@ public class FieldDeclExt_c extends ClassMemberExt_c {
         && fieldDecl.name().startsWith("jlc$"))
       return super.interfaceMember(pr, parent);
 
-    List<ClassMember> result = new ArrayList<ClassMember>();
+    List<ClassMember> result = new ArrayList<>();
     for (ClassMember m : accessors(pr))
       result.addAll(ext(m).interfaceMember(pr, parent));
     return result;
@@ -158,7 +158,7 @@ public class FieldDeclExt_c extends ClassMemberExt_c {
     boolean finalField = flags.isFinal();
 
     flags = flags.clearTransient().clearFinal().clearStatic().clearPrivate();
-    List<ClassMember> members = new ArrayList<ClassMember>(4);
+    List<ClassMember> members = new ArrayList<>(4);
     String regRead =
         finalField ? ""
             : "fabric.worker.transaction.TransactionManager.getInstance().registerRead(this);";

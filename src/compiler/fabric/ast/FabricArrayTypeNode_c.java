@@ -1,6 +1,7 @@
 package fabric.ast;
 
 import polyglot.ast.ArrayTypeNode_c;
+import polyglot.ast.Ext;
 import polyglot.ast.Node;
 import polyglot.ast.NodeFactory;
 import polyglot.ast.TypeNode;
@@ -9,11 +10,17 @@ import polyglot.visit.AmbiguityRemover;
 import polyglot.visit.TypeBuilder;
 import fabric.types.FabricTypeSystem;
 
+//XXX Should be replaced with extension
+@Deprecated
 public class FabricArrayTypeNode_c extends ArrayTypeNode_c implements
-    FabricArrayTypeNode {
-
+FabricArrayTypeNode {
+  @Deprecated
   public FabricArrayTypeNode_c(Position pos, TypeNode base) {
-    super(pos, base);
+    this(pos, base, null);
+  }
+
+  public FabricArrayTypeNode_c(Position pos, TypeNode base, Ext ext) {
+    super(pos, base, ext);
   }
 
   @Override

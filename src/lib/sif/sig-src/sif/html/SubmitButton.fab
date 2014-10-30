@@ -9,13 +9,17 @@ public final class SubmitButton[principal servletP, label L, label E] extends In
     private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
     private static int __JIF_PARAMS_RUNTIME_REPRESENTED$20051007 = 0;
     
-    public SubmitButton(Input[servletP]{L} input, String{L} name_) 
+    public SubmitButton(Input[servletP]{L} input, String{L} value) 
     where {L;E} <= {*input.inputLbl} {
         super(input);
     }
-    public SubmitButton{L}(Servlet[servletP]{L} s, label{L} inputLabel, String{L} name_) 
+    public SubmitButton{L}(Servlet[servletP]{L} s, label{L} inputLabel, String{L} value) 
     where {L;E} <= {*inputLabel} {
         super(s, inputLabel);
     }
 
+    public SubmitButton(String{L} name, String{L} value) 
+    {
+        super(name);
+    }
 }

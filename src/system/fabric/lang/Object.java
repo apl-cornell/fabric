@@ -102,7 +102,7 @@ public interface Object {
    * This method is used to initialize object databases with objects at
    * well-known onums (e.g., naming map and store principal).
    * </p>
-   * 
+   *
    * @deprecated
    */
   @Deprecated
@@ -398,7 +398,7 @@ public interface Object {
      * This method is used to initialize object databases with objects at
      * well-known onums (e.g., naming map and store principal).
      * </p>
-     * 
+     *
      * @deprecated
      */
     @Deprecated
@@ -491,7 +491,7 @@ public interface Object {
 
     /**
      * A reference to the global read list for this object.
-     * 
+     *
      * @see fabric.worker.transaction.TransactionManager#readMap
      */
     public final ReadMap.Entry $readMapEntry;
@@ -559,7 +559,7 @@ public interface Object {
 
     /**
      * Creates a new Fabric object that will reside on the given Store.
-     * 
+     *
      * @param store
      *          the location for the object
      */
@@ -597,7 +597,12 @@ public interface Object {
 
     @Override
     public Object fabric$lang$Object$() {
-      return $initLabels();
+      Object result = $initLabels();
+
+      // Register the new object with the transaction manager.
+      TransactionManager.getInstance().registerLabelsInitialized(this);
+
+      return result;
     }
 
     /**
@@ -743,7 +748,7 @@ public interface Object {
      * fields declared in this subclass. The order in which fields are written
      * must be fixed and the same as the order used by the deserialization
      * constructor.
-     * 
+     *
      * @param serializedOutput
      *          An output stream for writing serialized primitive values and
      *          inlined objects.
@@ -773,7 +778,7 @@ public interface Object {
      * first read inherited fields. It should then read the value of each
      * non-transient field declared in this subclass. The order in which fields
      * are presented is the same as the order used by $serialize.
-     * 
+     *
      * @param store
      *          The store on which the object lives.
      * @param onum
@@ -793,13 +798,16 @@ public interface Object {
      * @param intraStoreRefs
      *          An iterator of intra-store references, each represented by an
      *          onum.
+     * @param interStoreRefs
+     *          An iterator of inter-store references.
      * @throws IOException
      * @throws ClassNotFoundException
      */
     public _Impl(Store store, long onum, int version, long expiry,
         long updateLabel, long accessPolicy, ObjectInput serializedInput,
-        Iterator<RefTypeEnum> refTypes, Iterator<Long> intraStoreRefs)
-        throws IOException, ClassNotFoundException {
+        Iterator<RefTypeEnum> refTypes, Iterator<Long> intraStoreRefs,
+        Iterator<Pair<String, Long>> interStoreRefs) throws IOException,
+        ClassNotFoundException {
       this(store, onum, version, expiry);
       this.$updateLabel = new Label._Proxy(store, updateLabel);
       this.$accessPolicy = new ConfPolicy._Proxy(store, accessPolicy);
@@ -814,7 +822,7 @@ public interface Object {
 
     /**
      * A helper method for reading a pointer during object deserialization.
-     * 
+     *
      * @param proxyClass
      *          The expected proxy class for the reference being read.
      * @param refType
@@ -826,6 +834,8 @@ public interface Object {
      * @param intraStoreRefs
      *          An iterator of intra-store references, each represented by an
      *          onum.
+     * @param interStoreRefs
+     *          An iterator of inter-store references.
      * @throws ClassNotFoundException
      *           Thrown when the class for a wrapped object is unavailable.
      * @throws IOException
@@ -834,8 +844,9 @@ public interface Object {
      */
     protected static final Object $readRef(
         Class<? extends Object._Proxy> proxyClass, RefTypeEnum refType,
-        ObjectInput in, Store store, Iterator<Long> intraStoreRefs)
-        throws IOException, ClassNotFoundException {
+        ObjectInput in, Store store, Iterator<Long> intraStoreRefs,
+        Iterator<Pair<String, Long>> interStoreRefs) throws IOException,
+        ClassNotFoundException {
       switch (refType) {
       case NULL:
         return null;
@@ -858,9 +869,22 @@ public interface Object {
         }
 
       case REMOTE:
-        // These should have been swizzled by the store.
-        throw new InternalError(
-            "Unexpected remote object reference encountered during deserialization.");
+        try {
+          Constructor<? extends Object._Proxy> constructor =
+              constructorTable.get(proxyClass);
+          if (constructor == null) {
+            constructor = proxyClass.getConstructor(Store.class, long.class);
+            constructorTable.put(proxyClass, constructor);
+          }
+
+          Pair<String, Long> ref = interStoreRefs.next();
+          String storeName = ref.first;
+          long onum = ref.second;
+          return constructor.newInstance(
+              Worker.getWorker().getStore(storeName), onum);
+        } catch (Exception e) {
+          throw new InternalError(e);
+        }
       }
 
       throw new InternalError(
@@ -881,7 +905,7 @@ public interface Object {
 
     /**
      * A helper method for serializing a reference during object serialization.
-     * 
+     *
      * @param store
      *          The referring object's store.
      * @param obj
@@ -941,8 +965,7 @@ public interface Object {
         throw new InternalError(message);
       }
       refType.add(RefTypeEnum.REMOTE);
-      interStoreRefs
-          .add(new Pair<String, Long>(p.ref.store.name(), p.ref.onum));
+      interStoreRefs.add(new Pair<>(p.ref.store.name(), p.ref.onum));
     }
 
     /**
@@ -967,7 +990,7 @@ public interface Object {
      * This method is used to initialize object databases with objects at
      * well-known onums (e.g., naming map and store principal).
      * </p>
-     * 
+     *
      * @deprecated
      */
     @Deprecated
@@ -1020,7 +1043,7 @@ public interface Object {
 
       /**
        * Used to initialize the _Static._Proxy.$instance variables.
-       * 
+       *
        * @param c
        *          The class to instantiate.
        */

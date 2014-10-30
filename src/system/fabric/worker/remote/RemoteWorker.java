@@ -1,6 +1,7 @@
 package fabric.worker.remote;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.List;
 
 import fabric.common.ClassRef;
@@ -76,7 +77,7 @@ public class RemoteWorker extends RemoteNode<RemoteWorker> {
 
   public Object issueRemoteCall(_Proxy receiver, String methodName,
       Class<?>[] parameterTypes, Object[] args)
-      throws UnreachableNodeException, RemoteCallException {
+          throws UnreachableNodeException, RemoteCallException {
     TransactionManager tm = TransactionManager.getInstance();
     tm.registerRemoteCall(this);
 
@@ -85,7 +86,7 @@ public class RemoteWorker extends RemoteNode<RemoteWorker> {
 
     Class<? extends fabric.lang.Object> receiverClass =
         (Class<? extends fabric.lang.Object>) receiver.fetch().$getProxy()
-            .getClass().getEnclosingClass();
+        .getClass().getEnclosingClass();
     ClassRef receiverClassRef = ClassRef.makeRef(receiverClass);
 
     RemoteCallMessage.Response response =
@@ -123,18 +124,18 @@ public class RemoteWorker extends RemoteNode<RemoteWorker> {
 
   /**
    * Informs the remote worker that a transaction is aborting.
-   * 
+   *
    * @param tid
    *          the tid for the transaction that is aborting.
    */
   public void abortTransaction(TransactionID tid) throws AccessException,
-      UnreachableNodeException {
+  UnreachableNodeException {
     send(new AbortTransactionMessage(tid));
   }
 
   /**
    * Reads the given object from the remote worker, updating the object's state.
-   * 
+   *
    * @param tid
    *          the tid for the current transaction.
    */
@@ -162,13 +163,12 @@ public class RemoteWorker extends RemoteNode<RemoteWorker> {
     DirtyReadMessage.Response response =
         send(new DirtyReadMessage(tid, store, onum));
     if (response.obj == null) return null;
-    return new Pair<Store, Pair<SerializedObject, VersionWarranty>>(
-        response.store, response.obj);
+    return new Pair<>(response.store, response.obj);
   }
 
   /**
    * Unsets the ownership bit for the given object at the remote worker.
-   * 
+   *
    * @param tid
    *          the tid for the current transaction.
    */
@@ -203,7 +203,7 @@ public class RemoteWorker extends RemoteNode<RemoteWorker> {
   /**
    * Notifies the dissemination node at the given worker that an object has been
    * updated.
-   * 
+   *
    * @return whether the node is resubscribing to the object.
    */
   public List<Long> notifyObjectUpdates(String store,
@@ -220,7 +220,7 @@ public class RemoteWorker extends RemoteNode<RemoteWorker> {
 
   /**
    * Notifies the worker that a set of objects has been updated.
-   * 
+   *
    * @return whether the node is resubscribing to the object.
    */
   public List<Long> notifyObjectUpdates(List<Long> updatedOnums,
@@ -283,5 +283,25 @@ public class RemoteWorker extends RemoteNode<RemoteWorker> {
       throw new InternalError(e);
     }
     return response.resubscriptions;
+  }
+
+  // ////////////////////////////////
+  // Java custom-serialization gunk
+  // ////////////////////////////////
+
+  private Object writeReplace() {
+    return new SerializationProxy(name);
+  }
+
+  static final class SerializationProxy implements Serializable {
+    private final String workerName;
+
+    public SerializationProxy(String workerName) {
+      this.workerName = workerName;
+    }
+
+    java.lang.Object readResolve() {
+      return Worker.getWorker().getWorker(workerName);
+    }
   }
 }

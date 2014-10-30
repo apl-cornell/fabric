@@ -8,9 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import jif.ast.LabelActsForLabelConstraintNode;
-import jif.ast.LabelActsForPrincipalConstraintNode;
-import jif.ast.LabelNode;
 import jif.translate.ConjunctivePrincipalToJavaExpr_c;
 import jif.translate.LabelToJavaExpr;
 import jif.translate.PrincipalToJavaExpr;
@@ -94,6 +91,7 @@ import codebases.types.CBPackage_c;
 import codebases.types.CBPlaceHolder_c;
 import codebases.types.CodebaseResolver;
 import codebases.types.NamespaceResolver;
+import fabil.types.FabILFlags;
 import fabric.FabricOptions;
 import fabric.ast.FabricUtil;
 import fabric.ast.RemoteWorkerGetter;
@@ -165,7 +163,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
     FabricOptions opt = extInfo.getOptions();
     boolean loadRaw = opt.skipLabelChecking;
 
-    namespaceResolvers = new HashMap<URI, NamespaceResolver>();
+    namespaceResolvers = new HashMap<>();
     platformResolver = namespaceResolver(extInfo.platformNamespace());
     platformResolver.loadRawClasses(loadRaw);
 
@@ -276,7 +274,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
   @Override
   public List<String> defaultPackageImports() {
     // Include fabric.lang and fabric.worker as default imports.
-    List<String> result = new ArrayList<String>(5);
+    List<String> result = new ArrayList<>(5);
     result.add("fabric.lang");
     result.add("fabric.lang.security");
     result.add("fabric.worker");
@@ -399,7 +397,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
       fabric.ast.Store store = (fabric.ast.Store) e;
       return isFinalAccessExpr(store.expr());
     } else if (e instanceof New) {
-      // treat New expressions as "constant" 
+      // treat New expressions as "constant"
       // this aids instantiation of Store
       // principals in prodecure signatures.
       return true;
@@ -416,7 +414,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
     } else if (e instanceof fabric.ast.Worker) {
       return workerLocalAccessPath(e.position());
     } else if (e instanceof New) {
-      // support instantiation of this.store$ in constructors 
+      // support instantiation of this.store$ in constructors
       New nw = (New) e;
       FabricTypeSystem ts = (FabricTypeSystem) context.typeSystem();
       ClassType ct = (ClassType) ts.unlabel(nw.type());
@@ -431,7 +429,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
     } else if (e instanceof fabric.ast.Store) {
       fabric.ast.Store st = (fabric.ast.Store) e;
       // if we wanted to allow "new C().store$" then we need to
-      // check whether st.expr is a New expr. 
+      // check whether st.expr is a New expr.
       // This doesn't seem useful, though.
       return new AccessPathStore(exprToAccessPath(st.expr(), context), Store(),
           st.position());
@@ -522,7 +520,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
   }
 
   @Override
-  public Subst<ParamInstance, Param> subst(
+  protected Subst<ParamInstance, Param> substImpl(
       Map<ParamInstance, ? extends Param> substMap) {
     return new FabricSubst_c(this, substMap);
   }
@@ -570,13 +568,13 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
     if (L instanceof ArgLabel) {
       return super.confProjection(((ArgLabel) L).upperBound());
     } else if (L instanceof MeetLabel) {
-      Set<ConfPolicy> confPols = new HashSet<ConfPolicy>();
+      Set<ConfPolicy> confPols = new HashSet<>();
       for (Label l : ((MeetLabel) L).meetComponents()) {
         confPols.add(representableConfProjection(l));
       }
       return meetConfPolicy(L.position(), confPols);
     } else if (L instanceof JoinLabel) {
-      Set<ConfPolicy> confPols = new HashSet<ConfPolicy>();
+      Set<ConfPolicy> confPols = new HashSet<>();
       for (Label l : ((JoinLabel) L).joinComponents()) {
         confPols.add(representableConfProjection(l));
       }
@@ -590,13 +588,13 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
     if (L instanceof ArgLabel) {
       return super.integProjection(((ArgLabel) L).upperBound());
     } else if (L instanceof MeetLabel) {
-      Set<IntegPolicy> integPols = new HashSet<IntegPolicy>();
+      Set<IntegPolicy> integPols = new HashSet<>();
       for (Label l : ((MeetLabel) L).meetComponents()) {
         integPols.add(representableIntegProjection(l));
       }
       return meetIntegPolicy(L.position(), integPols);
     } else if (L instanceof JoinLabel) {
-      Set<IntegPolicy> integPols = new HashSet<IntegPolicy>();
+      Set<IntegPolicy> integPols = new HashSet<>();
       for (Label l : ((JoinLabel) L).joinComponents()) {
         integPols.add(representableIntegProjection(l));
       }
@@ -706,14 +704,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
   @Override
   public Flags legalTopLevelClassFlags() {
     Flags f = super.legalTopLevelClassFlags();
-    f = f.set(FabricFlags.NONFABRIC);
-    return f;
-  }
-
-  @Override
-  public Flags legalInterfaceFlags() {
-    Flags f = super.legalInterfaceFlags();
-    f = f.set(FabricFlags.NONFABRIC);
+    f = f.set(FabILFlags.NONFABRIC);
     return f;
   }
 
@@ -735,11 +726,6 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
         hasThis |= containsThisLabel((Label) afc.actor());
 
       return hasThis;
-    } else if (as instanceof LabelActsForPrincipalConstraintNode) {
-      LabelActsForLabelConstraintNode laflcn =
-          (LabelActsForLabelConstraintNode) as;
-      LabelNode lhs = (LabelNode) laflcn.actor();
-      return containsThisLabel(lhs.label());
     }
 
     return false;
@@ -802,11 +788,6 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
         hasThis |= containsArgLabel((Label) afc.actor());
 
       return hasThis;
-    } else if (as instanceof LabelActsForPrincipalConstraintNode) {
-      LabelActsForLabelConstraintNode laflcn =
-          (LabelActsForLabelConstraintNode) as;
-      LabelNode lhs = (LabelNode) laflcn.actor();
-      return containsArgLabel(lhs.label());
     }
     return false;
   }
@@ -868,7 +849,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
       DynamicPrincipal dp = (DynamicPrincipal) p;
       if (dp.path() instanceof AccessPathStore) {
         AccessPathStore aps = (AccessPathStore) dp.path();
-        // Store principals are the only dynamic principals 
+        // Store principals are the only dynamic principals
         // that can appear in access labels, but the path
         // must be a this path.
         return aps.path() instanceof AccessPathThis;
@@ -1158,8 +1139,8 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
             conf = join(proj.label().subst(this), noComponentsLabel());
           } else if (c instanceof JoinConfPolicy_c) {
             JoinConfPolicy_c jp = (JoinConfPolicy_c) c;
-            Set<Label> lifted = new HashSet<Label>();
-            Set<ConfPolicy> confpols = new HashSet<ConfPolicy>();
+            Set<Label> lifted = new HashSet<>();
+            Set<ConfPolicy> confpols = new HashSet<>();
 
             for (ConfPolicy cp : jp.joinComponents()) {
               if (cp instanceof ConfProjectionPolicy_c) {

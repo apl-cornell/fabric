@@ -11,7 +11,7 @@ import fabric.worker.Worker;
  * that will periodically save CPU profile information to the file system. The
  * location is determined by the "fabric.profiling.dir" system property, and the
  * period is specified in seconds by the "fabric.profiling.interval" system
- * property. 
+ * property.
  */
 public class Profiling {
 
@@ -78,7 +78,7 @@ public class Profiling {
       int snapshotNum = 0;
       String filePrefix =
           dir + System.getProperty("file.separator")
-              + Worker.getWorker().getName() + "-";
+          + Worker.getWorker().getName() + "-";
 
       try {
         while (true) {

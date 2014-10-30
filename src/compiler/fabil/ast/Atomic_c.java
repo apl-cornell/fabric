@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import polyglot.ast.Block_c;
+import polyglot.ast.Ext;
 import polyglot.ast.Stmt;
 import polyglot.types.LocalInstance;
 import polyglot.util.Position;
@@ -14,12 +15,19 @@ import fabil.visit.AbortRetryCollector;
 /**
  * An <code>Atomic</code> represents an <code>atomic</code> block.
  */
+//XXX Should be replaced with extension
+@Deprecated
 public class Atomic_c extends Block_c implements Atomic {
   protected List<LocalInstance> updatedLocals;
   protected boolean mayAbort;
 
+  @Deprecated
   public Atomic_c(Position pos, List<Stmt> statements) {
-    super(pos, statements);
+    this(pos, statements, null);
+  }
+
+  public Atomic_c(Position pos, List<Stmt> statements, Ext ext) {
+    super(pos, statements, ext);
   }
 
   @Override
@@ -34,8 +42,8 @@ public class Atomic_c extends Block_c implements Atomic {
 
     // Find all the aborts and retries that are lexically enclosed in the
     // atomic blocks, and add appropriate edges.
-    List<AbortStmt> aborts = new ArrayList<AbortStmt>();
-    List<RetryStmt> retries = new ArrayList<RetryStmt>();
+    List<AbortStmt> aborts = new ArrayList<>();
+    List<RetryStmt> retries = new ArrayList<>();
 
     for (Stmt s : statements()) {
       AbortRetryCollector c = new AbortRetryCollector(aborts, retries);

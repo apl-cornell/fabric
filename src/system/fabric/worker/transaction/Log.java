@@ -340,30 +340,27 @@ public final class Log {
     this.child = null;
     this.thread = Thread.currentThread();
     this.retrySignal = parent == null ? null : parent.retrySignal;
-    this.reads = new OidKeyHashMap<ReadMap.Entry>();
-    this.readsInSubcalls = new OidKeyHashMap<ReadMap.Entry>();
-    this.readsReadByParent = new ArrayList<ReadMap.Entry>();
-    this.creates = new LongKeyHashMap<_Impl>();
-    this.createsInSubcalls = new LongKeyHashMap<_Impl>();
-    this.localStoreCreates = new WeakReferenceArrayList<_Impl>();
-    this.writes = new ArrayList<_Impl>();
-    this.localStoreWrites = new WeakReferenceArrayList<_Impl>();
-    this.workersCalled = new ArrayList<RemoteWorker>();
+    this.reads = new OidKeyHashMap<>();
+    this.readsInSubcalls = new OidKeyHashMap<>();
+    this.readsReadByParent = new ArrayList<>();
+    this.creates = new LongKeyHashMap<>();
+    this.createsInSubcalls = new LongKeyHashMap<>();
+    this.localStoreCreates = new WeakReferenceArrayList<>();
+    this.writes = new ArrayList<>();
+    this.localStoreWrites = new WeakReferenceArrayList<>();
+    this.workersCalled = new ArrayList<>();
     this.semanticWarrantyCall = semanticWarrantyCall;
-    this.semanticWarrantiesUsed =
-        new HashMap<CallInstance, WarrantiedCallResult>();
-    this.callsInSubcalls = new HashMap<CallInstance, WarrantiedCallResult>();
-    this.readDependencies = new LongKeyHashMap<Set<CallInstance>>();
-    this.callDependencies = new HashMap<CallInstance, Set<CallInstance>>();
-    this.requests = new HashMap<CallInstance, SemanticWarrantyRequest>();
-    this.requestLocations = new HashMap<CallInstance, Store>();
-    this.requestReplies =
-        Collections
-            .synchronizedMap(new HashMap<CallInstance, SemanticWarranty>());
-    this.blockedWarranties = new HashSet<CallInstance>();
+    this.semanticWarrantiesUsed = new HashMap<>();
+    this.callsInSubcalls = new HashMap<>();
+    this.readDependencies = new LongKeyHashMap<>();
+    this.callDependencies = new HashMap<>();
+    this.requests = new HashMap<>();
+    this.requestLocations = new HashMap<>();
+    this.requestReplies = Collections.synchronizedMap(new HashMap<>());
+    this.blockedWarranties = new HashSet<>();
     this.useStaleWarranties = true;
     this.startTime = System.currentTimeMillis();
-    this.waitsFor = new HashSet<Log>();
+    this.waitsFor = new HashSet<>();
 
     if (parent != null) {
       this.blockedWarranties.addAll(parent.blockedWarranties);
@@ -406,7 +403,7 @@ public final class Log {
   /**
    * Creates a nested transaction whose parent is the transaction with the given
    * log. The created transaction log is added to the parent's children.
-   * 
+   *
    * @param parent
    *          the log for the parent transaction or null if creating the log for
    *          a top-level transaction.
@@ -825,7 +822,7 @@ public final class Log {
    * transaction.
    */
   Set<Store> storesWritten() {
-    Set<Store> result = new HashSet<Store>();
+    Set<Store> result = new HashSet<>();
 
     for (_Impl obj : writes) {
       if (obj.$isOwned) result.add(obj.$getStore());
@@ -847,7 +844,7 @@ public final class Log {
    * @return a set of stores to contact when checking for object freshness.
    */
   Set<Store> storesToCheckFreshness() {
-    Set<Store> result = new HashSet<Store>();
+    Set<Store> result = new HashSet<>();
     result.addAll(reads.storeSet());
     for (ReadMap.Entry entry : readsReadByParent) {
       result.add(entry.getStore());
@@ -859,12 +856,10 @@ public final class Log {
   /**
    * Returns a map from onums to version numbers of objects read at the given
    * store. Reads on created objects are never included.
-   * 
-   * @param includeModified
-   *          whether to include reads on modified objects.
+   *
    */
   LongKeyMap<Integer> getReadsForStore(Store store) {
-    LongKeyMap<Integer> result = new LongKeyHashMap<Integer>();
+    LongKeyMap<Integer> result = new LongKeyHashMap<>();
     LongKeyMap<ReadMap.Entry> submap = reads.get(store);
     if (submap != null) {
       for (LongKeyMap.Entry<ReadMap.Entry> entry : submap.entrySet()) {
@@ -912,7 +907,7 @@ public final class Log {
   Collection<_Impl> getWritesForStore(Store store) {
     // This should be a Set of _Impl, but we have a map indexed by OID to
     // avoid calling hashCode and equals on the _Impls.
-    LongKeyMap<_Impl> result = new LongKeyHashMap<_Impl>();
+    LongKeyMap<_Impl> result = new LongKeyHashMap<>();
 
     if (store.isLocalStore()) {
       for (_Impl obj : localStoreWrites) {
@@ -941,7 +936,7 @@ public final class Log {
   Collection<_Impl> getCreatesForStore(Store store) {
     // This should be a Set of _Impl, but to avoid calling methods on the
     // _Impls, we instead use a map keyed on OID.
-    LongKeyMap<_Impl> result = new LongKeyHashMap<_Impl>();
+    LongKeyMap<_Impl> result = new LongKeyHashMap<>();
 
     if (store.isLocalStore()) {
       for (_Impl obj : localStoreCreates) {
@@ -1000,7 +995,7 @@ public final class Log {
    * Sets the retry flag on this and the logs of all sub-transactions.
    */
   public void flagRetry() {
-    Queue<Log> toFlag = new LinkedList<Log>();
+    Queue<Log> toFlag = new LinkedList<>();
     toFlag.add(this);
     while (!toFlag.isEmpty()) {
       Log log = toFlag.remove();
@@ -1721,7 +1716,7 @@ public final class Log {
    */
   public Set<Log> getWaitsFor() {
     synchronized (this.waitsFor) {
-      return new HashSet<Log>(this.waitsFor);
+      return new HashSet<>(this.waitsFor);
     }
   }
 
@@ -1729,7 +1724,7 @@ public final class Log {
    * Goes through this transaction log and performs an onum renumbering. This is
    * used by fabric.worker.TransactionRegistery.renumberObject. Do not call this
    * unless if you really know what you are doing.
-   * 
+   *
    * @deprecated
    */
   @Deprecated

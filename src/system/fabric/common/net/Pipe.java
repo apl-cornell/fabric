@@ -152,11 +152,11 @@ public class Pipe {
      * Blocks until at least one byte is available to be read or the end of
      * stream is reached (i.e., the corresponding output stream is closed).
      * Ensures the next byte to read (if any) is curBuf[readPos].
-     * 
+     *
      * @return
      *          The number of bytes available to be read without blocking. If
      *          the end of the stream has been reached, -1 is returned.
-     * 
+     *
      * @throws IOException
      *          if the stream is closed.
      */

@@ -92,7 +92,7 @@ public class LoginAction[principal servP] extends AbstractAction[servP] {
         Node[lbl, lbl] form = servlet.createForm(lbl, lbl, new SubmitLoginAction[servP](servlet, this),
                                                                 lbl, lbl, 
                                                                 new Table[lbl, lbl](lbl, lbl, entries)); 
-        Node[lbl, lbl] createNew = new Hyperlink(new CreateUserAction[servP](servlet, successAction, req.session), "Create new user"); 
+        Node[lbl, lbl] createNew = new Hyperlink[servP, lbl, lbl](new CreateUserAction[servP](servlet, successAction, req.session), "Create new user"); 
         Node[lbl, lbl] createNewPara = new Paragraph[lbl, lbl](createNew);
         Node[lbl, lbl] content = new NodeList[lbl, lbl](lbl, lbl, banner, createBody(lbl, lbl, new NodeList[lbl, lbl](lbl, lbl, welcomeText, form, createNewPara)));
         servlet.createPage(req, title, lbl, lbl, content);

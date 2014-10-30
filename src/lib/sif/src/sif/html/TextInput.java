@@ -25,6 +25,13 @@ public class TextInput extends InputNode {
     initialText = initial;
   }
 
+  public TextInput(Principal servletP, Label L, Label E, String name, int size,
+      String initial) {
+    super(servletP, L, E, name);
+    this.size = size;
+    initialText = initial;
+  }
+
   public final int getSize() {
     return size;
   }
@@ -42,7 +49,7 @@ public class TextInput extends InputNode {
     p.print("<input");
     p.print(" type=\"" + typeName() + "\"");
     p.print(" name=");
-    p.printq(input.getName());
+    p.printq(getName());
     p.print(" size=");
     p.printq(size);
     p.print(" value=");

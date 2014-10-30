@@ -68,7 +68,7 @@ public class GroupServlet extends Servlet[worker$] implements AuthServlet[worker
 		return defaultActionName;
 	} 
 
-	protected AuthSessState{*lbl} createSessionState{*lbl}(label{*lbl} lbl,
+	protected SessionState{*lbl} createSessionState{*lbl}(label{*lbl} lbl,
 			String{*lbl} id, SessionPrincipal{*lbl} session) {
 	  final Store localStore = worker$.getLocalStore();
 	  atomic {

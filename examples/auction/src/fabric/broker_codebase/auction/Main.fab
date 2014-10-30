@@ -7,7 +7,7 @@ import broker.Agent;
 import broker.User;
 import broker.UserAgent;
 
-class Main  {
+public class Main  {
     public static final void main{* <- }  (principal{*provider} p, String[] args)  throws SecurityException, IllegalArgumentException  
 		where caller(p), provider actsfor p, {*provider} <= {p<-}, 
 			{*provider} equiv {*AirlineExample.provider},

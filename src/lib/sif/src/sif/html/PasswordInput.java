@@ -16,6 +16,11 @@ public final class PasswordInput extends TextInput {
     super(servletP, L, E, input, size, initial);
   }
 
+  public PasswordInput(Principal servletP, Label L, Label E, String name,
+      int size, String initial) {
+    super(servletP, L, E, name, size, initial);
+  }
+
   @Override
   String typeName() {
     return "password";

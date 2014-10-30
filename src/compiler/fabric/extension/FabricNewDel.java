@@ -59,11 +59,11 @@ public class FabricNewDel extends JifNewDel implements NewOps {
         if (!ts.isFinalAccessExpr(ext.location()))
           throw new SemanticException(
               "The location must be a final access path.", ext.location()
-                  .position());
+              .position());
         ext =
             (NewExt_c) ext.storePrincipal(ts.exprToPrincipal(ts,
                 ext.location(), context));
-        n = (New) FabricUtil.updateFabricExt(n, ext);
+        n = FabricUtil.updateFabricExt(n, ext);
 
       } else {
         if (tc.context().inStaticContext()) {
@@ -71,7 +71,7 @@ public class FabricNewDel extends JifNewDel implements NewOps {
           ext =
               (NewExt_c) ext.storePrincipal(ts.workerLocalPrincipal(Position
                   .compilerGenerated()));
-          n = (New) FabricUtil.updateFabricExt(n, ext);
+          n = FabricUtil.updateFabricExt(n, ext);
         } else {
           AccessPath storeap =
               ts.currentStoreAccessPathFor(tc.context().currentClass(),
@@ -79,7 +79,7 @@ public class FabricNewDel extends JifNewDel implements NewOps {
           ext =
               (NewExt_c) ext.storePrincipal(ts.dynamicPrincipal(
                   Position.compilerGenerated(), storeap));
-          n = (New) FabricUtil.updateFabricExt(n, ext);
+          n = FabricUtil.updateFabricExt(n, ext);
         }
       }
     }

@@ -21,6 +21,7 @@ import sif.html.HyperlinkRequest;
 import sif.html.Input;
 import sif.html.Node;
 import sif.html.NodeList;
+import sif.html.OffsiteForm;
 import sif.html.Page;
 import sif.html.Paragraph;
 import sif.html.Pre;
@@ -100,6 +101,11 @@ abstract public class HTMLServlet extends Servlet {
   public final Node createForm(Label L, Label E, Action action, Label cL,
       Label cE, Node body) {
     return new Form(servletP, L, E, action, cL, cE, body);
+  }
+
+  public final Node createOffsiteForm(Label L, Label E, String action,
+      boolean useGetMethod, Label cL, Label cE, Node body) {
+    return new OffsiteForm(servletP, L, E, action, useGetMethod, cL, cE, body);
   }
 
   /** checkLoad implements load checking for the servlet. This

@@ -28,7 +28,7 @@ public class NewJifExt_c extends JifNewExt {
 
   @Override
   public Node labelCheck(LabelChecker lc) throws SemanticException {
-    New n = (New) node();
+    New n = node();
     NewExt_c ext = (NewExt_c) FabricUtil.fabricExt(n);
     FabricTypeSystem ts = (FabricTypeSystem) lc.typeSystem();
     JifContext context = lc.context();
@@ -73,7 +73,7 @@ public class NewJifExt_c extends JifNewExt {
       Label newLabel =
           ts.freshLabelVariable(n.position(), "new" + ct.name(),
               "label of the reference to the newly created " + ct.name()
-                  + " object, at " + n.position());
+              + " object, at " + n.position());
       ClassType unlblCt = (ClassType) ts.unlabel(n.type());
 
       CallHelper ch =

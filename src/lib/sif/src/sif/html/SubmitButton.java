@@ -11,18 +11,24 @@ import fabric.lang.security.Principal;
  * A button that submits a form.
  */
 public final class SubmitButton extends InputNode {
-  private final String name;
+  private final String value;
 
   public SubmitButton(Principal servletP, Label L, Label E, Input input,
-      String name_) {
+      String val) {
     super(servletP, L, E, input);
-    name = name_;
+    value = val;
   }
 
   public SubmitButton(Principal servletP, Label L, Label E, HTMLServlet s,
-      Label inputLabel, String name_) {
+      Label inputLabel, String val) {
     super(servletP, L, E, new Input(servletP, s, inputLabel));
-    name = name_;
+    value = val;
+  }
+
+  public SubmitButton(Principal servletP, Label L, Label E, String name,
+      String val) {
+    super(servletP, L, E, name);
+    value = val;
   }
 
   @Override
@@ -30,9 +36,9 @@ public final class SubmitButton extends InputNode {
     p.print("<input ");
     p.begin();
     p.print("type=submit class=submit value=");
-    p.printq(name);
+    p.printq(value);
     p.print(" name=");
-    p.printq(input.getName());
+    p.printq(getName());
     p.end();
     p.print(" />");
   }

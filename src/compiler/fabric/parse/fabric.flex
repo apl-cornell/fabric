@@ -10,11 +10,12 @@ import polyglot.lex.*;
 import polyglot.util.Position;
 import polyglot.util.ErrorQueue;
 import polyglot.util.ErrorInfo;
-import polyglot.frontend.FileSource;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Collections;
+import polyglot.frontend.Source;
 import java.math.BigInteger;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 @SuppressWarnings("all")
 %%
@@ -40,12 +41,12 @@ import java.math.BigInteger;
     ErrorQueue eq;
     HashMap keywords;
 
-    public Lexer_c(java.io.InputStream in, FileSource file, ErrorQueue eq) {
+    public Lexer_c(java.io.InputStream in, Source file, ErrorQueue eq) {
         this(new java.io.BufferedReader(new java.io.InputStreamReader(in)),
              file, eq);
     }
 
-    public Lexer_c(java.io.Reader reader, FileSource file, ErrorQueue eq) {
+    public Lexer_c(java.io.Reader reader, Source file, ErrorQueue eq) {
         this(reader);
         this.file = file.name();
         this.path = file.path();
@@ -53,11 +54,16 @@ import java.math.BigInteger;
         this.keywords = new HashMap();
         init_keywords();
     }
-	
-	public Map keywords() {
-		return Collections.unmodifiableMap(keywords);
+
+    public Set<String> keywords() {
+	if (keywords == null) {
+	    this.keywords = new HashMap<>();
+	    init_keywords();
 	}
-	
+
+	return Collections.unmodifiableSet(keywords.keySet());
+    }
+
     protected void init_keywords() {
         keywords.put("abstract",      new Integer(sym.ABSTRACT));
         keywords.put("assert",        new Integer(sym.ASSERT));
@@ -431,7 +437,7 @@ OctalEscape = \\ [0-7]
 
 <TRADITIONAL_COMMENT> {
     "*/"                         { yybegin(YYINITIAL); }
-    .|\n                         { /* ignore */ }
+    [^]                          { /* ignore */ }
 }
 
 <END_OF_LINE_COMMENT> {
@@ -520,6 +526,6 @@ OctalEscape = \\ [0-7]
 }
 
 /* Fallthrough case: anything not matched above is an error */
-.|\n                             { eq.enqueue(ErrorInfo.LEXICAL_ERROR,
+[^]                              { eq.enqueue(ErrorInfo.LEXICAL_ERROR,
                                               "Illegal character \"" +
                                               yytext() + "\"", pos()); }

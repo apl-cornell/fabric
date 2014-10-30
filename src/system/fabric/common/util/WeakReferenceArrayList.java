@@ -47,7 +47,7 @@ public class WeakReferenceArrayList<T> implements Iterable<T> {
     if (size == data.length) {
       ensureCapacity(size + 1);
     }
-    data[size++] = new WeakReference<T>(e);
+    data[size++] = new WeakReference<>(e);
     return true;
   }
 

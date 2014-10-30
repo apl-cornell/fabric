@@ -50,7 +50,7 @@ public interface FetchManager {
 
   /**
    * Updates the dissemination and worker caches with the given glob.
-   * 
+   *
    * @return true iff there was a dissemination-cache entry for the given oid.
    */
   public boolean updateCaches(RemoteStore store, long onum,

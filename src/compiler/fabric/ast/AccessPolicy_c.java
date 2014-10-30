@@ -4,6 +4,7 @@ import java.util.List;
 
 import jif.ast.LabelNode;
 import jif.types.label.ConfPolicy;
+import polyglot.ast.Ext;
 import polyglot.ast.Node;
 import polyglot.ast.Term;
 import polyglot.ast.Term_c;
@@ -17,18 +18,19 @@ import fabric.types.AccessPolicyInstance;
 import fabric.types.FabricParsedClassType;
 import fabric.types.FabricTypeSystem;
 
-/**
- * 
- */
+//XXX Should be replaced with extension
+@Deprecated
 public class AccessPolicy_c extends Term_c implements AccessPolicy {
   protected LabelNode policy;
   protected AccessPolicyInstance accessPolicyInstance;
 
-  /**
-   * @param pos
-   */
+  @Deprecated
   public AccessPolicy_c(Position pos, LabelNode policy) {
-    super(pos);
+    this(pos, policy, null);
+  }
+
+  public AccessPolicy_c(Position pos, LabelNode policy, Ext ext) {
+    super(pos, ext);
     this.policy = policy;
   }
 
@@ -37,9 +39,14 @@ public class AccessPolicy_c extends Term_c implements AccessPolicy {
     return policy;
   }
 
+  @Override
   public AccessPolicy policy(LabelNode policy) {
-    if (policy == this.policy) return this;
-    AccessPolicy_c n = (AccessPolicy_c) copy();
+    return policy(this, policy);
+  }
+
+  protected <N extends AccessPolicy_c> N policy(N n, LabelNode policy) {
+    if (n.policy == policy) return n;
+    n = copyIfNeeded(n);
     n.policy = policy;
     return n;
   }
@@ -63,17 +70,13 @@ public class AccessPolicy_c extends Term_c implements AccessPolicy {
 
   @Override
   public Node visitChildren(NodeVisitor v) {
-    LabelNode policy = (LabelNode) visitChild(this.policy, v);
-    return reconstruct(policy);
+    LabelNode policy = visitChild(this.policy, v);
+    return reconstruct(this, policy);
   }
 
-  protected Node reconstruct(LabelNode policy) {
-    if (this.policy != policy) {
-      AccessPolicy_c n = (AccessPolicy_c) copy();
-      n.policy = policy;
-      return n;
-    }
-    return this;
+  protected <N extends AccessPolicy_c> N reconstruct(N n, LabelNode policy) {
+    n = policy(n, policy);
+    return n;
   }
 
   @Override

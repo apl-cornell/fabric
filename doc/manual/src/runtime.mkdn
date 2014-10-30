@@ -61,9 +61,15 @@ the CA in the Fabric installation to sign the certificate.
   $ bin/make-node --app-home /opt/fabric --name valinor
 ~~~
 This creates a Java keystore `/opt/fabric/etc/keys/valinor.keystore`
-containing the node's private key and certificate. Before importing the
-certificate into the node's keystore, the CA certificate will be
-displayed, and you will be asked whether it should be trusted.
+containing the node's private key and certificate.
+
+Before importing the certificate into the node's keystore, the CA
+certificate will be displayed, and you will be asked whether it should
+be trusted. You can use the `--trust-ca-cert` option to automatically
+trust the CA certificate without prompting:
+~~~
+  $ bin/make-node --app-home /opt/fabric --name valinor --trust-ca-cert
+~~~
 
 ### Method 2: Using `genkey` @anchor genkey
 
@@ -91,8 +97,15 @@ into the node's keystore:
   $ bin/import-cert --keystore /opt/fabric/etc/keys/valinor.keystore \
       --ca etc/ca/ca.crt /tmp/valinor.crt
 ~~~
-Before importing the certificates, this will display the CA certificate
-and ask you whether it should be trusted.
+
+Before importing the certificates, the CA certificate will be displayed,
+and you will be asked whether it should be trusted. You can use the
+`--trust-ca-cert` option to automatically trust the CA certificate
+without prompting:
+~~~
+  $ bin/import-cert --keystore /opt/fabric/etc/keys/valinor.keystore \
+      --ca etc/ca/ca.crt /tmp/valinor.crt --trust-ca-cert
+~~~
 
 
 Import other CA certificates
@@ -104,8 +117,16 @@ those CAs.
   $ bin/add-trusted-ca --keystore /opt/fabric/etc/keys/valinor.keystore \
       other-ca.crt
 ~~~
-Before importing the certificate into the node's keystore, this will
-display the CA certificate and ask you whether it should be trusted.
+
+Before importing the certificate into the node's keystore, the CA
+certificate will be displayed, and you will be asked whether it should
+be trusted. You can use the `--no-prompt` option to automatically trust
+the CA certificate without prompting:
+~~~
+  $ bin/add-trusted-ca --no-prompt \
+      --keystore /opt/fabric/etc/keys/valinor.keystore \
+      other-ca.crt
+~~~
 
 
 Configure the node

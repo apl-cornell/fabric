@@ -22,7 +22,7 @@ public class ConstructorDeclExt_c extends ClassMemberExt_c {
   public List<ClassMember> implMember(ProxyRewriter pr, ClassDecl parent) {
     // TODO add Store parameters?
     ConstructorDecl node = (ConstructorDecl) node();
-    node = node.name("_Impl");
+    node = (ConstructorDecl) node.name("_Impl");
     return Collections.singletonList((ClassMember) node);
   }
 
@@ -39,7 +39,7 @@ public class ConstructorDeclExt_c extends ClassMemberExt_c {
 
     NodeFactory nf = pr.nodeFactory();
     Position pos = Position.compilerGenerated();
-    List<Formal> formals = new LinkedList<Formal>(decl.formals());
+    List<Formal> formals = new LinkedList<>(decl.formals());
     formals.add(
         0,
         nf.Formal(pos, Flags.NONE,

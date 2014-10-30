@@ -28,12 +28,19 @@ public final class Select extends InputNode {
     selected = selected_;
   }
 
+  public Select(Principal servletP, Label L, Label E, String name,
+      int selected_, String[] options_) {
+    super(servletP, L, E, name);
+    options = options_;
+    selected = selected_;
+  }
+
   @Override
   void writeImpl(HTMLWriter p) {
     // TODO Auto-generated method stub
     p.begin(2);
     p.print("<select name=");
-    p.printq(input.getName());
+    p.printq(getName());
     p.print(">");
     for (int i = 0; i < options.length; i++) {
       //p.breakLine();

@@ -152,7 +152,7 @@ public abstract class ClassRef implements FastSerializable {
 
   /**
    * Factory method.
-   * 
+   *
    * @param clazz
    *          the class being referenced. If it's a Fabric class, this must be
    *          the interface corresponding to the Fabric type, and not the _Proxy
@@ -164,7 +164,7 @@ public abstract class ClassRef implements FastSerializable {
 
     @SuppressWarnings("unchecked")
     Class<? extends fabric.lang.Object> fabClass =
-        (Class<? extends fabric.lang.Object>) clazz;
+    (Class<? extends fabric.lang.Object>) clazz;
     return new FabricClassRef(fabClass);
   }
 
@@ -328,7 +328,7 @@ public abstract class ClassRef implements FastSerializable {
 
     /**
      * Deserializes a PlatformClassRef object from the given byte array.
-     * 
+     *
      * @param pos
      *          the starting position of a serialized representation of a
      *          PlatformClassRef object.
@@ -647,7 +647,7 @@ public abstract class ClassRef implements FastSerializable {
 
     /**
      * Deserializes a FabricClassRef object from the given byte array.
-     * 
+     *
      * @param pos
      *          the starting position of a serialized representation of a
      *          FabricClassRef object.
@@ -736,7 +736,7 @@ public abstract class ClassRef implements FastSerializable {
     private static int storeNameLength(byte[] data, int pos) {
       int x =
           SerializationUtil
-              .unsignedShortAt(data, storeNameLengthPos(data, pos));
+          .unsignedShortAt(data, storeNameLengthPos(data, pos));
       return x;
     }
 

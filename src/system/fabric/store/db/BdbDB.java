@@ -134,7 +134,7 @@ public class BdbDB extends ObjectDB {
   /**
    * Creates a new BdbStore for the store specified. A new database will be
    * created if it does not exist.
-   * 
+   *
    * @param name
    *          name of store to create store for.
    */
@@ -184,9 +184,9 @@ public class BdbDB extends ObjectDB {
 
     this.nextOnum = new MutableLong(-1);
     this.lastReservedOnum = new MutableLong(-2);
-    this.cachedVersions = new LongKeyCache<MutableInteger>();
-    this.cachedObjects = new LongKeyCache<SerializedObject>();
-    this.preparedTransactions = new Cache<ByteArray, PendingTransaction>();
+    this.cachedVersions = new LongKeyCache<>();
+    this.cachedObjects = new LongKeyCache<>();
+    this.preparedTransactions = new Cache<>();
   }
 
   @Override
@@ -297,7 +297,7 @@ public class BdbDB extends ObjectDB {
 
                 if (pending != null) {
                   FSSerializer<SerializedObject> serializer =
-                      new FSSerializer<SerializedObject>();
+                      new FSSerializer<>();
                   for (SerializedObject o : SysUtil.chain(pending.creates,
                       pending.writes)) {
                     o.setVersion(o.getVersion() + 1);
@@ -636,7 +636,7 @@ public class BdbDB extends ObjectDB {
   /**
    * Removes a PendingTransaction from the prepare log and returns it. If no
    * transaction with the given transaction id is found, null is returned.
-   * 
+   *
    * @param worker
    *          the principal under which this action is being executed.
    * @param txn
@@ -715,8 +715,7 @@ public class BdbDB extends ObjectDB {
     // This code is adapted from the JavaDoc for LockConflictException.
     boolean success = false;
     int backoff = 1;
-    List<LockConflictException> conflicts =
-        new ArrayList<LockConflictException>(MAX_TX_RETRIES);
+    List<LockConflictException> conflicts = new ArrayList<>(MAX_TX_RETRIES);
     for (int i = 0; i < MAX_TX_RETRIES; i++) {
       int waitTime = randInt(backoff);
       if (waitTime > 0) {

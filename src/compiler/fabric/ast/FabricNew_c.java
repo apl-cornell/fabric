@@ -5,6 +5,7 @@ import java.util.List;
 import jif.ast.JifNew_c;
 import polyglot.ast.ClassBody;
 import polyglot.ast.Expr;
+import polyglot.ast.Ext;
 import polyglot.ast.Term;
 import polyglot.ast.Term_c;
 import polyglot.ast.TypeNode;
@@ -13,11 +14,19 @@ import polyglot.visit.CFGBuilder;
 import fabric.extension.FabricExt;
 import fabric.extension.LocatedExt_c;
 
+//XXX Should be replaced with extension
+@Deprecated
 public class FabricNew_c extends JifNew_c {
 
+  @Deprecated
   public FabricNew_c(Position pos, Expr outer, TypeNode tn,
       List<Expr> arguments, ClassBody body) {
-    super(pos, outer, tn, arguments, body);
+    this(pos, outer, tn, arguments, body, null);
+  }
+
+  public FabricNew_c(Position pos, Expr outer, TypeNode tn,
+      List<Expr> arguments, ClassBody body, Ext ext) {
+    super(pos, outer, tn, arguments, body, ext);
   }
 
   @Override

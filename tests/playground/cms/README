@@ -25,7 +25,7 @@ if (true)
 
 4) Update your CLASSPATH to be:
 
-.:{polyglot home}/classes:{polyglot home}/lib/java_cup.jar:{polyglot home}/lib/JFlex.jar:{polyglot home}/lib/ppg.jar:/usr/share/java/servlet-api.jar:{fabric home}/tests/cms/web/WEB-INF/lib/ostermillerutils_1_05_00_for_java_1_4.jar:{fabric home}/tests/cms/web/WEB-INF/lib/mail.jar
+.:{polyglot home}/classes:{polyglot home}/lib/java_cup.jar:{polyglot home}/lib/jflex.jar:{polyglot home}/lib/ppg.jar:/usr/share/java/servlet-api.jar:{fabric home}/tests/cms/web/WEB-INF/lib/ostermillerutils_1_05_00_for_java_1_4.jar:{fabric home}/tests/cms/web/WEB-INF/lib/mail.jar
 
 5) Build CMS
 

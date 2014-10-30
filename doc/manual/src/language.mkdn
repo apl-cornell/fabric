@@ -122,6 +122,15 @@ Access labels @anchor access-labels
   label `{this.store→}`. For any object `o`, the pseudo-field `o.store`
   represents the node on which `o` is stored.
 
+  Access labels for classes and interfaces can also be specified independently
+  of fields:
+
+~~~
+  interface I {
+      @ {⊤→n}
+  }
+~~~
+
 Provider labels @anchor provider-labels
 ---------------
   Remote method calls make it possible to invoke a method on a remote node even

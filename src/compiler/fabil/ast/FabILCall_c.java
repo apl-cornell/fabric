@@ -5,37 +5,49 @@ import java.util.List;
 
 import polyglot.ast.Call_c;
 import polyglot.ast.Expr;
+import polyglot.ast.Ext;
 import polyglot.ast.Id;
 import polyglot.ast.Node;
 import polyglot.ast.Receiver;
 import polyglot.types.SemanticException;
+import polyglot.util.Copy;
 import polyglot.util.Position;
 import polyglot.visit.NodeVisitor;
 import polyglot.visit.TypeChecker;
 import fabil.types.FabILTypeSystem;
 
+//XXX Should be replaced with extension
+@Deprecated
 public class FabILCall_c extends Call_c implements FabILCall {
   protected Expr remoteWorker;
 
+  @Deprecated
   public FabILCall_c(Position pos, Receiver target, Id name,
       List<Expr> arguments) {
-    this(pos, target, name, null, arguments);
+    this(pos, target, name, arguments, null);
+  }
+
+  public FabILCall_c(Position pos, Receiver target, Id name,
+      List<Expr> arguments, Ext ext) {
+    this(pos, target, name, null, arguments, ext);
+  }
+
+  @Deprecated
+  public FabILCall_c(Position pos, Receiver target, Id name, Expr remoteWorker,
+      List<Expr> arguments) {
+    this(pos, target, name, remoteWorker, arguments, null);
   }
 
   public FabILCall_c(Position pos, Receiver target, Id name, Expr remoteWorker,
-      List<Expr> arguments) {
-    super(pos, target, name, arguments);
+      List<Expr> arguments, Ext ext) {
+    super(pos, target, name, arguments, ext);
     this.remoteWorker = remoteWorker;
   }
 
-  protected FabILCall_c reconstruct(Receiver target, Id name,
-      Expr remoteWorker, List<Expr> arguments) {
-    FabILCall_c n = (FabILCall_c) super.reconstruct(target, name, arguments);
-
-    if (remoteWorker != this.remoteWorker) {
-      n = (FabILCall_c) n.copy();
-      n.remoteWorker = remoteWorker;
-    }
+  protected <N extends FabILCall_c> N reconstruct(N n, Receiver target,
+      Id name, Expr remoteWorker, List<Expr> arguments) {
+    n = super.reconstruct(n, target, name, arguments);
+    n = remoteWorker(n, remoteWorker);
 
     return n;
   }
@@ -47,22 +59,23 @@ public class FabILCall_c extends Call_c implements FabILCall {
 
   @Override
   public FabILCall remoteWorker(Expr remoteWorker) {
-    if (remoteWorker == this.remoteWorker) {
-      return this;
-    }
+    return remoteWorker(this, remoteWorker);
+  }
 
-    FabILCall_c n = (FabILCall_c) this.copy();
+  protected <N extends FabILCall_c> N remoteWorker(N n, Expr remoteWorker) {
+    if (n.remoteWorker == remoteWorker) return n;
+    if (n == this) n = Copy.Util.copy(n);
     n.remoteWorker = remoteWorker;
     return n;
   }
 
   @Override
   public Node visitChildren(NodeVisitor v) {
-    Receiver target = (Receiver) visitChild(this.target, v);
-    Id name = (Id) visitChild(this.name, v);
-    Expr remoteWorker = (Expr) visitChild(this.remoteWorker, v);
+    Receiver target = visitChild(this.target, v);
+    Id name = visitChild(this.name, v);
+    Expr remoteWorker = visitChild(this.remoteWorker, v);
     List<Expr> arguments = visitList(this.arguments, v);
-    return reconstruct(target, name, remoteWorker, arguments);
+    return reconstruct(this, target, name, remoteWorker, arguments);
   }
 
   @Override
@@ -90,7 +103,7 @@ public class FabILCall_c extends Call_c implements FabILCall {
         // The expression after @ has to be a RemoteWorker
         throw new SemanticException(
             "Remote method invocations expect remote workers.", c
-                .remoteWorker().position());
+            .remoteWorker().position());
       }
     }
 

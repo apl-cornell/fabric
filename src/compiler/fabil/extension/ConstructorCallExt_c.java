@@ -25,7 +25,7 @@ public class ConstructorCallExt_c extends FabILExt_c {
     if (!pr.typeSystem().isFabricClass(containerType))
       return super.rewriteProxies(pr);
 
-    List<Expr> args = new LinkedList<Expr>(call.arguments());
+    List<Expr> args = new LinkedList<>(call.arguments());
     args.add(
         0,
         nf.AmbExpr(Position.compilerGenerated(),

@@ -10,12 +10,12 @@ import fabric.worker.remote.RemoteWorker;
  * This abstract class acts as a visitor for MessagesToStore. It also documents
  * the list of all messages that a store needs to be able to handle. The methods
  * all have the form:<br>
- * 
+ *
  * <pre>
  * public Response handle(Principal, Message)
  *   throws FabricException
  * </pre>
- * 
+ *
  * and there is one such method for each message type that the store handles.
  */
 public abstract class MessageToStoreHandler extends AbstractMessageServer {
@@ -40,28 +40,28 @@ public abstract class MessageToStoreHandler extends AbstractMessageServer {
   @Override
   public final fabric.messages.DirtyReadMessage.Response handle(
       RemoteIdentity<RemoteWorker> client, DirtyReadMessage msg)
-      throws ProtocolError {
+          throws ProtocolError {
     throw error(msg);
   }
 
   @Override
   public final fabric.messages.RemoteCallMessage.Response handle(
       RemoteIdentity<RemoteWorker> client, RemoteCallMessage msg)
-      throws ProtocolError {
+          throws ProtocolError {
     throw error(msg);
   }
 
   @Override
   public final fabric.messages.TakeOwnershipMessage.Response handle(
       RemoteIdentity<RemoteWorker> client, TakeOwnershipMessage msg)
-      throws ProtocolError {
+          throws ProtocolError {
     throw error(msg);
   }
 
   @Override
   public final fabric.messages.InterWorkerStalenessMessage.Response handle(
       RemoteIdentity<RemoteWorker> client, InterWorkerStalenessMessage msg)
-      throws ProtocolError {
+          throws ProtocolError {
     throw error(msg);
   }
 

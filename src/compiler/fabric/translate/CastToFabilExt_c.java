@@ -43,7 +43,7 @@ public class CastToFabilExt_c extends CastToJavaExt_c {
       return rw.java_nf().Cast(c.position(), c.castType(), c.expr());
     }
 
-    List<Expr> args = new ArrayList<Expr>();
+    List<Expr> args = new ArrayList<>();
     if (((JifCastDel) c.del()).isToSubstJifClass()) {
       // add all the actual param expressions to args
       FabricSubstType t = (FabricSubstType) castType;
@@ -57,7 +57,7 @@ public class CastToFabilExt_c extends CastToJavaExt_c {
     args.add(c.expr());
 
     FabricClassType fct = (FabricClassType) castType;
-    String jifImplClass = fct.name();
+    String jifImplClass = fct.fullName();
     if (fct.flags().isInterface()) {
       // use the full name for the interface, since the IMPL class
       // will not be in the import table.

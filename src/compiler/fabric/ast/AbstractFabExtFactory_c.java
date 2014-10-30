@@ -9,14 +9,11 @@ import polyglot.ast.ExtFactory;
  * parent class {@link polyglot.ast.AbstractExtFactory_c}: it provides a default
  * implementation of the factory method for each fabric extension class that
  * delegates to the factory method for its parent class's extension.
- * 
- * @author mdgeorge
  */
 public class AbstractFabExtFactory_c extends AbstractJifExtFactory_c implements
-    FabricExtFactory {
+FabricExtFactory {
 
   public AbstractFabExtFactory_c() {
-    super();
   }
 
   public AbstractFabExtFactory_c(ExtFactory next) {
@@ -26,10 +23,10 @@ public class AbstractFabExtFactory_c extends AbstractJifExtFactory_c implements
   @Override
   public final Ext extAtomic() {
     Ext e = extAtomicImpl();
-    if (nextExtFactory() != null
-        && nextExtFactory() instanceof FabricExtFactory) {
-      FabricExtFactory nextFac = (FabricExtFactory) nextExtFactory();
-      Ext e2 = nextFac.extAtomic();
+
+    ExtFactory nextEF = nextExtFactory();
+    if (nextEF instanceof FabricExtFactory) {
+      Ext e2 = ((FabricExtFactory) nextEF).extAtomic();
       e = composeExts(e, e2);
     }
     return postExtAtomic(e);
@@ -46,10 +43,10 @@ public class AbstractFabExtFactory_c extends AbstractJifExtFactory_c implements
   @Override
   public final Ext extAbortStmt() {
     Ext e = extAbortStmtImpl();
-    if (nextExtFactory() != null
-        && nextExtFactory() instanceof FabricExtFactory) {
-      FabricExtFactory nextFac = (FabricExtFactory) nextExtFactory();
-      Ext e2 = nextFac.extAbortStmt();
+
+    ExtFactory nextEF = nextExtFactory();
+    if (nextEF instanceof FabricExtFactory) {
+      Ext e2 = ((FabricExtFactory) nextEF).extAbortStmt();
       e = composeExts(e, e2);
     }
     return postExtAbortStmt(e);
@@ -66,10 +63,10 @@ public class AbstractFabExtFactory_c extends AbstractJifExtFactory_c implements
   @Override
   public final Ext extRetryStmt() {
     Ext e = extRetryStmtImpl();
-    if (nextExtFactory() != null
-        && nextExtFactory() instanceof FabricExtFactory) {
-      FabricExtFactory nextFac = (FabricExtFactory) nextExtFactory();
-      Ext e2 = nextFac.extRetryStmt();
+
+    ExtFactory nextEF = nextExtFactory();
+    if (nextEF instanceof FabricExtFactory) {
+      Ext e2 = ((FabricExtFactory) nextEF).extRetryStmt();
       e = composeExts(e, e2);
     }
     return postExtRetryStmt(e);
@@ -86,10 +83,10 @@ public class AbstractFabExtFactory_c extends AbstractJifExtFactory_c implements
   @Override
   public final Ext extWorker() {
     Ext e = extWorkerImpl();
-    if (nextExtFactory() != null
-        && nextExtFactory() instanceof FabricExtFactory) {
-      FabricExtFactory nextFac = (FabricExtFactory) nextExtFactory();
-      Ext e2 = nextFac.extWorker();
+
+    ExtFactory nextEF = nextExtFactory();
+    if (nextEF instanceof FabricExtFactory) {
+      Ext e2 = ((FabricExtFactory) nextEF).extWorker();
       e = composeExts(e, e2);
     }
     return postExtWorker(e);
@@ -106,10 +103,10 @@ public class AbstractFabExtFactory_c extends AbstractJifExtFactory_c implements
   @Override
   public final Ext extNewFabricArray() {
     Ext e = extNewFabricArrayImpl();
-    if (nextExtFactory() != null
-        && nextExtFactory() instanceof FabricExtFactory) {
-      FabricExtFactory nextFac = (FabricExtFactory) nextExtFactory();
-      Ext e2 = nextFac.extNewFabricArray();
+
+    ExtFactory nextEF = nextExtFactory();
+    if (nextEF instanceof FabricExtFactory) {
+      Ext e2 = ((FabricExtFactory) nextEF).extNewFabricArray();
       e = composeExts(e, e2);
     }
     return postExtNewFabricArray(e);
@@ -126,10 +123,10 @@ public class AbstractFabExtFactory_c extends AbstractJifExtFactory_c implements
   @Override
   public final Ext extAmbNewFabricArray() {
     Ext e = extAmbNewFabricArrayImpl();
-    if (nextExtFactory() != null
-        && nextExtFactory() instanceof FabricExtFactory) {
-      FabricExtFactory nextFac = (FabricExtFactory) nextExtFactory();
-      Ext e2 = nextFac.extAmbNewFabricArray();
+
+    ExtFactory nextEF = nextExtFactory();
+    if (nextEF instanceof FabricExtFactory) {
+      Ext e2 = ((FabricExtFactory) nextEF).extAmbNewFabricArray();
       e = composeExts(e, e2);
     }
 
@@ -147,10 +144,10 @@ public class AbstractFabExtFactory_c extends AbstractJifExtFactory_c implements
   @Override
   public final Ext extRemoteWorkerGetter() {
     Ext e = extRemoteWorkerGetterImpl();
-    if (nextExtFactory() != null
-        && nextExtFactory() instanceof FabricExtFactory) {
-      FabricExtFactory nextFac = (FabricExtFactory) nextExtFactory();
-      Ext e2 = nextFac.extRemoteWorkerGetter();
+
+    ExtFactory nextEF = nextExtFactory();
+    if (nextEF instanceof FabricExtFactory) {
+      Ext e2 = ((FabricExtFactory) nextEF).extRemoteWorkerGetter();
       e = composeExts(e, e2);
     }
     return postExtRemoteWorkerGetter(e);
@@ -167,10 +164,10 @@ public class AbstractFabExtFactory_c extends AbstractJifExtFactory_c implements
   @Override
   public final Ext extFabricArrayInit() {
     Ext e = extFabricArrayInitImpl();
-    if (nextExtFactory() != null
-        && nextExtFactory() instanceof FabricExtFactory) {
-      FabricExtFactory nextFac = (FabricExtFactory) nextExtFactory();
-      Ext e2 = nextFac.extFabricArrayInit();
+
+    ExtFactory nextEF = nextExtFactory();
+    if (nextEF instanceof FabricExtFactory) {
+      Ext e2 = ((FabricExtFactory) nextEF).extFabricArrayInit();
       e = composeExts(e, e2);
     }
     return postExtFabricArrayInit(e);
@@ -185,12 +182,12 @@ public class AbstractFabExtFactory_c extends AbstractJifExtFactory_c implements
   }
 
   @Override
-  public Ext extFabricArrayTypeNode() {
+  public final Ext extFabricArrayTypeNode() {
     Ext e = extFabricArrayTypeNodeImpl();
-    if (nextExtFactory() != null
-        && nextExtFactory() instanceof FabricExtFactory) {
-      FabricExtFactory nextFac = (FabricExtFactory) nextExtFactory();
-      Ext e2 = nextFac.extFabricArrayTypeNode();
+
+    ExtFactory nextEF = nextExtFactory();
+    if (nextEF instanceof FabricExtFactory) {
+      Ext e2 = ((FabricExtFactory) nextEF).extFabricArrayTypeNode();
       e = composeExts(e, e2);
     }
     return postExtFabricArrayTypeNode(e);
@@ -205,44 +202,52 @@ public class AbstractFabExtFactory_c extends AbstractJifExtFactory_c implements
   }
 
   @Override
-  public Ext extCodebaseNode() {
+  public final Ext extCodebaseNode() {
     Ext e = extCodebaseNodeImpl();
-    if (nextExtFactory() != null
-        && nextExtFactory() instanceof FabricExtFactory) {
-      FabricExtFactory nextFac = (FabricExtFactory) nextExtFactory();
-      Ext e2 = nextFac.extCodebaseNode();
+
+    ExtFactory nextEF = nextExtFactory();
+    if (nextEF instanceof FabricExtFactory) {
+      Ext e2 = ((FabricExtFactory) nextEF).extCodebaseNode();
       e = composeExts(e, e2);
     }
-    return e;
+    return postExtCodebaseNode(e);
   }
 
   protected Ext extCodebaseNodeImpl() {
-    return extNode();
+    return extNodeImpl();
+  }
+
+  protected Ext postExtCodebaseNode(Ext e) {
+    return postExtNode(e);
   }
 
   @Override
-  public Ext extCodebaseDecl() {
+  public final Ext extCodebaseDecl() {
     Ext e = extCodebaseDeclImpl();
-    if (nextExtFactory() != null
-        && nextExtFactory() instanceof FabricExtFactory) {
-      FabricExtFactory nextFac = (FabricExtFactory) nextExtFactory();
-      Ext e2 = nextFac.extCodebaseDecl();
+
+    ExtFactory nextEF = nextExtFactory();
+    if (nextEF instanceof FabricExtFactory) {
+      Ext e2 = ((FabricExtFactory) nextEF).extCodebaseDecl();
       e = composeExts(e, e2);
     }
-    return e;
+    return postExtCodebaseDecl(e);
   }
 
   protected Ext extCodebaseDeclImpl() {
-    return extNode();
+    return extNodeImpl();
+  }
+
+  protected Ext postExtCodebaseDecl(Ext e) {
+    return postExtNode(e);
   }
 
   @Override
   public final Ext extStore() {
     Ext e = extStoreImpl();
-    if (nextExtFactory() != null
-        && nextExtFactory() instanceof FabricExtFactory) {
-      FabricExtFactory nextFac = (FabricExtFactory) nextExtFactory();
-      Ext e2 = nextFac.extStore();
+
+    ExtFactory nextEF = nextExtFactory();
+    if (nextEF instanceof FabricExtFactory) {
+      Ext e2 = ((FabricExtFactory) nextEF).extStore();
       e = composeExts(e, e2);
     }
     return postExtStore(e);
@@ -257,28 +262,21 @@ public class AbstractFabExtFactory_c extends AbstractJifExtFactory_c implements
   }
 
   @Override
-  public Ext extAccessPolicy() {
+  public final Ext extAccessPolicy() {
     Ext e = extAccessPolicyImpl();
-    if (nextExtFactory() != null
-        && nextExtFactory() instanceof FabricExtFactory) {
-      FabricExtFactory nextFac = (FabricExtFactory) nextExtFactory();
-      Ext e2 = nextFac.extAccessPolicy();
+
+    ExtFactory nextEF = nextExtFactory();
+    if (nextEF instanceof FabricExtFactory) {
+      Ext e2 = ((FabricExtFactory) nextEF).extAccessPolicy();
       e = composeExts(e, e2);
     }
     return postExtAccessPolicy(e);
   }
 
-  /**
-   * @param e
-   * @return
-   */
   protected Ext postExtAccessPolicy(Ext e) {
     return postExtNode(e);
   }
 
-  /**
-   * @return
-   */
   protected Ext extAccessPolicyImpl() {
     return extNodeImpl();
   }

@@ -54,7 +54,7 @@ public class NewFabricArrayExt_c extends AnnotatedExt_c {
     }
     return qq.parseExpr("(%T) new %T(%E, %E, %E, " + typeArg
         + "%E).$getProxy()", arrayType, arrayImplType, newArray.location(),
-        newArray.updateLabel(), newArray.accessLabel(), size);
+        newArray.updateLabel(), newArray.accessPolicy(), size);
   }
 
   @Override
@@ -70,7 +70,7 @@ public class NewFabricArrayExt_c extends AnnotatedExt_c {
       newArray = newArray.init(init);
 
       // Translation of initializer will be the array itself.
-      return (Expr) newArray.visitChild(init, rewriter);
+      return newArray.visitChild(init, rewriter);
     }
 
     return null;
@@ -137,7 +137,7 @@ public class NewFabricArrayExt_c extends AnnotatedExt_c {
 
   private NewFabricArray assignAccessPolicy(LabelAssigner la,
       NewFabricArray expr) {
-    if (expr.accessLabel() != null) return expr;
+    if (expr.accessPolicy() != null) return expr;
 
     FabILTypeSystem ts = la.typeSystem();
     QQ qq = la.qq();

@@ -20,12 +20,14 @@ public class HelloAction[label T] extends Action[HelloServEP] {
 		atomic {
 			this.nameInp = new Input[HelloServEP](m, new label {});
 			this.fileInp = new Input[HelloServEP](m, new label {});
+			this.searchLbl = new label {};
 		}
 		initFields(m);
 	}
 
 	final Input[HelloServEP]{T} nameInp;
 	final Input[HelloServEP]{T} fileInp;
+	final label{T} searchLbl;
 
 	public void invoke{*lbl}(label{*lbl} lbl, Request[HelloServEP]{*lbl} _req):
 				{*lbl;_req.session←}
@@ -42,8 +44,8 @@ public class HelloAction[label T] extends Action[HelloServEP] {
 			atomic {
 			// extract the name, if it exists.        
 			try {
-				if (lbl <= this.nameInp.inputLbl && this.nameInp.inputLbl equiv this.fileInp.inputLbl) {
-					if (this.nameInp.inputLbl <= new label {*:req.session} && this.fileInp.inputLbl <= new label {*:req.session}) {
+				if (lbl <= this.nameInp.inputLbl && this.nameInp.inputLbl equiv this.fileInp.inputLbl && this.nameInp.inputLbl equiv searchLbl) {
+					if (this.nameInp.inputLbl <= new label {*:req.session} && this.fileInp.inputLbl <= new label {*:req.session} && searchLbl <= new label {*:req.session}) {
 						if (new label {*!:req.session} <= this.nameInp.inputLbl && new label {*!:req.session} <= this.fileInp.inputLbl) {
 							String name = req.getParam(nameInp);
 							String fileContents = "";
@@ -57,7 +59,7 @@ public class HelloAction[label T] extends Action[HelloServEP] {
 								}
 							}
 							catch (IOException ignore) { }
-							catch (NullPointerException ignore) { }
+							catch (NullPointerException{⊤→} ignore) { }
 
 							if (name == null || name.length() == 0) name = "world";
 
@@ -69,6 +71,13 @@ public class HelloAction[label T] extends Action[HelloServEP] {
 										lbl, lbl, new SubmitButton(s, lbl, "Submit"));
 							Node form = s.createForm(this.nameInp.inputLbl, lbl, this, this.nameInp.inputLbl, lbl, formEntries);
 
+							NodeList searchFormEntries =
+							  new NodeList(lbl, lbl, new Text("Search the web: "),
+								  new TextInput("q", 40, ""),
+									new SubmitButton("btnG", "Google Search"),
+									new SubmitButton("btnI", "I'm Feeling Lucky"));
+							Node offsiteForm = s.createOffsiteForm(searchLbl, lbl, "https://encrypted.google.com/search", true, searchLbl, lbl, searchFormEntries);
+
 							content =
 								new NodeList(this.nameInp.inputLbl, lbl,
 										new Paragraph(this.nameInp.inputLbl, lbl,
@@ -79,6 +88,7 @@ public class HelloAction[label T] extends Action[HelloServEP] {
 														lbl, lbl, new HRule(),
 														this.nameInp.inputLbl, lbl, new Paragraph(this.nameInp.inputLbl, lbl, form),
 														lbl, lbl, new HRule(),
+														searchLbl, lbl, new Paragraph(searchLbl, lbl, offsiteForm),
 														lbl, lbl, new Paragraph("File contents: "),
 														this.nameInp.inputLbl, lbl, new Paragraph(this.nameInp.inputLbl, lbl, new Pre(fileContents)));
 							s.createPage(req, "Hello webapp", this.nameInp.inputLbl, lbl, content);

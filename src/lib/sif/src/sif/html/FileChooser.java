@@ -25,10 +25,15 @@ public final class FileChooser extends InputNode {
     this.size = size;
   }
 
+  public FileChooser(Principal servletP, Label L, Label E, String name, int size) {
+    super(servletP, L, E, name);
+    this.size = size;
+  }
+
   @Override
   void writeImpl(HTMLWriter p) {
     p.print("<input type=file name=");
-    p.printq(input.getName());
+    p.printq(getName());
     if (size > 0) {
       p.print(" size=");
       p.printq(size);
