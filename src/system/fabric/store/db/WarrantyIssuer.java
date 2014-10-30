@@ -12,10 +12,9 @@ import fabric.common.Warranty;
 import fabric.common.exceptions.InternalError;
 
 /**
- * A warranty issuer is notified of write events and read-prepares, and uses
- * this information to decide how long issued warranties should last. It also
- * tracks the latest warranties that have been issued for each object. This
- * class is thread-safe.
+ * A warranty issuer maintains the mapping from keys to warranties on those keys
+ * and uses access metrics for keys to suggest how long newly issued warranties
+ * should last. This class is thread-safe.
  */
 public class WarrantyIssuer<K, V extends Warranty> {
 
@@ -254,8 +253,6 @@ public class WarrantyIssuer<K, V extends Warranty> {
             "onum = {0}, warranty length = {1}", key, warrantyLength);
       }
     }
-
-    //if (warrantyLength < MIN_WARRANTY_LENGTH) return expiry;
 
     return Math.max(expiry, System.currentTimeMillis() + warrantyLength);
   }
