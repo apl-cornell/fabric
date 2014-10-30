@@ -197,11 +197,18 @@ public class AccessMetrics<K> {
       // We already issued something for a longer term, nothing to do.
       if (lastReadPrepareTime > expiry) return false;
 
+      if (numReadPrepares == 0 &&
+          lastReadPrepareTime > System.currentTimeMillis()) {
+        // We are extending a warranty term that is still active.
+        long delta = expiry - lastReadPrepareTime;
+        lastWarrantyLength += delta;
+      } else {
+        // Replacing an inactive warranty term.
+        lastWarrantyLength = expiry - System.currentTimeMillis();
+      }
+
       lastReadPrepareTime = expiry;
       numReadPrepares = 0;
-      //XXX: I don't actually think the below is correct.
-      //      - Tom
-      lastWarrantyLength = expiry - System.currentTimeMillis();
       return true;
     }
   }
