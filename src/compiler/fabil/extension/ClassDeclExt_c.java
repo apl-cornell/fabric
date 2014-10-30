@@ -25,6 +25,7 @@ import polyglot.ast.MethodDecl;
 import polyglot.ast.New;
 import polyglot.ast.Node;
 import polyglot.ast.NodeFactory;
+import polyglot.ast.ProcedureDecl;
 import polyglot.ast.Stmt;
 import polyglot.ast.TypeNode;
 import polyglot.qq.QQ;
@@ -36,6 +37,7 @@ import polyglot.types.PrimitiveType;
 import polyglot.types.SemanticException;
 import polyglot.types.Type;
 import polyglot.util.Position;
+
 import fabil.types.FabILFlags;
 import fabil.types.FabILTypeSystem;
 import fabil.visit.MemoizedMethodRewriter;
@@ -957,13 +959,13 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
       if (!(cm instanceof MethodDecl)) {
         allMembers.add(cm);
       } else {
-        MethodDecl method = (MethodDecl) cm;
+        ProcedureDecl method = (ProcedureDecl) cm;
         if (method.flags().contains(FabILFlags.MEMOIZED)) {
           // TODO: Error on static method explaining we don't do that yet.
           method = method.flags(method.flags().clear(FabILFlags.MEMOIZED));
           if (!cd.flags().isInterface()) {
-            allMembers.add(makeMemoizedMethod(mmr, method));
-            memoizedMethods.add(method);
+            allMembers.add(makeMemoizedMethod(mmr, (MethodDecl) method));
+            memoizedMethods.add((MethodDecl) method);
             method = method.name(method.name() + "$NonMemoized");
           }
         }
