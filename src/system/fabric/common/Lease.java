@@ -23,6 +23,8 @@ public abstract class Lease /*implements Comparable<Lease>*/ {
   /**
    * Set of RemoteWorkers that should be contacted in addition to the store
    * during in-term write prepare.
+   *
+   * TODO: Better identifier objects.
    */
   private final Set<RemoteWorker> lessees;
 
