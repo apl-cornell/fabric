@@ -8,8 +8,8 @@ import fabric.common.Logging;
 import fabric.common.util.Cache;
 
 /**
- * Table of metrics and issued warranties (or otherwise) for a given type K
- * (objects, computations, etc.).
+ * Table of read and write metrics for keys K.  This information is used for
+ * issuing logic for optimizations like warranties. This class is thread-safe.
  */
 public class AccessMetrics<K> {
 
@@ -83,7 +83,7 @@ public class AccessMetrics<K> {
       this.numReadPrepares = 0;
     }
 
-    // Accessor methods.  Don't make them modifiable outside this class.
+    // Accessor methods.  Don't make the fields modifiable outside this class.
 
     /**
      * @return the lastReadPrepareTime
@@ -212,11 +212,25 @@ public class AccessMetrics<K> {
     this.table = new Cache<>();
   }
 
+  /**
+   * Get the metrics object for a given key.  Optionally create an entry if
+   * there wasn't one found.
+   *
+   * @param key The item we are looking up the Metrics for.
+   * @param createIfAbsent If true, make an entry for the key if there wasn't a
+   * preexisting Metrics object.
+   */
   public Metrics getMetrics(K key, boolean createIfAbsent) {
     if (createIfAbsent) table.putIfAbsent(key, new Metrics());
     return table.get(key);
   }
 
+  /**
+   * Get the metrics object for a given key.  Create an entry if there wasn't
+   * one found.
+   *
+   * @param key The item we are looking up the Metrics for.
+   */
   public Metrics getMetrics(K key) {
     return getMetrics(key, true);
   }
