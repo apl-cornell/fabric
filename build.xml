@@ -547,17 +547,21 @@
   </target>
 
   <target name="LongKeyWarrantyIssuer-check">
-    <uptodate property="LongKeyWarrantyIssuer.up-to-date"
-        srcfile="${system.src}/fabric/store/db/WarrantyIssuer.java"
-        targetfile="${system.src}/fabric/store/db/LongKeyWarrantyIssuer.java"/>
-    <uptodate property="LongKeyAccessMetrics.up-to-date"
-        srcfile="${system.src}/fabric/store/db/AccessMetrics.java"
-        targetfile="${system.src}/fabric/store/db/LongKeyAccessMetrics.java"/>
+    <condition property="LongKeys.up-to-date">
+      <and>
+        <uptodate property="LongKeyWarrantyIssuer.up-to-date"
+            srcfile="${system.src}/fabric/store/db/WarrantyIssuer.java"
+            targetfile="${system.src}/fabric/store/db/LongKeyWarrantyIssuer.java"/>
+        <uptodate property="LongKeyAccessMetrics.up-to-date"
+            srcfile="${system.src}/fabric/store/db/AccessMetrics.java"
+            targetfile="${system.src}/fabric/store/db/LongKeyAccessMetrics.java"/>
+      </and>
+    </condition>
   </target>
 
   <target name="LongKeyWarrantyIssuer"
       depends="LongKeyWarrantyIssuer-check"
-      unless="LongKeyWarrantyIssuer.up-to-date">
+      unless="LongKeys.up-to-date">
     <apply executable="bash"
         failonerror="true"
         dir="${system.src}/fabric/store/db"
