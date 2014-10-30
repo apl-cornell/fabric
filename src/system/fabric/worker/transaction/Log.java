@@ -356,7 +356,8 @@ public final class Log {
     this.callDependencies = new HashMap<>();
     this.requests = new HashMap<>();
     this.requestLocations = new HashMap<>();
-    this.requestReplies = Collections.synchronizedMap(new HashMap<>());
+    this.requestReplies = Collections.synchronizedMap(
+        new HashMap<CallInstance, SemanticWarranty>());
     this.blockedWarranties = new HashSet<>();
     this.useStaleWarranties = true;
     this.startTime = System.currentTimeMillis();

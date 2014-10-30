@@ -1021,7 +1021,7 @@ public class SemanticWarrantyTable {
     public void update() {
       Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
           "Completing update to {0}", call);
-      issuer.notifyWriteCommit(call);
+      accessMetrics.notifyWriteCommit(call);
 
       // Remove old stuff
       // Reads
@@ -1115,7 +1115,12 @@ public class SemanticWarrantyTable {
   private final SemanticWarranty DEFAULT_SEM_WARRANTY = new SemanticWarranty(0);
 
   /**
-   * WarrantyIssuer for semantic warranties.
+   * AccessMetrics for semantic warranties.
+   */
+  private final AccessMetrics<CallInstance> accessMetrics;
+
+  /**
+   * AccessMetrics for semantic warranties.
    */
   private final WarrantyIssuer<CallInstance, SemanticWarranty> issuer;
 
@@ -1131,13 +1136,12 @@ public class SemanticWarrantyTable {
   private final ObjectDB database;
 
   public SemanticWarrantyTable(ObjectDB database) {
-    infoTable = new ConcurrentHashMap<CallInstance, CallInfo>();
-    readersTable = new ConcurrentLongKeyHashMap<Set<CallInstance>>();
-    creatorTable = new ConcurrentLongKeyHashMap<Set<CallInstance>>();
-    issuer =
-        new WarrantyIssuer<CallInstance, SemanticWarranty>(
-            DEFAULT_SEM_WARRANTY);
-    updatingTIDMap = new ConcurrentLongKeyHashMap<Set<CallInstance>>();
+    infoTable = new ConcurrentHashMap<>();
+    readersTable = new ConcurrentLongKeyHashMap<>();
+    creatorTable = new ConcurrentLongKeyHashMap<>();
+    accessMetrics = new AccessMetrics<>();
+    issuer = new WarrantyIssuer<>(DEFAULT_SEM_WARRANTY, accessMetrics);
+    updatingTIDMap = new ConcurrentLongKeyHashMap<>();
     this.database = database;
     this.database.setSemanticWarrantyTable(this);
   }
@@ -1270,7 +1274,7 @@ public class SemanticWarrantyTable {
       CallInstance call, WarrantiedCallResult oldValue, long newTime, long tid) {
     Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINER,
         "Notifying read prepare on {0}", call);
-    issuer.notifyReadPrepare(call);
+    accessMetrics.notifyReadPrepare(call);
     // TODO: This is going to have false positives until I separate out things
     // that are changing value from things that are just changing dependencies.
     if (updatingTIDMap.containsKey(tid) &&
