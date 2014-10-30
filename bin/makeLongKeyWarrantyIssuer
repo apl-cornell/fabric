@@ -1,9 +1,16 @@
 #!/bin/sh
 
+if [ ! -r AccessMetrics.java ]
+then
+  echo "Did not find AccessMetrics.java. Need to run in diff directory." 1>&2
+  exit 1
+fi
+
 if [ ! -r WarrantyIssuer.java ]
 then
   echo "Did not find WarrantyIssuer.java. Need to run in diff directory." 1>&2
   exit 1
 fi
 
+perl -np makeLongKeyWarrantyIssuer.pl < AccessMetrics.java > LongKeyAccessMetrics.java
 perl -np makeLongKeyWarrantyIssuer.pl < WarrantyIssuer.java > LongKeyWarrantyIssuer.java

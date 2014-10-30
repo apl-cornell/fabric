@@ -338,6 +338,7 @@
 
       <fileset dir="${system.src}">
         <include name="fabric/store/db/LongKeyWarrantyIssuer.java"/>
+        <include name="fabric/store/db/LongKeyAccessMetrics.java"/>
       </fileset>
     </delete>
 
@@ -549,6 +550,9 @@
     <uptodate property="LongKeyWarrantyIssuer.up-to-date"
         srcfile="${system.src}/fabric/store/db/WarrantyIssuer.java"
         targetfile="${system.src}/fabric/store/db/LongKeyWarrantyIssuer.java"/>
+    <uptodate property="LongKeyAccessMetrics.up-to-date"
+        srcfile="${system.src}/fabric/store/db/AccessMetrics.java"
+        targetfile="${system.src}/fabric/store/db/LongKeyAccessMetrics.java"/>
   </target>
 
   <target name="LongKeyWarrantyIssuer"

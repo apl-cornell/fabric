@@ -243,6 +243,11 @@ public abstract class ObjectDB {
   protected final LongKeyWarrantyIssuer<VersionWarranty> warrantyIssuer;
 
   /**
+   * The table containing the access metrics for each object.
+   */
+  protected final LongKeyAccessMetrics accessMetrics;
+
+  /**
    * <p>
    * Tracks the write locks for each onum. Maps each onum to the tid for the
    * lock holder.
@@ -276,7 +281,9 @@ public abstract class ObjectDB {
     this.writtenOnumsByTid = new ConcurrentLongKeyHashMap<>();
     this.objectGrouper = new ObjectGrouper(this, privateKey);
     this.longestWarranty = new VersionWarranty[] { new VersionWarranty(0) };
-    this.warrantyIssuer = new LongKeyWarrantyIssuer<>(new VersionWarranty(0));
+    this.accessMetrics = new LongKeyAccessMetrics();
+    this.warrantyIssuer = new LongKeyWarrantyIssuer<>(new VersionWarranty(0),
+        this.accessMetrics);
   }
 
   /**
@@ -344,9 +351,9 @@ public abstract class ObjectDB {
     if (obj == null) throw new AccessException(name, onum);
     boolean unpopular = obj.getUnpopularity() > 2;
     if (unpopular) {
-      obj.incrementUnpopularity(warrantyIssuer);
+      obj.incrementUnpopularity(accessMetrics);
     } else {
-      warrantyIssuer.notifyReadPrepare(onum);
+      accessMetrics.notifyReadPrepare(onum);
     }
 
     final boolean extendBeyondCommitTime = !unpopular;
@@ -429,7 +436,7 @@ public abstract class ObjectDB {
       }
 
       // Notify the warranty issuer.
-      warrantyIssuer.notifyWritePrepare(onum);
+      accessMetrics.notifyWritePrepare(onum);
 
       // Register the update.
       addWrittenOnumByTid(tid, worker, onum);
@@ -782,7 +789,7 @@ public abstract class ObjectDB {
     LongSet groupOnums = objectGrouper.removeGroup(onum);
 
     // Notify the warranty issuer.
-    warrantyIssuer.notifyWriteCommit(onum);
+    accessMetrics.notifyWriteCommit(onum);
 
     if (SubscriptionManager.ENABLE_OBJECT_UPDATES) {
       LongSet updatedOnums = new LongHashSet();
