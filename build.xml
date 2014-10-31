@@ -549,6 +549,9 @@
   <target name="LongKeyWarrantyIssuer-check">
     <condition property="LongKeys.up-to-date">
       <and>
+        <uptodate property="LongKeyLeaseIssuer.up-to-date"
+            srcfile="${system.src}/fabric/store/db/LeaseIssuer.java"
+            targetfile="${system.src}/fabric/store/db/LongKeyLeaseIssuer.java"/>
         <uptodate property="LongKeyWarrantyIssuer.up-to-date"
             srcfile="${system.src}/fabric/store/db/WarrantyIssuer.java"
             targetfile="${system.src}/fabric/store/db/LongKeyWarrantyIssuer.java"/>

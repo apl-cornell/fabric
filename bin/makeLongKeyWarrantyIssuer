@@ -12,5 +12,12 @@ then
   exit 1
 fi
 
+if [ ! -r LeaseIssuer.java ]
+then
+  echo "Did not find LeaseIssuer.java. Need to run in diff directory." 1>&2
+  exit 1
+fi
+
 perl -np makeLongKeyWarrantyIssuer.pl < AccessMetrics.java > LongKeyAccessMetrics.java
 perl -np makeLongKeyWarrantyIssuer.pl < WarrantyIssuer.java > LongKeyWarrantyIssuer.java
+perl -np makeLongKeyWarrantyIssuer.pl < LeaseIssuer.java > LongKeyLeaseIssuer.java

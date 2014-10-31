@@ -17,6 +17,7 @@ import javax.security.auth.x500.X500Principal;
 import fabric.common.FastSerializable;
 import fabric.common.Logging;
 import fabric.common.ONumConstants;
+import fabric.common.RWLease;
 import fabric.common.SerializedObject;
 import fabric.common.SysUtil;
 import fabric.common.VersionWarranty;
@@ -243,6 +244,11 @@ public abstract class ObjectDB {
   protected final LongKeyWarrantyIssuer<VersionWarranty> warrantyIssuer;
 
   /**
+   * The table containing the object leases we've issued.
+   */
+  protected final LongKeyLeaseIssuer<RWLease> leaseIssuer;
+
+  /**
    * The table containing the access metrics for each object.
    */
   protected final LongKeyAccessMetrics accessMetrics;
@@ -283,6 +289,8 @@ public abstract class ObjectDB {
     this.longestWarranty = new VersionWarranty[] { new VersionWarranty(0) };
     this.accessMetrics = new LongKeyAccessMetrics();
     this.warrantyIssuer = new LongKeyWarrantyIssuer<>(new VersionWarranty(0),
+        this.accessMetrics);
+    this.leaseIssuer = new LongKeyLeaseIssuer<>(new RWLease(0),
         this.accessMetrics);
   }
 
