@@ -444,7 +444,7 @@ public abstract class ObjectDB {
       }
 
       // Notify the warranty issuer.
-      accessMetrics.notifyWritePrepare(onum);
+      accessMetrics.notifyWritePrepare(onum, worker);
 
       // Register the update.
       addWrittenOnumByTid(tid, worker, onum);

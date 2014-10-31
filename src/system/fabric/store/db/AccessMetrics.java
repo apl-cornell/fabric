@@ -6,6 +6,8 @@ import java.util.logging.Level;
 
 import fabric.common.Logging;
 import fabric.common.util.Cache;
+import fabric.common.util.Oid;
+import fabric.lang.security.Principal;
 
 /**
  * Table of read and write metrics for keys K.  This information is used for
@@ -72,6 +74,19 @@ public class AccessMetrics<K> {
      */
     private int numReadPrepares;
 
+    /**
+     * The oid of the principal of the writer of this object, if there is only
+     * one.  This is null if either there have been no writers or there is more
+     * than one.
+     */
+    private Oid writer;
+
+    /**
+     * True if the object has been written since the beginning of the most
+     * recent term.
+     */
+    private boolean writtenSinceTerm;
+
     public Metrics() {
       final long now = System.currentTimeMillis();
 
@@ -81,6 +96,8 @@ public class AccessMetrics<K> {
       this.lastWritePrepareTime = now;
       this.writeInterval = Integer.MAX_VALUE;
       this.numReadPrepares = 0;
+      this.writer = null;
+      this.writtenSinceTerm = false;
     }
 
     // Accessor methods.  Don't make the fields modifiable outside this class.
@@ -128,6 +145,20 @@ public class AccessMetrics<K> {
     }
 
     /**
+     * @return the writer
+     */
+    public Oid getWriter() {
+      return writer;
+    }
+
+    /**
+     * @return the writtenSinceTerm
+     */
+    public boolean isWrittenSinceTerm() {
+      return writtenSinceTerm;
+    }
+
+    /**
      * Notifies of a read-prepare event.
      */
     synchronized void notifyReadPrepare() {
@@ -167,7 +198,7 @@ public class AccessMetrics<K> {
     /**
      * Notifies of a prepare event.
      */
-    synchronized void notifyWritePrepare() {
+    synchronized void notifyWritePrepare(Principal client) {
       long now = System.currentTimeMillis();
       int curInterval = (int) (now - lastWritePrepareTime);
       lastWritePrepareTime = now;
@@ -178,6 +209,16 @@ public class AccessMetrics<K> {
         writeInterval =
             (int) (PREPARE_ALPHA * writeInterval + (1.0 - PREPARE_ALPHA)
                 * curInterval);
+      }
+
+      // Update writer tracking.
+      Oid clientOid = new Oid(client);
+      if (writtenSinceTerm && writer != clientOid) {
+        // If it was already null, this is redundant.
+        writer = null;
+      } else if (!writtenSinceTerm) {
+        writer = clientOid;
+        writtenSinceTerm = true;
       }
     }
 
@@ -205,6 +246,9 @@ public class AccessMetrics<K> {
       } else {
         // Replacing an inactive warranty term.
         lastWarrantyLength = expiry - System.currentTimeMillis();
+        // Reset writer checking.
+        writtenSinceTerm = false;
+        writer = null;
       }
 
       lastReadPrepareTime = expiry;
@@ -263,9 +307,9 @@ public class AccessMetrics<K> {
    * being prepared until the corresponding transaction either commits or
    * aborts.
    */
-  public void notifyWritePrepare(K key) {
+  public void notifyWritePrepare(K key, Principal client) {
     Logging.log(HOTOS_LOGGER, Level.FINER, "writing @{0}", key);
-    getMetrics(key).notifyWritePrepare();
+    getMetrics(key).notifyWritePrepare(client);
   }
 
   /**
