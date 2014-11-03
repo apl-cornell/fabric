@@ -10,6 +10,7 @@ import java.util.logging.Level;
 import fabric.common.Logging;
 import fabric.common.Lease;
 import fabric.common.exceptions.InternalError;
+import fabric.common.util.Oid;
 
 /**
  * A lease issuer maintains the mapping from keys to leases on those keys and
@@ -28,6 +29,8 @@ public class LeaseIssuer<K, V extends Lease> {
 
   /**
    * The amount by which write intervals are scaled to determine lease length.
+   *
+   * TODO: Consider longer K2 since this is less costly than leases.
    */
   private static final double K2 = 0.5;
 
@@ -196,6 +199,7 @@ public class LeaseIssuer<K, V extends Lease> {
     // Snapshot state to avoid locking for too long.
     final long readInterval;
     final long writeInterval;
+    Oid writer;
     AccessMetrics<K>.Metrics m = getMetrics(key);
     synchronized (m) {
       // Only continue if we have enough samples since the last lease
@@ -204,12 +208,23 @@ public class LeaseIssuer<K, V extends Lease> {
 
       writeInterval = m.getWriteInterval();
       readInterval = m.getReadInterval();
+      writer = m.getWriter();
     }
 
     final int curCount = count++;
 
+    if (writer == null) {
+      // If object has no exclusive writer, don't give a lease
+      if (curCount % 10000 == 0) {
+        // onum, readInterval, actualReadInterval, writeInterval, lease
+        HOTOS_LOGGER.info("lease #" + curCount + ": " + key + "," +
+            readInterval + "," + writeInterval + ",no-exclusive-writer");
+      }
+      return expiry;
+    }
+
     if (readInterval > MAX_READ_PREP_INTERVAL) {
-      // The object is too unpopular. Suggest the minimal expiry time.
+      // The object is too unpopular, only issue for the expiry needed.
       if (curCount % 10000 == 0) {
         // onum, readInterval, actualReadInterval, writeInterval, lease
         HOTOS_LOGGER.info("lease #" + curCount + ": " + key + "," +
@@ -218,18 +233,7 @@ public class LeaseIssuer<K, V extends Lease> {
       return expiry;
     }
 
-    double ratio = writeInterval / (readInterval + 1.0);
-
-    if (ratio < K3) {
-      // Not enough reads per write. Suggest the minimal expiry time.
-      if (curCount % 10000 == 0) {
-        // onum, readInterval, actualReadInterval, writeInterval, lease
-        HOTOS_LOGGER.info("lease #" + curCount + ": " + key + "," +
-            readInterval + "," + writeInterval + ",low read-write");
-      }
-      return expiry;
-    }
-
+    // Issue lease with term as long as K2 * writeInterval
     if (curCount % 10000 == 0) {
       // onum, readInterval, actualReadInterval, writeInterval, lease
       HOTOS_LOGGER
