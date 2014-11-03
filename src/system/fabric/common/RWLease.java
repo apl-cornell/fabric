@@ -1,21 +1,27 @@
 package fabric.common;
 
-import fabric.worker.remote.RemoteWorker;
-import java.util.Collections;
-import java.util.Set;
+import fabric.common.util.Oid;
+import fabric.lang.security.Principal;
+import fabric.worker.Worker;
 
 /**
  * A lease that allows both reads and writes.
  */
 public class RWLease extends Lease {
+
+  /**
+   * Owner of the lease with read-write privileges.
+   */
+  private final Oid owner;
   
   /**
    * @param expiry expiry time, in milliseconds since the epoch.
    * @param lessees Set of RemoteWorker nodes which should be contacted on an
    * in-term write prepare.
    */
-  public RWLease(long expiry, Set<RemoteWorker> lessees) {
-    super(expiry, true, lessees);
+  public RWLease(long expiry, Oid owner) {
+    super(expiry);
+    this.owner = owner;
   }
   
   /**
@@ -24,11 +30,29 @@ public class RWLease extends Lease {
    * @param expiry expiry time, in milliseconds since the epoch.
    */
   public RWLease(long expiry) {
-    super(expiry, true, Collections.<RemoteWorker>emptySet());
+    super(expiry);
+    this.owner = null;
   }
 
   // Deserialization constructor.
   protected RWLease() {
-    super(0, true, Collections.<RemoteWorker>emptySet());
+    super(0);
+    this.owner = null;
+  }
+
+  /**
+   * Check if the given principal owns the lease.
+   *
+   * @param p Principal to be checked.
+   */
+  public boolean ownedByPrincipal(Principal p) {
+    return owner.equals(new Oid(p));
+  }
+
+  /**
+   * Check if the current worker owns the lease.
+   */
+  public boolean ownedByCurrentWorker() {
+    return ownedByPrincipal(Worker.getWorker().getPrincipal());
   }
 }
