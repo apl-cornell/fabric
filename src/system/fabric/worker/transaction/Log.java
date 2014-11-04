@@ -267,8 +267,8 @@ public final class Log {
 
     /**
      * The transaction's proposed commit time. In the PREPARING or PREPARED
-     * state, objects whose warranties expire before this time are (being)
-     * read-prepared.
+     * state, objects whose version might be changed expire before this time are
+     * (being) read-prepared.
      */
     public long commitTime = 0;
 
@@ -663,8 +663,8 @@ public final class Log {
 
   /**
    * Returns a mapping of stores to (mappings of onums to version numbers),
-   * indicating those objects read (but not modified) by this transaction, whose
-   * version warranties expire between commitState.commitTime (exclusive) and
+   * indicating those objects read (but not modified) by this transaction that
+   * could be updated in the time between commitState.commitTime (exclusive) and
    * the given commitTime (inclusive).
    */
   Map<Store, LongKeyMap<Integer>> storesRead(long commitTime) {
