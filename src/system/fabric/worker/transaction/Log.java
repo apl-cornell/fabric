@@ -275,7 +275,7 @@ public final class Log {
     /**
      * The set of stores that have been contacted by the commit protocol.
      */
-    public final Set<Store> storesContacted = new HashSet<Store>();
+    public final Set<Store> storesContacted = new HashSet<>();
   }
 
   public final AbstractSecurityCache securityCache;
@@ -393,8 +393,8 @@ public final class Log {
 
       this.writeLookAsideMap = null;
       this.createLookAsideMap = null;
-      this.lookAsideWritesRegistered = new HashMap<Store, LongSet>();
-      this.lookAsideCreatesRegistered = new HashMap<Store, LongSet>();
+      this.lookAsideWritesRegistered = new HashMap<>();
+      this.lookAsideCreatesRegistered = new HashMap<>();
 
       // New top-level frame. Register it in the transaction registry.
       TransactionRegistry.register(this);
@@ -509,7 +509,7 @@ public final class Log {
         "Onum {0} written, invalidating calls that read this.", onum);
     Set<CallInstance> dependencies = readDependencies.get(onum);
     if (dependencies == null) return;
-    for (CallInstance id : new HashSet<CallInstance>(dependencies))
+    for (CallInstance id : new HashSet<>(dependencies))
       removeRequest(id);
   }
 
@@ -649,7 +649,7 @@ public final class Log {
    * DURING CALL CHECKING.
    */
   public Map<CallInstance, SemanticWarrantyRequest> getAllRequests() {
-    return new HashMap<CallInstance, SemanticWarrantyRequest>(requests);
+    return new HashMap<>(requests);
   }
 
   /**
@@ -668,15 +668,14 @@ public final class Log {
    * the given commitTime (inclusive).
    */
   Map<Store, LongKeyMap<Integer>> storesRead(long commitTime) {
-    Map<Store, LongKeyMap<Integer>> result =
-        new HashMap<Store, LongKeyMap<Integer>>();
+    Map<Store, LongKeyMap<Integer>> result = new HashMap<>();
     // Handle reads from the actual transaction
     Iterable<Entry<Store, LongKeyMap<ReadMap.Entry>>> chain =
         SysUtil.chain(reads.nonNullEntrySet(),
             readsInSubcalls.nonNullEntrySet());
     for (Entry<Store, LongKeyMap<ReadMap.Entry>> entry : chain) {
       Store store = entry.getKey();
-      LongKeyMap<Integer> submap = new LongKeyHashMap<Integer>();
+      LongKeyMap<Integer> submap = new LongKeyHashMap<>();
       LongKeyMap<ReadMap.Entry> readOnlyObjects =
           filterModifiedReads(store, entry.getValue());
 
@@ -702,9 +701,11 @@ public final class Log {
           .nonNullEntrySet()) {
         Store store = entry.getKey();
         LongKeyMap<Integer> submap = null;
-        if (result.containsKey(store))
+        if (result.containsKey(store)) {
           submap = result.get(store);
-        else submap = new LongKeyHashMap<Integer>();
+        } else {
+          submap = new LongKeyHashMap<>();
+        }
 
         LongKeyMap<Pair<Integer, VersionWarranty>> readOnly =
             filterModifiedReads(store, entry.getValue());
@@ -736,8 +737,7 @@ public final class Log {
    * commitState.commitTime (exclusive) and the given commitTime (inclusive).
    */
   Map<Store, Set<CallInstance>> storesCalled(long commitTime) {
-    Map<Store, Set<CallInstance>> result =
-        new HashMap<Store, Set<CallInstance>>();
+    Map<Store, Set<CallInstance>> result = new HashMap<>();
     for (Entry<CallInstance, WarrantiedCallResult> e : SysUtil.chain(
         semanticWarrantiesUsed.entrySet(), callsInSubcalls.entrySet())) {
       Store store = e.getKey().target.$getStore();
@@ -747,7 +747,7 @@ public final class Log {
           && !requests.containsKey(call)) {
         Set<CallInstance> requestsAtStore = result.get(store);
         if (requestsAtStore == null) {
-          requestsAtStore = new HashSet<CallInstance>();
+          requestsAtStore = new HashSet<>();
           result.put(store, requestsAtStore);
         }
         requestsAtStore.add(e.getKey());
@@ -760,7 +760,7 @@ public final class Log {
    * Returns a set of Stores we are making requests at.
    */
   Set<Store> storesRequested() {
-    return new HashSet<Store>(requestLocations.values());
+    return new HashSet<>(requestLocations.values());
   }
 
   /**
@@ -800,7 +800,7 @@ public final class Log {
   }
 
   private <V> LongKeyMap<V> filterModifiedReads(Store store, LongKeyMap<V> map) {
-    map = new LongKeyHashMap<V>(map);
+    map = new LongKeyHashMap<>(map);
 
     if (store.isLocalStore()) {
       Iterable<_Impl> chain =
@@ -957,8 +957,7 @@ public final class Log {
    * Returns the set of requests that will be stored on the given store.
    */
   Set<SemanticWarrantyRequest> getRequestsForStore(Store store) {
-    Set<SemanticWarrantyRequest> reqSet =
-        new HashSet<SemanticWarrantyRequest>();
+    Set<SemanticWarrantyRequest> reqSet = new HashSet<>();
     for (SemanticWarrantyRequest r : requests.values())
       if (requestLocations.get(r.call) == store) reqSet.add(r);
     return reqSet;
@@ -978,11 +977,10 @@ public final class Log {
    * Returns the set of call ids used from a given store
    */
   Map<CallInstance, WarrantiedCallResult> getCallsForStore(Store store) {
-    Set<CallInstance> requestsSet = new HashSet<CallInstance>();
+    Set<CallInstance> requestsSet = new HashSet<>();
     for (SemanticWarrantyRequest req : getRequestsForStore(store))
       requestsSet.add(req.call);
-    Map<CallInstance, WarrantiedCallResult> callSet =
-        new HashMap<CallInstance, WarrantiedCallResult>();
+    Map<CallInstance, WarrantiedCallResult> callSet = new HashMap<>();
     for (CallInstance c : semanticWarrantiesUsed.keySet())
       if (c.target.$getStore() == store && !requestsSet.contains(c))
         callSet.put(c, semanticWarrantiesUsed.get(c));
@@ -1116,7 +1114,7 @@ public final class Log {
   protected void addReadDependency(long onum) {
     Set<CallInstance> deps = readDependencies.get(onum);
     if (deps == null) {
-      deps = new HashSet<CallInstance>();
+      deps = new HashSet<>();
       readDependencies.put(onum, deps);
     }
     deps.add(semanticWarrantyCall);
@@ -1153,8 +1151,7 @@ public final class Log {
       }
     }
 
-    OidKeyHashMap<ReadMap.Entry> readsForTargetStore =
-        new OidKeyHashMap<ReadMap.Entry>();
+    OidKeyHashMap<ReadMap.Entry> readsForTargetStore = new OidKeyHashMap<>();
 
     // Check writes
     for (Store store : storesWritten()) {
@@ -1209,7 +1206,7 @@ public final class Log {
     }
 
     // Check creates
-    OidKeyHashMap<_Impl> createsForTargetStore = new OidKeyHashMap<_Impl>();
+    OidKeyHashMap<_Impl> createsForTargetStore = new OidKeyHashMap<>();
     for (_Impl create : creates.values()) {
       if (!registeredInLookAside(create.$getStore(), create.$getOnum())) {
         if (create.$getStore().equals(targetStore)) {
@@ -1231,7 +1228,7 @@ public final class Log {
 
     // Check calls
     Map<CallInstance, WarrantiedCallResult> callsForTargetStore =
-        new HashMap<CallInstance, WarrantiedCallResult>();
+      new HashMap<>();
     for (Entry<CallInstance, WarrantiedCallResult> entry : semanticWarrantiesUsed
         .entrySet()) {
       CallInstance call = entry.getKey();
@@ -1301,7 +1298,7 @@ public final class Log {
     for (CallInstance call : callsForTargetStore.keySet()) {
       Set<CallInstance> deps = callDependencies.get(call);
       if (deps == null) {
-        deps = new HashSet<CallInstance>();
+        deps = new HashSet<>();
         callDependencies.put(call, deps);
       }
       deps.add(semanticWarrantyCall);
