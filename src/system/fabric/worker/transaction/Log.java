@@ -180,7 +180,7 @@ public final class Log {
     /**
      * The set of stores that have been contacted by the commit protocol.
      */
-    public final Set<Store> storesContacted = new HashSet<Store>();
+    public final Set<Store> storesContacted = new HashSet<>();
   }
 
   public final AbstractSecurityCache securityCache;
@@ -294,12 +294,11 @@ public final class Log {
    * the given commitTime (inclusive).
    */
   Map<Store, LongKeyMap<Integer>> storesRead(long commitTime) {
-    Map<Store, LongKeyMap<Integer>> result =
-        new HashMap<Store, LongKeyMap<Integer>>();
+    Map<Store, LongKeyMap<Integer>> result = new HashMap<>();
     for (Entry<Store, LongKeyMap<ReadMap.Entry>> entry : reads
         .nonNullEntrySet()) {
       Store store = entry.getKey();
-      LongKeyMap<Integer> submap = new LongKeyHashMap<Integer>();
+      LongKeyMap<Integer> submap = new LongKeyHashMap<>();
       LongKeyMap<ReadMap.Entry> readOnlyObjects =
           filterModifiedReads(store, entry.getValue());
 
@@ -361,7 +360,7 @@ public final class Log {
   }
 
   private <V> LongKeyMap<V> filterModifiedReads(Store store, LongKeyMap<V> map) {
-    map = new LongKeyHashMap<V>(map);
+    map = new LongKeyHashMap<>(map);
 
     if (store.isLocalStore()) {
       Iterable<_Impl> chain =
