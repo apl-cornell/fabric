@@ -16,6 +16,7 @@ import java.util.Set;
 import java.util.logging.Level;
 
 import fabric.common.Logging;
+import fabric.common.RWLease;
 import fabric.common.SysUtil;
 import fabric.common.Threading;
 import fabric.common.Timing;
@@ -307,8 +308,14 @@ public final class Log {
         long onum = subEntry.getKey();
         ReadMap.Entry rme = subEntry.getValue();
 
+        // will the object will be covered for the client by lease?
+        boolean coveredByLease = rme.getLease().ownedByCurrentWorker() &&
+          !(rme.getLease().expiresAfter(commitState.commitTime, true) &&
+              rme.getLease().expiresBefore(commitTime, true));
+
         if (rme.getWarranty().expiresAfter(commitState.commitTime, true)
-            && rme.getWarranty().expiresBefore(commitTime, true)) {
+            && rme.getWarranty().expiresBefore(commitTime, true)
+            && !coveredByLease) {
           submap.put(onum, rme.getVersionNumber());
         }
       }
@@ -332,6 +339,23 @@ public final class Log {
       ReadMap.Entry rme = reads.get(store, onum);
       if (rme != null) {
         rme.updateWarranty(warranty);
+      }
+    }
+  }
+
+  /**
+   * Update the leases for reads from a given store.
+   */
+  void updateRWLeases(Store store, LongKeyMap<RWLease> newLeases) {
+    if (store.isLocalStore()) return;
+
+    for (LongKeyMap.Entry<RWLease> entry : newLeases.entrySet()) {
+      long onum = entry.getKey();
+      RWLease lease = entry.getValue();
+
+      ReadMap.Entry rme = reads.get(store, onum);
+      if (rme != null) {
+        rme.updateLease(lease);
       }
     }
   }
