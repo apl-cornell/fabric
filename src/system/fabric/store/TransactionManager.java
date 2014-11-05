@@ -14,6 +14,7 @@ import java.util.logging.Level;
 import fabric.common.AuthorizationUtil;
 import fabric.common.ONumConstants;
 import fabric.common.ObjectGroup;
+import fabric.common.RWLease;
 import fabric.common.SerializedObject;
 import fabric.common.SerializedObjectAndTokens;
 import fabric.common.VersionWarranty;
@@ -248,8 +249,9 @@ public class TransactionManager {
           case BAD_VERSION:
             SerializedObject obj = database.read(onum);
             status = database.refreshWarranty(resultObj, onum);
+            //TODO: Change to use protocol for lease
             versionConflicts.put(onum, new SerializedObjectAndTokens(obj,
-                status.second));
+                status.second, new RWLease(0)));
             continue;
 
           case DENIED:
@@ -507,8 +509,9 @@ public class TransactionManager {
               database.refreshWarranty(resultObj, onum);
           SerializedObject obj = database.read(onum);
 
+          //TODO: Use protocol to set lease
           result.add(new SerializedObjectAndTokens(obj,
-              refreshWarrantyResult.second));
+              refreshWarrantyResult.second, new RWLease(0)));
 
           if (ENABLE_WARRANTY_REFRESHES) {
             if (refreshWarrantyResult.first == ExtendWarrantyStatus.NEW) {

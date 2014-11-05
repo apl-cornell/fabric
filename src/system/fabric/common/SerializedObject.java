@@ -1101,8 +1101,8 @@ public final class SerializedObject implements FastSerializable, Serializable {
    * @throws ClassNotFoundException
    *           Thrown when the class for this object is unavailable.
    */
-  public _Impl deserialize(Store store, VersionWarranty warranty) {
-    return deserialize(store, warranty, true);
+  public _Impl deserialize(Store store, VersionWarranty warranty, RWLease lease) {
+    return deserialize(store, warranty, lease, true);
   }
 
   /**
@@ -1117,7 +1117,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
    *           Thrown when the class for this object is unavailable.
    */
   public _Impl deserialize(Store store, VersionWarranty warranty,
-      boolean chaseSurrogates) {
+      RWLease lease, boolean chaseSurrogates) {
     try {
       Class<? extends _Impl> implClass = getClassRef().toImplClass();
 
@@ -1126,7 +1126,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
       if (constructor == null) {
         constructor =
             implClass.getConstructor(Store.class, long.class, int.class,
-                VersionWarranty.class, long.class, long.class,
+                VersionWarranty.class, RWLease.class, long.class, long.class,
                 ObjectInput.class, Iterator.class, Iterator.class,
                 Iterator.class);
         constructorTable.put(implClass, constructor);

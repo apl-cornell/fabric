@@ -1,5 +1,6 @@
 package fabric.lang.security;
 
+import fabric.common.RWLease;
 import fabric.common.VersionWarranty;
 
 public interface Capability extends fabric.lang.Object {
@@ -91,12 +92,12 @@ public interface Capability extends fabric.lang.Object {
         java.util.List interStoreRefs) throws java.io.IOException;
 
     public _Impl(fabric.worker.Store store, long onum, int version,
-        VersionWarranty warranty, long label, long accessLabel,
+        VersionWarranty warranty, RWLease lease, long label, long accessLabel,
         java.io.ObjectInput in, java.util.Iterator refTypes,
         java.util.Iterator intraStoreRefs, java.util.Iterator interStoreRefs)
         throws java.io.IOException, java.lang.ClassNotFoundException {
-      super(store, onum, version, warranty, label, accessLabel, in, refTypes,
-          intraStoreRefs, interStoreRefs);
+      super(store, onum, version, warranty, lease, label, accessLabel, in,
+          refTypes, intraStoreRefs, interStoreRefs);
     }
 
     @Override

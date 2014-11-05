@@ -9,6 +9,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import fabric.common.RWLease;
 import fabric.common.RefTypeEnum;
 import fabric.common.VersionWarranty;
 import fabric.common.exceptions.InternalError;
@@ -77,12 +78,12 @@ public interface _ObjectArray<T extends Object> extends Object {
      * Used for deserializing.
      */
     public _Impl(Store store, long onum, int version, VersionWarranty warranty,
-        long label, long accessLabel, ObjectInput in,
+        RWLease lease, long label, long accessLabel, ObjectInput in,
         Iterator<RefTypeEnum> refTypes, Iterator<Long> intraStoreRefs,
         Iterator<Pair<String, Long>> interStoreRefs) throws IOException,
         ClassNotFoundException {
-      super(store, onum, version, warranty, label, accessLabel, in, refTypes,
-          intraStoreRefs, interStoreRefs);
+      super(store, onum, version, warranty, lease, label, accessLabel, in,
+          refTypes, intraStoreRefs, interStoreRefs);
       proxyType =
           (Class<? extends Object._Proxy>) Worker.getWorker().getClassLoader()
               .loadClass(in.readUTF());

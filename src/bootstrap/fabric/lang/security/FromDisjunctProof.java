@@ -1,5 +1,6 @@
 package fabric.lang.security;
 
+import fabric.common.RWLease;
 import fabric.common.VersionWarranty;
 
 public interface FromDisjunctProof extends fabric.lang.security.ActsForProof {
@@ -55,11 +56,11 @@ public interface FromDisjunctProof extends fabric.lang.security.ActsForProof {
         java.util.List interStoreRefs) throws java.io.IOException;
 
     public _Impl(fabric.worker.Store store, long onum, int version,
-        VersionWarranty warranty, long label, long accessLabel,
+        VersionWarranty warranty, RWLease lease, long label, long accessLabel,
         java.io.ObjectInput in, java.util.Iterator refTypes,
         java.util.Iterator intraStoreRefs, java.util.Iterator interStoreRefs)
         throws java.io.IOException, java.lang.ClassNotFoundException {
-      super(store, onum, version, warranty, label, accessLabel, in, refTypes,
+      super(store, onum, version, warranty, lease, label, accessLabel, in, refTypes,
           intraStoreRefs, interStoreRefs);
     }
 

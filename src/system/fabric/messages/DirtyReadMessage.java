@@ -4,6 +4,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import fabric.common.RWLease;
 import fabric.common.SerializedObject;
 import fabric.common.SerializedObjectAndTokens;
 import fabric.common.TransactionID;
@@ -60,7 +61,9 @@ public class DirtyReadMessage extends
         @SuppressWarnings("deprecation")
         SerializedObject serialized = new SerializedObject(obj);
         VersionWarranty warranty = obj.$versionWarranty();
-        this.obj = new SerializedObjectAndTokens(serialized, warranty);
+        //TODO: get lease from protocol
+        this.obj =
+            new SerializedObjectAndTokens(serialized, warranty, new RWLease(0));
       }
     }
 
@@ -119,8 +122,9 @@ public class DirtyReadMessage extends
     SerializedObject serialized = new SerializedObject(in);
     VersionWarranty warranty = new VersionWarranty(in.readLong());
 
+    // TODO: Change this to use protocol for lease.
     return new Response(store, new SerializedObjectAndTokens(serialized,
-        warranty));
+        warranty, new RWLease(0)));
   }
 
 }

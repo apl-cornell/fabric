@@ -10,11 +10,13 @@ import fabric.worker.Store;
 public class SerializedObjectAndTokens {
   private SerializedObject serializedObject;
   private VersionWarranty warranty;
+  private RWLease lease;
 
   public SerializedObjectAndTokens(SerializedObject object,
-      VersionWarranty warranty) {
+      VersionWarranty warranty, RWLease lease) {
     this.serializedObject = object;
     this.warranty = warranty;
+    this.lease = lease;
   }
 
   @Override
@@ -22,7 +24,8 @@ public class SerializedObjectAndTokens {
     if (!(o instanceof SerializedObjectAndTokens)) return false;
 
     SerializedObjectAndTokens s = (SerializedObjectAndTokens) o;
-    return equals(serializedObject, s.serializedObject) && equals(warranty, s.warranty);
+    return equals(serializedObject, s.serializedObject)
+        && equals(warranty, s.warranty) && equals(lease, s.lease);
   }
 
   private boolean equals(Object o1, Object o2) {
@@ -35,7 +38,8 @@ public class SerializedObjectAndTokens {
   public int hashCode() {
     // This hash code implementation could probably be improved.
     return (serializedObject == null ? 0 : serializedObject.hashCode())
-        ^ (warranty == null ? 0 : warranty.hashCode());
+        ^ (warranty == null ? 0 : warranty.hashCode())
+        ^ (lease == null ? 0 : lease.hashCode());
   }
 
   /**
@@ -63,13 +67,30 @@ public class SerializedObjectAndTokens {
   }
 
   /**
+   * @return the lease
+   */
+  public RWLease getLease() {
+    return lease;
+  }
+
+  /**
+   * @param lease the lease to set
+   *
+   * Does <strong>not</strong> check if the new lease is strictly newer than the
+   * original lease.
+   */
+  public void setLease(RWLease lease) {
+    this.lease = lease;
+  }
+
+  /**
    * Get the deserialized version of the object with the current tokens.
    *
    * @param store Store this object comes from (same as argument for
    * {@link SerializedObject#deserialize}).
    */
   public _Impl getDeserializedObject(Store store) {
-    return serializedObject.deserialize(store, warranty);
+    return serializedObject.deserialize(store, warranty, lease);
   }
 
   /**
@@ -81,6 +102,6 @@ public class SerializedObjectAndTokens {
    * {@link SerializedObject#deserialize}).
    */
   public _Impl getDeserializedObject(Store store, boolean chaseSurrogates) {
-    return serializedObject.deserialize(store, warranty, chaseSurrogates);
+    return serializedObject.deserialize(store, warranty, lease, chaseSurrogates);
   }
 }

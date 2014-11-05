@@ -567,13 +567,15 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     ClassMember deserialize =
         qq.parseMember(
             "public _Impl(fabric.worker.Store store, long onum, int version, "
-                + "fabric.common.VersionWarranty warranty, long label, long accessLabel, "
+                + "fabric.common.VersionWarranty warranty, "
+                + "fabric.common.RWLease lease, long label, long accessLabel, "
                 + "java.io.ObjectInput in, java.util.Iterator refTypes, "
                 + "java.util.Iterator intraStoreRefs, "
                 + "java.util.Iterator interStoreRefs) "
                 + "throws java.io.IOException, java.lang.ClassNotFoundException {"
-                + "super(store, onum, version, warranty, label, accessLabel, in, "
-                + "refTypes, intraStoreRefs, interStoreRefs);" + in + " }",
+                + "super(store, onum, version, warranty, lease, label, "
+                + "accessLabel, in, refTypes, intraStoreRefs, interStoreRefs);"
+                + in + " }",
             inSubst);
     result.add(deserialize);
 

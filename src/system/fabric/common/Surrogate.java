@@ -27,12 +27,12 @@ public final class Surrogate extends _Impl {
   public final long onum;
 
   public Surrogate(Store store, long onum, int version,
-      VersionWarranty warranty, long label, long accessLabel,
+      VersionWarranty warranty, RWLease lease, long label, long accessLabel,
       ObjectInput serializedInput, Iterator<RefTypeEnum> refTypes,
       Iterator<Long> intraStoreRefs, Iterator<Pair<String, Long>> interStoreRefs)
       throws IOException, ClassNotFoundException {
-    super(store, onum, version, warranty, label, accessLabel, serializedInput,
-        refTypes, intraStoreRefs, interStoreRefs);
+    super(store, onum, version, warranty, lease, label, accessLabel,
+        serializedInput, refTypes, intraStoreRefs, interStoreRefs);
     String storeName = serializedInput.readUTF();
     this.store = Worker.getWorker().getStore(storeName);
     this.onum = serializedInput.readLong();

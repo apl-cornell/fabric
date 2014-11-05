@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.logging.Level;
 
 import fabric.common.ObjectGroup;
+import fabric.common.RWLease;
 import fabric.common.SerializedObject;
 import fabric.common.SerializedObjectAndTokens;
 import fabric.common.Surrogate;
@@ -454,7 +455,8 @@ public final class ObjectCache {
       if (group.second != null) warranty = group.second.get(curOnum);
 
       Entry curEntry =
-          putIfAbsent(store, new SerializedObjectAndTokens(obj, warranty), true);
+          putIfAbsent(store, new SerializedObjectAndTokens(obj, warranty,
+              new RWLease(0)), true);
       if (result == null && onum == curOnum) {
         result = curEntry;
       }
@@ -539,7 +541,7 @@ public final class ObjectCache {
     }
 
     forcePut(store, new SerializedObjectAndTokens(obj,
-        VersionWarranty.EXPIRED_WARRANTY));
+        VersionWarranty.EXPIRED_WARRANTY, new RWLease(0)));
     return true;
   }
 

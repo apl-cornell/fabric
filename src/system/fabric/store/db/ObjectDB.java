@@ -457,8 +457,9 @@ public abstract class ObjectDB {
       if (storeVersion != workerVersion) {
         Pair<ExtendWarrantyStatus, VersionWarranty> refreshWarrantyResult =
             refreshWarranty(scratchObj, onum);
+        // TODO: Actually get lease from protocol
         versionConflicts.put(onum, new SerializedObjectAndTokens(storeCopy,
-            refreshWarrantyResult.second));
+            refreshWarrantyResult.second, new RWLease(0)));
         return VersionWarranty.EXPIRED_WARRANTY;
       }
 

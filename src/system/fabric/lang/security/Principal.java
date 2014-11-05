@@ -9,6 +9,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import fabric.common.Crypto;
+import fabric.common.RWLease;
 import fabric.common.RefTypeEnum;
 import fabric.common.VersionWarranty;
 import fabric.common.util.Pair;
@@ -190,12 +191,12 @@ public interface Principal extends fabric.lang.Object {
     }
 
     public _Impl(Store store, long onum, int version, VersionWarranty warranty,
-        long label, long accessLabel, ObjectInput in,
+        RWLease lease, long label, long accessLabel, ObjectInput in,
         Iterator<RefTypeEnum> refTypes, Iterator<Long> intraStoreRefs,
         Iterator<Pair<String, Long>> interStoreRefs)
         throws java.io.IOException, ClassNotFoundException {
-      super(store, onum, version, warranty, label, accessLabel, in, refTypes,
-          intraStoreRefs, interStoreRefs);
+      super(store, onum, version, warranty, lease, label, accessLabel, in,
+          refTypes, intraStoreRefs, interStoreRefs);
     }
 
     @Override

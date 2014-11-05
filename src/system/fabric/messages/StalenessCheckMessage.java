@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import fabric.common.RWLease;
 import fabric.common.SerializedObject;
 import fabric.common.SerializedObjectAndTokens;
 import fabric.common.VersionWarranty;
@@ -101,7 +102,9 @@ public final class StalenessCheckMessage extends
     for (int i = 0; i < size; i++) {
       SerializedObject obj = new SerializedObject(in);
       VersionWarranty warranty = new VersionWarranty(in.readLong());
-      staleObjects.add(new SerializedObjectAndTokens(obj, warranty));
+      //TODO: Change it so that lease is included in network protocol
+      staleObjects.add(new SerializedObjectAndTokens(obj, warranty,
+          new RWLease(0)));
     }
 
     return new Response(staleObjects);
