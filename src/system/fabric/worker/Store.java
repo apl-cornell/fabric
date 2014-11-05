@@ -5,8 +5,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
-import fabric.common.SemanticWarranty;
-import fabric.common.SerializedObject;
+import fabric.common.SerializedObjectAndTokens;
 import fabric.common.TransactionID;
 import fabric.common.VersionWarranty;
 import fabric.common.exceptions.AccessException;
@@ -38,7 +37,7 @@ public interface Store extends Serializable {
 
   /**
    * Notifies the store that the transaction is entering the write-prepare phase.
-   * 
+   *
    * @return a minimum commit time.
    */
   PrepareWritesResult prepareTransactionWrites(long tid,
@@ -48,7 +47,7 @@ public interface Store extends Serializable {
 
   /**
    * Notifies the store that the transaction is entering the read-prepare phase.
-   * 
+   *
    * @return the set of new version warranties.
    */
   Pair<LongKeyMap<VersionWarranty>, Map<CallInstance, WarrantiedCallResult>>
@@ -152,6 +151,6 @@ public interface Store extends Serializable {
    *
    * @return the resulting cache entry.
    */
-  public ObjectCache.Entry cache(Pair<SerializedObject, VersionWarranty> obj);
+  public ObjectCache.Entry cache(SerializedObjectAndTokens obj);
 
 }

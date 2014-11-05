@@ -22,6 +22,7 @@ import fabric.common.ONumConstants;
 import fabric.common.ObjectGroup;
 import fabric.common.SemanticWarranty;
 import fabric.common.SerializedObject;
+import fabric.common.SerializedObjectAndTokens;
 import fabric.common.TransactionID;
 import fabric.common.VersionWarranty;
 import fabric.common.WarrantyGroup;
@@ -440,10 +441,9 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
 
   @Override
   public boolean checkForStaleObjects(LongKeyMap<Integer> reads) {
-    List<Pair<SerializedObject, VersionWarranty>> staleObjects =
-        getStaleObjects(reads);
+    List<SerializedObjectAndTokens> staleObjects = getStaleObjects(reads);
 
-    for (Pair<SerializedObject, VersionWarranty> pair : staleObjects)
+    for (SerializedObjectAndTokens pair : staleObjects)
       updateCache(pair);
 
     return !staleObjects.isEmpty();
@@ -452,7 +452,7 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
   /**
    * Helper for checkForStaleObjects.
    */
-  protected List<Pair<SerializedObject, VersionWarranty>> getStaleObjects(
+  protected List<SerializedObjectAndTokens> getStaleObjects(
       LongKeyMap<Integer> reads) {
     try {
       return send(Worker.getWorker().authToStore, new StalenessCheckMessage(
@@ -499,7 +499,7 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
    * and retried. If the object does not exist in cache, then the cache is not
    * updated.
    */
-  public void updateCache(Pair<SerializedObject, VersionWarranty> update) {
+  public void updateCache(SerializedObjectAndTokens update) {
     cache.update(this, update);
   }
 
@@ -508,7 +508,7 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
    * replaced. Any transactions currently using the object are aborted and
    * retried.
    */
-  void forceCache(Pair<SerializedObject, VersionWarranty> obj) {
+  void forceCache(SerializedObjectAndTokens obj) {
     cache.forcePut(this, obj);
   }
 
@@ -531,7 +531,7 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
 
   /**
    * Updates the worker's cache with the given set of warranties.
-   * 
+   *
    * @return the set of onums for which a cache entry was found.
    */
   public List<Long> updateWarranties(WarrantyGroup warranties) {
@@ -548,7 +548,7 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
   }
 
   @Override
-  public ObjectCache.Entry cache(Pair<SerializedObject, VersionWarranty> obj) {
+  public ObjectCache.Entry cache(SerializedObjectAndTokens obj) {
     return cache.put(this, obj);
   }
 

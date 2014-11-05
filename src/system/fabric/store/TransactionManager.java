@@ -23,6 +23,7 @@ import fabric.common.ONumConstants;
 import fabric.common.ObjectGroup;
 import fabric.common.SemanticWarranty;
 import fabric.common.SerializedObject;
+import fabric.common.SerializedObjectAndTokens;
 import fabric.common.VersionWarranty;
 import fabric.common.WarrantyGroup;
 import fabric.common.exceptions.AccessException;
@@ -132,7 +133,7 @@ public class TransactionManager {
 
   /**
    * Executes the PREPARE_WRITES phase of the three-phase commit.
-   * 
+   *
    * @return a minimum commit time, specifying a time after which the warranties
    * on all modified objects will expire, and the additional reads and
    * warrantied calls the transaction needs to use to support any call updates
@@ -168,18 +169,17 @@ public class TransactionManager {
     database.beginPrepareWrites(tid, worker);
 
     long longest = 0;
-    OidKeyHashMap<Integer> addedReads = new OidKeyHashMap<Integer>();
-    Map<CallInstance, WarrantiedCallResult> addedCalls =
-      new HashMap<CallInstance, WarrantiedCallResult>();
+    OidKeyHashMap<Integer> addedReads = new OidKeyHashMap<>();
+    Map<CallInstance, WarrantiedCallResult> addedCalls = new HashMap<>();
 
     try {
       // This will store the set of onums of objects that were out of date.
-      LongKeyMap<Pair<SerializedObject, VersionWarranty>> versionConflicts =
+      LongKeyMap<SerializedObjectAndTokens> versionConflicts =
           new LongKeyHashMap<>();
 
       // Prepare writes.
       Pair<ExtendWarrantyStatus, VersionWarranty> scratchObj =
-          new Pair<ExtendWarrantyStatus, VersionWarranty>(null, null);
+          new Pair<>(null, null);
       for (SerializedObject o : req.writes) {
         VersionWarranty warranty =
             database.registerUpdate(scratchObj, tid, worker, o,
@@ -197,31 +197,29 @@ public class TransactionManager {
       // Double check calls.
       long currentTime = System.currentTimeMillis();
       long currentProposedTime =
-        (longestWarranty == null ? 0 : longestWarranty.expiry());
+          (longestWarranty == null ? 0 : longestWarranty.expiry());
       Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
           "Checking calls for {0} that would delay longer than {1} ms",
           Long.toHexString(tid), currentProposedTime - currentTime);
-      Pair<SemanticWarranty,
-           Pair<Map<CallInstance, SemanticWarrantyRequest>,
-                Map<CallInstance, SemanticWarrantyRequest>>>
-        callPrepareResp = semanticWarranties.prepareWrites(req.writes,
-            req.creates, tid, currentProposedTime, database.getName());
+      Pair<SemanticWarranty, Pair<Map<CallInstance, SemanticWarrantyRequest>, Map<CallInstance, SemanticWarrantyRequest>>> callPrepareResp =
+          semanticWarranties.prepareWrites(req.writes, req.creates, tid,
+              currentProposedTime, database.getName());
 
       SemanticWarranty longestCallWarranty = callPrepareResp.first;
       Map<CallInstance, SemanticWarrantyRequest> updates =
-        callPrepareResp.second.first;
+          callPrepareResp.second.first;
       Map<CallInstance, SemanticWarrantyRequest> newCalls =
-        callPrepareResp.second.second;
+          callPrepareResp.second.second;
       updates.putAll(newCalls);
 
-      OidKeyHashMap<Store> addedCreates = new OidKeyHashMap<Store>();
+      OidKeyHashMap<Store> addedCreates = new OidKeyHashMap<>();
 
       for (SemanticWarrantyRequest update : updates.values()) {
         // Register additional creates
         for (LongKeyMap<_Impl> submap : update.creates) {
           for (_Impl create : submap.values()) {
-            database.registerUpdate(scratchObj, tid, worker, new
-                SerializedObject(create), versionConflicts, CREATE);
+            database.registerUpdate(scratchObj, tid, worker,
+                new SerializedObject(create), versionConflicts, CREATE);
             addedCreates.put(create.$getStore(), create.$getOnum(),
                 create.$getStore());
           }
@@ -257,7 +255,7 @@ public class TransactionManager {
       if (!versionConflicts.isEmpty()) {
         throw new TransactionPrepareFailedException(versionConflicts);
       }
-      
+
       // Don't worry about calls we're updating or requesting.
       for (CallInstance updatingCall : updates.keySet()) {
         addedCalls.remove(updatingCall);
@@ -296,13 +294,11 @@ public class TransactionManager {
     } catch (TransactionPrepareFailedException tpfe) {
       // Don't need to worry about calls because inprocess store doesn't
       // maintain a cache.  Need to update local cache of objects, however.
-      for (Pair<SerializedObject, VersionWarranty> conflict :
-          tpfe.versionConflicts.values())
+      for (SerializedObjectAndTokens conflict : tpfe.versionConflicts.values())
         store.updateCache(conflict);
       throw new TransactionPrepareFailedException(
           "Had problems with reads from call updates!");
     }
-        
 
     STORE_TRANSACTION_LOGGER.log(Level.FINE,
         "Prepared writes for transaction {0}", tid);
@@ -316,7 +312,7 @@ public class TransactionManager {
 
   /**
    * Executes the PREPARE_READS phase of the three-phase commit.
-   * 
+   *
    * @param workerIdentity
    *          The worker requesting the prepare
    * @throws TransactionPrepareFailedException
@@ -350,13 +346,12 @@ public class TransactionManager {
       }
 
       // This will store the set of onums of objects that were out of date.
-      LongKeyMap<Pair<SerializedObject, VersionWarranty>> versionConflicts =
-          new LongKeyHashMap<Pair<SerializedObject, VersionWarranty>>();
+      LongKeyMap<SerializedObjectAndTokens> versionConflicts =
+          new LongKeyHashMap<>();
 
       // This will store the warranties that will be sent back to the worker as
       // a result of the prepare.
-      LongKeyMap<VersionWarranty> prepareResult =
-          new LongKeyHashMap<VersionWarranty>();
+      LongKeyMap<VersionWarranty> prepareResult = new LongKeyHashMap<>();
 
       // This will store the new warranties we get.
       List<VersionWarranty.Binding> newWarranties =
@@ -365,7 +360,7 @@ public class TransactionManager {
 
       // Check reads
       final Pair<ExtendWarrantyStatus, VersionWarranty> resultObj =
-          new Pair<ExtendWarrantyStatus, VersionWarranty>(null, null);
+          new Pair<>(null, null);
       for (LongKeyMap.Entry<Integer> entry : reads.entrySet()) {
         long onum = entry.getKey();
         int version = entry.getValue().intValue();
@@ -388,15 +383,17 @@ public class TransactionManager {
           case BAD_VERSION:
             SerializedObject obj = database.read(onum);
             status = database.refreshWarranty(resultObj, onum);
-            versionConflicts
-                .put(onum, new Pair<SerializedObject, VersionWarranty>(obj,
-                    status.second));
-            Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST, "BAD VERSION ON {0} FOR {1}: DB: {2}, US: {3}", onum, Long.toHexString(tid), obj.getVersion(), version);
+            versionConflicts.put(onum, new SerializedObjectAndTokens(obj,
+                status.second));
+            Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+                "BAD VERSION ON {0} FOR {1}: DB: {2}, US: {3}", onum,
+                Long.toHexString(tid), obj.getVersion(), version);
             continue;
 
           case DENIED:
             sm.notifyNewWarranties(newWarranties, null);
-            Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST, "DENIED EXTENSION ON {0} FOR {1}", onum, Long.toHexString(tid));
+            Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+                "DENIED EXTENSION ON {0} FOR {1}", onum, Long.toHexString(tid));
             throw new TransactionPrepareFailedException(versionConflicts,
                 "Unable to extend warranty for object " + onum);
           }
@@ -429,52 +426,59 @@ public class TransactionManager {
   /**
    * Executes the calls piece of the PREPARE_READS phase of the three-phase
    * commit.
-   * 
+   *
    * @param worker
    *          The worker requesting the prepare
    * @throws TransactionPrepareFailedException
    *           If the transaction could not successfully extend the
    *           SemanticWarranty on any of the calls
    */
-  public Map<CallInstance, WarrantiedCallResult> prepareCalls(Principal worker, long
-      tid, Map<CallInstance, WarrantiedCallResult> calls, long commitTime)
-    throws TransactionPrepareFailedException {
+  public Map<CallInstance, WarrantiedCallResult> prepareCalls(Principal worker,
+      long tid, Map<CallInstance, WarrantiedCallResult> calls, long commitTime)
+      throws TransactionPrepareFailedException {
     try {
       Map<CallInstance, WarrantiedCallResult> updatedWars =
-        new HashMap<CallInstance, WarrantiedCallResult>();
+          new HashMap<CallInstance, WarrantiedCallResult>();
       Map<CallInstance, WarrantiedCallResult> conflictWars =
-        new HashMap<CallInstance, WarrantiedCallResult>();
+          new HashMap<CallInstance, WarrantiedCallResult>();
       for (CallInstance call : calls.keySet()) {
         Pair<SemanticExtendStatus, WarrantiedCallResult> extResult =
-          semanticWarranties.extendForReadPrepare(call, calls.get(call),
-              commitTime, tid);
+            semanticWarranties.extendForReadPrepare(call, calls.get(call),
+                commitTime, tid);
         switch (extResult.first) {
-          case OK:
-            updatedWars.put(call, extResult.second);
-            break;
-          case BAD_VERSION:
-            conflictWars.put(call, extResult.second);
-            break;
-          case DENIED:
-            throw new TransactionPrepareFailedException(conflictWars,
-                "Could not extend for " + call);
+        case OK:
+          updatedWars.put(call, extResult.second);
+          break;
+        case BAD_VERSION:
+          conflictWars.put(call, extResult.second);
+          break;
+        case DENIED:
+          throw new TransactionPrepareFailedException(conflictWars,
+              "Could not extend for " + call);
         }
       }
       if (conflictWars.size() > 0) {
-        SEMANTIC_WARRANTY_LOGGER.finest("Prepare Calls failed due to conflicting or stale call values!");
+        SEMANTIC_WARRANTY_LOGGER
+            .finest("Prepare Calls failed due to conflicting or stale call values!");
         long currentTime = System.currentTimeMillis();
-        String msg = "Prepare Calls failed due to " + conflictWars.size()
-          + " conflicting values:\n";
+        String msg =
+            "Prepare Calls failed due to " + conflictWars.size()
+                + " conflicting values:\n";
         msg += "Conflicting...\n";
-        for (Map.Entry<CallInstance, WarrantiedCallResult> entry : conflictWars.entrySet()) {
+        for (Map.Entry<CallInstance, WarrantiedCallResult> entry : conflictWars
+            .entrySet()) {
           if (entry.getValue().getValue() instanceof WrappedJavaInlineable) {
-            msg += "\t" + entry.getKey() + " = " +
-              entry.getValue().getValue().$unwrap() + " (" +
-              (entry.getValue().getWarranty().expiry() - currentTime) + ")\n";
+            msg +=
+                "\t" + entry.getKey() + " = "
+                    + entry.getValue().getValue().$unwrap() + " ("
+                    + (entry.getValue().getWarranty().expiry() - currentTime)
+                    + ")\n";
           } else {
-            msg += "\t" + entry.getKey() + " = " +
-              entry.getValue().getValue().$getOnum() + " (" +
-              (entry.getValue().getWarranty().expiry() - currentTime) + ")\n";
+            msg +=
+                "\t" + entry.getKey() + " = "
+                    + entry.getValue().getValue().$getOnum() + " ("
+                    + (entry.getValue().getWarranty().expiry() - currentTime)
+                    + ")\n";
           }
         }
         throw new TransactionPrepareFailedException(conflictWars, msg);
@@ -494,7 +498,7 @@ public class TransactionManager {
   /**
    * Executes the requests piece of the PREPARE_READS phase of the three-phase
    * commit.
-   * 
+   *
    * @param worker
    *          The worker requesting the prepare
    */
@@ -502,24 +506,23 @@ public class TransactionManager {
       long tid, Set<SemanticWarrantyRequest> requests) {
     /* Create the associated warranties and add these calls to the warranties
      * table.
-     */ 
+     */
     Map<CallInstance, SemanticWarranty> warranties =
-      new HashMap<CallInstance, SemanticWarranty>();
+        new HashMap<CallInstance, SemanticWarranty>();
 
     // Have to do a topologically sorted order of requests (so call dependencies
     // have warranties already).
-    Map<CallInstance, Set<CallInstance>> simplifiedDepMap = new
-      HashMap<CallInstance, Set<CallInstance>>();
-    Map<CallInstance, SemanticWarrantyRequest> reqMap = new
-      HashMap<CallInstance, SemanticWarrantyRequest>(requests.size());
+    Map<CallInstance, Set<CallInstance>> simplifiedDepMap =
+        new HashMap<CallInstance, Set<CallInstance>>();
+    Map<CallInstance, SemanticWarrantyRequest> reqMap =
+        new HashMap<CallInstance, SemanticWarrantyRequest>(requests.size());
     for (SemanticWarrantyRequest r : requests) {
       reqMap.put(r.call, r);
     }
     for (SemanticWarrantyRequest r : requests) {
       Set<CallInstance> depsInTable = new HashSet<CallInstance>();
       for (CallInstance c : r.calls.keySet())
-        if (reqMap.containsKey(c))
-          depsInTable.add(c);
+        if (reqMap.containsKey(c)) depsInTable.add(c);
       simplifiedDepMap.put(r.call, depsInTable);
     }
 
@@ -528,8 +531,7 @@ public class TransactionManager {
     for (CallInstance k : simplifiedDepMap.keySet())
       if (simplifiedDepMap.get(k).isEmpty())
         fringe.add(k);
-      else
-        nonfringe.add(k);
+      else nonfringe.add(k);
 
     while (!fringe.isEmpty()) {
       SemanticWarrantyRequest r = reqMap.get(fringe.poll());
@@ -537,16 +539,15 @@ public class TransactionManager {
           "Proposing SemanticWarranty for CallInstance {0}", r.call);
 
       // Get a proposal for a warranty
-      SemanticWarranty proposed = semanticWarranties.requestWarranty(tid, r,
-          true);
+      SemanticWarranty proposed =
+          semanticWarranties.requestWarranty(tid, r, true);
       if (proposed != null) {
         Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINER,
-            "{0} was proposed a warranty to expire in {1}",
-            r.call.toString(),
+            "{0} was proposed a warranty to expire in {1}", r.call.toString(),
             (proposed.expiry() - System.currentTimeMillis()));
         // Add it to the response set
         warranties.put(r.call, proposed);
-        
+
         //Update fringe
         for (CallInstance c : new HashSet<CallInstance>(nonfringe)) {
           simplifiedDepMap.get(c).remove(r.call);
@@ -694,18 +695,18 @@ public class TransactionManager {
   /**
    * Returns a WarrantiedCallResult containing the specified call's value and
    * warranty.
-   * 
+   *
    * @param principal
    *          The principal performing the read.
    * @param id
    *          The id for the call instance.
    */
-  public WarrantiedCallResult getCall(Principal principal,
-      CallInstance id) throws AccessException {
+  public WarrantiedCallResult getCall(Principal principal, CallInstance id)
+      throws AccessException {
     WarrantiedCallResult result = semanticWarranties.fetchForWorker(id);
     if (result == null)
-      throw new AccessException( "AccessDenied, could not find call id " +
-          id.toString());
+      throw new AccessException("AccessDenied, could not find call id "
+          + id.toString());
     return result;
   }
 
@@ -753,7 +754,7 @@ public class TransactionManager {
             : null;
 
     Pair<ExtendWarrantyStatus, VersionWarranty> resultObj =
-        new Pair<ExtendWarrantyStatus, VersionWarranty>(null, null);
+        new Pair<>(null, null);
     for (Entry<Integer> entry : onumsToVersions.entrySet()) {
       long onum = entry.getKey();
       Pair<ExtendWarrantyStatus, VersionWarranty> refreshResult =
@@ -790,7 +791,7 @@ public class TransactionManager {
    * Checks the given set of objects for staleness and returns a list of updates
    * for any stale objects found.
    */
-  List<Pair<SerializedObject, VersionWarranty>> checkForStaleObjects(
+  List<SerializedObjectAndTokens> checkForStaleObjects(
       RemoteIdentity<RemoteWorker> workerIdentity, LongKeyMap<Integer> versions)
       throws AccessException {
     Principal worker = workerIdentity.principal;
@@ -803,14 +804,15 @@ public class TransactionManager {
           Collections.<SerializedObject> emptyList());
     }
 
-    List<Pair<SerializedObject, VersionWarranty>> result = new ArrayList<>();
-    List<VersionWarranty.Binding> newWarranties = ENABLE_WARRANTY_REFRESHES ?
-      new ArrayList<VersionWarranty.Binding>() : null;
+    List<SerializedObjectAndTokens> result = new ArrayList<>();
+    List<VersionWarranty.Binding> newWarranties =
+        ENABLE_WARRANTY_REFRESHES ? new ArrayList<VersionWarranty.Binding>()
+            : null;
     boolean success = false;
 
     try {
       Pair<ExtendWarrantyStatus, VersionWarranty> resultObj =
-          new Pair<ExtendWarrantyStatus, VersionWarranty>(null, null);
+          new Pair<>(null, null);
       for (LongKeyMap.Entry<Integer> entry : versions.entrySet()) {
         long onum = entry.getKey();
         int version = entry.getValue();
@@ -821,7 +823,7 @@ public class TransactionManager {
               database.refreshWarranty(resultObj, onum);
           SerializedObject obj = database.read(onum);
 
-          result.add(new Pair<SerializedObject, VersionWarranty>(obj,
+          result.add(new SerializedObjectAndTokens(obj,
               refreshWarrantyResult.second));
 
           if (ENABLE_WARRANTY_REFRESHES) {

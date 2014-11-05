@@ -13,21 +13,21 @@ import java.io.ObjectStreamException;
 import java.io.Serializable;
 
 import fabric.common.SerializedObject;
+import fabric.common.SerializedObjectAndTokens;
 import fabric.common.VersionWarranty;
 import fabric.common.exceptions.FabricException;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
-import fabric.common.util.Pair;
 import fabric.net.RemoteNode;
 import fabric.worker.memoize.CallInstance;
 import fabric.worker.memoize.WarrantiedCallResult;
 
 public class TransactionPrepareFailedException extends FabricException
-  implements Serializable {
+    implements Serializable {
   /**
    * A set of objects used by the transaction and were out of date.
    */
-  public LongKeyMap<Pair<SerializedObject, VersionWarranty>> versionConflicts;
+  public LongKeyMap<SerializedObjectAndTokens> versionConflicts;
 
   /**
    * A set of calls used by the transaction that were out of date and the store
@@ -48,11 +48,11 @@ public class TransactionPrepareFailedException extends FabricException
       outD.writeInt(0);
     } else {
       outD.writeInt(versionConflicts.size());
-      for (LongKeyMap.Entry<Pair<SerializedObject, VersionWarranty>> e :
-          versionConflicts.entrySet()) {
+      for (LongKeyMap.Entry<SerializedObjectAndTokens> e : versionConflicts
+          .entrySet()) {
         outD.writeLong(e.getKey());
-        e.getValue().first.write(outD);
-        outD.writeLong(e.getValue().second.expiry());
+        e.getValue().getSerializedObject().write(outD);
+        outD.writeLong(e.getValue().getWarranty().expiry());
       }
     }
 
@@ -60,8 +60,8 @@ public class TransactionPrepareFailedException extends FabricException
       outD.writeInt(0);
     } else {
       outD.writeInt(callConflictUpdates.size());
-      for (Map.Entry<CallInstance, WarrantiedCallResult> e :
-          callConflictUpdates.entrySet()) {
+      for (Map.Entry<CallInstance, WarrantiedCallResult> e : callConflictUpdates
+          .entrySet()) {
         e.getKey().write(outD);
         e.getValue().write(outD);
       }
@@ -78,36 +78,35 @@ public class TransactionPrepareFailedException extends FabricException
   }
 
   private void readObject(ObjectInputStream in) throws IOException,
-          ClassNotFoundException {
+      ClassNotFoundException {
     DataInputStream inD = new DataInputStream(in);
     int verSize = inD.readInt();
-    this.versionConflicts = new LongKeyHashMap<Pair<SerializedObject, VersionWarranty>>(verSize);
+    this.versionConflicts = new LongKeyHashMap<>(verSize);
     for (int i = 0; i < verSize; i++) {
       long id = inD.readLong();
       SerializedObject obj = new SerializedObject(inD);
       VersionWarranty war = new VersionWarranty(inD.readLong());
-      this.versionConflicts.put(id, new Pair<SerializedObject,
-          VersionWarranty>(obj, war));
+      this.versionConflicts.put(id, new SerializedObjectAndTokens(obj, war));
     }
 
     int callUpSize = inD.readInt();
-    this.callConflictUpdates = new HashMap<CallInstance,
-      WarrantiedCallResult>(callUpSize);
+    this.callConflictUpdates = new HashMap<>(callUpSize);
     for (int i = 0; i < callUpSize; i++) {
       CallInstance call = new CallInstance(inD);
       this.callConflictUpdates.put(call, new WarrantiedCallResult(inD));
     }
 
     int messagesSize = inD.readInt();
-    this.messages = new ArrayList<String>(messagesSize);
+    this.messages = new ArrayList<>(messagesSize);
     for (int i = 0; i < messagesSize; i++) {
       this.messages.add(inD.readUTF());
     }
   }
 
-  private void readObjectNoData(ObjectInputStream in) throws
-    ObjectStreamException {
-      throw new ObjectStreamException() {};
+  private void readObjectNoData(ObjectInputStream in)
+      throws ObjectStreamException {
+    throw new ObjectStreamException() {
+    };
   }
 
   public TransactionPrepareFailedException(TransactionRestartingException cause) {
@@ -117,7 +116,7 @@ public class TransactionPrepareFailedException extends FabricException
   }
 
   public TransactionPrepareFailedException(
-      LongKeyMap<Pair<SerializedObject, VersionWarranty>> versionConflicts) {
+      LongKeyMap<SerializedObjectAndTokens> versionConflicts) {
     this.versionConflicts = versionConflicts;
     this.messages = null;
     this.callConflictUpdates = null;
@@ -161,8 +160,7 @@ public class TransactionPrepareFailedException extends FabricException
   }
 
   public TransactionPrepareFailedException(
-      LongKeyMap<Pair<SerializedObject, VersionWarranty>> versionConflicts,
-      String message) {
+      LongKeyMap<SerializedObjectAndTokens> versionConflicts, String message) {
     this.versionConflicts = versionConflicts;
     messages = java.util.Collections.singletonList(message);
     this.callConflictUpdates = null;
@@ -181,7 +179,7 @@ public class TransactionPrepareFailedException extends FabricException
   }
 
   public TransactionPrepareFailedException(
-      LongKeyMap<Pair<SerializedObject, VersionWarranty>> versionConflicts,
+      LongKeyMap<SerializedObjectAndTokens> versionConflicts,
       Map<CallInstance, WarrantiedCallResult> callConflictUpdates,
       String message) {
     messages = java.util.Collections.singletonList(message);
@@ -190,7 +188,7 @@ public class TransactionPrepareFailedException extends FabricException
   }
 
   public TransactionPrepareFailedException(
-      LongKeyMap<Pair<SerializedObject, VersionWarranty>> versionConflicts,
+      LongKeyMap<SerializedObjectAndTokens> versionConflicts,
       Map<CallInstance, WarrantiedCallResult> callConflictUpdates,
       List<String> messages) {
     this.messages = messages;
@@ -199,7 +197,7 @@ public class TransactionPrepareFailedException extends FabricException
   }
 
   public TransactionPrepareFailedException(
-      LongKeyMap<Pair<SerializedObject, VersionWarranty>> versionConflicts,
+      LongKeyMap<SerializedObjectAndTokens> versionConflicts,
       Map<CallInstance, WarrantiedCallResult> callConflictUpdates) {
     this.messages = null;
     this.versionConflicts = versionConflicts;

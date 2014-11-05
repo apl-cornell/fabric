@@ -29,7 +29,7 @@ import java.util.logging.Level;
 import fabric.common.FabricThread;
 import fabric.common.Logging;
 import fabric.common.SemanticWarranty;
-import fabric.common.SerializedObject;
+import fabric.common.SerializedObjectAndTokens;
 import fabric.common.Threading;
 import fabric.common.Threading.NamedRunnable;
 import fabric.common.Timing;
@@ -507,7 +507,7 @@ public final class TransactionManager {
 
     // Aggregated request results.
     final Map<CallInstance, SemanticWarranty> callResults =
-        new HashMap<CallInstance, SemanticWarranty>();
+        new HashMap<>();
 
     // Go through each worker and send prepare messages in parallel.
     for (final RemoteWorker worker : current.workersCalled) {
@@ -623,11 +623,10 @@ public final class TransactionManager {
         if (entry.getKey() instanceof RemoteStore) {
           // Remove old objects from our cache.
           RemoteStore store = (RemoteStore) entry.getKey();
-          LongKeyMap<Pair<SerializedObject, VersionWarranty>> versionConflicts =
+          LongKeyMap<SerializedObjectAndTokens> versionConflicts =
               entry.getValue().versionConflicts;
           if (versionConflicts != null) {
-            for (Pair<SerializedObject, VersionWarranty> obj : versionConflicts
-                .values())
+            for (SerializedObjectAndTokens obj : versionConflicts.values())
               store.updateCache(obj);
           }
 
@@ -755,7 +754,7 @@ public final class TransactionManager {
     Map<Store, Set<CallInstance>> storesCalled =
         current.storesCalled(commitTime);
 
-    Set<Store> storesToContact = new HashSet<Store>(storesCalled.keySet());
+    Set<Store> storesToContact = new HashSet<>(storesCalled.keySet());
     storesToContact.addAll(storesRead.keySet());
 
     current.commitState.commitTime = commitTime;
@@ -854,15 +853,14 @@ public final class TransactionManager {
         if (entry.getKey() instanceof RemoteStore) {
           // Remove old objects from our cache.
           RemoteStore store = (RemoteStore) entry.getKey();
-          LongKeyMap<Pair<SerializedObject, VersionWarranty>> versionConflicts =
+          LongKeyMap<SerializedObjectAndTokens> versionConflicts =
               entry.getValue().versionConflicts;
           if (versionConflicts != null) {
             Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
                 "{0} conflicted objects", versionConflicts.size());
-            for (Pair<SerializedObject, VersionWarranty> obj : versionConflicts
-                .values()) {
+            for (SerializedObjectAndTokens obj : versionConflicts.values()) {
               Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST, "\t{0}",
-                  obj.first.getOnum());
+                  obj.getSerializedObject().getOnum());
               store.updateCache(obj);
             }
           }

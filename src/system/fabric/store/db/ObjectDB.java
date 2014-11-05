@@ -18,6 +18,7 @@ import fabric.common.FastSerializable;
 import fabric.common.Logging;
 import fabric.common.ONumConstants;
 import fabric.common.SerializedObject;
+import fabric.common.SerializedObjectAndTokens;
 import fabric.common.SysUtil;
 import fabric.common.VersionWarranty;
 import fabric.common.exceptions.AccessException;
@@ -284,8 +285,8 @@ public abstract class ObjectDB {
     this.objectGrouper = new ObjectGrouper(this, privateKey);
     this.longestWarranty = new VersionWarranty[] { new VersionWarranty(0) };
     this.accessMetrics = new LongKeyAccessMetrics();
-    this.warrantyIssuer = new LongKeyWarrantyIssuer<>(new VersionWarranty(0),
-        this.accessMetrics);
+    this.warrantyIssuer =
+        new LongKeyWarrantyIssuer<>(new VersionWarranty(0), this.accessMetrics);
   }
 
   /**
@@ -297,7 +298,7 @@ public abstract class ObjectDB {
 
   /**
    * Opens a transaction so it can be write-prepared.
-   * 
+   *
    * @param worker
    *          the worker under whose authority the transaction is running.
    */
@@ -346,7 +347,7 @@ public abstract class ObjectDB {
   /**
    * Attempts to extend the warranty on a particular version of an object, owing
    * to a read prepare.
-   * 
+   *
    * @return a result status and the new warranty (if the status is OK).
    * @throws AccessException if no object exists at the given onum.
    */
@@ -376,18 +377,16 @@ public abstract class ObjectDB {
   }
 
   private static Pair<ExtendWarrantyStatus, VersionWarranty> EXTEND_WARRANTY_DENIED =
-      new Pair<ExtendWarrantyStatus, VersionWarranty>(
-          ExtendWarrantyStatus.DENIED, null);
+      new Pair<>(ExtendWarrantyStatus.DENIED, null);
 
   private static Pair<ExtendWarrantyStatus, VersionWarranty> EXTEND_WARRANTY_BAD_VERSION =
-      new Pair<ExtendWarrantyStatus, VersionWarranty>(
-          ExtendWarrantyStatus.BAD_VERSION, null);
+      new Pair<>(ExtendWarrantyStatus.BAD_VERSION, null);
 
   /**
    * Registers that a transaction has created or written to an object. This
    * update will not become visible in the store until after commit() is called
    * for the transaction.
-   * 
+   *
    * @param tid
    *          the identifier for the transaction preparing the create/write.
    * @param worker
@@ -401,13 +400,13 @@ public abstract class ObjectDB {
    *          version.
    * @param create
    *          whether the object was newly created by the transaction.
-   *          
+   *
    * @return the object's existing warranty.
    */
   public final VersionWarranty registerUpdate(
       Pair<ExtendWarrantyStatus, VersionWarranty> scratchObj, long tid,
       Principal worker, SerializedObject obj,
-      LongKeyMap<Pair<SerializedObject, VersionWarranty>> versionConflicts,
+      LongKeyMap<SerializedObjectAndTokens> versionConflicts,
       UpdateType updateType) throws TransactionPrepareFailedException {
     long onum = obj.getOnum();
 
@@ -459,8 +458,8 @@ public abstract class ObjectDB {
       if (storeVersion != workerVersion) {
         Pair<ExtendWarrantyStatus, VersionWarranty> refreshWarrantyResult =
             refreshWarranty(scratchObj, onum);
-        versionConflicts.put(onum, new Pair<SerializedObject, VersionWarranty>(
-            storeCopy, refreshWarrantyResult.second));
+        versionConflicts.put(onum, new SerializedObjectAndTokens(storeCopy,
+            refreshWarrantyResult.second));
         return VersionWarranty.EXPIRED_WARRANTY;
       }
 
@@ -483,7 +482,7 @@ public abstract class ObjectDB {
   protected void addWrittenOnumByTid(long tid, Principal worker, long onum) {
     // Get the submap corresponding to the given TID, creating the submap if
     // necessary.
-    OidKeyHashMap<LongSet> submap = new OidKeyHashMap<LongSet>();
+    OidKeyHashMap<LongSet> submap = new OidKeyHashMap<>();
     OidKeyHashMap<LongSet> existingSubmap =
         writtenOnumsByTid.putIfAbsent(tid, submap);
     if (existingSubmap != null) submap = existingSubmap;
@@ -519,7 +518,7 @@ public abstract class ObjectDB {
 
   /**
    * Registers a write lock for the given TID.
-   * 
+   *
    * @throws UnableToLockException
    *          when a conflicting lock is held.
    */
@@ -563,11 +562,11 @@ public abstract class ObjectDB {
   /**
    * Causes the objects prepared in transaction [tid] to be committed. The
    * changes will be visible to read after the given commit time.
-   * 
+   *
    * @param tid
    *          the transaction id
    * @param commitTime
-   *          the time after which the commit should take effect. 
+   *          the time after which the commit should take effect.
    * @param workerIdentity
    *          the remote worker that is performing the commit
    */
@@ -581,7 +580,7 @@ public abstract class ObjectDB {
       LongSet onums = removeWrittenOnumsByTid(tid, workerIdentity.principal);
       if (onums != null) {
         Pair<ExtendWarrantyStatus, VersionWarranty> resultObj =
-            new Pair<ExtendWarrantyStatus, VersionWarranty>(null, null);
+            new Pair<>(null, null);
         for (LongIterator it = onums.iterator(); it.hasNext();) {
           long onum = it.next();
           Pair<ExtendWarrantyStatus, VersionWarranty> extendResult =
@@ -607,11 +606,11 @@ public abstract class ObjectDB {
 
   /**
    * Schedules a transaction for commit.
-   * 
+   *
    * @param tid
    *          the transaction id
    * @param commitTime
-   *          the time after which the commit should take effect. 
+   *          the time after which the commit should take effect.
    * @param workerIdentity
    *          the remote worker that is performing the commit
    */
@@ -654,7 +653,7 @@ public abstract class ObjectDB {
 
   /**
    * Returns the version warranty for the object stored at the given onum.
-   * 
+   *
    * @return the version warranty. If no warranty has been issued, a really old
    *       warranty will be returned.
    */
@@ -682,7 +681,7 @@ public abstract class ObjectDB {
   /**
    * Extends the version warranty of an object, if necessary and possible. The
    * object's resulting warranty is returned.
-   * 
+   *
    * @param onum the onum of the object whose warranty is to be extended.
    * @param minExpiry if the existing warranty already extends beyond this time,
    *          just return it without extending it.
@@ -695,7 +694,7 @@ public abstract class ObjectDB {
    *          warrantyIssuer gives us.
    * @param ignoreWriteLocks if true, then write locks will be ignored when
    *          determining whether it is possible to extend the warranty.
-   *          
+   *
    * @return the resulting warranty, and whether it was extended. If the current
    *          warranty does not meet minExpiry and could not be renewed,
    *          EXTEND_WARRANTY_DENIED is returned.
@@ -759,8 +758,7 @@ public abstract class ObjectDB {
         extendWarranty(resultObj, onum, System.currentTimeMillis(), false,
             true, false);
     if (result == EXTEND_WARRANTY_DENIED) {
-      return new Pair<ExtendWarrantyStatus, VersionWarranty>(
-          ExtendWarrantyStatus.OLD, warrantyIssuer.get(onum));
+      return new Pair<>(ExtendWarrantyStatus.OLD, warrantyIssuer.get(onum));
     }
 
     return result;

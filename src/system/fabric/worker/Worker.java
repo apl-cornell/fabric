@@ -27,6 +27,7 @@ import fabric.common.NSUtil;
 import fabric.common.ONumConstants;
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
+import fabric.common.SerializedObjectAndTokens;
 import fabric.common.Threading;
 import fabric.common.Timing;
 import fabric.common.TransactionID;
@@ -415,7 +416,7 @@ public final class Worker {
     boolean result = false;
     for (SerializedObject obj : group.objects().values()) {
       if (TransactionManager.haveReaders(store, obj.getOnum())) {
-        store.forceCache(new Pair<>(obj, VersionWarranty.EXPIRED_WARRANTY));
+        store.forceCache(new SerializedObjectAndTokens(obj, VersionWarranty.EXPIRED_WARRANTY));
         result = true;
       } else if (store.updateOrEvict(obj)) {
         result = true;
