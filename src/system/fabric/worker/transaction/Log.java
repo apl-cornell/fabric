@@ -684,8 +684,7 @@ public final class Log {
         long onum = subEntry.getKey();
         ReadMap.Entry rme = subEntry.getValue();
 
-        if (rme.getWarranty().expiresAfter(commitState.commitTime, true)
-            && rme.getWarranty().expiresBefore(commitTime, true)) {
+        if (rme.getWarranty().expiresBefore(commitTime, true)) {
           submap.put(onum, rme.getVersionNumber());
         }
       }
@@ -716,8 +715,7 @@ public final class Log {
           int objVersion = subEntry.getValue().first;
           VersionWarranty objWarranty = subEntry.getValue().second;
 
-          if (objWarranty.expiresAfter(commitState.commitTime, true)
-              && objWarranty.expiresBefore(commitTime, true)) {
+          if (objWarranty.expiresBefore(commitTime, true)) {
             submap.put(onum, objVersion);
           }
         }
