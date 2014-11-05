@@ -677,7 +677,7 @@ public final class TransactionManager {
       }
     }
 
-    List<Future<?>> futures = new ArrayList<Future<?>>();
+    List<Future<?>> futures = new ArrayList<>();
 
     // Go through each worker and send prepare messages in parallel.
     for (final RemoteWorker worker : current.workersCalled) {
