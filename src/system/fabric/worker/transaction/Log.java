@@ -308,9 +308,10 @@ public final class Log {
         ReadMap.Entry rme = subEntry.getValue();
 
         // will the object will be covered for the client by lease?
-        boolean coveredByLease = rme.getLease().ownedByCurrentWorker() &&
-          !(rme.getLease().expiresAfter(commitState.commitTime, true) &&
-              rme.getLease().expiresBefore(commitTime, true));
+        boolean coveredByLease =
+            rme.getLease().ownedByCurrentWorker()
+                && !(rme.getLease().expiresAfter(commitState.commitTime, true) && rme
+                    .getLease().expiresBefore(commitTime, true));
 
         if (rme.getWarranty().expiresAfter(commitState.commitTime, true)
             && rme.getWarranty().expiresBefore(commitTime, true)

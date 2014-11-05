@@ -442,7 +442,7 @@ public final class TransactionManager {
    * Sends prepare-write messages to the cohorts. If any cohort fails to
    * prepare, abort messages will be sent, and the local portion of the
    * transaction is rolled back.
-   * 
+   *
    * @return a proposed commit time, based on the outstanding warranties for
    *           objects modified by the transaction. The returned commit time is
    *           guaranteed to be no earlier than the time at which this method is
@@ -629,7 +629,7 @@ public final class TransactionManager {
    * Sends prepare-read messages to the cohorts. If any cohort fails to
    * prepare, abort messages will be sent, and the local portion of the
    * transaction is rolled back.
-   * 
+   *
    * @throws TransactionRestartingException
    *           if the prepare fails.
    */
@@ -863,8 +863,8 @@ public final class TransactionManager {
       final List<RemoteNode<?>> failed =
           Collections.synchronizedList(new ArrayList<RemoteNode<?>>());
       List<Future<?>> futures =
-          new ArrayList<>(current.commitState.storesContacted.size() +
-              current.workersCalled.size());
+          new ArrayList<>(current.commitState.storesContacted.size()
+              + current.workersCalled.size());
 
       // Send commit messages to the workers in parallel.
       for (final RemoteWorker worker : current.workersCalled) {
