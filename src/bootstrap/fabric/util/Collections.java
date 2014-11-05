@@ -1,5 +1,7 @@
 package fabric.util;
 
+import fabric.common.VersionWarranty;
+
 public interface Collections extends fabric.lang.Object {
   public static interface EmptySet extends java.io.Serializable,
       fabric.util.AbstractSet {
@@ -151,11 +153,11 @@ public interface Collections extends fabric.lang.Object {
           java.util.List interStoreRefs) throws java.io.IOException;
 
       public _Impl(fabric.worker.Store store, long onum, int version,
-          long expiry, long label, long accessLabel, java.io.ObjectInput in,
-          java.util.Iterator refTypes, java.util.Iterator intraStoreRefs,
-	  java.util.Iterator interStoreRefs)
+          VersionWarranty warranty, long label, long accessLabel,
+          java.io.ObjectInput in, java.util.Iterator refTypes,
+          java.util.Iterator intraStoreRefs, java.util.Iterator interStoreRefs)
           throws java.io.IOException, java.lang.ClassNotFoundException {
-        super(store, onum, version, expiry, label, accessLabel, in, refTypes,
+        super(store, onum, version, warranty, label, accessLabel, in, refTypes,
             intraStoreRefs, interStoreRefs);
       }
     }
@@ -362,11 +364,11 @@ public interface Collections extends fabric.lang.Object {
           java.util.List interStoreRefs) throws java.io.IOException;
 
       public _Impl(fabric.worker.Store store, long onum, int version,
-          long expiry, long label, long accessLabel, java.io.ObjectInput in,
-          java.util.Iterator refTypes, java.util.Iterator intraStoreRefs,
-	  java.util.Iterator interStoreRefs)
+          VersionWarranty warranty, long label, long accessLabel,
+          java.io.ObjectInput in, java.util.Iterator refTypes,
+          java.util.Iterator intraStoreRefs, java.util.Iterator interStoreRefs)
           throws java.io.IOException, java.lang.ClassNotFoundException {
-        super(store, onum, version, expiry, label, accessLabel, in, refTypes,
+        super(store, onum, version, warranty, label, accessLabel, in, refTypes,
             intraStoreRefs, interStoreRefs);
       }
     }
@@ -525,11 +527,11 @@ public interface Collections extends fabric.lang.Object {
           java.util.List interStoreRefs) throws java.io.IOException;
 
       public _Impl(fabric.worker.Store store, long onum, int version,
-          long expiry, long label, long accessLabel, java.io.ObjectInput in,
-          java.util.Iterator refTypes, java.util.Iterator intraStoreRefs,
-	  java.util.Iterator interStoreRefs)
+          VersionWarranty warranty, long label, long accessLabel,
+          java.io.ObjectInput in, java.util.Iterator refTypes,
+          java.util.Iterator intraStoreRefs, java.util.Iterator interStoreRefs)
           throws java.io.IOException, java.lang.ClassNotFoundException {
-        super(store, onum, version, expiry, label, accessLabel, in, refTypes,
+        super(store, onum, version, warranty, label, accessLabel, in, refTypes,
             intraStoreRefs, interStoreRefs);
       }
     }
@@ -733,11 +735,11 @@ public interface Collections extends fabric.lang.Object {
           java.util.List interStoreRefs) throws java.io.IOException;
 
       public _Impl(fabric.worker.Store store, long onum, int version,
-          long expiry, long label, long accessLabel, java.io.ObjectInput in,
-          java.util.Iterator refTypes, java.util.Iterator intraStoreRefs,
-	  java.util.Iterator interStoreRefs)
+          VersionWarranty warranty, long label, long accessLabel,
+          java.io.ObjectInput in, java.util.Iterator refTypes,
+          java.util.Iterator intraStoreRefs, java.util.Iterator interStoreRefs)
           throws java.io.IOException, java.lang.ClassNotFoundException {
-        super(store, onum, version, expiry, label, accessLabel, in, refTypes,
+        super(store, onum, version, warranty, label, accessLabel, in, refTypes,
             intraStoreRefs, interStoreRefs);
       }
 
@@ -845,11 +847,11 @@ public interface Collections extends fabric.lang.Object {
           java.util.List interStoreRefs) throws java.io.IOException;
 
       public _Impl(fabric.worker.Store store, long onum, int version,
-          long expiry, long label, long accessLabel, java.io.ObjectInput in,
-          java.util.Iterator refTypes, java.util.Iterator intraStoreRefs,
-	  java.util.Iterator interStoreRefs)
+          VersionWarranty warranty, long label, long accessLabel,
+          java.io.ObjectInput in, java.util.Iterator refTypes,
+          java.util.Iterator intraStoreRefs, java.util.Iterator interStoreRefs)
           throws java.io.IOException, java.lang.ClassNotFoundException {
-        super(store, onum, version, expiry, label, accessLabel, in, refTypes,
+        super(store, onum, version, warranty, label, accessLabel, in, refTypes,
             intraStoreRefs, interStoreRefs);
       }
     }
@@ -1021,12 +1023,12 @@ public interface Collections extends fabric.lang.Object {
             java.util.List interStoreRefs) throws java.io.IOException;
 
         public _Impl(fabric.worker.Store store, long onum, int version,
-            long expiry, long label, long accessLabel, java.io.ObjectInput in,
-            java.util.Iterator refTypes, java.util.Iterator intraStoreRefs,
-	    java.util.Iterator interStoreRefs)
+            VersionWarranty warranty, long label, long accessLabel,
+            java.io.ObjectInput in, java.util.Iterator refTypes,
+            java.util.Iterator intraStoreRefs, java.util.Iterator interStoreRefs)
             throws java.io.IOException, java.lang.ClassNotFoundException {
-          super(store, onum, version, expiry, label, accessLabel, in, refTypes,
-              intraStoreRefs, interStoreRefs);
+          super(store, onum, version, warranty, label, accessLabel, in,
+              refTypes, intraStoreRefs, interStoreRefs);
         }
 
         @Override
@@ -1158,11 +1160,11 @@ public interface Collections extends fabric.lang.Object {
           java.util.List interStoreRefs) throws java.io.IOException;
 
       public _Impl(fabric.worker.Store store, long onum, int version,
-          long expiry, long label, long accessLabel, java.io.ObjectInput in,
-          java.util.Iterator refTypes, java.util.Iterator intraStoreRefs,
-	  java.util.Iterator interStoreRefs)
+          VersionWarranty warranty, long label, long accessLabel,
+          java.io.ObjectInput in, java.util.Iterator refTypes,
+          java.util.Iterator intraStoreRefs, java.util.Iterator interStoreRefs)
           throws java.io.IOException, java.lang.ClassNotFoundException {
-        super(store, onum, version, expiry, label, accessLabel, in, refTypes,
+        super(store, onum, version, warranty, label, accessLabel, in, refTypes,
             intraStoreRefs, interStoreRefs);
       }
 
@@ -1352,11 +1354,11 @@ public interface Collections extends fabric.lang.Object {
           java.util.List interStoreRefs) throws java.io.IOException;
 
       public _Impl(fabric.worker.Store store, long onum, int version,
-          long expiry, long label, long accessLabel, java.io.ObjectInput in,
-          java.util.Iterator refTypes, java.util.Iterator intraStoreRefs,
-	  java.util.Iterator interStoreRefs)
+          VersionWarranty warranty, long label, long accessLabel,
+          java.io.ObjectInput in, java.util.Iterator refTypes,
+          java.util.Iterator intraStoreRefs, java.util.Iterator interStoreRefs)
           throws java.io.IOException, java.lang.ClassNotFoundException {
-        super(store, onum, version, expiry, label, accessLabel, in, refTypes,
+        super(store, onum, version, warranty, label, accessLabel, in, refTypes,
             intraStoreRefs, interStoreRefs);
       }
 
@@ -1506,12 +1508,12 @@ public interface Collections extends fabric.lang.Object {
             java.util.List interStoreRefs) throws java.io.IOException;
 
         public _Impl(fabric.worker.Store store, long onum, int version,
-            long expiry, long label, long accessLabel, java.io.ObjectInput in,
-            java.util.Iterator refTypes, java.util.Iterator intraStoreRefs,
-	    java.util.Iterator interStoreRefs)
+            VersionWarranty warranty, long label, long accessLabel,
+            java.io.ObjectInput in, java.util.Iterator refTypes,
+            java.util.Iterator intraStoreRefs, java.util.Iterator interStoreRefs)
             throws java.io.IOException, java.lang.ClassNotFoundException {
-          super(store, onum, version, expiry, label, accessLabel, in, refTypes,
-              intraStoreRefs, interStoreRefs);
+          super(store, onum, version, warranty, label, accessLabel, in,
+              refTypes, intraStoreRefs, interStoreRefs);
         }
 
         @Override
@@ -1655,11 +1657,11 @@ public interface Collections extends fabric.lang.Object {
           java.util.List interStoreRefs) throws java.io.IOException;
 
       public _Impl(fabric.worker.Store store, long onum, int version,
-          long expiry, long label, long accessLabel, java.io.ObjectInput in,
-          java.util.Iterator refTypes, java.util.Iterator intraStoreRefs,
-	  java.util.Iterator interStoreRefs)
+          VersionWarranty warranty, long label, long accessLabel,
+          java.io.ObjectInput in, java.util.Iterator refTypes,
+          java.util.Iterator intraStoreRefs, java.util.Iterator interStoreRefs)
           throws java.io.IOException, java.lang.ClassNotFoundException {
-        super(store, onum, version, expiry, label, accessLabel, in, refTypes,
+        super(store, onum, version, warranty, label, accessLabel, in, refTypes,
             intraStoreRefs, interStoreRefs);
       }
 
@@ -1918,11 +1920,11 @@ public interface Collections extends fabric.lang.Object {
           java.util.List interStoreRefs) throws java.io.IOException;
 
       public _Impl(fabric.worker.Store store, long onum, int version,
-          long expiry, long label, long accessLabel, java.io.ObjectInput in,
-          java.util.Iterator refTypes, java.util.Iterator intraStoreRefs,
-	  java.util.Iterator interStoreRefs)
+          VersionWarranty warranty, long label, long accessLabel,
+          java.io.ObjectInput in, java.util.Iterator refTypes,
+          java.util.Iterator intraStoreRefs, java.util.Iterator interStoreRefs)
           throws java.io.IOException, java.lang.ClassNotFoundException {
-        super(store, onum, version, expiry, label, accessLabel, in, refTypes,
+        super(store, onum, version, warranty, label, accessLabel, in, refTypes,
             intraStoreRefs, interStoreRefs);
       }
 
@@ -2065,11 +2067,11 @@ public interface Collections extends fabric.lang.Object {
           java.util.List interStoreRefs) throws java.io.IOException;
 
       public _Impl(fabric.worker.Store store, long onum, int version,
-          long expiry, long label, long accessLabel, java.io.ObjectInput in,
-          java.util.Iterator refTypes, java.util.Iterator intraStoreRefs,
-	  java.util.Iterator interStoreRefs)
+          VersionWarranty warranty, long label, long accessLabel,
+          java.io.ObjectInput in, java.util.Iterator refTypes,
+          java.util.Iterator intraStoreRefs, java.util.Iterator interStoreRefs)
           throws java.io.IOException, java.lang.ClassNotFoundException {
-        super(store, onum, version, expiry, label, accessLabel, in, refTypes,
+        super(store, onum, version, warranty, label, accessLabel, in, refTypes,
             intraStoreRefs, interStoreRefs);
       }
 
@@ -2288,11 +2290,11 @@ public interface Collections extends fabric.lang.Object {
           java.util.List interStoreRefs) throws java.io.IOException;
 
       public _Impl(fabric.worker.Store store, long onum, int version,
-          long expiry, long label, long accessLabel, java.io.ObjectInput in,
-          java.util.Iterator refTypes, java.util.Iterator intraStoreRefs,
-	  java.util.Iterator interStoreRefs)
+          VersionWarranty warranty, long label, long accessLabel,
+          java.io.ObjectInput in, java.util.Iterator refTypes,
+          java.util.Iterator intraStoreRefs, java.util.Iterator interStoreRefs)
           throws java.io.IOException, java.lang.ClassNotFoundException {
-        super(store, onum, version, expiry, label, accessLabel, in, refTypes,
+        super(store, onum, version, warranty, label, accessLabel, in, refTypes,
             intraStoreRefs, interStoreRefs);
       }
 
@@ -2391,11 +2393,11 @@ public interface Collections extends fabric.lang.Object {
           java.util.List interStoreRefs) throws java.io.IOException;
 
       public _Impl(fabric.worker.Store store, long onum, int version,
-          long expiry, long label, long accessLabel, java.io.ObjectInput in,
-          java.util.Iterator refTypes, java.util.Iterator intraStoreRefs,
-	  java.util.Iterator interStoreRefs)
+          VersionWarranty warranty, long label, long accessLabel,
+          java.io.ObjectInput in, java.util.Iterator refTypes,
+          java.util.Iterator intraStoreRefs, java.util.Iterator interStoreRefs)
           throws java.io.IOException, java.lang.ClassNotFoundException {
-        super(store, onum, version, expiry, label, accessLabel, in, refTypes,
+        super(store, onum, version, warranty, label, accessLabel, in, refTypes,
             intraStoreRefs, interStoreRefs);
       }
     }
@@ -2561,11 +2563,11 @@ public interface Collections extends fabric.lang.Object {
           java.util.List interStoreRefs) throws java.io.IOException;
 
       public _Impl(fabric.worker.Store store, long onum, int version,
-          long expiry, long label, long accessLabel, java.io.ObjectInput in,
-          java.util.Iterator refTypes, java.util.Iterator intraStoreRefs,
-	  java.util.Iterator interStoreRefs)
+          VersionWarranty warranty, long label, long accessLabel,
+          java.io.ObjectInput in, java.util.Iterator refTypes,
+          java.util.Iterator intraStoreRefs, java.util.Iterator interStoreRefs)
           throws java.io.IOException, java.lang.ClassNotFoundException {
-        super(store, onum, version, expiry, label, accessLabel, in, refTypes,
+        super(store, onum, version, warranty, label, accessLabel, in, refTypes,
             intraStoreRefs, interStoreRefs);
       }
 
@@ -2756,12 +2758,12 @@ public interface Collections extends fabric.lang.Object {
               java.util.List interStoreRefs) throws java.io.IOException;
 
           public _Impl(fabric.worker.Store store, long onum, int version,
-              long expiry, long label, long accessLabel,
+              VersionWarranty warranty, long label, long accessLabel,
               java.io.ObjectInput in, java.util.Iterator refTypes,
               java.util.Iterator intraStoreRefs,
-	      java.util.Iterator interStoreRefs) throws java.io.IOException,
+              java.util.Iterator interStoreRefs) throws java.io.IOException,
               java.lang.ClassNotFoundException {
-            super(store, onum, version, expiry, label, accessLabel, in,
+            super(store, onum, version, warranty, label, accessLabel, in,
                 refTypes, intraStoreRefs, interStoreRefs);
           }
 
@@ -2876,12 +2878,12 @@ public interface Collections extends fabric.lang.Object {
               java.util.List interStoreRefs) throws java.io.IOException;
 
           public _Impl(fabric.worker.Store store, long onum, int version,
-              long expiry, long label, long accessLabel,
+              VersionWarranty warranty, long label, long accessLabel,
               java.io.ObjectInput in, java.util.Iterator refTypes,
               java.util.Iterator intraStoreRefs,
-	      java.util.Iterator interStoreRefs) throws java.io.IOException,
+              java.util.Iterator interStoreRefs) throws java.io.IOException,
               java.lang.ClassNotFoundException {
-            super(store, onum, version, expiry, label, accessLabel, in,
+            super(store, onum, version, warranty, label, accessLabel, in,
                 refTypes, intraStoreRefs, interStoreRefs);
           }
 
@@ -2984,12 +2986,12 @@ public interface Collections extends fabric.lang.Object {
             java.util.List interStoreRefs) throws java.io.IOException;
 
         public _Impl(fabric.worker.Store store, long onum, int version,
-            long expiry, long label, long accessLabel, java.io.ObjectInput in,
-            java.util.Iterator refTypes, java.util.Iterator intraStoreRefs,
-	    java.util.Iterator interStoreRefs)
+            VersionWarranty warranty, long label, long accessLabel,
+            java.io.ObjectInput in, java.util.Iterator refTypes,
+            java.util.Iterator intraStoreRefs, java.util.Iterator interStoreRefs)
             throws java.io.IOException, java.lang.ClassNotFoundException {
-          super(store, onum, version, expiry, label, accessLabel, in, refTypes,
-              intraStoreRefs, interStoreRefs);
+          super(store, onum, version, warranty, label, accessLabel, in,
+              refTypes, intraStoreRefs, interStoreRefs);
         }
       }
 
@@ -3255,11 +3257,11 @@ public interface Collections extends fabric.lang.Object {
           java.util.List interStoreRefs) throws java.io.IOException;
 
       public _Impl(fabric.worker.Store store, long onum, int version,
-          long expiry, long label, long accessLabel, java.io.ObjectInput in,
-          java.util.Iterator refTypes, java.util.Iterator intraStoreRefs,
-	  java.util.Iterator interStoreRefs)
+          VersionWarranty warranty, long label, long accessLabel,
+          java.io.ObjectInput in, java.util.Iterator refTypes,
+          java.util.Iterator intraStoreRefs, java.util.Iterator interStoreRefs)
           throws java.io.IOException, java.lang.ClassNotFoundException {
-        super(store, onum, version, expiry, label, accessLabel, in, refTypes,
+        super(store, onum, version, warranty, label, accessLabel, in, refTypes,
             intraStoreRefs, interStoreRefs);
       }
 
@@ -3375,11 +3377,11 @@ public interface Collections extends fabric.lang.Object {
           java.util.List interStoreRefs) throws java.io.IOException;
 
       public _Impl(fabric.worker.Store store, long onum, int version,
-          long expiry, long label, long accessLabel, java.io.ObjectInput in,
-          java.util.Iterator refTypes, java.util.Iterator intraStoreRefs,
-	  java.util.Iterator interStoreRefs)
+          VersionWarranty warranty, long label, long accessLabel,
+          java.io.ObjectInput in, java.util.Iterator refTypes,
+          java.util.Iterator intraStoreRefs, java.util.Iterator interStoreRefs)
           throws java.io.IOException, java.lang.ClassNotFoundException {
-        super(store, onum, version, expiry, label, accessLabel, in, refTypes,
+        super(store, onum, version, warranty, label, accessLabel, in, refTypes,
             intraStoreRefs, interStoreRefs);
       }
     }
@@ -3547,11 +3549,11 @@ public interface Collections extends fabric.lang.Object {
           java.util.List interStoreRefs) throws java.io.IOException;
 
       public _Impl(fabric.worker.Store store, long onum, int version,
-          long expiry, long label, long accessLabel, java.io.ObjectInput in,
-          java.util.Iterator refTypes, java.util.Iterator intraStoreRefs,
-	  java.util.Iterator interStoreRefs)
+          VersionWarranty warranty, long label, long accessLabel,
+          java.io.ObjectInput in, java.util.Iterator refTypes,
+          java.util.Iterator intraStoreRefs, java.util.Iterator interStoreRefs)
           throws java.io.IOException, java.lang.ClassNotFoundException {
-        super(store, onum, version, expiry, label, accessLabel, in, refTypes,
+        super(store, onum, version, warranty, label, accessLabel, in, refTypes,
             intraStoreRefs, interStoreRefs);
       }
 
@@ -3766,11 +3768,11 @@ public interface Collections extends fabric.lang.Object {
           java.util.List interStoreRefs) throws java.io.IOException;
 
       public _Impl(fabric.worker.Store store, long onum, int version,
-          long expiry, long label, long accessLabel, java.io.ObjectInput in,
-          java.util.Iterator refTypes, java.util.Iterator intraStoreRefs,
-	  java.util.Iterator interStoreRefs)
+          VersionWarranty warranty, long label, long accessLabel,
+          java.io.ObjectInput in, java.util.Iterator refTypes,
+          java.util.Iterator intraStoreRefs, java.util.Iterator interStoreRefs)
           throws java.io.IOException, java.lang.ClassNotFoundException {
-        super(store, onum, version, expiry, label, accessLabel, in, refTypes,
+        super(store, onum, version, warranty, label, accessLabel, in, refTypes,
             intraStoreRefs, interStoreRefs);
       }
 
@@ -4018,11 +4020,11 @@ public interface Collections extends fabric.lang.Object {
         java.util.List interStoreRefs) throws java.io.IOException;
 
     public _Impl(fabric.worker.Store store, long onum, int version,
-        long expiry, long label, long accessLabel, java.io.ObjectInput in,
-        java.util.Iterator refTypes, java.util.Iterator intraStoreRefs,
-	java.util.Iterator interStoreRefs)
+        VersionWarranty warranty, long label, long accessLabel,
+        java.io.ObjectInput in, java.util.Iterator refTypes,
+        java.util.Iterator intraStoreRefs, java.util.Iterator interStoreRefs)
         throws java.io.IOException, java.lang.ClassNotFoundException {
-      super(store, onum, version, expiry, label, accessLabel, in, refTypes,
+      super(store, onum, version, warranty, label, accessLabel, in, refTypes,
           intraStoreRefs, interStoreRefs);
     }
   }

@@ -1,5 +1,7 @@
 package fabric.util;
 
+import fabric.common.VersionWarranty;
+
 public interface ArrayList extends fabric.util.List, fabric.util.RandomAccess,
     fabric.util.AbstractList {
 
@@ -273,11 +275,11 @@ public interface ArrayList extends fabric.util.List, fabric.util.RandomAccess,
         java.util.List interStoreRefs) throws java.io.IOException;
 
     public _Impl(fabric.worker.Store store, long onum, int version,
-        long expiry, long label, long accessLabel, java.io.ObjectInput in,
-        java.util.Iterator refTypes, java.util.Iterator intraStoreRefs,
-	java.util.Iterator interStoreRefs)
+        VersionWarranty warranty, long label, long accessLabel,
+        java.io.ObjectInput in, java.util.Iterator refTypes,
+        java.util.Iterator intraStoreRefs, java.util.Iterator interStoreRefs)
         throws java.io.IOException, java.lang.ClassNotFoundException {
-      super(store, onum, version, expiry, label, accessLabel, in, refTypes,
+      super(store, onum, version, warranty, label, accessLabel, in, refTypes,
           intraStoreRefs, interStoreRefs);
     }
 
