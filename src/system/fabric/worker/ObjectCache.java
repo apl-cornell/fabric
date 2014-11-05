@@ -10,6 +10,7 @@ import java.util.logging.Level;
 
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
+import fabric.common.SerializedObjectAndTokens;
 import fabric.common.Surrogate;
 import fabric.common.VersionWarranty;
 import fabric.common.VersionWarranty.Binding;
@@ -57,7 +58,7 @@ public final class ObjectCache {
   public static final class Entry {
     private Object._Impl impl;
     private Store store;
-    private Pair<SerializedObject, VersionWarranty> serialized;
+    private SerializedObjectAndTokens serialized;
 
     private Entry next;
 
@@ -75,11 +76,11 @@ public final class ObjectCache {
     /**
      * Constructs an <code>Entry</code> object in <b>serialized</b> state.
      */
-    private Entry(Store store, Pair<SerializedObject, VersionWarranty> obj) {
+    private Entry(Store store, SerializedObjectAndTokens obj) {
       this.impl = null;
 
       this.store = store;
-      if (obj.second == null) {
+      if (obj.getWarranty() == null) {
         new InternalError();
       }
       this.serialized = obj;
@@ -124,14 +125,14 @@ public final class ObjectCache {
       // This entry is in serialized state. Deserialize.
       // XXX BEGIN HACK FOR OAKLAND 2012 TIMING STUFF
       boolean fclass =
-          FClass.class.getName().equals(serialized.first.getClassName());
+          FClass.class.getName().equals(serialized.getSerializedObject().getClassName());
       if (fclass) {
         TIMING_LOGGER.log(Level.FINE, "Start deserializing FClass ({0} bytes)",
-            serialized.first.size());
+            serialized.getSerializedObject().size());
       }
       try {
         // XXX END HACK FOR OAKLAND 2012 TIMING STUFF
-        _Impl impl = serialized.first.deserialize(store, serialized.second);
+        _Impl impl = serialized.getDeserializedObject(store);
         next = impl.$cacheEntry;
         store = null;
         serialized = null;
@@ -165,9 +166,8 @@ public final class ObjectCache {
 
         Surrogate surrogate = (Surrogate) impl;
         next = new Object._Proxy(surrogate.store, surrogate.onum).fetchEntry();
-      } else if (serialized.first.isSurrogate()) {
-        next =
-            serialized.first.deserialize(store, serialized.second, false).$cacheEntry;
+      } else if (serialized.getSerializedObject().isSurrogate()) {
+        next = serialized.getDeserializedObject(store, false).$cacheEntry;
       } else {
         return;
       }
@@ -243,10 +243,10 @@ public final class ObjectCache {
 
         return impl.$readMapEntry.updateWarranty(warranty);
       } else if (serialized != null) {
-        if (serialized.first.getVersion() != versionNumber) return false;
+        if (serialized.getSerializedObject().getVersion() != versionNumber) return false;
 
-        if (warranty.expiresAfter(serialized.second)) {
-          serialized.second = warranty;
+        if (warranty.expiresAfter(serialized.getWarranty())) {
+          serialized.setWarranty(warranty);
         }
         return true;
       } else {
@@ -261,7 +261,7 @@ public final class ObjectCache {
     public synchronized Integer getVersion() {
       if (next != null) return next.getVersion();
       if (impl != null) return impl.$version;
-      if (serialized != null) return serialized.first.getVersion();
+      if (serialized != null) return serialized.getSerializedObject().getVersion();
       return null;
     }
 
@@ -279,7 +279,8 @@ public final class ObjectCache {
       resolveSurrogates();
 
       if (next != null) return next.getLabel();
-      return new Label._Proxy(store, serialized.first.getUpdateLabelOnum());
+      return new Label._Proxy(store, serialized.getSerializedObject()
+          .getUpdateLabelOnum());
     }
 
     /**
@@ -296,8 +297,8 @@ public final class ObjectCache {
       resolveSurrogates();
 
       if (next != null) return next.getAccessPolicy();
-      return new ConfPolicy._Proxy(store,
-          serialized.first.getAccessPolicyOnum());
+      return new ConfPolicy._Proxy(store, serialized.getSerializedObject()
+          .getAccessPolicyOnum());
     }
 
     /**
@@ -316,11 +317,11 @@ public final class ObjectCache {
       if (next != null) return next.getProxy();
 
       Class<? extends Object._Proxy> proxyClass =
-          serialized.first.getClassRef().toProxyClass();
+          serialized.getSerializedObject().getClassRef().toProxyClass();
       try {
         Constructor<? extends Object._Proxy> constructor =
             proxyClass.getConstructor(Store.class, long.class);
-        return constructor.newInstance(store, serialized.first.getOnum());
+        return constructor.newInstance(store, serialized.getSerializedObject().getOnum());
       } catch (NoSuchMethodException e) {
         throw new InternalError(e);
       } catch (SecurityException e) {
@@ -406,7 +407,7 @@ public final class ObjectCache {
    *
    * @return the Entry inserted into the cache.
    */
-  Entry put(Store store, Pair<SerializedObject, VersionWarranty> obj) {
+  Entry put(Store store, SerializedObjectAndTokens obj) {
     return putIfAbsent(store, obj, false);
   }
 
@@ -418,9 +419,9 @@ public final class ObjectCache {
    *          the object, then an error is thrown.
    * @return the resulting cache entry associated with the object's onum.
    */
-  private Entry putIfAbsent(Store store,
-      Pair<SerializedObject, VersionWarranty> obj, boolean silenceConflicts) {
-    long onum = obj.first.getOnum();
+  private Entry putIfAbsent(Store store, SerializedObjectAndTokens obj,
+      boolean silenceConflicts) {
+    long onum = obj.getSerializedObject().getOnum();
 
     Entry newEntry = new Entry(store, obj);
     Entry existingEntry = entries.putIfAbsent(onum, newEntry);
@@ -452,7 +453,8 @@ public final class ObjectCache {
       VersionWarranty warranty = VersionWarranty.EXPIRED_WARRANTY;
       if (group.second != null) warranty = group.second.get(curOnum);
 
-      Entry curEntry = putIfAbsent(store, new Pair<>(obj, warranty), true);
+      Entry curEntry =
+          putIfAbsent(store, new SerializedObjectAndTokens(obj, warranty), true);
       if (result == null && onum == curOnum) {
         result = curEntry;
       }
@@ -467,7 +469,7 @@ public final class ObjectCache {
    * replaced, and any transactions currently using the object are aborted and
    * retried.
    */
-  void forcePut(Store store, Pair<SerializedObject, VersionWarranty> obj) {
+  void forcePut(Store store, SerializedObjectAndTokens obj) {
     update(store, obj, false);
   }
 
@@ -478,20 +480,19 @@ public final class ObjectCache {
    * and retried. If the object does not exist in cache, then the cache is not
    * updated.
    */
-  void update(Store store, Pair<SerializedObject, VersionWarranty> update) {
+  void update(Store store, SerializedObjectAndTokens update) {
     update(store, update, true);
   }
 
-  /**  
+  /**
    * Updates the cache with the given serialized object. If
    * <code>replaceOnly</code> is true, then the cache is only updated if an
    * object with the given onum exists in cache. The existing object is evicted,
    * and the given update is placed in the cache. If the cache is updated, then
    * any transactions currently using the object are aborted and retried.
    */
-  void update(Store store, Pair<SerializedObject, VersionWarranty> update,
-      boolean replaceOnly) {
-    long onum = update.first.getOnum();
+  void update(Store store, SerializedObjectAndTokens update, boolean replaceOnly) {
+    long onum = update.getSerializedObject().getOnum();
     Entry curEntry = entries.get(onum);
 
     if (curEntry == null) {
@@ -503,7 +504,7 @@ public final class ObjectCache {
       if (replaceOnly && curEntry.isEvicted()) return;
 
       // Check if object in current entry is an older version.
-      if (curEntry.getVersion() >= update.first.getVersion()) return;
+      if (curEntry.getVersion() >= update.getSerializedObject().getVersion()) return;
 
       curEntry.evict();
     }
@@ -511,7 +512,7 @@ public final class ObjectCache {
     Entry newEntry = new Entry(store, update);
     entries.replace(onum, curEntry, newEntry);
 
-    TransactionManager.abortReaders(store, update.first.getOnum());
+    TransactionManager.abortReaders(store, update.getSerializedObject().getOnum());
   }
 
   /**
@@ -537,17 +538,18 @@ public final class ObjectCache {
       return false;
     }
 
-    forcePut(store, new Pair<>(obj, VersionWarranty.EXPIRED_WARRANTY));
+    forcePut(store, new SerializedObjectAndTokens(obj,
+        VersionWarranty.EXPIRED_WARRANTY));
     return true;
   }
 
   /**
    * Updates the cache with the given set of warranties.
-   * 
+   *
    * @return the set of onums for which a cache entry was found.
    */
   public List<Long> update(RemoteStore store, WarrantyGroup warranties) {
-    List<Long> result = new ArrayList<Long>();
+    List<Long> result = new ArrayList<>();
     for (Binding update : warranties) {
       long onum = update.onum;
 

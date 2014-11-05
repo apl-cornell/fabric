@@ -7,9 +7,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import fabric.common.ObjectGroup;
-import fabric.common.SerializedObject;
+import fabric.common.SerializedObjectAndTokens;
 import fabric.common.TransactionID;
-import fabric.common.VersionWarranty;
 import fabric.common.WarrantyGroup;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.NotImplementedException;
@@ -54,7 +53,7 @@ public class InProcessRemoteWorker extends RemoteWorker {
   @Override
   public Object issueRemoteCall(_Proxy receiver, String methodName,
       Class<?>[] parameterTypes, Object[] args)
-          throws UnreachableNodeException, RemoteCallException {
+      throws UnreachableNodeException, RemoteCallException {
     // XXX Does this actually happen?
     throw new NotImplementedException();
   }
@@ -82,7 +81,7 @@ public class InProcessRemoteWorker extends RemoteWorker {
 
   @Override
   public void abortTransaction(TransactionID tid) throws AccessException,
-  UnreachableNodeException {
+      UnreachableNodeException {
     // XXX Does this actually happen?
     throw new NotImplementedException();
   }
@@ -94,8 +93,8 @@ public class InProcessRemoteWorker extends RemoteWorker {
   }
 
   @Override
-  public Pair<Store, Pair<SerializedObject, VersionWarranty>> readObject(
-      TransactionID tid, Store store, long onum) throws AccessException {
+  public Pair<Store, SerializedObjectAndTokens> readObject(TransactionID tid,
+      Store store, long onum) throws AccessException {
     // XXX Does this actually happen?
     throw new NotImplementedException();
   }
@@ -171,7 +170,7 @@ public class InProcessRemoteWorker extends RemoteWorker {
   public List<Long> notifyWarrantyRefresh(String storeName,
       LongKeyMap<WarrantyGlob> updates) {
     RemoteStore store = worker.getStore(storeName);
-    List<Long> result = new ArrayList<Long>();
+    List<Long> result = new ArrayList<>();
 
     for (LongKeyMap.Entry<WarrantyGlob> entry : updates.entrySet()) {
       long onum = entry.getKey();

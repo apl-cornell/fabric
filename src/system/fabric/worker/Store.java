@@ -3,12 +3,11 @@ package fabric.worker;
 import java.io.Serializable;
 import java.util.Collection;
 
-import fabric.common.SerializedObject;
+import fabric.common.SerializedObjectAndTokens;
 import fabric.common.TransactionID;
 import fabric.common.VersionWarranty;
 import fabric.common.exceptions.AccessException;
 import fabric.common.util.LongKeyMap;
-import fabric.common.util.Pair;
 import fabric.lang.Object._Impl;
 import fabric.lang.security.NodePrincipal;
 import fabric.net.UnreachableNodeException;
@@ -31,7 +30,7 @@ public interface Store extends Serializable {
 
   /**
    * Notifies the store that the transaction is entering the write-prepare phase.
-   * 
+   *
    * @return a minimum commit time.
    */
   long prepareTransactionWrites(long tid, Collection<_Impl> toCreate,
@@ -40,7 +39,7 @@ public interface Store extends Serializable {
 
   /**
    * Notifies the store that the transaction is entering the read-prepare phase.
-   * 
+   *
    * @return the set of new version warranties.
    */
   LongKeyMap<VersionWarranty> prepareTransactionReads(long tid,
@@ -133,6 +132,6 @@ public interface Store extends Serializable {
    *
    * @return the resulting cache entry.
    */
-  public ObjectCache.Entry cache(Pair<SerializedObject, VersionWarranty> obj);
+  public ObjectCache.Entry cache(SerializedObjectAndTokens obj);
 
 }
