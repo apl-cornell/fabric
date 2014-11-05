@@ -7,6 +7,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import fabric.common.RefTypeEnum;
+import fabric.common.VersionWarranty;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
 import fabric.common.util.Pair;
@@ -24,7 +25,7 @@ public interface _intArray extends Object {
   int get(int i);
 
   public static class _Impl extends Object._Impl implements _intArray,
-  _InternalArrayImpl {
+      _InternalArrayImpl {
     private int[] value;
 
     /**
@@ -59,12 +60,12 @@ public interface _intArray extends Object {
     /**
      * Used for deserializing.
      */
-    public _Impl(Store store, long onum, int version, long expiry, long label,
-        long accessLabel, ObjectInput in, Iterator<RefTypeEnum> refTypes,
-        Iterator<Long> intraStoreRefs,
+    public _Impl(Store store, long onum, int version, VersionWarranty warranty,
+        long label, long accessLabel, ObjectInput in,
+        Iterator<RefTypeEnum> refTypes, Iterator<Long> intraStoreRefs,
         Iterator<Pair<String, Long>> interStoreRefs) throws IOException,
         ClassNotFoundException {
-      super(store, onum, version, expiry, label, accessLabel, in, refTypes,
+      super(store, onum, version, warranty, label, accessLabel, in, refTypes,
           intraStoreRefs, interStoreRefs);
       value = new int[in.readInt()];
       for (int i = 0; i < value.length; i++)
@@ -113,7 +114,7 @@ public interface _intArray extends Object {
     @Override
     public void $serialize(ObjectOutput out, List<RefTypeEnum> refTypes,
         List<Long> intraStoreRefs, List<Pair<String, Long>> interStoreRefs)
-            throws IOException {
+        throws IOException {
       super.$serialize(out, refTypes, intraStoreRefs, interStoreRefs);
       out.writeInt(value.length);
       for (int element : value)

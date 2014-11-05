@@ -10,6 +10,7 @@ import java.util.List;
 
 import fabric.common.Crypto;
 import fabric.common.RefTypeEnum;
+import fabric.common.VersionWarranty;
 import fabric.common.util.Pair;
 import fabric.lang.Object;
 import fabric.net.UnreachableNodeException;
@@ -47,7 +48,7 @@ public interface Principal extends fabric.lang.Object {
   PrivateKeyObject getPrivateKeyObject();
 
   public static class _Proxy extends fabric.lang.Object._Proxy implements
-  Principal {
+      Principal {
 
     public _Proxy(Principal._Impl impl) {
       super(impl);
@@ -112,7 +113,7 @@ public interface Principal extends fabric.lang.Object {
   }
 
   abstract public static class _Impl extends fabric.lang.Object._Impl implements
-  Principal {
+      Principal {
 
     private PublicKey publicKey;
     private PrivateKeyObject privateKeyObject;
@@ -149,8 +150,8 @@ public interface Principal extends fabric.lang.Object {
 
       this.privateKeyObject =
           new PrivateKeyObject._Impl($getStore())
-      .fabric$lang$security$PrivateKeyObject$((Principal) $getProxy(),
-          keyPair.getPrivate());
+              .fabric$lang$security$PrivateKeyObject$((Principal) $getProxy(),
+                  keyPair.getPrivate());
 
       return (Principal) this.$getProxy();
     }
@@ -184,16 +185,16 @@ public interface Principal extends fabric.lang.Object {
     @Override
     public void $serialize(ObjectOutput out, List<RefTypeEnum> refTypes,
         List<Long> intraStoreRefs, List<Pair<String, Long>> interStoreRefs)
-            throws IOException {
+        throws IOException {
       super.$serialize(out, refTypes, intraStoreRefs, interStoreRefs);
     }
 
-    public _Impl(Store store, long onum, int version, long expiry, long label,
-        long accessLabel, ObjectInput in, Iterator<RefTypeEnum> refTypes,
-        Iterator<Long> intraStoreRefs,
+    public _Impl(Store store, long onum, int version, VersionWarranty warranty,
+        long label, long accessLabel, ObjectInput in,
+        Iterator<RefTypeEnum> refTypes, Iterator<Long> intraStoreRefs,
         Iterator<Pair<String, Long>> interStoreRefs)
-            throws java.io.IOException, ClassNotFoundException {
-      super(store, onum, version, expiry, label, accessLabel, in, refTypes,
+        throws java.io.IOException, ClassNotFoundException {
+      super(store, onum, version, warranty, label, accessLabel, in, refTypes,
           intraStoreRefs, interStoreRefs);
     }
 
@@ -217,7 +218,7 @@ public interface Principal extends fabric.lang.Object {
 
   interface _Static extends fabric.lang.Object, Cloneable {
     final class _Proxy extends fabric.lang.Object._Proxy implements
-    Principal._Static {
+        Principal._Static {
 
       public _Proxy(Principal._Static._Impl impl) {
         super(impl);
@@ -232,14 +233,14 @@ public interface Principal extends fabric.lang.Object {
       static {
         Principal._Static._Impl impl =
             (Principal._Static._Impl) fabric.lang.Object._Static._Proxy
-            .$makeStaticInstance(Principal._Static._Impl.class);
+                .$makeStaticInstance(Principal._Static._Impl.class);
         $instance = (Principal._Static) impl.$getProxy();
         impl.$init();
       }
     }
 
     class _Impl extends fabric.lang.Object._Impl implements
-    fabric.lang.security.Principal._Static {
+        fabric.lang.security.Principal._Static {
 
       public _Impl(Store store) throws UnreachableNodeException {
         super(store);

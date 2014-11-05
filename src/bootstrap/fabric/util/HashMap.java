@@ -1,5 +1,7 @@
 package fabric.util;
 
+import fabric.common.VersionWarranty;
+
 public interface HashMap extends fabric.util.Map, fabric.util.AbstractMap {
 
   public int get$threshold();
@@ -128,11 +130,11 @@ public interface HashMap extends fabric.util.Map, fabric.util.AbstractMap {
           java.util.List interStoreRefs) throws java.io.IOException;
 
       public _Impl(fabric.worker.Store store, long onum, int version,
-          long expiry, long label, long accessLabel, java.io.ObjectInput in,
-          java.util.Iterator refTypes, java.util.Iterator intraStoreRefs,
-	  java.util.Iterator interStoreRefs)
+          VersionWarranty warranty, long label, long accessLabel,
+          java.io.ObjectInput in, java.util.Iterator refTypes,
+          java.util.Iterator intraStoreRefs, java.util.Iterator interStoreRefs)
           throws java.io.IOException, java.lang.ClassNotFoundException {
-        super(store, onum, version, expiry, label, accessLabel, in, refTypes,
+        super(store, onum, version, warranty, label, accessLabel, in, refTypes,
             intraStoreRefs, interStoreRefs);
       }
 
@@ -479,11 +481,11 @@ public interface HashMap extends fabric.util.Map, fabric.util.AbstractMap {
           java.util.List interStoreRefs) throws java.io.IOException;
 
       public _Impl(fabric.worker.Store store, long onum, int version,
-          long expiry, long label, long accessLabel, java.io.ObjectInput in,
-          java.util.Iterator refTypes, java.util.Iterator intraStoreRefs,
-	  java.util.Iterator interStoreRefs)
+          VersionWarranty warranty, long label, long accessLabel,
+          java.io.ObjectInput in, java.util.Iterator refTypes,
+          java.util.Iterator intraStoreRefs, java.util.Iterator interStoreRefs)
           throws java.io.IOException, java.lang.ClassNotFoundException {
-        super(store, onum, version, expiry, label, accessLabel, in, refTypes,
+        super(store, onum, version, warranty, label, accessLabel, in, refTypes,
             intraStoreRefs, interStoreRefs);
       }
 
@@ -618,11 +620,11 @@ public interface HashMap extends fabric.util.Map, fabric.util.AbstractMap {
           java.util.List interStoreRefs) throws java.io.IOException;
 
       public _Impl(fabric.worker.Store store, long onum, int version,
-          long expiry, long label, long accessLabel, java.io.ObjectInput in,
+          VersionWarranty warranty, long label, long accessLabel, java.io.ObjectInput in,
           java.util.Iterator refTypes, java.util.Iterator intraStoreRefs,
-	  java.util.Iterator interStoreRefs)
-          throws java.io.IOException, java.lang.ClassNotFoundException {
-        super(store, onum, version, expiry, label, accessLabel, in, refTypes,
+          java.util.Iterator interStoreRefs) throws java.io.IOException,
+          java.lang.ClassNotFoundException {
+        super(store, onum, version, warranty, label, accessLabel, in, refTypes,
             intraStoreRefs, interStoreRefs);
       }
 
@@ -727,11 +729,11 @@ public interface HashMap extends fabric.util.Map, fabric.util.AbstractMap {
           java.util.List interStoreRefs) throws java.io.IOException;
 
       public _Impl(fabric.worker.Store store, long onum, int version,
-          long expiry, long label, long accessLabel, java.io.ObjectInput in,
-          java.util.Iterator refTypes, java.util.Iterator intraStoreRefs,
-	  java.util.Iterator interStoreRefs)
+          VersionWarranty warranty, long label, long accessLabel,
+          java.io.ObjectInput in, java.util.Iterator refTypes,
+          java.util.Iterator intraStoreRefs, java.util.Iterator interStoreRefs)
           throws java.io.IOException, java.lang.ClassNotFoundException {
-        super(store, onum, version, expiry, label, accessLabel, in, refTypes,
+        super(store, onum, version, warranty, label, accessLabel, in, refTypes,
             intraStoreRefs, interStoreRefs);
       }
 
@@ -863,11 +865,11 @@ public interface HashMap extends fabric.util.Map, fabric.util.AbstractMap {
           java.util.List interStoreRefs) throws java.io.IOException;
 
       public _Impl(fabric.worker.Store store, long onum, int version,
-          long expiry, long label, long accessLabel, java.io.ObjectInput in,
+          VersionWarranty warranty, long label, long accessLabel, java.io.ObjectInput in,
           java.util.Iterator refTypes, java.util.Iterator intraStoreRefs,
-	  java.util.Iterator interStoreRefs)
-          throws java.io.IOException, java.lang.ClassNotFoundException {
-        super(store, onum, version, expiry, label, accessLabel, in, refTypes,
+          java.util.Iterator interStoreRefs) throws java.io.IOException,
+          java.lang.ClassNotFoundException {
+        super(store, onum, version, warranty, label, accessLabel, in, refTypes,
             intraStoreRefs, interStoreRefs);
       }
 
@@ -1162,11 +1164,11 @@ public interface HashMap extends fabric.util.Map, fabric.util.AbstractMap {
         java.util.List interStoreRefs) throws java.io.IOException;
 
     public _Impl(fabric.worker.Store store, long onum, int version,
-        long expiry, long label, long accessLabel, java.io.ObjectInput in,
+        VersionWarranty warranty, long label, long accessLabel, java.io.ObjectInput in,
         java.util.Iterator refTypes, java.util.Iterator intraStoreRefs,
-	java.util.Iterator interStoreRefs)
-        throws java.io.IOException, java.lang.ClassNotFoundException {
-      super(store, onum, version, expiry, label, accessLabel, in, refTypes,
+        java.util.Iterator interStoreRefs) throws java.io.IOException,
+        java.lang.ClassNotFoundException {
+      super(store, onum, version, warranty, label, accessLabel, in, refTypes,
           intraStoreRefs, interStoreRefs);
     }
 
