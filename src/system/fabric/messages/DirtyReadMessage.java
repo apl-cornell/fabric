@@ -5,12 +5,12 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import fabric.common.SerializedObject;
+import fabric.common.SerializedObjectAndTokens;
 import fabric.common.TransactionID;
 import fabric.common.VersionWarranty;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.ProtocolError;
 import fabric.common.net.RemoteIdentity;
-import fabric.common.util.Pair;
 import fabric.lang.Object._Impl;
 import fabric.worker.Store;
 import fabric.worker.Worker;
@@ -20,7 +20,7 @@ import fabric.worker.remote.RemoteWorker;
  * Represents a request from a worker to read an object owned by another worker.
  */
 public class DirtyReadMessage extends
-Message<DirtyReadMessage.Response, AccessException> {
+    Message<DirtyReadMessage.Response, AccessException> {
   // ////////////////////////////////////////////////////////////////////////////
   // message contents //
   // ////////////////////////////////////////////////////////////////////////////
@@ -48,7 +48,7 @@ Message<DirtyReadMessage.Response, AccessException> {
      */
     public final Store store;
 
-    public final Pair<SerializedObject, VersionWarranty> obj;
+    public final SerializedObjectAndTokens obj;
 
     public Response(_Impl obj) {
       if (obj == null) {
@@ -60,12 +60,11 @@ Message<DirtyReadMessage.Response, AccessException> {
         @SuppressWarnings("deprecation")
         SerializedObject serialized = new SerializedObject(obj);
         VersionWarranty warranty = obj.$versionWarranty();
-        this.obj =
-            new Pair<SerializedObject, VersionWarranty>(serialized, warranty);
+        this.obj = new SerializedObjectAndTokens(serialized, warranty);
       }
     }
 
-    public Response(Store store, Pair<SerializedObject, VersionWarranty> obj) {
+    public Response(Store store, SerializedObjectAndTokens obj) {
       this.store = store;
       this.obj = obj;
     }
@@ -103,8 +102,8 @@ Message<DirtyReadMessage.Response, AccessException> {
     if (r.obj != null) {
       out.writeBoolean(true);
       out.writeUTF(r.store.name());
-      r.obj.first.write(out);
-      out.writeLong(r.obj.second.expiry());
+      r.obj.getSerializedObject().write(out);
+      out.writeLong(r.obj.getWarranty().expiry());
     } else {
       out.writeBoolean(false);
     }
@@ -120,8 +119,8 @@ Message<DirtyReadMessage.Response, AccessException> {
     SerializedObject serialized = new SerializedObject(in);
     VersionWarranty warranty = new VersionWarranty(in.readLong());
 
-    return new Response(store, new Pair<SerializedObject, VersionWarranty>(
-        serialized, warranty));
+    return new Response(store, new SerializedObjectAndTokens(serialized,
+        warranty));
   }
 
 }

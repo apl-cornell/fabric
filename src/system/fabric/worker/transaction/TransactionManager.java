@@ -28,7 +28,7 @@ import java.util.logging.Level;
 import fabric.common.FabricThread;
 import fabric.common.Logging;
 import fabric.common.RWLease;
-import fabric.common.SerializedObject;
+import fabric.common.SerializedObjectAndTokens;
 import fabric.common.Threading;
 import fabric.common.Threading.NamedRunnable;
 import fabric.common.Timing;
@@ -37,7 +37,6 @@ import fabric.common.VersionWarranty;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongKeyMap;
-import fabric.common.util.Pair;
 import fabric.lang.Object._Impl;
 import fabric.lang.Object._Proxy;
 import fabric.lang.security.Label;
@@ -584,11 +583,10 @@ public final class TransactionManager {
         if (entry.getKey() instanceof RemoteStore) {
           // Remove old objects from our cache.
           RemoteStore store = (RemoteStore) entry.getKey();
-          LongKeyMap<Pair<SerializedObject, VersionWarranty>> versionConflicts =
+          LongKeyMap<SerializedObjectAndTokens> versionConflicts =
               entry.getValue().versionConflicts;
           if (versionConflicts != null) {
-            for (Pair<SerializedObject, VersionWarranty> obj : versionConflicts
-                .values())
+            for (SerializedObjectAndTokens obj : versionConflicts.values())
               store.updateCache(obj);
           }
         }
@@ -791,11 +789,10 @@ public final class TransactionManager {
         if (entry.getKey() instanceof RemoteStore) {
           // Remove old objects from our cache.
           RemoteStore store = (RemoteStore) entry.getKey();
-          LongKeyMap<Pair<SerializedObject, VersionWarranty>> versionConflicts =
+          LongKeyMap<SerializedObjectAndTokens> versionConflicts =
               entry.getValue().versionConflicts;
           if (versionConflicts != null) {
-            for (Pair<SerializedObject, VersionWarranty> obj : versionConflicts
-                .values())
+            for (SerializedObjectAndTokens obj : versionConflicts.values())
               store.updateCache(obj);
           }
         }

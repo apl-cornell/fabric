@@ -6,6 +6,7 @@ import java.util.List;
 
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
+import fabric.common.SerializedObjectAndTokens;
 import fabric.common.TransactionID;
 import fabric.common.VersionWarranty;
 import fabric.common.WarrantyGroup;
@@ -152,7 +153,7 @@ public class InProcessStore extends RemoteStore {
   }
 
   @Override
-  protected List<Pair<SerializedObject, VersionWarranty>> getStaleObjects(
+  protected List<SerializedObjectAndTokens> getStaleObjects(
       LongKeyMap<Integer> reads) {
     try {
       return tm.checkForStaleObjects(localWorkerIdentity(), reads);

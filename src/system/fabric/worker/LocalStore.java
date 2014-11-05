@@ -10,7 +10,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import fabric.common.ONumConstants;
-import fabric.common.SerializedObject;
+import fabric.common.SerializedObjectAndTokens;
 import fabric.common.TransactionID;
 import fabric.common.VersionWarranty;
 import fabric.common.exceptions.InternalError;
@@ -67,7 +67,7 @@ public final class LocalStore implements Store, Serializable {
   }
 
   private static final LongKeyMap<VersionWarranty> EMPTY_VERSION_WARRANTY_MAP =
-      new LongKeyHashMap<VersionWarranty>();
+      new LongKeyHashMap<>();
 
   @Override
   public void abortTransaction(TransactionID tid) {
@@ -226,7 +226,7 @@ public final class LocalStore implements Store, Serializable {
   }
 
   @Override
-  public ObjectCache.Entry cache(Pair<SerializedObject, VersionWarranty> obj) {
+  public ObjectCache.Entry cache(SerializedObjectAndTokens obj) {
     throw new InternalError(
         "Unexpected attempt to cache a serialized local-store object.");
   }

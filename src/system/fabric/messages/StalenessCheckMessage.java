@@ -7,13 +7,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import fabric.common.SerializedObject;
+import fabric.common.SerializedObjectAndTokens;
 import fabric.common.VersionWarranty;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.ProtocolError;
 import fabric.common.net.RemoteIdentity;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
-import fabric.common.util.Pair;
 import fabric.worker.remote.RemoteWorker;
 
 /**
@@ -39,9 +39,9 @@ public final class StalenessCheckMessage extends
   // ////////////////////////////////////////////////////////////////////////////
 
   public static class Response implements Message.Response {
-    public final List<Pair<SerializedObject, VersionWarranty>> staleObjects;
+    public final List<SerializedObjectAndTokens> staleObjects;
 
-    public Response(List<Pair<SerializedObject, VersionWarranty>> staleObjects) {
+    public Response(List<SerializedObjectAndTokens> staleObjects) {
       this.staleObjects = staleObjects;
     }
   }
@@ -88,21 +88,20 @@ public final class StalenessCheckMessage extends
   @Override
   protected void writeResponse(DataOutput out, Response r) throws IOException {
     out.writeInt(r.staleObjects.size());
-    for (Pair<SerializedObject, VersionWarranty> obj : r.staleObjects) {
-      obj.first.write(out);
-      out.writeLong(obj.second.expiry());
+    for (SerializedObjectAndTokens obj : r.staleObjects) {
+      obj.getSerializedObject().write(out);
+      out.writeLong(obj.getWarranty().expiry());
     }
   }
 
   @Override
   protected Response readResponse(DataInput in) throws IOException {
     int size = in.readInt();
-    List<Pair<SerializedObject, VersionWarranty>> staleObjects =
-        new ArrayList<>(size);
+    List<SerializedObjectAndTokens> staleObjects = new ArrayList<>(size);
     for (int i = 0; i < size; i++) {
       SerializedObject obj = new SerializedObject(in);
       VersionWarranty warranty = new VersionWarranty(in.readLong());
-      staleObjects.add(new Pair<>(obj, warranty));
+      staleObjects.add(new SerializedObjectAndTokens(obj, warranty));
     }
 
     return new Response(staleObjects);

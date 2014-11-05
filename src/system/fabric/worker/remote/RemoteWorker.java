@@ -6,9 +6,8 @@ import java.util.List;
 
 import fabric.common.ClassRef;
 import fabric.common.ObjectGroup;
-import fabric.common.SerializedObject;
+import fabric.common.SerializedObjectAndTokens;
 import fabric.common.TransactionID;
-import fabric.common.VersionWarranty;
 import fabric.common.WarrantyGroup;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.FabricException;
@@ -77,7 +76,7 @@ public class RemoteWorker extends RemoteNode<RemoteWorker> {
 
   public Object issueRemoteCall(_Proxy receiver, String methodName,
       Class<?>[] parameterTypes, Object[] args)
-          throws UnreachableNodeException, RemoteCallException {
+      throws UnreachableNodeException, RemoteCallException {
     TransactionManager tm = TransactionManager.getInstance();
     tm.registerRemoteCall(this);
 
@@ -86,7 +85,7 @@ public class RemoteWorker extends RemoteNode<RemoteWorker> {
 
     Class<? extends fabric.lang.Object> receiverClass =
         (Class<? extends fabric.lang.Object>) receiver.fetch().$getProxy()
-        .getClass().getEnclosingClass();
+            .getClass().getEnclosingClass();
     ClassRef receiverClassRef = ClassRef.makeRef(receiverClass);
 
     RemoteCallMessage.Response response =
@@ -129,7 +128,7 @@ public class RemoteWorker extends RemoteNode<RemoteWorker> {
    *          the tid for the transaction that is aborting.
    */
   public void abortTransaction(TransactionID tid) throws AccessException,
-  UnreachableNodeException {
+      UnreachableNodeException {
     send(new AbortTransactionMessage(tid));
   }
 
@@ -140,7 +139,7 @@ public class RemoteWorker extends RemoteNode<RemoteWorker> {
    *          the tid for the current transaction.
    */
   public void readObject(TransactionID tid, _Impl obj) {
-    Pair<Store, Pair<SerializedObject, VersionWarranty>> remoteSerializedObj;
+    Pair<Store, SerializedObjectAndTokens> remoteSerializedObj;
     try {
       remoteSerializedObj = readObject(tid, obj.$getStore(), obj.$getOnum());
     } catch (AccessException e) {
@@ -150,16 +149,14 @@ public class RemoteWorker extends RemoteNode<RemoteWorker> {
     if (remoteSerializedObj == null)
       throw new InternalError("Inter-worker object read failed.");
 
-    Pair<SerializedObject, VersionWarranty> serialized =
-        remoteSerializedObj.second;
+    SerializedObjectAndTokens serialized = remoteSerializedObj.second;
     _Impl remoteObj =
-        serialized.first.deserialize(remoteSerializedObj.first,
-            serialized.second);
+        serialized.getDeserializedObject(remoteSerializedObj.first);
     obj.$copyAppStateFrom(remoteObj);
   }
 
-  public Pair<Store, Pair<SerializedObject, VersionWarranty>> readObject(
-      TransactionID tid, Store store, long onum) throws AccessException {
+  public Pair<Store, SerializedObjectAndTokens> readObject(TransactionID tid,
+      Store store, long onum) throws AccessException {
     DirtyReadMessage.Response response =
         send(new DirtyReadMessage(tid, store, onum));
     if (response.obj == null) return null;

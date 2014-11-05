@@ -15,6 +15,7 @@ import fabric.common.AuthorizationUtil;
 import fabric.common.ONumConstants;
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
+import fabric.common.SerializedObjectAndTokens;
 import fabric.common.VersionWarranty;
 import fabric.common.WarrantyGroup;
 import fabric.common.exceptions.AccessException;
@@ -107,7 +108,7 @@ public class TransactionManager {
 
   /**
    * Executes the PREPARE_WRITES phase of the three-phase commit.
-   * 
+   *
    * @return a minimum commit time, specifying a time after which the warranties
    *     on all modified objects will expire.
    * @throws TransactionPrepareFailedException
@@ -138,12 +139,12 @@ public class TransactionManager {
 
     try {
       // This will store the set of onums of objects that were out of date.
-      LongKeyMap<Pair<SerializedObject, VersionWarranty>> versionConflicts =
+      LongKeyMap<SerializedObjectAndTokens> versionConflicts =
           new LongKeyHashMap<>();
 
       // Prepare writes.
       Pair<ExtendWarrantyStatus, VersionWarranty> scratchObj =
-          new Pair<ExtendWarrantyStatus, VersionWarranty>(null, null);
+          new Pair<>(null, null);
       for (SerializedObject o : req.writes) {
         VersionWarranty warranty =
             database.registerUpdate(scratchObj, tid, worker, o,
@@ -180,7 +181,7 @@ public class TransactionManager {
 
   /**
    * Executes the PREPARE_READS phase of the three-phase commit.
-   * 
+   *
    * @param workerIdentity
    *          The worker requesting the prepare
    * @throws TransactionPrepareFailedException
@@ -210,13 +211,12 @@ public class TransactionManager {
       }
 
       // This will store the set of onums of objects that were out of date.
-      LongKeyMap<Pair<SerializedObject, VersionWarranty>> versionConflicts =
-          new LongKeyHashMap<Pair<SerializedObject, VersionWarranty>>();
+      LongKeyMap<SerializedObjectAndTokens> versionConflicts =
+          new LongKeyHashMap<>();
 
       // This will store the warranties that will be sent back to the worker as
       // a result of the prepare.
-      LongKeyMap<VersionWarranty> prepareResult =
-          new LongKeyHashMap<VersionWarranty>();
+      LongKeyMap<VersionWarranty> prepareResult = new LongKeyHashMap<>();
 
       // This will store the new warranties we get.
       List<VersionWarranty.Binding> newWarranties =
@@ -225,7 +225,7 @@ public class TransactionManager {
 
       // Check reads
       final Pair<ExtendWarrantyStatus, VersionWarranty> resultObj =
-          new Pair<ExtendWarrantyStatus, VersionWarranty>(null, null);
+          new Pair<>(null, null);
       for (LongKeyMap.Entry<Integer> entry : reads.entrySet()) {
         long onum = entry.getKey();
         int version = entry.getValue().intValue();
@@ -248,9 +248,8 @@ public class TransactionManager {
           case BAD_VERSION:
             SerializedObject obj = database.read(onum);
             status = database.refreshWarranty(resultObj, onum);
-            versionConflicts
-                .put(onum, new Pair<SerializedObject, VersionWarranty>(obj,
-                    status.second));
+            versionConflicts.put(onum, new SerializedObjectAndTokens(obj,
+                status.second));
             continue;
 
           case DENIED:
@@ -439,7 +438,7 @@ public class TransactionManager {
             : null;
 
     Pair<ExtendWarrantyStatus, VersionWarranty> resultObj =
-        new Pair<ExtendWarrantyStatus, VersionWarranty>(null, null);
+        new Pair<>(null, null);
     for (Entry<Integer> entry : onumsToVersions.entrySet()) {
       long onum = entry.getKey();
       Pair<ExtendWarrantyStatus, VersionWarranty> refreshResult =
@@ -476,7 +475,7 @@ public class TransactionManager {
    * Checks the given set of objects for staleness and returns a list of updates
    * for any stale objects found.
    */
-  List<Pair<SerializedObject, VersionWarranty>> checkForStaleObjects(
+  List<SerializedObjectAndTokens> checkForStaleObjects(
       RemoteIdentity<RemoteWorker> workerIdentity, LongKeyMap<Integer> versions)
       throws AccessException {
     Principal worker = workerIdentity.principal;
@@ -489,14 +488,15 @@ public class TransactionManager {
           Collections.<SerializedObject> emptyList());
     }
 
-    List<Pair<SerializedObject, VersionWarranty>> result = new ArrayList<>();
-    List<VersionWarranty.Binding> newWarranties = ENABLE_WARRANTY_REFRESHES ?
-      new ArrayList<VersionWarranty.Binding>() : null;
+    List<SerializedObjectAndTokens> result = new ArrayList<>();
+    List<VersionWarranty.Binding> newWarranties =
+        ENABLE_WARRANTY_REFRESHES ? new ArrayList<VersionWarranty.Binding>()
+            : null;
     boolean success = false;
 
     try {
       Pair<ExtendWarrantyStatus, VersionWarranty> resultObj =
-          new Pair<ExtendWarrantyStatus, VersionWarranty>(null, null);
+          new Pair<>(null, null);
       for (LongKeyMap.Entry<Integer> entry : versions.entrySet()) {
         long onum = entry.getKey();
         int version = entry.getValue();
@@ -507,7 +507,7 @@ public class TransactionManager {
               database.refreshWarranty(resultObj, onum);
           SerializedObject obj = database.read(onum);
 
-          result.add(new Pair<SerializedObject, VersionWarranty>(obj,
+          result.add(new SerializedObjectAndTokens(obj,
               refreshWarrantyResult.second));
 
           if (ENABLE_WARRANTY_REFRESHES) {

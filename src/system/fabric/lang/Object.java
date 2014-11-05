@@ -15,7 +15,7 @@ import fabric.common.NSUtil;
 import fabric.common.ONumConstants;
 import fabric.common.RWLease;
 import fabric.common.RefTypeEnum;
-import fabric.common.SerializedObject;
+import fabric.common.SerializedObjectAndTokens;
 import fabric.common.Timing;
 import fabric.common.VersionWarranty;
 import fabric.common.exceptions.AccessException;
@@ -192,7 +192,7 @@ public interface Object {
           }
 
           // Fetch from the worker.
-          Pair<Store, Pair<SerializedObject, VersionWarranty>> serialized =
+          Pair<Store, SerializedObjectAndTokens> serialized =
               worker.readObject(tm.getCurrentTid(), ref.store, ref.onum);
           result = serialized.first.cache(serialized.second);
         } else if (this instanceof SecretKeyObject
