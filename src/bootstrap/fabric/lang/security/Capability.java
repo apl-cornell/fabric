@@ -1,5 +1,7 @@
 package fabric.lang.security;
 
+import fabric.common.VersionWarranty;
+
 public interface Capability extends fabric.lang.Object {
 
   public fabric.lang.security.Principal get$jif$jif_lang_Capability_P();
@@ -89,11 +91,11 @@ public interface Capability extends fabric.lang.Object {
         java.util.List interStoreRefs) throws java.io.IOException;
 
     public _Impl(fabric.worker.Store store, long onum, int version,
-        long expiry, long label, long accessLabel, java.io.ObjectInput in,
-        java.util.Iterator refTypes, java.util.Iterator intraStoreRefs,
-	java.util.Iterator interStoreRefs)
+        VersionWarranty warranty, long label, long accessLabel,
+        java.io.ObjectInput in, java.util.Iterator refTypes,
+        java.util.Iterator intraStoreRefs, java.util.Iterator interStoreRefs)
         throws java.io.IOException, java.lang.ClassNotFoundException {
-      super(store, onum, version, expiry, label, accessLabel, in, refTypes,
+      super(store, onum, version, warranty, label, accessLabel, in, refTypes,
           intraStoreRefs, interStoreRefs);
     }
 

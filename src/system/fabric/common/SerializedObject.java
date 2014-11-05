@@ -665,7 +665,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
       int numIntraStoreRefs = getNumIntraStoreRefs();
       Iterator<Long> intraStoreRefIt = intraStoreRefs.iterator();
 
-      // Write onum, version number, and warranty expiry.
+      // Write onum and version number.
       out.write(objectData, 0, isInterStoreUpdateLabelPos());
 
       // Write the update label reference.
@@ -1126,14 +1126,15 @@ public final class SerializedObject implements FastSerializable, Serializable {
       if (constructor == null) {
         constructor =
             implClass.getConstructor(Store.class, long.class, int.class,
-                long.class, long.class, long.class, ObjectInput.class,
-                Iterator.class, Iterator.class, Iterator.class);
+                VersionWarranty.class, long.class, long.class,
+                ObjectInput.class, Iterator.class, Iterator.class,
+                Iterator.class);
         constructorTable.put(implClass, constructor);
       }
 
       _Impl result =
           (_Impl) constructor.newInstance(store, getOnum(), getVersion(),
-              warranty.expiry(), getUpdateLabelOnum(), getAccessPolicyOnum(),
+              warranty, getUpdateLabelOnum(), getAccessPolicyOnum(),
               new ObjectInputStream(getSerializedDataStream()),
               getRefTypeIterator(), getIntraStoreRefIterator(),
               getInterStoreRefIterator());

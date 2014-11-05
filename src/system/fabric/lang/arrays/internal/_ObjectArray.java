@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 import fabric.common.RefTypeEnum;
+import fabric.common.VersionWarranty;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.Pair;
 import fabric.lang.Object;
@@ -75,12 +76,12 @@ public interface _ObjectArray<T extends Object> extends Object {
     /**
      * Used for deserializing.
      */
-    public _Impl(Store store, long onum, int version, long expiry, long label,
-        long accessLabel, ObjectInput in, Iterator<RefTypeEnum> refTypes,
-        Iterator<Long> intraStoreRefs,
+    public _Impl(Store store, long onum, int version, VersionWarranty warranty,
+        long label, long accessLabel, ObjectInput in,
+        Iterator<RefTypeEnum> refTypes, Iterator<Long> intraStoreRefs,
         Iterator<Pair<String, Long>> interStoreRefs) throws IOException,
         ClassNotFoundException {
-      super(store, onum, version, expiry, label, accessLabel, in, refTypes,
+      super(store, onum, version, warranty, label, accessLabel, in, refTypes,
           intraStoreRefs, interStoreRefs);
       proxyType =
           (Class<? extends Object._Proxy>) Worker.getWorker().getClassLoader()
