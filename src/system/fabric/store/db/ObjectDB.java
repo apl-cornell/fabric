@@ -396,13 +396,13 @@ public abstract class ObjectDB {
   }
 
   /**
-   * Attempts to extend the warranty on a particular version of an object, owing
-   * to a read prepare.
+   * Attempts to create or extend the read lock (through warranties or
+   * otherwise) on a particular version of an object, owing to a read prepare.
    *
    * @return a result status and the new warranty (if the status is OK).
    * @throws AccessException if no object exists at the given onum.
    */
-  public final ReadPrepareResult extendWarrantyForReadPrepare(
+  public final ReadPrepareResult lockForReadPrepare(
       ReadPrepareResult resultObj, Principal worker, long onum, int version,
       long commitTime) throws AccessException {
     // First, check the object's popularity status. If it is too
