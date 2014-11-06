@@ -458,8 +458,8 @@ public abstract class ObjectDB {
    * @return the time, in ms since the epoch, the object can be written by the
    * worker.
    */
-  public final long registerUpdate(ReadPrepareResult scratchObj,
-      long tid, Principal worker, SerializedObject obj,
+  public final long registerUpdate(ReadPrepareResult scratchObj, long tid,
+      Principal worker, SerializedObject obj,
       LongKeyMap<SerializedObjectAndTokens> versionConflicts,
       UpdateType updateType) throws TransactionPrepareFailedException {
     long onum = obj.getOnum();
@@ -514,13 +514,16 @@ public abstract class ObjectDB {
             refreshRead(worker, scratchObj, onum);
         versionConflicts.put(onum, new SerializedObjectAndTokens(storeCopy,
             refreshReadResult.warranty, refreshReadResult.lease));
+        // Doesn't matter, this transaction's aborting.
         return VersionWarranty.EXPIRED_WARRANTY.expiry();
       }
 
-      // Obtain existing warranty.
+      // Obtain existing warranty and lease.
       VersionWarranty warranty = getWarranty(onum);
+      RWLease lease = getLease(onum);
 
       if (HOTOS_LOGGER.isLoggable(Level.FINE)) {
+        // TODO: Make this more informative with leases.
         Logging.log(HOTOS_LOGGER, Level.FINE,
             "writing {0}, warranty expires in {1} ms", onum, warranty.expiry()
                 - System.currentTimeMillis());
@@ -529,7 +532,15 @@ public abstract class ObjectDB {
       // Update the version number on the prepared copy of the object.
       obj.setVersion(storeVersion + 1);
 
-      return warranty.expiry();
+      // Don't worry about lease if it's owned by the writer.
+      if (lease.ownedByPrincipal(worker)) return warranty.expiry();
+
+      // If there's a lease we don't own, we have to wait until both warranties
+      // and leases are expired.  The warranty will be extended to the current
+      // value of the lease at commit (before releasing the write lock)
+      // "masking" the lease and protecting the object by writes from the lease
+      // owner.
+      return Math.max(warranty.expiry(), lease.expiry());
     }
 
     throw new fabric.common.exceptions.InternalError("Unknown update type: "
@@ -709,6 +720,16 @@ public abstract class ObjectDB {
   }
 
   /**
+   * Returns the RWLease for the object stored at the given onum.
+   *
+   * @return the lease. If no lease has been issued, an expired unowned lease
+   * will be returned.
+   */
+  public final RWLease getLease(long onum) {
+    return leaseIssuer.get(onum);
+  }
+
+  /**
    * Returns the version warranty for the object stored at the given onum.
    *
    * @return the version warranty. If no warranty has been issued, a really old
@@ -735,8 +756,6 @@ public abstract class ObjectDB {
    */
   protected abstract void saveLongestWarranty();
 
-  //TODO: Either here or elsewhere, put in code to maybe get a new/extended
-  //lease
   /**
    * Extends the version warranty of an object, if necessary and possible. The
    * object's resulting warranty is returned.
@@ -799,8 +818,8 @@ public abstract class ObjectDB {
       long expiry = minExpiry;
       boolean canLease = false;
       if (extendBeyondMinExpiry) {
-        long suggestedLeaseExpiry = leaseIssuer.suggestLease(worker, onum,
-            minExpiry);
+        long suggestedLeaseExpiry =
+            leaseIssuer.suggestLease(worker, onum, minExpiry);
         if (suggestedLeaseExpiry >= expiry) {
           canLease = true;
           expiry = suggestedLeaseExpiry;
