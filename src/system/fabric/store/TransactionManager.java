@@ -145,7 +145,7 @@ public class TransactionManager {
   public long prepareWrites(RemoteIdentity<RemoteWorker> workerIdentity,
       PrepareWritesRequest req) throws TransactionPrepareFailedException {
     final long tid = req.tid;
-    VersionWarranty longestWarranty = null;
+    long commitTime = System.currentTimeMillis();
 
     Principal worker = workerIdentity.principal;
 
@@ -168,7 +168,6 @@ public class TransactionManager {
 
     database.beginPrepareWrites(tid, worker);
 
-    long longest = 0;
     OidKeyHashMap<Integer> addedReads = new OidKeyHashMap<>();
     Map<CallInstance, WarrantiedCallResult> addedCalls = new HashMap<>();
 
@@ -181,11 +180,9 @@ public class TransactionManager {
       ObjectDB.ReadPrepareResult scratchObj =
           new ObjectDB.ReadPrepareResult(null, null);
       for (SerializedObject o : req.writes) {
-        VersionWarranty warranty =
-            database.registerUpdate(scratchObj, tid, worker, o,
-                versionConflicts, WRITE);
-        if (longestWarranty == null || warranty.expiresAfter(longestWarranty))
-          longestWarranty = warranty;
+        commitTime =
+            Math.max(commitTime, database.registerUpdate(scratchObj, tid,
+                worker, o, versionConflicts, WRITE));
       }
 
       // Prepare creates.
@@ -196,14 +193,12 @@ public class TransactionManager {
 
       // Double check calls.
       long currentTime = System.currentTimeMillis();
-      long currentProposedTime =
-          (longestWarranty == null ? 0 : longestWarranty.expiry());
       Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
           "Checking calls for {0} that would delay longer than {1} ms",
-          Long.toHexString(tid), currentProposedTime - currentTime);
+          Long.toHexString(tid), commitTime - currentTime);
       Pair<SemanticWarranty, Pair<Map<CallInstance, SemanticWarrantyRequest>, Map<CallInstance, SemanticWarrantyRequest>>> callPrepareResp =
           semanticWarranties.prepareWrites(req.writes, req.creates, tid,
-              currentProposedTime, database.getName());
+              commitTime, database.getName());
 
       SemanticWarranty longestCallWarranty = callPrepareResp.first;
       Map<CallInstance, SemanticWarrantyRequest> updates =
@@ -266,11 +261,9 @@ public class TransactionManager {
         addedCalls.remove(callRequest.call);
       }
 
-      // Ugh this is ugly.
-      longest = longestWarranty == null ? 0 : longestWarranty.expiry();
       if (longestCallWarranty != null
-          && (longestCallWarranty.expiresAfter(longest, true))) {
-        longest = longestCallWarranty.expiry();
+          && (longestCallWarranty.expiresAfter(commitTime, true))) {
+        commitTime = longestCallWarranty.expiry();
       }
 
       database.finishPrepareWrites(tid, worker);
@@ -287,10 +280,10 @@ public class TransactionManager {
 
     try {
       if (addedCalls.size() != 0)
-        prepareCalls(worker, tid, addedCalls, longest);
+        prepareCalls(worker, tid, addedCalls, commitTime);
       // Don't bother if there were no reads.
       if (addedReads.get(store) != null)
-        prepareReads(workerIdentity, tid, addedReads.get(store), longest);
+        prepareReads(workerIdentity, tid, addedReads.get(store), commitTime);
     } catch (TransactionPrepareFailedException tpfe) {
       // Don't need to worry about calls because inprocess store doesn't
       // maintain a cache.  Need to update local cache of objects, however.
@@ -305,9 +298,9 @@ public class TransactionManager {
 
     Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
         "Transaction {0} prepared writes to be done in {1} ms.",
-        Long.toHexString(tid), longest - System.currentTimeMillis());
+        Long.toHexString(tid), commitTime - System.currentTimeMillis());
 
-    return longest;
+    return commitTime;
   }
 
   /**

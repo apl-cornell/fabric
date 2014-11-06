@@ -442,9 +442,10 @@ public abstract class ObjectDB {
    * @param create
    *          whether the object was newly created by the transaction.
    *
-   * @return the object's existing warranty.
+   * @return the time, in ms since the epoch, the object can be written by the
+   * worker.
    */
-  public final VersionWarranty registerUpdate(ReadPrepareResult scratchObj,
+  public final long registerUpdate(ReadPrepareResult scratchObj,
       long tid, Principal worker, SerializedObject obj,
       LongKeyMap<SerializedObjectAndTokens> versionConflicts,
       UpdateType updateType) throws TransactionPrepareFailedException {
@@ -476,7 +477,7 @@ public abstract class ObjectDB {
 
       // Set the object's initial version number.
       obj.setVersion(INITIAL_OBJECT_VERSION_NUMBER - 1);
-      return VersionWarranty.EXPIRED_WARRANTY;
+      return VersionWarranty.EXPIRED_WARRANTY.expiry();
 
     case WRITE:
       synchronized (submap) {
@@ -500,7 +501,7 @@ public abstract class ObjectDB {
             refreshRead(scratchObj, onum);
         versionConflicts.put(onum, new SerializedObjectAndTokens(storeCopy,
             refreshReadResult.warranty));
-        return VersionWarranty.EXPIRED_WARRANTY;
+        return VersionWarranty.EXPIRED_WARRANTY.expiry();
       }
 
       // Obtain existing warranty.
@@ -512,7 +513,7 @@ public abstract class ObjectDB {
                 - System.currentTimeMillis());
       }
 
-      return warranty;
+      return warranty.expiry();
     }
 
     throw new fabric.common.exceptions.InternalError("Unknown update type: "
