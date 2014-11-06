@@ -326,6 +326,10 @@ public final class Log {
     return result;
   }
 
+  /**
+   * After a transaction has been prepared, update version warranties for
+   * objects from that store.
+   */
   void updateVersionWarranties(Store store,
       LongKeyMap<VersionWarranty> newWarranties) {
     if (store.isLocalStore()) return;
