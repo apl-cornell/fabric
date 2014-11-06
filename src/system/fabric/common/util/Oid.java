@@ -3,8 +3,8 @@ package fabric.common.util;
 import fabric.worker.Store;
 
 public class Oid {
-  final Store store;
-  final long onum;
+  public final Store store;
+  public final long onum;
 
   public Oid(Store store, long onum) {
     if (store == null) {
