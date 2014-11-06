@@ -398,13 +398,14 @@ public abstract class ObjectDB {
     }
 
     final boolean extendBeyondCommitTime = !unpopular;
-    ReadPrepareResult newWarranty =
-        extendWarranty(resultObj, onum, commitTime, true,
+    ReadPrepareResult extendResult =
+        extendReadLock(resultObj, onum, commitTime, true,
             extendBeyondCommitTime, false);
 
-    if (newWarranty == EXTEND_READ_LOCK_DENIED) return EXTEND_READ_LOCK_DENIED;
+    if (extendResult == EXTEND_READ_LOCK_DENIED)
+      return EXTEND_READ_LOCK_DENIED;
     if (version != getVersion(onum)) return EXTEND_READ_LOCK_BAD_VERSION;
-    return newWarranty;
+    return extendResult;
   }
 
   private static ReadPrepareResult EXTEND_READ_LOCK_DENIED =
@@ -616,7 +617,7 @@ public abstract class ObjectDB {
         for (LongIterator it = onums.iterator(); it.hasNext();) {
           long onum = it.next();
           ReadPrepareResult extendResult =
-              extendWarranty(resultObj, onum, commitTime, true, false, true);
+              extendReadLock(resultObj, onum, commitTime, true, false, true);
           if (ENABLE_WARRANTY_REFRESHES) {
             if (extendResult.status == ExtendReadLockStatus.NEW) {
               try {
@@ -729,9 +730,9 @@ public abstract class ObjectDB {
    *
    * @return the resulting warranty, and whether it was extended. If the current
    *          warranty does not meet minExpiry and could not be renewed,
-   *          EXTEND_WARRANTY_DENIED is returned.
+   *          EXTEND_WARRANTY_DENIE is returned.
    */
-  private ReadPrepareResult extendWarranty(ReadPrepareResult result, long onum,
+  private ReadPrepareResult extendReadLock(ReadPrepareResult result, long onum,
       long minExpiry, boolean minExpiryStrict, boolean extendBeyondMinExpiry,
       boolean ignoreWriteLocks) {
     while (true) {
@@ -786,7 +787,7 @@ public abstract class ObjectDB {
   public ReadPrepareResult refreshWarranty(ReadPrepareResult resultObj,
       long onum) {
     ReadPrepareResult result =
-        extendWarranty(resultObj, onum, System.currentTimeMillis(), false,
+        extendReadLock(resultObj, onum, System.currentTimeMillis(), false,
             true, false);
     if (result == EXTEND_READ_LOCK_DENIED) {
       return new ReadPrepareResult(ExtendReadLockStatus.OLD,
