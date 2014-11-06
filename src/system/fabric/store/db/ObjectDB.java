@@ -496,10 +496,10 @@ public abstract class ObjectDB {
       int storeVersion = storeCopy.getVersion();
       int workerVersion = obj.getVersion();
       if (storeVersion != workerVersion) {
-        ReadPrepareResult refreshWarrantyResult =
-            refreshWarranty(scratchObj, onum);
+        ReadPrepareResult refreshReadResult =
+            refreshRead(scratchObj, onum);
         versionConflicts.put(onum, new SerializedObjectAndTokens(storeCopy,
-            refreshWarrantyResult.warranty));
+            refreshReadResult.warranty));
         return VersionWarranty.EXPIRED_WARRANTY;
       }
 
@@ -790,7 +790,7 @@ public abstract class ObjectDB {
    * write-locked, then a new warranty cannot be created, and the existing one
    * is returned.
    */
-  public ReadPrepareResult refreshWarranty(ReadPrepareResult resultObj,
+  public ReadPrepareResult refreshRead(ReadPrepareResult resultObj,
       long onum) {
     ReadPrepareResult result =
         extendReadLock(resultObj, onum, System.currentTimeMillis(), false,
