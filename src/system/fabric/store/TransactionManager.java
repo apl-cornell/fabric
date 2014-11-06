@@ -35,7 +35,7 @@ import fabric.lang.security.Label;
 import fabric.lang.security.Principal;
 import fabric.store.db.GroupContainer;
 import fabric.store.db.ObjectDB;
-import fabric.store.db.ObjectDB.ExtendWarrantyStatus;
+import fabric.store.db.ObjectDB.ExtendReadLockStatus;
 import fabric.worker.AbortException;
 import fabric.worker.Store;
 import fabric.worker.TransactionCommitFailedException;
@@ -144,8 +144,8 @@ public class TransactionManager {
           new LongKeyHashMap<>();
 
       // Prepare writes.
-      Pair<ExtendWarrantyStatus, VersionWarranty> scratchObj =
-          new Pair<>(null, null);
+      ObjectDB.ReadPrepareResult scratchObj =
+          new ObjectDB.ReadPrepareResult(null, null);
       for (SerializedObject o : req.writes) {
         VersionWarranty warranty =
             database.registerUpdate(scratchObj, tid, worker, o,
@@ -225,33 +225,34 @@ public class TransactionManager {
               : null;
 
       // Check reads
-      final Pair<ExtendWarrantyStatus, VersionWarranty> resultObj =
-          new Pair<>(null, null);
+      final ObjectDB.ReadPrepareResult resultObj =
+          new ObjectDB.ReadPrepareResult(null, null);
       for (LongKeyMap.Entry<Integer> entry : reads.entrySet()) {
         long onum = entry.getKey();
         int version = entry.getValue().intValue();
 
         // Attempt to extend the object's warranty.
         try {
-          Pair<ExtendWarrantyStatus, VersionWarranty> status =
+          ObjectDB.ReadPrepareResult result =
               database.extendWarrantyForReadPrepare(resultObj, worker, onum,
                   version, commitTime);
-          switch (status.first) {
+          switch (result.getStatus()) {
           case NEW:
             if (ENABLE_WARRANTY_REFRESHES) {
-              newWarranties.add(status.second.new Binding(onum, version));
+              newWarranties
+                  .add(result.getWarranty().new Binding(onum, version));
             }
             //$FALL-THROUGH$
           case OLD:
-            prepareResult.put(onum, status.second);
+            prepareResult.put(onum, result.getWarranty());
             break;
 
           case BAD_VERSION:
             SerializedObject obj = database.read(onum);
-            status = database.refreshWarranty(resultObj, onum);
+            result = database.refreshWarranty(resultObj, onum);
             //TODO: Change to use protocol for lease
             versionConflicts.put(onum, new SerializedObjectAndTokens(obj,
-                status.second, new RWLease(0)));
+                result.getWarranty(), new RWLease(0)));
             continue;
 
           case DENIED:
@@ -439,16 +440,16 @@ public class TransactionManager {
         ENABLE_WARRANTY_REFRESHES ? new ArrayList<VersionWarranty.Binding>()
             : null;
 
-    Pair<ExtendWarrantyStatus, VersionWarranty> resultObj =
-        new Pair<>(null, null);
+    ObjectDB.ReadPrepareResult resultObj =
+        new ObjectDB.ReadPrepareResult(null, null);
     for (Entry<Integer> entry : onumsToVersions.entrySet()) {
       long onum = entry.getKey();
-      Pair<ExtendWarrantyStatus, VersionWarranty> refreshResult =
+      ObjectDB.ReadPrepareResult refreshResult =
           database.refreshWarranty(resultObj, onum);
 
       if (ENABLE_WARRANTY_REFRESHES) {
-        if (refreshResult.first == ExtendWarrantyStatus.NEW) {
-          newWarranties.add(refreshResult.second.new Binding(onum, entry
+        if (refreshResult.getStatus() == ExtendReadLockStatus.NEW) {
+          newWarranties.add(refreshResult.getWarranty().new Binding(onum, entry
               .getValue()));
         }
       }
@@ -497,26 +498,27 @@ public class TransactionManager {
     boolean success = false;
 
     try {
-      Pair<ExtendWarrantyStatus, VersionWarranty> resultObj =
-          new Pair<>(null, null);
+      ObjectDB.ReadPrepareResult resultObj =
+          new ObjectDB.ReadPrepareResult(null, null);
       for (LongKeyMap.Entry<Integer> entry : versions.entrySet()) {
         long onum = entry.getKey();
         int version = entry.getValue();
 
         int curVersion = database.getVersion(onum);
         if (curVersion != version) {
-          Pair<ExtendWarrantyStatus, VersionWarranty> refreshWarrantyResult =
+          ObjectDB.ReadPrepareResult refreshWarrantyResult =
               database.refreshWarranty(resultObj, onum);
           SerializedObject obj = database.read(onum);
 
           //TODO: Use protocol to set lease
-          result.add(new SerializedObjectAndTokens(obj,
-              refreshWarrantyResult.second, new RWLease(0)));
+          result.add(new SerializedObjectAndTokens(obj, refreshWarrantyResult
+              .getWarranty(), new RWLease(0)));
 
           if (ENABLE_WARRANTY_REFRESHES) {
-            if (refreshWarrantyResult.first == ExtendWarrantyStatus.NEW) {
-              newWarranties.add(refreshWarrantyResult.second.new Binding(onum,
-                  version));
+            if (refreshWarrantyResult.getStatus() == ExtendReadLockStatus.NEW) {
+              newWarranties
+                  .add(refreshWarrantyResult.getWarranty().new Binding(onum,
+                      version));
             }
           }
         }
