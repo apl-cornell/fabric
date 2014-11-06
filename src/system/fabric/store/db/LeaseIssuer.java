@@ -11,6 +11,7 @@ import fabric.common.Logging;
 import fabric.common.Lease;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.Oid;
+import fabric.lang.security.Principal;
 
 /**
  * A lease issuer maintains the mapping from keys to leases on those keys and
@@ -187,15 +188,21 @@ public class LeaseIssuer<K, V extends Lease> {
 
   /**
    * Suggests a lease-expiry time.
+   *
+   * @param worker the worker requesting the lease.
+   * @param key key the lease is for.
    */
-  public Long suggestLease(K key) {
-    return suggestLease(key, System.currentTimeMillis());
+  public Long suggestLease(Principal worker, K key) {
+    return suggestLease(worker, key, System.currentTimeMillis());
   }
 
   /**
    * Suggests a lease-expiry time beyond the given expiry time.
+   *
+   * @return The suggested expiry.  Returns 0 if a warranty should be used
+   * instead.
    */
-  public long suggestLease(K key, long expiry) {
+  public long suggestLease(Principal worker, K key, long expiry) {
     // Snapshot state to avoid locking for too long.
     final long readInterval;
     final long writeInterval;
@@ -213,14 +220,15 @@ public class LeaseIssuer<K, V extends Lease> {
 
     final int curCount = count++;
 
-    if (writer == null) {
-      // If object has no exclusive writer, don't give a lease
+    if (writer == null || !writer.equals(new Oid(worker))) {
+      // If object isn't exclusively written by the requester, don't give a
+      // lease
       if (curCount % 10000 == 0) {
         // onum, readInterval, actualReadInterval, writeInterval, lease
         HOTOS_LOGGER.info("lease #" + curCount + ": " + key + "," +
             readInterval + "," + writeInterval + ",no-exclusive-writer");
       }
-      return expiry;
+      return 0;
     }
 
     if (readInterval > MAX_READ_PREP_INTERVAL) {

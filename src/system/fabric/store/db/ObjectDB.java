@@ -31,6 +31,7 @@ import fabric.common.util.LongHashSet;
 import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
+import fabric.common.util.Oid;
 import fabric.common.util.OidKeyHashMap;
 import fabric.lang.security.NodePrincipal;
 import fabric.lang.security.Principal;
@@ -41,6 +42,7 @@ import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.Worker;
 import fabric.worker.remote.RemoteWorker;
 
+//TODO: Code for managing leases on crash recovery.
 /**
  * <p>
  * An ObjectDB encapsulates the persistent state of the Store. It is responsible
@@ -766,15 +768,19 @@ public abstract class ObjectDB {
       // extended.
       VersionWarranty curWarranty = warrantyIssuer.get(onum);
       RWLease curLease = leaseIssuer.get(onum);
+      boolean workerOwnsLease = curLease.ownedByPrincipal(worker);
+
       if (minExpiryStrict) {
-        if (curWarranty.expiresAfterStrict(minExpiry)) {
+        if (curWarranty.expiresAfterStrict(minExpiry)
+            || (workerOwnsLease && curLease.expiresAfterStrict(minExpiry))) {
           result.status = ExtendReadLockStatus.OLD;
           result.warranty = curWarranty;
           result.lease = curLease;
           return result;
         }
       } else {
-        if (curWarranty.expiresAfter(minExpiry, false)) {
+        if (curWarranty.expiresAfter(minExpiry, false)
+            || (workerOwnsLease && curLease.expiresAfter(minExpiry, false))) {
           result.status = ExtendReadLockStatus.OLD;
           result.warranty = curWarranty;
           result.lease = curLease;
@@ -788,11 +794,37 @@ public abstract class ObjectDB {
         return EXTEND_READ_LOCK_DENIED;
       }
 
-      // Extend the object's warranty.
+      // Extend the object's warranty or lease.
       long expiry = minExpiry;
+      boolean canLease = false;
       if (extendBeyondMinExpiry) {
-        expiry = warrantyIssuer.suggestWarranty(onum, minExpiry);
+        long suggestedLeaseExpiry = leaseIssuer.suggestLease(worker, onum,
+            minExpiry);
+        if (suggestedLeaseExpiry >= expiry) {
+          canLease = true;
+          expiry = suggestedLeaseExpiry;
+        } else {
+          expiry = warrantyIssuer.suggestWarranty(onum, minExpiry);
+        }
       }
+
+      if (canLease) {
+        // Can lease, use that in place of a warranty.
+        RWLease newLease = new RWLease(expiry, new Oid(worker));
+        if (expiry > System.currentTimeMillis()) {
+          if (!leaseIssuer.replace(onum, curLease, newLease)) continue;
+
+          // TODO: Update longest lease here?
+          //updateLongestWarranty(newWarranty);
+        }
+
+        result.status = ExtendReadLockStatus.NEW;
+        result.warranty = curWarranty;
+        result.lease = newLease;
+        return result;
+      }
+
+      // Otherwise, use a warranty.
       VersionWarranty newWarranty = new VersionWarranty(expiry);
       if (expiry > System.currentTimeMillis()) {
         if (!warrantyIssuer.replace(onum, curWarranty, newWarranty)) continue;

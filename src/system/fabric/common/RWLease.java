@@ -16,8 +16,7 @@ public class RWLease extends Lease {
   
   /**
    * @param expiry expiry time, in milliseconds since the epoch.
-   * @param lessees Set of RemoteWorker nodes which should be contacted on an
-   * in-term write prepare.
+   * @param owner Oid of the worker principal which owns the lease.
    */
   public RWLease(long expiry, Oid owner) {
     super(expiry);
