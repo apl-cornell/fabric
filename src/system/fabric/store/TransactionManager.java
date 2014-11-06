@@ -145,7 +145,7 @@ public class TransactionManager {
 
       // Prepare writes.
       ObjectDB.ReadPrepareResult scratchObj =
-          new ObjectDB.ReadPrepareResult(null, null);
+          new ObjectDB.ReadPrepareResult(null, null, null);
       for (SerializedObject o : req.writes) {
         VersionWarranty warranty =
             database.registerUpdate(scratchObj, tid, worker, o,
@@ -226,7 +226,7 @@ public class TransactionManager {
 
       // Check reads
       final ObjectDB.ReadPrepareResult resultObj =
-          new ObjectDB.ReadPrepareResult(null, null);
+          new ObjectDB.ReadPrepareResult(null, null, null);
       for (LongKeyMap.Entry<Integer> entry : reads.entrySet()) {
         long onum = entry.getKey();
         int version = entry.getValue().intValue();
@@ -250,9 +250,8 @@ public class TransactionManager {
           case BAD_VERSION:
             SerializedObject obj = database.read(onum);
             result = database.refreshWarranty(resultObj, onum);
-            //TODO: Change to use protocol for lease
             versionConflicts.put(onum, new SerializedObjectAndTokens(obj,
-                result.getWarranty(), new RWLease(0)));
+                result.getWarranty(), result.getLease()));
             continue;
 
           case DENIED:
@@ -441,7 +440,7 @@ public class TransactionManager {
             : null;
 
     ObjectDB.ReadPrepareResult resultObj =
-        new ObjectDB.ReadPrepareResult(null, null);
+        new ObjectDB.ReadPrepareResult(null, null, null);
     for (Entry<Integer> entry : onumsToVersions.entrySet()) {
       long onum = entry.getKey();
       ObjectDB.ReadPrepareResult refreshResult =
@@ -499,7 +498,7 @@ public class TransactionManager {
 
     try {
       ObjectDB.ReadPrepareResult resultObj =
-          new ObjectDB.ReadPrepareResult(null, null);
+          new ObjectDB.ReadPrepareResult(null, null, null);
       for (LongKeyMap.Entry<Integer> entry : versions.entrySet()) {
         long onum = entry.getKey();
         int version = entry.getValue();
@@ -510,9 +509,8 @@ public class TransactionManager {
               database.refreshWarranty(resultObj, onum);
           SerializedObject obj = database.read(onum);
 
-          //TODO: Use protocol to set lease
           result.add(new SerializedObjectAndTokens(obj, refreshWarrantyResult
-              .getWarranty(), new RWLease(0)));
+              .getWarranty(), refreshWarrantyResult.getLease()));
 
           if (ENABLE_WARRANTY_REFRESHES) {
             if (refreshWarrantyResult.getStatus() == ExtendReadLockStatus.NEW) {

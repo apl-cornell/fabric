@@ -32,7 +32,6 @@ import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
 import fabric.common.util.OidKeyHashMap;
-import fabric.common.util.Pair;
 import fabric.lang.security.NodePrincipal;
 import fabric.lang.security.Principal;
 import fabric.store.SubscriptionManager;
@@ -362,10 +361,16 @@ public abstract class ObjectDB {
      */
     protected VersionWarranty warranty;
 
+    /**
+     * Lease now associated with the object.
+     */
+    protected RWLease lease;
+
     public ReadPrepareResult(ExtendReadLockStatus status,
-        VersionWarranty warranty) {
+        VersionWarranty warranty, RWLease lease) {
       this.status = status;
       this.warranty = warranty;
+      this.lease = lease;
     }
 
     /**
@@ -380,6 +385,13 @@ public abstract class ObjectDB {
      */
     public VersionWarranty getWarranty() {
       return warranty;
+    }
+
+    /**
+     * @return the lease
+     */
+    public RWLease getLease() {
+      return lease;
     }
   }
 
@@ -416,10 +428,10 @@ public abstract class ObjectDB {
   }
 
   private static ReadPrepareResult EXTEND_WARRANTY_DENIED =
-      new ReadPrepareResult(ExtendReadLockStatus.DENIED, null);
+      new ReadPrepareResult(ExtendReadLockStatus.DENIED, null, null);
 
   private static ReadPrepareResult EXTEND_WARRANTY_BAD_VERSION =
-      new ReadPrepareResult(ExtendReadLockStatus.BAD_VERSION, null);
+      new ReadPrepareResult(ExtendReadLockStatus.BAD_VERSION, null, null);
 
   /**
    * Registers that a transaction has created or written to an object. This
@@ -621,7 +633,7 @@ public abstract class ObjectDB {
     try {
       LongSet onums = removeWrittenOnumsByTid(tid, workerIdentity.principal);
       if (onums != null) {
-        ReadPrepareResult resultObj = new ReadPrepareResult(null, null);
+        ReadPrepareResult resultObj = new ReadPrepareResult(null, null, null);
         for (LongIterator it = onums.iterator(); it.hasNext();) {
           long onum = it.next();
           ReadPrepareResult extendResult =
@@ -799,7 +811,7 @@ public abstract class ObjectDB {
             true, false);
     if (result == EXTEND_WARRANTY_DENIED) {
       return new ReadPrepareResult(ExtendReadLockStatus.OLD,
-          warrantyIssuer.get(onum));
+          warrantyIssuer.get(onum), leaseIssuer.get(onum));
     }
 
     return result;
