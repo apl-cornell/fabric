@@ -808,11 +808,9 @@ public abstract class ObjectDB {
   }
 
   /**
-   * Returns any existing version warranty on the object stored at the given
-   * onum, if the warranty is still valid. Otherwise, attempts to create and
-   * return a new version warranty for the object. If the object is
-   * write-locked, then a new warranty cannot be created, and the existing one
-   * is returned.
+   * Returns a ReadPrepareResult, refreshing the read results for the object
+   * stored at the given onum.  This will attempt to refresh warranties on that
+   * object, if possible.
    */
   public ReadPrepareResult refreshRead(Principal worker,
       ReadPrepareResult resultObj, long onum) {
