@@ -402,15 +402,15 @@ public abstract class ObjectDB {
         extendWarranty(resultObj, onum, commitTime, true,
             extendBeyondCommitTime, false);
 
-    if (newWarranty == EXTEND_WARRANTY_DENIED) return EXTEND_WARRANTY_DENIED;
-    if (version != getVersion(onum)) return EXTEND_WARRANTY_BAD_VERSION;
+    if (newWarranty == EXTEND_READ_LOCK_DENIED) return EXTEND_READ_LOCK_DENIED;
+    if (version != getVersion(onum)) return EXTEND_READ_LOCK_BAD_VERSION;
     return newWarranty;
   }
 
-  private static ReadPrepareResult EXTEND_WARRANTY_DENIED =
+  private static ReadPrepareResult EXTEND_READ_LOCK_DENIED =
       new ReadPrepareResult(ExtendReadLockStatus.DENIED, null);
 
-  private static ReadPrepareResult EXTEND_WARRANTY_BAD_VERSION =
+  private static ReadPrepareResult EXTEND_READ_LOCK_BAD_VERSION =
       new ReadPrepareResult(ExtendReadLockStatus.BAD_VERSION, null);
 
   /**
@@ -755,7 +755,7 @@ public abstract class ObjectDB {
       // Need to extend warranty.
       if (!ignoreWriteLocks && isWritten(onum)) {
         // Unable to extend.
-        return EXTEND_WARRANTY_DENIED;
+        return EXTEND_READ_LOCK_DENIED;
       }
 
       // Extend the object's warranty.
@@ -788,7 +788,7 @@ public abstract class ObjectDB {
     ReadPrepareResult result =
         extendWarranty(resultObj, onum, System.currentTimeMillis(), false,
             true, false);
-    if (result == EXTEND_WARRANTY_DENIED) {
+    if (result == EXTEND_READ_LOCK_DENIED) {
       return new ReadPrepareResult(ExtendReadLockStatus.OLD,
           warrantyIssuer.get(onum));
     }
