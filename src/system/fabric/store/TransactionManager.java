@@ -118,7 +118,7 @@ public class TransactionManager {
   public long prepareWrites(Principal worker, PrepareWritesRequest req)
       throws TransactionPrepareFailedException {
     final long tid = req.tid;
-    VersionWarranty longestWarranty = null;
+    long commitTime = System.currentTimeMillis();
 
     // First, check write permissions. We do this before we attempt to do the
     // actual prepare because we want to run the permissions check in a
@@ -146,11 +146,9 @@ public class TransactionManager {
       ObjectDB.ReadPrepareResult scratchObj =
           new ObjectDB.ReadPrepareResult(null, null);
       for (SerializedObject o : req.writes) {
-        VersionWarranty warranty =
-            database.registerUpdate(scratchObj, tid, worker, o,
-                versionConflicts, WRITE);
-        if (longestWarranty == null || warranty.expiresAfter(longestWarranty))
-          longestWarranty = warranty;
+        commitTime =
+            Math.max(commitTime, database.registerUpdate(scratchObj, tid,
+                worker, o, versionConflicts, WRITE));
       }
 
       // Prepare creates.
@@ -168,7 +166,7 @@ public class TransactionManager {
       STORE_TRANSACTION_LOGGER.log(Level.FINE,
           "Prepared writes for transaction {0}", tid);
 
-      return longestWarranty == null ? 0 : longestWarranty.expiry();
+      return commitTime;
     } catch (TransactionPrepareFailedException e) {
       database.abortPrepareWrites(tid, worker);
       throw e;
