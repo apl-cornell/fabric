@@ -55,4 +55,11 @@ public class RWLease extends Lease {
   public boolean ownedByCurrentWorker() {
     return ownedByPrincipal(Worker.getWorker().getPrincipal());
   }
+
+  /**
+   * @return the owner
+   */
+  public Oid getOwner() {
+    return owner;
+  }
 }

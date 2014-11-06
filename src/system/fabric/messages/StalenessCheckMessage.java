@@ -15,6 +15,9 @@ import fabric.common.exceptions.ProtocolError;
 import fabric.common.net.RemoteIdentity;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.Oid;
+import fabric.worker.Store;
+import fabric.worker.Worker;
 import fabric.worker.remote.RemoteWorker;
 
 /**
@@ -92,6 +95,9 @@ public final class StalenessCheckMessage extends
     for (SerializedObjectAndTokens obj : r.staleObjects) {
       obj.getSerializedObject().write(out);
       out.writeLong(obj.getWarranty().expiry());
+      out.writeUTF(obj.getLease().getOwner().store.name());
+      out.writeLong(obj.getLease().getOwner().onum);
+      out.writeLong(obj.getLease().expiry());
     }
   }
 
@@ -102,9 +108,11 @@ public final class StalenessCheckMessage extends
     for (int i = 0; i < size; i++) {
       SerializedObject obj = new SerializedObject(in);
       VersionWarranty warranty = new VersionWarranty(in.readLong());
-      //TODO: Change it so that lease is included in network protocol
-      staleObjects.add(new SerializedObjectAndTokens(obj, warranty,
-          new RWLease(0)));
+      Store ownerStore = Worker.getWorker().getStore(in.readUTF());
+      Oid ownerOid = new Oid(ownerStore, in.readLong());
+      RWLease lease = new RWLease(in.readLong(), ownerOid);
+
+      staleObjects.add(new SerializedObjectAndTokens(obj, warranty, lease));
     }
 
     return new Response(staleObjects);

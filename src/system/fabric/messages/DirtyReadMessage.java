@@ -12,6 +12,7 @@ import fabric.common.VersionWarranty;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.ProtocolError;
 import fabric.common.net.RemoteIdentity;
+import fabric.common.util.Oid;
 import fabric.lang.Object._Impl;
 import fabric.worker.Store;
 import fabric.worker.Worker;
@@ -61,9 +62,8 @@ public class DirtyReadMessage extends
         @SuppressWarnings("deprecation")
         SerializedObject serialized = new SerializedObject(obj);
         VersionWarranty warranty = obj.$versionWarranty();
-        //TODO: get lease from protocol
-        this.obj =
-            new SerializedObjectAndTokens(serialized, warranty, new RWLease(0));
+        RWLease lease = obj.$rwlease();
+        this.obj = new SerializedObjectAndTokens(serialized, warranty, lease);
       }
     }
 
@@ -107,6 +107,9 @@ public class DirtyReadMessage extends
       out.writeUTF(r.store.name());
       r.obj.getSerializedObject().write(out);
       out.writeLong(r.obj.getWarranty().expiry());
+      out.writeUTF(r.obj.getLease().getOwner().store.name());
+      out.writeLong(r.obj.getLease().getOwner().onum);
+      out.writeLong(r.obj.getLease().expiry());
     } else {
       out.writeBoolean(false);
     }
@@ -121,10 +124,12 @@ public class DirtyReadMessage extends
     Store store = Worker.getWorker().getStore(in.readUTF());
     SerializedObject serialized = new SerializedObject(in);
     VersionWarranty warranty = new VersionWarranty(in.readLong());
+    Store ownerStore = Worker.getWorker().getStore(in.readUTF());
+    Oid ownerOid = new Oid(ownerStore, in.readLong());
+    RWLease lease = new RWLease(in.readLong(), ownerOid);
 
-    // TODO: Change this to use protocol for lease.
     return new Response(store, new SerializedObjectAndTokens(serialized,
-        warranty, new RWLease(0)));
+        warranty, lease));
   }
 
 }
