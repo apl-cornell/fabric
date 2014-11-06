@@ -368,7 +368,7 @@ public class TransactionManager {
         // Attempt to extend the object's warranty.
         try {
           ObjectDB.ReadPrepareResult result =
-              database.extendWarrantyForReadPrepare(resultObj, worker, onum,
+              database.lockForReadPrepare(resultObj, worker, onum,
                   version, commitTime);
           switch (result.getStatus()) {
           case NEW:
