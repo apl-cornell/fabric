@@ -234,8 +234,8 @@ public class TransactionManager {
         // Attempt to extend the object's warranty.
         try {
           ObjectDB.ReadPrepareResult result =
-              database.lockForReadPrepare(resultObj, worker, onum,
-                  version, commitTime);
+              database.lockForReadPrepare(resultObj, worker, onum, version,
+                  commitTime);
           switch (result.getStatus()) {
           case NEW:
             if (ENABLE_WARRANTY_REFRESHES) {
@@ -249,7 +249,7 @@ public class TransactionManager {
 
           case BAD_VERSION:
             SerializedObject obj = database.read(onum);
-            result = database.refreshWarranty(resultObj, onum);
+            result = database.refreshRead(resultObj, onum);
             versionConflicts.put(onum, new SerializedObjectAndTokens(obj,
                 result.getWarranty(), result.getLease()));
             continue;
@@ -444,7 +444,7 @@ public class TransactionManager {
     for (Entry<Integer> entry : onumsToVersions.entrySet()) {
       long onum = entry.getKey();
       ObjectDB.ReadPrepareResult refreshResult =
-          database.refreshWarranty(resultObj, onum);
+          database.refreshRead(resultObj, onum);
 
       if (ENABLE_WARRANTY_REFRESHES) {
         if (refreshResult.getStatus() == ExtendReadLockStatus.NEW) {
@@ -505,18 +505,17 @@ public class TransactionManager {
 
         int curVersion = database.getVersion(onum);
         if (curVersion != version) {
-          ObjectDB.ReadPrepareResult refreshWarrantyResult =
-              database.refreshWarranty(resultObj, onum);
+          ObjectDB.ReadPrepareResult refreshReadResult =
+              database.refreshRead(resultObj, onum);
           SerializedObject obj = database.read(onum);
 
-          result.add(new SerializedObjectAndTokens(obj, refreshWarrantyResult
-              .getWarranty(), refreshWarrantyResult.getLease()));
+          result.add(new SerializedObjectAndTokens(obj, refreshReadResult
+              .getWarranty(), refreshReadResult.getLease()));
 
           if (ENABLE_WARRANTY_REFRESHES) {
-            if (refreshWarrantyResult.getStatus() == ExtendReadLockStatus.NEW) {
-              newWarranties
-                  .add(refreshWarrantyResult.getWarranty().new Binding(onum,
-                      version));
+            if (refreshReadResult.getStatus() == ExtendReadLockStatus.NEW) {
+              newWarranties.add(refreshReadResult.getWarranty().new Binding(
+                  onum, version));
             }
           }
         }
