@@ -42,7 +42,6 @@ import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.Worker;
 import fabric.worker.remote.RemoteWorker;
 
-//TODO: Code for managing leases on crash recovery.
 /**
  * <p>
  * An ObjectDB encapsulates the persistent state of the Store. It is responsible
@@ -834,8 +833,12 @@ public abstract class ObjectDB {
         if (expiry > System.currentTimeMillis()) {
           if (!leaseIssuer.replace(onum, curLease, newLease)) continue;
 
-          // TODO: Update longest lease here?
-          //updateLongestWarranty(newWarranty);
+          // If we crash, recover by "upgrading" leases to warranties until the
+          // longest lease or warranty has expired.
+          //
+          // TODO: there's probably a refactoring that should happen for this to
+          // be cleaner, but it works for now.
+          updateLongestWarranty(new VersionWarranty(newLease.expiry()));
         }
 
         result.status = ExtendReadLockStatus.NEW;
