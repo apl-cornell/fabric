@@ -419,7 +419,7 @@ public abstract class ObjectDB {
 
     final boolean extendBeyondCommitTime = !unpopular;
     ReadPrepareResult extendResult =
-        extendReadLock(resultObj, onum, commitTime, true,
+        extendReadLock(worker, resultObj, onum, commitTime, true,
             extendBeyondCommitTime, false);
 
     if (extendResult == EXTEND_READ_LOCK_DENIED)
@@ -508,7 +508,7 @@ public abstract class ObjectDB {
       int workerVersion = obj.getVersion();
       if (storeVersion != workerVersion) {
         ReadPrepareResult refreshReadResult =
-            refreshRead(scratchObj, onum);
+            refreshRead(worker, scratchObj, onum);
         versionConflicts.put(onum, new SerializedObjectAndTokens(storeCopy,
             refreshReadResult.warranty, refreshReadResult.lease));
         return VersionWarranty.EXPIRED_WARRANTY;
@@ -637,7 +637,8 @@ public abstract class ObjectDB {
         for (LongIterator it = onums.iterator(); it.hasNext();) {
           long onum = it.next();
           ReadPrepareResult extendResult =
-              extendReadLock(resultObj, onum, commitTime, true, false, true);
+              extendReadLock(workerIdentity.principal, resultObj, onum,
+                  commitTime, true, false, true);
           if (ENABLE_WARRANTY_REFRESHES) {
             if (extendResult.status == ExtendReadLockStatus.NEW) {
               try {
@@ -737,6 +738,8 @@ public abstract class ObjectDB {
    * Extends the version warranty of an object, if necessary and possible. The
    * object's resulting warranty is returned.
    *
+   * @param worker the worker trying to read lock the object, null if this is
+   *          not a worker's request.
    * @param onum the onum of the object whose warranty is to be extended.
    * @param minExpiry if the existing warranty already extends beyond this time,
    *          just return it without extending it.
@@ -754,8 +757,9 @@ public abstract class ObjectDB {
    *          warranty does not meet minExpiry and could not be renewed,
    *          EXTEND_WARRANTY_DENIE is returned.
    */
-  private ReadPrepareResult extendReadLock(ReadPrepareResult result, long onum,
-      long minExpiry, boolean minExpiryStrict, boolean extendBeyondMinExpiry,
+  private ReadPrepareResult extendReadLock(Principal worker,
+      ReadPrepareResult result, long onum, long minExpiry,
+      boolean minExpiryStrict, boolean extendBeyondMinExpiry,
       boolean ignoreWriteLocks) {
     while (true) {
       // Get the object's current warranty and determine whether it needs to be
@@ -810,11 +814,11 @@ public abstract class ObjectDB {
    * write-locked, then a new warranty cannot be created, and the existing one
    * is returned.
    */
-  public ReadPrepareResult refreshRead(ReadPrepareResult resultObj,
-      long onum) {
+  public ReadPrepareResult refreshRead(Principal worker,
+      ReadPrepareResult resultObj, long onum) {
     ReadPrepareResult result =
-        extendReadLock(resultObj, onum, System.currentTimeMillis(), false,
-            true, false);
+        extendReadLock(worker, resultObj, onum, System.currentTimeMillis(),
+            false, true, false);
     if (result == EXTEND_READ_LOCK_DENIED) {
       return new ReadPrepareResult(ExtendReadLockStatus.OLD,
           warrantyIssuer.get(onum), leaseIssuer.get(onum));

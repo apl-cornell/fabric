@@ -14,7 +14,6 @@ import java.util.logging.Level;
 import fabric.common.AuthorizationUtil;
 import fabric.common.ONumConstants;
 import fabric.common.ObjectGroup;
-import fabric.common.RWLease;
 import fabric.common.SerializedObject;
 import fabric.common.SerializedObjectAndTokens;
 import fabric.common.VersionWarranty;
@@ -249,7 +248,7 @@ public class TransactionManager {
 
           case BAD_VERSION:
             SerializedObject obj = database.read(onum);
-            result = database.refreshRead(resultObj, onum);
+            result = database.refreshRead(worker, resultObj, onum);
             versionConflicts.put(onum, new SerializedObjectAndTokens(obj,
                 result.getWarranty(), result.getLease()));
             continue;
@@ -444,7 +443,7 @@ public class TransactionManager {
     for (Entry<Integer> entry : onumsToVersions.entrySet()) {
       long onum = entry.getKey();
       ObjectDB.ReadPrepareResult refreshResult =
-          database.refreshRead(resultObj, onum);
+          database.refreshRead(null, resultObj, onum);
 
       if (ENABLE_WARRANTY_REFRESHES) {
         if (refreshResult.getStatus() == ExtendReadLockStatus.NEW) {
@@ -506,7 +505,7 @@ public class TransactionManager {
         int curVersion = database.getVersion(onum);
         if (curVersion != version) {
           ObjectDB.ReadPrepareResult refreshReadResult =
-              database.refreshRead(resultObj, onum);
+              database.refreshRead(worker, resultObj, onum);
           SerializedObject obj = database.read(onum);
 
           result.add(new SerializedObjectAndTokens(obj, refreshReadResult
