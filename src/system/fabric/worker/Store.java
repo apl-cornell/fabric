@@ -3,11 +3,13 @@ package fabric.worker;
 import java.io.Serializable;
 import java.util.Collection;
 
+import fabric.common.RWLease;
 import fabric.common.SerializedObjectAndTokens;
 import fabric.common.TransactionID;
 import fabric.common.VersionWarranty;
 import fabric.common.exceptions.AccessException;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.Pair;
 import fabric.lang.Object._Impl;
 import fabric.lang.security.NodePrincipal;
 import fabric.net.UnreachableNodeException;
@@ -42,8 +44,8 @@ public interface Store extends Serializable {
    *
    * @return the set of new version warranties.
    */
-  LongKeyMap<VersionWarranty> prepareTransactionReads(long tid,
-      boolean readOnly, LongKeyMap<Integer> reads, long commitTime)
+  Pair<LongKeyMap<VersionWarranty>, LongKeyMap<RWLease>> prepareTransactionReads(
+      long tid, boolean readOnly, LongKeyMap<Integer> reads, long commitTime)
       throws UnreachableNodeException, TransactionPrepareFailedException;
 
   /**

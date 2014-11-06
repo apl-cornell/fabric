@@ -37,6 +37,7 @@ import fabric.common.VersionWarranty;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.Pair;
 import fabric.lang.Object._Impl;
 import fabric.lang.Object._Proxy;
 import fabric.lang.security.Label;
@@ -727,12 +728,14 @@ public final class TransactionManager {
                       store, reads.size());
                 }
 
-                LongKeyMap<VersionWarranty> newWarranties =
+                Pair<LongKeyMap<VersionWarranty>, LongKeyMap<RWLease>> newWarrantiesAndLeases =
                     store.prepareTransactionReads(current.tid.topTid, readOnly,
                         reads, commitTime);
 
                 // Prepare was successful. Update the objects' warranties.
-                current.updateVersionWarranties(store, newWarranties);
+                current.updateVersionWarranties(store,
+                    newWarrantiesAndLeases.first);
+                current.updateRWLeases(store, newWarrantiesAndLeases.second);
               } catch (TransactionPrepareFailedException e) {
                 failures.put((RemoteNode<?>) store, e);
               } catch (UnreachableNodeException e) {

@@ -14,6 +14,7 @@ import java.util.logging.Level;
 import fabric.common.AuthorizationUtil;
 import fabric.common.ONumConstants;
 import fabric.common.ObjectGroup;
+import fabric.common.RWLease;
 import fabric.common.SerializedObject;
 import fabric.common.SerializedObjectAndTokens;
 import fabric.common.VersionWarranty;
@@ -186,7 +187,7 @@ public class TransactionManager {
    *           If the transaction would cause a conflict or if the worker is
    *           insufficiently privileged to execute the transaction.
    */
-  public LongKeyMap<VersionWarranty> prepareReads(
+  public Pair<LongKeyMap<VersionWarranty>, LongKeyMap<RWLease>> prepareReads(
       RemoteIdentity<RemoteWorker> workerIdentity, long tid,
       LongKeyMap<Integer> reads, long commitTime)
       throws TransactionPrepareFailedException {
@@ -214,7 +215,10 @@ public class TransactionManager {
 
       // This will store the warranties that will be sent back to the worker as
       // a result of the prepare.
-      LongKeyMap<VersionWarranty> prepareResult = new LongKeyHashMap<>();
+      Pair<LongKeyMap<VersionWarranty>, LongKeyMap<RWLease>> prepareResult =
+          new Pair<LongKeyMap<VersionWarranty>, LongKeyMap<RWLease>>(
+              new LongKeyHashMap<VersionWarranty>(),
+              new LongKeyHashMap<RWLease>());
 
       // This will store the new warranties we get.
       List<VersionWarranty.Binding> newWarranties =
@@ -241,7 +245,8 @@ public class TransactionManager {
             }
             //$FALL-THROUGH$
           case OLD:
-            prepareResult.put(onum, result.getWarranty());
+            prepareResult.first.put(onum, result.getWarranty());
+            prepareResult.second.put(onum, result.getLease());
             break;
 
           case BAD_VERSION:

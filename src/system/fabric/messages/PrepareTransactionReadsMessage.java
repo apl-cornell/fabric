@@ -4,11 +4,15 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import fabric.common.RWLease;
 import fabric.common.VersionWarranty;
 import fabric.common.net.RemoteIdentity;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.Oid;
+import fabric.worker.Store;
 import fabric.worker.TransactionPrepareFailedException;
+import fabric.worker.Worker;
 import fabric.worker.remote.RemoteWorker;
 
 /**
@@ -66,13 +70,16 @@ public class PrepareTransactionReadsMessage
 
   public static class Response implements Message.Response {
     public final LongKeyMap<VersionWarranty> newWarranties;
+    public final LongKeyMap<RWLease> newLeases;
 
     public Response() {
       this.newWarranties = null;
+      this.newLeases = null;
     }
 
-    public Response(LongKeyMap<VersionWarranty> newWarranties) {
+    public Response(LongKeyMap<VersionWarranty> newWarranties, LongKeyMap<RWLease> newLeases) {
       this.newWarranties = newWarranties;
+      this.newLeases = newLeases;
     }
   }
 
@@ -138,30 +145,64 @@ public class PrepareTransactionReadsMessage
   protected void writeResponse(DataOutput out, Response r) throws IOException {
     if (r.newWarranties == null) {
       out.writeBoolean(false);
-      return;
+    } else {
+      out.writeBoolean(true);
+      out.writeInt(r.newWarranties.size());
+      for (LongKeyMap.Entry<VersionWarranty> entry : r.newWarranties.entrySet()) {
+        out.writeLong(entry.getKey());
+        out.writeLong(entry.getValue().expiry());
+      }
     }
 
-    out.writeBoolean(true);
-    out.writeInt(r.newWarranties.size());
-    for (LongKeyMap.Entry<VersionWarranty> entry : r.newWarranties.entrySet()) {
-      out.writeLong(entry.getKey());
-      out.writeLong(entry.getValue().expiry());
+    if (r.newLeases == null) {
+      out.writeBoolean(false);
+    } else {
+      out.writeBoolean(true);
+      out.writeInt(r.newLeases.size());
+      for (LongKeyMap.Entry<RWLease> entry : r.newLeases.entrySet()) {
+        out.writeLong(entry.getKey());
+        if (entry.getValue().getOwner() != null) {
+          out.writeBoolean(true);
+          out.writeUTF(entry.getValue().getOwner().store.name());
+          out.writeLong(entry.getValue().getOwner().onum);
+        } else {
+          out.writeBoolean(false);
+        }
+        out.writeLong(entry.getValue().expiry());
+      }
     }
   }
 
   @Override
   protected Response readResponse(DataInput in) throws IOException {
-    if (!in.readBoolean()) {
-      return new Response();
+    LongKeyMap<VersionWarranty> newWarranties = null;
+    LongKeyMap<RWLease> newLeases = null;
+
+    if (in.readBoolean()) {
+      // Read in warranties
+      int warrantiesSize = in.readInt();
+      newWarranties = new LongKeyHashMap<>(warrantiesSize);
+      for (int i = 0; i < warrantiesSize; i++) {
+        long onum = in.readLong();
+        newWarranties.put(onum, new VersionWarranty(in.readLong()));
+      }
     }
 
-    int size = in.readInt();
-    LongKeyMap<VersionWarranty> newWarranties =
-        new LongKeyHashMap<VersionWarranty>(size);
-    for (int i = 0; i < size; i++) {
-      newWarranties.put(in.readLong(), new VersionWarranty(in.readLong()));
+    if (in.readBoolean()) {
+      // Read in warranties
+      int leasesSize = in.readInt();
+      newLeases = new LongKeyHashMap<>(leasesSize);
+      for (int i = 0; i < leasesSize; i++) {
+        long onum = in.readLong();
+        Oid owner = null;
+        if (in.readBoolean()) {
+          Store ownerStore = Worker.getWorker().getStore(in.readUTF());
+          owner = new Oid(ownerStore, in.readLong());
+        }
+        newLeases.put(onum, new RWLease(in.readLong(), owner));
+      }
     }
 
-    return new Response(newWarranties);
+    return new Response(newWarranties, newLeases);
   }
 }

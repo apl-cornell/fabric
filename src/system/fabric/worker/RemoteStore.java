@@ -16,6 +16,7 @@ import fabric.common.Crypto;
 import fabric.common.Logging;
 import fabric.common.ONumConstants;
 import fabric.common.ObjectGroup;
+import fabric.common.RWLease;
 import fabric.common.SerializedObject;
 import fabric.common.SerializedObjectAndTokens;
 import fabric.common.TransactionID;
@@ -142,14 +143,14 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
   }
 
   @Override
-  public LongKeyMap<VersionWarranty> prepareTransactionReads(long tid,
-      boolean readOnly, LongKeyMap<Integer> reads, long commitTime)
+  public Pair<LongKeyMap<VersionWarranty>, LongKeyMap<RWLease>> prepareTransactionReads(
+      long tid, boolean readOnly, LongKeyMap<Integer> reads, long commitTime)
       throws TransactionPrepareFailedException, UnreachableNodeException {
     PrepareTransactionReadsMessage.Response response =
         send(
             Worker.getWorker().authToStore,
             new PrepareTransactionReadsMessage(tid, readOnly, reads, commitTime));
-    return response.newWarranties;
+    return new Pair<>(response.newWarranties, response.newLeases);
   }
 
   @Override

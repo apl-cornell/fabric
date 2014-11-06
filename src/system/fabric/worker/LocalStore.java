@@ -10,6 +10,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import fabric.common.ONumConstants;
+import fabric.common.RWLease;
 import fabric.common.SerializedObjectAndTokens;
 import fabric.common.TransactionID;
 import fabric.common.VersionWarranty;
@@ -58,16 +59,17 @@ public final class LocalStore implements Store, Serializable {
   }
 
   @Override
-  public LongKeyMap<VersionWarranty> prepareTransactionReads(long tid,
-      boolean readOnly, LongKeyMap<Integer> reads, long commitTime) {
+  public Pair<LongKeyMap<VersionWarranty>, LongKeyMap<RWLease>> prepareTransactionReads(
+      long tid, boolean readOnly, LongKeyMap<Integer> reads, long commitTime) {
     // Note: since we assume local single threading we can ignore reads
     // (conflicts are impossible)
     WORKER_LOCAL_STORE_LOGGER.fine("Local transaction preparing reads");
-    return EMPTY_VERSION_WARRANTY_MAP;
+    return EMPTY_READ_TOKENS_MAP;
   }
 
-  private static final LongKeyMap<VersionWarranty> EMPTY_VERSION_WARRANTY_MAP =
-      new LongKeyHashMap<>();
+  private static final Pair<LongKeyMap<VersionWarranty>, LongKeyMap<RWLease>> EMPTY_READ_TOKENS_MAP =
+      new Pair<LongKeyMap<VersionWarranty>, LongKeyMap<RWLease>>(
+          new LongKeyHashMap<VersionWarranty>(), new LongKeyHashMap<RWLease>());
 
   @Override
   public void abortTransaction(TransactionID tid) {

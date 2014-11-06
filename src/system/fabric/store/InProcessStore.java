@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.List;
 
 import fabric.common.ObjectGroup;
+import fabric.common.RWLease;
 import fabric.common.SerializedObject;
 import fabric.common.SerializedObjectAndTokens;
 import fabric.common.TransactionID;
@@ -111,10 +112,10 @@ public class InProcessStore extends RemoteStore {
   }
 
   @Override
-  public LongKeyMap<VersionWarranty> prepareTransactionReads(long tid,
-      boolean readOnly, LongKeyMap<Integer> reads, long commitTime)
+  public Pair<LongKeyMap<VersionWarranty>, LongKeyMap<RWLease>> prepareTransactionReads(
+      long tid, boolean readOnly, LongKeyMap<Integer> reads, long commitTime)
       throws TransactionPrepareFailedException {
-    LongKeyMap<VersionWarranty> result =
+    Pair<LongKeyMap<VersionWarranty>, LongKeyMap<RWLease>> result =
         tm.prepareReads(localWorkerIdentity(), tid, reads, commitTime);
 
     if (readOnly) {
