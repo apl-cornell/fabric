@@ -731,6 +731,8 @@ public abstract class ObjectDB {
    */
   protected abstract void saveLongestWarranty();
 
+  //TODO: Either here or elsewhere, put in code to maybe get a new/extended
+  //lease
   /**
    * Extends the version warranty of an object, if necessary and possible. The
    * object's resulting warranty is returned.
@@ -759,16 +761,19 @@ public abstract class ObjectDB {
       // Get the object's current warranty and determine whether it needs to be
       // extended.
       VersionWarranty curWarranty = warrantyIssuer.get(onum);
+      RWLease curLease = leaseIssuer.get(onum);
       if (minExpiryStrict) {
         if (curWarranty.expiresAfterStrict(minExpiry)) {
           result.status = ExtendReadLockStatus.OLD;
           result.warranty = curWarranty;
+          result.lease = curLease;
           return result;
         }
       } else {
         if (curWarranty.expiresAfter(minExpiry, false)) {
           result.status = ExtendReadLockStatus.OLD;
           result.warranty = curWarranty;
+          result.lease = curLease;
           return result;
         }
       }
@@ -793,6 +798,7 @@ public abstract class ObjectDB {
 
       result.status = ExtendReadLockStatus.NEW;
       result.warranty = newWarranty;
+      result.lease = curLease;
       return result;
     }
   }
