@@ -763,6 +763,8 @@ public final class Log {
 
   /**
    * Update the warranties we needed to extend at the given store.
+   * After a transaction has been prepared, update version warranties for
+   * objects from that store.
    */
   void updateVersionWarranties(Store store,
       LongKeyMap<VersionWarranty> newWarranties) {
