@@ -33,19 +33,21 @@ where
   /**
    * Create a new group with the given name and the default maximum size.
    */
-  public native
+  public
   Group
   {           // side effects:
     {this} //⊓  // fields are updated
   }
   (
     final String {this} name
-  );
+  ){
+    super(name, groupOwner);
+  }
 
   /**
    * Create a new group with the given name and maximum size.
    */
-  public native
+  public
   Group
   {           // side effects:
     {this} ⊓  // fields are updated
@@ -58,7 +60,9 @@ where
   throws
   (
     NegativeArraySizeException{maxSize}
-  );
+  ){
+    super(name, groupOwner);
+  }
 
   //////////////////////////////////////////////////////////////////////////////
   // Group membership operations                                              //

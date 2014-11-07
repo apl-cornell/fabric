@@ -2,20 +2,21 @@ package fabil.extension;
 
 import polyglot.ast.AbstractExtFactory_c;
 import polyglot.ast.Ext;
+import polyglot.ast.ExtFactory;
 
 /**
  * Factory for FabIL extension nodes.
  */
 public class FabILExtFactory_c extends AbstractExtFactory_c implements
-    FabILExtFactory {
+FabILExtFactory {
 
   @Override
-  public Ext extFabricArrayTypeNode() {
+  public final Ext extFabricArrayTypeNode() {
     Ext e = extFabricArrayTypeNodeImpl();
 
-    FabILExtFactory nextExtFactory = (FabILExtFactory) nextExtFactory();
-    if (nextExtFactory != null) {
-      Ext e2 = nextExtFactory.extFabricArrayTypeNode();
+    ExtFactory nextEF = nextExtFactory();
+    if (nextEF instanceof FabILExtFactory) {
+      Ext e2 = ((FabILExtFactory) nextEF).extFabricArrayTypeNode();
       e = composeExts(e, e2);
     }
 
@@ -35,9 +36,9 @@ public class FabILExtFactory_c extends AbstractExtFactory_c implements
   public final Ext extAtomic() {
     Ext e = extAtomicImpl();
 
-    FabILExtFactory nextExtFactory = (FabILExtFactory) nextExtFactory();
-    if (nextExtFactory != null) {
-      Ext e2 = nextExtFactory.extAtomic();
+    ExtFactory nextEF = nextExtFactory();
+    if (nextEF instanceof FabILExtFactory) {
+      Ext e2 = ((FabILExtFactory) nextEF).extAtomic();
       e = composeExts(e, e2);
     }
     return postExtAtomic(e);
@@ -55,9 +56,9 @@ public class FabILExtFactory_c extends AbstractExtFactory_c implements
   public final Ext extAbort() {
     Ext e = extAbortImpl();
 
-    FabILExtFactory nextExtFactory = (FabILExtFactory) nextExtFactory();
-    if (nextExtFactory != null) {
-      Ext e2 = nextExtFactory.extAbort();
+    ExtFactory nextEF = nextExtFactory();
+    if (nextEF instanceof FabILExtFactory) {
+      Ext e2 = ((FabILExtFactory) nextEF).extAbort();
       e = composeExts(e, e2);
     }
     return postExtAbort(e);
@@ -75,9 +76,9 @@ public class FabILExtFactory_c extends AbstractExtFactory_c implements
   public final Ext extRetry() {
     Ext e = extRetryImpl();
 
-    FabILExtFactory nextExtFactory = (FabILExtFactory) nextExtFactory();
-    if (nextExtFactory != null) {
-      Ext e2 = nextExtFactory.extRetry();
+    ExtFactory nextEF = nextExtFactory();
+    if (nextEF instanceof FabILExtFactory) {
+      Ext e2 = ((FabILExtFactory) nextEF).extRetry();
       e = composeExts(e, e2);
     }
     return postExtRetry(e);
@@ -105,9 +106,9 @@ public class FabILExtFactory_c extends AbstractExtFactory_c implements
   public final Ext extFabricArrayInit() {
     Ext e = extFabricArrayInitImpl();
 
-    FabILExtFactory nextExtFactory = (FabILExtFactory) nextExtFactory();
-    if (nextExtFactory != null) {
-      Ext e2 = nextExtFactory.extFabricArrayInit();
+    ExtFactory nextEF = nextExtFactory();
+    if (nextEF instanceof FabILExtFactory) {
+      Ext e2 = ((FabILExtFactory) nextEF).extFabricArrayInit();
       e = composeExts(e, e2);
     }
 
@@ -130,6 +131,11 @@ public class FabILExtFactory_c extends AbstractExtFactory_c implements
   @Override
   protected Ext extCallImpl() {
     return new CallExt_c();
+  }
+
+  @Override
+  protected Ext extCaseImpl() {
+    return new CaseExt_c();
   }
 
   @Override
@@ -203,12 +209,12 @@ public class FabILExtFactory_c extends AbstractExtFactory_c implements
   }
 
   @Override
-  public Ext extNewFabricArray() {
+  public final Ext extNewFabricArray() {
     Ext e = extNewFabricArrayImpl();
 
-    FabILExtFactory nextExtFactory = (FabILExtFactory) nextExtFactory();
-    if (nextExtFactory != null) {
-      Ext e2 = nextExtFactory.extNewFabricArray();
+    ExtFactory nextEF = nextExtFactory();
+    if (nextEF instanceof FabILExtFactory) {
+      Ext e2 = ((FabILExtFactory) nextEF).extNewFabricArray();
       e = composeExts(e, e2);
     }
 
@@ -252,9 +258,9 @@ public class FabILExtFactory_c extends AbstractExtFactory_c implements
   public final Ext extProviderLabel() {
     Ext e = extProviderLabelImpl();
 
-    FabILExtFactory nextExtFactory = (FabILExtFactory) nextExtFactory();
-    if (nextExtFactory != null) {
-      Ext e2 = nextExtFactory.extProviderLabel();
+    ExtFactory nextEF = nextExtFactory();
+    if (nextEF instanceof FabILExtFactory) {
+      Ext e2 = ((FabILExtFactory) nextEF).extProviderLabel();
       e = composeExts(e, e2);
     }
     return postExtProviderLabel(e);
@@ -269,23 +275,83 @@ public class FabILExtFactory_c extends AbstractExtFactory_c implements
   }
 
   @Override
-  public Ext extCodebaseNode() {
-    return extNode();
+  public final Ext extCodebaseNode() {
+    Ext e = extCodebaseNodeImpl();
+
+    ExtFactory nextEF = nextExtFactory();
+    if (nextEF instanceof FabILExtFactory) {
+      Ext e2 = ((FabILExtFactory) nextEF).extCodebaseNode();
+      e = composeExts(e, e2);
+    }
+    return postExtCodebaseNode(e);
+  }
+
+  protected Ext extCodebaseNodeImpl() {
+    return extNodeImpl();
+  }
+
+  protected Ext postExtCodebaseNode(Ext ext) {
+    return postExtNode(ext);
   }
 
   @Override
-  public Ext extCodebaseDecl() {
-    return extNode();
+  public final Ext extCodebaseDecl() {
+    Ext e = extCodebaseDeclImpl();
+
+    ExtFactory nextEF = nextExtFactory();
+    if (nextEF instanceof FabILExtFactory) {
+      Ext e2 = ((FabILExtFactory) nextEF).extCodebaseDecl();
+      e = composeExts(e, e2);
+    }
+    return postExtCodebaseDecl(e);
+  }
+
+  protected Ext extCodebaseDeclImpl() {
+    return extNodeImpl();
+  }
+
+  protected Ext postExtCodebaseDecl(Ext ext) {
+    return postExtNode(ext);
   }
 
   @Override
-  public Ext extCodebaseTypeNode() {
-    return extCanonicalTypeNode();
+  public final Ext extCodebaseTypeNode() {
+    Ext e = extCodebaseTypeNodeImpl();
+
+    ExtFactory nextEF = nextExtFactory();
+    if (nextEF instanceof FabILExtFactory) {
+      Ext e2 = ((FabILExtFactory) nextEF).extCodebaseTypeNode();
+      e = composeExts(e, e2);
+    }
+    return postExtCodebaseTypeNode(e);
+  }
+
+  protected Ext extCodebaseTypeNodeImpl() {
+    return extCanonicalTypeNodeImpl();
+  }
+
+  protected Ext postExtCodebaseTypeNode(Ext ext) {
+    return postExtCanonicalTypeNode(ext);
   }
 
   @Override
-  protected Ext extCaseImpl() {
-    return new CaseExt_c();
+  public final Ext extStoreGetter() {
+    Ext e = extStoreGetterImpl();
+
+    ExtFactory nextEF = nextExtFactory();
+    if (nextEF instanceof FabILExtFactory) {
+      Ext e2 = ((FabILExtFactory) nextEF).extStoreGetter();
+      e = composeExts(e, e2);
+    }
+    return postExtStoreGetter(e);
+  }
+
+  protected Ext extStoreGetterImpl() {
+    return extExprImpl();
+  }
+
+  protected Ext postExtStoreGetter(Ext ext) {
+    return postExtExpr(ext);
   }
 
 }

@@ -8,8 +8,8 @@ import javax.tools.FileObject;
 public class PublishedLocalSource extends DerivedLocalSource {
 
   protected PublishedLocalSource(String name, FileObject derivedFrom,
-      boolean userSpecified, URI namespace) throws IOException {
-    super(name, derivedFrom, userSpecified, namespace);
+      URI namespace) throws IOException {
+    super(name, derivedFrom, namespace);
   }
 
   // Allow PublishedLocalSource to be equal to RemoteSource

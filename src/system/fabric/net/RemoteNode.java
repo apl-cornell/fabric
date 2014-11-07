@@ -18,7 +18,7 @@ import fabric.messages.Message;
  * Abstracts remote stores and remote workers.
  */
 public abstract class RemoteNode<This extends RemoteNode<This>> implements
-    Serializable {
+Serializable {
   /**
    * The node's Fabric node name. (Likely different from its DNS host name.)
    */

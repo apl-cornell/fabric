@@ -2,17 +2,18 @@ package util;
 
 public class Meet extends AbstractPrincipal {
 
-  public native
+  public
   Meet
   (
     Store     {this} store,
     Principal {this} left,
     Principal {this} right
   )
-  where
-    store actsfor (left,right);
+  where store actsfor (left,right) {
+    super(null);
+  }
 
-  public native
+  public
   Meet
   (
     Store     {this} store,
@@ -20,8 +21,9 @@ public class Meet extends AbstractPrincipal {
     Principal {this} left,
     Principal {this} right
   )
-  where
-    store actsfor (left,right);
+  where store actsfor (left,right) {
+    super(name);
+  }
 
   //////////////////////////////////////////////////////////////////////////////
   // Principal methods                                                        //

@@ -119,7 +119,7 @@ public class MakeSignature {
     for (Field f : c.getDeclaredFields()) {
       int mod =
           f.getModifiers()
-              & ~(Modifier.VOLATILE | Modifier.TRANSIENT | Modifier.FINAL);
+          & ~(Modifier.VOLATILE | Modifier.TRANSIENT | Modifier.FINAL);
 
       if (visible(mod)) {
         out.println("  " + Modifier.toString(mod) + " "
@@ -218,7 +218,7 @@ public class MakeSignature {
           break;
         case 'e':
           opts.fields =
-              opts.prots = opts.privs = opts.packs = opts.inners = true;
+          opts.prots = opts.privs = opts.packs = opts.inners = true;
           break;
         }
       }

@@ -2,6 +2,7 @@ package fabric.ast;
 
 import polyglot.ast.Ext;
 import polyglot.ast.ExtFactory;
+import fabric.extension.ClassBodyExt_c;
 import fabric.extension.FabricExt;
 import fabric.extension.NewExt_c;
 import fabric.extension.NewFabricArrayExt_c;
@@ -12,7 +13,7 @@ import fabric.extension.PrincipalExprExt_c;
 /**
  * This class constructs {@link FabricExt} objects for the Fabric language
  * constructs.
- * 
+ *
  * @author mdgeorge
  */
 public class FabricFabExtFactory_c extends AbstractFabExtFactory_c {
@@ -23,6 +24,11 @@ public class FabricFabExtFactory_c extends AbstractFabExtFactory_c {
 
   public FabricFabExtFactory_c(ExtFactory next) {
     super(next);
+  }
+
+  @Override
+  protected Ext extClassBodyImpl() {
+    return new ClassBodyExt_c();
   }
 
   @Override

@@ -9,8 +9,8 @@ import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.remote.RemoteWorker;
 
 public class CommitTransactionMessage
-    extends
-    Message<CommitTransactionMessage.Response, TransactionCommitFailedException> {
+extends
+Message<CommitTransactionMessage.Response, TransactionCommitFailedException> {
   // ////////////////////////////////////////////////////////////////////////////
   // message contents //
   // ////////////////////////////////////////////////////////////////////////////

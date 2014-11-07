@@ -3,6 +3,7 @@ package fabil.ast;
 import java.util.List;
 
 import polyglot.ast.Expr_c;
+import polyglot.ast.Ext;
 import polyglot.ast.Node;
 import polyglot.ast.Term;
 import polyglot.util.CodeWriter;
@@ -13,10 +14,17 @@ import polyglot.visit.PrettyPrinter;
 import polyglot.visit.TypeChecker;
 import fabil.types.FabILTypeSystem;
 
+//XXX Should be replaced with extension
+@Deprecated
 public class StoreGetter_c extends Expr_c implements StoreGetter {
 
+  @Deprecated
   public StoreGetter_c(Position pos) {
-    super(pos);
+    this(pos, null);
+  }
+
+  public StoreGetter_c(Position pos, Ext ext) {
+    super(pos, ext);
   }
 
   @Override

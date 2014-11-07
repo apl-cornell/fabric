@@ -28,7 +28,7 @@ import fabric.lang.Codebase;
 import fabric.lang.FClass;
 
 public class FabILParsedClassType_c extends ParsedClassType_c implements
-    FabILParsedClassType {
+FabILParsedClassType {
 
   /**
    * The namespace used to resolve the dependencies of this class

@@ -1,0 +1,18 @@
+#!/bin/bash
+
+# A helper script for running stuff in a new xterm window.
+
+if [[ -z "${XTERM}" ]] ; then
+  XTERM=xterm
+fi
+
+TITLE="$1"
+shift
+
+TITLE_SWITCH="-T"
+
+# Special case for gnome-terminal's xterm-incompatibility.
+[[ "${XTERM}" == "gnome-terminal" ]] && TITLE_SWITCH="-t"
+
+"${XTERM}" ${TITLE_SWITCH} "${TITLE}" -e "$@"
+

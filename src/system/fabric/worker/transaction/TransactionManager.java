@@ -141,7 +141,7 @@ public final class TransactionManager {
   }
 
   private static final Map<Thread, TransactionManager> instanceMap =
-      new WeakHashMap<Thread, TransactionManager>();
+      new WeakHashMap<>();
 
   public static TransactionManager getInstance() {
     Thread thread = Thread.currentThread();
@@ -300,7 +300,7 @@ public final class TransactionManager {
 
   /**
    * Commits the transaction if possible; otherwise, aborts the transaction.
-   * 
+   *
    * @throws AbortException
    *           if the transaction was aborted.
    * @throws TransactionRestartingException
@@ -445,7 +445,7 @@ public final class TransactionManager {
   /**
    * Sends prepare messages to the cohorts in a distributed transaction. Also
    * sends abort messages if any cohort fails to prepare.
-   * 
+   *
    * @throws TransactionRestartingException
    *           if the prepare fails.
    */
@@ -458,7 +458,7 @@ public final class TransactionManager {
    * Sends prepare messages to the given set of stores and workers. If the
    * prepare fails, the local portion and given branch of the transaction is
    * rolled back.
-   * 
+   *
    * @throws TransactionRestartingException
    *           if the prepare fails.
    */
@@ -495,8 +495,7 @@ public final class TransactionManager {
       }
     }
 
-    List<Future<?>> futures =
-        new ArrayList<Future<?>>(stores.size() + workers.size());
+    List<Future<?>> futures = new ArrayList<>(stores.size() + workers.size());
 
     // Go through each worker and send prepare messages in parallel.
     for (final RemoteWorker worker : workers) {
@@ -659,8 +658,7 @@ public final class TransactionManager {
           Collections.synchronizedList(new ArrayList<RemoteNode<?>>());
       final List<RemoteNode<?>> failed =
           Collections.synchronizedList(new ArrayList<RemoteNode<?>>());
-      List<Future<?>> futures =
-          new ArrayList<Future<?>>(stores.size() + workers.size());
+      List<Future<?>> futures = new ArrayList<>(stores.size() + workers.size());
 
       // Send commit messages to the workers in parallel.
       for (final RemoteWorker worker : workers) {
@@ -749,7 +747,7 @@ public final class TransactionManager {
 
   /**
    * Sends abort messages to those nodes that haven't reported failures.
-   * 
+   *
    * @param stores
    *          the set of stores involved in the transaction.
    * @param workers
@@ -895,7 +893,7 @@ public final class TransactionManager {
 
   /**
    * This should be called <i>before</i> the object is modified.
-   * 
+   *
    * @return whether a new (top-level) transaction was created.
    */
   public boolean registerWrite(_Impl obj) {
@@ -938,7 +936,7 @@ public final class TransactionManager {
     boolean hadToWait = false;
     try {
       // This is the set of logs for those transactions we're waiting for.
-      Set<Log> waitsFor = new HashSet<Log>();
+      Set<Log> waitsFor = new HashSet<>();
 
       boolean firstWait = true;
       boolean deadlockDetectRequested = false;
@@ -1107,7 +1105,7 @@ public final class TransactionManager {
 
   /**
    * Checks whether any of the objects used by a transaction are stale.
-   * 
+   *
    * @return true iff stale objects were found
    */
   public boolean checkForStaleObjects() {
@@ -1116,7 +1114,7 @@ public final class TransactionManager {
     final List<RemoteNode<?>> nodesWithStaleObjects =
         Collections.synchronizedList(new ArrayList<RemoteNode<?>>(
             numNodesToContact));
-    List<Future<?>> futures = new ArrayList<Future<?>>(numNodesToContact);
+    List<Future<?>> futures = new ArrayList<>(numNodesToContact);
 
     // Go through each worker and send check messages in parallel.
     for (final RemoteWorker worker : current.workersCalled) {

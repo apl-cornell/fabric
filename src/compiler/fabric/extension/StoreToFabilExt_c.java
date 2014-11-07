@@ -8,7 +8,7 @@ import polyglot.types.SemanticException;
 import fabric.ast.Store;
 
 /**
- * 
+ *
  */
 public class StoreToFabilExt_c extends ToJavaExt_c implements ToJavaExt {
 

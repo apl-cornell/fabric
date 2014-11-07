@@ -62,7 +62,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
 
   /**
    * Returns the interface translation of the class declaration.
-   * 
+   *
    * @see fabil.extension.FabILExt_c#rewriteProxies(fabil.visit.ProxyRewriter)
    */
   @Override
@@ -82,8 +82,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     if (classDecl.flags().isInterface()) {
       // Already an interface. Leave existing members alone, but insert a proxy
       // class.
-      List<ClassMember> members =
-          new ArrayList<ClassMember>(classDecl.body().members());
+      List<ClassMember> members = new ArrayList<>(classDecl.body().members());
       members.add(makeProxy(pr, pr.typeSystem().FObject()));
 
       // If necessary, add fabric.lang.Object as a super-interface.
@@ -97,7 +96,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
       }
 
       if (needObject) {
-        interfaces = new ArrayList<TypeNode>(interfaces);
+        interfaces = new ArrayList<>(interfaces);
         interfaces.add(nf.CanonicalTypeNode(Position.compilerGenerated(),
             ts.FObject()));
       }
@@ -116,7 +115,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     }
 
     // The super class will be turned into an interface that we will extend.
-    List<TypeNode> interfaces = new ArrayList<TypeNode>(classDecl.interfaces());
+    List<TypeNode> interfaces = new ArrayList<>(classDecl.interfaces());
     interfaces.add(superClass);
     ClassDecl result = classDecl.interfaces(interfaces);
     result = result.superClass(null);
@@ -131,7 +130,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     // Rewrite the members.
     ClassBody body = classDecl.body();
     List<ClassMember> oldMembers = body.members();
-    List<ClassMember> members = new ArrayList<ClassMember>(oldMembers.size());
+    List<ClassMember> members = new ArrayList<>(oldMembers.size());
     for (ClassMember m : oldMembers) {
       members.addAll(ext(m).interfaceMember(pr, classDecl));
 
@@ -167,7 +166,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     // Rewrite the members.
     ClassBody body = classDecl.body();
     List<ClassMember> oldMembers = body.members();
-    List<ClassMember> members = new ArrayList<ClassMember>(oldMembers.size());
+    List<ClassMember> members = new ArrayList<>(oldMembers.size());
     for (ClassMember m : oldMembers)
       members.addAll(ext(m).proxyMember(pr, classDecl));
 
@@ -202,18 +201,18 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
    * Generates proxy methods for methods contained in the given class type and
    * all the interfaces it implements.
    */
-  private List<ClassMember> makeProxyMethods(ProxyRewriter pr, ClassType ct) {
-    List<ClassMember> result = new ArrayList<ClassMember>();
+  private List<ClassMember> makeProxyMethods(ProxyRewriter pr,
+      final ClassType ct) {
+    final FabILTypeSystem ts = pr.typeSystem();
+    List<ClassMember> result = new ArrayList<>();
 
-    Queue<ClassType> toVisit = new LinkedList<ClassType>();
-    Set<ClassType> visitedTypes = new HashSet<ClassType>();
-    visitedTypes.add(pr.typeSystem().Object());
-    visitedTypes.add(pr.typeSystem().FObject());
+    Queue<ClassType> toVisit = new LinkedList<>();
+    Set<ClassType> visitedTypes = new HashSet<>();
 
     // Maps method names to sets of formal argument types. This prevents us
     // from generating duplicate methods.
     Map<String, Set<List<? extends Type>>> translatedInstances =
-        new HashMap<String, Set<List<? extends Type>>>();
+        new HashMap<>();
 
     // First populate the above data structures with the super class and the
     // type hierarchy above that. The proxy's super class will already have
@@ -234,10 +233,13 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
         // will work correctly.
         if (mi.flags().isStatic()) continue;
 
+        // Don't count private methods either.
+        if (mi.flags().isPrivate()) continue;
+
         String name = mi.name();
         Set<List<? extends Type>> formalTypes = translatedInstances.get(name);
         if (formalTypes == null) {
-          formalTypes = new HashSet<List<? extends Type>>();
+          formalTypes = new HashSet<>();
           translatedInstances.put(name, formalTypes);
         }
         formalTypes.add(mi.formalTypes());
@@ -254,20 +256,28 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
       List<? extends MethodInstance> methods = type.methods();
       for (MethodInstance mi : methods) {
         String name = mi.name();
+
+        // Don't generate proxies for private methods.
+        if (mi.flags().isPrivate()) continue;
+
         List<? extends Type> types = mi.formalTypes();
 
         // Ensure this isn't a duplicate method.
         Set<List<? extends Type>> formalTypes = translatedInstances.get(name);
         if (formalTypes == null) {
-          formalTypes = new HashSet<List<? extends Type>>();
+          formalTypes = new HashSet<>();
           translatedInstances.put(name, formalTypes);
         }
 
         if (formalTypes.contains(types)) continue;
         formalTypes.add(types);
 
-        // Don't generate proxies for private methods.
-        if (!mi.flags().isPrivate()) result.add(makeProxyMethod(pr, mi));
+        // Don't generate proxies for methods that were already implemented by
+        // a super class.
+        if (ts.findImplementingMethod(ct.superType().toClass(), mi) != null)
+          continue;
+
+        result.add(makeProxyMethod(pr, mi));
       }
 
       toVisit.addAll((Collection<? extends ClassType>) type.interfaces());
@@ -285,7 +295,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     // The end result will be quasiquoted. Construct the quasiquoted string and
     // list of substitution arguments in tandem.
     StringBuffer methodDecl = new StringBuffer();
-    List<Object> subst = new ArrayList<Object>();
+    List<Object> subst = new ArrayList<>();
 
     // Since the method will be implementing part of an interface, make the
     // method public and non-abstract.
@@ -321,7 +331,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     List<? extends Type> throwTypes = mi.throwTypes();
     if (!throwTypes.isEmpty()) {
       methodDecl.append("throws %LT ");
-      subst.add(new ArrayList<Type>(throwTypes));
+      subst.add(new ArrayList<>(throwTypes));
     }
     if (!mi.flags().isNative()) {
       methodDecl.append("{ " + (returnType.isVoid() ? "" : "return "));
@@ -356,7 +366,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     // Rewrite the members.
     ClassBody body = classDecl.body();
     List<ClassMember> oldMembers = body.members();
-    List<ClassMember> members = new ArrayList<ClassMember>(oldMembers.size());
+    List<ClassMember> members = new ArrayList<>(oldMembers.size());
     for (ClassMember m : oldMembers) {
       members.addAll(ext(m).implMember(pr, classDecl));
     }
@@ -393,13 +403,10 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     // Rewrite the members.
     ClassBody body = classDecl.body();
     List<ClassMember> oldMembers = body.members();
-    List<ClassMember> interfaceMembers =
-        new ArrayList<ClassMember>(oldMembers.size());
-    List<ClassMember> proxyMembers =
-        new ArrayList<ClassMember>(oldMembers.size());
-    List<ClassMember> implMembers =
-        new ArrayList<ClassMember>(oldMembers.size());
-    List<Stmt> implInitMembers = new ArrayList<Stmt>(oldMembers.size());
+    List<ClassMember> interfaceMembers = new ArrayList<>(oldMembers.size());
+    List<ClassMember> proxyMembers = new ArrayList<>(oldMembers.size());
+    List<ClassMember> implMembers = new ArrayList<>(oldMembers.size());
+    List<Stmt> implInitMembers = new ArrayList<>(oldMembers.size());
 
     for (ClassMember m : oldMembers) {
       interfaceMembers.addAll(ext(m).staticInterfaceMember(pr, classDecl));
@@ -482,7 +489,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
         qq.parseDecl("interface _Static extends fabric.lang.Object, Cloneable "
             + "{%LM}", (Object) interfaceMembers);
 
-    List<ClassMember> result = new ArrayList<ClassMember>(2);
+    List<ClassMember> result = new ArrayList<>(2);
     result.add(interfaceDecl);
     return result;
   }
@@ -490,8 +497,8 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
   private List<ClassMember> makeSerializers(ProxyRewriter pr,
       List<ClassMember> members) {
     FabILTypeSystem ts = pr.typeSystem();
-    List<ClassMember> result = new ArrayList<ClassMember>(3);
-    List<FieldDecl> fields = new LinkedList<FieldDecl>();
+    List<ClassMember> result = new ArrayList<>(3);
+    List<FieldDecl> fields = new LinkedList<>();
 
     // Determine the list of fields to serialize.
     for (ClassMember m : members) {
@@ -506,7 +513,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     QQ qq = pr.qq();
     StringBuilder out = new StringBuilder();
     StringBuilder in = new StringBuilder();
-    List<Object> inSubst = new ArrayList<Object>();
+    List<Object> inSubst = new ArrayList<>();
 
     for (FieldDecl f : fields) {
       Type t = f.declType();
@@ -614,7 +621,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     QQ qq = tr.qq();
     NodeFactory nf = tr.nodeFactory();
     FabILTypeSystem ts = tr.typeSystem();
-    List<TypeNode> interfaces = new ArrayList<TypeNode>(decl.interfaces());
+    List<TypeNode> interfaces = new ArrayList<>(decl.interfaces());
     interfaces.add(nf.CanonicalTypeNode(Position.compilerGenerated(),
         ts.FabricThread()));
     ClassDecl result = decl.interfaces(interfaces);
@@ -660,8 +667,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     TypeNode tnClass = rr.qq().parseType("java.lang.Class");
     TypeNode tnObject = rr.qq().parseType("java.lang.Object");
 
-    List<ClassMember> members =
-        new ArrayList<ClassMember>(cd.body().members().size());
+    List<ClassMember> members = new ArrayList<>(cd.body().members().size());
 
     for (ClassMember cm : cd.body().members()) {
       members.add(cm);
@@ -682,7 +688,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
         String fieldName = "$paramTypes" + (freshTid++);
 
         // Skip the first formal in the Fabric remote wrapper
-        List<Expr> formalTypes = new ArrayList<Expr>(realFormals.size());
+        List<Expr> formalTypes = new ArrayList<>(realFormals.size());
         for (Formal f : realFormals) {
           TypeNode tn = f.type();
           formalTypes.add(nf.ClassLit(Position.compilerGenerated(), tn));
@@ -701,7 +707,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
         members.add(fd);
 
         // Now create the wrapper method.
-        List<Expr> locals = new ArrayList<Expr>(realFormals.size());
+        List<Expr> locals = new ArrayList<>(realFormals.size());
         for (Formal f : realFormals) {
           locals.add(nf.Local(Position.compilerGenerated(), f.id()));
         }
@@ -711,11 +717,11 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
           args = nf.NullLit(Position.compilerGenerated());
         } else {
           args = nf.NewArray(Position.compilerGenerated(), tnObject, 1, // one-dimensional
-                                                                        // array
+              // array
               nf.ArrayInit(Position.compilerGenerated(), locals));
         }
 
-        List<Expr> arguments = new ArrayList<Expr>(4);
+        List<Expr> arguments = new ArrayList<>(4);
         arguments.add(nf.This(Position.compilerGenerated()));
         arguments.add(nf.StringLit(Position.compilerGenerated(), realName));
         arguments.add(nf.AmbExpr(Position.compilerGenerated(),
@@ -763,7 +769,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
                   Position.compilerGenerated(), md.returnType(), castExpr));
         }
 
-        List<Stmt> catchStmts = new ArrayList<Stmt>();
+        List<Stmt> catchStmts = new ArrayList<>();
         catchStmts.add(rr.qq().parseStmt(
             "java.lang.Throwable $t = $e.getCause();"));
         // We need to catch RemoteCallException, and rethrow the cause.
@@ -779,8 +785,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
                 "try {\n" + "  %S\n" + "}\n" + "catch (%T $e) {\n" + "  %LS\n"
                     + "}", ret, ts.RemoteCallException(), catchStmts);
 
-        List<Formal> newFormals =
-            new ArrayList<Formal>(md.formals().size() + 1);
+        List<Formal> newFormals = new ArrayList<>(md.formals().size() + 1);
         newFormals.add(remoteWorker);
         newFormals.addAll(md.formals());
         MethodDecl wrapper =

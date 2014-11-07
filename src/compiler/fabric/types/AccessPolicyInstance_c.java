@@ -8,7 +8,7 @@ import polyglot.types.TypeSystem;
 import polyglot.util.Position;
 
 /**
- * 
+ *
  */
 public class AccessPolicyInstance_c implements AccessPolicyInstance {
 
@@ -66,7 +66,7 @@ public class AccessPolicyInstance_c implements AccessPolicyInstance {
   @Override
   public boolean equalsImpl(TypeObject t) {
     if (t == this) return true;
-    
+
     if (t instanceof AccessPolicyInstance) {
       AccessPolicyInstance api = (AccessPolicyInstance) t;
       return api.container().equals(container) && api.policy().equals(policy);
@@ -75,7 +75,7 @@ public class AccessPolicyInstance_c implements AccessPolicyInstance {
   }
 
   @Override
-  public Object copy() {
+  public AccessPolicyInstance copy() {
     return new AccessPolicyInstance_c(pos, container, policy);
   }
 }

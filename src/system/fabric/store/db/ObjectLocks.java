@@ -37,10 +37,10 @@ final class ObjectLocks {
 
   /**
    * Registers a write lock for the given TID.
-   * 
+   *
    * @throws UnableToLockException
    *          when a conflicting lock is held. Write locks are always considered
-   *          conflicting. Read locks are considered conflicting if they are 
+   *          conflicting. Read locks are considered conflicting if they are
    *          held by transactions whose TID is different from the one
    *          requesting the lock.
    */
@@ -61,7 +61,7 @@ final class ObjectLocks {
 
   /**
    * Removes a write lock for the given TID.
-   * 
+   *
    * @return true iff a lock was found for the given TID.
    */
   synchronized boolean unlockForWrite(long tid) {
@@ -75,7 +75,7 @@ final class ObjectLocks {
 
   /**
    * Registers a read lock for the given TID and worker.
-   * 
+   *
    * @throws UnableToLockException
    *          when a conflicting lock is held. Write locks are always
    *          conflicting. Read locks never conflict.
@@ -98,7 +98,7 @@ final class ObjectLocks {
 
   /**
    * Removes a read lock for the given TID and worker.
-   * 
+   *
    * @return true iff a lock was found for the given TID and worker.
    */
   synchronized boolean unlockForRead(long tid, Principal worker) {

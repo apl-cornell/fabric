@@ -69,10 +69,6 @@
   <!-- Tests directory -->
   <property name="tests" location="${fabric.home}/tests"/>
 
-  <!-- XXX: THIS IS A BIT OF A HACK -->
-  <!-- Top N directory -->
-  <property name="top-n" location="${fabric.home}/tests/playground/memoization/top-n"/>
-
   <!-- tmp directory (for creating the distribution) -->
   <property name="tmp" location="${fabric.home}/tmp"/>
 
@@ -94,7 +90,7 @@
   <property name="polyglot.url.prefix"
       value="http://www.cs.cornell.edu/Projects/polyglot/src/polyglot-"/>
   <property name="polyglot.url.suffix"
-      value="-src.tar.gz"/>
+      value="-src.zip"/>
 
   <!-- Jar files -->
   <property name="jar.base" location="${lib}/fabric.jar" />
@@ -130,10 +126,7 @@
 
     <!-- Check for presence of JDK. -->
     <condition property="jdk.exists" value="true">
-     <or>
-      <available file="${jdk.home}/bin/javac" />
-      <available file="${jdk.home}/bin/javac.exe" />
-     </or>
+      <available file="${jdk.home}/lib/tools.jar" />
     </condition>
 
     <!-- Check for presence of Polyglot. -->
@@ -149,7 +142,7 @@
     </condition>
 
     <!-- Error handling: JDK not found and jdk.home not set. -->
-    <fail message="Failed to find javac. Edit 'config.properties' and set the 'jdk.home' property.">
+    <fail message="Failed to find tools.jar. Edit 'config.properties' and set the 'jdk.home' property.">
       <condition>
         <and>
           <isfalse value="${jdk.exists}"/>
@@ -159,7 +152,7 @@
     </fail>
 
     <!-- Error handling: JDK not found. -->
-    <fail message="Failed to find javac. Ensure the 'jdk.home' property is correct in 'config.properties'.">
+    <fail message="Failed to find tools.jar. Ensure the 'jdk.home' property is correct in 'config.properties'.">
       <condition>
         <isfalse value="${jdk.exists}"/>
       </condition>
@@ -254,7 +247,27 @@
 
   <target name="configure-version" unless="fabric.version">
     <property file="${fabric.home}/version.properties" prefix="fabric" />
-    <property name="fabric.version" value="${fabric.version.major}.${fabric.version.minor}.${fabric.version.patch}" />
+    <!-- Handle branched versions. -->
+    <condition
+        property="fabric.version"
+        value="${fabric.version.major}.${fabric.version.minor}.${fabric.version.patch}-${fabric.version.branch}">
+      <and>
+        <isset property="fabric.version.branch"/>
+        <not>
+          <or>
+            <equals arg1="${fabric.version.branch}" arg2="" trim="true"/>
+            <equals arg1="${fabric.version.branch}" arg2="master"
+                trim="true"/>
+          </or>
+        </not>
+      </and>
+    </condition>
+    <!-- Handle unbranched versions. -->
+    <condition
+        property="fabric.version"
+        value="${fabric.version.major}.${fabric.version.minor}.${fabric.version.patch}">
+      <not><isset property="fabric.version"/></not>
+    </condition>
   </target>
 
   <target name="config.properties-check">
@@ -452,18 +465,6 @@
       description="Builds the Fabric application examples">
     <subant target="build-all">
       <fileset dir="${examples}" includes="build.xml" />
-    </subant>
-  </target>
-
-  <!--XXX: This is a bit of a hack for the NSDI submission -->
-  <!-- Compiles the Top N test -->
-  <target name="top-n" depends="build-all"
-      description="Builds the top-n test application">
-    <subant target="clobber">
-      <fileset dir="${top-n}" includes="build.xml" />
-    </subant>
-    <subant target="build-all">
-      <fileset dir="${top-n}" includes="build.xml" />
     </subant>
   </target>
 
@@ -716,6 +717,22 @@
     <antcall target="gen-version" />
   </target>
 
+  <target name="mark-branch" depends="get-current-fabric-branch">
+    <!-- Ask for branch name. -->
+    <input message="Branch name?"
+        defaultvalue="${fabric.current.branch}"
+        addproperty="fabric.version.newbranch"/>
+
+    <propertyfile file="${fabric.home}/version.properties">
+      <entry key="version.branch" type="string"
+          value="${fabric.version.newbranch}"/>
+    </propertyfile>
+
+    <!-- Reread version info and regenerate version files -->
+    <antcall target="configure-buildstring" />
+    <antcall target="gen-version" />
+  </target>
+
   <!--
     Configures properties for dependency versions.
   -->
@@ -872,15 +889,18 @@ public class Version extends polyglot.main.Version {
  *   ant bump-major    (Bumps the major version number.)
  *   ant bump-minor    (Bumps the minor version number.)
  *   ant bump-patch    (Bumps the patch level.)
+ *   ant mark-branch   (Changes the branch name.)
  */
 public class Version {
   private int major = ${fabric.version.major};
   private int minor = ${fabric.version.minor};
   private int patch = ${fabric.version.patch};
+  private String branch = "${fabric.version.branch}";
 
   public int major() { return major; }
   public int minor() { return minor; }
   public int patch() { return patch; }
+  public String branch() { return branch; }
 
   @Override
   public String toString() {
@@ -1103,20 +1123,72 @@ public class Version {
   ****************************************************************************
   -->
 
-  <!-- Main target for generating the Fabric distribution. -->
-  <target name="dist" depends="dist-tarball"
-      description="Generates the distribution">
-    <!-- Output a checklist for verifying that the distribution is good. -->
-    <echo message="Dist package created. Verify the following:" />
-    <echo message=" - Examples build and run" />
-    <echo message=" - CHANGES file up-to-date" />
-    <echo message=" - Version bump" />
-    <echo />
-    <echo message="When satisfied, you can integrate the distribution" />
-    <echo message="package and manual into your working copy of the" />
-    <echo message="website:" />
-    <echo />
-    <echo message="  bin/ship-dist fabric-${fabric.version}.tar.gz" />
+  <!--
+    Main target for generating the Fabric distribution.
+    Creates the distribution tarball from Git.
+  -->
+  <target name="dist"
+      description="Generates the distribution"
+      depends="configure-buildstring,get-fabric-snapshot-info,build-jif">
+    <!-- build-jif should have set up the tmp directory already. -->
+
+    <!-- Check out Fabric from Git. -->
+    <antcall target="git-clone">
+      <param name="name" value="fabric" />
+      <param name="root" value="${git.root.fabric}" />
+      <param name="branch" value="${fabric.snapshot.branch}" />
+      <param name="date" value="${fabric.snapshot.timestamp}" />
+    </antcall>
+
+    <!-- Configure the scratch copy. -->
+    <concat destfile="${tmp}/fabric/config.properties" append="no">
+      jif.home=${tmp}/fabric
+      polyglot.home=${tmp}/fabric
+      jdk.home=${jdk.home}
+    </concat>
+
+    <!-- Generate version information in the scratch copy. -->
+    <antcall target="sub-ant-dist">
+      <param name="sub-ant.dir" value="fabric" />
+      <param name="sub-ant.target" value="gen-version" />
+    </antcall>
+
+    <!-- Copy jars into the scratch copy. -->
+    <copy todir="${tmp}/fabric/lib">
+      <fileset dir="${tmp}/jif/lib">
+        <include name="jif.jar" />
+        <include name="polyglot.jar" />
+        <include name="ppg.jar" />
+        <include name="pth.jar" />
+        <include name="jflex.jar" />
+        <include name="java_cup.jar" />
+      </fileset>
+    </copy>
+
+    <!-- Attach copyright notices to source files in the scratch copy. -->
+    <antcall target="sub-ant-dist">
+      <param name="sub-ant.dir" value="fabric" />
+      <param name="sub-ant.target" value="copyright-stamp" />
+    </antcall>
+
+    <!-- Create the distribution tarball in the scratch copy. -->
+    <antcall target="sub-ant-dist">
+      <param name="sub-ant.dir" value="fabric" />
+      <param name="sub-ant.target" value="dist.tar" />
+    </antcall>
+
+    <!-- Move the distribution tarball out of the scratch directory. -->
+    <move todir="${fabric.home}">
+      <fileset dir="${tmp}/fabric">
+        <include name="fabric-?*.?*.?*.tar.gz"/>
+        <include name="fabric-?*.?*.?*-*.tar.gz"/>
+      </fileset>
+    </move>
+
+    <!-- Clean up. -->
+    <antcall target="rmdir-tmp" />
+
+    <!-- Warn if we built against a snapshot of Jif. -->
     <antcall target="snapshot-warning" />
   </target>
 
@@ -1170,64 +1242,6 @@ public class Version {
       <arg value="-c"/>
       <arg value="git rev-parse --abbrev-ref HEAD"/>
     </exec>
-  </target>
-
-  <!-- Creates the distribution tarball from Git. -->
-  <target name="dist-tarball"
-      depends="configure-buildstring,get-fabric-snapshot-info,build-jif">
-    <!-- build-jif should have set up the tmp directory already. -->
-
-    <!-- Check out Fabric from Git. -->
-    <antcall target="git-clone">
-      <param name="name" value="fabric" />
-      <param name="root" value="${git.root.fabric}" />
-      <param name="branch" value="${fabric.snapshot.branch}" />
-      <param name="date" value="${fabric.snapshot.timestamp}" />
-    </antcall>
-
-    <!-- Configure the scratch copy. -->
-    <concat destfile="${tmp}/fabric/config.properties" append="no">
-      jif.home=${tmp}/fabric
-      polyglot.home=${tmp}/fabric
-      jdk.home=${jdk.home}
-    </concat>
-
-    <!-- Generate version information in the scratch copy. -->
-    <antcall target="sub-ant-dist">
-      <param name="sub-ant.dir" value="fabric" />
-      <param name="sub-ant.target" value="gen-version" />
-    </antcall>
-
-    <!-- Copy jars into the scratch copy. -->
-    <copy todir="${tmp}/fabric/lib">
-      <fileset dir="${tmp}/jif/lib">
-        <include name="jif.jar" />
-        <include name="polyglot.jar" />
-        <include name="ppg.jar" />
-        <include name="pth.jar" />
-        <include name="JFlex.jar" />
-        <include name="java_cup.jar" />
-      </fileset>
-    </copy>
-
-    <!-- Attach copyright notices to source files in the scratch copy. -->
-    <antcall target="sub-ant-dist">
-      <param name="sub-ant.dir" value="fabric" />
-      <param name="sub-ant.target" value="copyright-stamp" />
-    </antcall>
-
-    <!-- Create the distribution tarball in the scratch copy. -->
-    <antcall target="sub-ant-dist">
-      <param name="sub-ant.dir" value="fabric" />
-      <param name="sub-ant.target" value="dist.tar" />
-    </antcall>
-
-    <!-- Move the distribution tarball out of the scratch directory. -->
-    <move tofile="${fabric.home}/fabric-${fabric.version}.tar.gz"
-        file="${tmp}/fabric/fabric-${fabric.version}.tar.gz" />
-
-    <!-- Clean up. -->
-    <antcall target="rmdir-tmp" />
   </target>
 
   <!-- Stamps all source files with a copyright notice. -->
@@ -1288,7 +1302,8 @@ public class Version {
 
     <!-- Create actual tarball. -->
     <tar destfile="${fabric.home}/fabric-${fabric.version}.tar.gz"
-        compression="gzip">
+        compression="gzip"
+        longfile="posix">
       <!-- Include top-level files. -->
       <tarfileset dir="${fabric.home}" prefix="fabric-${fabric.version}">
         <include name="version.properties" />
@@ -1385,7 +1400,7 @@ public class Version {
           ********************************************************************
         -->
         <!-- JFlex -->
-        <include name="JFlex.jar" />
+        <include name="jflex.jar" />
         <!-- Java CUP -->
         <include name="java_cup.jar" />
         <!-- FreePastry -->
@@ -1512,6 +1527,22 @@ public class Version {
         <include name="collections/src/**/*.fab" />
       </tarfileset>
     </tar>
+
+    <!-- Output a checklist for verifying that the distribution is good. -->
+    <echo message="Dist package created. Verify the following:" />
+    <echo message=" - Examples build and run" />
+    <echo message=" - CHANGES file is up-to-date" />
+    <echo message=" - CREDITS file is up-to-date, including funding support" />
+    <echo message=" - Licensing information for 3rd-party software" />
+    <echo message="   is up-to-date in COPYING" />
+    <echo message=" - New features documented in manual" />
+    <echo message=" - Version bump" />
+    <echo />
+    <echo message="When satisfied, you can integrate the distribution" />
+    <echo message="package and manual into your working copy of the" />
+    <echo message="website:" />
+    <echo />
+    <echo message="  bin/ship-dist fabric-${fabric.version}.tar.gz" />
   </target>
 
   <!--
@@ -1630,10 +1661,9 @@ public class Version {
       unless="${use-jif-rcs}" if="${polyglot-needed}">
     <property name="polyglot.download.url"
         value="${polyglot.url.prefix}${polyglot.download.version}${polyglot.url.suffix}"/>
-    <get src="${polyglot.download.url}" dest="${tmp}/polyglot.tar.gz"
+    <get src="${polyglot.download.url}" dest="${tmp}/polyglot.zip"
         verbose="on"/>
-    <gunzip src="${tmp}/polyglot.tar.gz"/>
-    <untar src="${tmp}/polyglot.tar" dest="${tmp}"/>
+    <unzip src="${tmp}/polyglot.zip" dest="${tmp}"/>
     <move file="${tmp}/polyglot-${polyglot.download.version}-src"
         tofile="${tmp}/polyglot"/>
     <copy todir="${tmp}/jif/lib">
@@ -1641,7 +1671,7 @@ public class Version {
         <include name="polyglot.jar"/>
         <include name="ppg.jar" />
         <include name="pth.jar" />
-        <include name="JFlex.jar" />
+        <include name="jflex.jar" />
         <include name="java_cup.jar" />
       </fileset>
     </copy>
@@ -1686,7 +1716,7 @@ public class Version {
         <include name="polyglot.jar" />
         <include name="ppg.jar" />
         <include name="pth.jar" />
-        <include name="JFlex.jar" />
+        <include name="jflex.jar" />
         <include name="java_cup.jar" />
       </fileset>
     </copy>
@@ -1794,9 +1824,10 @@ public class Version {
 
   <target name="jflex-lexer" depends="jflex-lexer-deps"
       unless="jflex.lexer.up-to-date">
-    <java classname="JFlex.Main" fork="true" dir="${lexer.dir}"
+    <java classname="jflex.Main" fork="true" dir="${lexer.dir}"
         failonerror="true">
       <classpath refid="polyglot.classpath" />
+            <arg line="--noinputstreamctor" />
       <arg value="${jflex.file}" />
     </java>
   </target>

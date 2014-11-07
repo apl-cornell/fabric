@@ -66,6 +66,6 @@ public interface FabILNodeFactory extends NodeFactory, CodebaseNodeFactory {
   /**
    * @return an AST node representing the provider label for the given type.
    */
-  ProviderLabel providerLabel(Position pos, TypeNode tn);
+  ProviderLabel ProviderLabel(Position pos, TypeNode tn);
 
 }

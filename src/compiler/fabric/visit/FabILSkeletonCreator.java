@@ -30,7 +30,7 @@ public class FabILSkeletonCreator extends NodeVisitor {
     if (n instanceof ClassBody) {
       List<ClassMember> members = ((ClassBody) n).members();
 
-      List<ClassMember> stubmembers = new LinkedList<ClassMember>();
+      List<ClassMember> stubmembers = new LinkedList<>();
       for (ClassMember m : members) {
         if (m instanceof ClassDecl) {
           stubmembers.add(m);
@@ -39,7 +39,8 @@ public class FabILSkeletonCreator extends NodeVisitor {
           if (pd.body() != null) {
             pd = (MethodDecl) pd.body(null);
             // Make this method native if not already
-            if (!pd.flags().isNative()) pd = pd.flags(pd.flags().Native());
+            if (!pd.flags().isNative())
+              pd = (MethodDecl) pd.flags(pd.flags().Native());
           }
           stubmembers.add(pd);
         } else if (m instanceof ConstructorDecl) {
@@ -47,7 +48,7 @@ public class FabILSkeletonCreator extends NodeVisitor {
           Block b = cd.body();
           if (b != null && b.statements() != null
               && b.statements().get(0) instanceof ConstructorCall) {
-            List<Stmt> l = new LinkedList<Stmt>();
+            List<Stmt> l = new LinkedList<>();
             l.add(b.statements().get(0));
             cd = (ConstructorDecl) cd.body(b.statements(l));
           } else cd = (ConstructorDecl) cd.body(null);

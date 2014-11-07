@@ -22,12 +22,12 @@ public interface _byteArray extends Object {
   byte get(int i);
 
   public static class _Impl extends Object._Impl implements _byteArray,
-      _InternalArrayImpl {
+  _InternalArrayImpl {
     private byte[] value;
 
     /**
      * Creates a new byte array at the given Store with the given length.
-     * 
+     *
      * @param store
      *          The store on which to allocate the array.
      * @param length
@@ -41,7 +41,7 @@ public interface _byteArray extends Object {
     /**
      * Creates a new byte array at the given Store using the given backing
      * array.
-     * 
+     *
      * @param store
      *          The store on which to allocate the array.
      * @param value
@@ -113,7 +113,7 @@ public interface _byteArray extends Object {
     @Override
     public void $serialize(ObjectOutput out, List<RefTypeEnum> refTypes,
         List<Long> intraStoreRefs, List<Pair<String, Long>> interStoreRefs)
-        throws IOException {
+            throws IOException {
       super.$serialize(out, refTypes, intraStoreRefs, interStoreRefs);
       out.writeInt(value.length);
       for (byte element : value)

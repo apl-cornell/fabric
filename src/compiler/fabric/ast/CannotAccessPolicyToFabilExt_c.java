@@ -8,10 +8,10 @@ import polyglot.types.SemanticException;
 import polyglot.util.InternalCompilerError;
 
 /**
- * 
+ *
  */
 public class CannotAccessPolicyToFabilExt_c extends ToJavaExt_c implements
-    ToJavaExt {
+ToJavaExt {
   @Override
   public Node toJava(JifToJavaRewriter rw) throws SemanticException {
     throw new InternalCompilerError("Cannot translate " + node() + " to FabIL.");

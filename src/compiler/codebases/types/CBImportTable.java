@@ -42,8 +42,8 @@ public class CBImportTable extends ImportTable {
     super(ts, pkg, source.name());
     this.ts = ts;
     this.ns = ns;
-    this.aliases = new HashSet<String>();
-    this.fromExternal = new HashMap<String, String>();
+    this.aliases = new HashSet<>();
+    this.fromExternal = new HashMap<>();
     //XXX: this is a little sleazy.
     this.jobExt = (CBJobExt) ts.extensionInfo().scheduler().currentJob().ext();
   }
@@ -119,8 +119,7 @@ public class CBImportTable extends ImportTable {
         }
       }
 
-      List<String> imports =
-          new ArrayList<String>(typeOnDemandImports.size() + 5);
+      List<String> imports = new ArrayList<>(typeOnDemandImports.size() + 5);
 
       imports.addAll(ts.defaultPackageImports());
       imports.addAll(typeOnDemandImports);
@@ -252,7 +251,7 @@ public class CBImportTable extends ImportTable {
         } catch (NoClassException e) {
           // didn't find it
         }
-        // The class may be a static member class of another, 
+        // The class may be a static member class of another,
         lazyImportLongNameStaticMember(import_ns, first, longName);
 
       } catch (SemanticException e) {
@@ -265,8 +264,8 @@ public class CBImportTable extends ImportTable {
       }
     }
 
-    lazyImports = new ArrayList<String>();
-    lazyImportPositions = new ArrayList<Position>();
+    lazyImports = new ArrayList<>();
+    lazyImportPositions = new ArrayList<>();
   }
 
   /**
@@ -326,7 +325,7 @@ public class CBImportTable extends ImportTable {
               // map.put(n, p); SC: no need to map n to the type
             }
           } else {
-            // t, whatever it is, is further qualified, but 
+            // t, whatever it is, is further qualified, but
             // should be, at least in Java, a ClassType.
             throw new InternalCompilerError("Qualified type \"" + t
                 + "\" is not a class type.", sourcePos);
@@ -385,7 +384,7 @@ public class CBImportTable extends ImportTable {
   /**
    * Returns the alias used to load type name, or null if name was not loaded
    * via a codebase alias.
-   * 
+   *
    * @param name
    * @return
    */

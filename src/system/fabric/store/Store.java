@@ -166,7 +166,7 @@ class Store extends MessageToStoreHandler {
   @Override
   public AbortTransactionMessage.Response handle(
       RemoteIdentity<RemoteWorker> client, AbortTransactionMessage message)
-      throws AccessException {
+          throws AccessException {
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
         "Handling Abort Message from {0} for tid={1}",
         nameOf(client.principal), message.tid.topTid);
@@ -194,7 +194,7 @@ class Store extends MessageToStoreHandler {
   @Override
   public CommitTransactionMessage.Response handle(
       RemoteIdentity<RemoteWorker> client, CommitTransactionMessage message)
-      throws TransactionCommitFailedException {
+          throws TransactionCommitFailedException {
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
         "Handling Commit Message from {0} for tid={1}",
         nameOf(client.principal), message.transactionID);
@@ -209,7 +209,7 @@ class Store extends MessageToStoreHandler {
   @Override
   public PrepareTransactionMessage.Response handle(
       RemoteIdentity<RemoteWorker> client, PrepareTransactionMessage msg)
-      throws TransactionPrepareFailedException {
+          throws TransactionPrepareFailedException {
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
         "Handling Prepare Message, worker={0}, tid={1}",
         nameOf(client.principal), msg.tid);
@@ -276,7 +276,7 @@ class Store extends MessageToStoreHandler {
   @Override
   public MakePrincipalMessage.Response handle(
       RemoteIdentity<RemoteWorker> client, MakePrincipalMessage msg)
-      throws FabricGeneralSecurityException {
+          throws FabricGeneralSecurityException {
     // Note: p should always be null.
 
     // Get the store's node object and its signing key.
@@ -290,7 +290,7 @@ class Store extends MessageToStoreHandler {
       public Long run() {
         NodePrincipal principal =
             new NodePrincipal._Impl(store)
-                .fabric$lang$security$NodePrincipal$(null);
+        .fabric$lang$security$NodePrincipal$(null);
         principal.addDelegatesTo(store.getPrincipal());
         return principal.$getOnum();
       }
@@ -318,7 +318,7 @@ class Store extends MessageToStoreHandler {
   @Override
   public StalenessCheckMessage.Response handle(
       RemoteIdentity<RemoteWorker> client, StalenessCheckMessage message)
-      throws AccessException {
+          throws AccessException {
     STORE_REQUEST_LOGGER.log(Level.FINER,
         "Handling Staleness Check Message from {0}", nameOf(client.principal));
 
@@ -329,7 +329,7 @@ class Store extends MessageToStoreHandler {
   private void prepareTransaction(Principal p, long tid,
       Collection<SerializedObject> serializedCreates,
       Collection<SerializedObject> serializedWrites, LongKeyMap<Integer> reads)
-      throws TransactionPrepareFailedException {
+          throws TransactionPrepareFailedException {
 
     PrepareRequest req =
         new PrepareRequest(tid, serializedCreates, serializedWrites, reads);

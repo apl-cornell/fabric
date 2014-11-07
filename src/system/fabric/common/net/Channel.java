@@ -27,7 +27,7 @@ import fabric.net.RemoteNode;
 /**
  * A channel manages a single socket, allowing it to be multiplexed across
  * multiple SubSockets.
- * 
+ *
  * @param <Node> the type of node at the remote endpoint.
  */
 abstract class Channel<Node extends RemoteNode<Node>> extends Thread {
@@ -91,7 +91,7 @@ abstract class Channel<Node extends RemoteNode<Node>> extends Thread {
         new DataInputStream(new BufferedInputStream(in,
             sock.getReceiveBufferSize()));
 
-    this.connections = new HashMap<Integer, Connection>();
+    this.connections = new HashMap<>();
     this.maxOpenConnections = maxOpenConnections;
 
     start();

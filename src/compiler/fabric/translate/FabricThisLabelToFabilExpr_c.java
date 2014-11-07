@@ -8,10 +8,10 @@ import polyglot.ast.Expr;
 import fabric.visit.FabricToFabilRewriter;
 
 /**
- * 
+ *
  */
 public class FabricThisLabelToFabilExpr_c extends LabelToJavaExpr_c implements
-    LabelToJavaExpr {
+LabelToJavaExpr {
   @Override
   public Expr toJava(Label label, JifToJavaRewriter rw) {
 

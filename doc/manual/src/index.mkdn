@@ -25,12 +25,10 @@ the [Fabric web site](http://www.cs.cornell.edu/projects/fabric/).
 User support and feedback
 -------------------------
 If you use Fabric, we'd appreciate your letting us know. We welcome comments,
-bug reports, and discussion about Fabric on the [Fabric users]
-(https://lists.cs.cornell.edu/mailman/listinfo/fabric-users) mailing list.
-
-[Subscribe to fabric-announce]
-(https://lists.cs.cornell.edu/mailman/listinfo/fabric-announce) to be notified
-about new releases of Fabric and related announcements.
+bug reports, and discussion about Fabric on the [Fabric users mailing list]
+(http://www.cs.cornell.edu/projects/fabric/#mailing-list). This is a
+low-traffic mailing list, to which we will also post notifications of new
+releases of Fabric and other related announcements.
 
 
 Package contents

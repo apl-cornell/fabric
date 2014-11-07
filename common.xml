@@ -35,7 +35,13 @@
   <!-- First  choice: jdk.home in config.properties
        Second choice: jdk.home in ${jif.home}/config.properties
        Third  choice: JAVA_HOME environment variable
-       Fourth choice: Ant's built-in java.home
+       Fourth choice: output of the BASH command (if successful):
+                        readlink -f $(which javac) \
+                          | sed '/\/bin\/javac$/{s|/bin/javac$||;q}; q1'
+                      (The above sed expression is the same as
+                      's|/bin/javac$||', except it returns with exit code 1 if
+                      the substitution is unsuccessful.)
+       Fifth  choice: Ant's built-in java.home
   -->
   <condition property="jdk.home" value="${jif.jdk.home}">
     <and>
@@ -48,6 +54,23 @@
   <condition property="jdk.home" value="${env.JAVA_HOME}">
     <and>
       <isset property="env.JAVA_HOME" />
+      <not>
+        <isset property="jdk.home" />
+      </not>
+    </and>
+  </condition>
+  <exec executable="bash"
+      failifexecutionfails="false"
+      outputproperty="jdk.home.detected"
+      resultproperty="jdk.home.detected-result">
+    <arg value="-c"/>
+    <arg value="-o"/> <arg value="pipefail"/>
+    <arg value="readlink -f $(which javac) | sed '/\/bin\/javac$/{s|/bin/javac$||;q}; q1'"/>
+  </exec>
+  <condition property="jdk.home" value="${jdk.home.detected}">
+    <and>
+      <equals arg1="${jdk.home.detected-result}" arg2="0"/>
+      <isset property="jdk.home.detected"/>
       <not>
         <isset property="jdk.home" />
       </not>
@@ -97,7 +120,7 @@
     <pathelement path="${polyglot.home}/lib/polyglot.jar" />
     <pathelement path="${polyglot.home}/lib/ppg.jar" />
     <pathelement path="${polyglot.home}/lib/java_cup.jar" />
-    <pathelement path="${polyglot.home}/lib/JFlex.jar" />
+    <pathelement path="${polyglot.home}/lib/jflex.jar" />
     <pathelement path="${jdk.home}/lib/tools.jar" />
   </path>
 

@@ -235,7 +235,7 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
   @Override
   public List<String> defaultPackageImports() {
     // Include fabric.lang as a default import.
-    List<String> result = new ArrayList<String>(6);
+    List<String> result = new ArrayList<>(6);
     result.add("fabric.lang");
     result.add("fabric.lang.security");
     result.add("fabric.worker");
@@ -248,9 +248,10 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
   // XXX: Why is this method here?
   protected List<? extends MethodInstance> findAcceptableMethods(
       ReferenceType container, String name, List<? extends Type> argTypes,
-      ClassType currClass) throws SemanticException {
+      ClassType currClass, boolean fromClient) throws SemanticException {
     List<? extends MethodInstance> result =
-        super.findAcceptableMethods(container, name, argTypes, currClass);
+        super.findAcceptableMethods(container, name, argTypes, currClass,
+            fromClient);
     if (isJavaInlineable(container)) {
       // Remove any methods from fabric.lang.Object. They don't really exist.
       for (MethodInstance mi : (List<MethodInstance>) FObject().methods()) {
@@ -304,8 +305,7 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
     return fabricArrayType(pos, type);
   }
 
-  private Map<Type, FabricArrayType> fabricArrayTypeCache =
-      new HashMap<Type, FabricArrayType>();
+  private Map<Type, FabricArrayType> fabricArrayTypeCache = new HashMap<>();
 
   protected FabricArrayType fabricArrayType(Position pos, Type type) {
     FabricArrayType t = fabricArrayTypeCache.get(type);
@@ -487,13 +487,6 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
   }
 
   @Override
-  public Flags legalInterfaceFlags() {
-    Flags f = super.legalInterfaceFlags();
-    f = f.set(FabILFlags.NONFABRIC);
-    return f;
-  }
-
-  @Override
   public String translateClass(Resolver c, ClassType t) {
     // Fully qualify classes in fabric.lang.security.
     if (t.package_() != null) {
@@ -517,7 +510,7 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
     this.loadedResolver = null;
     this.systemResolver = null;
     this.extInfo = (fabil.ExtensionInfo) extInfo;
-    namespaceResolvers = new HashMap<URI, NamespaceResolver>();
+    namespaceResolvers = new HashMap<>();
     try {
       initResolvers();
     } catch (IOException e) {
@@ -528,7 +521,7 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
   protected void initResolvers() throws IOException {
     FabricFileManager fileManager =
         (FabricFileManager) extInfo.extFileManager();
-    List<File> platform_directories = new ArrayList<File>();
+    List<File> platform_directories = new ArrayList<>();
     platform_directories.addAll(extInfo.getOptions().signaturepath());
     platform_directories.addAll(extInfo.bootclasspath());
     fileManager.setLocation(extInfo.getOptions().bootclasspath,

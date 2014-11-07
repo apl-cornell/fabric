@@ -184,7 +184,7 @@ public class FabricPairLabelToFabilExpr_c extends PairLabelToJavaExpr_c {
     if (p instanceof JoinPolicy_c) {
       @SuppressWarnings("unchecked")
       JoinPolicy_c<Policy> jp = (JoinPolicy_c<Policy>) p;
-      LinkedList<Policy> l = new LinkedList<Policy>(jp.joinComponents());
+      LinkedList<Policy> l = new LinkedList<>(jp.joinComponents());
       Iterator<Policy> iter = l.iterator();
       Policy head = iter.next();
       Expr e = policyToJava(head, rw);
@@ -199,7 +199,7 @@ public class FabricPairLabelToFabilExpr_c extends PairLabelToJavaExpr_c {
     if (p instanceof MeetPolicy_c) {
       @SuppressWarnings("unchecked")
       MeetPolicy_c<Policy> mp = (MeetPolicy_c<Policy>) p;
-      LinkedList<Policy> l = new LinkedList<Policy>(mp.meetComponents());
+      LinkedList<Policy> l = new LinkedList<>(mp.meetComponents());
       Iterator<Policy> iter = l.iterator();
       Policy head = iter.next();
       Expr e = policyToJava(head, rw);

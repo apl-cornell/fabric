@@ -126,7 +126,7 @@ public class Replicate extends AbstractRawMessage {
     this.sender = sender;
     level = buf.readInt();
     int numStores = buf.readInt();
-    skip = new OidKeyHashMap<Long>();
+    skip = new OidKeyHashMap<>();
 
     for (int i = 0; i < numStores; i++) {
       Store store = worker.getStore(buf.readUTF());
@@ -198,7 +198,7 @@ public class Replicate extends AbstractRawMessage {
       DataInputBuffer in = new DataInputBuffer(buf);
       Worker worker = Worker.getWorker();
       int n = in.readInt();
-      globs = new HashMap<Pair<RemoteStore, Long>, ObjectGlob>(n);
+      globs = new HashMap<>(n);
 
       for (int i = 0; i < n; i++) {
         RemoteStore store = worker.getStore(in.readUTF());
@@ -206,7 +206,7 @@ public class Replicate extends AbstractRawMessage {
         try {
           ObjectGlob g = new ObjectGlob(in);
           g.verifySignature(store.getPublicKey());
-          globs.put(new Pair<RemoteStore, Long>(store, onum), g);
+          globs.put(new Pair<>(store, onum), g);
         } catch (GeneralSecurityException e) {
         }
       }

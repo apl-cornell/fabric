@@ -11,7 +11,7 @@ public interface NewFabricArray extends polyglot.ast.NewArray, Annotated {
 
   Expr updateLabel();
 
-  Expr accessLabel();
+  Expr accessPolicy();
 
   NewFabricArray updateLabel(Expr label);
 

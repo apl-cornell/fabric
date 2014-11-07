@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.tools.FileObject;
 import javax.tools.StandardLocation;
@@ -21,6 +22,8 @@ import polyglot.frontend.Job;
 import polyglot.frontend.JobExt;
 import polyglot.frontend.Parser;
 import polyglot.frontend.Scheduler;
+import polyglot.frontend.Source;
+import polyglot.frontend.Source.Kind;
 import polyglot.frontend.TargetFactory;
 import polyglot.frontend.goals.Goal;
 import polyglot.lex.Lexer;
@@ -59,7 +62,7 @@ import fabric.worker.Store;
  * Extension information for fabric extension.
  */
 public class ExtensionInfo extends jif.ExtensionInfo implements
-    codebases.frontend.ExtensionInfo {
+codebases.frontend.ExtensionInfo {
 
   /*
    * Note: jif.ExtensionInfo has a jif.OutputExtensionInfo field jlext. The only
@@ -109,13 +112,13 @@ public class ExtensionInfo extends jif.ExtensionInfo implements
     ((FabricFileManager) extFM).setLocation(options.classpath,
         options.classpathURIs());
     //Also load source from codebases
-    List<URI> sourcedirs = new ArrayList<URI>();
+    List<URI> sourcedirs = new ArrayList<>();
     for (URI cpdir : options.classpathURIs()) {
       if (cpdir.getScheme().equals("fab")) sourcedirs.add(cpdir);
     }
     sourcedirs.addAll(options.sourcepathURIs());
     ((FabricFileManager) extFM).setLocation(options.source_path, sourcedirs);
-    List<File> dirs = new ArrayList<File>();
+    List<File> dirs = new ArrayList<>();
     dirs.addAll(options.sigcp);
     dirs.addAll(options.bootclasspathDirectories());
     extFM.setLocation(options.bootclasspath, dirs);
@@ -136,7 +139,7 @@ public class ExtensionInfo extends jif.ExtensionInfo implements
         Collections.singletonList(opt.sourceOutputDirectory());
     extFM.setLocation(StandardLocation.SOURCE_PATH, sourcepath);
 
-    List<File> classpath = new ArrayList<File>();
+    List<File> classpath = new ArrayList<>();
     classpath.addAll(opt.bootclasspathDirectories());
     for (URI u : opt.classpathURIs()) {
       if (u.getScheme().equals("file")) {
@@ -170,13 +173,18 @@ public class ExtensionInfo extends jif.ExtensionInfo implements
   }
 
   @Override
-  public Parser parser(Reader reader, FileSource source, ErrorQueue eq) {
+  public Parser parser(Reader reader, Source source, ErrorQueue eq) {
     CodebaseSource src = (CodebaseSource) source;
     Lexer lexer = new Lexer_c(reader, source, eq);
     Grm grm =
         new Grm(lexer, typeSystem(), nodeFactory(), eq,
             src.canonicalNamespace());
     return new CupParser(grm, source, eq);
+  }
+
+  @Override
+  public Set<String> keywords() {
+    return new Lexer_c(null).keywords();
   }
 
   @Override
@@ -252,10 +260,10 @@ public class ExtensionInfo extends jif.ExtensionInfo implements
   }
 
   @Override
-  public LabelChecker createLabelChecker(Job job, boolean solvePerClassBody,
-      boolean solvePerMethod, boolean doLabelSubst) {
+  public LabelChecker createLabelChecker(Job job, boolean warningsEnabled,
+      boolean solvePerClassBody, boolean solvePerMethod, boolean doLabelSubst) {
     return new FabricLabelChecker(job, typeSystem(), nodeFactory(),
-        solvePerClassBody, solvePerMethod, doLabelSubst);
+        warningsEnabled, solvePerClassBody, solvePerMethod, doLabelSubst);
   }
 
   @Override
@@ -265,7 +273,7 @@ public class ExtensionInfo extends jif.ExtensionInfo implements
 
   @Override
   // TODO: support multiple local namespaces
-  public FileSource createFileSource(FileObject f, boolean user)
+  public FileSource createFileSource(FileObject f, Kind kind)
       throws IOException {
     if (f instanceof FabricFileObject) {
       fabric.lang.FClass fcls = ((FabricFileObject) f).getData();
@@ -276,17 +284,17 @@ public class ExtensionInfo extends jif.ExtensionInfo implements
             + " is higher than the label of its codebase ");
       }
 
-      return new RemoteSource(f, fcls, user);
+      return new RemoteSource(f, fcls, kind);
     } else {
       URI ns =
           getOptions().platformMode() ? platformNamespace() : localNamespace();
-      LocalSource src = new LocalSource(f, user, ns);
-      // Publish all local source unless we're in platform mode.
-      // TODO: generalize and make this better. We should only publish
-      // source in the sourcepath. Plus, the user may be re-publishing remote
-      // source with a new codebase.
-      src.setPublish(getOptions().publish());
-      return src;
+          LocalSource src = new LocalSource(f, kind, ns);
+          // Publish all local source unless we're in platform mode.
+          // TODO: generalize and make this better. We should only publish
+          // source in the sourcepath. Plus, the user may be re-publishing remote
+          // source with a new codebase.
+          src.setPublish(getOptions().publish());
+          return src;
     }
   }
 
@@ -297,7 +305,7 @@ public class ExtensionInfo extends jif.ExtensionInfo implements
 
   /**
    * Creates namespace resolvers for Fabric namespaces.
-   * 
+   *
    * @param ns
    * @return
    */

@@ -40,7 +40,7 @@ public class ObjectGroup implements FastSerializable {
    */
   public ObjectGroup(DataInput in) throws IOException {
     int groupSize = in.readInt();
-    objects = new LongKeyHashMap<SerializedObject>(groupSize);
+    objects = new LongKeyHashMap<>(groupSize);
 
     for (int i = 0; i < groupSize; i++) {
       SerializedObject obj = new SerializedObject(in);

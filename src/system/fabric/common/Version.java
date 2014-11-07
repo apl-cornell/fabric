@@ -10,18 +10,32 @@ package fabric.common;
  *   ant bump-major    (Bumps the major version number.)
  *   ant bump-minor    (Bumps the minor version number.)
  *   ant bump-patch    (Bumps the patch level.)
+ *   ant mark-branch   (Changes the branch name.)
  */
 public class Version {
   private int major = 0;
   private int minor = 2;
-  private int patch = 1;
+  private int patch = 2;
+  private String branch = "";
 
-  public int major() { return major; }
-  public int minor() { return minor; }
-  public int patch() { return patch; }
+  public int major() {
+    return major;
+  }
+
+  public int minor() {
+    return minor;
+  }
+
+  public int patch() {
+    return patch;
+  }
+
+  public String branch() {
+    return branch;
+  }
 
   @Override
   public String toString() {
-    return "0.2.1 (2013-06-22 01:53:21 EDT)";
+    return "0.2.2 (2014-07-08 22:45:05 EDT)";
   }
 }

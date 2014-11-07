@@ -102,7 +102,7 @@ public class TransactionManager {
    * <li>TODO: duplicate objects within sets / between sets?</li>
    * </ul>
    * </p>
-   * 
+   *
    * @param worker
    *          The worker requesting the prepare
    * @throws TransactionPrepareFailedException
@@ -134,8 +134,7 @@ public class TransactionManager {
 
     try {
       // This will store the set of onums of objects that were out of date.
-      LongKeyMap<SerializedObject> versionConflicts =
-          new LongKeyHashMap<SerializedObject>();
+      LongKeyMap<SerializedObject> versionConflicts = new LongKeyHashMap<>();
 
       // Prepare writes.
       for (SerializedObject o : req.writes) {
@@ -236,7 +235,7 @@ public class TransactionManager {
    * referenced by any object in the group will also be in the group. This
    * ensures that the worker will not reveal information when dereferencing
    * surrogates.
-   * 
+   *
    * @param subscriber
    *          If non-null, then the given worker will be subscribed to the
    *          object.
@@ -257,7 +256,7 @@ public class TransactionManager {
    * Returns a Glob containing the specified object. All surrogates referenced
    * by any object in the group will also be in the group. This ensures that the
    * worker will not reveal information when dereferencing surrogates.
-   * 
+   *
    * @param subscriber
    *          If non-null, then the given worker will be subscribed to the
    *          object as a dissemination node.
@@ -272,7 +271,7 @@ public class TransactionManager {
    * referenced by any object in the group will also be in the group. This
    * ensures that the worker will not reveal information when dereferencing
    * surrogates.
-   * 
+   *
    * @param principal
    *          The principal performing the read.
    * @param subscriber
@@ -330,7 +329,7 @@ public class TransactionManager {
           Collections.<SerializedObject> emptyList());
     }
 
-    List<SerializedObject> result = new ArrayList<SerializedObject>();
+    List<SerializedObject> result = new ArrayList<>();
     for (LongKeyMap.Entry<Integer> entry : versions.entrySet()) {
       long onum = entry.getKey();
       int version = entry.getValue();

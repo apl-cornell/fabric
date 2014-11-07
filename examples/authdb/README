@@ -1,0 +1,50 @@
+authdb Example
+==============
+
+This is a simple authentication database built using Fabric,
+with a shim for calling into the database from Java.
+
+This directory contains the following sub-directories:
+
+  - src: source code for the example
+  - bin: a collection of scripts for running the example
+  - etc: configuration files for the example's store and worker
+
+
+Using
+-----
+This example comes with a store named "store" for storing persistent
+data, and a worker named "worker" for running a test program.
+
+  0. Begin in the authdb directory and compile this example:
+
+        $ cd authdb
+        $ ant
+
+  1. Start the store. The 'start-all' script will start the
+     store in a separate xterm window:
+
+        $ bin/start-all
+
+     You can also use an xterm replacement (e.g., gnome-terminal or
+     konsole):
+
+        $ XTERM=gnome-terminal bin/start-all
+
+     Or, if you prefer, you can start the store separately in your
+     favourite terminal emulator:
+
+        $ bin/start-store
+
+  2. Start the test program:
+
+        $ bin/run-test
+
+  3. Exit the store with the "exit" command in its console (you can also
+     use CTRL-D).
+
+     You can clean up the store's persistent state by removing the 'var'
+     directory:
+
+        $ rm -rf var
+

@@ -107,7 +107,7 @@ public class KeyMaterial {
     // extract trusted certs from key store
     try {
       KEY_LOGGER.info("loading trusted certificates");
-      this.trustedCerts = new HashSet<TrustAnchor>(this.keys.size());
+      this.trustedCerts = new HashSet<>(this.keys.size());
       Enumeration<String> i = this.keys.aliases();
       while (i.hasMoreElements()) {
         String alias = i.nextElement();
@@ -300,9 +300,9 @@ public class KeyMaterial {
       throws Exception {
     File file = new File(filename);
     file.getParentFile().mkdirs();
-    OutputStream out = new FileOutputStream(file);
-    store.store(out, password);
-    out.close();
+    try (OutputStream out = new FileOutputStream(file)) {
+      store.store(out, password);
+    }
   }
 
   private static KeyStore createKeyStore() {
@@ -323,10 +323,8 @@ public class KeyMaterial {
 
   private static void loadKeyStore(KeyStore store, String filename,
       char[] password) throws FileNotFoundException, InternalError {
-    try {
-      InputStream in = new FileInputStream(filename);
+    try (InputStream in = new FileInputStream(filename)) {
       store.load(in, password);
-      in.close();
     } catch (FileNotFoundException e) {
       throw e;
     } catch (IOException e) {

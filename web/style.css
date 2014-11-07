@@ -1,96 +1,331 @@
-body {font-size: "100%"; background-color: #ffffff; color: black; margin: 0 }
-div.top {background-color: #48C}
-div.top td {font-family: "Cronos Pro", "Trebuchet MS", "lucida sans", helvetica, sans-serif}
-div.top a {color: white }
-div.top a:hover {color: #ffff80 }
-div.top { text-shadow: #102010 2px 2px 2px}
-div.top table tr td {padding: 10px}
-div.top table td.links {color: white}
-p {font-family: "Times New Roman", times, serif}
-p { max-width: 100ex }
-table {font-family: "Times New Roman", times, serif}
-ul {font-family: "Times New Roman", times, serif}
-a {text-decoration: none; color: #558; font-weight: bold}
-a.email {font-family: System, helvetica, sans-serif}
-h1 {font-size: 300%; font-family: "Cronos Pro", "Trebuchet MS", "lucida sans", helvetica, sans-serif; color: #508050}
-div.top h1 { color: #ffffff }
-div.top h4 { color: #ffffff; font-family: "Cronos Pro", "Trebuchet MS", helvetica, sans-serif }
-h2 {font-size: "150%"; font-family: "Cronos Pro", "Trebuchet MS", helvetica, sans-serif; color: #669}
-span.ampm {font-variant: small-caps}
-span.name {font-size: "150%"; font-weight: bold; font-family: "Cronos Pro", "Trebuchet MS", helvetica, sans-serif; color: #508050}
-span.date { width: 9em; display: inline-block;}
+body {
+  background-color: #ffffff;
+  color: #333;
+  margin: 0;
+  font-size: 14px;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
 
-table.twocolumn tr td { padding-top: 10; padding-left: 20; padding-right: 20 }
+a {
+  text-decoration: none;
+  color: #39526b;
+  font-weight: bold;
+}
 
-div.download { margin: 5px; padding-top:5; padding-bottom: 5;  padding-left:
-    10; padding-right: 10; background-color: #eed; border-style: outset;
-    border-width: 2; float: right; width: 33%}
+a:hover {
+  color: #48c;
+}
 
-ol > li {margin-bottom: 1ex}
+h2 {
+  font-size: 24px;
+  font-family: "Cronos Pro", "Trebuchet MS", "Helvetica Neue", Helvetica,
+    Arial, sans-serif;
+  color: #669;
+  margin-top: 30px;
+  margin-bottom: 10px;
+}
 
-div.documentation { margin: 5px; padding-bottom: 5;  padding-left: 10;
-padding-right: 10; background-color: #e0e8ee; border-style: outset;
-border-width: 2; float: right; width: 50%}
+h3 {
+  font-size: 20px;
+  font-weight: bold;
+  font-family: "Cronos Pro", "Trebuchet MS", "Helvetica Neue", Helvetica,
+    Arial, sans-serif;
+  color: #669;
+  margin-top: 15px;
+  margin-bottom: 5px;
+}
 
+div.content {
+  margin: 0 auto;
+  min-width: 730px;
+  max-width: 70em;
+}
 
-tr.projects { border-style: solid; border-width: 1; border-color: black }
+div.top {
+  background: -webkit-linear-gradient(#36a1ff, #08f); /* Safari 5.1 - 6.0 */
+  background: -o-linear-gradient(#36a1ff, #08f); /* Opera 11.1 - 12.0 */
+  background: -moz-linear-gradient(#36a1ff, #08f); /* Firefox 3.6 - 15 */
+  background: linear-gradient(#36a1ff, #08f); /* standard syntax */
+  width: 100%;
+  min-width: 730px;
+  display: table;
 
-body.download {margin: 0; padding: 0}
-div.inset { padding: 5ex 6ex }
-div.content { margin: 0; padding: 0 }
-p.explanation { width: 80ex; padding: 25px}
-td.question {vertical-align: top; text-align: right; font-weight: bold }
-form.questionnaire {padding: 25px}
-form.download {margin: -2px -2px 0 -2px; display: inline}
-form.download-old {display: inline}
-form.download input {margin: -6px -4px 0 4em; padding: 0}
+  color: blue;
+  font-family: "Cronos Pro", "Trebuchet MS", "Lucida Sans", "Helvetica Neue",
+    Helvetica, Arial, sans-serif;
+  font-size: 15px;
+  line-height: 18px;
+  vertical-align: bottom;
+}
+
+div.motto {
+  width: 100%;
+  padding: 11px 0;
+  font-size: 200%;
+  color: #aef;
+  background: linear-gradient(#36a1ff, #08f);
+  font-weight: bold;
+  margin: 10px auto 5px 130px;
+  padding: 0 0 0 1em;
+  vertical-align: middle;
+  line-height: 40px;
+  display: table-cell;
+  text-shadow: rgba(0,0,0,0.5) 0 1px 1px;
+}
+
+div.top a { color: white; }
+div.top a:hover { color: #ffff80; }
+
+div.logo {
+  display: table-cell;
+  padding: 11px;
+  background: linear-gradient(#fcfeff, #f2f9ff);
+}
+
+img.logo {
+  width: 160px;
+  display: table-cell;
+  vertical-align: middle;
+}
+
+div.menu {
+  display: table-cell;
+  vertical-align: middle;
+  text-align: right;
+  margin: 0 0 0 auto;
+  padding: 11px 12px;
+  font-size: 120%;
+  line-height: 25px;
+}
+
+div.menu > ul {
+  font-family: inherit;
+}
+
+div.menu > ul > li {
+  list-style-type: none;
+  text-align: right;
+}
+
+div.inset {
+  padding: 3ex 10ex;
+}
+
+div.intro {
+  min-height: 355px;
+}
+
+img.figure {
+  padding: 0ex 0ex 2ex 6ex;
+  float: right;
+  margin: 0 auto;
+}
+
+div.mailing-list-form {
+  float: right;
+  padding: 2ex;
+  margin: 0ex 0ex 2ex 2ex;
+  background-color: #eed;
+}
+
+div.mailing-list-form h2 {
+  font-size: 20px;
+  margin: 0;
+}
+
+div.mailing-list-form p {
+  margin: 0.5ex 0;
+}
+
+#mailing-list-div {
+  display: none;
+}
+
+#mailing-list-div div {
+  font-size: 10px;
+}
+
+a.mailing-list {
+  display: block;
+  text-align: center;
+  font-family: monospace;
+}
+
+#mailing-list-div-noscript {
+  max-width: 273px;
+}
+
+div.github {
+  font-size: 110%;
+  text-align: center;
+}
+
+form.download {
+  width: 100%;
+  text-align: center;
+  padding-bottom: 0.5ex;
+}
+
+form.download > ul {
+  padding: 6px 0 0 0;
+  margin: 0;
+  font-size: 90%;
+}
+
+form.download > ul > li {
+  display: inline;
+}
+
+form.download > ul > li:first-child:before {
+  content: "";
+}
+
+form.download > ul > li:before {
+  content: "\2219 ";
+}
+
 input.download {
-    color: #558;
-    font-weight: bold;
-    font-size: 110%;
-    font-family: "Times New Roman", times, serif
-    padding-left: 6em;
+  color: white;
+  font-size: 16px;
+  background: -webkit-linear-gradient(#1a4, #164);
+  background: -o-linear-gradient(#1a4, #164);
+  background: -moz-linear-gradient(#1a4, #164);
+  background: linear-gradient(#1a4, #164);
+  background-color: #184;
+  background-repeat: repeat-x;
+  border: 1px solid #0d4d33;
+  border-radius: 3px;
+  padding: 5px 20px;
+  font-weight: bold;
 }
-input.download:hover, input.download-old:hover {
-    color: #48f;
-}
-input.download-old {
-    border: none;
-    background-color: transparent;
-    font-size: 100%;
-    font-weight: bold;
-    font-family: "Times New Roman", times, serif;
-    padding-right: 2em;
-    display: inline;
-}
-div.content h1 {
-   color: white; background-color: #50a0c0;
-   text-shadow: #102010 2px 2px 2px;
-   vertical-align: top;
-   margin: 0; padding: 15px}
 
-img.logo {}
-span.title {white-space: nowrap}
+input.download:hover {
+  background: #194;
+}
+
+div.current-releases {
+  display: table;
+  width: 100%;
+}
+
+div.current-releases > div {
+  padding-bottom: 1ex;
+  width: 50%;
+  display: table-cell;
+}
+
+table.previous-releases {
+  padding-left: 20px;
+  border-collapse: collapse;
+}
+
+table.previous-releases > caption {
+  display: none;
+}
+
+table.previous-releases > thead {
+  display: none;
+}
+
+table.previous-releases > tbody > tr > td {
+  padding: 1px 25px;
+  border-top: 1px solid #aaa;
+  border-bottom: 1px solid #aaa;
+}
+
+form.download-old {
+  display: inline-block;
+}
+
+input.download-old {
+  border: none;
+  padding: 0;
+  background-color: transparent;
+  font-size: inherit;
+  font-weight: bold;
+  display: inline;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  color: #39526b;
+  cursor: pointer;
+}
+
+input.download-old:hover {
+  color: #48c;
+}
+
+ol.pub-list > li {
+  margin-bottom: 1ex;
+}
+
+span.pub-title {
+  font-style: italic;
+}
+
+div.three-cols {
+  display: table;
+}
+
+div.three-cols > div {
+  display: table-cell;
+  width: 33%;
+}
+
+div.related-projects {
+  padding: 2ex;
+  background-color: #eed;
+}
+
+div.related-projects h2 {
+  margin: 0;
+}
+
+div.related-projects > ul {
+  margin: 1ex 0 0 0;
+  padding-left: 3.5ex;
+}
+
+div.sponsors {
+  color: #888;
+  font-size: 75%;
+  padding-top: 5ex;
+}
+
+/************************/
+/* Download form styles */
+/************************/
+
+body.download {
+  margin: 0; padding: 0;
+}
+
+div.content h1 {
+  color: white;
+  background-color: #48C;
+  text-shadow: #102010 2px 2px 2px;
+  vertical-align: top;
+  margin: 0;
+  padding: 15px;
+  font-family: "Cronos Pro", "Trebuchet MS", "Lucida Sans", "Helvetica Neue",
+    Helvetica, Arial, sans-serif;
+  font-size: 45px;
+}
+
+p.explanation {
+  width: 80ex;
+  padding: 25px;
+}
 
 form.questionnaire {
-    padding: 2ex;
-    border-style: solid;
-    border-width: 1px;
-    border-color: #bbb;
-    background-color: #eee;
+  padding: 2ex;
+  border-style: solid;
+  border-width: 1px;
+  border-color: #bbb;
+  background-color: #eee;
 }
 
-h1 span.title { vertical-align: top }
-
-div.figure {
-    padding: 5ex 5ex 2ex 5ex; float: right
-}
-div.figure img { margin: 0 auto }
-
-div.downloads {
+td.question {
+  vertical-align: top;
+  text-align: right;
+  font-weight: bold;
 }
 
-td.links {
-    text-align: right;
-    width: 0%
-}

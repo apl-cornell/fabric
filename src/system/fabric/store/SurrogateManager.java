@@ -3,7 +3,7 @@ package fabric.store;
 /**
  * A surrogate manager encapsulates the strategy for building and maintaining
  * surrogate objects for inter-store references.
- * 
+ *
  * @author mdgeorge
  */
 public interface SurrogateManager {
@@ -21,7 +21,7 @@ public interface SurrogateManager {
    * <li>Need access to an object database to allocate new surrogate onums</li>
    * </ul>
    * </p>
-   * 
+   *
    * @param req
    *          the collections of objects created, modified, and read by this
    *          transaction. These collections may be modified if surrogate

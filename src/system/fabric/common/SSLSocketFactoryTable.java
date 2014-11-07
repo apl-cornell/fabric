@@ -9,8 +9,7 @@ import javax.net.ssl.SSLSocketFactory;
  * A table of <code>SSLSocketFactory</code>s.
  */
 public class SSLSocketFactoryTable {
-  private static Map<String, SSLSocketFactory> table =
-      new HashMap<String, SSLSocketFactory>();
+  private static Map<String, SSLSocketFactory> table = new HashMap<>();
 
   public static void register(String hostname, SSLSocketFactory factory) {
     table.put(hostname, factory);

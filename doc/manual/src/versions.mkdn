@@ -1,6 +1,22 @@
 Version history {#versions}
 ===============
 
+Version 0.2.2 (Jul 2014)
+-------------
+* Language support for specifying the access policy for a class or interface
+  independently from fields.
+    
+* Support for local deadlock detection.
+
+* SIF has been refactored to better support building non-HTML web apps.
+
+* Class hashing is now less sensitive to the version of Java being used.
+
+* Various bug fixes and performance improvements.
+
+* Updated to Jif 3.4.2 and Polyglot 2.6.1.
+
+
 Version 0.2.1 (Jun 2013)
 -------------
 Issued fresh node certificates for examples. The old ones had expired.

@@ -29,11 +29,11 @@ public class Version extends polyglot.main.Version {
 
   @Override
   public int patch_level() {
-    return 1;
+    return 2;
   }
 
   @Override
   public String toString() {
-    return "0.2.1 (2013-06-22 01:53:21 EDT)";
+    return "0.2.2 (2014-07-08 22:45:05 EDT)";
   }
 }

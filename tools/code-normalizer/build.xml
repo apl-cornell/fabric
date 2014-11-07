@@ -83,7 +83,7 @@
 
   <target name="jflex-lexer" depends="jflex-lexer-deps"
       unless="jflex.lexer.up-to-date">
-    <java classname="JFlex.Main" fork="true" dir="${lexer.dir}"
+    <java classname="jflex.Main" fork="true" dir="${lexer.dir}"
         failonerror="true">
       <classpath refid="code-normalizer.classpath" />
       <arg value="${jflex.file}" />

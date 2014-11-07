@@ -33,7 +33,7 @@ public class AtomicMethodRewriter extends NodeVisitor {
 
       if (f.contains(FabILFlags.ATOMIC)) {
         f = f.clear(FabILFlags.ATOMIC);
-        md = md.flags(f);
+        md = (MethodDecl) md.flags(f);
         md.methodInstance().setFlags(f);
         Block b =
             nf.Atomic(Position.compilerGenerated(), md.body().statements());
@@ -49,7 +49,7 @@ public class AtomicMethodRewriter extends NodeVisitor {
 
       if (f.contains(FabILFlags.ATOMIC)) {
         f = f.clear(FabILFlags.ATOMIC);
-        cd = cd.flags(f);
+        cd = (ConstructorDecl) cd.flags(f);
         cd.constructorInstance().setFlags(f);
         Block b =
             nf.Atomic(Position.compilerGenerated(), cd.body().statements());

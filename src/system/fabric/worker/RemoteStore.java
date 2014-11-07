@@ -88,8 +88,8 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
     super(name);
 
     this.cache = new ObjectCache(name);
-    this.fetchLocks = new ConcurrentLongKeyHashMap<FetchLock>();
-    this.fresh_ids = new LinkedList<Long>();
+    this.fetchLocks = new ConcurrentLongKeyHashMap<>();
+    this.fresh_ids = new LinkedList<>();
     this.publicKey = null;
   }
 
@@ -195,7 +195,7 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
   /**
    * Fetches the object from the store. Places the object in the object cache
    * and returns the resulting cache entry.
-   * 
+   *
    * @param useDissem
    *          Whether to use the dissemination network. If false, the
    *          dissemination network will be bypassed.
@@ -218,7 +218,7 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
 
   /**
    * Goes to the store to get object.
-   * 
+   *
    * @param onum
    *          The object number to fetch
    * @return An ObjectGroup whose head object is the requested object.
@@ -233,7 +233,7 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
 
   /**
    * Called by dissemination to fetch an encrypted object from the store.
-   * 
+   *
    * @param onum
    *          The object number to fetch.
    */
@@ -255,7 +255,7 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
    * Looks up the actual Store object when this store is deserialized. While
    * this method is not explicitly called in the code, it is used by the Java
    * serialization framework when deserializing a Store object.
-   * 
+   *
    * @return The canonical Store object corresponding to this Store's onum
    * @throws ObjectStreamException
    */
@@ -266,7 +266,7 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
   /**
    * Ensure that a given number of objects can be created without contacting the
    * store.
-   * 
+   *
    * @param num
    *          The number of objects to allocate
    */
@@ -378,7 +378,7 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
    * <li>If the cache contains a serialized copy of an old version of the
    * object, then that old version is evicted.
    * </ul>
-   * 
+   *
    * @return true iff after this update operation, the cache contains the
    *     object.
    */
@@ -431,7 +431,7 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
   /**
    * Clears the worker's cache for this store. To be used for (performance)
    * testing only.
-   * 
+   *
    * @see fabric.worker.Worker#clearCache()
    */
   public void clearCache() {

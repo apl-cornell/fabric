@@ -15,9 +15,7 @@ import jif.ast.PrincipalExpr;
 import jif.ast.PrincipalNode;
 import jif.types.Assertion;
 import polyglot.ast.Call;
-import polyglot.ast.CanonicalTypeNode;
 import polyglot.ast.ClassBody;
-import polyglot.ast.ClassDecl;
 import polyglot.ast.ClassMember;
 import polyglot.ast.Disamb;
 import polyglot.ast.Expr;
@@ -33,8 +31,6 @@ import polyglot.ast.TopLevelDecl;
 import polyglot.ast.TypeNode;
 import polyglot.types.Flags;
 import polyglot.types.Package;
-import polyglot.types.Type;
-import polyglot.util.CollectionUtil;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
 import codebases.ast.CBSourceFile_c;
@@ -49,7 +45,7 @@ import fabric.extension.LocatedExt_c;
  * NodeFactory for fabric extension.
  */
 public class FabricNodeFactory_c extends JifNodeFactory_c implements
-    FabricNodeFactory {
+FabricNodeFactory {
 
   // ////////////////////////////////////////////////////////////////////////////
   // public constructors //
@@ -73,6 +69,10 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
     return new FabricDisamb_c();
   }
 
+  // ////////////////////////////////////////////////////////////////////////////
+  // new factory methods //
+  // ////////////////////////////////////////////////////////////////////////////
+
   @Override
   public CodebaseNode CodebaseNode(Position pos, URI ns, String name,
       URI externalNS) {
@@ -83,31 +83,24 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
   public CodebaseNode CodebaseNode(Position pos, URI ns, String name,
       URI externalNS, Package package_) {
     CodebaseNode n = new CodebaseNode_c(pos, ns, name, externalNS, package_);
-    n = (CodebaseNode) n.ext(fabricExtFactory().extCodebaseNode());
-    n = (CodebaseNode) n.del(fabricDelFactory().delCodebaseNode());
+    n = ext(n, fabricExtFactory().extCodebaseNode());
+    n = del(n, fabricDelFactory().delCodebaseNode());
     return n;
   }
 
   @Override
   public CodebaseDecl CodebaseDecl(Position pos, Id name) {
     CodebaseDecl n = new CodebaseDecl_c(pos, name);
-    n = (CodebaseDecl) n.ext(fabricExtFactory().extCodebaseDecl());
-    n = (CodebaseDecl) n.del(fabricDelFactory().delCodebaseDecl());
+    n = ext(n, fabricExtFactory().extCodebaseDecl());
+    n = del(n, fabricDelFactory().delCodebaseDecl());
     return n;
   }
-
-  // ////////////////////////////////////////////////////////////////////////////
-  // new factory methods //
-  // ////////////////////////////////////////////////////////////////////////////
 
   @Override
   public Atomic Atomic(Position pos, List<Stmt> statements) {
     Atomic result = new Atomic_c(pos, statements);
-    // note: this is correct. fabricExtFactory() is a factory that returns Jif
-    // extension objects with their ext() pointers referring to Fabric Ext
-    // objects, which is as it should be.
-    result = (Atomic) result.ext(fabricExtFactory().extAtomic());
-    result = (Atomic) result.del(fabricDelFactory().delAtomic());
+    result = ext(result, fabricExtFactory().extAtomic());
+    result = del(result, fabricDelFactory().delAtomic());
     return result;
   }
 
@@ -116,53 +109,48 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
       Expr loc, Object expr, List<Expr> dims, int addDims) {
     AmbNewFabricArray result =
         new AmbNewFabricArray_c(pos, base, loc, expr, dims, addDims);
-    result =
-        (AmbNewFabricArray) result.ext(fabricExtFactory()
-            .extAmbNewFabricArray());
-    result =
-        (AmbNewFabricArray) result.del(fabricDelFactory()
-            .delAmbNewFabricArray());
+    result = ext(result, fabricExtFactory().extAmbNewFabricArray());
+    result = del(result, fabricDelFactory().delAmbNewFabricArray());
     return result;
   }
 
   @Override
   public RetryStmt RetryStmt(Position pos) {
     RetryStmt s = new RetryStmt_c(pos);
-    s = (RetryStmt) s.ext(fabricExtFactory().extRetryStmt());
-    s = (RetryStmt) s.del(fabricDelFactory().delStmt());
+    s = ext(s, fabricExtFactory().extRetryStmt());
+    s = del(s, fabricDelFactory().delStmt());
     return s;
   }
 
   @Override
   public AbortStmt AbortStmt(Position pos) {
     AbortStmt s = new AbortStmt_c(pos);
-    s = (AbortStmt) s.ext(fabricExtFactory().extAbortStmt());
-    s = (AbortStmt) s.del(fabricDelFactory().delStmt());
+    s = ext(s, fabricExtFactory().extAbortStmt());
+    s = del(s, fabricDelFactory().delStmt());
     return s;
   }
 
   @Override
   public Worker Worker(Position pos) {
     Worker n = new Worker_c(pos, Id(pos, "worker$"));
-    n = (Worker) n.ext(fabricExtFactory().extWorker());
-    n = (Worker) n.del(fabricDelFactory().delWorker());
+    n = ext(n, fabricExtFactory().extWorker());
+    n = del(n, fabricDelFactory().delWorker());
     return n;
   }
 
   @Override
   public Store Store(Position pos, Expr expr) {
     Store n = new Store_c(pos, expr);
-    n = (Store) n.ext(fabricExtFactory().extStore());
-    n = (Store) n.del(fabricDelFactory().delStore());
+    n = ext(n, fabricExtFactory().extStore());
+    n = del(n, fabricDelFactory().delStore());
     return n;
   }
 
   @Override
   public RemoteWorkerGetter RemoteWorkerGetter(Position pos, Expr remoteName) {
     RemoteWorkerGetter n = new RemoteWorkerGetter_c(pos, remoteName);
-    // TODO add the real extension and delegation for RemoteWorkerGetter.
-    n = (RemoteWorkerGetter) n.ext(fabricExtFactory().extRemoteWorkerGetter());
-    n = (RemoteWorkerGetter) n.del(fabricDelFactory().delRemoteWorkerGetter());
+    n = ext(n, fabricExtFactory().extRemoteWorkerGetter());
+    n = del(n, fabricDelFactory().delRemoteWorkerGetter());
     return n;
   }
 
@@ -171,34 +159,29 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
       Expr location, List<Expr> dims, int addDims, FabricArrayInit init) {
     NewFabricArray result =
         new NewFabricArray_c(pos, base, dims, addDims, init);
-    result =
-        (NewFabricArray) result.ext(fabricExtFactory().extNewFabricArray());
-    result =
-        (NewFabricArray) result.del(fabricDelFactory().delNewFabricArray());
+    result = ext(result, fabricExtFactory().extNewFabricArray());
+    result = del(result, fabricDelFactory().delNewFabricArray());
+
+    LocatedExt_c ext = (LocatedExt_c) FabricUtil.fabricExt(result);
+    result = FabricUtil.updateFabricExt(result, ext.location(location));
     return result;
   }
 
   @Override
-  public FabricArrayInit FabricArrayInit(Position position, Expr label,
+  public FabricArrayInit FabricArrayInit(Position pos, Expr label,
       Expr location, List<Expr> elements) {
     FabricArrayInit result =
-        new FabricArrayInit_c(position, elements, label, location);
-    result =
-        (FabricArrayInit) result.ext(fabricExtFactory().extFabricArrayInit());
-    result =
-        (FabricArrayInit) result.del(fabricDelFactory().delFabricArrayInit());
+        new FabricArrayInit_c(pos, elements, label, location);
+    result = ext(result, fabricExtFactory().extFabricArrayInit());
+    result = del(result, fabricDelFactory().delFabricArrayInit());
     return result;
   }
 
   @Override
   public FabricArrayTypeNode FabricArrayTypeNode(Position pos, TypeNode type) {
     FabricArrayTypeNode result = new FabricArrayTypeNode_c(pos, type);
-    result =
-        (FabricArrayTypeNode) result.ext(fabricExtFactory()
-            .extFabricArrayTypeNode());
-    result =
-        (FabricArrayTypeNode) result.del(fabricDelFactory()
-            .delFabricArrayTypeNode());
+    result = ext(result, fabricExtFactory().extFabricArrayTypeNode());
+    result = del(result, fabricDelFactory().delFabricArrayTypeNode());
     return result;
   }
 
@@ -209,7 +192,7 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
   @Override
   public New New(Position pos, TypeNode type, Expr location, List<Expr> args) {
     New result = New(pos, type, args);
-    result = (New) setLocation(result, location);
+    result = setLocation(result, location);
     return result;
   }
 
@@ -217,7 +200,7 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
   public New New(Position pos, TypeNode type, Expr location, List<Expr> args,
       polyglot.ast.ClassBody body) {
     New result = New(pos, type, args, body);
-    result = (New) setLocation(result, location);
+    result = setLocation(result, location);
     return result;
   }
 
@@ -225,7 +208,7 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
   public New New(Position pos, Expr outer, TypeNode objectType, Expr location,
       List<Expr> args) {
     New result = New(pos, outer, objectType, args, null);
-    result = (New) setLocation(result, location);
+    result = setLocation(result, location);
     return result;
   }
 
@@ -238,8 +221,8 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
       throw new InternalCompilerError("Fabric does not support inner classes.");
 
     New n = new FabricNew_c(pos, outer, objectType, args, body);
-    n = (New) n.ext(extFactory().extNew());
-    n = (New) n.del(delFactory().delNew());
+    n = ext(n, extFactory().extNew());
+    n = del(n, delFactory().delNew());
     return n;
   }
 
@@ -247,7 +230,7 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
   public New New(Position pos, Expr outer, TypeNode objectType, Expr location,
       List<Expr> args, polyglot.ast.ClassBody body) {
     New n = New(pos, outer, objectType, args, body);
-    n = (New) setLocation(n, location);
+    n = setLocation(n, location);
     return n;
   }
 
@@ -277,19 +260,18 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
 
   @Override
   public NewLabel NewLabel(Position pos, LabelNode label, Expr location) {
-    NewLabel result = super.NewLabel(pos, label);
-    result = (NewLabel) setLocation(result, location);
+    NewLabel result = NewLabel(pos, label);
+    result = setLocation(result, location);
     return result;
   }
 
   @Override
   public PrincipalExpr PrincipalExpr(Position pos, PrincipalNode principal,
       Expr location) {
-    PrincipalExpr n = super.PrincipalExpr(pos, principal);
-    n =
-        (PrincipalExpr) n.del(((FabricDelFactory) delFactory())
-            .delPrincipalExpr());
-    n = (PrincipalExpr) setLocation(n, location);
+    PrincipalExpr n = PrincipalExpr(pos, principal);
+    // XXX yuck. This should be done by modifying Jif's del factory.
+    n = del(n, ((FabricDelFactory) delFactory()).delPrincipalExpr());
+    n = setLocation(n, location);
     return n;
   }
 
@@ -298,15 +280,11 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
   // ////////////////////////////////////////////////////////////////////////////
 
   @Override
-  public ClassDecl ClassDecl(Position pos, Flags flags, Id name,
+  public JifClassDecl ClassDecl(Position pos, Flags flags, Id name,
       TypeNode superClass, List<TypeNode> interfaces, ClassBody body) {
-    ClassDecl n =
-        new ClassDecl_c(pos, flags, name, Collections.<ParamDecl> emptyList(),
-            superClass, interfaces, Collections.<PrincipalNode> emptyList(),
-            Collections.<ConstraintNode<Assertion>> emptyList(), body);
-    n = (ClassDecl) n.ext(extFactory().extClassDecl());
-    n = (ClassDecl) n.del(delFactory().delClassDecl());
-    return n;
+    return JifClassDecl(pos, flags, name, Collections.<ParamDecl> emptyList(),
+        superClass, interfaces, Collections.<PrincipalNode> emptyList(),
+        Collections.<ConstraintNode<Assertion>> emptyList(), body);
   }
 
   @Override
@@ -317,8 +295,16 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
     JifClassDecl n =
         new ClassDecl_c(pos, flags, name, params, superClass, interfaces,
             authority, constraints, body);
-    n = (JifClassDecl) n.ext(extFactory().extClassDecl());
-    n = (JifClassDecl) n.del(delFactory().delClassDecl());
+    n = ext(n, extFactory().extClassDecl());
+    n = del(n, delFactory().delClassDecl());
+    return n;
+  }
+
+  @Override
+  public ClassBody ClassBody(Position pos, List<ClassMember> members) {
+    ClassBody n = new FabricClassBody_c(pos, members);
+    n = ext(n, extFactory().extClassBody());
+    n = del(n, delFactory().delClassBody());
     return n;
   }
 
@@ -327,24 +313,16 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
       TypeNode type, LabelNode accessLabel, Id name, Expr init) {
     FabricFieldDecl n =
         new FabricFieldDecl_c(pos, flags, type, accessLabel, name, init);
-    n = (FabricFieldDecl) n.ext(extFactory().extFieldDecl());
-    n = (FabricFieldDecl) n.del(delFactory().delFieldDecl());
+    n = ext(n, extFactory().extFieldDecl());
+    n = del(n, delFactory().delFieldDecl());
     return n;
   }
 
   @Override
   public AccessPolicy AccessPolicy(Position pos, LabelNode ln) {
     AccessPolicy n = new AccessPolicy_c(pos, ln);
-    n = (AccessPolicy) n.ext(fabricExtFactory().extAccessPolicy());
-    n = (AccessPolicy) n.del(fabricDelFactory().delAccessPolicy());
-    return n;
-  }
-
-  @Override
-  public ClassBody ClassBody(Position pos, List<ClassMember> members) {
-    ClassBody n = new ClassBody_c(pos, CollectionUtil.nonNullList(members));
-    n = (ClassBody) n.ext(extFactory().extClassBody());
-    n = (ClassBody) n.del(delFactory().delClassBody());
+    n = ext(n, fabricExtFactory().extAccessPolicy());
+    n = del(n, fabricDelFactory().delAccessPolicy());
     return n;
   }
 
@@ -354,32 +332,27 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
   }
 
   @Override
-  public CanonicalTypeNode CanonicalTypeNode(Position pos, Type type) {
-    return super.CanonicalTypeNode(pos, type);
-  }
-
-  @Override
   public Call Call(Position pos, Receiver target, Id name, Expr remoteWorker,
       List<Expr> args) {
     Call n = new FabricCall_c(pos, target, name, remoteWorker, args);
-    n = (Call) n.ext(extFactory().extCall());
-    n = (Call) n.del(delFactory().delCall());
+    n = ext(n, extFactory().extCall());
+    n = del(n, delFactory().delCall());
     return n;
   }
 
   @Override
   public AmbPrincipalNode AmbPrincipalNode(Position pos, Expr expr) {
     AmbPrincipalNode n = new FabricAmbPrincipalNode_c(pos, expr);
-    n = (AmbPrincipalNode) n.ext(jifExtFactory().extAmbPrincipalNode());
-    n = (AmbPrincipalNode) n.del(delFactory().delExpr());
+    n = ext(n, jifExtFactory().extAmbPrincipalNode());
+    n = del(n, delFactory().delExpr());
     return n;
   }
 
   @Override
   public AmbPrincipalNode AmbPrincipalNode(Position pos, Id name) {
     AmbPrincipalNode n = new FabricAmbPrincipalNode_c(pos, name);
-    n = (AmbPrincipalNode) n.ext(jifExtFactory().extAmbPrincipalNode());
-    n = (AmbPrincipalNode) n.del(delFactory().delExpr());
+    n = ext(n, jifExtFactory().extAmbPrincipalNode());
+    n = del(n, delFactory().delExpr());
     return n;
   }
 
@@ -395,8 +368,8 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
       List<TopLevelDecl> decls) {
     SourceFile sf =
         new CBSourceFile_c(pos, packageName, imports, codebases, decls);
-    sf = (SourceFile) sf.ext(jifExtFactory().extSourceFile());
-    sf = (SourceFile) sf.del(delFactory().delSourceFile());
+    sf = ext(sf, jifExtFactory().extSourceFile());
+    sf = del(sf, delFactory().delSourceFile());
     return sf;
   }
 
@@ -404,6 +377,7 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
   // private helper methods //
   // ////////////////////////////////////////////////////////////////////////////
 
+  @Deprecated
   private FabricDelFactory fabricDelFactory() {
     return (FabricDelFactory) this.delFactory();
   }
@@ -413,8 +387,8 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
   }
 
   /**
-   * Update the provided node with a given location.
-   * 
+   * Updates the provided node with a given location.
+   *
    * @param result
    *          a Node having a LocatedExt as a Fabric extension
    * @param location
@@ -422,7 +396,7 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements
    * @return a copy of <code>result</code> with the Fabric extension updated
    *         with the location
    */
-  protected Node setLocation(Node result, Expr location) {
+  private <N extends Node> N setLocation(N result, Expr location) {
     FabricExt fabExt = FabricUtil.fabricExt(result);
     // Ext jifExt = result.ext();
     // Ext fabExt = jifExt.ext();

@@ -11,7 +11,16 @@
 #
 #   2. The JAVA_HOME environment variable.
 #
-#   3. Ant's built-in java.home property (on some systems, this points
+#   3. The output of the following BASH command (if successful):
+#
+#          readlink -f $(which javac) \
+#            | sed '/\/bin\/javac$/{s|/bin/javac$||;q}; q1'
+#
+#      (The above sed expression is the same as 's|/bin/javac$||',
+#      except it returns with exit code 1 if the substitution is
+#      unsuccessful.)
+#
+#   4. Ant's built-in java.home property (on some systems, this points
 #      to the JRE, and not the JDK).
 #
 # The commented example below uses Ant's built-in java.home property.

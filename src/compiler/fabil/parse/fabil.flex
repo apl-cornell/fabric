@@ -10,9 +10,11 @@ import polyglot.lex.*;
 import polyglot.util.Position;
 import polyglot.util.ErrorQueue;
 import polyglot.util.ErrorInfo;
-import polyglot.frontend.FileSource;
-import java.util.HashMap;
+import polyglot.frontend.Source;
 import java.math.BigInteger;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Set;
 
 
 @SuppressWarnings("all")
@@ -39,13 +41,22 @@ import java.math.BigInteger;
     ErrorQueue eq;
     HashMap keywords;
 
-    public Lexer_c(java.io.Reader reader, FileSource file, ErrorQueue eq) {
+    public Lexer_c(java.io.Reader reader, Source file, ErrorQueue eq) {
         this(reader);
         this.file = file.name();
         this.path = file.path();
         this.eq = eq;
         this.keywords = new HashMap();
         init_keywords();
+    }
+
+    public Set<String> keywords() {
+	if (keywords == null) {
+	    this.keywords = new HashMap<>();
+	    init_keywords();
+	}
+
+	return Collections.unmodifiableSet(keywords.keySet());
     }
 
     protected void init_keywords() {
@@ -393,7 +404,7 @@ OctalEscape = \\ [0-7]
 
 <TRADITIONAL_COMMENT> {
     "*/"                         { yybegin(YYINITIAL); }
-    .|\n                         { /* ignore */ }
+    [^]                          { /* ignore */ }
 }
 
 <END_OF_LINE_COMMENT> {
@@ -482,6 +493,6 @@ OctalEscape = \\ [0-7]
 }
 
 /* Fallthrough case: anything not matched above is an error */
-.|\n                             { eq.enqueue(ErrorInfo.LEXICAL_ERROR,
+[^]                              { eq.enqueue(ErrorInfo.LEXICAL_ERROR,
                                               "Illegal character \"" +
                                               yytext() + "\"", pos()); }

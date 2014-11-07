@@ -39,7 +39,7 @@ public final class ReadMap {
     private final Set<Log> readLocks;
 
     /**
-     * The version number on the object represented by this entry. 
+     * The version number on the object represented by this entry.
      */
     private int versionNumber;
 
@@ -113,13 +113,13 @@ public final class ReadMap {
 
     /**
      * Transfers a lock from a reader to its parent.
-     * 
+     *
      * @return <ul>
      *          <li>null, if the reader's parent already has a lock;
      *          <li>true, if an ancestor of the reader's parent already has a
      *          lock;
      *          <li>false, otherwise.
-     *          </ul> 
+     *          </ul>
      */
     synchronized Boolean transferLockToParent(Log reader) {
       final Log child = reader;
@@ -159,7 +159,7 @@ public final class ReadMap {
 
     /**
      * Decrements pin count and attempts garbage collection.
-     * 
+     *
      * @return true iff this entry was removed from the read map.
      */
     public synchronized boolean depin() {
@@ -172,7 +172,7 @@ public final class ReadMap {
      * the impl's version number is the same as that of this entry, the update
      * succeeds. Otherwise, the update fails, and any transaction that has read
      * the old version of the object is aborted.
-     * 
+     *
      * @return true iff successful.
      */
     private boolean updateImpl(_Impl impl) {
@@ -197,7 +197,7 @@ public final class ReadMap {
     /**
      * Attempts to garbage-collect this entry. Garbage collection is performed
      * when the pin count is 0 and there are no read locks.
-     * 
+     *
      * @return true iff garbage collection was performed.
      */
     private synchronized boolean attemptGC() {
@@ -213,7 +213,7 @@ public final class ReadMap {
     /**
      * Signals the object corresponding to this entry (if the object is resident
      * in memory). After signalling, this method clears the $reader stamp of the
-     * object. 
+     * object.
      */
     void signalObject() {
       _Impl obj = this.obj.get();
