@@ -107,8 +107,13 @@ public class DirtyReadMessage extends
       out.writeUTF(r.store.name());
       r.obj.getSerializedObject().write(out);
       out.writeLong(r.obj.getWarranty().expiry());
-      out.writeUTF(r.obj.getLease().getOwner().store.name());
-      out.writeLong(r.obj.getLease().getOwner().onum);
+      if (r.obj.getLease().getOwner() != null) {
+        out.writeBoolean(true);
+        out.writeUTF(r.obj.getLease().getOwner().store.name());
+        out.writeLong(r.obj.getLease().getOwner().onum);
+      } else {
+        out.writeBoolean(false);
+      }
       out.writeLong(r.obj.getLease().expiry());
     } else {
       out.writeBoolean(false);
@@ -124,9 +129,15 @@ public class DirtyReadMessage extends
     Store store = Worker.getWorker().getStore(in.readUTF());
     SerializedObject serialized = new SerializedObject(in);
     VersionWarranty warranty = new VersionWarranty(in.readLong());
-    Store ownerStore = Worker.getWorker().getStore(in.readUTF());
-    Oid ownerOid = new Oid(ownerStore, in.readLong());
-    RWLease lease = new RWLease(in.readLong(), ownerOid);
+
+    RWLease lease;
+    if (in.readBoolean()) {
+      Store ownerStore = Worker.getWorker().getStore(in.readUTF());
+      Oid ownerOid = new Oid(ownerStore, in.readLong());
+      lease = new RWLease(in.readLong(), ownerOid);
+    } else {
+      lease = new RWLease(in.readLong());
+    }
 
     return new Response(store, new SerializedObjectAndTokens(serialized,
         warranty, lease));

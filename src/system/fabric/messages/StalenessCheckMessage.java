@@ -95,8 +95,13 @@ public final class StalenessCheckMessage extends
     for (SerializedObjectAndTokens obj : r.staleObjects) {
       obj.getSerializedObject().write(out);
       out.writeLong(obj.getWarranty().expiry());
-      out.writeUTF(obj.getLease().getOwner().store.name());
-      out.writeLong(obj.getLease().getOwner().onum);
+      if (obj.getLease() != null) {
+        out.writeBoolean(true);
+        out.writeUTF(obj.getLease().getOwner().store.name());
+        out.writeLong(obj.getLease().getOwner().onum);
+      } else {
+        out.writeBoolean(false);
+      }
       out.writeLong(obj.getLease().expiry());
     }
   }
@@ -108,9 +113,14 @@ public final class StalenessCheckMessage extends
     for (int i = 0; i < size; i++) {
       SerializedObject obj = new SerializedObject(in);
       VersionWarranty warranty = new VersionWarranty(in.readLong());
-      Store ownerStore = Worker.getWorker().getStore(in.readUTF());
-      Oid ownerOid = new Oid(ownerStore, in.readLong());
-      RWLease lease = new RWLease(in.readLong(), ownerOid);
+      RWLease lease;
+      if (in.readBoolean()) {
+        Store ownerStore = Worker.getWorker().getStore(in.readUTF());
+        Oid ownerOid = new Oid(ownerStore, in.readLong());
+        lease = new RWLease(in.readLong(), ownerOid);
+      } else {
+        lease = new RWLease(in.readLong());
+      }
 
       staleObjects.add(new SerializedObjectAndTokens(obj, warranty, lease));
     }

@@ -45,6 +45,7 @@ public class RWLease extends Lease {
    * @param p Principal to be checked.
    */
   public boolean ownedByPrincipal(Principal p) {
+    if (owner == null) return false;
     return owner.equals(new Oid(p));
   }
 

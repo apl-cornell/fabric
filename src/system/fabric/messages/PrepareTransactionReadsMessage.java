@@ -189,17 +189,18 @@ public class PrepareTransactionReadsMessage
     }
 
     if (in.readBoolean()) {
-      // Read in warranties
+      // Read in leases
       int leasesSize = in.readInt();
       newLeases = new LongKeyHashMap<>(leasesSize);
       for (int i = 0; i < leasesSize; i++) {
         long onum = in.readLong();
-        Oid owner = null;
         if (in.readBoolean()) {
           Store ownerStore = Worker.getWorker().getStore(in.readUTF());
-          owner = new Oid(ownerStore, in.readLong());
+          Oid owner = new Oid(ownerStore, in.readLong());
+          newLeases.put(onum, new RWLease(in.readLong(), owner));
+        } else {
+          newLeases.put(onum, new RWLease(in.readLong()));
         }
-        newLeases.put(onum, new RWLease(in.readLong(), owner));
       }
     }
 
