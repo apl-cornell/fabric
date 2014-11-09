@@ -1134,7 +1134,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
 
       _Impl result =
           (_Impl) constructor.newInstance(store, getOnum(), getVersion(),
-              warranty, getUpdateLabelOnum(), getAccessPolicyOnum(),
+              warranty, lease, getUpdateLabelOnum(), getAccessPolicyOnum(),
               new ObjectInputStream(getSerializedDataStream()),
               getRefTypeIterator(), getIntraStoreRefIterator(),
               getInterStoreRefIterator());
