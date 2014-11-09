@@ -372,4 +372,13 @@ public final class ConjunctivePrincipal extends NonPrimitivePrincipal {
     }
     return PrincipalUtil.join(newConjuncts);
   }
+
+  @Override
+  Set<PrimitivePrincipal> componentPrimitivePrincipals() {
+    Set<PrimitivePrincipal> result = new HashSet<>();
+    for (Principal p : conjuncts) {
+      result.addAll(p.componentPrimitivePrincipals());
+    }
+    return result;
+  }
 }

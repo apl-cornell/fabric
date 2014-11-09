@@ -2,11 +2,9 @@ package fla.principals;
 
 import java.util.Set;
 
-import fla.Label;
-
 public class PrincipalUtil {
   /**
-   * Determines whether {@code superior} actsfor {@code inferior} in an empty
+   * Determines whether {@code superior} ≽ {@code inferior} in an empty
    * (i.e., static) context.
    */
   public static boolean staticallyActsFor(Principal superior, Principal inferior) {
@@ -14,23 +12,23 @@ public class PrincipalUtil {
   }
 
   /**
-   * Asks {@code prover} whether it can find a proof for "{@code superior}
-   * actsfor {@code inferior}". See {@link fla.principals.Principal#actsFor(Principal,
-   * Principal, Label, Principal)}.
+   * Asks {@code prover} whether it can find a proof for "{@code superior} ≽
+   * {@code inferior}". See {@link fla.principals.Principal#actsFor(Principal,
+   * Principal, Principal, Principal)}.
    */
   public static boolean actsFor(Principal prover, Principal superior,
-      Principal inferior, Label maxUsableLabel, Principal accessPolicy) {
+      Principal inferior, Principal maxUsableLabel, Principal accessPolicy) {
     return prover.actsFor(superior, inferior, maxUsableLabel, accessPolicy);
   }
 
   /**
    * Asks {@code prover} whether it can find the (direct) delegation "{@code
-   * superior} actsfor {@code granter}" whose label does not exceed {@code
-   * maxLabel}. See {@link fla.principals.Principal#delegatesTo(Principal, Principal,
-   * Label, Principal)}.
+   * superior} ≽ {@code granter}" whose label does not exceed {@code maxLabel}.
+   * See {@link fla.principals.Principal#delegatesTo(Principal, Principal,
+   * Principal, Principal)}.
    */
   public static boolean delegatesTo(PrimitivePrincipal prover,
-      Principal granter, Principal superior, Label maxLabel,
+      Principal granter, Principal superior, Principal maxLabel,
       Principal accessPolicy) {
     return prover.delegatesTo(granter, superior, maxLabel, accessPolicy);
   }
@@ -46,12 +44,12 @@ public class PrincipalUtil {
   /**
    * Asks {@code prover} whether it can find a proof for the equivalence of two
    * principals. Principals are equivalent if they act for each other. See
-   * {@link fla.principals.Principal#actsFor(Principal, Principal, Label,
+   * {@link fla.principals.Principal#actsFor(Principal, Principal, Principal,
    * Principal)} for documentation on {@code maxUsableLabel} and {@code
    * accessPolicy}.
    */
   public static boolean equivalentTo(Principal prover, Principal p,
-      Principal q, Label maxUsableLabel, Principal accessPolicy) {
+      Principal q, Principal maxUsableLabel, Principal accessPolicy) {
     return actsFor(prover, p, q, maxUsableLabel, accessPolicy)
         && actsFor(prover, q, p, maxUsableLabel, accessPolicy);
   }

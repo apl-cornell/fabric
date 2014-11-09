@@ -1,5 +1,8 @@
 package fla.principals;
 
+import java.util.HashSet;
+import java.util.Set;
+
 /**
  * Represents an ownership projection of a principal.
  */
@@ -259,5 +262,13 @@ public final class OwnedPrincipal extends NonPrimitivePrincipal {
   Principal meet(DisjunctivePrincipal disjunct) {
     // Use the DisjunctivePrincipal implementation.
     return disjunct.meet(this);
+  }
+
+  @Override
+  Set<PrimitivePrincipal> componentPrimitivePrincipals() {
+    Set<PrimitivePrincipal> result =
+        new HashSet<>(owner.componentPrimitivePrincipals());
+    result.addAll(projection.componentPrimitivePrincipals());
+    return result;
   }
 }

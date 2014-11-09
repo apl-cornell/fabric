@@ -1,17 +1,22 @@
 package fla.util;
 
-import fla.Label;
 import fla.principals.Principal;
 import fla.principals.PrincipalUtil;
 
 public class ActsForQuery<Superior extends Principal, Inferior extends Principal> {
   public final Superior superior;
   public final Inferior inferior;
-  public final Label maxUsableLabel;
+  public final Principal maxUsableLabel;
   public final Principal accessPolicy;
 
+  /**
+   * Memoized value for the lower bound of principals to which recursive queries
+   * can be made.
+   */
+  private Principal recurseLowerBound;
+
   public ActsForQuery(Superior superior, Inferior inferior,
-      Label maxUsableLabel, Principal accessPolicy) {
+      Principal maxUsableLabel, Principal accessPolicy) {
     this.superior = superior;
     this.inferior = inferior;
     this.maxUsableLabel = maxUsableLabel;
@@ -56,5 +61,18 @@ public class ActsForQuery<Superior extends Principal, Inferior extends Principal
 
   public boolean useDynamicContext() {
     return maxUsableLabel != null && accessPolicy != null;
+  }
+
+  /**
+   * @return the lower bound (in the acts-for hierarchy) for principals to which
+   *          recursive queries can be made
+   */
+  public Principal recurseLowerBound() {
+    if (recurseLowerBound != null) return recurseLowerBound;
+
+    // The lower bound is {@code accessPolicy} ∧ {@code maxLabel}←.
+    recurseLowerBound =
+        PrincipalUtil.conjunction(accessPolicy, maxUsableLabel.integrity());
+    return recurseLowerBound;
   }
 }

@@ -1,5 +1,7 @@
 package fla.principals;
 
+import java.util.Set;
+
 /**
  * Represents the integrity projection of a principal.
  */
@@ -283,5 +285,10 @@ public final class IntegPrincipal extends NonPrimitivePrincipal {
     // Can assume q∨r ⋡ p←.
     // Rewrite p← ∨ (q∨r) as (p∨(q∨r))←.
     return PrincipalUtil.disjunction(p, qr).integrity();
+  }
+
+  @Override
+  Set<PrimitivePrincipal> componentPrimitivePrincipals() {
+    return base.componentPrimitivePrincipals();
   }
 }

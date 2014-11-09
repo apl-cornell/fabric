@@ -306,4 +306,13 @@ public class DisjunctivePrincipal extends NonPrimitivePrincipal {
     if (newDisjuncts.size() == 1) return q;
     return new DisjunctivePrincipal(newDisjuncts, false);
   }
+
+  @Override
+  Set<PrimitivePrincipal> componentPrimitivePrincipals() {
+    Set<PrimitivePrincipal> result = new HashSet<>();
+    for (Principal p : disjuncts) {
+      result.addAll(p.componentPrimitivePrincipals());
+    }
+    return result;
+  }
 }

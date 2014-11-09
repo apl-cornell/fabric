@@ -1,5 +1,7 @@
 package fla.principals;
 
+import java.util.Set;
+
 /**
  * Represents the confidentiality projection of a principal.
  */
@@ -291,5 +293,10 @@ public final class ConfPrincipal extends NonPrimitivePrincipal {
     // Can assume q∨r ⋡ p→.
     // Rewrite p→ ∨ (q∨r) as (p∨(q∨r))→.
     return PrincipalUtil.disjunction(p, qr).confidentiality();
+  }
+
+  @Override
+  Set<PrimitivePrincipal> componentPrimitivePrincipals() {
+    return base.componentPrimitivePrincipals();
   }
 }

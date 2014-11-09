@@ -1,6 +1,11 @@
 package fla.principals;
 
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+
 import fla.util.ActsForQuery;
+import fla.util.DelegationPair;
 
 /**
  * An abstract class for principals constructed from other principals through
@@ -92,8 +97,21 @@ abstract class NonPrimitivePrincipal extends Principal {
   abstract Principal meet(DisjunctivePrincipal p);
 
   @Override
-  final boolean delegatesTo(ActsForQuery<?, ?> query) {
+  final Set<DelegationPair> usableDelegations(ActsForQuery<?, ?> query,
+      ProofSearchState searchState) {
     // Only primitive principals store delegations.
-    return false;
+    return Collections.emptySet();
+  }
+
+  @Override
+  final Set<Principal> askablePrincipals(ActsForQuery<?, ?> query,
+      ProofSearchState searchState) {
+    if (!query.useDynamicContext()) {
+      // Static context. No dynamic delegations should be used.
+      return Collections.emptySet();
+    }
+
+    return removeUnaskablePrincipals(new HashSet<Principal>(
+        componentPrimitivePrincipals()), query, searchState);
   }
 }

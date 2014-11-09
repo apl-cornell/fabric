@@ -1,6 +1,9 @@
 package fla.principals;
 
-import fla.Label;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+
 import fla.util.ActsForQuery;
 import fla.util.DelegationPair;
 import fla.util.PolyInstantiableSet;
@@ -133,14 +136,13 @@ public class PrimitivePrincipal extends Principal {
    * @param label the label on the new delegation
    */
   public final void addDelegatesTo(Principal granter, Principal superior,
-      Label label) {
+      Principal label) {
     delegations.add(label, new DelegationPair(granter, superior));
   }
 
   /**
    * Asks this principal whether it can find the (direct) delegation "{@code
-   * superior} actsfor {@code granter}" whose label does not exceed {@code
-   * maxLabel}.
+   * superior} ≽ {@code granter}" whose label flows to {@code maxLabel}.
    * <p>
    * When making recursive calls, any principals receiving those calls must act
    * for {@code accessPolicy} and the integrity projection of {@code maxLabel}.
@@ -163,21 +165,44 @@ public class PrimitivePrincipal extends Principal {
    * @param granter the potential granter
    * @param superior the potential superior
    * @param maxLabel labels on delegations considered when satisfying this
-   *          query will not exceed this label
+   *          query must flow to this label
    * @param accessPolicy the confidentiality level of the query. This should
    *          act for the confidentiality component of {@code maxLabel}
    */
   public final boolean delegatesTo(Principal granter, Principal superior,
-      Label maxLabel, Principal accessPolicy) {
+      Principal maxLabel, Principal accessPolicy) {
     return delegatesTo(new ActsForQuery<>(superior, granter, maxLabel,
         accessPolicy));
   }
 
   @Override
-  final boolean delegatesTo(ActsForQuery<?, ?> query) {
+  Set<PrimitivePrincipal> componentPrimitivePrincipals() {
+    return Collections.singleton(this);
+  }
+
+  @Override
+  final Set<DelegationPair> usableDelegations(ActsForQuery<?, ?> query,
+      ProofSearchState searchState) {
     if (!query.useDynamicContext()) {
       // Static context. No dynamic delegations should be used.
-      return false;
+      return Collections.emptySet();
     }
+  }
+
+  @Override
+  Set<Principal> askablePrincipals(ActsForQuery<?, ?> query,
+      ProofSearchState searchState) {
+    if (!query.useDynamicContext()) {
+      // Static context. No dynamic delegations should be used.
+      return Collections.emptySet();
+    }
+
+    Set<Principal> result = new HashSet<>();
+    for (DelegationPair delegation : usableDelegations(query, searchState)) {
+      result.addAll(delegation.inferior.componentPrimitivePrincipals());
+      result.addAll(delegation.superior.componentPrimitivePrincipals());
+    }
+
+    return removeUnaskablePrincipals(result, query, searchState);
   }
 }
