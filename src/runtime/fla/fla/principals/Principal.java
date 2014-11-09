@@ -5,15 +5,19 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import jif.lang.FromDisjunctProof;
-import jif.lang.ToConjunctProof;
 import fla.Label;
 import fla.util.ActsForProof;
 import fla.util.ActsForQuery;
+import fla.util.ConfProjectionProof;
 import fla.util.DelegatesProof;
 import fla.util.DelegationPair;
+import fla.util.FromDisjunctProof;
+import fla.util.IntegProjectionProof;
+import fla.util.MeetToOwnerProof;
+import fla.util.OwnedPrincipalsProof;
 import fla.util.PolyInstantiableSet;
 import fla.util.ReflexiveProof;
+import fla.util.ToConjunctProof;
 import fla.util.TransitiveProof;
 
 public abstract class Principal implements Label {
@@ -179,7 +183,7 @@ public abstract class Principal implements Label {
    */
   public final boolean delegatesTo(Principal granter, Principal superior,
       Label maxLabel, Principal accessPolicy) {
-    return delegatesTo(new ActsForQuery(superior, granter, maxLabel,
+    return delegatesTo(new ActsForQuery<>(superior, granter, maxLabel,
         accessPolicy));
   }
 
@@ -245,7 +249,7 @@ public abstract class Principal implements Label {
    */
   public final boolean actsFor(Principal superior, Principal inferior,
       Label maxUsableLabel, Principal accessPolicy) {
-    return actsForProof(new ActsForQuery(superior, inferior, maxUsableLabel,
+    return actsForProof(new ActsForQuery<>(superior, inferior, maxUsableLabel,
         accessPolicy)) != null;
   }
 
@@ -272,13 +276,14 @@ public abstract class Principal implements Label {
    * null}, then a static context is assumed, and dynamic delegations will be
    * ignored.
    */
-  private final ActsForProof actsForProof(ActsForQuery query) {
+  private final <Superior extends Principal, Inferior extends Principal> ActsForProof<Superior, Inferior> actsForProof(
+      ActsForQuery<Superior, Inferior> query) {
     if (delegatesTo(query)) {
-      return new DelegatesProof(query.inferior, query.superior);
+      return new DelegatesProof<>(query.inferior, query.superior);
     }
 
     if (PrincipalUtil.equals(query.inferior, query.superior)) {
-      return new ReflexiveProof(query.inferior, query.superior);
+      return new ReflexiveProof<>(query.superior, query.inferior);
     }
 
     // Try searching.
@@ -292,16 +297,16 @@ public abstract class Principal implements Label {
    * @param searchState records the goals that we are in the middle of
    *          attempting
    */
-  private final ActsForProof findActsForProof(ActsForQuery query,
-      ProofSearchState searchState) {
+  private final <Superior extends Principal, Inferior extends Principal> ActsForProof<Superior, Inferior> findActsForProof(
+      ActsForQuery<Superior, Inferior> query, ProofSearchState searchState) {
     // Try the dumb things first.
     if (query.inferior instanceof BottomPrincipal
         || query.superior instanceof TopPrincipal) {
-      return new DelegatesProof(query.inferior, query.superior);
+      return new DelegatesProof<>(query.inferior, query.superior);
     }
 
     if (PrincipalUtil.equals(query.inferior, query.superior)) {
-      return new ReflexiveProof(query.inferior, query.superior);
+      return new ReflexiveProof<>(query.superior, query.inferior);
     }
 
     // Check the search state.
@@ -316,14 +321,16 @@ public abstract class Principal implements Label {
     // Attempt to use the rule:
     //   a ≽ c or b ≽ c => a ∧ b ≽ c
     if (query.superior instanceof ConjunctivePrincipal) {
-      ConjunctivePrincipal superior = (ConjunctivePrincipal) query.superior;
+      final ConjunctivePrincipal superior =
+          (ConjunctivePrincipal) query.superior;
       for (Principal witness : superior.conjuncts()) {
-        ActsForProof proof =
+        ActsForProof<Principal, Inferior> proof =
             findActsForProof(query.superior(witness), searchState);
         if (proof != null) {
           // Have a proof of witness ≽ query.inferior.
-          DelegatesProof step = new DelegatesProof(witness, this);
-          return new TransitiveProof(step, witness, proof);
+          DelegatesProof<Superior, Principal> step =
+              new DelegatesProof<>(witness, query.superior);
+          return new TransitiveProof<>(step, witness, proof);
         }
       }
     }
@@ -331,11 +338,13 @@ public abstract class Principal implements Label {
     // Attempt to use the rule:
     //   a ≽ c and b ≽ c => a ∨ b ≽ c
     if (query.superior instanceof DisjunctivePrincipal) {
-      DisjunctivePrincipal superior = (DisjunctivePrincipal) query.superior;
-      Map<Principal, ActsForProof> proofs;
+      final DisjunctivePrincipal superior =
+          (DisjunctivePrincipal) query.superior;
+      Map<Principal, ActsForProof<Principal, Inferior>> proofs;
       boolean success = true;
       for (Principal p : superior.disjuncts()) {
-        ActsForProof proof = findActsForProof(query.superior(p), searchState);
+        ActsForProof<Principal, Inferior> proof =
+            findActsForProof(query.superior(p), searchState);
         if (proof == null) {
           success = false;
           break;
@@ -344,18 +353,21 @@ public abstract class Principal implements Label {
       }
 
       if (success) {
-        return new FromDisjunctProof(query.superior, query.inferior, proofs);
+        return (ActsForProof<Superior, Inferior>) new FromDisjunctProof<>(
+            superior, query.inferior, proofs);
       }
     }
 
     // Attempt to use the rule:
     //   a ≽ b and a ≽ c => a ≽ b ∧ c
     if (query.inferior instanceof ConjunctivePrincipal) {
-      ConjunctivePrincipal inferior = (ConjunctivePrincipal) query.inferior;
-      Map<Principal, ActsForProof> proofs;
+      final ConjunctivePrincipal inferior =
+          (ConjunctivePrincipal) query.inferior;
+      Map<Principal, ActsForProof<Superior, Principal>> proofs;
       boolean success = true;
       for (Principal p : inferior.conjuncts()) {
-        ActsForProof proof = findActsForProof(query.inferior(p), searchState);
+        ActsForProof<Superior, Principal> proof =
+            findActsForProof(query.inferior(p), searchState);
         if (proof == null) {
           success = false;
           break;
@@ -364,7 +376,8 @@ public abstract class Principal implements Label {
       }
 
       if (success) {
-        return new ToConjunctProof(query.superior, query.inferior, proofs);
+        return (ActsForProof<Superior, Inferior>) new ToConjunctProof<>(
+            query.superior, inferior, proofs);
       }
     }
 
@@ -373,27 +386,30 @@ public abstract class Principal implements Label {
     if (query.inferior instanceof DisjunctivePrincipal) {
       DisjunctivePrincipal inferior = (DisjunctivePrincipal) query.inferior;
       for (Principal witness : inferior.disjuncts()) {
-        ActsForProof proof =
+        ActsForProof<Superior, Principal> proof =
             findActsForProof(query.inferior(witness), searchState);
         if (proof != null) {
           // Have a proof of query.superior ≽ witness.
-          DelegatesProof step = new DelegatesProof(this, witness);
-          return new TransitiveProof(proof, witness, step);
+          DelegatesProof<Principal, Inferior> step =
+              new DelegatesProof<>(query.inferior, witness);
+          return new TransitiveProof<>(proof, witness, step);
         }
       }
     }
 
     if (query.inferior instanceof ConfPrincipal) {
       ConfPrincipal inferior = (ConfPrincipal) query.inferior;
-
-      // Attempt to use the rule:
-      //   a ≽ b => a ≽ b→
-      ActsForProof proof =
-          findActsForProof(query.inferior(inferior.base()), searchState);
-      if (proof != null) {
-        // Have a proof of query.superior ≽ inferior.base().
-        DelegatesProof step = new DelegatesProof(inferior, inferior.base());
-        return new TransitiveProof(proof, inferior.base(), step);
+      {
+        // Attempt to use the rule:
+        //   a ≽ b => a ≽ b→
+        ActsForProof<Superior, Principal> proof =
+            findActsForProof(query.inferior(inferior.base()), searchState);
+        if (proof != null) {
+          // Have a proof of query.superior ≽ inferior.base().
+          DelegatesProof<Principal, Inferior> step =
+              new DelegatesProof<>(query.inferior, inferior.base());
+          return new TransitiveProof<>(proof, inferior.base(), step);
+        }
       }
 
       if (query.superior instanceof ConfPrincipal) {
@@ -401,28 +417,31 @@ public abstract class Principal implements Label {
 
         // Attempt to use the rule:
         //   a ≽ b => a→ ≽ b→
-        proof =
+        ActsForProof<Principal, Principal> proof =
             findActsForProof(
                 query.superior(superior.base()).inferior(inferior.base()),
                 searchState);
         if (proof != null) {
-          // Have a proof of superior.base ≽ inferior.base.
-          return new ConfProjectionProof(proof);
+          // Have a proof of superior.base() ≽ inferior.base().
+          return (ActsForProof<Superior, Inferior>) new ConfProjectionProof(
+              proof);
         }
       }
     }
 
     if (query.inferior instanceof IntegPrincipal) {
       IntegPrincipal inferior = (IntegPrincipal) query.inferior;
-
-      // Attempt to use the rule:
-      //   a ≽ b => a ≽ b←
-      ActsForProof proof =
-          findActsForProof(query.inferior(inferior.base()), searchState);
-      if (proof != null) {
-        // Have a proof of query.superior ≽ inferior.base().
-        DelegatesProof step = new DelegatesProof(inferior, inferior.base());
-        return new TransitiveProof(proof, inferior.base(), step);
+      {
+        // Attempt to use the rule:
+        //   a ≽ b => a ≽ b←
+        ActsForProof<Superior, Principal> proof =
+            findActsForProof(query.inferior(inferior.base()), searchState);
+        if (proof != null) {
+          // Have a proof of query.superior ≽ inferior.base().
+          DelegatesProof<Principal, Inferior> step =
+              new DelegatesProof<>(query.inferior, inferior.base());
+          return new TransitiveProof<>(proof, inferior.base(), step);
+        }
       }
 
       if (query.superior instanceof IntegPrincipal) {
@@ -430,13 +449,14 @@ public abstract class Principal implements Label {
 
         // Attempt to use the rule:
         //   a ≽ b => a← ≽ b←
-        proof =
+        ActsForProof<Principal, Principal> proof =
             findActsForProof(
                 query.superior(superior.base()).inferior(inferior.base()),
                 searchState);
         if (proof != null) {
-          // Have a proof of superior.base ≽ inferior.base.
-          return new IntegProjectionProof(proof);
+          // Have a proof of superior.base() ≽ inferior.base().
+          return (ActsForProof<Superior, Inferior>) new IntegProjectionProof(
+              proof);
         }
       }
     }
@@ -447,11 +467,12 @@ public abstract class Principal implements Label {
       OwnedPrincipal superior = (OwnedPrincipal) query.superior;
       Principal a = superior.owner();
       Principal b = superior.projection();
-      ActsForProof proof =
+      ActsForProof<Principal, Inferior> proof =
           findActsForProof(query.superior(PrincipalUtil.disjunction(a, b)),
               searchState);
       if (proof != null) {
-        return new MeetToOwnerProof(superior, proof);
+        return (ActsForProof<Superior, Inferior>) new MeetToOwnerProof<>(
+            superior, proof);
       }
 
       // Attempt to use the rule:
@@ -460,15 +481,15 @@ public abstract class Principal implements Label {
         OwnedPrincipal inferior = (OwnedPrincipal) query.inferior;
         Principal c = inferior.owner();
         Principal d = inferior.projection();
-        ActsForProof ownersProof =
+        ActsForProof<Principal, Principal> ownersProof =
             findActsForProof(query.superior(a).inferior(c), searchState);
         if (ownersProof != null) {
-          ActsForProof projectionProof =
+          ActsForProof<Principal, Principal> projectionProof =
               findActsForProof(query.superior(PrincipalUtil.disjunction(a, b))
                   .inferior(PrincipalUtil.disjunction(c, d)), searchState);
           if (projectionProof != null) {
-            return new OwnedPrincipalsProof(query.superior, query.inferior,
-                ownersProof, projectionProof);
+            return (ActsForProof<Superior, Inferior>) new OwnedPrincipalsProof(
+                superior, inferior, ownersProof, projectionProof);
           }
         }
       }
@@ -479,11 +500,13 @@ public abstract class Principal implements Label {
     if (query.inferior instanceof OwnedPrincipal) {
       OwnedPrincipal inferior = (OwnedPrincipal) query.inferior;
       Principal b = inferior.owner();
-      ActsForProof proof = findActsForProof(query.inferior(b), searchState);
+      ActsForProof<Superior, Principal> proof =
+          findActsForProof(query.inferior(b), searchState);
       if (proof != null) {
         // Have a proof of query.superior ≽ inferior.owner().
-        DelegatesProof step = new DelegatesProof(inferior, inferior.owner());
-        return new TransitiveProof(proof, inferior.owner(), step);
+        DelegatesProof<Principal, Inferior> step =
+            new DelegatesProof<>(query.inferior, inferior.owner());
+        return new TransitiveProof<>(proof, inferior.owner(), step);
       }
     }
 
@@ -502,20 +525,21 @@ public abstract class Principal implements Label {
   }
 
   private static final class ProofSearchState {
-    private List<ActsForQuery> goalStack;
+    private List<ActsForQuery<?, ?>> goalStack;
 
     public ProofSearchState() {
       goalStack = Collections.emptyList();
     }
 
-    private ProofSearchState(ProofSearchState state, ActsForQuery query) {
-      List<ActsForQuery> stack = new ArrayList<>(state.goalStack.size() + 1);
+    private ProofSearchState(ProofSearchState state, ActsForQuery<?, ?> query) {
+      List<ActsForQuery<?, ?>> stack =
+          new ArrayList<>(state.goalStack.size() + 1);
       this.goalStack = Collections.unmodifiableList(stack);
       stack.addAll(state.goalStack);
       stack.add(query);
     }
 
-    public boolean contains(ActsForQuery query) {
+    public boolean contains(ActsForQuery<?, ?> query) {
       return goalStack.contains(query);
     }
   }
