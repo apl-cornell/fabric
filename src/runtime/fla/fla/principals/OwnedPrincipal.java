@@ -66,13 +66,13 @@ public final class OwnedPrincipal extends NonPrimitivePrincipal {
   }
 
   @Override
-  public Principal project(TopPrincipal projection) {
+  Principal project(TopPrincipal projection) {
     // Use the TopPrincipal owner implementation.
     return projection.owner(this);
   }
 
   @Override
-  public Principal project(PrimitivePrincipal projection) {
+  Principal project(PrimitivePrincipal projection) {
     // Let p:q = this, and r = projection.
     Principal pq = this;
     Principal r = projection;
@@ -82,19 +82,19 @@ public final class OwnedPrincipal extends NonPrimitivePrincipal {
   }
 
   @Override
-  public Principal project(ConfPrincipal projection) {
+  Principal project(ConfPrincipal projection) {
     // Use the ConfPrincipal owner implementation.
     return projection.owner(this);
   }
 
   @Override
-  public Principal project(IntegPrincipal projection) {
+  Principal project(IntegPrincipal projection) {
     // Use the IntegPrincipal owner implementation.
     return projection.owner(this);
   }
 
   @Override
-  public Principal project(OwnedPrincipal projection) {
+  Principal project(OwnedPrincipal projection) {
     // Let p:q = this, and r:s = projection.
     Principal pq = this;
     Principal rs = projection;
@@ -104,13 +104,13 @@ public final class OwnedPrincipal extends NonPrimitivePrincipal {
   }
 
   @Override
-  public Principal project(ConjunctivePrincipal projection) {
+  Principal project(ConjunctivePrincipal projection) {
     // Use the ConjunctivePrincipal owner implementation.
     return projection.owner(this);
   }
 
   @Override
-  public Principal project(DisjunctivePrincipal projection) {
+  Principal project(DisjunctivePrincipal projection) {
     // Use the DisjunctivePrincipal owner implementation.
     return projection.owner(this);
   }
@@ -121,44 +121,44 @@ public final class OwnedPrincipal extends NonPrimitivePrincipal {
   }
 
   @Override
-  public Principal owner(TopPrincipal owner) {
+  Principal owner(TopPrincipal owner) {
     // Use the TopPrincipal projection implementation.
     return owner.project(this);
   }
 
   @Override
-  public Principal owner(PrimitivePrincipal owner) {
+  Principal owner(PrimitivePrincipal owner) {
     // Let p:q = this, and r = owner.
     // Have r:(p:q), which is normal form.
     return new OwnedPrincipal(owner, this);
   }
 
   @Override
-  public Principal owner(ConfPrincipal owner) {
+  Principal owner(ConfPrincipal owner) {
     // Use the ConfPrincipal projection implementation.
     return owner.project(this);
   }
 
   @Override
-  public Principal owner(IntegPrincipal owner) {
+  Principal owner(IntegPrincipal owner) {
     // Use the IntegPrincipal projection implementation.
     return owner.project(this);
   }
 
   @Override
-  public Principal owner(OwnedPrincipal owner) {
+  Principal owner(OwnedPrincipal owner) {
     // Use the OwnedPrincipal projection implementation.
     return owner.project(this);
   }
 
   @Override
-  public Principal owner(ConjunctivePrincipal owner) {
+  Principal owner(ConjunctivePrincipal owner) {
     // Use the ConjunctivePrincipal projection implementation.
     return owner.project(this);
   }
 
   @Override
-  public Principal owner(DisjunctivePrincipal owner) {
+  Principal owner(DisjunctivePrincipal owner) {
     // Use the DisjunctivePrincipal projection implementation.
     return owner.project(this);
   }

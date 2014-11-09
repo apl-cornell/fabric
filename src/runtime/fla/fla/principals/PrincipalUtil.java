@@ -29,8 +29,9 @@ public class PrincipalUtil {
    * maxLabel}. See {@link fla.principals.Principal#delegatesTo(Principal, Principal,
    * Label, Principal)}.
    */
-  public static boolean delegatesTo(Principal prover, Principal granter,
-      Principal superior, Label maxLabel, Principal accessPolicy) {
+  public static boolean delegatesTo(PrimitivePrincipal prover,
+      Principal granter, Principal superior, Label maxLabel,
+      Principal accessPolicy) {
     return prover.delegatesTo(granter, superior, maxLabel, accessPolicy);
   }
 

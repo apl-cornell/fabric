@@ -1,5 +1,7 @@
 package fla.principals;
 
+import fla.util.ActsForQuery;
+
 public final class BottomPrincipal extends Principal {
   public static final BottomPrincipal INSTANCE = new BottomPrincipal();
 
@@ -33,37 +35,37 @@ public final class BottomPrincipal extends Principal {
   }
 
   @Override
-  public Principal project(TopPrincipal projection) {
+  Principal project(TopPrincipal projection) {
     return this;
   }
 
   @Override
-  public Principal project(PrimitivePrincipal projection) {
+  Principal project(PrimitivePrincipal projection) {
     return this;
   }
 
   @Override
-  public Principal project(ConfPrincipal projection) {
+  Principal project(ConfPrincipal projection) {
     return this;
   }
 
   @Override
-  public Principal project(IntegPrincipal projection) {
+  Principal project(IntegPrincipal projection) {
     return this;
   }
 
   @Override
-  public Principal project(OwnedPrincipal projection) {
+  Principal project(OwnedPrincipal projection) {
     return this;
   }
 
   @Override
-  public Principal project(ConjunctivePrincipal projection) {
+  Principal project(ConjunctivePrincipal projection) {
     return this;
   }
 
   @Override
-  public Principal project(DisjunctivePrincipal projection) {
+  Principal project(DisjunctivePrincipal projection) {
     return this;
   }
 
@@ -73,38 +75,43 @@ public final class BottomPrincipal extends Principal {
   }
 
   @Override
-  public Principal owner(TopPrincipal owner) {
+  Principal owner(TopPrincipal owner) {
     return this;
   }
 
   @Override
-  public Principal owner(PrimitivePrincipal owner) {
+  Principal owner(PrimitivePrincipal owner) {
     return this;
   }
 
   @Override
-  public Principal owner(ConfPrincipal owner) {
+  Principal owner(ConfPrincipal owner) {
     return this;
   }
 
   @Override
-  public Principal owner(IntegPrincipal owner) {
+  Principal owner(IntegPrincipal owner) {
     return this;
   }
 
   @Override
-  public Principal owner(OwnedPrincipal owner) {
+  Principal owner(OwnedPrincipal owner) {
     return this;
   }
 
   @Override
-  public Principal owner(ConjunctivePrincipal owner) {
+  Principal owner(ConjunctivePrincipal owner) {
     return this;
   }
 
   @Override
-  public Principal owner(DisjunctivePrincipal owner) {
+  Principal owner(DisjunctivePrincipal owner) {
     return this;
   }
 
+  @Override
+  final boolean delegatesTo(ActsForQuery<?, ?> query) {
+    // Only (non-top, non-bottom) primitive principals store delegations.
+    return false;
+  }
 }

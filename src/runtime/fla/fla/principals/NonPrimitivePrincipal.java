@@ -1,5 +1,7 @@
 package fla.principals;
 
+import fla.util.ActsForQuery;
+
 /**
  * An abstract class for principals constructed from other principals through
  * join, meet, and projection operators.
@@ -88,4 +90,10 @@ abstract class NonPrimitivePrincipal extends Principal {
    *          {@code PrincipalUtil.staticallyActsfor(p, this)}.
    */
   abstract Principal meet(DisjunctivePrincipal p);
+
+  @Override
+  final boolean delegatesTo(ActsForQuery<?, ?> query) {
+    // Only primitive principals store delegations.
+    return false;
+  }
 }

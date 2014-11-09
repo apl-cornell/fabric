@@ -77,43 +77,43 @@ public class DisjunctivePrincipal extends NonPrimitivePrincipal {
   }
 
   @Override
-  public Principal project(TopPrincipal projection) {
+  Principal project(TopPrincipal projection) {
     // Use the TopPrincipal owner implementation.
     return projection.owner(this);
   }
 
   @Override
-  public Principal project(PrimitivePrincipal projection) {
+  Principal project(PrimitivePrincipal projection) {
     // Use the generic implementation.
     return project((Principal) projection);
   }
 
   @Override
-  public Principal project(ConfPrincipal projection) {
+  Principal project(ConfPrincipal projection) {
     // Use the generic implementation.
     return project((Principal) projection);
   }
 
   @Override
-  public Principal project(IntegPrincipal projection) {
+  Principal project(IntegPrincipal projection) {
     // Use the generic implementation.
     return project((Principal) projection);
   }
 
   @Override
-  public Principal project(OwnedPrincipal projection) {
+  Principal project(OwnedPrincipal projection) {
     // Use the generic implementation.
     return project((Principal) projection);
   }
 
   @Override
-  public Principal project(ConjunctivePrincipal projection) {
+  Principal project(ConjunctivePrincipal projection) {
     // Use the generic implementation.
     return project((Principal) projection);
   }
 
   @Override
-  public Principal project(DisjunctivePrincipal projection) {
+  Principal project(DisjunctivePrincipal projection) {
     // Use the generic implementation.
     return project((Principal) projection);
   }
@@ -134,43 +134,43 @@ public class DisjunctivePrincipal extends NonPrimitivePrincipal {
   }
 
   @Override
-  public Principal owner(TopPrincipal owner) {
+  Principal owner(TopPrincipal owner) {
     // Use the generic implementation.
     return owner((Principal) owner);
   }
 
   @Override
-  public Principal owner(PrimitivePrincipal owner) {
+  Principal owner(PrimitivePrincipal owner) {
     // Use the generic implementation.
     return owner((Principal) owner);
   }
 
   @Override
-  public Principal owner(ConfPrincipal owner) {
+  Principal owner(ConfPrincipal owner) {
     // Use the generic implementation.
     return owner((Principal) owner);
   }
 
   @Override
-  public Principal owner(IntegPrincipal owner) {
+  Principal owner(IntegPrincipal owner) {
     // Use the generic implementation.
     return owner((Principal) owner);
   }
 
   @Override
-  public Principal owner(OwnedPrincipal owner) {
+  Principal owner(OwnedPrincipal owner) {
     // Use the generic implementation.
     return owner((Principal) owner);
   }
 
   @Override
-  public Principal owner(ConjunctivePrincipal owner) {
+  Principal owner(ConjunctivePrincipal owner) {
     // Use the generic implementation.
     return owner((Principal) owner);
   }
 
   @Override
-  public Principal owner(DisjunctivePrincipal owner) {
+  Principal owner(DisjunctivePrincipal owner) {
     // Use the generic implementation.
     return owner((Principal) owner);
   }
