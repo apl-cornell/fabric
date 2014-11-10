@@ -12,6 +12,14 @@ public class PrincipalUtil {
   }
 
   /**
+   * Determines whether two principals are equivalent in an empty (i.e., static)
+   * context. Principals are equivalent if they act for each other.
+   */
+  public static boolean equivalent(Principal p, Principal q) {
+    return staticallyActsFor(p, q) && staticallyActsFor(q, p);
+  }
+
+  /**
    * Asks {@code prover} whether it can find a proof for "{@code superior} ≽
    * {@code inferior}". See {@link fla.principals.Principal#actsFor(Principal,
    * Principal, Principal, Principal)}.
