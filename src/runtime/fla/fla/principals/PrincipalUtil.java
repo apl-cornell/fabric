@@ -24,8 +24,8 @@ public class PrincipalUtil {
   /**
    * Asks {@code prover} whether it can find the (direct) delegation "{@code
    * superior} ≽ {@code granter}" whose label does not exceed {@code maxLabel}.
-   * See {@link fla.principals.Principal#delegatesTo(Principal, Principal,
-   * Principal, Principal)}.
+   * See {@link fla.principals.PrimitivePrincipal#delegatesTo(Principal,
+   * Principal, Principal, Principal)}.
    */
   public static boolean delegatesTo(PrimitivePrincipal prover,
       Principal granter, Principal superior, Principal maxLabel,
