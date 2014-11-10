@@ -24,6 +24,21 @@ public class ActsForQuery<Superior extends Principal, Inferior extends Principal
         accessPolicy == null ? null : accessPolicy.confidentiality();
   }
 
+  /**
+   * @return an ActsForQuery equivalent to the query {@code l1} ⊑ {@code l2},
+   *          having label {@code maxUsableLabel} and access policy {@code
+   *          accessPolicy}.
+   */
+  public static ActsForQuery<Principal, Principal> flowsToQuery(Principal l1,
+      Principal l2, Principal maxUsableLabel, Principal accessPolicy) {
+    // l1 ⊑ l2 is just l2→ ∧ l1← ≽ l1→ ∧ l2←.
+    Principal superior =
+        PrincipalUtil.conjunction(l2.confidentiality(), l1.integrity());
+    Principal inferior =
+        PrincipalUtil.conjunction(l1.confidentiality(), l2.integrity());
+    return new ActsForQuery<>(superior, inferior, maxUsableLabel, accessPolicy);
+  }
+
   public <P extends Principal> ActsForQuery<P, Inferior> superior(P superior) {
     return new ActsForQuery<>(superior, inferior, maxUsableLabel, accessPolicy);
   }

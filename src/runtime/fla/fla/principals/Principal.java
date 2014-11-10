@@ -331,7 +331,7 @@ public abstract class Principal {
    * @param searchState records the goals that we are in the middle of
    *          attempting
    */
-  private final <Superior extends Principal, Inferior extends Principal> ActsForProof<Superior, Inferior> findActsForProof(
+  final <Superior extends Principal, Inferior extends Principal> ActsForProof<Superior, Inferior> findActsForProof(
       ActsForQuery<Superior, Inferior> query, final ProofSearchState searchState) {
     // Try the dumb things first.
     if (query.inferior instanceof BottomPrincipal

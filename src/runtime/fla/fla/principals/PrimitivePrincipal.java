@@ -1,18 +1,22 @@
 package fla.principals;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import fla.util.ActsForQuery;
 import fla.util.DelegationPair;
-import fla.util.PolyInstantiableSet;
 
 public class PrimitivePrincipal extends Principal {
-  private final PolyInstantiableSet<DelegationPair> delegations;
+  /**
+   * Maps labels L to delegation pairs labelled with L.
+   */
+  private final Map<Principal, Set<DelegationPair>> delegations;
 
   public PrimitivePrincipal() {
-    this.delegations = new PolyInstantiableSet<>();
+    this.delegations = new HashMap<>();
   }
 
   @Override
@@ -137,7 +141,13 @@ public class PrimitivePrincipal extends Principal {
    */
   public final void addDelegatesTo(Principal granter, Principal superior,
       Principal label) {
-    delegations.add(label, new DelegationPair(granter, superior));
+    Set<DelegationPair> entry = delegations.get(label);
+    if (entry == null) {
+      entry = new HashSet<>();
+      delegations.put(label, entry);
+    }
+
+    entry.add(new DelegationPair(granter, superior));
   }
 
   /**
@@ -187,6 +197,22 @@ public class PrimitivePrincipal extends Principal {
       // Static context. No dynamic delegations should be used.
       return Collections.emptySet();
     }
+
+    Set<DelegationPair> result = new HashSet<>();
+
+    for (Map.Entry<Principal, Set<DelegationPair>> entry : delegations
+        .entrySet()) {
+      Principal delegationLabel = entry.getKey();
+      Principal queryLabel = query.maxUsableLabel;
+
+      // Can use delegations if delegationLabel ⊑ queryLabel.
+      if (findActsForProof(ActsForQuery.flowsToQuery(delegationLabel,
+          queryLabel, query.maxUsableLabel, query.accessPolicy), searchState) != null) {
+        result.addAll(entry.getValue());
+      }
+    }
+
+    return result;
   }
 
   @Override
