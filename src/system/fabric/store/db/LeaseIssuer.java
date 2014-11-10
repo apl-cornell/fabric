@@ -132,7 +132,7 @@ public class LeaseIssuer<K, V extends Lease> {
 
   /**
    * Replaces the lease for an onum only if it currently has a specific lease.
-   * 
+   *
    * @return true iff the lease was replaced.
    */
   final boolean replace(K key, V oldLease, V newLease) {
@@ -171,8 +171,7 @@ public class LeaseIssuer<K, V extends Lease> {
       long expiry = lease.expiry();
       long length = expiry - System.currentTimeMillis();
       Logging.log(STORE_DB_LOGGER, Level.FINEST,
-          "Adding lease for {0}; expiry={1} (in {2} ms)", key, expiry,
-          length);
+          "Adding lease for {0}; expiry={1} (in {2} ms)", key, expiry, length);
     }
 
     getEntry(key).setLeaseIssued(lease);
@@ -206,6 +205,7 @@ public class LeaseIssuer<K, V extends Lease> {
     // Snapshot state to avoid locking for too long.
     final long readInterval;
     final long writeInterval;
+    final boolean isWritten;
     Oid writer;
     AccessMetrics<K>.Metrics m = getMetrics(key);
     synchronized (m) {
@@ -216,17 +216,19 @@ public class LeaseIssuer<K, V extends Lease> {
       writeInterval = m.getWriteInterval();
       readInterval = m.getReadInterval();
       writer = m.getWriter();
+      isWritten = m.isWrittenSinceTerm();
     }
 
     final int curCount = count++;
 
-    if (writer == null || !writer.equals(new Oid(worker))) {
+    if ((writer == null && isWritten)
+        || (writer != null && !writer.equals(new Oid(worker)))) {
       // If object isn't exclusively written by the requester, don't give a
       // lease
       if (curCount % 10000 == 0) {
         // onum, readInterval, actualReadInterval, writeInterval, lease
-        HOTOS_LOGGER.info("lease #" + curCount + ": " + key + "," +
-            readInterval + "," + writeInterval + ",no-exclusive-writer");
+        HOTOS_LOGGER.info("lease #" + curCount + ": " + key + ","
+            + readInterval + "," + writeInterval + ",no-exclusive-writer");
       }
       return 0;
     }
@@ -235,8 +237,8 @@ public class LeaseIssuer<K, V extends Lease> {
       // The object is too unpopular, only issue for the expiry needed.
       if (curCount % 10000 == 0) {
         // onum, readInterval, actualReadInterval, writeInterval, lease
-        HOTOS_LOGGER.info("lease #" + curCount + ": " + key + "," +
-            readInterval + "," + writeInterval + ",unpopular");
+        HOTOS_LOGGER.info("lease #" + curCount + ": " + key + ","
+            + readInterval + "," + writeInterval + ",unpopular");
       }
       return expiry;
     }
@@ -244,23 +246,21 @@ public class LeaseIssuer<K, V extends Lease> {
     // Issue lease with term as long as K2 * writeInterval
     if (curCount % 10000 == 0) {
       // onum, readInterval, actualReadInterval, writeInterval, lease
-      HOTOS_LOGGER
-          .info("lease #" + curCount + ": " + key + "," + readInterval
-              + "," + writeInterval + "," + (K2 * writeInterval));
+      HOTOS_LOGGER.info("lease #" + curCount + ": " + key + "," + readInterval
+          + "," + writeInterval + "," + (K2 * writeInterval));
     }
 
-    long leaseLength =
-        Math.min((long) (K2 * writeInterval), MAX_LEASE_LENGTH);
+    long leaseLength = Math.min((long) (K2 * writeInterval), MAX_LEASE_LENGTH);
 
     if (HOTOS_LOGGER.isLoggable(Level.FINE)) {
       if (key instanceof Number && ((Number) key).longValue() == 0) {
-        Logging.log(HOTOS_LOGGER, Level.FINE,
-            "onum = {0}, lease length = {1}", key, leaseLength);
+        Logging.log(HOTOS_LOGGER, Level.FINE, "onum = {0}, lease length = {1}",
+            key, leaseLength);
       }
 
       if (writeInterval != Integer.MAX_VALUE) {
-        Logging.log(HOTOS_LOGGER, Level.FINE,
-            "onum = {0}, lease length = {1}", key, leaseLength);
+        Logging.log(HOTOS_LOGGER, Level.FINE, "onum = {0}, lease length = {1}",
+            key, leaseLength);
       }
     }
 
