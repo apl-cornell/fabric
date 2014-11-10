@@ -15,13 +15,24 @@ public class PrimitivePrincipal extends Principal {
    */
   private final Map<Principal, Set<DelegationPair>> delegations;
 
-  public PrimitivePrincipal() {
+  public final String name;
+
+  /**
+   * @param name a name for this principal, for {@code toString()} purposes.
+   */
+  public PrimitivePrincipal(String name) {
     this.delegations = new HashMap<>();
+    this.name = name;
   }
 
   @Override
   public boolean equals(Principal p) {
     return this == p;
+  }
+
+  @Override
+  public String toString() {
+    return name;
   }
 
   @Override

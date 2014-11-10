@@ -37,6 +37,11 @@ public final class ConfPrincipal extends NonPrimitivePrincipal {
   }
 
   @Override
+  public String toString() {
+    return base + "→";
+  }
+
+  @Override
   public ConfPrincipal confidentiality() {
     return this;
   }

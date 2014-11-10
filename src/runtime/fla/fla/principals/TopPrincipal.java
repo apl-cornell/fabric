@@ -24,6 +24,11 @@ public final class TopPrincipal extends Principal {
   }
 
   @Override
+  public String toString() {
+    return "⊤";
+  }
+
+  @Override
   public ConfPrincipal confidentiality() {
     return new ConfPrincipal(this);
   }

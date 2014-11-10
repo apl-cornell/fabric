@@ -51,6 +51,23 @@ public class DisjunctivePrincipal extends NonPrimitivePrincipal {
   }
 
   @Override
+  public String toString() {
+    StringBuffer result = null;
+    for (Principal disjunct : disjuncts) {
+      if (result == null) {
+        result = new StringBuffer();
+      } else {
+        result.append(" ∨ ");
+      }
+      result.append("(");
+      result.append(disjunct);
+      result.append(")");
+    }
+
+    return result.toString();
+  }
+
+  @Override
   public ConfPrincipal confidentiality() {
     return new ConfPrincipal(this);
   }

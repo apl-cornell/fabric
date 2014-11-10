@@ -24,6 +24,11 @@ public final class BottomPrincipal extends Principal {
   }
 
   @Override
+  public String toString() {
+    return "⊥";
+  }
+
+  @Override
   public Principal confidentiality() {
     return this;
   }

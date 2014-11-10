@@ -54,6 +54,11 @@ public final class OwnedPrincipal extends NonPrimitivePrincipal {
   }
 
   @Override
+  public String toString() {
+    return "(" + owner + ") : (" + projection + ")";
+  }
+
+  @Override
   public ConfPrincipal confidentiality() {
     return new ConfPrincipal(this);
   }

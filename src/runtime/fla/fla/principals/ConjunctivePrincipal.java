@@ -51,6 +51,23 @@ public final class ConjunctivePrincipal extends NonPrimitivePrincipal {
     return conjuncts.equals(((ConjunctivePrincipal) p).conjuncts());
   }
 
+  @Override
+  public String toString() {
+    StringBuffer result = null;
+    for (Principal conjunct : conjuncts) {
+      if (result == null) {
+        result = new StringBuffer();
+      } else {
+        result.append(" ∧ ");
+      }
+      result.append("(");
+      result.append(conjunct);
+      result.append(")");
+    }
+
+    return result.toString();
+  }
+
   /**
    * @return true iff this conjunctive principal has two conjuncts: a
    *          confidentiality projection and an integrity projection.
