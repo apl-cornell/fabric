@@ -8,7 +8,7 @@ public class PrincipalUtil {
    * (i.e., static) context.
    */
   public static boolean staticallyActsFor(Principal superior, Principal inferior) {
-    return superior.actsFor(superior, inferior, null, null);
+    return inferior.actsFor(superior, inferior, null, null);
   }
 
   /**
