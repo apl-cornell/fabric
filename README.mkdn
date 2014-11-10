@@ -1,8 +1,9 @@
-Fabric (with State Warranties)
-==============================
+Fabric (with State Warranties and Read-Write Leases)
+====================================================
 This is a branched release of Fabric that includes state warranties, as
 described in our paper "Warranties for Faster Strong Consistency",
-published in NSDI 2014 [1].
+published in NSDI 2014 [1], and read-write leases (an extension being explored
+in this branch).
 
 Fabric is a language and runtime system that supports secure federated
 distributed computing. This is a quick-start manual to get you started
