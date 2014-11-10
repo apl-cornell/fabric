@@ -15,7 +15,7 @@ public class PrincipalUtil {
    * Determines whether two principals are equivalent in an empty (i.e., static)
    * context. Principals are equivalent if they act for each other.
    */
-  public static boolean equivalent(Principal p, Principal q) {
+  public static boolean staticallyEquivalent(Principal p, Principal q) {
     return staticallyActsFor(p, q) && staticallyActsFor(q, p);
   }
 
