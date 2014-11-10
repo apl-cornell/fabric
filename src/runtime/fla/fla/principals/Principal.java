@@ -572,7 +572,8 @@ public abstract class Principal {
     }
 
     // Forward query to other nodes. First, figure out who to ask.
-    Set<Principal> askable = askablePrincipals(query, origSearchState);
+    Set<Principal> askable =
+        new HashSet<>(askablePrincipals(query, origSearchState));
     askable.addAll(origSearchState.allParticipants);
     askable.removeAll(origSearchState.principalsAsked);
 
