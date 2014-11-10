@@ -103,7 +103,7 @@ public class PrincipalUtil {
       return ((NonPrimitivePrincipal) q).join(p);
 
     // Both arguments are primitive principals.
-    return new DisjunctivePrincipal(p, q);
+    return new ConjunctivePrincipal(p, q);
   }
 
   /**

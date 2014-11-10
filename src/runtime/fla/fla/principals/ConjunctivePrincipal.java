@@ -327,7 +327,7 @@ public final class ConjunctivePrincipal extends NonPrimitivePrincipal {
   @Override
   Principal meet(Principal disjunct) {
     if (disjunct instanceof NonPrimitivePrincipal) {
-      return ((NonPrimitivePrincipal) disjunct).join(this);
+      return ((NonPrimitivePrincipal) disjunct).meet(this);
     }
 
     // Disjunct is a primitive principal.
