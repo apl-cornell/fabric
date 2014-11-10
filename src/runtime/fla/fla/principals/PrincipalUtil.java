@@ -48,8 +48,8 @@ public class PrincipalUtil {
    * Principal)} for documentation on {@code maxUsableLabel} and {@code
    * accessPolicy}.
    */
-  public static boolean equivalentTo(Principal prover, Principal p,
-      Principal q, Principal maxUsableLabel, Principal accessPolicy) {
+  public static boolean equivalent(Principal prover, Principal p, Principal q,
+      Principal maxUsableLabel, Principal accessPolicy) {
     return actsFor(prover, p, q, maxUsableLabel, accessPolicy)
         && actsFor(prover, q, p, maxUsableLabel, accessPolicy);
   }
