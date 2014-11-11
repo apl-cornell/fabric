@@ -146,11 +146,11 @@ public class PrimitivePrincipal extends Principal {
   /**
    * Stores a new delegation with this principal.
    *
-   * @param granter the principal granting privileges
+   * @param inferior the principal granting privileges
    * @param superior the principal receiving new privileges
    * @param label the label on the new delegation
    */
-  public final void addDelegatesTo(Principal granter, Principal superior,
+  public final void addDelegatesTo(Principal inferior, Principal superior,
       Principal label) {
     Set<DelegationPair> entry = delegations.get(label);
     if (entry == null) {
@@ -158,7 +158,7 @@ public class PrimitivePrincipal extends Principal {
       delegations.put(label, entry);
     }
 
-    entry.add(new DelegationPair(granter, superior));
+    entry.add(new DelegationPair(inferior, superior));
   }
 
   /**
