@@ -38,7 +38,7 @@ public final class IntegPrincipal extends NonPrimitivePrincipal {
 
   @Override
   public String toString() {
-    return base + "←";
+    return "(" + base + ")←";
   }
 
   @Override
