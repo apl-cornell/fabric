@@ -227,14 +227,14 @@ public class PrimitivePrincipal extends Principal {
   }
 
   @Override
-  Set<Principal> askablePrincipals(ActsForQuery<?, ?> query,
+  Set<PrimitivePrincipal> askablePrincipals(ActsForQuery<?, ?> query,
       ProofSearchState searchState) {
     if (!query.useDynamicContext()) {
       // Static context. No dynamic delegations should be used.
       return Collections.emptySet();
     }
 
-    Set<Principal> result = new HashSet<>();
+    Set<PrimitivePrincipal> result = new HashSet<>();
     for (DelegationPair delegation : usableDelegations(query, searchState)) {
       result.addAll(delegation.inferior.componentPrimitivePrincipals());
       result.addAll(delegation.superior.componentPrimitivePrincipals());

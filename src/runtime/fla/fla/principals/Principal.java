@@ -186,7 +186,7 @@ public abstract class Principal {
    *
    * @param searchState the state of the proof search being made
    */
-  abstract Set<Principal> askablePrincipals(ActsForQuery<?, ?> query,
+  abstract Set<PrimitivePrincipal> askablePrincipals(ActsForQuery<?, ?> query,
       ProofSearchState searchState);
 
   /**
@@ -212,10 +212,11 @@ public abstract class Principal {
    * @return the object {@code set}, with all unaskable principals having been
    *          removed
    */
-  final Set<Principal> removeUnaskablePrincipals(Set<Principal> set,
-      ActsForQuery<?, ?> query, ProofSearchState searchState) {
-    for (Iterator<Principal> it = set.iterator(); it.hasNext();) {
-      Principal p = it.next();
+  final Set<PrimitivePrincipal> removeUnaskablePrincipals(
+      Set<PrimitivePrincipal> set, ActsForQuery<?, ?> query,
+      ProofSearchState searchState) {
+    for (Iterator<PrimitivePrincipal> it = set.iterator(); it.hasNext();) {
+      PrimitivePrincipal p = it.next();
 
       // Assume p passes muster if it has participated in the search so far.
       if (searchState.hasParticipant(p)) continue;
@@ -294,6 +295,12 @@ public abstract class Principal {
       Principal maxUsableLabel, Principal accessPolicy) {
     return actsForProof(new ActsForQuery<>(superior, inferior, maxUsableLabel,
         accessPolicy)) != null;
+  }
+
+  public final boolean flowsTo(Principal inferior, Principal superior,
+      Principal maxUsableLabel, Principal accessPolicy) {
+    return actsForProof(ActsForQuery.flowsToQuery(inferior, superior,
+        maxUsableLabel, accessPolicy)) != null;
   }
 
   /**
@@ -549,31 +556,41 @@ public abstract class Principal {
     }
 
     // Attempt to use transitivity.
-    // For each usable delegation p ≽ q, try to show:
-    //   query.superior ≽ p and q ≽ query.inferior.
+    // For each usable delegation p ≽ q, try to show either:
+    //   query.superior = p and q ≽ query.inferior
+    // or:
+    //   query.superior ≽ p and q = query.inferior.
     for (DelegationPair delegation : usableDelegations(query, newSearchState)) {
-      // Find a proof of query.superior ≽ delegation.superior.
-      ActsForProof<Superior, Principal> step1 =
-          findActsForProof(query.inferior(delegation.superior), newSearchState);
-      if (step1 == null) continue;
+      // Let p = delegation.superior and q = delegation.inferior.
+      final Principal p = delegation.superior;
+      final Principal q = delegation.inferior;
 
-      // Have the delegation delegation.superior ≽ delegation.inferior.
-      DelegatesProof<Principal, Principal> step2 =
-          new DelegatesProof<>(this, delegation.inferior, delegation.superior);
+      if (PrincipalUtil.equals(query.superior, p)) {
+        // Have query.superior = p. Show q ≽ query.inferior.
+        ActsForProof<Principal, Inferior> step =
+            findActsForProof(query.superior(q), newSearchState);
+        if (step != null) {
+          // Proof successful.
+          return new TransitiveProof<>(new DelegatesProof<>(this, q,
+              query.superior), q, step);
+        }
+      }
 
-      // Find a proof of delegation.inferior ≽ query.inferior.
-      ActsForProof<Principal, Inferior> step3 =
-          findActsForProof(query.superior(delegation.inferior), newSearchState);
-      if (step3 == null) continue;
-
-      // Put it all together.
-      return new TransitiveProof<>(new TransitiveProof<>(step1,
-          delegation.superior, step2), delegation.inferior, step3);
+      if (PrincipalUtil.equals(q, query.inferior)) {
+        // Have q = query.inferior. Show query.superior ≽ p.
+        ActsForProof<Superior, Principal> step =
+            findActsForProof(query.inferior(p), newSearchState);
+        if (step != null) {
+          // Proof successful.
+          return new TransitiveProof<>(step, p, new DelegatesProof<>(this,
+              query.inferior, p));
+        }
+      }
     }
 
     // Forward query to other nodes. First, figure out who to ask.
-    Set<Principal> askable =
-        new HashSet<>(askablePrincipals(query, origSearchState));
+    Set<PrimitivePrincipal> askable =
+        new HashSet<>(askablePrincipals(query, newSearchState));
     askable.addAll(origSearchState.allParticipants);
     askable.removeAll(origSearchState.principalsAsked);
 
@@ -598,7 +615,7 @@ public abstract class Principal {
     /**
      * The set of principals who have participated in the search so far.
      */
-    private final Set<Principal> allParticipants;
+    private final Set<PrimitivePrincipal> allParticipants;
 
     /**
      * The set of principals who have already been asked about the most recent
@@ -608,7 +625,12 @@ public abstract class Principal {
 
     public ProofSearchState() {
       goals = Collections.emptySet();
-      allParticipants = Collections.singleton(Principal.this);
+      if (Principal.this instanceof PrimitivePrincipal) {
+        allParticipants =
+            Collections.singleton((PrimitivePrincipal) Principal.this);
+      } else {
+        allParticipants = Collections.emptySet();
+      }
       principalsAsked = Collections.emptySet();
     }
 
@@ -632,10 +654,10 @@ public abstract class Principal {
      * the set of principals asked.
      */
     private ProofSearchState(ProofSearchState state,
-        Set<? extends Principal> newPrincipalsAsked) {
+        Set<PrimitivePrincipal> newPrincipalsAsked) {
       this.goals = state.goals;
 
-      Set<Principal> allParticipants =
+      Set<PrimitivePrincipal> allParticipants =
           new HashSet<>(state.allParticipants.size()
               + newPrincipalsAsked.size());
       this.allParticipants = Collections.unmodifiableSet(allParticipants);
@@ -658,5 +680,22 @@ public abstract class Principal {
     public boolean hasParticipant(Principal p) {
       return allParticipants.contains(p);
     }
+
+    @Override
+    public String toString() {
+      StringBuffer result = new StringBuffer();
+      result.append("goals = [\n");
+      for (ActsForQuery<?, ?> goal : goals) {
+        result.append("  " + goal + ",\n");
+      }
+      result.append("]\n");
+
+      result.append("allParticipants = " + allParticipants + "\n");
+
+      result.append("prinicpalsAsked = " + principalsAsked);
+
+      return result.toString();
+    }
   }
+
 }

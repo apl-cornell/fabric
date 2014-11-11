@@ -104,14 +104,14 @@ abstract class NonPrimitivePrincipal extends Principal {
   }
 
   @Override
-  final Set<Principal> askablePrincipals(ActsForQuery<?, ?> query,
+  final Set<PrimitivePrincipal> askablePrincipals(ActsForQuery<?, ?> query,
       ProofSearchState searchState) {
     if (!query.useDynamicContext()) {
       // Static context. No dynamic delegations should be used.
       return Collections.emptySet();
     }
 
-    return removeUnaskablePrincipals(new HashSet<Principal>(
+    return removeUnaskablePrincipals(new HashSet<>(
         componentPrimitivePrincipals()), query, searchState);
   }
 }

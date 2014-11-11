@@ -30,6 +30,16 @@ public class PrincipalUtil {
   }
 
   /**
+   * Asks {@code prover} whether it can find a proof for "{@code inferior} ⊑
+   * {@code superior}". See {@link fla.principals.Principal#actsFor(Principal,
+   * Principal, Principal, Principal)}.
+   */
+  public static boolean flowsTo(Principal prover, Principal inferior,
+      Principal superior, Principal maxUsableLabel, Principal accessPolicy) {
+    return prover.flowsTo(inferior, superior, maxUsableLabel, accessPolicy);
+  }
+
+  /**
    * Asks {@code prover} whether it can find the (direct) delegation "{@code
    * superior} ≽ {@code granter}" whose label does not exceed {@code maxLabel}.
    * See {@link fla.principals.PrimitivePrincipal#delegatesTo(Principal,

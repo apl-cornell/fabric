@@ -74,6 +74,12 @@ public class ActsForQuery<Superior extends Principal, Inferior extends Principal
     return true;
   }
 
+  @Override
+  public String toString() {
+    return superior + " ≽ " + inferior + " ({" + maxUsableLabel + "} @ ("
+        + accessPolicy + "))";
+  }
+
   public boolean useDynamicContext() {
     return maxUsableLabel != null && accessPolicy != null;
   }

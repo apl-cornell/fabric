@@ -131,7 +131,7 @@ public final class BottomPrincipal extends Principal {
   }
 
   @Override
-  Set<Principal> askablePrincipals(ActsForQuery<?, ?> query,
+  Set<PrimitivePrincipal> askablePrincipals(ActsForQuery<?, ?> query,
       ProofSearchState searchState) {
     // No component principals.
     return Collections.emptySet();
