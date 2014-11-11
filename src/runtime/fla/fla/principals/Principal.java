@@ -339,219 +339,235 @@ public abstract class Principal {
    *          attempting
    */
   final <Superior extends Principal, Inferior extends Principal> ActsForProof<Superior, Inferior> findActsForProof(
-      ActsForQuery<Superior, Inferior> query, final ProofSearchState searchState) {
-    // Try the dumb things first.
-    if (query.inferior instanceof BottomPrincipal
-        || query.superior instanceof TopPrincipal) {
-      return new DelegatesProof<>(query.inferior, query.superior);
-    }
+      ActsForQuery<Superior, Inferior> query, ProofSearchState searchState) {
+    return findActsForProof(query, searchState, false);
+  }
 
-    if (PrincipalUtil.equals(query.inferior, query.superior)) {
-      return new ReflexiveProof<>(query.superior, query.inferior);
-    }
-
-    // Check the search state.
-    if (searchState.contains(query)) {
-      // Already on the goal stack. Prevent an infinite recursion.
-      return null;
-    }
-
-    // Push the query onto the search-state stack.
-    final ProofSearchState origSearchState = searchState;
-    final ProofSearchState newSearchState =
-        new ProofSearchState(searchState, query);
-
-    // Attempt to use the rule:
-    //   a ≽ c or b ≽ c => a ∧ b ≽ c
-    if (query.superior instanceof ConjunctivePrincipal) {
-      final ConjunctivePrincipal superior =
-          (ConjunctivePrincipal) query.superior;
-      for (Principal witness : superior.conjuncts()) {
-        ActsForProof<Principal, Inferior> proof =
-            findActsForProof(query.superior(witness), newSearchState);
-        if (proof != null) {
-          // Have a proof of witness ≽ query.inferior.
-          DelegatesProof<Superior, Principal> step =
-              new DelegatesProof<>(witness, query.superior);
-          return new TransitiveProof<>(step, witness, proof);
-        }
-      }
-    }
-
-    // Attempt to use the rule:
-    //   a ≽ c and b ≽ c => a ∨ b ≽ c
-    if (query.superior instanceof DisjunctivePrincipal) {
-      final DisjunctivePrincipal superior =
-          (DisjunctivePrincipal) query.superior;
-      Map<Principal, ActsForProof<Principal, Inferior>> proofs =
-          new HashMap<>(superior.disjuncts().size());
-      boolean success = true;
-      for (Principal p : superior.disjuncts()) {
-        ActsForProof<Principal, Inferior> proof =
-            findActsForProof(query.superior(p), newSearchState);
-        if (proof == null) {
-          success = false;
-          break;
-        }
-        proofs.put(p, proof);
+  /**
+   * Searches for an ActsForProof.
+   *
+   * @param searchState records the goals that we are in the middle of
+   *          attempting
+   * @param forwarded true iff this query was forwarded from another node
+   */
+  private final <Superior extends Principal, Inferior extends Principal> ActsForProof<Superior, Inferior> findActsForProof(
+      ActsForQuery<Superior, Inferior> query, ProofSearchState searchState,
+      boolean forwarded) {
+    // If this is a forwarded query, just skip to the part that uses
+    // delegations. The caller should have done the rest already.
+    if (!forwarded) {
+      // Try the dumb things first.
+      if (query.inferior instanceof BottomPrincipal
+          || query.superior instanceof TopPrincipal) {
+        return new DelegatesProof<>(query.inferior, query.superior);
       }
 
-      if (success) {
-        return (ActsForProof<Superior, Inferior>) new FromDisjunctProof<>(
-            superior, query.inferior, proofs);
-      }
-    }
-
-    // Attempt to use the rule:
-    //   a ≽ b and a ≽ c => a ≽ b ∧ c
-    if (query.inferior instanceof ConjunctivePrincipal) {
-      final ConjunctivePrincipal inferior =
-          (ConjunctivePrincipal) query.inferior;
-      Map<Principal, ActsForProof<Superior, Principal>> proofs =
-          new HashMap<>(inferior.conjuncts.size());
-      boolean success = true;
-      for (Principal p : inferior.conjuncts()) {
-        ActsForProof<Superior, Principal> proof =
-            findActsForProof(query.inferior(p), newSearchState);
-        if (proof == null) {
-          success = false;
-          break;
-        }
-        proofs.put(p, proof);
+      if (PrincipalUtil.equals(query.inferior, query.superior)) {
+        return new ReflexiveProof<>(query.superior, query.inferior);
       }
 
-      if (success) {
-        return (ActsForProof<Superior, Inferior>) new ToConjunctProof<>(
-            query.superior, inferior, proofs);
-      }
-    }
-
-    // Attempt to use the rule:
-    //   a ≽ b or a ≽ c => a ≽ b ∨ c
-    if (query.inferior instanceof DisjunctivePrincipal) {
-      DisjunctivePrincipal inferior = (DisjunctivePrincipal) query.inferior;
-      for (Principal witness : inferior.disjuncts()) {
-        ActsForProof<Superior, Principal> proof =
-            findActsForProof(query.inferior(witness), newSearchState);
-        if (proof != null) {
-          // Have a proof of query.superior ≽ witness.
-          DelegatesProof<Principal, Inferior> step =
-              new DelegatesProof<>(query.inferior, witness);
-          return new TransitiveProof<>(proof, witness, step);
-        }
-      }
-    }
-
-    if (query.inferior instanceof ConfPrincipal) {
-      ConfPrincipal inferior = (ConfPrincipal) query.inferior;
-      {
-        // Attempt to use the rule:
-        //   a ≽ b => a ≽ b→
-        ActsForProof<Superior, Principal> proof =
-            findActsForProof(query.inferior(inferior.base()), newSearchState);
-        if (proof != null) {
-          // Have a proof of query.superior ≽ inferior.base().
-          DelegatesProof<Principal, Inferior> step =
-              new DelegatesProof<>(query.inferior, inferior.base());
-          return new TransitiveProof<>(proof, inferior.base(), step);
-        }
+      // Check the search state.
+      if (searchState.contains(query)) {
+        // Already a goal. Prevent an infinite recursion.
+        return null;
       }
 
-      if (query.superior instanceof ConfPrincipal) {
-        ConfPrincipal superior = (ConfPrincipal) query.superior;
-
-        // Attempt to use the rule:
-        //   a ≽ b => a→ ≽ b→
-        ActsForProof<Principal, Principal> proof =
-            findActsForProof(
-                query.superior(superior.base()).inferior(inferior.base()),
-                newSearchState);
-        if (proof != null) {
-          // Have a proof of superior.base() ≽ inferior.base().
-          return (ActsForProof<Superior, Inferior>) new ConfProjectionProof(
-              proof);
-        }
-      }
-    }
-
-    if (query.inferior instanceof IntegPrincipal) {
-      IntegPrincipal inferior = (IntegPrincipal) query.inferior;
-      {
-        // Attempt to use the rule:
-        //   a ≽ b => a ≽ b←
-        ActsForProof<Superior, Principal> proof =
-            findActsForProof(query.inferior(inferior.base()), newSearchState);
-        if (proof != null) {
-          // Have a proof of query.superior ≽ inferior.base().
-          DelegatesProof<Principal, Inferior> step =
-              new DelegatesProof<>(query.inferior, inferior.base());
-          return new TransitiveProof<>(proof, inferior.base(), step);
-        }
-      }
-
-      if (query.superior instanceof IntegPrincipal) {
-        IntegPrincipal superior = (IntegPrincipal) query.superior;
-
-        // Attempt to use the rule:
-        //   a ≽ b => a← ≽ b←
-        ActsForProof<Principal, Principal> proof =
-            findActsForProof(
-                query.superior(superior.base()).inferior(inferior.base()),
-                newSearchState);
-        if (proof != null) {
-          // Have a proof of superior.base() ≽ inferior.base().
-          return (ActsForProof<Superior, Inferior>) new IntegProjectionProof(
-              proof);
-        }
-      }
-    }
-
-    // Attempt to use the rule:
-    //   a ∨ b ≽ c => a:b ≽ c
-    if (query.superior instanceof OwnedPrincipal) {
-      OwnedPrincipal superior = (OwnedPrincipal) query.superior;
-      Principal a = superior.owner();
-      Principal b = superior.projection();
-      ActsForProof<Principal, Inferior> proof =
-          findActsForProof(query.superior(PrincipalUtil.disjunction(a, b)),
-              newSearchState);
-      if (proof != null) {
-        return (ActsForProof<Superior, Inferior>) new MeetToOwnerProof<>(
-            superior, proof);
-      }
+      // Add the query to the search state.
+      searchState = new ProofSearchState(searchState, query);
 
       // Attempt to use the rule:
-      //   a ≽ c and a∨b ≽ c∨d => a:b ≽ c:d
-      if (query.inferior instanceof OwnedPrincipal) {
-        OwnedPrincipal inferior = (OwnedPrincipal) query.inferior;
-        Principal c = inferior.owner();
-        Principal d = inferior.projection();
-        ActsForProof<Principal, Principal> ownersProof =
-            findActsForProof(query.superior(a).inferior(c), newSearchState);
-        if (ownersProof != null) {
-          ActsForProof<Principal, Principal> projectionProof =
-              findActsForProof(query.superior(PrincipalUtil.disjunction(a, b))
-                  .inferior(PrincipalUtil.disjunction(c, d)), newSearchState);
-          if (projectionProof != null) {
-            return (ActsForProof<Superior, Inferior>) new OwnedPrincipalsProof(
-                superior, inferior, ownersProof, projectionProof);
+      //   a ≽ c or b ≽ c => a ∧ b ≽ c
+      if (query.superior instanceof ConjunctivePrincipal) {
+        final ConjunctivePrincipal superior =
+            (ConjunctivePrincipal) query.superior;
+        for (Principal witness : superior.conjuncts()) {
+          ActsForProof<Principal, Inferior> proof =
+              findActsForProof(query.superior(witness), searchState);
+          if (proof != null) {
+            // Have a proof of witness ≽ query.inferior.
+            DelegatesProof<Superior, Principal> step =
+                new DelegatesProof<>(witness, query.superior);
+            return new TransitiveProof<>(step, witness, proof);
           }
         }
       }
-    }
 
-    // Attempt to use the rule:
-    //   a ≽ b => a ≽ b:c
-    if (query.inferior instanceof OwnedPrincipal) {
-      OwnedPrincipal inferior = (OwnedPrincipal) query.inferior;
-      Principal b = inferior.owner();
-      ActsForProof<Superior, Principal> proof =
-          findActsForProof(query.inferior(b), newSearchState);
-      if (proof != null) {
-        // Have a proof of query.superior ≽ inferior.owner().
-        DelegatesProof<Principal, Inferior> step =
-            new DelegatesProof<>(query.inferior, inferior.owner());
-        return new TransitiveProof<>(proof, inferior.owner(), step);
+      // Attempt to use the rule:
+      //   a ≽ c and b ≽ c => a ∨ b ≽ c
+      if (query.superior instanceof DisjunctivePrincipal) {
+        final DisjunctivePrincipal superior =
+            (DisjunctivePrincipal) query.superior;
+        Map<Principal, ActsForProof<Principal, Inferior>> proofs =
+            new HashMap<>(superior.disjuncts().size());
+        boolean success = true;
+        for (Principal p : superior.disjuncts()) {
+          ActsForProof<Principal, Inferior> proof =
+              findActsForProof(query.superior(p), searchState);
+          if (proof == null) {
+            success = false;
+            break;
+          }
+          proofs.put(p, proof);
+        }
+
+        if (success) {
+          return (ActsForProof<Superior, Inferior>) new FromDisjunctProof<>(
+              superior, query.inferior, proofs);
+        }
+      }
+
+      // Attempt to use the rule:
+      //   a ≽ b and a ≽ c => a ≽ b ∧ c
+      if (query.inferior instanceof ConjunctivePrincipal) {
+        final ConjunctivePrincipal inferior =
+            (ConjunctivePrincipal) query.inferior;
+        Map<Principal, ActsForProof<Superior, Principal>> proofs =
+            new HashMap<>(inferior.conjuncts.size());
+        boolean success = true;
+        for (Principal p : inferior.conjuncts()) {
+          ActsForProof<Superior, Principal> proof =
+              findActsForProof(query.inferior(p), searchState);
+          if (proof == null) {
+            success = false;
+            break;
+          }
+          proofs.put(p, proof);
+        }
+
+        if (success) {
+          return (ActsForProof<Superior, Inferior>) new ToConjunctProof<>(
+              query.superior, inferior, proofs);
+        }
+      }
+
+      // Attempt to use the rule:
+      //   a ≽ b or a ≽ c => a ≽ b ∨ c
+      if (query.inferior instanceof DisjunctivePrincipal) {
+        DisjunctivePrincipal inferior = (DisjunctivePrincipal) query.inferior;
+        for (Principal witness : inferior.disjuncts()) {
+          ActsForProof<Superior, Principal> proof =
+              findActsForProof(query.inferior(witness), searchState);
+          if (proof != null) {
+            // Have a proof of query.superior ≽ witness.
+            DelegatesProof<Principal, Inferior> step =
+                new DelegatesProof<>(query.inferior, witness);
+            return new TransitiveProof<>(proof, witness, step);
+          }
+        }
+      }
+
+      if (query.inferior instanceof ConfPrincipal) {
+        ConfPrincipal inferior = (ConfPrincipal) query.inferior;
+        {
+          // Attempt to use the rule:
+          //   a ≽ b => a ≽ b→
+          ActsForProof<Superior, Principal> proof =
+              findActsForProof(query.inferior(inferior.base()), searchState);
+          if (proof != null) {
+            // Have a proof of query.superior ≽ inferior.base().
+            DelegatesProof<Principal, Inferior> step =
+                new DelegatesProof<>(query.inferior, inferior.base());
+            return new TransitiveProof<>(proof, inferior.base(), step);
+          }
+        }
+
+        if (query.superior instanceof ConfPrincipal) {
+          ConfPrincipal superior = (ConfPrincipal) query.superior;
+
+          // Attempt to use the rule:
+          //   a ≽ b => a→ ≽ b→
+          ActsForProof<Principal, Principal> proof =
+              findActsForProof(
+                  query.superior(superior.base()).inferior(inferior.base()),
+                  searchState);
+          if (proof != null) {
+            // Have a proof of superior.base() ≽ inferior.base().
+            return (ActsForProof<Superior, Inferior>) new ConfProjectionProof(
+                proof);
+          }
+        }
+      }
+
+      if (query.inferior instanceof IntegPrincipal) {
+        IntegPrincipal inferior = (IntegPrincipal) query.inferior;
+        {
+          // Attempt to use the rule:
+          //   a ≽ b => a ≽ b←
+          ActsForProof<Superior, Principal> proof =
+              findActsForProof(query.inferior(inferior.base()), searchState);
+          if (proof != null) {
+            // Have a proof of query.superior ≽ inferior.base().
+            DelegatesProof<Principal, Inferior> step =
+                new DelegatesProof<>(query.inferior, inferior.base());
+            return new TransitiveProof<>(proof, inferior.base(), step);
+          }
+        }
+
+        if (query.superior instanceof IntegPrincipal) {
+          IntegPrincipal superior = (IntegPrincipal) query.superior;
+
+          // Attempt to use the rule:
+          //   a ≽ b => a← ≽ b←
+          ActsForProof<Principal, Principal> proof =
+              findActsForProof(
+                  query.superior(superior.base()).inferior(inferior.base()),
+                  searchState);
+          if (proof != null) {
+            // Have a proof of superior.base() ≽ inferior.base().
+            return (ActsForProof<Superior, Inferior>) new IntegProjectionProof(
+                proof);
+          }
+        }
+      }
+
+      // Attempt to use the rule:
+      //   a ∨ b ≽ c => a:b ≽ c
+      if (query.superior instanceof OwnedPrincipal) {
+        OwnedPrincipal superior = (OwnedPrincipal) query.superior;
+        Principal a = superior.owner();
+        Principal b = superior.projection();
+        ActsForProof<Principal, Inferior> proof =
+            findActsForProof(query.superior(PrincipalUtil.disjunction(a, b)),
+                searchState);
+        if (proof != null) {
+          return (ActsForProof<Superior, Inferior>) new MeetToOwnerProof<>(
+              superior, proof);
+        }
+
+        // Attempt to use the rule:
+        //   a ≽ c and a∨b ≽ c∨d => a:b ≽ c:d
+        if (query.inferior instanceof OwnedPrincipal) {
+          OwnedPrincipal inferior = (OwnedPrincipal) query.inferior;
+          Principal c = inferior.owner();
+          Principal d = inferior.projection();
+          ActsForProof<Principal, Principal> ownersProof =
+              findActsForProof(query.superior(a).inferior(c), searchState);
+          if (ownersProof != null) {
+            ActsForProof<Principal, Principal> projectionProof =
+                findActsForProof(
+                    query.superior(PrincipalUtil.disjunction(a, b)).inferior(
+                        PrincipalUtil.disjunction(c, d)), searchState);
+            if (projectionProof != null) {
+              return (ActsForProof<Superior, Inferior>) new OwnedPrincipalsProof(
+                  superior, inferior, ownersProof, projectionProof);
+            }
+          }
+        }
+      }
+
+      // Attempt to use the rule:
+      //   a ≽ b => a ≽ b:c
+      if (query.inferior instanceof OwnedPrincipal) {
+        OwnedPrincipal inferior = (OwnedPrincipal) query.inferior;
+        Principal b = inferior.owner();
+        ActsForProof<Superior, Principal> proof =
+            findActsForProof(query.inferior(b), searchState);
+        if (proof != null) {
+          // Have a proof of query.superior ≽ inferior.owner().
+          DelegatesProof<Principal, Inferior> step =
+              new DelegatesProof<>(query.inferior, inferior.owner());
+          return new TransitiveProof<>(proof, inferior.owner(), step);
+        }
       }
     }
 
@@ -560,7 +576,7 @@ public abstract class Principal {
     //   query.superior = p and q ≽ query.inferior
     // or:
     //   query.superior ≽ p and q = query.inferior.
-    for (DelegationPair delegation : usableDelegations(query, newSearchState)) {
+    for (DelegationPair delegation : usableDelegations(query, searchState)) {
       // Let p = delegation.superior and q = delegation.inferior.
       final Principal p = delegation.superior;
       final Principal q = delegation.inferior;
@@ -568,7 +584,7 @@ public abstract class Principal {
       if (PrincipalUtil.equals(query.superior, p)) {
         // Have query.superior = p. Show q ≽ query.inferior.
         ActsForProof<Principal, Inferior> step =
-            findActsForProof(query.superior(q), newSearchState);
+            findActsForProof(query.superior(q), searchState);
         if (step != null) {
           // Proof successful.
           return new TransitiveProof<>(new DelegatesProof<>(this, q,
@@ -579,7 +595,7 @@ public abstract class Principal {
       if (PrincipalUtil.equals(q, query.inferior)) {
         // Have q = query.inferior. Show query.superior ≽ p.
         ActsForProof<Superior, Principal> step =
-            findActsForProof(query.inferior(p), newSearchState);
+            findActsForProof(query.inferior(p), searchState);
         if (step != null) {
           // Proof successful.
           return new TransitiveProof<>(step, p, new DelegatesProof<>(this,
@@ -590,18 +606,17 @@ public abstract class Principal {
 
     // Forward query to other nodes. First, figure out who to ask.
     Set<PrimitivePrincipal> askable =
-        new HashSet<>(askablePrincipals(query, newSearchState));
-    askable.addAll(origSearchState.allParticipants);
-    askable.removeAll(origSearchState.principalsAsked);
+        new HashSet<>(askablePrincipals(query, searchState));
+    askable.addAll(searchState.allParticipants);
+    askable.removeAll(searchState.principalsAsked);
 
     // Add the set of askable nodes to the existing search state.
-    final ProofSearchState recurseSearchState =
-        new ProofSearchState(origSearchState, askable);
+    searchState = new ProofSearchState(searchState, askable);
 
     // Ask the other nodes.
     for (Principal callee : askable) {
       ActsForProof<Superior, Inferior> result =
-          callee.findActsForProof(query, recurseSearchState);
+          callee.findActsForProof(query, searchState, true);
       if (result != null) return result;
     }
 
