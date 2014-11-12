@@ -136,7 +136,7 @@ public class Test {
           (OwnedPrincipal) new PrimitivePrincipal("group").owner(owner);
       this.exclusionGroup =
           (OwnedPrincipal) new PrimitivePrincipal("exclusionGroup")
-              .owner(owner);
+      .owner(owner);
     }
 
     /**
@@ -223,6 +223,11 @@ public class Test {
 
   private static class DelegationLeak {
     static void test() {
+      test01();
+      test02();
+    }
+
+    static void test01() {
       PrimitivePrincipal a = new PrimitivePrincipal("alice");
       PrimitivePrincipal b = new PrimitivePrincipal("bob");
       PrimitivePrincipal c = new PrimitivePrincipal("charlie");
@@ -230,6 +235,20 @@ public class Test {
 
       a.addDelegatesTo(b, c, a);
       e.addDelegatesTo(a, e, a);
+      if (PrincipalUtil.actsFor(e, c, b, a, bottom)) {
+        throw new Error(e + " learned " + c + " ≽ " + b);
+      }
+    }
+
+    static void test02() {
+      PrimitivePrincipal a = new PrimitivePrincipal("alice");
+      PrimitivePrincipal b = new PrimitivePrincipal("bob");
+      PrimitivePrincipal c = new PrimitivePrincipal("charlie");
+      PrimitivePrincipal e = new PrimitivePrincipal("eve");
+
+      a.addDelegatesTo(b, c, a);
+      e.addDelegatesTo(a, e,
+          PrincipalUtil.join(bottom.confidentiality(), top.integrity()));
       if (PrincipalUtil.actsFor(e, c, b, a, bottom)) {
         throw new Error(e + " learned " + c + " ≽ " + b);
       }
