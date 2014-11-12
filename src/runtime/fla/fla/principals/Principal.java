@@ -393,18 +393,17 @@ public abstract class Principal {
     ActsForProof<Superior, Inferior> result =
         findActsForProof(caller, query, searchState);
 
-    // Cache the result.
+    // Cache positive results.
     if (result != null) {
       searchState.cacheActsFor(query, result);
-    } else {
-      searchState.cacheNotActsFor(query);
     }
 
     return result;
   }
 
   /**
-   * Searches for an ActsForProof without using the cache.
+   * Searches for an ActsForProof without using the cache. Negative results will
+   * be added to the cache. Callers are responsible for caching positive results.
    *
    * @param caller the principal making this call
    * @param searchState records the goals that we are in the middle of
@@ -432,7 +431,8 @@ public abstract class Principal {
 
       // Check the search state.
       if (searchState.contains(query)) {
-        // Already a goal. Prevent an infinite recursion.
+        // Already a goal. Prevent an infinite recursion, but don't cache this
+        // result.
         return null;
       }
 
@@ -696,7 +696,8 @@ public abstract class Principal {
       if (result != null) return result;
     }
 
-    // Proof failed.
+    // Proof failed. Cache the negative result.
+    searchState.cacheNotActsFor(query);
     return null;
   }
 
