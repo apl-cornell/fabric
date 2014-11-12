@@ -217,8 +217,8 @@ public class PrimitivePrincipal extends Principal {
       Principal queryLabel = query.maxUsableLabel;
 
       // Can use delegations if delegationLabel ⊑ queryLabel.
-      if (findActsForProof(ActsForQuery.flowsToQuery(delegationLabel,
-          queryLabel, query.maxUsableLabel, query.accessPolicy), searchState) != null) {
+      if (actsForProof(ActsForQuery.flowsToQuery(delegationLabel, queryLabel,
+          query.maxUsableLabel, query.accessPolicy), searchState) != null) {
         result.addAll(entry.getValue());
       }
     }
