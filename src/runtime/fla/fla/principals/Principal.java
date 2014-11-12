@@ -354,7 +354,7 @@ public abstract class Principal {
       ActsForQuery<Superior, Inferior> query, ProofSearchState searchState,
       boolean forwarded) {
     // If this is a forwarded query, just skip to the part that uses
-    // delegations. The caller should have done the rest already.
+    // delegations directly. The caller should have done the rest already.
     if (!forwarded) {
       // Try the dumb things first.
       if (query.inferior instanceof BottomPrincipal
@@ -374,7 +374,19 @@ public abstract class Principal {
 
       // Add the query to the search state.
       searchState = new ProofSearchState(searchState, query);
+    }
 
+    // See if we can satisfy the query directly with a delegation.
+    for (DelegationPair delegation : usableDelegations(query, searchState)) {
+      if (PrincipalUtil.equals(query.superior, delegation.superior)
+          && PrincipalUtil.equals(query.inferior, delegation.inferior)) {
+        return new DelegatesProof<>(this, query.inferior, query.superior);
+      }
+    }
+
+    // If this is a forwarded query, just skip to the next part that uses
+    // delegations directly. The caller should have done the rest already.
+    if (!forwarded) {
       // Attempt to use the rule:
       //   a ≽ c or b ≽ c => a ∧ b ≽ c
       if (query.superior instanceof ConjunctivePrincipal) {
