@@ -19,6 +19,9 @@ public class Test {
     System.out.println("All tests passed.");
   }
 
+  private static final Principal bottom = PrincipalUtil.bottom();
+  private static final Principal top = PrincipalUtil.top();
+
   private static class URA97 {
     /**
      * Represents a rule specifying which administrators can assign which roles
@@ -75,8 +78,6 @@ public class Test {
      * @return true iff successful (even if {@code u} already has role {@code r})
      */
     boolean assignUser(Principal a, Principal u, Principal r) {
-      Principal bottom = PrincipalUtil.bottom();
-
       for (CanAssignRule rule : canAssign) {
         final PrimitivePrincipal ar = rule.ar;
         final Principal c = rule.c;
@@ -103,7 +104,7 @@ public class Test {
       return false;
     }
 
-    private static void test() {
+    static void test() {
       // TODO
     }
   }
@@ -176,8 +177,7 @@ public class Test {
       return true;
     }
 
-    private static void test() {
-      Principal bottom = PrincipalUtil.bottom();
+    static void test() {
       PrimitivePrincipal loblaw = new PrimitivePrincipal("loblaw");
       Principal alice = new PrimitivePrincipal("alice");
       Principal bob = new PrimitivePrincipal("bob");
@@ -221,8 +221,7 @@ public class Test {
   }
 
   private static class DelegationLoophole {
-    private static void test() {
-      Principal bottom = PrincipalUtil.bottom();
+    static void test() {
       PrimitivePrincipal acme = new PrimitivePrincipal("acme");
       PrimitivePrincipal apex = new PrimitivePrincipal("apex");
       PrimitivePrincipal bob = new PrimitivePrincipal("bob");
@@ -271,9 +270,6 @@ public class Test {
   }
 
   private static void smokeTest() {
-    Principal bottom = PrincipalUtil.bottom();
-    Principal top = PrincipalUtil.top();
-
     // ⊤ should act for ⊥.
     if (!PrincipalUtil.staticallyActsFor(top, bottom)) {
       throw new Error(top + " ⋡ " + bottom);
