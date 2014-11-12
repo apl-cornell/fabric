@@ -40,11 +40,25 @@ public class ActsForQuery<Superior extends Principal, Inferior extends Principal
   }
 
   public <P extends Principal> ActsForQuery<P, Inferior> superior(P superior) {
+    if (superior == this.superior) return (ActsForQuery<P, Inferior>) this;
     return new ActsForQuery<>(superior, inferior, maxUsableLabel, accessPolicy);
   }
 
   public <P extends Principal> ActsForQuery<Superior, P> inferior(P inferior) {
+    if (inferior == this.inferior) return (ActsForQuery<Superior, P>) this;
     return new ActsForQuery<>(superior, inferior, maxUsableLabel, accessPolicy);
+  }
+
+  /**
+   * Meets the given principal into the {@code maxUsableLabel} and returns the
+   * result. This ensures that the given principal is trusted with the resulting
+   * query's answer.
+   */
+  public ActsForQuery<Superior, Inferior> meetLabel(Principal p) {
+    Principal newMaxUsableLabel = PrincipalUtil.meet(maxUsableLabel, p);
+    if (maxUsableLabel == newMaxUsableLabel) return this;
+    return new ActsForQuery<>(superior, inferior, newMaxUsableLabel,
+        accessPolicy);
   }
 
   @Override

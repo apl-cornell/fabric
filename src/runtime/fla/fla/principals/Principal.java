@@ -170,12 +170,13 @@ public abstract class Principal {
 
   /**
    * Obtains a set of principals to whom the given query can be forwarded. A
-   * query can be forwarded to any PrimitivePrincipal {@code p} that:
+   * query can be forwarded to any PrimitivePrincipal {@code p} that
    * <ul>
    * <li>appears as a component of this principal (if this is a {@code
-   * NonPrimitivePrincipal}); or</li>
+   * NonPrimitivePrincipal}),</li>
    * <li>appears as a component of a <i>usable</i> delegation stored at this
-   * principal;</li>
+   * principal, or</li>
+   * <li>appears in the search state as a participant in the query</li>
    * </ul>
    * such that {@code p} acts for {@code query.accessPolicy} and the
    * integrity projection of {@code query.maxLabel}.
@@ -187,8 +188,32 @@ public abstract class Principal {
    *
    * @param searchState the state of the proof search being made
    */
-  abstract Set<PrimitivePrincipal> askablePrincipals(ActsForQuery<?, ?> query,
-      ProofSearchState searchState);
+  private final Set<PrimitivePrincipal> askablePrincipals(
+      ActsForQuery<?, ?> query, ProofSearchState searchState) {
+    if (!query.useDynamicContext()) {
+      // Static context. No dynamic delegations should be used.
+      return Collections.emptySet();
+    }
+
+    // Construct an unfiltered set of candidates.
+    // Start with all participants in the search state.
+    Set<PrimitivePrincipal> unfilteredResult =
+        new HashSet<>(searchState.allParticipants);
+
+    // Add primitive principals that appear as a component of this principal.
+    unfilteredResult.addAll(componentPrimitivePrincipals());
+
+    // Add components of usable delegations.
+    for (DelegationPair delegation : usableDelegations(query, searchState)) {
+      unfilteredResult.addAll(delegation.inferior
+          .componentPrimitivePrincipals());
+      unfilteredResult.addAll(delegation.superior
+          .componentPrimitivePrincipals());
+    }
+
+    // Filter.
+    return removeUnaskablePrincipals(unfilteredResult, query, searchState);
+  }
 
   /**
    * Determines whether the given principal {@code p} can be asked the given
@@ -201,7 +226,7 @@ public abstract class Principal {
       ProofSearchState searchState) {
     // See if p ≽ query.recurseLowerBound().
     query = query.inferior(query.recurseLowerBound()).superior(p);
-    return actsForProof(query, searchState) != null;
+    return actsForProof(this, query, searchState) != null;
   }
 
   /**
@@ -213,7 +238,7 @@ public abstract class Principal {
    * @return the object {@code set}, with all unaskable principals having been
    *          removed
    */
-  final Set<PrimitivePrincipal> removeUnaskablePrincipals(
+  private final Set<PrimitivePrincipal> removeUnaskablePrincipals(
       Set<PrimitivePrincipal> set, ActsForQuery<?, ?> query,
       ProofSearchState searchState) {
     for (Iterator<PrimitivePrincipal> it = set.iterator(); it.hasNext();) {
@@ -330,12 +355,7 @@ public abstract class Principal {
   private final <Superior extends Principal, Inferior extends Principal> ActsForProof<Superior, Inferior> actsForProof(
       ActsForQuery<Superior, Inferior> query) {
     // TODO Verify proof?
-    return actsForProof(query, new ProofSearchState());
-  }
-
-  final <Superior extends Principal, Inferior extends Principal> ActsForProof<Superior, Inferior> actsForProof(
-      ActsForQuery<Superior, Inferior> query, ProofSearchState searchState) {
-    return actsForProof(query, searchState, false);
+    return actsForProof(this, query, new ProofSearchState());
   }
 
   /**
@@ -343,13 +363,18 @@ public abstract class Principal {
    * cache miss, a proof search is made using {@code findActsForProof()}, and
    * the result is added to the cache.
    *
+   * @param caller the principal making this call
    * @param searchState records the goals that we are in the middle of
    *          attempting, and any cached intermediate results
-   * @param forwarded true iff this query was forwarded from another node
    */
-  private final <Superior extends Principal, Inferior extends Principal> ActsForProof<Superior, Inferior> actsForProof(
-      ActsForQuery<Superior, Inferior> query, ProofSearchState searchState,
-      boolean forwarded) {
+  final <Superior extends Principal, Inferior extends Principal> ActsForProof<Superior, Inferior> actsForProof(
+      Principal caller, ActsForQuery<Superior, Inferior> query,
+      ProofSearchState searchState) {
+    // If this is a remote call, ensure the query label flows to the caller.
+    if (caller != this) {
+      query = query.meetLabel(caller);
+    }
+
     // Check the cache.
     Pair<Boolean, ActsForProof<Superior, Inferior>> cachedResult =
         searchState.cacheLookup(query);
@@ -366,7 +391,7 @@ public abstract class Principal {
 
     // Cache miss. Search for a proof.
     ActsForProof<Superior, Inferior> result =
-        findActsForProof(query, searchState, forwarded);
+        findActsForProof(caller, query, searchState);
 
     // Cache the result.
     if (result != null) {
@@ -381,13 +406,17 @@ public abstract class Principal {
   /**
    * Searches for an ActsForProof without using the cache.
    *
+   * @param caller the principal making this call
    * @param searchState records the goals that we are in the middle of
    *          attempting, and any cached intermediate results
-   * @param forwarded true iff this query was forwarded from another node
+   * @param query the query to satisfy. It is assumed that the caller acts for
+   *          the label in the query.
    */
   private final <Superior extends Principal, Inferior extends Principal> ActsForProof<Superior, Inferior> findActsForProof(
-      ActsForQuery<Superior, Inferior> query, ProofSearchState searchState,
-      boolean forwarded) {
+      Principal caller, ActsForQuery<Superior, Inferior> query,
+      ProofSearchState searchState) {
+    final boolean forwarded = caller != this;
+
     // If this is a forwarded query, just skip to the part that uses
     // delegations directly. The caller should have done the rest already.
     if (!forwarded) {
@@ -429,7 +458,7 @@ public abstract class Principal {
             (ConjunctivePrincipal) query.superior;
         for (Principal witness : superior.conjuncts()) {
           ActsForProof<Principal, Inferior> proof =
-              actsForProof(query.superior(witness), searchState);
+              actsForProof(this, query.superior(witness), searchState);
           if (proof != null) {
             // Have a proof of witness ≽ query.inferior.
             DelegatesProof<Superior, Principal> step =
@@ -449,7 +478,7 @@ public abstract class Principal {
         boolean success = true;
         for (Principal p : superior.disjuncts()) {
           ActsForProof<Principal, Inferior> proof =
-              actsForProof(query.superior(p), searchState);
+              actsForProof(this, query.superior(p), searchState);
           if (proof == null) {
             success = false;
             break;
@@ -473,7 +502,7 @@ public abstract class Principal {
         boolean success = true;
         for (Principal p : inferior.conjuncts()) {
           ActsForProof<Superior, Principal> proof =
-              actsForProof(query.inferior(p), searchState);
+              actsForProof(this, query.inferior(p), searchState);
           if (proof == null) {
             success = false;
             break;
@@ -493,7 +522,7 @@ public abstract class Principal {
         DisjunctivePrincipal inferior = (DisjunctivePrincipal) query.inferior;
         for (Principal witness : inferior.disjuncts()) {
           ActsForProof<Superior, Principal> proof =
-              actsForProof(query.inferior(witness), searchState);
+              actsForProof(this, query.inferior(witness), searchState);
           if (proof != null) {
             // Have a proof of query.superior ≽ witness.
             DelegatesProof<Principal, Inferior> step =
@@ -509,7 +538,7 @@ public abstract class Principal {
           // Attempt to use the rule:
           //   a ≽ b => a ≽ b→
           ActsForProof<Superior, Principal> proof =
-              actsForProof(query.inferior(inferior.base()), searchState);
+              actsForProof(this, query.inferior(inferior.base()), searchState);
           if (proof != null) {
             // Have a proof of query.superior ≽ inferior.base().
             DelegatesProof<Principal, Inferior> step =
@@ -524,7 +553,7 @@ public abstract class Principal {
           // Attempt to use the rule:
           //   a ≽ b => a→ ≽ b→
           ActsForProof<Principal, Principal> proof =
-              actsForProof(
+              actsForProof(this,
                   query.superior(superior.base()).inferior(inferior.base()),
                   searchState);
           if (proof != null) {
@@ -541,7 +570,7 @@ public abstract class Principal {
           // Attempt to use the rule:
           //   a ≽ b => a ≽ b←
           ActsForProof<Superior, Principal> proof =
-              actsForProof(query.inferior(inferior.base()), searchState);
+              actsForProof(this, query.inferior(inferior.base()), searchState);
           if (proof != null) {
             // Have a proof of query.superior ≽ inferior.base().
             DelegatesProof<Principal, Inferior> step =
@@ -556,7 +585,7 @@ public abstract class Principal {
           // Attempt to use the rule:
           //   a ≽ b => a← ≽ b←
           ActsForProof<Principal, Principal> proof =
-              actsForProof(
+              actsForProof(this,
                   query.superior(superior.base()).inferior(inferior.base()),
                   searchState);
           if (proof != null) {
@@ -574,7 +603,7 @@ public abstract class Principal {
         Principal a = superior.owner();
         Principal b = superior.projection();
         ActsForProof<Principal, Inferior> proof =
-            actsForProof(query.superior(PrincipalUtil.disjunction(a, b)),
+            actsForProof(this, query.superior(PrincipalUtil.disjunction(a, b)),
                 searchState);
         if (proof != null) {
           return (ActsForProof<Superior, Inferior>) new MeetToOwnerProof<>(
@@ -588,11 +617,13 @@ public abstract class Principal {
           Principal c = inferior.owner();
           Principal d = inferior.projection();
           ActsForProof<Principal, Principal> ownersProof =
-              actsForProof(query.superior(a).inferior(c), searchState);
+              actsForProof(this, query.superior(a).inferior(c), searchState);
           if (ownersProof != null) {
             ActsForProof<Principal, Principal> projectionProof =
-                actsForProof(query.superior(PrincipalUtil.disjunction(a, b))
-                    .inferior(PrincipalUtil.disjunction(c, d)), searchState);
+                actsForProof(
+                    this,
+                    query.superior(PrincipalUtil.disjunction(a, b)).inferior(
+                        PrincipalUtil.disjunction(c, d)), searchState);
             if (projectionProof != null) {
               return (ActsForProof<Superior, Inferior>) new OwnedPrincipalsProof(
                   superior, inferior, ownersProof, projectionProof);
@@ -607,7 +638,7 @@ public abstract class Principal {
         OwnedPrincipal inferior = (OwnedPrincipal) query.inferior;
         Principal b = inferior.owner();
         ActsForProof<Superior, Principal> proof =
-            actsForProof(query.inferior(b), searchState);
+            actsForProof(this, query.inferior(b), searchState);
         if (proof != null) {
           // Have a proof of query.superior ≽ inferior.owner().
           DelegatesProof<Principal, Inferior> step =
@@ -630,7 +661,7 @@ public abstract class Principal {
       if (PrincipalUtil.equals(query.superior, p)) {
         // Have query.superior = p. Show q ≽ query.inferior.
         ActsForProof<Principal, Inferior> step =
-            actsForProof(query.superior(q), searchState);
+            actsForProof(this, query.superior(q), searchState);
         if (step != null) {
           // Proof successful.
           return new TransitiveProof<>(new DelegatesProof<>(this, q,
@@ -641,7 +672,7 @@ public abstract class Principal {
       if (PrincipalUtil.equals(q, query.inferior)) {
         // Have q = query.inferior. Show query.superior ≽ p.
         ActsForProof<Superior, Principal> step =
-            actsForProof(query.inferior(p), searchState);
+            actsForProof(this, query.inferior(p), searchState);
         if (step != null) {
           // Proof successful.
           return new TransitiveProof<>(step, p, new DelegatesProof<>(this,
@@ -653,7 +684,6 @@ public abstract class Principal {
     // Forward query to other nodes. First, figure out who to ask.
     Set<PrimitivePrincipal> askable =
         new HashSet<>(askablePrincipals(query, searchState));
-    askable.addAll(searchState.allParticipants);
     askable.removeAll(searchState.principalsAsked);
 
     // Add the set of askable nodes to the existing search state.
@@ -662,7 +692,7 @@ public abstract class Principal {
     // Ask the other nodes.
     for (Principal callee : askable) {
       ActsForProof<Superior, Inferior> result =
-          callee.actsForProof(query, searchState, true);
+          callee.actsForProof(this, query, searchState);
       if (result != null) return result;
     }
 

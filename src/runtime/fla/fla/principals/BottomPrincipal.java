@@ -129,11 +129,4 @@ public final class BottomPrincipal extends Principal {
     // Only (non-top, non-bottom) primitive principals store delegations.
     return Collections.emptySet();
   }
-
-  @Override
-  Set<PrimitivePrincipal> askablePrincipals(ActsForQuery<?, ?> query,
-      ProofSearchState searchState) {
-    // No component principals.
-    return Collections.emptySet();
-  }
 }

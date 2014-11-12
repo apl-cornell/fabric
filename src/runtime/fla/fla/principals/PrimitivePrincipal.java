@@ -217,29 +217,12 @@ public class PrimitivePrincipal extends Principal {
       Principal queryLabel = query.maxUsableLabel;
 
       // Can use delegations if delegationLabel ⊑ queryLabel.
-      if (actsForProof(ActsForQuery.flowsToQuery(delegationLabel, queryLabel,
-          query.maxUsableLabel, query.accessPolicy), searchState) != null) {
+      if (actsForProof(this, ActsForQuery.flowsToQuery(delegationLabel,
+          queryLabel, query.maxUsableLabel, query.accessPolicy), searchState) != null) {
         result.addAll(entry.getValue());
       }
     }
 
     return result;
-  }
-
-  @Override
-  Set<PrimitivePrincipal> askablePrincipals(ActsForQuery<?, ?> query,
-      ProofSearchState searchState) {
-    if (!query.useDynamicContext()) {
-      // Static context. No dynamic delegations should be used.
-      return Collections.emptySet();
-    }
-
-    Set<PrimitivePrincipal> result = new HashSet<>();
-    for (DelegationPair delegation : usableDelegations(query, searchState)) {
-      result.addAll(delegation.inferior.componentPrimitivePrincipals());
-      result.addAll(delegation.superior.componentPrimitivePrincipals());
-    }
-
-    return removeUnaskablePrincipals(result, query, searchState);
   }
 }

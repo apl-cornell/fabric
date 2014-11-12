@@ -1,7 +1,6 @@
 package fla.principals;
 
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Set;
 
 import fla.util.ActsForQuery;
@@ -101,17 +100,5 @@ abstract class NonPrimitivePrincipal extends Principal {
       ProofSearchState searchState) {
     // Only primitive principals store delegations.
     return Collections.emptySet();
-  }
-
-  @Override
-  final Set<PrimitivePrincipal> askablePrincipals(ActsForQuery<?, ?> query,
-      ProofSearchState searchState) {
-    if (!query.useDynamicContext()) {
-      // Static context. No dynamic delegations should be used.
-      return Collections.emptySet();
-    }
-
-    return removeUnaskablePrincipals(new HashSet<>(
-        componentPrimitivePrincipals()), query, searchState);
   }
 }
