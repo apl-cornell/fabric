@@ -14,6 +14,7 @@ public class Test {
     smokeTest();
     DelegationLoophole.test();
     InfoScreen.test();
+    DelegationLeak.test();
     URA97.test();
 
     System.out.println("All tests passed.");
@@ -216,6 +217,21 @@ public class Test {
           screenGroupInteg, bottom)) {
         throw new Error(loblawBob + " ≽ " + screen.group + " with "
             + screenGroupInteg);
+      }
+    }
+  }
+
+  private static class DelegationLeak {
+    static void test() {
+      PrimitivePrincipal a = new PrimitivePrincipal("alice");
+      PrimitivePrincipal b = new PrimitivePrincipal("bob");
+      PrimitivePrincipal c = new PrimitivePrincipal("charlie");
+      PrimitivePrincipal e = new PrimitivePrincipal("eve");
+
+      a.addDelegatesTo(b, c, a);
+      e.addDelegatesTo(a, e, a);
+      if (PrincipalUtil.actsFor(e, c, b, a, bottom)) {
+        throw new Error(e + " learned " + c + " ≽ " + b);
       }
     }
   }
