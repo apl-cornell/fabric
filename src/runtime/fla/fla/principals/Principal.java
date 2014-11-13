@@ -174,9 +174,11 @@ public abstract class Principal {
    * <ul>
    * <li>appears as a component of this principal (if this is a {@code
    * NonPrimitivePrincipal}),</li>
+   * <li>appears as a component of the superior or inferior parts of the
+   * query,</li>
    * <li>appears as a component of a <i>usable</i> delegation stored at this
    * principal, or</li>
-   * <li>appears in the search state as a participant in the query</li>
+   * <li>appears in the search state as a participant in the query,</li>
    * </ul>
    * such that {@code p} acts for {@code query.accessPolicy} and the
    * integrity projection of {@code query.maxLabel}.
@@ -202,6 +204,10 @@ public abstract class Principal {
 
     // Add primitive principals that appear as a component of this principal.
     unfilteredResult.addAll(componentPrimitivePrincipals());
+
+    // Add primitive principals that appears as a component of the query.
+    unfilteredResult.addAll(query.superior.componentPrimitivePrincipals());
+    unfilteredResult.addAll(query.inferior.componentPrimitivePrincipals());
 
     // Add components of usable delegations.
     for (DelegationPair delegation : usableDelegations(query, searchState)) {
