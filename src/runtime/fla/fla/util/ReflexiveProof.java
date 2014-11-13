@@ -7,7 +7,8 @@ import fla.principals.Principal;
  */
 public final class ReflexiveProof<Superior extends Principal, Inferior extends Principal>
     extends ActsForProof<Superior, Inferior> {
-  public ReflexiveProof(Superior p, Inferior q) {
-    super(p, q);
+  public ReflexiveProof(ActsForQuery<Superior, Inferior> query) {
+    super(query.superior, query.inferior, query.maxUsableLabel,
+        query.accessPolicy);
   }
 }

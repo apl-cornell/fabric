@@ -425,11 +425,11 @@ public abstract class Principal {
       // Try the dumb things first.
       if (query.inferior instanceof BottomPrincipal
           || query.superior instanceof TopPrincipal) {
-        return new DelegatesProof<>(query.inferior, query.superior);
+        return new DelegatesProof<>(query);
       }
 
       if (PrincipalUtil.equals(query.inferior, query.superior)) {
-        return new ReflexiveProof<>(query.superior, query.inferior);
+        return new ReflexiveProof<>(query);
       }
 
       // Check the search state.
@@ -447,7 +447,7 @@ public abstract class Principal {
     for (DelegationPair delegation : usableDelegations(query, searchState)) {
       if (PrincipalUtil.equals(query.superior, delegation.superior)
           && PrincipalUtil.equals(query.inferior, delegation.inferior)) {
-        return new DelegatesProof<>(this, query.inferior, query.superior);
+        return new DelegatesProof<>(this, query);
       }
     }
 
@@ -464,8 +464,9 @@ public abstract class Principal {
               actsForProof(this, query.superior(witness), searchState);
           if (proof != null) {
             // Have a proof of witness ≽ query.inferior.
+            // Construct a proof for query.superior ≽ witness.
             DelegatesProof<Superior, Principal> step =
-                new DelegatesProof<>(witness, query.superior);
+                new DelegatesProof<>(query.inferior(witness));
             return new TransitiveProof<>(step, witness, proof);
           }
         }
@@ -528,8 +529,9 @@ public abstract class Principal {
               actsForProof(this, query.inferior(witness), searchState);
           if (proof != null) {
             // Have a proof of query.superior ≽ witness.
+            // Construct a proof for witness ≽ query.inferior.
             DelegatesProof<Principal, Inferior> step =
-                new DelegatesProof<>(query.inferior, witness);
+                new DelegatesProof<>(query.superior(witness));
             return new TransitiveProof<>(proof, witness, step);
           }
         }
@@ -544,8 +546,9 @@ public abstract class Principal {
               actsForProof(this, query.inferior(inferior.base()), searchState);
           if (proof != null) {
             // Have a proof of query.superior ≽ inferior.base().
+            // Construct a proof for inferior.base() ≽ query.inferior.
             DelegatesProof<Principal, Inferior> step =
-                new DelegatesProof<>(query.inferior, inferior.base());
+                new DelegatesProof<>(query.superior(inferior.base()));
             return new TransitiveProof<>(proof, inferior.base(), step);
           }
         }
@@ -576,8 +579,9 @@ public abstract class Principal {
               actsForProof(this, query.inferior(inferior.base()), searchState);
           if (proof != null) {
             // Have a proof of query.superior ≽ inferior.base().
+            // Construct a proof for inferior.base() ≽query.inferior.
             DelegatesProof<Principal, Inferior> step =
-                new DelegatesProof<>(query.inferior, inferior.base());
+                new DelegatesProof<>(query.superior(inferior.base()));
             return new TransitiveProof<>(proof, inferior.base(), step);
           }
         }
@@ -644,8 +648,9 @@ public abstract class Principal {
             actsForProof(this, query.inferior(b), searchState);
         if (proof != null) {
           // Have a proof of query.superior ≽ inferior.owner().
+          // Construct a proof for inferior.owner() ≽ query.inferior.
           DelegatesProof<Principal, Inferior> step =
-              new DelegatesProof<>(query.inferior, inferior.owner());
+              new DelegatesProof<>(query.superior(inferior.owner()));
           return new TransitiveProof<>(proof, inferior.owner(), step);
         }
       }
@@ -668,7 +673,8 @@ public abstract class Principal {
         if (step != null) {
           // Proof successful.
           return new TransitiveProof<>(new DelegatesProof<>(this, q,
-              query.superior), q, step);
+              query.superior, query.maxUsableLabel, query.accessPolicy), q,
+              step);
         }
       }
 
@@ -679,7 +685,7 @@ public abstract class Principal {
         if (step != null) {
           // Proof successful.
           return new TransitiveProof<>(step, p, new DelegatesProof<>(this,
-              query.inferior, p));
+              query.inferior, p, query.maxUsableLabel, query.accessPolicy));
         }
       }
     }

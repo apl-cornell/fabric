@@ -16,7 +16,7 @@ public final class MeetToOwnerProof<Meet extends Principal, Inferior extends Pri
 
   public MeetToOwnerProof(OwnedPrincipal superior,
       ActsForProof<Meet, Inferior> proof) {
-    super(superior, proof.inferior);
+    super(superior, proof.inferior, proof.label, proof.accessPolicy);
     this.proof = proof;
   }
 }

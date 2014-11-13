@@ -14,7 +14,8 @@ public final class IntegProjectionProof extends
 
   public IntegProjectionProof(ActsForProof<?, ?> proof) {
     super((IntegPrincipal) proof.superior.integrity(),
-        (IntegPrincipal) proof.inferior.integrity());
+        (IntegPrincipal) proof.inferior.integrity(), proof.label,
+        proof.accessPolicy);
     this.proof = proof;
   }
 }

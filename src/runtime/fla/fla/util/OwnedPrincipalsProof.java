@@ -7,7 +7,7 @@ import fla.principals.Principal;
  * Represents use of the rule a ≽ c and a∨b ≽ c∨d => a:b ≽ c:d.
  */
 public final class OwnedPrincipalsProof extends
-    ActsForProof<OwnedPrincipal, OwnedPrincipal> {
+ActsForProof<OwnedPrincipal, OwnedPrincipal> {
   /**
    * A proof of {@code superior.owner()} ≽ {@code inferior.owner()}.
    */
@@ -22,8 +22,10 @@ public final class OwnedPrincipalsProof extends
   public OwnedPrincipalsProof(OwnedPrincipal superior, OwnedPrincipal inferior,
       ActsForProof<Principal, Principal> ownersProof,
       ActsForProof<Principal, Principal> projectionProof) {
-    super(superior, inferior);
+    super(superior, inferior, ownersProof.label, ownersProof.accessPolicy);
     this.ownersProof = ownersProof;
     this.projectionProof = projectionProof;
+
+    assertEquals(ownersProof.label, projectionProof.label);
   }
 }
