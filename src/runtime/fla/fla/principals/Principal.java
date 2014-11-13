@@ -244,9 +244,6 @@ public abstract class Principal {
     for (Iterator<PrimitivePrincipal> it = set.iterator(); it.hasNext();) {
       PrimitivePrincipal p = it.next();
 
-      // Assume p passes muster if it has participated in the search so far.
-      if (searchState.hasParticipant(p)) continue;
-
       if (!isAskable(p, query, searchState)) it.remove();
     }
 
@@ -820,10 +817,6 @@ public abstract class Principal {
 
     public boolean contains(ActsForQuery<?, ?> query) {
       return goals.contains(query);
-    }
-
-    public boolean hasParticipant(Principal p) {
-      return allParticipants.contains(p);
     }
 
     @Override
