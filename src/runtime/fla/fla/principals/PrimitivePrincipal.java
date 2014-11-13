@@ -7,13 +7,12 @@ import java.util.Map;
 import java.util.Set;
 
 import fla.util.ActsForQuery;
-import fla.util.DelegationPair;
 
 public class PrimitivePrincipal extends Principal {
   /**
    * Maps labels L to delegation pairs labelled with L.
    */
-  private final Map<Principal, Set<DelegationPair>> delegations;
+  private final Map<Principal, Set<Delegation<?, ?>>> delegations;
 
   public final String name;
 
@@ -152,13 +151,13 @@ public class PrimitivePrincipal extends Principal {
    */
   public final void addDelegatesTo(Principal inferior, Principal superior,
       Principal label) {
-    Set<DelegationPair> entry = delegations.get(label);
+    Set<Delegation<?, ?>> entry = delegations.get(label);
     if (entry == null) {
       entry = new HashSet<>();
       delegations.put(label, entry);
     }
 
-    entry.add(new DelegationPair(inferior, superior));
+    entry.add(new Delegation<>(this, inferior, superior, label));
   }
 
   /**
@@ -202,16 +201,16 @@ public class PrimitivePrincipal extends Principal {
   }
 
   @Override
-  final Set<DelegationPair> usableDelegations(ActsForQuery<?, ?> query,
+  final Set<Delegation<?, ?>> usableDelegations(ActsForQuery<?, ?> query,
       ProofSearchState searchState) {
     if (!query.useDynamicContext()) {
       // Static context. No dynamic delegations should be used.
       return Collections.emptySet();
     }
 
-    Set<DelegationPair> result = new HashSet<>();
+    Set<Delegation<?, ?>> result = new HashSet<>();
 
-    for (Map.Entry<Principal, Set<DelegationPair>> entry : delegations
+    for (Map.Entry<Principal, Set<Delegation<?, ?>>> entry : delegations
         .entrySet()) {
       Principal delegationLabel = entry.getKey();
       Principal queryLabel = query.maxUsableLabel;

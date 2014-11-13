@@ -1,5 +1,6 @@
 package fla.util;
 
+import fla.principals.Delegation;
 import fla.principals.Principal;
 
 /**
@@ -9,35 +10,40 @@ import fla.principals.Principal;
 public final class DelegatesProof<Superior extends Principal, Inferior extends Principal>
     extends ActsForProof<Superior, Inferior> {
   /**
-   * The principal storing the delegation. This can be {@code null} to indicate
-   * that the delegation is statically known.
+   * The dynamic delegation from {@code inferior} to {@code superior}. This can
+   * be {@code null} to indicate that the delegation is statically known.
    */
-  public final Principal source;
+  public final Delegation<Inferior, Superior> delegation;
 
   /**
-   * Constructs a statically known delegation.
+   * A proof showing that the delegation can be used in this proof.
+   */
+  public final ActsForProof<?, ?> usabilityProof;
+
+  /**
+   * Constructs proof of a statically known delegation from the given query's
+   * inferior to its superior.
    */
   public DelegatesProof(ActsForQuery<Superior, Inferior> query) {
-    this(null, query.inferior, query.superior, query.maxUsableLabel,
+    super(query.superior, query.inferior, query.maxUsableLabel,
         query.accessPolicy);
+    this.delegation = null;
+    this.usabilityProof = null;
   }
 
   /**
-   * @param source the principal storing the delegation. This can be (@code
-   *          null} to indicate that the delegation is statically known.
+   * Constructs a proof that uses the given dynamic delegation to satisfy the
+   * given query.
+   *
+   * @param delegation the dynamic delegation being used
+   * @param usabilityProof a proof showing that the given delegation can be used
+   *          as part of the proof of the given query
    */
-  public DelegatesProof(Principal source, ActsForQuery<Superior, Inferior> query) {
-    this(source, query.inferior, query.superior, query.maxUsableLabel,
+  public DelegatesProof(Delegation<Inferior, Superior> delegation,
+      ActsForQuery<?, ?> query, ActsForProof<?, ?> usabilityProof) {
+    super(delegation.superior, delegation.inferior, query.maxUsableLabel,
         query.accessPolicy);
-  }
-
-  /**
-   * @param source the principal storing the delegation. This can be (@code
-   *          null} to indicate that the delegation is statically known.
-   */
-  public DelegatesProof(Principal source, Inferior inferior, Superior superior,
-      Principal label, Principal accessPolicy) {
-    super(superior, inferior, label, accessPolicy);
-    this.source = source;
+    this.delegation = delegation;
+    this.usabilityProof = usabilityProof;
   }
 }

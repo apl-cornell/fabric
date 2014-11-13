@@ -4,7 +4,6 @@ import java.util.Collections;
 import java.util.Set;
 
 import fla.util.ActsForQuery;
-import fla.util.DelegationPair;
 
 public final class BottomPrincipal extends Principal {
   public static final BottomPrincipal INSTANCE = new BottomPrincipal();
@@ -124,7 +123,7 @@ public final class BottomPrincipal extends Principal {
   }
 
   @Override
-  final Set<DelegationPair> usableDelegations(ActsForQuery<?, ?> query,
+  final Set<Delegation<?, ?>> usableDelegations(ActsForQuery<?, ?> query,
       ProofSearchState searchState) {
     // Only (non-top, non-bottom) primitive principals store delegations.
     return Collections.emptySet();

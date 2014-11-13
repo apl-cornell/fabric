@@ -4,7 +4,6 @@ import java.util.Collections;
 import java.util.Set;
 
 import fla.util.ActsForQuery;
-import fla.util.DelegationPair;
 
 /**
  * An abstract class for principals constructed from other principals through
@@ -96,7 +95,7 @@ abstract class NonPrimitivePrincipal extends Principal {
   abstract Principal meet(DisjunctivePrincipal p);
 
   @Override
-  final Set<DelegationPair> usableDelegations(ActsForQuery<?, ?> query,
+  final Set<Delegation<?, ?>> usableDelegations(ActsForQuery<?, ?> query,
       ProofSearchState searchState) {
     // Only primitive principals store delegations.
     return Collections.emptySet();
