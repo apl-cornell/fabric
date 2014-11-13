@@ -136,7 +136,7 @@ public class Test {
           (OwnedPrincipal) new PrimitivePrincipal("group").owner(owner);
       this.exclusionGroup =
           (OwnedPrincipal) new PrimitivePrincipal("exclusionGroup")
-      .owner(owner);
+              .owner(owner);
     }
 
     /**
@@ -235,6 +235,7 @@ public class Test {
 
       a.addDelegatesTo(b, c, a);
       e.addDelegatesTo(a, e, a);
+      e.addDelegatesTo(a, e, e);
       if (PrincipalUtil.actsFor(e, c, b, a, bottom)) {
         throw new Error(e + " learned " + c + " ≽ " + b);
       }
