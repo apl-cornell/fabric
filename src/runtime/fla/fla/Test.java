@@ -28,12 +28,20 @@ public class Test {
      * Represents a rule specifying which administrators can assign which roles
      * to which users.
      *
-     * With this rule, an administrator acting for {@code ar} may assign users
-     * that act for {@code c} to roles r between {@code ar:xiMin} and
-     * {@code ar:xiMax} (inclusive). To assign a role r to a user u, the
-     * acts-for relationship ar:u ≽ r is established.
+     * With this rule, an administrator, in the context of an organization
+     * {@code o}, acting for {@code ar} may assign a user having role {@code c}
+     * to any role between {@code xiMin} and {@code xiMax} (inclusive). To
+     * assign a role r to a user u, the acts-for relationship o:u ≽ r is
+     * established.
+     *
+     * The invariant {@code ar} ≽ {@code xiMax} is assumed to hold.
      */
     static class CanAssignRule {
+      /**
+       * The owner.
+       */
+      final Principal o;
+
       /**
        * The administrative authority required to assign roles with this rule.
        */
@@ -41,8 +49,7 @@ public class Test {
 
       /**
        * The role-membership criterion: for all roles that can be assigned with
-       * this rule, the members of those roles must have at least {@code c}'s
-       * authority.
+       * this rule, the members of those roles must already have role c.
        */
       final Principal c;
 
@@ -56,8 +63,9 @@ public class Test {
        */
       final Principal xiMax;
 
-      public CanAssignRule(PrimitivePrincipal ar, Principal c, Principal xiMin,
-          Principal xiMax) {
+      public CanAssignRule(Principal o, PrimitivePrincipal ar, Principal c,
+          Principal xiMin, Principal xiMax) {
+        this.o = o;
         this.ar = ar;
         this.c = c;
         this.xiMin = xiMin;
@@ -80,26 +88,30 @@ public class Test {
      */
     boolean assignUser(Principal a, Principal u, Principal r) {
       for (CanAssignRule rule : canAssign) {
+        final Principal o = rule.o;
+        final Principal ou = o.project(u);
         final PrimitivePrincipal ar = rule.ar;
         final Principal c = rule.c;
-        final Principal arXiMin = rule.xiMin.owner(ar);
-        final Principal arXiMax = rule.xiMax.owner(ar);
-        final Principal arInteg = ar.integrity();
+        final Principal xiMin = rule.xiMin;
+        final Principal xiMax = rule.xiMax;
 
         // Ensure a ≽ ar with ar←.
-        if (!PrincipalUtil.actsFor(ar, a, ar, arInteg, bottom)) continue;
+        if (!PrincipalUtil.actsFor(ar, a, ar, ar.integrity(), bottom))
+          continue;
 
-        // Ensure u ≽ c with ar←.
-        if (!PrincipalUtil.actsFor(ar, u, c, arInteg, bottom)) continue;
+        // Ensure o:u ≽ c with c←.
+        if (!PrincipalUtil.actsFor(ar, ou, c, c.integrity(), bottom)) continue;
 
-        // Ensure r ≽ ar:xiMin with ar←.
-        if (!PrincipalUtil.actsFor(ar, r, arXiMin, arInteg, bottom)) continue;
+        // Ensure r ≽ xiMin with xiMin←.
+        if (!PrincipalUtil.actsFor(ar, r, xiMin, xiMin.integrity(), bottom))
+          continue;
 
-        // Ensure ar:xiMax ≽ r with ar←.
-        if (!PrincipalUtil.actsFor(ar, arXiMax, r, arInteg, bottom)) continue;
+        // Ensure xiMax ≽ r with r←.
+        if (!PrincipalUtil.actsFor(ar, xiMax, r, r.integrity(), bottom))
+          continue;
 
-        // Establish the delegation ar:u ≽ r with ar←.
-        ar.addDelegatesTo(r, ar.project(u), arInteg);
+        // Establish the delegation o:u ≽ r with ar←.
+        ar.addDelegatesTo(r, ou, ar.integrity());
       }
 
       return false;
