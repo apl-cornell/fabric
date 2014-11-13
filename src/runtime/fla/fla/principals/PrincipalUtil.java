@@ -228,4 +228,18 @@ public class PrincipalUtil {
   public static Principal meet(Set<Principal> p) {
     return disjunction(p);
   }
+
+  /**
+   * @return the readers-to-writers mapping of the given principal. This is
+   *          defined as the confidentiality projection of the principal, viewed
+   *          as an integrity projection (i.e., with the arrow "flipped").
+   */
+  public static Principal readersToWriters(Principal p) {
+    Principal confP = p.confidentiality();
+    if (confP instanceof ConfPrincipal) {
+      return ((ConfPrincipal) confP).base().integrity();
+    }
+
+    return confP.integrity();
+  }
 }

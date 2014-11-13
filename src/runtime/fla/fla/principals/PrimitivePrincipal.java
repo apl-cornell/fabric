@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import fla.util.ActsForProof;
 import fla.util.ActsForQuery;
 
 public class PrimitivePrincipal extends Principal {
@@ -201,24 +202,36 @@ public class PrimitivePrincipal extends Principal {
   }
 
   @Override
-  final Set<Delegation<?, ?>> usableDelegations(ActsForQuery<?, ?> query,
-      ProofSearchState searchState) {
+  final Map<Delegation<?, ?>, ActsForProof<?, ?>> usableDelegations(
+      ActsForQuery<?, ?> query, ProofSearchState searchState) {
     if (!query.useDynamicContext()) {
       // Static context. No dynamic delegations should be used.
-      return Collections.emptySet();
+      return Collections.emptyMap();
     }
 
-    Set<Delegation<?, ?>> result = new HashSet<>();
+    Map<Delegation<?, ?>, ActsForProof<?, ?>> result = new HashMap<>();
 
     for (Map.Entry<Principal, Set<Delegation<?, ?>>> entry : delegations
         .entrySet()) {
       Principal delegationLabel = entry.getKey();
       Principal queryLabel = query.maxUsableLabel;
 
-      // Can use delegations if delegationLabel ⊑ queryLabel.
-      if (actsForProof(this, ActsForQuery.flowsToQuery(delegationLabel,
-          queryLabel, query.maxUsableLabel, query.accessPolicy), searchState) != null) {
-        result.addAll(entry.getValue());
+      // Can use delegations if delegationLabel ⊑ queryLabel. This subquery
+      // should maintain the confidentiality and integrity of the top-level
+      // query, and maintain the integrity of the delegation's confidentiality.
+      // i.e., the label on the subquery should be:
+      //   queryLabel ∧ writersToReaders(delegationLabel).
+      ActsForProof<?, ?> usabilityProof =
+          actsForProof(this, ActsForQuery.flowsToQuery(
+              delegationLabel,
+              queryLabel,
+              PrincipalUtil.conjunction(
+                  PrincipalUtil.readersToWriters(delegationLabel), queryLabel),
+                  query.accessPolicy), searchState);
+      if (usabilityProof != null) {
+        for (Delegation<?, ?> delegation : entry.getValue()) {
+          result.put(delegation, usabilityProof);
+        }
       }
     }
 

@@ -153,7 +153,8 @@ public abstract class Principal {
 
   /**
    * Obtains a set of delegations that are stored at this principal and can be
-   * used to answer the given query.
+   * used to answer the given query. Each delegation is mapped to a proof
+   * showing that it can be used.
    * <p>
    * A delegation may be used to answer a query if the label on the delegation
    * flows to {@code query.maxLabel}.
@@ -164,8 +165,8 @@ public abstract class Principal {
    *
    * @param searchState the state of the proof search being made
    */
-  abstract Set<Delegation<?, ?>> usableDelegations(ActsForQuery<?, ?> query,
-      ProofSearchState searchState);
+  abstract Map<Delegation<?, ?>, ActsForProof<?, ?>> usableDelegations(
+      ActsForQuery<?, ?> query, ProofSearchState searchState);
 
   /**
    * Obtains a set of principals to whom the given query can be forwarded. A
@@ -209,7 +210,9 @@ public abstract class Principal {
     unfilteredResult.addAll(query.inferior.componentPrimitivePrincipals());
 
     // Add components of usable delegations.
-    for (Delegation<?, ?> delegation : usableDelegations(query, searchState)) {
+    for (Delegation<?, ?> delegation : usableDelegations(query, searchState)
+        .keySet()) {
+      // XXX Dropping usability proofs. Should use them to prove correctness of the return value.
       unfilteredResult.addAll(delegation.inferior
           .componentPrimitivePrincipals());
       unfilteredResult.addAll(delegation.superior
@@ -281,7 +284,7 @@ public abstract class Principal {
    */
   final boolean delegatesTo(ActsForQuery<?, ?> query) {
     for (Delegation<?, ?> delegation : usableDelegations(query,
-        new ProofSearchState())) {
+        new ProofSearchState()).keySet()) {
       if (PrincipalUtil.equals(query.inferior, delegation.inferior)
           && PrincipalUtil.equals(query.superior, delegation.superior))
         return true;
@@ -443,11 +446,14 @@ public abstract class Principal {
     }
 
     // See if we can satisfy the query directly with a delegation.
-    for (Delegation<?, ?> delegation : usableDelegations(query, searchState)) {
+    for (Map.Entry<Delegation<?, ?>, ActsForProof<?, ?>> entry : usableDelegations(
+        query, searchState).entrySet()) {
+      final Delegation<?, ?> delegation = entry.getKey();
+      final ActsForProof<?, ?> usabilityProof = entry.getValue();
       if (PrincipalUtil.equals(query.superior, delegation.superior)
           && PrincipalUtil.equals(query.inferior, delegation.inferior)) {
         return (ActsForProof<Superior, Inferior>) new DelegatesProof<>(
-            delegation, query, XXX);
+            delegation, query, usabilityProof);
       }
     }
 
@@ -661,7 +667,11 @@ public abstract class Principal {
     //   query.superior = p and q ≽ query.inferior
     // or:
     //   query.superior ≽ p and q = query.inferior.
-    for (Delegation<?, ?> delegation : usableDelegations(query, searchState)) {
+    for (Map.Entry<Delegation<?, ?>, ActsForProof<?, ?>> entry : usableDelegations(
+        query, searchState).entrySet()) {
+      final Delegation<?, ?> delegation = entry.getKey();
+      final ActsForProof<?, ?> usabilityProof = entry.getValue();
+
       // Let p = delegation.superior and q = delegation.inferior.
       final Principal p = delegation.superior;
       final Principal q = delegation.inferior;
@@ -674,7 +684,8 @@ public abstract class Principal {
           // Proof successful.
           ActsForProof<Superior, Principal> step1 =
               new DelegatesProof<>(
-                  (Delegation<Principal, Superior>) delegation, query, XXX);
+                  (Delegation<Principal, Superior>) delegation, query,
+                  usabilityProof);
           return new TransitiveProof<>(step1, q, step2);
         }
       }
@@ -687,7 +698,8 @@ public abstract class Principal {
           // Proof successful.
           ActsForProof<Principal, Inferior> step2 =
               new DelegatesProof<>(
-                  (Delegation<Inferior, Principal>) delegation, query, XXX);
+                  (Delegation<Inferior, Principal>) delegation, query,
+                  usabilityProof);
           return new TransitiveProof<>(step1, p, step2);
         }
       }

@@ -38,4 +38,9 @@ public class Delegation<Inferior extends Principal, Superior extends Principal> 
     this.superior = superior;
     this.label = label;
   }
+
+  @Override
+  public String toString() {
+    return superior + " ≽ " + inferior + " {" + label + "} at " + store;
+  }
 }

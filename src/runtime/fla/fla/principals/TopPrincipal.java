@@ -1,8 +1,10 @@
 package fla.principals;
 
 import java.util.Collections;
+import java.util.Map;
 import java.util.Set;
 
+import fla.util.ActsForProof;
 import fla.util.ActsForQuery;
 
 public final class TopPrincipal extends Principal {
@@ -144,9 +146,9 @@ public final class TopPrincipal extends Principal {
   }
 
   @Override
-  final Set<Delegation<?, ?>> usableDelegations(ActsForQuery<?, ?> query,
-      ProofSearchState searchState) {
+  final Map<Delegation<?, ?>, ActsForProof<?, ?>> usableDelegations(
+      ActsForQuery<?, ?> query, ProofSearchState searchState) {
     // Only (non-top, non-bottom) primitive principals store delegations.
-    return Collections.emptySet();
+    return Collections.emptyMap();
   }
 }
