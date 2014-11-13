@@ -740,7 +740,8 @@ public abstract class Principal {
 
     /**
      * Constructs a new search state with the given query pushed onto the query
-     * stack.
+     * stack, and with {@code principalsAsked} containing just {@code
+     * Principal.this}.
      */
     private ProofSearchState(ProofSearchState state, ActsForQuery<?, ?> query) {
       Set<ActsForQuery<?, ?>> goals = new HashSet<>(state.goals.size() + 1);
@@ -750,7 +751,7 @@ public abstract class Principal {
 
       this.allParticipants = state.allParticipants;
 
-      this.principalsAsked = Collections.emptySet();
+      this.principalsAsked = Collections.singleton(Principal.this);
 
       this.actsForCache = state.actsForCache;
       this.notActsForCache = state.notActsForCache;
