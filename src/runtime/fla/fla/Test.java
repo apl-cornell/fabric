@@ -40,12 +40,12 @@ public class Test {
       /**
        * The owner.
        */
-      final Principal o;
+      final PrimitivePrincipal o;
 
       /**
        * The administrative authority required to assign roles with this rule.
        */
-      final PrimitivePrincipal ar;
+      final Principal ar;
 
       /**
        * The role-membership criterion: for all roles that can be assigned with
@@ -63,7 +63,7 @@ public class Test {
        */
       final Principal xiMax;
 
-      public CanAssignRule(Principal o, PrimitivePrincipal ar, Principal c,
+      public CanAssignRule(PrimitivePrincipal o, Principal ar, Principal c,
           Principal xiMin, Principal xiMax) {
         this.o = o;
         this.ar = ar;
@@ -88,9 +88,9 @@ public class Test {
      */
     boolean assignUser(Principal a, Principal u, Principal r) {
       for (CanAssignRule rule : canAssign) {
-        final Principal o = rule.o;
+        final PrimitivePrincipal o = rule.o;
         final Principal ou = o.project(u);
-        final PrimitivePrincipal ar = rule.ar;
+        final Principal ar = rule.ar;
         final Principal c = rule.c;
         final Principal xiMin = rule.xiMin;
         final Principal xiMax = rule.xiMax;
@@ -111,14 +111,82 @@ public class Test {
           continue;
 
         // Establish the delegation o:u ≽ r with ar←.
-        ar.addDelegatesTo(r, ou, ar.integrity());
+        o.addDelegatesTo(r, ou, ar.integrity());
+        return true;
       }
 
       return false;
     }
 
     static void test() {
-      // TODO
+      PrimitivePrincipal acme = new PrimitivePrincipal("Acme");
+      Principal acmeHR = new PrimitivePrincipal("HR").owner(acme);
+      Principal acmePL = new PrimitivePrincipal("ProgramLead").owner(acme);
+      Principal acmeEmp = new PrimitivePrincipal("Emp").owner(acme);
+      Principal acmeEng = new PrimitivePrincipal("Eng").owner(acme);
+      Principal acmeInteg = acme.integrity();
+
+      // acmeHR acts for acmeEmp, and acmePL acts for acmeEng.
+      acme.addDelegatesTo(acmeEmp, acmeHR, acmeInteg);
+      acme.addDelegatesTo(acmeEng, acmePL, acmeInteg);
+
+      // Alice is a program lead at Acme.
+      Principal acmeAlice = new PrimitivePrincipal("alice").owner(acme);
+      acme.addDelegatesTo(acmePL, acmeAlice, acmeInteg);
+
+      // Bob works in HR at Acme.
+      Principal acmeBob = new PrimitivePrincipal("bob").owner(acme);
+      acme.addDelegatesTo(acmeHR, acmeBob, acmeInteg);
+
+      // Chuck is a freelance programmer.
+      Principal chuck = new PrimitivePrincipal("chuck");
+
+      // Set up the trust management rules for Acme.
+      URA97 acmeRules;
+      {
+        Set<CanAssignRule> canAssign = new HashSet<>();
+
+        // Members of the HR department can hire new employees.
+        canAssign
+            .add(new CanAssignRule(acme, acmeHR, bottom, acmeEmp, acmeEmp));
+
+        // Program leads can recruit employees to the engineering team.
+        canAssign
+            .add(new CanAssignRule(acme, acmePL, acmeEmp, acmeEng, acmeEng));
+
+        acmeRules = new URA97(canAssign);
+      }
+
+      // Alice should not be able to add Chuck to the engineering team.
+      if (acmeRules.assignUser(acmeAlice, chuck, acmeEng)) {
+        throw new Error(acmeAlice + " added " + chuck + " to " + acmeEng);
+      }
+
+      // Bob should not be able to add Chuck to the engineering team.
+      if (acmeRules.assignUser(acmeBob, chuck, acmeEng)) {
+        throw new Error(acmeBob + " added " + chuck + " to " + acmeEng);
+      }
+
+      // Alice should not be able to hire Chuck.
+      if (acmeRules.assignUser(acmeAlice, chuck, acmeEmp)) {
+        throw new Error(acmeAlice + " added " + chuck + " to " + acmeEmp);
+      }
+
+      // Bob should be able to hire Chuck.
+      if (!acmeRules.assignUser(acmeBob, chuck, acmeEmp)) {
+        throw new Error(acmeBob + " unable to add " + chuck + " to " + acmeEmp);
+      }
+
+      // Bob should still not be able to add Chuck to the engineering team.
+      if (acmeRules.assignUser(acmeBob, chuck, acmeEng)) {
+        throw new Error(acmeBob + " added " + chuck + " to " + acmeEng);
+      }
+
+      // Alice should now be able to add Chuck to the engineering team.
+      if (!acmeRules.assignUser(acmeAlice, chuck, acmeEng)) {
+        throw new Error(acmeAlice + " unable to add " + chuck + " to "
+            + acmeEng);
+      }
     }
   }
 
