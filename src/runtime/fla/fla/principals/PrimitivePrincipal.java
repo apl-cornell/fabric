@@ -220,14 +220,17 @@ public class PrimitivePrincipal extends Principal {
       // should maintain the confidentiality and integrity of the top-level
       // query, and maintain the integrity of the delegation's confidentiality.
       // i.e., the label on the subquery should be:
-      //   queryLabel ∧ writersToReaders(delegationLabel).
+      //   queryLabel ∧ readersToWriters(delegationLabel).
+      // Additionally, the access policy on the subquery should be raised to
+      // protect the delegation's confidentiality.
       ActsForProof<?, ?> usabilityProof =
           actsForProof(this, ActsForQuery.flowsToQuery(
               delegationLabel,
               queryLabel,
               PrincipalUtil.conjunction(
                   PrincipalUtil.readersToWriters(delegationLabel), queryLabel),
-                  query.accessPolicy), searchState);
+              PrincipalUtil.conjunction(query.accessPolicy,
+                      delegationLabel.confidentiality())), searchState);
       if (usabilityProof != null) {
         for (Delegation<?, ?> delegation : entry.getValue()) {
           result.put(delegation, usabilityProof);
