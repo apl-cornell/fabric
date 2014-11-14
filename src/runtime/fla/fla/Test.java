@@ -135,7 +135,6 @@ public class Test {
 
       public CanRevokeRule(PrimitivePrincipal o, Principal ar, Principal xiMin,
           Principal xiMax) {
-        super();
         this.o = o;
         this.ar = ar;
         this.xiMin = xiMin;
@@ -284,7 +283,6 @@ public class Test {
 
       public CanRevokePRule(PrimitivePrincipal o, Principal ar,
           Principal xiMin, Principal xiMax) {
-        super();
         this.o = o;
         this.ar = ar;
         this.xiMin = xiMin;
@@ -317,17 +315,113 @@ public class Test {
       }
     }
 
+    /**
+     * Represents a rule specifying which administrators can modify which role
+     * ranges.
+     *
+     * With this rule, and administrator, in the context of an organization
+     * {@code o}, acting for {@code ar} may insert or remove a role between
+     * {@code xiMin} and {@code xiMax} (exclusive).
+     */
+    static class CanModifyRule {
+      /**
+       * The owner.
+       */
+      final PrimitivePrincipal o;
+
+      /**
+       * The administrative authority required to assign permissions with this
+       * rule.
+       */
+      final Principal ar;
+
+      /**
+       * The lower bound of the role range that can be modified with this rule.
+       */
+      final Principal xiMin;
+
+      /**
+       * The upper bound of the role range that can be modified with this rule.
+       */
+      final Principal xiMax;
+
+      public CanModifyRule(PrimitivePrincipal o, Principal ar, Principal xiMin,
+          Principal xiMax) {
+        this.o = o;
+        this.ar = ar;
+        this.xiMin = xiMin;
+        this.xiMax = xiMax;
+      }
+
+      /**
+       * Uses this rule to add a role {@code r} to the role range using
+       * administrator {@code a}'s authority.
+       *
+       * @return true iff successful (even if {@code r} was already in the
+       *          range)
+       */
+      boolean addToRange(Principal a, Principal xiMin, Principal xiMax,
+          Principal r) {
+        // Ensure the given range matches the one in this rule.
+        if (!PrincipalUtil.equals(xiMin, this.xiMin)) return false;
+        if (!PrincipalUtil.equals(xiMax, this.xiMax)) return false;
+
+        // Ensure r ≠ xiMin and r≠ xiMax.
+        if (PrincipalUtil.equals(r, xiMin)) return false;
+        if (PrincipalUtil.equals(r, xiMax)) return false;
+
+        // Ensure a ≽ ar with ar←.
+        if (!PrincipalUtil.actsFor(ar, a, ar, ar.integrity(), bottom))
+          return false;
+
+        // Establish the delegations xiMax ≽ r and r ≽ xiMin with ar←.
+        o.addDelegatesTo(xiMin, r, ar.integrity());
+        o.addDelegatesTo(r, xiMax, ar.integrity());
+        return true;
+      }
+
+      /**
+       * Uses this rule to remove a role {@code r} from the range using
+       * administrator {@code a}'s authority.
+       *
+       * @return true iff successful (even if {@code r} was already not in the
+       *          range)
+       */
+      boolean removeFromRange(Principal a, Principal xiMin, Principal xiMax,
+          Principal r) {
+        // Ensure the given range matches the one in this rule.
+        if (!PrincipalUtil.equals(xiMin, this.xiMin)) return false;
+        if (!PrincipalUtil.equals(xiMax, this.xiMax)) return false;
+
+        // Ensure r ≠ xiMin and r≠ xiMax.
+        if (PrincipalUtil.equals(r, xiMin)) return false;
+        if (PrincipalUtil.equals(r, xiMax)) return false;
+
+        // Ensure a ≽ ar with ar←.
+        if (!PrincipalUtil.actsFor(ar, a, ar, ar.integrity(), bottom))
+          return false;
+
+        // Revoke the delegations xiMax ≽ r and r ≽ xiMin with ar←.
+        o.removeDelegatesTo(xiMin, r, ar.integrity());
+        o.removeDelegatesTo(r, xiMax, ar.integrity());
+        return true;
+      }
+    }
+
     final Set<CanAssignRule> canAssign;
     final Set<CanRevokeRule> canRevoke;
     final Set<CanAssignPRule> canAssignP;
     final Set<CanRevokePRule> canRevokeP;
+    final Set<CanModifyRule> canModify;
 
     ARBAC97(Set<CanAssignRule> canAssign, Set<CanRevokeRule> canRevoke,
-        Set<CanAssignPRule> canAssignP, Set<CanRevokePRule> canRevokeP) {
+        Set<CanAssignPRule> canAssignP, Set<CanRevokePRule> canRevokeP,
+        Set<CanModifyRule> canModify) {
       this.canAssign = Collections.unmodifiableSet(new HashSet<>(canAssign));
       this.canRevoke = Collections.unmodifiableSet(new HashSet<>(canRevoke));
       this.canAssignP = Collections.unmodifiableSet(new HashSet<>(canAssignP));
       this.canRevokeP = Collections.unmodifiableSet(new HashSet<>(canRevokeP));
+      this.canModify = Collections.unmodifiableSet(new HashSet<>(canModify));
     }
 
     /**
@@ -389,6 +483,38 @@ public class Test {
       return false;
     }
 
+    /**
+     * Adds a role {@code r} to the role range using administrator {@code a}'s
+     * authority.
+     *
+     * @return true iff successful (even if {@code r} was already in the
+     *          range)
+     */
+    boolean addToRange(Principal a, Principal xiMin, Principal xiMax,
+        Principal r) {
+      for (CanModifyRule rule : canModify) {
+        if (rule.addToRange(a, xiMin, xiMax, r)) return true;
+      }
+
+      return false;
+    }
+
+    /**
+     * Removes a role {@code r} from the role range using administrator {@code
+     * a}'s authority.
+     *
+     * @return true iff successful (even if {@code r} was already not in the
+     *          range)
+     */
+    boolean removeFromRange(Principal a, Principal xiMin, Principal xiMax,
+        Principal r) {
+      for (CanModifyRule rule : canModify) {
+        if (rule.removeFromRange(a, xiMin, xiMax, r)) return true;
+      }
+
+      return false;
+    }
+
     static void test() {
       PrimitivePrincipal acme = new PrimitivePrincipal("Acme");
       Principal acmeHR = new PrimitivePrincipal("HR").owner(acme);
@@ -419,6 +545,7 @@ public class Test {
         Set<CanRevokeRule> canRevoke = new HashSet<>();
         Set<CanAssignPRule> canAssignP = new HashSet<>();
         Set<CanRevokePRule> canRevokeP = new HashSet<>();
+        Set<CanModifyRule> canModify = new HashSet<>();
 
         // Members of the HR department can hire new employees.
         canAssign
@@ -431,7 +558,8 @@ public class Test {
         // Members of the HR department can fire employees.
         canRevoke.add(new CanRevokeRule(acme, acmeHR, acmeEmp, acmeEmp));
 
-        acmeRules = new ARBAC97(canAssign, canRevoke, canAssignP, canRevokeP);
+        acmeRules =
+            new ARBAC97(canAssign, canRevoke, canAssignP, canRevokeP, canModify);
       }
 
       // Alice should not be able to add Chuck to the engineering team.
