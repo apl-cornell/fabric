@@ -1,5 +1,10 @@
 package fla;
 
+import java.util.HashSet;
+import java.util.Set;
+
+import fla.ARBAC97.CanAssignRule;
+import fla.ARBAC97.CanRevokeRule;
 import fla.principals.OwnedPrincipal;
 import fla.principals.PrimitivePrincipal;
 import fla.principals.Principal;
@@ -11,7 +16,7 @@ public class Test {
     DelegationLoophole.test();
     InfoScreen.test();
     DelegationLeak.test();
-    ARBAC97.test();
+    arbac97Test();
 
     System.out.println("All tests passed.");
   }
@@ -211,6 +216,118 @@ public class Test {
         throw new Error(acmeEmpConf + " ⊑ " + acmeApexConf + " with "
             + bobOrApexInteg);
       }
+    }
+  }
+
+  static void arbac97Test() {
+    PrimitivePrincipal acme = new PrimitivePrincipal("Acme");
+    Principal acmeHR = new PrimitivePrincipal("HR").owner(acme);
+    Principal acmePL = new PrimitivePrincipal("ProgramLead").owner(acme);
+    Principal acmeEmp = new PrimitivePrincipal("Emp").owner(acme);
+    Principal acmeEng = new PrimitivePrincipal("Eng").owner(acme);
+    Principal acmeInteg = acme.integrity();
+
+    // acmeHR acts for acmeEmp, and acmePL acts for acmeEng.
+    acme.addDelegatesTo(acmeEmp, acmeHR, acmeInteg);
+    acme.addDelegatesTo(acmeEng, acmePL, acmeInteg);
+
+    // Alice is a program lead at Acme.
+    Principal acmeAlice = new PrimitivePrincipal("alice").owner(acme);
+    acme.addDelegatesTo(acmePL, acmeAlice, acmeInteg);
+
+    // Bob works in HR at Acme.
+    Principal acmeBob = new PrimitivePrincipal("bob").owner(acme);
+    acme.addDelegatesTo(acmeHR, acmeBob, acmeInteg);
+
+    // Chuck is a freelance programmer.
+    Principal chuck = new PrimitivePrincipal("chuck");
+
+    // Set up the trust management rules for Acme.
+    ARBAC97 acmeRules;
+    {
+      Set<ARBAC97.CanAssignRule> canAssign = new HashSet<>();
+      Set<ARBAC97.CanRevokeRule> canRevoke = new HashSet<>();
+      Set<ARBAC97.CanAssignPRule> canAssignP = new HashSet<>();
+      Set<ARBAC97.CanRevokePRule> canRevokeP = new HashSet<>();
+      Set<ARBAC97.CanModifyRule> canModify = new HashSet<>();
+
+      // Members of the HR department can hire new employees.
+      canAssign.add(new CanAssignRule(acme, acmeHR, bottom, acmeEmp, acmeEmp));
+
+      // Program leads can recruit employees to the engineering team.
+      canAssign.add(new CanAssignRule(acme, acmePL, acmeEmp, acmeEng, acmeEng));
+
+      // Members of the HR department can fire employees.
+      canRevoke.add(new CanRevokeRule(acme, acmeHR, acmeEmp, acmeEmp));
+
+      acmeRules =
+          new ARBAC97(canAssign, canRevoke, canAssignP, canRevokeP, canModify);
+    }
+
+    // Alice should not be able to add Chuck to the engineering team.
+    if (acmeRules.assignUser(acmeAlice, chuck, acmeEng)) {
+      throw new Error(acmeAlice + " added " + chuck + " to " + acmeEng);
+    }
+
+    // Bob should not be able to add Chuck to the engineering team.
+    if (acmeRules.assignUser(acmeBob, chuck, acmeEng)) {
+      throw new Error(acmeBob + " added " + chuck + " to " + acmeEng);
+    }
+
+    // Alice should not be able to hire Chuck.
+    if (acmeRules.assignUser(acmeAlice, chuck, acmeEmp)) {
+      throw new Error(acmeAlice + " added " + chuck + " to " + acmeEmp);
+    }
+
+    // Bob should be able to hire Chuck.
+    if (!acmeRules.assignUser(acmeBob, chuck, acmeEmp)) {
+      throw new Error(acmeBob + " unable to add " + chuck + " to " + acmeEmp);
+    }
+
+    // Bob should still not be able to add Chuck to the engineering team.
+    if (acmeRules.assignUser(acmeBob, chuck, acmeEng)) {
+      throw new Error(acmeBob + " added " + chuck + " to " + acmeEng);
+    }
+
+    // Alice should now be able to add Chuck to the engineering team.
+    if (!acmeRules.assignUser(acmeAlice, chuck, acmeEng)) {
+      throw new Error(acmeAlice + " unable to add " + chuck + " to " + acmeEng);
+    }
+
+    // Chuck should be a member of acmeEng.
+    Principal acmeChuck = acme.project(chuck);
+    if (!PrincipalUtil.actsFor(acme, acmeChuck, acmeEng, acmePL.integrity(),
+        bottom)) {
+      throw new Error(acmeChuck + " does not act for " + acmeEng);
+    }
+
+    // Chuck should be a member of acmeEmp.
+    if (!PrincipalUtil.actsFor(acme, acmeChuck, acmeEmp, acmeHR.integrity(),
+        bottom)) {
+      throw new Error(acmeChuck + " does not act for " + acmeEmp);
+    }
+
+    // Alice should not be able to fire Chuck.
+    if (acmeRules.revokeUser(acmeAlice, chuck, acmeEmp)) {
+      throw new Error(acmeAlice + " removed " + chuck + " from " + acmeEmp);
+    }
+
+    // Bob should be able to fire Chuck.
+    if (!acmeRules.revokeUser(acmeBob, chuck, acmeEmp)) {
+      throw new Error(acmeBob + " unable to remove " + chuck + " from "
+          + acmeEmp);
+    }
+
+    // Chuck should still be a member of acmeEng.
+    if (!PrincipalUtil.actsFor(acme, acmeChuck, acmeEng, acmePL.integrity(),
+        bottom)) {
+      throw new Error(acmeChuck + " no longer acts for " + acmeEng);
+    }
+
+    // Chuck should not be a member of acmeEmp.
+    if (PrincipalUtil.actsFor(acme, acmeChuck, acmeEmp, acmeHR.integrity(),
+        bottom)) {
+      throw new Error(acmeChuck + " still acts for " + acmeEmp);
     }
   }
 

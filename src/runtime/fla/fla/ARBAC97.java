@@ -393,6 +393,74 @@ class ARBAC97 {
       o.removeDelegatesTo(r, xiMax, ar.integrity());
       return true;
     }
+
+    /**
+     * Uses this rule to add a delegation from role {@code s} to role {@code r},
+     * using administrator {@code a}'s authority, where {@code s} and {@code r}
+     * are in the range.
+     *
+     * @return true iff successful (even if {@code s} already delegates to
+     *          {@code r})
+     */
+    boolean addAsSenior(Principal a, Principal r, Principal s) {
+      // Ensure a ≽ ar with ar←.
+      if (!PrincipalUtil.actsFor(ar, a, ar, ar.integrity(), bottom))
+        return false;
+
+      // Ensure r ≽ xiMin with xiMin←.
+      if (!PrincipalUtil.actsFor(ar, r, xiMin, xiMin.integrity(), bottom))
+        return false;
+
+      // Ensure xiMax ≽ r with r←.
+      if (!PrincipalUtil.actsFor(ar, xiMax, r, r.integrity(), bottom))
+        return false;
+
+      // Ensure s ≽ xiMin with xiMin←.
+      if (!PrincipalUtil.actsFor(ar, s, xiMin, xiMin.integrity(), bottom))
+        return false;
+
+      // Ensure xiMax ≽ s with s←.
+      if (!PrincipalUtil.actsFor(ar, xiMax, s, s.integrity(), bottom))
+        return false;
+
+      // Establish the delegation r ≽ s with ar←.
+      o.addDelegatesTo(s, r, ar.integrity());
+      return true;
+    }
+
+    /**
+     * Uses this rule to remove a delegation from role {@code s} to role {@code
+     * r}, using administrator {@code a}'s authority, where {@code s} and {@code
+     * r} are in the range.
+     *
+     * @return true iff successful (even if {@code s} already does not delegate
+     *          to {@code r})
+     */
+    boolean removeAsSenior(Principal a, Principal r, Principal s) {
+      // Ensure a ≽ ar with ar←.
+      if (!PrincipalUtil.actsFor(ar, a, ar, ar.integrity(), bottom))
+        return false;
+
+      // Ensure r ≽ xiMin with xiMin←.
+      if (!PrincipalUtil.actsFor(ar, r, xiMin, xiMin.integrity(), bottom))
+        return false;
+
+      // Ensure xiMax ≽ r with r←.
+      if (!PrincipalUtil.actsFor(ar, xiMax, r, r.integrity(), bottom))
+        return false;
+
+      // Ensure s ≽ xiMin with xiMin←.
+      if (!PrincipalUtil.actsFor(ar, s, xiMin, xiMin.integrity(), bottom))
+        return false;
+
+      // Ensure xiMax ≽ s with s←.
+      if (!PrincipalUtil.actsFor(ar, xiMax, s, s.integrity(), bottom))
+        return false;
+
+      // Revoke the delegation r ≽ s with ar←.
+      o.removeDelegatesTo(s, r, ar.integrity());
+      return true;
+    }
   }
 
   final Set<ARBAC97.CanAssignRule> canAssign;
@@ -503,115 +571,33 @@ class ARBAC97 {
     return false;
   }
 
-  static void test() {
-    PrimitivePrincipal acme = new PrimitivePrincipal("Acme");
-    Principal acmeHR = new PrimitivePrincipal("HR").owner(acme);
-    Principal acmePL = new PrimitivePrincipal("ProgramLead").owner(acme);
-    Principal acmeEmp = new PrimitivePrincipal("Emp").owner(acme);
-    Principal acmeEng = new PrimitivePrincipal("Eng").owner(acme);
-    Principal acmeInteg = acme.integrity();
-
-    // acmeHR acts for acmeEmp, and acmePL acts for acmeEng.
-    acme.addDelegatesTo(acmeEmp, acmeHR, acmeInteg);
-    acme.addDelegatesTo(acmeEng, acmePL, acmeInteg);
-
-    // Alice is a program lead at Acme.
-    Principal acmeAlice = new PrimitivePrincipal("alice").owner(acme);
-    acme.addDelegatesTo(acmePL, acmeAlice, acmeInteg);
-
-    // Bob works in HR at Acme.
-    Principal acmeBob = new PrimitivePrincipal("bob").owner(acme);
-    acme.addDelegatesTo(acmeHR, acmeBob, acmeInteg);
-
-    // Chuck is a freelance programmer.
-    Principal chuck = new PrimitivePrincipal("chuck");
-
-    // Set up the trust management rules for Acme.
-    ARBAC97 acmeRules;
-    {
-      Set<ARBAC97.CanAssignRule> canAssign = new HashSet<>();
-      Set<ARBAC97.CanRevokeRule> canRevoke = new HashSet<>();
-      Set<ARBAC97.CanAssignPRule> canAssignP = new HashSet<>();
-      Set<ARBAC97.CanRevokePRule> canRevokeP = new HashSet<>();
-      Set<ARBAC97.CanModifyRule> canModify = new HashSet<>();
-
-      // Members of the HR department can hire new employees.
-      canAssign.add(new CanAssignRule(acme, acmeHR, bottom, acmeEmp, acmeEmp));
-
-      // Program leads can recruit employees to the engineering team.
-      canAssign.add(new CanAssignRule(acme, acmePL, acmeEmp, acmeEng, acmeEng));
-
-      // Members of the HR department can fire employees.
-      canRevoke.add(new CanRevokeRule(acme, acmeHR, acmeEmp, acmeEmp));
-
-      acmeRules =
-          new ARBAC97(canAssign, canRevoke, canAssignP, canRevokeP, canModify);
+  /**
+   * Adds a delegation from role {@code s} to role {@code r}, using
+   * administrator {@code a}'s authority.
+   *
+   * @return true iff successful (even if {@code s} already delegates to
+   *          {@code r})
+   */
+  boolean addAsSenior(Principal a, Principal r, Principal s) {
+    for (ARBAC97.CanModifyRule rule : canModify) {
+      if (rule.addAsSenior(a, r, s)) return true;
     }
 
-    // Alice should not be able to add Chuck to the engineering team.
-    if (acmeRules.assignUser(acmeAlice, chuck, acmeEng)) {
-      throw new Error(acmeAlice + " added " + chuck + " to " + acmeEng);
+    return false;
+  }
+
+  /**
+   * Removes a delegation from role {@code s} to role {@code r}, using
+   * administrator {@code a}'s authority.
+   *
+   * @return true iff successful (even if {@code s} already does not delegate
+   *          to {@code r})
+   */
+  boolean removeAsSenior(Principal a, Principal r, Principal s) {
+    for (ARBAC97.CanModifyRule rule : canModify) {
+      if (rule.removeAsSenior(a, r, s)) return true;
     }
 
-    // Bob should not be able to add Chuck to the engineering team.
-    if (acmeRules.assignUser(acmeBob, chuck, acmeEng)) {
-      throw new Error(acmeBob + " added " + chuck + " to " + acmeEng);
-    }
-
-    // Alice should not be able to hire Chuck.
-    if (acmeRules.assignUser(acmeAlice, chuck, acmeEmp)) {
-      throw new Error(acmeAlice + " added " + chuck + " to " + acmeEmp);
-    }
-
-    // Bob should be able to hire Chuck.
-    if (!acmeRules.assignUser(acmeBob, chuck, acmeEmp)) {
-      throw new Error(acmeBob + " unable to add " + chuck + " to " + acmeEmp);
-    }
-
-    // Bob should still not be able to add Chuck to the engineering team.
-    if (acmeRules.assignUser(acmeBob, chuck, acmeEng)) {
-      throw new Error(acmeBob + " added " + chuck + " to " + acmeEng);
-    }
-
-    // Alice should now be able to add Chuck to the engineering team.
-    if (!acmeRules.assignUser(acmeAlice, chuck, acmeEng)) {
-      throw new Error(acmeAlice + " unable to add " + chuck + " to " + acmeEng);
-    }
-
-    // Chuck should be a member of acmeEng.
-    Principal acmeChuck = acme.project(chuck);
-    if (!PrincipalUtil.actsFor(acme, acmeChuck, acmeEng, acmePL.integrity(),
-        bottom)) {
-      throw new Error(acmeChuck + " does not act for " + acmeEng);
-    }
-
-    // Chuck should be a member of acmeEmp.
-    if (!PrincipalUtil.actsFor(acme, acmeChuck, acmeEmp, acmeHR.integrity(),
-        bottom)) {
-      throw new Error(acmeChuck + " does not act for " + acmeEmp);
-    }
-
-    // Alice should not be able to fire Chuck.
-    if (acmeRules.revokeUser(acmeAlice, chuck, acmeEmp)) {
-      throw new Error(acmeAlice + " removed " + chuck + " from " + acmeEmp);
-    }
-
-    // Bob should be able to fire Chuck.
-    if (!acmeRules.revokeUser(acmeBob, chuck, acmeEmp)) {
-      throw new Error(acmeBob + " unable to remove " + chuck + " from "
-          + acmeEmp);
-    }
-
-    // Chuck should still be a member of acmeEng.
-    if (!PrincipalUtil.actsFor(acme, acmeChuck, acmeEng, acmePL.integrity(),
-        bottom)) {
-      throw new Error(acmeChuck + " no longer acts for " + acmeEng);
-    }
-
-    // Chuck should not be a member of acmeEmp.
-    if (PrincipalUtil.actsFor(acme, acmeChuck, acmeEmp, acmeHR.integrity(),
-        bottom)) {
-      throw new Error(acmeChuck + " still acts for " + acmeEmp);
-    }
+    return false;
   }
 }
