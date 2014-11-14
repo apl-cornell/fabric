@@ -56,8 +56,10 @@ public final class ActsForQuery<Superior extends Principal, Inferior extends Pri
    * answer.
    */
   ActsForQuery<Superior, Inferior> meetLabel(Principal p) {
+    // newMaxUsableLabel = maxUsableLabel ∨ (p→ ∧ ⊤←)
     Principal newMaxUsableLabel =
-        PrincipalUtil.meet(maxUsableLabel, p.confidentiality());
+        PrincipalUtil.meet(maxUsableLabel, PrincipalUtil.join(
+            p.confidentiality(), PrincipalUtil.top().integrity()));
     if (maxUsableLabel == newMaxUsableLabel) return this;
     return new ActsForQuery<>(superior, inferior, newMaxUsableLabel,
         accessPolicy);

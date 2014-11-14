@@ -241,6 +241,17 @@ public final class ConjunctivePrincipal extends NonPrimitivePrincipal {
     }
 
     // Conjunct is a primitive principal.
+    if (isTopLevelNormalForm()) {
+      // Let p→ ∧ q← = this, and r = conjunct.
+      Principal p = confidentiality().base();
+      Principal q = integrity().base();
+      Principal r = conjunct;
+
+      // Rewrite p→ ∧ q← ∧ r as (p∧r)→ ∧ (q∧r)←.
+      return PrincipalUtil.join(PrincipalUtil.join(p, r).confidentiality(),
+          PrincipalUtil.join(q, r).integrity());
+    }
+
     // Let ⋀p_i = this, and q = conjunct.
     Principal q = conjunct;
 
@@ -267,6 +278,17 @@ public final class ConjunctivePrincipal extends NonPrimitivePrincipal {
 
   @Override
   Principal join(OwnedPrincipal conjunct) {
+    if (isTopLevelNormalForm()) {
+      // Let p→ ∧ q← = this, and r:s = conjunct.
+      Principal p = confidentiality().base();
+      Principal q = integrity().base();
+      Principal rs = conjunct;
+
+      // Rewrite p→ ∧ q← ∧ r:s as (p∧(r:s))→ ∧ (q∧(r:s))←.
+      return PrincipalUtil.join(PrincipalUtil.join(p, rs).confidentiality(),
+          PrincipalUtil.join(q, rs).integrity());
+    }
+
     // Let ⋀p_i = this, and q:r = conjunct.
     Principal qr = conjunct;
 
@@ -295,6 +317,17 @@ public final class ConjunctivePrincipal extends NonPrimitivePrincipal {
   Principal join(DisjunctivePrincipal conjunct) {
     // Let ⋀p_i = this, and q∨r = conjunct.
     Principal qr = conjunct;
+
+    if (isTopLevelNormalForm()) {
+      // Let p→ ∧ q← = this, and r∨s = conjunct.
+      Principal p = confidentiality().base();
+      Principal q = integrity().base();
+      Principal rs = conjunct;
+
+      // Rewrite p→ ∧ q← ∧ (r∨s) as (p∧(r∨s))→ ∧ (q∧(r∨s))←.
+      return PrincipalUtil.join(PrincipalUtil.join(p, rs).confidentiality(),
+          PrincipalUtil.join(q, rs).integrity());
+    }
 
     // Can assume ⋀p_i ⋡ (q∨r). So ∀i, p_i ⋡ q∨r.
     // Join in the new conjunct, while omitting any existing conjuncts that
