@@ -31,8 +31,8 @@ public class Test {
      * With this rule, an administrator, in the context of an organization
      * {@code o}, acting for {@code ar} may assign a user having role {@code c}
      * to any role between {@code xiMin} and {@code xiMax} (inclusive). To
-     * assign a role r to a user u, the acts-for relationship o:u ≽ r is
-     * established.
+     * assign a role {@code r} to a user {@code u}, the acts-for relationship
+     * {@code o:u ≽ r} is established at {@code o} with label {@code ar←}.
      *
      * The invariant {@code ar} ≽ {@code xiMax} is assumed to hold.
      */
@@ -72,12 +72,110 @@ public class Test {
         this.xiMax = xiMax;
       }
 
+      /**
+       * Uses this rule to assign user {@code u} to role {@code r} using
+       * administrator {@code a}'s authority.
+       *
+       * @return true iff successful (even if {@code u} already has role
+       *          {@code r})
+       */
+      boolean assignUser(Principal a, Principal u, Principal r) {
+        final Principal ou = o.project(u);
+
+        // Ensure a ≽ ar with ar←.
+        if (!PrincipalUtil.actsFor(ar, a, ar, ar.integrity(), bottom))
+          return false;
+
+        // Ensure o:u ≽ c with c←.
+        if (!PrincipalUtil.actsFor(ar, ou, c, c.integrity(), bottom))
+          return false;
+
+        // Ensure r ≽ xiMin with xiMin←.
+        if (!PrincipalUtil.actsFor(ar, r, xiMin, xiMin.integrity(), bottom))
+          return false;
+
+        // Ensure xiMax ≽ r with r←.
+        if (!PrincipalUtil.actsFor(ar, xiMax, r, r.integrity(), bottom))
+          return false;
+
+        // Establish the delegation o:u ≽ r with ar←.
+        o.addDelegatesTo(r, ou, ar.integrity());
+        return true;
+      }
+    }
+
+    /**
+     * Represents a rule specifying which administrators can revoke which roles.
+     *
+     * With this rule, an administrator, in the context of an organization
+     * {@code o}, acting for {@code ar} may revoke from any user any role
+     * between {@code xiMin} and {@code xiMax} (inclusive). To revoke a role r
+     * from a user u, the acts-for relationship o:u ≽ r is revoked at {@code o}.
+     */
+    static class CanRevokeRule {
+      /**
+       * The owner.
+       */
+      final PrimitivePrincipal o;
+
+      /**
+       * The administrative authority required to revoke roles with this rule.
+       */
+      final Principal ar;
+
+      /**
+       * The minimum role that can be revoked with this rule.
+       */
+      final Principal xiMin;
+
+      /**
+       * The maximum role that can be revoked with this rule.
+       */
+      final Principal xiMax;
+
+      public CanRevokeRule(PrimitivePrincipal o, Principal ar, Principal xiMin,
+          Principal xiMax) {
+        super();
+        this.o = o;
+        this.ar = ar;
+        this.xiMin = xiMin;
+        this.xiMax = xiMax;
+      }
+
+      /**
+       * Uses this rule to revoke role {@code r} from user {@code u} using
+       * administrator {@code a}'s authority.
+       *
+       * @return true iff successful (even if {@code u} did not already have
+       *          role {@code r})
+       */
+      boolean revokeUser(Principal a, Principal u, Principal r) {
+        final Principal ou = o.project(u);
+
+        // Ensure a ≽ ar with ar←.
+        if (!PrincipalUtil.actsFor(ar, a, ar, ar.integrity(), bottom))
+          return false;
+
+        // Ensure r ≽ xiMin with xiMin←.
+        if (!PrincipalUtil.actsFor(ar, r, xiMin, xiMin.integrity(), bottom))
+          return false;
+
+        // Ensure xiMax ≽ r with r←.
+        if (!PrincipalUtil.actsFor(ar, xiMax, r, r.integrity(), bottom))
+          return false;
+
+        // Revoke the delegation o:u ≽ r with ar←.
+        o.removeDelegatesTo(r, ou, ar.integrity());
+        return true;
+      }
     }
 
     final Set<CanAssignRule> canAssign;
+    final Set<CanRevokeRule> canRevoke;
 
-    URA97(Set<CanAssignRule> canAssign) {
+    URA97(Set<CanAssignRule> canAssign, Set<CanRevokeRule> canRevoke) {
       this.canAssign = Collections.unmodifiableSet(new HashSet<>(canAssign));
+      this.canRevoke = Collections.unmodifiableSet(new HashSet<>(canRevoke));
     }
 
     /**
@@ -88,31 +186,22 @@ public class Test {
      */
     boolean assignUser(Principal a, Principal u, Principal r) {
       for (CanAssignRule rule : canAssign) {
-        final PrimitivePrincipal o = rule.o;
-        final Principal ou = o.project(u);
-        final Principal ar = rule.ar;
-        final Principal c = rule.c;
-        final Principal xiMin = rule.xiMin;
-        final Principal xiMax = rule.xiMax;
+        if (rule.assignUser(a, u, r)) return true;
+      }
 
-        // Ensure a ≽ ar with ar←.
-        if (!PrincipalUtil.actsFor(ar, a, ar, ar.integrity(), bottom))
-          continue;
+      return false;
+    }
 
-        // Ensure o:u ≽ c with c←.
-        if (!PrincipalUtil.actsFor(ar, ou, c, c.integrity(), bottom)) continue;
-
-        // Ensure r ≽ xiMin with xiMin←.
-        if (!PrincipalUtil.actsFor(ar, r, xiMin, xiMin.integrity(), bottom))
-          continue;
-
-        // Ensure xiMax ≽ r with r←.
-        if (!PrincipalUtil.actsFor(ar, xiMax, r, r.integrity(), bottom))
-          continue;
-
-        // Establish the delegation o:u ≽ r with ar←.
-        o.addDelegatesTo(r, ou, ar.integrity());
-        return true;
+    /**
+     * Revokes role {@code r} from user {@code u} using administrator {@code
+     * a}'s authority.
+     *
+     * @return true iff successful (even if {@code u} did not already have role
+     *          {@code r})
+     */
+    boolean revokeUser(Principal a, Principal u, Principal r) {
+      for (CanRevokeRule rule : canRevoke) {
+        if (rule.revokeUser(a, u, r)) return true;
       }
 
       return false;
@@ -145,6 +234,7 @@ public class Test {
       URA97 acmeRules;
       {
         Set<CanAssignRule> canAssign = new HashSet<>();
+        Set<CanRevokeRule> canRevoke = new HashSet<>();
 
         // Members of the HR department can hire new employees.
         canAssign
@@ -154,7 +244,10 @@ public class Test {
         canAssign
             .add(new CanAssignRule(acme, acmePL, acmeEmp, acmeEng, acmeEng));
 
-        acmeRules = new URA97(canAssign);
+        // Members of the HR department can fire employees.
+        canRevoke.add(new CanRevokeRule(acme, acmeHR, acmeEmp, acmeEmp));
+
+        acmeRules = new URA97(canAssign, canRevoke);
       }
 
       // Alice should not be able to add Chuck to the engineering team.
@@ -186,6 +279,42 @@ public class Test {
       if (!acmeRules.assignUser(acmeAlice, chuck, acmeEng)) {
         throw new Error(acmeAlice + " unable to add " + chuck + " to "
             + acmeEng);
+      }
+
+      // Chuck should be a member of acmeEng.
+      Principal acmeChuck = acme.project(chuck);
+      if (!PrincipalUtil.actsFor(acme, acmeChuck, acmeEng, acmePL.integrity(),
+          bottom)) {
+        throw new Error(acmeChuck + " does not act for " + acmeEng);
+      }
+
+      // Chuck should be a member of acmeEmp.
+      if (!PrincipalUtil.actsFor(acme, acmeChuck, acmeEmp, acmeHR.integrity(),
+          bottom)) {
+        throw new Error(acmeChuck + " does not act for " + acmeEmp);
+      }
+
+      // Alice should not be able to fire Chuck.
+      if (acmeRules.revokeUser(acmeAlice, chuck, acmeEmp)) {
+        throw new Error(acmeAlice + " removed " + chuck + " from " + acmeEmp);
+      }
+
+      // Bob should be able to fire Chuck.
+      if (!acmeRules.revokeUser(acmeBob, chuck, acmeEmp)) {
+        throw new Error(acmeBob + " unable to remove " + chuck + " from "
+            + acmeEmp);
+      }
+
+      // Chuck should still be a member of acmeEng.
+      if (!PrincipalUtil.actsFor(acme, acmeChuck, acmeEng, acmePL.integrity(),
+          bottom)) {
+        throw new Error(acmeChuck + " no longer acts for " + acmeEng);
+      }
+
+      // Chuck should not be a member of acmeEmp.
+      if (PrincipalUtil.actsFor(acme, acmeChuck, acmeEmp, acmeHR.integrity(),
+          bottom)) {
+        throw new Error(acmeChuck + " still acts for " + acmeEmp);
       }
     }
   }
