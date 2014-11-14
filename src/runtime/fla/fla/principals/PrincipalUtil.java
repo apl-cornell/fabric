@@ -233,6 +233,8 @@ public class PrincipalUtil {
    * @return the readers-to-writers mapping of the given principal. This is
    *          defined as the confidentiality projection of the principal, viewed
    *          as an integrity projection (i.e., with the arrow "flipped").
+   *          More precisely, if {@code p = a→ ∧ b←} is in normal form, then
+   *          {@code readersToWriters(p)} is {@code a←}.
    */
   public static Principal readersToWriters(Principal p) {
     Principal confP = p.confidentiality();

@@ -1,5 +1,6 @@
 package fla.util;
 
+import fla.principals.ActsForQuery;
 import fla.principals.Delegation;
 import fla.principals.Principal;
 

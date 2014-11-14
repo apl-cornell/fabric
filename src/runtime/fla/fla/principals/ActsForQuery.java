@@ -1,9 +1,9 @@
-package fla.util;
+package fla.principals;
 
-import fla.principals.Principal;
-import fla.principals.PrincipalUtil;
+import java.util.HashSet;
+import java.util.Set;
 
-public class ActsForQuery<Superior extends Principal, Inferior extends Principal> {
+public final class ActsForQuery<Superior extends Principal, Inferior extends Principal> {
   public final Superior superior;
   public final Inferior inferior;
   public final Principal maxUsableLabel;
@@ -15,8 +15,8 @@ public class ActsForQuery<Superior extends Principal, Inferior extends Principal
    */
   private Principal recurseLowerBound;
 
-  public ActsForQuery(Superior superior, Inferior inferior,
-      Principal maxUsableLabel, Principal accessPolicy) {
+  ActsForQuery(Superior superior, Inferior inferior, Principal maxUsableLabel,
+      Principal accessPolicy) {
     this.superior = superior;
     this.inferior = inferior;
     this.maxUsableLabel = maxUsableLabel;
@@ -29,7 +29,7 @@ public class ActsForQuery<Superior extends Principal, Inferior extends Principal
    *          having label {@code maxUsableLabel} and access policy {@code
    *          accessPolicy}.
    */
-  public static ActsForQuery<Principal, Principal> flowsToQuery(Principal l1,
+  static ActsForQuery<Principal, Principal> flowsToQuery(Principal l1,
       Principal l2, Principal maxUsableLabel, Principal accessPolicy) {
     // l1 ⊑ l2 is just l2→ ∧ l1← ≽ l1→ ∧ l2←.
     Principal superior =
@@ -39,23 +39,25 @@ public class ActsForQuery<Superior extends Principal, Inferior extends Principal
     return new ActsForQuery<>(superior, inferior, maxUsableLabel, accessPolicy);
   }
 
-  public <P extends Principal> ActsForQuery<P, Inferior> superior(P superior) {
+  <P extends Principal> ActsForQuery<P, Inferior> superior(P superior) {
     if (superior == this.superior) return (ActsForQuery<P, Inferior>) this;
     return new ActsForQuery<>(superior, inferior, maxUsableLabel, accessPolicy);
   }
 
-  public <P extends Principal> ActsForQuery<Superior, P> inferior(P inferior) {
+  <P extends Principal> ActsForQuery<Superior, P> inferior(P inferior) {
     if (inferior == this.inferior) return (ActsForQuery<Superior, P>) this;
     return new ActsForQuery<>(superior, inferior, maxUsableLabel, accessPolicy);
   }
 
   /**
-   * Meets the given principal into the {@code maxUsableLabel} and returns the
-   * result. This ensures that the given principal is trusted with the resulting
-   * query's answer.
+   * Meets the confidentiality projection of the given principal into the {@code
+   * maxUsableLabel} and returns the result. This ensures that the given
+   * principal is trusted with the confidentiality of the resulting query's
+   * answer.
    */
-  public ActsForQuery<Superior, Inferior> meetLabel(Principal p) {
-    Principal newMaxUsableLabel = PrincipalUtil.meet(maxUsableLabel, p);
+  ActsForQuery<Superior, Inferior> meetLabel(Principal p) {
+    Principal newMaxUsableLabel =
+        PrincipalUtil.meet(maxUsableLabel, p.confidentiality());
     if (maxUsableLabel == newMaxUsableLabel) return this;
     return new ActsForQuery<>(superior, inferior, newMaxUsableLabel,
         accessPolicy);
@@ -94,7 +96,7 @@ public class ActsForQuery<Superior extends Principal, Inferior extends Principal
         + accessPolicy + "))";
   }
 
-  public boolean useDynamicContext() {
+  boolean useDynamicContext() {
     return maxUsableLabel != null && accessPolicy != null;
   }
 
@@ -102,12 +104,21 @@ public class ActsForQuery<Superior extends Principal, Inferior extends Principal
    * @return the lower bound (in the acts-for hierarchy) for principals to which
    *          recursive queries can be made
    */
-  public Principal recurseLowerBound() {
+  Principal recurseLowerBound() {
     if (recurseLowerBound != null) return recurseLowerBound;
 
     // The lower bound is {@code accessPolicy} ∧ {@code maxLabel}←.
     recurseLowerBound =
         PrincipalUtil.conjunction(accessPolicy, maxUsableLabel.integrity());
     return recurseLowerBound;
+  }
+
+  Set<PrimitivePrincipal> componentPrimitivePrincipals() {
+    Set<PrimitivePrincipal> result = new HashSet<>();
+    result.addAll(superior.componentPrimitivePrincipals());
+    result.addAll(inferior.componentPrimitivePrincipals());
+    result.addAll(maxUsableLabel.componentPrimitivePrincipals());
+    result.addAll(accessPolicy.componentPrimitivePrincipals());
+    return result;
   }
 }

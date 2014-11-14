@@ -1,5 +1,8 @@
 package fla.principals;
 
+import java.util.HashSet;
+import java.util.Set;
+
 /**
  * Represents a labelled delegation from an inferior to a superior, stored at a
  * principal.
@@ -42,5 +45,14 @@ public class Delegation<Inferior extends Principal, Superior extends Principal> 
   @Override
   public String toString() {
     return superior + " ≽ " + inferior + " {" + label + "} at " + store;
+  }
+
+  Set<PrimitivePrincipal> componentPrimitivePrincipals() {
+    Set<PrimitivePrincipal> result = new HashSet<>();
+    result.add(store);
+    result.addAll(inferior.componentPrimitivePrincipals());
+    result.addAll(superior.componentPrimitivePrincipals());
+    result.addAll(label.componentPrimitivePrincipals());
+    return result;
   }
 }

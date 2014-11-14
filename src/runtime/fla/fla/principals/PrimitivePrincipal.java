@@ -6,8 +6,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import fla.util.ActsForQuery;
-
 public class PrimitivePrincipal extends Principal {
   /**
    * Maps labels L to delegation pairs labelled with L.
@@ -55,7 +53,7 @@ public class PrimitivePrincipal extends Principal {
   }
 
   @Override
-  Principal project(TopPrincipal projection) {
+  final Principal project(TopPrincipal projection) {
     // Use the TopPrincipal owner implementation.
     return projection.owner(this);
   }
@@ -106,7 +104,7 @@ public class PrimitivePrincipal extends Principal {
   }
 
   @Override
-  Principal owner(TopPrincipal owner) {
+  final Principal owner(TopPrincipal owner) {
     // Use the TopPrincipal projection implementation.
     return owner.project(this);
   }

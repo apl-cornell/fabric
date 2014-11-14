@@ -9,7 +9,6 @@ import java.util.Set;
 
 import fabric.common.util.Pair;
 import fla.util.ActsForProof;
-import fla.util.ActsForQuery;
 import fla.util.ConfProjectionProof;
 import fla.util.DelegatesProof;
 import fla.util.FromDisjunctProof;
@@ -189,21 +188,33 @@ public abstract class Principal {
       Principal delegationLabel = entry.getKey();
       Principal queryLabel = query.maxUsableLabel;
 
-      // Can use delegations if delegationLabel ⊑ queryLabel. This subquery
-      // should maintain the confidentiality and integrity of the top-level
-      // query, and maintain the integrity of the delegation's confidentiality.
-      // i.e., the label on the subquery should be:
-      //   queryLabel ∧ readersToWriters(delegationLabel).
-      // Additionally, the access policy on the subquery should be raised to
-      // protect the delegation's confidentiality.
+      // XXX Check this.
+      // Can use delegations if we can show
+      //   delegationLabel ⊑ queryLabel
+      //     with (queryLabel ∧ readersToWriters(delegationLabel))
+      //     at (query.accessPolicy ∧ delegationLabel→).
+      //
+      // The confidentiality of the answer to this subquery is the same as the
+      // top-level query:
+      //   queryLabel→.
+      //
+      // To ensure robustness, the integrity of the subquery result acts for
+      //   readersToWriters(delegationLabel).
+      //
+      // To ensure the integrity of the top-level query, the integrity of the
+      // sub-level query also acts for
+      //   queryLabel←.
+      //
+      // Additionally, the access policy on the subquery ensures the
+      // confidentiality of both the top-level query and the delegation.
       ActsForProof<?, ?> usabilityProof =
           actsForProof(this, ActsForQuery.flowsToQuery(
               delegationLabel,
               queryLabel,
               PrincipalUtil.conjunction(
                   PrincipalUtil.readersToWriters(delegationLabel), queryLabel),
-                  PrincipalUtil.conjunction(query.accessPolicy,
-                  delegationLabel.confidentiality())), searchState);
+              PrincipalUtil.conjunction(query.accessPolicy,
+                      delegationLabel.confidentiality())), searchState);
       if (usabilityProof != null) {
         for (Delegation<?, ?> delegation : entry.getValue()) {
           result.put(delegation, usabilityProof);
@@ -252,18 +263,13 @@ public abstract class Principal {
     unfilteredResult.addAll(componentPrimitivePrincipals());
 
     // Add primitive principals that appears as a component of the query.
-    unfilteredResult.addAll(query.superior.componentPrimitivePrincipals());
-    unfilteredResult.addAll(query.inferior.componentPrimitivePrincipals());
+    unfilteredResult.addAll(query.componentPrimitivePrincipals());
 
     // Add components of usable delegations.
     for (Delegation<?, ?> delegation : usableDelegations(query, searchState)
         .keySet()) {
       // XXX Dropping usability proofs. Should use them to prove correctness of the return value.
-      unfilteredResult.addAll(delegation.inferior
-          .componentPrimitivePrincipals());
-      unfilteredResult.addAll(delegation.superior
-          .componentPrimitivePrincipals());
-      unfilteredResult.addAll(delegation.label.componentPrimitivePrincipals());
+      unfilteredResult.addAll(delegation.componentPrimitivePrincipals());
     }
 
     // Filter.
@@ -280,6 +286,7 @@ public abstract class Principal {
   private final boolean isAskable(Principal p, ActsForQuery<?, ?> query,
       ProofSearchState searchState) {
     // See if p ≽ query.recurseLowerBound().
+    // XXX robust? (Also robust wrt label on delegation that the principal came from?)
     query = query.inferior(query.recurseLowerBound()).superior(p);
     return actsForProof(this, query, searchState) != null;
   }
@@ -382,6 +389,226 @@ public abstract class Principal {
   }
 
   /**
+   * Revokes delegations of the form <code>superior ≽ inferior {L}</code>, where
+   * {@code label ⊑ L}, at all principals reachable from this one.
+   *
+   * @param inferior the principal whose delegations are being revoked
+   * @param superior the principal whose privileges are being revoked
+   * @param label the label on the revocation. Labels on revoked delegations
+   *          must flow to this label.
+   */
+  public final void removeDelegatesTo(Principal inferior, Principal superior,
+      Principal label) {
+    removeDelegatesTo(this, new RevocationRequest(inferior, superior, label),
+        Collections.singleton(this));
+  }
+
+  /**
+   * Recursively calls {@link Principal#removeDelegatesTo(Principal,
+   * RevocationRequest, Set)} on those elements of {@code candidates} for which
+   * it is safe to do so.
+   *
+   * @param req the revocation request
+   * @param candidates the set of candidates on which to recurse
+   * @param visited the set of principals already called so far
+   * @param delegationLabel the label on the delegations from which the
+   *          candidate set was derived. This can be {@code null} if the
+   *          candidate set was not derived from any delegations, in which case
+   *          this will be treated as ⊤←.
+   * @return the set of candidates to which recursive calls were made. In
+   *          principle, this will have label {@code req.label ∧
+   *          delegationLabel→ ∧ (readersToWriters(req.label) ∨
+   *          readersToWriters(delegationLabel))}.
+   *
+   */
+  private final Set<PrimitivePrincipal> recurseRemoveDelegatesTo(
+      RevocationRequest req, Set<PrimitivePrincipal> candidates,
+      Set<Principal> visited, Principal delegationLabel) {
+    if (delegationLabel == null) {
+      // Default to bottom confidentiality, top integrity.
+      delegationLabel = PrincipalUtil.top().integrity();
+    }
+
+    // Remove all candidates that we can't safely visit.
+    for (Iterator<PrimitivePrincipal> it = candidates.iterator(); it.hasNext();) {
+      PrimitivePrincipal candidate = it.next();
+      {
+        // XXX Check this.
+        // We can recurse only if we can show:
+        //   candidate ≽ req.label→
+        //     with (req.label ∧ delegationLabel→ ∧ readersToWriters(req.label))
+        //     at req.label→ ∧ delegationLabel→.
+        //
+        // Because the confidentiality of the recursive calls will be
+        //   req.label→ ∧ delegationLabel→,
+        // this the confidentiality of the query result.
+        //
+        // To ensure robustness, the integrity of the query result acts for
+        //   readersToWriters(req.label→).
+        //
+        // To ensure the integrity of the revocation request, the integrity of
+        // the query result also acts for req.label←.
+        //
+        // The access policy ensures the confidentiality of both the query and
+        // the delegation.
+        Principal superior = candidate;
+        Principal inferior = req.label.confidentiality();
+        Principal label =
+            PrincipalUtil.conjunction(req.label,
+                delegationLabel.confidentiality(),
+                PrincipalUtil.readersToWriters(req.label));
+        Principal accessPolicy =
+            PrincipalUtil.conjunction(req.label.confidentiality(),
+                delegationLabel.confidentiality());
+        ActsForQuery<Principal, Principal> query =
+            new ActsForQuery<>(superior, inferior, label, accessPolicy);
+        if (actsForProof(query) == null) {
+          // Can't recurse to this candidate.
+          it.remove();
+          continue;
+        }
+      }
+
+      if (delegationLabel != null) {
+        // XXX Check this.
+        // We can recurse only if we can show
+        //   candidate ≽ delegationLabel→
+        //     with (req.label ∧ delegationLabel→
+        //           ∧ readersToWriters(delegationLabel))
+        //     at req.label→ ∧ delegationLabel→.
+        //
+        // Because the confidentiality of the recursive calls will be
+        //   req.label→ ∧ delegationLabel→,
+        // this the confidentiality of the query result.
+        //
+        // To ensure robustness, the integrity of the query result acts for
+        //   readersToWriters(delegationLabel→).
+        //
+        // To ensure the integrity of the revocation request, the integrity of
+        // the query result also acts for req.label←.
+        //
+        // The access policy ensures the confidentiality of both the query and
+        // the delegation.
+        Principal superior = candidate;
+        Principal inferior = delegationLabel.confidentiality();
+        Principal label =
+            PrincipalUtil.conjunction(req.label, delegationLabel,
+                PrincipalUtil.readersToWriters(delegationLabel));
+        Principal accessPolicy =
+            PrincipalUtil.conjunction(req.label.confidentiality(),
+                delegationLabel.confidentiality());
+        ActsForQuery<Principal, Principal> query =
+            new ActsForQuery<>(superior, inferior, label, accessPolicy);
+        if (actsForProof(query) == null) {
+          // Can't recurse to this candidate.
+          it.remove();
+          continue;
+        }
+      }
+    }
+
+    // The contents of candidates has label
+    //   req.label ∧ delegationLabel→
+    //     ∧ (readersToWriters(req.label) ∨ readersToWriters(delegationLabel)),
+    // so it is safe to include it as part of the visited set for all recursive
+    // calls made here.
+    visited = new HashSet<>(visited);
+    visited.addAll(candidates);
+    visited = Collections.unmodifiableSet(visited);
+
+    // Actually recurse. Recursive calls will have label
+    //   req.label ∧ delegationLabel→
+    for (Principal p : candidates) {
+      p.removeDelegatesTo(this, req.joinLabel(delegationLabel), visited);
+    }
+
+    return candidates;
+  }
+
+  /**
+   * Revokes delegations matching the given request, at all principals reachable
+   * from this one.
+   *
+   * @param visited a set of principals that have already received the request,
+   *          including {@code this}
+   */
+  private final void removeDelegatesTo(Principal caller, RevocationRequest req,
+      Set<Principal> visited) {
+    // If this is a remote call, ensure the caller acts for the request label's
+    // integrity.
+    if (caller != this) {
+      req = req.meetIntegrity(caller);
+    }
+
+    // Recurse into other principals that we haven't visited yet.
+    // First, consider components of this principal and of the request itself.
+    {
+      Set<PrimitivePrincipal> candidates = new HashSet<>();
+      candidates.addAll(componentPrimitivePrincipals());
+      candidates.addAll(req.componentPrimitivePrincipals());
+      candidates.removeAll(visited);
+
+      // The set of candidates we actually recurse to will have label
+      //   {req.label ∧ readersToWriters(req.label)},
+      // so it is safe to include it as part of the visited set for all
+      // recursive calls we make.
+      visited = new HashSet<>(visited);
+      visited.addAll(recurseRemoveDelegatesTo(req, candidates, visited, null));
+      visited = Collections.unmodifiableSet(visited);
+    }
+
+    // Now, consider recursing into components of any delegations we store.
+    for (Map.Entry<Principal, Set<Delegation<?, ?>>> entry : delegations()
+        .entrySet()) {
+      Principal label = entry.getKey();
+      Set<Delegation<?, ?>> delegations = entry.getValue();
+
+      // Get a set of candidates for recursing into.
+      Set<PrimitivePrincipal> candidates = new HashSet<>();
+      for (Delegation<?, ?> delegation : delegations) {
+        candidates.addAll(delegation.componentPrimitivePrincipals());
+      }
+      candidates.removeAll(visited);
+
+      // Recurse.
+      recurseRemoveDelegatesTo(req, candidates, visited, label);
+    }
+
+    // Remove any local delegations that match.
+    for (Iterator<Map.Entry<Principal, Set<Delegation<?, ?>>>> entryIt =
+        delegations().entrySet().iterator(); entryIt.hasNext();) {
+      Map.Entry<Principal, Set<Delegation<?, ?>>> entry = entryIt.next();
+      Principal label = entry.getKey();
+
+      // Delegations at this level can match only if we can show:
+      //   req.label ⊑ label
+      //     with XXX
+      //     at req.label→ ∧ label→.
+      //
+      // Because the effect of removal will be visible at req.label→, this is
+      // the confidentiality of the query result.
+      Principal accessPolicy =
+          PrincipalUtil.join(label.confidentiality(),
+              req.label.confidentiality());
+      // To ensure the robustness of the query, XXX
+      if (actsForProof(ActsForQuery.flowsToQuery(req.label, label, XXX,
+          accessPolicy)) == null) {
+        continue;
+      }
+
+      Set<Delegation<?, ?>> delegations = entry.getValue();
+      for (Iterator<Delegation<?, ?>> it = delegations.iterator(); it.hasNext();) {
+        Delegation<?, ?> delegation = it.next();
+        if (!PrincipalUtil.equals(delegation.inferior, req.inferior)) continue;
+        if (!PrincipalUtil.equals(delegation.superior, req.superior)) continue;
+        it.remove();
+      }
+
+      if (delegations.isEmpty()) entryIt.remove();
+    }
+  }
+
+  /**
    * Asks this principal for a proof of "{@code query.superior} ≽ {@code
    * query.inferior}". Labels on the delegations used in this proof must flow to
    * {@code query.maxUsableLabel}.
@@ -422,7 +649,8 @@ public abstract class Principal {
   final <Superior extends Principal, Inferior extends Principal> ActsForProof<Superior, Inferior> actsForProof(
       Principal caller, ActsForQuery<Superior, Inferior> query,
       ProofSearchState searchState) {
-    // If this is a remote call, ensure the query label flows to the caller.
+    // If this is a remote call, ensure the caller is trusted with the
+    // confidentiality of the query's answer.
     if (caller != this) {
       query = query.meetLabel(caller);
     }
@@ -770,6 +998,70 @@ public abstract class Principal {
     // Proof failed. Cache the negative result.
     searchState.cacheNotActsFor(query);
     return null;
+  }
+
+  /**
+   * A request to revoke all reachable delegations of {@code inferior}'s
+   * authority to {@code superior}, where {@code label} flows to the
+   * delegation's label.
+   */
+  private final class RevocationRequest {
+    /**
+     * The principal whose delegations are to be revoked.
+     */
+    final Principal inferior;
+
+    /**
+     * The principal whose privileges are to be revoked.
+     */
+    final Principal superior;
+
+    /**
+     * The label on the request.
+     */
+    final Principal label;
+
+    RevocationRequest(Principal inferior, Principal superior, Principal label) {
+      this.inferior = inferior;
+      this.superior = superior;
+      this.label = label;
+    }
+
+    /**
+     * Joins the confidentiality projection of the given principal into the
+     * {@code label} of this request and returns the result. This ensures that
+     * the given principal's confidentiality is protected by the resulting
+     * request.
+     */
+    RevocationRequest joinLabel(Principal p) {
+      Principal newLabel = PrincipalUtil.join(label, p.confidentiality());
+      if (label == newLabel) return this;
+      return new RevocationRequest(inferior, superior, newLabel);
+    }
+
+    /**
+     * Meets the given principal's integrity into the {@code label} and returns
+     * the resulting {@code RevocationRequest}. This ensures that the given
+     * principal is trusted with the integrity of the request.
+     */
+    RevocationRequest meetIntegrity(Principal p) {
+      // newLabel = label ∨ (⊤→ ∧ p←).
+      Principal newLabel =
+          PrincipalUtil.meet(
+              label,
+              PrincipalUtil.join(PrincipalUtil.top().confidentiality(),
+                  p.integrity()));
+      if (PrincipalUtil.equals(label, newLabel)) return this;
+      return new RevocationRequest(inferior, superior, newLabel);
+    }
+
+    Set<PrimitivePrincipal> componentPrimitivePrincipals() {
+      Set<PrimitivePrincipal> result = new HashSet<>();
+      result.addAll(inferior.componentPrimitivePrincipals());
+      result.addAll(superior.componentPrimitivePrincipals());
+      result.addAll(label.componentPrimitivePrincipals());
+      return result;
+    }
   }
 
   final class ProofSearchState {
