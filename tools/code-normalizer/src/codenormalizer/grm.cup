@@ -43,7 +43,7 @@ parser Grm extends lr_parser {:
 
   public Symbol nextSymbol() throws java.io.IOException {
     Token t = lexer.nextToken();
-    return new Symbol(t.symbol(), t);
+    return getSymbolFactory().newSymbol(t.toString(), t.symbol(), t);
   }
 :};
 

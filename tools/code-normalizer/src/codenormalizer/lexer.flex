@@ -344,7 +344,7 @@ UnicodeEscape = \\ u[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]
 
 <TRADITIONAL_COMMENT> {
     "*/"                         { yybegin(YYINITIAL); }
-    .|\n                         { /* ignore */ }
+    [^]                          { /* ignore */ }
 }
 
 <END_OF_LINE_COMMENT> {
@@ -454,6 +454,6 @@ UnicodeEscape = \\ u[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]
 }
 
 /* Fallthrough case: anything not matched above is an error */
-.|\n                             { eq.enqueue(ErrorInfo.LEXICAL_ERROR,
+[^]                              { eq.enqueue(ErrorInfo.LEXICAL_ERROR,
                                               "Illegal character \"" +
                                               yytext() + "\"", pos()); }
