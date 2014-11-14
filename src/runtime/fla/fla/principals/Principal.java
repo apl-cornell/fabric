@@ -188,18 +188,17 @@ public abstract class Principal {
       Principal delegationLabel = entry.getKey();
       Principal queryLabel = query.maxUsableLabel;
 
-      // XXX Check this.
       // Can use delegations if we can show
       //   delegationLabel ⊑ queryLabel
       //     with (queryLabel ∧ readersToWriters(delegationLabel))
       //     at (query.accessPolicy ∧ delegationLabel→).
       //
-      // The confidentiality of the answer to this subquery is the same as the
-      // top-level query:
+      // The confidentiality of the answer to this subquery is the same as that
+      // of the top-level query:
       //   queryLabel→.
       //
       // To ensure robustness, the integrity of the subquery result acts for
-      //   readersToWriters(delegationLabel).
+      //   readersToWriters(delegationLabel) ∧ queryLabel←.
       //
       // To ensure the integrity of the top-level query, the integrity of the
       // sub-level query also acts for
@@ -433,7 +432,6 @@ public abstract class Principal {
     for (Iterator<PrimitivePrincipal> it = candidates.iterator(); it.hasNext();) {
       PrimitivePrincipal candidate = it.next();
       {
-        // XXX Check this.
         // We can recurse only if we can show:
         //   candidate ≽ req.label→
         //     with (req.label ∧ delegationLabel→ ∧ readersToWriters(req.label))
@@ -470,7 +468,6 @@ public abstract class Principal {
       }
 
       if (delegationLabel != null) {
-        // XXX Check this.
         // We can recurse only if we can show
         //   candidate ≽ delegationLabel→
         //     with (req.label ∧ delegationLabel→
@@ -582,17 +579,30 @@ public abstract class Principal {
 
       // Delegations at this level can match only if we can show:
       //   req.label ⊑ label
-      //     with XXX
+      //     with (req.label ∧ readersToWriters(req.label) ∧ label←)
       //     at req.label→ ∧ label→.
       //
       // Because the effect of removal will be visible at req.label→, this is
       // the confidentiality of the query result.
+      //
+      // To ensure robustness, the integrity of the query result acts for
+      //   readersToWriters(req.label) ∧ label←.
+      //
+      // To ensure the integrity of the revocation request, the integrity of the
+      // query result also acts for req.label←.
+      //
+      // The access policy ensures the confidentiality of both the revocation
+      // request and the delegation.
+      Principal inferior = req.label;
+      Principal superior = label;
+      Principal queryLabel =
+          PrincipalUtil.join(req.label,
+              PrincipalUtil.readersToWriters(req.label), label.integrity());
       Principal accessPolicy =
           PrincipalUtil.join(label.confidentiality(),
               req.label.confidentiality());
-      // To ensure the robustness of the query, XXX
-      if (actsForProof(ActsForQuery.flowsToQuery(req.label, label, XXX,
-          accessPolicy)) == null) {
+      if (actsForProof(ActsForQuery.flowsToQuery(inferior, superior,
+          queryLabel, accessPolicy)) == null) {
         continue;
       }
 
