@@ -232,8 +232,8 @@ public class Test {
         if (!PrincipalUtil.actsFor(ar, a, ar, ar.integrity(), bottom))
           return false;
 
-        // Ensure p ≽ c with c←.
-        if (!PrincipalUtil.actsFor(ar, p, c, c.integrity(), bottom))
+        // Ensure c ≽ p with p←.
+        if (!PrincipalUtil.actsFor(ar, c, p, p.integrity(), bottom))
           return false;
 
         // Ensure r ≽ xiMin with xiMin←.
@@ -422,11 +422,11 @@ public class Test {
 
         // Members of the HR department can hire new employees.
         canAssign
-        .add(new CanAssignRule(acme, acmeHR, bottom, acmeEmp, acmeEmp));
+            .add(new CanAssignRule(acme, acmeHR, bottom, acmeEmp, acmeEmp));
 
         // Program leads can recruit employees to the engineering team.
         canAssign
-        .add(new CanAssignRule(acme, acmePL, acmeEmp, acmeEng, acmeEng));
+            .add(new CanAssignRule(acme, acmePL, acmeEmp, acmeEng, acmeEng));
 
         // Members of the HR department can fire employees.
         canRevoke.add(new CanRevokeRule(acme, acmeHR, acmeEmp, acmeEmp));
@@ -529,7 +529,7 @@ public class Test {
           (OwnedPrincipal) new PrimitivePrincipal("group").owner(owner);
       this.exclusionGroup =
           (OwnedPrincipal) new PrimitivePrincipal("exclusionGroup")
-      .owner(owner);
+              .owner(owner);
     }
 
     /**
