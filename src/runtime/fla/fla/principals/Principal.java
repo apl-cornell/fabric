@@ -217,6 +217,7 @@ public abstract class Principal {
           .componentPrimitivePrincipals());
       unfilteredResult.addAll(delegation.superior
           .componentPrimitivePrincipals());
+      unfilteredResult.addAll(delegation.label.componentPrimitivePrincipals());
     }
 
     // Filter.
