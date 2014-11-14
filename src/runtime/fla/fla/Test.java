@@ -15,7 +15,7 @@ public class Test {
     DelegationLoophole.test();
     InfoScreen.test();
     DelegationLeak.test();
-    URA97.test();
+    ARBAC97.test();
 
     System.out.println("All tests passed.");
   }
@@ -23,7 +23,7 @@ public class Test {
   private static final Principal bottom = PrincipalUtil.bottom();
   private static final Principal top = PrincipalUtil.top();
 
-  private static class URA97 {
+  private static class ARBAC97 {
     /**
      * Represents a rule specifying which administrators can assign which roles
      * to which users.
@@ -170,12 +170,164 @@ public class Test {
       }
     }
 
+    /**
+     * Represents a rule specifying which administrators can assign which
+     * permissions to which roles.
+     *
+     * With this rule, an administrator, in the context of an organization
+     * {@code o}, acting for {@code ar} may assign a permission {@code p}
+     * to any role between {@code xiMin} and {@code xiMax} (inclusive), if
+     * {@code p} was previously assigned to {@code c}. To assign a permission
+     * {@code p} to a role {@code r}, the acts-for relationship
+     * {@code r ≽ p} is established at {@code o} with label {@code ar←}.
+     *
+     * The invariant {@code ar} ≽ {@code p} is assumed to hold.
+     */
+    static class CanAssignPRule {
+      /**
+       * The owner.
+       */
+      final PrimitivePrincipal o;
+
+      /**
+       * The administrative authority required to assign permissions with this
+       * rule.
+       */
+      final Principal ar;
+
+      /**
+       * The permission-assignment criterion: permissions that can be assigned
+       * with this rule must already be assigned to c.
+       */
+      final Principal c;
+
+      /**
+       * The minimum role to which permissions can be assigned with this rule.
+       */
+      final Principal xiMin;
+
+      /**
+       * The maximum role to which permissions can be assigned with this rule.
+       */
+      final Principal xiMax;
+
+      public CanAssignPRule(PrimitivePrincipal o, Principal ar, Principal c,
+          Principal xiMin, Principal xiMax) {
+        this.o = o;
+        this.ar = ar;
+        this.c = c;
+        this.xiMin = xiMin;
+        this.xiMax = xiMax;
+      }
+
+      /**
+       * Uses this rule to assign permission {@code p} to role {@code r} using
+       * administrator {@code a}'s authority.
+       *
+       * @return true iff successful (even if {@code r} already has permission
+       *          {@code p})
+       */
+      boolean assignPermission(Principal a, Principal p, Principal r) {
+        // Ensure a ≽ ar with ar←.
+        if (!PrincipalUtil.actsFor(ar, a, ar, ar.integrity(), bottom))
+          return false;
+
+        // Ensure p ≽ c with c←.
+        if (!PrincipalUtil.actsFor(ar, p, c, c.integrity(), bottom))
+          return false;
+
+        // Ensure r ≽ xiMin with xiMin←.
+        if (!PrincipalUtil.actsFor(ar, r, xiMin, xiMin.integrity(), bottom))
+          return false;
+
+        // Ensure xiMax ≽ r with r←.
+        if (!PrincipalUtil.actsFor(ar, xiMax, r, r.integrity(), bottom))
+          return false;
+
+        // Establish the delegation r ≽ p with ar←.
+        o.addDelegatesTo(p, r, ar.integrity());
+        return true;
+      }
+    }
+
+    /**
+     * Represents a rule specifying which administrators can revoke which
+     * permissions.
+     *
+     * With this rule, an administrator, in the context of an organization
+     * {@code o}, acting for {@code ar} may revoke any permission from any role
+     * between {@code xiMin} and {@code xiMax} (inclusive). To revoke a
+     * permission {@code p} from a role {@code r}, the acts-for relationship r ≽
+     * p is revoked at {@code o}.
+     */
+    static class CanRevokePRule {
+      /**
+       * The owner.
+       */
+      final PrimitivePrincipal o;
+
+      /**
+       * The administrative authority required to revoke permissions with this
+       * rule.
+       */
+      final Principal ar;
+
+      /**
+       * The minimum role from which permissions can be revoked with this rule.
+       */
+      final Principal xiMin;
+
+      /**
+       * The maximum role from which permissions can be revoked with this rule.
+       */
+      final Principal xiMax;
+
+      public CanRevokePRule(PrimitivePrincipal o, Principal ar,
+          Principal xiMin, Principal xiMax) {
+        super();
+        this.o = o;
+        this.ar = ar;
+        this.xiMin = xiMin;
+        this.xiMax = xiMax;
+      }
+
+      /**
+       * Uses this rule to revoke permission {@code p} from role {@code r} using
+       * administrator {@code a}'s authority.
+       *
+       * @return true iff successful (even if {@code r} did not already have
+       *          permission {@code p})
+       */
+      boolean revokePermission(Principal a, Principal p, Principal r) {
+        // Ensure a ≽ ar with ar←.
+        if (!PrincipalUtil.actsFor(ar, a, ar, ar.integrity(), bottom))
+          return false;
+
+        // Ensure r ≽ xiMin with xiMin←.
+        if (!PrincipalUtil.actsFor(ar, r, xiMin, xiMin.integrity(), bottom))
+          return false;
+
+        // Ensure xiMax ≽ r with r←.
+        if (!PrincipalUtil.actsFor(ar, xiMax, r, r.integrity(), bottom))
+          return false;
+
+        // Revoke the delegation r ≽ p with ar←.
+        o.removeDelegatesTo(p, r, ar.integrity());
+        return true;
+      }
+    }
+
     final Set<CanAssignRule> canAssign;
     final Set<CanRevokeRule> canRevoke;
+    final Set<CanAssignPRule> canAssignP;
+    final Set<CanRevokePRule> canRevokeP;
 
-    URA97(Set<CanAssignRule> canAssign, Set<CanRevokeRule> canRevoke) {
+    ARBAC97(Set<CanAssignRule> canAssign, Set<CanRevokeRule> canRevoke,
+        Set<CanAssignPRule> canAssignP, Set<CanRevokePRule> canRevokeP) {
       this.canAssign = Collections.unmodifiableSet(new HashSet<>(canAssign));
       this.canRevoke = Collections.unmodifiableSet(new HashSet<>(canRevoke));
+      this.canAssignP = Collections.unmodifiableSet(new HashSet<>(canAssignP));
+      this.canRevokeP = Collections.unmodifiableSet(new HashSet<>(canRevokeP));
     }
 
     /**
@@ -207,6 +359,36 @@ public class Test {
       return false;
     }
 
+    /**
+     * Assigns permission {@code p} to role {@code r} using administrator {@code
+     * a}'s authority.
+     *
+     * @return true iff successful (even if {@code r} already has permission
+     *          {@code p})
+     */
+    boolean assignPermission(Principal a, Principal p, Principal r) {
+      for (CanAssignPRule rule : canAssignP) {
+        if (rule.assignPermission(a, p, r)) return true;
+      }
+
+      return false;
+    }
+
+    /**
+     * Revokes permission {@code p} from role {@code r} using administrator
+     * {@code a}'s authority.
+     *
+     * @return true iff successful (even if {@code r} did not already have
+     *          permission {@code p})
+     */
+    boolean revokePermission(Principal a, Principal p, Principal r) {
+      for (CanRevokePRule rule : canRevokeP) {
+        if (rule.revokePermission(a, p, r)) return true;
+      }
+
+      return false;
+    }
+
     static void test() {
       PrimitivePrincipal acme = new PrimitivePrincipal("Acme");
       Principal acmeHR = new PrimitivePrincipal("HR").owner(acme);
@@ -231,23 +413,25 @@ public class Test {
       Principal chuck = new PrimitivePrincipal("chuck");
 
       // Set up the trust management rules for Acme.
-      URA97 acmeRules;
+      ARBAC97 acmeRules;
       {
         Set<CanAssignRule> canAssign = new HashSet<>();
         Set<CanRevokeRule> canRevoke = new HashSet<>();
+        Set<CanAssignPRule> canAssignP = new HashSet<>();
+        Set<CanRevokePRule> canRevokeP = new HashSet<>();
 
         // Members of the HR department can hire new employees.
         canAssign
-            .add(new CanAssignRule(acme, acmeHR, bottom, acmeEmp, acmeEmp));
+        .add(new CanAssignRule(acme, acmeHR, bottom, acmeEmp, acmeEmp));
 
         // Program leads can recruit employees to the engineering team.
         canAssign
-            .add(new CanAssignRule(acme, acmePL, acmeEmp, acmeEng, acmeEng));
+        .add(new CanAssignRule(acme, acmePL, acmeEmp, acmeEng, acmeEng));
 
         // Members of the HR department can fire employees.
         canRevoke.add(new CanRevokeRule(acme, acmeHR, acmeEmp, acmeEmp));
 
-        acmeRules = new URA97(canAssign, canRevoke);
+        acmeRules = new ARBAC97(canAssign, canRevoke, canAssignP, canRevokeP);
       }
 
       // Alice should not be able to add Chuck to the engineering team.
@@ -345,7 +529,7 @@ public class Test {
           (OwnedPrincipal) new PrimitivePrincipal("group").owner(owner);
       this.exclusionGroup =
           (OwnedPrincipal) new PrimitivePrincipal("exclusionGroup")
-              .owner(owner);
+      .owner(owner);
     }
 
     /**
