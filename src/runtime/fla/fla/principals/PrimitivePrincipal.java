@@ -6,7 +6,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import fla.util.ActsForProof;
 import fla.util.ActsForQuery;
 
 public class PrimitivePrincipal extends Principal {
@@ -23,6 +22,11 @@ public class PrimitivePrincipal extends Principal {
   public PrimitivePrincipal(String name) {
     this.delegations = new HashMap<>();
     this.name = name;
+  }
+
+  @Override
+  final Map<Principal, Set<Delegation<?, ?>>> delegations() {
+    return delegations;
   }
 
   @Override
@@ -199,45 +203,5 @@ public class PrimitivePrincipal extends Principal {
   @Override
   Set<PrimitivePrincipal> componentPrimitivePrincipals() {
     return Collections.singleton(this);
-  }
-
-  @Override
-  final Map<Delegation<?, ?>, ActsForProof<?, ?>> usableDelegations(
-      ActsForQuery<?, ?> query, ProofSearchState searchState) {
-    if (!query.useDynamicContext()) {
-      // Static context. No dynamic delegations should be used.
-      return Collections.emptyMap();
-    }
-
-    Map<Delegation<?, ?>, ActsForProof<?, ?>> result = new HashMap<>();
-
-    for (Map.Entry<Principal, Set<Delegation<?, ?>>> entry : delegations
-        .entrySet()) {
-      Principal delegationLabel = entry.getKey();
-      Principal queryLabel = query.maxUsableLabel;
-
-      // Can use delegations if delegationLabel ⊑ queryLabel. This subquery
-      // should maintain the confidentiality and integrity of the top-level
-      // query, and maintain the integrity of the delegation's confidentiality.
-      // i.e., the label on the subquery should be:
-      //   queryLabel ∧ readersToWriters(delegationLabel).
-      // Additionally, the access policy on the subquery should be raised to
-      // protect the delegation's confidentiality.
-      ActsForProof<?, ?> usabilityProof =
-          actsForProof(this, ActsForQuery.flowsToQuery(
-              delegationLabel,
-              queryLabel,
-              PrincipalUtil.conjunction(
-                  PrincipalUtil.readersToWriters(delegationLabel), queryLabel),
-              PrincipalUtil.conjunction(query.accessPolicy,
-                      delegationLabel.confidentiality())), searchState);
-      if (usabilityProof != null) {
-        for (Delegation<?, ?> delegation : entry.getValue()) {
-          result.put(delegation, usabilityProof);
-        }
-      }
-    }
-
-    return result;
   }
 }

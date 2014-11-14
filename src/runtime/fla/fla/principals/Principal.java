@@ -152,6 +152,16 @@ public abstract class Principal {
   abstract Set<PrimitivePrincipal> componentPrimitivePrincipals();
 
   /**
+   * @return the delegation set stored at this principal, represented as a map
+   *          from labels to delegations at that label. If this principal
+   *          supports the storage of delegations, then modifications to the
+   *          returned map should reflect modifications to the stored
+   *          delegations. Otherwise, an empty unmodifiable map should be
+   *          returned.
+   */
+  abstract Map<Principal, Set<Delegation<?, ?>>> delegations();
+
+  /**
    * Obtains a set of delegations that are stored at this principal and can be
    * used to answer the given query. Each delegation is mapped to a proof
    * showing that it can be used.
@@ -165,8 +175,44 @@ public abstract class Principal {
    *
    * @param searchState the state of the proof search being made
    */
-  abstract Map<Delegation<?, ?>, ActsForProof<?, ?>> usableDelegations(
-      ActsForQuery<?, ?> query, ProofSearchState searchState);
+  private final Map<Delegation<?, ?>, ActsForProof<?, ?>> usableDelegations(
+      ActsForQuery<?, ?> query, ProofSearchState searchState) {
+    if (!query.useDynamicContext()) {
+      // Static context. No dynamic delegations should be used.
+      return Collections.emptyMap();
+    }
+
+    Map<Delegation<?, ?>, ActsForProof<?, ?>> result = new HashMap<>();
+
+    for (Map.Entry<Principal, Set<Delegation<?, ?>>> entry : delegations()
+        .entrySet()) {
+      Principal delegationLabel = entry.getKey();
+      Principal queryLabel = query.maxUsableLabel;
+
+      // Can use delegations if delegationLabel ⊑ queryLabel. This subquery
+      // should maintain the confidentiality and integrity of the top-level
+      // query, and maintain the integrity of the delegation's confidentiality.
+      // i.e., the label on the subquery should be:
+      //   queryLabel ∧ readersToWriters(delegationLabel).
+      // Additionally, the access policy on the subquery should be raised to
+      // protect the delegation's confidentiality.
+      ActsForProof<?, ?> usabilityProof =
+          actsForProof(this, ActsForQuery.flowsToQuery(
+              delegationLabel,
+              queryLabel,
+              PrincipalUtil.conjunction(
+                  PrincipalUtil.readersToWriters(delegationLabel), queryLabel),
+                  PrincipalUtil.conjunction(query.accessPolicy,
+                  delegationLabel.confidentiality())), searchState);
+      if (usabilityProof != null) {
+        for (Delegation<?, ?> delegation : entry.getValue()) {
+          result.put(delegation, usabilityProof);
+        }
+      }
+    }
+
+    return result;
+  }
 
   /**
    * Obtains a set of principals to whom the given query can be forwarded. A

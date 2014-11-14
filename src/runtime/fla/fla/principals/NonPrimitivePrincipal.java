@@ -2,9 +2,7 @@ package fla.principals;
 
 import java.util.Collections;
 import java.util.Map;
-
-import fla.util.ActsForProof;
-import fla.util.ActsForQuery;
+import java.util.Set;
 
 /**
  * An abstract class for principals constructed from other principals through
@@ -96,9 +94,8 @@ abstract class NonPrimitivePrincipal extends Principal {
   abstract Principal meet(DisjunctivePrincipal p);
 
   @Override
-  final Map<Delegation<?, ?>, ActsForProof<?, ?>> usableDelegations(
-      ActsForQuery<?, ?> query, ProofSearchState searchState) {
-    // Only primitive principals store delegations.
+  Map<Principal, Set<Delegation<?, ?>>> delegations() {
+    // Only (non-top, non-bottom) primitive principals store delegations.
     return Collections.emptyMap();
   }
 }

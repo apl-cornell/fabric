@@ -4,9 +4,6 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
-import fla.util.ActsForProof;
-import fla.util.ActsForQuery;
-
 public final class BottomPrincipal extends Principal {
   public static final BottomPrincipal INSTANCE = new BottomPrincipal();
 
@@ -125,8 +122,7 @@ public final class BottomPrincipal extends Principal {
   }
 
   @Override
-  final Map<Delegation<?, ?>, ActsForProof<?, ?>> usableDelegations(
-      ActsForQuery<?, ?> query, ProofSearchState searchState) {
+  Map<Principal, Set<Delegation<?, ?>>> delegations() {
     // Only (non-top, non-bottom) primitive principals store delegations.
     return Collections.emptyMap();
   }
