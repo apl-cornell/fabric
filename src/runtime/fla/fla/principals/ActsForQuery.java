@@ -123,4 +123,20 @@ public final class ActsForQuery<Superior extends Principal, Inferior extends Pri
     result.addAll(accessPolicy.componentPrimitivePrincipals());
     return result;
   }
+
+  /**
+   * @return a robust version of this query. Strengthens the integrity component
+   *          of {@code maxUsableLabel} to ensure the query is robust.
+   */
+  ActsForQuery<Superior, Inferior> makeRobust() {
+    // The minimum integrity required for the query to be robust:
+    // inferior← ∧ readersToWriters(inferior).
+    Principal minInteg =
+        PrincipalUtil.join(inferior.integrity(),
+            PrincipalUtil.readersToWriters(inferior));
+    Principal maxUsableLabel =
+        PrincipalUtil.join(this.maxUsableLabel, minInteg);
+    if (maxUsableLabel == this.maxUsableLabel) return this;
+    return new ActsForQuery<>(superior, inferior, maxUsableLabel, accessPolicy);
+  }
 }
