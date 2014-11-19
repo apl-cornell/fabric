@@ -1,5 +1,7 @@
 package fabric.common;
 
+import java.io.Serializable;
+
 import fabric.lang.Object._Impl;
 import fabric.worker.Store;
 
@@ -7,7 +9,7 @@ import fabric.worker.Store;
  * Objects bundling a serialized object along with any runtime tokens (like
  * warranties or leases).
  */
-public class SerializedObjectAndTokens {
+public class SerializedObjectAndTokens implements Serializable {
   private SerializedObject serializedObject;
   private VersionWarranty warranty;
 
@@ -22,7 +24,8 @@ public class SerializedObjectAndTokens {
     if (!(o instanceof SerializedObjectAndTokens)) return false;
 
     SerializedObjectAndTokens s = (SerializedObjectAndTokens) o;
-    return equals(serializedObject, s.serializedObject) && equals(warranty, s.warranty);
+    return equals(serializedObject, s.serializedObject)
+        && equals(warranty, s.warranty);
   }
 
   private boolean equals(Object o1, Object o2) {
