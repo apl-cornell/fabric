@@ -1,5 +1,7 @@
 package fabric.common;
 
+import java.io.Serializable;
+
 import fabric.lang.Object._Impl;
 import fabric.worker.Store;
 
@@ -7,7 +9,7 @@ import fabric.worker.Store;
  * Objects bundling a serialized object along with any runtime tokens (like
  * warranties or leases).
  */
-public class SerializedObjectAndTokens {
+public class SerializedObjectAndTokens implements Serializable {
   private SerializedObject serializedObject;
   private VersionWarranty warranty;
   private RWLease lease;
@@ -102,6 +104,7 @@ public class SerializedObjectAndTokens {
    * {@link SerializedObject#deserialize}).
    */
   public _Impl getDeserializedObject(Store store, boolean chaseSurrogates) {
-    return serializedObject.deserialize(store, warranty, lease, chaseSurrogates);
+    return serializedObject
+        .deserialize(store, warranty, lease, chaseSurrogates);
   }
 }
