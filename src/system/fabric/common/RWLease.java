@@ -1,5 +1,7 @@
 package fabric.common;
 
+import java.io.Serializable;
+
 import fabric.common.util.Oid;
 import fabric.lang.security.Principal;
 import fabric.worker.Worker;
@@ -7,13 +9,13 @@ import fabric.worker.Worker;
 /**
  * A lease that allows both reads and writes.
  */
-public class RWLease extends Lease {
+public class RWLease extends Lease implements Serializable {
 
   /**
    * Owner of the lease with read-write privileges.
    */
   private final Oid owner;
-  
+
   /**
    * @param expiry expiry time, in milliseconds since the epoch.
    * @param owner Oid of the worker principal which owns the lease.
@@ -22,7 +24,7 @@ public class RWLease extends Lease {
     super(expiry);
     this.owner = owner;
   }
-  
+
   /**
    * Constructor with no lessees.
    *

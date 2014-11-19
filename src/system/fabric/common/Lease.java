@@ -1,6 +1,8 @@
 package fabric.common;
 
-public abstract class Lease {
+import java.io.Serializable;
+
+public abstract class Lease implements Serializable {
   /**
    * Assumed maximum clock skew, in milliseconds.
    */
@@ -17,7 +19,7 @@ public abstract class Lease {
   public Lease(long expiry) {
     this.expiry = expiry;
   }
-  
+
   // Deserialization constructor.
   protected Lease() {
     this.expiry = 0;
@@ -32,7 +34,7 @@ public abstract class Lease {
 
   /**
    * Determines whether this lease has expired.
-   * 
+   *
    * @param defaultResult
    *         the value to return if the current time is within CLOCK_SKEW of the
    *         lease's expiry.
@@ -53,7 +55,7 @@ public abstract class Lease {
   /**
    * Determines whether this lease expires before a certain time, taking clock
    * skew into account.
-   * 
+   *
    * @param defaultResult
    *         the value to return if the time given is within CLOCK_SKEW of the
    *         lease's expiry.
@@ -65,7 +67,7 @@ public abstract class Lease {
   /**
    * Determines whether this lease expires after a certain time, taking clock
    * skew into account.
-   * 
+   *
    * @param defaultResult
    *         the value to return if the time given is within CLOCK_SKEW of the
    *         lease's expiry.
@@ -84,7 +86,7 @@ public abstract class Lease {
 
   /**
    * Determines whether time1 is before time2, taking clock skew into account.
-   * 
+   *
    * @param defaultResult
    *         the value to return if the given times are within CLOCK_SKEW of
    *         each other.
@@ -95,7 +97,7 @@ public abstract class Lease {
 
   /**
    * Determines whether time1 is after time2, taking clock skew into account.
-   * 
+   *
    * @param defaultResult
    *         the value to return if the given times are within CLOCK_SKEW of
    *         each other.
