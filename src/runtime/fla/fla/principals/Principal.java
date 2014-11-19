@@ -6,7 +6,9 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
+import fabric.common.exceptions.InternalError;
 import fabric.common.util.Pair;
 import fla.util.ActsForProof;
 import fla.util.ConfProjectionProof;
@@ -453,7 +455,7 @@ public abstract class Principal {
                 delegationLabel.confidentiality());
         ActsForQuery<Principal, Principal> query =
             new ActsForQuery<>(superior, inferior, label, accessPolicy)
-                .makeRobust();
+            .makeRobust();
         if (actsForProof(query) == null) {
           // Can't recurse to this candidate.
           it.remove();
@@ -491,7 +493,7 @@ public abstract class Principal {
                 delegationLabel.confidentiality());
         ActsForQuery<Principal, Principal> query =
             new ActsForQuery<>(superior, inferior, label, accessPolicy)
-                .makeRobust();
+            .makeRobust();
         if (actsForProof(query) == null) {
           // Can't recurse to this candidate.
           it.remove();
@@ -674,20 +676,32 @@ public abstract class Principal {
     }
 
     // Cache miss. Search for a proof.
-    ActsForProof<Superior, Inferior> result =
+    ProofSearchResult<Superior, Inferior> result =
         findActsForProof(caller, query, searchState);
 
-    // Cache positive results.
-    if (result != null) {
-      searchState.cacheActsFor(query, result);
+    switch (result.type) {
+    case SUCCESS:
+      // Cache positive result.
+      searchState.cacheActsFor(query, result.proof);
+      return result.proof;
+
+    case PRUNED:
+      // Don't cache.
+      return null;
+
+    case FAILED:
+      // Cache negative result.
+      searchState.cacheNotActsFor(query);
+      return null;
     }
 
-    return result;
+    throw new InternalError("Unexpected acts-for-proof search result type: "
+        + result.type);
   }
 
   /**
-   * Searches for an ActsForProof without using the cache. Negative results will
-   * be added to the cache. Callers are responsible for caching positive results.
+   * Searches for an ActsForProof, assuming a cache miss. Callers are
+   * responsible for caching the results.
    *
    * @param caller the principal making this call
    * @param searchState records the goals that we are in the middle of
@@ -695,7 +709,7 @@ public abstract class Principal {
    * @param query the query to satisfy. It is assumed that the caller acts for
    *          the label in the query.
    */
-  private final <Superior extends Principal, Inferior extends Principal> ActsForProof<Superior, Inferior> findActsForProof(
+  private final <Superior extends Principal, Inferior extends Principal> ProofSearchResult<Superior, Inferior> findActsForProof(
       Principal caller, ActsForQuery<Superior, Inferior> query,
       ProofSearchState searchState) {
     final boolean forwarded = caller != this;
@@ -706,22 +720,21 @@ public abstract class Principal {
       // Try the dumb things first.
       if (query.inferior instanceof BottomPrincipal
           || query.superior instanceof TopPrincipal) {
-        return new DelegatesProof<>(query);
+        return new ProofSearchResult<>(new DelegatesProof<>(query));
       }
 
       if (PrincipalUtil.equals(query.inferior, query.superior)) {
-        return new ReflexiveProof<>(query);
-      }
-
-      // Check the search state.
-      if (searchState.contains(query)) {
-        // Already a goal. Prevent an infinite recursion, but don't cache this
-        // result.
-        return null;
+        return new ProofSearchResult<>(new ReflexiveProof<>(query));
       }
 
       // Add the query to the search state.
-      searchState = new ProofSearchState(searchState, query);
+      try {
+        searchState = new ProofSearchState(searchState, query);
+      } catch (CircularProofException e) {
+        // Already a goal. Prevent an infinite recursion, but don't cache this
+        // result.
+        return ProofSearchResult.pruned();
+      }
     }
 
     // See if we can satisfy the query directly with a delegation.
@@ -731,8 +744,9 @@ public abstract class Principal {
       final ActsForProof<?, ?> usabilityProof = entry.getValue();
       if (PrincipalUtil.equals(query.superior, delegation.superior)
           && PrincipalUtil.equals(query.inferior, delegation.inferior)) {
-        return (ActsForProof<Superior, Inferior>) new DelegatesProof<>(
-            delegation, query, usabilityProof);
+        return new ProofSearchResult<>(
+            (ActsForProof<Superior, Inferior>) new DelegatesProof<>(delegation,
+                query, usabilityProof));
       }
     }
 
@@ -752,7 +766,8 @@ public abstract class Principal {
             // Construct a proof for query.superior ≽ witness.
             DelegatesProof<Superior, Principal> step =
                 new DelegatesProof<>(query.inferior(witness));
-            return new TransitiveProof<>(step, witness, proof);
+            return new ProofSearchResult<>(new TransitiveProof<>(step, witness,
+                proof));
           }
         }
       }
@@ -776,8 +791,9 @@ public abstract class Principal {
         }
 
         if (success) {
-          return (ActsForProof<Superior, Inferior>) new FromDisjunctProof<>(
-              superior, query.inferior, proofs);
+          return new ProofSearchResult<>(
+              (ActsForProof<Superior, Inferior>) new FromDisjunctProof<>(
+                  superior, query.inferior, proofs));
         }
       }
 
@@ -800,8 +816,9 @@ public abstract class Principal {
         }
 
         if (success) {
-          return (ActsForProof<Superior, Inferior>) new ToConjunctProof<>(
-              query.superior, inferior, proofs);
+          return new ProofSearchResult<>(
+              (ActsForProof<Superior, Inferior>) new ToConjunctProof<>(
+                  query.superior, inferior, proofs));
         }
       }
 
@@ -817,7 +834,8 @@ public abstract class Principal {
             // Construct a proof for witness ≽ query.inferior.
             DelegatesProof<Principal, Inferior> step =
                 new DelegatesProof<>(query.superior(witness));
-            return new TransitiveProof<>(proof, witness, step);
+            return new ProofSearchResult<>(new TransitiveProof<>(proof,
+                witness, step));
           }
         }
       }
@@ -834,7 +852,8 @@ public abstract class Principal {
             // Construct a proof for inferior.base() ≽ query.inferior.
             DelegatesProof<Principal, Inferior> step =
                 new DelegatesProof<>(query.superior(inferior.base()));
-            return new TransitiveProof<>(proof, inferior.base(), step);
+            return new ProofSearchResult<>(new TransitiveProof<>(proof,
+                inferior.base(), step));
           }
         }
 
@@ -849,8 +868,9 @@ public abstract class Principal {
                   searchState);
           if (proof != null) {
             // Have a proof of superior.base() ≽ inferior.base().
-            return (ActsForProof<Superior, Inferior>) new ConfProjectionProof(
-                proof);
+            return new ProofSearchResult<>(
+                (ActsForProof<Superior, Inferior>) new ConfProjectionProof(
+                    proof));
           }
         }
       }
@@ -867,7 +887,8 @@ public abstract class Principal {
             // Construct a proof for inferior.base() ≽query.inferior.
             DelegatesProof<Principal, Inferior> step =
                 new DelegatesProof<>(query.superior(inferior.base()));
-            return new TransitiveProof<>(proof, inferior.base(), step);
+            return new ProofSearchResult<>(new TransitiveProof<>(proof,
+                inferior.base(), step));
           }
         }
 
@@ -882,8 +903,9 @@ public abstract class Principal {
                   searchState);
           if (proof != null) {
             // Have a proof of superior.base() ≽ inferior.base().
-            return (ActsForProof<Superior, Inferior>) new IntegProjectionProof(
-                proof);
+            return new ProofSearchResult<>(
+                (ActsForProof<Superior, Inferior>) new IntegProjectionProof(
+                    proof));
           }
         }
       }
@@ -898,8 +920,9 @@ public abstract class Principal {
             actsForProof(this, query.superior(PrincipalUtil.disjunction(a, b)),
                 searchState);
         if (proof != null) {
-          return (ActsForProof<Superior, Inferior>) new MeetToOwnerProof<>(
-              superior, proof);
+          return new ProofSearchResult<>(
+              (ActsForProof<Superior, Inferior>) new MeetToOwnerProof<>(
+                  superior, proof));
         }
 
         // Attempt to use the rule:
@@ -917,8 +940,9 @@ public abstract class Principal {
                     query.superior(PrincipalUtil.disjunction(a, b)).inferior(
                         PrincipalUtil.disjunction(c, d)), searchState);
             if (projectionProof != null) {
-              return (ActsForProof<Superior, Inferior>) new OwnedPrincipalsProof(
-                  superior, inferior, ownersProof, projectionProof);
+              return new ProofSearchResult<>(
+                  (ActsForProof<Superior, Inferior>) new OwnedPrincipalsProof(
+                      superior, inferior, ownersProof, projectionProof));
             }
           }
         }
@@ -936,7 +960,8 @@ public abstract class Principal {
           // Construct a proof for inferior.owner() ≽ query.inferior.
           DelegatesProof<Principal, Inferior> step =
               new DelegatesProof<>(query.superior(inferior.owner()));
-          return new TransitiveProof<>(proof, inferior.owner(), step);
+          return new ProofSearchResult<>(new TransitiveProof<>(proof,
+              inferior.owner(), step));
         }
       }
     }
@@ -965,7 +990,7 @@ public abstract class Principal {
               new DelegatesProof<>(
                   (Delegation<Principal, Superior>) delegation, query,
                   usabilityProof);
-          return new TransitiveProof<>(step1, q, step2);
+          return new ProofSearchResult<>(new TransitiveProof<>(step1, q, step2));
         }
       }
 
@@ -979,7 +1004,7 @@ public abstract class Principal {
               new DelegatesProof<>(
                   (Delegation<Inferior, Principal>) delegation, query,
                   usabilityProof);
-          return new TransitiveProof<>(step1, p, step2);
+          return new ProofSearchResult<>(new TransitiveProof<>(step1, p, step2));
         }
       }
     }
@@ -996,12 +1021,15 @@ public abstract class Principal {
     for (Principal callee : askable) {
       ActsForProof<Superior, Inferior> result =
           callee.actsForProof(this, query, searchState);
-      if (result != null) return result;
+      if (result != null) return new ProofSearchResult<>(result);
     }
 
-    // Proof failed. Cache the negative result.
-    searchState.cacheNotActsFor(query);
-    return null;
+    // Proof failed.
+    if (searchState.searchPruned.get()) {
+      return ProofSearchResult.pruned();
+    } else {
+      return ProofSearchResult.failed();
+    }
   }
 
   /**
@@ -1068,8 +1096,70 @@ public abstract class Principal {
     }
   }
 
+  private static final class ProofSearchResult<Superior extends Principal, Inferior extends Principal> {
+    enum Type {
+      SUCCESS, PRUNED, FAILED
+    }
+
+    private static final ProofSearchResult<Principal, Principal> PRUNED =
+        new ProofSearchResult<>(Type.PRUNED);
+
+    private static final ProofSearchResult<Principal, Principal> FAILED =
+        new ProofSearchResult<>(Type.FAILED);
+
+    final Type type;
+    final ActsForProof<Superior, Inferior> proof;
+
+    private ProofSearchResult(Type type) {
+      this.type = type;
+      this.proof = null;
+    }
+
+    /**
+     * Constructs a ProofSearchResult indicating that a proof was found.
+     */
+    ProofSearchResult(ActsForProof<Superior, Inferior> proof) {
+      this.type = Type.SUCCESS;
+      this.proof = proof;
+    }
+
+    @Override
+    public String toString() {
+      return type.toString();
+    }
+
+    /**
+     * @return a ProofSearchResult indicating that no proof was found, but the
+     *          search was pruned due to cycles with ancestor goals
+     */
+    static <Superior extends Principal, Inferior extends Principal> ProofSearchResult<Superior, Inferior> pruned() {
+      return (ProofSearchResult<Superior, Inferior>) PRUNED;
+    }
+
+    /**
+     * @return a ProofSearchResult indicating that no proof was found, despite
+     *          an exhaustive search
+     */
+    static <Superior extends Principal, Inferior extends Principal> ProofSearchResult<Superior, Inferior> failed() {
+      return (ProofSearchResult<Superior, Inferior>) FAILED;
+    }
+  }
+
   final class ProofSearchState {
-    private final Set<ActsForQuery<?, ?>> goals;
+    /**
+     * The most recent goal on the stack.
+     */
+    private final ActsForQuery<?, ?> curGoal;
+
+    /**
+     * The search state for the parent goal.
+     */
+    private final ProofSearchState parent;
+
+    /**
+     * All goals currently on the stack.
+     */
+    private final Set<ActsForQuery<?, ?>> allGoals;
 
     /**
      * The set of principals who have participated in the search so far.
@@ -1081,6 +1171,15 @@ public abstract class Principal {
      * goal on the stack.
      */
     private final Set<Principal> principalsAsked;
+
+    /**
+     * Whether the proof search for the current goal has been pruned. A search
+     * is pruned when an ancestor goal becomes a subgoal. For example, suppose
+     * the proof of A has the proof of B as a subgoal, which in turn depends on
+     * the proof of C. If the proof search for C finds A as a subgoal, then the
+     * search for B and C (but not A) are considered pruned.
+     */
+    private final AtomicBoolean searchPruned;
 
     /**
      * The acts-for cache. Maps pairs of principals and queries to the
@@ -1095,7 +1194,11 @@ public abstract class Principal {
     private final Set<Pair<Principal, ActsForQuery<Principal, Principal>>> notActsForCache;
 
     public ProofSearchState() {
-      goals = Collections.emptySet();
+      this.curGoal = null;
+      this.parent = null;
+      this.searchPruned = new AtomicBoolean(false);
+
+      allGoals = Collections.emptySet();
       if (Principal.this instanceof PrimitivePrincipal) {
         allParticipants =
             Collections.singleton((PrimitivePrincipal) Principal.this);
@@ -1110,14 +1213,34 @@ public abstract class Principal {
 
     /**
      * Constructs a new search state with the given query pushed onto the query
-     * stack, and with {@code principalsAsked} containing just {@code
-     * Principal.this}.
+     * stack, and with {@link ProofSearchState#principalsAsked} containing just
+     * {@link Principal}{@code .this}. If the given query already exists as a
+     * goal, then every goal on the stack up to (but not including) the query
+     * will be marked as being pruned, and a {@link CircularProofException} is
+     * thrown.
      */
-    private ProofSearchState(ProofSearchState state, ActsForQuery<?, ?> query) {
-      Set<ActsForQuery<?, ?>> goals = new HashSet<>(state.goals.size() + 1);
-      this.goals = Collections.unmodifiableSet(goals);
-      goals.addAll(state.goals);
-      goals.add(query);
+    private ProofSearchState(ProofSearchState state, ActsForQuery<?, ?> query)
+        throws CircularProofException {
+      // Check for circularity.
+      if (state.allGoals.contains(query)) {
+        // Circular proof. Mark pruned searches.
+        for (ProofSearchState curState = state; !query.equals(curState.curGoal); curState =
+            curState.parent) {
+          curState.searchPruned.set(true);
+        }
+
+        throw new CircularProofException();
+      }
+
+      this.curGoal = query;
+      this.parent = state;
+      this.searchPruned = new AtomicBoolean(false);
+
+      Set<ActsForQuery<?, ?>> allGoals =
+          new HashSet<>(state.allGoals.size() + 1);
+      this.allGoals = Collections.unmodifiableSet(allGoals);
+      allGoals.addAll(state.allGoals);
+      allGoals.add(query);
 
       this.allParticipants = state.allParticipants;
 
@@ -1133,7 +1256,10 @@ public abstract class Principal {
      */
     private ProofSearchState(ProofSearchState state,
         Set<PrimitivePrincipal> newPrincipalsAsked) {
-      this.goals = state.goals;
+      this.curGoal = state.curGoal;
+      this.parent = state.parent;
+      this.allGoals = state.allGoals;
+      this.searchPruned = state.searchPruned;
 
       Set<PrimitivePrincipal> allParticipants =
           new HashSet<>(state.allParticipants.size()
@@ -1187,15 +1313,18 @@ public abstract class Principal {
     }
 
     public boolean contains(ActsForQuery<?, ?> query) {
-      return goals.contains(query);
+      return allGoals.contains(query);
     }
 
     @Override
     public String toString() {
       StringBuffer result = new StringBuffer();
       result.append("goals = [\n");
-      for (ActsForQuery<?, ?> goal : goals) {
-        result.append("  " + goal + ",\n");
+      for (ProofSearchState curState = this; curState != null; curState =
+          curState.parent) {
+        result.insert(10,
+            "  " + curState.curGoal
+                + (curState.searchPruned.get() ? " [pruned]" : "") + ",\n");
       }
       result.append("]\n");
 
@@ -1207,4 +1336,9 @@ public abstract class Principal {
     }
   }
 
+  /**
+   * Indicates a circular proof tree was detected.
+   */
+  private static class CircularProofException extends Exception {
+  }
 }
