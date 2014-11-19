@@ -276,23 +276,9 @@ public abstract class Principal {
   }
 
   /**
-   * Determines whether the given principal {@code p} can be asked the given
-   * {@code query}. The principal can be asked if {@code p} acts for {@code
-   * query.accessPolicy} and the integrity projection of {@code query.maxLabel}.
-   *
-   * @param searchState the state of the proof search being made
-   */
-  private final boolean isAskable(Principal p, ActsForQuery<?, ?> query,
-      ProofSearchState searchState) {
-    // See if p ≽ query.recurseLowerBound().
-    // XXX robust? (Also robust wrt label on delegation that the principal came from?)
-    query = query.inferior(query.recurseLowerBound()).superior(p);
-    return actsForProof(this, query, searchState) != null;
-  }
-
-  /**
    * Removes from the given set all principals that cannot be asked the given
-   * query.
+   * query. A principal can be asked if it acts for {@code query.accessPolicy}
+   * and the integrity projection of {@code query.maxLabel}.
    *
    * @param searchState the state of the proof search being made
    *
@@ -305,7 +291,13 @@ public abstract class Principal {
     for (Iterator<PrimitivePrincipal> it = set.iterator(); it.hasNext();) {
       PrimitivePrincipal p = it.next();
 
-      if (!isAskable(p, query, searchState)) it.remove();
+      // See if p ≽ query.recurseLowerBound(), robustly.
+      ActsForQuery<?, ?> subquery =
+          query.inferior(query.recurseLowerBound()).superior(p).makeRobust();
+      if (actsForProof(this, subquery, searchState) == null) {
+        // Unable to prove the askability of p. Remove.
+        it.remove();
+      }
     }
 
     return set;
@@ -461,7 +453,7 @@ public abstract class Principal {
                 delegationLabel.confidentiality());
         ActsForQuery<Principal, Principal> query =
             new ActsForQuery<>(superior, inferior, label, accessPolicy)
-            .makeRobust();
+                .makeRobust();
         if (actsForProof(query) == null) {
           // Can't recurse to this candidate.
           it.remove();
