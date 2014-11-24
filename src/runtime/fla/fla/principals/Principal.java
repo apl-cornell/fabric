@@ -6,10 +6,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import fabric.common.exceptions.InternalError;
-import fabric.common.util.Pair;
 import fla.util.ActsForProof;
 import fla.util.ConfProjectionProof;
 import fla.util.DelegatesProof;
@@ -209,17 +207,29 @@ public abstract class Principal {
       // the top-level query and the delegation.
       ActsForQuery<?, ?> subquery =
           ActsForQuery.flowsToQuery(
+              this,
               delegationLabel,
               queryLabel,
               queryLabel,
               PrincipalUtil.conjunction(query.accessPolicy,
                   delegationLabel.confidentiality())).makeRobust();
-      ActsForProof<?, ?> usabilityProof =
+      ProofSearchResult<?, ?> usabilityProofResult =
           actsForProof(this, subquery, searchState);
-      if (usabilityProof != null) {
+      switch (usabilityProofResult.type) {
+      case SUCCESS:
         for (Delegation<?, ?> delegation : entry.getValue()) {
-          result.put(delegation, usabilityProof);
+          result.put(delegation, usabilityProofResult.proof);
         }
+        break;
+
+      case PRUNED:
+        // Can make progress if the subquery can.
+        searchState.progressCondition
+            .or(usabilityProofResult.progressCondition);
+        break;
+
+      case FAILED:
+        break;
       }
     }
 
@@ -296,9 +306,21 @@ public abstract class Principal {
       // See if p ≽ query.recurseLowerBound(), robustly.
       ActsForQuery<?, ?> subquery =
           query.inferior(query.recurseLowerBound()).superior(p).makeRobust();
-      if (actsForProof(this, subquery, searchState) == null) {
+      ProofSearchResult<?, ?> result =
+          actsForProof(this, subquery, searchState);
+      switch (result.type) {
+      case SUCCESS:
+        break;
+
+      case PRUNED:
+        // Can make progress if the subquery can.
+        searchState.progressCondition.or(result.progressCondition);
+
+        //$FALL-THROUGH$
+      case FAILED:
         // Unable to prove the askability of p. Remove.
         it.remove();
+        break;
       }
     }
 
@@ -371,13 +393,13 @@ public abstract class Principal {
    */
   public final boolean actsFor(Principal superior, Principal inferior,
       Principal maxUsableLabel, Principal accessPolicy) {
-    return actsForProof(new ActsForQuery<>(superior, inferior, maxUsableLabel,
-        accessPolicy)) != null;
+    return actsForProof(new ActsForQuery<>(this, superior, inferior,
+        maxUsableLabel, accessPolicy)) != null;
   }
 
   public final boolean flowsTo(Principal inferior, Principal superior,
       Principal maxUsableLabel, Principal accessPolicy) {
-    return actsForProof(ActsForQuery.flowsToQuery(inferior, superior,
+    return actsForProof(ActsForQuery.flowsToQuery(this, inferior, superior,
         maxUsableLabel, accessPolicy)) != null;
   }
 
@@ -454,8 +476,8 @@ public abstract class Principal {
             PrincipalUtil.conjunction(req.label.confidentiality(),
                 delegationLabel.confidentiality());
         ActsForQuery<Principal, Principal> query =
-            new ActsForQuery<>(superior, inferior, label, accessPolicy)
-            .makeRobust();
+            new ActsForQuery<>(this, superior, inferior, label, accessPolicy)
+                .makeRobust();
         if (actsForProof(query) == null) {
           // Can't recurse to this candidate.
           it.remove();
@@ -492,8 +514,8 @@ public abstract class Principal {
             PrincipalUtil.conjunction(req.label.confidentiality(),
                 delegationLabel.confidentiality());
         ActsForQuery<Principal, Principal> query =
-            new ActsForQuery<>(superior, inferior, label, accessPolicy)
-            .makeRobust();
+            new ActsForQuery<>(this, superior, inferior, label, accessPolicy)
+                .makeRobust();
         if (actsForProof(query) == null) {
           // Can't recurse to this candidate.
           it.remove();
@@ -597,7 +619,7 @@ public abstract class Principal {
       Principal accessPolicy =
           PrincipalUtil.join(label.confidentiality(),
               req.label.confidentiality());
-      if (actsForProof(ActsForQuery.flowsToQuery(inferior, superior,
+      if (actsForProof(ActsForQuery.flowsToQuery(this, inferior, superior,
           queryLabel, accessPolicy).makeRobust()) == null) {
         continue;
       }
@@ -640,7 +662,7 @@ public abstract class Principal {
   private final <Superior extends Principal, Inferior extends Principal> ActsForProof<Superior, Inferior> actsForProof(
       ActsForQuery<Superior, Inferior> query) {
     // TODO Verify proof?
-    return actsForProof(this, query, new ProofSearchState());
+    return actsForProof(this, query, new ProofSearchState()).proof;
   }
 
   /**
@@ -652,7 +674,7 @@ public abstract class Principal {
    * @param searchState records the goals that we are in the middle of
    *          attempting, and any cached intermediate results
    */
-  final <Superior extends Principal, Inferior extends Principal> ActsForProof<Superior, Inferior> actsForProof(
+  private final <Superior extends Principal, Inferior extends Principal> ProofSearchResult<Superior, Inferior> actsForProof(
       Principal caller, ActsForQuery<Superior, Inferior> query,
       ProofSearchState searchState) {
     // If this is a remote call, ensure the caller is trusted with the
@@ -662,41 +684,20 @@ public abstract class Principal {
     }
 
     // Check the cache.
-    Pair<Boolean, ActsForProof<Superior, Inferior>> cachedResult =
+    ProofSearchResult<Superior, Inferior> cachedResult =
         searchState.cacheLookup(query);
 
     if (cachedResult != null) {
-      if (cachedResult.first) {
-        // Positive cache hit.
-        return cachedResult.second;
-      } else {
-        // Negative cache hit.
-        return null;
-      }
+      // Cache hit.
+      return cachedResult;
     }
 
     // Cache miss. Search for a proof.
     ProofSearchResult<Superior, Inferior> result =
         findActsForProof(caller, query, searchState);
 
-    switch (result.type) {
-    case SUCCESS:
-      // Cache positive result.
-      searchState.cacheActsFor(query, result.proof);
-      return result.proof;
-
-    case PRUNED:
-      // Don't cache.
-      return null;
-
-    case FAILED:
-      // Cache negative result.
-      searchState.cacheNotActsFor(query);
-      return null;
-    }
-
-    throw new InternalError("Unexpected acts-for-proof search result type: "
-        + result.type);
+    searchState.cache(query, result);
+    return result;
   }
 
   /**
@@ -726,15 +727,15 @@ public abstract class Principal {
       if (PrincipalUtil.equals(query.inferior, query.superior)) {
         return new ProofSearchResult<>(new ReflexiveProof<>(query));
       }
+    }
 
-      // Add the query to the search state.
-      try {
-        searchState = new ProofSearchState(searchState, query);
-      } catch (CircularProofException e) {
-        // Already a goal. Prevent an infinite recursion, but don't cache this
-        // result.
-        return ProofSearchResult.pruned();
-      }
+    // Add the query to the search state.
+    try {
+      searchState = new ProofSearchState(searchState, query);
+    } catch (CircularProofException e) {
+      // Already a goal. Prune the search to prevent an infinite recursion.
+      return new ProofSearchResult<>(new ProgressCondition(query,
+          ProgressCondition.Mutability.IMMUTABLE));
     }
 
     // See if we can satisfy the query directly with a delegation.
@@ -759,15 +760,24 @@ public abstract class Principal {
         final ConjunctivePrincipal superior =
             (ConjunctivePrincipal) query.superior;
         for (Principal witness : superior.conjuncts()) {
-          ActsForProof<Principal, Inferior> proof =
+          ProofSearchResult<Principal, Inferior> result =
               actsForProof(this, query.superior(witness), searchState);
-          if (proof != null) {
+          switch (result.type) {
+          case SUCCESS:
             // Have a proof of witness ≽ query.inferior.
             // Construct a proof for query.superior ≽ witness.
             DelegatesProof<Superior, Principal> step =
-                new DelegatesProof<>(query.inferior(witness));
+            new DelegatesProof<>(query.inferior(witness));
             return new ProofSearchResult<>(new TransitiveProof<>(step, witness,
-                proof));
+                result.proof));
+
+          case PRUNED:
+            // Can make progress if the subquery can.
+            searchState.progressCondition.or(result.progressCondition);
+            break;
+
+          case FAILED:
+            break;
           }
         }
       }
@@ -777,17 +787,35 @@ public abstract class Principal {
       if (query.superior instanceof DisjunctivePrincipal) {
         final DisjunctivePrincipal superior =
             (DisjunctivePrincipal) query.superior;
+
+        // Maps subgoals to their proofs.
         Map<Principal, ActsForProof<Principal, Inferior>> proofs =
             new HashMap<>(superior.disjuncts().size());
+
+        // Collects conditions for making further progress on this rule, should
+        // the search be pruned.
+        ProgressCondition ruleConditions = null;
+
         boolean success = true;
-        for (Principal p : superior.disjuncts()) {
-          ActsForProof<Principal, Inferior> proof =
+        L: for (Principal p : superior.disjuncts()) {
+          ProofSearchResult<Principal, Inferior> result =
               actsForProof(this, query.superior(p), searchState);
-          if (proof == null) {
+          switch (result.type) {
+          case SUCCESS:
+            proofs.put(p, result.proof);
+            break;
+
+          case FAILED:
             success = false;
+            ruleConditions = null;
+            break L;
+
+          case PRUNED:
+            success = false;
+            ruleConditions =
+                ProgressCondition.and(ruleConditions, result.progressCondition);
             break;
           }
-          proofs.put(p, proof);
         }
 
         if (success) {
@@ -795,6 +823,8 @@ public abstract class Principal {
               (ActsForProof<Superior, Inferior>) new FromDisjunctProof<>(
                   superior, query.inferior, proofs));
         }
+
+        searchState.progressCondition.or(ruleConditions);
       }
 
       // Attempt to use the rule:
@@ -802,17 +832,35 @@ public abstract class Principal {
       if (query.inferior instanceof ConjunctivePrincipal) {
         final ConjunctivePrincipal inferior =
             (ConjunctivePrincipal) query.inferior;
+
+        // Maps subgoals to their proofs.
         Map<Principal, ActsForProof<Superior, Principal>> proofs =
-            new HashMap<>(inferior.conjuncts.size());
+            new HashMap<>(inferior.conjuncts().size());
+
+        // Collects conditions for making further progress on this rule, should
+        // the search be pruned.
+        ProgressCondition ruleConditions = null;
+
         boolean success = true;
-        for (Principal p : inferior.conjuncts()) {
-          ActsForProof<Superior, Principal> proof =
+        L: for (Principal p : inferior.conjuncts()) {
+          ProofSearchResult<Superior, Principal> result =
               actsForProof(this, query.inferior(p), searchState);
-          if (proof == null) {
+          switch (result.type) {
+          case SUCCESS:
+            proofs.put(p, result.proof);
+            break;
+
+          case FAILED:
             success = false;
+            ruleConditions = null;
+            break L;
+
+          case PRUNED:
+            success = false;
+            ruleConditions =
+                ProgressCondition.and(ruleConditions, result.progressCondition);
             break;
           }
-          proofs.put(p, proof);
         }
 
         if (success) {
@@ -820,6 +868,8 @@ public abstract class Principal {
               (ActsForProof<Superior, Inferior>) new ToConjunctProof<>(
                   query.superior, inferior, proofs));
         }
+
+        searchState.progressCondition.or(ruleConditions);
       }
 
       // Attempt to use the rule:
@@ -827,15 +877,24 @@ public abstract class Principal {
       if (query.inferior instanceof DisjunctivePrincipal) {
         DisjunctivePrincipal inferior = (DisjunctivePrincipal) query.inferior;
         for (Principal witness : inferior.disjuncts()) {
-          ActsForProof<Superior, Principal> proof =
+          ProofSearchResult<Superior, Principal> result =
               actsForProof(this, query.inferior(witness), searchState);
-          if (proof != null) {
+          switch (result.type) {
+          case SUCCESS:
             // Have a proof of query.superior ≽ witness.
             // Construct a proof for witness ≽ query.inferior.
             DelegatesProof<Principal, Inferior> step =
-                new DelegatesProof<>(query.superior(witness));
-            return new ProofSearchResult<>(new TransitiveProof<>(proof,
+            new DelegatesProof<>(query.superior(witness));
+            return new ProofSearchResult<>(new TransitiveProof<>(result.proof,
                 witness, step));
+
+          case PRUNED:
+            // Can make progress if the subquery can.
+            searchState.progressCondition.or(result.progressCondition);
+            break;
+
+          case FAILED:
+            break;
           }
         }
       }
@@ -845,15 +904,24 @@ public abstract class Principal {
         {
           // Attempt to use the rule:
           //   a ≽ b => a ≽ b→
-          ActsForProof<Superior, Principal> proof =
+          ProofSearchResult<Superior, Principal> result =
               actsForProof(this, query.inferior(inferior.base()), searchState);
-          if (proof != null) {
+          switch (result.type) {
+          case SUCCESS:
             // Have a proof of query.superior ≽ inferior.base().
             // Construct a proof for inferior.base() ≽ query.inferior.
             DelegatesProof<Principal, Inferior> step =
-                new DelegatesProof<>(query.superior(inferior.base()));
-            return new ProofSearchResult<>(new TransitiveProof<>(proof,
+            new DelegatesProof<>(query.superior(inferior.base()));
+            return new ProofSearchResult<>(new TransitiveProof<>(result.proof,
                 inferior.base(), step));
+
+          case PRUNED:
+            // Can make progress if the subquery can.
+            searchState.progressCondition.or(result.progressCondition);
+            break;
+
+          case FAILED:
+            break;
           }
         }
 
@@ -862,15 +930,24 @@ public abstract class Principal {
 
           // Attempt to use the rule:
           //   a ≽ b => a→ ≽ b→
-          ActsForProof<Principal, Principal> proof =
+          ProofSearchResult<Principal, Principal> result =
               actsForProof(this,
                   query.superior(superior.base()).inferior(inferior.base()),
                   searchState);
-          if (proof != null) {
+          switch (result.type) {
+          case SUCCESS:
             // Have a proof of superior.base() ≽ inferior.base().
             return new ProofSearchResult<>(
                 (ActsForProof<Superior, Inferior>) new ConfProjectionProof(
-                    proof));
+                    result.proof));
+
+          case PRUNED:
+            // Can make progress if the subquery can.
+            searchState.progressCondition.or(result.progressCondition);
+            break;
+
+          case FAILED:
+            break;
           }
         }
       }
@@ -880,15 +957,24 @@ public abstract class Principal {
         {
           // Attempt to use the rule:
           //   a ≽ b => a ≽ b←
-          ActsForProof<Superior, Principal> proof =
+          ProofSearchResult<Superior, Principal> result =
               actsForProof(this, query.inferior(inferior.base()), searchState);
-          if (proof != null) {
+          switch (result.type) {
+          case SUCCESS:
             // Have a proof of query.superior ≽ inferior.base().
             // Construct a proof for inferior.base() ≽query.inferior.
             DelegatesProof<Principal, Inferior> step =
                 new DelegatesProof<>(query.superior(inferior.base()));
-            return new ProofSearchResult<>(new TransitiveProof<>(proof,
+            return new ProofSearchResult<>(new TransitiveProof<>(result.proof,
                 inferior.base(), step));
+
+          case PRUNED:
+            // Can make progress if the subquery can.
+            searchState.progressCondition.or(result.progressCondition);
+            break;
+
+          case FAILED:
+            break;
           }
         }
 
@@ -897,15 +983,24 @@ public abstract class Principal {
 
           // Attempt to use the rule:
           //   a ≽ b => a← ≽ b←
-          ActsForProof<Principal, Principal> proof =
+          ProofSearchResult<Principal, Principal> result =
               actsForProof(this,
                   query.superior(superior.base()).inferior(inferior.base()),
                   searchState);
-          if (proof != null) {
+          switch (result.type) {
+          case SUCCESS:
             // Have a proof of superior.base() ≽ inferior.base().
             return new ProofSearchResult<>(
                 (ActsForProof<Superior, Inferior>) new IntegProjectionProof(
-                    proof));
+                    result.proof));
+
+          case PRUNED:
+            // Can make progress if the subquery can.
+            searchState.progressCondition.or(result.progressCondition);
+            break;
+
+          case FAILED:
+            break;
           }
         }
       }
@@ -916,13 +1011,22 @@ public abstract class Principal {
         OwnedPrincipal superior = (OwnedPrincipal) query.superior;
         Principal a = superior.owner();
         Principal b = superior.projection();
-        ActsForProof<Principal, Inferior> proof =
+        ProofSearchResult<Principal, Inferior> result =
             actsForProof(this, query.superior(PrincipalUtil.disjunction(a, b)),
                 searchState);
-        if (proof != null) {
+        switch (result.type) {
+        case SUCCESS:
           return new ProofSearchResult<>(
               (ActsForProof<Superior, Inferior>) new MeetToOwnerProof<>(
-                  superior, proof));
+                  superior, result.proof));
+
+        case PRUNED:
+          // Can make progress if the subquery can.
+          searchState.progressCondition.or(result.progressCondition);
+          break;
+
+        case FAILED:
+          break;
         }
 
         // Attempt to use the rule:
@@ -931,20 +1035,58 @@ public abstract class Principal {
           OwnedPrincipal inferior = (OwnedPrincipal) query.inferior;
           Principal c = inferior.owner();
           Principal d = inferior.projection();
-          ActsForProof<Principal, Principal> ownersProof =
+
+          // Collects conditions for making further progress on this rule,
+          // should the search be pruned.
+          ProgressCondition ruleConditions = null;
+
+          ProofSearchResult<Principal, Principal> ownersProofResult =
               actsForProof(this, query.superior(a).inferior(c), searchState);
-          if (ownersProof != null) {
-            ActsForProof<Principal, Principal> projectionProof =
+          switch (ownersProofResult.type) {
+          case SUCCESS:
+            break;
+
+          case PRUNED:
+            ruleConditions =
+                new ProgressCondition(ownersProofResult.progressCondition,
+                    ProgressCondition.Mutability.MUTABLE);
+            break;
+
+          case FAILED:
+            break;
+          }
+
+          if (!ownersProofResult.failed()) {
+            ProofSearchResult<Principal, Principal> projectionProofResult =
                 actsForProof(
                     this,
                     query.superior(PrincipalUtil.disjunction(a, b)).inferior(
                         PrincipalUtil.disjunction(c, d)), searchState);
-            if (projectionProof != null) {
-              return new ProofSearchResult<>(
-                  (ActsForProof<Superior, Inferior>) new OwnedPrincipalsProof(
-                      superior, inferior, ownersProof, projectionProof));
+            switch (projectionProofResult.type) {
+            case SUCCESS:
+              if (ownersProofResult.succeeded()) {
+                return new ProofSearchResult<>(
+                    (ActsForProof<Superior, Inferior>) new OwnedPrincipalsProof(
+                        superior, inferior, ownersProofResult.proof,
+                        projectionProofResult.proof));
+              }
+
+              break;
+
+            case PRUNED:
+              // Take the conjunction of the conditions.
+              ruleConditions =
+              ProgressCondition.and(ruleConditions,
+                  projectionProofResult.progressCondition);
+              break;
+
+            case FAILED:
+              ruleConditions = null;
+              break;
             }
           }
+
+          searchState.progressCondition.or(ruleConditions);
         }
       }
 
@@ -953,15 +1095,24 @@ public abstract class Principal {
       if (query.inferior instanceof OwnedPrincipal) {
         OwnedPrincipal inferior = (OwnedPrincipal) query.inferior;
         Principal b = inferior.owner();
-        ActsForProof<Superior, Principal> proof =
+        ProofSearchResult<Superior, Principal> result =
             actsForProof(this, query.inferior(b), searchState);
-        if (proof != null) {
+        switch (result.type) {
+        case SUCCESS:
           // Have a proof of query.superior ≽ inferior.owner().
           // Construct a proof for inferior.owner() ≽ query.inferior.
           DelegatesProof<Principal, Inferior> step =
-              new DelegatesProof<>(query.superior(inferior.owner()));
-          return new ProofSearchResult<>(new TransitiveProof<>(proof,
+          new DelegatesProof<>(query.superior(inferior.owner()));
+          return new ProofSearchResult<>(new TransitiveProof<>(result.proof,
               inferior.owner(), step));
+
+        case PRUNED:
+          // Can make progress if the subquery can.
+          searchState.progressCondition.or(result.progressCondition);
+          break;
+
+        case FAILED:
+          break;
         }
       }
     }
@@ -982,29 +1133,49 @@ public abstract class Principal {
 
       if (PrincipalUtil.equals(query.superior, p)) {
         // Have query.superior = p. Show q ≽ query.inferior.
-        ActsForProof<Principal, Inferior> step2 =
+        ProofSearchResult<Principal, Inferior> step2Result =
             actsForProof(this, query.superior(q), searchState);
-        if (step2 != null) {
+        switch (step2Result.type) {
+        case SUCCESS:
           // Proof successful.
           ActsForProof<Superior, Principal> step1 =
               new DelegatesProof<>(
                   (Delegation<Principal, Superior>) delegation, query,
                   usabilityProof);
-          return new ProofSearchResult<>(new TransitiveProof<>(step1, q, step2));
+          return new ProofSearchResult<>(new TransitiveProof<>(step1, q,
+              step2Result.proof));
+
+        case PRUNED:
+          // Can make progress if the subquery can.
+          searchState.progressCondition.or(step2Result.progressCondition);
+          break;
+
+        case FAILED:
+          break;
         }
       }
 
       if (PrincipalUtil.equals(q, query.inferior)) {
         // Have q = query.inferior. Show query.superior ≽ p.
-        ActsForProof<Superior, Principal> step1 =
+        ProofSearchResult<Superior, Principal> step1Result =
             actsForProof(this, query.inferior(p), searchState);
-        if (step1 != null) {
+        switch (step1Result.type) {
+        case SUCCESS:
           // Proof successful.
           ActsForProof<Principal, Inferior> step2 =
               new DelegatesProof<>(
                   (Delegation<Inferior, Principal>) delegation, query,
                   usabilityProof);
-          return new ProofSearchResult<>(new TransitiveProof<>(step1, p, step2));
+          return new ProofSearchResult<>(new TransitiveProof<>(
+              step1Result.proof, p, step2));
+
+        case PRUNED:
+          // Can make progress if the subquery can.
+          searchState.progressCondition.or(step1Result.progressCondition);
+          break;
+
+        case FAILED:
+          break;
         }
       }
     }
@@ -1019,17 +1190,31 @@ public abstract class Principal {
 
     // Ask the other nodes.
     for (Principal callee : askable) {
-      ActsForProof<Superior, Inferior> result =
-          callee.actsForProof(this, query, searchState);
-      if (result != null) return new ProofSearchResult<>(result);
+      ProofSearchResult<Superior, Inferior> result =
+          callee.actsForProof(this, query.receiver(callee), searchState);
+      switch (result.type) {
+      case SUCCESS:
+        // Proof successful.
+        return new ProofSearchResult<>(result.proof);
+
+      case PRUNED:
+        // Can make progress if the subquery can.
+        searchState.progressCondition.or(result.progressCondition);
+        break;
+
+      case FAILED:
+        break;
+      }
     }
 
-    // Proof failed.
-    if (searchState.searchPruned.get()) {
-      return ProofSearchResult.pruned();
-    } else {
-      return ProofSearchResult.failed();
+    // No proof found.
+    if (searchState.progressCondition.isFalse()) {
+      // No further progress can be made.
+      return ProofSearchResult.FAILED();
     }
+
+    // Search was pruned.
+    return new ProofSearchResult<>(searchState.progressCondition);
   }
 
   /**
@@ -1096,13 +1281,20 @@ public abstract class Principal {
     }
   }
 
+  /**
+   * There are three kinds of results:
+   * <ol>
+   * <li>SUCCESS - proof found</li>
+   * <li>FAILED - a complete search was made, and no proof was</li>
+   * <li>PRUNED - a partial search was made, and no proof found. There are
+   * queries currently on the goal stack that need to be resolved before further
+   * progress can be made.</li>
+   * </ol>
+   */
   private static final class ProofSearchResult<Superior extends Principal, Inferior extends Principal> {
     enum Type {
       SUCCESS, PRUNED, FAILED
     }
-
-    private static final ProofSearchResult<Principal, Principal> PRUNED =
-        new ProofSearchResult<>(Type.PRUNED);
 
     private static final ProofSearchResult<Principal, Principal> FAILED =
         new ProofSearchResult<>(Type.FAILED);
@@ -1110,9 +1302,16 @@ public abstract class Principal {
     final Type type;
     final ActsForProof<Superior, Inferior> proof;
 
+    /**
+     * Represents the conditions that need to be met before further progress can
+     * be made.
+     */
+    final ProgressCondition progressCondition;
+
     private ProofSearchResult(Type type) {
       this.type = type;
       this.proof = null;
+      this.progressCondition = null;
     }
 
     /**
@@ -1121,6 +1320,18 @@ public abstract class Principal {
     ProofSearchResult(ActsForProof<Superior, Inferior> proof) {
       this.type = Type.SUCCESS;
       this.proof = proof;
+      this.progressCondition = null;
+    }
+
+    /**
+     * Constructs a ProofSearchResult indicating that the search was pruned.
+     */
+    ProofSearchResult(ProgressCondition progressCondition) {
+      this.type = Type.PRUNED;
+      this.proof = null;
+      this.progressCondition =
+          new ProgressCondition(progressCondition,
+              ProgressCondition.Mutability.IMMUTABLE);
     }
 
     @Override
@@ -1129,27 +1340,231 @@ public abstract class Principal {
     }
 
     /**
-     * @return a ProofSearchResult indicating that no proof was found, but the
-     *          search was pruned due to cycles with ancestor goals
+     * @return true iff this represents a successful proof
      */
-    static <Superior extends Principal, Inferior extends Principal> ProofSearchResult<Superior, Inferior> pruned() {
-      return (ProofSearchResult<Superior, Inferior>) PRUNED;
+    boolean succeeded() {
+      return type == Type.SUCCESS;
+    }
+
+    /**
+     * @return true iff this represents a failed proof
+     */
+    boolean failed() {
+      return type == Type.FAILED;
     }
 
     /**
      * @return a ProofSearchResult indicating that no proof was found, despite
      *          an exhaustive search
      */
-    static <Superior extends Principal, Inferior extends Principal> ProofSearchResult<Superior, Inferior> failed() {
+    static <Superior extends Principal, Inferior extends Principal> ProofSearchResult<Superior, Inferior> FAILED() {
       return (ProofSearchResult<Superior, Inferior>) FAILED;
     }
   }
 
-  final class ProofSearchState {
+  /**
+   * Represents the condition that needs to be met before further progress can
+   * be made on a query. An empty progress condition is one that can never be
+   * satisfied. A progress condition containing an empty disjunct is one that is
+   * always satisfied. {@code null} is used to represent a neutral progress
+   * condition (i.e., one that is neutral with respect to conjunction and
+   * disjunction).
+   */
+  private static final class ProgressCondition {
+    static enum Mutability {
+      MUTABLE, IMMUTABLE
+    }
+
+    /**
+     * A set of sets of queries that are currently on the goal stack. If all
+     * queries in one of these sets are resolved positively (i.e., answered
+     * "yes"), then further progress can be made.
+     */
+    final Set<Set<ActsForQuery<?, ?>>> disjuncts;
+
+    /**
+     * Creates a new empty but mutable progress condition.
+     */
+    ProgressCondition() {
+      disjuncts = new HashSet<>();
+    }
+
+    /**
+     * Creates a new singleton progress condition.
+     */
+    ProgressCondition(ActsForQuery<?, ?> condition, Mutability mutability) {
+      final boolean immutable = mutability == Mutability.IMMUTABLE;
+
+      if (immutable) {
+        disjuncts =
+            Collections.singleton(Collections
+                .<ActsForQuery<?, ?>> singleton(condition));
+        return;
+      }
+
+      disjuncts = new HashSet<>();
+      Set<ActsForQuery<?, ?>> disjunct = new HashSet<>();
+      disjunct.add(condition);
+      disjuncts.add(disjunct);
+    }
+
+    /**
+     * Copy constructor.
+     */
+    ProgressCondition(ProgressCondition old, Mutability mutability) {
+      final boolean immutable = mutability == Mutability.IMMUTABLE;
+
+      Set<Set<ActsForQuery<?, ?>>> disjuncts =
+          new HashSet<>(old.disjuncts.size());
+      for (Set<ActsForQuery<?, ?>> oldDisjunct : old.disjuncts) {
+        Set<ActsForQuery<?, ?>> newDisjunct = new HashSet<>(oldDisjunct);
+        if (immutable) newDisjunct = Collections.unmodifiableSet(newDisjunct);
+        disjuncts.add(newDisjunct);
+      }
+
+      if (immutable) disjuncts = Collections.unmodifiableSet(disjuncts);
+      this.disjuncts = disjuncts;
+    }
+
+    /**
+     * @return true iff this condition can never be satisfied.
+     */
+    boolean isFalse() {
+      return disjuncts.isEmpty();
+    }
+
+    /**
+     * Joins the given {@code ProgressCondition} into this one by taking a
+     * disjunction.
+     */
+    void or(ProgressCondition other) {
+      if (other == null) return;
+      disjuncts.addAll(other.disjuncts);
+    }
+
+    /**
+     * @return the conjunction of {@code p1} and {@code p2} in a new mutable
+     *          ProgressCondition. If one of {@code p1} or {@code p2} is {@code
+     *          null}, then a copy of the other is returned. If both are {@code
+     *          null}, then {@code null} is returned.
+     */
+    static ProgressCondition and(ProgressCondition p1, ProgressCondition p2) {
+      if (p1 == null) {
+        if (p2 == null) return null;
+        return new ProgressCondition(p2, Mutability.MUTABLE);
+      }
+
+      if (p2 == null) return new ProgressCondition(p1, Mutability.MUTABLE);
+
+      ProgressCondition result = new ProgressCondition();
+      for (Set<ActsForQuery<?, ?>> thisDisjunct : p1.disjuncts) {
+        for (Set<ActsForQuery<?, ?>> thatDisjunct : p2.disjuncts) {
+          Set<ActsForQuery<?, ?>> newDisjunct =
+              new HashSet<>(thisDisjunct.size() + thatDisjunct.size());
+          newDisjunct.addAll(thisDisjunct);
+          newDisjunct.addAll(thatDisjunct);
+          result.disjuncts.add(newDisjunct);
+        }
+      }
+
+      return result;
+    }
+
+    /**
+     * Updates this progress condition to reflect that the given query had a
+     * successful proof.
+     *
+     * @return true if this condition is satisfied as a consequent of the given
+     *          successful query
+     */
+    boolean notifySuccess(ActsForQuery<?, ?> query) {
+      boolean result = false;
+
+      // We have to rebuild the entire data structure to ensure the hash tables'
+      // consistency as we mutate their contents.
+      Set<Set<ActsForQuery<?, ?>>> newDisjuncts =
+          new HashSet<>(disjuncts.size());
+
+      // Go through our disjuncts and remove the query. If any disjunct becomes
+      // empty as a result, then the condition is satisfied.
+      for (Set<ActsForQuery<?, ?>> disjunct : disjuncts) {
+        Set<ActsForQuery<?, ?>> newDisjunct = new HashSet<>(disjunct);
+        newDisjunct.remove(query);
+        newDisjuncts.add(newDisjunct);
+
+        // An empty disjunct represents a satisfied condition.
+        result |= newDisjunct.isEmpty();
+      }
+
+      disjuncts.clear();
+      disjuncts.addAll(newDisjuncts);
+      return result;
+    }
+
+    /**
+     * Updates this progress condition to reflect that the given query had a
+     * failed proof.
+     *
+     * @return true if this condition becomes unsatisfiable as a consequent of
+     *          the given unsuccessful proof.
+     */
+    boolean notifyFailure(ActsForQuery<?, ?> query) {
+      return notifyFailures(Collections.<ActsForQuery<?, ?>> singleton(query));
+    }
+
+    /**
+     * Updates this progress condition to reflect that the given queries had
+     * failed proofs.
+     *
+     * @return true if this condition becomes unsatisfiable as a consequent of
+     *          the given unsuccessful proofs.
+     */
+    boolean notifyFailures(Set<ActsForQuery<?, ?>> queries) {
+      // Go through our disjuncts and remove those that mention any of the given
+      // queries. If the condition becomes empty as a result, then the condition
+      // is unsatisfiable.
+      for (Iterator<Set<ActsForQuery<?, ?>>> it = disjuncts.iterator(); it
+          .hasNext();) {
+        Set<ActsForQuery<?, ?>> disjunct = it.next();
+
+        // Determine whether disjunct and queries have an empty intersection.
+        boolean emptyIntersection = true;
+        Set<ActsForQuery<?, ?>> smaller, larger;
+        if (queries.size() < disjunct.size()) {
+          smaller = queries;
+          larger = disjunct;
+        } else {
+          smaller = disjunct;
+          larger = queries;
+        }
+        for (ActsForQuery<?, ?> query : smaller) {
+          if (larger.contains(query)) {
+            emptyIntersection = false;
+            break;
+          }
+        }
+
+        if (!emptyIntersection) {
+          // The disjunct contains some failed query, and is unsatisfiable as a
+          // result. Remove it from the set of disjuncts.
+          it.remove();
+        }
+      }
+
+      return disjuncts.isEmpty();
+    }
+  }
+
+  private final class ProofSearchState {
     /**
      * The most recent goal on the stack.
      */
     private final ActsForQuery<?, ?> curGoal;
+
+    /**
+     * The principal receiving the query for the most recent goal on the stack.
+     */
+    private final Principal curReceiver;
 
     /**
      * The search state for the parent goal.
@@ -1157,9 +1572,9 @@ public abstract class Principal {
     private final ProofSearchState parent;
 
     /**
-     * All goals currently on the stack.
+     * Maps principals to the set of goals they are trying to satisfy.
      */
-    private final Set<ActsForQuery<?, ?>> allGoals;
+    private final Map<Principal, Set<ActsForQuery<Principal, Principal>>> allGoals;
 
     /**
      * The set of principals who have participated in the search so far.
@@ -1173,32 +1588,139 @@ public abstract class Principal {
     private final Set<Principal> principalsAsked;
 
     /**
-     * Whether the proof search for the current goal has been pruned. A search
-     * is pruned when an ancestor goal becomes a subgoal. For example, suppose
-     * the proof of A has the proof of B as a subgoal, which in turn depends on
-     * the proof of C. If the proof search for C finds A as a subgoal, then the
-     * search for B and C (but not A) are considered pruned.
+     * Accumulates conditions under which further progress can be made on the
+     * current query, in case the search for the current query is pruned.
      */
-    private final AtomicBoolean searchPruned;
+    private final ProgressCondition progressCondition;
 
     /**
-     * The acts-for cache. Maps pairs of principals and queries to the
-     * principal's proof of the query's truth.
+     * The acts-for cache. Maps queries to the query's receiver's proof of the
+     * query's truth.
      */
-    private final Map<Pair<Principal, ActsForQuery<Principal, Principal>>, ActsForProof<Principal, Principal>> actsForCache;
+    private final Map<ActsForQuery<?, ?>, ActsForProof<?, ?>> actsForCache;
 
     /**
-     * The not-acts-for cache. A set of pairs of principals and queries, where
-     * the principal has previously returned a negative answer to the query.
+     * The not-acts-for cache. A set of queries, where the query's receiver
+     * principal has previously returned a negative answer to the query.
      */
-    private final Set<Pair<Principal, ActsForQuery<Principal, Principal>>> notActsForCache;
+    private final Set<ActsForQuery<?, ?>> notActsForCache;
+
+    /**
+     * The cache of pruned proof searches. When a cycle in the proof tree is
+     * found, the members of that cycle are entered into this cache. Once a
+     * member of a cycle is definitively resolved, that member should be removed
+     * from this cache.
+     */
+    private final PrunedSearchCache prunedSearchCache;
+
+    /**
+     * A cache of pruned proof searches. Maps queries to the condition that
+     * needs to be met before further progress can be made on the query.
+     */
+    private final class PrunedSearchCache {
+      final Map<ActsForQuery<?, ?>, ProgressCondition> entries;
+
+      PrunedSearchCache() {
+        entries = new HashMap<>();
+      }
+
+      <Superior extends Principal, Inferior extends Principal> ProofSearchResult<Superior, Inferior> get(
+          ActsForQuery<Superior, Inferior> query) {
+        ProgressCondition progressCondition = entries.get(query);
+        if (progressCondition == null) return null;
+        return new ProofSearchResult<>(progressCondition);
+      }
+
+      /**
+       * Updates the cache to reflect that the given query had a successful
+       * proof.
+       */
+      void notifySuccess(ActsForQuery<?, ?> query) {
+        for (Iterator<ProgressCondition> it = entries.values().iterator(); it
+            .hasNext();) {
+          ProgressCondition condition = it.next();
+          if (condition.notifySuccess(query)) {
+            // Condition satisfied -- can make more progress on query. Evict
+            // from cache.
+            it.remove();
+          }
+        }
+      }
+
+      /**
+       * Updates the cache to reflect that the proof search for the given query
+       * was pruned, and that further progress can be made under the given
+       * condition.
+       *
+       * @return a set of queries that fail as a consequent of the given pruned
+       *          query. This can contain the pruned query itself. This can
+       *          happen, for example, if the query is its own progress
+       *          condition.
+       */
+      Set<ActsForQuery<?, ?>> notifyPruned(ActsForQuery<?, ?> query,
+          ProgressCondition progressCondition) {
+        progressCondition =
+            new ProgressCondition(progressCondition,
+                ProgressCondition.Mutability.MUTABLE);
+
+        // Disjuncts in the progress condition that mention the query itself are
+        // not satisfiable.
+        if (progressCondition.notifyFailure(query)) {
+          // Progress condition not satisfiable. Turn this into a failure
+          // notification.
+          Set<ActsForQuery<?, ?>> result = notifyFailure(query);
+          result.add(query);
+          return result;
+        }
+
+        entries.put(query, progressCondition);
+        return Collections.emptySet();
+      }
+
+      /**
+       * Updates the cache to reflect that the given query had a failed,
+       * unpruned proof.
+       *
+       * @return a set of queries that fail as a consequent of the given failed
+       *          query
+       */
+      Set<ActsForQuery<?, ?>> notifyFailure(ActsForQuery<?, ?> query) {
+        Set<ActsForQuery<?, ?>> result = new HashSet<>();
+        Set<ActsForQuery<?, ?>> toProcess = new HashSet<>();
+        toProcess.add(query);
+
+        // Loop until we get a fixed point.
+        while (!toProcess.isEmpty()) {
+          Set<ActsForQuery<?, ?>> processing = toProcess;
+          toProcess = new HashSet<>();
+
+          for (Iterator<Map.Entry<ActsForQuery<?, ?>, ProgressCondition>> it =
+              entries.entrySet().iterator(); it.hasNext();) {
+            Map.Entry<ActsForQuery<?, ?>, ProgressCondition> entry = it.next();
+
+            if (entry.getValue().notifyFailures(processing)) {
+              // Condition not satisfiable -- impossible to make more progress on
+              // query. Evict from cache and report to caller.
+              it.remove();
+
+              ActsForQuery<?, ?> newFailure = entry.getKey();
+              result.add(newFailure);
+              toProcess.add(newFailure);
+            }
+          }
+        }
+
+        return result;
+      }
+    }
 
     public ProofSearchState() {
       this.curGoal = null;
+      this.curReceiver = Principal.this;
       this.parent = null;
-      this.searchPruned = new AtomicBoolean(false);
+      this.progressCondition = new ProgressCondition();
 
-      allGoals = Collections.emptySet();
+      allGoals = Collections.emptyMap();
       if (Principal.this instanceof PrimitivePrincipal) {
         allParticipants =
             Collections.singleton((PrimitivePrincipal) Principal.this);
@@ -1209,38 +1731,48 @@ public abstract class Principal {
 
       this.actsForCache = new HashMap<>();
       this.notActsForCache = new HashSet<>();
+      this.prunedSearchCache = new PrunedSearchCache();
     }
 
     /**
      * Constructs a new search state with the given query pushed onto the query
      * stack, and with {@link ProofSearchState#principalsAsked} containing just
      * {@link Principal}{@code .this}. If the given query already exists as a
-     * goal, then every goal on the stack up to (but not including) the query
-     * will be marked as being pruned, and a {@link CircularProofException} is
-     * thrown.
+     * goal, then a {@link CircularProofException} is thrown.
      */
     private ProofSearchState(ProofSearchState state, ActsForQuery<?, ?> query)
         throws CircularProofException {
       // Check for circularity.
-      if (state.allGoals.contains(query)) {
-        // Circular proof. Mark pruned searches.
-        for (ProofSearchState curState = state; !query.equals(curState.curGoal); curState =
-            curState.parent) {
-          curState.searchPruned.set(true);
+      {
+        Set<ActsForQuery<Principal, Principal>> allGoalsEntry =
+            state.allGoals.get(Principal.this);
+        if (allGoalsEntry != null && allGoalsEntry.contains(query)) {
+          throw new CircularProofException();
         }
-
-        throw new CircularProofException();
       }
 
       this.curGoal = query;
+      this.curReceiver = Principal.this;
       this.parent = state;
-      this.searchPruned = new AtomicBoolean(false);
+      this.progressCondition = new ProgressCondition();
 
-      Set<ActsForQuery<?, ?>> allGoals =
-          new HashSet<>(state.allGoals.size() + 1);
-      this.allGoals = Collections.unmodifiableSet(allGoals);
-      allGoals.addAll(state.allGoals);
-      allGoals.add(query);
+      {
+        Map<Principal, Set<ActsForQuery<Principal, Principal>>> allGoals =
+            new HashMap<>(state.allGoals);
+        this.allGoals = Collections.unmodifiableMap(allGoals);
+
+        Set<ActsForQuery<Principal, Principal>> allGoalsEntry =
+            allGoals.get(Principal.this);
+        if (allGoalsEntry == null) {
+          allGoalsEntry =
+              Collections.singleton((ActsForQuery<Principal, Principal>) query);
+        } else {
+          allGoalsEntry = new HashSet<>(allGoalsEntry);
+          allGoalsEntry.add((ActsForQuery<Principal, Principal>) query);
+          allGoalsEntry = Collections.unmodifiableSet(allGoalsEntry);
+        }
+        allGoals.put(Principal.this, allGoalsEntry);
+      }
 
       this.allParticipants = state.allParticipants;
 
@@ -1248,6 +1780,7 @@ public abstract class Principal {
 
       this.actsForCache = state.actsForCache;
       this.notActsForCache = state.notActsForCache;
+      this.prunedSearchCache = state.prunedSearchCache;
     }
 
     /**
@@ -1256,10 +1789,14 @@ public abstract class Principal {
      */
     private ProofSearchState(ProofSearchState state,
         Set<PrimitivePrincipal> newPrincipalsAsked) {
+      // Sanity check.
+      if (Principal.this != state.curReceiver) throw new InternalError();
+
       this.curGoal = state.curGoal;
+      this.curReceiver = state.curReceiver;
       this.parent = state.parent;
       this.allGoals = state.allGoals;
-      this.searchPruned = state.searchPruned;
+      this.progressCondition = state.progressCondition;
 
       Set<PrimitivePrincipal> allParticipants =
           new HashSet<>(state.allParticipants.size()
@@ -1278,42 +1815,60 @@ public abstract class Principal {
 
       this.actsForCache = state.actsForCache;
       this.notActsForCache = state.notActsForCache;
+      this.prunedSearchCache = state.prunedSearchCache;
     }
 
-    private <Superior extends Principal, Inferior extends Principal> void cacheActsFor(
+    private <Superior extends Principal, Inferior extends Principal> void cache(
         ActsForQuery<Superior, Inferior> query,
-        ActsForProof<Superior, Inferior> proof) {
-      actsForCache.put(new Pair<>(Principal.this,
-          (ActsForQuery<Principal, Principal>) query),
-          (ActsForProof<Principal, Principal>) proof);
-    }
+        ProofSearchResult<Superior, Inferior> result) {
+      switch (result.type) {
+      case SUCCESS:
+        actsForCache.put(query, result.proof);
+        prunedSearchCache.notifySuccess(query);
+        return;
 
-    private <Superior extends Principal, Inferior extends Principal> void cacheNotActsFor(
-        ActsForQuery<Superior, Inferior> query) {
-      notActsForCache.add(new Pair<>(Principal.this,
-          (ActsForQuery<Principal, Principal>) query));
+      case PRUNED: {
+        Set<ActsForQuery<?, ?>> newNotActsFors =
+            prunedSearchCache.notifyPruned(query, result.progressCondition);
+
+        // Update the not-acts-for cache with the new entries.
+        for (ActsForQuery<?, ?> newNotActsFor : newNotActsFors) {
+          notActsForCache.add(newNotActsFor);
+        }
+
+        return;
+      }
+
+      case FAILED:
+        notActsForCache.add(query);
+        Set<ActsForQuery<?, ?>> newNotActsFors =
+            prunedSearchCache.notifyFailure(query);
+
+        // Update the not-acts-for cache with the new entries.
+        for (ActsForQuery<?, ?> newNotActsFor : newNotActsFors) {
+          notActsForCache.add(newNotActsFor);
+        }
+
+        return;
+      }
+
+      throw new InternalError("Unknown acts-for-proof result type: "
+          + result.type);
     }
 
     /**
-     * @return (true, proof) for cached positive answers, (false, null) for
-     *        cached negative answers, and null for a cache miss
+     * @return a ProofSearchResult for cache hits, and null for cache misses
      */
-    private <Superior extends Principal, Inferior extends Principal> Pair<Boolean, ActsForProof<Superior, Inferior>> cacheLookup(
+    private <Superior extends Principal, Inferior extends Principal> ProofSearchResult<Superior, Inferior> cacheLookup(
         ActsForQuery<Superior, Inferior> query) {
-      Pair<Principal, ActsForQuery<Principal, Principal>> key =
-          new Pair<>(Principal.this, (ActsForQuery<Principal, Principal>) query);
-      ActsForProof<Principal, Principal> proof = actsForCache.get(key);
+      ActsForProof<?, ?> proof = actsForCache.get(query);
       if (proof != null) {
-        return new Pair<>(true, (ActsForProof<Superior, Inferior>) proof);
+        return new ProofSearchResult<>((ActsForProof<Superior, Inferior>) proof);
       }
 
-      if (notActsForCache.contains(key)) return new Pair<>(false, null);
+      if (notActsForCache.contains(query)) return ProofSearchResult.FAILED();
 
-      return null;
-    }
-
-    public boolean contains(ActsForQuery<?, ?> query) {
-      return allGoals.contains(query);
+      return prunedSearchCache.get(query);
     }
 
     @Override
@@ -1322,9 +1877,8 @@ public abstract class Principal {
       result.append("goals = [\n");
       for (ProofSearchState curState = this; curState != null; curState =
           curState.parent) {
-        result.insert(10,
-            "  " + curState.curGoal
-                + (curState.searchPruned.get() ? " [pruned]" : "") + ",\n");
+        result.insert(10, "  " + curState.curReceiver + " -- "
+            + curState.curGoal + ",\n");
       }
       result.append("]\n");
 

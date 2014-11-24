@@ -192,10 +192,10 @@ public class PrimitivePrincipal extends Principal {
    * @param accessPolicy the confidentiality level of the query. This should
    *          act for the confidentiality component of {@code maxLabel}
    */
-  public final boolean delegatesTo(Principal granter, Principal superior,
-      Principal maxLabel, Principal accessPolicy) {
-    return delegatesTo(new ActsForQuery<>(superior, granter, maxLabel,
-        accessPolicy));
+  public final boolean delegatesTo(Principal receiver, Principal granter,
+      Principal superior, Principal maxLabel, Principal accessPolicy) {
+    return delegatesTo(new ActsForQuery<>(receiver, superior, granter,
+        maxLabel, accessPolicy));
   }
 
   @Override

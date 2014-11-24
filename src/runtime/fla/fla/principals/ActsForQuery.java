@@ -4,6 +4,10 @@ import java.util.HashSet;
 import java.util.Set;
 
 public final class ActsForQuery<Superior extends Principal, Inferior extends Principal> {
+  /**
+   * The principal being queried.
+   */
+  public final Principal receiver;
   public final Superior superior;
   public final Inferior inferior;
   public final Principal maxUsableLabel;
@@ -15,8 +19,9 @@ public final class ActsForQuery<Superior extends Principal, Inferior extends Pri
    */
   private Principal recurseLowerBound;
 
-  ActsForQuery(Superior superior, Inferior inferior, Principal maxUsableLabel,
-      Principal accessPolicy) {
+  ActsForQuery(Principal receiver, Superior superior, Inferior inferior,
+      Principal maxUsableLabel, Principal accessPolicy) {
+    this.receiver = receiver;
     this.superior = superior;
     this.inferior = inferior;
     this.maxUsableLabel = maxUsableLabel;
@@ -29,24 +34,34 @@ public final class ActsForQuery<Superior extends Principal, Inferior extends Pri
    *          having label {@code maxUsableLabel} and access policy {@code
    *          accessPolicy}.
    */
-  static ActsForQuery<Principal, Principal> flowsToQuery(Principal l1,
-      Principal l2, Principal maxUsableLabel, Principal accessPolicy) {
+  static ActsForQuery<Principal, Principal> flowsToQuery(Principal receiver,
+      Principal l1, Principal l2, Principal maxUsableLabel,
+      Principal accessPolicy) {
     // l1 ⊑ l2 is just l2→ ∧ l1← ≽ l1→ ∧ l2←.
     Principal superior =
         PrincipalUtil.conjunction(l2.confidentiality(), l1.integrity());
     Principal inferior =
         PrincipalUtil.conjunction(l1.confidentiality(), l2.integrity());
-    return new ActsForQuery<>(superior, inferior, maxUsableLabel, accessPolicy);
+    return new ActsForQuery<>(receiver, superior, inferior, maxUsableLabel,
+        accessPolicy);
+  }
+
+  ActsForQuery<Superior, Inferior> receiver(Principal receiver) {
+    if (receiver == this.receiver) return this;
+    return new ActsForQuery<>(receiver, superior, inferior, maxUsableLabel,
+        accessPolicy);
   }
 
   <P extends Principal> ActsForQuery<P, Inferior> superior(P superior) {
     if (superior == this.superior) return (ActsForQuery<P, Inferior>) this;
-    return new ActsForQuery<>(superior, inferior, maxUsableLabel, accessPolicy);
+    return new ActsForQuery<>(receiver, superior, inferior, maxUsableLabel,
+        accessPolicy);
   }
 
   <P extends Principal> ActsForQuery<Superior, P> inferior(P inferior) {
     if (inferior == this.inferior) return (ActsForQuery<Superior, P>) this;
-    return new ActsForQuery<>(superior, inferior, maxUsableLabel, accessPolicy);
+    return new ActsForQuery<>(receiver, superior, inferior, maxUsableLabel,
+        accessPolicy);
   }
 
   /**
@@ -61,7 +76,7 @@ public final class ActsForQuery<Superior extends Principal, Inferior extends Pri
         PrincipalUtil.meet(maxUsableLabel, PrincipalUtil.join(
             p.confidentiality(), PrincipalUtil.top().integrity()));
     if (maxUsableLabel == newMaxUsableLabel) return this;
-    return new ActsForQuery<>(superior, inferior, newMaxUsableLabel,
+    return new ActsForQuery<>(receiver, superior, inferior, newMaxUsableLabel,
         accessPolicy);
   }
 
@@ -137,6 +152,7 @@ public final class ActsForQuery<Superior extends Principal, Inferior extends Pri
     Principal maxUsableLabel =
         PrincipalUtil.join(this.maxUsableLabel, minInteg);
     if (maxUsableLabel == this.maxUsableLabel) return this;
-    return new ActsForQuery<>(superior, inferior, maxUsableLabel, accessPolicy);
+    return new ActsForQuery<>(receiver, superior, inferior, maxUsableLabel,
+        accessPolicy);
   }
 }
