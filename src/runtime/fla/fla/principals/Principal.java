@@ -730,13 +730,7 @@ public abstract class Principal {
     }
 
     // Add the query to the search state.
-    try {
-      searchState = new ProofSearchState(searchState, query);
-    } catch (CircularProofException e) {
-      // Already a goal. Prune the search to prevent an infinite recursion.
-      return new ProofSearchResult<>(new ProgressCondition(query,
-          ProgressCondition.Mutability.IMMUTABLE));
-    }
+    searchState = new ProofSearchState(searchState, query);
 
     // See if we can satisfy the query directly with a delegation.
     for (Map.Entry<Delegation<?, ?>, ActsForProof<?, ?>> entry : usableDelegations(
@@ -1214,7 +1208,7 @@ public abstract class Principal {
     }
 
     // Search was pruned.
-    return new ProofSearchResult<>(searchState.progressCondition);
+    return ProofSearchResult.pruned(query, searchState.progressCondition);
   }
 
   /**
@@ -1334,9 +1328,41 @@ public abstract class Principal {
               ProgressCondition.Mutability.IMMUTABLE);
     }
 
+    /**
+     * Constructs a ProofSearchResult indicating that the search for the given
+     * query was pruned.
+     *
+     * The given progress condition will be sanitized to avoid self-cycles: any
+     * instances of the given query in the condition will be considered
+     * unsatisfiable, and the condition will be rewritten to reflect this. If
+     * this results in the condition being unsatisfiable, then the constructed
+     * ProofSearchResult will be {@code FAILED}.
+     */
+    static <Superior extends Principal, Inferior extends Principal> ProofSearchResult<Superior, Inferior> pruned(
+        ActsForQuery<Superior, Inferior> query,
+        ProgressCondition progressCondition) {
+      // Disjuncts in the progress condition that mention the query itself are
+      // not satisfiable.
+      progressCondition =
+          new ProgressCondition(progressCondition,
+              ProgressCondition.Mutability.MUTABLE);
+      if (progressCondition.notifyFailure(query)) {
+        // Progress condition not satisfiable.
+        return FAILED();
+      }
+
+      return new ProofSearchResult<>(progressCondition);
+    }
+
     @Override
     public String toString() {
-      return type.toString();
+      StringBuffer result = new StringBuffer(type.toString());
+      if (type == Type.PRUNED) {
+        result.append("\n");
+        result.append(progressCondition.toString(2));
+      }
+
+      return result.toString();
     }
 
     /**
@@ -1367,7 +1393,7 @@ public abstract class Principal {
    * be made on a query. An empty progress condition is one that can never be
    * satisfied. A progress condition containing an empty disjunct is one that is
    * always satisfied. {@code null} is used to represent a neutral progress
-   * condition (i.e., one that is neutral with respect to conjunction and
+   * condition (i.e., one that is the identity with respect to conjunction and
    * disjunction).
    */
   private static final class ProgressCondition {
@@ -1553,6 +1579,86 @@ public abstract class Principal {
 
       return disjuncts.isEmpty();
     }
+
+    /**
+     * Logically replaces all instances of the given query with the given
+     * progress condition.
+     */
+    void substitute(ActsForQuery<?, ?> query,
+        ProgressCondition progressCondition) {
+      // Rebuild the entire data structure.
+      Set<Set<ActsForQuery<?, ?>>> newDisjuncts =
+          new HashSet<>(disjuncts.size());
+
+      // Go through our disjuncts and replace the query. As we do so, rewrite
+      // to maintain disjunctive normal form.
+      boolean changesMade = false;
+      for (Set<ActsForQuery<?, ?>> disjunct : disjuncts) {
+        if (!disjunct.contains(query)) {
+          newDisjuncts.add(disjunct);
+          continue;
+        }
+
+        // Let a∧b = disjunct.
+        // Let b = query.
+        // Let c1∨c2 = progressCondition.
+        //
+        // Want to produce a∧(c1∨c2). To maintain normal form, rewrite to
+        // a∧c1 ∨ a∧c2.
+
+        ActsForQuery<?, ?> b = query;
+        Set<ActsForQuery<?, ?>> a = new HashSet<>(disjunct);
+        a.remove(b);
+
+        for (Set<ActsForQuery<?, ?>> c : progressCondition.disjuncts) {
+          Set<ActsForQuery<?, ?>> newDisjunct =
+              new HashSet<>(a.size() + c.size());
+          newDisjunct.addAll(a);
+          newDisjunct.addAll(c);
+          newDisjuncts.add(newDisjunct);
+        }
+
+        changesMade = true;
+      }
+
+      if (!changesMade) {
+        // Nothing changed.
+        return;
+      }
+
+      disjuncts.clear();
+      disjuncts.addAll(newDisjuncts);
+    }
+
+    @Override
+    public String toString() {
+      return toString(0);
+    }
+
+    private String toString(int indent) {
+      StringBuffer result = new StringBuffer();
+      boolean firstDisjunct = true;
+      for (Set<ActsForQuery<?, ?>> disjunct : disjuncts) {
+        for (int i = 0; i < indent; i++)
+          result.append(" ");
+        result.append((firstDisjunct ? "" : ") or ") + "(\n");
+        for (ActsForQuery<?, ?> conjunct : disjunct) {
+          for (int i = 0; i < indent; i++)
+            result.append(" ");
+          result.append("  " + conjunct + "\n");
+        }
+        firstDisjunct = false;
+      }
+      for (int i = 0; i < indent; i++)
+        result.append(" ");
+      if (firstDisjunct) {
+        result.append("FALSE\n");
+      } else {
+        result.append(")\n");
+      }
+
+      return result.toString();
+    }
   }
 
   private final class ProofSearchState {
@@ -1562,19 +1668,9 @@ public abstract class Principal {
     private final ActsForQuery<?, ?> curGoal;
 
     /**
-     * The principal receiving the query for the most recent goal on the stack.
-     */
-    private final Principal curReceiver;
-
-    /**
      * The search state for the parent goal.
      */
     private final ProofSearchState parent;
-
-    /**
-     * Maps principals to the set of goals they are trying to satisfy.
-     */
-    private final Map<Principal, Set<ActsForQuery<Principal, Principal>>> allGoals;
 
     /**
      * The set of principals who have participated in the search so far.
@@ -1618,6 +1714,10 @@ public abstract class Principal {
      * needs to be met before further progress can be made on the query.
      */
     private final class PrunedSearchCache {
+      /**
+       * Maps queries to the condition that needs to be met before further
+       * progress can be made on the query.
+       */
       final Map<ActsForQuery<?, ?>, ProgressCondition> entries;
 
       PrunedSearchCache() {
@@ -1632,10 +1732,20 @@ public abstract class Principal {
       }
 
       /**
+       * Adds a placeholder entry for the given query.
+       */
+      void addPlaceholder(ActsForQuery<?, ?> query) {
+        ProgressCondition progressCondition =
+            new ProgressCondition(query, ProgressCondition.Mutability.MUTABLE);
+        entries.put(query, progressCondition);
+      }
+
+      /**
        * Updates the cache to reflect that the given query had a successful
        * proof.
        */
       void notifySuccess(ActsForQuery<?, ?> query) {
+        entries.remove(query);
         for (Iterator<ProgressCondition> it = entries.values().iterator(); it
             .hasNext();) {
           ProgressCondition condition = it.next();
@@ -1663,17 +1773,14 @@ public abstract class Principal {
             new ProgressCondition(progressCondition,
                 ProgressCondition.Mutability.MUTABLE);
 
-        // Disjuncts in the progress condition that mention the query itself are
-        // not satisfiable.
-        if (progressCondition.notifyFailure(query)) {
-          // Progress condition not satisfiable. Turn this into a failure
-          // notification.
-          Set<ActsForQuery<?, ?>> result = notifyFailure(query);
-          result.add(query);
-          return result;
+        entries.put(query, progressCondition);
+
+        // In all cached conditions, replace all instances of the query with its
+        // progress condition.
+        for (ProgressCondition value : entries.values()) {
+          value.substitute(query, progressCondition);
         }
 
-        entries.put(query, progressCondition);
         return Collections.emptySet();
       }
 
@@ -1685,6 +1792,8 @@ public abstract class Principal {
        *          query
        */
       Set<ActsForQuery<?, ?>> notifyFailure(ActsForQuery<?, ?> query) {
+        entries.remove(query);
+
         Set<ActsForQuery<?, ?>> result = new HashSet<>();
         Set<ActsForQuery<?, ?>> toProcess = new HashSet<>();
         toProcess.add(query);
@@ -1712,15 +1821,18 @@ public abstract class Principal {
 
         return result;
       }
+
+      @Override
+      public String toString() {
+        return entries.toString();
+      }
     }
 
     public ProofSearchState() {
       this.curGoal = null;
-      this.curReceiver = Principal.this;
       this.parent = null;
       this.progressCondition = new ProgressCondition();
 
-      allGoals = Collections.emptyMap();
       if (Principal.this instanceof PrimitivePrincipal) {
         allParticipants =
             Collections.singleton((PrimitivePrincipal) Principal.this);
@@ -1737,42 +1849,18 @@ public abstract class Principal {
     /**
      * Constructs a new search state with the given query pushed onto the query
      * stack, and with {@link ProofSearchState#principalsAsked} containing just
-     * {@link Principal}{@code .this}. If the given query already exists as a
-     * goal, then a {@link CircularProofException} is thrown.
+     * {@link Principal}{@code .this}.
      */
-    private ProofSearchState(ProofSearchState state, ActsForQuery<?, ?> query)
-        throws CircularProofException {
-      // Check for circularity.
-      {
-        Set<ActsForQuery<Principal, Principal>> allGoalsEntry =
-            state.allGoals.get(Principal.this);
-        if (allGoalsEntry != null && allGoalsEntry.contains(query)) {
-          throw new CircularProofException();
-        }
+    private ProofSearchState(ProofSearchState state, ActsForQuery<?, ?> query) {
+      // Sanity check.
+      if (query.receiver != Principal.this) {
+        throw new InternalError("Inconsistency: " + query.receiver + " != "
+            + Principal.this);
       }
 
       this.curGoal = query;
-      this.curReceiver = Principal.this;
       this.parent = state;
       this.progressCondition = new ProgressCondition();
-
-      {
-        Map<Principal, Set<ActsForQuery<Principal, Principal>>> allGoals =
-            new HashMap<>(state.allGoals);
-        this.allGoals = Collections.unmodifiableMap(allGoals);
-
-        Set<ActsForQuery<Principal, Principal>> allGoalsEntry =
-            allGoals.get(Principal.this);
-        if (allGoalsEntry == null) {
-          allGoalsEntry =
-              Collections.singleton((ActsForQuery<Principal, Principal>) query);
-        } else {
-          allGoalsEntry = new HashSet<>(allGoalsEntry);
-          allGoalsEntry.add((ActsForQuery<Principal, Principal>) query);
-          allGoalsEntry = Collections.unmodifiableSet(allGoalsEntry);
-        }
-        allGoals.put(Principal.this, allGoalsEntry);
-      }
 
       this.allParticipants = state.allParticipants;
 
@@ -1781,6 +1869,9 @@ public abstract class Principal {
       this.actsForCache = state.actsForCache;
       this.notActsForCache = state.notActsForCache;
       this.prunedSearchCache = state.prunedSearchCache;
+
+      // Add a placeholder to the cache in case the search cycles back here.
+      prunedSearchCache.addPlaceholder(query);
     }
 
     /**
@@ -1790,12 +1881,13 @@ public abstract class Principal {
     private ProofSearchState(ProofSearchState state,
         Set<PrimitivePrincipal> newPrincipalsAsked) {
       // Sanity check.
-      if (Principal.this != state.curReceiver) throw new InternalError();
+      if (state.curGoal.receiver != Principal.this) {
+        throw new InternalError("Inconsistency: " + state.curGoal.receiver
+            + " != " + Principal.this);
+      }
 
       this.curGoal = state.curGoal;
-      this.curReceiver = state.curReceiver;
       this.parent = state.parent;
-      this.allGoals = state.allGoals;
       this.progressCondition = state.progressCondition;
 
       Set<PrimitivePrincipal> allParticipants =
@@ -1832,9 +1924,7 @@ public abstract class Principal {
             prunedSearchCache.notifyPruned(query, result.progressCondition);
 
         // Update the not-acts-for cache with the new entries.
-        for (ActsForQuery<?, ?> newNotActsFor : newNotActsFors) {
-          notActsForCache.add(newNotActsFor);
-        }
+        notActsForCache.addAll(newNotActsFors);
 
         return;
       }
@@ -1845,9 +1935,7 @@ public abstract class Principal {
             prunedSearchCache.notifyFailure(query);
 
         // Update the not-acts-for cache with the new entries.
-        for (ActsForQuery<?, ?> newNotActsFor : newNotActsFors) {
-          notActsForCache.add(newNotActsFor);
-        }
+        notActsForCache.addAll(newNotActsFors);
 
         return;
       }
@@ -1877,22 +1965,37 @@ public abstract class Principal {
       result.append("goals = [\n");
       for (ProofSearchState curState = this; curState != null; curState =
           curState.parent) {
-        result.insert(10, "  " + curState.curReceiver + " -- "
-            + curState.curGoal + ",\n");
+        result.insert(10, "  " + curState.curGoal + ",\n");
       }
       result.append("]\n");
 
       result.append("allParticipants = " + allParticipants + "\n");
 
-      result.append("prinicpalsAsked = " + principalsAsked);
+      result.append("prinicpalsAsked = " + principalsAsked + "\n");
+
+      result.append("progressCondition = " + progressCondition + "\n");
+
+      result.append("actsForCache = {\n");
+      for (ActsForQuery<?, ?> cacheEntry : actsForCache.keySet()) {
+        result.append("  " + cacheEntry + "\n");
+      }
+      result.append("}\n");
+
+      result.append("notActsForCache = {\n");
+      for (ActsForQuery<?, ?> cacheEntry : notActsForCache) {
+        result.append("  " + cacheEntry + "\n");
+      }
+      result.append("}\n");
+
+      result.append("prunedSearchCache = {\n");
+      for (Map.Entry<ActsForQuery<?, ?>, ProgressCondition> entry : prunedSearchCache.entries
+          .entrySet()) {
+        result.append("  " + entry.getKey() + " ->\n");
+        result.append(entry.getValue().toString(4));
+      }
+      result.append("}\n");
 
       return result.toString();
     }
-  }
-
-  /**
-   * Indicates a circular proof tree was detected.
-   */
-  private static class CircularProofException extends Exception {
   }
 }
