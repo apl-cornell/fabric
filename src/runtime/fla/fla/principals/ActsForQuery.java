@@ -82,7 +82,8 @@ public final class ActsForQuery<Superior extends Principal, Inferior extends Pri
 
   @Override
   public int hashCode() {
-    return superior.hashCode()
+    return receiver.hashCode()
+        ^ superior.hashCode()
         ^ inferior.hashCode()
         ^ ((maxUsableLabel == null || accessPolicy == null) ? 0
             : (maxUsableLabel.hashCode() ^ accessPolicy.hashCode()));
@@ -93,6 +94,7 @@ public final class ActsForQuery<Superior extends Principal, Inferior extends Pri
     if (!(obj instanceof ActsForQuery)) return false;
     ActsForQuery<?, ?> that = (ActsForQuery<?, ?>) obj;
 
+    if (!PrincipalUtil.equals(this.receiver, that.receiver)) return false;
     if (!PrincipalUtil.equals(this.superior, that.superior)) return false;
     if (!PrincipalUtil.equals(this.inferior, that.inferior)) return false;
 
@@ -109,8 +111,8 @@ public final class ActsForQuery<Superior extends Principal, Inferior extends Pri
 
   @Override
   public String toString() {
-    return superior + " ≽ " + inferior + " ({" + maxUsableLabel + "} @ ("
-        + accessPolicy + "))";
+    return receiver + " -- " + superior + " ≽ " + inferior + " ({"
+        + maxUsableLabel + "} @ (" + accessPolicy + "))";
   }
 
   boolean useDynamicContext() {
