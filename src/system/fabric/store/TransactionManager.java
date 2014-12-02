@@ -246,7 +246,10 @@ public class TransactionManager {
             //$FALL-THROUGH$
           case OLD:
             prepareResult.first.put(onum, result.getWarranty());
-            prepareResult.second.put(onum, result.getLease());
+            // Don't bother giving back leases not owned by the worker.
+            if (result.getLease().ownedByPrincipal(workerIdentity.principal)) {
+              prepareResult.second.put(onum, result.getLease());
+            }
             break;
 
           case BAD_VERSION:
