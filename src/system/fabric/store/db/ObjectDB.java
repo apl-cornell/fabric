@@ -818,8 +818,11 @@ public abstract class ObjectDB {
       long expiry = minExpiry;
       boolean canLease = false;
       if (extendBeyondMinExpiry) {
-        if (worker != null) {
-          // Only bother with leasing if we're doing this for a worker.
+        if (worker != null && (curLease.expired(false) ||
+              curLease.ownedByPrincipal(worker))) {
+          // Only bother with leasing if we're doing this for a worker when
+          // either there is no current lease or this worker owns the current
+          // lease.
           long suggestedLeaseExpiry =
               leaseIssuer.suggestLease(worker, onum, minExpiry);
           if (suggestedLeaseExpiry >= expiry) {
