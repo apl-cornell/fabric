@@ -228,7 +228,12 @@ public class AccessMetrics<K> {
    * preexisting Metrics object.
    */
   public Metrics getMetrics(K key, boolean createIfAbsent) {
-    if (createIfAbsent) table.putIfAbsent(key, new Metrics());
+    if (createIfAbsent) {
+      Metrics newMetrics = new Metrics();
+      Metrics result = table.putIfAbsent(key, newMetrics);
+      if (result != null) return result;
+      return newMetrics;
+    }
     return table.get(key);
   }
 
