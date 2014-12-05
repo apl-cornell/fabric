@@ -245,9 +245,14 @@ public class TransactionManager {
             }
             //$FALL-THROUGH$
           case OLD:
-            prepareResult.first.put(onum, result.getWarranty());
-            // Don't bother giving back leases not owned by the worker.
-            if (result.getLease().ownedByPrincipal(workerIdentity.principal)) {
+            if (!result.getWarranty().expired(true)) {
+              // Don't bother sending a warranty back if it's not going to be
+              // valid on arrival.
+              prepareResult.first.put(onum, result.getWarranty());
+            }
+            if ((!result.getLease().expired(true)) &&
+                result.getLease().ownedByPrincipal(workerIdentity.principal)) {
+              // Don't bother giving back leases not owned by the worker.
               prepareResult.second.put(onum, result.getLease());
             }
             break;
