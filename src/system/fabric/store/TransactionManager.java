@@ -241,7 +241,11 @@ public class TransactionManager {
             }
             //$FALL-THROUGH$
           case OLD:
-            prepareResult.put(onum, result.getWarranty());
+            if (!result.getWarranty().expired(true)) {
+              // Don't bother sending a warranty back if it's not going to be
+              // valid on arrival.
+              prepareResult.put(onum, result.getWarranty());
+            }
             break;
 
           case BAD_VERSION:
