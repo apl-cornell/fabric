@@ -818,21 +818,19 @@ public abstract class ObjectDB {
       long expiry = minExpiry;
       boolean canLease = false;
       if (extendBeyondMinExpiry) {
-        if (worker != null && (curLease.expired(false) ||
+        expiry = warrantyIssuer.suggestWarranty(onum, minExpiry);
+
+        if (expiry <= minExpiry && worker != null && (curLease.expired(false) ||
               curLease.ownedByPrincipal(worker))) {
-          // Only bother with leasing if we're doing this for a worker when
-          // either there is no current lease or this worker owns the current
-          // lease.
+          // Only bother with leasing if we won't warranty and we're doing this
+          // for a worker when either there is no current lease or this worker
+          // owns the current lease.
           long suggestedLeaseExpiry =
               leaseIssuer.suggestLease(worker, onum, minExpiry);
           if (suggestedLeaseExpiry >= expiry) {
             canLease = true;
             expiry = suggestedLeaseExpiry;
           }
-        }
-
-        if (!canLease) {
-          expiry = warrantyIssuer.suggestWarranty(onum, minExpiry);
         }
       }
 
