@@ -28,7 +28,7 @@ import fabric.lang.Object._Impl;
 import fabric.lang.Object._Proxy;
 import fabric.lang.security.ConfPolicy;
 import fabric.lang.security.Label;
-import fabric.store.db.LongKeyAccessMetrics;
+import fabric.store.db.AccessMetrics;
 import fabric.store.db.WarrantyIssuer;
 import fabric.worker.LocalStore;
 import fabric.worker.Store;
@@ -1171,7 +1171,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
    * object's last read-prepare time is updated.
    */
   public synchronized void incrementUnpopularity(
-      LongKeyAccessMetrics accessMetrics) {
+      AccessMetrics<Long> accessMetrics) {
     unpopularityCount =
         (byte) ((unpopularityCount + 1) % (SAMPLE_SIZE + IGNORE_COUNT));
     accessMetrics.setReadPrepareTime(getOnum());
