@@ -9,6 +9,7 @@ import java.util.logging.Level;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.Cache;
 
+import fabric.common.exceptions.InternalError;
 import fabric.common.Logging;
 
 /**
