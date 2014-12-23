@@ -16,7 +16,7 @@
 	<classpathentry kind="lib" path="lib/FreePastry-2.1.jar"/>
 	<classpathentry kind="lib" path="lib/servlet-api.jar"/>
 	<classpathentry kind="lib" path="lib/bcprov-jdk15-145.jar"/>
-	<classpathentry kind="lib" path="lib/guava-14.0.1.jar"/>
+	<classpathentry kind="lib" path="lib/guava-18.0.jar"/>
 	<classpathentry kind="lib" path="lib/je-4.0.103.jar"/>
 	<classpathentry kind="lib" path="lib/jline-0.9.94.jar"/>
 	@TOOLS.JAR@
