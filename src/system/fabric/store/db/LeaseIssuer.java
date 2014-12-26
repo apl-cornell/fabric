@@ -3,9 +3,17 @@ package fabric.store.db;
 import static fabric.common.Logging.HOTOS_LOGGER;
 import static fabric.common.Logging.STORE_DB_LOGGER;
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.logging.Level;
+
+import com.google.common.base.Supplier;
+import com.google.common.collect.Multimaps;
+import com.google.common.collect.SetMultimap;
 
 import fabric.common.Logging;
 import fabric.common.Lease;
@@ -69,10 +77,13 @@ public class LeaseIssuer<K, V extends Lease> {
     Entry(K key) {
       this.key = key;
       this.leaseIssued = defaultLease;
+      reverseTable.put(defaultLease.expiry() >> 3, this);
     }
 
     synchronized void setLeaseIssued(V lease) {
+      reverseTable.remove(leaseIssued.expiry() >> 3, this);
       this.leaseIssued = lease;
+      reverseTable.put(lease.expiry() >> 3, this);
     }
 
     synchronized boolean replaceLease(V oldLease, V newLease) {
@@ -83,12 +94,12 @@ public class LeaseIssuer<K, V extends Lease> {
           long expiry = newLease.expiry();
           synchronized (metrics) {
             boolean updated = metrics.updateTerm(expiry);
-            if (updated) this.leaseIssued = newLease;
+            if (updated) this.setLeaseIssued(newLease);
             return true;
           }
         }
 
-        this.leaseIssued = newLease;
+        this.setLeaseIssued(newLease);
       }
       return success;
     }
@@ -98,10 +109,25 @@ public class LeaseIssuer<K, V extends Lease> {
 
   private final ConcurrentMap<K, Entry> table;
 
+  /**
+   * Coarse grained reverse table, indexed by seconds since epoch (rounded down
+   * to nearest whole second).
+   */
+  private final SetMultimap<Long, Entry> reverseTable;
+
   private final AccessMetrics<K> accessMetrics;
 
   protected LeaseIssuer(V defaultLease, AccessMetrics<K> accessMetrics) {
-    this.table = new ConcurrentHashMap<K, Entry>();
+    this.table = new ConcurrentHashMap<>();
+    this.reverseTable = Multimaps.synchronizedSetMultimap(
+        Multimaps.newSetMultimap(
+          new HashMap<Long, Collection<Entry>>(),
+            new Supplier<Set<Entry>>() {
+              @Override
+              public Set<Entry> get() {
+                return new HashSet<>();
+              }
+            }));
     this.defaultLease = defaultLease;
     this.accessMetrics = accessMetrics;
   }
@@ -264,5 +290,42 @@ public class LeaseIssuer<K, V extends Lease> {
     }
 
     return Math.max(expiry, System.currentTimeMillis() + leaseLength);
+  }
+
+  /**
+   * Clean Up thread to wipe away old warranties.
+   *
+   * Currently does the dead simple method of checking every second for things
+   * to wipe.
+   *
+   * TODO: This is not thread safe due to how table is maintained, go back and
+   * fix the other code to not produce data races.
+   */
+  private final class Collector extends Thread {
+    private Collector() {
+      super("Lease entry collector");
+      setDaemon(true);
+    }
+
+    @Override
+    public void run() {
+      while (true) {
+        try {
+          // Every second, wipe away stale entries.
+          Thread.sleep(1000);
+          for (Long timeSlice : reverseTable.keySet()) {
+            if (((timeSlice.longValue() + 1) << 3) < System.currentTimeMillis()) {
+              Set<Entry> toWipe = reverseTable.removeAll(timeSlice);
+              for (Entry candidate : toWipe) {
+                if (candidate.leaseIssued.expired(false))
+                  table.remove(candidate.key, candidate);
+              }
+            }
+          }
+        } catch (InterruptedException e) {
+          Logging.logIgnoredInterruptedException(e);
+        }
+      }
+    }
   }
 }
