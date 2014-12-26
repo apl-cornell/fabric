@@ -3,9 +3,18 @@ package fabric.store.db;
 import static fabric.common.Logging.HOTOS_LOGGER;
 import static fabric.common.Logging.STORE_DB_LOGGER;
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.logging.Level;
+
+import com.google.common.base.Supplier;
+import com.google.common.collect.MultimapBuilder;
+import com.google.common.collect.Multimaps;
+import com.google.common.collect.SetMultimap;
 
 import fabric.common.Logging;
 import fabric.common.Warranty;
@@ -66,10 +75,13 @@ public class WarrantyIssuer<K, V extends Warranty> {
     Entry(K key) {
       this.key = key;
       this.warrantyIssued = defaultWarranty;
+      reverseTable.put(defaultWarranty.expiry() >> 3, this);
     }
 
     synchronized void setWarrantyIssued(V warranty) {
+      reverseTable.remove(warrantyIssued.expiry() >> 3, this);
       this.warrantyIssued = warranty;
+      reverseTable.put(warranty.expiry() >> 3, this);
     }
 
     synchronized boolean replaceWarranty(V oldWarranty, V newWarranty) {
@@ -80,12 +92,12 @@ public class WarrantyIssuer<K, V extends Warranty> {
           long expiry = newWarranty.expiry();
           synchronized (metrics) {
             boolean updated = metrics.updateTerm(expiry);
-            if (updated) this.warrantyIssued = newWarranty;
+            if (updated) setWarrantyIssued(newWarranty);
             return true;
           }
         }
 
-        this.warrantyIssued = newWarranty;
+        setWarrantyIssued(newWarranty);
       }
       return success;
     }
@@ -95,10 +107,25 @@ public class WarrantyIssuer<K, V extends Warranty> {
 
   private final ConcurrentMap<K, Entry> table;
 
+  /**
+   * Coarse grained reverse table, indexed by seconds since epoch (rounded down
+   * to nearest whole second).
+   */
+  private final SetMultimap<Long, Entry> reverseTable;
+
   private final AccessMetrics<K> accessMetrics;
 
   protected WarrantyIssuer(V defaultWarranty, AccessMetrics<K> accessMetrics) {
-    this.table = new ConcurrentHashMap<K, Entry>();
+    this.table = new ConcurrentHashMap<>();
+    this.reverseTable = Multimaps.synchronizedSetMultimap(
+        Multimaps.newSetMultimap(
+          new HashMap<Long, Collection<Entry>>(),
+            new Supplier<Set<Entry>>() {
+              @Override
+              public Set<Entry> get() {
+                return new HashSet<>();
+              }
+            }));
     this.defaultWarranty = defaultWarranty;
     this.accessMetrics = accessMetrics;
   }
@@ -255,5 +282,42 @@ public class WarrantyIssuer<K, V extends Warranty> {
     }
 
     return Math.max(expiry, System.currentTimeMillis() + warrantyLength);
+  }
+
+  /**
+   * Clean Up thread to wipe away old warranties.
+   *
+   * Currently does the dead simple method of checking every second for things
+   * to wipe.
+   *
+   * TODO: This is not thread safe due to how table is maintained, go back and
+   * fix the other code to not produce data races.
+   */
+  private final class Collector extends Thread {
+    private Collector() {
+      super("Warranty entry collector");
+      setDaemon(true);
+    }
+
+    @Override
+    public void run() {
+      while (true) {
+        try {
+          // Every second, wipe away stale entries.
+          Thread.sleep(1000);
+          for (Long timeSlice : reverseTable.keySet()) {
+            if (((timeSlice.longValue() + 1) << 3) < System.currentTimeMillis()) {
+              Set<Entry> toWipe = reverseTable.removeAll(timeSlice);
+              for (Entry candidate : toWipe) {
+                if (candidate.warrantyIssued.expired(false))
+                  table.remove(candidate.key, candidate);
+              }
+            }
+          }
+        } catch (InterruptedException e) {
+          Logging.logIgnoredInterruptedException(e);
+        }
+      }
+    }
   }
 }
