@@ -12,7 +12,6 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.logging.Level;
 
 import com.google.common.base.Supplier;
-import com.google.common.collect.MultimapBuilder;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.SetMultimap;
 
@@ -128,6 +127,7 @@ public class WarrantyIssuer<K, V extends Warranty> {
             }));
     this.defaultWarranty = defaultWarranty;
     this.accessMetrics = accessMetrics;
+    new Collector().start();
   }
 
   private Entry getEntry(K key) {
