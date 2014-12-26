@@ -2,10 +2,15 @@ package fabric.store.db;
 
 import static fabric.common.Logging.HOTOS_LOGGER;
 
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.Cache;
+
+import fabric.common.exceptions.InternalError;
 import fabric.common.Logging;
-import fabric.common.util.Cache;
 import fabric.common.util.Oid;
 import fabric.lang.security.Principal;
 
@@ -260,8 +265,16 @@ public class AccessMetrics<K> {
   private final Cache<K, Metrics> table;
 
   protected AccessMetrics() {
-    this.table = new Cache<>();
+    this.table = CacheBuilder.newBuilder().softValues().build();
   }
+
+  private final Callable<Metrics> makeNewMetrics =
+    new Callable<Metrics>() {
+      @Override
+      public Metrics call() {
+        return new Metrics();
+      }
+    };
 
   /**
    * Get the metrics object for a given key.  Optionally create an entry if
@@ -273,12 +286,14 @@ public class AccessMetrics<K> {
    */
   public Metrics getMetrics(K key, boolean createIfAbsent) {
     if (createIfAbsent) {
-      Metrics newMetrics = new Metrics();
-      Metrics result = table.putIfAbsent(key, newMetrics);
-      if (result != null) return result;
-      return newMetrics;
+      try {
+        return table.get(key, makeNewMetrics);
+      } catch (ExecutionException e) {
+        throw new InternalError(
+            "Unexpectedly errored in cache default creation.", e);
+      }
     }
-    return table.get(key);
+    return table.getIfPresent(key);
   }
 
   /**

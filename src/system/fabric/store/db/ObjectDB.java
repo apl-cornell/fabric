@@ -242,17 +242,17 @@ public abstract class ObjectDB {
   /**
    * The table containing the version warranties that we've issued.
    */
-  protected final LongKeyWarrantyIssuer<VersionWarranty> warrantyIssuer;
+  protected final WarrantyIssuer<Long, VersionWarranty> warrantyIssuer;
 
   /**
    * The table containing the object leases we've issued.
    */
-  protected final LongKeyLeaseIssuer<RWLease> leaseIssuer;
+  protected final LeaseIssuer<Long, RWLease> leaseIssuer;
 
   /**
    * The table containing the access metrics for each object.
    */
-  protected final LongKeyAccessMetrics accessMetrics;
+  protected final AccessMetrics<Long> accessMetrics;
 
   /**
    * <p>
@@ -288,11 +288,10 @@ public abstract class ObjectDB {
     this.writtenOnumsByTid = new ConcurrentLongKeyHashMap<>();
     this.objectGrouper = new ObjectGrouper(this, privateKey);
     this.longestWarranty = new VersionWarranty[] { new VersionWarranty(0) };
-    this.accessMetrics = new LongKeyAccessMetrics();
-    this.warrantyIssuer =
-        new LongKeyWarrantyIssuer<>(new VersionWarranty(0), this.accessMetrics);
-    this.leaseIssuer =
-        new LongKeyLeaseIssuer<>(new RWLease(0), this.accessMetrics);
+    this.accessMetrics = new AccessMetrics<>();
+    this.warrantyIssuer = new WarrantyIssuer<>(new VersionWarranty(0),
+        this.accessMetrics);
+    this.leaseIssuer = new LeaseIssuer<>(new RWLease(0), this.accessMetrics);
   }
 
   /**
