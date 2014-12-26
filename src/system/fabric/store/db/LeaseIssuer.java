@@ -130,6 +130,7 @@ public class LeaseIssuer<K, V extends Lease> {
             }));
     this.defaultLease = defaultLease;
     this.accessMetrics = accessMetrics;
+    new Collector().start();
   }
 
   private Entry getEntry(K key) {
