@@ -314,7 +314,7 @@ public class LeaseIssuer<K, V extends Lease> {
         try {
           // Every second, wipe away stale entries.
           Thread.sleep(1000);
-          for (Long timeSlice : reverseTable.keySet()) {
+          for (Long timeSlice : new HashSet<>(reverseTable.keySet())) {
             if (((timeSlice.longValue() + 1) << 3) < System.currentTimeMillis()) {
               Set<Entry> toWipe = reverseTable.removeAll(timeSlice);
               for (Entry candidate : toWipe) {
