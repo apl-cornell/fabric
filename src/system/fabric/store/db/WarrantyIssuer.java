@@ -108,7 +108,12 @@ public class WarrantyIssuer<K, V extends Warranty> {
 
     AccessMetrics<K>.Metrics metrics = getMetrics(key);
     synchronized (metrics) {
-      success = table.replace(key, oldWarranty, newWarranty);
+      if (oldWarranty == defaultWarranty && !table.containsKey(key)) {
+        success = true;
+        table.put(key, newWarranty);
+      } else {
+        success = table.replace(key, oldWarranty, newWarranty);
+      }
       if (success) metrics.updateTerm(newWarranty.expiry());
     }
 
