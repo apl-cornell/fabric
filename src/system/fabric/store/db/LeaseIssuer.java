@@ -3,17 +3,11 @@ package fabric.store.db;
 import static fabric.common.Logging.HOTOS_LOGGER;
 import static fabric.common.Logging.STORE_DB_LOGGER;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
-import com.google.common.base.Supplier;
-import com.google.common.collect.Multimaps;
-import com.google.common.collect.SetMultimap;
+import com.google.common.cache.CacheBuilder;
 
 import fabric.common.Logging;
 import fabric.common.Lease;
@@ -70,80 +64,17 @@ public class LeaseIssuer<K, V extends Lease> {
    */
   private volatile V defaultLease;
 
-  private class Entry {
-    final K key;
-    volatile V leaseIssued;
-
-    Entry(K key) {
-      this.key = key;
-      this.leaseIssued = defaultLease;
-      reverseTable.put(defaultLease.expiry() >> 3, this);
-    }
-
-    synchronized void setLeaseIssued(V lease) {
-      reverseTable.remove(leaseIssued.expiry() >> 3, this);
-      this.leaseIssued = lease;
-      reverseTable.put(lease.expiry() >> 3, this);
-    }
-
-    synchronized boolean replaceLease(V oldLease, V newLease) {
-      boolean success = this.leaseIssued.equals(oldLease);
-      if (success) {
-        AccessMetrics<K>.Metrics metrics = getMetrics(key, false);
-        if (metrics != null) {
-          long expiry = newLease.expiry();
-          synchronized (metrics) {
-            boolean updated = metrics.updateTerm(expiry);
-            if (updated) this.setLeaseIssued(newLease);
-            return true;
-          }
-        }
-
-        this.setLeaseIssued(newLease);
-      }
-      return success;
-    }
-  }
-
   private static int count = 0;
 
-  private final ConcurrentMap<K, Entry> table;
-
-  /**
-   * Coarse grained reverse table, indexed by seconds since epoch (rounded down
-   * to nearest whole second).
-   */
-  private final SetMultimap<Long, Entry> reverseTable;
+  private final ConcurrentMap<K, V> table;
 
   private final AccessMetrics<K> accessMetrics;
 
   protected LeaseIssuer(V defaultLease, AccessMetrics<K> accessMetrics) {
-    this.table = new ConcurrentHashMap<>();
-    this.reverseTable = Multimaps.synchronizedSetMultimap(
-        Multimaps.newSetMultimap(
-          new HashMap<Long, Collection<Entry>>(),
-            new Supplier<Set<Entry>>() {
-              @Override
-              public Set<Entry> get() {
-                return new HashSet<>();
-              }
-            }));
+    this.table = CacheBuilder.newBuilder().expireAfterWrite(MAX_LEASE_LENGTH,
+        TimeUnit.MILLISECONDS).<K, V>build().asMap();
     this.defaultLease = defaultLease;
     this.accessMetrics = accessMetrics;
-    new Collector().start();
-  }
-
-  private Entry getEntry(K key) {
-    Entry existingEntry = table.get(key);
-    if (existingEntry != null) return existingEntry;
-
-    Entry entry = new Entry(key);
-    existingEntry = table.putIfAbsent(key, entry);
-    return existingEntry == null ? entry : existingEntry;
-  }
-
-  private AccessMetrics<K>.Metrics getMetrics(K key, boolean createIfAbsent) {
-    return accessMetrics.getMetrics(key, createIfAbsent);
   }
 
   private AccessMetrics<K>.Metrics getMetrics(K key) {
@@ -154,7 +85,9 @@ public class LeaseIssuer<K, V extends Lease> {
    * @return the issued lease for the given key.
    */
   final V get(K key) {
-    return getEntry(key).leaseIssued;
+    V existingLease = table.get(key);
+    if (existingLease != null) return existingLease;
+    return defaultLease;
   }
 
   /**
@@ -173,7 +106,19 @@ public class LeaseIssuer<K, V extends Lease> {
           "Attempted to replace a lease with one that expires sooner");
     }
 
-    boolean success = getEntry(key).replaceLease(oldLease, newLease);
+    boolean success = false;
+
+    AccessMetrics<K>.Metrics metrics = getMetrics(key);
+    synchronized (metrics) {
+      if (oldLease == defaultLease && !table.containsKey(key)) {
+        success = true;
+        table.put(key, newLease);
+      } else {
+        success = table.replace(key, oldLease, newLease);
+      }
+      if (success) metrics.updateTerm(newLease.expiry());
+    }
+
     if (STORE_DB_LOGGER.isLoggable(Level.FINEST) && success) {
       long expiry = newLease.expiry();
       long length = expiry - System.currentTimeMillis();
@@ -201,7 +146,7 @@ public class LeaseIssuer<K, V extends Lease> {
           "Adding lease for {0}; expiry={1} (in {2} ms)", key, expiry, length);
     }
 
-    getEntry(key).setLeaseIssued(lease);
+    table.put(key, lease);
   }
 
   /**
@@ -232,7 +177,7 @@ public class LeaseIssuer<K, V extends Lease> {
     // Snapshot state to avoid locking for too long.
     final long readInterval;
     final long writeInterval;
-    final boolean isWritten;
+    //final boolean isWritten;
     Oid writer;
     AccessMetrics<K>.Metrics m = getMetrics(key);
     synchronized (m) {
@@ -243,7 +188,7 @@ public class LeaseIssuer<K, V extends Lease> {
       writeInterval = m.getWriteInterval();
       readInterval = m.getReadInterval();
       writer = m.getWriter();
-      isWritten = m.isWrittenSinceTerm();
+      //isWritten = m.isWrittenSinceTerm();
     }
 
     final int curCount = count++;
@@ -291,47 +236,5 @@ public class LeaseIssuer<K, V extends Lease> {
     }
 
     return Math.max(expiry, System.currentTimeMillis() + leaseLength);
-  }
-
-  /**
-   * Clean Up thread to wipe away old warranties.
-   *
-   * Currently does the dead simple method of checking every second for things
-   * to wipe.
-   *
-   * TODO: This is not thread safe due to how table is maintained, go back and
-   * fix the other code to not produce data races.
-   */
-  private final class Collector extends Thread {
-    private Collector() {
-      super("Lease entry collector");
-      setDaemon(true);
-    }
-
-    @Override
-    public void run() {
-      while (true) {
-        try {
-          // Every second, wipe away stale entries.
-          Thread.sleep(1000);
-
-          HashSet<Long> timeSlices;
-          synchronized (reverseTable) {
-            timeSlices = new HashSet<>(reverseTable.keySet());
-          }
-          for (Long timeSlice : timeSlices) {
-            if (((timeSlice.longValue() + 1) << 3) < System.currentTimeMillis()) {
-              Set<Entry> toWipe = reverseTable.removeAll(timeSlice);
-              for (Entry candidate : toWipe) {
-                if (candidate.leaseIssued.expired(false))
-                  table.remove(candidate.key, candidate);
-              }
-            }
-          }
-        } catch (InterruptedException e) {
-          Logging.logIgnoredInterruptedException(e);
-        }
-      }
-    }
   }
 }
