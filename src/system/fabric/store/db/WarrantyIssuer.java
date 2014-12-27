@@ -3,9 +3,10 @@ package fabric.store.db;
 import static fabric.common.Logging.HOTOS_LOGGER;
 import static fabric.common.Logging.STORE_DB_LOGGER;
 
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.logging.Level;
+
+import com.google.common.collect.MapMaker;
 
 import fabric.common.Logging;
 import fabric.common.Warranty;
@@ -66,9 +67,7 @@ public class WarrantyIssuer<K, V extends Warranty> {
   private final AccessMetrics<K> accessMetrics;
 
   protected WarrantyIssuer(V defaultWarranty, AccessMetrics<K> accessMetrics) {
-    //this.table = CacheBuilder.newBuilder().expireAfterWrite(MAX_WARRANTY_LENGTH,
-        //TimeUnit.MILLISECONDS).<K, V>build().asMap();
-    this.table = new ConcurrentHashMap<>();
+    this.table = (new MapMaker()).<K, V>makeMap();
     this.defaultWarranty = defaultWarranty;
     this.accessMetrics = accessMetrics;
   }
