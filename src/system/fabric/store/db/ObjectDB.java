@@ -826,7 +826,7 @@ public abstract class ObjectDB {
           // owns the current lease.
           long suggestedLeaseExpiry =
               leaseIssuer.suggestLease(worker, onum, minExpiry);
-          if (suggestedLeaseExpiry >= expiry) {
+          if (suggestedLeaseExpiry > expiry) {
             canLease = true;
             expiry = suggestedLeaseExpiry;
           }
