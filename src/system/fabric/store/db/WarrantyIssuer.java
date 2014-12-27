@@ -3,17 +3,11 @@ package fabric.store.db;
 import static fabric.common.Logging.HOTOS_LOGGER;
 import static fabric.common.Logging.STORE_DB_LOGGER;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
-import com.google.common.base.Supplier;
-import com.google.common.collect.Multimaps;
-import com.google.common.collect.SetMultimap;
+import com.google.common.cache.CacheBuilder;
 
 import fabric.common.Logging;
 import fabric.common.Warranty;
@@ -67,80 +61,17 @@ public class WarrantyIssuer<K, V extends Warranty> {
    */
   private volatile V defaultWarranty;
 
-  private class Entry {
-    final K key;
-    volatile V warrantyIssued;
-
-    Entry(K key) {
-      this.key = key;
-      this.warrantyIssued = defaultWarranty;
-      reverseTable.put(defaultWarranty.expiry() >> 3, this);
-    }
-
-    synchronized void setWarrantyIssued(V warranty) {
-      reverseTable.remove(warrantyIssued.expiry() >> 3, this);
-      this.warrantyIssued = warranty;
-      reverseTable.put(warranty.expiry() >> 3, this);
-    }
-
-    synchronized boolean replaceWarranty(V oldWarranty, V newWarranty) {
-      boolean success = this.warrantyIssued.equals(oldWarranty);
-      if (success) {
-        AccessMetrics<K>.Metrics metrics = getMetrics(key, false);
-        if (metrics != null) {
-          long expiry = newWarranty.expiry();
-          synchronized (metrics) {
-            boolean updated = metrics.updateTerm(expiry);
-            if (updated) setWarrantyIssued(newWarranty);
-            return true;
-          }
-        }
-
-        setWarrantyIssued(newWarranty);
-      }
-      return success;
-    }
-  }
-
   private static int count = 0;
 
-  private final ConcurrentMap<K, Entry> table;
-
-  /**
-   * Coarse grained reverse table, indexed by seconds since epoch (rounded down
-   * to nearest whole second).
-   */
-  private final SetMultimap<Long, Entry> reverseTable;
+  private final ConcurrentMap<K, V> table;
 
   private final AccessMetrics<K> accessMetrics;
 
   protected WarrantyIssuer(V defaultWarranty, AccessMetrics<K> accessMetrics) {
-    this.table = new ConcurrentHashMap<>();
-    this.reverseTable = Multimaps.synchronizedSetMultimap(
-        Multimaps.newSetMultimap(
-          new HashMap<Long, Collection<Entry>>(),
-            new Supplier<Set<Entry>>() {
-              @Override
-              public Set<Entry> get() {
-                return new HashSet<>();
-              }
-            }));
+    this.table = CacheBuilder.newBuilder().expireAfterWrite(MAX_WARRANTY_LENGTH,
+        TimeUnit.MILLISECONDS).<K, V>build().asMap();
     this.defaultWarranty = defaultWarranty;
     this.accessMetrics = accessMetrics;
-    new Collector().start();
-  }
-
-  private Entry getEntry(K key) {
-    Entry existingEntry = table.get(key);
-    if (existingEntry != null) return existingEntry;
-
-    Entry entry = new Entry(key);
-    existingEntry = table.putIfAbsent(key, entry);
-    return existingEntry == null ? entry : existingEntry;
-  }
-
-  private AccessMetrics<K>.Metrics getMetrics(K key, boolean createIfAbsent) {
-    return accessMetrics.getMetrics(key, createIfAbsent);
   }
 
   private AccessMetrics<K>.Metrics getMetrics(K key) {
@@ -151,7 +82,11 @@ public class WarrantyIssuer<K, V extends Warranty> {
    * @return the issued warranty for the given key.
    */
   final V get(K key) {
-    return getEntry(key).warrantyIssued;
+    V existingWarranty = table.get(key);
+    if (existingWarranty != null) return existingWarranty;
+
+    existingWarranty = table.putIfAbsent(key, defaultWarranty);
+    return existingWarranty == null ? defaultWarranty : existingWarranty;
   }
 
   /**
@@ -171,7 +106,14 @@ public class WarrantyIssuer<K, V extends Warranty> {
           "Attempted to replace a warranty with one that expires sooner");
     }
 
-    boolean success = getEntry(key).replaceWarranty(oldWarranty, newWarranty);
+    boolean success = false;
+
+    AccessMetrics<K>.Metrics metrics = getMetrics(key);
+    synchronized (metrics) {
+      success = table.replace(key, oldWarranty, newWarranty);
+      if (success) metrics.updateTerm(newWarranty.expiry());
+    }
+
     if (STORE_DB_LOGGER.isLoggable(Level.FINEST) && success) {
       long expiry = newWarranty.expiry();
       long length = expiry - System.currentTimeMillis();
@@ -200,7 +142,7 @@ public class WarrantyIssuer<K, V extends Warranty> {
           length);
     }
 
-    getEntry(key).setWarrantyIssued(warranty);
+    table.put(key, warranty);
   }
 
   /**
@@ -282,48 +224,5 @@ public class WarrantyIssuer<K, V extends Warranty> {
     }
 
     return Math.max(expiry, System.currentTimeMillis() + warrantyLength);
-  }
-
-  /**
-   * Clean Up thread to wipe away old warranties.
-   *
-   * Currently does the dead simple method of checking every second for things
-   * to wipe.
-   *
-   * TODO: This is not thread safe due to how table is maintained, go back and
-   * fix the other code to not produce data races.
-   */
-  private final class Collector extends Thread {
-    private Collector() {
-      super("Warranty entry collector");
-      setDaemon(true);
-    }
-
-    @Override
-    public void run() {
-      while (true) {
-        try {
-          // Every second, wipe away stale entries.
-          Thread.sleep(1000);
-
-          HashSet<Long> timeSlices;
-          synchronized (reverseTable) {
-            timeSlices = new HashSet<>(reverseTable.keySet());
-          }
-
-          for (Long timeSlice : timeSlices) {
-            if (((timeSlice.longValue() + 1) << 3) < System.currentTimeMillis()) {
-              Set<Entry> toWipe = reverseTable.removeAll(timeSlice);
-              for (Entry candidate : toWipe) {
-                if (candidate.warrantyIssued.expired(false))
-                  table.remove(candidate.key, candidate);
-              }
-            }
-          }
-        } catch (InterruptedException e) {
-          Logging.logIgnoredInterruptedException(e);
-        }
-      }
-    }
   }
 }
