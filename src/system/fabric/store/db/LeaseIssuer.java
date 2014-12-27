@@ -3,9 +3,10 @@ package fabric.store.db;
 import static fabric.common.Logging.HOTOS_LOGGER;
 import static fabric.common.Logging.STORE_DB_LOGGER;
 
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.logging.Level;
+
+import com.google.common.collect.MapMaker;
 
 import fabric.common.Logging;
 import fabric.common.Lease;
@@ -69,9 +70,7 @@ public class LeaseIssuer<K, V extends Lease> {
   private final AccessMetrics<K> accessMetrics;
 
   protected LeaseIssuer(V defaultLease, AccessMetrics<K> accessMetrics) {
-    //this.table = CacheBuilder.newBuilder().expireAfterWrite(MAX_LEASE_LENGTH,
-        //TimeUnit.MILLISECONDS).<K, V>build().asMap();
-    this.table = new ConcurrentHashMap<>();
+    this.table = (new MapMaker()).<K, V>makeMap();
     this.defaultLease = defaultLease;
     this.accessMetrics = accessMetrics;
   }
