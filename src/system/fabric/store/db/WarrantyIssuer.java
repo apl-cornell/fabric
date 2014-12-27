@@ -84,9 +84,7 @@ public class WarrantyIssuer<K, V extends Warranty> {
   final V get(K key) {
     V existingWarranty = table.get(key);
     if (existingWarranty != null) return existingWarranty;
-
-    existingWarranty = table.putIfAbsent(key, defaultWarranty);
-    return existingWarranty == null ? defaultWarranty : existingWarranty;
+    return defaultWarranty;
   }
 
   /**
