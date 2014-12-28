@@ -107,8 +107,14 @@ public class LeaseIssuer<K, V extends Lease> {
   }
 
   private Entry getEntry(K key) {
+    return getEntry(key, true);
+  }
+
+  private Entry getEntry(K key, boolean createIfAbsent) {
     Entry existingEntry = table.get(key);
     if (existingEntry != null) return existingEntry;
+
+    if (!createIfAbsent) return null;
 
     Entry entry = new Entry(key);
     existingEntry = table.putIfAbsent(key, entry);
@@ -127,7 +133,8 @@ public class LeaseIssuer<K, V extends Lease> {
    * @return the issued lease for the given key.
    */
   final V get(K key) {
-    return getEntry(key).leaseIssued;
+    Entry e;
+    return ((e = getEntry(key, false)) == null) ? defaultLease : e.leaseIssued;
   }
 
   /**
