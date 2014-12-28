@@ -3,10 +3,9 @@ package fabric.store.db;
 import static fabric.common.Logging.HOTOS_LOGGER;
 import static fabric.common.Logging.STORE_DB_LOGGER;
 
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.logging.Level;
-
-import com.google.common.collect.MapMaker;
 
 import fabric.common.Logging;
 import fabric.common.Warranty;
@@ -60,16 +59,61 @@ public class WarrantyIssuer<K, V extends Warranty> {
    */
   private volatile V defaultWarranty;
 
+  private class Entry {
+    final K key;
+    volatile V warrantyIssued;
+
+    Entry(K key) {
+      this.key = key;
+      this.warrantyIssued = defaultWarranty;
+    }
+
+    synchronized void setWarrantyIssued(V warranty) {
+      this.warrantyIssued = warranty;
+    }
+
+    synchronized boolean replaceWarranty(V oldWarranty, V newWarranty) {
+      boolean success = this.warrantyIssued.equals(oldWarranty);
+      if (success) {
+        AccessMetrics<K>.Metrics metrics = getMetrics(key, false);
+        if (metrics != null) {
+          long expiry = newWarranty.expiry();
+          synchronized (metrics) {
+            boolean updated = metrics.updateTerm(expiry);
+            if (updated) this.warrantyIssued = newWarranty;
+            return true;
+          }
+        }
+
+        this.warrantyIssued = newWarranty;
+      }
+      return success;
+    }
+  }
+
   private static int count = 0;
 
-  private final ConcurrentMap<K, V> table;
+  private final ConcurrentMap<K, Entry> table;
 
   private final AccessMetrics<K> accessMetrics;
 
   protected WarrantyIssuer(V defaultWarranty, AccessMetrics<K> accessMetrics) {
-    this.table = (new MapMaker()).<K, V>makeMap();
+    this.table = new ConcurrentHashMap<K, Entry>();
     this.defaultWarranty = defaultWarranty;
     this.accessMetrics = accessMetrics;
+  }
+
+  private Entry getEntry(K key) {
+    Entry existingEntry = table.get(key);
+    if (existingEntry != null) return existingEntry;
+
+    Entry entry = new Entry(key);
+    existingEntry = table.putIfAbsent(key, entry);
+    return existingEntry == null ? entry : existingEntry;
+  }
+
+  private AccessMetrics<K>.Metrics getMetrics(K key, boolean createIfAbsent) {
+    return accessMetrics.getMetrics(key, createIfAbsent);
   }
 
   private AccessMetrics<K>.Metrics getMetrics(K key) {
@@ -80,9 +124,7 @@ public class WarrantyIssuer<K, V extends Warranty> {
    * @return the issued warranty for the given key.
    */
   final V get(K key) {
-    V existingWarranty = table.get(key);
-    if (existingWarranty != null) return existingWarranty;
-    return defaultWarranty;
+    return getEntry(key).warrantyIssued;
   }
 
   /**
@@ -102,19 +144,7 @@ public class WarrantyIssuer<K, V extends Warranty> {
           "Attempted to replace a warranty with one that expires sooner");
     }
 
-    boolean success = false;
-
-    AccessMetrics<K>.Metrics metrics = getMetrics(key);
-    synchronized (metrics) {
-      if (oldWarranty == defaultWarranty && !table.containsKey(key)) {
-        success = true;
-        table.put(key, newWarranty);
-      } else {
-        success = table.replace(key, oldWarranty, newWarranty);
-      }
-      if (success) metrics.updateTerm(newWarranty.expiry());
-    }
-
+    boolean success = getEntry(key).replaceWarranty(oldWarranty, newWarranty);
     if (STORE_DB_LOGGER.isLoggable(Level.FINEST) && success) {
       long expiry = newWarranty.expiry();
       long length = expiry - System.currentTimeMillis();
@@ -143,7 +173,7 @@ public class WarrantyIssuer<K, V extends Warranty> {
           length);
     }
 
-    table.put(key, warranty);
+    getEntry(key).setWarrantyIssued(warranty);
   }
 
   /**
