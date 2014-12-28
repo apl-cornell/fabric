@@ -104,8 +104,14 @@ public class WarrantyIssuer<K, V extends Warranty> {
   }
 
   private Entry getEntry(K key) {
+    return getEntry(key, true);
+  }
+
+  private Entry getEntry(K key, boolean createIfAbsent) {
     Entry existingEntry = table.get(key);
     if (existingEntry != null) return existingEntry;
+
+    if (!createIfAbsent) return null;
 
     Entry entry = new Entry(key);
     existingEntry = table.putIfAbsent(key, entry);
@@ -124,7 +130,8 @@ public class WarrantyIssuer<K, V extends Warranty> {
    * @return the issued warranty for the given key.
    */
   final V get(K key) {
-    return getEntry(key).warrantyIssued;
+    Entry e;
+    return ((e = getEntry(key, false)) == null) ? defaultWarranty : e.warrantyIssued;
   }
 
   /**
