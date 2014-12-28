@@ -3,10 +3,9 @@ package fabric.store.db;
 import static fabric.common.Logging.HOTOS_LOGGER;
 import static fabric.common.Logging.STORE_DB_LOGGER;
 
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.logging.Level;
-
-import com.google.common.collect.MapMaker;
 
 import fabric.common.Logging;
 import fabric.common.Lease;
@@ -63,16 +62,61 @@ public class LeaseIssuer<K, V extends Lease> {
    */
   private volatile V defaultLease;
 
+  private class Entry {
+    final K key;
+    volatile V leaseIssued;
+
+    Entry(K key) {
+      this.key = key;
+      this.leaseIssued = defaultLease;
+    }
+
+    synchronized void setLeaseIssued(V lease) {
+      this.leaseIssued = lease;
+    }
+
+    synchronized boolean replaceLease(V oldLease, V newLease) {
+      boolean success = this.leaseIssued.equals(oldLease);
+      if (success) {
+        AccessMetrics<K>.Metrics metrics = getMetrics(key, false);
+        if (metrics != null) {
+          long expiry = newLease.expiry();
+          synchronized (metrics) {
+            boolean updated = metrics.updateTerm(expiry);
+            if (updated) this.leaseIssued = newLease;
+            return true;
+          }
+        }
+
+        this.leaseIssued = newLease;
+      }
+      return success;
+    }
+  }
+
   private static int count = 0;
 
-  private final ConcurrentMap<K, V> table;
+  private final ConcurrentMap<K, Entry> table;
 
   private final AccessMetrics<K> accessMetrics;
 
   protected LeaseIssuer(V defaultLease, AccessMetrics<K> accessMetrics) {
-    this.table = (new MapMaker()).<K, V>makeMap();
+    this.table = new ConcurrentHashMap<K, Entry>();
     this.defaultLease = defaultLease;
     this.accessMetrics = accessMetrics;
+  }
+
+  private Entry getEntry(K key) {
+    Entry existingEntry = table.get(key);
+    if (existingEntry != null) return existingEntry;
+
+    Entry entry = new Entry(key);
+    existingEntry = table.putIfAbsent(key, entry);
+    return existingEntry == null ? entry : existingEntry;
+  }
+
+  private AccessMetrics<K>.Metrics getMetrics(K key, boolean createIfAbsent) {
+    return accessMetrics.getMetrics(key, createIfAbsent);
   }
 
   private AccessMetrics<K>.Metrics getMetrics(K key) {
@@ -83,9 +127,7 @@ public class LeaseIssuer<K, V extends Lease> {
    * @return the issued lease for the given key.
    */
   final V get(K key) {
-    V existingLease = table.get(key);
-    if (existingLease != null) return existingLease;
-    return defaultLease;
+    return getEntry(key).leaseIssued;
   }
 
   /**
@@ -104,19 +146,7 @@ public class LeaseIssuer<K, V extends Lease> {
           "Attempted to replace a lease with one that expires sooner");
     }
 
-    boolean success = false;
-
-    AccessMetrics<K>.Metrics metrics = getMetrics(key);
-    synchronized (metrics) {
-      if (oldLease == defaultLease && !table.containsKey(key)) {
-        success = true;
-        table.put(key, newLease);
-      } else {
-        success = table.replace(key, oldLease, newLease);
-      }
-      if (success) metrics.updateTerm(newLease.expiry());
-    }
-
+    boolean success = getEntry(key).replaceLease(oldLease, newLease);
     if (STORE_DB_LOGGER.isLoggable(Level.FINEST) && success) {
       long expiry = newLease.expiry();
       long length = expiry - System.currentTimeMillis();
@@ -144,7 +174,7 @@ public class LeaseIssuer<K, V extends Lease> {
           "Adding lease for {0}; expiry={1} (in {2} ms)", key, expiry, length);
     }
 
-    table.put(key, lease);
+    getEntry(key).setLeaseIssued(lease);
   }
 
   /**
@@ -175,7 +205,7 @@ public class LeaseIssuer<K, V extends Lease> {
     // Snapshot state to avoid locking for too long.
     final long readInterval;
     final long writeInterval;
-    //final boolean isWritten;
+    final boolean isWritten;
     Oid writer;
     AccessMetrics<K>.Metrics m = getMetrics(key);
     synchronized (m) {
@@ -186,7 +216,7 @@ public class LeaseIssuer<K, V extends Lease> {
       writeInterval = m.getWriteInterval();
       readInterval = m.getReadInterval();
       writer = m.getWriter();
-      //isWritten = m.isWrittenSinceTerm();
+      isWritten = m.isWrittenSinceTerm();
     }
 
     final int curCount = count++;
