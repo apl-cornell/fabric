@@ -181,9 +181,6 @@ public class RemoteCallManager extends MessageToWorkerHandler {
       tm.associateLog(null);
     }
 
-    /* TODO: Figure out if I should actually be passing back the results of
-     * requests to the remote caller... I don't think so?
-     */
     return new PrepareTransactionWritesMessage.Response(result);
   }
 

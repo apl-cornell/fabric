@@ -1,23 +1,18 @@
 package fabric.worker.memoize;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
-/* TODO:
- *      - Maybe use a concurrent map rather than a synchronized map?
- */
 /**
  * Represents a Cache of all the call values known to this worker along with the
  * semantic warranties for these calls.
  */
 public final class CallCache {
 
-  private Map<CallInstance, WarrantiedCallResult> callTable;
+  private ConcurrentMap<CallInstance, WarrantiedCallResult> callTable;
 
   public CallCache() {
-    callTable = Collections.synchronizedMap(
-        new HashMap<CallInstance, WarrantiedCallResult>());
+    callTable = new ConcurrentHashMap<>();
   }
 
   public WarrantiedCallResult get(CallInstance call) {

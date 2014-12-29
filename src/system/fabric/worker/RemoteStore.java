@@ -362,14 +362,9 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
 
     result = callCache.get(call);
     if (result != null) {
-      if (current == null || !result.getWarranty().expired(true) ||
-          current.useStaleWarranties) {
-        Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
-            "Call {0} found in local call cache: {1}", call, result);
-        return result;
-      } else {
-        result = null;
-      }
+      Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+          "Call {0} found in local call cache: {1}", call, result);
+      return result;
     }
 
     /* TODO: Check dissemination layer. */
@@ -377,15 +372,10 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
     try {
       result = reuseCallFromStore(call);
       if (result != null) {
-        if (current == null || !result.getWarranty().expired(true) ||
-            current.useStaleWarranties) {
-          Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
-              "Call {0} found at store: {1}", call, result);
-          insertResult(call, result);
-          return result;
-        } else {
-          result = null;
-        }
+        Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+            "Call {0} found at store: {1}", call, result);
+        insertResult(call, result);
+        return result;
       }
     } catch (AccessException e) {
     }

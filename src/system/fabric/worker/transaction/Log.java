@@ -154,12 +154,6 @@ public final class Log {
   public final Set<CallInstance> blockedWarranties;
 
   /**
-   * Flag for whether we should optimistically reuse stale warranties.  This
-   * should be true only in the case of checking calls at the store.
-   */
-  public boolean useStaleWarranties;
-
-  /**
    * A call for which this transaction will represent a request for a
    * SemanticWarranty on the call.  This is only for the current transaction,
    * not a subtransaction.
@@ -359,13 +353,11 @@ public final class Log {
     this.requestReplies = Collections.synchronizedMap(
         new HashMap<CallInstance, SemanticWarranty>());
     this.blockedWarranties = new HashSet<>();
-    this.useStaleWarranties = true;
     this.startTime = System.currentTimeMillis();
     this.waitsFor = new HashSet<>();
 
     if (parent != null) {
       this.blockedWarranties.addAll(parent.blockedWarranties);
-      this.useStaleWarranties = parent.useStaleWarranties;
       try {
         Timing.SUBTX.begin();
         this.writerMap = new WriterMap(parent.writerMap);
