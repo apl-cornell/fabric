@@ -6,24 +6,15 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
-import fabric.common.SemanticWarranty;
 import fabric.common.SerializedObject;
-import fabric.common.VersionWarranty;
 import fabric.common.net.RemoteIdentity;
-import fabric.common.util.LongKeyHashMap;
-import fabric.common.util.LongKeyMap;
-import fabric.common.util.Pair;
 import fabric.lang.Object._Impl;
 import fabric.store.PrepareWritesResult;
 import fabric.worker.TransactionPrepareFailedException;
-import fabric.worker.memoize.CallInstance;
 import fabric.worker.memoize.SemanticWarrantyRequest;
-import fabric.worker.memoize.WarrantiedCallResult;
 import fabric.worker.remote.RemoteWorker;
 
 /**
@@ -191,7 +182,7 @@ public class PrepareTransactionWritesMessage
 
     // Read requests
     int requestsSize = in.readInt();
-    this.requests = new HashSet<SemanticWarrantyRequest>(requestsSize);
+    this.requests = new HashSet<>(requestsSize);
     for (int i = 0; i < requestsSize; i++)
       this.requests.add(new SemanticWarrantyRequest(in));
   }

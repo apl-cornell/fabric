@@ -590,7 +590,7 @@ public class BdbDB extends ObjectDB {
 
             // Scan through the commitTimes database and build a commit schedule.
             SortedMap<Long, List<Pair<Long, Principal>>> commitSchedule =
-                new TreeMap<Long, List<Pair<Long, Principal>>>();
+                new TreeMap<>();
             {
               Cursor commitTimesCursor = commitTimes.openCursor(txn, null);
               while (commitTimesCursor.getNext(key, data, null) != OperationStatus.NOTFOUND) {
@@ -600,7 +600,7 @@ public class BdbDB extends ObjectDB {
                 List<Pair<Long, Principal>> toCommit =
                     commitSchedule.get(commitTime);
                 if (toCommit == null) {
-                  toCommit = new ArrayList<Pair<Long, Principal>>(2);
+                  toCommit = new ArrayList<>(2);
                   commitSchedule.put(commitTime, toCommit);
                 }
 
@@ -784,11 +784,11 @@ public class BdbDB extends ObjectDB {
       DataInputStream dis = new DataInputStream(bis);
       long tid = dis.readLong();
 
-      if (data.length < 10) return new Pair<Long, Principal>(tid, null);
+      if (data.length < 10) return new Pair<>(tid, null);
       Store store = Worker.getWorker().getStore(dis.readUTF());
       long onum = dis.readLong();
       Principal owner = new Principal._Proxy(store, onum);
-      return new Pair<Long, Principal>(tid, owner);
+      return new Pair<>(tid, owner);
     } catch (IOException e) {
       throw new InternalError();
     }

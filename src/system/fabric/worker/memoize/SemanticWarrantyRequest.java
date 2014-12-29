@@ -75,7 +75,7 @@ public class SemanticWarrantyRequest {
     for (int i = 0; i < createsLen; i++)
       this.createOnums.add(in.readLong());
 
-    this.calls = new HashMap<CallInstance, WarrantiedCallResult>();
+    this.calls = new HashMap<>();
     int callsLen = in.readInt();
     for (int i = 0; i < callsLen; i++) {
       CallInstance subcall = new CallInstance(in);

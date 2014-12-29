@@ -13,7 +13,6 @@ import java.io.Serializable;
 import fabric.common.SemanticWarranty;
 import fabric.common.util.LongHashSet;
 import fabric.common.util.LongIterator;
-import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongSet;
 import fabric.lang.Object;
 import fabric.lang.WrappedJavaInlineable;

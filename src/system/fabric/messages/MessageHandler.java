@@ -48,7 +48,7 @@ public interface MessageHandler {
       RemoteIdentity<RemoteWorker> client, PrepareTransactionReadsMessage msg)
       throws TransactionPrepareFailedException;
 
-  public ReuseCallMessage.Response handle(RemoteIdentity client,
+  public ReuseCallMessage.Response handle(RemoteIdentity<RemoteWorker> client,
       ReuseCallMessage msg)
       throws ProtocolError, AccessException;
 

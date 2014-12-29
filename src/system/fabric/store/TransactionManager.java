@@ -435,10 +435,8 @@ public class TransactionManager {
       long tid, Map<CallInstance, WarrantiedCallResult> calls, long commitTime)
       throws TransactionPrepareFailedException {
     try {
-      Map<CallInstance, WarrantiedCallResult> updatedWars =
-          new HashMap<CallInstance, WarrantiedCallResult>();
-      Map<CallInstance, WarrantiedCallResult> conflictWars =
-          new HashMap<CallInstance, WarrantiedCallResult>();
+      Map<CallInstance, WarrantiedCallResult> updatedWars = new HashMap<>();
+      Map<CallInstance, WarrantiedCallResult> conflictWars = new HashMap<>();
       for (CallInstance call : calls.keySet()) {
         Pair<SemanticExtendStatus, WarrantiedCallResult> extResult =
             semanticWarranties.extendForReadPrepare(call, calls.get(call),
@@ -505,27 +503,25 @@ public class TransactionManager {
     /* Create the associated warranties and add these calls to the warranties
      * table.
      */
-    Map<CallInstance, SemanticWarranty> warranties =
-        new HashMap<CallInstance, SemanticWarranty>();
+    Map<CallInstance, SemanticWarranty> warranties = new HashMap<>();
 
     // Have to do a topologically sorted order of requests (so call dependencies
     // have warranties already).
-    Map<CallInstance, Set<CallInstance>> simplifiedDepMap =
-        new HashMap<CallInstance, Set<CallInstance>>();
+    Map<CallInstance, Set<CallInstance>> simplifiedDepMap = new HashMap<>();
     Map<CallInstance, SemanticWarrantyRequest> reqMap =
-        new HashMap<CallInstance, SemanticWarrantyRequest>(requests.size());
+        new HashMap<>(requests.size());
     for (SemanticWarrantyRequest r : requests) {
       reqMap.put(r.call, r);
     }
     for (SemanticWarrantyRequest r : requests) {
-      Set<CallInstance> depsInTable = new HashSet<CallInstance>();
+      Set<CallInstance> depsInTable = new HashSet<>();
       for (CallInstance c : r.calls.keySet())
         if (reqMap.containsKey(c)) depsInTable.add(c);
       simplifiedDepMap.put(r.call, depsInTable);
     }
 
-    LinkedList<CallInstance> fringe = new LinkedList<CallInstance>();
-    Set<CallInstance> nonfringe = new HashSet<CallInstance>();
+    LinkedList<CallInstance> fringe = new LinkedList<>();
+    Set<CallInstance> nonfringe = new HashSet<>();
     for (CallInstance k : simplifiedDepMap.keySet())
       if (simplifiedDepMap.get(k).isEmpty())
         fringe.add(k);
@@ -547,7 +543,7 @@ public class TransactionManager {
         warranties.put(r.call, proposed);
 
         //Update fringe
-        for (CallInstance c : new HashSet<CallInstance>(nonfringe)) {
+        for (CallInstance c : new HashSet<>(nonfringe)) {
           simplifiedDepMap.get(c).remove(r.call);
           if (simplifiedDepMap.get(c).isEmpty()) {
             nonfringe.remove(c);
@@ -557,14 +553,14 @@ public class TransactionManager {
       } else {
         // We couldn't get that warranty... so don't even bother with other
         // warranties that used it.  Oh well.
-        List<CallInstance> callsToDrop = new ArrayList<CallInstance>();
+        List<CallInstance> callsToDrop = new ArrayList<>();
         Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINER,
             "{0} could not make a warranty.", r.call);
         callsToDrop.add(r.call);
         // Recursively remove stuff that used this.
         while (!callsToDrop.isEmpty()) {
           CallInstance callToDrop = callsToDrop.remove(0);
-          for (CallInstance c : new HashSet<CallInstance>(nonfringe)) {
+          for (CallInstance c : new HashSet<>(nonfringe)) {
             if (simplifiedDepMap.get(c).contains(callToDrop)) {
               nonfringe.remove(c);
               Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINER,

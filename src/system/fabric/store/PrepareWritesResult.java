@@ -5,17 +5,9 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import fabric.common.SemanticWarranty;
-import fabric.common.VersionWarranty;
-import fabric.common.util.LongKeyMap;
-import fabric.common.util.OidKeyHashMap;
-import fabric.common.util.Pair;
-import fabric.worker.Store;
-import fabric.worker.Worker;
 import fabric.worker.memoize.CallInstance;
-import fabric.worker.memoize.WarrantiedCallResult;
 
 /**
  * Convenience class to bundle up everything that resulted from the prepare
@@ -37,8 +29,7 @@ public final class PrepareWritesResult {
 
     // Read the request responses
     int numResponses = in.readInt();
-    this.callResults =
-      new HashMap<CallInstance, SemanticWarranty>(numResponses);
+    this.callResults = new HashMap<>(numResponses);
     for (int i = 0; i < numResponses; i++) {
       CallInstance call = new CallInstance(in);
       this.callResults.put(call, new SemanticWarranty(in.readLong()));

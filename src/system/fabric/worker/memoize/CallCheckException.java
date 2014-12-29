@@ -11,7 +11,6 @@ public class CallCheckException extends AbortException {
 
   public CallCheckException(Map<CallInstance, SemanticWarrantyRequest> unchanged, Set<CallInstance> changed) {
     super();
-    this.updates = new Pair<Map<CallInstance, SemanticWarrantyRequest>,
-      Set<CallInstance>>(unchanged, changed);
+    this.updates = new Pair<>(unchanged, changed);
   }
 }

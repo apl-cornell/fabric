@@ -146,8 +146,7 @@ public class InProcessStore extends RemoteStore {
       // prepare phase.
     }
 
-    return new Pair<LongKeyMap<VersionWarranty>, Map<CallInstance, WarrantiedCallResult>>(
-        updates, semUpdates);
+    return new Pair<>(updates, semUpdates);
   }
 
   @Override

@@ -46,7 +46,6 @@ import fabric.common.net.handshake.Protocol;
 import fabric.common.net.naming.NameService;
 import fabric.common.net.naming.NameService.PortType;
 import fabric.common.net.naming.TransitionalNameService;
-import fabric.common.util.Pair;
 import fabric.dissemination.AbstractGlob;
 import fabric.dissemination.FetchManager;
 import fabric.lang.FabricClassLoader;

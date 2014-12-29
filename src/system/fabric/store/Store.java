@@ -268,8 +268,7 @@ class Store extends MessageToStoreHandler {
       Logging.HOTOS_LOGGER.info("Read prepare set size is " + msg.reads.size());
     }
 
-    LongKeyMap<VersionWarranty> newWarranties =
-      new LongKeyHashMap<VersionWarranty>();
+    LongKeyMap<VersionWarranty> newWarranties = new LongKeyHashMap<>();
     try {
       newWarranties.putAll(prepareTransactionReads(client, msg.tid, msg.reads,
                             msg.commitTime));
@@ -277,14 +276,13 @@ class Store extends MessageToStoreHandler {
       error = e;
     }
 
-    Map<CallInstance, WarrantiedCallResult> newSemWarranties =
-      new HashMap<CallInstance, WarrantiedCallResult>();
+    Map<CallInstance, WarrantiedCallResult> newSemWarranties = new HashMap<>();
     try {
       newSemWarranties.putAll(prepareTransactionCalls(client.principal, msg.tid,
             msg.calls, msg.commitTime));
     } catch (TransactionPrepareFailedException e) {
       if (error != null) {
-        List<String> msgs = new LinkedList<String>();
+        List<String> msgs = new LinkedList<>();
         if (error.messages != null) msgs.addAll(error.messages);
         if (e.messages != null) msgs.addAll(e.messages);
         throw new TransactionPrepareFailedException(error.versionConflicts,
@@ -312,7 +310,7 @@ class Store extends MessageToStoreHandler {
    * Processes the given call request.
    */
   @Override
-  public ReuseCallMessage.Response handle(RemoteIdentity client,
+  public ReuseCallMessage.Response handle(RemoteIdentity<RemoteWorker> client,
       ReuseCallMessage msg) throws AccessException {
     Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
         "Handling Reuse Call Message from {0} for call {1}",

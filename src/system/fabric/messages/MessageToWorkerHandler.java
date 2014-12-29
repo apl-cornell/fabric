@@ -46,7 +46,8 @@ public abstract class MessageToWorkerHandler extends AbstractMessageServer {
 
   @Override
   public fabric.messages.ReuseCallMessage.Response handle(
-      RemoteIdentity client, ReuseCallMessage msg) throws ProtocolError {
+      RemoteIdentity<RemoteWorker> client, ReuseCallMessage msg)
+          throws ProtocolError {
     throw error(msg);
   }
 

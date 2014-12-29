@@ -148,15 +148,15 @@ public class PrepareTransactionReadsMessage
     // Read reads.
     int size = in.readInt();
     if (size == 0) {
-      reads = new LongKeyHashMap<Integer>();
+      reads = new LongKeyHashMap<>();
     } else {
-      reads = new LongKeyHashMap<Integer>(size);
+      reads = new LongKeyHashMap<>(size);
       for (int i = 0; i < size; i++)
         reads.put(in.readLong(), in.readInt());
     }
 
     int callSize = in.readInt();
-    calls = new HashMap<CallInstance, WarrantiedCallResult>();
+    calls = new HashMap<>();
     for (int i = 0; i < callSize; i++) {
       CallInstance key = new CallInstance(in);
       calls.put(key, new WarrantiedCallResult(in));
@@ -190,15 +190,14 @@ public class PrepareTransactionReadsMessage
   @Override
   protected Response readResponse(DataInput in) throws IOException {
     int size = in.readInt();
-    LongKeyMap<VersionWarranty> newWarranties =
-        new LongKeyHashMap<VersionWarranty>(size);
+    LongKeyMap<VersionWarranty> newWarranties = new LongKeyHashMap<>(size);
     for (int i = 0; i < size; i++) {
       newWarranties.put(in.readLong(), new VersionWarranty(in.readLong()));
     }
 
     int semSize = in.readInt();
     Map<CallInstance, WarrantiedCallResult> newSemWarranties =
-        new HashMap<CallInstance, WarrantiedCallResult>(semSize);
+        new HashMap<>(semSize);
     for (int i = 0; i < semSize; i++) {
       CallInstance key = new CallInstance(in);
       newSemWarranties.put(key, new WarrantiedCallResult(in));

@@ -20,7 +20,6 @@ import fabric.common.Crypto;
 import fabric.common.Logging;
 import fabric.common.ONumConstants;
 import fabric.common.ObjectGroup;
-import fabric.common.SemanticWarranty;
 import fabric.common.SerializedObject;
 import fabric.common.SerializedObjectAndTokens;
 import fabric.common.TransactionID;
@@ -171,9 +170,7 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
       send(Worker.getWorker().authToStore,
           new PrepareTransactionReadsMessage(tid, readOnly, reads, calls,
             commitTime));
-    return new Pair<LongKeyMap<VersionWarranty>, java.util.Map<CallInstance,
-           WarrantiedCallResult>>(response.newWarranties,
-               response.newSemWarranties);
+    return new Pair<>(response.newWarranties, response.newSemWarranties);
   }
 
   @Override

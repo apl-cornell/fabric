@@ -46,7 +46,7 @@ public class ObjectLookAsideMap {
   private OidKeyHashMap<Entry> entryMap;
 
   public ObjectLookAsideMap() {
-    entryMap = new OidKeyHashMap<Entry>();
+    entryMap = new OidKeyHashMap<>();
   }
 
   public _Impl get(Store s, long onum) {

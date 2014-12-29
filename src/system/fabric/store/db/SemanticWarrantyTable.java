@@ -272,7 +272,7 @@ public class SemanticWarrantyTable {
       case STALE:
       default:
         synchronized (callers) {
-          return new HashSet<CallInstance>(callers);
+          return new HashSet<>(callers);
         }
       }
     }
@@ -364,7 +364,7 @@ public class SemanticWarrantyTable {
           createOids = new LongHashSet(creates);
         }
         synchronized (calls) {
-          callsCopy = new HashSet<CallInstance>(calls);
+          callsCopy = new HashSet<>(calls);
         }
         for (CallInstance subcall : callsCopy)
           createOids.addAll(getInfo(subcall).getCreates());
@@ -381,8 +381,8 @@ public class SemanticWarrantyTable {
       try {
         this.call = call;
         this.value = null;
-        this.callers = new HashSet<CallInstance>();
-        this.calls = new HashSet<CallInstance>();
+        this.callers = new HashSet<>();
+        this.calls = new HashSet<>();
         this.creates = new LongHashSet();
         this.reads = new LongHashSet();
         this.nextUpdate = null;
@@ -604,13 +604,13 @@ public class SemanticWarrantyTable {
      * (including itself) which are now expired.
      */
     public Set<CallInstance> getExpiredCalls() {
-      Set<CallInstance> expired = new HashSet<CallInstance>();
+      Set<CallInstance> expired = new HashSet<>();
       switch (getStatus()) {
       case NOVALUE:
         expired.add(call);
         Set<CallInstance> children = null;
         synchronized (calls) {
-          children = new TreeSet<CallInstance>(calls);
+          children = new TreeSet<>(calls);
         }
         for (CallInstance child : children) {
           expired.addAll(getExpiredSubgraph(child));
@@ -692,12 +692,9 @@ public class SemanticWarrantyTable {
       // Rerun the call.
       call.runCall();
 
-      Map<CallInstance, SemanticWarrantyRequest> newUpdates =
-          new HashMap<CallInstance, SemanticWarrantyRequest>();
-      Map<CallInstance, SemanticWarrantyRequest> newChanges =
-          new HashMap<CallInstance, SemanticWarrantyRequest>();
-      Map<CallInstance, SemanticWarrantyRequest> newNewCalls =
-          new HashMap<CallInstance, SemanticWarrantyRequest>();
+      Map<CallInstance, SemanticWarrantyRequest> newUpdates = new HashMap<>();
+      Map<CallInstance, SemanticWarrantyRequest> newChanges = new HashMap<>();
+      Map<CallInstance, SemanticWarrantyRequest> newNewCalls = new HashMap<>();
 
       Map<CallInstance, SemanticWarrantyRequest> updatedRequests =
           current.getAllRequests();
@@ -796,7 +793,7 @@ public class SemanticWarrantyTable {
      * Locks are unlocked in the writePrepare method after everything is done.
      */
     public Set<CallInstance> getAffectedSet() {
-      Set<CallInstance> affected = new TreeSet<CallInstance>();
+      Set<CallInstance> affected = new TreeSet<>();
       affected.add(call);
       switch (getStatus()) {
       case NOVALUE:
@@ -807,7 +804,7 @@ public class SemanticWarrantyTable {
         synchronized (callers) {
           // Go around getCallers since this is used for proposing a write time,
           // which will fail later on if this had no value...
-          callersCopy = new TreeSet<CallInstance>(callers);
+          callersCopy = new TreeSet<>(callers);
         }
         for (CallInstance parent : callersCopy) {
           affected.addAll(getInfo(parent).getAffectedSet());
@@ -864,7 +861,7 @@ public class SemanticWarrantyTable {
             Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
                 "Call {0} extending commit time to {1}", call, getWarranty()
                     .expiry());
-          for (CallInstance parent : new TreeSet<CallInstance>(getCallers())) {
+          for (CallInstance parent : new TreeSet<>(getCallers())) {
             long parentTime =
                 getInfo(parent).proposeWriteTime(uncertainCalls, longest,
                     updates, changes, newCalls, creates, writes, writeLocked);
@@ -904,7 +901,7 @@ public class SemanticWarrantyTable {
       default:
         // Schedule parents only if their dependency changed.
         if (changes.containsKey(call)) {
-          for (CallInstance parent : new TreeSet<CallInstance>(getCallers())) {
+          for (CallInstance parent : new TreeSet<>(getCallers())) {
             getInfo(parent).scheduleWriteAt(time, transactionID, updates,
                 changes);
           }
@@ -1282,8 +1279,7 @@ public class SemanticWarrantyTable {
       Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.SEVERE,
           "CALL {0} IS BEING READ REQUESTED BY TID {1} WHICH UPDATES IT", call,
           tid);
-      return new Pair<SemanticExtendStatus, WarrantiedCallResult>(
-          SemanticExtendStatus.DENIED, get(call));
+      return new Pair<>(SemanticExtendStatus.DENIED, get(call));
     }
     CallInfo info = getInfo(call);
     SemanticExtendStatus stat;
@@ -1296,7 +1292,7 @@ public class SemanticWarrantyTable {
       throw e;
     }
     WarrantiedCallResult res = get(call);
-    return new Pair<SemanticExtendStatus, WarrantiedCallResult>(stat, res);
+    return new Pair<>(stat, res);
   }
 
   /**
@@ -1318,7 +1314,7 @@ public class SemanticWarrantyTable {
       long commitTime, final String storeName)
       throws TransactionPrepareFailedException {
     long startTime = System.currentTimeMillis();
-    TreeSet<CallInstance> affectedCalls = new TreeSet<CallInstance>();
+    TreeSet<CallInstance> affectedCalls = new TreeSet<>();
     ObjectLookAsideMap writeLookAside = new ObjectLookAsideMap();
     ObjectLookAsideMap createLookAside = new ObjectLookAsideMap();
     Store localStore = Worker.getWorker().getStore(database.getName());
@@ -1352,17 +1348,14 @@ public class SemanticWarrantyTable {
 
     long curTime = System.currentTimeMillis();
     long longest = commitTime > curTime ? commitTime : curTime;
-    Map<CallInstance, SemanticWarrantyRequest> changes =
-        new HashMap<CallInstance, SemanticWarrantyRequest>();
-    Map<CallInstance, SemanticWarrantyRequest> updates =
-        new HashMap<CallInstance, SemanticWarrantyRequest>();
-    Map<CallInstance, SemanticWarrantyRequest> newCalls =
-        new HashMap<CallInstance, SemanticWarrantyRequest>();
+    Map<CallInstance, SemanticWarrantyRequest> changes = new HashMap<>();
+    Map<CallInstance, SemanticWarrantyRequest> updates = new HashMap<>();
+    Map<CallInstance, SemanticWarrantyRequest> newCalls = new HashMap<>();
 
     // Lock the calls.
-    Set<CallInstance> writeLockedCalls = new HashSet<CallInstance>();
+    Set<CallInstance> writeLockedCalls = new HashSet<>();
     try {
-      Set<CallInstance> uncertainCalls = new TreeSet<CallInstance>();
+      Set<CallInstance> uncertainCalls = new TreeSet<>();
       for (CallInstance call : affectedCalls) {
         for (CallInstance uncertain : getInfo(call).getAffectedSet()) {
           if (!updatingTIDMap.containsKey(transactionID)
@@ -1418,10 +1411,8 @@ public class SemanticWarrantyTable {
             Long.toHexString(transactionID), longest - commitTime,
             System.currentTimeMillis() - startTime);
 
-    return new Pair<SemanticWarranty, Pair<Map<CallInstance, SemanticWarrantyRequest>, Map<CallInstance, SemanticWarrantyRequest>>>(
-        new SemanticWarranty(longest),
-        new Pair<Map<CallInstance, SemanticWarrantyRequest>, Map<CallInstance, SemanticWarrantyRequest>>(
-            updates, newCalls));
+    return new Pair<>(new SemanticWarranty(longest), new Pair<>(updates,
+          newCalls));
   }
 
   /**
