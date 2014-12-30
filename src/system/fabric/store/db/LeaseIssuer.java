@@ -205,8 +205,7 @@ public class LeaseIssuer<K, V extends Lease> {
   /**
    * Suggests a lease-expiry time beyond the given expiry time.
    *
-   * @return The suggested expiry.  Returns 0 if a warranty should be used
-   * instead.
+   * @return The suggested expiry.
    */
   public long suggestLease(Principal worker, K key, long expiry) {
     // Snapshot state to avoid locking for too long.
@@ -228,7 +227,7 @@ public class LeaseIssuer<K, V extends Lease> {
 
     final int curCount = count++;
 
-    if (writer == null || !writer.equals(new Oid(worker))) {
+    if ((writer == null && isWritten) || !writer.equals(new Oid(worker))) {
       // If object isn't exclusively written by the requester, don't give a
       // lease
       if (curCount % 10000 == 0) {
@@ -236,7 +235,7 @@ public class LeaseIssuer<K, V extends Lease> {
         HOTOS_LOGGER.info("lease #" + curCount + ": " + key + ","
             + readInterval + "," + writeInterval + ",no-exclusive-writer");
       }
-      return 0;
+      return expiry;
     }
 
     if (readInterval > MAX_READ_PREP_INTERVAL) {
