@@ -83,7 +83,7 @@ abstract class Channel<Node extends RemoteNode<Node>> extends Thread {
       in = new GZIPInputStream(in);
     }
 
-    int bufSize = sock.getSendBufferSize() - STREAM_HEADER_SIZE;
+    int bufSize = sock.getSendBufferSize();
     if (bufSize > 8192) bufSize = 8192;
 
     this.out = new DataOutputStream(new BufferedOutputStream(out, bufSize));
