@@ -227,7 +227,8 @@ public class LeaseIssuer<K, V extends Lease> {
 
     final int curCount = count++;
 
-    if ((writer == null && isWritten) || !writer.equals(new Oid(worker))) {
+    if ((writer == null && isWritten)
+        || (writer != null && !writer.equals(new Oid(worker)))) {
       // If object isn't exclusively written by the requester, don't give a
       // lease
       if (curCount % 10000 == 0) {
