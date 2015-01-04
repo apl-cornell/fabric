@@ -218,7 +218,7 @@ public class AccessMetrics<K> {
 
       // Update writer tracking.
       Oid clientOid = new Oid(client);
-      if (writtenSinceTerm && writer != clientOid) {
+      if (writtenSinceTerm && !clientOid.equals(writer)) {
         // If it was already null, this is redundant.
         writer = null;
       } else if (!writtenSinceTerm) {
