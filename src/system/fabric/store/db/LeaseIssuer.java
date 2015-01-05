@@ -33,13 +33,13 @@ public class LeaseIssuer<K, V extends Lease> {
    *
    * TODO: Consider longer K2 since this is less costly than leases.
    */
-  private static final double K2 = 0.5;
+  private static final double K2 = 1;
 
   /**
    * The minimum read-to-write ratio. If the read-to-write ratio for an object
    * is below this threshold, then no leases will be issued for that object.
    */
-  private static final double K3 = 2;
+  private static final double K3 = 1;
 
   /**
    * The number of samples to take after a lease period before issuing another
