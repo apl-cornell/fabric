@@ -30,16 +30,8 @@ public class LeaseIssuer<K, V extends Lease> {
 
   /**
    * The amount by which write intervals are scaled to determine lease length.
-   *
-   * TODO: Consider longer K2 since this is less costly than leases.
    */
   private static final double K2 = 1;
-
-  /**
-   * The minimum read-to-write ratio. If the read-to-write ratio for an object
-   * is below this threshold, then no leases will be issued for that object.
-   */
-  private static final double K3 = 1;
 
   /**
    * The number of samples to take after a lease period before issuing another
@@ -48,13 +40,6 @@ public class LeaseIssuer<K, V extends Lease> {
   public static final int SAMPLE_SIZE = 3;
 
   // END TUNING PARAMETERS ///////////////////////////////////////////////////
-
-  /**
-   * The popularity cutoff. If the average read interval of an object is above
-   * this threshold, then no leases will be issued for that object.
-   */
-  private static final double MAX_READ_PREP_INTERVAL = MAX_LEASE_LENGTH
-      / (K2 * K3);
 
   /**
    * The default lease for keys that aren't yet in the table. All leases in the
@@ -235,16 +220,6 @@ public class LeaseIssuer<K, V extends Lease> {
         // onum, readInterval, actualReadInterval, writeInterval, lease
         HOTOS_LOGGER.info("lease #" + curCount + ": " + key + ","
             + readInterval + "," + writeInterval + ",no-exclusive-client");
-      }
-      return expiry;
-    }
-
-    if (readInterval > MAX_READ_PREP_INTERVAL) {
-      // The object is too unpopular, only issue for the expiry needed.
-      if (curCount % 10000 == 0) {
-        // onum, readInterval, actualReadInterval, writeInterval, lease
-        HOTOS_LOGGER.info("lease #" + curCount + ": " + key + ","
-            + readInterval + "," + writeInterval + ",unpopular");
       }
       return expiry;
     }
