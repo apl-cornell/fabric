@@ -80,17 +80,17 @@ public class AccessMetrics<K> {
     private int numReadPrepares;
 
     /**
-     * The oid of the principal of the writer of this object, if there is only
-     * one.  This is null if either there have been no writers or there is more
+     * The oid of the principal of the client of this object, if there is only
+     * one.  This is null if either there have been no clients or there is more
      * than one.
      */
-    private Oid writer;
+    private Oid client;
 
     /**
-     * True if the object has been written since the beginning of the most
-     * recent term.
+     * True if the object has been used since the beginning of the most recent
+     * term.
      */
-    private boolean writtenSinceTerm;
+    private boolean usedSinceTerm;
 
     public Metrics() {
       final long now = System.currentTimeMillis();
@@ -101,8 +101,8 @@ public class AccessMetrics<K> {
       this.lastWritePrepareTime = now;
       this.writeInterval = Integer.MAX_VALUE;
       this.numReadPrepares = 0;
-      this.writer = null;
-      this.writtenSinceTerm = false;
+      this.client = null;
+      this.usedSinceTerm = false;
     }
 
     // Accessor methods.  Don't make the fields modifiable outside this class.
@@ -150,17 +150,17 @@ public class AccessMetrics<K> {
     }
 
     /**
-     * @return the writer
+     * @return the client
      */
-    public Oid getWriter() {
-      return writer;
+    public Oid getClient() {
+      return client;
     }
 
     /**
-     * @return the writtenSinceTerm
+     * @return the usedSinceTerm
      */
-    public boolean isWrittenSinceTerm() {
-      return writtenSinceTerm;
+    public boolean isUsedSinceTerm() {
+      return usedSinceTerm;
     }
 
     /**
@@ -192,6 +192,16 @@ public class AccessMetrics<K> {
         readInterval =
             (int) (alpha * readInterval + (1.0 - alpha) * curInterval);
       }
+
+      // Update client tracking.
+      Oid workerOid = new Oid(worker);
+      if (usedSinceTerm && !workerOid.equals(client)) {
+        // If it was already null, this is redundant.
+        client = null;
+      } else if (!usedSinceTerm) {
+        client = workerOid;
+        usedSinceTerm = true;
+      }
     }
 
     /**
@@ -203,7 +213,7 @@ public class AccessMetrics<K> {
     /**
      * Notifies of a prepare event.
      */
-    synchronized void notifyWritePrepare(Principal client) {
+    synchronized void notifyWritePrepare(Principal worker) {
       long now = System.currentTimeMillis();
       int curInterval = (int) (now - lastWritePrepareTime);
       lastWritePrepareTime = now;
@@ -216,14 +226,14 @@ public class AccessMetrics<K> {
                 * curInterval);
       }
 
-      // Update writer tracking.
-      Oid clientOid = new Oid(client);
-      if (writtenSinceTerm && !clientOid.equals(writer)) {
+      // Update client tracking.
+      Oid workerOid = new Oid(worker);
+      if (usedSinceTerm && !workerOid.equals(client)) {
         // If it was already null, this is redundant.
-        writer = null;
-      } else if (!writtenSinceTerm) {
-        writer = clientOid;
-        writtenSinceTerm = true;
+        client = null;
+      } else if (!usedSinceTerm) {
+        client = workerOid;
+        usedSinceTerm = true;
       }
     }
 
@@ -251,9 +261,9 @@ public class AccessMetrics<K> {
       } else {
         // Replacing an inactive warranty term.
         lastWarrantyLength = expiry - System.currentTimeMillis();
-        // Reset writer checking.
-        writtenSinceTerm = false;
-        writer = null;
+        // Reset client checking.
+        usedSinceTerm = false;
+        client = null;
       }
 
       lastReadPrepareTime = expiry;
@@ -327,9 +337,9 @@ public class AccessMetrics<K> {
    * being prepared until the corresponding transaction either commits or
    * aborts.
    */
-  public void notifyWritePrepare(K key, Principal client) {
+  public void notifyWritePrepare(K key, Principal worker) {
     Logging.log(HOTOS_LOGGER, Level.FINER, "writing @{0}", key);
-    getMetrics(key).notifyWritePrepare(client);
+    getMetrics(key).notifyWritePrepare(worker);
   }
 
   /**

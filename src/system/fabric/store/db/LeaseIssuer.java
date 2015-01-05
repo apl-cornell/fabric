@@ -211,8 +211,8 @@ public class LeaseIssuer<K, V extends Lease> {
     // Snapshot state to avoid locking for too long.
     final long readInterval;
     final long writeInterval;
-    final boolean isWritten;
-    Oid writer;
+    final boolean isUsed;
+    Oid client;
     AccessMetrics<K>.Metrics m = getMetrics(key);
     synchronized (m) {
       // Only continue if we have enough samples since the last lease
@@ -221,20 +221,20 @@ public class LeaseIssuer<K, V extends Lease> {
 
       writeInterval = m.getWriteInterval();
       readInterval = m.getReadInterval();
-      writer = m.getWriter();
-      isWritten = m.isWrittenSinceTerm();
+      client = m.getClient();
+      isUsed = m.isUsedSinceTerm();
     }
 
     final int curCount = count++;
 
-    if ((writer == null && isWritten)
-        || (writer != null && !writer.equals(new Oid(worker)))) {
-      // If object isn't exclusively written by the requester, don't give a
+    if ((client == null && isUsed)
+        || (client != null && !client.equals(new Oid(worker)))) {
+      // If object isn't exclusively used by the requester, don't give a
       // lease
       if (curCount % 10000 == 0) {
         // onum, readInterval, actualReadInterval, writeInterval, lease
         HOTOS_LOGGER.info("lease #" + curCount + ": " + key + ","
-            + readInterval + "," + writeInterval + ",no-exclusive-writer");
+            + readInterval + "," + writeInterval + ",no-exclusive-client");
       }
       return expiry;
     }
