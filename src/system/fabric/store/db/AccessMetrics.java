@@ -166,7 +166,7 @@ public class AccessMetrics<K> {
     /**
      * Notifies of a read-prepare event.
      */
-    synchronized void notifyReadPrepare() {
+    synchronized void notifyReadPrepare(Principal worker) {
       long now = System.currentTimeMillis();
 
       if (lastReadPrepareTime > now) {
@@ -320,8 +320,8 @@ public class AccessMetrics<K> {
    * Notifies that a read has been prepared, signalling that perhaps the
    * warranties issued should be longer.
    */
-  public void notifyReadPrepare(K key) {
-    getMetrics(key).notifyReadPrepare();
+  public void notifyReadPrepare(K key, Principal worker) {
+    getMetrics(key).notifyReadPrepare(worker);
   }
 
   /**

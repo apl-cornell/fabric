@@ -414,7 +414,7 @@ public abstract class ObjectDB {
     if (unpopular) {
       obj.incrementUnpopularity(accessMetrics);
     } else {
-      accessMetrics.notifyReadPrepare(onum);
+      accessMetrics.notifyReadPrepare(onum, worker);
     }
 
     final boolean extendBeyondCommitTime = !unpopular;
