@@ -860,6 +860,14 @@ public abstract class ObjectDB {
 
         updateLongestWarranty(newWarranty);
       }
+      
+      // We are using a _new_ warranty, did we mask a lease for another client?
+      if (curLease.getOwner() != null && !curLease.expired(false)) {
+        long now = System.currentTimeMillis();
+        long maskTime = Math.min(newWarranty.expiry(), curLease.expiry()) - now;
+        HOTOS_LOGGER.info("Lease for " + onum + " masked by warranty for " +
+            maskTime + "ms");
+      }
 
       result.status = ExtendReadLockStatus.NEW;
       result.warranty = newWarranty;
