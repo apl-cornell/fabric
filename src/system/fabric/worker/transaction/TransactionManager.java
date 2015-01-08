@@ -403,7 +403,7 @@ public final class TransactionManager {
 
     // XXX Log how many round trips this commit took
     Logging.log(HOTOS_LOGGER, Level.INFO, "Commit took {0} round trips",
-        current.commitState.commitRoundTrips);
+        HOTOS_current.commitState.commitRoundTrips);
 
     final long actualCommitTime =
         Math.max(commitTime, System.currentTimeMillis());
