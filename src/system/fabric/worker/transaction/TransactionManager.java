@@ -423,6 +423,10 @@ public final class TransactionManager {
     // Send commit messages to our cohorts.
     sendCommitMessagesAndCleanUp(readOnly, writeResult.commitTime);
 
+    // XXX Log how many round trips this commit took
+    Logging.log(HOTOS_LOGGER, Level.INFO, "Commit took {0} round trips",
+        current.commitState.commitRoundTrips);
+
     final long actualCommitTime =
         Math.max(writeResult.commitTime, System.currentTimeMillis());
     COMMIT_TIME.set(actualCommitTime);
@@ -599,6 +603,12 @@ public final class TransactionManager {
       }
     }
 
+    if (current.workersCalled.size() > 0 ||
+        storesWritten.size() > 1 ||
+        (storesWritten.size() == 1 && !(storesWritten.toArray()[0] instanceof InProcessStore))) {
+      current.commitState.commitRoundTrips++;
+    }
+
     // Wait for replies.
     for (Future<?> future : futures) {
       while (true) {
@@ -759,6 +769,7 @@ public final class TransactionManager {
 
     current.commitState.commitTime = commitTime;
     int numRemoteReadsPrepared = 0;
+    int numRemoteCallsPrepared = 0;
     for (Iterator<Entry<Store, LongKeyMap<Integer>>> entryIt =
         storesRead.entrySet().iterator(); entryIt.hasNext();) {
       Entry<Store, LongKeyMap<Integer>> entry = entryIt.next();
@@ -769,6 +780,7 @@ public final class TransactionManager {
 
       if (!store.isLocalStore()) {
         numRemoteReadsPrepared += reads.size();
+        numRemoteCallsPrepared += calls.size();
       }
 
       NamedRunnable runnable =
@@ -812,6 +824,12 @@ public final class TransactionManager {
       } else {
         runnable.run();
       }
+    }
+
+    if (current.workersCalled.size() > 0 ||
+        numRemoteReadsPrepared > 0 ||
+        numRemoteCallsPrepared > 0) {
+      current.commitState.commitRoundTrips++;
     }
 
     if (HOTOS_LOGGER.isLoggable(Level.FINE)) {
@@ -998,18 +1016,25 @@ public final class TransactionManager {
         } else {
           runnable.run();
         }
+      }
 
-        // Wait for replies.
-        for (Future<?> future : futures) {
-          while (true) {
-            try {
-              future.get();
-              break;
-            } catch (InterruptedException e) {
-              Logging.logIgnoredInterruptedException(e);
-            } catch (ExecutionException e) {
-              e.printStackTrace();
-            }
+      if (current.workersCalled.size() > 0 ||
+          current.commitState.storesContacted.size() > 1 ||
+          (current.commitState.storesContacted.size() == 1 &&
+           !(current.commitState.storesContacted.toArray()[0] instanceof InProcessStore))) {
+        current.commitState.commitRoundTrips++;
+      }
+
+      // Wait for replies.
+      for (Future<?> future : futures) {
+        while (true) {
+          try {
+            future.get();
+            break;
+          } catch (InterruptedException e) {
+            Logging.logIgnoredInterruptedException(e);
+          } catch (ExecutionException e) {
+            e.printStackTrace();
           }
         }
 
