@@ -593,14 +593,7 @@ public final class TransactionManager {
                     new TransactionPrepareFailedException("Unreachable store"));
               }
             }
-          } catch (TransactionPrepareFailedException e) {
-            failures.put((RemoteNode<?>) store, e);
-          } catch (UnreachableNodeException e) {
-            failures.put((RemoteNode<?>) store,
-                new TransactionPrepareFailedException("Unreachable store"));
-          }
-        }
-      };
+        };
 
       // Optimization: only start in a new thread if there are more stores to
       // contact and if it's a truly remote store (i.e., not in-process).
@@ -781,7 +774,6 @@ public final class TransactionManager {
 
     current.commitState.commitTime = commitTime;
     int numRemoteReadsPrepared = 0;
-    int numRemoteCallsPrepared = 0;
     for (Iterator<Entry<Store, LongKeyMap<Integer>>> entryIt =
         storesRead.entrySet().iterator(); entryIt.hasNext();) {
       Entry<Store, LongKeyMap<Integer>> entry = entryIt.next();
@@ -792,7 +784,6 @@ public final class TransactionManager {
 
       if (!store.isLocalStore()) {
         numRemoteReadsPrepared += reads.size();
-        numRemoteCallsPrepared += calls.size();
       }
 
       NamedRunnable runnable =
@@ -826,21 +817,7 @@ public final class TransactionManager {
                     new TransactionPrepareFailedException("Unreachable store"));
               }
             }
-
-            LongKeyMap<VersionWarranty> newWarranties =
-                store.prepareTransactionReads(current.tid.topTid, readOnly,
-                    reads, commitTime);
-
-            // Prepare was successful. Update the objects' warranties.
-            current.updateVersionWarranties(store, newWarranties);
-          } catch (TransactionPrepareFailedException e) {
-            failures.put((RemoteNode<?>) store, e);
-          } catch (UnreachableNodeException e) {
-            failures.put((RemoteNode<?>) store,
-                new TransactionPrepareFailedException("Unreachable store"));
-          }
-        }
-      };
+        };
 
       // Optimization: only start in a new thread if there are more ss to
       // contact and if it's a truly remote s (i.e., not in-process).
