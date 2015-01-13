@@ -391,19 +391,6 @@ public final class TransactionManager {
 
     // Commit top-level transaction.
 
-    // Send prepare-write messages to our cohorts. If the prepare fails, this
-    // will abort our portion of the transaction and throw a
-    // TransactionRestartingException.
-    long startTime = System.currentTimeMillis();
-    PrepareWritesResult writeResult = sendPrepareWriteMessages();
-
-    Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
-        "Delay since we began is {0}ms", (writeResult.commitTime - startTime));
-
-    //current.semanticWarrantiesUsed.putAll(writeResult.addedCalls);
-    current.requestReplies.putAll(writeResult.callResults);
-    //current.addedReads = writeResult.addedReads;
-
     Log HOTOS_current = current;
     List<RemoteWorker> workers = current.workersCalled;
     final boolean isWriteFree =
@@ -415,6 +402,18 @@ public final class TransactionManager {
     stores.addAll(current.storesWritten());
     final long prepareStart = System.currentTimeMillis();
 
+    // Set number of round trips to 0
+    ROUND_TRIPS.set(0);
+
+    // Send prepare-write messages to our cohorts. If the prepare fails, this
+    // will abort our portion of the transaction and throw a
+    // TransactionRestartingException.
+    PrepareWritesResult writeResult = sendPrepareWriteMessages();
+
+    //current.semanticWarrantiesUsed.putAll(writeResult.addedCalls);
+    current.requestReplies.putAll(writeResult.callResults);
+    //current.addedReads = writeResult.addedReads;
+
     // Send prepare-read messages to our cohorts. If the prepare fails, this
     // will abort our portion of the transaction and throw a
     // TransactionRestartingException.
@@ -422,10 +421,6 @@ public final class TransactionManager {
 
     // Send commit messages to our cohorts.
     sendCommitMessagesAndCleanUp(readOnly, writeResult.commitTime);
-
-    // XXX Log how many round trips this commit took
-    Logging.log(HOTOS_LOGGER, Level.INFO, "Commit took {0} round trips",
-        HOTOS_current.commitState.commitRoundTrips);
 
     final long actualCommitTime =
         Math.max(writeResult.commitTime, System.currentTimeMillis());
@@ -459,6 +454,12 @@ public final class TransactionManager {
    * transaction latency.
    */
   public static final ThreadLocal<Long> COMMIT_TIME = new ThreadLocal<>();
+
+  /**
+   * XXX Similarly gross HACK for making transaction commit round trips visible
+   * to the application.
+   */
+  public static final ThreadLocal<Integer> ROUND_TRIPS = new ThreadLocal<>();
 
   private static LocalStore LOCAL_STORE;
 
@@ -609,7 +610,7 @@ public final class TransactionManager {
     }
 
     if (haveRoundTrip) {
-      current.commitState.commitRoundTrips++;
+      ROUND_TRIPS.set(ROUND_TRIPS.get().intValue() + 1);
     }
 
     // Wait for replies.
@@ -833,7 +834,7 @@ public final class TransactionManager {
     }
 
     if (haveRoundTrip) {
-      current.commitState.commitRoundTrips++;
+      ROUND_TRIPS.set(ROUND_TRIPS.get().intValue() + 1);
     }
 
     if (HOTOS_LOGGER.isLoggable(Level.FINE)) {
@@ -1028,7 +1029,7 @@ public final class TransactionManager {
       }
 
       if (haveRoundTrip) {
-        current.commitState.commitRoundTrips++;
+        ROUND_TRIPS.set(ROUND_TRIPS.get().intValue() + 1);
       }
 
       // Wait for replies.
