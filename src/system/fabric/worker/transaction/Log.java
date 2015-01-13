@@ -181,12 +181,6 @@ public final class Log {
      * The set of stores that have been contacted by the commit protocol.
      */
     public final Set<Store> storesContacted = new HashSet<>();
-    
-    /**
-     * Counter to track how many round trips used in the protocol (for
-     * performance statistics).  XXX This is a bit of a hack.
-     */
-    public byte commitRoundTrips = 0;
   }
 
   public final AbstractSecurityCache securityCache;
