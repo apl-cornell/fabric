@@ -144,7 +144,7 @@ public class DisjunctivePrincipal extends NonPrimitivePrincipal {
     // Rewrite q:(⋁p_i) as ⋁(q:p_i).
     Set<Principal> disjuncts = new HashSet<>(p.size());
     for (Principal p_i : p) {
-      disjuncts.add(q.owner(p_i));
+      disjuncts.add(q.project(p_i));
     }
 
     return PrincipalUtil.meet(disjuncts);
