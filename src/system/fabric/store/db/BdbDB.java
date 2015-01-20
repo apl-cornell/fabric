@@ -197,7 +197,7 @@ public class BdbDB extends ObjectDB {
       @Override
       public Void run(Transaction txn) throws RuntimeException {
         DatabaseEntry data = new DatabaseEntry();
-        LongBinding.longToEntry(longestWarranty[0].expiry(), data);
+        LongBinding.longToEntry(longestExpiry[0], data);
 
         meta.put(txn, longestWarrantyEntry, data);
         return null;
@@ -612,9 +612,8 @@ public class BdbDB extends ObjectDB {
             // Recover the longest warranty issued and use that as the default
             // warranty.
             if (meta.get(txn, longestWarrantyEntry, data, LockMode.DEFAULT) == SUCCESS) {
-              longestWarranty[0] =
-                  new VersionWarranty(LongBinding.entryToLong(data));
-              warrantyIssuer.setDefaultWarranty(longestWarranty[0]);
+              longestExpiry[0] = LongBinding.entryToLong(data);
+              warrantyIssuer.setDefaultWarranty(new VersionWarranty(longestExpiry[0]));
             }
 
             return commitSchedule;
