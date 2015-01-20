@@ -230,14 +230,18 @@ public abstract class ObjectDB {
 
   /**
    * <p>
-   * A ref cell containing a warranty that will expire after all warranties
-   * issued thus far. The ref cell is used as a mutex for accessing its value.
+   * A ref cell containing the longest expiration on any outstanding cached
+   * values the store is supposed to honor.  This protects against recovering
+   * from a crash while clients have outstanding values like warranties.
+   * </p>
+   * <p>
+   * The ref cell is used as a mutex for accessing its value.
    * </p>
    * <p>
    * This should be saved to stable storage and restored when starting up.
    * </p>
    */
-  protected final VersionWarranty[] longestWarranty;
+  protected final long[] longestExpiry;
 
   /**
    * The table containing the version warranties that we've issued.
@@ -287,7 +291,7 @@ public abstract class ObjectDB {
     this.writeLocks = new ConcurrentLongKeyHashMap<>();
     this.writtenOnumsByTid = new ConcurrentLongKeyHashMap<>();
     this.objectGrouper = new ObjectGrouper(this, privateKey);
-    this.longestWarranty = new VersionWarranty[] { new VersionWarranty(0) };
+    this.longestExpiry = new long[] { 0 };
     this.accessMetrics = new AccessMetrics<>();
     this.warrantyIssuer = new WarrantyIssuer<>(new VersionWarranty(0),
         this.accessMetrics);
@@ -738,18 +742,18 @@ public abstract class ObjectDB {
   }
 
   private void updateLongestWarranty(VersionWarranty warranty) {
-    synchronized (longestWarranty) {
-      if (warranty.expiresAfter(longestWarranty[0])) {
-        // Fudge longestWarranty so we don't continually touch disk when we create
+    synchronized (longestExpiry) {
+      if (warranty.expiresAfterStrict(longestExpiry[0])) {
+        // Fudge longestExpiry so we don't continually touch disk when we create
         // a sequence of warranties whose expiries increase with real time.
-        longestWarranty[0] = new VersionWarranty(warranty.expiry() + 30 * 1000);
+        longestExpiry[0] = warranty.expiry() + 30 * 1000;
         saveLongestWarranty();
       }
     }
   }
 
   /**
-   * Saves the warranty in <code>longestWarranty</code> to stable storage. On
+   * Saves the warranty in <code>longestExpiry</code> to stable storage. On
    * recovery, this value will be used as the default warranty.
    */
   protected abstract void saveLongestWarranty();
