@@ -741,22 +741,22 @@ public abstract class ObjectDB {
     return warrantyIssuer.get(onum);
   }
 
-  private void updateLongestWarranty(VersionWarranty warranty) {
+  private void updateLongestExpiry(long newExpiry) {
     synchronized (longestExpiry) {
-      if (warranty.expiresAfterStrict(longestExpiry[0])) {
+      if (newExpiry > longestExpiry[0]) {
         // Fudge longestExpiry so we don't continually touch disk when we create
         // a sequence of warranties whose expiries increase with real time.
-        longestExpiry[0] = warranty.expiry() + 30 * 1000;
-        saveLongestWarranty();
+        longestExpiry[0] = newExpiry + 30 * 1000;
+        saveLongestExpiry();
       }
     }
   }
 
   /**
-   * Saves the warranty in <code>longestExpiry</code> to stable storage. On
-   * recovery, this value will be used as the default warranty.
+   * Saves the expiry in <code>longestExpiry</code> to stable storage. On
+   * recovery, this value will be used as the default expiry.
    */
-  protected abstract void saveLongestWarranty();
+  protected abstract void saveLongestExpiry();
 
   /**
    * Extends the version warranty of an object, if necessary and possible. The
@@ -845,10 +845,7 @@ public abstract class ObjectDB {
 
           // If we crash, recover by "upgrading" leases to warranties until the
           // longest lease or warranty has expired.
-          //
-          // TODO: there's probably a refactoring that should happen for this to
-          // be cleaner, but it works for now.
-          updateLongestWarranty(new VersionWarranty(newLease.expiry()));
+          updateLongestExpiry(expiry);
         }
 
         result.status = ExtendReadLockStatus.NEW;
@@ -862,7 +859,7 @@ public abstract class ObjectDB {
       if (expiry > System.currentTimeMillis()) {
         if (!warrantyIssuer.replace(onum, curWarranty, newWarranty)) continue;
 
-        updateLongestWarranty(newWarranty);
+        updateLongestExpiry(expiry);
       }
       
       // We are using a _new_ warranty, did we mask a lease for another client?

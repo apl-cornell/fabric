@@ -190,7 +190,7 @@ public class BdbDB extends ObjectDB {
   }
 
   @Override
-  protected void saveLongestWarranty() {
+  protected void saveLongestExpiry() {
     STORE_DB_LOGGER.fine("Bdb saving longest warranty");
 
     runInBdbTransaction(new Code<Void, RuntimeException>() {
