@@ -227,7 +227,7 @@ public class MemoryDB extends ObjectDB {
   }
 
   @Override
-  protected void saveLongestWarranty() {
+  protected void saveLongestExpiry() {
     // TODO Implement me!
   }
 
