@@ -819,42 +819,34 @@ public abstract class ObjectDB {
 
       // Extend the object's warranty or lease.
       long expiry = minExpiry;
-      boolean canLease = false;
-      if (extendBeyondMinExpiry) {
-        expiry = warrantyIssuer.suggestWarranty(onum, minExpiry);
+      if (extendBeyondMinExpiry && worker != null
+          && (curLease.expired(false) || curLease.ownedByPrincipal(worker))) {
+        // Only bother with leasing if either the worker owns the lease or their
+        // is no lease currently owned.
+        long suggestedLeaseExpiry =
+            leaseIssuer.suggestLease(worker, onum, minExpiry);
 
-        if (expiry <= minExpiry && worker != null && (curLease.expired(false) ||
-              curLease.ownedByPrincipal(worker))) {
-          // Only bother with leasing if we won't warranty and we're doing this
-          // for a worker when either there is no current lease or this worker
-          // owns the current lease.
-          long suggestedLeaseExpiry =
-              leaseIssuer.suggestLease(worker, onum, minExpiry);
-          if (suggestedLeaseExpiry > expiry) {
-            canLease = true;
-            expiry = suggestedLeaseExpiry;
+        if (suggestedLeaseExpiry > expiry) {
+          // Can issue a lease!
+          expiry = suggestedLeaseExpiry;
+
+          RWLease newLease = new RWLease(expiry, new Oid(worker));
+          if (expiry > System.currentTimeMillis()) {
+            if (!leaseIssuer.replace(onum, curLease, newLease)) continue;
+
+            // If we crash, recover by "upgrading" leases to warranties until the
+            // longest lease or warranty has expired.
+            updateLongestExpiry(expiry);
           }
+
+          result.status = ExtendReadLockStatus.NEW;
+          result.warranty = curWarranty;
+          result.lease = newLease;
+          return result;
         }
       }
 
-      if (canLease) {
-        // Can lease, use that in place of a warranty.
-        RWLease newLease = new RWLease(expiry, new Oid(worker));
-        if (expiry > System.currentTimeMillis()) {
-          if (!leaseIssuer.replace(onum, curLease, newLease)) continue;
-
-          // If we crash, recover by "upgrading" leases to warranties until the
-          // longest lease or warranty has expired.
-          updateLongestExpiry(expiry);
-        }
-
-        result.status = ExtendReadLockStatus.NEW;
-        result.warranty = curWarranty;
-        result.lease = newLease;
-        return result;
-      }
-
-      // Otherwise, use a warranty.
+      // No lease, lock for the requested amount of time
       VersionWarranty newWarranty = new VersionWarranty(expiry);
       if (expiry > System.currentTimeMillis()) {
         if (!warrantyIssuer.replace(onum, curWarranty, newWarranty)) continue;
@@ -862,7 +854,7 @@ public abstract class ObjectDB {
         updateLongestExpiry(expiry);
       }
       
-      // We are using a _new_ warranty, did we mask a lease for another client?
+      // Did we mask a lease for another client?
       if (curLease.getOwner() != null && !curLease.expired(false) &&
           !newWarranty.expired(false)) {
         long now = System.currentTimeMillis();
