@@ -868,9 +868,8 @@ public abstract class ObjectDB {
         long now = System.currentTimeMillis();
         long maskTime = Math.min(newWarranty.expiry(), curLease.expiry()) - now;
         HOTOS_LOGGER.info("Lease for " + onum + " masked by warranty for " +
-            maskTime + "ms.  Client: " +
-            accessMetrics.getMetrics(onum).getClient() + ", Requester: " +
-            new Oid(worker));
+            maskTime + "ms. Requester: " + new Oid(worker) + " " +
+            accessMetrics.getMetrics(onum));
       }
 
       result.status = ExtendReadLockStatus.NEW;
