@@ -55,9 +55,10 @@ public class AccessMetrics<K> {
     private long lastReadPrepareTime;
 
     /**
-     * The length of the last warranty issued.
+     * The length of the last term for a read token (like a warranty) to be
+     * issued.
      */
-    private long lastWarrantyLength;
+    private long lastTermLength;
 
     /**
      * The moving average of (estimated) read intervals, in milliseconds.
@@ -96,13 +97,25 @@ public class AccessMetrics<K> {
       final long now = System.currentTimeMillis();
 
       this.lastReadPrepareTime = now;
-      this.lastWarrantyLength = 0;
+      this.lastTermLength = 0;
       this.readInterval = Integer.MAX_VALUE;
       this.lastWritePrepareTime = now;
       this.writeInterval = Integer.MAX_VALUE;
       this.numReadPrepares = 0;
       this.client = null;
       this.usedSinceTerm = false;
+    }
+
+    @Override
+    public String toString() {
+      return "Metrics[LastReadPrepareTime: " + lastReadPrepareTime
+                  + " LastTermLength: " + lastTermLength
+                  + " ReadInterval: " + readInterval
+                  + " LastWritePrepareTime: " + lastWritePrepareTime
+                  + " WriteInterval: " + writeInterval
+                  + " NumReadPrepares: " + numReadPrepares
+                  + " Client: " + client
+                  + " UsedSinceTerm: " + usedSinceTerm + "]";
     }
 
     // Accessor methods.  Don't make the fields modifiable outside this class.
@@ -115,10 +128,10 @@ public class AccessMetrics<K> {
     }
 
     /**
-     * @return the lastWarrantyLength
+     * @return the lastTermLength
      */
-    public long getLastWarrantyLength() {
-      return lastWarrantyLength;
+    public long getLastTermLength() {
+      return lastTermLength;
     }
 
     /**
@@ -185,7 +198,7 @@ public class AccessMetrics<K> {
         final double alpha;
         if (numReadPrepares == 1) {
           // First read prepare after a warranty period.
-          alpha = Math.exp(NEG_DECAY_CONSTANT * lastWarrantyLength);
+          alpha = Math.exp(NEG_DECAY_CONSTANT * lastTermLength);
         } else {
           alpha = PREPARE_ALPHA;
         }
@@ -257,10 +270,10 @@ public class AccessMetrics<K> {
           lastReadPrepareTime > System.currentTimeMillis()) {
         // We are extending a warranty term that is still active.
         long delta = expiry - lastReadPrepareTime;
-        lastWarrantyLength += delta;
+        lastTermLength += delta;
       } else {
         // Replacing an inactive warranty term.
-        lastWarrantyLength = expiry - System.currentTimeMillis();
+        lastTermLength = expiry - System.currentTimeMillis();
         // Reset client checking.
         usedSinceTerm = false;
         client = null;
