@@ -821,19 +821,27 @@ public abstract class ObjectDB {
       long expiry = minExpiry;
       boolean canLease = false;
       if (extendBeyondMinExpiry) {
-        expiry = warrantyIssuer.suggestWarranty(onum, minExpiry);
+        // XXX Ugh, I'm starting to suspect we should wrap the intertwined logic
+        // here into a wrapper around both issuers.
 
-        if (expiry <= minExpiry && worker != null && (curLease.expired(false) ||
+        // First see if we can lease
+        if (worker != null && (curLease.expired(false) ||
               curLease.ownedByPrincipal(worker))) {
-          // Only bother with leasing if we won't warranty and we're doing this
-          // for a worker when either there is no current lease or this worker
-          // owns the current lease.
+          // Only bother with leasing if we're doing this for a worker when
+          // either there is no current lease or this worker owns the current
+          // lease.
           long suggestedLeaseExpiry =
               leaseIssuer.suggestLease(worker, onum, minExpiry);
           if (suggestedLeaseExpiry > expiry) {
             canLease = true;
             expiry = suggestedLeaseExpiry;
           }
+        }
+
+        // If we can't lease, it's possible that it was shared and could be
+        // warrantied.
+        if (!canLease) {
+          expiry = warrantyIssuer.suggestWarranty(onum, minExpiry);
         }
       }
 
