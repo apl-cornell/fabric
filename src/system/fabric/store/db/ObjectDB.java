@@ -832,7 +832,9 @@ public abstract class ObjectDB {
           // lease.
           long suggestedLeaseExpiry =
               leaseIssuer.suggestLease(worker, onum, minExpiry);
-          if (suggestedLeaseExpiry > expiry) {
+          if (suggestedLeaseExpiry >= expiry) {
+            // If we can lease (there isn't more clients than we thought),
+            // great!
             canLease = true;
             expiry = suggestedLeaseExpiry;
           }

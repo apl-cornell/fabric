@@ -188,7 +188,8 @@ public class LeaseIssuer<K, V extends Lease> {
   }
 
   /**
-   * Suggests a lease-expiry time beyond the given expiry time.
+   * Suggests a lease-expiry time beyond the given expiry time.  Returns 0 if
+   * a lease would be inappropriate for this object.
    *
    * @return The suggested expiry.
    */
@@ -221,7 +222,7 @@ public class LeaseIssuer<K, V extends Lease> {
         HOTOS_LOGGER.info("lease #" + curCount + ": " + key + ","
             + readInterval + "," + writeInterval + ",no-exclusive-client");
       }
-      return expiry;
+      return 0;
     }
 
     // Issue lease with term as long as K2 * writeInterval
