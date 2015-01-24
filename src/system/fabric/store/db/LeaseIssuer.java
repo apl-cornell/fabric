@@ -203,7 +203,7 @@ public class LeaseIssuer<K, V extends Lease> {
     synchronized (m) {
       // Only continue if we have enough samples since the last lease
       // period.
-      if (m.getNumReadPrepares() < SAMPLE_SIZE) return expiry;
+      if (m.getNumReadPrepares() < SAMPLE_SIZE) return 0;
 
       writeInterval = m.getWriteInterval();
       readInterval = m.getReadInterval();
