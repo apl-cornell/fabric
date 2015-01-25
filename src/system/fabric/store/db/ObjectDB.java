@@ -869,6 +869,7 @@ public abstract class ObjectDB {
               + "\n\tMin Expiry: " + minExpiry
               + "\n\tWarranty Expiry: " + curWarranty.expiry()
               + "\n\tLease Expiry: " + newLease.expiry()
+              + "\n\tLease Owner: " + newLease.getOwner()
               + "\n\tRequester: " + new Oid(worker)
               + "\n\t" + accessMetrics.getMetrics(onum));
         }
@@ -897,6 +898,7 @@ public abstract class ObjectDB {
             + "\n\tMin Expiry: " + minExpiry
             + "\n\tWarranty Expiry: " + newWarranty.expiry()
             + "\n\tLease Expiry: " + curLease.expiry()
+            + "\n\tLease Owner: " + curLease.getOwner()
             + "\n\tRequester: " + new Oid(worker)
             + "\n\t" + accessMetrics.getMetrics(onum));
       }
