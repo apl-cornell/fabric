@@ -892,7 +892,7 @@ public abstract class ObjectDB {
           !newWarranty.expired(true)) {
         long now = System.currentTimeMillis();
         long maskTime = Math.min(newWarranty.expiry(), curLease.expiry()) - now;
-        HOTOS_LOGGER.info("New lease for " + onum + " masked by warranty for "
+        HOTOS_LOGGER.info("Old lease for " + onum + " masked by warranty for "
             + maskTime + "ms."
             + "\n\tMin Expiry: " + minExpiry
             + "\n\tWarranty Expiry: " + newWarranty.expiry()
