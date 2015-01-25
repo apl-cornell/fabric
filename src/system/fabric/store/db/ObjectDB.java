@@ -825,16 +825,19 @@ public abstract class ObjectDB {
         // here into a wrapper around both issuers.
 
         // First see if we can lease
-        if (worker != null && (curLease.expired(false) ||
-              curLease.ownedByPrincipal(worker))) {
+        boolean leaseExpired = curLease.expired(false);
+        if (worker != null
+            && (leaseExpired || curLease.ownedByPrincipal(worker))) {
           // Only bother with leasing if we're doing this for a worker when
           // either there is no current lease or this worker owns the current
           // lease.
           long suggestedLeaseExpiry =
               leaseIssuer.suggestLease(worker, onum, minExpiry);
-          if (suggestedLeaseExpiry >= expiry) {
-            // If we can lease (there isn't more clients than we thought),
-            // great!
+          if (suggestedLeaseExpiry > minExpiry
+              || (!leaseExpired && suggestedLeaseExpiry == minExpiry)) {
+            // Lease either if we can extend beyond the request with a lease or
+            // if we're under a lease and it's appropriate to continue the lease
+            // (we don't have other users).
             canLease = true;
             expiry = suggestedLeaseExpiry;
           }
