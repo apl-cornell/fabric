@@ -40,7 +40,7 @@ public class AccessMetrics<K> {
    * The number of samples to take after a warranty period before issuing
    * another warranty.
    */
-  public static final int SAMPLE_SIZE = 3;
+  public static final int SAMPLE_SIZE = 5;
 
   // END TUNING PARAMETERS ///////////////////////////////////////////////////
 

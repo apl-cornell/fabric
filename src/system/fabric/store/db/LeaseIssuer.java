@@ -37,7 +37,7 @@ public class LeaseIssuer<K, V extends Lease> {
    * The number of samples to take after a lease period before issuing another
    * lease.
    */
-  public static final int SAMPLE_SIZE = 3;
+  public static final int SAMPLE_SIZE = 5;
 
   // END TUNING PARAMETERS ///////////////////////////////////////////////////
 
