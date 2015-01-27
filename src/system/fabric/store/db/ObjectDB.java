@@ -867,8 +867,11 @@ public abstract class ObjectDB {
           long now = System.currentTimeMillis();
           long maskTime = Math.min(newLease.expiry(), curWarranty.expiry()) -
             now;
-          HOTOS_LOGGER.info("New lease for " + onum + " masked by warranty for "
-              + maskTime + "ms."
+          fabric.lang.Object._Impl obj =
+            read(onum).deserialize(Worker.getWorker().getStore(getName()),
+                curWarranty, newLease);
+          HOTOS_LOGGER.info("New lease for " + obj.$getOnum()
+              + " masked by warranty for " + maskTime + "ms."
               + "\n\tMin Expiry: " + minExpiry
               + "\n\tWarranty Expiry: " + curWarranty.expiry()
               + "\n\tLease Expiry: " + newLease.expiry()
@@ -896,8 +899,11 @@ public abstract class ObjectDB {
           !newWarranty.expired(true)) {
         long now = System.currentTimeMillis();
         long maskTime = Math.min(newWarranty.expiry(), curLease.expiry()) - now;
-        HOTOS_LOGGER.info("Old lease for " + onum + " masked by warranty for "
-            + maskTime + "ms."
+        fabric.lang.Object._Impl obj =
+          read(onum).deserialize(Worker.getWorker().getStore(getName()),
+              newWarranty, curLease);
+        HOTOS_LOGGER.info("Old lease for " + obj.$getOnum()
+            + " masked by warranty for " + maskTime + "ms."
             + "\n\tMin Expiry: " + minExpiry
             + "\n\tWarranty Expiry: " + newWarranty.expiry()
             + "\n\tLease Expiry: " + curLease.expiry()
