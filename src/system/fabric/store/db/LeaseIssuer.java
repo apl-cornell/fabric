@@ -26,7 +26,7 @@ public class LeaseIssuer<K, V extends Lease> {
    * The maximum length of time (in milliseconds) for which each issued lease
    * should be valid.
    */
-  private static final int MAX_LEASE_LENGTH = 10000;
+  private static final int MAX_LEASE_LENGTH = 15000;
 
   /**
    * The amount by which write intervals are scaled to determine lease length.
