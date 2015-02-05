@@ -1,7 +1,8 @@
 #!/usr/bin/perl -np
 s/\bK\b/long/g;
 s/AccessMetrics/LongKeyAccessMetrics/g;
-s/Cache/LongKeyCache/g;
+#s/Cache/LongKeyCache/g; // Trying to keep the guava cache for now.
+s/Cache<long/Cache<Long/g;
 s/ConcurrentMap<long, /ConcurrentLongKeyMap</g;
 s/ConcurrentHashMap<long, /ConcurrentLongKeyHashMap</g;
 s/WarrantyIssuer/LongKeyWarrantyIssuer/g;

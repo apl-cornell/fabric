@@ -336,10 +336,10 @@
         <include name="**/*_ppg.cup" />
       </fileset>
 
-      <!-- <fileset dir="${system.src}">
+      <fileset dir="${system.src}">
         <include name="fabric/store/db/LongKeyWarrantyIssuer.java"/>
         <include name="fabric/store/db/LongKeyAccessMetrics.java"/>
-      </fileset> -->
+      </fileset>
     </delete>
 
     <subant target="clobber">
@@ -540,14 +540,12 @@
     </touch>
   </target>
 
-  <!-- <target name="bootstrap-check" depends="LongKeyWarrantyIssuer"> -->
-  <target name="bootstrap-check">
+  <target name="bootstrap-check" depends="LongKeyWarrantyIssuer">
     <uptodate property="bootstrap.up-to-date" targetfile="${bootstrap.tstamp}">
       <srcfiles dir="${bootstrap.src}" includes="**" />
     </uptodate>
   </target>
 
-  <!--
   <target name="LongKeyWarrantyIssuer-check">
     <condition property="LongKeys.up-to-date">
       <and>
@@ -574,7 +572,7 @@
       <fileset dir="${system.src}/fabric/store/db/"
           includes="WarrantyIssuer.java" />
     </apply>
-  </target> -->
+  </target>
 
   <!-- Compiles the Fabric runtime classes that are implemented in Java -->
   <target name="native" depends="init,bootstrap,native-check"
