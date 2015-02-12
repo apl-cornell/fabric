@@ -852,7 +852,7 @@ public abstract class ObjectDB {
 
       if (canLease) {
         // Can lease, use that in place of a warranty.
-        RWLease newLease = new RWLease(expiry, new Oid(worker));
+        RWLease newLease = new RWLease(expiry, worker);
         if (expiry > System.currentTimeMillis()) {
           if (!leaseIssuer.replace(onum, curLease, newLease)) continue;
 
@@ -875,7 +875,7 @@ public abstract class ObjectDB {
               + "\n\tMin Expiry: " + minExpiry
               + "\n\tWarranty Expiry: " + curWarranty.expiry()
               + "\n\tLease Expiry: " + newLease.expiry()
-              + "\n\tLease Owner: " + newLease.getOwner()
+              + "\n\tLease Owner: " + (newLease.getOwnerStore().name() + "://" + newLease.getOwnerOnum())
               + "\n\tRequester: " + new Oid(worker)
               + "\n\t" + accessMetrics.getMetrics(onum));
         }
@@ -895,7 +895,7 @@ public abstract class ObjectDB {
       }
       
       // We are using a _new_ warranty, did we mask a lease for another client?
-      if (curLease.getOwner() != null && !curLease.expired(true) &&
+      if (curLease.getOwnerStore() != null && !curLease.expired(true) &&
           !newWarranty.expired(true)) {
         long now = System.currentTimeMillis();
         long maskTime = Math.min(newWarranty.expiry(), curLease.expiry()) - now;
@@ -907,7 +907,7 @@ public abstract class ObjectDB {
             + "\n\tMin Expiry: " + minExpiry
             + "\n\tWarranty Expiry: " + newWarranty.expiry()
             + "\n\tLease Expiry: " + curLease.expiry()
-            + "\n\tLease Owner: " + curLease.getOwner()
+            + "\n\tLease Owner: " + (curLease.getOwnerStore().name() + "://" + curLease.getOwnerOnum())
             + "\n\tRequester: " + new Oid(worker)
             + "\n\t" + accessMetrics.getMetrics(onum));
       }

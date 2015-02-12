@@ -2,8 +2,8 @@ package fabric.common;
 
 import java.io.Serializable;
 
-import fabric.common.util.Oid;
 import fabric.lang.security.Principal;
+import fabric.worker.Store;
 import fabric.worker.Worker;
 
 /**
@@ -12,17 +12,32 @@ import fabric.worker.Worker;
 public class RWLease extends Lease implements Serializable {
 
   /**
-   * Owner of the lease with read-write privileges.
+   * (Inlined) owner of the lease with read-write privileges.
+   *
+   * Store and onum for the owner's principal.
    */
-  private final Oid owner;
+  private final Store ownerStore;
+  private final long ownerOnum;
 
   /**
    * @param expiry expiry time, in milliseconds since the epoch.
-   * @param owner Oid of the worker principal which owns the lease.
+   * @param ownerStore store of the worker principal which owns the lease.
+   * @param ownerOnum onum of the worker principal which owns the lease.
    */
-  public RWLease(long expiry, Oid owner) {
+  public RWLease(long expiry, Store ownerStore, long ownerOnum) {
     super(expiry);
-    this.owner = owner;
+    this.ownerStore = ownerStore;
+    this.ownerOnum = ownerOnum;
+  }
+
+  /**
+   * @param expiry expiry time, in milliseconds since the epoch.
+   * @param owner the worker principal which owns the lease.
+   */
+  public RWLease(long expiry, Principal owner) {
+    super(expiry);
+    this.ownerStore = owner.$getStore();
+    this.ownerOnum = owner.$getOnum();
   }
 
   /**
@@ -32,13 +47,15 @@ public class RWLease extends Lease implements Serializable {
    */
   public RWLease(long expiry) {
     super(expiry);
-    this.owner = null;
+    this.ownerStore = null;
+    this.ownerOnum = 0;
   }
 
   // Deserialization constructor.
   protected RWLease() {
     super(0);
-    this.owner = null;
+    this.ownerStore = null;
+    this.ownerOnum = 0;
   }
 
   /**
@@ -47,8 +64,8 @@ public class RWLease extends Lease implements Serializable {
    * @param p Principal to be checked.
    */
   public boolean ownedByPrincipal(Principal p) {
-    if (owner == null) return false;
-    return owner.equals(new Oid(p));
+    if (ownerStore == null) return false;
+    return ownerStore.equals(p.$getStore()) && ownerOnum == p.$getOnum();
   }
 
   /**
@@ -59,9 +76,16 @@ public class RWLease extends Lease implements Serializable {
   }
 
   /**
-   * @return the owner
+   * @return the owner store
    */
-  public Oid getOwner() {
-    return owner;
+  public Store getOwnerStore() {
+    return ownerStore;
+  }
+
+  /**
+   * @return the owner store
+   */
+  public long getOwnerOnum() {
+    return ownerOnum;
   }
 }
