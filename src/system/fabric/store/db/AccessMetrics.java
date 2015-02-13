@@ -11,8 +11,8 @@ import com.google.common.cache.Cache;
 
 import fabric.common.exceptions.InternalError;
 import fabric.common.Logging;
-import fabric.common.util.Oid;
 import fabric.lang.security.Principal;
+import fabric.worker.Store;
 
 /**
  * Table of read and write metrics for keys K.  This information is used for
@@ -81,11 +81,17 @@ public class AccessMetrics<K> {
     private int numReadPrepares;
 
     /**
-     * The oid of the principal of the client of this object, if there is only
+     * The store of the principal of the client of this object, if there is only
      * one.  This is null if either there have been no clients or there is more
      * than one.
      */
-    private Oid client;
+    private Store clientStore;
+
+    /**
+     * The onum of the principal of the client of this object, if there is only
+     * one.
+     */
+    private long clientOnum;
 
     /**
      * True if the object has been used since the beginning of the most recent
@@ -102,7 +108,8 @@ public class AccessMetrics<K> {
       this.lastWritePrepareTime = now;
       this.writeInterval = Integer.MAX_VALUE;
       this.numReadPrepares = 0;
-      this.client = null;
+      this.clientStore = null;
+      this.clientOnum = 0;
       this.usedSinceTerm = false;
     }
 
@@ -114,7 +121,7 @@ public class AccessMetrics<K> {
                   + " LastWritePrepareTime: " + lastWritePrepareTime
                   + " WriteInterval: " + writeInterval
                   + " NumReadPrepares: " + numReadPrepares
-                  + " Client: " + client
+                  + " Client: " + (clientStore.name() + "://" + clientOnum)
                   + " UsedSinceTerm: " + usedSinceTerm + "]";
     }
 
@@ -163,10 +170,17 @@ public class AccessMetrics<K> {
     }
 
     /**
-     * @return the client
+     * @return the client store
      */
-    public Oid getClient() {
-      return client;
+    public Store getClientStore() {
+      return clientStore;
+    }
+
+    /**
+     * @return the client onum
+     */
+    public long getClientOnum() {
+      return clientOnum;
     }
 
     /**
@@ -206,13 +220,15 @@ public class AccessMetrics<K> {
             (int) (alpha * readInterval + (1.0 - alpha) * curInterval);
       }
 
-      // Update client tracking.
-      Oid workerOid = new Oid(worker);
-      if (usedSinceTerm && !workerOid.equals(client)) {
+      if (usedSinceTerm &&
+          !(worker.$getStore().equals(clientStore) &&
+            worker.$getOnum() == clientOnum)) {
         // If it was already null, this is redundant.
-        client = null;
+        clientStore = null;
+        clientOnum = 0;
       } else if (!usedSinceTerm) {
-        client = workerOid;
+        clientStore = worker.$getStore();
+        clientOnum = worker.$getOnum();
         usedSinceTerm = true;
       }
     }
@@ -240,12 +256,15 @@ public class AccessMetrics<K> {
       }
 
       // Update client tracking.
-      Oid workerOid = new Oid(worker);
-      if (usedSinceTerm && !workerOid.equals(client)) {
+      if (usedSinceTerm &&
+          !(worker.$getStore().equals(clientStore) &&
+            worker.$getOnum() == clientOnum)) {
         // If it was already null, this is redundant.
-        client = null;
+        clientStore = null;
+        clientOnum = 0;
       } else if (!usedSinceTerm) {
-        client = workerOid;
+        clientStore = worker.$getStore();
+        clientOnum = worker.$getOnum();
         usedSinceTerm = true;
       }
     }
@@ -276,7 +295,8 @@ public class AccessMetrics<K> {
         lastTermLength = expiry - System.currentTimeMillis();
         // Reset client checking.
         usedSinceTerm = false;
-        client = null;
+        clientStore = null;
+        clientOnum = 0;
       }
 
       lastReadPrepareTime = expiry;

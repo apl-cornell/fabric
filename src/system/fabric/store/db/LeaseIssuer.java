@@ -10,8 +10,8 @@ import java.util.logging.Level;
 import fabric.common.Logging;
 import fabric.common.Lease;
 import fabric.common.exceptions.InternalError;
-import fabric.common.util.Oid;
 import fabric.lang.security.Principal;
+import fabric.worker.Store;
 
 /**
  * A lease issuer maintains the mapping from keys to leases on those keys and
@@ -198,7 +198,8 @@ public class LeaseIssuer<K, V extends Lease> {
     final long readInterval;
     final long writeInterval;
     final boolean isUsed;
-    Oid client;
+    Store clientStore;
+    long clientOnum;
     AccessMetrics<K>.Metrics m = getMetrics(key);
     synchronized (m) {
       // Only continue if we have enough samples since the last lease
@@ -207,14 +208,17 @@ public class LeaseIssuer<K, V extends Lease> {
 
       writeInterval = m.getWriteInterval();
       readInterval = m.getReadInterval();
-      client = m.getClient();
+      clientStore = m.getClientStore();
+      clientOnum = m.getClientOnum();
       isUsed = m.isUsedSinceTerm();
     }
 
     final int curCount = count++;
 
-    if ((client == null && isUsed)
-        || (client != null && !client.equals(new Oid(worker)))) {
+    if ((clientStore == null && isUsed)
+        || (clientStore != null &&
+            !(clientStore.equals(worker.$getStore()) &&
+              clientOnum == worker.$getOnum()))) {
       // If object isn't exclusively used by the requester, don't give a
       // lease
       if (curCount % 10000 == 0) {
