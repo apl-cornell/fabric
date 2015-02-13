@@ -244,14 +244,10 @@ public abstract class ObjectDB {
   protected final long[] longestExpiry;
 
   /**
-   * The table containing the version warranties that we've issued.
+   * The table containing the object warranties and leases that have been
+   * issued.  Also provides suggestions for new warranties and leases.
    */
-  protected final WarrantyIssuer<Long, VersionWarranty> warrantyIssuer;
-
-  /**
-   * The table containing the object leases we've issued.
-   */
-  protected final LeaseIssuer<Long, RWLease> leaseIssuer;
+  protected final CombinedIssuer<Long, RWLease, VersionWarranty> tokenIssuer;
 
   /**
    * The table containing the access metrics for each object.
@@ -293,9 +289,7 @@ public abstract class ObjectDB {
     this.objectGrouper = new ObjectGrouper(this, privateKey);
     this.longestExpiry = new long[] { 0 };
     this.accessMetrics = new AccessMetrics<>();
-    this.warrantyIssuer = new WarrantyIssuer<>(new VersionWarranty(0),
-        this.accessMetrics);
-    this.leaseIssuer = new LeaseIssuer<>(new RWLease(0), this.accessMetrics);
+    this.tokenIssuer = new CombinedIssuer<>(new RWLease(0), new VersionWarranty(0), this.accessMetrics);
   }
 
   /**
@@ -728,7 +722,7 @@ public abstract class ObjectDB {
    * will be returned.
    */
   public final RWLease getLease(long onum) {
-    return leaseIssuer.get(onum);
+    return tokenIssuer.getLease(onum);
   }
 
   /**
@@ -738,7 +732,7 @@ public abstract class ObjectDB {
    *       warranty will be returned.
    */
   public final VersionWarranty getWarranty(long onum) {
-    return warrantyIssuer.get(onum);
+    return tokenIssuer.getWarranty(onum);
   }
 
   private void updateLongestExpiry(long newExpiry) {
@@ -788,8 +782,8 @@ public abstract class ObjectDB {
     while (true) {
       // Get the object's current warranty and determine whether it needs to be
       // extended.
-      VersionWarranty curWarranty = warrantyIssuer.get(onum);
-      RWLease curLease = leaseIssuer.get(onum);
+      VersionWarranty curWarranty = tokenIssuer.getWarranty(onum);
+      RWLease curLease = tokenIssuer.getLease(onum);
       boolean workerOwnsLease =
           worker != null && curLease.ownedByPrincipal(worker);
 
@@ -817,44 +811,21 @@ public abstract class ObjectDB {
         return EXTEND_READ_LOCK_DENIED;
       }
 
-      // Extend the object's warranty or lease.
-      long expiry = minExpiry;
+      // Extend the warranty
       boolean canLease = false;
+      long expiry = minExpiry;
       if (extendBeyondMinExpiry) {
-        // XXX Ugh, I'm starting to suspect we should wrap the intertwined logic
-        // here into a wrapper around both issuers.
-
-        // First see if we can lease
-        boolean leaseExpired = curLease.expired(false);
-        if (worker != null
-            && (leaseExpired || curLease.ownedByPrincipal(worker))) {
-          // Only bother with leasing if we're doing this for a worker when
-          // either there is no current lease or this worker owns the current
-          // lease.
-          long suggestedLeaseExpiry =
-              leaseIssuer.suggestLease(worker, onum, minExpiry);
-          if (suggestedLeaseExpiry > minExpiry
-              || (!leaseExpired && suggestedLeaseExpiry == minExpiry)) {
-            // Lease either if we can extend beyond the request with a lease or
-            // if we're under a lease and it's appropriate to continue the lease
-            // (we don't have other users).
-            canLease = true;
-            expiry = suggestedLeaseExpiry;
-          }
-        }
-
-        // If we can't lease, it's possible that it was shared and could be
-        // warrantied.
-        if (!canLease) {
-          expiry = warrantyIssuer.suggestWarranty(onum, minExpiry);
-        }
+        // Get a suggestion
+        CombinedIssuer.Suggestion suggested = tokenIssuer.suggestToken(worker, onum);
+        canLease = suggested.leaseAppropriate;
+        expiry = suggested.expiry;
       }
-
+      
       if (canLease) {
         // Can lease, use that in place of a warranty.
         RWLease newLease = new RWLease(expiry, worker);
         if (expiry > System.currentTimeMillis()) {
-          if (!leaseIssuer.replace(onum, curLease, newLease)) continue;
+          if (!tokenIssuer.replace(onum, curLease, newLease)) continue;
 
           // If we crash, recover by "upgrading" leases to warranties until the
           // longest lease or warranty has expired.
@@ -889,7 +860,7 @@ public abstract class ObjectDB {
       // Otherwise, use a warranty.
       VersionWarranty newWarranty = new VersionWarranty(expiry);
       if (expiry > System.currentTimeMillis()) {
-        if (!warrantyIssuer.replace(onum, curWarranty, newWarranty)) continue;
+        if (!tokenIssuer.replace(onum, curWarranty, newWarranty)) continue;
 
         updateLongestExpiry(expiry);
       }
@@ -931,7 +902,7 @@ public abstract class ObjectDB {
             false, true, false);
     if (result == EXTEND_READ_LOCK_DENIED) {
       return new ReadPrepareResult(ExtendReadLockStatus.OLD,
-          warrantyIssuer.get(onum), leaseIssuer.get(onum));
+          tokenIssuer.getWarranty(onum), tokenIssuer.getLease(onum));
     }
 
     return result;

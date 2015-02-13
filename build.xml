@@ -555,6 +555,9 @@
         <uptodate property="LongKeyWarrantyIssuer.up-to-date"
             srcfile="${system.src}/fabric/store/db/WarrantyIssuer.java"
             targetfile="${system.src}/fabric/store/db/LongKeyWarrantyIssuer.java"/>
+        <uptodate property="LongKeyCombinedIssuer.up-to-date"
+            srcfile="${system.src}/fabric/store/db/CombinedIssuer.java"
+            targetfile="${system.src}/fabric/store/db/LongKeyCombinedIssuer.java"/>
         <uptodate property="LongKeyAccessMetrics.up-to-date"
             srcfile="${system.src}/fabric/store/db/AccessMetrics.java"
             targetfile="${system.src}/fabric/store/db/LongKeyAccessMetrics.java"/>
