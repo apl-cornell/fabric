@@ -355,11 +355,11 @@ public class CombinedIssuer<K, L extends Lease, W extends Warranty> {
     }
 
     // Only lease if the requester is the only user
-    boolean leasePossible = !isUsed ||
-                            (worker != null &&
-                             clientStore != null &&
-                             clientOnum == worker.$getOnum() &&
-                             clientStore.equals(worker.$getStore()));
+    boolean leasePossible = worker != null &&
+                            (!isUsed ||
+                             (clientStore != null &&
+                              clientOnum == worker.$getOnum() &&
+                              clientStore.equals(worker.$getStore())));
 
     // Stop now if we haven't sampled enough.
     if (numReadPrepares < SAMPLE_SIZE)
