@@ -407,6 +407,9 @@ public final class TransactionManager {
     boolean singleStore = workers.isEmpty() && numRemoteStores == 1;
     boolean readOnly = current.isReadOnly();
 
+    // Set number of round trips to 0
+    ROUND_TRIPS.set(0);
+
     // Send prepare messages to our cohorts. This will also abort our portion of
     // the transaction if the prepare fails.
     sendPrepareMessages(singleStore, readOnly, stores, workers);
@@ -435,6 +438,12 @@ public final class TransactionManager {
    * transaction latency.
    */
   public static final ThreadLocal<Long> COMMIT_TIME = new ThreadLocal<>();
+
+  /**
+   * XXX Similarly gross HACK for making transaction commit round trips visible
+   * to the application.
+   */
+  public static final ThreadLocal<Integer> ROUND_TRIPS = new ThreadLocal<>();
 
   private static LocalStore LOCAL_STORE;
 
@@ -516,6 +525,8 @@ public final class TransactionManager {
       futures.add(Threading.getPool().submit(runnable));
     }
 
+    boolean haveRoundTrip = false;
+
     // Go through each store and send prepare messages in parallel.
     for (Iterator<Store> storeIt = stores.iterator(); storeIt.hasNext();) {
       final Store store = storeIt.next();
@@ -547,6 +558,13 @@ public final class TransactionManager {
       } else {
         runnable.run();
       }
+
+      if (!(store instanceof InProcessStore || store.isLocalStore()))
+        haveRoundTrip = true;
+    }
+
+    if (haveRoundTrip) {
+      ROUND_TRIPS.set(ROUND_TRIPS.get().intValue() + 1);
     }
 
     // Wait for replies.
@@ -675,6 +693,8 @@ public final class TransactionManager {
         futures.add(Threading.getPool().submit(runnable));
       }
 
+      boolean haveRoundTrip = false;
+
       // Send commit messages to the stores in parallel.
       for (Iterator<Store> storeIt = stores.iterator(); storeIt.hasNext();) {
         final Store store = storeIt.next();
@@ -700,6 +720,13 @@ public final class TransactionManager {
         } else {
           runnable.run();
         }
+
+        if (!(store instanceof InProcessStore || store.isLocalStore()))
+          haveRoundTrip = true;
+      }
+
+      if (haveRoundTrip) {
+        ROUND_TRIPS.set(ROUND_TRIPS.get().intValue() + 1);
       }
 
       // Wait for replies.

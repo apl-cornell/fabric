@@ -1,10 +1,12 @@
 package fabric.common.util;
 
+import java.io.Serializable;
+
 import fabric.worker.Store;
 
-public class Oid {
-  final Store store;
-  final long onum;
+public class Oid implements Serializable {
+  public final Store store;
+  public final long onum;
 
   public Oid(Store store, long onum) {
     if (store == null) {

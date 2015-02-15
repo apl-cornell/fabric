@@ -33,6 +33,7 @@ import fabric.net.RemoteNode;
 abstract class Channel<Node extends RemoteNode<Node>> extends Thread {
   static final int DEFAULT_MAX_OPEN_CONNECTIONS = 0;
   private static final boolean USE_COMPRESSION = false;
+  private static final int MAX_SEND_BUF_SIZE = 8192;
 
   private final DataOutputStream out;
   private final DataInputStream in;
@@ -83,9 +84,8 @@ abstract class Channel<Node extends RemoteNode<Node>> extends Thread {
       in = new GZIPInputStream(in);
     }
 
-    this.out =
-        new DataOutputStream(new BufferedOutputStream(out,
-            sock.getSendBufferSize()));
+    final int bufSize = Math.min(sock.getSendBufferSize(), MAX_SEND_BUF_SIZE);
+    this.out = new DataOutputStream(new BufferedOutputStream(out, bufSize));
 
     this.in =
         new DataInputStream(new BufferedInputStream(in,
@@ -244,9 +244,9 @@ abstract class Channel<Node extends RemoteNode<Node>> extends Thread {
 
       this.streamID = streamID;
 
-      int bufSize = sock.getSendBufferSize() - STREAM_HEADER_SIZE;
-      if (bufSize > 8192) bufSize = 8192;
-
+      final int bufSize =
+          Math.min(sock.getSendBufferSize(), MAX_SEND_BUF_SIZE)
+          - STREAM_HEADER_SIZE;
       this.out =
           new BufferedOutputStream(new MuxedOutputStream(streamID), bufSize);
 
