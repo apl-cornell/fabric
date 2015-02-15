@@ -658,7 +658,7 @@
 
   <!-- Compiles the part of the runtime that is implemented in Fabric -->
   <target name="fabric-runtime"
-      depends="fabric-signatures,fabil-runtime">
+      depends="fabric-signatures,fabil-runtime,fla-runtime">
     <fabc dest="${runtime.classes}">
       <arg value="-j" />
       <arg value="-Xms256M" />
@@ -671,6 +671,17 @@
     </fabc>
   </target>
 
+  <target name="fla-runtime" depends="fabric-system">
+    <javac source="1.7" target="1.7"
+        srcdir="${runtime.src}" destdir="${runtime.classes}"
+        includes="fla/**"
+        includeAntRuntime="false" debug="on">
+      <classpath>
+        <pathelement location="${classes}" />
+        <path refid="lib.classpath"/>
+      </classpath>
+    </javac>
+  </target>
   <!--
   ****************************************************************************
     Version-management targets
