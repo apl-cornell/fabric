@@ -123,7 +123,7 @@ public class AccessMetrics<K> {
                   + " NumReadPrepares: " + numReadPrepares
                   + " Client: " + (clientStore == null ? "null" :
                                                          (clientStore.name() +
-                                                          "://" + clientOnum)
+                                                          "://" + clientOnum))
                   + " UsedSinceTerm: " + usedSinceTerm + "]";
     }
 
