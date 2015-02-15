@@ -121,7 +121,9 @@ public class AccessMetrics<K> {
                   + " LastWritePrepareTime: " + lastWritePrepareTime
                   + " WriteInterval: " + writeInterval
                   + " NumReadPrepares: " + numReadPrepares
-                  + " Client: " + (clientStore.name() + "://" + clientOnum)
+                  + " Client: " + (clientStore == null ? "null" :
+                                                         (clientStore.name() +
+                                                          "://" + clientOnum)
                   + " UsedSinceTerm: " + usedSinceTerm + "]";
     }
 
