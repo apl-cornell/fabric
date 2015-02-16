@@ -404,7 +404,8 @@ public class CombinedIssuer<K, L extends Lease, W extends Warranty> {
     }
 
     // Standard warranty
-    long suggestedTerm = (long) (WARRANTY_K2 * writeInterval);
+    long suggestedTerm = Math.min((long) (WARRANTY_K2 * writeInterval),
+        MAX_WARRANTY_LENGTH);
 
     if (logResult) 
       HOTOS_LOGGER.info("Token (Warranty) #" + curCount + ": " + key + "," +
