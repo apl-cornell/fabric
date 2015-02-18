@@ -12,7 +12,6 @@ import fabric.common.VersionWarranty;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.ProtocolError;
 import fabric.common.net.RemoteIdentity;
-import fabric.common.util.Oid;
 import fabric.lang.Object._Impl;
 import fabric.worker.Store;
 import fabric.worker.Worker;
@@ -107,10 +106,10 @@ public class DirtyReadMessage extends
       out.writeUTF(r.store.name());
       r.obj.getSerializedObject().write(out);
       out.writeLong(r.obj.getWarranty().expiry());
-      if (r.obj.getLease().getOwner() != null) {
+      if (r.obj.getLease().getOwnerStore() != null) {
         out.writeBoolean(true);
-        out.writeUTF(r.obj.getLease().getOwner().store.name());
-        out.writeLong(r.obj.getLease().getOwner().onum);
+        out.writeUTF(r.obj.getLease().getOwnerStore().name());
+        out.writeLong(r.obj.getLease().getOwnerOnum());
       } else {
         out.writeBoolean(false);
       }
@@ -133,8 +132,8 @@ public class DirtyReadMessage extends
     RWLease lease;
     if (in.readBoolean()) {
       Store ownerStore = Worker.getWorker().getStore(in.readUTF());
-      Oid ownerOid = new Oid(ownerStore, in.readLong());
-      lease = new RWLease(in.readLong(), ownerOid);
+      long ownerOnum = in.readLong();
+      lease = new RWLease(in.readLong(), ownerStore, ownerOnum);
     } else {
       lease = new RWLease(in.readLong());
     }

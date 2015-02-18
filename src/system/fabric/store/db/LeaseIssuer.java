@@ -10,8 +10,8 @@ import java.util.logging.Level;
 import fabric.common.Logging;
 import fabric.common.Lease;
 import fabric.common.exceptions.InternalError;
-import fabric.common.util.Oid;
 import fabric.lang.security.Principal;
+import fabric.worker.Store;
 
 /**
  * A lease issuer maintains the mapping from keys to leases on those keys and
@@ -26,7 +26,7 @@ public class LeaseIssuer<K, V extends Lease> {
    * The maximum length of time (in milliseconds) for which each issued lease
    * should be valid.
    */
-  private static final int MAX_LEASE_LENGTH = 10000;
+  private static final int MAX_LEASE_LENGTH = 15000;
 
   /**
    * The amount by which write intervals are scaled to determine lease length.
@@ -37,7 +37,7 @@ public class LeaseIssuer<K, V extends Lease> {
    * The number of samples to take after a lease period before issuing another
    * lease.
    */
-  public static final int SAMPLE_SIZE = 3;
+  public static final int SAMPLE_SIZE = 5;
 
   // END TUNING PARAMETERS ///////////////////////////////////////////////////
 
@@ -188,7 +188,8 @@ public class LeaseIssuer<K, V extends Lease> {
   }
 
   /**
-   * Suggests a lease-expiry time beyond the given expiry time.
+   * Suggests a lease-expiry time beyond the given expiry time.  Returns 0 if
+   * a lease would be inappropriate for this object.
    *
    * @return The suggested expiry.
    */
@@ -197,7 +198,8 @@ public class LeaseIssuer<K, V extends Lease> {
     final long readInterval;
     final long writeInterval;
     final boolean isUsed;
-    Oid client;
+    Store clientStore;
+    long clientOnum;
     AccessMetrics<K>.Metrics m = getMetrics(key);
     synchronized (m) {
       // Only continue if we have enough samples since the last lease
@@ -206,14 +208,17 @@ public class LeaseIssuer<K, V extends Lease> {
 
       writeInterval = m.getWriteInterval();
       readInterval = m.getReadInterval();
-      client = m.getClient();
+      clientStore = m.getClientStore();
+      clientOnum = m.getClientOnum();
       isUsed = m.isUsedSinceTerm();
     }
 
     final int curCount = count++;
 
-    if ((client == null && isUsed)
-        || (client != null && !client.equals(new Oid(worker)))) {
+    if ((clientStore == null && isUsed)
+        || (clientStore != null &&
+            !(clientStore.equals(worker.$getStore()) &&
+              clientOnum == worker.$getOnum()))) {
       // If object isn't exclusively used by the requester, don't give a
       // lease
       if (curCount % 10000 == 0) {
@@ -221,7 +226,7 @@ public class LeaseIssuer<K, V extends Lease> {
         HOTOS_LOGGER.info("lease #" + curCount + ": " + key + ","
             + readInterval + "," + writeInterval + ",no-exclusive-client");
       }
-      return expiry;
+      return 0;
     }
 
     // Issue lease with term as long as K2 * writeInterval

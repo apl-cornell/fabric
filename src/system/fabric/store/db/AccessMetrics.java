@@ -11,8 +11,8 @@ import com.google.common.cache.Cache;
 
 import fabric.common.exceptions.InternalError;
 import fabric.common.Logging;
-import fabric.common.util.Oid;
 import fabric.lang.security.Principal;
+import fabric.worker.Store;
 
 /**
  * Table of read and write metrics for keys K.  This information is used for
@@ -40,7 +40,7 @@ public class AccessMetrics<K> {
    * The number of samples to take after a warranty period before issuing
    * another warranty.
    */
-  public static final int SAMPLE_SIZE = 3;
+  public static final int SAMPLE_SIZE = 5;
 
   // END TUNING PARAMETERS ///////////////////////////////////////////////////
 
@@ -55,9 +55,10 @@ public class AccessMetrics<K> {
     private long lastReadPrepareTime;
 
     /**
-     * The length of the last warranty issued.
+     * The length of the last term for a read token (like a warranty) to be
+     * issued.
      */
-    private long lastWarrantyLength;
+    private long lastTermLength;
 
     /**
      * The moving average of (estimated) read intervals, in milliseconds.
@@ -80,11 +81,17 @@ public class AccessMetrics<K> {
     private int numReadPrepares;
 
     /**
-     * The oid of the principal of the client of this object, if there is only
+     * The store of the principal of the client of this object, if there is only
      * one.  This is null if either there have been no clients or there is more
      * than one.
      */
-    private Oid client;
+    private Store clientStore;
+
+    /**
+     * The onum of the principal of the client of this object, if there is only
+     * one.
+     */
+    private long clientOnum;
 
     /**
      * True if the object has been used since the beginning of the most recent
@@ -96,13 +103,28 @@ public class AccessMetrics<K> {
       final long now = System.currentTimeMillis();
 
       this.lastReadPrepareTime = now;
-      this.lastWarrantyLength = 0;
+      this.lastTermLength = 0;
       this.readInterval = Integer.MAX_VALUE;
       this.lastWritePrepareTime = now;
       this.writeInterval = Integer.MAX_VALUE;
       this.numReadPrepares = 0;
-      this.client = null;
+      this.clientStore = null;
+      this.clientOnum = 0;
       this.usedSinceTerm = false;
+    }
+
+    @Override
+    public String toString() {
+      return "Metrics[LastReadPrepareTime: " + lastReadPrepareTime
+                  + " LastTermLength: " + lastTermLength
+                  + " ReadInterval: " + readInterval
+                  + " LastWritePrepareTime: " + lastWritePrepareTime
+                  + " WriteInterval: " + writeInterval
+                  + " NumReadPrepares: " + numReadPrepares
+                  + " Client: " + (clientStore == null ? "null" :
+                                                         (clientStore.name() +
+                                                          "://" + clientOnum))
+                  + " UsedSinceTerm: " + usedSinceTerm + "]";
     }
 
     // Accessor methods.  Don't make the fields modifiable outside this class.
@@ -115,10 +137,10 @@ public class AccessMetrics<K> {
     }
 
     /**
-     * @return the lastWarrantyLength
+     * @return the lastTermLength
      */
-    public long getLastWarrantyLength() {
-      return lastWarrantyLength;
+    public long getLastTermLength() {
+      return lastTermLength;
     }
 
     /**
@@ -150,10 +172,17 @@ public class AccessMetrics<K> {
     }
 
     /**
-     * @return the client
+     * @return the client store
      */
-    public Oid getClient() {
-      return client;
+    public Store getClientStore() {
+      return clientStore;
+    }
+
+    /**
+     * @return the client onum
+     */
+    public long getClientOnum() {
+      return clientOnum;
     }
 
     /**
@@ -185,7 +214,7 @@ public class AccessMetrics<K> {
         final double alpha;
         if (numReadPrepares == 1) {
           // First read prepare after a warranty period.
-          alpha = Math.exp(NEG_DECAY_CONSTANT * lastWarrantyLength);
+          alpha = Math.exp(NEG_DECAY_CONSTANT * lastTermLength);
         } else {
           alpha = PREPARE_ALPHA;
         }
@@ -193,13 +222,15 @@ public class AccessMetrics<K> {
             (int) (alpha * readInterval + (1.0 - alpha) * curInterval);
       }
 
-      // Update client tracking.
-      Oid workerOid = new Oid(worker);
-      if (usedSinceTerm && !workerOid.equals(client)) {
+      if (usedSinceTerm &&
+          !(worker.$getStore().equals(clientStore) &&
+            worker.$getOnum() == clientOnum)) {
         // If it was already null, this is redundant.
-        client = null;
+        clientStore = null;
+        clientOnum = 0;
       } else if (!usedSinceTerm) {
-        client = workerOid;
+        clientStore = worker.$getStore();
+        clientOnum = worker.$getOnum();
         usedSinceTerm = true;
       }
     }
@@ -227,12 +258,15 @@ public class AccessMetrics<K> {
       }
 
       // Update client tracking.
-      Oid workerOid = new Oid(worker);
-      if (usedSinceTerm && !workerOid.equals(client)) {
+      if (usedSinceTerm &&
+          !(worker.$getStore().equals(clientStore) &&
+            worker.$getOnum() == clientOnum)) {
         // If it was already null, this is redundant.
-        client = null;
+        clientStore = null;
+        clientOnum = 0;
       } else if (!usedSinceTerm) {
-        client = workerOid;
+        clientStore = worker.$getStore();
+        clientOnum = worker.$getOnum();
         usedSinceTerm = true;
       }
     }
@@ -257,13 +291,14 @@ public class AccessMetrics<K> {
           lastReadPrepareTime > System.currentTimeMillis()) {
         // We are extending a warranty term that is still active.
         long delta = expiry - lastReadPrepareTime;
-        lastWarrantyLength += delta;
+        lastTermLength += delta;
       } else {
         // Replacing an inactive warranty term.
-        lastWarrantyLength = expiry - System.currentTimeMillis();
+        lastTermLength = expiry - System.currentTimeMillis();
         // Reset client checking.
         usedSinceTerm = false;
-        client = null;
+        clientStore = null;
+        clientOnum = 0;
       }
 
       lastReadPrepareTime = expiry;

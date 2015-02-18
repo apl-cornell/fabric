@@ -40,6 +40,7 @@ import com.sleepycat.je.Transaction;
 import fabric.common.FastSerializable;
 import fabric.common.Logging;
 import fabric.common.ONumConstants;
+import fabric.common.RWLease;
 import fabric.common.Resources;
 import fabric.common.SerializedObject;
 import fabric.common.Surrogate;
@@ -572,7 +573,7 @@ public class BdbDB extends ObjectDB {
                   addWrittenOnumByTid(tid, owner, onum);
 
                   // Restore the object's warranty.
-                  warrantyIssuer.put(onum, warranty);
+                  tokenIssuer.put(onum, warranty);
                 }
               }
               preparedCursor.close();
@@ -580,7 +581,7 @@ public class BdbDB extends ObjectDB {
 
             // Scan through the commitTimes database and build a commit schedule.
             SortedMap<Long, List<Pair<Long, Principal>>> commitSchedule =
-                new TreeMap<Long, List<Pair<Long, Principal>>>();
+                new TreeMap<>();
             {
               Cursor commitTimesCursor = commitTimes.openCursor(txn, null);
               while (commitTimesCursor.getNext(key, data, null) != OperationStatus.NOTFOUND) {
@@ -590,7 +591,7 @@ public class BdbDB extends ObjectDB {
                 List<Pair<Long, Principal>> toCommit =
                     commitSchedule.get(commitTime);
                 if (toCommit == null) {
-                  toCommit = new ArrayList<Pair<Long, Principal>>(2);
+                  toCommit = new ArrayList<>(2);
                   commitSchedule.put(commitTime, toCommit);
                 }
 
@@ -603,7 +604,8 @@ public class BdbDB extends ObjectDB {
             // warranty.
             if (meta.get(txn, longestWarrantyEntry, data, LockMode.DEFAULT) == SUCCESS) {
               longestExpiry[0] = LongBinding.entryToLong(data);
-              warrantyIssuer.setDefaultWarranty(new VersionWarranty(longestExpiry[0]));
+              tokenIssuer.setDefaultWarranty(new VersionWarranty(longestExpiry[0]));
+              tokenIssuer.setDefaultLease(new RWLease(longestExpiry[0]));
             }
 
             return commitSchedule;
@@ -773,11 +775,11 @@ public class BdbDB extends ObjectDB {
       DataInputStream dis = new DataInputStream(bis);
       long tid = dis.readLong();
 
-      if (data.length < 10) return new Pair<Long, Principal>(tid, null);
+      if (data.length < 10) return new Pair<>(tid, null);
       Store store = Worker.getWorker().getStore(dis.readUTF());
       long onum = dis.readLong();
       Principal owner = new Principal._Proxy(store, onum);
-      return new Pair<Long, Principal>(tid, owner);
+      return new Pair<>(tid, owner);
     } catch (IOException e) {
       throw new InternalError();
     }

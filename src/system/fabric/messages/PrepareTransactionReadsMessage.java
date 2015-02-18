@@ -9,7 +9,6 @@ import fabric.common.VersionWarranty;
 import fabric.common.net.RemoteIdentity;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
-import fabric.common.util.Oid;
 import fabric.worker.Store;
 import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.Worker;
@@ -133,9 +132,9 @@ public class PrepareTransactionReadsMessage
     // Read reads.
     int size = in.readInt();
     if (size == 0) {
-      reads = new LongKeyHashMap<Integer>();
+      reads = new LongKeyHashMap<>();
     } else {
-      reads = new LongKeyHashMap<Integer>(size);
+      reads = new LongKeyHashMap<>(size);
       for (int i = 0; i < size; i++)
         reads.put(in.readLong(), in.readInt());
     }
@@ -161,10 +160,10 @@ public class PrepareTransactionReadsMessage
       out.writeInt(r.newLeases.size());
       for (LongKeyMap.Entry<RWLease> entry : r.newLeases.entrySet()) {
         out.writeLong(entry.getKey());
-        if (entry.getValue().getOwner() != null) {
+        if (entry.getValue().getOwnerStore() != null) {
           out.writeBoolean(true);
-          out.writeUTF(entry.getValue().getOwner().store.name());
-          out.writeLong(entry.getValue().getOwner().onum);
+          out.writeUTF(entry.getValue().getOwnerStore().name());
+          out.writeLong(entry.getValue().getOwnerOnum());
         } else {
           out.writeBoolean(false);
         }
@@ -196,8 +195,8 @@ public class PrepareTransactionReadsMessage
         long onum = in.readLong();
         if (in.readBoolean()) {
           Store ownerStore = Worker.getWorker().getStore(in.readUTF());
-          Oid owner = new Oid(ownerStore, in.readLong());
-          newLeases.put(onum, new RWLease(in.readLong(), owner));
+          long ownerOnum = in.readLong();
+          newLeases.put(onum, new RWLease(in.readLong(), ownerStore, ownerOnum));
         } else {
           newLeases.put(onum, new RWLease(in.readLong()));
         }

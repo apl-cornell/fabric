@@ -15,7 +15,6 @@ import fabric.common.exceptions.ProtocolError;
 import fabric.common.net.RemoteIdentity;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
-import fabric.common.util.Oid;
 import fabric.worker.Store;
 import fabric.worker.Worker;
 import fabric.worker.remote.RemoteWorker;
@@ -97,8 +96,8 @@ public final class StalenessCheckMessage extends
       out.writeLong(obj.getWarranty().expiry());
       if (obj.getLease() != null) {
         out.writeBoolean(true);
-        out.writeUTF(obj.getLease().getOwner().store.name());
-        out.writeLong(obj.getLease().getOwner().onum);
+        out.writeUTF(obj.getLease().getOwnerStore().name());
+        out.writeLong(obj.getLease().getOwnerOnum());
       } else {
         out.writeBoolean(false);
       }
@@ -116,8 +115,8 @@ public final class StalenessCheckMessage extends
       RWLease lease;
       if (in.readBoolean()) {
         Store ownerStore = Worker.getWorker().getStore(in.readUTF());
-        Oid ownerOid = new Oid(ownerStore, in.readLong());
-        lease = new RWLease(in.readLong(), ownerOid);
+        long ownerOnum = in.readLong();
+        lease = new RWLease(in.readLong(), ownerStore, ownerOnum);
       } else {
         lease = new RWLease(in.readLong());
       }
