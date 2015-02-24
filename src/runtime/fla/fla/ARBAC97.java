@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+import fla.principals.NodePrincipal;
 import fla.principals.PrimitivePrincipal;
 import fla.principals.Principal;
 import fla.principals.PrincipalUtil;
@@ -27,7 +28,7 @@ class ARBAC97 {
     /**
      * The owner.
      */
-    final PrimitivePrincipal o;
+    final NodePrincipal o;
 
     /**
      * The administrative authority required to assign roles with this rule.
@@ -50,7 +51,7 @@ class ARBAC97 {
      */
     final Principal xiMax;
 
-    public CanAssignRule(PrimitivePrincipal o, Principal ar, Principal c,
+    public CanAssignRule(NodePrincipal o, Principal ar, Principal c,
         Principal xiMin, Principal xiMax) {
       this.o = o;
       this.ar = ar;
@@ -173,7 +174,7 @@ class ARBAC97 {
     /**
      * The owner.
      */
-    final PrimitivePrincipal o;
+    final NodePrincipal o;
 
     /**
      * The administrative authority required to assign permissions with this
@@ -197,7 +198,7 @@ class ARBAC97 {
      */
     final Principal xiMax;
 
-    public CanAssignPRule(PrimitivePrincipal o, Principal ar, Principal c,
+    public CanAssignPRule(NodePrincipal o, Principal ar, Principal c,
         Principal xiMin, Principal xiMax) {
       this.o = o;
       this.ar = ar;
@@ -314,7 +315,7 @@ class ARBAC97 {
     /**
      * The owner.
      */
-    final PrimitivePrincipal o;
+    final NodePrincipal o;
 
     /**
      * The administrative authority required to assign permissions with this
@@ -332,7 +333,7 @@ class ARBAC97 {
      */
     final Principal xiMax;
 
-    public CanModifyRule(PrimitivePrincipal o, Principal ar, Principal xiMin,
+    public CanModifyRule(NodePrincipal o, Principal ar, Principal xiMin,
         Principal xiMax) {
       this.o = o;
       this.ar = ar;

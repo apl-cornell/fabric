@@ -148,7 +148,7 @@ public abstract class Principal {
    * @return the set of {@code PrimitivePrincipal}s that appear as components of
    *          this principal.
    */
-  abstract Set<PrimitivePrincipal> componentPrimitivePrincipals();
+  protected abstract Set<NodePrincipal> componentNodePrincipals();
 
   /**
    * @return the delegation set stored at this principal, represented as a map
@@ -258,8 +258,8 @@ public abstract class Principal {
    *
    * @param searchState the state of the proof search being made
    */
-  private final Set<PrimitivePrincipal> askablePrincipals(
-      ActsForQuery<?, ?> query, ProofSearchState searchState) {
+  private final Set<NodePrincipal> askablePrincipals(ActsForQuery<?, ?> query,
+      ProofSearchState searchState) {
     if (!query.useDynamicContext()) {
       // Static context. No dynamic delegations should be used.
       return Collections.emptySet();
@@ -267,11 +267,11 @@ public abstract class Principal {
 
     // Construct an unfiltered set of candidates.
     // Start with all participants in the search state.
-    Set<PrimitivePrincipal> unfilteredResult =
+    Set<NodePrincipal> unfilteredResult =
         new HashSet<>(searchState.allParticipants);
 
     // Add primitive principals that appear as a component of this principal.
-    unfilteredResult.addAll(componentPrimitivePrincipals());
+    unfilteredResult.addAll(componentNodePrincipals());
 
     // Add primitive principals that appears as a component of the query.
     unfilteredResult.addAll(query.componentPrimitivePrincipals());
@@ -297,10 +297,10 @@ public abstract class Principal {
    * @return the object {@code set}, with all unaskable principals having been
    *          removed
    */
-  private final Set<PrimitivePrincipal> removeUnaskablePrincipals(
-      Set<PrimitivePrincipal> set, ActsForQuery<?, ?> query,
+  private final Set<NodePrincipal> removeUnaskablePrincipals(
+      Set<NodePrincipal> set, ActsForQuery<?, ?> query,
       ProofSearchState searchState) {
-    for (Iterator<PrimitivePrincipal> it = set.iterator(); it.hasNext();) {
+    for (Iterator<NodePrincipal> it = set.iterator(); it.hasNext();) {
       PrimitivePrincipal p = it.next();
 
       // See if p ≽ query.recurseLowerBound(), robustly.
@@ -436,8 +436,8 @@ public abstract class Principal {
    *          readersToWriters(delegationLabel))}.
    *
    */
-  private final Set<PrimitivePrincipal> recurseRemoveDelegatesTo(
-      RevocationRequest req, Set<PrimitivePrincipal> candidates,
+  private final Set<NodePrincipal> recurseRemoveDelegatesTo(
+      RevocationRequest req, Set<NodePrincipal> candidates,
       Set<Principal> visited, Principal delegationLabel) {
     if (delegationLabel == null) {
       // Default to bottom confidentiality, top integrity.
@@ -445,7 +445,7 @@ public abstract class Principal {
     }
 
     // Remove all candidates that we can't safely visit.
-    for (Iterator<PrimitivePrincipal> it = candidates.iterator(); it.hasNext();) {
+    for (Iterator<NodePrincipal> it = candidates.iterator(); it.hasNext();) {
       PrimitivePrincipal candidate = it.next();
       {
         // We can recurse only if we can robustly show:
@@ -560,8 +560,8 @@ public abstract class Principal {
     // Recurse into other principals that we haven't visited yet.
     // First, consider components of this principal and of the request itself.
     {
-      Set<PrimitivePrincipal> candidates = new HashSet<>();
-      candidates.addAll(componentPrimitivePrincipals());
+      Set<NodePrincipal> candidates = new HashSet<>();
+      candidates.addAll(componentNodePrincipals());
       candidates.addAll(req.componentPrimitivePrincipals());
       candidates.removeAll(visited);
 
@@ -581,7 +581,7 @@ public abstract class Principal {
       Set<Delegation<?, ?>> delegations = entry.getValue();
 
       // Get a set of candidates for recursing into.
-      Set<PrimitivePrincipal> candidates = new HashSet<>();
+      Set<NodePrincipal> candidates = new HashSet<>();
       for (Delegation<?, ?> delegation : delegations) {
         candidates.addAll(delegation.componentPrimitivePrincipals());
       }
@@ -1175,7 +1175,7 @@ public abstract class Principal {
     }
 
     // Forward query to other nodes. First, figure out who to ask.
-    Set<PrimitivePrincipal> askable =
+    Set<NodePrincipal> askable =
         new HashSet<>(askablePrincipals(query, searchState));
     askable.removeAll(searchState.principalsAsked);
 
@@ -1266,11 +1266,11 @@ public abstract class Principal {
       return new RevocationRequest(inferior, superior, newLabel);
     }
 
-    Set<PrimitivePrincipal> componentPrimitivePrincipals() {
-      Set<PrimitivePrincipal> result = new HashSet<>();
-      result.addAll(inferior.componentPrimitivePrincipals());
-      result.addAll(superior.componentPrimitivePrincipals());
-      result.addAll(label.componentPrimitivePrincipals());
+    Set<NodePrincipal> componentPrimitivePrincipals() {
+      Set<NodePrincipal> result = new HashSet<>();
+      result.addAll(inferior.componentNodePrincipals());
+      result.addAll(superior.componentNodePrincipals());
+      result.addAll(label.componentNodePrincipals());
       return result;
     }
   }
@@ -1675,7 +1675,7 @@ public abstract class Principal {
     /**
      * The set of principals who have participated in the search so far.
      */
-    private final Set<PrimitivePrincipal> allParticipants;
+    private final Set<NodePrincipal> allParticipants;
 
     /**
      * The set of principals who have already been asked about the most recent
@@ -1833,9 +1833,8 @@ public abstract class Principal {
       this.parent = null;
       this.progressCondition = new ProgressCondition();
 
-      if (Principal.this instanceof PrimitivePrincipal) {
-        allParticipants =
-            Collections.singleton((PrimitivePrincipal) Principal.this);
+      if (Principal.this instanceof NodePrincipal) {
+        allParticipants = Collections.singleton((NodePrincipal) Principal.this);
       } else {
         allParticipants = Collections.emptySet();
       }
@@ -1879,7 +1878,7 @@ public abstract class Principal {
      * the set of principals asked.
      */
     private ProofSearchState(ProofSearchState state,
-        Set<PrimitivePrincipal> newPrincipalsAsked) {
+        Set<NodePrincipal> newPrincipalsAsked) {
       // Sanity check.
       if (state.curGoal.receiver != Principal.this) {
         throw new InternalError("Inconsistency: " + state.curGoal.receiver
@@ -1890,7 +1889,7 @@ public abstract class Principal {
       this.parent = state.parent;
       this.progressCondition = state.progressCondition;
 
-      Set<PrimitivePrincipal> allParticipants =
+      Set<NodePrincipal> allParticipants =
           new HashSet<>(state.allParticipants.size()
               + newPrincipalsAsked.size());
       this.allParticipants = Collections.unmodifiableSet(allParticipants);

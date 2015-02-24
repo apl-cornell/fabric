@@ -6,6 +6,7 @@ import java.util.Set;
 import fla.ARBAC97.CanAssignRule;
 import fla.ARBAC97.CanRevokeRule;
 import fla.principals.OwnedPrincipal;
+import fla.principals.NodePrincipal;
 import fla.principals.PrimitivePrincipal;
 import fla.principals.Principal;
 import fla.principals.PrincipalUtil;
@@ -47,9 +48,9 @@ public class Test {
     InfoScreen(Principal owner) {
       this.owner = owner;
       this.group =
-          (OwnedPrincipal) new PrimitivePrincipal("group").owner(owner);
+          (OwnedPrincipal) new NodePrincipal("group").owner(owner);
       this.exclusionGroup =
-          (OwnedPrincipal) new PrimitivePrincipal("exclusionGroup")
+          (OwnedPrincipal) new NodePrincipal("exclusionGroup")
               .owner(owner);
     }
 
@@ -60,7 +61,7 @@ public class Test {
      * @return true iff delegation was successful
      */
     boolean addMember(MemberType memberType, Principal p, Principal s,
-        PrimitivePrincipal store) {
+        NodePrincipal store) {
       // Turn p into o:p.
       p = p.owner(owner);
 
@@ -93,9 +94,9 @@ public class Test {
     }
 
     static void test() {
-      PrimitivePrincipal loblaw = new PrimitivePrincipal("loblaw");
-      Principal alice = new PrimitivePrincipal("alice");
-      Principal bob = new PrimitivePrincipal("bob");
+      NodePrincipal loblaw = new NodePrincipal("loblaw");
+      Principal alice = new NodePrincipal("alice");
+      Principal bob = new NodePrincipal("bob");
 
       InfoScreen screen = new InfoScreen(loblaw);
 
@@ -142,10 +143,10 @@ public class Test {
     }
 
     static void test01() {
-      PrimitivePrincipal a = new PrimitivePrincipal("alice");
-      PrimitivePrincipal b = new PrimitivePrincipal("bob");
-      PrimitivePrincipal c = new PrimitivePrincipal("charlie");
-      PrimitivePrincipal e = new PrimitivePrincipal("eve");
+      NodePrincipal a = new NodePrincipal("alice");
+      PrimitivePrincipal b = new NodePrincipal("bob");
+      PrimitivePrincipal c = new NodePrincipal("charlie");
+      NodePrincipal e = new NodePrincipal("eve");
 
       a.addDelegatesTo(b, c, a);
       e.addDelegatesTo(a, e, a);
@@ -156,10 +157,10 @@ public class Test {
     }
 
     static void test02() {
-      PrimitivePrincipal a = new PrimitivePrincipal("alice");
-      PrimitivePrincipal b = new PrimitivePrincipal("bob");
-      PrimitivePrincipal c = new PrimitivePrincipal("charlie");
-      PrimitivePrincipal e = new PrimitivePrincipal("eve");
+      NodePrincipal a = new NodePrincipal("alice");
+      PrimitivePrincipal b = new NodePrincipal("bob");
+      PrimitivePrincipal c = new NodePrincipal("charlie");
+      NodePrincipal e = new NodePrincipal("eve");
 
       a.addDelegatesTo(b, c, a);
       e.addDelegatesTo(a, e,
@@ -172,10 +173,10 @@ public class Test {
 
   private static class DelegationLoophole {
     static void test() {
-      PrimitivePrincipal acme = new PrimitivePrincipal("acme");
-      PrimitivePrincipal apex = new PrimitivePrincipal("apex");
-      PrimitivePrincipal bob = new PrimitivePrincipal("bob");
-      PrimitivePrincipal emp = new PrimitivePrincipal("emp");
+      NodePrincipal acme = new NodePrincipal("acme");
+      PrimitivePrincipal apex = new NodePrincipal("apex");
+      NodePrincipal bob = new NodePrincipal("bob");
+      PrimitivePrincipal emp = new NodePrincipal("emp");
 
       Principal acmeEmp = acme.project(emp);
       Principal acmeBob = acme.project(bob);
@@ -220,11 +221,11 @@ public class Test {
   }
 
   static void arbac97Test() {
-    PrimitivePrincipal acme = new PrimitivePrincipal("Acme");
-    Principal acmeHR = new PrimitivePrincipal("HR").owner(acme);
-    Principal acmePL = new PrimitivePrincipal("ProgramLead").owner(acme);
-    Principal acmeEmp = new PrimitivePrincipal("Emp").owner(acme);
-    Principal acmeEng = new PrimitivePrincipal("Eng").owner(acme);
+    NodePrincipal acme = new NodePrincipal("Acme");
+    Principal acmeHR = new NodePrincipal("HR").owner(acme);
+    Principal acmePL = new NodePrincipal("ProgramLead").owner(acme);
+    Principal acmeEmp = new NodePrincipal("Emp").owner(acme);
+    Principal acmeEng = new NodePrincipal("Eng").owner(acme);
     Principal acmeInteg = acme.integrity();
 
     // acmeHR acts for acmeEmp, and acmePL acts for acmeEng.
@@ -232,15 +233,15 @@ public class Test {
     acme.addDelegatesTo(acmeEng, acmePL, acmeInteg);
 
     // Alice is a program lead at Acme.
-    Principal acmeAlice = new PrimitivePrincipal("alice").owner(acme);
+    Principal acmeAlice = new NodePrincipal("alice").owner(acme);
     acme.addDelegatesTo(acmePL, acmeAlice, acmeInteg);
 
     // Bob works in HR at Acme.
-    Principal acmeBob = new PrimitivePrincipal("bob").owner(acme);
+    Principal acmeBob = new NodePrincipal("bob").owner(acme);
     acme.addDelegatesTo(acmeHR, acmeBob, acmeInteg);
 
     // Chuck is a freelance programmer.
-    Principal chuck = new PrimitivePrincipal("chuck");
+    Principal chuck = new NodePrincipal("chuck");
 
     // Set up the trust management rules for Acme.
     ARBAC97 acmeRules;
@@ -337,10 +338,10 @@ public class Test {
       throw new Error(top + " ⋡ " + bottom);
     }
 
-    Principal a = new PrimitivePrincipal("a");
-    Principal b = new PrimitivePrincipal("b");
-    Principal c = new PrimitivePrincipal("c");
-    Principal d = new PrimitivePrincipal("d");
+    Principal a = new NodePrincipal("a");
+    Principal b = new NodePrincipal("b");
+    Principal c = new NodePrincipal("c");
+    Principal d = new NodePrincipal("d");
 
     // ⊤ should act for a.
     if (!PrincipalUtil.staticallyActsFor(top, a)) {

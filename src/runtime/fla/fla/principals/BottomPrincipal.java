@@ -117,7 +117,8 @@ public final class BottomPrincipal extends Principal {
   }
 
   @Override
-  Set<PrimitivePrincipal> componentPrimitivePrincipals() {
+  protected
+  Set<NodePrincipal> componentNodePrincipals() {
     return Collections.emptySet();
   }
 

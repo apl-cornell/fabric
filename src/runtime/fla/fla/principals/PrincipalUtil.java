@@ -42,12 +42,12 @@ public class PrincipalUtil {
   /**
    * Asks {@code prover} whether it can find the (direct) delegation "{@code
    * superior} ≽ {@code granter}" whose label does not exceed {@code maxLabel}.
-   * See {@link fla.principals.PrimitivePrincipal#delegatesTo(Principal,
+   * See {@link fla.principals.NodePrincipal#delegatesTo(Principal,
    * Principal, Principal, Principal, Principal)}.
    */
-  public static boolean delegatesTo(Principal receiver,
-      PrimitivePrincipal prover, Principal granter, Principal superior,
-      Principal maxLabel, Principal accessPolicy) {
+  public static boolean delegatesTo(Principal receiver, NodePrincipal prover,
+      Principal granter, Principal superior, Principal maxLabel,
+      Principal accessPolicy) {
     return prover.delegatesTo(receiver, granter, superior, maxLabel,
         accessPolicy);
   }
@@ -245,4 +245,61 @@ public class PrincipalUtil {
 
     return confP.integrity();
   }
+
+  /**
+   * @return the information flow join of the given principals
+   */
+  public static Principal flowJoin(Principal p, Principal q) {
+    Principal conf = PrincipalUtil.conjunction(p, q).confidentiality();
+    Principal integ = PrincipalUtil.disjunction(p, q).integrity();
+    return PrincipalUtil.conjunction(conf, integ);
+  }
+
+  /**
+   * @return the information flow join of the given principals
+   */
+  public static Principal flowJoin(Principal p, Principal q, Principal... r) {
+    Principal conf = PrincipalUtil.conjunction(p, q, r).confidentiality();
+    Principal integ = PrincipalUtil.disjunction(p, q, r).integrity();
+    return PrincipalUtil.conjunction(conf, integ);
+  }
+
+  /**
+   * @return the information flow join of the given set of principals.
+   *          If the set is empty, bottom is returned.
+   */
+  public static Principal flowJoin(Set<Principal> p) {
+    Principal conf = PrincipalUtil.conjunction(p).confidentiality();
+    Principal integ = PrincipalUtil.disjunction(p).integrity();
+    return PrincipalUtil.conjunction(conf, integ);
+  }
+
+  /**
+   * @return the information flow join of the given principals
+   */
+  public static Principal flowMeet(Principal p, Principal q) {
+    Principal conf = PrincipalUtil.disjunction(p, q).confidentiality();
+    Principal integ = PrincipalUtil.conjunction(p, q).integrity();
+    return PrincipalUtil.conjunction(conf, integ);
+  }
+
+  /**
+   * @return the information flow join of the given principals
+   */
+  public static Principal flowMeet(Principal p, Principal q, Principal... r) {
+    Principal conf = PrincipalUtil.conjunction(p, q, r).confidentiality();
+    Principal integ = PrincipalUtil.disjunction(p, q, r).integrity();
+    return PrincipalUtil.conjunction(conf, integ);
+  }
+
+  /**
+   * @return the information flow join of the given set of principals.
+   *          If the set is empty, bottom is returned.
+   */
+  public static Principal flowMeet(Set<Principal> p) {
+    Principal conf = PrincipalUtil.conjunction(p).confidentiality();
+    Principal integ = PrincipalUtil.disjunction(p).integrity();
+    return PrincipalUtil.conjunction(conf, integ);
+  }
+
 }

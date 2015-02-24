@@ -132,12 +132,12 @@ public final class ActsForQuery<Superior extends Principal, Inferior extends Pri
     return recurseLowerBound;
   }
 
-  Set<PrimitivePrincipal> componentPrimitivePrincipals() {
-    Set<PrimitivePrincipal> result = new HashSet<>();
-    result.addAll(superior.componentPrimitivePrincipals());
-    result.addAll(inferior.componentPrimitivePrincipals());
-    result.addAll(maxUsableLabel.componentPrimitivePrincipals());
-    result.addAll(accessPolicy.componentPrimitivePrincipals());
+  Set<NodePrincipal> componentPrimitivePrincipals() {
+    Set<NodePrincipal> result = new HashSet<>();
+    result.addAll(superior.componentNodePrincipals());
+    result.addAll(inferior.componentNodePrincipals());
+    result.addAll(maxUsableLabel.componentNodePrincipals());
+    result.addAll(accessPolicy.componentNodePrincipals());
     return result;
   }
 

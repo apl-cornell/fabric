@@ -301,7 +301,8 @@ public final class ConfPrincipal extends NonPrimitivePrincipal {
   }
 
   @Override
-  Set<PrimitivePrincipal> componentPrimitivePrincipals() {
-    return base.componentPrimitivePrincipals();
+  protected
+  Set<NodePrincipal> componentNodePrincipals() {
+    return base.componentNodePrincipals();
   }
 }

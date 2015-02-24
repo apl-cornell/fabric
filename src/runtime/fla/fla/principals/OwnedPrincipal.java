@@ -270,10 +270,11 @@ public final class OwnedPrincipal extends NonPrimitivePrincipal {
   }
 
   @Override
-  Set<PrimitivePrincipal> componentPrimitivePrincipals() {
-    Set<PrimitivePrincipal> result =
-        new HashSet<>(owner.componentPrimitivePrincipals());
-    result.addAll(projection.componentPrimitivePrincipals());
+  protected
+  Set<NodePrincipal> componentNodePrincipals() {
+    Set<NodePrincipal> result =
+        new HashSet<>(owner.componentNodePrincipals());
+    result.addAll(projection.componentNodePrincipals());
     return result;
   }
 }

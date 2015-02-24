@@ -11,7 +11,7 @@ public class Delegation<Inferior extends Principal, Superior extends Principal> 
   /**
    * The principal storing the delegation.
    */
-  public final PrimitivePrincipal store;
+  public final NodePrincipal store;
 
   /**
    * The principal delegating its authority.
@@ -34,7 +34,7 @@ public class Delegation<Inferior extends Principal, Superior extends Principal> 
    * @param superior the principal being delegated to
    * @param label on the delegation
    */
-  Delegation(PrimitivePrincipal store, Inferior inferior, Superior superior,
+  Delegation(NodePrincipal store, Inferior inferior, Superior superior,
       Principal label) {
     this.store = store;
     this.inferior = inferior;
@@ -47,12 +47,12 @@ public class Delegation<Inferior extends Principal, Superior extends Principal> 
     return superior + " ≽ " + inferior + " {" + label + "} at " + store;
   }
 
-  Set<PrimitivePrincipal> componentPrimitivePrincipals() {
-    Set<PrimitivePrincipal> result = new HashSet<>();
+  Set<NodePrincipal> componentPrimitivePrincipals() {
+    Set<NodePrincipal> result = new HashSet<>();
     result.add(store);
-    result.addAll(inferior.componentPrimitivePrincipals());
-    result.addAll(superior.componentPrimitivePrincipals());
-    result.addAll(label.componentPrimitivePrincipals());
+    result.addAll(inferior.componentNodePrincipals());
+    result.addAll(superior.componentNodePrincipals());
+    result.addAll(label.componentNodePrincipals());
     return result;
   }
 }
