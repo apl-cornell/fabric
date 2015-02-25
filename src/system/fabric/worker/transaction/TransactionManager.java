@@ -404,6 +404,18 @@ public final class TransactionManager {
     // Send commit messages to our cohorts.
     sendCommitMessagesAndCleanUp(readOnly, commitTime);
 
+    // Collect the names of nodes contacted.
+    Set<Store> storesContacted = current.commitState.storesContacted;
+    String[] contactedNodes = new String[storesContacted.size() + workers.size()];
+    int i = 0;
+    for (Store s : storesContacted) {
+      contactedNodes[i++] = s.name();
+    }
+    for (RemoteWorker w : workers) {
+      contactedNodes[i++] = w.name();
+    }
+    CONTACTED_NODES.set(contactedNodes);
+
     final long actualCommitTime =
         Math.max(commitTime, System.currentTimeMillis());
     COMMIT_TIME.set(actualCommitTime);
@@ -442,6 +454,12 @@ public final class TransactionManager {
    * to the application.
    */
   public static final ThreadLocal<Integer> ROUND_TRIPS = new ThreadLocal<>();
+
+  /**
+   * XXX Similarly gross HACK for making the nodes contacted by this client
+   * during commit visible to the application.
+   */
+  public static final ThreadLocal<String[]> CONTACTED_NODES = new ThreadLocal<>();
 
   private static LocalStore LOCAL_STORE;
 
