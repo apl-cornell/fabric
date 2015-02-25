@@ -1042,6 +1042,15 @@ public interface Object {
         super(store);
       }
 
+      public _Impl(Store store, long onum, int version, VersionWarranty warranty,
+          RWLease lease, long updateLabel, long accessPolicy, ObjectInput
+          serializedInput, Iterator<RefTypeEnum> refTypes, Iterator<Long>
+          intraStoreRefs, Iterator<Pair<String, Long>> interStoreRefs) throws
+        IOException, ClassNotFoundException {
+        super(store, onum, version, warranty, lease, updateLabel, accessPolicy,
+            serializedInput, refTypes, intraStoreRefs, interStoreRefs);
+      }
+
       @Override
       protected Object._Proxy $makeProxy() {
         return new _Static._Proxy(this);
