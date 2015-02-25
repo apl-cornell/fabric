@@ -42,10 +42,17 @@ div.content {
 }
 
 div.top {
-  background: -webkit-linear-gradient(#36a1ff, #08f); /* Safari 5.1 - 6.0 */
-  background: -o-linear-gradient(#36a1ff, #08f); /* Opera 11.1 - 12.0 */
-  background: -moz-linear-gradient(#36a1ff, #08f); /* Firefox 3.6 - 15 */
-  background: linear-gradient(#36a1ff, #08f); /* standard syntax */
+/*
+  background: -webkit-linear-gradient(#36a1ff, #08f);
+  background: -o-linear-gradient(#36a1ff, #08f);
+  background: -moz-linear-gradient(#36a1ff, #08f);
+  background: linear-gradient(#36a1ff, #08f);
+*/
+  background: -webkit-linear-gradient(left, white, #08f); /* Safari 5.1 - 6.0 */
+  background: -o-linear-gradient(left, white, #08f); /* Opera 11.1 - 12.0 */
+  background: -moz-linear-gradient(left, white, #08f); /* Firefox 3.6 - 15 */
+  background: linear-gradient(to right, white, #08f); /* standard syntax */
+  padding: 11px 0;
   width: 100%;
   min-width: 730px;
   display: table;
@@ -60,32 +67,38 @@ div.top {
 
 div.motto {
   width: 100%;
-  padding: 11px 0;
+/*  padding: 11px 0;*/
   font-size: 200%;
+/*
   color: #aef;
   background: linear-gradient(#36a1ff, #08f);
+*/
+  color: #09c;
   font-weight: bold;
   margin: 10px auto 5px 130px;
   padding: 0 0 0 1em;
   vertical-align: middle;
   line-height: 40px;
   display: table-cell;
-  text-shadow: rgba(0,0,0,0.5) 0 1px 1px;
+/*  text-shadow: rgba(0,0,0,0.5) 0 1px 1px;*/
 }
 
 div.top a { color: white; }
 div.top a:hover { color: #ffff80; }
 
+/*
 div.logo {
   display: table-cell;
   padding: 11px;
   background: linear-gradient(#fcfeff, #f2f9ff);
 }
+*/
 
 img.logo {
   width: 160px;
   display: table-cell;
   vertical-align: middle;
+  margin: 0 auto 0 1em;
 }
 
 div.menu {
@@ -93,7 +106,8 @@ div.menu {
   vertical-align: middle;
   text-align: right;
   margin: 0 0 0 auto;
-  padding: 11px 12px;
+/*  padding: 11px 12px;*/
+  padding: 0 12px;
   font-size: 120%;
   line-height: 25px;
 }
