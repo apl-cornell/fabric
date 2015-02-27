@@ -407,7 +407,7 @@ public final class TransactionManager {
     sendCommitMessagesAndCleanUp(readOnly, commitTime);
 
     // Collect the names of nodes contacted.
-    Set<Store> storesContacted = current.commitState.storesContacted;
+    Set<Store> storesContacted = HOTOS_current.commitState.storesContacted;
     String[] contactedNodes = new String[storesContacted.size() + workers.size()];
     int i = 0;
     for (Store s : storesContacted) {
