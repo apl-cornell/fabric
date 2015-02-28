@@ -178,7 +178,9 @@ public final class Log {
     public long commitTime = 0;
 
     /**
-     * The set of stores that have been contacted by the commit protocol.
+     * The set of stores that have been contacted by the commit protocol which
+     * are possibly holding indefinite locks (so this will not include stores
+     * contacted to extend a lease or warranty).
      */
     public final Set<Store> storesContacted = new HashSet<>();
   }

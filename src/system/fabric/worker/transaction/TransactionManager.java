@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.WeakHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -390,8 +391,9 @@ public final class TransactionManager {
     stores.addAll(current.storesWritten());
     final long prepareStart = System.currentTimeMillis();
 
-    // Set number of round trips to 0
+    // Set number of round trips to 0 and contacted nodes to empty
     ROUND_TRIPS.set(0);
+    CONTACTED_NODES.set(new TreeSet<String>());
 
     // Send prepare-write messages to our cohorts. If the prepare fails, this
     // will abort our portion of the transaction and throw a
@@ -405,18 +407,6 @@ public final class TransactionManager {
 
     // Send commit messages to our cohorts.
     sendCommitMessagesAndCleanUp(readOnly, commitTime);
-
-    // Collect the names of nodes contacted.
-    Set<Store> storesContacted = HOTOS_current.commitState.storesContacted;
-    String[] contactedNodes = new String[storesContacted.size() + workers.size()];
-    int i = 0;
-    for (Store s : storesContacted) {
-      contactedNodes[i++] = s.name();
-    }
-    for (RemoteWorker w : workers) {
-      contactedNodes[i++] = w.name();
-    }
-    CONTACTED_NODES.set(contactedNodes);
 
     final long actualCommitTime =
         Math.max(commitTime, System.currentTimeMillis());
@@ -461,7 +451,7 @@ public final class TransactionManager {
    * XXX Similarly gross HACK for making the nodes contacted by this client
    * during commit visible to the application.
    */
-  public static final ThreadLocal<String[]> CONTACTED_NODES = new ThreadLocal<>();
+  public static final ThreadLocal<Set<String>> CONTACTED_NODES = new ThreadLocal<>();
 
   private static LocalStore LOCAL_STORE;
 
@@ -514,6 +504,7 @@ public final class TransactionManager {
 
     // Go through each worker and send prepare messages in parallel.
     for (final RemoteWorker worker : current.workersCalled) {
+      CONTACTED_NODES.get().add(worker.name());
       NamedRunnable runnable =
           new NamedRunnable("worker write-prepare to " + worker.name()) {
         @Override
@@ -547,6 +538,7 @@ public final class TransactionManager {
     current.commitState.storesContacted.addAll(storesWritten);
     for (Iterator<Store> storeIt = storesWritten.iterator(); storeIt.hasNext();) {
       final Store store = storeIt.next();
+      CONTACTED_NODES.get().add(store.name());
       NamedRunnable runnable =
           new NamedRunnable("worker write-prepare to " + store.name()) {
         @Override
@@ -716,6 +708,7 @@ public final class TransactionManager {
 
     // Go through each worker and send prepare messages in parallel.
     for (final RemoteWorker worker : current.workersCalled) {
+      CONTACTED_NODES.get().add(worker.name());
       NamedRunnable runnable =
           new NamedRunnable("worker read-prepare to " + worker.name()) {
         @Override
@@ -748,6 +741,7 @@ public final class TransactionManager {
         storesRead.entrySet().iterator(); entryIt.hasNext();) {
       Entry<Store, LongKeyMap<Integer>> entry = entryIt.next();
       final Store store = entry.getKey();
+      CONTACTED_NODES.get().add(store.name());
       final LongKeyMap<Integer> reads = entry.getValue();
 
       if (!store.isLocalStore()) {
