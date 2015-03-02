@@ -174,19 +174,26 @@ public abstract class Principal {
    *
    * @param searchState the state of the proof search being made
    */
-  private final Map<Delegation<?, ?>, ActsForProof<?, ?>> usableDelegations(
+  protected final Map<Delegation<?, ?>, ActsForProof<?, ?>> usableDelegations(
       ActsForQuery<?, ?> query, ProofSearchState searchState) {
     if (!query.useDynamicContext()) {
       // Static context. No dynamic delegations should be used.
       return Collections.emptyMap();
+    } else {
+      return usableDelegations(query.maxUsableLabel, query.accessPolicy,
+          searchState);
     }
+  }
 
+  protected final Map<Delegation<?, ?>, ActsForProof<?, ?>> usableDelegations(
+      Principal maxUsableLabel, Principal accessPolicy,
+      ProofSearchState searchState) {
     Map<Delegation<?, ?>, ActsForProof<?, ?>> result = new HashMap<>();
 
     for (Map.Entry<Principal, Set<Delegation<?, ?>>> entry : delegations()
         .entrySet()) {
       Principal delegationLabel = entry.getKey();
-      Principal queryLabel = query.maxUsableLabel;
+      Principal queryLabel = maxUsableLabel;
 
       // Can use delegations if we can robustly show
       //   delegationLabel ⊑ queryLabel
@@ -211,7 +218,7 @@ public abstract class Principal {
               delegationLabel,
               queryLabel,
               queryLabel,
-              PrincipalUtil.conjunction(query.accessPolicy,
+              PrincipalUtil.conjunction(accessPolicy,
                   delegationLabel.confidentiality())).makeRobust();
       ProofSearchResult<?, ?> usabilityProofResult =
           actsForProof(this, subquery, searchState);
@@ -225,7 +232,7 @@ public abstract class Principal {
       case PRUNED:
         // Can make progress if the subquery can.
         searchState.progressCondition
-            .or(usabilityProofResult.progressCondition);
+        .or(usabilityProofResult.progressCondition);
         break;
 
       case FAILED:
@@ -477,7 +484,7 @@ public abstract class Principal {
                 delegationLabel.confidentiality());
         ActsForQuery<Principal, Principal> query =
             new ActsForQuery<>(this, superior, inferior, label, accessPolicy)
-                .makeRobust();
+            .makeRobust();
         if (actsForProof(query) == null) {
           // Can't recurse to this candidate.
           it.remove();
@@ -515,7 +522,7 @@ public abstract class Principal {
                 delegationLabel.confidentiality());
         ActsForQuery<Principal, Principal> query =
             new ActsForQuery<>(this, superior, inferior, label, accessPolicy)
-                .makeRobust();
+            .makeRobust();
         if (actsForProof(query) == null) {
           // Can't recurse to this candidate.
           it.remove();
@@ -761,7 +768,7 @@ public abstract class Principal {
             // Have a proof of witness ≽ query.inferior.
             // Construct a proof for query.superior ≽ witness.
             DelegatesProof<Superior, Principal> step =
-            new DelegatesProof<>(query.inferior(witness));
+                new DelegatesProof<>(query.inferior(witness));
             return new ProofSearchResult<>(new TransitiveProof<>(step, witness,
                 result.proof));
 
@@ -878,7 +885,7 @@ public abstract class Principal {
             // Have a proof of query.superior ≽ witness.
             // Construct a proof for witness ≽ query.inferior.
             DelegatesProof<Principal, Inferior> step =
-            new DelegatesProof<>(query.superior(witness));
+                new DelegatesProof<>(query.superior(witness));
             return new ProofSearchResult<>(new TransitiveProof<>(result.proof,
                 witness, step));
 
@@ -905,7 +912,7 @@ public abstract class Principal {
             // Have a proof of query.superior ≽ inferior.base().
             // Construct a proof for inferior.base() ≽ query.inferior.
             DelegatesProof<Principal, Inferior> step =
-            new DelegatesProof<>(query.superior(inferior.base()));
+                new DelegatesProof<>(query.superior(inferior.base()));
             return new ProofSearchResult<>(new TransitiveProof<>(result.proof,
                 inferior.base(), step));
 
@@ -958,7 +965,7 @@ public abstract class Principal {
             // Have a proof of query.superior ≽ inferior.base().
             // Construct a proof for inferior.base() ≽query.inferior.
             DelegatesProof<Principal, Inferior> step =
-                new DelegatesProof<>(query.superior(inferior.base()));
+            new DelegatesProof<>(query.superior(inferior.base()));
             return new ProofSearchResult<>(new TransitiveProof<>(result.proof,
                 inferior.base(), step));
 
@@ -1042,8 +1049,8 @@ public abstract class Principal {
 
           case PRUNED:
             ruleConditions =
-                new ProgressCondition(ownersProofResult.progressCondition,
-                    ProgressCondition.Mutability.MUTABLE);
+            new ProgressCondition(ownersProofResult.progressCondition,
+                ProgressCondition.Mutability.MUTABLE);
             break;
 
           case FAILED:
@@ -1070,8 +1077,8 @@ public abstract class Principal {
             case PRUNED:
               // Take the conjunction of the conditions.
               ruleConditions =
-              ProgressCondition.and(ruleConditions,
-                  projectionProofResult.progressCondition);
+                  ProgressCondition.and(ruleConditions,
+                      projectionProofResult.progressCondition);
               break;
 
             case FAILED:
@@ -1096,7 +1103,7 @@ public abstract class Principal {
           // Have a proof of query.superior ≽ inferior.owner().
           // Construct a proof for inferior.owner() ≽ query.inferior.
           DelegatesProof<Principal, Inferior> step =
-          new DelegatesProof<>(query.superior(inferior.owner()));
+              new DelegatesProof<>(query.superior(inferior.owner()));
           return new ProofSearchResult<>(new TransitiveProof<>(result.proof,
               inferior.owner(), step));
 
@@ -1133,9 +1140,9 @@ public abstract class Principal {
         case SUCCESS:
           // Proof successful.
           ActsForProof<Superior, Principal> step1 =
-              new DelegatesProof<>(
-                  (Delegation<Principal, Superior>) delegation, query,
-                  usabilityProof);
+          new DelegatesProof<>(
+              (Delegation<Principal, Superior>) delegation, query,
+              usabilityProof);
           return new ProofSearchResult<>(new TransitiveProof<>(step1, q,
               step2Result.proof));
 
@@ -1157,9 +1164,9 @@ public abstract class Principal {
         case SUCCESS:
           // Proof successful.
           ActsForProof<Principal, Inferior> step2 =
-              new DelegatesProof<>(
-                  (Delegation<Inferior, Principal>) delegation, query,
-                  usabilityProof);
+          new DelegatesProof<>(
+              (Delegation<Inferior, Principal>) delegation, query,
+              usabilityProof);
           return new ProofSearchResult<>(new TransitiveProof<>(
               step1Result.proof, p, step2));
 
@@ -1661,7 +1668,7 @@ public abstract class Principal {
     }
   }
 
-  private final class ProofSearchState {
+  protected final class ProofSearchState {
     /**
      * The most recent goal on the stack.
      */

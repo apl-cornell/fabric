@@ -23,7 +23,7 @@ public class NodePrincipal extends PrimitivePrincipal {
   }
 
   @Override
-  final Map<Principal, Set<Delegation<?, ?>>> delegations() {
+  protected final Map<Principal, Set<Delegation<?, ?>>> delegations() {
     return delegations;
   }
 

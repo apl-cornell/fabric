@@ -3,6 +3,11 @@ package fla.principals;
 import java.util.Set;
 
 public class PrincipalUtil {
+  public static final Principal PUBLIC_TRUSTED = conjunction(bottom()
+      .confidentiality(), top().integrity());
+  public static final Principal SECRET_UNTRUSTED = conjunction(top()
+      .confidentiality(), bottom().integrity());
+
   /**
    * Determines whether {@code superior} ≽ {@code inferior} in an empty
    * (i.e., static) context.
@@ -85,6 +90,14 @@ public class PrincipalUtil {
    */
   public static TopPrincipal top() {
     return TopPrincipal.INSTANCE;
+  }
+
+  public static Principal publicTrusted() {
+    return PUBLIC_TRUSTED;
+  }
+
+  public static Principal secretUntrusted() {
+    return SECRET_UNTRUSTED;
   }
 
   /**
