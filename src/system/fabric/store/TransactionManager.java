@@ -87,14 +87,14 @@ public class TransactionManager {
   private final SubscriptionManager sm;
 
   /**
-   * Data for maintaining semantic warranties.
+   * Data for maintaining computation warranties.
    */
-  private final ComputationWarrantyTable semanticWarranties;
+  private final ComputationWarrantyTable computationWarranties;
 
   public TransactionManager(ObjectDB database, PrivateKey signingKey) {
     this.database = database;
     this.sm = new SubscriptionManager(database.getName(), this, signingKey);
-    this.semanticWarranties = new ComputationWarrantyTable(database);
+    this.computationWarranties = new ComputationWarrantyTable(database);
   }
 
   public final SubscriptionManager subscriptionManager() {
@@ -107,7 +107,7 @@ public class TransactionManager {
   public void abortTransaction(Principal worker, long transactionID)
       throws AccessException {
     database.abort(transactionID, worker);
-    semanticWarranties.abort(transactionID);
+    computationWarranties.abort(transactionID);
     STORE_TRANSACTION_LOGGER.log(Level.FINE, "Aborted transaction {0}",
         transactionID);
   }
@@ -158,10 +158,10 @@ public class TransactionManager {
       try {
         checkPerms(worker, LongSet.EMPTY, req.writes);
       } catch (AccessException e) {
-        semanticWarranties.abort(tid);
+        computationWarranties.abort(tid);
         throw new TransactionPrepareFailedException(e.getMessage());
       } catch (AbortException e) {
-        semanticWarranties.abort(tid);
+        computationWarranties.abort(tid);
         throw new TransactionPrepareFailedException(e.getMessage());
       }
     }
@@ -197,7 +197,7 @@ public class TransactionManager {
           "Checking calls for {0} that would delay longer than {1} ms",
           Long.toHexString(tid), commitTime - currentTime);
       Pair<ComputationWarranty, Pair<Map<CallInstance, ComputationWarrantyRequest>, Map<CallInstance, ComputationWarrantyRequest>>> callPrepareResp =
-          semanticWarranties.prepareWrites(req.writes, req.creates, tid,
+          computationWarranties.prepareWrites(req.writes, req.creates, tid,
               commitTime, database.getName());
 
       ComputationWarranty longestCallWarranty = callPrepareResp.first;
@@ -269,12 +269,12 @@ public class TransactionManager {
       database.finishPrepareWrites(tid, worker);
     } catch (TransactionPrepareFailedException e) {
       database.abortPrepareWrites(tid, worker);
-      semanticWarranties.abort(tid);
+      computationWarranties.abort(tid);
       throw e;
     } catch (RuntimeException e) {
       e.printStackTrace();
       database.abortPrepareWrites(tid, worker);
-      semanticWarranties.abort(tid);
+      computationWarranties.abort(tid);
       throw e;
     }
 
@@ -429,7 +429,7 @@ public class TransactionManager {
    *          The worker requesting the prepare
    * @throws TransactionPrepareFailedException
    *           If the transaction could not successfully extend the
-   *           SemanticWarranty on any of the calls
+   *           ComputationWarranty on any of the calls
    */
   public Map<CallInstance, WarrantiedCallResult> prepareCalls(Principal worker,
       long tid, Map<CallInstance, WarrantiedCallResult> calls, long commitTime)
@@ -439,7 +439,7 @@ public class TransactionManager {
       Map<CallInstance, WarrantiedCallResult> conflictWars = new HashMap<>();
       for (CallInstance call : calls.keySet()) {
         Pair<ComputationExtendStatus, WarrantiedCallResult> extResult =
-            semanticWarranties.extendForReadPrepare(call, calls.get(call),
+            computationWarranties.extendForReadPrepare(call, calls.get(call),
                 commitTime, tid);
         switch (extResult.first) {
         case OK:
@@ -534,7 +534,7 @@ public class TransactionManager {
 
       // Get a proposal for a warranty
       ComputationWarranty proposed =
-          semanticWarranties.requestWarranty(tid, r, true);
+          computationWarranties.requestWarranty(tid, r, true);
       if (proposed != null) {
         Logging.log(COMPUTATION_WARRANTY_LOGGER, Level.FINER,
             "{0} was proposed a warranty to expire in {1}", r.call.toString(),
@@ -697,7 +697,7 @@ public class TransactionManager {
    */
   public WarrantiedCallResult getCall(Principal principal, CallInstance id)
       throws AccessException {
-    WarrantiedCallResult result = semanticWarranties.fetchForWorker(id);
+    WarrantiedCallResult result = computationWarranties.fetchForWorker(id);
     if (result == null)
       throw new AccessException("AccessDenied, could not find call id "
           + id.toString());
