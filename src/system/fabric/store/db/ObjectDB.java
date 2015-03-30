@@ -66,7 +66,7 @@ import fabric.worker.remote.RemoteWorker;
 public abstract class ObjectDB {
   private static final int INITIAL_OBJECT_VERSION_NUMBER = 1;
   // Needed to coordinate commits.
-  protected SemanticWarrantyTable semanticWarranties;
+  protected ComputationWarrantyTable computationWarranties;
 
   // Hack hack hack
   private static final boolean ENABLE_WARRANTY_REFRESHES = false;
@@ -293,10 +293,10 @@ public abstract class ObjectDB {
   }
 
   /**
-   * Set the semantic warranty table to use for coordinating commits.
+   * Set the computation warranty table to use for coordinating commits.
    */
-  public final void setSemanticWarrantyTable(SemanticWarrantyTable swt) {
-    this.semanticWarranties = swt;
+  public final void setComputationWarrantyTable(ComputationWarrantyTable swt) {
+    this.computationWarranties = swt;
   }
 
   /**

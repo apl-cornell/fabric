@@ -7,9 +7,9 @@ import fabric.common.util.Pair;
 import fabric.worker.AbortException;
 
 public class CallCheckException extends AbortException {
-  public final Pair<Map<CallInstance, SemanticWarrantyRequest>, Set<CallInstance>> updates;
+  public final Pair<Map<CallInstance, ComputationWarrantyRequest>, Set<CallInstance>> updates;
 
-  public CallCheckException(Map<CallInstance, SemanticWarrantyRequest> unchanged, Set<CallInstance> changed) {
+  public CallCheckException(Map<CallInstance, ComputationWarrantyRequest> unchanged, Set<CallInstance> changed) {
     super();
     this.updates = new Pair<>(unchanged, changed);
   }

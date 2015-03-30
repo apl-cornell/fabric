@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import fabric.common.SemanticWarranty;
+import fabric.common.ComputationWarranty;
 import fabric.worker.memoize.CallInstance;
 
 /**
@@ -15,10 +15,10 @@ import fabric.worker.memoize.CallInstance;
  */
 public final class PrepareWritesResult {
   public final long commitTime;
-  public final Map<CallInstance, SemanticWarranty> callResults;
+  public final Map<CallInstance, ComputationWarranty> callResults;
 
   public PrepareWritesResult(long commitTime,
-      Map<CallInstance, SemanticWarranty> callResults) {
+      Map<CallInstance, ComputationWarranty> callResults) {
     this.commitTime = commitTime;
     this.callResults = callResults;
   }
@@ -32,7 +32,7 @@ public final class PrepareWritesResult {
     this.callResults = new HashMap<>(numResponses);
     for (int i = 0; i < numResponses; i++) {
       CallInstance call = new CallInstance(in);
-      this.callResults.put(call, new SemanticWarranty(in.readLong()));
+      this.callResults.put(call, new ComputationWarranty(in.readLong()));
     }
   }
 
@@ -45,7 +45,7 @@ public final class PrepareWritesResult {
       out.writeInt(0);
     } else {
       out.writeInt(callResults.size());
-      for (Map.Entry<CallInstance, SemanticWarranty> e :
+      for (Map.Entry<CallInstance, ComputationWarranty> e :
           callResults.entrySet()) {
         e.getKey().write(out);
         out.writeLong(e.getValue().expiry());

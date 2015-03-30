@@ -1,6 +1,6 @@
 package fabric.worker.memoize;
 
-import static fabric.common.Logging.SEMANTIC_WARRANTY_LOGGER;
+import static fabric.common.Logging.COMPUTATION_WARRANTY_LOGGER;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -39,7 +39,7 @@ public class CallResult {
             WrappedJavaInlineable.$wrap((new ObjectInputStream(
                 new ByteArrayInputStream(inlinedData))).readObject());
       } catch (ClassNotFoundException e) {
-        Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+        Logging.log(COMPUTATION_WARRANTY_LOGGER, Level.FINEST,
             "Couldn't read in supposedly inlineable object: {0}", e);
       }
     } else if (valueType == 2) {

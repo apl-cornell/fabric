@@ -1,7 +1,7 @@
 package fabric.store;
 
 import static fabric.common.Logging.STORE_REQUEST_LOGGER;
-import static fabric.common.Logging.SEMANTIC_WARRANTY_LOGGER;
+import static fabric.common.Logging.COMPUTATION_WARRANTY_LOGGER;
 import static fabric.common.ONumConstants.STORE_PRINCIPAL;
 
 import java.io.IOException;
@@ -24,7 +24,7 @@ import fabric.common.KeyMaterial;
 import fabric.common.Logging;
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
-import fabric.common.SemanticWarranty;
+import fabric.common.ComputationWarranty;
 import fabric.common.SysUtil;
 import fabric.common.VersionWarranty;
 import fabric.common.WarrantyGroup;
@@ -64,7 +64,7 @@ import fabric.messages.StalenessCheckMessage;
 import fabric.store.db.ObjectDB;
 import fabric.worker.memoize.CallInstance;
 import fabric.worker.memoize.WarrantiedCallResult;
-import fabric.worker.memoize.SemanticWarrantyRequest;
+import fabric.worker.memoize.ComputationWarrantyRequest;
 import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.Worker;
@@ -231,16 +231,16 @@ class Store extends MessageToStoreHandler {
         "Handling Prepare-Writes Message, worker={0}, tid={1}",
         nameOf(client.principal), msg.tid);
 
-    Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+    Logging.log(COMPUTATION_WARRANTY_LOGGER, Level.FINEST,
         "Preparing {0} semantic warranty requests", msg.requests.size());
 
     long commitTime = prepareTransactionWrites(client, msg.tid,
         msg.serializedCreates, msg.serializedWrites, msg.requests);
 
-    Map<CallInstance, SemanticWarranty> replies =
+    Map<CallInstance, ComputationWarranty> replies =
       prepareTransactionRequests(client.principal, msg.tid, msg.requests);
 
-    Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+    Logging.log(COMPUTATION_WARRANTY_LOGGER, Level.FINEST,
         "Returning {0} request replies", replies.size());
 
     PrepareWritesResult writeResult = new PrepareWritesResult(commitTime, replies);
@@ -312,7 +312,7 @@ class Store extends MessageToStoreHandler {
   @Override
   public ReuseCallMessage.Response handle(RemoteIdentity<RemoteWorker> client,
       ReuseCallMessage msg) throws AccessException {
-    Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+    Logging.log(COMPUTATION_WARRANTY_LOGGER, Level.FINEST,
         "Handling Reuse Call Message from {0} for call {1}",
         nameOf(client.principal), msg.call);
 
@@ -424,7 +424,7 @@ class Store extends MessageToStoreHandler {
   private long prepareTransactionWrites(RemoteIdentity<RemoteWorker> r, long tid,
       Collection<SerializedObject> serializedCreates,
       Collection<SerializedObject> serializedWrites,
-      Collection<SemanticWarrantyRequest> calls) throws
+      Collection<ComputationWarrantyRequest> calls) throws
     TransactionPrepareFailedException {
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
         "Handling PrepareWrites Message from {0}, tid={1}", nameOf(r.principal),
@@ -453,8 +453,8 @@ class Store extends MessageToStoreHandler {
   /**
    * Handles the <code>SemanticWarrantyRequest</code> for a transaction.
    */
-  private Map<CallInstance, SemanticWarranty> prepareTransactionRequests(Principal p,
-      long tid, Set<SemanticWarrantyRequest> requests) throws
+  private Map<CallInstance, ComputationWarranty> prepareTransactionRequests(Principal p,
+      long tid, Set<ComputationWarrantyRequest> requests) throws
     TransactionPrepareFailedException {
       /* throws TransactionPrepareFailedException { */
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,

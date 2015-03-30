@@ -1,6 +1,6 @@
 package fabric.store;
 
-import static fabric.common.Logging.SEMANTIC_WARRANTY_LOGGER;
+import static fabric.common.Logging.COMPUTATION_WARRANTY_LOGGER;
 import static fabric.common.Logging.STORE_TRANSACTION_LOGGER;
 import static fabric.store.db.ObjectDB.UpdateType.CREATE;
 import static fabric.store.db.ObjectDB.UpdateType.WRITE;
@@ -21,7 +21,7 @@ import fabric.common.AuthorizationUtil;
 import fabric.common.Logging;
 import fabric.common.ONumConstants;
 import fabric.common.ObjectGroup;
-import fabric.common.SemanticWarranty;
+import fabric.common.ComputationWarranty;
 import fabric.common.SerializedObject;
 import fabric.common.SerializedObjectAndTokens;
 import fabric.common.VersionWarranty;
@@ -46,11 +46,11 @@ import fabric.lang.security.Principal;
 import fabric.store.db.GroupContainer;
 import fabric.store.db.ObjectDB;
 import fabric.store.db.ObjectDB.ExtendReadLockStatus;
-import fabric.store.db.SemanticWarrantyTable;
-import fabric.store.db.SemanticWarrantyTable.SemanticExtendStatus;
+import fabric.store.db.ComputationWarrantyTable;
+import fabric.store.db.ComputationWarrantyTable.ComputationExtendStatus;
 import fabric.worker.AbortException;
 import fabric.worker.memoize.CallInstance;
-import fabric.worker.memoize.SemanticWarrantyRequest;
+import fabric.worker.memoize.ComputationWarrantyRequest;
 import fabric.worker.memoize.WarrantiedCallResult;
 import fabric.worker.transaction.ReadMap;
 import fabric.worker.RemoteStore;
@@ -89,12 +89,12 @@ public class TransactionManager {
   /**
    * Data for maintaining semantic warranties.
    */
-  private final SemanticWarrantyTable semanticWarranties;
+  private final ComputationWarrantyTable semanticWarranties;
 
   public TransactionManager(ObjectDB database, PrivateKey signingKey) {
     this.database = database;
     this.sm = new SubscriptionManager(database.getName(), this, signingKey);
-    this.semanticWarranties = new SemanticWarrantyTable(database);
+    this.semanticWarranties = new ComputationWarrantyTable(database);
   }
 
   public final SubscriptionManager subscriptionManager() {
@@ -193,23 +193,23 @@ public class TransactionManager {
 
       // Double check calls.
       long currentTime = System.currentTimeMillis();
-      Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+      Logging.log(COMPUTATION_WARRANTY_LOGGER, Level.FINEST,
           "Checking calls for {0} that would delay longer than {1} ms",
           Long.toHexString(tid), commitTime - currentTime);
-      Pair<SemanticWarranty, Pair<Map<CallInstance, SemanticWarrantyRequest>, Map<CallInstance, SemanticWarrantyRequest>>> callPrepareResp =
+      Pair<ComputationWarranty, Pair<Map<CallInstance, ComputationWarrantyRequest>, Map<CallInstance, ComputationWarrantyRequest>>> callPrepareResp =
           semanticWarranties.prepareWrites(req.writes, req.creates, tid,
               commitTime, database.getName());
 
-      SemanticWarranty longestCallWarranty = callPrepareResp.first;
-      Map<CallInstance, SemanticWarrantyRequest> updates =
+      ComputationWarranty longestCallWarranty = callPrepareResp.first;
+      Map<CallInstance, ComputationWarrantyRequest> updates =
           callPrepareResp.second.first;
-      Map<CallInstance, SemanticWarrantyRequest> newCalls =
+      Map<CallInstance, ComputationWarrantyRequest> newCalls =
           callPrepareResp.second.second;
       updates.putAll(newCalls);
 
       OidKeyHashMap<Store> addedCreates = new OidKeyHashMap<>();
 
-      for (SemanticWarrantyRequest update : updates.values()) {
+      for (ComputationWarrantyRequest update : updates.values()) {
         // Register additional creates
         for (LongKeyMap<_Impl> submap : update.creates) {
           for (_Impl create : submap.values()) {
@@ -257,7 +257,7 @@ public class TransactionManager {
       }
 
       // Don't worry about calls we're requesting in this prepare request
-      for (SemanticWarrantyRequest callRequest : req.calls) {
+      for (ComputationWarrantyRequest callRequest : req.calls) {
         addedCalls.remove(callRequest.call);
       }
 
@@ -296,7 +296,7 @@ public class TransactionManager {
     STORE_TRANSACTION_LOGGER.log(Level.FINE,
         "Prepared writes for transaction {0}", tid);
 
-    Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+    Logging.log(COMPUTATION_WARRANTY_LOGGER, Level.FINEST,
         "Transaction {0} prepared writes to be done in {1} ms.",
         Long.toHexString(tid), commitTime - System.currentTimeMillis());
 
@@ -317,7 +317,7 @@ public class TransactionManager {
       LongKeyMap<Integer> reads, long commitTime)
       throws TransactionPrepareFailedException {
 
-    Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+    Logging.log(COMPUTATION_WARRANTY_LOGGER, Level.FINEST,
         "Transaction {0} preparing reads to be extended for {1} ms.",
         Long.toHexString(tid), commitTime - System.currentTimeMillis());
 
@@ -383,14 +383,14 @@ public class TransactionManager {
             result = database.refreshRead(resultObj, onum);
             versionConflicts.put(onum, new SerializedObjectAndTokens(obj,
                 result.getWarranty()));
-            Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+            Logging.log(COMPUTATION_WARRANTY_LOGGER, Level.FINEST,
                 "BAD VERSION ON {0} FOR {1}: DB: {2}, US: {3}", onum,
                 Long.toHexString(tid), obj.getVersion(), version);
             continue;
 
           case DENIED:
             sm.notifyNewWarranties(newWarranties, null);
-            Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+            Logging.log(COMPUTATION_WARRANTY_LOGGER, Level.FINEST,
                 "DENIED EXTENSION ON {0} FOR {1}", onum, Long.toHexString(tid));
             throw new TransactionPrepareFailedException(versionConflicts,
                 "Unable to extend warranty for object " + onum);
@@ -438,7 +438,7 @@ public class TransactionManager {
       Map<CallInstance, WarrantiedCallResult> updatedWars = new HashMap<>();
       Map<CallInstance, WarrantiedCallResult> conflictWars = new HashMap<>();
       for (CallInstance call : calls.keySet()) {
-        Pair<SemanticExtendStatus, WarrantiedCallResult> extResult =
+        Pair<ComputationExtendStatus, WarrantiedCallResult> extResult =
             semanticWarranties.extendForReadPrepare(call, calls.get(call),
                 commitTime, tid);
         switch (extResult.first) {
@@ -454,7 +454,7 @@ public class TransactionManager {
         }
       }
       if (conflictWars.size() > 0) {
-        SEMANTIC_WARRANTY_LOGGER
+        COMPUTATION_WARRANTY_LOGGER
             .finest("Prepare Calls failed due to conflicting or stale call values!");
         long currentTime = System.currentTimeMillis();
         String msg =
@@ -479,7 +479,7 @@ public class TransactionManager {
         }
         throw new TransactionPrepareFailedException(conflictWars, msg);
       }
-      SEMANTIC_WARRANTY_LOGGER.finest("Calls prepared!");
+      COMPUTATION_WARRANTY_LOGGER.finest("Calls prepared!");
       return updatedWars;
     } catch (TransactionPrepareFailedException e) {
       try {
@@ -498,22 +498,22 @@ public class TransactionManager {
    * @param worker
    *          The worker requesting the prepare
    */
-  public Map<CallInstance, SemanticWarranty> prepareRequests(Principal worker,
-      long tid, Set<SemanticWarrantyRequest> requests) {
+  public Map<CallInstance, ComputationWarranty> prepareRequests(Principal worker,
+      long tid, Set<ComputationWarrantyRequest> requests) {
     /* Create the associated warranties and add these calls to the warranties
      * table.
      */
-    Map<CallInstance, SemanticWarranty> warranties = new HashMap<>();
+    Map<CallInstance, ComputationWarranty> warranties = new HashMap<>();
 
     // Have to do a topologically sorted order of requests (so call dependencies
     // have warranties already).
     Map<CallInstance, Set<CallInstance>> simplifiedDepMap = new HashMap<>();
-    Map<CallInstance, SemanticWarrantyRequest> reqMap =
+    Map<CallInstance, ComputationWarrantyRequest> reqMap =
         new HashMap<>(requests.size());
-    for (SemanticWarrantyRequest r : requests) {
+    for (ComputationWarrantyRequest r : requests) {
       reqMap.put(r.call, r);
     }
-    for (SemanticWarrantyRequest r : requests) {
+    for (ComputationWarrantyRequest r : requests) {
       Set<CallInstance> depsInTable = new HashSet<>();
       for (CallInstance c : r.calls.keySet())
         if (reqMap.containsKey(c)) depsInTable.add(c);
@@ -528,15 +528,15 @@ public class TransactionManager {
       else nonfringe.add(k);
 
     while (!fringe.isEmpty()) {
-      SemanticWarrantyRequest r = reqMap.get(fringe.poll());
-      Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+      ComputationWarrantyRequest r = reqMap.get(fringe.poll());
+      Logging.log(COMPUTATION_WARRANTY_LOGGER, Level.FINEST,
           "Proposing SemanticWarranty for CallInstance {0}", r.call);
 
       // Get a proposal for a warranty
-      SemanticWarranty proposed =
+      ComputationWarranty proposed =
           semanticWarranties.requestWarranty(tid, r, true);
       if (proposed != null) {
-        Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINER,
+        Logging.log(COMPUTATION_WARRANTY_LOGGER, Level.FINER,
             "{0} was proposed a warranty to expire in {1}", r.call.toString(),
             (proposed.expiry() - System.currentTimeMillis()));
         // Add it to the response set
@@ -554,7 +554,7 @@ public class TransactionManager {
         // We couldn't get that warranty... so don't even bother with other
         // warranties that used it.  Oh well.
         List<CallInstance> callsToDrop = new ArrayList<>();
-        Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINER,
+        Logging.log(COMPUTATION_WARRANTY_LOGGER, Level.FINER,
             "{0} could not make a warranty.", r.call);
         callsToDrop.add(r.call);
         // Recursively remove stuff that used this.
@@ -563,7 +563,7 @@ public class TransactionManager {
           for (CallInstance c : new HashSet<>(nonfringe)) {
             if (simplifiedDepMap.get(c).contains(callToDrop)) {
               nonfringe.remove(c);
-              Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINER,
+              Logging.log(COMPUTATION_WARRANTY_LOGGER, Level.FINER,
                   "{0} could not make a warranty.", c);
               callsToDrop.add(c);
             }

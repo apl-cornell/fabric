@@ -18,11 +18,11 @@ import fabric.worker.transaction.ReadMap;
 import fabric.worker.Store;
 
 /**
- * Represents all the data needed for a request for a SemanticWarranty.  Should
+ * Represents all the data needed for a request for a ComputationWarranty.  Should
  * be constructed once the request has been computed and is about to be
  * committed.
  */
-public class SemanticWarrantyRequest {
+public class ComputationWarrantyRequest {
 
   public final CallInstance call;
   public final Object value;
@@ -36,14 +36,14 @@ public class SemanticWarrantyRequest {
 
   public TransactionID id;
 
-  public SemanticWarrantyRequest(CallInstance call, Object value,
+  public ComputationWarrantyRequest(CallInstance call, Object value,
       OidKeyHashMap<ReadMap.Entry> reads, OidKeyHashMap<_Impl> creates,
       Map<CallInstance, WarrantiedCallResult> calls, TransactionID id) {
     this(call, value, reads, creates, calls);
     this.id = id;
   }
 
-  public SemanticWarrantyRequest(CallInstance call, Object value,
+  public ComputationWarrantyRequest(CallInstance call, Object value,
       OidKeyHashMap<ReadMap.Entry> reads, OidKeyHashMap<_Impl> creates,
       Map<CallInstance, WarrantiedCallResult> calls) {
     this.call = call;
@@ -61,7 +61,7 @@ public class SemanticWarrantyRequest {
     this.calls = calls;
   }
 
-  public SemanticWarrantyRequest(DataInput in) throws IOException {
+  public ComputationWarrantyRequest(DataInput in) throws IOException {
     this.call = new CallInstance(in);
     this.value = new CallResult(in).value;
 

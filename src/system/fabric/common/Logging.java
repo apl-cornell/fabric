@@ -39,7 +39,7 @@ public final class Logging {
   /**
    * For events related to semantic warranties
    */
-  public static final Logger SEMANTIC_WARRANTY_LOGGER = Logger
+  public static final Logger COMPUTATION_WARRANTY_LOGGER = Logger
       .getLogger("fabric.worker.memoize");
 
   /**

@@ -134,8 +134,8 @@ public class MemoryDB extends ObjectDB {
 
         // If we have a semantic warranites table initialized (which should
         // always be true) then commit updates to the calls involved as well.
-        if (semanticWarranties != null) {
-          semanticWarranties.commit(tid);
+        if (computationWarranties != null) {
+          computationWarranties.commit(tid);
         } else {
           throw new InternalError(
               "Somehow we don't have a semantic warranties table!");

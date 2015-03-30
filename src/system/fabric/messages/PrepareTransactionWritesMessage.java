@@ -14,7 +14,7 @@ import fabric.common.net.RemoteIdentity;
 import fabric.lang.Object._Impl;
 import fabric.store.PrepareWritesResult;
 import fabric.worker.TransactionPrepareFailedException;
-import fabric.worker.memoize.SemanticWarrantyRequest;
+import fabric.worker.memoize.ComputationWarrantyRequest;
 import fabric.worker.remote.RemoteWorker;
 
 /**
@@ -61,7 +61,7 @@ public class PrepareTransactionWritesMessage
   /**
    * The semantic warranties that were created and are being requested.
    */
-  public final Set<SemanticWarrantyRequest> requests;
+  public final Set<ComputationWarrantyRequest> requests;
 
   /**
    * Used to prepare transactions at remote workers.
@@ -74,7 +74,7 @@ public class PrepareTransactionWritesMessage
    * Only used by the worker.
    */
   public PrepareTransactionWritesMessage(long tid, Collection<_Impl> toCreate,
-      Collection<_Impl> writes, Set<SemanticWarrantyRequest> requests) {
+      Collection<_Impl> writes, Set<ComputationWarrantyRequest> requests) {
     super(MessageType.PREPARE_TRANSACTION_WRITES,
         TransactionPrepareFailedException.class);
 
@@ -143,7 +143,7 @@ public class PrepareTransactionWritesMessage
       out.writeInt(0);
     } else {
       out.writeInt(requests.size());
-      for (SemanticWarrantyRequest r : requests)
+      for (ComputationWarrantyRequest r : requests)
         r.write(out);
     }
   }
@@ -184,7 +184,7 @@ public class PrepareTransactionWritesMessage
     int requestsSize = in.readInt();
     this.requests = new HashSet<>(requestsSize);
     for (int i = 0; i < requestsSize; i++)
-      this.requests.add(new SemanticWarrantyRequest(in));
+      this.requests.add(new ComputationWarrantyRequest(in));
   }
 
   @Override

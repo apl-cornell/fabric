@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.Set;
 
 import fabric.common.ObjectGroup;
-import fabric.common.SemanticWarranty;
+import fabric.common.ComputationWarranty;
 import fabric.common.SerializedObject;
 import fabric.common.SerializedObjectAndTokens;
 import fabric.common.TransactionID;
@@ -28,7 +28,7 @@ import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.Worker;
 import fabric.worker.memoize.CallInstance;
-import fabric.worker.memoize.SemanticWarrantyRequest;
+import fabric.worker.memoize.ComputationWarrantyRequest;
 import fabric.worker.memoize.WarrantiedCallResult;
 import fabric.worker.remote.RemoteWorker;
 
@@ -91,7 +91,7 @@ public class InProcessStore extends RemoteStore {
   @Override
   public PrepareWritesResult prepareTransactionWrites(long tid,
       Collection<_Impl> toCreate, Collection<_Impl> writes,
-      Set<SemanticWarrantyRequest> calls)
+      Set<ComputationWarrantyRequest> calls)
       throws TransactionPrepareFailedException {
     Collection<SerializedObject> serializedCreates =
         new ArrayList<>(toCreate.size());
@@ -118,7 +118,7 @@ public class InProcessStore extends RemoteStore {
     sm.createSurrogates(req);
 
     // Handle call requests
-    Map<CallInstance, SemanticWarranty> callReplies =
+    Map<CallInstance, ComputationWarranty> callReplies =
         tm.prepareRequests(Worker.getWorker().getPrincipal(), tid, calls);
 
     // Prepare object writes

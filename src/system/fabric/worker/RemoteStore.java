@@ -1,6 +1,6 @@
 package fabric.worker;
 
-import static fabric.common.Logging.SEMANTIC_WARRANTY_LOGGER;
+import static fabric.common.Logging.COMPUTATION_WARRANTY_LOGGER;
 
 import java.io.ObjectStreamException;
 import java.io.Serializable;
@@ -63,7 +63,7 @@ import fabric.util.Map;
 import fabric.worker.memoize.CallCache;
 import fabric.worker.memoize.CallInstance;
 import fabric.worker.memoize.WarrantiedCallResult;
-import fabric.worker.memoize.SemanticWarrantyRequest;
+import fabric.worker.memoize.ComputationWarrantyRequest;
 import fabric.worker.transaction.Log;
 import fabric.worker.transaction.TransactionManager;
 
@@ -151,7 +151,7 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
   @Override
   public PrepareWritesResult prepareTransactionWrites(long tid,
       Collection<Object._Impl> toCreate, Collection<Object._Impl> writes,
-      Set<SemanticWarrantyRequest> calls) throws
+      Set<ComputationWarrantyRequest> calls) throws
   TransactionPrepareFailedException, UnreachableNodeException {
     PrepareTransactionWritesMessage.Response response =
         send(Worker.getWorker().authToStore,
@@ -339,7 +339,7 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
 
   @Override
   public WarrantiedCallResult lookupCall(CallInstance call) {
-    Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST, "Looking up {0} ...",
+    Logging.log(COMPUTATION_WARRANTY_LOGGER, Level.FINEST, "Looking up {0} ...",
         call);
 
     WarrantiedCallResult result = null;
@@ -348,13 +348,13 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
     if (current != null) {
       result = current.getRequestResult(call);
       if (result != null) {
-        Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+        Logging.log(COMPUTATION_WARRANTY_LOGGER, Level.FINEST,
             "Call {0} found in transaction log: {1}", call, result);
         return result;
       }
 
       if (current.blockedWarranties.contains(call)) {
-        Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+        Logging.log(COMPUTATION_WARRANTY_LOGGER, Level.FINEST,
             "Call {0} was blocked, probably for call checking!", call);
         return null;
       }
@@ -362,7 +362,7 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
 
     result = callCache.get(call);
     if (result != null) {
-      Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+      Logging.log(COMPUTATION_WARRANTY_LOGGER, Level.FINEST,
           "Call {0} found in local call cache: {1}", call, result);
       return result;
     }
@@ -372,7 +372,7 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
     try {
       result = reuseCallFromStore(call);
       if (result != null) {
-        Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+        Logging.log(COMPUTATION_WARRANTY_LOGGER, Level.FINEST,
             "Call {0} found at store: {1}", call, result);
         insertResult(call, result);
         return result;
@@ -385,13 +385,13 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
 
   @Override
   public void insertResult(CallInstance call, WarrantiedCallResult result) {
-    Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST, "Putting call: {0}",
+    Logging.log(COMPUTATION_WARRANTY_LOGGER, Level.FINEST, "Putting call: {0}",
         call);
     callCache.put(call, result);
   }
 
   public void removeResult(CallInstance call) {
-    Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST, "Removing call: {0}",
+    Logging.log(COMPUTATION_WARRANTY_LOGGER, Level.FINEST, "Removing call: {0}",
         call);
     callCache.remove(call);
   }
@@ -406,7 +406,7 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
    *           if there was an error while fetching the object from the store.
    */
   public WarrantiedCallResult reuseCallFromStore(CallInstance id) throws AccessException {
-    Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+    Logging.log(COMPUTATION_WARRANTY_LOGGER, Level.FINEST,
         "Asking store {0} for call {1}", name(), id);
     ReuseCallMessage.Response response =
         send(Worker.getWorker().authToStore, new ReuseCallMessage(id));

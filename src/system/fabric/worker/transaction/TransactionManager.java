@@ -1,7 +1,7 @@
 package fabric.worker.transaction;
 
 import static fabric.common.Logging.HOTOS_LOGGER;
-import static fabric.common.Logging.SEMANTIC_WARRANTY_LOGGER;
+import static fabric.common.Logging.COMPUTATION_WARRANTY_LOGGER;
 import static fabric.common.Logging.WORKER_TRANSACTION_LOGGER;
 import static fabric.worker.transaction.Log.CommitState.Values.ABORTED;
 import static fabric.worker.transaction.Log.CommitState.Values.ABORTING;
@@ -29,7 +29,7 @@ import java.util.logging.Level;
 
 import fabric.common.FabricThread;
 import fabric.common.Logging;
-import fabric.common.SemanticWarranty;
+import fabric.common.ComputationWarranty;
 import fabric.common.SerializedObjectAndTokens;
 import fabric.common.Threading;
 import fabric.common.Threading.NamedRunnable;
@@ -60,7 +60,7 @@ import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.TransactionRestartingException;
 import fabric.worker.Worker;
 import fabric.worker.memoize.CallInstance;
-import fabric.worker.memoize.SemanticWarrantyRequest;
+import fabric.worker.memoize.ComputationWarrantyRequest;
 import fabric.worker.memoize.WarrantiedCallResult;
 import fabric.worker.remote.RemoteWorker;
 import fabric.worker.remote.WriterMap;
@@ -519,7 +519,7 @@ public final class TransactionManager {
     commitTime[0] = System.currentTimeMillis();
 
     // Aggregated request results.
-    final Map<CallInstance, SemanticWarranty> callResults =
+    final Map<CallInstance, ComputationWarranty> callResults =
         new HashMap<>();
 
     // Go through each worker and send prepare messages in parallel.
@@ -568,7 +568,7 @@ public final class TransactionManager {
               try {
                 Collection<_Impl> creates = current.getCreatesForStore(store);
                 Collection<_Impl> writes = current.getWritesForStore(store);
-                Set<SemanticWarrantyRequest> calls =
+                Set<ComputationWarrantyRequest> calls =
                     current.getRequestsForStore(store);
 
                 if (WORKER_TRANSACTION_LOGGER.isLoggable(Level.FINE)) {
@@ -578,7 +578,7 @@ public final class TransactionManager {
                           + "{3} modified", current.tid.topTid, store,
                       creates.size(), writes.size());
                 }
-                Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+                Logging.log(COMPUTATION_WARRANTY_LOGGER, Level.FINEST,
                     "Requesting {0} computation warranties", calls.size());
 
                 PrepareWritesResult response =
@@ -592,7 +592,7 @@ public final class TransactionManager {
 
                 synchronized (callResults) {
                   if (response.callResults != null) {
-                    Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+                    Logging.log(COMPUTATION_WARRANTY_LOGGER, Level.FINEST,
                         "Got {0} computation warranties", response.callResults.size());
                     callResults.putAll(response.callResults);
                   }
@@ -817,10 +817,10 @@ public final class TransactionManager {
                         reads, calls, commitTime);
 
                 // Prepare was successful. Update the objects' warranties.
-                SEMANTIC_WARRANTY_LOGGER.finest("Updating version warranties.");
+                COMPUTATION_WARRANTY_LOGGER.finest("Updating version warranties.");
                 current.updateVersionWarranties(store, allNewWarranties.first);
                 // Update warranties on calls.
-                SEMANTIC_WARRANTY_LOGGER.finest("Updating semantic warranties.");
+                COMPUTATION_WARRANTY_LOGGER.finest("Updating semantic warranties.");
                 current
                     .updateSemanticWarranties(store, allNewWarranties.second);
               } catch (TransactionPrepareFailedException e) {
@@ -880,7 +880,7 @@ public final class TransactionManager {
     if (!failures.isEmpty()) {
       String logMessage =
         "Transaction tid=" + current.tid.topTid + ": read-prepare failed.";
-      Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+      Logging.log(COMPUTATION_WARRANTY_LOGGER, Level.FINEST,
           "Transaction tid={0}: read-prepare failed.", current.tid.topTid);
 
       for (Map.Entry<RemoteNode<?>, TransactionPrepareFailedException> entry : failures
@@ -891,10 +891,10 @@ public final class TransactionManager {
           LongKeyMap<SerializedObjectAndTokens> versionConflicts =
               entry.getValue().versionConflicts;
           if (versionConflicts != null) {
-            Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+            Logging.log(COMPUTATION_WARRANTY_LOGGER, Level.FINEST,
                 "{0} conflicted objects", versionConflicts.size());
             for (SerializedObjectAndTokens obj : versionConflicts.values()) {
-              Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST, "\t{0}",
+              Logging.log(COMPUTATION_WARRANTY_LOGGER, Level.FINEST, "\t{0}",
                   obj.getSerializedObject().getOnum());
               store.updateCache(obj);
             }
@@ -904,11 +904,11 @@ public final class TransactionManager {
           Map<CallInstance, WarrantiedCallResult> callConflictUpdates =
               entry.getValue().callConflictUpdates;
           if (callConflictUpdates != null) {
-            Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+            Logging.log(COMPUTATION_WARRANTY_LOGGER, Level.FINEST,
                 "{0} conflicted calls", callConflictUpdates.size());
             for (Map.Entry<CallInstance, WarrantiedCallResult> update : callConflictUpdates
                 .entrySet()) {
-              Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST, "\t{0}",
+              Logging.log(COMPUTATION_WARRANTY_LOGGER, Level.FINEST, "\t{0}",
                   update.getKey());
               store.insertResult(update.getKey(), update.getValue());
             }
@@ -1017,7 +1017,7 @@ public final class TransactionManager {
                 try {
                   store.commitTransaction(current.tid.topTid, commitTime,
                       !current.commitState.storesContacted.contains(store));
-                  Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+                  Logging.log(COMPUTATION_WARRANTY_LOGGER, Level.FINEST,
                       "Transaction {0} committed.", current.tid.topTid);
                 } catch (TransactionCommitFailedException e) {
                   failed.add((RemoteStore) store);
@@ -1177,14 +1177,14 @@ public final class TransactionManager {
    */
   public void setSemanticWarrantyValue(fabric.lang.Object v) {
     if (v == null) {
-      Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+      Logging.log(COMPUTATION_WARRANTY_LOGGER, Level.FINEST,
           "Call {0} gets value null", current.semanticWarrantyCall);
     } else if (!(v instanceof WrappedJavaInlineable)) {
-      Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+      Logging.log(COMPUTATION_WARRANTY_LOGGER, Level.FINEST,
           "Call {0} gets value {1}@{2}", current.semanticWarrantyCall,
           v.$getOnum(), v.$getStore().name());
     } else {
-      Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+      Logging.log(COMPUTATION_WARRANTY_LOGGER, Level.FINEST,
           "Call {0} gets value {1}", current.semanticWarrantyCall,
           ((WrappedJavaInlineable<?>) v).$unwrap());
     }
@@ -1515,7 +1515,7 @@ public final class TransactionManager {
               // Because this could be during a subtransaction (and not at the top
               // level after gathering all the warranty request information), filter
               // reads for creates done by semantic warranty requests.
-              for (SemanticWarrantyRequest req : current.requests.values())
+              for (ComputationWarrantyRequest req : current.requests.values())
                 for (Entry<Store, LongKeyMap<_Impl>> entry : req.creates
                     .nonNullEntrySet())
                   for (_Impl create : entry.getValue().values())

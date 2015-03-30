@@ -3,7 +3,7 @@ package fabric.store;
 import java.util.Collection;
 
 import fabric.common.SerializedObject;
-import fabric.worker.memoize.SemanticWarrantyRequest;
+import fabric.worker.memoize.ComputationWarrantyRequest;
 
 /**
  * A convenience class for grouping together the created and modified object
@@ -19,12 +19,12 @@ public final class PrepareWritesRequest {
   public final Collection<SerializedObject> writes;
 
   /** The collection of requested semantic warrantied calls */
-  public final Collection<SemanticWarrantyRequest> calls;
+  public final Collection<ComputationWarrantyRequest> calls;
 
   /** Create a PrepareWritesRequest with the provided fields */
   public PrepareWritesRequest(long tid, Collection<SerializedObject> creates,
       Collection<SerializedObject> writes,
-      Collection<SemanticWarrantyRequest> calls) {
+      Collection<ComputationWarrantyRequest> calls) {
     this.tid = tid;
     this.creates = creates;
     this.writes = writes;

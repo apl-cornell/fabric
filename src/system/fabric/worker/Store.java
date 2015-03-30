@@ -17,7 +17,7 @@ import fabric.net.UnreachableNodeException;
 import fabric.store.PrepareWritesResult;
 import fabric.worker.memoize.CallInstance;
 import fabric.worker.memoize.WarrantiedCallResult;
-import fabric.worker.memoize.SemanticWarrantyRequest;
+import fabric.worker.memoize.ComputationWarrantyRequest;
 
 public interface Store extends Serializable {
   /**
@@ -42,7 +42,7 @@ public interface Store extends Serializable {
    */
   PrepareWritesResult prepareTransactionWrites(long tid,
       Collection<_Impl> toCreate, Collection<_Impl> writes,
-      Set<SemanticWarrantyRequest> calls) throws
+      Set<ComputationWarrantyRequest> calls) throws
     UnreachableNodeException, TransactionPrepareFailedException;
 
   /**

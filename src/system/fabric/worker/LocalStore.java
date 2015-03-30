@@ -1,7 +1,7 @@
 package fabric.worker;
 
 import static fabric.common.Logging.WORKER_LOCAL_STORE_LOGGER;
-import static fabric.common.Logging.SEMANTIC_WARRANTY_LOGGER;
+import static fabric.common.Logging.COMPUTATION_WARRANTY_LOGGER;
 
 import java.io.NotSerializableException;
 import java.io.ObjectStreamException;
@@ -35,7 +35,7 @@ import fabric.util.Map;
 import fabric.worker.memoize.CallCache;
 import fabric.worker.memoize.CallInstance;
 import fabric.worker.memoize.WarrantiedCallResult;
-import fabric.worker.memoize.SemanticWarrantyRequest;
+import fabric.worker.memoize.ComputationWarrantyRequest;
 import fabric.worker.transaction.Log;
 import fabric.worker.transaction.TransactionManager;
 
@@ -68,7 +68,7 @@ public final class LocalStore implements Store, Serializable {
   @Override
   public PrepareWritesResult prepareTransactionWrites(long tid,
       Collection<Object._Impl> toCreate, Collection<Object._Impl> writes,
-      Set<SemanticWarrantyRequest> calls) {
+      Set<ComputationWarrantyRequest> calls) {
     // TODO: Currently we don't handle local memoized calls.
     WORKER_LOCAL_STORE_LOGGER.fine("Local transaction preparing writes");
     return new PrepareWritesResult(0, null);
@@ -156,7 +156,7 @@ public final class LocalStore implements Store, Serializable {
 
   @Override
   public WarrantiedCallResult lookupCall(CallInstance call) {
-    Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+    Logging.log(COMPUTATION_WARRANTY_LOGGER, Level.FINEST,
         "Looking up call id: {0}", call);
 
     WarrantiedCallResult result = null;
@@ -167,14 +167,14 @@ public final class LocalStore implements Store, Serializable {
     if (result == null) result = callCache.get(call);
     
     // TODO: actually check the store itself.
-    Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+    Logging.log(COMPUTATION_WARRANTY_LOGGER, Level.FINEST,
         "Call {0} found in local store: {1}", call, result);
     return result;
   }
 
   @Override
   public void insertResult(CallInstance call, WarrantiedCallResult result) {
-    Logging.log(SEMANTIC_WARRANTY_LOGGER, Level.FINEST,
+    Logging.log(COMPUTATION_WARRANTY_LOGGER, Level.FINEST,
         "Putting call id: {0} -> {1}", call, result.getValue());
     callCache.put(call, result);
   }

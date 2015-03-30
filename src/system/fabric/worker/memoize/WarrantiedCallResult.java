@@ -10,7 +10,7 @@ import java.io.ObjectStreamException;
 import java.io.IOException;
 import java.io.Serializable;
 
-import fabric.common.SemanticWarranty;
+import fabric.common.ComputationWarranty;
 import fabric.common.util.LongHashSet;
 import fabric.common.util.LongIterator;
 import fabric.common.util.LongSet;
@@ -24,10 +24,10 @@ import fabric.lang.WrappedJavaInlineable;
 public class WarrantiedCallResult implements Serializable {
   
   private Object value;
-  private SemanticWarranty warranty;
+  private ComputationWarranty warranty;
   private LongSet createOids;
 
-  public WarrantiedCallResult(Object value, SemanticWarranty warranty, LongSet creates) {
+  public WarrantiedCallResult(Object value, ComputationWarranty warranty, LongSet creates) {
     this.value = value;
     this.warranty = warranty;
     this.createOids = creates;
@@ -36,14 +36,14 @@ public class WarrantiedCallResult implements Serializable {
   /**
    * Get the warranty for this call.
    */
-  public SemanticWarranty getWarranty() {
+  public ComputationWarranty getWarranty() {
     return warranty;
   }
 
   /**
    * Update the warranty for this call.
    */
-  public void setWarranty(SemanticWarranty newWarranty) {
+  public void setWarranty(ComputationWarranty newWarranty) {
     warranty = newWarranty;
   }
 
@@ -82,7 +82,7 @@ public class WarrantiedCallResult implements Serializable {
    * Deserialization constructor.
    */
   public WarrantiedCallResult(DataInput in) throws IOException {
-    warranty = new SemanticWarranty(in.readLong());
+    warranty = new ComputationWarranty(in.readLong());
     value = new CallResult(in).value;
     createOids = new LongHashSet();
     int createCount = in.readInt();
