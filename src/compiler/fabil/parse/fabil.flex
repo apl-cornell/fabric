@@ -33,7 +33,7 @@ import java.util.Set;
 %column
 %char
 
-%state STRING, CHARACTER, TRADITIONAL_COMMENT, END_OF_LINE_COMMENT
+%state STRING, CHARACTER, TRADITIONAL_COMMENT, END_OF_LINE_COMMENT, JAVADOC_COMMENT
 
 %{
     StringBuffer sb = new StringBuffer();
@@ -41,6 +41,7 @@ import java.util.Set;
     String path;
     ErrorQueue eq;
     HashMap keywords;
+    Position commentBegin;
 
     public Lexer_c(java.io.Reader reader, Source file, ErrorQueue eq) {
         this(reader);
@@ -249,6 +250,10 @@ import java.util.Set;
         return new StringLiteral(pos(sb.length()), sb.toString(),
                                  sym.STRING_LITERAL);
     }
+    
+    private Token javadoc_token() {
+        return new JavadocToken(pos(sb.length()), sb.toString(), sym.JAVADOC);
+    }
 
     private String chop(int i, int j) {
         return yytext().substring(i,yylength()-j);
@@ -314,6 +319,10 @@ OctalEscape = \\ [0-7]
     /* 3.7 Comments */
     "/*"    { yybegin(TRADITIONAL_COMMENT); }
     "//"    { yybegin(END_OF_LINE_COMMENT); }
+    "/**"   { yybegin(JAVADOC_COMMENT);
+              sb.setLength(0);
+              sb.append(yytext());
+              commentBegin = pos(); }
 
     /* 3.10.4 Character Literals */
     \'      { yybegin(CHARACTER); sb.setLength(0); }
@@ -412,6 +421,18 @@ OctalEscape = \\ [0-7]
 <END_OF_LINE_COMMENT> {
     {LineTerminator}             { yybegin(YYINITIAL); }
     .                            { /* ignore */ }
+}
+
+<JAVADOC_COMMENT> {
+    "*/"                         { yybegin(YYINITIAL);
+                                   sb.append(yytext()); 
+                                   return javadoc_token(); }
+
+    <<EOF>>                      { yybegin(YYINITIAL);
+                                   eq.enqueue(ErrorInfo.LEXICAL_ERROR,
+                                                  "Unclosed Javadoc comment",
+                                                  commentBegin); }
+    [^]                          { sb.append(yytext()); }
 }
 
 <CHARACTER> {
