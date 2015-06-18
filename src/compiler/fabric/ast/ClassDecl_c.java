@@ -9,6 +9,7 @@ import jif.types.Assertion;
 import polyglot.ast.ClassBody;
 import polyglot.ast.Ext;
 import polyglot.ast.Id;
+import polyglot.ast.Javadoc;
 import polyglot.ast.TypeNode;
 import polyglot.main.Report;
 import polyglot.types.Flags;
@@ -24,17 +25,19 @@ public class ClassDecl_c extends jif.ast.JifClassDecl_c {
   public ClassDecl_c(Position pos, Flags flags, Id name,
       List<ParamDecl> params, TypeNode superClass, List<TypeNode> interfaces,
       List<PrincipalNode> authority,
-      List<ConstraintNode<Assertion>> constraints, ClassBody body) {
+      List<ConstraintNode<Assertion>> constraints, ClassBody body,
+      Javadoc javadoc) {
     this(pos, flags, name, params, superClass, interfaces, authority,
-        constraints, body, null);
+        constraints, body, javadoc, null);
   }
 
   public ClassDecl_c(Position pos, Flags flags, Id name,
       List<ParamDecl> params, TypeNode superClass, List<TypeNode> interfaces,
       List<PrincipalNode> authority,
-      List<ConstraintNode<Assertion>> constraints, ClassBody body, Ext ext) {
+      List<ConstraintNode<Assertion>> constraints, ClassBody body,
+      Javadoc javadoc, Ext ext) {
     super(pos, flags, name, params, superClass, interfaces, authority,
-        constraints, body, ext);
+        constraints, body, javadoc, ext);
   }
 
   @Override

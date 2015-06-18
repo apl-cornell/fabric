@@ -5,6 +5,7 @@ import java.util.List;
 import polyglot.ast.ClassBody;
 import polyglot.ast.Ext;
 import polyglot.ast.Id;
+import polyglot.ast.Javadoc;
 import polyglot.ast.TypeNode;
 import polyglot.frontend.MissingDependencyException;
 import polyglot.frontend.Scheduler;
@@ -24,13 +25,13 @@ public class ClassDecl_c extends polyglot.ast.ClassDecl_c {
 
   @Deprecated
   public ClassDecl_c(Position pos, Flags flags, Id name, TypeNode superClass,
-      List<TypeNode> interfaces, ClassBody body) {
-    this(pos, flags, name, superClass, interfaces, body, null);
+      List<TypeNode> interfaces, ClassBody body, Javadoc javadoc) {
+    this(pos, flags, name, superClass, interfaces, body, javadoc, null);
   }
 
   public ClassDecl_c(Position pos, Flags flags, Id name, TypeNode superClass,
-      List<TypeNode> interfaces, ClassBody body, Ext ext) {
-    super(pos, flags, name, superClass, interfaces, body, ext);
+      List<TypeNode> interfaces, ClassBody body, Javadoc javadoc, Ext ext) {
+    super(pos, flags, name, superClass, interfaces, body, javadoc, ext);
   }
 
   @Override

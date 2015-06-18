@@ -458,7 +458,8 @@ override field_declaration ::=
                    VarDeclarator d = (VarDeclarator) i.next();
                    l.add(parser.nf.FabricFieldDecl(parser.pos(b, e),
                                              a, parser.array(b, d.dims), al,
-                                             d.name, d.init));
+                                             d.name, d.init,
+                                             parser.javadoc(parser.pos(a), parser.pos(b))));
                }
                RESULT = l; :}
     |   modifiers_opt:a type:b variable_declarators:c SEMICOLON:e
@@ -467,7 +468,8 @@ override field_declaration ::=
                    VarDeclarator d = (VarDeclarator) i.next();
                    l.add(parser.nf.FabricFieldDecl(parser.pos(b, e),
                                              a, parser.array(b, d.dims), null,
-                                             d.name, d.init));
+                                             d.name, d.init,
+                                             parser.javadoc(parser.pos(a), parser.pos(b))));
                }
                RESULT = l; :}
                

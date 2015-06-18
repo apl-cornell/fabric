@@ -17,6 +17,7 @@ import polyglot.ast.Expr;
 import polyglot.ast.ExtFactory;
 import polyglot.ast.Id;
 import polyglot.ast.Import;
+import polyglot.ast.Javadoc;
 import polyglot.ast.NodeFactory_c;
 import polyglot.ast.PackageNode;
 import polyglot.ast.Receiver;
@@ -42,7 +43,7 @@ import fabil.extension.FabILExtFactory_c;
  * NodeFactory for FabIL extension.
  */
 public class FabILNodeFactory_c extends NodeFactory_c implements
-FabILNodeFactory {
+    FabILNodeFactory {
 
   public FabILNodeFactory_c() {
     this(new FabILExtFactory_c(), new FabILDelFactory_c());
@@ -127,10 +128,11 @@ FabILNodeFactory {
 
   @Override
   public ClassDecl ClassDecl(Position pos, Flags flags, Id name,
-      TypeNode superClass, List<TypeNode> interfaces, ClassBody body) {
+      TypeNode superClass, List<TypeNode> interfaces, ClassBody body,
+      Javadoc javadoc) {
     ClassDecl n =
         new ClassDecl_c(pos, flags, name, superClass,
-            CollectionUtil.nonNullList(interfaces), body);
+            CollectionUtil.nonNullList(interfaces), body, javadoc);
     n = ext(n, extFactory().extClassDecl());
     n = del(n, delFactory().delClassDecl());
     return n;

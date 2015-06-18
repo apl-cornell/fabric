@@ -5,6 +5,7 @@ import polyglot.ast.Expr;
 import polyglot.ast.Ext;
 import polyglot.ast.FieldDecl_c;
 import polyglot.ast.Id;
+import polyglot.ast.Javadoc;
 import polyglot.ast.Node;
 import polyglot.ast.TypeNode;
 import polyglot.types.Flags;
@@ -19,13 +20,13 @@ public class FabricFieldDecl_c extends FieldDecl_c implements FabricFieldDecl {
 
   @Deprecated
   public FabricFieldDecl_c(Position pos, Flags flags, TypeNode type,
-      LabelNode accessPolicy, Id name, Expr init) {
-    this(pos, flags, type, accessPolicy, name, init, null);
+      LabelNode accessPolicy, Id name, Expr init, Javadoc javadoc) {
+    this(pos, flags, type, accessPolicy, name, init, javadoc, null);
   }
 
   public FabricFieldDecl_c(Position pos, Flags flags, TypeNode type,
-      LabelNode accessPolicy, Id name, Expr init, Ext ext) {
-    super(pos, flags, type, name, init, ext);
+      LabelNode accessPolicy, Id name, Expr init, Javadoc javadoc, Ext ext) {
+    super(pos, flags, type, name, init, javadoc, ext);
     this.accessPolicy = accessPolicy;
   }
 

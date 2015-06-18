@@ -21,6 +21,7 @@ import polyglot.ast.Disamb;
 import polyglot.ast.Expr;
 import polyglot.ast.Id;
 import polyglot.ast.Import;
+import polyglot.ast.Javadoc;
 import polyglot.ast.New;
 import polyglot.ast.Node;
 import polyglot.ast.PackageNode;
@@ -281,20 +282,22 @@ FabricNodeFactory {
 
   @Override
   public JifClassDecl ClassDecl(Position pos, Flags flags, Id name,
-      TypeNode superClass, List<TypeNode> interfaces, ClassBody body) {
+      TypeNode superClass, List<TypeNode> interfaces, ClassBody body,
+      Javadoc javadoc) {
     return JifClassDecl(pos, flags, name, Collections.<ParamDecl> emptyList(),
         superClass, interfaces, Collections.<PrincipalNode> emptyList(),
-        Collections.<ConstraintNode<Assertion>> emptyList(), body);
+        Collections.<ConstraintNode<Assertion>> emptyList(), body, javadoc);
   }
 
   @Override
   public JifClassDecl JifClassDecl(Position pos, Flags flags, Id name,
       List<ParamDecl> params, TypeNode superClass, List<TypeNode> interfaces,
       List<PrincipalNode> authority,
-      List<ConstraintNode<Assertion>> constraints, ClassBody body) {
+      List<ConstraintNode<Assertion>> constraints, ClassBody body,
+      Javadoc javadoc) {
     JifClassDecl n =
         new ClassDecl_c(pos, flags, name, params, superClass, interfaces,
-            authority, constraints, body);
+            authority, constraints, body, javadoc);
     n = ext(n, extFactory().extClassDecl());
     n = del(n, delFactory().delClassDecl());
     return n;
@@ -310,9 +313,10 @@ FabricNodeFactory {
 
   @Override
   public FabricFieldDecl FabricFieldDecl(Position pos, Flags flags,
-      TypeNode type, LabelNode accessLabel, Id name, Expr init) {
+      TypeNode type, LabelNode accessLabel, Id name, Expr init, Javadoc javadoc) {
     FabricFieldDecl n =
-        new FabricFieldDecl_c(pos, flags, type, accessLabel, name, init);
+        new FabricFieldDecl_c(pos, flags, type, accessLabel, name, init,
+            javadoc);
     n = ext(n, extFactory().extFieldDecl());
     n = del(n, delFactory().delFieldDecl());
     return n;

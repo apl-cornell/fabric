@@ -11,6 +11,7 @@ import polyglot.ast.Call;
 import polyglot.ast.ClassBody;
 import polyglot.ast.Expr;
 import polyglot.ast.Id;
+import polyglot.ast.Javadoc;
 import polyglot.ast.New;
 import polyglot.ast.Receiver;
 import polyglot.ast.Stmt;
@@ -77,7 +78,7 @@ public interface FabricNodeFactory extends JifNodeFactory, CodebaseNodeFactory {
       Expr location);
 
   FabricFieldDecl FabricFieldDecl(Position pos, Flags flags, TypeNode type,
-      LabelNode accessLabel, Id name, Expr init);
+      LabelNode accessLabel, Id name, Expr init, Javadoc javadoc);
 
   /**
    * @param expr
