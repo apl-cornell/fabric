@@ -350,7 +350,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
       methodDecl.append(";");
     }
     QQ qq = pr.qq();
-    return qq.parseMember(methodDecl.toString(), subst);
+    return qq.parseMember(methodDecl.toString(), subst.toArray());
   }
 
   /**
@@ -573,7 +573,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
                 + "throws java.io.IOException, java.lang.ClassNotFoundException {"
                 + "super(store, onum, version, expiry, label, accessLabel, in, "
                 + "refTypes, intraStoreRefs, interStoreRefs);" + in + " }",
-            inSubst);
+            inSubst.toArray());
     result.add(deserialize);
 
     return result;

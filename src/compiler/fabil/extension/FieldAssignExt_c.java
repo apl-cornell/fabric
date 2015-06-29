@@ -3,6 +3,8 @@ package fabil.extension;
 import java.util.ArrayList;
 import java.util.List;
 
+import fabil.visit.ProxyRewriter;
+import fabil.visit.ReadWriteChecker.State;
 import polyglot.ast.Assign;
 import polyglot.ast.Expr;
 import polyglot.ast.Field;
@@ -10,8 +12,6 @@ import polyglot.ast.FieldAssign;
 import polyglot.ast.Receiver;
 import polyglot.ast.Special;
 import polyglot.types.Flags;
-import fabil.visit.ProxyRewriter;
-import fabil.visit.ReadWriteChecker.State;
 
 public class FieldAssignExt_c extends ExprExt_c {
 
@@ -74,15 +74,15 @@ public class FieldAssignExt_c extends ExprExt_c {
 
     String setterName = "set$" + name;
     if (!assign.operator().equals(Assign.ASSIGN))
-      throw new UnsupportedOperationException("Oooh fancy.. Sorry but "
-          + assign.operator() + " at " + assign.position()
-          + " is not supported yet.");
+      throw new UnsupportedOperationException(
+          "Oooh fancy.. Sorry but " + assign.operator() + " at "
+              + assign.position() + " is not supported yet.");
     if (target.type().isArray() && name.equals("length")) {
       // Changing the length of an array. The setter here is different.
       setterName = "setLength";
     }
 
-    return pr.qq().parseExpr(quote + "." + setterName + "(%E)", subs);
+    return pr.qq().parseExpr(quote + "." + setterName + "(%E)", subs.toArray());
   }
 
   @Override
