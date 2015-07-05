@@ -4,6 +4,7 @@
     <title>Fabric Project</title>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <link rel="stylesheet" type="text/css" href="style.css"/>
+    <script src="ezdom.js"></script>
   </head>
 
   <body>
@@ -260,170 +261,289 @@
           <a id="publications">
             <h2>Related group publications</h2>
           </a>
-
-          <ol class="pub-list">
-            <li>
-<cite>
-<a href="http://www.cs.cornell.edu/andru/papers/flam">Flow-limited authorization</a></cite><br/>
-<div><span class="pub-title">
+          <div id="publist">
+ <style>
+a:hover { color: #0040ff }
+h2 a:hover { color: #c08000 }
+span.papertitle { font-weight: 800 }
+.paperinfo { margin: 0.5ex 1em 0.5ex 5%; font-size: small }
+.conferencename { font-style: italic }
+.bibtex { font-family: Consolas, Courier, monospace;
+display: none;
+white-space: pre;
+position: absolute; left: 5em;
+background-color: #eee;
+border: 1px solid black;
+padding: 0.5ex; }
+.link { color: #008; cursor: zoom-in }
+.xbutton { position: absolute; top: 2px; right: 2px; cursor: pointer; font-weight: bold }
+</style>
+<script src="ezdom.js"></script>
 
-28<span class=ordinal>th</span> IEEE Symp.&nbsp;on Computer Security Foundations</span>
-(<a href="http://csf2015.di.univr.it">CSF'15</a>),
-July 2015.
-Owen Arden, Jed Liu, and Andrew C. Myers.
-<li>
-	      <cite>
-		<a href="http://www.cs.cornell.edu/andru/papers/plas14/index.html">
-		  A language-based approach to secure quorum replication
-		</a>
-	      </cite>
-	      <div>
-                <span class="pub-title">
-		  9th ACM SIGPLAN Workshop on Programming Languages and
-		  Analysis for Security
-		</span> (<a href="http://researcher.watson.ibm.com/researcher/view_group.php?id=5237">PLAS 2014</a>),
-		July 2014.
-		Lantian Zheng and Andrew C. Myers.
-	      </div>
-            </li>
-            <li>
-              <cite>
-                <a href="http://www.cs.cornell.edu/andru/papers/persist">
-                  Defining and enforcing referential security
-                </a>
-              </cite>
-              <div>
-                <span class="pub-title">
-                  3rd Conference on Principles of Security and Trust
-                </span>
-                (<a href="http://www.etaps.org/2014/post">POST'14</a>),
-                pp. 199&ndash;219, April 2014.
-                Jed Liu and Andrew C. Myers.
-              </div>
-            </li>
-            <li>
-              <cite>
-                <a href="http://www.cs.cornell.edu/andru/papers/warranties">
-                  Warranties for faster strong consistency
-                </a>
-              </cite>
-              <div>
-                <span class="pub-title">
-                  11th USENIX Symposium on Networked Systems Design and
-                  Implementation
-                </span>
-                (<a href="https://www.usenix.org/conference/nsdi14">NSDI'14</a>),
-                pp. 503&ndash;517, April 2014.
-                Jed Liu, Tom Magrino, Owen Arden, Michael D. George, and
-                Andrew C. Myers.
-              </div>
-            </li>
-            <li>
-              <cite>
-                <a href="http://www.cs.cornell.edu/andru/papers/pltiming.html">
-                  Language-based control and mitigation of timing channels
-                </a>
-              </cite>
-              <div>
-                <span class="pub-title">
-                  Proceedings of the 2012 ACM Conference on Programming
-                  Language Design and Implementation
-                </span>
-                (<a href="http://pldi12.cs.purdue.edu/">PLDI'12</a>),
-                pp. 99&ndash;110, June 2012.
-                Danfeng Zhang, Aslan Askarov, and Andrew C. Myers.
-              </div>
-            </li>
-            <li>
-              <cite>
-                <a href="http://www.cs.cornell.edu/andru/papers/mobile.html">
-                  Sharing mobile code securely with information flow control
-                </a>
-              </cite>
-              <div>
-                <span class="pub-title">
-                  Proc. 33rd IEEE Symposium on Security and Privacy
-                </span>
-                (<a href="http://www.ieee-security.org/TC/SP2012/">Oakland'12</a>),
-                pp. 192&ndash;205, May 2012.
-                Owen Arden, Michael D. George, Jed Liu, K. Vikram, Aslan
-                Askarov, and Andrew C. Myers.
-              </div>
-            </li>
-            <li>
-              <cite>
-                <a href="http://www.cs.cornell.edu/andru/papers/robknowledge-lmcs.pdf">
-                  Attacker control and impact for confidentiality and
-                  integrity
-                </a>
-              </cite>
-              <div>
-                <span class="pub-title">Logical Methods in Computer
-                Science</span>, 7(3), September 2011.
-                Aslan Askarov and Andrew C. Myers.
-              </div>
-            </li>
-            <li>
-              <cite>
-                <a href="http://www.cs.cornell.edu/andru/papers/gentiming.html">
-                  Predictive mitigation of timing channels in interactive
-                  systems
-                </a>
-              </cite>
-              <div>
-                <span class="pub-title">
-                  Proceedings of the 18th ACM Conference on Computer and
-                  Communications Security
-                </span>
-                (<a href="http://www.sigsac.org/ccs/CCS2011/">CCS'11</a>),
-                pp. 563&ndash;574, October 2011.
-                Danfeng Zhang, Aslan Askarov,  and Andrew C. Myers.
-              </div>
-            </li>
-            <li>
-              <cite>
-                <a href="http://www.cs.cornell.edu/andru/papers/timing.html">
-                  Predictive black-box mitigation of timing channels
-                </a>
-              </cite>
-              <div>
-                <span class="pub-title">
-                  Proceedings of the 17th ACM Conference on Computer and
-                  Communications Security
-                </span>
-                (<a href="http://www.sigsac.org/ccs/CCS2010/">CCS'10</a>),
-                pp. 297&ndash;307, October 2010.
-                Aslan Askarov, Danfeng Zhang, and Andrew C. Myers.
-              </div>
-            </li>
-            <li>
-            <cite>
-            <a href="http://www.cs.cornell.edu/andru/papers/jed-liu-dissertation.pdf">
-            Towards a secure federated information system.
-            </a>
-                Ph.D. thesis, Cornell University Department of Computer Science,
-                August 2012.
-                Jed Liu.
-            </li>
-            <li>
-              <cite>
-                <a href="http://www.cs.cornell.edu/andru/papers/fabric-sosp09.html">
-                  Fabric: A platform for secure distributed computation and
-                  storage
-                </a>
-              </cite>
-              <div>
-                <span class="pub-title">
-                  Proc. 22nd ACM Symposium on Operating Systems
-                  Principles
-                </span>
-                (<a href="http://www.sigops.org/sosp/sosp09/">SOSP'09</a>),
-                pp. 321&ndash;334, October 2009.
-                Jed Liu, Michael D. George, K. Vikram, Xin Qi, Lucas Waye,
-                and Andrew C. Myers.
-              </div>
-            </li>
-          </ol> <!-- pub-list -->
+</head>
+<body><div class=paperlist>
+
+
+<ol class="pub-list">
+<li>
+<cite>
+<a href="http://www.cs.cornell.edu/andru/papers/plas14">A language-based approach to secure quorum replication</a></cite><br/>
+<p class=paperinfo>Quorum replication with information flow control can simultaneously enforce all three core
+security properties: confidentiality, integrity, and availability.
+</p>
+<span class="conferencename">
+9<span class=ordinal>th</span> ACM SIGPLAN Workshop on Programming Languages and Analysis for Security (PLAS)</span>,
+August 2014.
+
+
+Lantian Zheng and Andrew C. Myers.
+[&nbsp;<span class="bibtex"><span class=xbutton onclick="this.parentNode.style.display = 'none'">×</span>@inproceedings{zm14-plas,
+title="A language-based approach to secure quorum replication",
+author="Lantian Zheng and Andrew C. Myers",
+booktitle="9th ACM SIGPLAN Workshop on Programming Languages and Analysis for Security (PLAS)",
+url="http://www.cs.cornell.edu/andru/papers/plas14",
+month="August",
+year="2014"}</span>
+&nbsp;]
+</li>
+
+<li>
+<cite>
+<a href="http://www.cs.cornell.edu/andru/papers/warranties">Warranties for faster strong consistency</a></cite><br/>
+<p class=paperinfo>Distributed transactions can be sped up by giving clients
+time-limited invariants on state and computation.
+</p>
+<span class="conferencename">
+11<span class=ordinal>th</span> USENIX Symp.&nbsp;on Networked Systems Design and Implementation (NSDI)</span>,
+pp. 513&ndash;517,
+April 2014.
+
+
+Jed Liu, Tom Magrino, Owen Arden, Michael D. George, and Andrew C. Myers.
+[&nbsp;<span class="bibtex"><span class=xbutton onclick="this.parentNode.style.display = 'none'">×</span>@inproceedings{warranties,
+title="Warranties for faster strong consistency",
+author="Jed Liu and Tom Magrino and Owen Arden and Michael D. George and Andrew C. Myers",
+booktitle="11th USENIX Symp.&nbsp;on Networked Systems Design and Implementation (NSDI)",
+url="http://www.cs.cornell.edu/andru/papers/warranties",
+pages="513&ndash;517",
+month="April",
+year="2014"}</span>
+&nbsp;]
+</li>
+
+<li>
+<cite>
+<a href="http://www.cs.cornell.edu/andru/papers/persist">Defining and enforcing referential security</a></cite><br/>
+<p class=paperinfo>New security properties related to referential integrity and persistence can be soundly enforced by a type system.</p>
+<span class="conferencename">
+3<span class=ordinal>rd</span> Conf. on Principles of Security and Trust</span>,
+pp. 199&ndash;219,
+April 2014.
+
+
+Jed Liu and Andrew C. Myers.
+[&nbsp;<span class="bibtex"><span class=xbutton onclick="this.parentNode.style.display = 'none'">×</span>@inproceedings{persist,
+title="Defining and enforcing referential security",
+author="Liu, Jed and Myers, Andrew C.",
+booktitle="3rd Conf. on Principles of Security and Trust",
+url="http://www.cs.cornell.edu/andru/papers/persist",
+pages="199&ndash;219",
+month="April",
+year="2014"}</span>
+ |&nbsp;<a href="http://hdl.handle.net/1813/35150">TR</a>&nbsp;]
+</li>
+
+<li>
+<cite>
+<a href="http://www.cs.cornell.edu/andru/papers/jed-liu-dissertation.pdf">Towards a secure federated information system</a></cite><br/>
+
+Ph.D. dissertation, Cornell University Department of Computer Science,
+August 2012.
+
+
+Jed Liu.
+[&nbsp;<span class="bibtex"><span class=xbutton onclick="this.parentNode.style.display = 'none'">×</span>@phdthesis{liu-thesis,
+title="Towards a secure federated information system",
+author="Jed Liu",
+url="http://www.cs.cornell.edu/andru/papers/jed-liu-dissertation.pdf",
+month="August",
+year="2012"}</span>
+&nbsp;]
+</li>
+
+<li>
+<cite>
+<a href="http://www.cs.cornell.edu/andru/papers/pltiming.html">Language-based control and mitigation of timing channels</a></cite><br/>
+<p class=paperinfo>A type system bounds timing leakage when programs are run on hardware obeying the right contract.</p>
+<span class="conferencename">
+ACM SIGPLAN Conf.&nbsp;on Programming Language Design and Implementation (PLDI)</span>,
+pp. 99&ndash;110,
+June 2012.
+
+
+Danfeng Zhang, Aslan Askarov, and Andrew C. Myers.
+[&nbsp;<span class="bibtex"><span class=xbutton onclick="this.parentNode.style.display = 'none'">×</span>@inproceedings{pldi12,
+title="Language-based control and mitigation of timing channels",
+author="Danfeng Zhang and Aslan Askarov and Andrew C. Myers",
+booktitle="ACM SIGPLAN Conf.&nbsp;on Programming Language Design and Implementation (PLDI)",
+url="http://www.cs.cornell.edu/andru/papers/pltiming.html",
+pages="99&ndash;110",
+month="June",
+year="2012"}</span>
+&nbsp;]
+</li>
+
+<li>
+<cite>
+<a href="http://www.cs.cornell.edu/andru/papers/mobile.html">Sharing mobile code securely with information flow control</a></cite><br/>
+
+<span class="conferencename">
+IEEE Symp.&nbsp;on Security and Privacy</span>,
+pp. 191&ndash;205,
+May 2012.
+
+
+Owen Arden, Michael D. George, Jed Liu, K. Vikram, Aslan Askarov, and Andrew C. Myers.
+[&nbsp;<span class="bibtex"><span class=xbutton onclick="this.parentNode.style.display = 'none'">×</span>@inproceedings{oakland12,
+title="Sharing mobile code securely with information flow control",
+author="Owen Arden and Michael D. George and Jed Liu and K. Vikram
+and Aslan Askarov and Andrew C. Myers",
+booktitle="IEEE Symp.&nbsp;on Security and Privacy",
+url="http://www.cs.cornell.edu/andru/papers/mobile.html",
+pages="191&ndash;205",
+month="May",
+year="2012"}</span>
+&nbsp;]
+</li>
+
+<li>
+<cite>
+<a href="http://www.cs.cornell.edu/andru/papers/gentiming.html">Predictive mitigation of timing channels in interactive systems</a></cite><br/>
+
+<span class="conferencename">
+18<span class=ordinal>th</span> ACM Conf.&nbsp;on Computer and Communications Security (CCS)</span>,
+pp. 563-–574,
+October 2011.
+
+
+Danfeng Zhang, Aslan Askarov, and Andrew C. Myers.
+[&nbsp;<span class="bibtex"><span class=xbutton onclick="this.parentNode.style.display = 'none'">×</span>@inproceedings{zam11,
+title="Predictive mitigation of timing channels in interactive systems",
+author="Danfeng Zhang and Aslan Askarov and Andrew C. Myers",
+booktitle="18th ACM Conf.&nbsp;on Computer and Communications Security (CCS)",
+url="http://www.cs.cornell.edu/andru/papers/gentiming.html",
+pages="563-–574",
+month="October",
+year="2011"}</span>
+&nbsp;]
+</li>
+
+<li>
+<cite>
+<a href="http://www.cs.cornell.edu/andru/papers/robknowledge-lmcs.pdf">Attacker control and impact for confidentiality and integrity</a></cite><br/>
+
+<span class=journalname>Logical Methods in Computer Science</span>, 7(3),
+September 2011.
+
+
+Aslan Askarov and Andrew C. Myers.
+[&nbsp;<span class="bibtex"><span class=xbutton onclick="this.parentNode.style.display = 'none'">×</span>@article{am11,
+title="Attacker control and impact for confidentiality and integrity",
+author="Aslan Askarov and Andrew C. Myers",
+volume="7",
+number="3",
+url="http://www.cs.cornell.edu/andru/papers/robknowledge-lmcs.pdf",
+month="September",
+year="2011"}</span>
+&nbsp;]
+</li>
+
+<li>
+<cite>
+<a href="http://www.cs.cornell.edu/andru/papers/timing.html">Predictive black-box mitigation of timing channels</a></cite><br/>
+
+<span class="conferencename">
+17<span class=ordinal>th</span> ACM Conf.&nbsp;on Computer and Communications Security (CCS)</span>,
+pp. 297&ndash;307,
+October 2010.
+
+
+Aslan Askarov, Danfeng Zhang, and Andrew C. Myers.
+[&nbsp;<span class="bibtex"><span class=xbutton onclick="this.parentNode.style.display = 'none'">×</span>@inproceedings{azm10,
+title="Predictive black-box mitigation of timing channels",
+author="Aslan Askarov and Danfeng Zhang and Andrew C. Myers",
+booktitle="17th ACM Conf.&nbsp;on Computer and Communications Security (CCS)",
+url="http://www.cs.cornell.edu/andru/papers/timing.html",
+pages="297&ndash;307",
+month="October",
+year="2010"}</span>
+&nbsp;]
+</li>
+
+<li>
+<cite>
+<a href="http://www.cs.cornell.edu/andru/papers/robknowledge.pdf">A semantic framework for declassification and endorsement</a></cite><br/>
+
+<span class="conferencename">
+19<span class=ordinal>th</span> European Symposium on Programming</span>,
+March 2010.
+
+
+Aslan Askarov and Andrew C. Myers.
+[&nbsp;<span class="bibtex"><span class=xbutton onclick="this.parentNode.style.display = 'none'">×</span>@inproceedings{am10,
+title="A semantic framework for declassification and endorsement",
+author="Aslan Askarov and Andrew C. Myers",
+booktitle="19th European Symposium on Programming",
+url="http://www.cs.cornell.edu/andru/papers/robknowledge.pdf",
+month="March",
+year="2010"}</span>
+&nbsp;]
+</li>
+
+<li>
+<cite>
+<a href="http://www.cs.cornell.edu/andru/papers/fabric-sosp09.html">Fabric: a platform for secure distributed computation and storage</a></cite><br/>
+
+<span class="conferencename">
+22<span class=ordinal>nd</span> ACM Symp.&nbsp;on Operating System Principles (SOSP)</span>,
+pp. 321&ndash;334,
+October 2009.
+
+
+Jed Liu, Michael D. George, K. Vikram, Xin Qi, Lucas Waye, and Andrew C. Myers.
+[&nbsp;<span class="bibtex"><span class=xbutton onclick="this.parentNode.style.display = 'none'">×</span>@inproceedings{fabric09,
+title="Fabric: a platform for secure distributed computation and storage",
+author="Jed Liu and Michael D. George and K. Vikram and Xin Qi
+and Lucas Waye and Andrew C. Myers",
+booktitle="22nd ACM Symp.&nbsp;on Operating System Principles (SOSP)",
+url="http://www.cs.cornell.edu/andru/papers/fabric-sosp09.html",
+pages="321&ndash;334",
+month="October",
+year="2009"}</span>
+&nbsp;]
+</li>
+
+</ol>
+</div>
+<script>
+var bibs = document.getElementsByClassName("bibtex");
+for (var i = 0; i < bibs.length; i++) {
+handle = function(bib) {
+display_bibtexs = function() {
+bib.style.display = 'inline';
+var c = bib.parentNode.childNodes;
+}
+var n = span({className: 'link',
+onclick: display_bibtexs }, "BibTeX");
+bib.parentNode.insertBefore(n, bib);
+}
+handle(bibs[i]);
+}
+</script>
+
+</body>
+</html>
+          </div>
 
           <div class="three-cols">
             <div>

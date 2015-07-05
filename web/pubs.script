@@ -1,0 +1,91 @@
+bibfile: pm-master.bib
+papers: http://www.cs.cornell.edu/andru/papers
+projects: http://www.cs.cornell.edu/projects
+
+% comment
+
+banner: {}
+
+morestyle:
+. <style>
+.   a:hover         \{ color: #0040ff \}
+.   h2 a:hover      \{ color: #c08000 \}
+.   span.papertitle \{ font-weight: 800 \}
+.   .paperinfo      \{ margin: 0.5ex 1em 0.5ex 5%; font-size: small \}
+.   .conferencename \{ font-style: italic \}
+.   .bibtex         \{ font-family: Consolas, Courier, monospace;
+.                      display: none;
+.                      white-space: pre;
+.                      position: absolute; left: 5em;
+.                      background-color: #eee;
+.                      border: 1px solid black;
+.                      padding: 0.5ex; \}
+.   .link           \{ color: #008; cursor: zoom-in \}
+.   .xbutton        \{ position: absolute; top: 2px; right: 2px; cursor: pointer; font-weight: bold \}
+.</style>
+.<script src="ezdom.js"></script>
+.
+
+include: pm-master.bibweb
+closing: </div>
+openpaperlist: <ol class="pub-list">
+closepaperlist: </ol>
+stylesheet: style.css
+pagetitle: Fabric Publications
+
+pubformat:
+<li>
+<cite>
+\ifdef{paperurl}{<a href="\paperurl">}\title\ifdef{paperurl}{</a>}</cite><br/>
+.\ifdef{blurb}{<p class=paperinfo>\blurb</p>}
+.\wherepublished.
+.\ifdef{note}{\note}
+.\ifdef{award}{(<em>\award.</em>)}
+.\authors.
+.[~<span class="bibtex"><span class=xbutton onclick="this.parentNode.style.display = 'none'">×</span>{\def{textsuperscript}{#1}@\pubtype\{\key,
+.title="\title",
+.author="\bibtexAuthors",
+.\ifeq{\pubtype}{inproceedings}{booktitle="\venue",
+.}\ifdef{journal}{journal="\venue",
+.}\ifdef{institution}{institution="\institution",
+.}\ifdef{volume}{volume="\volume",
+.}\ifdef{number}{number="\number",
+.}\ifdef{paperurl}{url="\paperurl",
+.}\ifdef{pages}{pages="\pages",
+.}\ifdef{month}{month="\month",
+.}\ifdef{note}{note="\note",
+.}year="\year"\}}</span>
+.\ifdef{trkey}{\ifne{\pubinfo{\trkey}{paperurl}}{}{ |~<a href="\pubinfo{\trkey}{paperurl}">TR</a>}}~]
+</li>
+.
+
+closing:
+</div>
+<script>
+    var bibs = document.getElementsByClassName("bibtex");
+    for (var i = 0; i < bibs.length; i++) \{
+        handle = function(bib) \{
+            display_bibtexs = function() \{
+                bib.style.display = 'inline';
+                var c = bib.parentNode.childNodes;
+            \}
+            var n = span(\{className: 'link',
+                           onclick: display_bibtexs \}, "BibTeX");
+            bib.parentNode.insertBefore(n, bib);
+        \}
+        handle(bibs[i]);
+    \}
+</script>
+.
+
+generate:
+.output: fabric-pubs.html
+.section:
+..intro:
+...
+..select:
+    project: Fabric
+...
+..
+.
+
