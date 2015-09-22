@@ -33,7 +33,7 @@ public class JPA2FabILRewriter extends JL5ToJLRewriter {
   }
 
   @Override
-  public TypeNode typeToJava(Type t, Position pos) throws SemanticException {
+  public TypeNode typeToJava(Type t, Position pos) {
     if (isCollection(t)) {
       t = jl5ts.erasureType(t);
       if (t instanceof LubType) t = ((LubType) t).calculateLub();
