@@ -1,11 +1,15 @@
 package fabric.types;
 
+import fabric.ast.FabricFieldDecl;
+
 import jif.ast.LabelNode;
 import jif.types.FixedSignature;
+import jif.types.label.ConfPolicy;
 import jif.types.label.Label;
+
 import polyglot.ast.FieldDecl;
+import polyglot.ast.ProcedureDecl;
 import polyglot.types.Type;
-import fabric.ast.FabricFieldDecl;
 
 //TODO: This "default signature" design pattern is unevenly applied.
 //      We should either pull in all the default to this class or eliminate it.
@@ -33,4 +37,15 @@ FabricDefaultSignature {
     }
   }
 
+  @Override
+  public ConfPolicy defaultBeginAccess(ProcedureDecl pd) {
+    //TODO: Is this reasonable?
+    return fts.topConfPolicy(pd.position());
+  }
+
+  @Override
+  public ConfPolicy defaultEndConf(ProcedureDecl pd) {
+    //TODO: Is this reasonable?
+    return fts.bottomConfPolicy(pd.position());
+  }
 }
