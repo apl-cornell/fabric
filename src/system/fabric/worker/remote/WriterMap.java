@@ -205,7 +205,8 @@ public class WriterMap implements FastSerializable {
   public void put(_Proxy proxy, Label keyObject) {
     // Don't put in entries for global constants or objects on local store.
     if (ONumConstants.isGlobalConstant(proxy.$getOnum())
-        || proxy.$getStore() instanceof LocalStore) return;
+        || proxy.$getStore() instanceof LocalStore)
+      return;
 
     creates.put(hash(proxy), keyObject);
   }
@@ -213,7 +214,8 @@ public class WriterMap implements FastSerializable {
   public void put(_Proxy proxy, RemoteWorker worker) {
     // Don't put in entries for global constants or objects on local store.
     if (ONumConstants.isGlobalConstant(proxy.$getOnum())
-        || proxy.$getStore() instanceof LocalStore) return;
+        || proxy.$getStore() instanceof LocalStore)
+      return;
 
     writeCache.put(proxy, new Pair<>(proxy, worker));
     readCache.put(proxy, worker);
