@@ -227,10 +227,10 @@ public class WriterMap implements FastSerializable {
   public void putAll(WriterMap map) {
     this.creates.putAll(map.creates);
 
+    map.flushWriteCache();
     if (map.writers.isEmpty()) return;
 
     flushWriteCache();
-    map.flushWriteCache();
     this.writers.putAll(map.writers);
     this.readCache.clear();
 
