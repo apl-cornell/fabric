@@ -2,11 +2,41 @@ package fabric.types;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import codebases.frontend.CodebaseSource;
+import codebases.types.CBClassContextResolver;
+import codebases.types.CBImportTable;
+import codebases.types.CBLazyClassInitializer;
+import codebases.types.CBPackage;
+import codebases.types.CBPackageContextResolver;
+import codebases.types.CBPackage_c;
+import codebases.types.CBPlaceHolder_c;
+import codebases.types.CodebaseResolver;
+import codebases.types.NamespaceResolver;
+
+import fabil.types.FabILFlags;
+
+import fabric.FabricOptions;
+import fabric.ast.FabricUtil;
+import fabric.ast.RemoteWorkerGetter;
+import fabric.extension.NewExt_c;
+import fabric.lang.Codebase;
+import fabric.lang.security.LabelUtil;
+import fabric.lang.security.NodePrincipal;
+import fabric.translate.DisjunctivePrincipalToFabilExpr_c;
+import fabric.translate.DynamicPrincipalToFabilExpr_c;
+import fabric.translate.FabricJoinLabelToFabilExpr_c;
+import fabric.translate.FabricMeetLabelToFabilExpr_c;
+import fabric.translate.FabricPairLabelToFabilExpr_c;
+import fabric.translate.ProviderLabelToFabilExpr_c;
+import fabric.worker.Store;
+import fabric.worker.Worker;
 
 import jif.translate.ConjunctivePrincipalToJavaExpr_c;
 import jif.translate.LabelToJavaExpr;
@@ -16,6 +46,7 @@ import jif.types.Assertion;
 import jif.types.DefaultSignature;
 import jif.types.JifClassType;
 import jif.types.JifContext;
+import jif.types.JifMethodInstance;
 import jif.types.JifTypeSystem_c;
 import jif.types.LabelLeAssertion;
 import jif.types.LabelSubstitution;
@@ -53,6 +84,7 @@ import jif.types.principal.ExternalPrincipal_c;
 import jif.types.principal.ParamPrincipal;
 import jif.types.principal.Principal;
 import jif.types.principal.TopPrincipal;
+
 import polyglot.ast.Expr;
 import polyglot.ast.New;
 import polyglot.ext.param.types.Subst;
@@ -61,10 +93,12 @@ import polyglot.frontend.Source;
 import polyglot.types.AccessControlResolver;
 import polyglot.types.CachingResolver;
 import polyglot.types.ClassType;
+import polyglot.types.ConstructorInstance;
 import polyglot.types.FieldInstance;
 import polyglot.types.Flags;
 import polyglot.types.ImportTable;
 import polyglot.types.LazyClassInitializer;
+import polyglot.types.MethodInstance;
 import polyglot.types.Named;
 import polyglot.types.Package;
 import polyglot.types.ParsedClassType;
@@ -81,32 +115,6 @@ import polyglot.types.reflect.ClassFileLazyClassInitializer;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
 import polyglot.util.StringUtil;
-import codebases.frontend.CodebaseSource;
-import codebases.types.CBClassContextResolver;
-import codebases.types.CBImportTable;
-import codebases.types.CBLazyClassInitializer;
-import codebases.types.CBPackage;
-import codebases.types.CBPackageContextResolver;
-import codebases.types.CBPackage_c;
-import codebases.types.CBPlaceHolder_c;
-import codebases.types.CodebaseResolver;
-import codebases.types.NamespaceResolver;
-import fabil.types.FabILFlags;
-import fabric.FabricOptions;
-import fabric.ast.FabricUtil;
-import fabric.ast.RemoteWorkerGetter;
-import fabric.extension.NewExt_c;
-import fabric.lang.Codebase;
-import fabric.lang.security.LabelUtil;
-import fabric.lang.security.NodePrincipal;
-import fabric.translate.DisjunctivePrincipalToFabilExpr_c;
-import fabric.translate.DynamicPrincipalToFabilExpr_c;
-import fabric.translate.FabricJoinLabelToFabilExpr_c;
-import fabric.translate.FabricMeetLabelToFabilExpr_c;
-import fabric.translate.FabricPairLabelToFabilExpr_c;
-import fabric.translate.ProviderLabelToFabilExpr_c;
-import fabric.worker.Store;
-import fabric.worker.Worker;
 
 public class FabricTypeSystem_c extends JifTypeSystem_c implements
     FabricTypeSystem {
@@ -1185,5 +1193,79 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
   public AccessPolicyInstance accessPolicyInstance(Position pos,
       ParsedClassType ct, ConfPolicy policy) {
     return new AccessPolicyInstance_c(pos, ct, policy);
+  }
+
+  @Override
+  public ConstructorInstance constructorInstance(Position pos,
+      ClassType container, Flags flags, List<? extends Type> formalTypes,
+      List<? extends Type> excTypes) {
+    // XXX: I really don't know if this is the right values to be using for the
+    // begin access and end confidentiality policies.
+    return fabricConstructorInstance(pos, container, flags, unknownLabel(pos),
+        false, unknownLabel(pos).confProjection(), false, unknownLabel(pos),
+        false, unknownLabel(pos).confProjection(), false, formalTypes,
+        Collections.<Label> emptyList(), excTypes,
+        Collections.<Assertion> emptyList());
+  }
+
+  public FabricConstructorInstance fabricConstructorInstance(Position pos,
+      ClassType container, Flags flags, Label startLabel,
+      boolean isDefaultStartLabel, ConfPolicy beginAccessPolicy,
+      boolean isDefaultBeginAccessPol, Label returnLabel,
+      boolean isDefaultReturnLabel, ConfPolicy endConfPolicy,
+      boolean isDefaultEndConfPol, List<? extends Type> formalTypes,
+      List<Label> formalArgLabels, List<? extends Type> excTypes,
+      List<Assertion> constraints) {
+    FabricConstructorInstance ci =
+        new FabricConstructorInstance_c(this, pos, container, flags,
+            startLabel, isDefaultStartLabel, beginAccessPolicy,
+            isDefaultBeginAccessPol, returnLabel, isDefaultReturnLabel,
+            endConfPolicy, isDefaultEndConfPol, formalTypes, formalArgLabels,
+            excTypes, constraints);
+    return ci;
+  }
+
+  @Override
+  public ConstructorInstance defaultConstructor(Position pos,
+      ClassType container) {
+    // TODO: This hardcodes the default begin access and end confidentiality
+    // policy.
+    assert_(container);
+    return fabricConstructorInstance(pos, container, Public(), topLabel(), true,
+        topLabel().confProjection(), true, bottomLabel(), true,
+        bottomLabel().confProjection(), true, Collections.<Type> emptyList(),
+        Collections.<Label> emptyList(), Collections.<Type> emptyList(),
+        Collections.<Assertion> emptyList());
+  }
+
+  public FabricMethodInstance fabricMethodInstance(Position pos,
+      ReferenceType container, Flags flags, Type returnType, String name,
+      Label startLabel, boolean isDefaultStartLabel,
+      ConfPolicy beginAccessPolicy, boolean isDefaultBeginAccess,
+      List<? extends Type> formalTypes,
+      List<jif.types.label.Label> formalArgLabels,
+      Label endLabel, boolean isDefaultEndLabel,
+      ConfPolicy endConfPolicy, boolean isDefaultEndConf,
+      List<? extends Type> excTypes,
+      List<Assertion> constraints) {
+    // TODO Auto-generated method stub
+    FabricMethodInstance mi = new FabricMethodInstance_c(this, pos, container,
+        flags, returnType, name, startLabel, isDefaultStartLabel,
+        beginAccessPolicy, isDefaultBeginAccess, formalTypes, formalArgLabels,
+        endLabel, isDefaultEndLabel, endConfPolicy, isDefaultEndConf, excTypes,
+        constraints);
+    return mi;
+  }
+
+  @Override
+  public MethodInstance methodInstance(Position pos, ReferenceType container,
+      Flags flags, Type returnType, java.lang.String name,
+      List<? extends Type> formalTypes, List<? extends Type> excTypes) {
+    // TODO Auto-generated method stub
+    return fabricMethodInstance(pos, container, flags, returnType, name,
+        unknownLabel(pos), false, unknownLabel(pos).confProjection(), false,
+        formalTypes, Collections.<Label> emptyList(), unknownLabel(pos), false,
+        unknownLabel(pos).confProjection(), false, excTypes,
+        Collections.<Assertion> emptyList());
   }
 }

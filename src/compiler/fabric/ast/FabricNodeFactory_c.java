@@ -4,24 +4,42 @@ import java.net.URI;
 import java.util.Collections;
 import java.util.List;
 
+import codebases.ast.CBSourceFile_c;
+import codebases.ast.CodebaseDecl;
+import codebases.ast.CodebaseDecl_c;
+import codebases.ast.CodebaseNode;
+import codebases.ast.CodebaseNode_c;
+
+import fabric.extension.FabricExt;
+import fabric.extension.LocatedExt_c;
+
 import jif.ast.AmbPrincipalNode;
 import jif.ast.ConstraintNode;
 import jif.ast.JifClassDecl;
+import jif.ast.JifConstructorDecl;
+import jif.ast.JifConstructorDecl_c;
+import jif.ast.JifMethodDecl;
 import jif.ast.JifNodeFactory_c;
 import jif.ast.LabelNode;
 import jif.ast.NewLabel;
 import jif.ast.ParamDecl;
+import jif.ast.PolicyNode;
 import jif.ast.PrincipalExpr;
 import jif.ast.PrincipalNode;
 import jif.types.Assertion;
+
+import polyglot.ast.Block;
 import polyglot.ast.Call;
 import polyglot.ast.ClassBody;
 import polyglot.ast.ClassMember;
+import polyglot.ast.ConstructorDecl;
 import polyglot.ast.Disamb;
 import polyglot.ast.Expr;
+import polyglot.ast.Formal;
 import polyglot.ast.Id;
 import polyglot.ast.Import;
 import polyglot.ast.Javadoc;
+import polyglot.ast.MethodDecl;
 import polyglot.ast.New;
 import polyglot.ast.Node;
 import polyglot.ast.PackageNode;
@@ -34,13 +52,6 @@ import polyglot.types.Flags;
 import polyglot.types.Package;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
-import codebases.ast.CBSourceFile_c;
-import codebases.ast.CodebaseDecl;
-import codebases.ast.CodebaseDecl_c;
-import codebases.ast.CodebaseNode;
-import codebases.ast.CodebaseNode_c;
-import fabric.extension.FabricExt;
-import fabric.extension.LocatedExt_c;
 
 /**
  * NodeFactory for fabric extension.
@@ -264,6 +275,93 @@ FabricNodeFactory {
     NewLabel result = NewLabel(pos, label);
     result = setLocation(result, location);
     return result;
+  }
+
+  @Override
+  public MethodDecl MethodDecl(Position pos, Flags flags,
+      TypeNode returnType, Id name, List<Formal> formals,
+      List<TypeNode> throwTypes, Block body, Javadoc javadoc) {
+    MethodDecl n =
+        new FabricMethodDecl_c(pos, flags, returnType, name, null, null,
+            formals, null, null, throwTypes,
+            Collections.<ConstraintNode<Assertion>> emptyList(),
+            body, javadoc);
+    n = ext(n, extFactory().extMethodDecl());
+    n = del(n, delFactory().delMethodDecl());
+    return n;
+  }
+
+  @Override
+  public JifMethodDecl JifMethodDecl(Position pos, Flags flags,
+      TypeNode returnType, Id name, LabelNode startLabel,
+      List<Formal> formals, LabelNode endLabel,
+      List<TypeNode> throwTypes,
+      List<ConstraintNode<Assertion>> constraints, Block body,
+      Javadoc javadoc) {
+    JifMethodDecl n =
+        new FabricMethodDecl_c(pos, flags, returnType, name, startLabel, null,
+            formals, endLabel, null, throwTypes, constraints, body, javadoc);
+    n = ext(n, extFactory().extMethodDecl());
+    n = del(n, delFactory().delMethodDecl());
+    return n;
+  }
+
+  @Override
+  public FabricMethodDecl FabricMethodDecl(Position pos, Flags flags,
+      TypeNode returnType, Id name, LabelNode startLabel,
+      LabelNode beginAccessPolicy, List<Formal> arguments, LabelNode endLabel,
+      LabelNode endConfPolicy, List<TypeNode> exceptions,
+      List<ConstraintNode<Assertion>> constraints, Block body, Javadoc javadoc) {
+    FabricMethodDecl n =
+        new FabricMethodDecl_c(pos, flags, returnType, name, startLabel,
+            beginAccessPolicy, arguments, endLabel, endConfPolicy, exceptions,
+            constraints, body, javadoc);
+    n = ext(n, extFactory().extMethodDecl());
+    n = del(n, delFactory().delMethodDecl());
+    return n;
+  }
+
+  @Override
+  public ConstructorDecl ConstructorDecl(Position pos, Flags flags, Id name,
+      List<Formal> formals, List<TypeNode> throwTypes, Block body,
+      Javadoc javadoc) {
+    ConstructorDecl n =
+        new FabricConstructorDecl_c(pos, flags, name, null, null, null, formals,
+            null, throwTypes,
+            Collections.<ConstraintNode<Assertion>> emptyList(), body, javadoc);
+    n = ext(n, extFactory().extConstructorDecl());
+    n = del(n, delFactory().delConstructorDecl());
+    return n;
+  }
+
+  @Override
+  public JifConstructorDecl JifConstructorDecl(Position pos, Flags flags,
+      Id name, LabelNode startLabel, LabelNode returnLabel,
+      List<Formal> formals, List<TypeNode> throwTypes,
+      List<ConstraintNode<Assertion>> constraints, Block body,
+      Javadoc javadoc) {
+    JifConstructorDecl n =
+        new FabricConstructorDecl_c(pos, flags, name, startLabel, null,
+            returnLabel, formals, null, throwTypes, constraints, body,
+            javadoc);
+    n = ext(n, extFactory().extConstructorDecl());
+    n = del(n, delFactory().delConstructorDecl());
+    return n;
+  }
+
+  @Override
+  public FabricConstructorDecl FabricConstructorDecl(Position pos, Flags flags,
+      Id name, LabelNode startLabel, LabelNode beginAccessPolicy,
+      LabelNode returnLabel, List<Formal> arguments, LabelNode endConfPolicy,
+      List<TypeNode> exceptions, List<ConstraintNode<Assertion>> constraints,
+      Block body, Javadoc javadoc) {
+    FabricConstructorDecl n =
+        new FabricConstructorDecl_c(pos, flags, name, startLabel,
+            beginAccessPolicy, returnLabel, arguments, endConfPolicy,
+            exceptions, constraints, body, javadoc);
+    n = ext(n, extFactory().extConstructorDecl());
+    n = del(n, delFactory().delConstructorDecl());
+    return n;
   }
 
   @Override

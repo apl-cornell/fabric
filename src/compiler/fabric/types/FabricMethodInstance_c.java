@@ -32,9 +32,9 @@ public class FabricMethodInstance_c extends JifMethodInstance_c
             ReferenceType container, Flags flags, Type returnType, String name,
             Label pcBound, boolean isDefaultPCBound,
             ConfPolicy beginAccessPol, boolean isDefaultBeginAccess,
-            ConfPolicy endConfPol, boolean isDefaultEndConf,
             List<? extends Type> formalTypes, List<Label> formalArgLabels,
             Label returnLabel, boolean isDefaultReturnLabel,
+            ConfPolicy endConfPol, boolean isDefaultEndConf,
             List<? extends Type> excTypes, List<Assertion> constraints) {
     super(ts, pos, container, flags, returnType, name, pcBound,
         isDefaultPCBound, formalTypes, formalArgLabels, returnLabel,

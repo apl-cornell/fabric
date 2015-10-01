@@ -32,8 +32,8 @@ public class FabricConstructorInstance_c extends JifConstructorInstance_c
             ClassType container, Flags flags,
             Label pcBound, boolean isDefaultPCBound,
             ConfPolicy beginAccessPol, boolean isDefaultBeginAccess,
-            ConfPolicy endConfPol, boolean isDefaultEndConf,
             Label returnLabel, boolean isDefaultReturnLabel,
+            ConfPolicy endConfPol, boolean isDefaultEndConf,
             List<? extends Type> formalTypes, List<Label> formalArgLabels,
             List<? extends Type> excTypes, List<Assertion> constraints) {
     super(ts, pos, container, flags, pcBound, isDefaultPCBound, returnLabel,
