@@ -237,6 +237,7 @@ non terminal FabricArrayInit fabric_array_initializer;
 non terminal List codebase_declarations_opt, codebase_declarations;
 non terminal CodebaseDecl codebase_declaration;
 non terminal Store store_expr;
+non terminal LabelNode access_label_opt;
 
 start with goal;
 
@@ -473,6 +474,42 @@ override field_declaration ::=
                }
                RESULT = l; :}
                
+    ;
+
+////////////////////////////////////////////////////////////////////////
+// Method Declarations Now have begin/end labels for accesses         //
+////////////////////////////////////////////////////////////////////////
+
+override method_header ::=
+                    // JifMethodNode
+        modifiers_opt:a type:b IDENTIFIER:c label_opt:i access_label_opt:ba
+        LPAREN formal_parameter_list_opt:d RPAREN
+        dims_opt:e return_label_opt:r access_label_opt:ec throws_opt:f procedure_constraints_opt:w
+            {: RESULT = parser.nf.FabricMethodDecl(parser.pos(b,c,c), a,
+                                                   parser.array(b, e.intValue()),
+                                                   parser.nf.Id(parser.pos(c), c.getIdentifier()),
+                                                   i, ba, d, r, ec, f, w, null,
+                                                   parser.javadoc(parser.pos(a), parser.pos(b)));
+               if (i != null) parser.countAnnotation(parser.PC_BOUND_ANNOTATION, RESULT.position());
+             :}
+    |   modifiers_opt:a VOID:b IDENTIFIER:c label_opt:i access_label_opt:ba
+        LPAREN formal_parameter_list_opt:d RPAREN
+        return_label_opt:r access_label_opt:ec throws_opt:f procedure_constraints_opt:w
+            {: RESULT = parser.nf.FabricMethodDecl(parser.pos(b,c), a,
+                                                   parser.nf.CanonicalTypeNode(parser.pos(b),
+                                                                               parser.ts.Void()),
+                                                   parser.nf.Id(parser.pos(c), c.getIdentifier()),
+                                                   i, ba, d, r, ec, f, w, null,
+                                                   parser.javadoc(parser.pos(a), parser.pos(b)));
+               if (i != null) parser.countAnnotation(parser.PC_BOUND_ANNOTATION, RESULT.position());
+            :}
+    ;
+
+access_label_opt ::=
+                    // LabelNode
+            {: RESULT = null; :}
+    |   AT label:a
+            {: RESULT = a; :}
     ;
 
 ////////////////////////////////////////////////////////////////////////
