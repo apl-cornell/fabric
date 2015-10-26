@@ -19,8 +19,8 @@ public interface DelegatingPrincipal extends Principal {
 
   void removeDelegatesTo(Principal p);
 
-  public static class _Proxy extends Principal._Proxy implements
-  DelegatingPrincipal {
+  public static class _Proxy extends Principal._Proxy
+      implements DelegatingPrincipal {
 
     public _Proxy(DelegatingPrincipal._Impl impl) {
       super(impl);
@@ -46,7 +46,8 @@ public interface DelegatingPrincipal extends Principal {
       ((DelegatingPrincipal) fetch()).removeDelegatesTo(p);
     }
 
-    public static DelegatingPrincipal $addDefaultDelegates(DelegatingPrincipal p) {
+    public static DelegatingPrincipal $addDefaultDelegates(
+        DelegatingPrincipal p) {
       return DelegatingPrincipal._Impl.$addDefaultDelegates(p);
     }
 
@@ -57,8 +58,8 @@ public interface DelegatingPrincipal extends Principal {
     }
   }
 
-  public abstract static class _Impl extends Principal._Impl implements
-  DelegatingPrincipal {
+  public abstract static class _Impl extends Principal._Impl
+      implements DelegatingPrincipal {
 
     public _Impl(Store store) {
       super(store);
@@ -67,13 +68,14 @@ public interface DelegatingPrincipal extends Principal {
     public _Impl(Store store, long onum, int version, long expiry, long label,
         long accessLabel, ObjectInput in, Iterator<RefTypeEnum> refTypes,
         Iterator<Long> intraStoreRefs,
-        Iterator<Pair<String, Long>> interStoreRefs) throws IOException,
-        ClassNotFoundException {
+        Iterator<Pair<String, Long>> interStoreRefs)
+            throws IOException, ClassNotFoundException {
       super(store, onum, version, expiry, label, accessLabel, in, refTypes,
           intraStoreRefs, interStoreRefs);
     }
 
-    public static DelegatingPrincipal $addDefaultDelegates(DelegatingPrincipal p) {
+    public static DelegatingPrincipal $addDefaultDelegates(
+        DelegatingPrincipal p) {
       NodePrincipal store = p.$getStore().getPrincipal();
       p.addDelegatesTo(store);
 

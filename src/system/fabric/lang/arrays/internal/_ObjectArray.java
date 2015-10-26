@@ -26,8 +26,8 @@ public interface _ObjectArray<T extends Object> extends Object {
 
   T get(int i);
 
-  public static class _Impl<T extends Object> extends Object._Impl implements
-      _ObjectArray<T>, _InternalArrayImpl {
+  public static class _Impl<T extends Object> extends Object._Impl
+      implements _ObjectArray<T>, _InternalArrayImpl {
     /**
      * The class representing the proxy type for the array elements.
      */
@@ -78,24 +78,22 @@ public interface _ObjectArray<T extends Object> extends Object {
     public _Impl(Store store, long onum, int version, long expiry, long label,
         long accessLabel, ObjectInput in, Iterator<RefTypeEnum> refTypes,
         Iterator<Long> intraStoreRefs,
-        Iterator<Pair<String, Long>> interStoreRefs) throws IOException,
-        ClassNotFoundException {
+        Iterator<Pair<String, Long>> interStoreRefs)
+            throws IOException, ClassNotFoundException {
       super(store, onum, version, expiry, label, accessLabel, in, refTypes,
           intraStoreRefs, interStoreRefs);
-      proxyType =
-          (Class<? extends Object._Proxy>) Worker.getWorker().getClassLoader()
-              .loadClass(in.readUTF());
+      proxyType = (Class<? extends Object._Proxy>) Worker.getWorker()
+          .getClassLoader().loadClass(in.readUTF());
       value = new Object[in.readInt()];
       for (int i = 0; i < value.length; i++) {
-        value[i] =
-            $readRef(proxyType, refTypes.next(), in, store, intraStoreRefs,
-                interStoreRefs);
+        value[i] = $readRef(proxyType, refTypes.next(), in, store,
+            intraStoreRefs, interStoreRefs);
       }
     }
 
     private static final Map<Class<?>, Class<? extends fabric.lang.Object._Proxy>> proxyCache =
-        Collections
-            .synchronizedMap(new HashMap<Class<?>, Class<? extends fabric.lang.Object._Proxy>>());
+        Collections.synchronizedMap(
+            new HashMap<Class<?>, Class<? extends fabric.lang.Object._Proxy>>());
 
     /**
      * Given a Fabric class, returns the corresponding _Proxy class. If the
@@ -178,7 +176,7 @@ public interface _ObjectArray<T extends Object> extends Object {
     @Override
     public void $serialize(ObjectOutput out, List<RefTypeEnum> refTypes,
         List<Long> intraStoreRefs, List<Pair<String, Long>> interStoreRefs)
-        throws IOException {
+            throws IOException {
       super.$serialize(out, refTypes, intraStoreRefs, interStoreRefs);
       out.writeUTF(proxyType.getName());
       out.writeInt(value.length);
@@ -193,8 +191,8 @@ public interface _ObjectArray<T extends Object> extends Object {
     }
   }
 
-  public static class _Proxy<T extends Object> extends Object._Proxy implements
-      _ObjectArray<T> {
+  public static class _Proxy<T extends Object> extends Object._Proxy
+      implements _ObjectArray<T> {
 
     public _Proxy(Store store, long onum) {
       super(store, onum);

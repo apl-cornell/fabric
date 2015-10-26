@@ -82,13 +82,13 @@ public final class SerializedObject implements FastSerializable, Serializable {
   private static final int VERSION_LENGTH = 4; // int
 
   /** Index in objectData for object's promise-expiration time. */
-  private static final int PROMISE_EXPIRY_OFFSET = VERSION_OFFSET
-      + VERSION_LENGTH;
+  private static final int PROMISE_EXPIRY_OFFSET =
+      VERSION_OFFSET + VERSION_LENGTH;
   private static final int PROMISE_EXPIRY_LENGTH = 8; // long
 
   /** Index in objectData for update-label pointer. */
-  private static final int UPDATE_LABEL_OFFSET = PROMISE_EXPIRY_OFFSET
-      + PROMISE_EXPIRY_LENGTH;
+  private static final int UPDATE_LABEL_OFFSET =
+      PROMISE_EXPIRY_OFFSET + PROMISE_EXPIRY_LENGTH;
 
   //////////////////////////////////////////////////////////////////////////
   //
@@ -114,18 +114,18 @@ public final class SerializedObject implements FastSerializable, Serializable {
 
   private static final int REF_TYPES_POS_LENGTH = 4; // int
   /** Offset from end of objectData for index of ref-types data. */
-  private static final int REF_TYPES_POS_OFFSET = INTRASTORE_REFS_POS_OFFSET
-      + REF_TYPES_POS_LENGTH;
+  private static final int REF_TYPES_POS_OFFSET =
+      INTRASTORE_REFS_POS_OFFSET + REF_TYPES_POS_LENGTH;
 
   private static final int CLASS_REF_POS_LENGTH = 4; // int
   /** Offset from end of objectData for index of class-ref pointer. */
-  private static final int CLASS_REF_POS_OFFSET = REF_TYPES_POS_OFFSET
-      + CLASS_REF_POS_LENGTH;
+  private static final int CLASS_REF_POS_OFFSET =
+      REF_TYPES_POS_OFFSET + CLASS_REF_POS_LENGTH;
 
   private static final int ACCESS_POLICY_POS_LENGTH = 4; // int
   /** Offset from end of objectData for index of access-policy pointer. */
-  private static final int ACCESS_POLICY_POS_OFFSET = CLASS_REF_POS_OFFSET
-      + ACCESS_POLICY_POS_LENGTH;
+  private static final int ACCESS_POLICY_POS_OFFSET =
+      CLASS_REF_POS_OFFSET + ACCESS_POLICY_POS_LENGTH;
 
   /**
    * The ClassRef for this object's class. This is filled in lazily from the
@@ -320,12 +320,11 @@ public final class SerializedObject implements FastSerializable, Serializable {
   private ComparablePair<String, Long> getInterStoreRef(int refPos) {
     int storeNameLength = SerializationUtil.unsignedShortAt(objectData, refPos);
     int onumPos = refPos + 2 + storeNameLength;
-    DataInput in =
-        new DataInputStream(new ByteArrayInputStream(objectData, refPos,
-            onumPos));
+    DataInput in = new DataInputStream(
+        new ByteArrayInputStream(objectData, refPos, onumPos));
     try {
-      return new ComparablePair<>(in.readUTF(), SerializationUtil.longAt(
-          objectData, onumPos));
+      return new ComparablePair<>(in.readUTF(),
+          SerializationUtil.longAt(objectData, onumPos));
     } catch (IOException e) {
       throw new InternalError("Error while reading store name.", e);
     }
@@ -344,8 +343,8 @@ public final class SerializedObject implements FastSerializable, Serializable {
    *         inter-store reference.
    */
   public boolean updateLabelRefIsInterStore() {
-    return SerializationUtil
-        .booleanAt(objectData, isInterStoreUpdateLabelPos());
+    return SerializationUtil.booleanAt(objectData,
+        isInterStoreUpdateLabelPos());
   }
 
   /**
@@ -390,8 +389,8 @@ public final class SerializedObject implements FastSerializable, Serializable {
    *         reference.
    */
   private final int isInterStoreAccessPolicyPos() {
-    return SerializationUtil.intAt(objectData, objectData.length
-        - ACCESS_POLICY_POS_OFFSET);
+    return SerializationUtil.intAt(objectData,
+        objectData.length - ACCESS_POLICY_POS_OFFSET);
   }
 
   /**
@@ -433,10 +432,9 @@ public final class SerializedObject implements FastSerializable, Serializable {
    */
   public long getAccessPolicyOnum() {
     if (accessPolicyRefIsInterStore())
-      throw new InternalError(
-          "Unsupported operation: Attempted to get access "
-              + "policy onum of an object whose inter-store references have not yet "
-              + "been swizzled." + getInterStoreAccessPolicyRef());
+      throw new InternalError("Unsupported operation: Attempted to get access "
+          + "policy onum of an object whose inter-store references have not yet "
+          + "been swizzled." + getInterStoreAccessPolicyRef());
 
     return SerializationUtil.longAt(objectData, accessPolicyPos());
   }
@@ -446,8 +444,8 @@ public final class SerializedObject implements FastSerializable, Serializable {
    *         ClassRef for the object's class.
    */
   private final int classRefPos() {
-    return SerializationUtil.intAt(objectData, objectData.length
-        - CLASS_REF_POS_OFFSET);
+    return SerializationUtil.intAt(objectData,
+        objectData.length - CLASS_REF_POS_OFFSET);
   }
 
   /**
@@ -484,8 +482,8 @@ public final class SerializedObject implements FastSerializable, Serializable {
    *         inter-store/intra-store/serialized).
    */
   private final int numRefTypesPos() {
-    return SerializationUtil.intAt(objectData, objectData.length
-        - REF_TYPES_POS_OFFSET);
+    return SerializationUtil.intAt(objectData,
+        objectData.length - REF_TYPES_POS_OFFSET);
   }
 
   /**
@@ -538,8 +536,8 @@ public final class SerializedObject implements FastSerializable, Serializable {
    *         representing the number of intra-store references.
    */
   private final int numIntraStoreRefsPos() {
-    return SerializationUtil.intAt(objectData, objectData.length
-        - INTRASTORE_REFS_POS_OFFSET);
+    return SerializationUtil.intAt(objectData,
+        objectData.length - INTRASTORE_REFS_POS_OFFSET);
   }
 
   /**
@@ -593,8 +591,8 @@ public final class SerializedObject implements FastSerializable, Serializable {
    *         representing the length of the data portion of the object.
    */
   private final int serializedDataLengthPos() {
-    return SerializationUtil.intAt(objectData, objectData.length
-        - SERIALIZED_DATA_POS_OFFSET);
+    return SerializationUtil.intAt(objectData,
+        objectData.length - SERIALIZED_DATA_POS_OFFSET);
   }
 
   private final int serializedDataLength() {
@@ -623,8 +621,8 @@ public final class SerializedObject implements FastSerializable, Serializable {
    *         representing the number of inter-store references.
    */
   private final int numInterStoreRefsPos() {
-    return SerializationUtil.intAt(objectData, objectData.length
-        - INTERSTORE_REFS_POS_OFFSET);
+    return SerializationUtil.intAt(objectData,
+        objectData.length - INTERSTORE_REFS_POS_OFFSET);
   }
 
   /**
@@ -927,9 +925,8 @@ public final class SerializedObject implements FastSerializable, Serializable {
           for (StackTraceElement e : impl.$stackTrace)
             message += System.getProperty("line.separator") + "  " + e;
 
-          message +=
-              System.getProperty("line.separator")
-                  + "A stack trace for the creation of the local object follows.";
+          message += System.getProperty("line.separator")
+              + "A stack trace for the creation of the local object follows.";
           for (StackTraceElement e : ((_Impl) updateLabel.fetch()).$stackTrace)
             message += System.getProperty("line.separator") + "  " + e;
         }
@@ -963,9 +960,8 @@ public final class SerializedObject implements FastSerializable, Serializable {
           for (StackTraceElement e : impl.$stackTrace)
             message += System.getProperty("line.separator") + "  " + e;
 
-          message +=
-              System.getProperty("line.separator")
-                  + "A stack trace for the creation of the local object follows.";
+          message += System.getProperty("line.separator")
+              + "A stack trace for the creation of the local object follows.";
           for (StackTraceElement e : ((_Impl) updateLabel.fetch()).$stackTrace)
             message += System.getProperty("line.separator") + "  " + e;
         }
@@ -1115,8 +1111,8 @@ public final class SerializedObject implements FastSerializable, Serializable {
    * Maps class names to their deserialization constructors.
    */
   private static final Map<Class<? extends _Impl>, Constructor<?>> constructorTable =
-      Collections
-          .synchronizedMap(new HashMap<Class<? extends _Impl>, Constructor<?>>());
+      Collections.synchronizedMap(
+          new HashMap<Class<? extends _Impl>, Constructor<?>>());
 
   /**
    * Deserializes this object, traversing surrogates as necessary.
@@ -1149,10 +1145,9 @@ public final class SerializedObject implements FastSerializable, Serializable {
       Constructor<?> constructor = constructorTable.get(implClass);
 
       if (constructor == null) {
-        constructor =
-            implClass.getConstructor(Store.class, long.class, int.class,
-                long.class, long.class, long.class, ObjectInput.class,
-                Iterator.class, Iterator.class, Iterator.class);
+        constructor = implClass.getConstructor(Store.class, long.class,
+            int.class, long.class, long.class, long.class, ObjectInput.class,
+            Iterator.class, Iterator.class, Iterator.class);
         constructorTable.put(implClass, constructor);
       }
 
