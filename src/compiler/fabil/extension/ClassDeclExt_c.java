@@ -780,7 +780,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
 
         // Wrap remote call in a check for local worker.
         Stmt withLocalCheck = nf.If(Position.compilerGenerated(),
-                                    rr.qq().parseExpr("$remoteWorker != fabric.worker.Worker.getWorker().getLocalWorker()"),
+                                    rr.qq().parseExpr("$remoteWorker == fabric.worker.Worker.getWorker().getLocalWorker()"),
                                     retLocal,
                                     tryCatch);
 
