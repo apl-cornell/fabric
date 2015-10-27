@@ -154,18 +154,11 @@ public class CallExt_c extends ExprExt_c {
         rr.qq().parseExpr(
             "(" + ((ClassType) c.target().type()).translate(null)
                 + "._Proxy) %E", target);
-    return nf.Conditional(Position.compilerGenerated(),
-        nf.Binary(Position.compilerGenerated(),
-          c.remoteWorker(), Binary.EQ, rr.qq().parseExpr("fabric.worker.Worker.getLocalWorker()")),
-        nf.Call(Position.compilerGenerated(),
-          target,
-          nf.Id(Position.compilerGenerated(),
-            c.name().substring(0, c.name().length() - 7)), args.subList(1, args.size())),
-        nf.Call(Position.compilerGenerated(),
-          target,
-          // <name>_remote => <name>$remote
-          nf.Id(Position.compilerGenerated(),
-            c.name().substring(0, c.name().length() - 7) + "$remote"), args));
+    return nf.Call(Position.compilerGenerated(),
+        target,
+        // <name>_remote => <name>$remote
+        nf.Id(Position.compilerGenerated(),
+          c.name().substring(0, c.name().length() - 7) + "$remote"), args);
   }
 
   @Override
