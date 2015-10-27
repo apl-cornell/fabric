@@ -20,8 +20,8 @@ import fabric.worker.Store;
 public class Compat {
   public static booleanArray convert(Store store, Label label,
       ConfPolicy accessPolicy, boolean[] array) {
-    booleanArray result =
-        new booleanArray._Impl(store, label, accessPolicy, array.length);
+    booleanArray result = new booleanArray._Impl(store)
+        .fabric$lang$arrays$booleanArray$(label, accessPolicy, array.length);
     for (int i = 0; i < array.length; i++)
       result.set(i, array[i]);
     return (booleanArray) result.$getProxy();
@@ -29,8 +29,8 @@ public class Compat {
 
   public static byteArray convert(Store store, Label label,
       ConfPolicy accessPolicy, byte[] array) {
-    byteArray result =
-        new byteArray._Impl(store, label, accessPolicy, array.length);
+    byteArray result = new byteArray._Impl(store)
+        .fabric$lang$arrays$byteArray$(label, accessPolicy, array.length);
     for (int i = 0; i < array.length; i++)
       result.set(i, array[i]);
     return (byteArray) result.$getProxy();
@@ -38,8 +38,8 @@ public class Compat {
 
   public static charArray convert(Store store, Label label,
       ConfPolicy accessPolicy, char[] array) {
-    charArray result =
-        new charArray._Impl(store, label, accessPolicy, array.length);
+    charArray result = new charArray._Impl(store)
+        .fabric$lang$arrays$charArray$(label, accessPolicy, array.length);
     for (int i = 0; i < array.length; i++)
       result.set(i, array[i]);
     return (charArray) result.$getProxy();
@@ -47,8 +47,8 @@ public class Compat {
 
   public static doubleArray convert(Store store, Label label,
       ConfPolicy accessPolicy, double[] array) {
-    doubleArray result =
-        new doubleArray._Impl(store, label, accessPolicy, array.length);
+    doubleArray result = new doubleArray._Impl(store)
+        .fabric$lang$arrays$doubleArray$(label, accessPolicy, array.length);
     for (int i = 0; i < array.length; i++)
       result.set(i, array[i]);
     return (doubleArray) result.$getProxy();
@@ -56,8 +56,8 @@ public class Compat {
 
   public static floatArray convert(Store store, Label label,
       ConfPolicy accessPolicy, float[] array) {
-    floatArray result =
-        new floatArray._Impl(store, label, accessPolicy, array.length);
+    floatArray result = new floatArray._Impl(store)
+        .fabric$lang$arrays$floatArray$(label, accessPolicy, array.length);
     for (int i = 0; i < array.length; i++)
       result.set(i, array[i]);
     return (floatArray) result.$getProxy();
@@ -65,8 +65,8 @@ public class Compat {
 
   public static intArray convert(Store store, Label label,
       ConfPolicy accessPolicy, int[] array) {
-    intArray result =
-        new intArray._Impl(store, label, accessPolicy, array.length);
+    intArray result = new intArray._Impl(store)
+        .fabric$lang$arrays$intArray$(label, accessPolicy, array.length);
     for (int i = 0; i < array.length; i++)
       result.set(i, array[i]);
     return (intArray) result.$getProxy();
@@ -74,8 +74,8 @@ public class Compat {
 
   public static longArray convert(Store store, Label label,
       ConfPolicy accessPolicy, long[] array) {
-    longArray result =
-        new longArray._Impl(store, label, accessPolicy, array.length);
+    longArray result = new longArray._Impl(store)
+        .fabric$lang$arrays$longArray$(label, accessPolicy, array.length);
     for (int i = 0; i < array.length; i++)
       result.set(i, array[i]);
     return (longArray) result.$getProxy();
@@ -83,8 +83,8 @@ public class Compat {
 
   public static shortArray convert(Store store, Label label,
       ConfPolicy accessPolicy, short[] array) {
-    shortArray result =
-        new shortArray._Impl(store, label, accessPolicy, array.length);
+    shortArray result = new shortArray._Impl(store)
+        .fabric$lang$arrays$shortArray$(label, accessPolicy, array.length);
     for (int i = 0; i < array.length; i++)
       result.set(i, array[i]);
     return (shortArray) result.$getProxy();
@@ -93,8 +93,8 @@ public class Compat {
   public static ObjectArray convert(Store store, Label label,
       ConfPolicy accessPolicy, Object[] array) {
     ObjectArray result =
-        new ObjectArray._Impl(store, label, accessPolicy, array.getClass()
-            .getComponentType(), array.length);
+        new ObjectArray._Impl(store).fabric$lang$arrays$ObjectArray$(label,
+            accessPolicy, array.getClass().getComponentType(), array.length);
     for (int i = 0; i < array.length; i++)
       result.set(i, array[i]);
     return (ObjectArray) result.$getProxy();

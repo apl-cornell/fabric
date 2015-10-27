@@ -9,6 +9,7 @@ import fabil.ast.NewFabricArray;
 import fabil.types.FabILTypeSystem;
 import fabil.visit.LabelAssigner;
 import fabil.visit.ProxyRewriter;
+import fabric.translate.ClassDeclToFabilExt_c;
 import polyglot.ast.Call;
 import polyglot.ast.Expr;
 import polyglot.ast.Receiver;
@@ -44,7 +45,7 @@ public class NewFabricArrayExt_c extends AnnotatedExt_c {
 
     Type baseType = newArray.type().toArray().base();
     Type arrayImplType = ts.fabricRuntimeArrayImplOf(baseType);
-    Type arrayType = ts.fabricRuntimeArrayOf(baseType);
+    ClassType arrayType = ts.fabricRuntimeArrayOf(baseType);
     String typeArg = "";
     if (baseType.isReference()) {
       if (ts.isPureFabricType(baseType))
@@ -52,10 +53,12 @@ public class NewFabricArrayExt_c extends AnnotatedExt_c {
       else typeArg = "fabric.lang.Object";
       typeArg += "._Proxy.class, ";
     }
+    String initializerName =
+        ClassDeclToFabilExt_c.jifConstructorTranslatedName(arrayType);
     return qq.parseExpr(
-        "(%T) new %T(%E, %E, %E, " + typeArg + "%E).$getProxy()", arrayType,
-        arrayImplType, newArray.location(), newArray.updateLabel(),
-        newArray.accessPolicy(), size);
+        "(%T) new %T(%E).%s(%E, %E, " + typeArg + "%E).$getProxy()", arrayType,
+        arrayImplType, newArray.location(), initializerName,
+        newArray.updateLabel(), newArray.accessPolicy(), size);
   }
 
   @Override

@@ -31,8 +31,8 @@ public final class byteArray {
    * Analogous to a block in a file system. Also directly determines the fanout.
    * We always need it to be a power of 2.
    */
-  private final int CHUNK_SIZE;
-  private final int CHUNK_SIZE_LOG2;
+  private /*final*/ int CHUNK_SIZE;
+  private /*final*/ int CHUNK_SIZE_LOG2;
 
   /**
    * The height of the tree of little arrays. Depends on the chunk size
@@ -62,19 +62,23 @@ public final class byteArray {
    * @param length
    *          The length of the array.
    */
-  public byteArray(Label updateLabel, ConfPolicy accessPolicy, int length) {
+  public byteArray fabric$lang$arrays$byteArray$(Label updateLabel,
+      ConfPolicy accessPolicy, int length) {
     // Default chunk size is 256.
-    this(updateLabel, accessPolicy, length, 8);
+    fabric$lang$arrays$byteArray$(updateLabel, accessPolicy, length, 8);
+    return this;
   }
 
-  public byteArray(Label updateLabel, ConfPolicy accessPolicy, int length,
-      int CHUNK_SIZE_LOG2) {
+  public byteArray fabric$lang$arrays$byteArray$(Label updateLabel,
+      ConfPolicy accessPolicy, int length, int CHUNK_SIZE_LOG2) {
     this.CHUNK_SIZE_LOG2 = CHUNK_SIZE_LOG2;
     this.CHUNK_SIZE = (1 << CHUNK_SIZE_LOG2);
-    this.length = length;
 
     this.$updateLabel = updateLabel;
     this.$accessPolicy = accessPolicy;
+    fabric$lang$Object$();
+
+    this.length = length;
 
     // Compute required height (height starts at 1).
     this.height = getHeight(length);
@@ -93,6 +97,8 @@ public final class byteArray {
           (_ObjectArray) new _ObjectArray(this.$updateLabel, this.$accessPolicy,
               _ObjectArray.class, CHUNK_SIZE).$initLabels();
     }
+
+    return this;
   }
 
   public Object $initLabels() {

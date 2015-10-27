@@ -56,8 +56,9 @@ public class WrappedJavaInlineable<T> implements JavaInlineable {
    */
   public static ObjectArray $wrap(Store store, Label label,
       ConfPolicy accessPolicy, java.lang.Object[] array) {
-    ObjectArray result = new ObjectArray._Impl(store, label, accessPolicy,
-        Object._Proxy.class, array.length);
+    ObjectArray result =
+        new ObjectArray._Impl(store).fabric$lang$arrays$ObjectArray$(label,
+            accessPolicy, Object._Proxy.class, array.length);
     for (int i = 0; i < array.length; i++)
       result.set(i, $wrap(array[i]));
     return result;

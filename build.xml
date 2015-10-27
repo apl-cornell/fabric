@@ -374,6 +374,16 @@
   <!-- Compiles the FabIL compiler -->
   <target name="fabil-compiler" depends="init,bootstrap,native,eclipse"
       description="Builds the FabIL compiler">
+    <antcall target="standard-ext-lexer">
+      <param name="ext" value="fabric" />
+      <param name="ext.pkg" value="fabric" />
+    </antcall>
+
+    <antcall target="standard-ext-ppg-parser">
+      <param name="ext" value="fabric" />
+      <param name="ext.pkg" value="fabric" />
+    </antcall>
+
     <antcall target="standard-ext">
       <param name="ext" value="fabil" />
       <param name="ext.pkg" value="fabil" />
@@ -487,6 +497,9 @@
       <arg value="-sourcepath"/>
       <arg value="${runtime.src}"/>
       <fileset dir="${runtime.src}"
+          includes="**/*.fil"
+          excludes="**/*.fab"/>
+      <fileset dir="${arrays.src}"
           includes="**/*.fil"
           excludes="**/*.fab"/>
     </filc>
