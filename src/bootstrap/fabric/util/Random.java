@@ -738,14 +738,17 @@ public interface Random
         }
         
         public _Impl(fabric.worker.Store store, long onum, int version,
-                     long expiry, long label, long accessLabel,
-                     java.io.ObjectInput in, java.util.Iterator refTypes,
+                     long expiry, fabric.worker.Store labelStore,
+                     long labelOnum, fabric.worker.Store accessPolicyStore,
+                     long accessPolicyOnum, java.io.ObjectInput in,
+                     java.util.Iterator refTypes,
                      java.util.Iterator intraStoreRefs,
                      java.util.Iterator interStoreRefs)
               throws java.io.IOException,
             java.lang.ClassNotFoundException {
-            super(store, onum, version, expiry, label, accessLabel, in,
-                  refTypes, intraStoreRefs, interStoreRefs);
+            super(store, onum, version, expiry, labelStore, labelOnum,
+                  accessPolicyStore, accessPolicyOnum, in, refTypes,
+                  intraStoreRefs, interStoreRefs);
             this.haveNextNextGaussian = in.readBoolean();
             this.nextNextGaussian = in.readDouble();
             this.seed = in.readLong();
@@ -864,14 +867,17 @@ public interface Random
             }
             
             public _Impl(fabric.worker.Store store, long onum, int version,
-                         long expiry, long label, long accessLabel,
-                         java.io.ObjectInput in, java.util.Iterator refTypes,
+                         long expiry, fabric.worker.Store labelStore,
+                         long labelOnum, fabric.worker.Store accessPolicyStore,
+                         long accessPolicyOnum, java.io.ObjectInput in,
+                         java.util.Iterator refTypes,
                          java.util.Iterator intraStoreRefs,
                          java.util.Iterator interStoreRefs)
                   throws java.io.IOException,
                 java.lang.ClassNotFoundException {
-                super(store, onum, version, expiry, label, accessLabel, in,
-                      refTypes, intraStoreRefs, interStoreRefs);
+                super(store, onum, version, expiry, labelStore, labelOnum,
+                      accessPolicyStore, accessPolicyOnum, in, refTypes,
+                      intraStoreRefs, interStoreRefs);
                 this.serialVersionUID = in.readLong();
             }
             

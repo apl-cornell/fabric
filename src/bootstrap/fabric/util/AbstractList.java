@@ -708,14 +708,17 @@ public interface AbstractList
             }
             
             public _Impl(fabric.worker.Store store, long onum, int version,
-                         long expiry, long label, long accessLabel,
-                         java.io.ObjectInput in, java.util.Iterator refTypes,
+                         long expiry, fabric.worker.Store labelStore,
+                         long labelOnum, fabric.worker.Store accessPolicyStore,
+                         long accessPolicyOnum, java.io.ObjectInput in,
+                         java.util.Iterator refTypes,
                          java.util.Iterator intraStoreRefs,
                          java.util.Iterator interStoreRefs)
                   throws java.io.IOException,
                 java.lang.ClassNotFoundException {
-                super(store, onum, version, expiry, label, accessLabel, in,
-                      refTypes, intraStoreRefs, interStoreRefs);
+                super(store, onum, version, expiry, labelStore, labelOnum,
+                      accessPolicyStore, accessPolicyOnum, in, refTypes,
+                      intraStoreRefs, interStoreRefs);
                 this.out$ = (fabric.util.AbstractList)
                               $readRef(fabric.util.AbstractList._Proxy.class,
                                        (fabric.common.RefTypeEnum)
@@ -802,15 +805,18 @@ public interface AbstractList
                 }
                 
                 public _Impl(fabric.worker.Store store, long onum, int version,
-                             long expiry, long label, long accessLabel,
-                             java.io.ObjectInput in,
+                             long expiry, fabric.worker.Store labelStore,
+                             long labelOnum,
+                             fabric.worker.Store accessPolicyStore,
+                             long accessPolicyOnum, java.io.ObjectInput in,
                              java.util.Iterator refTypes,
                              java.util.Iterator intraStoreRefs,
                              java.util.Iterator interStoreRefs)
                       throws java.io.IOException,
                     java.lang.ClassNotFoundException {
-                    super(store, onum, version, expiry, label, accessLabel, in,
-                          refTypes, intraStoreRefs, interStoreRefs);
+                    super(store, onum, version, expiry, labelStore, labelOnum,
+                          accessPolicyStore, accessPolicyOnum, in, refTypes,
+                          intraStoreRefs, interStoreRefs);
                 }
                 
                 public _Impl(fabric.worker.Store store) { super(store); }
@@ -1577,14 +1583,17 @@ public interface AbstractList
             }
             
             public _Impl(fabric.worker.Store store, long onum, int version,
-                         long expiry, long label, long accessLabel,
-                         java.io.ObjectInput in, java.util.Iterator refTypes,
+                         long expiry, fabric.worker.Store labelStore,
+                         long labelOnum, fabric.worker.Store accessPolicyStore,
+                         long accessPolicyOnum, java.io.ObjectInput in,
+                         java.util.Iterator refTypes,
                          java.util.Iterator intraStoreRefs,
                          java.util.Iterator interStoreRefs)
                   throws java.io.IOException,
                 java.lang.ClassNotFoundException {
-                super(store, onum, version, expiry, label, accessLabel, in,
-                      refTypes, intraStoreRefs, interStoreRefs);
+                super(store, onum, version, expiry, labelStore, labelOnum,
+                      accessPolicyStore, accessPolicyOnum, in, refTypes,
+                      intraStoreRefs, interStoreRefs);
                 this.out$ = (fabric.util.AbstractList)
                               $readRef(fabric.util.AbstractList._Proxy.class,
                                        (fabric.common.RefTypeEnum)
@@ -1669,15 +1678,18 @@ public interface AbstractList
                 }
                 
                 public _Impl(fabric.worker.Store store, long onum, int version,
-                             long expiry, long label, long accessLabel,
-                             java.io.ObjectInput in,
+                             long expiry, fabric.worker.Store labelStore,
+                             long labelOnum,
+                             fabric.worker.Store accessPolicyStore,
+                             long accessPolicyOnum, java.io.ObjectInput in,
                              java.util.Iterator refTypes,
                              java.util.Iterator intraStoreRefs,
                              java.util.Iterator interStoreRefs)
                       throws java.io.IOException,
                     java.lang.ClassNotFoundException {
-                    super(store, onum, version, expiry, label, accessLabel, in,
-                          refTypes, intraStoreRefs, interStoreRefs);
+                    super(store, onum, version, expiry, labelStore, labelOnum,
+                          accessPolicyStore, accessPolicyOnum, in, refTypes,
+                          intraStoreRefs, interStoreRefs);
                 }
                 
                 public _Impl(fabric.worker.Store store) { super(store); }
@@ -2196,15 +2208,18 @@ public interface AbstractList
                 }
                 
                 public _Impl(fabric.worker.Store store, long onum, int version,
-                             long expiry, long label, long accessLabel,
-                             java.io.ObjectInput in,
+                             long expiry, fabric.worker.Store labelStore,
+                             long labelOnum,
+                             fabric.worker.Store accessPolicyStore,
+                             long accessPolicyOnum, java.io.ObjectInput in,
                              java.util.Iterator refTypes,
                              java.util.Iterator intraStoreRefs,
                              java.util.Iterator interStoreRefs)
                       throws java.io.IOException,
                     java.lang.ClassNotFoundException {
-                    super(store, onum, version, expiry, label, accessLabel, in,
-                          refTypes, intraStoreRefs, interStoreRefs);
+                    super(store, onum, version, expiry, labelStore, labelOnum,
+                          accessPolicyStore, accessPolicyOnum, in, refTypes,
+                          intraStoreRefs, interStoreRefs);
                     this.out$ =
                       (fabric.util.AbstractList.SubList)
                         $readRef(fabric.util.AbstractList.SubList._Proxy.class,
@@ -2303,14 +2318,17 @@ public interface AbstractList
                     }
                     
                     public _Impl(fabric.worker.Store store, long onum,
-                                 int version, long expiry, long label,
-                                 long accessLabel, java.io.ObjectInput in,
+                                 int version, long expiry,
+                                 fabric.worker.Store labelStore, long labelOnum,
+                                 fabric.worker.Store accessPolicyStore,
+                                 long accessPolicyOnum, java.io.ObjectInput in,
                                  java.util.Iterator refTypes,
                                  java.util.Iterator intraStoreRefs,
                                  java.util.Iterator interStoreRefs)
                           throws java.io.IOException,
                         java.lang.ClassNotFoundException {
-                        super(store, onum, version, expiry, label, accessLabel,
+                        super(store, onum, version, expiry, labelStore,
+                              labelOnum, accessPolicyStore, accessPolicyOnum,
                               in, refTypes, intraStoreRefs, interStoreRefs);
                     }
                     
@@ -2921,14 +2939,17 @@ public interface AbstractList
             }
             
             public _Impl(fabric.worker.Store store, long onum, int version,
-                         long expiry, long label, long accessLabel,
-                         java.io.ObjectInput in, java.util.Iterator refTypes,
+                         long expiry, fabric.worker.Store labelStore,
+                         long labelOnum, fabric.worker.Store accessPolicyStore,
+                         long accessPolicyOnum, java.io.ObjectInput in,
+                         java.util.Iterator refTypes,
                          java.util.Iterator intraStoreRefs,
                          java.util.Iterator interStoreRefs)
                   throws java.io.IOException,
                 java.lang.ClassNotFoundException {
-                super(store, onum, version, expiry, label, accessLabel, in,
-                      refTypes, intraStoreRefs, interStoreRefs);
+                super(store, onum, version, expiry, labelStore, labelOnum,
+                      accessPolicyStore, accessPolicyOnum, in, refTypes,
+                      intraStoreRefs, interStoreRefs);
                 this.backingList =
                   (fabric.util.AbstractList)
                     $readRef(fabric.util.AbstractList._Proxy.class,
@@ -2996,15 +3017,18 @@ public interface AbstractList
                 }
                 
                 public _Impl(fabric.worker.Store store, long onum, int version,
-                             long expiry, long label, long accessLabel,
-                             java.io.ObjectInput in,
+                             long expiry, fabric.worker.Store labelStore,
+                             long labelOnum,
+                             fabric.worker.Store accessPolicyStore,
+                             long accessPolicyOnum, java.io.ObjectInput in,
                              java.util.Iterator refTypes,
                              java.util.Iterator intraStoreRefs,
                              java.util.Iterator interStoreRefs)
                       throws java.io.IOException,
                     java.lang.ClassNotFoundException {
-                    super(store, onum, version, expiry, label, accessLabel, in,
-                          refTypes, intraStoreRefs, interStoreRefs);
+                    super(store, onum, version, expiry, labelStore, labelOnum,
+                          accessPolicyStore, accessPolicyOnum, in, refTypes,
+                          intraStoreRefs, interStoreRefs);
                 }
                 
                 public _Impl(fabric.worker.Store store) { super(store); }
@@ -3094,14 +3118,17 @@ public interface AbstractList
             }
             
             public _Impl(fabric.worker.Store store, long onum, int version,
-                         long expiry, long label, long accessLabel,
-                         java.io.ObjectInput in, java.util.Iterator refTypes,
+                         long expiry, fabric.worker.Store labelStore,
+                         long labelOnum, fabric.worker.Store accessPolicyStore,
+                         long accessPolicyOnum, java.io.ObjectInput in,
+                         java.util.Iterator refTypes,
                          java.util.Iterator intraStoreRefs,
                          java.util.Iterator interStoreRefs)
                   throws java.io.IOException,
                 java.lang.ClassNotFoundException {
-                super(store, onum, version, expiry, label, accessLabel, in,
-                      refTypes, intraStoreRefs, interStoreRefs);
+                super(store, onum, version, expiry, labelStore, labelOnum,
+                      accessPolicyStore, accessPolicyOnum, in, refTypes,
+                      intraStoreRefs, interStoreRefs);
             }
         }
         
@@ -3161,15 +3188,18 @@ public interface AbstractList
                 }
                 
                 public _Impl(fabric.worker.Store store, long onum, int version,
-                             long expiry, long label, long accessLabel,
-                             java.io.ObjectInput in,
+                             long expiry, fabric.worker.Store labelStore,
+                             long labelOnum,
+                             fabric.worker.Store accessPolicyStore,
+                             long accessPolicyOnum, java.io.ObjectInput in,
                              java.util.Iterator refTypes,
                              java.util.Iterator intraStoreRefs,
                              java.util.Iterator interStoreRefs)
                       throws java.io.IOException,
                     java.lang.ClassNotFoundException {
-                    super(store, onum, version, expiry, label, accessLabel, in,
-                          refTypes, intraStoreRefs, interStoreRefs);
+                    super(store, onum, version, expiry, labelStore, labelOnum,
+                          accessPolicyStore, accessPolicyOnum, in, refTypes,
+                          intraStoreRefs, interStoreRefs);
                 }
                 
                 public _Impl(fabric.worker.Store store) { super(store); }
@@ -3666,14 +3696,17 @@ public interface AbstractList
         }
         
         public _Impl(fabric.worker.Store store, long onum, int version,
-                     long expiry, long label, long accessLabel,
-                     java.io.ObjectInput in, java.util.Iterator refTypes,
+                     long expiry, fabric.worker.Store labelStore,
+                     long labelOnum, fabric.worker.Store accessPolicyStore,
+                     long accessPolicyOnum, java.io.ObjectInput in,
+                     java.util.Iterator refTypes,
                      java.util.Iterator intraStoreRefs,
                      java.util.Iterator interStoreRefs)
               throws java.io.IOException,
             java.lang.ClassNotFoundException {
-            super(store, onum, version, expiry, label, accessLabel, in,
-                  refTypes, intraStoreRefs, interStoreRefs);
+            super(store, onum, version, expiry, labelStore, labelOnum,
+                  accessPolicyStore, accessPolicyOnum, in, refTypes,
+                  intraStoreRefs, interStoreRefs);
             this.modCount = in.readInt();
         }
         
@@ -3763,14 +3796,17 @@ public interface AbstractList
             }
             
             public _Impl(fabric.worker.Store store, long onum, int version,
-                         long expiry, long label, long accessLabel,
-                         java.io.ObjectInput in, java.util.Iterator refTypes,
+                         long expiry, fabric.worker.Store labelStore,
+                         long labelOnum, fabric.worker.Store accessPolicyStore,
+                         long accessPolicyOnum, java.io.ObjectInput in,
+                         java.util.Iterator refTypes,
                          java.util.Iterator intraStoreRefs,
                          java.util.Iterator interStoreRefs)
                   throws java.io.IOException,
                 java.lang.ClassNotFoundException {
-                super(store, onum, version, expiry, label, accessLabel, in,
-                      refTypes, intraStoreRefs, interStoreRefs);
+                super(store, onum, version, expiry, labelStore, labelOnum,
+                      accessPolicyStore, accessPolicyOnum, in, refTypes,
+                      intraStoreRefs, interStoreRefs);
                 this.LOCAL_STORE = (fabric.worker.Store) in.readObject();
             }
             
