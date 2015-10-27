@@ -724,15 +724,24 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
             nf.Id(Position.compilerGenerated(), "issueRemoteCall"), arguments);
 
         Stmt ret;
+        Stmt retLocal;
         Type retType = md.returnType().type();
         if (retType.isVoid()) {
           // void is also a primitive type!
           ret = nf.Eval(Position.compilerGenerated(), call);
+          retLocal = nf.Eval(Position.compilerGenerated(),
+                             nf.Call(Position.compilerGenerated(),
+                                     nf.Id(Position.compilerGenerated(), realName),
+                                     locals));
         } else if (retType.isPrimitive()) {
           // Cannot cast Object to a primitive type directly
           PrimitiveType pt = (PrimitiveType) retType;
           ret = rr.qq()
               .parseStmt(" return (" + pt.wrapperTypeString(ts) + ")%E;", call);
+          retLocal = nf.Return(Position.compilerGenerated(),
+                               nf.Call(Position.compilerGenerated(),
+                                       nf.Id(Position.compilerGenerated(), realName),
+                                       locals));
         } else {
           Expr castExpr = call;
           TypeNode returnType = md.returnType();
@@ -745,6 +754,10 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
 
           ret = nf.Return(Position.compilerGenerated(),
               nf.Cast(Position.compilerGenerated(), md.returnType(), castExpr));
+          retLocal = nf.Return(Position.compilerGenerated(),
+                               nf.Call(Position.compilerGenerated(),
+                                       nf.Id(Position.compilerGenerated(), realName),
+                                       locals));
         }
 
         List<Stmt> catchStmts = new ArrayList<>();
@@ -759,8 +772,17 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
             "throw new fabric.common.exceptions.InternalError($e);"));
 
         Stmt tryCatch =
-            rr.qq().parseStmt("try {\n" + "  %S\n" + "}\n" + "catch (%T $e) {\n"
-                + "  %LS\n" + "}", ret, ts.RemoteCallException(), catchStmts);
+            rr.qq().parseStmt("try {\n"
+                            + "  %S\n"
+                            + "}\n"
+                            + "catch (%T $e) {\n"
+                            + "  %LS\n" + "}", ret, ts.RemoteCallException(), catchStmts);
+
+        // Wrap remote call in a check for local worker.
+        Stmt withLocalCheck = nf.If(Position.compilerGenerated(),
+                                    rr.qq().parseExpr("$remoteWorker != fabric.worker.Worker.getWorker().getLocalWorker()"),
+                                    retLocal,
+                                    tryCatch);
 
         List<Formal> newFormals = new ArrayList<>(md.formals().size() + 1);
         newFormals.add(remoteWorker);
@@ -769,7 +791,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
             Flags.PUBLIC, md.returnType(),
             nf.Id(Position.compilerGenerated(), realName + "$remote"),
             newFormals, md.throwTypes(),
-            nf.Block(Position.compilerGenerated(), tryCatch));
+            nf.Block(Position.compilerGenerated(), withLocalCheck));
 
         members.add(wrapper);
       }
