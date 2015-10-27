@@ -560,8 +560,8 @@ public interface Object {
       set$$updateLabel(Worker.getWorker().getLocalStore().getEmptyLabel());
 
       // Access policy is public.
-      set$$accessPolicy(Worker.getWorker().getLocalStore()
-          .getBottomConfidPolicy());
+      set$$accessPolicy(
+          Worker.getWorker().getLocalStore().getBottomConfidPolicy());
 
       return $getProxy();
     }
@@ -782,8 +782,8 @@ public interface Object {
     public _Impl(Store store, long onum, int version, long expiry,
         long updateLabel, long accessPolicy, ObjectInput serializedInput,
         Iterator<RefTypeEnum> refTypes, Iterator<Long> intraStoreRefs,
-        Iterator<Pair<String, Long>> interStoreRefs) throws IOException,
-        ClassNotFoundException {
+        Iterator<Pair<String, Long>> interStoreRefs)
+            throws IOException, ClassNotFoundException {
       this(store, onum, version, expiry);
       this.$updateLabel = new Label._Proxy(store, updateLabel);
       this.$accessPolicy = new ConfPolicy._Proxy(store, accessPolicy);
@@ -793,8 +793,8 @@ public interface Object {
      * Maps proxy classes to their constructors.
      */
     private static final Map<Class<? extends Object._Proxy>, Constructor<? extends Object._Proxy>> constructorTable =
-        Collections
-            .synchronizedMap(new HashMap<Class<? extends Object._Proxy>, Constructor<? extends Object._Proxy>>());
+        Collections.synchronizedMap(
+            new HashMap<Class<? extends Object._Proxy>, Constructor<? extends Object._Proxy>>());
 
     /**
      * A helper method for reading a pointer during object deserialization.
@@ -821,8 +821,8 @@ public interface Object {
     protected static final Object $readRef(
         Class<? extends Object._Proxy> proxyClass, RefTypeEnum refType,
         ObjectInput in, Store store, Iterator<Long> intraStoreRefs,
-        Iterator<Pair<String, Long>> interStoreRefs) throws IOException,
-        ClassNotFoundException {
+        Iterator<Pair<String, Long>> interStoreRefs)
+            throws IOException, ClassNotFoundException {
       switch (refType) {
       case NULL:
         return null;
@@ -856,8 +856,8 @@ public interface Object {
           Pair<String, Long> ref = interStoreRefs.next();
           String storeName = ref.first;
           long onum = ref.second;
-          return constructor.newInstance(
-              Worker.getWorker().getStore(storeName), onum);
+          return constructor.newInstance(Worker.getWorker().getStore(storeName),
+              onum);
         } catch (Exception e) {
           throw new InternalError(e);
         }
@@ -1047,8 +1047,8 @@ public interface Object {
       public _Impl(Store store, long onum, int version, long expiry,
           long updateLabel, long accessPolicy, ObjectInput serializedInput,
           Iterator<RefTypeEnum> refTypes, Iterator<Long> intraStoreRefs,
-          Iterator<Pair<String, Long>> interStoreRefs) throws IOException,
-          ClassNotFoundException {
+          Iterator<Pair<String, Long>> interStoreRefs)
+              throws IOException, ClassNotFoundException {
         super(store, onum, version, expiry, updateLabel, accessPolicy,
             serializedInput, refTypes, intraStoreRefs, interStoreRefs);
       }

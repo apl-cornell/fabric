@@ -32,7 +32,8 @@ public interface _longArray extends Object {
      * @param length
      *          The length of the array.
      */
-    public _Impl(Store store, Label label, ConfPolicy accessPolicy, int length) {
+    public _Impl(Store store, Label label, ConfPolicy accessPolicy,
+        int length) {
       this(store, label, accessPolicy, new long[length]);
     }
 
@@ -60,8 +61,8 @@ public interface _longArray extends Object {
     public _Impl(Store store, long onum, int version, long expiry, long label,
         int accessLabel, ObjectInput in, Iterator<RefTypeEnum> refTypes,
         Iterator<Long> intraStoreRefs,
-        Iterator<Pair<String, Long>> interStoreRefs) throws IOException,
-        ClassNotFoundException {
+        Iterator<Pair<String, Long>> interStoreRefs)
+            throws IOException, ClassNotFoundException {
       super(store, onum, version, expiry, label, accessLabel, in, refTypes,
           intraStoreRefs, interStoreRefs);
       value = new long[in.readInt()];

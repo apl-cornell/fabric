@@ -46,8 +46,8 @@ public interface Principal extends fabric.lang.Object {
 
   PrivateKeyObject getPrivateKeyObject();
 
-  public static class _Proxy extends fabric.lang.Object._Proxy implements
-  Principal {
+  public static class _Proxy extends fabric.lang.Object._Proxy
+      implements Principal {
 
     public _Proxy(Principal._Impl impl) {
       super(impl);
@@ -111,8 +111,8 @@ public interface Principal extends fabric.lang.Object {
     }
   }
 
-  abstract public static class _Impl extends fabric.lang.Object._Impl implements
-  Principal {
+  abstract public static class _Impl extends fabric.lang.Object._Impl
+      implements Principal {
 
     private PublicKey publicKey;
     private PrivateKeyObject privateKeyObject;
@@ -147,10 +147,9 @@ public interface Principal extends fabric.lang.Object {
       KeyPair keyPair = Crypto.genKeyPair();
       this.publicKey = keyPair.getPublic();
 
-      this.privateKeyObject =
-          new PrivateKeyObject._Impl($getStore())
-      .fabric$lang$security$PrivateKeyObject$((Principal) $getProxy(),
-          keyPair.getPrivate());
+      this.privateKeyObject = new PrivateKeyObject._Impl($getStore())
+          .fabric$lang$security$PrivateKeyObject$((Principal) $getProxy(),
+              keyPair.getPrivate());
 
       return (Principal) this.$getProxy();
     }
@@ -216,8 +215,8 @@ public interface Principal extends fabric.lang.Object {
   }
 
   interface _Static extends fabric.lang.Object, Cloneable {
-    final class _Proxy extends fabric.lang.Object._Proxy implements
-    Principal._Static {
+    final class _Proxy extends fabric.lang.Object._Proxy
+        implements Principal._Static {
 
       public _Proxy(Principal._Static._Impl impl) {
         super(impl);
@@ -232,14 +231,14 @@ public interface Principal extends fabric.lang.Object {
       static {
         Principal._Static._Impl impl =
             (Principal._Static._Impl) fabric.lang.Object._Static._Proxy
-            .$makeStaticInstance(Principal._Static._Impl.class);
+                .$makeStaticInstance(Principal._Static._Impl.class);
         $instance = (Principal._Static) impl.$getProxy();
         impl.$init();
       }
     }
 
-    class _Impl extends fabric.lang.Object._Impl implements
-    fabric.lang.security.Principal._Static {
+    class _Impl extends fabric.lang.Object._Impl
+        implements fabric.lang.security.Principal._Static {
 
       public _Impl(Store store) throws UnreachableNodeException {
         super(store);

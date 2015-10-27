@@ -1,6 +1,7 @@
 package fabric.worker;
 
 public class RemoteWorker {
+  @{⊤→}
   private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
   private static int __JIF_SAFE_CONSTRUCTORS$20050907 = 0;
   

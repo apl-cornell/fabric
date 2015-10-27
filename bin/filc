@@ -2,7 +2,7 @@
 
 # Wrapper script for fabil.Main, the FabIL compiler.
 
-source "$(dirname $0)/defs"
+source "$(dirname "$0")/defs"
 
 while true; do
   case "$1" in
@@ -34,9 +34,9 @@ classpath="${FILC_CP}:${cp}"
 # Jar files should always appear *after* their corresponding class directories.
 sigcp="${TOP}/sig-classes/fabil:${TOP}/lib/fabric-il-sig.jar"
 
-command="\"${JAVA}\" ${vmargs} -classpath \"$(fixpath ${classpath})\" \
-                   fabil.Main -addbootcp \"$(fixpath ${FABIL_BOOTCP})\" \
-                              -sigcp \"$(fixpath ${sigcp})\" ${args}"
+command="\"${JAVA}\" ${vmargs} -classpath \"$(fixpath "${classpath}")\" \
+                   fabil.Main -addbootcp \"$(fixpath "${FABIL_BOOTCP}")\" \
+                              -sigcp \"$(fixpath "${sigcp}")\" ${args}"
 
 if [ -n "${verbose}" ]
 then

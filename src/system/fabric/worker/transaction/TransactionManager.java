@@ -432,11 +432,10 @@ public final class TransactionManager {
     COMMIT_TIME.set(commitTime);
     if (HOTOS_LOGGER.isLoggable(Level.FINE)) {
       final long commitLatency = commitTime - prepareStart;
-      if (LOCAL_STORE == null)
-        LOCAL_STORE = Worker.getWorker().getLocalStore();
+      if (LOCAL_STORE == null) LOCAL_STORE = Worker.getWorker().getLocalStore();
       if (workers.size() > 0 || stores.size() != 1
           || !stores.contains(LOCAL_STORE)
-          && !(stores.iterator().next() instanceof InProcessStore)) {
+              && !(stores.iterator().next() instanceof InProcessStore)) {
         Logging.log(HOTOS_LOGGER, Level.FINE,
             "committed tid {0} (latency {1} ms)", HOTOS_current, commitLatency);
       }
@@ -460,7 +459,8 @@ public final class TransactionManager {
    * XXX Similarly gross HACK for making the nodes contacted by this client
    * during commit visible to the application.
    */
-  public static final ThreadLocal<String[]> CONTACTED_NODES = new ThreadLocal<>();
+  public static final ThreadLocal<String[]> CONTACTED_NODES =
+      new ThreadLocal<>();
 
   private static LocalStore LOCAL_STORE;
 
@@ -486,10 +486,10 @@ public final class TransactionManager {
    */
   private void sendPrepareMessages(final boolean singleStore,
       final boolean readOnly, Set<Store> stores, List<RemoteWorker> workers)
-      throws TransactionRestartingException {
+          throws TransactionRestartingException {
     final Map<RemoteNode<?>, TransactionPrepareFailedException> failures =
-        Collections
-            .synchronizedMap(new HashMap<RemoteNode<?>, TransactionPrepareFailedException>());
+        Collections.synchronizedMap(
+            new HashMap<RemoteNode<?>, TransactionPrepareFailedException>());
 
     synchronized (current.commitState) {
       switch (current.commitState.value) {
@@ -581,7 +581,10 @@ public final class TransactionManager {
     }
 
     if (haveRoundTrip) {
-      ROUND_TRIPS.set(ROUND_TRIPS.get().intValue() + 1);
+      Integer curRoundTrips = ROUND_TRIPS.get();
+      if (curRoundTrips != null) {
+        ROUND_TRIPS.set(curRoundTrips + 1);
+      }
     }
 
     // Wait for replies.
@@ -661,7 +664,7 @@ public final class TransactionManager {
    */
   private void sendCommitMessagesAndCleanUp(boolean singleStore,
       boolean readOnly, Set<Store> stores, List<RemoteWorker> workers)
-      throws TransactionAtomicityViolationException {
+          throws TransactionAtomicityViolationException {
     synchronized (current.commitState) {
       switch (current.commitState.value) {
       case UNPREPARED:
@@ -743,7 +746,10 @@ public final class TransactionManager {
       }
 
       if (haveRoundTrip) {
-        ROUND_TRIPS.set(ROUND_TRIPS.get().intValue() + 1);
+        Integer curRoundTrips = ROUND_TRIPS.get();
+        if (curRoundTrips != null) {
+          ROUND_TRIPS.set(curRoundTrips + 1);
+        }
       }
 
       // Wait for replies.
@@ -764,8 +770,8 @@ public final class TransactionManager {
       if (!(unreachable.isEmpty() && failed.isEmpty())) {
         Logging.log(WORKER_TRANSACTION_LOGGER, Level.SEVERE,
             "{0} error committing: atomicity violation "
-                + "-- failed: {1} unreachable: {2}", current, failed,
-            unreachable);
+                + "-- failed: {1} unreachable: {2}",
+            current, failed, unreachable);
         throw new TransactionAtomicityViolationException(failed, unreachable);
       }
     }
@@ -849,7 +855,8 @@ public final class TransactionManager {
   public void registerRead(_Impl obj) {
     synchronized (obj) {
       if (obj.$reader == current
-          && obj.writerMapVersion == current.writerMap.version) return;
+          && obj.writerMapVersion == current.writerMap.version)
+        return;
 
       // Nothing to do if we're not in a transaction.
       if (current == null) return;
@@ -884,8 +891,8 @@ public final class TransactionManager {
           && !current.isDescendantOf(obj.$writeLockHolder)) {
         try {
           Logging.log(WORKER_TRANSACTION_LOGGER, Level.FINEST,
-              "{0} wants to read {1}/{2} ({3}); waiting on writer {4}",
-              current, obj.$getStore(), obj.$getOnum(), obj.getClass(),
+              "{0} wants to read {1}/{2} ({3}); waiting on writer {4}", current,
+              obj.$getStore(), obj.$getOnum(), obj.getClass(),
               obj.$writeLockHolder);
           hadToWait = true;
           obj.$numWaiting++;
@@ -1049,9 +1056,8 @@ public final class TransactionManager {
     // Set the write stamp.
     obj.$writer = current;
 
-    if (hadToWait)
-      WORKER_TRANSACTION_LOGGER
-          .log(Level.FINEST, "{0} got write lock", current);
+    if (hadToWait) WORKER_TRANSACTION_LOGGER.log(Level.FINEST,
+        "{0} got write lock", current);
 
     if (obj.$writeLockHolder == current) return;
 
@@ -1099,8 +1105,8 @@ public final class TransactionManager {
     // Add the object to the writer map, but only do so if the object's labels
     // are initialized.
     if (obj.$version != 0 || obj.get$$updateLabel() != null) {
-      current.writerMap.put(obj.$getProxy(), Worker.getWorker()
-          .getLocalWorker());
+      current.writerMap.put(obj.$getProxy(),
+          Worker.getWorker().getLocalWorker());
     }
 
     // If the object is fresh, add it to our set of creates.
@@ -1151,9 +1157,8 @@ public final class TransactionManager {
   public boolean checkForStaleObjects() {
     Set<Store> stores = current.storesToCheckFreshness();
     int numNodesToContact = stores.size() + current.workersCalled.size();
-    final List<RemoteNode<?>> nodesWithStaleObjects =
-        Collections.synchronizedList(new ArrayList<RemoteNode<?>>(
-            numNodesToContact));
+    final List<RemoteNode<?>> nodesWithStaleObjects = Collections
+        .synchronizedList(new ArrayList<RemoteNode<?>>(numNodesToContact));
     List<Future<?>> futures = new ArrayList<>(numNodesToContact);
 
     // Go through each worker and send check messages in parallel.
@@ -1250,8 +1255,7 @@ public final class TransactionManager {
    * Starts the given thread, registering it as necessary.
    */
   public static void startThread(Thread thread) {
-    if (!(thread instanceof FabricThread))
-      getInstance().registerThread(thread);
+    if (!(thread instanceof FabricThread)) getInstance().registerThread(thread);
 
     thread.start();
   }
@@ -1337,9 +1341,8 @@ public final class TransactionManager {
   }
 
   public SecurityCache getSecurityCache() {
-    if (current == null)
-      throw new InternalError(
-          "Application attempting to perform label operations outside of a transaction");
+    if (current == null) throw new InternalError(
+        "Application attempting to perform label operations outside of a transaction");
     return (SecurityCache) current.securityCache;
   }
 

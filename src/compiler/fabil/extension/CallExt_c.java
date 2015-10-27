@@ -3,6 +3,7 @@ package fabil.extension;
 import java.util.ArrayList;
 import java.util.List;
 
+import polyglot.ast.Binary;
 import polyglot.ast.Call;
 import polyglot.ast.Expr;
 import polyglot.ast.Id;
@@ -157,7 +158,7 @@ public class CallExt_c extends ExprExt_c {
         target,
         // <name>_remote => <name>$remote
         nf.Id(Position.compilerGenerated(),
-            c.name().substring(0, c.name().length() - 7) + "$remote"), args);
+          c.name().substring(0, c.name().length() - 7) + "$remote"), args);
   }
 
   @Override

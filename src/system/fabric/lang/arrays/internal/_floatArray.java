@@ -21,8 +21,8 @@ public interface _floatArray extends Object {
 
   float get(int i);
 
-  public static class _Impl extends Object._Impl implements _floatArray,
-  _InternalArrayImpl {
+  public static class _Impl extends Object._Impl
+      implements _floatArray, _InternalArrayImpl {
     private float[] value;
 
     /**
@@ -62,8 +62,8 @@ public interface _floatArray extends Object {
     public _Impl(Store store, long onum, int version, long expiry, long label,
         long accessLabel, ObjectInput in, Iterator<RefTypeEnum> refTypes,
         Iterator<Long> intraStoreRefs,
-        Iterator<Pair<String, Long>> interStoreRefs) throws IOException,
-        ClassNotFoundException {
+        Iterator<Pair<String, Long>> interStoreRefs)
+            throws IOException, ClassNotFoundException {
       super(store, onum, version, expiry, label, accessLabel, in, refTypes,
           intraStoreRefs, interStoreRefs);
       value = new float[in.readInt()];

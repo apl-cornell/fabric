@@ -11,6 +11,11 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 
+import fabil.types.FabILFlags;
+import fabil.types.FabILTypeSystem;
+import fabil.visit.ProxyRewriter;
+import fabil.visit.RemoteCallRewriter;
+import fabil.visit.ThreadRewriter;
 import polyglot.ast.Call;
 import polyglot.ast.ClassBody;
 import polyglot.ast.ClassDecl;
@@ -32,11 +37,6 @@ import polyglot.types.MethodInstance;
 import polyglot.types.PrimitiveType;
 import polyglot.types.Type;
 import polyglot.util.Position;
-import fabil.types.FabILFlags;
-import fabil.types.FabILTypeSystem;
-import fabil.visit.ProxyRewriter;
-import fabil.visit.RemoteCallRewriter;
-import fabil.visit.ThreadRewriter;
 
 public class ClassDeclExt_c extends ClassMemberExt_c {
 
@@ -73,7 +73,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
 
     // Only translate if we're processing a Fabric class.
     if (!pr.typeSystem().isFabricClass(classDecl.type()))
-    // Tag for type serialization.
+      // Tag for type serialization.
       return classDecl.ext(shouldSerializeType(true));
 
     NodeFactory nf = pr.nodeFactory();
@@ -97,8 +97,8 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
 
       if (needObject) {
         interfaces = new ArrayList<>(interfaces);
-        interfaces.add(nf.CanonicalTypeNode(Position.compilerGenerated(),
-            ts.FObject()));
+        interfaces.add(
+            nf.CanonicalTypeNode(Position.compilerGenerated(), ts.FObject()));
       }
 
       // Flag the interface for serialization.
@@ -139,8 +139,9 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
 
       FieldDecl f = (FieldDecl) m;
       Flags fieldFlags = f.flags();
-      if (!(fieldFlags.isStatic() && fieldFlags.isFinal() && fieldFlags
-          .isPublic())) continue;
+      if (!(fieldFlags.isStatic() && fieldFlags.isFinal()
+          && fieldFlags.isPublic()))
+        continue;
 
       if (!f.name().startsWith("jlc$")) continue;
 
@@ -178,9 +179,8 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     QQ qq = pr.qq();
 
     if (!classDecl.flags().isInterface()) {
-      ClassMember implConstr =
-          qq.parseMember("public _Proxy(" + classDecl.id() + "._Impl impl) {"
-              + "super(impl); }");
+      ClassMember implConstr = qq.parseMember("public _Proxy(" + classDecl.id()
+          + "._Impl impl) {" + "super(impl); }");
       members.add(implConstr);
     }
 
@@ -190,10 +190,9 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     members.add(oidConstr);
 
     // Create the class declaration.
-    ClassDecl result =
-        qq.parseDecl(
-            "public static class _Proxy extends " + superClass.translate(null)
-                + "._Proxy implements %T {%LM}", classDecl.type(), members);
+    ClassDecl result = qq.parseDecl("public static class _Proxy extends "
+        + superClass.translate(null) + "._Proxy implements %T {%LM}",
+        classDecl.type(), members);
     return result.type(classDecl.type());
   }
 
@@ -386,10 +385,9 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     if (copyAppStateFrom != null) members.add(copyAppStateFrom);
 
     // Create the class declaration.
-    ClassDecl result =
-        qq.parseDecl(
-            flags + " class _Impl extends " + superClass.translate(null)
-                + "._Impl implements %T {%LM}", classType, members);
+    ClassDecl result = qq.parseDecl(flags + " class _Impl extends "
+        + superClass.translate(null) + "._Impl implements %T {%LM}", classType,
+        members);
     return result.type(classDecl.type());
   }
 
@@ -418,9 +416,8 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     // Create the proxy constructor declarations and add them to the list of
     // static proxy members.
     QQ qq = pr.qq();
-    ClassMember proxyConstructorDecl =
-        qq.parseMember("public _Proxy(" + classType.translate(null)
-            + "._Static._Impl impl) { super(impl); }");
+    ClassMember proxyConstructorDecl = qq.parseMember("public _Proxy("
+        + classType.translate(null) + "._Static._Impl impl) { super(impl); }");
     proxyMembers.add(proxyConstructorDecl);
     proxyConstructorDecl =
         qq.parseMember("public _Proxy(fabric.worker.Store store, long onum) {"
@@ -430,25 +427,23 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     // Create the $instance declaration and add it to the list of static proxy
     // members.
     String staticIfaceName = classType.translate(null) + "._Static";
-    FieldDecl fieldDecl =
-        (FieldDecl) qq.parseMember("public static final " + staticIfaceName
-            + " $instance;");
+    FieldDecl fieldDecl = (FieldDecl) qq
+        .parseMember("public static final " + staticIfaceName + " $instance;");
     proxyMembers.add(fieldDecl);
 
     // Create the static initializer for initializing $instance.
-    Initializer init =
-        (Initializer) qq.parseMember("static {" + staticIfaceName
-            + "._Impl impl = " + "  (" + staticIfaceName + "._Impl)"
-            + "    fabric.lang.Object._Static._Proxy.$makeStaticInstance("
-            + "      " + staticIfaceName + "._Impl.class);" + "$instance = ("
-            + staticIfaceName + ") impl.$getProxy();" + "impl.$init();" + "}");
+    Initializer init = (Initializer) qq.parseMember("static {" + staticIfaceName
+        + "._Impl impl = " + "  (" + staticIfaceName + "._Impl)"
+        + "    fabric.lang.Object._Static._Proxy.$makeStaticInstance("
+        + "      " + staticIfaceName + "._Impl.class);" + "$instance = ("
+        + staticIfaceName + ") impl.$getProxy();" + "impl.$init();" + "}");
     proxyMembers.add(init);
 
     // Create the proxy declaration and add it to the list of interface members.
-    ClassDecl proxyDecl =
-        qq.parseDecl("final class _Proxy extends fabric.lang.Object._Proxy "
-            + "implements " + classType.translate(null) + "._Static {%LM}",
-            (Object) proxyMembers);
+    ClassDecl proxyDecl = qq.parseDecl(
+        "final class _Proxy extends fabric.lang.Object._Proxy " + "implements "
+            + classType.translate(null) + "._Static {%LM}",
+        (Object) proxyMembers);
     interfaceMembers.add(proxyDecl);
 
     // Create the serialization method and deserialization constructor, and add
@@ -458,36 +453,34 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
 
     // Create the impl constructor declarations and add them to the list of
     // static impl members.
-    ClassMember implConstructorDecl =
-        qq.parseMember("public _Impl(fabric.worker.Store store) {"
-            + "super(store); }");
+    ClassMember implConstructorDecl = qq.parseMember(
+        "public _Impl(fabric.worker.Store store) {" + "super(store); }");
     implMembers.add(implConstructorDecl);
 
     // Create the $makeProxy method declaration and add it to the list of static
     // impl members.
-    ClassMember makeProxyDecl =
-        qq.parseMember("protected fabric.lang.Object._Proxy "
-            + "$makeProxy() { return new " + classType.translate(null)
-            + "._Static._Proxy(this); }");
+    ClassMember makeProxyDecl = qq.parseMember(
+        "protected fabric.lang.Object._Proxy " + "$makeProxy() { return new "
+            + classType.translate(null) + "._Static._Proxy(this); }");
     implMembers.add(makeProxyDecl);
 
     // Create the $init method declaration and add it to the list of static impl
     // members.
-    ClassMember initDecl =
-        qq.parseMember("private void $init() { %LS }", (Object) implInitMembers);
+    ClassMember initDecl = qq.parseMember("private void $init() { %LS }",
+        (Object) implInitMembers);
     implMembers.add(initDecl);
 
     // Create the impl declaration and add it to the list of interface members.
-    ClassDecl implDecl =
-        qq.parseDecl("class _Impl extends fabric.lang.Object._Impl "
-            + "implements " + classType.translate(null) + "._Static {%LM}",
-            (Object) implMembers);
+    ClassDecl implDecl = qq.parseDecl(
+        "class _Impl extends fabric.lang.Object._Impl " + "implements "
+            + classType.translate(null) + "._Static {%LM}",
+        (Object) implMembers);
     interfaceMembers.add(implDecl);
 
     // Create the interface declaration.
-    ClassDecl interfaceDecl =
-        qq.parseDecl("interface _Static extends fabric.lang.Object, Cloneable "
-            + "{%LM}", (Object) interfaceMembers);
+    ClassDecl interfaceDecl = qq.parseDecl(
+        "interface _Static extends fabric.lang.Object, Cloneable " + "{%LM}",
+        (Object) interfaceMembers);
 
     List<ClassMember> result = new ArrayList<>(2);
     result.add(interfaceDecl);
@@ -564,16 +557,15 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
             + out + " }");
     result.add(serialize);
 
-    ClassMember deserialize =
-        qq.parseMember(
-            "public _Impl(fabric.worker.Store store, long onum, int version, "
-                + "long expiry, long label, long accessLabel, java.io.ObjectInput in, "
-                + "java.util.Iterator refTypes, java.util.Iterator intraStoreRefs, "
-                + "java.util.Iterator interStoreRefs) "
-                + "throws java.io.IOException, java.lang.ClassNotFoundException {"
-                + "super(store, onum, version, expiry, label, accessLabel, in, "
-                + "refTypes, intraStoreRefs, interStoreRefs);" + in + " }",
-            inSubst.toArray());
+    ClassMember deserialize = qq.parseMember(
+        "public _Impl(fabric.worker.Store store, long onum, int version, "
+            + "long expiry, long label, long accessLabel, java.io.ObjectInput in, "
+            + "java.util.Iterator refTypes, java.util.Iterator intraStoreRefs, "
+            + "java.util.Iterator interStoreRefs) "
+            + "throws java.io.IOException, java.lang.ClassNotFoundException {"
+            + "super(store, onum, version, expiry, label, accessLabel, in, "
+            + "refTypes, intraStoreRefs, interStoreRefs);" + in + " }",
+        inSubst.toArray());
     result.add(deserialize);
 
     return result;
@@ -595,11 +587,9 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
 
     if (body.length() == 0) return null;
 
-    return qq
-        .parseMember("public void $copyAppStateFrom(fabric.lang.Object._Impl other) {"
-            + "super.$copyAppStateFrom(other);"
-            + implType
-            + " src = ("
+    return qq.parseMember(
+        "public void $copyAppStateFrom(fabric.lang.Object._Impl other) {"
+            + "super.$copyAppStateFrom(other);" + implType + " src = ("
             + implType + ") other;" + body + " }");
   }
 
@@ -622,31 +612,26 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
     NodeFactory nf = tr.nodeFactory();
     FabILTypeSystem ts = tr.typeSystem();
     List<TypeNode> interfaces = new ArrayList<>(decl.interfaces());
-    interfaces.add(nf.CanonicalTypeNode(Position.compilerGenerated(),
-        ts.FabricThread()));
+    interfaces.add(
+        nf.CanonicalTypeNode(Position.compilerGenerated(), ts.FabricThread()));
     ClassDecl result = decl.interfaces(interfaces);
 
     // Add the transaction manager field and accessors.
     ClassBody body = result.body();
-    body =
-        body.addMember(qq
-            .parseMember("private fabric.worker.transaction.TransactionManager $tm;"));
-    body =
-        body.addMember(qq
-            .parseMember("public final fabric.worker.transaction.TransactionManager "
-                + "getTransactionManager() { return $tm; }"));
-    body =
-        body.addMember(qq
-            .parseMember("public final void "
-                + "setTransactionManager(fabric.worker.transaction.TransactionManager tm) "
-                + "{$tm = tm;}"));
+    body = body.addMember(qq.parseMember(
+        "private fabric.worker.transaction.TransactionManager $tm;"));
+    body = body.addMember(qq.parseMember(
+        "public final fabric.worker.transaction.TransactionManager "
+            + "getTransactionManager() { return $tm; }"));
+    body = body.addMember(qq.parseMember("public final void "
+        + "setTransactionManager(fabric.worker.transaction.TransactionManager tm) "
+        + "{$tm = tm;}"));
 
     // Add the start() method if one doesn't yet exist.
     if (type.methods("start", Collections.<Type> emptyList()).isEmpty()) {
-      body =
-          body.addMember(qq.parseMember("public void start() {"
-              + "fabric.worker.transaction.TransactionManager.getInstance()"
-              + ".registerThread(this); super.start();}"));
+      body = body.addMember(qq.parseMember("public void start() {"
+          + "fabric.worker.transaction.TransactionManager.getInstance()"
+          + ".registerThread(this); super.start();}"));
     }
     result = result.body(body);
 
@@ -700,10 +685,10 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
         } else {
           init = nf.ArrayInit(Position.compilerGenerated(), formalTypes);
         }
-        FieldDecl fd =
-            nf.FieldDecl(Position.compilerGenerated(), Flags.STATIC.Public()
-                .Final(), nf.ArrayTypeNode(Position.compilerGenerated(),
-                tnClass), nf.Id(Position.compilerGenerated(), fieldName), init);
+        FieldDecl fd = nf.FieldDecl(Position.compilerGenerated(),
+            Flags.STATIC.Public().Final(),
+            nf.ArrayTypeNode(Position.compilerGenerated(), tnClass),
+            nf.Id(Position.compilerGenerated(), fieldName), init);
         members.add(fd);
 
         // Now create the wrapper method.
@@ -729,49 +714,55 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
         arguments.add(args);
 
         Id rcId = nf.Id(Position.compilerGenerated(), "$remoteWorker");
-        Formal remoteWorker =
-            nf.Formal(
-                Position.compilerGenerated(),
-                Flags.FINAL,
-                nf.CanonicalTypeNode(Position.compilerGenerated(),
-                    ts.RemoteWorker()), rcId);
+        Formal remoteWorker = nf.Formal(Position.compilerGenerated(),
+            Flags.FINAL, nf.CanonicalTypeNode(Position.compilerGenerated(),
+                ts.RemoteWorker()),
+            rcId);
 
-        Call call =
-            nf.Call(Position.compilerGenerated(),
-                nf.Local(Position.compilerGenerated(), rcId),
-                nf.Id(Position.compilerGenerated(), "issueRemoteCall"),
-                arguments);
+        Call call = nf.Call(Position.compilerGenerated(),
+            nf.Local(Position.compilerGenerated(), rcId),
+            nf.Id(Position.compilerGenerated(), "issueRemoteCall"), arguments);
 
         Stmt ret;
+        Stmt retLocal;
         Type retType = md.returnType().type();
         if (retType.isVoid()) {
           // void is also a primitive type!
           ret = nf.Eval(Position.compilerGenerated(), call);
+          retLocal = nf.Eval(Position.compilerGenerated(),
+                             nf.Call(Position.compilerGenerated(),
+                                     nf.Id(Position.compilerGenerated(), realName),
+                                     locals));
         } else if (retType.isPrimitive()) {
           // Cannot cast Object to a primitive type directly
           PrimitiveType pt = (PrimitiveType) retType;
-          ret =
-              rr.qq().parseStmt(
-                  " return (" + pt.wrapperTypeString(ts) + ")%E;", call);
+          ret = rr.qq()
+              .parseStmt(" return (" + pt.wrapperTypeString(ts) + ")%E;", call);
+          retLocal = nf.Return(Position.compilerGenerated(),
+                               nf.Call(Position.compilerGenerated(),
+                                       nf.Id(Position.compilerGenerated(), realName),
+                                       locals));
         } else {
           Expr castExpr = call;
           TypeNode returnType = md.returnType();
           if (ts.isFabricReference(returnType)) {
             // Do a little dance to get the exact proxy.
             QQ qq = rr.qq();
-            castExpr =
-                qq.parseExpr("fabric.lang.Object._Proxy.$getProxy(%E)",
-                    castExpr);
+            castExpr = qq.parseExpr("fabric.lang.Object._Proxy.$getProxy(%E)",
+                castExpr);
           }
 
-          ret =
-              nf.Return(Position.compilerGenerated(), nf.Cast(
-                  Position.compilerGenerated(), md.returnType(), castExpr));
+          ret = nf.Return(Position.compilerGenerated(),
+              nf.Cast(Position.compilerGenerated(), md.returnType(), castExpr));
+          retLocal = nf.Return(Position.compilerGenerated(),
+                               nf.Call(Position.compilerGenerated(),
+                                       nf.Id(Position.compilerGenerated(), realName),
+                                       locals));
         }
 
         List<Stmt> catchStmts = new ArrayList<>();
-        catchStmts.add(rr.qq().parseStmt(
-            "java.lang.Throwable $t = $e.getCause();"));
+        catchStmts
+            .add(rr.qq().parseStmt("java.lang.Throwable $t = $e.getCause();"));
         // We need to catch RemoteCallException, and rethrow the cause.
         for (TypeNode exception : md.throwTypes()) {
           catchStmts.add(rr.qq().parseStmt(
@@ -781,19 +772,26 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
             "throw new fabric.common.exceptions.InternalError($e);"));
 
         Stmt tryCatch =
-            rr.qq().parseStmt(
-                "try {\n" + "  %S\n" + "}\n" + "catch (%T $e) {\n" + "  %LS\n"
-                    + "}", ret, ts.RemoteCallException(), catchStmts);
+            rr.qq().parseStmt("try {\n"
+                            + "  %S\n"
+                            + "}\n"
+                            + "catch (%T $e) {\n"
+                            + "  %LS\n" + "}", ret, ts.RemoteCallException(), catchStmts);
+
+        // Wrap remote call in a check for local worker.
+        Stmt withLocalCheck = nf.If(Position.compilerGenerated(),
+                                    rr.qq().parseExpr("$remoteWorker == fabric.worker.Worker.getWorker().getLocalWorker()"),
+                                    retLocal,
+                                    tryCatch);
 
         List<Formal> newFormals = new ArrayList<>(md.formals().size() + 1);
         newFormals.add(remoteWorker);
         newFormals.addAll(md.formals());
-        MethodDecl wrapper =
-            nf.MethodDecl(Position.compilerGenerated(), Flags.PUBLIC,
-                md.returnType(),
-                nf.Id(Position.compilerGenerated(), realName + "$remote"),
-                newFormals, md.throwTypes(),
-                nf.Block(Position.compilerGenerated(), tryCatch));
+        MethodDecl wrapper = nf.MethodDecl(Position.compilerGenerated(),
+            Flags.PUBLIC, md.returnType(),
+            nf.Id(Position.compilerGenerated(), realName + "$remote"),
+            newFormals, md.throwTypes(),
+            nf.Block(Position.compilerGenerated(), withLocalCheck));
 
         members.add(wrapper);
       }

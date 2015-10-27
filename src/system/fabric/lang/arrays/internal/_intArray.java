@@ -21,8 +21,8 @@ public interface _intArray extends Object {
 
   int get(int i);
 
-  public static class _Impl extends Object._Impl implements _intArray,
-  _InternalArrayImpl {
+  public static class _Impl extends Object._Impl
+      implements _intArray, _InternalArrayImpl {
     private int[] value;
 
     /**
@@ -33,7 +33,8 @@ public interface _intArray extends Object {
      * @param length
      *          The length of the array.
      */
-    public _Impl(Store store, Label label, ConfPolicy accessPolicy, int length) {
+    public _Impl(Store store, Label label, ConfPolicy accessPolicy,
+        int length) {
       this(store, label, accessPolicy, new int[length]);
     }
 
@@ -60,8 +61,8 @@ public interface _intArray extends Object {
     public _Impl(Store store, long onum, int version, long expiry, long label,
         long accessLabel, ObjectInput in, Iterator<RefTypeEnum> refTypes,
         Iterator<Long> intraStoreRefs,
-        Iterator<Pair<String, Long>> interStoreRefs) throws IOException,
-        ClassNotFoundException {
+        Iterator<Pair<String, Long>> interStoreRefs)
+            throws IOException, ClassNotFoundException {
       super(store, onum, version, expiry, label, accessLabel, in, refTypes,
           intraStoreRefs, interStoreRefs);
       value = new int[in.readInt()];

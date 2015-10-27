@@ -53,6 +53,11 @@ public class InProcessRemoteWorker extends RemoteWorker {
       Class<?>[] parameterTypes, Object[] args)
       throws UnreachableNodeException, RemoteCallException {
     // XXX Does this actually happen?
+    //
+    // Tom (9/24/2015) Yes it does: run a program which does a remote call where
+    // the worker specified is the local worker.  This isn't too hard to imagine
+    // if you write a program that should run *anywhere* but always runs a call
+    // at the same exact node.
     throw new NotImplementedException();
   }
 

@@ -21,8 +21,8 @@ public interface _shortArray extends Object {
 
   short get(int i);
 
-  public static class _Impl extends Object._Impl implements _shortArray,
-  _InternalArrayImpl {
+  public static class _Impl extends Object._Impl
+      implements _shortArray, _InternalArrayImpl {
     private short[] value;
 
     /**
@@ -62,8 +62,8 @@ public interface _shortArray extends Object {
     public _Impl(Store store, long onum, int version, long expiry, long label,
         long accessLabel, ObjectInput in, Iterator<RefTypeEnum> refTypes,
         Iterator<Long> intraStoreRefs,
-        Iterator<Pair<String, Long>> interStoreRefs) throws IOException,
-        ClassNotFoundException {
+        Iterator<Pair<String, Long>> interStoreRefs)
+            throws IOException, ClassNotFoundException {
       super(store, onum, version, expiry, label, accessLabel, in, refTypes,
           intraStoreRefs, interStoreRefs);
       value = new short[in.readInt()];
