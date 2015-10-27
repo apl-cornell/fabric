@@ -481,6 +481,7 @@
   <fail if="do.abort">Bootstrap regeneration aborted by user.</fail>
     <filc dest="${bootstrap.src}">
       <arg value="-generate-native-skeletons" /> 
+      <arg value="-platform-mode" /> 
       <arg value="-noserial" /> 
       <arg value="-c" />
       <arg value="-sourcepath"/>

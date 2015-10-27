@@ -83,7 +83,7 @@ public class CodebaseImportDel_c extends JLDel_c {
   /** Write the import to an output file. */
   @Override
   public void prettyPrint(CodeWriter w, PrettyPrinter tr) {
-    if (!Options.global.fully_qualified_names
+    if (ct != null && !Options.global.fully_qualified_names
         && (tr instanceof CodebaseTranslator)) {
       Import im = (Import) node();
       CodebaseTranslator cbtr = (CodebaseTranslator) tr;
