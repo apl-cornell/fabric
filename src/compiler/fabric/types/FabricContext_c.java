@@ -3,8 +3,13 @@ package fabric.types;
 import java.net.URI;
 import java.util.Collection;
 
+import codebases.types.CBImportTable;
+import codebases.types.CodebaseTypeSystem;
+
 import jif.types.JifContext_c;
 import jif.types.JifTypeSystem;
+import jif.types.label.ConfPolicy;
+
 import polyglot.ast.Expr;
 import polyglot.main.Report;
 import polyglot.types.Context;
@@ -17,8 +22,6 @@ import polyglot.types.VarInstance;
 import polyglot.util.CollectionUtil;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
-import codebases.types.CBImportTable;
-import codebases.types.CodebaseTypeSystem;
 
 public class FabricContext_c extends JifContext_c implements FabricContext {
   private static final Collection<String> TOPICS = CollectionUtil.list(
@@ -26,8 +29,21 @@ public class FabricContext_c extends JifContext_c implements FabricContext {
 
   protected Expr location;
 
+  protected ConfPolicy accessedConf; //Confidentiality of accesses up to this point.
+
+  @Override
+  public ConfPolicy accessedConf() {
+    return accessedConf;
+  }
+
+  @Override
+  public void setAccessedConf(ConfPolicy accessedConf) {
+    this.accessedConf = accessedConf;
+  }
+
   protected FabricContext_c(JifTypeSystem ts, TypeSystem jlts) {
     super(ts, jlts);
+    this.accessedConf = ts.bottomConfPolicy(Position.compilerGenerated());
   }
 
   @Override

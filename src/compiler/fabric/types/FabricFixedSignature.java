@@ -40,7 +40,7 @@ FabricDefaultSignature {
   @Override
   public ConfPolicy defaultBeginAccess(ProcedureDecl pd) {
     //TODO: Is this reasonable?
-    return fts.topConfPolicy(pd.position());
+    return fts.bottomConfPolicy(pd.position());
   }
 
   @Override

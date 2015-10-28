@@ -46,13 +46,13 @@ import jif.types.Assertion;
 import jif.types.DefaultSignature;
 import jif.types.JifClassType;
 import jif.types.JifContext;
-import jif.types.JifMethodInstance;
 import jif.types.JifTypeSystem_c;
 import jif.types.LabelLeAssertion;
 import jif.types.LabelSubstitution;
 import jif.types.LabeledType;
 import jif.types.Param;
 import jif.types.ParamInstance;
+import jif.types.Path;
 import jif.types.Solver;
 import jif.types.hierarchy.LabelEnv;
 import jif.types.label.AccessPath;
@@ -1267,5 +1267,16 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
         formalTypes, Collections.<Label> emptyList(), unknownLabel(pos), false,
         unknownLabel(pos).confProjection(), false, excTypes,
         Collections.<Assertion> emptyList());
+  }
+
+  @Override
+  public FabricPathMap pathMap() {
+    return new FabricPathMap(this);
+  }
+
+  @Override
+  public FabricPathMap pathMap(Path path, Label L) {
+    FabricPathMap m = pathMap();
+    return m.set(path, L);
   }
 }

@@ -11,11 +11,15 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 
+import fabil.ExtensionInfo;
+import fabil.ast.FabILNodeFactory;
 import fabil.types.FabILFlags;
 import fabil.types.FabILTypeSystem;
+import fabil.visit.AtomicRewriter;
 import fabil.visit.ProxyRewriter;
 import fabil.visit.RemoteCallRewriter;
 import fabil.visit.ThreadRewriter;
+
 import polyglot.ast.Call;
 import polyglot.ast.ClassBody;
 import polyglot.ast.ClassDecl;
@@ -640,7 +644,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
 
   @Override
   public Node rewriteRemoteCalls(RemoteCallRewriter rr) {
-    NodeFactory nf = rr.nodeFactory();
+    FabILNodeFactory nf = (FabILNodeFactory) rr.nodeFactory();
     FabILTypeSystem ts = rr.typeSystem();
 
     ClassDecl cd = node();
@@ -759,6 +763,8 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
                                        nf.Id(Position.compilerGenerated(), realName),
                                        locals));
         }
+        retLocal = nf.Atomic(Position.compilerGenerated(),
+                             Collections.singletonList(retLocal));
 
         List<Stmt> catchStmts = new ArrayList<>();
         catchStmts
@@ -793,6 +799,7 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
             newFormals, md.throwTypes(),
             nf.Block(Position.compilerGenerated(), withLocalCheck));
 
+        //((FabILExt) wrapper.ext()).rewriteAtomic(new AtomicRewriter(new ExtensionInfo()));  NOT WHAT WE WANTED
         members.add(wrapper);
       }
     }

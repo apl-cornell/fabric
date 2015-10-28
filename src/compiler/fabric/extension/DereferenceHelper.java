@@ -1,5 +1,12 @@
 package fabric.extension;
 
+import fabric.common.exceptions.NotImplementedException;
+import fabric.types.FabricContext;
+import fabric.types.FabricFieldInstance;
+import fabric.types.FabricReferenceType;
+import fabric.types.FabricTypeSystem;
+import fabric.visit.FabricLabelChecker;
+
 import jif.ast.JifExt_c;
 import jif.types.ConstraintMessage;
 import jif.types.JifContext;
@@ -10,7 +17,10 @@ import jif.types.label.AccessPathUninterpreted;
 import jif.types.label.ConfPolicy;
 import jif.types.label.Label;
 import jif.visit.LabelChecker;
+
 import polyglot.ast.Expr;
+import polyglot.ast.Field;
+import polyglot.ast.Id;
 import polyglot.ast.NullLit;
 import polyglot.ast.Receiver;
 import polyglot.ast.Special;
@@ -18,13 +28,12 @@ import polyglot.ast.TypeNode;
 import polyglot.types.SemanticException;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
-import fabric.types.FabricReferenceType;
-import fabric.types.FabricTypeSystem;
 
 /**
  * A class containing code for checking access labels on dereferences.
  */
 public class DereferenceHelper {
+
   /**
    * Adds constraints to lc reflecting the fetch side effects of a dereference
    */
@@ -43,9 +52,8 @@ public class DereferenceHelper {
     if (!(ref instanceof Expr))
       throw new InternalCompilerError("unexpected receiver type");
 
-    // get the type of the target
+    // get the type of the target and check accesses to the object
     FabricReferenceType refType = (FabricReferenceType) ts.unlabel(ref.type());
-
     checkAccess((Expr) ref, refType, lc, pos);
   }
 

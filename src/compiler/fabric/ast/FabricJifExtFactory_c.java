@@ -412,5 +412,4 @@ FabricExtFactory {
   protected Ext postExtCodebaseDecl(Ext e) {
     return postExtNode(e);
   }
-
 }

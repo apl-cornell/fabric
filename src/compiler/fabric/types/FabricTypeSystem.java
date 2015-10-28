@@ -1,14 +1,23 @@
 package fabric.types;
 
+import codebases.frontend.CodebaseSource;
+import codebases.types.CodebaseTypeSystem;
+
+import fabric.ExtensionInfo;
+import fabric.ast.RemoteWorkerGetter;
+import fabric.ast.Store;
+
 import jif.types.Assertion;
 import jif.types.JifContext;
 import jif.types.JifTypeSystem;
+import jif.types.Path;
 import jif.types.hierarchy.LabelEnv;
 import jif.types.label.AccessPath;
 import jif.types.label.ConfPolicy;
 import jif.types.label.IntegPolicy;
 import jif.types.label.Label;
 import jif.types.principal.Principal;
+
 import polyglot.ast.Expr;
 import polyglot.types.ClassType;
 import polyglot.types.Flags;
@@ -17,11 +26,6 @@ import polyglot.types.ReferenceType;
 import polyglot.types.SemanticException;
 import polyglot.types.Type;
 import polyglot.util.Position;
-import codebases.frontend.CodebaseSource;
-import codebases.types.CodebaseTypeSystem;
-import fabric.ExtensionInfo;
-import fabric.ast.RemoteWorkerGetter;
-import fabric.ast.Store;
 
 public interface FabricTypeSystem extends JifTypeSystem, CodebaseTypeSystem {
   ClassType FObject();
@@ -197,4 +201,11 @@ public interface FabricTypeSystem extends JifTypeSystem, CodebaseTypeSystem {
   @Override
   ExtensionInfo extensionInfo();
 
+  /** Return the pathmap of this typesystem. */
+  @Override
+  FabricPathMap pathMap();
+
+  /** Update and return the pathmap of this typesystem. */
+  @Override
+  FabricPathMap pathMap(Path p, Label l);
 }
