@@ -1,4 +1,4 @@
-/*.swp
+.*.sw?
 /var
 /out
 /cache
