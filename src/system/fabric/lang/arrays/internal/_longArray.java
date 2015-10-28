@@ -15,14 +15,42 @@ import fabric.worker.Store;
 import fabric.worker.transaction.TransactionManager;
 
 public interface _longArray extends Object {
+  _longArray fabric$lang$arrays$internal$_longArray$(Label updateLabel,
+      ConfPolicy accessPolicy, int length);
+
+  _longArray fabric$lang$arrays$internal$_longArray$(Label updateLabel,
+      ConfPolicy accessPolicy, long[] value);
+
   int get$length();
 
   long set(int i, long value);
 
   long get(int i);
 
-  public static class _Impl extends Object._Impl implements _longArray {
+  public static class _Impl extends Object._Impl
+      implements _longArray, _InternalArrayImpl {
     private long[] value;
+
+    public _Impl(Store store) {
+      super(store);
+    }
+
+    /**
+     * Used for deserializing.
+     */
+    public _Impl(Store store, long onum, int version, long expiry,
+        Store labelStore, long labelOnum, Store accessPolicyStore,
+        long accessPolicyOnum, ObjectInput in, Iterator<RefTypeEnum> refTypes,
+        Iterator<Long> intraStoreRefs,
+        Iterator<Pair<String, Long>> interStoreRefs)
+            throws IOException, ClassNotFoundException {
+      super(store, onum, version, expiry, labelStore, labelOnum,
+          accessPolicyStore, accessPolicyOnum, in, refTypes, intraStoreRefs,
+          interStoreRefs);
+      value = new long[in.readInt()];
+      for (int i = 0; i < value.length; i++)
+        value[i] = in.readLong();
+    }
 
     /**
      * Creates a new long array at the given Store with the given length.
@@ -32,9 +60,12 @@ public interface _longArray extends Object {
      * @param length
      *          The length of the array.
      */
-    public _Impl(Store store, Label label, ConfPolicy accessPolicy,
-        int length) {
-      this(store, label, accessPolicy, new long[length]);
+    @Override
+    public _longArray fabric$lang$arrays$internal$_longArray$(Label updateLabel,
+        ConfPolicy accessPolicy, int length) {
+      fabric$lang$arrays$internal$_longArray$(updateLabel, accessPolicy,
+          new long[length]);
+      return this;
     }
 
     /**
@@ -46,28 +77,15 @@ public interface _longArray extends Object {
      * @param value
      *          The backing array to use.
      */
-    public _Impl(Store store, Label updateLabel, ConfPolicy accessPolicy,
-        long[] value) {
-      super(store);
-      this.value = value;
-
+    @Override
+    public _longArray fabric$lang$arrays$internal$_longArray$(Label updateLabel,
+        ConfPolicy accessPolicy, long[] value) {
       set$$updateLabel(updateLabel);
       set$$accessPolicy(accessPolicy);
-    }
+      fabric$lang$Object$();
 
-    /**
-     * Used for deserializing.
-     */
-    public _Impl(Store store, long onum, int version, long expiry, long label,
-        int accessLabel, ObjectInput in, Iterator<RefTypeEnum> refTypes,
-        Iterator<Long> intraStoreRefs,
-        Iterator<Pair<String, Long>> interStoreRefs)
-            throws IOException, ClassNotFoundException {
-      super(store, onum, version, expiry, label, accessLabel, in, refTypes,
-          intraStoreRefs, interStoreRefs);
-      value = new long[in.readInt()];
-      for (int i = 0; i < value.length; i++)
-        value[i] = in.readLong();
+      this.value = value;
+      return this;
     }
 
     @Override
@@ -99,6 +117,7 @@ public interface _longArray extends Object {
       value = src.value;
     }
 
+    @Override
     public void cloneValues() {
       value = value.clone();
     }
@@ -120,6 +139,7 @@ public interface _longArray extends Object {
 
     @Override
     public Object $initLabels() {
+      // Handled by initializers.
       return $getProxy();
     }
   }
@@ -132,6 +152,20 @@ public interface _longArray extends Object {
 
     public _Proxy(_longArray._Impl impl) {
       super(impl);
+    }
+
+    @Override
+    public _longArray fabric$lang$arrays$internal$_longArray$(Label updateLabel,
+        ConfPolicy accessPolicy, int length) {
+      return ((_longArray) fetch()).fabric$lang$arrays$internal$_longArray$(
+          updateLabel, accessPolicy, length);
+    }
+
+    @Override
+    public _longArray fabric$lang$arrays$internal$_longArray$(Label updateLabel,
+        ConfPolicy accessPolicy, long[] value) {
+      return ((_longArray) fetch()).fabric$lang$arrays$internal$_longArray$(
+          updateLabel, accessPolicy, value);
     }
 
     @Override

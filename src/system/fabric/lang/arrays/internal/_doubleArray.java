@@ -15,6 +15,12 @@ import fabric.worker.Store;
 import fabric.worker.transaction.TransactionManager;
 
 public interface _doubleArray extends Object {
+  _doubleArray fabric$lang$arrays$internal$_doubleArray$(Label updateLabel,
+      ConfPolicy accessPolicy, int length);
+
+  _doubleArray fabric$lang$arrays$internal$_doubleArray$(Label updateLabel,
+      ConfPolicy accessPolicy, double[] value);
+
   int get$length();
 
   double set(int i, double value);
@@ -25,6 +31,27 @@ public interface _doubleArray extends Object {
       implements _doubleArray, _InternalArrayImpl {
     private double[] value;
 
+    public _Impl(Store store) {
+      super(store);
+    }
+
+    /**
+     * Used for deserializing.
+     */
+    public _Impl(Store store, long onum, int version, long expiry,
+        Store labelStore, long labelOnum, Store accessPolicyStore,
+        long accessPolicyOnum, ObjectInput in, Iterator<RefTypeEnum> refTypes,
+        Iterator<Long> intraStoreRefs,
+        Iterator<Pair<String, Long>> interStoreRefs)
+            throws IOException, ClassNotFoundException {
+      super(store, onum, version, expiry, labelStore, labelOnum,
+          accessPolicyStore, accessPolicyOnum, in, refTypes, intraStoreRefs,
+          interStoreRefs);
+      value = new double[in.readInt()];
+      for (int i = 0; i < value.length; i++)
+        value[i] = in.readDouble();
+    }
+
     /**
      * Creates a new double array at the given Store with the given length.
      *
@@ -33,9 +60,12 @@ public interface _doubleArray extends Object {
      * @param length
      *          The length of the array.
      */
-    public _Impl(Store store, Label updateLabel, ConfPolicy accessPolicy,
-        int length) {
-      this(store, updateLabel, accessPolicy, new double[length]);
+    @Override
+    public _doubleArray fabric$lang$arrays$internal$_doubleArray$(Label updateLabel,
+        ConfPolicy accessPolicy, int length) {
+      fabric$lang$arrays$internal$_doubleArray$(updateLabel, accessPolicy,
+          new double[length]);
+      return this;
     }
 
     /**
@@ -47,28 +77,15 @@ public interface _doubleArray extends Object {
      * @param value
      *          The backing array to use.
      */
-    public _Impl(Store store, Label updateLabel, ConfPolicy accessPolicy,
-        double[] value) {
-      super(store);
-      this.value = value;
-
+    @Override
+    public _doubleArray fabric$lang$arrays$internal$_doubleArray$(Label updateLabel,
+        ConfPolicy accessPolicy, double[] value) {
       set$$updateLabel(updateLabel);
       set$$accessPolicy(accessPolicy);
-    }
+      fabric$lang$Object$();
 
-    /**
-     * Used for deserializing.
-     */
-    public _Impl(Store store, long onum, int version, long expiry, long label,
-        long accessLabel, ObjectInput in, Iterator<RefTypeEnum> refTypes,
-        Iterator<Long> intraStoreRefs,
-        Iterator<Pair<String, Long>> interStoreRefs)
-            throws IOException, ClassNotFoundException {
-      super(store, onum, version, expiry, label, accessLabel, in, refTypes,
-          intraStoreRefs, interStoreRefs);
-      value = new double[in.readInt()];
-      for (int i = 0; i < value.length; i++)
-        value[i] = in.readDouble();
+      this.value = value;
+      return this;
     }
 
     @Override
@@ -122,6 +139,7 @@ public interface _doubleArray extends Object {
 
     @Override
     public Object $initLabels() {
+      // Handled by initializers.
       return $getProxy();
     }
   }
@@ -134,6 +152,20 @@ public interface _doubleArray extends Object {
 
     public _Proxy(_doubleArray._Impl impl) {
       super(impl);
+    }
+
+    @Override
+    public _doubleArray fabric$lang$arrays$internal$_doubleArray$(Label updateLabel,
+        ConfPolicy accessPolicy, int length) {
+      return ((_doubleArray) fetch()).fabric$lang$arrays$internal$_doubleArray$(
+          updateLabel, accessPolicy, length);
+    }
+
+    @Override
+    public _doubleArray fabric$lang$arrays$internal$_doubleArray$(Label updateLabel,
+        ConfPolicy accessPolicy, double[] value) {
+      return ((_doubleArray) fetch()).fabric$lang$arrays$internal$_doubleArray$(
+          updateLabel, accessPolicy, value);
     }
 
     @Override

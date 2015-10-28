@@ -3,7 +3,6 @@ package fabric.lang.security;
 import fabric.util.Map;
 import fabric.util.HashMap;
 import fabric.util.Iterator;
-import java.lang.Object;
 
 
 /**
@@ -68,7 +67,7 @@ public abstract class AbstractPrincipal extends DelegatingPrincipal {
         return this.superiors.containsKey(p);
     }
 
-    public boolean isAuthorized(Object authPrf, 
+    public boolean isAuthorized(java.lang.Object authPrf, 
             Closure closure,
             Label lb,
             boolean executeNow) {
@@ -77,13 +76,13 @@ public abstract class AbstractPrincipal extends DelegatingPrincipal {
     }
 
 
-    public ActsForProof findProofDownto(Store store, Principal q, Object searchState) {    
+    public ActsForProof findProofDownto(Store store, Principal q, java.lang.Object searchState) {    
         // don't even try! We don't have any information
         // about who we can act for.
         return null;
     }
 
-    public ActsForProof findProofUpto(Store store, Principal p, Object searchState) {
+    public ActsForProof findProofUpto(Store store, Principal p, java.lang.Object searchState) {
         // What is the point of the store param if we don't use it to allocate?
         LocalStore localStore = Worker.getWorker().getLocalStore();
         Iterator i = this.superiors.keySet().iterator();

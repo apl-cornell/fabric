@@ -12,6 +12,7 @@ import polyglot.util.CodeWriter;
 import polyglot.visit.Translator;
 import codebases.frontend.CodebaseSource;
 import codebases.frontend.ExtensionInfo;
+import fabil.FabILOptions;
 
 public class CodebaseTranslator extends Translator {
   protected final ExtensionInfo extInfo;
@@ -49,13 +50,21 @@ public class CodebaseTranslator extends Translator {
         w.newline(0);
       }
     }
-
     boolean newline = false;
     for (String pkg : ts.defaultPackageImports()) {
       w.write("import ");
       w.write(pkg + ".*;");
       w.newline(0);
     }
+
+    //XXX: Hack for skeleton creator. Can't emit fully qualified class
+    //     names w/o types, so import fabric.lang.Object explicitly.
+    FabILOptions opts = (FabILOptions) extInfo.getOptions();
+    if (opts.createSkeleton()) {
+      w.write("import fabric.lang.Object;");
+      w.newline(0);
+    }
+
     for (Import imp : sfn.imports()) {
       imp.del().translate(w, this);
       newline = true;

@@ -4,7 +4,7 @@ import java.io.*;
 
 public class Runtime[principal P]
 {
-    private int@{this.store$->} _FABRIC_ACCESS_POLICY;
+    private int@{⊤->} _FABRIC_ACCESS_POLICY;
 
     private Runtime(principal{this} pp) { }
 

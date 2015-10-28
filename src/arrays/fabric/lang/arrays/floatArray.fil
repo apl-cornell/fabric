@@ -31,8 +31,8 @@ public final class floatArray {
    * Analogous to a block in a file system. Also directly determines the fanout.
    * We always need it to be a power of 2.
    */
-  private final int CHUNK_SIZE;
-  private final int CHUNK_SIZE_LOG2;
+  private /*final*/ int CHUNK_SIZE;
+  private /*final*/ int CHUNK_SIZE_LOG2;
 
   /**
    * The height of the tree of little arrays. Depends on the chunk size
@@ -62,32 +62,39 @@ public final class floatArray {
    * @param length
    *                The length of the array.
    */
-  public floatArray(Label updateLabel, ConfPolicy accessPolicy, int length) {
+  public floatArray fabric$lang$arrays$floatArray$(Label updateLabel,
+      ConfPolicy accessPolicy, int length) {
     // Default chunk size is 256.
-    this(updateLabel, accessPolicy, length, 8);
+    fabric$lang$arrays$floatArray$(updateLabel, accessPolicy, length, 8);
+    return this;
   }
 
-  public floatArray(Label updateLabel, ConfPolicy accessPolicy, int length, int CHUNK_SIZE_LOG2) {
+  public floatArray fabric$lang$arrays$floatArray$(Label updateLabel,
+      ConfPolicy accessPolicy, int length, int CHUNK_SIZE_LOG2) {
     this.CHUNK_SIZE_LOG2 = CHUNK_SIZE_LOG2;
     this.CHUNK_SIZE = (1 << CHUNK_SIZE_LOG2);
-    this.length = length;
 
     this.$updateLabel = updateLabel;
     this.$accessPolicy = accessPolicy;
+    fabric$lang$Object$();
+
+    this.length = length;
 
     // Compute required height (height starts at 1).
     this.height = getHeight(length);
 
     switch (height) {
     case 1:
-      root = (_floatArray) new _floatArray(this.$updateLabel, this.$accessPolicy, CHUNK_SIZE).$initLabels();
+      root = (_floatArray) new _floatArray().fabric$lang$arrays$internal$_floatArray$(this.$updateLabel, this.$accessPolicy, CHUNK_SIZE);
       break;
     case 2:
-      root = (_ObjectArray) new _ObjectArray(this.$updateLabel, this.$accessPolicy, _floatArray.class, CHUNK_SIZE).$initLabels();
+      root = (_ObjectArray) new _ObjectArray().fabric$lang$arrays$internal$_ObjectArray$(this.$updateLabel, this.$accessPolicy, _floatArray.class, CHUNK_SIZE);
       break;
     default:
-      root = (_ObjectArray) new _ObjectArray(this.$updateLabel, this.$accessPolicy, _ObjectArray.class, CHUNK_SIZE).$initLabels();
+      root = (_ObjectArray) new _ObjectArray().fabric$lang$arrays$internal$_ObjectArray$(this.$updateLabel, this.$accessPolicy, _ObjectArray.class, CHUNK_SIZE);
     }
+
+    return this;
   }
 
   public Object $initLabels() {
@@ -120,7 +127,7 @@ public final class floatArray {
   private void setZeroLength() {
     this.length = 0;
     this.height = 1;
-    root = (_floatArray) new _floatArray(this.$updateLabel, this.$accessPolicy, CHUNK_SIZE).$initLabels();
+    root = (_floatArray) new _floatArray().fabric$lang$arrays$internal$_floatArray$(this.$updateLabel, this.$accessPolicy, CHUNK_SIZE);
   }
 
   public void setLength(int newSize) {
@@ -137,13 +144,13 @@ public final class floatArray {
     if (difference > 0) {
       // Make sure the leaves are at the right level - push down the root.
       if (oldHeight == 1) {
-        _ObjectArray newRoot = (_ObjectArray) new _ObjectArray(this.$updateLabel, this.$accessPolicy, _floatArray.class, CHUNK_SIZE).$initLabels();
+        _ObjectArray newRoot = (_ObjectArray) new _ObjectArray().fabric$lang$arrays$internal$_ObjectArray$(this.$updateLabel, this.$accessPolicy, _floatArray.class, CHUNK_SIZE);
         newRoot.set(0, root);
         root = newRoot;
         difference--;
       }
       for (int count = 0; count < difference; count++) {
-        _ObjectArray newRoot = (_ObjectArray) new _ObjectArray(this.$updateLabel, this.$accessPolicy, _ObjectArray.class, CHUNK_SIZE).$initLabels();
+        _ObjectArray newRoot = (_ObjectArray) new _ObjectArray().fabric$lang$arrays$internal$_ObjectArray$(this.$updateLabel, this.$accessPolicy, _ObjectArray.class, CHUNK_SIZE);
         newRoot.set(0, root);
         root = newRoot;
       }
@@ -217,13 +224,13 @@ public final class floatArray {
         // Writing to a node that doesn't exist yet. Time to create it.
         switch (level) {
         case 3:
-          nextObject = (_ObjectArray) new _ObjectArray(this.$updateLabel, this.$accessPolicy, _floatArray.class, CHUNK_SIZE).$initLabels();
+          nextObject = (_ObjectArray) new _ObjectArray().fabric$lang$arrays$internal$_ObjectArray$(this.$updateLabel, this.$accessPolicy, _floatArray.class, CHUNK_SIZE);
           break;
         case 2:
-          nextObject = (_floatArray) new _floatArray(this.$updateLabel, this.$accessPolicy, CHUNK_SIZE).$initLabels();
+          nextObject = (_floatArray) new _floatArray().fabric$lang$arrays$internal$_floatArray$(this.$updateLabel, this.$accessPolicy, CHUNK_SIZE);
           break;
         default:
-          nextObject = (_ObjectArray) new _ObjectArray(this.$updateLabel, this.$accessPolicy, _ObjectArray.class, CHUNK_SIZE).$initLabels();
+          nextObject = (_ObjectArray) new _ObjectArray().fabric$lang$arrays$internal$_ObjectArray$(this.$updateLabel, this.$accessPolicy, _ObjectArray.class, CHUNK_SIZE);
         }
         oArray.set(firstDigit, nextObject);
       }

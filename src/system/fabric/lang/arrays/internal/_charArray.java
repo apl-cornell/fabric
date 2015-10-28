@@ -15,6 +15,12 @@ import fabric.worker.Store;
 import fabric.worker.transaction.TransactionManager;
 
 public interface _charArray extends Object {
+  _charArray fabric$lang$arrays$internal$_charArray$(Label updateLabel,
+      ConfPolicy accessPolicy, int length);
+
+  _charArray fabric$lang$arrays$internal$_charArray$(Label updateLabel,
+      ConfPolicy accessPolicy, char[] value);
+
   int get$length();
 
   char set(int i, char value);
@@ -25,6 +31,27 @@ public interface _charArray extends Object {
       implements _charArray, _InternalArrayImpl {
     private char[] value;
 
+    public _Impl(Store store) {
+      super(store);
+    }
+
+    /**
+     * Used for deserializing.
+     */
+    public _Impl(Store store, long onum, int version, long expiry,
+        Store labelStore, long labelOnum, Store accessPolicyStore,
+        long accessPolicyOnum, ObjectInput in, Iterator<RefTypeEnum> refTypes,
+        Iterator<Long> intraStoreRefs,
+        Iterator<Pair<String, Long>> interStoreRefs)
+            throws IOException, ClassNotFoundException {
+      super(store, onum, version, expiry, labelStore, labelOnum,
+          accessPolicyStore, accessPolicyOnum, in, refTypes, intraStoreRefs,
+          interStoreRefs);
+      value = new char[in.readInt()];
+      for (int i = 0; i < value.length; i++)
+        value[i] = in.readChar();
+    }
+
     /**
      * Creates a new char array at the given Store with the given length.
      *
@@ -33,9 +60,12 @@ public interface _charArray extends Object {
      * @param length
      *          The length of the array.
      */
-    public _Impl(Store store, Label label, ConfPolicy accessPolicy,
-        int length) {
-      this(store, label, accessPolicy, new char[length]);
+    @Override
+    public _charArray fabric$lang$arrays$internal$_charArray$(Label updateLabel,
+        ConfPolicy accessPolicy, int length) {
+      fabric$lang$arrays$internal$_charArray$(updateLabel, accessPolicy,
+          new char[length]);
+      return this;
     }
 
     /**
@@ -47,28 +77,15 @@ public interface _charArray extends Object {
      * @param value
      *          The backing array to use.
      */
-    public _Impl(Store store, Label updateLabel, ConfPolicy accessPolicy,
-        char[] value) {
-      super(store);
-      this.value = value;
-
+    @Override
+    public _charArray fabric$lang$arrays$internal$_charArray$(Label updateLabel,
+        ConfPolicy accessPolicy, char[] value) {
       set$$updateLabel(updateLabel);
       set$$accessPolicy(accessPolicy);
-    }
+      fabric$lang$Object$();
 
-    /**
-     * Used for deserializing.
-     */
-    public _Impl(Store store, long onum, int version, long expiry, long label,
-        long accessLabel, ObjectInput in, Iterator<RefTypeEnum> refTypes,
-        Iterator<Long> intraStoreRefs,
-        Iterator<Pair<String, Long>> interStoreRefs)
-            throws IOException, ClassNotFoundException {
-      super(store, onum, version, expiry, label, accessLabel, in, refTypes,
-          intraStoreRefs, interStoreRefs);
-      value = new char[in.readInt()];
-      for (int i = 0; i < value.length; i++)
-        value[i] = in.readChar();
+      this.value = value;
+      return this;
     }
 
     @Override
@@ -122,6 +139,7 @@ public interface _charArray extends Object {
 
     @Override
     public Object $initLabels() {
+      // Handled by initializers.
       return $getProxy();
     }
   }
@@ -134,6 +152,20 @@ public interface _charArray extends Object {
 
     public _Proxy(_charArray._Impl impl) {
       super(impl);
+    }
+
+    @Override
+    public _charArray fabric$lang$arrays$internal$_charArray$(Label updateLabel,
+        ConfPolicy accessPolicy, int length) {
+      return ((_charArray) fetch()).fabric$lang$arrays$internal$_charArray$(
+          updateLabel, accessPolicy, length);
+    }
+
+    @Override
+    public _charArray fabric$lang$arrays$internal$_charArray$(Label updateLabel,
+        ConfPolicy accessPolicy, char[] value) {
+      return ((_charArray) fetch()).fabric$lang$arrays$internal$_charArray$(
+          updateLabel, accessPolicy, value);
     }
 
     @Override

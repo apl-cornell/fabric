@@ -761,9 +761,13 @@ public interface Object {
      *          The object's onum.
      * @param version
      *          The object's version number.
-     * @param updateLabel
+     * @param updateLabelStore
+     *          The store holding the object's update label.
+     * @param updateLabelOnum
      *          Onum of the object's update label.
-     * @param accessPolicy
+     * @param accessPolicyStore
+     *          The store holding the object's access policy.
+     * @param accessPolicyOnum
      *          onum of the object's access policy.
      * @param serializedInput
      *          A stream of serialized primitive values and inlined objects.
@@ -780,13 +784,15 @@ public interface Object {
      * @throws ClassNotFoundException
      */
     public _Impl(Store store, long onum, int version, long expiry,
-        long updateLabel, long accessPolicy, ObjectInput serializedInput,
+        Store updateLabelStore, long updateLabelOnum, Store accessPolicyStore,
+        long accessPolicyOnum, ObjectInput serializedInput,
         Iterator<RefTypeEnum> refTypes, Iterator<Long> intraStoreRefs,
         Iterator<Pair<String, Long>> interStoreRefs)
             throws IOException, ClassNotFoundException {
       this(store, onum, version, expiry);
-      this.$updateLabel = new Label._Proxy(store, updateLabel);
-      this.$accessPolicy = new ConfPolicy._Proxy(store, accessPolicy);
+      this.$updateLabel = new Label._Proxy(updateLabelStore, updateLabelOnum);
+      this.$accessPolicy =
+          new ConfPolicy._Proxy(accessPolicyStore, accessPolicyOnum);
     }
 
     /**
@@ -1045,12 +1051,14 @@ public interface Object {
       }
 
       public _Impl(Store store, long onum, int version, long expiry,
-          long updateLabel, long accessPolicy, ObjectInput serializedInput,
+          Store updateLabelStore, long updateLabelOnum, Store accessPolicyStore,
+          long accessPolicyOnum, ObjectInput serializedInput,
           Iterator<RefTypeEnum> refTypes, Iterator<Long> intraStoreRefs,
           Iterator<Pair<String, Long>> interStoreRefs)
               throws IOException, ClassNotFoundException {
-        super(store, onum, version, expiry, updateLabel, accessPolicy,
-            serializedInput, refTypes, intraStoreRefs, interStoreRefs);
+        super(store, onum, version, expiry, updateLabelStore, updateLabelOnum,
+            accessPolicyStore, accessPolicyOnum, serializedInput, refTypes,
+            intraStoreRefs, interStoreRefs);
       }
 
       @Override

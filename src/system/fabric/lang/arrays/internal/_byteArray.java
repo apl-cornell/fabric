@@ -15,6 +15,12 @@ import fabric.worker.Store;
 import fabric.worker.transaction.TransactionManager;
 
 public interface _byteArray extends Object {
+  _byteArray fabric$lang$arrays$internal$_byteArray$(Label updateLabel,
+      ConfPolicy accessPolicy, int length);
+
+  _byteArray fabric$lang$arrays$internal$_byteArray$(Label updateLabel,
+      ConfPolicy accessPolicy, byte[] value);
+
   int get$length();
 
   byte set(int i, byte value);
@@ -25,6 +31,27 @@ public interface _byteArray extends Object {
       implements _byteArray, _InternalArrayImpl {
     private byte[] value;
 
+    public _Impl(Store store) {
+      super(store);
+    }
+
+    /**
+     * Used for deserializing.
+     */
+    public _Impl(Store store, long onum, int version, long expiry,
+        Store labelStore, long labelOnum, Store accessPolicyStore,
+        long accessPolicyOnum, ObjectInput in, Iterator<RefTypeEnum> refTypes,
+        Iterator<Long> intraStoreRefs,
+        Iterator<Pair<String, Long>> interStoreRefs)
+            throws IOException, ClassNotFoundException {
+      super(store, onum, version, expiry, labelStore, labelOnum,
+          accessPolicyStore, accessPolicyOnum, in, refTypes, intraStoreRefs,
+          interStoreRefs);
+      value = new byte[in.readInt()];
+      for (int i = 0; i < value.length; i++)
+        value[i] = in.readByte();
+    }
+
     /**
      * Creates a new byte array at the given Store with the given length.
      *
@@ -33,9 +60,12 @@ public interface _byteArray extends Object {
      * @param length
      *          The length of the array.
      */
-    public _Impl(Store store, Label updateLabel, ConfPolicy accessPolicy,
-        int length) {
-      this(store, updateLabel, accessPolicy, new byte[length]);
+    @Override
+    public _byteArray fabric$lang$arrays$internal$_byteArray$(Label updateLabel,
+        ConfPolicy accessPolicy, int length) {
+      fabric$lang$arrays$internal$_byteArray$(updateLabel, accessPolicy,
+          new byte[length]);
+      return this;
     }
 
     /**
@@ -47,28 +77,15 @@ public interface _byteArray extends Object {
      * @param value
      *          The backing array to use.
      */
-    public _Impl(Store store, Label updateLabel, ConfPolicy accessPolicy,
-        byte[] value) {
-      super(store);
-      this.value = value;
-
+    @Override
+    public _byteArray fabric$lang$arrays$internal$_byteArray$(Label updateLabel,
+        ConfPolicy accessPolicy, byte[] value) {
       set$$updateLabel(updateLabel);
       set$$accessPolicy(accessPolicy);
-    }
+      fabric$lang$Object$();
 
-    /**
-     * Used for deserializing.
-     */
-    public _Impl(Store store, long onum, int version, long expiry, long label,
-        long accessLabel, ObjectInput in, Iterator<RefTypeEnum> refTypes,
-        Iterator<Long> intraStoreRefs,
-        Iterator<Pair<String, Long>> interStoreRefs)
-            throws IOException, ClassNotFoundException {
-      super(store, onum, version, expiry, label, accessLabel, in, refTypes,
-          intraStoreRefs, interStoreRefs);
-      value = new byte[in.readInt()];
-      for (int i = 0; i < value.length; i++)
-        value[i] = in.readByte();
+      this.value = value;
+      return this;
     }
 
     @Override
@@ -122,6 +139,7 @@ public interface _byteArray extends Object {
 
     @Override
     public Object $initLabels() {
+      // Handled by initializers.
       return $getProxy();
     }
   }
@@ -134,6 +152,20 @@ public interface _byteArray extends Object {
 
     public _Proxy(_byteArray._Impl impl) {
       super(impl);
+    }
+
+    @Override
+    public _byteArray fabric$lang$arrays$internal$_byteArray$(Label updateLabel,
+        ConfPolicy accessPolicy, int length) {
+      return ((_byteArray) fetch()).fabric$lang$arrays$internal$_byteArray$(
+          updateLabel, accessPolicy, length);
+    }
+
+    @Override
+    public _byteArray fabric$lang$arrays$internal$_byteArray$(Label updateLabel,
+        ConfPolicy accessPolicy, byte[] value) {
+      return ((_byteArray) fetch()).fabric$lang$arrays$internal$_byteArray$(
+          updateLabel, accessPolicy, value);
     }
 
     @Override

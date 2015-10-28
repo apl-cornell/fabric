@@ -15,6 +15,12 @@ import fabric.worker.Store;
 import fabric.worker.transaction.TransactionManager;
 
 public interface _booleanArray extends Object {
+  _booleanArray fabric$lang$arrays$internal$_booleanArray$(Label updateLabel,
+      ConfPolicy accessPolicy, int length);
+
+  _booleanArray fabric$lang$arrays$internal$_booleanArray$(Label updateLabel,
+      ConfPolicy accessPolicy, boolean[] value);
+
   int get$length();
 
   boolean set(int i, boolean value);
@@ -25,6 +31,27 @@ public interface _booleanArray extends Object {
       implements _booleanArray, _InternalArrayImpl {
     private boolean[] value;
 
+    public _Impl(Store store) {
+      super(store);
+    }
+
+    /**
+     * Used for deserializing.
+     */
+    public _Impl(Store store, long onum, int version, long expiry,
+        Store labelStore, long labelOnum, Store accessPolicyStore,
+        long accessPolicyOnum, ObjectInput in, Iterator<RefTypeEnum> refTypes,
+        Iterator<Long> intraStoreRefs,
+        Iterator<Pair<String, Long>> interStoreRefs)
+            throws IOException, ClassNotFoundException {
+      super(store, onum, version, expiry, labelStore, labelOnum,
+          accessPolicyStore, accessPolicyOnum, in, refTypes, intraStoreRefs,
+          interStoreRefs);
+      value = new boolean[in.readInt()];
+      for (int i = 0; i < value.length; i++)
+        value[i] = in.readBoolean();
+    }
+
     /**
      * Creates a new boolean array at the given Store with the given length.
      *
@@ -33,9 +60,12 @@ public interface _booleanArray extends Object {
      * @param length
      *          The length of the array.
      */
-    public _Impl(Store store, Label updateLabel, ConfPolicy accessPolicy,
-        int length) {
-      this(store, updateLabel, accessPolicy, new boolean[length]);
+    @Override
+    public _booleanArray fabric$lang$arrays$internal$_booleanArray$(
+        Label updateLabel, ConfPolicy accessPolicy, int length) {
+      fabric$lang$arrays$internal$_booleanArray$(updateLabel, accessPolicy,
+          new boolean[length]);
+      return this;
     }
 
     /**
@@ -47,28 +77,15 @@ public interface _booleanArray extends Object {
      * @param value
      *          The backing array to use.
      */
-    public _Impl(Store store, Label updateLabel, ConfPolicy accessPolicy,
-        boolean[] value) {
-      super(store);
-      this.value = value;
-
+    @Override
+    public _booleanArray fabric$lang$arrays$internal$_booleanArray$(
+        Label updateLabel, ConfPolicy accessPolicy, boolean[] value) {
       set$$updateLabel(updateLabel);
       set$$accessPolicy(accessPolicy);
-    }
+      fabric$lang$Object$();
 
-    /**
-     * Used for deserializing.
-     */
-    public _Impl(Store store, long onum, int version, long expiry, long label,
-        long accessLabel, ObjectInput in, Iterator<RefTypeEnum> refTypes,
-        Iterator<Long> intraStoreRefs,
-        Iterator<Pair<String, Long>> interStoreRefs)
-            throws IOException, ClassNotFoundException {
-      super(store, onum, version, expiry, label, accessLabel, in, refTypes,
-          intraStoreRefs, interStoreRefs);
-      value = new boolean[in.readInt()];
-      for (int i = 0; i < value.length; i++)
-        value[i] = in.readBoolean();
+      this.value = value;
+      return this;
     }
 
     @Override
@@ -122,6 +139,7 @@ public interface _booleanArray extends Object {
 
     @Override
     public Object $initLabels() {
+      // Handled by initializers.
       return $getProxy();
     }
   }
@@ -134,6 +152,22 @@ public interface _booleanArray extends Object {
 
     public _Proxy(_booleanArray._Impl impl) {
       super(impl);
+    }
+
+    @Override
+    public _booleanArray fabric$lang$arrays$internal$_booleanArray$(
+        Label updateLabel, ConfPolicy accessPolicy, int length) {
+      return ((_booleanArray) fetch())
+          .fabric$lang$arrays$internal$_booleanArray$(updateLabel, accessPolicy,
+              length);
+    }
+
+    @Override
+    public _booleanArray fabric$lang$arrays$internal$_booleanArray$(
+        Label updateLabel, ConfPolicy accessPolicy, boolean[] value) {
+      return ((_booleanArray) fetch())
+          .fabric$lang$arrays$internal$_booleanArray$(updateLabel, accessPolicy,
+              value);
     }
 
     @Override

@@ -2,6 +2,14 @@ package fabil.extension;
 
 import java.util.Collections;
 
+import fabil.ast.Annotated;
+import fabil.ast.FabILNodeFactory;
+import fabil.ast.FabricArrayInit;
+import fabil.ast.NewFabricArray;
+import fabil.types.FabILTypeSystem;
+import fabil.visit.LabelAssigner;
+import fabil.visit.ProxyRewriter;
+import fabric.translate.ClassDeclToFabilExt_c;
 import polyglot.ast.Call;
 import polyglot.ast.Expr;
 import polyglot.ast.Receiver;
@@ -15,13 +23,6 @@ import polyglot.types.SemanticException;
 import polyglot.types.Type;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
-import fabil.ast.Annotated;
-import fabil.ast.FabILNodeFactory;
-import fabil.ast.FabricArrayInit;
-import fabil.ast.NewFabricArray;
-import fabil.types.FabILTypeSystem;
-import fabil.visit.LabelAssigner;
-import fabil.visit.ProxyRewriter;
 
 public class NewFabricArrayExt_c extends AnnotatedExt_c {
 
@@ -44,7 +45,7 @@ public class NewFabricArrayExt_c extends AnnotatedExt_c {
 
     Type baseType = newArray.type().toArray().base();
     Type arrayImplType = ts.fabricRuntimeArrayImplOf(baseType);
-    Type arrayType = ts.fabricRuntimeArrayOf(baseType);
+    ClassType arrayType = ts.fabricRuntimeArrayOf(baseType);
     String typeArg = "";
     if (baseType.isReference()) {
       if (ts.isPureFabricType(baseType))
@@ -52,8 +53,11 @@ public class NewFabricArrayExt_c extends AnnotatedExt_c {
       else typeArg = "fabric.lang.Object";
       typeArg += "._Proxy.class, ";
     }
-    return qq.parseExpr("(%T) new %T(%E, %E, %E, " + typeArg
-        + "%E).$getProxy()", arrayType, arrayImplType, newArray.location(),
+    String initializerName =
+        ClassDeclToFabilExt_c.jifConstructorTranslatedName(arrayType);
+    return qq.parseExpr(
+        "(%T) new %T(%E).%s(%E, %E, " + typeArg + "%E).$getProxy()", arrayType,
+        arrayImplType, newArray.location(), initializerName,
         newArray.updateLabel(), newArray.accessPolicy(), size);
   }
 
@@ -89,8 +93,8 @@ public class NewFabricArrayExt_c extends AnnotatedExt_c {
     return expr;
   }
 
-  private NewFabricArray assignUpdateLabel(LabelAssigner la, NewFabricArray expr)
-      throws SemanticException {
+  private NewFabricArray assignUpdateLabel(LabelAssigner la,
+      NewFabricArray expr) throws SemanticException {
     if (expr.updateLabel() != null) return expr;
 
     FabILNodeFactory nf = la.nodeFactory();
@@ -126,10 +130,9 @@ public class NewFabricArrayExt_c extends AnnotatedExt_c {
     Flags flags = Flags.NONE;
     if (context.inStaticContext()) flags = Flags.STATIC;
 
-    MethodInstance lmi =
-        ts.methodInstance(pos, currentClass, flags, ts.Label(),
-            "get$$updateLabel", Collections.<Type> emptyList(),
-            Collections.<Type> emptyList());
+    MethodInstance lmi = ts.methodInstance(pos, currentClass, flags, ts.Label(),
+        "get$$updateLabel", Collections.<Type> emptyList(),
+        Collections.<Type> emptyList());
     defaultLabel = (Call) defaultLabel.type(ts.Label());
     defaultLabel = defaultLabel.methodInstance(lmi);
     return expr.updateLabel(defaultLabel);
@@ -148,11 +151,9 @@ public class NewFabricArrayExt_c extends AnnotatedExt_c {
     Expr label = expr.updateLabel();
     Expr policy = qq.parseExpr("%E.confPolicy()", label).type(ts.ConfPolicy());
 
-    MethodInstance mi =
-        ts.methodInstance(Position.compilerGenerated(),
-            (ReferenceType) ts.Label(), Flags.PUBLIC, ts.ConfPolicy(),
-            "confPolicy", Collections.<Type> emptyList(),
-            Collections.<Type> emptyList());
+    MethodInstance mi = ts.methodInstance(Position.compilerGenerated(),
+        (ReferenceType) ts.Label(), Flags.PUBLIC, ts.ConfPolicy(), "confPolicy",
+        Collections.<Type> emptyList(), Collections.<Type> emptyList());
     policy = ((Call) policy).methodInstance(mi);
     return expr.accessPolicy(policy);
   }

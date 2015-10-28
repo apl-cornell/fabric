@@ -27,15 +27,23 @@ public final class MultiObjectArray {
     private Class proxyType;
     private int CHUNK_SIZE_LOG2;
 
-  public MultiObjectArray(Label updateLabel, ConfPolicy accessPolicy, Class proxyType, int dims, int[] lengths) {
+  public MultiObjectArray fabric$lang$arrays$MultiObjectArray$(
+      Label updateLabel, ConfPolicy accessPolicy, Class proxyType, int dims,
+      int[] lengths) {
     // Default chunk size is 256.
-    this(updateLabel, accessPolicy, proxyType, dims, lengths, 8);
+    fabric$lang$arrays$MultiObjectArray$(updateLabel, accessPolicy, proxyType,
+        dims, lengths, 8);
+    return this;
   }
 
-  public MultiObjectArray(Label updateLabel, ConfPolicy accessPolicy, Class proxyType, int dims, int[] lengths, int CHUNK_SIZE_LOG2) {
+  public MultiObjectArray fabric$lang$arrays$MultiObjectArray$(
+      Label updateLabel, ConfPolicy accessPolicy, Class proxyType, int dims,
+      int[] lengths, int CHUNK_SIZE_LOG2) {
 
     this.$updateLabel = updateLabel;
     this.$accessPolicy = accessPolicy;
+    fabric$lang$Object$();
+
     this.proxyType = proxyType;
     this.CHUNK_SIZE_LOG2 = CHUNK_SIZE_LOG2;
     
@@ -46,7 +54,8 @@ public final class MultiObjectArray {
         throw new RuntimeException("Missing array dimension. NewFabricArrayExt_c should not have let this happen.");
     }
     
-    firstDim = new ObjectArray(updateLabel, accessPolicy, proxyType, lengths[0], CHUNK_SIZE_LOG2);
+    firstDim = new ObjectArray().fabric$lang$arrays$ObjectArray$(updateLabel,
+        accessPolicy, proxyType, lengths[0], CHUNK_SIZE_LOG2);
     
     // now allocate the remaining dimensions
     for (int depth = 0; depth < lengths.length - 1; depth++) {
@@ -74,7 +83,8 @@ public final class MultiObjectArray {
             // now allocate an array in each cell of traverse
             for (int k = 0; k < lengths[depth]; k++) {
                 traverse.set(k,
-                        new ObjectArray(this.$updateLabel, 
+                        new ObjectArray().fabric$lang$arrays$ObjectArray$(
+                                this.$updateLabel, 
                                 this.$accessPolicy, 
                                 proxyType, 
                                 lengths[depth+1], 
@@ -83,6 +93,7 @@ public final class MultiObjectArray {
         }
     }
 
+    return this;
   }
   
   public Object $initLabels() {

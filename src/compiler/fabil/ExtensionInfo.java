@@ -17,14 +17,12 @@ import polyglot.ast.NodeFactory;
 import polyglot.filemanager.FileManager;
 import polyglot.frontend.CupParser;
 import polyglot.frontend.FileSource;
-import polyglot.frontend.Job;
 import polyglot.frontend.JobExt;
 import polyglot.frontend.Parser;
 import polyglot.frontend.Scheduler;
 import polyglot.frontend.Source;
 import polyglot.frontend.Source.Kind;
 import polyglot.frontend.TargetFactory;
-import polyglot.frontend.goals.Goal;
 import polyglot.lex.Lexer;
 import polyglot.main.Options;
 import polyglot.main.Report;
@@ -63,7 +61,7 @@ import fabric.worker.Worker;
  * Extension information for FabIL extension.
  */
 public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo implements
-codebases.frontend.ExtensionInfo {
+    codebases.frontend.ExtensionInfo {
   protected static URI platform_ns = URI.create("fab:platform");
   protected static URI local_ns = URI.create("fab:local");
 
@@ -238,7 +236,7 @@ codebases.frontend.ExtensionInfo {
         Report.report(2, "Creating filesource from " + f);
       URI ns =
           getOptions().platformMode() ? platformNamespace() : localNamespace();
-          return new LocalSource(f, kind, ns);
+      return new LocalSource(f, kind, ns);
     }
   }
 
@@ -319,13 +317,13 @@ codebases.frontend.ExtensionInfo {
     return new CBJobExt();
   }
 
-  @Override
-  public Goal getCompileGoal(Job job) {
-    FabILOptions opts = (FabILOptions) job.extensionInfo().getOptions();
-    if (opts.createSkeleton())
-      return ((FabILScheduler) scheduler()).CreateJavaSkeleton(job);
-    else return super.getCompileGoal(job);
-  }
+//  @Override
+//  public Goal getCompileGoal(Job job) {
+//    FabILOptions opts = (FabILOptions) job.extensionInfo().getOptions();
+//    if (opts.createSkeleton()) {
+//      return ((FabILScheduler) scheduler()).CreateJavaSkeleton(job);
+//    } else return super.getCompileGoal(job);
+//  }
 
   @Override
   public List<URI> classpath() {

@@ -5,9 +5,9 @@ public class _shortArray {
 
   public native short get(int i);
 
-  public _shortArray(Label updateLabel, ConfPolicy accessPolicy, int length) {
-  }
+  public native _shortArray fabric$lang$arrays$internal$_shortArray$(
+      Label updateLabel, ConfPolicy accessPolicy, int length);
 
-  public _shortArray(Label updateLabel, ConfPolicy accessPolicy, short native[] value) {
-  }
+  public native _shortArray fabric$lang$arrays$internal$_shortArray$(
+      Label updateLabel, ConfPolicy accessPolicy, short native[] value);
 }

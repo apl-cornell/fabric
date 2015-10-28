@@ -30,6 +30,7 @@ import fabric.lang.security.ConfPolicy;
 import fabric.lang.security.Label;
 import fabric.worker.LocalStore;
 import fabric.worker.Store;
+import fabric.worker.Worker;
 
 /**
  * <code>_Impl</code> objects are stored on stores in serialized form as
@@ -1146,17 +1147,40 @@ public final class SerializedObject implements FastSerializable, Serializable {
 
       if (constructor == null) {
         constructor = implClass.getConstructor(Store.class, long.class,
-            int.class, long.class, long.class, long.class, ObjectInput.class,
-            Iterator.class, Iterator.class, Iterator.class);
+            int.class, long.class, Store.class, long.class, Store.class,
+            long.class, ObjectInput.class, Iterator.class, Iterator.class,
+            Iterator.class);
         constructorTable.put(implClass, constructor);
       }
 
-      _Impl result =
-          (_Impl) constructor.newInstance(store, getOnum(), getVersion(),
-              getExpiry(), getUpdateLabelOnum(), getAccessPolicyOnum(),
-              new ObjectInputStream(getSerializedDataStream()),
-              getRefTypeIterator(), getIntraStoreRefIterator(),
-              getInterStoreRefIterator());
+      // Get the reference to the object's update label.
+      Store updateLabelStore = store;
+      long updateLabelOnum;
+      if (updateLabelRefIsInterStore()) {
+        ComparablePair<String, Long> ref = getInterStoreUpdateLabelRef();
+        updateLabelStore = Worker.getWorker().getStore(ref.first);
+        updateLabelOnum = ref.second;
+      } else {
+        updateLabelOnum = getUpdateLabelOnum();
+      }
+
+      // Get the reference to the object's access policy.
+      Store accessPolicyStore = store;
+      long accessPolicyOnum;
+      if (accessPolicyRefIsInterStore()) {
+        ComparablePair<String, Long> ref = getInterStoreAccessPolicyRef();
+        accessPolicyStore = Worker.getWorker().getStore(ref.first);
+        accessPolicyOnum = ref.second;
+      } else {
+        accessPolicyOnum = getAccessPolicyOnum();
+      }
+
+      _Impl result = (_Impl) constructor.newInstance(store, getOnum(),
+          getVersion(), getExpiry(), updateLabelStore, updateLabelOnum,
+          accessPolicyStore, accessPolicyOnum,
+          new ObjectInputStream(getSerializedDataStream()),
+          getRefTypeIterator(), getIntraStoreRefIterator(),
+          getInterStoreRefIterator());
 
       if (chaseSurrogates && (result instanceof Surrogate)) {
         // Chase the surrogate pointer.

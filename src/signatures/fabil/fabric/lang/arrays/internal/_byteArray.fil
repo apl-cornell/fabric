@@ -5,9 +5,9 @@ public class _byteArray {
 
   public native byte get(int i);
 
-  public _byteArray(Label updateLabel, ConfPolicy accessPolicy, int length) {
-  }
+  public native _byteArray fabric$lang$arrays$internal$_byteArray$(
+      Label updateLabel, ConfPolicy accessPolicy, int length);
 
-  public _byteArray(Label updateLabel, ConfPolicy accessPolicy, byte native[] value) {
-  }
+  public native _byteArray fabric$lang$arrays$internal$_byteArray$(
+      Label updateLabel, ConfPolicy accessPolicy, byte native[] value);
 }
