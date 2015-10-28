@@ -15,6 +15,12 @@ import fabric.worker.Store;
 import fabric.worker.transaction.TransactionManager;
 
 public interface _doubleArray extends Object {
+  _doubleArray fabric$lang$arrays$internal$_doubleArray$(Label updateLabel,
+      ConfPolicy accessPolicy, int length);
+
+  _doubleArray fabric$lang$arrays$internal$_doubleArray$(Label updateLabel,
+      ConfPolicy accessPolicy, double[] value);
+
   int get$length();
 
   double set(int i, double value);
@@ -25,35 +31,8 @@ public interface _doubleArray extends Object {
       implements _doubleArray, _InternalArrayImpl {
     private double[] value;
 
-    /**
-     * Creates a new double array at the given Store with the given length.
-     *
-     * @param store
-     *          The store on which to allocate the array.
-     * @param length
-     *          The length of the array.
-     */
-    public _Impl(Store store, Label updateLabel, ConfPolicy accessPolicy,
-        int length) {
-      this(store, updateLabel, accessPolicy, new double[length]);
-    }
-
-    /**
-     * Creates a new double array at the given Store using the given backing
-     * array.
-     *
-     * @param store
-     *          The store on which to allocate the array.
-     * @param value
-     *          The backing array to use.
-     */
-    public _Impl(Store store, Label updateLabel, ConfPolicy accessPolicy,
-        double[] value) {
+    public _Impl(Store store) {
       super(store);
-      this.value = value;
-
-      set$$updateLabel(updateLabel);
-      set$$accessPolicy(accessPolicy);
     }
 
     /**
@@ -71,6 +50,42 @@ public interface _doubleArray extends Object {
       value = new double[in.readInt()];
       for (int i = 0; i < value.length; i++)
         value[i] = in.readDouble();
+    }
+
+    /**
+     * Creates a new double array at the given Store with the given length.
+     *
+     * @param store
+     *          The store on which to allocate the array.
+     * @param length
+     *          The length of the array.
+     */
+    @Override
+    public _doubleArray fabric$lang$arrays$internal$_doubleArray$(Label updateLabel,
+        ConfPolicy accessPolicy, int length) {
+      fabric$lang$arrays$internal$_doubleArray$(updateLabel, accessPolicy,
+          new double[length]);
+      return this;
+    }
+
+    /**
+     * Creates a new double array at the given Store using the given backing
+     * array.
+     *
+     * @param store
+     *          The store on which to allocate the array.
+     * @param value
+     *          The backing array to use.
+     */
+    @Override
+    public _doubleArray fabric$lang$arrays$internal$_doubleArray$(Label updateLabel,
+        ConfPolicy accessPolicy, double[] value) {
+      set$$updateLabel(updateLabel);
+      set$$accessPolicy(accessPolicy);
+      fabric$lang$Object$();
+
+      this.value = value;
+      return this;
     }
 
     @Override
@@ -124,6 +139,7 @@ public interface _doubleArray extends Object {
 
     @Override
     public Object $initLabels() {
+      // Handled by initializers.
       return $getProxy();
     }
   }
@@ -136,6 +152,20 @@ public interface _doubleArray extends Object {
 
     public _Proxy(_doubleArray._Impl impl) {
       super(impl);
+    }
+
+    @Override
+    public _doubleArray fabric$lang$arrays$internal$_doubleArray$(Label updateLabel,
+        ConfPolicy accessPolicy, int length) {
+      return ((_doubleArray) fetch()).fabric$lang$arrays$internal$_doubleArray$(
+          updateLabel, accessPolicy, length);
+    }
+
+    @Override
+    public _doubleArray fabric$lang$arrays$internal$_doubleArray$(Label updateLabel,
+        ConfPolicy accessPolicy, double[] value) {
+      return ((_doubleArray) fetch()).fabric$lang$arrays$internal$_doubleArray$(
+          updateLabel, accessPolicy, value);
     }
 
     @Override

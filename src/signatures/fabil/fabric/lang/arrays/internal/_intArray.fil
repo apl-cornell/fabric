@@ -5,9 +5,9 @@ public class _intArray {
 
   public native int get(int i);
 
-  public _intArray(Label updateLabel, ConfPolicy accessPolicy, int length) {
-  }
+  public native _intArray fabric$lang$arrays$internal$_intArray$(
+      Label updateLabel, ConfPolicy accessPolicy, int length);
 
-  public _intArray(Label updateLabel, ConfPolicy accessPolicy, int native[] value) {
-  }
+  public native _intArray fabric$lang$arrays$internal$_intArray$(
+      Label updateLabel, ConfPolicy accessPolicy, int native[] value);
 }

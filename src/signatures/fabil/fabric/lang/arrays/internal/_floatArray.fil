@@ -5,9 +5,9 @@ public class _floatArray {
 
   public native float get(int i);
 
-  public _floatArray(Label updateLabel, ConfPolicy accessPolicy, int length) {
-  }
+  public native _floatArray fabric$lang$arrays$internal$_floatArray$(
+      Label updateLabel, ConfPolicy accessPolicy, int length);
 
-  public _floatArray(Label updateLabel, ConfPolicy accessPolicy, float native[] value) {
-  }
+  public native _floatArray fabric$lang$arrays$internal$_floatArray$(
+      Label updateLabel, ConfPolicy accessPolicy, float native[] value);
 }

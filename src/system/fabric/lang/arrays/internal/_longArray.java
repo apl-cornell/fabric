@@ -15,44 +15,24 @@ import fabric.worker.Store;
 import fabric.worker.transaction.TransactionManager;
 
 public interface _longArray extends Object {
+  _longArray fabric$lang$arrays$internal$_longArray$(Label updateLabel,
+      ConfPolicy accessPolicy, int length);
+
+  _longArray fabric$lang$arrays$internal$_longArray$(Label updateLabel,
+      ConfPolicy accessPolicy, long[] value);
+
   int get$length();
 
   long set(int i, long value);
 
   long get(int i);
 
-  public static class _Impl extends Object._Impl implements _longArray {
+  public static class _Impl extends Object._Impl
+      implements _longArray, _InternalArrayImpl {
     private long[] value;
 
-    /**
-     * Creates a new long array at the given Store with the given length.
-     *
-     * @param store
-     *          The store on which to allocate the array.
-     * @param length
-     *          The length of the array.
-     */
-    public _Impl(Store store, Label label, ConfPolicy accessPolicy,
-        int length) {
-      this(store, label, accessPolicy, new long[length]);
-    }
-
-    /**
-     * Creates a new long array at the given Store using the given backing
-     * array.
-     *
-     * @param store
-     *          The store on which to allocate the array.
-     * @param value
-     *          The backing array to use.
-     */
-    public _Impl(Store store, Label updateLabel, ConfPolicy accessPolicy,
-        long[] value) {
+    public _Impl(Store store) {
       super(store);
-      this.value = value;
-
-      set$$updateLabel(updateLabel);
-      set$$accessPolicy(accessPolicy);
     }
 
     /**
@@ -70,6 +50,42 @@ public interface _longArray extends Object {
       value = new long[in.readInt()];
       for (int i = 0; i < value.length; i++)
         value[i] = in.readLong();
+    }
+
+    /**
+     * Creates a new long array at the given Store with the given length.
+     *
+     * @param store
+     *          The store on which to allocate the array.
+     * @param length
+     *          The length of the array.
+     */
+    @Override
+    public _longArray fabric$lang$arrays$internal$_longArray$(Label updateLabel,
+        ConfPolicy accessPolicy, int length) {
+      fabric$lang$arrays$internal$_longArray$(updateLabel, accessPolicy,
+          new long[length]);
+      return this;
+    }
+
+    /**
+     * Creates a new long array at the given Store using the given backing
+     * array.
+     *
+     * @param store
+     *          The store on which to allocate the array.
+     * @param value
+     *          The backing array to use.
+     */
+    @Override
+    public _longArray fabric$lang$arrays$internal$_longArray$(Label updateLabel,
+        ConfPolicy accessPolicy, long[] value) {
+      set$$updateLabel(updateLabel);
+      set$$accessPolicy(accessPolicy);
+      fabric$lang$Object$();
+
+      this.value = value;
+      return this;
     }
 
     @Override
@@ -101,6 +117,7 @@ public interface _longArray extends Object {
       value = src.value;
     }
 
+    @Override
     public void cloneValues() {
       value = value.clone();
     }
@@ -122,6 +139,7 @@ public interface _longArray extends Object {
 
     @Override
     public Object $initLabels() {
+      // Handled by initializers.
       return $getProxy();
     }
   }
@@ -134,6 +152,20 @@ public interface _longArray extends Object {
 
     public _Proxy(_longArray._Impl impl) {
       super(impl);
+    }
+
+    @Override
+    public _longArray fabric$lang$arrays$internal$_longArray$(Label updateLabel,
+        ConfPolicy accessPolicy, int length) {
+      return ((_longArray) fetch()).fabric$lang$arrays$internal$_longArray$(
+          updateLabel, accessPolicy, length);
+    }
+
+    @Override
+    public _longArray fabric$lang$arrays$internal$_longArray$(Label updateLabel,
+        ConfPolicy accessPolicy, long[] value) {
+      return ((_longArray) fetch()).fabric$lang$arrays$internal$_longArray$(
+          updateLabel, accessPolicy, value);
     }
 
     @Override

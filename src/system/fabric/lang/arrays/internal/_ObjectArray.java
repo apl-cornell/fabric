@@ -20,6 +20,14 @@ import fabric.worker.Worker;
 import fabric.worker.transaction.TransactionManager;
 
 public interface _ObjectArray<T extends Object> extends Object {
+  <P extends Object._Proxy> _ObjectArray<T> fabric$lang$arrays$internal$_ObjectArray$(
+      Label updateLabel, ConfPolicy accessPolicy, Class<P> proxyType,
+      int length);
+
+  <P extends Object._Proxy> _ObjectArray<T> fabric$lang$arrays$internal$_ObjectArray$(
+      Label updateLabel, ConfPolicy accessPolicy, Class<P> proxyType,
+      T[] value);
+
   int get$length();
 
   T set(int i, T value);
@@ -31,45 +39,12 @@ public interface _ObjectArray<T extends Object> extends Object {
     /**
      * The class representing the proxy type for the array elements.
      */
-    private final Class<? extends Object._Proxy> proxyType;
+    private /*final*/ Class<? extends Object._Proxy> proxyType;
 
     private Object[] value;
 
-    /**
-     * Creates a new object array at the given Store with the given length.
-     *
-     * @param store
-     *          The store on which to allocate the array.
-     * @param length
-     *          The length of the array.
-     */
-    public _Impl(Store store, Label updateLabel, ConfPolicy accessPolicy,
-        Class<? extends Object._Proxy> proxyType, int length) {
+    public _Impl(Store store) {
       super(store);
-      this.proxyType = getProxy(proxyType);
-      value = new Object[length];
-
-      set$$updateLabel(updateLabel);
-      set$$accessPolicy(accessPolicy);
-    }
-
-    /**
-     * Creates a new object array at the given Store using the given backing
-     * array.
-     *
-     * @param store
-     *          The store on which to allocate the array.
-     * @param value
-     *          The backing array to use.
-     */
-    public _Impl(Store store, Label updateLabel, ConfPolicy accessPolicy,
-        Class<? extends Object._Proxy> proxyType, T[] value) {
-      super(store);
-      this.proxyType = getProxy(proxyType);
-      this.value = value;
-
-      set$$updateLabel(updateLabel);
-      set$$accessPolicy(accessPolicy);
     }
 
     /**
@@ -91,6 +66,46 @@ public interface _ObjectArray<T extends Object> extends Object {
         value[i] = $readRef(proxyType, refTypes.next(), in, store,
             intraStoreRefs, interStoreRefs);
       }
+    }
+
+    /**
+     * Creates a new object array at the given Store with the given length.
+     *
+     * @param store
+     *          The store on which to allocate the array.
+     * @param length
+     *          The length of the array.
+     */
+    @Override
+    public <P extends Object._Proxy> _ObjectArray<T> fabric$lang$arrays$internal$_ObjectArray$(
+        Label updateLabel, ConfPolicy accessPolicy, Class<P> proxyType,
+        int length) {
+      fabric$lang$arrays$internal$_ObjectArray$(updateLabel, accessPolicy,
+          proxyType, (T[]) new Object[length]);
+      return this;
+    }
+
+    /**
+     * Creates a new object array at the given Store using the given backing
+     * array.
+     *
+     * @param store
+     *          The store on which to allocate the array.
+     * @param value
+     *          The backing array to use.
+     */
+    @Override
+    public <P extends Object._Proxy> _ObjectArray<T> fabric$lang$arrays$internal$_ObjectArray$(
+        Label updateLabel, ConfPolicy accessPolicy, Class<P> proxyType,
+        T[] value) {
+      this.proxyType = getProxy(proxyType);
+
+      set$$updateLabel(updateLabel);
+      set$$accessPolicy(accessPolicy);
+      fabric$lang$Object$();
+
+      this.value = value;
+      return this;
     }
 
     private static final Map<Class<?>, Class<? extends fabric.lang.Object._Proxy>> proxyCache =
@@ -189,6 +204,7 @@ public interface _ObjectArray<T extends Object> extends Object {
 
     @Override
     public Object $initLabels() {
+      // Handled by initializers.
       return $getProxy();
     }
   }
@@ -202,6 +218,24 @@ public interface _ObjectArray<T extends Object> extends Object {
 
     public _Proxy(_ObjectArray._Impl<T> impl) {
       super(impl);
+    }
+
+    @Override
+    public <P extends Object._Proxy> _ObjectArray<T> fabric$lang$arrays$internal$_ObjectArray$(
+        Label updateLabel, ConfPolicy accessPolicy, Class<P> proxyType,
+        int length) {
+      return ((_ObjectArray<T>) fetch())
+          .fabric$lang$arrays$internal$_ObjectArray$(updateLabel, accessPolicy,
+              proxyType, length);
+    }
+
+    @Override
+    public <P extends Object._Proxy> _ObjectArray<T> fabric$lang$arrays$internal$_ObjectArray$(
+        Label updateLabel, ConfPolicy accessPolicy, Class<P> proxyType,
+        T[] value) {
+      return ((_ObjectArray<T>) fetch())
+          .fabric$lang$arrays$internal$_ObjectArray$(updateLabel, accessPolicy,
+              proxyType, value);
     }
 
     @Override

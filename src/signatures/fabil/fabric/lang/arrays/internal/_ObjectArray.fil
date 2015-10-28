@@ -5,9 +5,10 @@ public class _ObjectArray {
 
   public native Object get(int i);
 
-  public _ObjectArray(Label updateLabel, ConfPolicy accessPolicy, Class proxyType, int length) {
-  }
+  public native _ObjectArray fabric$lang$arrays$internal$_ObjectArray$(
+      Label updateLabel, ConfPolicy accessPolicy, Class proxyType, int length);
 
-  public _ObjectArray(Label updateLabel, ConfPolicy accessPolicy, Class proxyType, Object native[] value) {
-  }
+  public native _ObjectArray fabric$lang$arrays$internal$_ObjectArray$(
+      Label updateLabel, ConfPolicy accessPolicy, Class proxyType,
+      Object native[] value);
 }

@@ -15,6 +15,12 @@ import fabric.worker.Store;
 import fabric.worker.transaction.TransactionManager;
 
 public interface _shortArray extends Object {
+  _shortArray fabric$lang$arrays$internal$_shortArray$(Label updateLabel,
+      ConfPolicy accessPolicy, int length);
+
+  _shortArray fabric$lang$arrays$internal$_shortArray$(Label updateLabel,
+      ConfPolicy accessPolicy, short[] value);
+
   int get$length();
 
   short set(int i, short value);
@@ -25,35 +31,8 @@ public interface _shortArray extends Object {
       implements _shortArray, _InternalArrayImpl {
     private short[] value;
 
-    /**
-     * Creates a new short array at the given Store with the given length.
-     *
-     * @param store
-     *          The store on which to allocate the array.
-     * @param length
-     *          The length of the array.
-     */
-    public _Impl(Store store, Label updateLabel, ConfPolicy accessPolicy,
-        int length) {
-      this(store, updateLabel, accessPolicy, new short[length]);
-    }
-
-    /**
-     * Creates a new short array at the given Store using the given backing
-     * array.
-     *
-     * @param store
-     *          The store on which to allocate the array.
-     * @param value
-     *          The backing array to use.
-     */
-    public _Impl(Store store, Label updateLabel, ConfPolicy accessPolicy,
-        short[] value) {
+    public _Impl(Store store) {
       super(store);
-      this.value = value;
-
-      set$$updateLabel(updateLabel);
-      set$$accessPolicy(accessPolicy);
     }
 
     /**
@@ -71,6 +50,42 @@ public interface _shortArray extends Object {
       value = new short[in.readInt()];
       for (int i = 0; i < value.length; i++)
         value[i] = in.readShort();
+    }
+
+    /**
+     * Creates a new short array at the given Store with the given length.
+     *
+     * @param store
+     *          The store on which to allocate the array.
+     * @param length
+     *          The length of the array.
+     */
+    @Override
+    public _shortArray fabric$lang$arrays$internal$_shortArray$(Label updateLabel,
+        ConfPolicy accessPolicy, int length) {
+      fabric$lang$arrays$internal$_shortArray$(updateLabel, accessPolicy,
+          new short[length]);
+      return this;
+    }
+
+    /**
+     * Creates a new short array at the given Store using the given backing
+     * array.
+     *
+     * @param store
+     *          The store on which to allocate the array.
+     * @param value
+     *          The backing array to use.
+     */
+    @Override
+    public _shortArray fabric$lang$arrays$internal$_shortArray$(Label updateLabel,
+        ConfPolicy accessPolicy, short[] value) {
+      set$$updateLabel(updateLabel);
+      set$$accessPolicy(accessPolicy);
+      fabric$lang$Object$();
+
+      this.value = value;
+      return this;
     }
 
     @Override
@@ -124,6 +139,7 @@ public interface _shortArray extends Object {
 
     @Override
     public Object $initLabels() {
+      // Handled by initializers.
       return $getProxy();
     }
   }
@@ -136,6 +152,20 @@ public interface _shortArray extends Object {
 
     public _Proxy(_shortArray._Impl impl) {
       super(impl);
+    }
+
+    @Override
+    public _shortArray fabric$lang$arrays$internal$_shortArray$(Label updateLabel,
+        ConfPolicy accessPolicy, int length) {
+      return ((_shortArray) fetch()).fabric$lang$arrays$internal$_shortArray$(
+          updateLabel, accessPolicy, length);
+    }
+
+    @Override
+    public _shortArray fabric$lang$arrays$internal$_shortArray$(Label updateLabel,
+        ConfPolicy accessPolicy, short[] value) {
+      return ((_shortArray) fetch()).fabric$lang$arrays$internal$_shortArray$(
+          updateLabel, accessPolicy, value);
     }
 
     @Override

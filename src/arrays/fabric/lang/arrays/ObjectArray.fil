@@ -96,8 +96,8 @@ public final class ObjectArray {
     // Compute required height (height starts at 1).
     this.height = getHeight(length);
     if (height == 1)
-      root = (_ObjectArray) new _ObjectArray(this.$updateLabel, this.$accessPolicy, proxyType, CHUNK_SIZE).$initLabels();
-    else root = (_ObjectArray) new _ObjectArray(this.$updateLabel, this.$accessPolicy, _ObjectArray.class, CHUNK_SIZE).$initLabels();
+      root = (_ObjectArray) new _ObjectArray().fabric$lang$arrays$internal$_ObjectArray$(this.$updateLabel, this.$accessPolicy, proxyType, CHUNK_SIZE);
+    else root = (_ObjectArray) new _ObjectArray().fabric$lang$arrays$internal$_ObjectArray$(this.$updateLabel, this.$accessPolicy, _ObjectArray.class, CHUNK_SIZE);
 
     return this;
   }
@@ -132,7 +132,7 @@ public final class ObjectArray {
   private void setZeroLength() {
     this.length = 0;
     this.height = 1;
-    root = (_ObjectArray) new _ObjectArray(this.$updateLabel, this.$accessPolicy, proxyType, CHUNK_SIZE).$initLabels();
+    root = (_ObjectArray) new _ObjectArray().fabric$lang$arrays$internal$_ObjectArray$(this.$updateLabel, this.$accessPolicy, proxyType, CHUNK_SIZE);
   }
 
   public void setLength(int newSize) {
@@ -148,7 +148,7 @@ public final class ObjectArray {
     if (difference > 0) {
       // Make sure the leaves are at the right level - push down the root.
       for (int count = 0; count < difference; count++) {
-        _ObjectArray newRoot = (_ObjectArray) new _ObjectArray(this.$updateLabel, this.$accessPolicy, _ObjectArray.class, CHUNK_SIZE).$initLabels();
+        _ObjectArray newRoot = (_ObjectArray) new _ObjectArray().fabric$lang$arrays$internal$_ObjectArray$(this.$updateLabel, this.$accessPolicy, _ObjectArray.class, CHUNK_SIZE);
         newRoot.set(0, root);
         root = newRoot;
       }
@@ -212,8 +212,8 @@ public final class ObjectArray {
       if (nextObject == null) {
         // Writing to a node that doesn't exist yet. Time to create it.
         if (level == 2)
-          nextObject = (_ObjectArray) new _ObjectArray(this.$updateLabel, this.$accessPolicy, proxyType, CHUNK_SIZE).$initLabels();
-        else nextObject = (_ObjectArray) new _ObjectArray(this.$updateLabel, this.$accessPolicy, _ObjectArray.class, CHUNK_SIZE).$initLabels();
+          nextObject = (_ObjectArray) new _ObjectArray().fabric$lang$arrays$internal$_ObjectArray$(this.$updateLabel, this.$accessPolicy, proxyType, CHUNK_SIZE);
+        else nextObject = (_ObjectArray) new _ObjectArray().fabric$lang$arrays$internal$_ObjectArray$(this.$updateLabel, this.$accessPolicy, _ObjectArray.class, CHUNK_SIZE);
         node.set(firstDigit, nextObject);
       }
       node = (_ObjectArray) nextObject;

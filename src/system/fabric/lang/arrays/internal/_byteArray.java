@@ -15,6 +15,12 @@ import fabric.worker.Store;
 import fabric.worker.transaction.TransactionManager;
 
 public interface _byteArray extends Object {
+  _byteArray fabric$lang$arrays$internal$_byteArray$(Label updateLabel,
+      ConfPolicy accessPolicy, int length);
+
+  _byteArray fabric$lang$arrays$internal$_byteArray$(Label updateLabel,
+      ConfPolicy accessPolicy, byte[] value);
+
   int get$length();
 
   byte set(int i, byte value);
@@ -25,35 +31,8 @@ public interface _byteArray extends Object {
       implements _byteArray, _InternalArrayImpl {
     private byte[] value;
 
-    /**
-     * Creates a new byte array at the given Store with the given length.
-     *
-     * @param store
-     *          The store on which to allocate the array.
-     * @param length
-     *          The length of the array.
-     */
-    public _Impl(Store store, Label updateLabel, ConfPolicy accessPolicy,
-        int length) {
-      this(store, updateLabel, accessPolicy, new byte[length]);
-    }
-
-    /**
-     * Creates a new byte array at the given Store using the given backing
-     * array.
-     *
-     * @param store
-     *          The store on which to allocate the array.
-     * @param value
-     *          The backing array to use.
-     */
-    public _Impl(Store store, Label updateLabel, ConfPolicy accessPolicy,
-        byte[] value) {
+    public _Impl(Store store) {
       super(store);
-      this.value = value;
-
-      set$$updateLabel(updateLabel);
-      set$$accessPolicy(accessPolicy);
     }
 
     /**
@@ -71,6 +50,42 @@ public interface _byteArray extends Object {
       value = new byte[in.readInt()];
       for (int i = 0; i < value.length; i++)
         value[i] = in.readByte();
+    }
+
+    /**
+     * Creates a new byte array at the given Store with the given length.
+     *
+     * @param store
+     *          The store on which to allocate the array.
+     * @param length
+     *          The length of the array.
+     */
+    @Override
+    public _byteArray fabric$lang$arrays$internal$_byteArray$(Label updateLabel,
+        ConfPolicy accessPolicy, int length) {
+      fabric$lang$arrays$internal$_byteArray$(updateLabel, accessPolicy,
+          new byte[length]);
+      return this;
+    }
+
+    /**
+     * Creates a new byte array at the given Store using the given backing
+     * array.
+     *
+     * @param store
+     *          The store on which to allocate the array.
+     * @param value
+     *          The backing array to use.
+     */
+    @Override
+    public _byteArray fabric$lang$arrays$internal$_byteArray$(Label updateLabel,
+        ConfPolicy accessPolicy, byte[] value) {
+      set$$updateLabel(updateLabel);
+      set$$accessPolicy(accessPolicy);
+      fabric$lang$Object$();
+
+      this.value = value;
+      return this;
     }
 
     @Override
@@ -124,6 +139,7 @@ public interface _byteArray extends Object {
 
     @Override
     public Object $initLabels() {
+      // Handled by initializers.
       return $getProxy();
     }
   }
@@ -136,6 +152,20 @@ public interface _byteArray extends Object {
 
     public _Proxy(_byteArray._Impl impl) {
       super(impl);
+    }
+
+    @Override
+    public _byteArray fabric$lang$arrays$internal$_byteArray$(Label updateLabel,
+        ConfPolicy accessPolicy, int length) {
+      return ((_byteArray) fetch()).fabric$lang$arrays$internal$_byteArray$(
+          updateLabel, accessPolicy, length);
+    }
+
+    @Override
+    public _byteArray fabric$lang$arrays$internal$_byteArray$(Label updateLabel,
+        ConfPolicy accessPolicy, byte[] value) {
+      return ((_byteArray) fetch()).fabric$lang$arrays$internal$_byteArray$(
+          updateLabel, accessPolicy, value);
     }
 
     @Override

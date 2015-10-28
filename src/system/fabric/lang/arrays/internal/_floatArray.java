@@ -15,6 +15,12 @@ import fabric.worker.Store;
 import fabric.worker.transaction.TransactionManager;
 
 public interface _floatArray extends Object {
+  _floatArray fabric$lang$arrays$internal$_floatArray$(Label updateLabel,
+      ConfPolicy accessPolicy, int length);
+
+  _floatArray fabric$lang$arrays$internal$_floatArray$(Label updateLabel,
+      ConfPolicy accessPolicy, float[] value);
+
   int get$length();
 
   float set(int i, float value);
@@ -25,35 +31,8 @@ public interface _floatArray extends Object {
       implements _floatArray, _InternalArrayImpl {
     private float[] value;
 
-    /**
-     * Creates a new float array at the given Store with the given length.
-     *
-     * @param store
-     *          The store on which to allocate the array.
-     * @param length
-     *          The length of the array.
-     */
-    public _Impl(Store store, Label updateLabel, ConfPolicy accessPolicy,
-        int length) {
-      this(store, updateLabel, accessPolicy, new float[length]);
-    }
-
-    /**
-     * Creates a new float array at the given Store using the given backing
-     * array.
-     *
-     * @param store
-     *          The store on which to allocate the array.
-     * @param value
-     *          The backing array to use.
-     */
-    public _Impl(Store store, Label updateLabel, ConfPolicy accessPolicy,
-        float[] value) {
+    public _Impl(Store store) {
       super(store);
-      this.value = value;
-
-      set$$updateLabel(updateLabel);
-      set$$accessPolicy(accessPolicy);
     }
 
     /**
@@ -71,6 +50,42 @@ public interface _floatArray extends Object {
       value = new float[in.readInt()];
       for (int i = 0; i < value.length; i++)
         value[i] = in.readFloat();
+    }
+
+    /**
+     * Creates a new float array at the given Store with the given length.
+     *
+     * @param store
+     *          The store on which to allocate the array.
+     * @param length
+     *          The length of the array.
+     */
+    @Override
+    public _floatArray fabric$lang$arrays$internal$_floatArray$(Label updateLabel,
+        ConfPolicy accessPolicy, int length) {
+      fabric$lang$arrays$internal$_floatArray$(updateLabel, accessPolicy,
+          new float[length]);
+      return this;
+    }
+
+    /**
+     * Creates a new float array at the given Store using the given backing
+     * array.
+     *
+     * @param store
+     *          The store on which to allocate the array.
+     * @param value
+     *          The backing array to use.
+     */
+    @Override
+    public _floatArray fabric$lang$arrays$internal$_floatArray$(Label updateLabel,
+        ConfPolicy accessPolicy, float[] value) {
+      set$$updateLabel(updateLabel);
+      set$$accessPolicy(accessPolicy);
+      fabric$lang$Object$();
+
+      this.value = value;
+      return this;
     }
 
     @Override
@@ -124,6 +139,7 @@ public interface _floatArray extends Object {
 
     @Override
     public Object $initLabels() {
+      // Handled by initializers.
       return $getProxy();
     }
   }
@@ -136,6 +152,20 @@ public interface _floatArray extends Object {
 
     public _Proxy(_floatArray._Impl impl) {
       super(impl);
+    }
+
+    @Override
+    public _floatArray fabric$lang$arrays$internal$_floatArray$(Label updateLabel,
+        ConfPolicy accessPolicy, int length) {
+      return ((_floatArray) fetch()).fabric$lang$arrays$internal$_floatArray$(
+          updateLabel, accessPolicy, length);
+    }
+
+    @Override
+    public _floatArray fabric$lang$arrays$internal$_floatArray$(Label updateLabel,
+        ConfPolicy accessPolicy, float[] value) {
+      return ((_floatArray) fetch()).fabric$lang$arrays$internal$_floatArray$(
+          updateLabel, accessPolicy, value);
     }
 
     @Override

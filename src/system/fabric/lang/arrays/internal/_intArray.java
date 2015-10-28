@@ -15,6 +15,12 @@ import fabric.worker.Store;
 import fabric.worker.transaction.TransactionManager;
 
 public interface _intArray extends Object {
+  _intArray fabric$lang$arrays$internal$_intArray$(Label updateLabel,
+      ConfPolicy accessPolicy, int length);
+
+  _intArray fabric$lang$arrays$internal$_intArray$(Label updateLabel,
+      ConfPolicy accessPolicy, int[] value);
+
   int get$length();
 
   int set(int i, int value);
@@ -25,34 +31,8 @@ public interface _intArray extends Object {
       implements _intArray, _InternalArrayImpl {
     private int[] value;
 
-    /**
-     * Creates a new int array at the given Store with the given length.
-     *
-     * @param store
-     *          The store on which to allocate the array.
-     * @param length
-     *          The length of the array.
-     */
-    public _Impl(Store store, Label label, ConfPolicy accessPolicy,
-        int length) {
-      this(store, label, accessPolicy, new int[length]);
-    }
-
-    /**
-     * Creates a new int array at the given Store using the given backing array.
-     *
-     * @param store
-     *          The store on which to allocate the array.
-     * @param value
-     *          The backing array to use.
-     */
-    public _Impl(Store store, Label updateLabel, ConfPolicy accessPolicy,
-        int[] value) {
+    public _Impl(Store store) {
       super(store);
-      this.value = value;
-
-      set$$updateLabel(updateLabel);
-      set$$accessPolicy(accessPolicy);
     }
 
     /**
@@ -70,6 +50,42 @@ public interface _intArray extends Object {
       value = new int[in.readInt()];
       for (int i = 0; i < value.length; i++)
         value[i] = in.readInt();
+    }
+
+    /**
+     * Creates a new int array at the given Store with the given length.
+     *
+     * @param store
+     *          The store on which to allocate the array.
+     * @param length
+     *          The length of the array.
+     */
+    @Override
+    public _intArray fabric$lang$arrays$internal$_intArray$(Label updateLabel,
+        ConfPolicy accessPolicy, int length) {
+      fabric$lang$arrays$internal$_intArray$(updateLabel, accessPolicy,
+          new int[length]);
+      return this;
+    }
+
+    /**
+     * Creates a new int array at the given Store using the given backing
+     * array.
+     *
+     * @param store
+     *          The store on which to allocate the array.
+     * @param value
+     *          The backing array to use.
+     */
+    @Override
+    public _intArray fabric$lang$arrays$internal$_intArray$(Label updateLabel,
+        ConfPolicy accessPolicy, int[] value) {
+      set$$updateLabel(updateLabel);
+      set$$accessPolicy(accessPolicy);
+      fabric$lang$Object$();
+
+      this.value = value;
+      return this;
     }
 
     @Override
@@ -123,6 +139,7 @@ public interface _intArray extends Object {
 
     @Override
     public Object $initLabels() {
+      // Handled by initializers.
       return $getProxy();
     }
   }
@@ -135,6 +152,20 @@ public interface _intArray extends Object {
 
     public _Proxy(_intArray._Impl impl) {
       super(impl);
+    }
+
+    @Override
+    public _intArray fabric$lang$arrays$internal$_intArray$(Label updateLabel,
+        ConfPolicy accessPolicy, int length) {
+      return ((_intArray) fetch()).fabric$lang$arrays$internal$_intArray$(
+          updateLabel, accessPolicy, length);
+    }
+
+    @Override
+    public _intArray fabric$lang$arrays$internal$_intArray$(Label updateLabel,
+        ConfPolicy accessPolicy, int[] value) {
+      return ((_intArray) fetch()).fabric$lang$arrays$internal$_intArray$(
+          updateLabel, accessPolicy, value);
     }
 
     @Override

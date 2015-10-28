@@ -5,9 +5,9 @@ public class _longArray {
 
   public native long get(int i);
 
-  public _longArray(Label updateLabel, ConfPolicy accessPolicy, int length) {
-  }
+  public native _longArray fabric$lang$arrays$internal$_longArray$(
+      Label updateLabel, ConfPolicy accessPolicy, int length);
 
-  public _longArray(Label updateLabel, ConfPolicy accessPolicy, long native[] value) {
-  }
+  public native _longArray fabric$lang$arrays$internal$_longArray$(
+      Label updateLabel, ConfPolicy accessPolicy, long native[] value);
 }

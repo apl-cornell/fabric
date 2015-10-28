@@ -15,6 +15,12 @@ import fabric.worker.Store;
 import fabric.worker.transaction.TransactionManager;
 
 public interface _charArray extends Object {
+  _charArray fabric$lang$arrays$internal$_charArray$(Label updateLabel,
+      ConfPolicy accessPolicy, int length);
+
+  _charArray fabric$lang$arrays$internal$_charArray$(Label updateLabel,
+      ConfPolicy accessPolicy, char[] value);
+
   int get$length();
 
   char set(int i, char value);
@@ -25,35 +31,8 @@ public interface _charArray extends Object {
       implements _charArray, _InternalArrayImpl {
     private char[] value;
 
-    /**
-     * Creates a new char array at the given Store with the given length.
-     *
-     * @param store
-     *          The store on which to allocate the array.
-     * @param length
-     *          The length of the array.
-     */
-    public _Impl(Store store, Label label, ConfPolicy accessPolicy,
-        int length) {
-      this(store, label, accessPolicy, new char[length]);
-    }
-
-    /**
-     * Creates a new char array at the given Store using the given backing
-     * array.
-     *
-     * @param store
-     *          The store on which to allocate the array.
-     * @param value
-     *          The backing array to use.
-     */
-    public _Impl(Store store, Label updateLabel, ConfPolicy accessPolicy,
-        char[] value) {
+    public _Impl(Store store) {
       super(store);
-      this.value = value;
-
-      set$$updateLabel(updateLabel);
-      set$$accessPolicy(accessPolicy);
     }
 
     /**
@@ -71,6 +50,42 @@ public interface _charArray extends Object {
       value = new char[in.readInt()];
       for (int i = 0; i < value.length; i++)
         value[i] = in.readChar();
+    }
+
+    /**
+     * Creates a new char array at the given Store with the given length.
+     *
+     * @param store
+     *          The store on which to allocate the array.
+     * @param length
+     *          The length of the array.
+     */
+    @Override
+    public _charArray fabric$lang$arrays$internal$_charArray$(Label updateLabel,
+        ConfPolicy accessPolicy, int length) {
+      fabric$lang$arrays$internal$_charArray$(updateLabel, accessPolicy,
+          new char[length]);
+      return this;
+    }
+
+    /**
+     * Creates a new char array at the given Store using the given backing
+     * array.
+     *
+     * @param store
+     *          The store on which to allocate the array.
+     * @param value
+     *          The backing array to use.
+     */
+    @Override
+    public _charArray fabric$lang$arrays$internal$_charArray$(Label updateLabel,
+        ConfPolicy accessPolicy, char[] value) {
+      set$$updateLabel(updateLabel);
+      set$$accessPolicy(accessPolicy);
+      fabric$lang$Object$();
+
+      this.value = value;
+      return this;
     }
 
     @Override
@@ -124,6 +139,7 @@ public interface _charArray extends Object {
 
     @Override
     public Object $initLabels() {
+      // Handled by initializers.
       return $getProxy();
     }
   }
@@ -136,6 +152,20 @@ public interface _charArray extends Object {
 
     public _Proxy(_charArray._Impl impl) {
       super(impl);
+    }
+
+    @Override
+    public _charArray fabric$lang$arrays$internal$_charArray$(Label updateLabel,
+        ConfPolicy accessPolicy, int length) {
+      return ((_charArray) fetch()).fabric$lang$arrays$internal$_charArray$(
+          updateLabel, accessPolicy, length);
+    }
+
+    @Override
+    public _charArray fabric$lang$arrays$internal$_charArray$(Label updateLabel,
+        ConfPolicy accessPolicy, char[] value) {
+      return ((_charArray) fetch()).fabric$lang$arrays$internal$_charArray$(
+          updateLabel, accessPolicy, value);
     }
 
     @Override

@@ -85,13 +85,13 @@ public final class intArray {
 
     switch (height) {
     case 1:
-      root = (_intArray) new _intArray(this.$updateLabel, this.$accessPolicy, CHUNK_SIZE).$initLabels();
+      root = (_intArray) new _intArray().fabric$lang$arrays$internal$_intArray$(this.$updateLabel, this.$accessPolicy, CHUNK_SIZE);
       break;
     case 2:
-      root = (_ObjectArray) new _ObjectArray(this.$updateLabel, this.$accessPolicy, _intArray.class, CHUNK_SIZE).$initLabels();
+      root = (_ObjectArray) new _ObjectArray().fabric$lang$arrays$internal$_ObjectArray$(this.$updateLabel, this.$accessPolicy, _intArray.class, CHUNK_SIZE);
       break;
     default:
-      root = (_ObjectArray) new _ObjectArray(this.$updateLabel, this.$accessPolicy, _ObjectArray.class, CHUNK_SIZE).$initLabels();
+      root = (_ObjectArray) new _ObjectArray().fabric$lang$arrays$internal$_ObjectArray$(this.$updateLabel, this.$accessPolicy, _ObjectArray.class, CHUNK_SIZE);
     }
 
     return this;
@@ -127,7 +127,7 @@ public final class intArray {
   private void setZeroLength() {
     this.length = 0;
     this.height = 1;
-    root = (_intArray) new _intArray(this.$updateLabel, this.$accessPolicy, CHUNK_SIZE).$initLabels();
+    root = (_intArray) new _intArray().fabric$lang$arrays$internal$_intArray$(this.$updateLabel, this.$accessPolicy, CHUNK_SIZE);
   }
 
   public void setLength(int newSize) {
@@ -144,13 +144,13 @@ public final class intArray {
     if (difference > 0) {
       // Make sure the leaves are at the right level - push down the root.
       if (oldHeight == 1) {
-        _ObjectArray newRoot = (_ObjectArray) new _ObjectArray(this.$updateLabel, this.$accessPolicy, _intArray.class, CHUNK_SIZE).$initLabels();
+        _ObjectArray newRoot = (_ObjectArray) new _ObjectArray().fabric$lang$arrays$internal$_ObjectArray$(this.$updateLabel, this.$accessPolicy, _intArray.class, CHUNK_SIZE);
         newRoot.set(0, root);
         root = newRoot;
         difference--;
       }
       for (int count = 0; count < difference; count++) {
-        _ObjectArray newRoot = (_ObjectArray) new _ObjectArray(this.$updateLabel, this.$accessPolicy, _ObjectArray.class, CHUNK_SIZE).$initLabels();
+        _ObjectArray newRoot = (_ObjectArray) new _ObjectArray().fabric$lang$arrays$internal$_ObjectArray$(this.$updateLabel, this.$accessPolicy, _ObjectArray.class, CHUNK_SIZE);
         newRoot.set(0, root);
         root = newRoot;
       }
@@ -224,13 +224,13 @@ public final class intArray {
         // Writing to a node that doesn't exist yet. Time to create it.
         switch (level) {
         case 3:
-          nextObject = (_ObjectArray) new _ObjectArray(this.$updateLabel, this.$accessPolicy, _intArray.class, CHUNK_SIZE).$initLabels();
+          nextObject = (_ObjectArray) new _ObjectArray().fabric$lang$arrays$internal$_ObjectArray$(this.$updateLabel, this.$accessPolicy, _intArray.class, CHUNK_SIZE);
           break;
         case 2:
-          nextObject = (_intArray) new _intArray(this.$updateLabel, this.$accessPolicy, CHUNK_SIZE).$initLabels();
+          nextObject = (_intArray) new _intArray().fabric$lang$arrays$internal$_intArray$(this.$updateLabel, this.$accessPolicy, CHUNK_SIZE);
           break;
         default:
-          nextObject = (_ObjectArray) new _ObjectArray(this.$updateLabel, this.$accessPolicy, _ObjectArray.class, CHUNK_SIZE).$initLabels();
+          nextObject = (_ObjectArray) new _ObjectArray().fabric$lang$arrays$internal$_ObjectArray$(this.$updateLabel, this.$accessPolicy, _ObjectArray.class, CHUNK_SIZE);
         }
         oArray.set(firstDigit, nextObject);
       }

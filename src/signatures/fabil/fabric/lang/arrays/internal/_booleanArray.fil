@@ -5,9 +5,9 @@ public class _booleanArray {
 
   public native boolean get(int i);
 
-  public _booleanArray(Label updateLabel, ConfPolicy accessPolicy, int length) {
-  }
+  public native _booleanArray fabric$lang$arrays$internal$_booleanArray$(
+      Label updateLabel, ConfPolicy accessPolicy, int length);
 
-  public _booleanArray(Label updateLabel, ConfPolicy accessPolicy, boolean native[] value) {
-  }
+  public native _booleanArray fabric$lang$arrays$internal$_booleanArray$(
+      Label updateLabel, ConfPolicy accessPolicy, boolean native[] value);
 }
