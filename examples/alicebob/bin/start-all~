@@ -1,0 +1,10 @@
+#!/bin/bash
+
+BIN_DIR="$(dirname $0)"
+
+"${BIN_DIR}/run-in-xterm" "AliceBob AliceStore" 0 0 \
+  "${BIN_DIR}/start-alicestore $@" &
+
+"${BIN_DIR}/run-in-xterm" "AliceBob BobStore"   600 0 \
+  "${BIN_DIR}/start-bobstore $@" &
+

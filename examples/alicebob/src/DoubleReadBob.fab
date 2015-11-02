@@ -1,0 +1,45 @@
+/**
+ * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ *
+ * 
+ 
+ This file is part of Fabric.
+ *
+ * Fabric is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * Fabric is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ */
+import fabric.util.Map;
+import fabric.runtime.Runtime;
+
+class DoubleReadBob{
+  /**
+   *  Print out the message stored on CarolStore by SuperPingMain
+   **/
+  public static void main{*provider}(principal{*<-p}/*{p<-}*/ p, String[] args):{*->;_<-} throws Exception {
+    final Store       /*{⊤ → p;             ⊤ ← p}*/ alicestore = FabricWorker.getWorker().getStore("alicenode");
+    final principal   /*{⊤ → p;             ⊤ ← p}*/ alice      = alicestore.getPrincipal();
+    final Store       {⊤ → p ⊓ ⊤ → alice; ⊤ ← p} store      = FabricWorker.getWorker().getStore("bobnode");
+    final principal   {⊤ → p ⊓ ⊤ → alice; ⊤ ← p} bob        = store.getPrincipal();
+    final principal   {⊤ → p ⊓ ⊤ → alice; ⊤ ← p} top        = new principal(⊤);
+
+    if (p equiv bob) {
+      final Message[{⊤ → bob   ⊓ ⊤ → alice; ⊤ ← bob  ; ⊤ ← alice}]{⊤ → bob   ⊓ ⊤ → alice; ⊤ ← bob  ; ⊤ ← alice} myMessage = 
+           (Message[{⊤ → bob   ⊓ ⊤ → alice; ⊤ ← bob  ; ⊤ ← alice}]) store.getRoot().get("bobMessage");
+      if (myMessage != null) { 
+        final String{⊤ → bob   ⊓ ⊤ → alice} messageText = myMessage.getMessage();
+        Runtime[top].getRuntime().out().println(messageText);
+      } else {
+        throw new Error("It's Null! It's Null! Everything is Null!");
+      }
+    }
+  }
+}
+
+

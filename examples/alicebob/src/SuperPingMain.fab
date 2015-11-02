@@ -1,0 +1,84 @@
+/**
+ * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ *
+ * 
+ 
+ This file is part of Fabric.
+ *
+ * Fabric is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * Fabric is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ */
+import fabric.util.Map;
+import fabric.runtime.Runtime;
+import fabricated.util.List;
+import fabricated.util.Comparator;
+import fabricated.util.IdComparator;
+import fabricated.util.LinkedList;
+import fabric.lang.security.PrincipalUtil;
+import fabric.lang.security.LabelUtil;
+
+class SuperPingMain{
+
+  public static void main{*provider}(principal{p<-} p, String[] args):{*->;_<-}//:{p<-;p->}
+    throws Exception
+  {
+    // make the stores involved in our transaction
+    final Store store = FabricWorker.getWorker().getStore("alicenode");
+
+    final RemoteWorker alicestore = FabricWorker.getWorker().getWorker("alicenode");
+    final RemoteWorker bobstore   = FabricWorker.getWorker().getWorker("bobnode");
+    final RemoteWorker carolstore = FabricWorker.getWorker().getWorker("carolnode");
+    final principal alice = alicestore.getPrincipal();
+    final principal bob   = bobstore.getPrincipal();
+    final principal carol = carolstore.getPrincipal();
+
+    final label aliceReads  = new label{⊤ → alice}@store; //; alice → };
+    final label bobReads    = new label{⊤ → bob;   alice → bob}@store;
+    final label carolReads  = new label{⊤ → carol; alice → carol}@store;
+    final label aliceWrites = new label{⊤ ← alice}@store; //; alice ← };
+    final label bobWrites   = new label{⊤ ← bob;   alice ← bob}@store;
+    final label carolWrites = new label{⊤ ← carol; alice ← carol}@store;
+
+    final label initialReadPast    = new label{*aliceReads}@store;
+    final label initialWritePast   = new label{*aliceWrites}@store;
+    final label initialWriteFuture = new label{*aliceWrites ; *bobWrites ; *carolWrites}@store;
+    final label initialReadFuture  = new label{*aliceReads  ⊓ *bobReads  ⊓ *carolReads}@store;
+    final label initialReadFutureWritePast = new label{*initialReadFuture; *initialWritePast}@store;
+
+
+    if (alicestore equiv alice && alice equiv store && p equiv alice && initialReadFuture <= new label{*→ p}@store) {
+      // construct the SuperPing object we'll be using for the initial call
+
+      final SuperPing[initialReadFutureWritePast, initialReadFutureWritePast,  initialReadPast, initialWritePast, initialReadFuture, initialWriteFuture] sp = new SuperPing[initialReadFutureWritePast, initialReadFutureWritePast, initialReadPast, initialWritePast, initialReadFuture, initialWriteFuture]@store();
+
+      // an initial message, just "Hello World" for now.
+      final Message[{*initialReadFuture; *initialWritePast}]{*initialReadFuture; *initialWritePast} message = (
+        new Message[{*initialReadFuture; *initialWritePast}]@store("Hello, World"));
+
+      // Now constructing the bloody store list, which apparently invovles a comparator. 
+      final Comparator[{*initialReadFuture; *initialWritePast}]{*initialReadFuture; *initialWritePast} comparator = new IdComparator[{*initialReadFuture; *initialWritePast}]@store();
+      List[{*initialReadFuture; *initialWritePast}]{*initialReadFuture; *initialWritePast} storeList = (
+        new LinkedList[{*initialReadFuture; *initialWritePast}]@store(comparator));
+      //storeList.add("alicenode");
+      storeList.add("bobnode");
+      storeList.add("carolnode");
+
+      // The actually interesting call. We start on alicestore. 
+      atomic {
+          sp.ping@alicestore(message, storeList);
+      }
+      //final Runtime[p] runtime = Runtime[p].getRuntime();
+      //if (runtime.store$ actsfor p) {
+        //runtime.out().println("IT HAS BEGUN.");
+      //}
+    }
+    return; // "Go fuck yourself";
+  }
+}

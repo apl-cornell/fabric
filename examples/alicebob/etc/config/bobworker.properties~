@@ -1,0 +1,6 @@
+fabric.node.hostname  = localhost
+fabric.worker.port = 3385
+fabric.worker.adminPort = 3585
+
+fabric.worker.homeStore = bobstore
+

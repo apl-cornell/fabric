@@ -1,0 +1,46 @@
+/**
+ * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ *
+ * 
+ 
+ This file is part of Fabric.
+ *
+ * Fabric is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * Fabric is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ */
+import fabric.util.Map;
+
+class DoublePing{
+
+  public static void main{*provider}(principal{p<-} p, String[] args):{*->;_<-}
+    throws Exception
+  {
+    // make the stores involved in our transaction
+    final Store alicestore = FabricWorker.getWorker().getStore("alicenode");
+    final Store bobstore   = FabricWorker.getWorker().getStore("bobnode");
+    final Store carolstore = FabricWorker.getWorker().getStore("carolnode");
+
+    final principal alice = alicestore.getPrincipal();
+    final principal bob   = bobstore.getPrincipal();
+    final principal carol = carolstore.getPrincipal();
+
+    atomic {
+      if (alice equiv alicestore && bob equiv bobstore &&  carol equiv carolstore) {
+        final Message[{⊤ → carol ⊓ ⊤ → alice; ⊤ ← carol; ⊤ ← alice}]{⊤ → carol ⊓ ⊤ → alice; ⊤ ← carol; ⊤ ← alice} carolMessage = 
+          new Message[{⊤ → carol ⊓ ⊤ → alice; ⊤ ← carol; ⊤ ← alice}]@carolstore("Hello, Carol!");
+        carolstore.getRoot().put("carolMessage", carolMessage);   
+
+        final Message[{⊤ → bob   ⊓ ⊤ → alice; ⊤ ← bob  ; ⊤ ← alice}]{⊤ → bob   ⊓ ⊤ → alice; ⊤ ← bob  ; ⊤ ← alice} bobMessage = 
+          new Message[{⊤ → bob   ⊓ ⊤ → alice; ⊤ ← bob  ; ⊤ ← alice}]@bobstore("Hello, Bob!");
+        bobstore.getRoot().put(  "bobMessage",   bobMessage);
+      }
+    }
+  }
+}

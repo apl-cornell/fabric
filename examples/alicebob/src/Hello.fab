@@ -1,0 +1,48 @@
+/**
+ * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ *
+ * 
+ 
+ This file is part of Fabric.
+ *
+ * Fabric is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * Fabric is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ */
+import fabric.util.Map;
+import fabric.runtime.Runtime;
+
+class Hello{
+
+  public static void main{*provider}(principal{p<-} p, String[] args):{p<-;p->}
+    throws Exception
+  {
+
+    final principal alice = p;
+    final principal bob = FabricWorker.getWorker().getWorker("bobnode").getPrincipal();
+    final Store alicestore = FabricWorker.getWorker().getStore("alicenode");
+    Ping[alice,bob] ping = null;
+
+    atomic {
+      ping = new Ping[alice, bob]@alicestore();
+    }
+
+    atomic {
+      int{alice→} result = ping.m1();
+      Runtime[p].getRuntime().out().println(result);
+    }
+    //if ((alice actsfor p) && (p actsfor alice)) {
+    //String{alice→} result = ping.callStoreMessage();
+    //}
+    //atomic {
+    //  runtime.out().println(result);
+    //}
+  }
+}
+// vim: ts=2 sw=2 et syntax=java

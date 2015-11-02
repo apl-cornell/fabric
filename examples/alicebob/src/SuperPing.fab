@@ -1,0 +1,409 @@
+
+/**
+ * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ *
+ * 
+ 
+ This file is part of Fabric.
+ *
+ * Fabric is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * Fabric is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ */
+import fabric.util.Map;
+import fabric.runtime.Runtime;
+import fabricated.util.List;
+import fabricated.util.Comparator;
+import fabricated.util.IdComparator;
+import fabricated.util.LinkedList;
+//import fabric.lang.PrincipalUtil;
+
+class SuperPing[label incomingL, label storeListL, label readPast, label writePast, label readFuture, label writeFuture] {
+  @{*readFuture; *writePast}
+
+  private label{*readFuture; *writePast} readFutureRecursion{*readFuture; *writePast}(
+    final List[{*readFuture; *writePast}]{*readFuture; *writePast} storeList,
+    final int{*readFuture; *writePast} i):{*readFuture; *writePast} {
+
+    if (storeList.size() > i) {
+      try {
+        final String{*readFuture; *writePast} entryName = (String) storeList.get(i);
+        final RemoteWorker{*readFuture; *writePast} entryWorker = worker$.getWorker(entryName);
+        final principal{*readFuture; *writePast} entryPrincipal = entryWorker.getPrincipal();
+        final label{*readFuture; *writePast} entryLabel = new label{⊤ → entryPrincipal}@store$;
+        final label{*readFuture; *writePast} future = readFutureRecursion(storeList, i+1);
+        return (new label{*future ⊓ *entryLabel}@store$);
+      } catch (IndexOutOfBoundsException e) {
+        // there is really no reason for this to happen.
+      } catch (ClassCastException e) {
+        // there is really no reason for this to happen.
+      }
+    }
+    return (new label{⊤ → ⊤ }@store$);
+  }
+
+  private label{*readFuture; *writePast} writeFutureRecursion{*readFuture; *writePast}(
+    final List[{*readFuture; *writePast}]{*readFuture; *writePast} storeList,
+    final int{*readFuture; *writePast} i):{*readFuture; *writePast} {
+
+    if (storeList.size() > i) {
+      try {
+        final principal{*readFuture; *writePast} entryPrincipal = worker$.getWorker((String) storeList.get(i)).getPrincipal();
+        final label entryLabel = new label{⊤ ← entryPrincipal}@store$;
+        final label future = writeFutureRecursion(storeList, i+1);
+        return (new label{*future ; *entryLabel}@store$);
+      } catch (IndexOutOfBoundsException e) {
+        // there is really no reason for this to happen.
+      } catch (ClassCastException e) {
+        // there is really no reason for this to happen.
+      }
+    }
+    return (new label{⊤ ← ⊤});
+  }
+
+  private label{*readFuture; *writePast} getNewWritePast{*readFuture; *writePast}(
+    final List[{*readFuture; *writePast}]{*readFuture; *writePast} storeList):{*readFuture; *writePast} {
+
+    if (storeList.size() > 0) {
+      try {
+        final principal{*readFuture; *writePast} entryPrincipal = worker$.getWorker((String) storeList.get(0)).getPrincipal();
+        final label entryPrincipalWrites = new label{⊤ ← entryPrincipal}@store$; 
+        return (new label{*writePast ; *entryPrincipalWrites}@store$);
+      } catch (IndexOutOfBoundsException e) {
+        // there is really no reason for this to happen.
+      } catch (ClassCastException e) {
+        // there is really no reason for this to happen.
+      }
+    }
+    return writePast;
+  }
+
+  private label{*readFuture; *writePast} getNewReadPast{*readFuture; *writePast}(
+    final List[{*readFuture; *writePast}]{*readFuture; *writePast} storeList):{*readFuture; *writePast} {
+
+    if (storeList.size() > 0) {
+      try {
+        final principal{*readFuture; *writePast} entryPrincipal = worker$.getWorker((String) storeList.get(0)).getPrincipal();
+        final label entryPrincipalReads = new label{⊤ → entryPrincipal}@store$; 
+        return (new label{*readPast ⊓ *entryPrincipalReads}@store$);
+      } catch (IndexOutOfBoundsException e) {
+        // there is really no reason for this to happen.
+      } catch (ClassCastException e) {
+        // there is really no reason for this to happen.
+      }
+    }
+    return writePast;
+  }
+
+  private Store{*readFuture; *writePast} getListHeadStore{*readFuture; *writePast}(
+    final List[{*readFuture; *writePast}]{*readFuture; *writePast} storeList
+    ):{*readFuture; *writePast}
+  {
+
+    if (storeList.size() > 0) {
+      try {
+        return FabricWorker.getWorker().getStore((String) storeList.get(0));
+      } catch (IndexOutOfBoundsException e) {
+        // there is really no reason for this to happen.
+      } catch (ClassCastException e) {
+        // there is really no reason for this to happen.
+      }
+    }
+    if (1 == (2/2)) {
+      throw (new Error("something went wrong in getListHeadStore."));
+    }
+    return null; // I'm really hoping this doesn't happen.
+  }
+
+  private RemoteWorker{*readFuture; *writePast} getListHeadWorker{*readFuture; *writePast}(
+    final List[{*readFuture; *writePast}]{*readFuture; *writePast} storeList
+    ):{*readFuture; *writePast} {
+
+    if (storeList.size() > 0) {
+      try {
+        return worker$.getWorker((String) storeList.get(0));
+      } catch (IndexOutOfBoundsException e) {
+        // there is really no reason for this to happen.
+      } catch (ClassCastException e) {
+        // there is really no reason for this to happen.
+      }
+    }
+    if (1 == (2/2)) {
+      throw (new Error("something went wrong in getListHeadWorker."));
+    }
+    return null; // I'm really hoping this doesn't happen.
+  }
+
+  
+  private List[{*destinationL}]{*destinationL} listRelabel{*originL}(
+    final List[{*originL}]{*originL} origin,
+    final label{*originL} originL,
+    final label{*originL} destinationL,
+    final Store{*originL} store):{*destinationL}  
+    where originL <= {*readFuture; *writePast}, originL <= destinationL {
+    return listCopy(origin,originL,destinationL,origin.size()-1,origin.size(), 0, store);
+  }
+
+  private List[{*destinationL}]{*destinationL} tail{*originL}(
+    final List[{*originL}]{*originL} origin,
+    final label{*originL} originL,
+    final label{*originL} destinationL,
+    final Store{*originL} store):{*destinationL}  
+    where originL <= {*readFuture; *writePast} , originL <= destinationL {
+    return listCopy(origin,originL,destinationL,origin.size()-1,origin.size()-1, 1, store);
+  }
+
+  private List[{*destinationL}]{*destinationL} listCopy{*originL}(
+    final List[{*originL}]{*originL} origin,
+    final label{*originL} originL,
+    final label{*originL} destinationL,
+    final int{*originL} index,
+    final int{*originL} destinationSize,
+    final int{*originL} begin,
+    final Store{*originL} store):{*destinationL} 
+    where originL <= {*readFuture; *writePast} , originL <= destinationL {
+
+    if (index >= begin) {
+      final List[{*destinationL}]{*destinationL} destination = listCopy(origin, originL, destinationL, index - 1, destinationSize, begin, store);
+      try {
+        final Object entry = origin.get(index);
+        destination.add(entry);
+        return destination;
+      } catch (UnsupportedOperationException{*destinationL} e) {
+        // this really shouldn't happen.
+        if (0 == 0) throw new Error("WAT: an Unsupported Operation exception happened in listCopy");
+      } catch (ClassCastException{*destinationL} e) {
+        // this really shouldn't happen.
+        if (0 == 0) throw new Error("WAT: a ClassCast exception happened in listCopy");
+      } catch (NullPointerException{*destinationL} e) {
+        // this really shouldn't happen.
+        if (0 == 0) throw new Error("WAT: a Null Pointer exception happened in listCopy");
+      } catch (IllegalArgumentException{*destinationL} e) {
+        // this really shouldn't happen.
+        if (0 == 0) throw new Error("WAT: a Illegal Argument Exception on happened in listCopy");
+      } catch (IndexOutOfBoundsException{*destinationL} e) {
+        // this really shouldn't happen.
+        if (0 == 0) throw new Error("WAT: an IndexOutOfBounds exception happened in listCopy");
+      }
+      if (0 == 0) throw new Error("WAT: an unexpected exception happened in listCopy");
+    }
+    final principal storeP = store.getPrincipal();
+    final label storeReads  = new label{⊤ → storeP}@store$;
+    final label storeWrites = new label{⊤ ← storeP}@store$;
+    if (storeP equiv store && 
+        destinationL <= storeReads && 
+        storeWrites <= destinationL ) {
+      final Comparator[destinationL]{*destinationL} comparator = new IdComparator[destinationL]@store();
+      return (new LinkedList[{*destinationL}]@store(comparator));
+    }
+    if (0 == 0) throw new Error("WAT: listCopy If failed");
+    return null; // hopefully never happens
+  }
+
+  /**
+    * record some local information about the message, and maybe print some stuff.
+    **/
+  private void recordLocal{*readFuture; *writePast}(final String{*readFuture; *writePast} incomingMessage):{*readFuture; *writePast} {
+    final Store store = store$;//FabricWorker.getWorker().getLocalStore();
+    final principal storeP = store.getPrincipal();
+    final label{*readFuture; *writePast} readFutureWritePast = new label{*readFuture; *writePast}@store$;
+    final label{*readFuture; *writePast} storeReads  = new label{⊤ → storeP}@store$;
+    final label{*readFuture; *writePast} storeWrites = new label{⊤ ← storeP}@store$;
+    final label{*readFuture; *writePast} storeThinksStoreReads  = new label{storeP → }@store$;
+    final label{*readFuture; *writePast} storeThinksStoreWrites = new label{storeP ← }@store$;
+    final String{*readFuture; *writePast} initialText = "I have, througout history, received the following messages:\n";
+    // This if statement is positively ridiculous, and will almost certainly screw me at some point.
+    if (readFutureWritePast <= storeReads && storeWrites <= readFutureWritePast && storeP equiv store /*&& storeP equiv runtimePrincipal &&
+        readFutureWritePast <= storeThinksStoreReads && storeThinksStoreWrites <= readFutureWritePast*/) {
+      Map root = store.getRoot();
+      Message[{*readFuture; *writePast}]{*readFuture; *writePast} myMessage = (Message[{*readFuture; *writePast}]) root.get("myMessage");
+      if (myMessage == null) { // if it's not in the store yet, put it there.
+        myMessage = new Message[{*readFuture; *writePast}]@store(initialText);
+        root.put("myMessage", myMessage);
+      }
+      myMessage.update(myMessage.getMessage() + "\t" + incomingMessage + "\n");
+    }
+  }
+
+
+
+
+  public void ping{*incomingL}(
+    final Message[{*incomingL}]{*incomingL} incoming, 
+    final List[   {*storeListL}]{*storeListL} storeList
+    ):{*writeFuture ⊓ *writePast; *readPast} 
+    where storeListL <= incomingL, incomingL <= storeListL , storeListL <= {*readFuture; *writePast}//, storeListL <= {storeList}, {storeList} <= storeListL
+  {
+
+    // first of all, we're moving all inputs up to readFuture;writePast
+    final List[{*readFuture; *writePast}]{*readFuture; *writePast} storeListCopy = 
+      listRelabel(storeList, storeListL, new label{*readFuture; *writePast}@store$, store$);
+    final String{*readFuture; *writePast} incomingText = incoming.getMessage();
+
+    final String{*readFuture; *writePast} outgoingText = incomingText + "!";
+    recordLocal(incomingText); // record some local info about the message, and maybe print some stuff.
+    
+    
+    if (storeList.size() > 0) {
+      // Recursion time
+      // the store on which the next call will happen
+      final RemoteWorker{*readFuture; *writePast} nextWorker = getListHeadWorker(storeListCopy);
+      final principal{*readFuture; *writePast} nextWorkerP = nextWorker.getPrincipal();
+      final Store{*readFuture; *writePast} nextStore = getListHeadStore(storeListCopy);
+      final principal{*readFuture; *writePast} nextStoreP = nextStore.getPrincipal();
+
+      // Time to come up with the next round of labels.
+      final label{*readFuture; *writePast} newReadPast    = getNewReadPast(storeListCopy);
+      final label{*readFuture; *writePast} newWritePast   = getNewWritePast(storeListCopy);
+      final label{*readFuture; *writePast} newReadFuture  = readFutureRecursion(storeListCopy, 0);
+      final label{*readFuture; *writePast} newWriteFuture = writeFutureRecursion(storeListCopy, 0);
+      final label{*readFuture; *writePast} readFutureWritePast = new label{*readFuture; *writePast}@store$;
+      final label{*readFuture; *writePast} newReadFutureWritePast = new label{*newReadFuture; *newWritePast}@store$;
+
+      final Store{*readFuture; *writePast} store = store$;//FabricWorker.getWorker().getLocalStore();
+      final principal{*readFuture; *writePast} storeP = store.getPrincipal();
+      final label{*readFuture; *writePast} storeReads  = new label{⊤ → storeP}@store$;
+      final label{*readFuture; *writePast} storeWrites = new label{⊤ ← storeP}@store$;
+
+      final label{*readFuture; *writePast} nextStoreReads  = new label{⊤ → nextStoreP}@store$;
+      final label{*readFuture; *writePast} nextStoreWrites = new label{⊤ ← nextStoreP}@store$;
+
+      final label{*readFuture; *writePast} readFutureNewWritePast = new label{*readFuture; *newWritePast}@store$;
+
+
+
+      boolean{*readFuture; *writePast} debuggerator = false;
+      if (storeP equiv store) {debuggerator = true;}
+      if (!debuggerator) {throw new Error("DEBUGGERATOR: storeP not equiv store\nstoreP"+PrincipalUtil.toString(storeP)+"\nstore:"+PrincipalUtil.toString(store));}
+      debuggerator = false;
+      if (storeP equiv this.store$ ) {debuggerator = true;}
+      if (!debuggerator) {throw new Error("DEBUGGERATOR: storeP not equiv this.store$\nstoreP"+PrincipalUtil.toString(storeP)+"\nthis.store$:"+PrincipalUtil.toString(this.store$));}
+      debuggerator = false;
+      if (nextStoreP equiv nextStore  ) {debuggerator = true;}
+      if (!debuggerator) {throw new Error("DEBUGGERATOR: nextStoreP not equiv nestStore\nnestStoreP"+PrincipalUtil.toString(nextStoreP)+"\nnextStore:"+PrincipalUtil.toString(nextStore));}
+      debuggerator = false;
+      if (nextStoreP equiv nextWorker ) {debuggerator = true;}
+      if (!debuggerator) {throw new Error("DEBUGGERATOR: nextStoreP not equiv nextWorker\nnestStoreP"+PrincipalUtil.toString(nextStoreP)+"\nnextWorker:"+PrincipalUtil.toString(nextWorker));}
+      debuggerator = false;
+      if (nextStoreP equiv nextWorkerP ) {debuggerator = true;}
+      if (!debuggerator) {throw new Error("DEBUGGERATOR: nextStoreP not equiv nextWorkerP\nnestStoreP"+PrincipalUtil.toString(nextStoreP)+"\nnextWorkerP:"+PrincipalUtil.toString(nextWorkerP));}
+      debuggerator = false;
+      if (readFutureWritePast <= storeReads ) {debuggerator = true;}
+      if (!debuggerator) {throw new Error("DEBUGGERATOR: readFutureWritePast doesn't flow to  storeReads\nreadFutureWritePast:"
+          +LabelUtil.toString(readFutureWritePast )
+          +"\nstoreReads:"+LabelUtil.toString(storeReads));}
+      debuggerator = false;
+      if (newWritePast <= storeReads ) {debuggerator = true;}
+      if (!debuggerator) {throw new Error("DEBUGGERATOR: newWritePast doesn't flow to  storeReads\nnewWritePast:"
+          +LabelUtil.toString(newWritePast )
+          +"\nstoreReads:"+LabelUtil.toString(storeReads));}
+      debuggerator = false;
+      if (newWritePast <= newReadFuture)  {debuggerator = true;}
+      if (!debuggerator) {throw new Error("DEBUGGERATOR: newWritePast doesn't flow to  newReadFuture\nnewWritePast:"
+          +LabelUtil.toString(newWritePast )
+          +"\nnewReadFuture:"+LabelUtil.toString(newReadFuture));}
+      debuggerator = false;
+      if (readFutureWritePast <= newReadFuture) {debuggerator = true;}
+      if (!debuggerator) {throw new Error("DEBUGGERATOR: readFutureWritePast doesn't flow to  newReadFuture\nreadFutureWritePast:"
+          +LabelUtil.toString(readFutureWritePast )
+          +"\nnewReadFuture:"+LabelUtil.toString(newReadFuture));}
+      debuggerator = false;
+      if (storeWrites <= readFutureNewWritePast ) {debuggerator = true;}
+      if (!debuggerator) {throw new Error("DEBUGGERATOR: storeWrites doesn't flow to  readFutureNewWritePast\nstoreWrites:"
+          +LabelUtil.toString(storeWrites )
+          +"\nreadFutureNewWritePast:"+LabelUtil.toString(readFutureNewWritePast ));}
+      debuggerator = false;
+      if (readFutureWritePast <= new label{*readFuture; *newWritePast} ) {debuggerator = true;}
+      if (!debuggerator) {throw new Error("DEBUGGERATOR: storeWrites doesn't flow to new label{*readFuture; *newWritePast} \nreadFutureWritePast :"
+          +LabelUtil.toString(readFutureWritePast )
+          +"\nnew label{*readFuture; *newWritePast}:"+LabelUtil.toString(new label{*readFuture; *newWritePast}));}
+      debuggerator = false;
+      if (newReadFutureWritePast <= nextStoreReads) {debuggerator = true;}
+      if (!debuggerator) {throw new Error("DEBUGGERATOR: newReadFutureWritePast doesn't flow to nextStoreReads\nnewReadFutureWritePast :"
+          +LabelUtil.toString(newReadFutureWritePast )
+          +"\nnextStoreReads:"+LabelUtil.toString(nextStoreReads));}
+      debuggerator = false;
+      if (nextStoreWrites <= nextStoreReads) {debuggerator = true;}
+      if (!debuggerator) {throw new Error("DEBUGGERATOR: nextStoreWrites doesn't flow to nextStoreReads\nnextStoreWrites :"
+          +LabelUtil.toString(nextStoreWrites )
+          +"\nnextStoreReads:"+LabelUtil.toString(nextStoreReads));}
+      debuggerator = false;
+      if (nextStoreWrites <= newReadPast ) {debuggerator = true;}
+      if (!debuggerator) {throw new Error("DEBUGGERATOR: nextStoreWrites doesn't flow to newReadPast \nnextStoreWrites :"
+          +LabelUtil.toString(nextStoreWrites )
+          +"\nnewReadPast :"+LabelUtil.toString(newReadPast ));}
+      debuggerator = false;
+      if (nextStoreWrites <= newWritePast ) {debuggerator = true;}
+      if (!debuggerator) {throw new Error("DEBUGGERATOR: nextStoreWrites doesn't flow to newWritePast \nnextStoreWrites :"
+          +LabelUtil.toString(nextStoreWrites )
+          +"\nnewWritePast :"+LabelUtil.toString(newWritePast ));}
+      debuggerator = false;
+      if (nextStoreWrites <= readFuture ) {debuggerator = true;}
+      if (!debuggerator) {throw new Error("DEBUGGERATOR: nextStoreWrites doesn't flow to readFuture \nnextStoreWrites :"
+          +LabelUtil.toString(nextStoreWrites )
+          +"\nreadFuture :"+LabelUtil.toString(readFuture ));}
+      debuggerator = false;
+      if (readFutureWritePast <= newReadFutureWritePast ) {debuggerator = true;}
+      if (!debuggerator) {throw new Error("DEBUGGERATOR: readFutureWritePast doesn't flow to newReadFutureWritePast\nreadFutureWritePast: "
+          +LabelUtil.toString(readFutureWritePast)
+          +"\nnewReadFutureWritePast :"+LabelUtil.toString(newReadFutureWritePast ));}
+
+      if (storeP equiv store && 
+          storeP equiv this.store$ && 
+          nextStoreP equiv nextStore &&
+          nextStoreP equiv nextWorker &&
+          nextStoreP equiv nextWorkerP &&
+          readFutureWritePast <= storeReads && 
+          newWritePast <= storeReads &&
+          newWritePast <= newReadFuture &&
+          readFutureWritePast <= newReadFuture && 
+          storeWrites <= readFutureNewWritePast &&
+          readFutureWritePast <= new label{*readFuture; *newWritePast} &&
+          newReadFutureWritePast <= nextStoreReads &&
+          nextStoreWrites <= nextStoreReads &&
+          nextStoreWrites <= newReadPast &&
+          nextStoreWrites <= newWritePast &&
+          nextStoreWrites <= readFuture &&
+          readFutureWritePast <= newReadFutureWritePast &&
+          new label{*readFuture; *newWritePast} <= new label{*newReadFuture; *newWritePast}
+          ) { // make sure we have permission to go on
+
+        // create and populate the list of remaining stores
+        //new ArrayList[{*newReadFuture; *newWritePast}](
+        //  new IdComparator[{*newReadFuture; *newWritePast}]{*readFuture; *writePast}(), 
+        //  storeListCopy.size() - 1);
+        //copyTail(storeListCopy, newStoreList, newReadFutureWritePast);
+
+        // the superping object for the next call
+        final label readFutureNewWritePastN = new label{*readFutureNewWritePast}@nextStore;
+        final label newWritePastN = new label{*newWritePast}@nextStore;
+        final label newReadFutureN = new label{*newReadFuture}@nextStore;
+        final label newWriteFutureN = new label{*newWriteFuture}@nextStore;
+        final label newReadPastN = new label{*newReadPast}@nextStore;
+        
+
+        final List[readFutureNewWritePastN]{*readFutureNewWritePastN} newStoreList = tail(storeListCopy, readFutureWritePast, readFutureNewWritePastN, nextStore);
+
+
+        final SuperPing[readFutureNewWritePastN, readFutureNewWritePastN, newReadPastN, newWritePastN, newReadFutureN, newWriteFutureN]{*readFutureNewWritePastN} sp = (
+          new SuperPing[readFutureNewWritePastN, readFutureNewWritePastN, newReadPastN, newWritePastN, newReadFutureN, newWriteFutureN]@nextStore());
+
+        // create an outgoing message to send on
+        final Message[readFutureNewWritePastN]{*readFutureNewWritePastN} outgoing = (
+          new Message[readFutureNewWritePastN]@nextStore(outgoingText));
+
+
+        // The actual recursive call
+        sp.ping@nextWorker(outgoing, newStoreList);
+        //if (0 == 0) throw new Error("WAT: we made it past recursive call!");
+        // we actually do nothing with the response just now. Oh, well.
+      }
+    }
+  }
+}

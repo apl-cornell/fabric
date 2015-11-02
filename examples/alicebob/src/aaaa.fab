@@ -1,0 +1,45 @@
+import fabric.runtime.Runtime;
+import fabricated.util.List;
+import fabricated.util.IdComparator;
+import fabricated.util.ArrayList;
+//import internal;
+public class aaaa {
+
+  public static void main{*provider}(principal{p<-} p, String[] args):{p<-;p->}
+    throws Exception
+  {
+    atomic { // some shit from Hello, World
+      if (provider <= new label {p<-;p->} && internal.provider <= provider)
+        run(p, args);
+      else
+        throw new Error("Provider has insufficient integrity.");
+    }
+  }
+
+  public static void run{p<-;p->}(principal{p<-;p->} p, String[] args):{p<-;p->}
+    throws Exception where provider <= {p<-;p->},  internal.provider <= provider {
+    final Store store = worker$.getStore("store");
+    if (store actsfor p) {
+      final label l0 = new label{p<-;p->};
+      final internal[l0]{*l0} baz = new internal[l0]@store();
+      List[l0]{*l0} storeList = (new ArrayList[l0](new IdComparator[l0](), 3));
+      storeList.set(0,"alicenode");
+      final principal{*l0} z = baz.foo(storeList);
+    }
+  }
+}
+
+    
+class internal[label l1] {
+  @{*l1}
+  public principal{l1} foo{l1}(List[{*l1}]{*l1} storeList):{l1} {
+    if (storeList.size() > 0) {
+      try {
+        return ((worker$.getWorker((String) storeList.get(0))).getPrincipal());
+      } catch (IndexOutOfBoundsException e) {
+      } catch (ClassCastException e) {}
+    }
+    return FabricWorker.getWorker().getWorker("alicenode");
+  }
+}
+
