@@ -1,0 +1,21 @@
+// We use a separate class to store the message.  The class is parameterized by
+// a principal.
+public class Message[label l] {
+
+  private String{l} message;
+
+  public Message(String{l} message) {
+    this.message = message;
+    super();
+  }
+
+  public void update{l} (String{l} new_message) {
+    this.message = new_message;
+  }
+
+  public String{l} getMessage{l}() {
+    return(this.message);
+  }
+}
+
+

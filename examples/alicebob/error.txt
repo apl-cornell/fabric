@@ -1,0 +1,29 @@
+Buildfile: /home/isheff/Downloads/fabric-0.2.2/examples/alicebob/build.xml
+
+build:
+    [apply] /home/isheff/Downloads/fabric-0.2.2/examples/alicebob/src/Hello.fab:63: 
+    [apply]     Unsatisfiable constraint
+    [apply]     	general constraint:
+    [apply]     		{C(m), *<-c} <= [*->c, I(rv)]
+    [apply]     	in this context:
+    [apply]     		{*->; *<-bobworker} <= {*->bobworker; pb<-}
+    [apply]     	cannot satisfy equation:
+    [apply]     		{*->; *<-bobworker} ⊑ {*->bobworker; pb<-}
+    [apply]     	in environment:
+    [apply]     		{this} ⊑ {}
+    [apply]     		[(bobworker actsFor pb), (runtime.store$ actsFor pb)]
+    [apply] 
+    [apply]     Label Descriptions
+    [apply]     ------------------
+    [apply]      - {C(m), *<-c} = {*->; *<-bobworker}
+    [apply]      - [*->c, I(rv)] = {*->bobworker; pb<-}
+    [apply]      - this = label of the special variable "this" in Hello
+    [apply] 
+    [apply]     Insecure remote method call: Either the callee worker is not allowed to 
+    [apply]     read the method arguments or it does not have enough integrity to  return
+    [apply]      correctly.
+    [apply]             String{pb->; pb<-} s = worthless.fromBob@bobworker();
+    [apply]                                    ^---------------------------^
+    [apply] 
+    [apply] 1 error.
+    [apply] null

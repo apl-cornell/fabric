@@ -1,0 +1,152 @@
+/**
+ * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ *
+ * 
+ 
+ This file is part of Fabric.
+ *
+ * Fabric is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * Fabric is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ */
+import fabric.util.Map;
+import fabric.runtime.Runtime;
+//import fabric.lang.PrincipalUtil;
+
+class Ping[principal alice, principal bob] {
+
+  public int{alice→} m1{alice←} (principal{p<-;p->} p) {
+    final RemoteWorker w = FabricWorker.getWorker().getWorker("bobnode");
+    if (w actsfor bob) {
+      int{alice→bob} data = 1;
+      int{alice→} y = 0;
+      y = m2@w(data);
+      /**final Store alicestore = FabricWorker.getWorker().getStore("alicenode");
+      //final principal aliceOrBob = {alice,bob};
+      if (alicestore actsfor alice) {
+        Message[alice,bob] mess = null;
+        atomic{
+          mess = new Message[alice,bob]@alicestore("Bob, I love you.");
+        }
+        atomic {
+          //storeMessage@w(mess);
+        }
+      }**/
+      return y;
+    }
+    return 0;
+  }
+  
+  public int{alice→bob} m2{alice←} (int{alice→bob} x) {
+    return x+1;
+  }
+  
+  public String{alice→} callStoreMessage{alice→bob;alice←bob} () : {alice→bob;alice←bob} {
+    final Store alicestore = FabricWorker.getWorker().getStore("alicenode");
+    final RemoteWorker w = FabricWorker.getWorker().getWorker("bobnode");
+    
+    
+    /**Runtime[alice] runtime_ = null;
+    atomic {
+      runtime_ = Runtime[alice].getRuntime();
+    }
+
+    final Runtime[alice] runtime = runtime_;
+    **/
+    
+    Post[{alice→bob;alice←bob},{alice→bob;alice←bob}]{alice→bob} mess = null;
+    atomic {
+      
+      if (alicestore actsfor alice) {
+        
+        mess = new Post[{alice→bob;alice←bob},{alice→bob;alice←bob}]{alice→bob}@alicestore("Bob, I love you");
+      }
+    }
+    
+    atomic {
+      
+      if (w actsfor bob) {
+        
+        storeMessage@w(mess);
+      }
+    }
+    
+    atomic {
+      if ((w actsfor bob) ) { //&& (runtime.store$ actsfor alice)
+        try {
+          return (getMessage@w().content); // runtime.out().println
+        } catch (Exception e) {
+          return "Exception on getMessage: "+e.toString()+"\n"+e.getMessage();
+        }
+      }
+    }
+    
+    return null;
+      
+  }
+  
+  public void storeMessage{alice→bob;alice←bob} (Post[{alice→bob;alice←bob},{alice→bob;alice←bob}]{alice→bob} m) : {alice→bob;alice←bob} {
+    
+    atomic {
+
+      // Get a reference to the store called "store".
+      final Store store = worker$.getStore("bobnode");
+
+      // Get a reference to the runtime.
+      // This is how Fabric programs access the console.
+      //final Runtime[bob] runtime = Runtime[bob].getRuntime();
+
+      // We're storing p's message on "store", so we must ensure p trusts store.
+      //if (runtime.store$ actsfor bob) {
+        if (store actsfor bob) {
+
+          // Store a reference to our object in the store's root map.
+          Map root = store.getRoot();
+          //m.message = m.message+" . . and cheese!";
+          root.put("hello", m);
+
+        } else {
+          //runtime.out().println("store is not sufficiently trusted.");
+        }
+      //}
+    }
+  }
+  
+  
+  
+  public Post[{alice→bob;alice←bob},{alice→bob;alice←bob}]{alice→bob} getMessage{alice→bob;alice←bob} () : {alice→bob}  throws Exception{
+    
+    atomic {
+
+      // Get a reference to the store called "store".
+      final Store store = worker$.getStore("bobnode");
+
+      // Get a reference to the runtime.
+      // This is how Fabric programs access the console.
+      //final Runtime[bob] runtime = Runtime[bob].getRuntime();
+
+      // We're storing p's message on "store", so we must ensure p trusts store.
+      //if (runtime.store$ actsfor bob) {
+        if (store actsfor bob) {
+
+          // Store a reference to our object in the store's root map.
+          Map root = store.getRoot();
+          return  ((Post[{alice→bob;alice←bob},{alice→bob;alice←bob}]) root.get("hello"));
+          
+        } else {
+          //runtime.out().println("store is not sufficiently trusted.");
+        }
+      //}
+      return null;//new Message[alice,bob]@alicestore("failure! failure everywhere!");;
+    }
+  }
+  
+  
+}
+// vim: ts=2 sw=2 et syntax=java

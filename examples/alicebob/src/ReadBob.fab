@@ -1,0 +1,45 @@
+/**
+ * Copyright (C) 2010-2013 Fabric project group, Cornell University
+ *
+ * 
+ 
+ This file is part of Fabric.
+ *
+ * Fabric is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * Fabric is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ */
+import fabric.util.Map;
+import fabric.runtime.Runtime;
+
+class ReadBob{
+  /**
+   *  Print out the message stored on CarolStore by SuperPingMain
+   **/
+  public static void main{*provider}(principal{p<-} p, String[] args):{*->;_<-} throws Exception {
+    final Store store = FabricWorker.getWorker().getStore("bobnode");
+    final principal storeP = store.getPrincipal();
+    final Store carolstore = FabricWorker.getWorker().getStore("carolnode");
+    final principal carol = carolstore.getPrincipal();
+    final principal top = new principal(⊤);
+    final Runtime[top] runtime = Runtime[top].getRuntime();
+
+    if (storeP equiv store && p equiv storeP && runtime.store$ equiv storeP) {
+      final Map root = store.getRoot();
+      final Message[{⊤ → storeP ⊓ ⊤ → carol}]{storeP → carol} myMessage = (Message[{⊤ → storeP ⊓ ⊤ → carol}]) root.get("myMessage");
+      if (myMessage != null) { 
+        final String{⊤ → storeP ⊓ ⊤ → carol} messageText = myMessage.getMessage();
+        runtime.out().println(messageText);
+      } else {
+        throw new Error("It's Null! It's Null! Everything is Null!");
+      }
+    }
+  }
+}
+
