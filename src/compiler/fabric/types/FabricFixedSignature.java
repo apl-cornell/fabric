@@ -4,6 +4,7 @@ import fabric.ast.FabricFieldDecl;
 
 import jif.ast.LabelNode;
 import jif.types.FixedSignature;
+import jif.types.JifProcedureInstance;
 import jif.types.label.ConfPolicy;
 import jif.types.label.Label;
 
@@ -40,12 +41,20 @@ FabricDefaultSignature {
   @Override
   public ConfPolicy defaultBeginAccess(ProcedureDecl pd) {
     //TODO: Is this reasonable?
+    JifProcedureInstance jpi = (JifProcedureInstance) pd.procedureInstance();
+    if (jpi.pcBound() != null)
+      return fts.confProjection(jpi.pcBound());
     return fts.bottomConfPolicy(pd.position());
   }
 
   @Override
   public ConfPolicy defaultEndConf(ProcedureDecl pd) {
     //TODO: Is this reasonable?
-    return fts.topConfPolicy(pd.position());
+    /*
+    FabricProcedureInstance fpi = (FabricProcedureInstance) pd.procedureInstance();
+    if (!fpi.isDefaultBeginAccess())
+      return fpi.beginAccessPolicy();
+    */
+    return defaultBeginAccess(pd);
   }
 }
