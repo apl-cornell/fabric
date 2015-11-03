@@ -40,7 +40,7 @@ public class FabricFieldExt extends JifFieldExt {
    */
   @Override
   public Node labelCheck(LabelChecker lc) throws SemanticException {
-    final Field fe = (Field) node();
+    final Field fe = (Field) super.labelCheck(lc);
     Receiver ref = checkTarget(lc, fe);
     Position pos = fe.position();
 
@@ -77,7 +77,6 @@ public class FabricFieldExt extends JifFieldExt {
     FabricPathMap Xt = (FabricPathMap) getPathMap(ref);
     NamedLabel accessedConfLabel = new NamedLabel("accessed conf label",
         "the join of the confidentiality policies of previously referenced fields",
-        //ts.toLabel(A.accessedConf()));
         ts.join(ts.toLabel(A.accessedConf()), Xt.AC()));
 
     lc.constrain(accessedConfLabel, LabelConstraint.LEQ, accessPolLabel,
@@ -104,9 +103,8 @@ public class FabricFieldExt extends JifFieldExt {
     } else {
       confs.add(fieldType.label().confProjection());
     }
-    updatePathMap(fe, Xt.AC(ts.toLabel(ts.joinConfPolicy(pos, confs))));
-
-    return super.labelCheck(lc);
+    FabricPathMap X = (FabricPathMap) getPathMap(fe);
+    return updatePathMap(fe, X.AC(ts.toLabel(ts.joinConfPolicy(pos, confs))));
   }
 
 }
