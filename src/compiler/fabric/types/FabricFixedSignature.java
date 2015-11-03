@@ -46,6 +46,6 @@ FabricDefaultSignature {
   @Override
   public ConfPolicy defaultEndConf(ProcedureDecl pd) {
     //TODO: Is this reasonable?
-    return fts.bottomConfPolicy(pd.position());
+    return fts.topConfPolicy(pd.position());
   }
 }
