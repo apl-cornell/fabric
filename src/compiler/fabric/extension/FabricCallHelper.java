@@ -4,6 +4,8 @@ import java.util.List;
 
 import fabric.types.FabricContext;
 import fabric.types.FabricMethodInstance;
+import fabric.types.FabricPathMap;
+import fabric.types.FabricProcedureInstance;
 import fabric.types.FabricTypeSystem;
 
 import jif.extension.CallHelper;
@@ -197,5 +199,65 @@ public class FabricCallHelper extends CallHelper {
 
           }
         });
+  }
+
+  @Override
+  public void checkCall(LabelChecker lc, List<Type> throwTypes,
+      boolean targetMayBeNull) throws SemanticException {
+    super.checkCall(lc, throwTypes, targetMayBeNull);
+    FabricTypeSystem fts = (FabricTypeSystem) lc.context().typeSystem();
+    ConfPolicy beginAccess = resolveBeginAccess(lc);
+    ConfPolicy endConf = resolveEndConf(lc);
+    FabricContext A = (FabricContext) lc.context();
+
+    // Check previous accesses against access label bound of method.
+    NamedLabel accessPolLabel = new NamedLabel("begin access label",
+          "the lower bound of the access labels of all accesses in the method",
+          fts.toLabel(beginAccess));
+
+    // Get join of confidentiality policies of previous accesses
+    NamedLabel accessedConfLabel = new NamedLabel("accessed conf label",
+        "the join of the confidentiality policies of previously referenced fields",
+        fts.join(fts.toLabel(A.accessedConf()), ((FabricPathMap) X).AC()));
+
+    lc.constrain(accessedConfLabel, LabelConstraint.LEQ, accessPolLabel,
+        A.labelEnv(), position, new ConstraintMessage() {
+      @Override
+      public String msg() {
+        return "The field accesses during the call could leak "
+             + "information about preceding accesses to the stores which the "
+             + "fields accessed in the method are located on, which has "
+             + "confidentiality lower bounded by the method's begin access "
+             + "label.";
+      }
+    });
+
+    // Add in the confidentiality of the call's accesses to the AC path.
+    Label endConfLabel = fts.toLabel(endConf);
+    Label newAC = fts.join(fts.join(((FabricPathMap) X).AC(), endConfLabel),
+                           fts.toLabel(A.accessedConf()));
+    ((FabricPathMap) X).AC(newAC);
+  }
+
+  /**
+   * Returns the instantiated begin access policy.
+   * @throws SemanticException
+   */
+  protected ConfPolicy resolveBeginAccess(LabelChecker lc)
+      throws SemanticException {
+    FabricTypeSystem fts = (FabricTypeSystem) lc.context().typeSystem();
+    FabricProcedureInstance fpi = (FabricProcedureInstance) pi;
+    return instantiate(lc.context(), fts.toLabel(fpi.beginAccessPolicy())).confProjection();
+  }
+
+  /**
+   * Returns the instantiated end conf policy.
+   * @throws SemanticException
+   */
+  protected ConfPolicy resolveEndConf(LabelChecker lc)
+      throws SemanticException {
+    FabricTypeSystem fts = (FabricTypeSystem) lc.context().typeSystem();
+    FabricProcedureInstance fpi = (FabricProcedureInstance) pi;
+    return instantiate(lc.context(), fts.toLabel(fpi.endConfPolicy())).confProjection();
   }
 }

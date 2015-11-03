@@ -9,8 +9,10 @@ import fabric.types.FabricClassType;
 import fabric.types.FabricContext;
 import fabric.types.FabricMethodInstance;
 import fabric.types.FabricPathMap;
+import fabric.types.FabricReferenceType;
 import fabric.types.FabricTypeSystem;
 
+import jif.ast.JifExt_c;
 import jif.extension.JifCallExt;
 import jif.translate.ToJavaExt;
 import jif.types.Assertion;
@@ -33,6 +35,7 @@ import jif.visit.LabelChecker;
 import polyglot.ast.Call;
 import polyglot.ast.Expr;
 import polyglot.ast.Node;
+import polyglot.ast.Receiver;
 import polyglot.ast.Special;
 import polyglot.types.SemanticException;
 import polyglot.types.Type;
@@ -81,36 +84,7 @@ public class CallJifExt_c extends JifCallExt {
 
     DereferenceHelper.checkDereference(c.target(), lc, c.position());
 
-    // Check previous accesses against access label bound of method.
-    NamedLabel accessPolLabel = new NamedLabel("begin access label",
-        "the lower bound of the access labels of all accesses in the method",
-        ts.toLabel(((FabricMethodInstance) c.methodInstance()).beginAccessPolicy()));
-
-    // Get join of confidentiality policies of previous accesses
-    FabricContext A = (FabricContext) lc.context();
-    FabricPathMap X = (FabricPathMap) getPathMap(c);
-    NamedLabel accessedConfLabel = new NamedLabel("accessed conf label",
-        "the join of the confidentiality policies of previously referenced fields",
-        ts.join(ts.toLabel(A.accessedConf()), X.AC()));
-
-    lc.constrain(accessedConfLabel, LabelConstraint.LEQ, accessPolLabel,
-        A.labelEnv(), c.position(), new ConstraintMessage() {
-      @Override
-      public String msg() {
-        return "The field accesses during the call " + c + " could leak "
-             + "information about preceding accesses to the stores which the "
-             + "fields accessed in the method are located on, which has "
-             + "confidentiality lower bounded by the method's begin access "
-             + "label.";
-      }
-    });
-
     if (c.remoteWorker() != null) labelCheckRemoteCall(lc, c, mi, ts);
-
-    // Add in the confidentiality of the call's accesses to the AC path.
-    Label endConfLabel = ts.toLabel(mi.endConfPolicy());
-    Label newAC = ts.join(ts.join(X.AC(), endConfLabel), ts.toLabel(A.accessedConf()));
-    updatePathMap(c, X.AC(newAC));
 
     return c;
   }
