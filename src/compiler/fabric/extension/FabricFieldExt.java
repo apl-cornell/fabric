@@ -1,8 +1,5 @@
 package fabric.extension;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import fabric.types.FabricContext;
 import fabric.types.FabricFieldInstance;
 import fabric.types.FabricPathMap;
@@ -10,6 +7,7 @@ import fabric.types.FabricReferenceType;
 import fabric.types.FabricTypeSystem;
 
 import jif.ast.JifExt_c;
+import jif.ast.JifInstantiator;
 import jif.extension.JifFieldExt;
 import jif.translate.ToJavaExt;
 import jif.types.ConstraintMessage;
@@ -44,34 +42,32 @@ public class FabricFieldExt extends JifFieldExt {
     Receiver ref = checkTarget(lc, fe);
     Position pos = fe.position();
 
+    /* Perform access checks for the target. */
+    DereferenceHelper.checkDereference(ref, lc, pos);
+
     /* Secure txn access checks */
     if (ref == null)
       throw new InternalCompilerError("null receiver shouldn't happen at this point");
     
     //Id fieldName = fe.id();
     FabricTypeSystem ts = (FabricTypeSystem) lc.typeSystem();
-    FabricReferenceType refType = (FabricReferenceType) ts.unlabel(ref.type());
     FabricFieldInstance fieldType = (FabricFieldInstance) fe.fieldInstance();
     FabricContext A = (FabricContext) lc.context();
+    FabricReferenceType refType = (FabricReferenceType) targetType(ts, A, ref, fe);
 
     // Get the access policy on the field itself
     ConfPolicy accessPol = fieldType.accessPolicy();
     if (accessPol == null)
       accessPol = refType.accessPolicy();
-    NamedLabel accessPolLabel;
     Label objLabel = JifExt_c.getPathMap(ref).NV();
+    Label L = ts.toLabel(accessPol);
     if (ref instanceof Expr) {
       AccessPath storeap = ts.storeAccessPathFor((Expr) ref, A);
-      accessPolLabel = new NamedLabel("field access label",
-          "the access label of the field referenced (defaults to the object's access label)",
-          StoreInstantiator.instantiate(ts.toLabel(accessPol), A, (Expr) ref, refType,
-              objLabel, storeap));
-    } else {
-      //throw new InternalCompilerError("Unexpected ref: " + ref + " of type: " + ref.getClass() + " pos: " + pos);
-      accessPolLabel = new NamedLabel("field access label",
-          "the access label of the field referenced (defaults to the object's access label)",
-          ts.toLabel(accessPol));
+      L = StoreInstantiator.instantiate(L, A, (Expr) ref, refType, objLabel, storeap);
     }
+    NamedLabel accessPolLabel = new NamedLabel("field access label",
+          "the access label of the field referenced (defaults to the object's access label)",
+          L);
 
     // Get join of confidentiality policies of previous accesses
     FabricPathMap Xt = (FabricPathMap) getPathMap(ref);
@@ -90,21 +86,18 @@ public class FabricFieldExt extends JifFieldExt {
       }
     });
 
-    /* Perform access checks for the target. */
-    DereferenceHelper.checkDereference(ref, lc, pos);
-
     // Fold in this field's confidentiality into the AC FabricPath.
-    Set<ConfPolicy> confs = new HashSet<>();
-    confs.add(A.accessedConf());
+    Label endConfLabel;
     if (ref instanceof Expr) {
       AccessPath storeap = ts.storeAccessPathFor((Expr) ref, A);
-      confs.add(StoreInstantiator.instantiate(fieldType.label(), A, (Expr) ref,
-            refType, objLabel, storeap).confProjection());
+      endConfLabel = StoreInstantiator.instantiate(fieldType.label(),
+          A, (Expr) ref, refType, objLabel, storeap);
     } else {
-      confs.add(fieldType.label().confProjection());
+      endConfLabel = fieldType.label();
     }
     FabricPathMap X = (FabricPathMap) getPathMap(fe);
-    return updatePathMap(fe, X.AC(ts.toLabel(ts.joinConfPolicy(pos, confs))));
+    Label newAC = ts.join(ts.join(X.AC(), endConfLabel), ts.toLabel(A.accessedConf()));
+    return updatePathMap(fe, X.AC(newAC));
   }
 
 }
