@@ -131,36 +131,29 @@ public class DereferenceHelper {
     // Get join of confidentiality policies of previous accesses
     FabricPathMap Xt = (FabricPathMap) JifExt_c.getPathMap(ref);
     NamedLabel accessedConfLabel = new NamedLabel("accessed conf label",
-        "the join of the confidentiality policies of previously referenced fields",
-        ts.join(ts.toLabel(A.accessedConf()), Xt.AC()));
-
-    lc.constrain(accessedConfLabel, LabelConstraint.LEQ, accessPolLabel,
-        A.labelEnv(), pos, new ConstraintMessage() {
-      @Override
-      public String msg() {
-        return "The field access could leak information about "
-             + "preceding accesses to the store the field is located on, "
-             + "which has confidentiality lower bounded by the field's access "
-             + "label.";
-      }
-    });
+        "the join of the confidentiality policies of previously accessed objects",
+        ts.join(ts.toLabel(A.accessedConfBound()), ts.join(ts.toLabel(A.accessedConf()), Xt.AC())));
 
     // Check that this won't cause abort leaks.
     lc.constrain(accessedConfLabel, LabelConstraint.LEQ, accessPolLabel,
         A.labelEnv(), pos, new ConstraintMessage() {
       @Override
       public String msg() {
-        return "The field access could leak information about "
-             + "preceding accesses to the store the field is located on, "
-             + "which has confidentiality lower bounded by the field's access "
+        return "This access could leak information about "
+             + "preceding accesses to the store the object is located on, "
+             + "which has confidentiality lower bounded by the object's access "
              + "label.";
       }
     });
     
     // Fold in this obj's confidentiality into the AC FabricPath.
-    Label endConfLabel = ts.toLabel(objLabel.confProjection());
+    Label endConfLabel = confOnlyLabel(ts, pos, objLabel.confProjection());
     FabricPathMap X = (FabricPathMap) JifExt_c.getPathMap(n);
-    Label newAC = ts.join(ts.join(X.AC(), endConfLabel), ts.toLabel(A.accessedConf()));
+    Label newAC = ts.join(ts.join(X.AC(), endConfLabel), confOnlyLabel(ts, pos, A.accessedConf()));
     return JifExt_c.updatePathMap(n, X.AC(newAC));
+  }
+
+  private static Label confOnlyLabel(FabricTypeSystem ts, Position pos, ConfPolicy c) {
+    return ts.pairLabel(pos, c, ts.topIntegPolicy(pos));
   }
 }

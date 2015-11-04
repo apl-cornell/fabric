@@ -31,9 +31,16 @@ public class FabricContext_c extends JifContext_c implements FabricContext {
 
   protected ConfPolicy accessedConf; //Confidentiality of accesses up to this point.
 
+  protected ConfPolicy accessedConfBound; //Confidentiality of accesses up to this point.
+
   @Override
   public ConfPolicy accessedConf() {
     return accessedConf;
+  }
+
+  @Override
+  public ConfPolicy accessedConfBound() {
+    return accessedConfBound;
   }
 
   @Override
@@ -41,9 +48,15 @@ public class FabricContext_c extends JifContext_c implements FabricContext {
     this.accessedConf = accessedConf;
   }
 
+  @Override
+  public void setAccessedConfBound(ConfPolicy accessedConf) {
+    this.accessedConfBound = accessedConf;
+  }
+
   protected FabricContext_c(JifTypeSystem ts, TypeSystem jlts) {
     super(ts, jlts);
     this.accessedConf = ts.bottomConfPolicy(Position.compilerGenerated());
+    this.accessedConfBound = ts.bottomConfPolicy(Position.compilerGenerated());
   }
 
   @Override

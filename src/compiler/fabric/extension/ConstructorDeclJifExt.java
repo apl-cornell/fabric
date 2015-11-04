@@ -61,7 +61,7 @@ public class ConstructorDeclJifExt extends JifConstructorDeclExt implements Ext 
     super.setEndOfInitChecking(lc, ci);
     FabricContext A = (FabricContext) lc.context();
     FabricConstructorInstance fci = (FabricConstructorInstance) ci;
-    A.setAccessedConf(fci.beginAccessPolicy());
+    A.setAccessedConfBound(fci.beginAccessPolicy());
   }
 
   @Override

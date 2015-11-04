@@ -50,7 +50,7 @@ public class MethodDeclJifExt extends JifMethodDeclExt {
     super.initContextForBody(lc, mi);
     FabricMethodInstance fmi = (FabricMethodInstance) mi;
     FabricContext A = (FabricContext) lc.context();
-    A.setAccessedConf(fmi.beginAccessPolicy());
+    A.setAccessedConfBound(fmi.beginAccessPolicy());
   }
 
   //TODO: Move this into general FabricProcedureDeclExt?

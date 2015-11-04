@@ -42,19 +42,17 @@ FabricDefaultSignature {
   public ConfPolicy defaultBeginAccess(ProcedureDecl pd) {
     //TODO: Is this reasonable?
     JifProcedureInstance jpi = (JifProcedureInstance) pd.procedureInstance();
-    if (jpi.pcBound() != null)
+    if (!jpi.isDefaultPCBound())
       return fts.confProjection(jpi.pcBound());
-    return fts.bottomConfPolicy(pd.position());
+    return fts.topConfPolicy(pd.position());
   }
 
   @Override
   public ConfPolicy defaultEndConf(ProcedureDecl pd) {
     //TODO: Is this reasonable?
-    /*
     FabricProcedureInstance fpi = (FabricProcedureInstance) pd.procedureInstance();
-    if (!fpi.isDefaultBeginAccess())
-      return fpi.beginAccessPolicy();
-    */
-    return defaultBeginAccess(pd);
+    if (!fpi.isDefaultReturnLabel())
+      return fts.confProjection(fpi.returnLabel());
+    return fts.bottomConfPolicy(pd.position());
   }
 }
