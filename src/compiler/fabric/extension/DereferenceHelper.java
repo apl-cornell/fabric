@@ -132,7 +132,7 @@ public class DereferenceHelper {
     FabricPathMap Xt = (FabricPathMap) JifExt_c.getPathMap(ref);
     NamedLabel accessedConfLabel = new NamedLabel("accessed conf label",
         "the join of the confidentiality policies of previously accessed objects",
-        ts.join(ts.toLabel(A.accessedConfBound()), ts.join(ts.toLabel(A.accessedConf()), Xt.AC())));
+        ts.join(confOnlyLabel(ts, pos, A.accessedConfBound()), ts.join(confOnlyLabel(ts, pos, A.accessedConf()), Xt.AC())));
 
     // Check that this won't cause abort leaks.
     lc.constrain(accessedConfLabel, LabelConstraint.LEQ, accessPolLabel,
@@ -154,6 +154,6 @@ public class DereferenceHelper {
   }
 
   private static Label confOnlyLabel(FabricTypeSystem ts, Position pos, ConfPolicy c) {
-    return ts.pairLabel(pos, c, ts.topIntegPolicy(pos));
+    return ts.pairLabel(pos, c, ts.bottomIntegPolicy(pos));
   }
 }
