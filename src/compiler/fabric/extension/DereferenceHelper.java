@@ -105,12 +105,12 @@ public class DereferenceHelper {
     final Label instantiated =
         StoreInstantiator.instantiate(accessLabel, A, ref, targetType,
             objLabel, storeap);
-    NamedLabel accessPolLabel = new NamedLabel("field access label",
-          "the access label of the field referenced (defaults to the object's access label)",
+    NamedLabel accessPolLabel = new NamedLabel("access label",
+          "the access label of the object referenced",
           instantiated);
 
     lc.constrain(new NamedLabel("reference label", objLabel),
-        LabelConstraint.LEQ, new NamedLabel("access label", instantiated),
+        LabelConstraint.LEQ, accessPolLabel,
         A.labelEnv(), pos, new ConstraintMessage() {
       @Override
       public String msg() {
@@ -139,7 +139,7 @@ public class DereferenceHelper {
         A.labelEnv(), pos, new ConstraintMessage() {
       @Override
       public String msg() {
-        return "This access could leak information about "
+        return "The access of " + ref + " could leak information about "
              + "preceding accesses to the store the object is located on, "
              + "which has confidentiality lower bounded by the object's access "
              + "label.";
