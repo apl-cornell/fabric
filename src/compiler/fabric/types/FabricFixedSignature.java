@@ -53,6 +53,10 @@ FabricDefaultSignature {
     FabricProcedureInstance fpi = (FabricProcedureInstance) pd.procedureInstance();
     if (!fpi.isDefaultReturnLabel())
       return fts.confProjection(fpi.returnLabel());
+    if (!fpi.isDefaultBeginAccess())
+      return fpi.beginAccessPolicy();
+    if (!fpi.isDefaultPCBound())
+      return fts.confProjection(fpi.pcBound());
     return fts.bottomConfPolicy(pd.position());
   }
 }
