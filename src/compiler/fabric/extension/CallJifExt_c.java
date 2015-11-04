@@ -6,13 +6,9 @@ import java.util.List;
 
 import fabric.ast.FabricCall;
 import fabric.types.FabricClassType;
-import fabric.types.FabricContext;
 import fabric.types.FabricMethodInstance;
-import fabric.types.FabricPathMap;
-import fabric.types.FabricReferenceType;
 import fabric.types.FabricTypeSystem;
 
-import jif.ast.JifExt_c;
 import jif.extension.JifCallExt;
 import jif.translate.ToJavaExt;
 import jif.types.Assertion;
@@ -35,7 +31,6 @@ import jif.visit.LabelChecker;
 import polyglot.ast.Call;
 import polyglot.ast.Expr;
 import polyglot.ast.Node;
-import polyglot.ast.Receiver;
 import polyglot.ast.Special;
 import polyglot.types.SemanticException;
 import polyglot.types.Type;
@@ -78,11 +73,11 @@ public class CallJifExt_c extends JifCallExt {
   @Override
   public Node labelCheck(LabelChecker lc) throws SemanticException {
     Node n = super.labelCheck(lc);
-    final FabricCall c = (FabricCall) n;
+    FabricCall c = (FabricCall) n;
     FabricMethodInstance mi = (FabricMethodInstance) c.methodInstance();
     FabricTypeSystem ts = (FabricTypeSystem) lc.typeSystem();
 
-    DereferenceHelper.checkDereference(c.target(), lc, c.position());
+    c = (FabricCall) DereferenceHelper.checkDereference(c, c.target(), lc, c.position());
 
     if (c.remoteWorker() != null) labelCheckRemoteCall(lc, c, mi, ts);
 

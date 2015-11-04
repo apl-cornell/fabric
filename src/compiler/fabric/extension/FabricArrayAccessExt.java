@@ -27,9 +27,7 @@ public class FabricArrayAccessExt extends JifArrayAccessExt {
     ArrayAccess n = (ArrayAccess) super.labelCheck(lc);
     Expr array = n.array();
     Type type = lc.typeSystem().unlabel(array.type());
-    DereferenceHelper.checkAccess(array, (FabricReferenceType) type, lc, node()
-        .position());
-    return n;
+    return DereferenceHelper.checkAccess(n, array, (FabricReferenceType) type, lc, n.position());
   }
 
 }

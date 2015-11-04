@@ -1,15 +1,12 @@
 package fabric.extension;
 
-import fabric.common.exceptions.NotImplementedException;
 import fabric.types.FabricContext;
-import fabric.types.FabricFieldInstance;
+import fabric.types.FabricPathMap;
 import fabric.types.FabricReferenceType;
 import fabric.types.FabricTypeSystem;
-import fabric.visit.FabricLabelChecker;
 
 import jif.ast.JifExt_c;
 import jif.types.ConstraintMessage;
-import jif.types.JifContext;
 import jif.types.LabelConstraint;
 import jif.types.NamedLabel;
 import jif.types.label.AccessPath;
@@ -19,8 +16,7 @@ import jif.types.label.Label;
 import jif.visit.LabelChecker;
 
 import polyglot.ast.Expr;
-import polyglot.ast.Field;
-import polyglot.ast.Id;
+import polyglot.ast.Node;
 import polyglot.ast.NullLit;
 import polyglot.ast.Receiver;
 import polyglot.ast.Special;
@@ -37,24 +33,24 @@ public class DereferenceHelper {
   /**
    * Adds constraints to lc reflecting the fetch side effects of a dereference
    */
-  public static void checkDereference(final Receiver ref, LabelChecker lc,
+  public static Node checkDereference(Node n, final Receiver ref, LabelChecker lc,
       Position pos) throws SemanticException {
     FabricTypeSystem ts = (FabricTypeSystem) lc.typeSystem();
 
     // All classes referred to in executing code have already been fetched
     // during typechecking. Thus static dispatches do not cause fetches
-    if (ref instanceof TypeNode) return;
+    if (ref instanceof TypeNode) return n;
 
     // this and super are known to be resident when a method is executing. Thus
     // they do not cause side effects when dereferenced.
-    if (ref == null || ref instanceof Special) return;
+    if (ref == null || ref instanceof Special) return n;
 
     if (!(ref instanceof Expr))
       throw new InternalCompilerError("unexpected receiver type");
 
     // get the type of the target and check accesses to the object
     FabricReferenceType refType = (FabricReferenceType) ts.unlabel(ref.type());
-    checkAccess((Expr) ref, refType, lc, pos);
+    return checkAccess(n, (Expr) ref, refType, lc, pos);
   }
 
   /**
@@ -70,13 +66,13 @@ public class DereferenceHelper {
    * checkAccess(x, C2, ...) will add constraints reflecting that. Assumes that
    * ref has already been label checked.
    */
-  public static void checkAccess(final Expr ref,
+  public static Node checkAccess(Node n, final Expr ref,
       final FabricReferenceType targetType, LabelChecker lc, Position pos)
           throws SemanticException {
     FabricTypeSystem ts = (FabricTypeSystem) lc.typeSystem();
 
     // if the ref is a null literal, then the access label check is not required
-    if (ref instanceof NullLit) return;
+    if (ref instanceof NullLit) return n;
 
     // Dereferencing a reference with a transient type does not result in a fetch unless
     // 1) it is java.lang.Object (could refer to a fabric.lang.Object)
@@ -84,10 +80,10 @@ public class DereferenceHelper {
     if (ts.isTransient(ref.type())
         && !ref.type().equals(ts.Object())
         && !(ref.type().isClass() && ref.type().toClass().flags().isInterface()))
-      return;
+      return n;
 
     // check that the pc and ref label can flow to the access label
-    JifContext A = lc.context();
+    FabricContext A = (FabricContext) lc.context();
     Label objLabel = JifExt_c.getPathMap(ref).NV();
     Label pc = ts.join(JifExt_c.getPathMap(ref).N(), A.currentCodePCBound());
     AccessPath storeap = ts.storeAccessPathFor(ref, A);
@@ -109,6 +105,9 @@ public class DereferenceHelper {
     final Label instantiated =
         StoreInstantiator.instantiate(accessLabel, A, ref, targetType,
             objLabel, storeap);
+    NamedLabel accessPolLabel = new NamedLabel("field access label",
+          "the access label of the field referenced (defaults to the object's access label)",
+          instantiated);
 
     lc.constrain(new NamedLabel("reference label", objLabel),
         LabelConstraint.LEQ, new NamedLabel("access label", instantiated),
@@ -128,5 +127,40 @@ public class DereferenceHelper {
             + "fetched, revealing too much information to its " + "store";
       }
     });
+
+    // Get join of confidentiality policies of previous accesses
+    FabricPathMap Xt = (FabricPathMap) JifExt_c.getPathMap(ref);
+    NamedLabel accessedConfLabel = new NamedLabel("accessed conf label",
+        "the join of the confidentiality policies of previously referenced fields",
+        ts.join(ts.toLabel(A.accessedConf()), Xt.AC()));
+
+    lc.constrain(accessedConfLabel, LabelConstraint.LEQ, accessPolLabel,
+        A.labelEnv(), pos, new ConstraintMessage() {
+      @Override
+      public String msg() {
+        return "The field access could leak information about "
+             + "preceding accesses to the store the field is located on, "
+             + "which has confidentiality lower bounded by the field's access "
+             + "label.";
+      }
+    });
+
+    // Check that this won't cause abort leaks.
+    lc.constrain(accessedConfLabel, LabelConstraint.LEQ, accessPolLabel,
+        A.labelEnv(), pos, new ConstraintMessage() {
+      @Override
+      public String msg() {
+        return "The field access could leak information about "
+             + "preceding accesses to the store the field is located on, "
+             + "which has confidentiality lower bounded by the field's access "
+             + "label.";
+      }
+    });
+    
+    // Fold in this obj's confidentiality into the AC FabricPath.
+    Label endConfLabel = ts.toLabel(objLabel.confProjection());
+    FabricPathMap X = (FabricPathMap) JifExt_c.getPathMap(n);
+    Label newAC = ts.join(ts.join(X.AC(), endConfLabel), ts.toLabel(A.accessedConf()));
+    return JifExt_c.updatePathMap(n, X.AC(newAC));
   }
 }

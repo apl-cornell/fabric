@@ -1,14 +1,16 @@
 package fabric.extension;
 
+import fabric.types.FabricReferenceType;
+
 import jif.extension.JifInstanceofExt;
 import jif.translate.ToJavaExt;
 import jif.visit.LabelChecker;
+
 import polyglot.ast.Expr;
 import polyglot.ast.Instanceof;
 import polyglot.ast.Node;
 import polyglot.ast.TypeNode;
 import polyglot.types.SemanticException;
-import fabric.types.FabricReferenceType;
 
 /**
  *
@@ -21,13 +23,12 @@ public class FabricInstanceofExt extends JifInstanceofExt {
 
   @Override
   public Node labelCheck(LabelChecker lc) throws SemanticException {
-    Expr ref = (Expr) lc.labelCheck(node().expr());
-    TypeNode type = (TypeNode) lc.labelCheck(node().compareType());
+    Instanceof checkedNode = (Instanceof) super.labelCheck(lc);
+    Expr ref = checkedNode.expr();
+    TypeNode type = checkedNode.compareType();
 
-    DereferenceHelper.checkAccess(ref, (FabricReferenceType) type.type(), lc,
-        node().position());
-
-    return super.labelCheck(lc);
+    return DereferenceHelper.checkAccess(checkedNode, ref, (FabricReferenceType) type.type(), lc,
+        checkedNode.position());
   }
 
   @Override
