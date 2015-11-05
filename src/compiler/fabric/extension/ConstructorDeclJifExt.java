@@ -82,6 +82,7 @@ public class ConstructorDeclJifExt extends JifConstructorDeclExt implements Ext 
       FabricProcedureInstance mi) throws SemanticException {
     FabricTypeSystem ts = (FabricTypeSystem) lc.typeSystem();
     FabricContext A = (FabricContext) lc.context();
+    Position pos = mi.position();
 
     // Get the join of all accesses in the method
     NamedLabel accessedLabel = new NamedLabel("accessed label",
@@ -90,10 +91,11 @@ public class ConstructorDeclJifExt extends JifConstructorDeclExt implements Ext 
 
     NamedLabel endAccessLabel = new NamedLabel("end access label",
         "the upper bound on the update labels of objects accessed in this constructor",
-        mi.endAccessLabel());
+        ts.join(mi.endAccessLabel(),
+          ts.pairLabel(pos, ts.bottomConfPolicy(pos), ts.topIntegPolicy(pos))));
 
     lc.constrain(accessedLabel, LabelConstraint.LEQ, endAccessLabel,
-        A.labelEnv(), mi.position(), new ConstraintMessage() {
+        A.labelEnv(), pos, new ConstraintMessage() {
       @Override
       public String msg() {
         return "This constructor makes more confidential accesses than the ending "

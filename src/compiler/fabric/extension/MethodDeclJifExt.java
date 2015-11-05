@@ -19,6 +19,7 @@ import jif.visit.LabelChecker;
 
 import polyglot.types.SemanticException;
 import polyglot.types.Type;
+import polyglot.util.Position;
 
 public class MethodDeclJifExt extends JifMethodDeclExt {
 
@@ -63,6 +64,7 @@ public class MethodDeclJifExt extends JifMethodDeclExt {
       FabricProcedureInstance mi) throws SemanticException {
     FabricTypeSystem ts = (FabricTypeSystem) lc.typeSystem();
     FabricContext A = (FabricContext) lc.context();
+    Position pos = mi.position();
 
     // Get the join of all accesses in the method
     NamedLabel accessedLabel = new NamedLabel("accessed label",
@@ -71,10 +73,11 @@ public class MethodDeclJifExt extends JifMethodDeclExt {
 
     NamedLabel endAccessLabel = new NamedLabel("end access label",
         "the upper bound on the update labels of objects accessed in this method",
-        mi.endAccessLabel());
+        ts.join(mi.endAccessLabel(),
+          ts.pairLabel(pos, ts.bottomConfPolicy(pos), ts.topIntegPolicy(pos))));
 
     lc.constrain(accessedLabel, LabelConstraint.LEQ, endAccessLabel,
-        A.labelEnv(), mi.position(), new ConstraintMessage() {
+        A.labelEnv(), pos, new ConstraintMessage() {
       @Override
       public String msg() {
         return "This method makes more confidential accesses than the ending "

@@ -211,7 +211,8 @@ public class FabricCallHelper extends CallHelper {
     // Check previous accesses against access label bound of method.
     NamedLabel accessPolLabel = new NamedLabel("begin access label",
           "the lower bound of the access labels of all accesses in the method",
-          beginAccess);
+          fts.join(beginAccess,
+            fts.pairLabel(position, fts.bottomConfPolicy(position), fts.topIntegPolicy(position))));
 
     // Get join of update labels of previous accesses
     NamedLabel accessedLabel = new NamedLabel("accessed label",
@@ -244,7 +245,8 @@ public class FabricCallHelper extends CallHelper {
 
     NamedLabel endAccessBoundLabel = new NamedLabel("end access label",
         "the upper bound on the update labels of objects accessed in this method",
-        A.endAccessBound());
+        fts.join(A.endAccessBound(),
+          fts.pairLabel(position, fts.bottomConfPolicy(position), fts.topIntegPolicy(position))));
 
     lc.constrain(newANamed, LabelConstraint.LEQ, endAccessBoundLabel,
         A.labelEnv(), position, new ConstraintMessage() {

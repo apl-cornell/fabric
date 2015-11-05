@@ -107,7 +107,8 @@ public class DereferenceHelper {
             objLabel, storeap);
     NamedLabel accessPolLabel = new NamedLabel("access label",
           "the access label of the object referenced",
-          instantiated);
+          ts.join(instantiated,
+            ts.pairLabel(pos, ts.bottomConfPolicy(pos), ts.topIntegPolicy(pos))));
 
     lc.constrain(new NamedLabel("reference label", objLabel),
         LabelConstraint.LEQ, accessPolLabel,
@@ -161,7 +162,8 @@ public class DereferenceHelper {
 
     NamedLabel endConfBoundLabel = new NamedLabel("end access label",
         "the upper bound on the update labels of objects accessed in this method",
-        A.endAccessBound());
+        ts.join(A.endAccessBound(),
+          ts.pairLabel(pos, ts.bottomConfPolicy(pos), ts.topIntegPolicy(pos))));
 
     lc.constrain(newANamed, LabelConstraint.LEQ, endConfBoundLabel,
         A.labelEnv(), pos, new ConstraintMessage() {
