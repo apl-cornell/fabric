@@ -1,18 +1,8 @@
 package fabric.ast;
 
-import jif.ast.JifExtFactory_c;
-import jif.ast.JifExt_c;
-import jif.extension.JifBinaryExt;
-import jif.extension.JifFieldDeclExt_c;
-import jif.extension.JifLabelExprExt;
-import jif.extension.JifPrincipalExprExt;
-import jif.extension.JifSourceFileExt;
-import jif.translate.ArrayAccessToJavaExt_c;
-import jif.translate.FieldToJavaExt_c;
-import polyglot.ast.Ext;
-import polyglot.ast.ExtFactory;
 import fabric.extension.AbortJifExt_c;
 import fabric.extension.AtomicJifExt_c;
+import fabric.extension.BlockJifExt;
 import fabric.extension.CallJifExt_c;
 import fabric.extension.ClassBodyJifExt_c;
 import fabric.extension.ConstructorDeclJifExt;
@@ -50,6 +40,20 @@ import fabric.translate.RemoteWorkerGetterToFabilExt_c;
 import fabric.translate.RetryToFabilExt_c;
 import fabric.translate.SourceFileToFabilExt_c;
 import fabric.translate.WorkerToFabilExt_c;
+
+import jif.ast.JifExtFactory_c;
+import jif.ast.JifExt_c;
+import jif.extension.JifBinaryExt;
+import jif.extension.JifFieldDeclExt_c;
+import jif.extension.JifLabelExprExt;
+import jif.extension.JifPrincipalExprExt;
+import jif.extension.JifSourceFileExt;
+import jif.translate.ArrayAccessToJavaExt_c;
+import jif.translate.BlockToJavaExt_c;
+import jif.translate.FieldToJavaExt_c;
+
+import polyglot.ast.Ext;
+import polyglot.ast.ExtFactory;
 
 /**
  * This class extends the Jif Extension factory to provide Jif extension objects
@@ -411,5 +415,10 @@ FabricExtFactory {
 
   protected Ext postExtCodebaseDecl(Ext e) {
     return postExtNode(e);
+  }
+
+  @Override
+  protected Ext extBlockImpl() {
+    return new BlockJifExt(new BlockToJavaExt_c());
   }
 }
