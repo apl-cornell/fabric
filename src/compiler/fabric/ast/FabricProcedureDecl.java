@@ -8,7 +8,7 @@ import jif.ast.LabelNode;
  *  the end confidentiality policy.
  */
 public interface FabricProcedureDecl extends JifProcedureDecl {
-    LabelNode beginAccessPolicy();
+    LabelNode beginAccessLabel();
 
-    LabelNode endConfPolicy();
+    LabelNode endAccessLabel();
 }

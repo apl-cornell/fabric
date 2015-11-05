@@ -1,14 +1,10 @@
 package fabric.types;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import fabric.ast.FabricFieldDecl;
 
 import jif.ast.LabelNode;
 import jif.types.FixedSignature;
 import jif.types.JifProcedureInstance;
-import jif.types.label.ConfPolicy;
 import jif.types.label.Label;
 
 import polyglot.ast.FieldDecl;
@@ -42,24 +38,24 @@ FabricDefaultSignature {
   }
 
   @Override
-  public ConfPolicy defaultBeginAccess(ProcedureDecl pd) {
+  public Label defaultBeginAccess(ProcedureDecl pd) {
     //TODO: Is this reasonable?
     JifProcedureInstance jpi = (JifProcedureInstance) pd.procedureInstance();
     if (!jpi.isDefaultPCBound())
-      return fts.confProjection(jpi.pcBound());
-    return fts.topConfPolicy(pd.position());
+      return jpi.pcBound();
+    return fts.topLabel();
   }
 
   @Override
-  public ConfPolicy defaultEndConf(ProcedureDecl pd) {
+  public Label defaultEndAccess(ProcedureDecl pd) {
     //TODO: Is this reasonable?
     FabricProcedureInstance fpi = (FabricProcedureInstance) pd.procedureInstance();
     if (!fpi.isDefaultReturnLabel())
-      return fts.confProjection(fpi.returnLabel());
+      return fpi.returnLabel();
     if (!fpi.isDefaultBeginAccess())
-      return fpi.beginAccessPolicy();
+      return fpi.beginAccessLabel();
     if (!fpi.isDefaultPCBound())
-      return fts.confProjection(fpi.pcBound());
-    return fts.bottomConfPolicy(pd.position());
+      return fpi.pcBound();
+    return fts.bottomLabel();
   }
 }

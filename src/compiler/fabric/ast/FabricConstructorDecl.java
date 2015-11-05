@@ -10,7 +10,7 @@ import jif.ast.LabelNode;
  */
 public interface FabricConstructorDecl extends FabricProcedureDecl,
        JifConstructorDecl {
-  FabricConstructorDecl beginAccessPolicy(LabelNode beginAccessPolicy);
+  FabricConstructorDecl beginAccessLabel(LabelNode beginAccessLabel);
 
-  FabricConstructorDecl endConfPolicy(LabelNode endConfPolicy);
+  FabricConstructorDecl endAccessLabel(LabelNode endAccesLabel);
 }

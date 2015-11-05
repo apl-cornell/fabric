@@ -50,9 +50,8 @@ public class MethodDeclJifExt extends JifMethodDeclExt {
     super.initContextForBody(lc, mi);
     FabricMethodInstance fmi = (FabricMethodInstance) mi;
     FabricContext A = (FabricContext) lc.context();
-    FabricTypeSystem ts = (FabricTypeSystem) lc.typeSystem();
-    A.setAccessedConfBound(ts.pairLabel(fmi.position(), fmi.beginAccessPolicy(), ts.bottomIntegPolicy(fmi.position())));
-    A.setEndConfBound(ts.toLabel(fmi.endConfPolicy()));
+    A.setAccessedLabelBound(fmi.beginAccessLabel());
+    A.setEndAccessBound(fmi.endAccessLabel());
   }
 
   //TODO: Move this into general FabricProcedureDeclExt?
@@ -66,20 +65,20 @@ public class MethodDeclJifExt extends JifMethodDeclExt {
     FabricContext A = (FabricContext) lc.context();
 
     // Get the join of all accesses in the method
-    NamedLabel accessedConfLabel = new NamedLabel("accessed conf label",
-        "the join of the confidentiality policies of referenced fields in the method",
-        ts.join(A.accessedConf(), X.AC()));
+    NamedLabel accessedLabel = new NamedLabel("accessed label",
+        "the join of the update labels of objects accessed in the method",
+        ts.join(A.accessedLabel(), X.A()));
 
-    NamedLabel endConfLabel = new NamedLabel("end conf label",
-        "the upper bound on the confidentiality of accessed fields in this method",
-        ts.toLabel(mi.endConfPolicy()));
+    NamedLabel endAccessLabel = new NamedLabel("end access label",
+        "the upper bound on the update labels of objects accessed in this method",
+        mi.endAccessLabel());
 
-    lc.constrain(accessedConfLabel, LabelConstraint.LEQ, endConfLabel,
+    lc.constrain(accessedLabel, LabelConstraint.LEQ, endAccessLabel,
         A.labelEnv(), mi.position(), new ConstraintMessage() {
       @Override
       public String msg() {
         return "This method makes more confidential accesses than the ending "
-             + "confidentiality label allows.";
+             + "access label allows.";
       }
     });
   }

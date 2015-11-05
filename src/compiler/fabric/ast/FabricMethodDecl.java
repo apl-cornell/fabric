@@ -9,7 +9,7 @@ import jif.ast.LabelNode;
  * confidentiality label.
  */
 public interface FabricMethodDecl extends FabricProcedureDecl, JifMethodDecl {
-  FabricMethodDecl beginAccessPolicy(LabelNode beginAccessPolicy);
+  FabricMethodDecl beginAccessLabel(LabelNode beginAccessLabel);
 
-  FabricMethodDecl endConfPolicy(LabelNode endConfPolicy);
+  FabricMethodDecl endAccessLabel(LabelNode endAccessLabel);
 }

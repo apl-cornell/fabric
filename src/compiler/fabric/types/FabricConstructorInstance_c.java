@@ -7,7 +7,6 @@ import jif.types.Assertion;
 import jif.types.JifConstructorInstance_c;
 import jif.types.LabelSubstitution;
 import jif.types.VarMap;
-import jif.types.label.ConfPolicy;
 import jif.types.label.Label;
 
 import polyglot.main.Report;
@@ -23,32 +22,32 @@ import polyglot.util.Position;
 public class FabricConstructorInstance_c extends JifConstructorInstance_c
   implements FabricConstructorInstance {
 
-  protected ConfPolicy beginAccessPol;
+  protected Label beginAccessLab;
   protected boolean isDefaultBeginAccess;
-  protected ConfPolicy endConfPol;
-  protected boolean isDefaultEndConf;
+  protected Label endAccessLab;
+  protected boolean isDefaultEndAccess;
 
   public FabricConstructorInstance_c(FabricTypeSystem ts, Position pos,
             ClassType container, Flags flags,
             Label pcBound, boolean isDefaultPCBound,
-            ConfPolicy beginAccessPol, boolean isDefaultBeginAccess,
+            Label beginAccessLab, boolean isDefaultBeginAccess,
             Label returnLabel, boolean isDefaultReturnLabel,
-            ConfPolicy endConfPol, boolean isDefaultEndConf,
+            Label endAccessLab, boolean isDefaultEndAccess,
             List<? extends Type> formalTypes, List<Label> formalArgLabels,
             List<? extends Type> excTypes, List<Assertion> constraints) {
     super(ts, pos, container, flags, pcBound, isDefaultPCBound, returnLabel,
         isDefaultReturnLabel, formalTypes, formalArgLabels, excTypes,
         constraints);
 
-    this.beginAccessPol = beginAccessPol;
+    this.beginAccessLab = beginAccessLab;
     this.isDefaultBeginAccess = isDefaultBeginAccess;
-    this.endConfPol = endConfPol;
-    this.isDefaultEndConf = isDefaultEndConf;
+    this.endAccessLab = endAccessLab;
+    this.isDefaultEndAccess = isDefaultEndAccess;
   }
   
   @Override
-  public ConfPolicy beginAccessPolicy() {
-    return beginAccessPol;
+  public Label beginAccessLabel() {
+    return beginAccessLab;
   }
 
   @Override
@@ -57,25 +56,25 @@ public class FabricConstructorInstance_c extends JifConstructorInstance_c
   }
   
   @Override
-  public void setBeginAccessPolicy(ConfPolicy p, boolean isDefault) {
+  public void setBeginAccessLabel(Label p, boolean isDefault) {
     isDefaultBeginAccess = isDefault;
-    beginAccessPol = p;
+    beginAccessLab = p;
   }
 
   @Override
-  public ConfPolicy endConfPolicy() {
-    return endConfPol;
+  public Label endAccessLabel() {
+    return endAccessLab;
   }
 
   @Override
-  public boolean isDefaultEndConf() {
-    return isDefaultEndConf;
+  public boolean isDefaultEndAccess() {
+    return isDefaultEndAccess;
   }
 
   @Override
-  public void setEndConfPolicy(ConfPolicy p, boolean isDefault) {
-    isDefaultEndConf = isDefault;
-    endConfPol = p;
+  public void setEndAccessLabel(Label p, boolean isDefault) {
+    isDefaultEndAccess = isDefault;
+    endAccessLab = p;
   }
 
   // Mostly stolen from JifMethodInstance_c's implementation.
@@ -88,8 +87,8 @@ public class FabricConstructorInstance_c extends JifConstructorInstance_c
     }
 
     //Add begin access label.
-    if (beginAccessPol != null) {
-      s += "@" + beginAccessPol.toString();
+    if (beginAccessLab != null) {
+      s += "@" + beginAccessLab.toString();
     }
 
     s += "(";
@@ -107,13 +106,13 @@ public class FabricConstructorInstance_c extends JifConstructorInstance_c
 
     if (returnLabel != null) {
       s += " : " + returnLabel.toString();
-      if (endConfPol != null) {
-        //Add end confidentiality label.
-        s += "@" + endConfPol.toString();
+      if (endAccessLab != null) {
+        //Add end access label.
+        s += "@" + endAccessLab.toString();
       }
-    } else if (endConfPol != null) {
-      //Add end confidentiality label.
-      s += ":@" + endConfPol.toString();
+    } else if (endAccessLab != null) {
+      //Add end access label.
+      s += ":@" + endAccessLab.toString();
     }
 
     if (!this.throwTypes.isEmpty()) {
@@ -158,7 +157,7 @@ public class FabricConstructorInstance_c extends JifConstructorInstance_c
     if (!isDefaultBeginAccess() || Report.should_report(Report.debug, 1)) {
       // Add begin access label
       sb.append("@");
-      sb.append(beginAccessPol);
+      sb.append(beginAccessLab);
     }
     sb.append("(");
 
@@ -183,40 +182,38 @@ public class FabricConstructorInstance_c extends JifConstructorInstance_c
     if (!isDefaultReturnLabel() || Report.should_report(Report.debug, 1)) {
       sb.append(":");
       sb.append(returnLabel);
-      if (!isDefaultEndConf() || Report.should_report(Report.debug, 1)) {
-        // Add end conf label
+      if (!isDefaultEndAccess() || Report.should_report(Report.debug, 1)) {
+        // Add end access label
         sb.append("@");
-        sb.append(endConfPol);
+        sb.append(endAccessLab);
       }
-    } else if (!isDefaultEndConf() || Report.should_report(Report.debug, 1)) {
-      // Add end conf label
+    } else if (!isDefaultEndAccess() || Report.should_report(Report.debug, 1)) {
+      // Add end access label
       sb.append(":@");
-      sb.append(endConfPol);
+      sb.append(endAccessLab);
     }
     return sb.toString();
   }
 
   @Override
   public boolean isCanonical() {
-    return beginAccessPol.isCanonical() && endConfPol.isCanonical() &&
+    return beginAccessLab.isCanonical() && endAccessLab.isCanonical() &&
       super.isCanonical();
   }
 
   @Override
   public void subst(VarMap bounds) {
     // Tom: Hoping the casts I'm doing here are okay...
-    this.beginAccessPol = (ConfPolicy) bounds.applyTo(this.beginAccessPol);
-    this.endConfPol = (ConfPolicy) bounds.applyTo(this.endConfPol);
+    this.beginAccessLab = bounds.applyTo(this.beginAccessLab);
+    this.endAccessLab = bounds.applyTo(this.endAccessLab);
     super.subst(bounds);
   }
 
   @Override
   public void subst(LabelSubstitution subst) throws SemanticException {
     // Tom: Hoping the casts I'm doing here are okay...
-    setBeginAccessPolicy((ConfPolicy) beginAccessPolicy().subst(subst),
-        isDefaultBeginAccess());
-    setEndConfPolicy((ConfPolicy) endConfPolicy().subst(subst),
-        isDefaultEndConf());
+    setBeginAccessLabel(beginAccessLabel().subst(subst), isDefaultBeginAccess());
+    setEndAccessLabel(endAccessLabel().subst(subst), isDefaultEndAccess());
     super.subst(subst);
   }
 

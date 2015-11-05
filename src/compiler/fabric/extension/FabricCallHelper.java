@@ -16,7 +16,6 @@ import jif.types.JifTypeSystem;
 import jif.types.LabelConstraint;
 import jif.types.NamedLabel;
 import jif.types.label.AccessPath;
-import jif.types.label.ConfPolicy;
 import jif.types.label.Label;
 import jif.types.principal.Principal;
 import jif.visit.LabelChecker;
@@ -120,7 +119,6 @@ public class FabricCallHelper extends CallHelper {
     // construct a JifContext here, that equates the arg labels of mi and mj.
     FabricContext A = (FabricContext) lc.context();
     A = (FabricContext) A.pushBlock();
-    FabricTypeSystem ts = (FabricTypeSystem) lc.typeSystem();
     LabelChecker newlc = lc.context(A);
 
     // The method instances we're checking.
@@ -129,15 +127,15 @@ public class FabricCallHelper extends CallHelper {
     // pc bounds  are contravariant:
     //  the pc bound on mi may be more restrictive than the
     // pc bound on mj
-    ConfPolicy startAccessPoli = overriding.beginAccessPolicy();
-    NamedLabel startAccessi = new NamedLabel(
+    Label beginAccessLabi = overriding.beginAccessLabel();
+    NamedLabel beginAccessi = new NamedLabel(
         "sub_start_access_bound", "starting access bound of method " + overriding.name() + " in " + overriding.container(),
-        ts.toLabel(startAccessPoli));
-    ConfPolicy startAccessPolj = overridden.beginAccessPolicy();
-    NamedLabel startAccessj = new NamedLabel(
+        beginAccessLabi);
+    Label beginAccessLabj = overridden.beginAccessLabel();
+    NamedLabel beginAccessj = new NamedLabel(
         "sup_start_access_bound", "starting access bound of method " + overridden.name() + " in " + overridden.container(),
-        instantiate(A, ts.toLabel(startAccessPolj)));
-    newlc.constrain(startAccessj, LabelConstraint.LEQ, startAccessi, A.labelEnv(),
+        instantiate(A, beginAccessLabj));
+    newlc.constrain(beginAccessj, LabelConstraint.LEQ, beginAccessi, A.labelEnv(),
         overriding.position(), new ConstraintMessage() {
           @Override
           public String msg() {
@@ -166,15 +164,15 @@ public class FabricCallHelper extends CallHelper {
     // return labels are covariant
     //    the return label on mi may be less restrictive than the
     //    return label on mj
-    ConfPolicy endConfPoli = overriding.endConfPolicy();
-    NamedLabel endConfi = new NamedLabel("sub_end_conf_label",
+    Label endAccessLabi = overriding.endAccessLabel();
+    NamedLabel endAccessi = new NamedLabel("sub_end_conf_label",
         "ending confidentiality label of method " + overriding.name() + " in " + overriding.container(),
-        ts.toLabel(endConfPoli));
-    ConfPolicy endConfPolj = overridden.endConfPolicy();
-    NamedLabel endConfj = new NamedLabel("sup_return_label",
+        endAccessLabi);
+    Label endAccessLabj = overridden.endAccessLabel();
+    NamedLabel endAccessj = new NamedLabel("sup_return_label",
         "ending confidentiality label of method " + overridden.name() + " in " + overridden.container(),
-        instantiate(A, ts.toLabel(endConfPolj)));
-    newlc.constrain(endConfi, LabelConstraint.LEQ, endConfj, A.labelEnv(),
+        instantiate(A, endAccessLabj));
+    newlc.constrain(endAccessi, LabelConstraint.LEQ, endAccessj, A.labelEnv(),
         overriding.position(),
         new ConstraintMessage() {
           @Override
@@ -215,45 +213,45 @@ public class FabricCallHelper extends CallHelper {
           "the lower bound of the access labels of all accesses in the method",
           beginAccess);
 
-    // Get join of confidentiality policies of previous accesses
-    NamedLabel accessedConfLabel = new NamedLabel("accessed conf label",
-        "the join of the confidentiality policies of previously referenced fields",
-        fts.join(A.accessedConf(),
-                 fts.join(A.accessedConfBound(),
-                          ((FabricPathMap) X).AC())));
+    // Get join of update labels of previous accesses
+    NamedLabel accessedLabel = new NamedLabel("accessed label",
+        "the join of the update labels of previously accessed objects",
+        fts.join(A.accessedLabel(),
+                 fts.join(A.accessedLabelBound(),
+                          ((FabricPathMap) X).A())));
 
-    lc.constrain(accessedConfLabel, LabelConstraint.LEQ, accessPolLabel,
+    lc.constrain(accessedLabel, LabelConstraint.LEQ, accessPolLabel,
         A.labelEnv(), position, new ConstraintMessage() {
       @Override
       public String msg() {
-        return "The field accesses during the call could leak "
-             + "information about preceding accesses to the stores which the "
-             + "fields accessed in the method are located on, which has "
-             + "confidentiality lower bounded by the method's begin access "
+        return "The objects accessed during this method could leak "
+             + "information about preceding accesses to the stores "
+             + "of previously accessed objects, which have "
+             + "access lower bounded by the method's begin access "
              + "label.";
       }
     });
 
-    // Add in the confidentiality of the call's accesses to the AC path.
-    Label newAC = fts.join(fts.join(((FabricPathMap) X).AC(), endConf),
-                           A.accessedConf());
-    X = ((FabricPathMap) X).AC(newAC);
+    // Add in the update labels of the call's accesses to the A path.
+    Label newA = fts.join(fts.join(((FabricPathMap) X).A(), endConf),
+                           A.accessedLabel());
+    X = ((FabricPathMap) X).A(newA);
 
-    // Early check of end conf bound to get better location reporting.
-    NamedLabel newACNamed = new NamedLabel("accessed conf label",
-        "the join of the confidentiality policies of previously referenced fields",
-        newAC);
+    // Early check of end access bound to get better location reporting.
+    NamedLabel newANamed = new NamedLabel("accessed label",
+        "the join of the update labels of previously accessed objects",
+        newA);
 
-    NamedLabel endConfBoundLabel = new NamedLabel("end conf label",
-        "the upper bound on the confidentiality of accessed fields in this method",
-        A.endConfBound());
+    NamedLabel endAccessBoundLabel = new NamedLabel("end access label",
+        "the upper bound on the update labels of objects accessed in this method",
+        A.endAccessBound());
 
-    lc.constrain(newACNamed, LabelConstraint.LEQ, endConfBoundLabel,
+    lc.constrain(newANamed, LabelConstraint.LEQ, endAccessBoundLabel,
         A.labelEnv(), position, new ConstraintMessage() {
       @Override
       public String msg() {
-        return "This method makes more confidential accesses than the ending "
-             + "confidentiality label allows.";
+        return "This method makes more restricted accesses than the ending "
+             + "access label allows.";
       }
     });
   }
@@ -264,9 +262,8 @@ public class FabricCallHelper extends CallHelper {
    */
   protected Label resolveBeginAccess(LabelChecker lc)
       throws SemanticException {
-    FabricTypeSystem fts = (FabricTypeSystem) lc.context().typeSystem();
     FabricProcedureInstance fpi = (FabricProcedureInstance) pi;
-    return instantiate(lc.context(), fts.toLabel(fpi.beginAccessPolicy()));
+    return instantiate(lc.context(), fpi.beginAccessLabel());
   }
 
   /**
@@ -275,13 +272,8 @@ public class FabricCallHelper extends CallHelper {
    */
   protected Label resolveEndConf(LabelChecker lc)
       throws SemanticException {
-    FabricTypeSystem fts = (FabricTypeSystem) lc.context().typeSystem();
     FabricProcedureInstance fpi = (FabricProcedureInstance) pi;
     return instantiate(lc.context(),
-                       fts.pairLabel(fpi.position(),
-                                     fpi.endConfPolicy(),
-                                     fts.bottomIntegPolicy(fpi.position())
-                                    )
-                      );
+                       fpi.endAccessLabel());
   }
 }

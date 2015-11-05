@@ -29,47 +29,47 @@ public class FabricContext_c extends JifContext_c implements FabricContext {
 
   protected Expr location;
 
-  protected Label accessedConf; //Confidentiality of accesses up to this point.
+  protected Label accessedLab; //Join of update labels of accesses up to this point.
 
-  protected Label accessedConfBound; //Confidentiality of accesses up to this point.
+  protected Label accessedLabelBound; //Begin access label of current method.
 
-  protected Label endConfBound; //End conf bound of the current method.
+  protected Label endAccessBound; //End access label of the current method.
 
   @Override
-  public Label accessedConf() {
-    return accessedConf;
+  public Label accessedLabel() {
+    return accessedLab;
   }
 
   @Override
-  public Label accessedConfBound() {
-    return accessedConfBound;
+  public Label accessedLabelBound() {
+    return accessedLabelBound;
   }
 
   @Override
-  public Label endConfBound() {
-    return endConfBound;
+  public Label endAccessBound() {
+    return endAccessBound;
   }
 
   @Override
-  public void setAccessedConf(Label accessedConf) {
-    this.accessedConf = accessedConf;
+  public void setAccessedLabel(Label accessedLab) {
+    this.accessedLab = accessedLab;
   }
 
   @Override
-  public void setAccessedConfBound(Label accessedConf) {
-    this.accessedConfBound = accessedConf;
+  public void setAccessedLabelBound(Label accessedLab) {
+    this.accessedLabelBound = accessedLab;
   }
 
   @Override
-  public void setEndConfBound(Label endConf) {
-    this.endConfBound = endConf;
+  public void setEndAccessBound(Label endAccess) {
+    this.endAccessBound = endAccess;
   }
 
   protected FabricContext_c(JifTypeSystem ts, TypeSystem jlts) {
     super(ts, jlts);
-    this.accessedConf = ts.bottomLabel(Position.compilerGenerated());
-    this.accessedConfBound = ts.bottomLabel(Position.compilerGenerated());
-    this.endConfBound = ts.topLabel(Position.compilerGenerated());
+    this.accessedLab = ts.bottomLabel(Position.compilerGenerated());
+    this.accessedLabelBound = ts.bottomLabel(Position.compilerGenerated());
+    this.endAccessBound = ts.topLabel(Position.compilerGenerated());
   }
 
   @Override

@@ -14,32 +14,32 @@ public interface FabricContext extends JifContext, CodebaseContext {
   Expr location();
 
   /**
-   * Join of confidentiality policies of accesses so far
+   * Join of update labels of accesses so far
    */
-  Label accessedConf();
+  Label accessedLabel();
 
   /**
    * Begin access label of the current method
    */
-  Label accessedConfBound();
+  Label accessedLabelBound();
 
   /**
    * Begin access label of the current method
    */
-  Label endConfBound();
+  Label endAccessBound();
 
   /**
-   * Set join of confidentiality policies of accesses so far
+   * Set join of update labels of accesses so far
    */
-  void setAccessedConf(Label accessedConf);
-
-  /**
-   * Set begin access label of the current method
-   */
-  void setAccessedConfBound(Label accessedConf);
+  void setAccessedLabel(Label accessedLab);
 
   /**
    * Set begin access label of the current method
    */
-  void setEndConfBound(Label endConf);
+  void setAccessedLabelBound(Label accessedLab);
+
+  /**
+   * Set end access label of the current method
+   */
+  void setEndAccessBound(Label endAccess);
 }

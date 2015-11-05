@@ -1202,25 +1202,25 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
     // XXX: I really don't know if this is the right values to be using for the
     // begin access and end confidentiality policies.
     return fabricConstructorInstance(pos, container, flags, unknownLabel(pos),
-        false, unknownLabel(pos).confProjection(), false, unknownLabel(pos),
-        false, unknownLabel(pos).confProjection(), false, formalTypes,
+        false, unknownLabel(pos), false, unknownLabel(pos),
+        false, unknownLabel(pos), false, formalTypes,
         Collections.<Label> emptyList(), excTypes,
         Collections.<Assertion> emptyList());
   }
 
   public FabricConstructorInstance fabricConstructorInstance(Position pos,
       ClassType container, Flags flags, Label startLabel,
-      boolean isDefaultStartLabel, ConfPolicy beginAccessPolicy,
-      boolean isDefaultBeginAccessPol, Label returnLabel,
-      boolean isDefaultReturnLabel, ConfPolicy endConfPolicy,
-      boolean isDefaultEndConfPol, List<? extends Type> formalTypes,
+      boolean isDefaultStartLabel, Label beginAccessLab,
+      boolean isDefaultBeginAccess, Label returnLabel,
+      boolean isDefaultReturnLabel, Label endAccessLab,
+      boolean isDefaultEndAccess, List<? extends Type> formalTypes,
       List<Label> formalArgLabels, List<? extends Type> excTypes,
       List<Assertion> constraints) {
     FabricConstructorInstance ci =
         new FabricConstructorInstance_c(this, pos, container, flags,
-            startLabel, isDefaultStartLabel, beginAccessPolicy,
-            isDefaultBeginAccessPol, returnLabel, isDefaultReturnLabel,
-            endConfPolicy, isDefaultEndConfPol, formalTypes, formalArgLabels,
+            startLabel, isDefaultStartLabel, beginAccessLab,
+            isDefaultBeginAccess, returnLabel, isDefaultReturnLabel,
+            endAccessLab, isDefaultEndAccess, formalTypes, formalArgLabels,
             excTypes, constraints);
     return ci;
   }
@@ -1232,8 +1232,8 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
     // policy.
     assert_(container);
     return fabricConstructorInstance(pos, container, Public(), topLabel(), true,
-        topLabel().confProjection(), true, bottomLabel(), true,
-        bottomLabel().confProjection(), true, Collections.<Type> emptyList(),
+        topLabel(), true, bottomLabel(), true,
+        bottomLabel(), true, Collections.<Type> emptyList(),
         Collections.<Label> emptyList(), Collections.<Type> emptyList(),
         Collections.<Assertion> emptyList());
   }
@@ -1241,18 +1241,18 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
   public FabricMethodInstance fabricMethodInstance(Position pos,
       ReferenceType container, Flags flags, Type returnType, String name,
       Label startLabel, boolean isDefaultStartLabel,
-      ConfPolicy beginAccessPolicy, boolean isDefaultBeginAccess,
+      Label beginAccessLab, boolean isDefaultBeginAccess,
       List<? extends Type> formalTypes,
       List<jif.types.label.Label> formalArgLabels,
       Label endLabel, boolean isDefaultEndLabel,
-      ConfPolicy endConfPolicy, boolean isDefaultEndConf,
+      Label endAccessLab, boolean isDefaultEndAccess,
       List<? extends Type> excTypes,
       List<Assertion> constraints) {
     // TODO Auto-generated method stub
     FabricMethodInstance mi = new FabricMethodInstance_c(this, pos, container,
         flags, returnType, name, startLabel, isDefaultStartLabel,
-        beginAccessPolicy, isDefaultBeginAccess, formalTypes, formalArgLabels,
-        endLabel, isDefaultEndLabel, endConfPolicy, isDefaultEndConf, excTypes,
+        beginAccessLab, isDefaultBeginAccess, formalTypes, formalArgLabels,
+        endLabel, isDefaultEndLabel, endAccessLab, isDefaultEndAccess, excTypes,
         constraints);
     return mi;
   }
@@ -1263,9 +1263,9 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
       List<? extends Type> formalTypes, List<? extends Type> excTypes) {
     // TODO Auto-generated method stub
     return fabricMethodInstance(pos, container, flags, returnType, name,
-        unknownLabel(pos), false, unknownLabel(pos).confProjection(), false,
+        unknownLabel(pos), false, unknownLabel(pos), false,
         formalTypes, Collections.<Label> emptyList(), unknownLabel(pos), false,
-        unknownLabel(pos).confProjection(), false, excTypes,
+        unknownLabel(pos), false, excTypes,
         Collections.<Assertion> emptyList());
   }
 

@@ -1,7 +1,7 @@
 package fabric.types;
 
 import jif.types.JifProcedureInstance;
-import jif.types.label.ConfPolicy;
+import jif.types.label.Label;
 
 /**
  * Fabric procedure instance. A wrapper of all the type information related to a
@@ -13,9 +13,9 @@ import jif.types.label.ConfPolicy;
  */
 public interface FabricProcedureInstance extends JifProcedureInstance {
   /**
-   * Lower bound for the access policy on fields accessed in the method.
+   * Lower bound for the access label on objects accessed in the method.
    */
-  ConfPolicy beginAccessPolicy();
+  Label beginAccessLabel();
 
   /**
    * Is the lower bound not explicitly specified?
@@ -23,22 +23,22 @@ public interface FabricProcedureInstance extends JifProcedureInstance {
   boolean isDefaultBeginAccess();
 
   /**
-   * Set lower bound for the access policy on fields accessed in the method.
+   * Set lower bound for the access label on objects accessed in the method.
    */
-  void setBeginAccessPolicy(ConfPolicy p, boolean isDefault);
+  void setBeginAccessLabel(Label p, boolean isDefault);
 
   /**
-   * Upper bound on the confidentiality policy of fields accessed in the method.
+   * Upper bound on the update label of objects accessed in the method.
    */
-  ConfPolicy endConfPolicy();
+  Label endAccessLabel();
 
   /**
    * Is the upper bound not explicitly specified?
    */
-  boolean isDefaultEndConf();
+  boolean isDefaultEndAccess();
 
   /**
-   * Set upper bound on the confidentiality policy of fields accessed in the method.
+   * Set upper bound on the update label of objects accessed in the method.
    */
-  void setEndConfPolicy(ConfPolicy p, boolean isDefault);
+  void setEndAccessLabel(Label p, boolean isDefault);
 }

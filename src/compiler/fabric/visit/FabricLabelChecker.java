@@ -69,7 +69,7 @@ public class FabricLabelChecker extends LabelChecker {
   /* Ignore additional AC path. */
   @Override
   public boolean ignoredForSinglePathRule(Path p) {
-    return super.ignoredForSinglePathRule(p) || p.equals(FabricPath.AC);
+    return super.ignoredForSinglePathRule(p) || p.equals(FabricPath.A);
   }
 
 }

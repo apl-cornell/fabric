@@ -61,9 +61,8 @@ public class ConstructorDeclJifExt extends JifConstructorDeclExt implements Ext 
     super.setEndOfInitChecking(lc, ci);
     FabricContext A = (FabricContext) lc.context();
     FabricConstructorInstance fci = (FabricConstructorInstance) ci;
-    FabricTypeSystem ts = (FabricTypeSystem) lc.typeSystem();
-    A.setAccessedConfBound(ts.pairLabel(fci.position(), fci.beginAccessPolicy(), ts.bottomIntegPolicy(fci.position())));
-    A.setEndConfBound(ts.toLabel(fci.endConfPolicy()));
+    A.setAccessedLabelBound(fci.beginAccessLabel());
+    A.setEndAccessBound(fci.endAccessLabel());
   }
 
   @Override
@@ -85,20 +84,20 @@ public class ConstructorDeclJifExt extends JifConstructorDeclExt implements Ext 
     FabricContext A = (FabricContext) lc.context();
 
     // Get the join of all accesses in the method
-    NamedLabel accessedConfLabel = new NamedLabel("accessed conf label",
-        "the join of the confidentiality policies of referenced fields in the method",
-        ts.join(A.accessedConf(), X.AC()));
+    NamedLabel accessedLabel = new NamedLabel("accessed label",
+        "the join of the update labels of objects accessed in the constructor",
+        ts.join(A.accessedLabel(), X.A()));
 
-    NamedLabel endConfLabel = new NamedLabel("end conf label",
-        "the upper bound on the confidentiality of accessed fields in this method",
-        ts.toLabel(mi.endConfPolicy()));
+    NamedLabel endAccessLabel = new NamedLabel("end access label",
+        "the upper bound on the update labels of objects accessed in this constructor",
+        mi.endAccessLabel());
 
-    lc.constrain(accessedConfLabel, LabelConstraint.LEQ, endConfLabel,
+    lc.constrain(accessedLabel, LabelConstraint.LEQ, endAccessLabel,
         A.labelEnv(), mi.position(), new ConstraintMessage() {
       @Override
       public String msg() {
-        return "This method makes more confidential accesses than the ending "
-             + "confidentiality label allows.";
+        return "This constructor makes more confidential accesses than the ending "
+             + "access label allows.";
       }
     });
   }

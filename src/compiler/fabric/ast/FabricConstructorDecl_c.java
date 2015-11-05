@@ -12,7 +12,6 @@ import jif.ast.ConstraintNode;
 import jif.ast.JifConstructorDecl_c;
 import jif.ast.LabelNode;
 import jif.types.Assertion;
-import jif.types.label.ConfPolicy;
 import jif.types.label.Label;
 
 import polyglot.ast.Block;
@@ -40,73 +39,73 @@ FabricConstructorDecl {
   //Carried over from JifConstructorDecl_c
   private static final long serialVersionUID = SerialVersionUID.generate();
 
-  protected LabelNode beginAccessPolicy;
-  protected LabelNode endConfPolicy;
+  protected LabelNode beginAccessLabel;
+  protected LabelNode endAccessLabel;
 //  @Deprecated
   public FabricConstructorDecl_c(Position pos, Flags flags, Id name,
-      LabelNode startLabel, LabelNode beginAccessPolicy, LabelNode returnLabel,
-      List<Formal> formals, LabelNode endConfPolicy, List<TypeNode> throwTypes,
+      LabelNode startLabel, LabelNode beginAccessLabel, LabelNode returnLabel,
+      List<Formal> formals, LabelNode endAccessLabel, List<TypeNode> throwTypes,
       List<ConstraintNode<Assertion>> constraints, Block body,
       Javadoc javadoc) {
-    this(pos, flags, name, startLabel, beginAccessPolicy, returnLabel, formals,
-        endConfPolicy, throwTypes, constraints, body, javadoc, null);
+    this(pos, flags, name, startLabel, beginAccessLabel, returnLabel, formals,
+        endAccessLabel, throwTypes, constraints, body, javadoc, null);
   }
 
   public FabricConstructorDecl_c(Position pos, Flags flags, Id name,
-      LabelNode startLabel, LabelNode beginAccessPolicy, LabelNode returnLabel,
-      List<Formal> formals, LabelNode endConfPolicy, List<TypeNode> throwTypes,
+      LabelNode startLabel, LabelNode beginAccessLabel, LabelNode returnLabel,
+      List<Formal> formals, LabelNode endAccessLabel, List<TypeNode> throwTypes,
       List<ConstraintNode<Assertion>> constraints, Block body, Javadoc javadoc,
       Ext ext) {
     super(pos, flags, name, startLabel, returnLabel, formals, throwTypes,
         constraints, body, javadoc, ext);
-    this.beginAccessPolicy = beginAccessPolicy;
-    this.endConfPolicy = endConfPolicy;
+    this.beginAccessLabel = beginAccessLabel;
+    this.endAccessLabel = endAccessLabel;
   }
 
   @Override
-  public LabelNode beginAccessPolicy() {
-    return this.beginAccessPolicy;
+  public LabelNode beginAccessLabel() {
+    return this.beginAccessLabel;
   }
 
   @Override
-  public FabricConstructorDecl beginAccessPolicy(LabelNode beginAccessPolicy) {
-    return beginAccessPolicy(this, beginAccessPolicy);
+  public FabricConstructorDecl beginAccessLabel(LabelNode beginAccessLabel) {
+    return beginAccessLabel(this, beginAccessLabel);
   }
 
-  protected <N extends FabricConstructorDecl_c> N beginAccessPolicy(N n,
-      LabelNode beginAccessPolicy) {
-    if (n.beginAccessPolicy == beginAccessPolicy) return n;
+  protected <N extends FabricConstructorDecl_c> N beginAccessLabel(N n,
+      LabelNode beginAccessLabel) {
+    if (n.beginAccessLabel == beginAccessLabel) return n;
     n = copyIfNeeded(n);
-    n.beginAccessPolicy = beginAccessPolicy;
+    n.beginAccessLabel = beginAccessLabel;
     return n;
   }
 
   @Override
-  public LabelNode endConfPolicy() {
-    return this.endConfPolicy;
+  public LabelNode endAccessLabel() {
+    return this.endAccessLabel;
   }
 
   @Override
-  public FabricConstructorDecl endConfPolicy(LabelNode endConfPolicy) {
-    return endConfPolicy(this, endConfPolicy);
+  public FabricConstructorDecl endAccessLabel(LabelNode endAccessLabel) {
+    return endAccessLabel(this, endAccessLabel);
   }
 
-  protected <N extends FabricConstructorDecl_c> N endConfPolicy(N n,
-    LabelNode endConfPolicy) {
-    if (n.endConfPolicy == endConfPolicy) return n;
+  protected <N extends FabricConstructorDecl_c> N endAccessLabel(N n,
+    LabelNode endAccessLabel) {
+    if (n.endAccessLabel == endAccessLabel) return n;
     n = copyIfNeeded(n);
-    n.endConfPolicy = endConfPolicy;
+    n.endAccessLabel = endAccessLabel;
     return n;
   }
 
   protected <N extends FabricConstructorDecl_c> N reconstruct(N n, Id name,
-      LabelNode startLabel, LabelNode beginAccessPolicy, LabelNode returnLabel,
-      List<Formal> formals, LabelNode endConfPolicy, List<TypeNode> throwTypes,
+      LabelNode startLabel, LabelNode beginAccessLabel, LabelNode returnLabel,
+      List<Formal> formals, LabelNode endAccessLabel, List<TypeNode> throwTypes,
       List<ConstraintNode<Assertion>> constraints, Block body) {
     n = super.reconstruct(n, name, startLabel, returnLabel, formals, throwTypes,
         constraints, body);
-    n = beginAccessPolicy(n, beginAccessPolicy);
-    n = endConfPolicy(n, endConfPolicy);
+    n = beginAccessLabel(n, beginAccessLabel);
+    n = endAccessLabel(n, endAccessLabel);
     return n;
   }
 
@@ -114,16 +113,16 @@ FabricConstructorDecl {
   public Node visitChildren(NodeVisitor v) {
     Id name = visitChild(this.name, v);
     LabelNode startLabel = visitChild(this.startLabel, v);
-    LabelNode beginAccessPolicy = visitChild(this.beginAccessPolicy, v);
+    LabelNode beginAccessLabel = visitChild(this.beginAccessLabel, v);
     LabelNode returnLabel = visitChild(this.returnLabel, v);
     List<Formal> formals = visitList(this.formals, v);
-    LabelNode endConfPolicy = visitChild(this.endConfPolicy, v);
+    LabelNode endAccessLabel = visitChild(this.endAccessLabel, v);
     List<TypeNode> throwTypes = visitList(this.throwTypes, v);
     List<ConstraintNode<Assertion>> constraints =
         visitList(this.constraints, v);
     Block body = visitChild(this.body, v);
-    return reconstruct(this, name, startLabel, beginAccessPolicy, returnLabel,
-        formals, endConfPolicy, throwTypes, constraints, body);
+    return reconstruct(this, name, startLabel, beginAccessLabel, returnLabel,
+        formals, endAccessLabel, throwTypes, constraints, body);
   }
 
   //TODO: Ugh, this is basically redoing the work of the JifConstructorDecl_c's
@@ -216,37 +215,37 @@ FabricConstructorDecl {
     }
     fci.setConstraints(constraints);
 
-    if (n.beginAccessPolicy() != null && !n.beginAccessPolicy().isDisambiguated()) {
-      // the beginAccessPolicy node hasn't been disambiguated yet
+    if (n.beginAccessLabel() != null && !n.beginAccessLabel().isDisambiguated()) {
+      // the beginAccessLabel node hasn't been disambiguated yet
       ar.job().extensionInfo().scheduler().currentGoal().setUnreachableThisRun();
       return this;
     }
 
-    if (n.endConfPolicy() != null && !n.endConfPolicy().isDisambiguated()) {
-      // the endConfPolicy node hasn't been disambiguated yet
+    if (n.endAccessLabel() != null && !n.endAccessLabel().isDisambiguated()) {
+      // the endAccessLabel node hasn't been disambiguated yet
       ar.job().extensionInfo().scheduler().currentGoal().setUnreachableThisRun();
       return this;
     }
 
-    ConfPolicy bap; // begin access policy
-    boolean isDefaultBeginAccessPol = false;
-    if (n.beginAccessPolicy() == null) {
-      bap = fds.defaultBeginAccess(n);
-      isDefaultBeginAccessPol = true;
+    Label bal; // begin access label
+    boolean isDefaultBeginAccess = false;
+    if (n.beginAccessLabel() == null) {
+      bal = fds.defaultBeginAccess(n);
+      isDefaultBeginAccess = true;
     } else {
-      bap = n.beginAccessPolicy().label().confProjection();
+      bal = n.beginAccessLabel().label();
     }
-    fci.setBeginAccessPolicy(bap, isDefaultBeginAccessPol);
+    fci.setBeginAccessLabel(bal, isDefaultBeginAccess);
 
-    ConfPolicy ecp; // end conf policy
-    boolean isDefaultEndConfPol = false;
-    if (n.endConfPolicy() == null) {
-      ecp = fds.defaultEndConf(n);
-      isDefaultEndConfPol = true;
+    Label eal; // end access label
+    boolean isDefaultEndAccess = false;
+    if (n.endAccessLabel() == null) {
+      eal = fds.defaultEndAccess(n);
+      isDefaultEndAccess = true;
     } else {
-      ecp = n.endConfPolicy().label().confProjection();
+      eal = n.endAccessLabel().label();
     }
-    fci.setEndConfPolicy(ecp, isDefaultEndConfPol);
+    fci.setEndAccessLabel(eal, isDefaultEndAccess);
 
     return n.constructorInstance(fci);
   }

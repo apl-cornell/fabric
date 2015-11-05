@@ -19,7 +19,7 @@ public class MethodDeclToFabilExt_c extends MethodDeclToJavaExt_c {
     FabricMethodDecl n = (FabricMethodDecl) node();
     // Bypass startLabel, returnLabel and constraints.
     return ((JifToJavaRewriter) super.toJavaEnter(rw))
-        .bypass(n.beginAccessPolicy()).bypass(n.endConfPolicy());
+        .bypass(n.beginAccessLabel()).bypass(n.endAccessLabel());
   }
 
   @Override

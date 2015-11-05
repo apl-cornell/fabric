@@ -19,20 +19,20 @@ public class FabricPathMap extends PathMap {
   }
 
   /**
-   * Return a FabricPathMap with the AC label updated.
-   * @param label The new AC label.
+   * Return a FabricPathMap with the A label updated.
+   * @param label The new A label.
    * @return An updated copy of the FabricPathMap.
    */
-  public FabricPathMap AC(Label label) {
-    return set(FabricPath.AC, label);
+  public FabricPathMap A(Label label) {
+    return set(FabricPath.A, label);
   }
 
   /**
-   * Get the current AC label.
+   * Get the current A label.
    * @return The current AC label.
    */
-  public Label AC() {
-    return get(FabricPath.AC);
+  public Label A() {
+    return get(FabricPath.A);
   }
 
   /* Below are overidden to avoid hilarious amounts of casting elsewhere. */
