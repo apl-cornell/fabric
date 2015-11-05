@@ -11,7 +11,7 @@ public class LinkedList[label L] extends AbstractList[L]
     LinkedListEntry[L]{L} first;
     LinkedListEntry[L]{L} last;
 
-    public LinkedList(Comparator[L]{L} compare) {
+    public LinkedList{L}(Comparator[L]{L} compare) {
         first = null;
         last = null;
         super(compare);

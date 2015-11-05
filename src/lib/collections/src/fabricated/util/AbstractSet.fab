@@ -26,7 +26,7 @@ public abstract class AbstractSet[label L] extends AbstractCollection[L] impleme
   /**
    * The main constructor, for use by subclasses.
    */
-  protected AbstractSet(Comparator[L]{L} compare)
+  protected AbstractSet{L}(Comparator[L]{L} compare)
   {
     super(compare);
   }
