@@ -8,7 +8,7 @@ import codebases.types.CodebaseTypeSystem;
 
 import jif.types.JifContext_c;
 import jif.types.JifTypeSystem;
-import jif.types.label.ConfPolicy;
+import jif.types.label.Label;
 
 import polyglot.ast.Expr;
 import polyglot.main.Report;
@@ -29,34 +29,47 @@ public class FabricContext_c extends JifContext_c implements FabricContext {
 
   protected Expr location;
 
-  protected ConfPolicy accessedConf; //Confidentiality of accesses up to this point.
+  protected Label accessedConf; //Confidentiality of accesses up to this point.
 
-  protected ConfPolicy accessedConfBound; //Confidentiality of accesses up to this point.
+  protected Label accessedConfBound; //Confidentiality of accesses up to this point.
+
+  protected Label endConfBound; //End conf bound of the current method.
 
   @Override
-  public ConfPolicy accessedConf() {
+  public Label accessedConf() {
     return accessedConf;
   }
 
   @Override
-  public ConfPolicy accessedConfBound() {
+  public Label accessedConfBound() {
     return accessedConfBound;
   }
 
   @Override
-  public void setAccessedConf(ConfPolicy accessedConf) {
+  public Label endConfBound() {
+    return endConfBound;
+  }
+
+  @Override
+  public void setAccessedConf(Label accessedConf) {
     this.accessedConf = accessedConf;
   }
 
   @Override
-  public void setAccessedConfBound(ConfPolicy accessedConf) {
+  public void setAccessedConfBound(Label accessedConf) {
     this.accessedConfBound = accessedConf;
+  }
+
+  @Override
+  public void setEndConfBound(Label endConf) {
+    this.endConfBound = endConf;
   }
 
   protected FabricContext_c(JifTypeSystem ts, TypeSystem jlts) {
     super(ts, jlts);
-    this.accessedConf = ts.bottomConfPolicy(Position.compilerGenerated());
-    this.accessedConfBound = ts.bottomConfPolicy(Position.compilerGenerated());
+    this.accessedConf = ts.bottomLabel(Position.compilerGenerated());
+    this.accessedConfBound = ts.bottomLabel(Position.compilerGenerated());
+    this.endConfBound = ts.topLabel(Position.compilerGenerated());
   }
 
   @Override

@@ -50,7 +50,9 @@ public class MethodDeclJifExt extends JifMethodDeclExt {
     super.initContextForBody(lc, mi);
     FabricMethodInstance fmi = (FabricMethodInstance) mi;
     FabricContext A = (FabricContext) lc.context();
-    A.setAccessedConfBound(fmi.beginAccessPolicy());
+    FabricTypeSystem ts = (FabricTypeSystem) lc.typeSystem();
+    A.setAccessedConfBound(ts.pairLabel(fmi.position(), fmi.beginAccessPolicy(), ts.bottomIntegPolicy(fmi.position())));
+    A.setEndConfBound(ts.toLabel(fmi.endConfPolicy()));
   }
 
   //TODO: Move this into general FabricProcedureDeclExt?
@@ -66,7 +68,7 @@ public class MethodDeclJifExt extends JifMethodDeclExt {
     // Get the join of all accesses in the method
     NamedLabel accessedConfLabel = new NamedLabel("accessed conf label",
         "the join of the confidentiality policies of referenced fields in the method",
-        ts.join(ts.toLabel(A.accessedConf()), X.AC()));
+        ts.join(A.accessedConf(), X.AC()));
 
     NamedLabel endConfLabel = new NamedLabel("end conf label",
         "the upper bound on the confidentiality of accessed fields in this method",

@@ -3,7 +3,7 @@ package fabric.types;
 import codebases.types.CodebaseContext;
 
 import jif.types.JifContext;
-import jif.types.label.ConfPolicy;
+import jif.types.label.Label;
 
 import polyglot.ast.Expr;
 import polyglot.types.Context;
@@ -16,20 +16,30 @@ public interface FabricContext extends JifContext, CodebaseContext {
   /**
    * Join of confidentiality policies of accesses so far
    */
-  ConfPolicy accessedConf();
+  Label accessedConf();
 
   /**
    * Begin access label of the current method
    */
-  ConfPolicy accessedConfBound();
+  Label accessedConfBound();
+
+  /**
+   * Begin access label of the current method
+   */
+  Label endConfBound();
 
   /**
    * Set join of confidentiality policies of accesses so far
    */
-  void setAccessedConf(ConfPolicy accessedConf);
+  void setAccessedConf(Label accessedConf);
 
   /**
    * Set begin access label of the current method
    */
-  void setAccessedConfBound(ConfPolicy accessedConf);
+  void setAccessedConfBound(Label accessedConf);
+
+  /**
+   * Set begin access label of the current method
+   */
+  void setEndConfBound(Label endConf);
 }

@@ -132,7 +132,9 @@ public class DereferenceHelper {
     FabricPathMap Xt = (FabricPathMap) JifExt_c.getPathMap(ref);
     NamedLabel accessedConfLabel = new NamedLabel("accessed conf label",
         "the join of the confidentiality policies of previously accessed objects",
-        ts.join(confOnlyLabel(ts, pos, A.accessedConfBound()), ts.join(confOnlyLabel(ts, pos, A.accessedConf()), Xt.AC())));
+        ts.join(A.accessedConfBound(),
+                ts.join(A.accessedConf(),
+                        Xt.AC())));
 
     // Check that this won't cause abort leaks.
     lc.constrain(accessedConfLabel, LabelConstraint.LEQ, accessPolLabel,
@@ -147,13 +149,28 @@ public class DereferenceHelper {
     });
     
     // Fold in this obj's confidentiality into the AC FabricPath.
-    Label endConfLabel = confOnlyLabel(ts, pos, objLabel.confProjection());
     FabricPathMap X = (FabricPathMap) JifExt_c.getPathMap(n);
-    Label newAC = ts.join(ts.join(X.AC(), endConfLabel), confOnlyLabel(ts, pos, A.accessedConf()));
-    return JifExt_c.updatePathMap(n, X.AC(newAC));
-  }
+    Label newAC = ts.join(X.AC(), A.accessedConf());
+    n = JifExt_c.updatePathMap(n, X.AC(newAC));
 
-  private static Label confOnlyLabel(FabricTypeSystem ts, Position pos, ConfPolicy c) {
-    return ts.pairLabel(pos, c, ts.bottomIntegPolicy(pos));
+    // Early check of end conf bound to get better location reporting.
+    NamedLabel newACNamed = new NamedLabel("accessed conf label",
+        "the join of the confidentiality policies of previously referenced fields",
+        newAC);
+
+    NamedLabel endConfBoundLabel = new NamedLabel("end conf label",
+        "the upper bound on the confidentiality of accessed fields in this method",
+        A.endConfBound());
+
+    lc.constrain(newACNamed, LabelConstraint.LEQ, endConfBoundLabel,
+        A.labelEnv(), pos, new ConstraintMessage() {
+      @Override
+      public String msg() {
+        return "This method makes more confidential accesses than the ending "
+             + "confidentiality label allows.";
+      }
+    });
+
+    return n;
   }
 }

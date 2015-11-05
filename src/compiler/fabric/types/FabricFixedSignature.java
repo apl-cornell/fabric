@@ -1,5 +1,8 @@
 package fabric.types;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import fabric.ast.FabricFieldDecl;
 
 import jif.ast.LabelNode;

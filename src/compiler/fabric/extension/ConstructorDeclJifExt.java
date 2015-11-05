@@ -61,7 +61,9 @@ public class ConstructorDeclJifExt extends JifConstructorDeclExt implements Ext 
     super.setEndOfInitChecking(lc, ci);
     FabricContext A = (FabricContext) lc.context();
     FabricConstructorInstance fci = (FabricConstructorInstance) ci;
-    A.setAccessedConfBound(fci.beginAccessPolicy());
+    FabricTypeSystem ts = (FabricTypeSystem) lc.typeSystem();
+    A.setAccessedConfBound(ts.pairLabel(fci.position(), fci.beginAccessPolicy(), ts.bottomIntegPolicy(fci.position())));
+    A.setEndConfBound(ts.toLabel(fci.endConfPolicy()));
   }
 
   @Override
@@ -85,7 +87,7 @@ public class ConstructorDeclJifExt extends JifConstructorDeclExt implements Ext 
     // Get the join of all accesses in the method
     NamedLabel accessedConfLabel = new NamedLabel("accessed conf label",
         "the join of the confidentiality policies of referenced fields in the method",
-        ts.join(ts.toLabel(A.accessedConf()), X.AC()));
+        ts.join(A.accessedConf(), X.AC()));
 
     NamedLabel endConfLabel = new NamedLabel("end conf label",
         "the upper bound on the confidentiality of accessed fields in this method",
