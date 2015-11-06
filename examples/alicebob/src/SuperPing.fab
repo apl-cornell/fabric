@@ -68,7 +68,10 @@ class SuperPing[label incomingL, label storeListL, label readPast, label writePa
   }
 
   private label{*readFuture; *writePast} getNewWritePast{*readFuture; *writePast}(
-    final List[{*readFuture; *writePast}]{*readFuture; *writePast} storeList):{*readFuture; *writePast} {
+    final List[{*readFuture; *writePast}]{*readFuture; *writePast} storeList
+    ):{*readFuture; *writePast}@{*readFuture}
+  where {*writePast; _->_} <= {_->_;_<-_}
+  {
 
     if (storeList.size() > 0) {
       try {
@@ -154,8 +157,9 @@ class SuperPing[label incomingL, label storeListL, label readPast, label writePa
     final List[{*originL}]{*originL} origin,
     final label{*originL} originL,
     final label{*originL} destinationL,
-    final Store{*originL} store):{*destinationL}  
-    where originL <= {*readFuture; *writePast} , originL <= destinationL {
+    final Store{*originL} store):{*destinationL}
+    where originL <= {*readFuture; *writePast} , originL <= destinationL
+  {
     return listCopy(origin,originL,destinationL,origin.size()-1,origin.size()-1, 1, store);
   }
 
@@ -170,9 +174,9 @@ class SuperPing[label incomingL, label storeListL, label readPast, label writePa
     where originL <= {*readFuture; *writePast} , originL <= destinationL {
 
     if (index >= begin) {
-      final List[{*destinationL}]{*destinationL} destination = listCopy(origin, originL, destinationL, index - 1, destinationSize, begin, store);
       try {
         final Object entry = origin.get(index);
+        final List[{*destinationL}]{*destinationL} destination = listCopy(origin, originL, destinationL, index - 1, destinationSize, begin, store);
         destination.add(entry);
         return destination;
       } catch (UnsupportedOperationException{*destinationL} e) {
@@ -237,20 +241,22 @@ class SuperPing[label incomingL, label storeListL, label readPast, label writePa
   public void ping{*incomingL}(
     final Message[{*incomingL}]{*incomingL} incoming, 
     final List[   {*storeListL}]{*storeListL} storeList
-    ):{*writeFuture ⊓ *writePast; *readPast} 
-    where storeListL <= incomingL, incomingL <= storeListL , storeListL <= {*readFuture; *writePast}//, storeListL <= {storeList}, {storeList} <= storeListL
+    ):{*writeFuture ⊓ *writePast; *readPast}@{*->*}
+    where storeListL <= incomingL, incomingL <= storeListL , storeListL <= {*readFuture; *writePast}, {*writePast; _->_} <= {_->_; _<-_}
   {
+
+    final String{*readFuture; *writePast} incomingText = incoming.getMessage();
+    int{*readFuture; *writePast} storeListSize = storeList.size();
 
     // first of all, we're moving all inputs up to readFuture;writePast
     final List[{*readFuture; *writePast}]{*readFuture; *writePast} storeListCopy = 
       listRelabel(storeList, storeListL, new label{*readFuture; *writePast}@store$, store$);
-    final String{*readFuture; *writePast} incomingText = incoming.getMessage();
 
     final String{*readFuture; *writePast} outgoingText = incomingText + "!";
     recordLocal(incomingText); // record some local info about the message, and maybe print some stuff.
     
     
-    if (storeList.size() > 0) {
+    if (storeListSize > 0) {
       // Recursion time
       // the store on which the next call will happen
       final RemoteWorker{*readFuture; *writePast} nextWorker = getListHeadWorker(storeListCopy);
@@ -387,9 +393,10 @@ class SuperPing[label incomingL, label storeListL, label readPast, label writePa
         final label newWriteFutureN = new label{*newWriteFuture}@nextStore;
         final label newReadPastN = new label{*newReadPast}@nextStore;
         
-
-        final List[readFutureNewWritePastN]{*readFutureNewWritePastN} newStoreList = tail(storeListCopy, readFutureWritePast, readFutureNewWritePastN, nextStore);
-
+        
+        List[readFutureNewWritePastN]{*readFutureNewWritePastN} newStoreList = null;
+        if (readFutureNewWritePast <= new label{*readFutureWritePast;_<-_})
+          newStoreList = tail(storeListCopy, readFutureWritePast, readFutureNewWritePastN, nextStore);
 
         final SuperPing[readFutureNewWritePastN, readFutureNewWritePastN, newReadPastN, newWritePastN, newReadFutureN, newWriteFutureN]{*readFutureNewWritePastN} sp = (
           new SuperPing[readFutureNewWritePastN, readFutureNewWritePastN, newReadPastN, newWritePastN, newReadFutureN, newWriteFutureN]@nextStore());
@@ -400,7 +407,8 @@ class SuperPing[label incomingL, label storeListL, label readPast, label writePa
 
 
         // The actual recursive call
-        sp.ping@nextWorker(outgoing, newStoreList);
+        if (new label{*newWritePast; _->_} <= new label{_->_;_<-_})
+          sp.ping@nextWorker(outgoing, newStoreList);
         //if (0 == 0) throw new Error("WAT: we made it past recursive call!");
         // we actually do nothing with the response just now. Oh, well.
       }

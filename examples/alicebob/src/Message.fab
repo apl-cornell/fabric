@@ -4,9 +4,8 @@ public class Message[label l] {
 
   private String{l} message;
 
-  public Message(String{l} message) {
+  public Message{l}(String{l} message) {
     this.message = message;
-    super();
   }
 
   public void update{l} (String{l} new_message) {
