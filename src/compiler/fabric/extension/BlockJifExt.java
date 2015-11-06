@@ -42,8 +42,9 @@ public class BlockJifExt extends JifBlockExt {
         A = (FabricContext) bs.del().enterScope(A);
 
         // A path map incorporating all statements in the block seen so far.
-        PathMap Xblock = ts.pathMap();
+        FabricPathMap Xblock = (FabricPathMap) ts.pathMap();
         Xblock = Xblock.N(A.pc());
+        Xblock = Xblock.A(A.accessedLabel());
 
         A = (FabricContext) A.pushBlock();
 
@@ -62,7 +63,7 @@ public class BlockJifExt extends JifBlockExt {
             // At this point, the environment A should have been extended
             // to include any declarations of s.  Reset the PC label.
             A.setPc(Xs.N(), lc);
-            A.setAccessedLabel(Xs.A());
+            A.setAccessedLabel(ts.join(A.accessedLabel(), Xs.A()));
 
             if (Report.should_report(jif.Topics.pc, 1)) {
                 Report.report(1, "pc after statement at " + s.position() + " : "
