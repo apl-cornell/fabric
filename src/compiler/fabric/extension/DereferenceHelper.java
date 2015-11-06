@@ -105,7 +105,7 @@ public class DereferenceHelper {
     final Label instantiated =
         StoreInstantiator.instantiate(accessLabel, A, ref, targetType,
             objLabel, storeap);
-    NamedLabel accessPolLabel = new NamedLabel("access label",
+    NamedLabel accessPolLabel = new NamedLabel("access label of " + ref,
           "the access label of the object referenced",
           ts.join(instantiated,
             ts.pairLabel(pos, ts.bottomConfPolicy(pos), ts.topIntegPolicy(pos))));
@@ -152,7 +152,7 @@ public class DereferenceHelper {
     
     // Fold in this obj's update label into the A FabricPath.
     FabricPathMap X = (FabricPathMap) JifExt_c.getPathMap(n);
-    Label newA = ts.join(X.A(), A.accessedLabel());
+    Label newA = ts.join(Xt.A(), ts.join(X.A(), A.accessedLabel()));
     n = JifExt_c.updatePathMap(n, X.A(newA));
 
     // Early check of end access bound to get better location reporting.
@@ -169,7 +169,7 @@ public class DereferenceHelper {
         A.labelEnv(), pos, new ConstraintMessage() {
       @Override
       public String msg() {
-        return "This method makes more restricted accesses than the ending "
+        return "The current method makes more restricted accesses than the ending "
              + "access label allows.";
       }
     });

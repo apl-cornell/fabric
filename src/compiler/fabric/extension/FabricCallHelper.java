@@ -209,7 +209,7 @@ public class FabricCallHelper extends CallHelper {
     FabricContext A = (FabricContext) lc.context();
 
     // Check previous accesses against access label bound of method.
-    NamedLabel accessPolLabel = new NamedLabel("begin access label",
+    NamedLabel accessPolLabel = new NamedLabel("begin access label of " + pi.signature(),
           "the lower bound of the access labels of all accesses in the method",
           fts.join(beginAccess,
             fts.pairLabel(position, fts.bottomConfPolicy(position), fts.topIntegPolicy(position))));
@@ -225,10 +225,10 @@ public class FabricCallHelper extends CallHelper {
         A.labelEnv(), position, new ConstraintMessage() {
       @Override
       public String msg() {
-        return "The objects accessed during this method could leak "
-             + "information about preceding accesses to the stores "
+        return "The objects accessed during the call to " + FabricCallHelper.this.pi.signature()
+             + " could leak information about preceding accesses to the stores "
              + "of previously accessed objects, which have "
-             + "access lower bounded by the method's begin access "
+             + "access lower bounded by " + FabricCallHelper.this.pi + "'s begin access "
              + "label.";
       }
     });
@@ -244,7 +244,7 @@ public class FabricCallHelper extends CallHelper {
         newA);
 
     NamedLabel endAccessBoundLabel = new NamedLabel("end access label",
-        "the upper bound on the update labels of objects accessed in this method",
+        "the upper bound on the update labels of objects accessed in the current method",
         fts.join(A.endAccessBound(),
           fts.pairLabel(position, fts.bottomConfPolicy(position), fts.topIntegPolicy(position))));
 
@@ -252,7 +252,7 @@ public class FabricCallHelper extends CallHelper {
         A.labelEnv(), position, new ConstraintMessage() {
       @Override
       public String msg() {
-        return "This method makes more restricted accesses than the ending "
+        return "The current method makes more restricted accesses than the ending "
              + "access label allows.";
       }
     });
