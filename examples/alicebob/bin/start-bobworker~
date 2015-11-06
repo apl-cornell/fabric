@@ -1,9 +1,0 @@
-#!/bin/bash
-
-APP_HOME="$(dirname $0)/.."
-PATH="${APP_HOME}/../../bin:${PATH}"
-
-export FABRIC_HOME="${APP_HOME}"
-
-fab-worker --jvm-cp "${APP_HOME}/classes" --app-home "${FABRIC_HOME}" --name bobworker "$@"
-
