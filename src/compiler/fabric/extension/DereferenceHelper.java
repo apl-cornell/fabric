@@ -152,7 +152,10 @@ public class DereferenceHelper {
     
     // Fold in this obj's update label into the A FabricPath.
     FabricPathMap X = (FabricPathMap) JifExt_c.getPathMap(n);
-    Label newA = ts.join(Xt.A(), ts.join(X.A(), A.accessedLabel()));
+    Label newA = ts.join(objLabel,
+                         ts.join(Xt.A(),
+                                 ts.join(X.A(),
+                                         A.accessedLabel())));
     n = JifExt_c.updatePathMap(n, X.A(newA));
 
     // Early check of end access bound to get better location reporting.
