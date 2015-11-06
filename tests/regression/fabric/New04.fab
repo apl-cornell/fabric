@@ -1,0 +1,8 @@
+public final class New04 {
+  public void f{*<-}(Store s1, Store s2):{*->} {
+    final principal p1 = new New04@s1().store$;
+    final principal p2 = new New04@s2().store$;
+    int{p1->} x = 5;
+    int{p2->} y = x;
+  }
+}
