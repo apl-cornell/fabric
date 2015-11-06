@@ -51,10 +51,12 @@ public class NewJifExt_c extends JifNewExt {
       ts.processFAP(n.type().toReference(), aps.path(), context);
     }
 
+    /*
     context.addDefinitionalEquiv(
         ts.dynamicPrincipal(Position.compilerGenerated(), newStore),
         storePrincipal);
     context.addDefinitionalAssertionEquiv(newStore, storeap);
+    */
 
     n = (New) super.labelCheck(lc);
     ext = (NewExt_c) FabricUtil.fabricExt(n);
