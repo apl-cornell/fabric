@@ -8,6 +8,7 @@ import fabric.types.FabricPathMap;
 import fabric.types.FabricProcedureInstance;
 import fabric.types.FabricTypeSystem;
 
+import jif.ast.JifInstantiator;
 import jif.extension.CallHelper;
 import jif.types.ConstraintMessage;
 import jif.types.JifContext;
@@ -275,7 +276,6 @@ public class FabricCallHelper extends CallHelper {
   protected Label resolveEndConf(LabelChecker lc)
       throws SemanticException {
     FabricProcedureInstance fpi = (FabricProcedureInstance) pi;
-    return instantiate(lc.context(),
-                       fpi.endAccessLabel());
+    return instantiate(lc.context(), fpi.endAccessLabel());
   }
 }

@@ -129,6 +129,7 @@ public class DereferenceHelper {
       }
     });
 
+    /*
     // Get join of update labels of previous accesses
     FabricPathMap Xt = (FabricPathMap) JifExt_c.getPathMap(ref);
     NamedLabel accessedLabel = new NamedLabel("accessed label",
@@ -179,6 +180,7 @@ public class DereferenceHelper {
              + "access label allows.";
       }
     });
+    */
 
     return n;
   }

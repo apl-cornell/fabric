@@ -1,14 +1,16 @@
 package fabric.extension;
 
-import jif.extension.JifFieldDeclDel;
-import jif.types.label.ConfPolicy;
-import polyglot.ast.Node;
-import polyglot.types.SemanticException;
-import polyglot.visit.AmbiguityRemover;
 import fabric.ast.FabricFieldDecl;
 import fabric.types.FabricDefaultSignature;
 import fabric.types.FabricFieldInstance;
 import fabric.types.FabricTypeSystem;
+
+import jif.extension.JifFieldDeclDel;
+import jif.types.label.ConfPolicy;
+
+import polyglot.ast.Node;
+import polyglot.types.SemanticException;
+import polyglot.visit.AmbiguityRemover;
 
 public class FabricFieldDeclDel extends JifFieldDeclDel {
 
