@@ -128,7 +128,7 @@ public class ArrayList[label L] extends AbstractList[L] implements List[L], Rand
    *
    * @return the list size
    */
-  public int{L} size()
+  public int{L} size@{L}()
   {
     return size;
   }
@@ -138,7 +138,7 @@ public class ArrayList[label L] extends AbstractList[L] implements List[L], Rand
    *
    * @return true if there are no elements
    */
-  public boolean{L} isEmpty()
+  public boolean{L} isEmpty@{L}()
   {
     return size == 0;
   }

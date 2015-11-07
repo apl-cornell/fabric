@@ -35,7 +35,7 @@ public class BasicMapEntry[label L] implements MapEntry[L]
    *
    * @return the key
    */
-  public final Object{L} getKey()
+  public final Object{L} getKey@{L}()
   {
     return key;
   }
@@ -46,7 +46,7 @@ public class BasicMapEntry[label L] implements MapEntry[L]
    *
    * @return the value
    */
-  public final Object{L} getValue()
+  public final Object{L} getValue@{L}()
   {
     return value;
   }

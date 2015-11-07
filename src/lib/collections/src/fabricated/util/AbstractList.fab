@@ -518,7 +518,7 @@ class AbstractListIterator[label L] implements ListIterator[L] {
    *
    * @return The index of the next element.
    */
-  public int{L} nextIndex()
+  public int{L} nextIndex@{L}()
   {
     return position;
   }
@@ -529,7 +529,7 @@ class AbstractListIterator[label L] implements ListIterator[L] {
    *
    * @return The index of the previous element.
    */
-  public int{L} previousIndex()
+  public int{L} previousIndex@{L}()
   {
     return position - 1;
   }
