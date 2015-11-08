@@ -6,6 +6,7 @@ import java.io.ObjectInputStream;
 import java.security.PrivateKey;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 
 import javax.security.auth.x500.X500Principal;
@@ -92,9 +93,9 @@ public abstract class ObjectDB {
     PendingTransaction(long tid, Principal owner) {
       this.tid = tid;
       this.owner = owner;
-      this.reads = new ArrayList<>();
-      this.creates = new ArrayList<>();
-      this.writes = new ArrayList<>();
+      this.reads = new HashSet<>();
+      this.creates = new HashSet<>();
+      this.writes = new HashSet<>();
     }
 
     /**
