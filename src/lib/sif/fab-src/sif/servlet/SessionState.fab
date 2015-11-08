@@ -22,11 +22,11 @@ public class SessionState {
         super();
     }
     
-    public final String{this} getSessionId() {
+    public final String{this} getSessionId@{this.store$->}() {
         return sessionId;
     }
 
-    public final SessionPrincipal{this} sessionPrincipal() {
+    public final SessionPrincipal{this} sessionPrincipal@{this.store$->}() {
         return sessionPrincipal;
     }
 }
