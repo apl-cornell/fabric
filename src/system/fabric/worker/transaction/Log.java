@@ -17,7 +17,9 @@ import fabric.common.util.LongKeyMap;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.WeakReferenceArrayList;
 import fabric.lang.Object._Impl;
+import fabric.lang.security.ConfPolicy;
 import fabric.lang.security.LabelCache;
+import fabric.lang.security.LabelUtil;
 import fabric.lang.security.SecurityCache;
 import fabric.worker.FabricSoftRef;
 import fabric.worker.Store;
@@ -175,6 +177,11 @@ public final class Log {
   private final Set<Log> waitsFor;
 
   /**
+   * Current join of accessPolicies we've seen so far.
+   */
+  private ConfPolicy accessedPolicy;
+
+  /**
    * Creates a new log with the given parent and the given transaction ID. The
    * TID for the parent and the given TID are assumed to be consistent. If the
    * given TID is null, a random tid is generated for the subtransaction.
@@ -218,6 +225,7 @@ public final class Log {
       } finally {
         Timing.SUBTX.end();
       }
+      this.accessedPolicy = parent.accessedPolicy;
     } else {
       this.writerMap = new WriterMap(this.tid.topTid);
       commitState = new CommitState();
@@ -227,6 +235,7 @@ public final class Log {
 
       // New top-level frame. Register it in the transaction registry.
       TransactionRegistry.register(this);
+      this.accessedPolicy = LabelUtil._Impl.bottomConf();
     }
   }
 
