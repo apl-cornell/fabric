@@ -322,7 +322,7 @@ final class LinkedListIterator[label L] implements ListIterator[L] {
    *
    * @return the next index
    */
-  public int{L} nextIndex()
+  public int{L} nextIndex@{L}()
   {
     return position;
   }
@@ -332,7 +332,7 @@ final class LinkedListIterator[label L] implements ListIterator[L] {
    *
    * @return the previous index
    */
-  public int{L} previousIndex()
+  public int{L} previousIndex@{L}()
   {
     return position - 1;
   }
@@ -342,7 +342,7 @@ final class LinkedListIterator[label L] implements ListIterator[L] {
    *
    * @return true if next will succeed
    */
-  public boolean{L} hasNext()
+  public boolean{L} hasNext@{L}()
   {
     return (next != null);
   }
@@ -352,7 +352,7 @@ final class LinkedListIterator[label L] implements ListIterator[L] {
    *
    * @return true if previous will succeed
    */
-  public boolean{L} hasPrevious()
+  public boolean{L} hasPrevious@{L}()
   {
     return (previous != null);
   }
