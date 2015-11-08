@@ -19,6 +19,7 @@ import jif.visit.LabelChecker;
 import polyglot.ast.Expr;
 import polyglot.ast.Field;
 import polyglot.ast.Node;
+import polyglot.ast.NullLit;
 import polyglot.ast.Receiver;
 import polyglot.types.SemanticException;
 import polyglot.util.Position;
@@ -36,19 +37,32 @@ public class FabricFieldExt extends JifFieldExt {
   @Override
   public Node labelCheck(LabelChecker lc) throws SemanticException {
     Field fe = (Field) super.labelCheck(lc);
-    Receiver refR = fe.target();
+    Receiver target = fe.target();
     Position pos = fe.position();
 
-    if (refR instanceof Expr) {
-      Expr ref = (Expr) refR;
-      FabricTypeSystem ts = (FabricTypeSystem) lc.typeSystem();
-      FabricContext A = (FabricContext) lc.context();
-      FabricFieldInstance ffi = (FabricFieldInstance) fe.fieldInstance();
-      FabricReferenceType refType = (FabricReferenceType) targetType(ts, A, ref, fe);
+    /* Perform access checks for the target. */
+    fe = (Field) DereferenceHelper.checkDereference(fe, target, lc, pos);
 
+    FabricTypeSystem ts = (FabricTypeSystem) lc.typeSystem();
+    FabricContext A = (FabricContext) lc.context();
+    //FabricFieldInstance ffi = (FabricFieldInstance) fe.fieldInstance();
+    //FabricReferenceType refType = (FabricReferenceType) ffi.container();
+    FabricReferenceType refType = (FabricReferenceType) targetType(ts, A, target, fe);
+    FabricFieldInstance ffi = (FabricFieldInstance) ts.findField(refType, fe.name());
+
+    // Only care about:
+    // Expressions are not a transient type (in which case the field reference
+    // isn't going to end up fetching something...)
+    //
+    // For some reason... Fabric arrays appear to not be considered persistent?
+    if (target instanceof Expr
+        && !(target instanceof NullLit)
+        && (ts.isFabricArray(refType)
+          || ts.isPersistent(refType))) {
+      Expr ref = (Expr) target;
       ConfPolicy accessPol = ffi.accessPolicy();
       if (accessPol == null)
-        accessPol = ffi.label().confProjection();
+        accessPol = refType.accessPolicy();
       Label accessLabel = ts.toLabel(accessPol);
       Label objLabel = getPathMap(ref).NV();
       AccessPath storeap = ts.storeAccessPathFor(ref, A);
@@ -64,7 +78,7 @@ public class FabricFieldExt extends JifFieldExt {
                   ts.join(A.accessedLabel(),
                           Xt.A())));
 
-      NamedLabel accessPolLabel = new NamedLabel("access label of " + ref,
+      NamedLabel accessPolLabel = new NamedLabel("access label of " + fe,
             "the access label of the object referenced",
             ts.join(accessLabel,
               ts.pairLabel(pos, ts.bottomConfPolicy(pos), ts.topIntegPolicy(pos))));
@@ -110,8 +124,7 @@ public class FabricFieldExt extends JifFieldExt {
       });
     }
 
-    /* Perform access checks for the target. */
-    return DereferenceHelper.checkDereference(fe, refR, lc, pos);
+    return fe;
   }
 
 }
