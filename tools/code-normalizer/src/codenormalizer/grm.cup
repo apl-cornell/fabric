@@ -73,7 +73,8 @@ terminal Token ANDEQ, XOREQ, OREQ;
 
 terminal Token OVERRIDE, SUPPRESS_WARNINGS;
 terminal Token NEWLINE;
-terminal Token JOIN, MEET, LEFTARROW, TOP, BOTTOM, RIGHTARROW;
+terminal Token JOIN, MEET, LEFTARROW, TOP, BOTTOM, RIGHTARROW, TRUST_GTEQ,
+  INFO_LTEQ;
 
 terminal polyglot.lex.IntegerLiteral INTEGER_LITERAL;
 terminal polyglot.lex.IntegerLiteral INTEGER_LITERAL_BD;
@@ -205,6 +206,8 @@ non_newline_token ::=
   | MEET {: RESULT = "\u2293"; :}
   | LEFTARROW {: RESULT = "\u2190"; :}
   | RIGHTARROW {: RESULT = "\u2192"; :}
+  | TRUST_GTEQ {: RESULT = "\u227d"; :}
+  | INFO_LTEQ {: RESULT = "\u2291"; :}
   | TOP {: RESULT = "\u22a4"; :}
   | BOTTOM {: RESULT = "\u22a5"; :}
   | INTEGER_LITERAL:a {:
