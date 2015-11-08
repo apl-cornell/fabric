@@ -3,7 +3,7 @@
 # Counts and categorizes lines of code in the Fabric project that have changed
 # between two different branches/tags.
 
-import collections, os, re, shutil, subprocess, sys
+import collections, copy, os, re, shutil, subprocess, sys
 
 ###
 # Configuration
@@ -353,14 +353,12 @@ regexps = [
   re.compile(', (\d+) modifications')
 ]
 fieldLen = [3, 3, 3, 3, 3]
-master = {
-  'fab': categories,
-  'jif':
-    {'Jif compiler': ['.']},
-  'polyglot':
-    {'Polyglot compiler': ['.']}
-}
-for base, cats in master.items():
+for base, cats in {
+    'fab': copy.copy(categories),
+    'jif':
+      {'Jif compiler': ['.']},
+    'polyglot':
+      {'Polyglot compiler': ['.']}}.items():
   for cat, paths in cats.items():
     stats = [0, 0, 0, 0, 0]
     for path in paths:
