@@ -1,0 +1,3 @@
+public class DynamicTest021[label L1] {
+  int{L1}[]{L1} a;
+}

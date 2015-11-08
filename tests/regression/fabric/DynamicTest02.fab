@@ -1,0 +1,5 @@
+public class DynamicTest02[label L] extends DynamicTest021[L] {
+  public void foo{*lbl}(label lbl, DynamicTest02[{*lbl}]{*lbl} t) {
+    int x = t.a.length;
+  }
+}
