@@ -45,8 +45,8 @@ final class ObjectLocks {
    *          requesting the lock.
    */
   synchronized void lockForWrite(long tid) throws UnableToLockException {
-    if (writeLock != null) {
-      // Conflicting write lock.
+    if (writeLock != null && writeLock != tid) {
+      // Conflicting write lock from another transaction.
       throw new UnableToLockException();
     }
 
@@ -93,7 +93,11 @@ final class ObjectLocks {
       readLocks.put(tid, pins);
     }
 
-    pins.add(new Oid(worker.$getStore(), worker.$getOnum()));
+    // if this pin isn't already in the list, add it.
+    final Oid pin = new Oid(worker.$getStore(), worker.$getOnum());
+    if (!pins.contains(pin)) {
+      pins.add(pin);
+    }
   }
 
   /**
