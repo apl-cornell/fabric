@@ -443,6 +443,13 @@ public final class TransactionManager {
   }
 
   /**
+   * Prepare a stage of the transaction.
+   */
+  public void stageTransaction() throws AbortException, TransactionRestartingException {
+    //TODO
+  }
+
+  /**
    * XXX Really gross HACK to make actual transaction commit times visible to
    * the application. This allows us to measure end-to-end application-level
    * transaction latency.
