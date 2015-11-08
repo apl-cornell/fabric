@@ -251,7 +251,9 @@ public abstract class ObjectDB {
       if (existingSubmap != null) submap = existingSubmap;
 
       synchronized (submap) {
-        submap.put(worker, new PendingTransaction(tid, worker));
+        if (!submap.containsKey(worker)) { // if this transaction hasn't begun
+          submap.put(worker, new PendingTransaction(tid, worker));
+        }
       }
 
       // Ensure the submap wasn't removed out from under us.
