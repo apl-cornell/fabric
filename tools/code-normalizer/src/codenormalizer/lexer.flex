@@ -336,7 +336,9 @@ UnicodeEscape = \\ u[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]
     "\u2190" { return op(sym.LEFTARROW); }
     "\u2192" { return op(sym.RIGHTARROW); }
     "\u22a4" { return op(sym.TOP);      }
-    "\u22a5" { return op(sym.BOTTOM);   }    
+    "\u22a5" { return op(sym.BOTTOM);   }
+    "\u227d" { return op(sym.TRUST_GTEQ);   }
+    "\u2291" { return op(sym.INFO_LTEQ);   }
 
     /* codenormalizer extensions */
     {LineTerminator}             { return op(sym.NEWLINE); }
@@ -344,7 +346,7 @@ UnicodeEscape = \\ u[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]
 
 <TRADITIONAL_COMMENT> {
     "*/"                         { yybegin(YYINITIAL); }
-    .|\n                         { /* ignore */ }
+    [^]                          { /* ignore */ }
 }
 
 <END_OF_LINE_COMMENT> {
@@ -454,6 +456,6 @@ UnicodeEscape = \\ u[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]
 }
 
 /* Fallthrough case: anything not matched above is an error */
-.|\n                             { eq.enqueue(ErrorInfo.LEXICAL_ERROR,
+[^]                              { eq.enqueue(ErrorInfo.LEXICAL_ERROR,
                                               "Illegal character \"" +
                                               yytext() + "\"", pos()); }
