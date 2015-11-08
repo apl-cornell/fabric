@@ -443,6 +443,78 @@ public final class TransactionManager {
   }
 
   /**
+   * Prepare a stage of the transaction after an byte valued subexpression.
+   */
+  public byte stageTransaction(byte value) throws AbortException, TransactionRestartingException {
+    stageTransaction();
+    return value;
+  }
+
+  /**
+   * Prepare a stage of the transaction after an short valued subexpression.
+   */
+  public short stageTransaction(short value) throws AbortException, TransactionRestartingException {
+    stageTransaction();
+    return value;
+  }
+
+  /**
+   * Prepare a stage of the transaction after an int valued subexpression.
+   */
+  public int stageTransaction(int value) throws AbortException, TransactionRestartingException {
+    stageTransaction();
+    return value;
+  }
+
+  /**
+   * Prepare a stage of the transaction after an long valued subexpression.
+   */
+  public long stageTransaction(long value) throws AbortException, TransactionRestartingException {
+    stageTransaction();
+    return value;
+  }
+
+  /**
+   * Prepare a stage of the transaction after an float valued subexpression.
+   */
+  public float stageTransaction(float value) throws AbortException, TransactionRestartingException {
+    stageTransaction();
+    return value;
+  }
+
+  /**
+   * Prepare a stage of the transaction after an double valued subexpression.
+   */
+  public double stageTransaction(double value) throws AbortException, TransactionRestartingException {
+    stageTransaction();
+    return value;
+  }
+
+  /**
+   * Prepare a stage of the transaction after an boolean valued subexpression.
+   */
+  public boolean stageTransaction(boolean value) throws AbortException, TransactionRestartingException {
+    stageTransaction();
+    return value;
+  }
+
+  /**
+   * Prepare a stage of the transaction after an char valued subexpression.
+   */
+  public char stageTransaction(char value) throws AbortException, TransactionRestartingException {
+    stageTransaction();
+    return value;
+  }
+
+  /**
+   * Prepare a stage of the transaction after an Object valued subexpression.
+   */
+  public <N extends Object> N stageTransaction(N value) throws AbortException, TransactionRestartingException {
+    stageTransaction();
+    return value;
+  }
+
+  /**
    * Prepare a stage of the transaction.
    */
   public void stageTransaction() throws AbortException, TransactionRestartingException {
