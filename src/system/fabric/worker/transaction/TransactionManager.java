@@ -940,6 +940,8 @@ public final class TransactionManager {
       // Nothing to do if we're not in a transaction.
       if (current == null) return;
 
+      current.stageIfNeededBeforeAccess(obj);
+
       Timing.TXLOG.begin();
       try {
         ensureReadLock(obj);
@@ -1030,6 +1032,8 @@ public final class TransactionManager {
       if (obj.$writer == current
           && obj.writerMapVersion == current.writerMap.version && obj.$isOwned)
         return needTransaction;
+
+      current.stageIfNeededBeforeAccess(obj);
 
       try {
         Timing.TXLOG.begin();

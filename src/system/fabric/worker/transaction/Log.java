@@ -15,11 +15,14 @@ import fabric.common.TransactionID;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.OidKeyHashMap;
+import fabric.common.util.Triple;
 import fabric.common.util.WeakReferenceArrayList;
 import fabric.lang.Object._Impl;
 import fabric.lang.security.ConfPolicy;
+import fabric.lang.security.Label;
 import fabric.lang.security.LabelCache;
 import fabric.lang.security.LabelUtil;
+import fabric.lang.security.Policy;
 import fabric.lang.security.SecurityCache;
 import fabric.worker.FabricSoftRef;
 import fabric.worker.Store;
@@ -235,7 +238,7 @@ public final class Log {
 
       // New top-level frame. Register it in the transaction registry.
       TransactionRegistry.register(this);
-      this.accessedPolicy = LabelUtil._Impl.bottomConf();
+      this.accessedPolicy = null;
     }
   }
 
@@ -812,5 +815,29 @@ public final class Log {
   @Override
   public String toString() {
     return "[" + tid + "]";
+  }
+
+  /**
+   * Stage the transaction if needed before accessing the given object.
+   */
+  public void stageIfNeededBeforeAccess(_Impl obj) {
+    if (!obj.$getStore().isLocalStore() && obj.$accessPolicy != null) {
+      if (accessedPolicy != null) {
+        Store localStore = Worker.getWorker().getLocalStore();
+        Worker.getWorker().labelCache.getPolicyJoin(new Triple<>((Policy) accessedPolicy,
+                                                                 (Policy) obj.$accessPolicy,
+                                                                 localStore));
+        ConfPolicy postAccessedPolicy = accessedPolicy.join(localStore, obj.$accessPolicy);
+
+        Label postAccessedLabel = LabelUtil._Impl.toLabel(localStore, postAccessedPolicy);
+        Label accessedLabel = LabelUtil._Impl.toLabel(localStore, accessedPolicy);
+        if (!LabelUtil._Impl.equivalentTo(accessedLabel, postAccessedLabel)) {
+          TransactionManager.getInstance().stageTransaction();
+          accessedPolicy = postAccessedPolicy;
+        }
+      } else {
+        accessedPolicy = obj.$accessPolicy;
+      }
+    }
   }
 }
