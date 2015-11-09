@@ -10,14 +10,12 @@ import polyglot.types.Flags;
 import polyglot.visit.NodeVisitor;
 
 /**
- * Rewrites final flags into immutable flags before we do initialization
+ * Rewrites immutable flags into final flags after we do initialization
  * checking.
  *
- * This is a bit of a kludge to allow us to declare fields as final in FabIL in
- * order to avoid tracking them in transactions while getting around the
- * constructor protocol issues (fabric$lang$Object$(), etc.)
+ * @see FinalRewriter
  */
-public class FinalRewriter extends NodeVisitor {
+public class FinalRepairRewriter extends NodeVisitor {
 
   @Override
   public Node leave(Node old, Node n, NodeVisitor v) {
@@ -29,18 +27,17 @@ public class FinalRewriter extends NodeVisitor {
 
       Flags flags = fd.flags();
 
-      if (flags.isFinal())
-        fd = fd.flags(flags.clearFinal().set(FabILFlags.IMMUTABLE));
+      if (flags.contains(FabILFlags.IMMUTABLE))
+        fd = fd.flags(flags.clear(FabILFlags.IMMUTABLE).Final());
       return fd;
     }
 
     Field fd = (Field) n;
-
     Flags flags = fd.flags();
 
-    if (flags.isFinal()) {
+    if (flags.contains(FabILFlags.IMMUTABLE)) {
       FieldInstance fi = fd.fieldInstance();
-      fd = fd.fieldInstance(fi.flags(flags.clearFinal().set(FabILFlags.IMMUTABLE)));
+      fd = fd.fieldInstance(fi.flags(flags.clear(FabILFlags.IMMUTABLE).Final()));
     }
 
     return fd;
