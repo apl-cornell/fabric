@@ -170,7 +170,7 @@ public class RemoteCallManager extends MessageToWorkerHandler {
     tm.associateAndSyncLog(log, topTid);
 
     try {
-      tm.sendPrepareMessages();
+      tm.sendStagePrepareMessages(log);
     } catch (TransactionRestartingException e) {
       throw new TransactionPrepareFailedException(e);
     } finally {
