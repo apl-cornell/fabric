@@ -45,7 +45,7 @@ public class FieldAssignExt_c extends ExprExt_c {
     // If we're assigning to a final field, we must be in a constructor or an
     // initializer. Keep it as an assignment, since no setters will be
     // generated.
-    if (flags.isFinal() || flags.contains(FabILFlags.IMMUTABLE) || !pr.rewriteAssignments) {
+    if (flags.isFinal() || flags.contains(FabILFlags.IMMUTABLE) || !pr.rewriteAssignments()) {
       // We need to rewrite the left-hand side if translating a static field.
       if (!flags.isStatic()) return assign.right(rhs);
 
