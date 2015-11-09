@@ -908,6 +908,13 @@ public final class TransactionManager {
     try {
       if (current == null)
         throw new InternalError("Cannot create objects outside a transaction");
+      
+      // Don't lock/log access labels and their associated objects.
+      // XXX This is a kludge to get around the fact that Fabric's not smart
+      // enough to recognize that accessPolicies (and everything they point to)
+      // are effectively immutable
+      if (current.currentlyCheckingForStaging()) return;
+      current.stageIfNeededBeforeAccess(obj);
 
       // Make sure we're not supposed to abort/retry.
       checkRetrySignal();
@@ -939,7 +946,12 @@ public final class TransactionManager {
 
       // Nothing to do if we're not in a transaction.
       if (current == null) return;
-
+      
+      // Don't lock/log access labels and their associated objects.
+      // XXX This is a kludge to get around the fact that Fabric's not smart
+      // enough to recognize that accessPolicies (and everything they point to)
+      // are effectively immutable
+      if (current.currentlyCheckingForStaging()) return;
       current.stageIfNeededBeforeAccess(obj);
 
       Timing.TXLOG.begin();
@@ -1032,7 +1044,13 @@ public final class TransactionManager {
       if (obj.$writer == current
           && obj.writerMapVersion == current.writerMap.version && obj.$isOwned)
         return needTransaction;
-
+      
+      // Don't lock/log access labels and their associated objects.
+      // XXX This is a kludge to get around the fact that Fabric's not smart
+      // enough to recognize that accessPolicies (and everything they point to)
+      // are effectively immutable
+      if (current.currentlyCheckingForStaging())
+        return needTransaction;
       current.stageIfNeededBeforeAccess(obj);
 
       try {

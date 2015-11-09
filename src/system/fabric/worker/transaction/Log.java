@@ -817,27 +817,36 @@ public final class Log {
     return "[" + tid + "]";
   }
 
+  private boolean checkingForStaging = false;
+
+  public boolean currentlyCheckingForStaging() {
+    return checkingForStaging;
+  }
+
   /**
    * Stage the transaction if needed before accessing the given object.
    */
   public void stageIfNeededBeforeAccess(_Impl obj) {
-    if (!obj.$getStore().isLocalStore() && obj.$accessPolicy != null) {
-      if (accessedPolicy != null) {
-        Store localStore = Worker.getWorker().getLocalStore();
-        Worker.getWorker().labelCache.getPolicyJoin(new Triple<>((Policy) accessedPolicy,
-                                                                 (Policy) obj.$accessPolicy,
-                                                                 localStore));
-        ConfPolicy postAccessedPolicy = accessedPolicy.join(localStore, obj.$accessPolicy);
+    // Don't check for staging if this is coming from registering a read on an
+    // access label.
+    if (!checkingForStaging) {
+      checkingForStaging = true;
+      if (obj.$accessPolicy != null) {
+        if (accessedPolicy != null) {
+          Store localStore = Worker.getWorker().getLocalStore();
+          ConfPolicy postAccessedPolicy = accessedPolicy.join(localStore, obj.$accessPolicy);
 
-        Label postAccessedLabel = LabelUtil._Impl.toLabel(localStore, postAccessedPolicy);
-        Label accessedLabel = LabelUtil._Impl.toLabel(localStore, accessedPolicy);
-        if (!LabelUtil._Impl.equivalentTo(accessedLabel, postAccessedLabel)) {
-          TransactionManager.getInstance().stageTransaction();
-          accessedPolicy = postAccessedPolicy;
+          Label postAccessedLabel = LabelUtil._Impl.toLabel(localStore, postAccessedPolicy);
+          Label accessedLabel = LabelUtil._Impl.toLabel(localStore, accessedPolicy);
+          if (!LabelUtil._Impl.equivalentTo(accessedLabel, postAccessedLabel)) {
+            TransactionManager.getInstance().stageTransaction();
+            accessedPolicy = postAccessedPolicy;
+          }
+        } else {
+          accessedPolicy = obj.$accessPolicy;
         }
-      } else {
-        accessedPolicy = obj.$accessPolicy;
       }
+      checkingForStaging = false;
     }
   }
 }
