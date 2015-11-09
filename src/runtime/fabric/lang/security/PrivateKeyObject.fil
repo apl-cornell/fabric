@@ -20,9 +20,9 @@ public class PrivateKeyObject {
   /**
    * The principal to which this key belongs.
    */
-  private /*final*/ Principal principal;
+  private final Principal principal;
   
-  private PrivateKey key;
+  private final PrivateKey key;
   
   /**
    * @param p the principal to which this key belongs.

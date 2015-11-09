@@ -10,31 +10,31 @@ import fabric.util.Iterator;
  * It provides convenience methods for delgating authority to superiors.
  */
 public abstract class AbstractPrincipal extends DelegatingPrincipal {
-    private String name;
+    private final String name;
 
-    private Map superiors; // treat this like a set
+    private final Map superiors; // treat this like a set
 
     public AbstractPrincipal fabric$lang$security$AbstractPrincipal$() {
       this.jif$init();
       fabric$lang$security$DelegatingPrincipal$();
-	  return this;
+      return this;
     }
     
     private void jif$init() {
       superiors = (HashMap) new HashMap().fabric$util$HashMap$();
       
-    // XXX HACK Make read-only operations on principals really read-only. This
-    // creates the set view of the map's keys so that future calls to keySet()
-    // will not modify the hashmap object.
-    superiors.keySet();
+      // XXX HACK Make read-only operations on principals really read-only. This
+      // creates the set view of the map's keys so that future calls to keySet()
+      // will not modify the hashmap object.
+      superiors.keySet();
     }
     
 
     protected AbstractPrincipal fabric$lang$security$AbstractPrincipal$(String name) {
       this.jif$init();
-        fabric$lang$security$AbstractPrincipal$();
-        this.name = name;
-		return this;
+      fabric$lang$security$AbstractPrincipal$();
+      this.name = name;
+      return this;
     }
     
     protected AbstractPrincipal fabric$lang$security$AbstractPrincipal$(String name, Principal superior) {

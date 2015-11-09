@@ -17,31 +17,31 @@ public final class JoinIntegPolicy extends JoinPolicy implements IntegPolicy {
   }
   
   public IntegPolicy meet(Store store, IntegPolicy p, java.util.Set/*<DelegationPair>*/ s) {
-      return meet(store, p, s, true);
+    return meet(store, p, s, true);
   }
   
   public IntegPolicy join(Store store, IntegPolicy p) {
-      return join(store, p, true);
+    return join(store, p, true);
   }
   
   public IntegPolicy meet(Store store, IntegPolicy p) {
-      return meet(store, p, true);
+    return meet(store, p, true);
   }
   
   public IntegPolicy join(Store store, IntegPolicy p, boolean simplify) {
-      return LabelUtil.join(store, this, p, simplify);
+    return LabelUtil.join(store, this, p, simplify);
   }
   
   public IntegPolicy meet(Store store, IntegPolicy p, boolean simplify) {
-      return LabelUtil.meet(store, this, p, simplify);
+    return LabelUtil.meet(store, this, p, simplify);
   }
   
   public IntegPolicy join(Store store, IntegPolicy p, java.util.Set/*<DelegationPair>*/ s, boolean simplify) {
-      return LabelUtil.join(store, this, p, s, simplify);
+    return LabelUtil.join(store, this, p, s, simplify);
   }
   
   public IntegPolicy meet(Store store, IntegPolicy p, java.util.Set/*<DelegationPair>*/ s, boolean simplify) {
-      return LabelUtil.meet(store, this, p, s, simplify);
+    return LabelUtil.meet(store, this, p, s, simplify);
   }
 
   public Object $initLabels() {

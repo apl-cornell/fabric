@@ -9,7 +9,7 @@ import fabric.util.*;
  * copied from Jif.
  */
 public final class ConjunctivePrincipal extends Principal {
-  /*final*/ Set conjuncts;
+  final Set conjuncts;
   private Integer hashCode;
 
   ConjunctivePrincipal fabric$lang$security$ConjunctivePrincipal$(Set conjuncts) {

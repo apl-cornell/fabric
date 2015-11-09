@@ -983,13 +983,13 @@ public class Collections
      * The count of elements in this list.
      * @serial the list size
      */
-    private /*final*/ int n;
+    private final int n;
 
     /**
      * The repeated list element.
      * @serial the list contents
      */
-    private /*final*/ Object element;
+    private final Object element;
 
     /**
      * Constructs the list.
@@ -1000,11 +1000,11 @@ public class Collections
      */
     CopiesList fabric$util$Collections$CopiesList$(int n, Object o)
     {
-      fabric$util$AbstractList$();
       if (n < 0)
         throw new IllegalArgumentException();
       this.n = n;
       element = o;
+      fabric$util$AbstractList$();
 	  return this;
     }
 
@@ -1434,7 +1434,7 @@ public class Collections
      * The single element; package visible for use in nested class.
      * @serial the singleton
      */
-    /*final*/ Object element;
+    final Object element;
 
     /**
      * Construct a singleton.
@@ -1442,8 +1442,8 @@ public class Collections
      */
     SingletonSet fabric$util$Collections$SingletonSet$(Object o)
     {
-      fabric$util$AbstractSet$();
       element = o;
+      fabric$util$AbstractSet$();
 	  return this;
     }
 
@@ -1629,7 +1629,7 @@ public class Collections
      * The single element.
      * @serial the singleton
      */
-    private /*final*/ Object element;
+    private final Object element;
 
     /**
      * Construct a singleton.
@@ -1637,8 +1637,8 @@ public class Collections
      */
     SingletonList fabric$util$Collections$SingletonList$(Object o)
     {
-      fabric$util$AbstractList$();
       element = o;
+      fabric$util$AbstractList$();
 	  return this;
     }
 
@@ -1817,13 +1817,13 @@ public class Collections
      * The single key.
      * @serial the singleton key
      */
-    private /*final*/ Object k;
+    private final Object k;
 
     /**
      * The corresponding value.
      * @serial the singleton value
      */
-    private /*final*/ Object v;
+    private final Object v;
 
     /**
      * Cache the entry set.
@@ -1837,9 +1837,9 @@ public class Collections
      */
     SingletonMap fabric$util$Collections$SingletonMap$(Object key, Object value)
     {
-      fabric$util$AbstractMap$();
       k = key;
       v = value;
+      fabric$util$AbstractMap$();
       return this;
     }
 
@@ -4155,7 +4155,7 @@ public class Collections
      * The wrapped collection. Package visible for use by subclasses.
      * @serial the real collection
      */
-    /*final*/ Collection c;
+    final Collection c;
 
     /**
      * Wrap a given collection.
@@ -4164,10 +4164,10 @@ public class Collections
      */
     UnmodifiableCollection fabric$util$Collections$UnmodifiableCollection$(Collection c)
     {
-      fabric$lang$Object$();
       this.c = c;
       if (c == null)
         throw new NullPointerException();
+      fabric$lang$Object$();
       return this;
     }
 
@@ -4397,7 +4397,7 @@ public class Collections
     /**
      * The wrapped iterator.
      */
-    private /*final*/ Iterator i;
+    private final Iterator i;
 
     /**
      * Only trusted code creates a wrapper.
@@ -4405,8 +4405,8 @@ public class Collections
      */
     UnmodifiableIterator fabric$util$Collections$UnmodifiableIterator$(Iterator i)
     {
-      fabric$lang$Object$();
       this.i = i;
+      fabric$lang$Object$();
       return this;
     }
 
@@ -4504,7 +4504,7 @@ public class Collections
      * excessive casting. Package visible for use by subclass.
      * @serial the wrapped list
      */
-    /*final*/ List list;
+    final List list;
 
     /**
      * Wrap a given list.
@@ -4513,8 +4513,8 @@ public class Collections
      */
     UnmodifiableList fabric$util$Collections$UnmodifiableList$(List l)
     {
-      fabric$util$Collections$UnmodifiableCollection$(l);
       list = l;
+      fabric$util$Collections$UnmodifiableCollection$(l);
       return this;
     }
 
@@ -4761,7 +4761,7 @@ public class Collections
      * The wrapped iterator, stored both here and in the superclass to
      * avoid excessive casting.
      */
-    private /*final*/ ListIterator li;
+    private final ListIterator li;
 
     /**
      * Only trusted code creates a wrapper.
@@ -4769,8 +4769,8 @@ public class Collections
      */
     UnmodifiableListIterator fabric$util$Collections$UnmodifiableListIterator$(ListIterator li)
     {
-      fabric$util$Collections$UnmodifiableIterator$(li);
       this.li = li;
+      fabric$util$Collections$UnmodifiableIterator$(li);
       return this;
     }
 
@@ -4900,7 +4900,7 @@ public class Collections
      * The wrapped map.
      * @serial the real map
      */
-    private /*final*/ Map m;
+    private final Map m;
 
     /**
      * Cache the entry set.
@@ -4924,10 +4924,10 @@ public class Collections
      */
     UnmodifiableMap fabric$util$Collections$UnmodifiableMap$(Map m)
     {
-      fabric$lang$Object$();
       this.m = m;
       if (m == null)
         throw new NullPointerException();
+      fabric$lang$Object$();
       return this;
     }
 
@@ -5008,12 +5008,12 @@ public class Collections
       private static final class UnmodifiableMapEntry
           implements Map.Entry
       {
-        private /*final*/ Map.Entry e;
+        private final Map.Entry e;
 
         private UnmodifiableMapEntry fabric$util$Collections$UnmodifiableMapEntry$(Map.Entry e)
         {
-          fabric$lang$Object$();
           this.e = e;
+          fabric$lang$Object$();
           return this;
         }
 
@@ -5471,7 +5471,7 @@ public class Collections
      * excessive casting.
      * @serial the wrapped map
      */
-    private /*final*/ SortedMap sm;
+    private final SortedMap sm;
 
     /**
      * Wrap a given map.
@@ -5480,8 +5480,8 @@ public class Collections
      */
     UnmodifiableSortedMap fabric$util$Collections$UnmodifiableSortedMap$(SortedMap sm)
     {
-      fabric$util$Collections$UnmodifiableMap$(sm);
       this.sm = sm;
+      fabric$util$Collections$UnmodifiableMap$(sm);
       return this;
     }
 
@@ -5655,7 +5655,7 @@ public class Collections
      * excessive casting.
      * @serial the wrapped set
      */
-    private SortedSet ss;
+    private final SortedSet ss;
 
     /**
      * Wrap a given set.
@@ -5664,8 +5664,8 @@ public class Collections
      */
     UnmodifiableSortedSet fabric$util$Collections$UnmodifiableSortedSet$(SortedSet ss)
     {
-      fabric$util$Collections$UnmodifiableSet$(ss);
       this.ss = ss;
+      fabric$util$Collections$UnmodifiableSet$(ss);
       return this;
     }
 

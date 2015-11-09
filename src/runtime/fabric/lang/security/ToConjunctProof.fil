@@ -8,12 +8,12 @@ import java.util.Set;
  * This code is mostly copied from Jif.
  */
 public final class ToConjunctProof extends ActsForProof {
-  private /*final*/ Map conjunctProofs;
+  private final Map conjunctProofs;
 
   ToConjunctProof fabric$lang$security$ToConjunctProof$(Principal actor, ConjunctivePrincipal granter,
       Map conjunctProofs) {
-    fabric$lang$security$ActsForProof$(actor, granter);
     this.conjunctProofs = conjunctProofs;
+    fabric$lang$security$ActsForProof$(actor, granter);
     return this;
   }
 

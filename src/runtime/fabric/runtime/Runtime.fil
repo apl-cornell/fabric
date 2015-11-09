@@ -15,8 +15,8 @@ public class Runtime {
     /**
      * The principal under whose authority the JVM is running.
      */
-    private Principal dynp;
-    private Store local;
+    private final Principal dynp;
+    private final Store local;
 
     private Runtime fabric$runtime$Runtime$(Principal p) {
         this.dynp = p;

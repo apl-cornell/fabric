@@ -4,13 +4,13 @@ public class Object extends java.lang.Object {
   /**
    * The label that protects the object at run time.
    */
-  protected Label $updateLabel;
+  final protected Label $updateLabel;
   
   /**
    * The object's access policy, specifying the program contexts in which it is
    * safe to use this object.
    */
-  protected ConfPolicy $accessPolicy;
+  final protected ConfPolicy $accessPolicy;
   
   /**
    * Initializes the object's update label and access policy.

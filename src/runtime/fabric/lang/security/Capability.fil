@@ -7,9 +7,9 @@ import fabric.worker.Store;
  * This code is mostly copied from Jif.
  */
 public final class Capability {
-  private /*final*/ Principal jif$jif_lang_Capability_P;
-  private /*final*/ Label jif$jif_lang_Capability_L;
-  private /*final*/ Closure closure;
+  private final Principal jif$jif_lang_Capability_P;
+  private final Label jif$jif_lang_Capability_L;
+  private final Closure closure;
 
   public Closure getClosure() {
     return closure;
@@ -24,8 +24,8 @@ public final class Capability {
     this.jif$jif_lang_Capability_P = jif$P;
     this.jif$jif_lang_Capability_L = jif$L;
     this.closure = closure;
-	fabric$lang$Object$();
-	return this;
+    fabric$lang$Object$();
+    return this;
   }
 
   public static boolean jif$Instanceof(final Principal jif$P,

@@ -91,7 +91,7 @@ public class HashMap extends AbstractMap
    * Package visible for use by HashSet.
    * @serial the load factor
    */
-  /*final*/ float loadFactor;
+  final float loadFactor;
 
   /**
    * Array containing the actual key-value mappings.
@@ -223,20 +223,21 @@ public class HashMap extends AbstractMap
    */
   public HashMap fabric$util$HashMap$(int initialCapacity, float loadFactor)
   {
+    if (! (loadFactor > 0)) // check for NaN too
+      throw new IllegalArgumentException("Illegal Load: " + loadFactor);
+    this.loadFactor = loadFactor;
+
       fabric$util$AbstractMap$();	
+
     if (initialCapacity < 0)
       throw new IllegalArgumentException("Illegal Capacity: "
                                          + initialCapacity);
-    if (! (loadFactor > 0)) // check for NaN too
-      throw new IllegalArgumentException("Illegal Load: " + loadFactor);
-
     if (initialCapacity == 0)
       initialCapacity = 1;
     
     // XXX This label is wrong. HashMap should be parameterized
     Label label = LabelUtil.noComponents();
     buckets = new HashEntry[initialCapacity]~label;
-    this.loadFactor = loadFactor;
     threshold = (int) (initialCapacity * loadFactor);
 	return this;
   }
@@ -831,7 +832,7 @@ public class HashMap extends AbstractMap
      * The type of this Iterator: {@link #KEYS}, {@link #VALUES},
      * or {@link #ENTRIES}.
      */
-    private /*final*/ int type;
+    private final int type;
     /**
      * The number of modifications to the backing HashMap that we know about.
      */
@@ -855,8 +856,8 @@ public class HashMap extends AbstractMap
      */
     HashIterator fabric$util$HashMap$HashIterator$(int type)
     {
-	  fabric$lang$Object$();
       this.type = type;
+	  fabric$lang$Object$();
       this.knownMod = modCount;
       this.count = size;
       this.idx = buckets.length;

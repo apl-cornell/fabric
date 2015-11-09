@@ -9,39 +9,39 @@ import fabric.util.*;
 public final class JoinConfPolicy extends JoinPolicy implements ConfPolicy {
   JoinConfPolicy fabric$lang$security$JoinConfPolicy$(Set policies) {
     fabric$lang$security$JoinPolicy$(policies);
-	return this;
+    return this;
   }
 
   public ConfPolicy join(Store store, ConfPolicy p, java.util.Set/*<DelegationPair>*/ s) {
-      return join(store, p, s, true);
+    return join(store, p, s, true);
   }
 
   public ConfPolicy meet(Store store, ConfPolicy p, java.util.Set/*<DelegationPair>*/ s) {
-      return meet(store, p, s, true);
+    return meet(store, p, s, true);
   }
 
   public ConfPolicy join(Store store, ConfPolicy p) {
-      return join(store, p, true);
+    return join(store, p, true);
   }
 
   public ConfPolicy meet(Store store, ConfPolicy p) {
-      return meet(store, p, true);
+    return meet(store, p, true);
   }
 
   public ConfPolicy join(Store store, ConfPolicy p, boolean simplify) {
-      return LabelUtil.join(store, this, p, simplify);
+    return LabelUtil.join(store, this, p, simplify);
   }
 
   public ConfPolicy meet(Store store, ConfPolicy p, boolean simplify) {
-      return LabelUtil.meet(store, this, p, simplify);
+    return LabelUtil.meet(store, this, p, simplify);
   }
 
   public ConfPolicy join(Store store, ConfPolicy p, java.util.Set/*<DelegationPair>*/ s, boolean simplify) {
-      return LabelUtil.join(store, this, p, s, simplify);
+    return LabelUtil.join(store, this, p, s, simplify);
   }
 
   public ConfPolicy meet(Store store, ConfPolicy p, java.util.Set/*<DelegationPair>*/ s, boolean simplify) {
-      return LabelUtil.meet(store, this, p, s, simplify);
+    return LabelUtil.meet(store, this, p, s, simplify);
   }
 
   public Object $initLabels() {

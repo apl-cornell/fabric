@@ -13,12 +13,11 @@ import java.util.Set;
  * Jif.
  */
 public final class PairLabel implements Label {
-  private /*final*/ ConfPolicy confPol;
-  private /*final*/ IntegPolicy integPol;
-  private /*final*/ SecretKeyObject keyObject;
+  private final ConfPolicy confPol;
+  private final IntegPolicy integPol;
+  private final SecretKeyObject keyObject;
 
   public PairLabel fabric$lang$security$PairLabel$(ConfPolicy confPol, IntegPolicy integPol) {
-	fabric$lang$Object$();
     this.confPol = confPol;
     this.integPol = integPol;
     
@@ -33,7 +32,10 @@ public final class PairLabel implements Label {
     } else {
       this.keyObject = (SecretKeyObject) new SecretKeyObject().fabric$lang$security$SecretKeyObject$();
     }
-	return this;
+
+    fabric$lang$Object$();
+
+    return this;
   }
 
   public boolean relabelsTo(Label l, Set s) {

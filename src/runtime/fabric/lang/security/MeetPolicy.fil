@@ -10,14 +10,14 @@ import fabric.util.*;
  * mostly copied from Jif.
  */
 public abstract class MeetPolicy extends AbstractPolicy implements Policy {
-  private Set components; // Set of Policies
+  private final Set components; // Set of Policies
 
   MeetPolicy fabric$lang$security$MeetPolicy$(Set policies) {
-	fabric$lang$security$AbstractPolicy$();
     // Copy the contents into a linked hash set so we can sign these policies.
     components = Collections.unmodifiableSet($getStore(),
-	(LinkedHashSet) new LinkedHashSet().fabric$util$LinkedHashSet$(policies));
-	return this;
+        (LinkedHashSet) new LinkedHashSet().fabric$util$LinkedHashSet$(policies));
+    fabric$lang$security$AbstractPolicy$();
+    return this;
   }
 
   public Set meetComponents() {

@@ -20,22 +20,22 @@ import fabric.util.HashSet;
  * @author Lucas Waye <lrw48@cornell.edu>
  */
 public class FClass {
-  protected /*final*/ Codebase codebase;
-  protected /*final*/ Object staticInstance;
-  protected /*final*/ String   name;
-  protected /*final*/ String   source;
-  protected /*final*/ byte[]   bytecode;
+  protected final Codebase codebase;
+  protected Object staticInstance;
+  protected final String   name;
+  protected final String   source;
+  protected final byte[]   bytecode;
   
   public FClass fabric$lang$FClass$(Label updateLabel, ConfPolicy accessPolicy, Codebase codebase,
       String name, String source, byte[] bytecode) {
-	fabric$lang$Object$();
+    this.$updateLabel = updateLabel;
+    this.$accessPolicy = accessPolicy;
     this.codebase = codebase;
     this.name = name;
     this.source = source;
     this.bytecode = bytecode;
-    this.$updateLabel = updateLabel;
-    this.$accessPolicy = accessPolicy;
-	return this;
+    fabric$lang$Object$();
+    return this;
   }
 
   public Codebase getCodebase() {

@@ -7,9 +7,9 @@ import fabric.util.*;
  * from Jif.
  */
 public final class MeetConfPolicy extends MeetPolicy implements ConfPolicy {
- MeetConfPolicy fabric$lang$security$MeetConfPolicy$(Set policies) {
+  MeetConfPolicy fabric$lang$security$MeetConfPolicy$(Set policies) {
     fabric$lang$security$MeetPolicy$(policies);
-	return this;
+    return this;
   }
 
   public ConfPolicy join(Store store, ConfPolicy p, java.util.Set/*<DelegationPair>*/ s) {
