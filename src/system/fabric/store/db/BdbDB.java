@@ -172,27 +172,29 @@ public class BdbDB extends ObjectDB {
 
     final DatabaseEntry key = new DatabaseEntry(toBytes(tid, worker));
 
-    runInBdbTransaction(new Code<Void, RuntimeException>() {
-      @Override
-      public Void run(Transaction txn) throws RuntimeException {
-        DatabaseEntry data = new DatabaseEntry(toBytesNoModData(pending));
-        prepared.put(txn, key, data);
+    if (pending != null) {
+      runInBdbTransaction(new Code<Void, RuntimeException>() {
+        @Override
+        public Void run(Transaction txn) throws RuntimeException {
+          DatabaseEntry data = new DatabaseEntry(toBytesNoModData(pending));
+          prepared.put(txn, key, data);
 
-        Serializer<SerializedObject> serializer = new Serializer<>();
-        for (SerializedObject obj : pending.creates) {
-          data.setData(serializer.toBytes(obj));
-          preparedCreates.put(txn, key, data);
+          Serializer<SerializedObject> serializer = new Serializer<>();
+          for (SerializedObject obj : pending.creates) {
+            data.setData(serializer.toBytes(obj));
+            preparedCreates.put(txn, key, data);
+          }
+          for (SerializedObject obj : pending.writes) {
+            data.setData(serializer.toBytes(obj));
+            preparedWrites.put(txn, key, data);
+          }
+          return null;
         }
-        for (SerializedObject obj : pending.writes) {
-          data.setData(serializer.toBytes(obj));
-          preparedWrites.put(txn, key, data);
-        }
-        return null;
-      }
-    });
+      });
 
-    preparedTransactions.put(new ByteArray(key.getData()), pending);
-    STORE_DB_LOGGER.log(Level.FINER, "Bdb prepare success tid {0}", tid);
+      preparedTransactions.put(new ByteArray(key.getData()), pending);
+      STORE_DB_LOGGER.log(Level.FINER, "Bdb prepare success tid {0}", tid);
+    }
   }
 
   @Override
