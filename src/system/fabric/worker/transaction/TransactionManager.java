@@ -6,9 +6,9 @@ import static fabric.worker.transaction.Log.CommitState.Values.ABORTED;
 import static fabric.worker.transaction.Log.CommitState.Values.ABORTING;
 import static fabric.worker.transaction.Log.CommitState.Values.COMMITTED;
 import static fabric.worker.transaction.Log.CommitState.Values.COMMITTING;
-import static fabric.worker.transaction.Log.CommitState.Values.PREPARED;
-import static fabric.worker.transaction.Log.CommitState.Values.PREPARE_FAILED;
-import static fabric.worker.transaction.Log.CommitState.Values.PREPARING;
+import static fabric.worker.transaction.Log.CommitState.Values.RUNNING;
+import static fabric.worker.transaction.Log.CommitState.Values.STAGE_FAILED;
+import static fabric.worker.transaction.Log.CommitState.Values.STAGING;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -202,7 +202,7 @@ public final class TransactionManager {
       // Aborting a top-level transaction. Make sure no other thread is working
       // on this transaction.
       synchronized (current.commitState) {
-        while (current.commitState.value == PREPARING) {
+        while (current.commitState.value == STAGING) {
           try {
             current.commitState.wait();
           } catch (InterruptedException e) {
@@ -211,20 +211,20 @@ public final class TransactionManager {
         }
 
         switch (current.commitState.value) {
-        case UNPREPARED:
+        case RUNNING:
           current.commitState.value = ABORTING;
+          //TODO: Unrecoverable aborts?
           storesToContact = Collections.emptySet();
           workersToContact = current.workersCalled;
           break;
 
-        case PREPARE_FAILED:
-        case PREPARED:
+        case STAGE_FAILED:
           current.commitState.value = ABORTING;
-          storesToContact = current.storesToContact();
+          storesToContact = current.storesToStage();
           workersToContact = current.workersCalled;
           break;
 
-        case PREPARING:
+        case STAGING:
           // We should've taken care of this case already in the 'while' loop
           // above.
           throw new InternalError();
@@ -392,9 +392,10 @@ public final class TransactionManager {
     Log HOTOS_current = current;
     final long prepareStart = System.currentTimeMillis();
 
+    /*
     // Go through the transaction log and figure out the stores we need to
-    // contact.
-    Set<Store> stores = current.storesToContact();
+    // contact for commit.
+    Set<Store> stores = current.storesToCommit();
     List<RemoteWorker> workers = current.workersCalled;
 
     // Determine whether to use the single-store optimization. The optimization
@@ -406,16 +407,19 @@ public final class TransactionManager {
     }
     boolean singleStore = workers.isEmpty() && numRemoteStores == 1;
     boolean readOnly = current.isReadOnly();
+    */
 
     // Set number of round trips to 0
-    ROUND_TRIPS.set(0);
+    ROUND_TRIPS.set(0); // TODO: Fix this value
 
-    // Send prepare messages to our cohorts. This will also abort our portion of
-    // the transaction if the prepare fails.
-    sendPrepareMessages(singleStore, readOnly, stores, workers);
+    // Stage any unstaged operations now.
+    sendStagePrepareMessages(current);
 
     // Send commit messages to our cohorts.
-    sendCommitMessagesAndCleanUp(singleStore, readOnly, stores, workers);
+    Set<Store> stores = current.storesToCommit();
+    List<RemoteWorker> workers = current.workersCalledAndStaged;
+    //sendCommitMessagesAndCleanUp(singleStore, readOnly, stores, workers);
+    sendCommitMessagesAndCleanUp();
 
     // Collect the names of nodes contacted.
     String[] contactedNodes = new String[stores.size() + workers.size()];
@@ -443,169 +447,59 @@ public final class TransactionManager {
   }
 
   /**
-   * Prepare a stage of the transaction after an byte valued subexpression.
-   */
-  public byte stageTransaction(byte value) throws AbortException, TransactionRestartingException {
-    stageTransaction();
-    return value;
-  }
-
-  /**
-   * Prepare a stage of the transaction after an short valued subexpression.
-   */
-  public short stageTransaction(short value) throws AbortException, TransactionRestartingException {
-    stageTransaction();
-    return value;
-  }
-
-  /**
-   * Prepare a stage of the transaction after an int valued subexpression.
-   */
-  public int stageTransaction(int value) throws AbortException, TransactionRestartingException {
-    stageTransaction();
-    return value;
-  }
-
-  /**
-   * Prepare a stage of the transaction after an long valued subexpression.
-   */
-  public long stageTransaction(long value) throws AbortException, TransactionRestartingException {
-    stageTransaction();
-    return value;
-  }
-
-  /**
-   * Prepare a stage of the transaction after an float valued subexpression.
-   */
-  public float stageTransaction(float value) throws AbortException, TransactionRestartingException {
-    stageTransaction();
-    return value;
-  }
-
-  /**
-   * Prepare a stage of the transaction after an double valued subexpression.
-   */
-  public double stageTransaction(double value) throws AbortException, TransactionRestartingException {
-    stageTransaction();
-    return value;
-  }
-
-  /**
-   * Prepare a stage of the transaction after an boolean valued subexpression.
-   */
-  public boolean stageTransaction(boolean value) throws AbortException, TransactionRestartingException {
-    stageTransaction();
-    return value;
-  }
-
-  /**
-   * Prepare a stage of the transaction after an char valued subexpression.
-   */
-  public char stageTransaction(char value) throws AbortException, TransactionRestartingException {
-    stageTransaction();
-    return value;
-  }
-
-  /**
-   * Prepare a stage of the transaction after an Object valued subexpression.
-   */
-  public <N extends Object> N stageTransaction(N value) throws AbortException, TransactionRestartingException {
-    stageTransaction();
-    return value;
-  }
-
-  /**
-   * Prepare a stage of the transaction.
+   * Prepare the current stage of the transaction.
    */
   public void stageTransaction() throws AbortException, TransactionRestartingException {
-    //TODO
+    current.stage();
   }
 
   /**
-   * XXX Really gross HACK to make actual transaction commit times visible to
-   * the application. This allows us to measure end-to-end application-level
-   * transaction latency.
+   * Send out (stage) prepare messages to appropriate stores and workers.
    */
-  public static final ThreadLocal<Long> COMMIT_TIME = new ThreadLocal<>();
+  public void sendStagePrepareMessages(final Log topLevelLog) {
+    Set<Store> stores = topLevelLog.storesToStage();
+    List<RemoteWorker> workers = topLevelLog.workersCalled;
 
-  /**
-   * XXX Similarly gross HACK for making transaction commit round trips visible
-   * to the application.
-   */
-  public static final ThreadLocal<Integer> ROUND_TRIPS = new ThreadLocal<>();
-
-  /**
-   * XXX Similarly gross HACK for making the nodes contacted by this client
-   * during commit visible to the application.
-   */
-  public static final ThreadLocal<String[]> CONTACTED_NODES =
-      new ThreadLocal<>();
-
-  private static LocalStore LOCAL_STORE;
-
-  /**
-   * Sends prepare messages to the cohorts in a distributed transaction. Also
-   * sends abort messages if any cohort fails to prepare.
-   *
-   * @throws TransactionRestartingException
-   *           if the prepare fails.
-   */
-  public void sendPrepareMessages() {
-    sendPrepareMessages(false, false, current.storesToContact(),
-        current.workersCalled);
-  }
-
-  /**
-   * Sends prepare messages to the given set of stores and workers. If the
-   * prepare fails, the local portion and given branch of the transaction is
-   * rolled back.
-   *
-   * @throws TransactionRestartingException
-   *           if the prepare fails.
-   */
-  private void sendPrepareMessages(final boolean singleStore,
-      final boolean readOnly, Set<Store> stores, List<RemoteWorker> workers)
-          throws TransactionRestartingException {
     final Map<RemoteNode<?>, TransactionPrepareFailedException> failures =
         Collections.synchronizedMap(
             new HashMap<RemoteNode<?>, TransactionPrepareFailedException>());
 
-    synchronized (current.commitState) {
-      switch (current.commitState.value) {
-      case UNPREPARED:
-        current.commitState.value = PREPARING;
+    synchronized (topLevelLog.commitState) {
+      switch (topLevelLog.commitState.value) {
+      case RUNNING:
+        topLevelLog.commitState.value = STAGING;
         break;
 
-      case PREPARING:
-      case PREPARED:
+      case STAGING:
         return;
 
       case COMMITTING:
       case COMMITTED:
         WORKER_TRANSACTION_LOGGER.log(Level.FINE,
             "Ignoring prepare request (transaction state = {0})",
-            current.commitState.value);
+            topLevelLog.commitState.value);
         return;
 
-      case PREPARE_FAILED:
+      case STAGE_FAILED:
         throw new InternalError();
 
       case ABORTING:
       case ABORTED:
-        throw new TransactionRestartingException(current.tid);
+        throw new TransactionRestartingException(topLevelLog.tid);
       }
     }
 
     List<Future<?>> futures = new ArrayList<>(stores.size() + workers.size());
 
     // Go through each worker and send prepare messages in parallel.
+    // TODO: Handle remote worker calls for staged commit.
     for (final RemoteWorker worker : workers) {
       Threading.NamedRunnable runnable =
           new Threading.NamedRunnable("worker prepare to " + worker.name()) {
             @Override
             protected void runImpl() {
               try {
-                worker.prepareTransaction(current.tid.topTid);
+                worker.prepareTransaction(topLevelLog.tid.topTid);
               } catch (UnreachableNodeException e) {
                 failures.put(worker, new TransactionPrepareFailedException(
                     "Unreachable worker"));
@@ -631,12 +525,18 @@ public final class TransactionManager {
             @Override
             public void runImpl() {
               try {
-                Collection<_Impl> creates = current.getCreatesForStore(store);
+                Collection<_Impl> creates = topLevelLog.getCreatesForStore(store);
                 LongKeyMap<Integer> reads =
-                    current.getReadsForStore(store, false);
-                Collection<_Impl> writes = current.getWritesForStore(store);
-                store.prepareTransaction(current.tid.topTid, singleStore,
-                    readOnly, creates, reads, writes);
+                    topLevelLog.getReadsForStore(store, false);
+                Collection<_Impl> writes = topLevelLog.getWritesForStore(store);
+
+                // We're never using single store and read only optimizations
+                // for now
+                //
+                // TODO: Would be nice to reintroduce single store if we're
+                // staging the last stage and only contacted one store...
+                store.prepareTransaction(topLevelLog.tid.topTid, false,
+                    false, creates, reads, writes);
               } catch (TransactionPrepareFailedException e) {
                 failures.put((RemoteNode<?>) store, e);
               } catch (UnreachableNodeException e) {
@@ -683,7 +583,7 @@ public final class TransactionManager {
     // Check for conflicts and unreachable stores/workers.
     if (!failures.isEmpty()) {
       String logMessage =
-          "Transaction tid=" + current.tid.topTid + ":  prepare failed.";
+          "Transaction tid=" + topLevelLog.tid.topTid + ":  prepare failed.";
 
       for (Map.Entry<RemoteNode<?>, TransactionPrepareFailedException> entry : failures
           .entrySet()) {
@@ -706,36 +606,58 @@ public final class TransactionManager {
       WORKER_TRANSACTION_LOGGER.fine(logMessage);
       HOTOS_LOGGER.fine("Prepare failed.");
 
-      synchronized (current.commitState) {
-        current.commitState.value = PREPARE_FAILED;
-        current.commitState.notifyAll();
+      synchronized (topLevelLog.commitState) {
+        topLevelLog.commitState.value = STAGE_FAILED;
+        topLevelLog.commitState.notifyAll();
       }
 
-      TransactionID tid = current.tid;
+      TransactionID tid = topLevelLog.tid;
 
       TransactionPrepareFailedException e =
           new TransactionPrepareFailedException(failures);
       Logging.log(WORKER_TRANSACTION_LOGGER, Level.INFO,
-          "{0} error committing: prepare failed exception: {1}", current, e);
+          "{0} error committing: prepare failed exception: {1}", topLevelLog, e);
 
       abortTransaction(failures.keySet());
       throw new TransactionRestartingException(tid);
 
     } else {
-      synchronized (current.commitState) {
-        current.commitState.value = PREPARED;
-        current.commitState.notifyAll();
+      synchronized (topLevelLog.commitState) {
+        topLevelLog.commitState.value = RUNNING;
+        topLevelLog.commitState.notifyAll();
       }
     }
   }
+
+  /**
+   * XXX Really gross HACK to make actual transaction commit times visible to
+   * the application. This allows us to measure end-to-end application-level
+   * transaction latency.
+   */
+  public static final ThreadLocal<Long> COMMIT_TIME = new ThreadLocal<>();
+
+  /**
+   * XXX Similarly gross HACK for making transaction commit round trips visible
+   * to the application.
+   */
+  public static final ThreadLocal<Integer> ROUND_TRIPS = new ThreadLocal<>();
+
+  /**
+   * XXX Similarly gross HACK for making the nodes contacted by this client
+   * during commit visible to the application.
+   */
+  public static final ThreadLocal<String[]> CONTACTED_NODES =
+      new ThreadLocal<>();
+
+  private static LocalStore LOCAL_STORE;
 
   /**
    * Sends commit messages to the cohorts in a distributed transaction.
    */
   public void sendCommitMessagesAndCleanUp()
       throws TransactionAtomicityViolationException {
-    sendCommitMessagesAndCleanUp(false, false, current.storesToContact(),
-        current.workersCalled);
+    sendCommitMessagesAndCleanUp(false, false, current.storesToCommit(),
+        current.workersCalledAndStaged);
   }
 
   /**
@@ -746,20 +668,21 @@ public final class TransactionManager {
           throws TransactionAtomicityViolationException {
     synchronized (current.commitState) {
       switch (current.commitState.value) {
-      case UNPREPARED:
-      case PREPARING:
+      case STAGING:
         // This shouldn't happen.
         WORKER_TRANSACTION_LOGGER.log(Level.FINE,
             "Ignoring commit request (transaction state = {0}",
             current.commitState.value);
         return;
-      case PREPARED:
+      // XXX: For now, we're going to assume we didn't have unstaged items at
+      // this point.
+      case RUNNING:
         current.commitState.value = COMMITTING;
         break;
       case COMMITTING:
       case COMMITTED:
         return;
-      case PREPARE_FAILED:
+      case STAGE_FAILED:
       case ABORTING:
       case ABORTED:
         throw new TransactionAtomicityViolationException();

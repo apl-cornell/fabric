@@ -15,14 +15,12 @@ import fabric.common.TransactionID;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.OidKeyHashMap;
-import fabric.common.util.Triple;
 import fabric.common.util.WeakReferenceArrayList;
 import fabric.lang.Object._Impl;
 import fabric.lang.security.ConfPolicy;
 import fabric.lang.security.Label;
 import fabric.lang.security.LabelCache;
 import fabric.lang.security.LabelUtil;
-import fabric.lang.security.Policy;
 import fabric.lang.security.SecurityCache;
 import fabric.worker.FabricSoftRef;
 import fabric.worker.Store;
@@ -83,9 +81,24 @@ public final class Log {
   protected final OidKeyHashMap<ReadMap.Entry> reads;
 
   /**
+   * Maps OIDs to <code>readMap</code> entries for objects read and staged
+   * (locked on the store) in this transaction or completed sub-transactions.
+   * Reads from running or aborted sub-transactions don't count here.
+   */
+  // Proxy objects aren't used for keys here because doing so would result in
+  // calls to hashcode() and equals() on such objects, resulting in fetching the
+  // corresponding Impls from the store.
+  protected final OidKeyHashMap<ReadMap.Entry> stagedReads;
+
+  /**
    * Reads on objects that have been read by an ancestor transaction.
    */
   protected final List<ReadMap.Entry> readsReadByParent;
+
+  /**
+   * Staged reads on objects that have been read by an ancestor transaction.
+   */
+  protected final List<ReadMap.Entry> stagedReadsReadByParent;
 
   /**
    * A collection of all objects created in this transaction or completed
@@ -96,9 +109,22 @@ public final class Log {
   protected final List<_Impl> creates;
 
   /**
+   * A collection of all objects created and staged (locked on the store) in
+   * this transaction or completed sub-transactions. Objects created in running
+   * or aborted sub-transactions don't count here. To keep them from being
+   * pinned, objects on local store are not tracked here.
+   */
+  protected final List<_Impl> stagedCreates;
+
+  /**
    * Tracks objects created on local store. See <code>creates</code>.
    */
   protected final WeakReferenceArrayList<_Impl> localStoreCreates;
+
+  /**
+   * Tracks objects created and staged on local store. See <code>creates</code>.
+   */
+  protected final WeakReferenceArrayList<_Impl> localStoreStagedCreates;
 
   /**
    * A collection of all objects modified in this transaction or completed
@@ -109,16 +135,37 @@ public final class Log {
   protected final List<_Impl> writes;
 
   /**
+   * A collection of all objects modified and staged (locked on the store) in
+   * this transaction or completed sub-transactions. Objects modified in running
+   * or aborted sub-transactions don't count here. To keep them from being
+   * pinned, objects on local store are not tracked here.
+   */
+  protected final List<_Impl> stagedWrites;
+
+  /**
    * Tracks objects on local store that have been modified. See
    * <code>writes</code>.
    */
   protected final WeakReferenceArrayList<_Impl> localStoreWrites;
 
   /**
+   * Tracks objects on local store that have been modified and staged (locked
+   * on the store). See <code>writes</code>.
+   */
+  protected final WeakReferenceArrayList<_Impl> localStoreStagedWrites;
+
+  /**
    * The set of workers called by this transaction and completed
    * sub-transactions.
    */
   public final List<RemoteWorker> workersCalled;
+
+  /**
+   * The set of workers called by this transaction and completed
+   * sub-transactions that have already been staged (the remote worker's
+   * reads/writes/creates have been staged).
+   */
+  public final List<RemoteWorker> workersCalledAndStaged;
 
   /**
    * Indicates the state of commit for the top-level transaction.
@@ -128,23 +175,18 @@ public final class Log {
   public static class CommitState {
     public static enum Values {
       /**
-       * Signifies a transaction before it has been prepared or aborted.
+       * Signifies a transaction before it has been committed or aborted.
        */
-      UNPREPARED,
+      RUNNING,
       /**
        * Signifies a transaction that is currently being prepared.
        */
-      PREPARING,
+      STAGING,
       /**
-       * Signifies a transaction that has successfully prepared, but has not yet
-       * been committed.
+       * Signifies a transaction that has failed to prepare a stage, but has not
+       * yet been rolled back.
        */
-      PREPARED,
-      /**
-       * Signifies a transaction that has failed to prepare, but has not yet
-       * been rolled back.
-       */
-      PREPARE_FAILED,
+      STAGE_FAILED,
       /**
        * Signifies a transaction that is currently being committed.
        */
@@ -163,7 +205,8 @@ public final class Log {
       ABORTED
     }
 
-    public Values value = Values.UNPREPARED;
+    public Values value = Values.RUNNING;
+    public ConfPolicy stagedTo = null;
   }
 
   public final AbstractSecurityCache securityCache;
@@ -205,12 +248,19 @@ public final class Log {
     this.thread = Thread.currentThread();
     this.retrySignal = parent == null ? null : parent.retrySignal;
     this.reads = new OidKeyHashMap<>();
+    this.stagedReads = new OidKeyHashMap<>();
     this.readsReadByParent = new ArrayList<>();
+    this.stagedReadsReadByParent = new ArrayList<>();
     this.creates = new ArrayList<>();
+    this.stagedCreates = new ArrayList<>();
     this.localStoreCreates = new WeakReferenceArrayList<>();
+    this.localStoreStagedCreates = new WeakReferenceArrayList<>();
     this.writes = new ArrayList<>();
+    this.stagedWrites = new ArrayList<>();
     this.localStoreWrites = new WeakReferenceArrayList<>();
+    this.localStoreStagedWrites = new WeakReferenceArrayList<>();
     this.workersCalled = new ArrayList<>();
+    this.workersCalledAndStaged = new ArrayList<>();
     this.startTime = System.currentTimeMillis();
     this.waitsFor = new HashSet<>();
 
@@ -274,14 +324,17 @@ public final class Log {
    *         modifies objects on remote stores.
    */
   public boolean isReadOnly() {
-    return writes.isEmpty() && creates.isEmpty() && workersCalled.isEmpty();
+    return writes.isEmpty() && stagedWrites.isEmpty()
+        && creates.isEmpty() && stagedCreates.isEmpty()
+        && workersCalled.isEmpty() && workersCalledAndStaged.isEmpty();
   }
 
   /**
-   * Returns a set of stores affected by this transaction. This is the set of
-   * stores to contact when preparing and committing a transaction.
+   * Returns a set of stores affected by this transaction which are not already
+   * staged. This is the set of stores to contact when preparing the current
+   * stage of the transaction.
    */
-  Set<Store> storesToContact() {
+  Set<Store> storesToStage() {
     Set<Store> result = new HashSet<>();
 
     result.addAll(reads.storeSet());
@@ -295,6 +348,39 @@ public final class Log {
     }
 
     if (!localStoreWrites.isEmpty() || !localStoreCreates.isEmpty()) {
+      result.add(Worker.getWorker().getLocalStore());
+    }
+
+    return result;
+  }
+
+  /**
+   * Returns a set of stores to send commit messages to.
+   */
+  Set<Store> storesToCommit() {
+    Set<Store> result = new HashSet<>();
+
+    result.addAll(reads.storeSet());
+    result.addAll(stagedReads.storeSet());
+
+    for (_Impl obj : writes) {
+      if (obj.$isOwned) result.add(obj.$getStore());
+    }
+
+    for (_Impl obj : stagedWrites) {
+      if (obj.$isOwned) result.add(obj.$getStore());
+    }
+
+    for (_Impl obj : creates) {
+      if (obj.$isOwned) result.add(obj.$getStore());
+    }
+
+    for (_Impl obj : stagedCreates) {
+      if (obj.$isOwned) result.add(obj.$getStore());
+    }
+
+    if (!localStoreWrites.isEmpty() || !localStoreCreates.isEmpty() ||
+        !localStoreStagedWrites.isEmpty() || !localStoreStagedCreates.isEmpty()) {
       result.add(Worker.getWorker().getLocalStore());
     }
 
@@ -316,7 +402,7 @@ public final class Log {
 
   /**
    * Returns a map from onums to version numbers of objects read at the given
-   * store. Reads on created objects are never included.
+   * store. Reads on created and staged objects are never included.
    *
    * @param includeModified
    *          whether to include reads on modified objects.
@@ -364,7 +450,7 @@ public final class Log {
 
   /**
    * Returns a collection of objects modified at the given store. Writes on
-   * created objects are not included.
+   * created and staged objects are not included.
    */
   Collection<_Impl> getWritesForStore(Store store) {
     // This should be a Set of _Impl, but we have a map indexed by OID to
@@ -392,7 +478,8 @@ public final class Log {
   }
 
   /**
-   * Returns a collection of objects created at the given store.
+   * Returns a collection of objects created at the given store which are not
+   * staged.
    */
   Collection<_Impl> getCreatesForStore(Store store) {
     // This should be a Set of _Impl, but to avoid calling methods on the
@@ -442,6 +529,8 @@ public final class Log {
   /**
    * Updates logs and data structures in <code>_Impl</code>s to abort this
    * transaction. All locks held by this transaction are released.
+   *
+   * Only abort back to end of last stage.
    */
   void abort() {
     // Release read locks.
@@ -493,6 +582,108 @@ public final class Log {
           if (retrySignal.equals(tid)) retrySignal = null;
         }
       }
+    }
+  }
+
+  /**
+   * Stores have been successfully contacted and locked for previously unstaged
+   * values.  Move things over to their staged counterparts.
+   */
+  void stage() {
+    if (parent != null) {
+      // Merge reads and share read locks.
+      for (LongKeyMap<ReadMap.Entry> submap : reads) {
+        for (ReadMap.Entry entry : submap.values()) {
+          synchronized (entry) {
+            // Copy lock to parent, but don't release the current log's lock.
+            parent.transferReadLock(this, entry);
+            entry.addLock(this);
+          }
+        }
+      }
+
+      // Merge writes.
+      List<_Impl> parentWrites = parent.writes;
+      for (_Impl obj : writes) {
+        synchronized (parentWrites) {
+          parentWrites.add(obj);
+        }
+      }
+
+      WeakReferenceArrayList<_Impl> parentLocalStoreWrites =
+          parent.localStoreWrites;
+      for (_Impl obj : localStoreWrites) {
+        synchronized (parentLocalStoreWrites) {
+          parentLocalStoreWrites.add(obj);
+        }
+      }
+
+      // Merge creates and transfer write locks.
+      List<_Impl> parentCreates = parent.creates;
+      synchronized (parentCreates) {
+        for (_Impl obj : creates) {
+          parentCreates.add(obj);
+        }
+      }
+
+      WeakReferenceArrayList<_Impl> parentLocalStoreCreates =
+          parent.localStoreCreates;
+      synchronized (parentLocalStoreCreates) {
+        for (_Impl obj : localStoreCreates) {
+          parentLocalStoreCreates.add(obj);
+        }
+      }
+
+      // Merge the set of workers that have been called.
+      synchronized (parent.workersCalled) {
+        for (RemoteWorker worker : workersCalled) {
+          if (!parent.workersCalled.contains(worker))
+            parent.workersCalled.add(worker);
+        }
+      }
+
+      // Merge the writer map.
+      synchronized (parent.writerMap) {
+        parent.writerMap.putAll(writerMap);
+      }
+
+      // Now stage the parent.
+      parent.stage();
+    } else {
+      TransactionManager.getInstance().sendStagePrepareMessages(this);
+    }
+
+    // We got to this point, so this means we can move things over from unstaged
+    // to staged.
+    
+    // Move reads over.
+    for (LongKeyMap<ReadMap.Entry> submap : reads) {
+      for (ReadMap.Entry entry : submap.values()) {
+        stagedReads.put(entry.getStore(), entry.getRef().onum, entry);
+      }
+    }
+    reads.clear();
+
+    // Move parent reads over.  Parent already moved these around in their log.
+    stagedReadsReadByParent.addAll(readsReadByParent);
+    readsReadByParent.clear();
+
+    // Move writes over
+    stagedWrites.addAll(writes);
+    writes.clear();
+
+    // Move local store writes over
+    for (_Impl obj : localStoreWrites) {
+      localStoreStagedWrites.add(obj);
+    }
+
+    // Move creates over
+    stagedCreates.addAll(creates);
+    creates.clear();
+
+    // Move local store creates over
+    for (_Impl obj : localStoreCreates) {
+      localStoreStagedCreates.add(obj);
     }
   }
 
