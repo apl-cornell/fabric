@@ -134,8 +134,8 @@ public interface Principal extends fabric.lang.Object {
           LabelUtil._Impl.writerPolicy(store, thisProxy, thisProxy);
       Label thisIntegLabel = LabelUtil._Impl.toLabel(store, bottomConf, integ);
 
-      this.set$$updateLabel(thisIntegLabel);
-      this.set$$accessPolicy(bottomConf);
+      $updateLabel = thisIntegLabel;
+      $accessPolicy = bottomConf;
 
       return thisProxy;
     }

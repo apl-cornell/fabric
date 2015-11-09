@@ -431,7 +431,7 @@ public interface Object {
 
     protected Label $updateLabel;
 
-    protected ConfPolicy $accessPolicy;
+    public ConfPolicy $accessPolicy;
 
     public int $version;
 
@@ -557,11 +557,13 @@ public interface Object {
     @Override
     public Object $initLabels() {
       // Update label is public, untrusted.
-      set$$updateLabel(Worker.getWorker().getLocalStore().getEmptyLabel());
+      //set$$updateLabel(Worker.getWorker().getLocalStore().getEmptyLabel());
+      $updateLabel = Worker.getWorker().getLocalStore().getEmptyLabel();
 
       // Access policy is public.
-      set$$accessPolicy(
-          Worker.getWorker().getLocalStore().getBottomConfidPolicy());
+      //set$$accessPolicy(
+          //Worker.getWorker().getLocalStore().getBottomConfidPolicy());
+      $accessPolicy = Worker.getWorker().getLocalStore().getBottomConfidPolicy();
 
       return $getProxy();
     }
