@@ -5,35 +5,13 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import polyglot.ast.NodeFactory;
-import polyglot.ast.TypeNode;
-import polyglot.frontend.CyclicDependencyException;
-import polyglot.frontend.JLScheduler;
-import polyglot.frontend.Job;
-import polyglot.frontend.OutputPass;
-import polyglot.frontend.Pass;
-import polyglot.frontend.Scheduler;
-import polyglot.frontend.goals.CodeGenerated;
-import polyglot.frontend.goals.Goal;
-import polyglot.frontend.goals.Serialized;
-import polyglot.frontend.goals.VisitorGoal;
-import polyglot.main.Report;
-import polyglot.main.Version;
-import polyglot.types.TypeSystem;
-import polyglot.util.ErrorQueue;
-import polyglot.util.InternalCompilerError;
-import polyglot.util.Position;
-import polyglot.visit.ContextVisitor;
-import polyglot.visit.ExpressionFlattener;
-import polyglot.visit.InnerClassRemover;
-import polyglot.visit.LocalClassRemover;
-import polyglot.visit.LoopNormalizer;
 import codebases.frontend.CBScheduler;
 import codebases.frontend.CBTypeExists;
 import codebases.frontend.CodebaseImportsInitialized;
 import codebases.types.CodebaseTypeSystem;
 import codebases.visit.CBTypeBuilder;
 import codebases.visit.CodebaseTranslator;
+
 import fabil.ExtensionInfo;
 import fabil.FabILOptions;
 import fabil.Topics;
@@ -45,6 +23,7 @@ import fabil.visit.AtomicMethodRewriter;
 import fabil.visit.AtomicRewriter;
 import fabil.visit.ClassHashGenerator;
 import fabil.visit.ClassReferencesCollector;
+import fabil.visit.FinalRewriter;
 import fabil.visit.InlineableWrapper;
 import fabil.visit.JavaSkeletonCreator;
 import fabil.visit.LabelAssigner;
@@ -62,12 +41,49 @@ import fabil.visit.StoreGetterRewriter;
 import fabil.visit.ThreadRewriter;
 import fabil.visit.UpdatedVariableFinder;
 
+import polyglot.ast.NodeFactory;
+import polyglot.ast.TypeNode;
+import polyglot.frontend.CyclicDependencyException;
+import polyglot.frontend.JLScheduler;
+import polyglot.frontend.Job;
+import polyglot.frontend.OutputPass;
+import polyglot.frontend.Pass;
+import polyglot.frontend.Scheduler;
+import polyglot.frontend.goals.CodeGenerated;
+import polyglot.frontend.goals.Goal;
+import polyglot.frontend.goals.Serialized;
+import polyglot.frontend.goals.TypeChecked;
+import polyglot.frontend.goals.VisitorGoal;
+import polyglot.main.Report;
+import polyglot.main.Version;
+import polyglot.types.TypeSystem;
+import polyglot.util.ErrorQueue;
+import polyglot.util.InternalCompilerError;
+import polyglot.util.Position;
+import polyglot.visit.ContextVisitor;
+import polyglot.visit.ExpressionFlattener;
+import polyglot.visit.InnerClassRemover;
+import polyglot.visit.LocalClassRemover;
+import polyglot.visit.LoopNormalizer;
+
 public class FabILScheduler extends JLScheduler implements CBScheduler {
   protected ExtensionInfo extInfo;
 
   public FabILScheduler(ExtensionInfo extInfo) {
     super(extInfo);
     this.extInfo = extInfo;
+  }
+
+  public Goal finalToImmutable(Job job) {
+    Goal g = internGoal(new VisitorGoal(job, new FinalRewriter()){
+          @Override
+          public Collection<Goal> prerequisiteGoals(Scheduler s) {
+            List<Goal> l = new ArrayList<>();
+            l.add(Parsed(job));
+            return l;
+          }
+        });
+    return g;
   }
 
   @Override
@@ -607,4 +623,11 @@ public class FabILScheduler extends JLScheduler implements CBScheduler {
     return CBTypeExists.create(this, ns, name);
   }
 
+  @Override
+  public Goal TypeChecked(Job job) {
+    TypeSystem ts = extInfo.typeSystem();
+    NodeFactory nf = extInfo.nodeFactory();
+    Goal g = FabILTypeChecked.create(this, job, ts, nf);
+    return g;
+  }
 }
