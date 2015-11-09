@@ -6,11 +6,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
+import fabil.ExtensionInfo;
+import fabil.ast.FabILNodeFactory;
+import fabil.extension.FabILExt;
+import fabil.types.FabILTypeSystem;
+import fabil.visit.ReadWriteChecker.State;
+
 import polyglot.ast.Block;
 import polyglot.ast.CodeDecl;
 import polyglot.ast.ConstructorCall;
 import polyglot.ast.Local;
-import polyglot.ast.MethodDecl;
 import polyglot.ast.Node;
 import polyglot.ast.Receiver;
 import polyglot.ast.Stmt;
@@ -21,12 +26,6 @@ import polyglot.types.Flags;
 import polyglot.types.LocalInstance;
 import polyglot.types.Type;
 import polyglot.visit.NodeVisitor;
-
-import fabil.ExtensionInfo;
-import fabil.ast.FabILNodeFactory;
-import fabil.extension.FabILExt;
-import fabil.types.FabILTypeSystem;
-import fabil.visit.ReadWriteChecker.State;
 
 /**
  * Rewrites FabIL classes into classes that implement
@@ -40,16 +39,11 @@ public class ProxyRewriter extends NodeVisitor {
 
   private final Stack<Map<LocalInstance, String>> shadowStack = new Stack<>();
   private boolean inConstructorCall;
-  private boolean inInitLabels = false;
 
   public ProxyRewriter(ExtensionInfo extInfo) {
     this.qq = new QQ(extInfo);
     this.nf = extInfo.nodeFactory();
     this.ts = extInfo.typeSystem();
-  }
-
-  public boolean rewriteAssignments() {
-    return !inInitLabels;
   }
 
   @Override
@@ -60,11 +54,6 @@ public class ProxyRewriter extends NodeVisitor {
 
     if (n instanceof ConstructorCall) {
       inConstructorCall = true;
-    }
-
-    if (n instanceof MethodDecl &&
-        ((MethodDecl) n).name().equals("$initLabels")) {
-      inInitLabels = true;
     }
 
     return super.enter(parent, n);
@@ -86,11 +75,6 @@ public class ProxyRewriter extends NodeVisitor {
 
     if (n instanceof ConstructorCall) {
       inConstructorCall = false;
-    }
-
-    if (n instanceof MethodDecl &&
-        ((MethodDecl) n).name().equals("$initLabels")) {
-      inInitLabels = false;
     }
 
     return n;
