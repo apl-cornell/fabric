@@ -6,9 +6,9 @@ import java.util.Set;
  * This code is mostly copied from Jif.
  */
 public final class TransitiveProof extends ActsForProof {
-  private /*final*/ ActsForProof actorToP;
-  private /*final*/ ActsForProof pToGranter;
-  private /*final*/ Principal p;
+  private final ActsForProof actorToP;
+  private final ActsForProof pToGranter;
+  private final Principal p;
 
   public TransitiveProof fabric$lang$security$TransitiveProof$(ActsForProof actorToP, Principal p,
       ActsForProof pToGranter) {
@@ -17,7 +17,7 @@ public final class TransitiveProof extends ActsForProof {
     this.p = p;
     fabric$lang$security$ActsForProof$(actorToP != null ? actorToP.getActor() : null,
         pToGranter != null ? pToGranter.getGranter() : null);
-	return this;
+    return this;
   }
 
   ActsForProof getActorToP() {

@@ -2904,7 +2904,7 @@ public class Arrays
      * The array we are viewing.
      * @serial the array
      */
-    private /*final*/ Object[] a;
+    private final Object[] a;
 
     /**
      * Construct a list view of the array.
@@ -2913,12 +2913,12 @@ public class Arrays
      */
     ArrayList fabric$util$Arrays$ArrayList$(Object[] a)
     {
-	  fabric$util$AbstractList$();
       // We have to explicitly check.
       if (a == null)
         throw new NullPointerException();
       this.a = a;
-	  return this;
+      fabric$util$AbstractList$();
+      return this;
     }
 
     /**

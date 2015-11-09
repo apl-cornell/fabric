@@ -1,10 +1,16 @@
 package fabric.translate;
 
+import fabil.types.FabILFlags;
+
+import fabric.ast.FabricFieldDecl;
+
 import jif.translate.FieldDeclToJavaExt_c;
 import jif.translate.JifToJavaRewriter;
+
+import polyglot.ast.FieldDecl;
+import polyglot.ast.Node;
 import polyglot.types.SemanticException;
 import polyglot.visit.NodeVisitor;
-import fabric.ast.FabricFieldDecl;
 
 public class FieldDeclToFabilExt_c extends FieldDeclToJavaExt_c {
   @Override
@@ -19,4 +25,12 @@ public class FieldDeclToFabilExt_c extends FieldDeclToJavaExt_c {
     } else return rw;
   }
 
+  @Override
+  public Node toJava(JifToJavaRewriter rw) throws SemanticException {
+    FieldDecl n = (FieldDecl) node();
+    FieldDecl fd = (FieldDecl) super.toJava(rw);
+    if (n.flags().isFinal() && n instanceof FabricFieldDecl)
+      fd = fd.flags(fd.flags().set(FabILFlags.IMMUTABLE));
+    return fd;
+  }
 }

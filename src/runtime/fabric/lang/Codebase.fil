@@ -16,8 +16,8 @@ import fabric.util.Iterator;
  * 
  * @author Lucas Waye <lrw48@cornell.edu>
  */
-public class Codebase {	
-	
+public class Codebase {
+
   /** All of the classes in the codebase **/
   private Map/*String, FClass*/ classes;
   
@@ -44,15 +44,15 @@ public class Codebase {
   
   public Codebase fabric$lang$Codebase$(Label updateLabel, ConfPolicy accessPolicy) {
     return fabric$lang$Codebase$(updateLabel, accessPolicy, (Map) new HashMap().fabric$util$HashMap$());
-  }	
-	
+  }
+
   public Codebase fabric$lang$Codebase$(Label updateLabel, ConfPolicy accessPolicy,
       Map/* String, FClass */classes) {
+    this.$updateLabel = updateLabel;
+    this.$accessPolicy = accessPolicy;
     fabric$lang$Object$();
     this.classes = (Map) new HashMap().fabric$util$HashMap$(classes);
     codebases = (Map) new HashMap().fabric$util$HashMap$();
-    this.$updateLabel = updateLabel;
-    this.$accessPolicy = accessPolicy;
     return this;
   }
   

@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import fabil.types.FabILFlags;
+import fabil.visit.ProxyRewriter;
+
 import polyglot.ast.ClassDecl;
 import polyglot.ast.ClassMember;
 import polyglot.ast.Expr;
@@ -12,7 +15,6 @@ import polyglot.ast.Stmt;
 import polyglot.ast.TypeNode;
 import polyglot.qq.QQ;
 import polyglot.types.Flags;
-import fabil.visit.ProxyRewriter;
 
 public class FieldDeclExt_c extends ClassMemberExt_c {
 
@@ -36,7 +38,7 @@ public class FieldDeclExt_c extends ClassMemberExt_c {
     if (doStatic != flags.isStatic()) return super.implMember(pr, parent);
 
     // Make the field non-static and non-final.
-    flags = flags.clearStatic().clearFinal();
+    flags = flags.clearStatic().clearFinal().clear(FabILFlags.IMMUTABLE);
 
     // Clear any initializers on static fields. They get moved into the $init()
     // method.
@@ -56,7 +58,7 @@ public class FieldDeclExt_c extends ClassMemberExt_c {
     Expr init = fieldDecl.init();
     Flags flags = fieldDecl.flags();
 
-    if (init == null || !flags.isStatic() || flags.isFinal())
+    if (init == null || !flags.isStatic() || flags.isFinal() || flags.contains(FabILFlags.IMMUTABLE))
       return super.staticImplInitMember(pr);
 
     QQ qq = pr.qq();
@@ -97,7 +99,7 @@ public class FieldDeclExt_c extends ClassMemberExt_c {
     // Make the method public, non-final, non-static and non-transient.
     flags =
         ProxyRewriter.toPublic(flags).clearTransient().clearFinal()
-            .clearStatic();
+            .clearStatic().clear(FabILFlags.IMMUTABLE);
 
     // Figure out the call target for the delegates.
     String target =
@@ -109,7 +111,7 @@ public class FieldDeclExt_c extends ClassMemberExt_c {
     result.add(qq.parseMember(flags + " %T get$" + name + "() {" + "return "
         + target + ".get$" + name + "(); }", type));
 
-    if (!fieldDecl.flags().isFinal()) {
+    if (!fieldDecl.flags().isFinal() && !fieldDecl.flags().contains(FabILFlags.IMMUTABLE)) {
       result.add(qq.parseMember(flags + " %T set$" + name + "(%T val) {"
           + "return " + target + ".set$" + name + "(val); }", type, type));
 
@@ -155,9 +157,9 @@ public class FieldDeclExt_c extends ClassMemberExt_c {
 
     TypeNode typeNode = fieldDecl.type();
     String name = fieldDecl.name();
-    boolean finalField = flags.isFinal();
+    boolean finalField = flags.contains(FabILFlags.IMMUTABLE) || flags.isFinal();
 
-    flags = flags.clearTransient().clearFinal().clearStatic().clearPrivate();
+    flags = flags.clearTransient().clearFinal().clearStatic().clearPrivate().clear(FabILFlags.IMMUTABLE);
     List<ClassMember> members = new ArrayList<>(4);
     String regRead =
         finalField ? ""

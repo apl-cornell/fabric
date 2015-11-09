@@ -3,7 +3,7 @@
 # Counts and categorizes lines of code in the Fabric project that have changed
 # between two different branches/tags.
 
-import collections, os, re, shutil, subprocess, sys
+import collections, copy, os, re, shutil, subprocess, sys
 
 ###
 # Configuration
@@ -16,7 +16,7 @@ normalizeCode = 'tools/code-normalizer/bin/normalize-code'
 ignoreFilesRE = re.compile("""^.*/(
                               bin/[^/]*  # bin scripts
                             | etc/.*     # etc directories
-                            | \.cvsignore
+                            | \.gitignore
                             | README
                             | build.xml
                             | package-info.java
@@ -25,7 +25,7 @@ ignoreFilesRE = re.compile("""^.*/(
 
 # Regexp for examples to include. All other examples will be ignored.
 includeExamplesRE = re.compile("""^\./fab-(after|before)/examples/
-      (auction|friendmap|imageapp)
+      (auction|friendmap)
     /src/.*$""", re.X)
 
 # Regexp for source files.
@@ -50,8 +50,7 @@ categories['Worker'] = ['src/system/fabric/worker']
 
 # Stuff in src/arrays and src/runtime.
 categories['Fabric runtime support (FabIL)'] = \
-  [ 'src/runtime/fabric/applet',
-    'src/runtime/fabric/lang',
+  [ 'src/runtime/fabric/lang',
     'src/runtime/fabric/runtime',
     'src/arrays' ]
 categories['FabIL port of GNU classpath'] = ['src/runtime/fabric/util']
@@ -68,7 +67,8 @@ categories['FabIL signatures for fabric.*'] = ['src/signatures/fabil/fabric']
 categories['SIF (Java)'] = ['src/lib/sif/src']
 categories['SIF (Fabric)'] = ['src/lib/sif/fab-src']
 categories['SIF (signatures)'] = ['src/lib/sif/sig-src']
-categories['Transient collections'] = ['src/lib/transient']
+categories['Collections'] = ['src/lib/collections']
+categories['FabFX'] = ['src/lib/fabfx']
 
 # Other.
 categories['Bootstrap support'] = ['src/bootstrap']
@@ -77,7 +77,12 @@ categories['Bootstrap support'] = ['src/bootstrap']
 categories['Auction example (FabIL)'] = ['examples/auction/src/fabil']
 categories['Auction example (Fabric)'] = ['examples/auction/src/fabric']
 
-categories['FriendMap example (Jif)'] = ['examples/friendmap/src/jif']
+categories['FriendMap support classes (FabIL)'] = \
+  ['examples/friendmap/src/fabil']
+categories['FriendMap support classes (Fabric)'] = \
+  ['examples/friendmap/src/fabric/scripts']
+categories['FriendMap support classes (Fabric signatures)'] = \
+  ['examples/friendmap/src/fabric/signatures']
 categories['FriendMap runtime extensions (Fabric)'] = \
   ['examples/friendmap/src/fabric/trusted']
 categories['FriendMap v1 example (Fabric)'] = \
@@ -87,9 +92,6 @@ categories['FriendMap v1 example (Fabric)'] = \
 categories['FriendMap v2 example (Fabric)'] = \
   [ 'examples/friendmap/src/fabric/friendmap_2.0_codebase',
     'examples/friendmap/src/fabric/snapp_2.0_codebase']
-
-categories['ImageApp example (Jif)'] = ['examples/imageapp/src/jif']
-categories['ImageApp example (Fabric)'] = ['examples/imageapp/src/fabric']
 
 ########################################################################
 
@@ -160,36 +162,69 @@ os.mkdir('tmp')
 try: os.chdir('tmp')
 except OSError: sys.exit('error changing to FABRIC/tmp directory')
 
-# Export fab-before/src.
-print('Exporting Fabric BRANCH1 "%s" from svn...' % branch1Name)
-if subprocess.call(['svn', 'export',
-      'https://forge.cornell.edu/svn/repos/fabric/%s/src' % branch1Name,
-      'fab-before/src'], stdout=open(os.devnull, 'w')) != 0:
+# Clone Fabric.
+print('Cloning Fabric from git...')
+if subprocess.call(['git', 'clone', '..', 'fabric'],
+    stdout=open(os.devnull, 'w')) != 0:
   sys.exit(1)
 
-# Export fab-before/examples.
-if subprocess.call(['svn', 'export',
-      'https://forge.cornell.edu/svn/repos/fabric/%s/examples' % branch1Name,
-      'fab-before/examples'], stdout=open(os.devnull, 'w')) != 0:
+# Change into FABRIC/tmp/fabric.
+try: os.chdir('fabric')
+except OSError: sys.exit('error changing to FABRIC/tmp/fabric directory')
+
+# Check out BRANCH1.
+print('Checking out BRANCH1 "%s"...' % branch1Name)
+if subprocess.call(['git', 'pull'],
+    stdout=open(os.devnull, 'w')) != 0:
+  sys.exit(1)
+if subprocess.call(['git', 'checkout', branch1Name],
+    stdout=open(os.devnull, 'w')) != 0:
   sys.exit(1)
 
-# Export fab-before/lib.
-if subprocess.call(['svn', 'export',
-      'https://forge.cornell.edu/svn/repos/fabric/%s/lib' % branch1Name,
-      'fab-before/lib'], stdout=open(os.devnull, 'w')) != 0:
+# Change into FABRIC/tmp.
+try: os.chdir('..')
+except OSError: sys.exit('error changing to FABRIC/tmp directory')
+
+print('Exporting Fabric BRANCH1 "%s"...' % branch1Name)
+os.mkdir('fab-before')
+
+# Export fab-before/{src,examples,lib}.
+if subprocess.call(['rsync', '-SHEPAaX',
+      'fabric/src', 'fabric/examples', 'fabric/lib', 'fab-before/'],
+    stdout=open(os.devnull, 'w')) != 0:
   sys.exit(1)
 
-# Export fab-after/src.
-print('Exporting Fabric BRANCH2 "%s" from svn...' % branch2Name)
-if subprocess.call(['svn', 'export',
-      'https://forge.cornell.edu/svn/repos/fabric/%s/src' % branch2Name,
-      'fab-after/src'], stdout=open(os.devnull, 'w')) != 0:
+# Change into FABRIC/tmp/fabric.
+try: os.chdir('fabric')
+except OSError: sys.exit('error changing to FABRIC/tmp/fabric directory')
+
+# Check out BRANCH2.
+print('Checking out BRANCH2 "%s"...' % branch2Name)
+if subprocess.call(['git', 'checkout', branch2Name],
+    stdout=open(os.devnull, 'w')) != 0:
   sys.exit(1)
 
-# Export fab-after/examples.
-if subprocess.call(['svn', 'export',
-      'https://forge.cornell.edu/svn/repos/fabric/%s/examples' % branch2Name,
-      'fab-after/examples'], stdout=open(os.devnull, 'w')) != 0:
+# Change into FABRIC/tmp.
+try: os.chdir('..')
+except OSError: sys.exit('error changing to FABRIC/tmp directory')
+
+print('Exporting Fabric BRANCH2 "%s"...' % branch2Name)
+os.mkdir('fab-after')
+
+# Export fab-after/{src,examples}.
+if subprocess.call(['rsync', '-SHEPAaX',
+      'fabric/src', 'fabric/examples', 'fab-after/'],
+    stdout=open(os.devnull, 'w')) != 0:
+  sys.exit(1)
+
+# Clean up Fabric.
+shutil.rmtree('fabric')
+
+# Clone Jif.
+print('Cloning Jif from git...')
+if subprocess.call(['git', 'clone',
+      'https://apl.cs.cornell.edu/git/jif'],
+    stdout=open(os.devnull, 'w')) != 0:
   sys.exit(1)
 
 # For jif-before, use fab-before/lib/jif, if it exists.
@@ -197,39 +232,78 @@ if os.path.isdir('fab-before/lib/jif/src'):
   print('Using fab-before/lib/jif for jif-before')
   shutil.move('fab-before/lib/jif/src', 'jif-before')
 else:
+  # Check out BRANCH1.
+  print('Checking out Jif BRANCH1 (%s")...' % date1)
+  os.chdir('jif')
+  if subprocess.call(['git', 'checkout', date1],
+      stdout=open(os.devnull, 'w')) != 0:
+    sys.exit(1)
+  os.chdir('..')
+
   # Export jif-before.
-  print('Exporting Jif BRANCH1 ("%s") from cvs...' % date1)
-  if subprocess.call(['cvs', '-d', ':ext:gforge.cis.cornell.edu:/cvsroot/jif',
-        'export', '-D', date1, '-d', 'jif-before', 'jif/src'],
-        stdout=open(os.devnull, 'w')) != 0:
+  print('Exporting Jif BRANCH1 ("%s")...' % date1)
+  if subprocess.call(['rsync', '-SHEPAaX', 'jif/src/', 'jif-before/'],
+      stdout=open(os.devnull, 'w')) != 0:
     sys.exit(1)
 
 # Remove fab-before/lib.
 try: shutil.rmtree('fab-before/lib')
 except OSError: pass
 
-# Export jif-after.
-print('Exporting Jif BRANCH2 ("%s") from cvs...' % date2)
-if subprocess.call(['cvs', '-d', ':ext:gforge.cis.cornell.edu:/cvsroot/jif',
-      'export', '-D', date2, '-d', 'jif-after', 'jif/src'],
-      stdout=open(os.devnull, 'w')) != 0:
+# Check out BRANCH2.
+os.chdir('jif')
+print('Checking out Jif BRANCH2 ("%s")...' % date2)
+if subprocess.call(['git', 'checkout', date2],
+    stdout=open(os.devnull, 'w')) != 0:
   sys.exit(1)
+os.chdir('..')
+
+# Export jif-after.
+print('Exporting Jif BRANCH2 ("%s")...' % date2)
+if subprocess.call(['rsync', '-SHEPAaX', 'jif/src/', 'jif-after/'],
+    stdout=open(os.devnull, 'w')) != 0:
+  sys.exit(1)
+
+# Clean up Jif.
+shutil.rmtree('jif')
+
+# Clone Polyglot.
+print('Cloning Polyglot from git...')
+if subprocess.call(['git', 'clone',
+      'https://github.com/polyglot-compiler/polyglot'],
+    stdout=open(os.devnull, 'w')) != 0:
+  sys.exit(1)
+
+# Check out BRANCH1.
+os.chdir('polyglot')
+print('Checking out Polyglot BRANCH1 ("%s")...' % date1)
+if subprocess.call(['git', 'checkout', date1],
+    stdout=open(os.devnull, 'w')) != 0:
+  sys.exit(1)
+os.chdir('..')
 
 # Export polyglot-before.
-print('Exporting Polyglot BRANCH1 ("%s") from cvs...' % date1)
-if subprocess.call(['cvs',
-      '-d', ':ext:gforge.cis.cornell.edu:/cvsroot/polyglot',
-      'export', '-D', date1, '-d', 'polyglot-before', 'polyglot/src'],
-      stdout=open(os.devnull, 'w')) != 0:
+print('Exporting Polyglot BRANCH1 ("%s")...' % date1)
+if subprocess.call(['rsync', '-SHEPAaX', 'polyglot/src/', 'polyglot-before/'],
+    stdout=open(os.devnull, 'w')) != 0:
   sys.exit(1)
 
-# Export polyglot-after.
-print('Exporting Polyglot BRANCH2 ("%s") from cvs...' % date2)
-if subprocess.call(['cvs',
-      '-d', ':ext:gforge.cis.cornell.edu:/cvsroot/polyglot',
-      'export', '-D', date2, '-d', 'polyglot-after', 'polyglot/src'],
-      stdout=open(os.devnull, 'w')) != 0:
+# Check out BRANCH2.
+os.chdir('polyglot')
+print('Checking out Polyglot BRANCH2 ("%s")...' % date2)
+if subprocess.call(['git', 'checkout', date2],
+    stdout=open(os.devnull, 'w')) != 0:
   sys.exit(1)
+os.chdir('..')
+
+# Export polyglot-after.
+print('Exporting Polyglot BRANCH2 ("%s")...' % date2)
+if subprocess.call(['rsync', '-SHEPAaX', 'polyglot/src/', 'polyglot-after/'],
+    stdout=open(os.devnull, 'w')) != 0:
+  sys.exit(1)
+
+# Clean up Polyglot.
+shutil.rmtree('polyglot')
 
 # Construct the command to normalize sources.  While we do this, delete all
 # non-source files, and make sure the categories are exhaustive.
@@ -280,7 +354,7 @@ regexps = [
 ]
 fieldLen = [3, 3, 3, 3, 3]
 for base, cats in {
-    'fab': categories,
+    'fab': copy.copy(categories),
     'jif':
       {'Jif compiler': ['.']},
     'polyglot':

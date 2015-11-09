@@ -650,4 +650,14 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
           "Must call initResolvers() first! platform");
     return platformResolver;
   }
+
+  @Override
+  public Flags legalFieldFlags() {
+    return super.legalFieldFlags().set(FabILFlags.IMMUTABLE);
+  }
+
+  @Override
+  public Flags legalInterfaceFieldFlags() {
+    return super.legalInterfaceFieldFlags().set(FabILFlags.IMMUTABLE);
+  }
 }

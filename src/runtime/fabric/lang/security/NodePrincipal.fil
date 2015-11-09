@@ -12,7 +12,7 @@ public final class NodePrincipal extends AbstractPrincipal {
 
   public NodePrincipal fabric$lang$security$NodePrincipal$(String name) {
     fabric$lang$security$AbstractPrincipal$(name);
-	return this;
+    return this;
   }
 
   public Object $initLabels() {

@@ -59,7 +59,7 @@ public abstract class AbstractList extends AbstractCollection implements List
   protected AbstractList fabric$util$AbstractList$()
   {
     fabric$util$AbstractCollection$();
-	return this;
+    return this;
   }
 
   /**
@@ -274,8 +274,8 @@ while (i.hasNext())
   private class AnonymousIterator implements Iterator {
 
 
-    /*final*/ int initSize;
-    /*final*/ int initModCount;
+    final int initSize;
+    final int initModCount;
     private int pos;
     private int size;
     private int last;
@@ -284,11 +284,12 @@ while (i.hasNext())
     AnonymousIterator fabric$util$AbstractList$AnonymousIterator$() {
       this.initSize = size();
       this.initModCount = modCount;
+      fabric$lang$Object$();
       this.pos = 0;
       this.size = initSize;
       this.last = -1;
       this.knownMod = initModCount;
-	  return this;
+      return this;
     }
 
     // This will get inlined, since it is private.
@@ -551,7 +552,7 @@ while (i.hasNext())
     /**
      * 
      */
-    private /*final*/ int index;
+    private final int index;
 
     private int knownMod = modCount;
 
@@ -566,8 +567,8 @@ while (i.hasNext())
      */
     private AbstractListIterator fabric$util$AbstractList$AbstractListIterator$(int index) {
       this.index = index;
-      position = index;
       fabric$lang$Object$();
+      position = index;
       return this;
     }
 
@@ -764,7 +765,7 @@ while (i.hasNext())
   {
     public SubList fabric$util$AbstractList$SubList$() {
       fabric$util$AbstractList$();
-	  return this;
+      return this;
     }
 
     /**
@@ -774,9 +775,9 @@ while (i.hasNext())
       /**
        * 
        */
-      private /*final*/ int index;
+      private final int index;
 
-      private /*final*/ ListIterator i;
+      private final ListIterator i;
 
       private int position;
 
@@ -784,11 +785,11 @@ while (i.hasNext())
        * @param index
        */
       private SubListIterator fabric$util$AbstractList$SubListIterator$(int index) {
-        fabric$lang$Object$();
         this.index = index;
         i = backingList.listIterator(LOCAL_STORE, index + offset);
+        fabric$lang$Object$();
         position = index;
-		return this;
+        return this;
       }
 
       /**
@@ -947,9 +948,9 @@ while (i.hasNext())
 
     // Package visible, for use by iterator.
     /** The original list. */
-    /*final*/ AbstractList backingList;
+    final AbstractList backingList;
     /** The index of the first element of the sublist. */
-    /*final*/ int offset;
+    final int offset;
     /** The size of the sublist. */
     int size;
 
@@ -962,10 +963,10 @@ while (i.hasNext())
      */
     SubList fabric$util$AbstractList$SubList$(AbstractList backing, int fromIndex, int toIndex)
     {
-      fabric$lang$Object$();
       backingList = backing;
-      modCount = backing.modCount;
       offset = fromIndex;
+      fabric$lang$Object$();
+      modCount = backing.modCount;
       size = toIndex - fromIndex;
 	  return this;
     }

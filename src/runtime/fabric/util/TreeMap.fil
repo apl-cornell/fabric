@@ -69,7 +69,7 @@ public class TreeMap extends AbstractMap
    * to be black. This object must never be used as a key in a TreeMap, or
    * it will break bounds checking of a SubMap.
    */
-  /*final*/ Node nil;
+  final Node nil;
 
   /**
    * The root node of this TreeMap.
@@ -98,7 +98,7 @@ public class TreeMap extends AbstractMap
    * Package visible for use by nested classes.
    * @serial the comparator ordering this tree, or null
    */
-  /*final*/ Comparator comparator;
+  final Comparator comparator;
 
   /**
    * Class to represent an entry in the tree. Holds a single key-value pair,
@@ -168,13 +168,13 @@ public class TreeMap extends AbstractMap
    */
   public TreeMap fabric$util$TreeMap$(Comparator c)
   {
-    fabric$util$AbstractMap$();
     // Nil is self-referential, so we must initialize it after creation.
     nil = (Node) new Node().fabric$util$TreeMap$Node$(null, null, BLACK);
     nil.parent = nil;
     nil.left = nil;
     nil.right = nil;
     comparator = c;
+    fabric$util$AbstractMap$();
     fabricateTree(0);
 	return this;
   }
@@ -1305,7 +1305,7 @@ public class TreeMap extends AbstractMap
      * The type of this Iterator: {@link #KEYS}, {@link #VALUES},
      * or {@link #ENTRIES}.
      */
-    private /*final*/ int type;
+    private final int type;
     /** The number of modifications to the backing Map that we know about. */
     private int knownMod;
     /** The last Entry returned by a next() call. */
@@ -1316,7 +1316,7 @@ public class TreeMap extends AbstractMap
      * The last node visible to this iterator. This is used when iterating
      * on a SubMap.
      */
-    private /*final*/ Node max;
+    private final Node max;
 
     /**
      * Construct a new TreeIterator with the supplied type.
@@ -1324,12 +1324,12 @@ public class TreeMap extends AbstractMap
      */
     TreeIterator fabric$util$TreeMap$TreeIterator$(int type)
     {
+      this.type = type;
+      this.max = nil;
       fabric$lang$Object$();
       // FIXME gcj cannot handle this. Bug java/4695
       // this(type, firstNode(), nil);
-      this.type = type;
       this.next = firstNode();
-      this.max = nil;
       this.knownMod = modCount;
 	  return this;
     }
@@ -1344,10 +1344,10 @@ public class TreeMap extends AbstractMap
      */
     TreeIterator fabric$util$TreeMap$TreeIterator$(int type, Node first, Node max)
     {
-      fabric$lang$Object$();
       this.type = type;
-      this.next = first;
       this.max = max;
+      fabric$lang$Object$();
+      this.next = first;
       this.knownMod = modCount;
 	  return this;
     }
@@ -1426,13 +1426,13 @@ public class TreeMap extends AbstractMap
      * The lower range of this view, inclusive, or nil for unbounded.
      * Package visible for use by nested classes.
      */
-    /*final*/ Object minKey;
+    final Object minKey;
 
     /**
      * The upper range of this view, exclusive, or nil for unbounded.
      * Package visible for use by nested classes.
      */
-    /*final*/ Object maxKey;
+    final Object maxKey;
 
     /**
      * The cache for {@link #entrySet()}.
@@ -1450,11 +1450,11 @@ public class TreeMap extends AbstractMap
      */
     SubMap fabric$util$TreeMap$SubMap$(Object minKey, Object maxKey)
     {
-      fabric$lang$Object$();
       if (minKey != nil && maxKey != nil && compare(minKey, maxKey) > 0)
         throw new IllegalArgumentException("fromKey > toKey");
       this.minKey = minKey;
       this.maxKey = maxKey;
+      fabric$lang$Object$();
 	  return this;
     }
 

@@ -8,13 +8,13 @@ import java.util.Set;
  * This code is mostly copied from Jif.
  */
 public final class FromDisjunctProof extends ActsForProof {
-  private /*final*/ Map disjunctProofs; // map from disjuncts to proofs to Granter
+  private final Map disjunctProofs; // map from disjuncts to proofs to Granter
 
   FromDisjunctProof fabric$lang$security$FromDisjunctProof$(DisjunctivePrincipal actor, Principal granter,
       Map disjunctProofs) {
     fabric$lang$security$ActsForProof$(actor, granter);
     this.disjunctProofs = disjunctProofs;
-	return this;
+    return this;
   }
 
   Map getDisjunctProofs() {

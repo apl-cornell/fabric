@@ -85,7 +85,7 @@ public class LinkedHashMap extends HashMap
    *
    * @serial true for access order traversal
    */
-  /*final*/ boolean accessOrder;
+  final boolean accessOrder;
 
   /**
    * Class to represent an entry in the hash table. Holds a single key-value
@@ -197,8 +197,8 @@ public class LinkedHashMap extends HashMap
    */
   public LinkedHashMap fabric$util$LinkedHashMap$()
   {
-    fabric$util$HashMap$();
     accessOrder = false;
+    fabric$util$HashMap$();
     return this;
   }
 
@@ -218,8 +218,8 @@ public class LinkedHashMap extends HashMap
    */
   public LinkedHashMap fabric$util$LinkedHashMap$(Map m)
   {
-    fabric$util$HashMap$(m);
     accessOrder = false;
+    fabric$util$HashMap$(m);
     return this;
   }
 
@@ -232,8 +232,8 @@ public class LinkedHashMap extends HashMap
    */
   public LinkedHashMap fabric$util$LinkedHashMap$(int initialCapacity)
   {
-    fabric$util$HashMap$(initialCapacity);
     accessOrder = false;
+    fabric$util$HashMap$(initialCapacity);
     return this;
   }
 
@@ -248,8 +248,8 @@ public class LinkedHashMap extends HashMap
    */
   public LinkedHashMap fabric$util$LinkedHashMap$(int initialCapacity, float loadFactor)
   {
-    fabric$util$HashMap$(initialCapacity, loadFactor);
     accessOrder = false;
+    fabric$util$HashMap$(initialCapacity, loadFactor);
     return this;
   }
 
@@ -266,8 +266,8 @@ public class LinkedHashMap extends HashMap
   public LinkedHashMap fabric$util$LinkedHashMap$(int initialCapacity, float loadFactor,
                        boolean accessOrder)
   {
-    fabric$util$HashMap$(initialCapacity, loadFactor);
     this.accessOrder = accessOrder;
+    fabric$util$HashMap$(initialCapacity, loadFactor);
     return this;
   }
 
@@ -428,11 +428,11 @@ public class LinkedHashMap extends HashMap
     /** The number of known modifications to the backing Map. */
     int knownMod;
     
-    /*final*/ int type;
+    final int type;
     
     LinkedHashIterator fabric$util$LinkedHashMap$LinkedHashIterator$(int type) {
-      fabric$lang$Object$();
       this.type = type;
+      fabric$lang$Object$();
       this.current = root;
       this.knownMod = modCount;
       return this;

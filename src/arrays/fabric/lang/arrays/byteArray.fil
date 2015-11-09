@@ -31,8 +31,8 @@ public final class byteArray {
    * Analogous to a block in a file system. Also directly determines the fanout.
    * We always need it to be a power of 2.
    */
-  private /*final*/ int CHUNK_SIZE;
-  private /*final*/ int CHUNK_SIZE_LOG2;
+  private final int CHUNK_SIZE;
+  private final int CHUNK_SIZE_LOG2;
 
   /**
    * The height of the tree of little arrays. Depends on the chunk size

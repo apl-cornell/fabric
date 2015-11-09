@@ -274,15 +274,15 @@ public abstract class AbstractMap implements Map
 	class KeysIterator implements Iterator
 	{
 	  KeysIterator fabric$util$AbstractMap$KeysIterator$(fabric.worker.Store store) {
-	    fabric$lang$Object$();
 	    map_iterator = entrySet().iterator(store);
+	    fabric$lang$Object$();
 	    return this;
 	  }
 
 	  /**
 	   * The iterator returned by <code>entrySet()</code>.
 	   */
-	  private /*final*/ Iterator map_iterator;
+	  private final Iterator map_iterator;
 
 	  /**
 	   * Returns true if a call to <code>next()</code> will
@@ -534,15 +534,15 @@ public abstract class AbstractMap implements Map
 	class ValuesIterator implements Iterator
 	{
 	  ValuesIterator fabric$util$AbstractMap$ValuesIterator$(fabric.worker.Store store) {
-	    fabric$lang$Object$();
 	    map_iterator = entrySet().iterator(store);
+	    fabric$lang$Object$();
 	    return this;
 	  }
 
 	  /**
 	   * The iterator returned by <code>entrySet()</code>.
 	   */
-	  private /*final*/ Iterator map_iterator;
+	  private final Iterator map_iterator;
 
 	  /**
 	   * Returns true if a call to <code>next()</call> will

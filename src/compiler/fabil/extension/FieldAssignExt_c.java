@@ -3,6 +3,7 @@ package fabil.extension;
 import java.util.ArrayList;
 import java.util.List;
 
+import fabil.types.FabILFlags;
 import fabil.visit.ProxyRewriter;
 import fabil.visit.ReadWriteChecker.State;
 import polyglot.ast.Assign;
@@ -44,7 +45,7 @@ public class FieldAssignExt_c extends ExprExt_c {
     // If we're assigning to a final field, we must be in a constructor or an
     // initializer. Keep it as an assignment, since no setters will be
     // generated.
-    if (flags.isFinal() || !pr.rewriteAssignments()) {
+    if (flags.isFinal() || flags.contains(FabILFlags.IMMUTABLE) || !pr.rewriteAssignments) {
       // We need to rewrite the left-hand side if translating a static field.
       if (!flags.isStatic()) return assign.right(rhs);
 

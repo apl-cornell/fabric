@@ -9,7 +9,7 @@ import fabric.util.*;
  * Jif.
  */
 public final class DisjunctivePrincipal extends Principal {
-  /*final*/ Set disjuncts;
+  final Set disjuncts;
   private Integer hashCode = null;
 
   DisjunctivePrincipal fabric$lang$security$DisjunctivePrincipal$(Set disjuncts) {
