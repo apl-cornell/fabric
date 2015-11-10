@@ -45,7 +45,7 @@ public class FabricArrayAccessExt extends JifArrayAccessExt {
     FabricTypeSystem ts = (FabricTypeSystem) lc.typeSystem();
     FabricContext A = (FabricContext) lc.context();
 
-    ConfPolicy accessPol = ts.labelOfType(type.base()).confProjection();
+    ConfPolicy accessPol = ((FabricReferenceType) type).accessPolicy();
     Label accessLabel = ts.toLabel(accessPol);
     Label objLabel = getPathMap(array).NV();
     AccessPath storeap = ts.storeAccessPathFor(array, A);
