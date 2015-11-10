@@ -609,6 +609,9 @@ extend primitive_array_type ::=
     |   labeled_primitive_type:a NATIVE CONST LBRACK RBRACK:y
             {: RESULT = new Array(parser, parser.pos(a,y), a, 
                                   /* isConst */ true,  /* isNative */ true).toType(); :}
+    |   labeled_primitive_type:a LBRACK AT label:al RBRACK:y
+            {: RESULT = new Array(parser, parser.pos(a,y), a, al,
+                                  /* isConst */ false, /* isNative */ false).toType(); :}
     ;
     
 extend reftype_or_expr ::=

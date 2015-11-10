@@ -1,16 +1,20 @@
 package fabric.parse;
 
 import jif.ast.ConstArrayTypeNode;
+import jif.ast.LabelNode;
 import jif.ast.LabeledTypeNode;
 import jif.parse.Grm;
+
 import polyglot.ast.TypeNode;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
+
 import fabric.ast.FabricNodeFactory;
 
 public class Array extends jif.parse.Array {
 
   protected final boolean isNative;
+  protected final LabelNode accessLabel;
 
   public Array(Grm parser, Position pos, TypeNode prefix) {
     this(parser, pos, prefix, false);
@@ -22,8 +26,22 @@ public class Array extends jif.parse.Array {
 
   public Array(Grm parser, Position pos, TypeNode prefix, boolean isConst,
       boolean isNative) {
+    this(parser, pos, prefix, null, isConst);
+  }
+
+  public Array(Grm parser, Position pos, TypeNode prefix, LabelNode accessLabel) {
+    this(parser, pos, prefix, accessLabel, false);
+  }
+
+  public Array(Grm parser, Position pos, TypeNode prefix, LabelNode accessLabel, boolean isConst) {
+    this(parser, pos, prefix, accessLabel, isConst, false);
+  }
+
+  public Array(Grm parser, Position pos, TypeNode prefix, LabelNode accessLabel, boolean isConst,
+      boolean isNative) {
     super(parser, pos, prefix, isConst);
     this.isNative = isNative;
+    this.accessLabel = accessLabel;
   }
 
   public boolean isNative() {
@@ -50,7 +68,7 @@ public class Array extends jif.parse.Array {
       throw new InternalCompilerError("Const fabric arrays not yet supported"
           + base.position());
     if (isConst && !isFabric) return nf.ConstArrayTypeNode(pos, prefix);
-    if (!isConst && isFabric) return nf.FabricArrayTypeNode(pos, prefix);
+    if (!isConst && isFabric) return nf.FabricArrayTypeNode(pos, prefix, accessLabel);
     if (!isConst && !isFabric) return nf.ArrayTypeNode(pos, prefix);
 
     throw new InternalCompilerError("This line should be unreachable");

@@ -50,6 +50,8 @@ public interface FabricNodeFactory extends JifNodeFactory, CodebaseNodeFactory {
 
   FabricArrayTypeNode FabricArrayTypeNode(Position pos, TypeNode type);
 
+  FabricArrayTypeNode FabricArrayTypeNode(Position pos, TypeNode type, LabelNode accessLabel);
+
   FabricArrayInit FabricArrayInit(Position pos, List<Expr> elements);
 
   FabricArrayInit FabricArrayInit(Position pos, Expr label, Expr loc,

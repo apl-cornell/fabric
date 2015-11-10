@@ -870,20 +870,34 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
 
   @Override
   public FabricArrayType fabricArrayOf(Position pos, Type t) {
-    return new FabricArrayType_c(this, pos, t,
-    /* isConst */false, /* isNonConst */true,
-    /* isNative */false);
+    return fabricArrayOf(pos, t, null);
   }
 
   @Override
   public FabricArrayType fabricArrayOf(Position pos, Type t, int dims) {
-    if (dims == 1)
-      return fabricArrayOf(pos, t);
-    else return fabricArrayOf(pos, fabricArrayOf(pos, t, dims - 1));
+    return fabricArrayOf(pos, t, dims, null);
   }
 
   @Override
   protected FabricArrayType arrayType(Position pos, Type type) {
+    return arrayType(pos, type, null);
+  }
+
+  @Override
+  public FabricArrayType fabricArrayOf(Position pos, Type t, ConfPolicy ap) {
+    return new FabricArrayType_c(this, pos, t,
+    /* isConst */false, /* isNonConst */true,
+    /* isNative */false, ap);
+  }
+
+  @Override
+  public FabricArrayType fabricArrayOf(Position pos, Type t, int dims, ConfPolicy ap) {
+    if (dims == 1)
+      return fabricArrayOf(pos, t, ap);
+    else return fabricArrayOf(pos, fabricArrayOf(pos, t, dims - 1, ap));
+  }
+
+  protected FabricArrayType arrayType(Position pos, Type type, ConfPolicy ap) {
     if (!isLabeled(type)) {
       type =
           labeledType(pos, type, defaultSignature().defaultArrayBaseLabel(type));
@@ -891,7 +905,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
 
     return new FabricArrayType_c(this, pos, type,
     /* isConst */false, /* isNonConst */true,
-    /* isNative */true);
+    /* isNative */true, ap);
   }
 
   @Override

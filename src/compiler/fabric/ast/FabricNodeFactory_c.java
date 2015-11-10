@@ -191,7 +191,12 @@ FabricNodeFactory {
 
   @Override
   public FabricArrayTypeNode FabricArrayTypeNode(Position pos, TypeNode type) {
-    FabricArrayTypeNode result = new FabricArrayTypeNode_c(pos, type);
+    return FabricArrayTypeNode(pos, type, null);
+  }
+
+  @Override
+  public FabricArrayTypeNode FabricArrayTypeNode(Position pos, TypeNode type, LabelNode accessLabel) {
+    FabricArrayTypeNode result = new FabricArrayTypeNode_c(pos, type, accessLabel);
     result = ext(result, fabricExtFactory().extFabricArrayTypeNode());
     result = del(result, fabricDelFactory().delFabricArrayTypeNode());
     return result;

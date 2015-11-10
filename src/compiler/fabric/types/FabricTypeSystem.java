@@ -99,6 +99,10 @@ public interface FabricTypeSystem extends JifTypeSystem, CodebaseTypeSystem {
 
   FabricArrayType fabricArrayOf(Position pos, Type t, int dims);
 
+  FabricArrayType fabricArrayOf(Position pos, Type t, ConfPolicy ap);
+
+  FabricArrayType fabricArrayOf(Position pos, Type t, int dims, ConfPolicy ap);
+
   /** Returns the join of L1 and L2 as per the trust ordering */
   Label tjoin(Label L1, Label L2);
 

@@ -20,9 +20,10 @@ FabricArrayType {
   protected boolean isNative;
 
   public FabricArrayType_c(FabricTypeSystem ts, Position pos, Type base,
-      boolean isConst, boolean isNonConst, boolean isNative) {
+      boolean isConst, boolean isNonConst, boolean isNative, ConfPolicy accessPolicy) {
     super(ts, pos, base, isConst, isNonConst);
     this.isNative = isNative;
+    this.accessPolicy = accessPolicy;
   }
 
   @Override
