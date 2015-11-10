@@ -11,6 +11,7 @@ import polyglot.ast.NodeFactory;
 import polyglot.ast.TypeNode;
 import polyglot.util.Position;
 import polyglot.visit.AmbiguityRemover;
+import polyglot.visit.NodeVisitor;
 import polyglot.visit.TypeBuilder;
 
 //XXX Should be replaced with extension
@@ -18,7 +19,7 @@ import polyglot.visit.TypeBuilder;
 public class FabricArrayTypeNode_c extends ArrayTypeNode_c implements
 FabricArrayTypeNode {
 
-  private LabelNode accessPolicy;
+  protected LabelNode accessPolicy;
 
   @Deprecated
   public FabricArrayTypeNode_c(Position pos, TypeNode base) {
@@ -54,6 +55,36 @@ FabricArrayTypeNode {
   }
 
   @Override
+  public LabelNode accessPolicy() {
+    return accessPolicy;
+  }
+
+  @Override
+  public FabricArrayTypeNode accessPolicy(LabelNode accessPolicy) {
+    return accessPolicy(this, accessPolicy);
+  }
+
+  protected <N extends FabricArrayTypeNode_c> N accessPolicy(N n, LabelNode accessPolicy) {
+    if (n.accessPolicy == accessPolicy) return n;
+    n = copyIfNeeded(n);
+    n.accessPolicy = accessPolicy;
+    return n;
+  }
+
+  protected <N extends FabricArrayTypeNode_c> N reconstruct(N n, TypeNode base, LabelNode accessPolicy) {
+    n = base(n, base);
+    n = accessPolicy(n, accessPolicy);
+    return n;
+  }
+
+  @Override
+  public Node visitChildren(NodeVisitor v) {
+      TypeNode base = visitChild(this.base, v);
+      LabelNode accessPolicy = visitChild(this.accessPolicy, v);
+      return reconstruct(this, base, accessPolicy);
+  }
+
+  @Override
   public Node disambiguate(AmbiguityRemover ar) {
     FabricTypeSystem ts = (FabricTypeSystem) ar.typeSystem();
     NodeFactory nf = ar.nodeFactory();
@@ -62,7 +93,12 @@ FabricArrayTypeNode {
 
     if (!base().type().isCanonical()) return this;
 
+    if (accessPolicy != null && !accessPolicy.isDisambiguated()) return this;
+
+    if (accessPolicy != null && accessPolicy.label() != null)
+      return nf.CanonicalTypeNode(position(),
+          ts.fabricArrayOf(position(), base().type(), accessPolicy.label().confProjection()));
     return nf.CanonicalTypeNode(position(),
-        ts.fabricArrayOf(position(), base().type()));
+        ts.fabricArrayOf(position(), base().type(), null));
   }
 }
