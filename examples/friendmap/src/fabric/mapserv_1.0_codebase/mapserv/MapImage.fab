@@ -32,7 +32,7 @@ where
   protected final int  {L}@{A} height;
 
   /** packed data. non-null. data.length = this.width * this.height. */
-  protected final char {L}[]{L}@{A} data;
+  protected final char {L}[@{A}]{L}@{A} data;
 
   //////////////////////////////////////////////////////////////////////////////
   // public constructor                                                       //
