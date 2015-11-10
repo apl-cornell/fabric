@@ -168,6 +168,19 @@ public final class Log {
   public final List<RemoteWorker> workersCalledAndStaged;
 
   /**
+   * The set of workers that have called me that I don't think have staged yet.
+   *
+   * In theory this should only have 1 item, but I'm not 100% sure about that.
+   * -Tom
+   */
+  public final List<RemoteWorker> callingWorkers;
+
+  /**
+   * The set of workers that have called me that I've already told to stage.
+   */
+  public final List<RemoteWorker> stagedCallingWorkers;
+
+  /**
    * Indicates the state of commit for the top-level transaction.
    */
   public final CommitState commitState;
@@ -261,6 +274,8 @@ public final class Log {
     this.localStoreStagedWrites = new WeakReferenceArrayList<>();
     this.workersCalled = new ArrayList<>();
     this.workersCalledAndStaged = new ArrayList<>();
+    this.callingWorkers = new ArrayList<>();
+    this.stagedCallingWorkers = new ArrayList<>();
     this.startTime = System.currentTimeMillis();
     this.waitsFor = new HashSet<>();
 
@@ -642,6 +657,14 @@ public final class Log {
         }
       }
 
+      // Merge the set of workers that have called this worker.
+      synchronized (parent.callingWorkers) {
+        for (RemoteWorker worker : callingWorkers) {
+          if (!parent.callingWorkers.contains(worker))
+            parent.callingWorkers.add(worker);
+        }
+      }
+
       // Merge the writer map.
       synchronized (parent.writerMap) {
         parent.writerMap.putAll(writerMap);
@@ -685,6 +708,14 @@ public final class Log {
     for (_Impl obj : localStoreCreates) {
       localStoreStagedCreates.add(obj);
     }
+
+    // Move over callers
+    workersCalledAndStaged.addAll(workersCalled);
+    workersCalled.clear();
+
+    // Move over callees
+    stagedCallingWorkers.addAll(callingWorkers);
+    callingWorkers.clear();
   }
 
   /**
@@ -702,13 +733,16 @@ public final class Log {
     }
 
     // Merge reads and transfer read locks.
-    for (LongKeyMap<ReadMap.Entry> submap : reads) {
+    //
+    // If they're staged, we've already shared the lock up, but I don't think
+    // transferring again to be sure hurts...
+    for (LongKeyMap<ReadMap.Entry> submap : SysUtil.chain(reads, stagedReads)) {
       for (ReadMap.Entry entry : submap.values()) {
         parent.transferReadLock(this, entry);
       }
     }
 
-    for (ReadMap.Entry entry : readsReadByParent) {
+    for (ReadMap.Entry entry : SysUtil.chain(readsReadByParent, stagedReadsReadByParent)) {
       entry.releaseLock(this);
     }
 
@@ -727,6 +761,32 @@ public final class Log {
           synchronized (parentWrites) {
             parentWrites.add(obj);
           }
+        }
+        obj.$writer = null;
+        obj.$writeLockHolder = parent;
+
+        // Signal any readers/writers.
+        if (obj.$numWaiting > 0) obj.notifyAll();
+      }
+    }
+
+    // Merge writes and transfer write locks.
+    for (_Impl obj : stagedWrites) {
+      synchronized (obj) {
+        if (obj.$history.$writeLockHolder == parent) {
+          // The parent transaction already wrote to the object. Discard one
+          // layer of history. In doing so, we also end up releasing this
+          // transaction's write lock.
+          obj.$history = obj.$history.$history;
+          /*
+        } else {
+          // The parent transaction didn't write to the object. Add write to
+          // parent and transfer our write lock.
+          // This should have happened already in staging.
+          synchronized (parentStagedWrites) {
+            parentStagedWrites.add(obj);
+          }
+          */
         }
         obj.$writer = null;
         obj.$writeLockHolder = parent;
@@ -760,6 +820,31 @@ public final class Log {
       }
     }
 
+    for (_Impl obj : localStoreStagedWrites) {
+      synchronized (obj) {
+        if (obj.$history.$writeLockHolder == parent) {
+          // The parent transaction already wrote to the object. Discard one
+          // layer of history. In doing so, we also end up releasing this
+          // transaction's write lock.
+          obj.$history = obj.$history.$history;
+          /*
+        } else {
+          // The parent transaction didn't write to the object. Add write to
+          // parent and transfer our write lock.
+          // This should have already happened during staging.
+          synchronized (parentLocalStoreWrites) {
+            parentLocalStoreStagedWrites.add(obj);
+          }
+          */
+        }
+        obj.$writer = null;
+        obj.$writeLockHolder = parent;
+
+        // Signal any readers/writers.
+        if (obj.$numWaiting > 0) obj.notifyAll();
+      }
+    }
+
     // Merge creates and transfer write locks.
     List<_Impl> parentCreates = parent.creates;
     synchronized (parentCreates) {
@@ -767,6 +852,11 @@ public final class Log {
         parentCreates.add(obj);
         obj.$writeLockHolder = parent;
       }
+    }
+
+    // Transfer write locks for staged creates
+    for (_Impl obj : stagedCreates) {
+      obj.$writeLockHolder = parent;
     }
 
     WeakReferenceArrayList<_Impl> parentLocalStoreCreates =
@@ -778,11 +868,30 @@ public final class Log {
       }
     }
 
+    // Transfer write locks for local staged creates
+    for (_Impl obj : localStoreStagedCreates) {
+      obj.$writeLockHolder = parent;
+    }
+
     // Merge the set of workers that have been called.
+    //
+    // Staged workers called and calling workers would have been handled during
+    // staging.
     synchronized (parent.workersCalled) {
       for (RemoteWorker worker : workersCalled) {
         if (!parent.workersCalled.contains(worker))
           parent.workersCalled.add(worker);
+      }
+    }
+
+    // Merge the set of workers that have been called.
+    //
+    // Staged workers called and calling workers would have been handled during
+    // staging.
+    synchronized (parent.callingWorkers) {
+      for (RemoteWorker worker : callingWorkers) {
+        if (!parent.callingWorkers.contains(worker))
+          parent.callingWorkers.add(worker);
       }
     }
 

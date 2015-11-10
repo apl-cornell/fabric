@@ -68,6 +68,8 @@ public class RemoteCallManager extends MessageToWorkerHandler {
     if (tid != null) {
       Log log = TransactionRegistry.getOrCreateInnermostLog(tid);
       tm.associateAndSyncLog(log, tid);
+      if (!log.callingWorkers.contains(client.node))
+        log.callingWorkers.add(client.node);
 
       // Merge in the writer map we got.
       tm.getWriterMap().putAll(remoteCallMessage.writerMap);

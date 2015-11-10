@@ -458,7 +458,8 @@ public final class TransactionManager {
    */
   public void sendStagePrepareMessages(final Log topLevelLog) {
     Set<Store> stores = topLevelLog.storesToStage();
-    List<RemoteWorker> workers = topLevelLog.workersCalled;
+    Set<RemoteWorker> workers = new HashSet<>(topLevelLog.workersCalled);
+    workers.addAll(topLevelLog.callingWorkers);
 
     final Map<RemoteNode<?>, TransactionPrepareFailedException> failures =
         Collections.synchronizedMap(
