@@ -846,10 +846,12 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
       ConjunctivePrincipal cp = (ConjunctivePrincipal) p;
       for (Principal pp : cp.conjuncts())
         if (!accessPolicyValid(pp)) return false;
+      return true;
     } else if (p instanceof DisjunctivePrincipal) {
       DisjunctivePrincipal cp = (DisjunctivePrincipal) p;
       for (Principal pp : cp.disjuncts())
         if (!accessPolicyValid(pp)) return false;
+      return true;
     } else if (p instanceof ParamPrincipal || p instanceof ExternalPrincipal
         || p instanceof BottomPrincipal || p instanceof TopPrincipal) {
       return true;
