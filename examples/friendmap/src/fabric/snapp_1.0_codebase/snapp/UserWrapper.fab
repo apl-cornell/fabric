@@ -20,29 +20,33 @@ extends Meet
 {
   public final principal                    {this}@{A} userOwner;
   public final principal                    {this}@{A} userNetwork;
-  public final User[userOwner, userNetwork] {this}@{A} user;
+  public final principal                    {this}@{A} userAccessors;
+  public final User[userOwner, userNetwork, userAccessors] {this}@{A} user;
 
   public
   UserWrapper
   {          // side effects:
     {this} ⊓ // fields are set
     {A}      // object is accessed
-  }
+  }@{A}
   (
     final Store     store,
     final principal userOwner,
     final principal userNetwork,
-    final User[userOwner, userNetwork] user
-  )
+    final principal userAccessors,
+    final User[userOwner, userNetwork, userAccessors] user
+  )@{A}
   where
     // code and params affect fields and accesses
-    {*provider; store; userOwner; userNetwork; user} <= {this ⊓ A},
+    {*provider; store; userOwner; userNetwork; userAccessors; user} <= {this ⊓ A},
 
     // establish dynamic invariant
-    store actsfor (userOwner, userNetwork)
+    store actsfor (userOwner, userNetwork),
+    (userOwner, userNetwork) actsfor userAccessors
   {
     this.userOwner   = userOwner;
     this.userNetwork = userNetwork;
+    this.userAccessors = userAccessors;
     this.user        = user;
 
     super(store, userOwner, userNetwork);

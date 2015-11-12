@@ -48,7 +48,7 @@ where
   }
 
   public
-  User[owner,this] {*provider; _→; *←this; owner; this} // result is affected by code, fields, and args
+  User[owner,this,accessors] {*provider; _→; *←this,owner} // result is affected by code, fields, and args
   createUser
   {                      // side effects:
     {_→; *←this,owner} ⊓ // new user object fields are updated
@@ -56,18 +56,20 @@ where
   }
   (
     final String    name,
-    final principal owner
+    final principal owner,
+    final principal accessors
   )
-  : {*provider}
+  : {*provider}@{*->this}
   where
     // TODO: store ≽ {_→; *←this,owner}@{*→this}
     {_→; *←this,owner} <= {*→store$}, {*←store$} <= {_→; *←this,owner}, {*→this} <= {*→store$},
+    (owner,this) actsfor accessors,
 
     // code and args affect resulting User object
-    {*provider; name; owner} <= {_→; *←this,owner}
+    {*provider; name; owner; accessors} <= {_→; *←this,owner}
   {
     if (this.store$ actsfor this)
-      return new User[owner,this]@store$(name, store$);
+      return new User[owner,this,accessors]@store$(name, store$);
     else
       throw new AssertionFailedError("73 Snapp.store should act for Snapp");
   }

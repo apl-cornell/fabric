@@ -15,37 +15,40 @@ import snapp.Location;
  * Access label: {*→network}
  * Update label: {_→; *←network,owner}
  */
-public class User[principal owner, principal network]
+public class User[principal owner, principal network, principal accessors]
 where
   // trusted classes are trusted
   util.Group.provider         <= {*←},
   util.GroupIterator.provider <= {*←},
 
+  // the owner and network both can access the data
+  (owner,network) actsfor accessors,
+
   // code can flow to fields and field accesses
   provider <= {_→; *←(network,owner)},
-  provider <= {*→network},
+  provider <= {*→accessors},
   provider <= Location.provider,
   Location.provider <= provider
 {
   /** The principal (network,owner) */
-  public final principal   {_→; *←(network,owner)}@{*→network} p;
+  public final principal   {_→; *←(network,owner)}@{*→accessors} p;
 
   /** The label {p←;p→locationInfo} */
-  public final label       {_→; *←(network,owner)}@{*→network} locationLabel; // Cannot be set as initializer due to jif bug.
+  public final label       {_→; *←(network,owner)}@{*→accessors} locationLabel; // Cannot be set as initializer due to jif bug.
 
   /** The user's friends. non-null.
-   *  Contains UserWrapper[*→network] objects */
-  public final Group[p,{*→network}]
-                           {_→; *←(network,owner)}@{*→network} friends;
+   *  Contains UserWrapper[*→accessors] objects */
+  public final Group[p,{*→accessors}]
+                           {_→; *←(network,owner)}@{*→accessors} friends;
 
   /** The group containing anyone who can see the user's location. non-null.
    *  Contains UserWrapper[*→network] objects */
-  public final Group[p,{*→network}]
-                           {_→; *←(network,owner)}@{*→network} locationInfo;
+  public final Group[p,{*→accessors}]
+                           {_→; *←(network,owner)}@{*→accessors} locationInfo;
 
   /** The user's location, only readable by members of the locationInfo group. */
-  public Location[locationLabel, {*→network}]
-                           {_→; *←(network,owner)}@{*→network} location;
+  public Location[locationLabel, {*→accessors}]
+                           {_→; *←(network,owner)}@{*→accessors} location;
 
 
   /**
@@ -54,12 +57,15 @@ where
   User
   {                           // side effects
     {_→; *←(network,owner)} ⊓ // fields are set
-    {*→network}               // this is read
-  }
+    {*→accessors}             // this is read
+  }@{*->accessors}
   (
     String name,
     Store  store
-  )
+  ):{
+    {_→; *←(network,owner)} ⊓ // fields are set
+    {*→accessors}             // this is read
+  }@{*->accessors}
   where
     // establish invariants
     store actsfor network,
@@ -67,14 +73,14 @@ where
     // fields updates and accesses are affected by arguments.
     {*provider; store; name} <= {_→; *←network,owner}
   {
-    Group[p,{*→network}] friends_;
-    Group[p,{*→network}] locationInfo_;
+    Group[p,{*→accessors}] friends_;
+    Group[p,{*→accessors}] locationInfo_;
     label locationLabel_;
     p = new principal@store(owner,network);
 
     if (p equiv new principal(owner,network)) {
-      friends_       = new Group[p,{*→network}]@store(name + "'s friends");
-      locationInfo_  = new Group[p,{*→network}]@store(name + "'s location viewers");
+      friends_       = new Group[p,{*→accessors}]@store(name + "'s friends");
+      locationInfo_  = new Group[p,{*→accessors}]@store(name + "'s location viewers");
       locationLabel_ = new label {p←;p→locationInfo}@store;
     } else throw new AssertionFailedError("75 (p,q) equiv (p,q)");
 

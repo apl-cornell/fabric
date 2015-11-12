@@ -12,18 +12,20 @@ public class Util {
    *         if data is null TODO: or store is null
    */
   public static native
-  char{*res_label}[] {data;*arg_label}
+  char{*res_label}[@{*res_access}] {data;*arg_label}
   copyArray
   {                      // side effects:
     {*res_label}       ⊓ // contents of result   are updated
     {*arg_label;_←;*→}   // contents of argument are fetched
-  }
+  }@{*arg_access}
   (
-    final char{*arg_label}[] data,
+    final char{*arg_label}[@{*arg_access}] data,
     final label arg_label,
+    final label arg_access,
     final label res_label,
+    final label res_access,
     final Store s
-  )
+  )@{*res_access}
   throws (
     NullPointerException{data}
   )
@@ -35,6 +37,8 @@ public class Util {
 
     // information flows from argument contents to result contents:
     arg_label <= res_label,
+    // information flows from argument contents to result contents:
+    arg_access <= res_access,
     // fetch on data reveals information about the reference to data:
     {data} <= {*arg_label;_←;*→},
     // the output is affected by the reference to the input

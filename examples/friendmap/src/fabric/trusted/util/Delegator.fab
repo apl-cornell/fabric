@@ -28,7 +28,7 @@ public class Delegator extends AbstractPrincipal {
     this // TODO
   }
   (
-    String    {this} name,
+    String    {this} name
   )
   {
     this.owner = store$;

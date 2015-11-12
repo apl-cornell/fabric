@@ -80,7 +80,7 @@ where
   )
   :{groupOwner←}
   throws
-    ArrayIndexOutOfBoundsException;
+    ArrayIndexOutOfBoundsException
   {
     // invariant check
     if (this.members == null)

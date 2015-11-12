@@ -16,6 +16,7 @@ public class MapImage[label L, label A]
 where
   {_←} <= A, // A is a confidentiality label
   L    <= A, // if L is not ⊑ C(A), then no fields can be read.
+  //A <= {L;_<-}, //It should be the case that A == C(L)
 
   Box.provider <= provider, provider <= Box.provider
 {
@@ -52,17 +53,17 @@ where
     {L}              ⊓ // fields are updated
     {*bdry_access}   ⊓ // boundary is read
     {*→s}              // boundary copy is created at s
-  }
+  }@{A}
   (
     final Box[bdry_update,bdry_access] boundary,
-    final label bdry_update, final label bdry_access,
-
+    final label bdry_update,
+    final label bdry_access,
     final int       width,
     final int       height,
-    final char{L}[] data,
+    final char{L}[@{A}] data,
     final Store     s
   )
-  : {*provider;data;width;height;boundary}
+  : {*provider;data;width;height;boundary}@{A}
   throws
   (
     ArrayIndexOutOfBoundsException,
@@ -71,6 +72,7 @@ where
   where
     L <= {*→s}, {*←s} <= L, A <= {*→s},    // TODO: s ≽ L@A
     bdry_update <= bdry_access,            // access labels must bound update labels
+    bdry_access <= A,                      // access of boundary before copying it to this.
 
     {boundary;width;height;data} <= L, // fields are affected by args
     provider                     <= L, // fields are affected by code
@@ -80,7 +82,7 @@ where
     provider   <= bdry_access          // fetch to boundary is affected by code
   {
     this.boundary = (boundary == null) ? null : boundary.copy(L,A,s);
-    this.data     = (data     == null) ? null : Util.copyArray(data, L, L, s);
+    this.data     = (data     == null) ? null : Util.copyArray(data, L, A, L, A, s);
 
     if (boundary == null || data == null)
       throw new NullPointerException("86");
@@ -108,20 +110,21 @@ where
     {*l}  ⊓ // fields of result are updated
     {*→s} ⊓ // objects are created at s
     {A}     // this is accessed
-  }
+  }@{A}
   (
     label l,
     label a,
     Store s
   )
-  : {*provider}
+  : {*provider}@{A;*a}
   where
     l <= {*→s}, {*←s} <= l, a <= {*→s}, // TODO: s ≽ l@a
     l <= a,                             // access labels must bound update labels
 
     {L;*provider;l;a;s} <= l,     // result fields are affected by fields
     {L;*provider;l;a;s} <= {*→s}, // information leaks from fields to object creation.
-    provider            <= A      // code affects access to the boundary 
+    provider            <= A,     // code affects access to the boundary 
+    A                   <= a      // code accesses the copy after the original boundary
   {
     if (boundary == null)
       throw new AssertionFailedError("126 boundary is non-null.");
@@ -142,10 +145,10 @@ where
   {   // side effects:
     A ⊓// fields are accessed
     L  // BUG: access label of arrays is the update label.
-  }
+  }@{A}
   (
     float x, float y
-  )
+  )@{A}
   throws
   (
     ArrayIndexOutOfBoundsException{L;x;y;*provider}
@@ -173,12 +176,12 @@ where
   {     // side effects:
     L ⊓ // fields are updated
     A   // fields are read
-  }
+  }@{A}
   (
     float {L} x, float {L} y,
     char  {L} value
   )
-  :{L}
+  :{L}@{A}
   throws ArrayIndexOutOfBoundsException
   where
     provider <= L // code affects contents
@@ -201,13 +204,13 @@ where
     {*→s}  ⊓ // object is created at s
     {A;_←} ⊓ // fields are read
     {L;_←}   // data is accessed - access label of an array is same as update label
-  }
+  }@{A}
   (
     final label l,
     final label a,
     final Store s
   )
-  : {*provider}
+  : {*provider}@{A;*a}
   where
     // return object invariants
     {_←} <= a, // a must be a confidentiality policy
@@ -218,6 +221,7 @@ where
 
     // information flow within method
     {this;*L;*provider;l;a;s} <= l, // resulting map image fields are affected by fields, args, code
+    A <= a, // fetches of level A have to flow to fetches of level a
     provider                 <= A  // code affects fetches
   {
     try {
@@ -225,7 +229,7 @@ where
       // TODO: solver failing, had to add *l
       return new MapImage[l,a]{*l}@s (boundary, L, A,
                                       width, height,
-                                      Util.copyArray(data, L, l, s),
+                                      Util.copyArray(data, L, A, l, a, s),
                                       s);
 
     } catch (final NullPointerException e) {
@@ -247,10 +251,10 @@ where
   {     // side effects:
     L ⊓ // output is generated
     A   // fields are accessed
-  }
+  }@{A}
   (
-    final PrintStream[L] out
-  )
+    final PrintStream[A] out
+  )@{A}
   throws
   (
     NullPointerException{*provider; out}
@@ -318,7 +322,7 @@ where
     float x,
     float y
   )
-  : {*provider}
+  : {*provider}@{A}
   where     
     provider           <= A  // code affects fetches
   {

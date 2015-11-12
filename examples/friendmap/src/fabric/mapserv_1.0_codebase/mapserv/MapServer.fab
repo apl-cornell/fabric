@@ -63,12 +63,12 @@ where
     {*l}     ⊓ // result is updated
     {*a}     ⊓ // boundary is accessed
     {*→store$}  // map is created
-  }
+  }@{*a}
   (
     label l,
     label a,
     Box[l,a] boundary
-  )
+  )@{*a;*->store$}
   throws
   (
     NullPointerException{*provider;boundary}
@@ -77,6 +77,9 @@ where
     // TODO; store ≽ l@store; map is created at store
     {*←store$} <= l, l <= {*→store$}, {*→store$} <= {*→store$},
     l <= a, // access label for result must bound update label
+    a <= {*l;_<-}, // access label for result must be C(update label)
+    a <= {*->store$}, // access label must flow to this store
+    //{*->store$} <= {*l;_<-}, // boundary must be able to read store
 
     // result taints
     {*provider;*←this;boundary;l} <= l,
@@ -88,7 +91,7 @@ where
 
     if (store$ actsfor this) {
 
-    final char{*l}[]{*l} data = new char[100]/* TODO: @store */;
+    final char{*l}[@{*a}]{*l} data = new char[100]/* TODO: @store */;
     for (int i = 0; i < data.length; i++)
       data[i] = background;
 

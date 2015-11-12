@@ -27,12 +27,12 @@ where
    * Create a new box
    */
   public
-  Box {L} // L because the fields are updated
+  Box {L}@{A} // L because the fields are updated
   (
     float {L} xmin, float {L} ymin,
     float {L} xmax, float {L} ymax
   )
-  : {*provider}
+  : {*provider}@{A}
   where
     provider <= L // code affects fields
   {
@@ -53,7 +53,7 @@ where
     float{A} x,
     float{A} y
   )
-  : {*provider}
+  : {*provider}@{A}
   {
     return xmin < x && x < xmax
         && ymin < y && y < ymax;
@@ -68,11 +68,11 @@ where
   {       // side effects
     {L} ⊓ // fields are updated
     {A}   // fields are accessed
-  }
+  }@{A}
   (
     float {L} x, float {L} y
   )
-  : {*provider}
+  : {*provider}@{A}
   where
     provider <= L  // code affects fields
   {
@@ -93,7 +93,7 @@ where
   (
     float x
   )
-  : {*provider}
+  : {*provider}@{A}
   {
     return (x - xmin) / (xmax - xmin);
   }
@@ -110,7 +110,7 @@ where
   (
     float y
   )
-  : {*provider}
+  : {*provider}@{A}
   {
     return (y - ymin) / (ymax - ymin);
   }
@@ -126,20 +126,21 @@ where
     {*l}  ⊓ // fields of result are updated
     {*→s} ⊓ // object is created at s
     {A}     // fields are read
-  }
+  }@{A}
   (
     label l,
     label a,
     Store s
   )
-  : {*provider}
+  : {*provider}@{A;*a}
   where
     l <= {*→s}, {*←s} <= l, a <= {*→s}, // TODO: s ≽ l@a
     l <= a,                             // access labels must bound update labels
 
     L        <= l, // because this object affects result fields
     provider <= l, // code affects result fields
-    {l;a}    <= l  // labels affect type of object
+    {l;a}    <= l, // labels affect type of object
+    A        <= a  // because this object is accessed before the result
   {
     return new Box[l,a]@s(this.xmin, this.ymin, this.xmax, this.ymax);
   }
@@ -148,14 +149,14 @@ where
   // private helper methods                                                   //
   //////////////////////////////////////////////////////////////////////////////
 
-  private static float min (float a, float b): {*provider} {
+  private static float min (float a, float b): {*provider}@{_->_} {
     if (a < b)
       return a;
     else
       return b;
   }
 
-  private static float max (float a, float b): {*provider} {
+  private static float max (float a, float b): {*provider}@{_->_} {
     if (a > b)
       return a;
     else

@@ -80,9 +80,10 @@ where
     {*→user.p}          // map is output to the owner
   }
   (
-    User[owner,n] user,
+    User[owner,n,a] user,
     principal     owner,
-    principal     n
+    principal     n,
+    principal     a
   )
   throws
   (
@@ -103,7 +104,7 @@ where
       
     final Store local = worker$.getLocalStore();
 
-    printMap(user, owner, n, new label {*→user.p}@service.store$);
+    printMap(user, owner, n, a, new label {*→user.p}@service.store$);
   }
 
   /**
@@ -123,9 +124,10 @@ where
     {*→service.store$}   // map is fetched
   }
   (
-    final User[owner,n] user,
+    final User[owner,n,a] user,
     final principal     owner,
-    final principal     n
+    final principal     n,
+    final principal     a
   )
   throws
   (
@@ -145,7 +147,7 @@ where
     if (user == null)
       throw new NullPointerException("139 user is null");
 
-    printMap(user, owner, n, new label {*→user.friends}@service.store$);
+    printMap(user, owner, n, a, new label {*→user.friends}@service.store$);
   }
 
 
@@ -166,9 +168,10 @@ where
     {*lbl}                   // output on lbl channel
   }
   (
-    final User[owner,n] user,
+    final User[owner,n,a] user,
     final principal     owner,
     final principal     n,
+    final principal     a,
     final label         lbl
   )
   throws
@@ -218,7 +221,7 @@ where
     if (localStore equiv worker$)
     {
 
-    MapImage[lbl,{*→localStore}] result = createMap(lbl, localStore, user, owner, n, lbl);
+    MapImage[lbl,{*→localStore}] result = createMap(lbl, localStore, user, owner, n, a, lbl);
     PrintStream[lbl] out = System.stdout(lbl);
 
     if (result == null)                                             { throw new AssertionFailedError("224 createMap() returns a non-null value."); }
@@ -251,9 +254,10 @@ where
     final label  l,
     final Store  s,
 
-    final User[o,n] user,
+    final User[o,n,a] user,
     final principal o,
     final principal n,
+    final principal a,
 
     final label friend_access_bound
   )
@@ -338,7 +342,7 @@ where
     final label fetchLabel = new label {{*l} meet {*→fetchStore} meet {*→n} meet {*friend_access_bound}}@service.store$;
 
     // compute bounding box
-    final Box[fetchLabel, {*→fetchStore}] boundary = createBoundingBox(user, o, n, fetchLabel, fetchStore, friend_access_bound);
+    final Box[fetchLabel, {*→fetchStore}] boundary = createBoundingBox(user, o, n, a, fetchLabel, fetchStore, friend_access_bound);
 
     // get map
     MapImage[fetchLabel,{*→fetchStore}] map;
@@ -356,7 +360,7 @@ where
     MapImage[l,{*→s}] annotated = map.copy(l, new label{*→s}, s);
 
     // add annotations
-    annotateMap(user,      o, n,
+    annotateMap(user,      o, n, a,
                 annotated, l, new label {*→s},
                 friend_access_bound);
 
@@ -396,9 +400,10 @@ where
     {*friend_access_bound}   // user's friends are fetched
   }
   (
-    final User[o,n] user,
+    final User[o,n,a] user,
     final principal o,
     final principal n,
+    final principal a,
 
     final label l,
     final Store s,
@@ -457,16 +462,17 @@ where
       Principal next;
       try { next = i.next(); } catch (NoSuchElementException e) {throw new AssertionFailedError("452 if i.hasNext() then i.next() should return normally.");}
 
-      if (next instanceof UserWrapper[{*→n}]) {
-        final UserWrapper[{*→n}] fw = (UserWrapper[{*→n}]) next;
+      if (next instanceof UserWrapper[{*→((o,n),service)}]) {
+        final UserWrapper[{*→((o,n),service)}] fw = (UserWrapper[{*→((o,n),service)}]) next;
         final principal          fo = fw.userOwner;
         final principal          fn = fw.userNetwork;
+        final principal          fa = fw.userAccessors;
 
-        final User[fo,fn] friend = fw.user;
+        final User[fo,fn,fa] friend = fw.user;
         if (friend == null) throw new AssertionFailedError("460 UserWrapper only wraps non-null users.");
 
         // check general User invariants
-        if (friend.locationLabel <=    new label {*→fn}) {
+        if (friend.locationLabel <= new label {*→fn}) {
 
         // if we can fetch the user without leaking:
         if (friend_access_bound <= new label {*→fn}) {
@@ -526,9 +532,10 @@ where
     {*map_update}            // map is updated
   }
   (
-    final User[o,n] user,
+    final User[o,n,a] user,
     final principal o,
     final principal n,
+    final principal a,
 
     final MapImage[map_update, map_access] map,
     final label map_update,
@@ -628,8 +635,9 @@ where
         final UserWrapper[{*→n}] fw = (UserWrapper[{*→n}]) next;
         final principal          fo = fw.userOwner;
         final principal          fn = fw.userNetwork;
+        final principal          fa = fw.userAccessors;
 
-        final User[fo,fn]   friend = fw.user;
+        final User[fo,fn,fa]   friend = fw.user;
         if (friend == null) throw new AssertionFailedError("626 UserWrapper only wraps non-null users.");
 
         // check whether we can access the location without leaking:
@@ -659,7 +667,7 @@ where
         // the friend has a valid location
         if (boundary != null && boundary.contains(x,y)) {
 
-        try { addPin (map, map_update, map_access, x, y, friend, fo, fn); }
+        try { addPin (map, map_update, map_access, x, y, friend, fo, fn, fa); }
         catch (final NullPointerException e)           { throw new AssertionFailedError("657 annotated and friend are non-null"); }
         catch (final ArrayIndexOutOfBoundsException e) { throw new AssertionFailedError("658 if img.boundary.contains(loc) then img.setAt(loc) should return normally"); }
 
@@ -704,9 +712,10 @@ where
     final float x,
     final float y,
 
-    final User[o,n] friend,
+    final User[o,n,a] friend,
     final principal o,
-    final principal n
+    final principal n,
+    final principal a
   )
   :{*provider;*MapImage.provider;map;*map_update;friend}
   throws

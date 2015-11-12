@@ -28,7 +28,7 @@ where
   }
   (
     int{L} x, int{L} y
-  )
+  ):{L ⊓ A}
   {
     this.x = x;
     this.y = y;

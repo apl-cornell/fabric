@@ -14,7 +14,9 @@ public class Util {
   public static char[] copyArray(
     final char[] data,
     final Label l,
+    final Label a,
     final Label m,
+    final Label am,
     final Store s
   ) throws NullPointerException {
     final char[] result = new char[data.length]@s;

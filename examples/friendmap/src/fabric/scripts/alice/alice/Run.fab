@@ -18,40 +18,43 @@ where
   util.Group.provider         <= {*←},
   util.GroupIterator.provider <= {*←},
 
-  mapserv.MapServer.provider <= mapserv.Box.provider,           mapserv.Box.provider <= mapserv.MapServer.provider,
-  mapserv.MapServer.provider <= mapserv.MapImage.provider, mapserv.MapImage.provider <= mapserv.MapServer.provider,
+  mapserv.MapServer.provider <= mapserv.Box.provider,
+  mapserv.Box.provider <= mapserv.MapServer.provider,
+  mapserv.MapServer.provider <= mapserv.MapImage.provider,
+  mapserv.MapImage.provider <= mapserv.MapServer.provider,
 
   friendmap.FriendMap.provider <= {_→},
-    mapserv.MapServer.provider <= {_→}
+  mapserv.MapServer.provider <= {_→}
 {
-  public static void main{}(String[] args)
-  {
-   atomic {
-    final Store snappStore = worker$.getStore("snapp");
-    final Store fmStore    = worker$.getStore("friendmap");
-    final Map   rootMap    = snappStore.getRoot();
-    final Snapp snappP = (Snapp) snappStore.getRoot().get("snapp");
-    
-    if (snappStore actsfor snappP
-            &&  snappP.store$ equiv snappStore
-            &&  snapp.Snapp.provider <= new label {*←snappP}@snappStore
-            ) {
+  public static void main{}(String[] args) {
+    atomic {
+      final Store snappStore = worker$.getStore("snapp");
+      final Store fmStore    = worker$.getStore("friendmap");
+      final Map   rootMap    = snappStore.getRoot();
+      final Snapp snappP = (Snapp) snappStore.getRoot().get("snapp");
+      
+      if (snappStore actsfor snappP &&
+          snappP.store$ equiv snappStore &&
+          snapp.Snapp.provider <= new label {*←snappP}@snappStore) {
 
-        final UserWrapper[{*→snappP}] aw  = (UserWrapper[{*→snappP}]) rootMap.get("alice");
-        final FriendMap  [{*→fmStore}]    app = (FriendMap[{*→fmStore}])      rootMap.get("friendmap");
+          final UserWrapper[{*→snappP}] aw = (UserWrapper[{*→snappP}]) rootMap.get("alice");
+          final FriendMap  [{*→fmStore}] app = (FriendMap[{*→fmStore}]) rootMap.get("friendmap");
+          final User[aw.userOwner,aw.userNetwork,aw.userAccessors] userAlice = aw.user;
 
-        final User[aw.userOwner,aw.userNetwork] userAlice = aw.user;
+          if (userAlice.p equiv new principal (aw.userOwner, aw.userNetwork) &&
+              new label {*->userAlice.p} <= new label {*->worker$} &&
+              userAlice.p actsfor userAlice.friends &&
+              worker$ actsfor aw.userOwner &&
+              worker$ actsfor userAlice.friends) {
 
-        if (userAlice.p equiv new principal (aw.userOwner, aw.userNetwork) 
-                && new label {*->userAlice.p} <= new label {*->worker$}
-                && userAlice.p actsfor userAlice.friends
-                &&  worker$ actsfor aw.userOwner
-                &&  worker$ actsfor userAlice.friends
-        ) {
-            app.viewMap(userAlice, aw.userOwner, aw.userNetwork);
-        } else throw new AssertionFailedError("invariants");
-    } else throw new AssertionFailedError("store actsfor snapp");
-   }
+              app.viewMap(userAlice, aw.userOwner, aw.userNetwork);
+          } else {
+            throw new AssertionFailedError("invariants");
+          }
+      } else {
+        throw new AssertionFailedError("store actsfor snapp");
+      }
+    }
   }
 }
 

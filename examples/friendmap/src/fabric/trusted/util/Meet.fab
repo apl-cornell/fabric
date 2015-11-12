@@ -5,28 +5,16 @@ public class Meet extends AbstractPrincipal {
   protected final Principal{this}@{this->} left;
   protected final Principal{this}@{this->} right;
 
-  public
-  Meet
-  (
-    Principal {this} left,
-    Principal {this} right
-  )
-  {
+  public Meet(Principal{this} left, Principal{this} right) {
     final String leftName  = (left  == null ? "_" : left.name());
     final String rightName = (right == null ? "_" : right.name());
     final String fullName  = "(" + leftName + " meet " + rightName + ")";
+    final String name  = fullName;
 
     this(name, left, right);
   }
 
-  public
-  Meet
-  (
-    String    {this} name,
-    Principal {this} left,
-    Principal {this} right
-  )
-  {
+  public Meet(String{this} name, Principal{this} left, Principal{this} right) {
     this.left  = left;
     this.right = right;
 
