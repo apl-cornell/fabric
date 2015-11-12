@@ -32,7 +32,8 @@ public class HelloAction[label T] extends Action[HelloServEP] {
 	public void invoke{*lbl}(label{*lbl} lbl, Request[HelloServEP]{*lbl} _req):
 				{*lbl;_req.session←}
 			where caller(_req.session),
-				lbl <= {_req.session→} {
+				lbl <= {_req.session→}
+    {
 
 		final HTMLRequest[HelloServEP] req = (HTMLRequest[HelloServEP]) _req;
 		HTMLServlet s = (HTMLServlet) getServlet();       

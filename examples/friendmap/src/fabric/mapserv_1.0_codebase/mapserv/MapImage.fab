@@ -253,7 +253,7 @@ where
     A   // fields are accessed
   }@{A}
   (
-    final PrintStream[A] out
+    final PrintStream[{*A;*L}] out
   )@{A}
   throws
   (

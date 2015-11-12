@@ -74,7 +74,7 @@ where
   void
   viewMap
   {                     // side effects:
-    {*→n}             ⊓ // user is fetched
+    {*→a}             ⊓ // user is fetched
     {*→user.friends}  ⊓ // user's friends are fetched
     {*→service.store$} ⊓ // map is fetched
     {*→user.p}          // map is output to the owner
@@ -84,19 +84,23 @@ where
     principal     owner,
     principal     n,
     principal     a
-  )
+  )@{*->*}
   throws
   (
     NullPointerException {*provider; user}
   )
   where
-    {*provider; *MapServer.provider; user; n; owner} <= {{*→n} ⊓ {*→user.friends} ⊓ {*→service.store$} ⊓ {*→user.p}},  
+    {*provider; *MapServer.provider; user; n; a; owner} <= {{*→a} ⊓ {*→user.friends} ⊓ {*→service.store$} ⊓ {*→user.p}},  
     {_→; *←(n,owner)} <= {{*→user.friends} ⊓ {*→user.p}},
     {*←service}       <= {*→user.p},
     {*→user.p} <= {*→worker$},  
 //    // general user invariants
 //    worker$ actsfor owner,
     (owner,n) equiv user.p,
+    user.p equiv a,
+    {*->a} <= A,
+    A <= {*->service.store$},
+    {*->service.store$} <= A,
     user.p  actsfor user.friends
   {
     if (user == null)
@@ -119,7 +123,7 @@ where
   void
   postMap
   {                     // side effects:
-    {*→n}             ⊓ // user is fetched
+    {*→a}             ⊓ // user is fetched
     {*→user.friends}  ⊓ // user's wall is updated; user's friends are fetched
     {*→service.store$}   // map is fetched
   }
@@ -128,20 +132,24 @@ where
     final principal     owner,
     final principal     n,
     final principal     a
-  )
+  )@{*->*}
   throws
   (
     NullPointerException {*provider; user}
   )
   where
     // see printMap constraints
-    {*provider; *MapServer.provider; user; n} <= {{*→n} ⊓ {*→service.store$} ⊓ {*→user.friends} ⊓ {*→service.store$}},
+    {*provider; *MapServer.provider; user; n; a} <= {{*→a} ⊓ {*→service.store$} ⊓ {*→user.friends} ⊓ {*→service.store$}},
     {*←service}     <= {*→user.friends},
     {_→; *←owner,n} <= {*→user.friends},
 
     // general user invariants
     worker$ actsfor owner,
     (owner,n) equiv user.p,
+    user.p equiv a,
+    {*->a} <= A,
+    A <= {*->service.store$},
+    {*->service.store$} <= A,
     user.p  actsfor user.friends
   {
     if (user == null)
@@ -163,7 +171,7 @@ where
   void
   printMap
   {                          // side effects
-    {*→n}                  ⊓ // fetches of user's information
+    {*→a}                  ⊓ // fetches of user's information
     {*→service.store$}      ⊓ // map service is contacted
     {*lbl}                   // output on lbl channel
   }
@@ -171,9 +179,9 @@ where
     final User[owner,n,a] user,
     final principal     owner,
     final principal     n,
-    final principal     a,
+    final principal{*lbl} a,
     final label         lbl
-  )
+  )@{*->*}
   throws
   (
     NullPointerException {*provider; user}
@@ -184,10 +192,10 @@ where
     //  - user pointer
     //  - policies
     //  - the intermediate state of the result
-    {*provider; *MapServer.provider} <= {*→n},
-    {user}                           <= {*→n},
-    {n; lbl}                         <= {*→n},
-    {*lbl}                           <= {*→n},
+    {*provider; *MapServer.provider} <= {*→a},
+    {user}                           <= {*→a},
+    {n; lbl}                         <= {*→a},
+    {*lbl}                           <= {*→a},
 
     // initial map fetch depends on
     //  - confidentiality of code
@@ -209,6 +217,10 @@ where
 
     // invariants
     user.p equiv (n,owner),
+    user.p equiv a,
+    {*->a} <= A,
+    A <= {*->service.store$},
+    {*->service.store$} <= A,
 
     // lbl objects created on worker$
     {*←worker$} <= lbl, lbl <= {*→worker$} // TODO: worker$ ≽ lbl
@@ -218,14 +230,22 @@ where
 
     final Store localStore = worker$.getLocalStore();
 
-    if (localStore equiv worker$)
+    if (localStore equiv worker$ && new label{*->service.store$} <= new label{*->localStore})
     {
 
     MapImage[lbl,{*→localStore}] result = createMap(lbl, localStore, user, owner, n, a, lbl);
-    PrintStream[lbl] out = System.stdout(lbl);
+    PrintStream[{*lbl; *->localStore}] out = System.stdout(new label{*lbl; *->localStore});
 
     if (result == null)                                             { throw new AssertionFailedError("224 createMap() returns a non-null value."); }
-    try { result.print(out); } catch (final NullPointerException e) { throw new AssertionFailedError("225 System.stdout must return a non-null value"); }
+    try {
+      if (new label{*->a; *->service.store$; *->localStore} <= new label{*->localStore}) {
+        result.print(out);
+      } else {
+        throw new AssertionFailedError("Something's gone horribly wront with servide.store$ and localStore label checkery");
+      }
+    } catch (final NullPointerException e) {
+      throw new AssertionFailedError("225 System.stdout must return a non-null value");
+    }
 
     } else throw new AssertionFailedError("227 worker$ equiv worker$.getLocalStore");
   }
@@ -244,12 +264,13 @@ where
   MapImage[l,{*→s}] {*l}
   createMap
   {                          // side effects:
-    {*→n}                  ⊓ // user is fetched
+    {*→a}                  ⊓ // user is fetched
+    //{*→n}                  ⊓ // user is fetched
     {*l}                   ⊓ // result  map is updated
     {*→service.store$}     ⊓ // initial map is fetched
     {*→s}                  ⊓ // result is created at s
     {*friend_access_bound}   // friends are fetched
-  }
+  }@{*->a}
   (
     final label  l,
     final Store  s,
@@ -260,7 +281,7 @@ where
     final principal a,
 
     final label friend_access_bound
-  )
+  )@{*->a; *->service.store$; *->s}
   throws
   (
     NullPointerException{*provider; user}
@@ -274,13 +295,13 @@ where
     //  - the map service
     //  - the store at which the result is created
     //  - the intermediate state of the map
-    {*provider; *MapServer.provider} <= {*→n},
-    {user}                           <= {*→n},
-    {friend_access_bound; n; l}      <= {*→n},
+    {*provider; *MapServer.provider} <= {*→a},
+    {user}                           <= {*→a},
+    {friend_access_bound; n; l}      <= {*→a},
 
-    {s}                              <= {*→n},
-    {*←service}                      <= {*→n},
-    {*l}                             <= {*→n},
+    {s}                              <= {*→a},
+    {*←service}                      <= {*→a},
+    {*l}                             <= {*→a},
 
     // information that flows to the map service:
     //  - code and caller pc            (*provider and caller_pc)
@@ -323,7 +344,12 @@ where
     {*←s} <= l, l <= {*→s}, {*→s} <= {*→s}, // TODO: s ≽ l@{s→}: result created at s
 
     // invariants
-    user.p equiv (n,o)
+    user.p equiv (n,o),
+    user.p equiv a,
+    {*->a} <= A,
+    A <= {*->service.store$},
+    {*->service.store$} <= A,
+    {*->service.store$} <= {*->s}
   {
     // invariant checks
     if (user == null)
@@ -339,7 +365,8 @@ where
     if (fetchStore actsfor service) {
 
     // this is the label of the data that gets sent to the service
-    final label fetchLabel = new label {{*l} meet {*→fetchStore} meet {*→n} meet {*friend_access_bound}}@service.store$;
+    //final label fetchLabel = new label {{*l} meet {*→fetchStore} meet {*→a} meet {*friend_access_bound}}@service.store$;
+    final label fetchLabel = new label {*→fetchStore}@service.store$;
 
     // compute bounding box
     final Box[fetchLabel, {*→fetchStore}] boundary = createBoundingBox(user, o, n, a, fetchLabel, fetchStore, friend_access_bound);
@@ -357,14 +384,26 @@ where
 
     // make a local copy (with label l)
     // TODO: s ≽ l
-    MapImage[l,{*→s}] annotated = map.copy(l, new label{*→s}, s);
+    if (new label{*->a; *->service.store$} <= new label{*->fetchStore}) {
+      final MapImage[l,{*→s}] annotated = map.copy(l, new label{*→s}, s);
 
-    // add annotations
-    annotateMap(user,      o, n, a,
-                annotated, l, new label {*→s},
-                friend_access_bound);
+      // add annotations
+      if (new label{*->a; *->service.store$; *->fetchStore; *->s} <= new label{*->annotated.store$}) {
+        if (new label{*->a; *->service.store$; *->fetchStore; *->s; *->annotated.store$} <= new label{*->s}) {
+          annotateMap(user,      o, n, a,
+                      annotated, l, new label {*→s},
+                      friend_access_bound);
 
-    return annotated;
+          return annotated;
+        } else {
+          throw new AssertionFailedError("Something's gone horribly wrong with 'a' and service.store$ and fetchStore and s and annotated.store$ label checkery");
+        }
+      } else {
+        throw new AssertionFailedError("Something's gone horribly wrong with label checkery not involving annotated.store");
+      }
+    } else {
+      throw new AssertionFailedError("Something's gone horribly wrong with service.store and fetchstore and 'a' label checkery");
+    }
 
     } else throw new AssertionFailedError("359 service's store acts for the service");
   }
@@ -398,7 +437,7 @@ where
     {*→s}                  ⊓ // box is created
     {*→n}                  ⊓ // user is fetched
     {*friend_access_bound}   // user's friends are fetched
-  }
+  }@{A}
   (
     final User[o,n,a] user,
     final principal o,
@@ -409,7 +448,7 @@ where
     final Store s,
 
     final label friend_access_bound
-  )
+  )@{*->a; *->service.store$}
   where
 
     // update result box
@@ -443,7 +482,8 @@ where
     l <= {*→s}, {*←s} <= l, // TODO: s ≽ l
 
     // invariants
-    user.p equiv (n,o)
+    user.p equiv (n,o),
+    user.p equiv a
   {
     // TODO: remove local variable annotations.
     final Box[l, {*→s}] {*l} boundary = new Box[l, {*→s}]@s(0,0,10,10);
@@ -526,11 +566,11 @@ where
   void
   annotateMap
   {                          // side effects:
-    {*→n}                  ⊓ // user is fetched
+    {*→a}                  ⊓ // user is fetched
     {*map_access}          ⊓ // map is fetched
     {*friend_access_bound} ⊓ // friends are fetched
     {*map_update}            // map is updated
-  }
+  }@{*->a; *->service.store$; *->map.store$}
   (
     final User[o,n,a] user,
     final principal o,
@@ -548,7 +588,7 @@ where
     //  - code and caller_pc     (*provider and caller_pc)
     //  - user pointer           (user)
     //  - non-nullness of map    (map)
-    {*provider; user; map} <= {*→n},
+    {*provider; user; map} <= {*→a},
 
     // friend fetch based on
     //  - code and caller_pc          (*provider and caller_pc)
