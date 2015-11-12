@@ -39,50 +39,11 @@ public class MethodDeclJifExt extends JifMethodDeclExt {
   }
 
   @Override
-  protected void addReturnConstraints(Label Li, PathMap X,
-      JifProcedureInstance mi, LabelChecker lc, final Type returnType)
-    throws SemanticException {
-    super.addReturnConstraints(Li, X, mi, lc, returnType);
-    addAccessReturnConstraints(lc, (FabricPathMap) X, (FabricProcedureInstance) mi);
-  }
-
-  @Override
   protected void initContextForBody(LabelChecker lc, JifMethodInstance mi) {
     super.initContextForBody(lc, mi);
     FabricMethodInstance fmi = (FabricMethodInstance) mi;
     FabricContext A = (FabricContext) lc.context();
     A.setAccessedLabelBound(fmi.beginAccessLabel());
     A.setEndAccessBound(fmi.endAccessLabel());
-  }
-
-  //TODO: Move this into general FabricProcedureDeclExt?
-  /**
-   * Add constraints requiring that all accesses in the method have
-   * confidentiality upperbounded by the end confidentiality label.
-   */
-  protected void addAccessReturnConstraints(LabelChecker lc, FabricPathMap X,
-      FabricProcedureInstance mi) throws SemanticException {
-    FabricTypeSystem ts = (FabricTypeSystem) lc.typeSystem();
-    FabricContext A = (FabricContext) lc.context();
-    Position pos = mi.position();
-
-    // Get the join of all accesses in the method
-    NamedLabel accessedLabel = new NamedLabel("accessed label",
-        "the join of the update labels of objects accessed in the method",
-        ts.join(A.accessedLabel(), X.A()));
-
-    NamedLabel endAccessLabel = new NamedLabel("end access label",
-        "the upper bound on the update labels of objects accessed in this method",
-        ts.join(mi.endAccessLabel(),
-          ts.pairLabel(pos, ts.bottomConfPolicy(pos), ts.topIntegPolicy(pos))));
-
-    lc.constrain(accessedLabel, LabelConstraint.LEQ, endAccessLabel,
-        A.labelEnv(), pos, new ConstraintMessage() {
-      @Override
-      public String msg() {
-        return "This method makes more confidential accesses than the ending "
-             + "access label allows.";
-      }
-    });
   }
 }
