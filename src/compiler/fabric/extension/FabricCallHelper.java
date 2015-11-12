@@ -8,7 +8,6 @@ import fabric.types.FabricPathMap;
 import fabric.types.FabricProcedureInstance;
 import fabric.types.FabricTypeSystem;
 
-import jif.ast.JifInstantiator;
 import jif.extension.CallHelper;
 import jif.types.ConstraintMessage;
 import jif.types.JifContext;
