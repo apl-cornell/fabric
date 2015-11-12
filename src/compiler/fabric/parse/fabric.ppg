@@ -612,6 +612,13 @@ extend primitive_array_type ::=
     |   labeled_primitive_type:a LBRACK AT label:al RBRACK:y
             {: RESULT = new Array(parser, parser.pos(a,y), a, al,
                                   /* isConst */ false, /* isNative */ false).toType(); :}
+    |   primitive_array_type:a label_opt:b LBRACK AT label:al RBRACK:y
+            {: if (b != null) {
+                   a = parser.nf.LabeledTypeNode(parser.pos(a, b), a, b);
+               }
+               RESULT = new Array(parser, parser.pos(a,y), a, al).toType();
+               if (b != null) parser.countAnnotation(parser.TYPE_ANNOTATION, RESULT.position());
+            :}
     ;
     
 extend reftype_or_expr ::=
