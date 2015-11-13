@@ -79,7 +79,7 @@ where
     {*→user.friends}  ⊓ // user's friends are fetched
     {*→service.store$} ⊓ // map is fetched
     {*→user.p}          // map is output to the owner
-  }
+  }@{*->user.p}
   (
     User[owner,n,a] user,
     principal     owner,
@@ -96,9 +96,9 @@ where
     {*←service}       <= {*→user.p},
     {*→user.p} <= {*→worker$},  
 //    // general user invariants
-//    worker$ actsfor owner,
-    (owner,n) equiv user.p,
-    user.p equiv a,
+    worker$ actsfor owner,
+    //(owner,n) equiv user.p,
+    a actsfor user.p,
     {*->a} <= A,
     A <= {*->service.store$},
     {*->service.store$} <= A,
@@ -145,9 +145,9 @@ where
     {_→; *←owner,n} <= {*→user.friends},
 
     // general user invariants
-    worker$ actsfor owner,
-    (owner,n) equiv user.p,
-    user.p equiv a,
+    worker$ actsfor user.p,
+    //(owner,n) equiv user.p,
+    a actsfor user.p,
     {*->a} <= A,
     A <= {*->service.store$},
     {*->service.store$} <= A,
@@ -217,8 +217,8 @@ where
     {lbl; n}                         <= {*lbl},
 
     // invariants
-    user.p equiv (n,owner),
-    user.p equiv a,
+    //user.p equiv (n,owner),
+    a actsfor user.p,
     {*->a} <= A,
     A <= {*->service.store$},
     {*->service.store$} <= A,
@@ -345,8 +345,8 @@ where
     {*←s} <= l, l <= {*→s}, {*→s} <= {*→s}, // TODO: s ≽ l@{s→}: result created at s
 
     // invariants
-    user.p equiv (n,o),
-    user.p equiv a,
+    //user.p equiv (n,o),
+    a actsfor user.p,
     {*->a} <= A,
     A <= {*->service.store$},
     {*->service.store$} <= A,
@@ -514,8 +514,8 @@ where
     {*->a} <= {*->service.store$},
 
     // invariants
-    user.p equiv (n,o),
-    user.p equiv a
+    //user.p equiv (n,o),
+    a actsfor user.p
   {
     // TODO: remove local variable annotations.
     final Store localStore = worker$.getLocalStore();
@@ -659,7 +659,7 @@ where
     {*map_update} <= {*map_access},
 
     // user invariants
-    user.p equiv (n,o),
+    //user.p equiv (n,o),
 
     // jif bug workaround: label expressions modify the pc (see 2/27 email titled "another jif bug")
     {friends} <= {*->a; friends.store$->},

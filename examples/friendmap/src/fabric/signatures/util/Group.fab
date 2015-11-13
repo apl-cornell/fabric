@@ -76,7 +76,7 @@ where
   add
   {                // side effects:
     {*←groupOwner} // members set is updated
-  }
+  }@{A}
   (
     Principal{*←groupOwner} p
   )
@@ -93,7 +93,7 @@ where
   remove
   {                // side effects:
     {*←groupOwner} // members set is updated
-  }
+  }@{A}
   (
     Principal{*←groupOwner} p
   );
