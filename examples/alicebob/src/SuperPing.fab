@@ -158,8 +158,7 @@ class SuperPing[label incomingL, label storeListL, label readPast, label writePa
     final label{*originL} originL,
     final label{*originL} destinationL,
     final Store{*originL} store):{*destinationL}
-    where originL <= {*readFuture; *writePast} , originL <= destinationL
-  {
+    where originL <= {*readFuture; *writePast} , originL <= destinationL {
     return listCopy(origin,originL,destinationL,origin.size()-1,origin.size()-1, 1, store);
   }
 
