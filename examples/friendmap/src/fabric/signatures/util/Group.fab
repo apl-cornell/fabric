@@ -102,14 +102,15 @@ where
    * Iterate over the members of the group.
    */
   public native
-  GroupIterator[groupOwner, l, A]
+  GroupIterator[groupOwner, l, a]
   iterator
   {    // side effects:
     *l // TODO
   }
   (
     final Store s,
-    final label l
+    final label l,
+    final label a
   );
 
   //////////////////////////////////////////////////////////////////////////////

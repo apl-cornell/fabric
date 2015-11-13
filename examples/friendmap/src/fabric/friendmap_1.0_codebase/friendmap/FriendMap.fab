@@ -12,6 +12,7 @@ import snapp.User;
 import snapp.Location;
 import snapp.UserWrapper;
 
+import util.Group;
 import util.GroupIterator;
 import util.Delegator;
 import util.AssertionFailedError;
@@ -84,7 +85,7 @@ where
     principal     owner,
     principal     n,
     principal     a
-  )@{*->*}
+  ):{*->user.p}@{*->*}
   throws
   (
     NullPointerException {*provider; user}
@@ -132,7 +133,7 @@ where
     final principal     owner,
     final principal     n,
     final principal     a
-  )@{*->*}
+  ):{*->user.friends}@{*->*}
   throws
   (
     NullPointerException {*provider; user}
@@ -181,7 +182,7 @@ where
     final principal     n,
     final principal{*lbl} a,
     final label         lbl
-  )@{*->*}
+  ):{*lbl}@{*->*}
   throws
   (
     NullPointerException {*provider; user}
@@ -281,11 +282,11 @@ where
     final principal a,
 
     final label friend_access_bound
-  )@{*->a; *->service.store$; *->s}
-  throws
+  ):{*l}@{*->a; *->service.store$; *->s}
+  /*throws
   (
     NullPointerException{*provider; user}
-  )
+  )*/
   where
     // user fetch is based on
     //  - code and caller pc
@@ -297,11 +298,11 @@ where
     //  - the intermediate state of the map
     {*provider; *MapServer.provider} <= {*→a},
     {user}                           <= {*→a},
-    {friend_access_bound; n; l}      <= {*→a},
+    {friend_access_bound; a; n; l}   <= {*→a},
 
     {s}                              <= {*→a},
     {*←service}                      <= {*→a},
-    {*l}                             <= {*→a},
+    //{*l}                             <= {*→a},
 
     // information that flows to the map service:
     //  - code and caller pc            (*provider and caller_pc)
@@ -310,7 +311,7 @@ where
     //  - friends' policies and locations (checked dynamically)
     {*provider; *MapServer.provider} <= {*→service.store$},
     {user}                           <= {*→service.store$}, {_→; *←n,o} <= {*→service.store$},
-    {friend_access_bound; n; l}      <= {*→service.store$},
+    {friend_access_bound; a; n; l}   <= {*→service.store$},
 
     // information that flows to the resulting map:
     //  - code and caller pc
@@ -322,7 +323,7 @@ where
     {*provider; *MapServer.provider} <= {*l},
     {user}                           <= {*l}, {_→; *←n,o} <= {*l},
     {s; l}                           <= {*l},
-    {friend_access_bound; n; l}      <= {*l},
+    {friend_access_bound; a; n; l}   <= {*l},
     {*←service}                      <= {*l},
 
     // fetch of user's friends:
@@ -333,7 +334,7 @@ where
     //  - the intermediate state of the map
     {*provider; *MapServer.provider} <= {*friend_access_bound},
     {user}                           <= {*friend_access_bound}, {_→; *←n,o} <= {*friend_access_bound},
-    {friend_access_bound; n; l}      <= {*friend_access_bound},
+    {friend_access_bound; a; n; l}   <= {*friend_access_bound},
     {s}                              <= {*friend_access_bound},
     {*l}                             <= {*friend_access_bound},
 
@@ -353,9 +354,10 @@ where
   {
     // invariant checks
     if (user == null)
-      throw new NullPointerException("320 user is null");
+      throw new AssertionFailedError("320 user is null");
     if (user.friends == null)
       throw new AssertionFailedError("322 user.friends must be non-null");
+    final Group[user.p, {*->a}]{*l} friends = user.friends;
     if (this.service == null)
       throw new AssertionFailedError("324 service must be non-null");
 
@@ -366,10 +368,14 @@ where
 
     // this is the label of the data that gets sent to the service
     //final label fetchLabel = new label {{*l} meet {*→fetchStore} meet {*→a} meet {*friend_access_bound}}@service.store$;
-    final label fetchLabel = new label {*→fetchStore}@service.store$;
+    final label fetchLabel = new label {{*l} meet {*→fetchStore}}@service.store$;
 
     // compute bounding box
-    final Box[fetchLabel, {*→fetchStore}] boundary = createBoundingBox(user, o, n, a, fetchLabel, fetchStore, friend_access_bound);
+    if (new label{*A} <= friend_access_bound &&
+        new label{*A} <= l &&
+        new label{*A} <= new label{*->a} &&
+        friend_access_bound <= new label{*->fetchStore}) {
+    final Box[fetchLabel, {*→fetchStore}] boundary = createBoundingBox(user, o, n, a, friends, fetchLabel, fetchStore, friend_access_bound);
 
     // get map
     MapImage[fetchLabel,{*→fetchStore}] map;
@@ -389,8 +395,10 @@ where
 
       // add annotations
       if (new label{*->a; *->service.store$; *->fetchStore; *->s} <= new label{*->annotated.store$}) {
-        if (new label{*->a; *->service.store$; *->fetchStore; *->s; *->annotated.store$} <= new label{*->s}) {
-          annotateMap(user,      o, n, a,
+        if (new label{*->a; *->service.store$; *->fetchStore; *->s; *->annotated.store$} <= new label{*->s} &&
+            l <= new label{*->a} &&
+            l <= new label{friends.store$->}) {
+          annotateMap(user,      o, n, a, friends, 
                       annotated, l, new label {*→s},
                       friend_access_bound);
 
@@ -404,7 +412,7 @@ where
     } else {
       throw new AssertionFailedError("Something's gone horribly wrong with service.store and fetchstore and 'a' label checkery");
     }
-
+    } else throw new AssertionFailedError("Tried accessing with a bound too low for the service.");
     } else throw new AssertionFailedError("359 service's store acts for the service");
   }
 
@@ -434,8 +442,8 @@ where
   createBoundingBox
   {                          // side effects:
     {*l}                   ⊓ // box is updated
+    {*A}                   ⊓ // service is accessed
     {*→s}                  ⊓ // box is created
-    {*→n}                  ⊓ // user is fetched
     {*friend_access_bound}   // user's friends are fetched
   }@{A}
   (
@@ -443,12 +451,13 @@ where
     final principal o,
     final principal n,
     final principal a,
+    final Group[user.p, {*->a}] friends,
 
     final label l,
     final Store s,
 
     final label friend_access_bound
-  )@{*->a; *->service.store$}
+  ):{*provider}@{*->s}
   where
 
     // update result box
@@ -458,52 +467,76 @@ where
     //  - policy
     //  - result parameters (l and s)
     //  - (dyn) user's friends' locations
-    {*provider}                 <= l,
-    {*MapServer.provider}       <= l,
-    {user}                      <= l, {_→; *←n,o} <= l,
-    {friend_access_bound; n; l} <= l,
-    {l;s}                       <= l,
+    {*provider}                    <= l,
+    {*MapServer.provider}          <= l,
+    {friends}                      <= l, {_→; *←n,o} <= l,
+    {friend_access_bound; n; a; l} <= l,
+    {l;s}                          <= l,
 
     // fetch friends
     //  - code anc caller pc
-    //  - user and user's contents
+    //  - user's friends
     //  - policy
-    {*provider}                 <= friend_access_bound,
-    {user}                      <= friend_access_bound, {_→; *←n,o} <= friend_access_bound,
-    {friend_access_bound; n; l} <= friend_access_bound,
+    {*provider}                    <= friend_access_bound,
+    {friends}                      <= friend_access_bound, {_→; *←n,o} <= friend_access_bound,
+    {friend_access_bound; n; a; l} <= friend_access_bound,
+    {*<-user.p}                    <= l,
+    {*<-user.p}                    <= A,
+    {*<-user.p}                    <= friend_access_bound,
 
     // fetch user
     //  - code and caller pc
     //  - user pointer
     //  - policy
-    {*provider; user; n; l; friend_access_bound} <= {*→n},
+    {*provider; friends; n; a; l; friend_access_bound} <= {*A},
 
     // result is created at s.
     l <= {*→s}, {*←s} <= l, // TODO: s ≽ l
+    A <= {*->s},
+    {*->a; *->service.store$} <= {*->s},
+
+    // Accesses here are okay after talking to the service store
+    A <= {*->s},
+    A <= {*->a},
+    A <= l,
+    A <= friend_access_bound,
+
+    // We're creating the bounding box on the service's store (I hope)
+    // So it should be okay for {*->s} <= A
+    {*->s} <= A,
+
+    // We shouldn't be creating a bounding box to include friends that the final
+    // bounding box can't know about.
+    friend_access_bound <= {*->s},
+
+    // Everyone that can access the user's information should include the
+    // service.
+    {*->a} <= {*->service.store$},
 
     // invariants
     user.p equiv (n,o),
     user.p equiv a
   {
     // TODO: remove local variable annotations.
-    final Box[l, {*→s}] {*l} boundary = new Box[l, {*→s}]@s(0,0,10,10);
-
     final Store localStore = worker$.getLocalStore();
 
     // We need to choose a label for the iterator that can flow to
     //  - the resulting map
     //  - a fetch of the user
     //  - a fetch of a qualifying friend
-    final label iterLabel = new label {{*l} ⊓ {*→n} ⊓ {*friend_access_bound}};
+    final label iterLabel = new label {{*A} ⊓ {*l} ⊓ {*friend_access_bound}};
 
-    final GroupIterator[user.p, iterLabel, {*→n}] i = user.friends.iterator(localStore, iterLabel);
+    final GroupIterator[user.p, iterLabel, {*->s}] i = friends.iterator(localStore, iterLabel, new label{*->s});
+
+    final Box[l, {*→s}] {*l} boundary = new Box[l, {*→s}]@s(0,0,10,10);
+
     if (i == null) throw new AssertionFailedError("449 Group.iterator() should return a non-null value");
     while (i.hasNext()) {
       Principal next;
       try { next = i.next(); } catch (NoSuchElementException e) {throw new AssertionFailedError("452 if i.hasNext() then i.next() should return normally.");}
 
-      if (next instanceof UserWrapper[{*→((o,n),service)}]) {
-        final UserWrapper[{*→((o,n),service)}] fw = (UserWrapper[{*→((o,n),service)}]) next;
+      if (next instanceof UserWrapper[{*->s}]) {
+        final UserWrapper[{*->s}] fw = (UserWrapper[{*->s}]) next;
         final principal          fo = fw.userOwner;
         final principal          fn = fw.userNetwork;
         final principal          fa = fw.userAccessors;
@@ -512,21 +545,22 @@ where
         if (friend == null) throw new AssertionFailedError("460 UserWrapper only wraps non-null users.");
 
         // check general User invariants
-        if (friend.locationLabel <= new label {*→fn}) {
+        if (friend.locationLabel <= new label {*→fa}) {
 
         // if we can fetch the user without leaking:
-        if (friend_access_bound <= new label {*→fn}) {
+        if (friend_access_bound <= new label{*→fa} &&
+            new label{*->fa} <= new label{*->s}) {
 
         // TODO: solver is failing, so we need to specify a label.
-        final Location[friend.locationLabel, {*→fn}] {*friend.locationLabel} loc = friend.location;
-
-        final float x = loc.x;
-        final float y = loc.y;
+        final Location[friend.locationLabel, {*→fa}] {*friend.locationLabel} loc = friend.location;
 
         // if the friend's location can affect the map
         if (new label {_→; *←fo,fn} <= l && friend.locationLabel <= l) {
 
         if (loc != null) {
+          final float x = loc.x;
+          final float y = loc.y;
+
           try { boundary.expand(x, y); }
           catch (final NullPointerException e) { throw new AssertionFailedError("480 boundary is non-null."); }
         } // ok: friend has no location
@@ -566,23 +600,24 @@ where
   void
   annotateMap
   {                          // side effects:
-    {*→a}                  ⊓ // user is fetched
+    {*->a}                 ⊓ // user is fetched
     {*map_access}          ⊓ // map is fetched
     {*friend_access_bound} ⊓ // friends are fetched
     {*map_update}            // map is updated
-  }@{*->a; *->service.store$; *->map.store$}
+  }@{*map_access}
   (
     final User[o,n,a] user,
     final principal o,
     final principal n,
     final principal a,
+    final Group[user.p, {*->a}] friends,
 
     final MapImage[map_update, map_access] map,
     final label map_update,
     final label map_access,
 
     final label friend_access_bound
-  )
+  ):{*provider}@{*map_access}
   where
     // user fetch based on
     //  - code and caller_pc     (*provider and caller_pc)
@@ -611,10 +646,10 @@ where
     //  - policies                    (map_update, friend_access_bound)
     //  - user's friends' policies    dyn: (friends' stuff)
     //  - user's friends' locations   dyn: (friend.locationInfo)
-    {*provider;*MapImage.provider}    <= {*map_update},
-    {map}                             <= {*map_update},
-    {user; n}                         <= {*map_update}, {_→; *←n,o} <= {*map_update},
-    {map_update; friend_access_bound} <= {*map_update},
+    {*provider;*MapImage.provider}                <= {*map_update},
+    {map}                                         <= {*map_update},
+    {user; n}                                     <= {*map_update}, {_→; *←n,o} <= {*map_update},
+    {map_update; map_access; friend_access_bound} <= {*map_update},
 
     // objects are created on the local store.
     {*←worker$} <= map_update, map_update <= {*→worker$}, // TODO: worker$ ≽ map_update
@@ -627,7 +662,11 @@ where
     user.p equiv (n,o),
 
     // jif bug workaround: label expressions modify the pc (see 2/27 email titled "another jif bug")
-    {map_update; n; friend_access_bound} <= {{*→n} ⊓ {*map_update} ⊓ {*map_access} ⊓ {*friend_access_bound}}
+    {friends} <= {*->a; friends.store$->},
+    {map_update} <= {*->a; friends.store$->},
+    {map_access} <= {*->a; friends.store$->},
+    {friends} <= map_access
+    //{_->; *<-(n,o); map_update; friends; n; a; friend_access_bound} <= map_access
   {
     if (map == null) {
       String {*→} s = "582 MapImage.copy return value should be non-null";
@@ -640,10 +679,10 @@ where
     final Store local = worker$.getLocalStore();
     if (local equiv worker$) {
 
-    final label box_u = map_update;
     final label box_a = new label {*→local};
 
-    final Box[box_u,box_a] boundary = map.getBoundary(box_u, box_a, local);
+    if (map_access <= box_a && box_a <= map_access && map_access <= map_update) {
+    final Box[map_update,box_a] boundary = map.getBoundary(map_update, box_a, local);
 
     // need to choose label L for the iterator such that
     //
@@ -652,27 +691,27 @@ where
     // - user        <= L   because user affects iterator
     //
     // - L <= map_update    because iterator affects map and access
-    // - L <= {*→n}         because iterator affects fetch of friend wrappers
-    // - L <= {*→fn}        (dyn) because iterator affects fetch of friends
+    // - L <= {*→a}         because iterator affects fetch of friend wrappers
+    // - L <= {*→fa}        (dyn) because iterator affects fetch of friends
     //
     // - worker$ ≽ L        because the iterator will be stored locally
     //
     // We'll take the highest such label:
-    final label iterLabel = new label {{*map_update} ⊓ {*→n} ⊓ {*friend_access_bound}};
+    //final label iterLabel = map_access;//new label {{*map_update} ⊓ {*→a} ⊓ {*friend_access_bound}};
 
     // TODO: solver is failing, so we need to specify a label
-    final GroupIterator[user.p, iterLabel, {*→n}]
-        {*<-n,o ; user ; friend_access_bound ; n ; map_update}
-        j = user.friends.iterator(worker$.getLocalStore(), iterLabel);
+    final GroupIterator[user.p, map_access, map_access]
+        //{*<-n,o ; user ; friend_access_bound ; n ; a; map_update}
+        j = friends.iterator(worker$.getLocalStore(), map_access, map_access);
     if (j == null) throw new AssertionFailedError("613 Group.iterator() should return a non-null value");
 
     while (j.hasNext()) {
       Principal next;
       try { next = j.next(); } catch (NoSuchElementException e) { throw new AssertionFailedError("617 if j.hasNext() then j.next() should return normally."); }
-      if (next instanceof UserWrapper[{*→n}]) {
+      if (next instanceof UserWrapper[{*map_access}]) {
         // add friend to the map if possible
 
-        final UserWrapper[{*→n}] fw = (UserWrapper[{*→n}]) next;
+        final UserWrapper[{*map_access}] fw = (UserWrapper[{*map_access}]) next;
         final principal          fo = fw.userOwner;
         final principal          fn = fw.userNetwork;
         final principal          fa = fw.userAccessors;
@@ -687,13 +726,15 @@ where
         // we cannot check this directly because {user}, {n} and {caller_pc}
         // are not runtime representable.  Therefore we perform the following
         // check, which implies the requirements:
-        if (friend_access_bound <= new label {*→fn}) {
+        if (friend_access_bound <= new label {*→fa} &&
+            new label{*->fa} <= map_access && 
+            map_access <= new label{*->fa}) {
 
         // check general User invariants
-        if (friend.locationLabel <=    new label {*→fn}) {
+        if (friend.locationLabel <=    new label {*→fa}) {
 
         // TODO: the solver is failing, so we need to specify a label.
-        final Location[friend.locationLabel, {*→fn}] {*friend.locationLabel} loc = friend.location;
+        final Location[friend.locationLabel, {*→fa}] {*friend.locationLabel} loc = friend.location;
 
         if (loc != null) {
         final float x = loc.x;
@@ -719,6 +760,7 @@ where
       }
     }
 
+    } else throw new AssertionFailedError("Local worker isn't allowed to read the map");
     } //else throw new AssertionFailedError("worker$ equiv worker$.getLocalStore()");
   }
 
@@ -743,7 +785,7 @@ where
   {               // side effects:
     *map_update ⊓ // map contents are updated
     *map_access   // map contents are fetched
-  }
+  }@{*map_access}
   (
     final MapImage[map_update,map_access] map,
     final label    map_update,
@@ -758,6 +800,7 @@ where
     final principal a
   )
   :{*provider;*MapImage.provider;map;*map_update;friend}
+  @{*map_access}
   throws
   (
     NullPointerException,

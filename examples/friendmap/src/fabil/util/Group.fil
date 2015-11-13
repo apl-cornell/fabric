@@ -123,14 +123,15 @@ public class Group extends Delegator
   iterator
   (
     final Store s,
-    final Label l
+    final Label l,
+    final Label a
   )
   {
     if (PrincipalUtil.actsFor(jif$util_Group_groupOwner, this)) {
       final Group g = this;
       GroupIterator result =
         (GroupIterator)
-          new GroupIterator@s(jif$util_Group_groupOwner, l)
+          new GroupIterator@s(jif$util_Group_groupOwner, l, a)
             .util$GroupIterator$(g).$initLabels();
       return result;
     }

@@ -77,7 +77,7 @@ where
     // TODO; store ≽ l@store; map is created at store
     {*←store$} <= l, l <= {*→store$}, {*→store$} <= {*→store$},
     l <= a, // access label for result must bound update label
-    a <= {*l;_<-}, // access label for result must be C(update label)
+    //a <= {*l;_<-}, // access label for result must be C(update label)
     a <= {*->store$}, // access label must flow to this store
     //{*->store$} <= {*l;_<-}, // boundary must be able to read store
 

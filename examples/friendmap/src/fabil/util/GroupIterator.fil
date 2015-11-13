@@ -7,6 +7,7 @@ public class GroupIterator
   private       int              i;
   private final Principal jif$util_GroupIterator_owner;
   private final Label     jif$util_GroupIterator_L;
+  private final Label     jif$util_GroupIterator_A;
 
   /**
    * Create a new iterator over g, which must be non-null.
@@ -21,10 +22,11 @@ public class GroupIterator
     return this;
   }
 
-  public GroupIterator(Principal owner, Label L) {
+  public GroupIterator(Principal owner, Label L, Label A) {
     super();
     this.jif$util_GroupIterator_owner = owner;
     this.jif$util_GroupIterator_L = L;
+    this.jif$util_GroupIterator_A = A;
   }
 
   private void jif$init() { } 

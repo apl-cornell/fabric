@@ -143,8 +143,8 @@ where
   char  {L;x;y;*provider} // result is tainted by map, coordinates, code
   getAt
   {   // side effects:
-    A ⊓// fields are accessed
-    L  // BUG: access label of arrays is the update label.
+    A  // fields are accessed
+    //L  // BUG: access label of arrays is the update label.
   }@{A}
   (
     float x, float y
@@ -202,8 +202,8 @@ where
   {          // side effects:
     {*l}   ⊓ // result is updated
     {*→s}  ⊓ // object is created at s
-    {A;_←} ⊓ // fields are read
-    {L;_←}   // data is accessed - access label of an array is same as update label
+    {A;_←}   // fields are read
+    //{L;_←}   // data is accessed - access label of an array is same as update label
   }@{A}
   (
     final label l,

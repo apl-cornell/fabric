@@ -1,8 +1,11 @@
 package snapp;
 
-import util.Group;
-import util.Meet;
 import util.AssertionFailedError;
+import util.Group;
+import util.GroupIterator;
+import util.Meet;
+import util.NoSuchElementException;
+import util.Util;
 import snapp.Location;
 
 // TODO: comment labels
@@ -90,6 +93,75 @@ where
 
     super();
   }
+
+  /**
+   * Give me an array of locations (x, y coordinates) of all my friends who
+   * allow the given label to read their location.
+  public float{*lbl}[@{*->accessors}]{*->}[@{*->accessors}]
+  friendsLocations{*->accessors}@{*->accessors}
+  (
+      final label lbl,
+      final Store s
+  ):{*->accessors;*lbl}@{*->accessors}
+  where
+    {lbl} <= {*->accessors},
+    provider <= lbl
+  {
+    // Figure out how big it should be
+    int length = 0;
+    GroupIterator[p, {*->accessors}, {*->accessors}] i = friends.iterator(store$,
+        new label{*->accessors},
+        new label{*->accessors});
+    for (; i.hasNext();) {
+      Principal next;
+      try {
+        next = i.next();
+      } catch (NoSuchElementException e) {
+        throw new AssertionFailedError("if i.hasNext() then i.next() should return normally.");
+      }
+      final UserWrapper[{*→accessors}] fw = (UserWrapper[{*→accessors}]) next;
+      final principal          fo = fw.userOwner;
+      final principal          fn = fw.userNetwork;
+      final principal          fa = fw.userAccessors;
+      final User[fo,fn,fa] friend = fw.user;
+
+      if (fa equiv accessors &&
+          friend.locationLabel <= lbl)
+        length++;
+    }
+    // fill it up
+    i = friends.iterator(store$, new label{*->accessors}, new label{*->accessors});
+    float{*lbl}[@{*->accessors}]{*lbl}[@{*->accessors}]{*lbl} data = new float[length][2];
+    for (int j = 0; j < length && i.hasNext();) {
+      Principal next;
+      try {
+        next = i.next();
+      } catch (NoSuchElementException e) {
+        throw new AssertionFailedError("if i.hasNext() then i.next() should return normally.");
+      }
+      final UserWrapper[{*->accessors}] fw = (UserWrapper[{*->accessors}]) next;
+      final principal          fo = fw.userOwner;
+      final principal          fn = fw.userNetwork;
+      final principal          fa = fw.userAccessors;
+      final User[fo,fn,fa] friend = fw.user;
+
+      if (fa equiv accessors &&
+          friend.locationLabel <= lbl) {
+        Location[friend.locationLabel, {*->fa}] l = friend.location;
+        float x = l.x;
+        float y = l.y;
+        try {
+          data[j][0] = x;
+          data[j][1] = y;
+        } catch (ArrayIndexOutOfBoundsException e) {
+          throw new AssertionFailedError("This should not happen");
+        }
+        j++;
+      }
+    }
+    return data;
+  }
+   */
 }
 
 /*
