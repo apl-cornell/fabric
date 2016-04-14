@@ -237,6 +237,7 @@ non terminal FabricArrayInit fabric_array_initializer;
 non terminal List codebase_declarations_opt, codebase_declarations;
 non terminal CodebaseDecl codebase_declaration;
 non terminal Store store_expr;
+non terminal LabelNode access_label_opt;
 
 start with goal;
 
@@ -450,10 +451,45 @@ extend interface_member_declaration ::=
 // Field Declarations now use an optional "access label"              //
 ////////////////////////////////////////////////////////////////////////
 
+//Now includes dumb hack to get around parsing ambiguity if we were to instead
+//use the non-terminal type directly
+
 override field_declaration ::=
                     // List of ClassMember
-        modifiers_opt:a type:b AT label:al variable_declarators:c SEMICOLON:e
+        modifiers_opt:a labeled_primitive_type:b AT label:al variable_declarators:c SEMICOLON:e
             {: List l = new LinkedList<ClassMember>();
+               for (Iterator i = c.iterator(); i.hasNext(); ) {
+                   VarDeclarator d = (VarDeclarator) i.next();
+                   l.add(parser.nf.FabricFieldDecl(parser.pos(b, e),
+                                             a, parser.array(b, d.dims), al,
+                                             d.name, d.init,
+                                             parser.javadoc(parser.pos(a), parser.pos(b))));
+               }
+               RESULT = l; :}
+    |   modifiers_opt:a reftype_or_expr:bt AT label:al variable_declarators:c SEMICOLON:e
+            {: List l = new LinkedList<ClassMember>();
+               TypeNode b = bt.toType();
+               for (Iterator i = c.iterator(); i.hasNext(); ) {
+                   VarDeclarator d = (VarDeclarator) i.next();
+                   l.add(parser.nf.FabricFieldDecl(parser.pos(b, e),
+                                             a, parser.array(b, d.dims), al,
+                                             d.name, d.init,
+                                             parser.javadoc(parser.pos(a), parser.pos(bt))));
+               }
+               RESULT = l; :}
+    |   modifiers_opt:a primitive_array_type:b AT label:al variable_declarators:c SEMICOLON:e
+            {: List l = new LinkedList<ClassMember>();
+               for (Iterator i = c.iterator(); i.hasNext(); ) {
+                   VarDeclarator d = (VarDeclarator) i.next();
+                   l.add(parser.nf.FabricFieldDecl(parser.pos(b, e),
+                                             a, parser.array(b, d.dims), al,
+                                             d.name, d.init,
+                                             parser.javadoc(parser.pos(a), parser.pos(b))));
+               }
+               RESULT = l; :}
+    |   modifiers_opt:a primitive_array_type:bt label:bl AT label:al variable_declarators:c SEMICOLON:e
+            {: List l = new LinkedList<ClassMember>();
+	       TypeNode b = parser.nf.LabeledTypeNode(parser.pos(bt,bl), bt, bl);
                for (Iterator i = c.iterator(); i.hasNext(); ) {
                    VarDeclarator d = (VarDeclarator) i.next();
                    l.add(parser.nf.FabricFieldDecl(parser.pos(b, e),
@@ -476,6 +512,92 @@ override field_declaration ::=
     ;
 
 ////////////////////////////////////////////////////////////////////////
+// Method and Constructor Declarations Now have begin/end labels for  //
+// accesses                                                           //
+////////////////////////////////////////////////////////////////////////
+
+override constructor_declaration ::=
+                    // ConstructorDecl
+        modifiers_opt:a reftype_or_expr:q AT label:ba
+        LPAREN 
+        formal_parameter_list_opt:c RPAREN:y return_label_opt:r access_label_opt:ec
+        throws_opt:d procedure_constraints_opt:w 
+        constructor_body:e
+        {: Id b; LabelNode i;
+               // Pick apart the reftype_or_expr node.
+               // It can be either an identifier "a" or an
+               // identifier and label "a{L}".
+               if (q instanceof LabeledExpr) {
+                   b = ((LabeledExpr) q).prefix.toIdentifier();
+                   i = ((LabeledExpr) q).label;
+               }
+               else {
+                   b = q.toIdentifier();
+                   i = null;
+               }
+           RESULT = parser.nf.FabricConstructorDecl(parser.pos(q, y),
+                             a, b, i, ba, r, c, ec, d, w, e,
+                             parser.javadoc(parser.pos(a), parser.pos(q))); 
+        :}
+    |
+        modifiers_opt:a reftype_or_expr:q 
+        LPAREN 
+        formal_parameter_list_opt:c RPAREN:y return_label_opt:r access_label_opt:ec
+        throws_opt:d procedure_constraints_opt:w 
+        constructor_body:e
+        {: Id b; LabelNode i;
+               // Pick apart the reftype_or_expr node.
+               // It can be either an identifier "a" or an
+               // identifier and label "a{L}".
+               if (q instanceof LabeledExpr) {
+                   b = ((LabeledExpr) q).prefix.toIdentifier();
+                   i = ((LabeledExpr) q).label;
+               }
+               else {
+                   b = q.toIdentifier();
+                   i = null;
+               }
+           RESULT = parser.nf.FabricConstructorDecl(parser.pos(q, y),
+                             a, b, i, null, r, c, ec, d, w, e,
+                             parser.javadoc(parser.pos(a), parser.pos(q))); 
+        :}
+    ;
+
+override method_header ::=
+                    // JifMethodNode
+        modifiers_opt:a type:b IDENTIFIER:c label_opt:i access_label_opt:ba
+        LPAREN formal_parameter_list_opt:d RPAREN
+        dims_opt:e return_label_opt:r access_label_opt:ec throws_opt:f procedure_constraints_opt:w
+            {: RESULT = parser.nf.FabricMethodDecl(parser.pos(b,c,c), a,
+                                                   parser.array(b, e.intValue()),
+                                                   parser.nf.Id(parser.pos(c), c.getIdentifier()),
+                                                   i, ba, d, r, ec, f, w, null,
+                                                   parser.javadoc(parser.pos(a), parser.pos(b)));
+               if (i != null) parser.countAnnotation(parser.PC_BOUND_ANNOTATION, RESULT.position());
+             :}
+    |   modifiers_opt:a VOID:b IDENTIFIER:c label_opt:i access_label_opt:ba
+        LPAREN formal_parameter_list_opt:d RPAREN
+        return_label_opt:r access_label_opt:ec throws_opt:f procedure_constraints_opt:w
+            {: RESULT = parser.nf.FabricMethodDecl(parser.pos(b,c), a,
+                                                   parser.nf.CanonicalTypeNode(parser.pos(b),
+                                                                               parser.ts.Void()),
+                                                   parser.nf.Id(parser.pos(c), c.getIdentifier()),
+                                                   i, ba, d, r, ec, f, w, null,
+                                                   parser.javadoc(parser.pos(a), parser.pos(b)));
+               if (i != null) parser.countAnnotation(parser.PC_BOUND_ANNOTATION, RESULT.position());
+            :}
+    ;
+
+//TODO: Comment explaining that the end conf label is being done with this as a
+//hack.
+access_label_opt ::=
+                    // LabelNode
+            {: RESULT = null; :}
+    |   AT label:a
+            {: RESULT = a; :}
+    ;
+
+////////////////////////////////////////////////////////////////////////
 // Array types                                                        //
 ////////////////////////////////////////////////////////////////////////
 
@@ -484,9 +606,6 @@ extend primitive_array_type ::=
         labeled_primitive_type:a NATIVE LBRACK RBRACK:y
             {: RESULT = new Array(parser, parser.pos(a,y), a,
                                   /* isConst */ false, /* isNative */ true).toType(); :}
-    |   labeled_primitive_type:a NATIVE CONST LBRACK RBRACK:y
-            {: RESULT = new Array(parser, parser.pos(a,y), a, 
-                                  /* isConst */ true,  /* isNative */ true).toType(); :}
     ;
     
 extend reftype_or_expr ::=
