@@ -1,0 +1,40 @@
+/**
+ * Embodies a Patient, who has only two attributes, a string address, and 
+ * a boolean representing hiv positiveness.
+ **/
+public class Patient[label addressLabel, label hivLabel] {
+
+  /** This patient's (presumably comparatively public) mailing address **/
+  public /*private*/ Address[addressLabel, {hivLabel;addressLabel}]{addressLabel} address;
+
+  /** This patient's (presumably comparatively private) HIV status **/
+  public /*private*/ boolean{hivLabel} hiv;
+
+  /** Construct a new patient with an Address and HIV status **/
+  public Patient(Address[addressLabel, {hivLabel;addressLabel}]{addressLabel} newAddress, 
+                 boolean{hivLabel} newHiv) {
+    address = newAddress;
+    hiv = newHiv;
+    super();
+  }
+
+  ///** @return this patient's (presumably comparatively private) HIV status **/
+  //public boolean{hivLabel} hasHiv() {
+  //  return hiv;
+  //}
+
+  ///** @return this patient's (presumably comparatively public) mailing address **/
+  //public String{addressLabel} getAddress() {
+  //  return address.getAddress();
+  //}
+
+  ///**
+  // * @param newAddress sets this patient's (presumably comparatively public)
+  // *                   mailing address
+  // **/
+  //public void setAddress(String{addressLabel} newAddress) {
+  //  address.setAddress(newAddress);
+  //}
+}
+
+

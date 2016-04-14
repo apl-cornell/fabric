@@ -1,0 +1,103 @@
+import fabric.util.Map;
+import fabric.runtime.Runtime;
+import fabricated.util.List;
+
+class HivReader {
+
+  //
+  // The main method.  The declaration has a few annotations:
+  //
+  // 1. public static void main{p<-;p->} (principal{p<-} p, String[] args):{p<-;p->} throws Exception {
+  //                           ---------
+  // This annotation is the begin label, which bounds the side effects of the
+  // method.  This annotation prevents someone from outputting spurious
+  // messages to the console (the p<- component) or leaking information by
+  // calling this method in a secret context (the p-> component).
+  //
+  //
+  // 2. public static void main{p<-;p->} (principal{p<-} p, String[] args):{p<-;p->} throws Exception {
+  //                                      ----------------
+  // This extra parameter to main represents the principal who is invoking the
+  // method.  It has the label {p<-} because we require the principal object
+  // itself to have high integrity.
+  //
+  //
+  // 3. public static void main{p<-;p->} (principal{p<-} p, String[] args):{p<-;p->} throws Exception {
+  //                                                                       ---------
+  // This is the end label of the method.  It bounds the amount of information
+  // that can be learned by the successful completion of this method.
+  //
+  //
+  // 4. public static void main{p<-;p->} (principal{p<-} p, String[] args):{p<-;p->} throws Exception {
+  //                                                                                 ----------------
+  // In Fabric, all exceptions must be declared, because they represent a
+  // possible information flow.  Here we are lazy and simply declare "throws Exception"
+  //
+  public static void main{*provider}(principal{p<-} p, String[] args):{p->;p<-}
+  {
+    atomic {
+      if (provider <= new label {p<-;p->} && 
+          Address.provider <= provider  && 
+          Patient.provider <= provider )
+      {
+        // Get a reference to the store called "store".
+        final Store store = FabricWorker.getWorker().getStore("alicenode");
+
+        // Get a reference to the runtime.
+        // This is how Fabric programs access the console.
+        final Runtime[p] runtime = Runtime[p].getRuntime();
+
+        // We're storing p's stuff on "runtime.store", so we must ensure p trusts it.
+        if (runtime.store$ actsfor p) {
+          final principal alice = 
+              FabricWorker.getWorker().getWorker("alicenode").getPrincipal();
+          final principal bob = 
+              FabricWorker.getWorker().getWorker("bobnode"  ).getPrincipal();
+          final principal carol = 
+              FabricWorker.getWorker().getWorker("carolnode").getPrincipal();
+          //final principal aliceOrBob = new principal@store(alice,bob);
+          //final principal anybody   = new principal@store(aliceOrBob,carol);
+          //final principal aliceAndBob = new principal@store(alice&bob);
+          //final principal everybody = new principal@store(aliceAndBob&carol);
+          // Explicitly everybody believes that everybody can read and write
+          // the address.
+          final label addressLabel  = new label{
+            (alice,bob),carol →  (alice,bob),carol;
+            (alice,bob),carol ←  (alice,bob),carol
+          }@store;
+          // Explicitly everybody believes only alice can deal with the hivLabel.
+          final label hivLabel  = new label{
+            alice →  alice;
+            alice ←  alice
+          }@store;
+          if (new label{p<-} <= addressLabel && new label{p<-} <= hivLabel &&
+              addressLabel <= new label{p->} && hivLabel <= new label{p->}) {
+            // Store a reference to our object in the store's root map.
+            final Map root = store.getRoot();
+            final List[addressLabel] patients = 
+                  (List[addressLabel]) root.get("patients");
+            if (patients != null) {
+              for (int i = 0; i < patients.size(); i++) {
+                final Patient[addressLabel, hivLabel] patient = 
+                        (Patient[addressLabel, hivLabel]) patients.get(i);
+                if (patient.hiv) {
+                  final String{*addressLabel; *hivLabel} printable = 
+                          "a patient with Hiv Lives at " + patient.address.address;
+                  runtime.out().println(printable);
+                } else {
+                  runtime.out().println("iterating past a patient without Hiv...");
+                }
+              }
+            } else {
+              runtime.out().println("patients came back null");
+            }
+          } else {
+            runtime.out().println("p does not act for alice");
+          }
+        }
+      } else {
+        throw new Error("Provider has insufficient integrity.");
+      }
+    }
+  }
+}
