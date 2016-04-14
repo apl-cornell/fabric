@@ -1,0 +1,70 @@
+<!--
+  This is the Apache Ant build file for the Fabric "abort channels attack" example
+-->
+
+<project name="abort attack" default="build-all" basedir=".">
+  <description>
+    Build Abort Channel Attack example
+  </description>
+
+  <!--
+  ****************************************************************************
+    Global properties for this build.
+  ****************************************************************************
+  -->
+
+  <import file="../../common.xml" />
+  <import file="${fabric.home}/src/lib/sif/common.xml" />
+  <import file="${fabric.home}/src/lib/collections/common.xml" />
+
+  <dirname property="abort.home" file="${ant.file.abort}" />
+
+  <!--
+  ****************************************************************************
+    Targets for cleaning up the directory tree.
+  ****************************************************************************
+  -->
+
+  <target name="clean" description="Removes generated files">
+    <delete dir="${abort.home}/classes"/>
+  </target>
+
+  <target name="clobber" depends="clean"
+          description="Removes generated files and state of stores">
+    <delete dir="${abort.home}/var"/>
+  </target>
+
+  <!--
+  ****************************************************************************
+    Compilation targets.
+  ****************************************************************************
+  -->
+
+  <target name="build"
+          description="Builds the Abort Channel Attack example">
+    <fabc dest="${abort.home}/classes">
+      <arg value="-sourcepath" /> <arg value="${abort.home}/src" />
+      <arg value="-cp"/> <arg pathref="collections.classpath"/>
+      <arg value="-cp"/> <arg pathref="lib.classpath"/>
+      <arg value="-cp"         /> <arg value="${abort.home}/classes" />
+      <arg value="-trusted-providers" />
+      <arg value="-explain" />
+
+      <fileset dir="${abort.home}/src" includes="*.fab" />
+    </fabc>
+
+    <filc dest="${abort.home}/classes">
+      <arg value="-sourcepath" /> <arg value="${abort.home}/src" />
+      <arg value="-cp"/> <arg value="${abort.home}/classes"/> <arg value="-explain"/>
+      <fileset dir="${abort.home}/src" includes="**/*.fil" />
+    </filc>
+  </target>
+
+  <target name="build-all" depends="build" />
+  <target name="all" depends="build-all" />
+
+</project>
+
+<!--
+vim: ts=2 sw=2 et ai
+-->
