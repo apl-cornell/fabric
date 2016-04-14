@@ -36,67 +36,61 @@ class HivReader {
   public static void main{*provider}(principal{p<-} p, String[] args):{p->;p<-}
   {
     atomic {
-      if (provider <= new label {p<-;p->} && 
-          Address.provider <= provider  && 
-          Patient.provider <= provider )
-      {
-        // Get a reference to the store called "store".
-        final Store store = FabricWorker.getWorker().getStore("alicenode");
+      // Get a reference to the store called "store".
+      final Store store = FabricWorker.getWorker().getStore("alicenode");
 
-        // Get a reference to the runtime.
-        // This is how Fabric programs access the console.
-        final Runtime[p] runtime = Runtime[p].getRuntime();
+      // Get a reference to the runtime.
+      final Runtime[p] runtime = Runtime[p].getRuntime();
 
-        // We're storing p's stuff on "runtime.store", so we must ensure p trusts it.
-        if (runtime.store$ actsfor p) {
-          final principal alice = 
-              FabricWorker.getWorker().getWorker("alicenode").getPrincipal();
-          final principal bob = 
-              FabricWorker.getWorker().getWorker("bobnode"  ).getPrincipal();
-          final principal carol = 
-              FabricWorker.getWorker().getWorker("carolnode").getPrincipal();
-          //final principal aliceOrBob = new principal@store(alice,bob);
-          //final principal anybody   = new principal@store(aliceOrBob,carol);
-          //final principal aliceAndBob = new principal@store(alice&bob);
-          //final principal everybody = new principal@store(aliceAndBob&carol);
-          // Explicitly everybody believes that everybody can read and write
-          // the address.
-          final label addressLabel  = new label{
-            (alice,bob),carol →  (alice,bob),carol;
-            (alice,bob),carol ←  (alice,bob),carol
-          }@store;
-          // Explicitly everybody believes only alice can deal with the hivLabel.
-          final label hivLabel  = new label{
-            alice →  alice;
-            alice ←  alice
-          }@store;
-          if (new label{p<-} <= addressLabel && new label{p<-} <= hivLabel &&
-              addressLabel <= new label{p->} && hivLabel <= new label{p->}) {
-            // Store a reference to our object in the store's root map.
-            final Map root = store.getRoot();
-            final List[addressLabel] patients = 
-                  (List[addressLabel]) root.get("patients");
-            if (patients != null) {
-              for (int i = 0; i < patients.size(); i++) {
-                final Patient[addressLabel, hivLabel] patient = 
-                        (Patient[addressLabel, hivLabel]) patients.get(i);
-                if (patient.hiv) {
-                  final String{*addressLabel; *hivLabel} printable = 
-                          "a patient with Hiv Lives at " + patient.address.address;
-                  runtime.out().println(printable);
-                } else {
-                  runtime.out().println("iterating past a patient without Hiv...");
-                }
-              }
-            } else {
-              runtime.out().println("patients came back null");
-            }
+      // Get principals for alice, bob, and carol.
+      final principal alice = 
+          FabricWorker.getWorker().getWorker("alicenode").getPrincipal();
+      final principal bob = 
+          FabricWorker.getWorker().getWorker("bobnode"  ).getPrincipal();
+      final principal carol = 
+          FabricWorker.getWorker().getWorker("carolnode").getPrincipal();
+
+      // Explicitly everybody believes that everybody can read and write
+      // the address.
+      final label addressLabel  = new label{
+        (alice,bob),carol → (alice,bob),carol;
+        (alice,bob),carol ← (alice,bob),carol
+      }@store;
+
+      // only alice can deal with the hivLabel.
+      final label hivLabel  = new label{
+        alice → alice;
+        alice ← alice
+      }@store;
+
+      Map root = store.getRoot();
+      // Grab the patients list
+      List[addressLabel] patients = 
+            (List[addressLabel]) root.get("patients");
+      if (patients == null) {
+        runtime.out().println("patients came back null");
+        return;
+      }
+
+      if (new label{p<-} <= addressLabel &&
+          new label{p<-} <= hivLabel &&
+          addressLabel <= new label{p->} &&
+          hivLabel <= new label{p->}) {
+        // Cycle through the patients
+        for (int i = 0; i < patients.size(); i++) {
+          Patient[addressLabel, hivLabel] patient = 
+                  (Patient[addressLabel, hivLabel]) patients.get(i);
+          // Grab the address if they're hiv positive
+          String{*addressLabel; *hivLabel} printable = "";
+          if (patient.hiv) {
+            printable = "a patient with Hiv Lives at " + patient.address.address;
           } else {
-            runtime.out().println("p does not act for alice");
+            printable = "iterating past a patient without Hiv...";
           }
+          runtime.out().println(printable);
         }
       } else {
-        throw new Error("Provider has insufficient integrity.");
+        runtime.out().println("p does not act for alice");
       }
     }
   }

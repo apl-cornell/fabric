@@ -37,71 +37,67 @@ class PatientMaker {
   public static void main{*provider}(principal{p<-} p, String[] args):{p->;p<-}
   {
     atomic {
-      if (provider <= new label {p<-;p->} && 
-          Address.provider <= provider  && 
-          Patient.provider <= provider )
-      {
-        // Get a reference to the store called "store".
-        final Store store = FabricWorker.getWorker().getStore("alicenode");
+      // Get a reference to the store called "store".
+      final Store store = FabricWorker.getWorker().getStore("alicenode");
 
-        // Get a reference to the runtime.
-        // This is how Fabric programs access the console.
-        final Runtime[p] runtime = Runtime[p].getRuntime();
+      // Get a reference to the runtime.
+      // This is how Fabric programs access the console.
+      final Runtime[p] runtime = Runtime[p].getRuntime();
 
-        // We're storing p's stuff on "runtime.store", so we must ensure p trusts it.
-        if (runtime.store$ actsfor p && store actsfor p) {
-          final principal alice = 
-              FabricWorker.getWorker().getWorker("alicenode").getPrincipal();
-          final principal bob = 
-              FabricWorker.getWorker().getWorker("bobnode"  ).getPrincipal();
-          final principal carol = 
-              FabricWorker.getWorker().getWorker("carolnode").getPrincipal();
-          //final principal aliceOrBob = new principal@store(alice,bob);
-          //final principal anybody   = new principal@store(aliceOrBob,carol);
-          //final principal aliceAndBob = new principal@store(alice&bob);
-          //final principal everybody = new principal@store(aliceAndBob&carol);
-          // Explicitly everybody believes that everybody can read and write
-          // the address.
-          final label addressLabel  = new label{
-            (alice,bob),carol →  (alice,bob),carol;
-            (alice,bob),carol ←  (alice,bob),carol
-          }@store;
-          // Explicitly everybody believes only alice can deal with the hivLabel.
-          final label hivLabel  = new label{
-            alice →  alice;
-            alice ←  alice
-          }@store;
-          final label accessLabel = new label{
-            *addressLabel;
-            *hivLabel
-          }@store;
-          if (new label{p<-} <= addressLabel &&
-              hivLabel <= new label{*->store} &&
-              addressLabel <= new label{p->}) { // only alice is trusted enough
-            // Create an object at 'store' holding our important message
-            ArrayList[addressLabel] patients = 
-                   new ArrayList[addressLabel]@store(
-                       new IdComparator[addressLabel]@store(),
-                       1000);
-            for (int i = 0; i < 1000; i++) {
-              if (addressLabel <= hivLabel) {
-                patients.add(new Patient[addressLabel, hivLabel]@store(
-                      new Address[addressLabel, accessLabel]@store(" " + i + " Wysteria Lane"),
-                      ((i % 2) == 0)));
-              } else {
-                runtime.out().println("Addresses aren't strictly more public than hiv flags.");
-              }
-            }
+      final principal alice = 
+          FabricWorker.getWorker().getWorker("alicenode").getPrincipal();
+      final principal bob = 
+          FabricWorker.getWorker().getWorker("bobnode"  ).getPrincipal();
+      final principal carol = 
+          FabricWorker.getWorker().getWorker("carolnode").getPrincipal();
 
-            // Store a reference to our object in the store's root map.
-            Map root = store.getRoot();
-            root.put("patients", patients);
+      // Explicitly everybody believes that everybody can read and write
+      // the address.
+      final label addressLabel  = new label{
+        (alice,bob),carol →  (alice,bob),carol;
+        (alice,bob),carol ←  (alice,bob),carol
+      }@store;
+
+      // Explicitly everybody believes only alice can deal with the hivLabel.
+      final label hivLabel  = new label{
+        alice →  alice;
+        alice ←  alice
+      }@store;
+
+      // Patient records have to be stored somewhere that can hold both
+      // addresses and hiv flags.
+      final label accessLabel = new label{
+        *addressLabel;
+        *hivLabel
+      }@store;
+
+      // We're storing p's stuff on "runtime.store", so we must ensure p trusts it.
+      if (runtime.store$ actsfor p &&
+          store actsfor p &&
+          new label{p<-} <= addressLabel &&
+          hivLabel <= new label{*->store} &&
+          addressLabel <= new label{p->}) { // only alice is trusted enough
+
+        // Create an object at 'store' holding our important message
+        ArrayList[addressLabel] patients = 
+               new ArrayList[addressLabel]@store(
+                   new IdComparator[addressLabel]@store(),
+                   1000);
+        for (int i = 0; i < 1000; i++) {
+          if (addressLabel <= hivLabel) {
+            patients.add(new Patient[addressLabel, hivLabel]@store(
+                  new Address[addressLabel, accessLabel]@store(" " + i + " Wysteria Lane"),
+                  ((i % 2) == 0)));
           } else {
-            runtime.out().println("p does not act for alice, so it didn't work.");
+            runtime.out().println("Addresses aren't strictly more public than hiv flags.");
           }
         }
+
+        // Store a reference to our object in the store's root map.
+        Map root = store.getRoot();
+        root.put("patients", patients);
       } else {
-        throw new Error("Provider has insufficient integrity.");
+        runtime.out().println("p does not act for alice, so it didn't work.");
       }
     }
   }
