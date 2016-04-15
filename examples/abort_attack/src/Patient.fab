@@ -8,11 +8,11 @@ public class Patient[label addressLabel, label hivLabel] {
   public /*private*/ Address[addressLabel, {hivLabel;addressLabel}]{addressLabel} address;
 
   /** This patient's (presumably comparatively private) HIV status **/
-  public /*private*/ boolean{hivLabel} hiv;
+  public /*private*/ Hiv[hivLabel,{hivLabel;addressLabel}]{addressLabel} hiv;
 
   /** Construct a new patient with an Address and HIV status **/
   public Patient(Address[addressLabel, {hivLabel;addressLabel}]{addressLabel} newAddress, 
-                 boolean{hivLabel} newHiv) {
+                 Hiv[hivLabel,{hivLabel;addressLabel}]{addressLabel} newHiv) {
     address = newAddress;
     hiv = newHiv;
     super();

@@ -1,0 +1,7 @@
+public class Hiv[label hivLabel, label accessLabel] where hivLabel <= accessLabel{
+  @{accessLabel}
+  public boolean{hivLabel} hiv;
+}
+
+
+

@@ -70,32 +70,37 @@ class PatientMaker {
         *addressLabel;
         *hivLabel
       }@store;
+      // the label of the list of patients: everyone can read it, but only alice can
+      // write it.
+      final label listLabel = new label{
+        (alice,bob),carol →  (alice,bob),carol;
+        alice ←  alice
+      }@store;
+
 
       // We're storing p's stuff on "runtime.store", so we must ensure p trusts it.
       if (runtime.store$ actsfor p &&
           store actsfor p &&
-          new label{p<-} <= addressLabel &&
-          hivLabel <= new label{*->store} &&
-          addressLabel <= new label{p->}) { // only alice is trusted enough
+          p actsfor alice ) {
 
         // Create an object at 'store' holding our important message
-        ArrayList[addressLabel] patients = 
-               new ArrayList[addressLabel]@store(
-                   new IdComparator[addressLabel]@store(),
-                   1000);
+        PatientList[listLabel,addressLabel, hivLabel]{*listLabel} patients =
+          new PatientList[listLabel,addressLabel, hivLabel]@store();
+        final PatientList[listLabel,addressLabel, hivLabel]{*listLabel} patientRoot = patients;
         for (int i = 0; i < 1000; i++) {
-          if (addressLabel <= hivLabel) {
-            patients.add(new Patient[addressLabel, hivLabel]@store(
-                  new Address[addressLabel, accessLabel]@store(" " + i + " Wysteria Lane"),
-                  ((i % 2) == 0)));
-          } else {
-            runtime.out().println("Addresses aren't strictly more public than hiv flags.");
-          }
+            Address[addressLabel, accessLabel] addr = new Address[addressLabel, accessLabel]@store(" " + i + " Wysteria Lane");
+            Hiv[hivLabel, accessLabel]{*listLabel} h = new Hiv[hivLabel,accessLabel]@store();
+            h.hiv = ((i % 2) == 0);
+            patients.patient = (new Patient[addressLabel, hivLabel]@store(
+                  addr,
+                  h));
+            patients.next = new PatientList[listLabel,addressLabel, hivLabel]@store();
+            patients = patients.next;
         }
 
         // Store a reference to our object in the store's root map.
         Map root = store.getRoot();
-        root.put("patients", patients);
+        root.put("patients",  patientRoot);
       } else {
         runtime.out().println("p does not act for alice, so it didn't work.");
       }
