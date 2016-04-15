@@ -2,14 +2,21 @@ package fabric.ast;
 
 import java.util.List;
 
+import codebases.ast.CodebaseNodeFactory;
+
+import jif.ast.ConstraintNode;
 import jif.ast.JifNodeFactory;
 import jif.ast.LabelNode;
 import jif.ast.NewLabel;
 import jif.ast.PrincipalExpr;
 import jif.ast.PrincipalNode;
+import jif.types.Assertion;
+
+import polyglot.ast.Block;
 import polyglot.ast.Call;
 import polyglot.ast.ClassBody;
 import polyglot.ast.Expr;
+import polyglot.ast.Formal;
 import polyglot.ast.Id;
 import polyglot.ast.Javadoc;
 import polyglot.ast.New;
@@ -18,7 +25,6 @@ import polyglot.ast.Stmt;
 import polyglot.ast.TypeNode;
 import polyglot.types.Flags;
 import polyglot.util.Position;
-import codebases.ast.CodebaseNodeFactory;
 
 /**
  * NodeFactory for fabric extension.
@@ -73,6 +79,18 @@ public interface FabricNodeFactory extends JifNodeFactory, CodebaseNodeFactory {
   RemoteWorkerGetter RemoteWorkerGetter(Position pos, Expr remoteName);
 
   NewLabel NewLabel(Position pos, LabelNode label, Expr location);
+
+  FabricMethodDecl FabricMethodDecl(Position pos, Flags flags, TypeNode returnType,
+      Id name, LabelNode startLabel, LabelNode beginAccessPolicy,
+      List<Formal> arguments, LabelNode endLabel, LabelNode endConfPolicy,
+      List<TypeNode> exceptions, List<ConstraintNode<Assertion>> constraints,
+      Block body, Javadoc javadoc);
+
+  FabricConstructorDecl FabricConstructorDecl(Position pos, Flags flags, Id name,
+      LabelNode startLabel, LabelNode beginAccessPolicy, LabelNode returnLabel,
+      List<Formal> arguments, LabelNode endConfPolicy,
+      List<TypeNode> exceptions, List<ConstraintNode<Assertion>> constraints,
+      Block body, Javadoc javadoc);
 
   PrincipalExpr PrincipalExpr(Position pos, PrincipalNode principal,
       Expr location);

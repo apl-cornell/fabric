@@ -1,11 +1,15 @@
 package fabric.types;
 
+import fabric.ast.FabricFieldDecl;
+
 import jif.ast.LabelNode;
 import jif.types.FixedSignature;
+import jif.types.JifProcedureInstance;
 import jif.types.label.Label;
+
 import polyglot.ast.FieldDecl;
+import polyglot.ast.ProcedureDecl;
 import polyglot.types.Type;
-import fabric.ast.FabricFieldDecl;
 
 //TODO: This "default signature" design pattern is unevenly applied.
 //      We should either pull in all the default to this class or eliminate it.
@@ -33,4 +37,25 @@ FabricDefaultSignature {
     }
   }
 
+  @Override
+  public Label defaultBeginConflict(ProcedureDecl pd) {
+    //TODO: Is this reasonable?
+    JifProcedureInstance jpi = (JifProcedureInstance) pd.procedureInstance();
+    if (!jpi.isDefaultPCBound())
+      return jpi.pcBound();
+    return fts.topLabel();
+  }
+
+  @Override
+  public Label defaultEndConflict(ProcedureDecl pd) {
+    //TODO: Is this reasonable?
+    FabricProcedureInstance fpi = (FabricProcedureInstance) pd.procedureInstance();
+    if (!fpi.isDefaultReturnLabel())
+      return fpi.returnLabel();
+    if (!fpi.isDefaultBeginConflict())
+      return fpi.beginConflictLabel();
+    if (!fpi.isDefaultPCBound())
+      return fpi.pcBound();
+    return fts.bottomLabel();
+  }
 }
