@@ -45,13 +45,16 @@ import jif.types.ActsForConstraint;
 import jif.types.Assertion;
 import jif.types.DefaultSignature;
 import jif.types.JifClassType;
+import jif.types.JifConstructorInstance;
 import jif.types.JifContext;
+import jif.types.JifMethodInstance;
 import jif.types.JifTypeSystem_c;
 import jif.types.LabelLeAssertion;
 import jif.types.LabelSubstitution;
 import jif.types.LabeledType;
 import jif.types.Param;
 import jif.types.ParamInstance;
+import jif.types.Path;
 import jif.types.Solver;
 import jif.types.hierarchy.LabelEnv;
 import jif.types.label.AccessPath;
@@ -1227,10 +1230,24 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
   }
 
   @Override
+  public JifConstructorInstance jifConstructorInstance(Position pos,
+      ClassType container, Flags flags, jif.types.label.Label startLabel,
+      boolean isDefaultStartLabel, jif.types.label.Label returnLabel,
+      boolean isDefaultReturnLabel, List<? extends Type> formalTypes,
+      List<jif.types.label.Label> formalArgLabels,
+      List<? extends Type> excTypes, List<Assertion> constraints) {
+    // TODO: Not sure if I should put defaults here or unknownLabel calls.
+    return fabricConstructorInstance(pos, container, flags, startLabel,
+        isDefaultStartLabel, unknownLabel(pos), false, returnLabel,
+        isDefaultReturnLabel, unknownLabel(pos), false, formalTypes,
+        formalArgLabels, excTypes, constraints);
+  }
+
+  @Override
   public ConstructorInstance defaultConstructor(Position pos,
       ClassType container) {
-    // TODO: This hardcodes the default begin access and end confidentiality
-    // policy.
+    // This hardcodes the default begin access and end confidentiality policy.
+    // TODO: Not sure if I should put defaults here or unknownLabel calls.
     assert_(container);
     return fabricConstructorInstance(pos, container, Public(), topLabel(), true,
         topLabel(), true, bottomLabel(), true,
@@ -1249,7 +1266,6 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
       Label endAccessLab, boolean isDefaultEndAccess,
       List<? extends Type> excTypes,
       List<Assertion> constraints) {
-    // TODO Auto-generated method stub
     FabricMethodInstance mi = new FabricMethodInstance_c(this, pos, container,
         flags, returnType, name, startLabel, isDefaultStartLabel,
         beginAccessLab, isDefaultBeginAccess, formalTypes, formalArgLabels,
@@ -1259,14 +1275,40 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
   }
 
   @Override
+  public JifMethodInstance jifMethodInstance(Position pos,
+      ReferenceType container, Flags flags, Type returnType,
+      java.lang.String name, jif.types.label.Label startLabel,
+      boolean isDefaultStartLabel, List<? extends Type> formalTypes,
+      List<jif.types.label.Label> formalArgLabels,
+      jif.types.label.Label endLabel, boolean isDefaultEndLabel,
+      List<? extends Type> excTypes, List<Assertion> constraints) {
+    // TODO: Not sure if I should put defaults here or unknownLabel calls.
+    return fabricMethodInstance(pos, container, flags, returnType, name,
+        startLabel, isDefaultStartLabel, unknownLabel(pos), false, formalTypes,
+        formalArgLabels, endLabel, isDefaultEndLabel, unknownLabel(pos), false,
+        excTypes, constraints);
+  }
+
+  @Override
   public MethodInstance methodInstance(Position pos, ReferenceType container,
       Flags flags, Type returnType, java.lang.String name,
       List<? extends Type> formalTypes, List<? extends Type> excTypes) {
-    // TODO Auto-generated method stub
+    // TODO: Not sure if I should put defaults here or unknownLabel calls.
     return fabricMethodInstance(pos, container, flags, returnType, name,
         unknownLabel(pos), false, unknownLabel(pos), false,
         formalTypes, Collections.<Label> emptyList(), unknownLabel(pos), false,
         unknownLabel(pos), false, excTypes,
         Collections.<Assertion> emptyList());
+  }
+
+  @Override
+  public FabricPathMap pathMap() {
+    return new FabricPathMap(this);
+  }
+
+  @Override
+  public FabricPathMap pathMap(Path path, jif.types.label.Label L) {
+    FabricPathMap m = pathMap();
+    return m.set(path, L);
   }
 }
