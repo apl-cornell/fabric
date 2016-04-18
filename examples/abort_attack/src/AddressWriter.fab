@@ -33,7 +33,7 @@ class AddressWriter {
   // In Fabric, all exceptions must be declared, because they represent a
   // possible information flow.  Here we are lazy and simply declare "throws Exception"
   //
-  public static void main{*provider}(principal{p<-} p, String[] args):{p->;p<-}
+  public static void main{*provider}(principal{p<-} p, String{p<-}[]{p<-} args):{p->;p<-}
   {
     atomic {
       // Get a reference to the store called "store".
@@ -74,21 +74,30 @@ class AddressWriter {
         (alice,bob),carol →  (alice,bob),carol;
         alice ←  alice
       }@store;
+
       if (patientLabel <= addressLabel) {
         if (new label{p<-} <= addressLabel) {
           if (patientLabel <= new label{p->} ) {
+            int{*patientLabel} desired_patient = 0;
+            try {
+              desired_patient = Integer.parseInt(args[0]);
+            } catch (ArrayIndexOutOfBoundsException e) {
+              runtime.out().println("arg[0] doesn't exist!");
+            } catch (NumberFormatException e) {
+              runtime.out().println("arg[0] " + args[0] + " wasn't a desired patient number");
+            }
             // Grab the patients list
             Map root = store.getRoot();
-            PatientList[patientLabel,addressLabel, hivLabel]{*patientLabel} patients =
-              (PatientList[patientLabel,addressLabel, hivLabel]) root.get("patients");
+            PatientList[patientLabel,addressLabel,hivLabel]{*patientLabel} patients=
+             (PatientList[patientLabel,addressLabel,hivLabel]) root.get("patients");
             if (patients == null) {
               runtime.out().println("patients came back null");
               return;
             }
-
-            while (patients != null) {
+            while (patients != null && desired_patient >= 0) {
               Patient[addressLabel, hivLabel] patient = patients.patient;
-              if (patient != null) {
+              if (patient != null && desired_patient == 0) {
+                runtime.out().println("updating patient . . .");
                 Address[addressLabel,accessLabel]{*addressLabel} addr=patient.address;
                 if (addr != null) {
                   String{*addressLabel} address = addr.address;
@@ -108,9 +117,10 @@ class AddressWriter {
                 } else {
                   //runtime.out().println("patient.address came back null");
                 }
-              } else {
+              } else if (patient == null) {
                 runtime.out().println("patient (singular) came back null");
               }
+              desired_patient--;
               patients = patients.next;
             }
           } else {
@@ -123,8 +133,6 @@ class AddressWriter {
       } else {
         runtime.out().println("patientLabel doesn't flow to addressLabel");
       }
-
-
     }
   }
 }
