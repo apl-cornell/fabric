@@ -1,7 +1,7 @@
 import fabric.util.Map;
 import fabric.runtime.Runtime;
-import fabricated.util.ArrayList;
-import fabricated.util.IdComparator;
+//import fabricated.util.ArrayList;
+//import fabricated.util.IdComparator;
 
 class PatientMaker {
 

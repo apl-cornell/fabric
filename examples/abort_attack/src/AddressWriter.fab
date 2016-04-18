@@ -1,6 +1,5 @@
 import fabric.util.Map;
 import fabric.runtime.Runtime;
-import fabricated.util.List;
 
 class AddressWriter {
 
