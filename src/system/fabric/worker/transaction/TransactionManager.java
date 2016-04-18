@@ -14,7 +14,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -98,12 +97,6 @@ import fabric.worker.remote.WriterMap;
  * </p>
  */
 public final class TransactionManager {
-  /**
-   * The deadlock detector.
-   */
-  private static final DeadlockDetectorThread deadlockDetector =
-      new DeadlockDetectorThread();
-
   /**
    * The innermost running transaction for the thread being managed.
    */
@@ -486,7 +479,7 @@ public final class TransactionManager {
    */
   private void sendPrepareMessages(final boolean singleStore,
       final boolean readOnly, Set<Store> stores, List<RemoteWorker> workers)
-          throws TransactionRestartingException {
+      throws TransactionRestartingException {
     final Map<RemoteNode<?>, TransactionPrepareFailedException> failures =
         Collections.synchronizedMap(
             new HashMap<RemoteNode<?>, TransactionPrepareFailedException>());
@@ -664,7 +657,7 @@ public final class TransactionManager {
    */
   private void sendCommitMessagesAndCleanUp(boolean singleStore,
       boolean readOnly, Set<Store> stores, List<RemoteWorker> workers)
-          throws TransactionAtomicityViolationException {
+      throws TransactionAtomicityViolationException {
     synchronized (current.commitState) {
       switch (current.commitState.value) {
       case UNPREPARED:
@@ -884,47 +877,34 @@ public final class TransactionManager {
 
     // Check read condition: wait until all writers are in our ancestry.
     boolean hadToWait = false;
-    try {
-      boolean firstWait = true;
-      boolean deadlockDetectRequested = false;
-      while (obj.$writeLockHolder != null
-          && !current.isDescendantOf(obj.$writeLockHolder)) {
-        try {
-          Logging.log(WORKER_TRANSACTION_LOGGER, Level.FINEST,
-              "{0} wants to read {1}/{2} ({3}); waiting on writer {4}", current,
-              obj.$getStore(), obj.$getOnum(), obj.getClass(),
-              obj.$writeLockHolder);
-          hadToWait = true;
-          obj.$numWaiting++;
-          current.setWaitsFor(obj.$writeLockHolder);
+    boolean firstWait = true;
+    while (obj.$writeLockHolder != null
+        && !current.isDescendantOf(obj.$writeLockHolder)) {
+      try {
+        Logging.log(WORKER_TRANSACTION_LOGGER, Level.FINEST,
+            "{0} wants to read {1}/{2} ({3}); waiting on writer {4}", current,
+            obj.$getStore(), obj.$getOnum(), obj.getClass(),
+            obj.$writeLockHolder);
+        hadToWait = true;
+        obj.$numWaiting++;
 
-          if (firstWait) {
-            // This is the first time we're waiting. Wait with a 10 ms timeout.
-            firstWait = false;
-            obj.wait(10);
-          } else {
-            // Not the first time through the loop. Ask for deadlock detection
-            // if we haven't already.
-            if (!deadlockDetectRequested) {
-              deadlockDetector.requestDetect(current);
-              deadlockDetectRequested = true;
-            }
-
-            // Should be waiting indefinitely, but this requires proper handling
-            // of InterruptedExceptions in the entire system. Instead, we spin
-            // once a second so that we periodically check the retry signal.
-            obj.wait(1000);
-          }
-        } catch (InterruptedException e) {
-          Logging.logIgnoredInterruptedException(e);
+        if (firstWait) {
+          // This is the first time we're waiting. Wait with a 10 ms timeout.
+          firstWait = false;
+          obj.wait(10);
+        } else {
+          // Should be waiting indefinitely, but this requires proper handling
+          // of InterruptedExceptions in the entire system. Instead, we spin
+          // once a second so that we periodically check the retry signal.
+          obj.wait(1000);
         }
-        obj.$numWaiting--;
-
-        // Make sure we weren't aborted/retried while we were waiting.
-        checkRetrySignal();
+      } catch (InterruptedException e) {
+        Logging.logIgnoredInterruptedException(e);
       }
-    } finally {
-      current.clearWaitsFor();
+      obj.$numWaiting--;
+
+      // Make sure we weren't aborted/retried while we were waiting.
+      checkRetrySignal();
     }
 
     // Set the object's reader stamp to the current transaction.
@@ -981,76 +961,58 @@ public final class TransactionManager {
     // Check write condition: wait until writer is in our ancestry and all
     // readers are in our ancestry.
     boolean hadToWait = false;
-    try {
-      // This is the set of logs for those transactions we're waiting for.
-      Set<Log> waitsFor = new HashSet<>();
-
-      boolean firstWait = true;
-      boolean deadlockDetectRequested = false;
-      while (true) {
-        waitsFor.clear();
-
-        // Make sure writer is in our ancestry.
-        if (obj.$writeLockHolder != null
-            && !current.isDescendantOf(obj.$writeLockHolder)) {
-          Logging.log(WORKER_TRANSACTION_LOGGER, Level.FINEST,
-              "{0} wants to write {1}/{2} ({3}); waiting on writer {4}",
-              current, obj.$getStore(), obj.$getOnum(), obj.getClass(),
-              obj.$writeLockHolder);
-          waitsFor.add(obj.$writeLockHolder);
-          hadToWait = true;
-        } else {
-          // Restart any incompatible readers.
-          ReadMap.Entry readMapEntry = obj.$readMapEntry;
-          if (readMapEntry != null) {
-            synchronized (readMapEntry) {
-              for (Log lock : readMapEntry.getReaders()) {
-                if (!current.isDescendantOf(lock)) {
-                  Logging.log(WORKER_TRANSACTION_LOGGER, Level.FINEST,
-                      "{0} wants to write {1}/{2} ({3}); aborting reader {4}",
-                      current, obj.$getStore(), obj.$getOnum(), obj.getClass(),
-                      lock);
-                  waitsFor.add(lock);
-                  lock.flagRetry();
-                }
+    boolean firstWait = true;
+    while (true) {
+      // Make sure writer is in our ancestry.
+      if (obj.$writeLockHolder != null
+          && !current.isDescendantOf(obj.$writeLockHolder)) {
+        Logging.log(WORKER_TRANSACTION_LOGGER, Level.FINEST,
+            "{0} wants to write {1}/{2} ({3}); waiting on writer {4}", current,
+            obj.$getStore(), obj.$getOnum(), obj.getClass(),
+            obj.$writeLockHolder);
+        hadToWait = true;
+      } else {
+        // Wait for any incompatible readers.
+        ReadMap.Entry readMapEntry = obj.$readMapEntry;
+        if (readMapEntry != null) {
+          synchronized (readMapEntry) {
+            boolean needToWait = false;
+            for (Log lock : readMapEntry.getReaders()) {
+              if (!current.isDescendantOf(lock)) {
+                Logging.log(WORKER_TRANSACTION_LOGGER, Level.FINEST,
+                    "{0} wants to write {1}/{2} ({3}); waiting on reader {4}",
+                    current, obj.$getStore(), obj.$getOnum(), obj.getClass(),
+                    lock);
+                needToWait = true;
+                break;
               }
-
-              if (waitsFor.isEmpty()) break;
-            }
-          }
-        }
-
-        try {
-          obj.$numWaiting++;
-          current.setWaitsFor(waitsFor);
-
-          if (firstWait) {
-            // This is the first time we're waiting. Wait with a 10 ms timeout.
-            firstWait = false;
-            obj.wait(10);
-          } else {
-            // Not the first time through the loop. Ask for deadlock detection
-            // if we haven't already.
-            if (!deadlockDetectRequested) {
-              deadlockDetector.requestDetect(current);
-              deadlockDetectRequested = true;
             }
 
-            // Should be waiting indefinitely, but this requires proper handling
-            // of InterruptedExceptions in the entire system. Instead, we spin
-            // once a second so that we periodically check the retry signal.
-            obj.wait(1000);
+            if (!needToWait) break;
           }
-        } catch (InterruptedException e) {
-          Logging.logIgnoredInterruptedException(e);
         }
-        obj.$numWaiting--;
-
-        // Make sure we weren't aborted/retried while we were waiting.
-        checkRetrySignal();
       }
-    } finally {
-      current.clearWaitsFor();
+
+      try {
+        obj.$numWaiting++;
+
+        if (firstWait) {
+          // This is the first time we're waiting. Wait with a 10 ms timeout.
+          firstWait = false;
+          obj.wait(10);
+        } else {
+          // Should be waiting indefinitely, but this requires proper handling
+          // of InterruptedExceptions in the entire system. Instead, we spin
+          // once a second so that we periodically check the retry signal.
+          obj.wait(1000);
+        }
+      } catch (InterruptedException e) {
+        Logging.logIgnoredInterruptedException(e);
+      }
+      obj.$numWaiting--;
+
+      // Make sure we weren't aborted/retried while we were waiting.
+      checkRetrySignal();
     }
 
     // Set the write stamp.
@@ -1249,6 +1211,16 @@ public final class TransactionManager {
     } finally {
       Timing.BEGIN.end();
     }
+  }
+
+  /**
+   * Attempts to stage all reads and writes made so far in the top-level
+   * transaction.
+   *
+   * @throws TransactionRestartingException if the staging fails.
+   */
+  public void stageTransaction() {
+
   }
 
   /**

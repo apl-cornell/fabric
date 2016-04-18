@@ -169,12 +169,6 @@ public final class Log {
   public final long startTime;
 
   /**
-   * If a transaction T's log appears in this set, then this transaction is
-   * waiting for a lock that is held by transaction T.
-   */
-  private final Set<Log> waitsFor;
-
-  /**
    * Creates a new log with the given parent and the given transaction ID. The
    * TID for the parent and the given TID are assumed to be consistent. If the
    * given TID is null, a random tid is generated for the subtransaction.
@@ -202,7 +196,6 @@ public final class Log {
     this.localStoreWrites = new WeakReferenceArrayList<>();
     this.workersCalled = new ArrayList<>();
     this.startTime = System.currentTimeMillis();
-    this.waitsFor = new HashSet<>();
 
     if (parent != null) {
       try {
@@ -330,9 +323,8 @@ public final class Log {
     Log curLog = this;
     while (curLog != null) {
       if (store.isLocalStore()) {
-        Iterable<_Impl> writesToExclude =
-            includeModified ? Collections.<_Impl> emptyList()
-                : curLog.localStoreWrites;
+        Iterable<_Impl> writesToExclude = includeModified
+            ? Collections.<_Impl> emptyList() : curLog.localStoreWrites;
         Iterable<_Impl> chain =
             SysUtil.chain(writesToExclude, curLog.localStoreCreates);
         for (_Impl write : chain)
@@ -743,44 +735,6 @@ public final class Log {
 
   public Log getChild() {
     return child;
-  }
-
-  /**
-   * Changes the waitsFor set to a singleton set containing the given log.
-   */
-  public void setWaitsFor(Log waitsFor) {
-    synchronized (this.waitsFor) {
-      this.waitsFor.clear();
-      this.waitsFor.add(waitsFor);
-    }
-  }
-
-  /**
-   * Changes the waitsFor set to contain exactly the elements of the given set.
-   */
-  public void setWaitsFor(Set<Log> waitsFor) {
-    synchronized (this.waitsFor) {
-      this.waitsFor.clear();
-      this.waitsFor.addAll(waitsFor);
-    }
-  }
-
-  /**
-   * Empties the waitsFor set.
-   */
-  public void clearWaitsFor() {
-    synchronized (this.waitsFor) {
-      this.waitsFor.clear();
-    }
-  }
-
-  /**
-   * Returns a copy of the waitsFor set.
-   */
-  public Set<Log> getWaitsFor() {
-    synchronized (this.waitsFor) {
-      return new HashSet<>(this.waitsFor);
-    }
   }
 
   /**
