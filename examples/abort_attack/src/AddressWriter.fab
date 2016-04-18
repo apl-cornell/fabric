@@ -98,10 +98,11 @@ class AddressWriter {
               runtime.out().println("patients came back null");
               return;
             }
-            while (patients != null && desired_patient >= 0) {
+            int patients_left = desired_patient;
+            while (patients != null && patients_left >= 0) {
               Patient[addressLabel, hivLabel] patient = patients.patient;
-              if (patient != null && desired_patient == 0) {
-                runtime.out().println("updating patient . . .");
+              if (patient != null && patients_left == 0) {
+                runtime.out().println("updating patient " + desired_patient);
                 Address[addressLabel,accessLabel]{*addressLabel} addr=patient.address;
                 if (addr != null) {
                   String{*addressLabel} address = addr.address;
@@ -124,7 +125,7 @@ class AddressWriter {
               } else if (patient == null) {
                 runtime.out().println("patient (singular) came back null");
               }
-              desired_patient--;
+              patients_left--;
               patients = patients.next;
             }
           } else {
