@@ -1,5 +1,7 @@
 #!/bin/bash
 
+i=0
 while true; do
-  ../../bin/fab --jvm-cp "classes/:../../lib/fabric-collections.jar" --app-home "." --name carolnode AddressWriter ;
+  ../../bin/fab --jvm-cp "classes/:../../lib/fabric-collections.jar" --app-home "." --name carolnode AddressWriter $i ;
+  i=$(((i + 1)%1000)) ;
 done

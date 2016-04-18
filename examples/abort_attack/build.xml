@@ -40,13 +40,29 @@
   ****************************************************************************
   -->
 
+  <target name="build-sig"
+          description="Compiles signature files">
+      <fabsigc dest="${abort.home}/classes/fab-sig">
+        <arg value="-trusted-providers" />
+        <arg value="-explain" />
+        <arg value="-sourcepath" /> <arg value="${abort.home}/sig-src" />
+        <fileset dir="${abort.home}/sig-src" includes="**/*.fab" />
+      </fabsigc>
+      <filc dest="${abort.home}/classes">
+        <arg value="-sourcepath" /> <arg value="${abort.home}/sig-src" />
+        <fileset dir="${abort.home}/sig-src" includes="**/*.fil" />
+      </filc>
+  </target>
+
   <target name="build"
+          depends="build-sig"
           description="Builds the Abort Channel Attack example">
     <fabc dest="${abort.home}/classes">
       <arg value="-sourcepath" /> <arg value="${abort.home}/src" />
       <arg value="-cp"/> <arg pathref="collections.classpath"/>
       <arg value="-cp"/> <arg pathref="lib.classpath"/>
-      <arg value="-cp"         /> <arg value="${abort.home}/classes" />
+      <arg value="-cp"/> <arg value="${abort.home}/classes" />
+      <arg value="-addsigcp"/> <arg value="${abort.home}/classes/fab-sig" />
       <arg value="-trusted-providers" />
       <arg value="-explain" />
 

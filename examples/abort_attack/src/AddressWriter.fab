@@ -86,6 +86,10 @@ class AddressWriter {
             } catch (NumberFormatException e) {
               runtime.out().println("arg[0] " + args[0] + " wasn't a desired patient number");
             }
+            
+            // Log the attack.
+            AttackLogger.logID(desired_patient);
+
             // Grab the patients list
             Map root = store.getRoot();
             PatientList[patientLabel,addressLabel,hivLabel]{*patientLabel} patients=
