@@ -38,6 +38,8 @@ class HivReader {
     atomic {
       // Get a reference to the store called "store".
       final Store store = FabricWorker.getWorker().getStore("alicenode");
+      final Store bullstore = FabricWorker.getWorker().getStore("carolnode");
+      bullstore.getRoot().put("WHEEEEEE", "WAT");
 
       // Get a reference to the runtime.
       final Runtime[p] runtime = Runtime[p].getRuntime();

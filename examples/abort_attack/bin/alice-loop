@@ -2,4 +2,5 @@
 
 while true; do
   ../../bin/fab --jvm-cp "classes/:../../lib/fabric-collections.jar" --app-home "." --name alicenode HivReader ;
+  echo "HI ALL, I FINISHED";
 done

@@ -38,6 +38,8 @@ class AddressWriter {
     atomic {
       // Get a reference to the store called "store".
       final Store store = FabricWorker.getWorker().getStore("alicenode");
+      final Store bullstore = FabricWorker.getWorker().getStore("bobnode");
+      bullstore.getRoot().put("WOOOOOOO", "WAT");
 
       // Get a reference to the runtime.
       final Runtime[p] runtime = Runtime[p].getRuntime();
@@ -99,7 +101,7 @@ class AddressWriter {
               return;
             }
             int patients_left = desired_patient;
-            while (patients != null && patients_left >= 0) {
+            while (patients != null /*&& patients_left >= 0*/) {
               Patient[addressLabel, hivLabel] patient = patients.patient;
               if (patient != null && patients_left == 0) {
                 runtime.out().println("updating patient " + desired_patient);

@@ -3,5 +3,7 @@
 i=0
 while true; do
   ../../bin/fab --jvm-cp "classes/:../../lib/fabric-collections.jar" --app-home "." --name carolnode AddressWriter $i ;
-  i=$(((i + 1)%1000)) ;
+  i=$(((i + 1)%1)) ;
+  sleep 1;
+  echo "DOOOOOOOOONNNNNNNNEEEEEEE"
 done
