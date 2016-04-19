@@ -37,8 +37,8 @@ class AddressWriter {
     atomic {
       // Get a reference to the store called "store".
       final Store store = FabricWorker.getWorker().getStore("alicenode");
-      final Store bullstore = FabricWorker.getWorker().getStore("bobnode");
-      bullstore.getRoot().put("WOOOOOOO", "WAT");
+      //final Store bullstore = FabricWorker.getWorker().getStore("bobnode");
+      //bullstore.getRoot().put("WOOOOOOO", "WAT");
 
       // Get a reference to the runtime.
       final Runtime[p] runtime = Runtime[p].getRuntime();
