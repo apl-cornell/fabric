@@ -54,14 +54,14 @@ class PatientMaker {
       // Explicitly everybody believes that everybody can read and write
       // the address.
       final label addressLabel  = new label{
-        (alice,bob),carol →  (alice,bob),carol;
-        (alice,bob),carol ←  (alice,bob),carol
+        (alice,bob),carol → (alice,bob),carol;
+        (alice,bob),carol ← (alice,bob),carol
       }@store;
 
       // Explicitly everybody believes only alice can deal with the hivLabel.
       final label hivLabel  = new label{
-        alice →  alice;
-        alice ←  alice
+        (alice,bob) → (alice,bob);
+        (alice,bob) ← (alice,bob)
       }@store;
 
       // Patient records have to be stored somewhere that can hold both
@@ -73,8 +73,9 @@ class PatientMaker {
       // the label of the list of patients: everyone can read it, but only alice can
       // write it.
       final label listLabel = new label{
-        (alice,bob),carol →  (alice,bob),carol;
-        alice ←  alice
+        *addressLabel
+          meet
+        *hivLabel
       }@store;
 
 

@@ -59,23 +59,24 @@ class HivReader {
         (alice,bob),carol ← (alice,bob),carol
       }@store;
 
-      // only alice can deal with the hivLabel.
+      // Explicitly everybody believes only alice can deal with the hivLabel.
       final label hivLabel  = new label{
-        alice → alice;
-        alice ← alice
-      }@store;
-
-
-      // Label on the patient record itself.
-      final label patientLabel = new label{
-        (alice,bob),carol →  (alice,bob),carol;
-        alice ←  alice
+        (alice,bob) → (alice,bob);
+        (alice,bob) ← (alice,bob)
       }@store;
 
       // Patient records have to be stored somewhere that can hold both
       // addresses and hiv flags.
       final label accessLabel = new label{
         *addressLabel;
+        *hivLabel
+      }@store;
+
+      // the label of the list of patients: everyone can read it, but only alice can
+      // write it.
+      final label patientLabel = new label{
+        *addressLabel
+          meet
         *hivLabel
       }@store;
 
