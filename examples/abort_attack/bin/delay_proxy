@@ -1,0 +1,86 @@
+#!/usr/bin/env python3
+
+import argparse
+import multiprocessing as mp
+import socket
+import time
+
+def delayed_connection(point_a, point_b, delay):
+    """
+    Start and return send and receive processes for communicating with the
+    given delay between point_a and point_b.
+    """
+    # Delay queues
+    to_q, from_q = mp.Queue(), mp.Queue()
+
+    # A -> B
+    a_recv = mp.Process(target=recv_loop, args=(point_a, to_q, delay))
+    a_recv.start()
+    b_send = mp.Process(target=send_loop, args=(point_b, to_q))
+    b_send.start()
+
+    # B -> A
+    b_recv = mp.Process(target=recv_loop, args=(point_b, from_q, delay))
+    b_recv.start()
+    a_send = mp.Process(target=send_loop, args=(point_a, from_q))
+    a_send.start()
+
+    return a_recv, b_send, a_send, b_recv
+
+
+def recv_loop(incoming, q, delay):
+    """
+    Loop for sending data from incoming to the queue q with the given delay.
+    """
+    while True:
+        try:
+            buf = incoming.recv(4096)
+            q.put((time.time() + delay, buf))
+        except BlockingIOError:
+            pass
+
+
+def send_loop(outgoing, q):
+    """
+    Loop for receiving data from queue q  to outgoing.
+
+    The items in q are assumed to be pairs of send time, assumed monotonically
+    increasing, and a bytearray of data to send.
+    """
+    while True:
+        cur_time = time.time()
+        when, buf = q.get()
+        if when > cur_time:
+            time.sleep(when - cur_time)
+        outgoing.send(buf)
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="""
+Create a delaying proxy from localhost:P1 to A2:P2 locally adding DELAY ms of delay.
+""")
+    parser.add_argument('port1', type=int, metavar="P1", help="first port")
+    parser.add_argument('addr2', type=str, metavar="A2", help="second address")
+    parser.add_argument('port2', type=int, metavar="P2", help="second port")
+    parser.add_argument('delay', type=int, metavar="DELAY", help="delay")
+    args = parser.parse_args()
+
+    processes = [] # Keep track of threads to kill when this process finishes.
+    s1 = socket.socket()
+    try:
+        s1.bind(('', args.port1))
+        while True:
+            s1.listen()
+            s1conn, s1addr = s1.accept()
+            try:
+                s1conn.setblocking(False)
+                with socket.create_connection((args.addr2, args.port2)) as s2:
+                    s2.setblocking(False)
+                    processes.extend(delayed_connection(s1conn, s2, args.delay / 1000.0))
+            finally:
+                s1conn.close()
+    finally:
+        s1.close()
+        for t in threads:
+            t.terminate()
