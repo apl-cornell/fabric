@@ -13,7 +13,7 @@ import fabric.worker.Store;
 /**
  * A map from OIDs to Entry objects. An object's Entry records its version
  * number and a list of logs for transactions that have acquired a read lock on
- * that the object. Entries are removed from the map when they are no longer
+ * the object. Entries are removed from the map when they are no longer
  * read-locked.
  */
 public final class ReadMap {
@@ -281,8 +281,7 @@ public final class ReadMap {
 
       if (existing.updateImpl(impl)) return existing;
 
-      if (map.replace(ref.store, ref.onum, existing, newEntry))
-        return newEntry;
+      if (map.replace(ref.store, ref.onum, existing, newEntry)) return newEntry;
     }
   }
 }

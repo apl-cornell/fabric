@@ -189,6 +189,7 @@ public final class TransactionManager {
    *          already know about the abort.
    */
   private void abortTransaction(Set<RemoteNode<?>> abortedNodes) {
+    xxx = xxx;
     Set<Store> storesToContact;
     List<RemoteWorker> workersToContact;
     if (current.tid.depth == 0) {
@@ -213,7 +214,7 @@ public final class TransactionManager {
         case PREPARE_FAILED:
         case PREPARED:
           current.commitState.value = ABORTING;
-          storesToContact = current.storesToContact();
+          storesToContact = current.storesToCommit();
           workersToContact = current.workersCalled;
           break;
 
@@ -288,6 +289,85 @@ public final class TransactionManager {
   }
 
   /**
+   * Stages the transaction by obtaining locks on the stores for the objects
+   * read and written thus far.
+   *
+   * @throws TransactionRestartingException
+   *           if the staging fails.
+   */
+  public void stageTransaction() throws TransactionRestartingException {
+    // Make sure we're not supposed to abort or retry.
+    try {
+      checkRetrySignal();
+    } catch (TransactionAbortingException e) {
+      abortTransaction();
+      throw new AbortException();
+    } catch (TransactionRestartingException e) {
+      abortTransaction();
+      throw e;
+    }
+
+    // Go through the transaction log and figure out the stores we need
+    // to contact.
+    Set<Store> stores = current.storesToStage();
+
+    final Map<RemoteNode<?>, TransactionPrepareFailedException> failures =
+        Collections.synchronizedMap(
+            new HashMap<RemoteNode<?>, TransactionPrepareFailedException>());
+
+    List<Future<?>> futures = new ArrayList<>(stores.size());
+
+    // Go through each store and send staging messages in parallel.
+    for (Iterator<Store> storeIt = stores.iterator(); storeIt.hasNext();) {
+      final Store store = storeIt.next();
+      NamedRunnable runnable =
+          new NamedRunnable("worker stage to " + store.name()) {
+            @Override
+            protected void runImpl() {
+              try {
+                LongKeyMap<Integer> reads =
+                    current.getUnstagedReadsForStore(store, false);
+                LongKeyMap<Integer> writes =
+                    current.getUnstagedWritesForStore(store);
+                store.stageTransaction(current.tid.topTid, reads, writes);
+              } catch (TransactionPrepareFailedException e) {
+                failures.put((RemoteNode<?>) store, e);
+              } catch (UnreachableNodeException e) {
+                failures.put((RemoteNode<?>) store,
+                    new TransactionPrepareFailedException("Unreachable store"));
+              }
+            }
+          };
+
+      // Optimization: only start a new thread if there are more stores to
+      // contact and if it's a truly remote store (i.e., not in-process).
+      if (!(store instanceof InProcessStore || store.isLocalStore())
+          && storeIt.hasNext()) {
+        futures.add(Threading.getPool().submit(runnable));
+      } else {
+        runnable.run();
+      }
+    }
+
+    // Wait for replies.
+    for (Future<?> future : futures) {
+      while (true) {
+        try {
+          future.get();
+          break;
+        } catch (InterruptedException e) {
+          Logging.logIgnoredInterruptedException(e);
+        } catch (ExecutionException e) {
+          e.printStackTrace();
+        }
+      }
+    }
+
+    // Check for conflicts and unreachable stores.
+    xxx = xxx;
+  }
+
+  /**
    * Commits the transaction if possible; otherwise, aborts the transaction.
    *
    * @throws AbortException
@@ -306,6 +386,12 @@ public final class TransactionManager {
   }
 
   /**
+   * Commits the current transaction.
+   *
+   * If the parent transaction is a top-level transaction, then that top-level
+   * transaction is committed too, to satisfy the contract specified by
+   * {@link #startTransaction()}.
+   *
    * @throws TransactionRestartingException
    *           if the prepare fails.
    */
@@ -340,45 +426,55 @@ public final class TransactionManager {
 
     WORKER_TRANSACTION_LOGGER.log(Level.FINEST, "{0} committing", current);
 
+    // Sanity check: applications should not be explicitly committing top-level
+    // transactions.
+    if (current.tid.parent == null) {
+      throw new InternalError("Invariant violation: application code should not"
+          + " be explicitly committing top-level transactions");
+    }
+
+    // Commit the current nested transaction.
     Log parent = current.parent;
-    if (current.tid.parent != null) {
-      try {
-        Timing.SUBTX.begin();
-        // Update data structures to reflect the commit.
-        current.commitNested();
-        WORKER_TRANSACTION_LOGGER.log(Level.FINEST, "{0} committed", current);
+    try {
+      Timing.SUBTX.begin();
+      // Update data structures to reflect the commit.
+      current.commitNested();
+      WORKER_TRANSACTION_LOGGER.log(Level.FINEST, "{0} committed", current);
 
-        if (parent != null && parent.tid.equals(current.tid.parent)) {
-          // Parent frame represents parent transaction. Pop the stack.
-          current = parent;
-        } else {
-          // Reuse the current frame for the parent transaction. Update its TID.
-          current.tid = current.tid.parent;
-        }
-
-        if (ignoredRetrySignal != null) {
-          // Preserve the ignored retry signal.
-          synchronized (current) {
-            TransactionID signal = ignoredRetrySignal;
-            if (current.retrySignal != null) {
-              signal = signal.getLowestCommonAncestor(current.retrySignal);
-
-              if (signal == null) {
-                throw new InternalError("Something is broken with transaction "
-                    + "management. Found retry signals for different "
-                    + "transactions in the same log. (In transaction "
-                    + current.tid + ".  Retry1=" + current.retrySignal
-                    + "; Retry2=" + ignoredRetrySignal);
-              }
-            }
-
-            current.retrySignal = signal;
-          }
-        }
-        return;
-      } finally {
-        Timing.SUBTX.end();
+      if (parent != null && parent.tid.equals(current.tid.parent)) {
+        // Parent frame represents parent transaction. Pop the stack.
+        current = parent;
+      } else {
+        // Reuse the current frame for the parent transaction. Update its TID.
+        current.tid = current.tid.parent;
       }
+
+      if (ignoredRetrySignal != null) {
+        // Preserve the ignored retry signal.
+        synchronized (current) {
+          TransactionID signal = ignoredRetrySignal;
+          if (current.retrySignal != null) {
+            signal = signal.getLowestCommonAncestor(current.retrySignal);
+
+            if (signal == null) {
+              throw new InternalError("Something is broken with transaction "
+                  + "management. Found retry signals for different "
+                  + "transactions in the same log. (In transaction "
+                  + current.tid + ".  Retry1=" + current.retrySignal
+                  + "; Retry2=" + ignoredRetrySignal);
+            }
+          }
+
+          current.retrySignal = signal;
+        }
+      }
+
+      // If the now-current transaction is a nested transaction, then we're
+      // done committing. Otherwise, we continue on to commit the top-level
+      // transaction.
+      if (current.tid.parent != null) return;
+    } finally {
+      Timing.SUBTX.end();
     }
 
     // Commit top-level transaction.
@@ -387,7 +483,7 @@ public final class TransactionManager {
 
     // Go through the transaction log and figure out the stores we need to
     // contact.
-    Set<Store> stores = current.storesToContact();
+    Set<Store> stores = current.storesToCommit();
     List<RemoteWorker> workers = current.workersCalled;
 
     // Determine whether to use the single-store optimization. The optimization
@@ -405,10 +501,10 @@ public final class TransactionManager {
 
     // Send prepare messages to our cohorts. This will also abort our portion of
     // the transaction if the prepare fails.
-    sendPrepareMessages(singleStore, readOnly, stores, workers);
+    sendPrepareMessagesXXX(singleStore, readOnly, stores, workers);
 
     // Send commit messages to our cohorts.
-    sendCommitMessagesAndCleanUp(singleStore, readOnly, stores, workers);
+    sendCommitMessagesAndCleanUpXXX(singleStore, readOnly, stores, workers);
 
     // Collect the names of nodes contacted.
     String[] contactedNodes = new String[stores.size() + workers.size()];
@@ -465,7 +561,7 @@ public final class TransactionManager {
    *           if the prepare fails.
    */
   public void sendPrepareMessages() {
-    sendPrepareMessages(false, false, current.storesToContact(),
+    sendPrepareMessages(false, false, current.storesToCommit(),
         current.workersCalled);
   }
 
@@ -547,8 +643,11 @@ public final class TransactionManager {
               try {
                 Collection<_Impl> creates = current.getCreatesForStore(store);
                 LongKeyMap<Integer> reads =
-                    current.getReadsForStore(store, false);
+                    current.getUnstagedReadsForStore(store, false);
                 Collection<_Impl> writes = current.getWritesForStore(store);
+
+                if (reads.isEmpty() && writes.isEmpty()) return;
+
                 store.prepareTransaction(current.tid.topTid, singleStore,
                     readOnly, creates, reads, writes);
               } catch (TransactionPrepareFailedException e) {
@@ -648,7 +747,7 @@ public final class TransactionManager {
    */
   public void sendCommitMessagesAndCleanUp()
       throws TransactionAtomicityViolationException {
-    sendCommitMessagesAndCleanUp(false, false, current.storesToContact(),
+    sendCommitMessagesAndCleanUp(false, false, current.storesToCommit(),
         current.workersCalled);
   }
 
@@ -1034,9 +1133,13 @@ public final class TransactionManager {
       synchronized (current.localStoreWrites) {
         current.localStoreWrites.add(obj);
       }
+    } else if (current.parentWrites.containsKey(obj)) {
+      synchronized (current.writesWrittenByParent) {
+        current.writesWrittenByParent.add(obj);
+      }
     } else {
-      synchronized (current.writes) {
-        current.writes.add(obj);
+      synchronized (current.unstagedWritesx) {
+        current.unstagedWritesx.add(obj);
       }
     }
 
@@ -1148,7 +1251,8 @@ public final class TransactionManager {
           new NamedRunnable("worker freshness check to " + store.name()) {
             @Override
             public void runImpl() {
-              LongKeyMap<Integer> reads = current.getReadsForStore(store, true);
+              LongKeyMap<Integer> reads =
+                  current.getUnstagedReadsForStore(store, true);
               if (store.checkForStaleObjects(reads))
                 nodesWithStaleObjects.add((RemoteNode<?>) store);
             }
@@ -1184,6 +1288,12 @@ public final class TransactionManager {
   /**
    * Starts a new transaction. The sub-transaction runs in the same thread as
    * the caller.
+   *
+   * If a top-level is being started, a nested transaction within it is started
+   * too. This ensures that if the application needs to restart a top-level
+   * transaction, all staged reads and writes are preserved across the restart.
+   * {@link #commitTransaction()} will ensure that the top-level transaction is
+   * committed whenever the nested transaction commits.
    */
   public void startTransaction() {
     startTransaction(null);
@@ -1193,6 +1303,12 @@ public final class TransactionManager {
    * Starts a new transaction with the given tid. The given tid is assumed to be
    * a valid descendant of the current tid. If the given tid is null, a random
    * tid is generated for the sub-transaction.
+   *
+   * If a top-level is being started, a nested transaction within it is started
+   * too. This ensures that if the application needs to restart a top-level
+   * transaction, all staged reads and writes are preserved across the restart.
+   * {@link #commitTransaction()} will ensure that the top-level transaction is
+   * committed whenever the nested transaction commits.
    */
   public void startTransaction(TransactionID tid) {
     startTransaction(tid, false);
@@ -1211,16 +1327,10 @@ public final class TransactionManager {
     } finally {
       Timing.BEGIN.end();
     }
-  }
 
-  /**
-   * Attempts to stage all reads and writes made so far in the top-level
-   * transaction.
-   *
-   * @throws TransactionRestartingException if the staging fails.
-   */
-  public void stageTransaction() {
-
+    // If we just started a top-level transaction, automatically start a nested
+    // transaction too.
+    if (current.tid.parent == null) startTransaction();
   }
 
   /**
