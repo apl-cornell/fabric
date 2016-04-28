@@ -74,12 +74,12 @@ Create a delaying proxy from localhost:P1 to localhost:P2 adding DELAY ms of del
             s1conn, s1addr = s1.accept()
             try:
                 s1conn.setblocking(False)
-                with socket.create_connection(('', args.port2)) as s2:
+                with socket.create_connection(('localhost', args.port2)) as s2:
                     s2.setblocking(False)
                     processes.extend(delayed_connection(s1conn, s2, args.delay / 1000.0))
             finally:
                 s1conn.close()
     finally:
         s1.close()
-        for t in threads:
-            t.terminate()
+        for p in processes:
+            p.terminate()
