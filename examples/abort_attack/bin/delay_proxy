@@ -48,8 +48,8 @@ def send_loop(outgoing, q):
     increasing, and a bytearray of data to send.
     """
     while True:
-        cur_time = time.time()
         when, buf = q.get()
+        cur_time = time.time()
         if when > cur_time:
             time.sleep(when - cur_time)
         outgoing.send(buf)
@@ -58,10 +58,9 @@ def send_loop(outgoing, q):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="""
-Create a delaying proxy from localhost:P1 to A2:P2 locally adding DELAY ms of delay.
+Create a delaying proxy from localhost:P1 to localhost:P2 adding DELAY ms of delay.
 """)
     parser.add_argument('port1', type=int, metavar="P1", help="first port")
-    parser.add_argument('addr2', type=str, metavar="A2", help="second address")
     parser.add_argument('port2', type=int, metavar="P2", help="second port")
     parser.add_argument('delay', type=int, metavar="DELAY", help="delay")
     args = parser.parse_args()
@@ -75,7 +74,7 @@ Create a delaying proxy from localhost:P1 to A2:P2 locally adding DELAY ms of de
             s1conn, s1addr = s1.accept()
             try:
                 s1conn.setblocking(False)
-                with socket.create_connection((args.addr2, args.port2)) as s2:
+                with socket.create_connection(('', args.port2)) as s2:
                     s2.setblocking(False)
                     processes.extend(delayed_connection(s1conn, s2, args.delay / 1000.0))
             finally:
