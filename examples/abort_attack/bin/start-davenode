@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DELAY=160
+DELAY=100
 BIN_DIR="$(dirname $0)"
 APP_HOME="$(dirname $0)/.."
 PATH="${APP_HOME}/../../bin:${PATH}"
