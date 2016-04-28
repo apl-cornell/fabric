@@ -49,18 +49,20 @@ class AddressWriter {
           FabricWorker.getWorker().getWorker("bobnode"  ).getPrincipal();
       final principal carol = 
           FabricWorker.getWorker().getWorker("carolnode").getPrincipal();
+      final principal dave = 
+          FabricWorker.getWorker().getWorker("davenode" ).getPrincipal();
 
       // Explicitly everybody believes that everybody can read and write
       // the address.
       final label addressLabel  = new label{
-        (alice,bob),carol →  (alice,bob),carol;
-        (alice,bob),carol ←  (alice,bob),carol
+        (alice,bob),(carol,dave) →  (alice,bob),(carol,dave);
+        (alice,bob),(carol,dave) ←  (alice,bob),(carol,dave)
       }@store;
 
       // Explicitly everybody believes only alice can deal with the hivLabel.
       final label hivLabel  = new label{
-        (alice,bob) → (alice,bob);
-        (alice,bob) ← (alice,bob)
+        (alice,bob),dave → (alice,bob),dave;
+        (alice,bob),dave ← (alice,bob),dave
       }@store;
 
       // Patient records have to be stored somewhere that can hold both

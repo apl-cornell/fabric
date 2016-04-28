@@ -38,8 +38,7 @@ class HivReader {
     atomic {
       // Get a reference to the store called "store".
       final Store store = FabricWorker.getWorker().getStore("alicenode");
-      final Store bullstore = FabricWorker.getWorker().getStore("carolnode");
-      bullstore.getRoot().put("WHEEEEEE", "WAT");
+      final Store davestore = FabricWorker.getWorker().getStore("davenode");
 
       // Get a reference to the runtime.
       final Runtime[p] runtime = Runtime[p].getRuntime();
@@ -51,18 +50,20 @@ class HivReader {
           FabricWorker.getWorker().getWorker("bobnode"  ).getPrincipal();
       final principal carol = 
           FabricWorker.getWorker().getWorker("carolnode").getPrincipal();
+      final principal dave = 
+          FabricWorker.getWorker().getWorker("davenode" ).getPrincipal();
 
       // Explicitly everybody believes that everybody can read and write
       // the address.
       final label addressLabel  = new label{
-        (alice,bob),carol → (alice,bob),carol;
-        (alice,bob),carol ← (alice,bob),carol
+        (alice,bob),(carol,dave) → (alice,bob),(carol,dave);
+        (alice,bob),(carol,dave) ← (alice,bob),(carol,dave)
       }@store;
 
       // Explicitly everybody believes only alice can deal with the hivLabel.
       final label hivLabel  = new label{
-        (alice,bob) → (alice,bob);
-        (alice,bob) ← (alice,bob)
+        (alice,bob),dave → (alice,bob),dave;
+        (alice,bob),dave ← (alice,bob),dave
       }@store;
 
       // Patient records have to be stored somewhere that can hold both
@@ -82,11 +83,13 @@ class HivReader {
 
       if (new label{p<-} <= addressLabel &&
           new label{p<-} <= hivLabel &&
+          new label{davestore<-} <= hivLabel &&
           new label{p<-} <= patientLabel &&
           addressLabel <= new label{p->} &&
           patientLabel <= new label{p->} &&
           hivLabel <= new label{p->} &&
-          accessLabel <= new label{store->}) {
+          accessLabel <= new label{store->} &&
+          accessLabel <= new label{davestore->}) {
         // Cycle through the patients
         Map root = store.getRoot();
         // Grab the patients list
@@ -104,6 +107,14 @@ class HivReader {
                 if (h != null) {
                   if (h.hiv) {
                     if (addr.address != null) {
+                      // Copy the patient to dave's store.
+                      String{*accessLabel} addrCopyS = addr.address;
+                      Address[accessLabel, accessLabel] addrCopy = new Address[accessLabel, accessLabel]@davestore(addrCopyS);
+                      //Hiv[hivLabel, accessLabel]{*listLabel} hCopy = new Hiv[hivLabel,accessLabel]@davestore();
+                      //h.hiv = true;
+                      //Patient[hivLabel, hivLabel]{*hivLabel} patientCopy =
+                        //new Patient[hivLabel, hivLabel]@davestore(addr.address, true);
+
                       printable = "a patient with Hiv Lives at " + addr.address;
                     } else {
                       printable = "patient.address.address is null";
