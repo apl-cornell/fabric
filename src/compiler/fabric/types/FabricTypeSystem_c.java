@@ -1311,4 +1311,19 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
     FabricPathMap m = pathMap();
     return m.set(path, L);
   }
+
+  @Override
+  public Label readConflict(Label l) {
+    // CL(read l) = WritersToReaders(I(l))
+    Label integ = pairLabel(l.position(), topConfPolicy(l.position()), integProjection(l));
+    return writersToReadersLabel(l.position(), integ);
+  }
+
+  @Override
+  public Label writeConflict(Label l) {
+    // CL(write l) = WritersToReaders(I(l)) meet C(l)
+    Label integ = pairLabel(l.position(), topConfPolicy(l.position()), integProjection(l));
+    Label conf = pairLabel(l.position(), confProjection(l), topIntegPolicy(l.position()));
+    return meet(conf, writersToReadersLabel(l.position(), integ));
+  }
 }

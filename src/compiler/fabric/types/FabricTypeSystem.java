@@ -185,6 +185,18 @@ public interface FabricTypeSystem extends JifTypeSystem, CodebaseTypeSystem {
   boolean accessPolicyValid(ConfPolicy pol) throws SemanticException;
 
   /**
+   * @param label
+   * @return The read-conflict label for the input label.
+   */
+  Label readConflict(Label l);
+
+  /**
+   * @param label
+   * @return The write-conflict label for the input label.
+   */
+  Label writeConflict(Label l);
+
+  /**
    * @param pos
    * @param ct
    * @param policy
