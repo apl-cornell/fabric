@@ -122,10 +122,10 @@ public abstract class ObjectDB {
       this.writes = new ArrayList<>(writesSize);
 
       if (in.readBoolean()) {
-        for (int i = 0; i < size; i++)
+        for (int i = 0; i < createsSize; i++)
           creates.add(new SerializedObject(in));
 
-        for (int i = 0; i < size; i++)
+        for (int i = 0; i < writesSize; i++)
           writes.add(new SerializedObject(in));
       }
     }
