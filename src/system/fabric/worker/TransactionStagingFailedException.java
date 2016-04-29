@@ -10,7 +10,7 @@ import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.net.RemoteNode;
 
-public class TransactionPrepareFailedException extends FabricException {
+public class TransactionStagingFailedException extends FabricException {
   /**
    * A set of objects used by the transaction and were out of date.
    */
@@ -18,25 +18,26 @@ public class TransactionPrepareFailedException extends FabricException {
 
   public final List<String> messages;
 
-  public TransactionPrepareFailedException(TransactionRestartingException cause) {
+  public TransactionStagingFailedException(
+      TransactionRestartingException cause) {
     this.messages = null;
     this.versionConflicts = null;
   }
 
-  public TransactionPrepareFailedException(
+  public TransactionStagingFailedException(
       LongKeyMap<SerializedObject> versionConflicts) {
     this.versionConflicts = versionConflicts;
     this.messages = null;
   }
 
-  public TransactionPrepareFailedException(
-      Map<RemoteNode<?>, TransactionPrepareFailedException> failures) {
+  public TransactionStagingFailedException(
+      Map<RemoteNode<?>, TransactionStagingFailedException> failures) {
     this.versionConflicts = null;
 
     messages = new ArrayList<>();
-    for (Map.Entry<RemoteNode<?>, TransactionPrepareFailedException> entry : failures
+    for (Map.Entry<RemoteNode<?>, TransactionStagingFailedException> entry : failures
         .entrySet()) {
-      TransactionPrepareFailedException exn = entry.getValue();
+      TransactionStagingFailedException exn = entry.getValue();
 
       if (exn.messages != null) {
         for (String s : exn.messages)
@@ -45,12 +46,12 @@ public class TransactionPrepareFailedException extends FabricException {
     }
   }
 
-  public TransactionPrepareFailedException(
-      List<TransactionPrepareFailedException> causes) {
+  public TransactionStagingFailedException(
+      List<TransactionStagingFailedException> causes) {
     this.versionConflicts = new LongKeyHashMap<>();
 
     messages = new ArrayList<>();
-    for (TransactionPrepareFailedException exc : causes) {
+    for (TransactionStagingFailedException exc : causes) {
       if (exc.versionConflicts != null)
         versionConflicts.putAll(exc.versionConflicts);
 
@@ -58,13 +59,13 @@ public class TransactionPrepareFailedException extends FabricException {
     }
   }
 
-  public TransactionPrepareFailedException(
+  public TransactionStagingFailedException(
       LongKeyMap<SerializedObject> versionConflicts, String message) {
     this.versionConflicts = versionConflicts;
     messages = java.util.Collections.singletonList(message);
   }
 
-  public TransactionPrepareFailedException(String message) {
+  public TransactionStagingFailedException(String message) {
     this(null, message);
   }
 

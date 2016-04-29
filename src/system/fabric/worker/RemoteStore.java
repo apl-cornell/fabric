@@ -17,7 +17,6 @@ import fabric.common.Logging;
 import fabric.common.ONumConstants;
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
-import fabric.common.TransactionID;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.FabricGeneralSecurityException;
 import fabric.common.exceptions.FabricRuntimeException;
@@ -27,19 +26,19 @@ import fabric.common.exceptions.RuntimeFetchException;
 import fabric.common.util.ConcurrentLongKeyHashMap;
 import fabric.common.util.ConcurrentLongKeyMap;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.LongSet;
 import fabric.dissemination.ObjectGlob;
-import fabric.lang.Object;
 import fabric.lang.Object._Impl;
 import fabric.lang.security.NodePrincipal;
-import fabric.messages.AbortTransactionMessage;
+import fabric.messages.AbortStageMessage;
 import fabric.messages.AllocateMessage;
 import fabric.messages.CommitTransactionMessage;
 import fabric.messages.DissemReadMessage;
 import fabric.messages.GetCertChainMessage;
 import fabric.messages.MakePrincipalMessage;
 import fabric.messages.Message.NoException;
-import fabric.messages.PrepareTransactionMessage;
 import fabric.messages.ReadMessage;
+import fabric.messages.StageTransactionMessage;
 import fabric.messages.StalenessCheckMessage;
 import fabric.net.RemoteNode;
 import fabric.net.UnreachableNodeException;
@@ -52,8 +51,8 @@ import fabric.util.Map;
  * <code>Worker.getStore()</code> interface. For each remote store, there should
  * be at most one <code>RemoteStore</code> object representing that store.
  */
-public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
-    Serializable {
+public class RemoteStore extends RemoteNode<RemoteStore>
+    implements Store, Serializable {
   /**
    * A queue of fresh object identifiers.
    */
@@ -114,15 +113,14 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
   }
 
   /**
-   * Sends a PREPARE message to the store.
+   * Sends a STAGE message to the store.
    */
   @Override
-  public void prepareTransaction(long tid, boolean singleStore,
-      boolean readOnly, Collection<Object._Impl> toCreate,
-      LongKeyMap<Integer> reads, Collection<Object._Impl> writes)
-      throws TransactionPrepareFailedException, UnreachableNodeException {
-    send(Worker.getWorker().authToStore, new PrepareTransactionMessage(tid,
-        singleStore, readOnly, toCreate, reads, writes));
+  public void stageTransaction(long tid, LongKeyMap<Integer> reads,
+      LongKeyMap<Integer> writes, LongSet creates)
+      throws TransactionStagingFailedException, UnreachableNodeException {
+    send(Worker.getWorker().authToStore,
+        new StageTransactionMessage(tid, reads, writes, creates));
   }
 
   @Override
@@ -270,8 +268,8 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
    * @param num
    *          The number of objects to allocate
    */
-  protected void reserve(int num) throws AccessException,
-      UnreachableNodeException {
+  protected void reserve(int num)
+      throws AccessException, UnreachableNodeException {
     synchronized (fresh_ids) {
       while (fresh_ids.size() < num) {
         // log.info("Requesting new onums, storeid=" + storeID);
@@ -286,15 +284,16 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
   }
 
   @Override
-  public void abortTransaction(TransactionID tid) throws AccessException {
-    send(Worker.getWorker().authToStore, new AbortTransactionMessage(tid));
+  public void abortStage(long tid) throws AccessException {
+    send(Worker.getWorker().authToStore, new AbortStageMessage(tid));
   }
 
   @Override
-  public void commitTransaction(long transactionID)
+  public void commitTransaction(long transactionID, Collection<_Impl> toCreate,
+      Collection<_Impl> writes)
       throws UnreachableNodeException, TransactionCommitFailedException {
-    send(Worker.getWorker().authToStore, new CommitTransactionMessage(
-        transactionID));
+    send(Worker.getWorker().authToStore,
+        new CommitTransactionMessage(transactionID, toCreate, writes));
   }
 
   @Override
@@ -312,8 +311,8 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
    */
   protected List<SerializedObject> getStaleObjects(LongKeyMap<Integer> reads) {
     try {
-      return send(Worker.getWorker().authToStore, new StalenessCheckMessage(
-          reads)).staleObjects;
+      return send(Worker.getWorker().authToStore,
+          new StalenessCheckMessage(reads)).staleObjects;
     } catch (final AccessException e) {
       throw new RuntimeFetchException(e);
     }

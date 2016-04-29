@@ -4,22 +4,21 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import fabric.common.TransactionID;
 import fabric.common.exceptions.AccessException;
 import fabric.common.net.RemoteIdentity;
 import fabric.worker.remote.RemoteWorker;
 
-public class AbortTransactionMessage extends
-Message<AbortTransactionMessage.Response, AccessException> {
+public class AbortStageMessage
+    extends Message<AbortStageMessage.Response, AccessException> {
   // ////////////////////////////////////////////////////////////////////////////
   // message contents //
   // ////////////////////////////////////////////////////////////////////////////
 
   /** The tid for the transaction that is aborting. */
-  public final TransactionID tid;
+  public final long tid;
 
-  public AbortTransactionMessage(TransactionID tid) {
-    super(MessageType.ABORT_TRANSACTION, AccessException.class);
+  public AbortStageMessage(long tid) {
+    super(MessageType.ABORT_STAGE, AccessException.class);
     this.tid = tid;
   }
 
@@ -37,8 +36,8 @@ Message<AbortTransactionMessage.Response, AccessException> {
   // ////////////////////////////////////////////////////////////////////////////
 
   @Override
-  public Response dispatch(RemoteIdentity<RemoteWorker> client, MessageHandler h)
-      throws AccessException {
+  public Response dispatch(RemoteIdentity<RemoteWorker> client,
+      MessageHandler h) throws AccessException {
     return h.handle(client, this);
   }
 
@@ -48,12 +47,12 @@ Message<AbortTransactionMessage.Response, AccessException> {
 
   @Override
   protected void writeMessage(DataOutput out) throws IOException {
-    tid.write(out);
+    out.writeLong(tid);
   }
 
   /* readMessage */
-  protected AbortTransactionMessage(DataInput in) throws IOException {
-    this(new TransactionID(in));
+  protected AbortStageMessage(DataInput in) throws IOException {
+    this(in.readLong());
   }
 
   @Override

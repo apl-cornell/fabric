@@ -13,8 +13,11 @@ import fabric.common.SysUtil;
 import fabric.common.Timing;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.InternalError;
+import fabric.common.util.LongHashSet;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.LongSet;
+import fabric.common.util.Oid;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
 import fabric.common.util.WeakReferenceArrayList;
@@ -106,6 +109,11 @@ public final class Log {
   protected final List<_Impl> creates;
 
   /**
+   * The subset of {@link #creates} that has not yet been staged.
+   */
+  protected final List<_Impl> unstagedCreates;
+
+  /**
    * Tracks objects created on local store. See <code>creates</code>.
    */
   protected final WeakReferenceArrayList<_Impl> localStoreCreates;
@@ -117,7 +125,7 @@ public final class Log {
    * transaction. To keep them from being pinned, objects on local store
    * are not tracked here, either.
    */
-  protected final List<_Impl> unstagedWritesx;
+  protected final List<_Impl> unstagedWrites;
 
   /**
    * A collection of objects that have been write-staged in this transaction, a
@@ -126,7 +134,7 @@ public final class Log {
    * that were also modified by an ancestor transaction. To keep them from being
    * pinned, objects on local store are not tracked here, either.
    */
-  protected final List<_Impl> stagedWritesx;
+  protected final List<_Impl> stagedWrites;
 
   /**
    * A collection of objects modified in this transaction or completed
@@ -166,20 +174,6 @@ public final class Log {
        * Signifies a transaction before it has been prepared or aborted.
        */
       UNPREPARED,
-      /**
-       * Signifies a transaction that is currently being prepared.
-       */
-      PREPARING,
-      /**
-       * Signifies a transaction that has successfully prepared, but has not yet
-       * been committed.
-       */
-      PREPARED,
-      /**
-       * Signifies a transaction that has failed to prepare, but has not yet
-       * been rolled back.
-       */
-      PREPARE_FAILED,
       /**
        * Signifies a transaction that is currently being committed.
        */
@@ -232,9 +226,10 @@ public final class Log {
     this.stagedReads = new OidKeyHashMap<>();
     this.readsReadByParent = new ArrayList<>();
     this.creates = new ArrayList<>();
+    this.unstagedCreates = new ArrayList<>();
     this.localStoreCreates = new WeakReferenceArrayList<>();
-    this.unstagedWritesx = new ArrayList<>();
-    this.stagedWritesx = new ArrayList<>();
+    this.unstagedWrites = new ArrayList<>();
+    this.stagedWrites = new ArrayList<>();
     this.writesWrittenByParent = new ArrayList<>();
     this.parentWrites = new OidKeyHashMap<>();
     this.localStoreWrites = new WeakReferenceArrayList<>();
@@ -299,7 +294,7 @@ public final class Log {
    *         modifies objects on remote stores.
    */
   public boolean isReadOnly() {
-    return unstagedWritesx.isEmpty() && stagedWritesx.isEmpty()
+    return unstagedWrites.isEmpty() && stagedWrites.isEmpty()
         && writesWrittenByParent.isEmpty() && creates.isEmpty()
         && workersCalled.isEmpty();
   }
@@ -315,7 +310,7 @@ public final class Log {
     // Add stores on which we have unstaged reads and writes.
     result.addAll(unstagedReads.storeSet());
 
-    for (_Impl obj : unstagedWritesx) {
+    for (_Impl obj : unstagedWrites) {
       if (obj.$isOwned) result.add(obj.$getStore());
     }
 
@@ -329,14 +324,9 @@ public final class Log {
   Set<Store> storesToCommit() {
     Set<Store> result = new HashSet<>();
 
-    result.addAll(unstagedReads.storeSet());
     result.addAll(stagedReads.storeSet());
 
-    for (_Impl obj : unstagedWritesx) {
-      if (obj.$isOwned) result.add(obj.$getStore());
-    }
-
-    for (_Impl obj : stagedWritesx) {
+    for (_Impl obj : stagedWrites) {
       if (obj.$isOwned) result.add(obj.$getStore());
     }
 
@@ -363,8 +353,9 @@ public final class Log {
   }
 
   /**
-   * Returns a map from onums to version numbers of objects read at the given
-   * store. Reads on created objects are never included.
+   * Returns a map from onums to version numbers of objects at the given store
+   * that have been read, but not yet read-locked. Reads on created objects are
+   * never included.
    *
    * @param includeModified
    *          whether to include reads on modified objects.
@@ -398,10 +389,45 @@ public final class Log {
           writesToExclude = Collections.<_Impl> emptyList();
         } else {
           writesToExclude =
-              SysUtil.chain(curLog.stagedWritesx, curLog.unstagedWritesx);
+              SysUtil.chain(curLog.stagedWrites, curLog.unstagedWrites);
         }
         Iterable<_Impl> chain = SysUtil.chain(writesToExclude, curLog.creates);
         for (_Impl write : chain)
+          if (write.$getStore() == store) result.remove(write.$getOnum());
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * Returns a map from onums to version numbers of objects at the given store
+   * that have been written, but not yet write-locked. Objects created in the
+   * current transaction are never included.
+   */
+  LongKeyMap<Integer> getUnstagedWritesForStore(Store store) {
+    // Walk up the log stack and collect all unstaged writes.
+    LongKeyMap<Integer> result = new LongKeyHashMap<>();
+    for (Log curLog = this; curLog != null; curLog = curLog.parent) {
+      if (store.isLocalStore()) {
+        for (_Impl obj : curLog.localStoreWrites) {
+          result.put(obj.$getOnum(), obj.$getVersion());
+        }
+      } else {
+        for (_Impl obj : curLog.unstagedWrites) {
+          if (obj.$getStore() == store && obj.$isOwned)
+            result.put(obj.$getOnum(), obj.$getVersion());
+        }
+      }
+    }
+
+    // Walk up the log stack again, this time filtering out created objects.
+    for (Log curLog = this; curLog != null; curLog = curLog.parent) {
+      if (store.isLocalStore()) {
+        for (_Impl write : curLog.localStoreCreates)
+          result.remove(write.$getOnum());
+      } else {
+        for (_Impl write : curLog.creates)
           if (write.$getStore() == store) result.remove(write.$getOnum());
       }
     }
@@ -428,7 +454,7 @@ public final class Log {
         result.remove(create.$getOnum());
       }
     } else {
-      for (_Impl obj : SysUtil.chain(unstagedWritesx, stagedWritesx))
+      for (_Impl obj : SysUtil.chain(unstagedWrites, stagedWrites))
         if (obj.$getStore() == store && obj.$isOwned)
           result.put(obj.$getOnum(), obj);
 
@@ -437,6 +463,22 @@ public final class Log {
     }
 
     return result.values();
+  }
+
+  /**
+   * Returns a set of onums of objects that were at the given store, but not yet
+   * staged.
+   */
+  LongSet getUnstagedCreatesForStore(Store store) {
+    // Walk up the log stack and collect all unstaged creates.
+    LongSet result = new LongHashSet();
+    for (Log curLog = this; curLog != null; curLog = curLog.parent) {
+      for (_Impl obj : curLog.unstagedCreates) {
+        if (obj.$getStore() == store) result.add(obj.$getOnum());
+      }
+    }
+
+    return result;
   }
 
   /**
@@ -513,7 +555,7 @@ public final class Log {
     }
 
     // Ensure the parent has write locks on staged writes.
-    for (_Impl obj : stagedWritesx) {
+    for (_Impl obj : stagedWrites) {
       synchronized (obj) {
         // Create a copy of the backup object and insert it into the object
         // history.
@@ -527,14 +569,14 @@ public final class Log {
           newHist.$writeLockStackTrace = Thread.currentThread().getStackTrace();
 
         // Add the object to the list of the parent's staged writes.
-        synchronized (parent.stagedWritesx) {
-          parent.stagedWritesx.add(obj);
+        synchronized (parent.stagedWrites) {
+          parent.stagedWrites.add(obj);
         }
       }
     }
 
     // Roll back writes.
-    Iterable<_Impl> chain = SysUtil.chain(unstagedWritesx, stagedWritesx,
+    Iterable<_Impl> chain = SysUtil.chain(unstagedWrites, stagedWrites,
         writesWrittenByParent, localStoreWrites);
     for (_Impl write : chain) {
       synchronized (write) {
@@ -558,8 +600,9 @@ public final class Log {
       unstagedReads.clear();
       readsReadByParent.clear();
       creates.clear();
+      unstagedCreates.clear();
       localStoreCreates.clear();
-      unstagedWritesx.clear();
+      unstagedWrites.clear();
       writesWrittenByParent.clear();
       localStoreWrites.clear();
       workersCalled.clear();
@@ -613,9 +656,9 @@ public final class Log {
     // Merge writes and transfer write locks.
     // Some grossness to allow for code reuse.
     Pair<List<_Impl>, List<_Impl>> staged =
-        new Pair<>(parent.stagedWritesx, stagedWritesx);
+        new Pair<>(parent.stagedWrites, stagedWrites);
     Pair<List<_Impl>, List<_Impl>> unstaged =
-        new Pair<>(parent.unstagedWritesx, unstagedWritesx);
+        new Pair<>(parent.unstagedWrites, unstagedWrites);
     Pair<List<_Impl>, List<_Impl>> ancestor =
         new Pair<>(parent.writesWrittenByParent, writesWrittenByParent);
     for (Pair<List<_Impl>, List<_Impl>> pair : new Pair[] { staged, unstaged,
@@ -679,6 +722,11 @@ public final class Log {
       }
     }
 
+    List<_Impl> parentUnstagedCreates = parent.unstagedCreates;
+    synchronized (parentUnstagedCreates) {
+      parentUnstagedCreates.addAll(unstagedCreates);
+    }
+
     WeakReferenceArrayList<_Impl> parentLocalStoreCreates =
         parent.localStoreCreates;
     synchronized (parentLocalStoreCreates) {
@@ -734,7 +782,7 @@ public final class Log {
     }
 
     // There should also never be unstaged writes in the top-level transaction.
-    if (!unstagedWritesx.isEmpty()) {
+    if (!unstagedWrites.isEmpty()) {
       throw new InternalError("Invariant violation: found an unstaged write in "
           + "a top-level transaction.");
     }
@@ -745,7 +793,7 @@ public final class Log {
       throw new InternalError("something was written by a non-existent parent");
 
     // Release write locks and ownerships; update version numbers.
-    Iterable<_Impl> chain = SysUtil.chain(stagedWritesx, localStoreWrites);
+    Iterable<_Impl> chain = SysUtil.chain(stagedWrites, localStoreWrites);
     for (_Impl obj : chain) {
       if (!obj.$isOwned) {
         // The cached object is out-of-date. Evict it.
@@ -905,5 +953,46 @@ public final class Log {
   @Override
   public String toString() {
     return "[" + tid + "]";
+  }
+
+  /**
+   * @return the tid for the outermost transaction that has an unstaged use of
+   *         an object in the given conflict set. If the transaction does not
+   *         use an object in the conflict set, then {@code null} is returned.
+   */
+  TransactionID outermostConflictingTid(Set<Oid> conflicts) {
+    // Check parent, if we have one.
+    if (parent != null) {
+      TransactionID result = parent.outermostConflictingTid(conflicts);
+      if (result != null) return result;
+    }
+
+    // Check reads.
+    for (Oid oid : conflicts) {
+      if (unstagedReads.containsKey(oid)) return tid;
+    }
+
+    // Check writes.
+    for (_Impl impl : unstagedWrites) {
+      if (conflicts.contains(new Oid(impl.$getStore(), impl.$getOnum())))
+        return tid;
+    }
+
+    return null;
+  }
+
+  /**
+   * Updates the log to reflect a successful stage.
+   */
+  void updateForSuccessfulStage() {
+    stagedReads.putAll(unstagedReads);
+    unstagedReads.clear();
+
+    unstagedCreates.clear();
+
+    stagedWrites.addAll(unstagedWrites);
+    unstagedWrites.clear();
+
+    if (parent != null) parent.updateForSuccessfulStage();
   }
 }

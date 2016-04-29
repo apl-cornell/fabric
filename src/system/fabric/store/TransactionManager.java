@@ -5,8 +5,6 @@ import static fabric.store.db.ObjectDB.UpdateMode.CREATE;
 import static fabric.store.db.ObjectDB.UpdateMode.WRITE;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 
@@ -16,6 +14,7 @@ import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
 import fabric.common.exceptions.AccessException;
 import fabric.common.net.RemoteIdentity;
+import fabric.common.util.LongHashSet;
 import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
@@ -27,7 +26,7 @@ import fabric.store.db.GroupContainer;
 import fabric.store.db.ObjectDB;
 import fabric.worker.Store;
 import fabric.worker.TransactionCommitFailedException;
-import fabric.worker.TransactionPrepareFailedException;
+import fabric.worker.TransactionStagingFailedException;
 import fabric.worker.Worker;
 import fabric.worker.Worker.Code;
 import fabric.worker.remote.RemoteWorker;
@@ -53,11 +52,11 @@ public class TransactionManager {
   }
 
   /**
-   * Instruct the transaction manager that the given transaction is aborting
+   * Instruct the transaction manager that the latest stage of the given
+   * transaction is aborting
    */
-  public void abortTransaction(Principal worker, long transactionID)
-      throws AccessException {
-    database.rollback(transactionID, worker);
+  public void abortStage(Principal worker, long transactionID) {
+    database.abortStage(transactionID, worker);
     STORE_TRANSACTION_LOGGER.log(Level.FINE, "Aborted transaction {0}",
         transactionID);
   }
@@ -66,70 +65,68 @@ public class TransactionManager {
    * Execute the commit phase of two phase commit.
    */
   public void commitTransaction(RemoteIdentity<RemoteWorker> workerIdentity,
-      long transactionID) throws TransactionCommitFailedException {
+      CommitRequest req) throws TransactionCommitFailedException {
     try {
-      database.commit(transactionID, workerIdentity, sm);
+      database.commit(workerIdentity, req, sm);
       STORE_TRANSACTION_LOGGER.log(Level.FINE, "Committed transaction {0}",
-          transactionID);
+          req.tid);
     } catch (final AccessException e) {
       throw new TransactionCommitFailedException("Insufficient Authorization");
     } catch (final RuntimeException e) {
       throw new TransactionCommitFailedException(
           "something went wrong; store experienced a runtime exception during "
-              + "commit: " + e.getMessage(), e);
+              + "commit: " + e.getMessage(),
+          e);
     }
   }
 
   /**
    * <p>
-   * Execute the prepare phase of two phase commit. Validates the transaction to
-   * make sure that no conflicts would occur if this transaction were committed.
-   * Once prepare returns successfully, the corresponding transaction can only
-   * fail if the coordinator aborts it.
+   * Stages a transaction. The reads and writes made thus far in the transaction
+   * are validated to ensure that no conflicts would occur if the transaction
+   * were committed.
    * </p>
    * <p>
-   * The prepare method must check a large number of conditions:
+   * The following conditions are checked:
    * <ul>
-   * <li>Neither creates, updates, nor reads can have pending commits, i.e. none
-   * of them can contain objects for which other transactions have been prepared
-   * but not committed or aborted.</li>
+   * <li>Updates cannot have pending commits, i.e., they cannot contain objects
+   * for which other transaction have been staged, but not committed or
+   * aborted.</li>
    * <li>The worker has appropriate permissions to read/write/create</li>
    * <li>Created objects don't already exist</li>
-   * <li>Updated objects cannot have been read since the proposed commit time.</li>
-   * <li>Updated objects do not have valid outstanding promises</li>
+   * <li>Reads cannot have pending writes, i.e., they cannot be write-staged by
+   * an uncommitted transaction</li>
    * <li>Modified and read objects do exist</li>
    * <li>Read objects are still valid (version numbers match)</li>
-   * <li>TODO: duplicate objects within sets / between sets?</li>
    * </ul>
    * </p>
    *
    * @param worker
    *          The worker requesting the prepare
-   * @throws TransactionPrepareFailedException
+   * @throws TransactionStagingFailedException
    *           If the transaction would cause a conflict or if the worker is
    *           insufficiently privileged to execute the transaction.
    */
-  public void prepare(Principal worker, PrepareRequest req)
-      throws TransactionPrepareFailedException {
-    final long tid = req.tid;
-
+  public void stageTransaction(Principal worker, long tid,
+      LongKeyMap<Integer> reads, LongKeyMap<Integer> writes, LongSet creates)
+      throws TransactionStagingFailedException {
     // First, check read and write permissions. We do this before we attempt to
-    // do the actual prepare because we want to run the permissions check in a
+    // do the actual staging because we want to run the permissions check in a
     // transaction outside of the worker's transaction.
     Store store = Worker.getWorker().getStore(database.getName());
     if (worker == null || worker.$getStore() != store
         || worker.$getOnum() != ONumConstants.STORE_PRINCIPAL) {
       try {
-        checkPerms(worker, req.reads.keySet(), req.writes);
+        checkPerms(worker, reads.keySet(), writes.keySet());
       } catch (AccessException e) {
-        throw new TransactionPrepareFailedException(e.getMessage());
+        throw new TransactionStagingFailedException(e.getMessage());
       }
     }
 
     try {
-      database.beginTransaction(tid, worker);
+      database.beginStage(tid, worker);
     } catch (final AccessException e) {
-      throw new TransactionPrepareFailedException("Insufficient privileges");
+      throw new TransactionStagingFailedException("Insufficient privileges");
     }
 
     try {
@@ -137,37 +134,41 @@ public class TransactionManager {
       LongKeyMap<SerializedObject> versionConflicts = new LongKeyHashMap<>();
 
       // Prepare writes.
-      for (SerializedObject o : req.writes) {
-        database.prepareUpdate(tid, worker, o, versionConflicts, WRITE);
+      for (LongKeyMap.Entry<Integer> entry : writes.entrySet()) {
+        long onum = entry.getKey();
+        int version = entry.getValue();
+
+        database.stageUpdate(tid, worker, onum, version, versionConflicts,
+            WRITE);
       }
 
       // Prepare creates.
-      for (SerializedObject o : req.creates) {
-        database.prepareUpdate(tid, worker, o, versionConflicts, CREATE);
+      for (LongIterator it = creates.iterator(); it.hasNext();) {
+        database.stageUpdate(tid, worker, it.next(), 0, versionConflicts,
+            CREATE);
       }
 
-      // Check reads
-      for (LongKeyMap.Entry<Integer> entry : req.reads.entrySet()) {
+      // Prepare reads.
+      for (LongKeyMap.Entry<Integer> entry : reads.entrySet()) {
         long onum = entry.getKey();
-        int version = entry.getValue().intValue();
+        int version = entry.getValue();
 
-        database.prepareRead(tid, worker, onum, version, versionConflicts);
+        database.stageRead(tid, worker, onum, version, versionConflicts);
       }
 
       if (!versionConflicts.isEmpty()) {
-        throw new TransactionPrepareFailedException(versionConflicts);
+        throw new TransactionStagingFailedException(versionConflicts);
       }
 
-      // readHistory.record(req);
-      database.finishPrepare(tid, worker);
+      database.finishStage(tid, worker);
 
-      STORE_TRANSACTION_LOGGER.log(Level.FINE, "Prepared transaction {0}", tid);
-    } catch (TransactionPrepareFailedException e) {
-      database.abortPrepare(tid, worker);
+      STORE_TRANSACTION_LOGGER.log(Level.FINE, "Staged transaction {0}", tid);
+    } catch (TransactionStagingFailedException e) {
+      database.abortStage(tid, worker);
       throw e;
     } catch (RuntimeException e) {
       e.printStackTrace();
-      database.abortPrepare(tid, worker);
+      database.abortStage(tid, worker);
       throw e;
     }
   }
@@ -177,7 +178,7 @@ public class TransactionManager {
    * objects. If it doesn't, an AccessException is thrown.
    */
   private void checkPerms(final Principal worker, final LongSet reads,
-      final Collection<SerializedObject> writes) throws AccessException {
+      final LongSet writes) throws AccessException {
     // The code that does the actual checking.
     Code<AccessException> checker = new Code<AccessException>() {
       @Override
@@ -199,8 +200,8 @@ public class TransactionManager {
           }
         }
 
-        for (SerializedObject o : writes) {
-          long onum = o.getOnum();
+        for (LongIterator it = writes.iterator(); it.hasNext();) {
+          long onum = it.next();
 
           fabric.lang.Object storeCopy =
               new fabric.lang.Object._Proxy(store, onum);
@@ -227,7 +228,8 @@ public class TransactionManager {
    * Returns a GroupContainer containing the specified object.
    */
   GroupContainer getGroupContainer(long onum) throws AccessException {
-    return getGroupContainerAndSubscribe(onum, null, false /* this argument doesn't matter */);
+    return getGroupContainerAndSubscribe(onum, null,
+        false /* this argument doesn't matter */);
   }
 
   /**
@@ -284,9 +286,8 @@ public class TransactionManager {
    */
   public ObjectGroup getGroup(Principal principal, RemoteWorker subscriber,
       long onum) throws AccessException {
-    ObjectGroup group =
-        getGroupContainerAndSubscribe(onum, subscriber, false).getGroup(
-            principal);
+    ObjectGroup group = getGroupContainerAndSubscribe(onum, subscriber, false)
+        .getGroup(principal);
     if (group == null) throw new AccessException(database.getName(), onum);
     return group;
   }
@@ -325,8 +326,7 @@ public class TransactionManager {
     Store store = Worker.getWorker().getStore(database.getName());
     if (worker == null || worker.$getStore() != store
         || worker.$getOnum() != ONumConstants.STORE_PRINCIPAL) {
-      checkPerms(worker, versions.keySet(),
-          Collections.<SerializedObject> emptyList());
+      checkPerms(worker, versions.keySet(), new LongHashSet());
     }
 
     List<SerializedObject> result = new ArrayList<>();

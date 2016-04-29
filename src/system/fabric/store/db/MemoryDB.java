@@ -10,7 +10,6 @@ import java.security.PrivateKey;
 import fabric.common.ONumConstants;
 import fabric.common.Resources;
 import fabric.common.SerializedObject;
-import fabric.common.SysUtil;
 import fabric.common.exceptions.AccessException;
 import fabric.common.net.RemoteIdentity;
 import fabric.common.util.ConcurrentLongKeyHashMap;
@@ -19,6 +18,7 @@ import fabric.common.util.LongKeyMap;
 import fabric.common.util.MutableLong;
 import fabric.common.util.OidKeyHashMap;
 import fabric.lang.security.Principal;
+import fabric.store.CommitRequest;
 import fabric.store.SubscriptionManager;
 import fabric.worker.remote.RemoteWorker;
 
@@ -81,33 +81,45 @@ public class MemoryDB extends ObjectDB {
   }
 
   @Override
-  public void finishPrepare(long tid, Principal worker) {
+  public void finishStage(long tid, Principal worker) {
   }
 
   @Override
-  public void commit(long tid, RemoteIdentity<RemoteWorker> workerIdentity,
-      SubscriptionManager sm) throws AccessException {
-    OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
+  public void commit(RemoteIdentity<RemoteWorker> workerIdentity,
+      CommitRequest req, SubscriptionManager sm) throws AccessException {
+    OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(req.tid);
     if (submap == null)
-      throw new AccessException("Invalid transaction id: " + tid);
+      throw new AccessException("Invalid transaction id: " + req.tid);
 
-    PendingTransaction tx = submap.get(workerIdentity.principal);
+    if (!submap.containsKey(workerIdentity.principal))
+      throw new AccessException("Worker " + workerIdentity
+          + " not a partipant in transaction " + req.tid);
 
     // merge in the objects. We do creates before writes to avoid potential
-    // dangling references in update objects.
-    for (SerializedObject o : SysUtil.chain(tx.creates, tx.writes)) {
-      objectTable.put(o.getOnum(), o);
+    // dangling references in updated objects.
+    for (SerializedObject obj : req.creates) {
+      // Update the version number on the prepared copy of the object.
+      obj.setVersion(INITIAL_OBJECT_VERSION_NUMBER);
 
-      // Remove any cached globs containing the old version of this object.
-      notifyCommittedUpdate(sm, o.getOnum(), workerIdentity.node);
+      objectTable.put(obj.getOnum(), obj);
     }
 
-    remove(workerIdentity.principal, tid);
+    for (SerializedObject obj : req.writes) {
+      // Update the version number on the prepared copy of the object.
+      obj.setVersion(obj.getVersion() + 1);
+
+      objectTable.put(obj.getOnum(), obj);
+
+      // Remove any cached globs containing the old version of this object.
+      notifyCommittedUpdate(sm, obj.getOnum(), workerIdentity.node);
+    }
+
+    remove(workerIdentity.principal, req.tid, UnpinMode.COMMIT);
   }
 
   @Override
   public void rollback(long tid, Principal worker) throws AccessException {
-    remove(worker, tid);
+    remove(worker, tid, UnpinMode.ABORT);
   }
 
   @Override
@@ -159,7 +171,7 @@ public class MemoryDB extends ObjectDB {
    * Helper method to check permissions and update the pending object table for
    * a commit or roll-back.
    */
-  private PendingTransaction remove(Principal worker, long tid)
+  private PendingTransaction remove(Principal worker, long tid, UnpinMode mode)
       throws AccessException {
     OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
     if (submap == null)
@@ -171,12 +183,11 @@ public class MemoryDB extends ObjectDB {
       if (submap.isEmpty()) pendingByTid.remove(tid, submap);
     }
 
-    if (tx == null)
-      throw new AccessException("Invalid transaction id: " + tid);
+    if (tx == null) throw new AccessException("Invalid transaction id: " + tid);
 
     // XXX Check if the worker acts for the owner.
 
-    unpin(tx);
+    unpin(tx, mode);
     return tx;
   }
 

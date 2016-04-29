@@ -22,7 +22,7 @@ import fabric.store.InProcessStore;
 import fabric.worker.RemoteStore;
 import fabric.worker.Store;
 import fabric.worker.TransactionCommitFailedException;
-import fabric.worker.TransactionPrepareFailedException;
+import fabric.worker.TransactionStagingFailedException;
 import fabric.worker.Worker;
 
 /**
@@ -62,22 +62,22 @@ public class InProcessRemoteWorker extends RemoteWorker {
   }
 
   @Override
-  public void prepareTransaction(long tid) throws UnreachableNodeException,
-      TransactionPrepareFailedException {
+  public void stageTransaction(long tid)
+      throws UnreachableNodeException, TransactionStagingFailedException {
     // XXX Does this actually happen?
     throw new NotImplementedException();
   }
 
   @Override
-  public void commitTransaction(long tid) throws UnreachableNodeException,
-      TransactionCommitFailedException {
+  public void commitTransaction(long tid)
+      throws UnreachableNodeException, TransactionCommitFailedException {
     // XXX Does this actually happen?
     throw new NotImplementedException();
   }
 
   @Override
-  public void abortTransaction(TransactionID tid) throws AccessException,
-      UnreachableNodeException {
+  public void abortStage(TransactionID tid)
+      throws AccessException, UnreachableNodeException {
     // XXX Does this actually happen?
     throw new NotImplementedException();
   }

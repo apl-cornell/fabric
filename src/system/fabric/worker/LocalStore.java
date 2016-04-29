@@ -11,11 +11,10 @@ import java.util.Set;
 
 import fabric.common.ONumConstants;
 import fabric.common.SerializedObject;
-import fabric.common.TransactionID;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.LongSet;
 import fabric.common.util.Pair;
-import fabric.lang.Object;
 import fabric.lang.Object._Impl;
 import fabric.lang.security.ConfPolicy;
 import fabric.lang.security.IntegPolicy;
@@ -49,21 +48,21 @@ public final class LocalStore implements Store, Serializable {
   private Set<Pair<Principal, Principal>> localDelegates;
 
   @Override
-  public void prepareTransaction(long tid, boolean singleStore,
-      boolean readOnly, Collection<Object._Impl> toCreate,
-      LongKeyMap<Integer> reads, Collection<Object._Impl> writes) {
+  public void stageTransaction(long tid, LongKeyMap<Integer> reads,
+      LongKeyMap<Integer> writes, LongSet creates) {
     // Note: since we assume local single threading we can ignore reads
     // (conflicts are impossible)
     WORKER_LOCAL_STORE_LOGGER.fine("Local transaction preparing");
   }
 
   @Override
-  public void abortTransaction(TransactionID tid) {
+  public void abortStage(long tid) {
     WORKER_LOCAL_STORE_LOGGER.fine("Local transaction aborting");
   }
 
   @Override
-  public void commitTransaction(long transactionID) {
+  public void commitTransaction(long transactionID, Collection<_Impl> toCreate,
+      Collection<_Impl> writes) {
     WORKER_LOCAL_STORE_LOGGER.fine("Local transaction committing");
   }
 
@@ -238,45 +237,38 @@ public final class LocalStore implements Store, Serializable {
         // onums.)
 
         // Create the object representing the top principal.
-        topPrincipal =
-            new TopPrincipal._Impl(LocalStore.this)
-                .fabric$lang$security$PrincipalUtil$TopPrincipal$();
+        topPrincipal = new TopPrincipal._Impl(LocalStore.this)
+            .fabric$lang$security$PrincipalUtil$TopPrincipal$();
         topPrincipal.$forceRenumber(ONumConstants.TOP_PRINCIPAL);
 
         // Create the object representing the bottom confidentiality policy.
-        bottomConfidPolicy =
-            LabelUtil._Impl.readerPolicy(LocalStore.this, null,
-                (Principal) null);
+        bottomConfidPolicy = LabelUtil._Impl.readerPolicy(LocalStore.this, null,
+            (Principal) null);
         bottomConfidPolicy.$forceRenumber(ONumConstants.BOTTOM_CONFIDENTIALITY);
 
         // Create the object representing the bottom integrity policy.
-        bottomIntegPolicy =
-            LabelUtil._Impl.writerPolicy(LocalStore.this, topPrincipal,
-                topPrincipal);
+        bottomIntegPolicy = LabelUtil._Impl.writerPolicy(LocalStore.this,
+            topPrincipal, topPrincipal);
         bottomIntegPolicy.$forceRenumber(ONumConstants.BOTTOM_INTEGRITY);
 
         // Create the object representing the public readonly label.
-        publicReadonlyLabel =
-            LabelUtil._Impl.toLabel(LocalStore.this, bottomConfidPolicy,
-                bottomIntegPolicy);
+        publicReadonlyLabel = LabelUtil._Impl.toLabel(LocalStore.this,
+            bottomConfidPolicy, bottomIntegPolicy);
         publicReadonlyLabel.$forceRenumber(ONumConstants.PUBLIC_READONLY_LABEL);
 
         // Create the object representing the top confidentiality policy.
-        topConfidPolicy =
-            LabelUtil._Impl.readerPolicy(LocalStore.this, topPrincipal,
-                topPrincipal);
+        topConfidPolicy = LabelUtil._Impl.readerPolicy(LocalStore.this,
+            topPrincipal, topPrincipal);
         topConfidPolicy.$forceRenumber(ONumConstants.TOP_CONFIDENTIALITY);
 
         // Create the object representing the top integrity policy.
-        topIntegPolicy =
-            LabelUtil._Impl.writerPolicy(LocalStore.this, null,
-                (Principal) null);
+        topIntegPolicy = LabelUtil._Impl.writerPolicy(LocalStore.this, null,
+            (Principal) null);
         topIntegPolicy.$forceRenumber(ONumConstants.TOP_INTEGRITY);
 
         // Create the object representing the empty label.
-        emptyLabel =
-            LabelUtil._Impl.toLabel(LocalStore.this, bottomConfidPolicy,
-                topIntegPolicy);
+        emptyLabel = LabelUtil._Impl.toLabel(LocalStore.this,
+            bottomConfidPolicy, topIntegPolicy);
         emptyLabel.$forceRenumber(ONumConstants.EMPTY_LABEL);
 
         // Create the label {worker->_; worker<-_} for the root map.

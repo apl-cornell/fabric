@@ -27,7 +27,7 @@ public class SimpleSurrogateManager implements SurrogateManager {
   }
 
   @Override
-  public void createSurrogates(PrepareRequest req) {
+  public void createSurrogates(CommitRequest req) {
     // Maps remote refs -> surrogate onums.
     Map<Pair<String, Long>, Long> cache = new HashMap<>();
     Collection<SerializedObject> surrogates = new ArrayList<>();
@@ -39,9 +39,8 @@ public class SimpleSurrogateManager implements SurrogateManager {
           obj.getInterStoreRefIterator();
 
       boolean hadRemotes = false;
-      List<Long> newrefs =
-          new ArrayList<>(obj.getNumIntraStoreRefs()
-              + obj.getNumInterStoreRefs() + 1);
+      List<Long> newrefs = new ArrayList<>(
+          obj.getNumIntraStoreRefs() + obj.getNumInterStoreRefs() + 1);
 
       long updateLabelOnum;
       if (obj.updateLabelRefIsInterStore()) {

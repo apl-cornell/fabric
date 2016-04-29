@@ -6,6 +6,7 @@ import java.util.List;
 
 import fabric.common.AuthorizationUtil;
 import fabric.common.TransactionID;
+import fabric.common.exceptions.InternalError;
 import fabric.common.net.RemoteIdentity;
 import fabric.common.net.SubServerSocket;
 import fabric.common.net.SubServerSocketFactory;
@@ -13,20 +14,19 @@ import fabric.lang.Object._Impl;
 import fabric.lang.Object._Proxy;
 import fabric.lang.security.Label;
 import fabric.lang.security.Principal;
-import fabric.messages.AbortTransactionMessage;
+import fabric.messages.AbortStageMessage;
 import fabric.messages.CommitTransactionMessage;
 import fabric.messages.DirtyReadMessage;
 import fabric.messages.InterWorkerStalenessMessage;
 import fabric.messages.MessageToWorkerHandler;
 import fabric.messages.ObjectUpdateMessage;
-import fabric.messages.PrepareTransactionMessage;
 import fabric.messages.RemoteCallMessage;
+import fabric.messages.StageTransactionMessage;
 import fabric.messages.TakeOwnershipMessage;
 import fabric.worker.RemoteStore;
 import fabric.worker.TransactionAtomicityViolationException;
 import fabric.worker.TransactionCommitFailedException;
-import fabric.worker.TransactionPrepareFailedException;
-import fabric.worker.TransactionRestartingException;
+import fabric.worker.TransactionStagingFailedException;
 import fabric.worker.Worker;
 import fabric.worker.transaction.Log;
 import fabric.worker.transaction.TakeOwnershipFailedException;
@@ -135,49 +135,19 @@ public class RemoteCallManager extends MessageToWorkerHandler {
    * worker's TransactionManager is associated with a null log.
    */
   @Override
-  public AbortTransactionMessage.Response handle(
-      RemoteIdentity<RemoteWorker> client,
-      AbortTransactionMessage abortTransactionMessage) {
-    // XXX TODO Security checks.
-    Log log =
-        TransactionRegistry.getInnermostLog(abortTransactionMessage.tid.topTid);
-    if (log != null) {
-      TransactionManager tm = TransactionManager.getInstance();
-      tm.associateAndSyncLog(log, abortTransactionMessage.tid);
-      tm.abortTransaction();
-      tm.associateLog(null);
-    }
-
-    return new AbortTransactionMessage.Response();
+  public AbortStageMessage.Response handle(RemoteIdentity<RemoteWorker> client,
+      AbortStageMessage abortTransactionMessage) {
+    throw new InternalError("Remote calls not supported.");
   }
 
   @Override
-  public PrepareTransactionMessage.Response handle(
+  public StageTransactionMessage.Response handle(
       RemoteIdentity<RemoteWorker> client,
-      PrepareTransactionMessage prepareTransactionMessage)
-          throws TransactionPrepareFailedException {
-    // XXX TODO Security checks.
-    Log log =
-        TransactionRegistry.getInnermostLog(prepareTransactionMessage.tid);
-    if (log == null)
-      throw new TransactionPrepareFailedException("No such transaction");
-
-    // Commit up to the top level.
-    TransactionManager tm = TransactionManager.getInstance();
-    TransactionID topTid = log.getTid();
-    while (topTid.depth > 0)
-      topTid = topTid.parent;
-    tm.associateAndSyncLog(log, topTid);
-
-    try {
-      tm.sendPrepareMessages();
-    } catch (TransactionRestartingException e) {
-      throw new TransactionPrepareFailedException(e);
-    } finally {
-      tm.associateLog(null);
-    }
-
-    return new PrepareTransactionMessage.Response();
+      StageTransactionMessage stageTransactionMessage)
+      throws TransactionStagingFailedException {
+    throw new InternalError(
+        "PrepareTransactionMessage handler not implemented: remote calls are "
+            + "not supported.");
   }
 
   /**
@@ -188,10 +158,9 @@ public class RemoteCallManager extends MessageToWorkerHandler {
   public CommitTransactionMessage.Response handle(
       RemoteIdentity<RemoteWorker> client,
       CommitTransactionMessage commitTransactionMessage)
-          throws TransactionCommitFailedException {
+      throws TransactionCommitFailedException {
     // XXX TODO Security checks.
-    Log log =
-        TransactionRegistry
+    Log log = TransactionRegistry
         .getInnermostLog(commitTransactionMessage.transactionID);
     if (log == null) {
       // If no log exists, assume that another worker in the transaction has
@@ -245,12 +214,11 @@ public class RemoteCallManager extends MessageToWorkerHandler {
   @Override
   public TakeOwnershipMessage.Response handle(
       RemoteIdentity<RemoteWorker> client, TakeOwnershipMessage msg)
-          throws TakeOwnershipFailedException {
+      throws TakeOwnershipFailedException {
     Log log = TransactionRegistry.getInnermostLog(msg.tid.topTid);
-    if (log == null)
-      throw new TakeOwnershipFailedException(MessageFormat.format(
-          "Object fab://{0}/{1} is not owned by {2} in transaction {3}",
-          msg.store.name(), msg.onum, null, msg.tid));
+    if (log == null) throw new TakeOwnershipFailedException(MessageFormat
+        .format("Object fab://{0}/{1} is not owned by {2} in transaction {3}",
+            msg.store.name(), msg.onum, null, msg.tid));
 
     _Impl obj = new _Proxy(msg.store, msg.onum).fetch();
 
@@ -268,17 +236,16 @@ public class RemoteCallManager extends MessageToWorkerHandler {
 
       // Ensure that the remote worker is allowed to write the object.
       Label label = obj.get$$updateLabel();
-      boolean authorized =
-          AuthorizationUtil.isWritePermitted(client.principal,
-              label.$getStore(), label.$getOnum());
+      boolean authorized = AuthorizationUtil.isWritePermitted(client.principal,
+          label.$getStore(), label.$getOnum());
 
       tm.associateLog(null);
 
       if (!authorized) {
         Principal p = client.principal;
         throw new TakeOwnershipFailedException(MessageFormat.format(
-            "{0} is not authorized to own fab://{1}/{2}", p.$getStore() + "/"
-                + p.$getOnum(), msg.store.name(), msg.onum));
+            "{0} is not authorized to own fab://{1}/{2}",
+            p.$getStore() + "/" + p.$getOnum(), msg.store.name(), msg.onum));
       }
 
       // Relinquish ownership.
@@ -296,14 +263,12 @@ public class RemoteCallManager extends MessageToWorkerHandler {
     final List<Long> response;
 
     if (objectUpdateMessage.groups == null) {
-      response =
-          inProcessRemoteWorker.notifyObjectUpdates(objectUpdateMessage.store,
-              objectUpdateMessage.globs);
+      response = inProcessRemoteWorker.notifyObjectUpdates(
+          objectUpdateMessage.store, objectUpdateMessage.globs);
     } else {
       RemoteStore store = worker.getStore(client.node.name);
-      response =
-          inProcessRemoteWorker.notifyObjectUpdates(store,
-              objectUpdateMessage.onums, objectUpdateMessage.groups);
+      response = inProcessRemoteWorker.notifyObjectUpdates(store,
+          objectUpdateMessage.onums, objectUpdateMessage.groups);
     }
 
     return new ObjectUpdateMessage.Response(response);

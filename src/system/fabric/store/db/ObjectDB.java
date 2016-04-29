@@ -1,5 +1,7 @@
 package fabric.store.db;
 
+import static fabric.common.Logging.STORE_TRANSACTION_LOGGER;
+
 import java.io.DataOutput;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -7,6 +9,7 @@ import java.security.PrivateKey;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.logging.Level;
 
 import javax.security.auth.x500.X500Principal;
 
@@ -25,9 +28,10 @@ import fabric.common.util.LongSet;
 import fabric.common.util.OidKeyHashMap;
 import fabric.lang.security.NodePrincipal;
 import fabric.lang.security.Principal;
+import fabric.store.CommitRequest;
 import fabric.store.SubscriptionManager;
 import fabric.worker.Store;
-import fabric.worker.TransactionPrepareFailedException;
+import fabric.worker.TransactionStagingFailedException;
 import fabric.worker.Worker;
 import fabric.worker.remote.RemoteWorker;
 
@@ -55,7 +59,7 @@ import fabric.worker.remote.RemoteWorker;
  * </p>
  */
 public abstract class ObjectDB {
-  private static final int INITIAL_OBJECT_VERSION_NUMBER = 1;
+  protected static final int INITIAL_OBJECT_VERSION_NUMBER = 1;
   /**
    * The store's name.
    */
@@ -70,31 +74,168 @@ public abstract class ObjectDB {
     CREATE, WRITE
   }
 
+  protected static enum UnpinMode {
+    COMMIT, ABORT
+  }
+
   /**
    * The data stored for a partially prepared transaction.
    */
-  protected static final class PendingTransaction implements FastSerializable,
-      Iterable<Long> {
+  protected static final class PendingTransaction
+      implements FastSerializable, Iterable<Long> {
+    static final class Log implements FastSerializable, Iterable<Long> {
+      /**
+       * Objects that have been read.
+       */
+      public final Collection<Long> reads;
+
+      /**
+       * Objects that have been created.
+       */
+      public final Collection<Long> creates;
+
+      /**
+       * Objects that have been modified.
+       */
+      public final Collection<Long> writes;
+
+      Log() {
+        this.reads = new ArrayList<>();
+        this.creates = new ArrayList<>();
+        this.writes = new ArrayList<>();
+      }
+
+      /**
+       * Moves all reads/writes/creates to the given {@code Log}.
+       */
+      void moveTo(Log other) {
+        other.reads.addAll(reads);
+        reads.clear();
+
+        other.creates.addAll(creates);
+        creates.clear();
+
+        other.writes.addAll(writes);
+        writes.clear();
+      }
+
+      boolean isEmpty() {
+        return reads.isEmpty() && writes.isEmpty() && creates.isEmpty();
+      }
+
+      void clear() {
+        reads.clear();
+        writes.clear();
+        creates.clear();
+      }
+
+      /**
+       * Returns an iterator of onums involved in this transaction.
+       */
+      @Override
+      public Iterator<Long> iterator() {
+        return SysUtil.chain(reads, creates, writes).iterator();
+      }
+
+      /**
+       * Deserialization constructor.
+       */
+      public Log(ObjectInputStream in) throws IOException {
+        int size = in.readInt();
+        this.reads = new ArrayList<>(size);
+        for (int i = 0; i < size; i++)
+          reads.add(in.readLong());
+
+        size = in.readInt();
+        this.creates = new ArrayList<>(size);
+        for (int i = 0; i < size; i++)
+          creates.add(in.readLong());
+
+        size = in.readInt();
+        this.writes = new ArrayList<>(size);
+        for (int i = 0; i < size; i++)
+          writes.add(in.readLong());
+      }
+
+      @Override
+      public void write(DataOutput out) throws IOException {
+        out.writeInt(reads.size());
+        for (long onum : reads)
+          out.writeLong(onum);
+
+        out.writeInt(creates.size());
+        for (long onum : creates)
+          out.writeLong(onum);
+
+        out.writeInt(writes.size());
+        for (long onum : writes)
+          out.writeLong(onum);
+      }
+    }
+
     public final long tid;
     public final Principal owner;
-    public final Collection<Long> reads;
 
     /**
-     * Objects that have been created.
+     * The set of objects read, created, and modified in the current stage.
+     * These are liable to be rolled back if the stage is aborted.
      */
-    public final Collection<SerializedObject> creates;
+    private final Log current;
 
     /**
-     * Objects that have been modified.
+     * The set of objects read, created, and modified in previous stages. These
+     * cannot be rolled back.
      */
-    public final Collection<SerializedObject> writes;
+    private final Log confirmed;
 
     PendingTransaction(long tid, Principal owner) {
       this.tid = tid;
       this.owner = owner;
-      this.reads = new ArrayList<>();
-      this.creates = new ArrayList<>();
-      this.writes = new ArrayList<>();
+      this.current = new Log();
+      this.confirmed = new Log();
+    }
+
+    /**
+     * Starts a new stage for the transaction. All current reads/writes/creates
+     * become confirmed.
+     */
+    void beginNewStage() {
+      current.moveTo(confirmed);
+    }
+
+    void addRead(long onum) {
+      current.reads.add(onum);
+    }
+
+    void addCreate(long onum) {
+      current.creates.add(onum);
+    }
+
+    void addWrite(long onum) {
+      current.writes.add(onum);
+    }
+
+    /**
+     * Clears out the current (unconfirmed) portion of the log.
+     */
+    void abortCurrentStage() {
+      current.clear();
+    }
+
+    /**
+     * @return true iff the transaction has any confirmed reads, writes, or
+     *         creates.
+     */
+    boolean hasConfirmed() {
+      return !confirmed.isEmpty();
+    }
+
+    /**
+     * Returns an iterator of onums involved in this transaction.
+     */
+    @Override
+    public Iterator<Long> iterator() {
+      return SysUtil.chain(current, confirmed).iterator();
     }
 
     /**
@@ -110,53 +251,8 @@ public abstract class ObjectDB {
         this.owner = null;
       }
 
-      int size = in.readInt();
-      this.reads = new ArrayList<>(size);
-      for (int i = 0; i < size; i++)
-        reads.add(in.readLong());
-
-      int createsSize = in.readInt();
-      this.creates = new ArrayList<>(createsSize);
-
-      int writesSize = in.readInt();
-      this.writes = new ArrayList<>(writesSize);
-
-      if (in.readBoolean()) {
-        for (int i = 0; i < createsSize; i++)
-          creates.add(new SerializedObject(in));
-
-        for (int i = 0; i < writesSize; i++)
-          writes.add(new SerializedObject(in));
-      }
-    }
-
-    /**
-     * Returns an iterator of onums involved in this transaction.
-     */
-    @Override
-    public Iterator<Long> iterator() {
-      return new Iterator<Long>() {
-        private Iterator<Long> readIt = reads.iterator();
-        private Iterator<SerializedObject> createIt = creates.iterator();
-        private Iterator<SerializedObject> writeIt = writes.iterator();
-
-        @Override
-        public boolean hasNext() {
-          return readIt.hasNext() || createIt.hasNext() || writeIt.hasNext();
-        }
-
-        @Override
-        public Long next() {
-          if (readIt.hasNext()) return readIt.next();
-          if (createIt.hasNext()) return createIt.next().getOnum();
-          return writeIt.next().getOnum();
-        }
-
-        @Override
-        public void remove() {
-          throw new UnsupportedOperationException();
-        }
-      };
+      current = new Log(in);
+      confirmed = new Log(in);
     }
 
     /**
@@ -164,33 +260,6 @@ public abstract class ObjectDB {
      */
     @Override
     public void write(DataOutput out) throws IOException {
-      writeCommon(out);
-
-      // Indicate that contents of modData will follow.
-      out.writeBoolean(true);
-
-      for (SerializedObject obj : creates)
-        obj.write(out);
-
-      for (SerializedObject obj : writes)
-        obj.write(out);
-    }
-
-    /**
-     * Serializes this PendingTransaction out to the given output stream, whilst
-     * omitting data about the objects that have been modified or created.
-     */
-    void writeNoModData(DataOutput out) throws IOException {
-      writeCommon(out);
-
-      // Indicate that contents of modData will not follow.
-      out.writeBoolean(false);
-    }
-
-    /**
-     * Writes everything but contents of modData.
-     */
-    private void writeCommon(DataOutput out) throws IOException {
       out.writeLong(tid);
 
       out.writeBoolean(owner != null);
@@ -199,20 +268,14 @@ public abstract class ObjectDB {
         out.writeLong(owner.$getOnum());
       }
 
-      out.writeInt(reads.size());
-      for (Long onum : reads)
-        out.writeLong(onum);
-
-      out.writeInt(creates.size());
-      out.writeInt(writes.size());
+      current.write(out);
+      confirmed.write(out);
     }
   }
 
   /**
    * <p>
-   * The table of partially prepared transactions. Note that this does not need
-   * to be saved to stable storage, since we only need to persist transactions
-   * that are fully prepared.
+   * The table of known transactions.
    * </p>
    * <p>
    * Maps tids to principal oids to PendingTransactions.
@@ -234,14 +297,15 @@ public abstract class ObjectDB {
   }
 
   /**
-   * Opens a new transaction.
+   * Starts a new transaction stage for the given worker, under the given
+   * transaction ID. Any existing stages become confirmed and cannot be aborted.
    *
    * @param worker
    *          the worker under whose authority the transaction is running.
    * @throws AccessException
    *           if the worker has insufficient privileges.
    */
-  public final void beginTransaction(long tid, Principal worker)
+  public final void beginStage(long tid, Principal worker)
       throws AccessException {
     // Ensure pendingByTid has a submap for the given TID.
     while (true) {
@@ -250,8 +314,18 @@ public abstract class ObjectDB {
           pendingByTid.putIfAbsent(tid, submap);
       if (existingSubmap != null) submap = existingSubmap;
 
+      // Ensure there is a pending transaction for the given worker, and start
+      // a new staged in the pending transaction.
       synchronized (submap) {
-        submap.put(worker, new PendingTransaction(tid, worker));
+        PendingTransaction pending;
+        if (submap.containsKey(worker)) {
+          pending = submap.get(worker);
+        } else {
+          pending = new PendingTransaction(tid, worker);
+          submap.put(worker, pending);
+        }
+
+        pending.beginNewStage();
       }
 
       // Ensure the submap wasn't removed out from under us.
@@ -260,7 +334,7 @@ public abstract class ObjectDB {
   }
 
   /**
-   * Prepares a read against the database.
+   * Stages a read against the database.
    *
    * @param tid
    *          the identifier for the transaction preparing the read.
@@ -275,22 +349,22 @@ public abstract class ObjectDB {
    *          If the object read was out of date, then a new entry will be added
    *          to this map, binding the object's onum to its current version.
    */
-  public final void prepareRead(long tid, Principal worker, long onum,
+  public final void stageRead(long tid, Principal worker, long onum,
       int version, LongKeyMap<SerializedObject> versionConflicts)
-      throws TransactionPrepareFailedException {
+      throws TransactionStagingFailedException {
     // First, lock the object.
     try {
       objectLocksFor(onum).lockForRead(tid, worker);
     } catch (UnableToLockException e) {
-      throw new TransactionPrepareFailedException(versionConflicts, "Object "
-          + onum + " has been locked by an uncommitted transaction.");
+      throw new TransactionStagingFailedException(versionConflicts,
+          "Object " + onum + " has been locked by an uncommitted transaction.");
     }
 
     // Register that the transaction has locked the object.
     OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
 
     synchronized (submap) {
-      submap.get(worker).reads.add(onum);
+      submap.get(worker).addRead(onum);
     }
 
     // Check version numbers.
@@ -298,7 +372,7 @@ public abstract class ObjectDB {
     try {
       curVersion = getVersion(onum);
     } catch (AccessException e) {
-      throw new TransactionPrepareFailedException(versionConflicts,
+      throw new TransactionStagingFailedException(versionConflicts,
           e.getMessage());
     }
 
@@ -308,7 +382,7 @@ public abstract class ObjectDB {
   }
 
   /**
-   * Prepares a create/write against the database.
+   * Stages a create/write against the database.
    *
    * @param tid
    *          the identifier for the transaction preparing the create/write.
@@ -322,17 +396,15 @@ public abstract class ObjectDB {
    *          added to this map, binding the object's onum to its current
    *          version.
    */
-  public final void prepareUpdate(long tid, Principal worker,
-      SerializedObject obj, LongKeyMap<SerializedObject> versionConflicts,
-      UpdateMode mode) throws TransactionPrepareFailedException {
-    long onum = obj.getOnum();
-
+  public final void stageUpdate(long tid, Principal worker, long onum,
+      int workerVersion, LongKeyMap<SerializedObject> versionConflicts,
+      UpdateMode mode) throws TransactionStagingFailedException {
     // First, lock the object.
     try {
       objectLocksFor(onum).lockForWrite(tid);
     } catch (UnableToLockException e) {
-      throw new TransactionPrepareFailedException(versionConflicts, "Object "
-          + onum + " has been locked by an uncommitted transaction.");
+      throw new TransactionStagingFailedException(versionConflicts,
+          "Object " + onum + " has been locked by an uncommitted transaction.");
     }
 
     // Record the updated object. Doing so will also register that the
@@ -342,22 +414,20 @@ public abstract class ObjectDB {
     switch (mode) {
     case CREATE:
       synchronized (submap) {
-        submap.get(worker).creates.add(obj);
+        submap.get(worker).addCreate(onum);
       }
 
       // Make sure the onum doesn't already exist in the database.
       if (exists(onum)) {
-        throw new TransactionPrepareFailedException(versionConflicts, "Object "
-            + onum + " already exists.");
+        throw new TransactionStagingFailedException(versionConflicts,
+            "Object " + onum + " already exists.");
       }
 
-      // Set the object's initial version number.
-      obj.setVersion(INITIAL_OBJECT_VERSION_NUMBER);
       return;
 
     case WRITE:
       synchronized (submap) {
-        submap.get(worker).writes.add(obj);
+        submap.get(worker).addWrite(onum);
       }
 
       // Read the old copy from the database.
@@ -365,14 +435,11 @@ public abstract class ObjectDB {
 
       // Check version numbers.
       int storeVersion = storeCopy.getVersion();
-      int workerVersion = obj.getVersion();
       if (storeVersion != workerVersion) {
         versionConflicts.put(onum, storeCopy);
         return;
       }
 
-      // Update the version number on the prepared copy of the object.
-      obj.setVersion(storeVersion + 1);
       return;
     }
 
@@ -392,48 +459,56 @@ public abstract class ObjectDB {
   }
 
   /**
-   * Rolls back a partially prepared transaction. (i.e., one for which
-   * finishPrepare() has yet to be called.)
+   * Rolls back the current stage of a transaction.
    */
-  public final void abortPrepare(long tid, Principal worker) {
+  public final void abortStage(long tid, Principal worker) {
+    try {
+      rollback(tid, worker);
+    } catch (AccessException e) {
+      STORE_TRANSACTION_LOGGER.log(Level.WARNING,
+          "Access error while aborting stage: {0}", e);
+    }
     OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
 
     synchronized (submap) {
-      unpin(submap.remove(worker));
-      if (submap.isEmpty()) pendingByTid.remove(tid, submap);
+      PendingTransaction pending = submap.get(worker);
+      unpin(pending, UnpinMode.ABORT);
+      pending.abortCurrentStage();
+      if (pending.hasConfirmed()) {
+        submap.remove(worker);
+        if (submap.isEmpty()) pendingByTid.remove(tid, submap);
+      }
     }
   }
 
   /**
    * <p>
-   * Notifies the database that the given transaction is finished preparing. The
-   * transaction is not considered to be prepared until this is called. After
+   * Notifies the database that the given transaction is finished staging. The
+   * current stage is not written to stable storage until this is called. After
    * calling this method, there should not be any further calls to
-   * registerRead() or registerUpdate() for the given transaction. This method
+   * registerRead() or registerUpdate() for the given stage. This method
    * MUST be called before calling commit().
    * </p>
    * <p>
-   * Upon receiving this call, the object database should save the prepared
-   * transaction to stable storage so that it can be recovered in case of
-   * failure.
+   * Upon receiving this call, the object database should save the current
+   * stage to stable storage so that it can be recovered in case of failure.
    * </p>
    */
-  public abstract void finishPrepare(long tid, Principal worker);
+  public abstract void finishStage(long tid, Principal worker);
 
   /**
    * Causes the objects prepared in transaction [tid] to be committed. The
    * changes will hereafter be visible to read.
    *
-   * @param tid
-   *          the transaction id
    * @param workerIdentity
    *          the remote worker that is performing the commit
+   * @param req
+   *          the set of updates for the transaction
    * @throws AccessException
    *           if the principal differs from the caller of prepare()
    */
-  public abstract void commit(long tid,
-      RemoteIdentity<RemoteWorker> workerIdentity, SubscriptionManager sm)
-      throws AccessException;
+  public abstract void commit(RemoteIdentity<RemoteWorker> workerIdentity,
+      CommitRequest req, SubscriptionManager sm) throws AccessException;
 
   /**
    * Causes the objects prepared in transaction [tid] to be discarded.
@@ -554,8 +629,11 @@ public abstract class ObjectDB {
    * Adjusts rwLocks to account for the fact that the given transaction is about
    * to be committed or aborted.
    */
-  protected final void unpin(PendingTransaction tx) {
-    for (long readOnum : tx.reads) {
+  protected final void unpin(PendingTransaction tx, UnpinMode mode) {
+    Iterable<Long> reads = tx.current.reads;
+    if (mode == UnpinMode.COMMIT)
+      reads = SysUtil.chain(reads, tx.confirmed.reads);
+    for (long readOnum : reads) {
       ObjectLocks locks = rwLocks.get(readOnum);
       if (locks != null) {
         synchronized (locks) {
@@ -566,8 +644,11 @@ public abstract class ObjectDB {
       }
     }
 
-    for (SerializedObject update : SysUtil.chain(tx.creates, tx.writes)) {
-      long onum = update.getOnum();
+    Iterable<Long> updates =
+        SysUtil.chain(tx.current.creates, tx.current.writes);
+    if (mode == UnpinMode.ABORT)
+      updates = SysUtil.chain(tx.confirmed.creates, tx.confirmed.writes);
+    for (long onum : updates) {
       ObjectLocks locks = rwLocks.get(onum);
       if (locks != null) {
         synchronized (locks) {

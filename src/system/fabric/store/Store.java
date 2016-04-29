@@ -33,23 +33,22 @@ import fabric.common.net.handshake.Protocol;
 import fabric.common.net.naming.NameService;
 import fabric.common.net.naming.NameService.PortType;
 import fabric.common.net.naming.TransitionalNameService;
-import fabric.common.util.LongKeyMap;
 import fabric.dissemination.ObjectGlob;
 import fabric.lang.security.NodePrincipal;
 import fabric.lang.security.Principal;
-import fabric.messages.AbortTransactionMessage;
+import fabric.messages.AbortStageMessage;
 import fabric.messages.AllocateMessage;
 import fabric.messages.CommitTransactionMessage;
 import fabric.messages.DissemReadMessage;
 import fabric.messages.GetCertChainMessage;
 import fabric.messages.MakePrincipalMessage;
 import fabric.messages.MessageToStoreHandler;
-import fabric.messages.PrepareTransactionMessage;
 import fabric.messages.ReadMessage;
+import fabric.messages.StageTransactionMessage;
 import fabric.messages.StalenessCheckMessage;
 import fabric.store.db.ObjectDB;
 import fabric.worker.TransactionCommitFailedException;
-import fabric.worker.TransactionPrepareFailedException;
+import fabric.worker.TransactionStagingFailedException;
 import fabric.worker.Worker;
 import fabric.worker.Worker.Code;
 import fabric.worker.remote.RemoteWorker;
@@ -148,9 +147,8 @@ class Store extends MessageToStoreHandler {
         authProt = new HandshakeAuthenticated<>(keys);
       else authProt = new HandshakeBogus<>(this.config.name, STORE_PRINCIPAL);
 
-      Protocol<RemoteWorker> handshake =
-          new HandshakeComposite<>(authProt,
-              new HandshakeUnauthenticated<RemoteWorker>(this.config.name));
+      Protocol<RemoteWorker> handshake = new HandshakeComposite<>(authProt,
+          new HandshakeUnauthenticated<RemoteWorker>(this.config.name));
       NameService nameService = new TransitionalNameService();
 
       return new SubServerSocketFactory(handshake, nameService, PortType.STORE);
@@ -164,15 +162,14 @@ class Store extends MessageToStoreHandler {
   // ////////////////////////////////////////////////////////////////////////////
 
   @Override
-  public AbortTransactionMessage.Response handle(
-      RemoteIdentity<RemoteWorker> client, AbortTransactionMessage message)
-          throws AccessException {
+  public AbortStageMessage.Response handle(RemoteIdentity<RemoteWorker> client,
+      AbortStageMessage message) throws AccessException {
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
-        "Handling Abort Message from {0} for tid={1}",
-        nameOf(client.principal), message.tid.topTid);
+        "Handling Abort Message from {0} for tid={1}", nameOf(client.principal),
+        message.tid);
 
-    tm.abortTransaction(client.principal, message.tid.topTid);
-    return new AbortTransactionMessage.Response();
+    tm.abortStage(client.principal, message.tid);
+    return new AbortStageMessage.Response();
   }
 
   /**
@@ -194,39 +191,31 @@ class Store extends MessageToStoreHandler {
   @Override
   public CommitTransactionMessage.Response handle(
       RemoteIdentity<RemoteWorker> client, CommitTransactionMessage message)
-          throws TransactionCommitFailedException {
+      throws TransactionCommitFailedException {
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
         "Handling Commit Message from {0} for tid={1}",
         nameOf(client.principal), message.transactionID);
 
-    tm.commitTransaction(client, message.transactionID);
+    commitTransaction(client, message.transactionID, message.serializedCreates,
+        message.serializedWrites);
     return new CommitTransactionMessage.Response();
   }
 
   /**
-   * Processes the given PREPARE request.
+   * Processes the given stage-transaction request.
    */
   @Override
-  public PrepareTransactionMessage.Response handle(
-      RemoteIdentity<RemoteWorker> client, PrepareTransactionMessage msg)
-          throws TransactionPrepareFailedException {
+  public StageTransactionMessage.Response handle(
+      RemoteIdentity<RemoteWorker> client, StageTransactionMessage msg)
+      throws TransactionStagingFailedException {
     Logging.log(STORE_REQUEST_LOGGER, Level.FINER,
-        "Handling Prepare Message, worker={0}, tid={1}",
-        nameOf(client.principal), msg.tid);
+        "Handling Stage Message, worker={0}, tid={1}", nameOf(client.principal),
+        msg.tid);
 
-    prepareTransaction(client.principal, msg.tid, msg.serializedCreates,
-        msg.serializedWrites, msg.reads);
+    tm.stageTransaction(client.principal, msg.tid, msg.reads, msg.writes,
+        msg.creates);
 
-    if (msg.singleStore || msg.readOnly) {
-      try {
-        tm.commitTransaction(client, msg.tid);
-      } catch (TransactionCommitFailedException e) {
-        // Shouldn't happen.
-        throw new InternalError("Single-store commit failed unexpectedly.", e);
-      }
-    }
-
-    return new PrepareTransactionMessage.Response();
+    return new StageTransactionMessage.Response();
   }
 
   /**
@@ -276,7 +265,7 @@ class Store extends MessageToStoreHandler {
   @Override
   public MakePrincipalMessage.Response handle(
       RemoteIdentity<RemoteWorker> client, MakePrincipalMessage msg)
-          throws FabricGeneralSecurityException {
+      throws FabricGeneralSecurityException {
     // Note: p should always be null.
 
     // Get the store's node object and its signing key.
@@ -288,9 +277,8 @@ class Store extends MessageToStoreHandler {
     long principalOnum = Worker.runInTopLevelTransaction(new Code<Long>() {
       @Override
       public Long run() {
-        NodePrincipal principal =
-            new NodePrincipal._Impl(store)
-        .fabric$lang$security$NodePrincipal$(null);
+        NodePrincipal principal = new NodePrincipal._Impl(store)
+            .fabric$lang$security$NodePrincipal$(null);
         principal.addDelegatesTo(store.getPrincipal());
         return principal.$getOnum();
       }
@@ -300,10 +288,9 @@ class Store extends MessageToStoreHandler {
     // requester's name and the new principal object's OID.
     X509Certificate cert;
     try {
-      cert =
-          Crypto.createCertificate(
-              SysUtil.getNodeCN(client.node.name, principalOnum),
-              msg.requesterKey, name, storeKey);
+      cert = Crypto.createCertificate(
+          SysUtil.getNodeCN(client.node.name, principalOnum), msg.requesterKey,
+          name, storeKey);
     } catch (GeneralSecurityException e) {
       throw new FabricGeneralSecurityException(e);
     }
@@ -318,29 +305,29 @@ class Store extends MessageToStoreHandler {
   @Override
   public StalenessCheckMessage.Response handle(
       RemoteIdentity<RemoteWorker> client, StalenessCheckMessage message)
-          throws AccessException {
+      throws AccessException {
     STORE_REQUEST_LOGGER.log(Level.FINER,
         "Handling Staleness Check Message from {0}", nameOf(client.principal));
 
-    return new StalenessCheckMessage.Response(tm.checkForStaleObjects(
-        client.principal, message.versions));
+    return new StalenessCheckMessage.Response(
+        tm.checkForStaleObjects(client.principal, message.versions));
   }
 
-  private void prepareTransaction(Principal p, long tid,
-      Collection<SerializedObject> serializedCreates,
-      Collection<SerializedObject> serializedWrites, LongKeyMap<Integer> reads)
-          throws TransactionPrepareFailedException {
+  private void commitTransaction(RemoteIdentity<RemoteWorker> workerIdentity,
+      long tid, Collection<SerializedObject> serializedCreates,
+      Collection<SerializedObject> serializedWrites)
+      throws TransactionCommitFailedException {
 
-    PrepareRequest req =
-        new PrepareRequest(tid, serializedCreates, serializedWrites, reads);
+    CommitRequest req =
+        new CommitRequest(tid, serializedCreates, serializedWrites);
 
     sm.createSurrogates(req);
 
-    tm.prepare(p, req);
+    tm.commitTransaction(workerIdentity, req);
   }
 
   private String nameOf(Principal p) {
-    return p == null ? "BOTTOM" : ("fab://" + p.$getStore().name() + "/" + p
-        .$getOnum());
+    return p == null ? "BOTTOM"
+        : ("fab://" + p.$getStore().name() + "/" + p.$getOnum());
   }
 }

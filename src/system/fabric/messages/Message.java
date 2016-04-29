@@ -219,10 +219,10 @@ public abstract class Message<R extends Message.Response, E extends FabricExcept
         return new ReadMessage(in);
       }
     },
-    PREPARE_TRANSACTION {
+    STAGE_TRANSACTION {
       @Override
-      PrepareTransactionMessage parse(DataInput in) throws IOException {
-        return new PrepareTransactionMessage(in);
+      StageTransactionMessage parse(DataInput in) throws IOException {
+        return new StageTransactionMessage(in);
       }
     },
     COMMIT_TRANSACTION {
@@ -231,10 +231,10 @@ public abstract class Message<R extends Message.Response, E extends FabricExcept
         return new CommitTransactionMessage(in);
       }
     },
-    ABORT_TRANSACTION {
+    ABORT_STAGE {
       @Override
-      AbortTransactionMessage parse(DataInput in) throws IOException {
-        return new AbortTransactionMessage(in);
+      AbortStageMessage parse(DataInput in) throws IOException {
+        return new AbortStageMessage(in);
       }
     },
     DISSEM_READ_ONUM {
@@ -290,8 +290,7 @@ public abstract class Message<R extends Message.Response, E extends FabricExcept
       InterWorkerStalenessMessage parse(DataInput in) throws IOException {
         return new InterWorkerStalenessMessage(in);
       }
-    },
-    ;
+    },;
 
     /** Read a message of the appropriate type from the given DataInput. */
     abstract Message<?, ?> parse(DataInput in) throws IOException;

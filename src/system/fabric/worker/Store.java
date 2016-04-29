@@ -4,9 +4,9 @@ import java.io.Serializable;
 import java.util.Collection;
 
 import fabric.common.SerializedObject;
-import fabric.common.TransactionID;
 import fabric.common.exceptions.AccessException;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.LongSet;
 import fabric.lang.Object._Impl;
 import fabric.lang.security.NodePrincipal;
 import fabric.net.UnreachableNodeException;
@@ -28,12 +28,11 @@ public interface Store extends Serializable {
   public boolean isLocalStore();
 
   /**
-   * Notifies the store that the transaction is entering the Prepare phase.
+   * Notifies the store that a transaction is being staged.
    */
-  void prepareTransaction(long tid, boolean singleStore, boolean readOnly,
-      Collection<_Impl> toCreate, LongKeyMap<Integer> reads,
-      Collection<_Impl> writes) throws UnreachableNodeException,
-      TransactionPrepareFailedException;
+  void stageTransaction(long tid, LongKeyMap<Integer> reads,
+      LongKeyMap<Integer> writes, LongSet creates)
+      throws UnreachableNodeException, TransactionStagingFailedException;
 
   /**
    * Returns the cache entry for the given onum. If the object is not resident,
@@ -65,14 +64,13 @@ public interface Store extends Serializable {
   ObjectCache.Entry readFromCache(long onum);
 
   /**
-   * Notifies the store that the transaction is being Aborted.
+   * Notifies the store that the previous stage is being Aborted.
    *
    * @param tid
-   *          the ID of the aborting transaction. This is assumed to specify a
-   *          top-level transaction.
+   *          the top-level ID of the aborting transaction.
    * @throws AccessException
    */
-  void abortTransaction(TransactionID tid) throws AccessException;
+  void abortStage(long tid) throws AccessException;
 
   /**
    * Notifies the Store that the transaction should be committed.
@@ -82,8 +80,9 @@ public interface Store extends Serializable {
    * @throws UnreachableNodeException
    * @throws TransactionCommitFailedException
    */
-  void commitTransaction(long transactionID) throws UnreachableNodeException,
-  TransactionCommitFailedException;
+  void commitTransaction(long transactionID, Collection<_Impl> toCreate,
+      Collection<_Impl> writes)
+      throws UnreachableNodeException, TransactionCommitFailedException;
 
   /**
    * Determines whether the given set of objects are stale.

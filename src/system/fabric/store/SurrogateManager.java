@@ -27,5 +27,5 @@ public interface SurrogateManager {
    *          transaction. These collections may be modified if surrogate
    *          objects are created or modified.
    */
-  public void createSurrogates(PrepareRequest req);
+  public void createSurrogates(CommitRequest req);
 }

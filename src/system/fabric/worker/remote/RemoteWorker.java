@@ -20,21 +20,21 @@ import fabric.dissemination.ObjectGlob;
 import fabric.lang.Object._Impl;
 import fabric.lang.Object._Proxy;
 import fabric.lang.security.Principal;
-import fabric.messages.AbortTransactionMessage;
+import fabric.messages.AbortStageMessage;
 import fabric.messages.CommitTransactionMessage;
 import fabric.messages.DirtyReadMessage;
 import fabric.messages.InterWorkerStalenessMessage;
 import fabric.messages.Message;
 import fabric.messages.Message.NoException;
 import fabric.messages.ObjectUpdateMessage;
-import fabric.messages.PrepareTransactionMessage;
 import fabric.messages.RemoteCallMessage;
+import fabric.messages.StageTransactionMessage;
 import fabric.messages.TakeOwnershipMessage;
 import fabric.net.RemoteNode;
 import fabric.net.UnreachableNodeException;
 import fabric.worker.Store;
 import fabric.worker.TransactionCommitFailedException;
-import fabric.worker.TransactionPrepareFailedException;
+import fabric.worker.TransactionStagingFailedException;
 import fabric.worker.Worker;
 import fabric.worker.transaction.Log;
 import fabric.worker.transaction.TakeOwnershipFailedException;
@@ -100,13 +100,13 @@ public class RemoteWorker extends RemoteNode<RemoteWorker> {
     return response.result;
   }
 
-  public void prepareTransaction(long tid) throws UnreachableNodeException,
-      TransactionPrepareFailedException {
-    send(new PrepareTransactionMessage(tid));
+  public void stageTransaction(long tid)
+      throws UnreachableNodeException, TransactionStagingFailedException {
+    send(new StageTransactionMessage(tid));
   }
 
-  public void commitTransaction(long tid) throws UnreachableNodeException,
-      TransactionCommitFailedException {
+  public void commitTransaction(long tid)
+      throws UnreachableNodeException, TransactionCommitFailedException {
     send(new CommitTransactionMessage(tid));
   }
 
@@ -116,9 +116,9 @@ public class RemoteWorker extends RemoteNode<RemoteWorker> {
    * @param tid
    *          the tid for the transaction that is aborting.
    */
-  public void abortTransaction(TransactionID tid) throws AccessException,
-      UnreachableNodeException {
-    send(new AbortTransactionMessage(tid));
+  public void abortStage(TransactionID tid)
+      throws AccessException, UnreachableNodeException {
+    send(new AbortStageMessage(tid.topTid));
   }
 
   /**
