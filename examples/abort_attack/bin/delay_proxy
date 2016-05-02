@@ -33,11 +33,8 @@ def recv_loop(incoming, q, delay):
     Loop for sending data from incoming to the queue q with the given delay.
     """
     while True:
-        try:
-            buf = incoming.recv(4096)
-            q.put((time.time() + delay, buf))
-        except BlockingIOError:
-            pass
+        buf = incoming.recv(1024)
+        q.put((time.time() + delay, buf))
 
 
 def send_loop(outgoing, q):
@@ -73,9 +70,7 @@ Create a delaying proxy from localhost:P1 to localhost:P2 adding DELAY ms of del
             s1.listen()
             s1conn, s1addr = s1.accept()
             try:
-                s1conn.setblocking(False)
                 with socket.create_connection(('localhost', args.port2)) as s2:
-                    s2.setblocking(False)
                     processes.extend(delayed_connection(s1conn, s2, args.delay / 1000.0))
             finally:
                 s1conn.close()
