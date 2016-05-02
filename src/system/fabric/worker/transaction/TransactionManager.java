@@ -392,11 +392,12 @@ public final class TransactionManager {
       Logging.log(WORKER_TRANSACTION_LOGGER, Level.INFO,
           "{0} error staging: staging failed exception: {1}", current, e);
 
+      TransactionID toRestart = current.outermostConflictingTid(conflicts);
+
       // Abort the stage at nodes that didn't report failures.
       abortStage(failures.keySet());
 
-      throw new TransactionRestartingException(
-          current.outermostConflictingTid(conflicts));
+      throw new TransactionRestartingException(toRestart);
     }
 
     // Staging was successful. Update the log's data structures to reflect this.
