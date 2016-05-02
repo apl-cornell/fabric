@@ -118,8 +118,8 @@ public class MemoryDB extends ObjectDB {
   }
 
   @Override
-  public void rollback(long tid, Principal worker) throws AccessException {
-    remove(worker, tid, UnpinMode.ABORT);
+  protected void rollbackStage(long tid, Principal worker)
+      throws AccessException {
   }
 
   @Override

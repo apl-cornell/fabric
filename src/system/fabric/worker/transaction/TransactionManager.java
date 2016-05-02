@@ -286,6 +286,7 @@ public final class TransactionManager {
 
   private void stageTransaction(boolean ignoreRetrySignal)
       throws TransactionRestartingException {
+    WORKER_TRANSACTION_LOGGER.log(Level.FINEST, "{0} staging", current);
     if (!ignoreRetrySignal) {
       // Make sure we're not supposed to abort or retry.
       try {
@@ -400,6 +401,7 @@ public final class TransactionManager {
 
     // Staging was successful. Update the log's data structures to reflect this.
     current.updateForSuccessfulStage();
+    WORKER_TRANSACTION_LOGGER.log(Level.FINEST, "{0} staged", current);
   }
 
   /**
@@ -472,6 +474,7 @@ public final class TransactionManager {
       // The parent is the top-level transaction. This means that from the
       // application's perspective, it is committing a top-level transaction.
       // Stage all remaining reads and writes before continuing with the commit.
+      WORKER_TRANSACTION_LOGGER.log(Level.FINEST, "{0} auto-staging", current);
       stageTransaction(ignoreRetrySignal);
     }
 
@@ -520,6 +523,7 @@ public final class TransactionManager {
     }
 
     // Commit top-level transaction.
+    WORKER_TRANSACTION_LOGGER.log(Level.FINEST, "{0} auto-committing", current);
     Log HOTOS_current = current;
     final long prepareStart = System.currentTimeMillis();
 
@@ -1152,7 +1156,12 @@ public final class TransactionManager {
 
     // If we just started a top-level transaction, automatically start a nested
     // transaction too.
-    if (current.tid.parent == null) startTransaction();
+    if (current.tid.parent == null) {
+      Logging.log(WORKER_TRANSACTION_LOGGER, Level.FINEST,
+          "Auto-starting subtx for {0} in thread {1}", current,
+          Thread.currentThread());
+      startTransaction();
+    }
   }
 
   /**

@@ -87,12 +87,11 @@ fabric.worker.homeStore = store.example.net
 # optional.
 #
 # Valid options:
-#   - fabric.store.db.BdbDB
 #   - fabric.store.db.MemoryDB
 #
-# By default, this is fabric.store.db.BdbDB.
+# By default, this is fabric.store.db.MemoryDB.
 
-#fabric.store.db.class   = fabric.store.db.BdbDB
+#fabric.store.db.class   = fabric.store.db.MemoryDB
 
 
 ########################################################################

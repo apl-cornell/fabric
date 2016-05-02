@@ -103,7 +103,7 @@ public class ConfigProperties {
     this.storePort =
         Integer.parseInt(removeProperty(p, "fabric.store.port", "3472"));
     this.backendClass =
-        removeProperty(p, "fabric.store.db.class", "fabric.store.db.BdbDB");
+        removeProperty(p, "fabric.store.db.class", "fabric.store.db.MemoryDB");
 
     //
     // Collect dissemination properties while printing other unused properties.

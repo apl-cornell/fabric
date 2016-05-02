@@ -463,7 +463,7 @@ public abstract class ObjectDB {
    */
   public final void abortStage(long tid, Principal worker) {
     try {
-      rollback(tid, worker);
+      rollbackStage(tid, worker);
     } catch (AccessException e) {
       STORE_TRANSACTION_LOGGER.log(Level.WARNING,
           "Access error while aborting stage: {0}", e);
@@ -474,7 +474,7 @@ public abstract class ObjectDB {
       PendingTransaction pending = submap.get(worker);
       unpin(pending, UnpinMode.ABORT);
       pending.abortCurrentStage();
-      if (pending.hasConfirmed()) {
+      if (!pending.hasConfirmed()) {
         submap.remove(worker);
         if (submap.isEmpty()) pendingByTid.remove(tid, submap);
       }
@@ -511,7 +511,8 @@ public abstract class ObjectDB {
       CommitRequest req, SubscriptionManager sm) throws AccessException;
 
   /**
-   * Causes the objects prepared in transaction [tid] to be discarded.
+   * Causes the objects prepared in the current stage of transaction [tid] to be
+   * discarded.
    *
    * @param tid
    *          the transaction id
@@ -520,7 +521,7 @@ public abstract class ObjectDB {
    * @throws AccessException
    *           if the principal differs from the caller of prepare()
    */
-  public abstract void rollback(long tid, Principal worker)
+  protected abstract void rollbackStage(long tid, Principal worker)
       throws AccessException;
 
   /**
