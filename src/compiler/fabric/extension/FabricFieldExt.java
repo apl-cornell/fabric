@@ -66,7 +66,7 @@ public class FabricFieldExt extends JifFieldExt {
     NamedLabel pc = new NamedLabel("pc", ts.join(Xe.N(),
           A.currentCodePCBound()));
     NamedLabel conflictPC = new NamedLabel("conflict pc", ts.meet(Xe.CL(),
-          A.conflictLabel()));
+          ts.meet(A.conflictLabel(), A.beginConflictBound())));
 
     // Check pc ≤ CL(op field)
     lc.constrain(pc, LabelConstraint.LEQ, conflictNL, A.labelEnv(), pos,

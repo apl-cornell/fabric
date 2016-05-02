@@ -2,6 +2,7 @@ package fabric.ast;
 
 import fabric.extension.AbortJifExt_c;
 import fabric.extension.AtomicJifExt_c;
+import fabric.extension.BlockJifExt;
 import fabric.extension.CallJifExt_c;
 import fabric.extension.ClassBodyJifExt_c;
 import fabric.extension.ConstructorDeclJifExt;
@@ -49,6 +50,7 @@ import jif.extension.JifLabelExprExt;
 import jif.extension.JifPrincipalExprExt;
 import jif.extension.JifSourceFileExt;
 import jif.translate.ArrayAccessToJavaExt_c;
+import jif.translate.BlockToJavaExt_c;
 import jif.translate.FieldAssignToJavaExt_c;
 import jif.translate.FieldToJavaExt_c;
 
@@ -420,5 +422,10 @@ FabricExtFactory {
   @Override
   protected Ext extFieldAssignImpl() {
     return new FabricFieldAssignExt(new FieldAssignToJavaExt_c());
+  }
+
+  @Override
+  protected Ext extBlockImpl() {
+    return new BlockJifExt(new BlockToJavaExt_c());
   }
 }

@@ -1,17 +1,22 @@
 package fabric.extension;
 
+import fabric.types.AccessPathStore;
+import fabric.types.FabricConstructorInstance;
+import fabric.types.FabricContext;
+import fabric.types.FabricTypeSystem;
+
 import jif.extension.JifConstructorDeclExt;
 import jif.translate.ToJavaExt;
+import jif.types.JifConstructorInstance;
 import jif.types.JifContext;
 import jif.types.label.AccessPathThis;
 import jif.visit.LabelChecker;
+
 import polyglot.ast.Ext;
 import polyglot.ast.Node;
 import polyglot.types.ClassType;
 import polyglot.types.SemanticException;
 import polyglot.util.Position;
-import fabric.types.AccessPathStore;
-import fabric.types.FabricTypeSystem;
 
 /**
  *
@@ -40,4 +45,16 @@ public class ConstructorDeclJifExt extends JifConstructorDeclExt implements Ext 
     }
     return super.labelCheck(lc);
   }
+
+  @Override
+  protected void setEndOfInitChecking(LabelChecker lc,
+      JifConstructorInstance ci) {
+    super.setEndOfInitChecking(lc, ci);
+    FabricConstructorInstance fci = (FabricConstructorInstance) ci;
+    FabricContext A = (FabricContext) lc.context();
+    A.setBeginConflictBound(fci.beginConflictLabel());
+    //A.setConflictLabel(fci.beginConflictLabel());
+    A.setEndConflictBound(fci.endConflictLabel());
+  }
+
 }

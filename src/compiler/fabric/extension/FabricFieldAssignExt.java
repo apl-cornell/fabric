@@ -24,9 +24,6 @@ public class FabricFieldAssignExt extends JifFieldAssignExt {
     // Do normal target and field access checking.
     Receiver target = FabricFieldExt.checkTarget(lc, fe);
     DereferenceHelper.checkDereference(target, lc, node().position());
-
-    // TODO: Check the RHS (because I'm pretty sure it's not checked elsewhere?)
-    // Update the access
     
     // Label check the access for conflict rules.
     return assign.left(FabricFieldExt.conflictLabelCheck(target, fe, lc, true));
