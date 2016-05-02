@@ -12,7 +12,9 @@ import fabric.net.RemoteNode;
 
 public class TransactionStagingFailedException extends FabricException {
   /**
-   * A set of objects used by the transaction and were out of date.
+   * A set of objects used by the transaction and were in conflict. If the
+   * object's oid maps to a non-null value, then the value will be a updated
+   * version of the object.
    */
   public final LongKeyMap<SerializedObject> versionConflicts;
 

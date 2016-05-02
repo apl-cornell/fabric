@@ -372,9 +372,12 @@ public final class TransactionManager {
           LongKeyMap<SerializedObject> versionConflicts =
               entry.getValue().versionConflicts;
           if (versionConflicts != null) {
-            for (SerializedObject obj : versionConflicts.values()) {
-              store.updateCache(obj);
-              conflicts.add(new Oid(store, obj.getOnum()));
+            for (LongKeyMap.Entry<SerializedObject> conflictEntry : versionConflicts
+                .entrySet()) {
+              conflicts.add(new Oid(store, conflictEntry.getKey()));
+
+              SerializedObject obj = conflictEntry.getValue();
+              if (obj != null) store.updateCache(obj);
             }
           }
         }

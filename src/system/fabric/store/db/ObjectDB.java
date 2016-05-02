@@ -356,6 +356,7 @@ public abstract class ObjectDB {
     try {
       objectLocksFor(onum).lockForRead(tid, worker);
     } catch (UnableToLockException e) {
+      versionConflicts.put(onum, null);
       throw new TransactionStagingFailedException(versionConflicts,
           "Object " + onum + " has been locked by an uncommitted transaction.");
     }
@@ -403,6 +404,7 @@ public abstract class ObjectDB {
     try {
       objectLocksFor(onum).lockForWrite(tid);
     } catch (UnableToLockException e) {
+      versionConflicts.put(onum, null);
       throw new TransactionStagingFailedException(versionConflicts,
           "Object " + onum + " has been locked by an uncommitted transaction.");
     }
@@ -419,6 +421,7 @@ public abstract class ObjectDB {
 
       // Make sure the onum doesn't already exist in the database.
       if (exists(onum)) {
+        versionConflicts.put(onum, null);
         throw new TransactionStagingFailedException(versionConflicts,
             "Object " + onum + " already exists.");
       }
