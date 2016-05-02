@@ -218,10 +218,7 @@ public class FabricCallHelper extends CallHelper {
     // Check previous accesses against access label bound of method.
     NamedLabel beginConflictNL = new NamedLabel("begin conflict label of " + pi.signature(),
           "the upper bound of the conflict labels of all accesses in the method",
-          fts.meet(beginConflict,
-            fts.pairLabel(Position.compilerGenerated(),
-              fts.topConfPolicy(Position.compilerGenerated()),
-              fts.bottomIntegPolicy(Position.compilerGenerated()))));
+          beginConflict);
 
     // Get join of update labels of previous accesses
     NamedLabel conflictNL = new NamedLabel("prev conflict label",
@@ -253,10 +250,7 @@ public class FabricCallHelper extends CallHelper {
 
     NamedLabel endConflictBoundLabel = new NamedLabel("end conflict label",
         "the lower bound on the conflict labels of accesses in the current method",
-        fts.meet(A.endConflictBound(),
-            fts.pairLabel(Position.compilerGenerated(),
-              fts.topConfPolicy(Position.compilerGenerated()),
-              fts.bottomIntegPolicy(Position.compilerGenerated()))));
+        A.endConflictBound());
 
     lc.constrain(endConflictBoundLabel, LabelConstraint.LEQ, newCLN,
         A.labelEnv(), position, new ConstraintMessage() {
