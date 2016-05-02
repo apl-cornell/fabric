@@ -645,7 +645,7 @@ handle(bibs[i]);
         function genPasswd() {
           var chars =
             'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890';
-          var result = '';
+          var result = '1aA@';
           for (var i = 0; i < 20; i++)
             result += chars[Math.floor(Math.random() * chars.length)];
           return result;
@@ -670,10 +670,15 @@ handle(bibs[i]);
           addHiddenInput(form, 'pw', pass);
           addHiddenInput(form, 'pwv', pass);
           addHiddenInput(form, 'list', 'fabric-users-l');
+          addHiddenInput(form, 'lists', 'fabric-users-l');
+          addHiddenInput(form, 'demographics', '');
+          addHiddenInput(form, 'name_required', '');
           addHiddenInput(form, 'pw_required', 'T');
           addHiddenInput(form, 'confirm', 'one');
           addHiddenInput(form, 'showconfirm', 'T');
-          addHiddenInput(form, 'url', getURL());
+          addHiddenInput(form, 'url', '');
+          addHiddenInput(form, 'appendsubinfotourl', '');
+          addHiddenInput(form, 'secx', '4cbbba5b');
 
           form.submit();
         }
