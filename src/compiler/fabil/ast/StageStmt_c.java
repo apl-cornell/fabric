@@ -1,6 +1,5 @@
 package fabil.ast;
 
-import java.util.Collections;
 import java.util.List;
 
 import polyglot.ast.Ext;
@@ -25,7 +24,7 @@ public class StageStmt_c extends Stmt_c implements StageStmt {
 
   @Override
   public <T> List<T> acceptCFG(CFGBuilder<?> v, List<T> succs) {
-    return Collections.EMPTY_LIST;
+    return succs;
   }
 
   @Override
