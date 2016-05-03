@@ -3,8 +3,13 @@ package fabric.types;
 import java.net.URI;
 import java.util.Collection;
 
+import codebases.types.CBImportTable;
+import codebases.types.CodebaseTypeSystem;
+
 import jif.types.JifContext_c;
 import jif.types.JifTypeSystem;
+import jif.types.label.Label;
+
 import polyglot.ast.Expr;
 import polyglot.main.Report;
 import polyglot.types.Context;
@@ -17,8 +22,6 @@ import polyglot.types.VarInstance;
 import polyglot.util.CollectionUtil;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
-import codebases.types.CBImportTable;
-import codebases.types.CodebaseTypeSystem;
 
 public class FabricContext_c extends JifContext_c implements FabricContext {
   private static final Collection<String> TOPICS = CollectionUtil.list(
@@ -26,8 +29,48 @@ public class FabricContext_c extends JifContext_c implements FabricContext {
 
   protected Expr location;
 
+  protected Label conflictLab; //meet of conflict labels of accesses up to this point.
+
+  protected Label beginConflictBound; //Begin conflict label of current method.
+
+  protected Label endConflictBound; //End conflict label of the current method.
+
+  @Override
+  public Label conflictLabel() {
+    return conflictLab;
+  }
+
+  @Override
+  public Label beginConflictBound() {
+    return beginConflictBound;
+  }
+
+  @Override
+  public Label endConflictBound() {
+    return endConflictBound;
+  }
+
+  @Override
+  public void setConflictLabel(Label conflictLab) {
+    this.conflictLab = conflictLab;
+  }
+
+  @Override
+  public void setBeginConflictBound(Label conflictLab) {
+    this.beginConflictBound = conflictLab;
+  }
+
+  @Override
+  public void setEndConflictBound(Label endConflict) {
+    this.endConflictBound = endConflict;
+  }
+
   protected FabricContext_c(JifTypeSystem ts, TypeSystem jlts) {
     super(ts, jlts);
+    Position cg = Position.compilerGenerated();
+    this.conflictLab = ts.topLabel(cg);
+    this.beginConflictBound = ts.topLabel(cg);
+    this.endConflictBound = ts.pairLabel(cg, ts.bottomConfPolicy(cg), ts.topIntegPolicy(cg));
   }
 
   @Override

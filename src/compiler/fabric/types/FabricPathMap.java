@@ -8,6 +8,7 @@ import jif.types.VarMap;
 import jif.types.label.Label;
 import polyglot.types.SemanticException;
 import polyglot.types.Type;
+import polyglot.util.Position;
 
 /**
  * Extends the Jif PathMap with the path conflict label (CL).
@@ -32,6 +33,11 @@ public class FabricPathMap extends PathMap {
    * @return The current CL.
    */
   public Label CL() {
+    // Default to {⊤→;⊥←} for CL since we'll be performing meets.
+    //
+    // TODO: Should I instead use an analogue of NotTaken?  Or perhaps I should
+    // make NotTaken's meet behavior work the same as it does with join?
+    if (!map.containsKey(FabricPath.CL)) return ts.topLabel();
     return get(FabricPath.CL);
   }
 
@@ -83,5 +89,13 @@ public class FabricPathMap extends PathMap {
   @Override
   public FabricPathMap subst(VarMap bounds) {
     return (FabricPathMap) super.subst(bounds);
+  }
+
+  @Override
+  public Label get(Path p) {
+    // Make sure we don't return NotTaken for CL.
+    if (p.equals(FabricPath.CL) && !map.containsKey(p))
+      return ts.topLabel();
+    return super.get(p);
   }
 }

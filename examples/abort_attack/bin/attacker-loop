@@ -35,6 +35,8 @@ while true; do
 	OLD_COUNT="${COUNT}"
 	COUNT=$(abort_count)
 	if [ "${OLD_COUNT}" == "${COUNT}" ]; then
+		# Reset if we're going beyond max delay of backoff in Fabric,
+		# it's more likely we just missed our chance at this point.
 		WAIT_TIME=$(echo "if (${WAIT_TIME} < 8.192) (${WAIT_TIME} * 2) else .064" | bc -l)
 		echo "DONE" "${OLD_COUNT}" "${COUNT}" "${WAIT_TIME}"
 	else

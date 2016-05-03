@@ -10,6 +10,7 @@ import jif.types.label.Label;
 import polyglot.ast.FieldDecl;
 import polyglot.ast.ProcedureDecl;
 import polyglot.types.Type;
+import polyglot.util.Position;
 
 //TODO: This "default signature" design pattern is unevenly applied.
 //      We should either pull in all the default to this class or eliminate it.
@@ -17,10 +18,14 @@ public class FabricFixedSignature extends FixedSignature implements
 FabricDefaultSignature {
 
   FabricTypeSystem fts;
+  final private Label defaultEndCL;
 
   public FabricFixedSignature(FabricTypeSystem fts) {
     super(fts);
     this.fts = fts;
+    defaultEndCL = fts.pairLabel(Position.compilerGenerated(),
+        fts.bottomConfPolicy(Position.compilerGenerated()),
+        fts.topIntegPolicy(Position.compilerGenerated()));
   }
 
   @Override
@@ -40,15 +45,18 @@ FabricDefaultSignature {
   @Override
   public Label defaultBeginConflict(ProcedureDecl pd) {
     //TODO: Is this reasonable?
+    /*
     JifProcedureInstance jpi = (JifProcedureInstance) pd.procedureInstance();
     if (!jpi.isDefaultPCBound())
       return jpi.pcBound();
+      */
     return fts.topLabel();
   }
 
   @Override
   public Label defaultEndConflict(ProcedureDecl pd) {
     //TODO: Is this reasonable?
+    /*
     FabricProcedureInstance fpi = (FabricProcedureInstance) pd.procedureInstance();
     if (!fpi.isDefaultReturnLabel())
       return fpi.returnLabel();
@@ -56,6 +64,7 @@ FabricDefaultSignature {
       return fpi.beginConflictLabel();
     if (!fpi.isDefaultPCBound())
       return fpi.pcBound();
-    return fts.bottomLabel();
+      */
+    return defaultEndCL;
   }
 }
