@@ -48,7 +48,7 @@ public class FabricFieldExt extends JifFieldExt {
     FabricContext A = (FabricContext) lc.context();
 
     Position pos = fe.position();
-    FabricPathMap Xe = (FabricPathMap) getPathMap(target);
+    FabricPathMap Xe = (FabricPathMap) getPathMap(fe);
 
     ReferenceType targetType = targetType(ts, A, target, fe);
     FieldInstance fi = ts.findField(targetType, fe.name());
