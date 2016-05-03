@@ -2,6 +2,7 @@ package fabil.ast;
 
 import java.util.List;
 
+import codebases.ast.CodebaseNodeFactory;
 import polyglot.ast.ArrayTypeNode;
 import polyglot.ast.Call;
 import polyglot.ast.ClassBody;
@@ -12,7 +13,6 @@ import polyglot.ast.Receiver;
 import polyglot.ast.Stmt;
 import polyglot.ast.TypeNode;
 import polyglot.util.Position;
-import codebases.ast.CodebaseNodeFactory;
 
 /**
  * NodeFactory for FabIL extension.
@@ -57,6 +57,8 @@ public interface FabILNodeFactory extends NodeFactory, CodebaseNodeFactory {
   RetryStmt RetryStmt(Position pos);
 
   AbortStmt AbortStmt(Position pos);
+
+  StageStmt StageStmt(Position pos);
 
   Call Call(Position pos, Receiver target, Id name, Expr remoteWorker,
       List<Expr> args);

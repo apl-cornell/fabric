@@ -7,8 +7,8 @@ import polyglot.ast.ExtFactory;
 /**
  * Factory for FabIL extension nodes.
  */
-public class FabILExtFactory_c extends AbstractExtFactory_c implements
-FabILExtFactory {
+public class FabILExtFactory_c extends AbstractExtFactory_c
+    implements FabILExtFactory {
 
   @Override
   public final Ext extFabricArrayTypeNode() {
@@ -89,6 +89,26 @@ FabILExtFactory {
   }
 
   protected Ext postExtRetry(Ext ext) {
+    return postExtStmt(ext);
+  }
+
+  @Override
+  public final Ext extStage() {
+    Ext e = extStageImpl();
+
+    ExtFactory nextEF = nextExtFactory();
+    if (nextEF instanceof FabILExtFactory) {
+      Ext e2 = ((FabILExtFactory) nextEF).extStage();
+      e = composeExts(e, e2);
+    }
+    return postExtStage(e);
+  }
+
+  protected Ext extStageImpl() {
+    return new StageExt_c();
+  }
+
+  protected Ext postExtStage(Ext ext) {
     return postExtStmt(ext);
   }
 

@@ -58,12 +58,13 @@ terminal Token AT;
 terminal Token ATOMIC;
 terminal Token ABORT;
 terminal Token RETRY;
+terminal Token STAGE;
 terminal Token NONFABRIC;
 
 non terminal Atomic atomic_statement;
 non terminal Expr location_expr_opt;
 non terminal Expr label_opt;
-non terminal Stmt abort_stmt, retry_stmt;
+non terminal Stmt abort_stmt, retry_stmt, stage_stmt;
 non terminal FabricArrayInit fabric_array_initializer;
 
 start with goal;
@@ -101,6 +102,7 @@ extend statement_without_trailing_substatement ::=
         atomic_statement:a {: RESULT = a; :}
     |   abort_stmt:a {: RESULT = a; :}
     |   retry_stmt:a {: RESULT = a; :}
+    |   stage_stmt:a {: RESULT = a; :}
     ;
 
 atomic_statement ::=
@@ -117,6 +119,12 @@ retry_stmt ::=
 					// RetryStmt
 		RETRY:a SEMICOLON:b
 			{: RESULT = parser.nf.RetryStmt(parser.pos(a, b)); :}
+	;
+
+stage_stmt ::=
+					// RetryStmt
+		STAGE:a SEMICOLON:b
+			{: RESULT = parser.nf.StageStmt(parser.pos(a, b)); :}
 	;
 
 extend modifier ::=

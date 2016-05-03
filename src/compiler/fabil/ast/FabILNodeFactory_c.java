@@ -4,6 +4,15 @@ import java.net.URI;
 import java.util.Collections;
 import java.util.List;
 
+import codebases.ast.CBSourceFile_c;
+import codebases.ast.CodebaseDecl;
+import codebases.ast.CodebaseDecl_c;
+import codebases.ast.CodebaseNode;
+import codebases.ast.CodebaseNode_c;
+import fabil.extension.FabILDelFactory;
+import fabil.extension.FabILDelFactory_c;
+import fabil.extension.FabILExtFactory;
+import fabil.extension.FabILExtFactory_c;
 import polyglot.ast.ArrayAccess;
 import polyglot.ast.ArrayAccessAssign;
 import polyglot.ast.Assign.Operator;
@@ -29,21 +38,12 @@ import polyglot.types.Flags;
 import polyglot.types.Package;
 import polyglot.util.CollectionUtil;
 import polyglot.util.Position;
-import codebases.ast.CBSourceFile_c;
-import codebases.ast.CodebaseDecl;
-import codebases.ast.CodebaseDecl_c;
-import codebases.ast.CodebaseNode;
-import codebases.ast.CodebaseNode_c;
-import fabil.extension.FabILDelFactory;
-import fabil.extension.FabILDelFactory_c;
-import fabil.extension.FabILExtFactory;
-import fabil.extension.FabILExtFactory_c;
 
 /**
  * NodeFactory for FabIL extension.
  */
-public class FabILNodeFactory_c extends NodeFactory_c implements
-    FabILNodeFactory {
+public class FabILNodeFactory_c extends NodeFactory_c
+    implements FabILNodeFactory {
 
   public FabILNodeFactory_c() {
     this(new FabILExtFactory_c(), new FabILDelFactory_c());
@@ -130,9 +130,8 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
   public ClassDecl ClassDecl(Position pos, Flags flags, Id name,
       TypeNode superClass, List<TypeNode> interfaces, ClassBody body,
       Javadoc javadoc) {
-    ClassDecl n =
-        new ClassDecl_c(pos, flags, name, superClass,
-            CollectionUtil.nonNullList(interfaces), body, javadoc);
+    ClassDecl n = new ClassDecl_c(pos, flags, name, superClass,
+        CollectionUtil.nonNullList(interfaces), body, javadoc);
     n = ext(n, extFactory().extClassDecl());
     n = del(n, delFactory().delClassDecl());
     return n;
@@ -153,9 +152,8 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
   @Override
   public New New(Position pos, Expr outer, TypeNode objectType, Expr location,
       List<Expr> args, ClassBody body) {
-    New n =
-        new New_c(pos, outer, objectType, CollectionUtil.nonNullList(args),
-            body, location);
+    New n = new New_c(pos, outer, objectType, CollectionUtil.nonNullList(args),
+        body, location);
     n = ext(n, extFactory().extNew());
     n = del(n, delFactory().delNew());
 
@@ -165,8 +163,8 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
   // Constructors with fewer arguments ////////////////////////////////////////
 
   @Override
-  public New New(Position pos, Expr outer, TypeNode objectType,
-      List<Expr> args, ClassBody body) {
+  public New New(Position pos, Expr outer, TypeNode objectType, List<Expr> args,
+      ClassBody body) {
     return New(pos, outer, objectType, null, args, body);
   }
 
@@ -197,7 +195,8 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
 
   @Override
   public final NewFabricArray NewFabricArray(Position pos, TypeNode base,
-      Expr label, Expr accessPolicy, Expr location, List<Expr> dims, int addDims) {
+      Expr label, Expr accessPolicy, Expr location, List<Expr> dims,
+      int addDims) {
     return NewFabricArray(pos, base, label, accessPolicy, location, dims,
         addDims, null);
   }
@@ -223,6 +222,14 @@ public class FabILNodeFactory_c extends NodeFactory_c implements
   public AbortStmt AbortStmt(Position pos) {
     AbortStmt s = new AbortStmt_c(pos);
     s = ext(s, extFactory().extAbort());
+    s = del(s, delFactory().delStmt());
+    return s;
+  }
+
+  @Override
+  public StageStmt StageStmt(Position pos) {
+    StageStmt s = new StageStmt_c(pos);
+    s = ext(s, extFactory().extStage());
     s = del(s, delFactory().delStmt());
     return s;
   }
