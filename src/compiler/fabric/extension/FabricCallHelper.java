@@ -249,7 +249,7 @@ public class FabricCallHelper extends CallHelper {
         newCL);
 
     NamedLabel endConflictBoundLabel = new NamedLabel("end conflict label",
-        "the lower bound on the conflict labels of accesses in the current method",
+        "the lower bound on the conflict labels of accesses in " + pi.signature(),
         A.endConflictBound());
 
     lc.constrain(endConflictBoundLabel, LabelConstraint.LEQ, newCLN,
