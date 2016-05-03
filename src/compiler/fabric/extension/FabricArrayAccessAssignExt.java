@@ -1,5 +1,7 @@
 package fabric.extension;
 
+import fabric.types.FabricPathMap;
+
 import jif.extension.JifArrayAccessAssignExt;
 import jif.translate.ToJavaExt;
 import jif.visit.LabelChecker;
@@ -25,6 +27,9 @@ public class FabricArrayAccessAssignExt extends JifArrayAccessAssignExt {
     @Override
     public Node labelCheckLHS(LabelChecker lc) throws SemanticException {
       ArrayAccessAssign acc = (ArrayAccessAssign) super.labelCheckLHS(lc);
-      return acc.left(FabricArrayAccessExt.conflictLabelCheck(acc.left(), lc, true));
+      acc = (ArrayAccessAssign) acc.left(FabricArrayAccessExt.conflictLabelCheck(acc.left(), lc, true));
+      FabricPathMap Xfe = (FabricPathMap) getPathMap(acc.left());
+      FabricPathMap X = (FabricPathMap) getPathMap(acc);
+      return updatePathMap(acc, X.CL(Xfe.CL()));
     }
 }

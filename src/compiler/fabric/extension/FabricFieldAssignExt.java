@@ -1,5 +1,7 @@
 package fabric.extension;
 
+import fabric.types.FabricPathMap;
+
 import jif.extension.JifFieldAssignExt;
 import jif.translate.ToJavaExt;
 import jif.visit.LabelChecker;
@@ -26,6 +28,9 @@ public class FabricFieldAssignExt extends JifFieldAssignExt {
     DereferenceHelper.checkDereference(target, lc, node().position());
     
     // Label check the access for conflict rules.
-    return assign.left(FabricFieldExt.conflictLabelCheck(target, fe, lc, true));
+    assign = assign.left(FabricFieldExt.conflictLabelCheck(target, fe, lc, true));
+    FabricPathMap Xfe = (FabricPathMap) getPathMap(fe);
+    FabricPathMap X = (FabricPathMap) getPathMap(assign);
+    return updatePathMap(assign, X.CL(Xfe.CL()));
   }
 }
