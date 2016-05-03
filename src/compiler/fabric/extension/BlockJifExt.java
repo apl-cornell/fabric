@@ -31,6 +31,9 @@ public class BlockJifExt extends JifBlockExt {
         super(toJava);
     }
 
+    /**
+     * Modified to pass along the conflict label of accesses across statements.
+     */
     @Override
     public Node labelCheckStmt(LabelChecker lc) throws SemanticException {
         Block bs = (Block) node();

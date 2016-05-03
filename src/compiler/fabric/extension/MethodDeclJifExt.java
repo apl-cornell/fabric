@@ -2,11 +2,22 @@ package fabric.extension;
 
 import fabric.types.FabricContext;
 import fabric.types.FabricMethodInstance;
+import fabric.types.FabricPathMap;
 
+import jif.ast.JifMethodDecl;
 import jif.extension.JifMethodDeclExt;
 import jif.translate.ToJavaExt;
+import jif.types.ConstraintMessage;
 import jif.types.JifMethodInstance;
+import jif.types.JifProcedureInstance;
+import jif.types.LabelConstraint;
+import jif.types.NamedLabel;
+import jif.types.PathMap;
+import jif.types.label.Label;
 import jif.visit.LabelChecker;
+
+import polyglot.types.SemanticException;
+import polyglot.types.Type;
 
 public class MethodDeclJifExt extends JifMethodDeclExt {
 
@@ -25,6 +36,9 @@ public class MethodDeclJifExt extends JifMethodDeclExt {
     return is_remote;
   }
 
+  /**
+   * Add additional context initialization for conflict labels
+   */
   @Override
   protected void initContextForBody(LabelChecker lc, JifMethodInstance mi) {
     super.initContextForBody(lc, mi);
@@ -33,5 +47,41 @@ public class MethodDeclJifExt extends JifMethodDeclExt {
     A.setBeginConflictBound(fmi.beginConflictLabel());
     //A.setConflictLabel(fmi.beginConflictLabel());
     A.setEndConflictBound(fmi.endConflictLabel());
+  }
+
+  /**
+   * Add additional ending constraint that we're respecting the end conflict
+   * label of the method.
+   */
+  @Override
+  protected void addReturnConstraints(Label Li, PathMap X,
+      JifProcedureInstance mi, LabelChecker lc, final Type returnType) throws
+  SemanticException {
+    super.addReturnConstraints(Li, X, mi, lc, returnType);
+
+    FabricMethodInstance fmi = (FabricMethodInstance) mi;
+    FabricContext A = (FabricContext) lc.context();
+    FabricPathMap Xf = (FabricPathMap) X;
+    
+    final String name = ((JifMethodDecl) node()).name();
+
+    NamedLabel endConflictBoundLabel = new NamedLabel("end conflict label of " + name,
+        "lower bound on accesses that can be made up to the end of the body of "
+        + name, 
+        fmi.endConflictLabel());
+
+    NamedLabel endCLN = new NamedLabel("prev conflict label",
+        "the meet of the conflict labels of accesses up to the end of the method",
+        Xf.CL());
+
+    // Check that the end conflict label is respected by the method body.
+    lc.constrain(endConflictBoundLabel, LabelConstraint.LEQ, endCLN,
+        A.labelEnv(), mi.position(), new ConstraintMessage() {
+      @Override
+      public String msg() {
+        return "The body of " + name + " makes less restricted accesses than "
+          + "the ending conflict label allows.";
+      }
+    });
   }
 }

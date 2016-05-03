@@ -106,10 +106,12 @@ public class FabricCallHelper extends CallHelper {
   }
 
   /**
-   * this.pi is a Jif method instance that this.overridingMethod is attempting to
-   * override. Previous type checks have made sure that things like
+   * this.pi is a Jif method instance that this.overridingMethod is attempting
+   * to override. Previous type checks have made sure that things like
    * abstractness, access flags, throw sets, etc. are ok.
    * We need to check that the labels conform.
+   *
+   * Extended to check that conflict bounds are compatible in overriding method.
    * 
    * @throws SemanticException
    */
@@ -206,6 +208,9 @@ public class FabricCallHelper extends CallHelper {
         });
   }
 
+  /**
+   * Extended to check begin and end conflict labels of the called method.
+   */
   @Override
   public void checkCall(LabelChecker lc, List<Type> throwTypes,
       boolean targetMayBeNull) throws SemanticException {
@@ -242,8 +247,7 @@ public class FabricCallHelper extends CallHelper {
         A.conflictLabel());
     X = ((FabricPathMap) X).CL(newCL);
 
-    // TODO: Not convinced this should be done here...
-    // Early check of end conflict bound to get better location reporting.
+    // Check of end conflict bound to get better location reporting.
     NamedLabel newCLN = new NamedLabel("prev conflict label",
         "the meet of the conflict labels of accesses up to the end of the call",
         newCL);
