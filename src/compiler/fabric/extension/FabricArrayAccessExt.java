@@ -61,7 +61,7 @@ public class FabricArrayAccessExt extends JifArrayAccessExt {
     Position pos = acc.position();
     FabricPathMap Xe = (FabricPathMap) getPathMap(acc);
 
-    LabeledType arrayEntryType = (LabeledType) ((FabricArrayType) acc.array().type()).arrayOf();
+    LabeledType arrayEntryType = (LabeledType) acc.array().type();
     Label L = arrayEntryType.labelPart();
 
     Label conflictL;
