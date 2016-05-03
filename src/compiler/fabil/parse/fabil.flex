@@ -116,6 +116,7 @@ import java.util.Set;
 	keywords.put("atomic",        new Integer(sym.ATOMIC));
 	keywords.put("abort",         new Integer(sym.ABORT));
 	keywords.put("retry",         new Integer(sym.RETRY));
+	keywords.put("stage",         new Integer(sym.STAGE));
 	keywords.put("nonfabric",     new Integer(sym.NONFABRIC));
     }
 
