@@ -225,12 +225,14 @@ public class FabricCallHelper extends CallHelper {
           "the upper bound of the conflict labels of all accesses in the method",
           beginConflict);
 
-    // Get join of update labels of previous accesses
-    NamedLabel conflictNL = new NamedLabel("prev conflict label",
+    // Get the current conflict pc label
+    NamedLabel conflictNL = new NamedLabel("conflict pc",
         "the meet of the conflict labels of previous accesses",
-        fts.meet(A.conflictLabel(),
-                 fts.meet(A.beginConflictBound(),
-                          ((FabricPathMap) X).CL())));
+        fts.join(fts.meet(A.conflictLabel(),
+                          fts.meet(A.beginConflictBound(),
+                                   ((FabricPathMap) X).CL())),
+                 fts.pairLabel(position, fts.bottomConfPolicy(position),
+                                         fts.topIntegPolicy(position))));
 
     lc.constrain(beginConflictNL, LabelConstraint.LEQ, conflictNL,
         A.labelEnv(), position, new ConstraintMessage() {
@@ -243,12 +245,13 @@ public class FabricCallHelper extends CallHelper {
     });
 
     // Add in the conflict labels of the call's accesses to the CL path.
-    Label newCL = fts.meet(fts.meet(((FabricPathMap) X).CL(), endConflict),
-        A.conflictLabel());
+    Label newCL = fts.join(
+        fts.meet(fts.meet(((FabricPathMap) X).CL(), endConflict), A.conflictLabel()),
+        fts.pairLabel(position, fts.bottomConfPolicy(position), fts.topIntegPolicy(position)));
     X = ((FabricPathMap) X).CL(newCL);
 
     // Check of end conflict bound to get better location reporting.
-    NamedLabel newCLN = new NamedLabel("prev conflict label",
+    NamedLabel newCLN = new NamedLabel("conflict pc",
         "the meet of the conflict labels of accesses up to the end of the call",
         newCL);
 
