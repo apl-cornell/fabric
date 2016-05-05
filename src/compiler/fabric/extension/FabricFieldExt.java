@@ -1,6 +1,7 @@
 package fabric.extension;
 
 import fabric.types.FabricContext;
+import fabric.types.FabricFieldInstance;
 import fabric.types.FabricPathMap;
 import fabric.types.FabricTypeSystem;
 
@@ -15,8 +16,6 @@ import jif.visit.LabelChecker;
 import polyglot.ast.Field;
 import polyglot.ast.Node;
 import polyglot.ast.Receiver;
-import polyglot.types.FieldInstance;
-import polyglot.types.ReferenceType;
 import polyglot.types.SemanticException;
 import polyglot.util.Position;
 
@@ -28,9 +27,9 @@ public class FabricFieldExt extends JifFieldExt {
 
   @Override
   public Node labelCheck(LabelChecker lc) throws SemanticException {
-    Receiver target = checkTarget(lc, (Field) node());
-    DereferenceHelper.checkDereference(target, lc, node().position());
-    return conflictLabelCheck(target, (Field) super.labelCheck(lc), lc, false);
+    Field fe = (Field) super.labelCheck(lc);
+    DereferenceHelper.checkDereference(fe.target(), lc, node().position());
+    return conflictLabelCheck(fe, lc, false);
   }
 
   /**
@@ -42,34 +41,36 @@ public class FabricFieldExt extends JifFieldExt {
    *
    * Assumes target has already been checked.
    */
-  static protected Field conflictLabelCheck(Receiver target, final Field fe,
-      LabelChecker lc, final boolean isWrite) throws SemanticException {
+  static protected Field conflictLabelCheck(final Field fe, LabelChecker lc,
+      final boolean isWrite) throws SemanticException {
     FabricTypeSystem ts = (FabricTypeSystem) lc.typeSystem();
     FabricContext A = (FabricContext) lc.context();
 
+    // Only check persistent object accesses
+    if (ts.isTransient(fe.target().type())
+        && !ts.isFabricArray(fe.target().type()))
+      return fe;
+
     Position pos = fe.position();
+    FabricFieldInstance fi = (FabricFieldInstance) fe.fieldInstance();
+    Label L = ts.labelOfField(fi, A.pc());
     FabricPathMap Xe = (FabricPathMap) getPathMap(fe);
 
-    ReferenceType targetType = targetType(ts, A, target, fe);
-    FieldInstance fi = ts.findField(targetType, fe.name());
-    Label L = ts.labelOfField(fi, A.pc());
-
-    Label conflictL;
-    NamedLabel conflictNL;
+    NamedLabel conflictL;
     if (isWrite) {
-      conflictL = ts.writeConflict(L);
-      conflictNL = new NamedLabel("write conflict label", conflictL);
+      conflictL = new NamedLabel("write conflict label", ts.writeConflict(L));
     } else {
-      conflictL = ts.readConflict(L);
-      conflictNL = new NamedLabel("read conflict label", conflictL);
+      conflictL = new NamedLabel("read conflict label", ts.readConflict(L));
     }
-    NamedLabel pc = new NamedLabel("pc", ts.join(Xe.N(),
-          A.currentCodePCBound()));
-    NamedLabel conflictPC = new NamedLabel("conflict pc", ts.meet(Xe.CL(),
-          ts.meet(A.conflictLabel(), A.beginConflictBound())));
+    NamedLabel pc = new NamedLabel("pc",
+        ts.join(ts.join(Xe.N(), A.currentCodePCBound()),
+                ts.pairLabel(pos, ts.bottomConfPolicy(pos), ts.topIntegPolicy(pos))));
+    NamedLabel conflictPC = new NamedLabel("conflict pc",
+        ts.join(ts.meet(Xe.CL(), ts.meet(A.conflictLabel(), A.beginConflictBound())),
+                ts.pairLabel(pos, ts.bottomConfPolicy(pos), ts.topIntegPolicy(pos))));
 
     // Check pc ≤ CL(op field)
-    lc.constrain(pc, LabelConstraint.LEQ, conflictNL, A.labelEnv(), pos,
+    lc.constrain(pc, LabelConstraint.LEQ, conflictL, A.labelEnv(), pos,
         new ConstraintMessage() {
           @Override
           public String msg() {
@@ -79,7 +80,7 @@ public class FabricFieldExt extends JifFieldExt {
     });
 
     // Check CL(op field) ≤ meet(CL(prev accesses))
-    lc.constrain(conflictNL, LabelConstraint.LEQ, conflictPC, A.labelEnv(), pos,
+    lc.constrain(conflictL, LabelConstraint.LEQ, conflictPC, A.labelEnv(), pos,
         new ConstraintMessage() {
           @Override
           public String msg() {
@@ -91,8 +92,8 @@ public class FabricFieldExt extends JifFieldExt {
     // TODO: Insert staging check if necessary (possibly not here?)
     
     // Update the CL
-    FabricPathMap X = Xe.CL(lc.lowerBound(conflictL, Xe.CL()));
-    return (Field) updatePathMap(fe.target(target), X);
+    Xe = Xe.CL(ts.meet(conflictL.label(), conflictPC.label()));
+    return (Field) updatePathMap(fe, Xe);
   }
 
   static protected Receiver checkTarget(LabelChecker lc, Field fe) throws SemanticException {

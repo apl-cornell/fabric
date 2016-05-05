@@ -9,7 +9,6 @@ import jif.visit.LabelChecker;
 import polyglot.ast.Assign;
 import polyglot.ast.Field;
 import polyglot.ast.Node;
-import polyglot.ast.Receiver;
 import polyglot.types.SemanticException;
 
 public class FabricFieldAssignExt extends JifFieldAssignExt {
@@ -24,11 +23,12 @@ public class FabricFieldAssignExt extends JifFieldAssignExt {
     final Field fe = (Field) assign.left();
 
     // Do normal target and field access checking.
-    Receiver target = FabricFieldExt.checkTarget(lc, fe);
-    DereferenceHelper.checkDereference(target, lc, node().position());
+    DereferenceHelper.checkDereference(fe.target(), lc, node().position());
     
     // Label check the access for conflict rules.
-    assign = assign.left(FabricFieldExt.conflictLabelCheck(target, fe, lc, true));
+    assign = assign.left(FabricFieldExt.conflictLabelCheck(fe, lc, true));
+
+    // Update the path map.
     FabricPathMap Xfe = (FabricPathMap) getPathMap(fe);
     FabricPathMap X = (FabricPathMap) getPathMap(assign);
     return updatePathMap(assign, X.CL(Xfe.CL()));

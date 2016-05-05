@@ -1,6 +1,5 @@
 package fabric.extension;
 
-import fabric.types.FabricArrayType;
 import fabric.types.FabricContext;
 import fabric.types.FabricPathMap;
 import fabric.types.FabricReferenceType;
@@ -19,7 +18,6 @@ import polyglot.ast.ArrayAccess;
 import polyglot.ast.Expr;
 import polyglot.ast.Node;
 import polyglot.types.SemanticException;
-import polyglot.types.Type;
 import polyglot.util.Position;
 
 /**
@@ -36,11 +34,16 @@ public class FabricArrayAccessExt extends JifArrayAccessExt {
 
   @Override
   public Node labelCheck(LabelChecker lc) throws SemanticException {
+    // Jif checks
     ArrayAccess n = (ArrayAccess) super.labelCheck(lc);
+
+    // Access label checks
     Expr array = n.array();
-    Type type = lc.typeSystem().unlabel(array.type());
-    DereferenceHelper.checkAccess(array, (FabricReferenceType) type, lc, node()
+    FabricReferenceType type = (FabricReferenceType) lc.typeSystem().unlabel(array.type());
+    DereferenceHelper.checkAccess(array,  type, lc, node()
         .position());
+
+    // Conflict label checks
     return conflictLabelCheck(n, lc, false);
   }
 
@@ -58,28 +61,32 @@ public class FabricArrayAccessExt extends JifArrayAccessExt {
     FabricTypeSystem ts = (FabricTypeSystem) lc.typeSystem();
     FabricContext A = (FabricContext) lc.context();
 
+    // Only check persistent object accesses
+    if (ts.isTransient(acc.array().type())
+        && !ts.isFabricArray(acc.array().type()))
+      return acc;
+
     Position pos = acc.position();
     FabricPathMap Xe = (FabricPathMap) getPathMap(acc);
 
     LabeledType arrayEntryType = (LabeledType) acc.array().type();
     Label L = arrayEntryType.labelPart();
 
-    Label conflictL;
-    NamedLabel conflictNL;
+    NamedLabel conflictL;
     if (isWrite) {
-      conflictL = ts.writeConflict(L);
-      conflictNL = new NamedLabel("write conflict label", conflictL);
+      conflictL = new NamedLabel("write conflict label", ts.writeConflict(L));
     } else {
-      conflictL = ts.readConflict(L);
-      conflictNL = new NamedLabel("read conflict label", conflictL);
+      conflictL = new NamedLabel("read conflict label", ts.readConflict(L));
     }
-    NamedLabel pc = new NamedLabel("pc", ts.join(Xe.N(),
-          A.currentCodePCBound()));
-    NamedLabel conflictPC = new NamedLabel("conflict pc", ts.meet(Xe.CL(),
-          ts.meet(A.conflictLabel(), A.beginConflictBound())));
+    NamedLabel pc = new NamedLabel("pc",
+        ts.join(ts.join(Xe.N(), A.currentCodePCBound()),
+                ts.pairLabel(pos, ts.bottomConfPolicy(pos), ts.topIntegPolicy(pos))));
+    NamedLabel conflictPC = new NamedLabel("conflict pc",
+        ts.join(ts.meet(Xe.CL(), ts.meet(A.conflictLabel(), A.beginConflictBound())),
+                ts.pairLabel(pos, ts.bottomConfPolicy(pos), ts.topIntegPolicy(pos))));
 
     // Check pc ≤ CL(op array access)
-    lc.constrain(pc, LabelConstraint.LEQ, conflictNL, A.labelEnv(), pos,
+    lc.constrain(pc, LabelConstraint.LEQ, conflictL, A.labelEnv(), pos,
         new ConstraintMessage() {
           @Override
           public String msg() {
@@ -89,11 +96,11 @@ public class FabricArrayAccessExt extends JifArrayAccessExt {
     });
 
     // Check CL(op array access) ≤ meet(CL(prev accesses))
-    lc.constrain(conflictNL, LabelConstraint.LEQ, conflictPC, A.labelEnv(), pos,
+    lc.constrain(conflictL, LabelConstraint.LEQ, conflictPC, A.labelEnv(), pos,
         new ConstraintMessage() {
           @Override
           public String msg() {
-            return (isWrite ? "Write" : "Read") + " access of " + acc +
+            return (isWrite ? "Write" : "Read") + " access " + acc +
               " can't be staged at the current point in a transaction.";
           }
     });
@@ -101,7 +108,7 @@ public class FabricArrayAccessExt extends JifArrayAccessExt {
     // TODO: Insert staging check if necessary (possibly not here?)
     
     // Update the CL
-    FabricPathMap X = Xe.CL(lc.lowerBound(conflictL, Xe.CL()));
-    return (ArrayAccess) updatePathMap(acc, X);
+    Xe = Xe.CL(ts.meet(conflictL.label(), conflictPC.label()));
+    return (ArrayAccess) updatePathMap(acc, Xe);
   }
 }
