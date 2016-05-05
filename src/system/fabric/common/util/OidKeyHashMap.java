@@ -1,10 +1,12 @@
 package fabric.common.util;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
+import fabric.common.SysUtil;
 import fabric.lang.Object;
 import fabric.worker.Store;
 
@@ -160,5 +162,15 @@ public final class OidKeyHashMap<V> implements Iterable<LongKeyMap<V>> {
         map.put(store, new LongKeyHashMap<>(entry.getValue()));
       }
     }
+  }
+
+  public Iterable<V> values() {
+    Collection<V>[] values = new Collection[storeSet().size()];
+    int i = 0;
+    for (Store store : storeSet()) {
+      values[i++] = get(store).values();
+    }
+
+    return SysUtil.chain(values);
   }
 }

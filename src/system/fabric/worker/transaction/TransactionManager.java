@@ -178,15 +178,21 @@ public final class TransactionManager {
    * stores that were contacted.
    */
   public void abortTransaction() {
-    abortTransaction(Collections.<RemoteNode<?>> emptySet());
+    abortTransaction(Collections.<RemoteNode<?>> emptySet(), false);
   }
 
   /**
    * @param abortedNodes
    *          a set of nodes that don't need to be contacted because they
    *          already know about the abort.
+   *
+   * @param rollbackOnly
+   *          if true, then the current transaction log is only cleared after
+   *          being rolled back; otherwise, the current transaction is
+   *          terminated after rollback.
    */
-  private void abortTransaction(Set<RemoteNode<?>> abortedNodes) {
+  private void abortTransaction(Set<RemoteNode<?>> abortedNodes,
+      boolean rollbackOnly) {
     if (current.tid.depth == 0) {
       // With transaction staging, we shouldn't be aborting any top-level
       // transactions.
@@ -210,7 +216,7 @@ public final class TransactionManager {
     current.waitForThreads();
 
     sendAbortMessages(workersToContact, abortedNodes);
-    current.abort();
+    current.abort(rollbackOnly);
     WORKER_TRANSACTION_LOGGER.log(Level.INFO, "{0} aborted", current);
     HOTOS_LOGGER.log(Level.INFO, "aborted {0} " + (readOnly ? "R" : "W"),
         current);
@@ -222,9 +228,10 @@ public final class TransactionManager {
 //      TransactionRegistry.remove(current.tid.topTid);
 //    }
 
-    synchronized (current.commitState) {
-      // Following lines commented out because with transaction staging, we
-      // should no longer be aborting top-level transactions.
+    if (!rollbackOnly) {
+      synchronized (current.commitState) {
+        // Following lines commented out because with transaction staging, we
+        // should no longer be aborting top-level transactions.
 //      // The commit state reflects the state of the top-level transaction, so
 //      // only set the flag if a top-level transaction is being aborted.
 //      if (current.tid.depth == 0) {
@@ -232,13 +239,14 @@ public final class TransactionManager {
 //        current.commitState.notifyAll();
 //      }
 
-      if (current.tid.parent == null || current.parent != null
-          && current.parent.tid.equals(current.tid.parent)) {
-        // The parent frame represents the parent transaction. Pop the stack.
-        current = current.parent;
-      } else {
-        // Reuse the current frame for the parent transaction.
-        current.tid = current.tid.parent;
+        if (current.tid.parent == null || current.parent != null
+            && current.parent.tid.equals(current.tid.parent)) {
+          // The parent frame represents the parent transaction. Pop the stack.
+          current = current.parent;
+        } else {
+          // Reuse the current frame for the parent transaction.
+          current.tid = current.tid.parent;
+        }
       }
     }
   }
@@ -270,7 +278,7 @@ public final class TransactionManager {
     // XXX This works for now, but if/when we start trying to support remote
     // calls, we need to ensure that abortTransaction() doesn't needlessly
     // contact remote nodes.
-    abortTransaction(abortedNodes);
+    abortTransaction(abortedNodes, true);
   }
 
   /**
@@ -323,6 +331,9 @@ public final class TransactionManager {
                 LongKeyMap<Integer> writes =
                     current.getUnstagedWritesForStore(store);
                 LongSet creates = current.getUnstagedCreatesForStore(store);
+                Logging.log(WORKER_TRANSACTION_LOGGER, Level.FINEST,
+                    "{0} staging to {1}: reads = {2}, writes = {3}, creates = {4}",
+                    current, store, reads, writes, creates);
                 store.stageTransaction(current.tid.topTid, reads, writes,
                     creates);
               } catch (TransactionStagingFailedException e) {
@@ -963,7 +974,7 @@ public final class TransactionManager {
       synchronized (current.writesWrittenByParent) {
         current.writesWrittenByParent.add(obj);
       }
-    } else {
+    } else if (!current.stagedWrites.containsKey(obj)) {
       synchronized (current.unstagedWrites) {
         current.unstagedWrites.add(obj);
       }
