@@ -9,6 +9,7 @@ import jif.extension.JifFieldExt;
 import jif.translate.ToJavaExt;
 import jif.types.ConstraintMessage;
 import jif.types.LabelConstraint;
+import jif.types.LabeledType;
 import jif.types.NamedLabel;
 import jif.types.label.Label;
 import jif.visit.LabelChecker;
@@ -52,8 +53,8 @@ public class FabricFieldExt extends JifFieldExt {
       return fe;
 
     Position pos = fe.position();
-    FabricFieldInstance fi = (FabricFieldInstance) fe.fieldInstance();
-    Label L = ts.labelOfField(fi, A.pc());
+    // Using this instead of field instance so we get the instantiated label
+    Label L = ((LabeledType) fe.type()).labelPart();
     FabricPathMap Xe = (FabricPathMap) getPathMap(fe);
 
     NamedLabel conflictL;
