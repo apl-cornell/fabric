@@ -18,12 +18,13 @@ public class FabricFixedSignature extends FixedSignature implements
 FabricDefaultSignature {
 
   FabricTypeSystem fts;
-  final private Label defaultEndCL;
+  // Makes it easier to keep talking about {⊥→;⊤←}
+  final private Label bottomCL;
 
   public FabricFixedSignature(FabricTypeSystem fts) {
     super(fts);
     this.fts = fts;
-    defaultEndCL = fts.pairLabel(Position.compilerGenerated(),
+    bottomCL = fts.pairLabel(Position.compilerGenerated(),
         fts.bottomConfPolicy(Position.compilerGenerated()),
         fts.topIntegPolicy(Position.compilerGenerated()));
   }
@@ -42,29 +43,35 @@ FabricDefaultSignature {
     }
   }
 
+  /**
+   * Defaults to either the begin pc label (joined with top integrity).
+   * Reasoning is that this already has to flow to the begin conflict label for
+   * all methods already.
+   *
+   * XXX: What about methods which don't perform accesses?
+   */
   @Override
   public Label defaultBeginConflict(ProcedureDecl pd) {
     //TODO: Is this reasonable?
-    /*
     JifProcedureInstance jpi = (JifProcedureInstance) pd.procedureInstance();
     if (!jpi.isDefaultPCBound())
-      return jpi.pcBound();
-      */
+      return fts.join(jpi.pcBound(), bottomCL);
     return fts.topLabel();
   }
 
+  /**
+   * Defaults to either the end label (joined with top integrity) or the begin
+   * conflict label.  Reasoning is that the both of these already have to flow
+   * to the end conflict label for all methods already.
+   *
+   * XXX: What about methods which don't perform accesses?
+   */
   @Override
   public Label defaultEndConflict(ProcedureDecl pd) {
     //TODO: Is this reasonable?
-    /*
     FabricProcedureInstance fpi = (FabricProcedureInstance) pd.procedureInstance();
     if (!fpi.isDefaultReturnLabel())
-      return fpi.returnLabel();
-    if (!fpi.isDefaultBeginConflict())
-      return fpi.beginConflictLabel();
-    if (!fpi.isDefaultPCBound())
-      return fpi.pcBound();
-      */
-    return defaultEndCL;
+      return fts.join(fpi.returnLabel(), bottomCL);
+    return fpi.beginConflictLabel();
   }
 }
