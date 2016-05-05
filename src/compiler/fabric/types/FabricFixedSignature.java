@@ -4,7 +4,6 @@ import fabric.ast.FabricFieldDecl;
 
 import jif.ast.LabelNode;
 import jif.types.FixedSignature;
-import jif.types.JifProcedureInstance;
 import jif.types.label.Label;
 
 import polyglot.ast.FieldDecl;
@@ -53,10 +52,10 @@ FabricDefaultSignature {
   @Override
   public Label defaultBeginConflict(ProcedureDecl pd) {
     //TODO: Is this reasonable?
-    JifProcedureInstance jpi = (JifProcedureInstance) pd.procedureInstance();
-    if (!jpi.isDefaultPCBound())
-      return fts.join(jpi.pcBound(), bottomCL);
-    return fts.topLabel();
+    FabricProcedureInstance fpi = (FabricProcedureInstance) pd.procedureInstance();
+    if (!fpi.isDefaultPCBound())
+      return fts.join(fpi.pcBound(), bottomCL);
+    return bottomCL;
   }
 
   /**
@@ -70,8 +69,8 @@ FabricDefaultSignature {
   public Label defaultEndConflict(ProcedureDecl pd) {
     //TODO: Is this reasonable?
     FabricProcedureInstance fpi = (FabricProcedureInstance) pd.procedureInstance();
-    if (!fpi.isDefaultReturnLabel())
-      return fts.join(fpi.returnLabel(), bottomCL);
+    if (!fpi.isDefaultPCBound())
+      return fts.meet(fpi.beginConflictLabel(), fpi.pcBound());
     return fpi.beginConflictLabel();
   }
 }
