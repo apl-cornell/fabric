@@ -64,7 +64,7 @@ public class BlockJifExt extends JifBlockExt {
             // At this point, the environment A should have been extended
             // to include any declarations of s.  Reset the PC label.
             A.setPc(Xs.N(), lc);
-            A.setConflictLabel(ts.join(A.conflictLabel(), Xs.CL()));
+            A.setConflictLabel(ts.meet(A.conflictLabel(), Xs.CL()));
 
             if (Report.should_report(jif.Topics.pc, 1)) {
                 Report.report(1, "pc after statement at " + s.position() + " : "
