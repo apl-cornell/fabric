@@ -1,0 +1,100 @@
+import fabric.runtime.Runtime;
+
+class CarolComments {
+
+  public static void main{p<-}(principal{p<-} p, String[] args):{p->;p<-}
+  {
+    atomic {
+      // Get a reference to the store called "store".
+      final Store store = FabricWorker.getWorker().getStore("alicenode");
+
+      // Get a reference to the runtime.
+      final Runtime[p] runtime = Runtime[p].getRuntime();
+
+      // Get principals for alice, bob, and carol.
+      final principal alice = 
+          FabricWorker.getWorker().getWorker("alicenode").getPrincipal();
+      final principal bob = 
+          FabricWorker.getWorker().getWorker("bobnode"  ).getPrincipal();
+      final principal carol = 
+          FabricWorker.getWorker().getWorker("carolnode").getPrincipal();
+
+      final label postRead  = new label{
+        (alice,bob),carol → (alice,bob),carol
+      }@store;
+
+      final label postWrite  = new label{
+        (alice&bob)&carol ← alice
+      }@store;
+
+      final label commentRead  = new label{
+        alice,carol → alice,carol
+      }@store;
+
+      final label commentWrite  = new label{
+        alice,carol ← carol
+      }@store;
+
+      final label aliceReads  = new label{
+        (alice,bob),carol → (alice,bob),carol
+        //alice&carol←carol
+        //*←carol
+      }@store;
+
+      final String{*aliceReads} postId = "alicePost";
+      final String{*commentRead; *commentWrite} commentId = "carolPost";
+      final String{*commentRead; *commentWrite} firstPost = 
+        "Lolz, Bob can't read this comment";
+      final String{*commentRead; *commentWrite} secondPost = 
+        "Lolz, I updated this comment and Bob still can't read it";
+      final String{*commentRead; *commentWrite} thirdPost = 
+        "Lolz, two updates, and still Bob's in the dark.";
+
+      String{carol→ } printme = "";
+
+      if (p equiv carol && alice equiv store) {
+        if (new label{alice← } <= new label{*postRead; *postWrite}) { 
+          if (new label{p← } <= new label{*commentRead; *commentWrite}) { 
+            if (new label{*postRead; *postWrite} <= new label{p→ }) { 
+              if (new label{*commentRead; *commentWrite} <= new label{p→ }) { 
+                if (new label{*postRead; *postWrite} <= new label{alice→ }) { 
+                  if (new label{*commentRead; *commentWrite} <= new label{alice→ }) { 
+                    final String{*postRead; *postWrite} alicePost = 
+                      (new BuzzBlogAPI[postRead, postWrite]@store()
+                       ).viewPost(postId,store);
+                    printme = printme + "\n"+
+                      "Alice Posted: "+alicePost;
+
+                    final BuzzBlogAPI[commentRead, commentWrite] api = 
+                     new BuzzBlogAPI[commentRead, commentWrite]@store();
+                    printme = printme + "\n"+
+                      api.viewOrCreatePost(commentId, store, firstPost);
+
+
+                    String{*postRead; *postWrite; *commentRead; *commentWrite}
+                       suffix = "";
+                    if (alicePost.indexOf("fizz") >= 0) {
+                      suffix = "buzz";
+                    } else {
+                      if (alicePost.indexOf("buzz") >= 0) {
+                        suffix = "fizz";
+                      }
+                    }
+
+                    printme = printme + "\n" + 
+                      api.updatePost(commentId, store, secondPost + " - "+ suffix);
+                    printme = printme + "\n" + 
+                      api.updatePost(commentId, store, thirdPost + " - "+ suffix);
+                  } else printme = printme + "\n{*commentRead; *commentWrite} ⊑ {alice→ }  failed";
+                } else printme = printme + "\n{*postLabel} ⊑ {alice→ }  failed";
+              } else printme = printme + "\n{*commentRead; *commentWrite} ⊑ {p→ }  failed";
+            } else printme = printme + "\n{*postLabel} ⊑ {p→ }  failed";
+          } else printme = printme + "\n{p←} ⊑ {*commentRead; *commentWrite} failed";
+        } else printme = printme + "\n{alice←} ⊑ {*postLabel} failed";
+      } else printme = printme + "\nThe permission checking if block failed.";
+      if (p equiv carol)
+        runtime.out().println(printme);
+    }
+  }
+}
+

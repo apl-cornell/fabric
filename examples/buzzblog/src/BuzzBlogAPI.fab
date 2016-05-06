@@ -5,7 +5,7 @@ where
 postRead <= {postWrite; *->},
 postWrite <= {postRead; _<-}
 {
-  //@{storeLabel}
+  @{postRead}
 
   // Returns the string view of the post with the given id at the given store
   public String{postRead; postWrite ; postId ; store} viewPost{store}(

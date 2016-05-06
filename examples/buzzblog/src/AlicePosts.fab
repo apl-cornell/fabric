@@ -29,11 +29,9 @@ class AlicePosts {
 
       final String{*postRead; *postWrite} postId = "alicePost";
       final String{*postRead; *postWrite} firstPost = 
-        "This is the blog post that Alice wrote.";
+        "This is the fizzy blog post that Alice wrote.";
       final String{*postRead; *postWrite} secondPost = 
         "This is the updated post that Alice wrote.";
-      final String{*postRead; *postWrite} thirdPost = 
-        "Alice updated this post again.";
 
       String{alice->} printme = "";
 
@@ -42,9 +40,21 @@ class AlicePosts {
           if (new label{*postRead; *postWrite} <= new label{p→ } ) { // Alice should be able to read it too.
             final BuzzBlogAPI[postRead, postWrite] api = 
               new BuzzBlogAPI[postRead, postWrite]@store();
-            printme = printme + "\n"+api.viewOrCreatePost(postId, store, firstPost);
-            printme = printme + "\n" + api.updatePost(postId, store, secondPost);
-            printme = printme + "\n" + api.updatePost(postId, store, thirdPost);
+            final String{*postRead;*postWrite} firstView =
+              api.viewOrCreatePost(postId, store, firstPost);
+            printme = printme + "\n" + firstView;
+
+            String{*postRead; *postWrite} suffix = "";
+            if (firstView.indexOf("fizz") >= 0) {
+              suffix = "buzz";
+            } else {
+              if (firstView.indexOf("buzz") >= 0) {
+                suffix = "fizz";
+              }
+            }
+
+            printme = printme + "\n" + 
+              api.updatePost(postId, store, secondPost + " - " + suffix);
           } else printme = printme + "\n{*postRead; *postWrite} ⊑ {p→ }  failed";
         } else printme = printme + "\n{p←} ⊑ {*postRead; *postWrite} failed";
       } else printme = printme + "\nThe permission checking if block failed.";
