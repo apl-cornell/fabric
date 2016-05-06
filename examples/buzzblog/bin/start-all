@@ -1,0 +1,25 @@
+#!/bin/bash
+
+BIN_DIR="$(dirname $0)"
+
+#"${BIN_DIR}/run-in-xterm" "AliceBob AliceStore" 0 0 \
+#  "${BIN_DIR}/start-alicestore $@" &
+
+#"${BIN_DIR}/run-in-xterm" "AliceBob BobStore"   550 0 \
+#  "${BIN_DIR}/start-bobstore $@" &
+
+
+#sleep 4;"${BIN_DIR}/run-in-xterm" "AliceBob AliceWorker"   0 400 \
+#  "${BIN_DIR}/start-aliceworker $@" &
+
+#sleep 4;"${BIN_DIR}/run-in-xterm" "AliceBob BobWorker"   550 400 \
+#  "${BIN_DIR}/start-bobworker $@" &
+
+"${BIN_DIR}/run-in-xterm" "AliceBob AliceNode"   0 0 \
+  "${BIN_DIR}/start-alicenode $@" &
+
+"${BIN_DIR}/run-in-xterm" "AliceBob BobNode"     0 400 \
+  "${BIN_DIR}/start-bobnode $@" &
+
+"${BIN_DIR}/run-in-xterm" "AliceBob CarolNode"   0 800 \
+  "${BIN_DIR}/start-carolnode $@" &

@@ -1,0 +1,50 @@
+import fabric.util.Map;
+import fabric.runtime.Runtime;
+
+class AlicePosts {
+
+  public static void main{*provider}(principal{p<-} p, String[] args):{p->;p<-}
+  {
+    atomic {
+      // Get a reference to the store called "store".
+      final Store store = FabricWorker.getWorker().getStore("alicenode");
+
+      // Get a reference to the runtime.
+      final Runtime[p] runtime = Runtime[p].getRuntime();
+
+      // Get principals for alice, bob, and carol.
+      final principal alice = 
+          FabricWorker.getWorker().getWorker("alicenode").getPrincipal();
+      final principal bob = 
+          FabricWorker.getWorker().getWorker("bobnode"  ).getPrincipal();
+      final principal carol = 
+          FabricWorker.getWorker().getWorker("carolnode").getPrincipal();
+      final principal dave = 
+          FabricWorker.getWorker().getWorker("davenode" ).getPrincipal();
+
+      // Explicitly everybody believes that everybody can read, and only alice 
+      //  can write
+      final label postLabel  = new label{
+        (alice,bob),(carol,dave) → (alice,bob),(carol,dave);
+        (alice,bob),(carol,dave) ← alice
+      }@store;
+
+
+      if (new label{p← } <= postLabel &&
+          postLabel <= new label{p→ } &&
+          p equiv alice &&
+          alice equiv store) {
+        Map root = store.getRoot();
+        final BuzzBlogAPI[postLabel] api = new BuzzBlogAPI[postLabel]@store();
+        runtime.out().println(api.viewOrCreatePost("alicePost", store, 
+              "This is the blog post that Alice wrote."));
+        runtime.out().println(api.updatePost("alicePost", store, 
+              "This is the updated post that Alice wrote."));
+        runtime.out().println(api.updatePost("alicePost", store, 
+              "Alice updated this post again."));
+      } else {
+        runtime.out().println("The permission checking if block failed.");
+      }
+    }
+  }
+}

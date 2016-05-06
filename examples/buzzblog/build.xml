@@ -1,0 +1,70 @@
+<!--
+  This is the Apache Ant build file for the Fabric "ping" example
+-->
+
+<project name="buzzblog" default="build-all" basedir=".">
+  <description>
+    Build Ping example
+  </description>
+
+  <!--
+  ****************************************************************************
+    Global properties for this build.
+  ****************************************************************************
+  -->
+
+  <import file="../../common.xml" />
+  <import file="${fabric.home}/src/lib/sif/common.xml" />
+  <import file="${fabric.home}/src/lib/collections/common.xml" />
+
+  <dirname property="buzzblog.home" file="${ant.file.ping}" />
+
+  <!--
+  ****************************************************************************
+    Targets for cleaning up the directory tree.
+  ****************************************************************************
+  -->
+
+  <target name="clean" description="Removes generated files">
+    <delete dir="${buzzblog.home}/classes"/>
+  </target>
+
+  <target name="clobber" depends="clean"
+          description="Removes generated files and state of stores">
+    <delete dir="${buzzblog.home}/var"/>
+  </target>
+
+  <!--
+  ****************************************************************************
+    Compilation targets.
+  ****************************************************************************
+  -->
+
+  <target name="build"
+          description="Builds the buzzblog example">
+    <fabc dest="${buzzblog.home}/classes">
+      <arg value="-sourcepath" /> <arg value="${buzzblog.home}/src" />
+      <arg value="-cp"/> <arg pathref="collections.classpath"/>
+      <arg value="-cp"/> <arg pathref="lib.classpath"/>
+      <arg value="-cp"         /> <arg value="${buzzblog.home}/classes" />
+      <arg value="-trusted-providers" />
+      <arg value="-explain" />
+
+      <fileset dir="${buzzblog.home}/src" includes="**/*.fab" />
+    </fabc>
+
+    <filc dest="${buzzblog.home}/classes">
+      <arg value="-sourcepath" /> <arg value="${buzzblog.home}/src" />
+      <arg value="-cp"/> <arg value="${buzzblog.home}/classes"/> <arg value="-explain"/>
+      <fileset dir="${buzzblog.home}/src" includes="**/*.fil" />
+    </filc>
+  </target>
+
+  <target name="build-all" depends="build" />
+  <target name="all" depends="build-all" />
+
+</project>
+
+<!--
+vim: ts=2 sw=2 et ai
+-->
