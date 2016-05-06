@@ -19,9 +19,7 @@ import codebases.types.CBPackage_c;
 import codebases.types.CBPlaceHolder_c;
 import codebases.types.CodebaseResolver;
 import codebases.types.NamespaceResolver;
-
 import fabil.types.FabILFlags;
-
 import fabric.FabricOptions;
 import fabric.ast.FabricUtil;
 import fabric.ast.RemoteWorkerGetter;
@@ -37,7 +35,6 @@ import fabric.translate.FabricPairLabelToFabilExpr_c;
 import fabric.translate.ProviderLabelToFabilExpr_c;
 import fabric.worker.Store;
 import fabric.worker.Worker;
-
 import jif.translate.ConjunctivePrincipalToJavaExpr_c;
 import jif.translate.LabelToJavaExpr;
 import jif.translate.PrincipalToJavaExpr;
@@ -86,7 +83,6 @@ import jif.types.principal.ExternalPrincipal_c;
 import jif.types.principal.ParamPrincipal;
 import jif.types.principal.Principal;
 import jif.types.principal.TopPrincipal;
-
 import polyglot.ast.Expr;
 import polyglot.ast.New;
 import polyglot.ext.param.types.Subst;
@@ -118,8 +114,8 @@ import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
 import polyglot.util.StringUtil;
 
-public class FabricTypeSystem_c extends JifTypeSystem_c implements
-    FabricTypeSystem {
+public class FabricTypeSystem_c extends JifTypeSystem_c
+    implements FabricTypeSystem {
   protected Map<URI, NamespaceResolver> namespaceResolvers;
   protected NamespaceResolver platformResolver;
   protected NamespaceResolver applicationResolver;
@@ -353,9 +349,8 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
       // Always use the same local instance, because jif now use pointer
       // identity to compare local instances
       // for the purpose of label checking.
-      workerLocalInstance =
-          new WorkerLocalInstance_c(this, Position.compilerGenerated(),
-              Flags.FINAL, Worker(), "worker$");
+      workerLocalInstance = new WorkerLocalInstance_c(this,
+          Position.compilerGenerated(), Flags.FINAL, Worker(), "worker$");
     }
     return workerLocalInstance;
   }
@@ -366,8 +361,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
       WorkerLocalInstance wli = workerLocalInstance();
       workerLocalPrincipal =
           dynamicPrincipal(pos, new AccessPathLocalWorker(wli, pos));
-      wli.setLabel(pairLabel(
-          wli.position(),
+      wli.setLabel(pairLabel(wli.position(),
           readerPolicy(wli.position(), workerLocalPrincipal,
               bottomPrincipal(wli.position())),
           writerPolicy(wli.position(), workerLocalPrincipal,
@@ -382,8 +376,8 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
   }
 
   @Override
-  public Principal storePrincipal(fabric.ast.Store store,
-      FabricContext context, Position pos) throws SemanticException {
+  public Principal storePrincipal(fabric.ast.Store store, FabricContext context,
+      Position pos) throws SemanticException {
     AccessPath ap = exprToAccessPath(store, context);
     return dynamicPrincipal(pos, ap);
   }
@@ -430,8 +424,9 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
       ClassType ct = (ClassType) ts.unlabel(nw.type());
       NewExt_c ext = (NewExt_c) FabricUtil.fabricExt(nw);
       if (ext.location() == null) {
-        return new AccessPathNew(ct, currentStoreAccessPathFor(
-            context.currentClass(), context), nw.position());
+        return new AccessPathNew(ct,
+            currentStoreAccessPathFor(context.currentClass(), context),
+            nw.position());
       } else {
         return new AccessPathNew(ct, exprToAccessPath(ext.location(), context),
             nw.position());
@@ -488,8 +483,8 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
     Type strpFromType = strip(fromType);
     Type strpToType = strip(toType);
 
-    if ((equals(strpFromType, Worker()) || equals(strpFromType, RemoteWorker()) || equals(
-        strpFromType, Store())) && equals(strpToType, Principal())) {
+    if ((equals(strpFromType, Worker()) || equals(strpFromType, RemoteWorker())
+        || equals(strpFromType, Store())) && equals(strpToType, Principal())) {
       return true;
     }
 
@@ -501,8 +496,8 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
     Type strpFromType = strip(fromType);
     Type strpToType = strip(toType);
 
-    if ((equals(strpFromType, Worker()) || equals(strpFromType, RemoteWorker()) || equals(
-        strpFromType, Store())) && equals(strpToType, Principal())) {
+    if ((equals(strpFromType, Worker()) || equals(strpFromType, RemoteWorker())
+        || equals(strpFromType, Store())) && equals(strpToType, Principal())) {
       return true;
     }
 
@@ -874,9 +869,8 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
 
   @Override
   public FabricArrayType fabricArrayOf(Position pos, Type t) {
-    return new FabricArrayType_c(this, pos, t,
-    /* isConst */false, /* isNonConst */true,
-    /* isNative */false);
+    return new FabricArrayType_c(this, pos, t, /* isConst */false,
+        /* isNonConst */true, /* isNative */false);
   }
 
   @Override
@@ -889,13 +883,12 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
   @Override
   protected FabricArrayType arrayType(Position pos, Type type) {
     if (!isLabeled(type)) {
-      type =
-          labeledType(pos, type, defaultSignature().defaultArrayBaseLabel(type));
+      type = labeledType(pos, type,
+          defaultSignature().defaultArrayBaseLabel(type));
     }
 
-    return new FabricArrayType_c(this, pos, type,
-    /* isConst */false, /* isNonConst */true,
-    /* isNative */true);
+    return new FabricArrayType_c(this, pos, type, /* isConst */false,
+        /* isNonConst */true, /* isNative */true);
   }
 
   @Override
@@ -969,9 +962,8 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
              * labels. , lbl, lbl.confPolicy()
              */
             );
-        new_codebase =
-            new Codebase._Impl(dest).fabric$lang$Codebase$(lbl,
-                lbl.confPolicy(), classes);
+        new_codebase = new Codebase._Impl(dest).fabric$lang$Codebase$(lbl,
+            lbl.confPolicy(), classes);
       }
       return new_codebase;
     } else if (extInfo.platformNamespace().equals(namespace)
@@ -993,8 +985,8 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
       // fabric.util.ArrayList writers = new fabric.util.ArrayList._Impl(dest);
       // writers.add(w);
       // writers.add(st);
-      return LabelUtil._Impl.writerPolicyLabel(dest, Worker.getWorker()
-          .getLocalStore().getTopPrincipal(), st);
+      return LabelUtil._Impl.writerPolicyLabel(dest,
+          Worker.getWorker().getLocalStore().getTopPrincipal(), st);
     }
     throw new InternalCompilerError("Error W: " + w + " ST: " + st);
   }
@@ -1008,7 +1000,8 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
   }
 
   @Override
-  public fabric.lang.security.ConfPolicy sourceAccessPolicy(CodebaseSource src) {
+  public fabric.lang.security.ConfPolicy sourceAccessPolicy(
+      CodebaseSource src) {
     // Re-use update label for access label. In general the store may allow
     // a more restricted access label, but we can only use the provider
     // label to statically figure out when we can fetch from the store vs.
@@ -1097,8 +1090,8 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
     IntegPolicy ip1 = L1 == null ? null : L1.integProjection();
     IntegPolicy ip2 = L2 == null ? null : L2.integProjection();
 
-    return replaceProjections(pairLabel(L1.position(), join(cp1, cp2),
-        meet(ip1, ip2)));
+    return replaceProjections(
+        pairLabel(L1.position(), join(cp1, cp2), meet(ip1, ip2)));
   }
 
   @Override
@@ -1109,8 +1102,8 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
     IntegPolicy ip1 = L1 == null ? null : L1.integProjection();
     IntegPolicy ip2 = L2 == null ? null : L2.integProjection();
 
-    return replaceProjections(pairLabel(L1.position(), meet(cp1, cp2),
-        join(ip1, ip2)));
+    return replaceProjections(
+        pairLabel(L1.position(), meet(cp1, cp2), join(ip1, ip2)));
   }
 
   @Override
@@ -1130,8 +1123,8 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
       ConfProjectionPolicy_c p = (ConfProjectionPolicy_c) c;
       return join(p.label(), noComponentsLabel());
     }
-    return replaceProjections(pairLabel(c.position(), c,
-        topIntegPolicy(c.position())));
+    return replaceProjections(
+        pairLabel(c.position(), c, topIntegPolicy(c.position())));
   }
 
   @Override
@@ -1206,10 +1199,9 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
     // XXX: I really don't know if this is the right values to be using for the
     // begin access and end confidentiality policies.
     return fabricConstructorInstance(pos, container, flags, unknownLabel(pos),
-        false, unknownLabel(pos), false, unknownLabel(pos),
-        false, unknownLabel(pos), false, formalTypes,
-        Collections.<Label> emptyList(), excTypes,
-        Collections.<Assertion> emptyList());
+        false, unknownLabel(pos), false, unknownLabel(pos), false,
+        unknownLabel(pos), false, formalTypes, Collections.<Label> emptyList(),
+        excTypes, Collections.<Assertion> emptyList());
   }
 
   public FabricConstructorInstance fabricConstructorInstance(Position pos,
@@ -1221,11 +1213,10 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
       List<Label> formalArgLabels, List<? extends Type> excTypes,
       List<Assertion> constraints) {
     FabricConstructorInstance ci =
-        new FabricConstructorInstance_c(this, pos, container, flags,
-            startLabel, isDefaultStartLabel, beginAccessLab,
-            isDefaultBeginAccess, returnLabel, isDefaultReturnLabel,
-            endAccessLab, isDefaultEndAccess, formalTypes, formalArgLabels,
-            excTypes, constraints);
+        new FabricConstructorInstance_c(this, pos, container, flags, startLabel,
+            isDefaultStartLabel, beginAccessLab, isDefaultBeginAccess,
+            returnLabel, isDefaultReturnLabel, endAccessLab, isDefaultEndAccess,
+            formalTypes, formalArgLabels, excTypes, constraints);
     return ci;
   }
 
@@ -1250,22 +1241,18 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
     // TODO: Not sure if I should put defaults here or unknownLabel calls.
     assert_(container);
     return fabricConstructorInstance(pos, container, Public(), topLabel(), true,
-        topLabel(), true, bottomLabel(), true,
-        bottomLabel(), true, Collections.<Type> emptyList(),
-        Collections.<Label> emptyList(), Collections.<Type> emptyList(),
-        Collections.<Assertion> emptyList());
+        topLabel(), true, bottomLabel(), true, bottomLabel(), true,
+        Collections.<Type> emptyList(), Collections.<Label> emptyList(),
+        Collections.<Type> emptyList(), Collections.<Assertion> emptyList());
   }
 
   public FabricMethodInstance fabricMethodInstance(Position pos,
       ReferenceType container, Flags flags, Type returnType, String name,
-      Label startLabel, boolean isDefaultStartLabel,
-      Label beginAccessLab, boolean isDefaultBeginAccess,
-      List<? extends Type> formalTypes,
-      List<jif.types.label.Label> formalArgLabels,
-      Label endLabel, boolean isDefaultEndLabel,
-      Label endAccessLab, boolean isDefaultEndAccess,
-      List<? extends Type> excTypes,
-      List<Assertion> constraints) {
+      Label startLabel, boolean isDefaultStartLabel, Label beginAccessLab,
+      boolean isDefaultBeginAccess, List<? extends Type> formalTypes,
+      List<jif.types.label.Label> formalArgLabels, Label endLabel,
+      boolean isDefaultEndLabel, Label endAccessLab, boolean isDefaultEndAccess,
+      List<? extends Type> excTypes, List<Assertion> constraints) {
     FabricMethodInstance mi = new FabricMethodInstance_c(this, pos, container,
         flags, returnType, name, startLabel, isDefaultStartLabel,
         beginAccessLab, isDefaultBeginAccess, formalTypes, formalArgLabels,
@@ -1295,8 +1282,8 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
       List<? extends Type> formalTypes, List<? extends Type> excTypes) {
     // TODO: Not sure if I should put defaults here or unknownLabel calls.
     return fabricMethodInstance(pos, container, flags, returnType, name,
-        unknownLabel(pos), false, unknownLabel(pos), false,
-        formalTypes, Collections.<Label> emptyList(), unknownLabel(pos), false,
+        unknownLabel(pos), false, unknownLabel(pos), false, formalTypes,
+        Collections.<Label> emptyList(), unknownLabel(pos), false,
         unknownLabel(pos), false, excTypes,
         Collections.<Assertion> emptyList());
   }
@@ -1325,7 +1312,9 @@ public class FabricTypeSystem_c extends JifTypeSystem_c implements
     // CL(write l) = WritersToReaders(l) meet C(l)
     Label bottomConflictLabel = pairLabel(l.position(),
         bottomConfPolicy(l.position()), topIntegPolicy(l.position()));
-    Label conf = pairLabel(l.position(), confProjection(l), topIntegPolicy(l.position()));
-    return join(meet(conf, writersToReadersLabel(l.position(), l)), bottomConflictLabel);
+    Label conf = pairLabel(l.position(), confProjection(l),
+        topIntegPolicy(l.position()));
+    return join(meet(conf, writersToReadersLabel(l.position(), l)),
+        bottomConflictLabel);
   }
 }
