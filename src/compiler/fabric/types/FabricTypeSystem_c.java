@@ -27,6 +27,7 @@ import fabric.extension.NewExt_c;
 import fabric.lang.Codebase;
 import fabric.lang.security.LabelUtil;
 import fabric.lang.security.NodePrincipal;
+import fabric.translate.ConjunctivePrincipalToFabilExpr_c;
 import fabric.translate.DisjunctivePrincipalToFabilExpr_c;
 import fabric.translate.DynamicPrincipalToFabilExpr_c;
 import fabric.translate.FabricJoinLabelToFabilExpr_c;
@@ -35,7 +36,6 @@ import fabric.translate.FabricPairLabelToFabilExpr_c;
 import fabric.translate.ProviderLabelToFabilExpr_c;
 import fabric.worker.Store;
 import fabric.worker.Worker;
-import jif.translate.ConjunctivePrincipalToJavaExpr_c;
 import jif.translate.LabelToJavaExpr;
 import jif.translate.PrincipalToJavaExpr;
 import jif.types.ActsForConstraint;
@@ -560,7 +560,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c
   // are created on the correct store.
   @Override
   public PrincipalToJavaExpr conjunctivePrincipalTranslator() {
-    return new ConjunctivePrincipalToJavaExpr_c();
+    return new ConjunctivePrincipalToFabilExpr_c();
   }
 
   @Override

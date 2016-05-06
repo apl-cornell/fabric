@@ -1,0 +1,39 @@
+// We use a separate class to store the message.  The class is parameterized by
+// a principal.
+public class Post[label l] {
+
+  private String{l} content;
+  private int   {l} version;
+
+  public Post(String{l} content) {
+    this.content = content;
+    this.version = 0;
+    super();
+  }
+
+  /**
+   * The intended way users should read posts
+   */
+  public String{l} view() {
+    return(this.content + " --version " + this.version);
+  }
+
+  /**
+   * The intended way users should update posts
+   */
+  public void update{l} (String{l} new_message) {
+    this.content = new_message;
+    this.version++;
+  }
+
+  public String{l} getContent{l}() {
+    return(this.content);
+  }
+  
+  public int{l} getVersion{l}() {
+    return(this.version);
+  }
+}
+
+
+
