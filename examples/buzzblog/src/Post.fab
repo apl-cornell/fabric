@@ -5,8 +5,8 @@ public class Post[label l] {
   private String{l} content;
   private int   {l} version;
 
-  public Message(String{l} message) {
-    this.message = message;
+  public Post(String{l} content) {
+    this.content = content;
     this.version = 0;
     super();
   }
@@ -14,7 +14,7 @@ public class Post[label l] {
   /**
    * The intended way users should read posts
    */
-  public String{l} view{l}() {
+  public String{l} view() {
     return(this.content + " --version " + this.version);
   }
 
@@ -33,7 +33,6 @@ public class Post[label l] {
   public int{l} getVersion{l}() {
     return(this.version);
   }
-
 }
 
 

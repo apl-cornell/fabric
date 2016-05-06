@@ -1,4 +1,3 @@
-import fabric.util.Map;
 import fabric.runtime.Runtime;
 
 class AlicePosts {
@@ -19,32 +18,38 @@ class AlicePosts {
           FabricWorker.getWorker().getWorker("bobnode"  ).getPrincipal();
       final principal carol = 
           FabricWorker.getWorker().getWorker("carolnode").getPrincipal();
-      final principal dave = 
-          FabricWorker.getWorker().getWorker("davenode" ).getPrincipal();
 
-      // Explicitly everybody believes that everybody can read, and only alice 
-      //  can write
-      final label postLabel  = new label{
-        (alice,bob),(carol,dave) → (alice,bob),(carol,dave);
-        (alice,bob),(carol,dave) ← alice
+      final label postRead  = new label{
+        (alice,bob),carol → //(alice,bob),carol
       }@store;
 
+      final label postWrite  = new label{
+        (alice&bob)&carol ← alice
+      }@store;
 
-      if (new label{p← } <= postLabel &&
-          postLabel <= new label{p→ } &&
-          p equiv alice &&
-          alice equiv store) {
-        Map root = store.getRoot();
-        final BuzzBlogAPI[postLabel] api = new BuzzBlogAPI[postLabel]@store();
-        runtime.out().println(api.viewOrCreatePost("alicePost", store, 
-              "This is the blog post that Alice wrote."));
-        runtime.out().println(api.updatePost("alicePost", store, 
-              "This is the updated post that Alice wrote."));
-        runtime.out().println(api.updatePost("alicePost", store, 
-              "Alice updated this post again."));
-      } else {
-        runtime.out().println("The permission checking if block failed.");
-      }
+      final String{*postRead; *postWrite} postId = "alicePost";
+      final String{*postRead; *postWrite} firstPost = 
+        "This is the blog post that Alice wrote.";
+      final String{*postRead; *postWrite} secondPost = 
+        "This is the updated post that Alice wrote.";
+      final String{*postRead; *postWrite} thirdPost = 
+        "Alice updated this post again.";
+
+      String{alice->} printme = "";
+
+      if (p equiv alice && alice equiv store) {
+        if (new label{p← } <= new label{*postRead; *postWrite}) { // Alice should be able to write the post.
+          if (new label{*postRead; *postWrite} <= new label{p→ } ) { // Alice should be able to read it too.
+            final BuzzBlogAPI[postRead, postWrite] api = 
+              new BuzzBlogAPI[postRead, postWrite]@store();
+            printme = printme + "\n"+api.viewOrCreatePost(postId, store, firstPost);
+            printme = printme + "\n" + api.updatePost(postId, store, secondPost);
+            printme = printme + "\n" + api.updatePost(postId, store, thirdPost);
+          } else printme = printme + "\n{*postRead; *postWrite} ⊑ {p→ }  failed";
+        } else printme = printme + "\n{p←} ⊑ {*postRead; *postWrite} failed";
+      } else printme = printme + "\nThe permission checking if block failed.";
+      if (p equiv alice)
+        runtime.out().println(printme);
     }
   }
 }

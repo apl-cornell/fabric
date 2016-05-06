@@ -48,6 +48,7 @@
       <arg value="-cp"/> <arg pathref="lib.classpath"/>
       <arg value="-cp"         /> <arg value="${buzzblog.home}/classes" />
       <arg value="-trusted-providers" />
+      <!--<arg line="-report frontend=2" />-->
       <arg value="-explain" />
 
       <fileset dir="${buzzblog.home}/src" includes="**/*.fab" />
