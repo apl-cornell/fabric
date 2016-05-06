@@ -70,7 +70,6 @@ class CarolComments {
                     printme = printme + "\n"+
                       api.viewOrCreatePost(commentId, store, firstPost);
 
-
                     String{*postRead; *postWrite; *commentRead; *commentWrite}
                        suffix = "";
                     if (alicePost.indexOf("fizz") >= 0) {
