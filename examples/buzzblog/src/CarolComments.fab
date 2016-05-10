@@ -37,8 +37,6 @@ class CarolComments {
 
       final label aliceReads  = new label{
         (alice,bob),carol → (alice,bob),carol
-        //alice&carol←carol
-        //*←carol
       }@store;
 
       final String{*aliceReads} postId = "alicePost";
@@ -62,8 +60,7 @@ class CarolComments {
                     final String{*postRead; *postWrite} alicePost = 
                       (new BuzzBlogAPI[postRead, postWrite]@store()
                        ).viewPost(postId,store);
-                    printme = printme + "\n"+
-                      "Alice Posted: "+alicePost;
+                    printme = printme + "\n" + "Alice Posted: "+alicePost;
 
                     final BuzzBlogAPI[commentRead, commentWrite] api = 
                      new BuzzBlogAPI[commentRead, commentWrite]@store();
@@ -84,12 +81,15 @@ class CarolComments {
                       api.updatePost(commentId, store, secondPost + " - "+ suffix);
                     printme = printme + "\n" + 
                       api.updatePost(commentId, store, thirdPost + " - "+ suffix);
-                  } else printme = printme + "\n{*commentRead; *commentWrite} ⊑ {alice→ }  failed";
-                } else printme = printme + "\n{*postLabel} ⊑ {alice→ }  failed";
-              } else printme = printme + "\n{*commentRead; *commentWrite} ⊑ {p→ }  failed";
-            } else printme = printme + "\n{*postLabel} ⊑ {p→ }  failed";
+                  } else printme = printme + 
+                      "\n{*commentRead; *commentWrite} ⊑ {alice→ }  failed";
+                } else printme = printme +
+                    "\n{*postRead; *postWrite} ⊑ {alice→ }  failed";
+              } else printme = printme +
+                  "\n{*commentRead; *commentWrite} ⊑ {p→ }  failed";
+            } else printme = printme + "\n{*postRead; *postWrite} ⊑ {p→ }  failed";
           } else printme = printme + "\n{p←} ⊑ {*commentRead; *commentWrite} failed";
-        } else printme = printme + "\n{alice←} ⊑ {*postLabel} failed";
+        } else printme = printme + "\n{alice←} ⊑ {*postRead; *postWrite} failed";
       } else printme = printme + "\nThe permission checking if block failed.";
       if (p equiv carol)
         runtime.out().println(printme);

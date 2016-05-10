@@ -2,7 +2,7 @@ import fabric.runtime.Runtime;
 
 class AlicePosts {
 
-  public static void main{*provider}(principal{p<-} p, String[] args):{p->;p<-}
+  public static void main{p<-}(principal{p<-} p, String[] args):{p->;p<-}
   {
     atomic {
       // Get a reference to the store called "store".
@@ -20,7 +20,7 @@ class AlicePosts {
           FabricWorker.getWorker().getWorker("carolnode").getPrincipal();
 
       final label postRead  = new label{
-        (alice,bob),carol → //(alice,bob),carol
+        (alice,bob),carol → 
       }@store;
 
       final label postWrite  = new label{
@@ -36,8 +36,10 @@ class AlicePosts {
       String{alice->} printme = "";
 
       if (p equiv alice && alice equiv store) {
-        if (new label{p← } <= new label{*postRead; *postWrite}) { // Alice should be able to write the post.
-          if (new label{*postRead; *postWrite} <= new label{p→ } ) { // Alice should be able to read it too.
+        // Alice should be able to write the post.
+        if (new label{p← } <= new label{*postRead; *postWrite}) { 
+          // Alice should be able to read it too.
+          if (new label{*postRead; *postWrite} <= new label{p→ } ) { 
             final BuzzBlogAPI[postRead, postWrite] api = 
               new BuzzBlogAPI[postRead, postWrite]@store();
             final String{*postRead;*postWrite} firstView =
