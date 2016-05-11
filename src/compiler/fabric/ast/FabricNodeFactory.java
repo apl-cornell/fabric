@@ -71,6 +71,8 @@ public interface FabricNodeFactory extends JifNodeFactory, CodebaseNodeFactory {
 
   AbortStmt AbortStmt(Position pos);
 
+  StageStmt StageStmt(Position pos);
+
   Call Call(Position pos, Receiver target, Id name, Expr remoteWorker,
       List<Expr> args);
 

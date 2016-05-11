@@ -141,6 +141,7 @@ import java.util.Set;
        	keywords.put("store$",       new Integer(sym.STORE));        
         keywords.put("nonfabric",     new Integer(sym.NONFABRIC));
         keywords.put("codebase",     new Integer(sym.CODEBASE));        
+	keywords.put("stage",         new Integer(sym.STAGE));
     }
 
     public String file() {

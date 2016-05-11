@@ -81,6 +81,26 @@ FabricExtFactory {
   }
 
   @Override
+  public final Ext extStageStmt() {
+    Ext e = extStageStmtImpl();
+
+    ExtFactory nextEF = nextExtFactory();
+    if (nextEF instanceof FabricExtFactory) {
+      Ext e2 = ((FabricExtFactory) nextEF).extStageStmt();
+      e = composeExts(e, e2);
+    }
+    return postExtStageStmt(e);
+  }
+
+  protected Ext extStageStmtImpl() {
+    return extStmtImpl();
+  }
+
+  protected Ext postExtStageStmt(Ext e) {
+    return postExtStmt(e);
+  }
+
+  @Override
   public final Ext extWorker() {
     Ext e = extWorkerImpl();
 

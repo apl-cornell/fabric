@@ -80,13 +80,14 @@ public class FabricFieldExt extends JifFieldExt {
           }
     });
 
-    // Check CL(op field) ≤ meet(CL(prev accesses))
-    lc.constrain(conflictL, LabelConstraint.LEQ, conflictPC, A.labelEnv(), pos,
+    // Check CL(op field) = meet(CL(prev accesses)), (unless we just came out of
+    // a stage statement)
+    lc.constrain(conflictL, LabelConstraint.EQUAL, conflictPC, A.labelEnv(), pos,
         new ConstraintMessage() {
           @Override
           public String msg() {
             return (isWrite ? "Write" : "Read") + " access of " + fe +
-              " can't be staged at the current point in a transaction.";
+              " can't be included in the current transaction stage.";
           }
     });
 

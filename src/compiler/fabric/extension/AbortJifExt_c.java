@@ -1,5 +1,9 @@
 package fabric.extension;
 
+import fabric.ast.AbortStmt;
+import fabric.ast.FabricBranch;
+import fabric.types.FabricTypeSystem;
+
 import jif.extension.JifBranchExt;
 import jif.translate.ToJavaExt;
 import jif.types.ConstraintMessage;
@@ -9,12 +13,10 @@ import jif.types.NamedLabel;
 import jif.types.PathMap;
 import jif.types.label.Label;
 import jif.visit.LabelChecker;
+
 import polyglot.ast.Node;
 import polyglot.types.SemanticException;
 import polyglot.util.InternalCompilerError;
-import fabric.ast.AbortStmt;
-import fabric.ast.FabricBranch;
-import fabric.types.FabricTypeSystem;
 
 public class AbortJifExt_c extends JifBranchExt {
   public AbortJifExt_c(ToJavaExt toJava) {

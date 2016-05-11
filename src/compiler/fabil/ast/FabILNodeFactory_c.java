@@ -9,10 +9,15 @@ import codebases.ast.CodebaseDecl;
 import codebases.ast.CodebaseDecl_c;
 import codebases.ast.CodebaseNode;
 import codebases.ast.CodebaseNode_c;
+
 import fabil.extension.FabILDelFactory;
 import fabil.extension.FabILDelFactory_c;
 import fabil.extension.FabILExtFactory;
 import fabil.extension.FabILExtFactory_c;
+
+import fabric.ast.StageStmt;
+import fabric.ast.StageStmt_c;
+
 import polyglot.ast.ArrayAccess;
 import polyglot.ast.ArrayAccessAssign;
 import polyglot.ast.Assign.Operator;

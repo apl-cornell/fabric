@@ -26,6 +26,8 @@ public interface FabricExtFactory extends JifExtFactory {
 
   Ext extRetryStmt();
 
+  Ext extStageStmt();
+
   Ext extCodebaseNode();
 
   Ext extCodebaseDecl();

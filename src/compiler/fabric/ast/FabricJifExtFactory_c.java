@@ -17,6 +17,7 @@ import fabric.extension.MethodDeclJifExt;
 import fabric.extension.NewJifExt_c;
 import fabric.extension.RemoteWorkerGetterJifExt_c;
 import fabric.extension.RetryJifExt_c;
+import fabric.extension.StageJifExt_c;
 import fabric.extension.StoreJifExt_c;
 import fabric.extension.StoreToFabilExt_c;
 import fabric.extension.WorkerJifExt_c;
@@ -41,6 +42,7 @@ import fabric.translate.PrincipalExprToFabilExt_c;
 import fabric.translate.RemoteWorkerGetterToFabilExt_c;
 import fabric.translate.RetryToFabilExt_c;
 import fabric.translate.SourceFileToFabilExt_c;
+import fabric.translate.StageToFabilExt_c;
 import fabric.translate.WorkerToFabilExt_c;
 
 import jif.ast.JifExtFactory_c;
@@ -223,6 +225,26 @@ FabricExtFactory {
   }
 
   protected Ext postExtAbortStmt(Ext e) {
+    return postExtBranch(e);
+  }
+
+  @Override
+  public final Ext extStageStmt() {
+    Ext e = extStageStmtImpl();
+
+    ExtFactory nextEF = nextExtFactory();
+    if (nextEF instanceof FabricExtFactory) {
+      Ext e2 = ((FabricExtFactory) nextEF).extStageStmt();
+      e = composeExts(e, e2);
+    }
+    return postExtStageStmt(e);
+  }
+
+  protected Ext extStageStmtImpl() {
+    return new StageJifExt_c(new StageToFabilExt_c());
+  }
+
+  protected Ext postExtStageStmt(Ext e) {
     return postExtBranch(e);
   }
 

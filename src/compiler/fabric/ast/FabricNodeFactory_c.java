@@ -17,13 +17,11 @@ import jif.ast.AmbPrincipalNode;
 import jif.ast.ConstraintNode;
 import jif.ast.JifClassDecl;
 import jif.ast.JifConstructorDecl;
-import jif.ast.JifConstructorDecl_c;
 import jif.ast.JifMethodDecl;
 import jif.ast.JifNodeFactory_c;
 import jif.ast.LabelNode;
 import jif.ast.NewLabel;
 import jif.ast.ParamDecl;
-import jif.ast.PolicyNode;
 import jif.ast.PrincipalExpr;
 import jif.ast.PrincipalNode;
 import jif.types.Assertion;
@@ -137,6 +135,14 @@ public class FabricNodeFactory_c extends JifNodeFactory_c implements FabricNodeF
   public AbortStmt AbortStmt(Position pos) {
     AbortStmt s = new AbortStmt_c(pos);
     s = ext(s, fabricExtFactory().extAbortStmt());
+    s = del(s, fabricDelFactory().delStmt());
+    return s;
+  }
+
+  @Override
+  public StageStmt StageStmt(Position pos) {
+    StageStmt s = new StageStmt_c(pos);
+    s = ext(s, fabricExtFactory().extStageStmt());
     s = del(s, fabricDelFactory().delStmt());
     return s;
   }
