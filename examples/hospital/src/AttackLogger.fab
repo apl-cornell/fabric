@@ -1,0 +1,3 @@
+public class AttackLogger {
+  public static native void logAttack(int id);
+}

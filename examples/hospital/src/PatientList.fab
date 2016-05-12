@@ -1,0 +1,12 @@
+/**
+ * Embodies a Patient, who has only two attributes, a string address, and 
+ * a boolean representing hiv positiveness.
+ **/
+public class PatientList[label patientLabel, label addressLabel, label hivLabel] {
+
+  public Patient[addressLabel,hivLabel]{patientLabel} patient;
+  public PatientList[patientLabel,addressLabel,hivLabel]{patientLabel} next;
+}
+
+
+

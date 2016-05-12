@@ -1,0 +1,71 @@
+import fabric.util.Map;
+import fabric.runtime.Runtime;
+
+class DaveReader {
+
+  public static void main{*provider}(principal{p<-} p, String[] args):{p->;p<-}
+  {
+    atomic {
+      final Store davestore = FabricWorker.getWorker().getStore("davenode");
+
+      // Get a reference to the runtime.
+      final Runtime[p] runtime = Runtime[p].getRuntime();
+
+      // Get principals for alice, bob, and carol.
+      final principal alice = 
+          FabricWorker.getWorker().getWorker("alicenode").getPrincipal();
+      final principal bob = 
+          FabricWorker.getWorker().getWorker("bobnode"  ).getPrincipal();
+      final principal carol = 
+          FabricWorker.getWorker().getWorker("carolnode").getPrincipal();
+      final principal dave = 
+          FabricWorker.getWorker().getWorker("davenode" ).getPrincipal();
+
+      // Explicitly everybody believes that everybody can read and write
+      // the address.
+      final label addressLabel  = new label{
+        (alice,bob),(carol,dave) → (alice,bob),(carol,dave);
+        (alice,bob),(carol,dave) ← (alice,bob),(carol,dave)
+      }@davestore;
+
+      // Explicitly everybody believes only alice can deal with the hivLabel.
+      final label hivLabel  = new label{
+        (alice,bob),dave → (alice,bob),dave;
+        (alice,bob),dave ← (alice,bob),dave
+      }@davestore;
+
+      // Patient records have to be stored somewhere that can hold both
+      // addresses and hiv flags.
+      final label accessLabel = new label{
+        *addressLabel;
+        *hivLabel
+      }@davestore;
+
+
+      if (new label{p<-} <= accessLabel &&
+          new label{davestore<-} <= accessLabel &&
+          accessLabel <= new label{p->} &&
+          accessLabel <= new label{davestore->}) {
+        Map daveroot = davestore.getRoot();
+        // Grab the address list
+        AddressList[accessLabel,accessLabel]{*accessLabel} addrList =
+          (AddressList[accessLabel,accessLabel]) daveroot.get("addrList");
+        if (addrList != null) {
+          while (addrList != null) {
+            Address[accessLabel,accessLabel]{*accessLabel} address = 
+              addrList.address;
+            if (address != null) {
+              String{*accessLabel} printable = "";
+              if (address.address != null ) {
+                printable = address.address +"\n";
+              } else printable = "address.address is null";
+              runtime.out().println(printable);
+            } else runtime.out().println("address (singular) came back null");
+            addrList = addrList.next;
+          }
+        } else runtime.out().println("addrList came back null");
+      } else runtime.out().println("p is not good enough");
+    }
+  }
+}
+
