@@ -1,0 +1,50 @@
+#!/bin/bash
+
+# Figure out which log is the attacker log...
+LOG_FILE=""
+for file in var/log/fabric.log* ; do
+	if grep -q "carolnode" "${file}" ; then
+		LOG_FILE="${file}"
+		break
+	fi
+done
+
+if [ "${LOG_FILE}" == "" ]; then
+	echo "Could not find attacker's log!"
+	exit 1
+fi
+
+abort_count() {
+	grep "bort" "${LOG_FILE}" | wc -l
+}
+
+i=0
+TOTAL_PATIENTS=1
+WAIT_TIME=".064"
+
+COUNT=$(abort_count)
+while true; do
+	# Run the script
+	../../bin/fab --jvm-cp "classes/:../../lib/fabric-collections.jar" --app-home "." --name carolnode AddressWriter $i
+	TXN_EXIT=$?
+	if [ "${TXN_EXIT}" -ne "0" ] ; then
+		exit ${TXN_EXIT}
+	fi
+
+	# Check if we hit and if not, wait a little longer
+	OLD_COUNT="${COUNT}"
+	COUNT=$(abort_count)
+	if [ "${OLD_COUNT}" == "${COUNT}" ]; then
+		# Reset if we're going beyond max delay of backoff in Fabric,
+		# it's more likely we just missed our chance at this point.
+		WAIT_TIME=$(echo "if (${WAIT_TIME} < 8.192) (${WAIT_TIME} * 2) else .064" | bc -l)
+		echo "DONE" "${OLD_COUNT}" "${COUNT}" "${WAIT_TIME}"
+	else
+		WAIT_TIME=".064"
+		echo "DONE" "${OLD_COUNT}" "${COUNT}" "${WAIT_TIME}"
+	fi
+	NOISE=$((RANDOM % 250))
+	sleep $(echo "${WAIT_TIME} * (1.0 + (0.001 * ${NOISE}))" | bc -l)
+
+	i=$(((i + TOTAL_PATIENTS)%1))
+done

@@ -1,0 +1,10 @@
+#!/bin/bash
+
+while true; do
+  ../../bin/fab --jvm-cp "classes/:../../lib/fabric-collections.jar" --app-home "." --name bobnode HivReader
+  TXN_EXIT=$?
+  if [ "${TXN_EXIT}" -ne "0" ] ; then
+	  exit "${TXN_EXIT}"
+  fi
+  echo "DONE"
+done

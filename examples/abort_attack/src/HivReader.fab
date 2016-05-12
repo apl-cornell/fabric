@@ -1,0 +1,145 @@
+import fabric.util.Map;
+import fabric.runtime.Runtime;
+//import fabricated.util.List;
+
+class HivReader {
+
+  //
+  // The main method.  The declaration has a few annotations:
+  //
+  // 1. public static void main{p<-;p->} (principal{p<-} p, String[] args):{p<-;p->} throws Exception {
+  //                           ---------
+  // This annotation is the begin label, which bounds the side effects of the
+  // method.  This annotation prevents someone from outputting spurious
+  // messages to the console (the p<- component) or leaking information by
+  // calling this method in a secret context (the p-> component).
+  //
+  //
+  // 2. public static void main{p<-;p->} (principal{p<-} p, String[] args):{p<-;p->} throws Exception {
+  //                                      ----------------
+  // This extra parameter to main represents the principal who is invoking the
+  // method.  It has the label {p<-} because we require the principal object
+  // itself to have high integrity.
+  //
+  //
+  // 3. public static void main{p<-;p->} (principal{p<-} p, String[] args):{p<-;p->} throws Exception {
+  //                                                                       ---------
+  // This is the end label of the method.  It bounds the amount of information
+  // that can be learned by the successful completion of this method.
+  //
+  //
+  // 4. public static void main{p<-;p->} (principal{p<-} p, String[] args):{p<-;p->} throws Exception {
+  //                                                                                 ----------------
+  // In Fabric, all exceptions must be declared, because they represent a
+  // possible information flow.  Here we are lazy and simply declare "throws Exception"
+  //
+  public static void main{*provider}(principal{p<-} p, String[] args):{p->;p<-}
+  {
+    atomic {
+      // Get a reference to the store called "store".
+      final Store store = FabricWorker.getWorker().getStore("alicenode");
+      final Store davestore = FabricWorker.getWorker().getStore("davenode");
+
+      // Get a reference to the runtime.
+      final Runtime[p] runtime = Runtime[p].getRuntime();
+
+      // Get principals for alice, bob, and carol.
+      final principal alice = 
+          FabricWorker.getWorker().getWorker("alicenode").getPrincipal();
+      final principal bob = 
+          FabricWorker.getWorker().getWorker("bobnode"  ).getPrincipal();
+      final principal carol = 
+          FabricWorker.getWorker().getWorker("carolnode").getPrincipal();
+      final principal dave = 
+          FabricWorker.getWorker().getWorker("davenode" ).getPrincipal();
+
+      // Explicitly everybody believes that everybody can read and write
+      // the address.
+      final label addressLabel  = new label{
+        (alice,bob),(carol,dave) → (alice,bob),(carol,dave);
+        (alice,bob),(carol,dave) ← (alice,bob),(carol,dave)
+      }@store;
+
+      // Explicitly everybody believes only alice can deal with the hivLabel.
+      final label hivLabel  = new label{
+        (alice,bob),dave → (alice,bob),dave;
+        (alice,bob),dave ← (alice,bob),dave
+      }@store;
+
+      // Patient records have to be stored somewhere that can hold both
+      // addresses and hiv flags.
+      final label accessLabel = new label{
+        *addressLabel;
+        *hivLabel
+      }@store;
+
+      // the label of the list of patients: everyone can read it, but only alice can
+      // write it.
+      final label patientLabel = new label{
+        *addressLabel
+          meet
+        *hivLabel
+      }@store;
+
+      if (new label{p<-} <= addressLabel &&
+          new label{p<-} <= hivLabel &&
+          new label{davestore<-} <= hivLabel &&
+          new label{p<-} <= patientLabel &&
+          addressLabel <= new label{p->} &&
+          patientLabel <= new label{p->} &&
+          hivLabel <= new label{p->} &&
+          accessLabel <= new label{store->} &&
+          accessLabel <= new label{davestore->}) {
+        // Cycle through the patients
+        Map root = store.getRoot();
+        // Grab the patients list
+        PatientList[patientLabel,addressLabel, hivLabel]{*patientLabel} patients =
+              (PatientList[patientLabel,addressLabel, hivLabel]) root.get("patients");
+        if (patients != null) {
+          while (patients != null) {
+            Patient[addressLabel, hivLabel]{*patientLabel} patient = patients.patient;
+            if (patient != null) {
+              // Grab the address if they're hiv positive
+              String{*addressLabel; *hivLabel} printable = "";
+              Address[addressLabel, accessLabel]{*addressLabel} addr=patient.address;
+              if (addr != null ) {
+                Hiv[hivLabel,accessLabel]{*hivLabel} h = patient.hiv;
+                if (h != null) {
+                  if (h.hiv) {
+                    if (addr.address != null) {
+                      // Copy the patient to dave's store.
+                      String{*accessLabel} addrCopyS = addr.address;
+                      Address[accessLabel, accessLabel] addrCopy = new Address[accessLabel, accessLabel]@davestore(addrCopyS);
+                      //Hiv[hivLabel, accessLabel]{*listLabel} hCopy = new Hiv[hivLabel,accessLabel]@davestore();
+                      //h.hiv = true;
+                      //Patient[hivLabel, hivLabel]{*hivLabel} patientCopy =
+                        //new Patient[hivLabel, hivLabel]@davestore(addr.address, true);
+
+                      printable = "a patient with Hiv Lives at " + addr.address;
+                    } else {
+                      printable = "patient.address.address is null";
+                    }
+                  } else {
+                    printable = "iterating past a patient without Hiv...";
+                  }
+                } else {
+                  printable = "patient's hiv object is null";
+                }
+              } else {
+                printable = "patient's address is null";
+              }
+              runtime.out().println(printable);
+            } else {
+              runtime.out().println("patient (singular) came back null");
+            }
+            patients = patients.next;
+          }
+        } else {
+          runtime.out().println("patients came back null");
+        }
+      } else {
+        runtime.out().println("p does not act for alice");
+      }
+    }
+  }
+}

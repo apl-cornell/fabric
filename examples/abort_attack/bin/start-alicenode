@@ -1,0 +1,8 @@
+#!/bin/bash
+
+APP_HOME="$(dirname $0)/.."
+PATH="${APP_HOME}/../../bin:${PATH}"
+
+export FABRIC_HOME="${APP_HOME}"
+
+fab-store --trace-objects --jvm-cp "${APP_HOME}/classes:${APP_HOME}/../../lib/fabric-collections.jar" --app-home "${FABRIC_HOME}" --name alicenode "$@"

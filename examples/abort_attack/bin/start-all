@@ -1,0 +1,15 @@
+#!/bin/bash
+
+BIN_DIR="$(dirname $0)"
+
+"${BIN_DIR}/run-in-xterm" "AbortAttack AliceNode"   0 0 \
+  "${BIN_DIR}/start-alicenode $@" &
+
+"${BIN_DIR}/run-in-xterm" "AbortAttack BobNode"     0 400 \
+  "${BIN_DIR}/start-bobnode $@" &
+
+"${BIN_DIR}/run-in-xterm" "AbortAttack CarolNode"   0 800 \
+  "${BIN_DIR}/start-carolnode $@" &
+
+"${BIN_DIR}/run-in-xterm" "AbortAttack DaveNode"   0 1200 \
+  "${BIN_DIR}/start-davenode $@" &

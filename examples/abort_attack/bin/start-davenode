@@ -1,0 +1,26 @@
+#!/bin/bash
+
+DELAY=100
+BIN_DIR="$(dirname $0)"
+APP_HOME="$(dirname $0)/.."
+PATH="${APP_HOME}/../../bin:${PATH}"
+
+export FABRIC_HOME="${APP_HOME}/dave_apphome"
+
+#Start the delay proxy first.
+OUTPORT="$(cat ${APP_HOME}/etc/config/davenode.properties | sed 's/ //g' | grep store.port | cut -d= -f2)"
+INPORT="$(cat ${FABRIC_HOME}/etc/config/davenode.properties | sed 's/ //g' | grep store.port | cut -d= -f2)"
+"${BIN_DIR}/delay_proxy" "${OUTPORT}" "${INPORT}" "${DELAY}" &
+DELAY_PID=$!
+
+function clean_up {
+	#Once we're done, kill the delay proxy
+	kill "${DELAY_PID}"
+	exit $1
+}
+
+trap clean_up SIGHUP SIGINT SIGTERM
+
+fab-store --trace-objects --jvm-cp "${APP_HOME}/classes:${APP_HOME}/../../lib/fabric-collections.jar" --app-home "${FABRIC_HOME}" --name davenode "$@"
+
+clean_up
