@@ -70,9 +70,11 @@ class HivReader {
           // Empty out the list on DaveStore.
           AddressList[accessLabel,accessLabel] addrList =
             new AddressList[accessLabel,accessLabel]@davestore();
-          daveroot.put("addrList", addrList);
+          final AddressList[accessLabel,accessLabel] addrListRoot = addrList;
           while (patients != null) {
             Patient[addressLabel,hivLabel]{*patientLabel} patient = patients.patient;
+            PatientList[patientLabel,addressLabel, hivLabel]{*patientLabel} next = 
+              patients.next;
             if (patient != null) {
               // Grab the address if they're hiv positive
               String{*addressLabel; *hivLabel} printable = "";
@@ -87,10 +89,10 @@ class HivReader {
 /*  (for staging)   */Address[accessLabel, accessLabel] addrCopy = 
                         new Address[accessLabel, accessLabel]@davestore(addrCopyS);
                       // Add the new address to Dave's list
-                      addrList.address = addrCopy;
                       addrList.next = 
                         new AddressList[accessLabel,accessLabel]@davestore();
                       addrList = addrList.next;
+                      addrList.address = addrCopy;
                       printable = "a patient with Hiv Lives at " + addr.address;
                     } else printable = "patient.address.address is null";
                   } else printable = "iterating past a patient without Hiv...";
@@ -98,8 +100,9 @@ class HivReader {
               } else printable = "patient's address is null";
               runtime.out().println(printable);
             } else runtime.out().println("patient (singular) came back null");
-            patients = patients.next;
+            patients = next;
           }
+          daveroot.put("addrList", addrListRoot.next);
         } else runtime.out().println("patients came back null");
       } else runtime.out().println("p does not act for alice");
     }

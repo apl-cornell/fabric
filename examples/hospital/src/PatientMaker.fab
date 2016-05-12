@@ -80,6 +80,7 @@ class PatientMaker {
         *hivLabel
       }@store;
 
+      final int numPatients = 1000;
 
       // We're storing p's stuff on "runtime.store", so we must ensure p trusts it.
       if (runtime.store$ actsfor p &&
@@ -90,15 +91,17 @@ class PatientMaker {
         PatientList[listLabel,addressLabel, hivLabel]{*listLabel} patients =
           new PatientList[listLabel,addressLabel, hivLabel]@store();
         final PatientList[listLabel,addressLabel, hivLabel]{*listLabel} patientRoot = patients;
-        for (int i = 0; i < 1; i++) {
+        for (int i = 0; i < numPatients; i++) {
             Address[addressLabel, accessLabel] addr = new Address[addressLabel, accessLabel]@store(" " + i + " Wysteria Lane");
             Hiv[hivLabel, accessLabel]{*listLabel} h = new Hiv[hivLabel,accessLabel]@store();
             h.hiv = ((i % 2) == 0);
             patients.patient = (new Patient[addressLabel, hivLabel]@store(
                   addr,
                   h));
-            patients.next = new PatientList[listLabel,addressLabel, hivLabel]@store();
-            patients = patients.next;
+            if ((i+1) < numPatients) { // avoid the stupid off-by-one issue
+              patients.next = new PatientList[listLabel,addressLabel, hivLabel]@store();
+              patients = patients.next;
+            }
         }
 
         // Store a reference to our object in the store's root map.

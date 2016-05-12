@@ -57,7 +57,7 @@ class DaveReader {
             if (address != null) {
               String{*accessLabel} printable = "";
               if (address.address != null ) {
-                printable = address.address +"\n";
+                printable = address.address;
               } else printable = "address.address is null";
               runtime.out().println(printable);
             } else runtime.out().println("address (singular) came back null");
