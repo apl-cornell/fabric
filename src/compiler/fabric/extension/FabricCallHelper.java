@@ -7,6 +7,7 @@ import fabric.types.FabricMethodInstance;
 import fabric.types.FabricPathMap;
 import fabric.types.FabricProcedureInstance;
 import fabric.types.FabricTypeSystem;
+import fabric.types.NoAccesses;
 
 import jif.extension.CallHelper;
 import jif.types.ConstraintMessage;
@@ -220,53 +221,58 @@ public class FabricCallHelper extends CallHelper {
     Label endConflict = resolveEndConflict(lc);
     FabricContext A = (FabricContext) lc.context();
 
-    // Check previous accesses against access label bound of method.
-    NamedLabel beginConflictNL = new NamedLabel("begin conflict label of " + pi.signature(),
-          "the upper bound of the conflict labels of all accesses in the method",
-          beginConflict);
+    // Only perform checking if this call is going to perform accesses.
+    if (!(beginConflict instanceof NoAccesses)) {
+      // Check previous accesses against access label bound of method.
+      NamedLabel beginConflictNL = new NamedLabel("begin conflict label of " + pi.signature(),
+            "the upper bound of the conflict labels of all accesses in the method",
+            beginConflict);
 
-    // Get the current conflict pc label
-    NamedLabel conflictNL = new NamedLabel("conflict pc",
-        "the meet of the conflict labels of previous accesses",
-        fts.join(fts.meet(A.conflictLabel(),
-                          fts.meet(A.beginConflictBound(),
-                                   ((FabricPathMap) X).CL())),
-                 fts.pairLabel(position, fts.bottomConfPolicy(position),
-                                         fts.topIntegPolicy(position))));
+      // Get the current conflict pc label
+      NamedLabel conflictNL = new NamedLabel("conflict pc",
+          "the meet of the conflict labels of previous accesses",
+          fts.join(fts.meet(A.conflictLabel(),
+                            fts.meet(A.beginConflictBound(),
+                                     ((FabricPathMap) X).CL())),
+                   fts.pairLabel(position, fts.bottomConfPolicy(position),
+                                           fts.topIntegPolicy(position))));
 
-    lc.constrain(beginConflictNL, LabelConstraint.LEQ, conflictNL,
-        A.labelEnv(), position, new ConstraintMessage() {
-      @Override
-      public String msg() {
-        return "The accesses during the call to " + FabricCallHelper.this.pi.signature()
-             + " could leak information about previous accesses to the stores "
-             + "accessed during the method.";
-      }
-    });
+      lc.constrain(beginConflictNL, LabelConstraint.LEQ, conflictNL,
+          A.labelEnv(), position, new ConstraintMessage() {
+        @Override
+        public String msg() {
+          return "The accesses during the call to " + FabricCallHelper.this.pi.signature()
+               + " could leak information about previous accesses to the stores "
+               + "accessed during the method.";
+        }
+      });
 
-    // Add in the conflict labels of the call's accesses to the CL path.
-    Label newCL = fts.join(
-        fts.meet(fts.meet(((FabricPathMap) X).CL(), endConflict), A.conflictLabel()),
-        fts.pairLabel(position, fts.bottomConfPolicy(position), fts.topIntegPolicy(position)));
-    X = ((FabricPathMap) X).CL(newCL);
+      // TODO: Add staging in if needed.
 
-    // Check of end conflict bound to get better location reporting.
-    NamedLabel newCLN = new NamedLabel("conflict pc",
-        "the meet of the conflict labels of accesses up to the end of the call",
-        newCL);
+      // Add in the conflict labels of the call's accesses to the CL path.
+      Label newCL = fts.join(
+          fts.meet(fts.meet(((FabricPathMap) X).CL(), endConflict), A.conflictLabel()),
+          fts.pairLabel(position, fts.bottomConfPolicy(position), fts.topIntegPolicy(position)));
+      X = ((FabricPathMap) X).CL(newCL);
 
-    NamedLabel endConflictBoundLabel = new NamedLabel("end conflict label",
-        "the lower bound on the conflict labels of accesses in " + pi.signature(),
-        A.endConflictBound());
+      // Check of end conflict bound to get better location reporting.
+      NamedLabel newCLN = new NamedLabel("conflict pc",
+          "the meet of the conflict labels of accesses up to the end of the call",
+          newCL);
 
-    lc.constrain(endConflictBoundLabel, LabelConstraint.LEQ, newCLN,
-        A.labelEnv(), position, new ConstraintMessage() {
-      @Override
-      public String msg() {
-        return "The current method makes less restricted accesses than the ending "
-             + "conflict label allows.";
-      }
-    });
+      NamedLabel endConflictBoundLabel = new NamedLabel("end conflict label",
+          "the lower bound on the conflict labels of accesses in " + pi.signature(),
+          A.endConflictBound());
+
+      lc.constrain(endConflictBoundLabel, LabelConstraint.LEQ, newCLN,
+          A.labelEnv(), position, new ConstraintMessage() {
+        @Override
+        public String msg() {
+          return "The current method makes less restricted accesses than the ending "
+               + "conflict label allows.";
+        }
+      });
+    }
   }
 
   /**

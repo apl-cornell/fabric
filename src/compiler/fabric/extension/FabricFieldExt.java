@@ -25,14 +25,14 @@ import polyglot.ast.Expr;
 import polyglot.ast.Field;
 import polyglot.ast.Node;
 import polyglot.ast.Receiver;
+import polyglot.ast.Special;
 import polyglot.ast.TypeNode;
 import polyglot.ast.Unary;
+import polyglot.types.ConstructorInstance;
 import polyglot.types.SemanticException;
 import polyglot.types.Type;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
-import polyglot.visit.TypeBuilder;
-import polyglot.visit.TypeChecker;
 
 public class FabricFieldExt extends JifFieldExt {
 
@@ -86,6 +86,16 @@ public class FabricFieldExt extends JifFieldExt {
     // runtime.
     if (fe.fieldInstance().flags().isFinal())
       return fe;
+
+    // If we're in a constructor, we know that we can't conflict with accesses
+    // to the currently constructing object.
+    if (lc.context().currentCode() instanceof ConstructorInstance &&
+        fe.target() instanceof Special) {
+      // XXX: Why doesn't inConstructorCall work?
+      Special s = (Special) fe.target();
+      if (s.kind().equals(Special.THIS))
+        return fe;
+    }
 
     Position pos = fe.position();
     // Using this instead of field instance so we get the instantiated label

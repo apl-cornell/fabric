@@ -222,4 +222,6 @@ public interface FabricTypeSystem extends JifTypeSystem, CodebaseTypeSystem {
   @Override
   ExtensionInfo extensionInfo();
 
+  /** Label representing that no accesses have been made. */
+  Label noAccesses();
 }

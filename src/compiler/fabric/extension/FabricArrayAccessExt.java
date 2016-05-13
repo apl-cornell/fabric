@@ -5,6 +5,7 @@ import fabric.types.FabricContext;
 import fabric.types.FabricPathMap;
 import fabric.types.FabricReferenceType;
 import fabric.types.FabricTypeSystem;
+import fabric.types.NoAccesses;
 
 import jif.extension.JifArrayAccessExt;
 import jif.translate.ToJavaExt;
@@ -69,6 +70,12 @@ public class FabricArrayAccessExt extends JifArrayAccessExt {
     if (ts.isTransient(acc.array().type())
         && !ts.isFabricArray(acc.array().type()))
       return acc;
+
+    // If the current method requires that there's no accesses, then we're in
+    // trouble.
+    if (A.beginConflictBound() instanceof NoAccesses)
+      throw new SemanticException(
+          "Making accesses in a method with default begin access bound!");
 
     Position pos = acc.position();
     FabricPathMap Xe = (FabricPathMap) getPathMap(acc);

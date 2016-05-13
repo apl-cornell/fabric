@@ -35,8 +35,7 @@ public class FabricPathMap extends PathMap {
   public Label CL() {
     // Default to {⊤→;⊥←} for CL since we'll be performing meets.
     //
-    // TODO: Should I instead use an analogue of NotTaken?  Or perhaps I should
-    // make NotTaken's meet behavior work the same as it does with join?
+    // TODO: Should I instead use NoAccesses?
     if (!map.containsKey(FabricPath.CL)) return ts.topLabel();
     return get(FabricPath.CL);
   }

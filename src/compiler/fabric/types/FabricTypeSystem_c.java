@@ -1328,4 +1328,12 @@ public class FabricTypeSystem_c extends JifTypeSystem_c
   public LabelToJavaExpr writersToReadersTranslator() {
     return new FabricWritersToReadersLabelToFabilExpr_c();
   }
+
+  /** Label representing that no accesses have been made. */
+  protected Label noAccesses = new NoAccesses_c(this, Position.compilerGenerated());
+
+  @Override
+  public Label noAccesses() {
+    return noAccesses;
+  }
 }
