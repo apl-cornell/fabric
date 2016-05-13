@@ -1,8 +1,5 @@
 * Are static non-final fields something we'll need to support?
 * More extensive testing (compiler and runtime).
-* Make default begin and end conflict labels some special label representing
-  "no accesses are expected during this method" and support this behavior in
-  the label checker.
 * Array accesses
 * Inserting staging checks before method calls (if needed)
 * Syntax for writersToReaders?  Alternatively, change method begin and end
