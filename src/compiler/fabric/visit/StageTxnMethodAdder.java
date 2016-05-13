@@ -69,8 +69,6 @@ public class StageTxnMethodAdder extends NodeVisitor {
           new ArrayList<TypeNode>(), new ArrayList<ConstraintNode<Assertion>>(),
           body, nf.Javadoc(cg, ""));
 
-      stageTxnMd.prettyPrint(System.out);
-      System.out.println();
       cd = cd.body(cd.body().addMember(stageTxnMd));
       return cd;
     }

@@ -72,7 +72,6 @@ public class FabricFieldExt extends JifFieldExt {
     // label checking pass.
     if (fe.target() instanceof Call) {
       Call c = (Call) fe.target();
-      System.out.println(c);
       if (c.name().equals(StageTxnMethodAdder.STAGE_TXN_MD_NAME + c.type().toClass().name())) {
         return fe;
       }
@@ -126,8 +125,6 @@ public class FabricFieldExt extends JifFieldExt {
           }
     });
 
-    System.out.println("CONFLICT: " + conflictPC.label() + " CL: " + conflictL.label());
-    System.out.println("CONFLICT: " + conflictPC.label().isRuntimeRepresentable() + " CL: " + conflictL.label().isRuntimeRepresentable());
     if (!lc.context().labelEnv().leq(conflictPC.label(), conflictL.label())) {
       FabricNodeFactory nf = (FabricNodeFactory) lc.nodeFactory();
       // Generate the dynamic check, if !(conflictPC ≤ conflictL) then we need
@@ -140,31 +137,34 @@ public class FabricFieldExt extends JifFieldExt {
         stageSuffix = tgtExp.type().toClass().name();
       }
 
+      // Make the staging wrapper call.
       Call stageCall = nf.Call(pos, fe.target(),
             nf.Id(pos, StageTxnMethodAdder.STAGE_TXN_MD_NAME + stageSuffix),
                 nf.Unary(pos, Unary.NOT,
                   nf.Binary(pos, nf.LabelExpr(pos, conflictPC.label()).type(ts.Label()),
                                   Binary.LE,
                                  nf.LabelExpr(pos, conflictL.label()).type(ts.Label())).type(ts.Boolean())).type(ts.Boolean()));
-      System.out.println("THIS HAPPENED");
-      /*
-      Call stageCall = nf.Call(pos, fe.target(),
-            nf.Id(pos, StageTxnMethodAdder.STAGE_TXN_MD_NAME + stageSuffix),
-                nf.Unary(pos, Unary.NOT,
-                  nf.Binary(pos, nf.LabelExpr(pos, conflictPC.label()),
-                                  Binary.LE,
-                                 nf.LabelExpr(pos, conflictL.label()))));
-                                 */
+
+      // Get the wrapper call type information
       List<Type> stageArgTypes = new ArrayList<>();
       stageArgTypes.add(ts.Boolean());
       FabricMethodInstance mi = (FabricMethodInstance)
         ts.findMethod(fe.target().type().toReference(),
             StageTxnMethodAdder.STAGE_TXN_MD_NAME + stageSuffix, stageArgTypes,
             lc.context().currentClass(), true);
+
+      // Set the type information
       stageCall = stageCall.methodInstance(mi);
+
+      // Hack to avoid null pointers for stuff in the call delegate.
       FabricCallDel fcd = (FabricCallDel) stageCall.del();
       fcd.setReceiverVarLabel(ts);
+
+      // Run label checking on the staging wrapper
       stageCall = (Call) lc.labelCheck(stageCall);
+
+      // Replace the access with a call to the wrapper before the field is
+      // grabbed.
       fe = fe.target(stageCall);
     }
     
