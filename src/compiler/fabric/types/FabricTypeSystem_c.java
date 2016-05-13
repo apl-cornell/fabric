@@ -19,7 +19,9 @@ import codebases.types.CBPackage_c;
 import codebases.types.CBPlaceHolder_c;
 import codebases.types.CodebaseResolver;
 import codebases.types.NamespaceResolver;
+
 import fabil.types.FabILFlags;
+
 import fabric.FabricOptions;
 import fabric.ast.FabricUtil;
 import fabric.ast.RemoteWorkerGetter;
@@ -33,9 +35,11 @@ import fabric.translate.DynamicPrincipalToFabilExpr_c;
 import fabric.translate.FabricJoinLabelToFabilExpr_c;
 import fabric.translate.FabricMeetLabelToFabilExpr_c;
 import fabric.translate.FabricPairLabelToFabilExpr_c;
+import fabric.translate.FabricWritersToReadersLabelToFabilExpr_c;
 import fabric.translate.ProviderLabelToFabilExpr_c;
 import fabric.worker.Store;
 import fabric.worker.Worker;
+
 import jif.translate.LabelToJavaExpr;
 import jif.translate.PrincipalToJavaExpr;
 import jif.types.ActsForConstraint;
@@ -83,6 +87,7 @@ import jif.types.principal.ExternalPrincipal_c;
 import jif.types.principal.ParamPrincipal;
 import jif.types.principal.Principal;
 import jif.types.principal.TopPrincipal;
+
 import polyglot.ast.Expr;
 import polyglot.ast.New;
 import polyglot.ext.param.types.Subst;
@@ -1246,6 +1251,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c
         Collections.<Type> emptyList(), Collections.<Assertion> emptyList());
   }
 
+  @Override
   public FabricMethodInstance fabricMethodInstance(Position pos,
       ReferenceType container, Flags flags, Type returnType, String name,
       Label startLabel, boolean isDefaultStartLabel, Label beginAccessLab,
@@ -1316,5 +1322,10 @@ public class FabricTypeSystem_c extends JifTypeSystem_c
         topIntegPolicy(l.position()));
     return join(meet(conf, writersToReadersLabel(l.position(), l)),
         bottomConflictLabel);
+  }
+
+  @Override
+  public LabelToJavaExpr writersToReadersTranslator() {
+    return new FabricWritersToReadersLabelToFabilExpr_c();
   }
 }

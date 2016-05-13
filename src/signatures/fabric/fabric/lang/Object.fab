@@ -8,4 +8,9 @@ public class Object {
     throws (NullPointerException{*lbl});
 
   public static native int oidHashCode(Object o);
+
+  public Object{this} stageTxn{*->}(boolean b):{_<-} {
+    if (b) stage;
+    return this;
+  }
 }

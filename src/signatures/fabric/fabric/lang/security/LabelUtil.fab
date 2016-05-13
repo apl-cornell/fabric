@@ -29,6 +29,7 @@ public class LabelUtil {
        
     public static native label join(label l1, label l2);
     public static native label meetLbl(label l1, label l2); // "meet" is a keyword, and can't be used
+    public static native label writersToReaders(label l);
     
     public static native ConfPolicy join(ConfPolicy p1, ConfPolicy p2);
     public static native ConfPolicy meetPol(ConfPolicy p1, ConfPolicy p2);

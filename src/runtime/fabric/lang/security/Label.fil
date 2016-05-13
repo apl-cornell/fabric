@@ -22,6 +22,10 @@ public interface Label {
 
   Label meet(Store store, Label l, boolean simplify);
 
+  Label writersToReaders(Store store);
+
+  Label writersToReaders(Store store, boolean simplify);
+
   ConfPolicy confPolicy();
 
   IntegPolicy integPolicy();

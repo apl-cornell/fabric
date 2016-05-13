@@ -9,6 +9,7 @@ import fabric.lang.arrays.ObjectArray;
 import fabric.lang.security.ConfPolicy;
 import fabric.lang.security.Label;
 import fabric.worker.Store;
+import fabric.worker.transaction.TransactionManager;
 
 public class WrappedJavaInlineable<T> implements JavaInlineable {
 
@@ -165,5 +166,11 @@ public class WrappedJavaInlineable<T> implements JavaInlineable {
   @Override
   public Statistics createStatistics() {
     return DefaultStatistics.instance;
+  }
+
+  @Override
+  public WrappedJavaInlineable<T> stageTxn(boolean b) {
+    if (b) TransactionManager.getInstance().stageTransaction();
+    return this;
   }
 }

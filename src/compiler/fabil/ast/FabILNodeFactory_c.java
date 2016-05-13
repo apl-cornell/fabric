@@ -15,9 +15,6 @@ import fabil.extension.FabILDelFactory_c;
 import fabil.extension.FabILExtFactory;
 import fabil.extension.FabILExtFactory_c;
 
-import fabric.ast.StageStmt;
-import fabric.ast.StageStmt_c;
-
 import polyglot.ast.ArrayAccess;
 import polyglot.ast.ArrayAccessAssign;
 import polyglot.ast.Assign.Operator;

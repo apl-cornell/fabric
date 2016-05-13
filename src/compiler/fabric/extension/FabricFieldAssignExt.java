@@ -20,7 +20,7 @@ public class FabricFieldAssignExt extends JifFieldAssignExt {
   @Override
   public Node labelCheckLHS(LabelChecker lc) throws SemanticException {
     Assign assign = (Assign) super.labelCheckLHS(lc);
-    final Field fe = (Field) assign.left();
+    Field fe = (Field) assign.left();
 
     // Do normal target and field access checking.
     DereferenceHelper.checkDereference(fe.target(), lc, node().position());

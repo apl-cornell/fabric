@@ -4,8 +4,6 @@ import java.util.List;
 
 import codebases.ast.CodebaseNodeFactory;
 
-import fabric.ast.StageStmt;
-
 import polyglot.ast.ArrayTypeNode;
 import polyglot.ast.Call;
 import polyglot.ast.ClassBody;

@@ -1,5 +1,14 @@
 package fabric.types;
 
+import java.util.List;
+
+import codebases.frontend.CodebaseSource;
+import codebases.types.CodebaseTypeSystem;
+
+import fabric.ExtensionInfo;
+import fabric.ast.RemoteWorkerGetter;
+import fabric.ast.Store;
+
 import jif.types.Assertion;
 import jif.types.JifContext;
 import jif.types.JifTypeSystem;
@@ -9,6 +18,7 @@ import jif.types.label.ConfPolicy;
 import jif.types.label.IntegPolicy;
 import jif.types.label.Label;
 import jif.types.principal.Principal;
+
 import polyglot.ast.Expr;
 import polyglot.types.ClassType;
 import polyglot.types.Flags;
@@ -17,11 +27,6 @@ import polyglot.types.ReferenceType;
 import polyglot.types.SemanticException;
 import polyglot.types.Type;
 import polyglot.util.Position;
-import codebases.frontend.CodebaseSource;
-import codebases.types.CodebaseTypeSystem;
-import fabric.ExtensionInfo;
-import fabric.ast.RemoteWorkerGetter;
-import fabric.ast.Store;
 
 public interface FabricTypeSystem extends JifTypeSystem, CodebaseTypeSystem {
   ClassType FObject();
@@ -53,6 +58,14 @@ public interface FabricTypeSystem extends JifTypeSystem, CodebaseTypeSystem {
   WorkerLocalInstance workerLocalInstance();
 
   FabricDefaultSignature fabricDefaultSignature();
+
+  public FabricMethodInstance fabricMethodInstance(Position pos,
+      ReferenceType container, Flags flags, Type returnType, String name,
+      Label startLabel, boolean isDefaultStartLabel, Label beginAccessLab,
+      boolean isDefaultBeginAccess, List<? extends Type> formalTypes,
+      List<jif.types.label.Label> formalArgLabels, Label endLabel,
+      boolean isDefaultEndLabel, Label endAccessLab, boolean isDefaultEndAccess,
+      List<? extends Type> excTypes, List<Assertion> constraints);
 
   FabricFieldInstance fabricFieldInstance(Position pos,
       ReferenceType container, Flags flags, Type type, ConfPolicy accessLabel,

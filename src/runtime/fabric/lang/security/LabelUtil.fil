@@ -257,6 +257,54 @@ public final class LabelUtil {
       // error! non pair labels!
       return null;
   }
+  
+  public static Label writersToReaders(Store store, Label l) {
+    return writersToReaders(store, l, true);
+  }
+  
+  public static Label writersToReaders(Store store, Label l, boolean simplify) {
+      SecurityCache cache = TransactionManager.getInstance().getSecurityCache();
+
+      if (l instanceof PairLabel) {
+        Pair pair = new Pair(l, store);
+        Label result = cache.getWritersToReadersLabel(pair);
+        if (result == null) {
+          PairLabel pl = (PairLabel) l;
+          IntegPolicy integ = pl.integPolicy();
+          ConfPolicy wtorPol = writersToReaders(store, integ, simplify);
+          result = new PairLabel@store().fabric$lang$security$PairLabel$(wtorPol, topInteg());
+          cache.putWritersToReadersLabel(pair, result);
+        }
+        return result;
+      }
+
+      // error! non pair label!
+      return null;
+  }
+
+  public static ConfPolicy writersToReaders(Store store, IntegPolicy integ, boolean simplify) {
+    if (integ instanceof WriterPolicy) {
+      WriterPolicy wp = (WriterPolicy) integ;
+      return new ReaderPolicy@store().fabric$lang$security$ReaderPolicy$(wp.owner(), wp.writer());
+    } else if (integ instanceof JoinIntegPolicy) {
+      JoinIntegPolicy jip = (JoinIntegPolicy) integ;
+      Set/*<Policy>*/ newComponents = new LinkedHashSet/*<>*/().fabric$util$LinkedHashSet$();
+      for (Iterator it = jip.joinComponents().iterator(); it.hasNext();) {
+        IntegPolicy ip = (IntegPolicy) it.next();
+        newComponents.add(writersToReaders(store, ip, simplify));
+      }
+      return new MeetConfPolicy@store().fabric$lang$security$MeetConfPolicy$(newComponents);
+    } else if (integ instanceof MeetIntegPolicy) {
+      MeetIntegPolicy jip = (MeetIntegPolicy) integ;
+      Set/*<Policy>*/ newComponents = new LinkedHashSet/*<>*/().fabric$util$LinkedHashSet$();
+      for (Iterator it = jip.meetComponents().iterator(); it.hasNext();) {
+        IntegPolicy ip = (IntegPolicy) it.next();
+        newComponents.add(writersToReaders(store, ip, simplify));
+      }
+      return new JoinConfPolicy@store().fabric$lang$security$JoinConfPolicy$(newComponents);
+    }
+    return null;
+  }
 
   public static ConfPolicy join(Store store, ConfPolicy p1, ConfPolicy p2) {
       return join(store, p1, p2, new java.util.HashSet(), true);

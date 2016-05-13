@@ -13,7 +13,7 @@ import polyglot.visit.PrettyPrinter;
 // XXX Should be replaced with extension
 //@Deprecated
 public class StageStmt_c extends Stmt_c implements StageStmt {
-  //@Deprecated
+  @Deprecated
   public StageStmt_c(Position pos) {
     this(pos, null);
   }

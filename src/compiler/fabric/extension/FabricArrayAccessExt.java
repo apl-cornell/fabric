@@ -1,5 +1,6 @@
 package fabric.extension;
 
+import fabric.ast.FabricNodeFactory;
 import fabric.types.FabricContext;
 import fabric.types.FabricPathMap;
 import fabric.types.FabricReferenceType;
@@ -15,8 +16,10 @@ import jif.types.label.Label;
 import jif.visit.LabelChecker;
 
 import polyglot.ast.ArrayAccess;
+import polyglot.ast.Binary;
 import polyglot.ast.Expr;
 import polyglot.ast.Node;
+import polyglot.ast.Unary;
 import polyglot.types.SemanticException;
 import polyglot.util.Position;
 
@@ -56,8 +59,9 @@ public class FabricArrayAccessExt extends JifArrayAccessExt {
    *
    * Assumes array expression has already been checked.
    */
-  static protected ArrayAccess conflictLabelCheck(final ArrayAccess acc,
+  static protected ArrayAccess conflictLabelCheck(ArrayAccess acc,
       LabelChecker lc, final boolean isWrite) throws SemanticException {
+    final ArrayAccess origACC = acc;
     FabricTypeSystem ts = (FabricTypeSystem) lc.typeSystem();
     FabricContext A = (FabricContext) lc.context();
 
@@ -91,7 +95,7 @@ public class FabricArrayAccessExt extends JifArrayAccessExt {
           @Override
           public String msg() {
             return "Conflicts when " + (isWrite ? "writing" : "reading") + " " +
-              acc + " may leak secret information to other transactions.";
+              origACC + " may leak secret information to other transactions.";
           }
     });
 
@@ -100,12 +104,21 @@ public class FabricArrayAccessExt extends JifArrayAccessExt {
         new ConstraintMessage() {
           @Override
           public String msg() {
-            return (isWrite ? "Write" : "Read") + " access " + acc +
+            return (isWrite ? "Write" : "Read") + " access " + origACC +
               " can't be staged at the current point in a transaction.";
           }
     });
 
-    // TODO: Insert staging check if necessary (possibly not here?)
+    if (!lc.context().labelEnv().leq(conflictL.label(), conflictPC.label())) {
+      FabricNodeFactory nf = (FabricNodeFactory) lc.nodeFactory();
+      // Generate the dynamic check, if !(conflictPC ≤ conflictL) then we need
+      // to stage (since the stage label's about to change).
+      acc = acc.array(nf.Call(pos, acc.array(), nf.Id(pos, "stageTxn"),
+                nf.Unary(pos, Unary.NOT,
+                  nf.Binary(pos, nf.LabelExpr(pos, conflictPC.label()),
+                                  Binary.LE,
+                                 nf.LabelExpr(pos, conflictL.label())))));
+    }
     
     // Update the CL
     Xe = Xe.CL(ts.meet(conflictL.label(), conflictPC.label()));

@@ -111,6 +111,12 @@ public interface Object {
   Statistics createStatistics();
 
   /**
+   * Utility method for staging transactions.  Should only be called by compiler
+   * generated code.
+   */
+  public Object stageTxn(boolean b);
+
+  /**
    * _Proxy objects behave like regular objects by delegating to _Impl objects,
    * pointed to by a soft reference. This class abstracts away the code for
    * maintaining that soft reference.
@@ -397,6 +403,11 @@ public interface Object {
     @Override
     public Statistics createStatistics() {
       return fetch().createStatistics();
+    }
+
+    @Override
+    public Object stageTxn(boolean b) {
+      return fetch().stageTxn(b);
     }
 
     /**
@@ -716,6 +727,12 @@ public interface Object {
     @Override
     public Statistics createStatistics() {
       return DefaultStatistics.instance;
+    }
+
+    @Override
+    public Object stageTxn(boolean b) {
+      if (b) TransactionManager.getInstance().stageTransaction();
+      return this;
     }
 
     /**

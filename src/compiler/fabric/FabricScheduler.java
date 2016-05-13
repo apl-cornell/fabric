@@ -5,7 +5,28 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import codebases.frontend.CBScheduler;
+import codebases.frontend.CBTypeExists;
+import codebases.frontend.CodebaseImportsInitialized;
+import codebases.frontend.CodebaseSource;
+import codebases.visit.CBTypeBuilder;
+
+import fabric.ast.FabricNodeFactory;
+import fabric.types.FabricTypeSystem;
+import fabric.visit.CoercePrincipals;
+import fabric.visit.ExplicitSuperclassAdder;
+import fabric.visit.FClassGenerator;
+import fabric.visit.FabILSkeletonCreator;
+import fabric.visit.FabricExceptionChecker;
+import fabric.visit.FabricToFabilRewriter;
+import fabric.visit.NamespaceChecker;
+import fabric.visit.RemoteCallWrapperAdder;
+import fabric.visit.RemoteCallWrapperUpdater;
+import fabric.visit.StageTxnMethodAdder;
+import fabric.worker.Worker;
+
 import jif.JifScheduler;
+
 import polyglot.ast.Node;
 import polyglot.ast.NodeFactory;
 import polyglot.frontend.CyclicDependencyException;
@@ -27,23 +48,6 @@ import polyglot.main.Report;
 import polyglot.types.TypeSystem;
 import polyglot.util.InternalCompilerError;
 import polyglot.visit.Translator;
-import codebases.frontend.CBScheduler;
-import codebases.frontend.CBTypeExists;
-import codebases.frontend.CodebaseImportsInitialized;
-import codebases.frontend.CodebaseSource;
-import codebases.visit.CBTypeBuilder;
-import fabric.ast.FabricNodeFactory;
-import fabric.types.FabricTypeSystem;
-import fabric.visit.CoercePrincipals;
-import fabric.visit.ExplicitSuperclassAdder;
-import fabric.visit.FClassGenerator;
-import fabric.visit.FabILSkeletonCreator;
-import fabric.visit.FabricExceptionChecker;
-import fabric.visit.FabricToFabilRewriter;
-import fabric.visit.NamespaceChecker;
-import fabric.visit.RemoteCallWrapperAdder;
-import fabric.visit.RemoteCallWrapperUpdater;
-import fabric.worker.Worker;
 
 public class FabricScheduler extends JifScheduler implements CBScheduler {
   protected fabil.ExtensionInfo filext;
@@ -104,6 +108,21 @@ public class FabricScheduler extends JifScheduler implements CBScheduler {
     return g;
   }
 
+  public Goal StageTxnMethodsAdded(final Job job) {
+    FabricTypeSystem ts = fabext.typeSystem();
+    FabricNodeFactory nf = fabext.nodeFactory();
+    Goal g =
+        internGoal(new VisitorGoal(job, new StageTxnMethodAdder(job, ts, nf)) {
+          @Override
+          public Collection<Goal> prerequisiteGoals(Scheduler s) {
+            List<Goal> l = new ArrayList<>();
+            l.add(ExplicitSuperclassesAdded(job));
+            return l;
+          }
+        });
+    return g;
+  }
+
   public Goal RemoteCallWrappersAdded(final Job job) {
     FabricTypeSystem ts = fabext.typeSystem();
     FabricNodeFactory nf = fabext.nodeFactory();
@@ -130,6 +149,7 @@ public class FabricScheduler extends JifScheduler implements CBScheduler {
       addPrerequisiteDependency(g, ExplicitSuperclassesAdded(job));
       if (!opts.signatureMode()) {
         addPrerequisiteDependency(g, RemoteCallWrappersAdded(job));
+        addPrerequisiteDependency(g, StageTxnMethodsAdded(job));
       } else {
         addPrerequisiteDependency(g, Parsed(job));
       }

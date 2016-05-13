@@ -96,6 +96,14 @@ public final class PairLabel implements Label {
     return LabelUtil.meet(store, this, l, simplify);
   }
 
+  public Label writersToReaders(Store store) {
+    return LabelUtil.writersToReaders(store, this, true);
+  }
+
+  public Label writersToReaders(Store store, boolean simplify) {
+    return LabelUtil.writersToReaders(store, this, simplify);
+  }
+
   public ConfPolicy confPolicy() {
     return confPol;
   }

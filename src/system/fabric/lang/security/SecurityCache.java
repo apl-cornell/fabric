@@ -169,6 +169,12 @@ public final class SecurityCache extends AbstractSecurityCache {
    */
   private Map<DelegationPair, Set<Triple<Label, Label, Store>>> labelMeetDependencies;
 
+  /**
+   * Cache for writersToReaders conversions of labels. If (L, S) is mapped to
+   * L', then L' is an object on store S representing writersToReaders(L).
+   */
+  private Map<Pair<Label, Store>, Label> writersToReadersLabels;
+
   public SecurityCache(LabelCache topLevelCache) {
     this(topLevelCache, null);
   }
@@ -204,6 +210,7 @@ public final class SecurityCache extends AbstractSecurityCache {
     this.labelMeets = new HashMap<>();
     this.labelJoinDependencies = new HashMap<>();
     this.labelMeetDependencies = new HashMap<>();
+    this.writersToReadersLabels = new HashMap<>();
   }
 
   @Override
@@ -230,6 +237,7 @@ public final class SecurityCache extends AbstractSecurityCache {
     labelMeets.clear();
     labelJoinDependencies.clear();
     labelMeetDependencies.clear();
+    writersToReadersLabels.clear();
 
     if (parent != null) copyStateFromParent();
   }
@@ -259,6 +267,7 @@ public final class SecurityCache extends AbstractSecurityCache {
     copyMapSet(parent.labelJoinDependencies, labelJoinDependencies);
     labelMeets.putAll(parent.labelMeets);
     copyMapSet(parent.labelMeetDependencies, labelMeetDependencies);
+    writersToReadersLabels.putAll(parent.writersToReadersLabels);
   }
 
   private <T, U> void copyMapSet(Map<T, Set<U>> src, Map<T, Set<U>> dst) {
@@ -291,6 +300,7 @@ public final class SecurityCache extends AbstractSecurityCache {
     labelMeets = cache.labelMeets;
     labelJoinDependencies = cache.labelJoinDependencies;
     labelMeetDependencies = cache.labelMeetDependencies;
+    writersToReadersLabels = cache.writersToReadersLabels;
   }
 
   @Override
@@ -659,6 +669,14 @@ public final class SecurityCache extends AbstractSecurityCache {
     for (DelegationPair del : deps) {
       addLabelJoinDependency(del, triple);
     }
+  }
+
+  Label getWritersToReadersLabel(Pair<Label, Store> pair) {
+    return writersToReadersLabels.get(pair);
+  }
+
+  void putWritersToReadersLabel(Pair<Label, Store> pair, Label l) {
+    writersToReadersLabels.put(pair, l);
   }
 
   Label getLabelMeet(Triple<Label, Label, Store> triple) {

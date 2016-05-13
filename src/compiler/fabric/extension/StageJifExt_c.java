@@ -15,6 +15,6 @@ public class StageJifExt_c extends JifStmtExt_c {
   @Override
   public Node labelCheckStmt(LabelChecker lc) throws SemanticException {
     //TODO
-    return node();
+    return updatePathMap(node(), lc.typeSystem().pathMap());
   }
 }
