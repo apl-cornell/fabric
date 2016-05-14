@@ -5,7 +5,7 @@ where
 postRead <= {postWrite; *->},
 postWrite <= {postRead; _<-}
 {
-  //@{storeLabel}
+  @{postRead}
 
   // Returns the string view of the post with the given id at the given store
   public String{postRead; postWrite ; postId ; store} viewPost{store}(
@@ -19,7 +19,8 @@ postWrite <= {postRead; _<-}
   {
     final Map root = store.getRoot();
     if (root != null) {
-      final Post[{postRead; postWrite}] post = (Post[{postRead; postWrite}]) root.get(postId);
+      final Post[{postRead; postWrite}] post = 
+        (Post[{postRead; postWrite}]) root.get(postId);
       if (post != null) {
         return post.view();
       } else {
@@ -42,7 +43,8 @@ postWrite <= {postRead; _<-}
         {store}  <= {postRead; postWrite} {
     final Map root = store.getRoot();
     if (root != null) {
-      final Post[{postRead; postWrite}] post = (Post[{postRead; postWrite}]) root.get(postId);
+      final Post[{postRead; postWrite}] post = 
+        (Post[{postRead; postWrite}]) root.get(postId);
       if (post != null) {
         String oldContent = post.view();
         post.update(newContent);
@@ -70,12 +72,14 @@ postWrite <= {postRead; _<-}
         {store}  <= {postRead; postWrite} {
     final Map root = store.getRoot();
     if (root != null) {
-      final Post[{postRead; postWrite}] post = (Post[{postRead; postWrite}]) root.get(postId);
+      final Post[{postRead; postWrite}] post = 
+        (Post[{postRead; postWrite}]) root.get(postId);
       if (post != null) {
         return post.view();
       } else {
         try {
-          final Post[{postRead; postWrite}] newPost = new Post[{postRead; postWrite}]@store(newContent);
+          final Post[{postRead; postWrite}] newPost = 
+            new Post[{postRead; postWrite}]@store(newContent);
           root.put(postId,newPost);
           return "Created new post: "+newPost.view();
         } catch (Exception e) {

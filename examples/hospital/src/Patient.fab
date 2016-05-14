@@ -1,0 +1,24 @@
+/**
+ * Embodies a Patient, who has only two attributes, a string address, and 
+ * a boolean representing hiv positiveness.
+ **/
+public class Patient[label addressLabel, label hivLabel] {
+
+  /** This patient's (presumably comparatively public) mailing address **/
+  public Address[addressLabel, {hivLabel;addressLabel}]{addressLabel} address;
+
+  /** This patient's (presumably comparatively private) HIV status **/
+  public Hiv[hivLabel,{hivLabel;addressLabel}]{addressLabel} hiv;
+
+  /** Construct a new patient with an Address and HIV status **/
+  public Patient(
+           Address[addressLabel, {hivLabel;addressLabel}]{addressLabel} newAddress, 
+           Hiv[hivLabel,{hivLabel;addressLabel}]{addressLabel} newHiv
+         ) {
+    address = newAddress;
+    hiv = newHiv;
+    super();
+  }
+}
+
+

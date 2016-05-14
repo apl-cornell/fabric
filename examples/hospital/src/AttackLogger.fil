@@ -1,0 +1,8 @@
+import fabric.common.Logging;
+import java.util.logging.Level;
+
+public class AttackLogger {
+  public static void logAttack(int id) {
+    Logging.HOTOS_LOGGER.log(Level.INFO, "Attacking " + id);
+  }
+}

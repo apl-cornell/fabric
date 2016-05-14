@@ -1,0 +1,10 @@
+public class AddressList[label addressLabel, label accessLabel] 
+  where addressLabel <= accessLabel {
+  @{accessLabel}
+  public Address    [addressLabel, accessLabel]{addressLabel} address;
+  public AddressList[addressLabel, accessLabel]{addressLabel} next;
+}
+
+
+
+
