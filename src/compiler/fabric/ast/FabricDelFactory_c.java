@@ -1,14 +1,18 @@
 package fabric.ast;
 
-import jif.ast.JifDelFactory_c;
-import polyglot.ast.JLDel;
 import codebases.ast.CodebaseImportDel_c;
+
 import fabric.extension.FabricCallDel;
 import fabric.extension.FabricFieldDeclDel;
+import fabric.extension.FabricFieldDel;
 import fabric.extension.FabricNewDel;
 import fabric.extension.FabricNewFabricArrayDel;
 import fabric.extension.FabricNewLabelDel;
 import fabric.extension.FabricPrincipalExprDel;
+
+import jif.ast.JifDelFactory_c;
+
+import polyglot.ast.JLDel;
 
 /** Factory class for creating delegates for fabric types. */
 public class FabricDelFactory_c extends JifDelFactory_c implements
@@ -268,6 +272,11 @@ FabricDelFactory {
   @Override
   public JLDel delAccessPolicy() {
     return delNode();
+  }
+
+  @Override
+  protected JLDel delFieldImpl() {
+    return new FabricFieldDel();
   }
 
 }

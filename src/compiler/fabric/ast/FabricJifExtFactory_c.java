@@ -32,6 +32,7 @@ import fabric.translate.CodebaseDeclToFabilExt_c;
 import fabric.translate.CodebaseNodeToFabilExt_c;
 import fabric.translate.ConstructorDeclToFabilExt_c;
 import fabric.translate.FieldDeclToFabilExt_c;
+import fabric.translate.FieldToFabilExt_c;
 import fabric.translate.InstanceOfToFabilExt_c;
 import fabric.translate.MethodDeclToFabilExt_c;
 import fabric.translate.NewFabricArrayToFabilExt_c;
@@ -56,7 +57,6 @@ import jif.translate.ArrayAccessAssignToJavaExt_c;
 import jif.translate.ArrayAccessToJavaExt_c;
 import jif.translate.BlockToJavaExt_c;
 import jif.translate.FieldAssignToJavaExt_c;
-import jif.translate.FieldToJavaExt_c;
 
 import polyglot.ast.Ext;
 import polyglot.ast.ExtFactory;
@@ -111,7 +111,7 @@ FabricExtFactory {
 
   @Override
   protected Ext extFieldImpl() {
-    return new FabricFieldExt(new FieldToJavaExt_c());
+    return new FabricFieldExt(new FieldToFabilExt_c());
   }
 
   @Override

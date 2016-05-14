@@ -22,7 +22,6 @@ import fabric.visit.FabricToFabilRewriter;
 import fabric.visit.NamespaceChecker;
 import fabric.visit.RemoteCallWrapperAdder;
 import fabric.visit.RemoteCallWrapperUpdater;
-import fabric.visit.StageTxnMethodAdder;
 import fabric.worker.Worker;
 
 import jif.JifScheduler;
@@ -108,21 +107,6 @@ public class FabricScheduler extends JifScheduler implements CBScheduler {
     return g;
   }
 
-  public Goal StageTxnMethodsAdded(final Job job) {
-    FabricTypeSystem ts = fabext.typeSystem();
-    FabricNodeFactory nf = fabext.nodeFactory();
-    Goal g =
-        internGoal(new VisitorGoal(job, new StageTxnMethodAdder(job, ts, nf)) {
-          @Override
-          public Collection<Goal> prerequisiteGoals(Scheduler s) {
-            List<Goal> l = new ArrayList<>();
-            l.add(ExplicitSuperclassesAdded(job));
-            return l;
-          }
-        });
-    return g;
-  }
-
   public Goal RemoteCallWrappersAdded(final Job job) {
     FabricTypeSystem ts = fabext.typeSystem();
     FabricNodeFactory nf = fabext.nodeFactory();
@@ -149,7 +133,6 @@ public class FabricScheduler extends JifScheduler implements CBScheduler {
       addPrerequisiteDependency(g, ExplicitSuperclassesAdded(job));
       if (!opts.signatureMode()) {
         addPrerequisiteDependency(g, RemoteCallWrappersAdded(job));
-        addPrerequisiteDependency(g, StageTxnMethodsAdded(job));
       } else {
         addPrerequisiteDependency(g, Parsed(job));
       }

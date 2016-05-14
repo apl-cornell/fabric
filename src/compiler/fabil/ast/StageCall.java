@@ -7,7 +7,7 @@ import polyglot.ast.ProcedureCall;
  * Special expr for staging (if the second argument is true) and then returning
  * the first argument.
  */
-public interface StageCall extends ProcedureCall {
+public interface StageCall extends ProcedureCall, Expr {
 
   /**
    * Get the first argument to the stage call.
