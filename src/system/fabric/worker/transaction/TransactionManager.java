@@ -282,6 +282,25 @@ public final class TransactionManager {
   }
 
   /**
+   * Stages the transaction if the second argument is true and returns the
+   * first argument.  This is primarily a utility for adding staging to compiled
+   * code.
+   *
+   * @param value
+   *           Value to return after this call completes.
+   *
+   * @param stageFlag
+   *           Flag indicating whether to stage.
+   *
+   * @throws TransactionRestartingException
+   *           if the staging fails.
+   */
+  public <T> T stageTransactionExpr(T value, boolean stageFlag) throws TransactionRestartingException {
+    if (stageFlag) stageTransaction();
+    return value;
+  }
+
+  /**
    * Stages the transaction by obtaining locks on the stores for the objects
    * read and written thus far.
    *

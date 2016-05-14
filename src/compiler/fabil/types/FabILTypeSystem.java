@@ -183,4 +183,8 @@ public interface FabILTypeSystem extends TypeSystem, CodebaseTypeSystem {
   // */
   // void setRuntimeClassResolver(LoadedClassResolver lcr);
 
+  /**
+   * Create a new stage call instance at the given position with the given type.
+   */
+  StageInstance stageInstance(Type origType);
 }

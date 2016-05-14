@@ -237,6 +237,14 @@ public class FabILNodeFactory_c extends NodeFactory_c
   }
 
   @Override
+  public StageCall StageCall(Position pos, Expr origExpr, Expr flagExpr) {
+    StageCall s = new StageCall_c(pos, origExpr, flagExpr);
+    s = ext(s, extFactory().extStageCall());
+    s = del(s, delFactory().delStmt());
+    return s;
+  }
+
+  @Override
   public Call Call(Position pos, Receiver target, Id name, List<Expr> args) {
     return Call(pos, target, name, null, args);
   }

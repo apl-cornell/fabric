@@ -113,6 +113,26 @@ public class FabILExtFactory_c extends AbstractExtFactory_c
   }
 
   @Override
+  public final Ext extStageCall() {
+    Ext e = extStageCallImpl();
+
+    ExtFactory nextEF = nextExtFactory();
+    if (nextEF instanceof FabILExtFactory) {
+      Ext e2 = ((FabILExtFactory) nextEF).extStageCall();
+      e = composeExts(e, e2);
+    }
+    return postExtStageCall(e);
+  }
+
+  protected Ext extStageCallImpl() {
+    return new StageCallExt_c();
+  }
+
+  protected Ext postExtStageCall(Ext ext) {
+    return postExtExpr(ext);
+  }
+
+  @Override
   protected Ext extArrayAccessAssignImpl() {
     return new ArrayAccessAssignExt_c();
   }

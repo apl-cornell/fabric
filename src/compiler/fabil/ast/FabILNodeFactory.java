@@ -61,6 +61,8 @@ public interface FabILNodeFactory extends NodeFactory, CodebaseNodeFactory {
 
   StageStmt StageStmt(Position pos);
 
+  StageCall StageCall(Position pos, Expr origExpr, Expr flagExpr);
+
   Call Call(Position pos, Receiver target, Id name, Expr remoteWorker,
       List<Expr> args);
 

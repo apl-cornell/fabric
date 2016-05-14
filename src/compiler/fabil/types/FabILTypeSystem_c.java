@@ -660,4 +660,9 @@ public class FabILTypeSystem_c extends TypeSystem_c implements FabILTypeSystem {
   public Flags legalInterfaceFieldFlags() {
     return super.legalInterfaceFieldFlags().set(FabILFlags.IMMUTABLE);
   }
+
+  @Override
+  public StageInstance stageInstance(Type origType) {
+    return new StageInstance_c(this, origType);
+  }
 }
