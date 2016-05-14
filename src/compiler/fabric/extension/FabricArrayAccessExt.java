@@ -96,6 +96,29 @@ public class FabricArrayAccessExt extends JifArrayAccessExt {
         ts.join(ts.meet(Xe.CL(), ts.meet(A.conflictLabel(), A.beginConflictBound())),
                 ts.pairLabel(pos, ts.bottomConfPolicy(pos), ts.topIntegPolicy(pos))));
 
+    // Squirrel away the dynamic staging check and update the path map and what
+    // not.
+    if (!lc.context().labelEnv().leq(conflictPC.label(), conflictL.label())) {
+      FabricNodeFactory nf = (FabricNodeFactory) lc.nodeFactory();
+
+      // Make the staging dynamic check.
+      Expr stageCheck = nf.Unary(pos, Unary.NOT,
+          nf.Binary(pos,
+            nf.LabelExpr(pos, conflictPC.label()).type(ts.Label()),
+            Binary.LE,
+            nf.LabelExpr(pos, conflictL.label()).type(ts.Label())).type(ts.Boolean())).type(ts.Boolean());
+
+      // Label check it.
+      stageCheck = (Expr) lc.labelCheck(stageCheck);
+      FabricArrayAccessDel accDel = (FabricArrayAccessDel) acc.del();
+
+      // Squirrel it away for rewrite.
+      accDel.setStageCheck(stageCheck);
+
+      // Update the path map.
+      Xe = Xe.join(getPathMap(stageCheck));
+    }
+
     // Check pc ≤ CL(op array access)
     lc.constrain(pc, LabelConstraint.LEQ, conflictL, A.labelEnv(), pos,
         new ConstraintMessage() {
@@ -115,17 +138,6 @@ public class FabricArrayAccessExt extends JifArrayAccessExt {
               " can't be staged at the current point in a transaction.";
           }
     });
-
-    if (!lc.context().labelEnv().leq(conflictL.label(), conflictPC.label())) {
-      FabricNodeFactory nf = (FabricNodeFactory) lc.nodeFactory();
-      // Generate the dynamic check, if !(conflictPC ≤ conflictL) then we need
-      // to stage (since the stage label's about to change).
-      acc = acc.array(nf.Call(pos, acc.array(), nf.Id(pos, "stageTxn"),
-                nf.Unary(pos, Unary.NOT,
-                  nf.Binary(pos, nf.LabelExpr(pos, conflictPC.label()),
-                                  Binary.LE,
-                                 nf.LabelExpr(pos, conflictL.label())))));
-    }
     
     // Update the CL
     Xe = Xe.CL(ts.meet(conflictL.label(), conflictPC.label()));

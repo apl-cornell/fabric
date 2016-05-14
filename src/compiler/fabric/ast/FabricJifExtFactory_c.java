@@ -22,6 +22,7 @@ import fabric.extension.StoreJifExt_c;
 import fabric.extension.StoreToFabilExt_c;
 import fabric.extension.WorkerJifExt_c;
 import fabric.translate.AbortToFabilExt_c;
+import fabric.translate.ArrayAccessToFabilExt_c;
 import fabric.translate.AtomicToFabilExt_c;
 import fabric.translate.BinaryToFabilExt_c;
 import fabric.translate.CallToFabilExt_c;
@@ -54,7 +55,6 @@ import jif.extension.JifLabelExprExt;
 import jif.extension.JifPrincipalExprExt;
 import jif.extension.JifSourceFileExt;
 import jif.translate.ArrayAccessAssignToJavaExt_c;
-import jif.translate.ArrayAccessToJavaExt_c;
 import jif.translate.BlockToJavaExt_c;
 import jif.translate.FieldAssignToJavaExt_c;
 
@@ -116,7 +116,7 @@ FabricExtFactory {
 
   @Override
   protected Ext extArrayAccessImpl() {
-    return new FabricArrayAccessExt(new ArrayAccessToJavaExt_c());
+    return new FabricArrayAccessExt(new ArrayAccessToFabilExt_c());
   }
 
   @Override

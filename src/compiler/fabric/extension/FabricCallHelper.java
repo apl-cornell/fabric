@@ -237,6 +237,8 @@ public class FabricCallHelper extends CallHelper {
                    fts.pairLabel(position, fts.bottomConfPolicy(position),
                                            fts.topIntegPolicy(position))));
 
+      // TODO: Add the dynamic staging, if necessary.
+
       lc.constrain(beginConflictNL, LabelConstraint.LEQ, conflictNL,
           A.labelEnv(), position, new ConstraintMessage() {
         @Override
@@ -246,8 +248,6 @@ public class FabricCallHelper extends CallHelper {
                + "accessed during the method.";
         }
       });
-
-      // TODO: Add staging in if needed.
 
       // Add in the conflict labels of the call's accesses to the CL path.
       Label newCL = fts.join(

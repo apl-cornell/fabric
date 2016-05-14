@@ -2,6 +2,7 @@ package fabric.ast;
 
 import codebases.ast.CodebaseImportDel_c;
 
+import fabric.extension.FabricArrayAccessDel;
 import fabric.extension.FabricCallDel;
 import fabric.extension.FabricFieldDeclDel;
 import fabric.extension.FabricFieldDel;
@@ -277,6 +278,11 @@ FabricDelFactory {
   @Override
   protected JLDel delFieldImpl() {
     return new FabricFieldDel();
+  }
+
+  @Override
+  protected JLDel delArrayAccessImpl() {
+    return new FabricArrayAccessDel();
   }
 
 }

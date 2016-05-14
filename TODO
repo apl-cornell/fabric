@@ -1,6 +1,5 @@
 * Are static non-final fields something we'll need to support?
 * More extensive testing (compiler and runtime).
-* Array accesses (staging before them)
 * Inserting staging checks before method calls (if needed)
 * Syntax for writersToReaders?  Alternatively, change method begin and end
   conflict labels to be treated as converted to writersToReaders form by the
