@@ -1,8 +1,11 @@
 package fabric.types;
 
 import jif.types.ConstArrayType_c;
+import jif.types.JifFieldInstance;
+import jif.types.JifTypeSystem;
 import jif.types.label.ConfPolicy;
 import jif.types.label.Label;
+
 import polyglot.types.FieldInstance;
 import polyglot.types.SemanticException;
 import polyglot.types.Type;
@@ -50,18 +53,34 @@ FabricArrayType {
   @Override
   protected void init() {
     boolean fixField = fields == null;
+    JifTypeSystem ts = (JifTypeSystem) this.typeSystem();
 
     super.init();
 
     if (fixField) {
       // Make the length field non-final.
-      FieldInstance lengthField = lengthField();
-      lengthField = lengthField.flags(lengthField.flags().clearFinal());
+      JifFieldInstance lengthField = (JifFieldInstance) lengthField();
+      lengthField = (JifFieldInstance) lengthField.flags(lengthField.flags().clearFinal());
+      // Make the length field label the same as the label of the entries (since
+      // the length is non-final).
+      lengthField.setLabel(ts.labelOfType(base()));
       fields.set(0, lengthField);
     }
   }
 
   protected ConfPolicy defaultAccessPolicy() {
     return ts().confProjection(updateLabel());
+  }
+
+  @Override
+  protected FieldInstance createLengthFieldInstance() {
+      FieldInstance fi =
+              ts.fieldInstance(position(),
+                               this,
+                               ts.Public().Final(),
+                               ts.Int(),
+                               "length");
+      fi.setNotConstant();
+      return fi;
   }
 }
