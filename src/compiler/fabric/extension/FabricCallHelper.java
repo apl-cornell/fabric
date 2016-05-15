@@ -257,7 +257,7 @@ public class FabricCallHelper extends CallHelper {
 
         // Label check it.
         stageCheck = (Expr) lc.labelCheck(stageCheck);
-        FabricCallDel feDel = (FabricCallDel) call.del();
+        FabricStagingDel feDel = (FabricStagingDel) call.del();
 
         // Squirrel it away for rewrite.
         feDel.setStageCheck(stageCheck);

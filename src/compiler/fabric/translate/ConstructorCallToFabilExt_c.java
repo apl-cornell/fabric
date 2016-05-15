@@ -1,5 +1,6 @@
 package fabric.translate;
 
+import fabric.extension.FabricStagingDel;
 import fabric.visit.FabricToFabilRewriter;
 
 import jif.translate.ConstructorCallToJavaExt_c;
@@ -14,13 +15,13 @@ public class ConstructorCallToFabilExt_c extends ConstructorCallToJavaExt_c {
   @Override
   public Node toJava(JifToJavaRewriter rw) throws SemanticException {
     FabricToFabilRewriter frw = (FabricToFabilRewriter) rw;
-    /*
-    // Note if we've called another constructor.
-    ConstructorCall n = (ConstructorCall) node();
-    if (n.kind().equals(ConstructorCall.THIS)) {
-      frw.setAnotherConstructorCalled();
+    ConstructorCall orig = (ConstructorCall) node();
+    ConstructorCall call = (ConstructorCall) super.toJava(frw);
+    FabricStagingDel fsd = (FabricStagingDel) orig.del();
+    // Now update call with staging operation if needed
+    if (fsd.stageCheck() != null) {
+      // TODO: Staging!
     }
-    */
-    return super.toJava(frw);
+    return call;
   }
 }

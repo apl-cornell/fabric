@@ -1,10 +1,11 @@
 package fabric.extension;
 
-import jif.extension.JifFieldDel;
+import jif.extension.JifConstructorCallDel;
 
 import polyglot.ast.Expr;
 
-public class FabricFieldDel extends JifFieldDel implements FabricStagingDel {
+public class FabricConstructorCallDel extends JifConstructorCallDel implements FabricStagingDel {
+
   /**
    * Squirreled away the staging check expression to be produced when rewriting
    * to FabIL.
@@ -20,4 +21,5 @@ public class FabricFieldDel extends JifFieldDel implements FabricStagingDel {
   public void setStageCheck(Expr stageCheck) {
     this.stageCheck = stageCheck;
   }
+
 }

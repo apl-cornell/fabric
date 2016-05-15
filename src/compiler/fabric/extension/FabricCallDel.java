@@ -16,7 +16,7 @@ import polyglot.ast.Call;
 import polyglot.ast.Expr;
 import polyglot.ast.Receiver;
 
-public class FabricCallDel extends JifCallDel {
+public class FabricCallDel extends JifCallDel implements FabricStagingDel {
   @Override
   public boolean targetIsNeverNull() {
     Receiver r = ((Call) node()).target();
@@ -65,10 +65,12 @@ public class FabricCallDel extends JifCallDel {
    */
   protected Expr stageCheck;
 
+  @Override
   public Expr stageCheck() {
     return stageCheck;
   }
 
+  @Override
   public void setStageCheck(Expr stageCheck) {
     this.stageCheck = stageCheck;
   }

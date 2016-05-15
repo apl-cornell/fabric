@@ -19,7 +19,7 @@ import polyglot.visit.TypeChecker;
 import fabric.ast.FabricUtil;
 import fabric.types.FabricTypeSystem;
 
-public class FabricNewDel extends JifNewDel implements NewOps {
+public class FabricNewDel extends JifNewDel implements NewOps, FabricStagingDel {
   @Override
   public Node visitChildren(NodeVisitor v) {
     Node n = super.visitChildren(v);
@@ -110,5 +110,21 @@ public class FabricNewDel extends JifNewDel implements NewOps {
       return FabricUtil.updateFabricExt(n, ext);
     }
     return n;
+  }
+
+  /**
+   * Squirreled away the staging check expression to be produced when rewriting
+   * to FabIL.
+   */
+  protected Expr stageCheck;
+
+  @Override
+  public Expr stageCheck() {
+    return stageCheck;
+  }
+
+  @Override
+  public void setStageCheck(Expr stageCheck) {
+    this.stageCheck = stageCheck;
   }
 }

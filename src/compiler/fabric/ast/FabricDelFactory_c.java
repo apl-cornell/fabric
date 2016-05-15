@@ -4,6 +4,7 @@ import codebases.ast.CodebaseImportDel_c;
 
 import fabric.extension.FabricArrayAccessDel;
 import fabric.extension.FabricCallDel;
+import fabric.extension.FabricConstructorCallDel;
 import fabric.extension.FabricFieldDeclDel;
 import fabric.extension.FabricFieldDel;
 import fabric.extension.FabricNewDel;
@@ -248,6 +249,11 @@ FabricDelFactory {
   @Override
   public JLDel delPrincipalExpr() {
     return new FabricPrincipalExprDel();
+  }
+
+  @Override
+  protected JLDel delConstructorCallImpl() {
+    return new FabricConstructorCallDel();
   }
 
   @Override
