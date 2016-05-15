@@ -4,11 +4,18 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
+import fabric.ast.FabricMethodDecl;
+import fabric.ast.FabricNodeFactory;
+import fabric.extension.ClassBodyJifExt_c;
+import fabric.extension.MethodDeclJifExt;
+import fabric.types.FabricTypeSystem;
+
 import jif.ast.JifMethodDecl;
 import jif.ast.JifUtil;
 import jif.ast.LabelComponentNode;
 import jif.ast.PolicyNode;
 import jif.ast.PrincipalNode;
+
 import polyglot.ast.ClassDecl;
 import polyglot.ast.ClassMember;
 import polyglot.ast.Expr;
@@ -23,10 +30,6 @@ import polyglot.types.Flags;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
 import polyglot.visit.NodeVisitor;
-import fabric.ast.FabricNodeFactory;
-import fabric.extension.ClassBodyJifExt_c;
-import fabric.extension.MethodDeclJifExt;
-import fabric.types.FabricTypeSystem;
 
 public class RemoteCallWrapperAdder extends NodeVisitor {
   protected Job job;
@@ -57,8 +60,8 @@ public class RemoteCallWrapperAdder extends NodeVisitor {
       List<ClassMember> remote_wrappers = ext.remoteWrappers();
 
       for (ClassMember cm : cd.body().members()) {
-        if (cm instanceof JifMethodDecl) {
-          JifMethodDecl md = (JifMethodDecl) cm;
+        if (cm instanceof FabricMethodDecl) {
+          FabricMethodDecl md = (FabricMethodDecl) cm;
           if (!md.flags().isPublic() || md.flags().isStatic()) continue;
           // Also skip abstract method.
           if (md.body() == null) continue;
@@ -88,13 +91,15 @@ public class RemoteCallWrapperAdder extends NodeVisitor {
 
           ClassMember newCM =
               qq.parseMember(cm_fmt, md.returnType(), formals, stmts);
-          if (newCM instanceof JifMethodDecl) {
-            JifMethodDecl rmd = (JifMethodDecl) newCM;
-            rmd = (JifMethodDecl) rmd.flags(md.flags());
-            rmd = (JifMethodDecl) rmd.throwTypes(md.throwTypes());
-            rmd = rmd.startLabel(md.startLabel());
-            rmd = rmd.returnLabel(md.returnLabel());
-            rmd = rmd.constraints(md.constraints());
+          if (newCM instanceof FabricMethodDecl) {
+            FabricMethodDecl rmd = (FabricMethodDecl) newCM;
+            rmd = (FabricMethodDecl) rmd.flags(md.flags());
+            rmd = (FabricMethodDecl) rmd.throwTypes(md.throwTypes());
+            rmd = (FabricMethodDecl) rmd.startLabel(md.startLabel());
+            rmd = (FabricMethodDecl) rmd.returnLabel(md.returnLabel());
+            rmd = (FabricMethodDecl) rmd.constraints(md.constraints());
+            rmd = rmd.beginConflictLabel(md.beginConflictLabel());
+            rmd = rmd.endConflictLabel(md.endConflictLabel());
 
             MethodDeclJifExt rmd_ext = (MethodDeclJifExt) JifUtil.jifExt(rmd);
             rmd_ext.setRemote();
