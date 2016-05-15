@@ -36,7 +36,7 @@ public class FabricPathMap extends PathMap {
     // Default to {⊤→;⊥←} for CL since we'll be performing meets.
     //
     // TODO: Should I instead use NoAccesses?
-    if (!map.containsKey(FabricPath.CL)) return ts.topLabel();
+    if (!map.containsKey(FabricPath.CL)) return ts.topLabel(Position.COMPILER_GENERATED);
     return get(FabricPath.CL);
   }
 
@@ -94,7 +94,7 @@ public class FabricPathMap extends PathMap {
   public Label get(Path p) {
     // Make sure we don't return NotTaken for CL.
     if (p.equals(FabricPath.CL) && !map.containsKey(p))
-      return ts.topLabel();
+      return ts.topLabel(Position.COMPILER_GENERATED);
     return super.get(p);
   }
 }
