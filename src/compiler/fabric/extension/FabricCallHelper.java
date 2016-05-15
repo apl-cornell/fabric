@@ -2,6 +2,7 @@ package fabric.extension;
 
 import java.util.List;
 
+import fabric.ast.FabricNodeFactory;
 import fabric.types.FabricContext;
 import fabric.types.FabricMethodInstance;
 import fabric.types.FabricPathMap;
@@ -9,6 +10,7 @@ import fabric.types.FabricProcedureInstance;
 import fabric.types.FabricTypeSystem;
 import fabric.types.NoAccesses;
 
+import jif.ast.JifExt_c;
 import jif.extension.CallHelper;
 import jif.types.ConstraintMessage;
 import jif.types.JifContext;
@@ -21,8 +23,11 @@ import jif.types.label.Label;
 import jif.types.principal.Principal;
 import jif.visit.LabelChecker;
 
+import polyglot.ast.Binary;
 import polyglot.ast.Expr;
+import polyglot.ast.ProcedureCall;
 import polyglot.ast.Receiver;
+import polyglot.ast.Unary;
 import polyglot.types.ReferenceType;
 import polyglot.types.SemanticException;
 import polyglot.types.Type;
@@ -213,9 +218,10 @@ public class FabricCallHelper extends CallHelper {
    * Extended to check begin and end conflict labels of the called method.
    */
   @Override
-  public void checkCall(LabelChecker lc, List<Type> throwTypes,
-      boolean targetMayBeNull) throws SemanticException {
-    super.checkCall(lc, throwTypes, targetMayBeNull);
+  public <N extends ProcedureCall> N checkCall(LabelChecker lc,
+      List<Type> throwTypes, N call, boolean targetMayBeNull) throws
+  SemanticException {
+    call = super.checkCall(lc, throwTypes, call, targetMayBeNull);
     FabricTypeSystem fts = (FabricTypeSystem) lc.context().typeSystem();
     Label beginConflict = resolveBeginConflict(lc);
     Label endConflict = resolveEndConflict(lc);
@@ -237,7 +243,28 @@ public class FabricCallHelper extends CallHelper {
                    fts.pairLabel(position, fts.bottomConfPolicy(position),
                                            fts.topIntegPolicy(position))));
 
-      // TODO: Add the dynamic staging, if necessary.
+      // Squirrel away the dynamic staging check and update the path map and what
+      // not.
+      if (!lc.context().labelEnv().leq(conflictNL.label(), beginConflictNL.label())) {
+        FabricNodeFactory nf = (FabricNodeFactory) lc.nodeFactory();
+
+        // Make the staging dynamic check.
+        Expr stageCheck = nf.Unary(position, Unary.NOT,
+            nf.Binary(position,
+              nf.LabelExpr(position, conflictNL.label()).type(fts.Label()),
+              Binary.LE,
+              nf.LabelExpr(position, beginConflictNL.label()).type(fts.Label())).type(fts.Boolean())).type(fts.Boolean());
+
+        // Label check it.
+        stageCheck = (Expr) lc.labelCheck(stageCheck);
+        FabricCallDel feDel = (FabricCallDel) call.del();
+
+        // Squirrel it away for rewrite.
+        feDel.setStageCheck(stageCheck);
+
+        // Update the path map.
+        X = X.join(JifExt_c.getPathMap(stageCheck));
+      }
 
       lc.constrain(beginConflictNL, LabelConstraint.LEQ, conflictNL,
           A.labelEnv(), position, new ConstraintMessage() {
@@ -273,6 +300,8 @@ public class FabricCallHelper extends CallHelper {
         }
       });
     }
+    
+    return call;
   }
 
   /**

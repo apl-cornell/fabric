@@ -4,7 +4,6 @@ import fabric.ast.FabricNodeFactory;
 import fabric.types.FabricContext;
 import fabric.types.FabricPathMap;
 import fabric.types.FabricTypeSystem;
-import fabric.visit.StageTxnMethodAdder;
 
 import jif.ast.JifExt;
 import jif.extension.JifExprExt;
