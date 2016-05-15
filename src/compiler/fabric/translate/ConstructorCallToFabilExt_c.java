@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import fabil.ast.FabILCall;
+import fabil.ast.FabILNodeFactory;
 
 import fabric.extension.FabricStagingDel;
 import fabric.visit.FabricToFabilRewriter;
@@ -24,6 +25,7 @@ public class ConstructorCallToFabilExt_c extends ConstructorCallToJavaExt_c {
     ConstructorCall orig = (ConstructorCall) node();
     ConstructorCall call = (ConstructorCall) super.toJava(frw);
     FabricStagingDel fsd = (FabricStagingDel) orig.del();
+    FabILNodeFactory nf = (FabILNodeFactory) frw.java_nf();
     // Now update call with staging operation if needed
     if (fsd.stageCheck() != null) {
       // Add in staging.
@@ -32,14 +34,16 @@ public class ConstructorCallToFabilExt_c extends ConstructorCallToJavaExt_c {
         int lastIdx = call.arguments().size() - 1;
         List<Expr> args = new ArrayList<>(call.arguments());
         args.set(lastIdx,
-            rw.qq().parseExpr("stage(%E, %E)",
+            nf.StageCall(call.position(),
               args.get(lastIdx),
               rw.visitEdge(call, fsd.stageCheck())));
         call = (ConstructorCall) call.arguments(args);
       } else {
         // Use a ternary operator.
-        return rw.qq().parseExpr("stage(true, %E) ? %E : %E",
-              rw.visitEdge(call, fsd.stageCheck()),
+        return rw.qq().parseExpr("%E ? %E : %E",
+              nf.StageCall(call.position(),
+                nf.BooleanLit(call.position(), true),
+                rw.visitEdge(call, fsd.stageCheck())),
               call,
               call);
       }

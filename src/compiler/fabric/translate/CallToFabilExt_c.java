@@ -3,15 +3,18 @@ package fabric.translate;
 import java.util.ArrayList;
 import java.util.List;
 
+import fabil.ast.FabILCall;
+import fabil.ast.FabILNodeFactory;
+
+import fabric.ast.FabricCall;
+import fabric.extension.FabricStagingDel;
+
 import jif.translate.CallToJavaExt_c;
 import jif.translate.JifToJavaRewriter;
+
 import polyglot.ast.Expr;
 import polyglot.types.SemanticException;
 import polyglot.util.Position;
-import fabil.ast.FabILCall;
-import fabil.ast.FabILNodeFactory;
-import fabric.ast.FabricCall;
-import fabric.extension.FabricStagingDel;
 
 public class CallToFabilExt_c extends CallToJavaExt_c {
   @Override
@@ -49,6 +52,7 @@ public class CallToFabilExt_c extends CallToJavaExt_c {
       }
 
       FabricStagingDel fsd = (FabricStagingDel) c.del();
+      FabILNodeFactory fnf = (FabILNodeFactory) rw.java_nf();
       if (fsd.stageCheck() != null) {
         // Add in staging.
         if (result.arguments().size() > 0) {
@@ -56,19 +60,19 @@ public class CallToFabilExt_c extends CallToJavaExt_c {
           int lastIdx = result.arguments().size() - 1;
           List<Expr> args = new ArrayList<>(result.arguments());
           args.set(lastIdx,
-              rw.qq().parseExpr("stage(%E, %E)",
+              fnf.StageCall(result.position(),
                 args.get(lastIdx),
                 rw.visitEdge(c, fsd.stageCheck())));
           result = (FabILCall) result.arguments(args);
         } else if (result.target() instanceof Expr) {
           // Wrap the target
-          result = (FabILCall) result.target(rw.qq().parseExpr("stage(%E, %E)",
-                result.target(),
+          result = (FabILCall) result.target(fnf.StageCall(result.position(),
+                (Expr) result.target(),
                 rw.visitEdge(c, fsd.stageCheck())));
         } else {
           // Use a ternary operator.
-          return rw.qq().parseExpr("stage(true, %E) ? %E : %E",
-                rw.visitEdge(c, fsd.stageCheck()),
+          return rw.qq().parseExpr("%E ? %E : %E",
+                fnf.StageCall(result.position(), fnf.BooleanLit(result.position(), true), rw.visitEdge(c, fsd.stageCheck())),
                 result,
                 result);
         }
