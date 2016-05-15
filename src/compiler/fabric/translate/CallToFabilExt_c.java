@@ -11,12 +11,16 @@ import polyglot.util.Position;
 import fabil.ast.FabILCall;
 import fabil.ast.FabILNodeFactory;
 import fabric.ast.FabricCall;
+import fabric.extension.FabricStagingDel;
 
 public class CallToFabilExt_c extends CallToJavaExt_c {
   @Override
   public Expr exprToJava(JifToJavaRewriter rw) throws SemanticException {
     FabricCall c = (FabricCall) node();
     Expr e = super.exprToJava(rw);
+
+    // AFAIK the only reason the result isn't a call is that it was a call to
+    // clone.  I don't think we support that in Fabric?
     if (e instanceof FabILCall) {
       FabILNodeFactory nf = (FabILNodeFactory) rw.java_nf();
 
@@ -42,6 +46,32 @@ public class CallToFabilExt_c extends CallToJavaExt_c {
         // result.arguments().size()));
         args.addAll(result.arguments());
         result = (FabILCall) result.arguments(args);
+      }
+
+      FabricStagingDel fsd = (FabricStagingDel) c.del();
+      if (fsd.stageCheck() != null) {
+        // Add in staging.
+        if (result.arguments().size() > 0) {
+          // Wrap the last argument
+          int lastIdx = result.arguments().size() - 1;
+          List<Expr> args = new ArrayList<>(result.arguments());
+          args.set(lastIdx,
+              rw.qq().parseExpr("stage(%E, %E)",
+                args.get(lastIdx),
+                rw.visitEdge(c, fsd.stageCheck())));
+          result = (FabILCall) result.arguments(args);
+        } else if (result.target() instanceof Expr) {
+          // Wrap the target
+          result = (FabILCall) result.target(rw.qq().parseExpr("stage(%E, %E)",
+                result.target(),
+                rw.visitEdge(c, fsd.stageCheck())));
+        } else {
+          // Use a ternary operator.
+          return rw.qq().parseExpr("stage(true, %E) ? %E : %E",
+                rw.visitEdge(c, fsd.stageCheck()),
+                result,
+                result);
+        }
       }
 
       return result;

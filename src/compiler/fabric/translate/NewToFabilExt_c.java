@@ -3,23 +3,27 @@ package fabric.translate;
 import java.util.ArrayList;
 import java.util.List;
 
+import fabil.ast.FabILNodeFactory;
+
+import fabric.ast.FabricUtil;
+import fabric.extension.FabricStagingDel;
+import fabric.extension.LocatedExt_c;
+import fabric.extension.NewExt_c;
+import fabric.types.FabricClassType;
+import fabric.types.FabricTypeSystem;
+import fabric.visit.FabricToFabilRewriter;
+
 import jif.translate.JifToJavaRewriter;
 import jif.translate.NewToJavaExt_c;
 import jif.types.JifPolyType;
 import jif.types.JifSubst;
 import jif.types.JifSubstType;
 import jif.types.ParamInstance;
+
 import polyglot.ast.Expr;
 import polyglot.ast.New;
 import polyglot.types.SemanticException;
 import polyglot.visit.NodeVisitor;
-import fabil.ast.FabILNodeFactory;
-import fabric.ast.FabricUtil;
-import fabric.extension.LocatedExt_c;
-import fabric.extension.NewExt_c;
-import fabric.types.FabricClassType;
-import fabric.types.FabricTypeSystem;
-import fabric.visit.FabricToFabilRewriter;
 
 public class NewToFabilExt_c extends NewToJavaExt_c {
 
@@ -45,6 +49,7 @@ public class NewToFabilExt_c extends NewToJavaExt_c {
   public Expr exprToJava(JifToJavaRewriter rw) throws SemanticException {
     New n = (New) node();
     FabricClassType ct = (FabricClassType) objectType.toClass();
+    FabricStagingDel fsd = (FabricStagingDel) n.del();
 
     FabricTypeSystem ts = (FabricTypeSystem) rw.jif_ts();
     FabILNodeFactory nf = (FabILNodeFactory) rw.nodeFactory();
@@ -70,6 +75,27 @@ public class NewToFabilExt_c extends NewToJavaExt_c {
       n =
           nf.New(n.position(), n.qualifier(), n.objectType(), loc,
               n.arguments(), n.body());
+
+      // Staging
+      if (fsd.stageCheck() != null) {
+        if (n.arguments().size() > 0) {
+          // Wrap last argument
+          int lastIdx = n.arguments().size() - 1;
+          List<Expr> args = new ArrayList<>(n.arguments());
+          args.set(lastIdx,
+              rw.qq().parseExpr("stage(%E, %E)",
+                args.get(lastIdx),
+                rw.visitEdge(n, fsd.stageCheck())));
+          n = n.arguments(args);
+          return n;
+        } else {
+          // Use a ternary operator.
+          return rw.qq().parseExpr("stage(true, %E) ? %E : %E",
+                rw.visitEdge(n, fsd.stageCheck()),
+                n,
+                n);
+        }
+      }
       return n;
     }
 
@@ -91,6 +117,29 @@ public class NewToFabilExt_c extends NewToJavaExt_c {
       String name = ClassDeclToFabilExt_c.jifConstructorTranslatedName(ct);
       New newExpr =
           nf.New(n.position(), n.qualifier(), n.objectType(), loc, paramargs);
+
+      // Staging
+      if (fsd.stageCheck() != null) {
+        if (n.arguments().size() > 0) {
+          // Wrap last argument
+          int lastIdx = n.arguments().size() - 1;
+          List<Expr> args = new ArrayList<>(n.arguments());
+          args.set(lastIdx,
+              rw.qq().parseExpr("stage(%E, %E)",
+                args.get(lastIdx),
+                rw.visitEdge(n, fsd.stageCheck())));
+          n = n.arguments(args);
+          return rw.qq().parseExpr("(%T) %E.%s(%LE)", n.objectType(), newExpr,
+              name, n.arguments());
+        } else {
+          // Use a ternary operator.
+          return rw.qq().parseExpr("stage(true, %E) ? (%T) %E.%s(%LE) : (%T) %E.%s(%LE)",
+                rw.visitEdge(n, fsd.stageCheck()),
+                n.objectType(), newExpr, name, n.arguments(),
+                n.objectType(), newExpr, name, n.arguments());
+        }
+      }
+
       return rw.qq().parseExpr("(%T) %E.%s(%LE)", n.objectType(), newExpr,
           name, n.arguments());
     } else {
@@ -100,6 +149,27 @@ public class NewToFabilExt_c extends NewToJavaExt_c {
           new ArrayList<>(paramargs.size() + n.arguments().size());
       allArgs.addAll(paramargs);
       allArgs.addAll(n.arguments());
+
+      // Staging
+      if (fsd.stageCheck() != null) {
+        if (allArgs.size() > 0) {
+          // Wrap last argument
+          int lastIdx = allArgs.size() - 1;
+          List<Expr> args = new ArrayList<>(allArgs);
+          args.set(lastIdx,
+              rw.qq().parseExpr("stage(%E, %E)",
+                args.get(lastIdx),
+                rw.visitEdge(n, fsd.stageCheck())));
+          return rw.qq().parseExpr("new %T(%LE)", n.objectType(), allArgs);
+        } else {
+          // Use a ternary operator.
+          return rw.qq().parseExpr("stage(true, %E) ? new %T() : new %T()",
+                rw.visitEdge(n, fsd.stageCheck()),
+                n.objectType(),
+                n.objectType());
+        }
+      }
+
       return rw.qq().parseExpr("new %T(%LE)", n.objectType(), allArgs);
     }
   }
