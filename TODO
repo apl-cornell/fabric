@@ -6,3 +6,4 @@
 * Incorporate object splitting for more truth-y/safe locking behavior.
 * Does the runtime system gracefully handle stage commands out-of-transaction?
 * Return statements
+* Branching (If, While, For, Switch)
