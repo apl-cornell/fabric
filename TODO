@@ -1,8 +1,8 @@
 * Are static non-final fields something we'll need to support?
 * More extensive testing (compiler and runtime).
-* Inserting staging checks before method calls (if needed)
 * Syntax for writersToReaders?  Alternatively, change method begin and end
   conflict labels to be treated as converted to writersToReaders form by the
   compiler...
 * Incorporate object splitting for more truth-y/safe locking behavior.
 * Does the runtime system gracefully handle stage commands out-of-transaction?
+* Return statements
