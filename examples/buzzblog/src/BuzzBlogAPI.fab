@@ -8,7 +8,7 @@ postWrite <= {postRead; _<-}
   @{postRead}
 
   // Returns the string view of the post with the given id at the given store
-  public String{postRead; postWrite ; postId ; store} viewPost{store}(
+  public String{postRead; postWrite ; postId ; store} viewPost{store}@{W2R({postRead; postWrite})}(
       String postId, 
       final Store store) 
   where
@@ -33,7 +33,7 @@ postWrite <= {postRead; _<-}
 
   // updates a post given some new content, returns a message about how well 
   //  that went.
-  public String{postRead; postWrite} updatePost{store}(
+  public String{postRead; postWrite} updatePost{store}@{W2R({postRead;postWrite})}(
       final String postId, 
       final Store store, 
       final String{postRead; postWrite} newContent) 
@@ -62,7 +62,7 @@ postWrite <= {postRead; _<-}
   // If there is a post with the given id, it returns that post.
   // Otherwise, it makes a new one with the given content.
   // returns a message that's hopefully helpful.
-  public String{postRead; postWrite} viewOrCreatePost{store}(
+  public String{postRead; postWrite} viewOrCreatePost{store}@{W2R({postRead;postWrite})}(
       String postId, 
       final Store store, 
       String{postRead; postWrite} newContent) 

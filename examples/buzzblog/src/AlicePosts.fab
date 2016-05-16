@@ -2,7 +2,7 @@ import fabric.runtime.Runtime;
 
 class AlicePosts {
 
-  public static void main{p<-}(principal{p<-} p, String[] args):{p->;p<-}
+  public static void main{p<-}@{*->}(principal{p<-} p, String[] args):{p->;p<-}@{_->}
   {
     atomic {
       // Get a reference to the store called "store".
