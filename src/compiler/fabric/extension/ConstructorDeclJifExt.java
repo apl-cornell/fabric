@@ -67,7 +67,7 @@ public class ConstructorDeclJifExt extends JifConstructorDeclExt implements Ext 
     A.setBeginConflictBound(fci.beginConflictLabel());
     //A.setConflictLabel(fci.beginConflictLabel());
     A.setEndConflictBound(fci.endConflictLabel());
-    if (!fci.isDefaultBeginConflict() && !fci.isDefaultEndConflict()) {
+    if (!fci.isDefaultBeginConflict() || !fci.isDefaultEndConflict()) {
       FabricTypeSystem ts = (FabricTypeSystem) lc.jifTypeSystem();
       // Add assertion that the caller_pc is upper bounded by the conflict label
       // bounds.
