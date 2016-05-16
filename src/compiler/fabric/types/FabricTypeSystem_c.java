@@ -1205,8 +1205,8 @@ public class FabricTypeSystem_c extends JifTypeSystem_c
     // XXX: I really don't know if this is the right values to be using for the
     // begin access and end confidentiality policies.
     return fabricConstructorInstance(pos, container, flags, unknownLabel(pos),
-        false, unknownLabel(pos), false, unknownLabel(pos), false,
-        unknownLabel(pos), false, formalTypes, Collections.<Label> emptyList(),
+        false, noAccesses, true, unknownLabel(pos), false,
+        noAccesses, true, formalTypes, Collections.<Label> emptyList(),
         excTypes, Collections.<Assertion> emptyList());
   }
 
@@ -1235,8 +1235,8 @@ public class FabricTypeSystem_c extends JifTypeSystem_c
       List<? extends Type> excTypes, List<Assertion> constraints) {
     // TODO: Not sure if I should put defaults here or unknownLabel calls.
     return fabricConstructorInstance(pos, container, flags, startLabel,
-        isDefaultStartLabel, unknownLabel(pos), false, returnLabel,
-        isDefaultReturnLabel, unknownLabel(pos), false, formalTypes,
+        isDefaultStartLabel, noAccesses, true, returnLabel,
+        isDefaultReturnLabel, noAccesses, true, formalTypes,
         formalArgLabels, excTypes, constraints);
   }
 
@@ -1247,7 +1247,7 @@ public class FabricTypeSystem_c extends JifTypeSystem_c
     // TODO: Not sure if I should put defaults here or unknownLabel calls.
     assert_(container);
     return fabricConstructorInstance(pos, container, Public(), topLabel(), true,
-        topLabel(), true, bottomLabel(), true, bottomLabel(), true,
+        noAccesses, true, bottomLabel(), true, noAccesses, true,
         Collections.<Type> emptyList(), Collections.<Label> emptyList(),
         Collections.<Type> emptyList(), Collections.<Assertion> emptyList());
   }
@@ -1278,8 +1278,8 @@ public class FabricTypeSystem_c extends JifTypeSystem_c
       List<? extends Type> excTypes, List<Assertion> constraints) {
     // TODO: Not sure if I should put defaults here or unknownLabel calls.
     return fabricMethodInstance(pos, container, flags, returnType, name,
-        startLabel, isDefaultStartLabel, unknownLabel(pos), false, formalTypes,
-        formalArgLabels, endLabel, isDefaultEndLabel, unknownLabel(pos), false,
+        startLabel, isDefaultStartLabel, noAccesses, true, formalTypes,
+        formalArgLabels, endLabel, isDefaultEndLabel, noAccesses, true,
         excTypes, constraints);
   }
 
@@ -1289,9 +1289,9 @@ public class FabricTypeSystem_c extends JifTypeSystem_c
       List<? extends Type> formalTypes, List<? extends Type> excTypes) {
     // TODO: Not sure if I should put defaults here or unknownLabel calls.
     return fabricMethodInstance(pos, container, flags, returnType, name,
-        unknownLabel(pos), false, unknownLabel(pos), false, formalTypes,
+        unknownLabel(pos), false, noAccesses, true, formalTypes,
         Collections.<Label> emptyList(), unknownLabel(pos), false,
-        unknownLabel(pos), false, excTypes,
+        noAccesses, true, excTypes,
         Collections.<Assertion> emptyList());
   }
 
@@ -1309,20 +1309,19 @@ public class FabricTypeSystem_c extends JifTypeSystem_c
   @Override
   public Label readConflict(Label l) {
     // CL(read l) = WritersToReaders(l)
-    Label bottomConflictLabel = pairLabel(l.position(),
-        bottomConfPolicy(l.position()), topIntegPolicy(l.position()));
-    return join(writersToReadersLabel(l.position(), l), bottomConflictLabel);
+    return pairLabel(l.position(),
+        confProjection(writersToReadersLabel(l.position(), l)),
+        topIntegPolicy(l.position()));
   }
 
   @Override
   public Label writeConflict(Label l) {
     // CL(write l) = WritersToReaders(l) meet C(l)
-    Label bottomConflictLabel = pairLabel(l.position(),
-        bottomConfPolicy(l.position()), topIntegPolicy(l.position()));
     Label conf = pairLabel(l.position(), confProjection(l),
         topIntegPolicy(l.position()));
-    return join(meet(conf, writersToReadersLabel(l.position(), l)),
-        bottomConflictLabel);
+    return pairLabel(l.position(),
+        confProjection(meet(writersToReadersLabel(l.position(), l), conf)),
+        topIntegPolicy(l.position()));
   }
 
   @Override

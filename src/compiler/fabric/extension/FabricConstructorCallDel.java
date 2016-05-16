@@ -1,25 +1,30 @@
 package fabric.extension;
 
 import jif.extension.JifConstructorCallDel;
-
-import polyglot.ast.Expr;
+import jif.types.label.Label;
 
 public class FabricConstructorCallDel extends JifConstructorCallDel implements FabricStagingDel {
 
   /**
-   * Squirreled away the staging check expression to be produced when rewriting
-   * to FabIL.
+   * Squirreled away the stage labels to check in rewritten code.
    */
-  protected Expr stageCheck;
+  protected Label startStage;
+  protected Label endStage;
 
   @Override
-  public Expr stageCheck() {
-    return stageCheck;
+  public Label startStage() {
+    return startStage;
   }
 
   @Override
-  public void setStageCheck(Expr stageCheck) {
-    this.stageCheck = stageCheck;
+  public Label endStage() {
+    return endStage;
+  }
+
+  @Override
+  public void setStageCheck(Label startStage, Label endStage) {
+    this.startStage = startStage;
+    this.endStage = endStage;
   }
 
 }

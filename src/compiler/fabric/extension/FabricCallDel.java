@@ -10,6 +10,7 @@ import jif.extension.JifCallDel;
 import jif.types.JifMethodInstance;
 import jif.types.JifSubstType;
 import jif.types.Param;
+import jif.types.label.Label;
 import jif.types.label.VarLabel;
 
 import polyglot.ast.Call;
@@ -60,18 +61,24 @@ public class FabricCallDel extends JifCallDel implements FabricStagingDel {
   }
 
   /**
-   * Squirreled away the staging check expression to be produced when rewriting
-   * to FabIL.
+   * Squirreled away the stage labels to check in rewritten code.
    */
-  protected Expr stageCheck;
+  protected Label startStage;
+  protected Label endStage;
 
   @Override
-  public Expr stageCheck() {
-    return stageCheck;
+  public Label startStage() {
+    return startStage;
   }
 
   @Override
-  public void setStageCheck(Expr stageCheck) {
-    this.stageCheck = stageCheck;
+  public Label endStage() {
+    return endStage;
+  }
+
+  @Override
+  public void setStageCheck(Label startStage, Label endStage) {
+    this.startStage = startStage;
+    this.endStage = endStage;
   }
 }

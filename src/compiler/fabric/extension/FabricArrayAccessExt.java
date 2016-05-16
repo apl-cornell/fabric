@@ -73,13 +73,15 @@ public class FabricArrayAccessExt extends JifArrayAccessExt {
         && !ts.isFabricArray(acc.array().type()))
       return acc;
 
+    Position pos = acc.position();
+
     // If the current method requires that there's no accesses, then we're in
     // trouble.
-    if (A.beginConflictBound() instanceof NoAccesses)
-      throw new SemanticException(
-          "Making accesses in a method with default begin access bound!");
+    if (A.beginConflictBound().equals(ts.noAccesses())) {
+      throw new SemanticException("Access " + acc +
+          " made in a method which does not provide begin and end conflict labels!", pos);
+    }
 
-    Position pos = acc.position();
     FabricPathMap Xe = (FabricPathMap) getPathMap(acc);
 
     LabeledType arrayEntryType = (LabeledType) acc.array().type();
@@ -91,45 +93,26 @@ public class FabricArrayAccessExt extends JifArrayAccessExt {
     } else {
       conflictL = new NamedLabel("read conflict label", ts.readConflict(L));
     }
-    NamedLabel pc = new NamedLabel("pc",
-        ts.join(ts.join(Xe.N(), A.currentCodePCBound()),
-                ts.pairLabel(pos, ts.bottomConfPolicy(pos), ts.topIntegPolicy(pos))));
+    NamedLabel pc = new NamedLabel("C(pc)",
+        ts.pairLabel(pos,
+          ts.confProjection(ts.join(Xe.N(), A.pc())),
+          ts.topIntegPolicy(pos)));
     NamedLabel conflictPC = new NamedLabel("conflict pc",
         ts.join(ts.meet(Xe.CL(), ts.meet(A.conflictLabel(), A.beginConflictBound())),
                 ts.pairLabel(pos, ts.bottomConfPolicy(pos), ts.topIntegPolicy(pos))));
 
-    // Squirrel away the dynamic staging check and update the path map and what
-    // not.
+    // Squirrel away the dynamic staging check
+    // XXX: I don't think we need to update the pathmap or anything, since
+    // straight label comparisons don't do anything interesting for label
+    // checking state.
     if (!lc.context().labelEnv().leq(conflictPC.label(), conflictL.label())) {
       FabricNodeFactory nf = (FabricNodeFactory) lc.nodeFactory();
 
-      // Make the staging dynamic check.
-      Expr stageCheck = nf.Unary(pos, Unary.NOT,
-          nf.Binary(pos,
-            nf.LabelExpr(pos, conflictPC.label()).type(ts.Label()),
-            Binary.LE,
-            nf.LabelExpr(pos, conflictL.label()).type(ts.Label())).type(ts.Boolean())).type(ts.Boolean());
-
-      // Label check it.
-      stageCheck = (Expr) lc.labelCheck(stageCheck);
       FabricArrayAccessDel accDel = (FabricArrayAccessDel) acc.del();
 
       // Squirrel it away for rewrite.
-      accDel.setStageCheck(stageCheck);
-
-      // Update the path map.
-      Xe = Xe.join(getPathMap(stageCheck));
+      accDel.setStageCheck(conflictPC.label(), conflictL.label());
     }
-
-    // Check pc ≤ CL(op array access)
-    lc.constrain(pc, LabelConstraint.LEQ, conflictL, A.labelEnv(), pos,
-        new ConstraintMessage() {
-          @Override
-          public String msg() {
-            return "Conflicts when " + (isWrite ? "writing" : "reading") + " " +
-              origACC + " may leak secret information to other transactions.";
-          }
-    });
 
     // Check CL(op array access) ≤ meet(CL(prev accesses))
     lc.constrain(conflictL, LabelConstraint.LEQ, conflictPC, A.labelEnv(), pos,
@@ -138,6 +121,16 @@ public class FabricArrayAccessExt extends JifArrayAccessExt {
           public String msg() {
             return (isWrite ? "Write" : "Read") + " access " + origACC +
               " can't be staged at the current point in a transaction.";
+          }
+    });
+
+    // Check pc ≤ CL(op array access)
+    lc.constrain(pc, LabelConstraint.LEQ, conflictL, A.labelEnv(), pos,
+        new ConstraintMessage() {
+          @Override
+          public String msg() {
+            return "Conflicts when " + (isWrite ? "writing" : "reading") + " " +
+              origACC + " may leak secret information to other transactions.";
           }
     });
     

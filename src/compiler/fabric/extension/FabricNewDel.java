@@ -2,9 +2,14 @@ package fabric.extension;
 
 import java.util.List;
 
+import fabric.ast.FabricUtil;
+import fabric.types.FabricTypeSystem;
+
 import jif.extension.JifNewDel;
 import jif.types.JifContext;
 import jif.types.label.AccessPath;
+import jif.types.label.Label;
+
 import polyglot.ast.Expr;
 import polyglot.ast.New;
 import polyglot.ast.NewOps;
@@ -16,8 +21,6 @@ import polyglot.util.Position;
 import polyglot.visit.AmbiguityRemover;
 import polyglot.visit.NodeVisitor;
 import polyglot.visit.TypeChecker;
-import fabric.ast.FabricUtil;
-import fabric.types.FabricTypeSystem;
 
 public class FabricNewDel extends JifNewDel implements NewOps, FabricStagingDel {
   @Override
@@ -113,18 +116,24 @@ public class FabricNewDel extends JifNewDel implements NewOps, FabricStagingDel 
   }
 
   /**
-   * Squirreled away the staging check expression to be produced when rewriting
-   * to FabIL.
+   * Squirreled away the stage labels to check in rewritten code.
    */
-  protected Expr stageCheck;
+  protected Label startStage;
+  protected Label endStage;
 
   @Override
-  public Expr stageCheck() {
-    return stageCheck;
+  public Label startStage() {
+    return startStage;
   }
 
   @Override
-  public void setStageCheck(Expr stageCheck) {
-    this.stageCheck = stageCheck;
+  public Label endStage() {
+    return endStage;
+  }
+
+  @Override
+  public void setStageCheck(Label startStage, Label endStage) {
+    this.startStage = startStage;
+    this.endStage = endStage;
   }
 }

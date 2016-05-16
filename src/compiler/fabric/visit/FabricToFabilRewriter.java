@@ -6,26 +6,15 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import jif.translate.JifToJavaRewriter;
-import polyglot.ast.ClassDecl;
-import polyglot.ast.Expr;
-import polyglot.ast.Node;
-import polyglot.ast.SourceFile;
-import polyglot.ast.TopLevelDecl;
-import polyglot.ast.TypeNode;
-import polyglot.frontend.Job;
-import polyglot.frontend.Source;
-import polyglot.main.Report;
-import polyglot.types.SemanticException;
-import polyglot.types.Type;
-import polyglot.util.Position;
 import codebases.ast.CBSourceFile;
 import codebases.frontend.CBJobExt;
 import codebases.frontend.CodebaseSource;
 import codebases.types.CodebaseClassType;
+
 import fabil.FabILOptions;
 import fabil.ast.FabILNodeFactory;
 import fabil.types.FabILTypeSystem;
+
 import fabric.ExtensionInfo;
 import fabric.ast.FabricNodeFactory;
 import fabric.common.NSUtil;
@@ -33,6 +22,24 @@ import fabric.lang.Codebase;
 import fabric.types.FabricContext;
 import fabric.types.FabricSubstType;
 import fabric.types.FabricTypeSystem;
+
+import jif.translate.JifToJavaRewriter;
+import jif.types.label.Label;
+
+import polyglot.ast.Binary;
+import polyglot.ast.ClassDecl;
+import polyglot.ast.Expr;
+import polyglot.ast.Node;
+import polyglot.ast.SourceFile;
+import polyglot.ast.TopLevelDecl;
+import polyglot.ast.TypeNode;
+import polyglot.ast.Unary;
+import polyglot.frontend.Job;
+import polyglot.frontend.Source;
+import polyglot.main.Report;
+import polyglot.types.SemanticException;
+import polyglot.types.Type;
+import polyglot.util.Position;
 
 public class FabricToFabilRewriter extends JifToJavaRewriter {
   private static final Collection<String> TOPICS;
@@ -198,4 +205,15 @@ public class FabricToFabilRewriter extends JifToJavaRewriter {
     return staticThisExpr;
   }
 
+  public Expr stageCheckExpr(Node parent, Label startStage, Label endStage) {
+    Position pos = Position.compilerGenerated();
+    Expr fabExpr = this.jif_nf.Unary(pos, Unary.NOT,
+        jif_nf.Binary(pos,
+          jif_nf.LabelExpr(pos, startStage).type(jif_ts.Label()),
+          Binary.LE,
+          jif_nf.LabelExpr(pos, endStage).type(jif_ts.Label())
+        ).type(jif_ts.Boolean())
+      ).type(jif_ts.Boolean());
+    return (Expr) visitEdge(parent, fabExpr);
+  }
 }

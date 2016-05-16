@@ -97,4 +97,14 @@ public class FabricPathMap extends PathMap {
       return ts.topLabel(Position.COMPILER_GENERATED);
     return super.get(p);
   }
+
+  @Override
+  public boolean singlePath() {
+    for (Path p : paths()) {
+      if (p.equals(Path.N) || p.equals(Path.R) || p.equals(FabricPath.CL))
+        continue;
+      return false;
+    }
+    return true;
+  }
 }

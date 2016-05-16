@@ -27,7 +27,7 @@ public class ConstructorCallToFabilExt_c extends ConstructorCallToJavaExt_c {
     FabricStagingDel fsd = (FabricStagingDel) orig.del();
     FabILNodeFactory nf = (FabILNodeFactory) frw.java_nf();
     // Now update call with staging operation if needed
-    if (fsd.stageCheck() != null) {
+    if (fsd.startStage() != null || fsd.endStage() != null) {
       // Add in staging.
       if (call.arguments().size() > 0) {
         // Wrap the last argument
@@ -36,14 +36,14 @@ public class ConstructorCallToFabilExt_c extends ConstructorCallToJavaExt_c {
         args.set(lastIdx,
             nf.StageCall(call.position(),
               args.get(lastIdx),
-              rw.visitEdge(call, fsd.stageCheck())));
+              frw.stageCheckExpr(call, fsd.startStage(), fsd.endStage())));
         call = (ConstructorCall) call.arguments(args);
       } else {
         // Use a ternary operator.
         return rw.qq().parseExpr("%E ? %E : %E",
               nf.StageCall(call.position(),
                 nf.BooleanLit(call.position(), true),
-                rw.visitEdge(call, fsd.stageCheck())),
+                frw.stageCheckExpr(call, fsd.startStage(), fsd.endStage())),
               call,
               call);
       }

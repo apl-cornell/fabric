@@ -3,6 +3,7 @@ package fabric.extension;
 import fabric.types.FabricContext;
 import fabric.types.FabricMethodInstance;
 import fabric.types.FabricPathMap;
+import fabric.types.FabricTypeSystem;
 
 import jif.ast.JifMethodDecl;
 import jif.extension.JifMethodDeclExt;
@@ -18,6 +19,7 @@ import jif.visit.LabelChecker;
 
 import polyglot.types.SemanticException;
 import polyglot.types.Type;
+import polyglot.util.Position;
 
 public class MethodDeclJifExt extends JifMethodDeclExt {
 
@@ -47,6 +49,16 @@ public class MethodDeclJifExt extends JifMethodDeclExt {
     A.setBeginConflictBound(fmi.beginConflictLabel());
     //A.setConflictLabel(fmi.beginConflictLabel());
     A.setEndConflictBound(fmi.endConflictLabel());
+    if (!fmi.isDefaultBeginConflict() && !fmi.isDefaultEndConflict()) {
+      FabricTypeSystem ts = (FabricTypeSystem) lc.jifTypeSystem();
+      // Add assertion that the caller_pc is upper bounded by the conflict label
+      // bounds.
+      Label confPc = ts.pairLabel(Position.compilerGenerated(),
+          ts.confProjection(A.pc()),
+          ts.topIntegPolicy(Position.compilerGenerated()));
+      A.addAssertionLE(confPc, fmi.beginConflictLabel());
+      A.addAssertionLE(confPc, fmi.endConflictLabel());
+    }
   }
 
   /**

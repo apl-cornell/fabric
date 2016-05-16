@@ -244,27 +244,17 @@ public class FabricCallHelper extends CallHelper {
                    fts.pairLabel(position, fts.bottomConfPolicy(position),
                                            fts.topIntegPolicy(position))));
 
-      // Squirrel away the dynamic staging check and update the path map and what
-      // not.
+      // Squirrel away the dynamic staging check
+      // XXX: I don't think we need to update the pathmap or anything, since
+      // straight label comparisons don't do anything interesting for label
+      // checking state.
       if (!lc.context().labelEnv().leq(conflictNL.label(), beginConflictNL.label())) {
         FabricNodeFactory nf = (FabricNodeFactory) lc.nodeFactory();
 
-        // Make the staging dynamic check.
-        Expr stageCheck = nf.Unary(position, Unary.NOT,
-            nf.Binary(position,
-              nf.LabelExpr(position, conflictNL.label()).type(fts.Label()),
-              Binary.LE,
-              nf.LabelExpr(position, beginConflictNL.label()).type(fts.Label())).type(fts.Boolean())).type(fts.Boolean());
-
-        // Label check it.
-        stageCheck = (Expr) lc.labelCheck(stageCheck);
-        FabricStagingDel feDel = (FabricStagingDel) call.del();
+        FabricStagingDel cDel = (FabricStagingDel) call.del();
 
         // Squirrel it away for rewrite.
-        feDel.setStageCheck(stageCheck);
-
-        // Update the path map.
-        X = X.join(JifExt_c.getPathMap(stageCheck));
+        cDel.setStageCheck(conflictNL.label(), beginConflictNL.label());
       }
 
       lc.constrain(beginConflictNL, LabelConstraint.LEQ, conflictNL,

@@ -1,6 +1,6 @@
 package fabric.extension;
 
-import polyglot.ast.Expr;
+import jif.types.label.Label;
 
 /**
  * Interface supported by all delegates of fabric nodes which could be updated
@@ -8,10 +8,17 @@ import polyglot.ast.Expr;
  */
 public interface FabricStagingDel {
 
-  /** Get the staging check, if there is one (otherwise, null) */
-  public Expr stageCheck();
+  /**
+   * Get the starting stage label (if there is no staging needed, this is null)
+   */
+  public Label startStage();
+
+  /**
+   * Get the ending stage label (if there is no staging needed, this is null)
+   */
+  public Label endStage();
 
   /** Set the staging check */
-  public void setStageCheck(Expr stageCheck);
+  public void setStageCheck(Label startStage, Label endStage);
 
 }

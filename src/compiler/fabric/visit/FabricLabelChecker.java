@@ -2,11 +2,18 @@ package fabric.visit;
 
 import java.util.List;
 
+import fabric.extension.FabricCallHelper;
+import fabric.types.FabricPath;
+import fabric.types.SilenceableSolverGLB;
+
 import jif.ast.JifMethodDecl;
 import jif.extension.CallHelper;
 import jif.types.JifProcedureInstance;
+import jif.types.Path;
 import jif.types.label.Label;
+import jif.visit.JifLabelSubst;
 import jif.visit.LabelChecker;
+
 import polyglot.ast.Expr;
 import polyglot.ast.NodeFactory;
 import polyglot.ast.Receiver;
@@ -14,8 +21,6 @@ import polyglot.frontend.Job;
 import polyglot.types.ReferenceType;
 import polyglot.types.TypeSystem;
 import polyglot.util.Position;
-import fabric.extension.FabricCallHelper;
-import fabric.types.SilenceableSolverGLB;
 
 public class FabricLabelChecker extends LabelChecker {
   public FabricLabelChecker(Job job, TypeSystem ts, NodeFactory nf,
@@ -62,4 +67,13 @@ public class FabricLabelChecker extends LabelChecker {
     return super.clone();
   }
 
+  @Override
+  public boolean ignoredForSinglePathRule(Path p) {
+    return super.ignoredForSinglePathRule(p) || p.equals(FabricPath.CL);
+  }
+
+  @Override
+  public JifLabelSubst labelSubst() {
+    return new FabricLabelSubst(job, ts, nf, solver);
+  }
 }

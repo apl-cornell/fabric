@@ -8,7 +8,7 @@ import fabil.ast.FabILNodeFactory;
 
 import fabric.ast.FabricCall;
 import fabric.extension.FabricStagingDel;
-
+import fabric.visit.FabricToFabilRewriter;
 import jif.translate.CallToJavaExt_c;
 import jif.translate.JifToJavaRewriter;
 
@@ -19,6 +19,7 @@ import polyglot.util.Position;
 public class CallToFabilExt_c extends CallToJavaExt_c {
   @Override
   public Expr exprToJava(JifToJavaRewriter rw) throws SemanticException {
+    FabricToFabilRewriter frw = (FabricToFabilRewriter) rw;
     FabricCall c = (FabricCall) node();
     Expr e = super.exprToJava(rw);
 
@@ -53,7 +54,7 @@ public class CallToFabilExt_c extends CallToJavaExt_c {
 
       FabricStagingDel fsd = (FabricStagingDel) c.del();
       FabILNodeFactory fnf = (FabILNodeFactory) rw.java_nf();
-      if (fsd.stageCheck() != null) {
+      if (fsd.startStage() != null || fsd.endStage() != null) {
         // Add in staging.
         if (result.arguments().size() > 0) {
           // Wrap the last argument
@@ -62,17 +63,18 @@ public class CallToFabilExt_c extends CallToJavaExt_c {
           args.set(lastIdx,
               fnf.StageCall(result.position(),
                 args.get(lastIdx),
-                rw.visitEdge(c, fsd.stageCheck())));
+                frw.stageCheckExpr(c, fsd.startStage(), fsd.endStage())));
           result = (FabILCall) result.arguments(args);
         } else if (result.target() instanceof Expr) {
           // Wrap the target
           result = (FabILCall) result.target(fnf.StageCall(result.position(),
                 (Expr) result.target(),
-                rw.visitEdge(c, fsd.stageCheck())));
+                frw.stageCheckExpr(c, fsd.startStage(), fsd.endStage())));
         } else {
           // Use a ternary operator.
           return rw.qq().parseExpr("%E ? %E : %E",
-                fnf.StageCall(result.position(), fnf.BooleanLit(result.position(), true), rw.visitEdge(c, fsd.stageCheck())),
+                fnf.StageCall(result.position(), fnf.BooleanLit(result.position(), true),
+                  frw.stageCheckExpr(c, fsd.startStage(), fsd.endStage())),
                 result,
                 result);
         }
