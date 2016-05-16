@@ -18,6 +18,7 @@ import jif.types.JifProcedureInstance;
 import jif.types.JifTypeSystem;
 import jif.types.LabelConstraint;
 import jif.types.NamedLabel;
+import jif.types.PathMap;
 import jif.types.label.AccessPath;
 import jif.types.label.Label;
 import jif.types.principal.Principal;
@@ -322,5 +323,14 @@ public class FabricCallHelper extends CallHelper {
       throws SemanticException {
     FabricProcedureInstance fpi = (FabricProcedureInstance) pi;
     return instantiate(lc.context(), fpi.endConflictLabel());
+  }
+
+  @Override
+  protected void updateForNextArg(LabelChecker lc, JifContext A,
+      PathMap Xprev) {
+    super.updateForNextArg(lc, A, Xprev);
+    FabricContext Af = (FabricContext) A;
+    FabricPathMap Xfprev = (FabricPathMap) Xprev;
+    Af.setConflictLabel(lc.jifTypeSystem().meet(Af.conflictLabel(), Xfprev.CL()));
   }
 }

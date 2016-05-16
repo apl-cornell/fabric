@@ -1,10 +1,13 @@
 package fabric.extension;
 
+import fabric.types.FabricContext;
 import fabric.types.FabricPathMap;
 import fabric.types.FabricReferenceType;
 
 import jif.extension.JifArrayAccessAssignExt;
 import jif.translate.ToJavaExt;
+import jif.types.JifContext;
+import jif.types.PathMap;
 import jif.visit.LabelChecker;
 
 import polyglot.ast.ArrayAccessAssign;
@@ -45,4 +48,22 @@ public class FabricArrayAccessAssignExt extends JifArrayAccessAssignExt {
       FabricPathMap X = (FabricPathMap) getPathMap(acc);
       return updatePathMap(acc, X.CL(Xfe.CL()));
     }
+
+  @Override
+  protected void updateContextForIndex(LabelChecker lc, JifContext A,
+      PathMap Xarr) {
+    super.updateContextForIndex(lc, A, Xarr);
+    FabricContext Af = (FabricContext) A;
+    FabricPathMap Xfarr = (FabricPathMap) Xarr;
+    Af.setConflictLabel(lc.jifTypeSystem().meet(Af.conflictLabel(), Xfarr.CL()));
+  }
+
+  @Override
+  protected void updateContextForRHS(LabelChecker lc, JifContext A,
+      PathMap Xlhs) {
+    super.updateContextForRHS(lc, A, Xlhs);
+    FabricContext Af = (FabricContext) A;
+    FabricPathMap Xflhs = (FabricPathMap) Xlhs;
+    Af.setConflictLabel(lc.jifTypeSystem().meet(Af.conflictLabel(), Xflhs.CL()));
+  }
 }

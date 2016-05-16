@@ -8,11 +8,20 @@ import fabric.extension.ClassBodyJifExt_c;
 import fabric.extension.ConstructorDeclJifExt;
 import fabric.extension.FabricArrayAccessAssignExt;
 import fabric.extension.FabricArrayAccessExt;
+import fabric.extension.FabricArrayInitExt;
+import fabric.extension.FabricBinaryExt;
 import fabric.extension.FabricCastExt;
+import fabric.extension.FabricCheckedEndorseStmtExt;
 import fabric.extension.FabricClassDeclExt;
+import fabric.extension.FabricConditionalExt;
+import fabric.extension.FabricDoExt;
 import fabric.extension.FabricFieldAssignExt;
 import fabric.extension.FabricFieldExt;
+import fabric.extension.FabricForExt;
+import fabric.extension.FabricIfExt;
 import fabric.extension.FabricInstanceofExt;
+import fabric.extension.FabricSwitchExt;
+import fabric.extension.FabricWhileExt;
 import fabric.extension.MethodDeclJifExt;
 import fabric.extension.NewJifExt_c;
 import fabric.extension.RemoteWorkerGetterJifExt_c;
@@ -49,14 +58,21 @@ import fabric.translate.WorkerToFabilExt_c;
 
 import jif.ast.JifExtFactory_c;
 import jif.ast.JifExt_c;
-import jif.extension.JifBinaryExt;
 import jif.extension.JifFieldDeclExt_c;
 import jif.extension.JifLabelExprExt;
 import jif.extension.JifPrincipalExprExt;
 import jif.extension.JifSourceFileExt;
 import jif.translate.ArrayAccessAssignToJavaExt_c;
+import jif.translate.ArrayInitToJavaExt_c;
 import jif.translate.BlockToJavaExt_c;
+import jif.translate.ConditionalToJavaExt_c;
+import jif.translate.DoToJavaExt_c;
+import jif.translate.DowngradeStmtToJavaExt_c;
 import jif.translate.FieldAssignToJavaExt_c;
+import jif.translate.ForToJavaExt_c;
+import jif.translate.IfToJavaExt_c;
+import jif.translate.SwitchToJavaExt_c;
+import jif.translate.WhileToJavaExt_c;
 
 import polyglot.ast.Ext;
 import polyglot.ast.ExtFactory;
@@ -81,7 +97,7 @@ FabricExtFactory {
 
   @Override
   protected Ext extBinaryImpl() {
-    return new JifBinaryExt(new BinaryToFabilExt_c());
+    return new FabricBinaryExt(new BinaryToFabilExt_c());
   }
 
   @Override
@@ -456,5 +472,45 @@ FabricExtFactory {
   @Override
   protected Ext extBlockImpl() {
     return new BlockJifExt(new BlockToJavaExt_c());
+  }
+
+  @Override
+  protected Ext extArrayInitImpl() {
+    return new FabricArrayInitExt(new ArrayInitToJavaExt_c());
+  }
+
+  @Override
+  protected Ext extCheckedEndorseStmtImpl() {
+    return new FabricCheckedEndorseStmtExt(new DowngradeStmtToJavaExt_c());
+  }
+
+  @Override
+  protected Ext extConditionalImpl() {
+    return new FabricConditionalExt(new ConditionalToJavaExt_c());
+  }
+
+  @Override
+  protected Ext extDoImpl() {
+    return new FabricDoExt(new DoToJavaExt_c());
+  }
+
+  @Override
+  protected Ext extForImpl() {
+    return new FabricForExt(new ForToJavaExt_c());
+  }
+
+  @Override
+  protected Ext extIfImpl() {
+    return new FabricIfExt(new IfToJavaExt_c());
+  }
+
+  @Override
+  protected Ext extSwitchImpl() {
+    return new FabricSwitchExt(new SwitchToJavaExt_c());
+  }
+
+  @Override
+  protected Ext extWhileImpl() {
+    return new FabricWhileExt(new WhileToJavaExt_c());
   }
 }

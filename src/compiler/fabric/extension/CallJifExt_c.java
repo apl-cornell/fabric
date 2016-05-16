@@ -6,7 +6,9 @@ import java.util.List;
 
 import fabric.ast.FabricCall;
 import fabric.types.FabricClassType;
+import fabric.types.FabricContext;
 import fabric.types.FabricMethodInstance;
+import fabric.types.FabricPathMap;
 import fabric.types.FabricTypeSystem;
 
 import jif.extension.JifCallExt;
@@ -43,21 +45,22 @@ public class CallJifExt_c extends JifCallExt {
 
   protected void labelCheckArgs(LabelChecker lc, Call c,
       List<Label> actualLabels) throws SemanticException {
-    JifContext A = lc.context();
+    FabricContext A = (FabricContext) lc.context();
     JifTypeSystem ts = lc.typeSystem();
 
     // X_0 = X_null[n := A[pc]]
-    PathMap Xj = ts.pathMap();
+    FabricPathMap Xj = (FabricPathMap) ts.pathMap();
     Xj = Xj.N(A.pc());
+    Xj = Xj.CL(A.conflictLabel());
 
     for (Expr arg : c.arguments()) {
       // A[pc := X_{j-1}[N]] |- Ej : Xj
-      A = (JifContext) A.pushBlock();
-      A.setPc(Xj.N(), lc);
+      A = (FabricContext) A.pushBlock();
+      updateContextForNextArg(lc, A, Xj);
       arg = (Expr) lc.context(A).labelCheck(arg);
-      A = (JifContext) A.pop();
+      A = (FabricContext) A.pop();
 
-      Xj = getPathMap(arg);
+      Xj = (FabricPathMap) getPathMap(arg);
       actualLabels.add(Xj.NV());
     }
 
@@ -68,6 +71,19 @@ public class CallJifExt_c extends JifCallExt {
     // }
     //
     // return Xjoin;
+  }
+
+  /**
+   * Utility method for updating the context after checking the target.
+   *
+   * Useful for overriding in projects like fabric.
+   */
+  protected void updateContextForNextArg(LabelChecker lc, JifContext A,
+      PathMap Xtarg) {
+      // At this point, the environment A should have been extended
+      // to include any declarations of s.  Reset the PC label.
+      A.setPc(Xtarg.N(), lc);
+      ((FabricContext) A).setConflictLabel(((FabricPathMap) Xtarg).CL());
   }
 
   @Override
@@ -247,5 +263,23 @@ public class CallJifExt_c extends JifCallExt {
         }
       }
     }
+  }
+
+  @Override
+  protected void updateContextPostTarget(LabelChecker lc, JifContext A,
+      PathMap Xtarg) {
+    super.updateContextPostTarget(lc, A, Xtarg);
+    FabricContext Af = (FabricContext) A;
+    FabricPathMap Xftarg = (FabricPathMap) Xtarg;
+    Af.setConflictLabel(lc.jifTypeSystem().meet(Af.conflictLabel(), Xftarg.CL()));
+  }
+
+  @Override
+  protected void updateContextPostTargetExpr(LabelChecker lc, JifContext A,
+      PathMap Xtarg) {
+    super.updateContextPostTargetExpr(lc, A, Xtarg);
+    FabricContext Af = (FabricContext) A;
+    FabricPathMap Xftarg = (FabricPathMap) Xtarg;
+    Af.setConflictLabel(lc.jifTypeSystem().meet(Af.conflictLabel(), Xftarg.CL()));
   }
 }

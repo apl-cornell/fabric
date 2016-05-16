@@ -104,4 +104,13 @@ public class ConstructorDeclJifExt extends JifConstructorDeclExt implements Ext 
       }
     });
   }
+
+  @Override
+  protected void updateContextForNextStmt(LabelChecker lc, JifContext A,
+      PathMap Xprev) {
+    super.updateContextForNextStmt(lc, A, Xprev);
+    FabricContext Af = (FabricContext) A;
+    FabricPathMap Xfprev = (FabricPathMap) Xprev;
+    Af.setConflictLabel(lc.jifTypeSystem().meet(Af.conflictLabel(), Xfprev.CL()));
+  }
 }

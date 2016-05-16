@@ -1,21 +1,16 @@
 package fabric.extension;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import fabric.types.FabricContext;
 import fabric.types.FabricPathMap;
 
 import jif.extension.JifBlockExt;
 import jif.translate.ToJavaExt;
-import jif.types.JifTypeSystem;
+import jif.types.JifContext;
+import jif.types.PathMap;
+import jif.types.label.Label;
 import jif.visit.LabelChecker;
 
-import polyglot.ast.Block;
-import polyglot.ast.LocalClassDecl;
 import polyglot.ast.Node;
-import polyglot.ast.Stmt;
-import polyglot.main.Report;
 import polyglot.types.SemanticException;
 import polyglot.util.SerialVersionUID;
 
@@ -25,57 +20,29 @@ import polyglot.util.SerialVersionUID;
  *  @see jif.extension.JifBlockExt
  */
 public class BlockJifExt extends JifBlockExt {
-    private static final long serialVersionUID = SerialVersionUID.generate();
+  private static final long serialVersionUID = SerialVersionUID.generate();
 
-    public BlockJifExt(ToJavaExt toJava) {
-        super(toJava);
-    }
+  public BlockJifExt(ToJavaExt toJava) {
+    super(toJava);
+  }
 
-    /**
-     * Modified to pass along the conflict label of accesses across statements.
-     */
-    @Override
-    public Node labelCheckStmt(LabelChecker lc) throws SemanticException {
-        Block bs = (Block) node();
+  @Override
+  protected void updateContextForNextStmt(LabelChecker lc, JifContext A,
+      PathMap Xprev) {
+    super.updateContextForNextStmt(lc, A, Xprev);
+    FabricContext Af = (FabricContext) A;
+    FabricPathMap Xfprev = (FabricPathMap) Xprev;
+    Af.setConflictLabel(lc.jifTypeSystem().meet(Af.conflictLabel(), Xfprev.CL()));
+  }
 
-        JifTypeSystem ts = lc.jifTypeSystem();
-        FabricContext A = (FabricContext) lc.jifContext();
-        A = (FabricContext) bs.del().enterScope(A);
+  @Override
+  public Node labelCheckStmt(LabelChecker lc) throws SemanticException {
+    // Store the starting conflictLabel
+    Label confL = ((FabricContext) lc.context()).conflictLabel();
+    Node checked = super.labelCheckStmt(lc);
+    FabricPathMap X = (FabricPathMap) getPathMap(checked);
+    // Add the starting conflictLabel back into the path map.
+    return updatePathMap(checked, X.CL(lc.jifTypeSystem().meet(X.CL(), confL)));
+  }
 
-        // A path map incorporating all statements in the block seen so far.
-        FabricPathMap Xblock = (FabricPathMap) ts.pathMap();
-        Xblock = Xblock.N(A.pc());
-        Xblock = Xblock.CL(A.conflictLabel());
-
-        A = (FabricContext) A.pushBlock();
-
-        List<Stmt> l = new ArrayList<>(bs.statements().size());
-
-        for (Stmt s : bs.statements()) {
-            s = (Stmt) lc.context(A).labelCheck(s);
-            l.add(s);
-
-            if (s instanceof LocalClassDecl)
-                // nothing else required
-                continue;
-
-            FabricPathMap Xs = (FabricPathMap) getPathMap(s);
-
-            // At this point, the environment A should have been extended
-            // to include any declarations of s.  Reset the PC label.
-            A.setPc(Xs.N(), lc);
-            A.setConflictLabel(ts.meet(A.conflictLabel(), Xs.CL()));
-
-            if (Report.should_report(jif.Topics.pc, 1)) {
-                Report.report(1, "pc after statement at " + s.position() + " : "
-                        + A.pc().toString());
-            }
-
-            Xblock = Xblock.N(ts.notTaken()).join(Xs);
-        }
-
-        A = (FabricContext) A.pop();
-
-        return updatePathMap(bs.statements(l), Xblock);
-    }
 }

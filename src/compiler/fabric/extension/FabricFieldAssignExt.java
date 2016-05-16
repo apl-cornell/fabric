@@ -1,9 +1,12 @@
 package fabric.extension;
 
+import fabric.types.FabricContext;
 import fabric.types.FabricPathMap;
 
 import jif.extension.JifFieldAssignExt;
 import jif.translate.ToJavaExt;
+import jif.types.JifContext;
+import jif.types.PathMap;
 import jif.visit.LabelChecker;
 
 import polyglot.ast.Assign;
@@ -32,5 +35,14 @@ public class FabricFieldAssignExt extends JifFieldAssignExt {
     FabricPathMap Xfe = (FabricPathMap) getPathMap(fe);
     FabricPathMap X = (FabricPathMap) getPathMap(assign);
     return updatePathMap(assign, X.CL(Xfe.CL()));
+  }
+
+  @Override
+  protected void updateContextForRHS(LabelChecker lc, JifContext A,
+      PathMap Xleft) {
+    super.updateContextForRHS(lc, A, Xleft);
+    FabricContext Af = (FabricContext) A;
+    FabricPathMap Xfleft = (FabricPathMap) Xleft;
+    Af.setConflictLabel(lc.jifTypeSystem().meet(Af.conflictLabel(), Xfleft.CL()));
   }
 }
