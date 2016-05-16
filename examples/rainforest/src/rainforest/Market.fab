@@ -1,0 +1,228 @@
+package rainforest;
+
+import countribank.Account;
+
+/**
+ * Represents the Rainforest marketplace.
+ */
+public class Market[principal rainforestP] authority (rainforestP) {
+  @{⊤→rainforestP}
+
+  private final Vendor[rainforestP][]{rainforestP←} vendors;
+
+  public Market{rainforestP←}(
+      Vendor[rainforestP][]{rainforestP←} vendors
+  ) {
+    this.vendors = vendors;
+    super();
+  }
+
+  /**
+   * Returns a list of vendors in the marketplace.
+   */
+  public Vendor[rainforestP][]{rainforestP←} getVendors() {
+    return vendors;
+  }
+
+  /**
+   * Purchases a product on a customer's behalf.
+   */
+  public boolean{customerP→;rainforestP←}
+      buyProduct{customerP→;customerP←}(
+        principal{customerP→;customerP←} customerP,
+        principal{customerP→;customerP←} vendorP,
+        Customer[rainforestP,customerP]{customerP→;customerP←} customer,
+        Product[rainforestP, vendorP]{customerP→;customerP←} product,
+        int{customerP→;customerP←} numUnits
+      ) where
+        rainforestP ≽ vendorP,
+        rainforestP ≽ customerP,
+        rainforestP ≽ customer.bankP,
+        authority(rainforestP),
+        endorse ({customerP→;rainforestP←}) {
+    atomic {
+      // First, decrement the vendor's stock. To do so, need to declassify the
+      // pc.
+      boolean inStock = false;
+      declassify ({customerP→;rainforestP←} to {vendorP→;rainforestP←}) {
+        // Also need to downgrade the number of units and the product.
+        int numUnits_d =
+          endorse (
+            declassify (
+              numUnits,
+              {customerP→;vendorP→;customerP←} to {vendorP→;customerP←}),
+            {vendorP→;customerP←} to {vendorP→;vendorP←});
+        Product[rainforestP, vendorP] product_d =
+          endorse (
+            declassify (
+              product,
+              {customerP→;vendorP→;customerP←} to {vendorP→;customerP←}),
+            {vendorP→;customerP←} to {vendorP→;rainforestP←});
+
+        // Actually decrement the vendor's stock.
+        inStock = product_d.decrementInventory(numUnits_d);
+      }
+
+      // Downgrade inStock.
+      boolean inStock_d =
+        endorse (
+          declassify (
+            inStock,
+            {customerP→;vendorP→;vendorP←} to {customerP→;vendorP←}),
+          {customerP→;vendorP←} to {customerP→;rainforestP←});
+
+      if (!inStock_d) {
+        // Vendor has insufficient stock.
+        return false;
+      }
+
+      // Get the product's price. To do so, need to declassify the pc.
+      int price = 0;
+      declassify ({customerP→;rainforestP←} to {vendorP→;rainforestP←}) {
+        // Also need to declassify the product.
+        Product[rainforestP, vendorP] product_d =
+          declassify (
+            product,
+            {customerP→;vendorP→;customerP←} to {vendorP→;customerP←});
+        price = product_d.getPrice();
+      }
+
+      int purchaseAmount = numUnits * price;
+
+      Account[customer.bankP, customerP] customerAccount =
+        customer.getAccount();
+
+      // Debit the customer's account. To do so, we need to declassify the pc.
+      boolean sufficientFunds = false;
+      declassify ({customerP→;rainforestP←}
+          to {customerP→customer.bankP;rainforestP←}) {
+        // Downgrade the purchaseAmount.
+        int purchaseAmount_d =
+          declassify (
+            endorse (
+              purchaseAmount,
+                {customerP→;customerP←;vendorP→;vendorP←}
+                  to {customerP→;vendorP→;rainforestP←}),
+              {customerP→;vendorP→;customerP←}
+                to {customerP→customer.bankP;customerP←});
+
+        // Downgrade the customerAccount.
+        Account[customer.bankP, customerP] customerAccount_d =
+          declassify (
+            customerAccount,
+            {customerP→;customerP←} to {customerP→customer.bankP;customerP←});
+
+        // Downgrade the customer's bank principal.
+        final principal bankP =
+          declassify (
+            customer.bankP,
+            {customerP→;customerP←} to {customerP→customer.bankP;customerP←});
+
+        // Actually debit the customer's account.
+        if (bankP ≽ customerP) {
+          sufficientFunds = customerAccount_d.debit(purchaseAmount_d);
+        }
+      }
+
+      // Downgrade the result of debiting the customer's account.
+      boolean sufficientFunds_d =
+        endorse (
+          sufficientFunds,
+            {customerP→;customer.bankP←;customerP←}
+              to {customerP→;rainforestP←});
+
+      if (!sufficientFunds_d) {
+        // Customer has insufficient funds.
+        // Restock the vendor. To do so, need to declassify the pc.
+        declassify ({customerP→;rainforestP←} to {vendorP→;rainforestP←}) {
+          // Also need to downgrade the number of units and the product.
+          int numUnits_d =
+            endorse (
+              declassify (
+                numUnits,
+                {customerP→;vendorP→;customerP←} to {vendorP→;customerP←}),
+              {vendorP→;customerP←} to {vendorP→;vendorP←});
+          Product[rainforestP, vendorP] product_d =
+            endorse (
+              declassify (
+                product,
+                {customerP→;vendorP→;customerP←} to {vendorP→;customerP←}),
+              {vendorP→;customerP←} to {vendorP→;rainforestP←});
+
+          // Actually restock the vendor.
+          product_d.restock(numUnits_d);
+        }
+
+        return false;
+      }
+
+      // Credit the vendor with the purchase amount.
+      // First get the vendor. To do so, need to declassify the pc.
+      Vendor vendor = null;
+      declassify ({customerP→;rainforestP←} to {vendorP→;rainforestP←}) {
+        // Downgrade the product.
+        Product[rainforestP, vendorP] product_d =
+          declassify (
+            product,
+            {customerP→;vendorP→;customerP←} to {vendorP→;customerP←});
+        vendor = product_d.getVendor();
+      }
+
+      // Next, get the vendor's account.
+      final Vendor[rainforestP] vendor_ = vendor;
+      Account[vendor_.bankP, vendorP] vendorAccount = vendor_.getAccount();
+
+      // Now, need to declassify the pc again.
+      declassify ({customerP→;rainforestP←}
+          to {vendorP→vendor_.bankP;rainforestP←}) {
+        // Downgrade the purchase amount.
+        int purchaseAmount_d =
+          declassify (
+            endorse (
+              purchaseAmount,
+                {customerP→;customerP←;vendorP→;vendorP←}
+                  to {customerP→;vendorP→;rainforestP←}),
+              {customerP→;vendorP→;vendorP←}
+                to {vendorP→vendor_.bankP;vendorP←});
+
+        // Downgrade the vendor account.
+        Account[vendor_.bankP, vendorP] vendorAccount_d =
+          declassify (
+            endorse (
+              vendorAccount,
+              {vendorP→;customerP→;customerP←}
+                to {vendorP→;customerP→;rainforestP←}),
+            {vendorP→;customerP→;rainforestP←}
+              to {vendorP→vendor_.bankP;customerP←});
+
+        // Downgrade the vendor's bank principal.
+        final principal bankP =
+          declassify (
+            endorse (
+              vendor_.bankP,
+              {vendorP→;customerP→;customerP←}
+                to {vendorP→;customerP→;rainforestP←}),
+            {vendorP→;customerP→;rainforestP←}
+              to {vendorP→vendor_.bankP;customerP←});
+
+        // Downgrade the vendor's principal.
+        final principal vendorP_d =
+          declassify (
+            endorse (
+              vendorP,
+              {vendorP→vendor_.bankP;customerP→;customerP←}
+                to {vendorP→vendor_.bankP;customerP→;rainforestP←}),
+            {vendorP→vendor_.bankP;customerP→;rainforestP←}
+              to {vendorP→vendor_.bankP;customerP←});
+
+        if (bankP ≽ vendorP_d) {
+          // Actually credit the vendor.
+          vendorAccount_d.credit(purchaseAmount_d);
+        }
+      }
+    }
+
+    // Purchase successful.
+    return true;
+  }
+}

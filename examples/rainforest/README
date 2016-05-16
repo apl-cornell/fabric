@@ -1,0 +1,72 @@
+Rainforest
+==========
+
+This program emulates two competing shoppers, Alice and Bob,
+attempting to hoard a store's entire inventory, one item at a time.
+
+  - Rainforest is a marketplace that runs a storage node,
+    "rainforest", representing its central database. It also has two
+    workers, "aliceOutlet" and "bobOutlet", representing outlets that
+    are located close to Alice and Bob, respectively.
+
+  - Outel is a vendor in the marketplace. It runs a storage node that
+    tracks the inventory of the product it sells.
+
+  - Countribank is a bank, at which Alice, Bob, and Outel all hold
+    accounts. It runs a storage node that holds the account balances.
+
+This directory contains the following sub-directories:
+
+  - src: source code for the example, written in Fabric
+  - bin: a collection of scripts for running the example
+  - etc: configuration files for the example's stores and workers
+
+
+Using
+-----
+
+  0. Begin in the rainforest example directory and compile the
+     example:
+
+        $ cd $FABRIC/examples/rainforest
+        $ ant
+
+  I. Start the nodes and, if necessary, initialize their state:
+  
+    1. The 'start-all' script will start each node in a separate xterm
+       window:
+
+          $ bin/start-all
+
+       You can also use an xterm replacement (e.g., gnome-terminal or
+       konsole):
+
+          $ XTERM=gnome-terminal bin/start-all
+
+       Or, if you prefer, you can start the nodes separately in your
+       favourite terminal emulator:
+
+          $ bin/start-store rainforest
+          $ bin/start-store countribank
+          $ bin/start-store outel
+          $ bin/start-worker aliceOutlet
+          $ bin/start-worker bobOutlet
+
+    2. If you are starting from fresh stores, you will need to
+       initialize the application state. Otherwise, skip to II below.
+
+          $ bin/init
+
+  II. Start the application:
+
+        $ bin/run
+
+  III.  Exit the nodes with the "exit" command in each console (you
+        can also use CTRL-D).
+
+        While the nodes are shut down, you can clean up the stores'
+        persistent state by removing 'var' from the rainforest example
+        directory:
+
+        $ rm -rf var
+
