@@ -132,6 +132,7 @@ import java.util.Set;
         keywords.put("principal",     new Integer(sym.PRINCIPAL));
         keywords.put("where",         new Integer(sym.WHERE));
         keywords.put("meet",          new Integer(sym.MEET));
+        keywords.put("W2R",           new Integer(sym.WRITERSTOREADERS));
         
         keywords.put("provider",     new Integer(sym.PROVIDER));        
 
