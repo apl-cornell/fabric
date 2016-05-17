@@ -6,8 +6,10 @@ import jif.types.Path;
 import jif.types.PathMap;
 import jif.types.VarMap;
 import jif.types.label.Label;
+
 import polyglot.types.SemanticException;
 import polyglot.types.Type;
+import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
 
 /**
@@ -71,7 +73,21 @@ public class FabricPathMap extends PathMap {
   public FabricPathMap join(PathMap m) {
     FabricPathMap r = (FabricPathMap) super.join(m);
     // CL is actually a meet across statements, unlike other path labels.
-    r.set(FabricPath.CL, ts.meet(CL(), m.get(FabricPath.CL)));
+    if (!(m instanceof FabricPathMap)) {
+      throw new InternalCompilerError(
+          "Different PathMap implementations should not be mixed!");
+    }
+
+    FabricPathMap fm = (FabricPathMap) m;
+    if (fm.map.containsKey(FabricPath.CL) && map.containsKey(FabricPath.CL)) {
+      r.set(FabricPath.CL, ts.meet(CL(), m.get(FabricPath.CL)));
+    } else if (!fm.map.containsKey(FabricPath.CL) && map.containsKey(FabricPath.CL)) {
+      r.set(FabricPath.CL, CL());
+    } else if (fm.map.containsKey(FabricPath.CL) && !map.containsKey(FabricPath.CL)) {
+      r.set(FabricPath.CL, m.get(FabricPath.CL));
+    } else {
+      r.map.remove(FabricPath.CL);
+    }
     return r;
   }
 
