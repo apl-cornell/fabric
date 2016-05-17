@@ -241,8 +241,7 @@ public class FabricCallHelper extends CallHelper {
           fts.join(fts.meet(A.conflictLabel(),
                             fts.meet(A.beginConflictBound(),
                                      ((FabricPathMap) X).CL())),
-                   fts.pairLabel(position, fts.bottomConfPolicy(position),
-                                           fts.topIntegPolicy(position))));
+                   fts.noComponentsLabel()));
 
       // Squirrel away the dynamic staging check
       // XXX: I don't think we need to update the pathmap or anything, since
@@ -270,7 +269,7 @@ public class FabricCallHelper extends CallHelper {
       // Add in the conflict labels of the call's accesses to the CL path.
       Label newCL = fts.join(
           fts.meet(fts.meet(((FabricPathMap) X).CL(), endConflict), A.conflictLabel()),
-          fts.pairLabel(position, fts.bottomConfPolicy(position), fts.topIntegPolicy(position)));
+          fts.noComponentsLabel());
       X = ((FabricPathMap) X).CL(newCL);
       ((FabricContext) A).setConflictLabel(newCL);
 

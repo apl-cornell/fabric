@@ -19,10 +19,10 @@ public class ArrayAccessToFabilExt_c extends ArrayAccessToJavaExt_c {
     ArrayAccess orig = (ArrayAccess) node();
     FabricArrayAccessDel aad = (FabricArrayAccessDel) orig.del();
     ArrayAccess aa = (ArrayAccess) super.toJava(rw);
-    if (aad.startStage() != null || aad.endStage() != null) {
+    if (aad.endStage() != null) {
       FabILNodeFactory nf = (FabILNodeFactory) rw.java_nf();
       return aa.array(nf.StageCall(aa.position(), aa.array(),
-            frw.stageCheckExpr(orig, aad.startStage(), aad.endStage())));
+            frw.stageCheckExpr(orig, aad.endStage())));
     }
     return aa;
   }

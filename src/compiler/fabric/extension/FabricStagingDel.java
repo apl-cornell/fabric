@@ -6,6 +6,7 @@ import jif.types.label.Label;
  * Interface supported by all delegates of fabric nodes which could be updated
  * with a staging check.
  */
+//TODO: Start stage isn't really necessary now.
 public interface FabricStagingDel {
 
   /**

@@ -54,7 +54,7 @@ public class CallToFabilExt_c extends CallToJavaExt_c {
 
       FabricStagingDel fsd = (FabricStagingDel) c.del();
       FabILNodeFactory fnf = (FabILNodeFactory) rw.java_nf();
-      if (fsd.startStage() != null || fsd.endStage() != null) {
+      if (fsd.endStage() != null) {
         // Add in staging.
         if (result.arguments().size() > 0) {
           // Wrap the last argument
@@ -63,18 +63,18 @@ public class CallToFabilExt_c extends CallToJavaExt_c {
           args.set(lastIdx,
               fnf.StageCall(result.position(),
                 args.get(lastIdx),
-                frw.stageCheckExpr(c, fsd.startStage(), fsd.endStage())));
+                frw.stageCheckExpr(c, fsd.endStage())));
           result = (FabILCall) result.arguments(args);
         } else if (result.target() instanceof Expr) {
           // Wrap the target
           result = (FabILCall) result.target(fnf.StageCall(result.position(),
                 (Expr) result.target(),
-                frw.stageCheckExpr(c, fsd.startStage(), fsd.endStage())));
+                frw.stageCheckExpr(c, fsd.endStage())));
         } else {
           // Use a ternary operator.
           return rw.qq().parseExpr("%E ? %E : %E",
                 fnf.StageCall(result.position(), fnf.BooleanLit(result.position(), true),
-                  frw.stageCheckExpr(c, fsd.startStage(), fsd.endStage())),
+                  frw.stageCheckExpr(c, fsd.endStage())),
                 result,
                 result);
         }

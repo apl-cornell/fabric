@@ -81,7 +81,7 @@ public class FabricContext_c extends JifContext_c implements FabricContext {
     Position cg = Position.compilerGenerated();
     this.conflictLab = ts.topLabel(cg);
     this.beginConflictBound = ts.topLabel(cg);
-    this.endConflictBound = ts.pairLabel(cg, ts.bottomConfPolicy(cg), ts.topIntegPolicy(cg));
+    this.endConflictBound = ts.noComponentsLabel();
   }
 
   @Override

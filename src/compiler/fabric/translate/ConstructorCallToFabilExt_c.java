@@ -3,7 +3,6 @@ package fabric.translate;
 import java.util.ArrayList;
 import java.util.List;
 
-import fabil.ast.FabILCall;
 import fabil.ast.FabILNodeFactory;
 
 import fabric.extension.FabricStagingDel;
@@ -27,7 +26,7 @@ public class ConstructorCallToFabilExt_c extends ConstructorCallToJavaExt_c {
     FabricStagingDel fsd = (FabricStagingDel) orig.del();
     FabILNodeFactory nf = (FabILNodeFactory) frw.java_nf();
     // Now update call with staging operation if needed
-    if (fsd.startStage() != null || fsd.endStage() != null) {
+    if (fsd.endStage() != null) {
       // Add in staging.
       if (call.arguments().size() > 0) {
         // Wrap the last argument
@@ -36,14 +35,14 @@ public class ConstructorCallToFabilExt_c extends ConstructorCallToJavaExt_c {
         args.set(lastIdx,
             nf.StageCall(call.position(),
               args.get(lastIdx),
-              frw.stageCheckExpr(call, fsd.startStage(), fsd.endStage())));
+              frw.stageCheckExpr(call, fsd.endStage())));
         call = (ConstructorCall) call.arguments(args);
       } else {
         // Use a ternary operator.
         return rw.qq().parseExpr("%E ? %E : %E",
               nf.StageCall(call.position(),
                 nf.BooleanLit(call.position(), true),
-                frw.stageCheckExpr(call, fsd.startStage(), fsd.endStage())),
+                frw.stageCheckExpr(call, fsd.endStage())),
               call,
               call);
       }

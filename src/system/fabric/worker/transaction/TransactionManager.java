@@ -34,6 +34,7 @@ import fabric.common.util.Oid;
 import fabric.lang.Object._Impl;
 import fabric.lang.Object._Proxy;
 import fabric.lang.security.Label;
+import fabric.lang.security.LabelUtil;
 import fabric.lang.security.SecurityCache;
 import fabric.net.RemoteNode;
 import fabric.net.UnreachableNodeException;
@@ -295,8 +296,19 @@ public final class TransactionManager {
    * @throws TransactionRestartingException
    *           if the staging fails.
    */
-  public <T> T stageTransactionExpr(T value, boolean stageFlag) throws TransactionRestartingException {
-    if (stageFlag) stageTransaction();
+  public <T> T stageTransactionExpr(T value, Label nextStage) throws TransactionRestartingException {
+    // Only stage if the next stage is not the same as the current stage.
+    if (!LabelUtil._Impl.relabelsTo(current.getCurrentStage(), nextStage)) {
+      // So !(current ≤ next)
+      stageTransaction();
+      current.setCurrentStage(nextStage);
+    } else if (!LabelUtil._Impl.equivalentTo(current.getCurrentStage(), nextStage)) {
+      // So (current ≤ next) && !(current ≥ next) ⇒ current ≠ next
+      // This should only happen if the monotonicity rule was violated.
+      throw new InternalError(
+          "Staging monotonicity was violated, current stage: " +
+          current.getCurrentStage() + ", next stage: " + nextStage);
+    }
     return value;
   }
 

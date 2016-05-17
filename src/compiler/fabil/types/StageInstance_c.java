@@ -23,7 +23,7 @@ public class StageInstance_c extends ProcedureInstance_c implements StageInstanc
             null, new ArrayList<Type>());
     List<Type> formalTypes = new ArrayList<>();
     formalTypes.add(origType);
-    formalTypes.add(ts.Boolean());
+    formalTypes.add(((FabILTypeSystem) ts).Label());
     this.formalTypes = formalTypes;
   }
 
@@ -34,7 +34,7 @@ public class StageInstance_c extends ProcedureInstance_c implements StageInstanc
 
   @Override
   public String signature() {
-    return "public " + formalTypes.get(0) + " stage(boolean, " + formalTypes.get(0) + ")";
+    return "public " + formalTypes.get(0) + " stage(" + formalTypes.get(0) + ", Label)";
   }
 
   @Override
@@ -56,7 +56,7 @@ public class StageInstance_c extends ProcedureInstance_c implements StageInstanc
   public boolean callValidImpl(List<? extends Type> argTypes) {
     return argTypes.size() == 2 &&
       argTypes.get(0).typeEquals(formalTypes.get(0)) &&
-      argTypes.get(1).isBoolean();
+      argTypes.get(1).typeEquals(((FabILTypeSystem) ts).Label());
   }
 
   @Override
@@ -75,8 +75,8 @@ public class StageInstance_c extends ProcedureInstance_c implements StageInstanc
   public void setFormalTypes(List<? extends Type> formalTypes) {
     if (formalTypes.size() != 2)
       throw new InternalCompilerError("StageInstance must have exactly 2 arguments!");
-    if (!formalTypes.get(1).isBoolean())
-      throw new InternalCompilerError("StageInstance second argument must be boolean!");
+    if (!formalTypes.get(1).typeEquals(((FabILTypeSystem) ts).Label()))
+      throw new InternalCompilerError("StageInstance second argument must be a Label!");
     super.setFormalTypes(formalTypes);
   }
 

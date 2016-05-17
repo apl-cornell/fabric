@@ -34,7 +34,7 @@ import polyglot.visit.TypeChecker;
 
 /**
  * A {@code StageCall} represents a call to the special procedure {@code T
- * stage(T originalExpr, boolean stageFlag)}.
+ * stage(T originalExpr, Label nextStage)}.
  */
 public class StageCall_c extends Expr_c implements StageCall, ProcedureCallOps {
     private static final long serialVersionUID = SerialVersionUID.generate();
@@ -163,9 +163,9 @@ public class StageCall_c extends Expr_c implements StageCall, ProcedureCallOps {
         if (!flagExpr.type().isCanonical()) {
             return this;
         }
-        if (!flagExpr.type().isBoolean()) {
+        if (!flagExpr.type().typeEquals(ts.Label())) {
             throw new SemanticException("The second argument to the stage call "
-                + position + " must be a boolean!");
+                + position + " must be a label!");
         }
 
         StageInstance si = ts.stageInstance(origExpr.type());
@@ -178,12 +178,12 @@ public class StageCall_c extends Expr_c implements StageCall, ProcedureCallOps {
 
     @Override
     public Type childExpectedType(Expr child, AscriptionVisitor av) {
-        TypeSystem ts = av.typeSystem();
+        FabILTypeSystem ts = (FabILTypeSystem) av.typeSystem();
 
         if (child == this.origExpr) {
           return si.origType();
         } else if (child == this.flagExpr) {
-          return ts.Boolean();
+          return ts.Label();
         }
 
         return child.type();

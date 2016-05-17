@@ -21,7 +21,9 @@ import fabric.common.util.Oid;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.WeakReferenceArrayList;
 import fabric.lang.Object._Impl;
+import fabric.lang.security.Label;
 import fabric.lang.security.LabelCache;
+import fabric.lang.security.LabelUtil;
 import fabric.lang.security.SecurityCache;
 import fabric.worker.FabricSoftRef;
 import fabric.worker.Store;
@@ -202,6 +204,13 @@ public final class Log {
   public final long startTime;
 
   /**
+   * The label of the current stage.
+   *
+   * This should null for all nested logs.
+   */
+  protected Label stageLabel;
+
+  /**
    * Creates a new log with the given parent and the given transaction ID. The
    * TID for the parent and the given TID are assumed to be consistent. If the
    * given TID is null, a random tid is generated for the subtransaction.
@@ -265,6 +274,40 @@ public final class Log {
       // New top-level frame. Register it in the transaction registry.
       TransactionRegistry.register(this);
     }
+  }
+  
+  /**
+   * Get the current stage label.
+   *
+   * Goes up through the log chain to grab it from the top level log.
+   *
+   * Top level log will lazily assign the first stage to {⊤→;⊥←} when it is
+   * first requested.
+   */
+  public Label getCurrentStage() {
+    // Pass up to the top level log.
+    if (parent != null)
+      return parent.getCurrentStage();
+    // If the current stage is null, then we lazily set it to top.
+    if (stageLabel == null)
+      stageLabel = LabelUtil._Impl.toLabel(
+          Worker.getWorker().getLocalStore(),
+          LabelUtil._Impl.topConf());
+    return stageLabel;
+  }
+
+  /**
+   * Update the current stage label.
+   *
+   * Goes up through the log chain to modify the top level log only.
+   *
+   * Should only be called after staging is done.
+   */
+  protected void setCurrentStage(Label l) {
+    if (parent != null)
+      parent.setCurrentStage(l);
+    else
+      stageLabel = l;
   }
 
   /**

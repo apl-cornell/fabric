@@ -3,7 +3,6 @@ package fabil.extension;
 import java.util.ArrayList;
 import java.util.List;
 
-import polyglot.ast.Binary;
 import polyglot.ast.Call;
 import polyglot.ast.Expr;
 import polyglot.ast.Id;

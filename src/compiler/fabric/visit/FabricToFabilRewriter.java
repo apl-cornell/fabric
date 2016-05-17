@@ -205,15 +205,9 @@ public class FabricToFabilRewriter extends JifToJavaRewriter {
     return staticThisExpr;
   }
 
-  public Expr stageCheckExpr(Node parent, Label startStage, Label endStage) {
+  public Expr stageCheckExpr(Node parent, Label endStage) {
     Position pos = Position.compilerGenerated();
-    Expr fabExpr = this.jif_nf.Unary(pos, Unary.NOT,
-        jif_nf.Binary(pos,
-          jif_nf.LabelExpr(pos, startStage).type(jif_ts.Label()),
-          Binary.LE,
-          jif_nf.LabelExpr(pos, endStage).type(jif_ts.Label())
-        ).type(jif_ts.Boolean())
-      ).type(jif_ts.Boolean());
+    Expr fabExpr = jif_nf.LabelExpr(pos, endStage).type(jif_ts.Label());
     return (Expr) visitEdge(parent, fabExpr);
   }
 }

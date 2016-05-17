@@ -104,7 +104,7 @@ public class FabricFieldExt extends JifFieldExt {
           ts.topIntegPolicy(pos)));
     NamedLabel conflictPC = new NamedLabel("conflict pc",
         ts.join(ts.meet(Xe.CL(), ts.meet(A.conflictLabel(), A.beginConflictBound())),
-                ts.pairLabel(pos, ts.bottomConfPolicy(pos), ts.topIntegPolicy(pos))));
+                ts.noComponentsLabel()));
 
     // Squirrel away the dynamic staging check
     // XXX: I don't think we need to update the pathmap or anything, since
