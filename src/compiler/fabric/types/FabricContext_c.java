@@ -12,7 +12,9 @@ import jif.types.label.Label;
 
 import polyglot.ast.Expr;
 import polyglot.main.Report;
+import polyglot.types.CodeInstance;
 import polyglot.types.Context;
+import polyglot.types.Context_c;
 import polyglot.types.LocalInstance;
 import polyglot.types.Named;
 import polyglot.types.SemanticException;
@@ -53,6 +55,15 @@ public class FabricContext_c extends JifContext_c implements FabricContext {
   @Override
   public void setConflictLabel(Label conflictLab) {
     this.conflictLab = conflictLab;
+    // Bit of a hack to get the conflict label to propogate as far up as the
+    // code level.
+    FabricContext_c cur = this;
+    while (cur != null && !cur.isCode()) {
+      cur = (FabricContext_c) cur.outer;
+      if (cur != null) {
+        cur.conflictLab = conflictLab;
+      }
+    }
   }
 
   @Override

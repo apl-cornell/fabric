@@ -248,13 +248,21 @@ public class FabricCallHelper extends CallHelper {
       // XXX: I don't think we need to update the pathmap or anything, since
       // straight label comparisons don't do anything interesting for label
       // checking state.
-      if (!lc.context().labelEnv().leq(conflictNL.label(), beginConflictNL.label())) {
+      if (!lc.context().labelEnv().leq(conflictNL.label().simplify(),
+            beginConflictNL.label().simplify())) {
+        System.out.println("AT: " + position);
+        System.out.println("UNSIMPLIFIED PC: " + conflictNL.label());
+        System.out.println("UNSIMPLIFIED CPC: " + A.conflictLabel());
+        System.out.println("UNSIMPLIFIED BEGINCPC: " + A.beginConflictBound());
+        System.out.println("UNSIMPLIFIED ORIGCL: " + ((FabricPathMap) X).CL());
+        System.out.println("UNSIMPLIFIED CL: " + beginConflictNL.label());
         FabricNodeFactory nf = (FabricNodeFactory) lc.nodeFactory();
 
         FabricStagingDel cDel = (FabricStagingDel) call.del();
 
         // Squirrel it away for rewrite.
-        cDel.setStageCheck(conflictNL.label(), beginConflictNL.label());
+        cDel.setStageCheck(conflictNL.label().simplify(),
+            beginConflictNL.label().simplify());
       }
 
       lc.constrain(beginConflictNL, LabelConstraint.LEQ, conflictNL,
@@ -272,6 +280,7 @@ public class FabricCallHelper extends CallHelper {
           fts.meet(fts.meet(((FabricPathMap) X).CL(), endConflict), A.conflictLabel()),
           fts.pairLabel(position, fts.bottomConfPolicy(position), fts.topIntegPolicy(position)));
       X = ((FabricPathMap) X).CL(newCL);
+      ((FabricContext) A).setConflictLabel(newCL);
 
       // Check of end conflict bound to get better location reporting.
       NamedLabel newCLN = new NamedLabel("conflict pc",
@@ -322,5 +331,23 @@ public class FabricCallHelper extends CallHelper {
     FabricContext Af = (FabricContext) A;
     FabricPathMap Xfprev = (FabricPathMap) Xprev;
     Af.setConflictLabel(lc.jifTypeSystem().meet(Af.conflictLabel(), Xfprev.CL()));
+  }
+
+  @Override
+  protected void updateContextPostArgs(LabelChecker lc, JifContext A,
+      PathMap Xargs) {
+    super.updateContextPostArgs(lc, A, Xargs);
+    FabricContext Af = (FabricContext) A;
+    FabricPathMap Xfargs = (FabricPathMap) Xargs;
+    Af.setConflictLabel(lc.jifTypeSystem().meet(Af.conflictLabel(), Xfargs.CL()));
+  }
+
+  @Override
+  protected void updateContextPostParams(LabelChecker lc, JifContext A,
+      PathMap Xparams) {
+    super.updateContextPostParams(lc, A, Xparams);
+    FabricContext Af = (FabricContext) A;
+    FabricPathMap Xfparams = (FabricPathMap) Xparams;
+    Af.setConflictLabel(lc.jifTypeSystem().meet(Af.conflictLabel(), Xfparams.CL()));
   }
 }
