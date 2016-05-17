@@ -107,8 +107,6 @@ public class FabricArrayAccessExt extends JifArrayAccessExt {
     // checking state.
     if (!lc.context().labelEnv().leq(conflictPC.label().simplify(),
           conflictL.label().simplify())) {
-      FabricNodeFactory nf = (FabricNodeFactory) lc.nodeFactory();
-
       FabricArrayAccessDel accDel = (FabricArrayAccessDel) acc.del();
 
       // Squirrel it away for rewrite.

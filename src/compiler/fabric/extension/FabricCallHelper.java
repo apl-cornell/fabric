@@ -250,14 +250,6 @@ public class FabricCallHelper extends CallHelper {
       // checking state.
       if (!lc.context().labelEnv().leq(conflictNL.label().simplify(),
             beginConflictNL.label().simplify())) {
-        System.out.println("AT: " + position);
-        System.out.println("UNSIMPLIFIED PC: " + conflictNL.label());
-        System.out.println("UNSIMPLIFIED CPC: " + A.conflictLabel());
-        System.out.println("UNSIMPLIFIED BEGINCPC: " + A.beginConflictBound());
-        System.out.println("UNSIMPLIFIED ORIGCL: " + ((FabricPathMap) X).CL());
-        System.out.println("UNSIMPLIFIED CL: " + beginConflictNL.label());
-        FabricNodeFactory nf = (FabricNodeFactory) lc.nodeFactory();
-
         FabricStagingDel cDel = (FabricStagingDel) call.del();
 
         // Squirrel it away for rewrite.

@@ -112,8 +112,6 @@ public class FabricFieldExt extends JifFieldExt {
     // checking state.
     if (!lc.context().labelEnv().leq(conflictPC.label().simplify(),
           conflictL.label().simplify())) {
-      FabricNodeFactory nf = (FabricNodeFactory) lc.nodeFactory();
-
       FabricFieldDel feDel = (FabricFieldDel) fe.del();
 
       // Squirrel it away for rewrite.
