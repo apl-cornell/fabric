@@ -1,9 +1,14 @@
 * Are static non-final fields something we'll need to support?
 * More extensive testing (compiler and runtime).
-* Syntax for writersToReaders?  Alternatively, change method begin and end
-  conflict labels to be treated as converted to writersToReaders form by the
-  compiler...
 * Incorporate object splitting for more truth-y/safe locking behavior.
 * Does the runtime system gracefully handle stage commands out-of-transaction?
-* Return statements
-* Branching (If, While, For, Switch)
+* Branching:
+	* Procedure returns (return/exceptions), Conditional, and Ifs: working
+	  but could be improved to avoid unneeded
+	  stage checks.
+	* For
+	* Do
+	* While
+	* Try
+	* Switch
+	* Branch (think labeled continue/breaks)
