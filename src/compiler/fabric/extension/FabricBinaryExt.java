@@ -55,7 +55,7 @@ public class FabricBinaryExt extends JifBinaryExt {
         // conflict label after right (confidentiality check only), so we need
         // to stage when we're short circuiting.
         FabricStagingExt fse = FabricUtil.fabricStagingExt(b);
-        fse.setStageCheck(Xl.CL(), Xr.CL());
+        fse.setStageCheck(Xr.CL());
       }
     }
     return b;

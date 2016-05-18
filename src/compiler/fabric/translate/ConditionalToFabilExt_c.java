@@ -1,7 +1,5 @@
 package fabric.translate;
 
-import fabil.ast.FabILNodeFactory;
-
 import fabric.ast.FabricUtil;
 import fabric.extension.FabricStagingExt;
 import fabric.visit.FabricToFabilRewriter;
@@ -20,10 +18,6 @@ public class ConditionalToFabilExt_c extends ConditionalToJavaExt_c {
     Expr rewritten = (Expr) super.toJava(rw);
     FabricStagingExt fse = FabricUtil.fabricStagingExt(node());
     FabricToFabilRewriter frw = (FabricToFabilRewriter) rw;
-    FabILNodeFactory nf = (FabILNodeFactory) frw.java_nf();
-    if (fse.endStage() != null) {
-      return nf.StageCall(rewritten.position(), rewritten, frw.stageCheckExpr(node(), fse.endStage()));
-    }
-    return rewritten;
+    return fse.stageCheck(frw, node(), rewritten);
   }
 }

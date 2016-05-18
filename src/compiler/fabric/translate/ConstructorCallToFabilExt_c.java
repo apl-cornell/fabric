@@ -26,28 +26,22 @@ public class ConstructorCallToFabilExt_c extends ConstructorCallToJavaExt_c {
     ConstructorCall call = (ConstructorCall) super.toJava(frw);
     FabricStagingExt fse = FabricUtil.fabricStagingExt(orig);
     FabILNodeFactory nf = (FabILNodeFactory) frw.java_nf();
-    // Now update call with staging operation if needed
-    if (fse.endStage() != null) {
-      // Add in staging.
-      if (call.arguments().size() > 0) {
-        // Wrap the last argument
-        int lastIdx = call.arguments().size() - 1;
-        List<Expr> args = new ArrayList<>(call.arguments());
-        args.set(lastIdx,
-            nf.StageCall(call.position(),
-              args.get(lastIdx),
-              frw.stageCheckExpr(call, fse.endStage())));
-        call = (ConstructorCall) call.arguments(args);
-      } else {
-        // Use a ternary operator.
-        return rw.qq().parseExpr("%E ? %E : %E",
-              nf.StageCall(call.position(),
-                nf.BooleanLit(call.position(), true),
-                frw.stageCheckExpr(call, fse.endStage())),
-              call,
-              call);
-      }
+
+    // Add in staging.
+    if (call.arguments().size() > 0) {
+      // Wrap the last argument
+      int lastIdx = call.arguments().size() - 1;
+      List<Expr> args = new ArrayList<>(call.arguments());
+      args.set(lastIdx, fse.stageCheck(frw, orig, args.get(lastIdx)));
+      call = (ConstructorCall) call.arguments(args);
+    } else if (fse.nextStage() != null) {
+      // Use a ternary operator.
+      return rw.qq().parseExpr("%E ? %E : %E",
+            fse.stageCheck(frw, orig, nf.BooleanLit(call.position(), true)),
+            call,
+            call);
     }
+
     return call;
   }
 }

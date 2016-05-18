@@ -13,6 +13,7 @@ import codebases.types.CodebaseClassType;
 
 import fabil.FabILOptions;
 import fabil.ast.FabILNodeFactory;
+import fabil.ast.StageCall;
 import fabil.types.FabILTypeSystem;
 
 import fabric.ExtensionInfo;
@@ -24,22 +25,22 @@ import fabric.types.FabricSubstType;
 import fabric.types.FabricTypeSystem;
 
 import jif.translate.JifToJavaRewriter;
-import jif.types.label.Label;
 
-import polyglot.ast.Binary;
 import polyglot.ast.ClassDecl;
+import polyglot.ast.Conditional;
+import polyglot.ast.Eval;
 import polyglot.ast.Expr;
 import polyglot.ast.Node;
 import polyglot.ast.SourceFile;
 import polyglot.ast.TopLevelDecl;
 import polyglot.ast.TypeNode;
-import polyglot.ast.Unary;
 import polyglot.frontend.Job;
 import polyglot.frontend.Source;
 import polyglot.main.Report;
 import polyglot.types.SemanticException;
 import polyglot.types.Type;
 import polyglot.util.Position;
+import polyglot.visit.NodeVisitor;
 
 public class FabricToFabilRewriter extends JifToJavaRewriter {
   private static final Collection<String> TOPICS;
@@ -205,9 +206,20 @@ public class FabricToFabilRewriter extends JifToJavaRewriter {
     return staticThisExpr;
   }
 
-  public Expr stageCheckExpr(Node parent, Label endStage) {
-    Position pos = Position.compilerGenerated();
-    Expr fabExpr = jif_nf.LabelExpr(pos, endStage).type(jif_ts.Label());
-    return (Expr) visitEdge(parent, fabExpr);
+  @Override
+  public Node leaveCall(Node old, Node n, NodeVisitor v) {
+    if (n instanceof Eval) {
+      Eval ev = (Eval) n;
+      if (ev.expr() instanceof Conditional) {
+        Conditional cond = (Conditional) ev.expr();
+        if (cond.cond() instanceof StageCall) {
+          // The return type might be void for the original call, so fix
+          // rewriting to avoid a ternary with "void" type which is not allowed
+          // in Java.
+          n = qq().parseStmt("if (%E) %E;", cond.cond(), cond.consequent());
+        }
+      }
+    }
+    return super.leaveCall(old, n, v);
   }
 }

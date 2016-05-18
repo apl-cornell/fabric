@@ -72,16 +72,16 @@ public class BinaryToFabilExt_c extends BinaryToJavaExt_c {
         // e1 || e2 => e1 ? stage(true, nextStage) : e2
         return rw.qq().parseExpr("%E ? %E : %E",
             b.left(),
-            nf.StageCall(b.position(), nf.BooleanLit(b.position(), true), frw.stageCheckExpr(node(), fse.endStage())),
+            fse.stageCheck(frw, node(), nf.BooleanLit(b.position(), true)),
             b.right());
       }
 
       if (b.operator().equals(Binary.COND_AND)) {
         // e1 && e2 => !e1 ? stage(false, nextStage) : e2
-        return rw.qq().parseExpr("!(%E) ? %E : %E",
+        return rw.qq().parseExpr("%E ? %E : %E",
             b.left(),
-            nf.StageCall(b.position(), nf.BooleanLit(b.position(), false), frw.stageCheckExpr(node(), fse.endStage())),
-            b.right());
+            b.right(),
+            fse.stageCheck(frw, node(), nf.BooleanLit(b.position(), true)));
       }
     }
 

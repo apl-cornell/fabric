@@ -9,7 +9,6 @@ import jif.extension.JifConditionalExt;
 import jif.translate.ToJavaExt;
 import jif.types.JifContext;
 import jif.types.PathMap;
-import jif.types.label.Label;
 import jif.visit.LabelChecker;
 
 import polyglot.ast.Conditional;
@@ -35,7 +34,6 @@ public class FabricConditionalExt extends JifConditionalExt {
 
   @Override
   public Node labelCheck(LabelChecker lc) throws SemanticException {
-    Label origCL = ((FabricContext) lc.context()).conflictLabel();
     Conditional tern = (Conditional) super.labelCheck(lc);
 
     FabricTypeSystem ts = (FabricTypeSystem) lc.jifTypeSystem();
@@ -55,7 +53,7 @@ public class FabricConditionalExt extends JifConditionalExt {
       // branch we took, just stage up to the lower of the two.
       FabricStagingExt fse = FabricUtil.fabricStagingExt(tern);
       // Resulting path map CL will have the right stage label
-      fse.setStageCheck(origCL, ((FabricPathMap) getPathMap(tern)).CL());
+      fse.setStageCheck(((FabricPathMap) getPathMap(tern)).CL());
     }
 
     return tern;

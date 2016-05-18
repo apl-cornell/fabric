@@ -2,7 +2,6 @@ package fabric.extension;
 
 import java.util.List;
 
-import fabric.ast.FabricNodeFactory;
 import fabric.ast.FabricUtil;
 import fabric.types.FabricContext;
 import fabric.types.FabricMethodInstance;
@@ -11,7 +10,6 @@ import fabric.types.FabricProcedureInstance;
 import fabric.types.FabricTypeSystem;
 import fabric.types.NoAccesses;
 
-import jif.ast.JifExt_c;
 import jif.extension.CallHelper;
 import jif.types.ConstraintMessage;
 import jif.types.JifContext;
@@ -25,11 +23,9 @@ import jif.types.label.Label;
 import jif.types.principal.Principal;
 import jif.visit.LabelChecker;
 
-import polyglot.ast.Binary;
 import polyglot.ast.Expr;
 import polyglot.ast.ProcedureCall;
 import polyglot.ast.Receiver;
-import polyglot.ast.Unary;
 import polyglot.types.ReferenceType;
 import polyglot.types.SemanticException;
 import polyglot.types.Type;
@@ -252,8 +248,7 @@ public class FabricCallHelper extends CallHelper {
         FabricStagingExt fse = FabricUtil.fabricStagingExt(call);
 
         // Squirrel it away for rewrite.
-        fse.setStageCheck(conflictNL.label().simplify(),
-            beginConflictNL.label().simplify());
+        fse.setStageCheck(beginConflictNL.label().simplify());
       }
 
       lc.constrain(beginConflictNL,

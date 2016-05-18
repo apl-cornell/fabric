@@ -78,25 +78,19 @@ public class NewToFabilExt_c extends NewToJavaExt_c {
               n.arguments(), n.body());
 
       // Staging
-      if (fse.endStage() != null) {
-        if (n.arguments().size() > 0) {
-          // Wrap last argument
-          int lastIdx = n.arguments().size() - 1;
-          List<Expr> args = new ArrayList<>(n.arguments());
-          args.set(lastIdx,
-              nf.StageCall(n.position(),
-                args.get(lastIdx),
-                frw.stageCheckExpr(n, fse.endStage())));
-          n = n.arguments(args);
-          return n;
-        } else {
-          // Use a ternary operator.
-          return rw.qq().parseExpr("%E ? %E : %E",
-                nf.StageCall(n.position(), nf.BooleanLit(n.position(), true),
-                  frw.stageCheckExpr(n, fse.endStage())),
-                n,
-                n);
-        }
+      if (n.arguments().size() > 0) {
+        // Wrap last argument
+        int lastIdx = n.arguments().size() - 1;
+        List<Expr> args = new ArrayList<>(n.arguments());
+        args.set(lastIdx, fse.stageCheck(frw, n, args.get(lastIdx)));
+        n = n.arguments(args);
+        return n;
+      } else if (fse.nextStage() != null) {
+        // Use a ternary operator.
+        return rw.qq().parseExpr("%E ? %E : %E",
+              fse.stageCheck(frw, n, nf.BooleanLit(n.position(), true)),
+              n,
+              n);
       }
       return n;
     }
@@ -121,26 +115,20 @@ public class NewToFabilExt_c extends NewToJavaExt_c {
           nf.New(n.position(), n.qualifier(), n.objectType(), loc, paramargs);
 
       // Staging
-      if (fse.endStage() != null) {
-        if (n.arguments().size() > 0) {
-          // Wrap last argument
-          int lastIdx = n.arguments().size() - 1;
-          List<Expr> args = new ArrayList<>(n.arguments());
-          args.set(lastIdx,
-              nf.StageCall(n.position(),
-                args.get(lastIdx),
-                frw.stageCheckExpr(n, fse.endStage())));
-          n = n.arguments(args);
-          return rw.qq().parseExpr("(%T) %E.%s(%LE)", n.objectType(), newExpr,
-              name, n.arguments());
-        } else {
-          // Use a ternary operator.
-          return rw.qq().parseExpr("%E ? (%T) %E.%s(%LE) : (%T) %E.%s(%LE)",
-                nf.StageCall(n.position(), nf.BooleanLit(n.position(), true),
-                  frw.stageCheckExpr(n, fse.endStage())),
-                n.objectType(), newExpr, name, n.arguments(),
-                n.objectType(), newExpr, name, n.arguments());
-        }
+      if (n.arguments().size() > 0) {
+        // Wrap last argument
+        int lastIdx = n.arguments().size() - 1;
+        List<Expr> args = new ArrayList<>(n.arguments());
+        args.set(lastIdx, fse.stageCheck(frw, n, args.get(lastIdx)));
+        n = n.arguments(args);
+        return rw.qq().parseExpr("(%T) %E.%s(%LE)", n.objectType(), newExpr,
+            name, n.arguments());
+      } else if (fse.nextStage() != null) {
+        // Use a ternary operator.
+        return rw.qq().parseExpr("%E ? (%T) %E.%s(%LE) : (%T) %E.%s(%LE)",
+              fse.stageCheck(frw, n, nf.BooleanLit(n.position(), true)),
+              n.objectType(), newExpr, name, n.arguments(),
+              n.objectType(), newExpr, name, n.arguments());
       }
 
       return rw.qq().parseExpr("(%T) %E.%s(%LE)", n.objectType(), newExpr,
@@ -154,24 +142,18 @@ public class NewToFabilExt_c extends NewToJavaExt_c {
       allArgs.addAll(n.arguments());
 
       // Staging
-      if (fse.endStage() != null) {
-        if (allArgs.size() > 0) {
-          // Wrap last argument
-          int lastIdx = allArgs.size() - 1;
-          List<Expr> args = new ArrayList<>(allArgs);
-          args.set(lastIdx,
-              nf.StageCall(n.position(),
-                args.get(lastIdx),
-                frw.stageCheckExpr(n, fse.endStage())));
-          return rw.qq().parseExpr("new %T(%LE)", n.objectType(), allArgs);
-        } else {
-          // Use a ternary operator.
-          return rw.qq().parseExpr("%E ? new %T() : new %T()",
-                nf.StageCall(n.position(), nf.BooleanLit(n.position(), true),
-                  frw.stageCheckExpr(n, fse.endStage())),
-                n.objectType(),
-                n.objectType());
-        }
+      if (allArgs.size() > 0) {
+        // Wrap last argument
+        int lastIdx = allArgs.size() - 1;
+        List<Expr> args = new ArrayList<>(allArgs);
+        args.set(lastIdx, fse.stageCheck(frw, n, args.get(lastIdx)));
+        return rw.qq().parseExpr("new %T(%LE)", n.objectType(), args);
+      } else if (fse.nextStage() != null) {
+        // Use a ternary operator.
+        return rw.qq().parseExpr("%E ? new %T() : new %T()",
+              fse.stageCheck(frw, n, nf.BooleanLit(n.position(), true)),
+              n.objectType(),
+              n.objectType());
       }
 
       return rw.qq().parseExpr("new %T(%LE)", n.objectType(), allArgs);

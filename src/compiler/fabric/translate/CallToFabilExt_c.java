@@ -10,6 +10,7 @@ import fabric.ast.FabricCall;
 import fabric.ast.FabricUtil;
 import fabric.extension.FabricStagingExt;
 import fabric.visit.FabricToFabilRewriter;
+
 import jif.translate.CallToJavaExt_c;
 import jif.translate.JifToJavaRewriter;
 
@@ -55,32 +56,25 @@ public class CallToFabilExt_c extends CallToJavaExt_c {
 
       FabricStagingExt fse = FabricUtil.fabricStagingExt(c);
       FabILNodeFactory fnf = (FabILNodeFactory) rw.java_nf();
-      if (fse.endStage() != null) {
-        // Add in staging.
-        if (result.arguments().size() > 0) {
-          // Wrap the last argument
-          int lastIdx = result.arguments().size() - 1;
-          List<Expr> args = new ArrayList<>(result.arguments());
-          args.set(lastIdx,
-              fnf.StageCall(result.position(),
-                args.get(lastIdx),
-                frw.stageCheckExpr(c, fse.endStage())));
-          result = (FabILCall) result.arguments(args);
-        } else if (result.target() instanceof Expr) {
-          // Wrap the target
-          result = (FabILCall) result.target(fnf.StageCall(result.position(),
-                (Expr) result.target(),
-                frw.stageCheckExpr(c, fse.endStage())));
-        } else {
-          // Use a ternary operator.
-          return rw.qq().parseExpr("%E ? %E : %E",
-                fnf.StageCall(result.position(), fnf.BooleanLit(result.position(), true),
-                  frw.stageCheckExpr(c, fse.endStage())),
-                result,
-                result);
-        }
-      }
 
+      // Add in staging.
+      if (result.arguments().size() > 0) {
+        // Wrap the last argument
+        int lastIdx = result.arguments().size() - 1;
+        List<Expr> args = new ArrayList<>(result.arguments());
+        args.set(lastIdx, fse.stageCheck(frw, c, args.get(lastIdx)));
+        result = (FabILCall) result.arguments(args);
+      } else if (result.target() instanceof Expr) {
+        // Wrap the target
+        result = (FabILCall) result.target(fse.stageCheck(frw, c,
+              (Expr) result.target()));
+      } else if (fse.nextStage() != null) {
+        // Use a ternary operator.
+        return rw.qq().parseExpr("%E ? %E : %E",
+              fse.stageCheck(frw, c, fnf.BooleanLit(result.position(), true)),
+              result,
+              result);
+      }
       return result;
     }
     return e;

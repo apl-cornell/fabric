@@ -1,7 +1,5 @@
 package fabric.translate;
 
-import fabil.ast.FabILNodeFactory;
-
 import fabric.ast.FabricUtil;
 import fabric.extension.FabricStagingExt;
 import fabric.visit.FabricToFabilRewriter;
@@ -23,14 +21,11 @@ public class FieldToFabilExt_c extends FieldToJavaExt_c {
     Field orig = (Field) node();
     FabricStagingExt fse = FabricUtil.fabricStagingExt(orig);
     Field fd = (Field) super.toJava(rw);
-    if (fse.endStage() != null) {
-      FabILNodeFactory nf = (FabILNodeFactory) rw.java_nf();
+    if (fse.nextStage() != null) {
       if (!(fd.target() instanceof Expr)) {
         throw new InternalCompilerError("Staging does not currently support static non-final fields!");
       }
-      Expr targetExp = (Expr) fd.target();
-      return fd.target(nf.StageCall(fd.position(), targetExp,
-            frw.stageCheckExpr(orig, fse.endStage())));
+      return fd.target(fse.stageCheck(frw, orig, (Expr) fd.target()));
     }
     return fd;
   }

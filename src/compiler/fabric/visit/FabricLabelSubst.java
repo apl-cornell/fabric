@@ -23,8 +23,8 @@ public class FabricLabelSubst extends JifLabelSubst {
     Node nd = super.updateNode(n);
     // Substitute for labels in staging check.
     FabricStagingExt fse = FabricUtil.fabricStagingExt(nd);
-    if (fse.startStage() != null || fse.endStage() != null) {
-      fse.setStageCheck(bounds.applyTo(fse.startStage()), bounds.applyTo(fse.endStage()));
+    if (fse.nextStage() != null) {
+      fse.setStageCheck(bounds.applyTo(fse.nextStage()));
     }
     return nd;
   }
