@@ -50,7 +50,7 @@ public class FabricBinaryExt extends JifBinaryExt {
       FabricTypeSystem ts = (FabricTypeSystem) lc.jifTypeSystem();
       FabricPathMap Xl = (FabricPathMap) getPathMap(b.left());
       FabricPathMap Xr = (FabricPathMap) getPathMap(b.right());
-      if (!Xl.CL().equals(ts.noAccesses()) && !lc.context().labelEnv().leq(Xl.CL(), Xr.CL())) {
+      if (!Xr.CL().equals(ts.noAccesses()) && !lc.context().labelEnv().leq(Xl.CL(), Xr.CL())) {
         // stage conflict label after left does not statically flow to the stage
         // conflict label after right (confidentiality check only), so we need
         // to stage when we're short circuiting.
