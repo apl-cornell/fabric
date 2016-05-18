@@ -1,9 +1,9 @@
 public class noaccess {
 
   public void wat1@{*->}(final label l1, final label l2)@{_->} where l2 <= l1 {
-    wat2(l2);
-    wat3();
     wat2(l1);
+    wat3();
+    wat2(l2);
   }
 
   public int wat2@{*l}(final label l)@{*l} {
