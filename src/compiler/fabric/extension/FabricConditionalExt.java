@@ -12,6 +12,7 @@ import jif.types.PathMap;
 import jif.visit.LabelChecker;
 
 import polyglot.ast.Conditional;
+import polyglot.ast.Expr;
 import polyglot.ast.Node;
 import polyglot.types.SemanticException;
 import polyglot.util.SerialVersionUID;
@@ -42,6 +43,20 @@ public class FabricConditionalExt extends JifConditionalExt {
     FabricTypeSystem ts = (FabricTypeSystem) lc.jifTypeSystem();
     FabricPathMap Xt = (FabricPathMap) getPathMap(tern.consequent());
     FabricPathMap Xf = (FabricPathMap) getPathMap(tern.alternative());
+
+    // Simplify based on environment
+    FabricPathMap X = (FabricPathMap) getPathMap(tern);
+    if (lc.context().labelEnv().leq(Xt.CL(), Xf.CL()) && lc.context().labelEnv().leq(Xt.CL(), Xf.CL())) {
+      Expr alt = (Expr) updatePathMap(tern.alternative(), Xf.CL(Xt.CL()));
+      tern = tern.alternative(alt);
+      X = X.CL(Xt.CL());
+    } else if (lc.context().labelEnv().leq(Xt.CL(), Xf.CL())) {
+      X = X.CL(Xt.CL());
+    } else if (lc.context().labelEnv().leq(Xf.CL(), Xt.CL())) {
+      X = X.CL(Xf.CL());
+    }
+    tern = (Conditional) updatePathMap(tern, X);
+
     // Either:
     // consequent staged and alternative didn't
     // alternative staged and consequent didn't
