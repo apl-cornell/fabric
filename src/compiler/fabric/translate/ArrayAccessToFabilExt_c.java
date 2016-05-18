@@ -2,7 +2,8 @@ package fabric.translate;
 
 import fabil.ast.FabILNodeFactory;
 
-import fabric.extension.FabricArrayAccessDel;
+import fabric.ast.FabricUtil;
+import fabric.extension.FabricStagingExt;
 import fabric.visit.FabricToFabilRewriter;
 
 import jif.translate.ArrayAccessToJavaExt_c;
@@ -17,12 +18,12 @@ public class ArrayAccessToFabilExt_c extends ArrayAccessToJavaExt_c {
   public Node toJava(JifToJavaRewriter rw) {
     FabricToFabilRewriter frw = (FabricToFabilRewriter) rw;
     ArrayAccess orig = (ArrayAccess) node();
-    FabricArrayAccessDel aad = (FabricArrayAccessDel) orig.del();
+    FabricStagingExt fse = FabricUtil.fabricStagingExt(orig);
     ArrayAccess aa = (ArrayAccess) super.toJava(rw);
-    if (aad.endStage() != null) {
+    if (fse.endStage() != null) {
       FabILNodeFactory nf = (FabILNodeFactory) rw.java_nf();
       return aa.array(nf.StageCall(aa.position(), aa.array(),
-            frw.stageCheckExpr(orig, aad.endStage())));
+            frw.stageCheckExpr(orig, fse.endStage())));
     }
     return aa;
   }

@@ -1,6 +1,7 @@
 package fabric.visit;
 
-import fabric.extension.FabricStagingDel;
+import fabric.ast.FabricUtil;
+import fabric.extension.FabricStagingExt;
 
 import jif.types.JifTypeSystem;
 import jif.types.Solver;
@@ -20,12 +21,10 @@ public class FabricLabelSubst extends JifLabelSubst {
   @Override
   protected Node updateNode(Node n) throws SemanticException {
     Node nd = super.updateNode(n);
-    if (nd.del() instanceof FabricStagingDel) {
-      // Substitute for labels in staging check.
-      FabricStagingDel fsd = (FabricStagingDel) nd.del();
-      if (fsd.startStage() != null || fsd.endStage() != null) {
-        fsd.setStageCheck(bounds.applyTo(fsd.startStage()), bounds.applyTo(fsd.endStage()));
-      }
+    // Substitute for labels in staging check.
+    FabricStagingExt fse = FabricUtil.fabricStagingExt(nd);
+    if (fse.startStage() != null || fse.endStage() != null) {
+      fse.setStageCheck(bounds.applyTo(fse.startStage()), bounds.applyTo(fse.endStage()));
     }
     return nd;
   }

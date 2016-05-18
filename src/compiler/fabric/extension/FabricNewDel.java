@@ -22,7 +22,7 @@ import polyglot.visit.AmbiguityRemover;
 import polyglot.visit.NodeVisitor;
 import polyglot.visit.TypeChecker;
 
-public class FabricNewDel extends JifNewDel implements NewOps, FabricStagingDel {
+public class FabricNewDel extends JifNewDel implements NewOps {
   @Override
   public Node visitChildren(NodeVisitor v) {
     Node n = super.visitChildren(v);
@@ -113,27 +113,5 @@ public class FabricNewDel extends JifNewDel implements NewOps, FabricStagingDel 
       return FabricUtil.updateFabricExt(n, ext);
     }
     return n;
-  }
-
-  /**
-   * Squirreled away the stage labels to check in rewritten code.
-   */
-  protected Label startStage;
-  protected Label endStage;
-
-  @Override
-  public Label startStage() {
-    return startStage;
-  }
-
-  @Override
-  public Label endStage() {
-    return endStage;
-  }
-
-  @Override
-  public void setStageCheck(Label startStage, Label endStage) {
-    this.startStage = startStage;
-    this.endStage = endStage;
   }
 }

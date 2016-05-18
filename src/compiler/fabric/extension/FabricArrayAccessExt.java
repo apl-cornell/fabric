@@ -1,11 +1,10 @@
 package fabric.extension;
 
-import fabric.ast.FabricNodeFactory;
+import fabric.ast.FabricUtil;
 import fabric.types.FabricContext;
 import fabric.types.FabricPathMap;
 import fabric.types.FabricReferenceType;
 import fabric.types.FabricTypeSystem;
-import fabric.types.NoAccesses;
 
 import jif.extension.JifArrayAccessExt;
 import jif.translate.ToJavaExt;
@@ -19,10 +18,8 @@ import jif.types.label.Label;
 import jif.visit.LabelChecker;
 
 import polyglot.ast.ArrayAccess;
-import polyglot.ast.Binary;
 import polyglot.ast.Expr;
 import polyglot.ast.Node;
-import polyglot.ast.Unary;
 import polyglot.types.SemanticException;
 import polyglot.util.Position;
 
@@ -106,10 +103,10 @@ public class FabricArrayAccessExt extends JifArrayAccessExt {
     // checking state.
     if (!lc.context().labelEnv().leq(conflictPC.label().simplify(),
           ts.join(conflictL.label().simplify(), ts.noComponentsLabel()))) {
-      FabricArrayAccessDel accDel = (FabricArrayAccessDel) acc.del();
+      FabricStagingExt fse = FabricUtil.fabricStagingExt(acc);
 
       // Squirrel it away for rewrite.
-      accDel.setStageCheck(conflictPC.label().simplify(),
+      fse.setStageCheck(conflictPC.label().simplify(),
           conflictL.label().simplify());
     }
 

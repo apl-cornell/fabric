@@ -3,6 +3,7 @@ package fabric.extension;
 import java.util.List;
 
 import fabric.ast.FabricNodeFactory;
+import fabric.ast.FabricUtil;
 import fabric.types.FabricContext;
 import fabric.types.FabricMethodInstance;
 import fabric.types.FabricPathMap;
@@ -248,10 +249,10 @@ public class FabricCallHelper extends CallHelper {
       // checking state.
       if (!lc.context().labelEnv().leq(conflictNL.label().simplify(),
             fts.join(beginConflictNL.label().simplify(), fts.noComponentsLabel()))) {
-        FabricStagingDel cDel = (FabricStagingDel) call.del();
+        FabricStagingExt fse = FabricUtil.fabricStagingExt(call);
 
         // Squirrel it away for rewrite.
-        cDel.setStageCheck(conflictNL.label().simplify(),
+        fse.setStageCheck(conflictNL.label().simplify(),
             beginConflictNL.label().simplify());
       }
 

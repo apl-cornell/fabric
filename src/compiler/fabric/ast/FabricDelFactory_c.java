@@ -2,11 +2,8 @@ package fabric.ast;
 
 import codebases.ast.CodebaseImportDel_c;
 
-import fabric.extension.FabricArrayAccessDel;
 import fabric.extension.FabricCallDel;
-import fabric.extension.FabricConstructorCallDel;
 import fabric.extension.FabricFieldDeclDel;
-import fabric.extension.FabricFieldDel;
 import fabric.extension.FabricNewDel;
 import fabric.extension.FabricNewFabricArrayDel;
 import fabric.extension.FabricNewLabelDel;
@@ -252,11 +249,6 @@ FabricDelFactory {
   }
 
   @Override
-  protected JLDel delConstructorCallImpl() {
-    return new FabricConstructorCallDel();
-  }
-
-  @Override
   protected JLDel delCallImpl() {
     return new FabricCallDel();
   }
@@ -279,16 +271,6 @@ FabricDelFactory {
   @Override
   public JLDel delAccessPolicy() {
     return delNode();
-  }
-
-  @Override
-  protected JLDel delFieldImpl() {
-    return new FabricFieldDel();
-  }
-
-  @Override
-  protected JLDel delArrayAccessImpl() {
-    return new FabricArrayAccessDel();
   }
 
 }

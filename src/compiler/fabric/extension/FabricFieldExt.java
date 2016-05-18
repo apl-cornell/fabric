@@ -1,6 +1,6 @@
 package fabric.extension;
 
-import fabric.ast.FabricNodeFactory;
+import fabric.ast.FabricUtil;
 import fabric.types.FabricContext;
 import fabric.types.FabricPathMap;
 import fabric.types.FabricTypeSystem;
@@ -14,13 +14,10 @@ import jif.types.NamedLabel;
 import jif.types.label.Label;
 import jif.visit.LabelChecker;
 
-import polyglot.ast.Binary;
-import polyglot.ast.Expr;
 import polyglot.ast.Field;
 import polyglot.ast.Node;
 import polyglot.ast.Receiver;
 import polyglot.ast.Special;
-import polyglot.ast.Unary;
 import polyglot.types.ConstructorInstance;
 import polyglot.types.SemanticException;
 import polyglot.util.Position;
@@ -111,10 +108,10 @@ public class FabricFieldExt extends JifFieldExt {
     // checking state.
     if (!lc.context().labelEnv().leq(conflictPC.label().simplify(),
           ts.join(conflictL.label().simplify(), ts.noComponentsLabel()))) {
-      FabricFieldDel feDel = (FabricFieldDel) fe.del();
+      FabricStagingExt fse = FabricUtil.fabricStagingExt(fe);
 
       // Squirrel it away for rewrite.
-      feDel.setStageCheck(conflictPC.label().simplify(),
+      fse.setStageCheck(conflictPC.label().simplify(),
           conflictL.label().simplify());
     }
 

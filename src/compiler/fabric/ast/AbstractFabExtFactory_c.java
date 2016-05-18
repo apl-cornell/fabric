@@ -1,6 +1,7 @@
 package fabric.ast;
 
 import jif.ast.AbstractJifExtFactory_c;
+
 import polyglot.ast.Ext;
 import polyglot.ast.ExtFactory;
 

@@ -10,14 +10,13 @@ import jif.extension.JifCallDel;
 import jif.types.JifMethodInstance;
 import jif.types.JifSubstType;
 import jif.types.Param;
-import jif.types.label.Label;
 import jif.types.label.VarLabel;
 
 import polyglot.ast.Call;
 import polyglot.ast.Expr;
 import polyglot.ast.Receiver;
 
-public class FabricCallDel extends JifCallDel implements FabricStagingDel {
+public class FabricCallDel extends JifCallDel {
   @Override
   public boolean targetIsNeverNull() {
     Receiver r = ((Call) node()).target();
@@ -58,27 +57,5 @@ public class FabricCallDel extends JifCallDel implements FabricStagingDel {
     } else {
         this.paramVarLabels = Collections.emptyList();
     }
-  }
-
-  /**
-   * Squirreled away the stage labels to check in rewritten code.
-   */
-  protected Label startStage;
-  protected Label endStage;
-
-  @Override
-  public Label startStage() {
-    return startStage;
-  }
-
-  @Override
-  public Label endStage() {
-    return endStage;
-  }
-
-  @Override
-  public void setStageCheck(Label startStage, Label endStage) {
-    this.startStage = startStage;
-    this.endStage = endStage;
   }
 }
