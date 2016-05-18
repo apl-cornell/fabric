@@ -75,8 +75,13 @@ public class MethodDeclJifExt extends JifMethodDeclExt {
     super.addReturnConstraints(Li, X, mi, lc, returnType);
 
     FabricMethodInstance fmi = (FabricMethodInstance) mi;
+    FabricTypeSystem ts = (FabricTypeSystem) lc.typeSystem();
     FabricContext A = (FabricContext) lc.context();
     FabricPathMap Xf = (FabricPathMap) X;
+
+    // Don't bother if we didn't make accesses.
+    if (Xf.CL().equals(ts.noAccesses()))
+      return;
     
     final String name = ((JifMethodDecl) node()).name();
 
@@ -89,7 +94,6 @@ public class MethodDeclJifExt extends JifMethodDeclExt {
         "the meet of the conflict labels of accesses up to the end of the method",
         Xf.CL());
 
-    FabricTypeSystem ts = (FabricTypeSystem) lc.jifTypeSystem();
     // Check that the end conflict label is respected by the method body.
     lc.constrain(endConflictBoundLabel,
         LabelConstraint.LEQ,
@@ -108,14 +112,18 @@ public class MethodDeclJifExt extends JifMethodDeclExt {
     // Label check
     FabricMethodDecl fmd = (FabricMethodDecl) super.labelCheck(lc);
 
-    // Add staging to the end: no matter how we leave the method, there's one
-    // final staging check.
-    FabricTypeSystem ts = (FabricTypeSystem) lc.typeSystem();
-    FabricMethodInstance fmi = (FabricMethodInstance) fmd.methodInstance();
-    if (!fmi.endConflictLabel().equals(ts.noAccesses())) {
-      FabricStagingExt fse = FabricUtil.fabricStagingExt(fmd);
-      fse.setStageCheck(fmi.endConflictLabel());
+    // Will be null if there was a compilation problem.
+    if (fmd != null) {
+      // Add staging to the end: no matter how we leave the method, there's one
+      // final staging check.
+      FabricTypeSystem ts = (FabricTypeSystem) lc.typeSystem();
+      FabricMethodInstance fmi = (FabricMethodInstance) fmd.methodInstance();
+      if (!fmi.endConflictLabel().equals(ts.noAccesses())) {
+        FabricStagingExt fse = FabricUtil.fabricStagingExt(fmd);
+        fse.setStageCheck(fmi.endConflictLabel());
+      }
     }
+
     return fmd;
   }
 }

@@ -240,7 +240,8 @@ public class FabricCallHelper extends CallHelper {
       // XXX: I don't think we need to update the pathmap or anything, since
       // straight label comparisons don't do anything interesting for label
       // checking state.
-      if (!lc.context().labelEnv().leq(conflictNL.label().simplify(),
+      if (conflictNL.label().hasVariableComponents() ||
+          !lc.context().labelEnv().leq(conflictNL.label().simplify(),
             fts.join(beginConflictNL.label().simplify(), fts.noComponentsLabel()))) {
         FabricStagingExt fse = FabricUtil.fabricStagingExt(call);
 

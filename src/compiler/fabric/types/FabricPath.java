@@ -10,9 +10,7 @@ import polyglot.util.SerialVersionUID;
 public interface FabricPath extends Path {
   /**
    * Path Conflict Label: Meet of the conflict labels of all accesses up to the
-   * current point.
-   *
-   * Note that the FabricPathMap handles this meet vs. join difference.
+   * current point (sort of the conflict label analogue of N).
    */
   public static final Path CL = new FixedFabricPath("CL");
 

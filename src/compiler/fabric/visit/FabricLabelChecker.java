@@ -4,7 +4,6 @@ import java.util.List;
 
 import fabric.extension.FabricCallHelper;
 import fabric.types.FabricContext;
-import fabric.types.FabricPath;
 import fabric.types.FabricPathMap;
 import fabric.types.FabricTypeSystem;
 import fabric.types.SilenceableSolverGLB;
@@ -14,7 +13,6 @@ import jif.ast.JifMethodDecl;
 import jif.ast.JifUtil;
 import jif.extension.CallHelper;
 import jif.types.JifProcedureInstance;
-import jif.types.Path;
 import jif.types.label.Label;
 import jif.visit.JifLabelSubst;
 import jif.visit.LabelChecker;
@@ -72,11 +70,6 @@ public class FabricLabelChecker extends LabelChecker {
   protected Object clone() throws CloneNotSupportedException {
     // TODO Auto-generated method stub
     return super.clone();
-  }
-
-  @Override
-  public boolean ignoredForSinglePathRule(Path p) {
-    return super.ignoredForSinglePathRule(p) || p.equals(FabricPath.CL);
   }
 
   @Override

@@ -5,6 +5,7 @@ import codebases.types.CodebaseContext;
 import jif.types.JifContext;
 import jif.types.label.Label;
 
+import polyglot.ast.Branch;
 import polyglot.ast.Expr;
 import polyglot.types.Context;
 
@@ -42,4 +43,18 @@ public interface FabricContext extends JifContext, CodebaseContext {
    * Set end conflict label of the current method
    */
   void setEndConflictBound(Label endConflict);
+
+  /**
+   * Retrieve the <code>Label</code> associated with the current stage when
+   * branching to the location <code>label</code>, with the branch kind
+   * <code>kind</code>.
+   */
+  Label gotoConflictLabel(Branch.Kind kind, String label);
+
+  /**
+   * Record the <code>Label</code> associated with the current stage when
+   * branching to the location <code>label</code>, with the branch kind
+   * <code>kind</code>.
+   */
+  void gotoConflictLabel(Branch.Kind kind, String label, Label L);
 }

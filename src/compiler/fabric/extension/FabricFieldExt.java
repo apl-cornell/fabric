@@ -105,7 +105,8 @@ public class FabricFieldExt extends JifFieldExt {
     // XXX: I don't think we need to update the pathmap or anything, since
     // straight label comparisons don't do anything interesting for label
     // checking state.
-    if (!lc.context().labelEnv().leq(conflictPC.label().simplify(),
+    if (conflictPC.label().hasVariableComponents() ||
+        !lc.context().labelEnv().leq(conflictPC.label().simplify(),
           ts.join(conflictL.label().simplify(), ts.noComponentsLabel()))) {
       FabricStagingExt fse = FabricUtil.fabricStagingExt(fe);
 

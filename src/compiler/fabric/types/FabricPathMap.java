@@ -1,6 +1,10 @@
 package fabric.types;
 
-import jif.types.JifTypeSystem;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Set;
+
 import jif.types.LabelSubstitution;
 import jif.types.Path;
 import jif.types.PathMap;
@@ -9,15 +13,38 @@ import jif.types.label.Label;
 
 import polyglot.types.SemanticException;
 import polyglot.types.Type;
-import polyglot.util.InternalCompilerError;
 
 /**
  * Extends the Jif PathMap with the path conflict label (CL).
  */
 public class FabricPathMap extends PathMap {
 
-  public FabricPathMap(JifTypeSystem ts) {
+  protected Map<Path, Label> conflictMap;
+
+  public FabricPathMap(FabricTypeSystem ts) {
     super(ts);
+    conflictMap = new HashMap<>(4);
+  }
+
+  @Override
+  public FabricPathMap set(Path p, Label L) {
+    FabricPathMap n = (FabricPathMap) super.set(p, L);
+    n.conflictMap.putAll(conflictMap);
+    return n;
+  }
+
+  public FabricPathMap setCL(Path p, Label L) {
+    FabricPathMap n = (FabricPathMap) ts.pathMap();
+    n.map.putAll(map);
+    n.conflictMap.putAll(conflictMap);
+
+    if (L instanceof NoAccesses) {
+      n.conflictMap.remove(p);
+    } else {
+      n.conflictMap.put(p, L);
+    }
+
+    return n;
   }
 
   /**
@@ -26,7 +53,7 @@ public class FabricPathMap extends PathMap {
    * @return An updated copy of the FabricPathMap.
    */
   public FabricPathMap CL(Label label) {
-    return set(FabricPath.CL, label);
+    return setCL(FabricPath.CL, label);
   }
 
   /**
@@ -37,9 +64,9 @@ public class FabricPathMap extends PathMap {
     // Default to {⊤→;⊥←} for CL since we'll be performing meets.
     //
     // TODO: Should I instead use NoAccesses?
-    if (!map.containsKey(FabricPath.CL))
+    if (!conflictMap.containsKey(FabricPath.CL))
       return ((FabricTypeSystem) ts).noAccesses();
-    return get(FabricPath.CL);
+    return getCL(FabricPath.CL);
   }
 
   /* Below are overidden to avoid hilarious amounts of casting elsewhere. */
@@ -71,29 +98,24 @@ public class FabricPathMap extends PathMap {
 
   @Override
   public FabricPathMap join(PathMap m) {
-    FabricPathMap r = (FabricPathMap) super.join(m);
-    // CL is actually a meet across statements, unlike other path labels.
-    if (!(m instanceof FabricPathMap)) {
-      throw new InternalCompilerError(
-          "Different PathMap implementations should not be mixed!");
-    }
-
     FabricPathMap fm = (FabricPathMap) m;
-    if (fm.map.containsKey(FabricPath.CL) && map.containsKey(FabricPath.CL)) {
-      r = r.set(FabricPath.CL, ts.meet(CL(), m.get(FabricPath.CL)));
-    } else if (!fm.map.containsKey(FabricPath.CL) && map.containsKey(FabricPath.CL)) {
-      r = r.set(FabricPath.CL, CL());
-    } else if (fm.map.containsKey(FabricPath.CL) && !map.containsKey(FabricPath.CL)) {
-      r = r.set(FabricPath.CL, m.get(FabricPath.CL));
-    } else {
-      r.map.remove(FabricPath.CL);
-    }
-    return r;
-  }
+    FabricPathMap n = (FabricPathMap) super.join(m);
+    n.conflictMap.putAll(map);
 
-  @Override
-  public FabricPathMap set(Path p, Label L) {
-    return (FabricPathMap) super.set(p, L);
+    // Iterate over the elements of X, meeting those labels with the ones
+    // in this and adding the ones that aren't there.
+    for (Map.Entry<Path, Label> e : fm.conflictMap.entrySet()) {
+      Path p = e.getKey();
+      Label l1 = e.getValue();
+      Label l2 = n.getCL(p);
+      if (l2 instanceof NoAccesses) {
+        n.conflictMap.put(p, l1);
+      } else {
+        n.conflictMap.put(p, ts.meet(l1, l2));
+      }
+    }
+
+    return n;
   }
 
   @Override
@@ -106,21 +128,16 @@ public class FabricPathMap extends PathMap {
     return (FabricPathMap) super.subst(bounds);
   }
 
-  @Override
-  public Label get(Path p) {
-    // Make sure we don't return NotTaken for CL.
-    if (p.equals(FabricPath.CL) && !map.containsKey(p))
+  /**
+   * Get the conflict label associated with the given path.
+   */
+  public Label getCL(Path p) {
+    if (!conflictMap.containsKey(p))
       return ((FabricTypeSystem) ts).noAccesses();
-    return super.get(p);
+    return conflictMap.get(p);
   }
 
-  @Override
-  public boolean singlePath() {
-    for (Path p : paths()) {
-      if (p.equals(Path.N) || p.equals(Path.R) || p.equals(FabricPath.CL))
-        continue;
-      return false;
-    }
-    return true;
+  public Set<Path> conflictPaths() {
+    return new LinkedHashSet<>(conflictMap.keySet());
   }
 }

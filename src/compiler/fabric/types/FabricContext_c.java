@@ -2,6 +2,8 @@ package fabric.types;
 
 import java.net.URI;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 import codebases.types.CBImportTable;
 import codebases.types.CodebaseTypeSystem;
@@ -10,11 +12,10 @@ import jif.types.JifContext_c;
 import jif.types.JifTypeSystem;
 import jif.types.label.Label;
 
+import polyglot.ast.Branch;
 import polyglot.ast.Expr;
 import polyglot.main.Report;
-import polyglot.types.CodeInstance;
 import polyglot.types.Context;
-import polyglot.types.Context_c;
 import polyglot.types.LocalInstance;
 import polyglot.types.Named;
 import polyglot.types.SemanticException;
@@ -36,6 +37,11 @@ public class FabricContext_c extends JifContext_c implements FabricContext {
   protected Label beginConflictBound; //Begin conflict label of current method.
 
   protected Label endConflictBound; //End conflict label of the current method.
+
+  /**
+   * Map from JifContext_c.Key (pairs of Branch.Kind and String) to Labels.
+   */
+  protected Map<Key, Label> conflictGotos;
 
   @Override
   public Label conflictLabel() {
@@ -170,4 +176,15 @@ public class FabricContext_c extends JifContext_c implements FabricContext {
     return ((CBImportTable) it).resolveCodebaseName(name);
   }
 
+  @Override
+  public Label gotoConflictLabel(Branch.Kind kind, String label) {
+    if (conflictGotos == null) return null;
+    return conflictGotos.get(new Key(kind, label));
+  }
+
+  @Override
+  public void gotoConflictLabel(Branch.Kind kind, String label, Label L) {
+    if (conflictGotos == null) conflictGotos = new HashMap<>();
+    conflictGotos.put(new Key(kind, label), L);
+  }
 }

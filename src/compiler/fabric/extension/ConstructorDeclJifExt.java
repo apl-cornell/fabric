@@ -103,8 +103,13 @@ public class ConstructorDeclJifExt extends JifConstructorDeclExt implements Ext 
     super.addReturnConstraints(Li, X, ci, lc, returnType);
 
     FabricConstructorInstance fci = (FabricConstructorInstance) ci;
+    FabricTypeSystem ts = (FabricTypeSystem) lc.jifTypeSystem();
     FabricContext A = (FabricContext) lc.context();
     FabricPathMap Xf = (FabricPathMap) X;
+
+    // Don't bother if we didn't make accesses.
+    if (Xf.CL().equals(ts.noAccesses()))
+      return;
     
     final String name = ((JifConstructorDecl) node()).name();
 
@@ -117,7 +122,6 @@ public class ConstructorDeclJifExt extends JifConstructorDeclExt implements Ext 
         "the meet of the conflict labels of accesses up to the end of the method",
         Xf.CL());
 
-    FabricTypeSystem ts = (FabricTypeSystem) lc.jifTypeSystem();
     // Check that the end conflict label is respected by the method body.
     lc.constrain(endConflictBoundLabel,
         LabelConstraint.LEQ,
