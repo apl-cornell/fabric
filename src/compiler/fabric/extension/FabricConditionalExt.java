@@ -29,7 +29,10 @@ public class FabricConditionalExt extends JifConditionalExt {
     super.updateContextForConsequent(lc, A, Xexpr);
     FabricContext Af = (FabricContext) A;
     FabricPathMap Xfexpr = (FabricPathMap) Xexpr;
-    Af.setConflictLabel(lc.jifTypeSystem().meet(Af.conflictLabel(), Xfexpr.CL()));
+    FabricTypeSystem ts = (FabricTypeSystem) lc.jifTypeSystem();
+    if (!Xfexpr.CL().equals(ts.noAccesses())) {
+      Af.setConflictLabel(Xfexpr.CL());
+    }
   }
 
   @Override
