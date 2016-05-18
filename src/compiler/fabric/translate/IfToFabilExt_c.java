@@ -4,21 +4,22 @@ import fabric.ast.FabricUtil;
 import fabric.extension.FabricStagingExt;
 import fabric.visit.FabricToFabilRewriter;
 
-import jif.translate.ConditionalToJavaExt_c;
+import jif.translate.IfToJavaExt_c;
 import jif.translate.JifToJavaRewriter;
 
-import polyglot.ast.Expr;
+import polyglot.ast.If;
 import polyglot.ast.Node;
 import polyglot.types.SemanticException;
 
-public class ConditionalToFabilExt_c extends ConditionalToJavaExt_c {
+public class IfToFabilExt_c extends IfToJavaExt_c {
 
   @Override
   public Node toJava(JifToJavaRewriter rw) throws SemanticException {
-    Expr rewritten = (Expr) super.toJava(rw);
+    If iff = (If) super.toJava(rw);
+
+    // staging.
     FabricStagingExt fse = FabricUtil.fabricStagingExt(node());
-    FabricToFabilRewriter frw = (FabricToFabilRewriter) rw;
-    // TODO only put it in the necessary branch
-    return fse.stageCheck(frw, node(), rewritten);
+    // TODO: Only put it in the necessary branch.
+    return fse.stageCheck((FabricToFabilRewriter) rw, node(), iff);
   }
 }

@@ -55,6 +55,8 @@ public class FabricConditionalExt extends JifConditionalExt {
       X = X.CL(Xt.CL());
     } else if (A.labelEnv().leq(Xf.CL(), Xt.CL())) {
       X = X.CL(Xf.CL());
+    } else {
+      X = X.CL(ts.meet(Xt.CL(), Xf.CL()));
     }
     tern = (Conditional) updatePathMap(tern, X);
 

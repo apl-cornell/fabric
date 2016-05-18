@@ -41,6 +41,7 @@ import fabric.translate.ConditionalToFabilExt_c;
 import fabric.translate.ConstructorDeclToFabilExt_c;
 import fabric.translate.FieldDeclToFabilExt_c;
 import fabric.translate.FieldToFabilExt_c;
+import fabric.translate.IfToFabilExt_c;
 import fabric.translate.InstanceOfToFabilExt_c;
 import fabric.translate.MethodDeclToFabilExt_c;
 import fabric.translate.NewFabricArrayToFabilExt_c;
@@ -64,7 +65,6 @@ import jif.translate.ArrayAccessAssignToJavaExt_c;
 import jif.translate.DoToJavaExt_c;
 import jif.translate.FieldAssignToJavaExt_c;
 import jif.translate.ForToJavaExt_c;
-import jif.translate.IfToJavaExt_c;
 import jif.translate.SwitchToJavaExt_c;
 import jif.translate.WhileToJavaExt_c;
 
@@ -480,7 +480,7 @@ FabricExtFactory {
 
   @Override
   protected Ext extIfImpl() {
-    return new FabricIfExt(new IfToJavaExt_c());
+    return new FabricIfExt(new IfToFabilExt_c());
   }
 
   @Override
