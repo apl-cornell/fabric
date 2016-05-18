@@ -1,19 +1,16 @@
 package fabric.extension;
 
+import fabric.types.FabricReferenceType;
+
 import jif.extension.JifCastExt;
 import jif.translate.ToJavaExt;
-import jif.types.JifContext;
-import jif.types.PathMap;
 import jif.visit.LabelChecker;
+
 import polyglot.ast.Cast;
 import polyglot.ast.Expr;
 import polyglot.ast.Node;
 import polyglot.ast.TypeNode;
 import polyglot.types.SemanticException;
-
-import fabric.types.FabricContext;
-import fabric.types.FabricPathMap;
-import fabric.types.FabricReferenceType;
 
 public class FabricCastExt extends JifCastExt {
 
@@ -40,14 +37,5 @@ public class FabricCastExt extends JifCastExt {
   @Override
   public Cast node() {
     return (Cast) super.node();
-  }
-
-  @Override
-  protected void updateContextForType(LabelChecker lc, JifContext A,
-      PathMap Xexpr) {
-    super.updateContextForType(lc, A, Xexpr);
-    FabricContext Af = (FabricContext) A;
-    FabricPathMap Xfexpr = (FabricPathMap) Xexpr;
-    Af.setConflictLabel(lc.jifTypeSystem().meet(Af.conflictLabel(), Xfexpr.CL()));
   }
 }

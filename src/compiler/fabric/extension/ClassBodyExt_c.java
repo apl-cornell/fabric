@@ -3,6 +3,7 @@ package fabric.extension;
 import java.util.List;
 
 import jif.ast.JifUtil;
+
 import polyglot.ast.ClassMember;
 import polyglot.ast.Node;
 import polyglot.visit.NodeVisitor;

@@ -4,7 +4,6 @@ import fabric.ast.FabricUtil;
 import fabric.types.AccessPathStore;
 import fabric.types.FabricClassType;
 import fabric.types.FabricContext;
-import fabric.types.FabricPathMap;
 import fabric.types.FabricTypeSystem;
 
 import jif.extension.CallHelper;
@@ -12,7 +11,6 @@ import jif.extension.JifNewExt;
 import jif.translate.ToJavaExt;
 import jif.types.JifConstructorInstance;
 import jif.types.JifContext;
-import jif.types.PathMap;
 import jif.types.label.AccessPath;
 import jif.types.label.Label;
 import jif.types.principal.DynamicPrincipal;
@@ -106,23 +104,5 @@ public class NewJifExt_c extends JifNewExt {
     }
 
     return n;
-  }
-
-  @Override
-  protected void updateContextPostTarget(LabelChecker lc, JifContext A,
-      PathMap Xtarg) {
-    super.updateContextPostTarget(lc, A, Xtarg);
-    FabricContext Af = (FabricContext) A;
-    FabricPathMap Xftarg = (FabricPathMap) Xtarg;
-    Af.setConflictLabel(lc.jifTypeSystem().meet(Af.conflictLabel(), Xftarg.CL()));
-  }
-
-  @Override
-  protected void updateContextPostTargetExpr(LabelChecker lc, JifContext A,
-      PathMap Xtarg) {
-    super.updateContextPostTargetExpr(lc, A, Xtarg);
-    FabricContext Af = (FabricContext) A;
-    FabricPathMap Xftarg = (FabricPathMap) Xtarg;
-    Af.setConflictLabel(lc.jifTypeSystem().meet(Af.conflictLabel(), Xftarg.CL()));
   }
 }

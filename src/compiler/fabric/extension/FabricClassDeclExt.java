@@ -1,5 +1,9 @@
 package fabric.extension;
 
+import fabric.types.AccessPathStore;
+import fabric.types.FabricParsedClassType;
+import fabric.types.FabricTypeSystem;
+
 import jif.ast.JifClassDecl;
 import jif.extension.JifClassDeclExt;
 import jif.translate.ToJavaExt;
@@ -18,13 +22,11 @@ import jif.types.label.ProviderLabel;
 import jif.types.principal.DynamicPrincipal;
 import jif.types.principal.Principal;
 import jif.visit.LabelChecker;
+
 import polyglot.ast.ClassBody;
 import polyglot.ast.Node;
 import polyglot.types.SemanticException;
 import polyglot.util.Position;
-import fabric.types.AccessPathStore;
-import fabric.types.FabricParsedClassType;
-import fabric.types.FabricTypeSystem;
 
 public class FabricClassDeclExt extends JifClassDeclExt {
 

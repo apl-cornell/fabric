@@ -1,5 +1,9 @@
 package fabric.extension;
 
+import fabric.ast.Atomic;
+import fabric.ast.FabricBranch;
+import fabric.types.FabricTypeSystem;
+
 import jif.extension.JifBlockExt;
 import jif.translate.ToJavaExt;
 import jif.types.ConstraintMessage;
@@ -8,11 +12,9 @@ import jif.types.LabelConstraint;
 import jif.types.NamedLabel;
 import jif.types.label.Label;
 import jif.visit.LabelChecker;
+
 import polyglot.ast.Node;
 import polyglot.types.SemanticException;
-import fabric.ast.Atomic;
-import fabric.ast.FabricBranch;
-import fabric.types.FabricTypeSystem;
 
 public class AtomicJifExt_c extends JifBlockExt {
   public AtomicJifExt_c(ToJavaExt toJava) {

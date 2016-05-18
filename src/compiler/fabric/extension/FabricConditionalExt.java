@@ -24,16 +24,16 @@ public class FabricConditionalExt extends JifConditionalExt {
     super(toJava);
   }
 
+  /**
+   * Modified so we can reset the CL after the first branch.
+   */
   @Override
   protected void updateContextForConsequent(LabelChecker lc, JifContext A,
       PathMap Xexpr) {
     super.updateContextForConsequent(lc, A, Xexpr);
     FabricContext Af = (FabricContext) A;
     FabricPathMap Xfexpr = (FabricPathMap) Xexpr;
-    FabricTypeSystem ts = (FabricTypeSystem) lc.jifTypeSystem();
-    if (!Xfexpr.CL().equals(ts.noAccesses())) {
-      Af.setConflictLabel(Xfexpr.CL());
-    }
+    Af.setConflictLabel(Xfexpr.CL());
   }
 
   @Override

@@ -3,13 +3,10 @@ package fabric.extension;
 import fabric.ast.FabricUtil;
 import fabric.types.FabricClassType;
 import fabric.types.FabricContext;
-import fabric.types.FabricPathMap;
 import fabric.types.FabricTypeSystem;
 
 import jif.extension.JifNewArrayExt;
 import jif.translate.ToJavaExt;
-import jif.types.JifContext;
-import jif.types.PathMap;
 import jif.types.label.Label;
 import jif.visit.LabelChecker;
 
@@ -44,14 +41,5 @@ public class NewArrayJifExt_c extends JifNewArrayExt {
     }
 
     return super.labelCheck(lc);
-  }
-
-  @Override
-  protected void updateContextForDims(LabelChecker lc, JifContext A,
-      PathMap Xprev) {
-    super.updateContextForDims(lc, A, Xprev);
-    FabricContext Af = (FabricContext) A;
-    FabricPathMap Xfprev = (FabricPathMap) Xprev;
-    Af.setConflictLabel(lc.jifTypeSystem().meet(Af.conflictLabel(), Xfprev.CL()));
   }
 }

@@ -78,7 +78,6 @@ import jif.types.label.ParamLabel;
 import jif.types.label.ProviderLabel;
 import jif.types.label.ReaderPolicy;
 import jif.types.label.ThisLabel;
-import jif.types.label.WriterPolicy;
 import jif.types.principal.BottomPrincipal;
 import jif.types.principal.ConjunctivePrincipal;
 import jif.types.principal.DisjunctivePrincipal;
@@ -1335,98 +1334,5 @@ public class FabricTypeSystem_c extends JifTypeSystem_c
   @Override
   public Label noAccesses() {
     return noAccesses;
-  }
-
-  @Override
-  public Label joinLabel(Position pos, Set<Label> components) {
-    if (components == null) {
-      components = Collections.emptySet();
-    }
-    if (components.isEmpty()) {
-      return bottomLabel(pos);
-    }
-    if (components.size() == 1) {
-      return components.iterator().next();
-    }
-    Label t = new FabricJoinLabel_c(components, this, pos,
-        joinLabelTranslator());
-    return t;
-  }
-
-  @Override
-  public Label meetLabel(Position pos, Set<Label> components) {
-    if (components == null) {
-      components = Collections.emptySet();
-    }
-    if (components.isEmpty()) {
-      return bottomLabel(pos);
-    }
-    if (components.size() == 1) {
-      return components.iterator().next();
-    }
-    Label t = new FabricMeetLabel_c(components, this, pos,
-        meetLabelTranslator());
-    return t;
-  }
-
-  @Override
-  public PairLabel pairLabel(Position pos, ConfPolicy confPol,
-      IntegPolicy integPol) {
-      return new FabricPairLabel_c(this, confPol, integPol, pos,
-          pairLabelTranslator());
-  }
-
-  @Override
-  public ConfPolicy joinConfPolicy(Position pos, Set<ConfPolicy> components) {
-    if (components.isEmpty()) {
-      return bottomConfPolicy(pos);
-    } else if (components.size() == 1) {
-      return components.iterator().next();
-    }
-    return (ConfPolicy) new FabricJoinConfPolicy_c(components, this, pos).simplify();
-  }
-
-  @Override
-  public ConfPolicy meetConfPolicy(Position pos, Set<ConfPolicy> components) {
-    if (components.isEmpty()) {
-      return bottomConfPolicy(pos);
-    } else if (components.size() == 1) {
-      return components.iterator().next();
-    }
-    return (ConfPolicy) new FabricMeetConfPolicy_c(components, this, pos).simplify();
-  }
-
-  @Override
-  public IntegPolicy joinIntegPolicy(Position pos, Set<IntegPolicy> components) {
-    if (components.isEmpty()) {
-      return bottomIntegPolicy(pos);
-    } else if (components.size() == 1) {
-      return components.iterator().next();
-    }
-    return (IntegPolicy) new FabricJoinIntegPolicy_c(components, this, pos).simplify();
-  }
-
-  @Override
-  public IntegPolicy meetIntegPolicy(Position pos, Set<IntegPolicy> components) {
-    if (components.isEmpty()) {
-      return bottomIntegPolicy(pos);
-    } else if (components.size() == 1) {
-      return components.iterator().next();
-    }
-    return (IntegPolicy) new FabricMeetIntegPolicy_c(components, this, pos).simplify();
-  }
-
-  @Override
-  public ReaderPolicy readerPolicy(Position pos, Principal owner,
-      Principal reader) {
-    ReaderPolicy t = new FabricReaderPolicy_c(owner, reader, this, pos);
-    return t;
-  }
-
-  @Override
-  public WriterPolicy writerPolicy(Position pos, Principal owner,
-      Principal writer) {
-    WriterPolicy t = new FabricWriterPolicy_c(owner, writer, this, pos);
-    return t;
   }
 }

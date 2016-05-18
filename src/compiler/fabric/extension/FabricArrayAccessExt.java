@@ -9,11 +9,9 @@ import fabric.types.FabricTypeSystem;
 import jif.extension.JifArrayAccessExt;
 import jif.translate.ToJavaExt;
 import jif.types.ConstraintMessage;
-import jif.types.JifContext;
 import jif.types.LabelConstraint;
 import jif.types.LabeledType;
 import jif.types.NamedLabel;
-import jif.types.PathMap;
 import jif.types.label.Label;
 import jif.visit.LabelChecker;
 
@@ -94,8 +92,7 @@ public class FabricArrayAccessExt extends JifArrayAccessExt {
         ts.pairLabel(pos,
           ts.confProjection(ts.join(Xe.N(), A.pc())),
           ts.topIntegPolicy(pos)));
-    NamedLabel conflictPC = new NamedLabel("conflict pc",
-        ts.meet(Xe.CL(), ts.meet(A.conflictLabel(), A.beginConflictBound())));
+    NamedLabel conflictPC = new NamedLabel("conflict pc", A.conflictLabel());
 
     // Squirrel away the dynamic staging check
     // XXX: I don't think we need to update the pathmap or anything, since
@@ -133,17 +130,8 @@ public class FabricArrayAccessExt extends JifArrayAccessExt {
     });
     
     // Update the CL
-    Xe = Xe.CL(ts.meet(conflictL.label(), conflictPC.label()));
+    Xe = Xe.CL(conflictL.label());
     A.setConflictLabel(Xe.CL());
     return (ArrayAccess) updatePathMap(acc, Xe);
-  }
-
-  @Override
-  protected void updateContextForIndex(LabelChecker lc, JifContext A,
-      PathMap Xarr) {
-    super.updateContextForIndex(lc, A, Xarr);
-    FabricContext Af = (FabricContext) A;
-    FabricPathMap Xfarr = (FabricPathMap) Xarr;
-    Af.setConflictLabel(lc.jifTypeSystem().meet(Af.conflictLabel(), Xfarr.CL()));
   }
 }

@@ -264,22 +264,4 @@ public class CallJifExt_c extends JifCallExt {
       }
     }
   }
-
-  @Override
-  protected void updateContextPostTarget(LabelChecker lc, JifContext A,
-      PathMap Xtarg) {
-    super.updateContextPostTarget(lc, A, Xtarg);
-    FabricContext Af = (FabricContext) A;
-    FabricPathMap Xftarg = (FabricPathMap) Xtarg;
-    Af.setConflictLabel(lc.jifTypeSystem().meet(Af.conflictLabel(), Xftarg.CL()));
-  }
-
-  @Override
-  protected void updateContextPostTargetExpr(LabelChecker lc, JifContext A,
-      PathMap Xtarg) {
-    super.updateContextPostTargetExpr(lc, A, Xtarg);
-    FabricContext Af = (FabricContext) A;
-    FabricPathMap Xftarg = (FabricPathMap) Xtarg;
-    Af.setConflictLabel(lc.jifTypeSystem().meet(Af.conflictLabel(), Xftarg.CL()));
-  }
 }

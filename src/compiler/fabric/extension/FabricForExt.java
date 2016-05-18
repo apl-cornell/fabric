@@ -1,14 +1,11 @@
 package fabric.extension;
 
-import fabric.types.FabricContext;
-import fabric.types.FabricPathMap;
-
 import jif.extension.JifForExt;
 import jif.translate.ToJavaExt;
-import jif.types.JifContext;
-import jif.types.PathMap;
 import jif.visit.LabelChecker;
 
+import polyglot.ast.Node;
+import polyglot.types.SemanticException;
 import polyglot.util.SerialVersionUID;
 
 public class FabricForExt extends JifForExt {
@@ -19,29 +16,9 @@ public class FabricForExt extends JifForExt {
   }
 
   @Override
-  protected void updateContextForBody(LabelChecker lc, JifContext A,
-      PathMap Xcond) {
-    super.updateContextForBody(lc, A, Xcond);
-    FabricContext Af = (FabricContext) A;
-    FabricPathMap Xfcond = (FabricPathMap) Xcond;
-    Af.setConflictLabel(Xfcond.CL());
-  }
-
-  @Override
-  protected void updateContextForNextInit(LabelChecker lc, JifContext A,
-      PathMap Xprev) {
-    super.updateContextForNextInit(lc, A, Xprev);
-    FabricContext Af = (FabricContext) A;
-    FabricPathMap Xfprev = (FabricPathMap) Xprev;
-    Af.setConflictLabel(Xfprev.CL());
-  }
-
-  @Override
-  protected void updateContextForNextIter(LabelChecker lc, JifContext A,
-      PathMap Xprev) {
-    super.updateContextForNextIter(lc, A, Xprev);
-    FabricContext Af = (FabricContext) A;
-    FabricPathMap Xfprev = (FabricPathMap) Xprev;
-    Af.setConflictLabel(lc.jifTypeSystem().meet(Af.conflictLabel(), Xfprev.CL()));
+  public Node labelCheckStmt(LabelChecker lc) throws SemanticException {
+    // TODO Auto-generated method stub
+    // TODO: Need to handle loop rules for CL
+    return super.labelCheckStmt(lc);
   }
 }

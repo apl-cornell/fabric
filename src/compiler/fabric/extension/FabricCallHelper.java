@@ -17,7 +17,6 @@ import jif.types.JifProcedureInstance;
 import jif.types.JifTypeSystem;
 import jif.types.LabelConstraint;
 import jif.types.NamedLabel;
-import jif.types.PathMap;
 import jif.types.label.AccessPath;
 import jif.types.label.Label;
 import jif.types.principal.Principal;
@@ -235,9 +234,7 @@ public class FabricCallHelper extends CallHelper {
       // Get the current conflict pc label
       NamedLabel conflictNL = new NamedLabel("conflict pc",
           "the meet of the conflict labels of previous accesses",
-          fts.meet(A.conflictLabel(),
-                            fts.meet(A.beginConflictBound(),
-                                     ((FabricPathMap) X).CL())));
+          A.conflictLabel());
 
       // Squirrel away the dynamic staging check
       // XXX: I don't think we need to update the pathmap or anything, since
@@ -264,8 +261,7 @@ public class FabricCallHelper extends CallHelper {
       });
 
       // Add in the conflict labels of the call's accesses to the CL path.
-      Label newCL = fts.meet(fts.meet(((FabricPathMap) X).CL(), endConflict),
-          A.conflictLabel());
+      Label newCL = endConflict;
       X = ((FabricPathMap) X).CL(newCL);
       ((FabricContext) A).setConflictLabel(newCL);
 
@@ -309,32 +305,5 @@ public class FabricCallHelper extends CallHelper {
       throws SemanticException {
     FabricProcedureInstance fpi = (FabricProcedureInstance) pi;
     return instantiate(lc.context(), fpi.endConflictLabel());
-  }
-
-  @Override
-  protected void updateForNextArg(LabelChecker lc, JifContext A,
-      PathMap Xprev) {
-    super.updateForNextArg(lc, A, Xprev);
-    FabricContext Af = (FabricContext) A;
-    FabricPathMap Xfprev = (FabricPathMap) Xprev;
-    Af.setConflictLabel(lc.jifTypeSystem().meet(Af.conflictLabel(), Xfprev.CL()));
-  }
-
-  @Override
-  protected void updateContextPostArgs(LabelChecker lc, JifContext A,
-      PathMap Xargs) {
-    super.updateContextPostArgs(lc, A, Xargs);
-    FabricContext Af = (FabricContext) A;
-    FabricPathMap Xfargs = (FabricPathMap) Xargs;
-    Af.setConflictLabel(lc.jifTypeSystem().meet(Af.conflictLabel(), Xfargs.CL()));
-  }
-
-  @Override
-  protected void updateContextPostParams(LabelChecker lc, JifContext A,
-      PathMap Xparams) {
-    super.updateContextPostParams(lc, A, Xparams);
-    FabricContext Af = (FabricContext) A;
-    FabricPathMap Xfparams = (FabricPathMap) Xparams;
-    Af.setConflictLabel(lc.jifTypeSystem().meet(Af.conflictLabel(), Xfparams.CL()));
   }
 }

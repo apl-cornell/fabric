@@ -1,13 +1,9 @@
 package fabric.extension;
 
-import fabric.types.FabricContext;
-import fabric.types.FabricPathMap;
 import fabric.types.FabricReferenceType;
 
 import jif.extension.JifInstanceofExt;
 import jif.translate.ToJavaExt;
-import jif.types.JifContext;
-import jif.types.PathMap;
 import jif.visit.LabelChecker;
 
 import polyglot.ast.Expr;
@@ -40,14 +36,4 @@ public class FabricInstanceofExt extends JifInstanceofExt {
   public Instanceof node() {
     return (Instanceof) super.node();
   }
-
-  @Override
-  protected void updateContextForType(LabelChecker lc, JifContext A,
-      PathMap Xexpr) {
-    super.updateContextForType(lc, A, Xexpr);
-    FabricContext Af = (FabricContext) A;
-    FabricPathMap Xfexpr = (FabricPathMap) Xexpr;
-    Af.setConflictLabel(lc.jifTypeSystem().meet(Af.conflictLabel(), Xfexpr.CL()));
-  }
-
 }

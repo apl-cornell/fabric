@@ -2,16 +2,13 @@ package fabric.ast;
 
 import fabric.extension.AbortJifExt_c;
 import fabric.extension.AtomicJifExt_c;
-import fabric.extension.BlockJifExt;
 import fabric.extension.CallJifExt_c;
 import fabric.extension.ClassBodyJifExt_c;
 import fabric.extension.ConstructorDeclJifExt;
 import fabric.extension.FabricArrayAccessAssignExt;
 import fabric.extension.FabricArrayAccessExt;
-import fabric.extension.FabricArrayInitExt;
 import fabric.extension.FabricBinaryExt;
 import fabric.extension.FabricCastExt;
-import fabric.extension.FabricCheckedEndorseStmtExt;
 import fabric.extension.FabricClassDeclExt;
 import fabric.extension.FabricConditionalExt;
 import fabric.extension.FabricDoExt;
@@ -64,10 +61,7 @@ import jif.extension.JifLabelExprExt;
 import jif.extension.JifPrincipalExprExt;
 import jif.extension.JifSourceFileExt;
 import jif.translate.ArrayAccessAssignToJavaExt_c;
-import jif.translate.ArrayInitToJavaExt_c;
-import jif.translate.BlockToJavaExt_c;
 import jif.translate.DoToJavaExt_c;
-import jif.translate.DowngradeStmtToJavaExt_c;
 import jif.translate.FieldAssignToJavaExt_c;
 import jif.translate.ForToJavaExt_c;
 import jif.translate.IfToJavaExt_c;
@@ -467,21 +461,6 @@ FabricExtFactory {
   @Override
   protected Ext extFieldAssignImpl() {
     return new FabricFieldAssignExt(new FieldAssignToJavaExt_c());
-  }
-
-  @Override
-  protected Ext extBlockImpl() {
-    return new BlockJifExt(new BlockToJavaExt_c());
-  }
-
-  @Override
-  protected Ext extArrayInitImpl() {
-    return new FabricArrayInitExt(new ArrayInitToJavaExt_c());
-  }
-
-  @Override
-  protected Ext extCheckedEndorseStmtImpl() {
-    return new FabricCheckedEndorseStmtExt(new DowngradeStmtToJavaExt_c());
   }
 
   @Override

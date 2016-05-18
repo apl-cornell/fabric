@@ -55,12 +55,15 @@ public class FabricIfExt extends JifIfExt {
     return iff;
   }
 
+  /**
+   * Modified to reset the conflict pc after first branch.
+   */
   @Override
   protected void updateContextForConsequent(LabelChecker lc, JifContext A,
       PathMap Xcond) {
     super.updateContextForConsequent(lc, A, Xcond);
     FabricContext Af = (FabricContext) A;
     FabricPathMap Xfcond = (FabricPathMap) Xcond;
-    Af.setConflictLabel(lc.jifTypeSystem().meet(Af.conflictLabel(), Xfcond.CL()));
+    Af.setConflictLabel(Xfcond.CL());
   }
 }

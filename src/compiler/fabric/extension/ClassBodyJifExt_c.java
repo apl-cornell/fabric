@@ -3,16 +3,18 @@ package fabric.extension;
 import java.util.ArrayList;
 import java.util.List;
 
+import fabric.types.SilenceableSolverGLB;
+
 import jif.extension.JifClassBodyExt;
 import jif.translate.ToJavaExt;
 import jif.types.JifContext;
 import jif.types.JifTypeSystem;
 import jif.visit.LabelChecker;
+
 import polyglot.ast.ClassBody;
 import polyglot.ast.ClassMember;
 import polyglot.ast.Node;
 import polyglot.types.SemanticException;
-import fabric.types.SilenceableSolverGLB;
 
 public class ClassBodyJifExt_c extends JifClassBodyExt {
   protected List<ClassMember> remote_wrappers;

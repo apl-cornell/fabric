@@ -10,7 +10,6 @@ import jif.types.label.Label;
 import polyglot.types.SemanticException;
 import polyglot.types.Type;
 import polyglot.util.InternalCompilerError;
-import polyglot.util.Position;
 
 /**
  * Extends the Jif PathMap with the path conflict label (CL).
@@ -38,7 +37,8 @@ public class FabricPathMap extends PathMap {
     // Default to {⊤→;⊥←} for CL since we'll be performing meets.
     //
     // TODO: Should I instead use NoAccesses?
-    if (!map.containsKey(FabricPath.CL)) return ts.topLabel(Position.COMPILER_GENERATED);
+    if (!map.containsKey(FabricPath.CL))
+      return ((FabricTypeSystem) ts).noAccesses();
     return get(FabricPath.CL);
   }
 
@@ -110,7 +110,7 @@ public class FabricPathMap extends PathMap {
   public Label get(Path p) {
     // Make sure we don't return NotTaken for CL.
     if (p.equals(FabricPath.CL) && !map.containsKey(p))
-      return ts.topLabel(Position.COMPILER_GENERATED);
+      return ((FabricTypeSystem) ts).noAccesses();
     return super.get(p);
   }
 

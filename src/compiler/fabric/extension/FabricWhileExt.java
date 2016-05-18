@@ -1,14 +1,11 @@
 package fabric.extension;
 
-import fabric.types.FabricContext;
-import fabric.types.FabricPathMap;
-
 import jif.extension.JifWhileExt;
 import jif.translate.ToJavaExt;
-import jif.types.JifContext;
-import jif.types.PathMap;
 import jif.visit.LabelChecker;
 
+import polyglot.ast.Node;
+import polyglot.types.SemanticException;
 import polyglot.util.SerialVersionUID;
 
 public class FabricWhileExt extends JifWhileExt {
@@ -19,11 +16,9 @@ public class FabricWhileExt extends JifWhileExt {
   }
 
   @Override
-  protected void updateContextForBody(LabelChecker lc, JifContext A,
-      PathMap Xexpr) {
-    super.updateContextForBody(lc, A, Xexpr);
-    FabricContext Af = (FabricContext) A;
-    FabricPathMap Xfexpr = (FabricPathMap) Xexpr;
-    Af.setConflictLabel(lc.jifTypeSystem().meet(Af.conflictLabel(), Xfexpr.CL()));
+  public Node labelCheckStmt(LabelChecker lc) throws SemanticException {
+    // TODO Auto-generated method stub
+    // TODO Handle looping for staging rules.
+    return super.labelCheckStmt(lc);
   }
 }

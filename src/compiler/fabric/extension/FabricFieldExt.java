@@ -99,8 +99,7 @@ public class FabricFieldExt extends JifFieldExt {
         ts.pairLabel(pos,
           ts.confProjection(ts.join(Xe.N(), A.pc())),
           ts.topIntegPolicy(pos)));
-    NamedLabel conflictPC = new NamedLabel("conflict pc",
-        ts.meet(Xe.CL(), ts.meet(A.conflictLabel(), A.beginConflictBound())));
+    NamedLabel conflictPC = new NamedLabel("conflict pc", A.conflictLabel());
 
     // Squirrel away the dynamic staging check
     // XXX: I don't think we need to update the pathmap or anything, since
@@ -138,7 +137,7 @@ public class FabricFieldExt extends JifFieldExt {
     });
     
     // Update the CL
-    Xe = Xe.CL(ts.meet(conflictL.label(), conflictPC.label()));
+    Xe = Xe.CL(conflictPC.label());
     A.setConflictLabel(Xe.CL());
     return (Field) updatePathMap(fe, Xe);
   }
