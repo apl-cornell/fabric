@@ -98,15 +98,14 @@ public class FabricArrayAccessExt extends JifArrayAccessExt {
           ts.confProjection(ts.join(Xe.N(), A.pc())),
           ts.topIntegPolicy(pos)));
     NamedLabel conflictPC = new NamedLabel("conflict pc",
-        ts.join(ts.meet(Xe.CL(), ts.meet(A.conflictLabel(), A.beginConflictBound())),
-                ts.noComponentsLabel()));
+        ts.meet(Xe.CL(), ts.meet(A.conflictLabel(), A.beginConflictBound())));
 
     // Squirrel away the dynamic staging check
     // XXX: I don't think we need to update the pathmap or anything, since
     // straight label comparisons don't do anything interesting for label
     // checking state.
     if (!lc.context().labelEnv().leq(conflictPC.label().simplify(),
-          conflictL.label().simplify())) {
+          ts.join(conflictL.label().simplify(), ts.noComponentsLabel()))) {
       FabricArrayAccessDel accDel = (FabricArrayAccessDel) acc.del();
 
       // Squirrel it away for rewrite.
@@ -115,7 +114,10 @@ public class FabricArrayAccessExt extends JifArrayAccessExt {
     }
 
     // Check CL(op array access) ≤ meet(CL(prev accesses))
-    lc.constrain(conflictL, LabelConstraint.LEQ, conflictPC, A.labelEnv(), pos,
+    lc.constrain(conflictL,
+        LabelConstraint.LEQ,
+        conflictPC.join(lc, "{⊥→;⊥←}", ts.noComponentsLabel()),
+        A.labelEnv(), pos,
         new ConstraintMessage() {
           @Override
           public String msg() {

@@ -238,17 +238,16 @@ public class FabricCallHelper extends CallHelper {
       // Get the current conflict pc label
       NamedLabel conflictNL = new NamedLabel("conflict pc",
           "the meet of the conflict labels of previous accesses",
-          fts.join(fts.meet(A.conflictLabel(),
+          fts.meet(A.conflictLabel(),
                             fts.meet(A.beginConflictBound(),
-                                     ((FabricPathMap) X).CL())),
-                   fts.noComponentsLabel()));
+                                     ((FabricPathMap) X).CL())));
 
       // Squirrel away the dynamic staging check
       // XXX: I don't think we need to update the pathmap or anything, since
       // straight label comparisons don't do anything interesting for label
       // checking state.
       if (!lc.context().labelEnv().leq(conflictNL.label().simplify(),
-            beginConflictNL.label().simplify())) {
+            fts.join(beginConflictNL.label().simplify(), fts.noComponentsLabel()))) {
         FabricStagingDel cDel = (FabricStagingDel) call.del();
 
         // Squirrel it away for rewrite.
@@ -256,7 +255,9 @@ public class FabricCallHelper extends CallHelper {
             beginConflictNL.label().simplify());
       }
 
-      lc.constrain(beginConflictNL, LabelConstraint.LEQ, conflictNL,
+      lc.constrain(beginConflictNL,
+          LabelConstraint.LEQ,
+          conflictNL.join(lc, "{⊥→;⊥←}", fts.noComponentsLabel()),
           A.labelEnv(), position, new ConstraintMessage() {
         @Override
         public String msg() {
@@ -267,16 +268,15 @@ public class FabricCallHelper extends CallHelper {
       });
 
       // Add in the conflict labels of the call's accesses to the CL path.
-      Label newCL = fts.join(
-          fts.meet(fts.meet(((FabricPathMap) X).CL(), endConflict), A.conflictLabel()),
-          fts.noComponentsLabel());
+      Label newCL = fts.meet(fts.meet(((FabricPathMap) X).CL(), endConflict),
+          A.conflictLabel());
       X = ((FabricPathMap) X).CL(newCL);
       ((FabricContext) A).setConflictLabel(newCL);
 
       // Check of end conflict bound to get better location reporting.
       NamedLabel newCLN = new NamedLabel("conflict pc",
           "the meet of the conflict labels of accesses up to the end of the call",
-          newCL);
+          newCL).join(lc, "{⊥→;⊥←}", fts.noComponentsLabel());
 
       NamedLabel endConflictBoundLabel = new NamedLabel("end conflict label",
           "the lower bound on the conflict labels of accesses in " + pi.signature(),

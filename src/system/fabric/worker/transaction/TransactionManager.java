@@ -298,11 +298,13 @@ public final class TransactionManager {
    */
   public <T> T stageTransactionExpr(T value, Label nextStage) throws TransactionRestartingException {
     // Only stage if the next stage is not the same as the current stage.
-    if (!LabelUtil._Impl.relabelsTo(current.getCurrentStage(), nextStage)) {
+    if (!LabelUtil._Impl.relabelsTo(current.getCurrentStage().confPolicy(),
+          nextStage.confPolicy())) {
       // So !(current ≤ next)
       stageTransaction();
       current.setCurrentStage(nextStage);
-    } else if (!LabelUtil._Impl.equivalentTo(current.getCurrentStage(), nextStage)) {
+    } else if (!LabelUtil._Impl.relabelsTo(nextStage.confPolicy(),
+          current.getCurrentStage().confPolicy())) {
       // So (current ≤ next) && !(current ≥ next) ⇒ current ≠ next
       // This should only happen if the monotonicity rule was violated.
       throw new InternalError(
