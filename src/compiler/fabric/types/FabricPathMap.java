@@ -80,11 +80,11 @@ public class FabricPathMap extends PathMap {
 
     FabricPathMap fm = (FabricPathMap) m;
     if (fm.map.containsKey(FabricPath.CL) && map.containsKey(FabricPath.CL)) {
-      r.set(FabricPath.CL, ts.meet(CL(), m.get(FabricPath.CL)));
+      r = r.set(FabricPath.CL, ts.meet(CL(), m.get(FabricPath.CL)));
     } else if (!fm.map.containsKey(FabricPath.CL) && map.containsKey(FabricPath.CL)) {
-      r.set(FabricPath.CL, CL());
+      r = r.set(FabricPath.CL, CL());
     } else if (fm.map.containsKey(FabricPath.CL) && !map.containsKey(FabricPath.CL)) {
-      r.set(FabricPath.CL, m.get(FabricPath.CL));
+      r = r.set(FabricPath.CL, m.get(FabricPath.CL));
     } else {
       r.map.remove(FabricPath.CL);
     }
