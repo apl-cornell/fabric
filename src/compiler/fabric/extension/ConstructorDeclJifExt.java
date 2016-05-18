@@ -1,5 +1,7 @@
 package fabric.extension;
 
+import fabric.ast.FabricConstructorDecl;
+import fabric.ast.FabricUtil;
 import fabric.types.AccessPathStore;
 import fabric.types.FabricConstructorInstance;
 import fabric.types.FabricContext;
@@ -52,7 +54,18 @@ public class ConstructorDeclJifExt extends JifConstructorDeclExt implements Ext 
       A.addActsFor(ts.workerLocalPrincipal(pos),
           ts.dynamicPrincipal(pos, new AccessPathThis(ct, pos)));
     }
-    return super.labelCheck(lc);
+
+    // Run the label check
+    FabricConstructorDecl fcd = (FabricConstructorDecl) super.labelCheck(lc);
+
+    // Add staging to the end: no matter how we leave the constructor, there's
+    // one final staging check.
+    FabricConstructorInstance fci = (FabricConstructorInstance) fcd.constructorInstance();
+    if (!fci.endConflictLabel().equals(ts.noAccesses())) {
+      FabricStagingExt fse = FabricUtil.fabricStagingExt(fcd);
+      fse.setStageCheck(fci.endConflictLabel());
+    }
+    return fcd;
   }
 
   /**

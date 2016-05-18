@@ -1,5 +1,7 @@
 package fabric.extension;
 
+import fabric.ast.FabricMethodDecl;
+import fabric.ast.FabricUtil;
 import fabric.types.FabricContext;
 import fabric.types.FabricMethodInstance;
 import fabric.types.FabricPathMap;
@@ -17,6 +19,7 @@ import jif.types.PathMap;
 import jif.types.label.Label;
 import jif.visit.LabelChecker;
 
+import polyglot.ast.Node;
 import polyglot.types.SemanticException;
 import polyglot.types.Type;
 import polyglot.util.Position;
@@ -98,5 +101,21 @@ public class MethodDeclJifExt extends JifMethodDeclExt {
           + "the ending conflict label allows.";
       }
     });
+  }
+
+  @Override
+  public Node labelCheck(LabelChecker lc) throws SemanticException {
+    // Label check
+    FabricMethodDecl fmd = (FabricMethodDecl) super.labelCheck(lc);
+
+    // Add staging to the end: no matter how we leave the method, there's one
+    // final staging check.
+    FabricTypeSystem ts = (FabricTypeSystem) lc.typeSystem();
+    FabricMethodInstance fmi = (FabricMethodInstance) fmd.methodInstance();
+    if (!fmi.endConflictLabel().equals(ts.noAccesses())) {
+      FabricStagingExt fse = FabricUtil.fabricStagingExt(fmd);
+      fse.setStageCheck(fmi.endConflictLabel());
+    }
+    return fmd;
   }
 }

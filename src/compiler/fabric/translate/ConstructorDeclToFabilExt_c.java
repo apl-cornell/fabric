@@ -6,12 +6,16 @@ import java.util.List;
 import fabil.ast.FabILNodeFactory;
 
 import fabric.ast.FabricConstructorDecl;
+import fabric.ast.FabricUtil;
+import fabric.extension.FabricStagingExt;
+import fabric.visit.FabricToFabilRewriter;
 
 import jif.translate.ConstructorDeclToJavaExt_c;
 import jif.translate.JifToJavaRewriter;
 
 import polyglot.ast.MethodDecl;
 import polyglot.ast.Node;
+import polyglot.ast.ProcedureDecl;
 import polyglot.ast.Stmt;
 import polyglot.types.SemanticException;
 import polyglot.visit.NodeVisitor;
@@ -51,9 +55,12 @@ public class ConstructorDeclToFabilExt_c extends ConstructorDeclToJavaExt_c {
         // "getWorker"))));
         stmts.addAll(md.body().statements());
 
-        return md.body(nf.Block(md.body().position(), stmts));
+        n = md.body(nf.Block(md.body().position(), stmts));
       }
     }
-    return n;
+
+    // Staging
+    FabricStagingExt fse = FabricUtil.fabricStagingExt(node());
+    return fse.stageCheck((FabricToFabilRewriter) rw, node(), (ProcedureDecl) n);
   }
 }

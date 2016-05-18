@@ -1,0 +1,17 @@
+public class methcons {
+
+  public methcons@{*l}(final label l)@{*l} throws NullPointerException {
+    methcons x = null;
+    x.wat2(l);
+  }
+
+  public void wat1@{*->}(final label l1, final label l2)@{_->} where l2 <= l1 {
+    wat2(l1);
+    wat2(l2);
+  }
+
+  public int wat2@{*l}(final label l)@{*l} {
+    return 0;
+  }
+
+}

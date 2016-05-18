@@ -1,9 +1,15 @@
 package fabric.translate;
 
 import fabil.ast.FabILNodeFactory;
+
 import fabric.ast.FabricMethodDecl;
+import fabric.ast.FabricUtil;
+import fabric.extension.FabricStagingExt;
+import fabric.visit.FabricToFabilRewriter;
+
 import jif.translate.JifToJavaRewriter;
 import jif.translate.MethodDeclToJavaExt_c;
+
 import polyglot.ast.Block;
 import polyglot.ast.If;
 import polyglot.ast.MethodDecl;
@@ -39,10 +45,12 @@ public class MethodDeclToFabilExt_c extends MethodDeclToJavaExt_c {
       If ifStmt = (If) md.body().statements().get(0);
       ifStmt = ifStmt.alternative(rw.qq().parseStmt(
           "throw new fabric.worker.remote.RemoteCallLabelCheckFailedException();"));
-      return md.body(nf.Block(Position.compilerGenerated(), ifStmt));
+      md = (MethodDecl) md.body(nf.Block(Position.compilerGenerated(), ifStmt));
     }
 
-    return md;
+    // Staging
+    FabricStagingExt fse = FabricUtil.fabricStagingExt(node());
+    return fse.stageCheck((FabricToFabilRewriter) rw, node(), md);
   }
 
   @Override
