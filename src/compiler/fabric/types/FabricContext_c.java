@@ -187,4 +187,13 @@ public class FabricContext_c extends JifContext_c implements FabricContext {
     if (conflictGotos == null) conflictGotos = new HashMap<>();
     conflictGotos.put(new Key(kind, label), L);
   }
+
+  @Override
+  public FabricContext_c copy() {
+    FabricContext_c ctxt = (FabricContext_c) super.copy();
+    if (conflictGotos != null) {
+        ctxt.conflictGotos = new HashMap<>(conflictGotos);
+    }
+    return ctxt;
+  }
 }
