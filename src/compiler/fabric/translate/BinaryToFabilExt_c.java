@@ -9,7 +9,10 @@ import polyglot.types.Type;
 import polyglot.util.Position;
 import polyglot.visit.NodeVisitor;
 import fabil.ast.FabILNodeFactory;
+import fabric.ast.FabricUtil;
+import fabric.extension.FabricStagingExt;
 import fabric.types.FabricTypeSystem;
+import fabric.visit.FabricToFabilRewriter;
 
 public class BinaryToFabilExt_c extends BinaryToJavaExt_c {
   protected Type lhsType, rhsType;
@@ -53,5 +56,35 @@ public class BinaryToFabilExt_c extends BinaryToJavaExt_c {
           nf.Id(Position.compilerGenerated(), "getPrincipal"));
     }
     return e;
+  }
+
+  @Override
+  public Expr exprToJava(JifToJavaRewriter rw) throws SemanticException {
+    Expr rewritten = super.exprToJava(rw);
+
+    FabricToFabilRewriter frw = (FabricToFabilRewriter) rw;
+    FabILNodeFactory nf = (FabILNodeFactory) frw.java_nf();
+    FabricStagingExt fse = FabricUtil.fabricStagingExt(node());
+
+    if (rewritten instanceof Binary) {
+      Binary b = (Binary) rewritten;
+      if (b.operator().equals(Binary.COND_OR)) {
+        // e1 || e2 => e1 ? stage(true, nextStage) : e2
+        return rw.qq().parseExpr("%E ? %E : %E",
+            b.left(),
+            nf.StageCall(b.position(), nf.BooleanLit(b.position(), true), frw.stageCheckExpr(node(), fse.endStage())),
+            b.right());
+      }
+
+      if (b.operator().equals(Binary.COND_AND)) {
+        // e1 && e2 => !e1 ? stage(false, nextStage) : e2
+        return rw.qq().parseExpr("!(%E) ? %E : %E",
+            b.left(),
+            nf.StageCall(b.position(), nf.BooleanLit(b.position(), false), frw.stageCheckExpr(node(), fse.endStage())),
+            b.right());
+      }
+    }
+
+    return rewritten;
   }
 }
