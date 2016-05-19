@@ -108,8 +108,6 @@ public class FabricFieldExt extends JifFieldExt {
     FabricStagingExt fse = FabricUtil.fabricStagingExt(fe);
     fse.setStageCheck(conflictPC.label(), conflictL.label(), A);
 
-    System.out.println("" + conflictL.label().simplify() + "≤" + conflictPC.label().simplify());
-
     // Check CL(op field) ≤ meet(CL(prev accesses))
     lc.constrain(conflictL,
         LabelConstraint.LEQ,
