@@ -80,7 +80,7 @@ public class FabricConditionalExt extends JifConditionalExt {
       // branch we took, just stage up to the lower of the two.
       FabricStagingExt fse = FabricUtil.fabricStagingExt(tern);
       // Resulting path map CL will have the right stage label
-      fse.setStageCheck(startingCL.simplify(), X.CL().simplify());
+      fse.setStageCheck(startingCL, X.CL(), A);
     }
 
     return tern;

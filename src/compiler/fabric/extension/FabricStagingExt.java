@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import fabil.ast.FabILNodeFactory;
 
 import fabric.ast.FabricNodeFactory;
+import fabric.types.FabricContext;
 import fabric.types.FabricTypeSystem;
 import fabric.visit.FabricToFabilRewriter;
 
@@ -42,6 +43,20 @@ public class FabricStagingExt extends Ext_c implements FabricExt {
    */
   public Label nextStage() {
     return nextStage;
+  }
+
+  /**
+   * Set the staging check.
+   * Sets the fields to null if we're handed two equal labels.
+   *
+   * Variant which does not set the staging if the given context says that
+   *    curStage ≤ nextStage (reverse is checked elsewhere).
+   */
+  public void setStageCheck(Label curStage, Label nextStage, FabricContext A) {
+    if (curStage.hasVariableComponents() || nextStage.hasVariableComponents() ||
+        !A.labelEnv().leq(curStage, nextStage)) {
+      setStageCheck(curStage, nextStage);
+    }
   }
 
   /**

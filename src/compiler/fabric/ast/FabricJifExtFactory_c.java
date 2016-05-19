@@ -20,6 +20,7 @@ import fabric.extension.FabricIfExt;
 import fabric.extension.FabricInstanceofExt;
 import fabric.extension.FabricLabeledExt;
 import fabric.extension.FabricSwitchExt;
+import fabric.extension.FabricTryExt;
 import fabric.extension.FabricWhileExt;
 import fabric.extension.MethodDeclJifExt;
 import fabric.extension.NewJifExt_c;
@@ -35,6 +36,7 @@ import fabric.translate.AtomicToFabilExt_c;
 import fabric.translate.BinaryToFabilExt_c;
 import fabric.translate.CallToFabilExt_c;
 import fabric.translate.CastToFabilExt_c;
+import fabric.translate.CatchToFabilExt_c;
 import fabric.translate.ClassBodyToFabilExt_c;
 import fabric.translate.ClassDeclToFabilExt_c;
 import fabric.translate.CodebaseDeclToFabilExt_c;
@@ -56,6 +58,7 @@ import fabric.translate.RemoteWorkerGetterToFabilExt_c;
 import fabric.translate.RetryToFabilExt_c;
 import fabric.translate.SourceFileToFabilExt_c;
 import fabric.translate.StageToFabilExt_c;
+import fabric.translate.TryToFabilExt_c;
 import fabric.translate.WhileToFabilExt_c;
 import fabric.translate.WorkerToFabilExt_c;
 
@@ -505,5 +508,15 @@ FabricExtFactory {
   @Override
   protected Ext extLabeledImpl() {
     return new FabricLabeledExt(new LabeledToJavaExt_c());
+  }
+
+  @Override
+  protected Ext extTryImpl() {
+    return new FabricTryExt(new TryToFabilExt_c());
+  }
+
+  @Override
+  protected Ext extCatchImpl() {
+    return new JifExt_c(new CatchToFabilExt_c());
   }
 }

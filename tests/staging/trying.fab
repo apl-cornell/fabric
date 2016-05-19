@@ -1,0 +1,18 @@
+public class trying {
+  public final int@{*->} x = 7;
+  void m@{*->}(final label l1, final label l2)@{_->} where l1 <= l2 {
+    try {
+      m2(l2);
+      trying x = null;
+      int y = x.x;
+    } catch (NullPointerException e) {
+      m2(l2);
+    } finally {
+      m2(l1);
+    }
+  }
+
+  void m2@{*l}(final label l)@{*l} {
+    return;
+  }
+}

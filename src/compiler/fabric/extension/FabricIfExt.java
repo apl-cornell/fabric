@@ -74,7 +74,7 @@ public class FabricIfExt extends JifIfExt {
         // the other, so we need to add a final staging check to one or both
         // branches.
         FabricStagingExt fse = FabricUtil.fabricStagingExt(iff);
-        fse.setStageCheck(startingCL.simplify(), X.CL().simplify());
+        fse.setStageCheck(startingCL, X.CL(), A);
       }
     }
     return iff;
