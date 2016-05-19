@@ -21,6 +21,7 @@ import polyglot.ast.Expr;
 import polyglot.ast.Node;
 import polyglot.ast.NodeFactory;
 import polyglot.ast.Receiver;
+import polyglot.ast.Stmt;
 import polyglot.frontend.Job;
 import polyglot.types.ReferenceType;
 import polyglot.types.SemanticException;
@@ -92,9 +93,12 @@ public class FabricLabelChecker extends LabelChecker {
         X = (FabricPathMap) fts.pathMap();
       }
 
+      FabricContext A = (FabricContext) context();
       if (X.CL().equals(fts.noAccesses())) {
-        FabricContext A = (FabricContext) context();
         n = JifExt_c.updatePathMap(n, X.CL(A.conflictLabel()));
+      } else if (n instanceof Stmt) {
+        // Make the CL after the statement the new pc.
+        A.setConflictLabel(X.CL());
       }
     }
     return n;

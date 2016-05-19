@@ -50,7 +50,7 @@ public class MethodDeclJifExt extends JifMethodDeclExt {
     FabricMethodInstance fmi = (FabricMethodInstance) mi;
     FabricContext A = (FabricContext) lc.context();
     A.setBeginConflictBound(fmi.beginConflictLabel());
-    //A.setConflictLabel(fmi.beginConflictLabel());
+    A.setConflictLabel(fmi.beginConflictLabel());
     A.setEndConflictBound(fmi.endConflictLabel());
     if (!fmi.isDefaultBeginConflict() || !fmi.isDefaultEndConflict()) {
       FabricTypeSystem ts = (FabricTypeSystem) lc.jifTypeSystem();

@@ -8,6 +8,7 @@ import fabric.extension.ConstructorDeclJifExt;
 import fabric.extension.FabricArrayAccessAssignExt;
 import fabric.extension.FabricArrayAccessExt;
 import fabric.extension.FabricBinaryExt;
+import fabric.extension.FabricBranchExt;
 import fabric.extension.FabricCastExt;
 import fabric.extension.FabricClassDeclExt;
 import fabric.extension.FabricConditionalExt;
@@ -17,6 +18,7 @@ import fabric.extension.FabricFieldExt;
 import fabric.extension.FabricForExt;
 import fabric.extension.FabricIfExt;
 import fabric.extension.FabricInstanceofExt;
+import fabric.extension.FabricLabeledExt;
 import fabric.extension.FabricSwitchExt;
 import fabric.extension.FabricWhileExt;
 import fabric.extension.MethodDeclJifExt;
@@ -62,9 +64,11 @@ import jif.extension.JifLabelExprExt;
 import jif.extension.JifPrincipalExprExt;
 import jif.extension.JifSourceFileExt;
 import jif.translate.ArrayAccessAssignToJavaExt_c;
+import jif.translate.BranchToJavaExt_c;
 import jif.translate.DoToJavaExt_c;
 import jif.translate.FieldAssignToJavaExt_c;
 import jif.translate.ForToJavaExt_c;
+import jif.translate.LabeledToJavaExt_c;
 import jif.translate.SwitchToJavaExt_c;
 import jif.translate.WhileToJavaExt_c;
 
@@ -491,5 +495,15 @@ FabricExtFactory {
   @Override
   protected Ext extWhileImpl() {
     return new FabricWhileExt(new WhileToJavaExt_c());
+  }
+
+  @Override
+  protected Ext extBranchImpl() {
+    return new FabricBranchExt(new BranchToJavaExt_c());
+  }
+
+  @Override
+  protected Ext extLabeledImpl() {
+    return new FabricLabeledExt(new LabeledToJavaExt_c());
   }
 }

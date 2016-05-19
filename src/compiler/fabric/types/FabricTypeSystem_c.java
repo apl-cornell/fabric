@@ -1335,4 +1335,15 @@ public class FabricTypeSystem_c extends JifTypeSystem_c
   public Label noAccesses() {
     return noAccesses;
   }
+
+  @Override
+  public Label meet(Label L1, Label L2) {
+    if (L1 instanceof NoAccesses) {
+      return L2.simplify();
+    }
+    if (L2 instanceof NoAccesses) {
+      return L1.simplify();
+    }
+    return super.meet(L1, L2);
+  }
 }

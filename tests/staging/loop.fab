@@ -1,0 +1,25 @@
+public class loop {
+
+  public boolean b@{*l}(final label l)@{*l} {
+    return true;
+  }
+
+  public void wat1@{*->}(final label l1, final label l2)@{_->} where l1 <= l2 {
+foo: while (b(l2)) {
+      while (b(l2)) {
+        wat2(l2);
+        if (true) {
+          wat2(l1);
+          break foo;
+        }
+      }
+      wat2(l2);
+    }
+    wat2(l1);
+  }
+
+  public int wat2@{*l}(final label l)@{*l} {
+    return 0;
+  }
+
+}

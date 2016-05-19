@@ -61,6 +61,7 @@ public class FabricContext_c extends JifContext_c implements FabricContext {
   @Override
   public void setConflictLabel(Label conflictLab) {
     this.conflictLab = conflictLab;
+    /*
     // Bit of a hack to get the conflict label to propogate as far up as the
     // code level.
     FabricContext_c cur = this;
@@ -70,6 +71,7 @@ public class FabricContext_c extends JifContext_c implements FabricContext {
         cur.conflictLab = conflictLab;
       }
     }
+    */
   }
 
   @Override
@@ -192,7 +194,7 @@ public class FabricContext_c extends JifContext_c implements FabricContext {
   public FabricContext_c copy() {
     FabricContext_c ctxt = (FabricContext_c) super.copy();
     if (conflictGotos != null) {
-        ctxt.conflictGotos = new HashMap<>(conflictGotos);
+      ctxt.conflictGotos = new HashMap<>(conflictGotos);
     }
     return ctxt;
   }

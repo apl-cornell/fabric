@@ -78,7 +78,7 @@ public class ConstructorDeclJifExt extends JifConstructorDeclExt implements Ext 
     FabricConstructorInstance fci = (FabricConstructorInstance) ci;
     FabricContext A = (FabricContext) lc.context();
     A.setBeginConflictBound(fci.beginConflictLabel());
-    //A.setConflictLabel(fci.beginConflictLabel());
+    A.setConflictLabel(fci.beginConflictLabel());
     A.setEndConflictBound(fci.endConflictLabel());
     if (!fci.isDefaultBeginConflict() || !fci.isDefaultEndConflict()) {
       FabricTypeSystem ts = (FabricTypeSystem) lc.jifTypeSystem();
