@@ -31,8 +31,8 @@ public class Run {
     int numBought = 0;
     while (true) {
       if (!market.buyProduct(
-            customer.customerP_,
-            outel.vendorP,
+            customer.rainforest$Customer$_split_0.customerP_,
+            outel.rainforest$Vendor$_split_0.vendorP,
             customer,
             product,
             1)) {

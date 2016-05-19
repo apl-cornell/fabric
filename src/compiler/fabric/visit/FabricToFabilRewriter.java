@@ -6,19 +6,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import jif.translate.JifToJavaRewriter;
-import polyglot.ast.ClassDecl;
-import polyglot.ast.Expr;
-import polyglot.ast.Node;
-import polyglot.ast.SourceFile;
-import polyglot.ast.TopLevelDecl;
-import polyglot.ast.TypeNode;
-import polyglot.frontend.Job;
-import polyglot.frontend.Source;
-import polyglot.main.Report;
-import polyglot.types.SemanticException;
-import polyglot.types.Type;
-import polyglot.util.Position;
 import codebases.ast.CBSourceFile;
 import codebases.frontend.CBJobExt;
 import codebases.frontend.CodebaseSource;
@@ -31,8 +18,24 @@ import fabric.ast.FabricNodeFactory;
 import fabric.common.NSUtil;
 import fabric.lang.Codebase;
 import fabric.types.FabricContext;
+import fabric.types.FabricFieldInstance;
 import fabric.types.FabricSubstType;
 import fabric.types.FabricTypeSystem;
+import jif.translate.JifToJavaRewriter;
+import polyglot.ast.ClassDecl;
+import polyglot.ast.Expr;
+import polyglot.ast.Node;
+import polyglot.ast.SourceFile;
+import polyglot.ast.Stmt;
+import polyglot.ast.TopLevelDecl;
+import polyglot.ast.TypeNode;
+import polyglot.frontend.Job;
+import polyglot.frontend.Source;
+import polyglot.main.Report;
+import polyglot.types.FieldInstance;
+import polyglot.types.SemanticException;
+import polyglot.types.Type;
+import polyglot.util.Position;
 
 public class FabricToFabilRewriter extends JifToJavaRewriter {
   private static final Collection<String> TOPICS;
@@ -43,7 +46,11 @@ public class FabricToFabilRewriter extends JifToJavaRewriter {
     TOPICS.add("mobile");
   }
 
-  // protected boolean principalExpected = false;
+  /**
+   * A list of field names corresponding to object fragments that need to be
+   * initialized by the Jif initializer before initializing other fields.
+   */
+  protected List<String> objectFragments;
 
   /** An expression used to instantiate the 'this' principal in static contexts */
   protected Expr staticThisExpr;
@@ -52,6 +59,7 @@ public class FabricToFabilRewriter extends JifToJavaRewriter {
       FabricNodeFactory fab_nf, fabil.ExtensionInfo fabil_ext) {
     super(job, fab_ts, fab_nf, fabil_ext);
     this.job = job;
+    this.objectFragments = new ArrayList<>();
   }
 
   public Source createDerivedSource(CodebaseSource src, String newName) {
@@ -135,8 +143,8 @@ public class FabricToFabilRewriter extends JifToJavaRewriter {
         ct = (CodebaseClassType) ((FabricSubstType) ct).base();
       if (ext.isExternal(ct)) {
         String alias = ext.aliasFor(ct);
-        return fabil_nf.TypeNodeFromQualifiedName(pos, alias + "."
-            + t.toClass().fullName());
+        return fabil_nf.TypeNodeFromQualifiedName(pos,
+            alias + "." + t.toClass().fullName());
       }
     }
     return super.typeToJava(t, pos);
@@ -178,6 +186,19 @@ public class FabricToFabilRewriter extends JifToJavaRewriter {
     return n.decls(l);
   }
 
+  @Override
+  public void addInitializer(FieldInstance fi, Expr init)
+      throws SemanticException {
+    String splitName = ((FabricFieldInstance) fi).splitClassName();
+    if (splitName == null) {
+      super.addInitializer(fi, init);
+      return;
+    }
+
+    Stmt s = qq().parseStmt("%s.%s = %E;", splitName, fi.name(), init);
+    initializations.add(s);
+  }
+
   /**
    * Provide an expression to instantiate "this" principals with in static contexts.
    * This is primarily used to replace occurences of "this" in translated label
@@ -198,4 +219,16 @@ public class FabricToFabilRewriter extends JifToJavaRewriter {
     return staticThisExpr;
   }
 
+  public void addObjectFragment(String fragmentName) {
+    this.objectFragments.add(fragmentName);
+  }
+
+  /**
+   * @return a list of field names corresponding to object fragments that need
+   *           to be initialized by the Jif initializer before initializing
+   *           other fields.
+   */
+  public List<String> getObjectFragments() {
+    return objectFragments;
+  }
 }

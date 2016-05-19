@@ -51,6 +51,7 @@ import jif.types.ParamInstance;
 import jif.types.Solver;
 import jif.types.hierarchy.LabelEnv;
 import jif.types.label.AccessPath;
+import jif.types.label.AccessPathField;
 import jif.types.label.AccessPathThis;
 import jif.types.label.AccessPathUninterpreted;
 import jif.types.label.ArgLabel;
@@ -1184,5 +1185,11 @@ public class FabricTypeSystem_c extends JifTypeSystem_c
   public AccessPolicyInstance accessPolicyInstance(Position pos,
       ParsedClassType ct, ConfPolicy policy) {
     return new AccessPolicyInstance_c(pos, ct, policy);
+  }
+
+  @Override
+  protected AccessPathField accessPathField(AccessPath path, FieldInstance fi,
+      java.lang.String fieldName, Position pos) {
+    return new FabricAccessPathField(path, fi, fieldName, pos);
   }
 }

@@ -1,16 +1,5 @@
 package fabric.ast;
 
-import jif.ast.JifExtFactory_c;
-import jif.ast.JifExt_c;
-import jif.extension.JifBinaryExt;
-import jif.extension.JifFieldDeclExt_c;
-import jif.extension.JifLabelExprExt;
-import jif.extension.JifPrincipalExprExt;
-import jif.extension.JifSourceFileExt;
-import jif.translate.ArrayAccessToJavaExt_c;
-import jif.translate.FieldToJavaExt_c;
-import polyglot.ast.Ext;
-import polyglot.ast.ExtFactory;
 import fabric.extension.AbortJifExt_c;
 import fabric.extension.AtomicJifExt_c;
 import fabric.extension.CallJifExt_c;
@@ -39,6 +28,7 @@ import fabric.translate.CodebaseDeclToFabilExt_c;
 import fabric.translate.CodebaseNodeToFabilExt_c;
 import fabric.translate.ConstructorDeclToFabilExt_c;
 import fabric.translate.FieldDeclToFabilExt_c;
+import fabric.translate.FieldToFabilExt_c;
 import fabric.translate.InstanceOfToFabilExt_c;
 import fabric.translate.MethodDeclToFabilExt_c;
 import fabric.translate.NewFabricArrayToFabilExt_c;
@@ -50,13 +40,23 @@ import fabric.translate.RemoteWorkerGetterToFabilExt_c;
 import fabric.translate.RetryToFabilExt_c;
 import fabric.translate.SourceFileToFabilExt_c;
 import fabric.translate.WorkerToFabilExt_c;
+import jif.ast.JifExtFactory_c;
+import jif.ast.JifExt_c;
+import jif.extension.JifBinaryExt;
+import jif.extension.JifFieldDeclExt_c;
+import jif.extension.JifLabelExprExt;
+import jif.extension.JifPrincipalExprExt;
+import jif.extension.JifSourceFileExt;
+import jif.translate.ArrayAccessToJavaExt_c;
+import polyglot.ast.Ext;
+import polyglot.ast.ExtFactory;
 
 /**
  * This class extends the Jif Extension factory to provide Jif extension objects
  * for atomic sections.
  */
-public class FabricJifExtFactory_c extends JifExtFactory_c implements
-FabricExtFactory {
+public class FabricJifExtFactory_c extends JifExtFactory_c
+    implements FabricExtFactory {
   // ////////////////////////////////////////////////////////////////////////////
   // overridden Jif AST nodes (TODO: should be ext.del's?) //
   // ////////////////////////////////////////////////////////////////////////////
@@ -101,7 +101,7 @@ FabricExtFactory {
 
   @Override
   protected Ext extFieldImpl() {
-    return new FabricFieldExt(new FieldToJavaExt_c());
+    return new FabricFieldExt(new FieldToFabilExt_c());
   }
 
   @Override
