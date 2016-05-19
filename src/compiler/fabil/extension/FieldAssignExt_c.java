@@ -71,6 +71,7 @@ public class FieldAssignExt_c extends ExprExt_c {
       if (target instanceof Expr) quote = "%E";
       subs.add(target);
     }
+    subs.add(field.type());
     subs.add(rhs);
 
     String setterName = "set$" + name;
@@ -83,7 +84,8 @@ public class FieldAssignExt_c extends ExprExt_c {
       setterName = "setLength";
     }
 
-    return pr.qq().parseExpr(quote + "." + setterName + "(%E)", subs.toArray());
+    return pr.qq().parseExpr(quote + "." + setterName + "((%T) %E)",
+        subs.toArray());
   }
 
   @Override
