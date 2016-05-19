@@ -1,0 +1,23 @@
+public class forloop {
+
+  public void wat1@{*->}(final label l1, final label l2)@{_->} where l1 <= l2 {
+foo:
+    for (int i = wat2(new label{*->}); i < 0; i = wat2(l2)) {
+      //wat2(l1);
+      for (int j = wat2(l2); j < 0; j = wat2(l2)) {
+        wat2(l2);
+        if (true) {
+          wat2(l1);
+          break foo;
+        }
+      }
+      wat2(l2);
+    }
+    wat2(l1);
+  }
+
+  public int wat2@{*l}(final label l)@{*l} {
+    return 0;
+  }
+
+}
