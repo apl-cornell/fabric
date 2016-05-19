@@ -63,7 +63,7 @@ public class ConstructorDeclJifExt extends JifConstructorDeclExt implements Ext 
     FabricConstructorInstance fci = (FabricConstructorInstance) fcd.constructorInstance();
     if (!fci.endConflictLabel().equals(ts.noAccesses())) {
       FabricStagingExt fse = FabricUtil.fabricStagingExt(fcd);
-      fse.setStageCheck(fci.endConflictLabel());
+      fse.setStageCheck(fci.beginConflictLabel(), fci.endConflictLabel());
     }
     return fcd;
   }

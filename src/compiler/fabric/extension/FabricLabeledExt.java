@@ -31,10 +31,10 @@ public class FabricLabeledExt extends JifLabeledExt {
 
     String label = ls.label();
 
-    Label L1 = ts.freshLabelVariable(node().position(), label,
+    Label L1 = ts.freshLabelVariable(node().position(), label + "-continue",
             "conflict label at the labeled position " + label + " ("
                     + ls.position() + ")");
-    Label L2 = ts.freshLabelVariable(node().position(), label,
+    Label L2 = ts.freshLabelVariable(node().position(), label + "-break",
             "conflict label at the labeled position " + label + " ("
                     + ls.position() + ")");
 
@@ -47,22 +47,20 @@ public class FabricLabeledExt extends JifLabeledExt {
     A.gotoConflictLabel(polyglot.ast.Branch.CONTINUE, label, L1);
     A.gotoConflictLabel(polyglot.ast.Branch.BREAK, label, L2);
 
-    if (A.conflictLabel().equals(ts.noAccesses())) {
-      A.setConflictLabel(L1);
-    } else {
-      A.setConflictLabel(lc.lowerBound(A.conflictLabel(), L1));
-    }
+    A.setConflictLabel(lc.lowerBound(A.conflictLabel(), L1));
 
     ls = (Labeled) super.labelCheckStmt(lc.context(A));
 
+    FabricPathMap Xs = (FabricPathMap) getPathMap(ls.statement());
     FabricPathMap X = (FabricPathMap) getPathMap(ls);
+    X = X.CL(lc.lowerBound(Xs.CL(), L2));
     X = X.setCL(ts.gotoPath(polyglot.ast.Branch.CONTINUE, label), ts.noAccesses());
     X = X.setCL(ts.gotoPath(polyglot.ast.Branch.BREAK, label), ts.noAccesses());
-    X = X.CL(L2);
 
     A = (FabricContext) A.pop();
 
-    A.setConflictLabel(X.CL());
+    //A.setConflictLabel(X.CL());
+    A.setConflictLabel(L2);
 
     return ls;
   }

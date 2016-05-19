@@ -1,11 +1,13 @@
 package fabric.extension;
 
 import fabric.ast.FabricUtil;
+import fabric.types.FabricContext;
 import fabric.types.FabricPathMap;
 import fabric.types.FabricTypeSystem;
 
 import jif.extension.JifBinaryExt;
 import jif.translate.ToJavaExt;
+import jif.types.label.Label;
 import jif.visit.LabelChecker;
 
 import polyglot.ast.Binary;
@@ -22,6 +24,9 @@ public class FabricBinaryExt extends JifBinaryExt {
 
   @Override
   public Node labelCheck(LabelChecker lc) throws SemanticException {
+    FabricContext A = (FabricContext) lc.context();
+    Label startingCL = A.conflictLabel();
+
     Binary b = (Binary) super.labelCheck(lc);
     if (b.operator().equals(Binary.COND_AND) || b.operator().equals(Binary.COND_OR)) {
       // Need to account for short circuiting.
@@ -33,7 +38,7 @@ public class FabricBinaryExt extends JifBinaryExt {
         // conflict label after right (confidentiality check only), so we need
         // to stage when we're short circuiting.
         FabricStagingExt fse = FabricUtil.fabricStagingExt(b);
-        fse.setStageCheck(Xr.CL());
+        fse.setStageCheck(startingCL.simplify(), Xr.CL().simplify());
       }
     }
     return b;

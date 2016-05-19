@@ -120,7 +120,7 @@ public class MethodDeclJifExt extends JifMethodDeclExt {
       FabricMethodInstance fmi = (FabricMethodInstance) fmd.methodInstance();
       if (!fmi.endConflictLabel().equals(ts.noAccesses())) {
         FabricStagingExt fse = FabricUtil.fabricStagingExt(fmd);
-        fse.setStageCheck(fmi.endConflictLabel());
+        fse.setStageCheck(fmi.beginConflictLabel(), fmi.endConflictLabel());
       }
     }
 

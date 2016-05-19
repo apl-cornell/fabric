@@ -27,7 +27,15 @@ public class FabricStagingExt extends Ext_c implements FabricExt {
   /**
    * Squirreled away the stage labels to check in rewritten code.
    */
+  protected Label curStage;
   protected Label nextStage;
+
+  /**
+   * Get the starting stage label (if there is no staging needed, this is null)
+   */
+  public Label curStage() {
+    return curStage;
+  }
 
   /**
    * Get the ending stage label (if there is no staging needed, this is null)
@@ -37,7 +45,8 @@ public class FabricStagingExt extends Ext_c implements FabricExt {
   }
 
   /** Set the staging check */
-  public void setStageCheck(Label nextStage) {
+  public void setStageCheck(Label curStage, Label nextStage) {
+    this.curStage = curStage;
     this.nextStage = nextStage;
   }
 

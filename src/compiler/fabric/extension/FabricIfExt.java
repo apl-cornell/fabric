@@ -36,11 +36,13 @@ public class FabricIfExt extends JifIfExt {
    */
   @Override
   public Node labelCheckStmt(LabelChecker lc) throws SemanticException {
-    If iff = (If) super.labelCheckStmt(lc);
-    if (iff.alternative() != null) {
-      FabricTypeSystem ts = (FabricTypeSystem) lc.jifTypeSystem();
-      FabricContext A = (FabricContext) lc.context();
+    FabricTypeSystem ts = (FabricTypeSystem) lc.jifTypeSystem();
+    FabricContext A = (FabricContext) lc.context();
+    Label startingCL = A.conflictLabel();
 
+    If iff = (If) super.labelCheckStmt(lc);
+
+    if (iff.alternative() != null) {
       // Get the conflict label at the end of each alternative
       FabricPathMap Xt = (FabricPathMap) getPathMap(iff.consequent());
       Label tCL = Xt.CL();
@@ -72,7 +74,7 @@ public class FabricIfExt extends JifIfExt {
         // the other, so we need to add a final staging check to one or both
         // branches.
         FabricStagingExt fse = FabricUtil.fabricStagingExt(iff);
-        fse.setStageCheck(X.CL());
+        fse.setStageCheck(startingCL.simplify(), X.CL().simplify());
       }
     }
     return iff;

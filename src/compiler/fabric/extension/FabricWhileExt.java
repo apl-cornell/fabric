@@ -1,5 +1,6 @@
 package fabric.extension;
 
+import fabric.ast.FabricUtil;
 import fabric.types.FabricContext;
 import fabric.types.FabricPathMap;
 import fabric.types.FabricTypeSystem;
@@ -97,9 +98,14 @@ public class FabricWhileExt extends JifWhileExt {
     X = X.setCL(ts.gotoPath(Branch.CONTINUE, null), noAccesses);
     X = X.CL(L2);
 
+    ws = (While) updatePathMap(ws, X);
+
+    FabricStagingExt fse = FabricUtil.fabricStagingExt(ws);
+    fse.setStageCheck(loopEntryCL, X.CL());
+
     // update the conflict pc
     A.setConflictLabel(X.CL());
 
-    return updatePathMap(ws, X);
+    return ws;
   }
 }

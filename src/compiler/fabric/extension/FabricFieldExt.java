@@ -111,7 +111,8 @@ public class FabricFieldExt extends JifFieldExt {
       FabricStagingExt fse = FabricUtil.fabricStagingExt(fe);
 
       // Squirrel it away for rewrite.
-      fse.setStageCheck(conflictL.label().simplify());
+      fse.setStageCheck(conflictPC.label().simplify(),
+          conflictL.label().simplify());
     }
 
     // Check CL(op field) ≤ meet(CL(prev accesses))

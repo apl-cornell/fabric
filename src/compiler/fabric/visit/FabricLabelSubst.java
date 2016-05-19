@@ -5,6 +5,7 @@ import fabric.extension.FabricStagingExt;
 
 import jif.types.JifTypeSystem;
 import jif.types.Solver;
+import jif.types.label.Label;
 import jif.visit.JifLabelSubst;
 
 import polyglot.ast.Node;
@@ -24,7 +25,13 @@ public class FabricLabelSubst extends JifLabelSubst {
     // Substitute for labels in staging check.
     FabricStagingExt fse = FabricUtil.fabricStagingExt(nd);
     if (fse.nextStage() != null) {
-      fse.setStageCheck(bounds.applyTo(fse.nextStage()));
+      Label cur = bounds.applyTo(fse.curStage()).simplify();
+      Label next = bounds.applyTo(fse.nextStage()).simplify();
+      if (cur.equals(next)) {
+        fse.setStageCheck(null, null);
+      } else {
+        fse.setStageCheck(cur, next);
+      }
     }
     return nd;
   }

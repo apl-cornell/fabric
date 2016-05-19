@@ -60,9 +60,10 @@ public class FabricBranchExt extends JifBranchExt {
         });
     
     // Remove the CL from the pathmap so it's not included in the next
-    // statement's conflict PC.
+    // statement's conflict PC and add it to the gotoPath.
     FabricTypeSystem ts = (FabricTypeSystem) lc.typeSystem();
     FabricPathMap X = (FabricPathMap) getPathMap(bs);
+    X = X.setCL(ts.gotoPath(bs.kind(), bs.label()), X.CL());
     X = X.CL(ts.noAccesses());
     return updatePathMap(bs, X);
   }

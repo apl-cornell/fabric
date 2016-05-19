@@ -104,7 +104,8 @@ public class FabricArrayAccessExt extends JifArrayAccessExt {
       FabricStagingExt fse = FabricUtil.fabricStagingExt(acc);
 
       // Squirrel it away for rewrite.
-      fse.setStageCheck(conflictL.label().simplify());
+      fse.setStageCheck(conflictPC.label().simplify(),
+          conflictL.label().simplify());
     }
 
     // Check CL(op array access) ≤ meet(CL(prev accesses))

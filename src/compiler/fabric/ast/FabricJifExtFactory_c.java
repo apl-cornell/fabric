@@ -43,6 +43,7 @@ import fabric.translate.ConditionalToFabilExt_c;
 import fabric.translate.ConstructorDeclToFabilExt_c;
 import fabric.translate.FieldDeclToFabilExt_c;
 import fabric.translate.FieldToFabilExt_c;
+import fabric.translate.ForToFabilExt_c;
 import fabric.translate.IfToFabilExt_c;
 import fabric.translate.InstanceOfToFabilExt_c;
 import fabric.translate.MethodDeclToFabilExt_c;
@@ -55,6 +56,7 @@ import fabric.translate.RemoteWorkerGetterToFabilExt_c;
 import fabric.translate.RetryToFabilExt_c;
 import fabric.translate.SourceFileToFabilExt_c;
 import fabric.translate.StageToFabilExt_c;
+import fabric.translate.WhileToFabilExt_c;
 import fabric.translate.WorkerToFabilExt_c;
 
 import jif.ast.JifExtFactory_c;
@@ -67,10 +69,8 @@ import jif.translate.ArrayAccessAssignToJavaExt_c;
 import jif.translate.BranchToJavaExt_c;
 import jif.translate.DoToJavaExt_c;
 import jif.translate.FieldAssignToJavaExt_c;
-import jif.translate.ForToJavaExt_c;
 import jif.translate.LabeledToJavaExt_c;
 import jif.translate.SwitchToJavaExt_c;
-import jif.translate.WhileToJavaExt_c;
 
 import polyglot.ast.Ext;
 import polyglot.ast.ExtFactory;
@@ -479,7 +479,7 @@ FabricExtFactory {
 
   @Override
   protected Ext extForImpl() {
-    return new FabricForExt(new ForToJavaExt_c());
+    return new FabricForExt(new ForToFabilExt_c());
   }
 
   @Override
@@ -494,7 +494,7 @@ FabricExtFactory {
 
   @Override
   protected Ext extWhileImpl() {
-    return new FabricWhileExt(new WhileToJavaExt_c());
+    return new FabricWhileExt(new WhileToFabilExt_c());
   }
 
   @Override

@@ -246,7 +246,8 @@ public class FabricCallHelper extends CallHelper {
         FabricStagingExt fse = FabricUtil.fabricStagingExt(call);
 
         // Squirrel it away for rewrite.
-        fse.setStageCheck(beginConflictNL.label().simplify());
+        fse.setStageCheck(conflictNL.label().simplify(),
+            beginConflictNL.label().simplify());
       }
 
       lc.constrain(beginConflictNL,

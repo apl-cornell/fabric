@@ -2,6 +2,7 @@ package fabric.extension;
 
 import java.util.List;
 
+import fabric.ast.FabricUtil;
 import fabric.types.FabricContext;
 import fabric.types.FabricPathMap;
 import fabric.types.FabricTypeSystem;
@@ -100,13 +101,18 @@ public class FabricForExt extends JifForExt {
     }
 
     FabricPathMap X = (FabricPathMap) getPathMap(fs);
+    X = X.CL(L2);
     X = X.setCL(ts.gotoPath(Branch.BREAK, null), noAccesses);
     X = X.setCL(ts.gotoPath(Branch.CONTINUE, null), noAccesses);
-    X = X.CL(L2);
+
+    fs = (For) updatePathMap(fs, X);
+
+    FabricStagingExt fse = FabricUtil.fabricStagingExt(fs);
+    fse.setStageCheck(loopEntryCL, X.CL());
 
     // update the conflict pc
     Af.setConflictLabel(X.CL());
 
-    return updatePathMap(fs, X);
+    return fs;
   }
 }
