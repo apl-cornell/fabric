@@ -105,15 +105,10 @@ public class FabricFieldExt extends JifFieldExt {
     // XXX: I don't think we need to update the pathmap or anything, since
     // straight label comparisons don't do anything interesting for label
     // checking state.
-    if (conflictPC.label().hasVariableComponents() ||
-        !lc.context().labelEnv().leq(conflictPC.label().simplify(),
-          ts.join(conflictL.label().simplify(), ts.noComponentsLabel()))) {
-      FabricStagingExt fse = FabricUtil.fabricStagingExt(fe);
+    FabricStagingExt fse = FabricUtil.fabricStagingExt(fe);
+    fse.setStageCheck(conflictPC.label(), conflictL.label(), A);
 
-      // Squirrel it away for rewrite.
-      fse.setStageCheck(conflictPC.label().simplify(),
-          conflictL.label().simplify());
-    }
+    System.out.println("" + conflictL.label().simplify() + "≤" + conflictPC.label().simplify());
 
     // Check CL(op field) ≤ meet(CL(prev accesses))
     lc.constrain(conflictL,
@@ -139,7 +134,7 @@ public class FabricFieldExt extends JifFieldExt {
     });
     
     // Update the CL
-    Xe = Xe.CL(conflictPC.label());
+    Xe = Xe.CL(conflictL.label());
     A.setConflictLabel(Xe.CL());
     return (Field) updatePathMap(fe, Xe);
   }
