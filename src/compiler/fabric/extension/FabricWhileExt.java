@@ -37,9 +37,9 @@ public class FabricWhileExt extends JifWhileExt {
 
     Label noAccesses = ts.noAccesses();
 
-    Label L1 = ts.freshLabelVariable(ws.position(), "while1",
+    Label L1 = ts.freshLabelVariable(ws.position(), "while",
             "conflict label for the while statement at " + ws.position());
-    Label L2 = ts.freshLabelVariable(ws.position(), "while2",
+    Label L2 = ts.freshLabelVariable(ws.position(), "while",
             "conflict label for end of the while statement at " +
             ws.position());
     Label loopEntryCL = A.conflictLabel();
@@ -83,10 +83,10 @@ public class FabricWhileExt extends JifWhileExt {
             "conflict label at the top of the loop", L1),
           LabelConstraint.LEQ,
           endCL,
-          A.labelEnv(), ws.position(), true, new ConstraintMessage() {
+          A.labelEnv(), ws.position(), false, new ConstraintMessage() {
             @Override
             public String msg() {
-              return "The stage at the end of the while loop must be compoatible " +
+              return "The stage at the end of the while loop must be compatible " +
                      "with the stage for evaluating the loop condition.";
             }
           });
