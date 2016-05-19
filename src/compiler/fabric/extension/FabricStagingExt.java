@@ -44,10 +44,22 @@ public class FabricStagingExt extends Ext_c implements FabricExt {
     return nextStage;
   }
 
-  /** Set the staging check */
+  /**
+   * Set the staging check.
+   * Sets the fields to null if we're handed two equal labels.
+   */
   public void setStageCheck(Label curStage, Label nextStage) {
-    this.curStage = curStage;
-    this.nextStage = nextStage;
+    if (curStage != null)
+      curStage = curStage.simplify();
+    if (nextStage != null)
+      nextStage = nextStage.simplify();
+    if ((curStage == null && nextStage == null) || curStage.equals(nextStage)) {
+      this.curStage = null;
+      this.nextStage = null;
+    } else {
+      this.curStage = curStage;
+      this.nextStage = nextStage;
+    }
   }
 
   /**
