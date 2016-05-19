@@ -5,8 +5,7 @@
 * What's going on with labeled non-local breaks (we're allowing things to
   compile which shouldn't...)?
 * Branching:
-	* Procedure returns (return/exceptions), Conditional, and Ifs: working
-	  but could be improved to avoid unneeded stage checks.
+	* Try, Procedure returns (return/exceptions), Conditional, and Ifs:
+	  working but could be improved to avoid unneeded stage checks.
 	* Do
-	* Try
 	* Switch
