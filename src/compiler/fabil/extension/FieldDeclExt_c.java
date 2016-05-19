@@ -6,7 +6,6 @@ import java.util.List;
 
 import fabil.types.FabILFlags;
 import fabil.visit.ProxyRewriter;
-
 import polyglot.ast.ClassDecl;
 import polyglot.ast.ClassMember;
 import polyglot.ast.Expr;
@@ -24,7 +23,8 @@ public class FieldDeclExt_c extends ClassMemberExt_c {
   }
 
   @Override
-  public List<ClassMember> staticImplMember(ProxyRewriter pr, ClassDecl parent) {
+  public List<ClassMember> staticImplMember(ProxyRewriter pr,
+      ClassDecl parent) {
     return implMember(pr, parent, true);
   }
 
@@ -58,7 +58,8 @@ public class FieldDeclExt_c extends ClassMemberExt_c {
     Expr init = fieldDecl.init();
     Flags flags = fieldDecl.flags();
 
-    if (init == null || !flags.isStatic() || flags.isFinal() || flags.contains(FabILFlags.IMMUTABLE))
+    if (init == null || !flags.isStatic() || flags.isFinal()
+        || flags.contains(FabILFlags.IMMUTABLE))
       return super.staticImplInitMember(pr);
 
     QQ qq = pr.qq();
@@ -82,7 +83,8 @@ public class FieldDeclExt_c extends ClassMemberExt_c {
   }
 
   @Override
-  public List<ClassMember> staticProxyMember(ProxyRewriter pr, ClassDecl parent) {
+  public List<ClassMember> staticProxyMember(ProxyRewriter pr,
+      ClassDecl parent) {
     return proxyMember(pr, parent, true);
   }
 
@@ -97,21 +99,19 @@ public class FieldDeclExt_c extends ClassMemberExt_c {
     if (doStatic != flags.isStatic()) return super.implMember(pr, parent);
 
     // Make the method public, non-final, non-static and non-transient.
-    flags =
-        ProxyRewriter.toPublic(flags).clearTransient().clearFinal()
-            .clearStatic().clear(FabILFlags.IMMUTABLE);
+    flags = ProxyRewriter.toPublic(flags).clearTransient().clearFinal()
+        .clearStatic().clear(FabILFlags.IMMUTABLE);
 
     // Figure out the call target for the delegates.
-    String target =
-        "((" + parent.type().translate(null) + (doStatic ? "._Static" : "")
-            + "._Impl) fetch())";
+    String target = "((" + parent.type().translate(null)
+        + (doStatic ? "._Static" : "") + "._Impl) fetch())";
 
     QQ qq = pr.qq();
     List<ClassMember> result = new ArrayList<>(4);
     result.add(qq.parseMember(flags + " %T get$" + name + "() {" + "return "
         + target + ".get$" + name + "(); }", type));
 
-    if (!fieldDecl.flags().isFinal() && !fieldDecl.flags().contains(FabILFlags.IMMUTABLE)) {
+    if (!fieldDecl.flags().isFinal()) {
       result.add(qq.parseMember(flags + " %T set$" + name + "(%T val) {"
           + "return " + target + ".set$" + name + "(val); }", type, type));
 
@@ -157,36 +157,41 @@ public class FieldDeclExt_c extends ClassMemberExt_c {
 
     TypeNode typeNode = fieldDecl.type();
     String name = fieldDecl.name();
-    boolean finalField = flags.contains(FabILFlags.IMMUTABLE) || flags.isFinal();
+    boolean finalField = flags.isFinal();
+    boolean immutableField = finalField || flags.contains(FabILFlags.IMMUTABLE);
 
-    flags = flags.clearTransient().clearFinal().clearStatic().clearPrivate().clear(FabILFlags.IMMUTABLE);
+    flags = flags.clearTransient().clearFinal().clearStatic().clearPrivate()
+        .clear(FabILFlags.IMMUTABLE);
     List<ClassMember> members = new ArrayList<>(4);
-    String regRead =
-        finalField ? ""
-            : "fabric.worker.transaction.TransactionManager.getInstance().registerRead(this);";
+    String regRead = immutableField ? ""
+        : "fabric.worker.transaction.TransactionManager.getInstance().registerRead(this);";
     members.add(qq.parseMember(flags + " %T get$" + name + "() {" + regRead
         + "return this." + name + "; }", typeNode));
 
     if (!finalField) {
-      members.add(qq.parseMember(
-          flags + " %T set$" + name + "(%T val) {"
-              + "fabric.worker.transaction.TransactionManager tm = "
-              + "fabric.worker.transaction.TransactionManager.getInstance();"
-              + "boolean transactionCreated = tm.registerWrite(this);"
-              + "this." + name + " = val;"
-              + "if (transactionCreated) tm.commitTransaction();"
-              + "return val; }", typeNode, typeNode));
+      members.add(qq.parseMember(flags + " %T set$" + name + "(%T val) {"
+          + "fabric.worker.transaction.TransactionManager tm = "
+          + "fabric.worker.transaction.TransactionManager.getInstance();"
+          + "boolean transactionCreated = tm.registerWrite(this);" + "this."
+          + name + " = val;" + "if (transactionCreated) tm.commitTransaction();"
+          + "return val; }", typeNode, typeNode));
 
       // Add post-incrementer and post-decrementer if type is numeric.
       if (typeNode.type().isNumeric()) {
-        members.add(qq.parseMember(flags + " %T postInc$" + name + "() {"
-            + "%T tmp = this.get$" + name + "();" + "this.set$" + name
-            + "((%T) (tmp + 1));" + "return tmp; }", typeNode, typeNode,
-            typeNode, typeNode));
-        members.add(qq.parseMember(flags + " %T postDec$" + name + "() {"
-            + "%T tmp = this.get$" + name + "();" + "this.set$" + name
-            + "((%T) (tmp - 1));" + "return tmp; }", typeNode, typeNode,
-            typeNode, typeNode));
+        members
+            .add(
+                qq.parseMember(
+                    flags + " %T postInc$" + name + "() {"
+                        + "%T tmp = this.get$" + name + "();" + "this.set$"
+                        + name + "((%T) (tmp + 1));" + "return tmp; }",
+                    typeNode, typeNode, typeNode, typeNode));
+        members
+            .add(
+                qq.parseMember(
+                    flags + " %T postDec$" + name + "() {"
+                        + "%T tmp = this.get$" + name + "();" + "this.set$"
+                        + name + "((%T) (tmp - 1));" + "return tmp; }",
+                    typeNode, typeNode, typeNode, typeNode));
       }
     }
 

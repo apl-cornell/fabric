@@ -273,3 +273,27 @@ extend explicit_constructor_invocation ::=
     |   primary_no_new_array:a DOT SUPER:n LPAREN argument_list_opt:b RPAREN SEMICOLON:c
             {: RESULT = parser.nf.SuperCall(parser.pos(a, c, n), a, b); :}
     ;
+
+// Turn final fields into immutable fields.
+drop {
+    field_declaration ::=
+            modifiers_opt type variable_declarators SEMICOLON
+        ;
+}
+field_declaration ::=
+                    // List of ClassMember
+        modifiers_opt:a type:b variable_declarators:c SEMICOLON:e
+            {: List<ClassMember> l = new LinkedList<>();
+               // Turn 'final' flags into 'immutable'.
+               if (a.isFinal()) {
+                   a = a.clearFinal().set(FabILFlags.IMMUTABLE);
+               }
+               
+               for (VarDeclarator d : c) {
+                   l.add(parser.nf.FieldDecl(parser.pos(b, e),
+                                             a, parser.array(b, d.dims),
+                                             d.name, d.init, parser.javadoc(parser.pos(a), parser.pos(b))));
+               }
+               RESULT = l;
+            :}
+    ;

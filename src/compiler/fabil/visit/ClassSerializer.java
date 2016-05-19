@@ -3,6 +3,8 @@ package fabil.visit;
 import java.util.Collections;
 import java.util.List;
 
+import codebases.frontend.ExtensionInfo;
+import fabil.extension.ClassDeclExt_c;
 import polyglot.ast.ClassDecl;
 import polyglot.ast.ClassMember;
 import polyglot.ast.Ext;
@@ -10,8 +12,6 @@ import polyglot.ast.NodeFactory;
 import polyglot.main.Version;
 import polyglot.types.TypeSystem;
 import polyglot.util.ErrorQueue;
-import codebases.frontend.ExtensionInfo;
-import fabil.extension.ClassDeclExt_c;
 
 public class ClassSerializer extends polyglot.visit.ClassSerializer {
 
