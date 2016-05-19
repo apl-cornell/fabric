@@ -99,10 +99,12 @@ public class FabricStagingExt extends Ext_c implements FabricExt {
       // Wrap in the stage call
       Position pos = n.position();
       FabILNodeFactory fil_nf = (FabILNodeFactory) rw.java_nf();
-      return fil_nf.Block(pos,
-          n,
-          fil_nf.Eval(pos,
-            fil_nf.StageCall(pos, fil_nf.NullLit(pos), fabExpr)));
+      return fil_nf.Try(pos,
+          fil_nf.Block(pos, n),
+          new ArrayList<Catch>(),
+          fil_nf.Block(pos,
+            fil_nf.Eval(pos,
+              fil_nf.StageCall(pos, fil_nf.NullLit(pos), fabExpr))));
     }
     return n;
   }
