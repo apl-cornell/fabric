@@ -56,11 +56,13 @@ public class MethodDeclToFabilExt_c extends MethodDeclToJavaExt_c {
   @Override
   protected Block guardWithConstraints(JifToJavaRewriter rw, Block b)
       throws SemanticException {
-    boolean shouldGuard = false;
-    if (shouldGuard) {
-      b = super.guardWithConstraints(rw, b);
-    }
+    Block guarded = super.guardWithConstraints(rw, b);
+
+    // Do nothing if no guard was added.
+    if (guarded == b) return b;
+
+    // Wrap in atomic.
     return ((FabILNodeFactory) rw.java_nf())
-        .Atomic(Position.compilerGenerated(), b.statements());
+        .Atomic(Position.compilerGenerated(), guarded.statements());
   }
 }

@@ -1,5 +1,10 @@
 package fabric.translate;
 
+import fabil.ast.FabILNodeFactory;
+import fabric.types.AccessPathLocalWorker;
+import fabric.types.AccessPathStore;
+import fabric.types.FabricTypeSystem;
+import fabric.visit.FabricToFabilRewriter;
 import jif.translate.DynamicPrincipalToJavaExpr_c;
 import jif.translate.JifToJavaRewriter;
 import jif.types.label.AccessPath;
@@ -13,15 +18,11 @@ import polyglot.ast.NodeFactory;
 import polyglot.types.SemanticException;
 import polyglot.types.Type;
 import polyglot.util.Position;
-import fabil.ast.FabILNodeFactory;
-import fabric.types.AccessPathLocalWorker;
-import fabric.types.AccessPathStore;
-import fabric.types.FabricTypeSystem;
-import fabric.visit.FabricToFabilRewriter;
 
-public class DynamicPrincipalToFabilExpr_c extends DynamicPrincipalToJavaExpr_c {
+public class DynamicPrincipalToFabilExpr_c
+    extends DynamicPrincipalToJavaExpr_c {
   @Override
-  public Expr toJava(Principal principal, JifToJavaRewriter rw)
+  public Expr toJava(Principal principal, JifToJavaRewriter rw, Expr qualifier)
       throws SemanticException {
     DynamicPrincipal dp = (DynamicPrincipal) principal;
     FabricToFabilRewriter frw = (FabricToFabilRewriter) rw;
@@ -51,7 +52,8 @@ public class DynamicPrincipalToFabilExpr_c extends DynamicPrincipalToJavaExpr_c 
 
         Expr e;
         if (store.path() instanceof AccessPathThis
-            && frw.staticThisExpr() != null && frw.context().inStaticContext()) {
+            && frw.staticThisExpr() != null
+            && frw.context().inStaticContext()) {
           // safe to use "this" since it doesn't result in a fetch.
           e = frw.staticThisExpr();
         } else {
@@ -61,7 +63,7 @@ public class DynamicPrincipalToFabilExpr_c extends DynamicPrincipalToJavaExpr_c 
         return frw.qq().parseExpr("%E.fetch().$getStore().getPrincipal()", e);
       }
     }
-    return super.toJava(principal, frw);
+    return super.toJava(principal, frw, qualifier);
   }
 
   @Override

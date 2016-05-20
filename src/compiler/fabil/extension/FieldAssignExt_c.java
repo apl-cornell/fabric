@@ -71,6 +71,14 @@ public class FieldAssignExt_c extends ExprExt_c {
       if (target instanceof Expr) quote = "%E";
       subs.add(target);
     }
+
+    // Cast the RHS if the type is numeric. This works around Java's
+    // inconsistent implicit casting of numeric literals.
+    String arg = "(%E)";
+    if (field.type().isNumeric()) {
+      arg = "((%T) %E)";
+      subs.add(field.type());
+    }
     subs.add(rhs);
 
     String setterName = "set$" + name;
@@ -83,7 +91,7 @@ public class FieldAssignExt_c extends ExprExt_c {
       setterName = "setLength";
     }
 
-    return pr.qq().parseExpr(quote + "." + setterName + "(%E)", subs.toArray());
+    return pr.qq().parseExpr(quote + "." + setterName + arg, subs.toArray());
   }
 
   @Override
