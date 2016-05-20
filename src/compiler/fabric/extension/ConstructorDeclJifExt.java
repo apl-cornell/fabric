@@ -75,9 +75,7 @@ public class ConstructorDeclJifExt extends JifConstructorDeclExt implements Ext 
       FabricTypeSystem ts = (FabricTypeSystem) lc.jifTypeSystem();
       // Add assertion that the caller_pc is upper bounded by the conflict label
       // bounds.
-      Label confPc = ts.pairLabel(Position.compilerGenerated(),
-          ts.confProjection(A.pc()),
-          ts.topIntegPolicy(Position.compilerGenerated()));
+      Label confPc = ts.join(A.pc(), ts.noComponentsLabel());
       A.addAssertionLE(confPc, fci.beginConflictLabel());
       A.addAssertionLE(confPc, fci.endConflictLabel());
     }
