@@ -32,7 +32,7 @@ class AddressWriter {
   // In Fabric, all exceptions must be declared, because they represent a
   // possible information flow.  Here we are lazy and simply declare "throws Exception"
   //
-  public static void main{*provider}(principal{p<-} p, String{p<-}[]{p<-} args):{p->;p<-}
+  public static void main{*provider}@{*->}(principal{p<-} p, String{p<-}[]{p<-} args):{p->;p<-}@{_->}
   {
     atomic {
       // Get a reference to the store called "store".

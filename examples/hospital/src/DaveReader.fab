@@ -3,7 +3,7 @@ import fabric.runtime.Runtime;
 
 class DaveReader {
 
-  public static void main{*provider}(principal{p<-} p, String[] args):{p->;p<-}
+  public static void main{*provider}@{*->}(principal{p<-} p, String[] args):{p->;p<-}@{_->}
   {
     atomic {
       final Store davestore = FabricWorker.getWorker().getStore("davenode");

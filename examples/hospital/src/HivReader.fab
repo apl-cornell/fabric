@@ -3,7 +3,7 @@ import fabric.runtime.Runtime;
 
 class HivReader {
 
-  public static void main{*provider}(principal{p<-} p, String[] args):{p->;p<-}
+  public static void main{*provider}@{*->}(principal{p<-} p, String[] args):{p->;p<-}@{_->}
   {
     atomic {
       // Get a reference to the store called "store".
