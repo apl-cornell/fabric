@@ -43,11 +43,14 @@ public class FabricWhileExt extends JifWhileExt {
     Label L2 = ts.freshLabelVariable(ws.position(), "while",
             "conflict label for end of the while statement at " +
             ws.position());
+    A.addAssertionLE(L1, ts.noComponentsLabel());
+    A.addAssertionLE(L2, ts.noComponentsLabel());
     Label loopEntryCL = A.conflictLabel();
+    System.out.println("LOOP ENTRY CL: " + loopEntryCL);
 
     A = (FabricContext) A.pushBlock();
 
-    A.setConflictLabel(L1);
+    A.setConflictLabel(lc.lowerBound(loopEntryCL, L1));
     A.gotoConflictLabel(Branch.CONTINUE, null, L1);
     A.gotoConflictLabel(Branch.BREAK, null, L2);
 
@@ -100,7 +103,7 @@ public class FabricWhileExt extends JifWhileExt {
     FabricPathMap X = (FabricPathMap) getPathMap(ws);
     X = X.setCL(ts.gotoPath(Branch.BREAK, null), noAccesses);
     X = X.setCL(ts.gotoPath(Branch.CONTINUE, null), noAccesses);
-    X = X.CL(L2);
+    X = X.CL(lc.lowerBound(X.CL(), L2));
 
     ws = (While) updatePathMap(ws, X);
 

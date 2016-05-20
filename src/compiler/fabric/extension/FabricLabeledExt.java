@@ -37,6 +37,8 @@ public class FabricLabeledExt extends JifLabeledExt {
     Label L2 = ts.freshLabelVariable(node().position(), label + "-break",
             "conflict label at the labeled position " + label + " ("
                     + ls.position() + ")");
+    A.addAssertionLE(L1, ts.noComponentsLabel());
+    A.addAssertionLE(L2, ts.noComponentsLabel());
 
     // Push the current block so that we're not clobbering pre-existing labels
     // of the same name (I think?)
@@ -47,6 +49,7 @@ public class FabricLabeledExt extends JifLabeledExt {
     A.gotoConflictLabel(polyglot.ast.Branch.CONTINUE, label, L1);
     A.gotoConflictLabel(polyglot.ast.Branch.BREAK, label, L2);
 
+    System.out.println("CL WAS: " + A.conflictLabel());
     A.setConflictLabel(lc.lowerBound(A.conflictLabel(), L1));
 
     // We don't know if the current stage was started by accesses before a
@@ -59,12 +62,11 @@ public class FabricLabeledExt extends JifLabeledExt {
     FabricPathMap X = (FabricPathMap) getPathMap(ls);
     X = X.setCL(ts.gotoPath(polyglot.ast.Branch.CONTINUE, label), ts.noAccesses());
     X = X.setCL(ts.gotoPath(polyglot.ast.Branch.BREAK, label), ts.noAccesses());
-    X = X.CL(L2);
+    X = X.CL(lc.lowerBound(X.CL(), L2));
 
     A = (FabricContext) A.pop();
 
-    //A.setConflictLabel(X.CL());
-    A.setConflictLabel(L2);
+    A.setConflictLabel(X.CL());
 
     // We don't know if the current stage was started by accesses before a break
     // to this label or not (depends on the exact path taken), so double check

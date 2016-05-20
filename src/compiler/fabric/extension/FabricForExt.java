@@ -45,11 +45,13 @@ public class FabricForExt extends JifForExt {
     Label L2 = ts.freshLabelVariable(fs.position(), "for",
             "conflict label for end of the for loop at " +
             fs.position());
+    Af.addAssertionLE(L1, ts.noComponentsLabel());
+    Af.addAssertionLE(L2, ts.noComponentsLabel());
     Label loopEntryCL = Af.conflictLabel();
 
     Af = (FabricContext) Af.pushBlock();
 
-    Af.setConflictLabel(L1);
+    Af.setConflictLabel(lc.lowerBound(L1, loopEntryCL));
     Af.gotoConflictLabel(Branch.CONTINUE, null, L1);
     Af.gotoConflictLabel(Branch.BREAK, null, L2);
 
