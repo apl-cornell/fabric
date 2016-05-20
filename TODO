@@ -4,6 +4,9 @@
 * Does the runtime system gracefully handle stage commands out-of-transaction?
 * What's going on with labeled non-local breaks (we're allowing things to
   compile which shouldn't...)?
+* Cleaning up of staging decision making (lots of dead code from more
+  complicated approach, new approach might be better done with a second pass
+  after label checking).
 * Branching:
 	* Try, Procedure returns (return/exceptions), Conditional, and Ifs:
 	  working but could be improved to avoid unneeded stage checks.
