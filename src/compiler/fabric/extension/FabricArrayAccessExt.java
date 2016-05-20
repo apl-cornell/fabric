@@ -95,18 +95,8 @@ public class FabricArrayAccessExt extends JifArrayAccessExt {
     NamedLabel conflictPC = new NamedLabel("conflict pc", A.conflictLabel());
 
     // Squirrel away the dynamic staging check
-    // XXX: I don't think we need to update the pathmap or anything, since
-    // straight label comparisons don't do anything interesting for label
-    // checking state.
-    if (conflictPC.label().hasVariableComponents() ||
-        !lc.context().labelEnv().leq(conflictPC.label().simplify(),
-          ts.join(conflictL.label().simplify(), ts.noComponentsLabel()))) {
-      FabricStagingExt fse = FabricUtil.fabricStagingExt(acc);
-
-      // Squirrel it away for rewrite.
-      fse.setStageCheck(conflictPC.label().simplify(),
-          conflictL.label().simplify());
-    }
+    FabricStagingExt fse = FabricUtil.fabricStagingExt(acc);
+    fse.setStageCheck(conflictPC.label(), conflictL.label(), A);
 
     // Check CL(op array access) ≤ meet(CL(prev accesses))
     lc.constrain(conflictL,

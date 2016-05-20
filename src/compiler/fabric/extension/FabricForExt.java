@@ -2,7 +2,6 @@ package fabric.extension;
 
 import java.util.List;
 
-import fabric.ast.FabricUtil;
 import fabric.types.FabricContext;
 import fabric.types.FabricPathMap;
 import fabric.types.FabricTypeSystem;
@@ -56,6 +55,10 @@ public class FabricForExt extends JifForExt {
 
     Af = (FabricContext) Af.pushBlock();
 
+    // At this point, we don't know if the current stage is the result of
+    // accesses before the loop or during it.
+    Af.setStageStarted(false);
+
     fs = (For) super.checkLoop(lc, Af, fs, inits, Xinit);
 
     Af = (FabricContext) Af.pop();
@@ -107,8 +110,10 @@ public class FabricForExt extends JifForExt {
 
     fs = (For) updatePathMap(fs, X);
 
-    FabricStagingExt fse = FabricUtil.fabricStagingExt(fs);
-    fse.setStageCheck(loopEntryCL, X.CL());
+    // We don't know if the current stage was started by accesses in the loop or
+    // not (depends on the exact path taken), so double check on the next
+    // access.
+    Af.setStageStarted(false);
 
     // update the conflict pc
     Af.setConflictLabel(X.CL());

@@ -58,20 +58,35 @@ public class FabricContext_c extends JifContext_c implements FabricContext {
     return endConflictBound;
   }
 
+  /**
+   * Stage started flag.
+   */
+  protected boolean stageStarted;
+
+  /**
+   * Do we need to stage the next access, regardless of what the current
+   * conflict label is?
+   *
+   * This flag helps us handle issues with staging after something like an if
+   * statement which might or might not have started the stage it finishes in.
+   */
+  @Override
+  public boolean stageStarted() {
+    return stageStarted;
+  }
+
+  /**
+   * Update the stage started flag.  This only affects the current context (so
+   * if we leave the current block, it will reset to false.
+   */
+  @Override
+  public void setStageStarted(boolean flag) {
+    stageStarted = flag;
+  }
+
   @Override
   public void setConflictLabel(Label conflictLab) {
     this.conflictLab = conflictLab;
-    /*
-    // Bit of a hack to get the conflict label to propogate as far up as the
-    // code level.
-    FabricContext_c cur = this;
-    while (cur != null && !cur.isCode()) {
-      cur = (FabricContext_c) cur.outer;
-      if (cur != null) {
-        cur.conflictLab = conflictLab;
-      }
-    }
-    */
   }
 
   @Override

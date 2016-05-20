@@ -106,24 +106,4 @@ public class MethodDeclJifExt extends JifMethodDeclExt {
       }
     });
   }
-
-  @Override
-  public Node labelCheck(LabelChecker lc) throws SemanticException {
-    // Label check
-    FabricMethodDecl fmd = (FabricMethodDecl) super.labelCheck(lc);
-
-    // Will be null if there was a compilation problem.
-    if (fmd != null) {
-      // Add staging to the end: no matter how we leave the method, there's one
-      // final staging check.
-      FabricTypeSystem ts = (FabricTypeSystem) lc.typeSystem();
-      FabricMethodInstance fmi = (FabricMethodInstance) fmd.methodInstance();
-      if (!fmi.endConflictLabel().equals(ts.noAccesses())) {
-        FabricStagingExt fse = FabricUtil.fabricStagingExt(fmd);
-        fse.setStageCheck(fmi.beginConflictLabel(), fmi.endConflictLabel());
-      }
-    }
-
-    return fmd;
-  }
 }

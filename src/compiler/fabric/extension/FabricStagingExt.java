@@ -30,6 +30,7 @@ public class FabricStagingExt extends Ext_c implements FabricExt {
    */
   protected Label curStage;
   protected Label nextStage;
+  protected boolean stageRegardless = false;
 
   /**
    * Get the starting stage label (if there is no staging needed, this is null)
@@ -54,8 +55,10 @@ public class FabricStagingExt extends Ext_c implements FabricExt {
    */
   public void setStageCheck(Label curStage, Label nextStage, FabricContext A) {
     if (curStage.hasVariableComponents() || nextStage.hasVariableComponents() ||
-        !A.labelEnv().leq(curStage, nextStage)) {
+        !A.stageStarted() || !A.labelEnv().leq(curStage, nextStage)) {
+      stageRegardless = !A.stageStarted();
       setStageCheck(curStage, nextStage);
+      A.setStageStarted(true);
     }
   }
 
@@ -68,7 +71,9 @@ public class FabricStagingExt extends Ext_c implements FabricExt {
       curStage = curStage.simplify();
     if (nextStage != null)
       nextStage = nextStage.simplify();
-    if ((curStage == null && nextStage == null) || curStage.equals(nextStage)) {
+    if (!stageRegardless &&
+        ((curStage == null && nextStage == null) ||
+         curStage.equals(nextStage))) {
       this.curStage = null;
       this.nextStage = null;
     } else {

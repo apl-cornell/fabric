@@ -53,6 +53,10 @@ public class FabricWhileExt extends JifWhileExt {
 
     A = (FabricContext) A.pushBlock();
 
+    // At this point, we don't know if the current stage is the result of
+    // accesses before the loop or during it.
+    A.setStageStarted(false);
+
     ws = (While) super.labelCheckStmt(lc.context(A));
 
     A = (FabricContext) A.pop();
@@ -100,8 +104,10 @@ public class FabricWhileExt extends JifWhileExt {
 
     ws = (While) updatePathMap(ws, X);
 
-    FabricStagingExt fse = FabricUtil.fabricStagingExt(ws);
-    fse.setStageCheck(loopEntryCL, X.CL());
+    // We don't know if the current stage was started by accesses in the loop or
+    // not (depends on the exact path taken), so double check on the next
+    // access.
+    A.setStageStarted(false);
 
     // update the conflict pc
     A.setConflictLabel(X.CL());

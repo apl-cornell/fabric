@@ -57,4 +57,19 @@ public interface FabricContext extends JifContext, CodebaseContext {
    * <code>kind</code>.
    */
   void gotoConflictLabel(Branch.Kind kind, String label, Label L);
+
+  /**
+   * Do we need to stage the next access, regardless of what the current
+   * conflict label is?
+   *
+   * This flag helps us handle issues with staging after something like an if
+   * statement which might or might not have started the stage it finishes in.
+   */
+  public boolean stageStarted();
+
+  /**
+   * Update the stage started flag.  This only affects the current context (so
+   * if we leave the current block, it will reset to false.
+   */
+  public void setStageStarted(boolean flag);
 }

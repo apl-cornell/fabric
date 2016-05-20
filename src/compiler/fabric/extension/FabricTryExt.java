@@ -3,7 +3,6 @@ package fabric.extension;
 import java.util.ArrayList;
 import java.util.List;
 
-import fabric.ast.FabricUtil;
 import fabric.types.FabricContext;
 import fabric.types.FabricPathMap;
 import fabric.types.FabricTypeSystem;
@@ -33,24 +32,17 @@ public class FabricTryExt extends JifTryExt {
   public Node labelCheckStmt(LabelChecker lc) throws SemanticException {
     FabricTypeSystem ts = (FabricTypeSystem) lc.typeSystem();
     FabricContext A = (FabricContext) lc.context();
-    Label startingCL = A.conflictLabel();
-
     Try trs = (Try) super.labelCheckStmt(lc);
 
     FabricPathMap X = (FabricPathMap) getPathMap(trs);
     FabricPathMap Xt = (FabricPathMap) getPathMap(trs.tryBlock());
-    
-    // Staging for try block.
-    FabricStagingExt fseTry = FabricUtil.fabricStagingExt(trs.tryBlock());
-    fseTry.setStageCheck(startingCL, Xt.CL(), A);
 
-    // Staging for catches.
+    // Simplify the meet of the end of all catch blocks and a successful try
+    // block.
     List<FabricPathMap> Xcatches = new ArrayList<>(trs.catchBlocks().size());
     for (Catch cb : trs.catchBlocks()) {
       Xcatches.add((FabricPathMap) getPathMap(cb));
     }
-    // Simplify the meet of the end of all catch blocks and a successful try
-    // block.
     Label preFinally = Xt.CL();
     for (FabricPathMap Xc : Xcatches) {
       if (A.labelEnv().leq(Xc.CL(), preFinally)) {
@@ -58,17 +50,6 @@ public class FabricTryExt extends JifTryExt {
       } if (!A.labelEnv().leq(preFinally, Xc.CL())) {
         preFinally = ts.meet(preFinally, Xc.CL());
       }
-    }
-    for (Catch cb : trs.catchBlocks()) {
-      FabricStagingExt fseCB = FabricUtil.fabricStagingExt(cb);
-      fseCB.setStageCheck(Xt.CL(), preFinally, A);
-    }
-
-    // Staging for finally, if it's there.
-    if (trs.finallyBlock() != null) {
-      FabricStagingExt fseFinally =
-        FabricUtil.fabricStagingExt(trs.finallyBlock());
-      fseFinally.setStageCheck(preFinally, X.CL(), A);
     }
 
     // Simplify the ending CL
@@ -82,8 +63,35 @@ public class FabricTryExt extends JifTryExt {
   @Override
   protected Block checkFinally(LabelChecker lc, JifContext A, Block f,
       PathMap Xprev) throws SemanticException {
+    FabricTypeSystem ts = (FabricTypeSystem) lc.typeSystem();
+    FabricContext Af = (FabricContext) A;
+    // Additional pop since we just pushed before this check.
+    FabricContext AfOuter = (FabricContext) A.pop().pop();
+    FabricPathMap Xfprev = (FabricPathMap) Xprev;
     // Starting CL is the meet of all previous block ending CLs
-    ((FabricContext) A).setConflictLabel(((FabricPathMap) Xprev).CL());
+    Af.setConflictLabel(Xfprev.CL());
+    // We don't know if that stage started, however.
+    if (!Xfprev.CL().equals(ts.noAccesses()) &&
+        !A.labelEnv().leq(AfOuter.conflictLabel(), Xfprev.CL()))
+      Af.setStageStarted(false);
     return super.checkFinally(lc, A, f, Xprev);
+  }
+
+  @Override
+  protected Catch checkCatch(LabelChecker lc, JifContext A, PathMap Xtry,
+      Catch cb) throws SemanticException {
+    FabricTypeSystem ts = (FabricTypeSystem) lc.typeSystem();
+    FabricContext Af = (FabricContext) A;
+    // Additional pop since we just pushed before this check.
+    FabricContext AfOuter = (FabricContext) A.pop().pop();
+    FabricPathMap Xftry = (FabricPathMap) Xtry;
+
+    // If we started a new stage in the try, we don't know if it was started
+    // before this exception was thrown.
+    if (!Xftry.CL().equals(ts.noAccesses()) &&
+        !A.labelEnv().leq(AfOuter.conflictLabel(), Xftry.CL()))
+      Af.setStageStarted(false);
+
+    return super.checkCatch(lc, A, Xtry, cb);
   }
 }

@@ -49,18 +49,27 @@ public class FabricLabeledExt extends JifLabeledExt {
 
     A.setConflictLabel(lc.lowerBound(A.conflictLabel(), L1));
 
+    // We don't know if the current stage was started by accesses before a
+    // continue to this label or not (depends on the exact path taken), so
+    // double check on the next access.
+    A.setStageStarted(false);
+
     ls = (Labeled) super.labelCheckStmt(lc.context(A));
 
-    FabricPathMap Xs = (FabricPathMap) getPathMap(ls.statement());
     FabricPathMap X = (FabricPathMap) getPathMap(ls);
-    X = X.CL(lc.lowerBound(Xs.CL(), L2));
     X = X.setCL(ts.gotoPath(polyglot.ast.Branch.CONTINUE, label), ts.noAccesses());
     X = X.setCL(ts.gotoPath(polyglot.ast.Branch.BREAK, label), ts.noAccesses());
+    X = X.CL(L2);
 
     A = (FabricContext) A.pop();
 
     //A.setConflictLabel(X.CL());
     A.setConflictLabel(L2);
+
+    // We don't know if the current stage was started by accesses before a break
+    // to this label or not (depends on the exact path taken), so double check
+    // on the next access.
+    A.setStageStarted(false);
 
     return ls;
   }

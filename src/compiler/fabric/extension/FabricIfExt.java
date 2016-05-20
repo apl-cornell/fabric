@@ -1,6 +1,5 @@
 package fabric.extension;
 
-import fabric.ast.FabricUtil;
 import fabric.types.FabricContext;
 import fabric.types.FabricPathMap;
 import fabric.types.FabricTypeSystem;
@@ -69,12 +68,12 @@ public class FabricIfExt extends JifIfExt {
       // Set the conflict pc to the meet of the two branches.
       A.setConflictLabel(X.CL());
 
-      if (!tToF || !fToT) {
-        // Consequent or alternative isn't statically ending at a stage equal to
-        // the other, so we need to add a final staging check to one or both
-        // branches.
-        FabricStagingExt fse = FabricUtil.fabricStagingExt(iff);
-        fse.setStageCheck(startingCL, X.CL(), A);
+      // Staging happened in at least one branch.
+      if ((!Xt.CL().equals(ts.noAccesses()) && !startingCL.equals(Xt.CL())) ||
+          (!Xf.CL().equals(ts.noAccesses()) && !startingCL.equals(Xf.CL()))) {
+        // We need to worry about staging checks at the next access if one of
+        // the branches didn't start the stage.
+        A.setStageStarted(fToT && tToF);
       }
     }
     return iff;

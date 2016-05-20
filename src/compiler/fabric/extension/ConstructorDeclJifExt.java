@@ -56,16 +56,7 @@ public class ConstructorDeclJifExt extends JifConstructorDeclExt implements Ext 
     }
 
     // Run the label check
-    FabricConstructorDecl fcd = (FabricConstructorDecl) super.labelCheck(lc);
-
-    // Add staging to the end: no matter how we leave the constructor, there's
-    // one final staging check.
-    FabricConstructorInstance fci = (FabricConstructorInstance) fcd.constructorInstance();
-    if (!fci.endConflictLabel().equals(ts.noAccesses())) {
-      FabricStagingExt fse = FabricUtil.fabricStagingExt(fcd);
-      fse.setStageCheck(fci.beginConflictLabel(), fci.endConflictLabel());
-    }
-    return fcd;
+    return super.labelCheck(lc);
   }
 
   /**

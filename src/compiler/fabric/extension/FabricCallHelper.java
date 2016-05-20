@@ -237,18 +237,8 @@ public class FabricCallHelper extends CallHelper {
           A.conflictLabel());
 
       // Squirrel away the dynamic staging check
-      // XXX: I don't think we need to update the pathmap or anything, since
-      // straight label comparisons don't do anything interesting for label
-      // checking state.
-      if (conflictNL.label().hasVariableComponents() ||
-          !lc.context().labelEnv().leq(conflictNL.label().simplify(),
-            fts.join(beginConflictNL.label().simplify(), fts.noComponentsLabel()))) {
-        FabricStagingExt fse = FabricUtil.fabricStagingExt(call);
-
-        // Squirrel it away for rewrite.
-        fse.setStageCheck(conflictNL.label().simplify(),
-            beginConflictNL.label().simplify());
-      }
+      FabricStagingExt fse = FabricUtil.fabricStagingExt(call);
+      fse.setStageCheck(conflictNL.label(), beginConflictNL.label(), A);
 
       lc.constrain(beginConflictNL,
           LabelConstraint.LEQ,
@@ -266,6 +256,10 @@ public class FabricCallHelper extends CallHelper {
       Label newCL = endConflict;
       X = ((FabricPathMap) X).CL(newCL);
       ((FabricContext) A).setConflictLabel(newCL);
+
+      // We don't know if the method started the ending stage or not, so make
+      // sure the next access after this checks.
+      A.setStageStarted(false);
 
       // Check of end conflict bound to get better location reporting.
       NamedLabel newCLN = new NamedLabel("conflict pc",

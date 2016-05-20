@@ -102,9 +102,6 @@ public class FabricFieldExt extends JifFieldExt {
     NamedLabel conflictPC = new NamedLabel("conflict pc", A.conflictLabel());
 
     // Squirrel away the dynamic staging check
-    // XXX: I don't think we need to update the pathmap or anything, since
-    // straight label comparisons don't do anything interesting for label
-    // checking state.
     FabricStagingExt fse = FabricUtil.fabricStagingExt(fe);
     fse.setStageCheck(conflictPC.label(), conflictL.label(), A);
 

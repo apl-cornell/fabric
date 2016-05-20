@@ -1,6 +1,5 @@
 package fabric.extension;
 
-import fabric.ast.FabricUtil;
 import fabric.types.FabricContext;
 import fabric.types.FabricPathMap;
 import fabric.types.FabricTypeSystem;
@@ -47,40 +46,35 @@ public class FabricConditionalExt extends JifConditionalExt {
     FabricTypeSystem ts = (FabricTypeSystem) lc.jifTypeSystem();
     FabricPathMap Xt = (FabricPathMap) getPathMap(tern.consequent());
     FabricPathMap Xf = (FabricPathMap) getPathMap(tern.alternative());
+    Label tCL = Xt.CL();
+    Label fCL = Xf.CL();
+    boolean tToF = A.labelEnv().leq(tCL, fCL);
+    boolean fToT = A.labelEnv().leq(tCL, fCL);
 
     // Simplify based on environment
     FabricPathMap X = (FabricPathMap) getPathMap(tern);
-    if (A.labelEnv().leq(Xt.CL(), Xf.CL()) && A.labelEnv().leq(Xf.CL(), Xt.CL())) {
-      Expr alt = (Expr) updatePathMap(tern.alternative(), Xf.CL(Xt.CL()));
+    if (fToT && tToF) {
+      Expr alt = (Expr) updatePathMap(tern.alternative(), Xf.CL(tCL));
       tern = tern.alternative(alt);
-      X = X.CL(Xt.CL());
-    } else if (A.labelEnv().leq(Xt.CL(), Xf.CL())) {
-      X = X.CL(Xt.CL());
-    } else if (A.labelEnv().leq(Xf.CL(), Xt.CL())) {
-      X = X.CL(Xf.CL());
+      X = X.CL(tCL);
+    } else if (tToF) {
+      X = X.CL(tCL);
+    } else if (fToT) {
+      X = X.CL(fCL);
     } else {
-      X = X.CL(ts.meet(Xt.CL(), Xf.CL()));
+      X = X.CL(ts.meet(tCL, fCL));
     }
     tern = (Conditional) updatePathMap(tern, X);
 
     // Update the conflict pc to be the meet now.
     A.setConflictLabel(X.CL());
 
-    // Either:
-    // consequent staged and alternative didn't
-    // alternative staged and consequent didn't
-    // both staged but ended at differen't places
-    if ((Xt.CL().equals(ts.noAccesses()) && !Xf.CL().equals(ts.noAccesses())) ||
-        (!Xt.CL().equals(ts.noAccesses()) && Xf.CL().equals(ts.noAccesses())) ||
-        (!Xt.CL().equals(ts.noAccesses()) && !Xf.CL().equals(ts.noAccesses()) &&
-         (!A.labelEnv().leq(Xt.CL(), Xf.CL()) ||
-          !A.labelEnv().leq(Xf.CL(), Xt.CL()))))
-    {
-      // For now, if we know that the stage might be different depending on the
-      // branch we took, just stage up to the lower of the two.
-      FabricStagingExt fse = FabricUtil.fabricStagingExt(tern);
-      // Resulting path map CL will have the right stage label
-      fse.setStageCheck(startingCL, X.CL(), A);
+    // Staging happened in at least one branch.
+    if ((!Xt.CL().equals(ts.noAccesses()) && !startingCL.equals(Xt.CL())) ||
+        (!Xf.CL().equals(ts.noAccesses()) && !startingCL.equals(Xf.CL()))) {
+      // We need to worry about staging checks at the next access if one of the
+      // branchs didn't start the stage.
+      A.setStageStarted(tToF && fToT);
     }
 
     return tern;
