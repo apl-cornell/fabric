@@ -1,5 +1,6 @@
 package fabric.translate;
 
+import fabil.ast.FabILNodeFactory;
 import jif.translate.JifToJavaRewriter;
 import jif.translate.ProviderLabelToJavaExpr_c;
 import jif.types.label.Label;
@@ -7,17 +8,16 @@ import jif.types.label.ProviderLabel;
 import polyglot.ast.Expr;
 import polyglot.types.SemanticException;
 import polyglot.util.Position;
-import fabil.ast.FabILNodeFactory;
 
 public class ProviderLabelToFabilExpr_c extends ProviderLabelToJavaExpr_c {
 
   @Override
-  public Expr toJava(Label label, JifToJavaRewriter rw)
+  public Expr toJava(Label label, JifToJavaRewriter rw, Expr qualifier)
       throws SemanticException {
     FabILNodeFactory nf = (FabILNodeFactory) rw.nodeFactory();
     ProviderLabel provider = (ProviderLabel) label;
     if (provider.isTrusted()) {
-      return label.typeSystem().bottomLabel().toJava(rw);
+      return label.typeSystem().bottomLabel().toJava(rw, qualifier);
     }
 
     Position pos = provider.position();
