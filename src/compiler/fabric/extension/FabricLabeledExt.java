@@ -49,7 +49,6 @@ public class FabricLabeledExt extends JifLabeledExt {
     A.gotoConflictLabel(polyglot.ast.Branch.CONTINUE, label, L1);
     A.gotoConflictLabel(polyglot.ast.Branch.BREAK, label, L2);
 
-    System.out.println("CL WAS: " + A.conflictLabel());
     A.setConflictLabel(lc.lowerBound(A.conflictLabel(), L1));
 
     // We don't know if the current stage was started by accesses before a

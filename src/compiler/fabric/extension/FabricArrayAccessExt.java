@@ -88,10 +88,7 @@ public class FabricArrayAccessExt extends JifArrayAccessExt {
     } else {
       conflictL = new NamedLabel("read conflict label", ts.readConflict(L));
     }
-    NamedLabel pc = new NamedLabel("C(pc)",
-        ts.pairLabel(pos,
-          ts.confProjection(ts.join(Xe.N(), A.pc())),
-          ts.topIntegPolicy(pos)));
+    NamedLabel pc = new NamedLabel("pc", ts.join(Xe.N(), A.pc()));
     NamedLabel conflictPC = new NamedLabel("conflict pc", A.conflictLabel());
 
     // Squirrel away the dynamic staging check
@@ -99,6 +96,9 @@ public class FabricArrayAccessExt extends JifArrayAccessExt {
     fse.setStageCheck(conflictPC.label(), conflictL.label(), A);
 
     // Check CL(op array access) ≤ meet(CL(prev accesses))
+    //lc.constrain(conflictL.meet(lc,
+            //"{⊤→;⊤←}",
+            //ts.pairLabel(pos, ts.topConfPolicy(pos), ts.bottomIntegPolicy(pos))),
     lc.constrain(conflictL,
         LabelConstraint.LEQ,
         conflictPC.join(lc, "{⊥→;⊥←}", ts.noComponentsLabel()),
@@ -112,7 +112,7 @@ public class FabricArrayAccessExt extends JifArrayAccessExt {
     });
 
     // Check pc ≤ CL(op array access)
-    lc.constrain(pc, LabelConstraint.LEQ, conflictL, A.labelEnv(), pos,
+    lc.constrain(pc, LabelConstraint.LEQ, conflictL.join(lc, "{⊥→;⊥←}", ts.noComponentsLabel()),  A.labelEnv(), pos,
         new ConstraintMessage() {
           @Override
           public String msg() {

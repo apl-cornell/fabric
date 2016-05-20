@@ -240,9 +240,32 @@ public class FabricCallHelper extends CallHelper {
       FabricStagingExt fse = FabricUtil.fabricStagingExt(call);
       fse.setStageCheck(conflictNL.label(), beginConflictNL.label(), A);
 
+      //lc.constrain(beginConflictNL.meet(lc,
+            //"{⊤→;⊤←}",
+            //fts.pairLabel(position, fts.topConfPolicy(position), fts.bottomIntegPolicy(position))),
       lc.constrain(beginConflictNL,
           LabelConstraint.LEQ,
           conflictNL.join(lc, "{⊥→;⊥←}", fts.noComponentsLabel()),
+          A.labelEnv(), position, new ConstraintMessage() {
+        @Override
+        public String msg() {
+          return "The accesses during the call to " + FabricCallHelper.this.pi.signature()
+               + " could leak information about previous accesses to the stores "
+               + "accessed during the method.";
+        }
+      });
+
+      /*
+      NamedLabel pc = new NamedLabel("C(pc)",
+          fts.pairLabel(position,
+            fts.confProjection(fts.join(X.N(), A.pc())),
+            fts.topIntegPolicy(position)));
+            */
+      NamedLabel pc = new NamedLabel("pc", fts.join(X.N(), A.pc()));
+
+      lc.constrain(pc,
+          LabelConstraint.LEQ,
+          beginConflictNL.join(lc, "{⊥→;⊥←}", fts.noComponentsLabel()),
           A.labelEnv(), position, new ConstraintMessage() {
         @Override
         public String msg() {

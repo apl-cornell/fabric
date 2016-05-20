@@ -46,7 +46,6 @@ public class FabricWhileExt extends JifWhileExt {
     A.addAssertionLE(L1, ts.noComponentsLabel());
     A.addAssertionLE(L2, ts.noComponentsLabel());
     Label loopEntryCL = A.conflictLabel();
-    System.out.println("LOOP ENTRY CL: " + loopEntryCL);
 
     A = (FabricContext) A.pushBlock();
 
