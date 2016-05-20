@@ -81,6 +81,6 @@ public class RunAddressWriter {
       patients = (PatientList) store.getRoot().get("patients");
     }
     //actually do the thing:
-    System.out.println(addressWriter.writeAddress(patients,store,0));
+    System.out.println(addressWriter.writeAddress(patients,0));
   }
 }

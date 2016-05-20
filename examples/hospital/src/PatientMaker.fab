@@ -12,22 +12,15 @@ class PatientMaker[
         label listLabel]
 {
   public PatientList[listLabel, addressLabel, hivLabel]{listLabel}
-    makePatients{alice← }(Store store, int numPatients):{alice→ ; alice← } 
+    makePatients{alice← }(Store store, int{listLabel} numPatients):{alice→ ; alice← } 
     where store actsfor alice,
           listLabel    <= {⊤ → store},
           {⊤ ← store } <= listLabel,
           addressLabel <= accessLabel,
           accessLabel  <= {⊤ → store},
-          addressLabel <= {⊤ → store},
-          {⊤ ← store}  <= addressLabel,
-          hivLabel     <= accessLabel,
-          hivLabel     <= {⊤ → store},
           {⊤ ← store}  <= hivLabel,
-          accessLabel  <= {hivLabel ; addressLabel},
           hivLabel     <= accessLabel,
-          addressLabel <= accessLabel,
           accessLabel  <= {hivLabel ; addressLabel},
-          {numPatients}<= listLabel,
           addressLabel <= hivLabel,
           listLabel    <= addressLabel,
           {alice← }    <= listLabel

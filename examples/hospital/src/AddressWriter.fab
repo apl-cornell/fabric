@@ -14,22 +14,10 @@ class AddressWriter [
 {
   public String{addressLabel} writeAddress{carol← }(
       PatientList[patientLabel,addressLabel, hivLabel]{patientLabel} patientsIn,
-      Store store,
       int{patientLabel} desired_patient
       ):{carol→ ; carol← } 
-    where store actsfor alice,
-          patientLabel <= {⊤ → store},
-          {⊤ ← store } <= patientLabel,
-          addressLabel <= accessLabel,
-          accessLabel  <= {⊤ → store},
-          addressLabel <= {⊤ → store},
-          {⊤ ← store}  <= addressLabel,
+    where 
           hivLabel     <= accessLabel,
-          hivLabel     <= {⊤ → store},
-          {⊤ ← store}  <= hivLabel,
-          accessLabel  <= {hivLabel ; addressLabel},
-          hivLabel     <= accessLabel,
-          addressLabel <= accessLabel,
           accessLabel  <= {hivLabel ; addressLabel},
           addressLabel <= hivLabel,
           patientLabel <= addressLabel,
