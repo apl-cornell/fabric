@@ -2,12 +2,14 @@ import fabric.util.Map;
 
 class BuzzBlogAPI[label postRead, label postWrite]
 where
+// Post Read is confidentiality only
 postRead <= {*->;_<-},
 {_->;_<-} <= postRead,
+// Post Write is integrity only
 postWrite <= {_->;_<-},
 {_->;*<-} <= postWrite,
-postRead <= W2R({postWrite}),
-W2R({postWrite}) <= {*->;_<-}
+// Writers of the post are a subset of the readers
+postRead <= W2R({postWrite})
 {
   @{postRead}
 
