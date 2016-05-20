@@ -2,10 +2,14 @@ package fabric.types;
 
 import java.net.URI;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
+import codebases.types.CodebaseClassType;
+import fabil.types.FabILFlags;
 import jif.types.ActsForConstraint;
 import jif.types.ActsForParam;
 import jif.types.Assertion;
@@ -18,6 +22,7 @@ import jif.types.label.ConfPolicy;
 import jif.types.label.Label;
 import jif.types.label.ThisLabel;
 import jif.types.principal.Principal;
+import polyglot.ast.FieldDecl;
 import polyglot.frontend.Source;
 import polyglot.types.DeserializedClassInitializer;
 import polyglot.types.FieldInstance;
@@ -27,26 +32,39 @@ import polyglot.types.SemanticException;
 import polyglot.types.Type;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
-import codebases.types.CodebaseClassType;
-import fabil.types.FabILFlags;
 
-public class FabricParsedClassType_c extends JifParsedPolyType_c implements
-FabricParsedClassType {
+public class FabricParsedClassType_c extends JifParsedPolyType_c
+    implements FabricParsedClassType {
   private transient Label singleFieldLabel = null;
   private transient boolean fieldLabelFound = false;
+
+  /**
+   * @see #rootObjectLabel()
+   */
+  private transient Label rootObjectLabel = null;
+  private transient boolean rootObjectLabelFound = false;
 
   private ConfPolicy accessPolicy = null;
   protected URI canonical_ns = null;
   protected Set<CodebaseClassType> namespaceDependencies;
 
+  /**
+   * Maps the names of fields declared in this class to the name of the split
+   * fragment in which the field will reside after translation to FabIL. The
+   * split fragment will live as a class nested in this one.
+   */
+  protected final Map<String, String> splitMap;
+
   public FabricParsedClassType_c() {
     super();
+    splitMap = new HashMap<>();
   }
 
-  public FabricParsedClassType_c(FabricTypeSystem ts,
-      LazyClassInitializer init, Source fromSource, URI ns) {
+  public FabricParsedClassType_c(FabricTypeSystem ts, LazyClassInitializer init,
+      Source fromSource, URI ns) {
     super(ts, init, fromSource);
     this.canonical_ns = ns;
+    splitMap = new HashMap<>();
   }
 
   @Override
@@ -88,10 +106,9 @@ FabricParsedClassType {
       if (ts.isFabricClass(this)) {
         final FabricClassType superType = (FabricClassType) superType();
 
-        Label classLabel =
-            ts.pairLabel(Position.compilerGenerated(),
-                ts.bottomConfPolicy(Position.compilerGenerated()),
-                ts.topIntegPolicy(Position.compilerGenerated()));
+        Label classLabel = ts.pairLabel(Position.compilerGenerated(),
+            ts.bottomConfPolicy(Position.compilerGenerated()),
+            ts.topIntegPolicy(Position.compilerGenerated()));
 
         Label superLabel =
             superType == null ? classLabel : superType.updateLabel();
@@ -126,13 +143,65 @@ FabricParsedClassType {
             throw new InternalCompilerError(e);
           }
         }
-        singleFieldLabel =
-            superLabel == null ? classLabel : trustUpperBound(classEnv,
-                classLabel, superLabel);
+        singleFieldLabel = superLabel == null ? classLabel
+            : trustUpperBound(classEnv, classLabel, superLabel);
       }
       fieldLabelFound = true;
     }
     return singleFieldLabel;
+  }
+
+  @Override
+  public Label rootObjectLabel() throws SemanticException {
+    final FabricTypeSystem ts = (FabricTypeSystem) typeSystem();
+
+    if (!rootObjectLabelFound) {
+      if (ts.isFabricClass(this)) {
+        // Compute the supertype's root object label.
+        final FabricClassType superType = (FabricClassType) superType();
+        Label superLabel =
+            superType == null ? null : superType.rootObjectLabel();
+
+        // This will accumulate the root object label as required by the fields
+        // declared in the decl for this class.
+        Label result = null;
+
+        for (FieldInstance fi : fields()) {
+          if (fi.flags().isStatic()) continue;
+
+          Type fieldType = fi.type();
+          if (ts.isLabeled(fieldType)) {
+            Label fieldLabel = ts.labelOfType(fieldType);
+            result = result == null ? fieldLabel : ts.meet(result, fieldLabel);
+          }
+        }
+
+        // Add in the super class's label.
+        if (superLabel != null) {
+          final FabricClassType subType = this;
+          LabelSubstitution replaceThis = new LabelSubstitution() {
+            @Override
+            public Label substLabel(Label L) throws SemanticException {
+              if (L instanceof ThisLabel) {
+                ThisLabel ths = (ThisLabel) L;
+                if (ths.classType().equals(superType))
+                  return ts.thisLabel(ths.position(), subType);
+              }
+              return L;
+            }
+          };
+
+          superLabel = superLabel.subst(replaceThis);
+          result = result == null ? superLabel : ts.meet(result, superLabel);
+        }
+
+        rootObjectLabel = result;
+      }
+
+      rootObjectLabelFound = true;
+    }
+
+    return rootObjectLabel;
   }
 
   // XXX: These methods should be revisited post Oakland.
@@ -159,7 +228,7 @@ FabricParsedClassType {
       if (constraint instanceof ActsForConstraint) {
         @SuppressWarnings("unchecked")
         ActsForConstraint<ActsForParam, ActsForParam> pi =
-        (ActsForConstraint<ActsForParam, ActsForParam>) constraint;
+            (ActsForConstraint<ActsForParam, ActsForParam>) constraint;
         ActsForParam actor = pi.actor();
         ActsForParam granter = pi.granter();
         if (actor instanceof Principal && granter instanceof Principal) {
@@ -174,8 +243,8 @@ FabricParsedClassType {
         LabelLeAssertion lle = (LabelLeAssertion) constraint;
         classctx.addAssertionLE(lle.lhs(), lle.rhs());
       } else {
-        throw new InternalCompilerError("Unexpected assertion type: "
-            + constraint, constraint.position());
+        throw new InternalCompilerError(
+            "Unexpected assertion type: " + constraint, constraint.position());
       }
     }
     return classctx;
@@ -199,7 +268,8 @@ FabricParsedClassType {
   @Override
   public void setAccessPolicy(ConfPolicy policy) throws SemanticException {
     if (accessPolicy != null)
-      throw new SemanticException("Duplicate access policy.", policy.position());
+      throw new SemanticException("Duplicate access policy.",
+          policy.position());
     accessPolicy = policy;
   }
 
@@ -219,10 +289,9 @@ FabricParsedClassType {
         if (beginConf == null) continue;
 
         if (!ts.accessPolicyValid(beginConf)) {
-          throw new SemanticException("Default access policy for "
-              + this.name() + " contains variable components from method "
-              + jmi.signature() + ". "
-              + " Must specify an access policy explicitly.");
+          throw new SemanticException("Default access policy for " + this.name()
+              + " contains variable components from method " + jmi.signature()
+              + ". " + " Must specify an access policy explicitly.");
         }
         accessPolicy = ts.join(accessPolicy, beginConf);
       }
@@ -291,6 +360,16 @@ FabricParsedClassType {
   @Override
   public Collection<CodebaseClassType> namespaceDependencies() {
     return namespaceDependencies;
+  }
+
+  @Override
+  public void setSplitClassName(FieldDecl fieldDecl, String splitName) {
+    splitMap.put(fieldDecl.name(), splitName);
+  }
+
+  @Override
+  public String splitClassName(String fieldName) {
+    return splitMap.get(fieldName);
   }
 
 }

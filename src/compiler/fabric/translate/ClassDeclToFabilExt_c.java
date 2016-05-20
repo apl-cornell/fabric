@@ -3,6 +3,13 @@ package fabric.translate;
 import java.util.ArrayList;
 import java.util.List;
 
+import fabil.ast.FabILNodeFactory;
+import fabil.types.FabILTypeSystem;
+import fabric.ast.AccessPolicy;
+import fabric.types.FabricClassType;
+import fabric.types.FabricParsedClassType_c;
+import fabric.types.FabricTypeSystem;
+import fabric.visit.FabricToFabilRewriter;
 import jif.translate.ClassDeclToJavaExt_c;
 import jif.translate.JifToJavaRewriter;
 import jif.translate.ParamToJavaExpr_c;
@@ -25,13 +32,6 @@ import polyglot.types.SemanticException;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
 import polyglot.visit.NodeVisitor;
-import fabil.ast.FabILNodeFactory;
-import fabil.types.FabILTypeSystem;
-import fabric.ast.AccessPolicy;
-import fabric.types.FabricClassType;
-import fabric.types.FabricParsedClassType_c;
-import fabric.types.FabricTypeSystem;
-import fabric.visit.FabricToFabilRewriter;
 
 public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
   public static final String jifConstructorTranslatedName(ClassType ct) {
@@ -39,7 +39,8 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
   }
 
   @Override
-  public NodeVisitor toJavaEnter(JifToJavaRewriter rw) throws SemanticException {
+  public NodeVisitor toJavaEnter(JifToJavaRewriter rw)
+      throws SemanticException {
     rw = (JifToJavaRewriter) super.toJavaEnter(rw);
     ClassDecl cd = (ClassDecl) node();
     for (ClassMember cm : cd.body().members())
@@ -60,11 +61,8 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
         nf.CanonicalTypeNode(Position.compilerGenerated(), ts.Worker());
 
     List<ClassMember> members = new ArrayList<>(cd.body().members().size() + 1);
-    members.add(nf.FieldDecl(
-        Position.compilerGenerated(),
-        Flags.FINAL.Static(),
-        worker,
-        nf.Id(Position.compilerGenerated(), "worker$"),
+    members.add(nf.FieldDecl(Position.compilerGenerated(), Flags.FINAL.Static(),
+        worker, nf.Id(Position.compilerGenerated(), "worker$"),
         nf.Call(Position.compilerGenerated(), worker,
             nf.Id(Position.compilerGenerated(), "getWorker"))));
 
@@ -188,7 +186,18 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
 
   @Override
   protected ClassBody addInitializer(ClassBody cb, JifToJavaRewriter rw) {
-    List<Stmt> inits = new ArrayList<>(rw.getInitializations());
+    FabricToFabilRewriter fabrw = (FabricToFabilRewriter) rw;
+    List<Stmt> inits = new ArrayList<>();
+
+    // First, initialize the object fragments.
+    for (String splitName : fabrw.getObjectFragments()) {
+      inits.add(
+          rw.qq().parseStmt("%s = (%s) new %s(this).fabric$lang$Object$();",
+              splitName, splitName, splitName));
+    }
+
+    // Add the remaining initializations.
+    inits.addAll(rw.getInitializations());
     rw.getInitializations().clear();
     return cb.addMember(rw.qq().parseMember("private void %s() { %LS }",
         INITIALIZATIONS_METHOD_NAME, inits));
@@ -212,31 +221,35 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
     if (!sigMode && ts.isFabricClass(ct)) {
 
       // translate the labels to FabIL
-      Label updateLabel = ct.updateLabel();
-      ConfPolicy accessPolicy = ct.accessPolicy();
+      Label updateLabel = ct.rootObjectLabel();
+      if (updateLabel == null) {
+        // No fields declared. Make the update label public and trusted.
+        updateLabel = ts.bottomLabel();
+      } else {
+        updateLabel = updateLabel.simplify();
+      }
 
-      if (updateLabel == null || accessPolicy == null) {
-        throw new InternalCompilerError("Null update label or access policy");
+      ConfPolicy accessPolicy = ct.accessPolicy();
+      if (accessPolicy == null) {
+        throw new InternalCompilerError("Null access policy");
       }
 
       // locate labels at the same store as the object
-      rw =
-          ((FabricToFabilRewriter) rw).pushLocation(rw.qq().parseExpr(
-              "this.$getStore()"));
+      rw = ((FabricToFabilRewriter) rw)
+          .pushLocation(rw.qq().parseExpr("this.$getStore()"));
 
       Expr updateLabelExpr = rw.labelToJava(updateLabel);
 
-      Label accessLabel =
-          ts.pairLabel(accessPolicy.position(), accessPolicy,
-              ts.topIntegPolicy(accessPolicy.position()));
+      Label accessLabel = ts.pairLabel(accessPolicy.position(), accessPolicy,
+          ts.topIntegPolicy(accessPolicy.position()));
 
       Expr accessLabelExpr = rw.labelToJava(accessLabel);
 
       return cb.addMember(rw.qq().parseMember(
           "public Object %s() { " + "this.$updateLabel = %E;  "
               + "this.$accessPolicy = %E.confPolicy();" + "return this;" + "}",
-              FabricToFabilRewriter.LABEL_INITIALIZER_METHOD_NAME, updateLabelExpr,
-              accessLabelExpr));
+          FabricToFabilRewriter.LABEL_INITIALIZER_METHOD_NAME, updateLabelExpr,
+          accessLabelExpr));
     }
 
     return cb;

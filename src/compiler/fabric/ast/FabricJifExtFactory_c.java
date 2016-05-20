@@ -61,6 +61,16 @@ import fabric.translate.StageToFabilExt_c;
 import fabric.translate.TryToFabilExt_c;
 import fabric.translate.WhileToFabilExt_c;
 import fabric.translate.WorkerToFabilExt_c;
+import jif.ast.JifExtFactory_c;
+import jif.ast.JifExt_c;
+import jif.extension.JifBinaryExt;
+import jif.extension.JifFieldDeclExt_c;
+import jif.extension.JifLabelExprExt;
+import jif.extension.JifPrincipalExprExt;
+import jif.extension.JifSourceFileExt;
+import jif.translate.ArrayAccessToJavaExt_c;
+import polyglot.ast.Ext;
+import polyglot.ast.ExtFactory;
 
 import jif.ast.JifExtFactory_c;
 import jif.ast.JifExt_c;
@@ -82,8 +92,8 @@ import polyglot.ast.ExtFactory;
  * This class extends the Jif Extension factory to provide Jif extension objects
  * for atomic sections.
  */
-public class FabricJifExtFactory_c extends JifExtFactory_c implements
-FabricExtFactory {
+public class FabricJifExtFactory_c extends JifExtFactory_c
+    implements FabricExtFactory {
   // ////////////////////////////////////////////////////////////////////////////
   // overridden Jif AST nodes (TODO: should be ext.del's?) //
   // ////////////////////////////////////////////////////////////////////////////

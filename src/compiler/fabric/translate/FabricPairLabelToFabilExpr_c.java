@@ -3,6 +3,8 @@ package fabric.translate;
 import java.util.Iterator;
 import java.util.LinkedList;
 
+import fabric.types.FabricTypeSystem;
+import fabric.visit.FabricToFabilRewriter;
 import jif.translate.JifToJavaRewriter;
 import jif.translate.PairLabelToJavaExpr_c;
 import jif.types.label.ConfPolicy;
@@ -20,12 +22,10 @@ import polyglot.ast.Expr;
 import polyglot.types.SemanticException;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
-import fabric.types.FabricTypeSystem;
-import fabric.visit.FabricToFabilRewriter;
 
 public class FabricPairLabelToFabilExpr_c extends PairLabelToJavaExpr_c {
   @Override
-  public Expr toJava(Label label, JifToJavaRewriter rw)
+  public Expr toJava(Label label, JifToJavaRewriter rw, Expr qualifier)
       throws SemanticException {
     PairLabel pl = (PairLabel) label;
     FabricToFabilRewriter ffrw = (FabricToFabilRewriter) rw;
@@ -35,21 +35,19 @@ public class FabricPairLabelToFabilExpr_c extends PairLabelToJavaExpr_c {
       return rw.qq().parseExpr(rw.runtimeLabelUtil() + ".noComponents()");
     }
 
-    Expr cexp = policyToJava(pl.confPolicy(), rw);
-    Expr iexp = policyToJava(pl.integPolicy(), rw);
+    Expr cexp = policyToJava(pl.confPolicy(), rw, qualifier);
+    Expr iexp = policyToJava(pl.integPolicy(), rw, qualifier);
 
     Expr store = ffrw.currentLocation();
     if (containsProjection(pl.confPolicy())
         || containsProjection(pl.integPolicy())) {
       if (!containsProjection(pl.confPolicy())) {
-        cexp =
-            rw.qq().parseExpr(rw.runtimeLabelUtil() + ".liftToLabel(%E, %E)",
-                store, cexp);
+        cexp = rw.qq().parseExpr(rw.runtimeLabelUtil() + ".liftToLabel(%E, %E)",
+            store, cexp);
       }
       if (!containsProjection(pl.integPolicy())) {
-        iexp =
-            rw.qq().parseExpr(rw.runtimeLabelUtil() + ".liftToLabel(%E, %E)",
-                store, iexp);
+        iexp = rw.qq().parseExpr(rw.runtimeLabelUtil() + ".liftToLabel(%E, %E)",
+            store, iexp);
       }
       return rw.qq().parseExpr(rw.runtimeLabelUtil() + ".join(%E, %E, %E)",
           store, cexp, iexp);
@@ -81,7 +79,7 @@ public class FabricPairLabelToFabilExpr_c extends PairLabelToJavaExpr_c {
   }
 
   @Override
-  public Expr policyToJava(Policy p, JifToJavaRewriter rw)
+  public Expr policyToJava(Policy p, JifToJavaRewriter rw, Expr qualifier)
       throws SemanticException {
     FabricTypeSystem ts = (FabricTypeSystem) rw.jif_ts();
     FabricToFabilRewriter ffrw = (FabricToFabilRewriter) rw;
@@ -89,40 +87,34 @@ public class FabricPairLabelToFabilExpr_c extends PairLabelToJavaExpr_c {
 
     if (p instanceof IntegProjectionPolicy_c) {
       IntegProjectionPolicy_c ipp = (IntegProjectionPolicy_c) p;
-      Label l =
-          ts.meet(
-              ipp.label(),
-              ts.pairLabel(Position.compilerGenerated(),
-                  ts.bottomConfPolicy(Position.compilerGenerated()),
-                  ts.topIntegPolicy(Position.compilerGenerated())));
-      return l.toJava(rw);
+      Label l = ts.meet(ipp.label(),
+          ts.pairLabel(Position.compilerGenerated(),
+              ts.bottomConfPolicy(Position.compilerGenerated()),
+              ts.topIntegPolicy(Position.compilerGenerated())));
+      return l.toJava(rw, qualifier);
     } else if (p instanceof ConfProjectionPolicy_c) {
       ConfProjectionPolicy_c cpp = (ConfProjectionPolicy_c) p;
-      Label l =
-          ts.meet(
-              cpp.label(),
-              ts.pairLabel(Position.compilerGenerated(),
-                  ts.topConfPolicy(Position.compilerGenerated()),
-                  ts.bottomIntegPolicy(Position.compilerGenerated())));
-      return l.toJava(rw);
+      Label l = ts.meet(cpp.label(),
+          ts.pairLabel(Position.compilerGenerated(),
+              ts.topConfPolicy(Position.compilerGenerated()),
+              ts.bottomIntegPolicy(Position.compilerGenerated())));
+      return l.toJava(rw, qualifier);
     } else if (p instanceof JoinPolicy_c) {
       if (containsProjection(p)) {
         @SuppressWarnings("unchecked")
         JoinPolicy_c<Policy> jp = (JoinPolicy_c<Policy>) p;
         Expr result = null;
         for (Policy tp : jp.joinComponents()) {
-          Expr ep = policyToJava(tp, rw);
+          Expr ep = policyToJava(tp, rw, qualifier);
           if (!containsProjection(tp)) {
-            ep =
-                rw.qq().parseExpr(rw.runtimeLabelUtil() + ".toLabel(%E, %E)",
-                    store, ep);
+            ep = rw.qq().parseExpr(rw.runtimeLabelUtil() + ".toLabel(%E, %E)",
+                store, ep);
           }
           if (result == null) {
             result = ep;
           } else {
-            result =
-                rw.qq().parseExpr(rw.runtimeLabelUtil() + ".join(%E, %E, %E)",
-                    store, result, ep);
+            result = rw.qq().parseExpr(
+                rw.runtimeLabelUtil() + ".join(%E, %E, %E)", store, result, ep);
           }
         }
         return result;
@@ -133,18 +125,16 @@ public class FabricPairLabelToFabilExpr_c extends PairLabelToJavaExpr_c {
         MeetPolicy_c<Policy> mp = (MeetPolicy_c<Policy>) p;
         Expr result = null;
         for (Policy tp : mp.meetComponents()) {
-          Expr ep = policyToJava(tp, rw);
+          Expr ep = policyToJava(tp, rw, qualifier);
           if (!containsProjection(tp)) {
-            ep =
-                rw.qq().parseExpr(rw.runtimeLabelUtil() + ".toLabel(%E, %E)",
-                    store, ep);
+            ep = rw.qq().parseExpr(rw.runtimeLabelUtil() + ".toLabel(%E, %E)",
+                store, ep);
           }
           if (result == null) {
             result = ep;
           } else {
-            result =
-                rw.qq().parseExpr(rw.runtimeLabelUtil() + ".meet(%E, %E, %E)",
-                    store, result, ep);
+            result = rw.qq().parseExpr(
+                rw.runtimeLabelUtil() + ".meet(%E, %E, %E)", store, result, ep);
           }
         }
         return result;
@@ -161,8 +151,8 @@ public class FabricPairLabelToFabilExpr_c extends PairLabelToJavaExpr_c {
 
     if (p instanceof WriterPolicy) {
       WriterPolicy policy = (WriterPolicy) p;
-      Expr owner = rw.principalToJava(policy.owner());
-      Expr writer = rw.principalToJava(policy.writer());
+      Expr owner = rw.principalToJava(policy.owner(), qualifier);
+      Expr writer = rw.principalToJava(policy.writer(), qualifier);
       return rw.qq().parseExpr(
           rw.runtimeLabelUtil() + ".writerPolicy(%E, %E, %E)", store, owner,
           writer);
@@ -170,15 +160,13 @@ public class FabricPairLabelToFabilExpr_c extends PairLabelToJavaExpr_c {
 
     if (p instanceof ReaderPolicy) {
       ReaderPolicy policy = (ReaderPolicy) p;
-      Expr owner = rw.principalToJava(policy.owner());
-      Expr reader = rw.principalToJava(policy.reader());
-      return (Expr) rw
-          .qq()
-          .parseExpr(rw.runtimeLabelUtil() + ".readerPolicy(%E, %E, %E)",
-              store, owner, reader)
-          .position(
-              Position.compilerGenerated(p.toString() + ":"
-                  + p.position().toString()));
+      Expr owner = rw.principalToJava(policy.owner(), qualifier);
+      Expr reader = rw.principalToJava(policy.reader(), qualifier);
+      return (Expr) rw.qq()
+          .parseExpr(rw.runtimeLabelUtil() + ".readerPolicy(%E, %E, %E)", store,
+              owner, reader)
+          .position(Position
+              .compilerGenerated(p.toString() + ":" + p.position().toString()));
     }
 
     if (p instanceof JoinPolicy_c) {
@@ -187,10 +175,10 @@ public class FabricPairLabelToFabilExpr_c extends PairLabelToJavaExpr_c {
       LinkedList<Policy> l = new LinkedList<>(jp.joinComponents());
       Iterator<Policy> iter = l.iterator();
       Policy head = iter.next();
-      Expr e = policyToJava(head, rw);
+      Expr e = policyToJava(head, rw, qualifier);
       while (iter.hasNext()) {
         head = iter.next();
-        Expr f = policyToJava(head, rw);
+        Expr f = policyToJava(head, rw, qualifier);
         e = rw.qq().parseExpr("%E.join(%E, %E)", e, store, f);
       }
       return e;
@@ -202,10 +190,10 @@ public class FabricPairLabelToFabilExpr_c extends PairLabelToJavaExpr_c {
       LinkedList<Policy> l = new LinkedList<>(mp.meetComponents());
       Iterator<Policy> iter = l.iterator();
       Policy head = iter.next();
-      Expr e = policyToJava(head, rw);
+      Expr e = policyToJava(head, rw, qualifier);
       while (iter.hasNext()) {
         head = iter.next();
-        Expr f = policyToJava(head, rw);
+        Expr f = policyToJava(head, rw, qualifier);
         e = rw.qq().parseExpr("%E.meet(%E, %E)", e, store, f);
       }
       return e;

@@ -15,11 +15,13 @@ import polyglot.types.SemanticException;
 
 public class FabricWritersToReadersLabelToFabilExpr_c extends WritersToReadersLabelToJavaExpr_c {
   @Override
-  public Expr toJava(Label label, JifToJavaRewriter rw)
+  public Expr toJava(Label label, JifToJavaRewriter rw, Expr qualifier)
       throws SemanticException {
     FabricToFabilRewriter frw = (FabricToFabilRewriter) rw;
     FabILTypeSystem ts = (FabILTypeSystem) frw.java_ts();
     WritersToReadersLabel L = (WritersToReadersLabel) label;
-    return rw.qq().parseExpr("%E.writersToReaders(%T.getWorker().getLocalStore())", rw.labelToJava(L.label()), ts.Worker());
+    return
+      rw.qq().parseExpr("%E.writersToReaders(%T.getWorker().getLocalStore())",
+          rw.labelToJava(L.label(), qualifier), ts.Worker());
   }
 }

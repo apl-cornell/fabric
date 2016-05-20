@@ -59,6 +59,7 @@ import jif.types.Path;
 import jif.types.Solver;
 import jif.types.hierarchy.LabelEnv;
 import jif.types.label.AccessPath;
+import jif.types.label.AccessPathField;
 import jif.types.label.AccessPathThis;
 import jif.types.label.AccessPathUninterpreted;
 import jif.types.label.ArgLabel;
@@ -1345,5 +1346,10 @@ public class FabricTypeSystem_c extends JifTypeSystem_c
       return L1.simplify();
     }
     return super.meet(L1, L2);
+  }
+
+  protected AccessPathField accessPathField(AccessPath path, FieldInstance fi,
+      java.lang.String fieldName, Position pos) {
+    return new FabricAccessPathField(path, fi, fieldName, pos);
   }
 }

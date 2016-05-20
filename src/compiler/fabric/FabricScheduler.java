@@ -22,10 +22,12 @@ import fabric.visit.FabricToFabilRewriter;
 import fabric.visit.NamespaceChecker;
 import fabric.visit.RemoteCallWrapperAdder;
 import fabric.visit.RemoteCallWrapperUpdater;
+import fabric.visit.SplitNameInitializer;
 import fabric.worker.Worker;
 
 import jif.JifScheduler;
 
+import polyglot.ast.Lang;
 import polyglot.ast.Node;
 import polyglot.ast.NodeFactory;
 import polyglot.frontend.CyclicDependencyException;
@@ -54,13 +56,14 @@ public class FabricScheduler extends JifScheduler implements CBScheduler {
 
   protected TargetFactory fabil_target;
 
-  public FabricScheduler(fabric.ExtensionInfo fabext, fabil.ExtensionInfo filext) {
+  public FabricScheduler(fabric.ExtensionInfo fabext,
+      fabil.ExtensionInfo filext) {
     super(fabext, filext);
     this.fabext = fabext;
     this.filext = filext;
-    this.fabil_target =
-        new TargetFactory(filext.extFileManager(), filext.getOptions()
-            .outputLocation(), "fil", Options.global.output_stdout);
+    this.fabil_target = new TargetFactory(filext.extFileManager(),
+        filext.getOptions().outputLocation(), "fil",
+        Options.global.output_stdout);
 
   }
 
@@ -110,8 +113,8 @@ public class FabricScheduler extends JifScheduler implements CBScheduler {
   public Goal RemoteCallWrappersAdded(final Job job) {
     FabricTypeSystem ts = fabext.typeSystem();
     FabricNodeFactory nf = fabext.nodeFactory();
-    Goal g =
-        internGoal(new VisitorGoal(job, new RemoteCallWrapperAdder(job, ts, nf)) {
+    Goal g = internGoal(
+        new VisitorGoal(job, new RemoteCallWrapperAdder(job, ts, nf)) {
           @Override
           public Collection<Goal> prerequisiteGoals(Scheduler s) {
             List<Goal> l = new ArrayList<>();
@@ -145,9 +148,8 @@ public class FabricScheduler extends JifScheduler implements CBScheduler {
   public Goal RemoteCallWrappersUpdated(final Job job) {
     FabricTypeSystem ts = fabext.typeSystem();
     FabricNodeFactory nf = fabext.nodeFactory();
-    Goal g =
-        internGoal(new VisitorGoal(job, new RemoteCallWrapperUpdater(job, ts,
-            nf)) {
+    Goal g = internGoal(
+        new VisitorGoal(job, new RemoteCallWrapperUpdater(job, ts, nf)) {
           @Override
           public Collection<Goal> prerequisiteGoals(Scheduler s) {
             List<Goal> l = new ArrayList<>();
@@ -188,6 +190,7 @@ public class FabricScheduler extends JifScheduler implements CBScheduler {
 
         g.addPrerequisiteGoal(TypeChecked(job), this);
         g.addPrerequisiteGoal(ExceptionsChecked(job), this);
+        g.addPrerequisiteGoal(SplitNamesInitializedBarrier(), this);
       } catch (CyclicDependencyException e) {
         throw new InternalCompilerError(e);
       }
@@ -220,6 +223,31 @@ public class FabricScheduler extends JifScheduler implements CBScheduler {
             return l;
           }
         });
+
+    return g;
+  }
+
+  public Goal SplitNamesInitialized(Job job) {
+    Lang lang = fabext.nodeFactory().lang();
+    Goal g = internGoal(new VisitorGoal(job, new SplitNameInitializer(lang)) {
+      @Override
+      public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
+        List<Goal> l = new ArrayList<>();
+        l.add(LabelsDoubleChecked(job));
+        return l;
+      }
+    });
+
+    return g;
+  }
+
+  public Goal SplitNamesInitializedBarrier() {
+    Goal g = internGoal(new Barrier("SplitNamesInitialized", this) {
+      @Override
+      public Goal goalForJob(Job job) {
+        return SplitNamesInitialized(job);
+      }
+    });
 
     return g;
   }
@@ -302,9 +330,8 @@ public class FabricScheduler extends JifScheduler implements CBScheduler {
   public Goal FabricToFabilRewritten(Job job) {
     FabricTypeSystem ts = fabext.typeSystem();
     FabricNodeFactory nf = fabext.nodeFactory();
-    Goal g =
-        internGoal(new VisitorGoal(job, new FabricToFabilRewriter(job, ts, nf,
-            filext)));
+    Goal g = internGoal(
+        new VisitorGoal(job, new FabricToFabilRewriter(job, ts, nf, filext)));
     try {
       addPrerequisiteDependency(g, this.Serialized(job));
       addPrerequisiteDependency(g, this.PrincipalsCoerced(job));
@@ -325,8 +352,8 @@ public class FabricScheduler extends JifScheduler implements CBScheduler {
   public Goal ExceptionsChecked(Job job) {
     TypeSystem ts = extInfo.typeSystem();
     NodeFactory nf = extInfo.nodeFactory();
-    Goal g =
-        internGoal(new VisitorGoal(job, new FabricExceptionChecker(job, ts, nf)) {
+    Goal g = internGoal(
+        new VisitorGoal(job, new FabricExceptionChecker(job, ts, nf)) {
           @Override
           public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
             List<Goal> l = new ArrayList<>();
@@ -372,7 +399,8 @@ public class FabricScheduler extends JifScheduler implements CBScheduler {
         TypeSystem ts = extInfo.typeSystem();
         NodeFactory nf = extInfo.nodeFactory();
 
-        return new OutputPass(this, new Translator(job(), ts, nf, fabil_target));
+        return new OutputPass(this,
+            new Translator(job(), ts, nf, fabil_target));
       }
     });
     return g;
@@ -389,8 +417,8 @@ public class FabricScheduler extends JifScheduler implements CBScheduler {
     boolean fab_complete = super.runToCompletion();
     long endTime = System.currentTimeMillis();
     if (Report.should_report(Topics.profile, 1)) {
-      Report.report(1, "Fabric passes complete: " + (endTime - startTime)
-          + "ms");
+      Report.report(1,
+          "Fabric passes complete: " + (endTime - startTime) + "ms");
     }
     if (fab_complete) {
       // Create a goal to compile every source file.

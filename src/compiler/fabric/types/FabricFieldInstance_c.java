@@ -7,8 +7,8 @@ import polyglot.types.ReferenceType;
 import polyglot.types.Type;
 import polyglot.util.Position;
 
-public class FabricFieldInstance_c extends JifFieldInstance_c implements
-FabricFieldInstance {
+public class FabricFieldInstance_c extends JifFieldInstance_c
+    implements FabricFieldInstance {
 
   public FabricFieldInstance_c(FabricTypeSystem ts, Position pos,
       ReferenceType container, Flags flags, Type type, ConfPolicy accessLabel,
@@ -29,4 +29,9 @@ FabricFieldInstance {
     this.accessLabel = accessLabel;
   }
 
+  @Override
+  public String splitClassName() {
+    FabricClassType ct = (FabricClassType) container();
+    return ct.splitClassName(name);
+  }
 }

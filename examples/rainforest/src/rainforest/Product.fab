@@ -1,0 +1,60 @@
+package rainforest;
+
+/**
+ * Represents a product for sale at Rainforest.
+ */
+public class Product[principal rainforestP, principal vendorP] {
+  @{vendorP→}
+
+  private int{vendorP←} price;
+  private int{vendorP→;vendorP←} inventory;
+
+  /** The vendor selling the product. */
+  private final Vendor[rainforestP]{this} vendor;
+
+  public Product(
+      Vendor[rainforestP]{this} vendor,
+      int{vendorP←} price,
+      int{vendorP→;vendorP←} inventory
+  ) {
+    this.vendor = vendor;
+    this.price = price;
+    this.inventory = inventory;
+    super();
+  }
+
+  /**
+   * Returns the vendor selling the product.
+   */
+  public Vendor[rainforestP] getVendor() {
+    return vendor;
+  }
+
+  public int{vendorP←} getPrice() {
+    return price;
+  }
+
+  /**
+   * Decrements the number of items in the vendor's stock. Returns true if the
+   * vendor has sufficient stock; otherwise, false is returned and the number
+   * of stocked items is unchanged.
+   */
+  public boolean{vendorP→;vendorP←}
+      decrementInventory{vendorP→;vendorP←}(
+        int{vendorP→;vendorP←} amount
+      ) {
+    if (inventory >= amount) {
+      inventory = inventory - amount;
+      return true;
+    }
+
+    return false;
+  }
+  
+  /** Adds to the number of items in the vendor's stock. */
+  public final void restock{vendorP→;vendorP←}(
+      int{vendorP→;vendorP←} amount
+  ) {
+    decrementInventory(-amount);
+  }
+}

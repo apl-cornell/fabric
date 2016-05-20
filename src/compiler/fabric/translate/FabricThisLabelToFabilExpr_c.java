@@ -1,19 +1,19 @@
 package fabric.translate;
 
+import fabric.visit.FabricToFabilRewriter;
 import jif.translate.JifToJavaRewriter;
 import jif.translate.LabelToJavaExpr;
 import jif.translate.LabelToJavaExpr_c;
 import jif.types.label.Label;
 import polyglot.ast.Expr;
-import fabric.visit.FabricToFabilRewriter;
 
 /**
  *
  */
-public class FabricThisLabelToFabilExpr_c extends LabelToJavaExpr_c implements
-LabelToJavaExpr {
+public class FabricThisLabelToFabilExpr_c extends LabelToJavaExpr_c
+    implements LabelToJavaExpr {
   @Override
-  public Expr toJava(Label label, JifToJavaRewriter rw) {
+  public Expr toJava(Label label, JifToJavaRewriter rw, Expr qualifier) {
 
     FabricToFabilRewriter ffrw = (FabricToFabilRewriter) rw;
     Expr loc = ffrw.currentLocation();

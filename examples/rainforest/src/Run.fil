@@ -1,0 +1,48 @@
+import fabric.util.Map;
+
+import rainforest.Customer;
+import rainforest.Market;
+import rainforest.Product;
+import rainforest.Vendor;
+
+/**
+ * Executes the example. Sits in a loop, buying up as much of Outel's stock as
+ * it can on behalf of a customer, one item at a time.
+ */
+public class Run {
+  public static void main(String[] args) {
+    Store rainforestStore = Worker.getWorker().getStore("rainforest");
+    String customerName = args[0];
+
+    Market market = null;
+    Customer customer = null;
+    Vendor outel = null;
+    Product product = null;
+
+    atomic {
+      Map root = rainforestStore.getRoot();
+      market = (Market) root.get("market");
+      customer = (Customer) root.get(customerName);
+      outel = (Vendor) market.getVendors()[0];
+      product = outel.getProducts()[0];
+    }
+
+    System.out.println("Starting to stockpile outel's product...");
+    int numBought = 0;
+    while (true) {
+      if (!market.buyProduct(
+            customer.rainforest$Customer$_split_0.customerP_,
+            outel.rainforest$Vendor$_split_0.vendorP,
+            customer,
+            product,
+            1)) {
+        System.out.println("Hoarded " + numBought + " items.");
+        break;
+      }
+
+      numBought = numBought + 1;
+      if (numBought % 100 == 0)
+        System.out.println(numBought + " items hoarded so far...");
+    }
+  }
+}

@@ -3,7 +3,6 @@ package fabil.extension;
 import java.util.ArrayList;
 import java.util.List;
 
-import fabil.types.FabILFlags;
 import fabil.visit.ProxyRewriter;
 import fabil.visit.ReadWriteChecker.State;
 import polyglot.ast.Assign;
@@ -45,7 +44,7 @@ public class FieldAssignExt_c extends ExprExt_c {
     // If we're assigning to a final field, we must be in a constructor or an
     // initializer. Keep it as an assignment, since no setters will be
     // generated.
-    if (flags.isFinal() || flags.contains(FabILFlags.IMMUTABLE)) {
+    if (flags.isFinal()) {
       // We need to rewrite the left-hand side if translating a static field.
       if (!flags.isStatic()) return assign.right(rhs);
 
@@ -71,6 +70,14 @@ public class FieldAssignExt_c extends ExprExt_c {
       if (target instanceof Expr) quote = "%E";
       subs.add(target);
     }
+
+    // Cast the RHS if the type is numeric. This works around Java's
+    // inconsistent implicit casting of numeric literals.
+    String arg = "(%E)";
+    if (field.type().isNumeric()) {
+      arg = "((%T) %E)";
+      subs.add(field.type());
+    }
     subs.add(rhs);
 
     String setterName = "set$" + name;
@@ -83,7 +90,7 @@ public class FieldAssignExt_c extends ExprExt_c {
       setterName = "setLength";
     }
 
-    return pr.qq().parseExpr(quote + "." + setterName + "(%E)", subs.toArray());
+    return pr.qq().parseExpr(quote + "." + setterName + arg, subs.toArray());
   }
 
   @Override
