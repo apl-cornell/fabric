@@ -7,54 +7,43 @@ postWrite <= {postRead; _<-}
 {
   @{postRead}
 
-  // Returns the string view of the post with the given id at the given store
-  public String{postRead; postWrite ; postId ; store} viewPost{store}(
-      String postId, 
-      final Store store) 
+  private final label{this} postLabel = new label{postRead; postWrite};
+  private final Post[postLabel]{*postLabel}[]{this} posts;
+
+  public BuzzBlogAPI(Post[postLabel][]{this} posts) {
+    this.posts = posts;
+    super();
+  }
+
+  // Returns the string view of the post with the given id
+  public String{postRead ; postWrite ; postId} viewPost{postRead}(int postId) 
   where
-  postRead <= {⊤ → store},
-  {⊤ ← store} <= postWrite,
-  {postId} <= postRead,
-  {store} <= postRead
+    {postId} <= postRead
   {
-    final Map root = store.getRoot();
-    if (root != null) {
-      final Post[{postRead; postWrite}] post = 
-        (Post[{postRead; postWrite}]) root.get(postId);
-      if (post != null) {
-        return post.view();
-      } else {
-        return "post came back null";
-      }
+    final Post[postLabel] post = posts[postId];
+    if (post != null) {
+      return post.view();
     } else {
-      return "root came back null";
+      return "post came back null";
     }
   }
 
   // updates a post given some new content, returns a message about how well 
   //  that went.
-  public String{postRead; postWrite} updatePost{store}(
-      final String postId, 
-      final Store store, 
-      final String{postRead; postWrite} newContent) 
-  where postRead   <= {⊤ → store}, 
-        {⊤ ← store} <= postWrite, 
-        {postId} <= {postRead; postWrite}, 
-        {store}  <= {postRead; postWrite} {
-    final Map root = store.getRoot();
-    if (root != null) {
-      final Post[{postRead; postWrite}] post = 
-        (Post[{postRead; postWrite}]) root.get(postId);
-      if (post != null) {
-        String oldContent = post.view();
-        post.update(newContent);
-        return ("Post "+ postId +" updated from \""+ 
-                oldContent + "\" to \"" + post.view()+"\"");
-      } else {
-        return "post came back null";
-      }
+  public String{postRead;postWrite} updatePost{postRead;postWrite}(
+      int postId, 
+      String{postRead;postWrite} newContent) 
+    where
+      {postId} <= {postRead;postWrite}
+  {
+    final Post[postLabel] post = posts[postId];
+    if (post != null) {
+      String oldContent = post.view();
+      post.update(newContent);
+      return ("Post "+ postId +" updated from \""+ 
+              oldContent + "\" to \"" + post.view()+"\"");
     } else {
-      return "root came back null";
+      return "post came back null";
     }
   }
 
@@ -62,33 +51,26 @@ postWrite <= {postRead; _<-}
   // If there is a post with the given id, it returns that post.
   // Otherwise, it makes a new one with the given content.
   // returns a message that's hopefully helpful.
-  public String{postRead; postWrite} viewOrCreatePost{store}(
-      String postId, 
-      final Store store, 
-      String{postRead; postWrite} newContent) 
+  public String{postRead;postWrite} viewOrCreatePost{store}(
+      int postId, 
+      Store store, 
+      String{postRead;postWrite} newContent) 
   where postRead   <= {⊤ → store}, 
         {⊤ ← store} <= postWrite, 
-        {postId} <= {postRead; postWrite}, 
-        {store}  <= {postRead; postWrite} {
-    final Map root = store.getRoot();
-    if (root != null) {
-      final Post[{postRead; postWrite}] post = 
-        (Post[{postRead; postWrite}]) root.get(postId);
-      if (post != null) {
-        return post.view();
-      } else {
-        try {
-          final Post[{postRead; postWrite}] newPost = 
-            new Post[{postRead; postWrite}]@store(newContent);
-          root.put(postId,newPost);
-          return "Created new post: "+newPost.view();
-        } catch (Exception e) {
-          return "something threw an exception while creating a new post " +
-                 e.toString();
-        }
-      }
+        {postId} <= {postRead;postWrite}, 
+        {store}  <= {postRead;postWrite} {
+    final Post[postLabel] post = posts[postId];
+    if (post != null) {
+      return post.view();
     } else {
-      return "root came back null";
+      try {
+        final Post[postLabel] newPost = new Post[postLabel]@store(newContent);
+        posts[postId] = newPost;
+        return "Created new post: "+newPost.view();
+      } catch (Exception e) {
+        return "something threw an exception while creating a new post " +
+               e.toString();
+      }
     }
   }
 }

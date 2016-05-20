@@ -39,8 +39,8 @@ class CarolComments {
         (alice,bob),carol → (alice,bob),carol
       }@store;
 
-      final String{*aliceReads} postId = "alicePost";
-      final String{*commentRead; *commentWrite} commentId = "carolPost";
+      final int{*aliceReads} postId = 0;
+      final int{*commentRead; *commentWrite} commentId = 1;
       final String{*commentRead; *commentWrite} firstPost = 
         "Lolz, Bob can't read this comment";
       final String{*commentRead; *commentWrite} secondPost = 
@@ -59,7 +59,7 @@ class CarolComments {
                   if (new label{*commentRead; *commentWrite} <= new label{alice→ }) { 
                     final String{*postRead; *postWrite} alicePost = 
                       (new BuzzBlogAPI[postRead, postWrite]@store()
-                       ).viewPost(postId,store);
+                       ).viewPost(postId);
                     printme = printme + "\n" + "Alice Posted: "+alicePost;
 
                     final BuzzBlogAPI[commentRead, commentWrite] api = 
@@ -78,9 +78,9 @@ class CarolComments {
                     }
 
                     printme = printme + "\n" + 
-                      api.updatePost(commentId, store, secondPost + " - "+ suffix);
+                      api.updatePost(commentId, secondPost + " - "+ suffix);
                     printme = printme + "\n" + 
-                      api.updatePost(commentId, store, thirdPost + " - "+ suffix);
+                      api.updatePost(commentId, thirdPost + " - "+ suffix);
                   } else printme = printme + 
                       "\n{*commentRead; *commentWrite} ⊑ {alice→ }  failed";
                 } else printme = printme +

@@ -1,5 +1,4 @@
-// We use a separate class to store the message.  The class is parameterized by
-// a principal.
+// We use a separate class to store the message.
 public class Post[label l] {
 
   private String{l} content;
