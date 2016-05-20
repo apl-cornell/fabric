@@ -1,0 +1,86 @@
+import fabric.util.Map;
+
+/**
+ */
+public class RunAddressWriter {
+  public static void main(String[] args) {
+    // Get a reference to the store called "store".
+    Store store = null;
+    Store carolstore = null;
+    Principal alice = null;
+    Principal bob   = null;
+    Principal carol = null;
+    Principal dave  = null;
+
+    // addressLabel
+    //    (alice,bob),(carol,dave) → (alice,bob),(carol,dave);
+    //    (alice,bob),(carol,dave) ← (alice,bob),(carol,dave)
+    Principal joined = null;
+    Label addressLabel = null;
+
+    //HivLabel
+    //    (alice,bob),dave → (alice,bob),dave;
+    //    (alice,bob),dave ← (alice,bob),dave
+    Principal nocarol = null;
+    Label hivLabel = null;
+
+    Label accessLabel  = null;
+    Label listLabel    = null;
+
+    atomic { // Makin' labels and such
+      // Get a reference to the store called "store".
+      store = Worker.getWorker().getStore("alicenode");
+      carolstore = Worker.getWorker().getStore("carolnode");
+      alice = Worker.getWorker().getWorker("alicenode").getPrincipal();
+      bob   = Worker.getWorker().getWorker("bobnode").getPrincipal();
+      carol = Worker.getWorker().getWorker("carolnode").getPrincipal();
+      dave  = Worker.getWorker().getWorker("davenode").getPrincipal();
+
+      // addressLabel
+      //    (alice,bob),(carol,dave) → (alice,bob),(carol,dave);
+      //    (alice,bob),(carol,dave) ← (alice,bob),(carol,dave)
+      joined = PrincipalUtil.disjunction(store,
+           PrincipalUtil.disjunction(store,alice,bob),
+           PrincipalUtil.disjunction(store,carol,dave));
+      addressLabel = LabelUtil.toLabel(store,
+          LabelUtil.readerPolicy(store,joined,joined),
+          LabelUtil.writerPolicy(store,joined,joined));
+
+      //HivLabel
+      //    (alice,bob),dave → (alice,bob),dave;
+      //    (alice,bob),dave ← (alice,bob),dave
+      nocarol = PrincipalUtil.disjunction(store,
+           PrincipalUtil.disjunction(store,alice,bob),
+           dave);
+      hivLabel = LabelUtil.toLabel(store,
+          LabelUtil.readerPolicy(store,nocarol,nocarol),
+          LabelUtil.writerPolicy(store,nocarol,nocarol));
+
+      accessLabel  = LabelUtil.join(store,addressLabel,hivLabel);
+      listLabel    = LabelUtil.meet(store,addressLabel,hivLabel);
+    }
+
+    AddressWriter addressWriter =null;
+
+    atomic { // Constructin' the useful object
+      addressWriter = new AddressWriter@carolstore(
+           alice,
+           bob,
+           carol,
+           dave,
+           addressLabel,
+           hivLabel,
+           accessLabel,
+           listLabel
+         ).AddressWriter$();
+    }
+
+    PatientList patients = null;
+
+    atomic { // fetchin' stuff
+      patients = (PatientList) store.getRoot().get("patients");
+    }
+    //actually do the thing:
+    System.out.println(addressWriter.writeAddress(patients,store,0));
+  }
+}

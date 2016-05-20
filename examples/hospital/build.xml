@@ -71,7 +71,7 @@
 
     <filc dest="${abort.home}/classes">
       <arg value="-sourcepath" /> <arg value="${abort.home}/src" />
-      <arg value="-cp"/> <arg value="${abort.home}/classes"/> <arg value="-explain"/>
+      <arg value="-cp"/> <arg value="${abort.home}/classes"/> 
       <fileset dir="${abort.home}/src" includes="**/*.fil" />
     </filc>
   </target>

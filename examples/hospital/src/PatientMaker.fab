@@ -1,115 +1,55 @@
 import fabric.util.Map;
 import fabric.runtime.Runtime;
-//import fabricated.util.ArrayList;
-//import fabricated.util.IdComparator;
 
-class PatientMaker {
-
-  //
-  // The main method.  The declaration has a few annotations:
-  //
-  // 1. public static void main{p<-;p->} (principal{p<-} p, String[] args):{p<-;p->} throws Exception {
-  //                           ---------
-  // This annotation is the begin label, which bounds the side effects of the
-  // method.  This annotation prevents someone from outputting spurious
-  // messages to the console (the p<- component) or leaking information by
-  // calling this method in a secret context (the p-> component).
-  //
-  //
-  // 2. public static void main{p<-;p->} (principal{p<-} p, String[] args):{p<-;p->} throws Exception {
-  //                                      ----------------
-  // This extra parameter to main represents the principal who is invoking the
-  // method.  It has the label {p<-} because we require the principal object
-  // itself to have high integrity.
-  //
-  //
-  // 3. public static void main{p<-;p->} (principal{p<-} p, String[] args):{p<-;p->} throws Exception {
-  //                                                                       ---------
-  // This is the end label of the method.  It bounds the amount of information
-  // that can be learned by the successful completion of this method.
-  //
-  //
-  // 4. public static void main{p<-;p->} (principal{p<-} p, String[] args):{p<-;p->} throws Exception {
-  //                                                                                 ----------------
-  // In Fabric, all exceptions must be declared, because they represent a
-  // possible information flow.  Here we are lazy and simply declare "throws Exception"
-  //
-  public static void main{*provider}(principal{p<-} p, String[] args):{p->;p<-}
-  {
+class PatientMaker[
+        principal alice,
+        principal bob,
+        principal carol,
+        principal dave,
+        label addressLabel,
+        label hivLabel,
+        label accessLabel,
+        label listLabel]
+{
+  public PatientList[listLabel, addressLabel, hivLabel]{listLabel}
+    makePatients{alice← }(Store store, int numPatients):{alice→ ; alice← } 
+    where store actsfor alice,
+          listLabel    <= {⊤ → store},
+          {⊤ ← store } <= listLabel,
+          addressLabel <= accessLabel,
+          accessLabel  <= {⊤ → store},
+          addressLabel <= {⊤ → store},
+          {⊤ ← store}  <= addressLabel,
+          hivLabel     <= accessLabel,
+          hivLabel     <= {⊤ → store},
+          {⊤ ← store}  <= hivLabel,
+          accessLabel  <= {hivLabel ; addressLabel},
+          hivLabel     <= accessLabel,
+          addressLabel <= accessLabel,
+          accessLabel  <= {hivLabel ; addressLabel},
+          {numPatients}<= listLabel,
+          addressLabel <= hivLabel,
+          listLabel    <= addressLabel,
+          {alice← }    <= listLabel
+           {
+    PatientList[listLabel,addressLabel, hivLabel]{*listLabel} patientRoot = null;
     atomic {
-      // Get a reference to the store called "store".
-      final Store store = FabricWorker.getWorker().getStore("alicenode");
-
-      // Get a reference to the runtime.
-      // This is how Fabric programs access the console.
-      final Runtime[p] runtime = Runtime[p].getRuntime();
-
-      final principal alice = 
-          FabricWorker.getWorker().getWorker("alicenode").getPrincipal();
-      final principal bob = 
-          FabricWorker.getWorker().getWorker("bobnode"  ).getPrincipal();
-      final principal carol = 
-          FabricWorker.getWorker().getWorker("carolnode").getPrincipal();
-      final principal dave = 
-          FabricWorker.getWorker().getWorker("davenode" ).getPrincipal();
-
-      // Explicitly everybody believes that everybody can read and write
-      // the address.
-      final label addressLabel  = new label{
-        (alice,bob),(carol,dave) → (alice,bob),(carol,dave);
-        (alice,bob),(carol,dave) ← (alice,bob),(carol,dave)
-      }@store;
-
-      // Explicitly everybody believes only alice can deal with the hivLabel.
-      final label hivLabel  = new label{
-        (alice,bob),dave → (alice,bob),dave;
-        (alice,bob),dave ← (alice,bob),dave
-      }@store;
-
-      // Patient records have to be stored somewhere that can hold both
-      // addresses and hiv flags.
-      final label accessLabel = new label{
-        *addressLabel;
-        *hivLabel
-      }@store;
-      // the label of the list of patients: everyone can read it, but only alice can
-      // write it.
-      final label listLabel = new label{
-        *addressLabel
-          meet
-        *hivLabel
-      }@store;
-
-      final int numPatients = 1000;
-
-      // We're storing p's stuff on "runtime.store", so we must ensure p trusts it.
-      if (runtime.store$ actsfor p &&
-          store actsfor p &&
-          p actsfor alice ) {
-
-        // Create an object at 'store' holding our important message
-        PatientList[listLabel,addressLabel, hivLabel]{*listLabel} patients =
-          new PatientList[listLabel,addressLabel, hivLabel]@store();
-        final PatientList[listLabel,addressLabel, hivLabel]{*listLabel} patientRoot = patients;
-        for (int i = 0; i < numPatients; i++) {
-            Address[addressLabel, accessLabel] addr = new Address[addressLabel, accessLabel]@store(" " + i + " Wysteria Lane");
-            Hiv[hivLabel, accessLabel]{*listLabel} h = new Hiv[hivLabel,accessLabel]@store();
-            h.hiv = ((i % 2) == 0);
-            patients.patient = (new Patient[addressLabel, hivLabel]@store(
-                  addr,
-                  h));
-            if ((i+1) < numPatients) { // avoid the stupid off-by-one issue
-              patients.next = new PatientList[listLabel,addressLabel, hivLabel]@store();
-              patients = patients.next;
-            }
+      PatientList[listLabel,addressLabel, hivLabel]{*listLabel} patients =
+        new PatientList[listLabel,addressLabel, hivLabel]@store();
+        patientRoot = patients;
+      for (int i = 0; i < numPatients; i++) {
+        Address[addressLabel, accessLabel] addr = 
+          new Address[addressLabel, accessLabel]@store(" " + i + " Wysteria Lane");
+        Hiv[hivLabel, accessLabel]{*listLabel} h = 
+          new Hiv[hivLabel,accessLabel]@store();
+        h.hiv = ((i % 2) == 0);
+        patients.patient = (new Patient[addressLabel, hivLabel]@store(addr,h));
+        if ((i+1) < numPatients) { // avoid the stupid off-by-one issue
+          patients.next = new PatientList[listLabel,addressLabel, hivLabel]@store();
+          patients = patients.next;
         }
-
-        // Store a reference to our object in the store's root map.
-        Map root = store.getRoot();
-        root.put("patients",  patientRoot);
-      } else {
-        runtime.out().println("p does not act for alice, so it didn't work.");
       }
     }
+    return patientRoot;
   }
 }
