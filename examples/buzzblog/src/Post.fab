@@ -21,7 +21,7 @@ public class Post[label l] {
   /**
    * The intended way users should update posts
    */
-  public void update{l}@{W2R({l})}(String{l} new_message) {
+  public void update{l}@{{l} meet {W2R({l})}}(String{l} new_message) {
     this.content = new_message;
     this.version++;
   }

@@ -50,37 +50,52 @@ class CarolComments {
 
       String{carol→ } printme = "";
 
+      // Current principal is carol and the store is alice
       if (p equiv carol && alice equiv store) {
-        if (new label{alice← } <= new label{*postRead; *postWrite}) { 
-          if (new label{p← } <= new label{*commentRead; *commentWrite}) { 
-            if (new label{*postRead; *postWrite} <= new label{p→ }) { 
-              if (new label{*commentRead; *commentWrite} <= new label{p→ }) { 
-                if (new label{*postRead; *postWrite} <= new label{alice→ }) { 
-                  if (new label{*commentRead; *commentWrite} <= new label{alice→ }) { 
-                    final String{*postRead; *postWrite} alicePost = 
-                      (new BuzzBlogAPI[postRead, postWrite]@store()
-                       ).viewPost(postId,store);
-                    printme = printme + "\n" + "Alice Posted: "+alicePost;
+        // Alice is allowed to write the post
+        if (new label{alice←} <= postWrite) { 
+          // Carol's allowed to write a comment
+          if (new label{p←} <= commentWrite) { 
+            // Carol's allowed to read the post
+            if (postRead <= new label{p→}) { 
+              // Carol can read comments
+              if (commentRead <= new label{p→}) { 
+                // Alice can read the post
+                if (postRead <= new label{alice→}) { 
+                  // Alice can read the post
+                  if (commentRead <= new label{alice→}) { 
+                    // Writers of the comment can read the comment
+                    if (commentRead <= new label{W2R(*commentWrite)}) {
+                      // Writers of the post can read the post
+                      if (postRead <= new label{W2R(*postWrite)}) {
+                        final String{*postRead; *postWrite} alicePost = 
+                          (new BuzzBlogAPI[postRead, postWrite]@store()
+                           ).viewPost(postId,store);
+                        printme = printme + "\n" + "Alice Posted: "+alicePost;
 
-                    final BuzzBlogAPI[commentRead, commentWrite] api = 
-                     new BuzzBlogAPI[commentRead, commentWrite]@store();
-                    printme = printme + "\n"+
-                      api.viewOrCreatePost(commentId, store, firstPost);
+                        final BuzzBlogAPI[commentRead, commentWrite] api = 
+                         new BuzzBlogAPI[commentRead, commentWrite]@store();
+                        printme = printme + "\n"+
+                          api.viewOrCreatePost(commentId, store, firstPost);
 
-                    String{*postRead; *postWrite; *commentRead; *commentWrite}
-                       suffix = "";
-                    if (alicePost.indexOf("fizz") >= 0) {
-                      suffix = "buzz";
-                    } else {
-                      if (alicePost.indexOf("buzz") >= 0) {
-                        suffix = "fizz";
-                      }
-                    }
+                        String{*postRead; *postWrite; *commentRead; *commentWrite}
+                           suffix = "";
+                        if (alicePost.indexOf("fizz") >= 0) {
+                          suffix = "buzz";
+                        } else {
+                          if (alicePost.indexOf("buzz") >= 0) {
+                            suffix = "fizz";
+                          }
+                        }
 
-                    printme = printme + "\n" + 
-                      api.updatePost(commentId, store, secondPost + " - "+ suffix);
-                    printme = printme + "\n" + 
-                      api.updatePost(commentId, store, thirdPost + " - "+ suffix);
+                        printme = printme + "\n" + 
+                          api.updatePost(commentId, store, secondPost + " - "+ suffix);
+                        printme = printme + "\n" + 
+                          api.updatePost(commentId, store, thirdPost + " - "+ suffix);
+                      } else printme = printme + 
+                          "\npostRead ⊑ W2R({*postWrite}) failed";
+                    } else printme = printme + 
+                        "\ncommentRead ⊑ W2R({*commentWrite}) failed";
                   } else printme = printme + 
                       "\n{*commentRead; *commentWrite} ⊑ {alice→ }  failed";
                 } else printme = printme +

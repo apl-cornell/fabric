@@ -37,9 +37,9 @@ class AlicePosts {
 
       if (p equiv alice && alice equiv store) {
         // Alice should be able to write the post.
-        if (new label{p← } <= new label{*postRead; *postWrite}) { 
-          // Alice should be able to read it too.
-          if (new label{*postRead; *postWrite} <= new label{p→ } ) { 
+        if (new label{p← } <= postWrite) { 
+          // Writers should be able to read it too, especially Alice.
+          if (postRead <= new label{W2R(*postWrite)} && new label{W2R(*postWrite)} <= new label{p→}/* && postRead <= new label{p->}*/) { 
             final BuzzBlogAPI[postRead, postWrite] api = 
               new BuzzBlogAPI[postRead, postWrite]@store();
             final String{*postRead;*postWrite} firstView =
