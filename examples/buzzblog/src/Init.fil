@@ -9,34 +9,46 @@ class Init {
       Principal alice = Worker.getWorker().getWorker("alicenode").getPrincipal();
       Principal bob   = Worker.getWorker().getWorker("bobnode"  ).getPrincipal();
       Principal carol = Worker.getWorker().getWorker("carolnode").getPrincipal();
+      Principal bottom = PrincipalUtil.nullPrincipal();
+      Principal top = PrincipalUtil.topPrincipal();
 
       // Create labels.
-      // ((alice ∨ bob) ∨ carol)→
-      Label postRead =
-        LabelUtil.readerPolicyLabel(store,
-          PrincipalUtil.disjunction(store,
-            PrincipalUtil.disjunction(store, alice, bob),
-            carol),
-          PrincipalUtil.nullPrincipal());
+      // ((alice ∨ bob) ∨ carol)→ ; ((alice ∨ bob) ∨ carol)←
+      Label postLabel =
+        LabelUtil.toLabel(store,
+          LabelUtil.readerPolicy(store,
+            PrincipalUtil.disjunction(store,
+              PrincipalUtil.disjunction(store, alice, bob),
+              carol),
+            bottom),
+          LabelUtil.writerPolicy(store,
+            PrincipalUtil.disjunction(store,
+              PrincipalUtil.disjunction(store, alice, bob),
+              carol),
+            top));
 
-      // ((alice ∧ bob) ∧ carol)←alice
-      Label postWrite =
-        LabelUtil.writerPolicyLabel(store,
-          PrincipalUtil.conjunction(store,
-            PrincipalUtil.conjunction(store, alice, bob),
-            carol),
-          alice);
+      // (alice ∨ carol)→ ; (alice ∨ carol)←
+      Principal aliceOrCarol = PrincipalUtil.disjunction(store, alice, carol);
+      Label commentLabel =
+        LabelUtil.toLabel(store,
+          LabelUtil.readerPolicy(store, aliceOrCarol, bottom),
+          LabelUtil.writerPolicy(store, aliceOrCarol, top));
 
-      // Create the array of posts.
-      Post[] posts = new Post[2]@store;
+
+      // Create the arrays of posts and comments.
+      Post[] posts = new Post[1]@store;
+      Post[] comments = new Post[1]@store;
 
       // Create the BuzzBlogAPI object.
       BuzzBlogAPI blog =
-          new BuzzBlogAPI(postRead, postWrite).BuzzBlogAPI$(posts);
+          new BuzzBlogAPI@store(postLabel, commentLabel)
+            .BuzzBlogAPI$(posts, comments);
 
-      // Save the BuzzBlogAPI object in Alice's root map.
+      // Save the BuzzBlogAPI object and the two labels in Alice's root map.
       Map root = store.getRoot();
       root.put("buzzblog", blog);
+      root.put("postLabel", postLabel);
+      root.put("commentLabel", commentLabel);
     }
   }
 }

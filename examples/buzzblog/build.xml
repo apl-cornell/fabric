@@ -56,7 +56,7 @@
 
     <filc dest="${buzzblog.home}/classes">
       <arg value="-sourcepath" /> <arg value="${buzzblog.home}/src" />
-      <arg value="-cp"/> <arg value="${buzzblog.home}/classes"/> <arg value="-explain"/>
+      <arg value="-cp"/> <arg value="${buzzblog.home}/classes"/>
       <fileset dir="${buzzblog.home}/src" includes="**/*.fil" />
     </filc>
   </target>
