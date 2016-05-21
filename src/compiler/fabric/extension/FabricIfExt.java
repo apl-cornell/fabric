@@ -47,8 +47,8 @@ public class FabricIfExt extends JifIfExt {
       Label tCL = Xt.CL();
       FabricPathMap Xf = (FabricPathMap) getPathMap(iff.alternative());
       Label fCL = Xf.CL();
-      boolean tToF = A.labelEnv().leq(tCL, fCL);
-      boolean fToT = A.labelEnv().leq(tCL, fCL);
+      boolean tToF = !tCL.hasVariableComponents() && !fCL.hasVariableComponents() && A.labelEnv().leq(tCL, fCL);
+      boolean fToT = !tCL.hasVariableComponents() && !fCL.hasVariableComponents() && A.labelEnv().leq(tCL, fCL);
 
       // Simplify the ending label based on the environment
       FabricPathMap X = (FabricPathMap) getPathMap(iff);
