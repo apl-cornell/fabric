@@ -1,0 +1,6 @@
+class Assign01[principal p] {
+  int{p->_;p<-} x;
+  void m{p->_;p<-}@{p->}()@{p->} {
+    x = 0;
+  }
+}
