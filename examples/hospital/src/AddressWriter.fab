@@ -1,147 +1,70 @@
 import fabric.util.Map;
 import fabric.runtime.Runtime;
 
-class AddressWriter {
 
-  //
-  // The main method.  The declaration has a few annotations:
-  //
-  // 1. public static void main{p<-;p->} (principal{p<-} p, String[] args):{p<-;p->} throws Exception {
-  //                           ---------
-  // This annotation is the begin label, which bounds the side effects of the
-  // method.  This annotation prevents someone from outputting spurious
-  // messages to the console (the p<- component) or leaking information by
-  // calling this method in a secret context (the p-> component).
-  //
-  //
-  // 2. public static void main{p<-;p->} (principal{p<-} p, String[] args):{p<-;p->} throws Exception {
-  //                                      ----------------
-  // This extra parameter to main represents the principal who is invoking the
-  // method.  It has the label {p<-} because we require the principal object
-  // itself to have high integrity.
-  //
-  //
-  // 3. public static void main{p<-;p->} (principal{p<-} p, String[] args):{p<-;p->} throws Exception {
-  //                                                                       ---------
-  // This is the end label of the method.  It bounds the amount of information
-  // that can be learned by the successful completion of this method.
-  //
-  //
-  // 4. public static void main{p<-;p->} (principal{p<-} p, String[] args):{p<-;p->} throws Exception {
-  //                                                                                 ----------------
-  // In Fabric, all exceptions must be declared, because they represent a
-  // possible information flow.  Here we are lazy and simply declare "throws Exception"
-  //
-  public static void main{*provider}@{*->}(principal{p<-} p, String{p<-}[]{p<-} args):{p->;p<-}@{_->}
+class AddressWriter [
+        principal alice,
+        principal bob,
+        principal carol,
+        principal dave,
+        label addressLabel,
+        label hivLabel,
+        label accessLabel,
+        label patientLabel]
+{
+  public String{addressLabel} writeAddress{carol← }(
+      PatientList[patientLabel,addressLabel, hivLabel]{patientLabel} patientsIn,
+      int{patientLabel} desired_patient
+      ):{carol→ ; carol← } 
+    where 
+          hivLabel     <= accessLabel,
+          accessLabel  <= {hivLabel ; addressLabel},
+          addressLabel <= hivLabel,
+          patientLabel <= addressLabel,
+          {carol← }    <= patientLabel
   {
+    String{addressLabel} printable = "";
     atomic {
-      // Get a reference to the store called "store".
-      final Store store = FabricWorker.getWorker().getStore("alicenode");
-      //final Store bullstore = FabricWorker.getWorker().getStore("bobnode");
-      //bullstore.getRoot().put("WOOOOOOO", "WAT");
+        PatientList[patientLabel,addressLabel, hivLabel]{patientLabel} patients = 
+          patientsIn;
+        // Log the attack.
+        AttackLogger.logID(desired_patient);
 
-      // Get a reference to the runtime.
-      final Runtime[p] runtime = Runtime[p].getRuntime();
-
-      final principal alice = 
-          FabricWorker.getWorker().getWorker("alicenode").getPrincipal();
-      final principal bob = 
-          FabricWorker.getWorker().getWorker("bobnode"  ).getPrincipal();
-      final principal carol = 
-          FabricWorker.getWorker().getWorker("carolnode").getPrincipal();
-      final principal dave = 
-          FabricWorker.getWorker().getWorker("davenode" ).getPrincipal();
-
-      // Explicitly everybody believes that everybody can read and write
-      // the address.
-      final label addressLabel  = new label{
-        (alice,bob),(carol,dave) →  (alice,bob),(carol,dave);
-        (alice,bob),(carol,dave) ←  (alice,bob),(carol,dave)
-      }@store;
-
-      // Explicitly everybody believes only alice can deal with the hivLabel.
-      final label hivLabel  = new label{
-        (alice,bob),dave → (alice,bob),dave;
-        (alice,bob),dave ← (alice,bob),dave
-      }@store;
-
-      // Patient records have to be stored somewhere that can hold both
-      // addresses and hiv flags.
-      final label accessLabel = new label{
-        *addressLabel;
-        *hivLabel
-      }@store;
-
-      // Label on the patient record itself.
-      final label patientLabel = new label{
-        *addressLabel
-          meet
-        *hivLabel
-      }@store;
-
-      if (patientLabel <= addressLabel) {
-        if (new label{p<-} <= addressLabel) {
-          if (patientLabel <= new label{p->} ) {
-            int{*patientLabel} desired_patient = 0;
-            try {
-              desired_patient = Integer.parseInt(args[0]);
-            } catch (ArrayIndexOutOfBoundsException e) {
-              runtime.out().println("arg[0] doesn't exist!");
-            } catch (NumberFormatException e) {
-              runtime.out().println("arg[0] " + args[0] + " wasn't a desired patient number");
-            }
-            
-            // Log the attack.
-            AttackLogger.logID(desired_patient);
-
-            // Grab the patients list
-            Map root = store.getRoot();
-            PatientList[patientLabel,addressLabel,hivLabel]{*patientLabel} patients=
-             (PatientList[patientLabel,addressLabel,hivLabel]) root.get("patients");
-            if (patients == null) {
-              runtime.out().println("patients came back null");
-              return;
-            }
-            int patients_left = desired_patient;
-            while (patients != null /*&& patients_left >= 0*/) {
-              Patient[addressLabel, hivLabel] patient = patients.patient;
-              if (patient != null && patients_left == 0) {
-                runtime.out().println("updating patient " + desired_patient);
-                Address[addressLabel,accessLabel]{*addressLabel} addr=patient.address;
-                if (addr != null) {
-                  String{*addressLabel} address = addr.address;
-                  // make meaningless changes to the address, namely adding or
-                  // removing a space at the end.
-                  if (address != null) {
-                    if (address.endsWith(" ")) {
-                      //runtime.out().println("trimming address");
-                      addr.address = address.trim();
-                    } else {
-                      //runtime.out().println("adding space to address");
-                      addr.address = address + " ";
-                    }
-                  } else {
-                    //runtime.out().println("addr.address came back null");
-                  }
-                } else {
-                  //runtime.out().println("patient.address came back null");
-                }
-              } else if (patient == null) {
-                runtime.out().println("patient (singular) came back null");
-              }
-              patients_left--;
-              patients = patients.next;
-            }
-          } else {
-            runtime.out().println("p does not act for alice, bob, or carol, "+
-                "so it didn't work.");
-          }
-        } else {
-          runtime.out().println("{p <- } doesn't flow to addressLabel");
+        if (patients == null) { 
+          printable = printable + "\n" + ("patients came back null");
         }
-      } else {
-        runtime.out().println("patientLabel doesn't flow to addressLabel");
-      }
+
+        int{patientLabel} patients_left = desired_patient;
+        while (patients != null /*&& patients_left >= 0*/) {
+          Patient[addressLabel, hivLabel] patient = patients.patient;
+          if (patient != null && patients_left == 0) {
+            printable = printable + "\n" + ("updating patient " + desired_patient);
+            Address[addressLabel,accessLabel]{addressLabel} addr=patient.address;
+            if (addr != null) {
+              String{addressLabel} address = addr.address;
+              // make meaningless changes to the address, namely adding or
+              // removing a space at the end.
+              if (address != null) {
+                if (address.endsWith(" ")) {
+                  printable = printable + "\n" + ("trimming address");
+                  addr.address = address.trim();
+                } else {
+                  printable = printable + "\n" + ("adding space to address");
+                  addr.address = address + " ";
+                }
+              } else {
+                printable = printable + "\n" + ("addr.address came back null");
+              }
+            } else {
+              printable = printable + "\n" + ("patient.address came back null");
+            }
+          } else if (patient == null) {
+            printable = printable + "\n" + ("patient (singular) came back null");
+          }
+          patients_left--;
+          patients = patients.next;
+        }
     }
+    return printable;
   }
 }

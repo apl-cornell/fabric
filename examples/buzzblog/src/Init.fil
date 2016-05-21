@@ -1,0 +1,42 @@
+import fabric.util.Map;
+
+class Init {
+  public static void main(String[] args) {
+    atomic {
+      Store store = Worker.getWorker().getStore("alicenode");
+
+      // Get principals.
+      Principal alice = Worker.getWorker().getWorker("alicenode").getPrincipal();
+      Principal bob   = Worker.getWorker().getWorker("bobnode"  ).getPrincipal();
+      Principal carol = Worker.getWorker().getWorker("carolnode").getPrincipal();
+
+      // Create labels.
+      // ((alice ∨ bob) ∨ carol)→
+      Label postRead =
+        LabelUtil.readerPolicyLabel(store,
+          PrincipalUtil.disjunction(store,
+            PrincipalUtil.disjunction(store, alice, bob),
+            carol),
+          PrincipalUtil.nullPrincipal());
+
+      // ((alice ∧ bob) ∧ carol)←alice
+      Label postWrite =
+        LabelUtil.writerPolicyLabel(store,
+          PrincipalUtil.conjunction(store,
+            PrincipalUtil.conjunction(store, alice, bob),
+            carol),
+          alice);
+
+      // Create the array of posts.
+      Post[] posts = new Post[2]@store;
+
+      // Create the BuzzBlogAPI object.
+      BuzzBlogAPI blog =
+          new BuzzBlogAPI(postRead, postWrite).BuzzBlogAPI$(posts);
+
+      // Save the BuzzBlogAPI object in Alice's root map.
+      Map root = store.getRoot();
+      root.put("buzzblog", blog);
+    }
+  }
+}

@@ -1,15 +1,21 @@
 import fabric.runtime.Runtime;
 
-class AlicePosts {
+class AlicePosts[label postRead, label postWrite]
+  where
+    postRead  ⊑ {⊤→; postWrite},
+    postWrite ⊑ {postRead; ⊥←}
+{
 
-  public static void main{p<-}@{*->}(principal{p<-} p, String[] args):{p->;p<-}@{_->}
-  {
+  public static void run{workerP<-}(
+      principal{workerP<-} workerP,
+      BuzzBlogAPI[postRead, postWrite]{*postRead;*postWrite} api
+  ):{workerP->;workerP<-} {
     atomic {
       // Get a reference to the store called "store".
       final Store store = FabricWorker.getWorker().getStore("alicenode");
 
       // Get a reference to the runtime.
-      final Runtime[p] runtime = Runtime[p].getRuntime();
+      final Runtime[workerP] runtime = Runtime[workerP].getRuntime();
 
       // Get principals for alice, bob, and carol.
       final principal alice = 
@@ -19,15 +25,7 @@ class AlicePosts {
       final principal carol = 
           FabricWorker.getWorker().getWorker("carolnode").getPrincipal();
 
-      final label postRead  = new label{
-        (alice,bob),carol → 
-      }@store;
-
-      final label postWrite  = new label{
-        (alice&bob)&carol ← alice
-      }@store;
-
-      final String{*postRead; *postWrite} postId = "alicePost";
+      final int{*postRead; *postWrite} postId = 0;
       final String{*postRead; *postWrite} firstPost = 
         "This is the fizzy blog post that Alice wrote.";
       final String{*postRead; *postWrite} secondPost = 
@@ -35,13 +33,11 @@ class AlicePosts {
 
       String{alice->} printme = "";
 
-      if (p equiv alice && alice equiv store) {
+      if (workerP equiv alice && alice equiv store && new label {⊤←store} <= postWrite) {
         // Alice should be able to write the post.
-        if (new label{p← } <= postWrite) { 
-          // Writers should be able to read it too, especially Alice.
-          if (postRead <= new label{W2R(*postWrite)} && new label{W2R(*postWrite)} <= new label{p→}/* && postRead <= new label{p->}*/) { 
-            final BuzzBlogAPI[postRead, postWrite] api = 
-              new BuzzBlogAPI[postRead, postWrite]@store();
+        if (new label{workerP← } <= new label{*postRead; *postWrite}) { 
+          // Alice should be able to read it too.
+          if (new label{*postRead; *postWrite} <= new label{workerP→ } ) { 
             final String{*postRead;*postWrite} firstView =
               api.viewOrCreatePost(postId, store, firstPost);
             printme = printme + "\n" + firstView;
@@ -56,11 +52,11 @@ class AlicePosts {
             }
 
             printme = printme + "\n" + 
-              api.updatePost(postId, store, secondPost + " - " + suffix);
+              api.updatePost(postId, secondPost + " - " + suffix);
           } else printme = printme + "\n{*postRead; *postWrite} ⊑ {p→ }  failed";
         } else printme = printme + "\n{p←} ⊑ {*postRead; *postWrite} failed";
       } else printme = printme + "\nThe permission checking if block failed.";
-      if (p equiv alice)
+      if (workerP equiv alice)
         runtime.out().println(printme);
     }
   }
