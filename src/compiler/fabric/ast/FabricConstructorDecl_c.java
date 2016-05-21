@@ -125,8 +125,6 @@ FabricConstructorDecl {
         formals, endConflictLabel, throwTypes, constraints, body);
   }
 
-  //TODO: Ugh, this is basically redoing the work of the JifConstructorDecl_c's
-  //disambiguate.  Both this and JifConstructorDecl_c should be refactored.
   @Override
   public Node disambiguate(AmbiguityRemover ar) throws SemanticException {
     FabricConstructorDecl n = (FabricConstructorDecl) super.disambiguate(ar);
@@ -135,85 +133,6 @@ FabricConstructorDecl {
         (FabricConstructorInstance) n.constructorInstance();
     FabricTypeSystem fts = (FabricTypeSystem) ar.typeSystem();
     FabricDefaultSignature fds = (FabricDefaultSignature) fts.defaultSignature();
-
-    if (n.startLabel() != null && !n.startLabel().isDisambiguated()) {
-      // the startlabel node hasn't been disambiguated yet
-      return n;
-    }
-
-    if (n.returnLabel() != null && !n.returnLabel().isDisambiguated()) {
-      // the return label node hasn't been disambiguated yet
-      return n;
-    }
-
-    // set the formal types
-    List<Type> formalTypes = new ArrayList<>(n.formals().size());
-    List<Formal> formals = n.formals();
-    for (Formal f : formals) {
-      if (!f.isDisambiguated()) {
-        // formals are not disambiguated yet.
-        ar.job().extensionInfo().scheduler().currentGoal().setUnreachableThisRun();
-        return this;
-      }
-      formalTypes.add(f.declType());
-    }
-    fci.setFormalTypes(formalTypes);
-
-    Label Li; // start label
-    boolean isDefaultPCBound = false;
-    if (n.startLabel() == null) {
-      Li = fds.defaultPCBound(n.position(), n.name());
-      isDefaultPCBound = true;
-    } else {
-      Li = n.startLabel().label();
-
-      // Automagically ensure that the begin label is at least as high as
-      // the provider label. This ensures that code will be unable to
-      // affect data that the provider is not trusted to affect. It also
-      // ensures the behaviour of confidential code will not be leaked.
-      Li = fts.join(Li, fci.provider());
-    }
-    fci.setPCBound(Li, isDefaultPCBound);
-
-    Label Lr; // return label
-    boolean isDefaultReturnLabel = false;
-    if (n.returnLabel() == null) {
-      Lr = fds.defaultReturnLabel(n);
-      isDefaultReturnLabel = true;
-    } else {
-      Lr = n.returnLabel().label();
-    }
-    fci.setReturnLabel(Lr, isDefaultReturnLabel);
-
-    // set the labels for the throwTypes.
-    List<Type> newThrowTypes = new LinkedList<>();
-    List<TypeNode> throwTypes = n.throwTypes();
-    for (TypeNode tn : throwTypes) {
-      if (!tn.isDisambiguated()) {
-        // throw types haven't been disambiguated yet.
-        ar.job().extensionInfo().scheduler().currentGoal().setUnreachableThisRun();
-        return this;
-      }
-
-      Type xt = tn.type();
-      if (!fts.isLabeled(xt)) {
-        // default exception label is the return label
-        xt = fts.labeledType(xt.position(), xt, Lr);
-      }
-      newThrowTypes.add(xt);
-    }
-    fci.setThrowTypes(newThrowTypes);
-
-    List<Assertion> constraints = new ArrayList<>(n.constraints().size());
-    for (ConstraintNode<Assertion> cn : n.constraints()) {
-      if (!cn.isDisambiguated()) {
-        // constraint nodes haven't been disambiguated yet.
-        ar.job().extensionInfo().scheduler().currentGoal().setUnreachableThisRun();
-        return this;
-      }
-      constraints.addAll(cn.constraints());
-    }
-    fci.setConstraints(constraints);
 
     if (n.beginConflictLabel() != null && !n.beginConflictLabel().isDisambiguated()) {
       // the beginConflictLabel node hasn't been disambiguated yet
