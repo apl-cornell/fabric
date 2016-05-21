@@ -10,9 +10,13 @@ class PatientMaker[
         label hivLabel,
         label accessLabel,
         label listLabel]
+where
+listLabel <= {W2R(listLabel)},
+addressLabel <= {W2R(addressLabel)},
+hivLabel <= {W2R(hivLabel)}
 {
   public PatientList[listLabel, addressLabel, hivLabel]{listLabel}
-    makePatients{alice← }(Store store, int{listLabel} numPatients):{alice→ ; alice← } 
+    makePatients{alice← }@{W2R(listLabel)}(Store store, int{listLabel} numPatients):{alice→ ; alice← } 
     where store actsfor alice,
           listLabel    <= {⊤ → store},
           {⊤ ← store } <= listLabel,
@@ -34,8 +38,7 @@ class PatientMaker[
         Address[addressLabel, accessLabel] addr = 
           new Address[addressLabel, accessLabel]@store(" " + i + " Wysteria Lane");
         Hiv[hivLabel, accessLabel]{*listLabel} h = 
-          new Hiv[hivLabel,accessLabel]@store();
-        h.hiv = ((i % 2) == 0);
+          new Hiv[hivLabel,accessLabel]@store((i % 2) == 0);
         patients.patient = (new Patient[addressLabel, hivLabel]@store(addr,h));
         if ((i+1) < numPatients) { // avoid the stupid off-by-one issue
           patients.next = new PatientList[listLabel,addressLabel, hivLabel]@store();

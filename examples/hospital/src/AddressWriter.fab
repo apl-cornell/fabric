@@ -12,57 +12,63 @@ class AddressWriter [
         label accessLabel,
         label patientLabel]
 {
-  public String{addressLabel} writeAddress{carol← }(
+  public String{addressLabel} writeAddress{carol← }@{W2R(patientLabel)}(
       PatientList[patientLabel,addressLabel, hivLabel]{patientLabel} patientsIn,
       int{patientLabel} desired_patient
       ):{carol→ ; carol← } 
     where 
           hivLabel     <= accessLabel,
+          hivLabel     <= {W2R(hivLabel)},
           accessLabel  <= {hivLabel ; addressLabel},
           addressLabel <= hivLabel,
+          addressLabel <= {W2R(addressLabel)},
           patientLabel <= addressLabel,
-          {carol← }    <= patientLabel
+          {carol← }    <= patientLabel,
+          patientLabel <= {W2R(patientLabel)}
   {
     String{addressLabel} printable = "";
     atomic {
         PatientList[patientLabel,addressLabel, hivLabel]{patientLabel} patients = 
           patientsIn;
-        // Log the attack.
-        AttackLogger.logID(desired_patient);
 
         if (patients == null) { 
           printable = printable + "\n" + ("patients came back null");
         }
 
+        // Find the patient
         int{patientLabel} patients_left = desired_patient;
-        while (patients != null /*&& patients_left >= 0*/) {
-          Patient[addressLabel, hivLabel] patient = patients.patient;
-          if (patient != null && patients_left == 0) {
-            printable = printable + "\n" + ("updating patient " + desired_patient);
-            Address[addressLabel,accessLabel]{addressLabel} addr=patient.address;
-            if (addr != null) {
-              String{addressLabel} address = addr.address;
-              // make meaningless changes to the address, namely adding or
-              // removing a space at the end.
-              if (address != null) {
-                if (address.endsWith(" ")) {
-                  printable = printable + "\n" + ("trimming address");
-                  addr.address = address.trim();
-                } else {
-                  printable = printable + "\n" + ("adding space to address");
-                  addr.address = address + " ";
-                }
-              } else {
-                printable = printable + "\n" + ("addr.address came back null");
-              }
-            } else {
-              printable = printable + "\n" + ("patient.address came back null");
-            }
-          } else if (patient == null) {
-            printable = printable + "\n" + ("patient (singular) came back null");
-          }
+        while (patients != null && patients_left > 0) {
           patients_left--;
           patients = patients.next;
+        }
+        if (patients == null) {
+          return "patient wasn't found";
+        }
+        Patient[addressLabel, hivLabel] patient = patients.patient;
+        if (patient == null) {
+          return "patient wasn't found";
+        }
+
+        // Get the address
+        printable = printable + "\n" + ("updating patient " + desired_patient);
+        Address[addressLabel,accessLabel]{addressLabel} addr=patient.address;
+        if (addr == null) {
+          printable = printable + "\n" + ("patient.address came back null");
+          return printable;
+        }
+        String{addressLabel} address = addr.address;
+        if (address == null) {
+          printable = printable + "\n" + ("addr.address came back null");
+          return printable;
+        }
+
+        // Update the address
+        if (address.endsWith(" ")) {
+          printable = printable + "\n" + ("trimming address");
+          addr.address = address.trim();
+        } else {
+          printable = printable + "\n" + ("adding space to address");
+          addr.address = address + " ";
         }
     }
     return printable;

@@ -11,64 +11,59 @@ class HivReader [
         label accessLabel,
         label patientLabel]
 {
-  public String{addressLabel; hivLabel} readHiv{alice← }(
-      PatientList[patientLabel,addressLabel, hivLabel]{patientLabel} patientsIn,
-      AddressList[accessLabel,accessLabel]{hivLabel} addrListIn,
+  public AddressList[accessLabel, accessLabel]{*hivLabel}/*String{addressLabel; hivLabel}*/ readHiv{alice← }@{W2R(*hivLabel)}(
+      PatientList[hivLabel, addressLabel, hivLabel]{*hivLabel} patients,
+      AddressList[accessLabel,accessLabel]{*hivLabel} addrListIn,
       Store store,
-      Store davestore):{alice→ ; alice← } 
+      Store davestore,
+      final label hivLabel
+      ):{alice→ ; alice← }@{W2R(addressLabel)}
     where store actsfor alice,
           {⊤ ← store } <= patientLabel,
           addressLabel <= accessLabel,
           accessLabel  <= {⊤ → store},
           {⊤ ← store}  <= addressLabel,
           hivLabel     <= accessLabel,
-          accessLabel  <= {hivLabel ; addressLabel},
+          accessLabel  <= {*hivLabel ; addressLabel},
           addressLabel <= hivLabel,
           patientLabel <= addressLabel,
           {alice← }    <= patientLabel,
           accessLabel  <= {⊤ → davestore},
-          {⊤ ← davestore} <= accessLabel
+          {⊤ ← davestore} <= accessLabel,
+          accessLabel <= {W2R(accessLabel)},
+          patientLabel <= {W2R(patientLabel)},
+          addressLabel <= {W2R(addressLabel)},
+          hivLabel <= {W2R(*hivLabel)}
            {
-    String{addressLabel; hivLabel} printable = "";
     atomic {
-        PatientList[patientLabel,addressLabel, hivLabel]{patientLabel} patients = 
-          patientsIn;
-        AddressList[accessLabel,accessLabel]{hivLabel} addrList = addrListIn;
-        if (patients != null) {
-          // Empty out the list on DaveStore.
-          addrList.address = null;
-          addrList.next = addrList;
-          while (patients != null) {
-            Patient[addressLabel,hivLabel]{*patientLabel} patient = patients.patient;
-            PatientList[patientLabel,addressLabel, hivLabel]{*patientLabel} next = 
-              patients.next;
-            if (patient != null) {
-              // Grab the address if they're hiv positive
-              Address[addressLabel, accessLabel]{addressLabel} addr=patient.address;
-              if (addr != null ) {
-                Hiv[hivLabel,accessLabel]{hivLabel} h = patient.hiv;
-                if (h != null) {
-                  if (h.hiv) {
-                    if (addr.address != null) {
-                      // Copy the patient to dave's store.
-/* CHANGE THIS LINE */String{accessLabel} addrCopyS = addr.address;
-/*  (for staging)   */Address[accessLabel, accessLabel] addrCopy = 
-                        new Address[accessLabel, accessLabel]@davestore(addrCopyS);
-                      // Add the new address to Dave's list
-                      addrList.next = 
-                        new AddressList[accessLabel,accessLabel]@davestore();
-                      addrList = addrList.next;
-                      addrList.address = addrCopy;
-                      printable = printable + "\na patient with Hiv Lives at " + addr.address;
-                    } else printable = printable + "\npatient.address.address is null";
-                  } else printable = printable + "\niterating past a patient without Hiv...";
-                } else printable = printable + "\npatient's hiv object is null";
-              } else printable = printable + "\npatient's address is null";
-            } else printable = printable + ("\npatient (singular) came back null");
-            patients = next;
+      AddressList[accessLabel,accessLabel]{*hivLabel} addrList = addrListIn;
+      if (patients != null) {
+        PatientList[hivLabel, addressLabel, hivLabel]{*hivLabel} cur = patients;
+        while (cur != null) {
+          Patient[addressLabel,hivLabel]{*hivLabel} patient = cur.patient;
+          PatientList[hivLabel,addressLabel, hivLabel]{*hivLabel} next =
+            cur.next;
+          if (patient != null) {
+            Hiv[hivLabel, accessLabel]{*hivLabel} h = patient.hiv;
+            if (h != null) {
+              if (!h.hiv) {
+                //Filter out non-hiv patient.
+                if (next != null) {
+                  cur.patient = next.patient;
+                  cur.next = next.next;
+                  next = next.next;
+                } else {
+                  cur.patient = null;
+                  cur.next = null;
+                  next = null;
+                }
+              }
+            }
           }
-        } else printable = ("patients came back null");
+          cur = next;
+        }
+      }
+      return new AddressList[accessLabel, accessLabel]@davestore(hivLabel, hivLabel, patients);
     }
-    return printable;
   }
 }

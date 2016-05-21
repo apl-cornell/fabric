@@ -83,6 +83,16 @@ public class RunHivReader {
       addrList = (AddressList) davestore.getRoot().get("addrList");
     }
     //actually do the thing:
-    System.out.println(hivReader.readHiv(patients,addrList,store,davestore));
+    String s = "";
+    atomic {
+      addrList = hivReader.readHiv(patients, addrList, store,davestore, hivLabel);
+      s = addrList.toString();
+    }
+    System.out.println(s);
+
+    // Put it back
+    atomic {
+      davestore.getRoot().put("addrList", addrList);
+    }
   }
 }
