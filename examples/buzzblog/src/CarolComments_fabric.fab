@@ -1,0 +1,77 @@
+import fabric.runtime.Runtime;
+
+class CarolComments_fabric {
+
+  public static void run{workerP<-}(
+      label{workerP←} postLabel,
+      label{workerP←} commentLabel,
+      principal{workerP<-} workerP,
+      principal{workerP<-} alice,
+      principal{workerP<-} bob,
+      principal{workerP<-} carol,
+      BuzzBlogAPI[postLabel, commentLabel]{workerP←} api
+  ):{workerP->;workerP<-}
+    where
+      {*postLabel} equiv {alice&bob&carol ← alice ; ((alice,bob),carol)→},
+      {*commentLabel} equiv {(alice,carol)→ ; (alice,carol)←}
+  {
+    atomic {
+      // Get a reference to the store called "store".
+      final Store store = FabricWorker.getWorker().getStore("alicenode");
+
+      // Get a reference to the runtime.
+      final Runtime[workerP] runtime = Runtime[workerP].getRuntime();
+
+      final int postId = 0;
+      final String{*commentLabel} firstPost = 
+        "Lolz, Bob can't read this comment";
+      final String{*commentLabel} secondPost = 
+        "Lolz, I updated this comment and Bob still can't read it";
+      final String{*commentLabel} thirdPost = 
+        "Lolz, two updates, and still Bob's in the dark.";
+
+      String{carol→ } printme = "";
+
+      if (workerP equiv carol && alice equiv store && new label{⊤←store} <= commentLabel) {
+        if (new label{alice← } <= postLabel) { 
+          if (new label{workerP← } <= commentLabel) { 
+            if (postLabel <= new label{workerP→ }) { 
+              if (commentLabel <= new label{workerP→ }) { 
+                if (postLabel <= new label{alice→}) { 
+                  if (commentLabel <= new label{alice→ }) { 
+                    final String{*postLabel} alicePost = api.viewPost(postId);
+                    printme = printme + "\n" + "Alice Posted: "+alicePost;
+
+                    printme = printme + "\n"+
+                      api.viewOrCreateComment(postId, store, firstPost);
+
+                    String{*postLabel; *commentLabel}
+                       suffix = "";
+                    if (alicePost.indexOf("fizz") >= 0) {
+                      suffix = "buzz";
+                    } else {
+                      if (alicePost.indexOf("buzz") >= 0) {
+                        suffix = "fizz";
+                      }
+                    }
+
+                    printme = printme + "\n" + 
+                      api.updateComment(postId, secondPost + " - "+ suffix);
+                    printme = printme + "\n" + 
+                      api.updateComment(postId, thirdPost + " - "+ suffix);
+                  } else printme = printme + 
+                      "\ncommentLabel ⊑ {alice→ }  failed";
+                } else printme = printme +
+                    "\npostLabel ⊑ {alice→ }  failed";
+              } else printme = printme +
+                  "\ncommentLabel ⊑ {workerP→ }  failed";
+            } else printme = printme + "\npostLabel ⊑ {workerP→ }  failed";
+          } else printme = printme + "\n{workerP←} ⊑ commentLabel failed";
+        } else printme = printme + "\n{alice←} ⊑ postLabel failed";
+      } else printme = printme + "\nThe permission checking if block failed.";
+      if (workerP equiv carol)
+        runtime.out().println(printme);
+    }
+  }
+}
+
