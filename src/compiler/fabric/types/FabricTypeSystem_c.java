@@ -1309,19 +1309,14 @@ public class FabricTypeSystem_c extends JifTypeSystem_c
   @Override
   public Label readConflict(Label l) {
     // CL(read l) = WritersToReaders(l)
-    return pairLabel(l.position(),
-        confProjection(writersToReadersLabel(l.position(), l)),
-        topIntegPolicy(l.position()));
+    return writersToReadersLabel(l.position(), l);
   }
 
   @Override
   public Label writeConflict(Label l) {
     // CL(write l) = WritersToReaders(l) meet C(l)
-    Label conf = pairLabel(l.position(), confProjection(l),
-        topIntegPolicy(l.position()));
-    return pairLabel(l.position(),
-        confProjection(meet(writersToReadersLabel(l.position(), l), conf)),
-        topIntegPolicy(l.position()));
+    Label conf = pairLabel(l.position(), confProjection(l), topIntegPolicy(l.position()));
+    return meet(l, writersToReadersLabel(l.position(), l));
   }
 
   @Override

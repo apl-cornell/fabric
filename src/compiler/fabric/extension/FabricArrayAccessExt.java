@@ -90,6 +90,7 @@ public class FabricArrayAccessExt extends JifArrayAccessExt {
     }
     NamedLabel pc = new NamedLabel("pc", ts.join(Xe.N(), A.pc()));
     NamedLabel conflictPC = new NamedLabel("conflict pc", A.conflictLabel());
+    NamedLabel endConflict = new NamedLabel("end conflict bound", A.endConflictBound());
 
     // Squirrel away the dynamic staging check
     FabricStagingExt fse = FabricUtil.fabricStagingExt(acc);
@@ -118,6 +119,19 @@ public class FabricArrayAccessExt extends JifArrayAccessExt {
           public String msg() {
             return "Conflicts when " + (isWrite ? "writing" : "reading") + " " +
               origACC + " may leak secret information to other transactions.";
+          }
+    });
+    
+    // Check end conflict.
+    lc.constrain(endConflict,
+        LabelConstraint.LEQ,
+        conflictL.join(lc, "{⊥→;⊥←}", ts.noComponentsLabel()),
+        A.labelEnv(), pos,
+        new ConstraintMessage() {
+          @Override
+          public String msg() {
+            return (isWrite ? "Write" : "Read") + " access of " + origACC +
+              " is lower than the current method's ending conflict label.";
           }
     });
     

@@ -97,15 +97,13 @@ public class FabricFieldExt extends JifFieldExt {
     }
     NamedLabel pc = new NamedLabel("pc", ts.join(Xe.N(), A.pc()));
     NamedLabel conflictPC = new NamedLabel("conflict pc", A.conflictLabel());
+    NamedLabel endConflict = new NamedLabel("end conflict bound", A.endConflictBound());
 
     // Squirrel away the dynamic staging check
     FabricStagingExt fse = FabricUtil.fabricStagingExt(fe);
     fse.setStageCheck(conflictPC.label(), conflictL.label(), A);
 
     // Check CL(op field) ≤ meet(CL(prev accesses))
-    //lc.constrain(conflictL.meet(lc,
-            //"{⊤→;⊤←}",
-            //ts.pairLabel(pos, ts.topConfPolicy(pos), ts.bottomIntegPolicy(pos))),
     lc.constrain(conflictL,
         LabelConstraint.LEQ,
         conflictPC.join(lc, "{⊥→;⊥←}", ts.noComponentsLabel()),
@@ -125,6 +123,19 @@ public class FabricFieldExt extends JifFieldExt {
           public String msg() {
             return "Conflicts when " + (isWrite ? "writing" : "reading") + " " +
               origFE + " may leak secret information to other transactions.";
+          }
+    });
+    
+    // Check end conflict.
+    lc.constrain(endConflict,
+        LabelConstraint.LEQ,
+        conflictL.join(lc, "{⊥→;⊥←}", ts.noComponentsLabel()),
+        A.labelEnv(), pos,
+        new ConstraintMessage() {
+          @Override
+          public String msg() {
+            return (isWrite ? "Write" : "Read") + " access of " + origFE +
+              " is lower than the current method's ending conflict label.";
           }
     });
     
