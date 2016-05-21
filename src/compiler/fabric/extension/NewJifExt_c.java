@@ -1,5 +1,7 @@
 package fabric.extension;
 
+import java.util.ArrayList;
+
 import fabric.ast.FabricUtil;
 import fabric.types.AccessPathStore;
 import fabric.types.FabricClassType;
@@ -7,6 +9,7 @@ import fabric.types.FabricContext;
 import fabric.types.FabricTypeSystem;
 
 import jif.extension.CallHelper;
+import jif.extension.JifNewDel;
 import jif.extension.JifNewExt;
 import jif.translate.ToJavaExt;
 import jif.types.JifConstructorInstance;
@@ -82,6 +85,12 @@ public class NewJifExt_c extends JifNewExt {
           lc.createCallHelper(newLabel, n, unlblCt,
               (JifConstructorInstance) n.constructorInstance(), n.arguments(),
               n.position());
+
+      // Ugh, recheck call because we need to instantiate a bunch of state...
+      ch.checkCall(lc, new ArrayList<>(n.del().throwTypes(ts)), n,
+          (n.qualifier() != null) &&
+          (!((JifNewDel) node().del()).qualIsNeverNull()));
+
 
       if (accessLabel != null) {
         accessLabel = ch.instantiate(lc.jifContext(), accessLabel);
