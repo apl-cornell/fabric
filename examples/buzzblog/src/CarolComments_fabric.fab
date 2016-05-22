@@ -2,14 +2,14 @@ import fabric.runtime.Runtime;
 
 class CarolComments_fabric {
 
-  public static void run{workerP<-}(
-      label{workerP←} postLabel,
-      label{workerP←} commentLabel,
-      principal{workerP<-} workerP,
-      principal{workerP<-} alice,
-      principal{workerP<-} bob,
-      principal{workerP<-} carol,
-      BuzzBlogAPI[postLabel, commentLabel]{workerP←} api
+  public static void run{⊤←workerP}(
+      label{⊤←workerP} postLabel,
+      label{⊤←workerP} commentLabel,
+      principal{⊤←workerP} workerP,
+      principal{⊤←workerP} alice,
+      principal{⊤←workerP} bob,
+      principal{⊤←workerP} carol,
+      BuzzBlogAPI[postLabel, commentLabel]{⊤←workerP} api
   ):{workerP->;workerP<-}
     where
       {*postLabel} equiv {alice&bob&carol ← alice ; ((alice,bob),carol)→},
@@ -33,8 +33,8 @@ class CarolComments_fabric {
       String{carol→ } printme = "";
 
       if (workerP equiv carol && alice equiv store && new label{⊤←store} <= commentLabel) {
-        if (new label{alice← } <= postLabel) { 
-          if (new label{workerP← } <= commentLabel) { 
+        if (new label{⊤←alice} <= postLabel) { 
+          if (new label{⊤←workerP} <= commentLabel) { 
             if (postLabel <= new label{workerP→ }) { 
               if (commentLabel <= new label{workerP→ }) { 
                 if (postLabel <= new label{alice→}) { 
@@ -66,8 +66,8 @@ class CarolComments_fabric {
               } else printme = printme +
                   "\ncommentLabel ⊑ {workerP→ }  failed";
             } else printme = printme + "\npostLabel ⊑ {workerP→ }  failed";
-          } else printme = printme + "\n{workerP←} ⊑ commentLabel failed";
-        } else printme = printme + "\n{alice←} ⊑ postLabel failed";
+          } else printme = printme + "\n{⊤←workerP} ⊑ commentLabel failed";
+        } else printme = printme + "\n{⊤←alice} ⊑ postLabel failed";
       } else printme = printme + "\nThe permission checking if block failed.";
       if (workerP equiv carol)
         runtime.out().println(printme);

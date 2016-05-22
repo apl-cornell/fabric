@@ -13,7 +13,7 @@ class Init {
       Principal top = PrincipalUtil.topPrincipal();
 
       // Create labels.
-      // ((alice ∨ bob) ∨ carol)→ ; ((alice ∨ bob) ∨ carol)←
+      // ((alice ∨ bob) ∨ carol)→ ; ((alice ∧ bob) ∧ carol)← alice
       Label postLabel =
         LabelUtil.toLabel(store,
           LabelUtil.readerPolicy(store,
@@ -22,10 +22,10 @@ class Init {
               carol),
             bottom),
           LabelUtil.writerPolicy(store,
-            PrincipalUtil.disjunction(store,
-              PrincipalUtil.disjunction(store, alice, bob),
+            PrincipalUtil.conjunction(store,
+              PrincipalUtil.conjunction(store, alice, bob),
               carol),
-            top));
+            alice));
 
       // (alice ∨ carol)→ ; (alice ∨ carol)←
       Principal aliceOrCarol = PrincipalUtil.disjunction(store, alice, carol);
