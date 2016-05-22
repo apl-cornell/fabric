@@ -2,7 +2,7 @@ import fabric.runtime.Runtime;
 
 class CarolComments_fabric {
 
-  public static void run{⊤←workerP}(
+  public static void run{⊤←workerP}@{W2R(*postLabel)}(
       label{⊤←workerP} postLabel,
       label{⊤←workerP} commentLabel,
       principal{⊤←workerP} workerP,
@@ -10,10 +10,12 @@ class CarolComments_fabric {
       principal{⊤←workerP} bob,
       principal{⊤←workerP} carol,
       BuzzBlogAPI[postLabel, commentLabel]{⊤←workerP} api
-  ):{workerP->;workerP<-}
+  ):{workerP->;workerP<-}@{W2R(*commentLabel) ⊓ *commentLabel}
     where
       {*postLabel} equiv {alice&bob&carol ← alice ; ((alice,bob),carol)→},
-      {*commentLabel} equiv {(alice,carol)→ ; (alice,carol)←}
+      {*commentLabel} equiv {(alice,carol)→ ; (alice,carol)←},
+      postLabel ⊑ {W2R(*postLabel)},
+      commentLabel ⊑ {W2R(*commentLabel)}
   {
     atomic {
       // Get a reference to the store called "store".
@@ -23,8 +25,6 @@ class CarolComments_fabric {
       final Runtime[workerP] runtime = Runtime[workerP].getRuntime();
 
       final int postId = 0;
-      final String{*commentLabel} firstPost = 
-        "Lolz, Bob can't read this comment";
       final String{*commentLabel} secondPost = 
         "Lolz, I updated this comment and Bob still can't read it";
       final String{*commentLabel} thirdPost = 
@@ -56,8 +56,10 @@ class CarolComments_fabric {
 
                     printme = printme + "\n" + 
                       api.updateComment(postId, secondPost + " - "+ suffix);
-                    printme = printme + "\n" + 
-                      api.updateComment(postId, thirdPost + " - "+ suffix);
+
+                    // XXX Can only update once per transaction.
+                    //printme = printme + "\n" + 
+                    //  api.updateComment(postId, thirdPost + " - "+ suffix);
                   } else printme = printme + 
                       "\ncommentLabel ⊑ {alice→ }  failed";
                 } else printme = printme +
