@@ -16,6 +16,7 @@ import jif.types.JifConstructorInstance;
 import jif.types.JifContext;
 import jif.types.JifProcedureInstance;
 import jif.types.LabelConstraint;
+import jif.types.LabelLeAssertion;
 import jif.types.NamedLabel;
 import jif.types.PathMap;
 import jif.types.label.AccessPathThis;
@@ -41,7 +42,7 @@ public class ConstructorDeclJifExt extends JifConstructorDeclExt implements Ext 
   @Override
   public Node labelCheck(LabelChecker lc) throws SemanticException {
     // add some useful axioms
-    JifContext A = lc.context();
+    FabricContext A = (FabricContext) lc.context();
     ClassType ct = A.currentClass();
     FabricTypeSystem ts = (FabricTypeSystem) lc.typeSystem();
     Position pos = Position.compilerGenerated();
@@ -54,6 +55,25 @@ public class ConstructorDeclJifExt extends JifConstructorDeclExt implements Ext 
       A.addActsFor(ts.workerLocalPrincipal(pos),
           ts.dynamicPrincipal(pos, new AccessPathThis(ct, pos)));
     }
+
+    // Check that we can actually stage from the start to the end.
+    FabricConstructorInstance fci = (FabricConstructorInstance)
+      ((FabricConstructorDecl) node()).constructorInstance();
+    final Position declPos = node().position();
+    if (!fci.beginConflictLabel().equals(ts.noAccesses())) {
+      lc.constrain(new NamedLabel("end conflict label", fci.endConflictLabel()),
+          LabelConstraint.LEQ,
+          new NamedLabel("begin conflict label", fci.beginConflictLabel()).join(lc, "{⊥→;⊥←}", ts.noComponentsLabel()),
+          A.labelEnv(), declPos,
+          new ConstraintMessage() {
+            @Override
+            public String msg() {
+              return "End conflict label must have lower confidentiality than"
+                     + " begin conflict label for constructor at " + declPos;
+            }
+      });
+    }
+
 
     // Run the label check
     return super.labelCheck(lc);
