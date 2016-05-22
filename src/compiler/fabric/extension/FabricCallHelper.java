@@ -278,7 +278,7 @@ public class FabricCallHelper extends CallHelper {
       // Add in the conflict labels of the call's accesses to the CL path.
       Label newCL = endConflict;
       X = ((FabricPathMap) X).CL(newCL);
-      ((FabricContext) A).setConflictLabel(newCL);
+      A.setConflictLabel(newCL);
 
       // We don't know if the method started the ending stage or not, so make
       // sure the next access after this checks.
@@ -293,7 +293,7 @@ public class FabricCallHelper extends CallHelper {
           "the lower bound on the conflict labels of accesses in " + pi.signature(),
           A.endConflictBound());
 
-      lc.constrain(endConflictBoundLabel, LabelConstraint.LEQ, newCLN,
+      lc.constrain(newCLN, LabelConstraint.LEQ, endConflictBoundLabel,
           A.labelEnv(), position, new ConstraintMessage() {
         @Override
         public String msg() {
