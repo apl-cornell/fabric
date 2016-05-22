@@ -18,6 +18,7 @@ import jif.visit.LabelChecker;
 import polyglot.ast.ArrayAccess;
 import polyglot.ast.Expr;
 import polyglot.ast.Node;
+import polyglot.types.ArrayType;
 import polyglot.types.SemanticException;
 import polyglot.util.Position;
 
@@ -79,8 +80,8 @@ public class FabricArrayAccessExt extends JifArrayAccessExt {
 
     FabricPathMap Xe = (FabricPathMap) getPathMap(acc);
 
-    LabeledType arrayEntryType = (LabeledType) acc.array().type();
-    Label L = arrayEntryType.labelPart();
+    ArrayType arrayType = (ArrayType) ((LabeledType) acc.array().type()).typePart();
+    Label L = ((LabeledType) arrayType.base()).labelPart();
 
     NamedLabel conflictL;
     if (isWrite) {
