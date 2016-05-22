@@ -2,14 +2,14 @@ import fabric.runtime.Runtime;
 
 class AlicePosts_fabric {
 
-  public static void run{workerP<-}(
-      label{workerP←} postLabel,
-      label{workerP←} commentLabel,
-      principal{workerP<-} workerP,
-      principal{workerP<-} alice,
-      principal{workerP<-} bob,
-      principal{workerP<-} carol,
-      BuzzBlogAPI[postLabel, commentLabel]{workerP←} api
+  public static void run{⊤←workerP}(
+      label{⊤←workerP} postLabel,
+      label{⊤←workerP} commentLabel,
+      principal{⊤←workerP} workerP,
+      principal{⊤←workerP} alice,
+      principal{⊤←workerP} bob,
+      principal{⊤←workerP} carol,
+      BuzzBlogAPI[postLabel, commentLabel]{⊤←workerP} api
   ):{workerP->;workerP<-}
     where
       {*postLabel} equiv {alice&bob&carol ← alice ; ((alice,bob),carol)→}
@@ -31,7 +31,7 @@ class AlicePosts_fabric {
 
       if (workerP equiv alice && alice equiv store && new label {⊤←store} <= postLabel) {
         // Alice should be able to write the post.
-        if (new label{workerP←} <= postLabel) { 
+        if (new label{⊤←workerP} <= postLabel) { 
           // Alice should be able to read it too.
           if (postLabel <= new label{workerP→ } ) { 
             final String{*postLabel} firstView =
@@ -50,7 +50,7 @@ class AlicePosts_fabric {
             printme = printme + "\n" + 
               api.updatePost(postId, secondPost + " - " + suffix);
           } else printme = printme + "\npostLabel ⊑ {workerP→ }  failed";
-        } else printme = printme + "\n{workerP←} ⊑ postLabel failed";
+        } else printme = printme + "\n{⊤←workerP} ⊑ postLabel failed";
       } else printme = printme + "\nThe permission checking if block failed.";
       if (workerP equiv alice)
         runtime.out().println(printme);
