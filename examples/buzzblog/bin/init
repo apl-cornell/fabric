@@ -1,0 +1,5 @@
+#!/bin/bash
+
+BIN_DIR="$(dirname $0)"
+
+"${BIN_DIR}/start-worker" alicenode Init

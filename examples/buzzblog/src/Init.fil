@@ -1,0 +1,60 @@
+import fabric.util.Map;
+
+class Init {
+  public static void main(String[] args) {
+    atomic {
+      Store store = Worker.getWorker().getStore("alicenode");
+
+      // Get principals.
+      Principal alice = Worker.getWorker().getWorker("alicenode").getPrincipal();
+      Principal bob   = Worker.getWorker().getWorker("bobnode"  ).getPrincipal();
+      Principal carol = Worker.getWorker().getWorker("carolnode").getPrincipal();
+      Principal bottom = PrincipalUtil.nullPrincipal();
+      Principal top = PrincipalUtil.topPrincipal();
+
+      // Create labels.
+      // ((alice ∨ bob) ∨ carol)→ ; ((alice ∧ bob) ∧ carol)← alice
+      Label postLabel =
+        LabelUtil.toLabel(store,
+          LabelUtil.readerPolicy(store,
+            PrincipalUtil.disjunction(store,
+              PrincipalUtil.disjunction(store, alice, bob),
+              carol),
+            bottom),
+          LabelUtil.writerPolicy(store,
+            PrincipalUtil.conjunction(store,
+              PrincipalUtil.conjunction(store, alice, bob),
+              carol),
+            alice));
+
+      // (alice ∨ carol)→ ; (alice ∨ carol)←
+      Principal aliceOrCarol = PrincipalUtil.disjunction(store, alice, carol);
+      Label commentLabel =
+        LabelUtil.toLabel(store,
+          LabelUtil.readerPolicy(store, aliceOrCarol, bottom),
+          LabelUtil.writerPolicy(store, aliceOrCarol, top));
+
+
+      // Create the arrays of posts and comments.
+      Post[] posts = new Post[1]@store;
+      Post[] comments = new Post[1]@store;
+
+      // Create the BuzzBlogAPI object.
+      BuzzBlogAPI blog =
+          new BuzzBlogAPI@store(postLabel, commentLabel)
+            .BuzzBlogAPI$(posts, comments);
+
+      // Create the post and comment.
+      blog.viewOrCreatePost(0, store,
+        "This is the fizzy blog post that Alice wrote.");
+      blog.viewOrCreateComment(0, store, 
+        "Lolz, Bob can't read this comment");
+
+      // Save the BuzzBlogAPI object and the two labels in Alice's root map.
+      Map root = store.getRoot();
+      root.put("buzzblog", blog);
+      root.put("postLabel", postLabel);
+      root.put("commentLabel", commentLabel);
+    }
+  }
+}
