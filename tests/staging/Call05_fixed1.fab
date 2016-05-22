@@ -1,5 +1,5 @@
 abstract class Call05_fixed1[label L1, label L2] where {W2R(L2)} ⊑ {W2R(L1)} {
-  void m{}@{W2R(L1)}() {
+  void m{}@{W2R(L1)}()@{W2R(L2)} {
     f2();
   }
 
