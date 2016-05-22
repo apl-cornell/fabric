@@ -1,0 +1,8 @@
+abstract class Call05[label L1, label L2] {
+  void m{}@{W2R(L1)}() {
+    // Shouldn't be able to call f2.
+    f2();
+  }
+
+  abstract void f2@{W2R(L2)}()@{W2R(L2)};
+}
