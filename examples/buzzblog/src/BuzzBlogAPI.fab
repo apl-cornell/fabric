@@ -1,6 +1,8 @@
 import fabric.util.Map;
 
 class BuzzBlogAPI[label postLabel, label commentLabel]
+  where postLabel ⊑ {W2R(postLabel)},
+        commentLabel ⊑ {W2R(commentLabel)}
 {
   @{postLabel;commentLabel}
 
@@ -17,7 +19,8 @@ class BuzzBlogAPI[label postLabel, label commentLabel]
   }
 
   // Returns the string view of the post with the given id
-  public String{postLabel ; postId} viewPost{postLabel;⊥←}(int postId) 
+  public String{postLabel ; postId} viewPost{postLabel;⊥←}@{W2R(postLabel)}
+    (int postId) 
   where
     {postId} <= {postLabel; ⊥←}
   {
@@ -31,23 +34,26 @@ class BuzzBlogAPI[label postLabel, label commentLabel]
 
   // updates a post given some new content, returns a message about how well 
   //  that went.
-  public String{postLabel} updatePost{postLabel}(
+  public String{postLabel} updatePost{postLabel}@{W2R(postLabel)}(
       int postId, 
       String{postLabel} newContent) 
     where
       {postId} <= postLabel
   {
     final Post[postLabel] post = posts[postId];
-    if (post != null) {
-      String oldContent = post.view();
+//    if (post != null) {
+//      String oldContent = post.view();
       post.update(newContent);
-      return ("Post "+ postId +" updated from \""+ 
-              oldContent + "\" to \"" + post.view()+"\"");
-    } else {
-      return "post came back null";
-    }
+//      return ("Post "+ postId +" updated from \""+ 
+//              oldContent + "\" to \"" + post.view()+"\"");
+//    } else {
+//      return "post came back null";
+//    }
+
+    return null;
   }
 
+/*
   // updates a comment given some new content, returns a message about how well 
   //  that went.
   public String{commentLabel} updateComment{commentLabel}(
@@ -121,4 +127,5 @@ class BuzzBlogAPI[label postLabel, label commentLabel]
       }
     }
   }
+*/
 }
