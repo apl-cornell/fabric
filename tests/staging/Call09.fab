@@ -1,4 +1,4 @@
-abstract class Call07[label L1, label L2] where {W2R(L2)} ⊑ L1 {
+abstract class Call09[label L1, label L2] where {W2R(L2)} ⊑ L1 {
   void m@{L1}()@{W2R(L2)} {
     f();
     // Shouldn't be able to call f() a second time.
