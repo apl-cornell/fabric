@@ -101,7 +101,7 @@ public class AccessPolicy_c extends Term_c implements AccessPolicy {
     }
 
     if (accessPolicyInstance == null || !accessPolicyInstance.isCanonical()) {
-      ConfPolicy pol = ts.confProjection(policy.label());
+      ConfPolicy pol = (ConfPolicy) ts.confProjection(policy.label()).simplify();
       AccessPolicyInstance api = ts.accessPolicyInstance(position(), ct, pol);
       ct.setAccessPolicy(pol);
       return accessPolicyInstance(api);

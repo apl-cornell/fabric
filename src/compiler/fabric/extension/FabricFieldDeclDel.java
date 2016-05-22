@@ -20,9 +20,9 @@ public class FabricFieldDeclDel extends JifFieldDeclDel {
     FabricDefaultSignature fds = fts.fabricDefaultSignature();
     ConfPolicy Li;
     if (n.accessPolicy() == null) {
-      Li = fds.defaultAccessPolicy(n).confProjection();
+      Li = (ConfPolicy) fds.defaultAccessPolicy(n).confProjection().simplify();
     } else {
-      Li = n.accessPolicy().label().confProjection();
+      Li = (ConfPolicy) n.accessPolicy().label().confProjection().simplify();
     }
     // TODO: it seems fishy that Li can be null even if accessLabel is not null,
     // but it happens (in r3139 while building MapServ for example).
