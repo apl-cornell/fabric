@@ -1,7 +1,6 @@
 package fabric.extension;
 
 import fabric.ast.FabricConstructorDecl;
-import fabric.ast.FabricUtil;
 import fabric.types.AccessPathStore;
 import fabric.types.FabricConstructorInstance;
 import fabric.types.FabricContext;
@@ -13,16 +12,15 @@ import jif.extension.JifConstructorDeclExt;
 import jif.translate.ToJavaExt;
 import jif.types.ConstraintMessage;
 import jif.types.JifConstructorInstance;
-import jif.types.JifContext;
 import jif.types.JifProcedureInstance;
 import jif.types.LabelConstraint;
-import jif.types.LabelLeAssertion;
 import jif.types.NamedLabel;
 import jif.types.PathMap;
 import jif.types.label.AccessPathThis;
 import jif.types.label.Label;
 import jif.visit.LabelChecker;
 
+import polyglot.ast.Block;
 import polyglot.ast.Ext;
 import polyglot.ast.Node;
 import polyglot.types.ClassType;
@@ -55,25 +53,6 @@ public class ConstructorDeclJifExt extends JifConstructorDeclExt implements Ext 
       A.addActsFor(ts.workerLocalPrincipal(pos),
           ts.dynamicPrincipal(pos, new AccessPathThis(ct, pos)));
     }
-
-    // Check that we can actually stage from the start to the end.
-    FabricConstructorInstance fci = (FabricConstructorInstance)
-      ((FabricConstructorDecl) node()).constructorInstance();
-    final Position declPos = node().position();
-    if (!fci.beginConflictLabel().equals(ts.noAccesses())) {
-      lc.constrain(new NamedLabel("end conflict label", fci.endConflictLabel()),
-          LabelConstraint.LEQ,
-          new NamedLabel("begin conflict label", fci.beginConflictLabel()).join(lc, "{⊥→;⊥←}", ts.noComponentsLabel()),
-          A.labelEnv(), declPos,
-          new ConstraintMessage() {
-            @Override
-            public String msg() {
-              return "End conflict label must have lower confidentiality than"
-                     + " begin conflict label for constructor at " + declPos;
-            }
-      });
-    }
-
 
     // Run the label check
     return super.labelCheck(lc);
@@ -142,5 +121,31 @@ public class ConstructorDeclJifExt extends JifConstructorDeclExt implements Ext 
           + "the ending conflict label allows.";
       }
     });
+  }
+
+  @Override
+  protected Label checkEnforceSignature(JifProcedureInstance mi,
+          LabelChecker lc) throws SemanticException {
+    FabricContext A = (FabricContext) lc.context();
+    FabricTypeSystem ts = (FabricTypeSystem) lc.typeSystem();
+
+    // Check that we can actually stage from the start to the end.
+    FabricConstructorInstance fci = (FabricConstructorInstance) mi;
+    final Position declPos = node().position();
+    if (!fci.beginConflictLabel().equals(ts.noAccesses())) {
+      lc.constrain(new NamedLabel("end conflict label", fci.endConflictLabel()),
+          LabelConstraint.LEQ,
+          new NamedLabel("begin conflict label", fci.beginConflictLabel()).join(lc, "{⊥→;⊥←}", ts.noComponentsLabel()),
+          A.labelEnv(), declPos,
+          new ConstraintMessage() {
+            @Override
+            public String msg() {
+              return "End conflict label must have lower confidentiality than"
+                     + " begin conflict label for constructor at " + declPos;
+            }
+      });
+    }
+
+    return super.checkEnforceSignature(mi, lc);
   }
 }

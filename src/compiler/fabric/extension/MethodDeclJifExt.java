@@ -18,7 +18,6 @@ import jif.types.PathMap;
 import jif.types.label.Label;
 import jif.visit.LabelChecker;
 
-import polyglot.ast.Node;
 import polyglot.types.SemanticException;
 import polyglot.types.Type;
 import polyglot.util.Position;
@@ -105,7 +104,8 @@ public class MethodDeclJifExt extends JifMethodDeclExt {
   }
 
   @Override
-  public Node labelCheck(LabelChecker lc) throws SemanticException {
+  protected Label checkEnforceSignature(JifProcedureInstance mi,
+          LabelChecker lc) throws SemanticException {
     FabricContext A = (FabricContext) lc.context();
     FabricTypeSystem ts = (FabricTypeSystem) lc.typeSystem();
     FabricMethodDecl md = (FabricMethodDecl) node();
@@ -126,6 +126,7 @@ public class MethodDeclJifExt extends JifMethodDeclExt {
             }
       });
     }
-    return super.labelCheck(lc);
+
+    return super.checkEnforceSignature(mi, lc);
   }
 }
