@@ -1,0 +1,9 @@
+abstract class Call06[label L1, label L2] where L2 ⊑ L1 {
+  void m@{L1}()@{L2} {
+    f();
+    // Shouldn't be able to call f() a second time.
+    f();
+  }
+
+  abstract void f@{L1}()@{L2};
+}

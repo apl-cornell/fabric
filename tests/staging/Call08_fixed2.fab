@@ -1,0 +1,7 @@
+abstract class Call08_fixed2[label L1, label L2] where L2 ⊑ {W2R(L1)} {
+  void m@{W2R(L1)}()@{L2} {
+    f();
+  }
+
+  abstract void f@{W2R(L1)}()@{L2};
+}

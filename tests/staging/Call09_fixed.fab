@@ -1,0 +1,8 @@
+abstract class Call07_fixed[label L1, label L2] where {W2R(L2)} ⊑ L1 {
+  void m@{L1}()@{W2R(L2)} {
+    f();
+    f();
+  }
+
+  abstract void f@{L1}()@{L1};
+}
