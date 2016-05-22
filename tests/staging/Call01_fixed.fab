@@ -1,0 +1,7 @@
+abstract class Call01_fixed[label L1, label L2] where L2 ⊑ L1 {
+  void m{}@{L1}()@{L2} {
+    f();
+  }
+
+  abstract void f@{L1}()@{L2};
+}

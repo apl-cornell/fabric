@@ -1,0 +1,7 @@
+abstract class Call02_fixed[label L] {
+  void m{}@{W2R(L)}()@{W2R(L) ⊓ L} {
+    f();
+  }
+
+  abstract void f@{W2R(L)}()@{W2R(L) ⊓ L};
+}

@@ -1,0 +1,3 @@
+abstract class Call03_fixed[label L1, label L2] where L2 ⊑ L1 {
+  abstract void f@{L1}()@{L2};
+}
