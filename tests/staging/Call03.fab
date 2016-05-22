@@ -1,0 +1,4 @@
+abstract class Call03[label L1, label L2] where L1 ⊑ L2 {
+  // Bad method signature. Should require L2 ⊑ L1.
+  abstract void f@{L1}()@{L2};
+}

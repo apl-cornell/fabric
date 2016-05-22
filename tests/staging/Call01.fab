@@ -1,8 +1,8 @@
 abstract class Call01[label L1, label L2] where L2 ⊑ L1 {
-  void m{}@{L2}() {
+  void m{}@{L1}() {
     f();
-    // Should have to specify an end-stage label of L1
+    // Should have to specify an end-stage label of L2
   }
 
-  abstract void f@{L2}()@{L1};
+  abstract void f@{L1}()@{L2};
 }
