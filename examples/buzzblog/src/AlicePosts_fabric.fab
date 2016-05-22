@@ -2,7 +2,7 @@ import fabric.runtime.Runtime;
 
 class AlicePosts_fabric {
 
-  public static void run{⊤←workerP}(
+  public static void run{⊤←workerP}@{W2R(*postLabel)}(
       label{⊤←workerP} postLabel,
       label{⊤←workerP} commentLabel,
       principal{⊤←workerP} workerP,
@@ -10,9 +10,11 @@ class AlicePosts_fabric {
       principal{⊤←workerP} bob,
       principal{⊤←workerP} carol,
       BuzzBlogAPI[postLabel, commentLabel]{⊤←workerP} api
-  ):{workerP->;workerP<-}
+  ):{workerP->;workerP<-}@{W2R(*postLabel) ⊓ *postLabel}
     where
-      {*postLabel} equiv {alice&bob&carol ← alice ; ((alice,bob),carol)→}
+      {*postLabel} equiv {alice&bob&carol ← alice ; ((alice,bob),carol)→},
+      postLabel ⊑ {W2R(*postLabel)},
+      commentLabel ⊑ {W2R(*commentLabel)}
   {
     atomic {
       // Get a reference to the store called "store".
@@ -29,7 +31,7 @@ class AlicePosts_fabric {
 
       if (workerP equiv alice && alice equiv store && new label {⊤←store} <= postLabel) {
         // Alice should be able to write the post.
-        if (new label{⊤←workerP} <= postLabel) { 
+        if (new label{workerP←} <= postLabel) { 
           // Alice should be able to read it too.
           if (postLabel <= new label{workerP→ } ) { 
             final String{*postLabel} firstView = api.viewPost(postId);

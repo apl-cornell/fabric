@@ -20,7 +20,7 @@ class BuzzBlogAPI[label postLabel, label commentLabel]
 
   // Returns the string view of the post with the given id
   public String{postLabel ; postId} viewPost{postLabel;⊥←}@{W2R(postLabel)}
-    (int postId) 
+    (int postId)@{W2R(postLabel)}
   where
     {postId} <= {postLabel; ⊥←}
   {
@@ -33,7 +33,10 @@ class BuzzBlogAPI[label postLabel, label commentLabel]
   }
 
   // Returns the string view of the comment with the given id
-  public String{commentLabel ; postId} viewComment{commentLabel;⊥←}(int postId) 
+  public String{commentLabel ; postId}
+    viewComment{commentLabel;⊥←}@{W2R(commentLabel)}(
+      int postId
+    )@{W2R(commentLabel)}
   where
     {postId} <= {commentLabel; ⊥←}
   {
@@ -49,38 +52,35 @@ class BuzzBlogAPI[label postLabel, label commentLabel]
   //  that went.
   public String{postLabel} updatePost{postLabel}@{W2R(postLabel)}(
       int postId, 
-      String{postLabel} newContent) 
+      String{postLabel} newContent)@{postLabel ⊓ W2R(postLabel)}
     where
       {postId} <= postLabel
   {
     final Post[postLabel] post = posts[postId];
-//    if (post != null) {
-//      String oldContent = post.view();
-      post.update(newContent);
-//      return ("Post "+ postId +" updated from \""+ 
-//              oldContent + "\" to \"" + post.view()+"\"");
-//    } else {
-//      return "post came back null";
-//    }
-
-    return null;
+    if (post != null) {
+      String oldContent = post.view();
+      String newView = post.update(newContent);
+      return ("Post "+ postId +" updated from \""+ 
+              oldContent + "\" to \"" + newView+"\"");
+    } else {
+      return "post came back null";
+    }
   }
 
-/*
   // updates a comment given some new content, returns a message about how well 
   //  that went.
-  public String{commentLabel} updateComment{commentLabel}(
+  public String{commentLabel} updateComment{commentLabel}@{W2R(commentLabel)}(
       int postId, 
-      String{commentLabel} newContent) 
+      String{commentLabel} newContent)@{commentLabel ⊓ W2R(commentLabel)}
     where
       {postId} <= commentLabel
   {
     final Post[commentLabel] comment = comments[postId];
     if (comment != null) {
       String oldContent = comment.view();
-      comment.update(newContent);
+      String newView = comment.update(newContent);
       return ("Comment "+ postId +" updated from \""+ 
-              oldContent + "\" to \"" + comment.view()+"\"");
+              oldContent + "\" to \"" + newView+"\"");
     } else {
       return "comment came back null";
     }
@@ -90,10 +90,10 @@ class BuzzBlogAPI[label postLabel, label commentLabel]
   // If there is a post with the given id, it returns that post.
   // Otherwise, it makes a new one with the given content.
   // returns a message that's hopefully helpful.
-  public String{postLabel} viewOrCreatePost{store}(
+  public String{postLabel} viewOrCreatePost{store}@{W2R(postLabel)}(
       int postId, 
       Store store, 
-      String{postLabel} newContent) 
+      String{postLabel} newContent)@{W2R(postLabel) ⊓ postLabel}
   where postLabel  <= {⊤ → store}, 
         {⊤ ← store} <= postLabel, 
         {postId} <= postLabel, 
@@ -104,8 +104,9 @@ class BuzzBlogAPI[label postLabel, label commentLabel]
     } else {
       try {
         final Post[postLabel] newPost = new Post[postLabel]@store(newContent);
+        String view = newPost.view();
         posts[postId] = newPost;
-        return "Created new post: "+newPost.view();
+        return "Created new post: "+view;
       } catch (Exception e) {
         return "something threw an exception while creating a new post " +
                e.toString();
@@ -117,10 +118,10 @@ class BuzzBlogAPI[label postLabel, label commentLabel]
   // If there is a comment with the given id, it returns that comment.
   // Otherwise, it makes a new one with the given content.
   // returns a message that's hopefully helpful.
-  public String{commentLabel} viewOrCreateComment{store}(
+  public String{commentLabel} viewOrCreateComment{store}@{W2R(commentLabel)}(
       int postId, 
       Store store, 
-      String{commentLabel} newContent) 
+      String{commentLabel} newContent)@{W2R(commentLabel) ⊓ commentLabel}
   where commentLabel  <= {⊤ → store}, 
         {⊤ ← store} <= commentLabel, 
         {postId} <= commentLabel, 
@@ -132,13 +133,13 @@ class BuzzBlogAPI[label postLabel, label commentLabel]
       try {
         final Post[commentLabel] newComment =
             new Post[commentLabel]@store(newContent);
+        String view = newComment.view();
         comments[postId] = newComment;
-        return "Created new comment: "+newComment.view();
+        return "Created new comment: "+view;
       } catch (Exception e) {
         return "something threw an exception while creating a new comment " +
                e.toString();
       }
     }
   }
-*/
 }
