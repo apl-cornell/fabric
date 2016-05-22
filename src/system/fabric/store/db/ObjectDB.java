@@ -650,8 +650,8 @@ public abstract class ObjectDB {
 
     Iterable<Long> updates =
         SysUtil.chain(tx.current.creates, tx.current.writes);
-    if (mode == UnpinMode.ABORT)
-      updates = SysUtil.chain(tx.confirmed.creates, tx.confirmed.writes);
+    if (mode == UnpinMode.COMMIT)
+      updates = SysUtil.chain(updates, tx.confirmed.creates, tx.confirmed.writes);
     for (long onum : updates) {
       ObjectLocks locks = rwLocks.get(onum);
       if (locks != null) {
