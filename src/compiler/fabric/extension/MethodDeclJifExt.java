@@ -50,14 +50,6 @@ public class MethodDeclJifExt extends JifMethodDeclExt {
     A.setBeginConflictBound(fmi.beginConflictLabel());
     A.setConflictLabel(fmi.beginConflictLabel());
     A.setEndConflictBound(fmi.endConflictLabel());
-    if (!fmi.isDefaultBeginConflict() || !fmi.isDefaultEndConflict()) {
-      FabricTypeSystem ts = (FabricTypeSystem) lc.jifTypeSystem();
-      // Add assertion that the caller_pc is upper bounded by the conflict label
-      // bounds.
-      Label confPc = ts.join(A.pc(), ts.noComponentsLabel());
-      A.addAssertionLE(confPc, fmi.beginConflictLabel());
-      A.addAssertionLE(confPc, fmi.endConflictLabel());
-    }
   }
 
   /**
@@ -123,6 +115,28 @@ public class MethodDeclJifExt extends JifMethodDeclExt {
             public String msg() {
               return "End conflict label must have lower confidentiality than"
                      + " begin conflict label for method at " + declPos;
+            }
+      });
+
+      lc.constrain(new NamedLabel("caller pc", A.pc()),
+          LabelConstraint.LEQ,
+          new NamedLabel("end conflict label", fmi.endConflictLabel()).join(lc, "{⊥→;⊥←}", ts.noComponentsLabel()),
+          A.labelEnv(), declPos,
+          new ConstraintMessage() {
+            @Override
+            public String msg() {
+              return "Caller pc must be no more secret than the ending stage of the method at " + declPos;
+            }
+      });
+
+      lc.constrain(new NamedLabel("caller pc", A.pc()),
+          LabelConstraint.LEQ,
+          new NamedLabel("begin conflict label", fmi.beginConflictLabel()).join(lc, "{⊥→;⊥←}", ts.noComponentsLabel()),
+          A.labelEnv(), declPos,
+          new ConstraintMessage() {
+            @Override
+            public String msg() {
+              return "Caller pc must be no more secret than the starting stage of the method at " + declPos;
             }
       });
     }
