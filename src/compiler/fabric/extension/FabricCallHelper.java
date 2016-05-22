@@ -293,7 +293,7 @@ public class FabricCallHelper extends CallHelper {
           "the lower bound on the conflict labels of accesses in " + pi.signature(),
           A.endConflictBound());
 
-      lc.constrain(newCLN, LabelConstraint.LEQ, endConflictBoundLabel,
+      lc.constrain(endConflictBoundLabel, LabelConstraint.LEQ, newCLN,
           A.labelEnv(), position, new ConstraintMessage() {
         @Override
         public String msg() {
