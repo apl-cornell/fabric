@@ -260,7 +260,8 @@ public final class TransactionManager {
    *          a set of nodes that don't need to be contacted because they
    *          already know about the abort.
    */
-  private void abortStage(Set<RemoteNode<?>> abortedNodes) {
+  private void abortStage(Set<RemoteNode<?>> abortedNodes,
+      boolean attemptedToCommit) {
     // Send abort-stage messages to subordinates.
     for (Store store : current.storesToStage()) {
       if (!abortedNodes.contains(store)) {
@@ -276,10 +277,13 @@ public final class TransactionManager {
     // XXX If we were to support remote calls, we should also send messages to
     // workers here.
 
-    // XXX This works for now, but if/when we start trying to support remote
-    // calls, we need to ensure that abortTransaction() doesn't needlessly
-    // contact remote nodes.
-    abortTransaction(abortedNodes, true);
+    // If client attempted to commit, completely abort the transaction.
+    // Otherwise, the client asked to stage and is responsible for aborting its
+    // transaction, so just do a rollback.
+    abortTransaction(abortedNodes, !attemptedToCommit);
+    // XXX The above call works for now, but if/when we start trying to support
+    // remote calls, we need to ensure that abortTransaction() doesn't
+    // needlessly contact remote nodes.
   }
 
   /**
@@ -296,20 +300,21 @@ public final class TransactionManager {
    * @throws TransactionRestartingException
    *           if the staging fails.
    */
-  public <T> T stageTransactionExpr(T value, Label nextStage) throws TransactionRestartingException {
+  public <T> T stageTransactionExpr(T value, Label nextStage)
+      throws TransactionRestartingException {
     // Only stage if the next stage is not the same as the current stage.
     if (!LabelUtil._Impl.relabelsTo(current.getCurrentStage().confPolicy(),
-          nextStage.confPolicy())) {
+        nextStage.confPolicy())) {
       // So !(current ≤ next)
       stageTransaction();
       current.setCurrentStage(nextStage);
     } else if (!LabelUtil._Impl.relabelsTo(nextStage.confPolicy(),
-          current.getCurrentStage().confPolicy())) {
+        current.getCurrentStage().confPolicy())) {
       // So (current ≤ next) && !(current ≥ next) ⇒ current ≠ next
       // This should only happen if the monotonicity rule was violated.
       throw new InternalError(
-          "Staging monotonicity was violated, current stage: " +
-          current.getCurrentStage() + ", next stage: " + nextStage);
+          "Staging monotonicity was violated, current stage: "
+              + current.getCurrentStage() + ", next stage: " + nextStage);
     }
     return value;
   }
@@ -322,11 +327,11 @@ public final class TransactionManager {
    *           if the staging fails.
    */
   public void stageTransaction() throws TransactionRestartingException {
-    stageTransaction(false);
+    stageTransaction(false, false);
   }
 
-  private void stageTransaction(boolean ignoreRetrySignal)
-      throws TransactionRestartingException {
+  private void stageTransaction(boolean ignoreRetrySignal,
+      boolean attemptingToCommit) throws TransactionRestartingException {
     WORKER_TRANSACTION_LOGGER.log(Level.FINEST, "{0} staging", current);
     if (!ignoreRetrySignal) {
       // Make sure we're not supposed to abort or retry.
@@ -442,7 +447,7 @@ public final class TransactionManager {
       TransactionID toRestart = current.outermostConflictingTid(conflicts);
 
       // Abort the stage at nodes that didn't report failures.
-      abortStage(failures.keySet());
+      abortStage(failures.keySet(), attemptingToCommit);
 
       throw new TransactionRestartingException(toRestart);
     }
@@ -523,7 +528,7 @@ public final class TransactionManager {
       // application's perspective, it is committing a top-level transaction.
       // Stage all remaining reads and writes before continuing with the commit.
       WORKER_TRANSACTION_LOGGER.log(Level.FINEST, "{0} auto-staging", current);
-      stageTransaction(ignoreRetrySignal);
+      stageTransaction(ignoreRetrySignal, true);
     }
 
     // Commit the current nested transaction.
