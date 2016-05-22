@@ -29,6 +29,19 @@ class BuzzBlogAPI[label postLabel, label commentLabel]
     }
   }
 
+  // Returns the string view of the comment with the given id
+  public String{commentLabel ; postId} viewComment{commentLabel;⊥←}(int postId) 
+  where
+    {postId} <= {commentLabel; ⊥←}
+  {
+    final Post[commentLabel] comment = comments[postId];
+    if (comment != null) {
+      return comment.view();
+    } else {
+      return "comment came back null";
+    }
+  }
+
   // updates a post given some new content, returns a message about how well 
   //  that went.
   public String{postLabel} updatePost{postLabel}(

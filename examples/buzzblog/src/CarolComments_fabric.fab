@@ -42,8 +42,7 @@ class CarolComments_fabric {
                     final String{*postLabel} alicePost = api.viewPost(postId);
                     printme = printme + "\n" + "Alice Posted: "+alicePost;
 
-                    printme = printme + "\n"+
-                      api.viewOrCreateComment(postId, store, firstPost);
+                    printme = printme + "\n"+ api.viewComment(postId);
 
                     String{*postLabel; *commentLabel}
                        suffix = "";
