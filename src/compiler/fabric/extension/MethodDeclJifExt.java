@@ -1,5 +1,6 @@
 package fabric.extension;
 
+import fabric.ast.FabricMethodDecl;
 import fabric.types.FabricContext;
 import fabric.types.FabricMethodInstance;
 import fabric.types.FabricPathMap;
@@ -17,8 +18,10 @@ import jif.types.PathMap;
 import jif.types.label.Label;
 import jif.visit.LabelChecker;
 
+import polyglot.ast.Node;
 import polyglot.types.SemanticException;
 import polyglot.types.Type;
+import polyglot.util.Position;
 
 public class MethodDeclJifExt extends JifMethodDeclExt {
 
@@ -99,5 +102,30 @@ public class MethodDeclJifExt extends JifMethodDeclExt {
           + "the ending conflict label allows.";
       }
     });
+  }
+
+  @Override
+  public Node labelCheck(LabelChecker lc) throws SemanticException {
+    FabricContext A = (FabricContext) lc.context();
+    FabricTypeSystem ts = (FabricTypeSystem) lc.typeSystem();
+    FabricMethodDecl md = (FabricMethodDecl) node();
+
+    // Check that we can actually stage from the start to the end.
+    FabricMethodInstance fmi = (FabricMethodInstance) md.methodInstance();
+    final Position declPos = node().position();
+    if (!fmi.beginConflictLabel().equals(ts.noAccesses())) {
+      lc.constrain(new NamedLabel("end conflict label", fmi.endConflictLabel()),
+          LabelConstraint.LEQ,
+          new NamedLabel("begin conflict label", fmi.beginConflictLabel()).join(lc, "{⊥→;⊥←}", ts.noComponentsLabel()),
+          A.labelEnv(), declPos,
+          new ConstraintMessage() {
+            @Override
+            public String msg() {
+              return "End conflict label must have lower confidentiality than"
+                     + " begin conflict label for method at " + declPos;
+            }
+      });
+    }
+    return super.labelCheck(lc);
   }
 }
