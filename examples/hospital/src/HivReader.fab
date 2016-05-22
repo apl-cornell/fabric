@@ -52,10 +52,12 @@ class HivReader [
                   cur.patient = next.patient;
                   cur.next = next.next;
                   next = next.next;
+                  continue;
                 } else {
                   cur.patient = null;
                   cur.next = null;
                   next = null;
+                  break;
                 }
               }
             }
