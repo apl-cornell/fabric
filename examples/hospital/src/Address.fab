@@ -2,7 +2,10 @@
  * Embodies a Patient's Address, which is very much like a String, but mutable.
  * addressLabel represents the label assigned to the actual information stored.
  **/
-public class Address[label addressLabel, label accessLabel] where addressLabel <= accessLabel {
+public class Address[label addressLabel, label accessLabel]
+where addressLabel <= accessLabel,
+      addressLabel <= {W2R(addressLabel)}
+{
   @{accessLabel}
 
   /** a patient's (presumably comparatively public) mailing address **/
@@ -23,9 +26,9 @@ public class Address[label addressLabel, label accessLabel] where addressLabel <
    * @param newAddress sets this patient's (presumably comparatively public)
    *                   mailing address
    **/
-  public void setAddress{*addressLabel}@{W2R(addressLabel)}(String{addressLabel} newAddress)
-  :{*addressLabel} {
-    address = newAddress;
+  public void setAddress{*addressLabel}@{*addressLabel;_<-}(String{*addressLabel} newAddress)
+  :{*addressLabel}@{*addressLabel;_<-} {
+    this.address = newAddress;
   }
 }
 

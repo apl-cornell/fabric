@@ -116,8 +116,12 @@ public class FabricFieldExt extends JifFieldExt {
           }
     });
 
+    // Conflict label on right hand.
+    NamedLabel conflictLR = new NamedLabel("write conflict label",
+        conflictL.label()).join(lc, "{⊥→;⊥←}", ts.noComponentsLabel());
+
     // Check pc ≤ CL(op field)
-    lc.constrain(pc, LabelConstraint.LEQ, conflictL.join(lc, "{⊥→;⊥←}", ts.noComponentsLabel()),  A.labelEnv(), pos,
+    lc.constrain(pc, LabelConstraint.LEQ, conflictLR,  A.labelEnv(), pos,
         new ConstraintMessage() {
           @Override
           public String msg() {
@@ -127,10 +131,8 @@ public class FabricFieldExt extends JifFieldExt {
     });
     
     // Check end conflict.
-    lc.constrain(endConflict,
-        LabelConstraint.LEQ,
-        conflictL.join(lc, "{⊥→;⊥←}", ts.noComponentsLabel()),
-        A.labelEnv(), pos,
+    lc.constrain(endConflict, LabelConstraint.LEQ, conflictLR, A.labelEnv(),
+        pos,
         new ConstraintMessage() {
           @Override
           public String msg() {

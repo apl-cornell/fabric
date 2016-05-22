@@ -6,12 +6,13 @@ class DaveReader [
         label accessLabel
         ]
 {
-  public String{accessLabel} readDave{dave← }(
+  public String{accessLabel} readDave{dave← }@{W2R(accessLabel)}(
       AddressList[accessLabel,accessLabel]{accessLabel} addrListIn
       ):{dave→ ; dave← } 
     where 
           {dave← }    <= accessLabel,
-          accessLabel <= {dave → }
+          accessLabel <= {dave → },
+          accessLabel <= {W2R(accessLabel)}
   {
     String{accessLabel} printable = "";
     atomic {
