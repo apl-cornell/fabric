@@ -1,7 +1,7 @@
 abstract class Call02[label L] {
   void m{}@{W2R(L)}() {
     f();
-    // Should have to specify an end-stage label of L1
+    // Should have to specify an end-stage label of {W2R(L) ⊓ L}.
   }
 
   abstract void f@{W2R(L)}()@{W2R(L) ⊓ L};
