@@ -9,7 +9,7 @@ public class Address[label addressLabel, label accessLabel] where addressLabel <
   public String{addressLabel} address;
 
   /** Construct a new Address with a String **/
-  public Address{*addressLabel}(String{addressLabel} newAddress):{*addressLabel} {
+  public Address{addressLabel}(String{addressLabel} newAddress):{addressLabel} {
     super();
     setAddress(newAddress);
   }
@@ -23,8 +23,8 @@ public class Address[label addressLabel, label accessLabel] where addressLabel <
    * @param newAddress sets this patient's (presumably comparatively public)
    *                   mailing address
    **/
-  public void setAddress{*addressLabel}(String{addressLabel} newAddress)
-  :{*addressLabel} {
+  public void setAddress{addressLabel}(String{addressLabel} newAddress)
+  :{addressLabel} {
     address = newAddress;
   }
 }

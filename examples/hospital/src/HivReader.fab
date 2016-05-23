@@ -39,8 +39,8 @@ class HivReader [
           addrList.address = null;
           addrList.next = addrList;
           while (patients != null) {
-            Patient[addressLabel,hivLabel]{*patientLabel} patient = patients.patient;
-            PatientList[patientLabel,addressLabel, hivLabel]{*patientLabel} next = 
+            Patient[addressLabel,hivLabel]{patientLabel} patient = patients.patient;
+            PatientList[patientLabel,addressLabel, hivLabel]{patientLabel} next = 
               patients.next;
             if (patient != null) {
               // Grab the address if they're hiv positive
