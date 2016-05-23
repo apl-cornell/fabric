@@ -13,44 +13,6 @@ public class AddressList[label L] {
     this.next = tail;
   }
 
-  /**
-   * Constructs a list of address from the given list of patients.
-   * Invariant: patientList should not be null.
-   */
-  public AddressList{L}(
-    label listLabel,
-    label addressLabel,
-    label hivLabel,
-    PatientList[listLabel, addressLabel, hivLabel]{L} patientList
-  )
-    where
-      // Must be able to convert from the old list label to the new list label.
-      listLabel ⊑ L,
-
-      // Must be able to convert from the old address label to the new address
-      // label.
-      addressLabel ⊑ L,
-
-      // Access policy restriction for accessing patientList.
-      L ⊑ {*listLabel; *addressLabel; *hivLabel},
-
-      // Access policy restriction for accessing patient addresses.
-      L ⊑ {*addressLabel; *hivLabel}
-  {
-    if (patientList == null) throw new Error("null patient list");
-
-    Patient[addressLabel, hivLabel] patient = patientList.patient;
-    if (patient == null) throw new Error("null patient");
-
-    this.address = patient.address;
-    this.next = null;
-
-    if (patientList.next != null) {
-      this.next =
-          new AddressList(listLabel, addressLabel,hivLabel, patientList.next);
-    }
-  }
-
   public String{L} toString{L}() {
     String result = "";
     if (address != null) result = result + address;
