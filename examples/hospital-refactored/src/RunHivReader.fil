@@ -1,0 +1,27 @@
+import fabric.util.Map;
+
+public class RunHivReader {
+  public static void main(String[] args) {
+    Label listLabel = null;
+    Label addressLabel = null;
+    Label hivLabel = null;
+    PatientList patients = null;
+    DropBox dropBox = null;
+
+    atomic {
+      Store store = Worker.getWorker().getStore("alicenode");
+      Map rootMap = store.getRoot();
+      listLabel = (Label) rootMap.get("listLabel");
+      addressLabel = (Label) rootMap.get("addressLabel");
+      hivLabel = (Label) rootMap.get("hivLabel");
+      patients = (PatientList) rootMap.get("patients");
+
+      Store daveStore = Worker.getWorker().getStore("davenode");
+      dropBox = (DropBox) daveStore.getRoot().get("dropBox");
+    }
+
+    String result =
+        HivReader.readHiv(listLabel, addressLabel, hivLabel, patients, dropBox);
+    System.out.println(result);
+  }
+}

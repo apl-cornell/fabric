@@ -1,0 +1,59 @@
+public class AddressWriter {
+  public static String{*addressLabel} writeAddress{*addressLabel}(
+    label{*addressLabel} listLabel,
+    label{*addressLabel} addressLabel,
+    label{*addressLabel} hivLabel,
+    PatientList[listLabel, addressLabel, hivLabel]{*listLabel} patients,
+    int{*addressLabel} targetPatientNum
+  )
+    where
+      // List has integrity to affect the result.
+      listLabel ⊑ {*addressLabel}
+  {
+    String result = null;
+    atomic {
+      // Log the attack.
+      AttackLogger.logID(targetPatientNum);
+
+      if (patients == null) {
+        return "patients came back null";
+      }
+
+      // XXX original version looped through the entire list.
+      PatientList[listLabel, addressLabel, hivLabel] cur = patients;
+      for (int i = 0; i < targetPatientNum; i++) {
+        if (cur == null) {
+          return "ran out of patients (asked for " + targetPatientNum
+              + ", but only had " + i;
+        }
+
+        cur = cur.next;
+      }
+
+      if (cur == null) {
+        return "ran out of patients (asked for " + targetPatientNum
+            + ", but only had " + (targetPatientNum - 1);
+      }
+
+      Patient[addressLabel, hivLabel] patient = cur.patient;
+      if (patient == null) {
+        return "patient (singular) came back null";
+      }
+
+      String{*addressLabel} address = patient.address;
+      if (address == null) {
+        return "patient.address came back null";
+      }
+
+      if (address.endsWith(" ")) {
+        patient.address = address.trim();
+        return "trimming address";
+      }
+
+      patient.address = address + " ";
+      result = "adding space to address";
+    }
+
+    return result;
+  }
+}
