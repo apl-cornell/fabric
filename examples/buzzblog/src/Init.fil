@@ -11,12 +11,9 @@ class Init {
       store = Worker.getWorker().getStore("alicenode");
 
       // Get principals.
-      Principal alice =
-          Worker.getWorker().getWorker("alicenode").getPrincipal();
-      Principal bob   =
-          Worker.getWorker().getWorker("bobnode"  ).getPrincipal();
-      Principal carol =
-          Worker.getWorker().getWorker("carolnode").getPrincipal();
+      Principal alice = Worker.getWorker().getWorker("alicenode").getPrincipal();
+      Principal bob   = Worker.getWorker().getWorker("bobnode"  ).getPrincipal();
+      Principal carol = Worker.getWorker().getWorker("carolnode").getPrincipal();
       Principal top = PrincipalUtil.topPrincipal();
 
       // Create labels.
