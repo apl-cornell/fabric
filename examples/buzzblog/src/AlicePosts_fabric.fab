@@ -31,7 +31,7 @@ class AlicePosts_fabric {
 
       if (workerP equiv alice && alice equiv store && new label {⊤←store} <= postLabel) {
         // Alice should be able to write the post.
-        if (new label{workerP←} <= postLabel) { 
+        if (new label{⊤←workerP} <= postLabel) { 
           // Alice should be able to read it too.
           if (postLabel <= new label{workerP→ } ) { 
             final String{*postLabel} firstView = api.viewPost(postId);

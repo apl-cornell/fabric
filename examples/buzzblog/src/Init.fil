@@ -2,25 +2,32 @@ import fabric.util.Map;
 
 class Init {
   public static void main(String[] args) {
+    Store store = null;
+    BuzzBlogAPI blog = null;
+    Label postLabel = null;
+    Label commentLabel = null;
+
     atomic {
-      Store store = Worker.getWorker().getStore("alicenode");
+      store = Worker.getWorker().getStore("alicenode");
 
       // Get principals.
-      Principal alice = Worker.getWorker().getWorker("alicenode").getPrincipal();
-      Principal bob   = Worker.getWorker().getWorker("bobnode"  ).getPrincipal();
-      Principal carol = Worker.getWorker().getWorker("carolnode").getPrincipal();
-      Principal bottom = PrincipalUtil.nullPrincipal();
+      Principal alice =
+          Worker.getWorker().getWorker("alicenode").getPrincipal();
+      Principal bob   =
+          Worker.getWorker().getWorker("bobnode"  ).getPrincipal();
+      Principal carol =
+          Worker.getWorker().getWorker("carolnode").getPrincipal();
       Principal top = PrincipalUtil.topPrincipal();
 
       // Create labels.
       // ((alice ∨ bob) ∨ carol)→ ; ((alice ∧ bob) ∧ carol)← alice
-      Label postLabel =
+      postLabel =
         LabelUtil.toLabel(store,
           LabelUtil.readerPolicy(store,
             PrincipalUtil.disjunction(store,
               PrincipalUtil.disjunction(store, alice, bob),
               carol),
-            bottom),
+            top),
           LabelUtil.writerPolicy(store,
             PrincipalUtil.conjunction(store,
               PrincipalUtil.conjunction(store, alice, bob),
@@ -29,9 +36,9 @@ class Init {
 
       // (alice ∨ carol)→ ; (alice ∨ carol)←
       Principal aliceOrCarol = PrincipalUtil.disjunction(store, alice, carol);
-      Label commentLabel =
+      commentLabel =
         LabelUtil.toLabel(store,
-          LabelUtil.readerPolicy(store, aliceOrCarol, bottom),
+          LabelUtil.readerPolicy(store, aliceOrCarol, top),
           LabelUtil.writerPolicy(store, aliceOrCarol, top));
 
 
@@ -40,13 +47,16 @@ class Init {
       Post[] comments = new Post[1]@store;
 
       // Create the BuzzBlogAPI object.
-      BuzzBlogAPI blog =
+      blog =
           new BuzzBlogAPI@store(postLabel, commentLabel)
             .BuzzBlogAPI$(posts, comments);
 
       // Create the post and comment.
       blog.viewOrCreatePost(0, store,
         "This is the fizzy blog post that Alice wrote.");
+    }
+
+    atomic {
       blog.viewOrCreateComment(0, store, 
         "Lolz, Bob can't read this comment");
 

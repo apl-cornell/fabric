@@ -20,18 +20,20 @@ public class Post[label l] {
   /**
    * The intended way users should update posts
    */
-  public String{l} update{l}@{W2R(l)}(String{l} new_message)@{l meet W2R(l)} {
+  public String{l} update{l ⊓ W2R(l)}@{W2R(l)}(
+      String{l} new_message
+  )@{l ⊓ W2R(l)} {
     this.content = new_message;
     int newVersion = this.version = this.version + 1;
 
     return formatView(new_message, newVersion);
   }
 
-  public String{l} getContent{l}@{W2R(l)}() {
+  public String{l} getContent{l ⊓ W2R(l)}@{W2R(l)}() {
     return(this.content);
   }
   
-  public int{l} getVersion{l}@{W2R(l)}() {
+  public int{l} getVersion{l ⊓ W2R(l)}@{W2R(l)}() {
     return(this.version);
   }
 
