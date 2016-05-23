@@ -1,0 +1,74 @@
+class HivReader {
+  
+  /**
+   * Reads the given patient list, saves the list of addresses for HIV-positive
+   * patients into the given drop box, and returns a string representation of
+   * the result.
+   */
+  public static String{*addressLabel; *hivLabel}
+    readHiv{*addressLabel ; *hivLabel}(
+      label{*addressLabel ; *hivLabel} listLabel,
+      label{*addressLabel ; *hivLabel} addressLabel,
+      label{*addressLabel ; *hivLabel} hivLabel,
+      PatientList[listLabel, addressLabel, hivLabel]{*listLabel} patients,
+      DropBox[{*addressLabel; *hivLabel}]{*addressLabel; *hivLabel} dropBox
+  )
+    where
+      // List has integrity to affect the result.
+      listLabel ⊑ {*addressLabel ; *hivLabel},
+
+      // Drop box's store can store the result.
+      {*addressLabel ; *hivLabel} ⊑ {⊤→dropBox.store$},
+      {⊤←dropBox.store$} ⊑ {*addressLabel ; *hivLabel}
+  {
+    if (dropBox == null) return "drop box came back null";
+
+    if (patients == null) {
+      dropBox.result = null;
+      return "patients came back null";
+    }
+
+    String{*addressLabel; *hivLabel} resultStr = "";
+    atomic {
+      // First, build a list of HIV-positive patients.
+      PatientList[{*addressLabel; *hivLabel}, addressLabel, hivLabel]
+        hivPositives = null;
+      final Store dropBoxStore = dropBox.store$;
+
+      PatientList[listLabel, addressLabel, hivLabel] cur = patients;
+      while (cur != null) {
+        Patient[addressLabel, hivLabel]{*addressLabel; *hivLabel} patient =
+          cur.patient;
+        cur = cur.next;
+
+        // Ignore null patients.
+        if (patient == null) {
+          resultStr = resultStr + "\npatient (singular) came back null";
+          continue;
+        }
+
+        // Ignore HIV-negative patients.
+        if (!patient.hivStatus) {
+          resultStr = resultStr + "\niterating past a patient without HIV...";
+          continue;
+        }
+
+        // Add the patient to the list of HIV-positive patients.
+        hivPositives =
+            new PatientList@dropBoxStore(patient, hivPositives);
+      }
+
+      AddressList[{*addressLabel; *hivLabel}]{*addressLabel;*hivLabel} result =
+          new AddressList@dropBoxStore(
+              new label{*addressLabel; *hivLabel}@dropBoxStore,
+              addressLabel,
+              hivLabel,
+              hivPositives);
+      dropBox.result = result;
+
+      resultStr = resultStr + result.toString();
+    }
+
+    return resultStr;
+  }
+}

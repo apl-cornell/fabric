@@ -1,0 +1,24 @@
+import fabric.util.Map;
+
+public class RunAddressWriter {
+  public static void main(String[] args) {
+    Label listLabel = null;
+    Label addressLabel = null;
+    Label hivLabel = null;
+    PatientList patients = null;
+
+    atomic {
+      Store store = Worker.getWorker().getStore("alicenode");
+      Map rootMap = store.getRoot();
+      listLabel = (Label) rootMap.get("listLabel");
+      addressLabel = (Label) rootMap.get("addressLabel");
+      hivLabel = (Label) rootMap.get("hivLabel");
+      patients = (PatientList) rootMap.get("patients");
+    }
+
+    String result =
+        AddressWriter.writeAddress(listLabel, addressLabel, hivLabel, patients,
+            0);
+    System.out.println(result);
+  }
+}

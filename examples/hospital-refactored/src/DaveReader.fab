@@ -1,0 +1,26 @@
+class DaveReader {
+  public static String{*addressLabel; *hivLabel}
+    readDave{*addressLabel; *hivLabel}(
+      label{*addressLabel; *hivLabel} addressLabel,
+      label{*addressLabel; *hivLabel} hivLabel,
+      DropBox[{*addressLabel; *hivLabel}]{*addressLabel; *hivLabel} dropBox
+  )
+  {
+    String resultStr = null;
+    atomic {
+      if (dropBox == null) {
+        return "dropBox came back null";
+      }
+
+      AddressList[{*addressLabel; *hivLabel}]{*addressLabel; *hivLabel} result =
+          dropBox.result;
+      if (result == null) {
+        return "addrList came back null";
+      }
+
+      resultStr = result.toString();
+    }
+
+    return resultStr;
+  }
+}
