@@ -93,22 +93,28 @@ categories['FriendMap v2 example (Fabric)'] = \
   [ 'examples/friendmap/src/fabric/friendmap_2.0_codebase',
     'examples/friendmap/src/fabric/snapp_2.0_codebase']
 
+categories['Hospital example'] = ['examples/hospital/src']
+categories['Buzzblog example'] = ['examples/buzzblog/src']
+categories['Rainforest example'] = ['examples/rainforest/src']
+
 ########################################################################
 
-if len(sys.argv) - 1 != 4:
+if len(sys.argv) - 1 != 6:
   # Print usage info.
   scriptName = re.match('^(?:.*/)?([^/]+)$', sys.argv[0]).group(1)
   print("""\
-Usage: %s BRANCH1 BRANCH2 DATE1 DATE2
+Usage: %s FABBRANCH1 FABBRANCH2 JIFBRANCH1 JIFBRANCH2 POLYBRANCH1 POLYBRANCH2
+
   Determines the number of lines of code that have been added, modified and
-  deleted in Fabric BRANCH2 (relative to BRANCH1), and in Jif at DATE2
-  (relative to DATE1).
+  deleted in Fabric FABBRANCH2 (relative to FABBRANCH1), in Jif JIFBRANCH2
+  (relative to JIFBRANCH1), and in Polyglot POLYBRANCH2 (relative to
+  POLYBRANCH1).
 
-  BRANCH1 and BRANCH2 specify directories under the repo root. Examples:
+  All of the arguments specify an argument to git checkout. Examples:
 
-    trunk
-    branches/promises
-    tags/fabric-0.2.0
+    master
+    origin/abrtchan
+    601e5582
 
   This script exports fresh working copies into a temporary directory. The only
   prerequisites for running this script are:
@@ -138,8 +144,10 @@ for i in range(len(catKey)):
 
 branch1Name = sys.argv[1]
 branch2Name = sys.argv[2]
-date1 = sys.argv[3]
-date2 = sys.argv[4]
+jifBranch1 = sys.argv[3]
+jifBranch2 = sys.argv[4]
+polyBranch1 = sys.argv[5]
+polyBranch2 = sys.argv[6]
 
 try:
   if 'FABRIC_HOME' in os.environ:
@@ -233,15 +241,15 @@ if os.path.isdir('fab-before/lib/jif/src'):
   shutil.move('fab-before/lib/jif/src', 'jif-before')
 else:
   # Check out BRANCH1.
-  print('Checking out Jif BRANCH1 (%s")...' % date1)
+  print('Checking out Jif BRANCH1 (%s")...' % jifBranch1)
   os.chdir('jif')
-  if subprocess.call(['git', 'checkout', date1],
+  if subprocess.call(['git', 'checkout', jifBranch1],
       stdout=open(os.devnull, 'w')) != 0:
     sys.exit(1)
   os.chdir('..')
 
   # Export jif-before.
-  print('Exporting Jif BRANCH1 ("%s")...' % date1)
+  print('Exporting Jif BRANCH1 ("%s")...' % jifBranch1)
   if subprocess.call(['rsync', '-SHEPAaX', 'jif/src/', 'jif-before/'],
       stdout=open(os.devnull, 'w')) != 0:
     sys.exit(1)
@@ -252,14 +260,14 @@ except OSError: pass
 
 # Check out BRANCH2.
 os.chdir('jif')
-print('Checking out Jif BRANCH2 ("%s")...' % date2)
-if subprocess.call(['git', 'checkout', date2],
+print('Checking out Jif BRANCH2 ("%s")...' % jifBranch2)
+if subprocess.call(['git', 'checkout', jifBranch2],
     stdout=open(os.devnull, 'w')) != 0:
   sys.exit(1)
 os.chdir('..')
 
 # Export jif-after.
-print('Exporting Jif BRANCH2 ("%s")...' % date2)
+print('Exporting Jif BRANCH2 ("%s")...' % jifBranch2)
 if subprocess.call(['rsync', '-SHEPAaX', 'jif/src/', 'jif-after/'],
     stdout=open(os.devnull, 'w')) != 0:
   sys.exit(1)
@@ -276,28 +284,28 @@ if subprocess.call(['git', 'clone',
 
 # Check out BRANCH1.
 os.chdir('polyglot')
-print('Checking out Polyglot BRANCH1 ("%s")...' % date1)
-if subprocess.call(['git', 'checkout', date1],
+print('Checking out Polyglot BRANCH1 ("%s")...' % polyBranch1)
+if subprocess.call(['git', 'checkout', polyBranch1],
     stdout=open(os.devnull, 'w')) != 0:
   sys.exit(1)
 os.chdir('..')
 
 # Export polyglot-before.
-print('Exporting Polyglot BRANCH1 ("%s")...' % date1)
+print('Exporting Polyglot BRANCH1 ("%s")...' % polyBranch1)
 if subprocess.call(['rsync', '-SHEPAaX', 'polyglot/src/', 'polyglot-before/'],
     stdout=open(os.devnull, 'w')) != 0:
   sys.exit(1)
 
 # Check out BRANCH2.
 os.chdir('polyglot')
-print('Checking out Polyglot BRANCH2 ("%s")...' % date2)
-if subprocess.call(['git', 'checkout', date2],
+print('Checking out Polyglot BRANCH2 ("%s")...' % polyBranch2)
+if subprocess.call(['git', 'checkout', polyBranch2],
     stdout=open(os.devnull, 'w')) != 0:
   sys.exit(1)
 os.chdir('..')
 
 # Export polyglot-after.
-print('Exporting Polyglot BRANCH2 ("%s")...' % date2)
+print('Exporting Polyglot BRANCH2 ("%s")...' % polyBranch2)
 if subprocess.call(['rsync', '-SHEPAaX', 'polyglot/src/', 'polyglot-after/'],
     stdout=open(os.devnull, 'w')) != 0:
   sys.exit(1)
