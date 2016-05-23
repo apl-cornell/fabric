@@ -1,21 +1,22 @@
 class HivReader {
-  
+
   /**
    * Reads the given patient list, saves the list of addresses for HIV-positive
    * patients into the given drop box, and returns a string representation of
    * the result.
    */
   public static String{*addressLabel; *hivLabel}
-    readHiv{*addressLabel ; *hivLabel}(
+    readHiv{*listLabel}(
       label{*addressLabel ; *hivLabel} listLabel,
       label{*addressLabel ; *hivLabel} addressLabel,
       label{*addressLabel ; *hivLabel} hivLabel,
       PatientList[listLabel, addressLabel, hivLabel]{*listLabel} patients,
-      DropBox[{*addressLabel; *hivLabel}]{*addressLabel; *hivLabel} dropBox
+      DropBox[{*addressLabel; *hivLabel}]{*listLabel} dropBox
   )
     where
-      // List has integrity to affect the result.
-      listLabel ⊑ {*addressLabel ; *hivLabel},
+      // List label is the meet of address and hiv labels.
+      listLabel ⊑ {*addressLabel ⊓ *hivLabel},
+      {*addressLabel ⊓ *hivLabel} ⊑ listLabel,
 
       // Drop box's store can store the result.
       {*addressLabel ; *hivLabel} ⊑ {⊤→dropBox.store$},
