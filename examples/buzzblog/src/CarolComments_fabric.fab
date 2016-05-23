@@ -56,8 +56,8 @@ class CarolComments_fabric {
 
                     printme = printme + "\n" + 
                       api.updateComment(postId, secondPost + " - "+ suffix);
-                    printme = printme + "\n" + 
-                      api.updateComment(postId, thirdPost + " - "+ suffix);
+                    //printme = printme + "\n" + 
+                      //api.updateComment(postId, thirdPost + " - "+ suffix);
                   } else printme = printme + 
                       "\ncommentLabel ⊑ {alice→ }  failed";
                 } else printme = printme +
