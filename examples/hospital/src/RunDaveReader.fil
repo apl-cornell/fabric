@@ -1,81 +1,22 @@
 import fabric.util.Map;
 
-/**
- */
 public class RunDaveReader {
   public static void main(String[] args) {
-    // Get a reference to the store called "store".
-    Store store = null;
-    Store davestore = null;
-    Principal alice = null;
-    Principal bob   = null;
-    Principal carol = null;
-    Principal dave  = null;
-
-    // addressLabel
-    //    (alice,bob),(carol,dave) → (alice,bob),(carol,dave);
-    //    (alice,bob),(carol,dave) ← (alice,bob),(carol,dave)
-    Principal joined = null;
     Label addressLabel = null;
-
-    //HivLabel
-    //    (alice,bob),dave → (alice,bob),dave;
-    //    (alice,bob),dave ← (alice,bob),dave
-    Principal nocarol = null;
     Label hivLabel = null;
+    DropBox dropBox = null;
 
-    Label accessLabel  = null;
-    Label listLabel    = null;
+    atomic {
+      Store store = Worker.getWorker().getStore("alicenode");
+      Map rootMap = store.getRoot();
+      addressLabel = (Label) rootMap.get("addressLabel");
+      hivLabel = (Label) rootMap.get("hivLabel");
 
-    atomic { // Makin' labels and such
-      // Get a reference to the store called "store".
-      store = Worker.getWorker().getStore("alicenode");
-      davestore = Worker.getWorker().getStore("davenode");
-      alice = Worker.getWorker().getWorker("alicenode").getPrincipal();
-      bob   = Worker.getWorker().getWorker("bobnode").getPrincipal();
-      carol = Worker.getWorker().getWorker("carolnode").getPrincipal();
-      dave  = Worker.getWorker().getWorker("davenode").getPrincipal();
-
-      // addressLabel
-      //    (alice,bob),(carol,dave) → (alice,bob),(carol,dave);
-      //    (alice,bob),(carol,dave) ← (alice,bob),(carol,dave)
-      joined = PrincipalUtil.disjunction(store,
-           PrincipalUtil.disjunction(store,alice,bob),
-           PrincipalUtil.disjunction(store,carol,dave));
-      addressLabel = LabelUtil.toLabel(store,
-          LabelUtil.readerPolicy(store,joined,joined),
-          LabelUtil.writerPolicy(store,joined,joined));
-
-      //HivLabel
-      //    (alice,bob),dave → (alice,bob),dave;
-      //    (alice,bob),dave ← (alice,bob),dave
-      nocarol = PrincipalUtil.disjunction(store,
-           PrincipalUtil.disjunction(store,alice,bob),
-           dave);
-      hivLabel = LabelUtil.toLabel(store,
-          LabelUtil.readerPolicy(store,nocarol,nocarol),
-          LabelUtil.writerPolicy(store,nocarol,nocarol));
-
-      accessLabel  = LabelUtil.join(store,addressLabel,hivLabel);
-      listLabel    = LabelUtil.meet(store,addressLabel,hivLabel);
+      Store daveStore = Worker.getWorker().getStore("davenode");
+      dropBox = (DropBox) daveStore.getRoot().get("dropBox");
     }
 
-    DaveReader daveReader =null;
-
-    atomic { // Constructin' the useful object
-      daveReader = new DaveReader@davestore(
-           dave,
-           accessLabel
-         ).DaveReader$();
-    }
-
-    AddressList addrList = null;
-
-    atomic { // fetchin' stuff
-      addrList = (AddressList) davestore.getRoot().get("addrList");
-    }
-    //actually do the thing:
-    System.out.println(daveReader.readDave(addrList));
+    String result = DaveReader.readDave(addressLabel, hivLabel, dropBox);
+    System.out.println(result);
   }
 }
-

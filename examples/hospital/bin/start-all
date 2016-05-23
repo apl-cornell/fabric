@@ -25,4 +25,4 @@ BIN_DIR="$(dirname $0)"
   "${BIN_DIR}/start-carolnode $@" &
 
 "${BIN_DIR}/run-in-xterm" "AliceBob DaveNode"   400 800 \
-  "${BIN_DIR}/start-davenode $@" &
+  "${BIN_DIR}/start-davenode $@ --debug" &

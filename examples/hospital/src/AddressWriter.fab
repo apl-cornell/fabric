@@ -1,70 +1,59 @@
-import fabric.util.Map;
-import fabric.runtime.Runtime;
-
-
-class AddressWriter [
-        principal alice,
-        principal bob,
-        principal carol,
-        principal dave,
-        label addressLabel,
-        label hivLabel,
-        label accessLabel,
-        label patientLabel]
-{
-  public String{addressLabel} writeAddress{carol← }(
-      PatientList[patientLabel,addressLabel, hivLabel]{patientLabel} patientsIn,
-      int{patientLabel} desired_patient
-      ):{carol→ ; carol← } 
-    where 
-          hivLabel     <= accessLabel,
-          accessLabel  <= {hivLabel ; addressLabel},
-          addressLabel <= hivLabel,
-          patientLabel <= addressLabel,
-          {carol← }    <= patientLabel
+public class AddressWriter {
+  public static String{*addressLabel} writeAddress{*addressLabel}(
+    label{*addressLabel} listLabel,
+    label{*addressLabel} addressLabel,
+    label{*addressLabel} hivLabel,
+    PatientList[listLabel, addressLabel, hivLabel]{*listLabel} patients,
+    int{*addressLabel} targetPatientNum
+  )
+    where
+      // List has integrity to affect the result.
+      listLabel ⊑ {*addressLabel}
   {
-    String{addressLabel} printable = "";
+    String result = null;
     atomic {
-        PatientList[patientLabel,addressLabel, hivLabel]{patientLabel} patients = 
-          patientsIn;
-        // Log the attack.
-        AttackLogger.logID(desired_patient);
+      // Log the attack.
+      AttackLogger.logID(targetPatientNum);
 
-        if (patients == null) { 
-          printable = printable + "\n" + ("patients came back null");
+      if (patients == null) {
+        return "patients came back null";
+      }
+
+      // XXX original version looped through the entire list.
+      PatientList[listLabel, addressLabel, hivLabel] cur = patients;
+      for (int i = 0; i < targetPatientNum; i++) {
+        if (cur == null) {
+          return "ran out of patients (asked for " + targetPatientNum
+              + ", but only had " + i;
         }
 
-        int{patientLabel} patients_left = desired_patient;
-        while (patients != null /*&& patients_left >= 0*/) {
-          Patient[addressLabel, hivLabel] patient = patients.patient;
-          if (patient != null && patients_left == 0) {
-            printable = printable + "\n" + ("updating patient " + desired_patient);
-            Address[addressLabel,accessLabel]{addressLabel} addr=patient.address;
-            if (addr != null) {
-              String{addressLabel} address = addr.address;
-              // make meaningless changes to the address, namely adding or
-              // removing a space at the end.
-              if (address != null) {
-                if (address.endsWith(" ")) {
-                  printable = printable + "\n" + ("trimming address");
-                  addr.address = address.trim();
-                } else {
-                  printable = printable + "\n" + ("adding space to address");
-                  addr.address = address + " ";
-                }
-              } else {
-                printable = printable + "\n" + ("addr.address came back null");
-              }
-            } else {
-              printable = printable + "\n" + ("patient.address came back null");
-            }
-          } else if (patient == null) {
-            printable = printable + "\n" + ("patient (singular) came back null");
-          }
-          patients_left--;
-          patients = patients.next;
-        }
+        cur = cur.next;
+      }
+
+      if (cur == null) {
+        return "ran out of patients (asked for " + targetPatientNum
+            + ", but only had " + (targetPatientNum - 1);
+      }
+
+      Patient[addressLabel, hivLabel] patient = cur.patient;
+      if (patient == null) {
+        return "patient (singular) came back null";
+      }
+
+      String{*addressLabel} address = patient.address;
+      if (address == null) {
+        return "patient.address came back null";
+      }
+
+      if (address.endsWith(" ")) {
+        patient.address = address.trim();
+        return "trimming address";
+      }
+
+      patient.address = address + " ";
+      result = "adding space to address";
     }
-    return printable;
+
+    return result;
   }
 }
