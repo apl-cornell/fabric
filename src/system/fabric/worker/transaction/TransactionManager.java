@@ -303,11 +303,15 @@ public final class TransactionManager {
   public <T> T stageTransactionExpr(T value, Label nextStage)
       throws TransactionRestartingException {
     // Only stage if the next stage is not the same as the current stage.
+    HOTOS_LOGGER.log(Level.FINEST, "{0} start stage check", current);
     if (!LabelUtil._Impl.relabelsTo(current.getCurrentStage().confPolicy(),
         nextStage.confPolicy())) {
+      HOTOS_LOGGER.log(Level.FINEST, "{0} end stage check", current);
       // So !(current ≤ next)
+      HOTOS_LOGGER.log(Level.FINEST, "{0} start staging", current);
       stageTransaction();
       current.setCurrentStage(nextStage);
+      HOTOS_LOGGER.log(Level.FINEST, "{0} end staging", current);
     } else if (!LabelUtil._Impl.relabelsTo(nextStage.confPolicy(),
         current.getCurrentStage().confPolicy())) {
       // So (current ≤ next) && !(current ≥ next) ⇒ current ≠ next
@@ -315,6 +319,8 @@ public final class TransactionManager {
       throw new InternalError(
           "Staging monotonicity was violated, current stage: "
               + current.getCurrentStage() + ", next stage: " + nextStage);
+    } else {
+      HOTOS_LOGGER.log(Level.FINEST, "{0} start stage end", current);
     }
     return value;
   }
