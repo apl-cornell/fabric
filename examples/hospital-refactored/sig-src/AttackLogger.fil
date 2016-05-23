@@ -1,0 +1,7 @@
+import fabric.common.Logging;
+
+public class AttackLogger {
+  public static void logID(int id) {
+    Logging.HOTOS_LOGGER.info("Attacking " + id);
+  }
+}

@@ -1,0 +1,47 @@
+/**
+ * listLabel - the label on the list backbone and on the patients in the list.
+ * addressLabel - the label on the patients' addresses.
+ * hivLabel - the label on the patients' HIV statuses.
+ */
+public class PatientList[label listLabel, label addressLabel, label hivLabel] {
+  @{listLabel ; addressLabel ; hivLabel}
+  public Patient[addressLabel, hivLabel]{listLabel} patient;
+  public PatientList[listLabel, addressLabel, hivLabel]{listLabel} next;
+
+  /**
+   * cons constructor.
+   */
+  public PatientList{listLabel}(
+      Patient[addressLabel, hivLabel]{listLabel} head,
+      PatientList[listLabel, addressLabel, hivLabel]{listLabel} tail
+  ) {
+    this.patient = head;
+    this.next = tail;
+  }
+
+  /**
+   * Copy constructor. Copies a list while upgrading its backbone label.
+   * Invariant: oldList should not be null.
+   */
+  public PatientList{listLabel}(
+      label oldListLabel,
+      PatientList[oldListLabel, addressLabel, hivLabel]{*oldListLabel} oldList
+  )
+    where
+      oldListLabel ⊑ listLabel
+  {
+    if (oldList == null) throw new Error();
+
+    this.patient = oldList.patient;
+    this.next = null;
+
+    if (oldList.next != null) {
+      this.next =
+          new PatientList[listLabel, addressLabel, hivLabel]
+            (oldListLabel, oldList.next);
+    }
+  }
+}
+
+
+
