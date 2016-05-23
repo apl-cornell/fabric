@@ -10,25 +10,29 @@ class AlicePosts {
     Label postLabel = null;
     Label commentLabel = null;
 
-    atomic {
-      blog = (BuzzBlogAPI) rootMap.get("buzzblog");
-      postLabel = (Label) rootMap.get("postLabel");
-      commentLabel = (Label) rootMap.get("commentLabel");
+    long start = System.currentTimeMillis();
+
+    while (System.currentTimeMillis() < (start + (1000 * 60 * 5))) {
+      atomic {
+        blog = (BuzzBlogAPI) rootMap.get("buzzblog");
+        postLabel = (Label) rootMap.get("postLabel");
+        commentLabel = (Label) rootMap.get("commentLabel");
+      }
+
+      if (blog == null) {
+        System.out.println("Run 'Init' on alicenode first!");
+        return;
+      }
+
+      // Get principals for alice, bob, and carol.
+      Principal workerP = Worker.getWorker().getPrincipal();
+      Principal alice = Worker.getWorker().getWorker("alicenode").getPrincipal();
+      Principal bob = Worker.getWorker().getWorker("bobnode"  ).getPrincipal();
+      Principal carol = Worker.getWorker().getWorker("carolnode").getPrincipal();
+
+      // Call into Fabric.
+      AlicePosts_fabric.run(postLabel, commentLabel, workerP, alice, bob, carol,
+          blog);
     }
-
-    if (blog == null) {
-      System.out.println("Run 'Init' on alicenode first!");
-      return;
-    }
-
-    // Get principals for alice, bob, and carol.
-    Principal workerP = Worker.getWorker().getPrincipal();
-    Principal alice = Worker.getWorker().getWorker("alicenode").getPrincipal();
-    Principal bob = Worker.getWorker().getWorker("bobnode"  ).getPrincipal();
-    Principal carol = Worker.getWorker().getWorker("carolnode").getPrincipal();
-
-    // Call into Fabric.
-    AlicePosts_fabric.run(postLabel, commentLabel, workerP, alice, bob, carol,
-        blog);
   }
 }
