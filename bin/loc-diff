@@ -25,7 +25,7 @@ ignoreFilesRE = re.compile("""^.*/(
 
 # Regexp for examples to include. All other examples will be ignored.
 includeExamplesRE = re.compile("""^\./fab-(after|before)/examples/
-      (auction|friendmap|hospital|buzzblog|rainforest)
+      (auction|friendmap|hospital|hospital-refactored|buzzblog|rainforest)
     /src/.*$""", re.X)
 
 # Regexp for source files.
@@ -94,6 +94,7 @@ categories['FriendMap v2 example (Fabric)'] = \
     'examples/friendmap/src/fabric/snapp_2.0_codebase']
 
 categories['Hospital example'] = ['examples/hospital/src']
+categories['Hospital example (refactored)'] = ['examples/hospital-refactored/src']
 categories['Buzzblog example'] = ['examples/buzzblog/src']
 categories['Rainforest example'] = ['examples/rainforest/src']
 
