@@ -11,9 +11,19 @@ public class AddressList[label addressLabel, label accessLabel]
   /**
    * Construct a list of addresses given a list of patients.
    */
-  public AddressList@{W2R(*listLabel)}(final label listLabel, final label hivLabel, PatientList[listLabel, addressLabel, hivLabel]{*listLabel} patientList)@{W2R(addressLabel)} 
-  where listLabel <= {W2R(*listLabel)},
-        hivLabel <= accessLabel 
+  public AddressList@{W2R(*listLabel)}(
+      final label listLabel,
+      final label hivLabel,
+      PatientList[listLabel, addressLabel, hivLabel]{*listLabel} patientList
+  )@{W2R(addressLabel)}
+    where
+      {*listLabel} ⊑ {W2R(*listLabel)},
+      {W2R(*listLabel)} ⊑ {W2R(addressLabel)},
+      {W2R(addressLabel)} ⊑ {W2R(*listLabel)},
+      accessLabel ⊑ {*hivLabel; addressLabel},
+      {*hivLabel; addressLabel} ⊑ accessLabel,
+      {*listLabel} ⊑ addressLabel,
+      {this} ⊑ addressLabel
   {
     if (patientList == null) return;
     Patient[addressLabel, hivLabel] p = patientList.patient;
@@ -25,7 +35,7 @@ public class AddressList[label addressLabel, label accessLabel]
   /**
    * Produce string representation of this list.
    */
-  public String{addressLabel} toString@{W2R(addressLabel)}() {
+  public String{addressLabel} toString{addressLabel}@{W2R(addressLabel)}() {
     String{addressLabel} str = "";
     if (address != null) {
       String{addressLabel} a = address.address;

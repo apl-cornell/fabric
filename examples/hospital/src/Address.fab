@@ -12,9 +12,9 @@ where addressLabel <= accessLabel,
   public String{addressLabel} address;
 
   /** Construct a new Address with a String **/
-  public Address{addressLabel}@{W2R(addressLabel)}(String{addressLabel} newAddress):{addressLabel} {
+  public Address{addressLabel}(String{addressLabel} newAddress):{addressLabel} {
     super();
-    setAddress(newAddress);
+    address = newAddress;
   }
 
   /** @return this patient's (presumably comparatively public) mailing address **/
@@ -26,7 +26,8 @@ where addressLabel <= accessLabel,
    * @param newAddress sets this patient's (presumably comparatively public)
    *                   mailing address
    **/
-  public void setAddress{addressLabel}(String{addressLabel} newAddress)
+  public void setAddress{addressLabel}@{W2R(addressLabel) ⊓ addressLabel}(
+      String{addressLabel} newAddress)
   :{addressLabel} {
     address = newAddress;
   }

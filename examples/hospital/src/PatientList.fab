@@ -15,13 +15,12 @@ hivLabel <= {W2R(hivLabel)}
   public PatientList() {
   }
 
-  public PatientList{*patientLabel}@{W2R(*pl)}(final label pl, final label al, final label hl, PatientList[pl, al, hl]{*pl} orig)@{W2R(*pl)} 
+  public PatientList{patientLabel}@{W2R(*pl)}(final label pl, PatientList[pl, addressLabel, hivLabel]{*pl} orig)
   where pl <= patientLabel,
-        al <= addressLabel,
-        hl <= hivLabel
+        pl ⊑ {W2R(*pl)}
   {
     if (orig == null) return;
-    this.next = new PatientList[patientLabel, addressLabel, hivLabel](pl, al, hl, orig.next);
+    this.next = new PatientList[patientLabel, addressLabel, hivLabel](pl, orig.next);
     this.patient = orig.patient;
   }
 }
