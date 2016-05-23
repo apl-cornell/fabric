@@ -1,12 +1,19 @@
 public class AddressWriter {
-  public static String{*addressLabel} writeAddress{*addressLabel}(
-    label{*addressLabel} listLabel,
-    label{*addressLabel} addressLabel,
-    label{*addressLabel} hivLabel,
-    PatientList[listLabel, addressLabel, hivLabel]{*listLabel} patients,
-    int{*addressLabel} targetPatientNum
-  )
+  public static String{*addressLabel}
+    writeAddress{*addressLabel}@{W2R(*listLabel)}(
+      label{*addressLabel} listLabel,
+      label{*addressLabel} addressLabel,
+      label{*addressLabel} hivLabel,
+      PatientList[listLabel, addressLabel, hivLabel]{*listLabel} patients,
+      int{*addressLabel} targetPatientNum
+  )@{*addressLabel ⊓ W2R(*addressLabel)}
     where
+      // Those modifying the patient list can learn about addresses.
+      addressLabel ⊑ {W2R(*listLabel)},
+
+      // Those modifying addresses can learn about addresses.
+      addressLabel ⊑ {W2R(*addressLabel)},
+
       // List has integrity to affect the result.
       listLabel ⊑ {*addressLabel}
   {

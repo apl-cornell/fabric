@@ -6,14 +6,25 @@ class HivReader {
    * the result.
    */
   public static String{*addressLabel; *hivLabel}
-    readHiv{*listLabel}(
+    readHiv{*listLabel}@{W2R(*listLabel)}(
       label{*addressLabel ; *hivLabel} listLabel,
       label{*addressLabel ; *hivLabel} addressLabel,
       label{*addressLabel ; *hivLabel} hivLabel,
       PatientList[listLabel, addressLabel, hivLabel]{*listLabel} patients,
       DropBox[{*addressLabel; *hivLabel}]{*listLabel} dropBox
-  )
+  )@{*addressLabel; *hivLabel}
     where
+      // Those able to modify HIV statuses and those able to modify addresses
+      // must also be able to modify the patient list.
+      // This follows from listLabel = {*addressLabel ⊓ *hivLabel}.
+      {W2R(*listLabel)} ⊑ {W2R(*hivLabel)} ⊓ {W2R(*addressLabel)},
+
+      // Those able to modify both addresses and HIV statuses are also able to
+      // read address labels and HIV statuses.
+      {*addressLabel ; *hivLabel} ⊑ {W2R({*addressLabel ; *hivLabel})},
+
+    ////// Original constraints follow below /////
+
       // List label is the meet of address and hiv labels.
       listLabel ⊑ {*addressLabel ⊓ *hivLabel},
       {*addressLabel ⊓ *hivLabel} ⊑ listLabel,
@@ -51,14 +62,25 @@ class HivReader {
    * list of their addresses.
    */
   public static AddressList[{*addressLabel;*hivLabel}]{*addressLabel;*hivLabel}
-    filterAndGetAddresses{*listLabel}(
+    filterAndGetAddresses{*listLabel}@{W2R(*listLabel)}(
       Store{*addressLabel ; *hivLabel} store,
       label{*addressLabel ; *hivLabel} listLabel,
       label{*addressLabel ; *hivLabel} addressLabel,
       label{*addressLabel ; *hivLabel} hivLabel,
       PatientList[listLabel, addressLabel, hivLabel]{*listLabel} patients
-  )
+  )@{W2R(*addressLabel)}
     where
+      // Those able to modify the patient list are also able to
+      // read the patient list.
+      {*listLabel} ⊑ {W2R(*listLabel)},
+
+      // Those able to modify HIV statuses and those able to modify addresses
+      // must also be able to modify the patient list.
+      // This follows from listLabel = {*addressLabel ⊓ *hivLabel}.
+      {W2R(*listLabel)} ⊑ {W2R(*hivLabel)} ⊓ {W2R(*addressLabel)},
+
+    ////// Original constraints follow below /////
+
       // List label is the meet of address and hiv labels.
       listLabel ⊑ {*addressLabel ⊓ *hivLabel},
       {*addressLabel ⊓ *hivLabel} ⊑ listLabel,
