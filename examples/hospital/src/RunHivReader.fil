@@ -1,98 +1,27 @@
 import fabric.util.Map;
 
-/**
- */
 public class RunHivReader {
   public static void main(String[] args) {
-    // Get a reference to the store called "store".
-    Store store = null;
-    Store davestore = null;
-    Principal alice = null;
-    Principal bob   = null;
-    Principal carol = null;
-    Principal dave  = null;
-
-    // addressLabel
-    //    (alice,bob),(carol,dave) → (alice,bob),(carol,dave);
-    //    (alice,bob),(carol,dave) ← (alice,bob),(carol,dave)
-    Principal joined = null;
+    Label listLabel = null;
     Label addressLabel = null;
-
-    //HivLabel
-    //    (alice,bob),dave → (alice,bob),dave;
-    //    (alice,bob),dave ← (alice,bob),dave
-    Principal nocarol = null;
     Label hivLabel = null;
-
-    Label accessLabel  = null;
-    Label listLabel    = null;
-
-    atomic { // Makin' labels and such
-      // Get a reference to the store called "store".
-      store = Worker.getWorker().getStore("alicenode");
-      davestore = Worker.getWorker().getStore("davenode");
-      alice = Worker.getWorker().getWorker("alicenode").getPrincipal();
-      bob   = Worker.getWorker().getWorker("bobnode").getPrincipal();
-      carol = Worker.getWorker().getWorker("carolnode").getPrincipal();
-      dave  = Worker.getWorker().getWorker("davenode").getPrincipal();
-
-      // addressLabel
-      //    (alice,bob),(carol,dave) → (alice,bob),(carol,dave);
-      //    (alice,bob),(carol,dave) ← (alice,bob),(carol,dave)
-      joined = PrincipalUtil.disjunction(store,
-           PrincipalUtil.disjunction(store,alice,bob),
-           PrincipalUtil.disjunction(store,carol,dave));
-      addressLabel = LabelUtil.toLabel(store,
-          LabelUtil.readerPolicy(store,joined,joined),
-          LabelUtil.writerPolicy(store,joined,joined));
-
-      //HivLabel
-      //    (alice,bob),dave → (alice,bob),dave;
-      //    (alice,bob),dave ← (alice,bob),dave
-      nocarol = PrincipalUtil.disjunction(store,
-           PrincipalUtil.disjunction(store,alice,bob),
-           dave);
-      hivLabel = LabelUtil.toLabel(store,
-          LabelUtil.readerPolicy(store,nocarol,nocarol),
-          LabelUtil.writerPolicy(store,nocarol,nocarol));
-
-      accessLabel  = LabelUtil.join(store,addressLabel,hivLabel);
-      listLabel    = LabelUtil.meet(store,addressLabel,hivLabel);
-    }
-
-    HivReader hivReader =null;
-
-    atomic { // Constructin' the useful object
-      hivReader = new HivReader@store(
-           alice,
-           bob,
-           carol,
-           dave,
-           addressLabel,
-           hivLabel,
-           accessLabel,
-           listLabel
-         ).HivReader$();
-    }
-
     PatientList patients = null;
-    AddressList addrList = null;
+    DropBox dropBox = null;
 
-    atomic { // fetchin' stuff
-      patients = (PatientList) store.getRoot().get("patients");
-      addrList = (AddressList) davestore.getRoot().get("addrList");
-    }
-    //actually do the thing:
-    String s = "";
     atomic {
-      addrList = hivReader.readHiv(patients, addrList, store,davestore, hivLabel);
-      s = addrList.toString();
-    }
-    System.out.println(s);
+      Store store = Worker.getWorker().getStore("alicenode");
+      Map rootMap = store.getRoot();
+      listLabel = (Label) rootMap.get("listLabel");
+      addressLabel = (Label) rootMap.get("addressLabel");
+      hivLabel = (Label) rootMap.get("hivLabel");
+      patients = (PatientList) rootMap.get("patients");
 
-    // Put it back
-    atomic {
-      davestore.getRoot().put("addrList", addrList);
+      Store daveStore = Worker.getWorker().getStore("davenode");
+      dropBox = (DropBox) daveStore.getRoot().get("dropBox");
     }
+
+    String result =
+        HivReader.readHiv(listLabel, addressLabel, hivLabel, patients, dropBox);
+    System.out.println(result);
   }
 }

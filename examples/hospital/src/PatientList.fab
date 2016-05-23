@@ -1,26 +1,45 @@
 /**
- * Embodies a Patient, who has only two attributes, a string address, and 
- * a boolean representing hiv positiveness.
- **/
-public class PatientList[label patientLabel, label addressLabel, label hivLabel] 
-where
-patientLabel <= {W2R(patientLabel)},
-addressLabel <= {W2R(addressLabel)},
-hivLabel <= {W2R(hivLabel)}
-{
+ * listLabel - the label on the list backbone and on the patients in the list.
+ * addressLabel - the label on the patients' addresses.
+ * hivLabel - the label on the patients' HIV statuses.
+ */
+public class PatientList[label listLabel, label addressLabel, label hivLabel] {
+  @{listLabel ; addressLabel ; hivLabel}
+  public Patient[addressLabel, hivLabel]{listLabel} patient;
+  public PatientList[listLabel, addressLabel, hivLabel]{listLabel} next;
 
-  public Patient[addressLabel,hivLabel]{patientLabel} patient;
-  public PatientList[patientLabel,addressLabel,hivLabel]{patientLabel} next;
-
-  public PatientList() {
+  /**
+   * cons constructor.
+   */
+  public PatientList{listLabel}(
+      Patient[addressLabel, hivLabel]{listLabel} head,
+      PatientList[listLabel, addressLabel, hivLabel]{listLabel} tail
+  ) {
+    this.patient = head;
+    this.next = tail;
   }
 
-  public PatientList{patientLabel}@{W2R(*pl)}(final label pl, PatientList[pl, addressLabel, hivLabel]{*pl} orig)
-  where pl <= patientLabel,
-        pl ⊑ {W2R(*pl)}
+  /**
+   * Copy constructor. Copies a list while upgrading its backbone label.
+   * Invariant: oldList should not be null.
+   */
+  public PatientList{listLabel}(
+      label oldListLabel,
+      PatientList[oldListLabel, addressLabel, hivLabel]{*oldListLabel} oldList
+  )
+    where
+      {*oldListLabel} ⊑ listLabel
   {
-    if (orig == null) return;
-    this.next = new PatientList[patientLabel, addressLabel, hivLabel](pl, orig.next);
-    this.patient = orig.patient;
+    if (oldList == null) throw new Error();
+
+    this.patient = oldList.patient;
+    this.next = null;
+
+    if (oldList.next != null) {
+      this.next = new PatientList(oldListLabel, oldList.next);
+    }
   }
 }
+
+
+

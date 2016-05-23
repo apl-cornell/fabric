@@ -1,0 +1,6 @@
+/**
+ * A ref cell into which the HIV reader's result will be stored.
+ */
+public class DropBox[label L] {
+  public AddressList[L]{L} result;
+}

@@ -1,36 +1,26 @@
-import fabric.util.Map;
-import fabric.runtime.Runtime;
-
-class DaveReader [
-        principal dave,
-        label accessLabel
-        ]
-{
-  public String{accessLabel} readDave{dave← }@{W2R(accessLabel)}(
-      AddressList[accessLabel,accessLabel]{accessLabel} addrListIn
-      ):{dave→ ; dave← } 
-    where 
-          {dave← }    <= accessLabel,
-          accessLabel <= {dave → },
-          accessLabel <= {W2R(accessLabel)}
+class DaveReader {
+  public static String{*addressLabel; *hivLabel}
+    readDave{*addressLabel; *hivLabel}(
+      label{*addressLabel; *hivLabel} addressLabel,
+      label{*addressLabel; *hivLabel} hivLabel,
+      DropBox[{*addressLabel; *hivLabel}]{*addressLabel; *hivLabel} dropBox
+  )
   {
-    String{accessLabel} printable = "";
+    String resultStr = null;
     atomic {
-        AddressList[accessLabel,accessLabel]{accessLabel} addrList = addrListIn;
-        if (addrList != null) {
-          while (addrList != null) {
-            Address[accessLabel,accessLabel]{accessLabel} address = 
-              addrList.address;
-            if (address != null) {
-              if (address.address != null ) {
-                printable = printable + "\n" + address.address;
-              } else printable = printable + "address.address is null";
-            } else printable = printable + ("address (singular) came back null");
-            addrList = addrList.next;
-          }
-        } else printable = printable + ("addrList came back null");
+      if (dropBox == null) {
+        return "dropBox came back null";
+      }
+
+      AddressList[{*addressLabel; *hivLabel}]{*addressLabel; *hivLabel} result =
+          dropBox.result;
+      if (result == null) {
+        return "addrList came back null";
+      }
+
+      resultStr = result.toString();
     }
-    return printable;
+
+    return resultStr;
   }
 }
-

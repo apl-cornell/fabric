@@ -1,71 +1,63 @@
-import fabric.util.Map;
-import fabric.runtime.Runtime;
+class HivReader {
+  
+  /**
+   * Reads the given patient list, saves the list of addresses for HIV-positive
+   * patients into the given drop box, and returns a string representation of
+   * the result.
+   */
+  public static String{*addressLabel; *hivLabel}
+    readHiv{*addressLabel ; *hivLabel}(
+      label{*addressLabel ; *hivLabel} listLabel,
+      label{*addressLabel ; *hivLabel} addressLabel,
+      label{*addressLabel ; *hivLabel} hivLabel,
+      PatientList[listLabel, addressLabel, hivLabel]{*listLabel} patients,
+      DropBox[{*addressLabel; *hivLabel}]{*addressLabel; *hivLabel} dropBox
+  )
+    where
+      // List has integrity to affect the result.
+      listLabel ⊑ {*addressLabel ; *hivLabel},
 
-class HivReader [
-        principal alice,
-        principal bob,
-        principal carol,
-        principal dave,
-        label addressLabel,
-        label hivLabel,
-        label accessLabel,
-        label patientLabel]
-{
-  public AddressList[accessLabel, accessLabel]{hivLabel}/*String{addressLabel; hivLabel}*/ readHiv{alice← }@{W2R(hivLabel)}(
-      PatientList[hivLabel, addressLabel, hivLabel]{hivLabel} patients,
-      AddressList[accessLabel,accessLabel]{hivLabel} addrListIn,
-      Store store,
-      Store davestore,
-      final label hivLabel
-      ):{alice→ ; alice← }@{W2R(addressLabel)}
-    where store actsfor alice,
-          {⊤ ← store } <= patientLabel,
-          addressLabel <= accessLabel,
-          accessLabel  <= {⊤ → store},
-          {⊤ ← store}  <= addressLabel,
-          hivLabel     <= accessLabel,
-          accessLabel  <= {hivLabel ; addressLabel},
-          addressLabel <= hivLabel,
-          patientLabel <= addressLabel,
-          {alice← }    <= patientLabel,
-          accessLabel  <= {⊤ → davestore},
-          {⊤ ← davestore} <= accessLabel,
-          accessLabel <= {W2R(accessLabel)},
-          patientLabel <= {W2R(patientLabel)},
-          addressLabel <= {W2R(addressLabel)},
-          hivLabel <= {W2R(hivLabel)}
-           {
-    atomic {
-      AddressList[accessLabel,accessLabel]{hivLabel} addrList = addrListIn;
-      if (patients != null) {
-        PatientList[hivLabel, addressLabel, hivLabel]{hivLabel} cur = patients;
-        while (cur != null) {
-          Patient[addressLabel,hivLabel]{hivLabel} patient = cur.patient;
-          PatientList[hivLabel,addressLabel, hivLabel]{hivLabel} next =
-            cur.next;
-          if (patient != null) {
-            Hiv[hivLabel, accessLabel]{hivLabel} h = patient.hiv;
-            if (h != null) {
-              if (!h.hiv) {
-                //Filter out non-hiv patient.
-                if (next != null) {
-                  cur.patient = next.patient;
-                  cur.next = next.next;
-                  next = next.next;
-                  continue;
-                } else {
-                  cur.patient = null;
-                  cur.next = null;
-                  next = null;
-                  break;
-                }
-              }
-            }
-          }
-          cur = next;
-        }
-      }
-      return new AddressList[accessLabel, accessLabel]@davestore(hivLabel, hivLabel, patients);
+      // Drop box's store can store the result.
+      {*addressLabel ; *hivLabel} ⊑ {⊤→dropBox.store$},
+      {⊤←dropBox.store$} ⊑ {*addressLabel ; *hivLabel}
+  {
+    if (dropBox == null) return "drop box came back null";
+
+    final Store dropBoxStore = dropBox.store$;
+    dropBox.result = null;
+
+    if (patients == null) {
+      return "patients came back null";
     }
+
+    String{*addressLabel; *hivLabel} resultStr = "";
+    atomic {
+      PatientList[listLabel, addressLabel, hivLabel] cur = patients;
+      while (cur != null) {
+        Patient[addressLabel, hivLabel]{*addressLabel; *hivLabel} patient =
+          cur.patient;
+        cur = cur.next;
+
+        // Ignore null patients.
+        if (patient == null) {
+          resultStr = resultStr + "\npatient (singular) came back null";
+          continue;
+        }
+
+        // Ignore HIV-negative patients.
+        if (!patient.hivStatus) {
+          resultStr = resultStr + "\niterating past a patient without HIV...";
+          continue;
+        }
+
+        // Add the patient's address.
+        dropBox.result =
+            new AddressList@dropBoxStore(patient.address, dropBox.result);
+        resultStr =
+            resultStr + "\na patient with HIV lives at " + patient.address;
+      }
+    }
+
+    return resultStr;
   }
 }

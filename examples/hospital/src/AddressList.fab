@@ -1,55 +1,46 @@
-public class AddressList[label addressLabel, label accessLabel] 
-  where addressLabel <= accessLabel,
-  addressLabel <= {W2R(addressLabel)},
-  accessLabel <= {W2R(accessLabel)}
-{
-  @{accessLabel}
-  public Address    [addressLabel, accessLabel]{addressLabel} address;
-  public AddressList[addressLabel, accessLabel]{addressLabel} next;
-  public AddressList() { }
+public class AddressList[label L] {
+  public String{L} address;
+  public AddressList[L]{L} next;
 
   /**
-   * Construct a list of addresses given a list of patients.
+   * cons constructor.
    */
-  public AddressList@{W2R(*listLabel)}(
-      final label listLabel,
-      final label hivLabel,
-      PatientList[listLabel, addressLabel, hivLabel]{*listLabel} patientList
-  )@{W2R(addressLabel)}
-    where
-      {*listLabel} ⊑ {W2R(*listLabel)},
-      {W2R(*listLabel)} ⊑ {W2R(addressLabel)},
-      {W2R(addressLabel)} ⊑ {W2R(*listLabel)},
-      accessLabel ⊑ {*hivLabel; addressLabel},
-      {*hivLabel; addressLabel} ⊑ accessLabel,
-      {*listLabel} ⊑ addressLabel,
-      {this} ⊑ addressLabel
-  {
-    if (patientList == null) return;
-    Patient[addressLabel, hivLabel] p = patientList.patient;
-    if (p == null) return;
-    this.next = new AddressList[addressLabel, accessLabel](listLabel, hivLabel, patientList.next);
-    this.address = p.address;
+  public AddressList{L}(
+      String{L} head,
+      AddressList[L]{L} tail
+  ) {
+    this.address = head;
+    this.next = tail;
   }
 
   /**
-   * Produce string representation of this list.
+   * Constructs a list of address from the given list of patients.
+   * Invariant: patientList should not be null.
    */
-  public String{addressLabel} toString{addressLabel}@{W2R(addressLabel)}() {
-    String{addressLabel} str = "";
-    if (address != null) {
-      String{addressLabel} a = address.address;
-      if (a != null) {
-        str = str + a;
-      }
+  public AddressList{L}(
+    label listLabel,
+    label hivLabel,
+    PatientList[listLabel, L, hivLabel]{*listLabel} patientList
+  )
+    where {*listLabel} ⊑ L
+  {
+    if (patientList == null) throw new Error("null patient list");
+
+    Patient patient = patientList.patient;
+    if (patient == null) throw new Error("null patient");
+
+    this.address = patient.address;
+    this.next = null;
+
+    if (patientList.next != null) {
+      this.next = new AddressList(listLabel, hivLabel, patientList.next);
     }
-    if (next != null) {
-      str = str + "\n" + next.toString();
-    }
-    return str;
+  }
+
+  public String{L} toString{L}() {
+    String result = "";
+    if (address != null) result = result + address;
+    if (next != null) result = result + "\n" + next.toString();
+    return result;
   }
 }
-
-
-
-
