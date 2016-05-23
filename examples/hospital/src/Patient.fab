@@ -2,22 +2,24 @@
  * Embodies a Patient, who has only two attributes, a string address, and 
  * a boolean representing hiv positiveness.
  **/
-public class Patient[label addressLabel, label hivLabel] {
+public class Patient[label addressLabel, label hivLabel]
+  // Addresses are less private than HIV statuses.
+  where {addressLabel ; ⊥←} ⊑ {hivLabel ; ⊥←}
+{
 
   /** This patient's (presumably comparatively public) mailing address **/
-  public Address[addressLabel, {hivLabel;addressLabel}]{addressLabel} address;
+  public String{addressLabel} address;
 
   /** This patient's (presumably comparatively private) HIV status **/
-  public Hiv[hivLabel,{hivLabel;addressLabel}]{addressLabel} hiv;
+  public boolean{hivLabel} hivStatus;
 
   /** Construct a new patient with an Address and HIV status **/
-  public Patient(
-           Address[addressLabel, {hivLabel;addressLabel}]{addressLabel} newAddress, 
-           Hiv[hivLabel,{hivLabel;addressLabel}]{addressLabel} newHiv
-         ) {
-    address = newAddress;
-    hiv = newHiv;
-    super();
+  public Patient{addressLabel ⊓ hivLabel}(
+      String{addressLabel} address,
+      boolean{hivLabel} hivStatus
+  ) {
+    this.address = address;
+    this.hivStatus = hivStatus;
   }
 }
 

@@ -9,7 +9,6 @@ class Init {
       Principal alice = Worker.getWorker().getWorker("alicenode").getPrincipal();
       Principal bob   = Worker.getWorker().getWorker("bobnode"  ).getPrincipal();
       Principal carol = Worker.getWorker().getWorker("carolnode").getPrincipal();
-      Principal bottom = PrincipalUtil.nullPrincipal();
       Principal top = PrincipalUtil.topPrincipal();
 
       // Create labels.
@@ -20,7 +19,7 @@ class Init {
             PrincipalUtil.disjunction(store,
               PrincipalUtil.disjunction(store, alice, bob),
               carol),
-            bottom),
+            top),
           LabelUtil.writerPolicy(store,
             PrincipalUtil.conjunction(store,
               PrincipalUtil.conjunction(store, alice, bob),
@@ -31,7 +30,7 @@ class Init {
       Principal aliceOrCarol = PrincipalUtil.disjunction(store, alice, carol);
       Label commentLabel =
         LabelUtil.toLabel(store,
-          LabelUtil.readerPolicy(store, aliceOrCarol, bottom),
+          LabelUtil.readerPolicy(store, aliceOrCarol, top),
           LabelUtil.writerPolicy(store, aliceOrCarol, top));
 
 

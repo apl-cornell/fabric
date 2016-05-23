@@ -18,5 +18,5 @@ TITLE_SWITCH="-T"
 # Special case for gnome-terminal's xterm-incompatibility.
 [[ "${XTERM}" == "gnome-terminal" ]] && TITLE_SWITCH="-t"
 
-"${XTERM}" -geometry "80x24+$X_COORD+$Y_COORD" ${TITLE_SWITCH} "${TITLE}" -e "$@"
+"${XTERM}" ${TITLE_SWITCH} "${TITLE}" -e "$@"
 

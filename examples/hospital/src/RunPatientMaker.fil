@@ -1,100 +1,99 @@
 import fabric.util.Map;
 
 /**
+ * Initializes the data structures for this example.
  */
 public class RunPatientMaker {
   public static void main(String[] args) {
-    // Get a reference to the store called "store".
     Store store = null;
-    Store davestore = null;
-    Principal alice = null;
-    Principal bob   = null;
-    Principal carol = null;
-    Principal dave  = null;
-
-    // addressLabel
-    //    (alice,bob),(carol,dave) → (alice,bob),(carol,dave);
-    //    (alice,bob),(carol,dave) ← (alice,bob),(carol,dave)
-    Principal joined = null;
+    Label listLabel = null;
     Label addressLabel = null;
-
-    //HivLabel
-    //    (alice,bob),dave → (alice,bob),dave;
-    //    (alice,bob),dave ← (alice,bob),dave
-    Principal nocarol = null;
     Label hivLabel = null;
+    Label resultLabel = null;
 
-    Label accessLabel  = null;
-    Label listLabel    = null;
-
-    atomic { // Makin' labels and such
-      // Get a reference to the store called "store".
+    atomic {
+      // Get stores.
       store = Worker.getWorker().getStore("alicenode");
-      davestore = Worker.getWorker().getStore("davenode");
-      alice = Worker.getWorker().getWorker("alicenode").getPrincipal();
-      bob   = Worker.getWorker().getWorker("bobnode").getPrincipal();
-      carol = Worker.getWorker().getWorker("carolnode").getPrincipal();
-      dave  = Worker.getWorker().getWorker("davenode").getPrincipal();
+      Principal alice =
+          Worker.getWorker().getWorker("alicenode").getPrincipal();
+      Principal bob = Worker.getWorker().getWorker("bobnode").getPrincipal();
+      Principal carol =
+          Worker.getWorker().getWorker("carolnode").getPrincipal();
+      Principal dave = Worker.getWorker().getWorker("davenode").getPrincipal();
 
       // addressLabel
       //    (alice,bob),(carol,dave) → (alice,bob),(carol,dave);
       //    (alice,bob),(carol,dave) ← (alice,bob),(carol,dave)
-      joined = PrincipalUtil.disjunction(store,
-           PrincipalUtil.disjunction(store,alice,bob),
-           PrincipalUtil.disjunction(store,carol,dave));
+      Principal disj = PrincipalUtil.disjunction(store,
+           PrincipalUtil.disjunction(store, alice, bob),
+           PrincipalUtil.disjunction(store, carol, dave));
       addressLabel = LabelUtil.toLabel(store,
-          LabelUtil.readerPolicy(store,joined,joined),
-          LabelUtil.writerPolicy(store,joined,joined));
+          LabelUtil.readerPolicy(store, disj, disj),
+          LabelUtil.writerPolicy(store, disj, disj));
 
-      //HivLabel
+      // hivLabel
       //    (alice,bob),dave → (alice,bob),dave;
       //    (alice,bob),dave ← (alice,bob),dave
-      nocarol = PrincipalUtil.disjunction(store,
-           PrincipalUtil.disjunction(store,alice,bob),
+      Principal noCarol = PrincipalUtil.disjunction(store,
+           PrincipalUtil.disjunction(store, alice, bob),
            dave);
       hivLabel = LabelUtil.toLabel(store,
-          LabelUtil.readerPolicy(store,nocarol,nocarol),
-          LabelUtil.writerPolicy(store,nocarol,nocarol));
+          LabelUtil.readerPolicy(store, noCarol, noCarol),
+          LabelUtil.writerPolicy(store, noCarol, noCarol));
 
-      accessLabel  = LabelUtil.join(store,addressLabel,hivLabel);
-      listLabel    = LabelUtil.meet(store,addressLabel,hivLabel);
+      listLabel = LabelUtil.meet(store, addressLabel, hivLabel);
+      resultLabel = LabelUtil.join(store, addressLabel, hivLabel);
     }
 
-    PatientMaker patientMaker =null;
+    // Create the list of patients.
+    PatientList patients =
+      makePatients(store, 100, listLabel, addressLabel, hivLabel);
 
-    atomic { // Constructin' the useful object
-      patientMaker = new PatientMaker@store(
-           alice,
-           bob,
-           carol,
-           dave,
-           addressLabel,
-           hivLabel,
-           accessLabel,
-           listLabel
-         ).PatientMaker$();
-    }
+    // Create the drop box into which the resulting address list will be
+    // placed.
+    Store daveStore = null;
+    DropBox dropBox = null;
 
-    AddressList addrList = null;
     atomic {
-      addrList = new AddressList@davestore(
-        accessLabel,
-        accessLabel
-        ).AddressList$();
+      daveStore = Worker.getWorker().getStore("davenode");
+      dropBox = new DropBox@daveStore(resultLabel).DropBox$();
     }
 
+    // Save into root maps.
+    atomic {
+      Map aliceRoot = store.getRoot();
+      aliceRoot.put("patients", patients);
+      aliceRoot.put("listLabel", listLabel);
+      aliceRoot.put("addressLabel", addressLabel);
+      aliceRoot.put("hivLabel", hivLabel);
 
-    final int numPatients = 1000;
-
-    // actually doing anything
-    PatientList patients = patientMaker.makePatients(store,numPatients);
-
-    atomic { // storin' stuff
-      store.getRoot().put("patients", patients);
+      daveStore.getRoot().put("dropBox", dropBox);
     }
-    atomic { // storin' stuff
-      davestore.getRoot().put("addrList", addrList);
-    }
+
     System.out.println("I dud ut.");
+  }
+
+  /**
+   * Creates and returns a list of patients. Even-numbered patients will be
+   * HIV-positive.
+   */
+  private static PatientList makePatients(Store store, int numPatients,
+      Label listLabel, Label addressLabel, Label hivLabel) {
+    PatientList result = null;
+    atomic {
+      for (int i = 0; i < numPatients; i++) {
+        String address = (" " + i + " Wysteria Lane");
+        boolean hivStatus = i%2 == 0;
+
+        Patient patient =
+            (Patient) new Patient@store(addressLabel, hivLabel)
+                .Patient$(address, hivStatus);
+        result =
+            (PatientList) new PatientList@store(listLabel, addressLabel,
+                    hivLabel).PatientList$(patient, result);
+      }
+    }
+
+    return result;
   }
 }
