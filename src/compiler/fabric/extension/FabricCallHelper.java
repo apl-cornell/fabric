@@ -144,7 +144,7 @@ public class FabricCallHelper extends CallHelper {
         "starting conflict bound of method " + overridden.name() + " in " + overridden.container(),
         instantiate(A, beginConflictLj));
 
-    newlc.constrain(beginConflictNLi, LabelConstraint.LEQ, beginConflictNLj, A.labelEnv(),
+    newlc.constrain(beginConflictNLi, LabelConstraint.EQUAL, beginConflictNLj, A.labelEnv(),
         overriding.position(), new ConstraintMessage() {
           @Override
           public String msg() {
@@ -154,7 +154,7 @@ public class FabricCallHelper extends CallHelper {
                  + overriding.container()
                  + ". The beginning conflict bound of the "
                  + "overriding method "
-                 + "cannot be more restrictive than in "
+                 + "cannot be different from "
                  + "the overridden method.";
 
           }
@@ -183,7 +183,7 @@ public class FabricCallHelper extends CallHelper {
         "ending conflict label of method " + overridden.name() + " in " + overridden.container(),
         instantiate(A, endConflictLj));
 
-    newlc.constrain(endConflictNLj, LabelConstraint.LEQ, endConflictNLi, A.labelEnv(),
+    newlc.constrain(endConflictNLj, LabelConstraint.EQUAL, endConflictNLi, A.labelEnv(),
         overriding.position(),
         new ConstraintMessage() {
           @Override
@@ -194,7 +194,7 @@ public class FabricCallHelper extends CallHelper {
                  + overriding.container()
                  + ". The ending conflict label of the "
                  + "overriding method "
-                 + "cannot be less restrictive than in "
+                 + "cannot be different from "
                  + "the overridden method.";
 
           }
@@ -240,9 +240,6 @@ public class FabricCallHelper extends CallHelper {
       FabricStagingExt fse = FabricUtil.fabricStagingExt(call);
       fse.setStageCheck(conflictNL.label(), beginConflictNL.label(), A);
 
-      //lc.constrain(beginConflictNL.meet(lc,
-            //"{⊤→;⊤←}",
-            //fts.pairLabel(position, fts.topConfPolicy(position), fts.bottomIntegPolicy(position))),
       lc.constrain(beginConflictNL,
           LabelConstraint.LEQ,
           conflictNL.join(lc, "{⊥→;⊥←}", fts.noComponentsLabel()),
@@ -255,25 +252,23 @@ public class FabricCallHelper extends CallHelper {
         }
       });
 
-      /*
-      NamedLabel pc = new NamedLabel("C(pc)",
-          fts.pairLabel(position,
-            fts.confProjection(fts.join(X.N(), A.pc())),
-            fts.topIntegPolicy(position)));
-            */
-      NamedLabel pc = new NamedLabel("pc", fts.join(X.N(), A.pc()));
+      if (pi.isDefaultPCBound()) {
+        // Additional check to make sure that the "real" default PC bound is
+        // resepected.
+        NamedLabel pc = new NamedLabel("pc", fts.join(X.N(), A.pc()));
 
-      lc.constrain(pc,
-          LabelConstraint.LEQ,
-          beginConflictNL.join(lc, "{⊥→;⊥←}", fts.noComponentsLabel()),
-          A.labelEnv(), position, new ConstraintMessage() {
-        @Override
-        public String msg() {
-          return "The accesses during the call to " + FabricCallHelper.this.pi.signature()
-               + " could leak information about previous accesses to the stores "
-               + "accessed during the method.";
-        }
-      });
+        lc.constrain(pc,
+            LabelConstraint.LEQ,
+            beginConflictNL.join(lc, "{⊥→;⊥←}", fts.noComponentsLabel()),
+            A.labelEnv(), position, new ConstraintMessage() {
+          @Override
+          public String msg() {
+            return "The accesses during the call to " + FabricCallHelper.this.pi.signature()
+                 + " could leak information about previous accesses to the stores "
+                 + "accessed during the method.";
+          }
+        });
+      }
 
       // Add in the conflict labels of the call's accesses to the CL path.
       Label newCL = endConflict;

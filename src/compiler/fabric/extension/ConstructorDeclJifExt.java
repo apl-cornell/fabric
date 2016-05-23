@@ -124,7 +124,6 @@ public class ConstructorDeclJifExt extends JifConstructorDeclExt implements Ext 
     FabricConstructorInstance fci = (FabricConstructorInstance) mi;
     final Position declPos = node().position();
     if (!fci.beginConflictLabel().equals(ts.noAccesses())) {
-
       lc.constrain(new NamedLabel("end conflict label", fci.endConflictLabel()),
           LabelConstraint.LEQ,
           new NamedLabel("begin conflict label", fci.beginConflictLabel()).join(lc, "{⊥→;⊥←}", ts.noComponentsLabel()),
@@ -136,35 +135,6 @@ public class ConstructorDeclJifExt extends JifConstructorDeclExt implements Ext 
                      + " begin conflict label for constructor at " + declPos;
             }
       });
-
-      if (!fci.isDefaultPCBound()) {
-        lc.constrain(new NamedLabel("caller pc", fci.pcBound()),
-            LabelConstraint.LEQ,
-            new NamedLabel("end conflict label", fci.endConflictLabel()).join(lc, "{⊥→;⊥←}", ts.noComponentsLabel()),
-            A.labelEnv(), declPos,
-            new ConstraintMessage() {
-              @Override
-              public String msg() {
-                return "Caller pc must be no more secret than the ending stage of the constructor at " + declPos;
-              }
-        });
-
-        lc.constrain(new NamedLabel("caller pc", fci.pcBound()),
-            LabelConstraint.LEQ,
-            new NamedLabel("begin conflict label", fci.beginConflictLabel()).join(lc, "{⊥→;⊥←}", ts.noComponentsLabel()),
-            A.labelEnv(), declPos,
-            new ConstraintMessage() {
-              @Override
-              public String msg() {
-                return "Caller pc must be no more secret than the starting stage of the constructor at " + declPos;
-              }
-        });
-      }
-
-      // Let the body's context use the fact that the caller_pc will flow to the
-      // begin access label
-      A.addAssertionLE(A.pc(), ts.join(fci.beginConflictLabel(), ts.noComponentsLabel()));
-      A.addAssertionLE(A.pc(), ts.join(fci.endConflictLabel(), ts.noComponentsLabel()));
     }
 
     return ret;

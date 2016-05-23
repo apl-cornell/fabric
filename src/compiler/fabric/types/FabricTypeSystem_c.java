@@ -49,6 +49,7 @@ import jif.types.JifClassType;
 import jif.types.JifConstructorInstance;
 import jif.types.JifContext;
 import jif.types.JifMethodInstance;
+import jif.types.JifProcedureInstance;
 import jif.types.JifTypeSystem_c;
 import jif.types.LabelLeAssertion;
 import jif.types.LabelSubstitution;
@@ -1315,7 +1316,6 @@ public class FabricTypeSystem_c extends JifTypeSystem_c
   @Override
   public Label writeConflict(Label l) {
     // CL(write l) = WritersToReaders(l) meet C(l)
-    Label conf = pairLabel(l.position(), confProjection(l), topIntegPolicy(l.position()));
     return meet(l, writersToReadersLabel(l.position(), l));
   }
 
@@ -1343,8 +1343,22 @@ public class FabricTypeSystem_c extends JifTypeSystem_c
     return super.meet(L1, L2);
   }
 
+  @Override
   protected AccessPathField accessPathField(AccessPath path, FieldInstance fi,
       java.lang.String fieldName, Position pos) {
     return new FabricAccessPathField(path, fi, fieldName, pos);
+  }
+
+  @Override
+  public Label callSitePCLabel(JifProcedureInstance pi) {
+    ArgLabel callSitePC = (ArgLabel) super.callSitePCLabel(pi);
+    FabricProcedureInstance fpi = (FabricProcedureInstance) pi;
+    if (!fpi.isDefaultBeginConflict() && fpi.isDefaultPCBound()) {
+      callSitePC.setUpperBound(join(callSitePC.upperBound(), fpi.beginConflictLabel()));
+      callSitePC.setDescription("The pc at the call site of this " +
+          fpi.designator() + " (bounded above by {" + fpi.pcBound() + " join " +
+          fpi.beginConflictLabel() + "})");
+    }
+    return callSitePC;
   }
 }

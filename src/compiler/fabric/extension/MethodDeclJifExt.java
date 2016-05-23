@@ -107,7 +107,6 @@ public class MethodDeclJifExt extends JifMethodDeclExt {
     FabricMethodInstance fmi = (FabricMethodInstance) md.methodInstance();
     final Position declPos = node().position();
     if (!fmi.beginConflictLabel().equals(ts.noAccesses())) {
-
       lc.constrain(new NamedLabel("end conflict label", fmi.endConflictLabel()),
           LabelConstraint.LEQ,
           new NamedLabel("begin conflict label", fmi.beginConflictLabel()).join(lc, "{⊥→;⊥←}", ts.noComponentsLabel()),
@@ -119,35 +118,6 @@ public class MethodDeclJifExt extends JifMethodDeclExt {
                      + " begin conflict label for method at " + declPos;
             }
       });
-
-      if (!fmi.isDefaultPCBound()) {
-        lc.constrain(new NamedLabel("caller pc", fmi.pcBound()),
-            LabelConstraint.LEQ,
-            new NamedLabel("end conflict label", fmi.endConflictLabel()).join(lc, "{⊥→;⊥←}", ts.noComponentsLabel()),
-            A.labelEnv(), declPos,
-            new ConstraintMessage() {
-              @Override
-              public String msg() {
-                return "Caller pc must be no more secret than the ending stage of the method at " + declPos;
-              }
-        });
-
-        lc.constrain(new NamedLabel("caller pc", fmi.pcBound()),
-            LabelConstraint.LEQ,
-            new NamedLabel("begin conflict label", fmi.beginConflictLabel()).join(lc, "{⊥→;⊥←}", ts.noComponentsLabel()),
-            A.labelEnv(), declPos,
-            new ConstraintMessage() {
-              @Override
-              public String msg() {
-                return "Caller pc must be no more secret than the starting stage of the method at " + declPos;
-              }
-        });
-      }
-
-      // Let the body's context use the fact that the caller_pc will flow to the
-      // begin access label
-      A.addAssertionLE(A.pc(), ts.join(fmi.beginConflictLabel(), ts.noComponentsLabel()));
-      A.addAssertionLE(A.pc(), ts.join(fmi.endConflictLabel(), ts.noComponentsLabel()));
     }
 
     return l;

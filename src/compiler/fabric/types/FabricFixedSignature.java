@@ -9,6 +9,7 @@ import jif.types.label.Label;
 import polyglot.ast.FieldDecl;
 import polyglot.ast.ProcedureDecl;
 import polyglot.types.Type;
+import polyglot.util.Position;
 
 //TODO: This "default signature" design pattern is unevenly applied.
 //      We should either pull in all the default to this class or eliminate it.
@@ -43,7 +44,6 @@ FabricDefaultSignature {
   @Override
   public Label defaultBeginConflict(ProcedureDecl pd) {
     FabricProcedureInstance fpi = (FabricProcedureInstance) pd.procedureInstance();
-    if (!fpi.isDefaultEndConflict()) return fpi.endConflictLabel();
     return fts.noAccesses();
   }
 
