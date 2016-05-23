@@ -29,15 +29,15 @@ hivLabel <= {W2R(hivLabel)}
           listLabel    <= addressLabel,
           {alice← }    <= listLabel
            {
-    PatientList[listLabel,addressLabel, hivLabel]{*listLabel} patientRoot = null;
+    PatientList[listLabel,addressLabel, hivLabel]{listLabel} patientRoot = null;
     atomic {
-      PatientList[listLabel,addressLabel, hivLabel]{*listLabel} patients =
+      PatientList[listLabel,addressLabel, hivLabel]{listLabel} patients =
         new PatientList[listLabel,addressLabel, hivLabel]@store();
         patientRoot = patients;
       for (int i = 0; i < numPatients; i++) {
         Address[addressLabel, accessLabel] addr = 
           new Address[addressLabel, accessLabel]@store(" " + i + " Wysteria Lane");
-        Hiv[hivLabel, accessLabel]{*listLabel} h = 
+        Hiv[hivLabel, accessLabel]{listLabel} h = 
           new Hiv[hivLabel,accessLabel]@store((i % 2) == 0);
         patients.patient = (new Patient[addressLabel, hivLabel]@store(addr,h));
         if ((i+1) < numPatients) { // avoid the stupid off-by-one issue

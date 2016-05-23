@@ -11,9 +11,9 @@ class HivReader [
         label accessLabel,
         label patientLabel]
 {
-  public AddressList[accessLabel, accessLabel]{*hivLabel}/*String{addressLabel; hivLabel}*/ readHiv{alice← }@{W2R(*hivLabel)}(
-      PatientList[hivLabel, addressLabel, hivLabel]{*hivLabel} patients,
-      AddressList[accessLabel,accessLabel]{*hivLabel} addrListIn,
+  public AddressList[accessLabel, accessLabel]{hivLabel}/*String{addressLabel; hivLabel}*/ readHiv{alice← }@{W2R(hivLabel)}(
+      PatientList[hivLabel, addressLabel, hivLabel]{hivLabel} patients,
+      AddressList[accessLabel,accessLabel]{hivLabel} addrListIn,
       Store store,
       Store davestore,
       final label hivLabel
@@ -24,7 +24,7 @@ class HivReader [
           accessLabel  <= {⊤ → store},
           {⊤ ← store}  <= addressLabel,
           hivLabel     <= accessLabel,
-          accessLabel  <= {*hivLabel ; addressLabel},
+          accessLabel  <= {hivLabel ; addressLabel},
           addressLabel <= hivLabel,
           patientLabel <= addressLabel,
           {alice← }    <= patientLabel,
@@ -33,18 +33,18 @@ class HivReader [
           accessLabel <= {W2R(accessLabel)},
           patientLabel <= {W2R(patientLabel)},
           addressLabel <= {W2R(addressLabel)},
-          hivLabel <= {W2R(*hivLabel)}
+          hivLabel <= {W2R(hivLabel)}
            {
     atomic {
-      AddressList[accessLabel,accessLabel]{*hivLabel} addrList = addrListIn;
+      AddressList[accessLabel,accessLabel]{hivLabel} addrList = addrListIn;
       if (patients != null) {
-        PatientList[hivLabel, addressLabel, hivLabel]{*hivLabel} cur = patients;
+        PatientList[hivLabel, addressLabel, hivLabel]{hivLabel} cur = patients;
         while (cur != null) {
-          Patient[addressLabel,hivLabel]{*hivLabel} patient = cur.patient;
-          PatientList[hivLabel,addressLabel, hivLabel]{*hivLabel} next =
+          Patient[addressLabel,hivLabel]{hivLabel} patient = cur.patient;
+          PatientList[hivLabel,addressLabel, hivLabel]{hivLabel} next =
             cur.next;
           if (patient != null) {
-            Hiv[hivLabel, accessLabel]{*hivLabel} h = patient.hiv;
+            Hiv[hivLabel, accessLabel]{hivLabel} h = patient.hiv;
             if (h != null) {
               if (!h.hiv) {
                 //Filter out non-hiv patient.
