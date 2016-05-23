@@ -1,10 +1,46 @@
-public class AddressList[label addressLabel, label accessLabel] 
-  where addressLabel <= accessLabel {
-  @{accessLabel}
-  public Address    [addressLabel, accessLabel]{addressLabel} address;
-  public AddressList[addressLabel, accessLabel]{addressLabel} next;
+public class AddressList[label L] {
+  public String{L} address;
+  public AddressList[L]{L} next;
+
+  /**
+   * cons constructor.
+   */
+  public AddressList{L}(
+      String{L} head,
+      AddressList[L]{L} tail
+  ) {
+    this.address = head;
+    this.next = tail;
+  }
+
+  /**
+   * Constructs a list of address from the given list of patients.
+   * Invariant: patientList should not be null.
+   */
+  public AddressList{L}(
+    label listLabel,
+    label hivLabel,
+    PatientList[listLabel, L, hivLabel]{*listLabel} patientList
+  )
+    where {*listLabel} ⊑ L
+  {
+    if (patientList == null) throw new Error("null patient list");
+
+    Patient patient = patientList.patient;
+    if (patient == null) throw new Error("null patient");
+
+    this.address = patient.address;
+    this.next = null;
+
+    if (patientList.next != null) {
+      this.next = new AddressList(listLabel, hivLabel, patientList.next);
+    }
+  }
+
+  public String{L} toString{L}() {
+    String result = "";
+    if (address != null) result = result + address;
+    if (next != null) result = result + "\n" + next.toString();
+    return result;
+  }
 }
-
-
-
-

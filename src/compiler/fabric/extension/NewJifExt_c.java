@@ -81,32 +81,21 @@ public class NewJifExt_c extends JifNewExt {
               + " object, at " + n.position());
       ClassType unlblCt = (ClassType) ts.unlabel(n.type());
 
-      CallHelper ch =
-          lc.createCallHelper(newLabel, n, unlblCt,
-              (JifConstructorInstance) n.constructorInstance(), n.arguments(),
-              n.position());
-
-      // Ugh, recheck call because we need to instantiate a bunch of state...
-      ch.checkCall(lc, new ArrayList<>(n.del().throwTypes(ts)), n,
-          (n.qualifier() != null) &&
-          (!((JifNewDel) node().del()).qualIsNeverNull()));
-
-
       if (accessLabel != null) {
-        accessLabel = ch.instantiate(lc.jifContext(), accessLabel);
+        accessLabel = helper.instantiate(lc.jifContext(), accessLabel);
       }
 
       Label objectLabel = ct.updateLabel();
 
       if (objectLabel != null) {
-        objectLabel = ch.instantiate(lc.jifContext(), objectLabel);
+        objectLabel = helper.instantiate(lc.jifContext(), objectLabel);
       }
 
       Label referenceLabel =
           ext.referenceLabel((FabricContext) lc.jifContext());
 
       if (referenceLabel != null) {
-        referenceLabel = ch.instantiate(lc.jifContext(), referenceLabel);
+        referenceLabel = helper.instantiate(lc.jifContext(), referenceLabel);
       }
 
       ext.labelCheck(lc, objectLabel, accessLabel, referenceLabel);
