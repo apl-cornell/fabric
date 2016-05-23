@@ -28,7 +28,7 @@ public class PatientList[label listLabel, label addressLabel, label hivLabel] {
       PatientList[oldListLabel, addressLabel, hivLabel]{*oldListLabel} oldList
   )
     where
-      {*oldListLabel} ⊑ listLabel
+      oldListLabel ⊑ listLabel
   {
     if (oldList == null) throw new Error();
 
@@ -36,7 +36,9 @@ public class PatientList[label listLabel, label addressLabel, label hivLabel] {
     this.next = null;
 
     if (oldList.next != null) {
-      this.next = new PatientList(oldListLabel, oldList.next);
+      this.next =
+          new PatientList[listLabel, addressLabel, hivLabel]
+            (oldListLabel, oldList.next);
     }
   }
 }

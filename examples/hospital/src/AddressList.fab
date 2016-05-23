@@ -19,21 +19,35 @@ public class AddressList[label L] {
    */
   public AddressList{L}(
     label listLabel,
+    label addressLabel,
     label hivLabel,
-    PatientList[listLabel, L, hivLabel]{*listLabel} patientList
+    PatientList[listLabel, addressLabel, hivLabel]{L} patientList
   )
-    where {*listLabel} ⊑ L
+    where
+      // Must be able to convert from the old list label to the new list label.
+      listLabel ⊑ L,
+
+      // Must be able to convert from the old address label to the new address
+      // label.
+      addressLabel ⊑ L,
+
+      // Access policy restriction for accessing patientList.
+      L ⊑ {*listLabel; *addressLabel; *hivLabel},
+
+      // Access policy restriction for accessing patient addresses.
+      L ⊑ {*addressLabel; *hivLabel}
   {
     if (patientList == null) throw new Error("null patient list");
 
-    Patient patient = patientList.patient;
+    Patient[addressLabel, hivLabel] patient = patientList.patient;
     if (patient == null) throw new Error("null patient");
 
     this.address = patient.address;
     this.next = null;
 
     if (patientList.next != null) {
-      this.next = new AddressList(listLabel, hivLabel, patientList.next);
+      this.next =
+          new AddressList(listLabel, addressLabel,hivLabel, patientList.next);
     }
   }
 
