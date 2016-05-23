@@ -1353,8 +1353,8 @@ public class FabricTypeSystem_c extends JifTypeSystem_c
   public Label callSitePCLabel(JifProcedureInstance pi) {
     ArgLabel callSitePC = (ArgLabel) super.callSitePCLabel(pi);
     FabricProcedureInstance fpi = (FabricProcedureInstance) pi;
-    if (!fpi.isDefaultBeginConflict() && fpi.isDefaultPCBound()) {
-      callSitePC.setUpperBound(join(callSitePC.upperBound(), fpi.beginConflictLabel()));
+    if (!fpi.isDefaultBeginConflict()) {
+      callSitePC.setUpperBound(meet(callSitePC.upperBound(), fpi.beginConflictLabel()));
       callSitePC.setDescription("The pc at the call site of this " +
           fpi.designator() + " (bounded above by {" + fpi.pcBound() + " join " +
           fpi.beginConflictLabel() + "})");
