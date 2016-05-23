@@ -25,7 +25,7 @@ ignoreFilesRE = re.compile("""^.*/(
 
 # Regexp for examples to include. All other examples will be ignored.
 includeExamplesRE = re.compile("""^\./fab-(after|before)/examples/
-      (auction|friendmap)
+      (auction|friendmap|hospital|buzzblog|rainforest)
     /src/.*$""", re.X)
 
 # Regexp for source files.
