@@ -23,11 +23,12 @@ public class PatientList[label listLabel, label addressLabel, label hivLabel] {
    * Copy constructor. Copies a list while upgrading its backbone label.
    * Invariant: oldList should not be null.
    */
-  public PatientList{listLabel}(
+  public PatientList{listLabel}@{W2R(*oldListLabel)}(
       label oldListLabel,
       PatientList[oldListLabel, addressLabel, hivLabel]{*oldListLabel} oldList
   )
     where
+      oldListLabel ⊑ {W2R(*oldListLabel)},
       oldListLabel ⊑ listLabel
   {
     if (oldList == null) throw new Error();
