@@ -68,8 +68,8 @@ class CarolComments_fabric {
           } else printme = printme + "\n{⊤←workerP} ⊑ commentLabel failed";
         } else printme = printme + "\n{⊤←alice} ⊑ postLabel failed";
       } else printme = printme + "\nThe permission checking if block failed.";
-      if (workerP equiv carol)
-        runtime.out().println(printme);
+//      if (workerP equiv carol)
+//        runtime.out().println(printme);
     }
   }
 }
