@@ -28,7 +28,7 @@ public class Market[principal rainforestP] authority (rainforestP) {
    * Purchases a product on a customer's behalf.
    */
   public boolean{customerP→;rainforestP←}
-      buyProduct{customerP→;customerP←}@{vendorP→}(
+      buyProduct{customerP→;customerP←}(
         principal{customerP→;customerP←} customerP,
         principal{customerP→;customerP←} vendorP,
         Customer[rainforestP,customerP]{customerP→;customerP←} customer,

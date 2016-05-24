@@ -1,19 +1,16 @@
 package countribank;
 
-public class Account[principal bankP, principal holderP, principal vendorP]
+public class Account[principal bankP, principal holderP]
     authority (bankP) where bankP ≽ holderP {
   @{⊤→bankP}
 
-  // XXX There is something unsatisfactory about this label...
-  private int{bankP→holderP;bankP←vendorP;vendorP←bankP} balance;
+  private int{bankP→holderP;bankP←} balance;
 
-  public Account{bankP→holderP;bankP←vendorP;vendorP←bankP}(
-      int{bankP→holderP;bankP←vendorP;vendorP←bankP} balance) {
+  public Account{bankP→holderP;bankP←}(int{bankP→holderP;bankP←} balance) {
     this.balance = balance;
   }
 
-  public void credit{holderP→bankP}@{bankP→vendorP;vendorP→bankP}
-      (int{holderP→bankP} amount)@{bankP→holderP,vendorP;vendorP→bankP}
+  public void credit{holderP→bankP}(int{holderP→bankP} amount)
       where
         authority(bankP),
         endorse({holderP→bankP;bankP←}) {
@@ -25,12 +22,9 @@ public class Account[principal bankP, principal holderP, principal vendorP]
     }
   }
 
-  // XXX There is something unsatisfactory about this return label.
-  //     Shouldn't the integrity be {bankP←}?
-  public boolean{holderP,bankP→;bankP←vendorP;vendorP←bankP}
-    debit{holderP→bankP;holderP←}@{bankP→}(
+  public boolean{holderP,bankP→;bankP←} debit{holderP→bankP;holderP←}(
       int{holderP→bankP;holderP←} amount
-    )@{bankP→holderP} where
+    ) where
       authority(bankP),
       endorse({holderP→bankP;bankP←}) {
     atomic {
