@@ -5,26 +5,32 @@ VAR_DIR=$1
 
 if [ -z "${VAR_DIR}" ]; then
 	echo "Point me to the var directory with the logs!";
+	exit 1;
 fi
 
 # Figure out which one is the alice log and which one is the carol log
 ALICE_FILE=""
 CAROL_FILE=""
 for file in `ls ${VAR_DIR}/log/` ; do
-	grep "alicenode" ${VAR_DIR}/log/$file && ALICE_FILE=${VAR_DIR}/log/$file && break;
-	grep "carolnode" ${VAR_DIR}/log/$file && CAROL_FILE=${VAR_DIR}/log/$file && break;
+	head -n 1 ${VAR_DIR}/log/$file | grep -q "alicenode" && ALICE_FILE=${VAR_DIR}/log/$file && continue;
+	head -n 1 ${VAR_DIR}/log/$file | grep -q "carolnode" && CAROL_FILE=${VAR_DIR}/log/$file && continue;
 done
 
+if [ -z "${ALICE_FILE}" ] ; then 
+	echo "COULDN'T FIND ALICE!";
+	exit 1;
+fi
+
+if [ -z "${CAROL_FILE}" ] ; then 
+	echo "COULDN'T FIND CAROL!";
+	exit 1;
+fi
+
 # Post process alice, we want to filter out those commits from when carol was running.
-ALICE_THREAD=$(head -n 1000 ${CAROL_FILE} | cut -d, -f3 | sort | uniq -c | sort -n | tail -n 1 | sed 's/^ *//' | cut -d' ' -f2)
-CAROL_THREAD=$(head -n 1000 ${CAROL_FILE} | cut -d, -f3 | sort | uniq -c | sort -n | tail -n 1 | sed 's/^ *//' | cut -d' ' -f2)
+ALICE_THREAD="thread "$(head -n 1000 ${ALICE_FILE} | cut -d, -f3 | sed 's/^ *//' | sort | uniq -c | sort -n | tail -n 1 | sed 's/^ *//' | cut -d' ' -f3)
+CAROL_THREAD="thread "$(head -n 1000 ${CAROL_FILE} | cut -d, -f3 | sed 's/^ *//' | sort | uniq -c | sort -n | tail -n 1 | sed 's/^ *//' | cut -d' ' -f3)
 
-ALICE_OUT=${VAR_DIR}/log/posts
-CAROL_OUT=${VAR_DIR}/log/comments
-grep ${ALICE_THREAD} ${ALICE_FILE} > ${ALICE_OUT}
-grep ${CAROL_THREAD} ${CAROL_FILE} > ${CAROL_OUT}
-
-echo "POSTS:"
-cat ${ALICE_OUT} | $(dirname $0)/numbers 
-echo "COMMENTS:"
-cat ${CAROL_OUT} | $(dirname $0)/numbers 
+echo "POSTS: (${ALICE_THREAD})"
+grep -h "${ALICE_THREAD}" ${ALICE_FILE} | $(dirname $0)/numbers 
+echo "COMMENTS (${CAROL_THREAD}):"
+grep -h "${CAROL_THREAD}" ${CAROL_FILE} | $(dirname $0)/numbers 

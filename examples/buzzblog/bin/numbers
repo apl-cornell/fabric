@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import fileinput
+import sys
 from collections import defaultdict
 
 def new_txn():
@@ -17,8 +18,10 @@ class Txn:
         self.id=None
         self.start=None
         self.end=None
-        self.stage_checks=defaultdict(new_stage_check)
-        self.stages=defaultdict(new_stage)
+        self.start_checks=[]
+        self.end_checks=[]
+        self.start_stages=[]
+        self.end_stages=[]
 
     @property
     def time(self):
@@ -28,54 +31,36 @@ class Txn:
 
     @property
     def stage_count(self):
-        return len(self.stages)
+        return min(len(self.start_stages), len(self.end_stages))
 
     @property
     def staging_time(self):
-        total_time = 0
-        for _, stage in self.stages:
-            total_time += (stage.time if stage.time is not None else 0)
-        return total_time
-
-    @property
-    def checking_time(self):
-        total_time = 0
-        for _, check in self.stage_checks:
-            total_time += (check.time if check.time is not None else 0)
-        return total_time
-
-
-class Stage:
-    def __init__(self):
-        self.start=None
-        self.end=None
-        self.status=None
-
-    @property
-    def time(self):
-        if self.start is None or self.end is None:
-            return None
-        return self.end - self.start
-
-
-class StageCheck:
-    def __init__(self):
-        self.start_times=[]
-        self.end_times=[]
-
-    @property
-    def time(self):
-        starts = sorted(list(self.start_times), reverse=True)
-        ends = sorted(list(self.end_times), reverse=True)
+        starts = sorted(list(self.start_stages), reverse=True)
+        ends = sorted(list(self.end_stages), reverse=True)
         total_time = 0
         while len(starts) > 0 and len(ends) > 0:
-            if ends[0] < starts[0]:
+            if ends[-1] < starts[-1]:
                 ends.pop()
-            elif len(starts) > 1 and starts[1] < ends[0]:
+            elif len(starts) > 1 and starts[-2] < ends[-1]:
                 starts.pop()
             else:
                 total_time += (ends.pop() - starts.pop())
         return total_time
+
+    @property
+    def checking_time(self):
+        starts = sorted(list(self.start_checks), reverse=True)
+        ends = sorted(list(self.end_checks), reverse=True)
+        total_time = 0
+        while len(starts) > 0 and len(ends) > 0:
+            if ends[-1] < starts[-1]:
+                ends.pop()
+            elif len(starts) > 1 and starts[-2] < ends[-1]:
+                starts.pop()
+            else:
+                total_time += (ends.pop() - starts.pop())
+        return total_time
+
 
 def parse_line(line):
     # Line format: time, nodename, thread, message
@@ -87,20 +72,22 @@ def parse_line(line):
     # Check if it's a stage, a txn, or a stage check
     if message.startswith("started"):
         txn.start = time
-    elif message.startswith("commited"):
+    elif message.startswith("committed"):
         txn.end = time
     elif message.startswith("start staging"):
-        txn.stages[txn_full_id].start = time
+        txn.start_stages.append(time)
     elif message.startswith("end staging"):
-        txn.stages[txn_full_id].end = time
+        txn.end_stages.append(time)
     elif message.startswith("start stage check"):
-        txn.stage_checks[txn_full_id].start_times.append(time)
+        txn.start_checks.append(time)
     elif message.startswith("end stage check"):
-        txn.stage_checks[txn_full_id].end_times.append(time)
+        txn.end_checks.append(time)
+    else:
+        print("WAT", line)
 
 TXNS = defaultdict(new_txn)
 
-for line in fileinput.input():
+for line in sys.stdin:
     parse_line(line)
 
 class Stats:
@@ -112,11 +99,12 @@ class Stats:
         self.checking_time = 0
 
     def add_txn(self, txn):
-        self.count += 1
-        self.time += txn.time
-        self.stage_count += txn.stage_count
-        self.staging_time += txn.staging_time
-        self.checking_time += txn.checking_time
+        if txn.time:
+            self.count += 1
+            self.time += txn.time
+            self.stage_count += txn.stage_count
+            self.staging_time += txn.staging_time
+            self.checking_time += txn.checking_time
 
     @property
     def avg_time(self):
@@ -144,8 +132,17 @@ class Stats:
                                                 self.avg_staging_time,
                                                 self.avg_checking_time)
 
+max_stages = 0
+for _, txn in TXNS.items():
+    max_stages = max(max_stages, txn.stage_count)
+
+filtered = []
+for _, txn in TXNS.items():
+    if txn.stage_count == max_stages:
+        filtered.append(txn)
+
 stats = Stats()
-for _, txn in TXNS:
+for txn in filtered:
     stats.add_txn(txn)
 
 print(str(stats))
