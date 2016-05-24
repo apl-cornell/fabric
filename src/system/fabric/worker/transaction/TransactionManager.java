@@ -303,15 +303,13 @@ public final class TransactionManager {
   public <T> T stageTransactionExpr(T value, Label nextStage)
       throws TransactionRestartingException {
     // Only stage if the next stage is not the same as the current stage.
-    HOTOS_LOGGER.log(Level.FINEST, "{0} start stage check", current);
+    HOTOS_LOGGER.log(Level.FINEST, "start stage check {0}", current);
     if (!LabelUtil._Impl.relabelsTo(current.getCurrentStage().confPolicy(),
         nextStage.confPolicy())) {
-      HOTOS_LOGGER.log(Level.FINEST, "{0} end stage check", current);
+      HOTOS_LOGGER.log(Level.FINEST, "end stage check {0}", current);
       // So !(current ≤ next)
-      HOTOS_LOGGER.log(Level.FINEST, "{0} start staging", current);
       stageTransaction();
       current.setCurrentStage(nextStage);
-      HOTOS_LOGGER.log(Level.FINEST, "{0} end staging", current);
     } else if (!LabelUtil._Impl.relabelsTo(nextStage.confPolicy(),
         current.getCurrentStage().confPolicy())) {
       // So (current ≤ next) && !(current ≥ next) ⇒ current ≠ next
@@ -339,6 +337,7 @@ public final class TransactionManager {
   private void stageTransaction(boolean ignoreRetrySignal,
       boolean attemptingToCommit) throws TransactionRestartingException {
     WORKER_TRANSACTION_LOGGER.log(Level.FINEST, "{0} staging", current);
+    HOTOS_LOGGER.log(Level.FINEST, "start staging {0}", current);
     if (!ignoreRetrySignal) {
       // Make sure we're not supposed to abort or retry.
       try {
@@ -461,6 +460,7 @@ public final class TransactionManager {
     // Staging was successful. Update the log's data structures to reflect this.
     current.updateForSuccessfulStage();
     WORKER_TRANSACTION_LOGGER.log(Level.FINEST, "{0} staged", current);
+    HOTOS_LOGGER.log(Level.FINEST, "end staging {0}", current);
   }
 
   /**
