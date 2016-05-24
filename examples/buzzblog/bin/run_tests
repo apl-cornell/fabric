@@ -8,15 +8,15 @@ for i in {1..3}; do
 	ant clobber;
 	ant build || break;
 	bin/start-all || break;
-	sleep 1;
+	sleep 3;
 	echo "INITIALIZING"
 	bin/init || break;
-	sleep 1;
+	sleep 3;
 	echo "POSTING"
 	bin/alice-posts || break;
-	sleep 1;
+	sleep 3;
 	echo "COMMENTING"
 	bin/carol-comments || break;
 	mv var var${i};
-	sleep 1;
+	sleep 3;
 done
