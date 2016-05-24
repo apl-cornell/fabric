@@ -1,0 +1,66 @@
+<!--
+  This is the Apache Ant build file for the Fabric "rainforest" example
+-->
+
+<project name="rainforest" default="build-all" basedir=".">
+  <description>
+    Build Rainforest example
+  </description>
+
+  <!--
+  ****************************************************************************
+    Global properties for this build.
+  ****************************************************************************
+  -->
+
+  <import file="../../common.xml" />
+
+  <dirname property="rainforest.home" file="${ant.file.rainforest}" />
+
+  <!--
+  ****************************************************************************
+    Targets for cleaning up the directory tree.
+  ****************************************************************************
+  -->
+
+  <target name="clean" description="Removes generated files">
+    <delete dir="${rainforest.home}/classes"/>
+  </target>
+
+  <target name="clobber" depends="clean"
+          description="Removes generated files and state of stores">
+    <delete dir="${rainforest.home}/var"/>
+  </target>
+
+  <!--
+  ****************************************************************************
+    Compilation targets.
+  ****************************************************************************
+  -->
+
+  <target name="build"
+          description="Builds the Rainforest example">
+    <fabc dest="${rainforest.home}/classes">
+      <arg value="-sourcepath" /> <arg value="${rainforest.home}/src" />
+      <arg value="-cp"         /> <arg value="${rainforest.home}/classes" />
+      <arg value="-trusted-providers" />
+
+      <fileset dir="${rainforest.home}/src" includes="**/*.fab" />
+    </fabc>
+
+    <filc dest="${rainforest.home}/classes">
+      <arg value="-sourcepath" /> <arg value="${rainforest.home}/src" />
+      <arg value="-cp"         /> <arg value="${rainforest.home}/classes" />
+
+      <fileset dir="${rainforest.home}/src" includes="**/*.fil" />
+    </filc>
+  </target>
+
+  <target name="build-all" depends="build" />
+  <target name="all" depends="build-all" />
+
+</project>
+
+<!--
+vim: ts=2 sw=2 et ai
+-->

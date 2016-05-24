@@ -1,0 +1,25 @@
+package rainforest;
+
+import countribank.Account;
+
+public class Customer[principal rainforestP, principal customerP] {
+  @{rainforestP→}
+
+  public final principal{this} bankP;
+  public final principal{this} customerP_;
+  private final Account[bankP, customerP]{this} account;
+
+  public Customer(
+      principal{this} bankP,
+      Account[bankP, customerP]{this} account
+  ) {
+    this.bankP = bankP;
+    this.customerP_ = customerP;
+    this.account = account;
+    super();
+  }
+
+  public Account[bankP, customerP]{this} getAccount() {
+    return account;
+  }
+}
