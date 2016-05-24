@@ -8,9 +8,9 @@ for i in {1..3}; do
 	ant clobber;
 	ant build;
 	bin/start-all || break;
-	sleep 1;
+	sleep 3;
 	echo "RUNNING"
 	bin/run || break;
 	mv var var${i};
-	sleep 1;
+	sleep 3;
 done
