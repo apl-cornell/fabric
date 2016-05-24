@@ -32,8 +32,8 @@ public class Run {
     int numBought = 0;
     while (true) {
       if (!market.reserveStock(
-          customer.customerP_,
-          outel.vendorP,
+          customer.rainforest$Customer$_split_0.customerP_,
+          outel.rainforest$Vendor$_split_0.vendorP,
           product,
           numUnits)) {
         break;
@@ -41,8 +41,8 @@ public class Run {
 
       Integer price_ =
         market.getPrice(
-          customer.customerP_,
-          outel.vendorP,
+          customer.rainforest$Customer$_split_0.customerP_,
+          outel.rainforest$Vendor$_split_0.vendorP,
           product
         );
 
@@ -54,15 +54,15 @@ public class Run {
       int price = price_.intValue();
 
       if (!market.makePayment(
-          customer.customerP_,
-          outel.vendorP,
+          customer.rainforest$Customer$_split_0.customerP_,
+          outel.rainforest$Vendor$_split_0.vendorP,
           customer,
           numUnits,
           price)) {
         // Customer had insufficient funds. Cancel the order.
         market.cancelOrder(
-            customer.customerP_,
-            outel.vendorP,
+            customer.rainforest$Customer$_split_0.customerP_,
+            outel.rainforest$Vendor$_split_0.vendorP,
             product,
             numUnits);
         break;
@@ -70,8 +70,8 @@ public class Run {
 
       // Credit the vendor.
       market.creditVendor(
-          customer.customerP_,
-          outel.vendorP,
+          customer.rainforest$Customer$_split_0.customerP_,
+          outel.rainforest$Vendor$_split_0.vendorP,
           product,
           price,
           numUnits);
