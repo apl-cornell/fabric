@@ -304,9 +304,10 @@ public final class TransactionManager {
       throws TransactionRestartingException {
     // Only stage if the next stage is not the same as the current stage.
     HOTOS_LOGGER.log(Level.FINEST, "start stage check {0}", current);
-    if (!LabelUtil._Impl.relabelsTo(current.getCurrentStage().confPolicy(),
-        nextStage.confPolicy())) {
-      HOTOS_LOGGER.log(Level.FINEST, "end stage check {0}", current);
+    boolean check = !LabelUtil._Impl.relabelsTo(current.getCurrentStage().confPolicy(),
+        nextStage.confPolicy());
+    HOTOS_LOGGER.log(Level.FINEST, "end stage check {0}", current);
+    if (check) {
       // So !(current ≤ next)
       stageTransaction();
       current.setCurrentStage(nextStage);
@@ -317,8 +318,6 @@ public final class TransactionManager {
       throw new InternalError(
           "Staging monotonicity was violated, current stage: "
               + current.getCurrentStage() + ", next stage: " + nextStage);
-    } else {
-      HOTOS_LOGGER.log(Level.FINEST, "{0} start stage end", current);
     }
     return value;
   }
@@ -338,129 +337,137 @@ public final class TransactionManager {
       boolean attemptingToCommit) throws TransactionRestartingException {
     WORKER_TRANSACTION_LOGGER.log(Level.FINEST, "{0} staging", current);
     HOTOS_LOGGER.log(Level.FINEST, "start staging {0}", current);
-    if (!ignoreRetrySignal) {
-      // Make sure we're not supposed to abort or retry.
-      try {
-        checkRetrySignal();
-      } catch (TransactionAbortingException e) {
-        abortTransaction();
-        throw new AbortException();
-      } catch (TransactionRestartingException e) {
-        abortTransaction();
-        throw e;
-      }
-    }
-
-    // Go through the transaction log and figure out the stores we need
-    // to contact.
-    Set<Store> stores = current.storesToStage();
-
-    final Map<RemoteNode<?>, TransactionStagingFailedException> failures =
-        Collections.synchronizedMap(
-            new HashMap<RemoteNode<?>, TransactionStagingFailedException>());
-
-    List<Future<?>> futures = new ArrayList<>(stores.size());
-
-    // Go through each store and send staging messages in parallel.
-    for (Iterator<Store> storeIt = stores.iterator(); storeIt.hasNext();) {
-      final Store store = storeIt.next();
-      NamedRunnable runnable =
-          new NamedRunnable("worker stage to " + store.name()) {
-            @Override
-            protected void runImpl() {
-              try {
-                LongKeyMap<Integer> reads =
-                    current.getUnstagedReadsForStore(store, false);
-                LongKeyMap<Integer> writes =
-                    current.getUnstagedWritesForStore(store);
-                LongSet creates = current.getUnstagedCreatesForStore(store);
-                Logging.log(WORKER_TRANSACTION_LOGGER, Level.FINEST,
-                    "{0} staging to {1}: reads = {2}, writes = {3}, creates = {4}",
-                    current, store, reads, writes, creates);
-                store.stageTransaction(current.tid.topTid, reads, writes,
-                    creates);
-              } catch (TransactionStagingFailedException e) {
-                failures.put((RemoteNode<?>) store, e);
-              } catch (UnreachableNodeException e) {
-                failures.put((RemoteNode<?>) store,
-                    new TransactionStagingFailedException("Unreachable store"));
-              }
-            }
-          };
-
-      // Optimization: only start a new thread if there are more stores to
-      // contact and if it's a truly remote store (i.e., not in-process).
-      if (!(store instanceof InProcessStore || store.isLocalStore())
-          && storeIt.hasNext()) {
-        futures.add(Threading.getPool().submit(runnable));
-      } else {
-        runnable.run();
-      }
-    }
-
-    // Wait for replies.
-    for (Future<?> future : futures) {
-      while (true) {
+    try {
+      if (!ignoreRetrySignal) {
+        // Make sure we're not supposed to abort or retry.
         try {
-          future.get();
-          break;
-        } catch (InterruptedException e) {
-          Logging.logIgnoredInterruptedException(e);
-        } catch (ExecutionException e) {
-          e.printStackTrace();
+          checkRetrySignal();
+        } catch (TransactionAbortingException e) {
+          abortTransaction();
+          throw new AbortException();
+        } catch (TransactionRestartingException e) {
+          abortTransaction();
+          throw e;
         }
       }
-    }
 
-    // Check for conflicts and unreachable stores.
-    if (!failures.isEmpty()) {
-      Set<Oid> conflicts = new HashSet<>();
-      String logMessage =
-          "Transaction tid=" + current.tid + ": staging failed.";
+      // Go through the transaction log and figure out the stores we need
+      // to contact.
+      Set<Store> stores = current.storesToStage();
 
-      for (Map.Entry<RemoteNode<?>, TransactionStagingFailedException> entry : failures
-          .entrySet()) {
-        if (entry.getKey() instanceof RemoteStore) {
-          // Remove old objects from our cache.
-          RemoteStore store = (RemoteStore) entry.getKey();
-          LongKeyMap<SerializedObject> versionConflicts =
-              entry.getValue().versionConflicts;
-          if (versionConflicts != null) {
-            for (LongKeyMap.Entry<SerializedObject> conflictEntry : versionConflicts
-                .entrySet()) {
-              conflicts.add(new Oid(store, conflictEntry.getKey()));
+      final Map<RemoteNode<?>, TransactionStagingFailedException> failures =
+          Collections.synchronizedMap(
+              new HashMap<RemoteNode<?>, TransactionStagingFailedException>());
 
-              SerializedObject obj = conflictEntry.getValue();
-              if (obj != null) store.updateCache(obj);
-            }
+      List<Future<?>> futures = new ArrayList<>(stores.size());
+
+      // Go through each store and send staging messages in parallel.
+      for (Iterator<Store> storeIt = stores.iterator(); storeIt.hasNext();) {
+        final Store store = storeIt.next();
+        NamedRunnable runnable =
+            new NamedRunnable("worker stage to " + store.name()) {
+              @Override
+              protected void runImpl() {
+                try {
+                  LongKeyMap<Integer> reads =
+                      current.getUnstagedReadsForStore(store, false);
+                  LongKeyMap<Integer> writes =
+                      current.getUnstagedWritesForStore(store);
+                  LongSet creates = current.getUnstagedCreatesForStore(store);
+                  Logging.log(WORKER_TRANSACTION_LOGGER, Level.FINEST,
+                      "{0} staging to {1}: reads = {2}, writes = {3}, creates = {4}",
+                      current, store, reads, writes, creates);
+                  store.stageTransaction(current.tid.topTid, reads, writes,
+                      creates);
+                } catch (TransactionStagingFailedException e) {
+                  failures.put((RemoteNode<?>) store, e);
+                } catch (UnreachableNodeException e) {
+                  failures.put((RemoteNode<?>) store,
+                      new TransactionStagingFailedException("Unreachable store"));
+                }
+              }
+            };
+
+        // Optimization: only start a new thread if there are more stores to
+        // contact and if it's a truly remote store (i.e., not in-process).
+        if (!(store instanceof InProcessStore || store.isLocalStore())
+            && storeIt.hasNext()) {
+          futures.add(Threading.getPool().submit(runnable));
+        } else {
+          runnable.run();
+        }
+      }
+
+      // Wait for replies.
+      for (Future<?> future : futures) {
+        while (true) {
+          try {
+            future.get();
+            break;
+          } catch (InterruptedException e) {
+            Logging.logIgnoredInterruptedException(e);
+          } catch (ExecutionException e) {
+            e.printStackTrace();
           }
         }
-
-        if (WORKER_TRANSACTION_LOGGER.isLoggable(Level.FINE)) {
-          logMessage +=
-              "\n\t" + entry.getKey() + ": " + entry.getValue().getMessage();
-        }
       }
-      WORKER_TRANSACTION_LOGGER.fine(logMessage);
-      HOTOS_LOGGER.fine("Staging failed");
 
-      TransactionStagingFailedException e =
-          new TransactionStagingFailedException(failures);
-      Logging.log(WORKER_TRANSACTION_LOGGER, Level.INFO,
-          "{0} error staging: staging failed exception: {1}", current, e);
+      // Check for conflicts and unreachable stores.
+      if (!failures.isEmpty()) {
+        Set<Oid> conflicts = new HashSet<>();
+        String logMessage =
+            "Transaction tid=" + current.tid + ": staging failed.";
 
-      TransactionID toRestart = current.outermostConflictingTid(conflicts);
+        for (Map.Entry<RemoteNode<?>, TransactionStagingFailedException> entry : failures
+            .entrySet()) {
+          if (entry.getKey() instanceof RemoteStore) {
+            // Remove old objects from our cache.
+            RemoteStore store = (RemoteStore) entry.getKey();
+            LongKeyMap<SerializedObject> versionConflicts =
+                entry.getValue().versionConflicts;
+            if (versionConflicts != null) {
+              for (LongKeyMap.Entry<SerializedObject> conflictEntry : versionConflicts
+                  .entrySet()) {
+                conflicts.add(new Oid(store, conflictEntry.getKey()));
 
-      // Abort the stage at nodes that didn't report failures.
-      abortStage(failures.keySet(), attemptingToCommit);
+                SerializedObject obj = conflictEntry.getValue();
+                if (obj != null) store.updateCache(obj);
+              }
+            }
+          }
 
-      throw new TransactionRestartingException(toRestart);
+          if (WORKER_TRANSACTION_LOGGER.isLoggable(Level.FINE)) {
+            logMessage +=
+                "\n\t" + entry.getKey() + ": " + entry.getValue().getMessage();
+          }
+        }
+        WORKER_TRANSACTION_LOGGER.fine(logMessage);
+        HOTOS_LOGGER.fine("Staging failed");
+
+        TransactionStagingFailedException e =
+            new TransactionStagingFailedException(failures);
+        Logging.log(WORKER_TRANSACTION_LOGGER, Level.INFO,
+            "{0} error staging: staging failed exception: {1}", current, e);
+
+        TransactionID toRestart = current.outermostConflictingTid(conflicts);
+
+        // Abort the stage at nodes that didn't report failures.
+        abortStage(failures.keySet(), attemptingToCommit);
+
+        throw new TransactionRestartingException(toRestart);
+      }
+
+      // Staging was successful. Update the log's data structures to reflect this.
+      current.updateForSuccessfulStage();
+      WORKER_TRANSACTION_LOGGER.log(Level.FINEST, "{0} staged", current);
+      HOTOS_LOGGER.log(Level.FINEST, "end staging (success) {0}", current);
+    } catch (TransactionRestartingException e) {
+      HOTOS_LOGGER.log(Level.FINEST, "end staging (normal-failure) {0}", current);
+      throw e;
+    } catch (RuntimeException e) {
+      HOTOS_LOGGER.log(Level.FINEST, "end staging (runtime-failure) {0}", current);
+      throw e;
     }
-
-    // Staging was successful. Update the log's data structures to reflect this.
-    current.updateForSuccessfulStage();
-    WORKER_TRANSACTION_LOGGER.log(Level.FINEST, "{0} staged", current);
-    HOTOS_LOGGER.log(Level.FINEST, "end staging {0}", current);
   }
 
   /**
