@@ -3,6 +3,9 @@
 BIN_DIR="$(dirname $0)"
 
 "${BIN_DIR}/start-worker" alicenode RunPatientMaker
+sleep 1;
 "${BIN_DIR}/start-worker" alicenode RunHivReader
+sleep 2;
 "${BIN_DIR}/start-worker" carolnode RunAddressWriter
+sleep 3;
 "${BIN_DIR}/start-worker" davenode RunDaveReader
