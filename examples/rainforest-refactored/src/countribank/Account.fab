@@ -1,0 +1,46 @@
+package countribank;
+
+public class Account[principal bankP, principal holderP]
+    authority (bankP) where bankP ≽ holderP {
+  @{⊤→bankP}
+
+  private int{bankP→holderP;bankP←} balance;
+
+  public Account{bankP→holderP;bankP←}(int{bankP→holderP;bankP←} balance) {
+    this.balance = balance;
+  }
+
+  public void credit{holderP→bankP}(int{holderP→bankP} amount)
+      where
+        authority(bankP),
+        endorse({holderP→bankP;bankP←}) {
+    endorse(amount, {holderP→bankP} to {holderP→bankP;bankP←})
+    if (amount >= 0) {
+      int amount_d =
+        declassify (amount, {holderP→bankP;bankP←} to {bankP→holderP;bankP←});
+      balance = balance + amount_d;
+    }
+  }
+
+  public boolean{holderP,bankP→;bankP←} debit{holderP→bankP;holderP←}(
+      int{holderP→bankP;holderP←} amount
+    ) where
+      authority(bankP),
+      endorse({holderP→bankP;bankP←}) {
+    atomic {
+      endorse(amount, {holderP→bankP;holderP←} to {holderP→bankP;bankP←})
+      if (0 <= amount && amount <= balance) {
+        declassify (
+            {holderP→bankP;bankP→holderP;bankP←} to {holderP,bankP→;bankP←}) {
+          balance = balance - amount;
+          return true;
+        }
+      } else {
+        declassify (
+            {holderP→bankP;bankP→holderP;bankP←} to {holderP,bankP→;bankP←}) {
+          return false;
+        }
+      }
+    }
+  }
+}
