@@ -21,7 +21,7 @@ public class RunAddressWriter {
       String result =
           AddressWriter.writeAddress(listLabel, addressLabel, hivLabel, patients,
               0);
-      System.out.println(result);
+//      System.out.println(result);
     }
   }
 }
