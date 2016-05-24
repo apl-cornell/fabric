@@ -2,7 +2,8 @@
 
 BIN_DIR="$(dirname $0)"
 
+echo "MAKING PATIENTS `date`"
 "${BIN_DIR}/start-worker" alicenode RunPatientMaker
+sleep 3;
+echo "READING HIV `date`"
 "${BIN_DIR}/start-worker" alicenode RunHivReader
-"${BIN_DIR}/start-worker" carolnode RunAddressWriter
-"${BIN_DIR}/start-worker" davenode RunDaveReader

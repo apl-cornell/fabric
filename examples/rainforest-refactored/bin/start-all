@@ -1,0 +1,25 @@
+#!/bin/bash
+
+BIN_DIR="$(dirname $0)"
+
+# Start the stores.
+"${BIN_DIR}/run-in-xterm" "rainforest store" \
+  "${BIN_DIR}/start-store rainforest" &
+
+"${BIN_DIR}/run-in-xterm" "countribank store" \
+  "${BIN_DIR}/start-store countribank" &
+
+"${BIN_DIR}/run-in-xterm" "outel store" \
+  "${BIN_DIR}/start-store outel" &
+
+# Wait for the stores to start up.
+echo "Press ENTER when the stores are ready."
+echo "You should see console prompts in each window, e.g., 'rainforest>'"
+read -r
+
+# Start the workers.
+"${BIN_DIR}/run-in-xterm" "aliceOutlet worker" \
+  "${BIN_DIR}/start-worker aliceOutlet --debug" &
+
+"${BIN_DIR}/run-in-xterm" "bobOutlet worker" \
+  "${BIN_DIR}/start-worker bobOutlet" &

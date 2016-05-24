@@ -70,7 +70,7 @@ public class RunPatientMaker {
       daveStore.getRoot().put("dropBox", dropBox);
     }
 
-    System.out.println("I dud ut.");
+//    System.out.println("I dud ut.");
   }
 
   /**
