@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# Ugh, it's in bash.  Sue me.
+VAR_DIR=$1
+
+if [ -z "${VAR_DIR}" ]; then
+	echo "Point me to the var directory with the logs!";
+fi
+
+# Figure out which one is the alice log and which one is the carol log
+ALICE_FILE=""
+CAROL_FILE=""
+for file in `ls ${VAR_DIR}/log/` ; do
+	grep "alicenode" $file && ALICE_FILE=$file && break;
+	grep "carolnode" $file && CAROL_FILE=$file && break;
+done
+
+# Post process alice, we want to filter out those commits from when carol was running.
+ALICE_THREAD=$(head -n 1000 ${CAROL_FILE} | cut -d, -f3 | sort | uniq -c | sort -n | tail -n 1 | sed 's/^ *//' | cut -d' ' -f2)
+CAROL_THREAD=$(head -n 1000 ${CAROL_FILE} | cut -d, -f3 | sort | uniq -c | sort -n | tail -n 1 | sed 's/^ *//' | cut -d' ' -f2)
+
+ALICE_OUT=${VAR_DIR}/log/posts
+CAROL_OUT=${VAR_DIR}/log/comments
+grep ${ALICE_THREAD} ${ALICE_FILE} > ${ALICE_OUT}
+grep ${CAROL_THREAD} ${CAROL_FILE} > ${CAROL_OUT}
+
+echo "POSTS:"
+cat ${ALICE_OUT} | $(dirname $0)/numbers 
+echo "COMMENTS:"
+cat ${CAROL_OUT} | $(dirname $0)/numbers 

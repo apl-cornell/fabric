@@ -1,0 +1,151 @@
+#!/usr/bin/env python3
+
+import fileinput
+from collections import defaultdict
+
+def new_txn():
+    return Txn()
+
+def new_stage():
+    return Stage()
+
+def new_stage_check():
+    return StageCheck()
+
+class Txn:
+    def __init__(self):
+        self.id=None
+        self.start=None
+        self.end=None
+        self.stage_checks=defaultdict(new_stage_check)
+        self.stages=defaultdict(new_stage)
+
+    @property
+    def time(self):
+        if self.start is None or self.end is None:
+            return None
+        return self.end - self.start
+
+    @property
+    def stage_count(self):
+        return len(self.stages)
+
+    @property
+    def staging_time(self):
+        total_time = 0
+        for _, stage in self.stages:
+            total_time += (stage.time if stage.time is not None else 0)
+        return total_time
+
+    @property
+    def checking_time(self):
+        total_time = 0
+        for _, check in self.stage_checks:
+            total_time += (check.time if check.time is not None else 0)
+        return total_time
+
+
+class Stage:
+    def __init__(self):
+        self.start=None
+        self.end=None
+        self.status=None
+
+    @property
+    def time(self):
+        if self.start is None or self.end is None:
+            return None
+        return self.end - self.start
+
+
+class StageCheck:
+    def __init__(self):
+        self.start_times=[]
+        self.end_times=[]
+
+    @property
+    def time(self):
+        starts = sorted(list(self.start_times), reverse=True)
+        ends = sorted(list(self.end_times), reverse=True)
+        total_time = 0
+        while len(starts) > 0 and len(ends) > 0:
+            if ends[0] < starts[0]:
+                ends.pop()
+            elif len(starts) > 1 and starts[1] < ends[0]:
+                starts.pop()
+            else:
+                total_time += (ends.pop() - starts.pop())
+        return total_time
+
+def parse_line(line):
+    # Line format: time, nodename, thread, message
+    time, _, _, message = line.split(", ")
+    time=int(time)
+    txn_full_id = message.split("[")[1].split("]")[0]
+    txn_top_id = txn_full_id.split(":")[0]
+    txn = TXNS[txn_top_id]
+    # Check if it's a stage, a txn, or a stage check
+    if message.startswith("started"):
+        txn.start = time
+    elif message.startswith("commited"):
+        txn.end = time
+    elif message.startswith("start staging"):
+        txn.stages[txn_full_id].start = time
+    elif message.startswith("end staging"):
+        txn.stages[txn_full_id].end = time
+    elif message.startswith("start stage check"):
+        txn.stage_checks[txn_full_id].start_times.append(time)
+    elif message.startswith("end stage check"):
+        txn.stage_checks[txn_full_id].end_times.append(time)
+
+TXNS = defaultdict(new_txn)
+
+for line in fileinput.input():
+    parse_line(line)
+
+class Stats:
+    def __init__(self):
+        self.count = 0
+        self.time = 0
+        self.stage_count = 0
+        self.staging_time = 0
+        self.checking_time = 0
+
+    def add_txn(self, txn):
+        self.count += 1
+        self.time += txn.time
+        self.stage_count += txn.stage_count
+        self.staging_time += txn.staging_time
+        self.checking_time += txn.checking_time
+
+    @property
+    def avg_time(self):
+        return self.time / float(self.count)
+
+    @property
+    def avg_stage_count(self):
+        return self.stage_count / float(self.count)
+
+    @property
+    def avg_staging_time(self):
+        return self.staging_time / float(self.count)
+
+    @property
+    def avg_checking_time(self):
+        return self.checking_time / float(self.count)
+
+    def __str__(self):
+        return ("{0} txns" +\
+                ", avg_time: {1}ms" +\
+                ", avg_stages: {2}" +\
+                ", avg_staging: {3}ms" + \
+                ", avg_checking: {4}ms").format(self.count, self.avg_time,
+                                                self.avg_stage_count,
+                                                self.avg_staging_time,
+                                                self.avg_checking_time)
+
+stats = Stats()
+for _, txn in TXNS:
+    stats.add_txn(txn)
+
+print(str(stats))
