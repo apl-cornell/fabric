@@ -11,8 +11,8 @@ fi
 ALICE_FILE=""
 CAROL_FILE=""
 for file in `ls ${VAR_DIR}/log/` ; do
-	grep "alicenode" $file && ALICE_FILE=$file && break;
-	grep "carolnode" $file && CAROL_FILE=$file && break;
+	grep "alicenode" ${VAR_DIR}/log/$file && ALICE_FILE=${VAR_DIR}/log/$file && break;
+	grep "carolnode" ${VAR_DIR}/log/$file && CAROL_FILE=${VAR_DIR}/log/$file && break;
 done
 
 # Post process alice, we want to filter out those commits from when carol was running.
