@@ -20,8 +20,11 @@ public class RunHivReader {
       dropBox = (DropBox) daveStore.getRoot().get("dropBox");
     }
 
-    String result =
-        HivReader.readHiv(listLabel, addressLabel, hivLabel, patients, dropBox);
-    System.out.println(result);
+    long start = System.currentTimeMillis();
+    while (System.currentTimeMillis() < (start + (1000 * 60 * 5))) {
+      String result =
+          HivReader.readHiv(listLabel, addressLabel, hivLabel, patients, dropBox);
+      System.out.println(result);
+    }
   }
 }
