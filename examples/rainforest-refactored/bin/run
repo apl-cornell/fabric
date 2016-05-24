@@ -1,0 +1,6 @@
+#!/bin/bash
+
+BIN_DIR="$(dirname $0)"
+
+"${BIN_DIR}/start-worker" aliceOutlet Run alice &
+"${BIN_DIR}/start-worker" bobOutlet Run bob &

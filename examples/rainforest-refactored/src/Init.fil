@@ -1,0 +1,96 @@
+import fabric.util.Map;
+
+import countribank.Account;
+import rainforest.Customer;
+import rainforest.Market;
+import rainforest.Product;
+import rainforest.Vendor;
+
+/**
+ * Initializes the state of the application.
+ */
+public class Init {
+  public static void main(String[] args) {
+    atomic {
+      Store countribankStore = Worker.getWorker().getStore("countribank");
+      Store outelStore = Worker.getWorker().getStore("outel");
+      Store rainforestStore = Worker.getWorker().getStore("rainforest");
+      RemoteWorker aliceOutletWorker =
+          Worker.getWorker().getWorker("aliceOutlet");
+      RemoteWorker bobOutletWorker =
+          Worker.getWorker().getWorker("bobOutlet");
+
+      // Get/create principals.
+      DelegatingPrincipal alice =
+          new ExternalPrincipal@rainforestStore()
+              .fabric$lang$security$ExternalPrincipal$("alice");
+      DelegatingPrincipal bob =
+          new ExternalPrincipal@rainforestStore()
+              .fabric$lang$security$ExternalPrincipal$("bob");
+      DelegatingPrincipal countribank = countribankStore.getPrincipal();
+      DelegatingPrincipal outel = outelStore.getPrincipal();
+      DelegatingPrincipal rainforest = rainforestStore.getPrincipal();
+      Principal aliceOutlet = aliceOutletWorker.getPrincipal();
+      Principal bobOutlet = bobOutletWorker.getPrincipal();
+
+      // Have rainforestStore delegate to its outlets.
+      rainforest.addDelegatesTo(aliceOutlet);
+      rainforest.addDelegatesTo(bobOutlet);
+
+      // Have countribank and outel delegate to rainforest.
+      outel.addDelegatesTo(rainforest);
+      countribank.addDelegatesTo(rainforest);
+
+      // Have alice and bob delegate to countribank.
+      alice.addDelegatesTo(countribank);
+      bob.addDelegatesTo(countribank);
+
+      // Create bank accounts for alice, bob, and outel.
+      Account aliceAccount =
+          new Account@countribankStore(countribank, alice)
+              .countribank$Account$(5000);
+      Account bobAccount =
+          new Account@countribankStore(countribank, bob)
+              .countribank$Account$(5000);
+      Account outelAccount =
+          new Account@countribankStore(countribank, outel)
+              .countribank$Account$(0);
+
+      // Make customers out of Alice and Bob.
+      Customer aliceCustomer =
+          new Customer@rainforestStore(rainforest, alice)
+              .rainforest$Customer$(countribank, aliceAccount);
+      Customer bobCustomer =
+          new Customer@rainforestStore(rainforest, bob)
+              .rainforest$Customer$(countribank, bobAccount);
+
+      // Create outel's array of product [sic].
+      Product[] products = new Product[1]@rainforestStore;
+
+      // Make a vendor out of outel.
+      Vendor outelVendor =
+          new Vendor@rainforestStore(rainforest)
+              .rainforest$Vendor$(outel, countribank, outelAccount, products);
+
+      // Populate outel's array of product.
+      products[0] =
+          new Product@outelStore(rainforest, outel)
+              .rainforest$Product$(outelVendor, 1, 10000);
+
+      // Create rainforest's array of vendor.
+      Vendor[] vendors = new Vendor[1]@rainforestStore;
+      vendors[0] = outelVendor;
+
+      // Create the market.
+      Market market =
+          new Market@rainforestStore(rainforest)
+              .rainforest$Market$(vendors);
+
+      // Save the roots of the object forest in rainforest's root map.
+      Map root = rainforestStore.getRoot();
+      root.put("market", market);
+      root.put("alice", aliceCustomer);
+      root.put("bob", bobCustomer);
+    }
+  }
+}

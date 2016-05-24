@@ -1,0 +1,40 @@
+package rainforest;
+
+import countribank.Account;
+
+/**
+ * Represents a vendor at Rainforest.
+ */
+public class Vendor[principal rainforestP] {
+  @{⊤→rainforestP}
+
+  public final principal{this} vendorP;
+  public final principal{this} bankP;
+  private final Account[bankP, vendorP]{this} account;
+  private final Product[rainforestP, vendorP][]{this} products;
+
+  public Vendor(
+      principal{this} vendorP,
+      principal{this} bankP,
+      Account[bankP, vendorP]{this} account,
+      Product[rainforestP, vendorP][]{this} products
+  ) {
+    this.vendorP = vendorP;
+    this.bankP = bankP;
+    this.account = account;
+    this.products = products;
+    super();
+  }
+
+  /** Returns the vendor's bank account. */
+  public Account[bankP, vendorP]{this} getAccount() {
+    return account;
+  }
+
+  /**
+   * Returns a list of products sold by this vendor.
+   */
+  public Product[rainforestP, vendorP][]{this} getProducts() {
+    return products;
+  }
+}
