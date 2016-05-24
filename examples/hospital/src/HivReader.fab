@@ -24,41 +24,69 @@ class HivReader {
   {
     if (dropBox == null) return "drop box came back null";
 
-    final Store dropBoxStore = dropBox.store$;
-    dropBox.result = null;
-
     if (patients == null) {
+      dropBox.result = null;
       return "patients came back null";
     }
 
     String{*addressLabel; *hivLabel} resultStr = "";
     atomic {
-      PatientList[listLabel, addressLabel, hivLabel] cur = patients;
-      while (cur != null) {
-        Patient[addressLabel, hivLabel]{*addressLabel; *hivLabel} patient =
-          cur.patient;
-        cur = cur.next;
+      AddressList[{*addressLabel; *hivLabel}]{*addressLabel;*hivLabel} result =
+          filterAndGetAddresses(dropBox.store$, listLabel, addressLabel,
+              hivLabel, patients);
+      dropBox.result = result;
 
-        // Ignore null patients.
-        if (patient == null) {
-          resultStr = resultStr + "\npatient (singular) came back null";
-          continue;
-        }
-
-        // Ignore HIV-negative patients.
-        if (!patient.hivStatus) {
-          resultStr = resultStr + "\niterating past a patient without HIV...";
-          continue;
-        }
-
-        // Add the patient's address.
-        dropBox.result =
-            new AddressList@dropBoxStore(patient.address, dropBox.result);
-        resultStr =
-            resultStr + "\na patient with HIV lives at " + patient.address;
+      if (result != null) {
+        resultStr = resultStr + "\n" + result.toString();
+      } else {
+        resultStr = resultStr + "\n" + "no HIV-positive patients found";
       }
     }
 
     return resultStr;
+  }
+
+  /**
+   * Filters the given patient list for HIV-positive patients and obtains a
+   * list of their addresses.
+   */
+  public static AddressList[{*addressLabel;*hivLabel}]{*addressLabel;*hivLabel}
+    filterAndGetAddresses{*listLabel}(
+      Store{*addressLabel ; *hivLabel} store,
+      label{*addressLabel ; *hivLabel} listLabel,
+      label{*addressLabel ; *hivLabel} addressLabel,
+      label{*addressLabel ; *hivLabel} hivLabel,
+      PatientList[listLabel, addressLabel, hivLabel]{*listLabel} patients
+  )
+    where
+      // List label is the meet of address and hiv labels.
+      listLabel ⊑ {*addressLabel ⊓ *hivLabel},
+      {*addressLabel ⊓ *hivLabel} ⊑ listLabel,
+
+      // store can store the result.
+      {*addressLabel ; *hivLabel} ⊑ {⊤→store},
+      {⊤←store} ⊑ {*addressLabel ; *hivLabel}
+  {
+    if (patients == null) return null;
+
+    Patient[addressLabel, hivLabel] cur = patients.patient;
+    PatientList[listLabel, addressLabel, hivLabel] tail = patients.next;
+
+    if (cur == null) {
+      return
+          filterAndGetAddresses(store, listLabel, addressLabel, hivLabel, tail);
+    }
+
+    boolean curHivStatus = cur.hivStatus;
+    AddressList[{*addressLabel;*hivLabel}] result =
+        filterAndGetAddresses(store, listLabel, addressLabel, hivLabel, tail);
+    String curAddress = cur.address;
+
+    if (curHivStatus) {
+      result =
+          new AddressList[{*addressLabel;*hivLabel}]@store(curAddress, result);
+    }
+
+    return result;
   }
 }
