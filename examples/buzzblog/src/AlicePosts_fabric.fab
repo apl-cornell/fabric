@@ -51,8 +51,8 @@ class AlicePosts_fabric {
           } else printme = printme + "\npostLabel ⊑ {workerP→ }  failed";
         } else printme = printme + "\n{⊤←workerP} ⊑ postLabel failed";
       } else printme = printme + "\nThe permission checking if block failed.";
-      if (workerP equiv alice)
-        runtime.out().println(printme);
+//      if (workerP equiv alice)
+//        runtime.out().println(printme);
     }
   }
 }
