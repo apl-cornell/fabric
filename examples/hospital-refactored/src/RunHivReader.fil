@@ -24,7 +24,7 @@ public class RunHivReader {
     while (System.currentTimeMillis() < (start + (1000 * 60 * 5))) {
       String result =
           HivReader.readHiv(listLabel, addressLabel, hivLabel, patients, dropBox);
-      System.out.println(result);
+//      System.out.println(result);
     }
   }
 }
