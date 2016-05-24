@@ -1,0 +1,86 @@
+import fabric.util.Map;
+
+import rainforest.Customer;
+import rainforest.Market;
+import rainforest.Product;
+import rainforest.Vendor;
+
+/**
+ * Executes the example. Sits in a loop, buying up as much of Outel's stock as
+ * it can on behalf of a customer, one item at a time.
+ */
+public class Run {
+  public static void main(String[] args) {
+    Store rainforestStore = Worker.getWorker().getStore("rainforest");
+    String customerName = args[0];
+
+    Market market = null;
+    Customer customer = null;
+    Vendor outel = null;
+    Product product = null;
+
+    atomic {
+      Map root = rainforestStore.getRoot();
+      market = (Market) root.get("market");
+      customer = (Customer) root.get(customerName);
+      outel = (Vendor) market.getVendors()[0];
+      product = outel.getProducts()[0];
+    }
+
+    System.out.println("Starting to stockpile outel's product...");
+    int numUnits = 1; // Number of units to buy each time through the loop.
+    int numBought = 0;
+    while (true) {
+      if (!market.reserveStock(
+          customer.rainforest$Customer$_split_0.customerP_,
+          outel.rainforest$Vendor$_split_0.vendorP,
+          product,
+          numUnits)) {
+        break;
+      }
+
+      Integer price_ =
+        market.getPrice(
+          customer.rainforest$Customer$_split_0.customerP_,
+          outel.rainforest$Vendor$_split_0.vendorP,
+          product
+        );
+
+      if (price_ == null) {
+        System.out.println("Product price came back null.");
+        break;
+      }
+
+      int price = price_.intValue();
+
+      if (!market.makePayment(
+          customer.rainforest$Customer$_split_0.customerP_,
+          outel.rainforest$Vendor$_split_0.vendorP,
+          customer,
+          numUnits,
+          price)) {
+        // Customer had insufficient funds. Cancel the order.
+        market.cancelOrder(
+            customer.rainforest$Customer$_split_0.customerP_,
+            outel.rainforest$Vendor$_split_0.vendorP,
+            product,
+            numUnits);
+        break;
+      }
+
+      // Credit the vendor.
+      market.creditVendor(
+          customer.rainforest$Customer$_split_0.customerP_,
+          outel.rainforest$Vendor$_split_0.vendorP,
+          product,
+          price,
+          numUnits);
+
+      numBought = numBought + 1;
+      if (numBought % 100 == 0)
+        System.out.println(numBought + " items hoarded so far...");
+    }
+
+    System.out.println("Hoarded " + numBought + " items.");
+  }
+}
