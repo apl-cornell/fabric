@@ -134,20 +134,42 @@ public class Main extends polyglot.main.Main {
         String fileName = src.getPath();
         int index = fileName.indexOf("$$");
         fileName = fileName.substring(index);
-        insertBytecode(extInfo, classOutput, fileName, bytecodeMap);
+        insertBytecode(extInfo, classOutput, fileName, null, bytecodeMap);
+
+        // Handle class partitions.
+        // fileName will be of the form "$$store/onum_XXX$$/pkg/Class.java".
+        // Convert it to pkg.Class.
+        // First, strip off the "$$store/onum_XXX$$/" part.
+        String className = fileName.substring(fileName.indexOf("$$/", 2) + 3);
+        // Next, strip off the ".java" part.
+        className = className.substring(0, className.length() - 5);
+        // Finally, convert slashes to dots.
+        className = className.replace(File.separator, ".");
+
+        // Create the split class name prefix from the class name.
+        String splitClassNamePrefix = className.replace(".", "$") + "$_split_";
+        for (int splitNum = 0;; splitNum++) {
+          if (!insertBytecode(extInfo, classOutput, fileName,
+              splitClassNamePrefix + splitNum, bytecodeMap))
+            break;
+        }
       }
     } catch (TerminationException e) {
       throw new GeneralSecurityException(e);
     }
   }
 
-  private static void insertBytecode(fabric.ExtensionInfo extInfo,
-      Location classOutput, String fileName, Map<String, byte[]> bytecodeMap)
-      throws IOException {
+  private static boolean insertBytecode(fabric.ExtensionInfo extInfo,
+      Location classOutput, String fileName, String splitClassName,
+      Map<String, byte[]> bytecodeMap) throws IOException {
+    boolean bytecodeInserted = false;
     String[] suffixes = new String[] { "", "$_Impl", "$_Proxy", "$_Static",
         "$_Static$_Impl", "$_Static$_Proxy" };
+    final String splitClassNameExt =
+        splitClassName == null ? "" : "$" + splitClassName;
     final String classFileNameBase =
-        fileName.substring(0, fileName.lastIndexOf(".java"));
+        fileName.substring(0, fileName.lastIndexOf(".java"))
+            + splitClassNameExt;
 
     for (String ext : suffixes) {
       String classFileName = classFileNameBase + ext;
@@ -163,7 +185,11 @@ public class Main extends polyglot.main.Main {
         Report.report(2, "Inserting bytecode for " + fullName);
       }
       bytecodeMap.put(fullName, code);
+
+      bytecodeInserted = true;
     }
+
+    return bytecodeInserted;
   }
 
   public static void compileFromShell(List<String> args, InputStream in,

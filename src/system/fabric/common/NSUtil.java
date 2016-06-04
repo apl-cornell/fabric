@@ -300,6 +300,12 @@ public final class NSUtil {
     }
     String className = m.group(3);
 
+    // XXX This is super hacky.
+    if (className.contains("_split_")) {
+      // Remove the first occurrence of '$' and everything after.
+      className = className.substring(0, className.indexOf('$'));
+    }
+
     Codebase codebase =
         (Codebase) _Proxy.$getProxy(new _Proxy(codebaseStore, codebaseOnum));
 
