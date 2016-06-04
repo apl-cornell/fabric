@@ -125,8 +125,6 @@ public class Main extends polyglot.main.Main {
       }
 //      }
       Collection<JavaFileObject> outputFiles = main.compiler.outputFiles();
-      String[] suffixes = new String[] { "", "$_Impl", "$_Proxy", "$_Static",
-          "$_Static$_Impl", "$_Static$_Proxy" };
       Location classOutput = extInfo.getOptions().classOutputLocation();
       for (JavaFileObject jfo : outputFiles) {
         URI src = jfo.toUri();
@@ -136,25 +134,35 @@ public class Main extends polyglot.main.Main {
         String fileName = src.getPath();
         int index = fileName.indexOf("$$");
         fileName = fileName.substring(index);
-        for (String ext : suffixes) {
-          String classFileName =
-              fileName.substring(0, fileName.lastIndexOf(".java")) + ext;
-          classFileName = classFileName.replace(File.separator, ".");
-
-          FileObject classFo = extInfo.extFileManager()
-              .getJavaFileForInput(classOutput, classFileName, Kind.CLASS);
-          if (classFo == null) continue;
-          byte[] code = ExtFileManager.getBytes(classFo);
-          ClassFile classFile = extInfo.createClassFile(classFo, code);
-          String fullName = classFile.name().replace(File.separator, ".");
-          if (Report.should_report(Topics.mobile, 2)) {
-            Report.report(2, "Inserting bytecode for " + fullName);
-          }
-          bytecodeMap.put(fullName, code);
-        }
+        insertBytecode(extInfo, classOutput, fileName, bytecodeMap);
       }
     } catch (TerminationException e) {
       throw new GeneralSecurityException(e);
+    }
+  }
+
+  private static void insertBytecode(fabric.ExtensionInfo extInfo,
+      Location classOutput, String fileName, Map<String, byte[]> bytecodeMap)
+      throws IOException {
+    String[] suffixes = new String[] { "", "$_Impl", "$_Proxy", "$_Static",
+        "$_Static$_Impl", "$_Static$_Proxy" };
+    final String classFileNameBase =
+        fileName.substring(0, fileName.lastIndexOf(".java"));
+
+    for (String ext : suffixes) {
+      String classFileName = classFileNameBase + ext;
+      classFileName = classFileName.replace(File.separator, ".");
+      FileObject classFileObject = extInfo.extFileManager()
+          .getJavaFileForInput(classOutput, classFileName, Kind.CLASS);
+      if (classFileObject == null) continue;
+
+      byte[] code = ExtFileManager.getBytes(classFileObject);
+      ClassFile classFile = extInfo.createClassFile(classFileObject, code);
+      String fullName = classFile.name().replace(File.separator, ".");
+      if (Report.should_report(Topics.mobile, 2)) {
+        Report.report(2, "Inserting bytecode for " + fullName);
+      }
+      bytecodeMap.put(fullName, code);
     }
   }
 
