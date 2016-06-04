@@ -164,7 +164,7 @@ public abstract class ClassRef implements FastSerializable {
 
     @SuppressWarnings("unchecked")
     Class<? extends fabric.lang.Object> fabClass =
-    (Class<? extends fabric.lang.Object>) clazz;
+        (Class<? extends fabric.lang.Object>) clazz;
     return new FabricClassRef(fabClass);
   }
 
@@ -468,8 +468,8 @@ public abstract class ClassRef implements FastSerializable {
      */
     private static byte[] classHash(byte[] data, int pos) {
       int classHashPos = classHashLengthPos(data, pos) + 2;
-      return Arrays.copyOfRange(data, classHashPos, classHashPos
-          + classHashLength(data, pos));
+      return Arrays.copyOfRange(data, classHashPos,
+          classHashPos + classHashLength(data, pos));
     }
 
     private static final byte[] SURROGATE_CLASS_NAME_UTF8;
@@ -487,8 +487,7 @@ public abstract class ClassRef implements FastSerializable {
 
       int nameDataPos = classNameLengthPos(data, pos) + 2;
       for (int i = 0; i < SURROGATE_CLASS_NAME_UTF8.length; i++) {
-        if (data[nameDataPos + i] != SURROGATE_CLASS_NAME_UTF8[i])
-          return false;
+        if (data[nameDataPos + i] != SURROGATE_CLASS_NAME_UTF8[i]) return false;
       }
 
       return true;
@@ -734,9 +733,8 @@ public abstract class ClassRef implements FastSerializable {
      *         array.
      */
     private static int storeNameLength(byte[] data, int pos) {
-      int x =
-          SerializationUtil
-          .unsignedShortAt(data, storeNameLengthPos(data, pos));
+      int x = SerializationUtil.unsignedShortAt(data,
+          storeNameLengthPos(data, pos));
       return x;
     }
 
@@ -836,8 +834,8 @@ public abstract class ClassRef implements FastSerializable {
      */
     private static byte[] classHash(byte[] data, int pos) {
       int classHashPos = classHashLengthPos(data, pos) + 2;
-      return Arrays.copyOfRange(data, classHashPos, classHashPos
-          + classHashLength(data, pos));
+      return Arrays.copyOfRange(data, classHashPos,
+          classHashPos + classHashLength(data, pos));
     }
   }
 
