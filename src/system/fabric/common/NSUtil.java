@@ -12,13 +12,13 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import polyglot.util.InternalCompilerError;
 import fabric.common.exceptions.InternalError;
 import fabric.lang.Codebase;
 import fabric.lang.FClass;
 import fabric.lang.Object._Proxy;
 import fabric.worker.Store;
 import fabric.worker.Worker;
+import polyglot.util.InternalCompilerError;
 
 public final class NSUtil {
   private static List<String> TOPICS = new ArrayList<>();
@@ -42,9 +42,8 @@ public final class NSUtil {
    * @return the parent package name for classes in the codebase
    */
   public static String javaPackageName(URI codebase_oid) {
-    if (codebase_oid.isOpaque())
-      throw new InternalError("Cannot create java package name for "
-          + codebase_oid);
+    if (codebase_oid.isOpaque()) throw new InternalError(
+        "Cannot create java package name for " + codebase_oid);
     // URI is of form : 'fab://store/123'
     String store = codebase_oid.getAuthority();
 
@@ -170,7 +169,7 @@ public final class NSUtil {
    * a mangled java name.
    *
    * @param className The Fabric or FabIL class name.
-   * @param suffix The Java inner class name desired. 
+   * @param suffix The Java inner class name desired.
    * @return
    */
   private static String toJavaName(String className, String suffix) {
@@ -197,9 +196,8 @@ public final class NSUtil {
    * @return the uri representing the parent directory
    */
   public static URI dirname(URI uri) {
-    if (uri.isOpaque())
-      throw new InternalCompilerError("Cannot get dirname of opaque URI: "
-          + uri);
+    if (uri.isOpaque()) throw new InternalCompilerError(
+        "Cannot get dirname of opaque URI: " + uri);
     String scheme = uri.getScheme();
     String auth = uri.getAuthority();
     String path = uri.getPath();
@@ -218,9 +216,8 @@ public final class NSUtil {
    * @return the last component in uri's path
    */
   public static String basename(URI uri) {
-    if (uri.isOpaque())
-      throw new InternalCompilerError("Cannot get basename of opaque URI: "
-          + uri);
+    if (uri.isOpaque()) throw new InternalCompilerError(
+        "Cannot get basename of opaque URI: " + uri);
 
     String path = uri.getPath();
     int idx = path.lastIndexOf('/');
@@ -244,12 +241,10 @@ public final class NSUtil {
       if (s.endsWith("/")) s = s.substring(0, s.length() - 1);
       Long onum = Long.parseLong(s); // skip leading
 
-      Object o =
-          fabric.lang.Object._Proxy.$getProxy(new fabric.lang.Object._Proxy(
-              store, onum));
-      if (!(o instanceof Codebase))
-        throw new InternalCompilerError("The Fabric object at " + oid
-            + " is not a codebase.");
+      Object o = fabric.lang.Object._Proxy
+          .$getProxy(new fabric.lang.Object._Proxy(store, onum));
+      if (!(o instanceof Codebase)) throw new InternalCompilerError(
+          "The Fabric object at " + oid + " is not a codebase.");
       return (Codebase) o;
     } catch (StringIndexOutOfBoundsException e) {
       throw new InternalCompilerError("Invalid oid for codebase: " + oid);
@@ -292,27 +287,31 @@ public final class NSUtil {
    */
   public static FClass toProxy(String javaName) throws ClassNotFoundException {
     Matcher m = javaNameRegex.matcher(javaName);
-    if (!m.matches() || m.group(2) == null)
-      throw new ClassNotFoundException("failed to parse java class name "
-          + javaName);
+    if (!m.matches() || m.group(2) == null) throw new ClassNotFoundException(
+        "failed to parse java class name " + javaName);
 
     Store codebaseStore = Worker.getWorker().getStore(m.group(1));
     long codebaseOnum;
     try {
       codebaseOnum = Long.parseLong(m.group(2));
     } catch (NumberFormatException e) {
-      throw new ClassNotFoundException("Invalid onum in java name:" + javaName
-          + ":" + m.group(2));
+      throw new ClassNotFoundException(
+          "Invalid onum in java name:" + javaName + ":" + m.group(2));
     }
     String className = m.group(3);
+
+    // XXX This is super hacky.
+    if (className.contains("_split_")) {
+      // Remove the first occurrence of '$' and everything after.
+      className = className.substring(0, className.indexOf('$'));
+    }
 
     Codebase codebase =
         (Codebase) _Proxy.$getProxy(new _Proxy(codebaseStore, codebaseOnum));
 
     FClass result = codebase.resolveClassName(className);
-    if (result == null)
-      throw new ClassNotFoundException("Failed to load " + className
-          + " in codebase " + codebase + "[" + javaName + "]");
+    if (result == null) throw new ClassNotFoundException("Failed to load "
+        + className + " in codebase " + codebase + "[" + javaName + "]");
 
     return result;
   }
@@ -322,9 +321,8 @@ public final class NSUtil {
   // group 2: codebase onum or null for platform class
   // group 3: fabric class name
   // group 4: $_Impl or $_Proxy or ""
-  private static final Pattern javaNameRegex =
-      Pattern
-          .compile("(?:\\$\\$(.*)\\.onum_(\\d*)\\$\\$\\.)?(.*?)([$.]_Static)?((?:[$.]_Impl)|(?:[$.]_Proxy)|)");
+  private static final Pattern javaNameRegex = Pattern.compile(
+      "(?:\\$\\$(.*)\\.onum_(\\d*)\\$\\$\\.)?(.*?)([$.]_Static)?((?:[$.]_Impl)|(?:[$.]_Proxy)|)");
 
   /**
    * Return the namespace representing a codebase.
@@ -368,7 +366,8 @@ public final class NSUtil {
 
           if (next_idx > 0) remaining = path.substring(next_idx + 1);
 
-          try (BufferedReader lr = new BufferedReader(new FileReader(pathFile))) {
+          try (BufferedReader lr =
+              new BufferedReader(new FileReader(pathFile))) {
             path = lr.readLine();
           }
         } catch (FileNotFoundException e) {

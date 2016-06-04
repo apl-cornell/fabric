@@ -164,7 +164,7 @@ public abstract class ClassRef implements FastSerializable {
 
     @SuppressWarnings("unchecked")
     Class<? extends fabric.lang.Object> fabClass =
-    (Class<? extends fabric.lang.Object>) clazz;
+        (Class<? extends fabric.lang.Object>) clazz;
     return new FabricClassRef(fabClass);
   }
 
@@ -280,7 +280,7 @@ public abstract class ClassRef implements FastSerializable {
     }
 
     @Override
-    public String javaClassName() {
+    String javaClassName() {
       return clazz.getName();
     }
 
@@ -468,8 +468,8 @@ public abstract class ClassRef implements FastSerializable {
      */
     private static byte[] classHash(byte[] data, int pos) {
       int classHashPos = classHashLengthPos(data, pos) + 2;
-      return Arrays.copyOfRange(data, classHashPos, classHashPos
-          + classHashLength(data, pos));
+      return Arrays.copyOfRange(data, classHashPos,
+          classHashPos + classHashLength(data, pos));
     }
 
     private static final byte[] SURROGATE_CLASS_NAME_UTF8;
@@ -487,8 +487,7 @@ public abstract class ClassRef implements FastSerializable {
 
       int nameDataPos = classNameLengthPos(data, pos) + 2;
       for (int i = 0; i < SURROGATE_CLASS_NAME_UTF8.length; i++) {
-        if (data[nameDataPos + i] != SURROGATE_CLASS_NAME_UTF8[i])
-          return false;
+        if (data[nameDataPos + i] != SURROGATE_CLASS_NAME_UTF8[i]) return false;
       }
 
       return true;
@@ -512,9 +511,16 @@ public abstract class ClassRef implements FastSerializable {
     private final FClass._Proxy fClass;
 
     /**
-     * Whether this refers to the _Static class portion of the fClass.
+     * If this ClassRef refers to a nested class in the translated output of
+     * {@link #fClass}, then this will be the name of that nested class,
+     * relative to {@link #fClass}. For example, if this class refers to the
+     * _Static class, then {@link #nestedClassName} will be {@code _Static}.
+     * If this class refers to a partition class (due to object splitting), then
+     * {@link #nestedClassName} could be {@code pkg$className$_split_0}. If this
+     * ClassRef does not refer to a nested class, then {@link #nestedClassName}
+     * will be {@code null}.
      */
-    private final boolean staticClassFlag;
+    private final String nestedClassName;
 
     /**
      * The OID of the class's codebase, encapsulated as a proxy for the
@@ -545,32 +551,35 @@ public abstract class ClassRef implements FastSerializable {
      */
     private FabricClassRef(Class<? extends fabric.lang.Object> clazz) {
       super(ClassRefType.FABRIC);
+
+      String className = clazz.getName();
       try {
-        this.fClass = (FClass._Proxy) NSUtil.toProxy(clazz.getName());
+        this.fClass = (FClass._Proxy) NSUtil.toProxy(className);
       } catch (final ClassNotFoundException e) {
         throw new InternalError("failed to resolve existing class", e);
       }
 
-      // Done this way to ensure a compile error if the class name changes.
-      this.staticClassFlag =
-          clazz.getSimpleName().equals(Object._Static.class.getSimpleName());
+      if (className.contains("$$."))
+        className = className.substring(className.indexOf("$$.") + 3);
+      this.nestedClassName = className.contains("$")
+          ? className.substring(className.indexOf('$') + 1) : null;
 
       this.codebase = null;
       this.className = null;
     }
 
-    private FabricClassRef(FClass._Proxy fClass, boolean staticClassFlag) {
+    private FabricClassRef(FClass._Proxy fClass, String nestedClassName) {
       super(ClassRefType.FABRIC);
       this.fClass = fClass;
-      this.staticClassFlag = staticClassFlag;
+      this.nestedClassName = nestedClassName;
       this.codebase = null;
       this.className = null;
     }
 
     @Override
-    public String javaClassName() {
+    String javaClassName() {
       String result = NSUtil.javaClassName(getFClass());
-      if (staticClassFlag) result += "$_Static";
+      if (nestedClassName != null) result += "$" + nestedClassName;
       return result;
     }
 
@@ -595,7 +604,7 @@ public abstract class ClassRef implements FastSerializable {
      */
     public final Class<? extends fabric.lang.Object> toDeclaringClass() {
       Class<? extends fabric.lang.Object> result = toClass();
-      if (staticClassFlag) {
+      if (nestedClassName != null) {
         result = (Class<? extends Object>) result.getDeclaringClass();
       }
 
@@ -621,7 +630,8 @@ public abstract class ClassRef implements FastSerializable {
      * <li>short length of class OID's store's name</li>
      * <li>byte[] class OID's store's name</li>
      * <li>long class OID's onum</li>
-     * <li>byte whether this is a reference to the _Static class</li>
+     * <li>short length of the nested class name</li>
+     * <li>byte[] the name of the nested class</li>
      * <li>short class hash length</li>
      * <li>byte[] class hash</li>
      * </ul>
@@ -636,11 +646,14 @@ public abstract class ClassRef implements FastSerializable {
       long onum = fClass.$getOnum();
 
       byte[] storeNameUTF = storeName.getBytes("UTF-8");
+      byte[] nestedClassNameUTF = nestedClassName == null ? new byte[0]
+          : nestedClassName.getBytes("UTF-8");
 
       out.writeShort(storeNameUTF.length);
       out.write(storeNameUTF);
       out.writeLong(onum);
-      out.writeBoolean(staticClassFlag);
+      out.writeShort(nestedClassNameUTF.length);
+      out.write(nestedClassNameUTF);
       out.writeShort(hash.length);
       out.write(hash);
     }
@@ -654,7 +667,7 @@ public abstract class ClassRef implements FastSerializable {
      */
     private FabricClassRef(byte[] data, int pos) {
       this(new FClass._Proxy(store(data, pos), onum(data, pos)),
-          staticClassFlag(data, pos));
+          nestedClassName(data, pos));
       checkHash(classHash(data, pos));
     }
 
@@ -671,7 +684,11 @@ public abstract class ClassRef implements FastSerializable {
 
       long onum = in.readLong();
       this.fClass = new FClass._Proxy(store, onum);
-      this.staticClassFlag = in.readBoolean();
+
+      byte[] nestedClassNameData = new byte[in.readShort()];
+      in.readFully(nestedClassNameData);
+      this.nestedClassName = nestedClassNameData.length == 0 ? null
+          : new String(nestedClassNameData, "UTF-8");
       this.codebase = null;
       this.className = null;
 
@@ -693,8 +710,9 @@ public abstract class ClassRef implements FastSerializable {
       long onum = in.readLong();
       out.writeLong(onum);
 
-      boolean staticClassFlag = in.readBoolean();
-      out.writeBoolean(staticClassFlag);
+      int nestedClassNameLength = in.readShort();
+      out.writeShort(nestedClassNameLength);
+      SerializationUtil.copyBytes(in, out, nestedClassNameLength, buf);
 
       int classHashLength = in.readShort();
       out.writeShort(classHashLength);
@@ -734,9 +752,8 @@ public abstract class ClassRef implements FastSerializable {
      *         array.
      */
     private static int storeNameLength(byte[] data, int pos) {
-      int x =
-          SerializationUtil
-          .unsignedShortAt(data, storeNameLengthPos(data, pos));
+      int x = SerializationUtil.unsignedShortAt(data,
+          storeNameLengthPos(data, pos));
       return x;
     }
 
@@ -794,12 +811,52 @@ public abstract class ClassRef implements FastSerializable {
       return SerializationUtil.longAt(data, onumPos(data, pos));
     }
 
-    private static int staticClassFlagPos(byte[] data, int pos) {
+    /**
+     * @param pos
+     *          the starting position of a serialized representation of a
+     *          FabricClassRef object.
+     * @return the length of nested class name in serialized representation of
+     *         FabricClassRef starting at given position in the given byte
+     *         array.
+     */
+    private static int nestedClassNameLengthPos(byte[] data, int pos) {
       return onumPos(data, pos) + 8;
     }
 
-    private static boolean staticClassFlag(byte[] data, int pos) {
-      return SerializationUtil.booleanAt(data, staticClassFlagPos(data, pos));
+    /**
+     * @param pos
+     *          the starting position of a serialized representation of a
+     *          FabricClassRef object.
+     * @return the length of nested class name in serialized representation of
+     *         FabricClassRef starting at given position in the given byte
+     *         array.
+     */
+    private static int nestedClassNameLength(byte[] data, int pos) {
+      return SerializationUtil.unsignedShortAt(data,
+          nestedClassNameLengthPos(data, pos));
+    }
+
+    /**
+     * @param pos
+     *          the starting position of a serialized representation of a
+     *          FabricClassRef object.
+     * @return the nested class name in serialized representation of
+     *         FabricClassRef starting at given position in the given byte
+     *         array.
+     */
+    private static String nestedClassName(byte[] data, int pos) {
+      int nameLength = nestedClassNameLength(data, pos);
+      if (nameLength == 0) return null;
+
+      int nameDataPos = nestedClassNameLengthPos(data, pos) + 2;
+      byte[] nameUTF8 =
+          Arrays.copyOfRange(data, nameDataPos, nameDataPos + nameLength);
+
+      try {
+        return new String(nameUTF8, "UTF-8");
+      } catch (UnsupportedEncodingException e) {
+        throw new InternalError(e);
+      }
     }
 
     /**
@@ -811,7 +868,8 @@ public abstract class ClassRef implements FastSerializable {
      *         array.
      */
     private static int classHashLengthPos(byte[] data, int pos) {
-      return staticClassFlagPos(data, pos) + 1;
+      return nestedClassNameLengthPos(data, pos) + 2
+          + nestedClassNameLength(data, pos);
     }
 
     /**
@@ -836,8 +894,8 @@ public abstract class ClassRef implements FastSerializable {
      */
     private static byte[] classHash(byte[] data, int pos) {
       int classHashPos = classHashLengthPos(data, pos) + 2;
-      return Arrays.copyOfRange(data, classHashPos, classHashPos
-          + classHashLength(data, pos));
+      return Arrays.copyOfRange(data, classHashPos,
+          classHashPos + classHashLength(data, pos));
     }
   }
 

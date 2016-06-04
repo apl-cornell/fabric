@@ -21,6 +21,12 @@ import javax.tools.JavaFileManager.Location;
 import javax.tools.JavaFileObject;
 import javax.tools.JavaFileObject.Kind;
 
+import fabric.common.NSUtil;
+import fabric.lang.Codebase;
+import fabric.lang.FClass;
+import fabric.util.Iterator;
+import fabric.worker.AbortException;
+import fabric.worker.Worker;
 import polyglot.filemanager.ExtFileManager;
 import polyglot.frontend.Compiler;
 import polyglot.frontend.ExtensionInfo;
@@ -31,12 +37,6 @@ import polyglot.types.reflect.ClassFile;
 import polyglot.util.ErrorQueue;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.StdErrorQueue;
-import fabric.common.NSUtil;
-import fabric.lang.Codebase;
-import fabric.lang.FClass;
-import fabric.util.Iterator;
-import fabric.worker.AbortException;
-import fabric.worker.Worker;
 
 /**
  * Main is the main program of the compiler extension. It simply invokes
@@ -125,9 +125,6 @@ public class Main extends polyglot.main.Main {
       }
 //      }
       Collection<JavaFileObject> outputFiles = main.compiler.outputFiles();
-      String[] suffixes =
-          new String[] { "", "$_Impl", "$_Proxy", "$_Static", "$_Static$_Impl",
-              "$_Static$_Proxy" };
       Location classOutput = extInfo.getOptions().classOutputLocation();
       for (JavaFileObject jfo : outputFiles) {
         URI src = jfo.toUri();
@@ -137,27 +134,62 @@ public class Main extends polyglot.main.Main {
         String fileName = src.getPath();
         int index = fileName.indexOf("$$");
         fileName = fileName.substring(index);
-        for (String ext : suffixes) {
-          String classFileName =
-              fileName.substring(0, fileName.lastIndexOf(".java")) + ext;
-          classFileName = classFileName.replace(File.separator, ".");
+        insertBytecode(extInfo, classOutput, fileName, null, bytecodeMap);
 
-          FileObject classFo =
-              extInfo.extFileManager().getJavaFileForInput(classOutput,
-                  classFileName, Kind.CLASS);
-          if (classFo == null) continue;
-          byte[] code = ExtFileManager.getBytes(classFo);
-          ClassFile classFile = extInfo.createClassFile(classFo, code);
-          String fullName = classFile.name().replace(File.separator, ".");
-          if (Report.should_report(Topics.mobile, 2)) {
-            Report.report(2, "Inserting bytecode for " + fullName);
-          }
-          bytecodeMap.put(fullName, code);
+        // Handle class partitions.
+        // fileName will be of the form "$$store/onum_XXX$$/pkg/Class.java".
+        // Convert it to pkg.Class.
+        // First, strip off the "$$store/onum_XXX$$/" part.
+        String className = fileName.substring(fileName.indexOf("$$/", 2) + 3);
+        // Next, strip off the ".java" part.
+        className = className.substring(0, className.length() - 5);
+        // Finally, convert slashes to dots.
+        className = className.replace(File.separator, ".");
+
+        // Create the split class name prefix from the class name.
+        String splitClassNamePrefix = className.replace(".", "$") + "$_split_";
+        for (int splitNum = 0;; splitNum++) {
+          if (!insertBytecode(extInfo, classOutput, fileName,
+              splitClassNamePrefix + splitNum, bytecodeMap))
+            break;
         }
       }
     } catch (TerminationException e) {
       throw new GeneralSecurityException(e);
     }
+  }
+
+  private static boolean insertBytecode(fabric.ExtensionInfo extInfo,
+      Location classOutput, String fileName, String splitClassName,
+      Map<String, byte[]> bytecodeMap) throws IOException {
+    boolean bytecodeInserted = false;
+    String[] suffixes = new String[] { "", "$_Impl", "$_Proxy", "$_Static",
+        "$_Static$_Impl", "$_Static$_Proxy" };
+    final String splitClassNameExt =
+        splitClassName == null ? "" : "$" + splitClassName;
+    final String classFileNameBase =
+        fileName.substring(0, fileName.lastIndexOf(".java"))
+            + splitClassNameExt;
+
+    for (String ext : suffixes) {
+      String classFileName = classFileNameBase + ext;
+      classFileName = classFileName.replace(File.separator, ".");
+      FileObject classFileObject = extInfo.extFileManager()
+          .getJavaFileForInput(classOutput, classFileName, Kind.CLASS);
+      if (classFileObject == null) continue;
+
+      byte[] code = ExtFileManager.getBytes(classFileObject);
+      ClassFile classFile = extInfo.createClassFile(classFileObject, code);
+      String fullName = classFile.name().replace(File.separator, ".");
+      if (Report.should_report(Topics.mobile, 2)) {
+        Report.report(2, "Inserting bytecode for " + fullName);
+      }
+      bytecodeMap.put(fullName, code);
+
+      bytecodeInserted = true;
+    }
+
+    return bytecodeInserted;
   }
 
   public static void compileFromShell(List<String> args, InputStream in,
@@ -252,9 +284,8 @@ public class Main extends polyglot.main.Main {
     }
 
     if (options.needWorker()) {
-      if (Report.should_report(Topics.mobile, 2))
-        Report.report(2,
-            "Compiling in worker with args:" + Arrays.toString(argv));
+      if (Report.should_report(Topics.mobile, 2)) Report.report(2,
+          "Compiling in worker with args:" + Arrays.toString(argv));
       compileInWorker(options, source, ext, eq);
     } else start(options, source, ext, eq);
 
@@ -264,8 +295,8 @@ public class Main extends polyglot.main.Main {
       ErrorQueue eq) {
 
     if (eq == null) {
-      eq =
-          new StdErrorQueue(System.err, options.error_count, ext.compilerName());
+      eq = new StdErrorQueue(System.err, options.error_count,
+          ext.compilerName());
     }
 
     this.compiler = new Compiler(ext, eq);
@@ -299,8 +330,8 @@ public class Main extends polyglot.main.Main {
         if (!Worker.isInitialized())
           Worker.initialize(o.workerName());
         else if (!Worker.getWorker().config.name.equals(o.workerName()))
-          throw new InternalCompilerError("Can not compile as "
-              + o.workerName() + " from " + Worker.getWorker().config.name);
+          throw new InternalCompilerError("Can not compile as " + o.workerName()
+              + " from " + Worker.getWorker().config.name);
       } catch (fabric.common.exceptions.UsageError x) {
         throw new InternalCompilerError("Could not initialize Fabric worker.",
             x);
@@ -338,12 +369,14 @@ public class Main extends polyglot.main.Main {
                 throw new TerminationException(
                     "Error writing codebase reference to "
                         + extInfo.getOptions().codebaseFilename() + ": "
-                        + e.getMessage(), 1);
+                        + e.getMessage(),
+                    1);
               } catch (IOException e) {
                 throw new TerminationException(
                     "Error writing codebase reference to "
                         + extInfo.getOptions().codebaseFilename() + ": "
-                        + e.getMessage(), 1);
+                        + e.getMessage(),
+                    1);
               }
             }
           } catch (Throwable e) {
@@ -379,7 +412,7 @@ public class Main extends polyglot.main.Main {
     List<String> files = new ArrayList<>();
     for (Iterator it =
         classes.keySet().iterator(Worker.getWorker().getLocalStore()); it
-        .hasNext();) {
+            .hasNext();) {
       String className =
           (String) fabric.lang.WrappedJavaInlineable.$unwrap(it.next());
       FClass fcls = cb.resolveClassName(className);
