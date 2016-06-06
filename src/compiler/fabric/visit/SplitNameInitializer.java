@@ -5,6 +5,7 @@ import java.util.Map;
 
 import fabric.types.FabricClassType;
 import fabric.types.FabricFieldInstance;
+import fabric.types.FabricTypeSystem;
 import jif.translate.ClassDeclToJavaExt_c;
 import jif.types.label.Label;
 import polyglot.ast.ClassDecl;
@@ -20,8 +21,11 @@ import polyglot.visit.NodeVisitor;
  */
 public class SplitNameInitializer extends NodeVisitor {
 
-  public SplitNameInitializer(Lang lang) {
+  protected final FabricTypeSystem ts;
+
+  public SplitNameInitializer(Lang lang, FabricTypeSystem ts) {
     super(lang);
+    this.ts = ts;
   }
 
   @Override
@@ -30,6 +34,10 @@ public class SplitNameInitializer extends NodeVisitor {
       // Make sure this isn't an interface.
       ClassDecl classDecl = (ClassDecl) n;
       if (classDecl.flags().isInterface()) return n;
+
+      // Make sure this is a Fabric class; otherwise, instances won't be
+      // persistent.
+      if (!ts.isFabricClass(classDecl.type())) return n;
 
       // Initialize the split class names of the fields declared in the
       // ClassDecl.

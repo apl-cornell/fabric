@@ -226,14 +226,16 @@ public class FabricScheduler extends JifScheduler implements CBScheduler {
 
   public Goal SplitNamesInitialized(Job job) {
     Lang lang = fabext.nodeFactory().lang();
-    Goal g = internGoal(new VisitorGoal(job, new SplitNameInitializer(lang)) {
-      @Override
-      public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
-        List<Goal> l = new ArrayList<>();
-        l.add(LabelsDoubleChecked(job));
-        return l;
-      }
-    });
+    FabricTypeSystem ts = fabext.typeSystem();
+    Goal g =
+        internGoal(new VisitorGoal(job, new SplitNameInitializer(lang, ts)) {
+          @Override
+          public Collection<Goal> prerequisiteGoals(Scheduler scheduler) {
+            List<Goal> l = new ArrayList<>();
+            l.add(LabelsDoubleChecked(job));
+            return l;
+          }
+        });
 
     return g;
   }

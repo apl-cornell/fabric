@@ -1,0 +1,13 @@
+// Shouldn't be splitting Java classes. (Both below are Java classes.)
+class Split01 extends Split01a {
+  final int{⊤→} x;
+
+  Split01() {
+    x = 42;
+    super();
+  }
+}
+
+class Split01a extends java.lang.Object {
+  int y;
+}

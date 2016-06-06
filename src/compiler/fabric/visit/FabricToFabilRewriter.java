@@ -187,6 +187,15 @@ public class FabricToFabilRewriter extends JifToJavaRewriter {
   }
 
   @Override
+  public void leavingClass() {
+    super.leavingClass();
+
+    // Clear out object fragment information.
+    // XXX This won't work so well if Jif starts supporting nested classes.
+    objectFragments.clear();
+  }
+
+  @Override
   public void addInitializer(FieldInstance fi, Expr init)
       throws SemanticException {
     String splitName = ((FabricFieldInstance) fi).splitClassName();

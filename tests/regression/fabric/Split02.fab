@@ -1,0 +1,13 @@
+// Test case to exercise a bug where if multiple classes are declared in a
+// source file, their partition classes would get leaked into one another.
+class Split02 {
+  final int{⊤→} x;
+
+  Split02() {
+    x = 42;
+    super();
+  }
+}
+
+// Split02a shouldn't have partitions from Split02.
+class Split02a {}
