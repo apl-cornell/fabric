@@ -31,6 +31,10 @@ public class FabricFieldInstance_c extends JifFieldInstance_c
 
   @Override
   public String splitClassName() {
+    // Handle the "length" field for arrays.
+    ReferenceType container = container();
+    if (container instanceof FabricArrayType) return null;
+
     FabricClassType ct = (FabricClassType) container();
     return ct.splitClassName(name);
   }

@@ -15,7 +15,9 @@ public interface FabricFieldInstance extends jif.types.JifFieldInstance {
   /**
    * @return the class name of the split fragment in which this field will
    *           reside after translation to FabIL. The split fragment will live
-   *           as a class, nested in the class that declares this field.
+   *           as a class, nested in the class that declares this field. This
+   *           method returns null if the field does not reside in a split
+   *           fragment.
    */
   String splitClassName();
 }
