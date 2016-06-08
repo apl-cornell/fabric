@@ -1,0 +1,15 @@
+class Subst01[label L1] {
+  Object{L1}[]{L1} array;
+
+  int{L1} m{L1}() {
+    return array.length;
+  }
+}
+
+class Subst01a[label L2] {
+  int{L2} x;
+
+  void m{L2}(Subst01[L2]{L2} subst01) {
+    this.x = subst01.array.length;
+  }
+}
