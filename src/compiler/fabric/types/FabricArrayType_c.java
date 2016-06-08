@@ -1,11 +1,13 @@
 package fabric.types;
 
+import java.util.ArrayList;
+
 import jif.types.ConstArrayType_c;
 import jif.types.JifFieldInstance;
 import jif.types.JifTypeSystem;
+import jif.types.LabeledType;
 import jif.types.label.ConfPolicy;
 import jif.types.label.Label;
-
 import polyglot.types.FieldInstance;
 import polyglot.types.SemanticException;
 import polyglot.types.Type;
@@ -17,8 +19,8 @@ import polyglot.util.Position;
  * @see FabricTypeSystem for further description
  * @author mdgeorge
  */
-public class FabricArrayType_c extends ConstArrayType_c implements
-FabricArrayType {
+public class FabricArrayType_c extends ConstArrayType_c
+    implements FabricArrayType {
   protected ConfPolicy accessPolicy;
   protected boolean isNative;
 
@@ -60,10 +62,15 @@ FabricArrayType {
     if (fixField) {
       // Make the length field non-final.
       JifFieldInstance lengthField = (JifFieldInstance) lengthField();
-      lengthField = (JifFieldInstance) lengthField.flags(lengthField.flags().clearFinal());
+      lengthField = (JifFieldInstance) lengthField
+          .flags(lengthField.flags().clearFinal());
       // Make the length field label the same as the label of the entries (since
       // the length is non-final).
-      lengthField.setLabel(ts.labelOfType(base()));
+      Label label = ts.labelOfType(base());
+      LabeledType type = (LabeledType) lengthField.type();
+      type = type.labelPart(label);
+      lengthField = (JifFieldInstance) lengthField.type(type);
+      lengthField.setLabel(label);
       fields.set(0, lengthField);
     }
   }
@@ -74,13 +81,19 @@ FabricArrayType {
 
   @Override
   protected FieldInstance createLengthFieldInstance() {
-      FieldInstance fi =
-              ts.fieldInstance(position(),
-                               this,
-                               ts.Public().Final(),
-                               ts.Int(),
-                               "length");
-      fi.setNotConstant();
-      return fi;
+    FieldInstance fi =
+        ts.fieldInstance(position(), this, ts.Public(), ts.Int(), "length");
+    fi.setNotConstant();
+    return fi;
+  }
+
+  @Override
+  public FabricArrayType lengthField(FieldInstance fi) {
+    if (fi == fields.get(0)) return this;
+
+    FabricArrayType_c n = (FabricArrayType_c) copy();
+    n.fields = new ArrayList<>(fields);
+    n.fields.set(0, fi);
+    return n;
   }
 }

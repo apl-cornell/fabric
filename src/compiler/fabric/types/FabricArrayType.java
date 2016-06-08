@@ -1,6 +1,7 @@
 package fabric.types;
 
 import jif.types.ConstArrayType;
+import polyglot.types.FieldInstance;
 
 /**
  * Unlike FabIL, we follow the jif const array design here. All ArrayTypes
@@ -14,4 +15,10 @@ import jif.types.ConstArrayType;
 public interface FabricArrayType extends ConstArrayType, FabricReferenceType {
   /** Type is a native (java) array type */
   boolean isNative();
+
+  /**
+   * Updates the field instance associated with the length field, returning a
+   * new FabricArrayType.
+   */
+  FabricArrayType lengthField(FieldInstance fi);
 }
