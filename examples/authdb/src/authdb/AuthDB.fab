@@ -42,30 +42,28 @@ public final class AuthDB[principal authP] {
   }
 
   public boolean{authP←} authenticate{authP→}(String{authP→} user,
-      String{authP→} password) where caller(authP) {
-    // Endorse the PC to gain authP←.
-    endorse ({authP→} to {authP→;authP←}) {
-      // Endorse the password to gain authP← if it's not null.
-      endorse (password, {authP→} to {authP→;authP←})
-      if (password != null) {
-	atomic {
-	  Object lookupResult =
-	    db.get(endorse(user, {authP→} to {authP→;authP←}));
+        String{authP→} password)
+      where caller(authP),
+        // Endorse the PC to gain authP←.
+        endorse({authP→;authP←}) {
+    // Endorse the password to gain authP← if it's not null.
+    endorse (password, {authP→} to {authP→;authP←})
+    if (password != null) {
+      atomic {
+        Object lookupResult =
+          db.get(endorse(user, {authP→} to {authP→;authP←}));
 
-	  if (password.equals(lookupResult)) {
-	    // Downgrade the result.
-	    declassify ({authP→} to {})
-	      endorse ({} to {authP←})
-		return true;
-	  }
-	}
+        if (password.equals(lookupResult)) {
+          // Downgrade the result.
+          declassify ({authP→;authP←} to {authP←})
+            return true;
+        }
       }
     }
 
     // Downgrade the result.
-    declassify ({authP→} to {})
-      endorse ({} to {authP←})
-	return false;
+    declassify ({authP→;authP←} to {authP←})
+      return false;
   }
 
   public void addUser{authP→;authP←}(String{authP→;authP←} user,
