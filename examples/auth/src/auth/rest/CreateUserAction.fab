@@ -78,8 +78,8 @@ public class CreateUserAction[principal servP] extends AbstractAction[servP] {
       String uidErr = null;
       String passwordErr = null;
       ServletException se = null;
-      try {
-        if (lbl <= new label {req.session→;req.session←}) { // prevent untrusted lookups
+      if (lbl <= new label {req.session→;req.session←}) { // prevent untrusted lookups
+        try {
           principal _loginUser = servlet.lookupUserID(userID, req.session);
         
           if (userID == null || userID.length() == 0) {
@@ -151,16 +151,16 @@ public class CreateUserAction[principal servP] extends AbstractAction[servP] {
                   } else throw new Error("impossible");
               }
           }
+        } catch (ServletException e) {
+          se = e;
         }
-      } catch (ServletException e) {
-        se = e;
-      }
 
-      declassify({*lbl;req.session←}) {
-        ServletException _se = declassify(se, {*lbl;req.session←});
-        if (_se != null)
-          throw _se;
-        else return;
+        declassify({*lbl;req.session←}) {
+          ServletException _se = declassify(se, {*lbl;req.session←});
+          if (_se != null)
+            throw _se;
+          else return;
+        }
       }
     }
     

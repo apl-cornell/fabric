@@ -63,15 +63,14 @@ public class LoginAction[principal servP] extends AbstractAction[servP] {
             caller(req.session)
   {
     ServletException se = null;
-    try {
-      String userID = req.getParam(lbl, userParam);
-      String password = req.getParam(lbl, pwdParam);
-          
-      // validate data
-      String uidErr = null;
-      String passwordErr = null;
-      
-      if (lbl <= new label {req.session→;req.session←}) { // prevent untrusted lookups
+    if (lbl <= new label {req.session→;req.session←}) { // prevent untrusted lookups
+      try {
+        String userID = req.getParam(lbl, userParam);
+        String password = req.getParam(lbl, pwdParam);
+            
+        // validate data
+        String uidErr = null;
+        String passwordErr = null;
 
         final principal loginUser = servlet.lookupUserID(userID, req.session);
         
@@ -136,16 +135,16 @@ public class LoginAction[principal servP] extends AbstractAction[servP] {
             }
           }
         }
-      } //TODO lbl too restrictive
-    } catch (ServletException e) {
-      se = e;
-    }
-    declassify({*lbl;req.session←}) {
-      ServletException _se = declassify(se, {*lbl;req.session←});
-      if (_se != null)
-        throw _se;
-      else return;
-    }
+      } catch (ServletException e) {
+        se = e;
+      }
+      declassify({*lbl;req.session←}) {
+        ServletException _se = declassify(se, {*lbl;req.session←});
+        if (_se != null)
+          throw _se;
+        else return;
+      }
+    } //TODO lbl too restrictive
   }        
   
   private String{req.session→;req.session←} runClosure{req.session→;req.session←}(Request[servP]{req.session→;req.session←} req,
