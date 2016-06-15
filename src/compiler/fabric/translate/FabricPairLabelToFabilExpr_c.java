@@ -25,7 +25,7 @@ import polyglot.util.Position;
 
 public class FabricPairLabelToFabilExpr_c extends PairLabelToJavaExpr_c {
   @Override
-  public Expr toJava(Label label, JifToJavaRewriter rw, Expr qualifier)
+  public Expr toJava(Label label, JifToJavaRewriter rw, Expr thisQualifier)
       throws SemanticException {
     PairLabel pl = (PairLabel) label;
     FabricToFabilRewriter ffrw = (FabricToFabilRewriter) rw;
@@ -35,8 +35,8 @@ public class FabricPairLabelToFabilExpr_c extends PairLabelToJavaExpr_c {
       return rw.qq().parseExpr(rw.runtimeLabelUtil() + ".noComponents()");
     }
 
-    Expr cexp = policyToJava(pl.confPolicy(), rw, qualifier);
-    Expr iexp = policyToJava(pl.integPolicy(), rw, qualifier);
+    Expr cexp = policyToJava(pl.confPolicy(), rw, thisQualifier);
+    Expr iexp = policyToJava(pl.integPolicy(), rw, thisQualifier);
 
     Expr store = ffrw.currentLocation();
     if (containsProjection(pl.confPolicy())
@@ -79,7 +79,7 @@ public class FabricPairLabelToFabilExpr_c extends PairLabelToJavaExpr_c {
   }
 
   @Override
-  public Expr policyToJava(Policy p, JifToJavaRewriter rw, Expr qualifier)
+  public Expr policyToJava(Policy p, JifToJavaRewriter rw, Expr thisQualifier)
       throws SemanticException {
     FabricTypeSystem ts = (FabricTypeSystem) rw.jif_ts();
     FabricToFabilRewriter ffrw = (FabricToFabilRewriter) rw;
@@ -91,21 +91,21 @@ public class FabricPairLabelToFabilExpr_c extends PairLabelToJavaExpr_c {
           ts.pairLabel(Position.compilerGenerated(),
               ts.bottomConfPolicy(Position.compilerGenerated()),
               ts.topIntegPolicy(Position.compilerGenerated())));
-      return l.toJava(rw, qualifier);
+      return l.toJava(rw, thisQualifier);
     } else if (p instanceof ConfProjectionPolicy_c) {
       ConfProjectionPolicy_c cpp = (ConfProjectionPolicy_c) p;
       Label l = ts.meet(cpp.label(),
           ts.pairLabel(Position.compilerGenerated(),
               ts.topConfPolicy(Position.compilerGenerated()),
               ts.bottomIntegPolicy(Position.compilerGenerated())));
-      return l.toJava(rw, qualifier);
+      return l.toJava(rw, thisQualifier);
     } else if (p instanceof JoinPolicy_c) {
       if (containsProjection(p)) {
         @SuppressWarnings("unchecked")
         JoinPolicy_c<Policy> jp = (JoinPolicy_c<Policy>) p;
         Expr result = null;
         for (Policy tp : jp.joinComponents()) {
-          Expr ep = policyToJava(tp, rw, qualifier);
+          Expr ep = policyToJava(tp, rw, thisQualifier);
           if (!containsProjection(tp)) {
             ep = rw.qq().parseExpr(rw.runtimeLabelUtil() + ".toLabel(%E, %E)",
                 store, ep);
@@ -125,7 +125,7 @@ public class FabricPairLabelToFabilExpr_c extends PairLabelToJavaExpr_c {
         MeetPolicy_c<Policy> mp = (MeetPolicy_c<Policy>) p;
         Expr result = null;
         for (Policy tp : mp.meetComponents()) {
-          Expr ep = policyToJava(tp, rw, qualifier);
+          Expr ep = policyToJava(tp, rw, thisQualifier);
           if (!containsProjection(tp)) {
             ep = rw.qq().parseExpr(rw.runtimeLabelUtil() + ".toLabel(%E, %E)",
                 store, ep);
@@ -151,8 +151,8 @@ public class FabricPairLabelToFabilExpr_c extends PairLabelToJavaExpr_c {
 
     if (p instanceof WriterPolicy) {
       WriterPolicy policy = (WriterPolicy) p;
-      Expr owner = rw.principalToJava(policy.owner(), qualifier);
-      Expr writer = rw.principalToJava(policy.writer(), qualifier);
+      Expr owner = rw.principalToJava(policy.owner(), thisQualifier);
+      Expr writer = rw.principalToJava(policy.writer(), thisQualifier);
       return rw.qq().parseExpr(
           rw.runtimeLabelUtil() + ".writerPolicy(%E, %E, %E)", store, owner,
           writer);
@@ -160,8 +160,8 @@ public class FabricPairLabelToFabilExpr_c extends PairLabelToJavaExpr_c {
 
     if (p instanceof ReaderPolicy) {
       ReaderPolicy policy = (ReaderPolicy) p;
-      Expr owner = rw.principalToJava(policy.owner(), qualifier);
-      Expr reader = rw.principalToJava(policy.reader(), qualifier);
+      Expr owner = rw.principalToJava(policy.owner(), thisQualifier);
+      Expr reader = rw.principalToJava(policy.reader(), thisQualifier);
       return (Expr) rw.qq()
           .parseExpr(rw.runtimeLabelUtil() + ".readerPolicy(%E, %E, %E)", store,
               owner, reader)
@@ -175,10 +175,10 @@ public class FabricPairLabelToFabilExpr_c extends PairLabelToJavaExpr_c {
       LinkedList<Policy> l = new LinkedList<>(jp.joinComponents());
       Iterator<Policy> iter = l.iterator();
       Policy head = iter.next();
-      Expr e = policyToJava(head, rw, qualifier);
+      Expr e = policyToJava(head, rw, thisQualifier);
       while (iter.hasNext()) {
         head = iter.next();
-        Expr f = policyToJava(head, rw, qualifier);
+        Expr f = policyToJava(head, rw, thisQualifier);
         e = rw.qq().parseExpr("%E.join(%E, %E)", e, store, f);
       }
       return e;
@@ -190,10 +190,10 @@ public class FabricPairLabelToFabilExpr_c extends PairLabelToJavaExpr_c {
       LinkedList<Policy> l = new LinkedList<>(mp.meetComponents());
       Iterator<Policy> iter = l.iterator();
       Policy head = iter.next();
-      Expr e = policyToJava(head, rw, qualifier);
+      Expr e = policyToJava(head, rw, thisQualifier);
       while (iter.hasNext()) {
         head = iter.next();
-        Expr f = policyToJava(head, rw, qualifier);
+        Expr f = policyToJava(head, rw, thisQualifier);
         e = rw.qq().parseExpr("%E.meet(%E, %E)", e, store, f);
       }
       return e;

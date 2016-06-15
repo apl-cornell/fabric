@@ -1,0 +1,5 @@
+class Split03 {
+  @{⊤→}
+  final principal p = null;
+  int{p→}@{⊤→} x;
+}

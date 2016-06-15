@@ -136,6 +136,11 @@
       <arg value="-sourcepath" /> <arg value="${sig-src}" />
       <fileset dir="${sig-src}" includes="**/*.fab" />
     </fabsigc>
+    <!--
+         sif.servlet.SessionState is actually implemented in Fabric. It has a
+         signature file because other signatures depend on it.
+     -->
+    <delete file="${sif.sig-classes}/sif/servlet/SessionState.class"/>
   </target>
 
   <target name="all" depends="build-all" />

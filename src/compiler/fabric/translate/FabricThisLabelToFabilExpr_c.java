@@ -13,7 +13,7 @@ import polyglot.ast.Expr;
 public class FabricThisLabelToFabilExpr_c extends LabelToJavaExpr_c
     implements LabelToJavaExpr {
   @Override
-  public Expr toJava(Label label, JifToJavaRewriter rw, Expr qualifier) {
+  public Expr toJava(Label label, JifToJavaRewriter rw, Expr thisQualifier) {
 
     FabricToFabilRewriter ffrw = (FabricToFabilRewriter) rw;
     Expr loc = ffrw.currentLocation();

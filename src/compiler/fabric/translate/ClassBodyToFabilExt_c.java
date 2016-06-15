@@ -139,10 +139,10 @@ public class ClassBodyToFabilExt_c extends ClassBodyToJavaExt_c {
 
     // Create the expression that will qualify all accesses to label params and
     // principal params.
-    Expr qualifier = rw.qq().parseExpr("this.$root");
+    Expr thisQualifier = rw.qq().parseExpr("this.$root");
 
     // Simplify the label and translate it to FabIL.
-    Expr updateLabelExpr = rw.labelToJava(splitLabel.simplify(), qualifier);
+    Expr updateLabelExpr = rw.labelToJava(splitLabel.simplify(), thisQualifier);
 
     List<Stmt> body = new ArrayList<>();
 

@@ -12,12 +12,12 @@ import polyglot.util.Position;
 public class ProviderLabelToFabilExpr_c extends ProviderLabelToJavaExpr_c {
 
   @Override
-  public Expr toJava(Label label, JifToJavaRewriter rw, Expr qualifier)
+  public Expr toJava(Label label, JifToJavaRewriter rw, Expr thisQualifier)
       throws SemanticException {
     FabILNodeFactory nf = (FabILNodeFactory) rw.nodeFactory();
     ProviderLabel provider = (ProviderLabel) label;
     if (provider.isTrusted()) {
-      return label.typeSystem().bottomLabel().toJava(rw, qualifier);
+      return label.typeSystem().bottomLabel().toJava(rw, thisQualifier);
     }
 
     Position pos = provider.position();

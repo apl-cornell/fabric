@@ -13,8 +13,8 @@ import polyglot.types.SemanticException;
 public class FabExternalPrincipalToJavaExpr_c extends PrincipalToJavaExpr_c {
 
   @Override
-  public Expr toJava(Principal principal, JifToJavaRewriter rw, Expr qualifier)
-      throws SemanticException {
+  public Expr toJava(Principal principal, JifToJavaRewriter rw,
+      Expr thisQualifier) throws SemanticException {
     ExternalPrincipal P = (ExternalPrincipal) principal;
     return rw.qq().parseExpr("fabric.principals.%s.getInstance()", P.name());
   }

@@ -23,8 +23,8 @@ import polyglot.util.Position;
 public class DynamicPrincipalToFabilExpr_c
     extends DynamicPrincipalToJavaExpr_c {
   @Override
-  public Expr toJava(Principal principal, JifToJavaRewriter rw, Expr qualifier)
-      throws SemanticException {
+  public Expr toJava(Principal principal, JifToJavaRewriter rw,
+      Expr thisQualifier) throws SemanticException {
     DynamicPrincipal dp = (DynamicPrincipal) principal;
     FabricToFabilRewriter frw = (FabricToFabilRewriter) rw;
     FabILNodeFactory nf = (FabILNodeFactory) frw.java_nf();
@@ -41,7 +41,7 @@ public class DynamicPrincipalToFabilExpr_c
 
         Type type = dp.path().type();
         if (ts.equals(type, ts.RemoteWorker()) || ts.equals(type, ts.Store())) {
-          Expr pathExpr = accessPathToExpr(frw, dp.path());
+          Expr pathExpr = accessPathToExpr(frw, dp.path(), thisQualifier);
           return nf.Call(pathExpr.position(), pathExpr,
               nf.Id(Position.compilerGenerated(), "getPrincipal"));
         }
@@ -58,17 +58,18 @@ public class DynamicPrincipalToFabilExpr_c
           // safe to use "this" since it doesn't result in a fetch.
           e = frw.staticThisExpr();
         } else {
-          e = accessPathToExpr(frw, store.path());
+          e = accessPathToExpr(frw, store.path(), thisQualifier);
         }
         /* TODO XXX HUGE HACK. WE SHOULD NOT CALL fetch(). REMOVE AFTER SURROGATES PROBLEM IS FIXED. */
         return frw.qq().parseExpr("%E.fetch().$getStore().getPrincipal()", e);
       }
     }
-    return super.toJava(principal, frw, qualifier);
+    return super.toJava(principal, frw, thisQualifier);
   }
 
   @Override
-  protected Expr accessPathToExpr(JifToJavaRewriter rw, AccessPath ap) {
+  protected Expr accessPathToExpr(JifToJavaRewriter rw, AccessPath ap,
+      Expr thisQualifier) {
     NodeFactory nf = rw.java_nf();
     FabricToFabilRewriter frw = (FabricToFabilRewriter) rw;
 
@@ -80,17 +81,19 @@ public class DynamicPrincipalToFabilExpr_c
             frw.staticThisExpr());
       }
 
-      return nf.This(ap.position());
+      return thisQualifier;
     } else if (ap instanceof AccessPathField) {
       AccessPathField apf = (AccessPathField) ap;
       FabricFieldInstance fi = (FabricFieldInstance) apf.fieldInstance();
       String splitName = fi.splitClassName();
-      if (splitName == null) return super.accessPathToExpr(frw, apf);
+      if (splitName == null)
+        return super.accessPathToExpr(frw, apf, thisQualifier);
 
-      return rw.qq().parseExpr("%E.%s.%s", accessPathToExpr(rw, apf.path()),
-          splitName, fi.name());
+      return rw.qq().parseExpr("%E.%s.%s",
+          accessPathToExpr(rw, apf.path(), thisQualifier), splitName,
+          fi.name());
     } else {
-      return super.accessPathToExpr(frw, ap);
+      return super.accessPathToExpr(frw, ap, thisQualifier);
     }
   }
 }

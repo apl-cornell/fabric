@@ -12,7 +12,7 @@ import polyglot.types.SemanticException;
 public class DisjunctivePrincipalToFabilExpr_c
     extends DisjunctivePrincipalToJavaExpr_c {
   @Override
-  public Expr toJava(Principal principal, JifToJavaRewriter rw, Expr qualifier)
+  public Expr toJava(Principal principal, JifToJavaRewriter rw, Expr thisQualifier)
       throws SemanticException {
     FabricToFabilRewriter ffrw = (FabricToFabilRewriter) rw;
     JifTypeSystem ts = rw.jif_ts();
@@ -20,7 +20,7 @@ public class DisjunctivePrincipalToFabilExpr_c
     DisjunctivePrincipal dp = (DisjunctivePrincipal) principal;
 
     for (Principal p : dp.disjuncts()) {
-      Expr pe = rw.principalToJava(p, qualifier);
+      Expr pe = rw.principalToJava(p, thisQualifier);
       if (e == null) {
         e = pe;
       } else {

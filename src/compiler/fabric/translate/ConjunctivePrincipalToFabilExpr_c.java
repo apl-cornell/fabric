@@ -12,14 +12,14 @@ import polyglot.types.SemanticException;
 public class ConjunctivePrincipalToFabilExpr_c
     extends ConjunctivePrincipalToJavaExpr_c {
   @Override
-  public Expr toJava(Principal principal, JifToJavaRewriter rw, Expr qualifier)
+  public Expr toJava(Principal principal, JifToJavaRewriter rw, Expr thisQualifier)
       throws SemanticException {
     FabricToFabilRewriter ffrw = (FabricToFabilRewriter) rw;
     JifTypeSystem ts = rw.jif_ts();
     Expr e = null;
     ConjunctivePrincipal cp = (ConjunctivePrincipal) principal;
     for (Principal p : cp.conjuncts()) {
-      Expr pe = rw.principalToJava(p, qualifier);
+      Expr pe = rw.principalToJava(p, thisQualifier);
       if (e == null) {
         e = pe;
       } else {
