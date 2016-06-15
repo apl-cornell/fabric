@@ -1,0 +1,5 @@
+class Split04 {
+  @{⊤→}
+  final label L = new label {};
+  int{*L}@{⊤→} x;
+}
