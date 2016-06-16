@@ -7,10 +7,10 @@ public class ShowState {
 
       Broker broker = (Broker) store.getRoot().get(Config.brokerMapKey);
       System.out.println("customer account balance: "
-	  + broker.customerAcct.balance.value);
+	  + broker.travel$Broker$_split_0.customerAcct.travel$Account$_split_0.balance.travel$Balance$_split_0.value);
       System.out.println(" airline account balance: "
-	  + broker.airlineAcct.balance.value);
-      System.out.println("customer has " + broker.custTickets.num_tickets
+	  + broker.travel$Broker$_split_0.airlineAcct.travel$Account$_split_0.balance.travel$Balance$_split_0.value);
+      System.out.println("customer has " + broker.travel$Broker$_split_0.custTickets.travel$Tickets$_split_0.num_tickets
           + " tickets");
     }
   }
