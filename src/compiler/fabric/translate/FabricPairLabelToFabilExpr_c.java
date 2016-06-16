@@ -25,8 +25,8 @@ import polyglot.util.Position;
 
 public class FabricPairLabelToFabilExpr_c extends PairLabelToJavaExpr_c {
   @Override
-  public Expr toJava(Label label, JifToJavaRewriter rw, Expr thisQualifier)
-      throws SemanticException {
+  public Expr toJava(Label label, JifToJavaRewriter rw, Expr thisQualifier,
+      boolean simplify) throws SemanticException {
     PairLabel pl = (PairLabel) label;
     FabricToFabilRewriter ffrw = (FabricToFabilRewriter) rw;
 
@@ -35,8 +35,8 @@ public class FabricPairLabelToFabilExpr_c extends PairLabelToJavaExpr_c {
       return rw.qq().parseExpr(rw.runtimeLabelUtil() + ".noComponents()");
     }
 
-    Expr cexp = policyToJava(pl.confPolicy(), rw, thisQualifier);
-    Expr iexp = policyToJava(pl.integPolicy(), rw, thisQualifier);
+    Expr cexp = policyToJava(pl.confPolicy(), rw, thisQualifier, simplify);
+    Expr iexp = policyToJava(pl.integPolicy(), rw, thisQualifier, simplify);
 
     Expr store = ffrw.currentLocation();
     if (containsProjection(pl.confPolicy())
@@ -49,8 +49,9 @@ public class FabricPairLabelToFabilExpr_c extends PairLabelToJavaExpr_c {
         iexp = rw.qq().parseExpr(rw.runtimeLabelUtil() + ".liftToLabel(%E, %E)",
             store, iexp);
       }
-      return rw.qq().parseExpr(rw.runtimeLabelUtil() + ".join(%E, %E, %E)",
-          store, cexp, iexp);
+      return rw.qq().parseExpr(rw.runtimeLabelUtil() + ".join(%E, %E, %E, %E)",
+          store, cexp, iexp,
+          rw.java_nf().BooleanLit(Position.compilerGenerated(), simplify));
     }
 
     return rw.qq().parseExpr(rw.runtimeLabelUtil() + ".toLabel(%E, %E, %E)",
@@ -79,8 +80,8 @@ public class FabricPairLabelToFabilExpr_c extends PairLabelToJavaExpr_c {
   }
 
   @Override
-  public Expr policyToJava(Policy p, JifToJavaRewriter rw, Expr thisQualifier)
-      throws SemanticException {
+  public Expr policyToJava(Policy p, JifToJavaRewriter rw, Expr thisQualifier,
+      boolean simplify) throws SemanticException {
     FabricTypeSystem ts = (FabricTypeSystem) rw.jif_ts();
     FabricToFabilRewriter ffrw = (FabricToFabilRewriter) rw;
     Expr store = ffrw.currentLocation();
@@ -91,21 +92,21 @@ public class FabricPairLabelToFabilExpr_c extends PairLabelToJavaExpr_c {
           ts.pairLabel(Position.compilerGenerated(),
               ts.bottomConfPolicy(Position.compilerGenerated()),
               ts.topIntegPolicy(Position.compilerGenerated())));
-      return l.toJava(rw, thisQualifier);
+      return l.toJava(rw, thisQualifier, simplify);
     } else if (p instanceof ConfProjectionPolicy_c) {
       ConfProjectionPolicy_c cpp = (ConfProjectionPolicy_c) p;
       Label l = ts.meet(cpp.label(),
           ts.pairLabel(Position.compilerGenerated(),
               ts.topConfPolicy(Position.compilerGenerated()),
               ts.bottomIntegPolicy(Position.compilerGenerated())));
-      return l.toJava(rw, thisQualifier);
+      return l.toJava(rw, thisQualifier, simplify);
     } else if (p instanceof JoinPolicy_c) {
       if (containsProjection(p)) {
         @SuppressWarnings("unchecked")
         JoinPolicy_c<Policy> jp = (JoinPolicy_c<Policy>) p;
         Expr result = null;
         for (Policy tp : jp.joinComponents()) {
-          Expr ep = policyToJava(tp, rw, thisQualifier);
+          Expr ep = policyToJava(tp, rw, thisQualifier, simplify);
           if (!containsProjection(tp)) {
             ep = rw.qq().parseExpr(rw.runtimeLabelUtil() + ".toLabel(%E, %E)",
                 store, ep);
@@ -114,7 +115,9 @@ public class FabricPairLabelToFabilExpr_c extends PairLabelToJavaExpr_c {
             result = ep;
           } else {
             result = rw.qq().parseExpr(
-                rw.runtimeLabelUtil() + ".join(%E, %E, %E)", store, result, ep);
+                rw.runtimeLabelUtil() + ".join(%E, %E, %E, %E)", store, result,
+                ep, rw.java_nf().BooleanLit(Position.compilerGenerated(),
+                    simplify));
           }
         }
         return result;
@@ -125,7 +128,7 @@ public class FabricPairLabelToFabilExpr_c extends PairLabelToJavaExpr_c {
         MeetPolicy_c<Policy> mp = (MeetPolicy_c<Policy>) p;
         Expr result = null;
         for (Policy tp : mp.meetComponents()) {
-          Expr ep = policyToJava(tp, rw, thisQualifier);
+          Expr ep = policyToJava(tp, rw, thisQualifier, simplify);
           if (!containsProjection(tp)) {
             ep = rw.qq().parseExpr(rw.runtimeLabelUtil() + ".toLabel(%E, %E)",
                 store, ep);
@@ -134,7 +137,9 @@ public class FabricPairLabelToFabilExpr_c extends PairLabelToJavaExpr_c {
             result = ep;
           } else {
             result = rw.qq().parseExpr(
-                rw.runtimeLabelUtil() + ".meet(%E, %E, %E)", store, result, ep);
+                rw.runtimeLabelUtil() + ".meet(%E, %E, %E, %E)", store, result,
+                ep, rw.java_nf().BooleanLit(Position.compilerGenerated(),
+                    simplify));
           }
         }
         return result;
@@ -175,11 +180,12 @@ public class FabricPairLabelToFabilExpr_c extends PairLabelToJavaExpr_c {
       LinkedList<Policy> l = new LinkedList<>(jp.joinComponents());
       Iterator<Policy> iter = l.iterator();
       Policy head = iter.next();
-      Expr e = policyToJava(head, rw, thisQualifier);
+      Expr e = policyToJava(head, rw, thisQualifier, simplify);
       while (iter.hasNext()) {
         head = iter.next();
-        Expr f = policyToJava(head, rw, thisQualifier);
-        e = rw.qq().parseExpr("%E.join(%E, %E)", e, store, f);
+        Expr f = policyToJava(head, rw, thisQualifier, simplify);
+        e = rw.qq().parseExpr("%E.join(%E, %E, %E)", e, store, f,
+            rw.java_nf().BooleanLit(Position.compilerGenerated(), simplify));
       }
       return e;
     }
@@ -190,11 +196,12 @@ public class FabricPairLabelToFabilExpr_c extends PairLabelToJavaExpr_c {
       LinkedList<Policy> l = new LinkedList<>(mp.meetComponents());
       Iterator<Policy> iter = l.iterator();
       Policy head = iter.next();
-      Expr e = policyToJava(head, rw, thisQualifier);
+      Expr e = policyToJava(head, rw, thisQualifier, simplify);
       while (iter.hasNext()) {
         head = iter.next();
-        Expr f = policyToJava(head, rw, thisQualifier);
-        e = rw.qq().parseExpr("%E.meet(%E, %E)", e, store, f);
+        Expr f = policyToJava(head, rw, thisQualifier, simplify);
+        e = rw.qq().parseExpr("%E.meet(%E, %E, %E)", e, store, f,
+            rw.java_nf().BooleanLit(Position.compilerGenerated(), simplify));
       }
       return e;
     }

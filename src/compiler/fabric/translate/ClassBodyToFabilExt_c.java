@@ -142,7 +142,11 @@ public class ClassBodyToFabilExt_c extends ClassBodyToJavaExt_c {
     Expr thisQualifier = rw.qq().parseExpr("this.$root");
 
     // Simplify the label and translate it to FabIL.
-    Expr updateLabelExpr = rw.labelToJava(splitLabel.simplify(), thisQualifier);
+    // Don't do run-time simplification if this is a Principal class.
+    boolean simplify =
+        !rw.currentClass().isSubtype(rw.jif_ts().PrincipalClass());
+    Expr updateLabelExpr =
+        rw.labelToJava(splitLabel.simplify(), thisQualifier, simplify);
 
     List<Stmt> body = new ArrayList<>();
 

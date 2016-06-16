@@ -217,8 +217,8 @@ public final class LabelUtil {
           java.util.Set dependencies = new java.util.HashSet();
           result =
               (PairLabel) new PairLabel@store().fabric$lang$security$PairLabel$(
-                  pl1.confPolicy().join(store, pl2.confPolicy(), dependencies/*, simplify*/),
-                  pl1.integPolicy().join(store, pl2.integPolicy(), dependencies/*, simplify*/));
+                  pl1.confPolicy().join(store, pl2.confPolicy(), dependencies, simplify),
+                  pl1.integPolicy().join(store, pl2.integPolicy(), dependencies, simplify));
           cache.putLabelJoin(triple, result, dependencies);
         }
         return result;

@@ -238,12 +238,22 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
       rw = ((FabricToFabilRewriter) rw)
           .pushLocation(rw.qq().parseExpr("this.$getStore()"));
 
-      Expr updateLabelExpr = rw.labelToJava(updateLabel);
+      // Don't do run-time simplification if this is a Principal class.
+      boolean simplify = !ct.isSubtype(rw.jif_ts().PrincipalClass());
+
+      Expr updateLabelExpr = rw.labelToJava(updateLabel, simplify);
 
       Label accessLabel = ts.pairLabel(accessPolicy.position(), accessPolicy,
           ts.topIntegPolicy(accessPolicy.position()));
 
-      Expr accessLabelExpr = rw.labelToJava(accessLabel);
+      Expr accessLabelExpr = rw.labelToJava(accessLabel, simplify);
+
+      // Also initialize the object fragments.
+      FabricToFabilRewriter fabrw = (FabricToFabilRewriter) rw;
+      List<Stmt> inits = new ArrayList<>();
+      for (String splitName : fabrw.getObjectFragments()) {
+        inits.add(rw.qq().parseStmt("%s.fabric$lang$Object$();", splitName));
+      }
 
       return cb.addMember(rw.qq().parseMember(
           "public Object %s() { " + "this.$updateLabel = %E;  "
