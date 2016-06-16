@@ -189,11 +189,13 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
     FabricToFabilRewriter fabrw = (FabricToFabilRewriter) rw;
     List<Stmt> inits = new ArrayList<>();
 
-    // First, initialize the object fragments.
+    // First, create the object fragments.
+    // Don't initialize them yet, however. This will be done in the root
+    // object's $initLabels method, to ensure that the final fields are
+    // initialized first. Initializing the object fragments involves
+    // initializing their labels, which might depend on the final fields.
     for (String splitName : fabrw.getObjectFragments()) {
-      inits.add(
-          rw.qq().parseStmt("%s = (%s) new %s(this).fabric$lang$Object$();",
-              splitName, splitName, splitName));
+      inits.add(rw.qq().parseStmt("%s = new %s(this);", splitName, splitName));
     }
 
     // Add the remaining initializations.
@@ -255,10 +257,10 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
       }
 
       return cb.addMember(rw.qq().parseMember(
-          "public Object %s() { " + "this.$updateLabel = %E;  "
-              + "this.$accessPolicy = %E.confPolicy();" + "return this;" + "}",
+          "public Object %s() { this.$updateLabel = %E; "
+              + "this.$accessPolicy = %E.confPolicy(); { %LS } return this; }",
           FabricToFabilRewriter.LABEL_INITIALIZER_METHOD_NAME, updateLabelExpr,
-          accessLabelExpr));
+          accessLabelExpr, inits));
     }
 
     return cb;
