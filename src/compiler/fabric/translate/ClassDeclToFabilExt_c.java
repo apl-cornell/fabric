@@ -49,8 +49,8 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
   }
 
   @Override
-  public Node toJava(JifToJavaRewriter rw) throws SemanticException {
-    ClassDecl cd = (ClassDecl) super.toJava(rw);
+  public Node toJavaImpl(JifToJavaRewriter rw) throws SemanticException {
+    ClassDecl cd = (ClassDecl) super.toJavaImpl(rw);
 
     cd = cd.body(addLabelInitializer(cd.body(), rw));
 
@@ -214,7 +214,6 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
     FabricTypeSystem ts = (FabricTypeSystem) rw.jif_ts();
     boolean sigMode = ((FabricToFabilRewriter) rw).inSignatureMode();
 
-    //FIXME: why is rw.currentClass() null?
     ClassDecl n = (ClassDecl) node();
     FabricClassType ct = (FabricClassType) n.type();
 
