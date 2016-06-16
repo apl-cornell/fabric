@@ -9,13 +9,13 @@ import login.LoginClosure;
 public class BankPrincipal extends ExternalPrincipal {
 
   private final BankPassword[this]{this←} pass;
-  
+
   public BankPrincipal() {
     // XXX Is this kind of initialization secure?
     this.pass  = new BankPassword[this]("password");
     super("bank");
   }
-  
+
   // XXX Can we label this method any which way we want, since it won't
   // be invoked from Fabric code??
   // XXX Where will the declassification w.r.t. password happen?
@@ -28,21 +28,21 @@ public class BankPrincipal extends ExternalPrincipal {
         {authPrf;closure;lb;executeNow} <= lb,
         lb <= {this→}
   {
+      endorse(authPrf, {authPrf;this→;this←} to {this→;this←})
       if (authPrf instanceof String) {
           String passwd = (String)authPrf;
-          if (pass == null) return false;
+          if (pass == null)
+              declassify ({*lb;this;this←}) { return false; }
           String myPass = pass.password;
 
           if (myPass == passwd || (myPass != null && myPass.equals(passwd))) {
               // password supplied agrees with this password!
-              declassify ({*lb;this←}) { return true; }
+              declassify ({*lb;this;this←}) { return true; }
           }
       }
-      declassify ({*lb;this←}) { return false; }
+      declassify ({*lb;this;this←}) { return false; }
   }
-  
-  
-  
+
   public static BankPrincipal{*!:} getInstance{*!:}() {
     atomic {
       FabricWorker cl = FabricWorker.getWorker();
@@ -59,16 +59,16 @@ public class BankPrincipal extends ExternalPrincipal {
                 bank = new BankPrincipal@brokerStore();
                 rootMap.put(Config.bankPrincipalMapKey, bank);
             }
-            
+
             return bank;
           }
         }
       }
-      
+
       return null;
     }
   }
-  
+
   // Don't much care what store is, we're going to create it where we want
   public static BankPrincipal{*!:} getInstance{*!:}(Store store) {
       return getInstance();

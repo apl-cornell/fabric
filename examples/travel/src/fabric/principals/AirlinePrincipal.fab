@@ -7,15 +7,15 @@ import fabric.worker.Store;
 import login.LoginClosure;
 
 public class AirlinePrincipal extends ExternalPrincipal {
-     
+
     private final AirlinePassword[this]{this;this←}@{this.store$->} pass;
-    
+
     public AirlinePrincipal() {
         // XXX Is this kind of initialization secure?
         this.pass  = new AirlinePassword[this]("password");
         super("airline");
     }
-  
+
     // XXX Can we label this method any which way we want, since it won't
     // be invoked from Fabric code??
     // XXX Where will the declassification w.r.t. password happen?
@@ -28,19 +28,21 @@ public class AirlinePrincipal extends ExternalPrincipal {
           {authPrf;closure;lb;executeNow} <= lb,
           lb <= {this→}
     {
+        endorse(authPrf, {authPrf;this→;this←} to {this→;this←})
         if (authPrf instanceof String) {
             	String passwd = (String)authPrf;
-            	if (pass == null) return false;
+            	if (pass == null)
+                  declassify ({*lb;this;this←}) { return false; }
             	String myPass = pass.password;
 
             	if (myPass == passwd || (myPass != null && myPass.equals(passwd))) {
             	    // password supplied agrees with this password!
-            		declassify ({*lb;this←}) { return true; }
+            		declassify ({*lb;this;this←}) { return true; }
             	}
         }
-        declassify ({*lb;this←}) { return false; }
+        declassify ({*lb;this;this←}) { return false; }
     }
-    
+
   public static AirlinePrincipal{*!:} getInstance{*!:}() {
     atomic {
       FabricWorker cl = FabricWorker.getWorker();
@@ -57,12 +59,12 @@ public class AirlinePrincipal extends ExternalPrincipal {
               airline = new AirlinePrincipal@brokerStore();
               rootMap.put(Config.airlinePrincipalMapKey, airline);
             }
-            
+
             return airline;
           }
         }
       }
-      
+
       return null;
     }
   }
@@ -71,7 +73,7 @@ public class AirlinePrincipal extends ExternalPrincipal {
   public static AirlinePrincipal{*!:} getInstance{*!:}(Store store) {
       return getInstance();
   }
-  
+
 }
 
 class AirlinePassword[principal P] {
