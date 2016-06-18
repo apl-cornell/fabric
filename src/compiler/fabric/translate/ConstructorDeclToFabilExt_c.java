@@ -3,18 +3,20 @@ package fabric.translate;
 import java.util.ArrayList;
 import java.util.List;
 
+import fabil.ast.FabILNodeFactory;
 import jif.translate.ConstructorDeclToJavaExt_c;
 import jif.translate.JifToJavaRewriter;
 import polyglot.ast.MethodDecl;
 import polyglot.ast.Node;
 import polyglot.ast.Stmt;
 import polyglot.types.SemanticException;
-import fabil.ast.FabILNodeFactory;
+import polyglot.visit.NodeVisitor;
 
 public class ConstructorDeclToFabilExt_c extends ConstructorDeclToJavaExt_c {
   @Override
-  public Node toJava(JifToJavaRewriter rw) throws SemanticException {
-    Node n = super.toJava(rw);
+  public Node toJava(JifToJavaRewriter rw, NodeVisitor childRw)
+      throws SemanticException {
+    Node n = super.toJava(rw, childRw);
     if (n instanceof MethodDecl) {
       // The constructor declaration has been rewritten to a method declaration.
       MethodDecl md = (MethodDecl) n;
