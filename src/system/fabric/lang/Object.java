@@ -74,6 +74,13 @@ public interface Object {
    */
   Object $initLabels();
 
+  /**
+   * Initializes the object's partitions (if any) by calling their initializer
+   * methods. Object partitions are created in jif$init(), but are initialized
+   * in this method, which should be called by $initLabels().
+   */
+  void $initPartitions();
+
   /** Whether this object is "equal" to another object. */
   boolean equals(Object o);
 
@@ -300,6 +307,11 @@ public interface Object {
     @Override
     public Object $initLabels() {
       return fetch().$initLabels();
+    }
+
+    @Override
+    public void $initPartitions() {
+      fetch().$initPartitions();
     }
 
     @Override
@@ -563,7 +575,18 @@ public interface Object {
       set$$accessPolicy(
           Worker.getWorker().getLocalStore().getBottomConfidPolicy());
 
+      $initPartitions();
+
       return $getProxy();
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Subclasses overriding this method must call {@code super.$initPartitions()}.
+     */
+    @Override
+    public void $initPartitions() {
     }
 
     @Override
@@ -788,7 +811,7 @@ public interface Object {
         long accessPolicyOnum, ObjectInput serializedInput,
         Iterator<RefTypeEnum> refTypes, Iterator<Long> intraStoreRefs,
         Iterator<Pair<String, Long>> interStoreRefs)
-            throws IOException, ClassNotFoundException {
+        throws IOException, ClassNotFoundException {
       this(store, onum, version, expiry);
       this.$updateLabel = new Label._Proxy(updateLabelStore, updateLabelOnum);
       this.$accessPolicy =
@@ -828,7 +851,7 @@ public interface Object {
         Class<? extends Object._Proxy> proxyClass, RefTypeEnum refType,
         ObjectInput in, Store store, Iterator<Long> intraStoreRefs,
         Iterator<Pair<String, Long>> interStoreRefs)
-            throws IOException, ClassNotFoundException {
+        throws IOException, ClassNotFoundException {
       switch (refType) {
       case NULL:
         return null;
@@ -1055,7 +1078,7 @@ public interface Object {
           long accessPolicyOnum, ObjectInput serializedInput,
           Iterator<RefTypeEnum> refTypes, Iterator<Long> intraStoreRefs,
           Iterator<Pair<String, Long>> interStoreRefs)
-              throws IOException, ClassNotFoundException {
+          throws IOException, ClassNotFoundException {
         super(store, onum, version, expiry, updateLabelStore, updateLabelOnum,
             accessPolicyStore, accessPolicyOnum, serializedInput, refTypes,
             intraStoreRefs, interStoreRefs);

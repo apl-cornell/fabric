@@ -25,6 +25,7 @@ import polyglot.ast.Formal;
 import polyglot.ast.Node;
 import polyglot.ast.Stmt;
 import polyglot.ast.TypeNode;
+import polyglot.qq.QQ;
 import polyglot.types.ClassType;
 import polyglot.types.Context;
 import polyglot.types.Flags;
@@ -52,7 +53,10 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
   public Node toJavaImpl(JifToJavaRewriter rw) throws SemanticException {
     ClassDecl cd = (ClassDecl) super.toJavaImpl(rw);
 
-    cd = cd.body(addLabelInitializer(cd.body(), rw));
+    ClassBody body = cd.body();
+    body = addLabelInitializer(body, rw);
+    body = addPartitionInitializer(body, rw);
+    cd = cd.body(body);
 
     FabILNodeFactory nf = (FabILNodeFactory) rw.nodeFactory();
     FabILTypeSystem ts = (FabILTypeSystem) rw.java_ts();
@@ -249,20 +253,38 @@ public class ClassDeclToFabilExt_c extends ClassDeclToJavaExt_c {
 
       Expr accessLabelExpr = rw.labelToJava(accessLabel, simplify);
 
-      // Also initialize the object fragments.
-      FabricToFabilRewriter fabrw = (FabricToFabilRewriter) rw;
-      List<Stmt> inits = new ArrayList<>();
-      for (String splitName : fabrw.getObjectFragments()) {
-        inits.add(rw.qq().parseStmt("%s.fabric$lang$Object$();", splitName));
-      }
-
       return cb.addMember(rw.qq().parseMember(
           "public Object %s() { this.$updateLabel = %E; "
-              + "this.$accessPolicy = %E.confPolicy(); { %LS } return this; }",
+              + "this.$accessPolicy = %E.confPolicy(); %s(); return this; }",
           FabricToFabilRewriter.LABEL_INITIALIZER_METHOD_NAME, updateLabelExpr,
-          accessLabelExpr, inits));
+          accessLabelExpr,
+          FabricToFabilRewriter.PARTITION_INITIALIZER_METHOD_NAME));
     }
 
     return cb;
+  }
+
+  protected ClassBody addPartitionInitializer(ClassBody cb,
+      JifToJavaRewriter rw) {
+    FabricTypeSystem ts = (FabricTypeSystem) rw.jif_ts();
+    boolean sigMode = ((FabricToFabilRewriter) rw).inSignatureMode();
+
+    ClassDecl n = (ClassDecl) node();
+    FabricClassType ct = (FabricClassType) n.type();
+
+    if (sigMode || !ts.isFabricClass(ct)) return cb;
+
+    FabricToFabilRewriter fabrw = (FabricToFabilRewriter) rw;
+    QQ qq = fabrw.qq();
+    List<Stmt> stmts = new ArrayList<>();
+    stmts.add(qq.parseStmt("super.%s();",
+        FabricToFabilRewriter.PARTITION_INITIALIZER_METHOD_NAME));
+
+    for (String splitName : fabrw.getObjectFragments()) {
+      stmts.add(qq.parseStmt("%s.fabric$lang$Object$();", splitName));
+    }
+
+    return cb.addMember(rw.qq().parseMember("public void %s() { %LS }",
+        FabricToFabilRewriter.PARTITION_INITIALIZER_METHOD_NAME, stmts));
   }
 }

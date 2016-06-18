@@ -102,6 +102,10 @@ public class WrappedJavaInlineable<T> implements JavaInlineable {
   }
 
   @Override
+  public void $initPartitions() {
+  }
+
+  @Override
   public Object fabric$lang$Object$() {
     return this;
   }

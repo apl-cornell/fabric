@@ -40,6 +40,8 @@ import polyglot.util.Position;
 public class FabricToFabilRewriter extends JifToJavaRewriter {
   private static final Collection<String> TOPICS;
   public static final String LABEL_INITIALIZER_METHOD_NAME = "$initLabels";
+  public static final String PARTITION_INITIALIZER_METHOD_NAME =
+      "$initPartitions";
   static {
     TOPICS = new ArrayList<>(2);
     TOPICS.add("publish");

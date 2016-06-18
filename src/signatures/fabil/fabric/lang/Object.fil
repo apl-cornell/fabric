@@ -17,6 +17,11 @@ public class Object extends java.lang.Object {
    */
   public native Object $initLabels();
   
+  /**
+   * Initializes the object's partitions.
+   */
+  public native void $initPartitions();
+  
   public native boolean equals(Object o);
   
   /**
