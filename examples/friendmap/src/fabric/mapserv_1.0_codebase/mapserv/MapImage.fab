@@ -62,7 +62,7 @@ where
     final char{L}[] data,
     final Store     s
   )
-  : {*provider;data;width;height;boundary}
+  : {*provider;data;width;height;boundary;L}
   throws
   (
     ArrayIndexOutOfBoundsException,
