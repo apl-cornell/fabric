@@ -6,12 +6,13 @@ import util.AssertionFailedError;
 
 public class Init
 where
-  provider <= {*←},
+  // Code in Init is completely public.
+  provider <= {},
 
   util.Group.provider         <= {*←},
   util.GroupIterator.provider <= {*←},
 
-  FriendMap.provider <= {_→},
+  FriendMap.provider <= {},
 
   mapserv.MapServer.provider <= mapserv.Box.provider,           mapserv.Box.provider <= mapserv.MapServer.provider,
   mapserv.MapServer.provider <= mapserv.MapImage.provider, mapserv.MapImage.provider <= mapserv.MapServer.provider

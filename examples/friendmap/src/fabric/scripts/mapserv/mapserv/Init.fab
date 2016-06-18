@@ -5,7 +5,7 @@ import util.AssertionFailedError;
 
 public class Init
 where
-  provider <= {*←},
+  provider <= mapserv.MapServer.provider,
   mapserv.MapServer.provider <= mapserv.Box.provider,           mapserv.Box.provider <= mapserv.MapServer.provider,
   mapserv.MapServer.provider <= mapserv.MapImage.provider, mapserv.MapImage.provider <= mapserv.MapServer.provider
 {

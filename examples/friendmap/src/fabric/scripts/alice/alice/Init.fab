@@ -9,7 +9,7 @@ import util.AssertionFailedError;
 
 public class Init
 where
-  provider <= {*←},
+  provider <= {⊤←worker$},
 
   snapp.User.provider        <= snapp.Snapp.provider, snapp.Snapp.provider <= snapp.User.provider,
   snapp.UserWrapper.provider <= snapp.Snapp.provider, snapp.Snapp.provider <= snapp.UserWrapper.provider,

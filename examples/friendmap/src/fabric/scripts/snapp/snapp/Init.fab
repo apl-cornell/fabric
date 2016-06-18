@@ -18,7 +18,9 @@ where
     util.Delegator.provider     <= {*←},
     util.GroupIterator.provider <= {*←},
     util.Group.provider         <= {*←},
-    Snapp.provider              <= {*←}    
+
+    // Code in Snapp is completely public.
+    Snapp.provider              <= {}
 {
   public static void main{⊤←}(String[] args) {
     atomic {

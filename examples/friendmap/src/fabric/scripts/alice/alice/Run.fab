@@ -13,7 +13,8 @@ import util.AssertionFailedError;
 
 public class Run
 where
-  provider <= {*←},
+  // Code in Run is completely public.
+  provider <= {},
 
   util.Group.provider         <= {*←},
   util.GroupIterator.provider <= {*←},
@@ -21,8 +22,8 @@ where
   mapserv.MapServer.provider <= mapserv.Box.provider,           mapserv.Box.provider <= mapserv.MapServer.provider,
   mapserv.MapServer.provider <= mapserv.MapImage.provider, mapserv.MapImage.provider <= mapserv.MapServer.provider,
 
-  friendmap.FriendMap.provider <= {_→},
-    mapserv.MapServer.provider <= {_→}
+  friendmap.FriendMap.provider <= {},
+    mapserv.MapServer.provider <= {}
 {
   public static void main{}(String[] args)
   {

@@ -14,7 +14,9 @@ where
   // trusted classes are trusted
   util.Group.provider         <= {*←},
   util.GroupIterator.provider <= {*←},
-  provider                    <= {*←}
+
+  // Code in AddFriends is completely public.
+  provider                    <= {}
 {
   public static
   void
@@ -44,7 +46,10 @@ where
         final User[bw.userOwner,bw.userNetwork] userBob   = bw.user;
 
         if (userBob.p equiv new principal (bw.userNetwork, bw.userOwner))
+          if (provider <= new label {⊤←userBob.p})
             userBob.friends.add(aw);
+          else
+            throw new AssertionFailedError("provider ⊑ {⊤←userBob.p}");
         else
             throw new AssertionFailedError("User[n,o].p = (n, o)");
     } else throw new AssertionFailedError("store actsfor snapp");
