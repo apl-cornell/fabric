@@ -14,28 +14,17 @@ package fabric.common;
  */
 public class Version {
   private int major = 0;
-  private int minor = 2;
-  private int patch = 2;
+  private int minor = 3;
+  private int patch = 0;
   private String branch = "";
 
-  public int major() {
-    return major;
-  }
-
-  public int minor() {
-    return minor;
-  }
-
-  public int patch() {
-    return patch;
-  }
-
-  public String branch() {
-    return branch;
-  }
+  public int major() { return major; }
+  public int minor() { return minor; }
+  public int patch() { return patch; }
+  public String branch() { return branch; }
 
   @Override
   public String toString() {
-    return "0.2.2 (2014-07-08 22:45:05 EDT)";
+    return "0.3.0 (2016-06-27 19:55:11 EDT)";
   }
 }

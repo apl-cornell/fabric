@@ -30,7 +30,7 @@ extending Jif and provided quick bug fixes to the base Jif compiler.
 
 Thanks also to Matthew Loring and
 [Isaac Sheff](http://www.cs.cornell.edu/~isheff/)
-for submitting bug reports.
+for submitting patches and bug reports.
 
 We thank [Hakim Weatherspoon](http://www.cs.cornell.edu/~hweather/) for the use
 of the Fractus cloud infrastructure for running the performance tests that

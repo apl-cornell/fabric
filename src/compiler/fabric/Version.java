@@ -24,16 +24,16 @@ public class Version extends polyglot.main.Version {
 
   @Override
   public int minor() {
-    return 2;
+    return 3;
   }
 
   @Override
   public int patch_level() {
-    return 2;
+    return 0;
   }
 
   @Override
   public String toString() {
-    return "0.2.2 (2014-07-08 22:45:05 EDT)";
+    return "0.3.0 (2016-06-27 19:55:11 EDT)";
   }
 }

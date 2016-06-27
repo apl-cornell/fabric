@@ -1,6 +1,22 @@
 Version history {#versions}
 ===============
 
+Version 0.3.0 (Jun 2016)
+-------------
+* Objects at run time are now partitioned according to the labels of their
+  fields. This allows workers to read/modify an object's field without needing
+  to be also trusted to read/modify the rest of the object.
+
+* Various bug fixes, including:
+  * Constraints on `main()` are now checked at run time.
+  * The `length` field of array type `T{L}[]` is now labelled `L` instead of
+    `this`.
+  * Fixed a command-line processing bug that resulted in robustness checks
+    being turned off by default. This bug affects all Fabric 0.2.x releases.
+
+* Updated to Jif 3.5.0 and Polyglot 2.7.1.
+
+
 Version 0.2.2 (Jul 2014)
 -------------
 * Language support for specifying the access policy for a class or interface
