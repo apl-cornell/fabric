@@ -36,19 +36,19 @@
           <form class="download" method="POST"
               action="http://www.cs.cornell.edu/w8/~andru/cgi-bin/download.pl"
               enctype="multipart/form-data">
-            <input type="hidden" name="package" value="Fabric 0.2.2">
+            <input type="hidden" name="package" value="Fabric 0.3.0">
             <input type="hidden" name="style"
                 value="http://www.cs.cornell.edu/Projects/fabric/style.css">
             <input type="hidden" name="url"
-                value="http://www.cs.cornell.edu/Projects/fabric/releases/fabric-0.2.2.tar.gz">
+                value="http://www.cs.cornell.edu/Projects/fabric/releases/fabric-0.3.0.tar.gz">
             <input class="download" type="submit"
-                value="Download Fabric 0.2.2"/>
+                value="Download Fabric 0.3.0"/>
             <ul>
               <li>
-                <a href="manual/0.2.2/html/">Reference manual</a>
+                <a href="manual/0.3.0/html/">Reference manual</a>
               </li>
               <li>
-                <a href="manual/0.2.2/html/versions.html">ChangeLog</a>
+                <a href="manual/0.3.0/html/versions.html">ChangeLog</a>
               </li>
             </ul>
           </form>
@@ -126,13 +126,12 @@
             </a>
           </div>
 
-          <h3>Current releases</h3>
+          <h3>Current release</h3>
 
           <p>
-            Fabric 0.2.2 (July 2014) has support for local deadlock detection,
-            bug fixes, and performance improvements.
-            There is also a branch of 0.2.2 that additionally incorporates
-            support for state warranties, as described in our NSDI 2014 paper.
+            Fabric 0.3.0 (June 2016) includes support for object partitioning
+            and has several bug fixes. See the <a
+            href="manual/0.3.0/html/versions.html">ChangeLog</a> for details.
           </p>
 
           <div class="current-releases">
@@ -140,50 +139,31 @@
               <form class="download" method="POST"
                   action="http://www.cs.cornell.edu/w8/~andru/cgi-bin/download.pl"
                   enctype="multipart/form-data">
-                <input type="hidden" name="package" value="Fabric 0.2.2">
+                <input type="hidden" name="package" value="Fabric 0.3.0">
                 <input type="hidden" name="style"
                     value="http://www.cs.cornell.edu/Projects/fabric/style.css">
                 <input type="hidden" name="url"
-                    value="http://www.cs.cornell.edu/Projects/fabric/releases/fabric-0.2.2.tar.gz">
+                    value="http://www.cs.cornell.edu/Projects/fabric/releases/fabric-0.3.0.tar.gz">
                 <input class="download" type="submit"
-                    value="Download Fabric 0.2.2"/>
+                    value="Download Fabric 0.3.0"/>
                 <ul>
                   <li>
-                    <a href="manual/0.2.2/html/">Reference manual</a>
+                    <a href="manual/0.3.0/html/">Reference manual</a>
                   </li>
                   <li>
-                    <a href="manual/0.2.2/html/versions.html">ChangeLog</a>
-                  </li>
-                </ul>
-              </form>
-            </div>
-            <div>
-              <form class="download" method="POST"
-                  action="http://www.cs.cornell.edu/w8/~andru/cgi-bin/download.pl"
-                  enctype="multipart/form-data">
-                <input type="hidden" name="package"
-                    value="Fabric 0.2.2-warranties">
-                <input type="hidden" name="style"
-                    value="http://www.cs.cornell.edu/Projects/fabric/style.css">
-                <input type="hidden" name="url"
-                    value="http://www.cs.cornell.edu/Projects/fabric/releases/fabric-0.2.2-warranties.tar.gz">
-                <input class="download" type="submit"
-                    value="Download Fabric 0.2.2-warranties"/>
-                <ul>
-                  <li>
-                    <a href="manual/0.2.2-warranties/html/">Reference manual</a>
-                  </li>
-                  <li>
-                    <a href="manual/0.2.2-warranties/html/versions.html">
-                      ChangeLog
-                    </a>
+                    <a href="manual/0.3.0/html/versions.html">ChangeLog</a>
                   </li>
                 </ul>
               </form>
             </div>
           </div>
 
-          <h3>Previous releases</h3>
+          <h3>Previous releases and branches</h3>
+
+          <p>
+            There is a branch of 0.2.2 that incorporates support for state
+            warranties, as described in our NSDI 2014 paper.
+          </p>
 
           <table class="previous-releases">
             <caption>Previous releases</caption>
@@ -196,6 +176,46 @@
               </tr>
             </thead>
             <tbody>
+              <!-- Fabric 0.2.2 -->
+              <tr>
+                <td>
+                  <form class="download-old" method="POST" 
+                      action="http://www.cs.cornell.edu/w8/~andru/cgi-bin/download.pl"
+                      enctype="multipart/form-data">
+                    <input type="hidden" name="package" value="Fabric 0.2.2"/>
+                    <input type="hidden" name="style"
+                        value="http://www.cs.cornell.edu/Projects/fabric/style.css"/>
+                    <input type="hidden" name="url"
+                        value="http://www.cs.cornell.edu/Projects/fabric/releases/fabric-0.2.2.tar.gz"/>
+                    <input class="download-old" type="submit"
+                        value="Fabric 0.2.2"/>
+                  </form>
+                </td>
+                <td>July 2014</td>
+                <td><a href="manual/0.2.2/html/">Reference manual</a></td>
+                <td><a href="manual/0.2.2/html/versions.html">ChangeLog</a></td>
+              </tr>
+
+              <!-- Fabric 0.2.2-warranties -->
+              <tr>
+                <td>
+                  <form class="download-old" method="POST" 
+                      action="http://www.cs.cornell.edu/w8/~andru/cgi-bin/download.pl"
+                      enctype="multipart/form-data">
+                    <input type="hidden" name="package" value="Fabric 0.2.2-warranties"/>
+                    <input type="hidden" name="style"
+                        value="http://www.cs.cornell.edu/Projects/fabric/style.css"/>
+                    <input type="hidden" name="url"
+                        value="http://www.cs.cornell.edu/Projects/fabric/releases/fabric-0.2.2-warranties.tar.gz"/>
+                    <input class="download-old" type="submit"
+                        value="Fabric 0.2.2-warranties"/>
+                  </form>
+                </td>
+                <td>July 2014</td>
+                <td><a href="manual/0.2.2-warranties/html/">Reference manual</a></td>
+                <td><a href="manual/0.2.2-warranties/html/versions.html">ChangeLog</a></td>
+              </tr>
+
               <!-- Fabric 0.2.1 -->
               <tr>
                 <td>
