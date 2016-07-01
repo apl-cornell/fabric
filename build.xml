@@ -205,7 +205,7 @@
         else="">
       <available file="${jdk.home}/lib/tools.jar" />
     </condition>
-    <copy file="eclipse-classpath.in" tofile=".classpath">
+    <copy file="eclipse/classpath.in" tofile=".classpath">
       <filterset>
         <filter token="TOOLS.JAR" value="${tools.jar-entry}" />
       </filterset>
@@ -280,7 +280,7 @@
 
   <target name="eclipse-check">
     <uptodate property="eclipse.up-to-date" targetfile=".classpath"
-        srcfile="eclipse-classpath.in" />
+        srcfile="eclipse/classpath.in" />
   </target>
 
   <target name="bin-check">
@@ -1324,7 +1324,7 @@ public class Version {
         <include name="build.xml" />
         <include name="common.xml" />
         <include name="config.properties.in" />
-        <include name="eclipse-classpath.in" />
+        <include name="eclipse/classpath.in" />
         <include name="CHANGES" />
         <include name="COPYING" />
         <include name="CREDITS" />

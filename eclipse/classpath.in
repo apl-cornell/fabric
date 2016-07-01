@@ -10,6 +10,7 @@
 	<classpathentry kind="src" output="tools/code-normalizer/classes" path="tools/code-normalizer/src"/>
 	<classpathentry kind="src" output="tools/fabth/classes" path="tools/fabth/src"/>
 	<!--classpathentry kind="src" output="tools/net-perf/classes" path="tools/net-perf/src"/-->
+	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/jif"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/polyglot"/>
