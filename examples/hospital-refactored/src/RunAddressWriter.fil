@@ -17,10 +17,16 @@ public class RunAddressWriter {
     }
 
     long start = System.currentTimeMillis();
+    int txCount = 0;
     while (System.currentTimeMillis() < (start + (1000 * 60 * 5))) {
       String result =
           AddressWriter.writeAddress(listLabel, addressLabel, hivLabel, patients,
               0);
+
+      // HACK: Perform a GC once every 200 iterations.
+      txCount = (txCount + 1) % 200;
+      if (txCount == 0) System.gc();
+
 //      System.out.println(result);
     }
   }
