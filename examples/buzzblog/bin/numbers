@@ -4,6 +4,7 @@ import fileinput
 import sys
 from collections import defaultdict
 from math import sqrt
+from statistics import stdev, mean
 
 def new_txn():
     return Txn()
@@ -92,64 +93,44 @@ for line in sys.stdin:
     parse_line(line)
 
 class Stats:
-    def __init__(self):
-        self.count = 0
-        self.time = 0
-        self.time_sq = 0
-        self.stage_count = 0
-        self.stage_count_sq = 0
-        self.staging_time = 0
-        self.staging_time_sq = 0
-        self.checking_time = 0
-        self.checking_time_sq = 0
+    def __init__(self, txns):
+        self.txns = txns
 
-    def add_txn(self, txn):
-        if txn.time:
-            self.count += 1
-            self.time += txn.time
-            self.time_sq += (txn.time ** 2)
-            self.stage_count += txn.stage_count
-            self.stage_count_sq += (txn.stage_count ** 2)
-            self.staging_time += txn.staging_time
-            self.staging_time_sq += (txn.staging_time ** 2)
-            self.checking_time += txn.checking_time
-            self.checking_time_sq += (txn.checking_time ** 2)
+    @property
+    def count(self):
+        return len(self.txns)
 
     @property
     def avg_time(self):
-        return self.time / float(self.count)
+        return mean(map(lambda x: x.time, self.txns))
 
     @property
     def avg_stage_count(self):
-        return self.stage_count / float(self.count)
+        return mean(map(lambda x: x.stage_count, self.txns))
 
     @property
     def avg_staging_time(self):
-        return self.staging_time / float(self.count)
+        return mean(map(lambda x: x.staging_time, self.txns))
 
     @property
     def avg_checking_time(self):
-        return self.checking_time / float(self.count)
+        return mean(map(lambda x: x.checking_time, self.txns))
 
     @property
     def err_time(self):
-        avg_sq_time = (self.time_sq / float(self.count))
-        return sqrt(avg_sq_time - (self.avg_time ** 2)) / sqrt(self.count)
+        return stdev(map(lambda x: x.time, self.txns)) / sqrt(self.count)
 
     @property
     def err_stage_count(self):
-        avg_sq_stage_count = (self.stage_count_sq / float(self.count))
-        return sqrt(avg_sq_stage_count - (self.avg_stage_count ** 2)) / sqrt(self.count)
+        return stdev(map(lambda x: x.stage_count, self.txns)) / sqrt(self.count)
 
     @property
     def err_staging_time(self):
-        avg_sq_staging_time = (self.staging_time_sq / float(self.count))
-        return sqrt(avg_sq_staging_time - (self.avg_staging_time ** 2)) / sqrt(self.count)
+        return stdev(map(lambda x: x.staging_time, self.txns)) / sqrt(self.count)
 
     @property
     def err_checking_time(self):
-        avg_sq_checking_time = (self.checking_time_sq / float(self.count))
-        return sqrt(avg_sq_checking_time - (self.avg_checking_time ** 2)) / sqrt(self.count)
+        return stdev(map(lambda x: x.checking_time, self.txns)) / sqrt(self.count)
 
     def __str__(self):
         return ("{0} txns" +\
@@ -166,17 +147,10 @@ class Stats:
                                                         self.err_staging_time,
                                                         self.err_checking_time)
 
-max_stages = 0
-for _, txn in TXNS.items():
-    max_stages = max(max_stages, txn.stage_count)
+max_stages = max(map(lambda x: x.stage_count, TXNS.values()), default=0)
 
-filtered = []
-for _, txn in TXNS.items():
-    if txn.stage_count == max_stages:
-        filtered.append(txn)
+filtered = [txn for txn in TXNS.values() if txn.stage_count == max_stages and txn.time]
 
-stats = Stats()
-for txn in filtered:
-    stats.add_txn(txn)
+stats = Stats(filtered)
 
 print(str(stats))
