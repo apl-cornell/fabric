@@ -103,10 +103,10 @@ public class FabricFieldExt extends JifFieldExt {
     FabricStagingExt fse = FabricUtil.fabricStagingExt(fe);
     fse.setStageCheck(conflictPC.label(), conflictL.label(), A);
 
-    // Check CL(op field) ≤ meet(CL(prev accesses))
-    lc.constrain(conflictL,
+    // Check join(CL(prev accesses)) ≤ CL(op field)
+    lc.constrain(conflictPC,
         LabelConstraint.LEQ,
-        conflictPC.join(lc, "{⊥→;⊥←}", ts.noComponentsLabel()),
+        conflictL.join(lc, "{⊥→;⊥←}", ts.noComponentsLabel()),
         A.labelEnv(), pos,
         new ConstraintMessage() {
           @Override
@@ -131,13 +131,16 @@ public class FabricFieldExt extends JifFieldExt {
     });
     
     // Check end conflict.
-    lc.constrain(endConflict, LabelConstraint.LEQ, conflictLR, A.labelEnv(),
+    lc.constrain(conflictL,
+        LabelConstraint.LEQ,
+        endConflict.join(lc, "{⊥→;⊥←}", ts.noComponentsLabel()),
+        A.labelEnv(),
         pos,
         new ConstraintMessage() {
           @Override
           public String msg() {
             return (isWrite ? "Write" : "Read") + " access of " + origFE +
-              " is lower than the current method's ending conflict label.";
+              " is higher than the current method's ending conflict label.";
           }
     });
     

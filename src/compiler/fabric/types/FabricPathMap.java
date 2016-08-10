@@ -61,9 +61,6 @@ public class FabricPathMap extends PathMap {
    * @return The current CL.
    */
   public Label CL() {
-    // Default to {⊤→;⊥←} for CL since we'll be performing meets.
-    //
-    // TODO: Should I instead use NoAccesses?
     if (!conflictMap.containsKey(FabricPath.CL))
       return ((FabricTypeSystem) ts).noAccesses();
     return getCL(FabricPath.CL);
@@ -102,7 +99,7 @@ public class FabricPathMap extends PathMap {
     FabricPathMap n = (FabricPathMap) super.join(m);
     n.conflictMap.putAll(map);
 
-    // Iterate over the elements of X, meeting those labels with the ones
+    // Iterate over the elements of X, joining those labels with the ones
     // in this and adding the ones that aren't there.
     for (Map.Entry<Path, Label> e : fm.conflictMap.entrySet()) {
       Path p = e.getKey();
@@ -111,7 +108,7 @@ public class FabricPathMap extends PathMap {
       if (l2 instanceof NoAccesses) {
         n.conflictMap.put(p, l1);
       } else {
-        n.conflictMap.put(p, ts.meet(l1, l2));
+        n.conflictMap.put(p, ts.join(l1, l2));
       }
     }
 

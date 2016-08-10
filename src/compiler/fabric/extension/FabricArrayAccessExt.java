@@ -97,13 +97,10 @@ public class FabricArrayAccessExt extends JifArrayAccessExt {
     FabricStagingExt fse = FabricUtil.fabricStagingExt(acc);
     fse.setStageCheck(conflictPC.label(), conflictL.label(), A);
 
-    // Check CL(op array access) ≤ meet(CL(prev accesses))
-    //lc.constrain(conflictL.meet(lc,
-            //"{⊤→;⊤←}",
-            //ts.pairLabel(pos, ts.topConfPolicy(pos), ts.bottomIntegPolicy(pos))),
-    lc.constrain(conflictL,
+    // Check join(CL(prev accesses)) ≤ CL(op array access)
+    lc.constrain(conflictPC,
         LabelConstraint.LEQ,
-        conflictPC.join(lc, "{⊥→;⊥←}", ts.noComponentsLabel()),
+        conflictL.join(lc, "{⊥→;⊥←}", ts.noComponentsLabel()),
         A.labelEnv(), pos,
         new ConstraintMessage() {
           @Override
@@ -128,14 +125,17 @@ public class FabricArrayAccessExt extends JifArrayAccessExt {
     });
     
     // Check end conflict.
-    lc.constrain(endConflict, LabelConstraint.LEQ, conflictLR, A.labelEnv(),
+    lc.constrain(conflictL,
+        LabelConstraint.LEQ,
+        endConflict.join(lc, "{⊥→;⊥←}", ts.noComponentsLabel()),
+        A.labelEnv(),
         pos,
         new ConstraintMessage() {
-          @Override
-          public String msg() {
-            return (isWrite ? "Write" : "Read") + " access of " + origACC +
-              " is lower than the current method's ending conflict label.";
-          }
+           @Override
+           public String msg() {
+             return (isWrite ? "Write" : "Read") + " access of " + origACC +
+               " is higher than the current method's ending conflict label.";
+           }
     });
     
     // Update the CL

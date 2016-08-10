@@ -228,21 +228,21 @@ public class FabricCallHelper extends CallHelper {
     if (!(beginConflict instanceof NoAccesses)) {
       // Check previous accesses against access label bound of method.
       NamedLabel beginConflictNL = new NamedLabel("begin conflict label of " + pi.signature(),
-            "the upper bound of the conflict labels of all accesses in the method",
+            "the lower bound of the conflict labels of all accesses in the method",
             beginConflict);
 
       // Get the current conflict pc label
       NamedLabel conflictNL = new NamedLabel("conflict pc",
-          "the meet of the conflict labels of previous accesses",
+          "the join of the conflict labels of previous accesses",
           A.conflictLabel());
 
       // Squirrel away the dynamic staging check
       FabricStagingExt fse = FabricUtil.fabricStagingExt(call);
       fse.setStageCheck(conflictNL.label(), beginConflictNL.label(), A);
 
-      lc.constrain(beginConflictNL,
+      lc.constrain(conflictNL,
           LabelConstraint.LEQ,
-          conflictNL.join(lc, "{⊥→;⊥←}", fts.noComponentsLabel()),
+          beginConflictNL.join(lc, "{⊥→;⊥←}", fts.noComponentsLabel()),
           A.labelEnv(), position, new ConstraintMessage() {
         @Override
         public String msg() {
@@ -281,18 +281,18 @@ public class FabricCallHelper extends CallHelper {
 
       // Check of end conflict bound to get better location reporting.
       NamedLabel newCLN = new NamedLabel("conflict pc",
-          "the meet of the conflict labels of accesses up to the end of the call",
-          newCL).join(lc, "{⊥→;⊥←}", fts.noComponentsLabel());
+          "the join of the conflict labels of accesses up to the end of the call",
+          newCL);
 
       NamedLabel endConflictBoundLabel = new NamedLabel("end conflict label",
-          "the lower bound on the conflict labels of accesses in " + pi.signature(),
-          A.endConflictBound());
+          "the upper bound on the conflict labels of accesses in " + pi.signature(),
+          A.endConflictBound()).join(lc, "{⊥→;⊥←}", fts.noComponentsLabel());
 
-      lc.constrain(endConflictBoundLabel, LabelConstraint.LEQ, newCLN,
+      lc.constrain(newCLN, LabelConstraint.LEQ, endConflictBoundLabel,
           A.labelEnv(), position, new ConstraintMessage() {
         @Override
         public String msg() {
-          return "The current method makes less restricted accesses than the ending "
+          return "The current method makes more restricted accesses than the ending "
                + "conflict label allows.";
         }
       });

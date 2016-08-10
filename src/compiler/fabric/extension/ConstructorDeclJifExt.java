@@ -92,22 +92,22 @@ public class ConstructorDeclJifExt extends JifConstructorDeclExt implements Ext 
     final String name = ((JifConstructorDecl) node()).name();
 
     NamedLabel endConflictBoundLabel = new NamedLabel("end conflict label of " + name,
-        "lower bound on accesses that can be made up to the end of the body of "
+        "upper bound on accesses that can be made up to the end of the body of "
         + name, 
         fci.endConflictLabel());
 
     NamedLabel endCLN = new NamedLabel("prev conflict label",
-        "the meet of the conflict labels of accesses up to the end of the method",
+        "the join of the conflict labels of accesses up to the end of the method",
         Xf.CL());
 
     // Check that the end conflict label is respected by the method body.
-    lc.constrain(endConflictBoundLabel,
+    lc.constrain(endCLN,
         LabelConstraint.LEQ,
-        endCLN.join(lc, "{⊥→;⊥←}", ts.noComponentsLabel()),
+        endConflictBoundLabel.join(lc, "{⊥→;⊥←}", ts.noComponentsLabel()),
         A.labelEnv(), ci.position(), new ConstraintMessage() {
       @Override
       public String msg() {
-        return "The body of " + name + " makes less restricted accesses than "
+        return "The body of " + name + " makes more restricted accesses than "
           + "the ending conflict label allows.";
       }
     });
@@ -124,15 +124,15 @@ public class ConstructorDeclJifExt extends JifConstructorDeclExt implements Ext 
     FabricConstructorInstance fci = (FabricConstructorInstance) mi;
     final Position declPos = node().position();
     if (!fci.beginConflictLabel().equals(ts.noAccesses())) {
-      lc.constrain(new NamedLabel("end conflict label", fci.endConflictLabel()),
+      lc.constrain(new NamedLabel("begin conflict label", fci.beginConflictLabel()),
           LabelConstraint.LEQ,
-          new NamedLabel("begin conflict label", fci.beginConflictLabel()).join(lc, "{⊥→;⊥←}", ts.noComponentsLabel()),
+          new NamedLabel("end conflict label", fci.endConflictLabel()).join(lc, "{⊥→;⊥←}", ts.noComponentsLabel()),
           A.labelEnv(), declPos,
           new ConstraintMessage() {
             @Override
             public String msg() {
-              return "End conflict label must have lower confidentiality than"
-                     + " begin conflict label for constructor at " + declPos;
+              return "Begin conflict label must have lower confidentiality " +
+                  "than end conflict label for constructor at " + declPos;
             }
       });
     }

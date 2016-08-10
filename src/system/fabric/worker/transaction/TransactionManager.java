@@ -304,16 +304,17 @@ public final class TransactionManager {
       throws TransactionRestartingException {
     // Only stage if the next stage is not the same as the current stage.
     HOTOS_LOGGER.log(Level.FINEST, "start stage check {0}", current);
-    boolean check = !LabelUtil._Impl.relabelsTo(current.getCurrentStage().confPolicy(),
-        nextStage.confPolicy());
+    boolean check = !LabelUtil._Impl.relabelsTo(nextStage.confPolicy(),
+        current.getCurrentStage().confPolicy());
     HOTOS_LOGGER.log(Level.FINEST, "end stage check {0}", current);
     if (check) {
-      // So !(current ≤ next)
+      // So !(next ≤ current)
       stageTransaction();
       current.setCurrentStage(nextStage);
-    } else if (!LabelUtil._Impl.relabelsTo(nextStage.confPolicy(),
-        current.getCurrentStage().confPolicy())) {
-      // So (current ≤ next) && !(current ≥ next) ⇒ current ≠ next
+    } else if (!LabelUtil._Impl.relabelsTo(
+                current.getCurrentStage().confPolicy(),
+                nextStage.confPolicy())) {
+      // So (next ≤ current) && !(current ≤ next) ⇒ current ≠ next
       // This should only happen if the monotonicity rule was violated.
       throw new InternalError(
           "Staging monotonicity was violated, current stage: "

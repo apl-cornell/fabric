@@ -74,22 +74,22 @@ public class MethodDeclJifExt extends JifMethodDeclExt {
     final String name = ((JifMethodDecl) node()).name();
 
     NamedLabel endConflictBoundLabel = new NamedLabel("end conflict label of " + name,
-        "lower bound on accesses that can be made up to the end of the body of "
+        "upper bound on accesses that can be made up to the end of the body of "
         + name, 
         fmi.endConflictLabel());
 
     NamedLabel endCLN = new NamedLabel("prev conflict label",
-        "the meet of the conflict labels of accesses up to the end of the method",
+        "the join of the conflict labels of accesses up to the end of the method",
         Xf.CL());
 
     // Check that the end conflict label is respected by the method body.
-    lc.constrain(endConflictBoundLabel,
+    lc.constrain(endCLN,
         LabelConstraint.LEQ,
-        endCLN.join(lc, "{⊥→;⊥←}", ts.noComponentsLabel()),
+        endConflictBoundLabel.join(lc, "{⊥→;⊥←}", ts.noComponentsLabel()),
         A.labelEnv(), mi.position(), new ConstraintMessage() {
       @Override
       public String msg() {
-        return "The body of " + name + " makes less restricted accesses than "
+        return "The body of " + name + " makes more restricted accesses than "
           + "the ending conflict label allows.";
       }
     });
@@ -107,15 +107,15 @@ public class MethodDeclJifExt extends JifMethodDeclExt {
     FabricMethodInstance fmi = (FabricMethodInstance) md.methodInstance();
     final Position declPos = node().position();
     if (!fmi.beginConflictLabel().equals(ts.noAccesses())) {
-      lc.constrain(new NamedLabel("end conflict label", fmi.endConflictLabel()),
+      lc.constrain(new NamedLabel("begin conflict label", fmi.beginConflictLabel()),
           LabelConstraint.LEQ,
-          new NamedLabel("begin conflict label", fmi.beginConflictLabel()).join(lc, "{⊥→;⊥←}", ts.noComponentsLabel()),
+          new NamedLabel("end conflict label", fmi.endConflictLabel()).join(lc, "{⊥→;⊥←}", ts.noComponentsLabel()),
           A.labelEnv(), declPos,
           new ConstraintMessage() {
             @Override
             public String msg() {
-              return "End conflict label must have lower confidentiality than"
-                     + " begin conflict label for method at " + declPos;
+              return "Begin conflict label must have lower confidentiality than"
+                     + " end conflict label for method at " + declPos;
             }
       });
     }

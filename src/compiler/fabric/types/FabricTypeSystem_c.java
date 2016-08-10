@@ -1309,8 +1309,13 @@ public class FabricTypeSystem_c extends JifTypeSystem_c
 
   @Override
   public Label readConflict(Label l) {
-    // CL(read l) = WritersToReaders(l)
-    return writersToReadersLabel(l.position(), l);
+    // Old version
+    //// CL(read l) = WritersToReaders(l)
+    //return writersToReadersLabel(l.position(), l);
+    //
+    // New version
+    // CL(read l) = CL(write l) = WritersToReaders(l) meet C(l)
+    return meet(l, writersToReadersLabel(l.position(), l));
   }
 
   @Override
@@ -1333,17 +1338,6 @@ public class FabricTypeSystem_c extends JifTypeSystem_c
   }
 
   @Override
-  public Label meet(Label L1, Label L2) {
-    if (L1 instanceof NoAccesses) {
-      return L2.simplify();
-    }
-    if (L2 instanceof NoAccesses) {
-      return L1.simplify();
-    }
-    return super.meet(L1, L2);
-  }
-
-  @Override
   protected AccessPathField accessPathField(AccessPath path, FieldInstance fi,
       java.lang.String fieldName, Position pos) {
     return new FabricAccessPathField(path, fi, fieldName, pos);
@@ -1360,5 +1354,16 @@ public class FabricTypeSystem_c extends JifTypeSystem_c
           fpi.beginConflictLabel() + "})");
     }
     return callSitePC;
+  }
+
+  @Override
+  public Label join(Label L1, Label L2) {
+    if (L1 instanceof NoAccesses) {
+      return L2.simplify();
+    }
+    if (L2 instanceof NoAccesses) {
+      return L1.simplify();
+    }
+    return super.join(L1, L2);
   }
 }
