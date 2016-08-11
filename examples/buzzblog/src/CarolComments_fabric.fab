@@ -2,7 +2,7 @@ import fabric.runtime.Runtime;
 
 class CarolComments_fabric {
 
-  public static void run{⊤←workerP}@{W2R(*postLabel)}(
+  public static void run{⊤←workerP}@{*postLabel}(
       label{⊤←workerP} postLabel,
       label{⊤←workerP} commentLabel,
       principal{⊤←workerP} workerP,
@@ -10,7 +10,7 @@ class CarolComments_fabric {
       principal{⊤←workerP} bob,
       principal{⊤←workerP} carol,
       BuzzBlogAPI[postLabel, commentLabel]{⊤←workerP} api
-  ):{workerP->;workerP<-}@{W2R(*commentLabel) ⊓ *commentLabel}
+  ):{workerP->;workerP<-}@{*commentLabel}
     where
       {*postLabel} equiv {alice&bob&carol ← alice ; ((alice,bob),carol)→},
       {*commentLabel} equiv {(alice,carol)→ ; (alice,carol)←},

@@ -2,7 +2,7 @@ import fabric.runtime.Runtime;
 
 class AlicePosts_fabric {
 
-  public static void run{⊤←workerP}@{W2R(*postLabel)}(
+  public static void run{⊤←workerP}@{*postLabel ⊓ W2R(*postLabel)}(
       label{⊤←workerP} postLabel,
       label{⊤←workerP} commentLabel,
       principal{⊤←workerP} workerP,
