@@ -292,7 +292,7 @@ public final class Log {
     if (stageLabel == null)
       stageLabel = LabelUtil._Impl.toLabel(
           Worker.getWorker().getLocalStore(),
-          LabelUtil._Impl.topConf());
+          LabelUtil._Impl.bottomConf());
     return stageLabel;
   }
 
