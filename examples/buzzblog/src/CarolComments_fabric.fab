@@ -57,7 +57,6 @@ class CarolComments_fabric {
                     printme = printme + "\n" + 
                       api.updateComment(postId, secondPost + " - "+ suffix);
 
-                    // XXX Can only update once per transaction.
                     //printme = printme + "\n" + 
                     //  api.updateComment(postId, thirdPost + " - "+ suffix);
                   } else printme = printme + 
