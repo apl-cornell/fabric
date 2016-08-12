@@ -5,22 +5,46 @@ class HivReader {
    * patients into the given drop box, and returns a string representation of
    * the result.
    */
-  public static String{*addressLabel; *hivLabel}
+  public static String{*hivLabel}
     readHiv{*listLabel}(
-      label{*addressLabel ; *hivLabel} listLabel,
-      label{*addressLabel ; *hivLabel} addressLabel,
-      label{*addressLabel ; *hivLabel} hivLabel,
+      // The principal that can read and modify addresses.
+      principal{*listLabel} addressP,
+      // The principal that can read and modify HIV statuses.
+      principal{*listLabel} hivP,
+      label{*listLabel} listLabel,
+      label{*listLabel} addressLabel,
+      label{*listLabel} hivLabel,
       PatientList[listLabel, addressLabel, hivLabel]{*listLabel} patients,
-      DropBox[{*addressLabel; *hivLabel}]{*listLabel} dropBox
-  )
-    where
-      // List label is the meet of address and hiv labels.
-      listLabel ⊑ {*addressLabel ⊓ *hivLabel},
-      {*addressLabel ⊓ *hivLabel} ⊑ listLabel,
+      DropBox[hivLabel]{*listLabel} dropBox
+    )
+  where
+    // hivP is more trusted than addressP
+    hivP ≽ addressP,
 
-      // Drop box's store can store the result.
-      {*addressLabel ; *hivLabel} ⊑ {⊤→dropBox.store$},
-      {⊤←dropBox.store$} ⊑ {*addressLabel ; *hivLabel}
+    // listLabel = {addressP→ ; hivP←}
+    {*listLabel} equiv {addressP→ ; hivP←},
+
+    // hivLabel = {hivP→ ; hivP←}
+    {*hivLabel} equiv {hivP→ ; hivP←},
+
+    // addressLabel = {addressP→ ; addressP←}
+    {*addressLabel} equiv {addressP→ ; addressP←},
+/*
+    // Confidentiality part of listLabel is addressP→, which flows to
+    // confidentiality part of addressLabel (also addressP→).
+    // XXX Compiler should have enough to figure this out.
+    listLabel ⊑ {{*addressLabel} ⊔ {}},
+
+    // Confidentiality part of listLabel is addressP→, which flows to
+    // confidentiality part of hivLabel (which is hivP→).
+    // XXX Compiler should have enough to figure this out.
+    listLabel ⊑ {{*hivLabel} ⊔ {}},
+*/
+    // Drop box's store can store the result.
+    hivLabel ⊑ {⊤→dropBox.store$},
+    {⊤←dropBox.store$} ⊑ hivLabel,
+
+    caller (hivP)
   {
     if (dropBox == null) return "drop box came back null";
 
@@ -29,11 +53,11 @@ class HivReader {
       return "patients came back null";
     }
 
-    String{*addressLabel; *hivLabel} resultStr = "";
+    String resultStr = "";
     atomic {
-      AddressList[{*addressLabel; *hivLabel}]{*addressLabel;*hivLabel} result =
-          filterAndGetAddresses(dropBox.store$, listLabel, addressLabel,
-              hivLabel, patients);
+      AddressList[hivLabel] result =
+          filterAndGetAddresses(addressP, hivP, dropBox.store$, listLabel,
+              addressLabel, hivLabel, patients);
       dropBox.result = result;
 
       if (result != null) {
@@ -50,22 +74,46 @@ class HivReader {
    * Filters the given patient list for HIV-positive patients and obtains a
    * list of their addresses.
    */
-  public static AddressList[{*addressLabel;*hivLabel}]{*addressLabel;*hivLabel}
+  private static AddressList[hivLabel]{*hivLabel}
     filterAndGetAddresses{*listLabel}(
-      Store{*addressLabel ; *hivLabel} store,
-      label{*addressLabel ; *hivLabel} listLabel,
-      label{*addressLabel ; *hivLabel} addressLabel,
-      label{*addressLabel ; *hivLabel} hivLabel,
+      // The principal that can read and modify addresses.
+      principal{*listLabel} addressP,
+      // The principal that can read and modify HIV statuses.
+      principal{*listLabel} hivP,
+      Store{*listLabel} store,
+      label{*listLabel} listLabel,
+      label{*listLabel} addressLabel,
+      label{*listLabel} hivLabel,
       PatientList[listLabel, addressLabel, hivLabel]{*listLabel} patients
-  )
-    where
-      // List label is the meet of address and hiv labels.
-      listLabel ⊑ {*addressLabel ⊓ *hivLabel},
-      {*addressLabel ⊓ *hivLabel} ⊑ listLabel,
+    )
+  where
+    // hivP is more trusted than addressP
+    hivP ≽ addressP,
 
-      // store can store the result.
-      {*addressLabel ; *hivLabel} ⊑ {⊤→store},
-      {⊤←store} ⊑ {*addressLabel ; *hivLabel}
+    // listLabel = {addressP→ ; hivP←}
+    {*listLabel} equiv {addressP→ ; hivP←},
+
+    // hivLabel = {hivP→ ; hivP←}
+    {*hivLabel} equiv {hivP→ ; hivP←},
+
+    // addressLabel = {addressP→ ; addressP←}
+    {*addressLabel} equiv {addressP→ ; addressP←},
+/*
+    // Confidentiality part of listLabel is addressP→, which flows to
+    // confidentiality part of addressLabel (also addressP→).
+    // XXX Compiler should have enough to figure this out.
+    listLabel ⊑ {{*addressLabel} ⊔ {}},
+
+    // Confidentiality part of listLabel is addressP→, which flows to
+    // confidentiality part of hivLabel (which is hivP→).
+    // XXX Compiler should have enough to figure this out.
+    listLabel ⊑ {{*hivLabel} ⊔ {}},
+*/
+    // store can store the result.
+    hivLabel ⊑ {⊤→store},
+    {⊤←store} ⊑ hivLabel,
+
+    caller (hivP)
   {
     if (patients == null) return null;
 
@@ -74,17 +122,18 @@ class HivReader {
 
     if (cur == null) {
       return
-          filterAndGetAddresses(store, listLabel, addressLabel, hivLabel, tail);
+          filterAndGetAddresses(addressP, hivP, store, listLabel, addressLabel,
+              hivLabel, tail);
     }
 
+    String curAddress = endorse(cur.address, {*addressLabel} to {*hivLabel});
+    AddressList[hivLabel] result =
+        filterAndGetAddresses(addressP, hivP, store, listLabel, addressLabel,
+            hivLabel, tail);
     boolean curHivStatus = cur.hivStatus;
-    AddressList[{*addressLabel;*hivLabel}] result =
-        filterAndGetAddresses(store, listLabel, addressLabel, hivLabel, tail);
-    String curAddress = cur.address;
 
     if (curHivStatus) {
-      result =
-          new AddressList[{*addressLabel;*hivLabel}]@store(curAddress, result);
+      result = new AddressList[hivLabel]@store(curAddress, result);
     }
 
     return result;

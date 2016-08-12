@@ -6,6 +6,8 @@ import fabric.util.Map;
 public class RunPatientMaker {
   public static void main(String[] args) {
     Store store = null;
+    Principal addressP = null;
+    Principal hivP = null;
     Label listLabel = null;
     Label addressLabel = null;
     Label hivLabel = null;
@@ -24,22 +26,22 @@ public class RunPatientMaker {
       // addressLabel
       //    (alice,bob),(carol,dave) → (alice,bob),(carol,dave);
       //    (alice,bob),(carol,dave) ← (alice,bob),(carol,dave)
-      Principal disj = PrincipalUtil.disjunction(store,
+      addressP = PrincipalUtil.disjunction(store,
            PrincipalUtil.disjunction(store, alice, bob),
            PrincipalUtil.disjunction(store, carol, dave));
       addressLabel = LabelUtil.toLabel(store,
-          LabelUtil.readerPolicy(store, disj, disj),
-          LabelUtil.writerPolicy(store, disj, disj));
+          LabelUtil.readerPolicy(store, addressP, addressP),
+          LabelUtil.writerPolicy(store, addressP, addressP));
 
       // hivLabel
       //    (alice,bob),dave → (alice,bob),dave;
       //    (alice,bob),dave ← (alice,bob),dave
-      Principal noCarol = PrincipalUtil.disjunction(store,
+      hivP = PrincipalUtil.disjunction(store,
            PrincipalUtil.disjunction(store, alice, bob),
            dave);
       hivLabel = LabelUtil.toLabel(store,
-          LabelUtil.readerPolicy(store, noCarol, noCarol),
-          LabelUtil.writerPolicy(store, noCarol, noCarol));
+          LabelUtil.readerPolicy(store, hivP, hivP),
+          LabelUtil.writerPolicy(store, hivP, hivP));
 
       listLabel = LabelUtil.meet(store, addressLabel, hivLabel);
       resultLabel = LabelUtil.join(store, addressLabel, hivLabel);
@@ -62,6 +64,8 @@ public class RunPatientMaker {
     // Save into root maps.
     atomic {
       Map aliceRoot = store.getRoot();
+      aliceRoot.put("addressP", addressP);
+      aliceRoot.put("hivP", hivP);
       aliceRoot.put("patients", patients);
       aliceRoot.put("listLabel", listLabel);
       aliceRoot.put("addressLabel", addressLabel);

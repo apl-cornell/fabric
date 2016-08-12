@@ -2,14 +2,12 @@ import fabric.util.Map;
 
 public class RunDaveReader {
   public static void main(String[] args) {
-    Label addressLabel = null;
     Label hivLabel = null;
     DropBox dropBox = null;
 
     atomic {
       Store store = Worker.getWorker().getStore("alicenode");
       Map rootMap = store.getRoot();
-      addressLabel = (Label) rootMap.get("addressLabel");
       hivLabel = (Label) rootMap.get("hivLabel");
 
       Store daveStore = Worker.getWorker().getStore("davenode");
@@ -18,7 +16,7 @@ public class RunDaveReader {
 
     long start = System.currentTimeMillis();
     while (System.currentTimeMillis() < (start + (1000 * 60 * 5))) {
-      String result = DaveReader.readDave(addressLabel, hivLabel, dropBox);
+      String result = DaveReader.readDave(hivLabel, dropBox);
 //      System.out.println(result);
     }
   }
