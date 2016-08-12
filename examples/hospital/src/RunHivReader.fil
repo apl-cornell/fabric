@@ -21,9 +21,16 @@ public class RunHivReader {
     }
 
     long start = System.currentTimeMillis();
+    int txCount = 0;
     while (System.currentTimeMillis() < (start + (1000 * 60 * 5))) {
       String result =
-          HivReader.readHiv(listLabel, addressLabel, hivLabel, patients, dropBox);
+          HivReader.readHiv(listLabel, addressLabel,
+              hivLabel, patients, dropBox);
+
+      // HACK: Perform a GC once every 200 iterations.
+      txCount = (txCount + 1) % 200;
+      if (txCount == 0) System.gc();
+
 //      System.out.println(result);
     }
   }

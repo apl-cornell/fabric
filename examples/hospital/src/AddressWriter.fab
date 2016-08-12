@@ -1,14 +1,15 @@
 public class AddressWriter {
-  public static String{*addressLabel} writeAddress{*addressLabel}(
-    label{*addressLabel} listLabel,
-    label{*addressLabel} addressLabel,
-    label{*addressLabel} hivLabel,
-    PatientList[listLabel, addressLabel, hivLabel]{*listLabel} patients,
-    int{*addressLabel} targetPatientNum
-  )
-    where
-      // List has integrity to affect the result.
-      listLabel ⊑ {*addressLabel}
+  public static String{*addressLabel}
+    writeAddress{*addressLabel}(
+      label{*addressLabel} listLabel,
+      label{*addressLabel} addressLabel,
+      label{*addressLabel} hivLabel,
+      PatientList[listLabel, addressLabel, hivLabel]{*listLabel} patients,
+      int{*addressLabel} targetPatientNum
+    )
+  where
+    // List can affect the result.
+    listLabel ⊑ {*addressLabel}
   {
     String result = null;
     atomic {
