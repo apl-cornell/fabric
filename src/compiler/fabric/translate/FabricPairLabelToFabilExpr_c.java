@@ -18,6 +18,7 @@ import jif.types.label.PairLabel;
 import jif.types.label.Policy;
 import jif.types.label.ReaderPolicy;
 import jif.types.label.WriterPolicy;
+import jif.types.label.WritersToReadersPolicy;
 import polyglot.ast.Expr;
 import polyglot.types.SemanticException;
 import polyglot.util.InternalCompilerError;
@@ -74,6 +75,9 @@ public class FabricPairLabelToFabilExpr_c extends PairLabelToJavaExpr_c {
       for (Policy tp : mp.meetComponents()) {
         if (containsProjection(tp)) return true;
       }
+    } else if (p instanceof WritersToReadersPolicy) {
+      WritersToReadersPolicy policy = (WritersToReadersPolicy) p;
+      return containsProjection(policy.integPol());
     }
     return false;
   }
@@ -197,6 +201,13 @@ public class FabricPairLabelToFabilExpr_c extends PairLabelToJavaExpr_c {
         e = rw.qq().parseExpr("%E.meet(%E, %E)", e, store, f);
       }
       return e;
+    }
+
+    if (p instanceof WritersToReadersPolicy) {
+      WritersToReadersPolicy policy = (WritersToReadersPolicy) p;
+      return rw.qq().parseExpr(
+              rw.runtimeLabelUtil() + ".writersToReaders(%E, %E)",
+              store, policyToJava(policy.integPol(), rw, qualifier));
     }
 
     throw new InternalCompilerError("Cannot translate policy " + p);

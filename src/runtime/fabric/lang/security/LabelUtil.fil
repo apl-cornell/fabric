@@ -282,6 +282,10 @@ public final class LabelUtil {
       return null;
   }
 
+  public static ConfPolicy writersToReaders(Store store, IntegPolicy integ) {
+    return writersToReaders(store, integ, true);
+  }
+
   public static ConfPolicy writersToReaders(Store store, IntegPolicy integ, boolean simplify) {
     if (integ instanceof WriterPolicy) {
       WriterPolicy wp = (WriterPolicy) integ;
