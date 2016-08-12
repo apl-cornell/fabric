@@ -20,9 +20,9 @@ class BuzzBlogAPI[label postLabel, label commentLabel]
 
   // Returns the string view of the post with the given id
   public String{postLabel ; postId}
-    viewPost{postLabel;⊥←}@{postLabel ⊓ W2R(postLabel)}(
+    viewPost{postLabel;⊥←}@{{*postLabel} ⊓ {W2R(postLabel)}}(
       int postId
-    )@{postLabel ⊓ W2R(postLabel)}
+    )@{{*postLabel} ⊓ {W2R(postLabel)}}
   where
     {postId} <= {postLabel; ⊥←}
   {
@@ -36,9 +36,9 @@ class BuzzBlogAPI[label postLabel, label commentLabel]
 
   // Returns the string view of the comment with the given id
   public String{commentLabel ; postId}
-    viewComment{commentLabel;⊥←}@{commentLabel ⊓ W2R(commentLabel)}(
+    viewComment{commentLabel;⊥←}@{{*commentLabel} ⊓ {W2R(commentLabel)}}(
       int postId
-    )@{W2R(commentLabel)}
+    )@{{*commentLabel} meet {W2R(commentLabel)}}
   where
     {postId} <= {commentLabel; ⊥←}
   {
@@ -52,9 +52,9 @@ class BuzzBlogAPI[label postLabel, label commentLabel]
 
   // updates a post given some new content, returns a message about how well 
   //  that went.
-  public String{postLabel} updatePost{postLabel}@{postLabel ⊓ W2R(postLabel)}(
+  public String{postLabel} updatePost{postLabel}@{{*postLabel} ⊓ {W2R(postLabel)}}(
       int postId, 
-      String{postLabel} newContent)@{postLabel ⊓ W2R(postLabel)}
+      String{postLabel} newContent)@{{*postLabel} ⊓ {W2R(postLabel)}}
     where
       {postId} <= postLabel
   {
@@ -72,10 +72,10 @@ class BuzzBlogAPI[label postLabel, label commentLabel]
   // updates a comment given some new content, returns a message about how well 
   //  that went.
   public String{commentLabel}
-    updateComment{commentLabel}@{commentLabel ⊓ W2R(commentLabel)}(
+    updateComment{commentLabel}@{{*commentLabel} ⊓ {W2R(commentLabel)}}(
       int postId, 
       String{commentLabel} newContent
-    )@{commentLabel ⊓ W2R(commentLabel)}
+    )@{{*commentLabel} ⊓ {W2R(commentLabel)}}
   where
     {postId} <= commentLabel
   {
@@ -94,10 +94,10 @@ class BuzzBlogAPI[label postLabel, label commentLabel]
   // If there is a post with the given id, it returns that post.
   // Otherwise, it makes a new one with the given content.
   // returns a message that's hopefully helpful.
-  public String{postLabel} viewOrCreatePost{store}@{postLabel ⊓ W2R(postLabel)}(
+  public String{postLabel} viewOrCreatePost{store}@{{*postLabel} ⊓ {W2R(postLabel)}}(
       int postId, 
       Store store, 
-      String{postLabel} newContent)@{W2R(postLabel) ⊓ postLabel}
+      String{postLabel} newContent)@{{W2R(postLabel)} ⊓ {*postLabel}}
   where postLabel  <= {⊤ → store}, 
         {⊤ ← store} <= postLabel, 
         {postId} <= postLabel, 
@@ -123,11 +123,11 @@ class BuzzBlogAPI[label postLabel, label commentLabel]
   // Otherwise, it makes a new one with the given content.
   // returns a message that's hopefully helpful.
   public String{commentLabel}
-    viewOrCreateComment{store}@{commentLabel ⊓ W2R(commentLabel)}(
+    viewOrCreateComment{store}@{{*commentLabel} ⊓ {W2R(commentLabel)}}(
       int postId, 
       Store store, 
       String{commentLabel} newContent
-    )@{W2R(commentLabel) ⊓ commentLabel}
+    )@{{W2R(commentLabel)} ⊓ {*commentLabel}}
   where commentLabel  <= {⊤ → store}, 
         {⊤ ← store} <= commentLabel, 
         {postId} <= commentLabel, 
