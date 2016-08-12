@@ -13,8 +13,8 @@ public class AddressList[label L] {
     this.next = tail;
   }
 
-  public String{L} toString{L}@{W2R(L)}()
-    where L ⊑ {W2R(L)}
+  public String{L} toString{L}@{L}()
+    where L ⊑ {W2R(L) ; ⊥←}
   {
     String result = "";
     if (address != null) result = result + address;

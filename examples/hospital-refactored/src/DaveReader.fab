@@ -1,4 +1,5 @@
 class DaveReader {
+/*
   public static String{*addressLabel; *hivLabel}
     readDave{*addressLabel; *hivLabel}@{W2R({*addressLabel ; *hivLabel})}(
       label{*addressLabel; *hivLabel} addressLabel,
@@ -27,4 +28,5 @@ class DaveReader {
 
     return resultStr;
   }
+*/
 }
