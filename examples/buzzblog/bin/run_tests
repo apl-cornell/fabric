@@ -2,21 +2,33 @@
 
 echo "RUNNING TESTS"
 for i in {1..3}; do
-	echo "RUNNING TRIAL "${i};
+	echo "RUNNING TRIAL "${i} $(date);
+
 	killall xterm;
 	rm -r var;
 	ant clobber;
 	ant build || break;
 	bin/start-all || break;
 	sleep 3;
-	echo "INITIALIZING"
+	echo "INITIALIZING FOR POSTING "$(date);
 	bin/init || break;
 	sleep 3;
-	echo "POSTING"
+	echo "POSTING "$(date)
 	bin/alice-posts || break;
+	mv var posts-var${i};
 	sleep 3;
-	echo "COMMENTING"
+
+	killall xterm;
+	rm -r var;
+	ant clobber;
+	ant build || break;
+	bin/start-all || break;
+	sleep 3;
+	echo "INITIALIZING FOR COMMENTING "$(date);
+	bin/init || break;
+	sleep 3;
+	echo "COMMENTING "$(date);
 	bin/carol-comments || break;
-	mv var var${i};
+	mv var comments-var${i};
 	sleep 3;
 done
