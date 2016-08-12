@@ -1,0 +1,58 @@
+#!/bin/bash
+
+# Ugh, it's in bash.  Sue me.
+VAR_DIR1=$1
+VAR_DIR2=$2
+VAR_DIR3=$3
+
+if [ -z "${VAR_DIR1}" ]; then
+	echo "Point me to the var directory with the logs!";
+	exit 1;
+fi
+
+if [ -z "${VAR_DIR2}" ]; then
+	echo "Point me to the var directory with the logs!";
+	exit 1;
+fi
+
+if [ -z "${VAR_DIR3}" ]; then
+	echo "Point me to the var directory with the logs!";
+	exit 1;
+fi
+
+# Figure out which one is the alice log and which one is the carol log
+CAROL_FILE1=""
+for file in `ls ${VAR_DIR1}/log/` ; do
+	head -n 1 ${VAR_DIR1}/log/$file | grep -q "carolnode" && CAROL_FILE1=${VAR_DIR1}/log/$file && continue;
+done
+CAROL_FILE2=""
+for file in `ls ${VAR_DIR2}/log/` ; do
+	head -n 1 ${VAR_DIR2}/log/$file | grep -q "carolnode" && CAROL_FILE2=${VAR_DIR2}/log/$file && continue;
+done
+CAROL_FILE3=""
+for file in `ls ${VAR_DIR3}/log/` ; do
+	head -n 1 ${VAR_DIR3}/log/$file | grep -q "carolnode" && CAROL_FILE3=${VAR_DIR3}/log/$file && continue;
+done
+
+if [ -z "${CAROL_FILE1}" ] ; then 
+	echo "COULDN'T FIND CAROL!";
+	exit 1;
+fi
+
+if [ -z "${CAROL_FILE2}" ] ; then 
+	echo "COULDN'T FIND CAROL!";
+	exit 1;
+fi
+
+if [ -z "${CAROL_FILE3}" ] ; then 
+	echo "COULDN'T FIND CAROL!";
+	exit 1;
+fi
+
+# Post process alice, we want to filter out those commits from when carol was running.
+CAROL_THREAD1="thread "$(cat ${CAROL_FILE1} | cut -d, -f3 | sed 's/^ *//' | sort | uniq -c | sort -n | tail -n 1 | sed 's/^ *//' | cut -d' ' -f3)
+CAROL_THREAD2="thread "$(cat ${CAROL_FILE2} | cut -d, -f3 | sed 's/^ *//' | sort | uniq -c | sort -n | tail -n 1 | sed 's/^ *//' | cut -d' ' -f3)
+CAROL_THREAD3="thread "$(cat ${CAROL_FILE3} | cut -d, -f3 | sed 's/^ *//' | sort | uniq -c | sort -n | tail -n 1 | sed 's/^ *//' | cut -d' ' -f3)
+
+echo "COMMENTS:"
+{ grep -h "${CAROL_THREAD1}" ${CAROL_FILE1} ; grep -h "${CAROL_THREAD2}" ${CAROL_FILE2} ; grep -h "${CAROL_THREAD3}" ${CAROL_FILE3} ; } | $(dirname $0)/numbers 
