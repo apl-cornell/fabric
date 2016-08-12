@@ -1,80 +1,138 @@
 class HivReader {
+  /**
+   * Wrapper for calling from FabIL.
+   */
+  public static String{*hivLabel}
+    readHiv_wrapper{*listLabel}@{*listLabel}(
+      // The principal that can read and modify addresses.
+      principal{⊤←} addressP,
+      // The principal that can read and modify HIV statuses.
+      principal{⊤←} hivP,
+      label{⊤←} listLabel,
+      label{⊤←} addressLabel,
+      label{⊤←} hivLabel,
+      PatientList[listLabel, addressLabel, hivLabel]{⊤←} patients,
+      DropBox[hivLabel]{⊤←} dropBox
+    )@{*hivLabel}
+  where
+    listLabel ⊑ hivLabel,
+    caller (hivP)
+  {
+    atomic {
+      if (hivP ≽ addressP) {
+        if (listLabel equiv new label {addressP→ ; hivP←}) {
+          if (listLabel <= new label {W2R(*listLabel) ; ⊥←}) {
+            if (hivLabel equiv new label {hivP→ ; hivP←}) {
+              if (hivLabel <= new label {W2R(*hivLabel) ; ⊥←}) {
+                if (addressLabel equiv new label {addressP→ ; addressP←}) {
+                  if (addressLabel <= new label {W2R(*addressLabel) ; ⊥←}) {
+                    if (listLabel <= new label {{*addressLabel} ⊔ {}}) {
+                      if (listLabel <= new label {{*hivLabel} ⊔ {}}) {
+                        if (hivLabel <= new label {⊤→dropBox.store$}) {
+                          if (new label {⊤←dropBox.store$} <= hivLabel) {
+                            return readHiv(addressP, hivP, listLabel,
+                                addressLabel, hivLabel, patients, dropBox);
+                          } else throw new Error();
+                        } else throw new Error();
+                      } else throw new Error();
+                    } else throw new Error();
+                  } else throw new Error();
+                } else throw new Error();
+              } else throw new Error();
+            } else throw new Error();
+          } else throw new Error();
+        } else throw new Error();
+      } else throw new Error();
+    }
+  }
 
-//  /**
-//   * Reads the given patient list, saves the list of addresses for HIV-positive
-//   * patients into the given drop box, and returns a string representation of
-//   * the result.
-//   */
-//  public static String{*hivLabel}
-//    readHiv{*listLabel}@{*listLabel}(
-//      // The principal that can read and modify addresses.
-//      principal{*listLabel} addressP,
-//      // The principal that can read and modify HIV statuses.
-//      principal{*listLabel} hivP,
-//      label{*listLabel} listLabel,
-//      label{*listLabel} addressLabel,
-//      label{*listLabel} hivLabel,
-//      PatientList[listLabel, addressLabel, hivLabel]{*listLabel} patients,
-//      DropBox[hivLabel]{*listLabel} dropBox
-//    )@{*hivLabel}
-//  where
-//    // hivP is more trusted than addressP
-//    hivP ≽ addressP,
-//
-//    // listLabel = {addressP→ ; hivP←}
-//    listLabel ⊑ {addressP→ ; hivP←},
-//    {addressP→;hivP←} ⊑ listLabel,
-//
-//    // ...and therefore, listLabel ⊑ W2R(listLabel)
-//    listLabel ⊑ {W2R(*listLabel) ; ⊥←},
-//
-//    // hivLabel = {hivP→ ; hivP←}
-//    hivLabel ⊑ {hivP→ ; hivP←},
-//    {hivP→ ; hivP←} ⊑ hivLabel,
-//
-//    // ...and therefore, hivLabel ⊑ W2R(hivLabel)
-//    hivLabel ⊑ {W2R(*hivLabel) ; ⊥←},
-//
-//    // addressLabel = {addressP→ ; addressP←}
-//    addressLabel ⊑ {addressP→ ; addressP←},
-//    {addressP→ ; addressP←} ⊑ addressLabel,
-//
-//    // ...and therefore, addressLabel ⊑ W2R(addressLabel)
-//    addressLabel ⊑ {W2R(*addressLabel) ; ⊥←},
-//
-//    // Drop box's store can store the result.
-//    hivLabel ⊑ {⊤→dropBox.store$},
-//    {⊤←dropBox.store$} ⊑ hivLabel
-//  {
-//    if (dropBox == null) return "drop box came back null";
-//
-//    if (patients == null) {
-//      dropBox.result = null;
-//      return "patients came back null";
-//    }
-//
-//    String{*addressLabel; *hivLabel} resultStr = "";
-//    atomic {
-//      AddressList[hivLabel]{*addressLabel;*hivLabel} result =
-//          filterAndGetAddresses(addressP, hivP, dropBox.store$, listLabel,
-//              addressLabel, hivLabel, patients);
-//      dropBox.result = result;
-//
-//      if (result != null) {
-//        resultStr = resultStr + "\n" + result.toString();
-//      } else {
-//        resultStr = resultStr + "\n" + "no HIV-positive patients found";
-//      }
-//    }
-//
-//    return resultStr;
-//  }
+  /**
+   * Reads the given patient list, saves the list of addresses for HIV-positive
+   * patients into the given drop box, and returns a string representation of
+   * the result.
+   */
+  public static String{*hivLabel}
+    readHiv{*listLabel}@{*listLabel}(
+      // The principal that can read and modify addresses.
+      principal{*listLabel} addressP,
+      // The principal that can read and modify HIV statuses.
+      principal{*listLabel} hivP,
+      label{*listLabel} listLabel,
+      label{*listLabel} addressLabel,
+      label{*listLabel} hivLabel,
+      PatientList[listLabel, addressLabel, hivLabel]{*listLabel} patients,
+      DropBox[hivLabel]{*listLabel} dropBox
+    )@{*hivLabel}
+  where
+    // hivP is more trusted than addressP
+    hivP ≽ addressP,
+
+    // listLabel = {addressP→ ; hivP←}
+    {*listLabel} equiv {addressP→ ; hivP←},
+
+    // ...and therefore, listLabel ⊑ W2R(listLabel)
+    // XXX Compiler should have enough to figure this out.
+    listLabel ⊑ {W2R(*listLabel) ; ⊥←},
+
+    // hivLabel = {hivP→ ; hivP←}
+    {*hivLabel} equiv {hivP→ ; hivP←},
+
+    // ...and therefore, hivLabel ⊑ W2R(hivLabel)
+    // XXX Compiler should have enough to figure this out.
+    hivLabel ⊑ {W2R(*hivLabel) ; ⊥←},
+
+    // addressLabel = {addressP→ ; addressP←}
+    {*addressLabel} equiv {addressP→ ; addressP←},
+
+    // ...and therefore, addressLabel ⊑ W2R(addressLabel)
+    // XXX Compiler should have enough to figure this out.
+    addressLabel ⊑ {W2R(*addressLabel) ; ⊥←},
+
+    // Confidentiality part of listLabel is addressP→, which flows to
+    // confidentiality part of addressLabel (also addressP→).
+    // XXX Compiler should have enough to figure this out.
+    listLabel ⊑ {{*addressLabel} ⊔ {}},
+
+    // Confidentiality part of listLabel is addressP→, which flows to
+    // confidentiality part of hivLabel (which is hivP→).
+    // XXX Compiler should have enough to figure this out.
+    listLabel ⊑ {{*hivLabel} ⊔ {}},
+
+    // Drop box's store can store the result.
+    hivLabel ⊑ {⊤→dropBox.store$},
+    {⊤←dropBox.store$} ⊑ hivLabel,
+
+    caller (hivP)
+  {
+    if (dropBox == null) return "drop box came back null";
+
+    if (patients == null) {
+      dropBox.result = null;
+      return "patients came back null";
+    }
+
+    String resultStr = "";
+    atomic {
+      AddressList[hivLabel] result =
+          filterAndGetAddresses(addressP, hivP, dropBox.store$, listLabel,
+              addressLabel, hivLabel, patients);
+      dropBox.result = result;
+
+      if (result != null) {
+        resultStr = resultStr + "\n" + result.toString();
+      } else {
+        resultStr = resultStr + "\n" + "no HIV-positive patients found";
+      }
+    }
+
+    return resultStr;
+  }
 
   /**
    * Filters the given patient list for HIV-positive patients and obtains a
    * list of their addresses.
    */
-  public static AddressList[hivLabel]{*hivLabel}
+  private static AddressList[hivLabel]{*hivLabel}
     filterAndGetAddresses{*listLabel}@{*listLabel}(
       // The principal that can read and modify addresses.
       principal{*listLabel} addressP,
@@ -91,36 +149,41 @@ class HivReader {
     hivP ≽ addressP,
 
     // listLabel = {addressP→ ; hivP←}
-    listLabel ⊑ {addressP→ ; hivP←},
-    {addressP→;hivP←} ⊑ listLabel,
+    {*listLabel} equiv {addressP→ ; hivP←},
 
     // ...and therefore, listLabel ⊑ W2R(listLabel)
+    // XXX Compiler should have enough to figure this out.
     listLabel ⊑ {W2R(*listLabel) ; ⊥←},
 
     // hivLabel = {hivP→ ; hivP←}
-    hivLabel ⊑ {hivP→ ; hivP←},
-    {hivP→ ; hivP←} ⊑ hivLabel,
+    {*hivLabel} equiv {hivP→ ; hivP←},
 
     // ...and therefore, hivLabel ⊑ W2R(hivLabel)
+    // XXX Compiler should have enough to figure this out.
     hivLabel ⊑ {W2R(*hivLabel) ; ⊥←},
 
     // addressLabel = {addressP→ ; addressP←}
-    addressLabel ⊑ {addressP→ ; addressP←},
-    {addressP→ ; addressP←} ⊑ addressLabel,
+    {*addressLabel} equiv {addressP→ ; addressP←},
 
     // ...and therefore, addressLabel ⊑ W2R(addressLabel)
+    // XXX Compiler should have enough to figure this out.
     addressLabel ⊑ {W2R(*addressLabel) ; ⊥←},
 
-    // Since
-    //   listLabel = {addressP→ ; hivP←}
-    //   addressLabel = {addressP→ ; addressP←}
-    // therefore
-    //   listLabel ⊑ W2R(addressLabel)
-    listLabel ⊑ {W2R(addressLabel) ; ⊥←},
+    // Confidentiality part of listLabel is addressP→, which flows to
+    // confidentiality part of addressLabel (also addressP→).
+    // XXX Compiler should have enough to figure this out.
+    listLabel ⊑ {{*addressLabel} ⊔ {}},
+
+    // Confidentiality part of listLabel is addressP→, which flows to
+    // confidentiality part of hivLabel (which is hivP→).
+    // XXX Compiler should have enough to figure this out.
+    listLabel ⊑ {{*hivLabel} ⊔ {}},
 
     // store can store the result.
     hivLabel ⊑ {⊤→store},
-    {⊤←store} ⊑ hivLabel
+    {⊤←store} ⊑ hivLabel,
+
+    caller (hivP)
   {
     if (patients == null) return null;
 
@@ -133,7 +196,7 @@ class HivReader {
               hivLabel, tail);
     }
 
-    String curAddress = cur.address;
+    String curAddress = endorse(cur.address, {*addressLabel} to {*hivLabel});
     AddressList[hivLabel] result =
         filterAndGetAddresses(addressP, hivP, store, listLabel, addressLabel,
             hivLabel, tail);

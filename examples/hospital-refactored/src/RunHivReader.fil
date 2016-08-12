@@ -2,6 +2,8 @@ import fabric.util.Map;
 
 public class RunHivReader {
   public static void main(String[] args) {
+    Principal addressP = null;
+    Principal hivP = null;
     Label listLabel = null;
     Label addressLabel = null;
     Label hivLabel = null;
@@ -11,6 +13,8 @@ public class RunHivReader {
     atomic {
       Store store = Worker.getWorker().getStore("alicenode");
       Map rootMap = store.getRoot();
+      addressP = (Principal) rootMap.get("addressP");
+      hivP = (Principal) rootMap.get("hivP");
       listLabel = (Label) rootMap.get("listLabel");
       addressLabel = (Label) rootMap.get("addressLabel");
       hivLabel = (Label) rootMap.get("hivLabel");
@@ -24,7 +28,8 @@ public class RunHivReader {
     int txCount = 0;
     while (System.currentTimeMillis() < (start + (1000 * 60 * 5))) {
       String result =
-          HivReader.readHiv(listLabel, addressLabel, hivLabel, patients, dropBox);
+          HivReader.readHiv(addressP, hivP, listLabel, addressLabel,
+              hivLabel, patients, dropBox);
 
       // HACK: Perform a GC once every 200 iterations.
       txCount = (txCount + 1) % 200;

@@ -1,15 +1,25 @@
 class DaveReader {
-/*
-  public static String{*addressLabel; *hivLabel}
-    readDave{*addressLabel; *hivLabel}@{W2R({*addressLabel ; *hivLabel})}(
-      label{*addressLabel; *hivLabel} addressLabel,
-      label{*addressLabel; *hivLabel} hivLabel,
-      DropBox[{*addressLabel; *hivLabel}]{*addressLabel; *hivLabel} dropBox
+  /**
+   * Wrapper for calling from FabIL.
+   */
+  public static String{*hivLabel}
+    readDave_wrapper{*hivLabel}@{*hivLabel}(
+      label{*hivLabel} hivLabel,
+      DropBox[hivLabel]{*hivLabel} dropBox
+  ) {
+    if (hivLabel <= new label {W2R(*hivLabel) ; ⊥←})
+      return readDave(hivLabel, dropBox);
+    else throw new Error();
+  }
+
+  private static String{*hivLabel}
+    readDave{*hivLabel}@{*hivLabel}(
+      label{*hivLabel} hivLabel,
+      DropBox[hivLabel]{*hivLabel} dropBox
   )
     where
-      // Those able to modify both addresses and HIV statuses are also able to
-      // read address labels and HIV statuses.
-      {*addressLabel ; *hivLabel} ⊑ {W2R({*addressLabel ; *hivLabel})}
+      // Those able to modify HIV statuses are also able to read HIV statuses.
+      hivLabel ⊑ {W2R(*hivLabel) ; ⊥←}
   {
     String resultStr = null;
     atomic {
@@ -17,8 +27,7 @@ class DaveReader {
         return "dropBox came back null";
       }
 
-      AddressList[{*addressLabel; *hivLabel}]{*addressLabel; *hivLabel} result =
-          dropBox.result;
+      AddressList[hivLabel]{*hivLabel} result = dropBox.result;
       if (result == null) {
         return "addrList came back null";
       }
@@ -28,5 +37,4 @@ class DaveReader {
 
     return resultStr;
   }
-*/
 }
