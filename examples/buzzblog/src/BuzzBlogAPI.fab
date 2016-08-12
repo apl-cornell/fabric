@@ -17,7 +17,10 @@ class BuzzBlogAPI[label postLabel, label commentLabel]
   }
 
   // Returns the string view of the post with the given id
-  public String{postLabel ; postId} viewPost{postLabel;⊥←}(int postId) 
+  public String{postLabel ; postId}
+    viewPost{postLabel;⊥←}(
+      int postId
+    )
   where
     {postId} <= {postLabel; ⊥←}
   {
@@ -30,7 +33,10 @@ class BuzzBlogAPI[label postLabel, label commentLabel]
   }
 
   // Returns the string view of the comment with the given id
-  public String{commentLabel ; postId} viewComment{commentLabel;⊥←}(int postId) 
+  public String{commentLabel ; postId}
+    viewComment{commentLabel;⊥←}(
+      int postId
+    )
   where
     {postId} <= {commentLabel; ⊥←}
   {
@@ -46,7 +52,7 @@ class BuzzBlogAPI[label postLabel, label commentLabel]
   //  that went.
   public String{postLabel} updatePost{postLabel}(
       int postId, 
-      String{postLabel} newContent) 
+      String{postLabel} newContent)
     where
       {postId} <= postLabel
   {
@@ -63,11 +69,13 @@ class BuzzBlogAPI[label postLabel, label commentLabel]
 
   // updates a comment given some new content, returns a message about how well 
   //  that went.
-  public String{commentLabel} updateComment{commentLabel}(
+  public String{commentLabel}
+    updateComment{commentLabel}(
       int postId, 
-      String{commentLabel} newContent) 
-    where
-      {postId} <= commentLabel
+      String{commentLabel} newContent
+    )
+  where
+    {postId} <= commentLabel
   {
     final Post[commentLabel] comment = comments[postId];
     if (comment != null) {
@@ -87,7 +95,7 @@ class BuzzBlogAPI[label postLabel, label commentLabel]
   public String{postLabel} viewOrCreatePost{store}(
       int postId, 
       Store store, 
-      String{postLabel} newContent) 
+      String{postLabel} newContent)
   where postLabel  <= {⊤ → store}, 
         {⊤ ← store} <= postLabel, 
         {postId} <= postLabel, 
@@ -111,10 +119,12 @@ class BuzzBlogAPI[label postLabel, label commentLabel]
   // If there is a comment with the given id, it returns that comment.
   // Otherwise, it makes a new one with the given content.
   // returns a message that's hopefully helpful.
-  public String{commentLabel} viewOrCreateComment{store}(
+  public String{commentLabel}
+    viewOrCreateComment{store}(
       int postId, 
       Store store, 
-      String{commentLabel} newContent) 
+      String{commentLabel} newContent
+    )
   where commentLabel  <= {⊤ → store}, 
         {⊤ ← store} <= commentLabel, 
         {postId} <= commentLabel, 

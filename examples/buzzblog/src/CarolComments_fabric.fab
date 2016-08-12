@@ -23,8 +23,8 @@ class CarolComments_fabric {
       final Runtime[workerP] runtime = Runtime[workerP].getRuntime();
 
       final int postId = 0;
-      final String{*commentLabel} firstPost = 
-        "Lolz, Bob can't read this comment";
+//      final String{*commentLabel} firstPost = 
+//        "Lolz, Bob can't read this comment";
       final String{*commentLabel} secondPost = 
         "Lolz, I updated this comment and Bob still can't read it";
       final String{*commentLabel} thirdPost = 

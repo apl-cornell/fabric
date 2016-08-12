@@ -25,7 +25,7 @@ class CarolComments {
       }
 
       if (blog == null) {
-//        System.out.println("Run 'Init' on alicenode first!");
+        System.out.println("Run 'Init' on alicenode first!");
         return;
       }
 
