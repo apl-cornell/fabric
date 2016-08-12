@@ -337,7 +337,7 @@ public final class TransactionManager {
   private void stageTransaction(boolean ignoreRetrySignal,
       boolean attemptingToCommit) throws TransactionRestartingException {
     WORKER_TRANSACTION_LOGGER.log(Level.FINEST, "{0} staging", current);
-    HOTOS_LOGGER.log(Level.FINEST, "start staging {0}", current);
+    boolean actuallyStaging = false;
     try {
       if (!ignoreRetrySignal) {
         // Make sure we're not supposed to abort or retry.
@@ -355,6 +355,9 @@ public final class TransactionManager {
       // Go through the transaction log and figure out the stores we need
       // to contact.
       Set<Store> stores = current.storesToStage();
+      actuallyStaging = stores.size() > 0;
+      if (actuallyStaging)
+        HOTOS_LOGGER.log(Level.FINEST, "start staging {0}", current);
 
       final Map<RemoteNode<?>, TransactionStagingFailedException> failures =
           Collections.synchronizedMap(
@@ -461,12 +464,15 @@ public final class TransactionManager {
       // Staging was successful. Update the log's data structures to reflect this.
       current.updateForSuccessfulStage();
       WORKER_TRANSACTION_LOGGER.log(Level.FINEST, "{0} staged", current);
-      HOTOS_LOGGER.log(Level.FINEST, "end staging (success) {0}", current);
+      if (actuallyStaging)
+        HOTOS_LOGGER.log(Level.FINEST, "end staging (success) {0}", current);
     } catch (TransactionRestartingException e) {
-      HOTOS_LOGGER.log(Level.FINEST, "end staging (normal-failure) {0}", current);
+      if (actuallyStaging)
+        HOTOS_LOGGER.log(Level.FINEST, "end staging (normal-failure) {0}", current);
       throw e;
     } catch (RuntimeException e) {
-      HOTOS_LOGGER.log(Level.FINEST, "end staging (runtime-failure) {0}", current);
+      if (actuallyStaging)
+        HOTOS_LOGGER.log(Level.FINEST, "end staging (runtime-failure) {0}", current);
       throw e;
     }
   }
