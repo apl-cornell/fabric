@@ -12,7 +12,7 @@ class DaveReader {
     else throw new Error();
   }
 
-  private static String{*hivLabel}
+  public static String{*hivLabel}
     readDave{*hivLabel}@{*hivLabel}(
       label{*hivLabel} hivLabel,
       DropBox[hivLabel]{*hivLabel} dropBox
