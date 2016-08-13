@@ -50,9 +50,9 @@ if [ -z "${ALICE_FILE3}" ] ; then
 fi
 
 # Post process alice, we want to filter out those commits from when carol was running.
-ALICE_THREAD1="thread "$(head -n 1000 ${ALICE_FILE1} | cut -d, -f3 | sed 's/^ *//' | sort | uniq -c | sort -n | tail -n 1 | sed 's/^ *//' | cut -d' ' -f3)
-ALICE_THREAD2="thread "$(head -n 1000 ${ALICE_FILE2} | cut -d, -f3 | sed 's/^ *//' | sort | uniq -c | sort -n | tail -n 1 | sed 's/^ *//' | cut -d' ' -f3)
-ALICE_THREAD3="thread "$(head -n 1000 ${ALICE_FILE3} | cut -d, -f3 | sed 's/^ *//' | sort | uniq -c | sort -n | tail -n 1 | sed 's/^ *//' | cut -d' ' -f3)
+ALICE_THREAD1="thread "$(cat ${ALICE_FILE1} | cut -d, -f3 | sed 's/^ *//' | sort | uniq -c | sort -n | tail -n 1 | sed 's/^ *//' | cut -d' ' -f3)
+ALICE_THREAD2="thread "$(cat ${ALICE_FILE2} | cut -d, -f3 | sed 's/^ *//' | sort | uniq -c | sort -n | tail -n 1 | sed 's/^ *//' | cut -d' ' -f3)
+ALICE_THREAD3="thread "$(cat ${ALICE_FILE3} | cut -d, -f3 | sed 's/^ *//' | sort | uniq -c | sort -n | tail -n 1 | sed 's/^ *//' | cut -d' ' -f3)
 
 echo "HIV READER:"
 { grep -h "${ALICE_THREAD1}" ${ALICE_FILE1} ; grep -h "${ALICE_THREAD2}" ${ALICE_FILE2} ; grep -h "${ALICE_THREAD3}" ${ALICE_FILE3} ; } | $(dirname $0)/numbers 
