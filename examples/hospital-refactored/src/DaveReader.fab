@@ -1,16 +1,16 @@
 class DaveReader {
-  /**
-   * Wrapper for calling from FabIL.
-   */
-  public static String{*hivLabel}
-    readDave_wrapper{*hivLabel}@{*hivLabel}(
-      label{*hivLabel} hivLabel,
-      DropBox[hivLabel]{*hivLabel} dropBox
-  ) {
-    if (hivLabel <= new label {W2R(*hivLabel) ; ⊥←})
-      return readDave(hivLabel, dropBox);
-    else throw new Error();
-  }
+//  /**
+//   * Wrapper for calling from FabIL.
+//   */
+//  public static String{*hivLabel}
+//    readDave_wrapper{*hivLabel}@{*hivLabel}(
+//      label{*hivLabel} hivLabel,
+//      DropBox[hivLabel]{*hivLabel} dropBox
+//  ) {
+//    if (hivLabel <= new label {W2R(*hivLabel) ; ⊥←})
+//      return readDave(hivLabel, dropBox);
+//    else throw new Error();
+//  }
 
   public static String{*hivLabel}
     readDave{*hivLabel}@{*hivLabel}(

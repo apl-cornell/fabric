@@ -1,50 +1,50 @@
 class HivReader {
-  /**
-   * Wrapper for calling from FabIL.
-   */
-  public static String{*hivLabel}
-    readHiv_wrapper{*listLabel}@{*listLabel}(
-      // The principal that can read and modify addresses.
-      principal{⊤←} addressP,
-      // The principal that can read and modify HIV statuses.
-      principal{⊤←} hivP,
-      label{⊤←} listLabel,
-      label{⊤←} addressLabel,
-      label{⊤←} hivLabel,
-      PatientList[listLabel, addressLabel, hivLabel]{⊤←} patients,
-      DropBox[hivLabel]{⊤←} dropBox
-    )@{*hivLabel}
-  where
-    listLabel ⊑ hivLabel,
-    caller (hivP)
-  {
-    atomic {
-      if (hivP ≽ addressP) {
-        if (listLabel equiv new label {addressP→ ; hivP←}) {
-          if (listLabel <= new label {W2R(*listLabel) ; ⊥←}) {
-            if (hivLabel equiv new label {hivP→ ; hivP←}) {
-              if (hivLabel <= new label {W2R(*hivLabel) ; ⊥←}) {
-                if (addressLabel equiv new label {addressP→ ; addressP←}) {
-                  if (addressLabel <= new label {W2R(*addressLabel) ; ⊥←}) {
-                    if (listLabel <= new label {{*addressLabel} ⊔ {}}) {
-                      if (listLabel <= new label {{*hivLabel} ⊔ {}}) {
-                        if (hivLabel <= new label {⊤→dropBox.store$}) {
-                          if (new label {⊤←dropBox.store$} <= hivLabel) {
-                            return readHiv(addressP, hivP, listLabel,
-                                addressLabel, hivLabel, patients, dropBox);
-                          } else throw new Error();
-                        } else throw new Error();
-                      } else throw new Error();
-                    } else throw new Error();
-                  } else throw new Error();
-                } else throw new Error();
-              } else throw new Error();
-            } else throw new Error();
-          } else throw new Error();
-        } else throw new Error();
-      } else throw new Error();
-    }
-  }
+//  /**
+//   * Wrapper for calling from FabIL.
+//   */
+//  public static String{*hivLabel}
+//    readHiv_wrapper{*listLabel}@{*listLabel}(
+//      // The principal that can read and modify addresses.
+//      principal{⊤←} addressP,
+//      // The principal that can read and modify HIV statuses.
+//      principal{⊤←} hivP,
+//      label{⊤←} listLabel,
+//      label{⊤←} addressLabel,
+//      label{⊤←} hivLabel,
+//      PatientList[listLabel, addressLabel, hivLabel]{⊤←} patients,
+//      DropBox[hivLabel]{⊤←} dropBox
+//    )@{*hivLabel}
+//  where
+//    listLabel ⊑ hivLabel,
+//    caller (hivP)
+//  {
+//    atomic {
+//      if (hivP ≽ addressP) {
+//        if (listLabel equiv new label {addressP→ ; hivP←}) {
+//          if (listLabel <= new label {W2R(*listLabel) ; ⊥←}) {
+//            if (hivLabel equiv new label {hivP→ ; hivP←}) {
+//              if (hivLabel <= new label {W2R(*hivLabel) ; ⊥←}) {
+//                if (addressLabel equiv new label {addressP→ ; addressP←}) {
+//                  if (addressLabel <= new label {W2R(*addressLabel) ; ⊥←}) {
+//                    if (listLabel <= new label {{*addressLabel} ⊔ {}}) {
+//                      if (listLabel <= new label {{*hivLabel} ⊔ {}}) {
+//                        if (hivLabel <= new label {⊤→dropBox.store$}) {
+//                          if (new label {⊤←dropBox.store$} <= hivLabel) {
+//                            return readHiv(addressP, hivP, listLabel,
+//                                addressLabel, hivLabel, patients, dropBox);
+//                          } else throw new Error();
+//                        } else throw new Error();
+//                      } else throw new Error();
+//                    } else throw new Error();
+//                  } else throw new Error();
+//                } else throw new Error();
+//              } else throw new Error();
+//            } else throw new Error();
+//          } else throw new Error();
+//        } else throw new Error();
+//      } else throw new Error();
+//    }
+//  }
 
   /**
    * Reads the given patient list, saves the list of addresses for HIV-positive
