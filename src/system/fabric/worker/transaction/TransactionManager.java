@@ -311,7 +311,10 @@ public final class TransactionManager {
       // So !(next ≤ current)
       stageTransaction();
       current.setCurrentStage(nextStage);
-    } else if (!LabelUtil._Impl.relabelsTo(
+    } /* XXX: Turned off to avoid unnecessary overhead in measurements.  This
+    should be turned back on if there's any changes to the stage ordering rules
+    to help ensure that the compiler and runtime system are in agreement.
+    else if (!LabelUtil._Impl.relabelsTo(
                 current.getCurrentStage().confPolicy(),
                 nextStage.confPolicy())) {
       // So (next ≤ current) && !(current ≤ next) ⇒ current ≠ next
@@ -319,7 +322,7 @@ public final class TransactionManager {
       throw new InternalError(
           "Staging monotonicity was violated, current stage: "
               + current.getCurrentStage() + ", next stage: " + nextStage);
-    }
+    }*/
     return value;
   }
 
