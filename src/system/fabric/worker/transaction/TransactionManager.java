@@ -287,6 +287,15 @@ public final class TransactionManager {
   }
 
   /**
+   * XXX: Hack to get timing of the dynamically created label included in the
+   * checking time for stage checks.
+   */
+  public int logStageCheckStart() {
+    HOTOS_LOGGER.log(Level.FINEST, "start stage check {0}", current);
+    return 0;
+  }
+
+  /**
    * Stages the transaction if the second argument is true and returns the
    * first argument.  This is primarily a utility for adding staging to compiled
    * code.
@@ -300,10 +309,9 @@ public final class TransactionManager {
    * @throws TransactionRestartingException
    *           if the staging fails.
    */
-  public <T> T stageTransactionExpr(T value, Label nextStage)
+  public <T> T stageTransactionExpr(T value, int dummyArgument, Label nextStage)
       throws TransactionRestartingException {
     // Only stage if the next stage is not the same as the current stage.
-    HOTOS_LOGGER.log(Level.FINEST, "start stage check {0}", current);
     boolean check = !LabelUtil._Impl.relabelsTo(nextStage.confPolicy(),
         current.getCurrentStage().confPolicy());
     HOTOS_LOGGER.log(Level.FINEST, "end stage check {0}", current);

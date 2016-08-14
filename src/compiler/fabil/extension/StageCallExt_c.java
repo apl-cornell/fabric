@@ -11,7 +11,11 @@ public class StageCallExt_c extends FabILExt_c {
   public Node rewriteAtomic(AtomicRewriter ar) {
     StageCall sc = (StageCall) node();
     return ar.qq().parseExpr(
-        "fabric.worker.transaction.TransactionManager.getInstance().stageTransactionExpr(%E, %E)",
+        "fabric.worker.transaction.TransactionManager.getInstance().stageTransactionExpr(%E, " + 
+        // XXX: This is a hack to include the construction of the third argument
+        // in stage checking time data.
+        "fabric.worker.transaction.TransactionManager.getInstance().logStageCheckStart(), " +
+        "%E)",
         sc.origExpr(), sc.flagExpr());
   }
 
