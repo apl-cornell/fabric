@@ -72,7 +72,7 @@ class HivReader {
 
     // ...and therefore, listLabel ⊑ W2R(listLabel)
     // XXX Compiler should have enough to figure this out.
-    listLabel ⊑ {W2R(*listLabel) ; ⊥←},
+    //listLabel ⊑ {W2R(*listLabel) ; ⊥←},
 
     // hivLabel = {hivP→ ; hivP←}
     {*hivLabel} equiv {hivP→ ; hivP←},
@@ -91,7 +91,7 @@ class HivReader {
     // Confidentiality part of listLabel is addressP→, which flows to
     // confidentiality part of addressLabel (also addressP→).
     // XXX Compiler should have enough to figure this out.
-    listLabel ⊑ {{*addressLabel} ⊔ {}},
+    //listLabel ⊑ {{*addressLabel} ⊔ {}},
 
     // Confidentiality part of listLabel is addressP→, which flows to
     // confidentiality part of hivLabel (which is hivP→).
