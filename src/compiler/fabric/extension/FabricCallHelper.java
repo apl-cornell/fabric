@@ -275,9 +275,11 @@ public class FabricCallHelper extends CallHelper {
       X = ((FabricPathMap) X).CL(newCL);
       A.setConflictLabel(newCL);
 
-      // We don't know if the method started the ending stage or not, so make
-      // sure the next access after this checks.
-      A.setStageStarted(false);
+      if (!A.labelEnv().leq(endConflict, beginConflict)) {
+        // We don't know if the method started the ending stage or not, so make
+        // sure the next access after this checks.
+        A.setStageStarted(false);
+      }
 
       // Check of end conflict bound to get better location reporting.
       NamedLabel newCLN = new NamedLabel("conflict pc",

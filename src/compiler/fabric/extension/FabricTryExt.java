@@ -68,11 +68,11 @@ public class FabricTryExt extends JifTryExt {
     // Additional pop since we just pushed before this check.
     FabricContext AfOuter = (FabricContext) A.pop().pop();
     FabricPathMap Xfprev = (FabricPathMap) Xprev;
-    // Starting CL is the meet of all previous block ending CLs
+    // Starting CL is the join of all previous block ending CLs
     Af.setConflictLabel(Xfprev.CL());
     // We don't know if that stage started, however.
     if (!Xfprev.CL().equals(ts.noAccesses()) &&
-        !A.labelEnv().leq(AfOuter.conflictLabel(), Xfprev.CL()))
+        !A.labelEnv().leq(Xfprev.CL(), AfOuter.conflictLabel()))
       Af.setStageStarted(false);
     return super.checkFinally(lc, A, f, Xprev);
   }
@@ -89,7 +89,7 @@ public class FabricTryExt extends JifTryExt {
     // If we started a new stage in the try, we don't know if it was started
     // before this exception was thrown.
     if (!Xftry.CL().equals(ts.noAccesses()) &&
-        !A.labelEnv().leq(AfOuter.conflictLabel(), Xftry.CL()))
+        !A.labelEnv().leq(Xftry.CL(), AfOuter.conflictLabel()))
       Af.setStageStarted(false);
 
     return super.checkCatch(lc, A, Xtry, cb);

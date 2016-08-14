@@ -55,7 +55,7 @@ public class FabricStagingExt extends Ext_c implements FabricExt {
    */
   public void setStageCheck(Label curStage, Label nextStage, FabricContext A) {
     if (curStage.hasVariableComponents() || nextStage.hasVariableComponents() ||
-        !A.stageStarted() || !A.labelEnv().leq(curStage, nextStage)) {
+        !A.stageStarted() || !A.labelEnv().leq(nextStage, curStage)) {
       stageRegardless = !A.stageStarted();
       setStageCheck(curStage, nextStage);
       A.setStageStarted(true);
