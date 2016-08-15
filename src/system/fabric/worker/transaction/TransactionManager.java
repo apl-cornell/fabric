@@ -1245,9 +1245,12 @@ public final class TransactionManager {
       Logging.log(WORKER_TRANSACTION_LOGGER, Level.FINEST,
           "{0} started subtx {1} in thread {2}", current.parent, current,
           Thread.currentThread());
-      HOTOS_LOGGER.log(Level.FINEST, "started {0}", current);
     } finally {
       Timing.BEGIN.end();
+    }
+
+    if (current.tid.parent == null) {
+      HOTOS_LOGGER.log(Level.FINEST, "started {0}", current);
     }
   }
 
