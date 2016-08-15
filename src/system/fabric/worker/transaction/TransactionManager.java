@@ -1238,7 +1238,6 @@ public final class TransactionManager {
       Logging.log(WORKER_TRANSACTION_LOGGER, Level.FINEST,
           "{0} started subtx {1} in thread {2}", current.parent, current,
           Thread.currentThread());
-      HOTOS_LOGGER.log(Level.FINEST, "started {0}", current);
     } finally {
       Timing.BEGIN.end();
     }
@@ -1246,6 +1245,7 @@ public final class TransactionManager {
     // If we just started a top-level transaction, automatically start a nested
     // transaction too.
     if (current.tid.parent == null) {
+      HOTOS_LOGGER.log(Level.FINEST, "started {0}", current);
       Logging.log(WORKER_TRANSACTION_LOGGER, Level.FINEST,
           "Auto-starting subtx for {0} in thread {1}", current,
           Thread.currentThread());
