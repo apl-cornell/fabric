@@ -41,10 +41,14 @@ def parse_line(line):
         txn.start = time
     elif message.startswith("committed"):
         txn.end = time
-        base, checking, stages = message.split(", ")
-        txn.checking_time = (int(checking.split(" = ")[1].split(" ")[0]) /
-                             1000000.0)
-        txn.stage_count = int(stages.split(" = ")[1])
+        try:
+            base, checking, stages = message.split(", ")
+            txn.checking_time = (int(checking.split(" = ")[1].split(" ")[0]) /
+                                 1000000.0)
+            txn.stage_count = int(stages.split(" = ")[1])
+        except ValueError:
+            # There's no data because we're processing a baseline log.
+            pass
     else:
         print("WAT", line)
 
