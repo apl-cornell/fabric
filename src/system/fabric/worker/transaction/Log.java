@@ -211,6 +211,25 @@ public final class Log {
   protected Label stageLabel;
 
   /**
+   * Nanoseconds spent on dynamic staging checks in this transaction.  Using an
+   * array so that children can update the reference directly.
+   * XXX: This is a hack for the CCS 16 paper.
+   */
+  protected long[] checkingTime;
+
+  /**
+   * Number of stages in this transaction.
+   * XXX: This is a hack for the CCS 16 paper.
+   */
+  protected int[] stageCount;
+
+  /**
+   * Current checking start time.
+   * XXX: This is a hack for the CCS 16 paper.
+   */
+  protected long startChecking = 0;
+
+  /**
    * Creates a new log with the given parent and the given transaction ID. The
    * TID for the parent and the given TID are assumed to be consistent. If the
    * given TID is null, a random tid is generated for the subtransaction.
@@ -264,6 +283,9 @@ public final class Log {
       } finally {
         Timing.SUBTX.end();
       }
+
+      checkingTime = parent.checkingTime;
+      stageCount = parent.stageCount;
     } else {
       this.writerMap = new WriterMap(this.tid.topTid);
       commitState = new CommitState();
@@ -273,7 +295,45 @@ public final class Log {
 
       // New top-level frame. Register it in the transaction registry.
       TransactionRegistry.register(this);
+
+      checkingTime = new long[] { 0l };
+      stageCount = new int[] { 0 };
     }
+  }
+
+  /**
+   * Mark the start of a new dynamic check.
+   */
+  public void startCheckingTime() {
+    startChecking = System.nanoTime();
+  }
+
+  /**
+   * Mark and record the end of a new dynamic check.
+   */
+  public void endCheckingTime() {
+    checkingTime[0] += System.nanoTime() - startChecking;
+  }
+
+  /**
+   * What's the total checking time?
+   */
+  public long getCheckingTime() {
+    return checkingTime[0];
+  }
+
+  /**
+   * Record a stage.
+   */
+  public void countStage() {
+    stageCount[0]++;
+  }
+
+  /**
+   * How many stages?
+   */
+  public int getStageCount() {
+    return stageCount[0];
   }
   
   /**

@@ -291,7 +291,7 @@ public final class TransactionManager {
    * checking time for stage checks.
    */
   public int logStageCheckStart() {
-    HOTOS_LOGGER.log(Level.FINEST, "start stage check {0}", current);
+    current.startCheckingTime();
     return 0;
   }
 
@@ -314,7 +314,7 @@ public final class TransactionManager {
     // Only stage if the next stage is not the same as the current stage.
     boolean check = !LabelUtil._Impl.relabelsTo(nextStage.confPolicy(),
         current.getCurrentStage().confPolicy());
-    HOTOS_LOGGER.log(Level.FINEST, "end stage check {0}", current);
+    current.endCheckingTime();
     if (check) {
       // So !(next ≤ current)
       stageTransaction();
@@ -366,9 +366,9 @@ public final class TransactionManager {
       // Go through the transaction log and figure out the stores we need
       // to contact.
       Set<Store> stores = current.storesToStage();
-      actuallyStaging = stores.size() > 0;
-      if (actuallyStaging)
-        HOTOS_LOGGER.log(Level.FINEST, "start staging {0}", current);
+      //actuallyStaging = stores.size() > 0;
+      //if (actuallyStaging)
+        //HOTOS_LOGGER.log(Level.FINEST, "start staging {0}", current);
 
       final Map<RemoteNode<?>, TransactionStagingFailedException> failures =
           Collections.synchronizedMap(
@@ -475,15 +475,16 @@ public final class TransactionManager {
       // Staging was successful. Update the log's data structures to reflect this.
       current.updateForSuccessfulStage();
       WORKER_TRANSACTION_LOGGER.log(Level.FINEST, "{0} staged", current);
-      if (actuallyStaging)
-        HOTOS_LOGGER.log(Level.FINEST, "end staging (success) {0}", current);
+      current.countStage();
+      //if (actuallyStaging)
+        //HOTOS_LOGGER.log(Level.FINEST, "end staging (success) {0}", current);
     } catch (TransactionRestartingException e) {
-      if (actuallyStaging)
-        HOTOS_LOGGER.log(Level.FINEST, "end staging (normal-failure) {0}", current);
+      //if (actuallyStaging)
+        //HOTOS_LOGGER.log(Level.FINEST, "end staging (normal-failure) {0}", current);
       throw e;
     } catch (RuntimeException e) {
-      if (actuallyStaging)
-        HOTOS_LOGGER.log(Level.FINEST, "end staging (runtime-failure) {0}", current);
+      //if (actuallyStaging)
+        //HOTOS_LOGGER.log(Level.FINEST, "end staging (runtime-failure) {0}", current);
       throw e;
     }
   }
@@ -642,7 +643,11 @@ public final class TransactionManager {
           || !stores.contains(LOCAL_STORE)
               && !(stores.iterator().next() instanceof InProcessStore)) {
         Logging.log(HOTOS_LOGGER, Level.FINE,
-            "committed tid {0} (latency {1} ms)", HOTOS_current, commitLatency);
+            "committed tid {0} (latency {1} ms), checking = {2} ns, stages = {3}",
+            HOTOS_current,
+            commitLatency,
+            String.valueOf(HOTOS_current.getCheckingTime()),
+            String.valueOf(HOTOS_current.getStageCount()));
       }
     }
   }

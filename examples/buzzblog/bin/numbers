@@ -20,10 +20,8 @@ class Txn:
         self.id=None
         self.start=None
         self.end=None
-        self.start_checks=[]
-        self.end_checks=[]
-        self.start_stages=[]
-        self.end_stages=[]
+        self.checking_time = 0
+        self.stage_count = 0
 
     @property
     def time(self):
@@ -31,43 +29,10 @@ class Txn:
             return None
         return self.end - self.start
 
-    @property
-    def stage_count(self):
-        return min(len(self.start_stages), len(self.end_stages))
-
-    @property
-    def staging_time(self):
-        starts = sorted(list(self.start_stages), reverse=True)
-        ends = sorted(list(self.end_stages), reverse=True)
-        total_time = 0
-        while len(starts) > 0 and len(ends) > 0:
-            if ends[-1] < starts[-1]:
-                ends.pop()
-            elif len(starts) > 1 and starts[-2] < ends[-1]:
-                starts.pop()
-            else:
-                total_time += (ends.pop() - starts.pop())
-        return total_time
-
-    @property
-    def checking_time(self):
-        starts = sorted(list(self.start_checks), reverse=True)
-        ends = sorted(list(self.end_checks), reverse=True)
-        total_time = 0
-        while len(starts) > 0 and len(ends) > 0:
-            if ends[-1] < starts[-1]:
-                ends.pop()
-            elif len(starts) > 1 and starts[-2] < ends[-1]:
-                starts.pop()
-            else:
-                total_time += (ends.pop() - starts.pop())
-        return total_time
-
-
 def parse_line(line):
     # Line format: time, nodename, thread, message
-    time, _, _, message = line.split(", ")
-    time=int(time)
+    time, _, _, message = line.split(", ", 3)
+    time = int(time)
     txn_full_id = message.split("[")[1].split("]")[0]
     txn_top_id = txn_full_id.split(":")[0]
     txn = TXNS[txn_top_id]
@@ -76,14 +41,10 @@ def parse_line(line):
         txn.start = time
     elif message.startswith("committed"):
         txn.end = time
-    elif message.startswith("start staging"):
-        txn.start_stages.append(time)
-    elif message.startswith("end staging"):
-        txn.end_stages.append(time)
-    elif message.startswith("start stage check"):
-        txn.start_checks.append(time)
-    elif message.startswith("end stage check"):
-        txn.end_checks.append(time)
+        base, checking, stages = message.split(", ")
+        txn.checking_time = (int(checking.split(" = ")[1].split(" ")[0]) /
+                             1000000.0)
+        txn.stage_count = int(stages.split(" = ")[1])
     else:
         print("WAT", line)
 
@@ -109,10 +70,6 @@ class Stats:
         return mean(map(lambda x: x.stage_count, self.txns))
 
     @property
-    def avg_staging_time(self):
-        return mean(map(lambda x: x.staging_time, self.txns))
-
-    @property
     def avg_checking_time(self):
         return mean(map(lambda x: x.checking_time, self.txns))
 
@@ -125,27 +82,30 @@ class Stats:
         return stdev(map(lambda x: x.stage_count, self.txns)) / sqrt(self.count)
 
     @property
-    def err_staging_time(self):
-        return stdev(map(lambda x: x.staging_time, self.txns)) / sqrt(self.count)
-
-    @property
     def err_checking_time(self):
         return stdev(map(lambda x: x.checking_time, self.txns)) / sqrt(self.count)
 
+    @property
+    def pct_time(self):
+        return 100 * self.err_time / self.avg_time if self.avg_time != 0 else 0
+
+    @property
+    def pct_stage_count(self):
+        return 100 * self.err_stage_count / self.avg_stage_count if self.avg_stage_count != 0 else 0
+
+    @property
+    def pct_checking_time(self):
+        return 100 * self.err_checking_time / self.avg_checking_time if self.avg_checking_time != 0 else 0
+
     def __str__(self):
-        return ("{0} txns" +\
-                ", avg_time: {1} ± {5} ms" +\
-                ", avg_stages: {2} ± {6} " +\
-                ", avg_staging: {3} ± {7} ms" + \
-                ", avg_checking: {4} ± {8} ms").format(self.count,
-                                                        self.avg_time,
-                                                        self.avg_stage_count,
-                                                        self.avg_staging_time,
-                                                        self.avg_checking_time,
-                                                        self.err_time,
-                                                        self.err_stage_count,
-                                                        self.err_staging_time,
-                                                        self.err_checking_time)
+        return ("txns: {0}\n" +\
+                "avg_time: {1} ± {2} ms ({3}%)\n" +\
+                "avg_stages: {4} ± {5} ({6}%)\n" +\
+                "avg_checking: {7} ± {8} ms ({9}%)").format(
+                    self.count,
+                    self.avg_time, self.err_time, self.pct_time,
+                    self.avg_stage_count, self.err_stage_count, self.pct_stage_count,
+                    self.avg_checking_time, self.err_checking_time, self.pct_checking_time)
 
 max_stages = max(map(lambda x: x.stage_count, TXNS.values()), default=0)
 
