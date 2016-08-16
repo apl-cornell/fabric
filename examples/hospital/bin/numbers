@@ -1,0 +1,120 @@
+#!/usr/bin/env python3
+
+import fileinput
+import sys
+from collections import defaultdict
+from math import sqrt
+from statistics import stdev, mean
+
+def new_txn():
+    return Txn()
+
+def new_stage():
+    return Stage()
+
+def new_stage_check():
+    return StageCheck()
+
+class Txn:
+    def __init__(self):
+        self.id=None
+        self.start=None
+        self.end=None
+        self.checking_time = 0
+        self.stage_count = 0
+
+    @property
+    def time(self):
+        if self.start is None or self.end is None:
+            return None
+        return self.end - self.start
+
+def parse_line(line):
+    # Line format: time, nodename, thread, message
+    time, _, _, message = line.split(", ", 3)
+    time = int(time)
+    txn_full_id = message.split("[")[1].split("]")[0]
+    txn_top_id = txn_full_id.split(":")[0]
+    txn = TXNS[txn_top_id]
+    # Check if it's a stage, a txn, or a stage check
+    if message.startswith("started"):
+        txn.start = time
+    elif message.startswith("committed"):
+        txn.end = time
+        try:
+            base, checking, stages = message.split(", ")
+            txn.checking_time = (int(checking.split(" = ")[1].split(" ")[0]) /
+                                 1000000.0)
+            txn.stage_count = int(stages.split(" = ")[1])
+        except ValueError:
+            # There's no data because we're processing a baseline log.
+            pass
+    else:
+        print("WAT", line)
+
+TXNS = defaultdict(new_txn)
+
+for line in sys.stdin:
+    parse_line(line)
+
+class Stats:
+    def __init__(self, txns):
+        self.txns = txns
+
+    @property
+    def count(self):
+        return len(self.txns)
+
+    @property
+    def avg_time(self):
+        return mean(map(lambda x: x.time, self.txns))
+
+    @property
+    def avg_stage_count(self):
+        return mean(map(lambda x: x.stage_count, self.txns))
+
+    @property
+    def avg_checking_time(self):
+        return mean(map(lambda x: x.checking_time, self.txns))
+
+    @property
+    def err_time(self):
+        return stdev(map(lambda x: x.time, self.txns)) / sqrt(self.count)
+
+    @property
+    def err_stage_count(self):
+        return stdev(map(lambda x: x.stage_count, self.txns)) / sqrt(self.count)
+
+    @property
+    def err_checking_time(self):
+        return stdev(map(lambda x: x.checking_time, self.txns)) / sqrt(self.count)
+
+    @property
+    def pct_time(self):
+        return 100 * self.err_time / self.avg_time if self.avg_time != 0 else 0
+
+    @property
+    def pct_stage_count(self):
+        return 100 * self.err_stage_count / self.avg_stage_count if self.avg_stage_count != 0 else 0
+
+    @property
+    def pct_checking_time(self):
+        return 100 * self.err_checking_time / self.avg_checking_time if self.avg_checking_time != 0 else 0
+
+    def __str__(self):
+        return ("txns: {0}\n" +\
+                "avg_time: {1} ± {2} ms ({3}%)\n" +\
+                "avg_stages: {4} ± {5} ({6}%)\n" +\
+                "avg_checking: {7} ± {8} ms ({9}%)").format(
+                    self.count,
+                    self.avg_time, self.err_time, self.pct_time,
+                    self.avg_stage_count, self.err_stage_count, self.pct_stage_count,
+                    self.avg_checking_time, self.err_checking_time, self.pct_checking_time)
+
+max_stages = max(map(lambda x: x.stage_count, TXNS.values()), default=0)
+
+filtered = [txn for txn in TXNS.values() if txn.stage_count == max_stages and txn.time]
+
+stats = Stats(filtered)
+
+print(str(stats))

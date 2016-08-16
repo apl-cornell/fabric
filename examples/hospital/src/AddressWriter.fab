@@ -1,14 +1,47 @@
 public class AddressWriter {
-  public static String{*addressLabel} writeAddress{*addressLabel}(
-    label{*addressLabel} listLabel,
-    label{*addressLabel} addressLabel,
-    label{*addressLabel} hivLabel,
-    PatientList[listLabel, addressLabel, hivLabel]{*listLabel} patients,
-    int{*addressLabel} targetPatientNum
-  )
-    where
-      // List has integrity to affect the result.
-      listLabel ⊑ {*addressLabel}
+//  /**
+//   * Wrapper for calling from FabIL.
+//   */
+//  public static String{*addressLabel}
+//    writeAddress_wrapper{*addressLabel}@{*listLabel}(
+//      label{⊤←} listLabel,
+//      label{⊤←} addressLabel,
+//      label{⊤←} hivLabel,
+//      PatientList[listLabel, addressLabel, hivLabel]{*listLabel} patients,
+//      int{⊤←} targetPatientNum
+//    )@{{*addressLabel} ⊓ {W2R(*addressLabel)}}
+//  where
+//    listLabel ⊑ {{*addressLabel} ⊓ {W2R(*addressLabel)}}
+//  {
+//    atomic {
+//      if (addressLabel <= new label{W2R(*listLabel) ; ⊥←}) {
+//        if (addressLabel <= new label{W2R(*addressLabel) ; ⊥←}) {
+//          if (listLabel <= addressLabel) {
+//            return writeAddress(listLabel, addressLabel, hivLabel, patients,
+//                targetPatientNum);
+//          } else throw new Error();
+//        } else throw new Error();
+//      } else throw new Error();
+//    }
+//  }
+
+  public static String{*addressLabel}
+    writeAddress{*addressLabel}@{*listLabel}(
+      label{*addressLabel} listLabel,
+      label{*addressLabel} addressLabel,
+      label{*addressLabel} hivLabel,
+      PatientList[listLabel, addressLabel, hivLabel]{*listLabel} patients,
+      int{*addressLabel} targetPatientNum
+    )@{{*addressLabel} ⊓ {W2R(*addressLabel)}}
+  where
+    // Those modifying the patient list can learn about addresses.
+    addressLabel ⊑ {W2R(*listLabel) ; ⊥←},
+
+    // Those modifying addresses can learn about addresses.
+    addressLabel ⊑ {W2R(*addressLabel) ; ⊥←},
+
+    // List can affect the result.
+    listLabel ⊑ {*addressLabel}
   {
     String result = null;
     atomic {
@@ -19,23 +52,20 @@ public class AddressWriter {
         return "patients came back null";
       }
 
-      // XXX original version looped through the entire list.
-      PatientList[listLabel, addressLabel, hivLabel] cur = patients;
-      for (int i = 0; i < targetPatientNum; i++) {
-        if (cur == null) {
-          return "ran out of patients (asked for " + targetPatientNum
-              + ", but only had " + i;
-        }
-
-        cur = cur.next;
+      Patient target = null;
+      int numPatients = 0;
+      for (PatientList[listLabel, addressLabel, hivLabel] cur = patients;
+          cur != null; cur = cur.next) {
+        Patient curPatient = cur.patient;
+        if (numPatients == targetPatientNum) target = curPatient;
       }
 
-      if (cur == null) {
+      if (target == null) {
         return "ran out of patients (asked for " + targetPatientNum
-            + ", but only had " + (targetPatientNum - 1);
+            + ", but only had " + numPatients;
       }
 
-      Patient[addressLabel, hivLabel] patient = cur.patient;
+      Patient[addressLabel, hivLabel] patient = target;
       if (patient == null) {
         return "patient (singular) came back null";
       }
