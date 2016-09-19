@@ -303,9 +303,8 @@ public final class ObjectGrouper {
     }
 
     Store store = Worker.getWorker().getStore(database.getName());
-    GroupContainer result =
-        new GroupContainer(store, signingKey, new ObjectGroup(
-            partialGroup.objects));
+    GroupContainer result = new GroupContainer(store, signingKey,
+        new ObjectGroup(partialGroup.objects));
 
     // Add the result to the cache: bind all non-surrogate onums to the result.
     cacheGroup(headOnum, partialGroup.objects, result);
@@ -467,6 +466,11 @@ public final class ObjectGrouper {
     if (obj == null) obj = database.read(onum);
     if (obj == null) return null;
 
+    // XXX Could probably improve things if we relax grouping constraints.
+    // Instead of requiring the same update label in each group, we only really
+    // need to have the same confidentiality policy. The integrity half doesn't
+    // really matter for dissemination, since it will all be signed by the
+    // store anyway.
     long headLabelOnum = obj.getUpdateLabelOnum();
 
     LongKeyMap<SerializedObject> group = new LongKeyHashMap<>(MIN_GROUP_SIZE);
@@ -759,8 +763,8 @@ public final class ObjectGrouper {
                           break INNER;
                         }
 
-                        throw new InternalError("Unknown lock status: "
-                            + lock.status);
+                        throw new InternalError(
+                            "Unknown lock status: " + lock.status);
                       }
                     }
                   }
