@@ -65,13 +65,13 @@ where
     {*→store$}  // map is created
   }
   (
-    label l,
-    label a,
-    Box[l,a] boundary
+    label{*l} l,
+    label{*l} a,
+    Box[l,a]{*l} boundary
   )
   throws
   (
-    NullPointerException{*provider;boundary}
+    NullPointerException{*provider;*l}
   )
   where
     // TODO; store ≽ l@store; map is created at store
@@ -79,10 +79,10 @@ where
     l <= a, // access label for result must bound update label
 
     // result taints
-    {*provider;*←this;boundary;l} <= l,
+    {*provider;*←this} <= l,
 
     // boundary lookup taints
-    {*provider;boundary} <= a
+    {*provider;*l} <= a
   {
     if (boundary == null) throw new NullPointerException("92 boundary is null");
 

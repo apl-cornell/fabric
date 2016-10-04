@@ -331,8 +331,9 @@ where
 
     final Store fetchStore = service.store$;
     final Store localStore = s;
+    final RemoteWorker mapServ = worker$.getWorker(fetchStore.name());
 
-    if (fetchStore actsfor service) {
+    if (fetchStore actsfor service && fetchStore equiv mapServ) {
 
     // this is the label of the data that gets sent to the service
     final label fetchLabel = new label {{*l} meet {*→fetchStore} meet {*→n} meet {*friend_access_bound}}@service.store$;
@@ -343,7 +344,7 @@ where
     // get map
     MapImage[fetchLabel,{*→fetchStore}] map;
     try {
-      map = this.service.createMap(fetchLabel, new label {*→service.store$}@service.store$, boundary);
+      map = this.service.createMap@mapServ(fetchLabel, new label {*→service.store$}@service.store$, boundary);
     } catch (final NullPointerException e) {
       throw new AssertionFailedError("342 boundary is non-null.");
     }
