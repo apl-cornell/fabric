@@ -1,5 +1,7 @@
 package fabric.translate;
 
+import java.nio.file.Paths;
+
 import codebases.ast.CBSourceFile;
 import codebases.frontend.CodebaseSource;
 import fabil.ast.FabILNodeFactory;
@@ -28,7 +30,8 @@ public class SourceFileToFabilExt_c extends SourceFileToJavaExt_c {
 
     // Create a source derived from the fabric one. This is in support
     // of compiling to bytecode after publishing
-    source = ftfr.createDerivedSource((CodebaseSource) source, source.name());
+    String fileName = Paths.get(source.name()).getFileName().toString();
+    source = ftfr.createDerivedSource((CodebaseSource) source, fileName);
     n = (CBSourceFile) n.source(source);
     return rw.leavingSourceFile(n);
   }
