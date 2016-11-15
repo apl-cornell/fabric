@@ -1,6 +1,5 @@
 package codebases.types;
 
-import java.io.File;
 import java.net.URI;
 import java.util.Collections;
 import java.util.HashSet;
@@ -69,8 +68,8 @@ public class SimpleResolver extends NamespaceResolver_c {
           Report.report(4, "Class " + name + " has encoded type info");
         encodedClazz = clazz;
       }
-      if (encodedClazz != null && !name.replaceAll("[.$]", File.separator)
-          .equals(encodedClazz.name().replaceAll("[.$]", File.separator))) {
+      if (encodedClazz != null && !name.replaceAll("[.$]", "/")
+          .equals(encodedClazz.name().replaceAll("[.$]", "/"))) {
         if (Report.should_report(REPORT_TOPICS, 3))
           Report.report(3, "Not using " + encodedClazz.name()
               + "(case-insensitive filesystem?)");
@@ -104,8 +103,8 @@ public class SimpleResolver extends NamespaceResolver_c {
               Report.report(4, "Class " + name + " has encoded type info");
             encodedClazz = homeClazz;
           }
-          if (encodedClazz != null && !name.replaceAll("[.$]", File.separator)
-              .equals(encodedClazz.name().replaceAll("[.$]", File.separator))) {
+          if (encodedClazz != null && !name.replaceAll("[.$]", "/")
+              .equals(encodedClazz.name().replaceAll("[.$]", "/"))) {
             if (Report.should_report(REPORT_TOPICS, 3))
               Report.report(3, "Not using " + encodedClazz.name()
                   + "(case-insensitive filesystem?)");
