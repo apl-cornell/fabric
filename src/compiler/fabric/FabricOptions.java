@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import fabric.common.NSUtil;
 import jif.JifOptions;
 import polyglot.main.OptFlag;
 import polyglot.main.OptFlag.Arg;
@@ -21,7 +22,6 @@ import polyglot.main.OptFlag.Switch;
 import polyglot.main.UsageError;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.Pair;
-import fabric.common.NSUtil;
 
 public class FabricOptions extends JifOptions {
   /**
@@ -217,8 +217,8 @@ public class FabricOptions extends JifOptions {
       @Override
       public Arg<String> defaultArg() {
         try {
-          return createDefault(java.net.InetAddress.getLocalHost()
-              .getHostName());
+          return createDefault(
+              java.net.InetAddress.getLocalHost().getHostName());
         } catch (UnknownHostException e) {
           return createDefault("localhost");
         }
@@ -232,8 +232,8 @@ public class FabricOptions extends JifOptions {
         return createArg(index + 1, args[index]);
       }
     });
-    flags.add(new OptFlag<Pair<String, URI>>(new String[] { "-codebase-alias",
-        "-cb-alias" }, "<name>",
+    flags.add(new OptFlag<Pair<String, URI>>(
+        new String[] { "-codebase-alias", "-cb-alias" }, "<name>",
         "The the destination store for published classes.") {
       @Override
       public Arg<Pair<String, URI>> handle(String[] args, int index)
@@ -335,8 +335,8 @@ public class FabricOptions extends JifOptions {
       classpathURIs().addAll(uris);
 
     } else if (arg.flag().ids().contains("-sourcepath")) {
-      sourcepathURIs().addAll(
-          this.<List<URI>, URI> sccast(arg.value(), URI.class));
+      sourcepathURIs()
+          .addAll(this.<List<URI>, URI> sccast(arg.value(), URI.class));
 
     } else if (arg.flag().ids().contains("-bootclasspath")) {
       List<URI> uris = this.<List<URI>, URI> sccast(arg.value(), URI.class);

@@ -15,6 +15,7 @@ import java.util.Set;
 
 import javax.tools.JavaFileManager.Location;
 
+import fabric.common.NSUtil;
 import polyglot.frontend.ExtensionInfo;
 import polyglot.main.OptFlag;
 import polyglot.main.OptFlag.Arg;
@@ -23,7 +24,6 @@ import polyglot.main.OptFlag.Switch;
 import polyglot.main.UsageError;
 import polyglot.util.InternalCompilerError;
 import polyglot.util.Pair;
-import fabric.common.NSUtil;
 
 /**
  * This is the same as the JL options, except by default, we always generate
@@ -168,8 +168,8 @@ public class FabILOptions extends polyglot.main.Options {
       @Override
       public Arg<String> defaultArg() {
         try {
-          return createDefault(java.net.InetAddress.getLocalHost()
-              .getHostName());
+          return createDefault(
+              java.net.InetAddress.getLocalHost().getHostName());
         } catch (UnknownHostException e) {
           return createDefault("localhost");
         }
@@ -183,8 +183,8 @@ public class FabILOptions extends polyglot.main.Options {
         return createArg(index + 1, args[index]);
       }
     });
-    flags.add(new OptFlag<Pair<String, URI>>(new String[] { "-codebase-alias",
-        "-cb-alias" }, "<name>",
+    flags.add(new OptFlag<Pair<String, URI>>(
+        new String[] { "-codebase-alias", "-cb-alias" }, "<name>",
         "The the destination store for published classes.") {
       @Override
       public Arg<Pair<String, URI>> handle(String[] args, int index)
@@ -276,8 +276,8 @@ public class FabILOptions extends polyglot.main.Options {
       classpathURIs().addAll(uris);
 
     } else if (arg.flag().ids().contains("-sourcepath")) {
-      sourcepathURIs().addAll(
-          this.<List<URI>, URI> sccast(arg.value(), URI.class));
+      sourcepathURIs()
+          .addAll(this.<List<URI>, URI> sccast(arg.value(), URI.class));
 
     } else if (arg.flag().ids().contains("-bootclasspath")) {
       List<URI> uris = this.<List<URI>, URI> sccast(arg.value(), URI.class);

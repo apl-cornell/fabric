@@ -7,6 +7,9 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import codebases.frontend.CodebaseSource;
+import codebases.frontend.ExtensionInfo;
+import fabric.filemanager.FabricFileManager;
 import polyglot.frontend.Source;
 import polyglot.main.Report;
 import polyglot.types.BadSerializationException;
@@ -14,9 +17,6 @@ import polyglot.types.Importable;
 import polyglot.types.NoClassException;
 import polyglot.types.SemanticException;
 import polyglot.types.reflect.ClassFile;
-import codebases.frontend.CodebaseSource;
-import codebases.frontend.ExtensionInfo;
-import fabric.filemanager.FabricFileManager;
 
 public class SimpleResolver extends NamespaceResolver_c {
 //  protected final ClassFileLoader classfileLoader;
@@ -69,9 +69,8 @@ public class SimpleResolver extends NamespaceResolver_c {
           Report.report(4, "Class " + name + " has encoded type info");
         encodedClazz = clazz;
       }
-      if (encodedClazz != null
-          && !name.replaceAll("[.$]", File.separator).equals(
-              encodedClazz.name().replaceAll("[.$]", File.separator))) {
+      if (encodedClazz != null && !name.replaceAll("[.$]", File.separator)
+          .equals(encodedClazz.name().replaceAll("[.$]", File.separator))) {
         if (Report.should_report(REPORT_TOPICS, 3))
           Report.report(3, "Not using " + encodedClazz.name()
               + "(case-insensitive filesystem?)");
@@ -105,9 +104,8 @@ public class SimpleResolver extends NamespaceResolver_c {
               Report.report(4, "Class " + name + " has encoded type info");
             encodedClazz = homeClazz;
           }
-          if (encodedClazz != null
-              && !name.replaceAll("[.$]", File.separator).equals(
-                  encodedClazz.name().replaceAll("[.$]", File.separator))) {
+          if (encodedClazz != null && !name.replaceAll("[.$]", File.separator)
+              .equals(encodedClazz.name().replaceAll("[.$]", File.separator))) {
             if (Report.should_report(REPORT_TOPICS, 3))
               Report.report(3, "Not using " + encodedClazz.name()
                   + "(case-insensitive filesystem?)");
@@ -136,14 +134,13 @@ public class SimpleResolver extends NamespaceResolver_c {
       long sourceModTime = source.getLastModified();
 
       if (!ignore_mod_times && classModTime < sourceModTime) {
-        if (Report.should_report(REPORT_TOPICS, 3))
-          Report.report(3, "Source file version is newer than compiled for "
-              + name + ".");
+        if (Report.should_report(REPORT_TOPICS, 3)) Report.report(3,
+            "Source file version is newer than compiled for " + name + ".");
         encodedClazz = null;
-      } else if (checkCompilerVersion(encodedClazz.compilerVersion(version)) != COMPATIBLE) {
-        if (Report.should_report(REPORT_TOPICS, 3))
-          Report.report(3, "Incompatible encoding version for " + name
-              + " in class cache.");
+      } else if (checkCompilerVersion(
+          encodedClazz.compilerVersion(version)) != COMPATIBLE) {
+        if (Report.should_report(REPORT_TOPICS, 3)) Report.report(3,
+            "Incompatible encoding version for " + name + " in class cache.");
         encodedClazz = null;
       }
     }
@@ -196,8 +193,8 @@ public class SimpleResolver extends NamespaceResolver_c {
 
       if (clazz == null) {
         if (Report.should_report(REPORT_TOPICS, 4)) {
-          Report.report(4, "ClassFile for " + name + " not found in "
-              + namespace);
+          Report.report(4,
+              "ClassFile for " + name + " not found in " + namespace);
         }
         noClassCache.add(name);
         return null;
