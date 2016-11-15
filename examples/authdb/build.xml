@@ -67,6 +67,7 @@
     <javac
         destdir="${authdb.home}/classes"
         srcdir="${authdb.home}/src"
+        encoding="utf-8"
         debug="on"
         includes="**"
         classpathref="java-classpath"/>

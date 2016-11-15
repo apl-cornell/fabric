@@ -395,10 +395,18 @@
   <target name="fabric-signatures"
       depends="init,bootstrap,bin,fabric-compiler,fabil-runtime,worker,store"
       description="Compiles the Fabric signature classes">
+    <path id="fabric-signatures.bootcp">
+      <pathelement location="${runtime.classes}"/>
+      <pathelement location="${classes}"/>
+    </path>
+    <pathconvert
+        property="fabric-signatures.bootcp"
+        refid="fabric-signatures.bootcp"/>
+
     <fabsigc dest="${signatures.fabric.classes}">
       <arg value="-platform-mode" /> 
       <arg value="-bootclasspath" />
-      <arg value="${runtime.classes}:${classes}"/>
+      <arg value="${fabric-signatures.bootcp}"/>
       <arg value="-nooutput"/>
       <arg value="-trusted-providers" />
       <arg value="-sigcp"/>
@@ -426,15 +434,31 @@
   <target name="fabil-signatures"
       depends="init,bootstrap,fabil-compiler,bin,native"
       description="Compiles the FabIL signature clasess">
+    <path id="fabil-signatures.bootcp">
+      <pathelement location="${bootstrap.classes}"/>
+      <path refid="polyglot.classpath"/>
+    </path>
+    <pathconvert
+        property="fabil-signatures.bootcp"
+        refid="fabil-signatures.bootcp"/>
+
+    <path id="fabil-signatures.sigcp">
+      <pathelement location="${signatures.fabil.src}"/>
+      <pathelement location="${runtime.src}"/>
+    </path>
+    <pathconvert
+        property="fabil-signatures.sigcp"
+        refid="fabil-signatures.sigcp"/>
+
     <filsigc dest="${signatures.fabil.classes}">
       <arg value="-platform-mode" /> 
       <arg value="-jvm-cp" />
       <arg value="${bootstrap.classes}" />
       <arg value="-nooutput" />
       <arg value="-addbootcp" />
-      <arg value="${bootstrap.classes}:${polyglot.classpath}"/>
+      <arg value="${fabil-signatures.bootcp}"/>
       <arg value="-sigcp" />
-      <arg value="${signatures.fabil.src}:${runtime.src}" />
+      <arg value="${fabil-signatures.sigcp}" />
       <fileset dir="${signatures.fabil.src}" includes="**/*.fil" />
     </filsigc>
 
@@ -525,7 +549,7 @@
   <!-- Compiles the bootstrap classes. -->
   <target name="bootstrap" depends="init,bootstrap-check"
       unless="bootstrap.up-to-date">
-    <javac source="1.7" target="1.7"
+    <javac source="1.7" target="1.7" encoding="utf-8"
         srcdir="${bootstrap.src}" destdir="${bootstrap.classes}"
         includeAntRuntime="false" debug="on">
       <include name="**/*.java" />
@@ -558,7 +582,7 @@
   <!-- Compiles the Fabric runtime classes that are implemented in Java -->
   <target name="native" depends="init,bootstrap,native-check"
       unless="native.up-to-date">
-    <javac source="1.7" target="1.7"
+    <javac source="1.7" target="1.7" encoding="utf-8"
         srcdir="${system.src}" destdir="${classes}"
         includeAntRuntime="false" debug="on">
       <include name="fabric/lang/**" />
@@ -582,7 +606,7 @@
 
   <!-- Compiles the Fabric store -->
   <target name="store" depends="init,native,fabil-runtime">
-    <javac source="1.7" target="1.7"
+    <javac source="1.7" target="1.7" encoding="utf-8"
         srcdir="${system.src}" destdir="${classes}"
         includeAntRuntime="false" debug="on">
       <include name="fabric/common/**" />
@@ -598,7 +622,7 @@
 
   <!-- Compiles the Fabric worker -->
   <target name="worker" depends="init,bootstrap,native,fabil-runtime">
-    <javac source="1.7" target="1.7"
+    <javac source="1.7" target="1.7" encoding="utf-8"
         srcdir="${system.src}" destdir="${classes}"
         includeAntRuntime="false" debug="on">
       <include name="fabric/worker/**" />
@@ -615,7 +639,7 @@
 
   <!-- Compiles the Fabric dissemination node -->
   <target name="dissemination" depends="bootstrap,worker">
-    <javac source="1.7" target="1.7"
+    <javac source="1.7" target="1.7" encoding="utf-8"
         srcdir="${system.src}" destdir="${classes}"
         includeAntRuntime="false" debug="on">
       <include name="fabric/dissemination/**" />
@@ -638,7 +662,7 @@
   -->
   <target name="fabric-arrays"
       depends="init,bin,bootstrap,fabil-compiler,fabil-signatures">
-    <javac source="1.7" target="1.7"
+    <javac source="1.7" target="1.7" encoding="utf-8"
         srcdir="${system.src}" destdir="${classes}"
         includeAntRuntime="false" debug="on">
       <include name="fabric/worker/RetryException.java" />
@@ -658,13 +682,21 @@
   <!-- Compiles the part of the Fabric runtime that is implemented in FabIL -->
   <target name="fabil-runtime"
       depends="init,bootstrap,fabil-compiler,fabil-signatures,fabric-arrays">
+    <path id="fabil-runtime.bootcp">
+      <path refid="polyglot.classpath"/>
+      <pathelement location="${bootstrap.classes}"/>
+    </path>
+    <pathconvert
+        property="fabil-runtime.bootcp"
+        refid="fabil-runtime.bootcp"/>
+
     <filc dest="${runtime.classes}">
       <arg value="-jvm-cp" />
       <arg value="${bootstrap.classes}" />
       <arg value="-j" />
       <arg value="-Xms256M" />
       <arg value="-addbootcp" />
-      <arg value="${polyglot.classpath}:${bootstrap.classes}" />
+      <arg value="${fabil-runtime.bootcp}" />
       <arg value="-platform-mode"/>
       <fileset dir="${runtime.src}" includes="**/*.fil" />
     </filc>
@@ -776,6 +808,7 @@ public class VersionInfo {
     <javac
         srcdir="${tmp}"
         destdir="${tmp}"
+        encoding="utf-8"
         includes="VersionInfo.java"
         classpathref="jif.classpath"/>
 
@@ -1952,7 +1985,7 @@ public class Version {
   </target>
 
   <target name="compile-ext" depends="init,bootstrap">
-    <javac source="1.7" target="1.7" srcdir="${compiler.src}"
+    <javac source="1.7" target="1.7" encoding="utf-8" srcdir="${compiler.src}"
         destdir="${classes}" debug="on" includeAntRuntime="false"
         includes="${ext.pkg}/**"
         excludes="**/package-info.java">

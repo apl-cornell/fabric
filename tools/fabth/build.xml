@@ -63,7 +63,9 @@
       <param name="ppg.file" value="fabth.ppg" />
       <param name="cup.file" value="fabth_ppg.cup" />
     </antcall>
-    <javac source="1.7" target="1.7" srcdir="${fabth.home}/src" destdir="${fabth.home}/classes" debug="on" includes="fabric/**">
+    <javac source="1.7" target="1.7" encoding="utf-8"
+        srcdir="${fabth.home}/src" destdir="${fabth.home}/classes"
+        debug="on" includes="fabric/**">
       <classpath>
         <path refid="fabth.classpath" />
       </classpath>

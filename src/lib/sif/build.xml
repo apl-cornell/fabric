@@ -88,6 +88,7 @@
   <target name="build-sif-java" depends="init, build-sif-fab">
     <javac source="1.7"
            target="1.7"
+           encoding="utf-8"
            srcdir="${src}"
            destdir="${sif.classes}"
            debug="true"

@@ -45,7 +45,8 @@
   <target name="build"
       description="Builds the Fabric browser applet">
     <mkdir dir="${applet.classes}" />
-    <javac source="1.7" target="1.7" srcdir="${applet.src}"
+    <javac source="1.7" target="1.7" encoding="utf-8"
+        srcdir="${applet.src}"
         destdir="${applet.classes}" includeAntRuntime="false" debug="on">
       <include name="**/*.java" />
       <classpath refid="fabric.classpath" />

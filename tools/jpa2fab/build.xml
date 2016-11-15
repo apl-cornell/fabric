@@ -43,7 +43,11 @@
 
   <target name="build" description="Builds the JPA to Fabric converter">
     <mkdir dir="${jpa2fab.home}/classes" />
-    <javac source="1.7" target="1.7" srcdir="${jpa2fab.home}/src" destdir="${jpa2fab.home}/classes" debug="on" includes="**/*.java">
+    <javac source="1.7" target="1.7" encoding="utf-8"
+        srcdir="${jpa2fab.home}/src"
+        destdir="${jpa2fab.home}/classes"
+        debug="on"
+        includes="**/*.java">
       <classpath>
         <path refid="jpa2fab.classpath" />
       </classpath>

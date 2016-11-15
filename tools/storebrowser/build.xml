@@ -38,7 +38,8 @@
   <target name="build"
       description="Builds the Fabric store browser GUI tool">
     <mkdir dir="${storebrowser.home}/classes" />
-    <javac source="1.7" target="1.7" srcdir="${storebrowser.home}/src"
+    <javac source="1.7" target="1.7" encoding="utf-8"
+        srcdir="${storebrowser.home}/src"
         destdir="${storebrowser.home}/classes" includeAntRuntime="false"
         debug="on">
       <classpath>

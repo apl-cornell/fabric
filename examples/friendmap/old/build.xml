@@ -171,6 +171,7 @@
       <mkdir dir="${home}/classes/jif-sig-impl" />
       <javac srcdir="@{srcdir}"
              destdir="${home}/classes/jif-sig-impl"
+             encoding="utf-8"
              includes="@{includes}"
              excludes="@{excludes}"
              classpath="${jif.home}/rt-classes">

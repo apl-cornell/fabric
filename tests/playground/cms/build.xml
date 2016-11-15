@@ -100,7 +100,7 @@
 
   <!-- Compiles the Fabric CMS servlet -->
   <target name="fabservlet">
-    <javac source="1.7" target="1.7"
+    <javac source="1.7" target="1.7" encoding="utf-8"
         destdir="${cms.home}/web-fabil/WEB-INF/classes"
         includeAntRuntime="false" debug="on">
       <classpath refid="cms.classpath" />

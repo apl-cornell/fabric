@@ -42,7 +42,7 @@
 
   <target name="build-java" description="Builds the java version of skel">
     <mkdir dir="${home}/classes" />
-    <javac source="1.7" target="1.7"
+    <javac source="1.7" target="1.7" encoding="utf-8"
            includeAntRuntime="false"
            destdir="${home}/classes"
            srcdir="${home}/src/java"

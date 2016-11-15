@@ -71,14 +71,15 @@
 
   <target name="build-client" depends="setup-dirs">
     <javac srcdir="${blog.home}/src/java" destdir="${blog.home}/classes/java"
-        includeAntRuntime="false">
+        encoding="utf-8" includeAntRuntime="false">
       <classpath refid="blog.classpath" />
     </javac>
   </target>
 
   <target name="build-blog" depends="build-blog-uptodate, setup-dirs"
       unless="fabil-blog.uptodate">
-    <javac destdir="${blog.home}/classes/fabil" includeAntRuntime="false">
+    <javac destdir="${blog.home}/classes/fabil" encoding="utf-8"
+        includeAntRuntime="false">
       <src path="${blog.home}/src/fabil" />
       <include name="webapp/FabricUtils.java" />
       <classpath refid="blog.classpath" />
