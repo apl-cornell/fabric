@@ -288,16 +288,18 @@ public class FabricOptions extends JifOptions {
 
   @Override
   protected int parseSourceArg(String[] args, int index) {
-    URI u = URI.create(args[index]);
-    if (!u.isAbsolute()) {
-      File f;
-      try {
-        f = new File(args[index]).getCanonicalFile();
-      } catch (IOException e) {
-        throw new InternalCompilerError(e);
-      }
-      u = NSUtil.file.resolve(f.toURI());
+    URI u = null;
+    try {
+      u = URI.create(args[index]);
+    } catch (IllegalArgumentException e) {
     }
+
+    if (u == null || !u.isAbsolute()) {
+      // Have a local file path.
+      File f = new File(args[index]);
+      u = f.toURI();
+    }
+
     Arg<URI> src = new Arg<>(index + 1, u);
     arguments.add(src);
     return src.next();

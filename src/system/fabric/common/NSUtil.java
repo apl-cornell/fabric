@@ -346,17 +346,17 @@ public final class NSUtil {
   }
 
   /**
-   * Process a path string of the form <URI>:/localdir/:... into URIs and add to a list
-   * @param uris the list to add the URIs to
-   * @param path the path-style string of URIs and directories, with URIs delimited by '<' and '>'
-   * @return true if path contains any remote references
+   * Processs a path string of the form &lt;URI&gt;:/localdir/:... into a list of URIs.
+   * @param path the path-style string of URIs and directories, with URIs delimited by '&lt;' and '&gt;'
+   * @return the resulting list
    */
   public static List<URI> processPathString(String path) {
-    // XXX This breaks in the presence of Windows paths.
     List<URI> locations = new ArrayList<>();
     while (!path.isEmpty()) {
       String remaining = "";
       if (path.startsWith("@")) {
+        // Have a "@localfile" path element. Read the path element from the
+        // local file.
         try {
           int next_idx = path.indexOf(":");
           String pathFile;
@@ -379,6 +379,7 @@ public final class NSUtil {
       int idx = 0;
       while (idx < path.length()) {
         if (path.charAt(idx) == '<') {
+          // Have a "<URI>" path element.
           int end = path.indexOf('>', idx);
           if (end < 0) throw new InternalCompilerError("Invalid path");
           String cb = path.substring(idx + 1, end);
@@ -393,6 +394,7 @@ public final class NSUtil {
         } else if (path.charAt(idx) == File.pathSeparatorChar) {
           idx++;
         } else {
+          // Have a local path element.
           int end = path.indexOf(File.pathSeparatorChar, idx);
 
           String dir = "";
@@ -404,17 +406,9 @@ public final class NSUtil {
             idx = end;
           }
           if (!"".equals(dir)) {
-            if (!dir.endsWith("/")) dir += "/";
-
-            URI u = URI.create(dir);
-
-            if (u.isAbsolute())
-              locations.add(u);
-            else {
-              File f = new File(dir);
-              String suf = f.isDirectory() ? "/" : "";
-              locations.add(file.resolve(f.getAbsolutePath() + suf));
-            }
+            // Convert file system paths to URIs.
+            File f = new File(dir);
+            locations.add(f.toURI());
           }
         }
       }
