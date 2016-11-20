@@ -37,11 +37,11 @@ fabric.node.password = password
 #
 # Valid options:
 #   - fabric.dissemination.DummyFetchManager
-#   - fabric.dissemination.PastryFetchManager
+#   - fabric.dissemination.pastry.PastryFetchManager
 #
-# By default, this is fabric.dissemination.PastryFetchManager.
+# By default, this is fabric.dissemination.DummyFetchManager.
 
-# fabric.node.fetchmanager.class = fabric.dissemination.PastryFetchManager
+# fabric.node.fetchmanager.class = fabric.dissemination.DummyFetchManager
 
 
 # The port for the worker to listen on for remote-call requests. This is

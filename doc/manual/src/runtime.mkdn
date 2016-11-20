@@ -167,9 +167,9 @@ Fabric nodes are configured using several parameters.
 
   * `fabric.node.fetchmanager.class` specifies the class for the
     dissemination layer implementation. Valid options include
-    `fabric.dissemination.PastryFetchManager` and
-    `fabric.dissemination.DummyFetchManager`. By default,
-    `PastryFetchManager` is used.
+    `fabric.dissemination.DummyFetchManager` and
+    `fabric.dissemination.pastry.PastryFetchManager`. By default,
+    `DummyFetchManager` is used.
 
   * `fabric.worker.port` specifies the network port on which the node
     should listen for remote calls. The default worker port is 3372.

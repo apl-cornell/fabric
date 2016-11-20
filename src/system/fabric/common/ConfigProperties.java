@@ -90,7 +90,7 @@ public class ConfigProperties {
             removeProperty(p, "fabric.worker.certs", name + ".keystore"));
     this.dissemClass =
         removeProperty(p, "fabric.node.fetchmanager.class",
-            "fabric.dissemination.pastry.PastryFetchManager");
+            "fabric.dissemination.DummyFetchManager");
 
     /************************** Worker Properties *****************************/
     this.workerPort =
