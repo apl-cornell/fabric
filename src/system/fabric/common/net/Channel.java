@@ -3,9 +3,7 @@ package fabric.common.net;
 import static fabric.common.Logging.NETWORK_CHANNEL_LOGGER;
 
 import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -19,6 +17,7 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 import fabric.common.Logging;
+import fabric.common.SerializationUtil;
 import fabric.common.exceptions.InternalError;
 import fabric.common.exceptions.NotImplementedException;
 import fabric.common.net.handshake.ShakenSocket;
@@ -33,10 +32,18 @@ import fabric.net.RemoteNode;
 abstract class Channel<Node extends RemoteNode<Node>> extends Thread {
   static final int DEFAULT_MAX_OPEN_CONNECTIONS = 0;
   private static final boolean USE_COMPRESSION = false;
-  private static final int MAX_SEND_BUF_SIZE = 8192;
+  private static final int BUF_SIZE = 64 * 1024;
 
-  private final DataOutputStream out;
+  /**
+   * Connects to the network.
+   */
+  private final OutputStream out;
+
+  /**
+   * Connects to the network.
+   */
   private final DataInputStream in;
+
   protected final Socket sock;
 
   /**
@@ -84,11 +91,8 @@ abstract class Channel<Node extends RemoteNode<Node>> extends Thread {
       in = new GZIPInputStream(in);
     }
 
-    final int bufSize = Math.min(sock.getSendBufferSize(), MAX_SEND_BUF_SIZE);
-    this.out = new DataOutputStream(new BufferedOutputStream(out, bufSize));
-
-    this.in = new DataInputStream(
-        new BufferedInputStream(in, sock.getReceiveBufferSize()));
+    this.out = out;
+    this.in = new DataInputStream(new BufferedInputStream(in, BUF_SIZE));
 
     this.connections = new HashMap<>();
     this.maxOpenConnections = maxOpenConnections;
@@ -108,23 +112,23 @@ abstract class Channel<Node extends RemoteNode<Node>> extends Thread {
   /** send subsocket close message */
   private void sendClose(int streamID) throws IOException {
     synchronized (out) {
-      out.writeInt(streamID);
-      out.writeInt(0);
+      byte[] buf = new byte[8];
+      SerializationUtil.setIntAt(buf, 0, streamID);
+      SerializationUtil.setIntAt(buf, 4, 0);
+      out.write(buf);
       out.flush();
     }
   }
 
   /** send data */
-  private void sendData(int streamID, byte[] data, int offset, int len)
+  private void sendData(byte[] data, int offset, int len, boolean flush)
       throws IOException {
     Logging.log(NETWORK_CHANNEL_LOGGER, Level.FINE,
         "sending {0} bytes of data on {1}", len, this);
 
     synchronized (out) {
-      out.writeInt(streamID);
-      out.writeInt(len);
       out.write(data, offset, len);
-      out.flush();
+      if (flush) out.flush();
     }
   }
 
@@ -220,7 +224,7 @@ abstract class Channel<Node extends RemoteNode<Node>> extends Thread {
     /**
      * The application-facing output stream.
      */
-    final public BufferedOutputStream out;
+    final public MuxedOutputStream out;
 
     /**
      * The output stream for sending data to the application.
@@ -228,25 +232,17 @@ abstract class Channel<Node extends RemoteNode<Node>> extends Thread {
     final public Pipe.OutputStream sink;
 
     /**
-     * Size of stream headers. Currently two ints: streamID and packet length.
-     */
-    public static final int STREAM_HEADER_SIZE = 8;
-
-    /**
      * Whether the connection has been closed locally. The connection is not
      * fully closed until it is closed by both end points.
      */
     private boolean locallyClosed;
 
-    public Connection(int streamID) throws IOException {
+    public Connection(int streamID) {
       this.locallyClosed = false;
 
       this.streamID = streamID;
 
-      final int bufSize = Math.min(sock.getSendBufferSize(), MAX_SEND_BUF_SIZE)
-          - STREAM_HEADER_SIZE;
-      this.out =
-          new BufferedOutputStream(new MuxedOutputStream(streamID), bufSize);
+      this.out = new MuxedOutputStream(streamID);
 
       Pipe buf = new Pipe();
       this.in = buf.getInputStream();
@@ -331,31 +327,120 @@ abstract class Channel<Node extends RemoteNode<Node>> extends Thread {
   }
 
   /**
-   * an OutputStream that expands written data to include the stream id, and
-   * writes to the channel's output stream. These should be wrapped in
-   * BufferedOutputStreams before being returned.
+   * An buffering OutputStream that automatically adds a header to any data
+   * written to the channel's output stream. The header contains the stream id
+   * and the size of the data payload.
+   *
+   * Adapted from java.io.BufferedOutputStream.
    */
-  private class MuxedOutputStream extends OutputStream {
-    private final int streamID;
+  class MuxedOutputStream extends OutputStream {
+    /**
+     * Position of the streamID in the header.
+     */
+    private static final int STREAM_ID_POS = 0;
 
-    public MuxedOutputStream(int streamID) {
-      this.streamID = streamID;
+    /**
+     * Length of the streamID in the header. Currently an int.
+     */
+    private static final int STREAM_ID_LEN = 4;
+
+    /**
+     * Position of the payload-size field in the header.
+     */
+    private static final int PAYLOAD_SIZE_POS = STREAM_ID_POS + STREAM_ID_LEN;
+
+    /**
+     * Length of the payload-size field in the header. Currently an int.
+     */
+    private static final int PAYLOAD_SIZE_LEN = 4;
+
+    /**
+     * Size of stream headers.
+     */
+    private static final int STREAM_HEADER_SIZE =
+        PAYLOAD_SIZE_POS + PAYLOAD_SIZE_LEN;
+
+    /**
+     * The internal buffer.
+     */
+    private final byte[] buf;
+
+    /**
+     * The number of bytes contained in the buffer.
+     */
+    private int count;
+
+    private MuxedOutputStream(int streamID) {
+      this.buf = new byte[BUF_SIZE];
+      initBuffer();
+
+      // Fill in the streamID in the header.
+      SerializationUtil.setIntAt(buf, STREAM_ID_POS, streamID);
+    }
+
+    /**
+     * Reinitializes the buffer, while reserving space for the header.
+     */
+    private void initBuffer() {
+      count = STREAM_HEADER_SIZE;
+    }
+
+    /**
+     * Flushes the internal buffer.
+     *
+     * @param flushUnderlying whether to flush the underlying output stream.
+     */
+    private void flushBuffer(boolean flushUnderlying) throws IOException {
+      if (count > STREAM_HEADER_SIZE) {
+        // Fill in the size of the payload.
+        SerializationUtil.setIntAt(buf, PAYLOAD_SIZE_POS,
+            count - STREAM_HEADER_SIZE);
+
+        sendData(buf, 0, count, flushUnderlying);
+        initBuffer();
+      }
     }
 
     @Override
-    public void write(int arg0) throws IOException {
-      throw new IOException(
-          "MuxedOutputStreams do not support writing unbuffered data");
+    public synchronized void write(int b) throws IOException {
+      if (count >= buf.length) {
+        flushBuffer(false);
+      }
+
+      buf[count++] = (byte) b;
     }
 
     @Override
-    public void write(byte[] buf, int offset, int len) throws IOException {
-      sendData(streamID, buf, offset, len);
+    public synchronized void write(byte[] b, int offset, int len)
+        throws IOException {
+      if (len < 0) throw new IllegalArgumentException("len = " + len);
+
+      while (len > 0) {
+        // Ensure there is space in the buffer.
+        if (count >= buf.length) {
+          flushBuffer(false);
+        }
+
+        // Figure out how much to copy.
+        int amtToCopy = buf.length - count;
+        if (len < amtToCopy) amtToCopy = len;
+
+        // Actually copy.
+        System.arraycopy(b, offset, buf, count, amtToCopy);
+        offset += amtToCopy;
+        len -= amtToCopy;
+        count += amtToCopy;
+      }
     }
 
     @Override
     public void write(byte[] b) throws IOException {
       write(b, 0, b.length);
+    }
+
+    @Override
+    public synchronized void flush() throws IOException {
+      flushBuffer(true);
     }
   }
 }

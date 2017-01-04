@@ -1,6 +1,5 @@
 package fabric.common.net;
 
-import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -59,7 +58,7 @@ public class SubSocket<Node extends RemoteNode<Node>> {
    *
    * @see java.net.Socket#getOutputStream()
    */
-  public synchronized final BufferedOutputStream getOutputStream()
+  public synchronized final Channel<Node>.MuxedOutputStream getOutputStream()
       throws IOException {
     return state.getOutputStream();
   }
@@ -125,7 +124,7 @@ public class SubSocket<Node extends RemoteNode<Node>> {
       throw new IOException("Cannot get an input stream: " + this, cause);
     }
 
-    BufferedOutputStream getOutputStream() throws IOException {
+    Channel<Node>.MuxedOutputStream getOutputStream() throws IOException {
       throw new IOException("Cannot get an output stream: " + this, cause);
     }
 
@@ -199,7 +198,7 @@ public class SubSocket<Node extends RemoteNode<Node>> {
     }
 
     @Override
-    BufferedOutputStream getOutputStream() {
+    Channel<Node>.MuxedOutputStream getOutputStream() {
       return conn.out;
     }
 
