@@ -87,9 +87,8 @@ abstract class Channel<Node extends RemoteNode<Node>> extends Thread {
     final int bufSize = Math.min(sock.getSendBufferSize(), MAX_SEND_BUF_SIZE);
     this.out = new DataOutputStream(new BufferedOutputStream(out, bufSize));
 
-    this.in =
-        new DataInputStream(new BufferedInputStream(in,
-            sock.getReceiveBufferSize()));
+    this.in = new DataInputStream(
+        new BufferedInputStream(in, sock.getReceiveBufferSize()));
 
     this.connections = new HashMap<>();
     this.maxOpenConnections = maxOpenConnections;
@@ -244,8 +243,7 @@ abstract class Channel<Node extends RemoteNode<Node>> extends Thread {
 
       this.streamID = streamID;
 
-      final int bufSize =
-          Math.min(sock.getSendBufferSize(), MAX_SEND_BUF_SIZE)
+      final int bufSize = Math.min(sock.getSendBufferSize(), MAX_SEND_BUF_SIZE)
           - STREAM_HEADER_SIZE;
       this.out =
           new BufferedOutputStream(new MuxedOutputStream(streamID), bufSize);
@@ -287,7 +285,8 @@ abstract class Channel<Node extends RemoteNode<Node>> extends Thread {
         in.close();
       } catch (IOException e) {
         throw new InternalError(
-            "Unexpected error while closing application-facing input stream", e);
+            "Unexpected error while closing application-facing input stream",
+            e);
       }
 
       try {
