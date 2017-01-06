@@ -1,6 +1,6 @@
 package fabric.common.net.handshake;
 
-import java.net.Socket;
+import java.nio.channels.SocketChannel;
 
 import fabric.common.net.RemoteIdentity;
 import fabric.net.RemoteNode;
@@ -15,10 +15,10 @@ public class ShakenSocket<Node extends RemoteNode<Node>> {
   public final String name;
 
   public final RemoteIdentity<Node> remoteIdentity;
-  public final Socket sock;
+  public final SocketChannel sock;
 
   public ShakenSocket(String name, RemoteIdentity<Node> remoteIdentity,
-      Socket sock) {
+      SocketChannel sock) {
     this.name = name;
     this.remoteIdentity = remoteIdentity;
     this.sock = sock;

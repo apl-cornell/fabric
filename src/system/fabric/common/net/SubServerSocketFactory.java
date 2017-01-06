@@ -6,9 +6,11 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.net.BindException;
 import java.net.InetAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.net.InetSocketAddress;
 import java.net.SocketException;
+import java.net.StandardSocketOptions;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -47,7 +49,8 @@ public class SubServerSocketFactory {
    */
   public SubServerSocketFactory(Protocol<RemoteWorker> handshake,
       NameService nameService, PortType portType) {
-    this(handshake, nameService, portType, Channel.DEFAULT_MAX_OPEN_CONNECTIONS);
+    this(handshake, nameService, portType,
+        Channel.DEFAULT_MAX_OPEN_CONNECTIONS);
   }
 
   /**
@@ -180,10 +183,9 @@ public class SubServerSocketFactory {
      */
     ConnectionQueue makeQueue(String name, int size) throws IOException {
       synchronized (queues) {
-        if (queues.containsKey(name))
-          throw new IOException(
-              "attempted to bind multiple SubServerSockets to " + name + " @ "
-                  + address);
+        if (queues.containsKey(name)) throw new IOException(
+            "attempted to bind multiple SubServerSockets to " + name + " @ "
+                + address);
 
         ConnectionQueue queue = new ConnectionQueue(name, size);
         queues.put(name, queue);
@@ -192,12 +194,12 @@ public class SubServerSocketFactory {
     }
 
     /** handle an incoming connection */
-    private void recvConnection(Socket s) {
+    private void recvConnection(SocketChannel s) {
       try {
         NETWORK_CONNECTION_LOGGER.log(Level.INFO,
-            "receiving new connection from \"{0}\"", s.getInetAddress());
+            "receiving new connection from \"{0}\"", s.getRemoteAddress());
 
-        s.setTcpNoDelay(true);
+        s.setOption(StandardSocketOptions.TCP_NODELAY, true);
 
         ShakenSocket<RemoteWorker> conn = handshake.receive(s);
 
@@ -216,14 +218,15 @@ public class SubServerSocketFactory {
         if ("Connection reset".equalsIgnoreCase(e.getMessage())) {
           Logging.log(NETWORK_CONNECTION_LOGGER, Level.WARNING,
               "{0} connection closed ({1})", portType,
-              s.getRemoteSocketAddress());
+              s.socket().getRemoteSocketAddress());
           return;
         }
 
         throw new NotImplementedException(e);
       } catch (EOFException e) {
         Logging.log(NETWORK_CONNECTION_LOGGER, Level.WARNING,
-            "{0} connection reset ({1})", portType, s.getRemoteSocketAddress());
+            "{0} connection reset ({1})", portType,
+            s.socket().getRemoteSocketAddress());
       } catch (IOException e) {
         // TODO: failed to initiate, close s.
         throw new NotImplementedException(e);
@@ -242,9 +245,11 @@ public class SubServerSocketFactory {
      */
     @Override
     public void run() {
-      try (ServerSocket sock =
-          new ServerSocket(address.getPort(), 0,
-              InetAddress.getByAddress(new byte[] { 0, 0, 0, 0 }))) {
+      try (ServerSocketChannel sock = ServerSocketChannel.open()) {
+        sock.configureBlocking(true);
+        sock.bind(new InetSocketAddress(
+            InetAddress.getByAddress(new byte[] { 0, 0, 0, 0 }),
+            address.getPort()));
         while (true) {
           try {
             try {
@@ -377,7 +382,7 @@ public class SubServerSocketFactory {
 
         @Override
         public String toString() {
-          return "channel from " + sock.getInetAddress() + " to \""
+          return "channel from " + sock.socket().getInetAddress() + " to \""
               + ConnectionQueue.this.toString() + "\"";
         }
       }

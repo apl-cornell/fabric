@@ -3,7 +3,7 @@ package fabric.common.net.handshake;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.net.Socket;
+import java.nio.channels.SocketChannel;
 import java.util.logging.Level;
 
 import fabric.common.Logging;
@@ -20,8 +20,8 @@ import fabric.worker.remote.RemoteWorker;
  *
  * @param <Node> the type of node at the remote endpoint.
  */
-public class HandshakeBogus<Node extends RemoteNode<Node>> implements
-Protocol<Node> {
+public class HandshakeBogus<Node extends RemoteNode<Node>>
+    implements Protocol<Node> {
 
   // /////////////////////////////
   // Protocol
@@ -79,30 +79,32 @@ Protocol<Node> {
   }
 
   @Override
-  public ShakenSocket<Node> initiate(Node node, Socket s) throws IOException {
-    DataInputStream in = new DataInputStream(s.getInputStream());
-    DataOutputStream out = new DataOutputStream(s.getOutputStream());
+  public ShakenSocket<Node> initiate(Node node, SocketChannel s)
+      throws IOException {
+    DataInputStream in = new DataInputStream(s.socket().getInputStream());
+    DataOutputStream out = new DataOutputStream(s.socket().getOutputStream());
 
     out.writeUTF(node.name);
     out.writeUTF(Worker.getWorker().getName());
     writePrincipal(out);
 
-    return new ShakenSocket<>(node.name, new RemoteIdentity<>(node,
-        readPrincipal(in)), s);
+    return new ShakenSocket<>(node.name,
+        new RemoteIdentity<>(node, readPrincipal(in)), s);
   }
 
   @Override
-  public ShakenSocket<RemoteWorker> receive(Socket s) throws IOException {
-    DataInputStream in = new DataInputStream(s.getInputStream());
-    DataOutputStream out = new DataOutputStream(s.getOutputStream());
+  public ShakenSocket<RemoteWorker> receive(SocketChannel s)
+      throws IOException {
+    DataInputStream in = new DataInputStream(s.socket().getInputStream());
+    DataOutputStream out = new DataOutputStream(s.socket().getOutputStream());
 
     String name = in.readUTF();
     String remoteWorkerName = in.readUTF();
     writePrincipal(out);
 
     RemoteWorker remoteWorker = Worker.getWorker().getWorker(remoteWorkerName);
-    return new ShakenSocket<>(name, new RemoteIdentity<>(remoteWorker,
-        readPrincipal(in)), s);
+    return new ShakenSocket<>(name,
+        new RemoteIdentity<>(remoteWorker, readPrincipal(in)), s);
   }
 
   private void writePrincipal(DataOutputStream out) throws IOException {

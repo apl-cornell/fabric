@@ -1,6 +1,7 @@
 package fabric.common.net;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -11,7 +12,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class Pipe {
 
-  private final BlockingQueue<byte[]> queue;
+  private final BlockingQueue<ByteBuffer> queue;
   private final AtomicInteger bytesInQueue;
 
   private InputStream inputStream;
@@ -35,21 +36,20 @@ public class Pipe {
 
   public class InputStream extends java.io.InputStream {
     private boolean isClosed;
-    private byte[] curBuf;
-    private int readPos;
+    private ByteBuffer curBuf;
 
     private InputStream() {
       this.isClosed = false;
       this.curBuf = null;
-      this.readPos = 0;
     }
 
     @Override
     public int read() throws IOException {
       if (waitForBytes() < 1) return -1;
 
-      int result = curBuf[readPos] & 0xff;
-      seek(1);
+      int result = curBuf.get() & 0xff;
+      // Re-establish invariants.
+      seek(0);
       return result;
     }
 
@@ -69,11 +69,11 @@ public class Pipe {
       int lenCopied = 0;
 
       while (lenCopied != result) {
-        int bytesToCopy = Math.min(result - lenCopied, curBuf.length - readPos);
-        System.arraycopy(curBuf, readPos, b, off, bytesToCopy);
+        int bytesToCopy = Math.min(result - lenCopied, curBuf.remaining());
+        curBuf.get(b, off, bytesToCopy);
 
         // Re-establish invariants.
-        seek(bytesToCopy);
+        seek(0);
         off += bytesToCopy;
         lenCopied += bytesToCopy;
       }
@@ -97,13 +97,7 @@ public class Pipe {
     public int available() throws IOException {
       ensureOpen();
 
-      int availableInCurBuf;
-      if (curBuf == null) {
-        availableInCurBuf = 0;
-      } else {
-        availableInCurBuf = curBuf.length - readPos;
-      }
-
+      int availableInCurBuf = curBuf == null ? 0 : curBuf.remaining();
       return availableInCurBuf + bytesInQueue.get();
     }
 
@@ -115,23 +109,24 @@ public class Pipe {
     /**
      * Seeks over the next <code>length</code> bytes. It is assumed that length
      * ≤ available() and curBuf != null. If length &lt; available, ensures the
-     * next byte to read is curBuf[readPos].
+     * next byte to read is at curBuf's current position.
      */
     private void seek(long length) throws IOException {
       final long bytesRemaining = available() - length;
-      readPos += length;
 
-      while (readPos > curBuf.length) {
-        readPos -= curBuf.length;
+      while (length > curBuf.remaining()) {
+        length -= curBuf.remaining();
         dequeue();
       }
 
       // Dequeue again if we're at the end of curBuf and there are more bytes
       // available.
-      if (readPos == curBuf.length && bytesRemaining > 0) {
-        readPos = 0;
+      if (length == curBuf.remaining() && bytesRemaining > 0) {
+        length = 0;
         dequeue();
       }
+
+      curBuf.position((int) length + curBuf.position());
     }
 
     /**
@@ -141,8 +136,8 @@ public class Pipe {
       try {
         do {
           curBuf = queue.take();
-        } while (curBuf.length == 0);
-        bytesInQueue.addAndGet(-curBuf.length);
+        } while (!curBuf.hasRemaining());
+        bytesInQueue.addAndGet(-curBuf.remaining());
       } catch (InterruptedException e) {
         throw new IOException("Blocked read was interrupted");
       }
@@ -151,7 +146,7 @@ public class Pipe {
     /**
      * Blocks until at least one byte is available to be read or the end of
      * stream is reached (i.e., the corresponding output stream is closed).
-     * Ensures the next byte to read (if any) is curBuf[readPos].
+     * Ensures the next byte to read (if any) is curBuf's current position.
      *
      * @return
      *          The number of bytes available to be read without blocking. If
@@ -164,9 +159,9 @@ public class Pipe {
       while (true) {
         int available = available();
         if (available > 0) {
-          // Bytes are available. Ensure curBuf[readPos] is the next one.
-          if (curBuf == null || readPos == curBuf.length) {
-            readPos = 0;
+          // Bytes are available. Ensure the next available byte is at curBuf's
+          // current position.
+          if (curBuf == null || !curBuf.hasRemaining()) {
             dequeue();
           }
           return available;
@@ -176,8 +171,9 @@ public class Pipe {
 
         try {
           curBuf = queue.take();
-          if (curBuf.length > 0) bytesInQueue.addAndGet(-curBuf.length);
-          readPos = 0;
+          if (curBuf.hasRemaining()) {
+            bytesInQueue.addAndGet(-curBuf.remaining());
+          }
         } catch (InterruptedException e) {
           throw new IOException("Blocked read was interrupted");
         }
@@ -205,15 +201,15 @@ public class Pipe {
      * Enqueues the given buffer to be read by the corresponding reader. The
      * caller should not modify the buffer after calling this method.
      */
-    public void write(byte[] b) throws IOException {
+    public void write(ByteBuffer b) throws IOException {
       ensureOpen();
-      bytesInQueue.addAndGet(b.length);
+      bytesInQueue.addAndGet(b.remaining());
       queue.add(b);
     }
 
     public void close() {
       isClosed = true;
-      queue.add(new byte[0]);
+      queue.add(ByteBuffer.allocate(0));
     }
 
     /**

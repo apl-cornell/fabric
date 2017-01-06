@@ -7,6 +7,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.nio.channels.SocketChannel;
 import java.security.GeneralSecurityException;
 import java.security.Principal;
 import java.security.PrivateKey;
@@ -46,8 +47,8 @@ import fabric.worker.remote.RemoteWorker;
  * @see https://apl.cs.cornell.edu/wiki/Fabric:Fabric_Communication_Layer
  * @author mdgeorge
  */
-public class HandshakeAuthenticated<Node extends RemoteNode<Node>> implements
-    Protocol<Node> {
+public class HandshakeAuthenticated<Node extends RemoteNode<Node>>
+    implements Protocol<Node> {
 
   // ////////////////////////////////////////////////////////////////////////////
   // //
@@ -97,15 +98,15 @@ public class HandshakeAuthenticated<Node extends RemoteNode<Node>> implements
   }
 
   @Override
-  public ShakenSocket<Node> initiate(Node remoteNode, Socket s)
+  public ShakenSocket<Node> initiate(Node remoteNode, SocketChannel s)
       throws IOException {
-    DataOutputStream clearOut = new DataOutputStream(s.getOutputStream());
+    DataOutputStream clearOut =
+        new DataOutputStream(s.socket().getOutputStream());
     clearOut.writeUTF(remoteNode.name);
     clearOut.flush();
 
-    SSLSocket sock =
-        (SSLSocket) initiatorFactory.createSocket(s, remoteNode.name,
-            s.getPort(), true);
+    SSLSocket sock = (SSLSocket) initiatorFactory.createSocket(s,
+        remoteNode.name, s.socket().getPort(), true);
     sock.setUseClientMode(true);
     sock.setNeedClientAuth(true);
     Logging.log(Logging.TIMING_LOGGER, Level.INFO,
@@ -136,9 +137,8 @@ public class HandshakeAuthenticated<Node extends RemoteNode<Node>> implements
     String name = in.readUTF();
     Receiver receiver = receivers.get(name);
 
-    if (null == receiver)
-      throw new IOException("Connection destined for non-listening server "
-          + name);
+    if (null == receiver) throw new IOException(
+        "Connection destined for non-listening server " + name);
 
     SSLSocket sock =
         (SSLSocket) receiver.factory.createSocket(s, name, s.getPort(), true);

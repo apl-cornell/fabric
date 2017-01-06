@@ -3,7 +3,9 @@ package fabric.common.net;
 import static fabric.common.Logging.NETWORK_CONNECTION_LOGGER;
 
 import java.io.IOException;
-import java.net.Socket;
+import java.net.InetSocketAddress;
+import java.net.StandardSocketOptions;
+import java.nio.channels.SocketChannel;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -83,9 +85,10 @@ public final class SubSocketFactory<Node extends RemoteNode<Node>> {
             "establishing new connection to \"{0}\"", node.name);
         SocketAddress addr = nameService.resolve(node.name, portType);
 
-        Socket s = new Socket(addr.getAddress(), addr.getPort());
-        s.setSoLinger(false, 0);
-        s.setTcpNoDelay(true);
+        SocketChannel s = SocketChannel
+            .open(new InetSocketAddress(addr.getAddress(), addr.getPort()));
+        s.setOption(StandardSocketOptions.SO_LINGER, -1);
+        s.setOption(StandardSocketOptions.TCP_NODELAY, true);
 
         result = new ClientChannel(node, s, maxOpenConnectionsPerChannel);
         channels.put(node.name, result);
@@ -117,7 +120,7 @@ public final class SubSocketFactory<Node extends RemoteNode<Node>> {
     /**
      * @param host the host at the remote endpoint.
      */
-    public ClientChannel(Node host, Socket s, int maxOpenConnections)
+    public ClientChannel(Node host, SocketChannel s, int maxOpenConnections)
         throws IOException {
       super(protocol.initiate(host, s), maxOpenConnections);
 
