@@ -11,7 +11,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.SecureRandom;
-import java.security.Security;
 import java.security.Signature;
 import java.security.cert.CertPath;
 import java.security.cert.CertPathValidator;
@@ -36,7 +35,6 @@ import javax.naming.InvalidNameException;
 import javax.naming.ldap.LdapName;
 
 import org.bouncycastle.asn1.x509.X509Name;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.x509.X509V3CertificateGenerator;
 
 import fabric.common.exceptions.InternalError;
@@ -61,7 +59,6 @@ public final class Crypto {
   private static final SecureRandom random = new SecureRandom();
 
   static {
-    Security.addProvider(new BouncyCastleProvider());
     secretKeyGen = secretKeyGenInstance();
     publicKeyGen = publicKeyGenInstance();
   }
@@ -168,7 +165,6 @@ public final class Crypto {
   public static void validateCertificateChain(Certificate[] certificateChain,
       Set<TrustAnchor> trustStore) throws GeneralSecurityException {
     PKIXParameters params = new PKIXParameters(trustStore);
-    params.setSigProvider(BouncyCastleProvider.PROVIDER_NAME);
     params.setRevocationEnabled(false);
     CertificateFactory certFactory = CertificateFactory.getInstance("X509");
     CertPath certPath =
