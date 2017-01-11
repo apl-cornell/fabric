@@ -9,6 +9,7 @@ import java.security.KeyPairGenerator;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
+import java.security.Provider;
 import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.Signature;
@@ -56,11 +57,13 @@ public final class Crypto {
 
   private static final KeyGenerator secretKeyGen;
   private static final KeyPairGenerator publicKeyGen;
+  private static final Provider sigProvider;
   private static final SecureRandom random = new SecureRandom();
 
   static {
     secretKeyGen = secretKeyGenInstance();
     publicKeyGen = publicKeyGenInstance();
+    sigProvider = signatureInstance().getProvider();
   }
 
   public static MessageDigest digestInstance() {
@@ -165,6 +168,7 @@ public final class Crypto {
   public static void validateCertificateChain(Certificate[] certificateChain,
       Set<TrustAnchor> trustStore) throws GeneralSecurityException {
     PKIXParameters params = new PKIXParameters(trustStore);
+    params.setSigProvider(sigProvider.getName());
     params.setRevocationEnabled(false);
     CertificateFactory certFactory = CertificateFactory.getInstance("X509");
     CertPath certPath =
@@ -179,7 +183,7 @@ public final class Crypto {
    */
   public static X509Certificate createCertificate(String subjectName,
       PublicKey subjectKey, String issuerName, PrivateKey issuerKey)
-          throws GeneralSecurityException {
+      throws GeneralSecurityException {
 
     Calendar expiry = Calendar.getInstance();
     expiry.add(Calendar.YEAR, 1);
@@ -189,7 +193,7 @@ public final class Crypto {
     certGen.setSerialNumber(BigInteger.valueOf(System.currentTimeMillis()));
     certGen.setIssuerDN(new X509Name("CN=" + issuerName));
     certGen.setSubjectDN(new X509Name("CN=" + subjectName));
-    certGen.setSignatureAlgorithm("SHA1withRSA");
+    certGen.setSignatureAlgorithm(ALG_SIGNATURE);
     certGen.setPublicKey(subjectKey);
     certGen.setNotBefore(new Date(System.currentTimeMillis()));
     certGen.setNotAfter(expiry.getTime());
