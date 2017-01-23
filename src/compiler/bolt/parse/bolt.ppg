@@ -1,0 +1,150 @@
+include "polyglot/ext/jl7/parse/jl7.ppg"
+
+package bolt.parse;
+
+parser Grm extends polyglot.ext.jl7.parse.Grm {:
+  public Grm(Lexer l, TypeSystem t, NodeFactory n, ErrorQueue q) {
+    super(l, t, n, q);
+  }
+:};
+
+terminal token ATOMIC;
+terminal token JAVA;
+terminal token LABEL;
+terminal token PRINCIPAL;
+
+terminal token TOP;
+terminal token BOTTOM;
+terminal token LEFTARROW;
+terminal token RIGHTARROW;
+terminal token JOIN;
+terminal token MEET;
+terminal token ACTSFOR;
+terminal token EQUIV;
+terminal token INFO_LTEQ;
+terminal token TRUST_GTEQ;
+
+non terminal LabelNode label;
+non terminal List<LabelComponentNode> label_join_component_list;
+non terminal List<LabelComponentNode> label_meet_component_list;
+non terminal LabelComponentNode label_component;
+non terminal PolicyNode label_component_policy;
+
+non terminal List<PrincipalNode> principal_list_opt, principal_list;
+non terminal PrincipalNode principal;
+non terminal PrincipalNode principal_disjunctive;
+non terminal PrincipalNode principal_conjunctive;
+non terminal PrincipalNode principal_base;
+non terminal Token leftarrow, rightarrow;
+non terminal Expr access_path;
+non terminal Expr access_path_receiver;
+
+start with goal;
+
+// Labels
+label ::=
+    // LabelNode
+    LBRACE:x RBRACE:y
+  | LBRACE:x label_join_component_list:a RBRACE:y
+  ;
+
+// List of label components to be joined together.
+label_join_component_list ::=
+    // List<LabelComponentNode>
+    label_meet_component_list
+  | label_join_component_list JOIN label_meet_component_list
+  | label_join_component_list SEMICOLON label_meet_component_list
+  ;
+
+// List of label components to be meeted together.
+label_meet_component_list ::=
+    // List<LabelComponentNode>
+    label_component
+  | label_meet_component_list MEET label_component
+  ;
+
+label_component ::=
+    // LabelComponentNode
+    label_component_policy
+  | THIS
+  | IDENTIFIER
+  ;
+
+leftarrow ::=
+    LEFTARROW
+  | LT MINUS
+  ;
+
+rightarrow ::=
+    RIGHTARROW
+  | MINUS GT
+  ;
+
+label_component_policy ::=
+    // PolicyNode
+    principal rightarrow principal_list_opt
+  | principal leftarrow principal_list_opt
+  ;
+
+// Optional list of principals. Meaning of the list is context-dependent.
+principal_list_opt ::=
+    // List<PrincipalNode>
+  | principal_list
+  ;
+
+// List of principals. Meaning of the list is context-dependent.
+principal_list ::=
+    // List<PrincipalList>
+    principal
+  | principal_list COMMA principal
+  ;
+
+// Principals.
+principal ::=
+    // PrincipalNode
+    principal_disjunctive
+  ;
+
+// Disjunctive principals.
+principal_disjunctive ::=
+    // PrincipalNode
+    principal_conjunctive
+  | principal_disjunctive OR principal_conjunctive
+  ;
+
+// Conjunctive principals.
+principal_conjunctive ::=
+    // PrincipalNode
+    principal_base
+  | principal_conjunctive AND principal_base
+  ;
+
+// Base principals.
+principal_base ::=
+    // PrincipalNode
+    MULT // Top principal.
+  | TOP // Top principal.
+  | BOTTOM // Bottom principal.
+  | LBRACK expression RBRACK
+  | LPAREN principal RPAREN
+  | access_path
+  ;
+
+// Dotted sequence of identifiers/thises.
+access_path ::=
+    // Expr
+    THIS
+  | IDENTIFIER
+  | access_path_receiver DOT IDENTIFIER
+  ;
+
+access_path_receiver ::=
+    THIS
+  | IDENTIFIER
+  | access_path_receiver DOT IDENTIFIER
+  ;
+
+extend field_declaration ::=
+    modifiers_or_annotations_opt type label variable_declarators SEMICOLON
+  ;
+
