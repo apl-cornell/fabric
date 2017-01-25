@@ -37,15 +37,15 @@ non terminal PrincipalNode principal_conjunctive;
 non terminal PrincipalNode principal_base;
 non terminal Token leftarrow, rightarrow;
 non terminal Expr access_path;
-non terminal Expr access_path_receiver;
+non terminal Expr location_expr;
 
 start with goal;
 
 // Labels
 label ::=
     // LabelNode
-    LBRACE:x RBRACE:y
-  | LBRACE:x label_join_component_list:a RBRACE:y
+    LBRACE RBRACE
+  | LBRACE label_join_component_list RBRACE
   ;
 
 // List of label components to be joined together.
@@ -66,8 +66,9 @@ label_meet_component_list ::=
 label_component ::=
     // LabelComponentNode
     label_component_policy
-  | THIS
-  | IDENTIFIER
+  | access_path
+  | label
+  | LBRACK expression RBRACK
   ;
 
 leftarrow ::=
@@ -130,21 +131,111 @@ principal_base ::=
   | access_path
   ;
 
-// Dotted sequence of identifiers/thises.
+// Dotted sequence of identifiers/'this'es.
 access_path ::=
     // Expr
     THIS
   | IDENTIFIER
-  | access_path_receiver DOT IDENTIFIER
+  | access_path DOT IDENTIFIER
+  | access_path DOT THIS
   ;
 
-access_path_receiver ::=
-    THIS
-  | IDENTIFIER
-  | access_path_receiver DOT IDENTIFIER
-  ;
-
+// Field declarations can have labels.
 extend field_declaration ::=
     modifiers_or_annotations_opt type label variable_declarators SEMICOLON
   ;
 
+location_expr ::=
+    // Expr
+    AT access_path
+  | AT LPAREN expression RPAREN
+  ;
+
+// Expressions for constructing labels and principals.
+extend primary ::=
+    NEW LABEL label
+  | NEW location_expr LABEL label
+  | NEW PRINCIPAL LPAREN principal RPAREN
+  | NEW location_expr PRINCIPAL LPAREN principal RPAREN
+  ;
+
+// Constructor calls can have location annotations.
+extend class_instance_creation_expression ::=
+    NEW location_expr class_or_interface_type LPAREN argument_list_opt RPAREN
+    class_body_opt
+  | NEW location_expr type_arguments class_or_interface_type LPAREN
+    argument_list_opt RPAREN class_body_opt
+      // Instantiating type arguments
+  | primary DOT NEW location_expr type_arguments_opt IDENTIFIER LPAREN
+    argument_list_opt RPAREN class_body_opt
+      // Instantiating type arguments
+  | name DOT NEW location_expr type_arguments_opt IDENTIFIER LPAREN
+    argument_list_opt RPAREN class_body_opt
+      // Instantiating type arguments
+  | primary DOT NEW location_expr type_arguments_opt IDENTIFIER type_arguments
+    LPAREN argument_list_opt RPAREN class_body_opt
+      // Instantiating type arguments
+  | name DOT NEW location_expr type_arguments_opt IDENTIFIER type_arguments
+    LPAREN argument_list_opt RPAREN class_body_opt
+      // Instantiating type arguments
+  | NEW location_expr class_or_interface LT GT LPAREN argument_list_opt RPAREN
+    class_body_opt
+  | NEW location_expr type_arguments class_or_interface LT GT LPAREN
+    argument_list_opt RPAREN class_body_opt
+      // Instantiating type arguments
+  | primary DOT NEW location_expr type_arguments_opt IDENTIFIER LT GT LPAREN
+    argument_list_opt RPAREN class_body_opt
+      // Instantiating type arguments
+  | name DOT NEW location_expr type_arguments_opt IDENTIFIER LT GT LPAREN
+    argument_list_opt RPAREN class_body_opt
+      // Instantiating type arguments
+  ;
+
+// Array creation expressions can have location annotations.
+extend array_creation_expression ::=
+    // NewArray
+    NEW location_expr primitive_type dim_exprs dims_opt
+  | NEW location_expr class_or_interface_type dim_exprs dims_opt
+  ;
+
+// Array creation expressions can have location annotations and must have
+// labels.
+extend initialized_array_creation_expression ::=
+    NEW location_expr primitive_type dims label array_initializer
+  | NEW location_expr primitive_type dims access_path array_initializer
+  | NEW location_expr primitive_type dims LPAREN expression RPAREN
+    array_initializer
+  | NEW location_expr class_or_interface_type dims label array_initializer
+  | NEW location_expr class_or_interface_type dims access_path array_initializer
+  | NEW location_expr class_or_interface_type dims LPAREN expression RPAREN
+    array_initializer
+  ;
+
+// Array dimension expressions must specify a label for the array.
+override dim_expr ::=
+    LBRACK expression COMMA expression RBRACK
+  ;
+
+// Atomic blocks.
+extend statement_without_trailing_substatement ::=
+    // Stmt
+    ATOMIC block
+  | ATOMIC THROWS class_type_list block
+  ;
+
+// Method invocations can have location annotations.
+extend method_invocation ::=
+    // Call
+    name location_expr LPAREN argument_list_opt RPAREN
+  | primary DOT IDENTIFIER location_expr LPAREN argument_list_opt RPAREN
+  | SUPER DOT IDENTIFIER location_expr LPAREN argument_list_opt RPAREN
+  | name DOT SUPER DOT IDENTIFIER location_expr LPAREN argument_list_opt RPAREN
+  | primary DOT type_arguments IDENTIFIER location_expr LPAREN
+    argument_list_opt RPAREN
+  | name DOT type_arguments IDENTIFIER location_expr LPAREN argument_list_opt
+    RPAREN
+  | SUPER DOT type_arguments IDENTIFIER location_expr LPAREN argument_list_opt
+    RPAREN
+  | name DOT SUPER DOT type_arguments IDENTIFIER location_expr LPAREN
+    argument_list_opt RPAREN
+  ;
