@@ -200,11 +200,17 @@ extend array_creation_expression ::=
 
 // Array creation expressions can have location annotations and must have
 // labels.
-extend initialized_array_creation_expression ::=
-    NEW location_expr primitive_type dims label array_initializer
+override initialized_array_creation_expression ::=
+    NEW primitive_type dims label array_initializer
+  | NEW primitive_type dims access_path array_initializer
+  | NEW primitive_type dims LPAREN expression RPAREN array_initializer
+  | NEW location_expr primitive_type dims label array_initializer
   | NEW location_expr primitive_type dims access_path array_initializer
   | NEW location_expr primitive_type dims LPAREN expression RPAREN
     array_initializer
+  | NEW class_or_interface_type dims label array_initializer
+  | NEW class_or_interface_type dims access_path array_initializer
+  | NEW class_or_interface_type dims LPAREN expression RPAREN array_initializer
   | NEW location_expr class_or_interface_type dims label array_initializer
   | NEW location_expr class_or_interface_type dims access_path array_initializer
   | NEW location_expr class_or_interface_type dims LPAREN expression RPAREN
