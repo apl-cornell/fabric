@@ -41,6 +41,10 @@ non terminal Expr location_expr;
 
 start with goal;
 
+/************************************
+ * Labels
+ ************************************/
+
 // Labels
 label ::=
     // LabelNode
@@ -100,6 +104,10 @@ principal_list ::=
   | principal_list COMMA principal
   ;
 
+/************************************
+ * Principals
+ ************************************/
+
 // Principals.
 principal ::=
     // PrincipalNode
@@ -140,16 +148,18 @@ access_path ::=
   | access_path DOT THIS
   ;
 
+/************************************
+ * Field declarations
+ ************************************/
+
 // Field declarations can have labels.
 extend field_declaration ::=
     modifiers_or_annotations_opt type label variable_declarators SEMICOLON
   ;
 
-location_expr ::=
-    // Expr
-    AT access_path
-  | AT LPAREN expression RPAREN
-  ;
+/************************************
+ * Label/principal construction
+ ************************************/
 
 // Expressions for constructing labels and principals.
 extend primary ::=
@@ -158,6 +168,16 @@ extend primary ::=
   | NEW PRINCIPAL LPAREN principal RPAREN
   | NEW location_expr PRINCIPAL LPAREN principal RPAREN
   ;
+
+location_expr ::=
+    // Expr
+    AT access_path
+  | AT LPAREN expression RPAREN
+  ;
+
+/************************************
+ * Constructor calls
+ ************************************/
 
 // Constructor calls can have location annotations.
 extend class_instance_creation_expression ::=
@@ -191,43 +211,9 @@ extend class_instance_creation_expression ::=
       // Instantiating type arguments
   ;
 
-// Array creation expressions can have location annotations.
-extend array_creation_expression ::=
-    // NewArray
-    NEW location_expr primitive_type dim_exprs dims_opt
-  | NEW location_expr class_or_interface_type dim_exprs dims_opt
-  ;
-
-// Array creation expressions can have location annotations and must have
-// labels.
-override initialized_array_creation_expression ::=
-    NEW primitive_type dims label array_initializer
-  | NEW primitive_type dims access_path array_initializer
-  | NEW primitive_type dims LPAREN expression RPAREN array_initializer
-  | NEW location_expr primitive_type dims label array_initializer
-  | NEW location_expr primitive_type dims access_path array_initializer
-  | NEW location_expr primitive_type dims LPAREN expression RPAREN
-    array_initializer
-  | NEW class_or_interface_type dims label array_initializer
-  | NEW class_or_interface_type dims access_path array_initializer
-  | NEW class_or_interface_type dims LPAREN expression RPAREN array_initializer
-  | NEW location_expr class_or_interface_type dims label array_initializer
-  | NEW location_expr class_or_interface_type dims access_path array_initializer
-  | NEW location_expr class_or_interface_type dims LPAREN expression RPAREN
-    array_initializer
-  ;
-
-// Array dimension expressions must specify a label for the array.
-override dim_expr ::=
-    LBRACK expression COMMA expression RBRACK
-  ;
-
-// Atomic blocks.
-extend statement_without_trailing_substatement ::=
-    // Stmt
-    ATOMIC block
-  | ATOMIC THROWS class_type_list block
-  ;
+/************************************
+ * Method calls
+ ************************************/
 
 // Method invocations can have location annotations.
 extend method_invocation ::=
@@ -244,4 +230,59 @@ extend method_invocation ::=
     RPAREN
   | name DOT SUPER DOT type_arguments IDENTIFIER location_expr LPAREN
     argument_list_opt RPAREN
+  ;
+
+/************************************
+ * Arrays
+ ************************************/
+
+// Native arrays in variable declarations: "int foo native[]".
+extend variable_declarator_id ::=
+    variable_declarator_id NATIVE LBRACK RBRACK
+  ;
+
+// Native array types: "int native[]".
+extend dims ::=
+    NATIVE LBRACK RBRACK
+  ;
+
+// Native array initializers: "int native[5]".
+// Fabric array initializers specify a label for the array: "int [5, L]".
+override dim_expr ::=
+    NATIVE LBRACK expression RBRACK
+  | LBRACK expression COMMA expression RBRACK
+  ;
+
+// Array creation expressions can have location annotations.
+extend array_creation_expression ::=
+    // NewArray
+    NEW location_expr primitive_type dim_exprs dims_opt
+  | NEW location_expr class_or_interface_type dim_exprs dims_opt
+  ;
+
+// Array creation expressions with initializers can have location annotations.
+extend initialized_array_creation_expression ::=
+    NEW location_expr primitive_type dims array_initializer
+  | NEW location_expr class_or_interface_type dims array_initializer
+  ;
+
+// Array initializers can have location annotations and can have labels.
+extend array_initializer ::=
+    LBRACE expression COLON variable_initializers COMMA RBRACE
+  | location_expr LBRACE variable_initializers COMMA RBRACE
+  | location_expr LBRACE expression COLON variable_initializers COMMA RBRACE
+  | LBRACE expression COLON variable_initializers RBRACE
+  | location_expr LBRACE variable_initializers RBRACE
+  | location_expr LBRACE expression COLON variable_initializers RBRACE
+  ;
+
+/************************************
+ * Atomic blocks
+ ************************************/
+
+// Atomic blocks.
+extend statement_without_trailing_substatement ::=
+    // Stmt
+    ATOMIC block
+  | ATOMIC THROWS class_type_list block
   ;
