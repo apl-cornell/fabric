@@ -125,7 +125,6 @@ import java.util.Set;
 
         /* Fabric-specific keywords */
         keywords.put("atomic",        sym.ATOMIC);
-        keywords.put("java",     sym.JAVA);
     }
 
     @Override
