@@ -39,6 +39,8 @@ non terminal Token leftarrow, rightarrow;
 non terminal Expr access_path;
 non terminal Expr location_expr;
 
+non terminal ConstructorCall explicit_super_constructor_invocation;
+
 start with goal;
 
 /************************************
@@ -285,4 +287,39 @@ extend statement_without_trailing_substatement ::=
     // Stmt
     ATOMIC block
   | ATOMIC THROWS class_type_list block
+  ;
+
+/************************************
+ * Constructor bodies
+ ************************************/
+
+// Constructor bodies can have super() calls in the middle.
+extend constructor_body ::=
+    LBRACE block_statements explicit_super_constructor_invocation RBRACE
+  | LBRACE block_statements explicit_super_constructor_invocation
+    block_statements RBRACE
+  ;
+
+drop {
+  explicit_constructor_invocation ::=
+      SUPER LPAREN argument_list_opt RPAREN SEMICOLON
+    | primary DOT SUPER LPAREN argument_list_opt RPAREN SEMICOLON
+    | type_arguments SUPER LPAREN argument_list_opt RPAREN SEMICOLON
+    | primary DOT type_arguments SUPER LPAREN argument_list_opt RPAREN SEMICOLON
+    | name DOT SUPER LPAREN argument_list_opt RPAREN SEMICOLON
+    | name DOT type_arguments SUPER LPAREN argument_list_opt RPAREN SEMICOLON
+    ;
+}
+
+extend explicit_constructor_invocation ::=
+    explicit_super_constructor_invocation
+  ;
+
+explicit_super_constructor_invocation ::=
+    SUPER LPAREN argument_list_opt RPAREN SEMICOLON
+  | primary DOT SUPER LPAREN argument_list_opt RPAREN SEMICOLON
+  | type_arguments SUPER LPAREN argument_list_opt RPAREN SEMICOLON
+  | primary DOT type_arguments SUPER LPAREN argument_list_opt RPAREN SEMICOLON
+  | name DOT SUPER LPAREN argument_list_opt RPAREN SEMICOLON
+  | name DOT type_arguments SUPER LPAREN argument_list_opt RPAREN SEMICOLON
   ;
