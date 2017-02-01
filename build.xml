@@ -371,6 +371,16 @@
     </antcall>
   </target>
 
+  <!-- Compiles the Bolt compiler -->
+  <target name="bolt-compiler" depends="init,fabil-compiler,bootstrap"
+      description="Builds the Bolt compiler">
+    <antcall target="standard-ext">
+      <param name="ext" value="bolt" />
+      <param name="ext.pkg" value="bolt" />
+      <param name="parser.type" value="ppg" />
+    </antcall>
+  </target>
+
   <!-- Compiles the FabIL compiler -->
   <target name="fabil-compiler" depends="init,bootstrap,native,eclipse"
       description="Builds the FabIL compiler">
