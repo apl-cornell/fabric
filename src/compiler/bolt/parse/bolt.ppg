@@ -2,9 +2,18 @@ include "polyglot/ext/jl7/parse/jl7.ppg"
 
 package bolt.parse;
 
+import bolt.ast.BoltNodeFactory;
+import bolt.ast.Label;
+import bolt.ast.LabelComponent;
+import bolt.ast.Policy;
+import bolt.ast.Principal;
+
 parser Grm extends polyglot.ext.jl7.parse.Grm {:
+  public final BoltNodeFactory nf;
+
   public Grm(Lexer l, TypeSystem t, NodeFactory n, ErrorQueue q) {
     super(l, t, n, q);
+    this.nf = (BoltNodeFactory) n;
   }
 :};
 
@@ -24,17 +33,17 @@ terminal token EQUIV;
 terminal token INFO_LTEQ;
 terminal token TRUST_GTEQ;
 
-non terminal LabelNode label;
-non terminal List<LabelComponentNode> label_join_component_list;
-non terminal List<LabelComponentNode> label_meet_component_list;
-non terminal LabelComponentNode label_component;
-non terminal PolicyNode label_component_policy;
+non terminal Label label;
+non terminal List<LabelComponent> label_join_component_list;
+non terminal List<LabelComponent> label_meet_component_list;
+non terminal LabelComponent label_component;
+non terminal Policy label_component_policy;
 
-non terminal List<PrincipalNode> principal_list_opt, principal_list;
-non terminal PrincipalNode principal;
-non terminal PrincipalNode principal_disjunctive;
-non terminal PrincipalNode principal_conjunctive;
-non terminal PrincipalNode principal_base;
+non terminal List<Principal> principal_opt;
+non terminal Principal principal;
+non terminal Principal principal_disjunctive;
+non terminal Principal principal_conjunctive;
+non terminal Principal principal_base;
 non terminal Token leftarrow, rightarrow;
 non terminal Expr access_path;
 non terminal Expr location_expr;
@@ -49,14 +58,18 @@ start with goal;
 
 // Labels
 label ::=
-    // LabelNode
-    LBRACE RBRACE
-  | LBRACE label_join_component_list RBRACE
+    // Label
+    LBRACE:x RBRACE:y {:
+      RESULT = parser.nf.emptyLabel(parser.pos(x, y));
+    :}
+  | LBRACE:x label_join_component_list:a RBRACE:y {:
+      RESULT = parser.nf.JoinLabel(parser.pos(x, y), a);
+    :}
   ;
 
 // List of label components to be joined together.
 label_join_component_list ::=
-    // List<LabelComponentNode>
+    // List<LabelComponent>
     label_meet_component_list
   | label_join_component_list JOIN label_meet_component_list
   | label_join_component_list SEMICOLON label_meet_component_list
@@ -64,13 +77,13 @@ label_join_component_list ::=
 
 // List of label components to be meeted together.
 label_meet_component_list ::=
-    // List<LabelComponentNode>
+    // List<LabelComponent>
     label_component
   | label_meet_component_list MEET label_component
   ;
 
 label_component ::=
-    // LabelComponentNode
+    // LabelComponent
     label_component_policy
   | access_path
   | label
@@ -88,23 +101,23 @@ rightarrow ::=
   ;
 
 label_component_policy ::=
-    // PolicyNode
-    principal rightarrow principal_list_opt
-  | principal leftarrow principal_list_opt
+    // Policy
+    principal rightarrow principal_opt
+  | principal leftarrow principal_opt
   ;
 
-// Optional list of principals. Meaning of the list is context-dependent.
-principal_list_opt ::=
-    // List<PrincipalNode>
-  | principal_list
+principal_opt ::=
+    // Principal
+  | principal
   ;
 
-// List of principals. Meaning of the list is context-dependent.
-principal_list ::=
-    // List<PrincipalList>
-    principal
-  | principal_list COMMA principal
-  ;
+/************************************
+ * Principals
+ ************************************/
+
+/************************************
+ * Principals
+ ************************************/
 
 /************************************
  * Principals
@@ -112,27 +125,27 @@ principal_list ::=
 
 // Principals.
 principal ::=
-    // PrincipalNode
+    // Principal
     principal_disjunctive
   ;
 
 // Disjunctive principals.
 principal_disjunctive ::=
-    // PrincipalNode
+    // Principal
     principal_conjunctive
   | principal_disjunctive OR principal_conjunctive
   ;
 
 // Conjunctive principals.
 principal_conjunctive ::=
-    // PrincipalNode
+    // Principal
     principal_base
   | principal_conjunctive AND principal_base
   ;
 
 // Base principals.
 principal_base ::=
-    // PrincipalNode
+    // Principal
     MULT // Top principal.
   | TOP // Top principal.
   | BOTTOM // Bottom principal.
