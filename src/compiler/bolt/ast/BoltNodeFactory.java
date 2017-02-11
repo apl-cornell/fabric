@@ -2,6 +2,7 @@ package bolt.ast;
 
 import java.util.List;
 
+import polyglot.ast.Expr;
 import polyglot.ext.jl7.ast.JL7NodeFactory;
 import polyglot.util.Position;
 
@@ -17,6 +18,10 @@ public interface BoltNodeFactory extends JL7NodeFactory {
   JoinLabel JoinLabel(Position pos, LabelComponent... components);
 
   JoinLabel JoinLabel(Position pos, List<LabelComponent> components);
+
+  MeetLabel MeetLabel(Position pos, LabelComponent... components);
+
+  MeetLabel MeetLabel(Position pos, List<LabelComponent> components);
 
   /**
    * @return a confidentiality policy representing public information.
@@ -35,4 +40,6 @@ public interface BoltNodeFactory extends JL7NodeFactory {
   TopPrincipal TopPrincipal(Position pos);
 
   BottomPrincipal BottomPrincipal(Position pos);
+
+  ExprLabel ExprLabel(Position pos, Expr expr);
 }

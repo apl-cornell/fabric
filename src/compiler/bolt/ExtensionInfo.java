@@ -10,6 +10,8 @@ import bolt.parse.Grm;
 import bolt.parse.Lexer_c;
 import bolt.types.BoltTypeSystem_c;
 import polyglot.ast.NodeFactory;
+import polyglot.ext.jl5.ast.JL5ExtFactory_c;
+import polyglot.ext.jl7.ast.JL7ExtFactory_c;
 import polyglot.frontend.CupParser;
 import polyglot.frontend.Parser;
 import polyglot.frontend.Source;
@@ -51,7 +53,8 @@ public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo {
 
   @Override
   protected NodeFactory createNodeFactory() {
-    return new BoltNodeFactory_c(BoltLang_c.INSTANCE, new BoltExtFactory_c());
+    return new BoltNodeFactory_c(BoltLang_c.INSTANCE,
+        new BoltExtFactory_c(new JL7ExtFactory_c(new JL5ExtFactory_c())));
   }
 
   @Override

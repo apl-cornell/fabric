@@ -1,64 +1,68 @@
 package bolt.ast;
 
-import polyglot.ast.Ext;
-import polyglot.ext.jl7.ast.JL7ExtFactory;
-
-/**
- * Extension factory for Bolt extension.
- */
-public interface BoltExtFactory extends JL7ExtFactory {
-  /**
-   * Creates an extension object for {@link LabelComponent}.
-   */
-  Ext extLabelComponent();
-
-  /**
-   * Creates an extension object for {@link Policy}.
-   */
-  Ext extPolicy();
-
-  /**
-   * Creates an extension object for {@link ConfPolicy}.
-   */
-  Ext extConfPolicy();
-
-  /**
-   * Creates an extension object for {@link IntegPolicy}.
-   */
-  Ext extIntegPolicy();
-
-  /**
-   * Creates an extension object for {@link ReaderPolicy}.
-   */
-  Ext extReaderPolicy();
-
-  /**
-   * Creates an extension object for {@link WriterPolicy}.
-   */
-  Ext extWriterPolicy();
-
-  /**
-   * Creates an extension object for {@link Label}.
-   */
-  Ext extLabel();
-
-  /**
-   * Creates an extension object for {@link JoinLabel}.
-   */
-  Ext extJoinLabel();
-
-  /**
-   * Creates an extension object for {@link Principal}.
-   */
-  Ext extPrincipal();
-
-  /**
-   * Creates an extension object for {@link TopPrincipal}.
-   */
-  Ext extTopPrincipal();
-
-  /**
-   * Creates an extension object for {@link BottomPrincipal}.
-   */
-  Ext extBottomPrincipal();
+public interface BoltExtFactory extends polyglot.ext.jl7.ast.JL7ExtFactory {
+    /**
+     * Creates an extension object for {@link bolt.ast.BottomPrincipal}.
+     */
+    polyglot.ast.Ext extBottomPrincipal();
+    
+    /**
+     * Creates an extension object for {@link bolt.ast.ConfPolicy}.
+     */
+    polyglot.ast.Ext extConfPolicy();
+    
+    /**
+     * Creates an extension object for {@link bolt.ast.ExprLabel}.
+     */
+    polyglot.ast.Ext extExprLabel();
+    
+    /**
+     * Creates an extension object for {@link bolt.ast.IntegPolicy}.
+     */
+    polyglot.ast.Ext extIntegPolicy();
+    
+    /**
+     * Creates an extension object for {@link bolt.ast.JoinLabel}.
+     */
+    polyglot.ast.Ext extJoinLabel();
+    
+    /**
+     * Creates an extension object for {@link bolt.ast.Label}.
+     */
+    polyglot.ast.Ext extLabel();
+    
+    /**
+     * Creates an extension object for {@link bolt.ast.LabelComponent}.
+     */
+    polyglot.ast.Ext extLabelComponent();
+    
+    /**
+     * Creates an extension object for {@link bolt.ast.MeetLabel}.
+     */
+    polyglot.ast.Ext extMeetLabel();
+    
+    /**
+     * Creates an extension object for {@link bolt.ast.Policy}.
+     */
+    polyglot.ast.Ext extPolicy();
+    
+    /**
+     * Creates an extension object for {@link bolt.ast.Principal}.
+     */
+    polyglot.ast.Ext extPrincipal();
+    
+    /**
+     * Creates an extension object for {@link bolt.ast.ReaderPolicy}.
+     */
+    polyglot.ast.Ext extReaderPolicy();
+    
+    /**
+     * Creates an extension object for {@link bolt.ast.TopPrincipal}.
+     */
+    polyglot.ast.Ext extTopPrincipal();
+    
+    /**
+     * Creates an extension object for {@link bolt.ast.WriterPolicy}.
+     */
+    polyglot.ast.Ext extWriterPolicy();
 }

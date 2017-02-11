@@ -39,7 +39,7 @@ non terminal List<LabelComponent> label_meet_component_list;
 non terminal LabelComponent label_component;
 non terminal Policy label_component_policy;
 
-non terminal List<Principal> principal_opt;
+non terminal Principal principal_opt;
 non terminal Principal principal;
 non terminal Principal principal_disjunctive;
 non terminal Principal principal_conjunctive;
@@ -70,24 +70,47 @@ label ::=
 // List of label components to be joined together.
 label_join_component_list ::=
     // List<LabelComponent>
-    label_meet_component_list
-  | label_join_component_list JOIN label_meet_component_list
-  | label_join_component_list SEMICOLON label_meet_component_list
+    label_meet_component_list:a {:
+      RESULT = new ArrayList<>();
+      RESULT.add(parser.nf.MeetLabel(parser.pos(a), a));
+    :}
+  | label_join_component_list:a JOIN label_meet_component_list:b {:
+      a.add(parser.nf.MeetLabel(parser.pos(b), b));
+      RESULT = a;
+    :}
+  | label_join_component_list:a SEMICOLON label_meet_component_list:b {:
+      a.add(parser.nf.MeetLabel(parser.pos(b), b));
+      RESULT = a;
+    :}
   ;
 
 // List of label components to be meeted together.
 label_meet_component_list ::=
     // List<LabelComponent>
-    label_component
-  | label_meet_component_list MEET label_component
+    label_component:a {:
+      RESULT = new ArrayList<>();
+      RESULT.add(a);
+    :}
+  | label_meet_component_list:a MEET label_component:b {:
+      a.add(b);
+      RESULT = a;
+    :}
   ;
 
 label_component ::=
     // LabelComponent
-    label_component_policy
-  | access_path
-  | label
-  | LBRACK expression RBRACK
+    label_component_policy:a {:
+      RESULT = a;
+    :}
+  | access_path:a {:
+      RESULT = parser.nf.ExprLabel(pos(a), a);
+    :}
+  | label:a {:
+      RESULT = a;
+    :}
+  | LBRACK:x expression:a RBRACK:y {:
+      RESULT = parser.nf.ExprLabel(pos(x, y), a);
+    :}
   ;
 
 leftarrow ::=
@@ -102,22 +125,22 @@ rightarrow ::=
 
 label_component_policy ::=
     // Policy
-    principal rightarrow principal_opt
-  | principal leftarrow principal_opt
+    principal:a rightarrow principal_opt:b {:
+      if (b == null) b = parser.nf.BottomPrincipal(pos(b));
+      RESULT = parser.nf.ReaderPolicy(pos(a, b), a, b);
+    :}
+  | principal:a leftarrow principal_opt:b {:
+      if (b == null) b = parser.nf.BottomPrincipal(pos(b));
+      RESULT = parser.nf.WriterPolicy(pos(a, b), a, b);
+    :}
   ;
 
 principal_opt ::=
     // Principal
-  | principal
+  | principal:a {:
+      RESULT = a;
+    :}
   ;
-
-/************************************
- * Principals
- ************************************/
-
-/************************************
- * Principals
- ************************************/
 
 /************************************
  * Principals

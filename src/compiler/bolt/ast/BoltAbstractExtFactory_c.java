@@ -1,281 +1,284 @@
 package bolt.ast;
 
-import polyglot.ast.Ext;
-import polyglot.ast.ExtFactory;
-import polyglot.ext.jl7.ast.JL7AbstractExtFactory_c;
-
-public abstract class BoltAbstractExtFactory_c extends JL7AbstractExtFactory_c
-    implements BoltExtFactory {
-
-  public BoltAbstractExtFactory_c() {
-    super();
-  }
-
-  public BoltAbstractExtFactory_c(ExtFactory nextExtFactory) {
-    super(nextExtFactory);
-  }
-
-  @Override
-  public Ext extLabelComponent() {
-    Ext e = extLabelComponentImpl();
-
-    if (nextExtFactory() != null) {
-      Ext e2;
-      if (nextExtFactory() instanceof BoltExtFactory) {
-        e2 = ((BoltExtFactory) nextExtFactory()).extLabelComponent();
-      } else {
-        e2 = nextExtFactory().extTerm();
-      }
-      e = composeExts(e, e2);
+public abstract class BoltAbstractExtFactory_c extends polyglot.ext.jl7.ast.JL7AbstractExtFactory_c implements BoltExtFactory {
+    public BoltAbstractExtFactory_c() { super(); }
+    
+    public BoltAbstractExtFactory_c(polyglot.ast.ExtFactory nextExtFactory) {
+        super(nextExtFactory);
     }
-    return postExtLabelComponent(e);
-  }
-
-  @Override
-  public Ext extPolicy() {
-    Ext e = extPolicyImpl();
-
-    if (nextExtFactory() != null) {
-      Ext e2;
-      if (nextExtFactory() instanceof BoltExtFactory) {
-        e2 = ((BoltExtFactory) nextExtFactory()).extPolicy();
-      } else {
-        e2 = nextExtFactory().extTerm();
-      }
-      e = composeExts(e, e2);
+    
+    @Override
+    public final polyglot.ast.Ext extBottomPrincipal() {
+        polyglot.ast.Ext e = extBottomPrincipalImpl();
+        if (nextExtFactory() != null) {
+            polyglot.ast.Ext e2;
+            if (nextExtFactory() instanceof BoltExtFactory) {
+                e2 = ((BoltExtFactory) nextExtFactory()).extBottomPrincipal();
+            } else {
+                e2 = nextExtFactory().extTerm();
+            }
+            e = composeExts(e, e2);
+        }
+        return postExtBottomPrincipal(e);
     }
-    return postExtPolicy(e);
-  }
-
-  @Override
-  public Ext extConfPolicy() {
-    Ext e = extConfPolicyImpl();
-
-    if (nextExtFactory() != null) {
-      Ext e2;
-      if (nextExtFactory() instanceof BoltExtFactory) {
-        e2 = ((BoltExtFactory) nextExtFactory()).extConfPolicy();
-      } else {
-        e2 = nextExtFactory().extTerm();
-      }
-      e = composeExts(e, e2);
+    
+    @Override
+    public final polyglot.ast.Ext extConfPolicy() {
+        polyglot.ast.Ext e = extConfPolicyImpl();
+        if (nextExtFactory() != null) {
+            polyglot.ast.Ext e2;
+            if (nextExtFactory() instanceof BoltExtFactory) {
+                e2 = ((BoltExtFactory) nextExtFactory()).extConfPolicy();
+            } else {
+                e2 = nextExtFactory().extTerm();
+            }
+            e = composeExts(e, e2);
+        }
+        return postExtConfPolicy(e);
     }
-    return postExtConfPolicy(e);
-  }
-
-  @Override
-  public Ext extIntegPolicy() {
-    Ext e = extIntegPolicyImpl();
-
-    if (nextExtFactory() != null) {
-      Ext e2;
-      if (nextExtFactory() instanceof BoltExtFactory) {
-        e2 = ((BoltExtFactory) nextExtFactory()).extIntegPolicy();
-      } else {
-        e2 = nextExtFactory().extTerm();
-      }
-      e = composeExts(e, e2);
+    
+    @Override
+    public final polyglot.ast.Ext extExprLabel() {
+        polyglot.ast.Ext e = extExprLabelImpl();
+        if (nextExtFactory() != null) {
+            polyglot.ast.Ext e2;
+            if (nextExtFactory() instanceof BoltExtFactory) {
+                e2 = ((BoltExtFactory) nextExtFactory()).extExprLabel();
+            } else {
+                e2 = nextExtFactory().extTerm();
+            }
+            e = composeExts(e, e2);
+        }
+        return postExtExprLabel(e);
     }
-    return postExtIntegPolicy(e);
-  }
-
-  @Override
-  public Ext extReaderPolicy() {
-    Ext e = extReaderPolicyImpl();
-
-    if (nextExtFactory() != null) {
-      Ext e2;
-      if (nextExtFactory() instanceof BoltExtFactory) {
-        e2 = ((BoltExtFactory) nextExtFactory()).extReaderPolicy();
-      } else {
-        e2 = nextExtFactory().extTerm();
-      }
-      e = composeExts(e, e2);
+    
+    @Override
+    public final polyglot.ast.Ext extIntegPolicy() {
+        polyglot.ast.Ext e = extIntegPolicyImpl();
+        if (nextExtFactory() != null) {
+            polyglot.ast.Ext e2;
+            if (nextExtFactory() instanceof BoltExtFactory) {
+                e2 = ((BoltExtFactory) nextExtFactory()).extIntegPolicy();
+            } else {
+                e2 = nextExtFactory().extTerm();
+            }
+            e = composeExts(e, e2);
+        }
+        return postExtIntegPolicy(e);
     }
-    return postExtReaderPolicy(e);
-  }
-
-  @Override
-  public Ext extWriterPolicy() {
-    Ext e = extWriterPolicyImpl();
-
-    if (nextExtFactory() != null) {
-      Ext e2;
-      if (nextExtFactory() instanceof BoltExtFactory) {
-        e2 = ((BoltExtFactory) nextExtFactory()).extWriterPolicy();
-      } else {
-        e2 = nextExtFactory().extTerm();
-      }
-      e = composeExts(e, e2);
+    
+    @Override
+    public final polyglot.ast.Ext extJoinLabel() {
+        polyglot.ast.Ext e = extJoinLabelImpl();
+        if (nextExtFactory() != null) {
+            polyglot.ast.Ext e2;
+            if (nextExtFactory() instanceof BoltExtFactory) {
+                e2 = ((BoltExtFactory) nextExtFactory()).extJoinLabel();
+            } else {
+                e2 = nextExtFactory().extTerm();
+            }
+            e = composeExts(e, e2);
+        }
+        return postExtJoinLabel(e);
     }
-    return postExtWriterPolicy(e);
-  }
-
-  @Override
-  public Ext extLabel() {
-    Ext e = extLabelImpl();
-
-    if (nextExtFactory() != null) {
-      Ext e2;
-      if (nextExtFactory() instanceof BoltExtFactory) {
-        e2 = ((BoltExtFactory) nextExtFactory()).extLabel();
-      } else {
-        e2 = nextExtFactory().extTerm();
-      }
-      e = composeExts(e, e2);
+    
+    @Override
+    public final polyglot.ast.Ext extLabel() {
+        polyglot.ast.Ext e = extLabelImpl();
+        if (nextExtFactory() != null) {
+            polyglot.ast.Ext e2;
+            if (nextExtFactory() instanceof BoltExtFactory) {
+                e2 = ((BoltExtFactory) nextExtFactory()).extLabel();
+            } else {
+                e2 = nextExtFactory().extTerm();
+            }
+            e = composeExts(e, e2);
+        }
+        return postExtLabel(e);
     }
-    return postExtLabel(e);
-  }
-
-  @Override
-  public Ext extJoinLabel() {
-    Ext e = extJoinLabelImpl();
-
-    if (nextExtFactory() != null) {
-      Ext e2;
-      if (nextExtFactory() instanceof BoltExtFactory) {
-        e2 = ((BoltExtFactory) nextExtFactory()).extJoinLabel();
-      } else {
-        e2 = nextExtFactory().extTerm();
-      }
-      e = composeExts(e, e2);
+    
+    @Override
+    public final polyglot.ast.Ext extLabelComponent() {
+        polyglot.ast.Ext e = extLabelComponentImpl();
+        if (nextExtFactory() != null) {
+            polyglot.ast.Ext e2;
+            if (nextExtFactory() instanceof BoltExtFactory) {
+                e2 = ((BoltExtFactory) nextExtFactory()).extLabelComponent();
+            } else {
+                e2 = nextExtFactory().extTerm();
+            }
+            e = composeExts(e, e2);
+        }
+        return postExtLabelComponent(e);
     }
-    return postExtJoinLabel(e);
-  }
-
-  @Override
-  public Ext extPrincipal() {
-    Ext e = extPrincipalImpl();
-
-    if (nextExtFactory() != null) {
-      Ext e2;
-      if (nextExtFactory() instanceof BoltExtFactory) {
-        e2 = ((BoltExtFactory) nextExtFactory()).extPrincipal();
-      } else {
-        e2 = nextExtFactory().extTerm();
-      }
-      e = composeExts(e, e2);
+    
+    @Override
+    public final polyglot.ast.Ext extMeetLabel() {
+        polyglot.ast.Ext e = extMeetLabelImpl();
+        if (nextExtFactory() != null) {
+            polyglot.ast.Ext e2;
+            if (nextExtFactory() instanceof BoltExtFactory) {
+                e2 = ((BoltExtFactory) nextExtFactory()).extMeetLabel();
+            } else {
+                e2 = nextExtFactory().extTerm();
+            }
+            e = composeExts(e, e2);
+        }
+        return postExtMeetLabel(e);
     }
-    return postExtPrincipal(e);
-  }
-
-  @Override
-  public Ext extTopPrincipal() {
-    Ext e = extTopPrincipalImpl();
-
-    if (nextExtFactory() != null) {
-      Ext e2;
-      if (nextExtFactory() instanceof BoltExtFactory) {
-        e2 = ((BoltExtFactory) nextExtFactory()).extTopPrincipal();
-      } else {
-        e2 = nextExtFactory().extTerm();
-      }
-      e = composeExts(e, e2);
+    
+    @Override
+    public final polyglot.ast.Ext extPolicy() {
+        polyglot.ast.Ext e = extPolicyImpl();
+        if (nextExtFactory() != null) {
+            polyglot.ast.Ext e2;
+            if (nextExtFactory() instanceof BoltExtFactory) {
+                e2 = ((BoltExtFactory) nextExtFactory()).extPolicy();
+            } else {
+                e2 = nextExtFactory().extTerm();
+            }
+            e = composeExts(e, e2);
+        }
+        return postExtPolicy(e);
     }
-    return postExtTopPrincipal(e);
-  }
-
-  @Override
-  public Ext extBottomPrincipal() {
-    Ext e = extBottomPrincipalImpl();
-
-    if (nextExtFactory() != null) {
-      Ext e2;
-      if (nextExtFactory() instanceof BoltExtFactory) {
-        e2 = ((BoltExtFactory) nextExtFactory()).extBottomPrincipal();
-      } else {
-        e2 = nextExtFactory().extTerm();
-      }
-      e = composeExts(e, e2);
+    
+    @Override
+    public final polyglot.ast.Ext extPrincipal() {
+        polyglot.ast.Ext e = extPrincipalImpl();
+        if (nextExtFactory() != null) {
+            polyglot.ast.Ext e2;
+            if (nextExtFactory() instanceof BoltExtFactory) {
+                e2 = ((BoltExtFactory) nextExtFactory()).extPrincipal();
+            } else {
+                e2 = nextExtFactory().extTerm();
+            }
+            e = composeExts(e, e2);
+        }
+        return postExtPrincipal(e);
     }
-    return postExtBottomPrincipal(e);
-  }
-
-  protected Ext extLabelComponentImpl() {
-    return extTermImpl();
-  }
-
-  protected Ext extPolicyImpl() {
-    return extLabelComponentImpl();
-  }
-
-  protected Ext extConfPolicyImpl() {
-    return extPolicyImpl();
-  }
-
-  protected Ext extIntegPolicyImpl() {
-    return extPolicyImpl();
-  }
-
-  protected Ext extReaderPolicyImpl() {
-    return extConfPolicyImpl();
-  }
-
-  protected Ext extWriterPolicyImpl() {
-    return extIntegPolicyImpl();
-  }
-
-  protected Ext extLabelImpl() {
-    return extLabelComponentImpl();
-  }
-
-  protected Ext extJoinLabelImpl() {
-    return extLabelImpl();
-  }
-
-  protected Ext extPrincipalImpl() {
-    return extTermImpl();
-  }
-
-  protected Ext extTopPrincipalImpl() {
-    return extPrincipalImpl();
-  }
-
-  protected Ext extBottomPrincipalImpl() {
-    return extPrincipalImpl();
-  }
-
-  protected Ext postExtLabelComponent(Ext e) {
-    return postExtTerm(e);
-  }
-
-  protected Ext postExtPolicy(Ext e) {
-    return postExtLabelComponent(e);
-  }
-
-  protected Ext postExtConfPolicy(Ext e) {
-    return postExtPolicy(e);
-  }
-
-  protected Ext postExtIntegPolicy(Ext e) {
-    return postExtPolicy(e);
-  }
-
-  protected Ext postExtReaderPolicy(Ext e) {
-    return postExtConfPolicy(e);
-  }
-
-  protected Ext postExtWriterPolicy(Ext e) {
-    return postExtIntegPolicy(e);
-  }
-
-  protected Ext postExtLabel(Ext e) {
-    return postExtLabelComponent(e);
-  }
-
-  protected Ext postExtJoinLabel(Ext e) {
-    return postExtLabel(e);
-  }
-
-  protected Ext postExtPrincipal(Ext e) {
-    return postExtTerm(e);
-  }
-
-  protected Ext postExtTopPrincipal(Ext e) {
-    return postExtPrincipal(e);
-  }
-
-  protected Ext postExtBottomPrincipal(Ext e) {
-    return postExtPrincipal(e);
-  }
+    
+    @Override
+    public final polyglot.ast.Ext extReaderPolicy() {
+        polyglot.ast.Ext e = extReaderPolicyImpl();
+        if (nextExtFactory() != null) {
+            polyglot.ast.Ext e2;
+            if (nextExtFactory() instanceof BoltExtFactory) {
+                e2 = ((BoltExtFactory) nextExtFactory()).extReaderPolicy();
+            } else {
+                e2 = nextExtFactory().extTerm();
+            }
+            e = composeExts(e, e2);
+        }
+        return postExtReaderPolicy(e);
+    }
+    
+    @Override
+    public final polyglot.ast.Ext extTopPrincipal() {
+        polyglot.ast.Ext e = extTopPrincipalImpl();
+        if (nextExtFactory() != null) {
+            polyglot.ast.Ext e2;
+            if (nextExtFactory() instanceof BoltExtFactory) {
+                e2 = ((BoltExtFactory) nextExtFactory()).extTopPrincipal();
+            } else {
+                e2 = nextExtFactory().extTerm();
+            }
+            e = composeExts(e, e2);
+        }
+        return postExtTopPrincipal(e);
+    }
+    
+    @Override
+    public final polyglot.ast.Ext extWriterPolicy() {
+        polyglot.ast.Ext e = extWriterPolicyImpl();
+        if (nextExtFactory() != null) {
+            polyglot.ast.Ext e2;
+            if (nextExtFactory() instanceof BoltExtFactory) {
+                e2 = ((BoltExtFactory) nextExtFactory()).extWriterPolicy();
+            } else {
+                e2 = nextExtFactory().extTerm();
+            }
+            e = composeExts(e, e2);
+        }
+        return postExtWriterPolicy(e);
+    }
+    
+    protected polyglot.ast.Ext extBottomPrincipalImpl() {
+        return extTermImpl();
+    }
+    
+    protected polyglot.ast.Ext extConfPolicyImpl() { return extTermImpl(); }
+    
+    protected polyglot.ast.Ext extExprLabelImpl() { return extTermImpl(); }
+    
+    protected polyglot.ast.Ext extIntegPolicyImpl() { return extTermImpl(); }
+    
+    protected polyglot.ast.Ext extJoinLabelImpl() { return extTermImpl(); }
+    
+    protected polyglot.ast.Ext extLabelImpl() { return extTermImpl(); }
+    
+    protected polyglot.ast.Ext extLabelComponentImpl() { return extTermImpl(); }
+    
+    protected polyglot.ast.Ext extMeetLabelImpl() { return extTermImpl(); }
+    
+    protected polyglot.ast.Ext extPolicyImpl() { return extTermImpl(); }
+    
+    protected polyglot.ast.Ext extPrincipalImpl() { return extTermImpl(); }
+    
+    protected polyglot.ast.Ext extReaderPolicyImpl() { return extTermImpl(); }
+    
+    protected polyglot.ast.Ext extTopPrincipalImpl() { return extTermImpl(); }
+    
+    protected polyglot.ast.Ext extWriterPolicyImpl() { return extTermImpl(); }
+    
+    protected polyglot.ast.Ext postExtBottomPrincipal(polyglot.ast.Ext ext) {
+        return postExtTerm(ext);
+    }
+    
+    protected polyglot.ast.Ext postExtConfPolicy(polyglot.ast.Ext ext) {
+        return postExtTerm(ext);
+    }
+    
+    protected polyglot.ast.Ext postExtExprLabel(polyglot.ast.Ext ext) {
+        return postExtTerm(ext);
+    }
+    
+    protected polyglot.ast.Ext postExtIntegPolicy(polyglot.ast.Ext ext) {
+        return postExtTerm(ext);
+    }
+    
+    protected polyglot.ast.Ext postExtJoinLabel(polyglot.ast.Ext ext) {
+        return postExtTerm(ext);
+    }
+    
+    protected polyglot.ast.Ext postExtLabel(polyglot.ast.Ext ext) {
+        return postExtTerm(ext);
+    }
+    
+    protected polyglot.ast.Ext postExtLabelComponent(polyglot.ast.Ext ext) {
+        return postExtTerm(ext);
+    }
+    
+    protected polyglot.ast.Ext postExtMeetLabel(polyglot.ast.Ext ext) {
+        return postExtTerm(ext);
+    }
+    
+    protected polyglot.ast.Ext postExtPolicy(polyglot.ast.Ext ext) {
+        return postExtTerm(ext);
+    }
+    
+    protected polyglot.ast.Ext postExtPrincipal(polyglot.ast.Ext ext) {
+        return postExtTerm(ext);
+    }
+    
+    protected polyglot.ast.Ext postExtReaderPolicy(polyglot.ast.Ext ext) {
+        return postExtTerm(ext);
+    }
+    
+    protected polyglot.ast.Ext postExtTopPrincipal(polyglot.ast.Ext ext) {
+        return postExtTerm(ext);
+    }
+    
+    protected polyglot.ast.Ext postExtWriterPolicy(polyglot.ast.Ext ext) {
+        return postExtTerm(ext);
+    }
 }
