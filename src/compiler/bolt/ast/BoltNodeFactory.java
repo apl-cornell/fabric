@@ -42,4 +42,12 @@ public interface BoltNodeFactory extends JL7NodeFactory {
   BottomPrincipal BottomPrincipal(Position pos);
 
   ExprLabel ExprLabel(Position pos, Expr expr);
+
+  ConjunctivePrincipal ConjunctivePrincipal(Position pos,
+      List<Principal> conjuncts);
+
+  DisjunctivePrincipal DisjunctivePrincipal(Position pos,
+      List<Principal> disjuncts);
+
+  ExprPrincipal ExprPrincipal(Position pos, Expr expr);
 }

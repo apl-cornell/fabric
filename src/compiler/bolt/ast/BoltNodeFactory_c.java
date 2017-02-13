@@ -100,4 +100,27 @@ public class BoltNodeFactory_c extends JL7NodeFactory_c
     return n;
   }
 
+  @Override
+  public bolt.ast.ConjunctivePrincipal ConjunctivePrincipal(Position pos,
+      List<Principal> conjuncts) {
+    ConjunctivePrincipal_c n = new ConjunctivePrincipal_c(pos, conjuncts);
+    n = ext(n, extFactory().extConjunctivePrincipal());
+    return n;
+  }
+
+  @Override
+  public bolt.ast.DisjunctivePrincipal DisjunctivePrincipal(Position pos,
+      List<Principal> disjuncts) {
+    DisjunctivePrincipal_c n = new DisjunctivePrincipal_c(pos, disjuncts);
+    n = ext(n, extFactory().extDisjunctivePrincipal());
+    return n;
+  }
+
+  @Override
+  public bolt.ast.ExprPrincipal ExprPrincipal(Position pos, Expr expr) {
+    ExprPrincipal_c n = new ExprPrincipal_c(pos, expr);
+    n = ext(n, extFactory().extExprPrincipal());
+    return n;
+  }
+
 }

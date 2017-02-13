@@ -38,6 +38,38 @@ public abstract class BoltAbstractExtFactory_c extends polyglot.ext.jl7.ast.JL7A
     }
     
     @Override
+    public final polyglot.ast.Ext extConjunctivePrincipal() {
+        polyglot.ast.Ext e = extConjunctivePrincipalImpl();
+        if (nextExtFactory() != null) {
+            polyglot.ast.Ext e2;
+            if (nextExtFactory() instanceof BoltExtFactory) {
+                e2 = ((BoltExtFactory)
+                        nextExtFactory()).extConjunctivePrincipal();
+            } else {
+                e2 = nextExtFactory().extTerm();
+            }
+            e = composeExts(e, e2);
+        }
+        return postExtConjunctivePrincipal(e);
+    }
+    
+    @Override
+    public final polyglot.ast.Ext extDisjunctivePrincipal() {
+        polyglot.ast.Ext e = extDisjunctivePrincipalImpl();
+        if (nextExtFactory() != null) {
+            polyglot.ast.Ext e2;
+            if (nextExtFactory() instanceof BoltExtFactory) {
+                e2 = ((BoltExtFactory)
+                        nextExtFactory()).extDisjunctivePrincipal();
+            } else {
+                e2 = nextExtFactory().extTerm();
+            }
+            e = composeExts(e, e2);
+        }
+        return postExtDisjunctivePrincipal(e);
+    }
+    
+    @Override
     public final polyglot.ast.Ext extExprLabel() {
         polyglot.ast.Ext e = extExprLabelImpl();
         if (nextExtFactory() != null) {
@@ -50,6 +82,21 @@ public abstract class BoltAbstractExtFactory_c extends polyglot.ext.jl7.ast.JL7A
             e = composeExts(e, e2);
         }
         return postExtExprLabel(e);
+    }
+    
+    @Override
+    public final polyglot.ast.Ext extExprPrincipal() {
+        polyglot.ast.Ext e = extExprPrincipalImpl();
+        if (nextExtFactory() != null) {
+            polyglot.ast.Ext e2;
+            if (nextExtFactory() instanceof BoltExtFactory) {
+                e2 = ((BoltExtFactory) nextExtFactory()).extExprPrincipal();
+            } else {
+                e2 = nextExtFactory().extTerm();
+            }
+            e = composeExts(e, e2);
+        }
+        return postExtExprPrincipal(e);
     }
     
     @Override
@@ -208,7 +255,17 @@ public abstract class BoltAbstractExtFactory_c extends polyglot.ext.jl7.ast.JL7A
     
     protected polyglot.ast.Ext extConfPolicyImpl() { return extTermImpl(); }
     
+    protected polyglot.ast.Ext extConjunctivePrincipalImpl() {
+        return extTermImpl();
+    }
+    
+    protected polyglot.ast.Ext extDisjunctivePrincipalImpl() {
+        return extTermImpl();
+    }
+    
     protected polyglot.ast.Ext extExprLabelImpl() { return extTermImpl(); }
+    
+    protected polyglot.ast.Ext extExprPrincipalImpl() { return extTermImpl(); }
     
     protected polyglot.ast.Ext extIntegPolicyImpl() { return extTermImpl(); }
     
@@ -238,7 +295,19 @@ public abstract class BoltAbstractExtFactory_c extends polyglot.ext.jl7.ast.JL7A
         return postExtTerm(ext);
     }
     
+    protected polyglot.ast.Ext postExtConjunctivePrincipal(polyglot.ast.Ext ext) {
+        return postExtTerm(ext);
+    }
+    
+    protected polyglot.ast.Ext postExtDisjunctivePrincipal(polyglot.ast.Ext ext) {
+        return postExtTerm(ext);
+    }
+    
     protected polyglot.ast.Ext postExtExprLabel(polyglot.ast.Ext ext) {
+        return postExtTerm(ext);
+    }
+    
+    protected polyglot.ast.Ext postExtExprPrincipal(polyglot.ast.Ext ext) {
         return postExtTerm(ext);
     }
     

@@ -12,9 +12,24 @@ public interface BoltExtFactory extends polyglot.ext.jl7.ast.JL7ExtFactory {
     polyglot.ast.Ext extConfPolicy();
     
     /**
+     * Creates an extension object for {@link bolt.ast.ConjunctivePrincipal}.
+     */
+    polyglot.ast.Ext extConjunctivePrincipal();
+    
+    /**
+     * Creates an extension object for {@link bolt.ast.DisjunctivePrincipal}.
+     */
+    polyglot.ast.Ext extDisjunctivePrincipal();
+    
+    /**
      * Creates an extension object for {@link bolt.ast.ExprLabel}.
      */
     polyglot.ast.Ext extExprLabel();
+    
+    /**
+     * Creates an extension object for {@link bolt.ast.ExprPrincipal}.
+     */
+    polyglot.ast.Ext extExprPrincipal();
     
     /**
      * Creates an extension object for {@link bolt.ast.IntegPolicy}.

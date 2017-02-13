@@ -17,21 +17,21 @@ parser Grm extends polyglot.ext.jl7.parse.Grm {:
   }
 :};
 
-terminal token ATOMIC;
-terminal token JAVA;
-terminal token LABEL;
-terminal token PRINCIPAL;
+terminal Token ATOMIC;
+terminal Token JAVA;
+terminal Token LABEL;
+terminal Token PRINCIPAL;
 
-terminal token TOP;
-terminal token BOTTOM;
-terminal token LEFTARROW;
-terminal token RIGHTARROW;
-terminal token JOIN;
-terminal token MEET;
-terminal token ACTSFOR;
-terminal token EQUIV;
-terminal token INFO_LTEQ;
-terminal token TRUST_GTEQ;
+terminal Token TOP;
+terminal Token BOTTOM;
+terminal Token LEFTARROW;
+terminal Token RIGHTARROW;
+terminal Token JOIN;
+terminal Token MEET;
+terminal Token ACTSFOR;
+terminal Token EQUIV;
+terminal Token INFO_LTEQ;
+terminal Token TRUST_GTEQ;
 
 non terminal Label label;
 non terminal List<LabelComponent> label_join_component_list;
@@ -41,11 +41,12 @@ non terminal Policy label_component_policy;
 
 non terminal Principal principal_opt;
 non terminal Principal principal;
-non terminal Principal principal_disjunctive;
-non terminal Principal principal_conjunctive;
+non terminal List<Principal> principal_disjunctive_list;
+non terminal List<Principal> principal_conjunctive_list;
 non terminal Principal principal_base;
 non terminal Token leftarrow, rightarrow;
 non terminal Expr access_path;
+non terminal Expr primary_access_path;
 non terminal Expr location_expr;
 
 non terminal ConstructorCall explicit_super_constructor_invocation;
@@ -149,41 +150,108 @@ principal_opt ::=
 // Principals.
 principal ::=
     // Principal
-    principal_disjunctive
+    principal_disjunctive_list:a {:
+      if (a.size() == 1) {
+        RESULT = a.get(0);
+      } else {
+        RESULT = parser.nf.DisjunctivePrincipal(pos(a), a);
+      }
+    :}
   ;
 
 // Disjunctive principals.
-principal_disjunctive ::=
-    // Principal
-    principal_conjunctive
-  | principal_disjunctive OR principal_conjunctive
+principal_disjunctive_list ::=
+    // List<Principal>
+    principal_conjunctive_list:a {:
+      if (a.size() == 1) {
+        RESULT = a;
+      } else {
+        RESULT = new ArrayList<>();
+        RESULT.add(parser.nf.ConjunctivePrincipal(pos(a), a));
+      }
+    :}
+  | principal_disjunctive_list:a OR principal_conjunctive_list:b {:
+      RESULT = a;
+      if (b.size() == 1) {
+        a.addAll(b);
+      } else {
+        a.add(parser.nf.ConjunctivePrincipal(pos(b), b));
+      }
+    :}
   ;
 
 // Conjunctive principals.
-principal_conjunctive ::=
-    // Principal
-    principal_base
-  | principal_conjunctive AND principal_base
+principal_conjunctive_list ::=
+    // List<Principal>
+    principal_base:a {:
+      RESULT = new ArrayList<>();
+      RESULT.add(a);
+    :}
+  | principal_conjunctive_list:a AND principal_base:b {:
+      RESULT = a;
+      RESULT.add(b);
+    :}
   ;
 
 // Base principals.
 principal_base ::=
     // Principal
-    MULT // Top principal.
-  | TOP // Top principal.
-  | BOTTOM // Bottom principal.
-  | LBRACK expression RBRACK
-  | LPAREN principal RPAREN
-  | access_path
+    MULT:a {:
+      // Top principal.
+      RESULT = parser.nf.TopPrincipal(pos(a));
+    :}
+  | TOP:a {:
+      // Top principal.
+      RESULT = parser.nf.TopPrincipal(pos(a));
+    :}
+  | BOTTOM:a {:
+      // Bottom principal.
+      RESULT = parser.nf.BottomPrincipal(pos(a));
+    :}
+  | LBRACK:x expression:a RBRACK:y {:
+      RESULT = parser.nf.ExprPrincipal(pos(a), a);
+    :}
+  | LPAREN principal:a RPAREN {:
+      RESULT = a;
+    :}
+  | access_path:a {:
+      RESULT = parser.nf.ExprPrincipal(pos(a), a);
+    :}
   ;
 
-// Dotted sequence of identifiers/'this'es.
+// Dotted sequence of identifiers/'this'/'super'.
 access_path ::=
     // Expr
-    THIS
-  | IDENTIFIER
-  | access_path DOT IDENTIFIER
-  | access_path DOT THIS
+    primary_access_path:a {:
+      RESULT = a;
+    :}
+  | name:a {:
+      RESULT = a.toExpr();
+    :}
+  ;
+
+primary_access_path ::=
+    // Expr
+    THIS:a {:
+      RESULT = parser.nf.This(pos(a));
+    :}
+  | primary_access_path:a DOT IDENTIFIER:b {:
+      RESULT = parser.nf.Field(pos(a, b, b), a,
+          parser.nf.Id(pos(b), b.getIdentifier()));
+    :}
+  | SUPER:n DOT IDENTIFIER:a {:
+      RESULT = parser.nf.Field(pos(a),
+          parser.nf.Super(pos(n)),
+          parser.nf.Id(pos(a), a.getIdentifier()));
+    :}
+  | name:a DOT SUPER:n DOT IDENTIFIER:b {:
+      RESULT = parser.nf.Field(pos(b),
+          parser.nf.Super(pos(n), a.toType()),
+          parser.nf.Id(pos(b), b.getIdentifier()));
+    :}
+  | name:a DOT THIS:n {:
+      RESULT = parser.nf.This(pos(a, n, n), a.toType());
+    :}
   ;
 
 /************************************
