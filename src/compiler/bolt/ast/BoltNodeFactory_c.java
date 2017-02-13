@@ -2,8 +2,16 @@ package bolt.ast;
 
 import java.util.List;
 
+import polyglot.ast.ClassBody;
 import polyglot.ast.Expr;
+import polyglot.ast.FieldDecl;
+import polyglot.ast.Id;
+import polyglot.ast.Javadoc;
+import polyglot.ast.New;
+import polyglot.ast.TypeNode;
+import polyglot.ext.jl5.ast.AnnotationElem;
 import polyglot.ext.jl7.ast.JL7NodeFactory_c;
+import polyglot.types.Flags;
 import polyglot.util.Position;
 
 /**
@@ -72,7 +80,7 @@ public class BoltNodeFactory_c extends JL7NodeFactory_c
   }
 
   @Override
-  public bolt.ast.WriterPolicy WriterPolicy(Position pos, Principal owner,
+  public WriterPolicy WriterPolicy(Position pos, Principal owner,
       Principal writer) {
     WriterPolicy_c n = new WriterPolicy_c(pos, owner, writer);
     n = ext(n, extFactory().extWriterPolicy());
@@ -101,7 +109,7 @@ public class BoltNodeFactory_c extends JL7NodeFactory_c
   }
 
   @Override
-  public bolt.ast.ConjunctivePrincipal ConjunctivePrincipal(Position pos,
+  public ConjunctivePrincipal ConjunctivePrincipal(Position pos,
       List<Principal> conjuncts) {
     ConjunctivePrincipal_c n = new ConjunctivePrincipal_c(pos, conjuncts);
     n = ext(n, extFactory().extConjunctivePrincipal());
@@ -109,7 +117,7 @@ public class BoltNodeFactory_c extends JL7NodeFactory_c
   }
 
   @Override
-  public bolt.ast.DisjunctivePrincipal DisjunctivePrincipal(Position pos,
+  public DisjunctivePrincipal DisjunctivePrincipal(Position pos,
       List<Principal> disjuncts) {
     DisjunctivePrincipal_c n = new DisjunctivePrincipal_c(pos, disjuncts);
     n = ext(n, extFactory().extDisjunctivePrincipal());
@@ -117,10 +125,82 @@ public class BoltNodeFactory_c extends JL7NodeFactory_c
   }
 
   @Override
-  public bolt.ast.ExprPrincipal ExprPrincipal(Position pos, Expr expr) {
+  public ExprPrincipal ExprPrincipal(Position pos, Expr expr) {
     ExprPrincipal_c n = new ExprPrincipal_c(pos, expr);
     n = ext(n, extFactory().extExprPrincipal());
     return n;
   }
 
+  @Override
+  public final FieldDecl FieldDecl(Position pos, Flags flags,
+      List<AnnotationElem> annotations, TypeNode type, Id name, Expr init,
+      Javadoc javadoc) {
+    return FieldDecl(pos, flags, annotations, type, null, name, init, javadoc);
+  }
+
+  /**
+   * @deprecated use the version that takes in a {@link Javadoc}.
+   */
+  @Deprecated
+  @Override
+  public final FieldDecl FieldDecl(Position pos, Flags flags,
+      List<AnnotationElem> annotations, TypeNode type, Id name, Expr init) {
+    return FieldDecl(pos, flags, annotations, type, name, init, null);
+  }
+
+  @Override
+  public FieldDecl FieldDecl(Position pos, Flags flags,
+      List<AnnotationElem> annotations, TypeNode type, Label label, Id name,
+      Expr init, Javadoc javadoc) {
+    FieldDecl n =
+        super.FieldDecl(pos, flags, annotations, type, name, init, javadoc);
+    BoltFieldDeclExt ext = (BoltFieldDeclExt) BoltExt.ext(n);
+    ext.label = label;
+    return n;
+  }
+
+  @Override
+  public NewLabel NewLabel(Position pos, Label label) {
+    return NewLabel(pos, null, label);
+  }
+
+  @Override
+  public NewLabel NewLabel(Position pos, Expr location, Label label) {
+    NewLabel n = new NewLabel_c(pos, label);
+    n = ext(n, extFactory().extNewLabel());
+    NewLabelExt ext = (NewLabelExt) BoltExt.ext(n);
+    ext.location = location;
+    return n;
+  }
+
+  @Override
+  public NewPrincipal NewPrincipal(Position pos, Principal principal) {
+    return NewPrincipal(pos, null, principal);
+  }
+
+  @Override
+  public NewPrincipal NewPrincipal(Position pos, Expr location,
+      Principal principal) {
+    NewPrincipal n = new NewPrincipal_c(pos, principal);
+    n = ext(n, extFactory().extNewPrincipal());
+    NewPrincipalExt ext = (NewPrincipalExt) BoltExt.ext(n);
+    ext.location = location;
+    return n;
+  }
+
+  @Override
+  public New New(Position pos, Expr outer, List<TypeNode> typeArgs,
+      TypeNode objectType, List<Expr> args, ClassBody body) {
+    return New(pos, outer, null, typeArgs, objectType, args, body);
+  }
+
+  @Override
+  public New New(Position pos, Expr outer, Expr location,
+      List<TypeNode> typeArgs, TypeNode objectType, List<Expr> args,
+      ClassBody body) {
+    New n = super.New(pos, outer, typeArgs, objectType, args, body);
+    BoltNewExt ext = (BoltNewExt) BoltExt.ext(n);
+    ext.location = location;
+    return n;
+  }
 }

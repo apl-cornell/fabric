@@ -175,6 +175,36 @@ public abstract class BoltAbstractExtFactory_c extends polyglot.ext.jl7.ast.JL7A
     }
     
     @Override
+    public final polyglot.ast.Ext extNewLabel() {
+        polyglot.ast.Ext e = extNewLabelImpl();
+        if (nextExtFactory() != null) {
+            polyglot.ast.Ext e2;
+            if (nextExtFactory() instanceof BoltExtFactory) {
+                e2 = ((BoltExtFactory) nextExtFactory()).extNewLabel();
+            } else {
+                e2 = nextExtFactory().extExpr();
+            }
+            e = composeExts(e, e2);
+        }
+        return postExtNewLabel(e);
+    }
+    
+    @Override
+    public final polyglot.ast.Ext extNewPrincipal() {
+        polyglot.ast.Ext e = extNewPrincipalImpl();
+        if (nextExtFactory() != null) {
+            polyglot.ast.Ext e2;
+            if (nextExtFactory() instanceof BoltExtFactory) {
+                e2 = ((BoltExtFactory) nextExtFactory()).extNewPrincipal();
+            } else {
+                e2 = nextExtFactory().extExpr();
+            }
+            e = composeExts(e, e2);
+        }
+        return postExtNewPrincipal(e);
+    }
+    
+    @Override
     public final polyglot.ast.Ext extPolicy() {
         polyglot.ast.Ext e = extPolicyImpl();
         if (nextExtFactory() != null) {
@@ -277,6 +307,10 @@ public abstract class BoltAbstractExtFactory_c extends polyglot.ext.jl7.ast.JL7A
     
     protected polyglot.ast.Ext extMeetLabelImpl() { return extTermImpl(); }
     
+    protected polyglot.ast.Ext extNewLabelImpl() { return extExprImpl(); }
+    
+    protected polyglot.ast.Ext extNewPrincipalImpl() { return extExprImpl(); }
+    
     protected polyglot.ast.Ext extPolicyImpl() { return extTermImpl(); }
     
     protected polyglot.ast.Ext extPrincipalImpl() { return extTermImpl(); }
@@ -329,6 +363,14 @@ public abstract class BoltAbstractExtFactory_c extends polyglot.ext.jl7.ast.JL7A
     
     protected polyglot.ast.Ext postExtMeetLabel(polyglot.ast.Ext ext) {
         return postExtTerm(ext);
+    }
+    
+    protected polyglot.ast.Ext postExtNewLabel(polyglot.ast.Ext ext) {
+        return postExtExpr(ext);
+    }
+    
+    protected polyglot.ast.Ext postExtNewPrincipal(polyglot.ast.Ext ext) {
+        return postExtExpr(ext);
     }
     
     protected polyglot.ast.Ext postExtPolicy(polyglot.ast.Ext ext) {

@@ -17,4 +17,19 @@ public final class BoltExtFactory_c extends BoltAbstractExtFactory_c {
   protected Ext extNodeImpl() {
     return new BoltExt();
   }
+
+  @Override
+  protected Ext extTermImpl() {
+    return new BoltTermExt();
+  }
+
+  @Override
+  protected Ext extFieldDeclImpl() {
+    return new BoltFieldDeclExt();
+  }
+
+  @Override
+  protected Ext extNewLabelImpl() {
+    return new NewLabelExt();
+  }
 }

@@ -57,6 +57,16 @@ public interface BoltExtFactory extends polyglot.ext.jl7.ast.JL7ExtFactory {
     polyglot.ast.Ext extMeetLabel();
     
     /**
+     * Creates an extension object for {@link bolt.ast.NewLabel}.
+     */
+    polyglot.ast.Ext extNewLabel();
+    
+    /**
+     * Creates an extension object for {@link bolt.ast.NewPrincipal}.
+     */
+    polyglot.ast.Ext extNewPrincipal();
+    
+    /**
      * Creates an extension object for {@link bolt.ast.Policy}.
      */
     polyglot.ast.Ext extPolicy();

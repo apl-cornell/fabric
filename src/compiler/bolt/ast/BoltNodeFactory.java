@@ -2,8 +2,16 @@ package bolt.ast;
 
 import java.util.List;
 
+import polyglot.ast.ClassBody;
 import polyglot.ast.Expr;
+import polyglot.ast.FieldDecl;
+import polyglot.ast.Id;
+import polyglot.ast.Javadoc;
+import polyglot.ast.New;
+import polyglot.ast.TypeNode;
+import polyglot.ext.jl5.ast.AnnotationElem;
 import polyglot.ext.jl7.ast.JL7NodeFactory;
+import polyglot.types.Flags;
 import polyglot.util.Position;
 
 /**
@@ -50,4 +58,19 @@ public interface BoltNodeFactory extends JL7NodeFactory {
       List<Principal> disjuncts);
 
   ExprPrincipal ExprPrincipal(Position pos, Expr expr);
+
+  FieldDecl FieldDecl(Position pos, Flags flags,
+      List<AnnotationElem> annotations, TypeNode type, Label label, Id name,
+      Expr init, Javadoc javadoc);
+
+  NewLabel NewLabel(Position pos, Label label);
+
+  NewLabel NewLabel(Position pos, Expr location, Label label);
+
+  NewPrincipal NewPrincipal(Position pos, Principal principal);
+
+  NewPrincipal NewPrincipal(Position pos, Expr location, Principal principal);
+
+  New New(Position pos, Expr outer, Expr location, List<TypeNode> typeArgs,
+      TypeNode objectType, List<Expr> args, ClassBody body);
 }
