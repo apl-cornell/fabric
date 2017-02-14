@@ -5,41 +5,41 @@ Fabric programs. Each example includes a separate README describing how to
 build and run the example. The Fabric nodes required to run each example come
 pre-configured. We briefly list the examples here.
 
-  - `examples/hello`:
+  - [`examples/hello`](https://github.com/apl-cornell/fabric/tree/master/examples/hello):
       Every programmer's favorite program, ported to Fabric. This
       example creates a persistent object containing the message "hello
       world" and then outputs that message on the console.
 
-  - `examples/sif-hello`:
+  - [`examples/sif-hello`](https://github.com/apl-cornell/fabric/tree/master/examples/sif-hello):
       A demonstration of the Fabric port of the Servlets with
       Information Flow (SIF) library @cite sif2007. This example shows
       how web services can be built on top of Fabric.
 
-  - `examples/travel`:
+  - [`examples/travel`](https://github.com/apl-cornell/fabric/tree/master/examples/travel):
       A more complete demonstration of Fabric's features. This
       application involves coordination between an airline, bank, and
       customer to negotiate the purchase of a ticket. Each principal
       (airline, bank, and customer) also has a web-based user interface
       written using the SIF library.
 
-  - `examples/auction`:
+  - [`examples/auction`](https://github.com/apl-cornell/fabric/tree/master/examples/auction):
       A mobile bidding-agent program. This application demonstrates the
       mobile-code support of Fabric @cite mobile-fabric-2012. It
       models an auction in which participants submit confidential
       strategies for bidding and selling.
 
-  - `examples/friendmap`:
+  - [`examples/friendmap`](https://github.com/apl-cornell/fabric/tree/master/examples/friendmap):
       Another mobile-code demonstration. This program models a mash-up of
       social network and a mapping service to map a friend's confidential
       location.
 
-  - `examples/OO7`:
+  - [`examples/OO7`](https://github.com/apl-cornell/fabric/tree/master/examples/OO7):
       This is an implementation of the OO7 Object Oriented Database
       Benchmark @cite oo7. It is written using FabIL, the intermediate
       language for Fabric, and thus does not benefit from the static
       information-flow checking that the full Fabric language provides.
 
-  - `examples/blog`:
+  - [`examples/blog`](https://github.com/apl-cornell/fabric/tree/master/examples/blog):
       This is a simple web application implemented in FabIL. It is
       similar in structure to the Course Management System that we used
       for evaluating performance of Fabric @cite fabric2009.
