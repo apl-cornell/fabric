@@ -86,15 +86,31 @@ public interface BoltNodeFactory extends JL7NodeFactory {
 
   ArrayTypeNode ArrayTypeNode(Position pos, TypeNode base, ArrayDimKind kind);
 
-  BoltNewArray BoltNewArray(Position pos, TypeNode base,
-      List<ArrayDimExpr> dims, List<ArrayDimKind> addDims);
+  BoltNewArray BoltNewArray(Position pos, TypeNode base, List<ArrayDim> dims,
+      List<ArrayDimKind> addDims);
 
-  BoltNewArray BoltNewArray(Position pos, TypeNode base,
-      List<ArrayDimExpr> dims, List<ArrayDimKind> addDims, ArrayInit init);
-
-  BoltNewArray BoltNewArray(Position pos, Expr location, TypeNode base,
-      List<ArrayDimExpr> dims, List<ArrayDimKind> addDims);
+  BoltNewArray BoltNewArray(Position pos, TypeNode base, List<ArrayDim> dims,
+      List<ArrayDimKind> addDims, ArrayInit init);
 
   BoltNewArray BoltNewArray(Position pos, Expr location, TypeNode base,
-      List<ArrayDimExpr> dims, List<ArrayDimKind> addDims, ArrayInit init);
+      List<ArrayDim> dims, List<ArrayDimKind> addDims);
+
+  BoltNewArray BoltNewArray(Position pos, Expr location, TypeNode base,
+      List<ArrayDim> dims, List<ArrayDimKind> addDims, ArrayInit init);
+
+  /**
+   * Creates an {@link ArrayDim} for a Java array.
+   */
+  ArrayDim ArrayDim(Position pos, Expr length);
+
+  /**
+   * Creates an {@link ArrayDim} for a Fabric array.
+   */
+  ArrayDim ArrayDim(Position pos, Expr length, Expr label);
+
+  ArrayInit ArrayInit(Position pos, Expr location, Expr label);
+
+  ArrayInit ArrayInit(Position pos, Expr location, Expr label,
+      List<Expr> elements);
+
 }

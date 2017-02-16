@@ -8,18 +8,18 @@ public abstract class BoltAbstractExtFactory_c extends polyglot.ext.jl7.ast.JL7A
     }
     
     @Override
-    public final polyglot.ast.Ext extArrayDimExpr() {
-        polyglot.ast.Ext e = extArrayDimExprImpl();
+    public final polyglot.ast.Ext extArrayDim() {
+        polyglot.ast.Ext e = extArrayDimImpl();
         if (nextExtFactory() != null) {
             polyglot.ast.Ext e2;
             if (nextExtFactory() instanceof BoltExtFactory) {
-                e2 = ((BoltExtFactory) nextExtFactory()).extArrayDimExpr();
+                e2 = ((BoltExtFactory) nextExtFactory()).extArrayDim();
             } else {
                 e2 = nextExtFactory().extTerm();
             }
             e = composeExts(e, e2);
         }
-        return postExtArrayDimExpr(e);
+        return postExtArrayDim(e);
     }
     
     @Override
@@ -309,7 +309,7 @@ public abstract class BoltAbstractExtFactory_c extends polyglot.ext.jl7.ast.JL7A
         return postExtWriterPolicy(e);
     }
     
-    protected polyglot.ast.Ext extArrayDimExprImpl() { return extTermImpl(); }
+    protected polyglot.ast.Ext extArrayDimImpl() { return extTermImpl(); }
     
     protected polyglot.ast.Ext extBoltNewArrayImpl() { return extExprImpl(); }
     
@@ -355,7 +355,7 @@ public abstract class BoltAbstractExtFactory_c extends polyglot.ext.jl7.ast.JL7A
     
     protected polyglot.ast.Ext extWriterPolicyImpl() { return extTermImpl(); }
     
-    protected polyglot.ast.Ext postExtArrayDimExpr(polyglot.ast.Ext ext) {
+    protected polyglot.ast.Ext postExtArrayDim(polyglot.ast.Ext ext) {
         return postExtTerm(ext);
     }
     

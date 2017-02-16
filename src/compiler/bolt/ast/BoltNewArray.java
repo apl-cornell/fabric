@@ -32,12 +32,12 @@ public interface BoltNewArray extends Expr {
   /**
    * @return the list of dimension expressions.
    */
-  List<ArrayDimExpr> dims();
+  List<ArrayDim> dims();
 
   /**
    * Sets the list of dimension expressions.
    */
-  BoltNewArray dims(List<ArrayDimExpr> dims);
+  BoltNewArray dims(List<ArrayDim> dims);
 
   /**
    * @return the additional dimensions, each designated by its kind.

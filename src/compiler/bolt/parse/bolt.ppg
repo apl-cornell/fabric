@@ -2,7 +2,7 @@ include "polyglot/ext/jl7/parse/jl7.ppg"
 
 package bolt.parse;
 
-import bolt.ast.ArrayDimExpr;
+import bolt.ast.ArrayDim;
 import bolt.ast.ArrayDimKind;
 import bolt.ast.BoltNewArray;
 import bolt.ast.BoltNodeFactory;
@@ -49,14 +49,16 @@ non terminal Token leftarrow, rightarrow;
 non terminal Expr access_path;
 non terminal Expr primary_access_path;
 non terminal Expr location_expr;
+non terminal Expr location_expr_opt;
 
 non terminal ConstructorCall explicit_super_constructor_invocation;
 
-non terminal List<ArrayDimExpr> dim_exprs;
-non terminal ArrayDimExpr dim_expr;
+non terminal List<ArrayDim> dim_exprs;
+non terminal ArrayDim dim_expr;
 non terminal List<ArrayDimKind> dims, dims_opt;
 non terminal BoltNewArray array_creation_expression;
 non terminal BoltNewArray initialized_array_creation_expression;
+non terminal Expr label_expr_opt;
 
 start with goal;
 
@@ -287,16 +289,10 @@ extend field_declaration ::=
 // Expressions for constructing labels and principals.
 extend primary ::=
     // Expr
-    NEW:n LABEL label:a {:
-      RESULT = parser.nf.NewLabel(pos(n, a), a);
-    :}
-  | NEW:n location_expr:a LABEL label:b {:
+    NEW:n location_expr_opt:a LABEL label:b {:
       RESULT = parser.nf.NewLabel(pos(n, b, b), a, b);
     :}
-  | NEW:n PRINCIPAL LPAREN principal:a RPAREN {:
-      RESULT = parser.nf.NewPrincipal(pos(n, a), a);
-    :}
-  | NEW:n location_expr:a PRINCIPAL LPAREN principal:b RPAREN:z {:
+  | NEW:n location_expr_opt:a PRINCIPAL LPAREN principal:b RPAREN:z {:
       RESULT = parser.nf.NewPrincipal(pos(n, z, b), a, b);
     :}
   ;
@@ -311,6 +307,13 @@ location_expr ::=
     :}
   ;
 
+location_expr_opt ::=
+    // Expr
+  | location_expr:a {:
+      RESULT = a;
+    :}
+  ;
+
 /************************************
  * Constructor calls
  ************************************/
@@ -320,13 +323,11 @@ extend class_instance_creation_expression ::=
     // Expr
     NEW:n location_expr:a class_or_interface_type:b LPAREN argument_list_opt:c
     RPAREN class_body_opt:d {:
-      // ONE
       RESULT = parser.nf.New(pos(n), null, a, null, b, c, d);
     :}
   | NEW:n location_expr:a type_arguments:b class_or_interface_type:c LPAREN
     argument_list_opt:d RPAREN class_body_opt:e {:
       // Instantiating type arguments
-      // TWO
       RESULT = parser.nf.New(pos(n), null, a, b, c, d, e);
     :}
   | primary:a DOT NEW location_expr:b type_arguments_opt:c IDENTIFIER:d LPAREN
@@ -335,7 +336,6 @@ extend class_instance_creation_expression ::=
       TypeNode aa =
           new JL5Name(parser.nf, parser.ts, pos(d),
               parser.nf.Id(pos(d), d.getIdentifier())).toType();
-      // THREE
       RESULT = parser.nf.New(pos(a), a, b, c, aa, e, f);
     :}
   | name:a DOT NEW location_expr:b type_arguments_opt:c IDENTIFIER:d LPAREN
@@ -344,7 +344,6 @@ extend class_instance_creation_expression ::=
       TypeNode aa =
           new JL5Name(parser.nf, parser.ts, pos(d),
               parser.nf.Id(pos(d), d.getIdentifier())).toType();
-      // FOUR
       RESULT = parser.nf.New(pos(a), a.toExpr(), b, c, aa, e, f);
     :}
   | primary:a DOT NEW location_expr:b type_arguments_opt:c IDENTIFIER:d
@@ -354,7 +353,6 @@ extend class_instance_creation_expression ::=
           new JL5Name(parser.nf, parser.ts, pos(d),
               parser.nf.Id(pos(d), d.getIdentifier())).toType();
       TypeNode tn = parser.nf.AmbTypeInstantiation(pos(d, e), aa, e);
-      // FIVE
       RESULT = parser.nf.New(pos(a), a, b, c, tn, f, g);
     :}
   | name:a DOT NEW location_expr:b type_arguments_opt:c IDENTIFIER:d
@@ -364,20 +362,17 @@ extend class_instance_creation_expression ::=
           new JL5Name(parser.nf, parser.ts, pos(d),
               parser.nf.Id(pos(d), d.getIdentifier())).toType();
       TypeNode tn = parser.nf.AmbTypeInstantiation(pos(d, e), aa, e);
-      // SIX
       RESULT = parser.nf.New(pos(a), a.toExpr(), b, c, tn, f, g);
     :}
   | NEW:n location_expr:b class_or_interface:c LT GT:x LPAREN
     argument_list_opt:d RPAREN class_body_opt:e {:
       TypeNode tn = parser.nf.AmbDiamondTypeNode(pos(c, x), c);
-      // SEVEN
       RESULT = parser.nf.New(pos(n), null, b, null, tn, d, e);
     :}
   | NEW:n location_expr:a type_arguments:b class_or_interface:c LT GT:x LPAREN
     argument_list_opt:d RPAREN class_body_opt:e {:
       // Instantiating type arguments
       TypeNode tn = parser.nf.AmbDiamondTypeNode(pos(c, x), c);
-      // EIGHT
       RESULT = parser.nf.New(pos(n), null, a, b, tn, d, e);
     :}
   | primary:a DOT NEW location_expr:b type_arguments_opt:c IDENTIFIER:d LT GT:x
@@ -387,7 +382,6 @@ extend class_instance_creation_expression ::=
           new JL5Name(parser.nf, parser.ts, pos(b),
               parser.nf.Id(pos(d), d.getIdentifier())).toType();
       TypeNode tn = parser.nf.AmbDiamondTypeNode(pos(d, x), aa);
-      // NINE
       RESULT = parser.nf.New(pos(a), a, b, c, tn, e, f);
     :}
   | name:a DOT NEW location_expr:b type_arguments_opt:c IDENTIFIER:d LT GT:x
@@ -397,7 +391,6 @@ extend class_instance_creation_expression ::=
           new JL5Name(parser.nf, parser.ts, pos(d),
               parser.nf.Id(pos(d), d.getIdentifier())).toType();
       TypeNode tn = parser.nf.AmbDiamondTypeNode(pos(d, x), aa);
-      // TEN
       RESULT = parser.nf.New(pos(a), a.toExpr(), b, c, tn, e, f);
     :}
   ;
@@ -459,7 +452,7 @@ extend method_invocation ::=
 
 // Change the type of "dims" and "dims_opt" to List<ArrayDimKind>, a richer
 // data structure that lets us capture multidimensional arrays with mixed
-// native and non-native dimensions.
+// native (Java) and non-native (Fabric) dimensions.
 drop { dims, dims_opt }
 dims_opt ::=
     // List<ArrayDimKind>
@@ -520,7 +513,7 @@ override variable_declarator_id ::=
       RESULT = a;
       a.addDim(ArrayDimKind.FABRIC);
     :}
-  // Also add extra productions to allow native arrays in variable
+  // Also add extra productions to allow Java arrays in variable
   // declarations: "int foo native[]".
   | variable_declarator_id:a NATIVE LBRACK RBRACK {:
       RESULT = a;
@@ -648,20 +641,20 @@ initialized_array_creation_expression ::=
     // BoltNewArray
     NEW:a primitive_type:b dims:c array_initializer:d {:
       RESULT = parser.nf.BoltNewArray(pos(a, d), b,
-          Collections.<ArrayDimExpr> emptyList(), c, d);
+          Collections.<ArrayDim> emptyList(), c, d);
     :}
   | NEW:a class_or_interface_type:b dims:c array_initializer:d {:
       RESULT = parser.nf.BoltNewArray(pos(a, d), b,
-          Collections.<ArrayDimExpr> emptyList(), c, d);
+          Collections.<ArrayDim> emptyList(), c, d);
     :}
   | NEW:n location_expr:a primitive_type:b dims:c array_initializer:d {:
       RESULT = parser.nf.BoltNewArray(pos(n, d), a, b,
-          Collections.<ArrayDimExpr> emptyList(), c, d);
+          Collections.<ArrayDim> emptyList(), c, d);
     :}
   | NEW:n location_expr:a class_or_interface_type:b dims:c
     array_initializer:d {:
       RESULT = parser.nf.BoltNewArray(pos(n, d), a, b,
-          Collections.<ArrayDimExpr> emptyList(), c, d);
+          Collections.<ArrayDim> emptyList(), c, d);
     :}
   ;
 
@@ -683,9 +676,9 @@ override local_variable_declaration ::=
 drop { dim_exprs }
 
 dim_exprs ::=
-    // List<ArrayDimExpr>
+    // List<ArrayDim>
     dim_expr:a {:
-      List<ArrayDimExpr> l = new LinkedList<>();
+      List<ArrayDim> l = new LinkedList<>();
       l.add(a);
       RESULT = l;
     :}
@@ -699,22 +692,37 @@ dim_exprs ::=
 drop { dim_expr }
 
 dim_expr ::=
-    // List<ArrayDimExpr>
-  // Native array initializers: "int native[5]".
-    NATIVE LBRACK expression RBRACK
+    // ArrayDim
+  // Java array initializers: "int native[5]".
+    NATIVE:x LBRACK expression:a RBRACK:y {:
+      RESULT = parser.nf.ArrayDim(pos(x, y, a), a);
+    :}
   // Fabric array initializers specify a label for the array: "int [5, L]".
-  | LBRACK expression COMMA expression RBRACK
+  | LBRACK:x expression:a COMMA expression:b RBRACK:y {:
+      RESULT = parser.nf.ArrayDim(pos(x, y), a, b);
+    :}
   ;
 
 // Array initializers can have location annotations and can have labels.
-extend array_initializer ::=
+override array_initializer ::=
     // ArrayInit
-    LBRACE expression COLON variable_initializers COMMA RBRACE
-  | location_expr LBRACE variable_initializers COMMA RBRACE
-  | location_expr LBRACE expression COLON variable_initializers COMMA RBRACE
-  | LBRACE expression COLON variable_initializers RBRACE
-  | location_expr LBRACE variable_initializers RBRACE
-  | location_expr LBRACE expression COLON variable_initializers RBRACE
+    location_expr_opt:a LBRACE expression:b COLON variable_initializers:c
+    comma_opt RBRACE:y {:
+      RESULT = parser.nf.ArrayInit(pos(a, y), a, b, c);
+    :}
+  | location_expr_opt:a LBRACE variable_initializers:b comma_opt RBRACE:y {:
+      RESULT = parser.nf.ArrayInit(pos(a, y), a, null, b);
+    :}
+  | location_expr_opt:a LBRACE label_expr_opt:b comma_opt RBRACE:y {:
+      RESULT = parser.nf.ArrayInit(pos(a, y), a, b);
+    :}
+  ;
+
+label_expr_opt ::=
+    // Expr
+  | expression:a COLON {:
+      RESULT = a;
+    :}
   ;
 
 /************************************

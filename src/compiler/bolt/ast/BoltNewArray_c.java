@@ -23,17 +23,17 @@ public class BoltNewArray_c extends Expr_c implements BoltNewArray {
   private static final long serialVersionUID = SerialVersionUID.generate();
 
   protected TypeNode baseType;
-  protected List<ArrayDimExpr> dims;
+  protected List<ArrayDim> dims;
   protected List<ArrayDimKind> addDims;
   protected ArrayInit init;
 
   public BoltNewArray_c(Position pos, TypeNode baseType,
-      List<ArrayDimExpr> dims, List<ArrayDimKind> addDims, ArrayInit init) {
+      List<ArrayDim> dims, List<ArrayDimKind> addDims, ArrayInit init) {
     this(pos, baseType, dims, addDims, init, null);
   }
 
   public BoltNewArray_c(Position pos, TypeNode baseType,
-      List<ArrayDimExpr> dims, List<ArrayDimKind> addDims, ArrayInit init,
+      List<ArrayDim> dims, List<ArrayDimKind> addDims, ArrayInit init,
       Ext ext) {
     super(pos, ext);
     // Only init may be null.
@@ -69,16 +69,16 @@ public class BoltNewArray_c extends Expr_c implements BoltNewArray {
   }
 
   @Override
-  public List<ArrayDimExpr> dims() {
+  public List<ArrayDim> dims() {
     return dims;
   }
 
   @Override
-  public BoltNewArray dims(List<ArrayDimExpr> dims) {
+  public BoltNewArray dims(List<ArrayDim> dims) {
     return dims(this, dims);
   }
 
-  protected <N extends BoltNewArray_c> N dims(N n, List<ArrayDimExpr> dims) {
+  protected <N extends BoltNewArray_c> N dims(N n, List<ArrayDim> dims) {
     if (CollectionUtil.equals(n.dims, dims)) return n;
     n = copyIfNeeded(n);
     n.dims = ListUtil.copy(dims, true);
@@ -126,7 +126,7 @@ public class BoltNewArray_c extends Expr_c implements BoltNewArray {
   }
 
   protected <N extends BoltNewArray_c> N reconstruct(N n, TypeNode baseType,
-      List<ArrayDimExpr> dims, ArrayInit init) {
+      List<ArrayDim> dims, ArrayInit init) {
     n = baseType(n, baseType);
     n = dims(n, dims);
     n = init(n, init);
@@ -136,7 +136,7 @@ public class BoltNewArray_c extends Expr_c implements BoltNewArray {
   @Override
   public Node visitChildren(NodeVisitor v) {
     TypeNode baseType = visitChild(this.baseType, v);
-    List<ArrayDimExpr> dims = visitList(this.dims, v);
+    List<ArrayDim> dims = visitList(this.dims, v);
     ArrayInit init = visitChild(this.init, v);
     return reconstruct(this, baseType, dims, init);
   }

@@ -210,13 +210,36 @@ public class BoltNodeFactory_c extends BoltAbstractNodeFactory_c
 
   @Override
   public BoltNewArray BoltNewArray(Position pos, Expr location, TypeNode base,
-      List<ArrayDimExpr> dims, List<ArrayDimKind> addDims, ArrayInit init) {
+      List<ArrayDim> dims, List<ArrayDimKind> addDims, ArrayInit init) {
     BoltLocatedElementExt ext =
         (BoltLocatedElementExt) extFactory().extBoltNewArray();
     ext.location = location;
 
     BoltNewArray n = new BoltNewArray_c(pos, base, dims, addDims, init);
     n = ext(n, ext);
+    return n;
+  }
+
+  @Override
+  protected ArrayDim ArrayDim(Position pos, ArrayDimKind kind, Expr length,
+      Expr label) {
+    ArrayDim n = new ArrayDim_c(pos, kind, length, label);
+    n = ext(n, extFactory().extArrayDim());
+    return n;
+  }
+
+  @Override
+  public final ArrayInit ArrayInit(Position pos, List<Expr> elements) {
+    return ArrayInit(pos, null, null, elements);
+  }
+
+  @Override
+  public ArrayInit ArrayInit(Position pos, Expr location, Expr label,
+      List<Expr> elements) {
+    ArrayInit n = super.ArrayInit(pos, elements);
+    BoltArrayInitExt ext = (BoltArrayInitExt) BoltExt.ext(n);
+    ext.location = location;
+    ext.label = label;
     return n;
   }
 }

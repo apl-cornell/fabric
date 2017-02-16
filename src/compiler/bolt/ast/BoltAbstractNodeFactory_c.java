@@ -1,6 +1,7 @@
 package bolt.ast;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import polyglot.ast.ArrayInit;
@@ -74,20 +75,38 @@ public abstract class BoltAbstractNodeFactory_c extends JL7NodeFactory_c
 
   @Override
   public final BoltNewArray BoltNewArray(Position pos, TypeNode base,
-      List<ArrayDimExpr> dims, List<ArrayDimKind> addDims) {
+      List<ArrayDim> dims, List<ArrayDimKind> addDims) {
     return BoltNewArray(pos, base, dims, addDims, null);
   }
 
   @Override
   public final BoltNewArray BoltNewArray(Position pos, TypeNode base,
-      List<ArrayDimExpr> dims, List<ArrayDimKind> addDims, ArrayInit init) {
+      List<ArrayDim> dims, List<ArrayDimKind> addDims, ArrayInit init) {
     return BoltNewArray(pos, null, base, dims, addDims, init);
   }
 
   @Override
   public final BoltNewArray BoltNewArray(Position pos, Expr location,
-      TypeNode base, List<ArrayDimExpr> dims, List<ArrayDimKind> addDims) {
+      TypeNode base, List<ArrayDim> dims, List<ArrayDimKind> addDims) {
     return BoltNewArray(pos, location, base, dims, addDims, null);
+  }
+
+  @Override
+  public ArrayDim ArrayDim(Position pos, Expr length) {
+    return ArrayDim(pos, ArrayDimKind.JAVA, length, null);
+  }
+
+  @Override
+  public ArrayDim ArrayDim(Position pos, Expr length, Expr label) {
+    return ArrayDim(pos, ArrayDimKind.FABRIC, length, label);
+  }
+
+  protected abstract ArrayDim ArrayDim(Position pos, ArrayDimKind kind,
+      Expr length, Expr label);
+
+  @Override
+  public ArrayInit ArrayInit(Position pos, Expr location, Expr label) {
+    return ArrayInit(pos, location, label, Collections.<Expr> emptyList());
   }
 
 }

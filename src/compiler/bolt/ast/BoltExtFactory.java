@@ -2,9 +2,9 @@ package bolt.ast;
 
 public interface BoltExtFactory extends polyglot.ext.jl7.ast.JL7ExtFactory {
     /**
-     * Creates an extension object for {@link bolt.ast.ArrayDimExpr}.
+     * Creates an extension object for {@link bolt.ast.ArrayDim}.
      */
-    polyglot.ast.Ext extArrayDimExpr();
+    polyglot.ast.Ext extArrayDim();
     
     /**
      * Creates an extension object for {@link bolt.ast.BoltNewArray}.
