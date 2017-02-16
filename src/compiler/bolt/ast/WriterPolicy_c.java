@@ -7,11 +7,15 @@ import polyglot.ast.Node;
 import polyglot.ast.Term;
 import polyglot.util.CodeWriter;
 import polyglot.util.Position;
+import polyglot.util.SerialVersionUID;
 import polyglot.visit.CFGBuilder;
 import polyglot.visit.NodeVisitor;
 import polyglot.visit.PrettyPrinter;
 
 public class WriterPolicy_c extends IntegPolicy_c implements WriterPolicy {
+
+  private static final long serialVersionUID = SerialVersionUID.generate();
+
   protected Principal owner;
   protected Principal writer;
 
