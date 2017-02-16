@@ -2,12 +2,16 @@ package bolt.ast;
 
 import java.util.List;
 
+import polyglot.ast.ArrayInit;
+import polyglot.ast.ArrayTypeNode;
+import polyglot.ast.Call;
 import polyglot.ast.ClassBody;
 import polyglot.ast.Expr;
 import polyglot.ast.FieldDecl;
 import polyglot.ast.Id;
 import polyglot.ast.Javadoc;
 import polyglot.ast.New;
+import polyglot.ast.Receiver;
 import polyglot.ast.TypeNode;
 import polyglot.ext.jl5.ast.AnnotationElem;
 import polyglot.ext.jl7.ast.JL7NodeFactory;
@@ -73,4 +77,24 @@ public interface BoltNodeFactory extends JL7NodeFactory {
 
   New New(Position pos, Expr outer, Expr location, List<TypeNode> typeArgs,
       TypeNode objectType, List<Expr> args, ClassBody body);
+
+  Call Call(Position pos, Receiver target, Id name, Expr location,
+      List<Expr> args);
+
+  Call Call(Position pos, Receiver target, List<TypeNode> typeArgs, Id name,
+      Expr location, List<Expr> args);
+
+  ArrayTypeNode ArrayTypeNode(Position pos, TypeNode base, ArrayDimKind kind);
+
+  BoltNewArray BoltNewArray(Position pos, TypeNode base,
+      List<ArrayDimExpr> dims, List<ArrayDimKind> addDims);
+
+  BoltNewArray BoltNewArray(Position pos, TypeNode base,
+      List<ArrayDimExpr> dims, List<ArrayDimKind> addDims, ArrayInit init);
+
+  BoltNewArray BoltNewArray(Position pos, Expr location, TypeNode base,
+      List<ArrayDimExpr> dims, List<ArrayDimKind> addDims);
+
+  BoltNewArray BoltNewArray(Position pos, Expr location, TypeNode base,
+      List<ArrayDimExpr> dims, List<ArrayDimKind> addDims, ArrayInit init);
 }

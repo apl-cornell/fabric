@@ -2,22 +2,26 @@ package bolt.ast;
 
 import java.util.List;
 
+import polyglot.ast.ArrayInit;
+import polyglot.ast.ArrayTypeNode;
+import polyglot.ast.Call;
 import polyglot.ast.ClassBody;
 import polyglot.ast.Expr;
 import polyglot.ast.FieldDecl;
 import polyglot.ast.Id;
 import polyglot.ast.Javadoc;
 import polyglot.ast.New;
+import polyglot.ast.Receiver;
 import polyglot.ast.TypeNode;
 import polyglot.ext.jl5.ast.AnnotationElem;
-import polyglot.ext.jl7.ast.JL7NodeFactory_c;
 import polyglot.types.Flags;
+import polyglot.util.InternalCompilerError;
 import polyglot.util.Position;
 
 /**
  * NodeFactory for Bolt extension.
  */
-public class BoltNodeFactory_c extends JL7NodeFactory_c
+public class BoltNodeFactory_c extends BoltAbstractNodeFactory_c
     implements BoltNodeFactory {
   public BoltNodeFactory_c(BoltLang lang, BoltExtFactory extFactory) {
     super(lang, extFactory);
@@ -34,23 +38,9 @@ public class BoltNodeFactory_c extends JL7NodeFactory_c
   }
 
   @Override
-  public JoinLabel JoinLabel(Position pos, LabelComponent... components) {
-    JoinLabel_c n = new JoinLabel_c(pos, components);
-    n = ext(n, extFactory().extJoinLabel());
-    return n;
-  }
-
-  @Override
   public JoinLabel JoinLabel(Position pos, List<LabelComponent> components) {
     JoinLabel_c n = new JoinLabel_c(pos, components);
     n = ext(n, extFactory().extJoinLabel());
-    return n;
-  }
-
-  @Override
-  public MeetLabel MeetLabel(Position pos, LabelComponent... components) {
-    MeetLabel_c n = new MeetLabel_c(pos, components);
-    n = ext(n, extFactory().extMeetLabel());
     return n;
   }
 
@@ -138,16 +128,6 @@ public class BoltNodeFactory_c extends JL7NodeFactory_c
     return FieldDecl(pos, flags, annotations, type, null, name, init, javadoc);
   }
 
-  /**
-   * @deprecated use the version that takes in a {@link Javadoc}.
-   */
-  @Deprecated
-  @Override
-  public final FieldDecl FieldDecl(Position pos, Flags flags,
-      List<AnnotationElem> annotations, TypeNode type, Id name, Expr init) {
-    return FieldDecl(pos, flags, annotations, type, name, init, null);
-  }
-
   @Override
   public FieldDecl FieldDecl(Position pos, Flags flags,
       List<AnnotationElem> annotations, TypeNode type, Label label, Id name,
@@ -160,22 +140,12 @@ public class BoltNodeFactory_c extends JL7NodeFactory_c
   }
 
   @Override
-  public NewLabel NewLabel(Position pos, Label label) {
-    return NewLabel(pos, null, label);
-  }
-
-  @Override
   public NewLabel NewLabel(Position pos, Expr location, Label label) {
     NewLabel n = new NewLabel_c(pos, label);
     n = ext(n, extFactory().extNewLabel());
     NewLabelExt ext = (NewLabelExt) BoltExt.ext(n);
     ext.location = location;
     return n;
-  }
-
-  @Override
-  public NewPrincipal NewPrincipal(Position pos, Principal principal) {
-    return NewPrincipal(pos, null, principal);
   }
 
   @Override
@@ -189,7 +159,7 @@ public class BoltNodeFactory_c extends JL7NodeFactory_c
   }
 
   @Override
-  public New New(Position pos, Expr outer, List<TypeNode> typeArgs,
+  public final New New(Position pos, Expr outer, List<TypeNode> typeArgs,
       TypeNode objectType, List<Expr> args, ClassBody body) {
     return New(pos, outer, null, typeArgs, objectType, args, body);
   }
@@ -201,6 +171,52 @@ public class BoltNodeFactory_c extends JL7NodeFactory_c
     New n = super.New(pos, outer, typeArgs, objectType, args, body);
     BoltNewExt ext = (BoltNewExt) BoltExt.ext(n);
     ext.location = location;
+    return n;
+  }
+
+  @Override
+  public final Call Call(Position pos, Receiver target, List<TypeNode> typeArgs,
+      Id name, List<Expr> args) {
+    return Call(pos, target, typeArgs, name, null, args);
+  }
+
+  @Override
+  public Call Call(Position pos, Receiver target, List<TypeNode> typeArgs,
+      Id name, Expr location, List<Expr> args) {
+    Call n = super.Call(pos, target, typeArgs, name, args);
+    BoltCallExt ext = (BoltCallExt) BoltExt.ext(n);
+    ext.location = location;
+    return n;
+  }
+
+  /**
+   * @deprecated Use {@link #ArrayTypeNode(Position, TypeNode, Kind)}.
+   */
+  @Deprecated
+  @Override
+  public final ArrayTypeNode ArrayTypeNode(Position pos, TypeNode base) {
+    throw new InternalCompilerError(
+        "Call ArrayTypeNode(Position, TypeNode, Base) instead.");
+  }
+
+  @Override
+  public ArrayTypeNode ArrayTypeNode(Position pos, TypeNode base,
+      ArrayDimKind kind) {
+    ArrayTypeNode n = super.ArrayTypeNode(pos, base);
+    BoltArrayTypeNodeExt ext = (BoltArrayTypeNodeExt) BoltExt.ext(n);
+    ext.kind = kind;
+    return n;
+  }
+
+  @Override
+  public BoltNewArray BoltNewArray(Position pos, Expr location, TypeNode base,
+      List<ArrayDimExpr> dims, List<ArrayDimKind> addDims, ArrayInit init) {
+    BoltLocatedElementExt ext =
+        (BoltLocatedElementExt) extFactory().extBoltNewArray();
+    ext.location = location;
+
+    BoltNewArray n = new BoltNewArray_c(pos, base, dims, addDims, init);
+    n = ext(n, ext);
     return n;
   }
 }

@@ -1,6 +1,5 @@
 package bolt.ast;
 
-import java.util.Arrays;
 import java.util.List;
 
 import polyglot.ast.Ext;
@@ -19,14 +18,6 @@ public class JoinLabel_c extends Label_c implements JoinLabel {
   private static final long serialVersionUID = SerialVersionUID.generate();
 
   protected List<LabelComponent> components;
-
-  public JoinLabel_c(Position pos, LabelComponent... components) {
-    this(pos, components, null);
-  }
-
-  public JoinLabel_c(Position pos, LabelComponent[] components, Ext ext) {
-    this(pos, Arrays.asList(components), ext);
-  }
 
   public JoinLabel_c(Position pos, List<LabelComponent> components) {
     this(pos, components, null);

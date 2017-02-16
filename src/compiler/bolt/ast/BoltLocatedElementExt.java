@@ -14,7 +14,7 @@ import polyglot.visit.CFGBuilder;
 import polyglot.visit.NodeVisitor;
 import polyglot.visit.PrettyPrinter;
 
-public abstract class BoltLocatedElementExt extends BoltTermExt
+public class BoltLocatedElementExt extends BoltTermExt
     implements LocatedElement {
 
   private static final long serialVersionUID = SerialVersionUID.generate();

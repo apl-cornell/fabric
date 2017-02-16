@@ -24,12 +24,37 @@ public final class BoltExtFactory_c extends BoltAbstractExtFactory_c {
   }
 
   @Override
+  protected Ext extArrayTypeNodeImpl() {
+    return new BoltArrayTypeNodeExt(null);
+  }
+
+  @Override
+  protected Ext extCallImpl() {
+    return new BoltCallExt();
+  }
+
+  @Override
   protected Ext extFieldDeclImpl() {
     return new BoltFieldDeclExt();
   }
 
   @Override
+  protected Ext extNewImpl() {
+    return new BoltNewExt();
+  }
+
+  @Override
+  protected Ext extBoltNewArrayImpl() {
+    return new BoltLocatedElementExt(null);
+  }
+
+  @Override
   protected Ext extNewLabelImpl() {
     return new NewLabelExt();
+  }
+
+  @Override
+  protected Ext extNewPrincipalImpl() {
+    return new NewPrincipalExt();
   }
 }

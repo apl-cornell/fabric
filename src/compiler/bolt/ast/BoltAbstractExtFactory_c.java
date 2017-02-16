@@ -8,6 +8,36 @@ public abstract class BoltAbstractExtFactory_c extends polyglot.ext.jl7.ast.JL7A
     }
     
     @Override
+    public final polyglot.ast.Ext extArrayDimExpr() {
+        polyglot.ast.Ext e = extArrayDimExprImpl();
+        if (nextExtFactory() != null) {
+            polyglot.ast.Ext e2;
+            if (nextExtFactory() instanceof BoltExtFactory) {
+                e2 = ((BoltExtFactory) nextExtFactory()).extArrayDimExpr();
+            } else {
+                e2 = nextExtFactory().extTerm();
+            }
+            e = composeExts(e, e2);
+        }
+        return postExtArrayDimExpr(e);
+    }
+    
+    @Override
+    public final polyglot.ast.Ext extBoltNewArray() {
+        polyglot.ast.Ext e = extBoltNewArrayImpl();
+        if (nextExtFactory() != null) {
+            polyglot.ast.Ext e2;
+            if (nextExtFactory() instanceof BoltExtFactory) {
+                e2 = ((BoltExtFactory) nextExtFactory()).extBoltNewArray();
+            } else {
+                e2 = nextExtFactory().extExpr();
+            }
+            e = composeExts(e, e2);
+        }
+        return postExtBoltNewArray(e);
+    }
+    
+    @Override
     public final polyglot.ast.Ext extBottomPrincipal() {
         polyglot.ast.Ext e = extBottomPrincipalImpl();
         if (nextExtFactory() != null) {
@@ -279,6 +309,10 @@ public abstract class BoltAbstractExtFactory_c extends polyglot.ext.jl7.ast.JL7A
         return postExtWriterPolicy(e);
     }
     
+    protected polyglot.ast.Ext extArrayDimExprImpl() { return extTermImpl(); }
+    
+    protected polyglot.ast.Ext extBoltNewArrayImpl() { return extExprImpl(); }
+    
     protected polyglot.ast.Ext extBottomPrincipalImpl() {
         return extTermImpl();
     }
@@ -320,6 +354,14 @@ public abstract class BoltAbstractExtFactory_c extends polyglot.ext.jl7.ast.JL7A
     protected polyglot.ast.Ext extTopPrincipalImpl() { return extTermImpl(); }
     
     protected polyglot.ast.Ext extWriterPolicyImpl() { return extTermImpl(); }
+    
+    protected polyglot.ast.Ext postExtArrayDimExpr(polyglot.ast.Ext ext) {
+        return postExtTerm(ext);
+    }
+    
+    protected polyglot.ast.Ext postExtBoltNewArray(polyglot.ast.Ext ext) {
+        return postExtExpr(ext);
+    }
     
     protected polyglot.ast.Ext postExtBottomPrincipal(polyglot.ast.Ext ext) {
         return postExtTerm(ext);

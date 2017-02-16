@@ -2,18 +2,19 @@ include "polyglot/ext/jl7/parse/jl7.ppg"
 
 package bolt.parse;
 
+import bolt.ast.ArrayDimExpr;
+import bolt.ast.ArrayDimKind;
+import bolt.ast.BoltNewArray;
 import bolt.ast.BoltNodeFactory;
 import bolt.ast.Label;
 import bolt.ast.LabelComponent;
 import bolt.ast.Policy;
 import bolt.ast.Principal;
 
-parser Grm extends polyglot.ext.jl7.parse.Grm {:
-  public final BoltNodeFactory nf;
+parser Grm extends BoltBaseParser {:
 
   public Grm(Lexer l, TypeSystem t, NodeFactory n, ErrorQueue q) {
     super(l, t, n, q);
-    this.nf = (BoltNodeFactory) n;
   }
 :};
 
@@ -50,6 +51,12 @@ non terminal Expr primary_access_path;
 non terminal Expr location_expr;
 
 non terminal ConstructorCall explicit_super_constructor_invocation;
+
+non terminal List<ArrayDimExpr> dim_exprs;
+non terminal ArrayDimExpr dim_expr;
+non terminal List<ArrayDimKind> dims, dims_opt;
+non terminal BoltNewArray array_creation_expression;
+non terminal BoltNewArray initialized_array_creation_expression;
 
 start with goal;
 
@@ -260,12 +267,13 @@ primary_access_path ::=
 
 // Field declarations can have labels.
 extend field_declaration ::=
+    // List<ClassMember>
     modifiers_or_annotations_opt:a type:b label:c variable_declarators:d
     SEMICOLON:e {:
       List<ClassMember> l = new LinkedList<>();
       for (VarDeclarator decl : d) {
         l.add(parser.nf.FieldDecl(pos(b, e), a.flags(), a.annotations(),
-            parser.array(b, decl.dims), c, decl.name, decl.init,
+            parser.array(b, decl.dims()), c, decl.name(), decl.init(),
             parser.javadoc(a.position(), pos(b))));
       }
       RESULT = l;
@@ -278,6 +286,7 @@ extend field_declaration ::=
 
 // Expressions for constructing labels and principals.
 extend primary ::=
+    // Expr
     NEW:n LABEL label:a {:
       RESULT = parser.nf.NewLabel(pos(n, a), a);
     :}
@@ -308,6 +317,7 @@ location_expr ::=
 
 // Constructor calls can have location annotations.
 extend class_instance_creation_expression ::=
+    // Expr
     NEW:n location_expr:a class_or_interface_type:b LPAREN argument_list_opt:c
     RPAREN class_body_opt:d {:
       // ONE
@@ -343,7 +353,7 @@ extend class_instance_creation_expression ::=
       TypeNode aa =
           new JL5Name(parser.nf, parser.ts, pos(d),
               parser.nf.Id(pos(d), d.getIdentifier())).toType();
-      TypeNode tn = parser.nf.AmbTypeInstantiation(pos(d, e), aa, e); 
+      TypeNode tn = parser.nf.AmbTypeInstantiation(pos(d, e), aa, e);
       // FIVE
       RESULT = parser.nf.New(pos(a), a, b, c, tn, f, g);
     :}
@@ -399,56 +409,306 @@ extend class_instance_creation_expression ::=
 // Method invocations can have location annotations.
 extend method_invocation ::=
     // Call
-    name location_expr LPAREN argument_list_opt RPAREN
-  | primary DOT IDENTIFIER location_expr LPAREN argument_list_opt RPAREN
-  | SUPER DOT IDENTIFIER location_expr LPAREN argument_list_opt RPAREN
-  | name DOT SUPER DOT IDENTIFIER location_expr LPAREN argument_list_opt RPAREN
-  | primary DOT type_arguments IDENTIFIER location_expr LPAREN
-    argument_list_opt RPAREN
-  | name DOT type_arguments IDENTIFIER location_expr LPAREN argument_list_opt
-    RPAREN
-  | SUPER DOT type_arguments IDENTIFIER location_expr LPAREN argument_list_opt
-    RPAREN
-  | name DOT SUPER DOT type_arguments IDENTIFIER location_expr LPAREN
-    argument_list_opt RPAREN
+    name:a location_expr:b LPAREN argument_list_opt:c RPAREN:y {:
+      RESULT = parser.nf.Call(pos(a, y),
+          a.prefix == null ? null : a.prefix.toReceiver(),
+          a.name, b, c);
+    :}
+  | primary:a DOT IDENTIFIER:b location_expr:c LPAREN argument_list_opt:d
+    RPAREN:y {:
+      RESULT = parser.nf.Call(pos(b, y), a,
+          parser.nf.Id(pos(b), b.getIdentifier()), c, d);
+    :}
+  | SUPER:a DOT IDENTIFIER:b location_expr:c LPAREN argument_list_opt:d
+    RPAREN:y {:
+      RESULT = parser.nf.Call(pos(a, y, b),
+          parser.nf.Super(pos(a)),
+          parser.nf.Id(pos(b), b.getIdentifier()), c, d);
+    :}
+  | name:a DOT SUPER:n DOT IDENTIFIER:b location_expr:c LPAREN
+    argument_list_opt:d RPAREN:y {:
+      RESULT = parser.nf.Call(pos(b, y),
+          parser.nf.Super(pos(n), a.toType()),
+          parser.nf.Id(pos(b), b.getIdentifier()), c, d);
+    :}
+  | primary:a DOT type_arguments:b IDENTIFIER:c location_expr:d LPAREN
+    argument_list_opt:e RPAREN:y {:
+      RESULT = parser.nf.Call(pos(a, y), a, b,
+          parser.nf.Id(pos(c), c.getIdentifier()), d, e);
+    :}
+  | name:a DOT type_arguments:b IDENTIFIER:c location_expr:d LPAREN
+    argument_list_opt:e RPAREN:y {:
+      RESULT = parser.nf.Call(pos(a, y), a.toReceiver(), b,
+          parser.nf.Id(pos(c), c.getIdentifier()), d, e);
+    :}
+  | SUPER:a DOT type_arguments:b IDENTIFIER:c location_expr:d LPAREN
+    argument_list_opt:e RPAREN:y {:
+      RESULT = parser.nf.Call(pos(a, y, c), parser.nf.Super(pos(a)), b,
+          parser.nf.Id(pos(c), c.getIdentifier()), d, e);
+    :}
+  | name:a DOT SUPER:b DOT type_arguments:c IDENTIFIER:d location_expr:e LPAREN
+    argument_list_opt:f RPAREN:y {:
+      RESULT = parser.nf.Call(pos(d, y), parser.nf.Super(pos(b), a.toType()),
+          c, parser.nf.Id(pos(d), d.getIdentifier()), e, f);
+    :}
   ;
 
 /************************************
  * Arrays
  ************************************/
 
-// Native arrays in variable declarations: "int foo native[]".
-extend variable_declarator_id ::=
-    variable_declarator_id NATIVE LBRACK RBRACK
+// Change the type of "dims" and "dims_opt" to List<ArrayDimKind>, a richer
+// data structure that lets us capture multidimensional arrays with mixed
+// native and non-native dimensions.
+drop { dims, dims_opt }
+dims_opt ::=
+    // List<ArrayDimKind>
+    {:
+      RESULT = new ArrayList<>();
+    :}
+  | dims:a {:
+      RESULT = a;
+    :}
+  ;
+dims ::=
+    LBRACK RBRACK {:
+      RESULT = new ArrayList<>();
+      RESULT.add(ArrayDimKind.FABRIC);
+    :}
+  | NATIVE LBRACK RBRACK {:
+      RESULT = new ArrayList<>();
+      RESULT.add(ArrayDimKind.JAVA);
+    :}
+  | dims:a LBRACK RBRACK {:
+      a.add(ArrayDimKind.FABRIC);
+      RESULT = a;
+    :}
+  | dims:a NATIVE LBRACK RBRACK {:
+      a.add(ArrayDimKind.JAVA);
+      RESULT = a;
+    :}
   ;
 
-// Native array types: "int native[]".
-extend dims ::=
-    NATIVE LBRACK RBRACK
+//////////////////////////////////////////////////////////////////////////////
+// Begin patching of productions that mention "dims" and "dims_opt".
+//////////////////////////////////////////////////////////////////////////////
+override array_type ::=
+    primitive_type:a dims:b {:
+      RESULT = parser.array(a, b);
+    :}
+  | name:a dims:b {:
+      RESULT = parser.array(a.toType(), b);
+    :}
+  | class_or_interface:a LT type_argument_list_1:b DOT name:c dims:d {:
+      TypeNode tn = parser.nf.AmbTypeInstantiation(pos(a, b), a, b);
+      TypeNode aa = ((JL5Name) c).toType(tn);
+      RESULT = parser.array(aa, d);
+    :}
+  | class_or_interface:a LT type_argument_list_1:b dims:c {:
+      RESULT = parser.array(
+          parser.nf.AmbTypeInstantiation(pos(a, b), a, b), c);
+    :}
   ;
 
-// Native array initializers: "int native[5]".
-// Fabric array initializers specify a label for the array: "int [5, L]".
-override dim_expr ::=
+override variable_declarator_id ::=
+    // VarDeclarator
+    IDENTIFIER:a {:
+      RESULT = new VarDeclarator(pos(a),
+          parser.nf.Id(pos(a), a.getIdentifier()));
+    :}
+  | variable_declarator_id:a LBRACK RBRACK {:
+      RESULT = a;
+      a.addDim(ArrayDimKind.FABRIC);
+    :}
+  // Also add extra productions to allow native arrays in variable
+  // declarations: "int foo native[]".
+  | variable_declarator_id:a NATIVE LBRACK RBRACK {:
+      RESULT = a;
+      a.addDim(ArrayDimKind.JAVA);
+    :}
+  ;
+
+drop {
+  method_header ::=
+    modifiers_or_annotations_opt type IDENTIFIER LPAREN
+    formal_parameter_list_opt RPAREN dims_opt throws_opt
+  | modifiers_or_annotations_opt LT type_parameter_list_1 type IDENTIFIER
+    LPAREN formal_parameter_list_opt RPAREN dims_opt throws_opt
+  ;
+}
+
+extend method_header ::=
+    modifiers_or_annotations_opt:a type:b IDENTIFIER:d LPAREN
+    formal_parameter_list_opt:e RPAREN dims_opt:g throws_opt:h {:
+      RESULT = parser.nf.MethodDecl(pos(b, g, d), a.flags(),
+          a.annotations(), parser.array(b, g),
+          parser.nf.Id(pos(d), d.getIdentifier()), e, h, null,
+          new LinkedList<ParamTypeNode>(),
+          parser.javadoc(a.position(), pos(b)));
+    :}
+  | modifiers_or_annotations_opt:a LT:b type_parameter_list_1:c type:d
+    IDENTIFIER:i LPAREN formal_parameter_list_opt:e RPAREN dims_opt:g
+    throws_opt:h {:
+      RESULT = parser.nf.MethodDecl(pos(d, g, i), a.flags(), a.annotations(),
+          parser.array(d, g),
+          parser.nf.Id(pos(i), i.getIdentifier()), e, h, null, c,
+          parser.javadoc(a.position(), pos(b)));
+    :}
+  ;
+
+drop {
+  primary_no_new_array ::=
+    primitive_type dims DOT CLASS
+  | name dims DOT CLASS
+  ;
+}
+
+primary_no_new_array ::=
+    primitive_type:a dims:b DOT CLASS:d {:
+      RESULT = parser.nf.ClassLit(pos(a, d, d), parser.array(a, b));
+    :}
+  | name:a dims:b DOT CLASS:d {:
+      RESULT = parser.nf.ClassLit(pos(a, d, d), parser.array(a.toType(), b));
+    :}
+  ;
+
+// Type of array_creation_expression has changed.
+drop { array_creation_expression }
+
+array_creation_expression ::=
+    // BoltNewArray
+    NEW:n primitive_type:a dim_exprs:b dims_opt:c {:
+      RESULT = parser.nf.BoltNewArray(pos(n, b), a, b, c);
+    :}
+  | NEW:n class_or_interface_type:a dim_exprs:b dims_opt:c {:
+      RESULT = parser.nf.BoltNewArray(pos(n, b), a, b, c);
+    :}
+  | initialized_array_creation_expression:a {:
+      RESULT = a;
+    :}
+  // Also add extra productions to allow location annotations.
+  | NEW:n location_expr:a primitive_type:b dim_exprs:c dims_opt:d {:
+      RESULT = parser.nf.BoltNewArray(pos(n, c), a, b, c, d);
+    :}
+  | NEW:n location_expr:a class_or_interface_type:b dim_exprs:c dims_opt:d {:
+      RESULT = parser.nf.BoltNewArray(pos(n, c), a, b, c, d);
+    :}
+  ;
+
+drop {
+  cast_expression ::=
+    LPAREN primitive_type dims_opt RPAREN unary_expression
+  | LPAREN name dims RPAREN unary_expression_not_plus_minus
+  | LPAREN name LT type_argument_list_1 dims_opt RPAREN
+    unary_expression_not_plus_minus
+  | LPAREN name LT type_argument_list_1 DOT class_or_interface dims_opt RPAREN
+    unary_expression_not_plus_minus
+  | LPAREN name LT type_argument_list_1 DOT class_or_interface LT
+    type_argument_list_1 dims_opt RPAREN unary_expression_not_plus_minus
+  ;
+}
+
+extend cast_expression ::=
+    LPAREN:p primitive_type:a dims_opt:b RPAREN unary_expression:c {:
+      RESULT = parser.nf.Cast(pos(p, c, a), parser.array(a, b), c);
+    :}
+  | LPAREN:p name:a dims:b RPAREN unary_expression_not_plus_minus:c {:
+      RESULT = parser.nf.Cast(pos(p, c, a), parser.array(a.toType(), b), c);
+    :}
+  | LPAREN:a name:b LT type_argument_list_1:d dims_opt:e RPAREN
+    unary_expression_not_plus_minus:g {:
+      TypeNode tn = parser.nf.AmbTypeInstantiation(pos(b, d), b.toType(), d);
+      RESULT = parser.nf.Cast(pos(a, g, b), parser.array(tn, e), g);
+    :}
+  | LPAREN:a name:b LT type_argument_list_1:d DOT class_or_interface:f
+    dims_opt:g RPAREN unary_expression_not_plus_minus:i {:
+      AmbTypeNode bb = (AmbTypeNode) f;
+      TypeNode tn = parser.nf.AmbTypeInstantiation(pos(b, d),
+          parser.exprToType(b.toExpr()), d);
+      RESULT = parser.nf.Cast(pos(a, i, b),
+          parser.array(parser.nf.AmbTypeNode(pos(b, f), tn, bb.id()), g), i);
+    :}
+  | LPAREN:a name:b LT type_argument_list_1:d DOT class_or_interface:f LT
+    type_argument_list_1:h dims_opt:j RPAREN
+    unary_expression_not_plus_minus:i {:
+      AmbTypeNode bb = (AmbTypeNode) f;
+      TypeNode tn = parser.nf.AmbTypeInstantiation(pos(b, d),
+          parser.exprToType(b.toExpr()), d);
+      tn = parser.nf.AmbTypeInstantiation(pos(b, h),
+          parser.nf.AmbTypeNode(pos(b, f), tn, bb.id()), h);
+      RESULT = parser.nf.Cast(pos(a, i, b), parser.array(tn, j), i);
+    :}
+  ;
+
+// Type of initialized_array_creation_expression has changed.
+drop { initialized_array_creation_expression }
+
+// Also add extra productions to allow location annotations.
+initialized_array_creation_expression ::=
+    // BoltNewArray
+    NEW:a primitive_type:b dims:c array_initializer:d {:
+      RESULT = parser.nf.BoltNewArray(pos(a, d), b,
+          Collections.<ArrayDimExpr> emptyList(), c, d);
+    :}
+  | NEW:a class_or_interface_type:b dims:c array_initializer:d {:
+      RESULT = parser.nf.BoltNewArray(pos(a, d), b,
+          Collections.<ArrayDimExpr> emptyList(), c, d);
+    :}
+  | NEW:n location_expr:a primitive_type:b dims:c array_initializer:d {:
+      RESULT = parser.nf.BoltNewArray(pos(n, d), a, b,
+          Collections.<ArrayDimExpr> emptyList(), c, d);
+    :}
+  | NEW:n location_expr:a class_or_interface_type:b dims:c
+    array_initializer:d {:
+      RESULT = parser.nf.BoltNewArray(pos(n, d), a, b,
+          Collections.<ArrayDimExpr> emptyList(), c, d);
+    :}
+  ;
+
+//////////////////////////////////////////////////////////////////////////////
+// End patching of productions that mention "dims" and "dims_opt".
+//////////////////////////////////////////////////////////////////////////////
+
+// Also need to patch this, since we have a different VarDeclarator now.
+override local_variable_declaration ::=
+    modifiers_or_annotations:a type:b variable_declarators:c {:
+      RESULT = parser.boltVariableDeclarators(b, c, a.flags(), a.annotations());
+    :}
+  | type:a variable_declarators:b {:
+      RESULT = parser.boltVariableDeclarators(a, b, Flags.NONE);
+    :}
+  ;
+
+// Type of dim_exprs has changed.
+drop { dim_exprs }
+
+dim_exprs ::=
+    // List<ArrayDimExpr>
+    dim_expr:a {:
+      List<ArrayDimExpr> l = new LinkedList<>();
+      l.add(a);
+      RESULT = l;
+    :}
+  | dim_exprs:a dim_expr:b {:
+      RESULT = a;
+      a.add(b);
+    :}
+  ;
+
+// Type of dim_expr has changed.
+drop { dim_expr }
+
+dim_expr ::=
+    // List<ArrayDimExpr>
+  // Native array initializers: "int native[5]".
     NATIVE LBRACK expression RBRACK
+  // Fabric array initializers specify a label for the array: "int [5, L]".
   | LBRACK expression COMMA expression RBRACK
-  ;
-
-// Array creation expressions can have location annotations.
-extend array_creation_expression ::=
-    // NewArray
-    NEW location_expr primitive_type dim_exprs dims_opt
-  | NEW location_expr class_or_interface_type dim_exprs dims_opt
-  ;
-
-// Array creation expressions with initializers can have location annotations.
-extend initialized_array_creation_expression ::=
-    NEW location_expr primitive_type dims array_initializer
-  | NEW location_expr class_or_interface_type dims array_initializer
   ;
 
 // Array initializers can have location annotations and can have labels.
 extend array_initializer ::=
+    // ArrayInit
     LBRACE expression COLON variable_initializers COMMA RBRACE
   | location_expr LBRACE variable_initializers COMMA RBRACE
   | location_expr LBRACE expression COLON variable_initializers COMMA RBRACE
@@ -474,6 +734,7 @@ extend statement_without_trailing_substatement ::=
 
 // Constructor bodies can have super() calls in the middle.
 extend constructor_body ::=
+    // Block
     LBRACE block_statements explicit_super_constructor_invocation RBRACE
   | LBRACE block_statements explicit_super_constructor_invocation
     block_statements RBRACE
@@ -491,10 +752,12 @@ drop {
 }
 
 extend explicit_constructor_invocation ::=
+    // ConstructorCall
     explicit_super_constructor_invocation
   ;
 
 explicit_super_constructor_invocation ::=
+    // ConstructorCall
     SUPER LPAREN argument_list_opt RPAREN SEMICOLON
   | primary DOT SUPER LPAREN argument_list_opt RPAREN SEMICOLON
   | type_arguments SUPER LPAREN argument_list_opt RPAREN SEMICOLON

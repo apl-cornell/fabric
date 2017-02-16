@@ -1,6 +1,5 @@
 package bolt.ast;
 
-import java.util.Arrays;
 import java.util.List;
 
 import polyglot.ast.Ext;
@@ -19,14 +18,6 @@ public class MeetLabel_c extends Label_c implements MeetLabel {
   private static final long serialVersionUID = SerialVersionUID.generate();
 
   protected List<LabelComponent> components;
-
-  public MeetLabel_c(Position pos, LabelComponent... components) {
-    this(pos, components, null);
-  }
-
-  public MeetLabel_c(Position pos, LabelComponent[] components, Ext ext) {
-    this(pos, Arrays.asList(components), ext);
-  }
 
   public MeetLabel_c(Position pos, List<LabelComponent> components) {
     this(pos, components, null);

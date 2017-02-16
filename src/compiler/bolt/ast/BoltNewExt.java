@@ -51,12 +51,10 @@ public class BoltNewExt extends BoltLocatedElementExt {
 
     Term prev = n.qualifier();
 
-    if (prev != null) {
-      if (location != null) {
-        v.visitCFG(prev, prev = location, ENTRY);
-      }
-    } else {
+    if (prev == null) {
       prev = location;
+    } else if (location != null) {
+      v.visitCFG(prev, prev = location, ENTRY);
     }
 
     if (prev != null) {
