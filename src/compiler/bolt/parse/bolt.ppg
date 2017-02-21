@@ -454,6 +454,7 @@ extend method_invocation ::=
 // data structure that lets us capture multidimensional arrays with mixed
 // native (Java) and non-native (Fabric) dimensions.
 drop { dims, dims_opt }
+
 dims_opt ::=
     // List<ArrayDimKind>
     {:
@@ -463,6 +464,7 @@ dims_opt ::=
       RESULT = a;
     :}
   ;
+
 dims ::=
     LBRACK RBRACK {:
       RESULT = new ArrayList<>();
@@ -678,9 +680,8 @@ drop { dim_exprs }
 dim_exprs ::=
     // List<ArrayDim>
     dim_expr:a {:
-      List<ArrayDim> l = new LinkedList<>();
-      l.add(a);
-      RESULT = l;
+      RESULT = new LinkedList<>();
+      RESULT.add(a);
     :}
   | dim_exprs:a dim_expr:b {:
       RESULT = a;
@@ -732,8 +733,9 @@ label_expr_opt ::=
 // Atomic blocks.
 extend statement_without_trailing_substatement ::=
     // Stmt
-    ATOMIC block
-  | ATOMIC THROWS class_type_list block
+    ATOMIC:n throws_opt:a LBRACE block_statements_opt:b RBRACE:y {:
+      RESULT = parser.nf.Atomic(pos(n, y), a, b);
+    :}
   ;
 
 /************************************
@@ -743,33 +745,29 @@ extend statement_without_trailing_substatement ::=
 // Constructor bodies can have super() calls in the middle.
 extend constructor_body ::=
     // Block
-    LBRACE block_statements explicit_super_constructor_invocation RBRACE
-  | LBRACE block_statements explicit_super_constructor_invocation
-    block_statements RBRACE
+    LBRACE:x block_statements:a explicit_super_constructor_invocation:b
+    block_statements_opt:c RBRACE:y {:
+      List l = new LinkedList<>();
+      l.add(parser.nf.Prologue(pos(a), a));
+      l.add(b);
+      l.addAll(c);
+      RESULT = parser.nf.Block(parser.pos(x, y), l);
+    :}
   ;
 
-drop {
-  explicit_constructor_invocation ::=
+transfer explicit_constructor_invocation
+  to explicit_super_constructor_invocation {
       SUPER LPAREN argument_list_opt RPAREN SEMICOLON
     | primary DOT SUPER LPAREN argument_list_opt RPAREN SEMICOLON
     | type_arguments SUPER LPAREN argument_list_opt RPAREN SEMICOLON
     | primary DOT type_arguments SUPER LPAREN argument_list_opt RPAREN SEMICOLON
     | name DOT SUPER LPAREN argument_list_opt RPAREN SEMICOLON
     | name DOT type_arguments SUPER LPAREN argument_list_opt RPAREN SEMICOLON
-    ;
 }
 
 extend explicit_constructor_invocation ::=
     // ConstructorCall
-    explicit_super_constructor_invocation
-  ;
-
-explicit_super_constructor_invocation ::=
-    // ConstructorCall
-    SUPER LPAREN argument_list_opt RPAREN SEMICOLON
-  | primary DOT SUPER LPAREN argument_list_opt RPAREN SEMICOLON
-  | type_arguments SUPER LPAREN argument_list_opt RPAREN SEMICOLON
-  | primary DOT type_arguments SUPER LPAREN argument_list_opt RPAREN SEMICOLON
-  | name DOT SUPER LPAREN argument_list_opt RPAREN SEMICOLON
-  | name DOT type_arguments SUPER LPAREN argument_list_opt RPAREN SEMICOLON
+    explicit_super_constructor_invocation:a {:
+      RESULT = a;
+    :}
   ;

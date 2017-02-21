@@ -4,6 +4,7 @@ import java.util.List;
 
 import polyglot.ast.ArrayInit;
 import polyglot.ast.ArrayTypeNode;
+import polyglot.ast.Block;
 import polyglot.ast.Call;
 import polyglot.ast.ClassBody;
 import polyglot.ast.Expr;
@@ -12,6 +13,7 @@ import polyglot.ast.Id;
 import polyglot.ast.Javadoc;
 import polyglot.ast.New;
 import polyglot.ast.Receiver;
+import polyglot.ast.Stmt;
 import polyglot.ast.TypeNode;
 import polyglot.ext.jl5.ast.AnnotationElem;
 import polyglot.ext.jl7.ast.JL7NodeFactory;
@@ -113,4 +115,7 @@ public interface BoltNodeFactory extends JL7NodeFactory {
   ArrayInit ArrayInit(Position pos, Expr location, Expr label,
       List<Expr> elements);
 
+  Block Atomic(Position pos, List<TypeNode> throwTypes, List<Stmt> stmts);
+
+  Block Prologue(Position pos, List<Stmt> stmts);
 }

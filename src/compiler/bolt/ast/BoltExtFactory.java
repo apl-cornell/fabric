@@ -7,6 +7,16 @@ public interface BoltExtFactory extends polyglot.ext.jl7.ast.JL7ExtFactory {
     polyglot.ast.Ext extArrayDim();
     
     /**
+     * Creates an extension object for {@link polyglot.ast.Block}.
+     */
+    polyglot.ast.Ext extAtomic();
+    
+    /**
+     * Creates an extension object for {@link polyglot.ast.Block}.
+     */
+    polyglot.ast.Ext extPrologue();
+    
+    /**
      * Creates an extension object for {@link bolt.ast.BoltNewArray}.
      */
     polyglot.ast.Ext extBoltNewArray();
