@@ -1,21 +1,20 @@
 package fla.util;
 
-import fla.principals.ConfPrincipal;
+import fla.principals.Principal;
 
 /**
  * Represents use of the rule a ≽ b => a→ ≽ b→.
  */
 public final class ConfProjectionProof extends
-    ActsForProof<ConfPrincipal, ConfPrincipal> {
+    ActsForProof<Principal, Principal> {
   /**
    * A proof of {@code superior.base()} ≽ {@code inferior.base()}.
    */
   public final ActsForProof<?, ?> proof;
 
   public ConfProjectionProof(ActsForProof<?, ?> proof) {
-    super((ConfPrincipal) proof.superior.confidentiality(),
-        (ConfPrincipal) proof.inferior.confidentiality(), proof.label,
-        proof.accessPolicy);
+    super(proof.superior.confidentiality(), proof.inferior.confidentiality(),
+        proof.label, proof.accessPolicy);
     this.proof = proof;
   }
 }

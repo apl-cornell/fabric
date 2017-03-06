@@ -315,4 +315,32 @@ public class PrincipalUtil {
     return PrincipalUtil.conjunction(conf, integ);
   }
 
+  /**
+   * Add the delegation <code>superior</code> ≽ <code>inferior</code>
+   * to <code>host</code>'s delegation set with label <code>label</code>
+   */
+  public static void addActsForDelegation(Principal host, Principal superior,
+      Principal inferior, Principal label) {
+    if (host instanceof NodePrincipal) {
+      NodePrincipal node = (NodePrincipal) host;
+      node.addDelegatesTo(inferior, superior, label);
+    } else throw new Error("Host is not a NodePrincipal");
+  }
+
+  /**
+   * Add the delegation <code>permissive</code> ⊑ <code>restrictive</code>
+   * to <code>host</code>'s delegation set with label <code>label</code>
+   */
+  public static void addFlowsToDelegation(Principal host, Principal permissive,
+      Principal restrictive, Principal label) {
+    if (host instanceof NodePrincipal) {
+      NodePrincipal node = (NodePrincipal) host;
+      Principal inferior =
+          conjunction(permissive.confidentiality(), restrictive.integrity());
+      Principal superior =
+          conjunction(restrictive.confidentiality(), permissive.integrity());
+      node.addDelegatesTo(inferior, superior, label);
+    } else throw new Error("Host is not a NodePrincipal");
+  }
+
 }
