@@ -32,8 +32,6 @@ public class Object extends java.lang.Object {
   public static native Object jif$cast$fabric_lang_Object(Object o);
   public static native boolean jif$Instanceof$fabric_lang_Object(Object o);
 
-  public native Statistics createStatistics();
-  
   /**
    * The store where this object resides.
    */
