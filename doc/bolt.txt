@@ -1,0 +1,84 @@
+public abstract class C<T> extends D<T> implements I<T> {
+  label{} L = new @Node.fromDNS("bob.example.org") label {};
+  principal{L} P = Node.fromDNS("bob.example.org");
+
+  // Field labels like in Jif.
+  final int{L} x;
+
+  // No begin/end/exception/arg/return labels on methods or constructors.
+  public C(int x) {
+    // Like Jif, all finals must be initialized before calling super().
+    // Any calls to this() must still appear before anything else in the
+    // constructor.
+    // TODO
+    this.x = x;
+    super();
+    m();
+  }
+
+  void m() {
+    atomic throws Exception {
+      // No distinguishing between stores & workers.
+      Node node = Node.fromDNS("store.example.org");
+      Node localStore = Node.localStore(); // local temp store
+      Node local = Node.local();
+
+      // Locations in constructor/method calls.
+      C<T> c = new @(this.node()) C<>();
+      c.c@(this.node())(0).c@node(1).c@(node())(2);
+
+      // Locations in constructor calls are optional in non-static contexts.
+      C<T> c = new C<>();
+
+      // Label expressions.
+      label l0 = new @node label {P→;P←};
+      label l1 = new @node label {l0 ⊔ l0};
+      label l2 = new @node label {l1 ⊓ l0 ⊔ {P→}};
+
+      // Locations in label expressions are optional in non-static contexts.
+      label l3 = new label {P→;P←};
+      label l4 = new label {l0 ⊔ l0};
+      label l5 = new label {l1 ⊓ l0 ⊔ {P→}};
+
+      // Fabric arrays.
+      int[] arr0 = new @node int[5, L];
+      int[] arr1 = @node L {1, 2, 3};
+      int[] arr2 = @node l0 {1, 2, 3};
+      int[] arr3 = @node (new @node label {}) {1, 2, 3};
+      int len0 = new @node int[2, L].length;
+      int len1 = new @node int[] L {1, 2, 3}.length;
+      int len2 = new @node int[] l0 {1, 2, 3}.length;
+      int len3 = new @node int[] (new @node label {}) {1, 2, 3}.length;
+
+      // Locations in Fabric arrays are optional in non-static contexts.
+      int[] arr4 = new int[5, L];
+      int[] arr5 = L {1, 2, 3};
+      int[] arr6 = l0 {1, 2, 3};
+      int[] arr7 = (new @node label {}) {1, 2, 3};
+      int len4 = new int[2, L].length;
+      int len5 = new int[] L {1, 2, 3}.length;
+      int len6 = new int[] l0 {1, 2, 3}.length;
+      int len7 = new int[] (new @node label {}) {1, 2, 3}.length;
+
+      // Native arrays.
+      int native[] n_arr0 = new int native[5];
+      int native[] n_arr1 = {1, 2, 3};
+      int n_len0 = new int native[2].length;
+      int n_len1 = new int native[] {1, 2, 3}.length;
+    }
+  }
+
+  // Support Java 5 annotation syntax?
+  @Override
+  public String toString() {
+    return super.toString();
+  }
+
+  abstract Node node();
+  abstract C c(int x);
+  abstract principal p();
+  abstract label l();
+}
+
+class D<T> {}
+interface I<T> {}

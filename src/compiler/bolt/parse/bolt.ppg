@@ -1,0 +1,773 @@
+include "polyglot/ext/jl7/parse/jl7.ppg"
+
+package bolt.parse;
+
+import bolt.ast.ArrayDim;
+import bolt.ast.ArrayDimKind;
+import bolt.ast.BoltNewArray;
+import bolt.ast.BoltNodeFactory;
+import bolt.ast.Label;
+import bolt.ast.LabelComponent;
+import bolt.ast.Policy;
+import bolt.ast.Principal;
+
+parser Grm extends BoltBaseParser {:
+
+  public Grm(Lexer l, TypeSystem t, NodeFactory n, ErrorQueue q) {
+    super(l, t, n, q);
+  }
+:};
+
+terminal Token ATOMIC;
+terminal Token JAVA;
+terminal Token LABEL;
+terminal Token PRINCIPAL;
+
+terminal Token TOP;
+terminal Token BOTTOM;
+terminal Token LEFTARROW;
+terminal Token RIGHTARROW;
+terminal Token JOIN;
+terminal Token MEET;
+terminal Token ACTSFOR;
+terminal Token EQUIV;
+terminal Token INFO_LTEQ;
+terminal Token TRUST_GTEQ;
+
+non terminal Label label;
+non terminal List<LabelComponent> label_join_component_list;
+non terminal List<LabelComponent> label_meet_component_list;
+non terminal LabelComponent label_component;
+non terminal Policy label_component_policy;
+
+non terminal Principal principal_opt;
+non terminal Principal principal;
+non terminal List<Principal> principal_disjunctive_list;
+non terminal List<Principal> principal_conjunctive_list;
+non terminal Principal principal_base;
+non terminal Token leftarrow, rightarrow;
+non terminal Expr access_path;
+non terminal Expr primary_access_path;
+non terminal Expr location_expr;
+non terminal Expr location_expr_opt;
+
+non terminal ConstructorCall explicit_super_constructor_invocation;
+
+non terminal List<ArrayDim> dim_exprs;
+non terminal ArrayDim dim_expr;
+non terminal List<ArrayDimKind> dims, dims_opt;
+non terminal BoltNewArray array_creation_expression;
+non terminal BoltNewArray initialized_array_creation_expression;
+non terminal Expr label_expr_opt;
+
+start with goal;
+
+/************************************
+ * Labels
+ ************************************/
+
+// Labels
+label ::=
+    // Label
+    LBRACE:x RBRACE:y {:
+      RESULT = parser.nf.emptyLabel(pos(x, y));
+    :}
+  | LBRACE:x label_join_component_list:a RBRACE:y {:
+      RESULT = parser.nf.JoinLabel(pos(x, y), a);
+    :}
+  ;
+
+// List of label components to be joined together.
+label_join_component_list ::=
+    // List<LabelComponent>
+    label_meet_component_list:a {:
+      RESULT = new ArrayList<>();
+      RESULT.add(parser.nf.MeetLabel(pos(a), a));
+    :}
+  | label_join_component_list:a JOIN label_meet_component_list:b {:
+      a.add(parser.nf.MeetLabel(pos(b), b));
+      RESULT = a;
+    :}
+  | label_join_component_list:a SEMICOLON label_meet_component_list:b {:
+      a.add(parser.nf.MeetLabel(pos(b), b));
+      RESULT = a;
+    :}
+  ;
+
+// List of label components to be meeted together.
+label_meet_component_list ::=
+    // List<LabelComponent>
+    label_component:a {:
+      RESULT = new ArrayList<>();
+      RESULT.add(a);
+    :}
+  | label_meet_component_list:a MEET label_component:b {:
+      a.add(b);
+      RESULT = a;
+    :}
+  ;
+
+label_component ::=
+    // LabelComponent
+    label_component_policy:a {:
+      RESULT = a;
+    :}
+  | access_path:a {:
+      RESULT = parser.nf.ExprLabel(pos(a), a);
+    :}
+  | label:a {:
+      RESULT = a;
+    :}
+  | LBRACK:x expression:a RBRACK:y {:
+      RESULT = parser.nf.ExprLabel(pos(x, y), a);
+    :}
+  ;
+
+leftarrow ::=
+    LEFTARROW
+  | LT MINUS
+  ;
+
+rightarrow ::=
+    RIGHTARROW
+  | MINUS GT
+  ;
+
+label_component_policy ::=
+    // Policy
+    principal:a rightarrow principal_opt:b {:
+      if (b == null) b = parser.nf.BottomPrincipal(pos(b));
+      RESULT = parser.nf.ReaderPolicy(pos(a, b), a, b);
+    :}
+  | principal:a leftarrow principal_opt:b {:
+      if (b == null) b = parser.nf.BottomPrincipal(pos(b));
+      RESULT = parser.nf.WriterPolicy(pos(a, b), a, b);
+    :}
+  ;
+
+principal_opt ::=
+    // Principal
+  | principal:a {:
+      RESULT = a;
+    :}
+  ;
+
+/************************************
+ * Principals
+ ************************************/
+
+// Principals.
+principal ::=
+    // Principal
+    principal_disjunctive_list:a {:
+      if (a.size() == 1) {
+        RESULT = a.get(0);
+      } else {
+        RESULT = parser.nf.DisjunctivePrincipal(pos(a), a);
+      }
+    :}
+  ;
+
+// Disjunctive principals.
+principal_disjunctive_list ::=
+    // List<Principal>
+    principal_conjunctive_list:a {:
+      if (a.size() == 1) {
+        RESULT = a;
+      } else {
+        RESULT = new ArrayList<>();
+        RESULT.add(parser.nf.ConjunctivePrincipal(pos(a), a));
+      }
+    :}
+  | principal_disjunctive_list:a OR principal_conjunctive_list:b {:
+      RESULT = a;
+      if (b.size() == 1) {
+        a.addAll(b);
+      } else {
+        a.add(parser.nf.ConjunctivePrincipal(pos(b), b));
+      }
+    :}
+  ;
+
+// Conjunctive principals.
+principal_conjunctive_list ::=
+    // List<Principal>
+    principal_base:a {:
+      RESULT = new ArrayList<>();
+      RESULT.add(a);
+    :}
+  | principal_conjunctive_list:a AND principal_base:b {:
+      RESULT = a;
+      RESULT.add(b);
+    :}
+  ;
+
+// Base principals.
+principal_base ::=
+    // Principal
+    MULT:a {:
+      // Top principal.
+      RESULT = parser.nf.TopPrincipal(pos(a));
+    :}
+  | TOP:a {:
+      // Top principal.
+      RESULT = parser.nf.TopPrincipal(pos(a));
+    :}
+  | BOTTOM:a {:
+      // Bottom principal.
+      RESULT = parser.nf.BottomPrincipal(pos(a));
+    :}
+  | LBRACK:x expression:a RBRACK:y {:
+      RESULT = parser.nf.ExprPrincipal(pos(a), a);
+    :}
+  | LPAREN principal:a RPAREN {:
+      RESULT = a;
+    :}
+  | access_path:a {:
+      RESULT = parser.nf.ExprPrincipal(pos(a), a);
+    :}
+  ;
+
+// Dotted sequence of identifiers/'this'/'super'.
+access_path ::=
+    // Expr
+    primary_access_path:a {:
+      RESULT = a;
+    :}
+  | name:a {:
+      RESULT = a.toExpr();
+    :}
+  ;
+
+primary_access_path ::=
+    // Expr
+    THIS:a {:
+      RESULT = parser.nf.This(pos(a));
+    :}
+  | primary_access_path:a DOT IDENTIFIER:b {:
+      RESULT = parser.nf.Field(pos(a, b, b), a,
+          parser.nf.Id(pos(b), b.getIdentifier()));
+    :}
+  | SUPER:n DOT IDENTIFIER:a {:
+      RESULT = parser.nf.Field(pos(a),
+          parser.nf.Super(pos(n)),
+          parser.nf.Id(pos(a), a.getIdentifier()));
+    :}
+  | name:a DOT SUPER:n DOT IDENTIFIER:b {:
+      RESULT = parser.nf.Field(pos(b),
+          parser.nf.Super(pos(n), a.toType()),
+          parser.nf.Id(pos(b), b.getIdentifier()));
+    :}
+  | name:a DOT THIS:n {:
+      RESULT = parser.nf.This(pos(a, n, n), a.toType());
+    :}
+  ;
+
+/************************************
+ * Field declarations
+ ************************************/
+
+// Field declarations can have labels.
+extend field_declaration ::=
+    // List<ClassMember>
+    modifiers_or_annotations_opt:a type:b label:c variable_declarators:d
+    SEMICOLON:e {:
+      List<ClassMember> l = new LinkedList<>();
+      for (VarDeclarator decl : d) {
+        l.add(parser.nf.FieldDecl(pos(b, e), a.flags(), a.annotations(),
+            parser.array(b, decl.dims()), c, decl.name(), decl.init(),
+            parser.javadoc(a.position(), pos(b))));
+      }
+      RESULT = l;
+    :}
+  ;
+
+/************************************
+ * Label/principal construction
+ ************************************/
+
+// Expressions for constructing labels and principals.
+extend primary ::=
+    // Expr
+    NEW:n location_expr_opt:a LABEL label:b {:
+      RESULT = parser.nf.NewLabel(pos(n, b, b), a, b);
+    :}
+  | NEW:n location_expr_opt:a PRINCIPAL LPAREN principal:b RPAREN:z {:
+      RESULT = parser.nf.NewPrincipal(pos(n, z, b), a, b);
+    :}
+  ;
+
+location_expr ::=
+    // Expr
+    AT access_path:a {:
+      RESULT = a;
+    :}
+  | AT LPAREN expression:a RPAREN {:
+      RESULT = a;
+    :}
+  ;
+
+location_expr_opt ::=
+    // Expr
+  | location_expr:a {:
+      RESULT = a;
+    :}
+  ;
+
+/************************************
+ * Constructor calls
+ ************************************/
+
+// Constructor calls can have location annotations.
+extend class_instance_creation_expression ::=
+    // Expr
+    NEW:n location_expr:a class_or_interface_type:b LPAREN argument_list_opt:c
+    RPAREN class_body_opt:d {:
+      RESULT = parser.nf.New(pos(n), null, a, null, b, c, d);
+    :}
+  | NEW:n location_expr:a type_arguments:b class_or_interface_type:c LPAREN
+    argument_list_opt:d RPAREN class_body_opt:e {:
+      // Instantiating type arguments
+      RESULT = parser.nf.New(pos(n), null, a, b, c, d, e);
+    :}
+  | primary:a DOT NEW location_expr:b type_arguments_opt:c IDENTIFIER:d LPAREN
+    argument_list_opt:e RPAREN class_body_opt:f {:
+      // Instantiating type arguments
+      TypeNode aa =
+          new JL5Name(parser.nf, parser.ts, pos(d),
+              parser.nf.Id(pos(d), d.getIdentifier())).toType();
+      RESULT = parser.nf.New(pos(a), a, b, c, aa, e, f);
+    :}
+  | name:a DOT NEW location_expr:b type_arguments_opt:c IDENTIFIER:d LPAREN
+    argument_list_opt:e RPAREN class_body_opt:f {:
+      // Instantiating type arguments
+      TypeNode aa =
+          new JL5Name(parser.nf, parser.ts, pos(d),
+              parser.nf.Id(pos(d), d.getIdentifier())).toType();
+      RESULT = parser.nf.New(pos(a), a.toExpr(), b, c, aa, e, f);
+    :}
+  | primary:a DOT NEW location_expr:b type_arguments_opt:c IDENTIFIER:d
+    type_arguments:e LPAREN argument_list_opt:f RPAREN class_body_opt:g {:
+      // Instantiating type arguments
+      TypeNode aa =
+          new JL5Name(parser.nf, parser.ts, pos(d),
+              parser.nf.Id(pos(d), d.getIdentifier())).toType();
+      TypeNode tn = parser.nf.AmbTypeInstantiation(pos(d, e), aa, e);
+      RESULT = parser.nf.New(pos(a), a, b, c, tn, f, g);
+    :}
+  | name:a DOT NEW location_expr:b type_arguments_opt:c IDENTIFIER:d
+    type_arguments:e LPAREN argument_list_opt:f RPAREN class_body_opt:g {:
+      // Instantiating type arguments
+      TypeNode aa =
+          new JL5Name(parser.nf, parser.ts, pos(d),
+              parser.nf.Id(pos(d), d.getIdentifier())).toType();
+      TypeNode tn = parser.nf.AmbTypeInstantiation(pos(d, e), aa, e);
+      RESULT = parser.nf.New(pos(a), a.toExpr(), b, c, tn, f, g);
+    :}
+  | NEW:n location_expr:b class_or_interface:c LT GT:x LPAREN
+    argument_list_opt:d RPAREN class_body_opt:e {:
+      TypeNode tn = parser.nf.AmbDiamondTypeNode(pos(c, x), c);
+      RESULT = parser.nf.New(pos(n), null, b, null, tn, d, e);
+    :}
+  | NEW:n location_expr:a type_arguments:b class_or_interface:c LT GT:x LPAREN
+    argument_list_opt:d RPAREN class_body_opt:e {:
+      // Instantiating type arguments
+      TypeNode tn = parser.nf.AmbDiamondTypeNode(pos(c, x), c);
+      RESULT = parser.nf.New(pos(n), null, a, b, tn, d, e);
+    :}
+  | primary:a DOT NEW location_expr:b type_arguments_opt:c IDENTIFIER:d LT GT:x
+    LPAREN argument_list_opt:e RPAREN class_body_opt:f {:
+      // Instantiating type arguments
+      TypeNode aa =
+          new JL5Name(parser.nf, parser.ts, pos(b),
+              parser.nf.Id(pos(d), d.getIdentifier())).toType();
+      TypeNode tn = parser.nf.AmbDiamondTypeNode(pos(d, x), aa);
+      RESULT = parser.nf.New(pos(a), a, b, c, tn, e, f);
+    :}
+  | name:a DOT NEW location_expr:b type_arguments_opt:c IDENTIFIER:d LT GT:x
+    LPAREN argument_list_opt:e RPAREN class_body_opt:f {:
+      // Instantiating type arguments
+      TypeNode aa =
+          new JL5Name(parser.nf, parser.ts, pos(d),
+              parser.nf.Id(pos(d), d.getIdentifier())).toType();
+      TypeNode tn = parser.nf.AmbDiamondTypeNode(pos(d, x), aa);
+      RESULT = parser.nf.New(pos(a), a.toExpr(), b, c, tn, e, f);
+    :}
+  ;
+
+/************************************
+ * Method calls
+ ************************************/
+
+// Method invocations can have location annotations.
+extend method_invocation ::=
+    // Call
+    name:a location_expr:b LPAREN argument_list_opt:c RPAREN:y {:
+      RESULT = parser.nf.Call(pos(a, y),
+          a.prefix == null ? null : a.prefix.toReceiver(),
+          a.name, b, c);
+    :}
+  | primary:a DOT IDENTIFIER:b location_expr:c LPAREN argument_list_opt:d
+    RPAREN:y {:
+      RESULT = parser.nf.Call(pos(b, y), a,
+          parser.nf.Id(pos(b), b.getIdentifier()), c, d);
+    :}
+  | SUPER:a DOT IDENTIFIER:b location_expr:c LPAREN argument_list_opt:d
+    RPAREN:y {:
+      RESULT = parser.nf.Call(pos(a, y, b),
+          parser.nf.Super(pos(a)),
+          parser.nf.Id(pos(b), b.getIdentifier()), c, d);
+    :}
+  | name:a DOT SUPER:n DOT IDENTIFIER:b location_expr:c LPAREN
+    argument_list_opt:d RPAREN:y {:
+      RESULT = parser.nf.Call(pos(b, y),
+          parser.nf.Super(pos(n), a.toType()),
+          parser.nf.Id(pos(b), b.getIdentifier()), c, d);
+    :}
+  | primary:a DOT type_arguments:b IDENTIFIER:c location_expr:d LPAREN
+    argument_list_opt:e RPAREN:y {:
+      RESULT = parser.nf.Call(pos(a, y), a, b,
+          parser.nf.Id(pos(c), c.getIdentifier()), d, e);
+    :}
+  | name:a DOT type_arguments:b IDENTIFIER:c location_expr:d LPAREN
+    argument_list_opt:e RPAREN:y {:
+      RESULT = parser.nf.Call(pos(a, y), a.toReceiver(), b,
+          parser.nf.Id(pos(c), c.getIdentifier()), d, e);
+    :}
+  | SUPER:a DOT type_arguments:b IDENTIFIER:c location_expr:d LPAREN
+    argument_list_opt:e RPAREN:y {:
+      RESULT = parser.nf.Call(pos(a, y, c), parser.nf.Super(pos(a)), b,
+          parser.nf.Id(pos(c), c.getIdentifier()), d, e);
+    :}
+  | name:a DOT SUPER:b DOT type_arguments:c IDENTIFIER:d location_expr:e LPAREN
+    argument_list_opt:f RPAREN:y {:
+      RESULT = parser.nf.Call(pos(d, y), parser.nf.Super(pos(b), a.toType()),
+          c, parser.nf.Id(pos(d), d.getIdentifier()), e, f);
+    :}
+  ;
+
+/************************************
+ * Arrays
+ ************************************/
+
+// Change the type of "dims" and "dims_opt" to List<ArrayDimKind>, a richer
+// data structure that lets us capture multidimensional arrays with mixed
+// native (Java) and non-native (Fabric) dimensions.
+drop { dims, dims_opt }
+
+dims_opt ::=
+    // List<ArrayDimKind>
+    {:
+      RESULT = new ArrayList<>();
+    :}
+  | dims:a {:
+      RESULT = a;
+    :}
+  ;
+
+dims ::=
+    LBRACK RBRACK {:
+      RESULT = new ArrayList<>();
+      RESULT.add(ArrayDimKind.FABRIC);
+    :}
+  | NATIVE LBRACK RBRACK {:
+      RESULT = new ArrayList<>();
+      RESULT.add(ArrayDimKind.JAVA);
+    :}
+  | dims:a LBRACK RBRACK {:
+      a.add(ArrayDimKind.FABRIC);
+      RESULT = a;
+    :}
+  | dims:a NATIVE LBRACK RBRACK {:
+      a.add(ArrayDimKind.JAVA);
+      RESULT = a;
+    :}
+  ;
+
+//////////////////////////////////////////////////////////////////////////////
+// Begin patching of productions that mention "dims" and "dims_opt".
+//////////////////////////////////////////////////////////////////////////////
+override array_type ::=
+    primitive_type:a dims:b {:
+      RESULT = parser.array(a, b);
+    :}
+  | name:a dims:b {:
+      RESULT = parser.array(a.toType(), b);
+    :}
+  | class_or_interface:a LT type_argument_list_1:b DOT name:c dims:d {:
+      TypeNode tn = parser.nf.AmbTypeInstantiation(pos(a, b), a, b);
+      TypeNode aa = ((JL5Name) c).toType(tn);
+      RESULT = parser.array(aa, d);
+    :}
+  | class_or_interface:a LT type_argument_list_1:b dims:c {:
+      RESULT = parser.array(
+          parser.nf.AmbTypeInstantiation(pos(a, b), a, b), c);
+    :}
+  ;
+
+override variable_declarator_id ::=
+    // VarDeclarator
+    IDENTIFIER:a {:
+      RESULT = new VarDeclarator(pos(a),
+          parser.nf.Id(pos(a), a.getIdentifier()));
+    :}
+  | variable_declarator_id:a LBRACK RBRACK {:
+      RESULT = a;
+      a.addDim(ArrayDimKind.FABRIC);
+    :}
+  // Also add extra productions to allow Java arrays in variable
+  // declarations: "int foo native[]".
+  | variable_declarator_id:a NATIVE LBRACK RBRACK {:
+      RESULT = a;
+      a.addDim(ArrayDimKind.JAVA);
+    :}
+  ;
+
+drop {
+  method_header ::=
+    modifiers_or_annotations_opt type IDENTIFIER LPAREN
+    formal_parameter_list_opt RPAREN dims_opt throws_opt
+  | modifiers_or_annotations_opt LT type_parameter_list_1 type IDENTIFIER
+    LPAREN formal_parameter_list_opt RPAREN dims_opt throws_opt
+  ;
+}
+
+extend method_header ::=
+    modifiers_or_annotations_opt:a type:b IDENTIFIER:d LPAREN
+    formal_parameter_list_opt:e RPAREN dims_opt:g throws_opt:h {:
+      RESULT = parser.nf.MethodDecl(pos(b, g, d), a.flags(),
+          a.annotations(), parser.array(b, g),
+          parser.nf.Id(pos(d), d.getIdentifier()), e, h, null,
+          new LinkedList<ParamTypeNode>(),
+          parser.javadoc(a.position(), pos(b)));
+    :}
+  | modifiers_or_annotations_opt:a LT:b type_parameter_list_1:c type:d
+    IDENTIFIER:i LPAREN formal_parameter_list_opt:e RPAREN dims_opt:g
+    throws_opt:h {:
+      RESULT = parser.nf.MethodDecl(pos(d, g, i), a.flags(), a.annotations(),
+          parser.array(d, g),
+          parser.nf.Id(pos(i), i.getIdentifier()), e, h, null, c,
+          parser.javadoc(a.position(), pos(b)));
+    :}
+  ;
+
+drop {
+  primary_no_new_array ::=
+    primitive_type dims DOT CLASS
+  | name dims DOT CLASS
+  ;
+}
+
+primary_no_new_array ::=
+    primitive_type:a dims:b DOT CLASS:d {:
+      RESULT = parser.nf.ClassLit(pos(a, d, d), parser.array(a, b));
+    :}
+  | name:a dims:b DOT CLASS:d {:
+      RESULT = parser.nf.ClassLit(pos(a, d, d), parser.array(a.toType(), b));
+    :}
+  ;
+
+// Type of array_creation_expression has changed.
+drop { array_creation_expression }
+
+array_creation_expression ::=
+    // BoltNewArray
+    NEW:n primitive_type:a dim_exprs:b dims_opt:c {:
+      RESULT = parser.nf.BoltNewArray(pos(n, b), a, b, c);
+    :}
+  | NEW:n class_or_interface_type:a dim_exprs:b dims_opt:c {:
+      RESULT = parser.nf.BoltNewArray(pos(n, b), a, b, c);
+    :}
+  | initialized_array_creation_expression:a {:
+      RESULT = a;
+    :}
+  // Also add extra productions to allow location annotations.
+  | NEW:n location_expr:a primitive_type:b dim_exprs:c dims_opt:d {:
+      RESULT = parser.nf.BoltNewArray(pos(n, c), a, b, c, d);
+    :}
+  | NEW:n location_expr:a class_or_interface_type:b dim_exprs:c dims_opt:d {:
+      RESULT = parser.nf.BoltNewArray(pos(n, c), a, b, c, d);
+    :}
+  ;
+
+drop {
+  cast_expression ::=
+    LPAREN primitive_type dims_opt RPAREN unary_expression
+  | LPAREN name dims RPAREN unary_expression_not_plus_minus
+  | LPAREN name LT type_argument_list_1 dims_opt RPAREN
+    unary_expression_not_plus_minus
+  | LPAREN name LT type_argument_list_1 DOT class_or_interface dims_opt RPAREN
+    unary_expression_not_plus_minus
+  | LPAREN name LT type_argument_list_1 DOT class_or_interface LT
+    type_argument_list_1 dims_opt RPAREN unary_expression_not_plus_minus
+  ;
+}
+
+extend cast_expression ::=
+    LPAREN:p primitive_type:a dims_opt:b RPAREN unary_expression:c {:
+      RESULT = parser.nf.Cast(pos(p, c, a), parser.array(a, b), c);
+    :}
+  | LPAREN:p name:a dims:b RPAREN unary_expression_not_plus_minus:c {:
+      RESULT = parser.nf.Cast(pos(p, c, a), parser.array(a.toType(), b), c);
+    :}
+  | LPAREN:a name:b LT type_argument_list_1:d dims_opt:e RPAREN
+    unary_expression_not_plus_minus:g {:
+      TypeNode tn = parser.nf.AmbTypeInstantiation(pos(b, d), b.toType(), d);
+      RESULT = parser.nf.Cast(pos(a, g, b), parser.array(tn, e), g);
+    :}
+  | LPAREN:a name:b LT type_argument_list_1:d DOT class_or_interface:f
+    dims_opt:g RPAREN unary_expression_not_plus_minus:i {:
+      AmbTypeNode bb = (AmbTypeNode) f;
+      TypeNode tn = parser.nf.AmbTypeInstantiation(pos(b, d),
+          parser.exprToType(b.toExpr()), d);
+      RESULT = parser.nf.Cast(pos(a, i, b),
+          parser.array(parser.nf.AmbTypeNode(pos(b, f), tn, bb.id()), g), i);
+    :}
+  | LPAREN:a name:b LT type_argument_list_1:d DOT class_or_interface:f LT
+    type_argument_list_1:h dims_opt:j RPAREN
+    unary_expression_not_plus_minus:i {:
+      AmbTypeNode bb = (AmbTypeNode) f;
+      TypeNode tn = parser.nf.AmbTypeInstantiation(pos(b, d),
+          parser.exprToType(b.toExpr()), d);
+      tn = parser.nf.AmbTypeInstantiation(pos(b, h),
+          parser.nf.AmbTypeNode(pos(b, f), tn, bb.id()), h);
+      RESULT = parser.nf.Cast(pos(a, i, b), parser.array(tn, j), i);
+    :}
+  ;
+
+// Type of initialized_array_creation_expression has changed.
+drop { initialized_array_creation_expression }
+
+// Also add extra productions to allow location annotations.
+initialized_array_creation_expression ::=
+    // BoltNewArray
+    NEW:a primitive_type:b dims:c array_initializer:d {:
+      RESULT = parser.nf.BoltNewArray(pos(a, d), b,
+          Collections.<ArrayDim> emptyList(), c, d);
+    :}
+  | NEW:a class_or_interface_type:b dims:c array_initializer:d {:
+      RESULT = parser.nf.BoltNewArray(pos(a, d), b,
+          Collections.<ArrayDim> emptyList(), c, d);
+    :}
+  | NEW:n location_expr:a primitive_type:b dims:c array_initializer:d {:
+      RESULT = parser.nf.BoltNewArray(pos(n, d), a, b,
+          Collections.<ArrayDim> emptyList(), c, d);
+    :}
+  | NEW:n location_expr:a class_or_interface_type:b dims:c
+    array_initializer:d {:
+      RESULT = parser.nf.BoltNewArray(pos(n, d), a, b,
+          Collections.<ArrayDim> emptyList(), c, d);
+    :}
+  ;
+
+//////////////////////////////////////////////////////////////////////////////
+// End patching of productions that mention "dims" and "dims_opt".
+//////////////////////////////////////////////////////////////////////////////
+
+// Also need to patch this, since we have a different VarDeclarator now.
+override local_variable_declaration ::=
+    modifiers_or_annotations:a type:b variable_declarators:c {:
+      RESULT = parser.boltVariableDeclarators(b, c, a.flags(), a.annotations());
+    :}
+  | type:a variable_declarators:b {:
+      RESULT = parser.boltVariableDeclarators(a, b, Flags.NONE);
+    :}
+  ;
+
+// Type of dim_exprs has changed.
+drop { dim_exprs }
+
+dim_exprs ::=
+    // List<ArrayDim>
+    dim_expr:a {:
+      RESULT = new LinkedList<>();
+      RESULT.add(a);
+    :}
+  | dim_exprs:a dim_expr:b {:
+      RESULT = a;
+      a.add(b);
+    :}
+  ;
+
+// Type of dim_expr has changed.
+drop { dim_expr }
+
+dim_expr ::=
+    // ArrayDim
+  // Java array initializers: "int native[5]".
+    NATIVE:x LBRACK expression:a RBRACK:y {:
+      RESULT = parser.nf.ArrayDim(pos(x, y, a), a);
+    :}
+  // Fabric array initializers specify a label for the array: "int [5, L]".
+  | LBRACK:x expression:a COMMA expression:b RBRACK:y {:
+      RESULT = parser.nf.ArrayDim(pos(x, y), a, b);
+    :}
+  ;
+
+// Array initializers can have location annotations and can have labels.
+override array_initializer ::=
+    // ArrayInit
+    location_expr_opt:a LBRACE expression:b COLON variable_initializers:c
+    comma_opt RBRACE:y {:
+      RESULT = parser.nf.ArrayInit(pos(a, y), a, b, c);
+    :}
+  | location_expr_opt:a LBRACE variable_initializers:b comma_opt RBRACE:y {:
+      RESULT = parser.nf.ArrayInit(pos(a, y), a, null, b);
+    :}
+  | location_expr_opt:a LBRACE label_expr_opt:b comma_opt RBRACE:y {:
+      RESULT = parser.nf.ArrayInit(pos(a, y), a, b);
+    :}
+  ;
+
+label_expr_opt ::=
+    // Expr
+  | expression:a COLON {:
+      RESULT = a;
+    :}
+  ;
+
+/************************************
+ * Atomic blocks
+ ************************************/
+
+// Atomic blocks.
+extend statement_without_trailing_substatement ::=
+    // Stmt
+    ATOMIC:n throws_opt:a LBRACE block_statements_opt:b RBRACE:y {:
+      RESULT = parser.nf.Atomic(pos(n, y), a, b);
+    :}
+  ;
+
+/************************************
+ * Constructor bodies
+ ************************************/
+
+// Constructor bodies can have super() calls in the middle.
+extend constructor_body ::=
+    // Block
+    LBRACE:x block_statements:a explicit_super_constructor_invocation:b
+    block_statements_opt:c RBRACE:y {:
+      List l = new LinkedList<>();
+      l.add(parser.nf.Prologue(pos(a), a));
+      l.add(b);
+      l.addAll(c);
+      RESULT = parser.nf.Block(parser.pos(x, y), l);
+    :}
+  ;
+
+transfer explicit_constructor_invocation
+  to explicit_super_constructor_invocation {
+      SUPER LPAREN argument_list_opt RPAREN SEMICOLON
+    | primary DOT SUPER LPAREN argument_list_opt RPAREN SEMICOLON
+    | type_arguments SUPER LPAREN argument_list_opt RPAREN SEMICOLON
+    | primary DOT type_arguments SUPER LPAREN argument_list_opt RPAREN SEMICOLON
+    | name DOT SUPER LPAREN argument_list_opt RPAREN SEMICOLON
+    | name DOT type_arguments SUPER LPAREN argument_list_opt RPAREN SEMICOLON
+}
+
+extend explicit_constructor_invocation ::=
+    // ConstructorCall
+    explicit_super_constructor_invocation:a {:
+      RESULT = a;
+    :}
+  ;

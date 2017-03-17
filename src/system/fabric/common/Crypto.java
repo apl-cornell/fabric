@@ -11,7 +11,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.SecureRandom;
-import java.security.Security;
 import java.security.Signature;
 import java.security.cert.CertPath;
 import java.security.cert.CertPathValidator;
@@ -36,7 +35,6 @@ import javax.naming.InvalidNameException;
 import javax.naming.ldap.LdapName;
 
 import org.bouncycastle.asn1.x509.X509Name;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.x509.X509V3CertificateGenerator;
 
 import fabric.common.exceptions.InternalError;
@@ -58,12 +56,13 @@ public final class Crypto {
 
   private static final KeyGenerator secretKeyGen;
   private static final KeyPairGenerator publicKeyGen;
+  private static final String sigProviderName;
   private static final SecureRandom random = new SecureRandom();
 
   static {
-    Security.addProvider(new BouncyCastleProvider());
     secretKeyGen = secretKeyGenInstance();
     publicKeyGen = publicKeyGenInstance();
+    sigProviderName = signatureInstance().getProvider().getName();
   }
 
   public static MessageDigest digestInstance() {
@@ -168,7 +167,7 @@ public final class Crypto {
   public static void validateCertificateChain(Certificate[] certificateChain,
       Set<TrustAnchor> trustStore) throws GeneralSecurityException {
     PKIXParameters params = new PKIXParameters(trustStore);
-    params.setSigProvider(BouncyCastleProvider.PROVIDER_NAME);
+    params.setSigProvider(sigProviderName);
     params.setRevocationEnabled(false);
     CertificateFactory certFactory = CertificateFactory.getInstance("X509");
     CertPath certPath =
@@ -183,7 +182,7 @@ public final class Crypto {
    */
   public static X509Certificate createCertificate(String subjectName,
       PublicKey subjectKey, String issuerName, PrivateKey issuerKey)
-          throws GeneralSecurityException {
+      throws GeneralSecurityException {
 
     Calendar expiry = Calendar.getInstance();
     expiry.add(Calendar.YEAR, 1);
@@ -193,7 +192,7 @@ public final class Crypto {
     certGen.setSerialNumber(BigInteger.valueOf(System.currentTimeMillis()));
     certGen.setIssuerDN(new X509Name("CN=" + issuerName));
     certGen.setSubjectDN(new X509Name("CN=" + subjectName));
-    certGen.setSignatureAlgorithm("SHA1withRSA");
+    certGen.setSignatureAlgorithm(ALG_SIGNATURE);
     certGen.setPublicKey(subjectKey);
     certGen.setNotBefore(new Date(System.currentTimeMillis()));
     certGen.setNotAfter(expiry.getTime());

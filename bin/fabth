@@ -104,6 +104,10 @@ while true; do
             usage=1
             break
             ;;
+        -rdebug)
+            shift
+            vmargs="${vmargs} -Xdebug -Xrunjdwp:transport=dt_socket,address=6666,server=y,suspend=y"
+            ;;
         *)
             args="$args '$1'"
             shift

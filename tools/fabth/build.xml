@@ -51,18 +51,6 @@
 
   <target name="build" description="Builds the Fabric test harness">
     <mkdir dir="${fabth.home}/classes" />
-    <antcall target="jflex-lexer">
-      <param name="lexer.dir" value="${fabth.home}/src/fabric/tools/fabth" />
-      <param name="lexer.class" value="Lexer_c" />
-      <param name="jflex.file" value="script.flex" />
-    </antcall>
-    <antcall target="ppg-parser">
-      <param name="parser.dir" value="${fabth.home}/src/fabric/tools/fabth" />
-      <param name="parser.class" value="Grm" />
-      <param name="symbol.class" value="sym" />
-      <param name="ppg.file" value="fabth.ppg" />
-      <param name="cup.file" value="fabth_ppg.cup" />
-    </antcall>
     <javac source="1.7" target="1.7" encoding="utf-8"
         srcdir="${fabth.home}/src" destdir="${fabth.home}/classes"
         debug="on" includes="fabric/**">
@@ -74,90 +62,6 @@
 
   <target name="build-all" depends="build" />
   <target name="all" depends="build-all" />
-
-  <!--
-  ****************************************************************************
-    Generic helper stuff for building Polyglot extensions.
-  ****************************************************************************
-  -->
-
-  <target name="jflex-lexer" depends="jflex-lexer-deps" unless="jflex.lexer.up-to-date">
-    <java classname="jflex.Main" fork="true" dir="${lexer.dir}" failonerror="true">
-      <classpath refid="fabth.classpath" />
-      <arg value="${jflex.file}" />
-    </java>
-  </target>
-
-  <target name="jflex-lexer-deps">
-    <dependset>
-      <srcfileset dir="${lexer.dir}" includes="${jflex.file}" />
-      <targetfileset dir="${lexer.dir}" includes="${lexer.class}.java" />
-    </dependset>
-    <available property="jflex.lexer.up-to-date" file="${lexer.dir}/${lexer.class}.java" />
-  </target>
-
-  <target name="ppg-parser" depends="ppg-parser-deps" unless="ppg.parser.up-to-date">
-    <java classname="ppg.PPG" fork="true" dir="${parser.dir}" output="${parser.dir}/${cup.file}" failonerror="true" logError="true">
-      <classpath refid="fabth.classpath" />
-      <arg value="${ppg.file}" />
-    </java>
-    <antcall target="cup-parser" />
-  </target>
-
-  <target name="ppg-parser-deps">
-    <dependset>
-      <srcfileset dir="${parser.dir}" includes="${ppg.file}" />
-      <targetfileset dir="${parser.dir}">
-        <include name="${cup.file}" />
-        <include name="${parser.class}.java" />
-        <include name="${symbol.class}.java" />
-      </targetfileset>
-    </dependset>
-    <condition property="ppg.parser.up-to-date">
-      <and>
-        <available file="${parser.dir}/${cup.file}" />
-        <available file="${parser.dir}/${parser.class}.java" />
-        <available file="${parser.dir}/${symbol.class}.java" />
-      </and>
-    </condition>
-  </target>
-
-  <target name="cup-parser" depends="cup-parser-using-jar" unless="cup.parser.up-to-date">
-  </target>
-
-  <target name="cup-parser-using-jar" depends="cup-parser-deps" unless="cup.parser.up-to-date">
-    <java classname="java_cup.Main" fork="true" dir="${parser.dir}" failonerror="true">
-      <classpath refid="fabth.classpath" />
-      <arg value="-parser" />
-      <arg value="${parser.class}" />
-      <arg value="-symbols" />
-      <arg value="${symbol.class}" />
-      <arg value="${cup.file}" />
-    </java>
-    <replaceregexp
-      file="${parser.dir}/${parser.class}.java"
-      match="^(public )?class"
-      replace="@SuppressWarnings(&quot;all&quot;) \1class"
-      flags="g"
-      byline="yes"
-      />
-  </target>
-
-  <target name="cup-parser-deps">
-    <dependset>
-      <srcfileset dir="${parser.dir}" includes="${cup.file}" />
-      <targetfileset dir="${parser.dir}">
-        <include name="${parser.class}.java" />
-        <include name="${symbol.class}.java" />
-      </targetfileset>
-    </dependset>
-    <condition property="cup.parser.up-to-date">
-      <and>
-        <available file="${parser.dir}/${parser.class}.java" />
-        <available file="${parser.dir}/${symbol.class}.java" />
-      </and>
-    </condition>
-  </target>
 
 </project>
 

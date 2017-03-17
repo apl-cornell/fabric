@@ -165,9 +165,4 @@ public class WrappedJavaInlineable<T> implements JavaInlineable {
   public void $forceRenumber(long onum) {
     throw new InternalError("Unsupported operation");
   }
-
-  @Override
-  public Statistics createStatistics() {
-    return DefaultStatistics.instance;
-  }
 }

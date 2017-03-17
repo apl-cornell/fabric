@@ -113,11 +113,6 @@ public interface Object {
   void $forceRenumber(long onum);
 
   /**
-   * Creates a Statistics object to determine promises for this Object.
-   */
-  Statistics createStatistics();
-
-  /**
    * _Proxy objects behave like regular objects by delegating to _Impl objects,
    * pointed to by a soft reference. This class abstracts away the code for
    * maintaining that soft reference.
@@ -404,11 +399,6 @@ public interface Object {
     @Override
     public final void $forceRenumber(long onum) {
       fetch().$forceRenumber(onum);
-    }
-
-    @Override
-    public Statistics createStatistics() {
-      return fetch().createStatistics();
     }
 
     /**
@@ -734,11 +724,6 @@ public interface Object {
     @Override
     public final _Impl fetch() {
       return this;
-    }
-
-    @Override
-    public Statistics createStatistics() {
-      return DefaultStatistics.instance;
     }
 
     /**
