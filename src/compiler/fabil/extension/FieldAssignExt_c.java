@@ -5,12 +5,14 @@ import java.util.List;
 
 import fabil.visit.ProxyRewriter;
 import fabil.visit.ReadWriteChecker.State;
+import polyglot.ast.ArrayInit;
 import polyglot.ast.Assign;
 import polyglot.ast.Expr;
 import polyglot.ast.Field;
 import polyglot.ast.FieldAssign;
 import polyglot.ast.Receiver;
 import polyglot.ast.Special;
+import polyglot.types.ArrayType;
 import polyglot.types.Flags;
 
 public class FieldAssignExt_c extends ExprExt_c {
@@ -78,7 +80,16 @@ public class FieldAssignExt_c extends ExprExt_c {
       arg = "((%T) %E)";
       subs.add(field.type());
     }
-    subs.add(rhs);
+
+    if (rhs instanceof ArrayInit) {
+      // Turn the array initializer into an array-creation expression.
+      ArrayType arrayType = field.type().toArray();
+      arg = "(new %T { %LE } )";
+      subs.add(arrayType);
+      subs.add(((ArrayInit) rhs).elements());
+    } else {
+      subs.add(rhs);
+    }
 
     String setterName = "set$" + name;
     if (!assign.operator().equals(Assign.ASSIGN))
