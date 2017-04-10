@@ -25,7 +25,7 @@ import fabric.worker.Store;
  * </ul>
  */
 public abstract class DerivedMetric extends Metric implements Observer {
-  protected double[] lastValue;
+  protected double lastValue;
 
   protected Metric[] terms;
 
@@ -62,8 +62,8 @@ public abstract class DerivedMetric extends Metric implements Observer {
 
   /*@Override*/
   public void handleUpdates() {
-    double[] newValue = value();
-    if (!Arrays.equals(newValue, lastValue)) {
+    double newValue = value();
+    if (newValue != lastValue) {
       lastValue = newValue;
       markModified();
     }

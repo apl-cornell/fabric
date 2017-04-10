@@ -210,77 +210,62 @@ public abstract class MetricContract extends Contract {
    *       the system for this contract.
    */
   private long hedged(long time) {
-    double[] rate = getBound().rate;
-    double[] base = getBound().base;
-    long startTime = getBound().startTime;
     Metric m = getMetric();
-    double[] curValue = m.value();
-    double[] curVelocity = m.velocity();
-    double[] curNoise = m.noise();
 
     // True expiry: time this would fail with no changes to the current
     // value. This is the latest time we can safely advertise as the
     // expiration.
     long hedgedResult = getBound().trueExpiry(m, time);
 
-    // Find the smallest hedged time across all dimensions of the
-    // comparison.
-    for (int i = 0; i < rate.length; i++) {
-      double r = rate[i];
-      double b = base[i] + (r * (time - startTime));
-      double x = curValue[i];
-      double v = curVelocity[i];
-      double n = curNoise[i] * HEDGE_FACTOR * HEDGE_FACTOR;
+    long startTime = getBound().startTime;
+    double r = getBound().rate;
+    double b = getBound().base + r * (time - startTime);
+    double x = m.value();
+    double v = m.velocity();
+    double n = m.noise();
 
-      // Solving intersection by using rotated parametric formula
-      double bm = b - x;
-      double rv = r - v;
+    // Solving intersection by using rotated parametric formula
+    double bm = b - x;
+    double rv = r - v;
 
-      // Solving for extremal point
-      // TODO: Still not 100% sure this is the correct math...
-      double minYs = x
-        - ((v > 0 ? n : -n) / (4.0 * (v * Math.sqrt(v * v + 1))));
-      long min = getBound().trueExpiry(minYs, i, time);
+    // Solving for extremal point
+    // TODO: Still not 100% sure this is the correct math...
+    double minYs = x - ((v > 0 ? n : -n) / (4.0 * (v * Math.sqrt(v * v + 1))));
+    long min = getBound().trueExpiry(minYs, time);
 
-      // If the extremal point on the hedged curve is valid and below the
-      // current point, use the time for that.
-      if (minYs < x && getBound().test(minYs, i, time)) {
-        hedgedResult = Math.min(min, hedgedResult);
-      } else if (bm * rv > 0) {
-        // If the extremal point isn't valid, it means the projected
-        // "hedged" curve intersects the boundary, so we'll use that
-        // instead.
+    // If the extremal point on the hedged curve is valid and below the
+    // current point, use the time for that.
+    if (minYs < x && getBound().test(minYs, time)) {
+      hedgedResult = Math.min(min, hedgedResult);
+    } else if (bm * rv > 0) {
+      // If the extremal point isn't valid, it means the projected
+      // "hedged" curve intersects the boundary, so we'll use that
+      // instead.
 
-        // Negative intersection, rotated to set the expected direction
-        // as the
-        // x-axis
-        double rotatedY1 = 1.0
-          - Math.sqrt(4.0 * rv * bm + 1.0) / (2.0 * rv);
-        double rotatedX1 = (rotatedY1 + bm) / rv;
-        // Positive intersection, rotated to set the expected direction
-        // as the
-        // x-axis
-        double rotatedY2 = 1.0
-          + Math.sqrt(4.0 * rv * bm + 1.0) / (2.0 * rv);
-        double rotatedX2 = (rotatedY2 + bm) / rv;
-        // Terms to rotate back for the intersection time, relative to
-        // 'time'
-        double xxFact = 1 / Math.sqrt(v * v + 1); // cos(arctan(v))
-        double xyFact = v / Math.sqrt(v * v + 1); // -sin(arctan(v))
+      // Negative intersection, rotated to set the expected direction
+      // as the
+      // x-axis
+      double rotatedY1 = 1.0 - Math.sqrt(4.0 * rv * bm + 1.0) / (2.0 * rv);
+      double rotatedX1 = (rotatedY1 + bm) / rv;
+      // Positive intersection, rotated to set the expected direction
+      // as the
+      // x-axis
+      double rotatedY2 = 1.0 + Math.sqrt(4.0 * rv * bm + 1.0) / (2.0 * rv);
+      double rotatedX2 = (rotatedY2 + bm) / rv;
+      // Terms to rotate back for the intersection time, relative to
+      // 'time'
+      double xxFact = 1 / Math.sqrt(v * v + 1); // cos(arctan(v))
+      double xyFact = v / Math.sqrt(v * v + 1); // -sin(arctan(v))
 
-        // Rotate back
-        double intersectX1 = rotatedX1 * xxFact + rotatedY1 * xyFact;
-        double intersectX2 = rotatedX2 * xxFact + rotatedY2 * xyFact;
+      // Rotate back
+      double intersectX1 = rotatedX1 * xxFact + rotatedY1 * xyFact;
+      double intersectX2 = rotatedX2 * xxFact + rotatedY2 * xyFact;
 
-        // If there's an intersection, use that
-        double soonestX1 = (intersectX1 > 0) ? time + intersectX1
-          : Long.MAX_VALUE;
-        double soonestX2 = (intersectX2 > 0) ? time + intersectX2
-          : Long.MAX_VALUE;
+      // If there's an intersection, use that
+      double soonestX1 = (intersectX1 > 0) ? time + intersectX1 : Long.MAX_VALUE;
+      double soonestX2 = (intersectX2 > 0) ? time + intersectX2 : Long.MAX_VALUE;
 
-        hedgedResult = Math.min((long) Math.min(soonestX1, soonestX2),
-            hedgedResult);
-      }
+      hedgedResult = Math.min((long) Math.min(soonestX1, soonestX2), hedgedResult);
     }
     return hedgedResult;
   }

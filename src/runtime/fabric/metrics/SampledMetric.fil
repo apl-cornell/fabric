@@ -57,18 +57,17 @@ public class SampledMetric extends Metric {
   }
 
   /*@Override*/
-  public double[] value() {
-    return new double[] { value };
+  public double value() {
+    return value;
   }
 
   /*@Override*/
-  public double[] velocity() {
-    return new double[] {
-        biasStats.getMean() / updateIntervalStats.getMean() };
+  public double velocity() {
+    return biasStats.getMean() / updateIntervalStats.getMean();
   }
 
   /*@Override*/
-  public double[] noise() {
+  public double noise() {
     // Based on ratio estimator approach and assuming that there's 0
     // covariance between update intervals and update values
     double tSqrd = updateIntervalStats.getMean()
@@ -76,9 +75,8 @@ public class SampledMetric extends Metric {
     double bSqrd = biasStats.getMean() * biasStats.getMean();
     // The below is using alpha instead of 1/n... I have no idea if this is
     // right but it appears to work well in experiments?
-    return new double[] {
-        RunningStats.ALPHA * ((updateIntervalStats.getVar() / tSqrd)
-            + (bSqrd * biasStats.getVar() / (tSqrd * tSqrd))) };
+    return RunningStats.ALPHA * ((updateIntervalStats.getVar() / tSqrd)
+            + (bSqrd * biasStats.getVar() / (tSqrd * tSqrd)));
   }
 
   /*@Override*/
@@ -94,11 +92,6 @@ public class SampledMetric extends Metric {
   /*@Override*/
   public boolean isSingleStore() {
     return true;
-  }
-
-  /*@Override*/
-  public int dimension() {
-    return 1;
   }
 
   /*@Override*/

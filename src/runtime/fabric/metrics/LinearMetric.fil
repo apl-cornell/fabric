@@ -14,21 +14,21 @@ public class LinearMetric extends DerivedMetric {
   }
 
   /*@Override*/
-  public double[] value() {
+  public double value() {
     // TODO
-    return null;
+    return 0;
   }
 
   /*@Override*/
-  public double[] velocity() {
+  public double velocity() {
     // TODO
-    return null;
+    return 0;
   }
 
   /*@Override*/
-  public double[] noise() {
+  public double noise() {
     // TODO
-    return null;
+    return 0;
   }
 
   /*@Override*/
@@ -40,18 +40,6 @@ public class LinearMetric extends DerivedMetric {
   public boolean isSingleStore() {
     // TODO
     return true;
-  }
-
-  /*@Override*/
-  public int dimension() {
-    // TODO
-    return 1;
-  }
-
-  /*@Override*/
-  public DerivedMetric slice(int start, int end) {
-    // TODO
-    return this;
   }
 
   /*@Override*/

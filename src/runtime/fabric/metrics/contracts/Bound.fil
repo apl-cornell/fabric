@@ -10,8 +10,8 @@ import fabric.metrics.Metric;
  */
 public class Bound {
 
-  public /*final*/ double[] rate;
-  public /*final*/ double[] base;
+  public /*final*/ double rate;
+  public /*final*/ double base;
   public /*final*/ long startTime;
 
   /**
@@ -23,32 +23,8 @@ public class Bound {
    *        the time this bound's value is computed relative to
    */
   public Bound fabric$metrics$contracts$Bound$(double rate, double base, long startTime) {
-    this.rate = new double[] { rate };
-    this.base = new double[] { base };
-    this.startTime = startTime;
-    fabric$lang$Object$();
-    return this;
-  }
-
-  /**
-   * @param rate
-   *        the rate the value changes with time
-   * @param base
-   *        the value of the bound associated with startTime
-   * @param startTime
-   *        the time this bound's value is computed relative to
-   */
-  public Bound fabric$metrics$contracts$Bound$(double[] rate, double[] base, long startTime) {
-    if (rate.length != base.length)
-      throw new IllegalArgumentException("Rate and base must line up!");
-    this.rate = new double[rate.length];
-    for (int i = 0; i < rate.length; i++) {
-      this.rate[i] = rate[i];
-    }
-    this.base = new double[base.length];
-    for (int i = 0; i < rate.length; i++) {
-      this.base[i] = base[i];
-    }
+    this.rate = rate;
+    this.base = base;
     this.startTime = startTime;
     fabric$lang$Object$();
     return this;
@@ -59,12 +35,8 @@ public class Bound {
    *        the time we're computing the bound value for
    * @return the value of the bound at the given time
    */
-  public double[] value(long time) {
-    double[] result = new double[rate.length];
-    for (int i = 0; i < rate.length; i++) {
-      result[i] = rate[i] * (time - startTime) + base[i];
-    }
-    return result;
+  public double value(long time) {
+    return rate * (time - startTime) + base;
   }
 
   /**
@@ -85,26 +57,8 @@ public class Bound {
    *        the time this bound is being applied to m
    * @return true iff x satisfies the bound at the given time.
    */
-  public boolean test(double[] x, long time) {
-    double[] curBnd = value(time);
-    for (int i = 0; i < curBnd.length; i++) {
-      if (x[i] < curBnd[i])
-        return false;
-    }
-    return true;
-  }
-
-  /**
-   * @param x
-   *        a double we're testing this bound on
-   * @param idx
-   *        the index into the bound vector this checks x against
-   * @param time
-   *        the time this bound is being applied to m
-   * @return true iff x satisfies the bound on index idx at the given time.
-   */
-  public boolean test(double x, int idx, long time) {
-    return x >= value(time)[idx];
+  public boolean test(double x, long time) {
+    return x >= value(time);
   }
 
   /**
@@ -128,36 +82,13 @@ public class Bound {
    * @return the "true expiry" of this bound for the given value, the time at
    *       which point the bound would no longer be satisfied by the value.
    */
-  public long trueExpiry(double[] value, long time) {
-    double[] curBnd = value(time);
-    long worst = Long.MAX_VALUE;
-    for (int i = 0; i < curBnd.length; i++) {
-      if (rate[i] >= 0) {
-        worst = (long) Math.min(worst,
-            (time + (value[i] - curBnd[i]) / rate[i]));
-      } else if (value[i] < curBnd[i]) {
-        return 0;
-      }
+  public long trueExpiry(double value, long time) {
+    if (rate >= 0) {
+      return (long) (time + (value - value(time)) / rate);
+    } else if (value < value(time)) {
+      return 0;
     }
-    return worst;
-  }
-
-  /**
-   * @param value
-   *        the current value we're finding the true expiry for
-   * @param idx
-   *        the index into the bound vector this checks the value against
-   * @param time
-   *        the time we're running this calculation relative to
-   * @return the "true expiry" of this bound for the given value and index,
-   *       the time at which point the bound would no longer be satisfied by
-   *       the value.
-   */
-  public long trueExpiry(double value, int idx, long time) {
-    double[] curBnd = value(time);
-    if (rate[idx] >= 0)
-      return (long) (time + (value - curBnd[idx]) / rate[idx]);
-    return value >= curBnd[idx] ? Long.MAX_VALUE : 0;
+    return Long.MAX_VALUE;
   }
 
   /**
@@ -166,13 +97,7 @@ public class Bound {
    * @return true iff this is at least as strong of a bound as other
    */
   public boolean implies(Bound other) {
-    // Value at other's startTime
-    double[] thisBase = value(other.startTime);
-    for (int i = 0; i < rate.length; i++) {
-      if (rate[i] < other.rate[i] || thisBase[i] < other.base[i])
-        return false;
-    }
-    return true;
+    return rate >= other.rate && value(other.startTime) >= other.base;
   }
 
   /**
@@ -182,26 +107,21 @@ public class Bound {
    *       newStartTime
    */
   public Bound shifted(long newStartTime) {
-    double[] newBase = new double[base.length];
-    for (int i = 0; i < base.length; i++) {
-      newBase[i] = base[i] + rate[i] * (newStartTime - startTime);
-    }
-    return (new Bound()).fabric$metrics$contracts$Bound$(rate, newBase, newStartTime);
+    return (new Bound()).fabric$metrics$contracts$Bound$(rate, base + rate * (newStartTime - startTime), newStartTime);
   }
 
   /*@Override*/
   public boolean equals(Object o) {
     if (o instanceof Bound) {
       Bound other = (Bound) o;
-      return Arrays.equals(rate, other.rate)
-          && Arrays.equals(value(startTime), other.base);
+      return rate == other.rate
+          && value(other.startTime) == other.base;
     }
     return false;
   }
 
   /*@Override*/
   public String toString() {
-    return "> " + Arrays.toString(rate) + " * (t - " + startTime + ") + "
-        + Arrays.toString(base);
+    return "> " + rate + " * (t - " + startTime + ") + " + base;
   }
 }

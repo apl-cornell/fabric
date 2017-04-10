@@ -26,19 +26,16 @@ public abstract class Metric extends Subject implements Comparable/*<Metric>*/ {
   private Set/*<MetricContract>*/ contracts = new HashSet/*<>*/();
 
   /** @return the current value of the quantity being measured. */
-  public abstract double[] value();
+  public abstract double value();
 
   /** @return the estimated value of the measured quantity's velocity */
-  public abstract double[] velocity();
+  public abstract double velocity();
 
   /**
    * @return the estimated value of the measured quantity's noise (the
    *       variance of the velocity estimate)
    */
-  public abstract double[] noise();
-
-  /** @return the dimension of this metric's values. */
-  public abstract int dimension();
+  public abstract double noise();
 
   /**
    * @return true iff all the sampling and transformations on this metric are
@@ -54,10 +51,8 @@ public abstract class Metric extends Subject implements Comparable/*<Metric>*/ {
    *       estimated.
    */
   public long expectedTimeToHit(Bound bound, long time) {
-    double[] curVelocity = velocity();
-    double[] adjustedRate = new double[bound.rate.length];
-    for (int i = 0; i < adjustedRate.length; i++)
-      adjustedRate[i] = bound.rate[i] - curVelocity[i];
+    double curVelocity = velocity();
+    double adjustedRate = bound.rate - curVelocity;
     return (new Bound()).fabric$metrics$contracts$Bound$(adjustedRate, bound.base, bound.startTime).trueExpiry(this, time);
   }
 
@@ -131,44 +126,11 @@ public abstract class Metric extends Subject implements Comparable/*<Metric>*/ {
    * @param base
    *        the base parameter for the {@link Bound} on the resuling
    *        {@link MetricContract}
-   * @param time
-   *        the startTime parameter of the {@link Bound} on the resulting
-   *        {@link MetricContract}
-   * @return a {@link MetricContract} which enforces that the metric satisfies
-   *       a {@link Bound} that enforces a {@link Bound} with the given
-   *       parameters at the given time.
-   */
-  public MetricContract getContract(double[] rate, double[] base, long time) {
-    return getContract((new Bound()).fabric$metrics$contracts$Bound$(rate, base, time));
-  }
-
-  /**
-   * @param rate
-   *        the rate parameter for the {@link Bound} on the resuling
-   *        {@link MetricContract}
-   * @param base
-   *        the base parameter for the {@link Bound} on the resuling
-   *        {@link MetricContract}
    * @return a {@link MetricContract} which enforces that the metric satisfies
    *       a {@link Bound} that enforces a {@link Bound} with the given
    *       parameters at the current time.
    */
   public MetricContract getContract(double rate, double base) {
-    return getContract((new Bound()).fabric$metrics$contracts$Bound$(rate, base, System.currentTimeMillis()));
-  }
-
-  /**
-   * @param rate
-   *        the rate parameter for the {@link Bound} on the resuling
-   *        {@link MetricContract}
-   * @param base
-   *        the base parameter for the {@link Bound} on the resuling
-   *        {@link MetricContract}
-   * @return a {@link MetricContract} which enforces that the metric satisfies
-   *       a {@link Bound} that enforces a {@link Bound} with the given
-   *       parameters at the current time.
-   */
-  public MetricContract getContract(double[] rate, double[] base) {
     return getContract((new Bound()).fabric$metrics$contracts$Bound$(rate, base, System.currentTimeMillis()));
   }
 
@@ -195,7 +157,7 @@ public abstract class Metric extends Subject implements Comparable/*<Metric>*/ {
     final Store thisStore = $getStore();
     return /*$getStore().findDerivedMetric(*/
         new LinearMetric@thisStore().fabric$metrics$LinearMetric$(
-          new double[][] { new double[]{ 1 } }, new Metric[] { this })/*)*/;
+          new double[][] { new double[]{ scalar } }, new Metric[] { this })/*)*/;
   }
 
   /**
@@ -245,16 +207,6 @@ public abstract class Metric extends Subject implements Comparable/*<Metric>*/ {
   public Metric max(Metric other) {
     return (this.times(-1).min(other.times(-1))).times(-1);
   }
-
-  /**
-   * @param start
-   *        the start index (inclusive) to project
-   * @param end
-   *        the ending index (non-inclusive) to project
-   * @return a {@link LinearMetric} which projects the elements from [start,
-   *       end) of this {@link Metric}.
-   */
-  public abstract DerivedMetric slice(int start, int end);
 
   /**
    * Allows for sorting {@link Metric}s to help with normalizing
