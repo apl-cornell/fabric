@@ -1,0 +1,16 @@
+package fabric.metrics.util;
+
+/**
+ * Abstraction for tracking trees of observers/subjects. Unifies tracking
+ * between measure trees and contract trees.
+ *
+ * TODO: bulk handling of updates rather than per-update handling.
+ */
+public interface Observer {
+
+  /**
+   * Handles a new observation. This is called whenever any associated
+   * {@link Subject}s are changed prior to the transaction completing.
+   */
+  public void handleUpdates();
+}

@@ -1,0 +1,91 @@
+package fabric.metrics.util;
+
+import fabric.util.HashSet;
+import fabric.util.LinkedHashSet;
+import fabric.util.Set;
+
+/**
+ * Represents an observable object having a set of {@link Observer}s. After an
+ * observable object changes, an application can call
+ * {@link #getObserversCopy()} to get the current set of {@link Observer}s.
+ * {@link Observer}s are then notified of a change via a call to
+ * {@link Observer#handleUpdates()}.  */
+public abstract class Subject {
+
+  protected Subject fabric$metrics$util$Subject$() {
+    fabric$lang$Object$();
+    return this;
+  }
+
+  // Using a weak map as the backing for this set so that observers aren't
+  // pinned by their subjects.
+  private Set/*<Observer>*/ observers = new HashSet/*<>*/().fabric$util$HashSet$();
+
+  private boolean modified = false;
+
+  /**
+   * Adds an observer to the set of observers for this object. Nothing is done
+   * if the given observer {@link #equals(Object) equals} an existing
+   * observer.
+   *
+   * @param o
+   *        {@link Observer} to add
+   */
+  public void addObserver(Observer o) {
+    observers.add(o);
+  }
+
+  /**
+   * Removes an observer from the set of observers of this object.
+   *
+   * @param o
+   *        {@link Observer} to remove
+   */
+  public void removeObserver(Observer o) {
+    observers.remove(o);
+  }
+
+  /**
+   * @param o
+   *        an observer that might observe this subject.
+   * @return true iff o observes this subject.
+   */
+  public boolean observedBy(Observer o) {
+    return observers.contains(o);
+  }
+
+  /**
+   * @return true iff there are any observers of this subject, currently.
+   */
+  public boolean isObserved() {
+    return !observers.isEmpty();
+  }
+
+  /**
+   * @return a copy of the set of the current observers of this subject.
+   */
+  public Set/*<Observer>*/ getObserversCopy() {
+    return (new HashSet/*<>*/()).fabric$util$HashSet$(observers);
+  }
+
+  /**
+   * Mark this subject as modified.
+   */
+  public void markModified() {
+    this.modified = true;
+  }
+
+  /**
+   * Clear the modified flag on this subject.
+   */
+  public void clearModified() {
+    this.modified = false;
+  }
+
+  /**
+   * @return true iff the modified flag is set.
+   */
+  public boolean isModified() {
+    return this.modified;
+  }
+}

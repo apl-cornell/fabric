@@ -1,0 +1,68 @@
+package fabric.metrics.contracts.enforcement;
+
+import fabric.util.Collection;
+import fabric.util.Collections;
+import fabric.util.Iterator;
+import fabric.util.LinkedHashSet;
+import fabric.util.Set;
+
+import fabric.metrics.contracts.Contract;
+import fabric.metrics.contracts.MetricContract;
+
+/**
+ * An {@link EnforcementPolicy} which enforces a {@link MetricContract} by
+ * relying on a set of <em>witnesses</em>, other {@link MetricContract}s that in
+ * conjunction imply the enforced {@link MetricContract}.
+ */
+public class WitnessPolicy extends EnforcementPolicy {
+
+  /** The set of {@link MetricContract}s used to enforce this policy. */
+  public /*final*/ Set/*<MetricContract>*/ witnesses;
+
+  /**
+   * @param witnesses
+   *            the set of {@link MetricContract}s used to enforce this
+   *            policy. If any of the witnesses weren't already active, they
+   *            are {@link Contract#activate() activated} here.
+   */
+  public WitnessPolicy fabric$metrics$contracts$enforcement$WitnessPolicy$(Collection/*<MetricContract>*/ witnesses) {
+    this.witnesses = new LinkedHashSet/*<>*/().fabric$util$LinkedHashSet$(witnesses);
+    fabric$metrics$contracts$enforcement$EnforcementPolicy$();
+    Iterator itr = witnesses.iterator();
+    while (itr.hasNext()) {
+      MetricContract w = (MetricContract) itr.next();
+      w.activate();
+    }
+    return this;
+  }
+
+  /*@Override*/
+  public long expiry() {
+    long lowest = 0;
+    Iterator itr = witnesses.iterator();
+    while (itr.hasNext()) {
+      MetricContract w = (MetricContract) itr.next();
+      if (lowest == 0 || w.getExpiry() < lowest)
+        lowest = w.getExpiry();
+    }
+    return lowest;
+  }
+
+  /*@Override*/
+  public void apply(MetricContract mc) {
+    Iterator itr = witnesses.iterator();
+    while (itr.hasNext()) {
+      MetricContract w = (MetricContract) itr.next();
+      w.addObserver(mc);
+    }
+  }
+
+  /*@Override*/
+  public void unapply(MetricContract mc) {
+    Iterator itr = witnesses.iterator();
+    while (itr.hasNext()) {
+      MetricContract w = (MetricContract) itr.next();
+      w.removeObserver(mc);
+    }
+  }
+}

@@ -1,0 +1,29 @@
+package fabric.metrics.contracts;
+
+import fabric.metrics.contracts.enforcement.EnforcementPolicy;
+import fabric.metrics.DerivedMetric;
+
+/**
+ * A {@link MetricContract} for enforcement of {@link Bound}s on
+ * {@link DerivedMetric}s using the {@link DerivedMetric}s implementation of
+ * {@link DerivedMetric#policyFor(Bound)}
+ */
+public class DerivedMetricContract extends MetricContract {
+
+  /**
+   * @param metric
+   *        the {@link DerivedMetric} this contract asserts a bound on
+   * @param bound
+   *        the {@link Bound} this {@link MetricContract} asserts on
+   *        metric.
+   */
+  public DerivedMetricContract fabric$metrics$contracts$DerivedMetricContract$(DerivedMetric metric, Bound bound) {
+    fabric$metrics$contracts$MetricContract$(metric, bound);
+    return this;
+  }
+
+  /*@Override*/
+  protected EnforcementPolicy enforcementStrategy() {
+    return ((DerivedMetric) getMetric()).policyFor(getBound());
+  }
+}

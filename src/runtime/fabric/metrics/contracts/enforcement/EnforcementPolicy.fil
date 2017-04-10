@@ -1,0 +1,41 @@
+package fabric.metrics.contracts.enforcement;
+
+import fabric.metrics.contracts.MetricContract;
+
+/**
+ * A policy for enforcing a {@link MetricContract}.
+ */
+public abstract class EnforcementPolicy {
+
+  protected EnforcementPolicy fabric$metrics$contracts$enforcement$EnforcementPolicy$() {
+    fabric$lang$Object$();
+    return this;
+  }
+
+  /**
+   * @return the exipration time of this {@link EnforcementPolicy}.
+   */
+  public abstract long expiry();
+
+  /**
+   * Update book-keeping to use this {@link EnforcementPolicy} for the given
+   * {@link MetricContract}. This will add the given {@link MetricContract} as
+   * an {@link contracts.util.Observer Observer} of the necessary
+   * {@link contracts.util.Subject Subject}s to use the policy.
+   *
+   * @param mc
+   *        the {@link MetricContract} to apply this policy to.
+   */
+  public abstract void apply(MetricContract mc);
+
+  /**
+   * Update book-keeping to stop using this {@link EnforcementPolicy} for the
+   * given {@link MetricContract}. This will remove the given
+   * {@link MetricContract} as an {@link contracts.util.Observer Observer} of
+   * the necessary {@link contracts.util.Subject Subject}s to use the policy.
+   *
+   * @param mc
+   *        the {@link MetricContract} to stop applying this policy to.
+   */
+  public abstract void unapply(MetricContract mc);
+}

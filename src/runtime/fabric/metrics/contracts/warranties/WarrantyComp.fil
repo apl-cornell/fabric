@@ -1,0 +1,16 @@
+package fabric.metrics.contracts.warranties;
+
+import fabric.metrics.Metric;
+
+/**
+ * A warrantiable computation. Returns values wrapped in a {@link WarrantyValue}
+ * along with an appropriate {@link Metric} for the result.
+ */
+/*@FunctionalInterface*/
+public interface WarrantyComp/*<T> extends LongFunction<WarrantyValue<T>>*/ {
+
+  /**
+   * Run this warranty computation at the given time.
+   */
+  public WarrantyValue/*<T>*/ apply(long time);
+}

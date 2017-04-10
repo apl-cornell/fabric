@@ -1,0 +1,124 @@
+package fabric.metrics;
+
+import fabric.util.Arrays;
+import fabric.util.TreeSet;
+
+import fabric.metrics.contracts.Bound;
+import fabric.metrics.contracts.DerivedMetricContract;
+import fabric.metrics.contracts.MetricContract;
+import fabric.metrics.contracts.enforcement.EnforcementPolicy;
+import fabric.metrics.contracts.enforcement.WitnessPolicy;
+import fabric.metrics.util.Observer;
+import fabric.worker.Store;
+
+/**
+ * General base class for {@link Metric}s built by computing over other
+ * {@link Metrics}. Each {@link DerivedMetric} implementation is responsible for
+ * defining how to
+ * <ul>
+ * <li>construct the {@link #value()}, {@link #velocity()}, and {@link #noise()}
+ * from its terms</li>
+ * <li>provide a {@link EnforcementPolicy} to enforce a
+ * {@link DerivedMetricContract} on it given the {@link Bound}, typically using
+ * a {@link WitnessPolicy} using {@link MetricContract}s on the terms it is
+ * derived from.</li>
+ * </ul>
+ */
+public abstract class DerivedMetric extends Metric implements Observer {
+  protected double[] lastValue;
+
+  protected Metric[] terms;
+
+  /**
+   * @param s
+   *        the {@link Store} this {@link DerivedMetric} will be stored on
+   * @param terms
+   *        the {@link Metric}s that this {@link DerivedMetric} is
+   *        computed from
+   */
+  public DerivedMetric fabric$metrics$DerivedMetric$(Metric[] terms) {
+    fabric$metrics$Metric$();
+    this.terms = new Metric[terms.length];
+    Arrays.arraycopy(terms, 0, this.terms, 0, terms.length);
+    if ((new TreeSet/*<>*/()).fabric$util$TreeSet$(Arrays.asList(terms)).size() != terms.length)
+      throw new IllegalArgumentException(
+          "DerivedMetric terms must not contain duplicates!");
+    return this;
+  }
+
+  /**
+   * Method to be called at the end of a constructor for any subclass of
+   * {@link DerivedMetric}. Ensures that the {@link DerivedMetric} is added as
+   * an {@link Observer} of its terms as well as caches the initial value of
+   * the {@link Metric}.
+   */
+  public void initialize() {
+    for (int i = 0; i < terms.length; i++) {
+      terms[i].addObserver(this);
+    }
+
+    lastValue = value();
+  }
+
+  /*@Override*/
+  public void handleUpdates() {
+    double[] newValue = value();
+    if (!Arrays.equals(newValue, lastValue)) {
+      lastValue = newValue;
+      markModified();
+    }
+  }
+
+  /*@Override*/
+  public boolean isSingleStore() {
+    for (int i = 0; i < terms.length; i++) {
+      if (!terms[i].$getStore().equals($getStore()) || !terms[i].isSingleStore())
+        return false;
+    }
+    return true;
+  }
+
+  /**
+   * Method to be called when a {@link DerivedMetric} is no longer stored.
+   * Removes itself from the {@link Observer}s of its terms.
+   */
+  public void cleanup() {
+    for (int i = 0; i < terms.length; i++) {
+      terms[i].removeObserver(this);
+    }
+  }
+
+  /**
+   * @return the terms this {@link DerivedMetric} is defined over
+   */
+  public Metric[] terms() {
+    Metric[] cTerms = new Metric[terms.length];
+    Arrays.arraycopy(terms, 0, cTerms, 0, terms.length);
+    return cTerms;
+  }
+
+  /**
+   * @param i
+   *        an index into the terms array
+   * @return the ith term this {@link DerivedMetric} is defined over
+   */
+  public Metric term(int i) {
+    return terms[i];
+  }
+
+  /**
+   * @param s
+   *        a {@link Store} that will hold the copy of this
+   *        {@link DerivedMetric}
+   * @return a copy of this {@link DerivedMetric} that is stored on s
+   */
+  public abstract DerivedMetric copyOn(Store s);
+
+  /**
+   * @param bound
+   *        a {@link Bound} that the returned policy enforces.
+   * @return a {@link EnforcementPolicy} that enforces this {@link Metric}
+   *       being above bound.
+   */
+  public abstract EnforcementPolicy policyFor(Bound bound);
+}

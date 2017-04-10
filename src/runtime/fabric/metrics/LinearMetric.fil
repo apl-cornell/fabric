@@ -1,0 +1,66 @@
+package fabric.metrics;
+
+import fabric.worker.Store;
+import fabric.metrics.contracts.Bound;
+import fabric.metrics.contracts.MetricContract;
+import fabric.metrics.contracts.DerivedMetricContract;
+import fabric.metrics.contracts.enforcement.EnforcementPolicy;
+
+public class LinearMetric extends DerivedMetric {
+  // TODO
+  public LinearMetric fabric$metrics$LinearMetric$(double[][] matrix, Metric[] terms) {
+    // TODO
+    return this;
+  }
+
+  /*@Override*/
+  public double[] value() {
+    // TODO
+    return null;
+  }
+
+  /*@Override*/
+  public double[] velocity() {
+    // TODO
+    return null;
+  }
+
+  /*@Override*/
+  public double[] noise() {
+    // TODO
+    return null;
+  }
+
+  /*@Override*/
+  protected MetricContract createContract(Bound bound) {
+    return new DerivedMetricContract().fabric$metrics$contracts$DerivedMetricContract$(this, bound);
+  }
+
+  /*@Override*/
+  public boolean isSingleStore() {
+    // TODO
+    return true;
+  }
+
+  /*@Override*/
+  public int dimension() {
+    // TODO
+    return 1;
+  }
+
+  /*@Override*/
+  public DerivedMetric slice(int start, int end) {
+    // TODO
+    return this;
+  }
+
+  /*@Override*/
+  public DerivedMetric copyOn(final Store s) {
+    return new LinearMetric@s().fabric$metrics$LinearMetric$(null, null);
+  }
+
+  /*@Override*/
+  public EnforcementPolicy policyFor(Bound b) {
+    return null;
+  }
+}

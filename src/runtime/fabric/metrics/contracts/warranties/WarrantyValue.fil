@@ -1,0 +1,32 @@
+package fabric.metrics.contracts.warranties;
+
+import fabric.metrics.contracts.MetricContract;
+
+/**
+ * A utility class for warrantiable computation results, bundling the result
+ * with a {@link MetricContract}.
+ */
+public class WarrantyValue/*<V>*/ {
+  public /*final*/ /*V*/ Object value;
+  public /*final*/ MetricContract contract;
+
+  /**
+   * @param value
+   *        the return value we're bundling in this {@link WarrantyValue}
+   * @param contract
+   *        the value's associated {@link MetricContract}
+   */
+  public WarrantyValue fabric$metrics$contracts$warranties$WarrantyValue$(/*V*/ Object value, MetricContract contract) {
+    this.value = value;
+    this.contract = contract;
+    fabric$lang$Object$();
+    return this;
+  }
+
+  /**
+   * @return the time this result is expected to last.
+   */
+  public long expectedLifetime() {
+    return contract.getExpectedLifetime();
+  }
+}

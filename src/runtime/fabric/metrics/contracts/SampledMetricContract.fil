@@ -1,0 +1,29 @@
+package fabric.metrics.contracts;
+
+import fabric.metrics.contracts.enforcement.EnforcementPolicy;
+import fabric.metrics.SampledMetric;
+
+/**
+ * A specialized form of {@link MetricContract} for automating the enforcement
+ * strategy for {@link SampledMetric}s.
+ */
+public class SampledMetricContract extends MetricContract {
+
+  /**
+   * @param metric
+   *        the {@link SampledMetric} this contract asserts a bound on
+   * @param bound
+   *        the {@link Bound} this {@link MetricContract} asserts on
+   *        metric.
+   */
+  public SampledMetricContract fabric$metrics$contracts$SampledMetricContract$(SampledMetric metric, Bound bound) {
+    fabric$metrics$contracts$MetricContract$(metric, bound);
+    return this;
+  }
+
+  /*@Override*/
+  protected EnforcementPolicy enforcementStrategy() {
+    // XXX: is there really another policy at this level?
+    return directStrategy();
+  }
+}

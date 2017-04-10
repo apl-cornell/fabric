@@ -1,0 +1,59 @@
+package fabric.metrics.contracts.warranties;
+
+import fabric.metrics.contracts.Contract;
+import fabric.metrics.contracts.MetricContract;
+
+/**
+ * A Warranty (also known as a General Contract) is a time-limited assertion of
+ * the form <code>f(...) = y</code> and is enforced by an associated metric
+ * contract.
+ */
+public class Warranty/*<T>*/ extends Contract {
+
+  public /*final*/ WarrantyComp/*<T>*/ computation;
+  protected /*T*/ Object value;
+  protected MetricContract witness;
+
+  /**
+   * @param computation
+   *        the computation being warrantied.
+   */
+  public Warranty fabric$metrics$contracts$warranties$Warranty$(WarrantyComp/*<T>*/ computation) {
+    this.computation = computation;
+    fabric$metrics$contracts$Contract$();
+    return this;
+  }
+
+  /*@Override*/
+  protected void refresh() {
+    // Currently we just hope the witness is still valid. In all cases,
+    // update the expiry according to the witness.
+    long currentTime = System.currentTimeMillis();
+    if (witness == null || !witness.valid(currentTime)) {
+      if (witness != null)
+        witness.removeObserver(this);
+      WarrantyValue/*<T>*/ curVal = computation.apply(currentTime);
+      if (!curVal.value.equals(value)) {
+        this.markModified();
+        this.value = curVal.value;
+      }
+      witness = curVal.contract;
+      witness.activate();
+      witness.addObserver(this);
+    }
+    update(witness.getExpiry());
+  }
+
+  /**
+   * @return the current value of the computation this enforces (assuming the
+   *       {@link Warranty} is currently valid).
+   */
+  public /*T*/ Object value() {
+    return this.value;
+  }
+
+  /*@Override*/
+  public String toString() {
+    return "Warranty " + computation + " = " + value + " until " + getExpiry();
+  }
+}

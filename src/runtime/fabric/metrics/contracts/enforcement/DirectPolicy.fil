@@ -1,0 +1,42 @@
+package fabric.metrics.contracts.enforcement;
+
+import fabric.metrics.contracts.MetricContract;
+
+/**
+ * An enforcement policy for enforcing a {@link MetricContract}s by checking
+ * every update to the associated metric.
+ */
+public class DirectPolicy extends EnforcementPolicy {
+
+  /**
+   * How long to enforce the {@link MetricContract} this is applied to using
+   * direct checks on updates to the metric.
+   */
+  public /*final*/ long expiry;
+
+  /**
+   * @param expiry
+   *        how long to enforce the {@link MetricContract} this is applied
+   *        to using direct checks on updates to the metric.
+   */
+  public DirectPolicy fabric$metrics$contracts$enforcement$DirectPolicy$(long expiry) {
+    this.expiry = expiry;
+    fabric$metrics$contracts$enforcement$EnforcementPolicy$();
+    return this;
+  }
+
+  /*@Override*/
+  public long expiry() {
+    return expiry;
+  }
+
+  /*@Override*/
+  public void apply(MetricContract mc) {
+    mc.getMetric().addObserver(mc);
+  }
+
+  /*@Override*/
+  public void unapply(MetricContract mc) {
+    mc.getMetric().removeObserver(mc);
+  }
+}

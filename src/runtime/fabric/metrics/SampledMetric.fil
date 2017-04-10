@@ -1,0 +1,164 @@
+package fabric.metrics;
+
+import fabric.util.ArrayList;
+import fabric.util.List;
+
+import fabric.metrics.contracts.Bound;
+import fabric.metrics.contracts.MetricContract;
+import fabric.metrics.contracts.SampledMetricContract;
+import fabric.metrics.util.Observer;
+import fabric.metrics.util.RunningStats;
+import fabric.worker.Store;
+
+/**
+ * Takes measurements of a persistent value of the parameter type T. When
+ * constructed, the programmer provides a custom function for converting the
+ * value to a double (the measurement) as well as a pointer to the value being
+ * tracked.
+ * <p>
+ * In a transaction which has written the value being measured,
+ * {@link #takeSample(double,long)} must be called to ensure that
+ * {@link Observer}s of this {@link Metric} are aware of the change and the
+ * transaction context performs the proper book-keeping.
+ */
+public class SampledMetric extends Metric {
+
+  private /*final*/ String name;
+
+  /**
+   * @param store
+   *        the Store that holds this {@link Metric}
+   * @param name
+   *        the name the store associates with this {@link SampledMetric}
+   * @param init
+   *        the initial value of this {@link Metric}
+   */
+  public SampledMetric fabric$metrics$SampledMetric$(String name, double init) {
+    this.name = name;
+    fabric$metrics$Metric$();
+    this.value = init;
+    return this;
+  }
+
+  /**
+   * Update to a new value of the metric.
+   *
+   * @param sample
+   *        the value the metric is updating to.
+   * @param time
+   *        the time the sample occurred.
+   */
+  public void takeSample(double sample, long time) {
+    if (value != sample) {
+      updateEstimates(sample, time);
+      value = sample;
+      markModified();
+    }
+  }
+
+  /*@Override*/
+  public double[] value() {
+    return new double[] { value };
+  }
+
+  /*@Override*/
+  public double[] velocity() {
+    return new double[] {
+        biasStats.getMean() / updateIntervalStats.getMean() };
+  }
+
+  /*@Override*/
+  public double[] noise() {
+    // Based on ratio estimator approach and assuming that there's 0
+    // covariance between update intervals and update values
+    double tSqrd = updateIntervalStats.getMean()
+        * updateIntervalStats.getMean();
+    double bSqrd = biasStats.getMean() * biasStats.getMean();
+    // The below is using alpha instead of 1/n... I have no idea if this is
+    // right but it appears to work well in experiments?
+    return new double[] {
+        RunningStats.ALPHA * ((updateIntervalStats.getVar() / tSqrd)
+            + (bSqrd * biasStats.getVar() / (tSqrd * tSqrd))) };
+  }
+
+  /*@Override*/
+  protected MetricContract createContract(Bound bound) {
+    return new SampledMetricContract().fabric$metrics$contracts$SampledMetricContract$(this, bound);
+  }
+
+  /*@Override*/
+  public String toString() {
+    return "SampledMetric(" + name + ")@" + $getStore().name();
+  }
+
+  /*@Override*/
+  public boolean isSingleStore() {
+    return true;
+  }
+
+  /*@Override*/
+  public int dimension() {
+    return 1;
+  }
+
+  /*@Override*/
+  public DerivedMetric slice(int start, int end) {
+    throw new UnsupportedOperationException(
+        "SampledMetrics can't be sliced!");
+  }
+
+  /**
+   * The current measurement.
+   */
+  protected double value;
+
+  /**
+   * The time of the last update to this measure, in milliseconds since the
+   * UNIX epoch.
+   */
+  protected long lastUpdate = 0;
+
+  /**
+   * The statistics of update magnitudes for this measure. This is computed as
+   * an exponentially weighted moving average.
+   */
+  protected RunningStats biasStats = new RunningStats().fabric$metrics$util$RunningStats$(0);
+
+  /**
+   * The estimated time interval between updates, in milliseconds. This is
+   * computed as an exponentially weighted moving average.
+   */
+  protected RunningStats updateIntervalStats = new RunningStats().fabric$metrics$util$RunningStats$(1.0);
+
+  /**
+   * Updates the velocity and interval estimates with the given observation.
+   *
+   * @param newVal
+   *        the new value of the measured quantity
+   * @param eventTime
+   *        the time, in milliseconds, this update happened
+   */
+  protected void updateEstimates(double newVal, long eventTime) {
+    biasStats.update(newVal - value);
+    updateIntervalStats.update(eventTime - lastUpdate);
+    lastUpdate = eventTime;
+  }
+
+  /*@Override*/
+  public int hashCode() {
+    List/*<Object>*/ l = new ArrayList/*<>*/().fabric$util$ArrayList$(2);
+    l.add($getStore());
+    l.add(name);
+    return l.hashCode();
+  }
+
+  /*@Override*/
+  public boolean equals(Object other) {
+    if (other instanceof SampledMetric) {
+      SampledMetric that = (SampledMetric) other;
+      return this.name.equals(that.name)
+          && this.$getStore().equals(that.$getStore());
+    }
+    return false;
+  }
+}

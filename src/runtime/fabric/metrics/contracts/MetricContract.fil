@@ -1,0 +1,287 @@
+package fabric.metrics.contracts;
+
+import fabric.metrics.contracts.enforcement.DirectPolicy;
+import fabric.metrics.contracts.enforcement.EnforcementPolicy;
+import fabric.metrics.Metric;
+import fabric.metrics.util.Subject;
+
+/**
+ * A contract asserting that a {@link Metric}'s value is above or below a
+ * vectorized boundary expression <code>r⃗ * (t - startTime) + b⃗</code> until
+ * the associated expriation time.
+ * <p>
+ * This class follows the subject-observer pattern. An instance is an observer
+ * of either a {@link Metric} or a set of {@link MetricContract}s and can be
+ * observed by other {@link Contract}s.
+ */
+public abstract class MetricContract extends Contract {
+
+  protected /*final*/ Metric metric;
+  protected /*final*/ Bound bound;
+  protected EnforcementPolicy currentPolicy;
+
+  /**
+   * @param metric
+   *        the {@link Metric} this contract asserts a bound on
+   * @param bound
+   *        the {@link Bound} this {@link MetricContract} asserts on
+   *        metric.
+   */
+  public MetricContract fabric$metrics$contracts$MetricContract$(Metric metric, Bound bound) {
+    this.metric = metric;
+    this.bound = bound;
+    fabric$metrics$contracts$Contract$();
+    return this;
+  }
+
+  /** @return the {@link Metric} that this contract observes. */
+  public Metric getMetric() {
+    return metric;
+  }
+
+  /** @return the {@link Bound} that this contract observes. */
+  public Bound getBound() {
+    return bound;
+  }
+
+  /**
+   * @return the expected lifetime of this {@link MetricContract} given the
+   *       associated {@link Metric}s current velocity.
+   */
+  public long getExpectedLifetime() {
+    return getMetric().expectedTimeToHit(getBound(), System.currentTimeMillis());
+  }
+
+  /*@Override*/
+  public void activate() {
+    super.activate();
+    getMetric().addContract(this);
+  }
+
+  /**
+   * Update this contract's expiration time to stay valid in response to a
+   * change in the value of the {@link Subject}s used for enforcing this
+   * {@link Contract}. Revokes, extends, and updates the enforcement strategy
+   * as needed.
+   */
+  /*@Override*/
+  protected void refresh() {
+    long currentTime = System.currentTimeMillis();
+
+    EnforcementPolicy oldPolicy = currentPolicy;
+    // TODO: really should avoid checking metrics for witness enforced
+    // contracts.
+    if (bound.test(metric, currentTime)) {
+      EnforcementPolicy newPolicy;
+
+      if (metric.isSingleStore()) {
+        // Doesn't matter what it is, if it's on a single store, just go
+        // with a direct enforcement policy.
+        newPolicy = directStrategy();
+      } else {
+        // Otherwise use whatever's the best way to split things up.
+        newPolicy = enforcementStrategy();
+      }
+
+      if (oldPolicy != null)
+        oldPolicy.unapply(this);
+      if (newPolicy.expiry() > currentTime) {
+        currentPolicy = newPolicy;
+        currentPolicy.apply(this);
+      } else {
+        currentPolicy = null;
+      }
+      update(Math.min(newPolicy.expiry(), currentTime + EXTENSION_LIMIT));
+    } else {
+      if (oldPolicy != null)
+        oldPolicy.unapply(this);
+      update(0);
+    }
+  }
+
+  /**
+   * Check if this implies another {@link MetricContract} being considered.
+   *
+   * @param otherMetric
+   *        the {@link Metric} the other {@link MetricContract} would
+   *        assert a bound on
+   * @param otherBound
+   *        the {@link Bound} that would be used by the other
+   *        {@link MetricContract}
+   * @return true iff this would imply (and therefore) can enforce another
+   *       {@link MetricContract} with the given metric and bound.
+   */
+  public boolean implies(Metric otherMetric, Bound otherBound) {
+    return getMetric().equals(otherMetric) && valid(otherBound.startTime)
+      && bound.implies(otherBound);
+  }
+
+  /**
+   * Check if this implies the other {@link MetricContract}.
+   *
+   * @param other
+   *        the other {@link MetricContract} this is being compared with
+   * @return true iff this would imply (and therefore) can enforce other for
+   *       the entire duration of other.
+   */
+  public boolean implies(MetricContract other) {
+    return valid(other.getExpiry())
+      && implies(other.getMetric(), other.getBound());
+  }
+
+  /**
+   * Check if this enforces the <strong>same</strong> bound as another
+   * {@link MetricContract} being considered.
+   *
+   * @param otherMetric
+   *        the {@link Metric} the other {@link MetricContract} would
+   *        assert a bound on
+   * @param otherBound
+   *        the {@link Bound} that would be used by the other
+   *        {@link MetricContract}
+   * @return true iff this enforces another {@link MetricContract} with the
+   *       given parameters.
+   */
+  public boolean enforces(Metric otherMetric, Bound otherBound) {
+    return getMetric().equals(otherMetric) && valid(otherBound.startTime)
+      && bound.equals(otherBound);
+  }
+
+  /**
+   * Check if this enforces the <strong>same</strong> bound as another
+   * {@link MetricContract}.
+   *
+   * @param other
+   *        the other {@link MetricContract} this is being compared with
+   * @return true iff this enforces the same bound as other.
+   */
+  public boolean enforces(MetricContract other) {
+    return valid(other.getExpiry())
+      && enforces(other.getMetric(), other.getBound());
+  }
+
+  /*@Override*/
+  public String toString() {
+    return getMetric().toString() + " " + bound + " until " + getExpiry();
+  }
+
+  /**
+   * Given the current transaction context's view of the system state, return
+   * a new {@link EnforcementPolicy} to enforce this {@link MetricContract}.
+   *
+   * @return The {@link EnforcementPolicy} to use for this
+   *       {@link MetricContract} after the call completes.
+   */
+  protected abstract EnforcementPolicy enforcementStrategy();
+
+  protected EnforcementPolicy directStrategy() {
+    // First check if we actually can enforce it in the current state.
+    long currentTime = System.currentTimeMillis();
+    long trueTime = getBound().trueExpiry(getMetric(), currentTime);
+    long hedgedTime = hedged(currentTime);
+    if (getExpiry() > trueTime
+        || hedgedTime > (getExpiry() + EXTENSION_BUFFER)) {
+      return new DirectPolicy().fabric$metrics$contracts$enforcement$DirectPolicy$(hedgedTime);
+    }
+    return new DirectPolicy().fabric$metrics$contracts$enforcement$DirectPolicy$(getExpiry());
+  }
+
+  // How many standard deviations to use for hedging calculations.
+  // Note: larger value => less aggressive extensions => lower revocations
+  // Note: smaller value => longer extensions => less chatter
+  private static final double HEDGE_FACTOR = 2;
+  // The amount of time an extension has to improve over the current expiry
+  // for us to bother advertising it.
+  // Note: larger value => less aggressive extensions => lower revocations
+  private static final long EXTENSION_BUFFER = 20;
+  // The maximum amount of time from when extension messages go out that will
+  // be advertised for expiries.
+  // Note: smaller value => less aggressive extensions => lower revocations
+  // Note: larger value => longer extensions => less chatter
+  private static final long EXTENSION_LIMIT = 500l;
+
+  /**
+   * Using the associated {@link Metric's} statistics and some tuning
+   * constants, figure out a time to advertise given the current time.
+   *
+   * @param time
+   *        the time we're calculating this hedged expiration at
+   * @return an appropriately conservative time to advertise to other nodes in
+   *       the system for this contract.
+   */
+  private long hedged(long time) {
+    double[] rate = getBound().rate;
+    double[] base = getBound().base;
+    long startTime = getBound().startTime;
+    Metric m = getMetric();
+    double[] curValue = m.value();
+    double[] curVelocity = m.velocity();
+    double[] curNoise = m.noise();
+
+    // True expiry: time this would fail with no changes to the current
+    // value. This is the latest time we can safely advertise as the
+    // expiration.
+    long hedgedResult = getBound().trueExpiry(m, time);
+
+    // Find the smallest hedged time across all dimensions of the
+    // comparison.
+    for (int i = 0; i < rate.length; i++) {
+      double r = rate[i];
+      double b = base[i] + (r * (time - startTime));
+      double x = curValue[i];
+      double v = curVelocity[i];
+      double n = curNoise[i] * HEDGE_FACTOR * HEDGE_FACTOR;
+
+      // Solving intersection by using rotated parametric formula
+      double bm = b - x;
+      double rv = r - v;
+
+      // Solving for extremal point
+      // TODO: Still not 100% sure this is the correct math...
+      double minYs = x
+        - ((v > 0 ? n : -n) / (4.0 * (v * Math.sqrt(v * v + 1))));
+      long min = getBound().trueExpiry(minYs, i, time);
+
+      // If the extremal point on the hedged curve is valid and below the
+      // current point, use the time for that.
+      if (minYs < x && getBound().test(minYs, i, time)) {
+        hedgedResult = Math.min(min, hedgedResult);
+      } else if (bm * rv > 0) {
+        // If the extremal point isn't valid, it means the projected
+        // "hedged" curve intersects the boundary, so we'll use that
+        // instead.
+
+        // Negative intersection, rotated to set the expected direction
+        // as the
+        // x-axis
+        double rotatedY1 = 1.0
+          - Math.sqrt(4.0 * rv * bm + 1.0) / (2.0 * rv);
+        double rotatedX1 = (rotatedY1 + bm) / rv;
+        // Positive intersection, rotated to set the expected direction
+        // as the
+        // x-axis
+        double rotatedY2 = 1.0
+          + Math.sqrt(4.0 * rv * bm + 1.0) / (2.0 * rv);
+        double rotatedX2 = (rotatedY2 + bm) / rv;
+        // Terms to rotate back for the intersection time, relative to
+        // 'time'
+        double xxFact = 1 / Math.sqrt(v * v + 1); // cos(arctan(v))
+        double xyFact = v / Math.sqrt(v * v + 1); // -sin(arctan(v))
+
+        // Rotate back
+        double intersectX1 = rotatedX1 * xxFact + rotatedY1 * xyFact;
+        double intersectX2 = rotatedX2 * xxFact + rotatedY2 * xyFact;
+
+        // If there's an intersection, use that
+        double soonestX1 = (intersectX1 > 0) ? time + intersectX1
+          : Long.MAX_VALUE;
+        double soonestX2 = (intersectX2 > 0) ? time + intersectX2
+          : Long.MAX_VALUE;
+
+        hedgedResult = Math.min((long) Math.min(soonestX1, soonestX2),
+            hedgedResult);
+      }
+    }
+    return hedgedResult;
+  }
+}

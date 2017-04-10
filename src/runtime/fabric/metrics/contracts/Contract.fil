@@ -1,0 +1,141 @@
+package fabric.metrics.contracts;
+
+import fabric.metrics.Metric;
+import fabric.metrics.util.Observer;
+import fabric.metrics.util.Subject;
+
+/**
+ * A {@link Contract} consists of an assertion and an expiration time. If the
+ * current time is earlier than the expiration time, then the contract is
+ * <i>valid</i>: the enforcement protocol will ensure the assertion holds.
+ * <p>
+ * This class follows the subject-observer pattern. An instance can be an
+ * observer of a {@link Metric} or other {@link Contract}s, and can be observed
+ * by other {@link Contract}s.
+ */
+public abstract class Contract extends Subject implements Observer {
+
+  protected Contract fabric$metrics$contracts$Contract$() {
+    fabric$metrics$util$Subject$();
+    return this;
+  }
+
+  private long expiry = 0;
+
+  /**
+   * Extends the expiration time.
+   *
+   * @param newExpiry
+   *        the new expiration time for this {@link Contract} given in
+   *        milliseconds.
+   */
+  protected void extendTo(long newExpiry) {
+    if (newExpiry > expiry) markExtended();
+    expiry = expiry > newExpiry ? expiry : newExpiry;
+  }
+
+  private boolean extendedFlag = false;
+
+  /**
+   * Mark this contract as having been extended.
+   */
+  private void markExtended() {
+    extendedFlag = true;
+  }
+
+  /**
+   * Clear this contract's extended flag.
+   */
+  public void clearExtended() {
+    extendedFlag = false;
+  }
+
+  /**
+   * @return true iff this contract is currently marked as being extended by
+   *       the current transaction
+   */
+  public boolean extended() {
+    return extendedFlag;
+  }
+
+  private boolean active = false;
+
+  /**
+   * @return true if this contract is currently active (enforced).
+   */
+  public boolean isActive() {
+    return active;
+  }
+
+  /**
+   * Activate and start enforcing this {@link Contract}.
+   */
+  public void activate() {
+    if (!active) {
+      active = true;
+      refresh();
+    }
+  }
+
+  /**
+   * Updates the expiration time of this contract, either extending or
+   * revoking as needed.
+   *
+   * @param newExpiry
+   *        the new expiration time associated with this {@link Contract}.
+   */
+  public void update(long newExpiry) {
+    if (expiry != newExpiry) {
+      if (newExpiry > expiry) {
+        extendTo(newExpiry);
+      } else {
+        revoke(newExpiry);
+      }
+    }
+  }
+
+  /**
+   * Called to revoke this contract in the current transaction context.
+   *
+   * @param newExpiry
+   *        time to set the expiry back to.
+   */
+  protected void revoke(long newExpiry) {
+    // Mark this as modified, which needs to be resolved in this
+    // transaction.
+    clearExtended();
+    markModified();
+    expiry = newExpiry;
+  }
+
+  /**
+   * @param time
+   *        the time we're checking validity against.
+   * @return true iff the contract is valid at the given time in the current
+   *       transaction context.
+   */
+  public boolean valid(long time) {
+    if (expiry < time) refresh();
+    return expiry >= time;
+  }
+
+  /**
+   * @return the expiration time of the current state, in milliseconds
+   */
+  public long getExpiry() {
+    return expiry;
+  }
+
+  /**
+   * Update this contract's expiration time to stay valid in response to a
+   * change in the value of the {@link Subject}s used for enforcing this
+   * {@link Contract}. Revokes, extends, and updates the enforcement strategy
+   * as needed.
+   */
+  protected abstract void refresh();
+
+  /*@Override*/
+  public void handleUpdates() {
+    refresh();
+  }
+}
