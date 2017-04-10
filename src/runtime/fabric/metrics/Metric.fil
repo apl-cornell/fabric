@@ -8,6 +8,7 @@ import fabric.util.Set;
 import fabric.metrics.contracts.Bound;
 import fabric.metrics.contracts.MetricContract;
 import fabric.metrics.util.Subject;
+import fabric.metrics.util.Matrix;
 import fabric.worker.Store;
 
 /**
@@ -157,7 +158,7 @@ public abstract class Metric extends Subject implements Comparable/*<Metric>*/ {
     final Store thisStore = $getStore();
     return /*$getStore().findDerivedMetric(*/
         new LinearMetric@thisStore().fabric$metrics$LinearMetric$(
-          new double[][] { new double[]{ scalar } }, new Metric[] { this })/*)*/;
+          Matrix.constant(1, 1, scalar), new Metric[] { this })/*)*/;
   }
 
   /**
@@ -174,7 +175,7 @@ public abstract class Metric extends Subject implements Comparable/*<Metric>*/ {
     final Store thisStore = $getStore();
     return /*$getStore().findDerivedMetric(*/
         new LinearMetric@thisStore().fabric$metrics$LinearMetric$(
-          new double[][] { new double[]{ 1, 1 } }, new Metric[]{ this, other})/*)*/;
+          Matrix.constant(1, 2, 1), new Metric[]{ this, other})/*)*/;
   }
 
   /**
@@ -194,7 +195,7 @@ public abstract class Metric extends Subject implements Comparable/*<Metric>*/ {
     final Store thisStore = $getStore();
     return /*$getStore().findDerivedMetric(*/
         new LinearMetric@thisStore().fabric$metrics$LinearMetric$(
-          new double[][] { new double[]{ 1, 0 }, new double[]{ 0, 1 } }, new Metric[]{ this, other })/*)*/;
+          Matrix.identity(2), new Metric[]{ this, other })/*)*/;
   }
 
   /**
