@@ -149,16 +149,28 @@ public abstract class Metric extends Subject implements Comparable/*<Metric>*/ {
   }
 
   /**
+   * Dumb hack to allow us to get at a map on the store for avoiding duplicated
+   * (inconsistent) metric computations being distributed.
+   */
+  public static DerivedMetric findDerivedMetric(Store s, DerivedMetric m) {
+    if (s.derivedMap().get(m.toString()) == null)
+      s.derivedMap().put(m.toString(), m);
+    else
+      m.cleanup();
+    return (DerivedMetric) s.derivedMap().get(m.toString());
+  }
+
+  /**
    * @param scalar
    *        a double scalar to scale this metric by
    * @return A {@link LinearMetric} that tracks the scaled value of this
    *       {@link Metric}
    */
-  public DerivedMetric times(double scalar) {
+  public Metric times(double scalar) {
     final Store thisStore = $getStore();
-    return /*$getStore().findDerivedMetric(*/
+    return findDerivedMetric($getStore(),
         new LinearMetric@thisStore().fabric$metrics$LinearMetric$(
-          Matrix.constant(1, 1, scalar), new Metric[] { this })/*)*/;
+          Matrix.constant(1, 1, scalar), new Metric[] { this }));
   }
 
   /**
@@ -168,14 +180,14 @@ public abstract class Metric extends Subject implements Comparable/*<Metric>*/ {
    * @return a {@link LinearMetric} that tracks the value of the sum of other
    *       and this
    */
-  public DerivedMetric plus(Metric other) {
+  public Metric plus(Metric other) {
     // Ugh dumb hack
     if (other instanceof DerivedMetric)
       return other.plus(this);
     final Store thisStore = $getStore();
-    return /*$getStore().findDerivedMetric(*/
+    return findDerivedMetric($getStore(),
         new LinearMetric@thisStore().fabric$metrics$LinearMetric$(
-          Matrix.constant(1, 2, 1), new Metric[]{ this, other})/*)*/;
+          Matrix.constant(1, 2, 1), new Metric[]{ this, other}));
   }
 
   /**
@@ -193,9 +205,34 @@ public abstract class Metric extends Subject implements Comparable/*<Metric>*/ {
     if (this.equals(other))
       return this;
     final Store thisStore = $getStore();
-    return /*$getStore().findDerivedMetric(*/
+    return findDerivedMetric($getStore(),
         new LinearMetric@thisStore().fabric$metrics$LinearMetric$(
-          Matrix.identity(2), new Metric[]{ this, other })/*)*/;
+          Matrix.identity(2), new Metric[]{ this, other }));
+  }
+
+  public static Metric scaleAtStore(final Store s, double a, Metric m) {
+    if (m.$getStore().equals(s))
+      return m.times(a);
+    return findDerivedMetric(s, new LinearMetric@s().fabric$metrics$LinearMetric$(
+          Matrix.constant(1, 1, a), new Metric[] { m }));
+  }
+
+  public static Metric addAtStore(final Store s, Metric[] terms) {
+    if (terms.length == 0)
+      throw new IllegalArgumentException("Need at least one metric to sum!");
+    if (terms.length == 1)
+      return scaleAtStore(s, 1, terms[0]);
+    return findDerivedMetric(s, new LinearMetric@s().fabric$metrics$LinearMetric$(
+          Matrix.constant(1, terms.length, 1), terms));
+  }
+
+  public static Metric minAtStore(final Store s, Metric[] terms) {
+    if (terms.length == 0)
+      throw new IllegalArgumentException("Need at least one metric to min!");
+    if (terms.length == 1)
+      return scaleAtStore(s, 1, terms[0]);
+    return findDerivedMetric(s, new LinearMetric@s().fabric$metrics$LinearMetric$(
+          Matrix.identity(terms.length), terms));
   }
 
   /**

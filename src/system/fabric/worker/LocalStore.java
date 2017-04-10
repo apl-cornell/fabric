@@ -17,7 +17,6 @@ import fabric.common.util.LongKeyMap;
 import fabric.common.util.Pair;
 import fabric.lang.Object;
 import fabric.lang.Object._Impl;
-import fabric.lang.WrappedJavaInlineable;
 import fabric.lang.security.ConfPolicy;
 import fabric.lang.security.IntegPolicy;
 import fabric.lang.security.Label;
@@ -25,7 +24,6 @@ import fabric.lang.security.LabelUtil;
 import fabric.lang.security.NodePrincipal;
 import fabric.lang.security.Principal;
 import fabric.lang.security.PrincipalUtil.TopPrincipal;
-import fabric.metrics.DerivedMetric;
 import fabric.util.HashMap;
 import fabric.util.Map;
 
@@ -147,14 +145,8 @@ public final class LocalStore implements Store, Serializable {
   }
 
   @Override
-  public DerivedMetric findDerivedMetric(DerivedMetric m) {
-    Object key = WrappedJavaInlineable.$wrap(m.toString());
-    if (derivedMap.containsKey(key)) {
-      m.cleanup();
-      return (DerivedMetric) derivedMap.get(key);
-    }
-    derivedMap.put(key, m);
-    return m;
+  public Map derivedMap() {
+    return derivedMap;
   }
 
   public void addLocalDelegation(Principal p, Principal q) {

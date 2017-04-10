@@ -332,15 +332,8 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
   }
 
   @Override
-  public DerivedMetric findDerivedMetric(DerivedMetric m) {
-    Object key = WrappedJavaInlineable.$wrap(m.toString());
-    Map derivedMap = new Map._Proxy(this, ONumConstants.DERIVED_MAP);
-    if (derivedMap.containsKey(key)) {
-      m.cleanup();
-      return (DerivedMetric) derivedMap.get(key);
-    }
-    derivedMap.put(key, m);
-    return m;
+  public Map derivedMap() {
+    return new Map._Proxy(this, ONumConstants.DERIVED_MAP);
   }
 
   @Override

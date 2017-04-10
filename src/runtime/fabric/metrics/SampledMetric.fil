@@ -94,12 +94,6 @@ public class SampledMetric extends Metric {
     return true;
   }
 
-  /*@Override*/
-  public DerivedMetric slice(int start, int end) {
-    throw new UnsupportedOperationException(
-        "SampledMetrics can't be sliced!");
-  }
-
   /**
    * The current measurement.
    */

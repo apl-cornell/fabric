@@ -4,5 +4,5 @@ public interface Store extends fabric.lang.JavaInlineable {
   NodePrincipal getPrincipal();
   fabric.util.Map getRoot();
   String name();
-  fabric.metrics.DerivedMetric findDerivedMetric(fabric.metrics.DerivedMetric m);
+  fabric.util.Map derivedMap();
 }

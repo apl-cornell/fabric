@@ -31,15 +31,15 @@ public interface Store extends Serializable {
    * Find the unique DerivedMetric that's stored for tracking the equivalent of
    * the given DerivedMetric.
    */
-  public fabric.metrics.DerivedMetric findDerivedMetric(fabric.metrics.DerivedMetric m);
+  public fabric.util.Map derivedMap();
 
   /**
    * Notifies the store that the transaction is entering the Prepare phase.
    */
   void prepareTransaction(long tid, boolean singleStore, boolean readOnly,
       Collection<_Impl> toCreate, LongKeyMap<Integer> reads,
-      Collection<_Impl> writes) throws UnreachableNodeException,
-      TransactionPrepareFailedException;
+      Collection<_Impl> writes)
+      throws UnreachableNodeException, TransactionPrepareFailedException;
 
   /**
    * Returns the cache entry for the given onum. If the object is not resident,
@@ -88,8 +88,8 @@ public interface Store extends Serializable {
    * @throws UnreachableNodeException
    * @throws TransactionCommitFailedException
    */
-  void commitTransaction(long transactionID) throws UnreachableNodeException,
-  TransactionCommitFailedException;
+  void commitTransaction(long transactionID)
+      throws UnreachableNodeException, TransactionCommitFailedException;
 
   /**
    * Determines whether the given set of objects are stale.
