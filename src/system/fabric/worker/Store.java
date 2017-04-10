@@ -28,6 +28,12 @@ public interface Store extends Serializable {
   public boolean isLocalStore();
 
   /**
+   * Find the unique DerivedMetric that's stored for tracking the equivalent of
+   * the given DerivedMetric.
+   */
+  public fabric.metrics.DerivedMetric findDerivedMetric(fabric.metrics.DerivedMetric m);
+
+  /**
    * Notifies the store that the transaction is entering the Prepare phase.
    */
   void prepareTransaction(long tid, boolean singleStore, boolean readOnly,

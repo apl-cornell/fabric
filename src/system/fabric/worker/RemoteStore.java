@@ -30,6 +30,7 @@ import fabric.common.util.LongKeyMap;
 import fabric.dissemination.ObjectGlob;
 import fabric.lang.Object;
 import fabric.lang.Object._Impl;
+import fabric.lang.WrappedJavaInlineable;
 import fabric.lang.security.NodePrincipal;
 import fabric.messages.AbortTransactionMessage;
 import fabric.messages.AllocateMessage;
@@ -41,6 +42,7 @@ import fabric.messages.Message.NoException;
 import fabric.messages.PrepareTransactionMessage;
 import fabric.messages.ReadMessage;
 import fabric.messages.StalenessCheckMessage;
+import fabric.metrics.DerivedMetric;
 import fabric.net.RemoteNode;
 import fabric.net.UnreachableNodeException;
 import fabric.util.Map;
@@ -327,6 +329,18 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
   @Override
   public Map getRoot() {
     return new Map._Proxy(this, ONumConstants.ROOT_MAP);
+  }
+
+  @Override
+  public DerivedMetric findDerivedMetric(DerivedMetric m) {
+    Object key = WrappedJavaInlineable.$wrap(m.toString());
+    Map derivedMap = new Map._Proxy(this, ONumConstants.DERIVED_MAP);
+    if (derivedMap.containsKey(key)) {
+      m.cleanup();
+      return (DerivedMetric) derivedMap.get(key);
+    }
+    derivedMap.put(key, m);
+    return m;
   }
 
   @Override
