@@ -14,6 +14,7 @@ import fabric.common.Timing;
 import fabric.common.TransactionID;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.Oid;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.WeakReferenceArrayList;
 import fabric.lang.Object._Impl;
@@ -685,6 +686,11 @@ public final class Log {
       obj.$version = 1;
       obj.$readMapEntry.incrementVersion();
       obj.$isOwned = false;
+    }
+
+    // Queue up extension transactions
+    for (Contract extended : extendedContracts) {
+      TransactionManager.queueExtension(new Oid(extended));
     }
 
     // Merge the security cache into the top-level label cache.

@@ -150,6 +150,9 @@ public final class TransactionManager {
     Threading.getPool().submit(extensionsRunner);
   }
 
+  /**
+   * Get a runnable that runs a transaction to update the given Observer.
+   */
   private static NamedRunnable extensionTask(final Observer parent) {
     String name = "Extension of " + new Oid(parent);
     return new Threading.NamedRunnable(name) {
@@ -165,6 +168,22 @@ public final class TransactionManager {
         }, false);
       }
     };
+  }
+
+  /**
+   * Add an extended Oid to the extensions queue, to allow for bubbling up
+   * extensions to parent contracts within later transactions.
+   */
+  public static void queueExtension(Oid extended) {
+    synchronized (extensions) {
+      if (extensions.contains(extended)) {
+        try {
+          extensions.put(extended);
+        } catch (InterruptedException e) {
+          Logging.logIgnoredInterruptedException(e);
+        }
+      }
+    }
   }
 
   /**
