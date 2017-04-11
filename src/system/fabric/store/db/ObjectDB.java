@@ -660,10 +660,12 @@ public abstract class ObjectDB {
                 .fabric$util$HashMap$().fetch();
         map.$forceRenumber(ONumConstants.ROOT_MAP);
         // Create the DerivedMetric map
+        System.out.println("CREATING THE DERIVEDMAP");
         fabric.util.HashMap._Impl derivedMap =
             (fabric.util.HashMap._Impl) new fabric.util.HashMap._Impl(store)
                 .fabric$util$HashMap$().fetch();
-        map.$forceRenumber(ONumConstants.DERIVED_MAP);
+        derivedMap.$forceRenumber(ONumConstants.DERIVED_MAP);
+        System.out.println("CREATED THE DERIVEDMAP");
 
         return null;
       }
