@@ -5,9 +5,13 @@ import fabric.lang.security.*;
 import fabric.worker.*;
 import fabric.worker.remote.*;
 import java.lang.*;
+import fabric.util.Collections;
 import fabric.util.HashSet;
+import fabric.util.Iterator;
 import fabric.util.LinkedHashSet;
 import fabric.util.Set;
+import fabric.metrics.SampledMetric;
+import fabric.metrics.contracts.Contract;
 
 /**
  * Represents an observable object having a set of {@link Observer}s. After an
@@ -143,6 +147,11 @@ public interface Subject extends fabric.lang.Object {
             return ((fabric.metrics.util.Subject) fetch()).getObservers();
         }
         
+        public static void processSamples(java.util.LinkedList arg1,
+                                          java.util.List arg2) {
+            fabric.metrics.util.Subject._Impl.processSamples(arg1, arg2);
+        }
+        
         public _Proxy(Subject._Impl impl) { super(impl); }
         
         public _Proxy(fabric.worker.Store store, long onum) {
@@ -260,6 +269,128 @@ public interface Subject extends fabric.lang.Object {
    */
         public fabric.util.Set getObservers() { return this.get$observers(); }
         
+        /**
+   * Utility for processing a batch of samples for the transaction manager.
+   */
+        public static void processSamples(java.util.LinkedList unobserved,
+                                          java.util.List extensions) {
+            while (!unobserved.isEmpty()) {
+                fabric.metrics.SampledMetric
+                  sm =
+                  (fabric.metrics.SampledMetric)
+                    fabric.lang.Object._Proxy.
+                    $getProxy(
+                      fabric.lang.WrappedJavaInlineable.$wrap(
+                                                          unobserved.poll()));
+                sm.clearModified();
+                java.util.LinkedList queue = new java.util.LinkedList();
+                fabric.util.Iterator obsIter = sm.getObservers().iterator();
+                while (obsIter.hasNext()) {
+                    queue.add(
+                            (java.lang.Object)
+                              fabric.lang.WrappedJavaInlineable.$unwrap(
+                                                                  obsIter.next(
+                                                                            )));
+                }
+                while (!queue.isEmpty()) {
+                    fabric.metrics.util.Observer
+                      unhandled =
+                      (fabric.metrics.util.Observer)
+                        fabric.lang.Object._Proxy.
+                        $getProxy(
+                          fabric.lang.WrappedJavaInlineable.$wrap(
+                                                              queue.poll()));
+                    boolean needToWait = false;
+                    fabric.util.Iterator leavesIter =
+                      unhandled.getLeafSubjects().iterator();
+                    while (leavesIter.hasNext()) {
+                        if (unobserved.
+                              contains(
+                                (java.lang.Object)
+                                  fabric.lang.WrappedJavaInlineable.
+                                  $unwrap(leavesIter.next()))) {
+                            needToWait = true;
+                            break;
+                        }
+                    }
+                    if (!needToWait) {
+                        fabric.util.Set parents =
+                          fabric.util.Collections._Static._Proxy.$instance.
+                          get$EMPTY_SET();
+                        if (fabric.lang.Object._Proxy.
+                              $getProxy(
+                                (java.lang.Object)
+                                  fabric.lang.WrappedJavaInlineable.$unwrap(
+                                                                      unhandled)) instanceof fabric.metrics.util.Subject) {
+                            parents =
+                              ((fabric.metrics.util.Subject)
+                                 fabric.lang.Object._Proxy.$getProxy(
+                                                             unhandled)).
+                                getObserversCopy();
+                        }
+                        unhandled.handleUpdates();
+                        if (fabric.lang.Object._Proxy.
+                              $getProxy(
+                                (java.lang.Object)
+                                  fabric.lang.WrappedJavaInlineable.$unwrap(
+                                                                      unhandled)) instanceof fabric.metrics.util.Subject &&
+                              ((fabric.metrics.util.Subject)
+                                 fabric.lang.Object._Proxy.$getProxy(
+                                                             unhandled)).
+                              isModified()) {
+                            fabric.metrics.util.Subject s =
+                              (fabric.metrics.util.Subject)
+                                fabric.lang.Object._Proxy.$getProxy(unhandled);
+                            if (fabric.lang.Object._Proxy.
+                                  $getProxy(
+                                    (java.lang.Object)
+                                      fabric.lang.WrappedJavaInlineable.$unwrap(s)) instanceof fabric.metrics.contracts.Contract) {
+                                extensions.
+                                  remove(
+                                    (java.lang.Object)
+                                      fabric.lang.WrappedJavaInlineable.$unwrap(
+                                                                          s));
+                            }
+                            fabric.util.Iterator parentIter =
+                              parents.iterator();
+                            while (parentIter.hasNext()) {
+                                queue.
+                                  add(
+                                    (java.lang.Object)
+                                      fabric.lang.WrappedJavaInlineable.
+                                      $unwrap(parentIter.next()));
+                            }
+                            s.clearModified();
+                        }
+                        if (fabric.lang.Object._Proxy.
+                              $getProxy(
+                                (java.lang.Object)
+                                  fabric.lang.WrappedJavaInlineable.$unwrap(
+                                                                      unhandled)) instanceof fabric.metrics.contracts.Contract &&
+                              ((fabric.metrics.contracts.Contract)
+                                 fabric.lang.Object._Proxy.$getProxy(
+                                                             unhandled)).
+                              extended()) {
+                            fabric.metrics.contracts.Contract curContract =
+                              (fabric.metrics.contracts.Contract)
+                                fabric.lang.Object._Proxy.$getProxy(unhandled);
+                            curContract.clearExtended();
+                            if (!extensions.
+                                  contains(
+                                    (java.lang.Object)
+                                      fabric.lang.WrappedJavaInlineable.
+                                      $unwrap(curContract)))
+                                extensions.
+                                  add(
+                                    (java.lang.Object)
+                                      fabric.lang.WrappedJavaInlineable.
+                                      $unwrap(curContract));
+                        }
+                    }
+                }
+            }
+        }
+        
         public _Impl(fabric.worker.Store $location) { super($location); }
         
         protected fabric.lang.Object._Proxy $makeProxy() {
@@ -372,11 +503,11 @@ public interface Subject extends fabric.lang.Object {
         
     }
     
-    public static final byte[] $classHash = new byte[] { -85, 60, 82, -127, -37,
-    -42, 105, 48, -79, -63, 92, -93, -69, -1, 9, -15, 109, -74, 57, -119, 43,
-    71, 96, 2, 124, 56, -66, -97, -119, -26, 106, 118 };
+    public static final byte[] $classHash = new byte[] { 46, -79, 60, -68, -31,
+    34, 21, -47, 87, -43, 21, 15, 0, -68, -60, -20, 8, 10, -69, -11, 31, -115,
+    -106, -124, 69, 104, 114, 105, 14, 34, -2, 12 };
     public static final java.lang.String jlc$CompilerVersion$fabil = "0.3.0";
-    public static final long jlc$SourceLastModified$fabil = 1491926740000L;
+    public static final long jlc$SourceLastModified$fabil = 1491931564000L;
     public static final java.lang.String jlc$ClassType$fabil =
-      "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";
+      "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";
 }

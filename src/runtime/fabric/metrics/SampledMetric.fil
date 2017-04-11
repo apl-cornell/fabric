@@ -10,6 +10,8 @@ import fabric.metrics.util.Observer;
 import fabric.metrics.util.RunningStats;
 import fabric.worker.Store;
 
+import fabric.worker.transaction.TransactionManager;
+
 /**
  * Takes measurements of a persistent value of the parameter type T. When
  * constructed, the programmer provides a custom function for converting the
@@ -53,6 +55,7 @@ public class SampledMetric extends Metric {
       updateEstimates(sample, time);
       value = sample;
       markModified();
+      TransactionManager.getInstance().registerSample(this);
     }
   }
 

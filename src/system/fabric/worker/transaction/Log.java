@@ -19,6 +19,9 @@ import fabric.common.util.WeakReferenceArrayList;
 import fabric.lang.Object._Impl;
 import fabric.lang.security.LabelCache;
 import fabric.lang.security.SecurityCache;
+import fabric.metrics.contracts.Contract;
+import fabric.metrics.util.Observer;
+import fabric.metrics.util.Subject;
 import fabric.worker.FabricSoftRef;
 import fabric.worker.Store;
 import fabric.worker.Worker;
@@ -102,6 +105,18 @@ public final class Log {
    * are not tracked here.
    */
   protected final List<_Impl> writes;
+
+  /**
+   * A collection of {@link Subjects} modified in this transaction that need to
+   * be observed by {@link Observer}s before the transaction commits.
+   */
+  protected final LinkedList<Subject> unobservedSamples;
+
+  /**
+   * A collection of {@link Contract}s that are extended by this transaction and
+   * should trigger extensions up the tree after commit.
+   */
+  protected final List<Contract> extendedContracts;
 
   /**
    * Tracks objects on local store that have been modified. See
@@ -199,6 +214,8 @@ public final class Log {
     this.creates = new ArrayList<>();
     this.localStoreCreates = new WeakReferenceArrayList<>();
     this.writes = new ArrayList<>();
+    this.unobservedSamples = new LinkedList<>();
+    this.extendedContracts = new ArrayList<>();
     this.localStoreWrites = new WeakReferenceArrayList<>();
     this.workersCalled = new ArrayList<>();
     this.startTime = System.currentTimeMillis();
@@ -330,9 +347,8 @@ public final class Log {
     Log curLog = this;
     while (curLog != null) {
       if (store.isLocalStore()) {
-        Iterable<_Impl> writesToExclude =
-            includeModified ? Collections.<_Impl> emptyList()
-                : curLog.localStoreWrites;
+        Iterable<_Impl> writesToExclude = includeModified
+            ? Collections.<_Impl> emptyList() : curLog.localStoreWrites;
         Iterable<_Impl> chain =
             SysUtil.chain(writesToExclude, curLog.localStoreCreates);
         for (_Impl write : chain)
@@ -466,6 +482,7 @@ public final class Log {
       creates.clear();
       localStoreCreates.clear();
       writes.clear();
+      unobservedSamples.clear();
       localStoreWrites.clear();
       workersCalled.clear();
       securityCache.reset();
@@ -482,6 +499,14 @@ public final class Log {
         }
       }
     }
+  }
+
+  /**
+   * Resolve unobserved subjects, either before attempting to commit at the top
+   * level or before using a {@link Contract}.
+   */
+  public void resolveObservations() {
+    Subject._Impl.processSamples(unobservedSamples, extendedContracts);
   }
 
   /**
@@ -530,6 +555,13 @@ public final class Log {
 
         // Signal any readers/writers.
         if (obj.$numWaiting > 0) obj.notifyAll();
+      }
+    }
+
+    for (Subject sub : unobservedSamples) {
+      synchronized (parent.unobservedSamples) {
+        if (!parent.unobservedSamples.contains(sub))
+          parent.unobservedSamples.add(sub);
       }
     }
 

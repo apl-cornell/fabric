@@ -38,6 +38,7 @@ import fabric.lang.Object._Impl;
 import fabric.lang.Object._Proxy;
 import fabric.lang.security.Label;
 import fabric.lang.security.SecurityCache;
+import fabric.metrics.SampledMetric;
 import fabric.net.RemoteNode;
 import fabric.net.UnreachableNodeException;
 import fabric.store.InProcessStore;
@@ -326,6 +327,9 @@ public final class TransactionManager {
 
     // Wait for all sub-transactions to finish.
     current.waitForThreads();
+
+    // Resolve unobserved samples.
+    resolveObservations();
 
     TransactionID ignoredRetrySignal = null;
     if (!ignoreRetrySignal) {
@@ -1147,6 +1151,26 @@ public final class TransactionManager {
     // Need to fetch from the owner.
     ensureWriteLock(obj);
     owner.readObject(current.tid, obj);
+  }
+
+  /**
+   * Registers a sample that will need to be resolved before committing or
+   * accessing any Warranty values.
+   */
+  public void registerSample(SampledMetric sampled) {
+    // Make sure it's registered as written.
+    registerWrite((_Impl) sampled.fetch());
+    // Add it to the log's unobserved queue if it's not already there.
+    if (!current.unobservedSamples.contains(sampled))
+      current.unobservedSamples.add(sampled);
+  }
+
+  /**
+   * Resolves observations in the current transaction.  Called before retrieving
+   * a warranty's value.
+   */
+  public void resolveObservations() {
+    current.resolveObservations();
   }
 
   /**
