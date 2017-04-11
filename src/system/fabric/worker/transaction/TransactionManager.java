@@ -22,6 +22,7 @@ import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 
 import fabric.common.FabricThread;
@@ -34,11 +35,14 @@ import fabric.common.TransactionID;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.Oid;
 import fabric.lang.Object._Impl;
 import fabric.lang.Object._Proxy;
 import fabric.lang.security.Label;
 import fabric.lang.security.SecurityCache;
 import fabric.metrics.SampledMetric;
+import fabric.metrics.contracts.Contract;
+import fabric.metrics.util.Observer;
 import fabric.net.RemoteNode;
 import fabric.net.UnreachableNodeException;
 import fabric.store.InProcessStore;
@@ -52,6 +56,7 @@ import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.TransactionRestartingException;
 import fabric.worker.Worker;
+import fabric.worker.Worker.Code;
 import fabric.worker.remote.RemoteWorker;
 import fabric.worker.remote.WriterMap;
 
@@ -104,6 +109,63 @@ public final class TransactionManager {
    */
   private static final DeadlockDetectorThread deadlockDetector =
       new DeadlockDetectorThread();
+
+  /**
+   * The extension message queue.
+   */
+  private static final LinkedBlockingQueue<Oid> extensions =
+      new LinkedBlockingQueue<>();
+
+  /**
+   * A thread that goes through the extensions queue and sends out extension
+   * messages.
+   */
+  private static final Threading.NamedRunnable extensionsRunner =
+      new Threading.NamedRunnable("Extensions runner") {
+        @Override
+        protected void runImpl() {
+          while (true) {
+            try {
+              // Get the next extended item.
+              Oid extended = extensions.take();
+              Contract extendedContract =
+                  new Contract._Proxy(extended.store, extended.onum);
+
+              // Go through the parents.
+              fabric.util.Iterator parentIter =
+                  extendedContract.getObserversCopy().iterator();
+              while (parentIter.hasNext()) {
+                final Observer parent = (Observer) parentIter.next();
+                // Run the extension in a transaction.
+                Threading.getPool().submit(extensionTask(parent));
+              }
+            } catch (InterruptedException e) {
+              Logging.logIgnoredInterruptedException(e);
+            }
+          }
+        }
+      };
+
+  static {
+    Threading.getPool().submit(extensionsRunner);
+  }
+
+  private static NamedRunnable extensionTask(final Observer parent) {
+    String name = "Extension of " + new Oid(parent);
+    return new Threading.NamedRunnable(name) {
+      @Override
+      protected void runImpl() {
+        // Run a transaction handling updates at the parent
+        Worker.runInTopLevelTransaction(new Code<Object>() {
+          @Override
+          public Object run() {
+            parent.handleUpdates();
+            return null;
+          }
+        }, false);
+      }
+    };
+  }
 
   /**
    * The innermost running transaction for the thread being managed.
@@ -490,7 +552,7 @@ public final class TransactionManager {
    */
   private void sendPrepareMessages(final boolean singleStore,
       final boolean readOnly, Set<Store> stores, List<RemoteWorker> workers)
-          throws TransactionRestartingException {
+      throws TransactionRestartingException {
     final Map<RemoteNode<?>, TransactionPrepareFailedException> failures =
         Collections.synchronizedMap(
             new HashMap<RemoteNode<?>, TransactionPrepareFailedException>());
@@ -668,7 +730,7 @@ public final class TransactionManager {
    */
   private void sendCommitMessagesAndCleanUp(boolean singleStore,
       boolean readOnly, Set<Store> stores, List<RemoteWorker> workers)
-          throws TransactionAtomicityViolationException {
+      throws TransactionAtomicityViolationException {
     synchronized (current.commitState) {
       switch (current.commitState.value) {
       case UNPREPARED:
