@@ -1,5 +1,8 @@
 package fabric.metrics.contracts.warranties;
 
+import fabric.util.Collections;
+import fabric.util.Set;
+import fabric.metrics.SampledMetric;
 import fabric.metrics.contracts.Contract;
 import fabric.metrics.contracts.MetricContract;
 
@@ -55,5 +58,22 @@ public class Warranty/*<T>*/ extends Contract {
   /*@Override*/
   public String toString() {
     return "Warranty " + computation + " = " + value + " until " + getExpiry();
+  }
+
+  /*@Override*/
+  public Set/*<SampledMetric>*/ getLeafSubjects() {
+    if (witness != null)
+      return witness.getLeafSubjects();
+    else
+      return Collections.EMPTY_SET;
+  }
+
+  /*@Override*/
+  public void deactivate() {
+    if (!isObserved()) {
+      if (witness != null)
+        witness.removeObserver(this);
+    }
+    super.deactivate();
   }
 }

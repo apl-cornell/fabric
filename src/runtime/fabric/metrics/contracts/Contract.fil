@@ -78,6 +78,16 @@ public abstract class Contract extends Subject implements Observer {
   }
 
   /**
+   * Deactivate and stop observing any evidence.
+   */
+  public void deactivate() {
+    if (!isObserved()) {
+      active = false;
+      expiry = 0;
+    }
+  }
+
+  /**
    * Updates the expiration time of this contract, either extending or
    * revoking as needed.
    *

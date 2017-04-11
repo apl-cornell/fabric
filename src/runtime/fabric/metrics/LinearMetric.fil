@@ -10,7 +10,6 @@ import fabric.util.Set;
 import fabric.util.TreeSet;
 
 import fabric.metrics.contracts.Bound;
-import fabric.metrics.contracts.DerivedMetricContract;
 import fabric.metrics.contracts.MetricContract;
 import fabric.metrics.contracts.enforcement.EnforcementPolicy;
 import fabric.metrics.contracts.enforcement.WitnessPolicy;
@@ -135,7 +134,7 @@ public class LinearMetric extends DerivedMetric {
   }
 
   /*@Override*/
-  public double value() {
+  public double computeValue() {
     double[] values = new double[terms.length];
     for (int i = 0; i < terms.length; i++) {
       values[i] = terms[i].value();
@@ -148,7 +147,7 @@ public class LinearMetric extends DerivedMetric {
     return result;
   }
 
-  private double value(int i) {
+  private double computeValue(int i) {
     double[] values = new double[terms.length];
     for (int j = 0; j < terms.length; j++) {
       values[j] = terms[j].value();
@@ -158,7 +157,7 @@ public class LinearMetric extends DerivedMetric {
   }
 
   /*@Override*/
-  public double velocity() {
+  public double computeVelocity() {
     double[] values = new double[terms.length];
     for (int i = 0; i < terms.length; i++) {
       values[i] = terms[i].velocity();
@@ -171,7 +170,7 @@ public class LinearMetric extends DerivedMetric {
     return result;
   }
 
-  private double velocity(int i) {
+  private double computeVelocity(int i) {
     double[] values = new double[terms.length];
     for (int j = 0; j < terms.length; j++) {
       values[j] = terms[j].velocity();
@@ -181,7 +180,7 @@ public class LinearMetric extends DerivedMetric {
   }
 
   /*@Override*/
-  public double noise() {
+  public double computeNoise() {
     double[] noises = new double[terms.length];
     for (int i = 0; i < terms.length; i++) {
       noises[i] = terms[i].noise();
@@ -194,18 +193,13 @@ public class LinearMetric extends DerivedMetric {
     return noise;
   }
 
-  private double noise(int i) {
+  private double computeNoise(int i) {
     double[] noises = new double[terms.length];
     for (int j = 0; j < terms.length; j++) {
       noises[j] = terms[j].noise();
     }
     double[] resultNoises = varMatrix.multiply(noises);
     return resultNoises[i];
-  }
-
-  /*@Override*/
-  protected MetricContract createContract(Bound bound) {
-    return new DerivedMetricContract().fabric$metrics$contracts$DerivedMetricContract$(this, bound);
   }
 
   /*@Override*/
@@ -426,9 +420,9 @@ public class LinearMetric extends DerivedMetric {
     // Defend all rows against the bound individually, using the strictest
     // bounds across the rows for each term in this sum.
     for (int i = 0; i < matrix.rows(); i++) {
-      double totalValue = value(i);
-      double totalVelocity = velocity(i);
-      double totalNoise = noise(i);
+      double totalValue = computeValue(i);
+      double totalVelocity = computeVelocity(i);
+      double totalNoise = computeNoise(i);
       double numTerms = terms.length;
 
       // For each term, update the associated bounds to be the tightest

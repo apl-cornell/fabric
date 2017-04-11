@@ -1,8 +1,13 @@
 package fabric.metrics.contracts;
 
+import fabric.util.Collections;
+import fabric.util.Set;
+
 import fabric.metrics.contracts.enforcement.DirectPolicy;
 import fabric.metrics.contracts.enforcement.EnforcementPolicy;
+import fabric.metrics.DerivedMetric;
 import fabric.metrics.Metric;
+import fabric.metrics.SampledMetric;
 import fabric.metrics.util.Subject;
 
 /**
@@ -58,6 +63,29 @@ public abstract class MetricContract extends Contract {
     getMetric().addContract(this);
   }
 
+  /*@Override*/
+  public Set/*<SampledMetric>*/ getLeafSubjects() {
+    Metric m = getMetric();
+    if (m instanceof SampledMetric) {
+      return Collections.singleton((SampledMetric) m);
+    } else if (m instanceof DerivedMetric) {
+      return ((DerivedMetric) m).getLeafSubjects();
+    } else {
+      throw new IllegalStateException(
+              "All metrics should be either sampled or derived!");
+    }
+  }
+
+  /*@Override*/
+  public void deactivate() {
+    if (!isObserved()) {
+      if (currentPolicy != null)
+        currentPolicy.unapply(this);
+    }
+    super.deactivate();
+  }
+
+
   /**
    * Update this contract's expiration time to stay valid in response to a
    * change in the value of the {@link Subject}s used for enforcing this
@@ -69,8 +97,8 @@ public abstract class MetricContract extends Contract {
     long currentTime = System.currentTimeMillis();
 
     EnforcementPolicy oldPolicy = currentPolicy;
-    // TODO: really should avoid checking metrics for witness enforced
-    // contracts.
+    if (oldPolicy != null)
+      oldPolicy.unapply(this);
     if (bound.test(metric, currentTime)) {
       EnforcementPolicy newPolicy;
 
@@ -83,8 +111,6 @@ public abstract class MetricContract extends Contract {
         newPolicy = enforcementStrategy();
       }
 
-      if (oldPolicy != null)
-        oldPolicy.unapply(this);
       if (newPolicy.expiry() > currentTime) {
         currentPolicy = newPolicy;
         currentPolicy.apply(this);
@@ -93,8 +119,6 @@ public abstract class MetricContract extends Contract {
       }
       update(Math.min(newPolicy.expiry(), currentTime + EXTENSION_LIMIT));
     } else {
-      if (oldPolicy != null)
-        oldPolicy.unapply(this);
       update(0);
     }
   }

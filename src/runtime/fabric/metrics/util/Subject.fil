@@ -88,4 +88,11 @@ public abstract class Subject {
   public boolean isModified() {
     return this.modified;
   }
+
+  /**
+   * @return the set of the current observers of this subject.
+   */
+  public Set/*<Observer>*/ getObservers() {
+    return observers;
+  }
 }

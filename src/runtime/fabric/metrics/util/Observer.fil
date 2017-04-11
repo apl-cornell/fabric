@@ -1,5 +1,9 @@
 package fabric.metrics.util;
 
+import fabric.util.Set;
+
+import fabric.metrics.SampledMetric;
+
 /**
  * Abstraction for tracking trees of observers/subjects. Unifies tracking
  * between measure trees and contract trees.
@@ -13,4 +17,10 @@ public interface Observer {
    * {@link Subject}s are changed prior to the transaction completing.
    */
   public void handleUpdates();
+
+  /**
+   * @return the set of {@link SampledMetric}s this Observer observes at the
+   *         bottom of the dependency tree.
+   */
+  public Set/*<SampledMetric>*/ getLeafSubjects();
 }

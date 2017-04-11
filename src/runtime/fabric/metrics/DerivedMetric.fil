@@ -1,6 +1,9 @@
 package fabric.metrics;
 
 import fabric.util.Arrays;
+import fabric.util.Collections;
+import fabric.util.HashSet;
+import fabric.util.Set;
 import fabric.util.TreeSet;
 
 import fabric.metrics.contracts.Bound;
@@ -9,6 +12,7 @@ import fabric.metrics.contracts.MetricContract;
 import fabric.metrics.contracts.enforcement.EnforcementPolicy;
 import fabric.metrics.contracts.enforcement.WitnessPolicy;
 import fabric.metrics.util.Observer;
+import fabric.worker.Worker;
 import fabric.worker.Store;
 
 /**
@@ -26,8 +30,12 @@ import fabric.worker.Store;
  */
 public abstract class DerivedMetric extends Metric implements Observer {
   protected double lastValue;
+  protected double lastVelocity;
+  protected double lastNoise;
 
   protected Metric[] terms;
+
+  private Set/*<SampledMetric>*/ leafMetrics = new HashSet/*<>*/();
 
   /**
    * @param s
@@ -55,19 +63,51 @@ public abstract class DerivedMetric extends Metric implements Observer {
   public void initialize() {
     for (int i = 0; i < terms.length; i++) {
       terms[i].addObserver(this);
+      if (terms[i] instanceof SampledMetric) {
+        leafMetrics.add((SampledMetric) terms[i]);
+      } else if (terms[i] instanceof DerivedMetric) {
+        leafMetrics.addAll(((DerivedMetric) terms[i]).getLeafSubjects());
+      } else {
+        throw new IllegalStateException(
+            "This shouldn't happen, all metrics should either be a SampledMetric or a DerivedMetric!");
+      }
     }
-
-    lastValue = value();
+    lastValue = computeValue();
+    lastVelocity = computeVelocity();
+    lastNoise = computeNoise();
   }
 
   /*@Override*/
   public void handleUpdates() {
-    double newValue = value();
+    double newValue = computeValue();
     if (newValue != lastValue) {
       lastValue = newValue;
+      lastVelocity = computeVelocity();
+      lastNoise = computeNoise();
       markModified();
     }
   }
+
+  /*@Override*/
+  public double value() {
+    return lastValue;
+  }
+
+  public abstract double computeValue();
+
+  /*@Override*/
+  public double velocity() {
+    return lastVelocity;
+  }
+
+  public abstract double computeVelocity();
+
+  /*@Override*/
+  public double noise() {
+    return lastNoise;
+  }
+
+  public abstract double computeNoise();
 
   /*@Override*/
   public boolean isSingleStore() {
@@ -106,6 +146,11 @@ public abstract class DerivedMetric extends Metric implements Observer {
     return terms[i];
   }
 
+  /*@Override*/
+  protected MetricContract createContract(Bound bound) {
+    return new DerivedMetricContract().fabric$metrics$contracts$DerivedMetricContract$(this, bound);
+  }
+
   /**
    * @param s
    *        a {@link Store} that will hold the copy of this
@@ -121,4 +166,10 @@ public abstract class DerivedMetric extends Metric implements Observer {
    *       being above bound.
    */
   public abstract EnforcementPolicy policyFor(Bound bound);
+
+  /*@Override*/
+  public Set/*<SampledMetric>*/ getLeafSubjects() {
+    final Store s = Worker.getWorker().getLocalStore();
+    return Collections.unmodifiableSet(s, leafMetrics);
+  }
 }

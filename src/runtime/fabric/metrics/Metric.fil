@@ -77,7 +77,7 @@ public abstract class Metric extends Subject implements Comparable/*<Metric>*/ {
     Iterator cIter = (new HashSet/*<>*/()).fabric$util$HashSet$(contracts).iterator();
     while (cIter.hasNext()) {
       MetricContract c = (MetricContract) cIter.next();
-      if (!c.valid(time) || !c.isObserved() || !c.isActive())
+      if (!c.isActive() || !c.isObserved() || !c.valid(time))
         contracts.remove(c);
     }
     return contracts;

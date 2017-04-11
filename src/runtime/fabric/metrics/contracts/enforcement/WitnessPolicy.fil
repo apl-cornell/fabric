@@ -38,11 +38,11 @@ public class WitnessPolicy extends EnforcementPolicy {
 
   /*@Override*/
   public long expiry() {
-    long lowest = 0;
+    long lowest = -1;
     Iterator itr = witnesses.iterator();
     while (itr.hasNext()) {
       MetricContract w = (MetricContract) itr.next();
-      if (lowest == 0 || w.getExpiry() < lowest)
+      if (lowest == -1 || w.getExpiry() < lowest)
         lowest = w.getExpiry();
     }
     return lowest;
@@ -63,6 +63,7 @@ public class WitnessPolicy extends EnforcementPolicy {
     while (itr.hasNext()) {
       MetricContract w = (MetricContract) itr.next();
       w.removeObserver(mc);
+      w.deactivate();
     }
   }
 }
