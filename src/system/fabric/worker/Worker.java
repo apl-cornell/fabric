@@ -783,13 +783,19 @@ public final class Worker {
             // This is the TID for the parent of the transaction we just tried
             // to commit.
             TransactionID currentTid = tm.getCurrentTid();
-            if (currentTid == null || e.tid.isDescendantOf(currentTid)
-                && !currentTid.equals(e.tid))
-              // Restart the transaction just we tried to commit.
-              continue;
 
-            // Need to restart a parent transaction.
-            throw e;
+            // Determine whether we need to restart an ancestor of the
+            // transaction we just tried to commit.
+            if (currentTid != null) {
+              if (e.tid.equals(currentTid)
+                  || !e.tid.isDescendantOf(currentTid)) {
+                // Need to restart an ancestor of the transaction we just tried
+                // to commit.
+                throw e;
+              }
+            }
+
+            // The transaction just we tried to commit will be restarted.
           }
         } else {
           tm.abortTransaction();
