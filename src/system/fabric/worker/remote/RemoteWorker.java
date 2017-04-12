@@ -88,25 +88,27 @@ public class RemoteWorker extends RemoteNode<RemoteWorker> {
         send(new RemoteCallMessage(tid, writerMap, receiverClassRef, receiver,
             methodName, parameterTypes, args));
 
-    // Commit any outstanding subtransactions that occurred as a result of the
-    // remote call.
-    Log innermost = TransactionRegistry.getInnermostLog(tid.topTid);
-    tm.associateAndSyncLog(innermost, tid);
+    if (tid != null) {
+      // Commit any outstanding subtransactions that occurred as a result of the
+      // remote call.
+      Log innermost = TransactionRegistry.getInnermostLog(tid.topTid);
+      tm.associateAndSyncLog(innermost, tid);
 
-    // Merge in the writer map we got.
-    if (response.writerMap != null)
-      tm.getWriterMap().putAll(response.writerMap);
+      // Merge in the writer map we got.
+      if (response.writerMap != null)
+        tm.getWriterMap().putAll(response.writerMap);
+    }
 
     return response.result;
   }
 
-  public void prepareTransaction(long tid) throws UnreachableNodeException,
-      TransactionPrepareFailedException {
+  public void prepareTransaction(long tid)
+      throws UnreachableNodeException, TransactionPrepareFailedException {
     send(new PrepareTransactionMessage(tid));
   }
 
-  public void commitTransaction(long tid) throws UnreachableNodeException,
-      TransactionCommitFailedException {
+  public void commitTransaction(long tid)
+      throws UnreachableNodeException, TransactionCommitFailedException {
     send(new CommitTransactionMessage(tid));
   }
 
@@ -116,8 +118,8 @@ public class RemoteWorker extends RemoteNode<RemoteWorker> {
    * @param tid
    *          the tid for the transaction that is aborting.
    */
-  public void abortTransaction(TransactionID tid) throws AccessException,
-      UnreachableNodeException {
+  public void abortTransaction(TransactionID tid)
+      throws AccessException, UnreachableNodeException {
     send(new AbortTransactionMessage(tid));
   }
 
