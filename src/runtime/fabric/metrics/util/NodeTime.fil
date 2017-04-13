@@ -1,0 +1,257 @@
+package fabric.metrics.util;
+
+import fabric.worker.Worker;
+import fabric.worker.Store;
+
+/**
+ * Utility for describing a timestamp and getting bounds specific to the system
+ * node asking for it.
+ */
+public class NodeTime {
+
+  /**
+   * Maximum amount of drift we'll tolerate between two nodes in the system.
+   *
+   * For now a bit easier than trying to compute specific latencies. Worth
+   * reconsidering later.
+   */
+  public static final long MAX_DRIFT = 50;
+
+  /** The node specifying the expiry. */
+  public /*final*/ Store store;
+  /** The expiry time specified. */
+  public /*final*/ long time;
+
+  /**
+   * @param store
+   *        the node specifying the expiry
+   * @param time
+   *        the expiry time specified
+   */
+  public NodeTime fabric$metrics$util$NodeTime$(Store store, long time) {
+    this.store = store;
+    this.time = time;
+    fabric$lang$Object$();
+    return this;
+  }
+
+  /**
+   * Create a NodeTime on the current store.
+   *
+   * @param time
+   *        the expiry time specified
+   */
+  public NodeTime fabric$metrics$util$NodeTime$(long time) {
+    Worker w = Worker.getWorker();
+    this.store = w.getStore(w.getName());
+    this.time = time;
+    fabric$lang$Object$();
+    return this;
+  }
+
+  /**
+   * @return the lower bound on this time relative to the node running the
+   *       current transaction
+   */
+  public long lowerBound() {
+    Worker w = Worker.getWorker();
+    Store store = w.getStore(w.getName());
+    return lowerBoundAt(store);
+  }
+
+  /**
+   * @param other
+   *        a store we're computing relative to
+   * @return the lower bound on this time relative to other
+   */
+  public long lowerBoundAt(Store other) {
+    return store.equals(other) ? time : time - MAX_DRIFT;
+  }
+
+  /**
+   * @return the upper bound on this time relative to the node running the
+   *       current transaction
+   */
+  public long upperBound() {
+    Worker w = Worker.getWorker();
+    Store store = w.getStore(w.getName());
+    return upperBoundAt(store);
+  }
+
+  /**
+   * @param other
+   *        a store we're computing relative to
+   * @return the upper bound on this time relative to other
+   */
+  public long upperBoundAt(Store other) {
+    return other.equals(store) ? time : time + MAX_DRIFT;
+  }
+
+  /**
+   * @param other
+   *        a time relative to the current store.
+   * @return true iff this is definitely &gt;= other (relative to the store
+   *       running the current transaction)
+   */
+  public boolean greaterThan(long other) {
+    Worker w = Worker.getWorker();
+    Store store = w.getStore(w.getName());
+    return greaterThan(store, other);
+  }
+
+  /**
+   * @param other
+   *        another {@link NodeTime} to compare with
+   * @return true iff this is definitely &gt;= other (relative to the store
+   *       running the current transaction)
+   */
+  public boolean greaterThan(NodeTime other) {
+    Worker w = Worker.getWorker();
+    Store store = w.getStore(w.getName());
+    return greaterThan(store, other.upperBoundAt(store));
+  }
+
+  /**
+   * @param s
+   *        the store performing the comparison
+   * @param other
+   *        another {@link NodeTime} to compare with
+   * @return true iff this is definitely &gt;= other
+   */
+  public boolean greaterThan(Store s, NodeTime other) {
+    return greaterThan(s, other.upperBoundAt(s));
+  }
+
+  /**
+   * @param s
+   *        the store performing the comparison
+   * @param other
+   *        a time to compare with
+   * @return true iff this is definitely &gt;= other
+   */
+  public boolean greaterThan(Store s, long other) {
+    return lowerBoundAt(s) >= other;
+  }
+
+  /**
+   * @param other
+   *        a time local to the current node
+   * @return true iff this is definitely &lt;= other (relative to the store
+   *       running the current transaction)
+   */
+  public boolean lessThan(long other) {
+    Worker w = Worker.getWorker();
+    Store store = w.getStore(w.getName());
+    return lessThan(store, other);
+  }
+
+  /**
+   * @param other
+   *        another {@link NodeTime} to compare with
+   * @return true iff this is definitely &lt;= other (relative to the store
+   *       running the current transaction)
+   */
+  public boolean lessThan(NodeTime other) {
+    Worker w = Worker.getWorker();
+    Store store = w.getStore(w.getName());
+    return lessThan(store, other.lowerBoundAt(store));
+  }
+
+  /**
+   * @param s
+   *        the store performing the comparison
+   * @param other
+   *        another {@link NodeTime} to compare with
+   * @return true iff this is definitely &lt;= other
+   */
+  public boolean lessThan(Store s, NodeTime other) {
+    return lessThan(s, other.lowerBoundAt(s));
+  }
+
+  /**
+   * @param s
+   *        the store performing the comparison
+   * @param other
+   *        a time to compare with
+   * @return true iff this is definitely &lt;= other
+   */
+  public boolean lessThan(Store s, long other) {
+    return upperBoundAt(s) <= other;
+  }
+
+  /**
+   * @param other
+   *        a time local to the current node
+   * @return the max of the two times (defaulting to other if there's no clear
+   *       max).
+   */
+  public NodeTime max(long other) {
+    Worker w = Worker.getWorker();
+    Store store = w.getStore(w.getName());
+    return max(store, other);
+  }
+
+  /**
+   * @param other
+   *        a {@link NodeTime}
+   * @return the max of the two times (defaulting to other if there's no clear
+   *       max).
+   */
+  public NodeTime max(NodeTime other) {
+    Worker w = Worker.getWorker();
+    Store store = w.getStore(w.getName());
+    return max(store, other.upperBoundAt(store));
+  }
+
+  /**
+   * @param s
+   *        the store performing the comparison
+   * @param other
+   *        a {@link NodeTime}
+   * @return the max of the two times (defaulting to other if there's no clear
+   *       max).
+   */
+  public NodeTime max(Store s, NodeTime other) {
+    return max(s, other.upperBoundAt(s));
+  }
+
+  /**
+   * @param s
+   *        the store performing the comparison
+   * @param other
+   *        a time to compare with
+   * @return the max of the two times (defaulting to other if there's no clear
+   *       max).
+   */
+  public NodeTime max(Store s, long other) {
+    return lowerBoundAt(s) >= other ? this : new NodeTime@s().fabric$metrics$util$NodeTime$(s, other);
+  }
+
+  /**
+   * Translate this to a {@link NodeTime} on another {@link Store}
+   *
+   * @param s
+   *        the store for the translated result
+   * @return the translated {@link NodeTime}
+   */
+  public NodeTime translate(Store s) {
+    return new NodeTime@s().fabric$metrics$util$NodeTime$(s, lowerBoundAt(s));
+  }
+
+  /*@Override*/
+  public String toString() {
+    return "(" + time + "@" + store + ")";
+  }
+
+  /*@Override*/
+  public boolean equals(Object o) {
+    if (!(o instanceof NodeTime)) return false;
+    NodeTime that = (NodeTime) o;
+    return that.store.equals(store) && that.time == time;
+  }
+
+  /*@Override*/
+  public int hashCode() {
+    return Long.hashCode(time) * 32 + store.hashCode();
+  }
+}

@@ -1,8 +1,9 @@
 package fabric.metrics.contracts;
 
-import fabric.util.Arrays;
-
 import fabric.metrics.Metric;
+import fabric.metrics.util.NodeTime;
+
+import fabric.worker.Store;
 
 /**
  * A Bound is a linear time-varying bound compared with a {@link Metric} for a
@@ -12,7 +13,23 @@ public class Bound {
 
   public /*final*/ double rate;
   public /*final*/ double base;
-  public /*final*/ long startTime;
+  public /*final*/ NodeTime startTime;
+
+  /**
+   * @param rate
+   *        the rate the value changes with time
+   * @param base
+   *        the value of the bound associated with startTime
+   * @param startTime
+   *        the time this bound's value is computed relative to
+   */
+  public Bound fabric$metrics$contracts$Bound$(double rate, double base, NodeTime startTime) {
+    this.rate = rate;
+    this.base = base;
+    this.startTime = startTime;
+    fabric$lang$Object$();
+    return this;
+  }
 
   /**
    * @param rate
@@ -25,7 +42,7 @@ public class Bound {
   public Bound fabric$metrics$contracts$Bound$(double rate, double base, long startTime) {
     this.rate = rate;
     this.base = base;
-    this.startTime = startTime;
+    this.startTime = new NodeTime().fabric$metrics$util$NodeTime$(startTime);
     fabric$lang$Object$();
     return this;
   }
@@ -35,8 +52,17 @@ public class Bound {
    *        the time we're computing the bound value for
    * @return the value of the bound at the given time
    */
+  public double value(NodeTime time) {
+    return rate * (time.time - startTime.lowerBound()) + base;
+  }
+
+  /**
+   * @param time
+   *        the time we're computing the bound value for
+   * @return the value of the bound at the given time
+   */
   public double value(long time) {
-    return rate * (time - startTime) + base;
+    return value(new NodeTime().fabric$metrics$util$NodeTime$(time));
   }
 
   /**
@@ -83,7 +109,7 @@ public class Bound {
    *       which point the bound would no longer be satisfied by the value.
    */
   public long trueExpiry(double value, long time) {
-    if (rate >= 0) {
+    if (rate > 0) {
       return (long) (time + (value - value(time)) / rate);
     } else if (value < value(time)) {
       return 0;
@@ -107,21 +133,21 @@ public class Bound {
    *       newStartTime
    */
   public Bound shifted(long newStartTime) {
-    return (new Bound()).fabric$metrics$contracts$Bound$(rate, base + rate * (newStartTime - startTime), newStartTime);
+    final Store s = $getStore();
+    return (new Bound@s()).fabric$metrics$contracts$Bound$(rate, value(newStartTime), newStartTime);
   }
 
   /*@Override*/
   public boolean equals(Object o) {
     if (o instanceof Bound) {
       Bound other = (Bound) o;
-      return rate == other.rate
-          && value(other.startTime) == other.base;
+      return rate == other.rate && value(other.startTime) == other.base;
     }
     return false;
   }
 
   /*@Override*/
   public String toString() {
-    return "> " + rate + " * (t - " + startTime + ") + " + base;
+    return ">= " + rate + " * (t - " + startTime + ") + " + base;
   }
 }

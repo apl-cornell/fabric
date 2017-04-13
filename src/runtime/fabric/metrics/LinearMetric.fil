@@ -40,11 +40,6 @@ public class LinearMetric extends DerivedMetric {
    */
   public LinearMetric fabric$metrics$LinearMetric$(Matrix matrix, Metric[] terms) {
     fabric$metrics$DerivedMetric$(terms);
-    // Pretty sure this violates the constructor protocol, but I'm relying
-    // on terms being initialized by this point.
-    this.matrix = normalize(matrix);
-    this.varMatrix = this.matrix.elementMultiply(this.matrix);
-
     if (matrix.rows() == 0)
       throw new IllegalArgumentException(
           "LinearMetric needs at least 1 coefficient row!");
@@ -52,6 +47,11 @@ public class LinearMetric extends DerivedMetric {
       throw new IllegalArgumentException(
           "LinearMetric coefficient columns size as the dimension of term: "
               + matrix.toString());
+
+    // Ugh, this technically breaks the constructor protocol, but I need
+    // terms initialized before we normalize.
+    this.matrix = normalize(matrix).copy($getStore());
+    this.varMatrix = this.matrix.elementMultiply(this.matrix).copy($getStore());
     initialize();
     return this;
   }
@@ -67,7 +67,7 @@ public class LinearMetric extends DerivedMetric {
    */
   private Matrix normalize(Matrix matrix) {
     Metric[] normTerms = new Metric[terms.length];
-    Arrays.arraycopy(terms, 0, normTerms, 0, terms.length);
+    System.arraycopy(terms, 0, normTerms, 0, terms.length);
     Arrays.sort(normTerms);
     Matrix colNormed = new Matrix().fabric$metrics$util$Matrix$(matrix.rows(), terms.length);
     for (int i = 0; i < terms.length; i++) {
@@ -228,7 +228,7 @@ public class LinearMetric extends DerivedMetric {
   /*@Override*/
   public Metric times(double scalar) {
     final Store s = $getStore();
-    return findDerivedMetric($getStore(),
+    return Metric.findMetric(s,
         new LinearMetric@s().fabric$metrics$LinearMetric$(matrix.multiply(scalar), terms));
   }
 
@@ -246,7 +246,7 @@ public class LinearMetric extends DerivedMetric {
       LinearMetric that = (LinearMetric) other;
 
       // Get the combined sorted set of terms.
-      Set/*<Metric>*/ termsBag = new TreeSet/*<>*/();
+      Set/*<Metric>*/ termsBag = new TreeSet/*<>*/().fabric$util$TreeSet$();
       termsBag.addAll(Arrays.asList(this.terms));
       termsBag.addAll(Arrays.asList(that.terms));
 
@@ -260,9 +260,9 @@ public class LinearMetric extends DerivedMetric {
       int aggIdx = 0;
       int thisIdx = 0;
       int thatIdx = 0;
-      Iterator iter = termsBag.iterator();
-      while (iter.hasNext()) {
-        Metric m = (Metric) iter.next();
+      Iterator mIter = termsBag.iterator();
+      while (mIter.hasNext()) {
+        Metric m = (Metric) mIter.next();
         if (this.terms[thisIdx].equals(m)) {
           thisExpanded.setColumn(aggIdx,
               this.matrix.getColumn(thisIdx++));
@@ -288,7 +288,7 @@ public class LinearMetric extends DerivedMetric {
         }
       }
 
-      return findDerivedMetric($getStore(),
+      return Metric.findMetric(s,
           new LinearMetric@s().fabric$metrics$LinearMetric$(combined, newTerms));
     } else if (Arrays.asList(terms).indexOf(other) >= 0) {
       int idx = Arrays.asList(terms).indexOf(other);
@@ -296,16 +296,15 @@ public class LinearMetric extends DerivedMetric {
       for (int i = 0; i < newCs.rows(); i++) {
         newCs.set(i, idx, newCs.get(i, idx) + 1);
       }
-      return findDerivedMetric($getStore(),
+      return Metric.findMetric(s,
           new LinearMetric@s().fabric$metrics$LinearMetric$(newCs, terms));
     } else if (isSingleStore() && !other.$getStore().equals($getStore())) {
-      return findDerivedMetric($getStore(),
-        new LinearMetric@s().fabric$metrics$LinearMetric$(
-          Matrix.constant(1, 2, 1), new Metric[] { this, other }));
+      return Metric.findMetric(s,
+          new LinearMetric@s().fabric$metrics$LinearMetric$(Matrix.constant(1, 2, 1), new Metric[] { this, other }));
     }
 
     Metric[] newTerms = new Metric[terms.length + 1];
-    Arrays.arraycopy(terms, 0, newTerms, 0, terms.length);
+    System.arraycopy(terms, 0, newTerms, 0, terms.length);
     newTerms[terms.length] = other;
     Arrays.sort(newTerms, 0, newTerms.length);
     int idx = Arrays.asList(newTerms).indexOf(other);
@@ -315,7 +314,7 @@ public class LinearMetric extends DerivedMetric {
     }
     Matrix newCs = matrix.copy();
     newCs.insertColumn(idx, newCol);
-    return findDerivedMetric($getStore(),
+    return Metric.findMetric(s,
         new LinearMetric@s().fabric$metrics$LinearMetric$(newCs, newTerms));
   }
 
@@ -334,23 +333,21 @@ public class LinearMetric extends DerivedMetric {
       LinearMetric that = (LinearMetric) other;
 
       // Get the combined sorted set of terms.
-      Set/*<Metric>*/ termsBag = new TreeSet/*<>*/();
+      Set/*<Metric>*/ termsBag = new TreeSet/*<>*/().fabric$util$TreeSet$();
       termsBag.addAll(Arrays.asList(this.terms));
       termsBag.addAll(Arrays.asList(that.terms));
 
       // Expand both matrices to account for terms that metric didn't
       // include.
-      Matrix thisExpanded = new Matrix().fabric$metrics$util$Matrix$(this.matrix.rows(),
-          termsBag.size());
-      Matrix thatExpanded = new Matrix().fabric$metrics$util$Matrix$(that.matrix.rows(),
-          termsBag.size());
+      Matrix thisExpanded = new Matrix().fabric$metrics$util$Matrix$(this.matrix.rows(), termsBag.size());
+      Matrix thatExpanded = new Matrix().fabric$metrics$util$Matrix$(that.matrix.rows(), termsBag.size());
       Metric[] newTerms = new Metric[termsBag.size()];
       int aggIdx = 0;
       int thisIdx = 0;
       int thatIdx = 0;
-      Iterator iter = termsBag.iterator();
-      while (iter.hasNext()) {
-        Metric m = (Metric) iter.next();
+      Iterator mIter = termsBag.iterator();
+      while (mIter.hasNext()) {
+        Metric m = (Metric) mIter.next();
         if (this.terms[thisIdx].equals(m)) {
           thisExpanded.setColumn(aggIdx,
               this.matrix.getColumn(thisIdx++));
@@ -364,8 +361,7 @@ public class LinearMetric extends DerivedMetric {
 
       // Combined to include the sum of all pairs of rows between the two
       // expanded matrices
-      Matrix combined = new Matrix().fabric$metrics$util$Matrix$(
-          thisExpanded.rows() + thatExpanded.rows(), newTerms.length);
+      Matrix combined = new Matrix().fabric$metrics$util$Matrix$(thisExpanded.rows() + thatExpanded.rows(), newTerms.length);
       for (int i = 0; i < thisExpanded.rows(); i++) {
         for (int j = 0; j < newTerms.length; j++) {
           combined.set(i, j, thisExpanded.get(i, j));
@@ -374,7 +370,7 @@ public class LinearMetric extends DerivedMetric {
         }
       }
 
-      return findDerivedMetric($getStore(),
+      return Metric.findMetric(s,
           new LinearMetric@s().fabric$metrics$LinearMetric$(combined, newTerms));
     } else if (Arrays.asList(terms).indexOf(other) >= 0) {
       int idx = Arrays.asList(terms).indexOf(other);
@@ -382,16 +378,15 @@ public class LinearMetric extends DerivedMetric {
       double[] newRow = new double[terms.length];
       newRow[idx] = 1;
       newCs.addRow(newRow);
-      return findDerivedMetric($getStore(),
+      return Metric.findMetric(s,
           new LinearMetric@s().fabric$metrics$LinearMetric$(newCs, terms));
     } else if (isSingleStore() && !other.$getStore().equals($getStore())) {
-      return findDerivedMetric($getStore(),
-        new LinearMetric@s().fabric$metrics$LinearMetric$(
-          Matrix.identity(2), new Metric[] { this, other }));
+      return Metric.findMetric(s,
+          new LinearMetric@s().fabric$metrics$LinearMetric$(Matrix.identity(2), new Metric[] { this, other }));
     }
 
     Metric[] newTerms = new Metric[terms.length + 1];
-    Arrays.arraycopy(terms, 0, newTerms, 0, terms.length);
+    System.arraycopy(terms, 0, newTerms, 0, terms.length);
     newTerms[terms.length] = other;
     Arrays.sort(newTerms, 0, newTerms.length);
     int idx = Arrays.asList(newTerms).indexOf(other);
@@ -400,21 +395,22 @@ public class LinearMetric extends DerivedMetric {
     double[] newRow = new double[terms.length + 1];
     newRow[idx] = 1;
     newCs.addRow(newRow);
-    return findDerivedMetric($getStore(),
+    return Metric.findMetric(s,
         new LinearMetric@s().fabric$metrics$LinearMetric$(newCs, newTerms));
   }
 
   /*@Override*/
-  public DerivedMetric copyOn(final Store s) {
-    return findDerivedMetric(s, new LinearMetric@s().fabric$metrics$LinearMetric$(matrix, terms));
+  public Metric copyOn(final Store s) {
+    return Metric.findMetric(s,
+        new LinearMetric@s().fabric$metrics$LinearMetric$(matrix, terms));
   }
 
   /*@Override*/
   public EnforcementPolicy policyFor(Bound bound) {
-    Map/*<Metric, MetricContract>*/ witnesses = new HashMap/*<>*/();
+    Map/*<Metric, MetricContract>*/ witnesses = new HashMap/*<>*/().fabric$util$HashMap$();
 
     long currentTime = System.currentTimeMillis();
-    double base = bound.rate * (currentTime - bound.startTime) + bound.base;
+    double base = bound.value(currentTime);
     double rate = bound.rate;
 
     // Defend all rows against the bound individually, using the strictest
@@ -440,7 +436,8 @@ public class LinearMetric extends DerivedMetric {
         // De-scaled
         r /= c;
 
-        double b = scaledX - ((scaledN / totalNoise) * (totalValue - base));
+        double b = scaledX
+            - ((scaledN / totalNoise) * (totalValue - base));
         // De-scaled
         b /= c;
 
@@ -448,19 +445,18 @@ public class LinearMetric extends DerivedMetric {
           m = m.times(-1);
           b = -b;
           r = -r;
-          Bound witnessBound = new Bound().fabric$metrics$contracts$Bound$(r, b, currentTime);
-          if (!witnesses.containsKey(m) || !((MetricContract) witnesses.get(m)).getBound().implies(witnessBound)) {
-            witnesses.put(m, m.getContract(witnessBound));
-          }
-        } else {
-          Bound witnessBound = new Bound().fabric$metrics$contracts$Bound$(r, b, currentTime);
-          if (!witnesses.containsKey(m) || !((MetricContract) witnesses.get(m)).getBound().implies(witnessBound)) {
-            witnesses.put(m, m.getContract(witnessBound));
-          }
+        }
+        Bound witnessBoundTemp = new Bound().fabric$metrics$contracts$Bound$(r, b, currentTime);
+        if (!witnesses.containsKey(m)
+            || !((MetricContract) witnesses.get(m)).getBound().implies(witnessBoundTemp)) {
+          final Store s = m.$getStore();
+          Bound witnessBound = new Bound@s().fabric$metrics$contracts$Bound$(r, b, currentTime);
+          witnesses.put(m, m.getContract(witnessBound));
         }
       }
     }
-    return new WitnessPolicy().fabric$metrics$contracts$enforcement$WitnessPolicy$(witnesses.values());
+    final Store bndStore = bound.$getStore();
+    return new WitnessPolicy@bndStore().fabric$metrics$contracts$enforcement$WitnessPolicy$(witnesses.values());
   }
 
   /*@Override*/

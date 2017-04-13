@@ -1,8 +1,12 @@
 package fabric.metrics.contracts;
 
 import fabric.metrics.Metric;
+import fabric.metrics.util.NodeTime;
 import fabric.metrics.util.Observer;
 import fabric.metrics.util.Subject;
+
+import fabric.worker.Store;
+import fabric.worker.transaction.TransactionManager;
 
 /**
  * A {@link Contract} consists of an assertion and an expiration time. If the
@@ -15,47 +19,44 @@ import fabric.metrics.util.Subject;
  */
 public abstract class Contract extends Subject implements Observer {
 
+  private NodeTime expiry;
+
   protected Contract fabric$metrics$contracts$Contract$() {
     fabric$metrics$util$Subject$();
+    this.expiry = new NodeTime().fabric$metrics$util$NodeTime$($getStore(), -1);
     return this;
   }
 
-  private long expiry = 0;
+  // The proportional amount of time an extension has to improve over the
+  // current expiry for us to bother advertising it.
+  // Note: larger value => less aggressive extensions => lower overhead
+  // Note: smaller value => more aggressive extensions => less chance of a
+  // warranty going stale unecessarily.
+  public static double MIN_EXTENSION_FACTOR = 4;
+  // The maximum amount of time into the future to extend the expiry
+  // Note: smaller value => less aggressive extensions => lower revocations
+  // Note: larger value => longer extensions => less chatter
+  public static final long MAX_EXTENSION = 1000;
 
   /**
    * Extends the expiration time.
    *
    * @param newExpiry
-   *        the new expiration time for this {@link Contract} given in
-   *        milliseconds.
+   *        the new expiration time (computed at the current node) for
+   *        this {@link Contract} given in milliseconds.
    */
   protected void extendTo(long newExpiry) {
-    if (newExpiry > expiry) markExtended();
-    expiry = expiry > newExpiry ? expiry : newExpiry;
-  }
-
-  private boolean extendedFlag = false;
-
-  /**
-   * Mark this contract as having been extended.
-   */
-  private void markExtended() {
-    extendedFlag = true;
-  }
-
-  /**
-   * Clear this contract's extended flag.
-   */
-  public void clearExtended() {
-    extendedFlag = false;
-  }
-
-  /**
-   * @return true iff this contract is currently marked as being extended by
-   *       the current transaction
-   */
-  public boolean extended() {
-    return extendedFlag;
+    long currentTime = System.currentTimeMillis();
+    long adjustedNewExpiry = Math.min(newExpiry, currentTime + MAX_EXTENSION);
+    // Only bother advertising if it's better than our current expiry
+    // by the buffer amount.
+    if (expiry.lessThan(adjustedNewExpiry)) {
+      if (adjustedNewExpiry > currentTime + (MIN_EXTENSION_FACTOR
+          * (getExpiryLower() - currentTime))) {
+        TransactionManager.getInstance().registerExtension(this);
+      }
+      expiry = expiry.max(adjustedNewExpiry);
+    }
   }
 
   private boolean active = false;
@@ -83,7 +84,8 @@ public abstract class Contract extends Subject implements Observer {
   public void deactivate() {
     if (!isObserved()) {
       active = false;
-      expiry = 0;
+      final Store s = $getStore();
+      expiry = new NodeTime@s().fabric$metrics$util$NodeTime$(-1);
     }
   }
 
@@ -95,12 +97,12 @@ public abstract class Contract extends Subject implements Observer {
    *        the new expiration time associated with this {@link Contract}.
    */
   public void update(long newExpiry) {
-    if (expiry != newExpiry) {
-      if (newExpiry > expiry) {
-        extendTo(newExpiry);
-      } else {
-        revoke(newExpiry);
-      }
+    if (getExpiry().lessThan(newExpiry)) {
+      // XXX: ugh, is this the right one to compare against here?
+      extendTo(newExpiry);
+    } else if (getExpiry().greaterThan(newExpiry)) {
+      // XXX: ugh, is this the right one to compare against here?
+      revoke(newExpiry);
     }
   }
 
@@ -113,9 +115,9 @@ public abstract class Contract extends Subject implements Observer {
   protected void revoke(long newExpiry) {
     // Mark this as modified, which needs to be resolved in this
     // transaction.
-    clearExtended();
     markModified();
-    expiry = newExpiry;
+    final Store s = $getStore();
+    expiry = new NodeTime@s().fabric$metrics$util$NodeTime$(newExpiry);
   }
 
   /**
@@ -125,22 +127,73 @@ public abstract class Contract extends Subject implements Observer {
    *       transaction context.
    */
   public boolean valid(long time) {
-    if (expiry < time) refresh();
-    return expiry >= time;
+    final Store s = $getStore();
+    return valid(new NodeTime@s().fabric$metrics$util$NodeTime$(time));
   }
 
   /**
-   * @return the expiration time of the current state, in milliseconds
+   * @param time
+   *        the time we're checking validity against.
+   * @return true iff the contract is valid at the given time in the current
+   *       transaction context.
    */
-  public long getExpiry() {
+  public boolean valid(NodeTime time) {
+    if (!isActive())
+      return false;
+    if (time.greaterThan(getExpiry()))
+      refresh();
+    return getExpiry().greaterThan(time);
+  }
+
+  /**
+   * @return the lower bound on the expiration time of the current state, in
+   *       milliseconds, lowered to account for clock drift relative to the
+   *       current store
+   */
+  public long getExpiryLower() {
+    return expiry.lowerBound();
+  }
+
+  /**
+   * @param s
+   *        the store we're giving the lower bound relative to
+   * @return the lower bound on the expiration time of the current state, in
+   *       milliseconds, lowered to account for clock drift relative to s
+   */
+  public long getExpiryLower(Store s) {
+    return expiry.lowerBoundAt(s);
+  }
+
+  /**
+   * @return the upper bound on the expiration time of the current state, in
+   *       milliseconds, raised to account for clock drift relative to the
+   *       current store
+   */
+  public long getExpiryUpper() {
+    return expiry.upperBound();
+  }
+
+  /**
+   * @param s
+   *        the store we're giving the lower bound relative to
+   * @return the upper bound on the expiration time of the current state, in
+   *       milliseconds, raised to account for clock drift relative to s
+   */
+  public long getExpiryUpper(Store s) {
+    return expiry.upperBoundAt(s);
+  }
+
+  protected NodeTime getExpiry() {
     return expiry;
   }
 
   /**
-   * Update this contract's expiration time to stay valid in response to a
-   * change in the value of the {@link Subject}s used for enforcing this
-   * {@link Contract}. Revokes, extends, and updates the enforcement strategy
-   * as needed.
+   * @return the expiration time of the curren state
+   *
+   *       /** Update this contract's expiration time to stay valid in
+   *       response to a change in the value of the {@link Subject}s used
+   *       for enforcing this {@link Contract}. Revokes, extends, and
+   *       updates the enforcement strategy as needed.
    */
   protected abstract void refresh();
 

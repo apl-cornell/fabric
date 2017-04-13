@@ -5,8 +5,9 @@ import fabric.lang.security.*;
 import fabric.worker.*;
 import fabric.worker.remote.*;
 import java.lang.*;
-import fabric.util.Arrays;
 import fabric.metrics.Metric;
+import fabric.metrics.util.NodeTime;
+import fabric.worker.Store;
 
 /**
  * A Bound is a linear time-varying bound compared with a {@link Metric} for a
@@ -29,13 +30,21 @@ public interface Bound extends fabric.lang.Object {
     
     public double postDec$base();
     
-    public long get$startTime();
+    public fabric.metrics.util.NodeTime get$startTime();
     
-    public long set$startTime(long val);
+    public fabric.metrics.util.NodeTime set$startTime(fabric.metrics.util.NodeTime val);
     
-    public long postInc$startTime();
-    
-    public long postDec$startTime();
+    /**
+   * @param rate
+   *        the rate the value changes with time
+   * @param base
+   *        the value of the bound associated with startTime
+   * @param startTime
+   *        the time this bound's value is computed relative to
+   */
+    public fabric.metrics.contracts.Bound
+      fabric$metrics$contracts$Bound$(double rate,
+                                      double base, fabric.metrics.util.NodeTime startTime);
     
     /**
    * @param rate
@@ -47,6 +56,13 @@ public interface Bound extends fabric.lang.Object {
    */
     public fabric.metrics.contracts.Bound fabric$metrics$contracts$Bound$(
       double rate, double base, long startTime);
+    
+    /**
+   * @param time
+   *        the time we're computing the bound value for
+   * @return the value of the bound at the given time
+   */
+    public double value(fabric.metrics.util.NodeTime time);
     
     /**
    * @param time
@@ -153,30 +169,31 @@ public interface Bound extends fabric.lang.Object {
               postDec$base();
         }
         
-        public long get$startTime() {
+        public fabric.metrics.util.NodeTime get$startTime() {
             return ((fabric.metrics.contracts.Bound._Impl) fetch()).
               get$startTime();
         }
         
-        public long set$startTime(long val) {
+        public fabric.metrics.util.NodeTime set$startTime(
+          fabric.metrics.util.NodeTime val) {
             return ((fabric.metrics.contracts.Bound._Impl) fetch()).
               set$startTime(val);
         }
         
-        public long postInc$startTime() {
-            return ((fabric.metrics.contracts.Bound._Impl) fetch()).
-              postInc$startTime();
-        }
-        
-        public long postDec$startTime() {
-            return ((fabric.metrics.contracts.Bound._Impl) fetch()).
-              postDec$startTime();
+        public fabric.metrics.contracts.Bound fabric$metrics$contracts$Bound$(
+          double arg1, double arg2, fabric.metrics.util.NodeTime arg3) {
+            return ((fabric.metrics.contracts.Bound) fetch()).
+              fabric$metrics$contracts$Bound$(arg1, arg2, arg3);
         }
         
         public fabric.metrics.contracts.Bound fabric$metrics$contracts$Bound$(
           double arg1, double arg2, long arg3) {
             return ((fabric.metrics.contracts.Bound) fetch()).
               fabric$metrics$contracts$Bound$(arg1, arg2, arg3);
+        }
+        
+        public double value(fabric.metrics.util.NodeTime arg1) {
+            return ((fabric.metrics.contracts.Bound) fetch()).value(arg1);
         }
         
         public double value(long arg1) {
@@ -276,13 +293,14 @@ public interface Bound extends fabric.lang.Object {
         
         public double base;
         
-        public long get$startTime() {
+        public fabric.metrics.util.NodeTime get$startTime() {
             fabric.worker.transaction.TransactionManager.getInstance().
               registerRead(this);
             return this.startTime;
         }
         
-        public long set$startTime(long val) {
+        public fabric.metrics.util.NodeTime set$startTime(
+          fabric.metrics.util.NodeTime val) {
             fabric.worker.transaction.TransactionManager tm =
               fabric.worker.transaction.TransactionManager.getInstance();
             boolean transactionCreated = tm.registerWrite(this);
@@ -291,19 +309,24 @@ public interface Bound extends fabric.lang.Object {
             return val;
         }
         
-        public long postInc$startTime() {
-            long tmp = this.get$startTime();
-            this.set$startTime((long) (tmp + 1));
-            return tmp;
-        }
+        public fabric.metrics.util.NodeTime startTime;
         
-        public long postDec$startTime() {
-            long tmp = this.get$startTime();
-            this.set$startTime((long) (tmp - 1));
-            return tmp;
+        /**
+   * @param rate
+   *        the rate the value changes with time
+   * @param base
+   *        the value of the bound associated with startTime
+   * @param startTime
+   *        the time this bound's value is computed relative to
+   */
+        public fabric.metrics.contracts.Bound fabric$metrics$contracts$Bound$(
+          double rate, double base, fabric.metrics.util.NodeTime startTime) {
+            this.set$rate((double) rate);
+            this.set$base((double) base);
+            this.set$startTime(startTime);
+            fabric$lang$Object$();
+            return (fabric.metrics.contracts.Bound) this.$getProxy();
         }
-        
-        public long startTime;
         
         /**
    * @param rate
@@ -317,7 +340,12 @@ public interface Bound extends fabric.lang.Object {
           double rate, double base, long startTime) {
             this.set$rate((double) rate);
             this.set$base((double) base);
-            this.set$startTime((long) startTime);
+            this.set$startTime(
+                   ((fabric.metrics.util.NodeTime)
+                      new fabric.metrics.util.NodeTime._Impl(
+                        this.$getStore()).$getProxy(
+                                            )).fabric$metrics$util$NodeTime$(
+                                                 startTime));
             fabric$lang$Object$();
             return (fabric.metrics.contracts.Bound) this.$getProxy();
         }
@@ -327,9 +355,23 @@ public interface Bound extends fabric.lang.Object {
    *        the time we're computing the bound value for
    * @return the value of the bound at the given time
    */
-        public double value(long time) {
-            return this.get$rate() * (time - this.get$startTime()) +
+        public double value(fabric.metrics.util.NodeTime time) {
+            return this.get$rate() *
+              (time.get$time() - this.get$startTime().lowerBound()) +
               this.get$base();
+        }
+        
+        /**
+   * @param time
+   *        the time we're computing the bound value for
+   * @return the value of the bound at the given time
+   */
+        public double value(long time) {
+            return value(
+                     ((fabric.metrics.util.NodeTime)
+                        new fabric.metrics.util.NodeTime._Impl(
+                          this.$getStore()).$getProxy()).
+                         fabric$metrics$util$NodeTime$(time));
         }
         
         /**
@@ -374,7 +416,7 @@ public interface Bound extends fabric.lang.Object {
    *       which point the bound would no longer be satisfied by the value.
    */
         public long trueExpiry(double value, long time) {
-            if (this.get$rate() >= 0) {
+            if (this.get$rate() > 0) {
                 return (long) (time + (value - value(time)) / this.get$rate());
             } else if (value < value(time)) {
                 return 0;
@@ -399,14 +441,11 @@ public interface Bound extends fabric.lang.Object {
    *       newStartTime
    */
         public fabric.metrics.contracts.Bound shifted(long newStartTime) {
+            final fabric.worker.Store s = $getStore();
             return ((fabric.metrics.contracts.Bound)
-                      new fabric.metrics.contracts.Bound._Impl(
-                        this.$getStore()).$getProxy()).
+                      new fabric.metrics.contracts.Bound._Impl(s).$getProxy()).
               fabric$metrics$contracts$Bound$(this.get$rate(),
-                                              this.get$base() +
-                                                  this.get$rate() *
-                                                  (newStartTime -
-                                                     this.get$startTime()),
+                                              value(newStartTime),
                                               newStartTime);
         }
         
@@ -426,8 +465,15 @@ public interface Bound extends fabric.lang.Object {
         }
         
         public java.lang.String toString() {
-            return "> " + this.get$rate() + " * (t - " + this.get$startTime() +
-            ") + " + this.get$base();
+            return ">= " +
+            this.get$rate() +
+            " * (t - " +
+            java.lang.String.
+              valueOf(
+                fabric.lang.WrappedJavaInlineable.$unwrap(
+                                                    this.get$startTime())) +
+            ") + " +
+            this.get$base();
         }
         
         public _Impl(fabric.worker.Store $location) { super($location); }
@@ -444,7 +490,8 @@ public interface Bound extends fabric.lang.Object {
             super.$serialize(out, refTypes, intraStoreRefs, interStoreRefs);
             out.writeDouble(this.rate);
             out.writeDouble(this.base);
-            out.writeLong(this.startTime);
+            $writeRef($getStore(), this.startTime, refTypes, out,
+                      intraStoreRefs, interStoreRefs);
         }
         
         public _Impl(fabric.worker.Store store, long onum, int version,
@@ -461,7 +508,11 @@ public interface Bound extends fabric.lang.Object {
                   intraStoreRefs, interStoreRefs);
             this.rate = in.readDouble();
             this.base = in.readDouble();
-            this.startTime = in.readLong();
+            this.startTime =
+              (fabric.metrics.util.NodeTime)
+                $readRef(fabric.metrics.util.NodeTime._Proxy.class,
+                         (fabric.common.RefTypeEnum) refTypes.next(), in, store,
+                         intraStoreRefs, interStoreRefs);
         }
         
         public void $copyAppStateFrom(fabric.lang.Object._Impl other) {
@@ -541,11 +592,11 @@ public interface Bound extends fabric.lang.Object {
         
     }
     
-    public static final byte[] $classHash = new byte[] { -1, 69, 43, -73, -60,
-    22, 68, -38, -46, 4, 123, 56, 30, -59, 110, 100, -58, -115, -81, 68, -71,
-    -98, -96, 73, -35, -27, -34, 122, 125, 86, 119, 72 };
+    public static final byte[] $classHash = new byte[] { -121, 24, 21, 59, -95,
+    -53, 89, 82, 116, -51, -118, -1, 19, 88, 28, -26, 28, -79, -78, 35, -14, 79,
+    34, 60, 100, 83, -2, 28, 20, 64, -57, 40 };
     public static final java.lang.String jlc$CompilerVersion$fabil = "0.3.0";
-    public static final long jlc$SourceLastModified$fabil = 1491929446000L;
+    public static final long jlc$SourceLastModified$fabil = 1492107628000L;
     public static final java.lang.String jlc$ClassType$fabil =
-      "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";
+      "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";
 }

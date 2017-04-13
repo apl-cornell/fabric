@@ -14,7 +14,8 @@ import fabric.metrics.contracts.Contract;
  * observable object changes, an application can call
  * {@link #getObserversCopy()} to get the current set of {@link Observer}s.
  * {@link Observer}s are then notified of a change via a call to
- * {@link Observer#handleUpdates()}.  */
+ * {@link Observer#handleUpdates()}.
+ */
 public abstract class Subject {
 
   protected Subject fabric$metrics$util$Subject$() {
@@ -70,7 +71,7 @@ public abstract class Subject {
    * @return a copy of the set of the current observers of this subject.
    */
   public Set/*<Observer>*/ getObserversCopy() {
-    return (new HashSet/*<>*/()).fabric$util$HashSet$(observers);
+    return new LinkedHashSet/*<>*/().fabric$util$LinkedHashSet$(observers);
   }
 
   /**
@@ -109,7 +110,7 @@ public abstract class Subject {
       SampledMetric sm = (SampledMetric) unobserved.poll();
       sm.clearModified();
       java.util.LinkedList/*<Observer>*/ queue = new java.util.LinkedList/*<>*/();
-      //queue.addAll(sm.getObserversCopy());
+      //queue.addAll(sm.getObservers());
       Iterator obsIter = sm.getObservers().iterator();
       while (obsIter.hasNext()) {
         queue.add(obsIter.next());
@@ -136,19 +137,14 @@ public abstract class Subject {
             Subject s = (Subject) unhandled;
             if (s instanceof Contract) {
               // This contract isn't being extended now.
-              extensions.remove(s);
+              extensions.remove(/*(Contract)*/ s);
             }
+            //queue.addAll(parents);
             Iterator parentIter = parents.iterator();
             while (parentIter.hasNext()) {
               queue.add(parentIter.next());
             }
             s.clearModified();
-          }
-          if (unhandled instanceof Contract && ((Contract) unhandled).extended()) {
-            Contract curContract = (Contract) unhandled;
-            curContract.clearExtended();
-            if (!extensions.contains(curContract))
-              extensions.add(curContract);
           }
         }
       }

@@ -79,12 +79,13 @@ public class SampledMetric extends Metric {
     // The below is using alpha instead of 1/n... I have no idea if this is
     // right but it appears to work well in experiments?
     return RunningStats.ALPHA * ((updateIntervalStats.getVar() / tSqrd)
-            + (bSqrd * biasStats.getVar() / (tSqrd * tSqrd)));
+        + (bSqrd * biasStats.getVar() / (tSqrd * tSqrd)));
   }
 
   /*@Override*/
   protected MetricContract createContract(Bound bound) {
-    return new SampledMetricContract().fabric$metrics$contracts$SampledMetricContract$(this, bound);
+    final Store s = $getStore();
+    return new SampledMetricContract@s().fabric$metrics$contracts$SampledMetricContract$(this, bound);
   }
 
   /*@Override*/

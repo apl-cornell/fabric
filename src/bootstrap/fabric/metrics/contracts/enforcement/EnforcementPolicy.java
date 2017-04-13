@@ -22,8 +22,8 @@ public interface EnforcementPolicy extends fabric.lang.Object {
     /**
    * Update book-keeping to use this {@link EnforcementPolicy} for the given
    * {@link MetricContract}. This will add the given {@link MetricContract} as
-   * an {@link contracts.util.Observer Observer} of the necessary
-   * {@link contracts.util.Subject Subject}s to use the policy.
+   * an {@link metrics.util.Observer Observer} of the necessary
+   * {@link metrics.util.Subject Subject}s to use the policy.
    *
    * @param mc
    *        the {@link MetricContract} to apply this policy to.
@@ -33,8 +33,8 @@ public interface EnforcementPolicy extends fabric.lang.Object {
     /**
    * Update book-keeping to stop using this {@link EnforcementPolicy} for the
    * given {@link MetricContract}. This will remove the given
-   * {@link MetricContract} as an {@link contracts.util.Observer Observer} of
-   * the necessary {@link contracts.util.Subject Subject}s to use the policy.
+   * {@link MetricContract} as an {@link metrics.util.Observer Observer} of
+   * the necessary {@link metrics.util.Subject Subject}s to use the policy.
    *
    * @param mc
    *        the {@link MetricContract} to stop applying this policy to.
@@ -89,8 +89,8 @@ public interface EnforcementPolicy extends fabric.lang.Object {
         /**
    * Update book-keeping to use this {@link EnforcementPolicy} for the given
    * {@link MetricContract}. This will add the given {@link MetricContract} as
-   * an {@link contracts.util.Observer Observer} of the necessary
-   * {@link contracts.util.Subject Subject}s to use the policy.
+   * an {@link metrics.util.Observer Observer} of the necessary
+   * {@link metrics.util.Subject Subject}s to use the policy.
    *
    * @param mc
    *        the {@link MetricContract} to apply this policy to.
@@ -100,8 +100,8 @@ public interface EnforcementPolicy extends fabric.lang.Object {
         /**
    * Update book-keeping to stop using this {@link EnforcementPolicy} for the
    * given {@link MetricContract}. This will remove the given
-   * {@link MetricContract} as an {@link contracts.util.Observer Observer} of
-   * the necessary {@link contracts.util.Subject Subject}s to use the policy.
+   * {@link MetricContract} as an {@link metrics.util.Observer Observer} of
+   * the necessary {@link metrics.util.Subject Subject}s to use the policy.
    *
    * @param mc
    *        the {@link MetricContract} to stop applying this policy to.
@@ -229,11 +229,11 @@ public interface EnforcementPolicy extends fabric.lang.Object {
         
     }
     
-    public static final byte[] $classHash = new byte[] { -75, -116, 79, -12, 71,
-    -127, -77, -119, -95, 117, 119, 124, -31, -89, 5, -76, -112, 54, 111, -124,
-    -79, 83, 24, 49, -25, 7, 126, 107, 96, 28, 50, 94 };
+    public static final byte[] $classHash = new byte[] { -104, -110, -102, 122,
+    -15, -110, 39, -69, -68, 81, 88, -71, 78, -76, 22, 100, -89, -28, -111, -92,
+    94, 114, 22, -29, 115, -106, -61, -10, 32, -118, -25, -36 };
     public static final java.lang.String jlc$CompilerVersion$fabil = "0.3.0";
-    public static final long jlc$SourceLastModified$fabil = 1491929446000L;
+    public static final long jlc$SourceLastModified$fabil = 1492106653000L;
     public static final java.lang.String jlc$ClassType$fabil =
-      "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";
+      "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";
 }

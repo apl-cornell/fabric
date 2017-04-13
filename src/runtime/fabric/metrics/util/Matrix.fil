@@ -1,9 +1,10 @@
 package fabric.metrics.util;
 
 import fabric.util.ArrayList;
-import fabric.util.Arrays;
 
 //import fabric.metrics.LinearMetric;
+
+import fabric.worker.Worker;
 
 /**
  * Utility class for matrix representation in {@link LinearMetric}.
@@ -47,10 +48,7 @@ public class Matrix {
    */
   public double[] getRow(int i) {
     double[] copy = new double[columns];
-    double[] row = (double[]) data.get(i);
-    for (int j = 0; j < columns; j++) {
-      copy[j] = row[j];
-    }
+    System.arraycopy(data.get(i), 0, copy, 0, copy.length);
     return copy;
   }
 
@@ -297,7 +295,14 @@ public class Matrix {
    * @return a copy of this {@link Matrix}
    */
   public Matrix copy() {
-    Matrix result = new Matrix().fabric$metrics$util$Matrix$(rows, columns);
+    return copy(Worker.getWorker().getLocalStore());
+  }
+
+  /**
+   * @return a copy of this {@link Matrix}
+   */
+  public Matrix copy(final Store s) {
+    Matrix result = new Matrix@s().fabric$metrics$util$Matrix$(rows, columns);
     for (int i = 0; i < rows; i++) {
       for (int j = 0; j < columns; j++) {
         result.set(i, j, get(i, j));

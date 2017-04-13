@@ -3,6 +3,7 @@ package fabric.metrics;
 import fabric.util.Arrays;
 import fabric.util.Collections;
 import fabric.util.HashSet;
+import fabric.util.Iterator;
 import fabric.util.Set;
 import fabric.util.TreeSet;
 
@@ -12,8 +13,9 @@ import fabric.metrics.contracts.MetricContract;
 import fabric.metrics.contracts.enforcement.EnforcementPolicy;
 import fabric.metrics.contracts.enforcement.WitnessPolicy;
 import fabric.metrics.util.Observer;
-import fabric.worker.Worker;
+
 import fabric.worker.Store;
+import fabric.worker.Worker;
 
 /**
  * General base class for {@link Metric}s built by computing over other
@@ -35,7 +37,7 @@ public abstract class DerivedMetric extends Metric implements Observer {
 
   protected Metric[] terms;
 
-  private Set/*<SampledMetric>*/ leafMetrics = new HashSet/*<>*/();
+  private Set/*<SampledMetric>*/ leafMetrics = new HashSet/*<>*/().fabric$util$HashSet$();
 
   /**
    * @param s
@@ -47,8 +49,8 @@ public abstract class DerivedMetric extends Metric implements Observer {
   public DerivedMetric fabric$metrics$DerivedMetric$(Metric[] terms) {
     fabric$metrics$Metric$();
     this.terms = new Metric[terms.length];
-    Arrays.arraycopy(terms, 0, this.terms, 0, terms.length);
-    if ((new TreeSet/*<>*/()).fabric$util$TreeSet$(Arrays.asList(terms)).size() != terms.length)
+    System.arraycopy(terms, 0, this.terms, 0, terms.length);
+    if (new TreeSet/*<>*/().fabric$util$TreeSet$(Arrays.asList(terms)).size() != terms.length)
       throw new IllegalArgumentException(
           "DerivedMetric terms must not contain duplicates!");
     return this;
@@ -64,7 +66,7 @@ public abstract class DerivedMetric extends Metric implements Observer {
     for (int i = 0; i < terms.length; i++) {
       terms[i].addObserver(this);
       if (terms[i] instanceof SampledMetric) {
-        leafMetrics.add((SampledMetric) terms[i]);
+        leafMetrics.add(/*(SampledMetric)*/ terms[i]);
       } else if (terms[i] instanceof DerivedMetric) {
         leafMetrics.addAll(((DerivedMetric) terms[i]).getLeafSubjects());
       } else {
@@ -72,6 +74,7 @@ public abstract class DerivedMetric extends Metric implements Observer {
             "This shouldn't happen, all metrics should either be a SampledMetric or a DerivedMetric!");
       }
     }
+
     lastValue = computeValue();
     lastVelocity = computeVelocity();
     lastNoise = computeNoise();
@@ -90,6 +93,7 @@ public abstract class DerivedMetric extends Metric implements Observer {
 
   /*@Override*/
   public double value() {
+    fabric.worker.transaction.TransactionManager.getInstance().resolveObservations();
     return lastValue;
   }
 
@@ -97,6 +101,7 @@ public abstract class DerivedMetric extends Metric implements Observer {
 
   /*@Override*/
   public double velocity() {
+    fabric.worker.transaction.TransactionManager.getInstance().resolveObservations();
     return lastVelocity;
   }
 
@@ -104,6 +109,7 @@ public abstract class DerivedMetric extends Metric implements Observer {
 
   /*@Override*/
   public double noise() {
+    fabric.worker.transaction.TransactionManager.getInstance().resolveObservations();
     return lastNoise;
   }
 
@@ -123,8 +129,9 @@ public abstract class DerivedMetric extends Metric implements Observer {
    * Removes itself from the {@link Observer}s of its terms.
    */
   public void cleanup() {
-    for (int i = 0; i < terms.length; i++) {
-      terms[i].removeObserver(this);
+    Iterator iter = getContracts(System.currentTimeMillis()).iterator();
+    while (iter.hasNext()) {
+      ((MetricContract) iter.next()).deactivate();
     }
   }
 
@@ -132,9 +139,9 @@ public abstract class DerivedMetric extends Metric implements Observer {
    * @return the terms this {@link DerivedMetric} is defined over
    */
   public Metric[] terms() {
-    Metric[] cTerms = new Metric[terms.length];
-    Arrays.arraycopy(terms, 0, cTerms, 0, terms.length);
-    return cTerms;
+    Metric[] copy = new Metric[terms.length];
+    System.arraycopy(terms, 0, copy, 0, terms.length);
+    return copy;
   }
 
   /**
@@ -148,7 +155,8 @@ public abstract class DerivedMetric extends Metric implements Observer {
 
   /*@Override*/
   protected MetricContract createContract(Bound bound) {
-    return new DerivedMetricContract().fabric$metrics$contracts$DerivedMetricContract$(this, bound);
+    final Store s = $getStore();
+    return new DerivedMetricContract@s().fabric$metrics$contracts$DerivedMetricContract$(this, bound);
   }
 
   /**
@@ -157,7 +165,7 @@ public abstract class DerivedMetric extends Metric implements Observer {
    *        {@link DerivedMetric}
    * @return a copy of this {@link DerivedMetric} that is stored on s
    */
-  public abstract DerivedMetric copyOn(Store s);
+  public abstract Metric copyOn(Store s);
 
   /**
    * @param bound
@@ -169,7 +177,6 @@ public abstract class DerivedMetric extends Metric implements Observer {
 
   /*@Override*/
   public Set/*<SampledMetric>*/ getLeafSubjects() {
-    final Store s = Worker.getWorker().getLocalStore();
-    return Collections.unmodifiableSet(s, leafMetrics);
+    return Collections.unmodifiableSet(Worker.getWorker().getLocalStore(), leafMetrics);
   }
 }

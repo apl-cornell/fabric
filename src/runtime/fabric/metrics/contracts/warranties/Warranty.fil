@@ -47,7 +47,8 @@ public class Warranty/*<T>*/ extends Contract {
       witness.activate();
       witness.addObserver(this);
     }
-    update(witness.getExpiry());
+    // XXX: Right expiry?
+    update(witness.getExpiryLower());
   }
 
   /**
@@ -79,6 +80,7 @@ public class Warranty/*<T>*/ extends Contract {
         witness.removeObserver(this);
         witness.deactivate();
       }
+      value = null;
     }
     super.deactivate();
   }

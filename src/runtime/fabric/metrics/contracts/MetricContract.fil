@@ -10,6 +10,8 @@ import fabric.metrics.Metric;
 import fabric.metrics.SampledMetric;
 import fabric.metrics.util.Subject;
 
+import fabric.worker.Store;
+
 /**
  * A contract asserting that a {@link Metric}'s value is above or below a
  * vectorized boundary expression <code>r⃗ * (t - startTime) + b⃗</code> until
@@ -34,7 +36,7 @@ public abstract class MetricContract extends Contract {
    */
   public MetricContract fabric$metrics$contracts$MetricContract$(Metric metric, Bound bound) {
     this.metric = metric;
-    this.bound = bound;
+    this.bound = new Bound().fabric$metrics$contracts$Bound$(bound.rate, bound.base, bound.startTime);
     fabric$metrics$contracts$Contract$();
     return this;
   }
@@ -72,7 +74,7 @@ public abstract class MetricContract extends Contract {
       return ((DerivedMetric) m).getLeafSubjects();
     } else {
       throw new IllegalStateException(
-              "All metrics should be either sampled or derived!");
+          "All metrics should be either sampled or derived!");
     }
   }
 
@@ -84,7 +86,6 @@ public abstract class MetricContract extends Contract {
     }
     super.deactivate();
   }
-
 
   /**
    * Update this contract's expiration time to stay valid in response to a
@@ -99,6 +100,8 @@ public abstract class MetricContract extends Contract {
     EnforcementPolicy oldPolicy = currentPolicy;
     if (oldPolicy != null)
       oldPolicy.unapply(this);
+    // TODO: really should avoid checking metrics for witness enforced
+    // contracts.
     if (bound.test(metric, currentTime)) {
       EnforcementPolicy newPolicy;
 
@@ -111,13 +114,14 @@ public abstract class MetricContract extends Contract {
         newPolicy = enforcementStrategy();
       }
 
-      if (newPolicy.expiry() > currentTime) {
+      if (newPolicy.expiry() >= currentTime) {
         currentPolicy = newPolicy;
         currentPolicy.apply(this);
+        update(newPolicy.expiry());
       } else {
         currentPolicy = null;
+        update(currentTime);
       }
-      update(Math.min(newPolicy.expiry(), currentTime + EXTENSION_LIMIT));
     } else {
       update(0);
     }
@@ -137,7 +141,7 @@ public abstract class MetricContract extends Contract {
    */
   public boolean implies(Metric otherMetric, Bound otherBound) {
     return getMetric().equals(otherMetric) && valid(otherBound.startTime)
-      && bound.implies(otherBound);
+        && bound.implies(otherBound);
   }
 
   /**
@@ -149,8 +153,8 @@ public abstract class MetricContract extends Contract {
    *       the entire duration of other.
    */
   public boolean implies(MetricContract other) {
-    return valid(other.getExpiry())
-      && implies(other.getMetric(), other.getBound());
+    return valid(other.getExpiryUpper())
+        && implies(other.getMetric(), other.getBound());
   }
 
   /**
@@ -168,7 +172,7 @@ public abstract class MetricContract extends Contract {
    */
   public boolean enforces(Metric otherMetric, Bound otherBound) {
     return getMetric().equals(otherMetric) && valid(otherBound.startTime)
-      && bound.equals(otherBound);
+        && bound.equals(otherBound);
   }
 
   /**
@@ -180,8 +184,8 @@ public abstract class MetricContract extends Contract {
    * @return true iff this enforces the same bound as other.
    */
   public boolean enforces(MetricContract other) {
-    return valid(other.getExpiry())
-      && enforces(other.getMetric(), other.getBound());
+    return valid(other.getExpiryUpper())
+        && enforces(other.getMetric(), other.getBound());
   }
 
   /*@Override*/
@@ -203,26 +207,20 @@ public abstract class MetricContract extends Contract {
     long currentTime = System.currentTimeMillis();
     long trueTime = getBound().trueExpiry(getMetric(), currentTime);
     long hedgedTime = hedged(currentTime);
-    if (getExpiry() > trueTime
-        || hedgedTime > (getExpiry() + EXTENSION_BUFFER)) {
-      return new DirectPolicy().fabric$metrics$contracts$enforcement$DirectPolicy$(hedgedTime);
+    if (getExpiryUpper() <= trueTime) {
+      // Don't hedge below current expiry if we're not stuttering
+      // (shifting down the expiry due to true expiry being lower than
+      // advertised time).
+      hedgedTime = Math.max(getExpiryLower(), hedgedTime);
     }
-    return new DirectPolicy().fabric$metrics$contracts$enforcement$DirectPolicy$(getExpiry());
+    final Store s = $getStore();
+    return new DirectPolicy@s().fabric$metrics$contracts$enforcement$DirectPolicy$(hedgedTime);
   }
 
   // How many standard deviations to use for hedging calculations.
   // Note: larger value => less aggressive extensions => lower revocations
   // Note: smaller value => longer extensions => less chatter
-  private static final double HEDGE_FACTOR = 2;
-  // The amount of time an extension has to improve over the current expiry
-  // for us to bother advertising it.
-  // Note: larger value => less aggressive extensions => lower revocations
-  private static final long EXTENSION_BUFFER = 20;
-  // The maximum amount of time from when extension messages go out that will
-  // be advertised for expiries.
-  // Note: smaller value => less aggressive extensions => lower revocations
-  // Note: larger value => longer extensions => less chatter
-  private static final long EXTENSION_LIMIT = 500l;
+  private static final double HEDGE_FACTOR = 3;
 
   /**
    * Using the associated {@link Metric's} statistics and some tuning
@@ -234,19 +232,17 @@ public abstract class MetricContract extends Contract {
    *       the system for this contract.
    */
   private long hedged(long time) {
+    double r = getBound().rate;
+    double b = getBound().value(time);
     Metric m = getMetric();
+    double x = m.value();
+    double v = m.velocity();
+    double n = m.noise() * HEDGE_FACTOR * HEDGE_FACTOR;
 
     // True expiry: time this would fail with no changes to the current
     // value. This is the latest time we can safely advertise as the
     // expiration.
     long hedgedResult = getBound().trueExpiry(m, time);
-
-    long startTime = getBound().startTime;
-    double r = getBound().rate;
-    double b = getBound().base + r * (time - startTime);
-    double x = m.value();
-    double v = m.velocity();
-    double n = m.noise();
 
     // Solving intersection by using rotated parametric formula
     double bm = b - x;
@@ -291,6 +287,7 @@ public abstract class MetricContract extends Contract {
 
       hedgedResult = Math.min((long) Math.min(soonestX1, soonestX2), hedgedResult);
     }
+
     return hedgedResult;
   }
 }

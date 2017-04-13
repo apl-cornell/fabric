@@ -1242,8 +1242,24 @@ public final class TransactionManager {
     // Make sure it's registered as written.
     registerWrite((_Impl) sampled.fetch());
     // Add it to the log's unobserved queue if it's not already there.
-    if (!current.unobservedSamples.contains(sampled))
-      current.unobservedSamples.add(sampled);
+    synchronized (current.unobservedSamples) {
+      if (!current.unobservedSamples.contains(sampled))
+        current.unobservedSamples.add(sampled);
+    }
+  }
+
+  /**
+   * Registers a contract that will be extended and should have it's extension
+   * bubbled up the observer tree after the transaction commits.
+   */
+  public void registerExtension(Contract extended) {
+    // Make sure it's registered as written.
+    registerWrite((_Impl) extended.fetch());
+    // Add it to the log's unobserved queue if it's not already there.
+    synchronized (current.extendedContracts) {
+      if (!current.extendedContracts.contains(extended))
+        current.extendedContracts.add(extended);
+    }
   }
 
   /**

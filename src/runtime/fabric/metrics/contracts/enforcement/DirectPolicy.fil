@@ -39,4 +39,9 @@ public class DirectPolicy extends EnforcementPolicy {
   public void unapply(MetricContract mc) {
     mc.getMetric().removeObserver(mc);
   }
+
+  /*@Override*/
+  public String toString() {
+    return "Direct Until " + expiry;
+  }
 }

@@ -21,9 +21,9 @@ public class WitnessPolicy extends EnforcementPolicy {
 
   /**
    * @param witnesses
-   *            the set of {@link MetricContract}s used to enforce this
-   *            policy. If any of the witnesses weren't already active, they
-   *            are {@link Contract#activate() activated} here.
+   *        the set of {@link MetricContract}s used to enforce this
+   *        policy. If any of the witnesses weren't already active, they
+   *        are {@link Contract#activate() activated} here.
    */
   public WitnessPolicy fabric$metrics$contracts$enforcement$WitnessPolicy$(Collection/*<MetricContract>*/ witnesses) {
     this.witnesses = new LinkedHashSet/*<>*/().fabric$util$LinkedHashSet$(witnesses);
@@ -38,14 +38,17 @@ public class WitnessPolicy extends EnforcementPolicy {
 
   /*@Override*/
   public long expiry() {
-    long lowest = -1;
+    boolean atLeastOnce = false;
+    long result = 0;
     Iterator itr = witnesses.iterator();
     while (itr.hasNext()) {
       MetricContract w = (MetricContract) itr.next();
-      if (lowest == -1 || w.getExpiry() < lowest)
-        lowest = w.getExpiry();
+      if (!atLeastOnce || w.getExpiryLower() < result) {
+        atLeastOnce = true;
+        result = w.getExpiryLower();
+      }
     }
-    return lowest;
+    return result;
   }
 
   /*@Override*/
@@ -65,5 +68,10 @@ public class WitnessPolicy extends EnforcementPolicy {
       w.removeObserver(mc);
       w.deactivate();
     }
+  }
+
+  /*@Override*/
+  public String toString() {
+    return witnesses.toString();
   }
 }

@@ -20,8 +20,8 @@ public abstract class EnforcementPolicy {
   /**
    * Update book-keeping to use this {@link EnforcementPolicy} for the given
    * {@link MetricContract}. This will add the given {@link MetricContract} as
-   * an {@link contracts.util.Observer Observer} of the necessary
-   * {@link contracts.util.Subject Subject}s to use the policy.
+   * an {@link metrics.util.Observer Observer} of the necessary
+   * {@link metrics.util.Subject Subject}s to use the policy.
    *
    * @param mc
    *        the {@link MetricContract} to apply this policy to.
@@ -31,8 +31,8 @@ public abstract class EnforcementPolicy {
   /**
    * Update book-keeping to stop using this {@link EnforcementPolicy} for the
    * given {@link MetricContract}. This will remove the given
-   * {@link MetricContract} as an {@link contracts.util.Observer Observer} of
-   * the necessary {@link contracts.util.Subject Subject}s to use the policy.
+   * {@link MetricContract} as an {@link metrics.util.Observer Observer} of
+   * the necessary {@link metrics.util.Subject Subject}s to use the policy.
    *
    * @param mc
    *        the {@link MetricContract} to stop applying this policy to.
