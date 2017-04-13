@@ -173,8 +173,6 @@ public abstract class Metric extends Subject implements Comparable/*<Metric>*/ {
    *       {@link Metric}
    */
   public Metric times(double scalar) {
-    if (scalar == 1.0)
-      return this;
     final Store thisStore = $getStore();
     return findMetric($getStore(),
         new LinearMetric@thisStore().fabric$metrics$LinearMetric$(
@@ -211,7 +209,7 @@ public abstract class Metric extends Subject implements Comparable/*<Metric>*/ {
     if (other instanceof DerivedMetric)
       return other.min(this);
     if (this.equals(other))
-      return this;
+      return this.times(1);
     final Store thisStore = $getStore();
     return findMetric($getStore(),
         new LinearMetric@thisStore().fabric$metrics$LinearMetric$(
