@@ -554,13 +554,13 @@ while (i.hasNext())
      */
     private final int index;
 
-    private int knownMod = modCount;
+    private int knownMod;
 
     private int position;
 
     private int lastReturned = -1;
 
-    private int size = size();
+    private int size;
 
     /**
      * @param index
@@ -568,7 +568,9 @@ while (i.hasNext())
     private AbstractListIterator fabric$util$AbstractList$AbstractListIterator$(int index) {
       this.index = index;
       fabric$lang$Object$();
+      knownMod = modCount;
       position = index;
+      size = size();
       return this;
     }
 
