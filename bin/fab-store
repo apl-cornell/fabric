@@ -13,7 +13,7 @@ app_home="$(dirname $0)/.."
 cache_name="${HOSTNAME}"
 
 # Work around Java compiler/verifier bug.
-vmargs="-noverify"
+vmargs="${vmargs} -noverify"
 
 while true; do
   case "$1" in
