@@ -106,45 +106,47 @@ public abstract class Subject {
    * Utility for processing a batch of samples for the transaction manager.
    */
   public static void processSamples(java.util.LinkedList unobserved, java.util.List extensions) {
-    while (!unobserved.isEmpty()) {
-      SampledMetric sm = (SampledMetric) unobserved.poll();
-      sm.clearModified();
-      java.util.LinkedList/*<Observer>*/ queue = new java.util.LinkedList/*<>*/();
-      //queue.addAll(sm.getObservers());
-      Iterator obsIter = sm.getObservers().iterator();
-      while (obsIter.hasNext()) {
-        queue.add(obsIter.next());
-      }
-
-      while (!queue.isEmpty()) {
-        Observer unhandled = (Observer) queue.poll();
-        boolean needToWait = false;
-        Iterator leavesIter = unhandled.getLeafSubjects().iterator();
-        while (leavesIter.hasNext()) {
-          if (unobserved.contains(leavesIter.next())) {
-            needToWait = true;
-            break;
-          }
+    atomic {
+      while (!unobserved.isEmpty()) {
+        SampledMetric sm = (SampledMetric) unobserved.poll();
+        sm.clearModified();
+        java.util.LinkedList/*<Observer>*/ queue = new java.util.LinkedList/*<>*/();
+        //queue.addAll(sm.getObservers());
+        Iterator obsIter = sm.getObservers().iterator();
+        while (obsIter.hasNext()) {
+          queue.add(obsIter.next());
         }
-        // If this has no other pending sampled events, process it.
-        if (!needToWait) {
-          Set/*<Observer>*/ parents = Collections.EMPTY_SET;
-          if (unhandled instanceof Subject) {
-            parents = ((Subject) unhandled).getObserversCopy();
+
+        while (!queue.isEmpty()) {
+          Observer unhandled = (Observer) queue.poll();
+          boolean needToWait = false;
+          Iterator leavesIter = unhandled.getLeafSubjects().iterator();
+          while (leavesIter.hasNext()) {
+            if (unobserved.contains(leavesIter.next())) {
+              needToWait = true;
+              break;
+            }
           }
-          unhandled.handleUpdates();
-          if (unhandled instanceof Subject && ((Subject) unhandled).isModified()) {
-            Subject s = (Subject) unhandled;
-            if (s instanceof Contract) {
-              // This contract isn't being extended now.
-              extensions.remove(/*(Contract)*/ s);
+          // If this has no other pending sampled events, process it.
+          if (!needToWait) {
+            Set/*<Observer>*/ parents = Collections.EMPTY_SET;
+            if (unhandled instanceof Subject) {
+              parents = ((Subject) unhandled).getObserversCopy();
             }
-            //queue.addAll(parents);
-            Iterator parentIter = parents.iterator();
-            while (parentIter.hasNext()) {
-              queue.add(parentIter.next());
+            unhandled.handleUpdates();
+            if (unhandled instanceof Subject && ((Subject) unhandled).isModified()) {
+              Subject s = (Subject) unhandled;
+              if (s instanceof Contract) {
+                // This contract isn't being extended now.
+                extensions.remove(/*(Contract)*/ s);
+              }
+              //queue.addAll(parents);
+              Iterator parentIter = parents.iterator();
+              while (parentIter.hasNext()) {
+                queue.add(parentIter.next());
+              }
+              s.clearModified();
             }
-            s.clearModified();
           }
         }
       }

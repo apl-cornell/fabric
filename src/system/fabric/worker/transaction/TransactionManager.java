@@ -409,9 +409,6 @@ public final class TransactionManager {
     // Wait for all sub-transactions to finish.
     current.waitForThreads();
 
-    // Resolve unobserved samples.
-    resolveObservations();
-
     TransactionID ignoredRetrySignal = null;
     if (!ignoreRetrySignal) {
       // Make sure we're not supposed to abort or retry.
@@ -472,6 +469,9 @@ public final class TransactionManager {
         Timing.SUBTX.end();
       }
     }
+
+    // Resolve unobserved samples.
+    resolveObservations();
 
     // Commit top-level transaction.
     Log HOTOS_current = current;
