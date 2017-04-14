@@ -49,7 +49,7 @@ public abstract class DerivedMetric extends Metric implements Observer {
   public DerivedMetric fabric$metrics$DerivedMetric$(Metric[] terms) {
     fabric$metrics$Metric$();
     this.terms = new Metric[terms.length];
-    System.arraycopy(terms, 0, this.terms, 0, terms.length);
+    Arrays.arraycopy(terms, 0, this.terms, 0, terms.length);
     if (new TreeSet/*<>*/().fabric$util$TreeSet$(Arrays.asList(terms)).size() != terms.length)
       throw new IllegalArgumentException(
           "DerivedMetric terms must not contain duplicates!");
@@ -140,7 +140,7 @@ public abstract class DerivedMetric extends Metric implements Observer {
    */
   public Metric[] terms() {
     Metric[] copy = new Metric[terms.length];
-    System.arraycopy(terms, 0, copy, 0, terms.length);
+    Arrays.arraycopy(terms, 0, copy, 0, terms.length);
     return copy;
   }
 

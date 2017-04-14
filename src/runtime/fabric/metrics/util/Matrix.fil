@@ -47,8 +47,11 @@ public class Matrix {
    * @return a copy of row i
    */
   public double[] getRow(int i) {
+    double[] row = (double[]) data.get(i);
     double[] copy = new double[columns];
-    System.arraycopy(data.get(i), 0, copy, 0, copy.length);
+    for (int j = 0; j < row.length; j++) {
+      copy[j] = row[j];
+    }
     return copy;
   }
 

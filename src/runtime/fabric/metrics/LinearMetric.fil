@@ -67,7 +67,7 @@ public class LinearMetric extends DerivedMetric {
    */
   private Matrix normalize(Matrix matrix) {
     Metric[] normTerms = new Metric[terms.length];
-    System.arraycopy(terms, 0, normTerms, 0, terms.length);
+    Arrays.arraycopy(terms, 0, normTerms, 0, terms.length);
     Arrays.sort(normTerms);
     Matrix colNormed = new Matrix().fabric$metrics$util$Matrix$(matrix.rows(), terms.length);
     for (int i = 0; i < terms.length; i++) {
@@ -304,7 +304,7 @@ public class LinearMetric extends DerivedMetric {
     }
 
     Metric[] newTerms = new Metric[terms.length + 1];
-    System.arraycopy(terms, 0, newTerms, 0, terms.length);
+    Arrays.arraycopy(terms, 0, newTerms, 0, terms.length);
     newTerms[terms.length] = other;
     Arrays.sort(newTerms, 0, newTerms.length);
     int idx = Arrays.asList(newTerms).indexOf(other);
@@ -386,7 +386,7 @@ public class LinearMetric extends DerivedMetric {
     }
 
     Metric[] newTerms = new Metric[terms.length + 1];
-    System.arraycopy(terms, 0, newTerms, 0, terms.length);
+    Arrays.arraycopy(terms, 0, newTerms, 0, terms.length);
     newTerms[terms.length] = other;
     Arrays.sort(newTerms, 0, newTerms.length);
     int idx = Arrays.asList(newTerms).indexOf(other);
