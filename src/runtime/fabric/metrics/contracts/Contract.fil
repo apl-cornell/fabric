@@ -32,7 +32,7 @@ public abstract class Contract extends Subject implements Observer {
   // Note: larger value => less aggressive extensions => lower overhead
   // Note: smaller value => more aggressive extensions => less chance of a
   // warranty going stale unecessarily.
-  public static double MIN_EXTENSION_FACTOR = 4;
+  public static final double MIN_EXTENSION_FACTOR = 4;
   // The maximum amount of time into the future to extend the expiry
   // Note: smaller value => less aggressive extensions => lower revocations
   // Note: larger value => longer extensions => less chatter
