@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
@@ -23,6 +24,7 @@ import fabric.lang.security.SecurityCache;
 import fabric.metrics.contracts.Contract;
 import fabric.metrics.util.Observer;
 import fabric.metrics.util.Subject;
+import fabric.util.Iterator;
 import fabric.worker.FabricSoftRef;
 import fabric.worker.Store;
 import fabric.worker.Worker;
@@ -118,6 +120,13 @@ public final class Log {
    * should trigger extensions up the tree after commit.
    */
   protected final List<Contract> extendedContracts;
+
+  /**
+   * A collection of {@link Contract}s that should be sent extension messages
+   * after this commits.  Should only be populated in the top level Log right
+   * before attempting to commit.
+   */
+  protected final LinkedHashSet<Oid> extendedParents;
 
   /**
    * Tracks objects on local store that have been modified. See
@@ -223,6 +232,7 @@ public final class Log {
     this.waitsFor = new HashSet<>();
 
     if (parent != null) {
+      this.extendedParents = null;
       try {
         Timing.SUBTX.begin();
         this.writerMap = new WriterMap(parent.writerMap);
@@ -237,6 +247,7 @@ public final class Log {
         Timing.SUBTX.end();
       }
     } else {
+      this.extendedParents = new LinkedHashSet<>();
       this.writerMap = new WriterMap(this.tid.topTid);
       commitState = new CommitState();
 
@@ -487,6 +498,7 @@ public final class Log {
       localStoreWrites.clear();
       workersCalled.clear();
       securityCache.reset();
+      extendedParents.clear();
 
       if (parent != null) {
         writerMap = new WriterMap(parent.writerMap);
@@ -508,6 +520,18 @@ public final class Log {
    */
   public void resolveObservations() {
     Subject._Impl.processSamples(unobservedSamples, extendedContracts);
+  }
+
+  /**
+   * Right before attempting a top level commit, gather up extendedParents to
+   * send out extensions for after a successful commit.
+   */
+  public void gatherExtendedParents() {
+    for (Contract c : extendedContracts) {
+      for(Iterator iter = c.getObservers().iterator(); iter.hasNext();) {
+        extendedParents.add(new Oid(iter.next()));
+      }
+    }
   }
 
   /**
@@ -689,8 +713,8 @@ public final class Log {
     }
 
     // Queue up extension transactions
-    for (Contract extended : extendedContracts) {
-      TransactionManager.queueExtension(new Oid(extended));
+    for (Oid extended : extendedParents) {
+      TransactionManager.queueExtension(extended);
     }
 
     // Merge the security cache into the top-level label cache.

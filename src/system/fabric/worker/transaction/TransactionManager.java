@@ -42,7 +42,6 @@ import fabric.lang.security.Label;
 import fabric.lang.security.SecurityCache;
 import fabric.metrics.SampledMetric;
 import fabric.metrics.contracts.Contract;
-import fabric.metrics.util.Observer;
 import fabric.net.RemoteNode;
 import fabric.net.UnreachableNodeException;
 import fabric.store.InProcessStore;
@@ -56,7 +55,7 @@ import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.TransactionRestartingException;
 import fabric.worker.Worker;
-import fabric.worker.Worker.Code;
+import fabric.worker.remote.RemoteCallException;
 import fabric.worker.remote.RemoteWorker;
 import fabric.worker.remote.WriterMap;
 
@@ -126,19 +125,14 @@ public final class TransactionManager {
         protected void runImpl() {
           while (true) {
             try {
-              // Get the next extended item.
-              Oid extended = extensions.take();
-              Contract extendedContract =
-                  new Contract._Proxy(extended.store, extended.onum);
+              // Get the next parent of an extended item.
+              final Oid parentOid = extensions.take();
 
-              // Go through the parents.
-              fabric.util.Iterator parentIter =
-                  extendedContract.getObserversCopy().iterator();
-              while (parentIter.hasNext()) {
-                final Observer parent = (Observer) parentIter.next();
-                // Run the extension in a transaction.
-                Threading.getPool().submit(extensionTask(parent));
-              }
+              // Run the extension in a transaction.
+              Threading.getPool()
+                  .submit(extensionTask(
+                      Worker.getWorker().getWorker(parentOid.store.name()),
+                      parentOid));
             } catch (InterruptedException e) {
               Logging.logIgnoredInterruptedException(e);
             }
@@ -153,26 +147,31 @@ public final class TransactionManager {
   /**
    * Get a runnable that runs a transaction to update the given Observer.
    */
-  private static NamedRunnable extensionTask(final Observer parent) {
-    String name = "Extension of " + new Oid(parent);
+  private static NamedRunnable extensionTask(final RemoteWorker location,
+      final Oid parent) {
+    String name = "Extension of " + parent;
     return new Threading.NamedRunnable(name) {
       @Override
       protected void runImpl() {
         // Run a transaction handling updates at the parent
-        Worker.runInTopLevelTransaction(new Code<Object>() {
-          @Override
-          public Object run() {
-            parent.handleUpdates();
-            return null;
-          }
-        }, false);
+        try {
+          Logging.METRICS_LOGGER.log(Level.INFO,
+              "ATTEMPTING PARENT EXTENSION {0}", parent);
+          Contract._Proxy target =
+              new Contract._Proxy(parent.store, parent.onum);
+          location.issueRemoteCall(target, "handleUpdates", new Class<?>[0],
+              new Object[0]);
+        } catch (RemoteCallException e) {
+          Logging.METRICS_LOGGER.log(Level.INFO,
+              "Ignored remote call exception {0}", e);
+        }
       }
     };
   }
 
   /**
-   * Add an extended Oid to the extensions queue, to allow for bubbling up
-   * extensions to parent contracts within later transactions.
+   * Add an Oid of the observer of an extended contract to the extensions queue,
+   * to for sending up extensions to parent contracts within later transactions.
    */
   public static void queueExtension(Oid extended) {
     synchronized (extensions) {
@@ -472,6 +471,9 @@ public final class TransactionManager {
 
     // Resolve unobserved samples.
     resolveObservations();
+
+    // Gather up extended parents to run extensions for after this commits.
+    current.gatherExtendedParents();
 
     // Commit top-level transaction.
     Log HOTOS_current = current;
