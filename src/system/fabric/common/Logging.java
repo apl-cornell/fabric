@@ -147,6 +147,11 @@ public final class Logging {
       .getLogger("fabric.interruptedExceptions");
 
   /**
+   * For events related to metrics
+   */
+  public static final Logger METRICS_LOGGER = Logger.getLogger("metrics");
+
+  /**
    * For other events that don't fit into any other category. Use sparingly.
    */
   public static final Logger MISC_LOGGER = Logger.getLogger("fabric");

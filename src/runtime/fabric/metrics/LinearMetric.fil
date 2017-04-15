@@ -434,23 +434,22 @@ public class LinearMetric extends DerivedMetric {
         // rest of the sum
         double r = scaledV - ((totalVelocity - rate) / numTerms);
         // De-scaled
-        r /= c;
+        r = r / c;
 
         double b = scaledX
             - ((scaledN / totalNoise) * (totalValue - base));
         // De-scaled
-        b /= c;
+        b = b / c;
 
         if (c < 0) {
           m = m.times(-1);
           b = -b;
           r = -r;
         }
-        Bound witnessBoundTemp = new Bound().fabric$metrics$contracts$Bound$(r, b, currentTime);
+        final Store s = m.$getStore();
+        Bound witnessBound = new Bound@s().fabric$metrics$contracts$Bound$(r, b, currentTime);
         if (!witnesses.containsKey(m)
-            || !((MetricContract) witnesses.get(m)).getBound().implies(witnessBoundTemp)) {
-          final Store s = m.$getStore();
-          Bound witnessBound = new Bound@s().fabric$metrics$contracts$Bound$(r, b, currentTime);
+            || !((MetricContract) witnesses.get(m)).getBound().implies(witnessBound)) {
           witnesses.put(m, m.getContract(witnessBound));
         }
       }
@@ -461,11 +460,8 @@ public class LinearMetric extends DerivedMetric {
 
   /*@Override*/
   public int hashCode() {
-    List/*<Object>*/ l = new ArrayList/*<>*/().fabric$util$ArrayList$(terms.length + 2);
-    l.add(matrix);
-    l.add($getStore());
-    l.addAll(Arrays.asList(terms));
-    return l.hashCode();
+    int hash = Arrays.hashCode(terms) * 32 + matrix.hashCode();
+    return hash * 32 + $getStore().hashCode();
   }
 
   /*@Override*/

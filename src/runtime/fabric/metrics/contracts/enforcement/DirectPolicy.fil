@@ -32,16 +32,23 @@ public class DirectPolicy extends EnforcementPolicy {
 
   /*@Override*/
   public void apply(MetricContract mc) {
-    mc.getMetric().addObserver(mc);
+    mc.getMetric().startTracking(mc);
   }
 
   /*@Override*/
   public void unapply(MetricContract mc) {
-    mc.getMetric().removeObserver(mc);
+    mc.getMetric().stopTracking(mc);
   }
 
   /*@Override*/
   public String toString() {
     return "Direct Until " + expiry;
+  }
+
+  /*@Override*/
+  public boolean equals(Object other) {
+    if (!(other instanceof DirectPolicy)) return false;
+    DirectPolicy that = (DirectPolicy) other;
+    return this.expiry == that.expiry;
   }
 }

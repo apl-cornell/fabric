@@ -34,18 +34,19 @@ public class Warranty/*<T>*/ extends Contract {
     // update the expiry according to the witness.
     long currentTime = System.currentTimeMillis();
     if (witness == null || !witness.valid(currentTime)) {
-      if (witness != null) {
-        witness.removeObserver(this);
-        witness.deactivate();
-      }
       WarrantyValue/*<T>*/ curVal = computation.apply(currentTime);
       if (!curVal.value.equals(value)) {
         this.markModified();
         this.value = curVal.value;
       }
+      if (witness != null && witness != curVal.contract) {
+        witness.removeObserver(this);
+        witness.deactivate();
+      }
       witness = curVal.contract;
       witness.activate();
       witness.addObserver(this);
+      fabric.common.Logging.METRICS_LOGGER.info("DEFENDING " + this + " WITH " + witness);
     }
     // XXX: Right expiry?
     update(witness.getExpiryLower());
@@ -71,6 +72,13 @@ public class Warranty/*<T>*/ extends Contract {
       return witness.getLeafSubjects();
     else
       return Collections.EMPTY_SET;
+  }
+
+  /*@Override*/
+  public void activate() {
+    // Process outstanding observations before trying to activate this warranty.
+    TransactionManager.getInstance().resolveObservations();
+    super.activate();
   }
 
   /*@Override*/

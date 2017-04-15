@@ -53,7 +53,8 @@ public class Bound {
    * @return the value of the bound at the given time
    */
   public double value(NodeTime time) {
-    return rate * (time.time - startTime.lowerBound()) + base;
+    // Use the tightest bound possible.
+    return rate * (time.upperBound() - startTime.lowerBound()) + base;
   }
 
   /**

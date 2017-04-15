@@ -1,9 +1,8 @@
 package fabric.metrics;
 
-import fabric.util.Collections;
-import fabric.util.HashSet;
+import fabric.util.ArrayList;
 import fabric.util.Iterator;
-import fabric.util.Set;
+import fabric.util.List;
 
 import fabric.metrics.contracts.Bound;
 import fabric.metrics.contracts.MetricContract;
@@ -24,7 +23,7 @@ public abstract class Metric extends Subject implements Comparable/*<Metric>*/ {
     return this;
   }
 
-  private /*final*/ Set/*<MetricContract>*/ contracts = new HashSet/*<>*/().fabric$util$HashSet$();
+  private /*final*/ List/*<MetricContract>*/ contracts = new ArrayList/*<>*/().fabric$util$ArrayList$();
 
   /** @return the current value of the quantity being measured. */
   public abstract double value();
@@ -53,7 +52,7 @@ public abstract class Metric extends Subject implements Comparable/*<Metric>*/ {
    */
   public long expectedTimeToHit(Bound bound, long time) {
     double adjustedRate = bound.rate - velocity();
-    return new Bound().fabric$metrics$contracts$Bound$(adjustedRate, bound.base, bound.startTime).trueExpiry(this, time);
+    return (long) (time + ((value() - bound.value(time)) / adjustedRate));
   }
 
   /**
@@ -72,13 +71,12 @@ public abstract class Metric extends Subject implements Comparable/*<Metric>*/ {
    * @return a {@link Set} of {@link MetricContract}s that are currently
    *       enforced for this {@link Metric}
    */
-  protected Set/*<MetricContract>*/ getContracts(long time) {
-    Iterator cIter = new HashSet/*<>*/().fabric$util$HashSet$(contracts).iterator();
-    while (cIter.hasNext()) {
-      MetricContract c = (MetricContract) cIter.next();
+  protected List/*<MetricContract>*/ getContracts(long time) {
+    for (int i = 0; i < contracts.size(); i++) {
+      MetricContract c = (MetricContract) contracts.get(i);
       if (!c.isActive() || !c.isObserved() || !c.valid(time)) {
-        this.removeObserver(c);
-        contracts.remove(c);
+        removeObserver(c);
+        contracts.remove(i--);
       }
     }
     return contracts;
@@ -92,14 +90,18 @@ public abstract class Metric extends Subject implements Comparable/*<Metric>*/ {
    *       the given {@link Bound}
    */
   public MetricContract getContract(Bound bound) {
-    Iterator cIter = getContracts(System.currentTimeMillis()).iterator();
-    while (cIter.hasNext()) {
-      MetricContract existing = (MetricContract) cIter.next();
-      if (existing.enforces(this, bound)) {
-        return existing;
+    MetricContract mc = null;
+    for (int i = 0; i < contracts.size(); i++) {
+      MetricContract c = (MetricContract) contracts.get(i);
+      if (mc == null && c.isActive() && c.enforces(this, bound)) {
+        mc = c;
+      } else if (!c.isActive() || !c.isObserved() || !c.valid(bound.startTime)) {
+        removeObserver(c);
+        contracts.remove(i--);
       }
     }
-    MetricContract mc = createContract(bound);
+    if (mc == null)
+      mc = createContract(bound);
     return mc;
   }
 
@@ -146,24 +148,8 @@ public abstract class Metric extends Subject implements Comparable/*<Metric>*/ {
     if (!contract.getMetric().equals(this))
       throw new IllegalArgumentException(
           "Adding a contract for a different metric!");
-    contracts.add(contract);
-  }
-
-  /**
-   * @param s
-   *        the store we're looking for the given metric on
-   * @param m
-   *        the transformed metric we're looking up
-   * @return the existing equivalent {@link DerivedMetric} tracked by this
-   *       {@link Store}, if one exists. Otherwise, starts tracking
-   *       <code>m</code> and returns it.
-   */
-  public static Metric findMetric(final Store s, Metric m) {
-    if (s.derivedMap().get(m.toString()) == null)
-      s.derivedMap().put(m.toString(), m);
-    else if (m instanceof DerivedMetric)
-      ((DerivedMetric) m).cleanup();
-    return (Metric) s.derivedMap().get(m.toString());
+    if (!contracts.contains(contract))
+      contracts.add(contract);
   }
 
   /**
@@ -214,6 +200,47 @@ public abstract class Metric extends Subject implements Comparable/*<Metric>*/ {
     return findMetric($getStore(),
         new LinearMetric@thisStore().fabric$metrics$LinearMetric$(
           Matrix.identity(2), new Metric[]{ this, other }));
+  }
+
+  /**
+   * @param other
+   *            another {@link Metric} to take the maximum of along with this
+   *            {@link Metric}
+   * @return a {@link LinearMetric} that tracks the value of the maximum of
+   *         other and this's entries.
+   */
+  public Metric max(Metric other) {
+    return (this.times(-1).min(other.times(-1))).times(-1);
+  }
+
+  /**
+   * Allows for sorting {@link Metric}s to help with normalizing
+   * {@link DerivedMetric}s.
+   */
+  /*@Override*/
+  public int compareTo(/*Metric*/ java.lang.Object other) {
+    return toString().compareTo(other.toString());
+  }
+
+  /**
+   * @param s
+   *        the store we're looking for the given metric on
+   * @param m
+   *        the transformed metric we're looking up
+   * @return the existing equivalent {@link DerivedMetric} tracked by this
+   *       {@link Store}, if one exists. Otherwise, starts tracking
+   *       <code>m</code> and returns it.
+   */
+  public static Metric findMetric(final Store s, Metric m) {
+    DerivedMetric orig = (DerivedMetric) s.derivedMap().get(m.toString());
+    if (orig == null) {
+      s.derivedMap().put(m.toString(), m);
+      return m;
+    } else {
+      if (m instanceof DerivedMetric)
+        ((DerivedMetric) m).cleanup();
+      return orig;
+    }
   }
 
   /**
@@ -291,22 +318,16 @@ public abstract class Metric extends Subject implements Comparable/*<Metric>*/ {
   }
 
   /**
-   * @param other
-   *        another {@link Metric} to take the maximum of along with this
-   *        {@link Metric}
-   * @return a {@link LinearMetric} that tracks the value of the maximum of
-   *       other and this's entries.
+   * Track directly by a MetricContract.
    */
-  public Metric max(Metric other) {
-    return (this.times(-1).min(other.times(-1))).times(-1);
+  public void startTracking(MetricContract mc) {
+    addObserver(mc);
   }
 
   /**
-   * Allows for sorting {@link Metric}s to help with normalizing
-   * {@link DerivedMetric}s.
+   * Stop tracking directly by a MetricContract.
    */
-  /*@Override*/
-  public int compareTo(/*Metric*/ java.lang.Object other) {
-    return toString().compareTo(other.toString());
+  public void stopTracking(MetricContract mc) {
+    removeObserver(mc);
   }
 }

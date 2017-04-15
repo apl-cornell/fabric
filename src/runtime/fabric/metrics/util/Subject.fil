@@ -9,6 +9,8 @@ import fabric.util.Set;
 import fabric.metrics.SampledMetric;
 import fabric.metrics.contracts.Contract;
 
+import fabric.worker.transaction.TransactionManager;
+
 /**
  * Represents an observable object having a set of {@link Observer}s. After an
  * observable object changes, an application can call
@@ -38,6 +40,7 @@ public abstract class Subject {
    *        {@link Observer} to add
    */
   public void addObserver(Observer o) {
+    fabric.common.Logging.METRICS_LOGGER.info("SUBJECT " + this + " OBSERVED BY " + o + " IN " + TransactionManager.getInstance().getCurrentTid());
     observers.add(o);
   }
 
@@ -48,6 +51,7 @@ public abstract class Subject {
    *        {@link Observer} to remove
    */
   public void removeObserver(Observer o) {
+    fabric.common.Logging.METRICS_LOGGER.info("SUBJECT " + this + " NO LONGER OBSERVED BY " + o + " IN " + TransactionManager.getInstance().getCurrentTid());
     observers.remove(o);
   }
 
@@ -107,10 +111,10 @@ public abstract class Subject {
    */
   public static void processSamples(java.util.LinkedList unobserved, java.util.List extensions) {
     atomic {
+      java.util.LinkedList/*<Observer>*/ queue = new java.util.LinkedList/*<>*/();
       while (!unobserved.isEmpty()) {
         SampledMetric sm = (SampledMetric) unobserved.poll();
         sm.clearModified();
-        java.util.LinkedList/*<Observer>*/ queue = new java.util.LinkedList/*<>*/();
         //queue.addAll(sm.getObservers());
         Iterator obsIter = sm.getObservers().iterator();
         while (obsIter.hasNext()) {
@@ -129,10 +133,6 @@ public abstract class Subject {
           }
           // If this has no other pending sampled events, process it.
           if (!needToWait) {
-            Set/*<Observer>*/ parents = Collections.EMPTY_SET;
-            if (unhandled instanceof Subject) {
-              parents = ((Subject) unhandled).getObserversCopy();
-            }
             unhandled.handleUpdates();
             if (unhandled instanceof Subject && ((Subject) unhandled).isModified()) {
               Subject s = (Subject) unhandled;
@@ -141,7 +141,7 @@ public abstract class Subject {
                 extensions.remove(/*(Contract)*/ s);
               }
               //queue.addAll(parents);
-              Iterator parentIter = parents.iterator();
+              Iterator parentIter = s.getObservers().iterator();
               while (parentIter.hasNext()) {
                 queue.add(parentIter.next());
               }

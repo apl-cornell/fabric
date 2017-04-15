@@ -16,6 +16,7 @@ import fabric.metrics.util.Observer;
 
 import fabric.worker.Store;
 import fabric.worker.Worker;
+import fabric.worker.transaction.TransactionManager;
 
 /**
  * General base class for {@link Metric}s built by computing over other
@@ -64,7 +65,6 @@ public abstract class DerivedMetric extends Metric implements Observer {
    */
   public void initialize() {
     for (int i = 0; i < terms.length; i++) {
-      terms[i].addObserver(this);
       if (terms[i] instanceof SampledMetric) {
         leafMetrics.add(/*(SampledMetric)*/ terms[i]);
       } else if (terms[i] instanceof DerivedMetric) {
@@ -82,8 +82,10 @@ public abstract class DerivedMetric extends Metric implements Observer {
 
   /*@Override*/
   public void handleUpdates() {
+    fabric.common.Logging.MISC_LOGGER.info("CHECKING FOR UPDATE ON " + this + "(" + lastValue + ") IN " + TransactionManager.getInstance().getCurrentTid());
     double newValue = computeValue();
     if (newValue != lastValue) {
+      fabric.common.Logging.MISC_LOGGER.info("UPDATING " + this + " to " + newValue + " IN " + TransactionManager.getInstance().getCurrentTid());
       lastValue = newValue;
       lastVelocity = computeVelocity();
       lastNoise = computeNoise();
@@ -93,7 +95,13 @@ public abstract class DerivedMetric extends Metric implements Observer {
 
   /*@Override*/
   public double value() {
-    fabric.worker.transaction.TransactionManager.getInstance().resolveObservations();
+    if (isObserved()) {
+      // Make sure any related updates are accounted for
+      fabric.worker.transaction.TransactionManager.getInstance().resolveObservations();
+    } else {
+      // Not getting updated proactively, so compute it
+      lastValue = computeValue();
+    }
     return lastValue;
   }
 
@@ -101,7 +109,13 @@ public abstract class DerivedMetric extends Metric implements Observer {
 
   /*@Override*/
   public double velocity() {
-    fabric.worker.transaction.TransactionManager.getInstance().resolveObservations();
+    if (isObserved()) {
+      // Make sure any related updates are accounted for
+      fabric.worker.transaction.TransactionManager.getInstance().resolveObservations();
+    } else {
+      // Not getting updated proactively, so compute it
+      lastVelocity = computeVelocity();
+    }
     return lastVelocity;
   }
 
@@ -109,7 +123,13 @@ public abstract class DerivedMetric extends Metric implements Observer {
 
   /*@Override*/
   public double noise() {
-    fabric.worker.transaction.TransactionManager.getInstance().resolveObservations();
+    if (isObserved()) {
+      // Make sure any related updates are accounted for
+      fabric.worker.transaction.TransactionManager.getInstance().resolveObservations();
+    } else {
+      // Not getting updated proactively, so compute it
+      lastNoise = computeNoise();
+    }
     return lastNoise;
   }
 
@@ -122,6 +142,28 @@ public abstract class DerivedMetric extends Metric implements Observer {
         return false;
     }
     return true;
+  }
+
+  /*@Override*/
+  public void startTracking(MetricContract mc) {
+    if (!isObserved()) {
+      // Start tracking terms if this is now used by a contract directly.
+      for (int i = 0; i < terms.length; i++) {
+        terms[i].addObserver(this);
+      }
+    }
+    addObserver(mc);
+  }
+
+  /*@Override*/
+  public void stopTracking(MetricContract mc) {
+    removeObserver(mc);
+    if (!isObserved()) {
+      // Don't observe subterms unless it's being tracked directly.
+      for (int i = 0; i < terms.length; i++) {
+        terms[i].removeObserver(this);
+      }
+    }
   }
 
   /**

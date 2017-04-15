@@ -74,4 +74,11 @@ public class WitnessPolicy extends EnforcementPolicy {
   public String toString() {
     return witnesses.toString();
   }
+
+  /*@Override*/
+  public boolean equals(Object other) {
+    if (!(other instanceof WitnessPolicy)) return false;
+    WitnessPolicy that = (WitnessPolicy) other;
+    return this.witnesses.equals(that.witnesses);
+  }
 }

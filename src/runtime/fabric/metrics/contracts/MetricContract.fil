@@ -11,6 +11,7 @@ import fabric.metrics.SampledMetric;
 import fabric.metrics.util.Subject;
 
 import fabric.worker.Store;
+import fabric.worker.transaction.TransactionManager;
 
 /**
  * A contract asserting that a {@link Metric}'s value is above or below a
@@ -65,28 +66,6 @@ public abstract class MetricContract extends Contract {
     getMetric().addContract(this);
   }
 
-  /*@Override*/
-  public Set/*<SampledMetric>*/ getLeafSubjects() {
-    Metric m = getMetric();
-    if (m instanceof SampledMetric) {
-      return Collections.singleton((SampledMetric) m);
-    } else if (m instanceof DerivedMetric) {
-      return ((DerivedMetric) m).getLeafSubjects();
-    } else {
-      throw new IllegalStateException(
-          "All metrics should be either sampled or derived!");
-    }
-  }
-
-  /*@Override*/
-  public void deactivate() {
-    if (!isObserved()) {
-      if (currentPolicy != null)
-        currentPolicy.unapply(this);
-    }
-    super.deactivate();
-  }
-
   /**
    * Update this contract's expiration time to stay valid in response to a
    * change in the value of the {@link Subject}s used for enforcing this
@@ -98,8 +77,6 @@ public abstract class MetricContract extends Contract {
     long currentTime = System.currentTimeMillis();
 
     EnforcementPolicy oldPolicy = currentPolicy;
-    if (oldPolicy != null)
-      oldPolicy.unapply(this);
     // TODO: really should avoid checking metrics for witness enforced
     // contracts.
     if (bound.test(metric, currentTime)) {
@@ -115,14 +92,23 @@ public abstract class MetricContract extends Contract {
       }
 
       if (newPolicy.expiry() >= currentTime) {
+        // Wait to unapply so that metric is still tracked if this was
+        // directly enforced previously
+        if (oldPolicy != null && !oldPolicy.equals(newPolicy))
+          oldPolicy.unapply(this);
         currentPolicy = newPolicy;
         currentPolicy.apply(this);
+        fabric.common.Logging.METRICS_LOGGER.info("DEFENDING " + this + " WITH " + currentPolicy + " IN " + TransactionManager.getInstance().getCurrentTid());
         update(newPolicy.expiry());
       } else {
+        if (oldPolicy != null)
+          oldPolicy.unapply(this);
         currentPolicy = null;
         update(currentTime);
       }
     } else {
+      if (oldPolicy != null)
+        oldPolicy.unapply(this);
       update(0);
     }
   }
@@ -140,8 +126,11 @@ public abstract class MetricContract extends Contract {
    *       {@link MetricContract} with the given metric and bound.
    */
   public boolean implies(Metric otherMetric, Bound otherBound) {
-    return getMetric().equals(otherMetric) && valid(otherBound.startTime)
-        && bound.implies(otherBound);
+    if (!getMetric().equals(otherMetric) || !bound.implies(otherBound))
+      return false;
+    if (!valid(System.currentTimeMillis()))
+      refresh();
+    return valid(otherBound.startTime);
   }
 
   /**
@@ -153,7 +142,7 @@ public abstract class MetricContract extends Contract {
    *       the entire duration of other.
    */
   public boolean implies(MetricContract other) {
-    return valid(other.getExpiryUpper())
+    return valid(other.getExpiry().upperBound())
         && implies(other.getMetric(), other.getBound());
   }
 
@@ -171,21 +160,11 @@ public abstract class MetricContract extends Contract {
    *       given parameters.
    */
   public boolean enforces(Metric otherMetric, Bound otherBound) {
-    return getMetric().equals(otherMetric) && valid(otherBound.startTime)
-        && bound.equals(otherBound);
-  }
-
-  /**
-   * Check if this enforces the <strong>same</strong> bound as another
-   * {@link MetricContract}.
-   *
-   * @param other
-   *        the other {@link MetricContract} this is being compared with
-   * @return true iff this enforces the same bound as other.
-   */
-  public boolean enforces(MetricContract other) {
-    return valid(other.getExpiryUpper())
-        && enforces(other.getMetric(), other.getBound());
+    if (!getMetric().equals(otherMetric) || !bound.equals(otherBound))
+      return false;
+    if (!valid(System.currentTimeMillis()))
+      refresh();
+    return valid(otherBound.startTime.upperBound());
   }
 
   /*@Override*/
@@ -207,7 +186,7 @@ public abstract class MetricContract extends Contract {
     long currentTime = System.currentTimeMillis();
     long trueTime = getBound().trueExpiry(getMetric(), currentTime);
     long hedgedTime = hedged(currentTime);
-    if (getExpiryUpper() <= trueTime) {
+    if (getExpiryLower() <= trueTime) {
       // Don't hedge below current expiry if we're not stuttering
       // (shifting down the expiry due to true expiry being lower than
       // advertised time).
@@ -289,5 +268,27 @@ public abstract class MetricContract extends Contract {
     }
 
     return hedgedResult;
+  }
+
+  /*@Override*/
+  public Set/*<SampledMetric>*/ getLeafSubjects() {
+    Metric m = getMetric();
+    if (m instanceof SampledMetric) {
+      return Collections.singleton((SampledMetric) m);
+    } else if (m instanceof DerivedMetric) {
+      return ((DerivedMetric) m).getLeafSubjects();
+    } else {
+      throw new IllegalStateException(
+          "All metrics should be either sampled or derived!");
+    }
+  }
+
+  /*@Override*/
+  public void deactivate() {
+    if (!isObserved()) {
+      if (currentPolicy != null)
+        currentPolicy.unapply(this);
+    }
+    super.deactivate();
   }
 }

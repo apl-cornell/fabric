@@ -50,13 +50,12 @@ public abstract class Contract extends Subject implements Observer {
     long adjustedNewExpiry = Math.min(newExpiry, currentTime + MAX_EXTENSION);
     // Only bother advertising if it's better than our current expiry
     // by the buffer amount.
-    if (expiry.lessThan(adjustedNewExpiry)) {
-      if (adjustedNewExpiry > currentTime + (MIN_EXTENSION_FACTOR
+    if (adjustedNewExpiry > currentTime + (MIN_EXTENSION_FACTOR
           * (getExpiryLower() - currentTime))) {
-        TransactionManager.getInstance().registerExtension(this);
-      }
-      expiry = expiry.max(adjustedNewExpiry);
+      TransactionManager.getInstance().registerExtension(this);
     }
+    final Store s = $getStore();
+    expiry = new NodeTime@s().fabric$metrics$util$NodeTime$(adjustedNewExpiry);
   }
 
   private boolean active = false;
@@ -73,6 +72,7 @@ public abstract class Contract extends Subject implements Observer {
    */
   public void activate() {
     if (!active) {
+      fabric.common.Logging.METRICS_LOGGER.info("ACTIVATING " + this + " IN " + TransactionManager.getInstance().getCurrentTid());
       active = true;
       refresh();
     }
@@ -83,6 +83,7 @@ public abstract class Contract extends Subject implements Observer {
    */
   public void deactivate() {
     if (!isObserved()) {
+      fabric.common.Logging.METRICS_LOGGER.info("DEACTIVATING " + this + " IN " + TransactionManager.getInstance().getCurrentTid());
       active = false;
       final Store s = $getStore();
       expiry = new NodeTime@s().fabric$metrics$util$NodeTime$(-1);
@@ -97,11 +98,13 @@ public abstract class Contract extends Subject implements Observer {
    *        the new expiration time associated with this {@link Contract}.
    */
   public void update(long newExpiry) {
-    if (getExpiry().lessThan(newExpiry)) {
-      // XXX: ugh, is this the right one to compare against here?
+    if (getExpiry().upperBound() < newExpiry) {
+      // Only bother extending if we know everyone will see something
+      // better.
       extendTo(newExpiry);
-    } else if (getExpiry().greaterThan(newExpiry)) {
-      // XXX: ugh, is this the right one to compare against here?
+    } else if (getExpiry().upperBound() > newExpiry) {
+      // Only revoke if we're doing worse than whatever anyone else will
+      // see.
       revoke(newExpiry);
     }
   }
@@ -117,6 +120,7 @@ public abstract class Contract extends Subject implements Observer {
     // transaction.
     markModified();
     final Store s = $getStore();
+    fabric.common.Logging.METRICS_LOGGER.info("REVOKING " + this + " IN " + TransactionManager.getInstance().getCurrentTid());
     expiry = new NodeTime@s().fabric$metrics$util$NodeTime$(newExpiry);
   }
 
@@ -127,8 +131,11 @@ public abstract class Contract extends Subject implements Observer {
    *       transaction context.
    */
   public boolean valid(long time) {
-    final Store s = $getStore();
-    return valid(new NodeTime@s().fabric$metrics$util$NodeTime$(time));
+    if (!isActive())
+      return false;
+    //if (time > getExpiry().lowerBound())
+    //  refresh();
+    return getExpiry().lowerBound() > time;
   }
 
   /**
@@ -140,9 +147,9 @@ public abstract class Contract extends Subject implements Observer {
   public boolean valid(NodeTime time) {
     if (!isActive())
       return false;
-    if (time.greaterThan(getExpiry()))
-      refresh();
-    return getExpiry().greaterThan(time);
+    //if (time.lowerBound() > getExpiry().lowerBound())
+    //  refresh();
+    return getExpiry().lowerBound() > time.lowerBound();
   }
 
   /**
@@ -164,36 +171,15 @@ public abstract class Contract extends Subject implements Observer {
     return expiry.lowerBoundAt(s);
   }
 
-  /**
-   * @return the upper bound on the expiration time of the current state, in
-   *       milliseconds, raised to account for clock drift relative to the
-   *       current store
-   */
-  public long getExpiryUpper() {
-    return expiry.upperBound();
-  }
-
-  /**
-   * @param s
-   *        the store we're giving the lower bound relative to
-   * @return the upper bound on the expiration time of the current state, in
-   *       milliseconds, raised to account for clock drift relative to s
-   */
-  public long getExpiryUpper(Store s) {
-    return expiry.upperBoundAt(s);
-  }
-
   protected NodeTime getExpiry() {
     return expiry;
   }
 
   /**
-   * @return the expiration time of the curren state
-   *
-   *       /** Update this contract's expiration time to stay valid in
-   *       response to a change in the value of the {@link Subject}s used
-   *       for enforcing this {@link Contract}. Revokes, extends, and
-   *       updates the enforcement strategy as needed.
+   * Update this contract's expiration time to stay valid in
+   * response to a change in the value of the {@link Subject}s used
+   * for enforcing this {@link Contract}. Revokes, extends, and
+   * updates the enforcement strategy as needed.
    */
   protected abstract void refresh();
 

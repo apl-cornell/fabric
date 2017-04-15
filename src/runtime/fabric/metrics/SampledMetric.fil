@@ -137,10 +137,7 @@ public class SampledMetric extends Metric {
 
   /*@Override*/
   public int hashCode() {
-    List/*<Object>*/ l = new ArrayList/*<>*/().fabric$util$ArrayList$(2);
-    l.add($getStore());
-    l.add(name);
-    return l.hashCode();
+    return $getStore().hashCode() * 32 + name.hashCode();
   }
 
   /*@Override*/

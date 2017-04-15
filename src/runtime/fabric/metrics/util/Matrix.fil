@@ -239,7 +239,7 @@ public class Matrix {
     double[] result = new double[rows];
     for (int row = 0; row < rows; row++) {
       for (int col = 0; col < columns; col++) {
-        result[row] += get(row, col) * v[col];
+        result[row] = result[row] + get(row, col) * v[col];
       }
     }
     return result;
@@ -406,7 +406,7 @@ public class Matrix {
         str += ", ";
       str += "[";
       for (int j = 0; j < columns; j++) {
-        if (i > 0)
+        if (j > 0)
           str += ", ";
         str += get(i, j);
       }
