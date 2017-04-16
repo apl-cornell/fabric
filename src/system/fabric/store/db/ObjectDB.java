@@ -73,8 +73,8 @@ public abstract class ObjectDB {
   /**
    * The data stored for a partially prepared transaction.
    */
-  protected static final class PendingTransaction implements FastSerializable,
-      Iterable<Long> {
+  protected static final class PendingTransaction
+      implements FastSerializable, Iterable<Long> {
     public final long tid;
     public final Principal owner;
     public final Collection<Long> reads;
@@ -282,8 +282,8 @@ public abstract class ObjectDB {
     try {
       objectLocksFor(onum).lockForRead(tid, worker);
     } catch (UnableToLockException e) {
-      throw new TransactionPrepareFailedException(versionConflicts, "Object "
-          + onum + " has been locked by an uncommitted transaction.");
+      throw new TransactionPrepareFailedException(versionConflicts,
+          "Object " + onum + " has been locked by an uncommitted transaction.");
     }
 
     // Register that the transaction has locked the object.
@@ -331,8 +331,8 @@ public abstract class ObjectDB {
     try {
       objectLocksFor(onum).lockForWrite(tid);
     } catch (UnableToLockException e) {
-      throw new TransactionPrepareFailedException(versionConflicts, "Object "
-          + onum + " has been locked by an uncommitted transaction.");
+      throw new TransactionPrepareFailedException(versionConflicts,
+          "Object " + onum + " has been locked by an uncommitted transaction.");
     }
 
     // Record the updated object. Doing so will also register that the
@@ -347,8 +347,8 @@ public abstract class ObjectDB {
 
       // Make sure the onum doesn't already exist in the database.
       if (exists(onum)) {
-        throw new TransactionPrepareFailedException(versionConflicts, "Object "
-            + onum + " already exists.");
+        throw new TransactionPrepareFailedException(versionConflicts,
+            "Object " + onum + " already exists.");
       }
 
       // Set the object's initial version number.
@@ -371,8 +371,13 @@ public abstract class ObjectDB {
         return;
       }
 
-      // Update the version number on the prepared copy of the object.
-      obj.setVersion(storeVersion + 1);
+      // Update the version number on the prepared copy of the object unless
+      // it's an extended metric contract.
+      String className = obj.getClassName();
+      if ((className != "fabric.metrics.contracts.DerivedMetricContract"
+          && className != "fabric.metrics.contracts.SampledMetricContract")
+          || obj.getExpiry() <= storeCopy.getExpiry())
+        obj.setVersion(storeVersion + 1);
       return;
     }
 

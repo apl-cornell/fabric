@@ -22,6 +22,7 @@ import fabric.lang.Object._Impl;
 import fabric.lang.security.LabelCache;
 import fabric.lang.security.SecurityCache;
 import fabric.metrics.contracts.Contract;
+import fabric.metrics.contracts.MetricContract;
 import fabric.metrics.util.Observer;
 import fabric.metrics.util.Subject;
 import fabric.util.Iterator;
@@ -528,7 +529,7 @@ public final class Log {
    */
   public void gatherExtendedParents() {
     for (Contract c : extendedContracts) {
-      for(Iterator iter = c.getObservers().iterator(); iter.hasNext();) {
+      for (Iterator iter = c.getObservers().iterator(); iter.hasNext();) {
         extendedParents.add(new Oid(iter.next()));
       }
     }
@@ -683,7 +684,10 @@ public final class Log {
         obj.$writer = null;
         obj.$writeLockHolder = null;
         obj.$writeLockStackTrace = null;
-        obj.$version++;
+        // Don't increment the version if it's an extended metric contract
+        if (!(obj instanceof MetricContract)
+            || obj.$expiry <= obj.$history.$expiry)
+          obj.$version++;
         obj.$readMapEntry.incrementVersion();
         obj.$isOwned = false;
 
