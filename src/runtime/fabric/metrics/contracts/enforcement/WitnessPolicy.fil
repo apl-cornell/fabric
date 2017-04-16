@@ -43,9 +43,9 @@ public class WitnessPolicy extends EnforcementPolicy {
     Iterator itr = witnesses.iterator();
     while (itr.hasNext()) {
       MetricContract w = (MetricContract) itr.next();
-      if (!atLeastOnce || w.getExpiryLower() < result) {
+      if (!atLeastOnce || w.getExpiry() < result) {
         atLeastOnce = true;
-        result = w.getExpiryLower();
+        result = w.getExpiry();
       }
     }
     return result;

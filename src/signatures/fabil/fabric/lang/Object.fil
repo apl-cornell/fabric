@@ -5,30 +5,35 @@ public class Object extends java.lang.Object {
    * The label that protects the object at run time.
    */
   protected final Label $updateLabel;
-  
+
+  /**
+   * The expiry for contracts
+   */
+  protected long $expiry;
+
   /**
    * The object's access policy, specifying the program contexts in which it is
    * safe to use this object.
    */
   protected final ConfPolicy $accessPolicy;
-  
+
   /**
    * Initializes the object's update label and access policy.
    */
   public native Object $initLabels();
-  
+
   /**
    * Initializes the object's partitions.
    */
   public native void $initPartitions();
-  
+
   public native boolean equals(Object o);
-  
+
   /**
-   * Calls $initLabels 
+   * Calls $initLabels
    */
   public native Object fabric$lang$Object$();
-  
+
   public static native Object jif$cast$fabric_lang_Object(Object o);
   public static native boolean jif$Instanceof$fabric_lang_Object(Object o);
 
@@ -36,15 +41,15 @@ public class Object extends java.lang.Object {
    * The store where this object resides.
    */
   public native Store $getStore();
-  
+
   /** The object's onum. */
   public native long $getOnum();
-  
+
   /**
    * HUGE HACK. THIS SHOULD NOT BE HERE. TODO XXX. REMOVE AFTER SURROGATES PROBLEM IS FIXED.
    */
   public native Object fetch();
-  
+
   /**
    * A dummy method. This is a hack for working around reachability problems in
    * generated code.
@@ -52,7 +57,7 @@ public class Object extends java.lang.Object {
   public static native void _npe(Label lbl) throws NullPointerException;
 
   public native int oidHashCode();
-  
+
   /**
    * This version of oidHashCode launders the dereference of <code>o</code>
    * to prevent the Fabric type system from thinking the object will be

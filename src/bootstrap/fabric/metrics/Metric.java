@@ -5,10 +5,9 @@ import fabric.lang.security.*;
 import fabric.worker.*;
 import fabric.worker.remote.*;
 import java.lang.*;
-import fabric.util.Collections;
-import fabric.util.HashSet;
+import fabric.util.ArrayList;
 import fabric.util.Iterator;
-import fabric.util.Set;
+import fabric.util.List;
 import fabric.metrics.contracts.Bound;
 import fabric.metrics.contracts.MetricContract;
 import fabric.metrics.util.Subject;
@@ -25,9 +24,9 @@ public interface Metric
   extends java.lang.Comparable, fabric.metrics.util.Subject {
     public fabric.metrics.Metric fabric$metrics$Metric$();
     
-    public fabric.util.Set get$contracts();
+    public fabric.util.List get$contracts();
     
-    public fabric.util.Set set$contracts(fabric.util.Set val);
+    public fabric.util.List set$contracts(fabric.util.List val);
     
     /** @return the current value of the quantity being measured. */
     public abstract double value();
@@ -72,7 +71,7 @@ public interface Metric
    * @return a {@link Set} of {@link MetricContract}s that are currently
    *       enforced for this {@link Metric}
    */
-    public fabric.util.Set getContracts(long time);
+    public fabric.util.List getContracts(long time);
     
     /**
    * @param bound
@@ -149,10 +148,10 @@ public interface Metric
     
     /**
    * @param other
-   *        another {@link Metric} to take the maximum of along with this
-   *        {@link Metric}
+   *            another {@link Metric} to take the maximum of along with this
+   *            {@link Metric}
    * @return a {@link LinearMetric} that tracks the value of the maximum of
-   *       other and this's entries.
+   *         other and this's entries.
    */
     public fabric.metrics.Metric max(fabric.metrics.Metric other);
     
@@ -162,13 +161,23 @@ public interface Metric
    */
     public int compareTo(java.lang.Object other);
     
+    /**
+   * Track directly by a MetricContract.
+   */
+    public void startTracking(fabric.metrics.contracts.MetricContract mc);
+    
+    /**
+   * Stop tracking directly by a MetricContract.
+   */
+    public void stopTracking(fabric.metrics.contracts.MetricContract mc);
+    
     public static class _Proxy extends fabric.metrics.util.Subject._Proxy
       implements fabric.metrics.Metric {
-        public fabric.util.Set get$contracts() {
+        public fabric.util.List get$contracts() {
             return ((fabric.metrics.Metric._Impl) fetch()).get$contracts();
         }
         
-        public fabric.util.Set set$contracts(fabric.util.Set val) {
+        public fabric.util.List set$contracts(fabric.util.List val) {
             return ((fabric.metrics.Metric._Impl) fetch()).set$contracts(val);
         }
         
@@ -203,7 +212,7 @@ public interface Metric
             return ((fabric.metrics.Metric) fetch()).createContract(arg1);
         }
         
-        public fabric.util.Set getContracts(long arg1) {
+        public fabric.util.List getContracts(long arg1) {
             return ((fabric.metrics.Metric) fetch()).getContracts(arg1);
         }
         
@@ -228,11 +237,6 @@ public interface Metric
             ((fabric.metrics.Metric) fetch()).addContract(arg1);
         }
         
-        public static fabric.metrics.Metric findMetric(
-          fabric.worker.Store arg1, fabric.metrics.Metric arg2) {
-            return fabric.metrics.Metric._Impl.findMetric(arg1, arg2);
-        }
-        
         public fabric.metrics.Metric times(double arg1) {
             return ((fabric.metrics.Metric) fetch()).times(arg1);
         }
@@ -243,6 +247,19 @@ public interface Metric
         
         public fabric.metrics.Metric min(fabric.metrics.Metric arg1) {
             return ((fabric.metrics.Metric) fetch()).min(arg1);
+        }
+        
+        public fabric.metrics.Metric max(fabric.metrics.Metric arg1) {
+            return ((fabric.metrics.Metric) fetch()).max(arg1);
+        }
+        
+        public int compareTo(java.lang.Object arg1) {
+            return ((fabric.metrics.Metric) fetch()).compareTo(arg1);
+        }
+        
+        public static fabric.metrics.Metric findMetric(
+          fabric.worker.Store arg1, fabric.metrics.Metric arg2) {
+            return fabric.metrics.Metric._Impl.findMetric(arg1, arg2);
         }
         
         public static fabric.metrics.Metric scaleAtStore(
@@ -265,12 +282,13 @@ public interface Metric
             return fabric.metrics.Metric._Impl.maxAtStore(arg1, arg2);
         }
         
-        public fabric.metrics.Metric max(fabric.metrics.Metric arg1) {
-            return ((fabric.metrics.Metric) fetch()).max(arg1);
+        public void startTracking(
+          fabric.metrics.contracts.MetricContract arg1) {
+            ((fabric.metrics.Metric) fetch()).startTracking(arg1);
         }
         
-        public int compareTo(java.lang.Object arg1) {
-            return ((fabric.metrics.Metric) fetch()).compareTo(arg1);
+        public void stopTracking(fabric.metrics.contracts.MetricContract arg1) {
+            ((fabric.metrics.Metric) fetch()).stopTracking(arg1);
         }
         
         public _Proxy(Metric._Impl impl) { super(impl); }
@@ -287,13 +305,13 @@ public interface Metric
             return (fabric.metrics.Metric) this.$getProxy();
         }
         
-        public fabric.util.Set get$contracts() {
+        public fabric.util.List get$contracts() {
             fabric.worker.transaction.TransactionManager.getInstance().
               registerRead(this);
             return this.contracts;
         }
         
-        public fabric.util.Set set$contracts(fabric.util.Set val) {
+        public fabric.util.List set$contracts(fabric.util.List val) {
             fabric.worker.transaction.TransactionManager tm =
               fabric.worker.transaction.TransactionManager.getInstance();
             boolean transactionCreated = tm.registerWrite(this);
@@ -302,10 +320,10 @@ public interface Metric
             return val;
         }
         
-        private fabric.util.Set contracts =
-          ((fabric.util.HashSet)
-             new fabric.util.HashSet._Impl(this.$getStore()).$getProxy()).
-          fabric$util$HashSet$();
+        private fabric.util.List contracts =
+          ((fabric.util.ArrayList)
+             new fabric.util.ArrayList._Impl(this.$getStore()).$getProxy()).
+          fabric$util$ArrayList$();
         
         /** @return the current value of the quantity being measured. */
         public abstract double value();
@@ -335,12 +353,7 @@ public interface Metric
         public long expectedTimeToHit(fabric.metrics.contracts.Bound bound,
                                       long time) {
             double adjustedRate = bound.get$rate() - velocity();
-            return ((fabric.metrics.contracts.Bound)
-                      new fabric.metrics.contracts.Bound._Impl(
-                        this.$getStore()).$getProxy()).
-              fabric$metrics$contracts$Bound$(adjustedRate, bound.get$base(),
-                                              bound.get$startTime()).
-              trueExpiry((fabric.metrics.Metric) this.$getProxy(), time);
+            return (long) (time + (value() - bound.value(time)) / adjustedRate);
         }
         
         /**
@@ -359,18 +372,15 @@ public interface Metric
    * @return a {@link Set} of {@link MetricContract}s that are currently
    *       enforced for this {@link Metric}
    */
-        public fabric.util.Set getContracts(long time) {
-            fabric.util.Iterator cIter =
-              ((fabric.util.HashSet)
-                 new fabric.util.HashSet._Impl(this.$getStore()).$getProxy()).
-              fabric$util$HashSet$(this.get$contracts()).iterator();
-            while (cIter.hasNext()) {
+        public fabric.util.List getContracts(long time) {
+            for (int i = 0; i < this.get$contracts().size(); i++) {
                 fabric.metrics.contracts.MetricContract c =
                   (fabric.metrics.contracts.MetricContract)
-                    fabric.lang.Object._Proxy.$getProxy(cIter.next());
+                    fabric.lang.Object._Proxy.$getProxy(
+                                                this.get$contracts().get(i));
                 if (!c.isActive() || !c.isObserved() || !c.valid(time)) {
-                    this.removeObserver(c);
-                    this.get$contracts().remove(c);
+                    removeObserver(c);
+                    this.get$contracts().remove(i--);
                 }
             }
             return this.get$contracts();
@@ -385,16 +395,25 @@ public interface Metric
    */
         public fabric.metrics.contracts.MetricContract getContract(
           fabric.metrics.contracts.Bound bound) {
-            fabric.util.Iterator cIter =
-              getContracts(java.lang.System.currentTimeMillis()).iterator();
-            while (cIter.hasNext()) {
-                fabric.metrics.contracts.MetricContract existing =
+            fabric.metrics.contracts.MetricContract mc = null;
+            for (int i = 0; i < this.get$contracts().size(); i++) {
+                fabric.metrics.contracts.MetricContract c =
                   (fabric.metrics.contracts.MetricContract)
-                    fabric.lang.Object._Proxy.$getProxy(cIter.next());
-                if (existing.enforces((fabric.metrics.Metric) this.$getProxy(),
-                                      bound)) { return existing; }
+                    fabric.lang.Object._Proxy.$getProxy(
+                                                this.get$contracts().get(i));
+                if (fabric.lang.Object._Proxy.idEquals(mc, null) &&
+                      c.isActive() &&
+                      c.enforces((fabric.metrics.Metric) this.$getProxy(),
+                                 bound)) {
+                    mc = c;
+                } else if (!c.isActive() || !c.isObserved() ||
+                             !c.valid(java.lang.System.currentTimeMillis())) {
+                    removeObserver(c);
+                    this.get$contracts().remove(i--);
+                }
             }
-            fabric.metrics.contracts.MetricContract mc = createContract(bound);
+            if (fabric.lang.Object._Proxy.idEquals(mc, null))
+                mc = createContract(bound);
             return mc;
         }
         
@@ -455,60 +474,8 @@ public interface Metric
                                                this.$getProxy()))
                 throw new java.lang.IllegalArgumentException(
                         "Adding a contract for a different metric!");
-            this.get$contracts().add(contract);
-        }
-        
-        /**
-   * @param s
-   *        the store we're looking for the given metric on
-   * @param m
-   *        the transformed metric we're looking up
-   * @return the existing equivalent {@link DerivedMetric} tracked by this
-   *       {@link Store}, if one exists. Otherwise, starts tracking
-   *       <code>m</code> and returns it.
-   */
-        public static fabric.metrics.Metric findMetric(
-          final fabric.worker.Store s, fabric.metrics.Metric m) {
-            if (fabric.lang.Object._Proxy.
-                  idEquals(
-                    s.
-                        derivedMap().
-                        get(
-                          fabric.lang.WrappedJavaInlineable.
-                              $wrap(
-                                ((java.lang.Object)
-                                   fabric.lang.WrappedJavaInlineable.$unwrap(
-                                                                       m)).
-                                    toString())),
-                    null))
-                s.
-                  derivedMap().
-                  put(
-                    fabric.lang.WrappedJavaInlineable.
-                        $wrap(
-                          ((java.lang.Object)
-                             fabric.lang.WrappedJavaInlineable.$unwrap(m)).
-                              toString()),
-                    m);
-            else if (fabric.lang.Object._Proxy.
-                       $getProxy(
-                         (java.lang.Object)
-                           fabric.lang.WrappedJavaInlineable.
-                           $unwrap(m)) instanceof fabric.metrics.DerivedMetric)
-                ((fabric.metrics.DerivedMetric)
-                   fabric.lang.Object._Proxy.$getProxy(m)).cleanup();
-            return (fabric.metrics.Metric)
-                     fabric.lang.Object._Proxy.
-                     $getProxy(
-                       s.
-                           derivedMap().
-                           get(
-                             fabric.lang.WrappedJavaInlineable.
-                                 $wrap(
-                                   ((java.lang.Object)
-                                      fabric.lang.WrappedJavaInlineable.$unwrap(
-                                                                          m)).
-                                       toString())));
+            if (!this.get$contracts().contains(contract))
+                this.get$contracts().add(contract);
         }
         
         /**
@@ -601,6 +568,73 @@ public interface Metric
                             new fabric.lang.Object[] { (fabric.metrics.Metric)
                                                          this.$getProxy(),
                               other })));
+        }
+        
+        /**
+   * @param other
+   *            another {@link Metric} to take the maximum of along with this
+   *            {@link Metric}
+   * @return a {@link LinearMetric} that tracks the value of the maximum of
+   *         other and this's entries.
+   */
+        public fabric.metrics.Metric max(fabric.metrics.Metric other) {
+            return this.times(-1).min(other.times(-1)).times(-1);
+        }
+        
+        /**
+   * Allows for sorting {@link Metric}s to help with normalizing
+   * {@link DerivedMetric}s.
+   */
+        public int compareTo(java.lang.Object other) {
+            return toString().compareTo(other.toString());
+        }
+        
+        /**
+   * @param s
+   *        the store we're looking for the given metric on
+   * @param m
+   *        the transformed metric we're looking up
+   * @return the existing equivalent {@link DerivedMetric} tracked by this
+   *       {@link Store}, if one exists. Otherwise, starts tracking
+   *       <code>m</code> and returns it.
+   */
+        public static fabric.metrics.Metric findMetric(
+          final fabric.worker.Store s, fabric.metrics.Metric m) {
+            fabric.metrics.DerivedMetric
+              orig =
+              (fabric.metrics.DerivedMetric)
+                fabric.lang.Object._Proxy.
+                $getProxy(
+                  s.
+                      derivedMap().
+                      get(
+                        fabric.lang.WrappedJavaInlineable.
+                            $wrap(
+                              ((java.lang.Object)
+                                 fabric.lang.WrappedJavaInlineable.$unwrap(m)).
+                                  toString())));
+            if (fabric.lang.Object._Proxy.idEquals(orig, null)) {
+                s.
+                  derivedMap().
+                  put(
+                    fabric.lang.WrappedJavaInlineable.
+                        $wrap(
+                          ((java.lang.Object)
+                             fabric.lang.WrappedJavaInlineable.$unwrap(m)).
+                              toString()),
+                    m);
+                return m;
+            }
+            else {
+                if (fabric.lang.Object._Proxy.
+                      $getProxy(
+                        (java.lang.Object)
+                          fabric.lang.WrappedJavaInlineable.
+                          $unwrap(m)) instanceof fabric.metrics.DerivedMetric)
+                    ((fabric.metrics.DerivedMetric)
+                       fabric.lang.Object._Proxy.$getProxy(m)).cleanup();
+                return orig;
+            }
         }
         
         /**
@@ -727,22 +761,17 @@ public interface Metric
         }
         
         /**
-   * @param other
-   *        another {@link Metric} to take the maximum of along with this
-   *        {@link Metric}
-   * @return a {@link LinearMetric} that tracks the value of the maximum of
-   *       other and this's entries.
+   * Track directly by a MetricContract.
    */
-        public fabric.metrics.Metric max(fabric.metrics.Metric other) {
-            return this.times(-1).min(other.times(-1)).times(-1);
+        public void startTracking(fabric.metrics.contracts.MetricContract mc) {
+            addObserver(mc);
         }
         
         /**
-   * Allows for sorting {@link Metric}s to help with normalizing
-   * {@link DerivedMetric}s.
+   * Stop tracking directly by a MetricContract.
    */
-        public int compareTo(java.lang.Object other) {
-            return toString().compareTo(other.toString());
+        public void stopTracking(fabric.metrics.contracts.MetricContract mc) {
+            removeObserver(mc);
         }
         
         public _Impl(fabric.worker.Store $location) { super($location); }
@@ -773,8 +802,8 @@ public interface Metric
             super(store, onum, version, expiry, labelStore, labelOnum,
                   accessPolicyStore, accessPolicyOnum, in, refTypes,
                   intraStoreRefs, interStoreRefs);
-            this.contracts = (fabric.util.Set)
-                               $readRef(fabric.util.Set._Proxy.class,
+            this.contracts = (fabric.util.List)
+                               $readRef(fabric.util.List._Proxy.class,
                                         (fabric.common.RefTypeEnum)
                                           refTypes.next(), in, store,
                                         intraStoreRefs, interStoreRefs);
@@ -852,11 +881,11 @@ public interface Metric
         
     }
     
-    public static final byte[] $classHash = new byte[] { -80, -105, -68, 73,
-    -118, -72, -28, -96, 118, -27, -11, -97, -102, -10, 84, 69, -65, 58, -1, 62,
-    40, -114, -58, 17, -124, 106, 81, -113, 60, 101, 121, -125 };
+    public static final byte[] $classHash = new byte[] { 111, -68, 92, 102, -37,
+    94, -122, -65, 70, 72, -113, 125, -127, 50, 48, -106, 99, 5, -87, 19, -51,
+    26, -70, -128, -108, -115, 49, -98, -61, 112, -24, -90 };
     public static final java.lang.String jlc$CompilerVersion$fabil = "0.3.0";
-    public static final long jlc$SourceLastModified$fabil = 1492109906000L;
+    public static final long jlc$SourceLastModified$fabil = 1492298851000L;
     public static final java.lang.String jlc$ClassType$fabil =
-      "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";
+      "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";
 }

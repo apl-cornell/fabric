@@ -37,7 +37,7 @@ public abstract class MetricContract extends Contract {
    */
   public MetricContract fabric$metrics$contracts$MetricContract$(Metric metric, Bound bound) {
     this.metric = metric;
-    this.bound = new Bound().fabric$metrics$contracts$Bound$(bound.rate, bound.base, bound.startTime);
+    this.bound = new Bound().fabric$metrics$contracts$Bound$(bound.rate, bound.base, 0);
     fabric$metrics$contracts$Contract$();
     return this;
   }
@@ -130,7 +130,7 @@ public abstract class MetricContract extends Contract {
       return false;
     if (!valid(System.currentTimeMillis()))
       refresh();
-    return valid(otherBound.startTime);
+    return valid(System.currentTimeMillis());
   }
 
   /**
@@ -142,7 +142,7 @@ public abstract class MetricContract extends Contract {
    *       the entire duration of other.
    */
   public boolean implies(MetricContract other) {
-    return valid(other.getExpiry().upperBound())
+    return valid(other.getExpiry())
         && implies(other.getMetric(), other.getBound());
   }
 
@@ -164,7 +164,7 @@ public abstract class MetricContract extends Contract {
       return false;
     if (!valid(System.currentTimeMillis()))
       refresh();
-    return valid(otherBound.startTime.upperBound());
+    return valid(System.currentTimeMillis());
   }
 
   /*@Override*/
@@ -186,11 +186,11 @@ public abstract class MetricContract extends Contract {
     long currentTime = System.currentTimeMillis();
     long trueTime = getBound().trueExpiry(getMetric(), currentTime);
     long hedgedTime = hedged(currentTime);
-    if (getExpiryLower() <= trueTime) {
+    if (getExpiry() <= trueTime) {
       // Don't hedge below current expiry if we're not stuttering
       // (shifting down the expiry due to true expiry being lower than
       // advertised time).
-      hedgedTime = Math.max(getExpiryLower(), hedgedTime);
+      hedgedTime = Math.max(getExpiry(), hedgedTime);
     }
     final Store s = $getStore();
     return new DirectPolicy@s().fabric$metrics$contracts$enforcement$DirectPolicy$(hedgedTime);

@@ -6,10 +6,10 @@ import fabric.worker.*;
 import fabric.worker.remote.*;
 import java.lang.*;
 import fabric.metrics.Metric;
-import fabric.metrics.util.NodeTime;
 import fabric.metrics.util.Observer;
 import fabric.metrics.util.Subject;
 import fabric.worker.Store;
+import fabric.worker.Worker;
 import fabric.worker.transaction.TransactionManager;
 
 /**
@@ -23,13 +23,8 @@ import fabric.worker.transaction.TransactionManager;
  */
 public interface Contract
   extends fabric.metrics.util.Observer, fabric.metrics.util.Subject {
-    public fabric.metrics.util.NodeTime get$expiry();
-    
-    public fabric.metrics.util.NodeTime set$expiry(
-      fabric.metrics.util.NodeTime val);
-    
     public fabric.metrics.contracts.Contract fabric$metrics$contracts$Contract$();
-    
+
     /**
    * Extends the expiration time.
    *
@@ -38,26 +33,26 @@ public interface Contract
    *        this {@link Contract} given in milliseconds.
    */
     public void extendTo(long newExpiry);
-    
+
     public boolean get$active();
-    
+
     public boolean set$active(boolean val);
-    
+
     /**
    * @return true if this contract is currently active (enforced).
    */
     public boolean isActive();
-    
+
     /**
    * Activate and start enforcing this {@link Contract}.
    */
     public void activate();
-    
+
     /**
    * Deactivate and stop observing any evidence.
    */
     public void deactivate();
-    
+
     /**
    * Updates the expiration time of this contract, either extending or
    * revoking as needed.
@@ -66,7 +61,7 @@ public interface Contract
    *        the new expiration time associated with this {@link Contract}.
    */
     public void update(long newExpiry);
-    
+
     /**
    * Called to revoke this contract in the current transaction context.
    *
@@ -74,7 +69,7 @@ public interface Contract
    *        time to set the expiry back to.
    */
     public void revoke(long newExpiry);
-    
+
     /**
    * @param time
    *        the time we're checking validity against.
@@ -82,196 +77,98 @@ public interface Contract
    *       transaction context.
    */
     public boolean valid(long time);
-    
+
+    public long getExpiry();
+
     /**
-   * @param time
-   *        the time we're checking validity against.
-   * @return true iff the contract is valid at the given time in the current
-   *       transaction context.
-   */
-    public boolean valid(fabric.metrics.util.NodeTime time);
-    
-    /**
-   * @return the lower bound on the expiration time of the current state, in
-   *       milliseconds, lowered to account for clock drift relative to the
-   *       current store
-   */
-    public long getExpiryLower();
-    
-    /**
-   * @param s
-   *        the store we're giving the lower bound relative to
-   * @return the lower bound on the expiration time of the current state, in
-   *       milliseconds, lowered to account for clock drift relative to s
-   */
-    public long getExpiryLower(fabric.worker.Store s);
-    
-    /**
-   * @return the upper bound on the expiration time of the current state, in
-   *       milliseconds, raised to account for clock drift relative to the
-   *       current store
-   */
-    public long getExpiryUpper();
-    
-    /**
-   * @param s
-   *        the store we're giving the lower bound relative to
-   * @return the upper bound on the expiration time of the current state, in
-   *       milliseconds, raised to account for clock drift relative to s
-   */
-    public long getExpiryUpper(fabric.worker.Store s);
-    
-    public fabric.metrics.util.NodeTime getExpiry();
-    
-    /**
-   * @return the expiration time of the curren state
-   *
-   *       /** Update this contract's expiration time to stay valid in
-   *       response to a change in the value of the {@link Subject}s used
-   *       for enforcing this {@link Contract}. Revokes, extends, and
-   *       updates the enforcement strategy as needed.
+   * Update this contract's expiration time to stay valid in
+   * response to a change in the value of the {@link Subject}s used
+   * for enforcing this {@link Contract}. Revokes, extends, and
+   * updates the enforcement strategy as needed.
    */
     public abstract void refresh();
-    
+
     public void handleUpdates();
-    
+
     public static class _Proxy extends fabric.metrics.util.Subject._Proxy
       implements fabric.metrics.contracts.Contract {
-        public fabric.metrics.util.NodeTime get$expiry() {
-            return ((fabric.metrics.contracts.Contract._Impl) fetch()).
-              get$expiry();
-        }
-        
-        public fabric.metrics.util.NodeTime set$expiry(
-          fabric.metrics.util.NodeTime val) {
-            return ((fabric.metrics.contracts.Contract._Impl) fetch()).
-              set$expiry(val);
-        }
-        
         public boolean get$active() {
             return ((fabric.metrics.contracts.Contract._Impl) fetch()).
               get$active();
         }
-        
+
         public boolean set$active(boolean val) {
             return ((fabric.metrics.contracts.Contract._Impl) fetch()).
               set$active(val);
         }
-        
+
         public fabric.metrics.contracts.Contract
           fabric$metrics$contracts$Contract$() {
             return ((fabric.metrics.contracts.Contract) fetch()).
               fabric$metrics$contracts$Contract$();
         }
-        
+
         public void extendTo(long arg1) {
             ((fabric.metrics.contracts.Contract) fetch()).extendTo(arg1);
         }
-        
+
         public boolean isActive() {
             return ((fabric.metrics.contracts.Contract) fetch()).isActive();
         }
-        
+
         public void activate() {
             ((fabric.metrics.contracts.Contract) fetch()).activate();
         }
-        
+
         public void deactivate() {
             ((fabric.metrics.contracts.Contract) fetch()).deactivate();
         }
-        
+
         public void update(long arg1) {
             ((fabric.metrics.contracts.Contract) fetch()).update(arg1);
         }
-        
+
         public void revoke(long arg1) {
             ((fabric.metrics.contracts.Contract) fetch()).revoke(arg1);
         }
-        
+
         public boolean valid(long arg1) {
             return ((fabric.metrics.contracts.Contract) fetch()).valid(arg1);
         }
-        
-        public boolean valid(fabric.metrics.util.NodeTime arg1) {
-            return ((fabric.metrics.contracts.Contract) fetch()).valid(arg1);
-        }
-        
-        public long getExpiryLower() {
-            return ((fabric.metrics.contracts.Contract) fetch()).getExpiryLower(
-                                                                   );
-        }
-        
-        public long getExpiryLower(fabric.worker.Store arg1) {
-            return ((fabric.metrics.contracts.Contract) fetch()).getExpiryLower(
-                                                                   arg1);
-        }
-        
-        public long getExpiryUpper() {
-            return ((fabric.metrics.contracts.Contract) fetch()).getExpiryUpper(
-                                                                   );
-        }
-        
-        public long getExpiryUpper(fabric.worker.Store arg1) {
-            return ((fabric.metrics.contracts.Contract) fetch()).getExpiryUpper(
-                                                                   arg1);
-        }
-        
-        public fabric.metrics.util.NodeTime getExpiry() {
+
+        public long getExpiry() {
             return ((fabric.metrics.contracts.Contract) fetch()).getExpiry();
         }
-        
+
         public void refresh() {
             ((fabric.metrics.contracts.Contract) fetch()).refresh();
         }
-        
+
         public void handleUpdates() {
             ((fabric.metrics.contracts.Contract) fetch()).handleUpdates();
         }
-        
+
         public fabric.util.Set getLeafSubjects() {
             return ((fabric.metrics.contracts.Contract) fetch()).
               getLeafSubjects();
         }
-        
+
         public _Proxy(Contract._Impl impl) { super(impl); }
-        
+
         public _Proxy(fabric.worker.Store store, long onum) {
             super(store, onum);
         }
     }
-    
+
     public abstract static class _Impl extends fabric.metrics.util.Subject._Impl
       implements fabric.metrics.contracts.Contract {
-        public fabric.metrics.util.NodeTime get$expiry() {
-            fabric.worker.transaction.TransactionManager.getInstance().
-              registerRead(this);
-            return this.expiry;
-        }
-        
-        public fabric.metrics.util.NodeTime set$expiry(
-          fabric.metrics.util.NodeTime val) {
-            fabric.worker.transaction.TransactionManager tm =
-              fabric.worker.transaction.TransactionManager.getInstance();
-            boolean transactionCreated = tm.registerWrite(this);
-            this.expiry = val;
-            if (transactionCreated) tm.commitTransaction();
-            return val;
-        }
-        
-        private fabric.metrics.util.NodeTime expiry;
-        
         public fabric.metrics.contracts.Contract
           fabric$metrics$contracts$Contract$() {
             fabric$metrics$util$Subject$();
-            this.set$expiry(
-                   ((fabric.metrics.util.NodeTime)
-                      new fabric.metrics.util.NodeTime._Impl(
-                        this.$getStore()).$getProxy(
-                                            )).fabric$metrics$util$NodeTime$(
-                                                 $getStore(), -1));
+            this.set$$expiry((long) -1);
             return (fabric.metrics.contracts.Contract) this.$getProxy();
         }
-        
+
         /**
    * Extends the expiration time.
    *
@@ -289,24 +186,24 @@ public interface Contract
                 currentTime +
                     fabric.metrics.contracts.Contract._Static._Proxy.$instance.
                     get$MAX_EXTENSION());
-            if (this.get$expiry().lessThan(adjustedNewExpiry)) {
-                if (adjustedNewExpiry > currentTime +
-                      fabric.metrics.contracts.Contract._Static._Proxy.$instance.get$MIN_EXTENSION_FACTOR() *
-                      (getExpiryLower() - currentTime)) {
-                    fabric.worker.transaction.TransactionManager.getInstance().
-                      registerExtension((fabric.metrics.contracts.Contract)
-                                          this.$getProxy());
-                }
-                this.set$expiry(this.get$expiry().max(adjustedNewExpiry));
+            if (adjustedNewExpiry >
+                  currentTime +
+                  fabric.metrics.contracts.Contract._Static._Proxy.$instance.
+                  get$MIN_EXTENSION_FACTOR() * (getExpiry() - currentTime)) {
+                fabric.worker.transaction.TransactionManager.getInstance().
+                  registerExtension((fabric.metrics.contracts.Contract)
+                                      this.$getProxy());
             }
+            final fabric.worker.Store s = $getStore();
+            this.set$$expiry((long) adjustedNewExpiry);
         }
-        
+
         public boolean get$active() {
             fabric.worker.transaction.TransactionManager.getInstance().
               registerRead(this);
             return this.active;
         }
-        
+
         public boolean set$active(boolean val) {
             fabric.worker.transaction.TransactionManager tm =
               fabric.worker.transaction.TransactionManager.getInstance();
@@ -315,38 +212,58 @@ public interface Contract
             if (transactionCreated) tm.commitTransaction();
             return val;
         }
-        
+
         private boolean active = false;
-        
+
         /**
    * @return true if this contract is currently active (enforced).
    */
         public boolean isActive() { return this.get$active(); }
-        
+
         /**
    * Activate and start enforcing this {@link Contract}.
    */
         public void activate() {
             if (!this.get$active()) {
+                fabric.common.Logging.METRICS_LOGGER.
+                  info(
+                    "ACTIVATING " +
+                      java.lang.String.
+                        valueOf(
+                          fabric.lang.WrappedJavaInlineable.
+                              $unwrap((fabric.metrics.contracts.Contract)
+                                        this.$getProxy())) +
+                      " IN " +
+                      fabric.worker.transaction.TransactionManager.getInstance(
+                                                                     ).
+                        getCurrentTid());
                 this.set$active(true);
                 refresh();
             }
         }
-        
+
         /**
    * Deactivate and stop observing any evidence.
    */
         public void deactivate() {
             if (!isObserved()) {
+                fabric.common.Logging.METRICS_LOGGER.
+                  info(
+                    "DEACTIVATING " +
+                      java.lang.String.
+                        valueOf(
+                          fabric.lang.WrappedJavaInlineable.
+                              $unwrap((fabric.metrics.contracts.Contract)
+                                        this.$getProxy())) +
+                      " IN " +
+                      fabric.worker.transaction.TransactionManager.getInstance(
+                                                                     ).
+                        getCurrentTid());
                 this.set$active(false);
-                final fabric.worker.Store s = $getStore();
-                this.set$expiry(
-                       ((fabric.metrics.util.NodeTime)
-                          new fabric.metrics.util.NodeTime._Impl(
-                            s).$getProxy()).fabric$metrics$util$NodeTime$(-1));
+                this.set$$expiry((long) -1);
             }
         }
-        
+
         /**
    * Updates the expiration time of this contract, either extending or
    * revoking as needed.
@@ -355,13 +272,19 @@ public interface Contract
    *        the new expiration time associated with this {@link Contract}.
    */
         public void update(long newExpiry) {
-            if (getExpiry().lessThan(newExpiry)) {
+            fabric.worker.Worker localW = fabric.worker.Worker.getWorker();
+            if (!localW.getStore(localW.getName()).equals($getStore()))
+                newExpiry =
+                  newExpiry -
+                    fabric.metrics.contracts.Contract._Static._Proxy.$instance.
+                    get$DRIFT_FACTOR();
+            if (getExpiry() < newExpiry) {
                 extendTo(newExpiry);
-            } else if (getExpiry().greaterThan(newExpiry)) {
+            } else if (getExpiry() > newExpiry) {
                 revoke(newExpiry);
             }
         }
-        
+
         /**
    * Called to revoke this contract in the current transaction context.
    *
@@ -370,14 +293,20 @@ public interface Contract
    */
         public void revoke(long newExpiry) {
             markModified();
-            final fabric.worker.Store s = $getStore();
-            this.set$expiry(
-                   ((fabric.metrics.util.NodeTime)
-                      new fabric.metrics.util.NodeTime._Impl(
-                        s).$getProxy()).fabric$metrics$util$NodeTime$(
-                                          newExpiry));
+            fabric.common.Logging.METRICS_LOGGER.
+              info(
+                "REVOKING " +
+                  java.lang.String.
+                    valueOf(
+                      fabric.lang.WrappedJavaInlineable.
+                          $unwrap((fabric.metrics.contracts.Contract)
+                                    this.$getProxy())) +
+                  " IN " +
+                  fabric.worker.transaction.TransactionManager.getInstance().
+                    getCurrentTid());
+            this.set$$expiry((long) newExpiry);
         }
-        
+
         /**
    * @param time
    *        the time we're checking validity against.
@@ -385,92 +314,37 @@ public interface Contract
    *       transaction context.
    */
         public boolean valid(long time) {
-            final fabric.worker.Store s = $getStore();
-            return valid(
-                     ((fabric.metrics.util.NodeTime)
-                        new fabric.metrics.util.NodeTime._Impl(s).$getProxy()).
-                         fabric$metrics$util$NodeTime$(time));
-        }
-        
-        /**
-   * @param time
-   *        the time we're checking validity against.
-   * @return true iff the contract is valid at the given time in the current
-   *       transaction context.
-   */
-        public boolean valid(fabric.metrics.util.NodeTime time) {
             if (!isActive()) return false;
-            if (time.greaterThan(getExpiry())) refresh();
-            return getExpiry().greaterThan(time);
+            return getExpiry() > time;
         }
-        
+
+        public long getExpiry() { return this.get$$expiry(); }
+
         /**
-   * @return the lower bound on the expiration time of the current state, in
-   *       milliseconds, lowered to account for clock drift relative to the
-   *       current store
-   */
-        public long getExpiryLower() { return this.get$expiry().lowerBound(); }
-        
-        /**
-   * @param s
-   *        the store we're giving the lower bound relative to
-   * @return the lower bound on the expiration time of the current state, in
-   *       milliseconds, lowered to account for clock drift relative to s
-   */
-        public long getExpiryLower(fabric.worker.Store s) {
-            return this.get$expiry().lowerBoundAt(s);
-        }
-        
-        /**
-   * @return the upper bound on the expiration time of the current state, in
-   *       milliseconds, raised to account for clock drift relative to the
-   *       current store
-   */
-        public long getExpiryUpper() { return this.get$expiry().upperBound(); }
-        
-        /**
-   * @param s
-   *        the store we're giving the lower bound relative to
-   * @return the upper bound on the expiration time of the current state, in
-   *       milliseconds, raised to account for clock drift relative to s
-   */
-        public long getExpiryUpper(fabric.worker.Store s) {
-            return this.get$expiry().upperBoundAt(s);
-        }
-        
-        public fabric.metrics.util.NodeTime getExpiry() {
-            return this.get$expiry();
-        }
-        
-        /**
-   * @return the expiration time of the curren state
-   *
-   *       /** Update this contract's expiration time to stay valid in
-   *       response to a change in the value of the {@link Subject}s used
-   *       for enforcing this {@link Contract}. Revokes, extends, and
-   *       updates the enforcement strategy as needed.
+   * Update this contract's expiration time to stay valid in
+   * response to a change in the value of the {@link Subject}s used
+   * for enforcing this {@link Contract}. Revokes, extends, and
+   * updates the enforcement strategy as needed.
    */
         public abstract void refresh();
-        
+
         public void handleUpdates() { refresh(); }
-        
+
         public _Impl(fabric.worker.Store $location) { super($location); }
-        
+
         protected fabric.lang.Object._Proxy $makeProxy() {
             return new fabric.metrics.contracts.Contract._Proxy(this);
         }
-        
+
         public void $serialize(java.io.ObjectOutput out,
                                java.util.List refTypes,
                                java.util.List intraStoreRefs,
                                java.util.List interStoreRefs)
               throws java.io.IOException {
             super.$serialize(out, refTypes, intraStoreRefs, interStoreRefs);
-            $writeRef($getStore(), this.expiry, refTypes, out, intraStoreRefs,
-                      interStoreRefs);
             out.writeBoolean(this.active);
         }
-        
+
         public _Impl(fabric.worker.Store store, long onum, int version,
                      long expiry, fabric.worker.Store labelStore,
                      long labelOnum, fabric.worker.Store accessPolicyStore,
@@ -483,92 +357,114 @@ public interface Contract
             super(store, onum, version, expiry, labelStore, labelOnum,
                   accessPolicyStore, accessPolicyOnum, in, refTypes,
                   intraStoreRefs, interStoreRefs);
-            this.expiry = (fabric.metrics.util.NodeTime)
-                            $readRef(fabric.metrics.util.NodeTime._Proxy.class,
-                                     (fabric.common.RefTypeEnum)
-                                       refTypes.next(), in, store,
-                                     intraStoreRefs, interStoreRefs);
             this.active = in.readBoolean();
         }
-        
+
         public void $copyAppStateFrom(fabric.lang.Object._Impl other) {
             super.$copyAppStateFrom(other);
             fabric.metrics.contracts.Contract._Impl src =
               (fabric.metrics.contracts.Contract._Impl) other;
-            this.expiry = src.expiry;
             this.active = src.active;
         }
     }
-    
+
     interface _Static extends fabric.lang.Object, Cloneable {
         public double get$MIN_EXTENSION_FACTOR();
-        
+
         public double set$MIN_EXTENSION_FACTOR(double val);
-        
+
         public double postInc$MIN_EXTENSION_FACTOR();
-        
+
         public double postDec$MIN_EXTENSION_FACTOR();
-        
+
         public long get$MAX_EXTENSION();
-        
+
         public long set$MAX_EXTENSION(long val);
-        
+
         public long postInc$MAX_EXTENSION();
-        
+
         public long postDec$MAX_EXTENSION();
-        
+
+        public long get$DRIFT_FACTOR();
+
+        public long set$DRIFT_FACTOR(long val);
+
+        public long postInc$DRIFT_FACTOR();
+
+        public long postDec$DRIFT_FACTOR();
+
         final class _Proxy extends fabric.lang.Object._Proxy
           implements fabric.metrics.contracts.Contract._Static {
             public double get$MIN_EXTENSION_FACTOR() {
                 return ((fabric.metrics.contracts.Contract._Static._Impl)
                           fetch()).get$MIN_EXTENSION_FACTOR();
             }
-            
+
             public double set$MIN_EXTENSION_FACTOR(double val) {
                 return ((fabric.metrics.contracts.Contract._Static._Impl)
                           fetch()).set$MIN_EXTENSION_FACTOR(val);
             }
-            
+
             public double postInc$MIN_EXTENSION_FACTOR() {
                 return ((fabric.metrics.contracts.Contract._Static._Impl)
                           fetch()).postInc$MIN_EXTENSION_FACTOR();
             }
-            
+
             public double postDec$MIN_EXTENSION_FACTOR() {
                 return ((fabric.metrics.contracts.Contract._Static._Impl)
                           fetch()).postDec$MIN_EXTENSION_FACTOR();
             }
-            
+
             public long get$MAX_EXTENSION() {
                 return ((fabric.metrics.contracts.Contract._Static._Impl)
                           fetch()).get$MAX_EXTENSION();
             }
-            
+
             public long set$MAX_EXTENSION(long val) {
                 return ((fabric.metrics.contracts.Contract._Static._Impl)
                           fetch()).set$MAX_EXTENSION(val);
             }
-            
+
             public long postInc$MAX_EXTENSION() {
                 return ((fabric.metrics.contracts.Contract._Static._Impl)
                           fetch()).postInc$MAX_EXTENSION();
             }
-            
+
             public long postDec$MAX_EXTENSION() {
                 return ((fabric.metrics.contracts.Contract._Static._Impl)
                           fetch()).postDec$MAX_EXTENSION();
             }
-            
+
+            public long get$DRIFT_FACTOR() {
+                return ((fabric.metrics.contracts.Contract._Static._Impl)
+                          fetch()).get$DRIFT_FACTOR();
+            }
+
+            public long set$DRIFT_FACTOR(long val) {
+                return ((fabric.metrics.contracts.Contract._Static._Impl)
+                          fetch()).set$DRIFT_FACTOR(val);
+            }
+
+            public long postInc$DRIFT_FACTOR() {
+                return ((fabric.metrics.contracts.Contract._Static._Impl)
+                          fetch()).postInc$DRIFT_FACTOR();
+            }
+
+            public long postDec$DRIFT_FACTOR() {
+                return ((fabric.metrics.contracts.Contract._Static._Impl)
+                          fetch()).postDec$DRIFT_FACTOR();
+            }
+
             public _Proxy(fabric.metrics.contracts.Contract._Static.
                             _Impl impl) { super(impl); }
-            
+
             public _Proxy(fabric.worker.Store store, long onum) {
                 super(store, onum);
             }
-            
+
             public static final fabric.metrics.contracts.Contract._Static
               $instance;
-            
+
             static {
                 fabric.
                   metrics.
@@ -586,15 +482,13 @@ public interface Contract
                 impl.$init();
             }
         }
-        
+
         class _Impl extends fabric.lang.Object._Impl
           implements fabric.metrics.contracts.Contract._Static {
             public double get$MIN_EXTENSION_FACTOR() {
-                fabric.worker.transaction.TransactionManager.getInstance().
-                  registerRead(this);
                 return this.MIN_EXTENSION_FACTOR;
             }
-            
+
             public double set$MIN_EXTENSION_FACTOR(double val) {
                 fabric.worker.transaction.TransactionManager tm =
                   fabric.worker.transaction.TransactionManager.getInstance();
@@ -603,23 +497,23 @@ public interface Contract
                 if (transactionCreated) tm.commitTransaction();
                 return val;
             }
-            
+
             public double postInc$MIN_EXTENSION_FACTOR() {
                 double tmp = this.get$MIN_EXTENSION_FACTOR();
                 this.set$MIN_EXTENSION_FACTOR((double) (tmp + 1));
                 return tmp;
             }
-            
+
             public double postDec$MIN_EXTENSION_FACTOR() {
                 double tmp = this.get$MIN_EXTENSION_FACTOR();
                 this.set$MIN_EXTENSION_FACTOR((double) (tmp - 1));
                 return tmp;
             }
-            
+
             public double MIN_EXTENSION_FACTOR;
-            
+
             public long get$MAX_EXTENSION() { return this.MAX_EXTENSION; }
-            
+
             public long set$MAX_EXTENSION(long val) {
                 fabric.worker.transaction.TransactionManager tm =
                   fabric.worker.transaction.TransactionManager.getInstance();
@@ -628,21 +522,46 @@ public interface Contract
                 if (transactionCreated) tm.commitTransaction();
                 return val;
             }
-            
+
             public long postInc$MAX_EXTENSION() {
                 long tmp = this.get$MAX_EXTENSION();
                 this.set$MAX_EXTENSION((long) (tmp + 1));
                 return tmp;
             }
-            
+
             public long postDec$MAX_EXTENSION() {
                 long tmp = this.get$MAX_EXTENSION();
                 this.set$MAX_EXTENSION((long) (tmp - 1));
                 return tmp;
             }
-            
+
             public long MAX_EXTENSION;
-            
+
+            public long get$DRIFT_FACTOR() { return this.DRIFT_FACTOR; }
+
+            public long set$DRIFT_FACTOR(long val) {
+                fabric.worker.transaction.TransactionManager tm =
+                  fabric.worker.transaction.TransactionManager.getInstance();
+                boolean transactionCreated = tm.registerWrite(this);
+                this.DRIFT_FACTOR = val;
+                if (transactionCreated) tm.commitTransaction();
+                return val;
+            }
+
+            public long postInc$DRIFT_FACTOR() {
+                long tmp = this.get$DRIFT_FACTOR();
+                this.set$DRIFT_FACTOR((long) (tmp + 1));
+                return tmp;
+            }
+
+            public long postDec$DRIFT_FACTOR() {
+                long tmp = this.get$DRIFT_FACTOR();
+                this.set$DRIFT_FACTOR((long) (tmp - 1));
+                return tmp;
+            }
+
+            public long DRIFT_FACTOR;
+
             public void $serialize(java.io.ObjectOutput out,
                                    java.util.List refTypes,
                                    java.util.List intraStoreRefs,
@@ -651,8 +570,9 @@ public interface Contract
                 super.$serialize(out, refTypes, intraStoreRefs, interStoreRefs);
                 out.writeDouble(this.MIN_EXTENSION_FACTOR);
                 out.writeLong(this.MAX_EXTENSION);
+                out.writeLong(this.DRIFT_FACTOR);
             }
-            
+
             public _Impl(fabric.worker.Store store, long onum, int version,
                          long expiry, fabric.worker.Store labelStore,
                          long labelOnum, fabric.worker.Store accessPolicyStore,
@@ -667,15 +587,16 @@ public interface Contract
                       intraStoreRefs, interStoreRefs);
                 this.MIN_EXTENSION_FACTOR = in.readDouble();
                 this.MAX_EXTENSION = in.readLong();
+                this.DRIFT_FACTOR = in.readLong();
             }
-            
+
             public _Impl(fabric.worker.Store store) { super(store); }
-            
+
             protected fabric.lang.Object._Proxy $makeProxy() {
                 return new fabric.metrics.contracts.Contract._Static._Proxy(
                          this);
             }
-            
+
             private void $init() {
                 {
                     {
@@ -695,7 +616,7 @@ public interface Contract
                                         }
                                         catch (java.lang.
                                                  InterruptedException $e24) {
-                                            
+
                                         }
                                     }
                                 }
@@ -709,11 +630,15 @@ public interface Contract
                                 fabric.metrics.contracts.Contract._Static.
                                   _Proxy.
                                   $instance.
-                                  set$MIN_EXTENSION_FACTOR((double) 4);
+                                  set$MIN_EXTENSION_FACTOR((double) 1.5);
                                 fabric.metrics.contracts.Contract._Static.
                                   _Proxy.
                                   $instance.
                                   set$MAX_EXTENSION((long) 1000);
+                                fabric.metrics.contracts.Contract._Static.
+                                  _Proxy.
+                                  $instance.
+                                  set$DRIFT_FACTOR((long) 50);
                             }
                             catch (final fabric.worker.RetryException $e24) {
                                 $commit23 = false;
@@ -772,14 +697,14 @@ public interface Contract
                 }
             }
         }
-        
+
     }
-    
-    public static final byte[] $classHash = new byte[] { 24, 64, -33, 56, -61,
-    -34, -27, -23, 21, 44, 44, 31, 56, 66, -35, -65, -40, -74, 44, 17, -56, 35,
-    20, 5, -63, -25, -5, 35, 3, 127, -55, 33 };
+
+    public static final byte[] $classHash = new byte[] { 5, -110, 95, -74, -87,
+    -1, 56, -95, -47, -89, -50, 74, -76, 67, -66, -22, 51, -27, -56, 62, -2, 16,
+    -89, -44, -33, 41, 121, -7, -122, 47, 65, -36 };
     public static final java.lang.String jlc$CompilerVersion$fabil = "0.3.0";
-    public static final long jlc$SourceLastModified$fabil = 1492109732000L;
+    public static final long jlc$SourceLastModified$fabil = 1492300656000L;
     public static final java.lang.String jlc$ClassType$fabil =
-      "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";
+      "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";
 }

@@ -85,6 +85,16 @@ public class WrappedJavaInlineable<T> implements JavaInlineable {
   }
 
   @Override
+  public long get$$expiry() {
+    throw new InternalError("WrappedJavaInlineables don't have expiries.");
+  }
+
+  @Override
+  public long set$$expiry(long val) {
+    throw new InternalError("WrappedJavaInlineables don't have expiries.");
+  }
+
+  @Override
   public ConfPolicy get$$accessPolicy() {
     throw new InternalError(
         "WrappedJavaInlineables don't have access policies.");

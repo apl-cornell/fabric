@@ -95,7 +95,7 @@ public abstract class Metric extends Subject implements Comparable/*<Metric>*/ {
       MetricContract c = (MetricContract) contracts.get(i);
       if (mc == null && c.isActive() && c.enforces(this, bound)) {
         mc = c;
-      } else if (!c.isActive() || !c.isObserved() || !c.valid(bound.startTime)) {
+      } else if (!c.isActive() || !c.isObserved() || !c.valid(System.currentTimeMillis())) {
         removeObserver(c);
         contracts.remove(i--);
       }

@@ -42,6 +42,8 @@ public interface WitnessPolicy
     
     public java.lang.String toString();
     
+    public boolean equals(fabric.lang.Object other);
+    
     public static class _Proxy
     extends fabric.metrics.contracts.enforcement.EnforcementPolicy._Proxy
       implements fabric.metrics.contracts.enforcement.WitnessPolicy {
@@ -126,9 +128,9 @@ public interface WitnessPolicy
                 fabric.metrics.contracts.MetricContract w =
                   (fabric.metrics.contracts.MetricContract)
                     fabric.lang.Object._Proxy.$getProxy(itr.next());
-                if (!atLeastOnce || w.getExpiryLower() < result) {
+                if (!atLeastOnce || w.getExpiry() < result) {
                     atLeastOnce = true;
-                    result = w.getExpiryLower();
+                    result = w.getExpiry();
                 }
             }
             return result;
@@ -157,6 +159,17 @@ public interface WitnessPolicy
         
         public java.lang.String toString() {
             return this.get$witnesses().toString();
+        }
+        
+        public boolean equals(fabric.lang.Object other) {
+            if (!(fabric.lang.Object._Proxy.
+                    $getProxy((java.lang.Object)
+                                fabric.lang.WrappedJavaInlineable.$unwrap(other)) instanceof fabric.metrics.contracts.enforcement.WitnessPolicy))
+                return false;
+            fabric.metrics.contracts.enforcement.WitnessPolicy that =
+              (fabric.metrics.contracts.enforcement.WitnessPolicy)
+                fabric.lang.Object._Proxy.$getProxy(other);
+            return this.get$witnesses().equals(that.get$witnesses());
         }
         
         public _Impl(fabric.worker.Store $location) { super($location); }
@@ -281,11 +294,11 @@ public interface WitnessPolicy
         
     }
     
-    public static final byte[] $classHash = new byte[] { -34, -49, 92, -121,
-    -31, -115, 54, -108, -67, -30, 49, -30, 116, -85, -49, -110, -68, 95, -57,
-    -54, 3, 113, -122, 114, -21, -71, -37, 19, -11, -90, -89, -7 };
+    public static final byte[] $classHash = new byte[] { 64, -40, 58, -115, -35,
+    -116, -72, 33, 113, -21, -119, -84, 59, -30, 7, 101, -59, 3, -57, 41, -12,
+    124, -88, 82, 121, 34, -11, 53, -41, -46, 98, -111 };
     public static final java.lang.String jlc$CompilerVersion$fabil = "0.3.0";
-    public static final long jlc$SourceLastModified$fabil = 1492109732000L;
+    public static final long jlc$SourceLastModified$fabil = 1492299472000L;
     public static final java.lang.String jlc$ClassType$fabil =
-      "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";
+      "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";
 }

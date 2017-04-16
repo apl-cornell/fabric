@@ -1,7 +1,6 @@
 package fabric.metrics.contracts;
 
 import fabric.metrics.Metric;
-import fabric.metrics.util.NodeTime;
 
 import fabric.worker.Store;
 
@@ -11,25 +10,8 @@ import fabric.worker.Store;
  */
 public class Bound {
 
-  public /*final*/ double rate;
-  public /*final*/ double base;
-  public /*final*/ NodeTime startTime;
-
-  /**
-   * @param rate
-   *        the rate the value changes with time
-   * @param base
-   *        the value of the bound associated with startTime
-   * @param startTime
-   *        the time this bound's value is computed relative to
-   */
-  public Bound fabric$metrics$contracts$Bound$(double rate, double base, NodeTime startTime) {
-    this.rate = rate;
-    this.base = base;
-    this.startTime = startTime;
-    fabric$lang$Object$();
-    return this;
-  }
+  public final double rate;
+  public final double base;
 
   /**
    * @param rate
@@ -41,8 +23,7 @@ public class Bound {
    */
   public Bound fabric$metrics$contracts$Bound$(double rate, double base, long startTime) {
     this.rate = rate;
-    this.base = base;
-    this.startTime = new NodeTime().fabric$metrics$util$NodeTime$(startTime);
+    this.base = base - (rate * startTime);
     fabric$lang$Object$();
     return this;
   }
@@ -52,18 +33,9 @@ public class Bound {
    *        the time we're computing the bound value for
    * @return the value of the bound at the given time
    */
-  public double value(NodeTime time) {
-    // Use the tightest bound possible.
-    return rate * (time.upperBound() - startTime.lowerBound()) + base;
-  }
-
-  /**
-   * @param time
-   *        the time we're computing the bound value for
-   * @return the value of the bound at the given time
-   */
   public double value(long time) {
-    return value(new NodeTime().fabric$metrics$util$NodeTime$(time));
+    // Use the tightest bound possible.
+    return rate * time + base;
   }
 
   /**
@@ -124,31 +96,25 @@ public class Bound {
    * @return true iff this is at least as strong of a bound as other
    */
   public boolean implies(Bound other) {
-    return rate >= other.rate && value(other.startTime) >= other.base;
-  }
-
-  /**
-   * @param newStartTime
-   *        a new time to use as a startTime in the returned {@link Bound}
-   * @return an equivalent {@link Bound} with the startTime set to
-   *       newStartTime
-   */
-  public Bound shifted(long newStartTime) {
-    final Store s = $getStore();
-    return (new Bound@s()).fabric$metrics$contracts$Bound$(rate, value(newStartTime), newStartTime);
+    return rate >= other.rate && base >= other.base;
   }
 
   /*@Override*/
   public boolean equals(Object o) {
     if (o instanceof Bound) {
       Bound other = (Bound) o;
-      return rate == other.rate && value(other.startTime) == other.base;
+      return rate == other.rate && base == other.base;
     }
     return false;
   }
 
   /*@Override*/
+  public int hashCode() {
+    return Double.hashCode(rate) * 32 + Double.hashCode(base);
+  }
+
+  /*@Override*/
   public String toString() {
-    return ">= " + rate + " * (t - " + startTime + ") + " + base;
+    return ">= " + rate + " * t + " + base;
   }
 }

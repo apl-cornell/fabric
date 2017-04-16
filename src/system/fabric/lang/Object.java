@@ -56,6 +56,10 @@ public interface Object {
 
   Label set$$updateLabel(Label label);
 
+  /** The expiry of a contract. */
+  long get$$expiry();
+  long set$$expiry(long expiry);
+
   /**
    * The object's access policy, specifying the program contexts in which it is
    * safe to use this object.
@@ -276,6 +280,16 @@ public interface Object {
     @Override
     public final Label set$$updateLabel(Label label) {
       return fetch().set$$updateLabel(label);
+    }
+
+    @Override
+    public final long get$$expiry() {
+      return fetch().get$$expiry();
+    }
+
+    @Override
+    public final long set$$expiry(long expiry) {
+      return fetch().set$$expiry(expiry);
     }
 
     @Override
@@ -501,6 +515,11 @@ public interface Object {
     public final StackTraceElement[] $stackTrace;
 
     /**
+     * The expiry field, to be used by Contracts.
+     */
+    public long $expiry;
+
+    /**
      * A private constructor for initializing transaction-management state.
      */
     private _Impl(Store store, long onum, int version, long expiry) {
@@ -517,6 +536,7 @@ public interface Object {
       this.$ref.readMapEntry(this.$readMapEntry);
       this.$isOwned = false;
       this.writerMapVersion = -1;
+      this.$expiry = expiry;
 
       if (TRACE_OBJECTS)
         this.$stackTrace = Thread.currentThread().getStackTrace();
@@ -654,6 +674,7 @@ public interface Object {
       $isOwned = other.$isOwned;
       writerMapVersion = other.writerMapVersion;
       $copyAppStateFrom(other);
+      $expiry = other.$expiry;
     }
 
     /**
@@ -681,6 +702,20 @@ public interface Object {
     @Override
     public final Label get$$updateLabel() {
       return $updateLabel;
+    }
+
+    @Override
+    public final long get$$expiry() {
+      return $expiry;
+    }
+
+    @Override
+    public final long set$$expiry(long expiry) {
+      TransactionManager tm = TransactionManager.getInstance();
+      boolean transactionCreated = tm.registerWrite(this);
+      this.$expiry = expiry;
+      if (transactionCreated) tm.commitTransaction();
+      return $expiry;
     }
 
     @Override

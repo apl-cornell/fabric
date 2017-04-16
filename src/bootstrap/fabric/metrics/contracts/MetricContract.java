@@ -14,6 +14,7 @@ import fabric.metrics.Metric;
 import fabric.metrics.SampledMetric;
 import fabric.metrics.util.Subject;
 import fabric.worker.Store;
+import fabric.worker.transaction.TransactionManager;
 
 /**
  * A contract asserting that a {@link Metric}'s value is above or below a
@@ -65,10 +66,6 @@ public interface MetricContract extends fabric.metrics.contracts.Contract {
     
     public void activate();
     
-    public fabric.util.Set getLeafSubjects();
-    
-    public void deactivate();
-    
     /**
    * Update this contract's expiration time to stay valid in response to a
    * change in the value of the {@link Subject}s used for enforcing this
@@ -115,18 +112,8 @@ public interface MetricContract extends fabric.metrics.contracts.Contract {
    * @return true iff this enforces another {@link MetricContract} with the
    *       given parameters.
    */
-    public boolean enforces(
-      fabric.metrics.Metric otherMetric, fabric.metrics.contracts.Bound otherBound);
-    
-    /**
-   * Check if this enforces the <strong>same</strong> bound as another
-   * {@link MetricContract}.
-   *
-   * @param other
-   *        the other {@link MetricContract} this is being compared with
-   * @return true iff this enforces the same bound as other.
-   */
-    public boolean enforces(fabric.metrics.contracts.MetricContract other);
+    public boolean enforces(fabric.metrics.Metric otherMetric,
+                            fabric.metrics.contracts.Bound otherBound);
     
     public java.lang.String toString();
     
@@ -142,6 +129,10 @@ public interface MetricContract extends fabric.metrics.contracts.Contract {
     
     public fabric.metrics.contracts.enforcement.EnforcementPolicy
       directStrategy();
+    
+    public fabric.util.Set getLeafSubjects();
+    
+    public void deactivate();
     
     public static class _Proxy extends fabric.metrics.contracts.Contract._Proxy
       implements fabric.metrics.contracts.MetricContract {
@@ -201,11 +192,6 @@ public interface MetricContract extends fabric.metrics.contracts.Contract {
               getExpectedLifetime();
         }
         
-        public fabric.util.Set getLeafSubjects() {
-            return ((fabric.metrics.contracts.MetricContract) fetch()).
-              getLeafSubjects();
-        }
-        
         public boolean implies(fabric.metrics.Metric arg1,
                                fabric.metrics.contracts.Bound arg2) {
             return ((fabric.metrics.contracts.MetricContract) fetch()).implies(
@@ -225,11 +211,6 @@ public interface MetricContract extends fabric.metrics.contracts.Contract {
                                                                          arg2);
         }
         
-        public boolean enforces(fabric.metrics.contracts.MetricContract arg1) {
-            return ((fabric.metrics.contracts.MetricContract) fetch()).enforces(
-                                                                         arg1);
-        }
-        
         public fabric.metrics.contracts.enforcement.EnforcementPolicy
           enforcementStrategy() {
             return ((fabric.metrics.contracts.MetricContract) fetch()).
@@ -240,6 +221,11 @@ public interface MetricContract extends fabric.metrics.contracts.Contract {
           directStrategy() {
             return ((fabric.metrics.contracts.MetricContract) fetch()).
               directStrategy();
+        }
+        
+        public fabric.util.Set getLeafSubjects() {
+            return ((fabric.metrics.contracts.MetricContract) fetch()).
+              getLeafSubjects();
         }
         
         public _Proxy(MetricContract._Impl impl) { super(impl); }
@@ -324,8 +310,7 @@ public interface MetricContract extends fabric.metrics.contracts.Contract {
                         this.$getStore()).$getProxy(
                                             )).fabric$metrics$contracts$Bound$(
                                                  bound.get$rate(),
-                                                 bound.get$base(),
-                                                 bound.get$startTime()));
+                                                 bound.get$base(), 0));
             fabric$metrics$contracts$Contract$();
             return (fabric.metrics.contracts.MetricContract) this.$getProxy();
         }
@@ -354,45 +339,6 @@ public interface MetricContract extends fabric.metrics.contracts.Contract {
                                       this.$getProxy());
         }
         
-        public fabric.util.Set getLeafSubjects() {
-            fabric.metrics.Metric m = getMetric();
-            if (fabric.lang.Object._Proxy.
-                  $getProxy(
-                    (java.lang.Object)
-                      fabric.lang.WrappedJavaInlineable.
-                      $unwrap(m)) instanceof fabric.metrics.SampledMetric) {
-                return fabric.util.Collections._Impl.
-                  singleton((fabric.metrics.SampledMetric)
-                              fabric.lang.Object._Proxy.$getProxy(m));
-            }
-            else if (fabric.lang.Object._Proxy.
-                       $getProxy(
-                         (java.lang.Object)
-                           fabric.lang.WrappedJavaInlineable.
-                           $unwrap(
-                             m)) instanceof fabric.metrics.DerivedMetric) {
-                return ((fabric.metrics.DerivedMetric)
-                          fabric.lang.Object._Proxy.$getProxy(m)).
-                  getLeafSubjects();
-            }
-            else {
-                throw new java.lang.IllegalStateException(
-                        "All metrics should be either sampled or derived!");
-            }
-        }
-        
-        public void deactivate() {
-            if (!isObserved()) {
-                if (!fabric.lang.Object._Proxy.idEquals(
-                                                 this.get$currentPolicy(),
-                                                 null))
-                    this.get$currentPolicy().
-                      unapply((fabric.metrics.contracts.MetricContract)
-                                this.$getProxy());
-            }
-            super.deactivate();
-        }
-        
         /**
    * Update this contract's expiration time to stay valid in response to a
    * change in the value of the {@link Subject}s used for enforcing this
@@ -403,9 +349,6 @@ public interface MetricContract extends fabric.metrics.contracts.Contract {
             long currentTime = java.lang.System.currentTimeMillis();
             fabric.metrics.contracts.enforcement.EnforcementPolicy oldPolicy =
               this.get$currentPolicy();
-            if (!fabric.lang.Object._Proxy.idEquals(oldPolicy, null))
-                oldPolicy.unapply((fabric.metrics.contracts.MetricContract)
-                                    this.$getProxy());
             if (this.get$bound().test(this.get$metric(), currentTime)) {
                 fabric.metrics.contracts.enforcement.EnforcementPolicy
                   newPolicy;
@@ -415,16 +358,47 @@ public interface MetricContract extends fabric.metrics.contracts.Contract {
                     newPolicy = enforcementStrategy();
                 }
                 if (newPolicy.expiry() >= currentTime) {
+                    if (!fabric.lang.Object._Proxy.idEquals(oldPolicy, null) &&
+                          !oldPolicy.equals(newPolicy))
+                        oldPolicy.unapply(
+                                    (fabric.metrics.contracts.MetricContract)
+                                      this.$getProxy());
                     this.set$currentPolicy(newPolicy);
                     this.get$currentPolicy().
                       apply((fabric.metrics.contracts.MetricContract)
                               this.$getProxy());
+                    fabric.common.Logging.METRICS_LOGGER.
+                      info(
+                        "DEFENDING " +
+                          java.lang.String.
+                            valueOf(
+                              fabric.lang.WrappedJavaInlineable.
+                                  $unwrap(
+                                    (fabric.metrics.contracts.MetricContract)
+                                      this.$getProxy())) +
+                          " WITH " +
+                          java.lang.String.
+                            valueOf(
+                              fabric.lang.WrappedJavaInlineable.
+                                  $unwrap(this.get$currentPolicy())) +
+                          " IN " +
+                          fabric.worker.transaction.TransactionManager.
+                            getInstance().getCurrentTid());
                     update(newPolicy.expiry());
-                } else {
+                }
+                else {
+                    if (!fabric.lang.Object._Proxy.idEquals(
+                                                     oldPolicy, null))
+                        oldPolicy.unapply(
+                                    (fabric.metrics.contracts.MetricContract)
+                                      this.$getProxy());
                     this.set$currentPolicy(null);
                     update(currentTime);
                 }
             } else {
+                if (!fabric.lang.Object._Proxy.idEquals(oldPolicy, null))
+                    oldPolicy.unapply((fabric.metrics.contracts.MetricContract)
+                                        this.$getProxy());
                 update(0);
             }
         }
@@ -443,9 +417,11 @@ public interface MetricContract extends fabric.metrics.contracts.Contract {
    */
         public boolean implies(fabric.metrics.Metric otherMetric,
                                fabric.metrics.contracts.Bound otherBound) {
-            return getMetric().equals(otherMetric) &&
-              valid(otherBound.get$startTime()) &&
-              this.get$bound().implies(otherBound);
+            if (!getMetric().equals(otherMetric) ||
+                  !this.get$bound().implies(otherBound))
+                return false;
+            if (!valid(java.lang.System.currentTimeMillis())) refresh();
+            return valid(java.lang.System.currentTimeMillis());
         }
         
         /**
@@ -457,7 +433,7 @@ public interface MetricContract extends fabric.metrics.contracts.Contract {
    *       the entire duration of other.
    */
         public boolean implies(fabric.metrics.contracts.MetricContract other) {
-            return valid(other.getExpiryUpper()) &&
+            return valid(other.getExpiry()) &&
               implies(other.getMetric(), other.getBound());
         }
         
@@ -476,22 +452,11 @@ public interface MetricContract extends fabric.metrics.contracts.Contract {
    */
         public boolean enforces(fabric.metrics.Metric otherMetric,
                                 fabric.metrics.contracts.Bound otherBound) {
-            return getMetric().equals(otherMetric) &&
-              valid(otherBound.get$startTime()) &&
-              this.get$bound().equals(otherBound);
-        }
-        
-        /**
-   * Check if this enforces the <strong>same</strong> bound as another
-   * {@link MetricContract}.
-   *
-   * @param other
-   *        the other {@link MetricContract} this is being compared with
-   * @return true iff this enforces the same bound as other.
-   */
-        public boolean enforces(fabric.metrics.contracts.MetricContract other) {
-            return valid(other.getExpiryUpper()) &&
-              enforces(other.getMetric(), other.getBound());
+            if (!getMetric().equals(otherMetric) ||
+                  !this.get$bound().equals(otherBound))
+                return false;
+            if (!valid(java.lang.System.currentTimeMillis())) refresh();
+            return valid(java.lang.System.currentTimeMillis());
         }
         
         public java.lang.String toString() {
@@ -503,10 +468,7 @@ public interface MetricContract extends fabric.metrics.contracts.Contract {
               valueOf(
                 fabric.lang.WrappedJavaInlineable.$unwrap(this.get$bound())) +
             " until " +
-            java.lang.String.valueOf(
-                               fabric.lang.WrappedJavaInlineable.$unwrap(
-                                                                   getExpiry(
-                                                                     )));
+            getExpiry();
         }
         
         /**
@@ -525,8 +487,8 @@ public interface MetricContract extends fabric.metrics.contracts.Contract {
             long trueTime = getBound().trueExpiry(getMetric(), currentTime);
             long hedgedTime = ((fabric.metrics.contracts.MetricContract._Impl)
                                  this.fetch()).hedged(currentTime);
-            if (getExpiryUpper() <= trueTime) {
-                hedgedTime = java.lang.Math.max(getExpiryLower(), hedgedTime);
+            if (getExpiry() <= trueTime) {
+                hedgedTime = java.lang.Math.max(getExpiry(), hedgedTime);
             }
             final fabric.worker.Store s = $getStore();
             return ((fabric.metrics.contracts.enforcement.DirectPolicy)
@@ -603,6 +565,45 @@ public interface MetricContract extends fabric.metrics.contracts.Contract {
                                      hedgedResult);
             }
             return hedgedResult;
+        }
+        
+        public fabric.util.Set getLeafSubjects() {
+            fabric.metrics.Metric m = getMetric();
+            if (fabric.lang.Object._Proxy.
+                  $getProxy(
+                    (java.lang.Object)
+                      fabric.lang.WrappedJavaInlineable.
+                      $unwrap(m)) instanceof fabric.metrics.SampledMetric) {
+                return fabric.util.Collections._Impl.
+                  singleton((fabric.metrics.SampledMetric)
+                              fabric.lang.Object._Proxy.$getProxy(m));
+            }
+            else if (fabric.lang.Object._Proxy.
+                       $getProxy(
+                         (java.lang.Object)
+                           fabric.lang.WrappedJavaInlineable.
+                           $unwrap(
+                             m)) instanceof fabric.metrics.DerivedMetric) {
+                return ((fabric.metrics.DerivedMetric)
+                          fabric.lang.Object._Proxy.$getProxy(m)).
+                  getLeafSubjects();
+            }
+            else {
+                throw new java.lang.IllegalStateException(
+                        "All metrics should be either sampled or derived!");
+            }
+        }
+        
+        public void deactivate() {
+            if (!isObserved()) {
+                if (!fabric.lang.Object._Proxy.idEquals(
+                                                 this.get$currentPolicy(),
+                                                 null))
+                    this.get$currentPolicy().
+                      unapply((fabric.metrics.contracts.MetricContract)
+                                this.$getProxy());
+            }
+            super.deactivate();
         }
         
         public _Impl(fabric.worker.Store $location) { super($location); }
@@ -886,11 +887,11 @@ public interface MetricContract extends fabric.metrics.contracts.Contract {
         
     }
     
-    public static final byte[] $classHash = new byte[] { 49, 104, -23, 24, -64,
-    70, 72, -60, -34, 120, -69, 37, 112, -32, -9, 99, 42, -31, -114, -44, 100,
-    98, -6, 22, 92, -121, 37, -119, -71, -29, 52, -119 };
+    public static final byte[] $classHash = new byte[] { 64, 8, -10, -83, -56,
+    -109, -25, 92, 98, -8, -57, 90, 2, -25, -119, 76, 104, -118, 10, -20, 5,
+    -104, 81, -124, -75, 31, 101, -30, -79, 18, -3, -88 };
     public static final java.lang.String jlc$CompilerVersion$fabil = "0.3.0";
-    public static final long jlc$SourceLastModified$fabil = 1492109732000L;
+    public static final long jlc$SourceLastModified$fabil = 1492300604000L;
     public static final java.lang.String jlc$ClassType$fabil =
-      "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";
+      "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";
 }

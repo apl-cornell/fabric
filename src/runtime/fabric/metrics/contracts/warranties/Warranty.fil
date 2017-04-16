@@ -49,7 +49,7 @@ public class Warranty/*<T>*/ extends Contract {
       fabric.common.Logging.METRICS_LOGGER.info("DEFENDING " + this + " WITH " + witness);
     }
     // XXX: Right expiry?
-    update(witness.getExpiryLower());
+    update(witness.getExpiry());
   }
 
   /**

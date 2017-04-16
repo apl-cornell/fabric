@@ -909,7 +909,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
     // Write out the object header.
     out.writeLong(impl.$getOnum());
     out.writeInt(impl.$version);
-    out.writeLong(0);
+    out.writeLong(impl.$expiry);
 
     // Write the update label
     out.writeBoolean(interStoreUpdateLabel);
