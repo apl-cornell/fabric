@@ -530,7 +530,10 @@ public final class Log {
   public void gatherExtendedParents() {
     for (Contract c : extendedContracts) {
       for (Iterator iter = c.getObservers().iterator(); iter.hasNext();) {
-        extendedParents.add(new Oid(iter.next()));
+        Observer parent = (Observer) iter.next();
+        if (!extendedContracts.contains(parent)) {
+          extendedParents.add(new Oid(parent));
+        }
       }
     }
   }

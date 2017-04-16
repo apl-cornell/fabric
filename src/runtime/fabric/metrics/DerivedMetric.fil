@@ -17,6 +17,7 @@ import fabric.metrics.util.Observer;
 import fabric.worker.Store;
 import fabric.worker.Worker;
 import fabric.worker.transaction.TransactionManager;
+import java.util.logging.Level;
 
 /**
  * General base class for {@link Metric}s built by computing over other
@@ -82,10 +83,10 @@ public abstract class DerivedMetric extends Metric implements Observer {
 
   /*@Override*/
   public boolean handleUpdates() {
-    fabric.common.Logging.MISC_LOGGER.info("CHECKING FOR UPDATE ON " + this + "(" + lastValue + ") IN " + TransactionManager.getInstance().getCurrentTid());
+    fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "CHECKING FOR UPDATE ON {0}", this);
     double newValue = computeValue();
     if (newValue != lastValue) {
-      fabric.common.Logging.MISC_LOGGER.info("UPDATING " + this + " to " + newValue + " IN " + TransactionManager.getInstance().getCurrentTid());
+      fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "UPDATE TO {0}", new Double(newValue));
       lastValue = newValue;
       lastVelocity = computeVelocity();
       lastNoise = computeNoise();
@@ -147,6 +148,7 @@ public abstract class DerivedMetric extends Metric implements Observer {
 
   /*@Override*/
   public void startTracking(MetricContract mc) {
+    fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "TRACKING {0}", this);
     if (!isObserved()) {
       // Start tracking terms if this is now used by a contract directly.
       for (int i = 0; i < terms.length; i++) {
@@ -158,6 +160,7 @@ public abstract class DerivedMetric extends Metric implements Observer {
 
   /*@Override*/
   public void stopTracking(MetricContract mc) {
+    fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "STOP TRACKING {0}", this);
     removeObserver(mc);
     if (!isObserved()) {
       // Don't observe subterms unless it's being tracked directly.

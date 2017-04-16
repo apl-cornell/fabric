@@ -6,6 +6,7 @@ import fabric.metrics.SampledMetric;
 import fabric.metrics.contracts.Contract;
 import fabric.metrics.contracts.MetricContract;
 import fabric.worker.transaction.TransactionManager;
+import java.util.logging.Level;
 
 /**
  * A Warranty (also known as a General Contract) is a time-limited assertion of
@@ -33,10 +34,14 @@ public class Warranty/*<T>*/ extends Contract {
     // Currently we just hope the witness is still valid. In all cases,
     // update the expiry according to the witness.
     long currentTime = System.currentTimeMillis();
+    if (witness != null && !witness.valid(currentTime)) {
+      fabric.common.Logging.METRICS_LOGGER.log(Level.INFO, "REFRESHING WITNESS FOR {0}", this);
+      witness.handleUpdates();
+    }
     if (witness == null || !witness.valid(currentTime)) {
       WarrantyValue/*<T>*/ curVal = computation.apply(currentTime);
       if (!curVal.value.equals(value)) {
-        fabric.common.Logging.METRICS_LOGGER.info("UPDATING " + this + " VALUE TO " + curVal.value);
+        fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "UPDATING {0} TO {1}", new Object native[] { this, curVal.value });
         this.value = curVal.value;
       }
       if (witness != null && witness != curVal.contract) {
@@ -97,5 +102,15 @@ public class Warranty/*<T>*/ extends Contract {
       value = null;
     }
     super.deactivate();
+  }
+
+  /*@Override*/
+  public void attemptExtension_remote(fabric.lang.security.Principal caller) {
+    // Do nothing, warranty expiry is entirely based on it's child expiry
+  }
+
+  /*@Override*/
+  public void attemptExtension() {
+    // Do nothing, warranty expiry is entirely based on it's child expiry
   }
 }

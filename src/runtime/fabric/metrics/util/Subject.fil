@@ -11,6 +11,8 @@ import fabric.metrics.contracts.Contract;
 
 import fabric.worker.transaction.TransactionManager;
 
+import java.util.logging.Level;
+
 /**
  * Represents an observable object having a set of {@link Observer}s. After an
  * observable object changes, an application can call
@@ -38,7 +40,7 @@ public abstract class Subject {
    *        {@link Observer} to add
    */
   public void addObserver(Observer o) {
-    fabric.common.Logging.METRICS_LOGGER.info("SUBJECT " + this + " OBSERVED BY " + o + " IN " + TransactionManager.getInstance().getCurrentTid());
+    fabric.common.Logging.METRICS_LOGGER.log(Level.FINEST, "SUBJECT {0} ADDED OBSERVER {1}", new Object native[] { this, o });
     observers.add(o);
   }
 
@@ -49,7 +51,7 @@ public abstract class Subject {
    *        {@link Observer} to remove
    */
   public void removeObserver(Observer o) {
-    fabric.common.Logging.METRICS_LOGGER.info("SUBJECT " + this + " NO LONGER OBSERVED BY " + o + " IN " + TransactionManager.getInstance().getCurrentTid());
+    fabric.common.Logging.METRICS_LOGGER.log(Level.FINEST, "SUBJECT {0} REMOVED OBSERVER {1}", new Object native[] { this, o });
     observers.remove(o);
   }
 

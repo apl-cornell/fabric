@@ -12,6 +12,7 @@ import fabric.metrics.util.Subject;
 
 import fabric.worker.Store;
 import fabric.worker.transaction.TransactionManager;
+import java.util.logging.Level;
 
 /**
  * A contract asserting that a {@link Metric}'s value is above or below a
@@ -98,6 +99,7 @@ public abstract class MetricContract extends Contract {
           oldPolicy.unapply(this);
         currentPolicy = newPolicy;
         currentPolicy.apply(this);
+        fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "APPLIED POLICY {1} TO {0}", new Object native[] { this, currentPolicy });
         return update(newPolicy.expiry());
       } else {
         if (oldPolicy != null)
@@ -127,8 +129,8 @@ public abstract class MetricContract extends Contract {
   public boolean implies(Metric otherMetric, Bound otherBound) {
     if (!getMetric().equals(otherMetric) || !bound.implies(otherBound))
       return false;
-    if (!valid(System.currentTimeMillis()))
-      refresh();
+    //if (!valid(System.currentTimeMillis()))
+    //  refresh();
     return valid(System.currentTimeMillis());
   }
 
@@ -161,8 +163,8 @@ public abstract class MetricContract extends Contract {
   public boolean enforces(Metric otherMetric, Bound otherBound) {
     if (!getMetric().equals(otherMetric) || !bound.equals(otherBound))
       return false;
-    if (!valid(System.currentTimeMillis()))
-      refresh();
+    //if (!valid(System.currentTimeMillis()))
+    //  refresh();
     return valid(System.currentTimeMillis());
   }
 

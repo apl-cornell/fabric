@@ -18,6 +18,7 @@ import fabric.metrics.util.Observer;
 import fabric.metrics.util.Subject;
 
 import fabric.worker.Store;
+import java.util.logging.Level;
 
 /**
  * A {@link Metric} for the entries of Cm⃗ where m⃗ is a {@link Metric} and C is
@@ -135,6 +136,7 @@ public class LinearMetric extends DerivedMetric {
 
   /*@Override*/
   public double computeValue() {
+    fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "COMPUTING {0}", this);
     double[] values = new double[terms.length];
     for (int i = 0; i < terms.length; i++) {
       values[i] = terms[i].value();

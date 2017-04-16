@@ -9,6 +9,8 @@ import fabric.metrics.contracts.MetricContract;
 import fabric.metrics.util.Subject;
 import fabric.metrics.util.Matrix;
 import fabric.worker.Store;
+import fabric.worker.transaction.TransactionManager;
+import java.util.logging.Level;
 
 /**
  * Represents an observable quantity that changes over time. Internally, this
@@ -321,6 +323,7 @@ public abstract class Metric extends Subject implements Comparable/*<Metric>*/ {
    * Track directly by a MetricContract.
    */
   public void startTracking(MetricContract mc) {
+    fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "TRACKING {0}", this);
     addObserver(mc);
   }
 
@@ -328,6 +331,7 @@ public abstract class Metric extends Subject implements Comparable/*<Metric>*/ {
    * Stop tracking directly by a MetricContract.
    */
   public void stopTracking(MetricContract mc) {
+    fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "STOP TRACKING {0}", this);
     removeObserver(mc);
   }
 }

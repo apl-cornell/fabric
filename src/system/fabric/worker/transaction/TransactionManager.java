@@ -156,8 +156,6 @@ public final class TransactionManager {
       protected void runImpl() {
         // Run a transaction handling updates at the parent
         try {
-          Logging.METRICS_LOGGER.log(Level.INFO,
-              "ATTEMPTING PARENT EXTENSION {0}", parent);
           final Contract._Proxy target =
               new Contract._Proxy(parent.store, parent.onum);
           if (!location.equals(Worker.getWorker().getLocalWorker())) {
