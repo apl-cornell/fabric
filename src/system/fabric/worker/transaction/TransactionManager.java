@@ -486,7 +486,7 @@ public final class TransactionManager {
    */
   private void sendPrepareMessages(final boolean singleStore,
       final boolean readOnly, Set<Store> stores, List<RemoteWorker> workers)
-          throws TransactionRestartingException {
+      throws TransactionRestartingException {
     final Map<RemoteNode<?>, TransactionPrepareFailedException> failures =
         Collections.synchronizedMap(
             new HashMap<RemoteNode<?>, TransactionPrepareFailedException>());
@@ -639,7 +639,17 @@ public final class TransactionManager {
       Logging.log(WORKER_TRANSACTION_LOGGER, Level.INFO,
           "{0} error committing: prepare failed exception: {1}", current, e);
 
-      abortTransaction(failures.keySet());
+      Set<RemoteNode<?>> abortedNodes = failures.keySet();
+      if (readOnly) {
+        // All remote stores should have aborted already.
+        abortedNodes = new HashSet<>(abortedNodes);
+        for (Store store : stores) {
+          if (store instanceof RemoteStore) {
+            abortedNodes.add((RemoteStore) store);
+          }
+        }
+      }
+      abortTransaction(abortedNodes);
       throw new TransactionRestartingException(tid);
 
     } else {
@@ -664,7 +674,7 @@ public final class TransactionManager {
    */
   private void sendCommitMessagesAndCleanUp(boolean singleStore,
       boolean readOnly, Set<Store> stores, List<RemoteWorker> workers)
-          throws TransactionAtomicityViolationException {
+      throws TransactionAtomicityViolationException {
     synchronized (current.commitState) {
       switch (current.commitState.value) {
       case UNPREPARED:
