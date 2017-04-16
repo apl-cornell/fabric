@@ -702,6 +702,7 @@ public final class Log {
     // Release write locks on created objects and set version numbers.
     Iterable<_Impl> chain2 = SysUtil.chain(creates, localStoreCreates);
     for (_Impl obj : chain2) {
+      extendedParents.remove(new Oid(obj));
       if (!obj.$isOwned) {
         // The cached object is out-of-date. Evict it.
         obj.$ref.evict();

@@ -29,8 +29,6 @@ public abstract class Subject {
   // pinned by their subjects.
   private Set/*<Observer>*/ observers = new HashSet/*<>*/().fabric$util$HashSet$();
 
-  private boolean modified = false;
-
   /**
    * Adds an observer to the set of observers for this object. Nothing is done
    * if the given observer {@link #equals(Object) equals} an existing
@@ -79,27 +77,6 @@ public abstract class Subject {
   }
 
   /**
-   * Mark this subject as modified.
-   */
-  public void markModified() {
-    this.modified = true;
-  }
-
-  /**
-   * Clear the modified flag on this subject.
-   */
-  public void clearModified() {
-    this.modified = false;
-  }
-
-  /**
-   * @return true iff the modified flag is set.
-   */
-  public boolean isModified() {
-    return this.modified;
-  }
-
-  /**
    * @return the set of the current observers of this subject.
    */
   public Set/*<Observer>*/ getObservers() {
@@ -114,7 +91,6 @@ public abstract class Subject {
       java.util.LinkedList/*<Observer>*/ queue = new java.util.LinkedList/*<>*/();
       while (!unobserved.isEmpty()) {
         SampledMetric sm = (SampledMetric) unobserved.poll();
-        sm.clearModified();
         //queue.addAll(sm.getObservers());
         Iterator obsIter = sm.getObservers().iterator();
         while (obsIter.hasNext()) {
@@ -133,8 +109,8 @@ public abstract class Subject {
           }
           // If this has no other pending sampled events, process it.
           if (!needToWait) {
-            unhandled.handleUpdates();
-            if (unhandled instanceof Subject && ((Subject) unhandled).isModified()) {
+            boolean modified = unhandled.handleUpdates();
+            if (unhandled instanceof Subject && modified) {
               Subject s = (Subject) unhandled;
               if (s instanceof Contract) {
                 // This contract isn't being extended now.
@@ -145,7 +121,6 @@ public abstract class Subject {
               while (parentIter.hasNext()) {
                 queue.add(parentIter.next());
               }
-              s.clearModified();
             }
           }
         }

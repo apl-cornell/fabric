@@ -29,14 +29,13 @@ public class Warranty/*<T>*/ extends Contract {
   }
 
   /*@Override*/
-  protected void refresh() {
+  protected boolean refresh() {
     // Currently we just hope the witness is still valid. In all cases,
     // update the expiry according to the witness.
     long currentTime = System.currentTimeMillis();
     if (witness == null || !witness.valid(currentTime)) {
       WarrantyValue/*<T>*/ curVal = computation.apply(currentTime);
       if (!curVal.value.equals(value)) {
-        this.markModified();
         fabric.common.Logging.METRICS_LOGGER.info("UPDATING " + this + " VALUE TO " + curVal.value);
         this.value = curVal.value;
       }
@@ -47,8 +46,9 @@ public class Warranty/*<T>*/ extends Contract {
       witness = curVal.contract;
       witness.activate();
       witness.addObserver(this);
-      fabric.common.Logging.METRICS_LOGGER.info("DEFENDING " + this + " WITH " + witness);
+      return true;
     }
+    return false;
   }
 
   /*@Override*/

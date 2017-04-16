@@ -28,10 +28,6 @@ public interface Subject extends fabric.lang.Object {
     
     public fabric.util.Set set$observers(fabric.util.Set val);
     
-    public boolean get$modified();
-    
-    public boolean set$modified(boolean val);
-    
     /**
    * Adds an observer to the set of observers for this object. Nothing is done
    * if the given observer {@link #equals(Object) equals} an existing
@@ -68,21 +64,6 @@ public interface Subject extends fabric.lang.Object {
     public fabric.util.Set getObserversCopy();
     
     /**
-   * Mark this subject as modified.
-   */
-    public void markModified();
-    
-    /**
-   * Clear the modified flag on this subject.
-   */
-    public void clearModified();
-    
-    /**
-   * @return true iff the modified flag is set.
-   */
-    public boolean isModified();
-    
-    /**
    * @return the set of the current observers of this subject.
    */
     public fabric.util.Set getObservers();
@@ -96,15 +77,6 @@ public interface Subject extends fabric.lang.Object {
         
         public fabric.util.Set set$observers(fabric.util.Set val) {
             return ((fabric.metrics.util.Subject._Impl) fetch()).set$observers(
-                                                                   val);
-        }
-        
-        public boolean get$modified() {
-            return ((fabric.metrics.util.Subject._Impl) fetch()).get$modified();
-        }
-        
-        public boolean set$modified(boolean val) {
-            return ((fabric.metrics.util.Subject._Impl) fetch()).set$modified(
                                                                    val);
         }
         
@@ -131,18 +103,6 @@ public interface Subject extends fabric.lang.Object {
         
         public fabric.util.Set getObserversCopy() {
             return ((fabric.metrics.util.Subject) fetch()).getObserversCopy();
-        }
-        
-        public void markModified() {
-            ((fabric.metrics.util.Subject) fetch()).markModified();
-        }
-        
-        public void clearModified() {
-            ((fabric.metrics.util.Subject) fetch()).clearModified();
-        }
-        
-        public boolean isModified() {
-            return ((fabric.metrics.util.Subject) fetch()).isModified();
         }
         
         public fabric.util.Set getObservers() {
@@ -187,23 +147,6 @@ public interface Subject extends fabric.lang.Object {
           ((fabric.util.HashSet)
              new fabric.util.HashSet._Impl(this.$getStore()).$getProxy()).
           fabric$util$HashSet$();
-        
-        public boolean get$modified() {
-            fabric.worker.transaction.TransactionManager.getInstance().
-              registerRead(this);
-            return this.modified;
-        }
-        
-        public boolean set$modified(boolean val) {
-            fabric.worker.transaction.TransactionManager tm =
-              fabric.worker.transaction.TransactionManager.getInstance();
-            boolean transactionCreated = tm.registerWrite(this);
-            this.modified = val;
-            if (transactionCreated) tm.commitTransaction();
-            return val;
-        }
-        
-        private boolean modified = false;
         
         /**
    * Adds an observer to the set of observers for this object. Nothing is done
@@ -282,21 +225,6 @@ public interface Subject extends fabric.lang.Object {
         }
         
         /**
-   * Mark this subject as modified.
-   */
-        public void markModified() { this.set$modified(true); }
-        
-        /**
-   * Clear the modified flag on this subject.
-   */
-        public void clearModified() { this.set$modified(false); }
-        
-        /**
-   * @return true iff the modified flag is set.
-   */
-        public boolean isModified() { return this.get$modified(); }
-        
-        /**
    * @return the set of the current observers of this subject.
    */
         public fabric.util.Set getObservers() { return this.get$observers(); }
@@ -338,7 +266,6 @@ public interface Subject extends fabric.lang.Object {
                                 $getProxy(
                                   fabric.lang.WrappedJavaInlineable.
                                       $wrap(unobserved.poll()));
-                            sm.clearModified();
                             fabric.util.Iterator obsIter =
                               sm.getObservers().iterator();
                             while (obsIter.hasNext()) {
@@ -370,17 +297,15 @@ public interface Subject extends fabric.lang.Object {
                                     }
                                 }
                                 if (!needToWait) {
-                                    unhandled.handleUpdates();
+                                    boolean modified =
+                                      unhandled.handleUpdates();
                                     if (fabric.lang.Object._Proxy.
                                           $getProxy(
                                             (java.lang.Object)
                                               fabric.lang.WrappedJavaInlineable.
                                               $unwrap(
                                                 unhandled)) instanceof fabric.metrics.util.Subject &&
-                                          ((fabric.metrics.util.Subject)
-                                             fabric.lang.Object._Proxy.
-                                             $getProxy(unhandled)).isModified(
-                                                                     )) {
+                                          modified) {
                                         fabric.metrics.util.Subject
                                           s =
                                           (fabric.metrics.util.Subject)
@@ -407,7 +332,6 @@ public interface Subject extends fabric.lang.Object {
                                                   fabric.lang.WrappedJavaInlineable.
                                                   $unwrap(parentIter.next()));
                                         }
-                                        s.clearModified();
                                     }
                                 }
                             }
@@ -482,7 +406,6 @@ public interface Subject extends fabric.lang.Object {
             super.$serialize(out, refTypes, intraStoreRefs, interStoreRefs);
             $writeRef($getStore(), this.observers, refTypes, out,
                       intraStoreRefs, interStoreRefs);
-            out.writeBoolean(this.modified);
         }
         
         public _Impl(fabric.worker.Store store, long onum, int version,
@@ -502,7 +425,6 @@ public interface Subject extends fabric.lang.Object {
                                         (fabric.common.RefTypeEnum)
                                           refTypes.next(), in, store,
                                         intraStoreRefs, interStoreRefs);
-            this.modified = in.readBoolean();
         }
         
         public void $copyAppStateFrom(fabric.lang.Object._Impl other) {
@@ -510,7 +432,6 @@ public interface Subject extends fabric.lang.Object {
             fabric.metrics.util.Subject._Impl src =
               (fabric.metrics.util.Subject._Impl) other;
             this.observers = src.observers;
-            this.modified = src.modified;
         }
     }
     
@@ -580,11 +501,11 @@ public interface Subject extends fabric.lang.Object {
         
     }
     
-    public static final byte[] $classHash = new byte[] { 44, -103, 92, 40, -82,
-    102, -17, 57, -40, 114, 127, 91, 75, -97, 17, 33, -118, 124, 107, 40, 48,
-    54, 47, 16, -90, -39, -68, 82, -114, 116, -102, 82 };
+    public static final byte[] $classHash = new byte[] { 83, 42, 95, -12, -101,
+    -23, 92, 122, 110, 2, 3, 30, 37, 48, -53, 118, -125, 61, -61, -9, -73, -26,
+    16, 57, -11, 95, 36, 127, -105, 21, -107, 90 };
     public static final java.lang.String jlc$CompilerVersion$fabil = "0.3.0";
-    public static final long jlc$SourceLastModified$fabil = 1492294329000L;
+    public static final long jlc$SourceLastModified$fabil = 1492364524000L;
     public static final java.lang.String jlc$ClassType$fabil =
-      "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";
+      "H4sIAAAAAAAAAK0YbWwUx3XubM4+YzhjYkiMbYw5aO3AXU36h7hUxdcQLhzF8kEqTMt1bnfuvLC3u+zOnc+kblLSxrSVUJUaEpLAnzpJmzhBiRoRKUKK1K9Qqkqtqn5I/eBP2kSUH1Gbpj/apu/Nzn2tzxdb6kkzb27mvTfve2Z24TZZ5dhkIEPTmh7h0xZzIvtoOp4Yo7bD1JhOHecwzKaU1c3xC+88r/b5iT9B2hVqmIamUD1lOJysTZygBRo1GI8eGY+PHCNBBQn3U2eSE/+x0aJN+i1Tn87qJpebLOJ//u7o3BPHO15tIqEJEtKMJKdcU2KmwVmRT5D2HMulme3sVVWmTpB1BmNqktka1bXTgGgaE6TT0bIG5XmbOePMMfUCInY6eYvZYs/SJIpvgth2XuGmDeJ3uOLnuaZHE5rDRxIkkNGYrjqnyFdIc4Ksyug0C4gbEiUtooJjdB/OA3qbBmLaGaqwEknzSc1QOdnspShrHD4ACEDakmN80ixv1WxQmCCdrkg6NbLRJLc1Iwuoq8w87MJJ95JMAanVospJmmUpTu704o25S4AVFGZBEk66vGiCE/is2+OzKm/d/tynzj1k7Df8xAcyq0zRUf5WIOrzEI2zDLOZoTCXsH0ocYFuuHbWTwggd3mQXZyrX37vMzv63nzLxdlUB+dQ+gRTeEqZT6/9ZU9scHcTitFqmY6GoVCjufDqmFwZKVoQ7RvKHHExUlp8c/wnRx95gd3yk7Y4CSimns9BVK1TzJyl6cy+nxnMppypcRJkhhoT63HSAuOEZjB39lAm4zAeJ826mAqY4j+YKAMs0EQtMNaMjFkaW5RPinHRIoR0QCM+aGdgPAywixD/LCcPRCfNHIum9TybgvCOQmPUViajkLe2pkQdW4naeYNrgCSnIIoAOK7+ybwwWASksP6v3Iooe8eUzwdm3ayYKktTB3wk42V0TIeU2G/qKrNTin7uWpysv3ZRxEwQ49yBWBVW8YGfe7wVopp2Lj9633svp2648Ya00micbHJFjEgRXZ9KEUGqdkykCJSmCJSmBV8xErscf1HES8ARiVVm1A6M7rV0yjOmnSsSn09odYegF0zBzSehfECFaB9MfvGBL50daIIItaaa0WmAGvbmS6XKxGFEIQlSSmj2nX9euTBjVjKHk/CihF5MiQk54DWRbSpMhYJXYT/UT19LXZsJ+7GYBKHOcQqRCEWjz7tHTWKOlIocWmNVgqxGG1Adl0qVqY1P2uZUZUa4fi12nW4UoLE8Aor6uCdpXfrdL969R5wcpVIaqqq5ScZHqtIXmYVEoq6r2P6wzRjg/fHJse+cvz17TBgeMLbW2zCMfQzSlkK+mvbX3zr1+z//af7X/oqzOAlY+bSuKUWhy7oP4eeD9l9smIM4gRAqcUzmf3+5AFi48/aKbFAKdAg2EN0JHzFypqplNJrWGUbKv0Pbhl/727kO1906zLjGs8mOj2ZQmb9rlDxy4/gHfYKNT8GjqGK/Cppb39ZXOO+1bTqNchS/+qveiz+llyDyoTo52mkmCg4R9iDCgbuELXaKftiz9knsBlxr9ZQD3lvr9+GhWYnFiejCM92xT99yE74ci8hjS52Ef5BWpcmuF3Lv+wcCP/aTlgnSIc5ravAHKdQsCIMJOHGdmJxMkDU167Wnp3tUjJRzrcebB1XberOgUmhgjNg4bnMD3w0cMEQbGikJrY+QpjckFEqut7C/o+gjYnCvINkq+u3YDZaCscWytQJEVrHM1I9Mg5LZKQlPVDHlJGimHWYX4E4kqLogp2QldCsgE5HWLVKzWH9rPw6HOGmlaSg3VOEVAcQvJE+gxyScqhKgKhRIEWKhd6nLgrjozJ+Zu6weenbYPdI7aw/g+4x87qXf/OfnkSdvXq9T4IPctHbqrMD0qj1bYcsti26tB8VdqhJFN2/17o6dfDvrbrvZI6IX+/sHF67fv1153E+ayuGy6AJXSzRSGyRtNoP7p3G4JlT6y0ZtR2PtgrYRjPkzCeerQ8UtpEvFSdCyTQ7RzFRPpKyWvL4r4VNeR9XP6s83WDuK3RjkixtUYXm8htFjYXm8hiviHiwLhFFLtkH7OCHN1yV8ablKioj0aNcqmSxI+NzS2vlkbZIZ0VPvbnBI5o1IDyEMbWAH4chjnKymqlqirFP6xmwtB6dXQV5z2dm5b34YOTfnhrP7Fti66DpeTeO+B8SWa7C7G5NqS6NdBMW+v16ZeeN7M7N+KW6ck+aCqan1nAK2I/cQEtgh4ZolnILd8cUuQJJ2CQMf6QL8mxZc7QbWFTUqBy9Im+XMAqt2jVZPhY9B20NIy5yEhZWpgCR5Cc0VqPBQAxVmsCtw0ibrsTo6LfCy0osITkCNT5umzqhRT6teaJ8FCYcl7F2ZVkjSI+GG5WX+bIO1b2B3huMRK/2h4szD9STfCe0AbPsHCV9fmeRIclXCV5Yn+bcbrD2O3bfgQZ9lvJyrMdOaxvm99eQfhDYO43kJv7Yy+ZHkUQlnlif/xQZrT2M3By+RavnryS7eiSloR+H+MS3h0DJrbOnUh/cPfmLxFNuQ5DYoYc/SavlddqViW/elJBbvgqMLH1e6qVC9WMJfW43v3oufF3LPNzDRAnaXgNjCt4/jJGnO0t0XiVaELJMnE16DN9V5j8pvI0rsR2z+7QM7upZ4i9656GuVpHv5cqh14+UjvxXPq/J3jyC8XjJ5Xa++LlaNA5bNMpoQP+heHi0BXuFkfZ0DCio4AqHTFRfzB6BwLSYXH45wVI13Fbzq4uG/14XXuitdyfKdkhdekCPuBbnkp9pHsGDanbfxI97C3zf+K9B6+KZ4RoE7+pNDqX88/e4XThv+pr5tn7hReHTPDz+4+peO3e+nwg8/0XV+4n919dRxXBQAAA==";
 }

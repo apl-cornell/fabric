@@ -15,8 +15,11 @@ public interface Observer {
   /**
    * Handles a new observation. This is called whenever any associated
    * {@link Subject}s are changed prior to the transaction completing.
+   *
+   * @return true iff there was a modification that needs to be processed by any
+   * parents (if any) of this object.
    */
-  public void handleUpdates();
+  public boolean handleUpdates();
 
   /**
    * @return the set of {@link SampledMetric}s this Observer observes at the

@@ -73,7 +73,7 @@ public abstract class MetricContract extends Contract {
    * as needed.
    */
   /*@Override*/
-  protected void refresh() {
+  protected boolean refresh() {
     long currentTime = System.currentTimeMillis();
 
     EnforcementPolicy oldPolicy = currentPolicy;
@@ -98,18 +98,17 @@ public abstract class MetricContract extends Contract {
           oldPolicy.unapply(this);
         currentPolicy = newPolicy;
         currentPolicy.apply(this);
-        fabric.common.Logging.METRICS_LOGGER.info("DEFENDING " + this + " WITH " + currentPolicy + " IN " + TransactionManager.getInstance().getCurrentTid());
-        update(newPolicy.expiry());
+        return update(newPolicy.expiry());
       } else {
         if (oldPolicy != null)
           oldPolicy.unapply(this);
         currentPolicy = null;
-        update(currentTime);
+        return update(currentTime);
       }
     } else {
       if (oldPolicy != null)
         oldPolicy.unapply(this);
-      update(0);
+      return update(0);
     }
   }
 

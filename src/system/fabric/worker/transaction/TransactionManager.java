@@ -55,6 +55,7 @@ import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.TransactionRestartingException;
 import fabric.worker.Worker;
+import fabric.worker.Worker.Code;
 import fabric.worker.remote.RemoteCallException;
 import fabric.worker.remote.RemoteWorker;
 import fabric.worker.remote.WriterMap;
@@ -157,10 +158,20 @@ public final class TransactionManager {
         try {
           Logging.METRICS_LOGGER.log(Level.INFO,
               "ATTEMPTING PARENT EXTENSION {0}", parent);
-          Contract._Proxy target =
+          final Contract._Proxy target =
               new Contract._Proxy(parent.store, parent.onum);
-          location.issueRemoteCall(target, "handleUpdates", new Class<?>[0],
-              new Object[0]);
+          if (!location.equals(Worker.getWorker().getLocalWorker())) {
+            location.issueRemoteCall(target, "attemptExtension",
+                new Class<?>[0], new Object[0]);
+          } else {
+            Worker.runInTopLevelTransaction(new Code<Void>() {
+              @Override
+              public Void run() {
+                target.attemptExtension();
+                return null;
+              }
+            }, false);
+          }
         } catch (RemoteCallException e) {
           Logging.METRICS_LOGGER.log(Level.INFO,
               "Ignored remote call exception {0}", e);
@@ -175,7 +186,7 @@ public final class TransactionManager {
    */
   public static void queueExtension(Oid extended) {
     synchronized (extensions) {
-      if (extensions.contains(extended)) {
+      if (!extensions.contains(extended)) {
         try {
           extensions.put(extended);
         } catch (InterruptedException e) {

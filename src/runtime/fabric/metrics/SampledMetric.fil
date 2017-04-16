@@ -54,7 +54,6 @@ public class SampledMetric extends Metric {
     if (value != sample) {
       updateEstimates(sample, time);
       value = sample;
-      markModified();
       TransactionManager.getInstance().registerSample(this);
     }
   }

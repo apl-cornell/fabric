@@ -34,7 +34,7 @@ public abstract class Contract extends Subject implements Observer {
   // The maximum amount of time into the future to extend the expiry
   // Note: smaller value => less aggressive extensions => lower revocations
   // Note: larger value => longer extensions => less chatter
-  public static final long MAX_EXTENSION = 1000;
+  public static final long MAX_EXTENSION = 5000;
   // The drift tolerance factor we'll subtract from times we advertise to
   // others.
   public static final long DRIFT_FACTOR = 50;
@@ -48,15 +48,13 @@ public abstract class Contract extends Subject implements Observer {
    */
   protected void extendTo(long newExpiry) {
     long currentTime = System.currentTimeMillis();
-    long adjustedNewExpiry = Math.min(newExpiry, currentTime + MAX_EXTENSION);
     // Only bother advertising if it's better than our current expiry
     // by the buffer amount.
-    if (adjustedNewExpiry > currentTime
-        + (MIN_EXTENSION_FACTOR * (getExpiry() - currentTime))) {
+    if (newExpiry > currentTime + (MIN_EXTENSION_FACTOR * (getExpiry() - currentTime))) {
       TransactionManager.getInstance().registerExtension(this);
     }
-    final Store s = $getStore();
-    $expiry = adjustedNewExpiry;
+    fabric.common.Logging.METRICS_LOGGER.info("EXTENDING " + this + " TO " + newExpiry);
+    $expiry = newExpiry;
   }
 
   private boolean active = false;
@@ -96,11 +94,14 @@ public abstract class Contract extends Subject implements Observer {
    *
    * @param newExpiry
    *        the new expiration time associated with this {@link Contract}.
+   * @return true iff this contract was revoked.
    */
-  public void update(long newExpiry) {
+  public boolean update(long newExpiry) {
     Worker localW = Worker.getWorker();
     if (!localW.getStore(localW.getName()).equals($getStore()))
       newExpiry = newExpiry - DRIFT_FACTOR;
+    long currentTime = System.currentTimeMillis();
+    newExpiry = Math.min(newExpiry, currentTime + MAX_EXTENSION);
     if (getExpiry() < newExpiry) {
       // Only bother extending if we know everyone will see something
       // better.
@@ -109,7 +110,9 @@ public abstract class Contract extends Subject implements Observer {
       // Only revoke if we're doing worse than whatever anyone else will
       // see.
       revoke(newExpiry);
+      return true;
     }
+    return false;
   }
 
   /**
@@ -121,7 +124,6 @@ public abstract class Contract extends Subject implements Observer {
   protected void revoke(long newExpiry) {
     // Mark this as modified, which needs to be resolved in this
     // transaction.
-    markModified();
     fabric.common.Logging.METRICS_LOGGER.info("REVOKING " + this + " IN " + TransactionManager.getInstance().getCurrentTid());
     $expiry = newExpiry;
   }
@@ -149,11 +151,28 @@ public abstract class Contract extends Subject implements Observer {
    * response to a change in the value of the {@link Subject}s used
    * for enforcing this {@link Contract}. Revokes, extends, and
    * updates the enforcement strategy as needed.
+   *
+   * @return true iff the contract was retracted.
    */
-  protected abstract void refresh();
+  protected abstract boolean refresh();
 
   /*@Override*/
-  public void handleUpdates() {
-    refresh();
+  public boolean handleUpdates() {
+    if (isActive())
+      return refresh();
+    return false;
+  }
+
+  public void attemptExtension_remote(fabric.lang.security.Principal caller) {
+    // Ugh, need to add _remote suffix because it's expected by remote call
+    // messages and is added by the fabric compiler.
+    this.attemptExtension();
+  }
+
+  public void attemptExtension() {
+    // Ugh, need to add _remote suffix because it's expected by remote call
+    // messages and is added by the fabric compiler.
+    fabric.common.Logging.METRICS_LOGGER.info("ATTEMPTING EXTENSION OF " + this + " IN " + TransactionManager.getInstance().getCurrentTid());
+    this.refresh();
   }
 }

@@ -81,7 +81,7 @@ public abstract class DerivedMetric extends Metric implements Observer {
   }
 
   /*@Override*/
-  public void handleUpdates() {
+  public boolean handleUpdates() {
     fabric.common.Logging.MISC_LOGGER.info("CHECKING FOR UPDATE ON " + this + "(" + lastValue + ") IN " + TransactionManager.getInstance().getCurrentTid());
     double newValue = computeValue();
     if (newValue != lastValue) {
@@ -89,8 +89,9 @@ public abstract class DerivedMetric extends Metric implements Observer {
       lastValue = newValue;
       lastVelocity = computeVelocity();
       lastNoise = computeNoise();
-      markModified();
+      return true;
     }
+    return false;
   }
 
   /*@Override*/
