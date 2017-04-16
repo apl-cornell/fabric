@@ -132,7 +132,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
    * The ClassRef for this object's class. This is filled in lazily from the
    * data in objectData when getClassRef() is called.
    */
-  private ClassRef classRef;
+  private transient ClassRef classRef;
 
   private static final RefTypeEnum[] refTypeEnums = RefTypeEnum.values();
 
