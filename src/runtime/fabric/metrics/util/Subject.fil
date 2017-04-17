@@ -10,6 +10,7 @@ import fabric.metrics.SampledMetric;
 import fabric.metrics.contracts.Contract;
 
 import fabric.worker.transaction.TransactionManager;
+import fabric.worker.Store;
 
 import java.util.logging.Level;
 
@@ -21,6 +22,11 @@ import java.util.logging.Level;
  * {@link Observer#handleUpdates()}.
  */
 public abstract class Subject {
+
+  // Ugh, avoid getting a surrogate's store.
+  public Store getStore() {
+    return $getStore();
+  }
 
   protected Subject fabric$metrics$util$Subject$() {
     fabric$lang$Object$();

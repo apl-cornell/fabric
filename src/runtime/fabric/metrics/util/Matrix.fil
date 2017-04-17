@@ -5,6 +5,7 @@ import fabric.util.ArrayList;
 //import fabric.metrics.LinearMetric;
 
 import fabric.worker.Worker;
+import fabric.worker.Store;
 
 /**
  * Utility class for matrix representation in {@link LinearMetric}.
@@ -13,6 +14,10 @@ public class Matrix {
   private int rows;
   private int columns;
   private ArrayList/*<double[]>*/ data;
+
+  public Store getStore() {
+    return $getStore();
+  }
 
   /**
    * @param rows

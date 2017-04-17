@@ -51,8 +51,8 @@ public class LinearMetric extends DerivedMetric {
 
     // Ugh, this technically breaks the constructor protocol, but I need
     // terms initialized before we normalize.
-    this.matrix = normalize(matrix).copy($getStore());
-    this.varMatrix = this.matrix.elementMultiply(this.matrix).copy($getStore());
+    this.matrix = normalize(matrix).copy(getStore());
+    this.varMatrix = this.matrix.elementMultiply(this.matrix).copy(getStore());
     initialize();
     return this;
   }
@@ -136,7 +136,7 @@ public class LinearMetric extends DerivedMetric {
 
   /*@Override*/
   public double computeValue() {
-    fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "RECOMPUTING LINEAR METRIC AT {0}", $getStore().name());
+    fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "RECOMPUTING LINEAR METRIC AT {0}", getStore().name());
     double[] values = new double[terms.length];
     for (int i = 0; i < terms.length; i++) {
       values[i] = terms[i].value();
@@ -224,12 +224,12 @@ public class LinearMetric extends DerivedMetric {
       if (nonEmptyRow)
         nonEmpty = true;
     }
-    return str + ")@" + $getStore().name();
+    return str + ")@" + getStore().name();
   }
 
   /*@Override*/
   public Metric times(double scalar) {
-    final Store s = $getStore();
+    final Store s = getStore();
     return Metric.findMetric(s,
         new LinearMetric@s().fabric$metrics$LinearMetric$(matrix.multiply(scalar), terms));
   }
@@ -242,9 +242,9 @@ public class LinearMetric extends DerivedMetric {
    * {@link #handleUpdates()}.
    */
   public Metric plus(Metric other) {
-    final Store s = $getStore();
+    final Store s = getStore();
     if (other instanceof LinearMetric
-        && other.$getStore().equals($getStore())) {
+        && other.getStore().equals(getStore())) {
       LinearMetric that = (LinearMetric) other;
 
       // Get the combined sorted set of terms.
@@ -300,7 +300,7 @@ public class LinearMetric extends DerivedMetric {
       }
       return Metric.findMetric(s,
           new LinearMetric@s().fabric$metrics$LinearMetric$(newCs, terms));
-    } else if (isSingleStore() && !other.$getStore().equals($getStore())) {
+    } else if (isSingleStore() && !other.getStore().equals(getStore())) {
       return Metric.findMetric(s,
           new LinearMetric@s().fabric$metrics$LinearMetric$(Matrix.constant(1, 2, 1), new Metric[] { this, other }));
     }
@@ -329,9 +329,9 @@ public class LinearMetric extends DerivedMetric {
    */
   /*@Override*/
   public Metric min(Metric other) {
-    final Store s = $getStore();
+    final Store s = getStore();
     if (other instanceof LinearMetric
-        && other.$getStore().equals($getStore())) {
+        && other.getStore().equals(getStore())) {
       LinearMetric that = (LinearMetric) other;
 
       // Get the combined sorted set of terms.
@@ -382,7 +382,7 @@ public class LinearMetric extends DerivedMetric {
       newCs.addRow(newRow);
       return Metric.findMetric(s,
           new LinearMetric@s().fabric$metrics$LinearMetric$(newCs, terms));
-    } else if (isSingleStore() && !other.$getStore().equals($getStore())) {
+    } else if (isSingleStore() && !other.getStore().equals(getStore())) {
       return Metric.findMetric(s,
           new LinearMetric@s().fabric$metrics$LinearMetric$(Matrix.identity(2), new Metric[] { this, other }));
     }
@@ -448,7 +448,7 @@ public class LinearMetric extends DerivedMetric {
           b = -b;
           r = -r;
         }
-        final Store s = m.$getStore();
+        final Store s = m.getStore();
         Bound witnessBound = new Bound@s().fabric$metrics$contracts$Bound$(r, b, currentTime);
         if (!witnesses.containsKey(m)
             || !((MetricContract) witnesses.get(m)).getBound().implies(witnessBound)) {
@@ -456,14 +456,14 @@ public class LinearMetric extends DerivedMetric {
         }
       }
     }
-    final Store bndStore = bound.$getStore();
+    final Store bndStore = bound.getStore();
     return new WitnessPolicy@bndStore().fabric$metrics$contracts$enforcement$WitnessPolicy$(witnesses.values());
   }
 
   /*@Override*/
   public int hashCode() {
     int hash = Arrays.hashCode(terms) * 32 + matrix.hashCode();
-    return hash * 32 + $getStore().hashCode();
+    return hash * 32 + getStore().hashCode();
   }
 
   /*@Override*/
@@ -472,7 +472,7 @@ public class LinearMetric extends DerivedMetric {
       LinearMetric that = (LinearMetric) other;
       return this.matrix.equals(that.matrix)
           && Arrays.deepEquals(this.terms, that.terms)
-          && this.$getStore().equals(that.$getStore());
+          && this.getStore().equals(that.getStore());
     }
     return false;
   }

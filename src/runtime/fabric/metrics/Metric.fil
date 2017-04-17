@@ -161,8 +161,8 @@ public abstract class Metric extends Subject implements Comparable/*<Metric>*/ {
    *       {@link Metric}
    */
   public Metric times(double scalar) {
-    final Store thisStore = $getStore();
-    return findMetric($getStore(),
+    final Store thisStore = getStore();
+    return findMetric(getStore(),
         new LinearMetric@thisStore().fabric$metrics$LinearMetric$(
           Matrix.constant(1, 1, scalar), new Metric[] { this }));
   }
@@ -178,8 +178,8 @@ public abstract class Metric extends Subject implements Comparable/*<Metric>*/ {
     // Ugh dumb hack
     if (other instanceof DerivedMetric)
       return other.plus(this);
-    final Store thisStore = $getStore();
-    return findMetric($getStore(),
+    final Store thisStore = getStore();
+    return findMetric(getStore(),
         new LinearMetric@thisStore().fabric$metrics$LinearMetric$(
           Matrix.constant(1, 2, 1), new Metric[]{ this, other}));
   }
@@ -198,8 +198,8 @@ public abstract class Metric extends Subject implements Comparable/*<Metric>*/ {
       return other.min(this);
     if (this.equals(other))
       return this.times(1);
-    final Store thisStore = $getStore();
-    return findMetric($getStore(),
+    final Store thisStore = getStore();
+    return findMetric(getStore(),
         new LinearMetric@thisStore().fabric$metrics$LinearMetric$(
           Matrix.identity(2), new Metric[]{ this, other }));
   }
@@ -257,7 +257,7 @@ public abstract class Metric extends Subject implements Comparable/*<Metric>*/ {
    *       the given {@link Metric}.
    */
   public static Metric scaleAtStore(final Store s, double a, Metric term) {
-    if (term.$getStore().equals(s))
+    if (term.getStore().equals(s))
       return findMetric(s, term.times(a));
     return findMetric(s, new LinearMetric@s().fabric$metrics$LinearMetric$(
           Matrix.constant(1, 1, a), new Metric[] { term }));

@@ -16,7 +16,6 @@ import fabric.common.Timing;
 import fabric.common.TransactionID;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
-import fabric.common.util.LongSet;
 import fabric.common.util.Oid;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.WeakReferenceArrayList;
@@ -707,7 +706,7 @@ public final class Log {
     // Queue up extension transactions
     Map<Store, List<Long>> extensionsToSend = new HashMap<>();
     for (Contract extended : extendedContracts) {
-      Store store = extended.$getStore();
+      Store store = extended.getStore();
       if (!extensionsToSend.containsKey(store))
         extensionsToSend.put(store, new ArrayList<Long>());
       if (!extensionsToSend.get(store).contains(extended.$getOnum()))

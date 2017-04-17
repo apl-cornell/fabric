@@ -13,6 +13,10 @@ public class Bound {
   public final double rate;
   public final double base;
 
+  public Store getStore() {
+    return $getStore();
+  }
+
   /**
    * @param rate
    *        the rate the value changes with time

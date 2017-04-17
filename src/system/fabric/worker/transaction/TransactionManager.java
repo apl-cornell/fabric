@@ -22,7 +22,6 @@ import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 
 import fabric.common.FabricThread;
@@ -35,7 +34,6 @@ import fabric.common.TransactionID;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongKeyMap;
-import fabric.common.util.Oid;
 import fabric.lang.Object._Impl;
 import fabric.lang.Object._Proxy;
 import fabric.lang.security.Label;
@@ -55,8 +53,6 @@ import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.TransactionRestartingException;
 import fabric.worker.Worker;
-import fabric.worker.Worker.Code;
-import fabric.worker.remote.RemoteCallException;
 import fabric.worker.remote.RemoteWorker;
 import fabric.worker.remote.WriterMap;
 
@@ -446,7 +442,8 @@ public final class TransactionManager {
           || !stores.contains(LOCAL_STORE)
               && !(stores.iterator().next() instanceof InProcessStore)) {
         Logging.log(HOTOS_LOGGER, Level.FINE,
-            "committed tid {0} (latency {1} ms)", HOTOS_current, commitLatency);
+            "committed tid {0} (latency {1} ms, {2} stores)", HOTOS_current,
+            commitLatency, stores.size());
       }
     }
   }

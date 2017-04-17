@@ -192,7 +192,7 @@ public abstract class MetricContract extends Contract {
       // advertised time).
       hedgedTime = Math.max(getExpiry(), hedgedTime);
     }
-    final Store s = $getStore();
+    final Store s = getStore();
     return new DirectPolicy@s().fabric$metrics$contracts$enforcement$DirectPolicy$(hedgedTime);
   }
 

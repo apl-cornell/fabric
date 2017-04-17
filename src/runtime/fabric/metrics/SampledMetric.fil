@@ -83,13 +83,13 @@ public class SampledMetric extends Metric {
 
   /*@Override*/
   protected MetricContract createContract(Bound bound) {
-    final Store s = $getStore();
+    final Store s = getStore();
     return new SampledMetricContract@s().fabric$metrics$contracts$SampledMetricContract$(this, bound);
   }
 
   /*@Override*/
   public String toString() {
-    return "SampledMetric(" + name + ")@" + $getStore().name();
+    return "SampledMetric(" + name + ")@" + getStore().name();
   }
 
   /*@Override*/
@@ -136,7 +136,7 @@ public class SampledMetric extends Metric {
 
   /*@Override*/
   public int hashCode() {
-    return $getStore().hashCode() * 32 + name.hashCode();
+    return getStore().hashCode() * 32 + name.hashCode();
   }
 
   /*@Override*/
@@ -144,7 +144,7 @@ public class SampledMetric extends Metric {
     if (other instanceof SampledMetric) {
       SampledMetric that = (SampledMetric) other;
       return this.name.equals(that.name)
-          && this.$getStore().equals(that.$getStore());
+          && this.getStore().equals(that.getStore());
     }
     return false;
   }

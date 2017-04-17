@@ -107,7 +107,7 @@ public abstract class Contract extends Subject implements Observer {
    */
   public boolean update(long newExpiry) {
     Worker localW = Worker.getWorker();
-    if (!localW.getStore(localW.getName()).equals($getStore()))
+    if (!localW.getStore(localW.getName()).equals(getStore()))
       newExpiry = newExpiry - DRIFT_FACTOR;
     long currentTime = System.currentTimeMillis();
     newExpiry = Math.min(newExpiry, currentTime + MAX_EXTENSION);

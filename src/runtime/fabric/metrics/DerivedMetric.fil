@@ -139,7 +139,7 @@ public abstract class DerivedMetric extends Metric implements Observer {
   /*@Override*/
   public boolean isSingleStore() {
     for (int i = 0; i < terms.length; i++) {
-      if (!terms[i].$getStore().equals($getStore()) || !terms[i].isSingleStore())
+      if (!terms[i].getStore().equals(getStore()) || !terms[i].isSingleStore())
         return false;
     }
     return true;
@@ -198,7 +198,7 @@ public abstract class DerivedMetric extends Metric implements Observer {
 
   /*@Override*/
   protected MetricContract createContract(Bound bound) {
-    final Store s = $getStore();
+    final Store s = getStore();
     return new DerivedMetricContract@s().fabric$metrics$contracts$DerivedMetricContract$(this, bound);
   }
 
