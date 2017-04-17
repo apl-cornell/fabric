@@ -8,12 +8,17 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 
 import fabric.common.AuthorizationUtil;
+import fabric.common.Logging;
 import fabric.common.ONumConstants;
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
+import fabric.common.Threading;
 import fabric.common.exceptions.AccessException;
 import fabric.common.net.RemoteIdentity;
 import fabric.common.util.LongIterator;
@@ -23,6 +28,7 @@ import fabric.common.util.LongSet;
 import fabric.dissemination.ObjectGlob;
 import fabric.lang.security.Label;
 import fabric.lang.security.Principal;
+import fabric.metrics.contracts.Contract;
 import fabric.store.db.GroupContainer;
 import fabric.store.db.ObjectDB;
 import fabric.worker.Store;
@@ -50,6 +56,7 @@ public class TransactionManager {
   public TransactionManager(ObjectDB database) {
     this.database = database;
     this.sm = new SubscriptionManager(database.getName(), this);
+    Threading.getPool().submit(extensionsRunner);
   }
 
   /**
@@ -76,7 +83,8 @@ public class TransactionManager {
     } catch (final RuntimeException e) {
       throw new TransactionCommitFailedException(
           "something went wrong; store experienced a runtime exception during "
-              + "commit: " + e.getMessage(), e);
+              + "commit: " + e.getMessage(),
+          e);
     }
   }
 
@@ -227,7 +235,8 @@ public class TransactionManager {
    * Returns a GroupContainer containing the specified object.
    */
   GroupContainer getGroupContainer(long onum) throws AccessException {
-    return getGroupContainerAndSubscribe(onum, null, false /* this argument doesn't matter */);
+    return getGroupContainerAndSubscribe(onum, null,
+        false /* this argument doesn't matter */);
   }
 
   /**
@@ -284,9 +293,8 @@ public class TransactionManager {
    */
   public ObjectGroup getGroup(Principal principal, RemoteWorker subscriber,
       long onum) throws AccessException {
-    ObjectGroup group =
-        getGroupContainerAndSubscribe(onum, subscriber, false).getGroup(
-            principal);
+    ObjectGroup group = getGroupContainerAndSubscribe(onum, subscriber, false)
+        .getGroup(principal);
     if (group == null) throw new AccessException(database.getName(), onum);
     return group;
   }
@@ -343,4 +351,62 @@ public class TransactionManager {
     return result;
   }
 
+  /* Extension handling */
+  public void queueExtension(List<Long> onums) {
+    waitingExtensions.addAll(onums);
+  }
+
+  /**
+   * The extensions currently running.
+   */
+  private final Set<Long> runningExtensions = new ConcurrentSkipListSet<>();
+
+  /**
+   * The extensions waiting to run.
+   */
+  private final LinkedBlockingQueue<Long> waitingExtensions =
+      new LinkedBlockingQueue<>();
+
+  /**
+   * A thread that goes through the extensions queue and sends out extension
+   * messages.
+   */
+  private final Threading.NamedRunnable extensionsRunner =
+      new Threading.NamedRunnable("Extensions runner") {
+        @Override
+        protected void runImpl() {
+          while (true) {
+            try {
+              // Get the next parent of an extended item.
+              final long onum = waitingExtensions.take();
+              // If we're not already running an extension for it, run one
+              if (runningExtensions.add(onum)) {
+                Threading.getPool().submit(
+                    new Threading.NamedRunnable("Extension of " + onum) {
+                      @Override
+                      protected void runImpl() {
+                        // Run a transaction handling updates at the parent
+                        Logging.METRICS_LOGGER.log(Level.INFO,
+                            "RUNNING EXTENSION OF {0}", onum);
+                        Store store =
+                            Worker.getWorker().getStore(database.getName());
+                        final Contract._Proxy target =
+                            new Contract._Proxy(store, onum);
+                        Worker.runInTopLevelTransaction(new Code<Void>() {
+                          @Override
+                          public Void run() {
+                            target.attemptExtension();
+                            return null;
+                          }
+                        }, true);
+                        runningExtensions.remove(onum);
+                      }
+                    });
+              }
+            } catch (InterruptedException e) {
+              Logging.logIgnoredInterruptedException(e);
+            }
+          }
+        }
+      };
 }

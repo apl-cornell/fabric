@@ -3,10 +3,11 @@ package fabric.worker.transaction;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 
@@ -15,6 +16,7 @@ import fabric.common.Timing;
 import fabric.common.TransactionID;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.LongSet;
 import fabric.common.util.Oid;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.WeakReferenceArrayList;
@@ -25,7 +27,6 @@ import fabric.metrics.contracts.Contract;
 import fabric.metrics.contracts.MetricContract;
 import fabric.metrics.util.Observer;
 import fabric.metrics.util.Subject;
-import fabric.util.Iterator;
 import fabric.worker.FabricSoftRef;
 import fabric.worker.Store;
 import fabric.worker.Worker;
@@ -121,13 +122,6 @@ public final class Log {
    * should trigger extensions up the tree after commit.
    */
   protected final List<Contract> extendedContracts;
-
-  /**
-   * A collection of {@link Contract}s that should be sent extension messages
-   * after this commits.  Should only be populated in the top level Log right
-   * before attempting to commit.
-   */
-  protected final LinkedHashSet<Oid> extendedParents;
 
   /**
    * Tracks objects on local store that have been modified. See
@@ -233,7 +227,6 @@ public final class Log {
     this.waitsFor = new HashSet<>();
 
     if (parent != null) {
-      this.extendedParents = null;
       try {
         Timing.SUBTX.begin();
         this.writerMap = new WriterMap(parent.writerMap);
@@ -248,7 +241,6 @@ public final class Log {
         Timing.SUBTX.end();
       }
     } else {
-      this.extendedParents = new LinkedHashSet<>();
       this.writerMap = new WriterMap(this.tid.topTid);
       commitState = new CommitState();
 
@@ -496,10 +488,10 @@ public final class Log {
       localStoreCreates.clear();
       writes.clear();
       unobservedSamples.clear();
+      extendedContracts.clear();
       localStoreWrites.clear();
       workersCalled.clear();
       securityCache.reset();
-      extendedParents.clear();
 
       if (parent != null) {
         writerMap = new WriterMap(parent.writerMap);
@@ -521,21 +513,6 @@ public final class Log {
    */
   public void resolveObservations() {
     Subject._Impl.processSamples(unobservedSamples, extendedContracts);
-  }
-
-  /**
-   * Right before attempting a top level commit, gather up extendedParents to
-   * send out extensions for after a successful commit.
-   */
-  public void gatherExtendedParents() {
-    for (Contract c : extendedContracts) {
-      for (Iterator iter = c.getObservers().iterator(); iter.hasNext();) {
-        Observer parent = (Observer) iter.next();
-        if (!extendedContracts.contains(parent)) {
-          extendedParents.add(new Oid(parent));
-        }
-      }
-    }
   }
 
   /**
@@ -591,6 +568,13 @@ public final class Log {
       synchronized (parent.unobservedSamples) {
         if (!parent.unobservedSamples.contains(sub))
           parent.unobservedSamples.add(sub);
+      }
+    }
+
+    for (Contract obs : extendedContracts) {
+      synchronized (parent.extendedContracts) {
+        if (!parent.extendedContracts.contains(obs))
+          parent.extendedContracts.add(obs);
       }
     }
 
@@ -705,7 +689,7 @@ public final class Log {
     // Release write locks on created objects and set version numbers.
     Iterable<_Impl> chain2 = SysUtil.chain(creates, localStoreCreates);
     for (_Impl obj : chain2) {
-      extendedParents.remove(new Oid(obj));
+      extendedContracts.remove(new Oid(obj));
       if (!obj.$isOwned) {
         // The cached object is out-of-date. Evict it.
         obj.$ref.evict();
@@ -721,8 +705,17 @@ public final class Log {
     }
 
     // Queue up extension transactions
-    for (Oid extended : extendedParents) {
-      TransactionManager.queueExtension(extended);
+    Map<Store, List<Long>> extensionsToSend = new HashMap<>();
+    for (Contract extended : extendedContracts) {
+      Store store = extended.$getStore();
+      if (!extensionsToSend.containsKey(store))
+        extensionsToSend.put(store, new ArrayList<Long>());
+      if (!extensionsToSend.get(store).contains(extended.$getOnum()))
+        extensionsToSend.get(store).add(extended.$getOnum());
+    }
+
+    for (Map.Entry<Store, List<Long>> entry : extensionsToSend.entrySet()) {
+      entry.getKey().sendExtensions(entry.getValue());
     }
 
     // Merge the security cache into the top-level label cache.

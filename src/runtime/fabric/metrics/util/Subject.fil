@@ -111,15 +111,14 @@ public abstract class Subject {
           }
           // If this has no other pending sampled events, process it.
           if (!needToWait) {
+            if (unhandled instanceof Contract) {
+              // This contract is handled *now*
+              extensions.remove(/*(Contract)*/ unhandled);
+            }
             boolean modified = unhandled.handleUpdates();
             if (unhandled instanceof Subject && modified) {
-              Subject s = (Subject) unhandled;
-              if (s instanceof Contract) {
-                // This contract isn't being extended now.
-                extensions.remove(/*(Contract)*/ s);
-              }
               //queue.addAll(parents);
-              Iterator parentIter = s.getObservers().iterator();
+              Iterator parentIter = ((Subject) unhandled).getObservers().iterator();
               while (parentIter.hasNext()) {
                 queue.add(parentIter.next());
               }

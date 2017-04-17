@@ -3,6 +3,7 @@ package fabric.metrics.contracts;
 import fabric.metrics.Metric;
 import fabric.metrics.util.Observer;
 import fabric.metrics.util.Subject;
+import fabric.util.Iterator;
 
 import fabric.worker.Store;
 import fabric.worker.Worker;
@@ -20,9 +21,12 @@ import java.util.logging.Level;
  */
 public abstract class Contract extends Subject implements Observer {
 
+  private long lastAdvertised;
+
   protected Contract fabric$metrics$contracts$Contract$() {
     fabric$metrics$util$Subject$();
     this.$expiry = -1;
+    this.lastAdvertised = -1;
     return this;
   }
 
@@ -31,11 +35,11 @@ public abstract class Contract extends Subject implements Observer {
   // Note: larger value => less aggressive extensions => lower overhead
   // Note: smaller value => more aggressive extensions => less chance of a
   // warranty going stale unecessarily.
-  public static final double MIN_EXTENSION_FACTOR = 1.25;
+  public static final double MIN_EXTENSION_FACTOR = 2;
   // The maximum amount of time into the future to extend the expiry
   // Note: smaller value => less aggressive extensions => lower revocations
   // Note: larger value => longer extensions => less chatter
-  public static final long MAX_EXTENSION = 30000;
+  public static final long MAX_EXTENSION = 1000;
   // The drift tolerance factor we'll subtract from times we advertise to
   // others.
   public static final long DRIFT_FACTOR = 50;
@@ -51,8 +55,14 @@ public abstract class Contract extends Subject implements Observer {
     long currentTime = System.currentTimeMillis();
     // Only bother advertising if it's better than our current expiry
     // by the buffer amount.
-    if (newExpiry > currentTime + (MIN_EXTENSION_FACTOR * (getExpiry() - currentTime))) {
-      TransactionManager.getInstance().registerExtension(this);
+    if (newExpiry > currentTime + (MIN_EXTENSION_FACTOR * (lastAdvertised - currentTime))) {
+      for (Iterator iter = getObservers().iterator(); iter.hasNext();) {
+        Observer o = (Observer) iter.next();
+        if (o instanceof MetricContract) {
+          TransactionManager.getInstance().registerExtension((Contract) o);
+        }
+      }
+      lastAdvertised = newExpiry;
     }
     fabric.common.Logging.METRICS_LOGGER.log(Level.INFO, "EXTENDING {0} TO {1}", new Object native[] { this, new Long(newExpiry) });
     $expiry = newExpiry;
@@ -127,6 +137,7 @@ public abstract class Contract extends Subject implements Observer {
     // transaction.
     fabric.common.Logging.METRICS_LOGGER.log(Level.INFO, "REVOKING {0}", this);
     $expiry = newExpiry;
+    lastAdvertised = newExpiry;
   }
 
   /**
@@ -165,9 +176,11 @@ public abstract class Contract extends Subject implements Observer {
   }
 
   public void attemptExtension_remote(fabric.lang.security.Principal caller) {
-    // Ugh, need to add _remote suffix because it's expected by remote call
-    // messages and is added by the fabric compiler.
-    this.attemptExtension();
+    atomic {
+      // Ugh, need to add _remote suffix because it's expected by remote call
+      // messages and is added by the fabric compiler.
+      this.attemptExtension();
+    }
   }
 
   public void attemptExtension() {

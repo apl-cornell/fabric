@@ -17,6 +17,7 @@ import fabric.common.Logging;
 import fabric.common.ONumConstants;
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
+import fabric.common.Threading;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.FabricGeneralSecurityException;
@@ -30,11 +31,11 @@ import fabric.common.util.LongKeyMap;
 import fabric.dissemination.ObjectGlob;
 import fabric.lang.Object;
 import fabric.lang.Object._Impl;
-import fabric.lang.WrappedJavaInlineable;
 import fabric.lang.security.NodePrincipal;
 import fabric.messages.AbortTransactionMessage;
 import fabric.messages.AllocateMessage;
 import fabric.messages.CommitTransactionMessage;
+import fabric.messages.ContractExtensionMessage;
 import fabric.messages.DissemReadMessage;
 import fabric.messages.GetCertChainMessage;
 import fabric.messages.MakePrincipalMessage;
@@ -42,7 +43,6 @@ import fabric.messages.Message.NoException;
 import fabric.messages.PrepareTransactionMessage;
 import fabric.messages.ReadMessage;
 import fabric.messages.StalenessCheckMessage;
-import fabric.metrics.DerivedMetric;
 import fabric.net.RemoteNode;
 import fabric.net.UnreachableNodeException;
 import fabric.util.Map;
@@ -54,8 +54,8 @@ import fabric.util.Map;
  * <code>Worker.getStore()</code> interface. For each remote store, there should
  * be at most one <code>RemoteStore</code> object representing that store.
  */
-public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
-    Serializable {
+public class RemoteStore extends RemoteNode<RemoteStore>
+    implements Store, Serializable {
   /**
    * A queue of fresh object identifiers.
    */
@@ -272,8 +272,8 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
    * @param num
    *          The number of objects to allocate
    */
-  protected void reserve(int num) throws AccessException,
-      UnreachableNodeException {
+  protected void reserve(int num)
+      throws AccessException, UnreachableNodeException {
     synchronized (fresh_ids) {
       while (fresh_ids.size() < num) {
         // log.info("Requesting new onums, storeid=" + storeID);
@@ -295,8 +295,8 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
   @Override
   public void commitTransaction(long transactionID)
       throws UnreachableNodeException, TransactionCommitFailedException {
-    send(Worker.getWorker().authToStore, new CommitTransactionMessage(
-        transactionID));
+    send(Worker.getWorker().authToStore,
+        new CommitTransactionMessage(transactionID));
   }
 
   @Override
@@ -314,11 +314,25 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
    */
   protected List<SerializedObject> getStaleObjects(LongKeyMap<Integer> reads) {
     try {
-      return send(Worker.getWorker().authToStore, new StalenessCheckMessage(
-          reads)).staleObjects;
+      return send(Worker.getWorker().authToStore,
+          new StalenessCheckMessage(reads)).staleObjects;
     } catch (final AccessException e) {
       throw new RuntimeFetchException(e);
     }
+  }
+
+  @Override
+  public void sendExtensions(final List<Long> onums) {
+    Threading.getPool().submit(new Runnable() {
+      @Override
+      public void run() {
+        try {
+          send(Worker.getWorker().authToStore,
+              new ContractExtensionMessage(onums));
+        } catch (NoException e) {
+        }
+      }
+    });
   }
 
   @Override

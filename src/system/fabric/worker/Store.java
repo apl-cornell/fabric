@@ -2,6 +2,7 @@ package fabric.worker;
 
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.List;
 
 import fabric.common.SerializedObject;
 import fabric.common.TransactionID;
@@ -126,4 +127,9 @@ public interface Store extends Serializable {
    * @return the resulting cache entry.
    */
   public ObjectCache.Entry cache(SerializedObject obj);
+
+  /**
+   * Send extensions to handle.
+   */
+  public void sendExtensions(List<Long> onums);
 }

@@ -31,22 +31,22 @@ public abstract class MessageToStoreHandler extends AbstractMessageServer {
   @Override
   public abstract AbortTransactionMessage.Response handle(
       RemoteIdentity<RemoteWorker> client, AbortTransactionMessage msg)
-          throws AccessException;
+      throws AccessException;
 
   @Override
   public abstract AllocateMessage.Response handle(
       RemoteIdentity<RemoteWorker> client, AllocateMessage msg)
-          throws AccessException;
+      throws AccessException;
 
   @Override
   public abstract CommitTransactionMessage.Response handle(
       RemoteIdentity<RemoteWorker> client, CommitTransactionMessage msg)
-          throws TransactionCommitFailedException;
+      throws TransactionCommitFailedException;
 
   @Override
   public abstract DissemReadMessage.Response handle(
       RemoteIdentity<RemoteWorker> client, DissemReadMessage msg)
-          throws AccessException;
+      throws AccessException;
 
   @Override
   public abstract GetCertChainMessage.Response handle(
@@ -55,22 +55,26 @@ public abstract class MessageToStoreHandler extends AbstractMessageServer {
   @Override
   public abstract PrepareTransactionMessage.Response handle(
       RemoteIdentity<RemoteWorker> client, PrepareTransactionMessage msg)
-          throws TransactionPrepareFailedException;
+      throws TransactionPrepareFailedException;
 
   @Override
   public abstract ReadMessage.Response handle(
       RemoteIdentity<RemoteWorker> client, ReadMessage msg)
-          throws AccessException;
+      throws AccessException;
 
   @Override
   public abstract MakePrincipalMessage.Response handle(
       RemoteIdentity<RemoteWorker> client, MakePrincipalMessage msg)
-          throws FabricGeneralSecurityException;
+      throws FabricGeneralSecurityException;
 
   @Override
   public abstract StalenessCheckMessage.Response handle(
       RemoteIdentity<RemoteWorker> client, StalenessCheckMessage msg)
-          throws AccessException;
+      throws AccessException;
+
+  @Override
+  public abstract ContractExtensionMessage.Response handle(
+      RemoteIdentity<RemoteWorker> client, ContractExtensionMessage msg);
 
   @Override
   public final Response handle(RemoteIdentity<RemoteWorker> client,
@@ -81,28 +85,28 @@ public abstract class MessageToStoreHandler extends AbstractMessageServer {
   @Override
   public final fabric.messages.DirtyReadMessage.Response handle(
       RemoteIdentity<RemoteWorker> client, DirtyReadMessage msg)
-          throws ProtocolError {
+      throws ProtocolError {
     throw error(msg);
   }
 
   @Override
   public final fabric.messages.RemoteCallMessage.Response handle(
       RemoteIdentity<RemoteWorker> client, RemoteCallMessage msg)
-          throws ProtocolError {
+      throws ProtocolError {
     throw error(msg);
   }
 
   @Override
   public final fabric.messages.TakeOwnershipMessage.Response handle(
       RemoteIdentity<RemoteWorker> client, TakeOwnershipMessage msg)
-          throws ProtocolError {
+      throws ProtocolError {
     throw error(msg);
   }
 
   @Override
   public final fabric.messages.InterWorkerStalenessMessage.Response handle(
       RemoteIdentity<RemoteWorker> client, InterWorkerStalenessMessage msg)
-          throws ProtocolError {
+      throws ProtocolError {
     throw error(msg);
   }
 

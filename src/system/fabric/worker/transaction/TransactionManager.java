@@ -111,90 +111,6 @@ public final class TransactionManager {
       new DeadlockDetectorThread();
 
   /**
-   * The extension message queue.
-   */
-  private static final LinkedBlockingQueue<Oid> extensions =
-      new LinkedBlockingQueue<>();
-
-  /**
-   * A thread that goes through the extensions queue and sends out extension
-   * messages.
-   */
-  private static final Threading.NamedRunnable extensionsRunner =
-      new Threading.NamedRunnable("Extensions runner") {
-        @Override
-        protected void runImpl() {
-          while (true) {
-            try {
-              // Get the next parent of an extended item.
-              final Oid parentOid = extensions.take();
-
-              // Run the extension in a transaction.
-              Threading.getPool()
-                  .submit(extensionTask(
-                      Worker.getWorker().getWorker(parentOid.store.name()),
-                      parentOid));
-            } catch (InterruptedException e) {
-              Logging.logIgnoredInterruptedException(e);
-            }
-          }
-        }
-      };
-
-  static {
-    Threading.getPool().submit(extensionsRunner);
-  }
-
-  /**
-   * Get a runnable that runs a transaction to update the given Observer.
-   */
-  private static NamedRunnable extensionTask(final RemoteWorker location,
-      final Oid parent) {
-    String name = "Extension of " + parent;
-    return new Threading.NamedRunnable(name) {
-      @Override
-      protected void runImpl() {
-        // Run a transaction handling updates at the parent
-        try {
-          final Contract._Proxy target =
-              new Contract._Proxy(parent.store, parent.onum);
-          if (!location.equals(Worker.getWorker().getLocalWorker())) {
-            location.issueRemoteCall(target, "attemptExtension",
-                new Class<?>[0], new Object[0]);
-          } else {
-            Worker.runInTopLevelTransaction(new Code<Void>() {
-              @Override
-              public Void run() {
-                target.attemptExtension();
-                return null;
-              }
-            }, false);
-          }
-        } catch (RemoteCallException e) {
-          Logging.METRICS_LOGGER.log(Level.INFO,
-              "Ignored remote call exception {0}", e);
-        }
-      }
-    };
-  }
-
-  /**
-   * Add an Oid of the observer of an extended contract to the extensions queue,
-   * to for sending up extensions to parent contracts within later transactions.
-   */
-  public static void queueExtension(Oid extended) {
-    synchronized (extensions) {
-      if (!extensions.contains(extended)) {
-        try {
-          extensions.put(extended);
-        } catch (InterruptedException e) {
-          Logging.logIgnoredInterruptedException(e);
-        }
-      }
-    }
-  }
-
-  /**
    * The innermost running transaction for the thread being managed.
    */
   private Log current;
@@ -480,9 +396,6 @@ public final class TransactionManager {
 
     // Resolve unobserved samples.
     resolveObservations();
-
-    // Gather up extended parents to run extensions for after this commits.
-    current.gatherExtendedParents();
 
     // Commit top-level transaction.
     Log HOTOS_current = current;

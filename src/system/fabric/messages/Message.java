@@ -291,7 +291,12 @@ public abstract class Message<R extends Message.Response, E extends FabricExcept
         return new InterWorkerStalenessMessage(in);
       }
     },
-    ;
+    CONTRACT_EXTENSION {
+      @Override
+      ContractExtensionMessage parse(DataInput in) throws IOException {
+        return new ContractExtensionMessage(in);
+      }
+    },;
 
     /** Read a message of the appropriate type from the given DataInput. */
     abstract Message<?, ?> parse(DataInput in) throws IOException;
