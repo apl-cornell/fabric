@@ -40,7 +40,6 @@ public abstract class Subject {
    *        {@link Observer} to add
    */
   public void addObserver(Observer o) {
-    fabric.common.Logging.METRICS_LOGGER.log(Level.FINEST, "SUBJECT {0} ADDED OBSERVER {1}", new Object native[] { this, o });
     observers.add(o);
   }
 
@@ -51,7 +50,6 @@ public abstract class Subject {
    *        {@link Observer} to remove
    */
   public void removeObserver(Observer o) {
-    fabric.common.Logging.METRICS_LOGGER.log(Level.FINEST, "SUBJECT {0} REMOVED OBSERVER {1}", new Object native[] { this, o });
     observers.remove(o);
   }
 

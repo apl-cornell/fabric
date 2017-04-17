@@ -99,7 +99,6 @@ public abstract class MetricContract extends Contract {
           oldPolicy.unapply(this);
         currentPolicy = newPolicy;
         currentPolicy.apply(this);
-        fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "APPLIED POLICY {1} TO {0}", new Object native[] { this, currentPolicy });
         return update(newPolicy.expiry());
       } else {
         if (oldPolicy != null)

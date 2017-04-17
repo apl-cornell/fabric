@@ -136,7 +136,7 @@ public class LinearMetric extends DerivedMetric {
 
   /*@Override*/
   public double computeValue() {
-    fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "COMPUTING {0}", this);
+    fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "RECOMPUTING LINEAR METRIC AT {0}", $getStore().name());
     double[] values = new double[terms.length];
     for (int i = 0; i < terms.length; i++) {
       values[i] = terms[i].value();
