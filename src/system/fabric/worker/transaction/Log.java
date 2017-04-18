@@ -1,5 +1,7 @@
 package fabric.worker.transaction;
 
+import static fabric.common.Logging.HOTOS_LOGGER;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -10,7 +12,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
+import java.util.logging.Level;
 
+import fabric.common.Logging;
 import fabric.common.SerializedObject;
 import fabric.common.SysUtil;
 import fabric.common.Timing;
@@ -480,6 +484,11 @@ public final class Log {
    * transaction. All locks held by this transaction are released.
    */
   void abort() {
+    Store localStore = Worker.getWorker().getLocalStore();
+    Set<Store> stores = storesToContact();
+    // Note what we were trying to do before we aborted.
+    Logging.log(HOTOS_LOGGER, Level.FINE, "aborted tid {0} ({1} stores)", tid,
+        stores.size() - (stores.contains(localStore) ? 1 : 0));
     // Release read locks.
     for (LongKeyMap<ReadMap.Entry> submap : reads) {
       for (ReadMap.Entry entry : submap.values()) {
