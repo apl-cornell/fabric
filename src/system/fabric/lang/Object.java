@@ -531,7 +531,7 @@ public interface Object {
       this.$history = null;
       this.$numWaiting = 0;
       this.$ref = new FabricSoftRef(store, onum, this);
-      this.$cacheEntry = new ObjectCache.Entry(this);
+      this.$cacheEntry = store.newCacheEntry(this);
       this.$readMapEntry = TransactionManager.getReadMapEntry(this, expiry);
       this.$ref.readMapEntry(this.$readMapEntry);
       this.$isOwned = false;

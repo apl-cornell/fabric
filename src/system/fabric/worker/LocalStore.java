@@ -197,7 +197,7 @@ public final class LocalStore implements Store, Serializable {
    * @see fabric.worker.Worker.getLocalStore
    */
   protected LocalStore() {
-    this.cache = new ObjectCache(name());
+    this.cache = new ObjectCache(this);
   }
 
   @Override
@@ -283,6 +283,11 @@ public final class LocalStore implements Store, Serializable {
   @Override
   public void cache(_Impl impl) {
     // nothing to do
+  }
+
+  @Override
+  public ObjectCache.Entry newCacheEntry(_Impl impl) {
+    return cache.new Entry(impl);
   }
 
   @Override

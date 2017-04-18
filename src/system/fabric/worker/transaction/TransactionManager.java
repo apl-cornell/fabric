@@ -609,8 +609,8 @@ public final class TransactionManager {
 
     // Check for conflicts and unreachable stores/workers.
     if (!failures.isEmpty()) {
-      String logMessage =
-          "Transaction tid=" + current.tid.topTid + ":  prepare failed.";
+      String logMessage = "Transaction tid="
+          + Long.toHexString(current.tid.topTid) + ":  prepare failed.";
 
       for (Map.Entry<RemoteNode<?>, TransactionPrepareFailedException> entry : failures
           .entrySet()) {
@@ -645,7 +645,17 @@ public final class TransactionManager {
       Logging.log(WORKER_TRANSACTION_LOGGER, Level.INFO,
           "{0} error committing: prepare failed exception: {1}", current, e);
 
-      abortTransaction(failures.keySet());
+      Set<RemoteNode<?>> abortedNodes = failures.keySet();
+      if (readOnly) {
+        // All remote stores should have aborted already.
+        abortedNodes = new HashSet<>(abortedNodes);
+        for (Store store : stores) {
+          if (store instanceof RemoteStore) {
+            abortedNodes.add((RemoteStore) store);
+          }
+        }
+      }
+      abortTransaction(abortedNodes);
       throw new TransactionRestartingException(tid);
 
     } else {

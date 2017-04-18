@@ -89,7 +89,7 @@ public class RemoteStore extends RemoteNode<RemoteStore>
   protected RemoteStore(String name) {
     super(name);
 
-    this.cache = new ObjectCache(name);
+    this.cache = new ObjectCache(this);
     this.fetchLocks = new ConcurrentLongKeyHashMap<>();
     this.fresh_ids = new LinkedList<>();
     this.publicKey = null;
@@ -125,6 +125,11 @@ public class RemoteStore extends RemoteNode<RemoteStore>
       throws TransactionPrepareFailedException, UnreachableNodeException {
     send(Worker.getWorker().authToStore, new PrepareTransactionMessage(tid,
         singleStore, readOnly, toCreate, reads, writes));
+  }
+
+  @Override
+  public ObjectCache.Entry newCacheEntry(_Impl impl) {
+    return cache.new Entry(impl);
   }
 
   @Override
@@ -215,7 +220,7 @@ public class RemoteStore extends RemoteNode<RemoteStore>
       g = readObjectFromStore(onum);
     }
 
-    return cache.put(this, g, onum);
+    return cache.put(g, onum);
   }
 
   /**
@@ -378,7 +383,7 @@ public class RemoteStore extends RemoteNode<RemoteStore>
    * updated.
    */
   public void updateCache(SerializedObject update) {
-    cache.update(this, update);
+    cache.update(update);
   }
 
   /**
@@ -387,7 +392,7 @@ public class RemoteStore extends RemoteNode<RemoteStore>
    * retried.
    */
   void forceCache(SerializedObject obj) {
-    cache.forcePut(this, obj);
+    cache.forcePut(obj);
   }
 
   /**
@@ -404,7 +409,7 @@ public class RemoteStore extends RemoteNode<RemoteStore>
    *     object.
    */
   boolean updateOrEvict(SerializedObject obj) {
-    return cache.updateOrEvict(this, obj);
+    return cache.updateOrEvict(obj);
   }
 
   @Override
@@ -418,7 +423,7 @@ public class RemoteStore extends RemoteNode<RemoteStore>
 
   @Override
   public ObjectCache.Entry cache(SerializedObject obj) {
-    return cache.put(this, obj);
+    return cache.put(obj);
   }
 
   /**

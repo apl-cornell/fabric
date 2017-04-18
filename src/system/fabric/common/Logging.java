@@ -33,20 +33,20 @@ public final class Logging {
   /**
    * For requests received by the store.
    */
-  public static final Logger STORE_REQUEST_LOGGER = Logger
-      .getLogger("fabric.store.requests");
+  public static final Logger STORE_REQUEST_LOGGER =
+      Logger.getLogger("fabric.store.requests");
 
   /**
    * For transaction events on the store.
    */
-  public static final Logger STORE_TRANSACTION_LOGGER = Logger
-      .getLogger("fabric.store.transactions");
+  public static final Logger STORE_TRANSACTION_LOGGER =
+      Logger.getLogger("fabric.store.transactions");
 
   /**
    * For back-end DB events on the store.
    */
-  public static final Logger STORE_DB_LOGGER = Logger
-      .getLogger("fabric.store.db");
+  public static final Logger STORE_DB_LOGGER =
+      Logger.getLogger("fabric.store.db");
 
   /**
    * For other store-related events that don't fit into any other category. Use
@@ -61,20 +61,20 @@ public final class Logging {
   /**
    * For transaction events on the worker.
    */
-  public static final Logger WORKER_TRANSACTION_LOGGER = Logger
-      .getLogger("fabric.worker.transactions");
+  public static final Logger WORKER_TRANSACTION_LOGGER =
+      Logger.getLogger("fabric.worker.transactions");
 
   /**
    * For local-store events on the worker.
    */
-  public static final Logger WORKER_LOCAL_STORE_LOGGER = Logger
-      .getLogger("fabric.worker.localstore");
+  public static final Logger WORKER_LOCAL_STORE_LOGGER =
+      Logger.getLogger("fabric.worker.localstore");
 
   /**
    * For deadlock-detection events on the worker.
    */
-  public static final Logger WORKER_DEADLOCK_LOGGER = Logger
-      .getLogger("fabric.worker.deadlocks");
+  public static final Logger WORKER_DEADLOCK_LOGGER =
+      Logger.getLogger("fabric.worker.deadlocks");
 
   /**
    * For other worker-related events that don't fit into any other category. Use
@@ -89,26 +89,26 @@ public final class Logging {
   /**
    * For network connection events.
    */
-  public static final Logger NETWORK_CONNECTION_LOGGER = Logger
-      .getLogger("fabric.net.connections");
+  public static final Logger NETWORK_CONNECTION_LOGGER =
+      Logger.getLogger("fabric.net.connections");
 
   /**
    * For network channel events.
    */
-  public static final Logger NETWORK_CHANNEL_LOGGER = Logger
-      .getLogger("fabric.net.channel");
+  public static final Logger NETWORK_CHANNEL_LOGGER =
+      Logger.getLogger("fabric.net.channel");
 
   /**
    * For network messages received from remote nodes.
    */
-  public static final Logger NETWORK_MESSAGE_RECEIVE_LOGGER = Logger
-      .getLogger("fabric.net.messages.received");
+  public static final Logger NETWORK_MESSAGE_RECEIVE_LOGGER =
+      Logger.getLogger("fabric.net.messages.received");
 
   /**
    * For network messages sent to remote nodes.
    */
-  public static final Logger NETWORK_MESSAGE_SEND_LOGGER = Logger
-      .getLogger("fabric.net.messages.sent");
+  public static final Logger NETWORK_MESSAGE_SEND_LOGGER =
+      Logger.getLogger("fabric.net.messages.sent");
 
   // //////////////////////////////////////////////////////////////////////////
   // MISCELLANEOUS LOGGERS
@@ -132,8 +132,8 @@ public final class Logging {
   /**
    * For class-hashing events.
    */
-  public static final Logger CLASS_HASHING_LOGGER = Logger
-      .getLogger("fabric.class_hashing");
+  public static final Logger CLASS_HASHING_LOGGER =
+      Logger.getLogger("fabric.class_hashing");
 
   /**
    * For detailed timing analysis.
@@ -143,8 +143,8 @@ public final class Logging {
   /**
    * For ignored InterruptedExceptions.
    */
-  public static final Logger INTERRUPTED_EXCEPTION_LOGGER = Logger
-      .getLogger("fabric.interruptedExceptions");
+  public static final Logger INTERRUPTED_EXCEPTION_LOGGER =
+      Logger.getLogger("fabric.interruptedExceptions");
 
   /**
    * For events related to metrics
@@ -166,6 +166,24 @@ public final class Logging {
   // //////////////////////////////////////////////////////////////////////////
 
   /**
+   * Logs a message.
+   *
+   * @param logger
+   *          The logger to log to
+   * @param level
+   *          One of the message level identifiers, e.g. SEVERE
+   * @param msg
+   *          The string message (or a key in the message catalog)
+   * @param param1
+   *          first parameter to the message
+   */
+  public static void log(Logger logger, Level level, String msg,
+      Object... params) {
+    if (!logger.isLoggable(level)) return;
+    logger.log(level, msg, params);
+  }
+
+  /**
    * Logs a message, with one object parameter. This is just here for
    * completeness.
    *
@@ -178,7 +196,8 @@ public final class Logging {
    * @param param1
    *          first parameter to the message
    */
-  public static void log(Logger logger, Level level, String msg, Object param1) {
+  public static void log(Logger logger, Level level, String msg,
+      Object param1) {
     if (!logger.isLoggable(level)) return;
     logger.log(level, msg, param1);
   }
@@ -270,8 +289,8 @@ public final class Logging {
   public static void log(Logger logger, Level level, String msg, Object param1,
       Object param2, Object param3, Object param4, Object param5) {
     if (!logger.isLoggable(level)) return;
-    logger.log(level, msg, new Object[] { param1, param2, param3, param4,
-        param5 });
+    logger.log(level, msg,
+        new Object[] { param1, param2, param3, param4, param5 });
   }
 
   /**
@@ -318,8 +337,8 @@ public final class Logging {
         pout.flush();
         out.flush();
 
-        LogManager.getLogManager().readConfiguration(
-            new ByteArrayInputStream(out.toByteArray()));
+        LogManager.getLogManager()
+            .readConfiguration(new ByteArrayInputStream(out.toByteArray()));
       } catch (IOException e) {
       }
 

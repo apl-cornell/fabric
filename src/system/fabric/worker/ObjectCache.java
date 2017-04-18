@@ -29,28 +29,25 @@ public final class ObjectCache {
    * Entries hold either an _Impl or a SerializedObject (but not both). This
    * class is thread safe.
    * <p>
-   * Possible states:
+   * We maintain the invariant that at most one of {@link #impl},
+   * {@link #serialized}, and {@link #next} is non-null. Possible states:
    * <ol>
-   * <li><b>overridden:</b> <code>next</code> is non-null, <code>impl</code> and
-   * <code>serialized</code> are null (the entry in <code>next</code> should be
-   * used instead of this)
+   * <li><b>overridden:</b> {@link #next} is non-null. The entry in
+   * {@link #next} should be used instead of this.
    * <ul>
    * <li>This is done because we maintain the invariant that exactly one Entry
    * object is associated with any given _Impl or SerializedObject.</li>
    * </ul>
    * </li>
-   * <li><b>serialized:</b> <code>impl</code> and <code>next</code> are null,
-   * <code>serialized</code> and <code>store</code> are non-null</li>
-   * <li><b>deserialized:</b> <code>serialized</code> and <code>next</code> are
-   * null, <code>impl</code> is non-null</li>
-   * <li><b>evicted:</b> <code>impl</code>, <code>serialized</code>, and
-   * <code>next</code> are null
+   * <li><b>serialized:</b> {@link #serialized} is non-null</li>
+   * <li><b>deserialized:</b> {@link #impl} is non-null</li>
+   * <li><b>evicted:</b> {@link #impl}, {@link #serialized}, and {@link #next}
+   * are all null
    * </ol>
    * <p>
    */
-  public static final class Entry {
+  public final class Entry {
     private Object._Impl impl;
-    private Store store;
     private SerializedObject serialized;
 
     private Entry next;
@@ -61,7 +58,6 @@ public final class ObjectCache {
     public Entry(Object._Impl obj) {
       this.impl = obj;
 
-      this.store = null;
       this.serialized = null;
       this.next = null;
     }
@@ -69,10 +65,9 @@ public final class ObjectCache {
     /**
      * Constructs an <code>Entry</code> object in <b>serialized</b> state.
      */
-    private Entry(Store store, SerializedObject obj) {
+    private Entry(SerializedObject obj) {
       this.impl = null;
 
-      this.store = store;
       this.serialized = obj;
       this.next = null;
     }
@@ -123,7 +118,6 @@ public final class ObjectCache {
         // XXX END HACK FOR OAKLAND 2012 TIMING STUFF
         _Impl impl = serialized.deserialize(store);
         next = impl.$cacheEntry;
-        store = null;
         serialized = null;
         impl.$getStore().cache(impl);
         // XXX BEGIN HACK FOR OAKLAND 2012 TIMING STUFF
@@ -201,7 +195,6 @@ public final class ObjectCache {
           }
 
           Entry next = entry.next;
-          entry.store = null;
           entry.serialized = null;
           entry.next = null;
 
@@ -314,9 +307,11 @@ public final class ObjectCache {
     }
   }
 
+  private final Store store;
   private final LongKeyCache<Entry> entries;
 
-  ObjectCache(String storeName) {
+  ObjectCache(Store store) {
+    this.store = store;
     this.entries = new LongKeyCache<>();
   }
 
@@ -374,8 +369,8 @@ public final class ObjectCache {
    *
    * @return the Entry inserted into the cache.
    */
-  Entry put(Store store, SerializedObject obj) {
-    return putIfAbsent(store, obj, false);
+  Entry put(SerializedObject obj) {
+    return putIfAbsent(obj, false);
   }
 
   /**
@@ -386,11 +381,10 @@ public final class ObjectCache {
    *          the object, then an error is thrown.
    * @return the resulting cache entry associated with the object's onum.
    */
-  private Entry putIfAbsent(Store store, SerializedObject obj,
-      boolean silenceConflicts) {
+  private Entry putIfAbsent(SerializedObject obj, boolean silenceConflicts) {
     long onum = obj.getOnum();
 
-    Entry newEntry = new Entry(store, obj);
+    Entry newEntry = new Entry(obj);
     Entry existingEntry = entries.putIfAbsent(onum, newEntry);
     if (existingEntry != null) {
       if (!silenceConflicts) {
@@ -412,10 +406,10 @@ public final class ObjectCache {
    * @param onum the onum of the entry to return. This should be a member of the
    *          given group.
    */
-  Entry put(Store store, ObjectGroup group, long onum) {
+  Entry put(ObjectGroup group, long onum) {
     Entry result = null;
     for (SerializedObject obj : group.objects().values()) {
-      Entry curEntry = putIfAbsent(store, obj, true);
+      Entry curEntry = putIfAbsent(obj, true);
       if (result == null && onum == obj.getOnum()) {
         result = curEntry;
       }
@@ -430,8 +424,8 @@ public final class ObjectCache {
    * replaced, and any transactions currently using the object are aborted and
    * retried.
    */
-  void forcePut(Store store, SerializedObject obj) {
-    update(store, obj, false);
+  void forcePut(SerializedObject obj) {
+    update(obj, false);
   }
 
   /**
@@ -441,8 +435,8 @@ public final class ObjectCache {
    * and retried. If the object does not exist in cache, then the cache is not
    * updated.
    */
-  void update(Store store, SerializedObject update) {
-    update(store, update, true);
+  void update(SerializedObject update) {
+    update(update, true);
   }
 
   /**
@@ -452,12 +446,12 @@ public final class ObjectCache {
    * and the given update is placed in the cache. If the cache is updated, then
    * any transactions currently using the object are aborted and retried.
    */
-  void update(Store store, SerializedObject update, boolean replaceOnly) {
+  void update(SerializedObject update, boolean replaceOnly) {
     long onum = update.getOnum();
     Entry curEntry = entries.get(onum);
 
     if (curEntry == null) {
-      if (!replaceOnly) putIfAbsent(store, update, true);
+      if (!replaceOnly) putIfAbsent(update, true);
       return;
     }
 
@@ -470,7 +464,7 @@ public final class ObjectCache {
       curEntry.evict();
     }
 
-    Entry newEntry = new Entry(store, update);
+    Entry newEntry = new Entry(update);
     entries.replace(onum, curEntry, newEntry);
 
     TransactionManager.abortReaders(store, update.getOnum());
@@ -489,7 +483,7 @@ public final class ObjectCache {
    * @return true iff after this update operation, the cache contains the
    *     object.
    */
-  boolean updateOrEvict(Store store, SerializedObject obj) {
+  boolean updateOrEvict(SerializedObject obj) {
     long onum = obj.getOnum();
     Entry curEntry = entries.get(onum);
     if (curEntry == null) return false;
@@ -499,7 +493,7 @@ public final class ObjectCache {
       return false;
     }
 
-    forcePut(store, obj);
+    forcePut(obj);
     return true;
   }
 
