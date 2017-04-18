@@ -604,14 +604,14 @@ public class ConcurrentLongKeyHashMap<V> extends AbstractLongKeyMap<V>
   static class Node<V> implements Map.Entry<Long, V> {
     final int hash;
     final boolean nullKey;
-    final long keyx;
+    final long key;
     volatile V val;
     volatile Node<V> next;
 
     Node(int hash) {
       this.hash = hash;
       this.nullKey = true;
-      this.keyx = 0;
+      this.key = 0;
       this.val = null;
       this.next = null;
     }
@@ -619,7 +619,7 @@ public class ConcurrentLongKeyHashMap<V> extends AbstractLongKeyMap<V>
     Node(int hash, boolean nullKey, long key, V val, Node<V> next) {
       this.hash = hash;
       this.nullKey = nullKey;
-      this.keyx = key;
+      this.key = key;
       this.val = val;
       this.next = next;
     }
@@ -627,14 +627,14 @@ public class ConcurrentLongKeyHashMap<V> extends AbstractLongKeyMap<V>
     Node(int hash, long key, V val, Node<V> next) {
       this.hash = hash;
       this.nullKey = false;
-      this.keyx = key;
+      this.key = key;
       this.val = val;
       this.next = next;
     }
 
     @Override
     public final Long getKey() {
-      return keyx;
+      return key;
     }
 
     @Override
@@ -644,12 +644,12 @@ public class ConcurrentLongKeyHashMap<V> extends AbstractLongKeyMap<V>
 
     @Override
     public final int hashCode() {
-      return (nullKey ? 0 : Long.hashCode(keyx)) ^ val.hashCode();
+      return (nullKey ? 0 : Long.hashCode(key)) ^ val.hashCode();
     }
 
     @Override
     public final String toString() {
-      return (nullKey ? "null" : keyx) + "=" + val;
+      return (nullKey ? "null" : key) + "=" + val;
     }
 
     @Override
@@ -666,7 +666,7 @@ public class ConcurrentLongKeyHashMap<V> extends AbstractLongKeyMap<V>
         if (e.nullKey) return false;
         final long k = e.getKey();
         Object v, u;
-        return ((v = e.getValue()) != null && k == keyx
+        return ((v = e.getValue()) != null && k == key
             && (v == (u = val) || v.equals(u)));
       }
 
@@ -674,7 +674,7 @@ public class ConcurrentLongKeyHashMap<V> extends AbstractLongKeyMap<V>
         final LongKeyMap.Entry<?> e = (LongKeyMap.Entry<?>) o;
         final long k = e.getKey();
         Object v, u;
-        return ((v = e.getValue()) != null && k == keyx
+        return ((v = e.getValue()) != null && k == key
             && (v == (u = val) || v.equals(u)));
       }
 
@@ -683,7 +683,7 @@ public class ConcurrentLongKeyHashMap<V> extends AbstractLongKeyMap<V>
       final Map.Entry<?, ?> e;
       return ((o instanceof Map.Entry)
           && (k = (Long) (e = (Map.Entry<?, ?>) o).getKey()) != null
-          && (v = e.getValue()) != null && k == keyx
+          && (v = e.getValue()) != null && k == key
           && (v == (u = val) || v.equals(u)));
     }
 
@@ -693,7 +693,7 @@ public class ConcurrentLongKeyHashMap<V> extends AbstractLongKeyMap<V>
     Node<V> find(int h, long k) {
       Node<V> e = this;
       do {
-        if (e.hash == h && !e.nullKey && e.keyx == k) return e;
+        if (e.hash == h && !e.nullKey && e.key == k) return e;
       } while ((e = e.next) != null);
 
       return null;
@@ -943,10 +943,10 @@ public class ConcurrentLongKeyHashMap<V> extends AbstractLongKeyMap<V>
     if ((tab = table) != null && (n = tab.length) > 0
         && (e = tabAt(tab, (n - 1) & h)) != null) {
       if ((eh = e.hash) == h) {
-        if (!e.nullKey && e.keyx == key) return e.val;
+        if (!e.nullKey && e.key == key) return e.val;
       } else if (eh < 0) return (p = e.find(h, key)) != null ? p.val : null;
       while ((e = e.next) != null) {
-        if (e.hash == h && !e.nullKey && e.keyx == key) return e.val;
+        if (e.hash == h && !e.nullKey && e.key == key) return e.val;
       }
     }
     return null;
@@ -1029,7 +1029,7 @@ public class ConcurrentLongKeyHashMap<V> extends AbstractLongKeyMap<V>
             if (fh >= 0) {
               binCount = 1;
               for (Node<V> e = f;; ++binCount) {
-                if (e.hash == hash && !e.nullKey && e.keyx == key) {
+                if (e.hash == hash && !e.nullKey && e.key == key) {
                   oldVal = e.val;
                   if (!onlyIfAbsent) e.val = value;
                   break;
@@ -1112,7 +1112,7 @@ public class ConcurrentLongKeyHashMap<V> extends AbstractLongKeyMap<V>
             if (fh >= 0) {
               validated = true;
               for (Node<V> e = f, pred = null;;) {
-                if (e.hash == hash && !e.nullKey && e.keyx == key) {
+                if (e.hash == hash && !e.nullKey && e.key == key) {
                   final V ev = e.val;
                   if (cv == null || cv == ev || (ev != null && cv.equals(ev))) {
                     oldVal = ev;
@@ -1275,7 +1275,7 @@ public class ConcurrentLongKeyHashMap<V> extends AbstractLongKeyMap<V>
     if ((t = table) != null) {
       final Traverser<V> it = new Traverser<>(t, t.length, 0, t.length);
       for (Node<V> p; (p = it.advance()) != null;)
-        h += Long.hashCode(p.keyx) ^ p.val.hashCode();
+        h += Long.hashCode(p.key) ^ p.val.hashCode();
     }
     return h;
   }
@@ -1301,7 +1301,7 @@ public class ConcurrentLongKeyHashMap<V> extends AbstractLongKeyMap<V>
     Node<V> p;
     if ((p = it.advance()) != null) {
       for (;;) {
-        final long k = p.keyx;
+        final long k = p.key;
         final V v = p.val;
         sb.append(k);
         sb.append('=');
@@ -1333,7 +1333,7 @@ public class ConcurrentLongKeyHashMap<V> extends AbstractLongKeyMap<V>
       final Traverser<V> it = new Traverser<>(t, f, 0, f);
       for (Node<V> p; (p = it.advance()) != null;) {
         final V val = p.val;
-        final Object v = m.get(p.keyx);
+        final Object v = m.get(p.key);
         if (v == null || (v != val && !v.equals(val))) return false;
       }
       for (final LongKeyMap.Entry<?> e : m.entrySet()) {
@@ -1396,7 +1396,7 @@ public class ConcurrentLongKeyHashMap<V> extends AbstractLongKeyMap<V>
     if ((t = table) != null) {
       final Traverser<V> it = new Traverser<>(t, t.length, 0, t.length);
       for (Node<V> p; (p = it.advance()) != null;) {
-        s.writeLong(p.keyx);
+        s.writeLong(p.key);
         s.writeObject(p.val);
       }
     }
@@ -1457,7 +1457,7 @@ public class ConcurrentLongKeyHashMap<V> extends AbstractLongKeyMap<V>
         if ((first = tabAt(tab, j)) == null)
           insertAtFront = true;
         else {
-          final long k = p.keyx;
+          final long k = p.key;
           if (first.hash < 0) {
             final TreeBin<V> t = (TreeBin<V>) first;
             if (t.putTreeVal(h, k, p.val) == null) ++added;
@@ -1467,7 +1467,7 @@ public class ConcurrentLongKeyHashMap<V> extends AbstractLongKeyMap<V>
             insertAtFront = true;
             Node<V> q;
             for (q = first; q != null; q = q.next) {
-              if (q.hash == h && !q.nullKey && q.keyx == k) {
+              if (q.hash == h && !q.nullKey && q.key == k) {
                 insertAtFront = false;
                 break;
               }
@@ -1480,7 +1480,7 @@ public class ConcurrentLongKeyHashMap<V> extends AbstractLongKeyMap<V>
               TreeNode<V> hd = null, tl = null;
               for (q = p; q != null; q = q.next) {
                 final TreeNode<V> t =
-                    new TreeNode<>(q.hash, q.keyx, q.val, null, null);
+                    new TreeNode<>(q.hash, q.key, q.val, null, null);
                 if ((t.prev = tl) == null)
                   hd = t;
                 else tl.next = t;
@@ -2137,7 +2137,7 @@ public class ConcurrentLongKeyHashMap<V> extends AbstractLongKeyMap<V>
           return null;
         for (;;) {
           int eh;
-          if ((eh = e.hash) == h && !e.nullKey && e.keyx == k) return e;
+          if ((eh = e.hash) == h && !e.nullKey && e.key == k) return e;
           if (eh < 0) {
             if (e instanceof ForwardingNode) {
               tab = ((ForwardingNode<V>) e).nextTable;
@@ -2422,7 +2422,7 @@ public class ConcurrentLongKeyHashMap<V> extends AbstractLongKeyMap<V>
               for (Node<V> p = f; p != lastRun; p = p.next) {
                 final int ph = p.hash;
                 final boolean pn = p.nullKey;
-                final long pk = p.keyx;
+                final long pk = p.key;
                 final V pv = p.val;
                 if ((ph & n) == 0)
                   ln = new Node<>(ph, pn, pk, pv, ln);
@@ -2440,7 +2440,7 @@ public class ConcurrentLongKeyHashMap<V> extends AbstractLongKeyMap<V>
               for (Node<V> e = t.first; e != null; e = e.next) {
                 final int h = e.hash;
                 final TreeNode<V> p =
-                    new TreeNode<>(h, e.keyx, e.val, null, null);
+                    new TreeNode<>(h, e.key, e.val, null, null);
                 if ((h & n) == 0) {
                   if ((p.prev = loTail) == null)
                     lo = p;
@@ -2632,7 +2632,7 @@ public class ConcurrentLongKeyHashMap<V> extends AbstractLongKeyMap<V>
             TreeNode<V> hd = null, tl = null;
             for (Node<V> e = b; e != null; e = e.next) {
               final TreeNode<V> p =
-                  new TreeNode<>(e.hash, e.keyx, e.val, null, null);
+                  new TreeNode<>(e.hash, e.key, e.val, null, null);
               if ((p.prev = tl) == null)
                 hd = p;
               else tl.next = p;
@@ -2651,7 +2651,7 @@ public class ConcurrentLongKeyHashMap<V> extends AbstractLongKeyMap<V>
   static <V> Node<V> untreeify(Node<V> b) {
     Node<V> hd = null, tl = null;
     for (Node<V> q = b; q != null; q = q.next) {
-      final Node<V> p = new Node<>(q.hash, q.nullKey, q.keyx, q.val, null);
+      final Node<V> p = new Node<>(q.hash, q.nullKey, q.key, q.val, null);
       if (tl == null)
         hd = p;
       else tl.next = p;
@@ -2698,7 +2698,7 @@ public class ConcurrentLongKeyHashMap<V> extends AbstractLongKeyMap<V>
           p = pl;
         else if (ph < h)
           p = pr;
-        else if ((pk = p.keyx) == k && !p.nullKey)
+        else if ((pk = p.key) == k && !p.nullKey)
           return p;
         else if (pl == null)
           p = pr;
@@ -2762,13 +2762,13 @@ public class ConcurrentLongKeyHashMap<V> extends AbstractLongKeyMap<V>
           r = x;
         } else {
           final boolean n = x.nullKey;
-          final long k = x.keyx;
+          final long k = x.key;
           final int h = x.hash;
           for (TreeNode<V> p = r;;) {
             long dir;
             int ph;
             final boolean pn = p.nullKey;
-            final long pk = p.keyx;
+            final long pk = p.key;
             if ((ph = p.hash) > h)
               dir = -1;
             else if (ph < h)
@@ -2834,7 +2834,7 @@ public class ConcurrentLongKeyHashMap<V> extends AbstractLongKeyMap<V>
       for (Node<V> e = first; e != null;) {
         int s;
         if (((s = lockState) & (WAITER | WRITER)) != 0) {
-          if (e.hash == h && !e.nullKey && e.keyx == k) return e;
+          if (e.hash == h && !e.nullKey && e.key == k) return e;
           e = e.next;
         } else if (U.compareAndSwapInt(this, LOCKSTATE, s, s + READER)) {
           TreeNode<V> r, p;
@@ -2870,7 +2870,7 @@ public class ConcurrentLongKeyHashMap<V> extends AbstractLongKeyMap<V>
           dir = -1;
         else if (ph < h)
           dir = 1;
-        else if ((pk = p.keyx) == k && !p.nullKey)
+        else if ((pk = p.key) == k && !p.nullKey)
           return p;
         else if ((dir = k - pk) == 0) {
           if (!searched) {
@@ -3344,7 +3344,7 @@ public class ConcurrentLongKeyHashMap<V> extends AbstractLongKeyMap<V>
       Node<V> p;
       if ((p = lastReturned) == null) throw new IllegalStateException();
       lastReturned = null;
-      map.replaceNode(p.keyx, null, null);
+      map.replaceNode(p.key, null, null);
     }
   }
 
@@ -3359,7 +3359,7 @@ public class ConcurrentLongKeyHashMap<V> extends AbstractLongKeyMap<V>
     public final long next() {
       Node<V> p;
       if ((p = next) == null) throw new NoSuchElementException();
-      final long k = p.keyx;
+      final long k = p.key;
       lastReturned = p;
       advance();
       return k;
@@ -3405,7 +3405,7 @@ public class ConcurrentLongKeyHashMap<V> extends AbstractLongKeyMap<V>
     public final LongKeyMap.Entry<V> next() {
       Node<V> p;
       if ((p = next) == null) throw new NoSuchElementException();
-      final long k = p.keyx;
+      final long k = p.key;
       final V v = p.val;
       lastReturned = p;
       advance();
