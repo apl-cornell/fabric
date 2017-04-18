@@ -21,7 +21,6 @@ import fabric.common.Timing;
 import fabric.common.TransactionID;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
-import fabric.common.util.Oid;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
 import fabric.common.util.WeakReferenceArrayList;
@@ -487,8 +486,9 @@ public final class Log {
     Store localStore = Worker.getWorker().getLocalStore();
     Set<Store> stores = storesToContact();
     // Note what we were trying to do before we aborted.
-    Logging.log(HOTOS_LOGGER, Level.FINE, "aborted tid {0} ({1} stores, {2} retractions, {3} extensions, {4} parent extensions)", tid,
-        stores.size() - (stores.contains(localStore) ? 1 : 0),
+    Logging.log(HOTOS_LOGGER, Level.FINE,
+        "aborted tid {0} ({1} stores, {2} retractions, {3} extensions, {4} parent extensions)",
+        tid, stores.size() - (stores.contains(localStore) ? 1 : 0),
         retractedContracts.size(), extendedContracts.size(),
         parentExtensions.size());
     // Release read locks.
@@ -742,7 +742,7 @@ public final class Log {
         obj.$writeLockStackTrace = null;
         // Don't increment the version if it's an extended metric contract
         if (!(obj instanceof MetricContract)
-            || obj.$expiry <= obj.$history.$expiry)
+            || !(extendedContracts.contains(obj)))
           obj.$version++;
         obj.$readMapEntry.incrementVersion();
         obj.$isOwned = false;
@@ -758,7 +758,6 @@ public final class Log {
     // Release write locks on created objects and set version numbers.
     Iterable<_Impl> chain2 = SysUtil.chain(creates, localStoreCreates);
     for (_Impl obj : chain2) {
-      extendedContracts.remove(new Oid(obj));
       if (!obj.$isOwned) {
         // The cached object is out-of-date. Evict it.
         obj.$ref.evict();

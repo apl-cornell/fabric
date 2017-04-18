@@ -1225,7 +1225,6 @@ public final class TransactionManager {
   public void registerRetraction(Contract retracted) {
     // Make sure it's registered as written.
     registerWrite((_Impl) retracted.fetch());
-    // Add it to the log's unobserved queue if it's not already there.
     synchronized (current.retractedContracts) {
       if (!current.retractedContracts.contains(retracted))
         current.retractedContracts.add(retracted);
@@ -1249,7 +1248,6 @@ public final class TransactionManager {
     synchronized (current.retractedContracts) {
       if (current.retractedContracts.contains(extended)) return;
     }
-    // Add it to the log's unobserved queue if it's not already there.
     synchronized (current.extendedContracts) {
       if (!current.extendedContracts.contains(extended))
         current.extendedContracts.add(extended);
@@ -1271,7 +1269,6 @@ public final class TransactionManager {
     synchronized (current.extendedContracts) {
       if (current.extendedContracts.contains(toBeExtended)) return;
     }
-    // Add it to the log's unobserved queue if it's not already there.
     synchronized (current.parentExtensions) {
       if (!current.parentExtensions.contains(toBeExtended))
         current.parentExtensions.add(toBeExtended);

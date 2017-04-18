@@ -383,7 +383,7 @@ public abstract class ObjectDB {
         // expiry already.
         if (storeExpiry > newExpiry) {
           submap.get(worker).writes.remove(obj);
-          // TODO: Send back later expiry version?
+          longerContracts.put(onum, read(onum));
         }
       } else {
         // Update the version number on the prepared copy of the object if it's
