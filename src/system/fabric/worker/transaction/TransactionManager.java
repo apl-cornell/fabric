@@ -34,6 +34,7 @@ import fabric.common.TransactionID;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.Pair;
 import fabric.lang.Object._Impl;
 import fabric.lang.Object._Proxy;
 import fabric.lang.security.Label;
@@ -417,7 +418,8 @@ public final class TransactionManager {
 
     // Send prepare messages to our cohorts. This will also abort our portion of
     // the transaction if the prepare fails.
-    sendPrepareMessages(singleStore, readOnly, stores, workers);
+    current.longerContracts =
+        sendPrepareMessages(singleStore, readOnly, stores, workers);
 
     // Send commit messages to our cohorts.
     sendCommitMessagesAndCleanUp(singleStore, readOnly, stores, workers);
@@ -443,7 +445,7 @@ public final class TransactionManager {
               && !(stores.iterator().next() instanceof InProcessStore)) {
         Logging.log(HOTOS_LOGGER, Level.FINE,
             "committed tid {0} (latency {1} ms, {2} stores)", HOTOS_current,
-            commitLatency, stores.size());
+            commitLatency, stores.size() - (stores.contains(LOCAL_STORE) ? 1 : 0));
       }
     }
   }
@@ -474,11 +476,16 @@ public final class TransactionManager {
    * Sends prepare messages to the cohorts in a distributed transaction. Also
    * sends abort messages if any cohort fails to prepare.
    *
+   * @return A map from stores to maps from onums to contracts that have longer
+   * expiries at the store, to update in the cache after this transaction
+   * commits.
+   *
+   *
    * @throws TransactionRestartingException
    *           if the prepare fails.
    */
-  public void sendPrepareMessages() {
-    sendPrepareMessages(false, false, current.storesToContact(),
+  public Map<RemoteStore, LongKeyMap<SerializedObject>> sendPrepareMessages() {
+    return sendPrepareMessages(false, false, current.storesToContact(),
         current.workersCalled);
   }
 
@@ -487,15 +494,22 @@ public final class TransactionManager {
    * prepare fails, the local portion and given branch of the transaction is
    * rolled back.
    *
+   * @return A map from stores to maps from onums to contracts that have longer
+   * expiries at the store, to update in the cache after this transaction
+   * commits.
+   *
    * @throws TransactionRestartingException
    *           if the prepare fails.
    */
-  private void sendPrepareMessages(final boolean singleStore,
-      final boolean readOnly, Set<Store> stores, List<RemoteWorker> workers)
-      throws TransactionRestartingException {
+  private Map<RemoteStore, LongKeyMap<SerializedObject>> sendPrepareMessages(
+      final boolean singleStore, final boolean readOnly, Set<Store> stores,
+      List<RemoteWorker> workers) throws TransactionRestartingException {
     final Map<RemoteNode<?>, TransactionPrepareFailedException> failures =
         Collections.synchronizedMap(
             new HashMap<RemoteNode<?>, TransactionPrepareFailedException>());
+    final Map<RemoteStore, LongKeyMap<SerializedObject>> longerContracts =
+        Collections.synchronizedMap(
+            new HashMap<RemoteStore, LongKeyMap<SerializedObject>>());
 
     synchronized (current.commitState) {
       switch (current.commitState.value) {
@@ -505,14 +519,14 @@ public final class TransactionManager {
 
       case PREPARING:
       case PREPARED:
-        return;
+        return longerContracts;
 
       case COMMITTING:
       case COMMITTED:
         WORKER_TRANSACTION_LOGGER.log(Level.FINE,
             "Ignoring prepare request (transaction state = {0})",
             current.commitState.value);
-        return;
+        return longerContracts;
 
       case PREPARE_FAILED:
         throw new InternalError();
@@ -561,9 +575,16 @@ public final class TransactionManager {
                 Collection<_Impl> creates = current.getCreatesForStore(store);
                 LongKeyMap<Integer> reads =
                     current.getReadsForStore(store, false);
-                Collection<_Impl> writes = current.getWritesForStore(store);
-                store.prepareTransaction(current.tid.topTid, singleStore,
-                    readOnly, creates, reads, writes);
+                Collection<Pair<_Impl, Boolean>> writes =
+                    current.getWritesForStore(store);
+                if (store instanceof RemoteStore) {
+                  longerContracts.put((RemoteStore) store,
+                      store.prepareTransaction(current.tid.topTid, singleStore,
+                          readOnly, creates, reads, writes));
+                } else {
+                  store.prepareTransaction(current.tid.topTid, singleStore,
+                      readOnly, creates, reads, writes);
+                }
               } catch (TransactionPrepareFailedException e) {
                 failures.put((RemoteNode<?>) store, e);
               } catch (UnreachableNodeException e) {
@@ -620,8 +641,9 @@ public final class TransactionManager {
           LongKeyMap<SerializedObject> versionConflicts =
               entry.getValue().versionConflicts;
           if (versionConflicts != null) {
-            for (SerializedObject obj : versionConflicts.values())
+            for (SerializedObject obj : versionConflicts.values()) {
               store.updateCache(obj);
+            }
           }
         }
 
@@ -630,6 +652,18 @@ public final class TransactionManager {
               "\n\t" + entry.getKey() + ": " + entry.getValue().getMessage();
         }
       }
+
+      // Update the contract objects locally so that we're using the latest
+      // version next time.
+      for (Map.Entry<RemoteStore, LongKeyMap<SerializedObject>> e1 : longerContracts
+          .entrySet()) {
+        RemoteStore s = e1.getKey();
+        for (SerializedObject obj : e1.getValue().values()) {
+          // Evict the old version.
+          s.updateCache(obj);
+        }
+      }
+
       WORKER_TRANSACTION_LOGGER.fine(logMessage);
       HOTOS_LOGGER.fine("Prepare failed.");
 
@@ -664,6 +698,8 @@ public final class TransactionManager {
         current.commitState.notifyAll();
       }
     }
+
+    return longerContracts;
   }
 
   /**
@@ -1180,16 +1216,61 @@ public final class TransactionManager {
   }
 
   /**
-   * Registers a contract that will be extended and should have it's extension
-   * bubbled up the observer tree after the transaction commits.
+   * Registers a contract that is retracted by this transaction.
+   */
+  public void registerRetraction(Contract retracted) {
+    // Make sure it's registered as written.
+    registerWrite((_Impl) retracted.fetch());
+    // Add it to the log's unobserved queue if it's not already there.
+    synchronized (current.retractedContracts) {
+      if (!current.extendedContracts.contains(retracted))
+        current.extendedContracts.add(retracted);
+    }
+    synchronized (current.extendedContracts) {
+      if (current.extendedContracts.contains(retracted))
+        current.extendedContracts.remove(retracted);
+    }
+    synchronized (current.parentExtensions) {
+      if (current.parentExtensions.contains(retracted))
+        current.parentExtensions.remove(retracted);
+    }
+  }
+
+  /**
+   * Registers a contract that is extended by this transaction.
    */
   public void registerExtension(Contract extended) {
     // Make sure it's registered as written.
     registerWrite((_Impl) extended.fetch());
+    synchronized (current.retractedContracts) {
+      if (current.retractedContracts.contains(extended)) return;
+    }
     // Add it to the log's unobserved queue if it's not already there.
     synchronized (current.extendedContracts) {
       if (!current.extendedContracts.contains(extended))
         current.extendedContracts.add(extended);
+    }
+    synchronized (current.parentExtensions) {
+      if (current.parentExtensions.contains(extended))
+        current.parentExtensions.remove(extended);
+    }
+  }
+
+  /**
+   * Registers a contract that should have an extension message sent after this
+   * transaction commits.
+   */
+  public void registerParentExtension(Contract toBeExtended) {
+    synchronized (current.retractedContracts) {
+      if (current.retractedContracts.contains(toBeExtended)) return;
+    }
+    synchronized (current.extendedContracts) {
+      if (current.extendedContracts.contains(toBeExtended)) return;
+    }
+    // Add it to the log's unobserved queue if it's not already there.
+    synchronized (current.parentExtensions) {
+      if (!current.parentExtensions.contains(toBeExtended))
+        current.parentExtensions.add(toBeExtended);
     }
   }
 

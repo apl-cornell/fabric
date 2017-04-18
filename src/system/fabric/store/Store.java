@@ -34,6 +34,7 @@ import fabric.common.net.naming.NameService;
 import fabric.common.net.naming.NameService.PortType;
 import fabric.common.net.naming.TransitionalNameService;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.Pair;
 import fabric.dissemination.ObjectGlob;
 import fabric.lang.security.NodePrincipal;
 import fabric.lang.security.Principal;
@@ -214,8 +215,9 @@ class Store extends MessageToStoreHandler {
         "Handling Prepare Message, worker={0}, tid={1}",
         nameOf(client.principal), msg.tid);
 
-    prepareTransaction(client.principal, msg.tid, msg.serializedCreates,
-        msg.serializedWrites, msg.reads);
+    LongKeyMap<SerializedObject> longerContracts =
+        prepareTransaction(client.principal, msg.tid, msg.serializedCreates,
+            msg.serializedWrites, msg.reads);
 
     if (msg.singleStore || msg.readOnly) {
       try {
@@ -226,7 +228,7 @@ class Store extends MessageToStoreHandler {
       }
     }
 
-    return new PrepareTransactionMessage.Response();
+    return new PrepareTransactionMessage.Response(longerContracts);
   }
 
   /**
@@ -339,17 +341,17 @@ class Store extends MessageToStoreHandler {
     return new ContractExtensionMessage.Response();
   }
 
-  private void prepareTransaction(Principal p, long tid,
+  private LongKeyMap<SerializedObject> prepareTransaction(Principal p, long tid,
       Collection<SerializedObject> serializedCreates,
-      Collection<SerializedObject> serializedWrites, LongKeyMap<Integer> reads)
-      throws TransactionPrepareFailedException {
+      Collection<Pair<SerializedObject, Boolean>> serializedWrites,
+      LongKeyMap<Integer> reads) throws TransactionPrepareFailedException {
 
     PrepareRequest req =
         new PrepareRequest(tid, serializedCreates, serializedWrites, reads);
 
     sm.createSurrogates(req);
 
-    tm.prepare(p, req);
+    return tm.prepare(p, req);
   }
 
   private String nameOf(Principal p) {

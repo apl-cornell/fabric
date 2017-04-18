@@ -25,6 +25,7 @@ import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
+import fabric.common.util.Pair;
 import fabric.dissemination.ObjectGlob;
 import fabric.lang.security.Label;
 import fabric.lang.security.Principal;
@@ -113,12 +114,15 @@ public class TransactionManager {
    *
    * @param worker
    *          The worker requesting the prepare
+   * @return a collection of serialized contracts that were write prepared that
+   *         were already longer lasting on the store.
    * @throws TransactionPrepareFailedException
    *           If the transaction would cause a conflict or if the worker is
    *           insufficiently privileged to execute the transaction.
    */
-  public void prepare(Principal worker, PrepareRequest req)
-      throws TransactionPrepareFailedException {
+  public LongKeyMap<SerializedObject> prepare(Principal worker,
+      PrepareRequest req) throws TransactionPrepareFailedException {
+    LongKeyMap<SerializedObject> longerContracts = new LongKeyHashMap<>();
     final long tid = req.tid;
 
     // First, check read and write permissions. We do this before we attempt to
@@ -145,13 +149,15 @@ public class TransactionManager {
       LongKeyMap<SerializedObject> versionConflicts = new LongKeyHashMap<>();
 
       // Prepare writes.
-      for (SerializedObject o : req.writes) {
-        database.prepareUpdate(tid, worker, o, versionConflicts, WRITE);
+      for (Pair<SerializedObject, Boolean> o : req.writes) {
+        database.prepareUpdate(tid, worker, o.first, o.second, versionConflicts,
+            longerContracts, WRITE);
       }
 
       // Prepare creates.
       for (SerializedObject o : req.creates) {
-        database.prepareUpdate(tid, worker, o, versionConflicts, CREATE);
+        database.prepareUpdate(tid, worker, o, false, versionConflicts,
+            longerContracts, CREATE);
       }
 
       // Check reads
@@ -172,12 +178,14 @@ public class TransactionManager {
       STORE_TRANSACTION_LOGGER.log(Level.FINE, "Prepared transaction {0}", tid);
     } catch (TransactionPrepareFailedException e) {
       database.abortPrepare(tid, worker);
+      e.versionConflicts.putAll(longerContracts);
       throw e;
     } catch (RuntimeException e) {
       e.printStackTrace();
       database.abortPrepare(tid, worker);
       throw e;
     }
+    return longerContracts;
   }
 
   /**
@@ -185,7 +193,8 @@ public class TransactionManager {
    * objects. If it doesn't, an AccessException is thrown.
    */
   private void checkPerms(final Principal worker, final LongSet reads,
-      final Collection<SerializedObject> writes) throws AccessException {
+      final Collection<Pair<SerializedObject, Boolean>> writes)
+      throws AccessException {
     // The code that does the actual checking.
     Code<AccessException> checker = new Code<AccessException>() {
       @Override
@@ -207,8 +216,8 @@ public class TransactionManager {
           }
         }
 
-        for (SerializedObject o : writes) {
-          long onum = o.getOnum();
+        for (Pair<SerializedObject, Boolean> o : writes) {
+          long onum = o.first.getOnum();
 
           fabric.lang.Object storeCopy =
               new fabric.lang.Object._Proxy(store, onum);
@@ -334,7 +343,7 @@ public class TransactionManager {
     if (worker == null || worker.$getStore() != store
         || worker.$getOnum() != ONumConstants.STORE_PRINCIPAL) {
       checkPerms(worker, versions.keySet(),
-          Collections.<SerializedObject> emptyList());
+          Collections.<Pair<SerializedObject, Boolean>> emptyList());
     }
 
     List<SerializedObject> result = new ArrayList<>();
@@ -388,13 +397,13 @@ public class TransactionManager {
                         // Run a transaction handling updates at the parent
                         Logging.METRICS_LOGGER.log(Level.INFO,
                             "RUNNING EXTENSION OF {0}", onum);
-                        Store store =
-                            Worker.getWorker().getStore(database.getName());
-                        final Contract._Proxy target =
-                            new Contract._Proxy(store, onum);
                         Worker.runInTopLevelTransaction(new Code<Void>() {
                           @Override
                           public Void run() {
+                            Store store =
+                                Worker.getWorker().getStore(database.getName());
+                            final Contract._Proxy target =
+                                new Contract._Proxy(store, onum);
                             target.attemptExtension();
                             return null;
                           }

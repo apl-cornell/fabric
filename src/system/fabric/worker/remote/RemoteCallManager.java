@@ -5,10 +5,12 @@ import java.text.MessageFormat;
 import java.util.List;
 
 import fabric.common.AuthorizationUtil;
+import fabric.common.SerializedObject;
 import fabric.common.TransactionID;
 import fabric.common.net.RemoteIdentity;
 import fabric.common.net.SubServerSocket;
 import fabric.common.net.SubServerSocketFactory;
+import fabric.common.util.LongKeyHashMap;
 import fabric.lang.Object._Impl;
 import fabric.lang.Object._Proxy;
 import fabric.lang.security.Label;
@@ -155,7 +157,7 @@ public class RemoteCallManager extends MessageToWorkerHandler {
   public PrepareTransactionMessage.Response handle(
       RemoteIdentity<RemoteWorker> client,
       PrepareTransactionMessage prepareTransactionMessage)
-          throws TransactionPrepareFailedException {
+      throws TransactionPrepareFailedException {
     // XXX TODO Security checks.
     Log log =
         TransactionRegistry.getInnermostLog(prepareTransactionMessage.tid);
@@ -177,7 +179,8 @@ public class RemoteCallManager extends MessageToWorkerHandler {
       tm.associateLog(null);
     }
 
-    return new PrepareTransactionMessage.Response();
+    return new PrepareTransactionMessage.Response(
+        new LongKeyHashMap<SerializedObject>());
   }
 
   /**
@@ -188,10 +191,9 @@ public class RemoteCallManager extends MessageToWorkerHandler {
   public CommitTransactionMessage.Response handle(
       RemoteIdentity<RemoteWorker> client,
       CommitTransactionMessage commitTransactionMessage)
-          throws TransactionCommitFailedException {
+      throws TransactionCommitFailedException {
     // XXX TODO Security checks.
-    Log log =
-        TransactionRegistry
+    Log log = TransactionRegistry
         .getInnermostLog(commitTransactionMessage.transactionID);
     if (log == null) {
       // If no log exists, assume that another worker in the transaction has
@@ -245,12 +247,11 @@ public class RemoteCallManager extends MessageToWorkerHandler {
   @Override
   public TakeOwnershipMessage.Response handle(
       RemoteIdentity<RemoteWorker> client, TakeOwnershipMessage msg)
-          throws TakeOwnershipFailedException {
+      throws TakeOwnershipFailedException {
     Log log = TransactionRegistry.getInnermostLog(msg.tid.topTid);
-    if (log == null)
-      throw new TakeOwnershipFailedException(MessageFormat.format(
-          "Object fab://{0}/{1} is not owned by {2} in transaction {3}",
-          msg.store.name(), msg.onum, null, msg.tid));
+    if (log == null) throw new TakeOwnershipFailedException(MessageFormat
+        .format("Object fab://{0}/{1} is not owned by {2} in transaction {3}",
+            msg.store.name(), msg.onum, null, msg.tid));
 
     _Impl obj = new _Proxy(msg.store, msg.onum).fetch();
 
@@ -268,17 +269,16 @@ public class RemoteCallManager extends MessageToWorkerHandler {
 
       // Ensure that the remote worker is allowed to write the object.
       Label label = obj.get$$updateLabel();
-      boolean authorized =
-          AuthorizationUtil.isWritePermitted(client.principal,
-              label.$getStore(), label.$getOnum());
+      boolean authorized = AuthorizationUtil.isWritePermitted(client.principal,
+          label.$getStore(), label.$getOnum());
 
       tm.associateLog(null);
 
       if (!authorized) {
         Principal p = client.principal;
         throw new TakeOwnershipFailedException(MessageFormat.format(
-            "{0} is not authorized to own fab://{1}/{2}", p.$getStore() + "/"
-                + p.$getOnum(), msg.store.name(), msg.onum));
+            "{0} is not authorized to own fab://{1}/{2}",
+            p.$getStore() + "/" + p.$getOnum(), msg.store.name(), msg.onum));
       }
 
       // Relinquish ownership.
@@ -296,14 +296,12 @@ public class RemoteCallManager extends MessageToWorkerHandler {
     final List<Long> response;
 
     if (objectUpdateMessage.groups == null) {
-      response =
-          inProcessRemoteWorker.notifyObjectUpdates(objectUpdateMessage.store,
-              objectUpdateMessage.globs);
+      response = inProcessRemoteWorker.notifyObjectUpdates(
+          objectUpdateMessage.store, objectUpdateMessage.globs);
     } else {
       RemoteStore store = worker.getStore(client.node.name);
-      response =
-          inProcessRemoteWorker.notifyObjectUpdates(store,
-              objectUpdateMessage.onums, objectUpdateMessage.groups);
+      response = inProcessRemoteWorker.notifyObjectUpdates(store,
+          objectUpdateMessage.onums, objectUpdateMessage.groups);
     }
 
     return new ObjectUpdateMessage.Response(response);

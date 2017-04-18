@@ -228,6 +228,17 @@ public final class ObjectCache {
     }
 
     /**
+     * Obtains the object's expiry. (Returns null if this entry has been
+     * evicted.)
+     */
+    public synchronized Long getExpiry() {
+      if (next != null) return next.getExpiry();
+      if (impl != null) return impl.$expiry;
+      if (serialized != null) return serialized.getExpiry();
+      return null;
+    }
+
+    /**
      * Obtains a reference to the object's update label. (Returns null if this
      * entry has been evicted.)
      */
@@ -459,7 +470,10 @@ public final class ObjectCache {
       if (replaceOnly && curEntry.isEvicted()) return;
 
       // Check if object in current entry is an older version.
-      if (curEntry.getVersion() >= update.getVersion()) return;
+      if (curEntry.getVersion() > update.getVersion()
+          || (curEntry.getVersion() == update.getVersion()
+              && curEntry.getExpiry() >= update.getExpiry()))
+        return;
 
       curEntry.evict();
     }

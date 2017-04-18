@@ -11,6 +11,7 @@ import fabric.common.SerializedObject;
 import fabric.common.net.RemoteIdentity;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.Pair;
 import fabric.lang.Object._Impl;
 import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.remote.RemoteWorker;
@@ -63,15 +64,21 @@ public class PrepareTransactionMessage
    * The objects modified during the transaction, unserialized. This will only
    * be non-null on the worker. The store should use the
    * <code>serializedWrites</code> field instead.
+   *
+   * Each item is paired with a boolean flag indicating if the write is intended
+   * as an extension (for a contract) and false otherwise.
    */
-  public final Collection<_Impl> writes;
+  public final Collection<Pair<_Impl, Boolean>> writes;
 
   /**
    * The objects modified during the transaction, serialized. This will only be
    * non-null on the store. The worker should use the <code>writes</code> field
    * instead.
+   *
+   * Each item is paired with a boolean flag indicating if the write is intended
+   * as an extension (for a contract) and false otherwise.
    */
-  public final Collection<SerializedObject> serializedWrites;
+  public final Collection<Pair<SerializedObject, Boolean>> serializedWrites;
 
   /**
    * Used to prepare transactions at remote workers.
@@ -85,7 +92,7 @@ public class PrepareTransactionMessage
    */
   public PrepareTransactionMessage(long tid, boolean singleStore,
       boolean readOnly, Collection<_Impl> toCreate, LongKeyMap<Integer> reads,
-      Collection<_Impl> writes) {
+      Collection<Pair<_Impl, Boolean>> writes) {
     super(MessageType.PREPARE_TRANSACTION,
         TransactionPrepareFailedException.class);
 
@@ -104,10 +111,13 @@ public class PrepareTransactionMessage
   // ////////////////////////////////////////////////////////////////////////////
 
   public static class Response implements Message.Response {
+    public final LongKeyMap<SerializedObject> longerContracts;
+
     /**
      * Creates a Response indicating a successful prepare.
      */
-    public Response() {
+    public Response(LongKeyMap<SerializedObject> longerContracts) {
+      this.longerContracts = longerContracts;
     }
   }
 
@@ -161,8 +171,10 @@ public class PrepareTransactionMessage
       out.writeInt(0);
     } else {
       out.writeInt(writes.size());
-      for (_Impl impl : writes)
-        SerializedObject.write(impl, out);
+      for (Pair<_Impl, Boolean> p : writes) {
+        SerializedObject.write(p.first, out);
+        out.writeBoolean(p.second);
+      }
     }
   }
 
@@ -210,17 +222,30 @@ public class PrepareTransactionMessage
       serializedWrites = Collections.emptyList();
     } else {
       serializedWrites = new ArrayList<>(size);
-      for (int i = 0; i < size; i++)
-        serializedWrites.add(new SerializedObject(in));
+      for (int i = 0; i < size; i++) {
+        SerializedObject obj = new SerializedObject(in);
+        serializedWrites.add(new Pair<>(obj, in.readBoolean()));
+      }
     }
   }
 
   @Override
   protected void writeResponse(DataOutput out, Response r) throws IOException {
+    out.writeInt(r.longerContracts.size());
+    for (LongKeyMap.Entry<SerializedObject> e : r.longerContracts.entrySet()) {
+      out.writeLong(e.getKey());
+      e.getValue().write(out);
+    }
   }
 
   @Override
   protected Response readResponse(DataInput in) throws IOException {
-    return new Response();
+    int size = in.readInt();
+    LongKeyMap<SerializedObject> longerContracts = new LongKeyHashMap<>(size);
+    for (int i = 0; i < size; i++) {
+      long onum = in.readLong();
+      longerContracts.put(onum, new SerializedObject(in));
+    }
+    return new Response(longerContracts);
   }
 }

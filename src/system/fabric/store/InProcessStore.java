@@ -12,6 +12,7 @@ import fabric.common.exceptions.InternalError;
 import fabric.common.net.RemoteIdentity;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.Pair;
 import fabric.dissemination.ObjectGlob;
 import fabric.lang.Object._Impl;
 import fabric.worker.RemoteStore;
@@ -77,12 +78,13 @@ public class InProcessStore extends RemoteStore {
   }
 
   @Override
-  public void prepareTransaction(long tid, boolean singleStore,
-      boolean readOnly, Collection<_Impl> toCreate, LongKeyMap<Integer> reads,
-      Collection<_Impl> writes) throws TransactionPrepareFailedException {
+  public LongKeyMap<SerializedObject> prepareTransaction(long tid,
+      boolean singleStore, boolean readOnly, Collection<_Impl> toCreate,
+      LongKeyMap<Integer> reads, Collection<Pair<_Impl, Boolean>> writes)
+      throws TransactionPrepareFailedException {
     Collection<SerializedObject> serializedCreates =
         new ArrayList<>(toCreate.size());
-    Collection<SerializedObject> serializedWrites =
+    Collection<Pair<SerializedObject, Boolean>> serializedWrites =
         new ArrayList<>(writes.size());
 
     for (_Impl o : toCreate) {
@@ -91,10 +93,10 @@ public class InProcessStore extends RemoteStore {
       serializedCreates.add(serialized);
     }
 
-    for (_Impl o : writes) {
+    for (Pair<_Impl, Boolean> o : writes) {
       @SuppressWarnings("deprecation")
-      SerializedObject serialized = new SerializedObject(o);
-      serializedWrites.add(serialized);
+      SerializedObject serialized = new SerializedObject(o.first);
+      serializedWrites.add(new Pair<>(serialized, o.second));
     }
 
     PrepareRequest req =
@@ -103,7 +105,8 @@ public class InProcessStore extends RemoteStore {
     // Swizzle remote pointers.
     sm.createSurrogates(req);
 
-    tm.prepare(Worker.getWorker().getPrincipal(), req);
+    LongKeyMap<SerializedObject> longerContracts =
+        tm.prepare(Worker.getWorker().getPrincipal(), req);
 
     if (singleStore || readOnly) {
       try {
@@ -113,6 +116,7 @@ public class InProcessStore extends RemoteStore {
         throw new InternalError("Single-store commit failed unexpectedly.", e);
       }
     }
+    return longerContracts;
   }
 
   @Override

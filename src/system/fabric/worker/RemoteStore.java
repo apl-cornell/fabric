@@ -28,6 +28,7 @@ import fabric.common.exceptions.RuntimeFetchException;
 import fabric.common.util.ConcurrentLongKeyHashMap;
 import fabric.common.util.ConcurrentLongKeyMap;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.Pair;
 import fabric.dissemination.ObjectGlob;
 import fabric.lang.Object;
 import fabric.lang.Object._Impl;
@@ -116,15 +117,16 @@ public class RemoteStore extends RemoteNode<RemoteStore>
   }
 
   /**
+   * {@inheritDoc}
    * Sends a PREPARE message to the store.
    */
   @Override
-  public void prepareTransaction(long tid, boolean singleStore,
-      boolean readOnly, Collection<Object._Impl> toCreate,
-      LongKeyMap<Integer> reads, Collection<Object._Impl> writes)
+  public LongKeyMap<SerializedObject> prepareTransaction(long tid,
+      boolean singleStore, boolean readOnly, Collection<Object._Impl> toCreate,
+      LongKeyMap<Integer> reads, Collection<Pair<Object._Impl, Boolean>> writes)
       throws TransactionPrepareFailedException, UnreachableNodeException {
-    send(Worker.getWorker().authToStore, new PrepareTransactionMessage(tid,
-        singleStore, readOnly, toCreate, reads, writes));
+    return send(Worker.getWorker().authToStore, new PrepareTransactionMessage(
+        tid, singleStore, readOnly, toCreate, reads, writes)).longerContracts;
   }
 
   @Override

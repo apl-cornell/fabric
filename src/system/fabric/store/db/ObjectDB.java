@@ -316,6 +316,8 @@ public abstract class ObjectDB {
    *          the worker preparing the create/write.
    * @param obj
    *          the modified object.
+   * @param isExtension
+   *          is this update intended as an extension for a contract?
    * @param versionConflicts
    *          a map containing the transaction's version-conflict information.
    *          If the object modified was out of date, then a new entry will be
@@ -323,8 +325,11 @@ public abstract class ObjectDB {
    *          version.
    */
   public final void prepareUpdate(long tid, Principal worker,
-      SerializedObject obj, LongKeyMap<SerializedObject> versionConflicts,
-      UpdateMode mode) throws TransactionPrepareFailedException {
+      SerializedObject obj, boolean isExtension,
+      LongKeyMap<SerializedObject> versionConflicts,
+      LongKeyMap<SerializedObject> longerContracts,
+      UpdateMode mode)
+      throws TransactionPrepareFailedException {
     long onum = obj.getOnum();
 
     // First, lock the object.
@@ -371,13 +376,20 @@ public abstract class ObjectDB {
         return;
       }
 
-      // Update the version number on the prepared copy of the object unless
-      // it's an extended metric contract.
-      String className = obj.getClassName();
-      if ((className != "fabric.metrics.contracts.DerivedMetricContract"
-          && className != "fabric.metrics.contracts.SampledMetricContract")
-          || obj.getExpiry() <= storeCopy.getExpiry())
+      if (isExtension) {
+        long storeExpiry = storeCopy.getExpiry();
+        long newExpiry = obj.getExpiry();
+        // Don't bother replacing if it's an extension and we have a longer
+        // expiry already.
+        if (storeExpiry > newExpiry) {
+          submap.get(worker).writes.remove(obj);
+          // TODO: Send back later expiry version?
+        }
+      } else {
+        // Update the version number on the prepared copy of the object if it's
+        // not an extended metric contract.
         obj.setVersion(storeVersion + 1);
+      }
       return;
     }
 

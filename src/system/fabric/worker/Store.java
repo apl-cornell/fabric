@@ -8,6 +8,7 @@ import fabric.common.SerializedObject;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.AccessException;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.Pair;
 import fabric.lang.Object._Impl;
 import fabric.lang.security.NodePrincipal;
 import fabric.net.UnreachableNodeException;
@@ -36,10 +37,13 @@ public interface Store extends Serializable {
 
   /**
    * Notifies the store that the transaction is entering the Prepare phase.
+   *
+   * @return A map from onums to contracts that were longer on the store, to
+   * replace in the local cache.
    */
-  void prepareTransaction(long tid, boolean singleStore, boolean readOnly,
-      Collection<_Impl> toCreate, LongKeyMap<Integer> reads,
-      Collection<_Impl> writes)
+  LongKeyMap<SerializedObject> prepareTransaction(long tid, boolean singleStore,
+      boolean readOnly, Collection<_Impl> toCreate, LongKeyMap<Integer> reads,
+      Collection<Pair<_Impl, Boolean>> writes)
       throws UnreachableNodeException, TransactionPrepareFailedException;
 
   /**

@@ -4,6 +4,7 @@ import java.util.Collection;
 
 import fabric.common.SerializedObject;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.Pair;
 
 /**
  * A convenience class for grouping together the created, modified, and read
@@ -17,15 +18,19 @@ public final class PrepareRequest {
   /** The set of created objects */
   public final Collection<SerializedObject> creates;
 
-  /** The collection of modified objects */
-  public final Collection<SerializedObject> writes;
+  /**
+   * The collection of modified objects paired with whether it's intended as an
+   * extension
+   */
+  public final Collection<Pair<SerializedObject, Boolean>> writes;
 
   /** The object numbers and version numbers of the read objects */
   public final LongKeyMap<Integer> reads;
 
   /** Create a PrepareRequest with the provided fields */
   public PrepareRequest(long tid, Collection<SerializedObject> creates,
-      Collection<SerializedObject> writes, LongKeyMap<Integer> reads) {
+      Collection<Pair<SerializedObject, Boolean>> writes,
+      LongKeyMap<Integer> reads) {
     this.tid = tid;
     this.creates = creates;
     this.writes = writes;

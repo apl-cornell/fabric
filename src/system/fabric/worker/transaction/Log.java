@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 
+import fabric.common.SerializedObject;
 import fabric.common.SysUtil;
 import fabric.common.Timing;
 import fabric.common.TransactionID;
@@ -18,6 +19,7 @@ import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.Oid;
 import fabric.common.util.OidKeyHashMap;
+import fabric.common.util.Pair;
 import fabric.common.util.WeakReferenceArrayList;
 import fabric.lang.Object._Impl;
 import fabric.lang.security.LabelCache;
@@ -27,6 +29,7 @@ import fabric.metrics.contracts.MetricContract;
 import fabric.metrics.util.Observer;
 import fabric.metrics.util.Subject;
 import fabric.worker.FabricSoftRef;
+import fabric.worker.RemoteStore;
 import fabric.worker.Store;
 import fabric.worker.Worker;
 import fabric.worker.remote.RemoteWorker;
@@ -117,10 +120,26 @@ public final class Log {
   protected final LinkedList<Subject> unobservedSamples;
 
   /**
-   * A collection of {@link Contract}s that are extended by this transaction and
-   * should trigger extensions up the tree after commit.
+   * A collection of {@link Contract}s that are extended by this transaction
    */
   protected final List<Contract> extendedContracts;
+
+  /**
+   * A collection of {@link Contract}s that are retracted by this transaction
+   */
+  protected final List<Contract> retractedContracts;
+
+  /**
+   * A collection of {@link Contract}s that should be extended after this
+   * transaction
+   */
+  protected final List<Contract> parentExtensions;
+
+  /**
+   * A map from RemoteStores to maps from onums to contracts that were longer on
+   * the store, to update after we commit this transaction.
+   */
+  public Map<RemoteStore, LongKeyMap<SerializedObject>> longerContracts;
 
   /**
    * Tracks objects on local store that have been modified. See
@@ -218,14 +237,16 @@ public final class Log {
     this.creates = new ArrayList<>();
     this.localStoreCreates = new WeakReferenceArrayList<>();
     this.writes = new ArrayList<>();
-    this.unobservedSamples = new LinkedList<>();
     this.extendedContracts = new ArrayList<>();
+    this.retractedContracts = new ArrayList<>();
+    this.parentExtensions = new ArrayList<>();
     this.localStoreWrites = new WeakReferenceArrayList<>();
     this.workersCalled = new ArrayList<>();
     this.startTime = System.currentTimeMillis();
     this.waitsFor = new HashSet<>();
 
     if (parent != null) {
+      this.unobservedSamples = parent.unobservedSamples;
       try {
         Timing.SUBTX.begin();
         this.writerMap = new WriterMap(parent.writerMap);
@@ -240,6 +261,7 @@ public final class Log {
         Timing.SUBTX.end();
       }
     } else {
+      this.unobservedSamples = new LinkedList<>();
       this.writerMap = new WriterMap(this.tid.topTid);
       commitState = new CommitState();
 
@@ -374,23 +396,29 @@ public final class Log {
    * Returns a collection of objects modified at the given store. Writes on
    * created objects are not included.
    */
-  Collection<_Impl> getWritesForStore(Store store) {
+  Collection<Pair<_Impl, Boolean>> getWritesForStore(Store store) {
     // This should be a Set of _Impl, but we have a map indexed by OID to
     // avoid calling hashCode and equals on the _Impls.
-    LongKeyMap<_Impl> result = new LongKeyHashMap<>();
+    LongKeyMap<Pair<_Impl, Boolean>> result = new LongKeyHashMap<>();
 
     if (store.isLocalStore()) {
       for (_Impl obj : localStoreWrites) {
-        result.put(obj.$getOnum(), obj);
+        result.put(obj.$getOnum(),
+            new Pair<>(obj, ((obj instanceof MetricContract)
+                && extendedContracts.contains(obj))));
       }
 
       for (_Impl create : localStoreCreates) {
         result.remove(create.$getOnum());
       }
     } else {
-      for (_Impl obj : writes)
-        if (obj.$getStore() == store && obj.$isOwned)
-          result.put(obj.$getOnum(), obj);
+      for (_Impl obj : writes) {
+        if (obj.$getStore() == store && obj.$isOwned) {
+          result.put(obj.$getOnum(),
+              new Pair<>(obj, ((obj instanceof MetricContract)
+                  && extendedContracts.contains(obj))));
+        }
+      }
 
       for (_Impl create : creates)
         if (create.$getStore() == store) result.remove(create.$getOnum());
@@ -488,9 +516,12 @@ public final class Log {
       writes.clear();
       unobservedSamples.clear();
       extendedContracts.clear();
+      retractedContracts.clear();
+      parentExtensions.clear();
       localStoreWrites.clear();
       workersCalled.clear();
       securityCache.reset();
+      longerContracts = null;
 
       if (parent != null) {
         writerMap = new WriterMap(parent.writerMap);
@@ -511,7 +542,7 @@ public final class Log {
    * level or before using a {@link Contract}.
    */
   public void resolveObservations() {
-    Subject._Impl.processSamples(unobservedSamples, extendedContracts);
+    Subject._Impl.processSamples(unobservedSamples);
   }
 
   /**
@@ -563,17 +594,45 @@ public final class Log {
       }
     }
 
-    for (Subject sub : unobservedSamples) {
-      synchronized (parent.unobservedSamples) {
-        if (!parent.unobservedSamples.contains(sub))
-          parent.unobservedSamples.add(sub);
+    for (Contract obs : retractedContracts) {
+      synchronized (parent.retractedContracts) {
+        if (!parent.retractedContracts.contains(obs))
+          parent.retractedContracts.add(obs);
+      }
+      synchronized (parent.extendedContracts) {
+        if (parent.extendedContracts.contains(obs))
+          parent.extendedContracts.remove(obs);
+      }
+      synchronized (parent.parentExtensions) {
+        if (parent.parentExtensions.contains(obs))
+          parent.parentExtensions.remove(obs);
       }
     }
 
     for (Contract obs : extendedContracts) {
+      synchronized (parent.parentExtensions) {
+        if (parent.parentExtensions.contains(obs))
+          parent.parentExtensions.remove(obs);
+      }
+      synchronized (parent.retractedContracts) {
+        if (parent.retractedContracts.contains(obs)) continue;
+      }
       synchronized (parent.extendedContracts) {
         if (!parent.extendedContracts.contains(obs))
           parent.extendedContracts.add(obs);
+      }
+    }
+
+    for (Contract obs : parentExtensions) {
+      synchronized (parent.retractedContracts) {
+        if (parent.retractedContracts.contains(obs)) continue;
+      }
+      synchronized (parent.extendedContracts) {
+        if (parent.extendedContracts.contains(obs)) continue;
+      }
+      synchronized (parent.parentExtensions) {
+        if (!parent.parentExtensions.contains(obs))
+          parent.parentExtensions.add(obs);
       }
     }
 
@@ -703,14 +762,24 @@ public final class Log {
       obj.$isOwned = false;
     }
 
+    // Update the local copies of contracts now that we've released the lock and
+    // won't be aborted by this.
+    for (Map.Entry<RemoteStore, LongKeyMap<SerializedObject>> e : longerContracts
+        .entrySet()) {
+      RemoteStore s = e.getKey();
+      for (SerializedObject obj : e.getValue().values()) {
+        s.updateCache(obj);
+      }
+    }
+
     // Queue up extension transactions
     Map<Store, List<Long>> extensionsToSend = new HashMap<>();
-    for (Contract extended : extendedContracts) {
-      Store store = extended.getStore();
+    for (Contract toBeExtended : parentExtensions) {
+      Store store = toBeExtended.getStore();
       if (!extensionsToSend.containsKey(store))
         extensionsToSend.put(store, new ArrayList<Long>());
-      if (!extensionsToSend.get(store).contains(extended.$getOnum()))
-        extensionsToSend.get(store).add(extended.$getOnum());
+      if (!extensionsToSend.get(store).contains(toBeExtended.$getOnum()))
+        extensionsToSend.get(store).add(toBeExtended.$getOnum());
     }
 
     for (Map.Entry<Store, List<Long>> entry : extensionsToSend.entrySet()) {

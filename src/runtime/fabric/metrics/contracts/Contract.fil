@@ -21,12 +21,9 @@ import java.util.logging.Level;
  */
 public abstract class Contract extends Subject implements Observer {
 
-  private long lastAdvertised;
-
   protected Contract fabric$metrics$contracts$Contract$() {
     fabric$metrics$util$Subject$();
     this.$expiry = -1;
-    this.lastAdvertised = -1;
     return this;
   }
 
@@ -35,7 +32,7 @@ public abstract class Contract extends Subject implements Observer {
   // Note: larger value => less aggressive extensions => lower overhead
   // Note: smaller value => more aggressive extensions => less chance of a
   // warranty going stale unecessarily.
-  public static final double MIN_EXTENSION_FACTOR = 2;
+  public static final double MIN_EXTENSION_FACTOR = 5;
   // The maximum amount of time into the future to extend the expiry
   // Note: smaller value => less aggressive extensions => lower revocations
   // Note: larger value => longer extensions => less chatter
@@ -52,19 +49,20 @@ public abstract class Contract extends Subject implements Observer {
    *        this {@link Contract} given in milliseconds.
    */
   protected void extendTo(long newExpiry) {
+    TransactionManager tm = TransactionManager.getInstance();
     long currentTime = System.currentTimeMillis();
     // Only bother advertising if it's better than our current expiry
     // by the buffer amount.
-    if (newExpiry > currentTime + (MIN_EXTENSION_FACTOR * (lastAdvertised - currentTime))) {
+    if (newExpiry > currentTime + (MIN_EXTENSION_FACTOR * ($expiry - currentTime))) {
       for (Iterator iter = getObservers().iterator(); iter.hasNext();) {
         Observer o = (Observer) iter.next();
         if (o instanceof MetricContract) {
-          TransactionManager.getInstance().registerExtension((Contract) o);
+          tm.registerParentExtension((Contract) o);
         }
       }
-      lastAdvertised = newExpiry;
     }
     fabric.common.Logging.METRICS_LOGGER.log(Level.INFO, "SYNCH EXTENSION");
+    tm.registerExtension(this);
     $expiry = newExpiry;
   }
 
@@ -134,8 +132,8 @@ public abstract class Contract extends Subject implements Observer {
     // Mark this as modified, which needs to be resolved in this
     // transaction.
     fabric.common.Logging.METRICS_LOGGER.log(Level.INFO, "REVOCATION");
+    TransactionManager.getInstance().registerRetraction(this);
     $expiry = newExpiry;
-    lastAdvertised = newExpiry;
   }
 
   /**

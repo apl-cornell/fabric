@@ -68,6 +68,8 @@ public class Warranty/*<T>*/ extends Contract {
    */
   public /*T*/ Object value() {
     TransactionManager.getInstance().resolveObservations();
+    if (!valid(System.currentTimeMillis()))
+      refresh();
     return this.value;
   }
 

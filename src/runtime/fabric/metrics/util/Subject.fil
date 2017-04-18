@@ -92,7 +92,7 @@ public abstract class Subject {
   /**
    * Utility for processing a batch of samples for the transaction manager.
    */
-  public static void processSamples(java.util.LinkedList unobserved, java.util.List extensions) {
+  public static void processSamples(java.util.LinkedList unobserved) {
     atomic {
       java.util.LinkedList/*<Observer>*/ queue = new java.util.LinkedList/*<>*/();
       while (!unobserved.isEmpty()) {
@@ -115,10 +115,6 @@ public abstract class Subject {
           }
           // If this has no other pending sampled events, process it.
           if (!needToWait) {
-            if (unhandled instanceof Contract) {
-              // This contract is handled *now*
-              extensions.remove(/*(Contract)*/ unhandled);
-            }
             boolean modified = unhandled.handleUpdates();
             if (unhandled instanceof Subject && modified) {
               //queue.addAll(parents);
