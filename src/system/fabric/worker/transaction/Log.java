@@ -487,8 +487,10 @@ public final class Log {
     Store localStore = Worker.getWorker().getLocalStore();
     Set<Store> stores = storesToContact();
     // Note what we were trying to do before we aborted.
-    Logging.log(HOTOS_LOGGER, Level.FINE, "aborted tid {0} ({1} stores)", tid,
-        stores.size() - (stores.contains(localStore) ? 1 : 0));
+    Logging.log(HOTOS_LOGGER, Level.FINE, "aborted tid {0} ({1} stores, {2} retractions, {3} extensions, {4} parent extensions)", tid,
+        stores.size() - (stores.contains(localStore) ? 1 : 0),
+        retractedContracts.size(), extendedContracts.size(),
+        parentExtensions.size());
     // Release read locks.
     for (LongKeyMap<ReadMap.Entry> submap : reads) {
       for (ReadMap.Entry entry : submap.values()) {

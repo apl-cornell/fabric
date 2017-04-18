@@ -444,8 +444,12 @@ public final class TransactionManager {
           || !stores.contains(LOCAL_STORE)
               && !(stores.iterator().next() instanceof InProcessStore)) {
         Logging.log(HOTOS_LOGGER, Level.FINE,
-            "committed tid {0} (latency {1} ms, {2} stores)", HOTOS_current,
-            commitLatency, stores.size() - (stores.contains(LOCAL_STORE) ? 1 : 0));
+            "committed tid {0} (latency {1} ms, {2} stores, {3} retractions, {4} extensions, {5} parent extensions)",
+            HOTOS_current, commitLatency,
+            stores.size() - (stores.contains(LOCAL_STORE) ? 1 : 0),
+            HOTOS_current.retractedContracts.size(),
+            HOTOS_current.extendedContracts.size(),
+            HOTOS_current.parentExtensions.size());
       }
     }
   }
@@ -1223,8 +1227,8 @@ public final class TransactionManager {
     registerWrite((_Impl) retracted.fetch());
     // Add it to the log's unobserved queue if it's not already there.
     synchronized (current.retractedContracts) {
-      if (!current.extendedContracts.contains(retracted))
-        current.extendedContracts.add(retracted);
+      if (!current.retractedContracts.contains(retracted))
+        current.retractedContracts.add(retracted);
     }
     synchronized (current.extendedContracts) {
       if (current.extendedContracts.contains(retracted))
