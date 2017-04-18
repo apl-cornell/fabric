@@ -238,45 +238,38 @@ public final class LocalStore implements Store, Serializable {
         // onums.)
 
         // Create the object representing the top principal.
-        topPrincipal =
-            new TopPrincipal._Impl(LocalStore.this)
-                .fabric$lang$security$PrincipalUtil$TopPrincipal$();
+        topPrincipal = new TopPrincipal._Impl(LocalStore.this)
+            .fabric$lang$security$PrincipalUtil$TopPrincipal$();
         topPrincipal.$forceRenumber(ONumConstants.TOP_PRINCIPAL);
 
         // Create the object representing the bottom confidentiality policy.
-        bottomConfidPolicy =
-            LabelUtil._Impl.readerPolicy(LocalStore.this, null,
-                (Principal) null);
+        bottomConfidPolicy = LabelUtil._Impl.readerPolicy(LocalStore.this, null,
+            (Principal) null);
         bottomConfidPolicy.$forceRenumber(ONumConstants.BOTTOM_CONFIDENTIALITY);
 
         // Create the object representing the bottom integrity policy.
-        bottomIntegPolicy =
-            LabelUtil._Impl.writerPolicy(LocalStore.this, topPrincipal,
-                topPrincipal);
+        bottomIntegPolicy = LabelUtil._Impl.writerPolicy(LocalStore.this,
+            topPrincipal, topPrincipal);
         bottomIntegPolicy.$forceRenumber(ONumConstants.BOTTOM_INTEGRITY);
 
         // Create the object representing the public readonly label.
-        publicReadonlyLabel =
-            LabelUtil._Impl.toLabel(LocalStore.this, bottomConfidPolicy,
-                bottomIntegPolicy);
+        publicReadonlyLabel = LabelUtil._Impl.toLabel(LocalStore.this,
+            bottomConfidPolicy, bottomIntegPolicy);
         publicReadonlyLabel.$forceRenumber(ONumConstants.PUBLIC_READONLY_LABEL);
 
         // Create the object representing the top confidentiality policy.
-        topConfidPolicy =
-            LabelUtil._Impl.readerPolicy(LocalStore.this, topPrincipal,
-                topPrincipal);
+        topConfidPolicy = LabelUtil._Impl.readerPolicy(LocalStore.this,
+            topPrincipal, topPrincipal);
         topConfidPolicy.$forceRenumber(ONumConstants.TOP_CONFIDENTIALITY);
 
         // Create the object representing the top integrity policy.
-        topIntegPolicy =
-            LabelUtil._Impl.writerPolicy(LocalStore.this, null,
-                (Principal) null);
+        topIntegPolicy = LabelUtil._Impl.writerPolicy(LocalStore.this, null,
+            (Principal) null);
         topIntegPolicy.$forceRenumber(ONumConstants.TOP_INTEGRITY);
 
         // Create the object representing the empty label.
-        emptyLabel =
-            LabelUtil._Impl.toLabel(LocalStore.this, bottomConfidPolicy,
-                topIntegPolicy);
+        emptyLabel = LabelUtil._Impl.toLabel(LocalStore.this,
+            bottomConfidPolicy, topIntegPolicy);
         emptyLabel.$forceRenumber(ONumConstants.EMPTY_LABEL);
 
         // Create the label {worker->_; worker<-_} for the root map.

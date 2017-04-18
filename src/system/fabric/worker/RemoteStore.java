@@ -52,8 +52,8 @@ import fabric.util.Map;
  * <code>Worker.getStore()</code> interface. For each remote store, there should
  * be at most one <code>RemoteStore</code> object representing that store.
  */
-public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
-    Serializable {
+public class RemoteStore extends RemoteNode<RemoteStore>
+    implements Store, Serializable {
   /**
    * A queue of fresh object identifiers.
    */
@@ -270,8 +270,8 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
    * @param num
    *          The number of objects to allocate
    */
-  protected void reserve(int num) throws AccessException,
-      UnreachableNodeException {
+  protected void reserve(int num)
+      throws AccessException, UnreachableNodeException {
     synchronized (fresh_ids) {
       while (fresh_ids.size() < num) {
         // log.info("Requesting new onums, storeid=" + storeID);
@@ -293,8 +293,8 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
   @Override
   public void commitTransaction(long transactionID)
       throws UnreachableNodeException, TransactionCommitFailedException {
-    send(Worker.getWorker().authToStore, new CommitTransactionMessage(
-        transactionID));
+    send(Worker.getWorker().authToStore,
+        new CommitTransactionMessage(transactionID));
   }
 
   @Override
@@ -312,8 +312,8 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
    */
   protected List<SerializedObject> getStaleObjects(LongKeyMap<Integer> reads) {
     try {
-      return send(Worker.getWorker().authToStore, new StalenessCheckMessage(
-          reads)).staleObjects;
+      return send(Worker.getWorker().authToStore,
+          new StalenessCheckMessage(reads)).staleObjects;
     } catch (final AccessException e) {
       throw new RuntimeFetchException(e);
     }
