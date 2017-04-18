@@ -126,18 +126,18 @@ public final class Log {
   /**
    * A collection of {@link Contract}s that are extended by this transaction
    */
-  protected final List<Oid> extendedContracts;
+  protected final List<Contract> extendedContracts;
 
   /**
    * A collection of {@link Contract}s that are retracted by this transaction
    */
-  protected final List<Oid> retractedContracts;
+  protected final List<Contract> retractedContracts;
 
   /**
    * A collection of {@link Contract}s that should be extended after this
    * transaction
    */
-  protected final List<Oid> parentExtensions;
+  protected final List<Contract> parentExtensions;
 
   /**
    * A map from RemoteStores to maps from onums to contracts that were longer on
@@ -525,6 +525,7 @@ public final class Log {
       creates.clear();
       localStoreCreates.clear();
       writes.clear();
+      unobservedSamples.clear();
       extendedContracts.clear();
       retractedContracts.clear();
       parentExtensions.clear();
@@ -537,7 +538,6 @@ public final class Log {
         writerMap = new WriterMap(parent.writerMap);
       } else {
         writerMap = new WriterMap(tid.topTid);
-        unobservedSamples.clear();
       }
 
       if (retrySignal != null) {
@@ -605,7 +605,7 @@ public final class Log {
       }
     }
 
-    for (Oid obs : retractedContracts) {
+    for (Contract obs : retractedContracts) {
       synchronized (parent.retractedContracts) {
         if (!parent.retractedContracts.contains(obs))
           parent.retractedContracts.add(obs);
@@ -620,7 +620,7 @@ public final class Log {
       }
     }
 
-    for (Oid obs : extendedContracts) {
+    for (Contract obs : extendedContracts) {
       synchronized (parent.parentExtensions) {
         if (parent.parentExtensions.contains(obs))
           parent.parentExtensions.remove(obs);
@@ -634,7 +634,7 @@ public final class Log {
       }
     }
 
-    for (Oid obs : parentExtensions) {
+    for (Contract obs : parentExtensions) {
       synchronized (parent.retractedContracts) {
         if (parent.retractedContracts.contains(obs)) continue;
       }
@@ -758,9 +758,7 @@ public final class Log {
     // Release write locks on created objects and set version numbers.
     Iterable<_Impl> chain2 = SysUtil.chain(creates, localStoreCreates);
     for (_Impl obj : chain2) {
-      retractedContracts.remove(new Oid(obj));
       extendedContracts.remove(new Oid(obj));
-      parentExtensions.remove(new Oid(obj));
       if (!obj.$isOwned) {
         // The cached object is out-of-date. Evict it.
         obj.$ref.evict();
@@ -787,12 +785,12 @@ public final class Log {
 
     // Queue up extension transactions
     Map<Store, List<Long>> extensionsToSend = new HashMap<>();
-    for (Oid toBeExtended : parentExtensions) {
-      Store store = toBeExtended.store;
+    for (Contract toBeExtended : parentExtensions) {
+      Store store = toBeExtended.getStore();
       if (!extensionsToSend.containsKey(store))
         extensionsToSend.put(store, new ArrayList<Long>());
-      if (!extensionsToSend.get(store).contains(toBeExtended.onum))
-        extensionsToSend.get(store).add(toBeExtended.onum);
+      if (!extensionsToSend.get(store).contains(toBeExtended.$getOnum()))
+        extensionsToSend.get(store).add(toBeExtended.$getOnum());
     }
 
     for (Map.Entry<Store, List<Long>> entry : extensionsToSend.entrySet()) {
