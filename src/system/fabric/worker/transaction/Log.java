@@ -117,8 +117,8 @@ public final class Log {
   protected final List<_Impl> writes;
 
   /**
-   * A collection of {@link Subjects} modified in this transaction that need to
-   * be observed by {@link Observer}s before the transaction commits.
+   * Collection of {@link Subjects} in this transaction that need to be/have
+   * been observed by {@link Observer}s before the transaction commits.
    */
   protected final LinkedList<Subject> unobservedSamples;
 
@@ -240,6 +240,7 @@ public final class Log {
     this.creates = new ArrayList<>();
     this.localStoreCreates = new WeakReferenceArrayList<>();
     this.writes = new ArrayList<>();
+    this.unobservedSamples = new LinkedList<>();
     this.extendedContracts = new ArrayList<>();
     this.retractedContracts = new ArrayList<>();
     this.parentExtensions = new ArrayList<>();
@@ -249,7 +250,7 @@ public final class Log {
     this.waitsFor = new HashSet<>();
 
     if (parent != null) {
-      this.unobservedSamples = parent.unobservedSamples;
+      this.unobservedSamples.addAll(parent.unobservedSamples);
       try {
         Timing.SUBTX.begin();
         this.writerMap = new WriterMap(parent.writerMap);
@@ -264,7 +265,6 @@ public final class Log {
         Timing.SUBTX.end();
       }
     } else {
-      this.unobservedSamples = new LinkedList<>();
       this.writerMap = new WriterMap(this.tid.topTid);
       commitState = new CommitState();
 
@@ -603,6 +603,11 @@ public final class Log {
         // Signal any readers/writers.
         if (obj.$numWaiting > 0) obj.notifyAll();
       }
+    }
+
+    synchronized (parent.unobservedSamples) {
+      parent.unobservedSamples.clear();
+      parent.unobservedSamples.addAll(unobservedSamples);
     }
 
     for (Contract obs : retractedContracts) {
