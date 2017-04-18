@@ -36,6 +36,11 @@ public interface Store extends Serializable {
       throws UnreachableNodeException, TransactionPrepareFailedException;
 
   /**
+   * Creates a new cache entry for the given _Impl.
+   */
+  ObjectCache.Entry newCacheEntry(_Impl impl);
+
+  /**
    * Returns the cache entry for the given onum. If the object is not resident,
    * it is fetched from the store via dissemination.
    *
