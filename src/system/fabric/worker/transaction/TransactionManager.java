@@ -34,6 +34,7 @@ import fabric.common.TransactionID;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.Oid;
 import fabric.common.util.Pair;
 import fabric.lang.Object._Impl;
 import fabric.lang.Object._Proxy;
@@ -1225,18 +1226,19 @@ public final class TransactionManager {
   public void registerRetraction(Contract retracted) {
     // Make sure it's registered as written.
     registerWrite((_Impl) retracted.fetch());
+    Oid oid = new Oid(retracted);
     // Add it to the log's unobserved queue if it's not already there.
     synchronized (current.retractedContracts) {
-      if (!current.retractedContracts.contains(retracted))
-        current.retractedContracts.add(retracted);
+      if (!current.retractedContracts.contains(oid))
+        current.retractedContracts.add(oid);
     }
     synchronized (current.extendedContracts) {
-      if (current.extendedContracts.contains(retracted))
-        current.extendedContracts.remove(retracted);
+      if (current.extendedContracts.contains(oid))
+        current.extendedContracts.remove(oid);
     }
     synchronized (current.parentExtensions) {
-      if (current.parentExtensions.contains(retracted))
-        current.parentExtensions.remove(retracted);
+      if (current.parentExtensions.contains(oid))
+        current.parentExtensions.remove(oid);
     }
   }
 
@@ -1246,17 +1248,18 @@ public final class TransactionManager {
   public void registerExtension(Contract extended) {
     // Make sure it's registered as written.
     registerWrite((_Impl) extended.fetch());
+    Oid oid = new Oid(extended);
     synchronized (current.retractedContracts) {
-      if (current.retractedContracts.contains(extended)) return;
+      if (current.retractedContracts.contains(oid)) return;
     }
     // Add it to the log's unobserved queue if it's not already there.
     synchronized (current.extendedContracts) {
-      if (!current.extendedContracts.contains(extended))
-        current.extendedContracts.add(extended);
+      if (!current.extendedContracts.contains(oid))
+        current.extendedContracts.add(oid);
     }
     synchronized (current.parentExtensions) {
-      if (current.parentExtensions.contains(extended))
-        current.parentExtensions.remove(extended);
+      if (current.parentExtensions.contains(oid))
+        current.parentExtensions.remove(oid);
     }
   }
 
@@ -1265,16 +1268,17 @@ public final class TransactionManager {
    * transaction commits.
    */
   public void registerParentExtension(Contract toBeExtended) {
+    Oid oid = new Oid(toBeExtended);
     synchronized (current.retractedContracts) {
-      if (current.retractedContracts.contains(toBeExtended)) return;
+      if (current.retractedContracts.contains(oid)) return;
     }
     synchronized (current.extendedContracts) {
-      if (current.extendedContracts.contains(toBeExtended)) return;
+      if (current.extendedContracts.contains(oid)) return;
     }
     // Add it to the log's unobserved queue if it's not already there.
     synchronized (current.parentExtensions) {
-      if (!current.parentExtensions.contains(toBeExtended))
-        current.parentExtensions.add(toBeExtended);
+      if (!current.parentExtensions.contains(oid))
+        current.parentExtensions.add(oid);
     }
   }
 
