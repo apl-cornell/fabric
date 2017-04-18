@@ -603,8 +603,8 @@ public final class TransactionManager {
 
     // Check for conflicts and unreachable stores/workers.
     if (!failures.isEmpty()) {
-      String logMessage =
-          "Transaction tid=" + current.tid.topTid + ":  prepare failed.";
+      String logMessage = "Transaction tid="
+          + Long.toHexString(current.tid.topTid) + ":  prepare failed.";
 
       for (Map.Entry<RemoteNode<?>, TransactionPrepareFailedException> entry : failures
           .entrySet()) {
