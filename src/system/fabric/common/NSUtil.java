@@ -77,7 +77,7 @@ public final class NSUtil {
   /**
    * Return the mangled Java interface name of a Fabric class object.
    */
-  public static String javaClassName(fabric.lang.FClass._Proxy fClass) {
+  public static String javaClassName(fabric.lang.FClass fClass) {
     return javaClassName(absoluteName(fClass));
   }
 

@@ -445,7 +445,6 @@
       depends="init,bootstrap,fabil-compiler,bin,native"
       description="Compiles the FabIL signature clasess">
     <path id="fabil-signatures.bootcp">
-      <pathelement location="${bootstrap.classes}"/>
       <path refid="polyglot.classpath"/>
     </path>
     <pathconvert
