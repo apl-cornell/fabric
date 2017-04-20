@@ -327,8 +327,7 @@ public abstract class ObjectDB {
   public final void prepareUpdate(long tid, Principal worker,
       SerializedObject obj, boolean isExtension,
       LongKeyMap<SerializedObject> versionConflicts,
-      LongKeyMap<SerializedObject> longerContracts,
-      UpdateMode mode)
+      LongKeyMap<SerializedObject> longerContracts, UpdateMode mode)
       throws TransactionPrepareFailedException {
     long onum = obj.getOnum();
 
@@ -383,6 +382,7 @@ public abstract class ObjectDB {
         // expiry already.
         if (storeExpiry > newExpiry) {
           submap.get(worker).writes.remove(obj);
+          objectLocksFor(tid).unlockForWrite(onum);
           longerContracts.put(onum, read(onum));
         }
       } else {

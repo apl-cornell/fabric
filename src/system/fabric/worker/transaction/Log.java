@@ -746,10 +746,11 @@ public final class Log {
         obj.$writeLockHolder = null;
         obj.$writeLockStackTrace = null;
         // Don't increment the version if it's an extended metric contract
-        if (!(obj instanceof MetricContract)
-            || !(extendedContracts.contains(obj)))
+        if (!((obj instanceof MetricContract) &&
+            (extendedContracts.contains(obj)))) {
           obj.$version++;
-        obj.$readMapEntry.incrementVersion();
+          obj.$readMapEntry.incrementVersion();
+        }
         obj.$isOwned = false;
 
         // Discard one layer of history.
