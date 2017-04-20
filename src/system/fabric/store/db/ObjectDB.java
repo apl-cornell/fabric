@@ -382,8 +382,8 @@ public abstract class ObjectDB {
         // expiry already.
         if (storeExpiry > newExpiry) {
           submap.get(worker).writes.remove(obj);
-          objectLocksFor(onum).unlockForWrite(tid);
           longerContracts.put(onum, read(onum));
+          objectLocksFor(onum).unlockForWrite(tid);
         }
       } else {
         // Update the version number on the prepared copy of the object if it's
