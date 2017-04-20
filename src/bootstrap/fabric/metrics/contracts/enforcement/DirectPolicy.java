@@ -6,6 +6,7 @@ import fabric.worker.*;
 import fabric.worker.remote.*;
 import java.lang.*;
 import fabric.metrics.contracts.MetricContract;
+import fabric.metrics.Metric;
 
 /**
  * An enforcement policy for enforcing a {@link MetricContract}s by checking
@@ -13,6 +14,11 @@ import fabric.metrics.contracts.MetricContract;
  */
 public interface DirectPolicy
   extends fabric.metrics.contracts.enforcement.EnforcementPolicy {
+    public fabric.metrics.contracts.MetricContract get$contract();
+    
+    public fabric.metrics.contracts.MetricContract set$contract(
+      fabric.metrics.contracts.MetricContract val);
+    
     public long get$expiry();
     
     public long set$expiry(long val);
@@ -21,13 +27,22 @@ public interface DirectPolicy
     
     public long postDec$expiry();
     
+    public boolean get$activated();
+    
+    public boolean set$activated(boolean val);
+    
     /**
    * @param expiry
    *        how long to enforce the {@link MetricContract} this is applied
    *        to using direct checks on updates to the metric.
    */
     public fabric.metrics.contracts.enforcement.DirectPolicy
-      fabric$metrics$contracts$enforcement$DirectPolicy$(long expiry);
+      fabric$metrics$contracts$enforcement$DirectPolicy$(
+      fabric.metrics.contracts.MetricContract contract);
+    
+    public void activate();
+    
+    public void refresh();
     
     public long expiry();
     
@@ -42,6 +57,17 @@ public interface DirectPolicy
     public static class _Proxy
     extends fabric.metrics.contracts.enforcement.EnforcementPolicy._Proxy
       implements fabric.metrics.contracts.enforcement.DirectPolicy {
+        public fabric.metrics.contracts.MetricContract get$contract() {
+            return ((fabric.metrics.contracts.enforcement.DirectPolicy._Impl)
+                      fetch()).get$contract();
+        }
+        
+        public fabric.metrics.contracts.MetricContract set$contract(
+          fabric.metrics.contracts.MetricContract val) {
+            return ((fabric.metrics.contracts.enforcement.DirectPolicy._Impl)
+                      fetch()).set$contract(val);
+        }
+        
         public long get$expiry() {
             return ((fabric.metrics.contracts.enforcement.DirectPolicy._Impl)
                       fetch()).get$expiry();
@@ -62,8 +88,19 @@ public interface DirectPolicy
                       fetch()).postDec$expiry();
         }
         
+        public boolean get$activated() {
+            return ((fabric.metrics.contracts.enforcement.DirectPolicy._Impl)
+                      fetch()).get$activated();
+        }
+        
+        public boolean set$activated(boolean val) {
+            return ((fabric.metrics.contracts.enforcement.DirectPolicy._Impl)
+                      fetch()).set$activated(val);
+        }
+        
         public fabric.metrics.contracts.enforcement.DirectPolicy
-          fabric$metrics$contracts$enforcement$DirectPolicy$(long arg1) {
+          fabric$metrics$contracts$enforcement$DirectPolicy$(
+          fabric.metrics.contracts.MetricContract arg1) {
             return ((fabric.metrics.contracts.enforcement.DirectPolicy)
                       fetch()).
               fabric$metrics$contracts$enforcement$DirectPolicy$(arg1);
@@ -79,6 +116,22 @@ public interface DirectPolicy
     public static class _Impl
     extends fabric.metrics.contracts.enforcement.EnforcementPolicy._Impl
       implements fabric.metrics.contracts.enforcement.DirectPolicy {
+        public fabric.metrics.contracts.MetricContract get$contract() {
+            return this.contract;
+        }
+        
+        public fabric.metrics.contracts.MetricContract set$contract(
+          fabric.metrics.contracts.MetricContract val) {
+            fabric.worker.transaction.TransactionManager tm =
+              fabric.worker.transaction.TransactionManager.getInstance();
+            boolean transactionCreated = tm.registerWrite(this);
+            this.contract = val;
+            if (transactionCreated) tm.commitTransaction();
+            return val;
+        }
+        
+        public fabric.metrics.contracts.MetricContract contract;
+        
         public long get$expiry() {
             fabric.worker.transaction.TransactionManager.getInstance().
               registerRead(this);
@@ -106,11 +159,24 @@ public interface DirectPolicy
             return tmp;
         }
         
-        /**
-   * How long to enforce the {@link MetricContract} this is applied to using
-   * direct checks on updates to the metric.
-   */
         public long expiry;
+        
+        public boolean get$activated() {
+            fabric.worker.transaction.TransactionManager.getInstance().
+              registerRead(this);
+            return this.activated;
+        }
+        
+        public boolean set$activated(boolean val) {
+            fabric.worker.transaction.TransactionManager tm =
+              fabric.worker.transaction.TransactionManager.getInstance();
+            boolean transactionCreated = tm.registerWrite(this);
+            this.activated = val;
+            if (transactionCreated) tm.commitTransaction();
+            return val;
+        }
+        
+        public boolean activated;
         
         /**
    * @param expiry
@@ -118,17 +184,344 @@ public interface DirectPolicy
    *        to using direct checks on updates to the metric.
    */
         public fabric.metrics.contracts.enforcement.DirectPolicy
-          fabric$metrics$contracts$enforcement$DirectPolicy$(long expiry) {
-            this.set$expiry((long) expiry);
+          fabric$metrics$contracts$enforcement$DirectPolicy$(
+          fabric.metrics.contracts.MetricContract contract) {
+            this.set$contract(contract);
             fabric$metrics$contracts$enforcement$EnforcementPolicy$();
+            this.set$expiry((long) -1);
+            this.set$activated(false);
             return (fabric.metrics.contracts.enforcement.DirectPolicy)
                      this.$getProxy();
+        }
+        
+        public void activate() {
+            {
+                fabric.worker.transaction.TransactionManager $tm32 =
+                  fabric.worker.transaction.TransactionManager.getInstance();
+                int $backoff33 = 1;
+                boolean $doBackoff34 = true;
+                $label28: for (boolean $commit29 = false; !$commit29; ) {
+                    if ($doBackoff34) {
+                        if ($backoff33 > 32) {
+                            while (true) {
+                                try {
+                                    java.lang.Thread.sleep($backoff33);
+                                    break;
+                                }
+                                catch (java.lang.InterruptedException $e30) {  }
+                            }
+                        }
+                        if ($backoff33 < 5000) $backoff33 *= 2;
+                    }
+                    $doBackoff34 = $backoff33 <= 32 || !$doBackoff34;
+                    $commit29 = true;
+                    fabric.worker.transaction.TransactionManager.getInstance().
+                      startTransaction();
+                    try { if (this.get$activated()) return; }
+                    catch (final fabric.worker.RetryException $e30) {
+                        $commit29 = false;
+                        continue $label28;
+                    }
+                    catch (final fabric.worker.
+                             TransactionRestartingException $e30) {
+                        $commit29 = false;
+                        fabric.common.TransactionID $currentTid31 =
+                          $tm32.getCurrentTid();
+                        if ($e30.tid.isDescendantOf($currentTid31))
+                            continue $label28;
+                        if ($currentTid31.parent != null) throw $e30;
+                        throw new InternalError(
+                                "Something is broken with " +
+                                    "transaction management. Got a signal to restart a " +
+                                    "different transaction than the one being managed.");
+                    }
+                    catch (final Throwable $e30) {
+                        $commit29 = false;
+                        if ($tm32.checkForStaleObjects()) continue $label28;
+                        throw new fabric.worker.AbortException($e30);
+                    }
+                    finally {
+                        if ($commit29) {
+                            try {
+                                fabric.worker.transaction.TransactionManager.
+                                  getInstance().commitTransaction();
+                            }
+                            catch (final fabric.worker.AbortException $e30) {
+                                $commit29 = false;
+                            }
+                            catch (final fabric.worker.
+                                     TransactionRestartingException $e30) {
+                                $commit29 = false;
+                                fabric.common.TransactionID $currentTid31 =
+                                  $tm32.getCurrentTid();
+                                if ($currentTid31 != null) {
+                                    if ($e30.tid.equals($currentTid31) ||
+                                          !$e30.tid.isDescendantOf(
+                                                      $currentTid31)) {
+                                        throw $e30;
+                                    }
+                                }
+                            }
+                        }
+                        else {
+                            fabric.worker.transaction.TransactionManager.
+                              getInstance().abortTransaction();
+                        }
+                        if (!$commit29) {  }
+                    }
+                }
+            }
+            refresh();
+        }
+        
+        public void refresh() {
+            {
+                fabric.worker.transaction.TransactionManager $tm39 =
+                  fabric.worker.transaction.TransactionManager.getInstance();
+                int $backoff40 = 1;
+                boolean $doBackoff41 = true;
+                $label35: for (boolean $commit36 = false; !$commit36; ) {
+                    if ($doBackoff41) {
+                        if ($backoff40 > 32) {
+                            while (true) {
+                                try {
+                                    java.lang.Thread.sleep($backoff40);
+                                    break;
+                                }
+                                catch (java.lang.InterruptedException $e37) {  }
+                            }
+                        }
+                        if ($backoff40 < 5000) $backoff40 *= 2;
+                    }
+                    $doBackoff41 = $backoff40 <= 32 || !$doBackoff41;
+                    $commit36 = true;
+                    fabric.worker.transaction.TransactionManager.getInstance().
+                      startTransaction();
+                    try {
+                        long currentTime = java.lang.System.currentTimeMillis();
+                        long trueTime =
+                          this.get$contract().getBound().trueExpiry(
+                                                           this.get$contract(
+                                                                  ).getMetric(),
+                                                           currentTime);
+                        if (trueTime < currentTime) this.set$expiry((long) 0);
+                        long
+                          hedgedTime =
+                          ((fabric.metrics.contracts.enforcement.DirectPolicy.
+                             _Impl) this.fetch()).hedged(currentTime);
+                        if (this.get$contract().getExpiry() <= trueTime) {
+                            hedgedTime =
+                              java.lang.Math.max(
+                                               this.get$contract().getExpiry(),
+                                               hedgedTime);
+                        }
+                        this.set$expiry((long) hedgedTime);
+                        this.set$activated(true);
+                    }
+                    catch (final fabric.worker.RetryException $e37) {
+                        $commit36 = false;
+                        continue $label35;
+                    }
+                    catch (final fabric.worker.
+                             TransactionRestartingException $e37) {
+                        $commit36 = false;
+                        fabric.common.TransactionID $currentTid38 =
+                          $tm39.getCurrentTid();
+                        if ($e37.tid.isDescendantOf($currentTid38))
+                            continue $label35;
+                        if ($currentTid38.parent != null) throw $e37;
+                        throw new InternalError(
+                                "Something is broken with " +
+                                    "transaction management. Got a signal to restart a " +
+                                    "different transaction than the one being managed.");
+                    }
+                    catch (final Throwable $e37) {
+                        $commit36 = false;
+                        if ($tm39.checkForStaleObjects()) continue $label35;
+                        throw new fabric.worker.AbortException($e37);
+                    }
+                    finally {
+                        if ($commit36) {
+                            try {
+                                fabric.worker.transaction.TransactionManager.
+                                  getInstance().commitTransaction();
+                            }
+                            catch (final fabric.worker.AbortException $e37) {
+                                $commit36 = false;
+                            }
+                            catch (final fabric.worker.
+                                     TransactionRestartingException $e37) {
+                                $commit36 = false;
+                                fabric.common.TransactionID $currentTid38 =
+                                  $tm39.getCurrentTid();
+                                if ($currentTid38 != null) {
+                                    if ($e37.tid.equals($currentTid38) ||
+                                          !$e37.tid.isDescendantOf(
+                                                      $currentTid38)) {
+                                        throw $e37;
+                                    }
+                                }
+                            }
+                        }
+                        else {
+                            fabric.worker.transaction.TransactionManager.
+                              getInstance().abortTransaction();
+                        }
+                        if (!$commit36) {  }
+                    }
+                }
+            }
+        }
+        
+        /**
+   * Using the associated {@link Metric's} statistics and some tuning
+   * constants, figure out a time to advertise given the current time.
+   *
+   * @param time
+   *        the current time we're calculating this hedged expiration at
+   * @return an appropriately conservative time to advertise to other nodes in
+   *       the system for this contract.
+   */
+        private long hedged(long time) {
+            double r = this.get$contract().getBound().get$rate();
+            double b = this.get$contract().getBound().value(time);
+            fabric.metrics.Metric m = this.get$contract().getMetric();
+            double x = m.value();
+            double v = m.velocity();
+            double n = m.noise() *
+              fabric.metrics.contracts.enforcement.DirectPolicy._Static._Proxy.$instance.get$HEDGE_FACTOR() *
+              fabric.metrics.contracts.enforcement.DirectPolicy._Static._Proxy.$instance.get$HEDGE_FACTOR();
+            long hedgedResult = this.get$contract().getBound().trueExpiry(m,
+                                                                          time);
+            double bm = b - x;
+            double rv = r - v;
+            double minYs = x - (v > 0 ? n : -n) /
+              (4.0 * (v * java.lang.Math.sqrt(v * v + 1)));
+            long min = this.get$contract().getBound().trueExpiry(minYs, time);
+            if (minYs < x && this.get$contract().getBound().test(minYs, time)) {
+                hedgedResult = java.lang.Math.min(min, hedgedResult);
+            }
+            else if (bm * rv > 0) {
+                double rotatedY1 =
+                  1.0 - java.lang.Math.sqrt(4.0 * rv * bm + 1.0) / (2.0 * rv);
+                double rotatedX1 =
+                  (rotatedY1 + bm) / rv;
+                double rotatedY2 =
+                  1.0 + java.lang.Math.sqrt(4.0 * rv * bm + 1.0) / (2.0 * rv);
+                double rotatedX2 =
+                  (rotatedY2 + bm) / rv;
+                double xxFact =
+                  1 / java.lang.Math.sqrt(v * v + 1);
+                double xyFact =
+                  v / java.lang.Math.sqrt(v * v + 1);
+                double intersectX1 = rotatedX1 *
+                  xxFact +
+                  rotatedY1 * xyFact;
+                double intersectX2 = rotatedX2 *
+                  xxFact +
+                  rotatedY2 * xyFact;
+                double soonestX1 =
+                  intersectX1 >
+                  0
+                  ? time +
+                  intersectX1
+                  : java.lang.Long.MAX_VALUE;
+                double soonestX2 =
+                  intersectX2 >
+                  0
+                  ? time +
+                  intersectX2
+                  : java.lang.Long.MAX_VALUE;
+                hedgedResult =
+                  java.lang.Math.min((long)
+                                       java.lang.Math.min(soonestX1, soonestX2),
+                                     hedgedResult);
+            }
+            return hedgedResult;
         }
         
         public long expiry() { return this.get$expiry(); }
         
         public void apply(fabric.metrics.contracts.MetricContract mc) {
-            mc.getMetric().startTracking(mc);
+            {
+                fabric.worker.transaction.TransactionManager $tm46 =
+                  fabric.worker.transaction.TransactionManager.getInstance();
+                int $backoff47 = 1;
+                boolean $doBackoff48 = true;
+                $label42: for (boolean $commit43 = false; !$commit43; ) {
+                    if ($doBackoff48) {
+                        if ($backoff47 > 32) {
+                            while (true) {
+                                try {
+                                    java.lang.Thread.sleep($backoff47);
+                                    break;
+                                }
+                                catch (java.lang.InterruptedException $e44) {  }
+                            }
+                        }
+                        if ($backoff47 < 5000) $backoff47 *= 2;
+                    }
+                    $doBackoff48 = $backoff47 <= 32 || !$doBackoff48;
+                    $commit43 = true;
+                    fabric.worker.transaction.TransactionManager.getInstance().
+                      startTransaction();
+                    try {
+                        if (!this.get$activated()) refresh();
+                        mc.getMetric().startTracking(mc);
+                    }
+                    catch (final fabric.worker.RetryException $e44) {
+                        $commit43 = false;
+                        continue $label42;
+                    }
+                    catch (final fabric.worker.
+                             TransactionRestartingException $e44) {
+                        $commit43 = false;
+                        fabric.common.TransactionID $currentTid45 =
+                          $tm46.getCurrentTid();
+                        if ($e44.tid.isDescendantOf($currentTid45))
+                            continue $label42;
+                        if ($currentTid45.parent != null) throw $e44;
+                        throw new InternalError(
+                                "Something is broken with " +
+                                    "transaction management. Got a signal to restart a " +
+                                    "different transaction than the one being managed.");
+                    }
+                    catch (final Throwable $e44) {
+                        $commit43 = false;
+                        if ($tm46.checkForStaleObjects()) continue $label42;
+                        throw new fabric.worker.AbortException($e44);
+                    }
+                    finally {
+                        if ($commit43) {
+                            try {
+                                fabric.worker.transaction.TransactionManager.
+                                  getInstance().commitTransaction();
+                            }
+                            catch (final fabric.worker.AbortException $e44) {
+                                $commit43 = false;
+                            }
+                            catch (final fabric.worker.
+                                     TransactionRestartingException $e44) {
+                                $commit43 = false;
+                                fabric.common.TransactionID $currentTid45 =
+                                  $tm46.getCurrentTid();
+                                if ($currentTid45 != null) {
+                                    if ($e44.tid.equals($currentTid45) ||
+                                          !$e44.tid.isDescendantOf(
+                                                      $currentTid45)) {
+                                        throw $e44;
+                                    }
+                                }
+                            }
+                        }
+                        else {
+                            fabric.worker.transaction.TransactionManager.
+                              getInstance().abortTransaction();
+                        }
+                        if (!$commit43) {  }
+                    }
+                }
+            }
         }
         
         public void unapply(fabric.metrics.contracts.MetricContract mc) {
@@ -136,7 +529,10 @@ public interface DirectPolicy
         }
         
         public java.lang.String toString() {
-            return "Direct Until " + this.get$expiry();
+            return "Directly watching " +
+            java.lang.String.
+              valueOf(
+                fabric.lang.WrappedJavaInlineable.$unwrap(this.get$contract()));
         }
         
         public boolean equals(fabric.lang.Object other) {
@@ -147,7 +543,8 @@ public interface DirectPolicy
             fabric.metrics.contracts.enforcement.DirectPolicy that =
               (fabric.metrics.contracts.enforcement.DirectPolicy)
                 fabric.lang.Object._Proxy.$getProxy(other);
-            return this.get$expiry() == that.get$expiry();
+            return fabric.lang.Object._Proxy.idEquals(this.get$contract(),
+                                                      that.get$contract());
         }
         
         public _Impl(fabric.worker.Store $location) { super($location); }
@@ -163,7 +560,10 @@ public interface DirectPolicy
                                java.util.List interStoreRefs)
               throws java.io.IOException {
             super.$serialize(out, refTypes, intraStoreRefs, interStoreRefs);
+            $writeRef($getStore(), this.contract, refTypes, out, intraStoreRefs,
+                      interStoreRefs);
             out.writeLong(this.expiry);
+            out.writeBoolean(this.activated);
         }
         
         public _Impl(fabric.worker.Store store, long onum, int version,
@@ -178,20 +578,56 @@ public interface DirectPolicy
             super(store, onum, version, expiry, labelStore, labelOnum,
                   accessPolicyStore, accessPolicyOnum, in, refTypes,
                   intraStoreRefs, interStoreRefs);
+            this.contract =
+              (fabric.metrics.contracts.MetricContract)
+                $readRef(fabric.metrics.contracts.MetricContract._Proxy.class,
+                         (fabric.common.RefTypeEnum) refTypes.next(), in, store,
+                         intraStoreRefs, interStoreRefs);
             this.expiry = in.readLong();
+            this.activated = in.readBoolean();
         }
         
         public void $copyAppStateFrom(fabric.lang.Object._Impl other) {
             super.$copyAppStateFrom(other);
             fabric.metrics.contracts.enforcement.DirectPolicy._Impl src =
               (fabric.metrics.contracts.enforcement.DirectPolicy._Impl) other;
+            this.contract = src.contract;
             this.expiry = src.expiry;
+            this.activated = src.activated;
         }
     }
     
     interface _Static extends fabric.lang.Object, Cloneable {
+        public double get$HEDGE_FACTOR();
+        
+        public double set$HEDGE_FACTOR(double val);
+        
+        public double postInc$HEDGE_FACTOR();
+        
+        public double postDec$HEDGE_FACTOR();
+        
         final class _Proxy extends fabric.lang.Object._Proxy
           implements fabric.metrics.contracts.enforcement.DirectPolicy._Static {
+            public double get$HEDGE_FACTOR() {
+                return ((fabric.metrics.contracts.enforcement.DirectPolicy.
+                          _Static._Impl) fetch()).get$HEDGE_FACTOR();
+            }
+            
+            public double set$HEDGE_FACTOR(double val) {
+                return ((fabric.metrics.contracts.enforcement.DirectPolicy.
+                          _Static._Impl) fetch()).set$HEDGE_FACTOR(val);
+            }
+            
+            public double postInc$HEDGE_FACTOR() {
+                return ((fabric.metrics.contracts.enforcement.DirectPolicy.
+                          _Static._Impl) fetch()).postInc$HEDGE_FACTOR();
+            }
+            
+            public double postDec$HEDGE_FACTOR() {
+                return ((fabric.metrics.contracts.enforcement.DirectPolicy.
+                          _Static._Impl) fetch()).postDec$HEDGE_FACTOR();
+            }
+            
             public _Proxy(fabric.metrics.contracts.enforcement.DirectPolicy.
                             _Static._Impl impl) { super(impl); }
             
@@ -231,12 +667,38 @@ public interface DirectPolicy
         
         class _Impl extends fabric.lang.Object._Impl
           implements fabric.metrics.contracts.enforcement.DirectPolicy._Static {
+            public double get$HEDGE_FACTOR() { return this.HEDGE_FACTOR; }
+            
+            public double set$HEDGE_FACTOR(double val) {
+                fabric.worker.transaction.TransactionManager tm =
+                  fabric.worker.transaction.TransactionManager.getInstance();
+                boolean transactionCreated = tm.registerWrite(this);
+                this.HEDGE_FACTOR = val;
+                if (transactionCreated) tm.commitTransaction();
+                return val;
+            }
+            
+            public double postInc$HEDGE_FACTOR() {
+                double tmp = this.get$HEDGE_FACTOR();
+                this.set$HEDGE_FACTOR((double) (tmp + 1));
+                return tmp;
+            }
+            
+            public double postDec$HEDGE_FACTOR() {
+                double tmp = this.get$HEDGE_FACTOR();
+                this.set$HEDGE_FACTOR((double) (tmp - 1));
+                return tmp;
+            }
+            
+            private double HEDGE_FACTOR;
+            
             public void $serialize(java.io.ObjectOutput out,
                                    java.util.List refTypes,
                                    java.util.List intraStoreRefs,
                                    java.util.List interStoreRefs)
                   throws java.io.IOException {
                 super.$serialize(out, refTypes, intraStoreRefs, interStoreRefs);
+                out.writeDouble(this.HEDGE_FACTOR);
             }
             
             public _Impl(fabric.worker.Store store, long onum, int version,
@@ -251,6 +713,7 @@ public interface DirectPolicy
                 super(store, onum, version, expiry, labelStore, labelOnum,
                       accessPolicyStore, accessPolicyOnum, in, refTypes,
                       intraStoreRefs, interStoreRefs);
+                this.HEDGE_FACTOR = in.readDouble();
             }
             
             public _Impl(fabric.worker.Store store) { super(store); }
@@ -260,16 +723,107 @@ public interface DirectPolicy
                          _Static._Proxy(this);
             }
             
-            private void $init() {  }
+            private void $init() {
+                {
+                    {
+                        fabric.worker.transaction.TransactionManager $tm53 =
+                          fabric.worker.transaction.TransactionManager.
+                          getInstance();
+                        int $backoff54 = 1;
+                        boolean $doBackoff55 = true;
+                        $label49: for (boolean $commit50 = false; !$commit50;
+                                       ) {
+                            if ($doBackoff55) {
+                                if ($backoff54 > 32) {
+                                    while (true) {
+                                        try {
+                                            java.lang.Thread.sleep($backoff54);
+                                            break;
+                                        }
+                                        catch (java.lang.
+                                                 InterruptedException $e51) {
+                                            
+                                        }
+                                    }
+                                }
+                                if ($backoff54 < 5000) $backoff54 *= 2;
+                            }
+                            $doBackoff55 = $backoff54 <= 32 || !$doBackoff55;
+                            $commit50 = true;
+                            fabric.worker.transaction.TransactionManager.
+                              getInstance().startTransaction();
+                            try {
+                                fabric.metrics.contracts.enforcement.DirectPolicy.
+                                  _Static.
+                                  _Proxy.
+                                  $instance.
+                                  set$HEDGE_FACTOR((double) 0);
+                            }
+                            catch (final fabric.worker.RetryException $e51) {
+                                $commit50 = false;
+                                continue $label49;
+                            }
+                            catch (final fabric.worker.
+                                     TransactionRestartingException $e51) {
+                                $commit50 = false;
+                                fabric.common.TransactionID $currentTid52 =
+                                  $tm53.getCurrentTid();
+                                if ($e51.tid.isDescendantOf($currentTid52))
+                                    continue $label49;
+                                if ($currentTid52.parent != null) throw $e51;
+                                throw new InternalError(
+                                        "Something is broken with " +
+                                            "transaction management. Got a signal to restart a " +
+                                            "different transaction than the one being managed.");
+                            }
+                            catch (final Throwable $e51) {
+                                $commit50 = false;
+                                if ($tm53.checkForStaleObjects())
+                                    continue $label49;
+                                throw new fabric.worker.AbortException($e51);
+                            }
+                            finally {
+                                if ($commit50) {
+                                    try {
+                                        fabric.worker.transaction.TransactionManager.
+                                          getInstance().commitTransaction();
+                                    }
+                                    catch (final fabric.worker.
+                                             AbortException $e51) {
+                                        $commit50 = false;
+                                    }
+                                    catch (final fabric.worker.
+                                             TransactionRestartingException $e51) {
+                                        $commit50 = false;
+                                        fabric.common.TransactionID
+                                          $currentTid52 = $tm53.getCurrentTid();
+                                        if ($currentTid52 != null) {
+                                            if ($e51.tid.equals(
+                                                           $currentTid52) ||
+                                                  !$e51.tid.isDescendantOf(
+                                                              $currentTid52)) {
+                                                throw $e51;
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    fabric.worker.transaction.TransactionManager.getInstance().abortTransaction();
+                                }
+                                if (!$commit50) {  }
+                            }
+                        }
+                    }
+                }
+            }
         }
         
     }
     
-    public static final byte[] $classHash = new byte[] { -75, 22, 16, 78, 2,
-    -73, -51, 96, 91, 108, -107, 101, -6, -41, 68, -95, 22, 88, -51, -52, -92,
-    -11, -42, 71, 33, -86, -12, -39, -33, -118, -45, -1 };
+    public static final byte[] $classHash = new byte[] { 125, 16, 94, 11, 6, 62,
+    87, 92, -55, 82, -82, 45, -20, 22, 27, -67, -108, -20, -7, 127, 25, -73, 12,
+    -114, 11, 114, 113, -28, 64, 51, 19, 91 };
     public static final java.lang.String jlc$CompilerVersion$fabil = "0.3.0";
-    public static final long jlc$SourceLastModified$fabil = 1492535467000L;
+    public static final long jlc$SourceLastModified$fabil = 1492662239000L;
     public static final java.lang.String jlc$ClassType$fabil =
-      "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";
+      "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";
 }

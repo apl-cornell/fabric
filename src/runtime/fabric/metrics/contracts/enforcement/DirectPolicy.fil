@@ -1,6 +1,7 @@
 package fabric.metrics.contracts.enforcement;
 
 import fabric.metrics.contracts.MetricContract;
+import fabric.metrics.Metric;
 
 /**
  * An enforcement policy for enforcing a {@link MetricContract}s by checking
@@ -9,20 +10,126 @@ import fabric.metrics.contracts.MetricContract;
 public class DirectPolicy extends EnforcementPolicy {
 
   /**
-   * How long to enforce the {@link MetricContract} this is applied to using
-   * direct checks on updates to the metric.
+   * The metric and bound that's being directly enforced.
    */
-  public /*final*/ long expiry;
+  public final MetricContract contract;
+  public long expiry;
+  public boolean activated;
 
   /**
    * @param expiry
    *        how long to enforce the {@link MetricContract} this is applied
    *        to using direct checks on updates to the metric.
    */
-  public DirectPolicy fabric$metrics$contracts$enforcement$DirectPolicy$(long expiry) {
-    this.expiry = expiry;
+  public DirectPolicy fabric$metrics$contracts$enforcement$DirectPolicy$(
+      MetricContract contract) {
+    this.contract = contract;
     fabric$metrics$contracts$enforcement$EnforcementPolicy$();
+    this.expiry = -1;
+    this.activated = false;
     return this;
+  }
+
+  public void activate() {
+    atomic {
+      if (activated)
+        return;
+    }
+    refresh();
+  }
+
+  public void refresh() {
+    atomic {
+      // First check if we actually can enforce it in the current state.
+      long currentTime = System.currentTimeMillis();
+      long trueTime = contract.getBound().trueExpiry(contract.getMetric(),
+          currentTime);
+      if (trueTime < currentTime)
+        expiry = 0;
+      long hedgedTime = hedged(currentTime);
+      if (contract.getExpiry() <= trueTime) {
+        // Don't hedge below current expiry if we're not stuttering
+        // (shifting down the expiry due to true expiry being lower than
+        // advertised time).
+        hedgedTime = Math.max(contract.getExpiry(), hedgedTime);
+      }
+      expiry = hedgedTime;
+      activated = true;
+    }
+  }
+
+  // How many standard deviations to use for hedging calculations.
+  // Note: larger value => less aggressive extensions => lower revocations
+  // Note: smaller value => longer extensions => less chatter
+  private static final double HEDGE_FACTOR = 0;
+
+  /**
+   * Using the associated {@link Metric's} statistics and some tuning
+   * constants, figure out a time to advertise given the current time.
+   *
+   * @param time
+   *        the current time we're calculating this hedged expiration at
+   * @return an appropriately conservative time to advertise to other nodes in
+   *       the system for this contract.
+   */
+  private long hedged(long time) {
+    double r = contract.getBound().rate;
+    double b = contract.getBound().value(time);
+    Metric m = contract.getMetric();
+    double x = m.value();
+    double v = m.velocity();
+    double n = m.noise() * HEDGE_FACTOR * HEDGE_FACTOR;
+
+    // True expiry: time this would fail with no changes to the current
+    // value. This is the latest time we can safely advertise as the
+    // expiration.
+    long hedgedResult = contract.getBound().trueExpiry(m, time);
+
+    // Solving intersection by using rotated parametric formula
+    double bm = b - x;
+    double rv = r - v;
+
+    // Solving for extremal point
+    // TODO: Still not 100% sure this is the correct math...
+    double minYs = x - ((v > 0 ? n : -n) / (4.0 * (v * Math.sqrt(v * v + 1))));
+    long min = contract.getBound().trueExpiry(minYs, time);
+
+    // If the extremal point on the hedged curve is valid and below the
+    // current point, use the time for that.
+    if (minYs < x && contract.getBound().test(minYs, time)) {
+      hedgedResult = Math.min(min, hedgedResult);
+    } else if (bm * rv > 0) {
+      // If the extremal point isn't valid, it means the projected
+      // "hedged" curve intersects the boundary, so we'll use that
+      // instead.
+
+      // Negative intersection, rotated to set the expected direction
+      // as the
+      // x-axis
+      double rotatedY1 = 1.0 - Math.sqrt(4.0 * rv * bm + 1.0) / (2.0 * rv);
+      double rotatedX1 = (rotatedY1 + bm) / rv;
+      // Positive intersection, rotated to set the expected direction
+      // as the
+      // x-axis
+      double rotatedY2 = 1.0 + Math.sqrt(4.0 * rv * bm + 1.0) / (2.0 * rv);
+      double rotatedX2 = (rotatedY2 + bm) / rv;
+      // Terms to rotate back for the intersection time, relative to
+      // 'time'
+      double xxFact = 1 / Math.sqrt(v * v + 1); // cos(arctan(v))
+      double xyFact = v / Math.sqrt(v * v + 1); // -sin(arctan(v))
+
+      // Rotate back
+      double intersectX1 = rotatedX1 * xxFact + rotatedY1 * xyFact;
+      double intersectX2 = rotatedX2 * xxFact + rotatedY2 * xyFact;
+
+      // If there's an intersection, use that
+      double soonestX1 = (intersectX1 > 0) ? time + intersectX1 : Long.MAX_VALUE;
+      double soonestX2 = (intersectX2 > 0) ? time + intersectX2 : Long.MAX_VALUE;
+
+      hedgedResult = Math.min((long) Math.min(soonestX1, soonestX2), hedgedResult);
+    }
+
+    return hedgedResult;
   }
 
   /*@Override*/
@@ -32,7 +139,11 @@ public class DirectPolicy extends EnforcementPolicy {
 
   /*@Override*/
   public void apply(MetricContract mc) {
-    mc.getMetric().startTracking(mc);
+    atomic {
+      if (!activated)
+        refresh();
+      mc.getMetric().startTracking(mc);
+    }
   }
 
   /*@Override*/
@@ -42,13 +153,13 @@ public class DirectPolicy extends EnforcementPolicy {
 
   /*@Override*/
   public String toString() {
-    return "Direct Until " + expiry;
+    return "Directly watching " + contract;
   }
 
   /*@Override*/
   public boolean equals(Object other) {
     if (!(other instanceof DirectPolicy)) return false;
     DirectPolicy that = (DirectPolicy) other;
-    return this.expiry == that.expiry;
+    return this.contract == that.contract;
   }
 }

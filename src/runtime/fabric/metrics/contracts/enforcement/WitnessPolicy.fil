@@ -1,10 +1,6 @@
 package fabric.metrics.contracts.enforcement;
 
-import fabric.util.Collection;
-import fabric.util.Collections;
-import fabric.util.Iterator;
-import fabric.util.LinkedHashSet;
-import fabric.util.Set;
+import fabric.util.Arrays;
 
 import fabric.metrics.contracts.Contract;
 import fabric.metrics.contracts.MetricContract;
@@ -17,7 +13,9 @@ import fabric.metrics.contracts.MetricContract;
 public class WitnessPolicy extends EnforcementPolicy {
 
   /** The set of {@link MetricContract}s used to enforce this policy. */
-  public /*final*/ Set/*<MetricContract>*/ witnesses;
+  public final MetricContract[] witnesses;
+  public long expiry;
+  public boolean activated;
 
   /**
    * @param witnesses
@@ -25,48 +23,66 @@ public class WitnessPolicy extends EnforcementPolicy {
    *        policy. If any of the witnesses weren't already active, they
    *        are {@link Contract#activate() activated} here.
    */
-  public WitnessPolicy fabric$metrics$contracts$enforcement$WitnessPolicy$(Collection/*<MetricContract>*/ witnesses) {
-    this.witnesses = new LinkedHashSet/*<>*/().fabric$util$LinkedHashSet$(witnesses);
+  public WitnessPolicy fabric$metrics$contracts$enforcement$WitnessPolicy$(MetricContract[] witnesses) {
     fabric$metrics$contracts$enforcement$EnforcementPolicy$();
-    Iterator itr = witnesses.iterator();
-    while (itr.hasNext()) {
-      MetricContract w = (MetricContract) itr.next();
-      w.activate();
-    }
+    this.witnesses = new MetricContract[witnesses.length];
+    Arrays.arraycopy(witnesses, 0, this.witnesses, 0, witnesses.length);
+    this.expiry = -1;
+    this.activated = false;
     return this;
   }
 
   /*@Override*/
-  public long expiry() {
+  public void activate() {
+    atomic {
+      if (activated)
+        return;
+    }
+    refresh();
+  }
+
+  /*@Override*/
+  public void refresh() {
+    int len = 0;
+    atomic {
+      len = witnesses.length;
+    }
     boolean atLeastOnce = false;
-    long result = 0;
-    Iterator itr = witnesses.iterator();
-    while (itr.hasNext()) {
-      MetricContract w = (MetricContract) itr.next();
-      if (!atLeastOnce || w.getExpiry() < result) {
-        atLeastOnce = true;
-        result = w.getExpiry();
+    for (int i = 0; i < len; i++) {
+      MetricContract w = null;
+      atomic {
+        w = witnesses[i];
+      }
+      w.activate();
+      atomic {
+        if (!atLeastOnce || w.getExpiry() < expiry) {
+          atLeastOnce = true;
+          expiry = w.getExpiry();
+        }
       }
     }
-    return result;
+    atomic {
+      activated = true;
+    }
+  }
+
+  /*@Override*/
+  public long expiry() {
+    return expiry;
   }
 
   /*@Override*/
   public void apply(MetricContract mc) {
-    Iterator itr = witnesses.iterator();
-    while (itr.hasNext()) {
-      MetricContract w = (MetricContract) itr.next();
-      w.addObserver(mc);
+    for (int i = 0; i < witnesses.length; i++) {
+      witnesses[i].addObserver((fabric.metrics.util.Observer) mc.fetch());
     }
   }
 
   /*@Override*/
   public void unapply(MetricContract mc) {
-    Iterator itr = witnesses.iterator();
-    while (itr.hasNext()) {
-      MetricContract w = (MetricContract) itr.next();
-      w.removeObserver(mc);
-      w.deactivate();
+    for (int i = 0; i < witnesses.length; i++) {
+      witnesses[i].removeObserver(mc);
+      witnesses[i].deactivate();
     }
   }
 

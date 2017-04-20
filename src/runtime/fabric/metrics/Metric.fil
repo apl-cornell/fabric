@@ -22,10 +22,11 @@ public abstract class Metric extends Subject implements Comparable/*<Metric>*/ {
 
   protected Metric fabric$metrics$Metric$() {
     fabric$metrics$util$Subject$();
+    contracts = new ArrayList/*<>*/().fabric$util$ArrayList$();
     return this;
   }
 
-  private /*final*/ List/*<MetricContract>*/ contracts = new ArrayList/*<>*/().fabric$util$ArrayList$();
+  private /*final*/ List/*<MetricContract>*/ contracts;
 
   /** @return the current value of the quantity being measured. */
   public abstract double value();
@@ -76,7 +77,7 @@ public abstract class Metric extends Subject implements Comparable/*<Metric>*/ {
   protected List/*<MetricContract>*/ getContracts(long time) {
     for (int i = 0; i < contracts.size(); i++) {
       MetricContract c = (MetricContract) contracts.get(i);
-      if (!c.isActive() || !c.isObserved() || !c.valid(time)) {
+      if (!c.isActive()) {
         stopTracking(c);
         contracts.remove(i--);
       }
@@ -97,7 +98,7 @@ public abstract class Metric extends Subject implements Comparable/*<Metric>*/ {
       MetricContract c = (MetricContract) contracts.get(i);
       if (mc == null && c.isActive() && c.enforces(this, bound)) {
         mc = c;
-      } else if (!c.isActive() || !c.isObserved() || !c.valid(System.currentTimeMillis())) {
+      } else if (!c.isActive()) {
         stopTracking(c);
         contracts.remove(i--);
       }

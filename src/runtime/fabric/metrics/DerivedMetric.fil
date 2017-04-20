@@ -39,7 +39,7 @@ public abstract class DerivedMetric extends Metric implements Observer {
 
   protected Metric[] terms;
 
-  private Set/*<SampledMetric>*/ leafMetrics = new HashSet/*<>*/().fabric$util$HashSet$();
+  private Set/*<SampledMetric>*/ leafMetrics;
 
   /**
    * @param s
@@ -55,6 +55,7 @@ public abstract class DerivedMetric extends Metric implements Observer {
     if (new TreeSet/*<>*/().fabric$util$TreeSet$(Arrays.asList(terms)).size() != terms.length)
       throw new IllegalArgumentException(
           "DerivedMetric terms must not contain duplicates!");
+    this.leafMetrics = new HashSet/*<>*/().fabric$util$HashSet$();
     return this;
   }
 
@@ -86,6 +87,7 @@ public abstract class DerivedMetric extends Metric implements Observer {
     fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "CHECKING FOR UPDATE ON DERIVED METRIC");
     double newValue = computeValue();
     if (newValue != lastValue) {
+      fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "UPDATE ON DERIVED METRIC");
       lastValue = newValue;
       lastVelocity = computeVelocity();
       lastNoise = computeNoise();
@@ -152,6 +154,9 @@ public abstract class DerivedMetric extends Metric implements Observer {
       for (int i = 0; i < terms.length; i++) {
         terms[i].addObserver(this);
       }
+      lastValue = computeValue();
+      lastVelocity = computeVelocity();
+      lastNoise = computeNoise();
     }
     addObserver(mc);
   }

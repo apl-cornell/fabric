@@ -39,6 +39,8 @@ public class SampledMetric extends Metric {
     this.name = name;
     fabric$metrics$Metric$();
     this.value = init;
+    this.biasStats = new RunningStats().fabric$metrics$util$RunningStats$(0);
+    this.updateIntervalStats = new RunningStats().fabric$metrics$util$RunningStats$(1.0);
     return this;
   }
 
@@ -112,13 +114,13 @@ public class SampledMetric extends Metric {
    * The statistics of update magnitudes for this measure. This is computed as
    * an exponentially weighted moving average.
    */
-  protected RunningStats biasStats = new RunningStats().fabric$metrics$util$RunningStats$(0);
+  protected RunningStats biasStats;
 
   /**
    * The estimated time interval between updates, in milliseconds. This is
    * computed as an exponentially weighted moving average.
    */
-  protected RunningStats updateIntervalStats = new RunningStats().fabric$metrics$util$RunningStats$(1.0);
+  protected RunningStats updateIntervalStats;
 
   /**
    * Updates the velocity and interval estimates with the given observation.

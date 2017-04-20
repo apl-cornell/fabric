@@ -30,12 +30,13 @@ public abstract class Subject {
 
   protected Subject fabric$metrics$util$Subject$() {
     fabric$lang$Object$();
+    this.observers = new HashSet/*<>*/().fabric$util$HashSet$();
     return this;
   }
 
   // Using a weak map as the backing for this set so that observers aren't
   // pinned by their subjects.
-  private Set/*<Observer>*/ observers = new HashSet/*<>*/().fabric$util$HashSet$();
+  private Set/*<Observer>*/ observers;
 
   /**
    * Adds an observer to the set of observers for this object. Nothing is done
@@ -46,7 +47,9 @@ public abstract class Subject {
    *        {@link Observer} to add
    */
   public void addObserver(Observer o) {
-    observers.add(o);
+    atomic {
+      observers.add(o);
+    }
   }
 
   /**
@@ -56,7 +59,9 @@ public abstract class Subject {
    *        {@link Observer} to remove
    */
   public void removeObserver(Observer o) {
-    observers.remove(o);
+    atomic {
+      observers.remove(o);
+    }
   }
 
   /**
@@ -65,21 +70,27 @@ public abstract class Subject {
    * @return true iff o observes this subject.
    */
   public boolean observedBy(Observer o) {
-    return observers.contains(o);
+    atomic {
+      return observers.contains(o);
+    }
   }
 
   /**
    * @return true iff there are any observers of this subject, currently.
    */
   public boolean isObserved() {
-    return !observers.isEmpty();
+    atomic {
+      return !observers.isEmpty();
+    }
   }
 
   /**
    * @return a copy of the set of the current observers of this subject.
    */
   public Set/*<Observer>*/ getObserversCopy() {
-    return new LinkedHashSet/*<>*/().fabric$util$LinkedHashSet$(observers);
+    atomic {
+      return new LinkedHashSet/*<>*/().fabric$util$LinkedHashSet$(observers);
+    }
   }
 
   /**

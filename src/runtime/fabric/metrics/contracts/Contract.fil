@@ -32,14 +32,16 @@ public abstract class Contract extends Subject implements Observer {
   // Note: larger value => less aggressive extensions => lower overhead
   // Note: smaller value => more aggressive extensions => less chance of a
   // warranty going stale unecessarily.
-  public static final double MIN_EXTENSION_FACTOR = 5;
+  public static final double MIN_EXTENSION_FACTOR = 0;
+  //public static final double MIN_EXTENSION_FACTOR = 2;
   // The maximum amount of time into the future to extend the expiry
   // Note: smaller value => less aggressive extensions => lower revocations
   // Note: larger value => longer extensions => less chatter
-  public static final long MAX_EXTENSION = 5000;
+  public static final long MAX_EXTENSION = 5000000000l;
   // The drift tolerance factor we'll subtract from times we advertise to
   // others.
-  public static final long DRIFT_FACTOR = 100;
+  public static final long DRIFT_FACTOR = 0;
+  //public static final long DRIFT_FACTOR = 100;
 
   /**
    * Extends the expiration time.
@@ -79,9 +81,11 @@ public abstract class Contract extends Subject implements Observer {
    * Activate and start enforcing this {@link Contract}.
    */
   public void activate() {
-    if (!active) {
-      active = true;
-      refresh();
+    atomic {
+      if (!active) {
+        fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "CONTRACT ACTIVATE");
+        active = true;
+      }
     }
   }
 
@@ -89,9 +93,12 @@ public abstract class Contract extends Subject implements Observer {
    * Deactivate and stop observing any evidence.
    */
   public void deactivate() {
-    if (!isObserved()) {
-      active = false;
-      $expiry = -1;
+    atomic {
+      if (!isObserved()) {
+        fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "CONTRACT DEACTIVATE");
+        active = false;
+        $expiry = -1;
+      }
     }
   }
 
@@ -145,8 +152,6 @@ public abstract class Contract extends Subject implements Observer {
   public boolean valid(long time) {
     if (!isActive())
       return false;
-    //if (time > getExpiry().lowerBound())
-    //  refresh();
     return getExpiry() > time;
   }
 
@@ -160,14 +165,19 @@ public abstract class Contract extends Subject implements Observer {
    * for enforcing this {@link Contract}. Revokes, extends, and
    * updates the enforcement strategy as needed.
    *
+   * @param force
+   *        flag to indicate if finding a new expiry should be forced.
+   *
    * @return true iff the contract was retracted.
    */
-  protected abstract boolean refresh();
+  protected abstract boolean refresh(boolean force);
 
   /*@Override*/
   public boolean handleUpdates() {
+    fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "CHECKING CONTRACT CHANGE");
     if (isActive())
-      return refresh();
+      return refresh(true);
+    fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "CONTRACT INVALID");
     return false;
   }
 
@@ -183,6 +193,6 @@ public abstract class Contract extends Subject implements Observer {
     // Ugh, need to add _remote suffix because it's expected by remote call
     // messages and is added by the fabric compiler.
     fabric.common.Logging.METRICS_LOGGER.log(Level.INFO, "ASYNC EXTENSION");
-    this.refresh();
+    this.refresh(false);
   }
 }

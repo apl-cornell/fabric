@@ -38,4 +38,14 @@ public abstract class EnforcementPolicy {
    *        the {@link MetricContract} to stop applying this policy to.
    */
   public abstract void unapply(MetricContract mc);
+
+  /**
+   * Activate this policy, activating witnesses and setting the expiry.
+   */
+  public abstract void activate();
+
+  /**
+   * Refresh this policy, updating the expiry.
+   */
+  public abstract void refresh();
 }

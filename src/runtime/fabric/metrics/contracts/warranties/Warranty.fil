@@ -30,14 +30,13 @@ public class Warranty/*<T>*/ extends Contract {
   }
 
   /*@Override*/
-  protected boolean refresh() {
-    // Currently we just hope the witness is still valid. In all cases,
-    // update the expiry according to the witness.
+  protected boolean refresh(boolean force) {
+    if (force && witness != null)
+      return false;
+    // Policy is always to use the last returned witness while it's valid.  If
+    // we're forcing or don't have a witness (XXX does this happen?) or the
+    // witness has since gone stale, recompute and update.
     long currentTime = System.currentTimeMillis();
-    //if (witness != null && !witness.valid(currentTime)) {
-    //  fabric.common.Logging.METRICS_LOGGER.log(Level.INFO, "REFRESHING WARRANTY WITNESS");
-    //  witness.handleUpdates();
-    //}
     if (witness == null || !witness.valid(currentTime)) {
       WarrantyValue/*<T>*/ curVal = computation.apply(currentTime);
       if (!curVal.value.equals(value)) {
@@ -68,8 +67,6 @@ public class Warranty/*<T>*/ extends Contract {
    */
   public /*T*/ Object value() {
     TransactionManager.getInstance().resolveObservations();
-    if (!valid(System.currentTimeMillis()))
-      refresh();
     return this.value;
   }
 
@@ -88,21 +85,38 @@ public class Warranty/*<T>*/ extends Contract {
 
   /*@Override*/
   public void activate() {
-    // Process outstanding observations before trying to activate this warranty.
-    TransactionManager.getInstance().resolveObservations();
-    super.activate();
+    WarrantyValue/*<T>*/ curVal = null;
+    MetricContract w = null;
+    atomic {
+      fabric.common.Logging.METRICS_LOGGER.fine("ASDF TRYING TO COMPUTE");
+      long currentTime = System.currentTimeMillis();
+      curVal = computation.apply(currentTime);
+      w = curVal.contract;
+    }
+    fabric.common.Logging.METRICS_LOGGER.fine("ASDF ACTIVATING");
+    w.activate();
+    atomic {
+      fabric.common.Logging.METRICS_LOGGER.fine("ASDF OBSERVING");
+      this.value = curVal.value;
+      witness = curVal.contract;
+      witness.addObserver(this);
+      super.activate();
+    }
+    fabric.common.Logging.METRICS_LOGGER.fine("ASDF ACTIVATE");
   }
 
   /*@Override*/
   public void deactivate() {
-    if (!isObserved()) {
-      if (witness != null) {
-        witness.removeObserver(this);
-        witness.deactivate();
+    atomic {
+      if (!isObserved()) {
+        if (witness != null) {
+          witness.removeObserver(this);
+          witness.deactivate();
+        }
+        value = null;
       }
-      value = null;
+      super.deactivate();
     }
-    super.deactivate();
   }
 
   /*@Override*/

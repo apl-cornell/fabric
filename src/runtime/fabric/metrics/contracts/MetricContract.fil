@@ -63,8 +63,39 @@ public abstract class MetricContract extends Contract {
 
   /*@Override*/
   public void activate() {
-    super.activate();
-    getMetric().addContract(this);
+    fabric.common.Logging.METRICS_LOGGER.fine("ASDF ACTIVATING MC " + $getOnum());
+    atomic {
+      if (isActive())
+        return;
+    }
+
+    EnforcementPolicy startPol = null;
+    // Determine children
+    atomic {
+      fabric.common.Logging.METRICS_LOGGER.fine("ASDF POLICY FOR MC " + $getOnum());
+      if (metric.isSingleStore()) {
+        // Doesn't matter what it is, if it's on a single store, just go
+        // with a direct enforcement policy.
+        startPol = directStrategy();
+      } else {
+        // Otherwise use whatever's the best way to split things up.
+        startPol = enforcementStrategy();
+      }
+    }
+
+    // Activate new children
+    startPol.activate();
+
+    // Set the expiry and free it up
+    atomic {
+      fabric.common.Logging.METRICS_LOGGER.fine("ASDF DONE ACTIVATING MC " + $getOnum());
+      currentPolicy = startPol;
+      $expiry = currentPolicy.expiry();
+      super.activate();
+      currentPolicy.apply(this);
+      getMetric().addContract(this);
+    }
+    fabric.common.Logging.METRICS_LOGGER.fine("ASDF FINISHED ACTIVATING MC " + $getOnum());
   }
 
   /**
@@ -74,15 +105,28 @@ public abstract class MetricContract extends Contract {
    * as needed.
    */
   /*@Override*/
-  protected boolean refresh() {
+  protected boolean refresh(boolean force) {
+    // If we haven't activated yet, this is a bad operation.  Stop.
+    if (!isActive()) {
+      fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "CONTRACT INACTIVE");
+      return false;
+    }
+
+    // If we're forcing this or couldn't make the old policy work, check the
+    // actual bound and if it's up to date find a fresh policy
     long currentTime = System.currentTimeMillis();
-
     EnforcementPolicy oldPolicy = currentPolicy;
-    // TODO: really should avoid checking metrics for witness enforced
-    // contracts.
     if (bound.test(metric, currentTime)) {
-      EnforcementPolicy newPolicy;
+      // If we're not forcing this, refresh the current policy and update to the
+      // new expiration time.
+      currentPolicy.refresh();
+      if (currentPolicy.expiry() > currentTime) {
+        fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "CONTRACT REFRESHED");
+        return update(currentPolicy.expiry());
+      }
 
+      // Otherwise find a new one.
+      EnforcementPolicy newPolicy;
       if (metric.isSingleStore()) {
         // Doesn't matter what it is, if it's on a single store, just go
         // with a direct enforcement policy.
@@ -92,21 +136,14 @@ public abstract class MetricContract extends Contract {
         newPolicy = enforcementStrategy();
       }
 
-      if (newPolicy.expiry() >= currentTime) {
-        // Wait to unapply so that metric is still tracked if this was
-        // directly enforced previously
-        if (oldPolicy != null && !oldPolicy.equals(newPolicy))
-          oldPolicy.unapply(this);
-        currentPolicy = newPolicy;
-        currentPolicy.apply(this);
-        return update(newPolicy.expiry());
-      } else {
-        if (oldPolicy != null)
-          oldPolicy.unapply(this);
-        currentPolicy = null;
-        return update(currentTime);
-      }
+      if (oldPolicy != null && !oldPolicy.equals(newPolicy))
+        oldPolicy.unapply(this);
+      currentPolicy = newPolicy;
+      currentPolicy.apply(this);
+      fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "CONTRACT TRUE");
+      return update(currentPolicy.expiry());
     } else {
+      fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "CONTRACT FALSE");
       if (oldPolicy != null)
         oldPolicy.unapply(this);
       return update(0);
@@ -128,8 +165,6 @@ public abstract class MetricContract extends Contract {
   public boolean implies(Metric otherMetric, Bound otherBound) {
     if (!getMetric().equals(otherMetric) || !bound.implies(otherBound))
       return false;
-    //if (!valid(System.currentTimeMillis()))
-    //  refresh();
     return valid(System.currentTimeMillis());
   }
 
@@ -162,8 +197,6 @@ public abstract class MetricContract extends Contract {
   public boolean enforces(Metric otherMetric, Bound otherBound) {
     if (!getMetric().equals(otherMetric) || !bound.equals(otherBound))
       return false;
-    //if (!valid(System.currentTimeMillis()))
-    //  refresh();
     return valid(System.currentTimeMillis());
   }
 
@@ -182,92 +215,8 @@ public abstract class MetricContract extends Contract {
   protected abstract EnforcementPolicy enforcementStrategy();
 
   protected EnforcementPolicy directStrategy() {
-    // First check if we actually can enforce it in the current state.
-    long currentTime = System.currentTimeMillis();
-    long trueTime = getBound().trueExpiry(getMetric(), currentTime);
-    long hedgedTime = hedged(currentTime);
-    if (getExpiry() <= trueTime) {
-      // Don't hedge below current expiry if we're not stuttering
-      // (shifting down the expiry due to true expiry being lower than
-      // advertised time).
-      hedgedTime = Math.max(getExpiry(), hedgedTime);
-    }
     final Store s = getStore();
-    return new DirectPolicy@s().fabric$metrics$contracts$enforcement$DirectPolicy$(hedgedTime);
-  }
-
-  // How many standard deviations to use for hedging calculations.
-  // Note: larger value => less aggressive extensions => lower revocations
-  // Note: smaller value => longer extensions => less chatter
-  private static final double HEDGE_FACTOR = 3;
-
-  /**
-   * Using the associated {@link Metric's} statistics and some tuning
-   * constants, figure out a time to advertise given the current time.
-   *
-   * @param time
-   *        the time we're calculating this hedged expiration at
-   * @return an appropriately conservative time to advertise to other nodes in
-   *       the system for this contract.
-   */
-  private long hedged(long time) {
-    double r = getBound().rate;
-    double b = getBound().value(time);
-    Metric m = getMetric();
-    double x = m.value();
-    double v = m.velocity();
-    double n = m.noise() * HEDGE_FACTOR * HEDGE_FACTOR;
-
-    // True expiry: time this would fail with no changes to the current
-    // value. This is the latest time we can safely advertise as the
-    // expiration.
-    long hedgedResult = getBound().trueExpiry(m, time);
-
-    // Solving intersection by using rotated parametric formula
-    double bm = b - x;
-    double rv = r - v;
-
-    // Solving for extremal point
-    // TODO: Still not 100% sure this is the correct math...
-    double minYs = x - ((v > 0 ? n : -n) / (4.0 * (v * Math.sqrt(v * v + 1))));
-    long min = getBound().trueExpiry(minYs, time);
-
-    // If the extremal point on the hedged curve is valid and below the
-    // current point, use the time for that.
-    if (minYs < x && getBound().test(minYs, time)) {
-      hedgedResult = Math.min(min, hedgedResult);
-    } else if (bm * rv > 0) {
-      // If the extremal point isn't valid, it means the projected
-      // "hedged" curve intersects the boundary, so we'll use that
-      // instead.
-
-      // Negative intersection, rotated to set the expected direction
-      // as the
-      // x-axis
-      double rotatedY1 = 1.0 - Math.sqrt(4.0 * rv * bm + 1.0) / (2.0 * rv);
-      double rotatedX1 = (rotatedY1 + bm) / rv;
-      // Positive intersection, rotated to set the expected direction
-      // as the
-      // x-axis
-      double rotatedY2 = 1.0 + Math.sqrt(4.0 * rv * bm + 1.0) / (2.0 * rv);
-      double rotatedX2 = (rotatedY2 + bm) / rv;
-      // Terms to rotate back for the intersection time, relative to
-      // 'time'
-      double xxFact = 1 / Math.sqrt(v * v + 1); // cos(arctan(v))
-      double xyFact = v / Math.sqrt(v * v + 1); // -sin(arctan(v))
-
-      // Rotate back
-      double intersectX1 = rotatedX1 * xxFact + rotatedY1 * xyFact;
-      double intersectX2 = rotatedX2 * xxFact + rotatedY2 * xyFact;
-
-      // If there's an intersection, use that
-      double soonestX1 = (intersectX1 > 0) ? time + intersectX1 : Long.MAX_VALUE;
-      double soonestX2 = (intersectX2 > 0) ? time + intersectX2 : Long.MAX_VALUE;
-
-      hedgedResult = Math.min((long) Math.min(soonestX1, soonestX2), hedgedResult);
-    }
-
-    return hedgedResult;
+    return new DirectPolicy@s().fabric$metrics$contracts$enforcement$DirectPolicy$(this);
   }
 
   /*@Override*/
@@ -285,10 +234,12 @@ public abstract class MetricContract extends Contract {
 
   /*@Override*/
   public void deactivate() {
-    if (!isObserved()) {
-      if (currentPolicy != null)
-        currentPolicy.unapply(this);
+    atomic {
+      if (!isObserved()) {
+        if (currentPolicy != null)
+          currentPolicy.unapply(this);
+      }
+      super.deactivate();
     }
-    super.deactivate();
   }
 }
