@@ -382,7 +382,7 @@ public abstract class ObjectDB {
         // expiry already.
         if (storeExpiry > newExpiry) {
           submap.get(worker).writes.remove(obj);
-          objectLocksFor(tid).unlockForWrite(onum);
+          objectLocksFor(onum).unlockForWrite(tid);
           longerContracts.put(onum, read(onum));
         }
       } else {
