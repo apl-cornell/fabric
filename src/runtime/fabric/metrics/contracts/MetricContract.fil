@@ -117,8 +117,8 @@ public abstract class MetricContract extends Contract {
     long currentTime = System.currentTimeMillis();
     EnforcementPolicy oldPolicy = currentPolicy;
     if (bound.test(metric, currentTime)) {
-      // If we're not forcing this, refresh the current policy and update to the
-      // new expiration time.
+      // Refresh the current policy and update to the new expiration time if
+      // it's long enough.
       currentPolicy.refresh();
       if (currentPolicy.expiry() > currentTime) {
         fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "CONTRACT REFRESHED");

@@ -44,16 +44,18 @@ public class DirectPolicy extends EnforcementPolicy {
       long currentTime = System.currentTimeMillis();
       long trueTime = contract.getBound().trueExpiry(contract.getMetric(),
           currentTime);
-      if (trueTime < currentTime)
+      if (trueTime < currentTime) {
         expiry = 0;
-      long hedgedTime = hedged(currentTime);
-      if (contract.getExpiry() <= trueTime) {
-        // Don't hedge below current expiry if we're not stuttering
-        // (shifting down the expiry due to true expiry being lower than
-        // advertised time).
-        hedgedTime = Math.max(contract.getExpiry(), hedgedTime);
+      } else {
+        long hedgedTime = hedged(currentTime);
+        if (contract.getExpiry() <= trueTime) {
+          // Don't hedge below current expiry if we're not stuttering
+          // (shifting down the expiry due to true expiry being lower than
+          // advertised time).
+          hedgedTime = Math.max(contract.getExpiry(), hedgedTime);
+        }
+        expiry = hedgedTime;
       }
-      expiry = hedgedTime;
       activated = true;
     }
   }
@@ -61,7 +63,7 @@ public class DirectPolicy extends EnforcementPolicy {
   // How many standard deviations to use for hedging calculations.
   // Note: larger value => less aggressive extensions => lower revocations
   // Note: smaller value => longer extensions => less chatter
-  private static final double HEDGE_FACTOR = 0;
+  private static final double HEDGE_FACTOR = 3;
 
   /**
    * Using the associated {@link Metric's} statistics and some tuning
