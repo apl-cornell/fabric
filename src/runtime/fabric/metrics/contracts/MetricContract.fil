@@ -117,12 +117,14 @@ public abstract class MetricContract extends Contract {
     long currentTime = System.currentTimeMillis();
     EnforcementPolicy oldPolicy = currentPolicy;
     if (bound.test(metric, currentTime)) {
-      // Refresh the current policy and update to the new expiration time if
-      // it's long enough.
-      currentPolicy.refresh();
-      if (currentPolicy.expiry() > currentTime) {
-        fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "CONTRACT REFRESHED");
-        return update(currentPolicy.expiry());
+      // Refresh the current policy and update to the new expiration time
+      // if it's long enough.
+      if (currentPolicy != null) {
+        currentPolicy.refresh();
+        if (currentPolicy.expiry() >= currentTime) {
+          fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "CONTRACT REFRESHED");
+          return update(currentPolicy.expiry());
+        }
       }
 
       // Otherwise find a new one.
@@ -136,9 +138,12 @@ public abstract class MetricContract extends Contract {
         newPolicy = enforcementStrategy();
       }
 
+      // Wait to unapply so that metric is still tracked if this was
+      // directly enforced previously
       if (oldPolicy != null && !oldPolicy.equals(newPolicy))
         oldPolicy.unapply(this);
       currentPolicy = newPolicy;
+      currentPolicy.activate();
       currentPolicy.apply(this);
       fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "CONTRACT TRUE");
       return update(currentPolicy.expiry());
@@ -183,7 +188,8 @@ public abstract class MetricContract extends Contract {
 
   /**
    * Check if this enforces the <strong>same</strong> bound as another
-   * {@link MetricContract} being considered.
+   * {@link MetricContract} being considered. Attempts to refresh this
+   * contract if it's gone stale and would otherwise enforce the bound.
    *
    * @param otherMetric
    *        the {@link Metric} the other {@link MetricContract} would

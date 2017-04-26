@@ -45,7 +45,8 @@ public abstract class EnforcementPolicy {
   public abstract void activate();
 
   /**
-   * Refresh this policy, updating the expiry.
+   * Refresh this policy, updating the expiry time to account for expiry
+   * changes in any metric contracts used.
    */
   public abstract void refresh();
 }

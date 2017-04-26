@@ -10,7 +10,7 @@ import fabric.metrics.Metric;
 public class DirectPolicy extends EnforcementPolicy {
 
   /**
-   * The metric and bound that's being directly enforced.
+   * The contract that this direct policy was created for.
    */
   public final MetricContract contract;
   public long expiry;
@@ -48,11 +48,11 @@ public class DirectPolicy extends EnforcementPolicy {
         expiry = 0;
       } else {
         long hedgedTime = hedged(currentTime);
-        if (contract.getExpiry() <= trueTime) {
+        if (expiry() <= trueTime) {
           // Don't hedge below current expiry if we're not stuttering
           // (shifting down the expiry due to true expiry being lower than
           // advertised time).
-          hedgedTime = Math.max(contract.getExpiry(), hedgedTime);
+          hedgedTime = Math.max(expiry(), hedgedTime);
         }
         expiry = hedgedTime;
       }
@@ -93,7 +93,8 @@ public class DirectPolicy extends EnforcementPolicy {
 
     // Solving for extremal point
     // TODO: Still not 100% sure this is the correct math...
-    double minYs = x - ((v > 0 ? n : -n) / (4.0 * (v * Math.sqrt(v * v + 1))));
+    double minYs = x
+      - ((v > 0 ? n : -n) / (4.0 * (v * Math.sqrt(v * v + 1))));
     long min = contract.getBound().trueExpiry(minYs, time);
 
     // If the extremal point on the hedged curve is valid and below the
@@ -108,12 +109,14 @@ public class DirectPolicy extends EnforcementPolicy {
       // Negative intersection, rotated to set the expected direction
       // as the
       // x-axis
-      double rotatedY1 = 1.0 - Math.sqrt(4.0 * rv * bm + 1.0) / (2.0 * rv);
+      double rotatedY1 = 1.0
+        - Math.sqrt(4.0 * rv * bm + 1.0) / (2.0 * rv);
       double rotatedX1 = (rotatedY1 + bm) / rv;
       // Positive intersection, rotated to set the expected direction
       // as the
       // x-axis
-      double rotatedY2 = 1.0 + Math.sqrt(4.0 * rv * bm + 1.0) / (2.0 * rv);
+      double rotatedY2 = 1.0
+        + Math.sqrt(4.0 * rv * bm + 1.0) / (2.0 * rv);
       double rotatedX2 = (rotatedY2 + bm) / rv;
       // Terms to rotate back for the intersection time, relative to
       // 'time'
@@ -125,10 +128,13 @@ public class DirectPolicy extends EnforcementPolicy {
       double intersectX2 = rotatedX2 * xxFact + rotatedY2 * xyFact;
 
       // If there's an intersection, use that
-      double soonestX1 = (intersectX1 > 0) ? time + intersectX1 : Long.MAX_VALUE;
-      double soonestX2 = (intersectX2 > 0) ? time + intersectX2 : Long.MAX_VALUE;
+      double soonestX1 = (intersectX1 > 0) ? time + intersectX1
+        : Long.MAX_VALUE;
+      double soonestX2 = (intersectX2 > 0) ? time + intersectX2
+        : Long.MAX_VALUE;
 
-      hedgedResult = Math.min((long) Math.min(soonestX1, soonestX2), hedgedResult);
+      hedgedResult = Math.min((long) Math.min(soonestX1, soonestX2),
+          hedgedResult);
     }
 
     return hedgedResult;
@@ -143,7 +149,7 @@ public class DirectPolicy extends EnforcementPolicy {
   public void apply(MetricContract mc) {
     atomic {
       if (!activated)
-        refresh();
+        activate();
       mc.getMetric().startTracking(mc);
     }
   }
@@ -160,7 +166,8 @@ public class DirectPolicy extends EnforcementPolicy {
 
   /*@Override*/
   public boolean equals(Object other) {
-    if (!(other instanceof DirectPolicy)) return false;
+    if (!(other instanceof DirectPolicy))
+      return false;
     DirectPolicy that = (DirectPolicy) other;
     return this.contract == that.contract;
   }
