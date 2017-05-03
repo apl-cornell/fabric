@@ -43,7 +43,7 @@ public interface _shortArray extends Object {
         long accessPolicyOnum, ObjectInput in, Iterator<RefTypeEnum> refTypes,
         Iterator<Long> intraStoreRefs,
         Iterator<Pair<String, Long>> interStoreRefs)
-            throws IOException, ClassNotFoundException {
+        throws IOException, ClassNotFoundException {
       super(store, onum, version, expiry, labelStore, labelOnum,
           accessPolicyStore, accessPolicyOnum, in, refTypes, intraStoreRefs,
           interStoreRefs);
@@ -61,8 +61,8 @@ public interface _shortArray extends Object {
      *          The length of the array.
      */
     @Override
-    public _shortArray fabric$lang$arrays$internal$_shortArray$(Label updateLabel,
-        ConfPolicy accessPolicy, int length) {
+    public _shortArray fabric$lang$arrays$internal$_shortArray$(
+        Label updateLabel, ConfPolicy accessPolicy, int length) {
       fabric$lang$arrays$internal$_shortArray$(updateLabel, accessPolicy,
           new short[length]);
       return this;
@@ -78,8 +78,8 @@ public interface _shortArray extends Object {
      *          The backing array to use.
      */
     @Override
-    public _shortArray fabric$lang$arrays$internal$_shortArray$(Label updateLabel,
-        ConfPolicy accessPolicy, short[] value) {
+    public _shortArray fabric$lang$arrays$internal$_shortArray$(
+        Label updateLabel, ConfPolicy accessPolicy, short[] value) {
       set$$updateLabel(updateLabel);
       set$$accessPolicy(accessPolicy);
       fabric$lang$Object$();
@@ -130,7 +130,7 @@ public interface _shortArray extends Object {
     @Override
     public void $serialize(ObjectOutput out, List<RefTypeEnum> refTypes,
         List<Long> intraStoreRefs, List<Pair<String, Long>> interStoreRefs)
-            throws IOException {
+        throws IOException {
       super.$serialize(out, refTypes, intraStoreRefs, interStoreRefs);
       out.writeInt(value.length);
       for (short element : value)
@@ -155,15 +155,15 @@ public interface _shortArray extends Object {
     }
 
     @Override
-    public _shortArray fabric$lang$arrays$internal$_shortArray$(Label updateLabel,
-        ConfPolicy accessPolicy, int length) {
+    public _shortArray fabric$lang$arrays$internal$_shortArray$(
+        Label updateLabel, ConfPolicy accessPolicy, int length) {
       return ((_shortArray) fetch()).fabric$lang$arrays$internal$_shortArray$(
           updateLabel, accessPolicy, length);
     }
 
     @Override
-    public _shortArray fabric$lang$arrays$internal$_shortArray$(Label updateLabel,
-        ConfPolicy accessPolicy, short[] value) {
+    public _shortArray fabric$lang$arrays$internal$_shortArray$(
+        Label updateLabel, ConfPolicy accessPolicy, short[] value) {
       return ((_shortArray) fetch()).fabric$lang$arrays$internal$_shortArray$(
           updateLabel, accessPolicy, value);
     }
