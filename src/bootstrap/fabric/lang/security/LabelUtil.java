@@ -22,16 +22,11 @@ import fabric.util.*;
  * set of components, each of which is a fabric.lang.security.Policy. This code
  * is mostly copied from Jif.
  */
-public interface LabelUtil
-  extends fabric.lang.Object
-{
-    
+public interface LabelUtil extends fabric.lang.Object {
     public fabric.lang.Object $initLabels();
     
     public static class _Proxy extends fabric.lang.Object._Proxy
-      implements fabric.lang.security.LabelUtil
-    {
-        
+      implements fabric.lang.security.LabelUtil {
         public static native fabric.lang.security.Label noComponents();
         
         public static native fabric.lang.security.Label noComponents(
@@ -261,9 +256,7 @@ public interface LabelUtil
     }
     
     public static final class _Impl extends fabric.lang.Object._Impl
-      implements fabric.lang.security.LabelUtil
-    {
-        
+      implements fabric.lang.security.LabelUtil {
         private native fabric.lang.security.LabelUtil
           fabric$lang$security$LabelUtil$();
         
@@ -289,8 +282,8 @@ public interface LabelUtil
           fabric.util.Collection readers);
         
         /**
-         * See the Jif signature for the explanation of lbl.
-         */
+   * See the Jif signature for the explanation of lbl.
+   */
         public static native fabric.lang.security.ConfPolicy readerPolicy(
           fabric.worker.Store store, fabric.lang.security.Label lbl,
           fabric.lang.security.Principal owner,
@@ -313,8 +306,8 @@ public interface LabelUtil
           fabric.util.Collection readers);
         
         /**
-         * See the Jif signature for the explanation of lbl.
-         */
+   * See the Jif signature for the explanation of lbl.
+   */
         public static native fabric.lang.security.Label readerPolicyLabel(
           fabric.worker.Store store, fabric.lang.security.Label lbl,
           fabric.lang.security.Principal owner,
@@ -341,16 +334,16 @@ public interface LabelUtil
           fabric.util.Collection writers);
         
         /**
-         * See the Jif signature for the explanation of lbl.
-         */
+   * See the Jif signature for the explanation of lbl.
+   */
         public static native fabric.lang.security.Label writerPolicyLabel(
           fabric.worker.Store store, fabric.lang.security.Label lbl,
           fabric.lang.security.Principal owner,
           fabric.lang.arrays.ObjectArray writers);
         
         /**
-         * See the Jif signature for the explanation of lbl.
-         */
+   * See the Jif signature for the explanation of lbl.
+   */
         public static native fabric.lang.security.IntegPolicy writerPolicy(
           fabric.worker.Store store, fabric.lang.security.Label lbl,
           fabric.lang.security.Principal owner,
@@ -470,8 +463,8 @@ public interface LabelUtil
           fabric.lang.security.Label lbl, fabric.lang.security.Principal p);
         
         /**
-         * @return true iff from <= to in the information-flow ordering.
-         */
+   * @return true iff from <= to in the information-flow ordering.
+   */
         public static native boolean relabelsTo(fabric.lang.security.Label from,
                                                 fabric.lang.security.Label to);
         
@@ -507,15 +500,13 @@ public interface LabelUtil
           java.util.Set dependencies);
         
         public static native void notifyNewDelegation(
-          fabric.lang.security.Principal granter,
-          fabric.lang.security.Principal superior);
+          fabric.lang.security.Principal granter, fabric.lang.security.Principal superior);
         
         /**
-         * Throws an exception if o's store is not trusted to enforce
-         accessLabel.
-         * @param accessLabel
-         * @param o
-         */
+   * Throws an exception if o's store is not trusted to enforce accessLabel.
+   * @param accessLabel
+   * @param o
+   */
         public static native fabric.lang.Object accessCheck(
           fabric.lang.security.Label accessLabel, fabric.lang.Object o);
         
@@ -536,31 +527,28 @@ public interface LabelUtil
         }
         
         public _Impl(fabric.worker.Store store, long onum, int version,
-                     long expiry, fabric.worker.Store labelStore,
-                     long labelOnum, fabric.worker.Store accessPolicyStore,
+                     fabric.worker.Store labelStore, long labelOnum,
+                     fabric.worker.Store accessPolicyStore,
                      long accessPolicyOnum, java.io.ObjectInput in,
                      java.util.Iterator refTypes,
                      java.util.Iterator intraStoreRefs,
                      java.util.Iterator interStoreRefs)
               throws java.io.IOException,
             java.lang.ClassNotFoundException {
-            super(store, onum, version, expiry, labelStore, labelOnum,
+            super(store, onum, version, labelStore, labelOnum,
                   accessPolicyStore, accessPolicyOnum, in, refTypes,
                   intraStoreRefs, interStoreRefs);
         }
     }
     
     interface _Static extends fabric.lang.Object, Cloneable {
-        
         public fabric.worker.LocalStore get$localStore();
         
         public fabric.worker.LocalStore set$localStore(
           fabric.worker.LocalStore val);
         
         final class _Proxy extends fabric.lang.Object._Proxy
-          implements fabric.lang.security.LabelUtil._Static
-        {
-            
+          implements fabric.lang.security.LabelUtil._Static {
             public fabric.worker.LocalStore get$localStore() {
                 return ((fabric.lang.security.LabelUtil._Static._Impl) fetch()).
                   get$localStore();
@@ -589,7 +577,8 @@ public interface LabelUtil
                   security.
                   LabelUtil.
                   _Static.
-                  _Impl impl =
+                  _Impl
+                  impl =
                   (fabric.lang.security.LabelUtil._Static._Impl)
                     fabric.lang.Object._Static._Proxy.
                     $makeStaticInstance(
@@ -601,12 +590,8 @@ public interface LabelUtil
         }
         
         class _Impl extends fabric.lang.Object._Impl
-          implements fabric.lang.security.LabelUtil._Static
-        {
-            
+          implements fabric.lang.security.LabelUtil._Static {
             public fabric.worker.LocalStore get$localStore() {
-                fabric.worker.transaction.TransactionManager.getInstance().
-                  registerRead(this);
                 return this.localStore;
             }
             
@@ -631,15 +616,15 @@ public interface LabelUtil
             }
             
             public _Impl(fabric.worker.Store store, long onum, int version,
-                         long expiry, fabric.worker.Store labelStore,
-                         long labelOnum, fabric.worker.Store accessPolicyStore,
+                         fabric.worker.Store labelStore, long labelOnum,
+                         fabric.worker.Store accessPolicyStore,
                          long accessPolicyOnum, java.io.ObjectInput in,
                          java.util.Iterator refTypes,
                          java.util.Iterator intraStoreRefs,
                          java.util.Iterator interStoreRefs)
                   throws java.io.IOException,
                 java.lang.ClassNotFoundException {
-                super(store, onum, version, expiry, labelStore, labelOnum,
+                super(store, onum, version, labelStore, labelOnum,
                       accessPolicyStore, accessPolicyOnum, in, refTypes,
                       intraStoreRefs, interStoreRefs);
             }

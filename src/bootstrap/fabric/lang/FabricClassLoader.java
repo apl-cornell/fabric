@@ -22,9 +22,7 @@ import fabric.common.NSUtil;
 /**
  * Loads Java classes from Fabric.
  */
-public class FabricClassLoader
-extends java.lang.ClassLoader
-{
+public class FabricClassLoader extends java.lang.ClassLoader {
     java.util.Map classes;
     java.util.Map classBytecodeMap;
     

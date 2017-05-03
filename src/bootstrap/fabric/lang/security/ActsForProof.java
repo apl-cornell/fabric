@@ -11,10 +11,7 @@ import java.util.Set;
 /**
  * This code is mostly copied from Jif.
  */
-public interface ActsForProof
-  extends fabric.lang.Object
-{
-    
+public interface ActsForProof extends fabric.lang.Object {
     public fabric.lang.security.Principal get$actor();
     
     public fabric.lang.security.Principal set$actor(
@@ -36,9 +33,7 @@ public interface ActsForProof
     public abstract void gatherDelegationDependencies(java.util.Set s);
     
     public static class _Proxy extends fabric.lang.Object._Proxy
-      implements fabric.lang.security.ActsForProof
-    {
-        
+      implements fabric.lang.security.ActsForProof {
         public fabric.lang.security.Principal get$actor() {
             return ((fabric.lang.security.ActsForProof._Impl) fetch()).
               get$actor();
@@ -83,14 +78,8 @@ public interface ActsForProof
     }
     
     public abstract static class _Impl extends fabric.lang.Object._Impl
-      implements fabric.lang.security.ActsForProof
-    {
-        
-        public fabric.lang.security.Principal get$actor() {
-            fabric.worker.transaction.TransactionManager.getInstance().
-              registerRead(this);
-            return this.actor;
-        }
+      implements fabric.lang.security.ActsForProof {
+        public fabric.lang.security.Principal get$actor() { return this.actor; }
         
         public fabric.lang.security.Principal set$actor(
           fabric.lang.security.Principal val) {
@@ -105,8 +94,6 @@ public interface ActsForProof
         private fabric.lang.security.Principal actor;
         
         public fabric.lang.security.Principal get$granter() {
-            fabric.worker.transaction.TransactionManager.getInstance().
-              registerRead(this);
             return this.granter;
         }
         
@@ -152,15 +139,15 @@ public interface ActsForProof
         }
         
         public _Impl(fabric.worker.Store store, long onum, int version,
-                     long expiry, fabric.worker.Store labelStore,
-                     long labelOnum, fabric.worker.Store accessPolicyStore,
+                     fabric.worker.Store labelStore, long labelOnum,
+                     fabric.worker.Store accessPolicyStore,
                      long accessPolicyOnum, java.io.ObjectInput in,
                      java.util.Iterator refTypes,
                      java.util.Iterator intraStoreRefs,
                      java.util.Iterator interStoreRefs)
               throws java.io.IOException,
             java.lang.ClassNotFoundException {
-            super(store, onum, version, expiry, labelStore, labelOnum,
+            super(store, onum, version, labelStore, labelOnum,
                   accessPolicyStore, accessPolicyOnum, in, refTypes,
                   intraStoreRefs, interStoreRefs);
             this.actor = (fabric.lang.security.Principal)
@@ -185,13 +172,9 @@ public interface ActsForProof
     
     interface _Static extends fabric.lang.Object, Cloneable {
         final class _Proxy extends fabric.lang.Object._Proxy
-          implements fabric.lang.security.ActsForProof._Static
-        {
-            
+          implements fabric.lang.security.ActsForProof._Static {
             public _Proxy(fabric.lang.security.ActsForProof._Static.
-                            _Impl impl) {
-                super(impl);
-            }
+                            _Impl impl) { super(impl); }
             
             public _Proxy(fabric.worker.Store store, long onum) {
                 super(store, onum);
@@ -206,7 +189,8 @@ public interface ActsForProof
                   security.
                   ActsForProof.
                   _Static.
-                  _Impl impl =
+                  _Impl
+                  impl =
                   (fabric.lang.security.ActsForProof._Static._Impl)
                     fabric.lang.Object._Static._Proxy.
                     $makeStaticInstance(
@@ -218,9 +202,7 @@ public interface ActsForProof
         }
         
         class _Impl extends fabric.lang.Object._Impl
-          implements fabric.lang.security.ActsForProof._Static
-        {
-            
+          implements fabric.lang.security.ActsForProof._Static {
             public void $serialize(java.io.ObjectOutput out,
                                    java.util.List refTypes,
                                    java.util.List intraStoreRefs,
@@ -230,15 +212,15 @@ public interface ActsForProof
             }
             
             public _Impl(fabric.worker.Store store, long onum, int version,
-                         long expiry, fabric.worker.Store labelStore,
-                         long labelOnum, fabric.worker.Store accessPolicyStore,
+                         fabric.worker.Store labelStore, long labelOnum,
+                         fabric.worker.Store accessPolicyStore,
                          long accessPolicyOnum, java.io.ObjectInput in,
                          java.util.Iterator refTypes,
                          java.util.Iterator intraStoreRefs,
                          java.util.Iterator interStoreRefs)
                   throws java.io.IOException,
                 java.lang.ClassNotFoundException {
-                super(store, onum, version, expiry, labelStore, labelOnum,
+                super(store, onum, version, labelStore, labelOnum,
                       accessPolicyStore, accessPolicyOnum, in, refTypes,
                       intraStoreRefs, interStoreRefs);
             }
@@ -247,7 +229,7 @@ public interface ActsForProof
             
             protected fabric.lang.Object._Proxy $makeProxy() {
                 return new fabric.lang.security.ActsForProof._Static._Proxy(
-                  this);
+                         this);
             }
             
             private void $init() {  }

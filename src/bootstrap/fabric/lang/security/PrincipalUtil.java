@@ -22,11 +22,8 @@ import java.util.HashSet;
 /**
  * Utility methods for principals. This code is mostly copied from Jif.
  */
-public interface PrincipalUtil
-  extends fabric.lang.Object
-{
+public interface PrincipalUtil extends fabric.lang.Object {
     public static interface ProofSearchState extends fabric.lang.Object {
-        
         public fabric.lang.security.SecurityCache.ActsForPair[] get$goalstack();
         
         public fabric.lang.security.SecurityCache.ActsForPair[] set$goalstack(
@@ -42,24 +39,18 @@ public interface PrincipalUtil
         public fabric.lang.Object $initLabels();
         
         public static class _Proxy extends fabric.lang.Object._Proxy
-          implements ProofSearchState
-        {
-            
+          implements ProofSearchState {
             public fabric.lang.security.SecurityCache.ActsForPair[]
               get$goalstack() {
                 return ((fabric.lang.security.PrincipalUtil.ProofSearchState.
-                          _Impl)
-                          fetch()).
-                  get$goalstack();
+                          _Impl) fetch()).get$goalstack();
             }
             
             public fabric.lang.security.SecurityCache.ActsForPair[]
               set$goalstack(
               fabric.lang.security.SecurityCache.ActsForPair[] val) {
                 return ((fabric.lang.security.PrincipalUtil.ProofSearchState.
-                          _Impl)
-                          fetch()).
-                  set$goalstack(val);
+                          _Impl) fetch()).set$goalstack(val);
             }
             
             public native fabric.lang.security.PrincipalUtil.ProofSearchState
@@ -78,9 +69,7 @@ public interface PrincipalUtil
         }
         
         public static class _Impl extends fabric.lang.Object._Impl
-          implements ProofSearchState
-        {
-            
+          implements ProofSearchState {
             public fabric.lang.security.SecurityCache.ActsForPair[]
               get$goalstack() {
                 fabric.worker.transaction.TransactionManager.getInstance().
@@ -120,8 +109,7 @@ public interface PrincipalUtil
             
             protected fabric.lang.Object._Proxy $makeProxy() {
                 return new fabric.lang.security.PrincipalUtil.ProofSearchState.
-                  _Proxy(
-                  this);
+                         _Proxy(this);
             }
             
             public void $serialize(java.io.ObjectOutput out,
@@ -133,15 +121,15 @@ public interface PrincipalUtil
             }
             
             public _Impl(fabric.worker.Store store, long onum, int version,
-                         long expiry, fabric.worker.Store labelStore,
-                         long labelOnum, fabric.worker.Store accessPolicyStore,
+                         fabric.worker.Store labelStore, long labelOnum,
+                         fabric.worker.Store accessPolicyStore,
                          long accessPolicyOnum, java.io.ObjectInput in,
                          java.util.Iterator refTypes,
                          java.util.Iterator intraStoreRefs,
                          java.util.Iterator interStoreRefs)
                   throws java.io.IOException,
                 java.lang.ClassNotFoundException {
-                super(store, onum, version, expiry, labelStore, labelOnum,
+                super(store, onum, version, labelStore, labelOnum,
                       accessPolicyStore, accessPolicyOnum, in, refTypes,
                       intraStoreRefs, interStoreRefs);
             }
@@ -164,7 +152,6 @@ public interface PrincipalUtil
               implements fabric.lang.security.PrincipalUtil.ProofSearchState.
                            _Static
             {
-                
                 public _Proxy(fabric.lang.security.PrincipalUtil.
                                 ProofSearchState._Static._Impl impl) {
                     super(impl);
@@ -175,8 +162,7 @@ public interface PrincipalUtil
                 }
                 
                 public static final fabric.lang.security.PrincipalUtil.
-                  ProofSearchState._Static
-                  $instance;
+                  ProofSearchState._Static $instance;
                 
                 static {
                     fabric.
@@ -185,7 +171,8 @@ public interface PrincipalUtil
                       PrincipalUtil.
                       ProofSearchState.
                       _Static.
-                      _Impl impl =
+                      _Impl
+                      impl =
                       (fabric.
                         lang.
                         security.
@@ -199,8 +186,7 @@ public interface PrincipalUtil
                             _Static._Impl.class);
                     $instance =
                       (fabric.lang.security.PrincipalUtil.ProofSearchState.
-                        _Static)
-                        impl.$getProxy();
+                        _Static) impl.$getProxy();
                     impl.$init();
                 }
             }
@@ -213,7 +199,6 @@ public interface PrincipalUtil
               implements fabric.lang.security.PrincipalUtil.ProofSearchState.
                            _Static
             {
-                
                 public void $serialize(java.io.ObjectOutput out,
                                        java.util.List refTypes,
                                        java.util.List intraStoreRefs,
@@ -224,8 +209,7 @@ public interface PrincipalUtil
                 }
                 
                 public _Impl(fabric.worker.Store store, long onum, int version,
-                             long expiry, fabric.worker.Store labelStore,
-                             long labelOnum,
+                             fabric.worker.Store labelStore, long labelOnum,
                              fabric.worker.Store accessPolicyStore,
                              long accessPolicyOnum, java.io.ObjectInput in,
                              java.util.Iterator refTypes,
@@ -233,7 +217,7 @@ public interface PrincipalUtil
                              java.util.Iterator interStoreRefs)
                       throws java.io.IOException,
                     java.lang.ClassNotFoundException {
-                    super(store, onum, version, expiry, labelStore, labelOnum,
+                    super(store, onum, version, labelStore, labelOnum,
                           accessPolicyStore, accessPolicyOnum, in, refTypes,
                           intraStoreRefs, interStoreRefs);
                 }
@@ -242,8 +226,7 @@ public interface PrincipalUtil
                 
                 protected fabric.lang.Object._Proxy $makeProxy() {
                     return new fabric.lang.security.PrincipalUtil.
-                      ProofSearchState._Static._Proxy(
-                      this);
+                             ProofSearchState._Static._Proxy(this);
                 }
                 
                 private void $init() {  }
@@ -255,7 +238,6 @@ public interface PrincipalUtil
     
     public static interface TopPrincipal extends fabric.lang.security.Principal
     {
-        
         public TopPrincipal fabric$lang$security$PrincipalUtil$TopPrincipal$();
         
         public java.lang.String name();
@@ -280,9 +262,7 @@ public interface PrincipalUtil
         public fabric.lang.Object $initLabels();
         
         public static class _Proxy extends fabric.lang.security.Principal._Proxy
-          implements TopPrincipal
-        {
-            
+          implements TopPrincipal {
             public native fabric.lang.security.PrincipalUtil.TopPrincipal
               fabric$lang$security$PrincipalUtil$TopPrincipal$();
             
@@ -294,9 +274,7 @@ public interface PrincipalUtil
         }
         
         public static final class _Impl
-        extends fabric.lang.security.Principal._Impl implements TopPrincipal
-        {
-            
+        extends fabric.lang.security.Principal._Impl implements TopPrincipal {
             public native TopPrincipal
               fabric$lang$security$PrincipalUtil$TopPrincipal$();
             
@@ -324,8 +302,7 @@ public interface PrincipalUtil
             
             protected fabric.lang.Object._Proxy $makeProxy() {
                 return new fabric.lang.security.PrincipalUtil.TopPrincipal.
-                  _Proxy(
-                  this);
+                         _Proxy(this);
             }
             
             public void $serialize(java.io.ObjectOutput out,
@@ -337,42 +314,33 @@ public interface PrincipalUtil
             }
             
             public _Impl(fabric.worker.Store store, long onum, int version,
-                         long expiry, fabric.worker.Store labelStore,
-                         long labelOnum, fabric.worker.Store accessPolicyStore,
+                         fabric.worker.Store labelStore, long labelOnum,
+                         fabric.worker.Store accessPolicyStore,
                          long accessPolicyOnum, java.io.ObjectInput in,
                          java.util.Iterator refTypes,
                          java.util.Iterator intraStoreRefs,
                          java.util.Iterator interStoreRefs)
                   throws java.io.IOException,
                 java.lang.ClassNotFoundException {
-                super(store, onum, version, expiry, labelStore, labelOnum,
+                super(store, onum, version, labelStore, labelOnum,
                       accessPolicyStore, accessPolicyOnum, in, refTypes,
                       intraStoreRefs, interStoreRefs);
             }
         }
         
         interface _Static extends fabric.lang.Object, Cloneable {
-            final class _Proxy
-            extends fabric.
-              lang.
-              Object.
-              _Proxy
-              implements fabric.lang.security.PrincipalUtil.TopPrincipal.
-                           _Static
+            final class _Proxy extends fabric.lang.Object._Proxy
+              implements fabric.lang.security.PrincipalUtil.TopPrincipal._Static
             {
-                
                 public _Proxy(fabric.lang.security.PrincipalUtil.TopPrincipal.
-                                _Static._Impl impl) {
-                    super(impl);
-                }
+                                _Static._Impl impl) { super(impl); }
                 
                 public _Proxy(fabric.worker.Store store, long onum) {
                     super(store, onum);
                 }
                 
                 public static final fabric.lang.security.PrincipalUtil.
-                  TopPrincipal._Static
-                  $instance;
+                  TopPrincipal._Static $instance;
                 
                 static {
                     fabric.
@@ -381,7 +349,8 @@ public interface PrincipalUtil
                       PrincipalUtil.
                       TopPrincipal.
                       _Static.
-                      _Impl impl =
+                      _Impl
+                      impl =
                       (fabric.
                         lang.
                         security.
@@ -400,15 +369,9 @@ public interface PrincipalUtil
                 }
             }
             
-            class _Impl
-            extends fabric.
-              lang.
-              Object.
-              _Impl
-              implements fabric.lang.security.PrincipalUtil.TopPrincipal.
-                           _Static
+            class _Impl extends fabric.lang.Object._Impl
+              implements fabric.lang.security.PrincipalUtil.TopPrincipal._Static
             {
-                
                 public void $serialize(java.io.ObjectOutput out,
                                        java.util.List refTypes,
                                        java.util.List intraStoreRefs,
@@ -419,8 +382,7 @@ public interface PrincipalUtil
                 }
                 
                 public _Impl(fabric.worker.Store store, long onum, int version,
-                             long expiry, fabric.worker.Store labelStore,
-                             long labelOnum,
+                             fabric.worker.Store labelStore, long labelOnum,
                              fabric.worker.Store accessPolicyStore,
                              long accessPolicyOnum, java.io.ObjectInput in,
                              java.util.Iterator refTypes,
@@ -428,7 +390,7 @@ public interface PrincipalUtil
                              java.util.Iterator interStoreRefs)
                       throws java.io.IOException,
                     java.lang.ClassNotFoundException {
-                    super(store, onum, version, expiry, labelStore, labelOnum,
+                    super(store, onum, version, labelStore, labelOnum,
                           accessPolicyStore, accessPolicyOnum, in, refTypes,
                           intraStoreRefs, interStoreRefs);
                 }
@@ -437,8 +399,7 @@ public interface PrincipalUtil
                 
                 protected fabric.lang.Object._Proxy $makeProxy() {
                     return new fabric.lang.security.PrincipalUtil.TopPrincipal.
-                      _Static._Proxy(
-                      this);
+                             _Static._Proxy(this);
                 }
                 
                 private void $init() {  }
@@ -448,13 +409,10 @@ public interface PrincipalUtil
         
     }
     
-    
     public fabric.lang.Object $initLabels();
     
     public static class _Proxy extends fabric.lang.Object._Proxy
-      implements fabric.lang.security.PrincipalUtil
-    {
-        
+      implements fabric.lang.security.PrincipalUtil {
         public static native boolean acts_for(
           fabric.lang.security.Principal arg1,
           fabric.lang.security.Principal arg2);
@@ -554,77 +512,69 @@ public interface PrincipalUtil
     }
     
     public static class _Impl extends fabric.lang.Object._Impl
-      implements fabric.lang.security.PrincipalUtil
-    {
+      implements fabric.lang.security.PrincipalUtil {
+        /**
+   * Returns true if and only if the principal p acts for the principal q. A
+   * synonym for the <code>actsFor</code> method.
+   */
+        public static native boolean
+          acts_for(fabric.lang.security.Principal p, fabric.lang.security.Principal q);
         
         /**
-         * Returns true if and only if the principal p acts for the principal q.
-         A
-         * synonym for the <code>actsFor</code> method.
-         */
-        public static native boolean acts_for(fabric.lang.security.Principal p,
-                                              fabric.lang.security.Principal q);
+   * Returns true if and only if the principal p acts for the principal q.
+   */
+        public static native boolean
+          actsFor(fabric.lang.security.Principal p, fabric.lang.security.Principal q);
         
         /**
-         * Returns true if and only if the principal p acts for the principal q.
-         */
-        public static native boolean actsFor(fabric.lang.security.Principal p,
-                                             fabric.lang.security.Principal q);
-        
-        /**
-         * Returns an actsfor proof if and only if the principal p acts for the
-         * principal q.
-         */
+   * Returns an actsfor proof if and only if the principal p acts for the
+   * principal q.
+   */
         public static native fabric.lang.security.ActsForProof actsForProof(
           fabric.worker.Store store, fabric.lang.security.Principal p,
           fabric.lang.security.Principal q);
         
         /**
-         * Notification that a new delegation has been created.
-         */
+   * Notification that a new delegation has been created.
+   */
         public static native void notifyNewDelegation(
           fabric.lang.security.Principal granter,
           fabric.lang.security.Principal superior);
         
         /**
-         * Notification that an existing delegation has been revoked.
-         */
+   * Notification that an existing delegation has been revoked.
+   */
         public static native void notifyRevokeDelegation(
-          fabric.lang.security.Principal granter,
-          fabric.lang.security.Principal superior);
+          fabric.lang.security.Principal granter, fabric.lang.security.Principal superior);
         
         /**
-         * Search for an ActsForProof between p and q. An ActsForProof between p
-         and q
-         * is a a checkable proof object.
-         * 
-         * @param p
-         * @param q
-         * @param searchState
-         *          records the goals that we are in the middle of attempting
-         * @return An ActsForPoorf between p and q, or null if none can be
-         found.
-         */
-        public static native fabric.lang.security.ActsForProof findActsForProof(
-          fabric.worker.Store store, fabric.lang.security.Principal p,
-          fabric.lang.security.Principal q, java.lang.Object searchState);
+   * Search for an ActsForProof between p and q. An ActsForProof between p and q
+   * is a a checkable proof object.
+   * 
+   * @param p
+   * @param q
+   * @param searchState
+   *          records the goals that we are in the middle of attempting
+   * @return An ActsForPoorf between p and q, or null if none can be found.
+   */
+        public static native fabric.lang.security.ActsForProof
+          findActsForProof(fabric.worker.Store store,
+                           fabric.lang.security.Principal p,
+                           fabric.lang.security.Principal q, java.lang.Object searchState);
         
         /**
-         * Return whether principals p and q are equal. p and q must either be
-         * references to the same object, both be null, or agree that they are
-         equal
-         * to the other.
-         */
-        private static native boolean eq(fabric.lang.security.Principal p,
-                                         fabric.lang.security.Principal q);
+   * Return whether principals p and q are equal. p and q must either be
+   * references to the same object, both be null, or agree that they are equal
+   * to the other.
+   */
+        private static native boolean
+          eq(fabric.lang.security.Principal p, fabric.lang.security.Principal q);
         
         /**
-         * Verify that the chain is a valid delegates-chain between p and q.
-         That is,
-         * q == chain[n], chain[n] delegates to chain[n-1], ..., chain[0] == p,
-         i.e.,
-         * p acts for q.
-         */
+   * Verify that the chain is a valid delegates-chain between p and q. That is,
+   * q == chain[n], chain[n] delegates to chain[n-1], ..., chain[0] == p, i.e.,
+   * p acts for q.
+   */
         public static native boolean verifyProof(
           fabric.lang.security.ActsForProof prf,
           fabric.lang.security.Principal actor,
@@ -641,15 +591,15 @@ public interface PrincipalUtil
                                             fabric.lang.security.Principal q);
         
         /**
-         * Execute the given closure, if the principal agrees.
-         */
+   * Execute the given closure, if the principal agrees.
+   */
         public static native java.lang.Object execute(
           fabric.lang.security.Principal p, java.lang.Object authPrf,
           fabric.lang.security.Closure c, fabric.lang.security.Label lb);
         
         /**
-         * Obtain a Capability for the given principal and closure.
-         */
+   * Obtain a Capability for the given principal and closure.
+   */
         public static native fabric.lang.security.Capability authorize(
           fabric.worker.Store store, fabric.lang.security.Principal p,
           java.lang.Object authPrf, fabric.lang.security.Closure c,
@@ -661,14 +611,13 @@ public interface PrincipalUtil
         
         private static native fabric.lang.security.Capability authorize(
           fabric.worker.Store store, fabric.lang.security.Principal p,
-          java.lang.Object authPrf, fabric.lang.security.Closure c,
-          fabric.lang.security.Label lb, boolean executeNow);
+          java.lang.Object authPrf,
+          fabric.lang.security.Closure c, fabric.lang.security.Label lb, boolean executeNow);
         
         /**
-         * returns the null principal, the principal that every other principal
-         can
-         * act for.
-         */
+   * returns the null principal, the principal that every other principal can
+   * act for.
+   */
         public static native fabric.lang.security.Principal nullPrincipal();
         
         public static native fabric.lang.security.Principal bottomPrincipal();
@@ -723,15 +672,15 @@ public interface PrincipalUtil
         }
         
         public _Impl(fabric.worker.Store store, long onum, int version,
-                     long expiry, fabric.worker.Store labelStore,
-                     long labelOnum, fabric.worker.Store accessPolicyStore,
+                     fabric.worker.Store labelStore, long labelOnum,
+                     fabric.worker.Store accessPolicyStore,
                      long accessPolicyOnum, java.io.ObjectInput in,
                      java.util.Iterator refTypes,
                      java.util.Iterator intraStoreRefs,
                      java.util.Iterator interStoreRefs)
               throws java.io.IOException,
             java.lang.ClassNotFoundException {
-            super(store, onum, version, expiry, labelStore, labelOnum,
+            super(store, onum, version, labelStore, labelOnum,
                   accessPolicyStore, accessPolicyOnum, in, refTypes,
                   intraStoreRefs, interStoreRefs);
         }
@@ -739,13 +688,9 @@ public interface PrincipalUtil
     
     interface _Static extends fabric.lang.Object, Cloneable {
         final class _Proxy extends fabric.lang.Object._Proxy
-          implements fabric.lang.security.PrincipalUtil._Static
-        {
-            
+          implements fabric.lang.security.PrincipalUtil._Static {
             public _Proxy(fabric.lang.security.PrincipalUtil._Static.
-                            _Impl impl) {
-                super(impl);
-            }
+                            _Impl impl) { super(impl); }
             
             public _Proxy(fabric.worker.Store store, long onum) {
                 super(store, onum);
@@ -760,7 +705,8 @@ public interface PrincipalUtil
                   security.
                   PrincipalUtil.
                   _Static.
-                  _Impl impl =
+                  _Impl
+                  impl =
                   (fabric.lang.security.PrincipalUtil._Static._Impl)
                     fabric.lang.Object._Static._Proxy.
                     $makeStaticInstance(
@@ -772,9 +718,7 @@ public interface PrincipalUtil
         }
         
         class _Impl extends fabric.lang.Object._Impl
-          implements fabric.lang.security.PrincipalUtil._Static
-        {
-            
+          implements fabric.lang.security.PrincipalUtil._Static {
             public void $serialize(java.io.ObjectOutput out,
                                    java.util.List refTypes,
                                    java.util.List intraStoreRefs,
@@ -784,15 +728,15 @@ public interface PrincipalUtil
             }
             
             public _Impl(fabric.worker.Store store, long onum, int version,
-                         long expiry, fabric.worker.Store labelStore,
-                         long labelOnum, fabric.worker.Store accessPolicyStore,
+                         fabric.worker.Store labelStore, long labelOnum,
+                         fabric.worker.Store accessPolicyStore,
                          long accessPolicyOnum, java.io.ObjectInput in,
                          java.util.Iterator refTypes,
                          java.util.Iterator intraStoreRefs,
                          java.util.Iterator interStoreRefs)
                   throws java.io.IOException,
                 java.lang.ClassNotFoundException {
-                super(store, onum, version, expiry, labelStore, labelOnum,
+                super(store, onum, version, labelStore, labelOnum,
                       accessPolicyStore, accessPolicyOnum, in, refTypes,
                       intraStoreRefs, interStoreRefs);
             }
@@ -801,7 +745,7 @@ public interface PrincipalUtil
             
             protected fabric.lang.Object._Proxy $makeProxy() {
                 return new fabric.lang.security.PrincipalUtil._Static._Proxy(
-                  this);
+                         this);
             }
             
             private void $init() {  }

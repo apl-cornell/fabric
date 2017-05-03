@@ -11,10 +11,7 @@ import java.util.Set;
 /**
  * This code is mostly copied from Jif.
  */
-public interface TransitiveProof
-  extends fabric.lang.security.ActsForProof
-{
-    
+public interface TransitiveProof extends fabric.lang.security.ActsForProof {
     public fabric.lang.security.ActsForProof get$actorToP();
     
     public fabric.lang.security.ActsForProof set$actorToP(
@@ -47,9 +44,7 @@ public interface TransitiveProof
     public fabric.lang.Object $initLabels();
     
     public static class _Proxy extends fabric.lang.security.ActsForProof._Proxy
-      implements fabric.lang.security.TransitiveProof
-    {
-        
+      implements fabric.lang.security.TransitiveProof {
         public fabric.lang.security.ActsForProof get$actorToP() {
             return ((fabric.lang.security.TransitiveProof._Impl) fetch()).
               get$actorToP();
@@ -104,12 +99,8 @@ public interface TransitiveProof
     
     public static final class _Impl
     extends fabric.lang.security.ActsForProof._Impl
-      implements fabric.lang.security.TransitiveProof
-    {
-        
+      implements fabric.lang.security.TransitiveProof {
         public fabric.lang.security.ActsForProof get$actorToP() {
-            fabric.worker.transaction.TransactionManager.getInstance().
-              registerRead(this);
             return this.actorToP;
         }
         
@@ -126,8 +117,6 @@ public interface TransitiveProof
         private fabric.lang.security.ActsForProof actorToP;
         
         public fabric.lang.security.ActsForProof get$pToGranter() {
-            fabric.worker.transaction.TransactionManager.getInstance().
-              registerRead(this);
             return this.pToGranter;
         }
         
@@ -143,11 +132,7 @@ public interface TransitiveProof
         
         private fabric.lang.security.ActsForProof pToGranter;
         
-        public fabric.lang.security.Principal get$p() {
-            fabric.worker.transaction.TransactionManager.getInstance().
-              registerRead(this);
-            return this.p;
-        }
+        public fabric.lang.security.Principal get$p() { return this.p; }
         
         public fabric.lang.security.Principal set$p(
           fabric.lang.security.Principal val) {
@@ -198,15 +183,15 @@ public interface TransitiveProof
         }
         
         public _Impl(fabric.worker.Store store, long onum, int version,
-                     long expiry, fabric.worker.Store labelStore,
-                     long labelOnum, fabric.worker.Store accessPolicyStore,
+                     fabric.worker.Store labelStore, long labelOnum,
+                     fabric.worker.Store accessPolicyStore,
                      long accessPolicyOnum, java.io.ObjectInput in,
                      java.util.Iterator refTypes,
                      java.util.Iterator intraStoreRefs,
                      java.util.Iterator interStoreRefs)
               throws java.io.IOException,
             java.lang.ClassNotFoundException {
-            super(store, onum, version, expiry, labelStore, labelOnum,
+            super(store, onum, version, labelStore, labelOnum,
                   accessPolicyStore, accessPolicyOnum, in, refTypes,
                   intraStoreRefs, interStoreRefs);
             this.actorToP =
@@ -237,13 +222,9 @@ public interface TransitiveProof
     
     interface _Static extends fabric.lang.Object, Cloneable {
         final class _Proxy extends fabric.lang.Object._Proxy
-          implements fabric.lang.security.TransitiveProof._Static
-        {
-            
+          implements fabric.lang.security.TransitiveProof._Static {
             public _Proxy(fabric.lang.security.TransitiveProof._Static.
-                            _Impl impl) {
-                super(impl);
-            }
+                            _Impl impl) { super(impl); }
             
             public _Proxy(fabric.worker.Store store, long onum) {
                 super(store, onum);
@@ -258,7 +239,8 @@ public interface TransitiveProof
                   security.
                   TransitiveProof.
                   _Static.
-                  _Impl impl =
+                  _Impl
+                  impl =
                   (fabric.lang.security.TransitiveProof._Static._Impl)
                     fabric.lang.Object._Static._Proxy.
                     $makeStaticInstance(
@@ -270,9 +252,7 @@ public interface TransitiveProof
         }
         
         class _Impl extends fabric.lang.Object._Impl
-          implements fabric.lang.security.TransitiveProof._Static
-        {
-            
+          implements fabric.lang.security.TransitiveProof._Static {
             public void $serialize(java.io.ObjectOutput out,
                                    java.util.List refTypes,
                                    java.util.List intraStoreRefs,
@@ -282,15 +262,15 @@ public interface TransitiveProof
             }
             
             public _Impl(fabric.worker.Store store, long onum, int version,
-                         long expiry, fabric.worker.Store labelStore,
-                         long labelOnum, fabric.worker.Store accessPolicyStore,
+                         fabric.worker.Store labelStore, long labelOnum,
+                         fabric.worker.Store accessPolicyStore,
                          long accessPolicyOnum, java.io.ObjectInput in,
                          java.util.Iterator refTypes,
                          java.util.Iterator intraStoreRefs,
                          java.util.Iterator interStoreRefs)
                   throws java.io.IOException,
                 java.lang.ClassNotFoundException {
-                super(store, onum, version, expiry, labelStore, labelOnum,
+                super(store, onum, version, labelStore, labelOnum,
                       accessPolicyStore, accessPolicyOnum, in, refTypes,
                       intraStoreRefs, interStoreRefs);
             }
@@ -299,7 +279,7 @@ public interface TransitiveProof
             
             protected fabric.lang.Object._Proxy $makeProxy() {
                 return new fabric.lang.security.TransitiveProof._Static._Proxy(
-                  this);
+                         this);
             }
             
             private void $init() {  }

@@ -25,12 +25,7 @@ import fabric.lang.Object;
  * @since 1.0
  * @status updated to 1.4
  */
-public class NoSuchElementException
-extends java.lang.RuntimeException
-{
-    /**
-     * Compatible with JDK 1.0.
-     */
+public class NoSuchElementException extends java.lang.RuntimeException {
     private static long serialVersionUID;
     
     public NoSuchElementException() { super(); }

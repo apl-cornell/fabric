@@ -39,58 +39,53 @@ import fabric.lang.Object;
  * @since 1.2
  * @status updated to 1.4
  */
-public interface Comparator
-  extends fabric.lang.Object
-{
-    
+public interface Comparator extends fabric.lang.Object {
     /**
-     * Return an integer that is negative, zero or positive depending on whether
-     * the first argument is less than, equal to or greater than the second
-     * according to this ordering. This method should obey the following
-     * contract:
-     * <ul>
-     *   <li>if compare(a, b) &lt; 0 then compare(b, a) &gt; 0</li>
-     *   <li>if compare(a, b) throws an exception, so does compare(b, a)</li>
-     *   <li>if compare(a, b) &lt; 0 and compare(b, c) &lt; 0 then compare(a, c)
-     *       &lt; 0</li>
-     *   <li>if compare(a, b) == 0 then compare(a, c) and compare(b, c) must
-     *       have the same sign</li>
-     * </ul>
-     * To be consistent with equals, the following additional constraint is
-     * in place:
-     * <ul>
-     *   <li>if a.equals(b) or both a and b are null, then
-     *       compare(a, b) == 0.</li>
-     * </ul><p>
-     *
-     * Although it is permissible for a comparator to provide an order
-     * inconsistent with equals, that should be documented.
-     *
-     * @param o1 the first object
-     * @param o2 the second object
-     * @return the comparison
-     * @throws ClassCastException if the elements are not of types that can be
-     *         compared by this ordering.
-     */
+   * Return an integer that is negative, zero or positive depending on whether
+   * the first argument is less than, equal to or greater than the second
+   * according to this ordering. This method should obey the following
+   * contract:
+   * <ul>
+   *   <li>if compare(a, b) &lt; 0 then compare(b, a) &gt; 0</li>
+   *   <li>if compare(a, b) throws an exception, so does compare(b, a)</li>
+   *   <li>if compare(a, b) &lt; 0 and compare(b, c) &lt; 0 then compare(a, c)
+   *       &lt; 0</li>
+   *   <li>if compare(a, b) == 0 then compare(a, c) and compare(b, c) must
+   *       have the same sign</li>
+   * </ul>
+   * To be consistent with equals, the following additional constraint is
+   * in place:
+   * <ul>
+   *   <li>if a.equals(b) or both a and b are null, then
+   *       compare(a, b) == 0.</li>
+   * </ul><p>
+   *
+   * Although it is permissible for a comparator to provide an order
+   * inconsistent with equals, that should be documented.
+   *
+   * @param o1 the first object
+   * @param o2 the second object
+   * @return the comparison
+   * @throws ClassCastException if the elements are not of types that can be
+   *         compared by this ordering.
+   */
     int compare(fabric.lang.Object o1, fabric.lang.Object o2);
     
     /**
-     * Return true if the object is equal to this object.  To be
-     * considered equal, the argument object must satisfy the constraints
-     * of <code>Object.equals()</code>, be a Comparator, and impose the
-     * same ordering as this Comparator. The default implementation
-     * inherited from Object is usually adequate.
-     *
-     * @param obj The object
-     * @return true if it is a Comparator that imposes the same order
-     * @see Object#equals(Object)
-     */
+   * Return true if the object is equal to this object.  To be
+   * considered equal, the argument object must satisfy the constraints
+   * of <code>Object.equals()</code>, be a Comparator, and impose the
+   * same ordering as this Comparator. The default implementation
+   * inherited from Object is usually adequate.
+   *
+   * @param obj The object
+   * @return true if it is a Comparator that imposes the same order
+   * @see Object#equals(Object)
+   */
     boolean equals(fabric.lang.Object obj);
     
     public static class _Proxy extends fabric.lang.Object._Proxy
-      implements fabric.util.Comparator
-    {
-        
+      implements fabric.util.Comparator {
         public int compare(fabric.lang.Object arg1, fabric.lang.Object arg2) {
             return ((fabric.util.Comparator) fetch()).compare(arg1, arg2);
         }

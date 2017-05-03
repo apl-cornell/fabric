@@ -22,43 +22,38 @@ import fabric.lang.Object;
  * @since 1.2
  * @status updated to 1.4
  */
-public interface Iterator
-  extends fabric.lang.Object
-{
-    
+public interface Iterator extends fabric.lang.Object {
     /**
-     * Tests whether there are elements remaining in the collection. In other
-     * words, calling <code>next()</code> will not throw an exception.
-     *
-     * @return true if there is at least one more element in the collection
-     */
+   * Tests whether there are elements remaining in the collection. In other
+   * words, calling <code>next()</code> will not throw an exception.
+   *
+   * @return true if there is at least one more element in the collection
+   */
     boolean hasNext();
     
     /**
-     * Obtain the next element in the collection.
-     *
-     * @return the next element in the collection
-     * @throws NoSuchElementException if there are no more elements
-     */
+   * Obtain the next element in the collection.
+   *
+   * @return the next element in the collection
+   * @throws NoSuchElementException if there are no more elements
+   */
     fabric.lang.Object next();
     
     /**
-     * Remove from the underlying collection the last element returned by next
-     * (optional operation). This method can be called only once after each
-     * call to <code>next()</code>. It does not affect what will be returned
-     * by subsequent calls to next.
-     *
-     * @throws IllegalStateException if next has not yet been called or remove
-     *         has already been called since the last call to next.
-     * @throws UnsupportedOperationException if this Iterator does not support
-     *         the remove operation.
-     */
+   * Remove from the underlying collection the last element returned by next
+   * (optional operation). This method can be called only once after each
+   * call to <code>next()</code>. It does not affect what will be returned
+   * by subsequent calls to next.
+   *
+   * @throws IllegalStateException if next has not yet been called or remove
+   *         has already been called since the last call to next.
+   * @throws UnsupportedOperationException if this Iterator does not support
+   *         the remove operation.
+   */
     void remove();
     
     public static class _Proxy extends fabric.lang.Object._Proxy
-      implements fabric.util.Iterator
-    {
-        
+      implements fabric.util.Iterator {
         public boolean hasNext() {
             return ((fabric.util.Iterator) fetch()).hasNext();
         }

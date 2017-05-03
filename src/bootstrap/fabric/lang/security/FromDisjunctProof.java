@@ -13,10 +13,7 @@ import java.util.Set;
 /**
  * This code is mostly copied from Jif.
  */
-public interface FromDisjunctProof
-  extends fabric.lang.security.ActsForProof
-{
-    
+public interface FromDisjunctProof extends fabric.lang.security.ActsForProof {
     public fabric.util.Map get$disjunctProofs();
     
     public fabric.util.Map set$disjunctProofs(fabric.util.Map val);
@@ -33,9 +30,7 @@ public interface FromDisjunctProof
     public fabric.lang.Object $initLabels();
     
     public static class _Proxy extends fabric.lang.security.ActsForProof._Proxy
-      implements fabric.lang.security.FromDisjunctProof
-    {
-        
+      implements fabric.lang.security.FromDisjunctProof {
         public fabric.util.Map get$disjunctProofs() {
             return ((fabric.lang.security.FromDisjunctProof._Impl) fetch()).
               get$disjunctProofs();
@@ -62,12 +57,8 @@ public interface FromDisjunctProof
     
     public static final class _Impl
     extends fabric.lang.security.ActsForProof._Impl
-      implements fabric.lang.security.FromDisjunctProof
-    {
-        
+      implements fabric.lang.security.FromDisjunctProof {
         public fabric.util.Map get$disjunctProofs() {
-            fabric.worker.transaction.TransactionManager.getInstance().
-              registerRead(this);
             return this.disjunctProofs;
         }
         
@@ -111,25 +102,22 @@ public interface FromDisjunctProof
         }
         
         public _Impl(fabric.worker.Store store, long onum, int version,
-                     long expiry, fabric.worker.Store labelStore,
-                     long labelOnum, fabric.worker.Store accessPolicyStore,
+                     fabric.worker.Store labelStore, long labelOnum,
+                     fabric.worker.Store accessPolicyStore,
                      long accessPolicyOnum, java.io.ObjectInput in,
                      java.util.Iterator refTypes,
                      java.util.Iterator intraStoreRefs,
                      java.util.Iterator interStoreRefs)
               throws java.io.IOException,
             java.lang.ClassNotFoundException {
-            super(store, onum, version, expiry, labelStore, labelOnum,
+            super(store, onum, version, labelStore, labelOnum,
                   accessPolicyStore, accessPolicyOnum, in, refTypes,
                   intraStoreRefs, interStoreRefs);
             this.disjunctProofs = (fabric.util.Map)
                                     $readRef(fabric.util.Map._Proxy.class,
                                              (fabric.common.RefTypeEnum)
-                                               refTypes.next(),
-                                             in,
-                                             store,
-                                             intraStoreRefs,
-                                             interStoreRefs);
+                                               refTypes.next(), in, store,
+                                             intraStoreRefs, interStoreRefs);
         }
         
         public void $copyAppStateFrom(fabric.lang.Object._Impl other) {
@@ -142,13 +130,9 @@ public interface FromDisjunctProof
     
     interface _Static extends fabric.lang.Object, Cloneable {
         final class _Proxy extends fabric.lang.Object._Proxy
-          implements fabric.lang.security.FromDisjunctProof._Static
-        {
-            
+          implements fabric.lang.security.FromDisjunctProof._Static {
             public _Proxy(fabric.lang.security.FromDisjunctProof._Static.
-                            _Impl impl) {
-                super(impl);
-            }
+                            _Impl impl) { super(impl); }
             
             public _Proxy(fabric.worker.Store store, long onum) {
                 super(store, onum);
@@ -163,7 +147,8 @@ public interface FromDisjunctProof
                   security.
                   FromDisjunctProof.
                   _Static.
-                  _Impl impl =
+                  _Impl
+                  impl =
                   (fabric.
                     lang.
                     security.
@@ -181,9 +166,7 @@ public interface FromDisjunctProof
         }
         
         class _Impl extends fabric.lang.Object._Impl
-          implements fabric.lang.security.FromDisjunctProof._Static
-        {
-            
+          implements fabric.lang.security.FromDisjunctProof._Static {
             public void $serialize(java.io.ObjectOutput out,
                                    java.util.List refTypes,
                                    java.util.List intraStoreRefs,
@@ -193,15 +176,15 @@ public interface FromDisjunctProof
             }
             
             public _Impl(fabric.worker.Store store, long onum, int version,
-                         long expiry, fabric.worker.Store labelStore,
-                         long labelOnum, fabric.worker.Store accessPolicyStore,
+                         fabric.worker.Store labelStore, long labelOnum,
+                         fabric.worker.Store accessPolicyStore,
                          long accessPolicyOnum, java.io.ObjectInput in,
                          java.util.Iterator refTypes,
                          java.util.Iterator intraStoreRefs,
                          java.util.Iterator interStoreRefs)
                   throws java.io.IOException,
                 java.lang.ClassNotFoundException {
-                super(store, onum, version, expiry, labelStore, labelOnum,
+                super(store, onum, version, labelStore, labelOnum,
                       accessPolicyStore, accessPolicyOnum, in, refTypes,
                       intraStoreRefs, interStoreRefs);
             }
@@ -210,8 +193,7 @@ public interface FromDisjunctProof
             
             protected fabric.lang.Object._Proxy $makeProxy() {
                 return new fabric.lang.security.FromDisjunctProof._Static.
-                  _Proxy(
-                  this);
+                         _Proxy(this);
             }
             
             private void $init() {  }

@@ -55,65 +55,58 @@ import java.io.Serializable;
  * @since 1.4
  * @status updated to 1.4
  */
-public interface LinkedHashSet
-  extends fabric.util.Set, fabric.util.HashSet
-{
-    
+public interface LinkedHashSet extends fabric.util.Set, fabric.util.HashSet {
     /**
-     * Construct a new, empty HashSet whose backing HashMap has the default
-     * capacity (11) and loadFacor (0.75).
-     */
+   * Construct a new, empty HashSet whose backing HashMap has the default
+   * capacity (11) and loadFacor (0.75).
+   */
     public fabric.util.LinkedHashSet fabric$util$LinkedHashSet$();
     
     /**
-     * Construct a new, empty HashSet whose backing HashMap has the supplied
-     * capacity and the default load factor (0.75).
-     *
-     * @param initialCapacity the initial capacity of the backing HashMap
-     * @throws IllegalArgumentException if the capacity is negative
-     */
-    public fabric.util.LinkedHashSet fabric$util$LinkedHashSet$(
-      int initialCapacity);
+   * Construct a new, empty HashSet whose backing HashMap has the supplied
+   * capacity and the default load factor (0.75).
+   *
+   * @param initialCapacity the initial capacity of the backing HashMap
+   * @throws IllegalArgumentException if the capacity is negative
+   */
+    public fabric.util.LinkedHashSet fabric$util$LinkedHashSet$(int initialCapacity);
     
     /**
-     * Construct a new, empty HashSet whose backing HashMap has the supplied
-     * capacity and load factor.
-     *
-     * @param initialCapacity the initial capacity of the backing HashMap
-     * @param loadFactor the load factor of the backing HashMap
-     * @throws IllegalArgumentException if either argument is negative, or
-     *         if loadFactor is POSITIVE_INFINITY or NaN
-     */
+   * Construct a new, empty HashSet whose backing HashMap has the supplied
+   * capacity and load factor.
+   *
+   * @param initialCapacity the initial capacity of the backing HashMap
+   * @param loadFactor the load factor of the backing HashMap
+   * @throws IllegalArgumentException if either argument is negative, or
+   *         if loadFactor is POSITIVE_INFINITY or NaN
+   */
     public fabric.util.LinkedHashSet fabric$util$LinkedHashSet$(
       int initialCapacity, float loadFactor);
     
     /**
-     * Construct a new HashSet with the same elements as are in the supplied
-     * collection (eliminating any duplicates, of course). The backing storage
-     * has twice the size of the collection, or the default size of 11,
-     * whichever is greater; and the default load factor (0.75).
-     *
-     * @param c a collection of initial set elements
-     * @throws NullPointerException if c is null
-     */
-    public fabric.util.LinkedHashSet fabric$util$LinkedHashSet$(
-      fabric.util.Collection c);
+   * Construct a new HashSet with the same elements as are in the supplied
+   * collection (eliminating any duplicates, of course). The backing storage
+   * has twice the size of the collection, or the default size of 11,
+   * whichever is greater; and the default load factor (0.75).
+   *
+   * @param c a collection of initial set elements
+   * @throws NullPointerException if c is null
+   */
+    public fabric.util.LinkedHashSet fabric$util$LinkedHashSet$(fabric.util.Collection c);
     
     /**
-     * Helper method which initializes the backing Map.
-     *
-     * @param capacity the initial capacity
-     * @param load the initial load factor
-     * @return the backing HashMap
-     */
+   * Helper method which initializes the backing Map.
+   *
+   * @param capacity the initial capacity
+   * @param load the initial load factor
+   * @return the backing HashMap
+   */
     public fabric.util.HashMap init(int capacity, float load);
     
     public fabric.lang.Object $initLabels();
     
     public static class _Proxy extends fabric.util.HashSet._Proxy
-      implements fabric.util.LinkedHashSet
-    {
-        
+      implements fabric.util.LinkedHashSet {
         public native fabric.util.LinkedHashSet fabric$util$LinkedHashSet$();
         
         public native fabric.util.LinkedHashSet fabric$util$LinkedHashSet$(
@@ -133,57 +126,52 @@ public interface LinkedHashSet
     }
     
     public static class _Impl extends fabric.util.HashSet._Impl
-      implements fabric.util.LinkedHashSet
-    {
-        
+      implements fabric.util.LinkedHashSet {
         /**
-         * Construct a new, empty HashSet whose backing HashMap has the default
-         * capacity (11) and loadFacor (0.75).
-         */
+   * Construct a new, empty HashSet whose backing HashMap has the default
+   * capacity (11) and loadFacor (0.75).
+   */
         public native fabric.util.LinkedHashSet fabric$util$LinkedHashSet$();
         
         /**
-         * Construct a new, empty HashSet whose backing HashMap has the supplied
-         * capacity and the default load factor (0.75).
-         *
-         * @param initialCapacity the initial capacity of the backing HashMap
-         * @throws IllegalArgumentException if the capacity is negative
-         */
-        public native fabric.util.LinkedHashSet fabric$util$LinkedHashSet$(
-          int initialCapacity);
+   * Construct a new, empty HashSet whose backing HashMap has the supplied
+   * capacity and the default load factor (0.75).
+   *
+   * @param initialCapacity the initial capacity of the backing HashMap
+   * @throws IllegalArgumentException if the capacity is negative
+   */
+        public native fabric.util.LinkedHashSet fabric$util$LinkedHashSet$(int initialCapacity);
         
         /**
-         * Construct a new, empty HashSet whose backing HashMap has the supplied
-         * capacity and load factor.
-         *
-         * @param initialCapacity the initial capacity of the backing HashMap
-         * @param loadFactor the load factor of the backing HashMap
-         * @throws IllegalArgumentException if either argument is negative, or
-         *         if loadFactor is POSITIVE_INFINITY or NaN
-         */
+   * Construct a new, empty HashSet whose backing HashMap has the supplied
+   * capacity and load factor.
+   *
+   * @param initialCapacity the initial capacity of the backing HashMap
+   * @param loadFactor the load factor of the backing HashMap
+   * @throws IllegalArgumentException if either argument is negative, or
+   *         if loadFactor is POSITIVE_INFINITY or NaN
+   */
         public native fabric.util.LinkedHashSet fabric$util$LinkedHashSet$(
           int initialCapacity, float loadFactor);
         
         /**
-         * Construct a new HashSet with the same elements as are in the supplied
-         * collection (eliminating any duplicates, of course). The backing
-         storage
-         * has twice the size of the collection, or the default size of 11,
-         * whichever is greater; and the default load factor (0.75).
-         *
-         * @param c a collection of initial set elements
-         * @throws NullPointerException if c is null
-         */
-        public native fabric.util.LinkedHashSet fabric$util$LinkedHashSet$(
-          fabric.util.Collection c);
+   * Construct a new HashSet with the same elements as are in the supplied
+   * collection (eliminating any duplicates, of course). The backing storage
+   * has twice the size of the collection, or the default size of 11,
+   * whichever is greater; and the default load factor (0.75).
+   *
+   * @param c a collection of initial set elements
+   * @throws NullPointerException if c is null
+   */
+        public native fabric.util.LinkedHashSet fabric$util$LinkedHashSet$(fabric.util.Collection c);
         
         /**
-         * Helper method which initializes the backing Map.
-         *
-         * @param capacity the initial capacity
-         * @param load the initial load factor
-         * @return the backing HashMap
-         */
+   * Helper method which initializes the backing Map.
+   *
+   * @param capacity the initial capacity
+   * @param load the initial load factor
+   * @return the backing HashMap
+   */
         public native fabric.util.HashMap init(int capacity, float load);
         
         public native fabric.lang.Object $initLabels();
@@ -203,22 +191,21 @@ public interface LinkedHashSet
         }
         
         public _Impl(fabric.worker.Store store, long onum, int version,
-                     long expiry, fabric.worker.Store labelStore,
-                     long labelOnum, fabric.worker.Store accessPolicyStore,
+                     fabric.worker.Store labelStore, long labelOnum,
+                     fabric.worker.Store accessPolicyStore,
                      long accessPolicyOnum, java.io.ObjectInput in,
                      java.util.Iterator refTypes,
                      java.util.Iterator intraStoreRefs,
                      java.util.Iterator interStoreRefs)
               throws java.io.IOException,
             java.lang.ClassNotFoundException {
-            super(store, onum, version, expiry, labelStore, labelOnum,
+            super(store, onum, version, labelStore, labelOnum,
                   accessPolicyStore, accessPolicyOnum, in, refTypes,
                   intraStoreRefs, interStoreRefs);
         }
     }
     
     interface _Static extends fabric.lang.Object, Cloneable {
-        
         public long get$serialVersionUID();
         
         public long set$serialVersionUID(long val);
@@ -228,9 +215,7 @@ public interface LinkedHashSet
         public long postDec$serialVersionUID();
         
         final class _Proxy extends fabric.lang.Object._Proxy
-          implements fabric.util.LinkedHashSet._Static
-        {
-            
+          implements fabric.util.LinkedHashSet._Static {
             public long get$serialVersionUID() {
                 return ((fabric.util.LinkedHashSet._Static._Impl) fetch()).
                   get$serialVersionUID();
@@ -266,7 +251,8 @@ public interface LinkedHashSet
                   util.
                   LinkedHashSet.
                   _Static.
-                  _Impl impl =
+                  _Impl
+                  impl =
                   (fabric.util.LinkedHashSet._Static._Impl)
                     fabric.lang.Object._Static._Proxy.
                     $makeStaticInstance(
@@ -278,14 +264,8 @@ public interface LinkedHashSet
         }
         
         class _Impl extends fabric.lang.Object._Impl
-          implements fabric.util.LinkedHashSet._Static
-        {
-            
-            public long get$serialVersionUID() {
-                fabric.worker.transaction.TransactionManager.getInstance().
-                  registerRead(this);
-                return this.serialVersionUID;
-            }
+          implements fabric.util.LinkedHashSet._Static {
+            public long get$serialVersionUID() { return this.serialVersionUID; }
             
             public long set$serialVersionUID(long val) {
                 fabric.worker.transaction.TransactionManager tm =
@@ -308,9 +288,6 @@ public interface LinkedHashSet
                 return tmp;
             }
             
-            /**
-             * Compatible with JDK 1.4.
-             */
             private long serialVersionUID;
             
             public void $serialize(java.io.ObjectOutput out,
@@ -323,15 +300,15 @@ public interface LinkedHashSet
             }
             
             public _Impl(fabric.worker.Store store, long onum, int version,
-                         long expiry, fabric.worker.Store labelStore,
-                         long labelOnum, fabric.worker.Store accessPolicyStore,
+                         fabric.worker.Store labelStore, long labelOnum,
+                         fabric.worker.Store accessPolicyStore,
                          long accessPolicyOnum, java.io.ObjectInput in,
                          java.util.Iterator refTypes,
                          java.util.Iterator intraStoreRefs,
                          java.util.Iterator interStoreRefs)
                   throws java.io.IOException,
                 java.lang.ClassNotFoundException {
-                super(store, onum, version, expiry, labelStore, labelOnum,
+                super(store, onum, version, labelStore, labelOnum,
                       accessPolicyStore, accessPolicyOnum, in, refTypes,
                       intraStoreRefs, interStoreRefs);
                 this.serialVersionUID = in.readLong();

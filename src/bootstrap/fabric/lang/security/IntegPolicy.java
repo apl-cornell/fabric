@@ -12,21 +12,18 @@ import java.util.Set;
  * This code is mostly copied from Jif.
  */
 public interface IntegPolicy
-  extends fabric.lang.security.Policy, fabric.lang.Object
-{
+  extends fabric.lang.security.Policy, fabric.lang.Object {
+    /**
+   * Return the join of this policy and p. The set s contains all delegations
+   * (i.e., DelegationPairs) that this join result depends upon.
+   */
+    fabric.lang.security.IntegPolicy join(
+      fabric.worker.Store store, fabric.lang.security.IntegPolicy p, java.util.Set dependencies);
     
     /**
-     * Return the join of this policy and p. The set s contains all delegations
-     * (i.e., DelegationPairs) that this join result depends upon.
-     */
-    fabric.lang.security.IntegPolicy join(fabric.worker.Store store,
-                                          fabric.lang.security.IntegPolicy p,
-                                          java.util.Set dependencies);
-    
-    /**
-     * Return the meet of this policy and p. The set s contains all delegations
-     * (i.e., DelegationPairs) that this meet result depends upon.
-     */
+   * Return the meet of this policy and p. The set s contains all delegations
+   * (i.e., DelegationPairs) that this meet result depends upon.
+   */
     fabric.lang.security.IntegPolicy meet(fabric.worker.Store store,
                                           fabric.lang.security.IntegPolicy p,
                                           java.util.Set dependencies);
@@ -56,9 +53,7 @@ public interface IntegPolicy
                                           boolean simplify);
     
     public static class _Proxy extends fabric.lang.Object._Proxy
-      implements fabric.lang.security.IntegPolicy
-    {
-        
+      implements fabric.lang.security.IntegPolicy {
         public fabric.lang.security.IntegPolicy join(
           fabric.worker.Store arg1, fabric.lang.security.IntegPolicy arg2,
           java.util.Set arg3) {

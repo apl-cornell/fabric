@@ -26,15 +26,15 @@ public final class Surrogate extends _Impl {
    */
   public final long onum;
 
-  public Surrogate(Store store, long onum, int version, long expiry,
-      Store labelStore, long labelOnum, Store accessPolicyStore,
-      long accessPolicyOnum, ObjectInput serializedInput,
-      Iterator<RefTypeEnum> refTypes, Iterator<Long> intraStoreRefs,
+  public Surrogate(Store store, long onum, int version, Store labelStore,
+      long labelOnum, Store accessPolicyStore, long accessPolicyOnum,
+      ObjectInput serializedInput, Iterator<RefTypeEnum> refTypes,
+      Iterator<Long> intraStoreRefs,
       Iterator<Pair<String, Long>> interStoreRefs)
-          throws IOException, ClassNotFoundException {
-    super(store, onum, version, expiry, labelStore, labelOnum,
-        accessPolicyStore, accessPolicyOnum, serializedInput, refTypes,
-        intraStoreRefs, interStoreRefs);
+      throws IOException, ClassNotFoundException {
+    super(store, onum, version, labelStore, labelOnum, accessPolicyStore,
+        accessPolicyOnum, serializedInput, refTypes, intraStoreRefs,
+        interStoreRefs);
     String storeName = serializedInput.readUTF();
     this.store = Worker.getWorker().getStore(storeName);
     this.onum = serializedInput.readLong();

@@ -42,7 +42,6 @@ public final class SerializedObject implements FastSerializable, Serializable {
    * <ul>
    * <li>long onum</li>
    * <li>int version number</li>
-   * <li>long promise expiration</li>
    * <li>byte[] update label pointer, consisting of:<ul>
    *   <li>byte whether the update label pointer is an inter-store ref</li>
    *   <li>short update label's store's name length (only present if inter-store)</li>
@@ -82,14 +81,9 @@ public final class SerializedObject implements FastSerializable, Serializable {
   private static final int VERSION_OFFSET = ONUM_OFFSET + ONUM_LENGTH;
   private static final int VERSION_LENGTH = 4; // int
 
-  /** Index in objectData for object's promise-expiration time. */
-  private static final int PROMISE_EXPIRY_OFFSET =
-      VERSION_OFFSET + VERSION_LENGTH;
-  private static final int PROMISE_EXPIRY_LENGTH = 8; // long
-
   /** Index in objectData for update-label pointer. */
   private static final int UPDATE_LABEL_OFFSET =
-      PROMISE_EXPIRY_OFFSET + PROMISE_EXPIRY_LENGTH;
+      VERSION_OFFSET + VERSION_LENGTH;
 
   //////////////////////////////////////////////////////////////////////////
   //
@@ -288,30 +282,6 @@ public final class SerializedObject implements FastSerializable, Serializable {
    */
   public void setVersion(final int version) {
     SerializationUtil.setIntAt(objectData, versionPos(), version);
-  }
-
-  /**
-   * @return the offset in objectData representing the start of the promise
-   *         expiry
-   */
-  private final int expiryPos() {
-    return PROMISE_EXPIRY_OFFSET;
-  }
-
-  /**
-   * @return the serialized object's promise expiration time
-   */
-  public long getExpiry() {
-    return SerializationUtil.longAt(objectData, expiryPos());
-  }
-
-  /**
-   * Modifies the serialized object's promise expiry
-   *
-   * @param expiry
-   */
-  public void setExpiry(long expiry) {
-    SerializationUtil.setLongAt(objectData, expiryPos(), expiry);
   }
 
   /**
@@ -909,7 +879,6 @@ public final class SerializedObject implements FastSerializable, Serializable {
     // Write out the object header.
     out.writeLong(impl.$getOnum());
     out.writeInt(impl.$version);
-    out.writeLong(0);
 
     // Write the update label
     out.writeBoolean(interStoreUpdateLabel);
@@ -1147,9 +1116,8 @@ public final class SerializedObject implements FastSerializable, Serializable {
 
       if (constructor == null) {
         constructor = implClass.getConstructor(Store.class, long.class,
-            int.class, long.class, Store.class, long.class, Store.class,
-            long.class, ObjectInput.class, Iterator.class, Iterator.class,
-            Iterator.class);
+            int.class, Store.class, long.class, Store.class, long.class,
+            ObjectInput.class, Iterator.class, Iterator.class, Iterator.class);
         constructorTable.put(implClass, constructor);
       }
 
@@ -1176,9 +1144,8 @@ public final class SerializedObject implements FastSerializable, Serializable {
       }
 
       _Impl result = (_Impl) constructor.newInstance(store, getOnum(),
-          getVersion(), getExpiry(), updateLabelStore, updateLabelOnum,
-          accessPolicyStore, accessPolicyOnum,
-          new ObjectInputStream(getSerializedDataStream()),
+          getVersion(), updateLabelStore, updateLabelOnum, accessPolicyStore,
+          accessPolicyOnum, new ObjectInputStream(getSerializedDataStream()),
           getRefTypeIterator(), getIntraStoreRefIterator(),
           getInterStoreRefIterator());
 

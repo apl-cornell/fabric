@@ -24,31 +24,26 @@ import fabric.lang.Object;
  * @since 1.0
  * @status updated to 1.4
  */
-public interface Enumeration
-  extends fabric.lang.Object
-{
-    
+public interface Enumeration extends fabric.lang.Object {
     /**
-     * Tests whether there are elements remaining in the enumeration.
-     *
-     * @return true if there is at least one more element in the enumeration,
-     *         that is, if the next call to nextElement will not throw a
-     *         NoSuchElementException.
-     */
+   * Tests whether there are elements remaining in the enumeration.
+   *
+   * @return true if there is at least one more element in the enumeration,
+   *         that is, if the next call to nextElement will not throw a
+   *         NoSuchElementException.
+   */
     boolean hasMoreElements();
     
     /**
-     * Obtain the next element in the enumeration.
-     *
-     * @return the next element in the enumeration
-     * @throws NoSuchElementException if there are no more elements
-     */
+   * Obtain the next element in the enumeration.
+   *
+   * @return the next element in the enumeration
+   * @throws NoSuchElementException if there are no more elements
+   */
     fabric.lang.Object nextElement();
     
     public static class _Proxy extends fabric.lang.Object._Proxy
-      implements fabric.util.Enumeration
-    {
-        
+      implements fabric.util.Enumeration {
         public boolean hasMoreElements() {
             return ((fabric.util.Enumeration) fetch()).hasMoreElements();
         }

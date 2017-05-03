@@ -14,10 +14,7 @@ import fabric.util.*;
  * A conjunction of two or more (non-null) principals. This code is mostly
  * copied from Jif.
  */
-public interface ConjunctivePrincipal
-  extends fabric.lang.security.Principal
-{
-    
+public interface ConjunctivePrincipal extends fabric.lang.security.Principal {
     public fabric.util.Set get$conjuncts();
     
     public fabric.util.Set set$conjuncts(fabric.util.Set val);
@@ -53,9 +50,7 @@ public interface ConjunctivePrincipal
     public fabric.lang.Object $initLabels();
     
     public static class _Proxy extends fabric.lang.security.Principal._Proxy
-      implements fabric.lang.security.ConjunctivePrincipal
-    {
-        
+      implements fabric.lang.security.ConjunctivePrincipal {
         public fabric.util.Set get$conjuncts() {
             return ((fabric.lang.security.ConjunctivePrincipal._Impl) fetch()).
               get$conjuncts();
@@ -87,14 +82,8 @@ public interface ConjunctivePrincipal
     }
     
     public static final class _Impl extends fabric.lang.security.Principal._Impl
-      implements fabric.lang.security.ConjunctivePrincipal
-    {
-        
-        public fabric.util.Set get$conjuncts() {
-            fabric.worker.transaction.TransactionManager.getInstance().
-              registerRead(this);
-            return this.conjuncts;
-        }
+      implements fabric.lang.security.ConjunctivePrincipal {
+        public fabric.util.Set get$conjuncts() { return this.conjuncts; }
         
         public fabric.util.Set set$conjuncts(fabric.util.Set val) {
             fabric.worker.transaction.TransactionManager tm =
@@ -168,25 +157,22 @@ public interface ConjunctivePrincipal
         }
         
         public _Impl(fabric.worker.Store store, long onum, int version,
-                     long expiry, fabric.worker.Store labelStore,
-                     long labelOnum, fabric.worker.Store accessPolicyStore,
+                     fabric.worker.Store labelStore, long labelOnum,
+                     fabric.worker.Store accessPolicyStore,
                      long accessPolicyOnum, java.io.ObjectInput in,
                      java.util.Iterator refTypes,
                      java.util.Iterator intraStoreRefs,
                      java.util.Iterator interStoreRefs)
               throws java.io.IOException,
             java.lang.ClassNotFoundException {
-            super(store, onum, version, expiry, labelStore, labelOnum,
+            super(store, onum, version, labelStore, labelOnum,
                   accessPolicyStore, accessPolicyOnum, in, refTypes,
                   intraStoreRefs, interStoreRefs);
             this.conjuncts = (fabric.util.Set)
                                $readRef(fabric.util.Set._Proxy.class,
                                         (fabric.common.RefTypeEnum)
-                                          refTypes.next(),
-                                        in,
-                                        store,
-                                        intraStoreRefs,
-                                        interStoreRefs);
+                                          refTypes.next(), in, store,
+                                        intraStoreRefs, interStoreRefs);
             this.hashCode = (java.lang.Integer) in.readObject();
         }
         
@@ -201,21 +187,16 @@ public interface ConjunctivePrincipal
     
     interface _Static extends fabric.lang.Object, Cloneable {
         final class _Proxy extends fabric.lang.Object._Proxy
-          implements fabric.lang.security.ConjunctivePrincipal._Static
-        {
-            
+          implements fabric.lang.security.ConjunctivePrincipal._Static {
             public _Proxy(fabric.lang.security.ConjunctivePrincipal._Static.
-                            _Impl impl) {
-                super(impl);
-            }
+                            _Impl impl) { super(impl); }
             
             public _Proxy(fabric.worker.Store store, long onum) {
                 super(store, onum);
             }
             
             public static final fabric.lang.security.ConjunctivePrincipal.
-              _Static
-              $instance;
+              _Static $instance;
             
             static {
                 fabric.
@@ -223,7 +204,8 @@ public interface ConjunctivePrincipal
                   security.
                   ConjunctivePrincipal.
                   _Static.
-                  _Impl impl =
+                  _Impl
+                  impl =
                   (fabric.
                     lang.
                     security.
@@ -241,9 +223,7 @@ public interface ConjunctivePrincipal
         }
         
         class _Impl extends fabric.lang.Object._Impl
-          implements fabric.lang.security.ConjunctivePrincipal._Static
-        {
-            
+          implements fabric.lang.security.ConjunctivePrincipal._Static {
             public void $serialize(java.io.ObjectOutput out,
                                    java.util.List refTypes,
                                    java.util.List intraStoreRefs,
@@ -253,15 +233,15 @@ public interface ConjunctivePrincipal
             }
             
             public _Impl(fabric.worker.Store store, long onum, int version,
-                         long expiry, fabric.worker.Store labelStore,
-                         long labelOnum, fabric.worker.Store accessPolicyStore,
+                         fabric.worker.Store labelStore, long labelOnum,
+                         fabric.worker.Store accessPolicyStore,
                          long accessPolicyOnum, java.io.ObjectInput in,
                          java.util.Iterator refTypes,
                          java.util.Iterator intraStoreRefs,
                          java.util.Iterator interStoreRefs)
                   throws java.io.IOException,
                 java.lang.ClassNotFoundException {
-                super(store, onum, version, expiry, labelStore, labelOnum,
+                super(store, onum, version, labelStore, labelOnum,
                       accessPolicyStore, accessPolicyOnum, in, refTypes,
                       intraStoreRefs, interStoreRefs);
             }
@@ -270,8 +250,7 @@ public interface ConjunctivePrincipal
             
             protected fabric.lang.Object._Proxy $makeProxy() {
                 return new fabric.lang.security.ConjunctivePrincipal._Static.
-                  _Proxy(
-                  this);
+                         _Proxy(this);
             }
             
             private void $init() {  }

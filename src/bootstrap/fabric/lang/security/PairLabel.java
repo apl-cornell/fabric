@@ -19,9 +19,7 @@ import java.util.Set;
  * Jif.
  */
 public interface PairLabel
-  extends fabric.lang.security.Label, fabric.lang.Object
-{
-    
+  extends fabric.lang.security.Label, fabric.lang.Object {
     public fabric.lang.security.ConfPolicy get$confPol();
     
     public fabric.lang.security.ConfPolicy set$confPol(
@@ -72,9 +70,7 @@ public interface PairLabel
     public fabric.lang.Object $initLabels();
     
     public static class _Proxy extends fabric.lang.Object._Proxy
-      implements fabric.lang.security.PairLabel
-    {
-        
+      implements fabric.lang.security.PairLabel {
         public fabric.lang.security.ConfPolicy get$confPol() {
             return ((fabric.lang.security.PairLabel._Impl) fetch()).get$confPol(
                                                                       );
@@ -144,12 +140,8 @@ public interface PairLabel
     }
     
     public static final class _Impl extends fabric.lang.Object._Impl
-      implements fabric.lang.security.PairLabel
-    {
-        
+      implements fabric.lang.security.PairLabel {
         public fabric.lang.security.ConfPolicy get$confPol() {
-            fabric.worker.transaction.TransactionManager.getInstance().
-              registerRead(this);
             return this.confPol;
         }
         
@@ -166,8 +158,6 @@ public interface PairLabel
         private fabric.lang.security.ConfPolicy confPol;
         
         public fabric.lang.security.IntegPolicy get$integPol() {
-            fabric.worker.transaction.TransactionManager.getInstance().
-              registerRead(this);
             return this.integPol;
         }
         
@@ -184,8 +174,6 @@ public interface PairLabel
         private fabric.lang.security.IntegPolicy integPol;
         
         public fabric.lang.security.SecretKeyObject get$keyObject() {
-            fabric.worker.transaction.TransactionManager.getInstance().
-              registerRead(this);
             return this.keyObject;
         }
         
@@ -258,15 +246,15 @@ public interface PairLabel
         }
         
         public _Impl(fabric.worker.Store store, long onum, int version,
-                     long expiry, fabric.worker.Store labelStore,
-                     long labelOnum, fabric.worker.Store accessPolicyStore,
+                     fabric.worker.Store labelStore, long labelOnum,
+                     fabric.worker.Store accessPolicyStore,
                      long accessPolicyOnum, java.io.ObjectInput in,
                      java.util.Iterator refTypes,
                      java.util.Iterator intraStoreRefs,
                      java.util.Iterator interStoreRefs)
               throws java.io.IOException,
             java.lang.ClassNotFoundException {
-            super(store, onum, version, expiry, labelStore, labelOnum,
+            super(store, onum, version, labelStore, labelOnum,
                   accessPolicyStore, accessPolicyOnum, in, refTypes,
                   intraStoreRefs, interStoreRefs);
             this.confPol =
@@ -298,9 +286,7 @@ public interface PairLabel
     
     interface _Static extends fabric.lang.Object, Cloneable {
         final class _Proxy extends fabric.lang.Object._Proxy
-          implements fabric.lang.security.PairLabel._Static
-        {
-            
+          implements fabric.lang.security.PairLabel._Static {
             public _Proxy(fabric.lang.security.PairLabel._Static._Impl impl) {
                 super(impl);
             }
@@ -318,7 +304,8 @@ public interface PairLabel
                   security.
                   PairLabel.
                   _Static.
-                  _Impl impl =
+                  _Impl
+                  impl =
                   (fabric.lang.security.PairLabel._Static._Impl)
                     fabric.lang.Object._Static._Proxy.
                     $makeStaticInstance(
@@ -330,9 +317,7 @@ public interface PairLabel
         }
         
         class _Impl extends fabric.lang.Object._Impl
-          implements fabric.lang.security.PairLabel._Static
-        {
-            
+          implements fabric.lang.security.PairLabel._Static {
             public void $serialize(java.io.ObjectOutput out,
                                    java.util.List refTypes,
                                    java.util.List intraStoreRefs,
@@ -342,15 +327,15 @@ public interface PairLabel
             }
             
             public _Impl(fabric.worker.Store store, long onum, int version,
-                         long expiry, fabric.worker.Store labelStore,
-                         long labelOnum, fabric.worker.Store accessPolicyStore,
+                         fabric.worker.Store labelStore, long labelOnum,
+                         fabric.worker.Store accessPolicyStore,
                          long accessPolicyOnum, java.io.ObjectInput in,
                          java.util.Iterator refTypes,
                          java.util.Iterator intraStoreRefs,
                          java.util.Iterator interStoreRefs)
                   throws java.io.IOException,
                 java.lang.ClassNotFoundException {
-                super(store, onum, version, expiry, labelStore, labelOnum,
+                super(store, onum, version, labelStore, labelOnum,
                       accessPolicyStore, accessPolicyOnum, in, refTypes,
                       intraStoreRefs, interStoreRefs);
             }

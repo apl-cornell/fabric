@@ -29,12 +29,8 @@ import fabric.lang.Object;
  * @since 1.2
  * @status updated to 1.4
  */
-public class ConcurrentModificationException
-extends java.lang.RuntimeException
+public class ConcurrentModificationException extends java.lang.RuntimeException
 {
-    /**
-     * Compatible with JDK 1.2.
-     */
     private static long serialVersionUID;
     
     public ConcurrentModificationException() { super(); }

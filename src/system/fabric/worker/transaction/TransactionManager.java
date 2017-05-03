@@ -136,7 +136,7 @@ public final class TransactionManager {
     readMap.abortReaders(store, onum);
   }
 
-  public static ReadMap.Entry getReadMapEntry(_Impl impl, long expiry) {
+  public static ReadMap.Entry getReadMapEntry(_Impl impl) {
     return readMap.getEntry(impl);
   }
 

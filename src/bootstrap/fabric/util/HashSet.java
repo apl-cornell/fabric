@@ -44,133 +44,127 @@ import java.io.Serializable;
  * @since 1.2
  * @status updated to 1.4
  */
-public interface HashSet
-  extends fabric.util.Set, fabric.util.AbstractSet
-{
-    
+public interface HashSet extends fabric.util.Set, fabric.util.AbstractSet {
     public fabric.util.HashMap get$map();
     
     public fabric.util.HashMap set$map(fabric.util.HashMap val);
     
     /**
-     * Construct a new, empty HashSet whose backing HashMap has the default
-     * capacity (11) and loadFacor (0.75).
-     */
+   * Construct a new, empty HashSet whose backing HashMap has the default
+   * capacity (11) and loadFacor (0.75).
+   */
     public fabric.util.HashSet fabric$util$HashSet$();
     
     /**
-     * Construct a new, empty HashSet whose backing HashMap has the supplied
-     * capacity and the default load factor (0.75).
-     *
-     * @param initialCapacity the initial capacity of the backing HashMap
-     * @throws IllegalArgumentException if the capacity is negative
-     */
+   * Construct a new, empty HashSet whose backing HashMap has the supplied
+   * capacity and the default load factor (0.75).
+   *
+   * @param initialCapacity the initial capacity of the backing HashMap
+   * @throws IllegalArgumentException if the capacity is negative
+   */
     public fabric.util.HashSet fabric$util$HashSet$(int initialCapacity);
     
     /**
-     * Construct a new, empty HashSet whose backing HashMap has the supplied
-     * capacity and load factor.
-     *
-     * @param initialCapacity the initial capacity of the backing HashMap
-     * @param loadFactor the load factor of the backing HashMap
-     * @throws IllegalArgumentException if either argument is negative, or
-     *         if loadFactor is POSITIVE_INFINITY or NaN
-     */
-    public fabric.util.HashSet fabric$util$HashSet$(int initialCapacity,
-                                                    float loadFactor);
+   * Construct a new, empty HashSet whose backing HashMap has the supplied
+   * capacity and load factor.
+   *
+   * @param initialCapacity the initial capacity of the backing HashMap
+   * @param loadFactor the load factor of the backing HashMap
+   * @throws IllegalArgumentException if either argument is negative, or
+   *         if loadFactor is POSITIVE_INFINITY or NaN
+   */
+    public fabric.util.HashSet fabric$util$HashSet$(int initialCapacity, float loadFactor);
     
     /**
-     * Construct a new HashSet with the same elements as are in the supplied
-     * collection (eliminating any duplicates, of course). The backing storage
-     * has twice the size of the collection, or the default size of 11,
-     * whichever is greater; and the default load factor (0.75).
-     *
-     * @param c a collection of initial set elements
-     * @throws NullPointerException if c is null
-     */
+   * Construct a new HashSet with the same elements as are in the supplied
+   * collection (eliminating any duplicates, of course). The backing storage
+   * has twice the size of the collection, or the default size of 11,
+   * whichever is greater; and the default load factor (0.75).
+   *
+   * @param c a collection of initial set elements
+   * @throws NullPointerException if c is null
+   */
     public fabric.util.HashSet fabric$util$HashSet$(fabric.util.Collection c);
     
     /**
-     * Adds the given Object to the set if it is not already in the Set.
-     * This set permits a null element.
-     *
-     * @param o the Object to add to this Set
-     * @return true if the set did not already contain o
-     */
+   * Adds the given Object to the set if it is not already in the Set.
+   * This set permits a null element.
+   *
+   * @param o the Object to add to this Set
+   * @return true if the set did not already contain o
+   */
     public boolean add(fabric.lang.Object o);
     
     /**
-     * Empties this Set of all elements; this takes constant time.
-     */
+   * Empties this Set of all elements; this takes constant time.
+   */
     public void clear();
     
     /**
-     * Returns true if the supplied element is in this Set.
-     *
-     * @param o the Object to look for
-     * @return true if it is in the set
-     */
+   * Returns true if the supplied element is in this Set.
+   *
+   * @param o the Object to look for
+   * @return true if it is in the set
+   */
     public boolean contains(fabric.lang.Object o);
     
     /**
-     * Returns true if this set has no elements in it.
-     *
-     * @return <code>size() == 0</code>.
-     */
+   * Returns true if this set has no elements in it.
+   *
+   * @return <code>size() == 0</code>.
+   */
     public boolean isEmpty();
     
     /**
-     * Returns an Iterator over the elements of this Set, which visits the
-     * elements in no particular order.  For this class, the Iterator allows
-     * removal of elements. The iterator is fail-fast, and will throw a
-     * ConcurrentModificationException if the set is modified externally.
-     *
-     * @return a set iterator
-     * @see ConcurrentModificationException
-     */
+   * Returns an Iterator over the elements of this Set, which visits the
+   * elements in no particular order.  For this class, the Iterator allows
+   * removal of elements. The iterator is fail-fast, and will throw a
+   * ConcurrentModificationException if the set is modified externally.
+   *
+   * @return a set iterator
+   * @see ConcurrentModificationException
+   */
     public fabric.util.Iterator iterator(fabric.worker.Store store);
     
     /**
-     * Removes the supplied Object from this Set if it is in the Set.
-     *
-     * @param o the object to remove
-     * @return true if an element was removed
-     */
+   * Removes the supplied Object from this Set if it is in the Set.
+   *
+   * @param o the object to remove
+   * @return true if an element was removed
+   */
     public boolean remove(fabric.lang.Object o);
     
     /**
-     * Returns the number of elements in this Set (its cardinality).
-     *
-     * @return the size of the set
-     */
+   * Returns the number of elements in this Set (its cardinality).
+   *
+   * @return the size of the set
+   */
     public int size();
     
     /**
-     * Helper method which initializes the backing Map. Overridden by
-     * LinkedHashSet for correct semantics.
-     *
-     * @param capacity the initial capacity
-     * @param load the initial load factor
-     * @return the backing HashMap
-     */
+   * Helper method which initializes the backing Map. Overridden by
+   * LinkedHashSet for correct semantics.
+   *
+   * @param capacity the initial capacity
+   * @param load the initial load factor
+   * @return the backing HashMap
+   */
     public fabric.util.HashMap init(int capacity, float load);
     
     /**
-     * Deserializes this object from the given stream.
-     *
-     * @param s the stream to read from
-     * @throws ClassNotFoundException if the underlying stream fails
-     * @throws IOException if the underlying stream fails
-     * @serialData the <i>capacity</i> (int) and <i>loadFactor</i> (float)
-     *             of the backing store, followed by the set size (int),
-     *             then a listing of its elements (Object) in no order
-     */
+   * Deserializes this object from the given stream.
+   *
+   * @param s the stream to read from
+   * @throws ClassNotFoundException if the underlying stream fails
+   * @throws IOException if the underlying stream fails
+   * @serialData the <i>capacity</i> (int) and <i>loadFactor</i> (float)
+   *             of the backing store, followed by the set size (int),
+   *             then a listing of its elements (Object) in no order
+   */
     public fabric.lang.Object $initLabels();
     
     public static class _Proxy extends fabric.util.AbstractSet._Proxy
-      implements fabric.util.HashSet
-    {
-        
+      implements fabric.util.HashSet {
         public fabric.util.HashMap get$map() {
             return ((fabric.util.HashSet._Impl) fetch()).get$map();
         }
@@ -199,9 +193,7 @@ public interface HashSet
     }
     
     public static class _Impl extends fabric.util.AbstractSet._Impl
-      implements fabric.util.HashSet
-    {
-        
+      implements fabric.util.HashSet {
         public fabric.util.HashMap get$map() {
             fabric.worker.transaction.TransactionManager.getInstance().
               registerRead(this);
@@ -218,126 +210,123 @@ public interface HashSet
         }
         
         /**
-         * The HashMap which backs this Set.
-         */
+   * The HashMap which backs this Set.
+   */
         private fabric.util.HashMap map;
         
         /**
-         * Construct a new, empty HashSet whose backing HashMap has the default
-         * capacity (11) and loadFacor (0.75).
-         */
+   * Construct a new, empty HashSet whose backing HashMap has the default
+   * capacity (11) and loadFacor (0.75).
+   */
         public native fabric.util.HashSet fabric$util$HashSet$();
         
         /**
-         * Construct a new, empty HashSet whose backing HashMap has the supplied
-         * capacity and the default load factor (0.75).
-         *
-         * @param initialCapacity the initial capacity of the backing HashMap
-         * @throws IllegalArgumentException if the capacity is negative
-         */
-        public native fabric.util.HashSet fabric$util$HashSet$(
-          int initialCapacity);
+   * Construct a new, empty HashSet whose backing HashMap has the supplied
+   * capacity and the default load factor (0.75).
+   *
+   * @param initialCapacity the initial capacity of the backing HashMap
+   * @throws IllegalArgumentException if the capacity is negative
+   */
+        public native fabric.util.HashSet fabric$util$HashSet$(int initialCapacity);
         
         /**
-         * Construct a new, empty HashSet whose backing HashMap has the supplied
-         * capacity and load factor.
-         *
-         * @param initialCapacity the initial capacity of the backing HashMap
-         * @param loadFactor the load factor of the backing HashMap
-         * @throws IllegalArgumentException if either argument is negative, or
-         *         if loadFactor is POSITIVE_INFINITY or NaN
-         */
+   * Construct a new, empty HashSet whose backing HashMap has the supplied
+   * capacity and load factor.
+   *
+   * @param initialCapacity the initial capacity of the backing HashMap
+   * @param loadFactor the load factor of the backing HashMap
+   * @throws IllegalArgumentException if either argument is negative, or
+   *         if loadFactor is POSITIVE_INFINITY or NaN
+   */
         public native fabric.util.HashSet fabric$util$HashSet$(
           int initialCapacity, float loadFactor);
         
         /**
-         * Construct a new HashSet with the same elements as are in the supplied
-         * collection (eliminating any duplicates, of course). The backing
-         storage
-         * has twice the size of the collection, or the default size of 11,
-         * whichever is greater; and the default load factor (0.75).
-         *
-         * @param c a collection of initial set elements
-         * @throws NullPointerException if c is null
-         */
-        public native fabric.util.HashSet fabric$util$HashSet$(
-          fabric.util.Collection c);
+   * Construct a new HashSet with the same elements as are in the supplied
+   * collection (eliminating any duplicates, of course). The backing storage
+   * has twice the size of the collection, or the default size of 11,
+   * whichever is greater; and the default load factor (0.75).
+   *
+   * @param c a collection of initial set elements
+   * @throws NullPointerException if c is null
+   */
+        public native fabric.util.HashSet fabric$util$HashSet$(fabric.util.Collection c);
         
         /**
-         * Adds the given Object to the set if it is not already in the Set.
-         * This set permits a null element.
-         *
-         * @param o the Object to add to this Set
-         * @return true if the set did not already contain o
-         */
+   * Adds the given Object to the set if it is not already in the Set.
+   * This set permits a null element.
+   *
+   * @param o the Object to add to this Set
+   * @return true if the set did not already contain o
+   */
         public native boolean add(fabric.lang.Object o);
         
         /**
-         * Empties this Set of all elements; this takes constant time.
-         */
+   * Empties this Set of all elements; this takes constant time.
+   */
         public native void clear();
         
         /**
-         * Returns true if the supplied element is in this Set.
-         *
-         * @param o the Object to look for
-         * @return true if it is in the set
-         */
+   * Returns true if the supplied element is in this Set.
+   *
+   * @param o the Object to look for
+   * @return true if it is in the set
+   */
         public native boolean contains(fabric.lang.Object o);
         
         /**
-         * Returns true if this set has no elements in it.
-         *
-         * @return <code>size() == 0</code>.
-         */
+   * Returns true if this set has no elements in it.
+   *
+   * @return <code>size() == 0</code>.
+   */
         public native boolean isEmpty();
         
         /**
-         * Returns an Iterator over the elements of this Set, which visits the
-         * elements in no particular order.  For this class, the Iterator allows
-         * removal of elements. The iterator is fail-fast, and will throw a
-         * ConcurrentModificationException if the set is modified externally.
-         *
-         * @return a set iterator
-         * @see ConcurrentModificationException
-         */
+   * Returns an Iterator over the elements of this Set, which visits the
+   * elements in no particular order.  For this class, the Iterator allows
+   * removal of elements. The iterator is fail-fast, and will throw a
+   * ConcurrentModificationException if the set is modified externally.
+   *
+   * @return a set iterator
+   * @see ConcurrentModificationException
+   */
         public native fabric.util.Iterator iterator(fabric.worker.Store store);
         
         /**
-         * Removes the supplied Object from this Set if it is in the Set.
-         *
-         * @param o the object to remove
-         * @return true if an element was removed
-         */
+   * Removes the supplied Object from this Set if it is in the Set.
+   *
+   * @param o the object to remove
+   * @return true if an element was removed
+   */
         public native boolean remove(fabric.lang.Object o);
         
         /**
-         * Returns the number of elements in this Set (its cardinality).
-         *
-         * @return the size of the set
-         */
+   * Returns the number of elements in this Set (its cardinality).
+   *
+   * @return the size of the set
+   */
         public native int size();
         
         /**
-         * Helper method which initializes the backing Map. Overridden by
-         * LinkedHashSet for correct semantics.
-         *
-         * @param capacity the initial capacity
-         * @param load the initial load factor
-         * @return the backing HashMap
-         */
+   * Helper method which initializes the backing Map. Overridden by
+   * LinkedHashSet for correct semantics.
+   *
+   * @param capacity the initial capacity
+   * @param load the initial load factor
+   * @return the backing HashMap
+   */
         public native fabric.util.HashMap init(int capacity, float load);
         
         /**
-         * Deserializes this object from the given stream.
-         *
-         * @param s the stream to read from
-         * @throws ClassNotFoundException if the underlying stream fails
-         * @throws IOException if the underlying stream fails
-         * @serialData the <i>capacity</i> (int) and <i>loadFactor</i> (float)
-         *             of the backing store, followed by the set size (int),
-         *             then a listing of its elements (Object) in no order
-         */
+   * Deserializes this object from the given stream.
+   *
+   * @param s the stream to read from
+   * @throws ClassNotFoundException if the underlying stream fails
+   * @throws IOException if the underlying stream fails
+   * @serialData the <i>capacity</i> (int) and <i>loadFactor</i> (float)
+   *             of the backing store, followed by the set size (int),
+   *             then a listing of its elements (Object) in no order
+   */
         public native fabric.lang.Object $initLabels();
         
         public _Impl(fabric.worker.Store $location) { super($location); }
@@ -357,15 +346,15 @@ public interface HashSet
         }
         
         public _Impl(fabric.worker.Store store, long onum, int version,
-                     long expiry, fabric.worker.Store labelStore,
-                     long labelOnum, fabric.worker.Store accessPolicyStore,
+                     fabric.worker.Store labelStore, long labelOnum,
+                     fabric.worker.Store accessPolicyStore,
                      long accessPolicyOnum, java.io.ObjectInput in,
                      java.util.Iterator refTypes,
                      java.util.Iterator intraStoreRefs,
                      java.util.Iterator interStoreRefs)
               throws java.io.IOException,
             java.lang.ClassNotFoundException {
-            super(store, onum, version, expiry, labelStore, labelOnum,
+            super(store, onum, version, labelStore, labelOnum,
                   accessPolicyStore, accessPolicyOnum, in, refTypes,
                   intraStoreRefs, interStoreRefs);
             this.map = (fabric.util.HashMap)
@@ -382,7 +371,6 @@ public interface HashSet
     }
     
     interface _Static extends fabric.lang.Object, Cloneable {
-        
         public long get$serialVersionUID();
         
         public long set$serialVersionUID(long val);
@@ -392,9 +380,7 @@ public interface HashSet
         public long postDec$serialVersionUID();
         
         final class _Proxy extends fabric.lang.Object._Proxy
-          implements fabric.util.HashSet._Static
-        {
-            
+          implements fabric.util.HashSet._Static {
             public long get$serialVersionUID() {
                 return ((fabric.util.HashSet._Static._Impl) fetch()).
                   get$serialVersionUID();
@@ -430,7 +416,8 @@ public interface HashSet
                   util.
                   HashSet.
                   _Static.
-                  _Impl impl =
+                  _Impl
+                  impl =
                   (fabric.util.HashSet._Static._Impl)
                     fabric.lang.Object._Static._Proxy.
                     $makeStaticInstance(
@@ -441,14 +428,8 @@ public interface HashSet
         }
         
         class _Impl extends fabric.lang.Object._Impl
-          implements fabric.util.HashSet._Static
-        {
-            
-            public long get$serialVersionUID() {
-                fabric.worker.transaction.TransactionManager.getInstance().
-                  registerRead(this);
-                return this.serialVersionUID;
-            }
+          implements fabric.util.HashSet._Static {
+            public long get$serialVersionUID() { return this.serialVersionUID; }
             
             public long set$serialVersionUID(long val) {
                 fabric.worker.transaction.TransactionManager tm =
@@ -471,9 +452,6 @@ public interface HashSet
                 return tmp;
             }
             
-            /**
-             * Compatible with JDK 1.2.
-             */
             private long serialVersionUID;
             
             public void $serialize(java.io.ObjectOutput out,
@@ -486,15 +464,15 @@ public interface HashSet
             }
             
             public _Impl(fabric.worker.Store store, long onum, int version,
-                         long expiry, fabric.worker.Store labelStore,
-                         long labelOnum, fabric.worker.Store accessPolicyStore,
+                         fabric.worker.Store labelStore, long labelOnum,
+                         fabric.worker.Store accessPolicyStore,
                          long accessPolicyOnum, java.io.ObjectInput in,
                          java.util.Iterator refTypes,
                          java.util.Iterator intraStoreRefs,
                          java.util.Iterator interStoreRefs)
                   throws java.io.IOException,
                 java.lang.ClassNotFoundException {
-                super(store, onum, version, expiry, labelStore, labelOnum,
+                super(store, onum, version, labelStore, labelOnum,
                       accessPolicyStore, accessPolicyOnum, in, refTypes,
                       intraStoreRefs, interStoreRefs);
                 this.serialVersionUID = in.readLong();

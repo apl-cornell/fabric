@@ -17,10 +17,7 @@ import fabric.worker.Worker;
  * The runtime interface between Fabric programs and the underlying system.
  * Ported from Jif.
  */
-public interface Runtime
-  extends fabric.lang.Object
-{
-    
+public interface Runtime extends fabric.lang.Object {
     public fabric.lang.security.Principal get$dynp();
     
     public fabric.lang.security.Principal set$dynp(
@@ -69,9 +66,7 @@ public interface Runtime
     public fabric.lang.Object $initLabels();
     
     public static class _Proxy extends fabric.lang.Object._Proxy
-      implements fabric.runtime.Runtime
-    {
-        
+      implements fabric.runtime.Runtime {
         public fabric.lang.security.Principal get$dynp() {
             return ((fabric.runtime.Runtime._Impl) fetch()).get$dynp();
         }
@@ -137,14 +132,8 @@ public interface Runtime
     }
     
     public static class _Impl extends fabric.lang.Object._Impl
-      implements fabric.runtime.Runtime
-    {
-        
-        public fabric.lang.security.Principal get$dynp() {
-            fabric.worker.transaction.TransactionManager.getInstance().
-              registerRead(this);
-            return this.dynp;
-        }
+      implements fabric.runtime.Runtime {
+        public fabric.lang.security.Principal get$dynp() { return this.dynp; }
         
         public fabric.lang.security.Principal set$dynp(
           fabric.lang.security.Principal val) {
@@ -156,16 +145,9 @@ public interface Runtime
             return val;
         }
         
-        /**
-         * The principal under whose authority the JVM is running.
-         */
         private fabric.lang.security.Principal dynp;
         
-        public fabric.worker.Store get$local() {
-            fabric.worker.transaction.TransactionManager.getInstance().
-              registerRead(this);
-            return this.local;
-        }
+        public fabric.worker.Store get$local() { return this.local; }
         
         public fabric.worker.Store set$local(fabric.worker.Store val) {
             fabric.worker.transaction.TransactionManager tm =
@@ -178,16 +160,14 @@ public interface Runtime
         
         private fabric.worker.Store local;
         
-        private native fabric.runtime.Runtime fabric$runtime$Runtime$(
-          fabric.lang.security.Principal p);
+        private native fabric.runtime.Runtime fabric$runtime$Runtime$(fabric.lang.security.Principal p);
         
         /**
-         * Gets a <code>Runtime</code> object parameterized with the
-         * principal <code>p</code>.
-         */
+     * Gets a <code>Runtime</code> object parameterized with the
+     * principal <code>p</code>.
+     */
         public static native fabric.runtime.Runtime getRuntime(
-          fabric.lang.security.Principal p)
-              throws java.lang.SecurityException;
+          fabric.lang.security.Principal p) throws java.lang.SecurityException;
         
         /** Get the current user  */
         public static native fabric.lang.security.Principal user(
@@ -198,43 +178,39 @@ public interface Runtime
         private native fabric.lang.security.Label defaultInputLabel();
         
         /**
-         * Gets the standard error output.
-         * The output channel is parameterized by <code>l</code>.
-         */
+     * Gets the standard error output.
+     * The output channel is parameterized by <code>l</code>.
+     */
         public native java.io.PrintStream stderr(fabric.lang.security.Label l);
         
         /**
-         * Gets the standard output.
-         * This output channel is parameterized by <code>l</code>.
-         */
+     * Gets the standard output.
+     * This output channel is parameterized by <code>l</code>.
+     */
         public native java.io.PrintStream stdout(fabric.lang.security.Label l);
         
         /**
-         * Gets the standard input.
-         * This input channel is parameterized by <code>l</code>.
-         */
+     * Gets the standard input.
+     * This input channel is parameterized by <code>l</code>.
+     */
         public native java.io.InputStream stdin(fabric.lang.security.Label l);
         
         /**
-         * Get the standard output parameterized by the default label, which
-         * has only one reader: the principal of this <code>Runtime</code>
-         object.
-         */
+     * Get the standard output parameterized by the default label, which
+     * has only one reader: the principal of this <code>Runtime</code> object.
+     */
         public native java.io.PrintStream out();
         
         /**
-         * Get the standard input parameterized by the default label, which
-         * has only one reader: the principal of this <code>Runtime</code>
-         object.
-         */
+     * Get the standard input parameterized by the default label, which
+     * has only one reader: the principal of this <code>Runtime</code> object.
+     */
         public native java.io.InputStream in();
         
         /**
-         * Get the standard error output parameterized by the default label,
-         which
-         * has only one reader: the principal of this <code>Runtime</code>
-         object.
-         */
+     * Get the standard error output parameterized by the default label, which
+     * has only one reader: the principal of this <code>Runtime</code> object.
+     */
         public native java.io.PrintStream err();
         
         public static native int currentYear(
@@ -275,15 +251,15 @@ public interface Runtime
         }
         
         public _Impl(fabric.worker.Store store, long onum, int version,
-                     long expiry, fabric.worker.Store labelStore,
-                     long labelOnum, fabric.worker.Store accessPolicyStore,
+                     fabric.worker.Store labelStore, long labelOnum,
+                     fabric.worker.Store accessPolicyStore,
                      long accessPolicyOnum, java.io.ObjectInput in,
                      java.util.Iterator refTypes,
                      java.util.Iterator intraStoreRefs,
                      java.util.Iterator interStoreRefs)
               throws java.io.IOException,
             java.lang.ClassNotFoundException {
-            super(store, onum, version, expiry, labelStore, labelOnum,
+            super(store, onum, version, labelStore, labelOnum,
                   accessPolicyStore, accessPolicyOnum, in, refTypes,
                   intraStoreRefs, interStoreRefs);
             this.dynp = (fabric.lang.security.Principal)
@@ -295,23 +271,20 @@ public interface Runtime
         
         public void $copyAppStateFrom(fabric.lang.Object._Impl other) {
             super.$copyAppStateFrom(other);
-            fabric.runtime.Runtime._Impl src =
-              (fabric.runtime.Runtime._Impl) other;
+            fabric.runtime.Runtime._Impl src = (fabric.runtime.Runtime._Impl)
+                                                 other;
             this.dynp = src.dynp;
             this.local = src.local;
         }
     }
     
     interface _Static extends fabric.lang.Object, Cloneable {
-        
         public boolean get$_nativeOK();
         
         public boolean set$_nativeOK(boolean val);
         
         final class _Proxy extends fabric.lang.Object._Proxy
-          implements fabric.runtime.Runtime._Static
-        {
-            
+          implements fabric.runtime.Runtime._Static {
             public boolean get$_nativeOK() {
                 return ((fabric.runtime.Runtime._Static._Impl) fetch()).
                   get$_nativeOK();
@@ -337,7 +310,8 @@ public interface Runtime
                   runtime.
                   Runtime.
                   _Static.
-                  _Impl impl =
+                  _Impl
+                  impl =
                   (fabric.runtime.Runtime._Static._Impl)
                     fabric.lang.Object._Static._Proxy.
                     $makeStaticInstance(
@@ -348,9 +322,7 @@ public interface Runtime
         }
         
         class _Impl extends fabric.lang.Object._Impl
-          implements fabric.runtime.Runtime._Static
-        {
-            
+          implements fabric.runtime.Runtime._Static {
             public boolean get$_nativeOK() {
                 fabric.worker.transaction.TransactionManager.getInstance().
                   registerRead(this);
@@ -378,15 +350,15 @@ public interface Runtime
             }
             
             public _Impl(fabric.worker.Store store, long onum, int version,
-                         long expiry, fabric.worker.Store labelStore,
-                         long labelOnum, fabric.worker.Store accessPolicyStore,
+                         fabric.worker.Store labelStore, long labelOnum,
+                         fabric.worker.Store accessPolicyStore,
                          long accessPolicyOnum, java.io.ObjectInput in,
                          java.util.Iterator refTypes,
                          java.util.Iterator intraStoreRefs,
                          java.util.Iterator interStoreRefs)
                   throws java.io.IOException,
                 java.lang.ClassNotFoundException {
-                super(store, onum, version, expiry, labelStore, labelOnum,
+                super(store, onum, version, labelStore, labelOnum,
                       accessPolicyStore, accessPolicyOnum, in, refTypes,
                       intraStoreRefs, interStoreRefs);
                 this._nativeOK = in.readBoolean();

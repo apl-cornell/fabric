@@ -24,10 +24,7 @@ import fabric.util.HashSet;
  * 
  * @author Lucas Waye <lrw48@cornell.edu>
  */
-public interface FClass
-  extends fabric.lang.Object
-{
-    
+public interface FClass extends fabric.lang.Object {
     public fabric.lang.Codebase get$codebase();
     
     public fabric.lang.Codebase set$codebase(fabric.lang.Codebase val);
@@ -66,9 +63,7 @@ public interface FClass
     public fabric.lang.Object $initLabels();
     
     public static class _Proxy extends fabric.lang.Object._Proxy
-      implements fabric.lang.FClass
-    {
-        
+      implements fabric.lang.FClass {
         public fabric.lang.Codebase get$codebase() {
             return ((fabric.lang.FClass._Impl) fetch()).get$codebase();
         }
@@ -131,14 +126,8 @@ public interface FClass
     }
     
     public static class _Impl extends fabric.lang.Object._Impl
-      implements fabric.lang.FClass
-    {
-        
-        public fabric.lang.Codebase get$codebase() {
-            fabric.worker.transaction.TransactionManager.getInstance().
-              registerRead(this);
-            return this.codebase;
-        }
+      implements fabric.lang.FClass {
+        public fabric.lang.Codebase get$codebase() { return this.codebase; }
         
         public fabric.lang.Codebase set$codebase(fabric.lang.Codebase val) {
             fabric.worker.transaction.TransactionManager tm =
@@ -168,11 +157,7 @@ public interface FClass
         
         protected fabric.lang.Object staticInstance;
         
-        public java.lang.String get$name() {
-            fabric.worker.transaction.TransactionManager.getInstance().
-              registerRead(this);
-            return this.name;
-        }
+        public java.lang.String get$name() { return this.name; }
         
         public java.lang.String set$name(java.lang.String val) {
             fabric.worker.transaction.TransactionManager tm =
@@ -185,11 +170,7 @@ public interface FClass
         
         protected java.lang.String name;
         
-        public java.lang.String get$source() {
-            fabric.worker.transaction.TransactionManager.getInstance().
-              registerRead(this);
-            return this.source;
-        }
+        public java.lang.String get$source() { return this.source; }
         
         public java.lang.String set$source(java.lang.String val) {
             fabric.worker.transaction.TransactionManager tm =
@@ -203,8 +184,6 @@ public interface FClass
         protected java.lang.String source;
         
         public fabric.lang.arrays.byteArray get$bytecode() {
-            fabric.worker.transaction.TransactionManager.getInstance().
-              registerRead(this);
             return this.bytecode;
         }
         
@@ -259,33 +238,27 @@ public interface FClass
         }
         
         public _Impl(fabric.worker.Store store, long onum, int version,
-                     long expiry, fabric.worker.Store labelStore,
-                     long labelOnum, fabric.worker.Store accessPolicyStore,
+                     fabric.worker.Store labelStore, long labelOnum,
+                     fabric.worker.Store accessPolicyStore,
                      long accessPolicyOnum, java.io.ObjectInput in,
                      java.util.Iterator refTypes,
                      java.util.Iterator intraStoreRefs,
                      java.util.Iterator interStoreRefs)
               throws java.io.IOException,
             java.lang.ClassNotFoundException {
-            super(store, onum, version, expiry, labelStore, labelOnum,
+            super(store, onum, version, labelStore, labelOnum,
                   accessPolicyStore, accessPolicyOnum, in, refTypes,
                   intraStoreRefs, interStoreRefs);
             this.codebase = (fabric.lang.Codebase)
                               $readRef(fabric.lang.Codebase._Proxy.class,
                                        (fabric.common.RefTypeEnum)
-                                         refTypes.next(),
-                                       in,
-                                       store,
-                                       intraStoreRefs,
-                                       interStoreRefs);
+                                         refTypes.next(), in, store,
+                                       intraStoreRefs, interStoreRefs);
             this.staticInstance = (fabric.lang.Object)
                                     $readRef(fabric.lang.Object._Proxy.class,
                                              (fabric.common.RefTypeEnum)
-                                               refTypes.next(),
-                                             in,
-                                             store,
-                                             intraStoreRefs,
-                                             interStoreRefs);
+                                               refTypes.next(), in, store,
+                                             intraStoreRefs, interStoreRefs);
             this.name = (java.lang.String) in.readObject();
             this.source = (java.lang.String) in.readObject();
             this.bytecode =
@@ -308,9 +281,7 @@ public interface FClass
     
     interface _Static extends fabric.lang.Object, Cloneable {
         final class _Proxy extends fabric.lang.Object._Proxy
-          implements fabric.lang.FClass._Static
-        {
-            
+          implements fabric.lang.FClass._Static {
             public _Proxy(fabric.lang.FClass._Static._Impl impl) {
                 super(impl);
             }
@@ -326,7 +297,8 @@ public interface FClass
                   lang.
                   FClass.
                   _Static.
-                  _Impl impl =
+                  _Impl
+                  impl =
                   (fabric.lang.FClass._Static._Impl)
                     fabric.lang.Object._Static._Proxy.
                     $makeStaticInstance(fabric.lang.FClass._Static._Impl.class);
@@ -336,9 +308,7 @@ public interface FClass
         }
         
         class _Impl extends fabric.lang.Object._Impl
-          implements fabric.lang.FClass._Static
-        {
-            
+          implements fabric.lang.FClass._Static {
             public void $serialize(java.io.ObjectOutput out,
                                    java.util.List refTypes,
                                    java.util.List intraStoreRefs,
@@ -348,15 +318,15 @@ public interface FClass
             }
             
             public _Impl(fabric.worker.Store store, long onum, int version,
-                         long expiry, fabric.worker.Store labelStore,
-                         long labelOnum, fabric.worker.Store accessPolicyStore,
+                         fabric.worker.Store labelStore, long labelOnum,
+                         fabric.worker.Store accessPolicyStore,
                          long accessPolicyOnum, java.io.ObjectInput in,
                          java.util.Iterator refTypes,
                          java.util.Iterator intraStoreRefs,
                          java.util.Iterator interStoreRefs)
                   throws java.io.IOException,
                 java.lang.ClassNotFoundException {
-                super(store, onum, version, expiry, labelStore, labelOnum,
+                super(store, onum, version, labelStore, labelOnum,
                       accessPolicyStore, accessPolicyOnum, in, refTypes,
                       intraStoreRefs, interStoreRefs);
             }

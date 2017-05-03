@@ -20,10 +20,7 @@ import fabric.lang.security.Principal;
 /**
  * This wraps a Java PrivateKey object.
  */
-public interface PrivateKeyObject
-  extends fabric.lang.Object
-{
-    
+public interface PrivateKeyObject extends fabric.lang.Object {
     public fabric.lang.security.Principal get$principal();
     
     public fabric.lang.security.Principal set$principal(
@@ -34,8 +31,8 @@ public interface PrivateKeyObject
     public java.security.PrivateKey set$key(java.security.PrivateKey val);
     
     /**
-     * @param p the principal to which this key belongs.
-     */
+   * @param p the principal to which this key belongs.
+   */
     public fabric.lang.security.PrivateKeyObject
       fabric$lang$security$PrivateKeyObject$(fabric.lang.security.Principal p,
                                              java.security.PrivateKey key);
@@ -45,9 +42,7 @@ public interface PrivateKeyObject
     public java.security.PrivateKey getKey();
     
     public static class _Proxy extends fabric.lang.Object._Proxy
-      implements fabric.lang.security.PrivateKeyObject
-    {
-        
+      implements fabric.lang.security.PrivateKeyObject {
         public fabric.lang.security.Principal get$principal() {
             return ((fabric.lang.security.PrivateKeyObject._Impl) fetch()).
               get$principal();
@@ -83,12 +78,8 @@ public interface PrivateKeyObject
     }
     
     public static class _Impl extends fabric.lang.Object._Impl
-      implements fabric.lang.security.PrivateKeyObject
-    {
-        
+      implements fabric.lang.security.PrivateKeyObject {
         public fabric.lang.security.Principal get$principal() {
-            fabric.worker.transaction.TransactionManager.getInstance().
-              registerRead(this);
             return this.principal;
         }
         
@@ -102,16 +93,9 @@ public interface PrivateKeyObject
             return val;
         }
         
-        /**
-         * The principal to which this key belongs.
-         */
         private fabric.lang.security.Principal principal;
         
-        public java.security.PrivateKey get$key() {
-            fabric.worker.transaction.TransactionManager.getInstance().
-              registerRead(this);
-            return this.key;
-        }
+        public java.security.PrivateKey get$key() { return this.key; }
         
         public java.security.PrivateKey set$key(java.security.PrivateKey val) {
             fabric.worker.transaction.TransactionManager tm =
@@ -125,8 +109,8 @@ public interface PrivateKeyObject
         private java.security.PrivateKey key;
         
         /**
-         * @param p the principal to which this key belongs.
-         */
+   * @param p the principal to which this key belongs.
+   */
         public native fabric.lang.security.PrivateKeyObject
           fabric$lang$security$PrivateKeyObject$(
           fabric.lang.security.Principal p, java.security.PrivateKey key);
@@ -152,15 +136,15 @@ public interface PrivateKeyObject
         }
         
         public _Impl(fabric.worker.Store store, long onum, int version,
-                     long expiry, fabric.worker.Store labelStore,
-                     long labelOnum, fabric.worker.Store accessPolicyStore,
+                     fabric.worker.Store labelStore, long labelOnum,
+                     fabric.worker.Store accessPolicyStore,
                      long accessPolicyOnum, java.io.ObjectInput in,
                      java.util.Iterator refTypes,
                      java.util.Iterator intraStoreRefs,
                      java.util.Iterator interStoreRefs)
               throws java.io.IOException,
             java.lang.ClassNotFoundException {
-            super(store, onum, version, expiry, labelStore, labelOnum,
+            super(store, onum, version, labelStore, labelOnum,
                   accessPolicyStore, accessPolicyOnum, in, refTypes,
                   intraStoreRefs, interStoreRefs);
             this.principal =
@@ -181,13 +165,9 @@ public interface PrivateKeyObject
     
     interface _Static extends fabric.lang.Object, Cloneable {
         final class _Proxy extends fabric.lang.Object._Proxy
-          implements fabric.lang.security.PrivateKeyObject._Static
-        {
-            
+          implements fabric.lang.security.PrivateKeyObject._Static {
             public _Proxy(fabric.lang.security.PrivateKeyObject._Static.
-                            _Impl impl) {
-                super(impl);
-            }
+                            _Impl impl) { super(impl); }
             
             public _Proxy(fabric.worker.Store store, long onum) {
                 super(store, onum);
@@ -202,7 +182,8 @@ public interface PrivateKeyObject
                   security.
                   PrivateKeyObject.
                   _Static.
-                  _Impl impl =
+                  _Impl
+                  impl =
                   (fabric.
                     lang.
                     security.
@@ -220,9 +201,7 @@ public interface PrivateKeyObject
         }
         
         class _Impl extends fabric.lang.Object._Impl
-          implements fabric.lang.security.PrivateKeyObject._Static
-        {
-            
+          implements fabric.lang.security.PrivateKeyObject._Static {
             public void $serialize(java.io.ObjectOutput out,
                                    java.util.List refTypes,
                                    java.util.List intraStoreRefs,
@@ -232,15 +211,15 @@ public interface PrivateKeyObject
             }
             
             public _Impl(fabric.worker.Store store, long onum, int version,
-                         long expiry, fabric.worker.Store labelStore,
-                         long labelOnum, fabric.worker.Store accessPolicyStore,
+                         fabric.worker.Store labelStore, long labelOnum,
+                         fabric.worker.Store accessPolicyStore,
                          long accessPolicyOnum, java.io.ObjectInput in,
                          java.util.Iterator refTypes,
                          java.util.Iterator intraStoreRefs,
                          java.util.Iterator interStoreRefs)
                   throws java.io.IOException,
                 java.lang.ClassNotFoundException {
-                super(store, onum, version, expiry, labelStore, labelOnum,
+                super(store, onum, version, labelStore, labelOnum,
                       accessPolicyStore, accessPolicyOnum, in, refTypes,
                       intraStoreRefs, interStoreRefs);
             }
@@ -249,7 +228,7 @@ public interface PrivateKeyObject
             
             protected fabric.lang.Object._Proxy $makeProxy() {
                 return new fabric.lang.security.PrivateKeyObject._Static._Proxy(
-                  this);
+                         this);
             }
             
             private void $init() {  }

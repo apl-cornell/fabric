@@ -12,10 +12,7 @@ import fabric.worker.Store;
 /**
  * This code is mostly copied from Jif.
  */
-public interface Capability
-  extends fabric.lang.Object
-{
-    
+public interface Capability extends fabric.lang.Object {
     public fabric.lang.security.Principal get$jif$jif_lang_Capability_P();
     
     public fabric.lang.security.Principal set$jif$jif_lang_Capability_P(
@@ -43,9 +40,7 @@ public interface Capability
     public fabric.lang.Object $initLabels();
     
     public static class _Proxy extends fabric.lang.Object._Proxy
-      implements fabric.lang.security.Capability
-    {
-        
+      implements fabric.lang.security.Capability {
         public fabric.lang.security.Principal get$jif$jif_lang_Capability_P() {
             return ((fabric.lang.security.Capability._Impl) fetch()).
               get$jif$jif_lang_Capability_P();
@@ -105,12 +100,8 @@ public interface Capability
     }
     
     public static final class _Impl extends fabric.lang.Object._Impl
-      implements fabric.lang.security.Capability
-    {
-        
+      implements fabric.lang.security.Capability {
         public fabric.lang.security.Principal get$jif$jif_lang_Capability_P() {
-            fabric.worker.transaction.TransactionManager.getInstance().
-              registerRead(this);
             return this.jif$jif_lang_Capability_P;
         }
         
@@ -127,8 +118,6 @@ public interface Capability
         private fabric.lang.security.Principal jif$jif_lang_Capability_P;
         
         public fabric.lang.security.Label get$jif$jif_lang_Capability_L() {
-            fabric.worker.transaction.TransactionManager.getInstance().
-              registerRead(this);
             return this.jif$jif_lang_Capability_L;
         }
         
@@ -145,8 +134,6 @@ public interface Capability
         private fabric.lang.security.Label jif$jif_lang_Capability_L;
         
         public fabric.lang.security.Closure get$closure() {
-            fabric.worker.transaction.TransactionManager.getInstance().
-              registerRead(this);
             return this.closure;
         }
         
@@ -204,15 +191,15 @@ public interface Capability
         }
         
         public _Impl(fabric.worker.Store store, long onum, int version,
-                     long expiry, fabric.worker.Store labelStore,
-                     long labelOnum, fabric.worker.Store accessPolicyStore,
+                     fabric.worker.Store labelStore, long labelOnum,
+                     fabric.worker.Store accessPolicyStore,
                      long accessPolicyOnum, java.io.ObjectInput in,
                      java.util.Iterator refTypes,
                      java.util.Iterator intraStoreRefs,
                      java.util.Iterator interStoreRefs)
               throws java.io.IOException,
             java.lang.ClassNotFoundException {
-            super(store, onum, version, expiry, labelStore, labelOnum,
+            super(store, onum, version, labelStore, labelOnum,
                   accessPolicyStore, accessPolicyOnum, in, refTypes,
                   intraStoreRefs, interStoreRefs);
             this.jif$jif_lang_Capability_P =
@@ -228,11 +215,8 @@ public interface Capability
             this.closure = (fabric.lang.security.Closure)
                              $readRef(fabric.lang.security.Closure._Proxy.class,
                                       (fabric.common.RefTypeEnum)
-                                        refTypes.next(),
-                                      in,
-                                      store,
-                                      intraStoreRefs,
-                                      interStoreRefs);
+                                        refTypes.next(), in, store,
+                                      intraStoreRefs, interStoreRefs);
         }
         
         public void $copyAppStateFrom(fabric.lang.Object._Impl other) {
@@ -247,9 +231,7 @@ public interface Capability
     
     interface _Static extends fabric.lang.Object, Cloneable {
         final class _Proxy extends fabric.lang.Object._Proxy
-          implements fabric.lang.security.Capability._Static
-        {
-            
+          implements fabric.lang.security.Capability._Static {
             public _Proxy(fabric.lang.security.Capability._Static._Impl impl) {
                 super(impl);
             }
@@ -267,7 +249,8 @@ public interface Capability
                   security.
                   Capability.
                   _Static.
-                  _Impl impl =
+                  _Impl
+                  impl =
                   (fabric.lang.security.Capability._Static._Impl)
                     fabric.lang.Object._Static._Proxy.
                     $makeStaticInstance(
@@ -279,9 +262,7 @@ public interface Capability
         }
         
         class _Impl extends fabric.lang.Object._Impl
-          implements fabric.lang.security.Capability._Static
-        {
-            
+          implements fabric.lang.security.Capability._Static {
             public void $serialize(java.io.ObjectOutput out,
                                    java.util.List refTypes,
                                    java.util.List intraStoreRefs,
@@ -291,15 +272,15 @@ public interface Capability
             }
             
             public _Impl(fabric.worker.Store store, long onum, int version,
-                         long expiry, fabric.worker.Store labelStore,
-                         long labelOnum, fabric.worker.Store accessPolicyStore,
+                         fabric.worker.Store labelStore, long labelOnum,
+                         fabric.worker.Store accessPolicyStore,
                          long accessPolicyOnum, java.io.ObjectInput in,
                          java.util.Iterator refTypes,
                          java.util.Iterator intraStoreRefs,
                          java.util.Iterator interStoreRefs)
                   throws java.io.IOException,
                 java.lang.ClassNotFoundException {
-                super(store, onum, version, expiry, labelStore, labelOnum,
+                super(store, onum, version, labelStore, labelOnum,
                       accessPolicyStore, accessPolicyOnum, in, refTypes,
                       intraStoreRefs, interStoreRefs);
             }

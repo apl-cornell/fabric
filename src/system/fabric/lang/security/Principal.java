@@ -187,15 +187,14 @@ public interface Principal extends fabric.lang.Object {
       super.$serialize(out, refTypes, intraStoreRefs, interStoreRefs);
     }
 
-    public _Impl(Store store, long onum, int version, long expiry,
-        Store labelStore, long labelOnum, Store accessPolicyStore,
-        long accessPolicyOnum, ObjectInput in, Iterator<RefTypeEnum> refTypes,
+    public _Impl(Store store, long onum, int version, Store labelStore,
+        long labelOnum, Store accessPolicyStore, long accessPolicyOnum,
+        ObjectInput in, Iterator<RefTypeEnum> refTypes,
         Iterator<Long> intraStoreRefs,
         Iterator<Pair<String, Long>> interStoreRefs)
         throws java.io.IOException, ClassNotFoundException {
-      super(store, onum, version, expiry, labelStore, labelOnum,
-          accessPolicyStore, accessPolicyOnum, in, refTypes, intraStoreRefs,
-          interStoreRefs);
+      super(store, onum, version, labelStore, labelOnum, accessPolicyStore,
+          accessPolicyOnum, in, refTypes, intraStoreRefs, interStoreRefs);
     }
 
     @Override

@@ -503,7 +503,7 @@ public interface Object {
     /**
      * A private constructor for initializing transaction-management state.
      */
-    private _Impl(Store store, long onum, int version, long expiry) {
+    private _Impl(Store store, long onum, int version) {
       this.$version = version;
       this.$writer = null;
       this.$writeLockHolder = null;
@@ -513,7 +513,7 @@ public interface Object {
       this.$numWaiting = 0;
       this.$ref = new FabricSoftRef(store, onum, this);
       this.$cacheEntry = store.newCacheEntry(this);
-      this.$readMapEntry = TransactionManager.getReadMapEntry(this, expiry);
+      this.$readMapEntry = TransactionManager.getReadMapEntry(this);
       this.$ref.readMapEntry(this.$readMapEntry);
       this.$isOwned = false;
       this.writerMapVersion = -1;
@@ -537,7 +537,7 @@ public interface Object {
      *          the location for the object
      */
     public _Impl(Store store) throws UnreachableNodeException {
-      this(store, store.createOnum(), 0, 0);
+      this(store, store.createOnum(), 0);
       store.cache(this);
 
       // Register the new object with the transaction manager.
@@ -791,13 +791,13 @@ public interface Object {
      * @throws IOException
      * @throws ClassNotFoundException
      */
-    public _Impl(Store store, long onum, int version, long expiry,
-        Store updateLabelStore, long updateLabelOnum, Store accessPolicyStore,
-        long accessPolicyOnum, ObjectInput serializedInput,
-        Iterator<RefTypeEnum> refTypes, Iterator<Long> intraStoreRefs,
+    public _Impl(Store store, long onum, int version, Store updateLabelStore,
+        long updateLabelOnum, Store accessPolicyStore, long accessPolicyOnum,
+        ObjectInput serializedInput, Iterator<RefTypeEnum> refTypes,
+        Iterator<Long> intraStoreRefs,
         Iterator<Pair<String, Long>> interStoreRefs)
         throws IOException, ClassNotFoundException {
-      this(store, onum, version, expiry);
+      this(store, onum, version);
       this.$updateLabel = new Label._Proxy(updateLabelStore, updateLabelOnum);
       this.$accessPolicy =
           new ConfPolicy._Proxy(accessPolicyStore, accessPolicyOnum);
@@ -1058,13 +1058,13 @@ public interface Object {
         super(store);
       }
 
-      public _Impl(Store store, long onum, int version, long expiry,
-          Store updateLabelStore, long updateLabelOnum, Store accessPolicyStore,
-          long accessPolicyOnum, ObjectInput serializedInput,
-          Iterator<RefTypeEnum> refTypes, Iterator<Long> intraStoreRefs,
+      public _Impl(Store store, long onum, int version, Store updateLabelStore,
+          long updateLabelOnum, Store accessPolicyStore, long accessPolicyOnum,
+          ObjectInput serializedInput, Iterator<RefTypeEnum> refTypes,
+          Iterator<Long> intraStoreRefs,
           Iterator<Pair<String, Long>> interStoreRefs)
           throws IOException, ClassNotFoundException {
-        super(store, onum, version, expiry, updateLabelStore, updateLabelOnum,
+        super(store, onum, version, updateLabelStore, updateLabelOnum,
             accessPolicyStore, accessPolicyOnum, serializedInput, refTypes,
             intraStoreRefs, interStoreRefs);
       }

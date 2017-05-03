@@ -15,9 +15,7 @@ import fabric.util.Iterator;
  * It provides convenience methods for delgating authority to superiors.
  */
 public interface AbstractPrincipal
-  extends fabric.lang.security.DelegatingPrincipal
-{
-    
+  extends fabric.lang.security.DelegatingPrincipal {
     public java.lang.String get$name();
     
     public java.lang.String set$name(java.lang.String val);
@@ -65,9 +63,7 @@ public interface AbstractPrincipal
     
     public static class _Proxy
     extends fabric.lang.security.DelegatingPrincipal._Proxy
-      implements fabric.lang.security.AbstractPrincipal
-    {
-        
+      implements fabric.lang.security.AbstractPrincipal {
         public java.lang.String get$name() {
             return ((fabric.lang.security.AbstractPrincipal._Impl) fetch()).
               get$name();
@@ -110,14 +106,8 @@ public interface AbstractPrincipal
     
     public abstract static class _Impl
     extends fabric.lang.security.DelegatingPrincipal._Impl
-      implements fabric.lang.security.AbstractPrincipal
-    {
-        
-        public java.lang.String get$name() {
-            fabric.worker.transaction.TransactionManager.getInstance().
-              registerRead(this);
-            return this.name;
-        }
+      implements fabric.lang.security.AbstractPrincipal {
+        public java.lang.String get$name() { return this.name; }
         
         public java.lang.String set$name(java.lang.String val) {
             fabric.worker.transaction.TransactionManager tm =
@@ -130,11 +120,7 @@ public interface AbstractPrincipal
         
         private java.lang.String name;
         
-        public fabric.util.Map get$superiors() {
-            fabric.worker.transaction.TransactionManager.getInstance().
-              registerRead(this);
-            return this.superiors;
-        }
+        public fabric.util.Map get$superiors() { return this.superiors; }
         
         public fabric.util.Map set$superiors(fabric.util.Map val) {
             fabric.worker.transaction.TransactionManager tm =
@@ -205,26 +191,23 @@ public interface AbstractPrincipal
         }
         
         public _Impl(fabric.worker.Store store, long onum, int version,
-                     long expiry, fabric.worker.Store labelStore,
-                     long labelOnum, fabric.worker.Store accessPolicyStore,
+                     fabric.worker.Store labelStore, long labelOnum,
+                     fabric.worker.Store accessPolicyStore,
                      long accessPolicyOnum, java.io.ObjectInput in,
                      java.util.Iterator refTypes,
                      java.util.Iterator intraStoreRefs,
                      java.util.Iterator interStoreRefs)
               throws java.io.IOException,
             java.lang.ClassNotFoundException {
-            super(store, onum, version, expiry, labelStore, labelOnum,
+            super(store, onum, version, labelStore, labelOnum,
                   accessPolicyStore, accessPolicyOnum, in, refTypes,
                   intraStoreRefs, interStoreRefs);
             this.name = (java.lang.String) in.readObject();
             this.superiors = (fabric.util.Map)
                                $readRef(fabric.util.Map._Proxy.class,
                                         (fabric.common.RefTypeEnum)
-                                          refTypes.next(),
-                                        in,
-                                        store,
-                                        intraStoreRefs,
-                                        interStoreRefs);
+                                          refTypes.next(), in, store,
+                                        intraStoreRefs, interStoreRefs);
         }
         
         public void $copyAppStateFrom(fabric.lang.Object._Impl other) {
@@ -238,13 +221,9 @@ public interface AbstractPrincipal
     
     interface _Static extends fabric.lang.Object, Cloneable {
         final class _Proxy extends fabric.lang.Object._Proxy
-          implements fabric.lang.security.AbstractPrincipal._Static
-        {
-            
+          implements fabric.lang.security.AbstractPrincipal._Static {
             public _Proxy(fabric.lang.security.AbstractPrincipal._Static.
-                            _Impl impl) {
-                super(impl);
-            }
+                            _Impl impl) { super(impl); }
             
             public _Proxy(fabric.worker.Store store, long onum) {
                 super(store, onum);
@@ -259,7 +238,8 @@ public interface AbstractPrincipal
                   security.
                   AbstractPrincipal.
                   _Static.
-                  _Impl impl =
+                  _Impl
+                  impl =
                   (fabric.
                     lang.
                     security.
@@ -277,9 +257,7 @@ public interface AbstractPrincipal
         }
         
         class _Impl extends fabric.lang.Object._Impl
-          implements fabric.lang.security.AbstractPrincipal._Static
-        {
-            
+          implements fabric.lang.security.AbstractPrincipal._Static {
             public void $serialize(java.io.ObjectOutput out,
                                    java.util.List refTypes,
                                    java.util.List intraStoreRefs,
@@ -289,15 +267,15 @@ public interface AbstractPrincipal
             }
             
             public _Impl(fabric.worker.Store store, long onum, int version,
-                         long expiry, fabric.worker.Store labelStore,
-                         long labelOnum, fabric.worker.Store accessPolicyStore,
+                         fabric.worker.Store labelStore, long labelOnum,
+                         fabric.worker.Store accessPolicyStore,
                          long accessPolicyOnum, java.io.ObjectInput in,
                          java.util.Iterator refTypes,
                          java.util.Iterator intraStoreRefs,
                          java.util.Iterator interStoreRefs)
                   throws java.io.IOException,
                 java.lang.ClassNotFoundException {
-                super(store, onum, version, expiry, labelStore, labelOnum,
+                super(store, onum, version, labelStore, labelOnum,
                       accessPolicyStore, accessPolicyOnum, in, refTypes,
                       intraStoreRefs, interStoreRefs);
             }
@@ -306,8 +284,7 @@ public interface AbstractPrincipal
             
             protected fabric.lang.Object._Proxy $makeProxy() {
                 return new fabric.lang.security.AbstractPrincipal._Static.
-                  _Proxy(
-                  this);
+                         _Proxy(this);
             }
             
             private void $init() {  }

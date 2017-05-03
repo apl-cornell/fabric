@@ -33,10 +33,7 @@ import fabric.lang.arrays.internal._ObjectArray;
  * 
  * @author kvikram
  */
-public interface ObjectArray
-  extends fabric.lang.Object
-{
-    
+public interface ObjectArray extends fabric.lang.Object {
     public int get$CHUNK_SIZE();
     
     public int set$CHUNK_SIZE(int val);
@@ -75,17 +72,16 @@ public interface ObjectArray
     
     public fabric.lang.arrays.internal._ObjectArray get$root();
     
-    public fabric.lang.arrays.internal._ObjectArray set$root(
-      fabric.lang.arrays.internal._ObjectArray val);
+    public fabric.lang.arrays.internal._ObjectArray set$root(fabric.lang.arrays.internal._ObjectArray val);
     
     /**
-     * Creates a new object array at the given Store with the given length.
-     * 
-     * @param store
-     *                The store on which to allocate the array.
-     * @param length
-     *                The length of the array.
-     */
+   * Creates a new object array at the given Store with the given length.
+   * 
+   * @param store
+   *                The store on which to allocate the array.
+   * @param length
+   *                The length of the array.
+   */
     public fabric.lang.arrays.ObjectArray fabric$lang$arrays$ObjectArray$(
       fabric.lang.security.Label updateLabel,
       fabric.lang.security.ConfPolicy accessPolicy, java.lang.Class proxyType,
@@ -107,9 +103,7 @@ public interface ObjectArray
     public fabric.lang.Object set(int i, fabric.lang.Object data);
     
     public static class _Proxy extends fabric.lang.Object._Proxy
-      implements fabric.lang.arrays.ObjectArray
-    {
-        
+      implements fabric.lang.arrays.ObjectArray {
         public int get$CHUNK_SIZE() {
             return ((fabric.lang.arrays.ObjectArray._Impl) fetch()).
               get$CHUNK_SIZE();
@@ -237,14 +231,8 @@ public interface ObjectArray
     }
     
     public static final class _Impl extends fabric.lang.Object._Impl
-      implements fabric.lang.arrays.ObjectArray
-    {
-        
-        public int get$CHUNK_SIZE() {
-            fabric.worker.transaction.TransactionManager.getInstance().
-              registerRead(this);
-            return this.CHUNK_SIZE;
-        }
+      implements fabric.lang.arrays.ObjectArray {
+        public int get$CHUNK_SIZE() { return this.CHUNK_SIZE; }
         
         public int set$CHUNK_SIZE(int val) {
             fabric.worker.transaction.TransactionManager tm =
@@ -267,19 +255,9 @@ public interface ObjectArray
             return tmp;
         }
         
-        /**
-         * The number of elements in each little array. Dependent on the MTU?
-         * Analogous to a block in a file system. Also directly determines the
-         fanout.
-         * We always need it to be a power of 2.
-         */
         private int CHUNK_SIZE;
         
-        public int get$CHUNK_SIZE_LOG2() {
-            fabric.worker.transaction.TransactionManager.getInstance().
-              registerRead(this);
-            return this.CHUNK_SIZE_LOG2;
-        }
+        public int get$CHUNK_SIZE_LOG2() { return this.CHUNK_SIZE_LOG2; }
         
         public int set$CHUNK_SIZE_LOG2(int val) {
             fabric.worker.transaction.TransactionManager tm =
@@ -332,11 +310,10 @@ public interface ObjectArray
         }
         
         /**
-         * The height of the tree of little arrays. Depends on the chunk size
-         * (determining the branching factor) and the number of expected
-         elements in
-         * the bigger array
-         */
+   * The height of the tree of little arrays. Depends on the chunk size
+   * (determining the branching factor) and the number of expected elements in
+   * the bigger array
+   */
         private int height;
         
         public int get$length() {
@@ -367,17 +344,12 @@ public interface ObjectArray
         }
         
         /**
-         * The number of expected elements in this big array Can be modified
-         even
-         * after an instance has been created
-         */
+   * The number of expected elements in this big array Can be modified even
+   * after an instance has been created
+   */
         private int length;
         
-        public java.lang.Class get$proxyType() {
-            fabric.worker.transaction.TransactionManager.getInstance().
-              registerRead(this);
-            return this.proxyType;
-        }
+        public java.lang.Class get$proxyType() { return this.proxyType; }
         
         public java.lang.Class set$proxyType(java.lang.Class val) {
             fabric.worker.transaction.TransactionManager tm =
@@ -388,9 +360,6 @@ public interface ObjectArray
             return val;
         }
         
-        /**
-         * The class representing the proxy type for the array elements.
-         */
         private java.lang.Class proxyType;
         
         public fabric.lang.arrays.internal._ObjectArray get$root() {
@@ -410,22 +379,20 @@ public interface ObjectArray
         }
         
         /**
-         * The root of the tree of little arrays. The runtime type of root is a
-         Fabric
-         * array of Fabric Objects. Each object in the array is either a further
-         array
-         * of objects or is an array element if this array is at the leaf level
-         */
+   * The root of the tree of little arrays. The runtime type of root is a Fabric
+   * array of Fabric Objects. Each object in the array is either a further array
+   * of objects or is an array element if this array is at the leaf level
+   */
         private fabric.lang.arrays.internal._ObjectArray root;
         
         /**
-         * Creates a new object array at the given Store with the given length.
-         * 
-         * @param store
-         *                The store on which to allocate the array.
-         * @param length
-         *                The length of the array.
-         */
+   * Creates a new object array at the given Store with the given length.
+   * 
+   * @param store
+   *                The store on which to allocate the array.
+   * @param length
+   *                The length of the array.
+   */
         public native fabric.lang.arrays.ObjectArray
           fabric$lang$arrays$ObjectArray$(
           fabric.lang.security.Label updateLabel,
@@ -443,11 +410,9 @@ public interface ObjectArray
         public native int getLength();
         
         /**
-         * Ceiling(log_{CHUNK_SIZE}(length)).  (Except returns 1 if length <=
-         1.)
-         * This basically returns the height of the tree for a given array
-         length.
-         */
+   * Ceiling(log_{CHUNK_SIZE}(length)).  (Except returns 1 if length <= 1.)
+   * This basically returns the height of the tree for a given array length.
+   */
         private native int getHeight(int length);
         
         private native void setZeroLength();
@@ -480,15 +445,15 @@ public interface ObjectArray
         }
         
         public _Impl(fabric.worker.Store store, long onum, int version,
-                     long expiry, fabric.worker.Store labelStore,
-                     long labelOnum, fabric.worker.Store accessPolicyStore,
+                     fabric.worker.Store labelStore, long labelOnum,
+                     fabric.worker.Store accessPolicyStore,
                      long accessPolicyOnum, java.io.ObjectInput in,
                      java.util.Iterator refTypes,
                      java.util.Iterator intraStoreRefs,
                      java.util.Iterator interStoreRefs)
               throws java.io.IOException,
             java.lang.ClassNotFoundException {
-            super(store, onum, version, expiry, labelStore, labelOnum,
+            super(store, onum, version, labelStore, labelOnum,
                   accessPolicyStore, accessPolicyOnum, in, refTypes,
                   intraStoreRefs, interStoreRefs);
             this.CHUNK_SIZE = in.readInt();
@@ -517,15 +482,12 @@ public interface ObjectArray
     }
     
     interface _Static extends fabric.lang.Object, Cloneable {
-        
         public fabric.lang.Object get$DEFAULT_VALUE();
         
         public fabric.lang.Object set$DEFAULT_VALUE(fabric.lang.Object val);
         
         final class _Proxy extends fabric.lang.Object._Proxy
-          implements fabric.lang.arrays.ObjectArray._Static
-        {
-            
+          implements fabric.lang.arrays.ObjectArray._Static {
             public fabric.lang.Object get$DEFAULT_VALUE() {
                 return ((fabric.lang.arrays.ObjectArray._Static._Impl) fetch()).
                   get$DEFAULT_VALUE();
@@ -554,7 +516,8 @@ public interface ObjectArray
                   arrays.
                   ObjectArray.
                   _Static.
-                  _Impl impl =
+                  _Impl
+                  impl =
                   (fabric.lang.arrays.ObjectArray._Static._Impl)
                     fabric.lang.Object._Static._Proxy.
                     $makeStaticInstance(
@@ -566,12 +529,8 @@ public interface ObjectArray
         }
         
         class _Impl extends fabric.lang.Object._Impl
-          implements fabric.lang.arrays.ObjectArray._Static
-        {
-            
+          implements fabric.lang.arrays.ObjectArray._Static {
             public fabric.lang.Object get$DEFAULT_VALUE() {
-                fabric.worker.transaction.TransactionManager.getInstance().
-                  registerRead(this);
                 return this.DEFAULT_VALUE;
             }
             
@@ -598,25 +557,22 @@ public interface ObjectArray
             }
             
             public _Impl(fabric.worker.Store store, long onum, int version,
-                         long expiry, fabric.worker.Store labelStore,
-                         long labelOnum, fabric.worker.Store accessPolicyStore,
+                         fabric.worker.Store labelStore, long labelOnum,
+                         fabric.worker.Store accessPolicyStore,
                          long accessPolicyOnum, java.io.ObjectInput in,
                          java.util.Iterator refTypes,
                          java.util.Iterator intraStoreRefs,
                          java.util.Iterator interStoreRefs)
                   throws java.io.IOException,
                 java.lang.ClassNotFoundException {
-                super(store, onum, version, expiry, labelStore, labelOnum,
+                super(store, onum, version, labelStore, labelOnum,
                       accessPolicyStore, accessPolicyOnum, in, refTypes,
                       intraStoreRefs, interStoreRefs);
                 this.DEFAULT_VALUE = (fabric.lang.Object)
                                        $readRef(fabric.lang.Object._Proxy.class,
                                                 (fabric.common.RefTypeEnum)
-                                                  refTypes.next(),
-                                                in,
-                                                store,
-                                                intraStoreRefs,
-                                                interStoreRefs);
+                                                  refTypes.next(), in, store,
+                                                intraStoreRefs, interStoreRefs);
             }
             
             public _Impl(fabric.worker.Store store) { super(store); }
