@@ -60,6 +60,8 @@ non terminal BoltNewArray array_creation_expression;
 non terminal BoltNewArray initialized_array_creation_expression;
 non terminal Expr label_expr_opt;
 
+non terminal Initializer initializer;
+
 start with goal;
 
 /************************************
@@ -278,6 +280,38 @@ extend field_declaration ::=
             parser.array(b, decl.dims()), c, decl.name(), decl.init(),
             parser.javadoc(a.position(), pos(b))));
       }
+      RESULT = l;
+    :}
+  ;
+
+/************************************
+ * Class initializers
+ ************************************/
+
+drop {
+  class_body_declaration ::=
+      static_initializer
+    ;
+}
+
+drop { static_initializer }
+
+initializer ::=
+    // Initializer
+    modifiers_or_annotations:a block:b {:
+      if (!a.annotations().isEmpty()) {
+        AnnotationElem elem = a.annotations().get(0);
+        parser.die(pos(elem));
+      }
+
+      RESULT = parser.nf.Initializer(parser.pos(b), a.flags(), b);
+    :}
+  ;
+
+extend class_body_declaration ::=
+    initializer:a {:
+      List<ClassMember> l = new LinkedList<>();
+      l.add(a);
       RESULT = l;
     :}
   ;
