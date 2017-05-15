@@ -11,6 +11,7 @@ import bolt.parse.Lexer_c;
 import bolt.types.BoltTypeSystem_c;
 import polyglot.ast.NodeFactory;
 import polyglot.ext.jl5.ast.JL5ExtFactory_c;
+import polyglot.ext.jl7.JL7ExtensionInfo;
 import polyglot.ext.jl7.ast.JL7ExtFactory_c;
 import polyglot.frontend.CupParser;
 import polyglot.frontend.Parser;
@@ -22,7 +23,7 @@ import polyglot.util.ErrorQueue;
 /**
  * Extension information for Bolt extension.
  */
-public class ExtensionInfo extends polyglot.frontend.JLExtensionInfo {
+public class ExtensionInfo extends JL7ExtensionInfo {
   static {
     // force Topics to load
     @SuppressWarnings("unused")
