@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import polyglot.ext.jl7.types.JL7TypeSystem_c;
+import polyglot.types.Flags;
 import polyglot.types.Type;
 import polyglot.util.Position;
 
@@ -45,6 +46,12 @@ public class BoltTypeSystem_c extends JL7TypeSystem_c
   protected JavaArrayType createArrayType(Position pos, Type type,
       boolean isVarArgs) {
     return new JavaArrayType_c(this, pos, type, isVarArgs);
+  }
+
+  @Override
+  public Flags legalInitializerFlags() {
+    // Initializers can be declared final.
+    return super.legalInitializerFlags().Final();
   }
 
 }
