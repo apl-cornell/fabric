@@ -15,6 +15,7 @@ import polyglot.ext.jl7.JL7ExtensionInfo;
 import polyglot.ext.jl7.ast.JL7ExtFactory_c;
 import polyglot.frontend.CupParser;
 import polyglot.frontend.Parser;
+import polyglot.frontend.Scheduler;
 import polyglot.frontend.Source;
 import polyglot.lex.Lexer;
 import polyglot.types.TypeSystem;
@@ -61,6 +62,11 @@ public class ExtensionInfo extends JL7ExtensionInfo {
   @Override
   protected TypeSystem createTypeSystem() {
     return new BoltTypeSystem_c();
+  }
+
+  @Override
+  public Scheduler createScheduler() {
+    return new BoltScheduler(this);
   }
 
 }
