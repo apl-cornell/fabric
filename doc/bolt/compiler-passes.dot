@@ -1,0 +1,81 @@
+digraph scheduler {
+  legend[label="GoalName\n[VisitorName]"];
+  CodeGenerated[label="JL5CodeGenerated\nCodeGenerated\n[JL5Translator]"];
+  Serialized[label="Serialized\n[ClassSerializer]"];
+  AnnotationCheck[label="AnnotationCheck\n[AnnotationChecker]"];
+  AnnotationsResolved[label="AnnotationsResolved\n[AnnotationsResolved]"];
+  Disambiguated[label="Disambiguated\n[AmbiguityRemover]"];
+  ImportTableInitialized[label="ImportTableInitialized\n(EmptyGoal)"];
+  TypesInitialized[label="TypesInitialized\n[TypeBuilder]"];
+  Parsed[label="Parsed\n[ParserPass]"];
+  TypesInitializedForCommandLine
+    [label="TypesInitializedForCommandLine\n(Barrier)"];
+  TypeChecked[label="TypeChecked\n[TypeChecker]"];
+  ReachabilityChecked[label="ReachabilityChecked\n[ReachChecker]"];
+  ExceptionsChecked[label="ExceptionsChecked\n[ExceptionChecker]"];
+  ExitPathsChecked[label="ExitPathsChecked\n[ExitChecker]"];
+  InitializationsChecked
+    [label="InitializationsChecked\n[JL5DefiniteAssignmentChecker]"];
+  ConstructorCallsChecked
+    [label="ConstructorCallsChecked\n[ConstructorCallChecker]"];
+  ForwardReferencesChecked
+    [label="ForwardReferencesChecked\n[FwdReferenceChecker]"];
+
+  Serialized
+    -> CodeGenerated;
+
+  Validated
+    -> Serialized;
+
+  TypeChecked,
+  AnnotationsResolved
+    -> AnnotationCheck;
+
+  Disambiguated
+    -> AnnotationsResolved;
+
+  ImportTableInitialized
+    -> Disambiguated;
+
+  TypesInitialized,
+  TypesInitializedForCommandLine
+    -> ImportTableInitialized;
+
+  Parsed
+    -> TypesInitialized;
+
+  TypesInitialized
+    -> TypesInitializedForCommandLine;
+
+  Disambiguated
+    -> TypeChecked;
+
+  TypeChecked,
+  ReachabilityChecked,
+  ExceptionsChecked,
+  ExitPathsChecked,
+  InitializationsChecked,
+  ConstructorCallsChecked,
+  ForwardReferencesChecked,
+  AnnotationCheck
+    -> Validated;
+
+  TypeChecked
+    -> ReachabilityChecked;
+
+  TypeChecked,
+  ReachabilityChecked
+    -> ExceptionsChecked;
+
+  ReachabilityChecked
+    -> ExitPathsChecked;
+
+  ReachabilityChecked
+    -> InitializationsChecked;
+
+  ReachabilityChecked
+    -> ConstructorCallsChecked;
+
+  ReachabilityChecked
+    -> ForwardReferencesChecked;
+}
