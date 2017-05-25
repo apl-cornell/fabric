@@ -240,7 +240,8 @@ public class Matrix {
    */
   public double[] multiply(double[] v) {
     if (v.length != columns)
-      throw new IllegalArgumentException("Bad vector length: " + v.length);
+      throw new IllegalArgumentException(
+          "Bad vector length: " + v.length);
     double[] result = new double[rows];
     for (int row = 0; row < rows; row++) {
       for (int col = 0; col < columns; col++) {

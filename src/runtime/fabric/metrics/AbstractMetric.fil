@@ -1,0 +1,264 @@
+package fabric.metrics;
+
+import fabric.util.ArrayList;
+import fabric.util.List;
+import fabric.util.Set;
+
+import fabric.metrics.contracts.Bound;
+import fabric.metrics.contracts.MetricContract;
+import fabric.metrics.contracts.enforcement.DirectPolicy;
+import fabric.metrics.contracts.enforcement.EnforcementPolicy;
+import fabric.metrics.util.AbstractSubject;
+import fabric.metrics.util.Observer;
+
+import fabric.worker.Store;
+
+/**
+ * Represents an observable quantity that changes over time. Internally, this
+ * class estimates the velocity of the observed quantity, and the interval
+ * between updates. Instances of this class can be observed by
+ * {@link LinearMetric}s and {@link MetricContract}s.
+ */
+public abstract class AbstractMetric extends AbstractSubject implements Metric {
+
+  protected AbstractMetric fabric$metrics$AbstractMetric$() {
+    contracts = new ArrayList/*<>*/().fabric$util$ArrayList$();
+    fabric$metrics$util$AbstractSubject$();
+    return this;
+  }
+
+  private final List/*<MetricContract>*/ contracts;
+
+  /*@Override*/
+  public EnforcementPolicy policy(Bound bound) {
+    return new DirectPolicy().fabric$metrics$contracts$enforcement$DirectPolicy$(this, bound);
+  }
+
+  /**
+   * @param bound
+   *        the {@link Bound} that the contract will enforce on this
+   *        {@link Metric}
+   * @return a {@link MetricContract} asserting this metric satisfies the
+   *       given {@link Bound}.
+   */
+  protected MetricContract createContract(Bound bound) {
+    return new MetricContract().fabric$metrics$contracts$MetricContract$(this, bound);
+  }
+
+  /**
+   * @param time
+   *        the time we're searching for {@link MetricContract}s for this
+   *        {@link Metric}
+   * @return a {@link Set} of {@link MetricContract}s that are currently
+   *       enforced for this {@link Metric}
+   */
+  protected List/*<MetricContract>*/ getContracts(long time) {
+    for (int i = 0; i < contracts.size(); i++) {
+      MetricContract c = (MetricContract) contracts.get(i);
+      if (!c.isActive()) {
+        stopTracking(c);
+        contracts.remove(i--);
+      }
+    }
+    return contracts;
+  }
+
+  /*@Override*/
+  public MetricContract getContract(Bound bound) {
+    MetricContract mc = null;
+    for (int i = 0; i < contracts.size(); i++) {
+      MetricContract c = (MetricContract) contracts.get(i);
+      if (mc == null && c.isActive() && c.enforces(this, bound)) {
+        mc = c;
+      } else if (!c.isActive()) {
+        stopTracking(c);
+        contracts.remove(i--);
+      }
+    }
+    if (mc == null)
+      mc = createContract(bound);
+    return mc;
+  }
+
+  /*@Override*/
+  public MetricContract getContract(double rate, double base, long time) {
+    return getContract(new Bound().fabric$metrics$contracts$Bound$(rate, base, time));
+  }
+
+  /*@Override*/
+  public MetricContract getContract(double rate, double base) {
+    return getContract(new Bound().fabric$metrics$contracts$Bound$(rate, base, System.currentTimeMillis()));
+  }
+
+  /**
+   * @param contract
+   *        a {@link MetricContract} to store with this {@link Metric}
+   * @throws IllegalArgumentException
+   *         if contract isn't defined on this {@link Metric}
+   */
+  public void addContract(MetricContract contract) {
+    if (!contract.getMetric().equals(this))
+      throw new IllegalArgumentException(
+          "Adding a contract for a different metric!");
+    if (!contracts.contains(contract))
+      contracts.add(contract);
+  }
+
+  /*@Override*/
+  public DerivedMetric times(double scalar) {
+    final Store s = $getStore();
+    return findDerivedMetric(s,
+        new ScaledMetric@s().fabric$metrics$ScaledMetric$(scalar, this));
+  }
+
+  /*@Override*/
+  public DerivedMetric plus(Metric other) {
+    // Ugh dumb hack
+    if (other instanceof SumMetric)
+      return other.plus(this);
+    final Store s = $getStore();
+    return findDerivedMetric(s,
+        new SumMetric@s().fabric$metrics$SumMetric$(new Metric[] { this, other }));
+  }
+
+  /*@Override*/
+  public Metric min(Metric other) {
+    // Ugh dumb hack
+    if (this.equals(other))
+      return this;
+    if (other instanceof MinMetric)
+      return other.min(this);
+    final Store s = $getStore();
+    return findDerivedMetric(s,
+        new MinMetric@s().fabric$metrics$MinMetric$(new Metric[] { this, other }));
+  }
+
+  /*@Override*/
+  public Metric max(Metric other) {
+    // TODO: This is not the best approach to this.
+    return (this.times(-1).min(other.times(-1))).times(-1);
+  }
+
+  /**
+   * Allows for sorting {@link Metric}s to help with normalizing
+   * {@link DerivedMetric}s.
+   */
+  /*@Override*/
+  public int compareTo(java.lang.Object that) {
+    if (!(that instanceof Metric))
+      return 0;
+    Metric other = (Metric) that;
+    int thisHash = hashCode();
+    int thatHash = other.hashCode();
+    if (thisHash == thatHash) {
+      if (other.equals(this)) {
+        return 0;
+      } else {
+        return toString().compareTo(other.toString());
+      }
+    }
+    return thisHash - thatHash;
+  }
+
+  /**
+   * @param s
+   *        the store we're looking for the given metric on
+   * @param m
+   *        the transformed metric we're looking up
+   * @return the existing equivalent {@link DerivedMetric} tracked by this
+   *       {@link Store}, if one exists. Otherwise, starts tracking
+   *       <code>m</code> and returns it.
+   */
+  public static DerivedMetric findDerivedMetric(final Store s,
+      DerivedMetric m) {
+    DerivedMetric orig = (DerivedMetric) s.derivedMap().get(m);
+    if (orig == null) {
+      s.derivedMap().put(m, m);
+      return m;
+    } else {
+      m.cleanup();
+      return orig;
+    }
+  }
+
+  /**
+   * Create a locally tracked {@link DerivedMetric} that takes a scaled value
+   * of another {@link Metric}.
+   *
+   * @param a
+   *        the scaling factor
+   * @param term
+   *        the {@link Metric}
+   * @return the locally tracked {@link DerivedMetric} for the scaled value of
+   *       the given {@link Metric}.
+   */
+  public static Metric scaleAtStore(final Store s, double a, Metric term) {
+    if (term.$getStore().equals(s))
+      return findDerivedMetric(s, term.times(a));
+    return findDerivedMetric(s, new ScaledMetric@s().fabric$metrics$ScaledMetric$(a, term));
+  }
+
+  /**
+   * Create a locally tracked {@link DerivedMetric} that takes the sum of
+   * other {@link Metric}s.
+   *
+   * @param terms
+   *        the {@link Metric}s
+   * @return the locally tracked {@link DerivedMetric} for the sum of the
+   *       terms.
+   */
+  public static Metric addAtStore(final Store s, Metric[] terms) {
+    if (terms.length == 0)
+      throw new IllegalArgumentException("Must have at least 1 term!");
+    if (terms.length == 1)
+      return scaleAtStore(s, 1.0, terms[0]);
+    return findDerivedMetric(s, new SumMetric@s().fabric$metrics$SumMetric$(terms));
+  }
+
+  /**
+   * Create a locally tracked {@link DerivedMetric} that takes the minimum of
+   * other {@link Metric}s.
+   *
+   * @param terms
+   *        the {@link Metric}s to take the min of
+   * @return the locally tracked {@link DerivedMetric} for the minimum of the
+   *       terms.
+   */
+  public static Metric minAtStore(final Store s, Metric[] terms) {
+    if (terms.length == 0)
+      throw new IllegalArgumentException("Must have at least 1 term!");
+    if (terms.length == 1)
+      return scaleAtStore(s, 1.0, terms[0]);
+    return findDerivedMetric(s, new MinMetric@s().fabric$metrics$MinMetric$(terms));
+  }
+
+  /**
+   * Create a locally tracked {@link DerivedMetric} that takes the maximum of
+   * other {@link Metric}s.
+   *
+   * @param terms
+   *        the {@link Metric}s to take the max of
+   * @return the locally tracked {@link DerivedMetric} for the maximum of the
+   *       terms.
+   */
+  public static Metric maxAtStore(final Store s, Metric[] terms) {
+    if (terms.length == 0)
+      throw new IllegalArgumentException("Must have at least 1 term!");
+    if (terms.length == 1)
+      return scaleAtStore(s, 1.0, terms[0]);
+    for (int i = 0; i < terms.length; i++) {
+      terms[i] = terms[i].times(-1);
+    }
+    return findDerivedMetric(s, minAtStore(s, terms).times(-1));
+  }
+
+  /*@Override*/
+  public void startTracking(Observer obs) {
+    addObserver(obs);
+  }
+
+  /*@Override*/
+  public void stopTracking(Observer obs) {
+    removeObserver(obs);
+  }
+}

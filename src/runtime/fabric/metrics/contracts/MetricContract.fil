@@ -3,11 +3,10 @@ package fabric.metrics.contracts;
 import fabric.util.Collections;
 import fabric.util.Set;
 
-import fabric.metrics.contracts.enforcement.DirectPolicy;
-import fabric.metrics.contracts.enforcement.EnforcementPolicy;
 import fabric.metrics.DerivedMetric;
 import fabric.metrics.Metric;
 import fabric.metrics.SampledMetric;
+import fabric.metrics.contracts.enforcement.EnforcementPolicy;
 import fabric.metrics.util.Subject;
 
 import fabric.worker.Store;
@@ -23,7 +22,7 @@ import java.util.logging.Level;
  * of either a {@link Metric} or a set of {@link MetricContract}s and can be
  * observed by other {@link Contract}s.
  */
-public abstract class MetricContract extends Contract {
+public class MetricContract extends Contract {
 
   protected /*final*/ Metric metric;
   protected /*final*/ Bound bound;
@@ -58,7 +57,11 @@ public abstract class MetricContract extends Contract {
    *       associated {@link Metric}s current velocity.
    */
   public long getExpectedLifetime() {
-    return getMetric().expectedTimeToHit(getBound(), System.currentTimeMillis());
+    long time = System.currentTimeMillis();
+    Metric m = getMetric();
+    Bound bound = getBound();
+    double adjustedRate = bound.rate - m.velocity();
+    return (long) (time + ((m.value() - bound.value(time)) / adjustedRate));
   }
 
   /*@Override*/
@@ -69,18 +72,10 @@ public abstract class MetricContract extends Contract {
         return;
     }
 
-    EnforcementPolicy startPol = null;
     // Determine children
+    EnforcementPolicy startPol = null;
     atomic {
-      fabric.common.Logging.METRICS_LOGGER.fine("ASDF POLICY FOR MC " + $getOnum());
-      if (metric.isSingleStore()) {
-        // Doesn't matter what it is, if it's on a single store, just go
-        // with a direct enforcement policy.
-        startPol = directStrategy();
-      } else {
-        // Otherwise use whatever's the best way to split things up.
-        startPol = enforcementStrategy();
-      }
+      startPol = metric.policy(bound);
     }
 
     // Activate new children
@@ -112,47 +107,30 @@ public abstract class MetricContract extends Contract {
       return false;
     }
 
-    // If we're forcing this or couldn't make the old policy work, check the
-    // actual bound and if it's up to date find a fresh policy
     long currentTime = System.currentTimeMillis();
-    EnforcementPolicy oldPolicy = currentPolicy;
-    if (bound.test(metric, currentTime)) {
-      // Refresh the current policy and update to the new expiration time
-      // if it's long enough.
-      if (currentPolicy != null) {
-        currentPolicy.refresh();
-        if (currentPolicy.expiry() >= currentTime) {
-          fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "CONTRACT REFRESHED");
-          return update(currentPolicy.expiry());
-        }
+    // Refresh the current policy and update to the new expiration time
+    // if it's long enough.
+    if (currentPolicy != null) {
+      currentPolicy.refresh();
+      if (currentPolicy.expiry() >= currentTime) {
+        fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "CONTRACT REFRESHED");
+        return update(currentPolicy.expiry());
       }
-
-      // Otherwise find a new one.
-      EnforcementPolicy newPolicy;
-      if (metric.isSingleStore()) {
-        // Doesn't matter what it is, if it's on a single store, just go
-        // with a direct enforcement policy.
-        newPolicy = directStrategy();
-      } else {
-        // Otherwise use whatever's the best way to split things up.
-        newPolicy = enforcementStrategy();
-      }
-
-      // Wait to unapply so that metric is still tracked if this was
-      // directly enforced previously
-      if (oldPolicy != null && !oldPolicy.equals(newPolicy))
-        oldPolicy.unapply(this);
-      currentPolicy = newPolicy;
-      currentPolicy.activate();
-      currentPolicy.apply(this);
-      fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "CONTRACT TRUE");
-      return update(currentPolicy.expiry());
-    } else {
-      fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "CONTRACT FALSE");
-      if (oldPolicy != null)
-        oldPolicy.unapply(this);
-      return update(0);
     }
+
+    // Otherwise find a new one.
+    EnforcementPolicy oldPolicy = currentPolicy;
+    EnforcementPolicy newPolicy = metric.policy(bound);
+
+    // Wait to unapply so that metric is still tracked if this was
+    // directly enforced previously
+    if (oldPolicy != null && !oldPolicy.equals(newPolicy))
+      oldPolicy.unapply(this);
+    currentPolicy = newPolicy;
+    currentPolicy.activate();
+    currentPolicy.apply(this);
+    fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "CONTRACT TRUE");
+    return update(currentPolicy.expiry());
   }
 
   /**
@@ -209,20 +187,6 @@ public abstract class MetricContract extends Contract {
   /*@Override*/
   public String toString() {
     return getMetric().toString() + " " + bound + " until " + getExpiry();
-  }
-
-  /**
-   * Given the current transaction context's view of the system state, return
-   * a new {@link EnforcementPolicy} to enforce this {@link MetricContract}.
-   *
-   * @return The {@link EnforcementPolicy} to use for this
-   *       {@link MetricContract} after the call completes.
-   */
-  protected abstract EnforcementPolicy enforcementStrategy();
-
-  protected EnforcementPolicy directStrategy() {
-    final Store s = getStore();
-    return new DirectPolicy@s().fabric$metrics$contracts$enforcement$DirectPolicy$(this);
   }
 
   /*@Override*/

@@ -1,21 +1,19 @@
 package fabric.metrics.util;
 
 /**
- * Utility class for tracking the sample mean and sample standard deviation
- * of a value that is updated periodically.
+ * Utility class for tracking the sample mean and sample standard deviation of a
+ * value that is updated periodically.
  *
  * This was originally based on a post on John D. Cook's blog here:
  * https://www.johndcook.com/blog/standard_deviation/
  *
- * That post assumed a stable distribution. This has since been modified to
- * use EWMA.
+ * That post assumed a stable distribution. This has since been modified to use
+ * EWMA.
  */
 public class RunningStats {
 
-  /**
-   * The sensitivity parameter for computing exponentially weighted moving
-   * averages.
-   */
+  // The sensitivity parameter for computing exponentially weighted moving
+  // averages.
   public static final double ALPHA = 0.01;
 
   private double mean = 0.0;

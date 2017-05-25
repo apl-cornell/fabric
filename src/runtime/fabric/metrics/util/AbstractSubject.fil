@@ -1,0 +1,104 @@
+package fabric.metrics.util;
+
+import fabric.util.Collections;
+import fabric.util.HashSet;
+import fabric.util.Iterator;
+import fabric.util.LinkedHashSet;
+import fabric.util.Set;
+
+import fabric.metrics.SampledMetric;
+import fabric.metrics.contracts.Contract;
+
+import fabric.worker.transaction.TransactionManager;
+import fabric.worker.Store;
+
+import java.util.logging.Level;
+
+
+/**
+ * Base implementation of {@link Subject}
+ */
+public abstract class AbstractSubject implements Subject {
+
+  // Ugh, avoid getting a surrogate's store.
+  public Store getStore() {
+    return $getStore();
+  }
+
+  protected AbstractSubject fabric$metrics$util$AbstractSubject$() {
+    this.observers = new LinkedHashSet/*<>*/().fabric$util$LinkedHashSet$();
+    fabric$lang$Object$();
+    return this;
+  }
+
+  // Using a weak map as the backing for this set so that observers aren't
+  // pinned by their subjects.
+  // private Set<Observer> observers = Collections
+  // .newSetFromMap(new WeakHashMap<>());
+  private final Set/*<Observer>*/ observers;
+
+  /*@Override*/
+  public void addObserver(Observer o) {
+    observers.add(o);
+  }
+
+  /*@Override*/
+  public void removeObserver(Observer o) {
+    observers.remove(o);
+  }
+
+  /*@Override*/
+  public boolean observedBy(Observer o) {
+    return observers.contains(o);
+  }
+
+  /*@Override*/
+  public boolean isObserved() {
+    return !observers.isEmpty();
+  }
+
+  /*@Override*/
+  public Set/*<Observer>*/ getObservers() {
+    return observers;
+  }
+
+  /**
+   * Utility for processing a batch of samples for the transaction manager.
+   */
+  public static void processSamples(java.util.LinkedList unobserved) {
+    atomic {
+      java.util.LinkedList/*<Observer>*/ queue = new java.util.LinkedList/*<>*/();
+      while (!unobserved.isEmpty()) {
+        SampledMetric sm = (SampledMetric) unobserved.poll();
+        //queue.addAll(sm.getObservers());
+        Iterator obsIter = sm.getObservers().iterator();
+        while (obsIter.hasNext()) {
+          queue.add(obsIter.next());
+        }
+
+        while (!queue.isEmpty()) {
+          Observer unhandled = (Observer) queue.poll();
+          boolean needToWait = false;
+          Iterator leavesIter = unhandled.getLeafSubjects().iterator();
+          while (leavesIter.hasNext()) {
+            if (unobserved.contains(leavesIter.next())) {
+              needToWait = true;
+              break;
+            }
+          }
+          // If this has no other pending sampled events, process it.
+          if (!needToWait) {
+            boolean modified = unhandled.handleUpdates();
+            if (unhandled instanceof Subject && modified) {
+              //queue.addAll(parents);
+              Iterator parentIter = ((Subject) unhandled).getObservers().iterator();
+              while (parentIter.hasNext()) {
+                queue.add(parentIter.next());
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

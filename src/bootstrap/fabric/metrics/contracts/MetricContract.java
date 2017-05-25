@@ -7,11 +7,10 @@ import fabric.worker.remote.*;
 import java.lang.*;
 import fabric.util.Collections;
 import fabric.util.Set;
-import fabric.metrics.contracts.enforcement.DirectPolicy;
-import fabric.metrics.contracts.enforcement.EnforcementPolicy;
 import fabric.metrics.DerivedMetric;
 import fabric.metrics.Metric;
 import fabric.metrics.SampledMetric;
+import fabric.metrics.contracts.enforcement.EnforcementPolicy;
 import fabric.metrics.util.Subject;
 import fabric.worker.Store;
 import fabric.worker.transaction.TransactionManager;
@@ -102,7 +101,8 @@ public interface MetricContract extends fabric.metrics.contracts.Contract {
     
     /**
    * Check if this enforces the <strong>same</strong> bound as another
-   * {@link MetricContract} being considered.
+   * {@link MetricContract} being considered. Attempts to refresh this
+   * contract if it's gone stale and would otherwise enforce the bound.
    *
    * @param otherMetric
    *        the {@link Metric} the other {@link MetricContract} would
@@ -117,19 +117,6 @@ public interface MetricContract extends fabric.metrics.contracts.Contract {
                             fabric.metrics.contracts.Bound otherBound);
     
     public java.lang.String toString();
-    
-    /**
-   * Given the current transaction context's view of the system state, return
-   * a new {@link EnforcementPolicy} to enforce this {@link MetricContract}.
-   *
-   * @return The {@link EnforcementPolicy} to use for this
-   *       {@link MetricContract} after the call completes.
-   */
-    public abstract fabric.metrics.contracts.enforcement.EnforcementPolicy
-      enforcementStrategy();
-    
-    public fabric.metrics.contracts.enforcement.EnforcementPolicy
-      directStrategy();
     
     public fabric.util.Set getLeafSubjects();
     
@@ -212,18 +199,6 @@ public interface MetricContract extends fabric.metrics.contracts.Contract {
                                                                          arg2);
         }
         
-        public fabric.metrics.contracts.enforcement.EnforcementPolicy
-          enforcementStrategy() {
-            return ((fabric.metrics.contracts.MetricContract) fetch()).
-              enforcementStrategy();
-        }
-        
-        public fabric.metrics.contracts.enforcement.EnforcementPolicy
-          directStrategy() {
-            return ((fabric.metrics.contracts.MetricContract) fetch()).
-              directStrategy();
-        }
-        
         public fabric.util.Set getLeafSubjects() {
             return ((fabric.metrics.contracts.MetricContract) fetch()).
               getLeafSubjects();
@@ -236,8 +211,7 @@ public interface MetricContract extends fabric.metrics.contracts.Contract {
         }
     }
     
-    public abstract static class _Impl
-    extends fabric.metrics.contracts.Contract._Impl
+    public static class _Impl extends fabric.metrics.contracts.Contract._Impl
       implements fabric.metrics.contracts.MetricContract {
         public fabric.metrics.Metric get$metric() {
             fabric.worker.transaction.TransactionManager.getInstance().
@@ -329,9 +303,12 @@ public interface MetricContract extends fabric.metrics.contracts.Contract {
    *       associated {@link Metric}s current velocity.
    */
         public long getExpectedLifetime() {
-            return getMetric().expectedTimeToHit(
-                                 getBound(),
-                                 java.lang.System.currentTimeMillis());
+            long time = java.lang.System.currentTimeMillis();
+            fabric.metrics.Metric m = getMetric();
+            fabric.metrics.contracts.Bound bound = getBound();
+            double adjustedRate = bound.get$rate() - m.velocity();
+            return (long)
+                     (time + (m.value() - bound.value(time)) / adjustedRate);
         }
         
         public void activate() {
@@ -440,13 +417,7 @@ public interface MetricContract extends fabric.metrics.contracts.Contract {
                     fabric.worker.transaction.TransactionManager.getInstance().
                       startTransaction();
                     try {
-                        fabric.common.Logging.METRICS_LOGGER.
-                          fine("ASDF POLICY FOR MC " + $getOnum());
-                        if (this.get$metric().isSingleStore()) {
-                            startPol = directStrategy();
-                        } else {
-                            startPol = enforcementStrategy();
-                        }
+                        startPol = this.get$metric().policy(this.get$bound());
                     }
                     catch (final fabric.worker.RetryException $e60) {
                         $commit59 = false;
@@ -610,42 +581,32 @@ public interface MetricContract extends fabric.metrics.contracts.Contract {
                 return false;
             }
             long currentTime = java.lang.System.currentTimeMillis();
-            fabric.metrics.contracts.enforcement.EnforcementPolicy oldPolicy =
-              this.get$currentPolicy();
-            if (this.get$bound().test(this.get$metric(), currentTime)) {
+            if (!fabric.lang.Object._Proxy.idEquals(this.get$currentPolicy(),
+                                                    null)) {
                 this.get$currentPolicy().refresh();
-                if (this.get$currentPolicy().expiry() > currentTime) {
+                if (this.get$currentPolicy().expiry() >= currentTime) {
                     fabric.common.Logging.METRICS_LOGGER.
                       log(java.util.logging.Level.FINE, "CONTRACT REFRESHED");
                     return update(this.get$currentPolicy().expiry());
                 }
-                fabric.metrics.contracts.enforcement.EnforcementPolicy
-                  newPolicy;
-                if (this.get$metric().isSingleStore()) {
-                    newPolicy = directStrategy();
-                } else {
-                    newPolicy = enforcementStrategy();
-                }
-                if (!fabric.lang.Object._Proxy.idEquals(oldPolicy, null) &&
-                      !oldPolicy.equals(newPolicy))
-                    oldPolicy.unapply((fabric.metrics.contracts.MetricContract)
-                                        this.$getProxy());
-                this.set$currentPolicy(newPolicy);
-                this.get$currentPolicy().
-                  apply((fabric.metrics.contracts.MetricContract)
-                          this.$getProxy());
-                fabric.common.Logging.METRICS_LOGGER.
-                  log(java.util.logging.Level.FINE, "CONTRACT TRUE");
-                return update(this.get$currentPolicy().expiry());
             }
-            else {
-                fabric.common.Logging.METRICS_LOGGER.
-                  log(java.util.logging.Level.FINE, "CONTRACT FALSE");
-                if (!fabric.lang.Object._Proxy.idEquals(oldPolicy, null))
-                    oldPolicy.unapply((fabric.metrics.contracts.MetricContract)
-                                        this.$getProxy());
-                return update(0);
-            }
+            fabric.metrics.contracts.enforcement.EnforcementPolicy oldPolicy =
+              this.get$currentPolicy();
+            fabric.metrics.contracts.enforcement.EnforcementPolicy newPolicy =
+              this.get$metric().policy(this.get$bound());
+            if (!fabric.lang.Object._Proxy.idEquals(oldPolicy, null) &&
+                  !oldPolicy.equals(newPolicy))
+                oldPolicy.unapply((fabric.metrics.contracts.MetricContract)
+                                    this.$getProxy());
+            this.set$currentPolicy(newPolicy);
+            this.get$currentPolicy().activate();
+            this.get$currentPolicy().apply(
+                                       (fabric.metrics.contracts.MetricContract)
+                                         this.$getProxy());
+            fabric.common.Logging.METRICS_LOGGER.log(
+                                                   java.util.logging.Level.FINE,
+                                                   "CONTRACT TRUE");
+            return update(this.get$currentPolicy().expiry());
         }
         
         /**
@@ -683,7 +644,8 @@ public interface MetricContract extends fabric.metrics.contracts.Contract {
         
         /**
    * Check if this enforces the <strong>same</strong> bound as another
-   * {@link MetricContract} being considered.
+   * {@link MetricContract} being considered. Attempts to refresh this
+   * contract if it's gone stale and would otherwise enforce the bound.
    *
    * @param otherMetric
    *        the {@link Metric} the other {@link MetricContract} would
@@ -703,36 +665,13 @@ public interface MetricContract extends fabric.metrics.contracts.Contract {
         }
         
         public java.lang.String toString() {
-            return ((java.lang.Object)
-                      fabric.lang.WrappedJavaInlineable.$unwrap(getMetric())).
-              toString() +
+            return getMetric().toString() +
             " " +
             java.lang.String.
               valueOf(
                 fabric.lang.WrappedJavaInlineable.$unwrap(this.get$bound())) +
             " until " +
             getExpiry();
-        }
-        
-        /**
-   * Given the current transaction context's view of the system state, return
-   * a new {@link EnforcementPolicy} to enforce this {@link MetricContract}.
-   *
-   * @return The {@link EnforcementPolicy} to use for this
-   *       {@link MetricContract} after the call completes.
-   */
-        public abstract fabric.metrics.contracts.enforcement.EnforcementPolicy
-          enforcementStrategy();
-        
-        public fabric.metrics.contracts.enforcement.EnforcementPolicy
-          directStrategy() {
-            final fabric.worker.Store s = getStore();
-            return ((fabric.metrics.contracts.enforcement.DirectPolicy)
-                      new fabric.metrics.contracts.enforcement.DirectPolicy.
-                        _Impl(s).
-                      $getProxy()).
-              fabric$metrics$contracts$enforcement$DirectPolicy$(
-                (fabric.metrics.contracts.MetricContract) this.$getProxy());
         }
         
         public fabric.util.Set getLeafSubjects() {
@@ -987,11 +926,11 @@ public interface MetricContract extends fabric.metrics.contracts.Contract {
         
     }
     
-    public static final byte[] $classHash = new byte[] { -88, -63, -56, -85, 91,
-    -27, -29, -58, 18, 3, 57, 104, 57, 68, 54, -100, 60, 13, 26, 118, 122, -32,
-    32, 105, 38, -2, -126, 86, -112, -126, 60, -40 };
+    public static final byte[] $classHash = new byte[] { -111, -68, 33, 24, -37,
+    -91, -49, 44, 88, -7, -126, -75, -79, 3, 53, -77, 66, 59, -69, 35, 113, 2,
+    56, -26, -30, 124, 65, -42, -29, -39, -107, 105 };
     public static final java.lang.String jlc$CompilerVersion$fabil = "0.3.0";
-    public static final long jlc$SourceLastModified$fabil = 1492660216000L;
+    public static final long jlc$SourceLastModified$fabil = 1495740956000L;
     public static final java.lang.String jlc$ClassType$fabil =
-      "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";
+      "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";
 }

@@ -8,7 +8,6 @@ import fabric.util.Set;
 import fabric.util.TreeSet;
 
 import fabric.metrics.contracts.Bound;
-import fabric.metrics.contracts.DerivedMetricContract;
 import fabric.metrics.contracts.MetricContract;
 import fabric.metrics.contracts.enforcement.EnforcementPolicy;
 import fabric.metrics.contracts.enforcement.WitnessPolicy;
@@ -32,14 +31,15 @@ import java.util.logging.Level;
  * derived from.</li>
  * </ul>
  */
-public abstract class DerivedMetric extends Metric implements Observer {
+public abstract class DerivedMetric extends AbstractMetric implements Observer {
   protected double lastValue;
   protected double lastVelocity;
   protected double lastNoise;
 
   protected Metric[] terms;
 
-  private Set/*<SampledMetric>*/ leafMetrics;
+  private final Set/*<SampledMetric>*/ leafMetrics;
+  private final boolean singleStore;
 
   /**
    * @param s
@@ -49,13 +49,22 @@ public abstract class DerivedMetric extends Metric implements Observer {
    *        computed from
    */
   public DerivedMetric fabric$metrics$DerivedMetric$(Metric[] terms) {
-    fabric$metrics$Metric$();
-    this.terms = new Metric[terms.length];
-    Arrays.arraycopy(terms, 0, this.terms, 0, terms.length);
     if (new TreeSet/*<>*/().fabric$util$TreeSet$(Arrays.asList(terms)).size() != terms.length)
       throw new IllegalArgumentException(
           "DerivedMetric terms must not contain duplicates!");
     this.leafMetrics = new HashSet/*<>*/().fabric$util$HashSet$();
+    boolean single = true;
+    for (int i = 0; i < terms.length; i++) {
+      if (!terms[i].isSingleStore()
+            || !terms[i].$getStore().equals($getStore())) {
+        single = false;
+        break;
+      }
+    }
+    this.singleStore = single;
+    fabric$metrics$AbstractMetric$();
+    this.terms = new Metric[terms.length];
+    Arrays.arraycopy(terms, 0, this.terms, 0, terms.length);
     return this;
   }
 
@@ -140,34 +149,30 @@ public abstract class DerivedMetric extends Metric implements Observer {
 
   /*@Override*/
   public boolean isSingleStore() {
-    for (int i = 0; i < terms.length; i++) {
-      if (!terms[i].getStore().equals(getStore()) || !terms[i].isSingleStore())
-        return false;
-    }
-    return true;
+    return singleStore;
   }
 
   /*@Override*/
-  public void startTracking(MetricContract mc) {
+  public void startTracking(Observer obs) {
     if (!isObserved()) {
       // Start tracking terms if this is now used by a contract directly.
       for (int i = 0; i < terms.length; i++) {
-        terms[i].addObserver(this);
+        terms[i].startTracking(this);
       }
       lastValue = computeValue();
       lastVelocity = computeVelocity();
       lastNoise = computeNoise();
     }
-    addObserver(mc);
+    addObserver(obs);
   }
 
   /*@Override*/
-  public void stopTracking(MetricContract mc) {
-    removeObserver(mc);
+  public void stopTracking(Observer obs) {
+    removeObserver(obs);
     if (!isObserved()) {
       // Don't observe subterms unless it's being tracked directly.
       for (int i = 0; i < terms.length; i++) {
-        terms[i].removeObserver(this);
+        terms[i].stopTracking(this);
       }
     }
   }
@@ -201,27 +206,13 @@ public abstract class DerivedMetric extends Metric implements Observer {
     return terms[i];
   }
 
-  /*@Override*/
-  protected MetricContract createContract(Bound bound) {
-    final Store s = getStore();
-    return new DerivedMetricContract@s().fabric$metrics$contracts$DerivedMetricContract$(this, bound);
-  }
-
   /**
    * @param s
    *        a {@link Store} that will hold the copy of this
    *        {@link DerivedMetric}
    * @return a copy of this {@link DerivedMetric} that is stored on s
    */
-  public abstract Metric copyOn(Store s);
-
-  /**
-   * @param bound
-   *        a {@link Bound} that the returned policy enforces.
-   * @return a {@link EnforcementPolicy} that enforces this {@link Metric}
-   *       being above bound.
-   */
-  public abstract EnforcementPolicy policyFor(Bound bound);
+  public abstract DerivedMetric copyOn(Store s);
 
   /*@Override*/
   public Set/*<SampledMetric>*/ getLeafSubjects() {

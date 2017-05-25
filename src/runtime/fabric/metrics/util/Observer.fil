@@ -13,11 +13,11 @@ import fabric.metrics.SampledMetric;
 public interface Observer {
 
   /**
-   * Handles a new observation. This is called whenever any associated
+   * Handles observation of subjects. This is called whenever any associated
    * {@link Subject}s are changed prior to the transaction completing.
    *
-   * @return true iff there was a modification that needs to be processed by any
-   * parents (if any) of this object.
+   * @return true iff there was a modification that needs to be processed by
+   * any parents (if any) of this object.
    */
   public boolean handleUpdates();
 

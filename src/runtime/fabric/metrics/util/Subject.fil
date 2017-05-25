@@ -1,18 +1,6 @@
 package fabric.metrics.util;
 
-import fabric.util.Collections;
-import fabric.util.HashSet;
-import fabric.util.Iterator;
-import fabric.util.LinkedHashSet;
 import fabric.util.Set;
-
-import fabric.metrics.SampledMetric;
-import fabric.metrics.contracts.Contract;
-
-import fabric.worker.transaction.TransactionManager;
-import fabric.worker.Store;
-
-import java.util.logging.Level;
 
 /**
  * Represents an observable object having a set of {@link Observer}s. After an
@@ -21,22 +9,7 @@ import java.util.logging.Level;
  * {@link Observer}s are then notified of a change via a call to
  * {@link Observer#handleUpdates()}.
  */
-public abstract class Subject {
-
-  // Ugh, avoid getting a surrogate's store.
-  public Store getStore() {
-    return $getStore();
-  }
-
-  protected Subject fabric$metrics$util$Subject$() {
-    fabric$lang$Object$();
-    this.observers = new HashSet/*<>*/().fabric$util$HashSet$();
-    return this;
-  }
-
-  // Using a weak map as the backing for this set so that observers aren't
-  // pinned by their subjects.
-  private Set/*<Observer>*/ observers;
+public interface Subject {
 
   /**
    * Adds an observer to the set of observers for this object. Nothing is done
@@ -46,11 +19,7 @@ public abstract class Subject {
    * @param o
    *        {@link Observer} to add
    */
-  public void addObserver(Observer o) {
-    atomic {
-      observers.add(o);
-    }
-  }
+  public void addObserver(Observer o);
 
   /**
    * Removes an observer from the set of observers of this object.
@@ -58,85 +27,22 @@ public abstract class Subject {
    * @param o
    *        {@link Observer} to remove
    */
-  public void removeObserver(Observer o) {
-    atomic {
-      observers.remove(o);
-    }
-  }
+  public void removeObserver(Observer o);
 
   /**
    * @param o
    *        an observer that might observe this subject.
    * @return true iff o observes this subject.
    */
-  public boolean observedBy(Observer o) {
-    atomic {
-      return observers.contains(o);
-    }
-  }
+  public boolean observedBy(Observer o);
 
   /**
    * @return true iff there are any observers of this subject, currently.
    */
-  public boolean isObserved() {
-    atomic {
-      return !observers.isEmpty();
-    }
-  }
-
-  /**
-   * @return a copy of the set of the current observers of this subject.
-   */
-  public Set/*<Observer>*/ getObserversCopy() {
-    atomic {
-      return new LinkedHashSet/*<>*/().fabric$util$LinkedHashSet$(observers);
-    }
-  }
+  public boolean isObserved();
 
   /**
    * @return the set of the current observers of this subject.
    */
-  public Set/*<Observer>*/ getObservers() {
-    return observers;
-  }
-
-  /**
-   * Utility for processing a batch of samples for the transaction manager.
-   */
-  public static void processSamples(java.util.LinkedList unobserved) {
-    atomic {
-      java.util.LinkedList/*<Observer>*/ queue = new java.util.LinkedList/*<>*/();
-      while (!unobserved.isEmpty()) {
-        SampledMetric sm = (SampledMetric) unobserved.poll();
-        //queue.addAll(sm.getObservers());
-        Iterator obsIter = sm.getObservers().iterator();
-        while (obsIter.hasNext()) {
-          queue.add(obsIter.next());
-        }
-
-        while (!queue.isEmpty()) {
-          Observer unhandled = (Observer) queue.poll();
-          boolean needToWait = false;
-          Iterator leavesIter = unhandled.getLeafSubjects().iterator();
-          while (leavesIter.hasNext()) {
-            if (unobserved.contains(leavesIter.next())) {
-              needToWait = true;
-              break;
-            }
-          }
-          // If this has no other pending sampled events, process it.
-          if (!needToWait) {
-            boolean modified = unhandled.handleUpdates();
-            if (unhandled instanceof Subject && modified) {
-              //queue.addAll(parents);
-              Iterator parentIter = ((Subject) unhandled).getObservers().iterator();
-              while (parentIter.hasNext()) {
-                queue.add(parentIter.next());
-              }
-            }
-          }
-        }
-      }
-    }
-  }
+  public Set/*<Observer>*/ getObservers();
 }

@@ -1,0 +1,236 @@
+package fabric.metrics;
+
+import fabric.util.Arrays;
+import fabric.util.Iterator;
+import fabric.util.LinkedHashMap;
+import fabric.util.Map;
+
+import fabric.metrics.contracts.Bound;
+import fabric.metrics.contracts.MetricContract;
+import fabric.metrics.contracts.enforcement.DirectPolicy;
+import fabric.metrics.contracts.enforcement.EnforcementPolicy;
+import fabric.metrics.contracts.enforcement.WitnessPolicy;
+import fabric.metrics.util.Observer;
+import fabric.metrics.util.Subject;
+
+import fabric.worker.Store;
+
+/**
+ * A {@link Metric} for the sum of the given metric terms.
+ */
+public class SumMetric extends DerivedMetric {
+
+    /**
+     * @param store
+     *            the Store that holds this {@link Metric}
+     * @param terms
+     *            The {@link Metric}s this applies to
+     */
+    public SumMetric fabric$metrics$SumMetric$(Metric[] terms) {
+        fabric$metrics$DerivedMetric$(terms);
+        initialize();
+        return this;
+    }
+
+    /*@Override*/
+    public double computeValue() {
+        double result = 0;
+        for (int i = 0; i < terms.length; i++) {
+            result += terms[i].value();
+        }
+        return result;
+    }
+
+    /*@Override*/
+    public double computeVelocity() {
+        double result = 0;
+        for (int i = 0; i < terms.length; i++) {
+            result += terms[i].velocity();
+        }
+        return result;
+    }
+
+    /*@Override*/
+    public double computeNoise() {
+        double result = 0;
+        for (int i = 0; i < terms.length; i++) {
+            result += terms[i].noise();
+        }
+        return result;
+    }
+
+    /*@Override*/
+    public String toString() {
+        String str = "(";
+        boolean nonEmpty = false;
+        for (int i = 0; i < terms.length; i++) {
+            if (nonEmpty)
+                str += " + ";
+            nonEmpty = true;
+            str += terms[i];
+        }
+        return str + ")@" + getStore();
+    }
+
+    /*@Override*/
+    public DerivedMetric times(double scalar) {
+        Metric[] newTerms = new Metric[terms.length];
+        Arrays.arraycopy(terms, 0, newTerms, 0, terms.length);
+        for (int i = 0; i < newTerms.length; i++) {
+            newTerms[i] = newTerms[i].times(scalar);
+        }
+        final Store s = $getStore();
+        return AbstractMetric.findDerivedMetric(s,
+                new SumMetric@s().fabric$metrics$SumMetric$(newTerms));
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * {@link SumMetric}s try to consolidate local computations so that there
+     * isn't unnecessary nodes in the {@link Subject}-{@link Observer} tree for
+     * {@link #handleUpdates()}.
+     */
+    // TODO: Combine shared terms with different coefficients.
+    public DerivedMetric plus(Metric other) {
+        final Store s = $getStore();
+        // Add in all of the terms of another sum, one by one
+        if (other instanceof SumMetric && other.$getStore().equals(s)) {
+            SumMetric that = (SumMetric) other;
+
+            DerivedMetric result = this;
+            for (int i = 0; i < that.terms.length; i++) {
+                result = result.plus(that.terms[i]);
+            }
+            return result;
+        }
+
+        // If the leaves of the new term are all present in an existing term
+        // computed on this store, add them together as a single term instead of
+        // adding a new term. (This helps group together ScaledMetrics with the
+        // same base term).
+        int termIdx = -1;
+        if (other instanceof DerivedMetric) {
+            DerivedMetric derivedOther = (DerivedMetric) other;
+            for (int i = 0; i < terms.length; i++) {
+                if (!terms[i].$getStore().equals(other.$getStore()))
+                    continue;
+                if (terms[i] instanceof DerivedMetric) {
+                    DerivedMetric derivedTerm = (DerivedMetric) terms[i];
+                    if (derivedTerm.getLeafSubjects()
+                            .containsAll(derivedOther.getLeafSubjects())) {
+                        termIdx = i;
+                        break;
+                    }
+                } else {
+                    SampledMetric sampledTerm = (SampledMetric) terms[i];
+                    if (derivedOther.getLeafSubjects().size() == 1
+                            && derivedOther.getLeafSubjects()
+                                    .contains(sampledTerm)) {
+                        termIdx = i;
+                        break;
+                    }
+                }
+            }
+        } else {
+            SampledMetric sampledOther = (SampledMetric) other;
+            for (int i = 0; i < terms.length; i++) {
+                if (!terms[i].$getStore().equals(other.$getStore()))
+                    continue;
+                if (terms[i] instanceof DerivedMetric) {
+                    DerivedMetric derivedTerm = (DerivedMetric) terms[i];
+                    if (derivedTerm.getLeafSubjects().contains(sampledOther)) {
+                        termIdx = i;
+                        break;
+                    }
+                } else {
+                    SampledMetric sampledTerm = (SampledMetric) terms[i];
+                    if (sampledTerm.equals(sampledOther)) {
+                        termIdx = i;
+                        break;
+                    }
+                }
+            }
+        }
+
+        Metric[] newTerms;
+        if (termIdx >= 0) {
+            newTerms = new Metric[terms.length];
+            Arrays.arraycopy(terms, 0, newTerms, 0, terms.length);
+            newTerms[termIdx] = newTerms[termIdx].plus(other);
+        } else {
+            newTerms = new Metric[terms.length + 1];
+            Arrays.arraycopy(terms, 0, newTerms, 0, terms.length);
+            newTerms[terms.length] = other;
+            Arrays.sort(newTerms, 0, newTerms.length);
+        }
+        return AbstractMetric.findDerivedMetric(s,
+                new SumMetric@s().fabric$metrics$SumMetric$(newTerms));
+    }
+
+    /*@Override*/
+    public DerivedMetric copyOn(Store s) {
+        return AbstractMetric.findDerivedMetric(s, new SumMetric@s().fabric$metrics$SumMetric$(terms));
+    }
+
+    /*@Override*/
+    public EnforcementPolicy policy(Bound bound) {
+        if (isSingleStore())
+            return new DirectPolicy().fabric$metrics$contracts$enforcement$DirectPolicy$(this, bound);
+
+        Map/*<Metric, MetricContract>*/ witnesses = new LinkedHashMap/*<>*/().fabric$util$LinkedHashMap$();
+
+        long currentTime = System.currentTimeMillis();
+        double base = bound.value(currentTime);
+        double rate = bound.rate;
+
+        // Defend all rows against the bound individually, using the strictest
+        // bounds across the rows for each term in this sum.
+        double totalValue = computeValue();
+        double totalVelocity = computeVelocity();
+        double totalNoise = computeNoise();
+        double numTerms = terms.length;
+
+        // For each term, update the associated bounds to be the tightest
+        // bound set across the rows
+        for (int j = 0; j < numTerms; j++) {
+            Metric m = term(j);
+            double scaledX = m.value();
+            double scaledV = m.velocity();
+            double scaledN = m.noise();
+            // Corrected for the way this metric is shifting relative to
+            // the
+            // rest of the sum
+            double r = scaledV - ((totalVelocity - rate) / numTerms);
+
+            double b = scaledX - ((scaledN / totalNoise) * (totalValue - base));
+            Bound witnessBound = new Bound().fabric$metrics$contracts$Bound$(r, b, currentTime);
+            if (!witnesses.containsKey(m)
+                    || !((MetricContract) witnesses.get(m)).getBound().implies(witnessBound)) {
+                witnesses.put(m, m.getContract(witnessBound));
+            }
+        }
+        MetricContract[] finalWitnesses = new MetricContract[witnesses.size()];
+        int i = 0;
+        for (Iterator iter = witnesses.values().iterator(); iter.hasNext();) {
+          finalWitnesses[i++] = (MetricContract) iter.next();
+        }
+        final Store bndStore = bound.getStore();
+        return new WitnessPolicy@bndStore().fabric$metrics$contracts$enforcement$WitnessPolicy$(finalWitnesses);
+    }
+
+    /*@Override*/
+    public int hashCode() {
+        return Arrays.hashCode(terms) * 32 + getStore().hashCode();
+    }
+
+    /*@Override*/
+    public boolean equals(Object other) {
+        if (other instanceof SumMetric) {
+            SumMetric that = (SumMetric) other;
+            return Arrays.deepEquals(this.terms, that.terms)
+                    && this.$getStore().equals(that.$getStore());
+        }
+        return false;
+    }
+}

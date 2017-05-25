@@ -32,12 +32,12 @@ public class Warranty/*<T>*/ extends Contract {
 
   /*@Override*/
   protected boolean refresh(boolean force) {
-    if (!force && witness != null && witness.valid(System.currentTimeMillis()))
+    long currentTime = System.currentTimeMillis();
+    if (!force && witness != null && witness.valid(currentTime))
       return false;
     // Policy is always to use the last returned witness while it's valid.
     // If we're forcing or don't have a witness (XXX does this happen?) or
     // the witness has since gone stale, recompute and update.
-    long currentTime = System.currentTimeMillis();
     if (witness == null || !witness.valid(currentTime)) {
       WarrantyValue/*<T>*/ curVal = computation.apply(currentTime);
       if ((curVal.value == null && value != null)
@@ -69,6 +69,7 @@ public class Warranty/*<T>*/ extends Contract {
    */
   public /*T*/ Object value() {
     TransactionManager.getInstance().resolveObservations();
+    refresh(false);
     return this.value;
   }
 
@@ -84,7 +85,7 @@ public class Warranty/*<T>*/ extends Contract {
       return witness.getLeafSubjects();
     else
       //return Collections.EMPTY_SET;
-      // Ugh if this works, I think we have a bug in EMPTY_SET/EMPTY_LIST etc.
+      // I think we have a bug in EMPTY_SET/EMPTY_LIST etc.
       return new HashSet().fabric$util$HashSet$();
   }
 

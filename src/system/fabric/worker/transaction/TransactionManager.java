@@ -1259,6 +1259,14 @@ public final class TransactionManager {
   }
 
   /**
+   * Registers a contract that can and should be extended later closer to the
+   * expiration.
+   */
+  public void registerDelayedExtension(Contract extended) {
+    // TODO XXX TODO XXX
+  }
+
+  /**
    * Registers a contract that should have an extension message sent after this
    * transaction commits.
    */

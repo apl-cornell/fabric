@@ -1,0 +1,147 @@
+package fabric.metrics;
+
+import fabric.util.Arrays;
+import fabric.util.Iterator;
+import fabric.util.LinkedHashMap;
+import fabric.util.Map;
+
+import fabric.metrics.contracts.Bound;
+import fabric.metrics.contracts.MetricContract;
+import fabric.metrics.contracts.enforcement.DirectPolicy;
+import fabric.metrics.contracts.enforcement.EnforcementPolicy;
+import fabric.metrics.contracts.enforcement.WitnessPolicy;
+import fabric.metrics.util.Observer;
+import fabric.metrics.util.Subject;
+
+import fabric.worker.Store;
+
+/**
+ * A {@link Metric} for the scaled value of a given metric.
+ */
+public class ScaledMetric extends DerivedMetric {
+    protected final double scalar;
+
+    /**
+     * @param store
+     *            the Store that holds this {@link Metric}
+     * @param scalar
+     *            The coefficient as a double
+     * @param term
+     *            The {@link Metric} this applies to
+     */
+    public ScaledMetric fabric$metrics$ScaledMetric$(double scalar, Metric term) {
+        this.scalar = scalar;
+        fabric$metrics$DerivedMetric$(new Metric[] { term });
+        initialize();
+        return this;
+    }
+
+    /*@Override*/
+    public double computeValue() {
+        return scalar * terms[0].value();
+    }
+
+    /*@Override*/
+    public double computeVelocity() {
+        return scalar * terms[0].velocity();
+    }
+
+    /*@Override*/
+    public double computeNoise() {
+        return scalar * scalar * terms[0].noise();
+    }
+
+    /*@Override*/
+    public String toString() {
+        return "(" + scalar + "*" + terms[0] + ")@" + getStore();
+    }
+
+    /*@Override*/
+    public DerivedMetric times(double otherScalar) {
+        final Store s = $getStore();
+        return AbstractMetric.findDerivedMetric(s,
+                new ScaledMetric@s().fabric$metrics$ScaledMetric$(otherScalar * scalar, terms[0]));
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * {@link ScaledMetric}s try to consolidate local computations so that there
+     * isn't unnecessary nodes in the {@link Subject}-{@link Observer} tree for
+     * {@link #handleUpdates()}.
+     */
+    /*@Override*/
+    public DerivedMetric plus(Metric other) {
+        final Store s = $getStore();
+        if (other instanceof ScaledMetric && other.$getStore().equals(s)
+                && ((ScaledMetric) other).terms[0].equals(terms[0])) {
+            ScaledMetric that = (ScaledMetric) other;
+
+            return AbstractMetric.findDerivedMetric(s, new ScaledMetric@s().fabric$metrics$ScaledMetric$(
+                    that.scalar + scalar, terms[0]));
+        }
+        return super.plus(other);
+    }
+
+    /*@Override*/
+    public DerivedMetric copyOn(Store s) {
+        return AbstractMetric.findDerivedMetric(s,
+                new ScaledMetric@s().fabric$metrics$ScaledMetric$(scalar, terms[0]));
+    }
+
+    /*@Override*/
+    public EnforcementPolicy policy(Bound bound) {
+        if (isSingleStore())
+            return new DirectPolicy().fabric$metrics$contracts$enforcement$DirectPolicy$(this, bound);
+
+        Map/*<Metric, MetricContract>*/ witnesses = new LinkedHashMap/*<>*/().fabric$util$LinkedHashMap$();
+
+        long currentTime = System.currentTimeMillis();
+        double base = bound.value(currentTime);
+        double rate = bound.rate;
+
+        // Defend all rows against the bound individually, using the strictest
+        // bounds across the rows for each term in this sum.
+        Metric m = term(0);
+
+        // De-scaled
+        rate = rate / scalar;
+
+        // De-scaled
+        base = base / scalar;
+
+        if (scalar < 0) {
+            m = m.times(-1);
+            base = -base;
+            rate = -rate;
+        }
+        Bound witnessBound = new Bound().fabric$metrics$contracts$Bound$(rate, base, currentTime);
+        if (!witnesses.containsKey(m)
+                || !((MetricContract) witnesses.get(m)).getBound().implies(witnessBound)) {
+            witnesses.put(m, m.getContract(witnessBound));
+        }
+        MetricContract[] finalWitnesses = new MetricContract[witnesses.size()];
+        int i = 0;
+        for (Iterator iter = witnesses.values().iterator(); iter.hasNext();) {
+          finalWitnesses[i++] = (MetricContract) iter.next();
+        }
+        final Store bndStore = bound.getStore();
+        return new WitnessPolicy@bndStore().fabric$metrics$contracts$enforcement$WitnessPolicy$(finalWitnesses);
+    }
+
+    /*@Override*/
+    public int hashCode() {
+        return Arrays.hashCode(terms) * 32 + Double.hashCode(scalar);
+    }
+
+    /*@Override*/
+    public boolean equals(Object other) {
+        if (other instanceof ScaledMetric) {
+            ScaledMetric that = (ScaledMetric) other;
+            return this.scalar == that.scalar
+                    && Arrays.deepEquals(this.terms, that.terms)
+                    && this.$getStore().equals(that.$getStore());
+        }
+        return false;
+    }
+}

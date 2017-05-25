@@ -29,6 +29,7 @@ import fabric.lang.security.LabelCache;
 import fabric.lang.security.SecurityCache;
 import fabric.metrics.contracts.Contract;
 import fabric.metrics.contracts.MetricContract;
+import fabric.metrics.util.AbstractSubject;
 import fabric.metrics.util.Observer;
 import fabric.metrics.util.Subject;
 import fabric.worker.FabricSoftRef;
@@ -553,7 +554,7 @@ public final class Log {
    * level or before using a {@link Contract}.
    */
   public void resolveObservations() {
-    Subject._Impl.processSamples(unobservedSamples);
+    AbstractSubject._Impl.processSamples(unobservedSamples);
   }
 
   /**

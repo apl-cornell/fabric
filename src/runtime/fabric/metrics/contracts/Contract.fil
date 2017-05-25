@@ -1,6 +1,7 @@
 package fabric.metrics.contracts;
 
 import fabric.metrics.Metric;
+import fabric.metrics.util.AbstractSubject;
 import fabric.metrics.util.Observer;
 import fabric.metrics.util.Subject;
 import fabric.util.Iterator;
@@ -19,10 +20,10 @@ import java.util.logging.Level;
  * observer of a {@link Metric} or other {@link Contract}s, and can be observed
  * by other {@link Contract}s.
  */
-public abstract class Contract extends Subject implements Observer {
+public abstract class Contract extends AbstractSubject implements Observer {
 
   protected Contract fabric$metrics$contracts$Contract$() {
-    fabric$metrics$util$Subject$();
+    fabric$metrics$util$AbstractSubject$();
     this.$expiry = -1;
     return this;
   }
@@ -54,19 +55,23 @@ public abstract class Contract extends Subject implements Observer {
     TransactionManager tm = TransactionManager.getInstance();
     long currentTime = System.currentTimeMillis();
     // Only bother advertising if it's better than our current expiry
-    // by the buffer amount.
+    // by the buffer amount or if we're close to the current expiration.
     if (newExpiry > currentTime
             + (MIN_EXTENSION_FACTOR * (getExpiry() - currentTime))) {
       for (Iterator iter = getObservers().iterator(); iter.hasNext();) {
-        Observer o = (Observer) iter.next();
-        if (o instanceof MetricContract) {
-          tm.registerParentExtension((Contract) o);
+        Observer parent = (Observer) iter.next();
+        if (parent instanceof MetricContract) {
+          tm.registerParentExtension((Contract) parent);
         }
       }
+      fabric.common.Logging.METRICS_LOGGER.log(Level.INFO, "SYNCH EXTENSION");
+      tm.registerExtension(this);
+      $expiry = newExpiry;
+    } else {
+      // Wait until later to extend, we don't want to get too eager.
+      fabric.common.Logging.METRICS_LOGGER.log(Level.INFO, "DELAYED EXTENSION");
+      tm.registerDelayedExtension(this);
     }
-    fabric.common.Logging.METRICS_LOGGER.log(Level.INFO, "SYNCH EXTENSION");
-    tm.registerExtension(this);
-    $expiry = newExpiry;
   }
 
   private boolean active = false;
@@ -109,21 +114,17 @@ public abstract class Contract extends Subject implements Observer {
    *
    * @param newExpiry
    *        the new expiration time associated with this {@link Contract}.
-   * @return true iff this contract was revoked.
+   * @return true iff the contract was retracted by this update.
    */
   public boolean update(long newExpiry) {
     Worker localW = Worker.getWorker();
     if (!localW.getStore(localW.getName()).equals(getStore()))
       newExpiry = newExpiry - DRIFT_FACTOR;
-    long currentTime = System.currentTimeMillis();
-    newExpiry = Math.min(newExpiry, currentTime + MAX_EXTENSION);
-    if (getExpiry() < newExpiry) {
-      // Only bother extending if we know everyone will see something
-      // better.
+    if (getExpiry() < newExpiry - DRIFT_FACTOR) {
+      // Only extend if everyone will see something better.
       extendTo(newExpiry);
     } else if (getExpiry() > newExpiry) {
-      // Only revoke if we're doing worse than whatever anyone else will
-      // see.
+      // Revoke if doing worse than what anyone else would see.
       revoke(newExpiry);
       return true;
     }

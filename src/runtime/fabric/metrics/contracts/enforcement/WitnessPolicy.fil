@@ -15,8 +15,8 @@ public class WitnessPolicy extends EnforcementPolicy {
   /** The set of {@link MetricContract}s used to enforce this policy. */
   public final MetricContract[] witnesses;
 
-  public long expiry;
-  public boolean activated;
+  private long expiry;
+  private boolean activated;
 
   /**
    * @param witnesses
