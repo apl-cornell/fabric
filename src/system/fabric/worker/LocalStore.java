@@ -139,19 +139,37 @@ public final class LocalStore implements Store, Serializable {
     return false;
   }
 
+  /**
+   * Checks if there are any existing extensions for the associated onum of each
+   * {@link DelayedExtension}. If there isn't one, or if the existing one is for
+   * a later time than the new request, the new {@link DelayedExtension} is
+   * added to the queue, and the onum-request mapping is updated.
+   */
   @Override
   public void sendExtensions(List<DelayedExtension> extensions) {
     for (DelayedExtension de : extensions) {
-      boolean done = false;
-      // Ugh, is this right?
-      while (!done) {
-        done = true;
-        DelayedExtension cur = unresolvedExtensions.get(de.onum);
-        if (cur == null || cur.compareTo(de) > 0) {
-          done = unresolvedExtensions.replace(de.onum, cur, de);
-          if (done) {
-            if (cur != null) waitingExtensions.remove(cur);
+      synchronized (de) {
+        // Keep trying until we're sure we've consistently updated the extension
+        // for this onum.
+        while (true) {
+          DelayedExtension existing =
+              unresolvedExtensions.putIfAbsent(de.onum, de);
+          if (existing == null) {
             waitingExtensions.add(de);
+            break;
+          } else {
+            synchronized (existing) {
+              // Don't do anything if there's an earlier extension queued.
+              if (existing.compareTo(de) <= 0) {
+                break;
+              }
+              // Update to this event if it's earlier than the queued one.
+              if (unresolvedExtensions.replace(de.onum, existing, de)) {
+                waitingExtensions.remove(existing);
+                waitingExtensions.add(de);
+                break;
+              }
+            }
           }
         }
       }
@@ -159,7 +177,8 @@ public final class LocalStore implements Store, Serializable {
   }
 
   /**
-   * The currently queued extensions, so we may easily replace them, if
+   * The currently queued or running extensions for each onum, so we may easily
+   * replace the request with a new (to be handled earlier) request, if
    * necessary.
    */
   private final ConcurrentLongKeyMap<DelayedExtension> unresolvedExtensions =
@@ -168,12 +187,15 @@ public final class LocalStore implements Store, Serializable {
   /**
    * The extensions waiting to run.
    */
-  private final BlockingQueue<DelayedExtension> waitingExtensions =
+  private final DelayQueue<DelayedExtension> waitingExtensions =
       new DelayQueue<>();
 
   /**
-   * A thread that goes through the extensions queue and sends out extension
-   * messages.
+   * A thread that goes through the extensions queue, waiting until the next
+   * DelayedExtension's delay is 0, and updates the expiration time of the
+   * DelayedExtension's associated onum.  It continually waits until the earliest
+   * {@code DelayedExtension}'s time, handles the extension in a transaction,
+   * then dequeues the extension.
    */
   private final Threading.NamedRunnable extensionsRunner =
       new Threading.NamedRunnable("Extensions runner") {
@@ -181,29 +203,45 @@ public final class LocalStore implements Store, Serializable {
         protected void runImpl() {
           while (true) {
             try {
-              // Get the next parent of an extended item.
-              final long onum = waitingExtensions.take().onum;
-              // If we're not already running an extension for it, run one
-              Threading.getPool()
-                  .submit(new Threading.NamedRunnable("Extension of " + onum) {
-                    @Override
-                    protected void runImpl() {
-                      // Run a transaction handling updates at the parent
-                      Logging.METRICS_LOGGER.log(Level.INFO,
-                          "RUNNING EXTENSION OF {0}", onum);
-                      Worker.runInTopLevelTransaction(new Code<Void>() {
-                        @Override
-                        public Void run() {
-                          Store store = LocalStore.this;
-                          final Contract._Proxy target =
-                              new Contract._Proxy(store, onum);
-                          target.attemptExtension();
-                          return null;
-                        }
-                      }, true);
-                      unresolvedExtensions.remove(onum);
-                    }
-                  });
+              // Get the next delayed extension item.
+              // XXX: In an ideal world, the extension item isn't taken off the
+              // queue until we've synchronized on it.  However, this doesn't
+              // hurt correctness although its a little inefficient.
+              //
+              // I'm not too worried about this because the stars would have to
+              // align so that:
+              //   - The second request comes in between those lines
+              //   - The second request is marked to be handled before the
+              //   current request
+              // At worst, this causes two requests to be handled when on would
+              // have been sufficient and that second request is unlikely to be
+              // very expensive to process.
+              final DelayedExtension extension = waitingExtensions.take();
+              Threading.getPool().submit(new Threading.NamedRunnable(
+                  "Extension of " + extension.onum) {
+                @Override
+                protected void runImpl() {
+                  // Don't want new extensions to walk away after this is
+                  // done before we remove the mapping.
+                  synchronized (extension) {
+                    // Run a transaction handling updates
+                    Logging.METRICS_LOGGER.log(Level.INFO,
+                        "RUNNING EXTENSION OF {0}", extension.onum);
+                    Worker.runInTopLevelTransaction(new Code<Void>() {
+                      @Override
+                      public Void run() {
+                        Store store =
+                            Worker.getWorker().getStore(database.getName());
+                        final Contract._Proxy target =
+                            new Contract._Proxy(store, extension.onum);
+                        target.attemptExtension();
+                        return null;
+                      }
+                    }, true);
+                    unresolvedExtensions.remove(extension.onum, extension);
+                  }
+                }
+              });
             } catch (InterruptedException e) {
               Logging.logIgnoredInterruptedException(e);
             }
