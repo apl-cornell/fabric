@@ -370,19 +370,21 @@ public class TransactionManager {
   public void queueExtension(List<DelayedExtension> extensions) {
     for (DelayedExtension de : extensions) {
       boolean done = false;
-      // Ugh, is this right?
       while (!done) {
-        done = true;
-        DelayedExtension cur = unresolvedExtensions.get(de.onum);
-        if (cur == null || cur.compareTo(de) > 0) {
-          if (cur == null) {
-              done = unresolvedExtensions.putIfAbsent(de.onum, de) == null;
-          } else {
-              done = unresolvedExtensions.replace(de.onum, cur, de);
-          }
-          if (done) {
-            if (cur != null) waitingExtensions.remove(cur);
+        synchronized (de) {
+          DelayedExtension existing =
+              unresolvedExtensions.putIfAbsent(de.onum, de);
+          if (existing == null) {
             waitingExtensions.add(de);
+            done = true;
+          } else {
+            synchronized (existing) {
+              done = unresolvedExtensions.replace(de.onum, existing, de);
+              if (done) {
+                waitingExtensions.remove(existing);
+                waitingExtensions.add(de);
+              }
+            }
           }
         }
       }
