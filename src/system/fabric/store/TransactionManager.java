@@ -424,6 +424,18 @@ public class TransactionManager {
           while (true) {
             try {
               // Get the next delayed extension item.
+              // XXX: In an ideal world, the extension item isn't taken off the
+              // queue until we've synchronized on it.  However, this doesn't
+              // hurt correctness although its a little inefficient.
+              //
+              // I'm not too worried about this because the stars would have to
+              // align so that:
+              //   - The second request comes in between those lines
+              //   - The second request is marked to be handled before the
+              //   current request
+              // At worst, this causes two requests to be handled when on would
+              // have been sufficient and that second request is unlikely to be
+              // very expensive to process.
               final DelayedExtension extension = waitingExtensions.take();
               Threading.getPool().submit(new Threading.NamedRunnable(
                   "Extension of " + extension.onum) {
