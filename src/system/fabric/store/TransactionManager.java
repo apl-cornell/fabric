@@ -361,7 +361,12 @@ public class TransactionManager {
     return result;
   }
 
-  /* Extension handling */
+  /**
+   * Checks if there are any existing extensions for the associated onum of each
+   * {@link DelayedExtension}. If there isn't one, or if the existing one is for
+   * a later time than the new request, the new {@link DelayedExtension} is
+   * added to the queue, and the onum–request mapping is updated.
+   */
   public void queueExtension(List<DelayedExtension> extensions) {
     for (DelayedExtension de : extensions) {
       boolean done = false;
@@ -395,7 +400,9 @@ public class TransactionManager {
 
   /**
    * A thread that goes through the extensions queue and sends out extension
-   * messages.
+   * messages. It continually waits until the earliest
+   * {@code DelayedExtension}'s time, dequeues it, and handles the extension in
+   * a transaction.
    */
   private final Threading.NamedRunnable extensionsRunner =
       new Threading.NamedRunnable("Extensions runner") {
