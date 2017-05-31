@@ -12,6 +12,7 @@ import fabric.common.util.Pair;
 import fabric.lang.Object._Impl;
 import fabric.lang.security.NodePrincipal;
 import fabric.net.UnreachableNodeException;
+import fabric.store.DelayedExtension;
 
 public interface Store extends Serializable {
   /**
@@ -140,5 +141,5 @@ public interface Store extends Serializable {
   /**
    * Send extensions to handle.
    */
-  public void sendExtensions(List<Long> onums);
+  public void sendExtensions(List<DelayedExtension> extensions);
 }

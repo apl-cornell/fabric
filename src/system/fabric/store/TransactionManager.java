@@ -8,9 +8,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
-import java.util.concurrent.ConcurrentSkipListSet;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.DelayQueue;
 import java.util.logging.Level;
 
 import fabric.common.AuthorizationUtil;
@@ -21,6 +20,8 @@ import fabric.common.SerializedObject;
 import fabric.common.Threading;
 import fabric.common.exceptions.AccessException;
 import fabric.common.net.RemoteIdentity;
+import fabric.common.util.ConcurrentLongKeyHashMap;
+import fabric.common.util.ConcurrentLongKeyMap;
 import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
@@ -361,20 +362,36 @@ public class TransactionManager {
   }
 
   /* Extension handling */
-  public void queueExtension(List<Long> onums) {
-    waitingExtensions.addAll(onums);
+  public void queueExtension(List<DelayedExtension> extensions) {
+    for (DelayedExtension de : extensions) {
+      boolean done = false;
+      // Ugh, is this right?
+      while (!done) {
+        done = true;
+        DelayedExtension cur = unresolvedExtensions.get(de.onum);
+        if (cur == null || cur.compareTo(de) > 0) {
+          done = unresolvedExtensions.replace(de.onum, cur, de);
+          if (done) {
+            if (cur != null) waitingExtensions.remove(cur);
+            waitingExtensions.add(de);
+          }
+        }
+      }
+    }
   }
 
   /**
-   * The extensions currently running.
+   * The currently queued or running extensions, so we may easily replace them,
+   * if necessary.
    */
-  private final Set<Long> runningExtensions = new ConcurrentSkipListSet<>();
+  private final ConcurrentLongKeyMap<DelayedExtension> unresolvedExtensions =
+      new ConcurrentLongKeyHashMap<>();
 
   /**
    * The extensions waiting to run.
    */
-  private final LinkedBlockingQueue<Long> waitingExtensions =
-      new LinkedBlockingQueue<>();
+  private final BlockingQueue<DelayedExtension> waitingExtensions =
+      new DelayQueue<>();
 
   /**
    * A thread that goes through the extensions queue and sends out extension
@@ -386,32 +403,30 @@ public class TransactionManager {
         protected void runImpl() {
           while (true) {
             try {
-              // Get the next parent of an extended item.
-              final long onum = waitingExtensions.take();
+              // Get the next delayed extension item.
+              final long onum = waitingExtensions.take().onum;
               // If we're not already running an extension for it, run one
-              if (runningExtensions.add(onum)) {
-                Threading.getPool().submit(
-                    new Threading.NamedRunnable("Extension of " + onum) {
-                      @Override
-                      protected void runImpl() {
-                        // Run a transaction handling updates at the parent
-                        Logging.METRICS_LOGGER.log(Level.INFO,
-                            "RUNNING EXTENSION OF {0}", onum);
-                        Worker.runInTopLevelTransaction(new Code<Void>() {
-                          @Override
-                          public Void run() {
-                            Store store =
-                                Worker.getWorker().getStore(database.getName());
-                            final Contract._Proxy target =
-                                new Contract._Proxy(store, onum);
-                            target.attemptExtension();
-                            return null;
-                          }
-                        }, true);
-                        runningExtensions.remove(onum);
-                      }
-                    });
-              }
+              Threading.getPool()
+                  .submit(new Threading.NamedRunnable("Extension of " + onum) {
+                    @Override
+                    protected void runImpl() {
+                      // Run a transaction handling updates
+                      Logging.METRICS_LOGGER.log(Level.INFO,
+                          "RUNNING EXTENSION OF {0}", onum);
+                      Worker.runInTopLevelTransaction(new Code<Void>() {
+                        @Override
+                        public Void run() {
+                          Store store =
+                              Worker.getWorker().getStore(database.getName());
+                          final Contract._Proxy target =
+                              new Contract._Proxy(store, onum);
+                          target.attemptExtension();
+                          return null;
+                        }
+                      }, true);
+                      unresolvedExtensions.remove(onum);
+                    }
+                  });
             } catch (InterruptedException e) {
               Logging.logIgnoredInterruptedException(e);
             }

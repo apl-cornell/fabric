@@ -46,6 +46,7 @@ import fabric.messages.ReadMessage;
 import fabric.messages.StalenessCheckMessage;
 import fabric.net.RemoteNode;
 import fabric.net.UnreachableNodeException;
+import fabric.store.DelayedExtension;
 import fabric.util.Map;
 
 /**
@@ -329,13 +330,13 @@ public class RemoteStore extends RemoteNode<RemoteStore>
   }
 
   @Override
-  public void sendExtensions(final List<Long> onums) {
+  public void sendExtensions(final List<DelayedExtension> extensions) {
     Threading.getPool().submit(new Runnable() {
       @Override
       public void run() {
         try {
           send(Worker.getWorker().authToStore,
-              new ContractExtensionMessage(onums));
+              new ContractExtensionMessage(extensions));
         } catch (NoException e) {
         }
       }

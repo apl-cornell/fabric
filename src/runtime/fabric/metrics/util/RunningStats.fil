@@ -14,7 +14,7 @@ public class RunningStats {
 
   // The sensitivity parameter for computing exponentially weighted moving
   // averages.
-  public static final double ALPHA = 0.01;
+  public static final double ALPHA = 0.001;
 
   private double mean = 0.0;
   private double var = 0.0;

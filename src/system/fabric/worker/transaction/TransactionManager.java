@@ -444,12 +444,12 @@ public final class TransactionManager {
           || !stores.contains(LOCAL_STORE)
               && !(stores.iterator().next() instanceof InProcessStore)) {
         Logging.log(HOTOS_LOGGER, Level.FINE,
-            "committed tid {0} (latency {1} ms, {2} stores, {3} retractions, {4} extensions, {5} parent extensions)",
+            "committed tid {0} (latency {1} ms, {2} stores, {3} retractions, {4} extensions, {5} delayed extensions)",
             HOTOS_current, commitLatency,
             stores.size() - (stores.contains(LOCAL_STORE) ? 1 : 0),
             HOTOS_current.retractedContracts.size(),
             HOTOS_current.extendedContracts.size(),
-            HOTOS_current.parentExtensions.size());
+            HOTOS_current.delayedExtensions.size());
       }
     }
   }
@@ -1233,9 +1233,9 @@ public final class TransactionManager {
       if (current.extendedContracts.contains(retracted))
         current.extendedContracts.remove(retracted);
     }
-    synchronized (current.parentExtensions) {
-      if (current.parentExtensions.contains(retracted))
-        current.parentExtensions.remove(retracted);
+    synchronized (current.delayedExtensions) {
+      if (current.delayedExtensions.contains(retracted))
+        current.delayedExtensions.remove(retracted);
     }
   }
 
@@ -1252,34 +1252,27 @@ public final class TransactionManager {
       if (!current.extendedContracts.contains(extended))
         current.extendedContracts.add(extended);
     }
-    synchronized (current.parentExtensions) {
-      if (current.parentExtensions.contains(extended))
-        current.parentExtensions.remove(extended);
+    synchronized (current.delayedExtensions) {
+      if (current.delayedExtensions.contains(extended))
+        current.delayedExtensions.remove(extended);
     }
   }
 
   /**
    * Registers a contract that can and should be extended later closer to the
-   * expiration.
+   * expiration.  This will be done by sending an extension message after the
+   * transaction completes.
    */
-  public void registerDelayedExtension(Contract extended) {
-    // TODO XXX TODO XXX
-  }
-
-  /**
-   * Registers a contract that should have an extension message sent after this
-   * transaction commits.
-   */
-  public void registerParentExtension(Contract toBeExtended) {
+  public void registerDelayedExtension(Contract toBeExtended) {
     synchronized (current.retractedContracts) {
       if (current.retractedContracts.contains(toBeExtended)) return;
     }
     synchronized (current.extendedContracts) {
       if (current.extendedContracts.contains(toBeExtended)) return;
     }
-    synchronized (current.parentExtensions) {
-      if (!current.parentExtensions.contains(toBeExtended))
-        current.parentExtensions.add(toBeExtended);
+    synchronized (current.delayedExtensions) {
+      if (!current.delayedExtensions.contains(toBeExtended))
+        current.delayedExtensions.add(toBeExtended);
     }
   }
 

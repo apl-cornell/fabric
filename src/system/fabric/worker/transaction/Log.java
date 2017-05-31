@@ -32,6 +32,7 @@ import fabric.metrics.contracts.MetricContract;
 import fabric.metrics.util.AbstractSubject;
 import fabric.metrics.util.Observer;
 import fabric.metrics.util.Subject;
+import fabric.store.DelayedExtension;
 import fabric.worker.FabricSoftRef;
 import fabric.worker.RemoteStore;
 import fabric.worker.Store;
@@ -137,7 +138,7 @@ public final class Log {
    * A collection of {@link Contract}s that should be extended after this
    * transaction
    */
-  protected final List<Contract> parentExtensions;
+  protected final List<Contract> delayedExtensions;
 
   /**
    * A map from RemoteStores to maps from onums to contracts that were longer on
@@ -244,7 +245,7 @@ public final class Log {
     this.unobservedSamples = new LinkedList<>();
     this.extendedContracts = new ArrayList<>();
     this.retractedContracts = new ArrayList<>();
-    this.parentExtensions = new ArrayList<>();
+    this.delayedExtensions = new ArrayList<>();
     this.localStoreWrites = new WeakReferenceArrayList<>();
     this.workersCalled = new ArrayList<>();
     this.startTime = System.currentTimeMillis();
@@ -488,10 +489,10 @@ public final class Log {
     Set<Store> stores = storesToContact();
     // Note what we were trying to do before we aborted.
     Logging.log(HOTOS_LOGGER, Level.FINE,
-        "aborted tid {0} ({1} stores, {2} retractions, {3} extensions, {4} parent extensions)",
+        "aborted tid {0} ({1} stores, {2} retractions, {3} extensions, {4} delayed extensions)",
         tid, stores.size() - (stores.contains(localStore) ? 1 : 0),
         retractedContracts.size(), extendedContracts.size(),
-        parentExtensions.size());
+        delayedExtensions.size());
     // Release read locks.
     for (LongKeyMap<ReadMap.Entry> submap : reads) {
       for (ReadMap.Entry entry : submap.values()) {
@@ -529,7 +530,7 @@ public final class Log {
       unobservedSamples.clear();
       extendedContracts.clear();
       retractedContracts.clear();
-      parentExtensions.clear();
+      delayedExtensions.clear();
       localStoreWrites.clear();
       workersCalled.clear();
       securityCache.reset();
@@ -554,6 +555,7 @@ public final class Log {
    * level or before using a {@link Contract}.
    */
   public void resolveObservations() {
+    Logging.METRICS_LOGGER.fine("PROCESSING SAMPLES " + unobservedSamples);
     AbstractSubject._Impl.processSamples(unobservedSamples);
   }
 
@@ -620,16 +622,16 @@ public final class Log {
         if (parent.extendedContracts.contains(obs))
           parent.extendedContracts.remove(obs);
       }
-      synchronized (parent.parentExtensions) {
-        if (parent.parentExtensions.contains(obs))
-          parent.parentExtensions.remove(obs);
+      synchronized (parent.delayedExtensions) {
+        if (parent.delayedExtensions.contains(obs))
+          parent.delayedExtensions.remove(obs);
       }
     }
 
     for (Contract obs : extendedContracts) {
-      synchronized (parent.parentExtensions) {
-        if (parent.parentExtensions.contains(obs))
-          parent.parentExtensions.remove(obs);
+      synchronized (parent.delayedExtensions) {
+        if (parent.delayedExtensions.contains(obs))
+          parent.delayedExtensions.remove(obs);
       }
       synchronized (parent.retractedContracts) {
         if (parent.retractedContracts.contains(obs)) continue;
@@ -640,16 +642,16 @@ public final class Log {
       }
     }
 
-    for (Contract obs : parentExtensions) {
+    for (Contract obs : delayedExtensions) {
       synchronized (parent.retractedContracts) {
         if (parent.retractedContracts.contains(obs)) continue;
       }
       synchronized (parent.extendedContracts) {
         if (parent.extendedContracts.contains(obs)) continue;
       }
-      synchronized (parent.parentExtensions) {
-        if (!parent.parentExtensions.contains(obs))
-          parent.parentExtensions.add(obs);
+      synchronized (parent.delayedExtensions) {
+        if (!parent.delayedExtensions.contains(obs))
+          parent.delayedExtensions.add(obs);
       }
     }
 
@@ -716,6 +718,9 @@ public final class Log {
     }
   }
 
+  // Time before expiration runs out to process pending extensions
+  public static final long EXTENSION_WINDOW = 1000;
+
   /**
    * Updates logs and data structures in <code>_Impl</code>s to commit this
    * transaction. Assumes this is a top-level transaction. All locks held by
@@ -747,8 +752,8 @@ public final class Log {
         obj.$writeLockHolder = null;
         obj.$writeLockStackTrace = null;
         // Don't increment the version if it's an extended metric contract
-        if (!((obj instanceof MetricContract) &&
-            (extendedContracts.contains(obj)))) {
+        if (!((obj instanceof MetricContract)
+            && (extendedContracts.contains(obj)))) {
           obj.$version++;
           obj.$readMapEntry.incrementVersion();
         }
@@ -790,16 +795,20 @@ public final class Log {
     }
 
     // Queue up extension transactions
-    Map<Store, List<Long>> extensionsToSend = new HashMap<>();
-    for (Contract toBeExtended : parentExtensions) {
+    Map<Store, List<DelayedExtension>> extensionsToSend = new HashMap<>();
+    for (Contract toBeExtended : delayedExtensions) {
       Store store = toBeExtended.getStore();
       if (!extensionsToSend.containsKey(store))
-        extensionsToSend.put(store, new ArrayList<Long>());
+        extensionsToSend.put(store, new ArrayList<DelayedExtension>());
       if (!extensionsToSend.get(store).contains(toBeExtended.$getOnum()))
-        extensionsToSend.get(store).add(toBeExtended.$getOnum());
+        extensionsToSend.get(store)
+            .add(new DelayedExtension(
+                toBeExtended.get$$expiry() - EXTENSION_WINDOW,
+                toBeExtended.$getOnum()));
     }
 
-    for (Map.Entry<Store, List<Long>> entry : extensionsToSend.entrySet()) {
+    for (Map.Entry<Store, List<DelayedExtension>> entry : extensionsToSend
+        .entrySet()) {
       entry.getKey().sendExtensions(entry.getValue());
     }
 

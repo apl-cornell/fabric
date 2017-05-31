@@ -21,6 +21,11 @@ import fabric.worker.Store;
 public class ScaledMetric extends DerivedMetric {
     protected final double scalar;
 
+    // Utility method to avoid annoying label initialization issue
+    private static Metric[] singleton(Metric term) {
+        return new Metric[] { term };
+    }
+
     /**
      * @param store
      *            the Store that holds this {@link Metric}
@@ -31,7 +36,7 @@ public class ScaledMetric extends DerivedMetric {
      */
     public ScaledMetric fabric$metrics$ScaledMetric$(double scalar, Metric term) {
         this.scalar = scalar;
-        fabric$metrics$DerivedMetric$(new Metric[] { term });
+        fabric$metrics$DerivedMetric$(singleton(term));
         initialize();
         return this;
     }

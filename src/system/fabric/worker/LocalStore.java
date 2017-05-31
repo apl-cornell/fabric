@@ -9,8 +9,8 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ConcurrentSkipListSet;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.DelayQueue;
 import java.util.logging.Level;
 
 import fabric.common.Logging;
@@ -19,6 +19,8 @@ import fabric.common.SerializedObject;
 import fabric.common.Threading;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.InternalError;
+import fabric.common.util.ConcurrentLongKeyHashMap;
+import fabric.common.util.ConcurrentLongKeyMap;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.Pair;
@@ -32,6 +34,7 @@ import fabric.lang.security.NodePrincipal;
 import fabric.lang.security.Principal;
 import fabric.lang.security.PrincipalUtil.TopPrincipal;
 import fabric.metrics.contracts.Contract;
+import fabric.store.DelayedExtension;
 import fabric.util.HashMap;
 import fabric.util.Map;
 import fabric.worker.Worker.Code;
@@ -137,20 +140,36 @@ public final class LocalStore implements Store, Serializable {
   }
 
   @Override
-  public void sendExtensions(List<Long> onums) {
-    waitingExtensions.addAll(onums);
+  public void sendExtensions(List<DelayedExtension> extensions) {
+    for (DelayedExtension de : extensions) {
+      boolean done = false;
+      // Ugh, is this right?
+      while (!done) {
+        done = true;
+        DelayedExtension cur = unresolvedExtensions.get(de.onum);
+        if (cur == null || cur.compareTo(de) > 0) {
+          done = unresolvedExtensions.replace(de.onum, cur, de);
+          if (done) {
+            if (cur != null) waitingExtensions.remove(cur);
+            waitingExtensions.add(de);
+          }
+        }
+      }
+    }
   }
 
   /**
-   * The extensions currently running.
+   * The currently queued extensions, so we may easily replace them, if
+   * necessary.
    */
-  private final Set<Long> runningExtensions = new ConcurrentSkipListSet<>();
+  private final ConcurrentLongKeyMap<DelayedExtension> unresolvedExtensions =
+      new ConcurrentLongKeyHashMap<>();
 
   /**
    * The extensions waiting to run.
    */
-  private final LinkedBlockingQueue<Long> waitingExtensions =
-      new LinkedBlockingQueue<>();
+  private final BlockingQueue<DelayedExtension> waitingExtensions =
+      new DelayQueue<>();
 
   /**
    * A thread that goes through the extensions queue and sends out extension
@@ -163,30 +182,28 @@ public final class LocalStore implements Store, Serializable {
           while (true) {
             try {
               // Get the next parent of an extended item.
-              final long onum = waitingExtensions.take();
+              final long onum = waitingExtensions.take().onum;
               // If we're not already running an extension for it, run one
-              if (runningExtensions.add(onum)) {
-                Threading.getPool().submit(
-                    new Threading.NamedRunnable("Extension of " + onum) {
-                      @Override
-                      protected void runImpl() {
-                        // Run a transaction handling updates at the parent
-                        Logging.METRICS_LOGGER.log(Level.INFO,
-                            "RUNNING EXTENSION OF {0}", onum);
-                        Worker.runInTopLevelTransaction(new Code<Void>() {
-                          @Override
-                          public Void run() {
-                            Store store = LocalStore.this;
-                            final Contract._Proxy target =
-                                new Contract._Proxy(store, onum);
-                            target.attemptExtension();
-                            return null;
-                          }
-                        }, true);
-                        runningExtensions.remove(onum);
-                      }
-                    });
-              }
+              Threading.getPool()
+                  .submit(new Threading.NamedRunnable("Extension of " + onum) {
+                    @Override
+                    protected void runImpl() {
+                      // Run a transaction handling updates at the parent
+                      Logging.METRICS_LOGGER.log(Level.INFO,
+                          "RUNNING EXTENSION OF {0}", onum);
+                      Worker.runInTopLevelTransaction(new Code<Void>() {
+                        @Override
+                        public Void run() {
+                          Store store = LocalStore.this;
+                          final Contract._Proxy target =
+                              new Contract._Proxy(store, onum);
+                          target.attemptExtension();
+                          return null;
+                        }
+                      }, true);
+                      unresolvedExtensions.remove(onum);
+                    }
+                  });
             } catch (InterruptedException e) {
               Logging.logIgnoredInterruptedException(e);
             }

@@ -33,13 +33,7 @@ public abstract class Contract extends AbstractSubject implements Observer {
   // Note: larger value => less aggressive extensions => lower overhead
   // Note: smaller value => more aggressive extensions => less chance of a
   // warranty going stale unecessarily.
-  public static final double MIN_EXTENSION_FACTOR = 2;
-  // The maximum amount of time into the future to extend the expiry
-  // Note: smaller value => less aggressive extensions => lower revocations
-  // Note: larger value => longer extensions => less chatter
-  // TODO: not convinced this is necessary?
-  // For now, 1 day.
-  public static final long MAX_EXTENSION = 1000l * 60 * 60 * 24;
+  public static final double MIN_EXTENSION_FACTOR = 1.05;
   // The drift tolerance factor we'll subtract from times we advertise to
   // others.
   public static final long DRIFT_FACTOR = 100;
@@ -61,7 +55,7 @@ public abstract class Contract extends AbstractSubject implements Observer {
       for (Iterator iter = getObservers().iterator(); iter.hasNext();) {
         Observer parent = (Observer) iter.next();
         if (parent instanceof MetricContract) {
-          tm.registerParentExtension((Contract) parent);
+          tm.registerDelayedExtension((Contract) parent);
         }
       }
       fabric.common.Logging.METRICS_LOGGER.log(Level.INFO, "SYNCH EXTENSION");
