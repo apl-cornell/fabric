@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.DelayQueue;
 import java.util.logging.Level;
 
@@ -407,7 +406,7 @@ public class TransactionManager {
   /**
    * The extensions waiting to run.
    */
-  private final BlockingQueue<DelayedExtension> waitingExtensions =
+  private final DelayQueue<DelayedExtension> waitingExtensions =
       new DelayQueue<>();
 
   /**
@@ -430,21 +429,25 @@ public class TransactionManager {
                   .submit(new Threading.NamedRunnable("Extension of " + onum) {
                     @Override
                     protected void runImpl() {
-                      // Run a transaction handling updates
-                      Logging.METRICS_LOGGER.log(Level.INFO,
-                          "RUNNING EXTENSION OF {0}", onum);
-                      Worker.runInTopLevelTransaction(new Code<Void>() {
-                        @Override
-                        public Void run() {
-                          Store store =
-                              Worker.getWorker().getStore(database.getName());
-                          final Contract._Proxy target =
-                              new Contract._Proxy(store, onum);
-                          target.attemptExtension();
-                          return null;
-                        }
-                      }, true);
-                      unresolvedExtensions.remove(onum, extension);
+                      // Don't want new extensions to walk away after this is
+                      // done before we remove the mapping.
+                      synchronized (extension) {
+                        // Run a transaction handling updates
+                        Logging.METRICS_LOGGER.log(Level.INFO,
+                            "RUNNING EXTENSION OF {0}", onum);
+                        Worker.runInTopLevelTransaction(new Code<Void>() {
+                          @Override
+                          public Void run() {
+                            Store store =
+                                Worker.getWorker().getStore(database.getName());
+                            final Contract._Proxy target =
+                                new Contract._Proxy(store, onum);
+                            target.attemptExtension();
+                            return null;
+                          }
+                        }, true);
+                        unresolvedExtensions.remove(onum, extension);
+                      }
                     }
                   });
             } catch (InterruptedException e) {
