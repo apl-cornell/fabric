@@ -1,0 +1,13 @@
+#!/bin/bash
+
+source "$(dirname $0)/../../bin/defs"
+
+# XXX This should be obtained from defs, but defs should probably be reworked,
+# XXX so this is here in the meantime.
+classpath="${TOP}/classes"
+classpath="${classpath}:${POLYGLOT}/classes"
+classpath="${classpath}:${POLYGLOT}/lib/polyglot.jar"
+classpath="${classpath}:${POLYGLOT}/lib/java_cup.jar"
+classpath="${classpath}:${POLYGLOT}/lib/jflex.jar"
+
+"${POLYGLOT}/bin/pth" -classpath "$(fixpath "${classpath}")" pthScript

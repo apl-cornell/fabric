@@ -1,0 +1,12 @@
+class FinalInitBad021 {
+  final int x;
+  
+  final {
+    // Final initializers may not refer to non-static methods.
+    x = m();
+  }
+
+  int m() {
+    return 0;
+  }
+}

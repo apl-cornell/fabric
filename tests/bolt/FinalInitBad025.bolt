@@ -1,0 +1,11 @@
+class FinalInitBad025 {
+  final Object o;
+  
+  FinalInitBad025() {
+    // Final initializers may not refer to inner classes.
+    o = new Inner();
+    super();
+  }
+
+  class Inner {}
+}

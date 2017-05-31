@@ -1,0 +1,8 @@
+class FinalInit002 {
+  final int x;
+
+  final {
+    // Final field initialized with final initializer block.
+    x = 0;
+  }
+}

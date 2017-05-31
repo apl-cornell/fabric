@@ -1,0 +1,124 @@
+# pth test script
+#
+# This file is a test script for pth (Polyglot Test Harness). It
+# conforms to the following grammar.
+#
+#      ScriptFile   ::= CompilerTest+
+#      CompilerTest ::= ExtClassName ["CmdLineArgs"] { FileTest [; FileTest]* }
+#                    |  javac ["CmdLineArgs"] { FileTestNoFailure [; FileTestNoFailure]* }
+#      FileTest     ::= Filenames [Description] [FailureSet]
+#      FileTestNoFailure ::= Filenames [Description]
+#      Filenames    ::= Filename [Filename]*
+#      Description  ::= LitString
+#      FailureSet   ::= Failure [, Failure]*
+#      Failure      ::= ( ErrorKind )
+#                    |  ( ErrorKind, "RegExp" )
+#                    |  ( "RegExp" )
+#                    |  ( )
+#      ErrorKind    :   one of, or a unique prefix of one of the following 
+#                       strings: "Warning", "Internal Error", "I/O Error", 
+#                       "Lexical Error", "Syntax Error", "Semantic Error"
+#                       or "Post-compiler Error".
+#      Filename     :   the name of a file. Is interpreted from the 
+#                       directory where pth is run.
+#      LitString    :   a literal string, enclosed in quotes.
+#      RegExp       :   a regular expression, as in java.util.regex; 
+#                       is always enclosed in quotes.
+#      CmdLineArgs  :   additional command line args for the Polyglot 
+#                       compiler; is always enclosed in quotes.
+
+# Compile some java classes first
+#javac "-d java-out -cp ." {
+#}
+ 
+bolt.ExtensionInfo "-d out -classpath java-out -assert -noserial -postopts \"-source 1.7 -Xlint\\:-options\" -morepermissiveinference" {
+  FinalInitGood001.bolt;
+  FinalInitGood002.bolt;
+  FinalInitGood003.bolt;
+  FinalInitGood004.bolt;
+  FinalInitGood005.bolt;
+  FinalInitGood006.bolt;
+  FinalInitGood007.bolt;
+  FinalInitGood008.bolt;
+  FinalInitGood009.bolt;
+  FinalInitGood010.bolt;
+  FinalInitGood011.bolt;
+  FinalInitGood012.bolt;
+
+  FinalInitBad001.bolt
+    (Semantic, "might not have been initialized");
+  FinalInitBad002.bolt
+    (Semantic, "might not have been initialized"),
+    (Semantic, "cannot assign a value to final field");
+  FinalInitBad003.bolt
+    (Semantic, "might not have been initialized"),
+    (Semantic, "cannot assign a value to final field");
+  FinalInitBad004.bolt
+    (Semantic, "might not have been initialized"),
+    (Semantic, "cannot assign a value to final field");
+  FinalInitBad005.bolt
+    (Semantic, "might already have been initialized");
+  FinalInitBad006.bolt
+    (Semantic, "might already have been initialized");
+  FinalInitBad007.bolt
+    (Semantic, "might already have been initialized");
+  FinalInitBad008.bolt
+    (Semantic, "cannot assign a value to final field");
+  FinalInitBad009.bolt
+    (Semantic, "cannot assign a value to final field");
+  FinalInitBad010.bolt
+    (Semantic, "cannot assign a value to final field");
+  FinalInitBad011.bolt
+    (Semantic, "cannot assign a value to final field");
+  FinalInitBad012.bolt
+    (Semantic, "cannot assign a value to final field");
+  FinalInitBad013.bolt
+    (Semantic, "cannot assign a value to final field");
+  FinalInitBad014.bolt
+    (Semantic, "cannot assign a value to final field");
+  FinalInitBad015.bolt
+    (Semantic, "cannot assign a value to final field");
+  FinalInitBad016.bolt
+    (Semantic, "cannot assign a value to final field");
+  FinalInitBad017.bolt
+    (Semantic);
+  FinalInitBad018.bolt
+    (Semantic);
+  FinalInitBad019.bolt
+    (Semantic);
+  FinalInitBad020.bolt
+    (Semantic);
+  FinalInitBad021.bolt
+    (Semantic);
+  FinalInitBad022.bolt
+    (Semantic);
+  FinalInitBad023.bolt
+    (Semantic);
+  FinalInitBad024.bolt
+    (Semantic);
+  FinalInitBad025.bolt
+    (Semantic);
+  FinalInitBad026.bolt
+    (Semantic);
+  FinalInitBad027.bolt
+    (Semantic);
+  FinalInitBad028.bolt
+    (Semantic);
+
+  SuperGood001.bolt;
+  SuperGood002.bolt;
+  SuperGood003.bolt;
+  SuperGood004.bolt;
+  SuperGood005.bolt;
+  SuperGood006.bolt;
+  SuperGood007.bolt;
+
+  SuperBad001.bolt
+    (Semantic);
+  SuperBad002.bolt
+    (Semantic);
+  SuperBad003.bolt
+    (Semantic);
+  SuperBad004.bolt
+    (Semantic);
+}

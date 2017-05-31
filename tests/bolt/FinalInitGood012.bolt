@@ -1,0 +1,14 @@
+class FinalInit012 {
+  int a;
+  final int b = 0;
+
+  class Inner {
+    Inner() {
+      // Constructor prologues may refer to outer objects.
+      int x = a;
+      int y = b;
+
+      super();
+    }
+  }
+}

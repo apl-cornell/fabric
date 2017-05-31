@@ -1,0 +1,5 @@
+This directory contains tests for the Bolt compiler. These tests check
+that the compiler's static checks are properly implemented, and that the
+generated code compiles successfully.
+
+These tests DO NOT check the run-time behaviour of generated code.

@@ -1,0 +1,8 @@
+class FinalInit005 {
+  final int x = 0;
+
+  final {
+    // Final initalizer blocks may use "this" to refer to final fields.
+    int x = this.x;
+  }
+}

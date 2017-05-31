@@ -1,0 +1,14 @@
+class FinalInitBad028 {
+  static class C extends FinalInitBad028 {
+    final int y;
+    
+    FinalInitBad028() {
+      // Final initializers may not refer to superclass components.
+      y = x;
+
+      super();
+    }
+  }
+
+  final int x = 0;
+}

@@ -1,0 +1,12 @@
+class FinalInitBad014 {
+  final int x;
+
+  FinalInitBad014() {
+    x = 0;
+
+    super();
+
+    // Can't assign to final field here.
+    x = 0;
+  }
+}

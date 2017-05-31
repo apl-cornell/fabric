@@ -1,0 +1,9 @@
+class FinalInitBad006 {
+  // Final field can't be initialized twice.
+  final int x = 0;
+
+  FinalInitBad006() {
+    x = 0;
+    super();
+  }
+}

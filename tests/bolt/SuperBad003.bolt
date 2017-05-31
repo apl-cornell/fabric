@@ -1,0 +1,14 @@
+class SuperBad003 {
+  static class Super {
+    Super(Object o) {}
+  }
+
+  static class Derived extends Super {
+    Derived() {
+      // Super calls may not refer to inner classes.
+      super(new Inner());
+    }
+
+    class Inner {}
+  }
+}

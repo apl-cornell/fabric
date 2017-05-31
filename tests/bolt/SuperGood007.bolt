@@ -1,0 +1,16 @@
+class SuperGood007 {
+  int m() {
+    return 0;
+  }
+
+  static class Super {
+    Super(int x) {}
+  }
+
+  class Derived extends Super {
+    Derived() {
+      // Super calls may use "this" to refer to an enclosing object.
+      super(SuperGood007.this.m());
+    }
+  }
+}

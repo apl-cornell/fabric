@@ -1,0 +1,14 @@
+class SuperBad001 {
+  static class Super {
+    Super(int x) {}
+  }
+
+  static class Derived extends Super {
+    int x;
+
+    Derived() {
+      // Super calls may not refer to non-final fields.
+      super(x);
+    }
+  }
+}

@@ -1,0 +1,15 @@
+class SuperGood002 {
+  static class Super {
+    Super(int x) {}
+  }
+
+  static class Derived extends Super {
+    final int x = 0;
+
+    Derived() {
+      // Super calls may use "this" to refer to final fields declared in the
+      // current class.
+      super(this.x);
+    }
+  }
+}
