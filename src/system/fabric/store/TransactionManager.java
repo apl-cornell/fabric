@@ -397,8 +397,9 @@ public class TransactionManager {
   }
 
   /**
-   * The currently queued or running extensions, so we may easily replace them,
-   * if necessary.
+   * The currently queued or running extensions for each onum, so we may easily
+   * replace the request with a new (to be handled earlier) request, if
+   * necessary.
    */
   private final ConcurrentLongKeyMap<DelayedExtension> unresolvedExtensions =
       new ConcurrentLongKeyHashMap<>();
