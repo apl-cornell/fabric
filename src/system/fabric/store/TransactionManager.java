@@ -405,8 +405,8 @@ public class TransactionManager {
   /**
    * A thread that goes through the extensions queue and sends out extension
    * messages. It continually waits until the earliest
-   * {@code DelayedExtension}'s time, dequeues it, and handles the extension in
-   * a transaction.
+   * {@code DelayedExtension}'s time, handles the extension in a transaction,
+   * then dequeues the extension.
    */
   private final Threading.NamedRunnable extensionsRunner =
       new Threading.NamedRunnable("Extensions runner") {
