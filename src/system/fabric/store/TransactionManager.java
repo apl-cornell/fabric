@@ -423,33 +423,31 @@ public class TransactionManager {
             try {
               // Get the next delayed extension item.
               final DelayedExtension extension = waitingExtensions.take();
-              final long onum = extension.onum;
-              // If we're not already running an extension for it, run one
-              Threading.getPool()
-                  .submit(new Threading.NamedRunnable("Extension of " + onum) {
-                    @Override
-                    protected void runImpl() {
-                      // Don't want new extensions to walk away after this is
-                      // done before we remove the mapping.
-                      synchronized (extension) {
-                        // Run a transaction handling updates
-                        Logging.METRICS_LOGGER.log(Level.INFO,
-                            "RUNNING EXTENSION OF {0}", onum);
-                        Worker.runInTopLevelTransaction(new Code<Void>() {
-                          @Override
-                          public Void run() {
-                            Store store =
-                                Worker.getWorker().getStore(database.getName());
-                            final Contract._Proxy target =
-                                new Contract._Proxy(store, onum);
-                            target.attemptExtension();
-                            return null;
-                          }
-                        }, true);
-                        unresolvedExtensions.remove(onum, extension);
+              Threading.getPool().submit(new Threading.NamedRunnable(
+                  "Extension of " + extension.onum) {
+                @Override
+                protected void runImpl() {
+                  // Don't want new extensions to walk away after this is
+                  // done before we remove the mapping.
+                  synchronized (extension) {
+                    // Run a transaction handling updates
+                    Logging.METRICS_LOGGER.log(Level.INFO,
+                        "RUNNING EXTENSION OF {0}", extension.onum);
+                    Worker.runInTopLevelTransaction(new Code<Void>() {
+                      @Override
+                      public Void run() {
+                        Store store =
+                            Worker.getWorker().getStore(database.getName());
+                        final Contract._Proxy target =
+                            new Contract._Proxy(store, extension.onum);
+                        target.attemptExtension();
+                        return null;
                       }
-                    }
-                  });
+                    }, true);
+                    unresolvedExtensions.remove(extension.onum, extension);
+                  }
+                }
+              });
             } catch (InterruptedException e) {
               Logging.logIgnoredInterruptedException(e);
             }
