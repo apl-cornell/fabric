@@ -410,8 +410,9 @@ public class TransactionManager {
       new DelayQueue<>();
 
   /**
-   * A thread that goes through the extensions queue and sends out extension
-   * messages. It continually waits until the earliest
+   * A thread that goes through the extensions queue, waiting until the next
+   * DelayedExtension's delay is 0, and updates the expiration time of the
+   * DelayedExtension's associated onum.  It continually waits until the earliest
    * {@code DelayedExtension}'s time, handles the extension in a transaction,
    * then dequeues the extension.
    */
