@@ -369,8 +369,10 @@ public class TransactionManager {
    */
   public void queueExtension(List<DelayedExtension> extensions) {
     for (DelayedExtension de : extensions) {
-      while (true) {
-        synchronized (de) {
+      synchronized (de) {
+        // Keep trying until we're sure we've consistently updated the extension
+        // for this onum.
+        while (true) {
           DelayedExtension existing =
               unresolvedExtensions.putIfAbsent(de.onum, de);
           if (existing == null) {
@@ -378,6 +380,11 @@ public class TransactionManager {
             break;
           } else {
             synchronized (existing) {
+              // Don't do anything if there's an earlier extension queued.
+              if (existing.compareTo(de) <= 0) {
+                break;
+              }
+              // Update to this event if it's earlier than the queued one.
               if (unresolvedExtensions.replace(de.onum, existing, de)) {
                 waitingExtensions.remove(existing);
                 waitingExtensions.add(de);
@@ -416,7 +423,8 @@ public class TransactionManager {
           while (true) {
             try {
               // Get the next delayed extension item.
-              final long onum = waitingExtensions.take().onum;
+              final DelayedExtension extension = waitingExtensions.take();
+              final long onum = extension.onum;
               // If we're not already running an extension for it, run one
               Threading.getPool()
                   .submit(new Threading.NamedRunnable("Extension of " + onum) {
@@ -436,7 +444,7 @@ public class TransactionManager {
                           return null;
                         }
                       }, true);
-                      unresolvedExtensions.remove(onum);
+                      unresolvedExtensions.remove(onum, extension);
                     }
                   });
             } catch (InterruptedException e) {
