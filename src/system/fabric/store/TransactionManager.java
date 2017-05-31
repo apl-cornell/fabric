@@ -365,7 +365,7 @@ public class TransactionManager {
    * Checks if there are any existing extensions for the associated onum of each
    * {@link DelayedExtension}. If there isn't one, or if the existing one is for
    * a later time than the new request, the new {@link DelayedExtension} is
-   * added to the queue, and the onum–request mapping is updated.
+   * added to the queue, and the onum-request mapping is updated.
    */
   public void queueExtension(List<DelayedExtension> extensions) {
     for (DelayedExtension de : extensions) {
@@ -375,7 +375,11 @@ public class TransactionManager {
         done = true;
         DelayedExtension cur = unresolvedExtensions.get(de.onum);
         if (cur == null || cur.compareTo(de) > 0) {
-          done = unresolvedExtensions.replace(de.onum, cur, de);
+          if (cur == null) {
+              done = unresolvedExtensions.putIfAbsent(de.onum, de) == null;
+          } else {
+              done = unresolvedExtensions.replace(de.onum, cur, de);
+          }
           if (done) {
             if (cur != null) waitingExtensions.remove(cur);
             waitingExtensions.add(de);
