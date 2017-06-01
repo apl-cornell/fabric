@@ -327,6 +327,14 @@ public final class TransactionManager {
 
     // XXX This is a long and ugly method. Refactor?
 
+    // Resolve unobserved samples for top level txn before waiting for threads
+    // and checking retry signal for the last time.
+    // TODO: This should probably be run somewhere else prior to this call,
+    // since it's technically not part of commit.
+    if (current.tid.parent == null) {
+      resolveObservations();
+    }
+
     // Wait for all sub-transactions to finish.
     current.waitForThreads();
 
@@ -390,9 +398,6 @@ public final class TransactionManager {
         Timing.SUBTX.end();
       }
     }
-
-    // Resolve unobserved samples.
-    resolveObservations();
 
     // Commit top-level transaction.
     Log HOTOS_current = current;

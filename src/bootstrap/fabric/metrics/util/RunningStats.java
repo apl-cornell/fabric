@@ -609,90 +609,90 @@ public interface RunningStats extends fabric.lang.Object {
             private void $init() {
                 {
                     {
-                        fabric.worker.transaction.TransactionManager $tm196 =
+                        fabric.worker.transaction.TransactionManager $tm189 =
                           fabric.worker.transaction.TransactionManager.
                           getInstance();
-                        int $backoff197 = 1;
-                        boolean $doBackoff198 = true;
-                        $label192: for (boolean $commit193 = false; !$commit193;
+                        int $backoff190 = 1;
+                        boolean $doBackoff191 = true;
+                        $label185: for (boolean $commit186 = false; !$commit186;
                                         ) {
-                            if ($doBackoff198) {
-                                if ($backoff197 > 32) {
+                            if ($doBackoff191) {
+                                if ($backoff190 > 32) {
                                     while (true) {
                                         try {
-                                            java.lang.Thread.sleep($backoff197);
+                                            java.lang.Thread.sleep($backoff190);
                                             break;
                                         }
                                         catch (java.lang.
-                                                 InterruptedException $e194) {
+                                                 InterruptedException $e187) {
                                             
                                         }
                                     }
                                 }
-                                if ($backoff197 < 5000) $backoff197 *= 2;
+                                if ($backoff190 < 5000) $backoff190 *= 2;
                             }
-                            $doBackoff198 = $backoff197 <= 32 || !$doBackoff198;
-                            $commit193 = true;
+                            $doBackoff191 = $backoff190 <= 32 || !$doBackoff191;
+                            $commit186 = true;
                             fabric.worker.transaction.TransactionManager.
                               getInstance().startTransaction();
                             try {
                                 fabric.metrics.util.RunningStats._Static._Proxy.
                                   $instance.
-                                  set$ALPHA((double) 0.01);
+                                  set$ALPHA((double) 0.001);
                             }
-                            catch (final fabric.worker.RetryException $e194) {
-                                $commit193 = false;
-                                continue $label192;
+                            catch (final fabric.worker.RetryException $e187) {
+                                $commit186 = false;
+                                continue $label185;
                             }
                             catch (final fabric.worker.
-                                     TransactionRestartingException $e194) {
-                                $commit193 = false;
-                                fabric.common.TransactionID $currentTid195 =
-                                  $tm196.getCurrentTid();
-                                if ($e194.tid.isDescendantOf($currentTid195))
-                                    continue $label192;
-                                if ($currentTid195.parent != null) throw $e194;
+                                     TransactionRestartingException $e187) {
+                                $commit186 = false;
+                                fabric.common.TransactionID $currentTid188 =
+                                  $tm189.getCurrentTid();
+                                if ($e187.tid.isDescendantOf($currentTid188))
+                                    continue $label185;
+                                if ($currentTid188.parent != null) throw $e187;
                                 throw new InternalError(
                                         "Something is broken with " +
                                             "transaction management. Got a signal to restart a " +
                                             "different transaction than the one being managed.");
                             }
-                            catch (final Throwable $e194) {
-                                $commit193 = false;
-                                if ($tm196.checkForStaleObjects())
-                                    continue $label192;
-                                throw new fabric.worker.AbortException($e194);
+                            catch (final Throwable $e187) {
+                                $commit186 = false;
+                                if ($tm189.checkForStaleObjects())
+                                    continue $label185;
+                                throw new fabric.worker.AbortException($e187);
                             }
                             finally {
-                                if ($commit193) {
+                                if ($commit186) {
                                     try {
                                         fabric.worker.transaction.TransactionManager.
                                           getInstance().commitTransaction();
                                     }
                                     catch (final fabric.worker.
-                                             AbortException $e194) {
-                                        $commit193 = false;
+                                             AbortException $e187) {
+                                        $commit186 = false;
                                     }
                                     catch (final fabric.worker.
-                                             TransactionRestartingException $e194) {
-                                        $commit193 = false;
+                                             TransactionRestartingException $e187) {
+                                        $commit186 = false;
                                         fabric.common.TransactionID
-                                          $currentTid195 =
-                                          $tm196.getCurrentTid();
-                                        if ($currentTid195 != null) {
-                                            if ($e194.tid.equals(
-                                                            $currentTid195) ||
-                                                  !$e194.tid.
+                                          $currentTid188 =
+                                          $tm189.getCurrentTid();
+                                        if ($currentTid188 != null) {
+                                            if ($e187.tid.equals(
+                                                            $currentTid188) ||
+                                                  !$e187.tid.
                                                   isDescendantOf(
-                                                    $currentTid195)) {
-                                                throw $e194;
+                                                    $currentTid188)) {
+                                                throw $e187;
                                             }
                                         }
                                     }
                                 } else {
                                     fabric.worker.transaction.TransactionManager.getInstance().abortTransaction();
                                 }
-                                if (!$commit193) {  }
+                                if (!$commit186) {  }
                             }
                         }
                     }
@@ -702,11 +702,11 @@ public interface RunningStats extends fabric.lang.Object {
         
     }
     
-    public static final byte[] $classHash = new byte[] { -27, 43, -39, -31, -76,
-    -59, -24, 87, -118, 102, -42, 14, 63, -79, -89, 84, 72, -92, 127, 77, 6,
-    106, 110, -54, 19, 6, -25, -58, -48, 30, 9, -71 };
+    public static final byte[] $classHash = new byte[] { 68, 107, 21, -70, 65,
+    -76, 99, 82, 122, -91, -104, 72, -75, -46, -10, 50, 26, 30, 68, 82, 124, 80,
+    92, -32, 18, 77, 4, 99, 119, -10, -40, -44 };
     public static final java.lang.String jlc$CompilerVersion$fabil = "0.3.0";
-    public static final long jlc$SourceLastModified$fabil = 1495740956000L;
+    public static final long jlc$SourceLastModified$fabil = 1496244158000L;
     public static final java.lang.String jlc$ClassType$fabil =
-      "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";
+      "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";
 }

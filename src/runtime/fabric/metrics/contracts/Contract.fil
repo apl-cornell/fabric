@@ -33,7 +33,8 @@ public abstract class Contract extends AbstractSubject implements Observer {
   // Note: larger value => less aggressive extensions => lower overhead
   // Note: smaller value => more aggressive extensions => less chance of a
   // warranty going stale unecessarily.
-  public static final double MIN_EXTENSION_FACTOR = 1.05;
+  public static final double MIN_EXTENSION_FACTOR = 1;
+  //public static final double MIN_EXTENSION_FACTOR = 1.05;
   // The drift tolerance factor we'll subtract from times we advertise to
   // others.
   public static final long DRIFT_FACTOR = 100;
@@ -117,9 +118,11 @@ public abstract class Contract extends AbstractSubject implements Observer {
     if (getExpiry() < newExpiry - DRIFT_FACTOR) {
       // Only extend if everyone will see something better.
       extendTo(newExpiry);
+      fabric.common.Logging.METRICS_LOGGER.fine("EXPIRY OF " + this + " IS NOW " + $expiry);
     } else if (getExpiry() > newExpiry) {
       // Revoke if doing worse than what anyone else would see.
       revoke(newExpiry);
+      fabric.common.Logging.METRICS_LOGGER.fine("EXPIRY OF " + this + " IS NOW " + $expiry);
       return true;
     }
     return false;

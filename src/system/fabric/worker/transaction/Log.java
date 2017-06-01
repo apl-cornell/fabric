@@ -556,7 +556,10 @@ public final class Log {
    */
   public void resolveObservations() {
     Logging.METRICS_LOGGER.fine("PROCESSING SAMPLES " + unobservedSamples);
-    AbstractSubject._Impl.processSamples(unobservedSamples);
+    // Skip if there's nothing to handle.
+    if (!unobservedSamples.isEmpty()) {
+      AbstractSubject._Impl.processSamples(unobservedSamples);
+    }
   }
 
   /**

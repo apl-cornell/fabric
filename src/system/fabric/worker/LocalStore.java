@@ -230,8 +230,7 @@ public final class LocalStore implements Store, Serializable {
                     Worker.runInTopLevelTransaction(new Code<Void>() {
                       @Override
                       public Void run() {
-                        Store store =
-                            Worker.getWorker().getStore(database.getName());
+                        Store store = LocalStore.this;
                         final Contract._Proxy target =
                             new Contract._Proxy(store, extension.onum);
                         target.attemptExtension();

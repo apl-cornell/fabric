@@ -239,7 +239,7 @@ public interface Contract
                     if (fabric.lang.Object._Proxy.
                           $getProxy((java.lang.Object)
                                       fabric.lang.WrappedJavaInlineable.$unwrap(parent)) instanceof fabric.metrics.contracts.MetricContract) {
-                        tm.registerParentExtension(
+                        tm.registerDelayedExtension(
                              (fabric.metrics.contracts.Contract)
                                fabric.lang.Object._Proxy.$getProxy(parent));
                     }
@@ -479,9 +479,29 @@ public interface Contract
                   fabric.metrics.contracts.Contract._Static._Proxy.$instance.
                   get$DRIFT_FACTOR()) {
                 extendTo(newExpiry);
+                fabric.common.Logging.METRICS_LOGGER.
+                  fine(
+                    "EXPIRY OF " +
+                      java.lang.String.
+                        valueOf(
+                          fabric.lang.WrappedJavaInlineable.
+                              $unwrap((fabric.metrics.contracts.Contract)
+                                        this.$getProxy())) +
+                      " IS NOW " +
+                      this.get$$expiry());
             }
             else if (getExpiry() > newExpiry) {
                 revoke(newExpiry);
+                fabric.common.Logging.METRICS_LOGGER.
+                  fine(
+                    "EXPIRY OF " +
+                      java.lang.String.
+                        valueOf(
+                          fabric.lang.WrappedJavaInlineable.
+                              $unwrap((fabric.metrics.contracts.Contract)
+                                        this.$getProxy())) +
+                      " IS NOW " +
+                      this.get$$expiry());
                 return true;
             }
             return false;
@@ -680,14 +700,6 @@ public interface Contract
         
         public double postDec$MIN_EXTENSION_FACTOR();
         
-        public long get$MAX_EXTENSION();
-        
-        public long set$MAX_EXTENSION(long val);
-        
-        public long postInc$MAX_EXTENSION();
-        
-        public long postDec$MAX_EXTENSION();
-        
         public long get$DRIFT_FACTOR();
         
         public long set$DRIFT_FACTOR(long val);
@@ -716,26 +728,6 @@ public interface Contract
             public double postDec$MIN_EXTENSION_FACTOR() {
                 return ((fabric.metrics.contracts.Contract._Static._Impl)
                           fetch()).postDec$MIN_EXTENSION_FACTOR();
-            }
-            
-            public long get$MAX_EXTENSION() {
-                return ((fabric.metrics.contracts.Contract._Static._Impl)
-                          fetch()).get$MAX_EXTENSION();
-            }
-            
-            public long set$MAX_EXTENSION(long val) {
-                return ((fabric.metrics.contracts.Contract._Static._Impl)
-                          fetch()).set$MAX_EXTENSION(val);
-            }
-            
-            public long postInc$MAX_EXTENSION() {
-                return ((fabric.metrics.contracts.Contract._Static._Impl)
-                          fetch()).postInc$MAX_EXTENSION();
-            }
-            
-            public long postDec$MAX_EXTENSION() {
-                return ((fabric.metrics.contracts.Contract._Static._Impl)
-                          fetch()).postDec$MAX_EXTENSION();
             }
             
             public long get$DRIFT_FACTOR() {
@@ -815,31 +807,6 @@ public interface Contract
             
             public double MIN_EXTENSION_FACTOR;
             
-            public long get$MAX_EXTENSION() { return this.MAX_EXTENSION; }
-            
-            public long set$MAX_EXTENSION(long val) {
-                fabric.worker.transaction.TransactionManager tm =
-                  fabric.worker.transaction.TransactionManager.getInstance();
-                boolean transactionCreated = tm.registerWrite(this);
-                this.MAX_EXTENSION = val;
-                if (transactionCreated) tm.commitTransaction();
-                return val;
-            }
-            
-            public long postInc$MAX_EXTENSION() {
-                long tmp = this.get$MAX_EXTENSION();
-                this.set$MAX_EXTENSION((long) (tmp + 1));
-                return tmp;
-            }
-            
-            public long postDec$MAX_EXTENSION() {
-                long tmp = this.get$MAX_EXTENSION();
-                this.set$MAX_EXTENSION((long) (tmp - 1));
-                return tmp;
-            }
-            
-            public long MAX_EXTENSION;
-            
             public long get$DRIFT_FACTOR() { return this.DRIFT_FACTOR; }
             
             public long set$DRIFT_FACTOR(long val) {
@@ -872,7 +839,6 @@ public interface Contract
                   throws java.io.IOException {
                 super.$serialize(out, refTypes, intraStoreRefs, interStoreRefs);
                 out.writeDouble(this.MIN_EXTENSION_FACTOR);
-                out.writeLong(this.MAX_EXTENSION);
                 out.writeLong(this.DRIFT_FACTOR);
             }
             
@@ -889,7 +855,6 @@ public interface Contract
                       accessPolicyStore, accessPolicyOnum, in, refTypes,
                       intraStoreRefs, interStoreRefs);
                 this.MIN_EXTENSION_FACTOR = in.readDouble();
-                this.MAX_EXTENSION = in.readLong();
                 this.DRIFT_FACTOR = in.readLong();
             }
             
@@ -933,12 +898,7 @@ public interface Contract
                                 fabric.metrics.contracts.Contract._Static.
                                   _Proxy.
                                   $instance.
-                                  set$MIN_EXTENSION_FACTOR((double) 2);
-                                fabric.metrics.contracts.Contract._Static.
-                                  _Proxy.
-                                  $instance.
-                                  set$MAX_EXTENSION((long)
-                                                      (1000L * 60 * 60 * 24));
+                                  set$MIN_EXTENSION_FACTOR((double) 1);
                                 fabric.metrics.contracts.Contract._Static.
                                   _Proxy.
                                   $instance.
@@ -1004,11 +964,11 @@ public interface Contract
         
     }
     
-    public static final byte[] $classHash = new byte[] { -36, 117, 30, -15, 66,
-    27, -51, -20, -79, -128, -50, -22, -35, 62, -1, 32, -123, 16, 29, -53, -74,
-    65, 27, -9, 36, -62, 24, -92, -50, 104, -94, -49 };
+    public static final byte[] $classHash = new byte[] { -89, -18, 116, 89, -76,
+    -95, 23, -70, 102, 35, -112, 17, 74, -88, -9, -123, -88, 56, -98, 77, 44,
+    -68, 4, 71, 0, 51, -102, 1, 12, 108, 43, -69 };
     public static final java.lang.String jlc$CompilerVersion$fabil = "0.3.0";
-    public static final long jlc$SourceLastModified$fabil = 1495740956000L;
+    public static final long jlc$SourceLastModified$fabil = 1496263005000L;
     public static final java.lang.String jlc$ClassType$fabil =
-      "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";
+      "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";
 }

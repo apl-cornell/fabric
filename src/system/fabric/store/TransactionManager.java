@@ -443,10 +443,12 @@ public class TransactionManager {
                 protected void runImpl() {
                   // Don't want new extensions to walk away after this is
                   // done before we remove the mapping.
+                  // Run a transaction handling updates
+                  Logging.METRICS_LOGGER.log(Level.INFO,
+                      "RUNNING EXTENSION OF {0}", extension.onum);
                   synchronized (extension) {
-                    // Run a transaction handling updates
-                    Logging.METRICS_LOGGER.log(Level.INFO,
-                        "RUNNING EXTENSION OF {0}", extension.onum);
+                    Logging.METRICS_LOGGER.log(Level.FINE,
+                        "SYNCHRONIZED EXTENSION OF {0}", extension.onum);
                     Worker.runInTopLevelTransaction(new Code<Void>() {
                       @Override
                       public Void run() {
@@ -460,6 +462,8 @@ public class TransactionManager {
                     }, true);
                     unresolvedExtensions.remove(extension.onum, extension);
                   }
+                  Logging.METRICS_LOGGER.log(Level.FINE,
+                      "FINISHED EXTENSION OF {0}", extension.onum);
                 }
               });
             } catch (InterruptedException e) {
