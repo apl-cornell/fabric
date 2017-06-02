@@ -1,16 +1,15 @@
 class FinalInit011 {
   int a;
   final int b = 0;
-  int c;
-  final int d = 0;
 
   class Inner {
+    int a;
+    int b;
+
     Inner() {
       // Constructor prologues may use "this" to refer to outer objects.
-      int x = this.c;
-      int y = this.d;
-      int c = FinalInit007.this.a;
-      int d = FinalInit007.this.b;
+      int a = FinalInit011.this.a;
+      int b = FinalInit011.this.b;
 
       super();
     }

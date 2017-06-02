@@ -1,13 +1,9 @@
 class FinalInit007 {
   int a;
   final int b = 0;
-  int c;
-  final int d = 0;
 
   class Inner {
     // Final field initializers may use "this" to refer to outer objects.
-    final int x = this.c;
-    final int y = this.d;
     final int a = FinalInit007.this.a;
     final int b = FinalInit007.this.b;
   }

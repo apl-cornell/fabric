@@ -107,10 +107,8 @@ bolt.ExtensionInfo "-d out -classpath java-out -assert -noserial -postopts \"-so
 
   SuperGood001.bolt;
   SuperGood002.bolt;
-  SuperGood003.bolt;
   SuperGood004.bolt;
   SuperGood005.bolt;
-  SuperGood006.bolt;
   SuperGood007.bolt;
 
   SuperBad001.bolt
