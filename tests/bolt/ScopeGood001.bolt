@@ -1,0 +1,9 @@
+class ScopeGood001 {
+  ScopeGood001() {
+    int x;
+    super();
+
+    // Variables declared in constructor prologue are still in scope here.
+    x = 0;
+  }
+}

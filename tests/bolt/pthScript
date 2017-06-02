@@ -119,4 +119,6 @@ bolt.ExtensionInfo "-d out -classpath java-out -assert -noserial -postopts \"-so
     (Semantic);
   SuperBad004.bolt
     (Semantic);
+
+  ScopeGood001.bolt;
 }
