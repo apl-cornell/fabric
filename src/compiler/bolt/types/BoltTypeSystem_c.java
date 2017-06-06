@@ -57,7 +57,8 @@ public class BoltTypeSystem_c extends JL7TypeSystem_c
 
   @Override
   public Flags legalInitializerFlags() {
-    // Initializers can be declared final.
+    // Initializers can be declared final. Final initializer blocks are used to
+    // initialize final fields, and execute before the constructor prologue.
     return super.legalInitializerFlags().Final();
   }
 
