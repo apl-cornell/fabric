@@ -9,6 +9,11 @@ import fabric.metrics.Metric;
 public abstract class WarrantyComp/*<T> implements LongFunction<T>*/ {
   private WarrantyValue/*<T>*/ curVal;
 
+  protected WarrantyComp fabric$metrics$contracts$warranties$WarrantyComp$() {
+    fabric$lang$Object$();
+    return this;
+  }
+
   /**
    * Create a new updated result paired with a contract that would enforce it
    * after this call.
