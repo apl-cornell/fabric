@@ -6,11 +6,25 @@ import fabric.metrics.Metric;
  * A warrantiable computation. Returns values wrapped in a {@link WarrantyValue}
  * along with an appropriate {@link Metric} for the result.
  */
-/*@FunctionalInterface*/
-public interface WarrantyComp/*<T> extends LongFunction<WarrantyValue<T>>*/ {
+public abstract class WarrantyComp/*<T> implements LongFunction<T>*/ {
+  private WarrantyValue/*<T>*/ curVal;
+
+  /**
+   * Create a new updated result paired with a contract that would enforce it
+   * after this call.
+   */
+  protected abstract WarrantyValue/*<T>*/ updatedVal(long time);
 
   /**
    * Run this warranty computation at the given time.
    */
-  public WarrantyValue/*<T>*/ apply(long time);
+  public Object/*T*/ apply(long time) {
+    if (curVal == null || !curVal.contract.isActive()
+          || !curVal.contract.valid(time)) {
+      curVal = updatedVal(time);
+      // TODO: this should happen asynchronously after this call returns.
+      curVal.contract.activate();
+    }
+    return curVal.value;
+  }
 }
