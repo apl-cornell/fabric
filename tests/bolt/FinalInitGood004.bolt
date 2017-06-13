@@ -1,6 +1,0 @@
-class FinalInit004 {
-  final int x = 0;
-
-  // Final-field initalizers may use "this" to refer to other final fields.
-  final int y = this.x;
-}

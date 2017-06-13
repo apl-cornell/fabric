@@ -1,0 +1,8 @@
+class C {
+  int a = 0;
+
+  class Inner {
+    // Field initializers may refer to outer objects.
+    int x = a;
+  }
+}

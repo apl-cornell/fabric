@@ -4,11 +4,13 @@ class C {
   }
 
   static class Derived extends Super {
-    int x = 0;
-
     Derived() {
-      // Super calls may refer to fields declared in the current class.
-      super(x);
+      // Super calls may not refer to non-static methods.
+      super(m());
+    }
+
+    int m() {
+      return 0;
     }
   }
 }

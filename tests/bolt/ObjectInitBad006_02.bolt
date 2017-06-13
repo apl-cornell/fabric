@@ -1,0 +1,8 @@
+class C {
+  {
+    // Initializer blocks may not construct inner classes.
+    new Inner();
+  }
+
+  class Inner {}
+}

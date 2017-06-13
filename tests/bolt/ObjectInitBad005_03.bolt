@@ -1,0 +1,10 @@
+class C {
+  C() {
+    // Constructor prologues may not refer to non-static methods.
+    m();
+    super();
+  }
+
+  void m() {
+  }
+}

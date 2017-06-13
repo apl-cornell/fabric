@@ -1,0 +1,8 @@
+class C {
+  {
+    x = 0;
+  }
+
+  // Final field can't be initialized twice.
+  final int x = 0;
+}

@@ -1,0 +1,10 @@
+class C {
+  {
+    // Initializer blocks may not refer to non-static methods.
+    m();
+  }
+
+  int m() {
+    return 0;
+  }
+}

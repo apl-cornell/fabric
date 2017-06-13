@@ -1,0 +1,4 @@
+class C {
+  // Field initialized with field initializer.
+  final int x = 0;
+}

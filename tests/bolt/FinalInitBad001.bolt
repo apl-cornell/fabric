@@ -1,4 +1,0 @@
-class FinalInitBad001 {
-  // Final fields must be initialized.
-  final int x;
-}

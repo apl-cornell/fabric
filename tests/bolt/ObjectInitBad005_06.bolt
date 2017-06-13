@@ -1,0 +1,12 @@
+class C {
+  static class D extends C {
+    D() {
+      // Constructor prologues may not refer to non-static methods.
+      m();
+      super();
+    }
+  }
+
+  void m() {
+  }
+}

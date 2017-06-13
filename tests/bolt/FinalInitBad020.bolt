@@ -1,8 +1,0 @@
-class FinalInitBad020 {
-  // Final initializers may not refer to non-static methods.
-  final int x = m();
-
-  int m() {
-    return 0;
-  }
-}

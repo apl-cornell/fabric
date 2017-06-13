@@ -1,8 +1,0 @@
-class FinalInitBad005 {
-  // Final field can't be initialized twice.
-  final int x = 0;
-
-  final {
-    x = 0;
-  }
-}

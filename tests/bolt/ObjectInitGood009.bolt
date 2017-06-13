@@ -1,0 +1,16 @@
+class C {
+  int a = 0;
+
+  class Inner {
+    int a;
+
+    {
+      // Initializer blocks may use "this" to refer to outer objects.
+      int a = C.this.a;
+    }
+
+    {
+      a = 0;
+    }
+  }
+}

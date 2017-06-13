@@ -1,6 +1,0 @@
-class FinalInitBad017 {
-  int y;
-
-  // Final initializers may not refer to non-final fields.
-  final int x = y;
-}

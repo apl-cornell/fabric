@@ -1,9 +1,0 @@
-class FinalInitBad002 {
-  // Final field must be initialized before super().
-  final int x;
-
-  FinalInitBad002() {
-    super();
-    x = 0;
-  }
-}

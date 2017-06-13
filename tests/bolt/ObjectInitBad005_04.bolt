@@ -1,0 +1,10 @@
+class C {
+  static class D extends C {
+    // Field initializers may not refer to non-static methods.
+    int x = m();
+  }
+
+  int m() {
+    return 0;
+  }
+}

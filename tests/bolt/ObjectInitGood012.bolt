@@ -1,0 +1,12 @@
+class C {
+  int a = 0;
+
+  class Inner {
+    Inner() {
+      // Constructor prologues may refer to outer objects.
+      int x = a;
+
+      super();
+    }
+  }
+}

@@ -1,0 +1,9 @@
+class C {
+  // Fields must be initialized before super().
+  int x;
+
+  C() {
+    super();
+    x = 0;
+  }
+}

@@ -1,0 +1,15 @@
+class C {
+  static class Super {
+    Super(int x) {
+    }
+  }
+
+  static class Derived extends Super {
+    final int x;
+
+    Derived() {
+      // Last-minute field assignment before calling super().
+      super(x = 0);
+    }
+  }
+}

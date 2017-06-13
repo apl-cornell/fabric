@@ -1,0 +1,14 @@
+class C {
+  int x;
+
+  int y;
+  {
+    // Cannot refer to uninitialized fields.
+    y = x;
+  }
+
+  C() {
+    x = 0;
+    super();
+  }
+}

@@ -1,0 +1,11 @@
+class C {
+  int x = 0;
+
+  FinalInit006() {
+    // Constructor prologues may use "this" to refer to fields that have been
+    // definitely assigned.
+    int x = this.x;
+
+    super();
+  }
+}

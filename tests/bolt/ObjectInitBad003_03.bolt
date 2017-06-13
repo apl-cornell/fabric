@@ -1,0 +1,9 @@
+class C {
+  final int x = 0;
+
+  C() {
+    // Final field can't be initialized twice.
+    x = 0;
+    super();
+  }
+}

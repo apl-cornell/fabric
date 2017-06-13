@@ -1,4 +1,0 @@
-class FinalInit001 {
-  // Final field initialized with final-field initializer.
-  final int x = 0;
-}

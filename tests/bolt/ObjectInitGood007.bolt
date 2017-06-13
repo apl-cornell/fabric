@@ -1,0 +1,8 @@
+class C {
+  int a = 0;
+
+  class Inner {
+    // Field initializers may use "this" to refer to outer objects.
+    int a = C.this.a;
+  }
+}

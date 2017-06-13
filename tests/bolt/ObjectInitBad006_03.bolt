@@ -1,0 +1,10 @@
+class C {
+  C() {
+    // Constructor prologues may not construct inner classes.
+    new Inner();
+
+    super();
+  }
+
+  class Inner {}
+}

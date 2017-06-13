@@ -1,0 +1,10 @@
+class C {
+  int x;
+
+  C() {
+    // Field initialized in constructor prologue.
+    x = 0;
+
+    super();
+  }
+}

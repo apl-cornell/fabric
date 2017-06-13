@@ -1,0 +1,9 @@
+class C {
+  int x = 0;
+
+  {
+    // Initalizer blocks may use "this" to refer to fields that have been
+    // definitely assigned.
+    int x = this.x;
+  }
+}

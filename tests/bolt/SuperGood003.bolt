@@ -1,16 +1,16 @@
 class C {
-  int m() {
-    return 0;
-  }
+  int x = 0;
 
   static class Super {
     Super(int x) {}
   }
 
   class Derived extends Super {
+    int x;
+
     Derived() {
       // Super calls may use "this" to refer to an enclosing object.
-      super(C.this.m());
+      super(C.this.x);
     }
   }
 }

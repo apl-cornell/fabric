@@ -1,0 +1,15 @@
+class C {
+  final int a = 0;
+
+  class Inner {
+    int a;
+
+    Inner() {
+      // Constructor prologues may use "this" to refer to outer objects.
+      int a = C.this.a;
+      this.a = 0;
+
+      super();
+    }
+  }
+}

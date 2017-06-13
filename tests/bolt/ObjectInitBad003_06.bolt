@@ -1,0 +1,13 @@
+class C {
+  final int x;
+
+  C() {
+    // Final field can't be initialized twice.
+    x = 0;
+    super();
+  }
+
+  {
+    x = 0;
+  }
+}

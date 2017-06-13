@@ -32,93 +32,118 @@
 #}
  
 bolt.ExtensionInfo "-d out -classpath java-out -assert -noserial -postopts \"-source 1.7 -Xlint\\:-options\" -morepermissiveinference" {
-  FinalInitGood001.bolt;
-  FinalInitGood002.bolt;
-  FinalInitGood003.bolt;
-  FinalInitGood004.bolt;
-  FinalInitGood005.bolt;
-  FinalInitGood006.bolt;
-  FinalInitGood007.bolt;
-  FinalInitGood008.bolt;
-  FinalInitGood009.bolt;
-  FinalInitGood010.bolt;
-  FinalInitGood011.bolt;
-  FinalInitGood012.bolt;
+  ObjectInitGood001_01.bolt;
+  ObjectInitGood001_02.bolt;
+  ObjectInitGood002_01.bolt;
+  ObjectInitGood002_02.bolt;
+  ObjectInitGood003_01.bolt;
+  ObjectInitGood003_02.bolt;
+  ObjectInitGood004.bolt;
+  ObjectInitGood005.bolt;
+  ObjectInitGood006.bolt;
+  ObjectInitGood007.bolt;
+  ObjectInitGood008.bolt;
+  ObjectInitGood009.bolt;
+  ObjectInitGood010.bolt;
+  ObjectInitGood011.bolt;
+  ObjectInitGood012.bolt;
 
-  FinalInitBad001.bolt
+  ObjectInitBad001_01.bolt
     (Semantic, "might not have been initialized");
-  FinalInitBad002.bolt
-    (Semantic, "might not have been initialized"),
-    (Semantic, "cannot assign a value to final field");
-  FinalInitBad003.bolt
-    (Semantic, "might not have been initialized"),
-    (Semantic, "cannot assign a value to final field");
-  FinalInitBad004.bolt
-    (Semantic, "might not have been initialized"),
-    (Semantic, "cannot assign a value to final field");
-  FinalInitBad005.bolt
+  ObjectInitBad001_02.bolt
+    (Semantic, "might not have been initialized");
+  ObjectInitBad002_01.bolt
+    (Semantic, "might not have been initialized");
+  ObjectInitBad002_02.bolt
+    (Semantic, "might not have been initialized");
+  ObjectInitBad003_01.bolt
     (Semantic, "might already have been initialized");
-  FinalInitBad006.bolt
+  ObjectInitBad003_02.bolt
     (Semantic, "might already have been initialized");
-  FinalInitBad007.bolt
+  ObjectInitBad003_03.bolt
     (Semantic, "might already have been initialized");
-  FinalInitBad008.bolt
-    (Semantic, "cannot assign a value to final field");
-  FinalInitBad009.bolt
-    (Semantic, "cannot assign a value to final field");
-  FinalInitBad010.bolt
-    (Semantic, "cannot assign a value to final field");
-  FinalInitBad011.bolt
-    (Semantic, "cannot assign a value to final field");
-  FinalInitBad012.bolt
-    (Semantic, "cannot assign a value to final field");
-  FinalInitBad013.bolt
-    (Semantic, "cannot assign a value to final field");
-  FinalInitBad014.bolt
-    (Semantic, "cannot assign a value to final field");
-  FinalInitBad015.bolt
-    (Semantic, "cannot assign a value to final field");
-  FinalInitBad016.bolt
-    (Semantic, "cannot assign a value to final field");
-  FinalInitBad017.bolt
-    (Semantic);
-  FinalInitBad018.bolt
-    (Semantic);
-  FinalInitBad019.bolt
-    (Semantic);
-  FinalInitBad020.bolt
-    (Semantic);
-  FinalInitBad021.bolt
-    (Semantic);
-  FinalInitBad022.bolt
-    (Semantic);
-  FinalInitBad023.bolt
-    (Semantic);
-  FinalInitBad024.bolt
-    (Semantic);
-  FinalInitBad025.bolt
-    (Semantic);
-  FinalInitBad026.bolt
-    (Semantic);
-  FinalInitBad027.bolt
-    (Semantic);
-  FinalInitBad028.bolt
-    (Semantic);
+  ObjectInitBad003_04.bolt
+    (Semantic, "might already have been initialized");
+  ObjectInitBad003_05.bolt
+    (Semantic, "might already have been initialized");
+  ObjectInitBad003_06.bolt
+    (Semantic, "might already have been initialized");
+  ObjectInitBad004_01.bolt
+    (Semantic, "might not have been initialized");
+  ObjectInitBad004_02.bolt
+    (Semantic, "might not have been initialized");
+  ObjectInitBad004_03.bolt
+    (Semantic, "might not have been initialized");
+  ObjectInitBad004_04.bolt
+    (Semantic, "might not have been initialized");
+  ObjectInitBad004_05.bolt
+    (Semantic, "might not have been initialized");
+  ObjectInitBad004_06.bolt
+    (Semantic, "might not have been initialized");
+  ObjectInitBad005_01.bolt
+    (Semantic, "Cannot access a non-static method");
+  ObjectInitBad005_02.bolt
+    (Semantic, "Cannot access a non-static method");
+  ObjectInitBad005_03.bolt
+    (Semantic, "Cannot access a non-static method");
+  ObjectInitBad005_04.bolt
+    (Semantic, "Cannot access a non-static method");
+  ObjectInitBad005_05.bolt
+    (Semantic, "Cannot access a non-static method");
+  ObjectInitBad005_06.bolt
+    (Semantic, "Cannot access a non-static method");
+  ObjectInitBad006_01.bolt
+    (Semantic, "cannot be instantiated");
+  ObjectInitBad006_02.bolt
+    (Semantic, "cannot be instantiated");
+  ObjectInitBad006_03.bolt
+    (Semantic, "cannot be instantiated");
+  ObjectInitBad006_04.bolt
+    (Semantic, "cannot be instantiated");
+  ObjectInitBad006_05.bolt
+    (Semantic, "cannot be instantiated");
+  ObjectInitBad006_06.bolt
+    (Semantic, "cannot be instantiated");
+  ObjectInitBad007_01.bolt
+    (Semantic, "Cannot access a non-static field");
+  ObjectInitBad007_02.bolt
+    (Semantic, "Cannot access a non-static field");
+  ObjectInitBad007_03.bolt
+    (Semantic, "Cannot access a non-static field");
+
+  FieldAssignBad001_01.bolt
+    (Semantic, "Cannot assign a value to final field");
+  FieldAssignBad001_02.bolt
+    (Semantic, "Cannot assign a value to final field");
+  FieldAssignBad001_03.bolt
+    (Semantic, "Cannot assign a value to final field");
+  FieldAssignBad001_04.bolt
+    (Semantic, "Cannot assign a value to final field");
+  FieldAssignBad001_05.bolt
+    (Semantic, "Cannot assign a value to final field");
+  FieldAssignBad001_06.bolt
+    (Semantic, "Cannot assign a value to final field");
 
   SuperGood001.bolt;
   SuperGood002.bolt;
+  SuperGood003.bolt;
   SuperGood004.bolt;
   SuperGood005.bolt;
-  SuperGood007.bolt;
+  SuperGood006.bolt;
 
-  SuperBad001.bolt
-    (Semantic);
-  SuperBad002.bolt
-    (Semantic);
+  ScopeBad001.bolt
+    (Semantic, "Could not find field or local variable");
+  SuperBad001_01.bolt
+    (Semantic, "Cannot access a non-static method");
+  SuperBad001_02.bolt
+    (Semantic, "Cannot access a non-static method");
+  SuperBad002_01.bolt
+    (Semantic, "cannot be instantiated");
+  SuperBad002_02.bolt
+    (Semantic, "cannot be instantiated");
   SuperBad003.bolt
-    (Semantic);
-  SuperBad004.bolt
-    (Semantic);
+    (Semantic, "Cannot access a non-static field");
 
   ScopeGood001.bolt;
+  ScopeGood002.bolt;
 }

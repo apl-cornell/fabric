@@ -1,0 +1,11 @@
+class C {
+  final int x;
+
+  C() {
+    x = 0;
+    super();
+
+    // Can't assign to final field here.
+    x = 0;
+  }
+}

@@ -1,0 +1,12 @@
+class C {
+  int x = 0;
+
+  static class D extends C {
+    D() {
+      // Cannot refer to fields declared in superclass.
+      x = 0;
+
+      super();
+    }
+  }
+}

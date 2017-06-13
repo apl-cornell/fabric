@@ -1,0 +1,12 @@
+class C {
+  static class D extends C {
+    {
+      // Initializer blocks may not refer to non-static methods.
+      m();
+    }
+  }
+
+  int m() {
+    return 0;
+  }
+}

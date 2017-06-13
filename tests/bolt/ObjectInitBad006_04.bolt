@@ -1,0 +1,8 @@
+class C {
+  static class D extends C {
+    // Field initializers may not construct inner classes.
+    Object o = new Inner();
+  }
+
+  class Inner {}
+}

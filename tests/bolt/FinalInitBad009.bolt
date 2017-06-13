@@ -1,8 +1,0 @@
-class FinalInitBad009 {
-  final int x = 0;
-
-  {
-    // Can't assign to final field here.
-    x = 0;
-  }
-}

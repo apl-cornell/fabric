@@ -1,6 +1,0 @@
-class FinalInitBad023 {
-  // Final initializers may not refer to inner classes.
-  final Object o = new Inner();
-
-  class Inner {}
-}

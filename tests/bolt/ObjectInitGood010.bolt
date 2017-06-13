@@ -1,0 +1,10 @@
+class C {
+  int a = 0;
+
+  class Inner {
+    {
+      // Initializer blocks may refer to outer objects.
+      int x = a;
+    }
+  }
+}

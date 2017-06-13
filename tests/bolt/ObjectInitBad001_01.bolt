@@ -1,0 +1,4 @@
+class C {
+  // Fields must be initialized.
+  final int x;
+}

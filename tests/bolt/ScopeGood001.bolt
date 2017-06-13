@@ -1,5 +1,5 @@
-class ScopeGood001 {
-  ScopeGood001() {
+class C {
+  C() {
     int x;
     super();
 

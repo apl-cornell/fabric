@@ -1,0 +1,8 @@
+class C {
+  int x;
+
+  {
+    // Field initialized with initializer block.
+    x = 0;
+  }
+}

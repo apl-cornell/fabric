@@ -1,0 +1,12 @@
+class C {
+  final int x;
+
+  {
+    x = 0;
+  }
+
+  void m() {
+    // Can't assign to final field here.
+    x = 0;
+  }
+}

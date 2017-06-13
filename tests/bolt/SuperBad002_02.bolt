@@ -2,13 +2,13 @@ class C {
   static class Super {
     Super(Object o) {}
 
-    final int x = 0;
+    class Inner {}
   }
 
   static class Derived extends Super {
     Derived() {
-      // Super calls may not refer to fields in superclass.
-      super(x);
+      // Super calls may not instantiate inner classes.
+      super(new Inner());
     }
   }
 }

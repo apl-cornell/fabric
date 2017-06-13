@@ -1,0 +1,16 @@
+class C {
+  int x;
+
+  static class D extends C {
+    int y;
+    {
+      // Cannot refer to uninitialized fields.
+      y = x;
+    }
+  }
+
+  C() {
+    x = 0;
+    super();
+  }
+}

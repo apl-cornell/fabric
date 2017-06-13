@@ -1,0 +1,10 @@
+class C {
+  {
+    int x;
+  }
+
+  {
+    // Previous variable x not in scope here.
+    x = 0;
+  }
+}
