@@ -3,34 +3,37 @@ package bolt.types;
 import polyglot.ext.jl5.types.JL5Context;
 
 /**
- * The context for Bolt type checking. Introduces the notion of a
- * final-initialization context.
+ * The context for Bolt type checking. Introduces the notion of an
+ * object-initialization context.
  */
 public interface BoltContext extends JL5Context {
   /**
-   * Determines whether this is a final-initialization context.
+   * Determines whether this is an object-initialization context.
    */
-  boolean inFinalContext();
+  boolean inObjectInitContext();
 
   /**
-   * Pushes a final-initialization context of the given kind.
+   * Pushes an object-initialization context of the given kind.
    */
-  BoltContext pushFinalInitializer(FinalInitKind kind);
+  BoltContext pushObjectInitializer(ObjectInitKind kind);
 
   /**
-   * Designates a kind of final-initializer context.
+   * Designates a kind of object-initializer context.
    */
-  enum FinalInitKind {
+  enum ObjectInitKind {
     /**
-     * Block final-initializer contexts are nested. Types, variables, and type
+     * Block object-initializer contexts are nested. Types, variables, and type
      * variables declared in this kind of context go out of scope at the end of
-     * the context.
+     * the context. Examples of block object-initializer contexts include
+     * initializer blocks and field initializers.
      */
     BLOCK,
     /**
-     * Inline final-initializer contexts are non-nested. Types, variables, and
+     * Inline object-initializer contexts are non-nested. Types, variables, and
      * type variables declared in this kind of context remain in scope at the
-     * end of the context.
+     * end of the context. The constructor prologue is an example of an inline
+     * object-initializer context: variables declared in the prologue remain in
+     * scope after the prologue.
      */
     INLINE
   }

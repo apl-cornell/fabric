@@ -1,7 +1,7 @@
 package bolt.ast;
 
 import bolt.types.BoltContext;
-import bolt.types.BoltContext.FinalInitKind;
+import bolt.types.BoltContext.ObjectInitKind;
 import polyglot.types.Context;
 import polyglot.util.SerialVersionUID;
 
@@ -14,7 +14,7 @@ public class BoltPrologueExt extends BoltTermExt {
 
   @Override
   public Context enterScope(Context c) {
-    return ((BoltContext) c).pushFinalInitializer(FinalInitKind.INLINE);
+    return ((BoltContext) c).pushObjectInitializer(ObjectInitKind.INLINE);
   }
 
 }
