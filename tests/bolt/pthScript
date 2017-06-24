@@ -31,7 +31,7 @@
 #javac "-d java-out -cp ." {
 #}
  
-bolt.ExtensionInfo "-d out -classpath java-out -assert -noserial -postopts \"-source 1.7 -Xlint\\:-options\" -morepermissiveinference" {
+bolt.ExtensionInfo "-d out -classpath java-out -assert -noserial -postcompiler /bin/echo -postopts \"-source 1.7 -Xlint\\:-options\" -morepermissiveinference" {
   ObjectInitGood001_01.bolt;
   ObjectInitGood001_02.bolt;
   ObjectInitGood002_01.bolt;
