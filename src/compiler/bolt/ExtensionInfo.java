@@ -5,9 +5,11 @@ import java.util.Set;
 
 import bolt.ast.BoltExtFactory_c;
 import bolt.ast.BoltLang_c;
+import bolt.ast.BoltNodeFactory;
 import bolt.ast.BoltNodeFactory_c;
 import bolt.parse.Grm;
 import bolt.parse.Lexer_c;
+import bolt.types.BoltTypeSystem;
 import bolt.types.BoltTypeSystem_c;
 import polyglot.ast.NodeFactory;
 import polyglot.ext.jl5.ast.JL5ExtFactory_c;
@@ -67,6 +69,16 @@ public class ExtensionInfo extends JL7ExtensionInfo {
   @Override
   public Scheduler createScheduler() {
     return new BoltScheduler(this);
+  }
+
+  @Override
+  public BoltTypeSystem typeSystem() {
+    return (BoltTypeSystem) super.typeSystem();
+  }
+
+  @Override
+  public BoltNodeFactory nodeFactory() {
+    return (BoltNodeFactory) super.nodeFactory();
   }
 
 }
