@@ -2,7 +2,7 @@ class C {
   int x = 0;
 
   static class Super {
-    Super(int x) {}
+    Super(int x, int y) {}
   }
 
   class Derived extends Super {
@@ -10,7 +10,7 @@ class C {
 
     Derived() {
       // Super calls may use "this" to refer to an enclosing object.
-      super(C.this.x);
+      super(C.this.x, x = 0);
     }
   }
 }
