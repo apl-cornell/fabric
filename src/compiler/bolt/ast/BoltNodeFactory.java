@@ -117,5 +117,7 @@ public interface BoltNodeFactory extends JL7NodeFactory {
 
   Block Atomic(Position pos, List<TypeNode> throwTypes, List<Stmt> stmts);
 
+  Block Prologue(Position pos, Stmt stmt);
+
   Block Prologue(Position pos, List<Stmt> stmts);
 }

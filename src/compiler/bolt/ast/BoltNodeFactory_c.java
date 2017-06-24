@@ -1,5 +1,6 @@
 package bolt.ast;
 
+import java.util.Collections;
 import java.util.List;
 
 import polyglot.ast.ArrayInit;
@@ -224,6 +225,11 @@ public class BoltNodeFactory_c extends BoltAbstractNodeFactory_c
     NewPrincipalExt ext = (NewPrincipalExt) BoltExt.ext(n);
     ext.location = location;
     return n;
+  }
+
+  @Override
+  public Block Prologue(Position pos, Stmt stmt) {
+    return Prologue(pos, Collections.singletonList(stmt));
   }
 
   @Override
