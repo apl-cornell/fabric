@@ -63,18 +63,16 @@ public class MinMetric extends DerivedMetric {
 
     /*@Override*/
     public String toString() {
-        String str = "min(";
-        boolean nonEmpty = false;
-        for (int i = 0; i < terms.length; i++) {
-            for (int j = 0; j < terms.length; j++) {
-                if (nonEmpty) {
-                    str += ", ";
-                }
-                nonEmpty = true;
-                str += terms[j];
-            }
+      String str = "min(";
+      boolean nonEmpty = false;
+      for (int i = 0; i < terms.length; i++) {
+        if (nonEmpty) {
+            str += ", ";
         }
-        return str + ")@" + $getStore();
+        nonEmpty = true;
+        str += terms[i];
+      }
+      return str + ")@" + $getStore();
     }
 
     /*@Override*/
@@ -156,20 +154,14 @@ public class MinMetric extends DerivedMetric {
     public EnforcementPolicy policy(Bound bound) {
         if (isSingleStore())
             return new DirectPolicy().fabric$metrics$contracts$enforcement$DirectPolicy$(this, bound);
-        Map/*<Metric, MetricContract>*/ witnesses = new LinkedHashMap/*<>*/().fabric$util$LinkedHashMap$();
+        MetricContract[] witnesses = new MetricContract[terms.length];
         // Defend all rows against the bound individually, using the strictest
         // bounds across the rows for each term in this sum.
         for (int i = 0; i < terms.length; i++) {
-            Metric m = term(i);
-            witnesses.put(m, m.getContract(bound));
-        }
-        MetricContract[] finalWitnesses = new MetricContract[witnesses.size()];
-        int i = 0;
-        for (Iterator iter = witnesses.values().iterator(); iter.hasNext();) {
-          finalWitnesses[i++] = (MetricContract) iter.next();
+            witnesses[i] = term(i).getContract(bound);
         }
         final Store bndStore = bound.getStore();
-        return new WitnessPolicy@bndStore().fabric$metrics$contracts$enforcement$WitnessPolicy$(finalWitnesses);
+        return new WitnessPolicy@bndStore().fabric$metrics$contracts$enforcement$WitnessPolicy$(witnesses);
     }
 
     /*@Override*/

@@ -55,9 +55,10 @@ public abstract class AbstractMetric extends AbstractSubject implements Metric {
   protected List/*<MetricContract>*/ getContracts(long time) {
     for (int i = 0; i < contracts.size(); i++) {
       MetricContract c = (MetricContract) contracts.get(i);
-      if (!c.isActive()) {
-        stopTracking(c);
-        contracts.remove(i--);
+      if (c.stale(time)) {
+        removeObserver(c);
+        // Contract's removed, shift the index to account (ugh)
+        i--;
       }
     }
     return contracts;
@@ -68,11 +69,13 @@ public abstract class AbstractMetric extends AbstractSubject implements Metric {
     MetricContract mc = null;
     for (int i = 0; i < contracts.size(); i++) {
       MetricContract c = (MetricContract) contracts.get(i);
-      if (mc == null && c.isActive() && c.enforces(this, bound)) {
+      if (c.stale()) {
+          removeObserver(c);
+          // Contract's removed, shift the index to account (ugh)
+          i--;
+      } else if (mc == null && c.isActivated()
+          && c.enforces(this, bound)) {
         mc = c;
-      } else if (!c.isActive()) {
-        stopTracking(c);
-        contracts.remove(i--);
       }
     }
     if (mc == null)
@@ -90,12 +93,7 @@ public abstract class AbstractMetric extends AbstractSubject implements Metric {
     return getContract(new Bound().fabric$metrics$contracts$Bound$(rate, base, System.currentTimeMillis()));
   }
 
-  /**
-   * @param contract
-   *        a {@link MetricContract} to store with this {@link Metric}
-   * @throws IllegalArgumentException
-   *         if contract isn't defined on this {@link Metric}
-   */
+  /*@Override*/
   public void addContract(MetricContract contract) {
     if (!contract.getMetric().equals(this))
       throw new IllegalArgumentException(
@@ -129,8 +127,9 @@ public abstract class AbstractMetric extends AbstractSubject implements Metric {
     if (other instanceof MinMetric)
       return other.min(this);
     final Store s = $getStore();
-    return findDerivedMetric(s,
-        new MinMetric@s().fabric$metrics$MinMetric$(new Metric[] { this, other }));
+    if (this.compareTo(other) > 0)
+        return findDerivedMetric(s, new MinMetric@s().fabric$metrics$MinMetric$(new Metric[] { other, this }));
+    return findDerivedMetric(s, new MinMetric@s().fabric$metrics$MinMetric$(new Metric[] { this, other }));
   }
 
   /*@Override*/
@@ -158,6 +157,41 @@ public abstract class AbstractMetric extends AbstractSubject implements Metric {
       }
     }
     return thisHash - thatHash;
+  }
+
+  /**
+   * Utility for removing a contract if it's no longer observing and is now
+   * stale.
+   *
+   * @param contract
+   *            a {@link MetricContract} to stop storing with this
+   *            {@link Metric} (if it is now invalid).
+   * @throws IllegalArgumentException
+   *             if contract isn't defined on this {@link Metric}
+   */
+  // TODO/XXX: I'm concerned this will cause problems if we are removing
+  // when switching between policies?
+  private void clearContract(MetricContract contract) {
+      if (!contract.getMetric().equals(this))
+          throw new IllegalArgumentException(
+                  "clearing a contract for a different metric!");
+      if (contract.stale())
+          contracts.remove(contract);
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * If the observer is a MetricContract and is now stale, this clears it out
+   * from the Metric's stored contract set.
+   */
+  /*@Override*/
+  public void removeObserver(Observer obs) {
+      super.removeObserver(obs);
+      if (obs instanceof MetricContract) {
+          MetricContract mc = (MetricContract) obs;
+          clearContract(mc);
+      }
   }
 
   /**
@@ -250,15 +284,5 @@ public abstract class AbstractMetric extends AbstractSubject implements Metric {
       terms[i] = terms[i].times(-1);
     }
     return findDerivedMetric(s, minAtStore(s, terms).times(-1));
-  }
-
-  /*@Override*/
-  public void startTracking(Observer obs) {
-    addObserver(obs);
-  }
-
-  /*@Override*/
-  public void stopTracking(Observer obs) {
-    removeObserver(obs);
   }
 }

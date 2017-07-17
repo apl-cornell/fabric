@@ -15,7 +15,10 @@ public class WitnessPolicy extends EnforcementPolicy {
   /** The set of {@link MetricContract}s used to enforce this policy. */
   public final MetricContract[] witnesses;
 
+  /** The currently associated expiration based on the witnesses. */
   private long expiry;
+
+  /** Is this currently actively enforced? */
   private boolean activated;
 
   /**
@@ -74,6 +77,8 @@ public class WitnessPolicy extends EnforcementPolicy {
 
   /*@Override*/
   public void apply(MetricContract mc) {
+    if (!activated)
+      activate();
     for (int i = 0; i < witnesses.length; i++) {
       witnesses[i].addObserver((fabric.metrics.util.Observer) mc.fetch());
     }
@@ -83,18 +88,18 @@ public class WitnessPolicy extends EnforcementPolicy {
   public void unapply(MetricContract mc) {
     for (int i = 0; i < witnesses.length; i++) {
       witnesses[i].removeObserver(mc);
-      witnesses[i].deactivate();
     }
   }
 
   /*@Override*/
   public String toString() {
-    return witnesses.toString();
+    return Arrays.deepToString(witnesses);
   }
 
   /*@Override*/
   public boolean equals(Object other) {
-    if (!(other instanceof WitnessPolicy)) return false;
+    if (!(other instanceof WitnessPolicy))
+      return false;
     WitnessPolicy that = (WitnessPolicy) other;
     return this.witnesses.equals(that.witnesses);
   }

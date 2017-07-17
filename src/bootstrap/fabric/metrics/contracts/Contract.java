@@ -37,14 +37,14 @@ public interface Contract
    */
     public void extendTo(long newExpiry);
     
-    public boolean get$active();
+    public boolean get$activated();
     
-    public boolean set$active(boolean val);
+    public boolean set$activated(boolean val);
     
     /**
    * @return true if this contract is currently active (enforced).
    */
-    public boolean isActive();
+    public boolean isActivated();
     
     /**
    * Activate and start enforcing this {@link Contract}.
@@ -52,9 +52,11 @@ public interface Contract
     public void activate();
     
     /**
-   * Deactivate and stop observing any evidence.
+   * {@inheritDoc}
+   *
+   * Make stale and stop observing any evidence if this is no longer observed.
    */
-    public void deactivate();
+    public void removeObserver(fabric.metrics.util.Observer obs);
     
     /**
    * Updates the expiration time of this contract, either extending or
@@ -67,12 +69,13 @@ public interface Contract
     public boolean update(long newExpiry);
     
     /**
-   * Called to revoke this contract in the current transaction context.
+   * Called to retract this contract's expiry in the current transaction
+   * context.
    *
    * @param newExpiry
    *        time to set the expiry back to.
    */
-    public void revoke(long newExpiry);
+    public void retract(long newExpiry);
     
     /**
    * @param time
@@ -81,6 +84,24 @@ public interface Contract
    *       transaction context.
    */
     public boolean valid(long time);
+    
+    /**
+   * @return true iff the contract is valid at the given time in the current
+   *         transaction context.
+   */
+    public boolean valid();
+    
+    /**
+   * @param time
+   *            the time we're checking against.
+   * @return true iff the contract is stale according to the local time.
+   */
+    public boolean stale(long time);
+    
+    /**
+   * @return true iff the contract is stale according to the local time.
+   */
+    public boolean stale();
     
     public long getExpiry();
     
@@ -108,14 +129,14 @@ public interface Contract
     public static class _Proxy
     extends fabric.metrics.util.AbstractSubject._Proxy
       implements fabric.metrics.contracts.Contract {
-        public boolean get$active() {
+        public boolean get$activated() {
             return ((fabric.metrics.contracts.Contract._Impl) fetch()).
-              get$active();
+              get$activated();
         }
         
-        public boolean set$active(boolean val) {
+        public boolean set$activated(boolean val) {
             return ((fabric.metrics.contracts.Contract._Impl) fetch()).
-              set$active(val);
+              set$activated(val);
         }
         
         public fabric.metrics.contracts.Contract
@@ -128,28 +149,36 @@ public interface Contract
             ((fabric.metrics.contracts.Contract) fetch()).extendTo(arg1);
         }
         
-        public boolean isActive() {
-            return ((fabric.metrics.contracts.Contract) fetch()).isActive();
+        public boolean isActivated() {
+            return ((fabric.metrics.contracts.Contract) fetch()).isActivated();
         }
         
         public void activate() {
             ((fabric.metrics.contracts.Contract) fetch()).activate();
         }
         
-        public void deactivate() {
-            ((fabric.metrics.contracts.Contract) fetch()).deactivate();
-        }
-        
         public boolean update(long arg1) {
             return ((fabric.metrics.contracts.Contract) fetch()).update(arg1);
         }
         
-        public void revoke(long arg1) {
-            ((fabric.metrics.contracts.Contract) fetch()).revoke(arg1);
+        public void retract(long arg1) {
+            ((fabric.metrics.contracts.Contract) fetch()).retract(arg1);
         }
         
         public boolean valid(long arg1) {
             return ((fabric.metrics.contracts.Contract) fetch()).valid(arg1);
+        }
+        
+        public boolean valid() {
+            return ((fabric.metrics.contracts.Contract) fetch()).valid();
+        }
+        
+        public boolean stale(long arg1) {
+            return ((fabric.metrics.contracts.Contract) fetch()).stale(arg1);
+        }
+        
+        public boolean stale() {
+            return ((fabric.metrics.contracts.Contract) fetch()).stale();
         }
         
         public long getExpiry() {
@@ -258,27 +287,27 @@ public interface Contract
             }
         }
         
-        public boolean get$active() {
+        public boolean get$activated() {
             fabric.worker.transaction.TransactionManager.getInstance().
               registerRead(this);
-            return this.active;
+            return this.activated;
         }
         
-        public boolean set$active(boolean val) {
+        public boolean set$activated(boolean val) {
             fabric.worker.transaction.TransactionManager tm =
               fabric.worker.transaction.TransactionManager.getInstance();
             boolean transactionCreated = tm.registerWrite(this);
-            this.active = val;
+            this.activated = val;
             if (transactionCreated) tm.commitTransaction();
             return val;
         }
         
-        private boolean active = false;
+        private boolean activated = false;
         
         /**
    * @return true if this contract is currently active (enforced).
    */
-        public boolean isActive() { return this.get$active(); }
+        public boolean isActivated() { return this.get$activated(); }
         
         /**
    * Activate and start enforcing this {@link Contract}.
@@ -307,11 +336,11 @@ public interface Contract
                     fabric.worker.transaction.TransactionManager.getInstance().
                       startTransaction();
                     try {
-                        if (!this.get$active()) {
+                        if (!this.get$activated()) {
                             fabric.common.Logging.METRICS_LOGGER.
                               log(java.util.logging.Level.FINE,
                                   "CONTRACT ACTIVATE");
-                            this.set$active(true);
+                            this.set$activated(true);
                         }
                     }
                     catch (final fabric.worker.RetryException $e24) {
@@ -370,9 +399,11 @@ public interface Contract
         }
         
         /**
-   * Deactivate and stop observing any evidence.
+   * {@inheritDoc}
+   *
+   * Make stale and stop observing any evidence if this is no longer observed.
    */
-        public void deactivate() {
+        public void removeObserver(fabric.metrics.util.Observer obs) {
             {
                 fabric.worker.transaction.TransactionManager $tm33 =
                   fabric.worker.transaction.TransactionManager.getInstance();
@@ -396,13 +427,8 @@ public interface Contract
                     fabric.worker.transaction.TransactionManager.getInstance().
                       startTransaction();
                     try {
-                        if (!isObserved()) {
-                            fabric.common.Logging.METRICS_LOGGER.
-                              log(java.util.logging.Level.FINE,
-                                  "CONTRACT DEACTIVATE");
-                            this.set$active(false);
-                            this.set$$expiry((long) -1);
-                        }
+                        super.removeObserver(obs);
+                        if (!isObserved()) { this.set$$expiry((long) -1); }
                     }
                     catch (final fabric.worker.RetryException $e31) {
                         $commit30 = false;
@@ -491,7 +517,7 @@ public interface Contract
                       this.get$$expiry());
             }
             else if (getExpiry() > newExpiry) {
-                revoke(newExpiry);
+                retract(newExpiry);
                 fabric.common.Logging.METRICS_LOGGER.
                   fine(
                     "EXPIRY OF " +
@@ -508,12 +534,13 @@ public interface Contract
         }
         
         /**
-   * Called to revoke this contract in the current transaction context.
+   * Called to retract this contract's expiry in the current transaction
+   * context.
    *
    * @param newExpiry
    *        time to set the expiry back to.
    */
-        public void revoke(long newExpiry) {
+        public void retract(long newExpiry) {
             fabric.common.Logging.METRICS_LOGGER.log(
                                                    java.util.logging.Level.INFO,
                                                    "REVOCATION");
@@ -530,8 +557,33 @@ public interface Contract
    *       transaction context.
    */
         public boolean valid(long time) {
-            if (!isActive()) return false;
-            return getExpiry() >= time;
+            return isActivated() && getExpiry() >= time;
+        }
+        
+        /**
+   * @return true iff the contract is valid at the given time in the current
+   *         transaction context.
+   */
+        public boolean valid() {
+            return isActivated() && getExpiry() >=
+              java.lang.System.currentTimeMillis();
+        }
+        
+        /**
+   * @param time
+   *            the time we're checking against.
+   * @return true iff the contract is stale according to the local time.
+   */
+        public boolean stale(long time) {
+            return isActivated() && getExpiry() < time;
+        }
+        
+        /**
+   * @return true iff the contract is stale according to the local time.
+   */
+        public boolean stale() {
+            return isActivated() && getExpiry() <
+              java.lang.System.currentTimeMillis();
         }
         
         public long getExpiry() {
@@ -559,7 +611,7 @@ public interface Contract
             fabric.common.Logging.METRICS_LOGGER.log(
                                                    java.util.logging.Level.FINE,
                                                    "CHECKING CONTRACT CHANGE");
-            if (isActive()) return refresh(true);
+            if (valid()) return refresh(true);
             fabric.common.Logging.METRICS_LOGGER.log(
                                                    java.util.logging.Level.FINE,
                                                    "CONTRACT INVALID");
@@ -665,7 +717,7 @@ public interface Contract
                                java.util.List interStoreRefs)
               throws java.io.IOException {
             super.$serialize(out, refTypes, intraStoreRefs, interStoreRefs);
-            out.writeBoolean(this.active);
+            out.writeBoolean(this.activated);
         }
         
         public _Impl(fabric.worker.Store store, long onum, int version,
@@ -680,14 +732,14 @@ public interface Contract
             super(store, onum, version, expiry, labelStore, labelOnum,
                   accessPolicyStore, accessPolicyOnum, in, refTypes,
                   intraStoreRefs, interStoreRefs);
-            this.active = in.readBoolean();
+            this.activated = in.readBoolean();
         }
         
         public void $copyAppStateFrom(fabric.lang.Object._Impl other) {
             super.$copyAppStateFrom(other);
             fabric.metrics.contracts.Contract._Impl src =
               (fabric.metrics.contracts.Contract._Impl) other;
-            this.active = src.active;
+            this.activated = src.activated;
         }
     }
     
@@ -964,11 +1016,11 @@ public interface Contract
         
     }
     
-    public static final byte[] $classHash = new byte[] { -89, -18, 116, 89, -76,
-    -95, 23, -70, 102, 35, -112, 17, 74, -88, -9, -123, -88, 56, -98, 77, 44,
-    -68, 4, 71, 0, 51, -102, 1, 12, 108, 43, -69 };
+    public static final byte[] $classHash = new byte[] { 4, -20, 93, 74, -4,
+    -51, -87, -72, -24, -104, -7, -65, 67, -82, -60, -84, 16, 27, 98, -62, -78,
+    117, 14, 27, -99, 113, 29, 26, -36, 29, 125, 70 };
     public static final java.lang.String jlc$CompilerVersion$fabil = "0.3.0";
-    public static final long jlc$SourceLastModified$fabil = 1496782676000L;
+    public static final long jlc$SourceLastModified$fabil = 1500326596000L;
     public static final java.lang.String jlc$ClassType$fabil =
-      "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";
+      "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";
 }

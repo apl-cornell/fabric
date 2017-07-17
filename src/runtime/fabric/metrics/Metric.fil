@@ -3,7 +3,6 @@ package fabric.metrics;
 import fabric.metrics.contracts.Bound;
 import fabric.metrics.contracts.MetricContract;
 import fabric.metrics.contracts.enforcement.EnforcementPolicy;
-import fabric.metrics.util.Observer;
 import fabric.metrics.util.Subject;
 
 import fabric.worker.Store;
@@ -122,14 +121,4 @@ public interface Metric extends Subject, Comparable/*<Metric>*/ {
    *         other and this's entries.
    */
   public Metric max(Metric other);
-
-  /**
-   * Track directly by an Observer.
-   */
-  public void startTracking(Observer obs);
-
-  /**
-   * Stop tracking directly by an Observer.
-   */
-  public void stopTracking(Observer obs);
 }

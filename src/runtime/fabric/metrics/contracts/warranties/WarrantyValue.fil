@@ -7,7 +7,7 @@ import fabric.metrics.contracts.MetricContract;
  * with a {@link MetricContract}.
  */
 public class WarrantyValue/*<V>*/ {
-  public /*final*/ /*V*/ Object value;
+  public /*final V*/ Object value;
   public /*final*/ MetricContract contract;
 
   /**
@@ -28,5 +28,10 @@ public class WarrantyValue/*<V>*/ {
    */
   public long expectedLifetime() {
     return contract.getExpectedLifetime();
+  }
+
+  /*@Override*/
+  public String toString() {
+    return "WarrantyVal(" + value + ", " + contract + ")";
   }
 }

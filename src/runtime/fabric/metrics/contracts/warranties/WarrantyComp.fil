@@ -1,18 +1,23 @@
 package fabric.metrics.contracts.warranties;
 
+import fabric.util.HashSet;
+import fabric.util.Set;
+
 import fabric.metrics.Metric;
+import fabric.metrics.SampledMetric;
+import fabric.metrics.util.Observer;
 
 /**
  * A warrantiable computation. Returns values wrapped in a {@link WarrantyValue}
  * along with an appropriate {@link Metric} for the result.
+ *
+ * Currently, WarrantyComp acts as an observer of the currently associated
+ * treaty. This helps to ensure that treaties don't get deactivated prematurely
+ * when used by the computation. TODO: this seems a bit like a hack? Is there a
+ * better way to handle the issue this addresses?
  */
-public abstract class WarrantyComp/*<T> implements LongFunction<T>*/ {
+public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observer {
   private WarrantyValue/*<T>*/ curVal;
-
-  protected WarrantyComp fabric$metrics$contracts$warranties$WarrantyComp$() {
-    fabric$lang$Object$();
-    return this;
-  }
 
   /**
    * Create a new updated result paired with a contract that would enforce it
@@ -23,13 +28,42 @@ public abstract class WarrantyComp/*<T> implements LongFunction<T>*/ {
   /**
    * Run this warranty computation at the given time.
    */
+  /*@Override*/
   public Object/*T*/ apply(long time) {
-    if (curVal == null || !curVal.contract.isActive()
-          || !curVal.contract.valid(time)) {
+    // TODO recompute but don't replace if current one is pending and we
+    // compute the same value
+    if (curVal == null || !curVal.contract.isActivated()
+          || curVal.contract.stale(time)) {
+      if (curVal != null) {
+        curVal.contract.removeObserver(this);
+      }
+      // TODO: only compare if it's not activated yet.
       curVal = updatedVal(time);
       // TODO: this should happen asynchronously after this call returns.
       curVal.contract.activate();
+      curVal.contract.addObserver(this);
     }
     return curVal.value;
+  }
+
+  /*@Override*/
+  public Set/*<SampledMetric>*/ getLeafSubjects() {
+    // TODO: Is this right?
+    if (curVal != null)
+      return curVal.contract.getLeafSubjects();
+    return new HashSet().fabric$util$HashSet$();
+  }
+
+  /*@Override*/
+  public boolean handleUpdates() {
+    // TODO: Is this right?
+    long time = System.currentTimeMillis();
+    return (curVal != null && curVal.contract.valid(time)
+          && curVal.value != apply(time));
+  }
+
+  protected WarrantyComp fabric$metrics$contracts$warranties$WarrantyComp$() {
+    fabric$lang$Object$();
+    return this;
   }
 }

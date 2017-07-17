@@ -99,7 +99,7 @@ public class ScaledMetric extends DerivedMetric {
         if (isSingleStore())
             return new DirectPolicy().fabric$metrics$contracts$enforcement$DirectPolicy$(this, bound);
 
-        Map/*<Metric, MetricContract>*/ witnesses = new LinkedHashMap/*<>*/().fabric$util$LinkedHashMap$();
+        MetricContract witness = null;
 
         long currentTime = System.currentTimeMillis();
         double base = bound.value(currentTime);
@@ -121,17 +121,9 @@ public class ScaledMetric extends DerivedMetric {
             rate = -rate;
         }
         Bound witnessBound = new Bound().fabric$metrics$contracts$Bound$(rate, base, currentTime);
-        if (!witnesses.containsKey(m)
-                || !((MetricContract) witnesses.get(m)).getBound().implies(witnessBound)) {
-            witnesses.put(m, m.getContract(witnessBound));
-        }
-        MetricContract[] finalWitnesses = new MetricContract[witnesses.size()];
-        int i = 0;
-        for (Iterator iter = witnesses.values().iterator(); iter.hasNext();) {
-          finalWitnesses[i++] = (MetricContract) iter.next();
-        }
+        witness = m.getContract(witnessBound);
         final Store bndStore = bound.getStore();
-        return new WitnessPolicy@bndStore().fabric$metrics$contracts$enforcement$WitnessPolicy$(finalWitnesses);
+        return new WitnessPolicy@bndStore().fabric$metrics$contracts$enforcement$WitnessPolicy$(new MetricContract[] { witness });
     }
 
     /*@Override*/

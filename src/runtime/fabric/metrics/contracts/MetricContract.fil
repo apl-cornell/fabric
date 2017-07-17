@@ -7,6 +7,7 @@ import fabric.metrics.DerivedMetric;
 import fabric.metrics.Metric;
 import fabric.metrics.SampledMetric;
 import fabric.metrics.contracts.enforcement.EnforcementPolicy;
+import fabric.metrics.util.Observer;
 import fabric.metrics.util.Subject;
 
 import fabric.worker.Store;
@@ -68,7 +69,7 @@ public class MetricContract extends Contract {
   public void activate() {
     fabric.common.Logging.METRICS_LOGGER.fine("ASDF ACTIVATING MC " + $getOnum());
     atomic {
-      if (isActive())
+      if (isActivated())
         return;
     }
 
@@ -87,8 +88,10 @@ public class MetricContract extends Contract {
       currentPolicy = startPol;
       $expiry = currentPolicy.expiry();
       super.activate();
-      currentPolicy.apply(this);
-      getMetric().addContract(this);
+      if (currentPolicy.expiry() >= System.currentTimeMillis()) {
+        currentPolicy.apply(this);
+        getMetric().addContract(this);
+      }
     }
     fabric.common.Logging.METRICS_LOGGER.fine("ASDF FINISHED ACTIVATING MC " + $getOnum());
   }
@@ -102,7 +105,7 @@ public class MetricContract extends Contract {
   /*@Override*/
   protected boolean refresh(boolean force) {
     // If we haven't activated yet, this is a bad operation.  Stop.
-    if (!isActive()) {
+    if (!isActivated()) {
       fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "CONTRACT INACTIVE");
       return false;
     }
@@ -128,7 +131,9 @@ public class MetricContract extends Contract {
       oldPolicy.unapply(this);
     currentPolicy = newPolicy;
     currentPolicy.activate();
-    currentPolicy.apply(this);
+    // Don't apply if the new policy is already expired.
+    if (currentPolicy.expiry() >= currentTime)
+      currentPolicy.apply(this);
     fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "CONTRACT TRUE");
     return update(currentPolicy.expiry());
   }
@@ -148,7 +153,7 @@ public class MetricContract extends Contract {
   public boolean implies(Metric otherMetric, Bound otherBound) {
     if (!getMetric().equals(otherMetric) || !bound.implies(otherBound))
       return false;
-    return valid(System.currentTimeMillis());
+    return valid();
   }
 
   /**
@@ -181,7 +186,7 @@ public class MetricContract extends Contract {
   public boolean enforces(Metric otherMetric, Bound otherBound) {
     if (!getMetric().equals(otherMetric) || !bound.equals(otherBound))
       return false;
-    return valid(System.currentTimeMillis());
+    return valid();
   }
 
   /*@Override*/
@@ -202,14 +207,20 @@ public class MetricContract extends Contract {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * Stops observing any evidence used by the current enforcement policy (by
+   * unapplying the policy).
+   */
   /*@Override*/
-  public void deactivate() {
+  public void removeObserver(Observer obs) {
     atomic {
+      super.removeObserver(obs);
       if (!isObserved()) {
         if (currentPolicy != null)
           currentPolicy.unapply(this);
       }
-      super.deactivate();
     }
   }
 }

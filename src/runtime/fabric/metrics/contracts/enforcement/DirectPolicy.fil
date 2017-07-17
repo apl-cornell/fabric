@@ -10,18 +10,20 @@ import fabric.metrics.contracts.MetricContract;
  */
 public class DirectPolicy extends EnforcementPolicy {
 
-  /**
-   * The contract that this direct policy was created for.
-   */
+  /** The metric the associated contract bounds. */
   public final Metric metric;
+  /** The bound enforced by the associated contract. */
   public final Bound bound;
+  /** The currently calculated expiration time to use for the contract. */
   private long expiry;
+  /** Is this policy active and being enforced? */
   private boolean activated;
 
   /**
-   * @param expiry
-   *        how long to enforce the {@link MetricContract} this is applied
-   *        to using direct checks on updates to the metric.
+   * @param metric
+   *            the Metric the associated contract is bounding.
+   * @param bound
+   *            the bound enforced by the associated contract.
    */
   public DirectPolicy fabric$metrics$contracts$enforcement$DirectPolicy$(Metric metric, Bound bound) {
     this.metric = metric;
@@ -166,16 +168,17 @@ public class DirectPolicy extends EnforcementPolicy {
 
   /*@Override*/
   public void apply(MetricContract mc) {
+    // TODO: Should this be atomic?
     atomic {
       if (!activated)
         activate();
-      mc.getMetric().startTracking(mc);
+      metric.addObserver(mc);
     }
   }
 
   /*@Override*/
   public void unapply(MetricContract mc) {
-    mc.getMetric().stopTracking(mc);
+    metric.removeObserver(mc);
   }
 
   /*@Override*/

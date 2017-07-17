@@ -106,9 +106,24 @@ public interface DerivedMetric
     
     public boolean isSingleStore();
     
-    public void startTracking(fabric.metrics.util.Observer obs);
+    /**
+   * {@inheritDoc}
+   *
+   * If this is the first observer, then this metric is being monitored for
+   * changes and so it stops computing on demand and instead caches the last
+   * updated value (computed on checks). This metric then becomes an observer
+   * of its terms.
+   */
+    public void addObserver(fabric.metrics.util.Observer obs);
     
-    public void stopTracking(fabric.metrics.util.Observer obs);
+    /**
+   * {@inheritDoc}
+   *
+   * If there are no observers after removing the given one, this metric stops
+   * acting as an observer of its terms (and goes back to computing on demand
+   * rather than caching the last updated value).
+   */
+    public void removeObserver(fabric.metrics.util.Observer obs);
     
     /**
    * Method to be called when a {@link DerivedMetric} is no longer stored.
@@ -447,7 +462,8 @@ public interface DerivedMetric
                   fabric$util$TreeSet$(fabric.util.Arrays._Impl.asList(terms)).
                   size() != terms.get$length())
                 throw new java.lang.IllegalArgumentException(
-                        "DerivedMetric terms must not contain duplicates!");
+                        "DerivedMetric terms must not contain duplicates: " +
+                          fabric.util.Arrays._Impl.deepToString(terms));
             this.set$leafMetrics(
                    ((fabric.util.HashSet)
                       new fabric.util.HashSet._Impl(
@@ -575,27 +591,42 @@ public interface DerivedMetric
         
         public boolean isSingleStore() { return this.get$singleStore(); }
         
-        public void startTracking(fabric.metrics.util.Observer obs) {
+        /**
+   * {@inheritDoc}
+   *
+   * If this is the first observer, then this metric is being monitored for
+   * changes and so it stops computing on demand and instead caches the last
+   * updated value (computed on checks). This metric then becomes an observer
+   * of its terms.
+   */
+        public void addObserver(fabric.metrics.util.Observer obs) {
             if (!isObserved()) {
                 for (int i = 0; i < this.get$terms().get$length(); i++) {
                     ((fabric.metrics.Metric) this.get$terms().get(i)).
-                      startTracking((fabric.metrics.DerivedMetric)
-                                      this.$getProxy());
+                      addObserver((fabric.metrics.DerivedMetric)
+                                    this.$getProxy());
                 }
                 this.set$lastValue((double) computeValue());
                 this.set$lastVelocity((double) computeVelocity());
                 this.set$lastNoise((double) computeNoise());
             }
-            addObserver(obs);
+            super.addObserver(obs);
         }
         
-        public void stopTracking(fabric.metrics.util.Observer obs) {
-            removeObserver(obs);
+        /**
+   * {@inheritDoc}
+   *
+   * If there are no observers after removing the given one, this metric stops
+   * acting as an observer of its terms (and goes back to computing on demand
+   * rather than caching the last updated value).
+   */
+        public void removeObserver(fabric.metrics.util.Observer obs) {
+            super.removeObserver(obs);
             if (!isObserved()) {
                 for (int i = 0; i < this.get$terms().get$length(); i++) {
                     ((fabric.metrics.Metric) this.get$terms().get(i)).
-                      stopTracking((fabric.metrics.DerivedMetric)
-                                     this.$getProxy());
+                      removeObserver((fabric.metrics.DerivedMetric)
+                                       this.$getProxy());
                 }
             }
         }
@@ -604,15 +635,7 @@ public interface DerivedMetric
    * Method to be called when a {@link DerivedMetric} is no longer stored.
    * Removes itself from the {@link Observer}s of its terms.
    */
-        public void cleanup() {
-            fabric.util.Iterator iter =
-              getContracts(java.lang.System.currentTimeMillis()).iterator();
-            while (iter.hasNext()) {
-                ((fabric.metrics.contracts.MetricContract)
-                   fabric.lang.Object._Proxy.$getProxy(iter.next())).deactivate(
-                                                                       );
-            }
-        }
+        public void cleanup() {  }
         
         /**
    * @return the terms this {@link DerivedMetric} is defined over
@@ -783,11 +806,11 @@ public interface DerivedMetric
         
     }
     
-    public static final byte[] $classHash = new byte[] { -31, -22, -63, 40, -3,
-    107, 64, 63, -53, -39, 41, -14, 66, -44, 116, 62, 47, -39, -21, 17, -101,
-    56, -117, 28, -98, -87, -62, -97, 106, 71, 66, -7 };
+    public static final byte[] $classHash = new byte[] { -42, 6, -23, -15, -31,
+    115, -113, -58, -9, -85, 95, -9, 29, 33, -109, 35, 92, -95, -63, -117, 63,
+    4, -107, -34, -58, 93, 11, 96, -67, -5, 13, -107 };
     public static final java.lang.String jlc$CompilerVersion$fabil = "0.3.0";
-    public static final long jlc$SourceLastModified$fabil = 1496782676000L;
+    public static final long jlc$SourceLastModified$fabil = 1500326803000L;
     public static final java.lang.String jlc$ClassType$fabil =
-      "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";
+      "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";
 }

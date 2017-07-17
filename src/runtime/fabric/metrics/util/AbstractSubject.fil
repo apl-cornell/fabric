@@ -75,6 +75,9 @@ public abstract class AbstractSubject implements Subject {
     // subtransaction starts.
     //atomic {
       java.util.LinkedList/*<Observer>*/ queue = new java.util.LinkedList/*<>*/();
+      // Items that should be handled and need to be checked again later after
+      // other children are processed.
+      java.util.LinkedList/*<Observer>*/ delayed = new java.util.LinkedList/*<>*/();
       while (!unobserved.isEmpty()) {
         SampledMetric sm = (SampledMetric) unobserved.poll();
         //fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "HANDLING OBSERVATION OF " + sm);
@@ -88,6 +91,10 @@ public abstract class AbstractSubject implements Subject {
         while (!queue.isEmpty()) {
           Observer unhandled = (Observer) queue.poll();
           //fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "CHECKING OBSERVER " + unhandled);
+          // We're handling a delayed item, mark it as not delayed for
+          // now. We'll delay it again if it's still not ready.
+          delayed.remove(unhandled);
+
           boolean needToWait = false;
           Iterator leavesIter = unhandled.getLeafSubjects().iterator();
           while (leavesIter.hasNext()) {
@@ -106,6 +113,29 @@ public abstract class AbstractSubject implements Subject {
               Iterator parentIter = ((Subject) unhandled).getObservers().iterator();
               while (parentIter.hasNext()) {
                 queue.add(parentIter.next());
+              }
+            } else {
+              // mark as delayed for later
+              delayed.add(unhandled);
+            }
+            // If there's nothing more, let's get back to delayed items that
+            // are now worth looking at before moving on.
+            if (queue.isEmpty()) {
+              java.util.Iterator delayedIter = delayed.iterator();
+              while (delayedIter.hasNext()) {
+                Observer withheld = (Observer) delayedIter.next();
+
+                boolean doneWaiting = true;
+                Iterator withheldLeavesIter = withheld.getLeafSubjects().iterator();
+                while (withheldLeavesIter.hasNext()) {
+                  if (unobserved.contains(withheldLeavesIter.next())) {
+                    doneWaiting = false;
+                    break;
+                  }
+                }
+                if (doneWaiting) {
+                  queue.add(withheld);
+                }
               }
             }
           }

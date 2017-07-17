@@ -51,7 +51,8 @@ public abstract class DerivedMetric extends AbstractMetric implements Observer {
   public DerivedMetric fabric$metrics$DerivedMetric$(Metric[] terms) {
     if (new TreeSet/*<>*/().fabric$util$TreeSet$(Arrays.asList(terms)).size() != terms.length)
       throw new IllegalArgumentException(
-          "DerivedMetric terms must not contain duplicates!");
+              "DerivedMetric terms must not contain duplicates: "
+                      + Arrays.deepToString(terms));
     this.leafMetrics = new HashSet/*<>*/().fabric$util$HashSet$();
     boolean single = true;
     for (int i = 0; i < terms.length; i++) {
@@ -152,27 +153,42 @@ public abstract class DerivedMetric extends AbstractMetric implements Observer {
     return singleStore;
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * If this is the first observer, then this metric is being monitored for
+   * changes and so it stops computing on demand and instead caches the last
+   * updated value (computed on checks). This metric then becomes an observer
+   * of its terms.
+   */
   /*@Override*/
-  public void startTracking(Observer obs) {
+  public void addObserver(Observer obs) {
     if (!isObserved()) {
       // Start tracking terms if this is now used by a contract directly.
       for (int i = 0; i < terms.length; i++) {
-        terms[i].startTracking(this);
+        terms[i].addObserver(this);
       }
       lastValue = computeValue();
       lastVelocity = computeVelocity();
       lastNoise = computeNoise();
     }
-    addObserver(obs);
+    super.addObserver(obs);
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * If there are no observers after removing the given one, this metric stops
+   * acting as an observer of its terms (and goes back to computing on demand
+   * rather than caching the last updated value).
+   */
   /*@Override*/
-  public void stopTracking(Observer obs) {
-    removeObserver(obs);
+  public void removeObserver(Observer obs) {
+    super.removeObserver(obs);
     if (!isObserved()) {
       // Don't observe subterms unless it's being tracked directly.
       for (int i = 0; i < terms.length; i++) {
-        terms[i].stopTracking(this);
+        terms[i].removeObserver(this);
       }
     }
   }
@@ -182,10 +198,13 @@ public abstract class DerivedMetric extends AbstractMetric implements Observer {
    * Removes itself from the {@link Observer}s of its terms.
    */
   public void cleanup() {
+    /*
+     * NOT CONVINCED THIS IS NEEDED
     Iterator iter = getContracts(System.currentTimeMillis()).iterator();
     while (iter.hasNext()) {
       ((MetricContract) iter.next()).deactivate();
     }
+    */
   }
 
   /**
