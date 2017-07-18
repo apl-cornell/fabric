@@ -80,7 +80,7 @@ public abstract class AbstractSubject implements Subject {
       java.util.LinkedList/*<Observer>*/ delayed = new java.util.LinkedList/*<>*/();
       while (!unobserved.isEmpty()) {
         SampledMetric sm = (SampledMetric) unobserved.poll();
-        //fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "HANDLING OBSERVATION OF " + sm);
+        fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "HANDLING OBSERVATION OF " + sm);
         //fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "AWAITING OBSERVATION OF " + unobserved);
         //queue.addAll(sm.getObservers());
         Iterator obsIter = sm.getObservers().iterator();
@@ -105,37 +105,38 @@ public abstract class AbstractSubject implements Subject {
           }
           // If this has no other pending sampled events, process it.
           if (!needToWait) {
-            //fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "HANDLING OBSERVER " + unhandled);
+            fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "HANDLING OBSERVER " + unhandled);
             boolean modified = unhandled.handleUpdates();
             if (unhandled instanceof Subject && modified) {
-              //fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "QUEUING PARENTS OF OBSERVER " + unhandled);
+              fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "QUEUING PARENTS OF OBSERVER " + unhandled);
               //queue.addAll(parents);
               Iterator parentIter = ((Subject) unhandled).getObservers().iterator();
               while (parentIter.hasNext()) {
                 queue.add(parentIter.next());
               }
-            } else {
-              // mark as delayed for later
-              delayed.add(unhandled);
             }
-            // If there's nothing more, let's get back to delayed items that
-            // are now worth looking at before moving on.
-            if (queue.isEmpty()) {
-              java.util.Iterator delayedIter = delayed.iterator();
-              while (delayedIter.hasNext()) {
-                Observer withheld = (Observer) delayedIter.next();
+          } else {
+            fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "DELAYING OBSERVER " + unhandled);
+            // mark as delayed for later
+            delayed.add(unhandled);
+          }
+          // If there's nothing more, let's get back to delayed items that
+          // are now worth looking at before moving on.
+          if (queue.isEmpty()) {
+            java.util.Iterator delayedIter = delayed.iterator();
+            while (delayedIter.hasNext()) {
+              Observer withheld = (Observer) delayedIter.next();
 
-                boolean doneWaiting = true;
-                Iterator withheldLeavesIter = withheld.getLeafSubjects().iterator();
-                while (withheldLeavesIter.hasNext()) {
-                  if (unobserved.contains(withheldLeavesIter.next())) {
-                    doneWaiting = false;
-                    break;
-                  }
+              boolean doneWaiting = true;
+              Iterator withheldLeavesIter = withheld.getLeafSubjects().iterator();
+              while (withheldLeavesIter.hasNext()) {
+                if (unobserved.contains(withheldLeavesIter.next())) {
+                  doneWaiting = false;
+                  break;
                 }
-                if (doneWaiting) {
-                  queue.add(withheld);
-                }
+              }
+              if (doneWaiting) {
+                queue.add(withheld);
               }
             }
           }
