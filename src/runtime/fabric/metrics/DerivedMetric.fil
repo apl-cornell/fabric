@@ -87,9 +87,12 @@ public abstract class DerivedMetric extends AbstractMetric implements Observer {
       }
     }
 
-    lastValue = computeValue();
-    lastVelocity = computeVelocity();
-    lastNoise = computeNoise();
+    // Not actually convinced we need to compute on create.  Either it will get
+    // an observer, and will precompute then, or it will be unobserved and be
+    // computed on each request.
+    // lastValue = computeValue();
+    // lastVelocity = computeVelocity();
+    // lastNoise = computeNoise();
   }
 
   /*@Override*/

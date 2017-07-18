@@ -1215,8 +1215,6 @@ public final class TransactionManager {
    * accessing any Warranty values.
    */
   public void registerSample(SampledMetric sampled) {
-    // Make sure it's registered as written.
-    registerWrite((_Impl) sampled.fetch());
     // Add it to the log's unobserved queue if it's not already there.
     synchronized (current.unobservedSamples) {
       if (!current.unobservedSamples.contains(sampled))
@@ -1229,6 +1227,7 @@ public final class TransactionManager {
    */
   public void registerRetraction(Contract retracted) {
     // Make sure it's registered as written.
+    // TODO: I'm not actually convinced this should be necessary.
     registerWrite((_Impl) retracted.fetch());
     synchronized (current.retractedContracts) {
       if (!current.retractedContracts.contains(retracted))
@@ -1249,6 +1248,7 @@ public final class TransactionManager {
    */
   public void registerExtension(Contract extended) {
     // Make sure it's registered as written.
+    // TODO: I'm not actually convinced this should be necessary.
     registerWrite((_Impl) extended.fetch());
     synchronized (current.retractedContracts) {
       if (current.retractedContracts.contains(extended)) return;
