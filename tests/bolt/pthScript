@@ -130,6 +130,10 @@ bolt.ExtensionInfo "-d out -classpath java-out -assert -noserial -postcompiler /
     (Semantic, "might not have been initialized");
   ObjectInitBad008_03.bolt
     (Semantic, "might not have been initialized");
+  ObjectInitBad009_01.bolt
+    (Semantic, "Cannot access");
+  ObjectInitBad009_02.bolt
+    (Semantic, "Cannot access");
 
   FieldAssignBad001_01.bolt
     (Semantic, "Final field .* might already have been initialized");

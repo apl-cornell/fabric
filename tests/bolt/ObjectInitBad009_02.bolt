@@ -1,0 +1,12 @@
+class C {
+  C() {
+    C c;
+
+    // Cannot call instance methods until super() or this() is called.
+    ((C) this).m();
+
+    super();
+  }
+
+  void m() {}
+}
