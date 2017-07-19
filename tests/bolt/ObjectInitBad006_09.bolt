@@ -1,6 +1,6 @@
 class C {
   C() {
-    // Constructor prologues may not construct anonymous classes.
+    // May not construct anonymous classes until this() or super() is called.
     new Object() {};
 
     super();

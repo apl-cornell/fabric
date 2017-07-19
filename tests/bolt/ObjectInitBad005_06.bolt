@@ -1,7 +1,7 @@
 class C {
   static class D extends C {
     D() {
-      // Constructor prologues may not refer to non-static methods.
+      // May not refer to non-static methods until super() or this() is called.
       m();
       super();
     }

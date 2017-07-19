@@ -1,0 +1,6 @@
+class C {
+  void m() {
+    // Can't call super() outside of a constructor.
+    super();
+  }
+}

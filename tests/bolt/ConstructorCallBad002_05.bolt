@@ -1,0 +1,8 @@
+class C {
+  C(boolean b) {
+    while (b) {
+      // super() might have been called already.
+      super();
+    }
+  }
+}

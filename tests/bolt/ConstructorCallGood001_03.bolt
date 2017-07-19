@@ -1,0 +1,5 @@
+class C {
+  C() {
+    // Special case: empty constructor has implicit super().
+  }
+}

@@ -2,6 +2,7 @@ class C {
   static void m(Object o) {}
 
   C() {
+    // Cannot use "this" as method argument until super() or this() is called.
     m(this);
 
     super();

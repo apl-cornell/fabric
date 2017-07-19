@@ -1,0 +1,6 @@
+class C {
+  void m() {
+    // Can't call this() outside of a constructor.
+    this();
+  }
+}

@@ -1,5 +1,6 @@
 class C {
   C() {
+      // Cannot pass "this" as argument to this call.
     this(this);
   }
 

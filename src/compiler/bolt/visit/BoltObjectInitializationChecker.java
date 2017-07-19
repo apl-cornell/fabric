@@ -16,6 +16,7 @@ import polyglot.ast.Cast;
 import polyglot.ast.ClassBody;
 import polyglot.ast.Conditional;
 import polyglot.ast.ConstructorCall;
+import polyglot.ast.ConstructorDecl;
 import polyglot.ast.Expr;
 import polyglot.ast.Field;
 import polyglot.ast.FieldAssign;
@@ -783,6 +784,8 @@ public class BoltObjectInitializationChecker extends
       checkNew(graph, (New) n, dfIn, dfOut);
     } else if (n instanceof ArrayAccessAssign) {
       checkArrayAccessAssign(graph, (ArrayAccessAssign) n, dfIn, dfOut);
+    } else if (n instanceof ConstructorDecl) {
+      checkConstructorDecl(graph, (ConstructorDecl) n, dfIn, dfOut);
     }
   }
 
@@ -790,6 +793,13 @@ public class BoltObjectInitializationChecker extends
       ConstructorCall call, FlowItem dfIn, FlowItem dfOut)
       throws SemanticException {
     // We are leaving a constructor call.
+
+    // Make sure a constructor call definitely hasn't happened yet.
+    if (!(dfIn.callStatus.definitelyNotCalled)) {
+      throw new SemanticException(
+          "A call to this() or super() might have already been made.",
+          call.position());
+    }
 
     // Make sure "this" isn't being smuggled out via call arguments.
     for (Expr arg : call.arguments()) {
@@ -888,6 +898,15 @@ public class BoltObjectInitializationChecker extends
                 + "called.",
             a.position());
       }
+    }
+  }
+
+  protected void checkConstructorDecl(FlowGraph<FlowItem> graph,
+      ConstructorDecl cd, FlowItem dfIn, FlowItem dfOut)
+      throws SemanticException {
+    if (!dfIn.callStatus.definitelyCalled) {
+      throw new SemanticException(
+          "Constructor might not call super() or this().", cd.position());
     }
   }
 }

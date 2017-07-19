@@ -1,8 +1,8 @@
 class C {
-  // Fields must be initialized before super().
   final int x;
 
   C() {
+    // Fields must be initialized before super().
     super();
     x = 0;
   }

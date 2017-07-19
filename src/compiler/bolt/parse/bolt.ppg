@@ -51,9 +51,6 @@ non terminal Expr primary_access_path;
 non terminal Expr location_expr;
 non terminal Expr location_expr_opt;
 
-non terminal ConstructorCall super_constructor_invocation;
-non terminal ConstructorCall this_constructor_invocation;
-
 non terminal List<ArrayDim> dim_exprs;
 non terminal ArrayDim dim_expr;
 non terminal List<ArrayDimKind> dims, dims_opt;
@@ -743,70 +740,22 @@ extend statement_without_trailing_substatement ::=
  * Constructor bodies
  ************************************/
 
-// Constructor bodies can have super() calls in the middle.
 override constructor_body ::=
     // Block
-    LBRACE:n this_constructor_invocation:a block_statements:b RBRACE:d {:
-      List<Stmt> l = new LinkedList<>();
-      l.add(a);
-      l.addAll(b);
-      RESULT = parser.nf.Block(parser.pos(n, d), l);
+    LBRACE:n block_statements:b RBRACE:d {:
+      RESULT = parser.nf.Block(parser.pos(n, d), b);
     :}
-  | LBRACE:n super_constructor_invocation:a block_statements:b RBRACE:d {:
-      List<Stmt> l = new LinkedList<>();
-      l.add(parser.nf.Prologue(pos(a), a));
-      l.addAll(b);
-      RESULT = parser.nf.Block(parser.pos(n, d), l);
-    :}
-  | LBRACE:n this_constructor_invocation:a RBRACE:d {:
-      RESULT = parser.nf.Block(parser.pos(n, d), a);
-    :}
-  | LBRACE:n super_constructor_invocation:a RBRACE:d {:
-      RESULT =
-          parser.nf.Block(parser.pos(n, d), parser.nf.Prologue(pos(a), a));
-    :}
-  | LBRACE:n block_statements:a RBRACE:d {:
-      a.add(0,
-          parser.nf.Prologue(pos(n, d),
-              parser.nf.SuperCall(parser.pos(n, d),
-                  Collections.<Expr> emptyList())));
-      RESULT = parser.nf.Block(parser.pos(n, d), a);
-   :}
   | LBRACE:n RBRACE:d {:
       RESULT =
           parser.nf.Block(parser.pos(n, d),
-            parser.nf.Prologue(pos(n, d),
-              parser.nf.SuperCall(parser.pos(n, d),
-                  Collections.<Expr> emptyList())));
-    :}
-  | LBRACE:x block_statements:a super_constructor_invocation:b
-    block_statements_opt:c RBRACE:y {:
-      List l = new LinkedList<>();
-      a.add(b);
-      l.add(parser.nf.Prologue(pos(a,b), a));
-      l.addAll(c);
-      RESULT = parser.nf.Block(parser.pos(x, y), l);
+            parser.nf.SuperCall(parser.pos(n, d),
+              Collections.<Expr> emptyList()));
     :}
   ;
 
-transfer explicit_constructor_invocation
-  to super_constructor_invocation {
-      SUPER LPAREN argument_list_opt RPAREN SEMICOLON
-    | primary DOT SUPER LPAREN argument_list_opt RPAREN SEMICOLON
-    | type_arguments SUPER LPAREN argument_list_opt RPAREN SEMICOLON
-    | primary DOT type_arguments SUPER LPAREN argument_list_opt RPAREN SEMICOLON
-    | name DOT SUPER LPAREN argument_list_opt RPAREN SEMICOLON
-    | name DOT type_arguments SUPER LPAREN argument_list_opt RPAREN SEMICOLON
-}
-
-transfer explicit_constructor_invocation
-  to this_constructor_invocation {
-      THIS LPAREN argument_list_opt RPAREN SEMICOLON
-    | primary DOT THIS LPAREN argument_list_opt RPAREN SEMICOLON
-    | type_arguments THIS LPAREN argument_list_opt RPAREN SEMICOLON
-    | name DOT THIS LPAREN argument_list_opt RPAREN SEMICOLON
-    | primary DOT type_arguments THIS LPAREN argument_list_opt RPAREN SEMICOLON
-    | name DOT type_arguments THIS LPAREN argument_list_opt RPAREN SEMICOLON
-}
-
-drop { explicit_constructor_invocation }
+extend statement_without_trailing_substatement ::=
+    // Stmt
+    explicit_constructor_invocation:a {:
+      RESULT = a;
+    :}
+  ;

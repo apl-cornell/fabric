@@ -1,0 +1,6 @@
+class Cool {
+  Cool() {
+    int x;
+    // Missing explicit constructor call.
+  }
+}

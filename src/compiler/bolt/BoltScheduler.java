@@ -1,5 +1,6 @@
 package bolt;
 
+import bolt.visit.BoltConstructorCallChecker;
 import bolt.visit.BoltObjectInitializationChecker;
 import polyglot.ext.jl7.JL7Scheduler;
 import polyglot.frontend.CyclicDependencyException;
@@ -26,12 +27,31 @@ public class BoltScheduler extends JL7Scheduler {
   }
 
   @Override
+  public Goal ConstructorCallsChecked(Job job) {
+    // Constructors in Bolt are more complicated than in Java. We can't hope to
+    // ensure that constructor calls aren't recursive. Instead, we check that
+    // constructor calls only occur within constructors.
+    Goal g = new VisitorGoal(job, new BoltConstructorCallChecker(job,
+        extInfo.typeSystem(), extInfo.nodeFactory()));
+
+    try {
+      g.addPrerequisiteGoal(ReachabilityChecked(job), this);
+    } catch (CyclicDependencyException e) {
+      throw new InternalCompilerError(e);
+    }
+
+    return internGoal(g);
+  }
+
+  @Override
   public Goal InitializationsChecked(Job job) {
     Goal g = new VisitorGoal(job, new BoltObjectInitializationChecker(job,
         extInfo.typeSystem(), extInfo.nodeFactory()));
 
     try {
-      g.addPrerequisiteGoal(ReachabilityChecked(job), this);
+      // Depend on ConstructorCallsChecked to make sure constructor calls only
+      // happen within constructors.
+      g.addPrerequisiteGoal(ConstructorCallsChecked(job), this);
     } catch (CyclicDependencyException e) {
       throw new InternalCompilerError(e);
     }

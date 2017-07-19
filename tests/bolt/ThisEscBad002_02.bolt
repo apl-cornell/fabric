@@ -3,6 +3,7 @@ class C {
 
   static class D extends C {
     D() {
+      // Cannot pass "this" as argument to super call.
       super(this);
     }
   }

@@ -183,4 +183,33 @@ bolt.ExtensionInfo "-d out -classpath java-out -assert -noserial -postcompiler /
     (Semantic, "Cannot use \"this\" as a call argument");
   ThisEscBad002_03.bolt
     (Semantic, "Cannot use \"this\" as a call argument");
+
+  ConstructorCallGood001_01.bolt;
+  ConstructorCallGood001_02.bolt;
+  ConstructorCallGood001_03.bolt;
+  ConstructorCallGood002_01.bolt;
+  ConstructorCallGood002_02.bolt;
+
+  ConstructorCallBad001_01.bolt
+    (Semantic, "Call to this must occur in a constructor");
+  ConstructorCallBad001_02.bolt
+    (Semantic, "Call to super must occur in a constructor");
+  ConstructorCallBad002_01.bolt
+    (Semantic, "A call to this.. or super.. might have already been made");
+  ConstructorCallBad002_02.bolt
+    (Semantic, "A call to this.. or super.. might have already been made");
+  ConstructorCallBad002_03.bolt
+    (Semantic, "A call to this.. or super.. might have already been made");
+  ConstructorCallBad002_04.bolt
+    (Semantic, "A call to this.. or super.. might have already been made");
+  ConstructorCallBad002_05.bolt
+    (Semantic, "A call to this.. or super.. might have already been made");
+  ConstructorCallBad002_06.bolt
+    (Semantic, "A call to this.. or super.. might have already been made");
+  ConstructorCallBad003_01.bolt
+    (Semantic, "Constructor might not call super.. or this");
+  ConstructorCallBad003_02.bolt
+    (Semantic, "Constructor might not call super.. or this");
+  ConstructorCallBad003_03.bolt
+    (Semantic, "Constructor might not call super.. or this");
 }

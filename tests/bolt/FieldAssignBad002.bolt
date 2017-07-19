@@ -1,8 +1,9 @@
 class C {
   final int x;
-  C(boolean b) {
-    C c = b ? this : null;
-    c.x = 0;
+  C(boolean b, C that) {
+    C c = b ? this : that;
+
+    // x might have been initialized already.
     c.x = 0;
   }
 }

@@ -38,21 +38,6 @@ public abstract class BoltAbstractExtFactory_c extends polyglot.ext.jl7.ast.JL7A
     }
     
     @Override
-    public final polyglot.ast.Ext extPrologue() {
-        polyglot.ast.Ext e = extPrologueImpl();
-        if (nextExtFactory() != null) {
-            polyglot.ast.Ext e2;
-            if (nextExtFactory() instanceof BoltExtFactory) {
-                e2 = ((BoltExtFactory) nextExtFactory()).extPrologue();
-            } else {
-                e2 = nextExtFactory().extBlock();
-            }
-            e = composeExts(e, e2);
-        }
-        return postExtPrologue(e);
-    }
-    
-    @Override
     public final polyglot.ast.Ext extBoltNewArray() {
         polyglot.ast.Ext e = extBoltNewArrayImpl();
         if (nextExtFactory() != null) {
@@ -343,8 +328,6 @@ public abstract class BoltAbstractExtFactory_c extends polyglot.ext.jl7.ast.JL7A
     
     protected polyglot.ast.Ext extAtomicImpl() { return extBlockImpl(); }
     
-    protected polyglot.ast.Ext extPrologueImpl() { return extBlockImpl(); }
-    
     protected polyglot.ast.Ext extBoltNewArrayImpl() { return extExprImpl(); }
     
     protected polyglot.ast.Ext extBottomPrincipalImpl() {
@@ -394,10 +377,6 @@ public abstract class BoltAbstractExtFactory_c extends polyglot.ext.jl7.ast.JL7A
     }
     
     protected polyglot.ast.Ext postExtAtomic(polyglot.ast.Ext ext) {
-        return postExtBlock(ext);
-    }
-    
-    protected polyglot.ast.Ext postExtPrologue(polyglot.ast.Ext ext) {
         return postExtBlock(ext);
     }
     

@@ -57,9 +57,4 @@ public final class BoltExtFactory_c extends BoltAbstractExtFactory_c {
   protected Ext extNewPrincipalImpl() {
     return new NewPrincipalExt();
   }
-
-  @Override
-  protected Ext extPrologueImpl() {
-    return new BoltPrologueExt();
-  }
 }

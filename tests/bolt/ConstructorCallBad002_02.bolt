@@ -1,0 +1,7 @@
+class C {
+  C() {
+    // Can't call this() or super() multiple times.
+    this();
+    super();
+  }
+}

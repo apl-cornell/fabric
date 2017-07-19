@@ -1,0 +1,9 @@
+class C {
+  C(int x) {
+    switch (x) {
+    case 0: this(x); break;
+    case 1: super(); break;
+    default: this(0);
+    }
+  }
+}

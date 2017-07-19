@@ -1,0 +1,8 @@
+class C {
+  C(boolean b) {
+    if (b) this(b);
+
+    // this() might have been called already.
+    super();
+  }
+}

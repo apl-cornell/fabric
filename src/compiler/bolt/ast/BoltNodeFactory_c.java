@@ -228,18 +228,6 @@ public class BoltNodeFactory_c extends BoltAbstractNodeFactory_c
   }
 
   @Override
-  public Block Prologue(Position pos, Stmt stmt) {
-    return Prologue(pos, Collections.singletonList(stmt));
-  }
-
-  @Override
-  public Block Prologue(Position pos, List<Stmt> stmts) {
-    Block n = new Block_c(pos, stmts);
-    n = ext(n, extFactory().extPrologue());
-    return n;
-  }
-
-  @Override
   public ConfPolicy publicPolicy(Position pos) {
     return ReaderPolicy(pos, BottomPrincipal(pos), BottomPrincipal(pos));
   }

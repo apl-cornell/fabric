@@ -5,7 +5,7 @@ class C {
   C() {
     c = (C) this;
 
-    // c.x might not be initialized yet.
+    // c.x not initialized yet.
     x = c.x;
 
     super();

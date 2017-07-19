@@ -1,0 +1,8 @@
+class C {
+  C() {
+    while (true) {
+      // this() might have been called already.
+      this();
+    }
+  }
+}

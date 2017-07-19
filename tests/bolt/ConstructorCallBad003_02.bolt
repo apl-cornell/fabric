@@ -1,0 +1,7 @@
+class C {
+  C(boolean b) {
+    if (b) this(b);
+
+    // this() might not have been called.
+  }
+}

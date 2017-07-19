@@ -1,7 +1,7 @@
 class C {
   static class D extends C {
     D() {
-      // Constructor prologues may not construct inner classes.
+      // Cannot not construct inner classes until this() or super() is called.
       new Inner();
 
       super();
