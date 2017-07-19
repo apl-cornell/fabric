@@ -1,0 +1,8 @@
+class C {
+  final int x;
+  C(boolean b) {
+    C c = b ? this : null;
+    c.x = 0;
+    c.x = 0;
+  }
+}

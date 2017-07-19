@@ -1,0 +1,13 @@
+class C {
+  C c;
+  int x;
+
+  C() {
+    c = (C) this;
+
+    // c.x might not be initialized yet.
+    x = c.x;
+
+    super();
+  }
+}

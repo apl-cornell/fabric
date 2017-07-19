@@ -1,0 +1,13 @@
+class C {
+  C c;
+  int x;
+
+  C(boolean b, C c2) {
+    c = b ? this : c2;
+
+    // c.x might not be initialized yet.
+    x = c.x;
+
+    super();
+  }
+}

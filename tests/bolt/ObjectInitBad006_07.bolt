@@ -1,0 +1,4 @@
+class C {
+  // Field initializers may not construct anonymous classes.
+  Object o = new Object() {};
+}

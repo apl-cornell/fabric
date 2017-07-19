@@ -1,0 +1,9 @@
+class C {
+  static void m(Object o) {}
+
+  C() {
+    m(this);
+
+    super();
+  }
+}

@@ -3,8 +3,8 @@ class C {
 
   static class D extends C {
     {
-      // Cannot access fields declared in superclass.
-      int y = x;
+      // Cannot assign to fields declared in superclass.
+      x = 0;
     }
   }
 }

@@ -1,0 +1,9 @@
+class C {
+  C(Object o) {}
+
+  static class D extends C {
+    D() {
+      super(this);
+    }
+  }
+}

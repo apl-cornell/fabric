@@ -1,0 +1,12 @@
+class C {
+  C c;
+
+  C(boolean b, C in) {
+    c = null;
+
+    // Escaping "this" reference.
+    in.c = this;
+
+    super();
+  }
+}

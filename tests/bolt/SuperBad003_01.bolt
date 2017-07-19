@@ -1,8 +1,8 @@
 class C {
   static class Super {
-    Super(Object o) {}
+    Super(int x) {}
 
-    final int x = 0;
+    int x = 0;
   }
 
   static class Derived extends Super {

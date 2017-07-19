@@ -1,7 +1,7 @@
 class C {
   int x;
 
-  int y;
+  int y = 0;
   {
     // Cannot refer to uninitialized fields.
     y = x;

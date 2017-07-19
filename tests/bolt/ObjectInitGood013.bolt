@@ -1,0 +1,10 @@
+class C {
+  C c;
+
+  C() {
+    c = this;
+    c.c = this;
+    c.c.c = this;
+    super();
+  }
+}

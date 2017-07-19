@@ -1,0 +1,9 @@
+class C {
+  C() {
+    this(this);
+  }
+
+  C(Object o) {
+    super();
+  }
+}

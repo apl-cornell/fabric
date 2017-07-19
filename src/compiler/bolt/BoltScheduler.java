@@ -25,7 +25,8 @@ public class BoltScheduler extends JL7Scheduler {
     return internGoal(new EmptyGoal(job, "ForwardReferencesChecked"));
   }
 
-  public Goal ObjectInitializationChecked(Job job) {
+  @Override
+  public Goal InitializationsChecked(Job job) {
     Goal g = new VisitorGoal(job, new BoltObjectInitializationChecker(job,
         extInfo.typeSystem(), extInfo.nodeFactory()));
 
@@ -35,17 +36,6 @@ public class BoltScheduler extends JL7Scheduler {
       throw new InternalCompilerError(e);
     }
 
-    return internGoal(g);
-  }
-
-  @Override
-  public Goal Validated(Job job) {
-    Goal g = super.Validated(job);
-    try {
-      g.addPrerequisiteGoal(ObjectInitializationChecked(job), this);
-    } catch (CyclicDependencyException e) {
-      throw new InternalCompilerError(e);
-    }
     return internGoal(g);
   }
 

@@ -2,7 +2,7 @@ class C {
   int x;
 
   static class D extends C {
-    int y;
+    int y = 0;
     {
       // Cannot refer to uninitialized fields.
       y = x;

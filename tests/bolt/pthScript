@@ -47,6 +47,8 @@ bolt.ExtensionInfo "-d out -classpath java-out -assert -noserial -postcompiler /
   ObjectInitGood010.bolt;
   ObjectInitGood011.bolt;
   ObjectInitGood012.bolt;
+  ObjectInitGood013.bolt;
+  ObjectInitGood014.bolt;
 
   ObjectInitBad001_01.bolt
     (Semantic, "might not have been initialized");
@@ -93,35 +95,55 @@ bolt.ExtensionInfo "-d out -classpath java-out -assert -noserial -postcompiler /
   ObjectInitBad005_06.bolt
     (Semantic, "Cannot access a non-static method");
   ObjectInitBad006_01.bolt
-    (Semantic, "cannot be instantiated");
+    (Semantic, "Cannot instantiate");
   ObjectInitBad006_02.bolt
-    (Semantic, "cannot be instantiated");
+    (Semantic, "Cannot instantiate");
   ObjectInitBad006_03.bolt
-    (Semantic, "cannot be instantiated");
+    (Semantic, "Cannot instantiate");
   ObjectInitBad006_04.bolt
-    (Semantic, "cannot be instantiated");
+    (Semantic, "Cannot instantiate");
   ObjectInitBad006_05.bolt
-    (Semantic, "cannot be instantiated");
+    (Semantic, "Cannot instantiate");
   ObjectInitBad006_06.bolt
-    (Semantic, "cannot be instantiated");
+    (Semantic, "Cannot instantiate");
+  ObjectInitBad006_07.bolt
+    (Semantic, "Cannot instantiate");
+  ObjectInitBad006_08.bolt
+    (Semantic, "Cannot instantiate");
+  ObjectInitBad006_09.bolt
+    (Semantic, "Cannot instantiate");
   ObjectInitBad007_01.bolt
-    (Semantic, "Cannot access a non-static field");
+    (Semantic, "might not have been initialized");
   ObjectInitBad007_02.bolt
-    (Semantic, "Cannot access a non-static field");
+    (Semantic, "Cannot assign to a non-static field");
   ObjectInitBad007_03.bolt
-    (Semantic, "Cannot access a non-static field");
+    (Semantic, "might not have been initialized");
+  ObjectInitBad007_04.bolt
+    (Semantic, "Cannot assign to a non-static field");
+  ObjectInitBad007_05.bolt
+    (Semantic, "might not have been initialized");
+  ObjectInitBad007_06.bolt
+    (Semantic, "Cannot assign to a non-static field");
+  ObjectInitBad008_01.bolt
+    (Semantic, "might not have been initialized");
+  ObjectInitBad008_02.bolt
+    (Semantic, "might not have been initialized");
+  ObjectInitBad008_03.bolt
+    (Semantic, "might not have been initialized");
 
   FieldAssignBad001_01.bolt
-    (Semantic, "Cannot assign a value to final field");
+    (Semantic, "Final field .* might already have been initialized");
   FieldAssignBad001_02.bolt
     (Semantic, "Cannot assign a value to final field");
   FieldAssignBad001_03.bolt
-    (Semantic, "Cannot assign a value to final field");
+    (Semantic, "Final field .* might already have been initialized");
   FieldAssignBad001_04.bolt
     (Semantic, "Cannot assign a value to final field");
   FieldAssignBad001_05.bolt
-    (Semantic, "Cannot assign a value to final field");
+    (Semantic, "Final field .* might already have been initialized");
   FieldAssignBad001_06.bolt
+    (Semantic, "Cannot assign a value to final field");
+  FieldAssignBad002.bolt
     (Semantic, "Cannot assign a value to final field");
 
   SuperGood001.bolt;
@@ -138,12 +160,27 @@ bolt.ExtensionInfo "-d out -classpath java-out -assert -noserial -postcompiler /
   SuperBad001_02.bolt
     (Semantic, "Cannot access a non-static method");
   SuperBad002_01.bolt
-    (Semantic, "cannot be instantiated");
+    (Semantic, "Cannot instantiate");
   SuperBad002_02.bolt
-    (Semantic, "cannot be instantiated");
-  SuperBad003.bolt
-    (Semantic, "Cannot access a non-static field");
+    (Semantic, "Cannot instantiate");
+  SuperBad002_03.bolt
+    (Semantic, "Cannot instantiate");
+  SuperBad003_01.bolt
+    (Semantic, "might not have been initialized");
+  SuperBad003_02.bolt
+    (Semantic, "Cannot assign to a non-static field");
+  SuperBad003_03.bolt
+    (Semantic, "Cannot assign a value to final field");
 
   ScopeGood001.bolt;
   ScopeGood002.bolt;
+
+  ThisEscBad001.bolt
+    (Semantic, "Cannot assign \"this\" to fields of other objects");
+  ThisEscBad002_01.bolt
+    (Semantic, "Cannot use \"this\" as a call argument");
+  ThisEscBad002_02.bolt
+    (Semantic, "Cannot use \"this\" as a call argument");
+  ThisEscBad002_03.bolt
+    (Semantic, "Cannot use \"this\" as a call argument");
 }

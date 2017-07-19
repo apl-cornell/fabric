@@ -1,0 +1,14 @@
+class C {
+  static class Super {
+    Super(int x) {}
+
+    final int x = 0;
+  }
+
+  static class Derived extends Super {
+    Derived() {
+      // Super calls may not refer to fields in superclass.
+      super(x = 0);
+    }
+  }
+}

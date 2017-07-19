@@ -2,9 +2,11 @@ class C {
   int x = 0;
 
   static class D extends C {
-    {
+    D() {
       // Cannot access fields declared in superclass.
       int y = x;
+
+      super();
     }
   }
 }

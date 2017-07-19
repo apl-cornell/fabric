@@ -1,0 +1,6 @@
+class C {
+  {
+    // Initializer blocks may not anonymous classes.
+    new Object() {};
+  }
+}

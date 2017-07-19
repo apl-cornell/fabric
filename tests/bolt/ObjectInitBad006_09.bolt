@@ -1,0 +1,8 @@
+class C {
+  C() {
+    // Constructor prologues may not construct anonymous classes.
+    new Object() {};
+
+    super();
+  }
+}
