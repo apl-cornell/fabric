@@ -3,10 +3,10 @@ package fabric.metrics.util;
 /**
  * Utility class for tracking the sample mean and sample standard deviation of a
  * value that is updated periodically.
- *
+ * <p>
  * This was originally based on a post on John D. Cook's blog here:
  * https://www.johndcook.com/blog/standard_deviation/
- *
+ * <p>
  * That post assumed a stable distribution. This has since been modified to use
  * EWMA.
  */
@@ -20,7 +20,7 @@ public class RunningStats {
   private double var = 0.0;
   private double meanPrev = 0.0;
   private double varPrev = 0.0;
-  private /*final*/ double startValue;
+  private final double startValue;
 
   /**
    * @param startValue

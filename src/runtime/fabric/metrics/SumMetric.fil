@@ -1,9 +1,9 @@
 package fabric.metrics;
 
 import fabric.util.Arrays;
-import fabric.util.Iterator;
 import fabric.util.LinkedHashMap;
 import fabric.util.Map;
+import fabric.util.Iterator;
 
 import fabric.metrics.contracts.Bound;
 import fabric.metrics.contracts.MetricContract;
@@ -16,13 +16,13 @@ import fabric.metrics.util.Subject;
 import fabric.worker.Store;
 
 /**
- * A {@link Metric} for the sum of the given metric terms.
+ * A {@link DerivedMetric} for the sum of the given metric terms.
  */
 public class SumMetric extends DerivedMetric {
 
     /**
      * @param store
-     *            the Store that holds this {@link Metric}
+     *            the {@link Store} that holds this {@link Metric}
      * @param terms
      *            The {@link Metric}s this applies to
      */

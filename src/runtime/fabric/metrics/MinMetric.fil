@@ -1,11 +1,11 @@
 package fabric.metrics;
 
 import fabric.util.Arrays;
+import fabric.util.Set;
+import fabric.util.TreeSet;
 import fabric.util.Iterator;
 import fabric.util.LinkedHashMap;
 import fabric.util.Map;
-import fabric.util.Set;
-import fabric.util.TreeSet;
 
 import fabric.metrics.contracts.Bound;
 import fabric.metrics.contracts.MetricContract;
@@ -18,13 +18,13 @@ import fabric.metrics.util.Subject;
 import fabric.worker.Store;
 
 /**
- * A {@link Metric} for the minimum of a group of other metrics.
+ * A {@link DerivedMetric} for the minimum of a group of other {@link Metric}s.
  */
 public class MinMetric extends DerivedMetric {
 
     /**
      * @param store
-     *            the Store that holds this {@link Metric}
+     *            the {@link Store} that holds this {@link Metric}
      * @param terms
      *            The {@link Metric}s this applies to
      */

@@ -8,26 +8,33 @@ import fabric.metrics.util.Subject;
 import fabric.worker.Store;
 
 /**
- * Represents an observable quantity that changes over time. Internally, this
- * class estimates the velocity of the observed quantity, and the interval
- * between updates. Instances of this class can be observed by
- * {@link LinearMetric}s and {@link MetricContract}s.
+ * Represents an observable quantity that changes over time and can be compared
+ * with a {@link Bound} enforced by a {@link MetricContract}. Internally, this
+ * class estimates the velocity and noise of the observed quantity, which are
+ * used for creating {@link MetricContract} expiries. Instances of this class
+ * can be observed by {@link DerivedMetric}s and {@link MetricContract}s.
+ *
+ * {@link Metric}s are {@link Comparable} to allow for predictable hashing and
+ * normalized representations.
  */
 public interface Metric extends Subject, Comparable/*<Metric>*/ {
 
-  /** @return the current value of the quantity being measured. */
+  /** @return the current value of the {@link Metric}. */
   public double value();
 
-  /** @return the estimated value of the measured quantity's velocity */
+  /** @return the estimated velocity of the {@link Metric}. */
   public double velocity();
 
   /**
-   * @return the estimated value of the measured quantity's noise (the
-   *         <em>variance</em> of the velocity estimate)
+   * @return the estimated noise (the <em>variance</em> of the velocity
+   *         estimate) of the {@link Metric}.
    */
   public double noise();
 
   /**
+   * Used to construct and enforce {@link MetricContract}s bounding this
+   * {@link Metric}s value.
+   *
    * @param bound
    *            a {@link Bound} that the returned policy enforces.
    * @return a {@link EnforcementPolicy} that enforces this {@link Metric}
@@ -45,8 +52,10 @@ public interface Metric extends Subject, Comparable/*<Metric>*/ {
    * @param bound
    *        the {@link Bound} that the returned {@link MetricContract}
    *        will enforce on this {@link Metric}
-   * @return a {@link MetricContract} that enforces that the metric satisfies
-   *       the given {@link Bound}
+   * @return a {@link MetricContract} that enforces that the {@link Metric}
+   *         satisfies the given {@link Bound}. If such a
+   *         {@link MetricContract}, it is returned, otherwise a new one is
+   *         created and returned (unactivated).
    */
   public MetricContract getContract(Bound bound);
 
@@ -60,9 +69,12 @@ public interface Metric extends Subject, Comparable/*<Metric>*/ {
    * @param time
    *        the startTime parameter of the {@link Bound} on the resulting
    *        {@link MetricContract}
-   * @return a {@link MetricContract} which enforces that the metric satisfies
-   *       a {@link Bound} that enforces a {@link Bound} with the given
-   *       parameters at the given time.
+   * @return a {@link MetricContract} which enforces that the {@link Metric}
+   *         satisfies a {@link Bound} with the given parameters at the given
+   *         time. If such a {@link MetricContract} already exists, it is
+   *         returned, otherwise a new one is created and returned
+   *         (unactivated).
+   *
    */
   public MetricContract getContract(double rate, double base, long time);
 
@@ -73,9 +85,11 @@ public interface Metric extends Subject, Comparable/*<Metric>*/ {
    * @param base
    *        the base parameter for the {@link Bound} on the resuling
    *        {@link MetricContract}
-   * @return a {@link MetricContract} which enforces that the metric satisfies
-   *       a {@link Bound} that enforces a {@link Bound} with the given
-   *       parameters at the current time.
+   * @return a {@link MetricContract} which enforces that the {@link Metric}
+   *         satisfies a {@link Bound} with the given parameters at the
+   *         current time. If such a {@link MetricContract} already exists, it
+   *         is returned, otherwise a new one is created and returned
+   *         (unactivated).
    */
   public MetricContract getContract(double rate, double base);
 
@@ -83,42 +97,42 @@ public interface Metric extends Subject, Comparable/*<Metric>*/ {
    * @param contract
    *        a {@link MetricContract} to store with this {@link Metric}
    * @throws IllegalArgumentException
-   *         if contract isn't defined on this {@link Metric}
+   *             if the {@link MetricContract} doesn't enforce a {@link Bound}
+   *             on this {@link Metric}
    */
   public void addContract(MetricContract contract);
 
   /**
    * @param scalar
    *        a double scalar to scale this metric by
-   * @return A {@link LinearMetric} that tracks the scaled value of this
-   *       {@link Metric}
+   * @return A {@link Metric} that tracks the scaled value of this
+   *         {@link Metric}.
    */
   public DerivedMetric times(double scalar);
 
   /**
    * @param other
-   *        another {@link Metric} to add with this {@link Metric},
-   *        element wise.
-   * @return a {@link LinearMetric} that tracks the value of the sum of other
-   *       and this
+   *            another {@link Metric} to add with this {@link Metric}.
+   * @return a {@link Metric} that tracks the value of the sum of other and
+   *         this.
    */
   public DerivedMetric plus(Metric other);
 
   /**
    * @param other
-   *        another {@link Metric} to take the minimum of along with this
-   *        {@link Metric}
-   * @return a {@link LinearMetric} that tracks the value of the minimum of
-   *       other and this's entries.
+   *            another {@link Metric} to take the minimum of along with this
+   *            {@link Metric}.
+   * @return a {@link Metric} that tracks the value of the minimum of this and
+   *         the other {@link Metric}.
    */
   public Metric min(Metric other);
 
   /**
    * @param other
    *            another {@link Metric} to take the maximum of along with this
-   *            {@link Metric}
-   * @return a {@link LinearMetric} that tracks the value of the maximum of
-   *         other and this's entries.
+   *            {@link Metric}.
+   * @return a {@link Metric} that tracks the value of the maximum of this and
+   *         the other {@link Metric}.
    */
   public Metric max(Metric other);
 }

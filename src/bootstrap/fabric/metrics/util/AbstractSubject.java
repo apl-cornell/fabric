@@ -6,10 +6,11 @@ import fabric.worker.*;
 import fabric.worker.remote.*;
 import java.lang.*;
 import fabric.util.Collections;
+import fabric.util.LinkedHashSet;
+import java.util.LinkedList;
+import fabric.util.Set;
 import fabric.util.HashSet;
 import fabric.util.Iterator;
-import fabric.util.LinkedHashSet;
-import fabric.util.Set;
 import fabric.metrics.SampledMetric;
 import fabric.metrics.contracts.Contract;
 import fabric.worker.transaction.TransactionManager;
@@ -142,6 +143,11 @@ public interface AbstractSubject
         
         /**
    * Utility for processing a batch of samples for the transaction manager.
+   *
+   * @param unobserved
+   *            a {@link LinkedList} of {@link SampledMetric}s that have been
+   *            updated and still need to have Observers compute the resulting
+   *            effects for.
    */
         public static void processSamples(java.util.LinkedList unobserved) {
             java.util.LinkedList queue = new java.util.LinkedList();
@@ -154,6 +160,12 @@ public interface AbstractSubject
                     $getProxy(
                       fabric.lang.WrappedJavaInlineable.$wrap(
                                                           unobserved.poll()));
+                fabric.common.Logging.METRICS_LOGGER.
+                  log(
+                    java.util.logging.Level.FINE,
+                    "HANDLING OBSERVATION OF " +
+                      java.lang.String.
+                        valueOf(fabric.lang.WrappedJavaInlineable.$unwrap(sm)));
                 fabric.util.Iterator obsIter = sm.getObservers().iterator();
                 while (obsIter.hasNext()) {
                     queue.add(
@@ -188,6 +200,14 @@ public interface AbstractSubject
                         }
                     }
                     if (!needToWait) {
+                        fabric.common.Logging.METRICS_LOGGER.
+                          log(
+                            java.util.logging.Level.FINE,
+                            "HANDLING OBSERVER " +
+                              java.lang.String.
+                                valueOf(
+                                  fabric.lang.WrappedJavaInlineable.
+                                      $unwrap(unhandled)));
                         boolean modified = unhandled.handleUpdates();
                         if (fabric.lang.Object._Proxy.
                               $getProxy(
@@ -195,6 +215,14 @@ public interface AbstractSubject
                                   fabric.lang.WrappedJavaInlineable.$unwrap(
                                                                       unhandled)) instanceof fabric.metrics.util.Subject &&
                               modified) {
+                            fabric.common.Logging.METRICS_LOGGER.
+                              log(
+                                java.util.logging.Level.FINE,
+                                "QUEUING PARENTS OF OBSERVER " +
+                                  java.lang.String.
+                                    valueOf(
+                                      fabric.lang.WrappedJavaInlineable.
+                                          $unwrap(unhandled)));
                             fabric.util.Iterator parentIter =
                               ((fabric.metrics.util.Subject)
                                  fabric.lang.Object._Proxy.$getProxy(
@@ -208,44 +236,51 @@ public interface AbstractSubject
                                       $unwrap(parentIter.next()));
                             }
                         }
-                        else {
-                            delayed.
-                              add(
-                                (java.lang.Object)
+                    }
+                    else {
+                        fabric.common.Logging.METRICS_LOGGER.
+                          log(
+                            java.util.logging.Level.FINE,
+                            "DELAYING OBSERVER " +
+                              java.lang.String.
+                                valueOf(
                                   fabric.lang.WrappedJavaInlineable.
-                                  $unwrap(unhandled));
-                        }
-                        if (queue.isEmpty()) {
-                            java.util.Iterator delayedIter = delayed.iterator();
-                            while (delayedIter.hasNext()) {
-                                fabric.metrics.util.Observer
-                                  withheld =
-                                  (fabric.metrics.util.Observer)
-                                    fabric.lang.Object._Proxy.
-                                    $getProxy(
-                                      fabric.lang.WrappedJavaInlineable.
-                                          $wrap(delayedIter.next()));
-                                boolean doneWaiting = true;
-                                fabric.util.Iterator withheldLeavesIter =
-                                  withheld.getLeafSubjects().iterator();
-                                while (withheldLeavesIter.hasNext()) {
-                                    if (unobserved.
-                                          contains(
-                                            (java.lang.Object)
-                                              fabric.lang.WrappedJavaInlineable.
-                                              $unwrap(
-                                                withheldLeavesIter.next()))) {
-                                        doneWaiting = false;
-                                        break;
-                                    }
-                                }
-                                if (doneWaiting) {
-                                    queue.
-                                      add(
+                                      $unwrap(unhandled)));
+                        delayed.
+                          add(
+                            (java.lang.Object)
+                              fabric.lang.WrappedJavaInlineable.$unwrap(
+                                                                  unhandled));
+                    }
+                    if (queue.isEmpty()) {
+                        java.util.Iterator delayedIter = delayed.iterator();
+                        while (delayedIter.hasNext()) {
+                            fabric.metrics.util.Observer
+                              withheld =
+                              (fabric.metrics.util.Observer)
+                                fabric.lang.Object._Proxy.
+                                $getProxy(
+                                  fabric.lang.WrappedJavaInlineable.
+                                      $wrap(delayedIter.next()));
+                            boolean doneWaiting = true;
+                            fabric.util.Iterator withheldLeavesIter =
+                              withheld.getLeafSubjects().iterator();
+                            while (withheldLeavesIter.hasNext()) {
+                                if (unobserved.
+                                      contains(
                                         (java.lang.Object)
                                           fabric.lang.WrappedJavaInlineable.
-                                          $unwrap(withheld));
+                                          $unwrap(withheldLeavesIter.next()))) {
+                                    doneWaiting = false;
+                                    break;
                                 }
+                            }
+                            if (doneWaiting) {
+                                queue.
+                                  add(
+                                    (java.lang.Object)
+                                      fabric.lang.WrappedJavaInlineable.
+                                      $unwrap(withheld));
                             }
                         }
                     }
@@ -363,11 +398,11 @@ public interface AbstractSubject
         
     }
     
-    public static final byte[] $classHash = new byte[] { 67, -53, -23, 32, -54,
-    -4, -118, -59, 54, 69, 14, 39, -15, 68, 28, -19, 124, 55, -4, -59, 71, 69,
-    -75, 72, 96, 73, 117, 61, 86, -8, -56, 30 };
+    public static final byte[] $classHash = new byte[] { 37, 27, 100, 38, 80,
+    -77, 6, -24, 80, 5, 83, -2, 42, 49, 85, 66, -42, 79, 68, -76, 27, 20, -25,
+    -1, 36, -125, 124, 76, 120, -123, 125, 74 };
     public static final java.lang.String jlc$CompilerVersion$fabil = "0.3.0";
-    public static final long jlc$SourceLastModified$fabil = 1500326775000L;
+    public static final long jlc$SourceLastModified$fabil = 1500579643000L;
     public static final java.lang.String jlc$ClassType$fabil =
-      "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";
+      "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";
 }

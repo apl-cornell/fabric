@@ -3,11 +3,16 @@ package fabric.metrics.contracts.warranties;
 import fabric.metrics.contracts.MetricContract;
 
 /**
- * A utility class for warrantiable computation results, bundling the result
- * with a {@link MetricContract}.
+ * A utility class for tracking {@link WarrantyComp} results and associated
+ * {@link MetricContract}s implying their validity.
  */
 public class WarrantyValue/*<V>*/ {
+
+  /** The result value. */
   public /*final V*/ Object value;
+  /**
+   * A {@link MetricContract} which, when valid, implies the value is current.
+   */
   public /*final*/ MetricContract contract;
 
   /**
@@ -24,7 +29,9 @@ public class WarrantyValue/*<V>*/ {
   }
 
   /**
-   * @return the time this result is expected to last.
+   * @return the time this result is expected to last (can be used to compare
+   *         potential results so the {@link WarrantyComp} can return the
+   *         longest lasting choice).
    */
   public long expectedLifetime() {
     return contract.getExpectedLifetime();

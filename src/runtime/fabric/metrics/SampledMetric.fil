@@ -3,19 +3,15 @@ package fabric.metrics;
 import fabric.util.ArrayList;
 import fabric.util.List;
 
-import fabric.metrics.contracts.Bound;
-import fabric.metrics.contracts.MetricContract;
 import fabric.metrics.util.Observer;
 import fabric.metrics.util.RunningStats;
-import fabric.worker.Store;
 
+import fabric.worker.Store;
 import fabric.worker.transaction.TransactionManager;
 
 /**
- * Takes measurements of a persistent value of the parameter type T. When
- * constructed, the programmer provides a custom function for converting the
- * value to a double (the measurement) as well as a pointer to the value being
- * tracked.
+ * A {@link Metric} that is directly updated by applications with new sample
+ * values to use for its value.
  * <p>
  * In a transaction which has written the value being measured,
  * {@link #takeSample(double,long)} must be called to ensure that
@@ -28,9 +24,10 @@ public class SampledMetric extends AbstractMetric {
 
   /**
    * @param store
-   *        the Store that holds this {@link Metric}
+   *            the {@link Store} that holds this {@link Metric}
    * @param name
-   *        the name the store associates with this {@link SampledMetric}
+   *            the name the {@link Store} associates with this
+   *            {@link SampledMetric}, so it can be easily retrieved later
    * @param init
    *        the initial value of this {@link Metric}
    */

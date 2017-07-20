@@ -8,25 +8,32 @@ import fabric.metrics.SampledMetric;
 import fabric.metrics.util.Observer;
 
 /**
- * A warrantiable computation. Returns values wrapped in a {@link WarrantyValue}
- * along with an appropriate {@link Metric} for the result.
- *
- * Currently, WarrantyComp acts as an observer of the currently associated
- * treaty. This helps to ensure that treaties don't get deactivated prematurely
- * when used by the computation. TODO: this seems a bit like a hack? Is there a
- * better way to handle the issue this addresses?
+ * A computation that uses {@link Contract}s to cache and reuse results.
+ * <p>
+ * Acts as an {@link Observer} of the currently associated {@link Contract}.
+ * This helps to ensure that the {@link Contract} implying the currently cached
+ * result is correct doesn't get deactivated prematurely by the API
+ * implementation.
  */
 public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observer {
+
+  /** The currently cached result. */
   private WarrantyValue/*<T>*/ curVal;
 
   /**
    * Create a new updated result paired with a contract that would enforce it
    * after this call.
+   *
+   * @param time
+   *            the current time we're running a new update at.
    */
   protected abstract WarrantyValue/*<T>*/ updatedVal(long time);
 
   /**
    * Run this warranty computation at the given time.
+   *
+   * @param time
+   *            the current time we're applying this computation at
    */
   /*@Override*/
   public Object/*T*/ apply(long time) {
@@ -37,9 +44,10 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
       if (curVal != null) {
         curVal.contract.removeObserver(this);
       }
-      // TODO: only compare if it's not activated yet.
+      // TODO: compute and compare (without replacing) if the currently
+      // stored value's Contract hasn't been activated yet.
       curVal = updatedVal(time);
-      // TODO: this should happen asynchronously after this call returns.
+      // TODO: this could happen asynchronously after this call returns.
       curVal.contract.activate();
       curVal.contract.addObserver(this);
     }

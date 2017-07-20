@@ -1,10 +1,11 @@
 package fabric.metrics.util;
 
 import fabric.util.Collections;
+import fabric.util.LinkedHashSet;
+import java.util.LinkedList;
+import fabric.util.Set;
 import fabric.util.HashSet;
 import fabric.util.Iterator;
-import fabric.util.LinkedHashSet;
-import fabric.util.Set;
 
 import fabric.metrics.SampledMetric;
 import fabric.metrics.contracts.Contract;
@@ -33,8 +34,6 @@ public abstract class AbstractSubject implements Subject {
 
   // Using a weak map as the backing for this set so that observers aren't
   // pinned by their subjects.
-  // private Set<Observer> observers = Collections
-  // .newSetFromMap(new WeakHashMap<>());
   private final Set/*<Observer>*/ observers;
 
   /*@Override*/
@@ -64,8 +63,13 @@ public abstract class AbstractSubject implements Subject {
 
   /**
    * Utility for processing a batch of samples for the transaction manager.
+   *
+   * @param unobserved
+   *            a {@link LinkedList} of {@link SampledMetric}s that have been
+   *            updated and still need to have Observers compute the resulting
+   *            effects for.
    */
-  public static void processSamples(java.util.LinkedList unobserved) {
+  public static void processSamples(LinkedList unobserved) {
     // Ugh, don't wrap this in an atomic block because it causes a copy to be
     // made with the items being processed, so subtransactions of this don't see
     // the handling we're doing.
@@ -74,10 +78,10 @@ public abstract class AbstractSubject implements Subject {
     // TODO: Change this to grab the right copy of the queue *after* the
     // subtransaction starts.
     //atomic {
-      java.util.LinkedList/*<Observer>*/ queue = new java.util.LinkedList/*<>*/();
+      LinkedList/*<Observer>*/ queue = new LinkedList/*<>*/();
       // Items that should be handled and need to be checked again later after
       // other children are processed.
-      java.util.LinkedList/*<Observer>*/ delayed = new java.util.LinkedList/*<>*/();
+      LinkedList/*<Observer>*/ delayed = new LinkedList/*<>*/();
       while (!unobserved.isEmpty()) {
         SampledMetric sm = (SampledMetric) unobserved.poll();
         fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "HANDLING OBSERVATION OF " + sm);
@@ -116,8 +120,8 @@ public abstract class AbstractSubject implements Subject {
               }
             }
           } else {
+            // mark as delayed for later processing
             fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "DELAYING OBSERVER " + unhandled);
-            // mark as delayed for later
             delayed.add(unhandled);
           }
           // If there's nothing more, let's get back to delayed items that

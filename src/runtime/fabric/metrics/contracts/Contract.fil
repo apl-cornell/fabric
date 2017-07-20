@@ -1,6 +1,7 @@
 package fabric.metrics.contracts;
 
 import fabric.metrics.Metric;
+import fabric.metrics.contracts.warranties.WarrantyComp;
 import fabric.metrics.util.AbstractSubject;
 import fabric.metrics.util.Observer;
 import fabric.metrics.util.Subject;
@@ -12,16 +13,26 @@ import fabric.worker.transaction.TransactionManager;
 import java.util.logging.Level;
 
 /**
- * A {@link Contract} consists of an assertion and an expiration time. If the
- * current time is earlier than the expiration time, then the contract is
- * <i>valid</i>: the enforcement protocol will ensure the assertion holds.
+ * A {@link Contract} represents an assertion that is enforced until an
+ * expiration time, once {@link #activate()}d. If the current time is earlier
+ * than the expiration time and the {@link Contract} {@link #isActivated()},
+ * then the {@link Contract} is <i>valid</i>: the enforcement protocol
+ * implemented by the API will ensure the assertion holds.
  * <p>
- * This class follows the subject-observer pattern. An instance can be an
- * observer of a {@link Metric} or other {@link Contract}s, and can be observed
- * by other {@link Contract}s.
+ * This class follows the {@link Subject}-{@link Observer} pattern. An instance
+ * can be an observer of a {@link Metric} or other {@link Contract}s, and can be
+ * observed by {@link WarrantyComp}s or other {@link Contract}s.
+ * <p>
+ * TODO: right now all the uses of expiry assume that the check is for a time
+ * after the time the {@link Contract} was created. Some of these operations
+ * will not be correct if the times being compared with are prior to creation.
  */
 public abstract class Contract extends AbstractSubject implements Observer {
 
+  /**
+   * @param store
+   *            the {@link Store} this {@link Contract} is stored at
+   */
   protected Contract fabric$metrics$contracts$Contract$() {
     fabric$metrics$util$AbstractSubject$();
     this.$expiry = -1;
@@ -34,13 +45,13 @@ public abstract class Contract extends AbstractSubject implements Observer {
   // Note: smaller value => more aggressive extensions => less chance of a
   // warranty going stale unecessarily.
   public static final double MIN_EXTENSION_FACTOR = 1;
-  //public static final double MIN_EXTENSION_FACTOR = 1.05;
   // The drift tolerance factor we'll subtract from times we advertise to
   // others.
   public static final long DRIFT_FACTOR = 100;
 
   /**
-   * Extends the expiration time.
+   * Extends the expiration time (queued to be extended later if the current
+   * time is much earlier than the current expiration).
    *
    * @param newExpiry
    *        the new expiration time (computed at the current node) for
@@ -69,17 +80,22 @@ public abstract class Contract extends AbstractSubject implements Observer {
     }
   }
 
+  /**
+   * Has the {@link Contract} been activated (the System has started enforcing
+   * and maintaining the expiration time)?
+   */
   private boolean activated = false;
 
   /**
-   * @return true if this contract is currently active (enforced).
+   * @return true iff this contract has been activated (the System is
+   *         enforcing it).
    */
   public boolean isActivated() {
     return activated;
   }
 
   /**
-   * Activate and start enforcing this {@link Contract}.
+   * Activate and start enforcing this {@link Contract} in the System.
    */
   public void activate() {
     atomic {
@@ -93,7 +109,9 @@ public abstract class Contract extends AbstractSubject implements Observer {
   /**
    * {@inheritDoc}
    *
-   * Make stale and stop observing any evidence if this is no longer observed.
+   * If there are no {@link Observer}s of this {@link Contract} left, mark as
+   * stale (to avoid unnecessary enforcement overhead) and stop observing any
+   * enforcement evidence.
    */
   /*@Override*/
   public void removeObserver(Observer obs) {
@@ -107,10 +125,12 @@ public abstract class Contract extends AbstractSubject implements Observer {
 
   /**
    * Updates the expiration time of this contract, either extending or
-   * revoking as needed.
+   * retracting as needed.
    *
    * @param newExpiry
-   *        the new expiration time associated with this {@link Contract}.
+   *            the new expiration time that could be associated with this
+   *            {@link Contract} (if it's past the current expiry, it may not
+   *            be immediately used to avoid unnecessary extension overhead).
    * @return true iff the contract was retracted by this update.
    */
   public boolean update(long newExpiry) {
@@ -132,8 +152,8 @@ public abstract class Contract extends AbstractSubject implements Observer {
   }
 
   /**
-   * Called to retract this contract's expiry in the current transaction
-   * context.
+   * Called to retract this contract's expiry to an earlier time (applied in
+   * the current transaction context).
    *
    * @param newExpiry
    *        time to set the expiry back to.
@@ -167,37 +187,41 @@ public abstract class Contract extends AbstractSubject implements Observer {
   /**
    * @param time
    *            the time we're checking against.
-   * @return true iff the contract is stale according to the local time.
+   * @return true iff the contract is stale (no longer enforced) according to
+   *         the local time.
    */
   public boolean stale(long time) {
     return isActivated() && getExpiry() < time;
   }
 
   /**
-   * @return true iff the contract is stale according to the local time.
+   * @return true iff the contract is stale (no longer enforced) according to
+   *         the local time.
    */
   public boolean stale() {
     return isActivated() && getExpiry() < System.currentTimeMillis();
   }
 
+  /**
+   * @return The expiration time for this {@link Contract} (shifted to account
+   *         for a constant "max" clock drift between the node that last set
+   *         the expiration time and other nodes checking it.)
+   */
   public long getExpiry() {
     return $expiry - DRIFT_FACTOR;
   }
 
   /**
-   * Update this contract's expiration time to stay valid in response to a
-   * change in the value of the {@link Subject}s used for enforcing this
-   * {@link Contract}. Revokes, extends, and updates the enforcement strategy
+   * Update the state used to enforce this contract's expiration time (and
+   * possibly update the expiration time) in response to a change in the value
+   * of the current evidence ({@link Subject}s) used to enforce this
+   * {@link Contract}. Revokes, extends, and updates the enforcement evidence
    * as needed.
    *
-   * @param force
-   *        flag indicating if a new policy should be found if the old one
-   *        has expired.
-   *
-   * @return true iff the contract was retracted as a result of this
-   *         operation.
+   * @return true iff the contract's expiration was retracted as a result of
+   *         this operation.
    */
-  protected abstract boolean refresh(boolean force);
+  protected abstract boolean refresh();
 
   /*@Override*/
   public boolean handleUpdates() {
@@ -205,11 +229,15 @@ public abstract class Contract extends AbstractSubject implements Observer {
     // Funny implication of this is that if something goes stale before it's
     // checked, it stays stale. Probably the right behavior?
     if (valid())
-      return refresh(true);
+      return refresh();
     fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "CONTRACT INVALID");
     return false;
   }
 
+  /**
+   * Attempt to extend this {@link Contract}'s expiration time. (Invoked to
+   * perform asynchronous extensions close to the current expiration time).
+   */
   public void attemptExtension_remote(fabric.lang.security.Principal caller) {
     atomic {
       // Ugh, need to add _remote suffix because it's expected by remote call
@@ -218,8 +246,12 @@ public abstract class Contract extends AbstractSubject implements Observer {
     }
   }
 
+  /**
+   * Attempt to extend this {@link Contract}'s expiration time. (Invoked to
+   * perform asynchronous extensions close to the current expiration time).
+   */
   public void attemptExtension() {
     fabric.common.Logging.METRICS_LOGGER.log(Level.INFO, "ASYNC EXTENSION");
-    refresh(false);
+    refresh();
   }
 }

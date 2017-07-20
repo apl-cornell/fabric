@@ -6,6 +6,7 @@ import fabric.worker.*;
 import fabric.worker.remote.*;
 import java.lang.*;
 import fabric.metrics.Metric;
+import fabric.metrics.contracts.warranties.WarrantyComp;
 import fabric.metrics.util.AbstractSubject;
 import fabric.metrics.util.Observer;
 import fabric.metrics.util.Subject;
@@ -16,20 +17,31 @@ import fabric.worker.transaction.TransactionManager;
 import java.util.logging.Level;
 
 /**
- * A {@link Contract} consists of an assertion and an expiration time. If the
- * current time is earlier than the expiration time, then the contract is
- * <i>valid</i>: the enforcement protocol will ensure the assertion holds.
+ * A {@link Contract} represents an assertion that is enforced until an
+ * expiration time, once {@link #activate()}d. If the current time is earlier
+ * than the expiration time and the {@link Contract} {@link #isActivated()},
+ * then the {@link Contract} is <i>valid</i>: the enforcement protocol
+ * implemented by the API will ensure the assertion holds.
  * <p>
- * This class follows the subject-observer pattern. An instance can be an
- * observer of a {@link Metric} or other {@link Contract}s, and can be observed
- * by other {@link Contract}s.
+ * This class follows the {@link Subject}-{@link Observer} pattern. An instance
+ * can be an observer of a {@link Metric} or other {@link Contract}s, and can be
+ * observed by {@link WarrantyComp}s or other {@link Contract}s.
+ * <p>
+ * TODO: right now all the uses of expiry assume that the check is for a time
+ * after the time the {@link Contract} was created. Some of these operations
+ * will not be correct if the times being compared with are prior to creation.
  */
 public interface Contract
   extends fabric.metrics.util.Observer, fabric.metrics.util.AbstractSubject {
+    /**
+   * @param store
+   *            the {@link Store} this {@link Contract} is stored at
+   */
     public fabric.metrics.contracts.Contract fabric$metrics$contracts$Contract$();
     
     /**
-   * Extends the expiration time.
+   * Extends the expiration time (queued to be extended later if the current
+   * time is much earlier than the current expiration).
    *
    * @param newExpiry
    *        the new expiration time (computed at the current node) for
@@ -42,35 +54,40 @@ public interface Contract
     public boolean set$activated(boolean val);
     
     /**
-   * @return true if this contract is currently active (enforced).
+   * @return true iff this contract has been activated (the System is
+   *         enforcing it).
    */
     public boolean isActivated();
     
     /**
-   * Activate and start enforcing this {@link Contract}.
+   * Activate and start enforcing this {@link Contract} in the System.
    */
     public void activate();
     
     /**
    * {@inheritDoc}
    *
-   * Make stale and stop observing any evidence if this is no longer observed.
+   * If there are no {@link Observer}s of this {@link Contract} left, mark as
+   * stale (to avoid unnecessary enforcement overhead) and stop observing any
+   * enforcement evidence.
    */
     public void removeObserver(fabric.metrics.util.Observer obs);
     
     /**
    * Updates the expiration time of this contract, either extending or
-   * revoking as needed.
+   * retracting as needed.
    *
    * @param newExpiry
-   *        the new expiration time associated with this {@link Contract}.
+   *            the new expiration time that could be associated with this
+   *            {@link Contract} (if it's past the current expiry, it may not
+   *            be immediately used to avoid unnecessary extension overhead).
    * @return true iff the contract was retracted by this update.
    */
     public boolean update(long newExpiry);
     
     /**
-   * Called to retract this contract's expiry in the current transaction
-   * context.
+   * Called to retract this contract's expiry to an earlier time (applied in
+   * the current transaction context).
    *
    * @param newExpiry
    *        time to set the expiry back to.
@@ -94,36 +111,48 @@ public interface Contract
     /**
    * @param time
    *            the time we're checking against.
-   * @return true iff the contract is stale according to the local time.
+   * @return true iff the contract is stale (no longer enforced) according to
+   *         the local time.
    */
     public boolean stale(long time);
     
     /**
-   * @return true iff the contract is stale according to the local time.
+   * @return true iff the contract is stale (no longer enforced) according to
+   *         the local time.
    */
     public boolean stale();
     
+    /**
+   * @return The expiration time for this {@link Contract} (shifted to account
+   *         for a constant "max" clock drift between the node that last set
+   *         the expiration time and other nodes checking it.)
+   */
     public long getExpiry();
     
     /**
-   * Update this contract's expiration time to stay valid in response to a
-   * change in the value of the {@link Subject}s used for enforcing this
-   * {@link Contract}. Revokes, extends, and updates the enforcement strategy
+   * Update the state used to enforce this contract's expiration time (and
+   * possibly update the expiration time) in response to a change in the value
+   * of the current evidence ({@link Subject}s) used to enforce this
+   * {@link Contract}. Revokes, extends, and updates the enforcement evidence
    * as needed.
    *
-   * @param force
-   *        flag indicating if a new policy should be found if the old one
-   *        has expired.
-   *
-   * @return true iff the contract was retracted as a result of this
-   *         operation.
+   * @return true iff the contract's expiration was retracted as a result of
+   *         this operation.
    */
-    public abstract boolean refresh(boolean force);
+    public abstract boolean refresh();
     
     public boolean handleUpdates();
     
+    /**
+   * Attempt to extend this {@link Contract}'s expiration time. (Invoked to
+   * perform asynchronous extensions close to the current expiration time).
+   */
     public void attemptExtension_remote(fabric.lang.security.Principal caller);
     
+    /**
+   * Attempt to extend this {@link Contract}'s expiration time. (Invoked to
+   * perform asynchronous extensions close to the current expiration time).
+   */
     public void attemptExtension();
     
     public static class _Proxy
@@ -185,8 +214,8 @@ public interface Contract
             return ((fabric.metrics.contracts.Contract) fetch()).getExpiry();
         }
         
-        public boolean refresh(boolean arg1) {
-            return ((fabric.metrics.contracts.Contract) fetch()).refresh(arg1);
+        public boolean refresh() {
+            return ((fabric.metrics.contracts.Contract) fetch()).refresh();
         }
         
         public boolean handleUpdates() {
@@ -238,6 +267,10 @@ public interface Contract
     public abstract static class _Impl
     extends fabric.metrics.util.AbstractSubject._Impl
       implements fabric.metrics.contracts.Contract {
+        /**
+   * @param store
+   *            the {@link Store} this {@link Contract} is stored at
+   */
         public fabric.metrics.contracts.Contract
           fabric$metrics$contracts$Contract$() {
             fabric$metrics$util$AbstractSubject$();
@@ -246,7 +279,8 @@ public interface Contract
         }
         
         /**
-   * Extends the expiration time.
+   * Extends the expiration time (queued to be extended later if the current
+   * time is much earlier than the current expiration).
    *
    * @param newExpiry
    *        the new expiration time (computed at the current node) for
@@ -302,15 +336,20 @@ public interface Contract
             return val;
         }
         
+        /**
+   * Has the {@link Contract} been activated (the System has started enforcing
+   * and maintaining the expiration time)?
+   */
         private boolean activated = false;
         
         /**
-   * @return true if this contract is currently active (enforced).
+   * @return true iff this contract has been activated (the System is
+   *         enforcing it).
    */
         public boolean isActivated() { return this.get$activated(); }
         
         /**
-   * Activate and start enforcing this {@link Contract}.
+   * Activate and start enforcing this {@link Contract} in the System.
    */
         public void activate() {
             {
@@ -401,7 +440,9 @@ public interface Contract
         /**
    * {@inheritDoc}
    *
-   * Make stale and stop observing any evidence if this is no longer observed.
+   * If there are no {@link Observer}s of this {@link Contract} left, mark as
+   * stale (to avoid unnecessary enforcement overhead) and stop observing any
+   * enforcement evidence.
    */
         public void removeObserver(fabric.metrics.util.Observer obs) {
             {
@@ -487,10 +528,12 @@ public interface Contract
         
         /**
    * Updates the expiration time of this contract, either extending or
-   * revoking as needed.
+   * retracting as needed.
    *
    * @param newExpiry
-   *        the new expiration time associated with this {@link Contract}.
+   *            the new expiration time that could be associated with this
+   *            {@link Contract} (if it's past the current expiry, it may not
+   *            be immediately used to avoid unnecessary extension overhead).
    * @return true iff the contract was retracted by this update.
    */
         public boolean update(long newExpiry) {
@@ -534,8 +577,8 @@ public interface Contract
         }
         
         /**
-   * Called to retract this contract's expiry in the current transaction
-   * context.
+   * Called to retract this contract's expiry to an earlier time (applied in
+   * the current transaction context).
    *
    * @param newExpiry
    *        time to set the expiry back to.
@@ -572,20 +615,27 @@ public interface Contract
         /**
    * @param time
    *            the time we're checking against.
-   * @return true iff the contract is stale according to the local time.
+   * @return true iff the contract is stale (no longer enforced) according to
+   *         the local time.
    */
         public boolean stale(long time) {
             return isActivated() && getExpiry() < time;
         }
         
         /**
-   * @return true iff the contract is stale according to the local time.
+   * @return true iff the contract is stale (no longer enforced) according to
+   *         the local time.
    */
         public boolean stale() {
             return isActivated() && getExpiry() <
               java.lang.System.currentTimeMillis();
         }
         
+        /**
+   * @return The expiration time for this {@link Contract} (shifted to account
+   *         for a constant "max" clock drift between the node that last set
+   *         the expiration time and other nodes checking it.)
+   */
         public long getExpiry() {
             return this.get$$expiry() -
               fabric.metrics.contracts.Contract._Static._Proxy.$instance.
@@ -593,31 +643,32 @@ public interface Contract
         }
         
         /**
-   * Update this contract's expiration time to stay valid in response to a
-   * change in the value of the {@link Subject}s used for enforcing this
-   * {@link Contract}. Revokes, extends, and updates the enforcement strategy
+   * Update the state used to enforce this contract's expiration time (and
+   * possibly update the expiration time) in response to a change in the value
+   * of the current evidence ({@link Subject}s) used to enforce this
+   * {@link Contract}. Revokes, extends, and updates the enforcement evidence
    * as needed.
    *
-   * @param force
-   *        flag indicating if a new policy should be found if the old one
-   *        has expired.
-   *
-   * @return true iff the contract was retracted as a result of this
-   *         operation.
+   * @return true iff the contract's expiration was retracted as a result of
+   *         this operation.
    */
-        public abstract boolean refresh(boolean force);
+        public abstract boolean refresh();
         
         public boolean handleUpdates() {
             fabric.common.Logging.METRICS_LOGGER.log(
                                                    java.util.logging.Level.FINE,
                                                    "CHECKING CONTRACT CHANGE");
-            if (valid()) return refresh(true);
+            if (valid()) return refresh();
             fabric.common.Logging.METRICS_LOGGER.log(
                                                    java.util.logging.Level.FINE,
                                                    "CONTRACT INVALID");
             return false;
         }
         
+        /**
+   * Attempt to extend this {@link Contract}'s expiration time. (Invoked to
+   * perform asynchronous extensions close to the current expiration time).
+   */
         public void attemptExtension_remote(
           fabric.lang.security.Principal caller) {
             {
@@ -698,11 +749,15 @@ public interface Contract
             }
         }
         
+        /**
+   * Attempt to extend this {@link Contract}'s expiration time. (Invoked to
+   * perform asynchronous extensions close to the current expiration time).
+   */
         public void attemptExtension() {
             fabric.common.Logging.METRICS_LOGGER.log(
                                                    java.util.logging.Level.INFO,
                                                    "ASYNC EXTENSION");
-            refresh(false);
+            refresh();
         }
         
         public _Impl(fabric.worker.Store $location) { super($location); }
@@ -1016,11 +1071,11 @@ public interface Contract
         
     }
     
-    public static final byte[] $classHash = new byte[] { 4, -20, 93, 74, -4,
-    -51, -87, -72, -24, -104, -7, -65, 67, -82, -60, -84, 16, 27, 98, -62, -78,
-    117, 14, 27, -99, 113, 29, 26, -36, 29, 125, 70 };
+    public static final byte[] $classHash = new byte[] { -71, -59, 116, -102,
+    -33, 58, -17, -14, -100, -128, 12, -9, 1, -67, -88, 103, -118, -48, -16,
+    -34, -90, 55, 75, 73, -81, 109, -114, -51, -64, -88, -87, 24 };
     public static final java.lang.String jlc$CompilerVersion$fabil = "0.3.0";
-    public static final long jlc$SourceLastModified$fabil = 1500326596000L;
+    public static final long jlc$SourceLastModified$fabil = 1500579638000L;
     public static final java.lang.String jlc$ClassType$fabil =
-      "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";
+      "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";
 }

@@ -3,7 +3,11 @@ package fabric.metrics.contracts.enforcement;
 import fabric.metrics.contracts.MetricContract;
 
 /**
- * A policy for enforcing a {@link MetricContract}.
+ * A policy for enforcing a {@link MetricContract}. This class is responsible
+ * for ensuring a {@link MetricContract} (and the API implementation) is
+ * monitoring evidence of the {@link MetricContract}'s validity and updating the
+ * expiration time correctly. It effectively acts as a bundle of the currently
+ * monitored information for enforcing a {@link MetricContract}.
  */
 public abstract class EnforcementPolicy {
 

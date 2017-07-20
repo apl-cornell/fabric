@@ -5,12 +5,15 @@ import fabric.metrics.Metric;
 import fabric.worker.Store;
 
 /**
- * A Bound is a linear time-varying bound compared with a {@link Metric} for a
- * {@link MetricContract} of <code>r⃗ * (t - startTime) + b⃗</code>.
+ * A linear time-varying bound that can be applied to a {@link Metric}'s value
+ * and enforced by a {@link MetricContract} of
+ * <code>&gt;= r * (t - startTime) + b</code>.
  */
 public class Bound {
 
+  /** The rate of the bound (r) */
   public final double rate;
+  /** The base of the bound (b) */
   public final double base;
 
   public Store getStore() {
@@ -38,7 +41,6 @@ public class Bound {
    * @return the value of the bound at the given time
    */
   public double value(long time) {
-    // Use the tightest bound possible.
     return rate * time + base;
   }
 
@@ -55,7 +57,7 @@ public class Bound {
 
   /**
    * @param x
-   *        a vector of doubles we're testing this bound on
+   *        a double we're testing this bound on
    * @param time
    *        the time this bound is being applied to m
    * @return true iff x satisfies the bound at the given time.
@@ -97,7 +99,8 @@ public class Bound {
   /**
    * @param other
    *        another {@link Bound}
-   * @return true iff this is at least as strong of a bound as other
+   * @return true iff this is at least as strong of a bound as other (so this
+   *         bound being satisfied imples the other bound is also satisfied)
    */
   public boolean implies(Bound other) {
     return rate >= other.rate && base >= other.base;

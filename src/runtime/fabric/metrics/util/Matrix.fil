@@ -2,7 +2,7 @@ package fabric.metrics.util;
 
 import fabric.util.ArrayList;
 
-//import fabric.metrics.LinearMetric;
+import fabric.metrics.LinearMetric;
 
 import fabric.worker.Worker;
 import fabric.worker.Store;

@@ -5,6 +5,7 @@ import fabric.util.List;
 import fabric.util.Set;
 
 import fabric.metrics.contracts.Bound;
+import fabric.metrics.contracts.Contract;
 import fabric.metrics.contracts.MetricContract;
 import fabric.metrics.contracts.enforcement.DirectPolicy;
 import fabric.metrics.contracts.enforcement.EnforcementPolicy;
@@ -14,13 +15,14 @@ import fabric.metrics.util.Observer;
 import fabric.worker.Store;
 
 /**
- * Represents an observable quantity that changes over time. Internally, this
- * class estimates the velocity of the observed quantity, and the interval
- * between updates. Instances of this class can be observed by
- * {@link LinearMetric}s and {@link MetricContract}s.
+ * Abstract class with base implementation of some {@link Metric} methods.
  */
 public abstract class AbstractMetric extends AbstractSubject implements Metric {
 
+  /**
+   * @param store
+   *            the Store that holds this {@link Metric}
+   */
   protected AbstractMetric fabric$metrics$AbstractMetric$() {
     contracts = new ArrayList/*<>*/().fabric$util$ArrayList$();
     fabric$metrics$util$AbstractSubject$();
@@ -138,10 +140,6 @@ public abstract class AbstractMetric extends AbstractSubject implements Metric {
     return (this.times(-1).min(other.times(-1))).times(-1);
   }
 
-  /**
-   * Allows for sorting {@link Metric}s to help with normalizing
-   * {@link DerivedMetric}s.
-   */
   /*@Override*/
   public int compareTo(java.lang.Object that) {
     if (!(that instanceof Metric))
@@ -182,8 +180,9 @@ public abstract class AbstractMetric extends AbstractSubject implements Metric {
   /**
    * {@inheritDoc}
    *
-   * If the observer is a MetricContract and is now stale, this clears it out
-   * from the Metric's stored contract set.
+   * If the {@link Observer} is a {@link MetricContract} and is now
+   * {@link Contract#stale()}, this clears it out from the Metric's stored
+   * contract set.
    */
   /*@Override*/
   public void removeObserver(Observer obs) {
@@ -194,9 +193,15 @@ public abstract class AbstractMetric extends AbstractSubject implements Metric {
       }
   }
 
+  /*
+   * TODO: For the static "interning" we should try to avoid creating the
+   * metric before looking it up, if possible?
+   */
+
   /**
    * @param s
-   *        the store we're looking for the given metric on
+   *            the {@link Store} we're looking for the given {@link Metric}
+   *            on
    * @param m
    *        the transformed metric we're looking up
    * @return the existing equivalent {@link DerivedMetric} tracked by this
@@ -219,6 +224,9 @@ public abstract class AbstractMetric extends AbstractSubject implements Metric {
    * Create a locally tracked {@link DerivedMetric} that takes a scaled value
    * of another {@link Metric}.
    *
+   * @param s
+   *            the {@link Store} the returned {@link DerivedMetric} will be
+   *            stored at
    * @param a
    *        the scaling factor
    * @param term
@@ -236,8 +244,11 @@ public abstract class AbstractMetric extends AbstractSubject implements Metric {
    * Create a locally tracked {@link DerivedMetric} that takes the sum of
    * other {@link Metric}s.
    *
+   * @param s
+   *            the {@link Store} the returned {@link DerivedMetric} will be
+   *            stored at
    * @param terms
-   *        the {@link Metric}s
+   *            the {@link Metric}s to sum
    * @return the locally tracked {@link DerivedMetric} for the sum of the
    *       terms.
    */
@@ -253,10 +264,12 @@ public abstract class AbstractMetric extends AbstractSubject implements Metric {
    * Create a locally tracked {@link DerivedMetric} that takes the minimum of
    * other {@link Metric}s.
    *
+   * @param s
+   *            the {@link Store} the returned {@link Metric} will be stored
+   *            at
    * @param terms
    *        the {@link Metric}s to take the min of
-   * @return the locally tracked {@link DerivedMetric} for the minimum of the
-   *       terms.
+   * @return the locally tracked {@link Metric} for the minimum of the terms.
    */
   public static Metric minAtStore(final Store s, Metric[] terms) {
     if (terms.length == 0)
@@ -270,10 +283,12 @@ public abstract class AbstractMetric extends AbstractSubject implements Metric {
    * Create a locally tracked {@link DerivedMetric} that takes the maximum of
    * other {@link Metric}s.
    *
+   * @param s
+   *            the {@link Store} the returned {@link Metric} will be stored
+   *            at
    * @param terms
    *        the {@link Metric}s to take the max of
-   * @return the locally tracked {@link DerivedMetric} for the maximum of the
-   *       terms.
+   * @return the locally tracked {@link Metric} for the maximum of the terms.
    */
   public static Metric maxAtStore(final Store s, Metric[] terms) {
     if (terms.length == 0)

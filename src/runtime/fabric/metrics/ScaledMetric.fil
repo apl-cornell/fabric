@@ -16,9 +16,11 @@ import fabric.metrics.util.Subject;
 import fabric.worker.Store;
 
 /**
- * A {@link Metric} for the scaled value of a given metric.
+ * A {@link DerivedMetric} for the scaled value of a given metric.
  */
 public class ScaledMetric extends DerivedMetric {
+
+    /** The scalar coefficient */
     protected final double scalar;
 
     // Utility method to avoid annoying label initialization issue
@@ -28,7 +30,7 @@ public class ScaledMetric extends DerivedMetric {
 
     /**
      * @param store
-     *            the Store that holds this {@link Metric}
+     *            the {@link Store} that holds this {@link Metric}
      * @param scalar
      *            The coefficient as a double
      * @param term

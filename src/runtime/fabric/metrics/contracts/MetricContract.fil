@@ -103,7 +103,7 @@ public class MetricContract extends Contract {
    * as needed.
    */
   /*@Override*/
-  protected boolean refresh(boolean force) {
+  protected boolean refresh() {
     // If we haven't activated yet, this is a bad operation.  Stop.
     if (!isActivated()) {
       fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "CONTRACT INACTIVE");

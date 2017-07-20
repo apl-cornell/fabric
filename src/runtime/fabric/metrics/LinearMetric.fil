@@ -1,14 +1,14 @@
 package fabric.metrics;
 
-import fabric.util.ArrayList;
 import fabric.util.Arrays;
-import fabric.util.HashMap;
-import fabric.util.Iterator;
 import fabric.util.LinkedHashMap;
-import fabric.util.List;
 import fabric.util.Map;
 import fabric.util.Set;
 import fabric.util.TreeSet;
+import fabric.util.ArrayList;
+import fabric.util.HashMap;
+import fabric.util.Iterator;
+import fabric.util.List;
 
 import fabric.metrics.contracts.Bound;
 import fabric.metrics.contracts.MetricContract;
@@ -25,12 +25,21 @@ import java.util.logging.Level;
 /**
  * A {@link Metric} for the entries of Cm⃗ where m⃗ is a {@link Metric} and C is
  * a {@link Matrix} of coefficients.
+ *
+ * Currently deprecated since it's not as easy to generalize for more and more
+ * operations.
  */
+/*@Deprecated*/
 public class LinearMetric extends DerivedMetric {
   /**
-   * The {@link Matrix} that defines this {@link Metric} along with the terms.
+   * The {@link Matrix} that defines the transformation applied to this
+   * {@link LinearMetric}s terms.
    */
   protected /*final*/ Matrix matrix;
+  /**
+   * The {@link Matrix} that defines the transformation applied to this
+   * {@link LinearMetric}s terms's noise estimates.
+   */
   protected /*final*/ Matrix varMatrix;
 
   /**
@@ -151,6 +160,11 @@ public class LinearMetric extends DerivedMetric {
     return result;
   }
 
+  /**
+   * @param i
+   *            an index in the value vector
+   * @return the freshly computed ith entry in the value vector
+   */
   private double computeValue(int i) {
     double[] values = new double[terms.length];
     for (int j = 0; j < terms.length; j++) {
@@ -174,6 +188,11 @@ public class LinearMetric extends DerivedMetric {
     return result;
   }
 
+  /**
+   * @param i
+   *            an index in the value vector
+   * @return the freshly estimated ith entry in the velocity vector
+   */
   private double computeVelocity(int i) {
     double[] values = new double[terms.length];
     for (int j = 0; j < terms.length; j++) {
@@ -197,6 +216,11 @@ public class LinearMetric extends DerivedMetric {
     return noise;
   }
 
+  /**
+   * @param i
+   *            an index in the value vector
+   * @return the freshly estimated ith entry in the noise vector
+   */
   private double computeNoise(int i) {
     double[] noises = new double[terms.length];
     for (int j = 0; j < terms.length; j++) {
@@ -243,6 +267,7 @@ public class LinearMetric extends DerivedMetric {
    * isn't unnecessary nodes in the {@link Subject}-{@link Observer} tree for
    * {@link #handleUpdates()}.
    */
+  /*@Override*/
   public DerivedMetric plus(Metric other) {
     final Store s = getStore();
     if (other instanceof LinearMetric

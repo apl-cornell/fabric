@@ -3,11 +3,10 @@ package fabric.metrics.util;
 import fabric.util.Set;
 
 /**
- * Represents an observable object having a set of {@link Observer}s. After an
- * observable object changes, an application can call
- * {@link #getObserversCopy()} to get the current set of {@link Observer}s.
- * {@link Observer}s are then notified of a change via a call to
- * {@link Observer#handleUpdates()}.
+ * Represents an observable object that can be monitored by {@link Observer}s.
+ * After a {@link Subject} changes, the API uses the current set of
+ * {@link Observer}s returned by {@link #getObservers()} to compute resulting
+ * changes for {@link Observer}s due to the update.
  */
 public interface Subject {
 

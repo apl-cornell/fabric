@@ -5,8 +5,8 @@ import fabric.metrics.contracts.Bound;
 import fabric.metrics.contracts.MetricContract;
 
 /**
- * An enforcement policy for enforcing a {@link MetricContract}s by checking
- * every update to the associated metric.
+ * An {@link EnforcementPolicy} for enforcing a {@link MetricContract}s by
+ * checking every update to the associated {@link Metric}.
  */
 public class DirectPolicy extends EnforcementPolicy {
 
@@ -76,8 +76,8 @@ public class DirectPolicy extends EnforcementPolicy {
    *
    * @param time
    *        the current time we're calculating this hedged expiration at
-   * @return an appropriately conservative time to advertise to other nodes in
-   *       the system for this contract.
+   * @return an appropriately conservative (unlikely to be retracted again)
+   *         time to advertise to other nodes in the system for this contract.
    */
   private long hedged(long time) {
     double r = bound.rate;

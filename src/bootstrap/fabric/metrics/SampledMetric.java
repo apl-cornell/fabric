@@ -7,18 +7,14 @@ import fabric.worker.remote.*;
 import java.lang.*;
 import fabric.util.ArrayList;
 import fabric.util.List;
-import fabric.metrics.contracts.Bound;
-import fabric.metrics.contracts.MetricContract;
 import fabric.metrics.util.Observer;
 import fabric.metrics.util.RunningStats;
 import fabric.worker.Store;
 import fabric.worker.transaction.TransactionManager;
 
 /**
- * Takes measurements of a persistent value of the parameter type T. When
- * constructed, the programmer provides a custom function for converting the
- * value to a double (the measurement) as well as a pointer to the value being
- * tracked.
+ * A {@link Metric} that is directly updated by applications with new sample
+ * values to use for its value.
  * <p>
  * In a transaction which has written the value being measured,
  * {@link #takeSample(double,long)} must be called to ensure that
@@ -32,9 +28,10 @@ public interface SampledMetric extends fabric.metrics.AbstractMetric {
     
     /**
    * @param store
-   *        the Store that holds this {@link Metric}
+   *            the {@link Store} that holds this {@link Metric}
    * @param name
-   *        the name the store associates with this {@link SampledMetric}
+   *            the name the {@link Store} associates with this
+   *            {@link SampledMetric}, so it can be easily retrieved later
    * @param init
    *        the initial value of this {@link Metric}
    */
@@ -61,21 +58,15 @@ public interface SampledMetric extends fabric.metrics.AbstractMetric {
     
     public boolean isSingleStore();
     
-    public double get$value();
+    public fabric.lang.arrays.doubleArray get$valueCell();
     
-    public double set$value(double val);
+    public fabric.lang.arrays.doubleArray set$valueCell(
+      fabric.lang.arrays.doubleArray val);
     
-    public double postInc$value();
+    public fabric.lang.arrays.longArray get$lastUpdate();
     
-    public double postDec$value();
-    
-    public long get$lastUpdate();
-    
-    public long set$lastUpdate(long val);
-    
-    public long postInc$lastUpdate();
-    
-    public long postDec$lastUpdate();
+    public fabric.lang.arrays.longArray set$lastUpdate(
+      fabric.lang.arrays.longArray val);
     
     public fabric.metrics.util.RunningStats get$biasStats();
     
@@ -115,43 +106,26 @@ public interface SampledMetric extends fabric.metrics.AbstractMetric {
             return ((fabric.metrics.SampledMetric._Impl) fetch()).set$name(val);
         }
         
-        public double get$value() {
-            return ((fabric.metrics.SampledMetric._Impl) fetch()).get$value();
+        public fabric.lang.arrays.doubleArray get$valueCell() {
+            return ((fabric.metrics.SampledMetric._Impl) fetch()).get$valueCell(
+                                                                    );
         }
         
-        public double set$value(double val) {
-            return ((fabric.metrics.SampledMetric._Impl) fetch()).set$value(
+        public fabric.lang.arrays.doubleArray set$valueCell(
+          fabric.lang.arrays.doubleArray val) {
+            return ((fabric.metrics.SampledMetric._Impl) fetch()).set$valueCell(
                                                                     val);
         }
         
-        public double postInc$value() {
-            return ((fabric.metrics.SampledMetric._Impl) fetch()).postInc$value(
-                                                                    );
-        }
-        
-        public double postDec$value() {
-            return ((fabric.metrics.SampledMetric._Impl) fetch()).postDec$value(
-                                                                    );
-        }
-        
-        public long get$lastUpdate() {
+        public fabric.lang.arrays.longArray get$lastUpdate() {
             return ((fabric.metrics.SampledMetric._Impl) fetch()).
               get$lastUpdate();
         }
         
-        public long set$lastUpdate(long val) {
+        public fabric.lang.arrays.longArray set$lastUpdate(
+          fabric.lang.arrays.longArray val) {
             return ((fabric.metrics.SampledMetric._Impl) fetch()).
               set$lastUpdate(val);
-        }
-        
-        public long postInc$lastUpdate() {
-            return ((fabric.metrics.SampledMetric._Impl) fetch()).
-              postInc$lastUpdate();
-        }
-        
-        public long postDec$lastUpdate() {
-            return ((fabric.metrics.SampledMetric._Impl) fetch()).
-              postDec$lastUpdate();
         }
         
         public fabric.metrics.util.RunningStats get$biasStats() {
@@ -227,11 +201,7 @@ public interface SampledMetric extends fabric.metrics.AbstractMetric {
     
     public static class _Impl extends fabric.metrics.AbstractMetric._Impl
       implements fabric.metrics.SampledMetric {
-        public java.lang.String get$name() {
-            fabric.worker.transaction.TransactionManager.getInstance().
-              registerRead(this);
-            return this.name;
-        }
+        public java.lang.String get$name() { return this.name; }
         
         public java.lang.String set$name(java.lang.String val) {
             fabric.worker.transaction.TransactionManager tm =
@@ -246,9 +216,10 @@ public interface SampledMetric extends fabric.metrics.AbstractMetric {
         
         /**
    * @param store
-   *        the Store that holds this {@link Metric}
+   *            the {@link Store} that holds this {@link Metric}
    * @param name
-   *        the name the store associates with this {@link SampledMetric}
+   *            the name the {@link Store} associates with this
+   *            {@link SampledMetric}, so it can be easily retrieved later
    * @param init
    *        the initial value of this {@link Metric}
    */
@@ -256,7 +227,20 @@ public interface SampledMetric extends fabric.metrics.AbstractMetric {
           java.lang.String name, double init) {
             this.set$name(name);
             fabric$metrics$AbstractMetric$();
-            this.set$value((double) init);
+            this.set$valueCell(
+                   fabric.lang.arrays.internal.Compat.convert(
+                                                        this.$getStore(),
+                                                        this.get$$updateLabel(),
+                                                        this.get$$updateLabel(
+                                                               ).confPolicy(),
+                                                        new double[] { init }));
+            this.set$lastUpdate(
+                   fabric.lang.arrays.internal.Compat.convert(
+                                                        this.$getStore(),
+                                                        this.get$$updateLabel(),
+                                                        this.get$$updateLabel(
+                                                               ).confPolicy(),
+                                                        new long[] { -1L }));
             this.set$biasStats(
                    ((fabric.metrics.util.RunningStats)
                       new fabric.metrics.util.RunningStats._Impl(
@@ -287,16 +271,16 @@ public interface SampledMetric extends fabric.metrics.AbstractMetric {
    *        the time the sample occurred.
    */
         public void takeSample(double sample, long time) {
-            if (this.get$value() != sample) {
+            if ((double) this.get$valueCell().get(0) != sample) {
                 updateEstimates(sample, time);
-                this.set$value((double) sample);
+                this.get$valueCell().set(0, sample);
                 fabric.worker.transaction.TransactionManager.getInstance().
                   registerSample((fabric.metrics.SampledMetric)
                                    this.$getProxy());
             }
         }
         
-        public double value() { return this.get$value(); }
+        public double value() { return (double) this.get$valueCell().get(0); }
         
         public double velocity() {
             return this.get$biasStats().getMean() /
@@ -319,45 +303,28 @@ public interface SampledMetric extends fabric.metrics.AbstractMetric {
         
         public boolean isSingleStore() { return true; }
         
-        public double get$value() {
-            fabric.worker.transaction.TransactionManager.getInstance().
-              registerRead(this);
-            return this.value;
+        public fabric.lang.arrays.doubleArray get$valueCell() {
+            return this.valueCell;
         }
         
-        public double set$value(double val) {
+        public fabric.lang.arrays.doubleArray set$valueCell(
+          fabric.lang.arrays.doubleArray val) {
             fabric.worker.transaction.TransactionManager tm =
               fabric.worker.transaction.TransactionManager.getInstance();
             boolean transactionCreated = tm.registerWrite(this);
-            this.value = val;
+            this.valueCell = val;
             if (transactionCreated) tm.commitTransaction();
             return val;
         }
         
-        public double postInc$value() {
-            double tmp = this.get$value();
-            this.set$value((double) (tmp + 1));
-            return tmp;
-        }
+        protected fabric.lang.arrays.doubleArray valueCell;
         
-        public double postDec$value() {
-            double tmp = this.get$value();
-            this.set$value((double) (tmp - 1));
-            return tmp;
-        }
-        
-        /**
-   * The current measurement.
-   */
-        protected double value;
-        
-        public long get$lastUpdate() {
-            fabric.worker.transaction.TransactionManager.getInstance().
-              registerRead(this);
+        public fabric.lang.arrays.longArray get$lastUpdate() {
             return this.lastUpdate;
         }
         
-        public long set$lastUpdate(long val) {
+        public fabric.lang.arrays.longArray set$lastUpdate(
+          fabric.lang.arrays.longArray val) {
             fabric.worker.transaction.TransactionManager tm =
               fabric.worker.transaction.TransactionManager.getInstance();
             boolean transactionCreated = tm.registerWrite(this);
@@ -366,27 +333,9 @@ public interface SampledMetric extends fabric.metrics.AbstractMetric {
             return val;
         }
         
-        public long postInc$lastUpdate() {
-            long tmp = this.get$lastUpdate();
-            this.set$lastUpdate((long) (tmp + 1));
-            return tmp;
-        }
-        
-        public long postDec$lastUpdate() {
-            long tmp = this.get$lastUpdate();
-            this.set$lastUpdate((long) (tmp - 1));
-            return tmp;
-        }
-        
-        /**
-   * The time of the last update to this measure, in milliseconds since the
-   * UNIX epoch.
-   */
-        protected long lastUpdate = -1;
+        protected fabric.lang.arrays.longArray lastUpdate;
         
         public fabric.metrics.util.RunningStats get$biasStats() {
-            fabric.worker.transaction.TransactionManager.getInstance().
-              registerRead(this);
             return this.biasStats;
         }
         
@@ -400,15 +349,9 @@ public interface SampledMetric extends fabric.metrics.AbstractMetric {
             return val;
         }
         
-        /**
-   * The statistics of update magnitudes for this measure. This is computed as
-   * an exponentially weighted moving average.
-   */
         protected fabric.metrics.util.RunningStats biasStats;
         
         public fabric.metrics.util.RunningStats get$updateIntervalStats() {
-            fabric.worker.transaction.TransactionManager.getInstance().
-              registerRead(this);
             return this.updateIntervalStats;
         }
         
@@ -422,15 +365,9 @@ public interface SampledMetric extends fabric.metrics.AbstractMetric {
             return val;
         }
         
-        /**
-   * The estimated time interval between updates, in milliseconds. This is
-   * computed as an exponentially weighted moving average.
-   */
         protected fabric.metrics.util.RunningStats updateIntervalStats;
         
         public fabric.metrics.util.RunningStats get$allStats() {
-            fabric.worker.transaction.TransactionManager.getInstance().
-              registerRead(this);
             return this.allStats;
         }
         
@@ -444,9 +381,6 @@ public interface SampledMetric extends fabric.metrics.AbstractMetric {
             return val;
         }
         
-        /**
-   * Directly measured stats.
-   */
         protected fabric.metrics.util.RunningStats allStats;
         
         /**
@@ -458,12 +392,21 @@ public interface SampledMetric extends fabric.metrics.AbstractMetric {
    *        the time, in milliseconds, this update happened
    */
         public void updateEstimates(double newVal, long eventTime) {
-            this.get$biasStats().update(newVal - this.get$value());
-            this.get$updateIntervalStats().update(eventTime -
-                                                      this.get$lastUpdate());
-            this.get$allStats().update((newVal - this.get$value()) /
-                                           (eventTime - this.get$lastUpdate()));
-            this.set$lastUpdate((long) eventTime);
+            this.get$biasStats().update(newVal -
+                                            (double)
+                                              this.get$valueCell().get(0));
+            this.get$updateIntervalStats().update(
+                                             eventTime -
+                                                 (long)
+                                                   this.get$lastUpdate().get(
+                                                                           0));
+            this.get$allStats().update((newVal -
+                                          (double)
+                                            this.get$valueCell().get(0)) /
+                                           (eventTime -
+                                              (long)
+                                                this.get$lastUpdate().get(0)));
+            this.get$lastUpdate().set(0, eventTime);
         }
         
         public int hashCode() {
@@ -498,8 +441,10 @@ public interface SampledMetric extends fabric.metrics.AbstractMetric {
               throws java.io.IOException {
             super.$serialize(out, refTypes, intraStoreRefs, interStoreRefs);
             $writeInline(out, this.name);
-            out.writeDouble(this.value);
-            out.writeLong(this.lastUpdate);
+            $writeRef($getStore(), this.valueCell, refTypes, out,
+                      intraStoreRefs, interStoreRefs);
+            $writeRef($getStore(), this.lastUpdate, refTypes, out,
+                      intraStoreRefs, interStoreRefs);
             $writeRef($getStore(), this.biasStats, refTypes, out,
                       intraStoreRefs, interStoreRefs);
             $writeRef($getStore(), this.updateIntervalStats, refTypes, out,
@@ -521,8 +466,16 @@ public interface SampledMetric extends fabric.metrics.AbstractMetric {
                   accessPolicyStore, accessPolicyOnum, in, refTypes,
                   intraStoreRefs, interStoreRefs);
             this.name = (java.lang.String) in.readObject();
-            this.value = in.readDouble();
-            this.lastUpdate = in.readLong();
+            this.valueCell =
+              (fabric.lang.arrays.doubleArray)
+                $readRef(fabric.lang.arrays.doubleArray._Proxy.class,
+                         (fabric.common.RefTypeEnum) refTypes.next(), in, store,
+                         intraStoreRefs, interStoreRefs);
+            this.lastUpdate =
+              (fabric.lang.arrays.longArray)
+                $readRef(fabric.lang.arrays.longArray._Proxy.class,
+                         (fabric.common.RefTypeEnum) refTypes.next(), in, store,
+                         intraStoreRefs, interStoreRefs);
             this.biasStats =
               (fabric.metrics.util.RunningStats)
                 $readRef(fabric.metrics.util.RunningStats._Proxy.class,
@@ -545,7 +498,7 @@ public interface SampledMetric extends fabric.metrics.AbstractMetric {
             fabric.metrics.SampledMetric._Impl src =
               (fabric.metrics.SampledMetric._Impl) other;
             this.name = src.name;
-            this.value = src.value;
+            this.valueCell = src.valueCell;
             this.lastUpdate = src.lastUpdate;
             this.biasStats = src.biasStats;
             this.updateIntervalStats = src.updateIntervalStats;
@@ -618,11 +571,11 @@ public interface SampledMetric extends fabric.metrics.AbstractMetric {
         
     }
     
-    public static final byte[] $classHash = new byte[] { 35, -49, 24, -109, 70,
-    -30, 7, -87, -38, 43, 27, 89, -100, 78, 97, -18, -103, -40, 5, 71, -98, 18,
-    18, -26, -113, -12, 30, -84, -12, 103, 64, -77 };
+    public static final byte[] $classHash = new byte[] { 101, -74, -17, 0, -74,
+    -63, -106, 5, 2, -24, 115, 93, 88, -93, 43, 78, -53, -91, -66, -25, -122,
+    -106, 69, 114, -21, -57, -62, 52, 48, -121, 83, -102 };
     public static final java.lang.String jlc$CompilerVersion$fabil = "0.3.0";
-    public static final long jlc$SourceLastModified$fabil = 1496782676000L;
+    public static final long jlc$SourceLastModified$fabil = 1500579678000L;
     public static final java.lang.String jlc$ClassType$fabil =
-      "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";
+      "H4sIAAAAAAAAAK1ZC2wUxxmeO+yzzw/84hEcGxzjoPLIXSEPKXGTFK4Grhzg2pCkJsTd252zN+ztLrtz5nhVpFJiFLVUSo0TqgRViiktcYnUiETQOk36SEiJIiV9pK2aBIkioASVkD6o2jT9/5m9196jPqmWZv69mf+f+eZ/zb/rySuk0rZIZ0yKqlqA7TSpHVgtRcORXsmyqRLSJNveBKODcm1FePziUWW+l3gjpE6WdENXZUkb1G1GZkYelkakoE5ZcHNfuHsL8csouFayhxnxblmVtEiHaWg7hzSDOZvkrX9waXDsyYcafziDNAyQBlXvZxJT5ZChM5pkA6QuTuNRatkrFYUqA6RJp1Tpp5YqaeouYDT0AdJsq0O6xBIWtfuobWgjyNhsJ0xq8T1TgwjfANhWQmaGBfAbBfwEU7VgRLVZd4T4YirVFHs7+SqpiJDKmCYNAeOcSOoUQb5icDWOA3uNCjCtmCTTlEjFNlVXGFnglkifuGsdMIBoVZyyYSO9VYUuwQBpFpA0SR8K9jNL1YeAtdJIwC6MtBZdFJiqTUneJg3RQUZucPP1iing8nO1oAgjs91sfCWwWavLZlnWurLhcwd262t1L/EAZoXKGuKvBqH5LqE+GqMW1WUqBOuWRMalOVP7vYQA82wXs+B5ac9Hn182/5XTgufGAjwbow9TmQ3KE9GZb7eFFt85A2FUm4atoivknJxbtdeZ6U6a4O1z0iviZCA1+Urfa1/ed4xe9pKaMPHJhpaIg1c1yUbcVDVqraE6tSRGlTDxU10J8fkwqYLniKpTMboxFrMpC5MKjQ/5DP4bVBSDJVBFVfCs6jEj9WxKbJg/J01CSBU04oE2QcisENDZhHj3MLIuOGzEaTCqJegOcO8gNCpZ8nAQ4tZS5aBtyUEroTMVmJwh8CIgdrBfipsaVdbznwGAYf5/l0si+sYdHg8odoFsKDQq2WAlx2NW9WoQFGsNTaHWoKwdmAqTlqlD3Gv86Ok2eCvXiwcs3ebOEdmyY4lVPR8dHzwjPA5lHbUx0iYwBhyMgRyMAKsOYykA2SkA2WnSkwyEDoef4y7js3lspVeqg5XuMjWJxQwrniQeDz/WLC7PfQUsvQ0yCCSJusX9W7/4lf2dM8BJzR0VaDdg7XKHTCbRhOFJgjgYlBtGL/79+fG9RiZ4GOnKi+l8SYzJTreOLEOmCuS8zPJLOqQTg1N7u7yYT/yQ6pgEzgh5Y757j5zY7E7lOdRGZYTUog4kDadSyamGDVvGjswIt/1M7JqFG6CyXAB5iry733zmd29dupVfHqls2pCVdvsp686KYFysgcdqU0b3myxKge+9p3q/dfDK6BaueOBYWGjDLuxDELkShKxhPXp6++8/eH/i196MsRjxmYmopspJfpamT+HPA+0/2DAMcQApJOOQkwI60jnAxJ0XZbBBNtAgIwF0u2uzHjcUNaZKUY2ip/y74eblJz480CjMrcGIUJ5Flv3vBTLj81aRfWce+sd8voxHxtsoo78Mm0hxLZmVV1qWtBNxJB95p/3Q69Iz4PmQoGx1F+U5h3B9EG7AFVwXt/B+uWvuNuw6hbba+LjPzk/3q/HezPjiQHDy6dbQPZdFxKd9Ede4qUDE3ydlhcmKY/G/eTt9v/CSqgHSyK9sSWf3SZC1wA0G4NK1Q85ghNTnzOdeoOK26E7HWps7DrK2dUdBJtPAM3Ljc41wfOE4oIhGVFIbtLmQrl9z6CmcbTGxn5X0EP5wFxdZyPtF2C3mivQyUmVa6gh4FiN+NR5PMLQ932UpExi4zGwoVrhl8VwBURjwiXnu3CXCEfs70jCbEebN0FRC6u926JICMHuKwvSblsFAmVTB4XtTCP0jqPUQ1TRwiXZXMQlJmPuguNzfOnp93lTXpevicneXGFmMVyc/uPxOfftxnsYq8FbhqnfXZvmlV05FxRHWcZjJAu7aa6lxyDgjTnVC9489/mngwJgIVVHCLcyrorJlRBnHd6lP73JTqV24xOoLz+/90ff2jgotNOcWJD16Iv6D337yZuCps28UuO58igGJi6aD1OPcPtzYAgPY0fUTH+4vYlZ8XMLA71Vd0lIm9WlUH2LDnHmDczIkX2JkBqgcH9cXXs/D1xPrYLcFuwe5QDIN2iu2Tnl1S8arQ5qhUyl1QHBsPzq2ZsDLRjLFLm5k1QikXwGiorxSknlqAXPkvd2s5x6SSTVnL7ffGdp2fkiYY4HLfG7u76+ffGPNIvkJL5mRzil5hX6uUHduJqmxKLyn6Jty8kmH0PI0NVsiU5sl5njqBbyVMqq5QFIRyVLosmgS6eL3Ipl5yaHvFkgiIyW8LZyTPWrgvYJtNhVIf5x7XZa7uVyvAlAPle/5j5TyfOwGCrnr7nL9e3eef+PPKHaxfMfE32rG5ruxi5cw3eMl5r6O3X7s+DQrbrrF0HYR0nDYoaMFTPeNaZvOH1UlG1/V7ZQrdbiKcZ7R+hK6DlcVZ0S+1qLwboW2D25U6tAvFIA3Nm14LQnuVWG8IuCKSu//RNH9PwPtUdj3pEOfLbD/oWnvXy1p7k2FHyzETk9vzf98zvvebocmsrbOqroI3jDtxV7N+e0y8bWxw8rGI8u9jnf0gaGYYd6i0RGqZS1VI3wwDcOPy2+A1klIxf0Obc7WQEZvrhN4UbTaEWlyaK37BBnnzYqPldj18qWPlXDxSeyOMF5egGd1OQ7WlfO215UB6DrWCmi3g5LPOfRUecdCkZMOfWFax+rFbg9f+oUSxzqB3XFIgkzaRsVZCia+EUNVCp0LSk1yDyFVJx36XHnnQpFjDp0ofq5sxD8pMfcqdqfgeuEFIVdDIdCt0EIAoELQqo/LA40i1xz64fRAny4x90vsfgbRCtFhyCrbWRQ3KjsMGA46dLQ83CjymEP3TQ/32yXmfoXdm6Bs3VDt0sp+gJDaNQ69ozzQKHK7Q4PTA/2HEnN/xO43oGxm9Kc/vqwshLsD2lbY9GWHHi0PN4p816HfmR7ucyXmzmP3PiP1qt0PqDXazwyrYKhWRQ1Do5LuOlMdLnUvtG8S0nTVoVNFzlSw5ggnc09Z6yzyY4eWnZeuljjvNez+zEiDuEJ7bKbGUwXaS8Vi40m4Ra859E/lmQtFzjn0vemZ658l5v6F3V/BzYYlezhkKDw8HiyEG1+InyakZdihkfJwo8g6h/YUx51d9EGV1OxUSVklN5/Ke49HBB5v8YN6qnHwE3hfo9sTkrjcLyTBTXOuRfwkdGOBj7POvwrk0M/pxPl1y2YX+TB7Q94/bxy544cbquce3vyueEdP/RvAHyHVsYSmZX86yXr2mRaNqVy1fvEhxeQnqWdkZm7xyPi7PD7huTy1gq8RDiv48FcTVzcvKFtT2m131aArozazJJkJZXBWvnFrwsJ/T01+PPe6r3rTWf51EBMPffEv5MVXxyu9F+2tDzy7dMOZIy9feGy8x7r8+k9v++xo/7f/C41jOZk2GwAA";
 }

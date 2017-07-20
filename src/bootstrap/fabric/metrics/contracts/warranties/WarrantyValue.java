@@ -8,8 +8,8 @@ import java.lang.*;
 import fabric.metrics.contracts.MetricContract;
 
 /**
- * A utility class for warrantiable computation results, bundling the result
- * with a {@link MetricContract}.
+ * A utility class for tracking {@link WarrantyComp} results and associated
+ * {@link MetricContract}s implying their validity.
  */
 public interface WarrantyValue extends fabric.lang.Object {
     public fabric.lang.Object get$value();
@@ -28,11 +28,12 @@ public interface WarrantyValue extends fabric.lang.Object {
    */
     public fabric.metrics.contracts.warranties.WarrantyValue
       fabric$metrics$contracts$warranties$WarrantyValue$(
-      fabric.lang.Object value,
-      fabric.metrics.contracts.MetricContract contract);
+      fabric.lang.Object value, fabric.metrics.contracts.MetricContract contract);
     
     /**
-   * @return the time this result is expected to last.
+   * @return the time this result is expected to last (can be used to compare
+   *         potential results so the {@link WarrantyComp} can return the
+   *         longest lasting choice).
    */
     public long expectedLifetime();
     
@@ -99,6 +100,7 @@ public interface WarrantyValue extends fabric.lang.Object {
             return val;
         }
         
+        /** The result value. */
         public fabric.lang.Object value;
         
         public fabric.metrics.contracts.MetricContract get$contract() {
@@ -117,6 +119,9 @@ public interface WarrantyValue extends fabric.lang.Object {
             return val;
         }
         
+        /**
+   * A {@link MetricContract} which, when valid, implies the value is current.
+   */
         public fabric.metrics.contracts.MetricContract contract;
         
         /**
@@ -137,7 +142,9 @@ public interface WarrantyValue extends fabric.lang.Object {
         }
         
         /**
-   * @return the time this result is expected to last.
+   * @return the time this result is expected to last (can be used to compare
+   *         potential results so the {@link WarrantyComp} can return the
+   *         longest lasting choice).
    */
         public long expectedLifetime() {
             return this.get$contract().getExpectedLifetime();
@@ -283,11 +290,11 @@ public interface WarrantyValue extends fabric.lang.Object {
         
     }
     
-    public static final byte[] $classHash = new byte[] { -118, 58, 115, 121,
-    -100, 105, -74, 68, 9, -5, 59, 26, 29, -16, -9, 96, -37, 99, 19, 93, -70,
-    98, 4, -123, 72, 76, -26, 124, 60, 100, -91, -91 };
+    public static final byte[] $classHash = new byte[] { 36, 99, -42, 95, 71,
+    100, 42, 38, -80, -124, 126, 117, -59, 68, 82, 23, -24, -26, -25, -30, -127,
+    -60, 113, 109, -118, -95, 91, 46, -41, 93, -22, 46 };
     public static final java.lang.String jlc$CompilerVersion$fabil = "0.3.0";
-    public static final long jlc$SourceLastModified$fabil = 1500320595000L;
+    public static final long jlc$SourceLastModified$fabil = 1500579633000L;
     public static final java.lang.String jlc$ClassType$fabil =
-      "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";
+      "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";
 }

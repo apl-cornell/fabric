@@ -2,10 +2,10 @@ package fabric.metrics;
 
 import fabric.util.Arrays;
 import fabric.util.Collections;
-import fabric.util.HashSet;
-import fabric.util.Iterator;
 import fabric.util.Set;
 import fabric.util.TreeSet;
+import fabric.util.HashSet;
+import fabric.util.Iterator;
 
 import fabric.metrics.contracts.Bound;
 import fabric.metrics.contracts.MetricContract;
@@ -32,10 +32,17 @@ import java.util.logging.Level;
  * </ul>
  */
 public abstract class DerivedMetric extends AbstractMetric implements Observer {
+  /** Last computed value of the {@link DerivedMetric} */
   protected double lastValue;
+  /** Last estimated velocity of the {@link DerivedMetric} */
   protected double lastVelocity;
+  /** Last estimated noise of the {@link DerivedMetric} */
   protected double lastNoise;
 
+  /**
+   * The {@link Metric} terms that this {@link DerivedMetric} is computed
+   * from.
+   */
   protected Metric[] terms;
 
   private final Set/*<SampledMetric>*/ leafMetrics;
@@ -71,9 +78,8 @@ public abstract class DerivedMetric extends AbstractMetric implements Observer {
 
   /**
    * Method to be called at the end of a constructor for any subclass of
-   * {@link DerivedMetric}. Ensures that the {@link DerivedMetric} is added as
-   * an {@link Observer} of its terms as well as caches the initial value of
-   * the {@link Metric}.
+   * {@link DerivedMetric}. Ensures that the {@link getLeafSubjects()} result
+   * is precomputed after the representation has been normalized.
    */
   public void initialize() {
     for (int i = 0; i < terms.length; i++) {
@@ -87,9 +93,9 @@ public abstract class DerivedMetric extends AbstractMetric implements Observer {
       }
     }
 
-    // Not actually convinced we need to compute on create.  Either it will get
-    // an observer, and will precompute then, or it will be unobserved and be
-    // computed on each request.
+    // The below should not be necessary. Either it will be computed on
+    // demand because there is no observer of this metric or it will be
+    // precomputed when an observer is added later.
     // lastValue = computeValue();
     // lastVelocity = computeVelocity();
     // lastNoise = computeNoise();
@@ -121,6 +127,7 @@ public abstract class DerivedMetric extends AbstractMetric implements Observer {
     return lastValue;
   }
 
+  /** @return a freshly computed value for this {@link DerivedMetric}. */
   public abstract double computeValue();
 
   /*@Override*/
@@ -135,6 +142,7 @@ public abstract class DerivedMetric extends AbstractMetric implements Observer {
     return lastVelocity;
   }
 
+  /** @return a freshly estimated velocity for this {@link DerivedMetric}. */
   public abstract double computeVelocity();
 
   /*@Override*/
@@ -149,6 +157,7 @@ public abstract class DerivedMetric extends AbstractMetric implements Observer {
     return lastNoise;
   }
 
+  /** @return a freshly estimated noise for this {@link DerivedMetric}. */
   public abstract double computeNoise();
 
   /*@Override*/
@@ -198,7 +207,8 @@ public abstract class DerivedMetric extends AbstractMetric implements Observer {
 
   /**
    * Method to be called when a {@link DerivedMetric} is no longer stored.
-   * Removes itself from the {@link Observer}s of its terms.
+   *
+   * TODO: not clear this does anything useful anymore.
    */
   public void cleanup() {
     /*

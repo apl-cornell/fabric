@@ -12,27 +12,34 @@ import fabric.metrics.util.Subject;
 import fabric.worker.Store;
 
 /**
- * Represents an observable quantity that changes over time. Internally, this
- * class estimates the velocity of the observed quantity, and the interval
- * between updates. Instances of this class can be observed by
- * {@link LinearMetric}s and {@link MetricContract}s.
+ * Represents an observable quantity that changes over time and can be compared
+ * with a {@link Bound} enforced by a {@link MetricContract}. Internally, this
+ * class estimates the velocity and noise of the observed quantity, which are
+ * used for creating {@link MetricContract} expiries. Instances of this class
+ * can be observed by {@link DerivedMetric}s and {@link MetricContract}s.
+ *
+ * {@link Metric}s are {@link Comparable} to allow for predictable hashing and
+ * normalized representations.
  */
 public interface Metric
   extends fabric.metrics.util.Subject, java.lang.Comparable, fabric.lang.Object
 {
-    /** @return the current value of the quantity being measured. */
+    /** @return the current value of the {@link Metric}. */
     public double value();
     
-    /** @return the estimated value of the measured quantity's velocity */
+    /** @return the estimated velocity of the {@link Metric}. */
     public double velocity();
     
     /**
-   * @return the estimated value of the measured quantity's noise (the
-   *         <em>variance</em> of the velocity estimate)
+   * @return the estimated noise (the <em>variance</em> of the velocity
+   *         estimate) of the {@link Metric}.
    */
     public double noise();
     
     /**
+   * Used to construct and enforce {@link MetricContract}s bounding this
+   * {@link Metric}s value.
+   *
    * @param bound
    *            a {@link Bound} that the returned policy enforces.
    * @return a {@link EnforcementPolicy} that enforces this {@link Metric}
@@ -51,8 +58,10 @@ public interface Metric
    * @param bound
    *        the {@link Bound} that the returned {@link MetricContract}
    *        will enforce on this {@link Metric}
-   * @return a {@link MetricContract} that enforces that the metric satisfies
-   *       the given {@link Bound}
+   * @return a {@link MetricContract} that enforces that the {@link Metric}
+   *         satisfies the given {@link Bound}. If such a
+   *         {@link MetricContract}, it is returned, otherwise a new one is
+   *         created and returned (unactivated).
    */
     public fabric.metrics.contracts.MetricContract getContract(fabric.metrics.contracts.Bound bound);
     
@@ -66,9 +75,12 @@ public interface Metric
    * @param time
    *        the startTime parameter of the {@link Bound} on the resulting
    *        {@link MetricContract}
-   * @return a {@link MetricContract} which enforces that the metric satisfies
-   *       a {@link Bound} that enforces a {@link Bound} with the given
-   *       parameters at the given time.
+   * @return a {@link MetricContract} which enforces that the {@link Metric}
+   *         satisfies a {@link Bound} with the given parameters at the given
+   *         time. If such a {@link MetricContract} already exists, it is
+   *         returned, otherwise a new one is created and returned
+   *         (unactivated).
+   *
    */
     public fabric.metrics.contracts.MetricContract getContract(double rate,
                                                                double base, long time);
@@ -80,9 +92,11 @@ public interface Metric
    * @param base
    *        the base parameter for the {@link Bound} on the resuling
    *        {@link MetricContract}
-   * @return a {@link MetricContract} which enforces that the metric satisfies
-   *       a {@link Bound} that enforces a {@link Bound} with the given
-   *       parameters at the current time.
+   * @return a {@link MetricContract} which enforces that the {@link Metric}
+   *         satisfies a {@link Bound} with the given parameters at the
+   *         current time. If such a {@link MetricContract} already exists, it
+   *         is returned, otherwise a new one is created and returned
+   *         (unactivated).
    */
     public fabric.metrics.contracts.MetricContract getContract(double rate, double base);
     
@@ -90,42 +104,42 @@ public interface Metric
    * @param contract
    *        a {@link MetricContract} to store with this {@link Metric}
    * @throws IllegalArgumentException
-   *         if contract isn't defined on this {@link Metric}
+   *             if the {@link MetricContract} doesn't enforce a {@link Bound}
+   *             on this {@link Metric}
    */
     public void addContract(fabric.metrics.contracts.MetricContract contract);
     
     /**
    * @param scalar
    *        a double scalar to scale this metric by
-   * @return A {@link LinearMetric} that tracks the scaled value of this
-   *       {@link Metric}
+   * @return A {@link Metric} that tracks the scaled value of this
+   *         {@link Metric}.
    */
     public fabric.metrics.DerivedMetric times(double scalar);
     
     /**
    * @param other
-   *        another {@link Metric} to add with this {@link Metric},
-   *        element wise.
-   * @return a {@link LinearMetric} that tracks the value of the sum of other
-   *       and this
+   *            another {@link Metric} to add with this {@link Metric}.
+   * @return a {@link Metric} that tracks the value of the sum of other and
+   *         this.
    */
     public fabric.metrics.DerivedMetric plus(fabric.metrics.Metric other);
     
     /**
    * @param other
-   *        another {@link Metric} to take the minimum of along with this
-   *        {@link Metric}
-   * @return a {@link LinearMetric} that tracks the value of the minimum of
-   *       other and this's entries.
+   *            another {@link Metric} to take the minimum of along with this
+   *            {@link Metric}.
+   * @return a {@link Metric} that tracks the value of the minimum of this and
+   *         the other {@link Metric}.
    */
     public fabric.metrics.Metric min(fabric.metrics.Metric other);
     
     /**
    * @param other
    *            another {@link Metric} to take the maximum of along with this
-   *            {@link Metric}
-   * @return a {@link LinearMetric} that tracks the value of the maximum of
-   *         other and this's entries.
+   *            {@link Metric}.
+   * @return a {@link Metric} that tracks the value of the maximum of this and
+   *         the other {@link Metric}.
    */
     public fabric.metrics.Metric max(fabric.metrics.Metric other);
     
@@ -218,11 +232,11 @@ public interface Metric
         }
     }
     
-    public static final byte[] $classHash = new byte[] { -67, -9, 46, -41, 18,
-    26, -34, -20, 31, 31, -92, -76, -1, 3, 42, 85, -28, 73, 56, 76, 97, 109,
-    -81, 67, -94, -99, -16, 29, 55, -26, -49, -106 };
+    public static final byte[] $classHash = new byte[] { 123, 45, -73, 15, -67,
+    -49, 66, 11, 93, -111, -64, -74, 2, 95, 11, -26, 60, -116, -112, -102, -94,
+    70, 81, -39, -90, -56, 119, 22, 93, -33, -47, 115 };
     java.lang.String jlc$CompilerVersion$fabil = "0.3.0";
-    long jlc$SourceLastModified$fabil = 1500324933000L;
+    long jlc$SourceLastModified$fabil = 1500579673000L;
     java.lang.String jlc$ClassType$fabil =
-      "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";
+      "H4sIAAAAAAAAALVYfYwbRxV/tu9859zlfLl8tZfk8tE01bWpTahEVS6V2nO+3DjcESeoJErMeHfs22S9u90d3/kSAilR1RBBoPQa0koNAoXy0bQVSG0R6EQQqKQUWrUgaP+A5J/woTR/VEjQPyjlvZn12d7zGYQulmZmPfNm5vfmvfd7s3vhOrR7LqwrsLxhJsSkw73ENpZPZ0aZ63E9ZTLP24O9Oa2rLX3mr9/RB8IQzkC3xizbMjRm5ixPQE/mEBtnSYuL5N7d6aH9ENNo4g7mjQkI7x+uuLDGsc3JomkLf5NZ6z9xR3Lq6wd7fxiB+D6IG1ZWMGFoKdsSvCL2QXeJl/Lc9e7Xda7vg0UW53qWuwYzjSMoaFv7oM8zihYTZZd7u7lnm+Mk2OeVHe7KPaudBN9G2G5ZE7aL8HsV/LIwzGTG8MRQBqIFg5u69xB8Dtoy0F4wWREFl2WqWiTlislt1I/iCwyE6RaYxqtT2g4bli5gdXDGjMbrd6IATu0ocTFmz2zVZjHsgD4FyWRWMZkVrmEVUbTdLuMuAvrnXBSFOh2mHWZFnhNwU1BuVA2hVEweC00RsDQoJldCm/UHbFZnreuf2Hz6qLXDCkMIMetcMwl/J04aCEzazQvc5ZbG1cTu2zNn2LLpk2EAFF4aEFYyL3/2vfs2Dly8pGRWNJEZyR/imshp5/M9b65MDd4TIRidju0Z5AoNmkurjvojQxUHvX3ZzIo0mKgOXtz9yqePf59fC8OCNEQ12yyX0KsWaXbJMUzubucWd5ngehpi3NJTcjwNHficMSyuekcKBY+LNLSZsitqy/94RAVcgo6oA58Nq2BXnx0mxuRzxQGADiwQwnIKYPF2bJcAhP8hYEtyzC7xZN4s8wl07yQWzlxtLIlx6xpa0nO1pFu2hIFCfhd6ETZecpdsE7i/M0/rVAhv70QohEe5WrN1nmce2sX3keFRE8Ngh23q3M1p5unpNCyeflL6SYx820P/lCcRQtuuDLJC/dyp8vDW957PvaZ8jOb6B4Uuq8AlfHAJBQ7xdFPYJJCIEkhEF0KVROpc+lnpHVFPhtHMEt24xMcdk4mC7ZYqEApJfZbI+dIt0KiHkSyQD7oHswce+MzJdRH0R2eijWxUkfG6svoHJwY0kcxwb9Z5+u3X/3aX5MwqicTr2CbLxVCd49Kacemii2o49rico9wfz44+/sT1R/dLEChxS7MN11OdQodl6Km2+8ilh965/KfzvwvPAI8IiDrlvGloAjpZHs+EaUJAbIa/lGKLPsRfCMu/qZCO1EEtUlPKD4g1MxHhOHXHEZbPSwWsCBhJapMty9Alkf6qoDp04rqEjz1vKiK9GaGRnUwbU02FznnVXJwk+fT8F6bO6SPf3qSYo68xzrda5dJzv//g14mzV15t4lMxYTt3mnycm3XKLMQt185KjrskZacxhzAktpx25dqqe1KHrxbVtqsDEIPS39t14dXtG7SvhSHic2eTPNE4aageLKYbl2Oas0ht6lmAm64LRpJra1zHXFjb9/Y17MXc9LH1YcozMUyBgiFJYT4ZCG7ewNlDVdelrdoz0EUBw0waqiatBWLMtSdqPZIhepQn4SHGyHGWqxI54bdlGl3sUL1EMYqUXy3rdVTdqtyJHjdQdZsUG0SLbKhFB9Kwif6EweOt32uVbN0oGOQ+FLf/it+66cV3T/cqY5vYo9C5sPG/L1Drv3kYjr928J8DcpmQRteAWgTXxFRuWVxb+X7XZZOEo/LwW6ue/CV7GnkIM4NnHOGS7MFnDwK1Vap9n6y3BMa2U7VZQPs4Q972ZqfYUdcoIX+M+ymWn5w69WHi9JRSW91Dbpl1Faifo+4icrOF8owp0ta22kXO2PaXF4795LvHHg37QO9CctHtcjV47250gH5VIpf99vX/2wHmPqo9LcY+RdUI0h5GuK0ZYpL+72yGlFx1DUDbUb8t3QCkB1qM5ah6EA1u2YbHm8HsI9m7sdwB0H7Nb1+ZJ5ghKRWqsvNAgMaJOChreIlhu2zpksnlOoUWKh2iilHysTH3TFbX/tica3O8I7kaL3FLIHHPPI/K6bXsEbAcWgs2AUS/7LfjN8ByXosxSWp4/1xoeFm8bJg8i1lYRUPaDyxqMgI68rZtcmY10+IjWDYDdD7ot5vm17D0tygFPt9ClYepOiKgq8hFqmoW32y3zWk2dRGrys9ppx1YRgC6xvx2cJ40jKhLjgyZWtwEjr7NtC2l/6kW+n+Fqkca9aeuE830uRfLQbwtvOu3P5onfcI1KaWPlDrTAvZZqh77H2F/FEsRIL5BtT0fzL+jnZAC32iB+JtUPYWIma43OFrQbOO2oTfTArkPbIDeDtXGr86/Furcn22hxXNUPYOcTe9OXjVQVgYCZQt3MYHqKkrmjI5BWhoVet9v355/hXqlwEstFJIu/AM8dscsS4EXmkFdi+U45qMBv43eKKg/bQH1Z1T9WECkZFi1PZsg/SK+VW/x2403CumlFkh/RdXPCSlTe1YwJSpvoMvjiiZv0/7XHC31C37+6s6NS+d4k75p1vc1f97z5+Kdy8/t/YO89c98qYnhW2ehbJp1LxX1LxhRx+UFQ0KMqcu8I5s3BPQ0urSQH7DoSSr8GyX3Fqql5Ojfb+Up99f8HSOjz19GvvWpzznVN77GN3O5Xn/Zpe+IF/6+/P1o554r8n2W0v3RO1+OT78x3HXgsYsvhXNdf978pa8+9a1tn3znmUsTyw5cftP7D797a2jfFAAA";
 }
