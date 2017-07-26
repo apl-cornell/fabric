@@ -55,7 +55,7 @@ public interface _ObjectArray<T extends Object> extends Object {
         long accessPolicyOnum, ObjectInput in, Iterator<RefTypeEnum> refTypes,
         Iterator<Long> intraStoreRefs,
         Iterator<Pair<String, Long>> interStoreRefs)
-            throws IOException, ClassNotFoundException {
+        throws IOException, ClassNotFoundException {
       super(store, onum, version, expiry, labelStore, labelOnum,
           accessPolicyStore, accessPolicyOnum, in, refTypes, intraStoreRefs,
           interStoreRefs);
@@ -193,7 +193,7 @@ public interface _ObjectArray<T extends Object> extends Object {
     @Override
     public void $serialize(ObjectOutput out, List<RefTypeEnum> refTypes,
         List<Long> intraStoreRefs, List<Pair<String, Long>> interStoreRefs)
-            throws IOException {
+        throws IOException {
       super.$serialize(out, refTypes, intraStoreRefs, interStoreRefs);
       out.writeUTF(proxyType.getName());
       out.writeInt(value.length);

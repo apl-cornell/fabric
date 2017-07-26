@@ -70,7 +70,7 @@ public interface DelegatingPrincipal extends Principal {
         long accessPolicyOnum, ObjectInput in, Iterator<RefTypeEnum> refTypes,
         Iterator<Long> intraStoreRefs,
         Iterator<Pair<String, Long>> interStoreRefs)
-            throws IOException, ClassNotFoundException {
+        throws IOException, ClassNotFoundException {
       super(store, onum, version, expiry, labelStore, labelOnum,
           accessPolicyStore, accessPolicyOnum, in, refTypes, intraStoreRefs,
           interStoreRefs);

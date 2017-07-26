@@ -43,7 +43,7 @@ public interface _doubleArray extends Object {
         long accessPolicyOnum, ObjectInput in, Iterator<RefTypeEnum> refTypes,
         Iterator<Long> intraStoreRefs,
         Iterator<Pair<String, Long>> interStoreRefs)
-            throws IOException, ClassNotFoundException {
+        throws IOException, ClassNotFoundException {
       super(store, onum, version, expiry, labelStore, labelOnum,
           accessPolicyStore, accessPolicyOnum, in, refTypes, intraStoreRefs,
           interStoreRefs);
@@ -61,8 +61,8 @@ public interface _doubleArray extends Object {
      *          The length of the array.
      */
     @Override
-    public _doubleArray fabric$lang$arrays$internal$_doubleArray$(Label updateLabel,
-        ConfPolicy accessPolicy, int length) {
+    public _doubleArray fabric$lang$arrays$internal$_doubleArray$(
+        Label updateLabel, ConfPolicy accessPolicy, int length) {
       fabric$lang$arrays$internal$_doubleArray$(updateLabel, accessPolicy,
           new double[length]);
       return this;
@@ -78,8 +78,8 @@ public interface _doubleArray extends Object {
      *          The backing array to use.
      */
     @Override
-    public _doubleArray fabric$lang$arrays$internal$_doubleArray$(Label updateLabel,
-        ConfPolicy accessPolicy, double[] value) {
+    public _doubleArray fabric$lang$arrays$internal$_doubleArray$(
+        Label updateLabel, ConfPolicy accessPolicy, double[] value) {
       set$$updateLabel(updateLabel);
       set$$accessPolicy(accessPolicy);
       fabric$lang$Object$();
@@ -130,7 +130,7 @@ public interface _doubleArray extends Object {
     @Override
     public void $serialize(ObjectOutput out, List<RefTypeEnum> refTypes,
         List<Long> intraStoreRefs, List<Pair<String, Long>> interStoreRefs)
-            throws IOException {
+        throws IOException {
       super.$serialize(out, refTypes, intraStoreRefs, interStoreRefs);
       out.writeInt(value.length);
       for (double element : value)
@@ -155,15 +155,15 @@ public interface _doubleArray extends Object {
     }
 
     @Override
-    public _doubleArray fabric$lang$arrays$internal$_doubleArray$(Label updateLabel,
-        ConfPolicy accessPolicy, int length) {
+    public _doubleArray fabric$lang$arrays$internal$_doubleArray$(
+        Label updateLabel, ConfPolicy accessPolicy, int length) {
       return ((_doubleArray) fetch()).fabric$lang$arrays$internal$_doubleArray$(
           updateLabel, accessPolicy, length);
     }
 
     @Override
-    public _doubleArray fabric$lang$arrays$internal$_doubleArray$(Label updateLabel,
-        ConfPolicy accessPolicy, double[] value) {
+    public _doubleArray fabric$lang$arrays$internal$_doubleArray$(
+        Label updateLabel, ConfPolicy accessPolicy, double[] value) {
       return ((_doubleArray) fetch()).fabric$lang$arrays$internal$_doubleArray$(
           updateLabel, accessPolicy, value);
     }
