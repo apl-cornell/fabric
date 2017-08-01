@@ -14,6 +14,7 @@ import fabric.common.net.naming.NameService;
 import fabric.common.net.naming.NameService.PortType;
 import fabric.common.net.naming.SocketAddress;
 import fabric.net.RemoteNode;
+import fabric.worker.Worker;
 
 /**
  * A factory for creating SubSockets. The factory decorates a
@@ -80,10 +81,15 @@ public final class SubSocketFactory<Node extends RemoteNode<Node>> {
       ClientChannel result = channels.get(node.name);
       if (null == result) {
         NETWORK_CONNECTION_LOGGER.log(Level.INFO,
+            "establishing new connection from \"{0}\"", Worker.getWorkerName());
+        NETWORK_CONNECTION_LOGGER.log(Level.INFO,
             "establishing new connection to \"{0}\"", node.name);
         SocketAddress addr = nameService.resolve(node.name, portType);
+        SocketAddress local =
+            nameService.resolve(Worker.getWorkerName(), portType);
 
-        Socket s = new Socket(addr.getAddress(), addr.getPort());
+        Socket s = new Socket(addr.getAddress(), addr.getPort(),
+            local.getAddress(), 0);
         s.setSoLinger(false, 0);
         s.setTcpNoDelay(true);
 
