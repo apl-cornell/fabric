@@ -177,6 +177,7 @@ public final class Worker {
     WORKER_LOGGER.info("Initializing Fabric worker");
     WORKER_LOGGER.config("use ssl:             " + config.useSSL);
 
+    instanceName = config.name;
     instance = new Worker(config, principalOnum, initStoreSet);
 
     Threading.getPool().execute(instance.remoteCallManager);
@@ -205,6 +206,12 @@ public final class Worker {
    * The singleton Worker instance.
    */
   protected static Worker instance;
+
+  /**
+   * Name for the singleton instance, kept separately so it can be accessed
+   * before the Worker's finished constructing.
+   */
+  protected static String instanceName;
 
   public static boolean isInitialized() {
     return instance != null;
@@ -322,6 +329,19 @@ public final class Worker {
     if (instance == null) throw new IllegalStateException(
         "The Fabric worker is uninitialized.  Call Worker.init(...)");
     return instance;
+  }
+
+  /**
+   * Returns the Singleton Worker instance's name.
+   *
+   * @return the Worker instance's name.
+   * @throws IllegalStateException
+   *           if the Fabric worker's name is uninitialized
+   */
+  public static String getWorkerName() throws IllegalStateException {
+    if (instanceName == null) throw new IllegalStateException(
+        "The Fabric worker's name is uninitialized.  Call Worker.init(...)");
+    return instanceName;
   }
 
   /**
