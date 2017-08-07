@@ -42,14 +42,18 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
     if (curVal == null || !curVal.contract.isActivated()
           || curVal.contract.stale(time)) {
       if (curVal != null) {
-        curVal.contract.removeObserver(this);
+        atomic {
+          curVal.contract.removeObserver(this);
+        }
       }
       // TODO: compute and compare (without replacing) if the currently
       // stored value's Contract hasn't been activated yet.
       curVal = updatedVal(time);
       // TODO: this could happen asynchronously after this call returns.
       curVal.contract.activate();
-      curVal.contract.addObserver(this);
+      atomic {
+        curVal.contract.addObserver(this);
+      }
     }
     return curVal.value;
   }

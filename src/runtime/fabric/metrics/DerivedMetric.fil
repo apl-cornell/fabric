@@ -31,7 +31,7 @@ import java.util.logging.Level;
  * derived from.</li>
  * </ul>
  */
-public abstract class DerivedMetric extends AbstractMetric implements Observer {
+public abstract class DerivedMetric extends Metric implements Observer {
   /** Last computed value of the {@link DerivedMetric} */
   protected double lastValue;
   /** Last estimated velocity of the {@link DerivedMetric} */
@@ -70,7 +70,7 @@ public abstract class DerivedMetric extends AbstractMetric implements Observer {
       }
     }
     this.singleStore = single;
-    fabric$metrics$AbstractMetric$();
+    fabric$metrics$Metric$();
     this.terms = new Metric[terms.length];
     Arrays.arraycopy(terms, 0, this.terms, 0, terms.length);
     return this;
@@ -81,7 +81,7 @@ public abstract class DerivedMetric extends AbstractMetric implements Observer {
    * {@link DerivedMetric}. Ensures that the {@link getLeafSubjects()} result
    * is precomputed after the representation has been normalized.
    */
-  public void initialize() {
+  protected void initialize() {
     for (int i = 0; i < terms.length; i++) {
       if (terms[i] instanceof SampledMetric) {
         leafMetrics.add(/*(SampledMetric)*/ terms[i]);
@@ -128,7 +128,7 @@ public abstract class DerivedMetric extends AbstractMetric implements Observer {
   }
 
   /** @return a freshly computed value for this {@link DerivedMetric}. */
-  public abstract double computeValue();
+  protected abstract double computeValue();
 
   /*@Override*/
   public double velocity() {
@@ -143,7 +143,7 @@ public abstract class DerivedMetric extends AbstractMetric implements Observer {
   }
 
   /** @return a freshly estimated velocity for this {@link DerivedMetric}. */
-  public abstract double computeVelocity();
+  protected abstract double computeVelocity();
 
   /*@Override*/
   public double noise() {
@@ -158,7 +158,7 @@ public abstract class DerivedMetric extends AbstractMetric implements Observer {
   }
 
   /** @return a freshly estimated noise for this {@link DerivedMetric}. */
-  public abstract double computeNoise();
+  protected abstract double computeNoise();
 
   /*@Override*/
   public boolean isSingleStore() {
@@ -206,24 +206,9 @@ public abstract class DerivedMetric extends AbstractMetric implements Observer {
   }
 
   /**
-   * Method to be called when a {@link DerivedMetric} is no longer stored.
-   *
-   * TODO: not clear this does anything useful anymore.
-   */
-  public void cleanup() {
-    /*
-     * NOT CONVINCED THIS IS NEEDED
-    Iterator iter = getContracts(System.currentTimeMillis()).iterator();
-    while (iter.hasNext()) {
-      ((MetricContract) iter.next()).deactivate();
-    }
-    */
-  }
-
-  /**
    * @return the terms this {@link DerivedMetric} is defined over
    */
-  public Metric[] terms() {
+  protected Metric[] terms() {
     Metric[] copy = new Metric[terms.length];
     Arrays.arraycopy(terms, 0, copy, 0, terms.length);
     return copy;
@@ -234,20 +219,23 @@ public abstract class DerivedMetric extends AbstractMetric implements Observer {
    *        an index into the terms array
    * @return the ith term this {@link DerivedMetric} is defined over
    */
-  public Metric term(int i) {
+  protected Metric term(int i) {
     return terms[i];
   }
-
-  /**
-   * @param s
-   *        a {@link Store} that will hold the copy of this
-   *        {@link DerivedMetric}
-   * @return a copy of this {@link DerivedMetric} that is stored on s
-   */
-  public abstract DerivedMetric copyOn(Store s);
 
   /*@Override*/
   public Set/*<SampledMetric>*/ getLeafSubjects() {
     return Collections.unmodifiableSet(Worker.getWorker().getLocalStore(), leafMetrics);
+  }
+
+  /*@Override*/
+  public void refreshWeakEstimates() {
+      // First, refresh the subterm stats.
+      for (int i = 0; i < terms.length; i++) {
+          // TODO: Add remote worker to call
+          terms[i].refreshWeakEstimates();
+      }
+      // Then update locally.
+      super.refreshWeakEstimates();
   }
 }

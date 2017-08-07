@@ -30,12 +30,15 @@ public class MinMetric extends DerivedMetric {
      */
     public MinMetric fabric$metrics$MinMetric$(Metric[] terms) {
         fabric$metrics$DerivedMetric$(terms);
+        Set/*<Metric>*/ termsBag = new TreeSet/*<Metric>*/().fabric$util$TreeSet$(Arrays.asList(terms));
+        this.terms = (Metric[]) termsBag.toArray(new Metric[termsBag.size()]);
+        Arrays.sort(this.terms);
         initialize();
         return this;
     }
 
     /*@Override*/
-    public double computeValue() {
+    protected double computeValue() {
         double result = Double.MAX_VALUE;
         for (int i = 0; i < terms.length; i++) {
             result = Math.min(result, terms[i].value());
@@ -44,7 +47,16 @@ public class MinMetric extends DerivedMetric {
     }
 
     /*@Override*/
-    public double computeVelocity() {
+    protected double computeWeakValue() {
+        double result = Double.MAX_VALUE;
+        for (int i = 0; i < terms.length; i++) {
+            result = Math.min(result, terms[i].weakValue());
+        }
+        return result;
+    }
+
+    /*@Override*/
+    protected double computeVelocity() {
         double result = Double.MAX_VALUE;
         for (int i = 0; i < terms.length; i++) {
             result = Math.min(result, terms[i].velocity());
@@ -53,10 +65,28 @@ public class MinMetric extends DerivedMetric {
     }
 
     /*@Override*/
-    public double computeNoise() {
+    protected double computeWeakVelocity() {
+        double result = Double.MAX_VALUE;
+        for (int i = 0; i < terms.length; i++) {
+            result = Math.min(result, terms[i].weakVelocity());
+        }
+        return result;
+    }
+
+    /*@Override*/
+    protected double computeNoise() {
         double noise = 0;
         for (int i = 0; i < terms.length; i++) {
             noise = Math.max(noise, terms[i].noise());
+        }
+        return noise;
+    }
+
+    /*@Override*/
+    protected double computeWeakNoise() {
+        double noise = 0;
+        for (int i = 0; i < terms.length; i++) {
+            noise = Math.max(noise, terms[i].weakNoise());
         }
         return noise;
     }
@@ -83,7 +113,7 @@ public class MinMetric extends DerivedMetric {
             newTerms[i] = newTerms[i].times(scalar);
         }
         final Store s = $getStore();
-        return AbstractMetric.findDerivedMetric(s,
+        return Metric.findDerivedMetric(s,
                 new MinMetric@s().fabric$metrics$MinMetric$(terms));
     }
 
@@ -102,7 +132,7 @@ public class MinMetric extends DerivedMetric {
             newTerms[i] = other.plus(newTerms[i]);
         }
         final Store s = $getStore();
-        return AbstractMetric.findDerivedMetric(s,
+        return Metric.findDerivedMetric(s,
                 new MinMetric@s().fabric$metrics$MinMetric$(terms));
     }
 
@@ -131,7 +161,7 @@ public class MinMetric extends DerivedMetric {
                 newTerms[aggIdx++] = m;
             }
 
-            return AbstractMetric.findDerivedMetric(s,
+            return Metric.findDerivedMetric(s,
                     new MinMetric@s().fabric$metrics$MinMetric$(newTerms));
         } else if (Arrays.asList(terms).indexOf(other) >= 0) {
             return this;
@@ -141,13 +171,8 @@ public class MinMetric extends DerivedMetric {
         System.arraycopy(terms, 0, newTerms, 0, terms.length);
         newTerms[terms.length] = other;
         Arrays.sort(newTerms, 0, newTerms.length);
-        return AbstractMetric.findDerivedMetric(s,
+        return Metric.findDerivedMetric(s,
                 new MinMetric@s().fabric$metrics$MinMetric$(newTerms));
-    }
-
-    /*@Override*/
-    public DerivedMetric copyOn(Store s) {
-        return AbstractMetric.findDerivedMetric(s, new MinMetric@s().fabric$metrics$MinMetric$(terms));
     }
 
     /*@Override*/

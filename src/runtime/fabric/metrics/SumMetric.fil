@@ -33,7 +33,7 @@ public class SumMetric extends DerivedMetric {
     }
 
     /*@Override*/
-    public double computeValue() {
+    protected double computeValue() {
         double result = 0;
         for (int i = 0; i < terms.length; i++) {
             result += terms[i].value();
@@ -42,7 +42,16 @@ public class SumMetric extends DerivedMetric {
     }
 
     /*@Override*/
-    public double computeVelocity() {
+    protected double computeWeakValue() {
+        double result = 0;
+        for (int i = 0; i < terms.length; i++) {
+            result += terms[i].weakValue();
+        }
+        return result;
+    }
+
+    /*@Override*/
+    protected double computeVelocity() {
         double result = 0;
         for (int i = 0; i < terms.length; i++) {
             result += terms[i].velocity();
@@ -51,10 +60,28 @@ public class SumMetric extends DerivedMetric {
     }
 
     /*@Override*/
-    public double computeNoise() {
+    protected double computeWeakVelocity() {
+        double result = 0;
+        for (int i = 0; i < terms.length; i++) {
+            result += terms[i].weakVelocity();
+        }
+        return result;
+    }
+
+    /*@Override*/
+    protected double computeNoise() {
         double result = 0;
         for (int i = 0; i < terms.length; i++) {
             result += terms[i].noise();
+        }
+        return result;
+    }
+
+    /*@Override*/
+    protected double computeWeakNoise() {
+        double result = 0;
+        for (int i = 0; i < terms.length; i++) {
+            result += terms[i].weakNoise();
         }
         return result;
     }
@@ -80,7 +107,7 @@ public class SumMetric extends DerivedMetric {
             newTerms[i] = newTerms[i].times(scalar);
         }
         final Store s = $getStore();
-        return AbstractMetric.findDerivedMetric(s,
+        return Metric.findDerivedMetric(s,
                 new SumMetric@s().fabric$metrics$SumMetric$(newTerms));
     }
 
@@ -164,13 +191,8 @@ public class SumMetric extends DerivedMetric {
             newTerms[terms.length] = other;
             Arrays.sort(newTerms, 0, newTerms.length);
         }
-        return AbstractMetric.findDerivedMetric(s,
+        return Metric.findDerivedMetric(s,
                 new SumMetric@s().fabric$metrics$SumMetric$(newTerms));
-    }
-
-    /*@Override*/
-    public DerivedMetric copyOn(Store s) {
-        return AbstractMetric.findDerivedMetric(s, new SumMetric@s().fabric$metrics$SumMetric$(terms));
     }
 
     /*@Override*/
@@ -186,18 +208,18 @@ public class SumMetric extends DerivedMetric {
 
         // Defend all rows against the bound individually, using the strictest
         // bounds across the rows for each term in this sum.
-        double totalValue = computeValue();
-        double totalVelocity = computeVelocity();
-        double totalNoise = computeNoise();
+        double totalValue = weakValue();
+        double totalVelocity = weakVelocity();
+        double totalNoise = weakNoise();
         double numTerms = terms.length;
 
         // For each term, update the associated bounds to be the tightest
         // bound set across the rows
         for (int j = 0; j < numTerms; j++) {
             Metric m = term(j);
-            double scaledX = m.value();
-            double scaledV = m.velocity();
-            double scaledN = m.noise();
+            double scaledX = m.weakValue();
+            double scaledV = m.weakVelocity();
+            double scaledN = m.weakNoise();
             // Corrected for the way this metric is shifting relative to
             // the
             // rest of the sum

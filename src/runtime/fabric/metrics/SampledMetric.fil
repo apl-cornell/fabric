@@ -18,7 +18,7 @@ import fabric.worker.transaction.TransactionManager;
  * {@link Observer}s of this {@link Metric} are aware of the change and the
  * transaction context performs the proper book-keeping.
  */
-public class SampledMetric extends AbstractMetric {
+public class SampledMetric extends Metric {
 
   private final String name;
 
@@ -33,8 +33,8 @@ public class SampledMetric extends AbstractMetric {
    */
   public SampledMetric fabric$metrics$SampledMetric$(String name, double init) {
     this.name = name;
-    fabric$metrics$AbstractMetric$();
-    this.valueCell = new double[] { init };
+    fabric$metrics$Metric$();
+    this.value = new double[] { init };
     this.lastUpdate = new long[] { -1l };
     this.biasStats = new RunningStats().fabric$metrics$util$RunningStats$(0);
     this.updateIntervalStats = new RunningStats().fabric$metrics$util$RunningStats$(1.0);
@@ -51,16 +51,16 @@ public class SampledMetric extends AbstractMetric {
    *        the time the sample occurred.
    */
   public void takeSample(double sample, long time) {
-    if (valueCell[0] != sample) {
+    if (value[0] != sample) {
       updateEstimates(sample, time);
-      valueCell[0] = sample;
+      value[0] = sample;
       TransactionManager.getInstance().registerSample(this);
     }
   }
 
   /*@Override*/
   public double value() {
-    return valueCell[0];
+    return value[0];
   }
 
   /*@Override*/
@@ -75,7 +75,7 @@ public class SampledMetric extends AbstractMetric {
     // covariance between update intervals and update values
     double tSqrd = updateIntervalStats.getMean()
         * updateIntervalStats.getMean();
-    double bSqrd = biasStats.getMean() * biasStats.getMean();
+    // double bSqrd = biasStats.getMean() * biasStats.getMean();
     // We're assuming exponential distribution of the times and here we get
     // the variance of the product of independent poisson (1/exp) and
     // normally distributed variables.
@@ -95,23 +95,14 @@ public class SampledMetric extends AbstractMetric {
   }
 
   /**
-   * The current measurement.
-   *
-   * In Fabric we're using an array so that updates don't create write locks on
-   * the SampledMetric itself, but instead on the value cell.  This avoids
-   * unnecessary aborts when reading this object to create a derived metric
-   * (without computing the value for it).
+   * The current measurement. (Stored as an array to avoid unnecessary
+   * conflicts.)
    */
-  protected final double[] valueCell;
+  protected final double[] value;
 
   /**
    * The time of the last update to this measure, in milliseconds since the
-   * UNIX epoch.
-   *
-   * In Fabric we're using an array so that updates don't create write locks on
-   * the SampledMetric itself, but instead on the last update cell.  This avoids
-   * unnecessary aborts when reading this object to create a derived metric
-   * (without computing the value for it).
+   * UNIX epoch. (Stored as an array to avoid unnecessary conflicts.)
    */
   protected final long[] lastUpdate;
 
@@ -141,9 +132,9 @@ public class SampledMetric extends AbstractMetric {
    *        the time, in milliseconds, this update happened
    */
   protected void updateEstimates(double newVal, long eventTime) {
-    biasStats.update(newVal - valueCell[0]);
+    biasStats.update(newVal - value[0]);
     updateIntervalStats.update(eventTime - lastUpdate[0]);
-    allStats.update((newVal - valueCell[0]) / (eventTime - lastUpdate[0]));
+    allStats.update((newVal - value[0]) / (eventTime - lastUpdate[0]));
     lastUpdate[0] = eventTime;
   }
 
@@ -160,5 +151,20 @@ public class SampledMetric extends AbstractMetric {
           && this.getStore().equals(that.getStore());
     }
     return false;
+  }
+
+  /*@Override*/
+  protected double computeWeakValue() {
+    return value();
+  }
+
+  /*@Override*/
+  protected double computeWeakVelocity() {
+    return velocity();
+  }
+
+  /*@Override*/
+  protected double computeWeakNoise() {
+    return noise();
   }
 }

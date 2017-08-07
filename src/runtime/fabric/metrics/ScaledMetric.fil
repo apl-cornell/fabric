@@ -44,18 +44,33 @@ public class ScaledMetric extends DerivedMetric {
     }
 
     /*@Override*/
-    public double computeValue() {
+    protected double computeValue() {
         return scalar * terms[0].value();
     }
 
     /*@Override*/
-    public double computeVelocity() {
+    protected double computeWeakValue() {
+        return scalar * terms[0].weakValue();
+    }
+
+    /*@Override*/
+    protected double computeVelocity() {
         return scalar * terms[0].velocity();
     }
 
     /*@Override*/
-    public double computeNoise() {
+    protected double computeWeakVelocity() {
+        return scalar * terms[0].weakVelocity();
+    }
+
+    /*@Override*/
+    protected double computeNoise() {
         return scalar * scalar * terms[0].noise();
+    }
+
+    /*@Override*/
+    protected double computeWeakNoise() {
+        return scalar * scalar * terms[0].weakNoise();
     }
 
     /*@Override*/
@@ -66,7 +81,7 @@ public class ScaledMetric extends DerivedMetric {
     /*@Override*/
     public DerivedMetric times(double otherScalar) {
         final Store s = $getStore();
-        return AbstractMetric.findDerivedMetric(s,
+        return Metric.findDerivedMetric(s,
                 new ScaledMetric@s().fabric$metrics$ScaledMetric$(otherScalar * scalar, terms[0]));
     }
 
@@ -84,16 +99,10 @@ public class ScaledMetric extends DerivedMetric {
                 && ((ScaledMetric) other).terms[0].equals(terms[0])) {
             ScaledMetric that = (ScaledMetric) other;
 
-            return AbstractMetric.findDerivedMetric(s, new ScaledMetric@s().fabric$metrics$ScaledMetric$(
+            return Metric.findDerivedMetric(s, new ScaledMetric@s().fabric$metrics$ScaledMetric$(
                     that.scalar + scalar, terms[0]));
         }
         return super.plus(other);
-    }
-
-    /*@Override*/
-    public DerivedMetric copyOn(Store s) {
-        return AbstractMetric.findDerivedMetric(s,
-                new ScaledMetric@s().fabric$metrics$ScaledMetric$(scalar, terms[0]));
     }
 
     /*@Override*/

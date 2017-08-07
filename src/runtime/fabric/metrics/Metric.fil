@@ -1,38 +1,43 @@
 package fabric.metrics;
 
+import fabric.util.ArrayList;
+import fabric.util.List;
+import fabric.util.Set;
+
 import fabric.metrics.contracts.Bound;
+import fabric.metrics.contracts.Contract;
 import fabric.metrics.contracts.MetricContract;
+import fabric.metrics.contracts.enforcement.DirectPolicy;
 import fabric.metrics.contracts.enforcement.EnforcementPolicy;
-import fabric.metrics.util.Subject;
+import fabric.metrics.util.AbstractSubject;
+import fabric.metrics.util.Observer;
 
 import fabric.worker.Store;
 
 /**
- * Represents an observable quantity that changes over time and can be compared
- * with a {@link Bound} enforced by a {@link MetricContract}. Internally, this
- * class estimates the velocity and noise of the observed quantity, which are
- * used for creating {@link MetricContract} expiries. Instances of this class
- * can be observed by {@link DerivedMetric}s and {@link MetricContract}s.
- *
- * {@link Metric}s are {@link Comparable} to allow for predictable hashing and
- * normalized representations.
+ * Abstract class with base implementation of some {@link Metric} methods.
  */
-public interface Metric extends Subject, Comparable/*<Metric>*/ {
+public abstract class Metric extends AbstractSubject
+        implements Comparable/*<Metric>*/ {
 
   ////////////////////////////////////////////////////////////////////////////
   // External (user-facing) API
   ////////////////////////////////////////////////////////////////////////////
 
   /** @return the current value of the {@link Metric}. */
-  public double value();
+  public abstract double value();
 
   /**
    * @param scalar
-   *        a double scalar to scale this metric by
+   *            a double scalar to scale this metric by
    * @return A {@link Metric} that tracks the scaled value of this
    *         {@link Metric}.
    */
-  public DerivedMetric times(double scalar);
+  public DerivedMetric times(double scalar) {
+    final Store s = $getStore();
+    return findDerivedMetric(s,
+        new ScaledMetric@s().fabric$metrics$ScaledMetric$(scalar, this));
+  }
 
   /**
    * @param other
@@ -40,7 +45,14 @@ public interface Metric extends Subject, Comparable/*<Metric>*/ {
    * @return a {@link Metric} that tracks the value of the sum of other and
    *         this.
    */
-  public DerivedMetric plus(Metric other);
+  public DerivedMetric plus(Metric other) {
+    // Ugh dumb hack
+    if (other instanceof SumMetric)
+      return other.plus(this);
+    final Store s = $getStore();
+    return findDerivedMetric(s,
+        new SumMetric@s().fabric$metrics$SumMetric$(new Metric[] { this, other }));
+  }
 
   /**
    * @param other
@@ -49,7 +61,17 @@ public interface Metric extends Subject, Comparable/*<Metric>*/ {
    * @return a {@link Metric} that tracks the value of the minimum of this and
    *         the other {@link Metric}.
    */
-  public Metric min(Metric other);
+  public Metric min(Metric other) {
+    // Ugh dumb hack
+    if (this.equals(other))
+      return this;
+    if (other instanceof MinMetric)
+      return other.min(this);
+    final Store s = $getStore();
+    if (this.compareTo(other) > 0)
+        return findDerivedMetric(s, new MinMetric@s().fabric$metrics$MinMetric$(new Metric[] { other, this }));
+    return findDerivedMetric(s, new MinMetric@s().fabric$metrics$MinMetric$(new Metric[] { this, other }));
+  }
 
   /**
    * @param other
@@ -58,29 +80,48 @@ public interface Metric extends Subject, Comparable/*<Metric>*/ {
    * @return a {@link Metric} that tracks the value of the maximum of this and
    *         the other {@link Metric}.
    */
-  public Metric max(Metric other);
+  public Metric max(Metric other) {
+    // TODO: This is not the best approach to this.
+    return (this.times(-1).min(other.times(-1))).times(-1);
+  }
 
   /**
    * @param bound
-   *        the {@link Bound} that the returned {@link MetricContract}
-   *        will enforce on this {@link Metric}
+   *            the {@link Bound} that the returned {@link MetricContract}
+   *            will enforce on this {@link Metric}
    * @return a {@link MetricContract} that enforces that the {@link Metric}
    *         satisfies the given {@link Bound}. If such a
    *         {@link MetricContract}, it is returned, otherwise a new one is
    *         created and returned (unactivated).
    */
-  public MetricContract getContract(Bound bound);
+  public MetricContract getContract(Bound bound) {
+    MetricContract mc = null;
+    for (int i = 0; i < contracts.size(); i++) {
+      MetricContract c = (MetricContract) contracts.get(i);
+      if (c.stale()) {
+          removeObserver(c);
+          // Contract's removed, shift the index to account (ugh)
+          i--;
+      } else if (mc == null && c.isActivated()
+          && c.enforces(this, bound)) {
+        mc = c;
+      }
+    }
+    if (mc == null)
+      mc = createContract(bound);
+    return mc;
+  }
 
   /**
    * @param rate
-   *        the rate parameter for the {@link Bound} on the resuling
-   *        {@link MetricContract}
+   *            the rate parameter for the {@link Bound} on the resuling
+   *            {@link MetricContract}
    * @param base
-   *        the base parameter for the {@link Bound} on the resuling
-   *        {@link MetricContract}
+   *            the base parameter for the {@link Bound} on the resuling
+   *            {@link MetricContract}
    * @param time
-   *        the startTime parameter of the {@link Bound} on the resulting
-   *        {@link MetricContract}
+   *            the startTime parameter of the {@link Bound} on the resulting
+   *            {@link MetricContract}
    * @return a {@link MetricContract} which enforces that the {@link Metric}
    *         satisfies a {@link Bound} with the given parameters at the given
    *         time. If such a {@link MetricContract} already exists, it is
@@ -88,59 +129,334 @@ public interface Metric extends Subject, Comparable/*<Metric>*/ {
    *         (unactivated).
    *
    */
-  public MetricContract getContract(double rate, double base, long time);
+  public MetricContract getContract(double rate, double base, long time) {
+    return getContract(new Bound().fabric$metrics$contracts$Bound$(rate, base, time));
+  }
 
   /**
    * @param rate
-   *        the rate parameter for the {@link Bound} on the resuling
-   *        {@link MetricContract}
+   *            the rate parameter for the {@link Bound} on the resuling
+   *            {@link MetricContract}
    * @param base
-   *        the base parameter for the {@link Bound} on the resuling
-   *        {@link MetricContract}
+   *            the base parameter for the {@link Bound} on the resuling
+   *            {@link MetricContract}
    * @return a {@link MetricContract} which enforces that the {@link Metric}
    *         satisfies a {@link Bound} with the given parameters at the
    *         current time. If such a {@link MetricContract} already exists, it
    *         is returned, otherwise a new one is created and returned
    *         (unactivated).
    */
-  public MetricContract getContract(double rate, double base);
+  public MetricContract getContract(double rate, double base) {
+    return getContract(new Bound().fabric$metrics$contracts$Bound$(rate, base, System.currentTimeMillis()));
+  }
+
+  /**
+   * Create a locally tracked {@link DerivedMetric} that takes a scaled value
+   * of another {@link Metric}.
+   *
+   * @param s
+   *            the {@link Store} the returned {@link DerivedMetric} will be
+   *            stored at
+   * @param a
+   *        the scaling factor
+   * @param term
+   *        the {@link Metric}
+   * @return the locally tracked {@link DerivedMetric} for the scaled value of
+   *       the given {@link Metric}.
+   */
+  public static Metric scaleAtStore(final Store s, double a, Metric term) {
+    if (term.$getStore().equals(s))
+      return findDerivedMetric(s, term.times(a));
+    return findDerivedMetric(s, new ScaledMetric@s().fabric$metrics$ScaledMetric$(a, term));
+  }
+
+  /**
+   * Create a locally tracked {@link DerivedMetric} that takes the sum of
+   * other {@link Metric}s.
+   *
+   * @param s
+   *            the {@link Store} the returned {@link DerivedMetric} will be
+   *            stored at
+   * @param terms
+   *            the {@link Metric}s to sum
+   * @return the locally tracked {@link DerivedMetric} for the sum of the
+   *       terms.
+   */
+  public static Metric addAtStore(final Store s, Metric[] terms) {
+    if (terms.length == 0)
+      throw new IllegalArgumentException("Must have at least 1 term!");
+    if (terms.length == 1)
+      return scaleAtStore(s, 1.0, terms[0]);
+    return findDerivedMetric(s, new SumMetric@s().fabric$metrics$SumMetric$(terms));
+  }
+
+  /**
+   * Create a locally tracked {@link DerivedMetric} that takes the minimum of
+   * other {@link Metric}s.
+   *
+   * @param s
+   *            the {@link Store} the returned {@link Metric} will be stored
+   *            at
+   * @param terms
+   *        the {@link Metric}s to take the min of
+   * @return the locally tracked {@link Metric} for the minimum of the terms.
+   */
+  public static Metric minAtStore(final Store s, Metric[] terms) {
+    if (terms.length == 0)
+      throw new IllegalArgumentException("Must have at least 1 term!");
+    if (terms.length == 1)
+      return scaleAtStore(s, 1.0, terms[0]);
+    return findDerivedMetric(s, new MinMetric@s().fabric$metrics$MinMetric$(terms));
+  }
+
+  /**
+   * Create a locally tracked {@link DerivedMetric} that takes the maximum of
+   * other {@link Metric}s.
+   *
+   * @param s
+   *            the {@link Store} the returned {@link Metric} will be stored
+   *            at
+   * @param terms
+   *        the {@link Metric}s to take the max of
+   * @return the locally tracked {@link Metric} for the maximum of the terms.
+   */
+  public static Metric maxAtStore(final Store s, Metric[] terms) {
+    if (terms.length == 0)
+      throw new IllegalArgumentException("Must have at least 1 term!");
+    if (terms.length == 1)
+      return scaleAtStore(s, 1.0, terms[0]);
+    for (int i = 0; i < terms.length; i++) {
+      terms[i] = terms[i].times(-1);
+    }
+    return findDerivedMetric(s, minAtStore(s, terms).times(-1));
+  }
 
   ////////////////////////////////////////////////////////////////////////////
   // Internal API
   ////////////////////////////////////////////////////////////////////////////
 
+  /**
+   * @param store
+   *            the Store that holds this {@link Metric}
+   */
+  protected Metric fabric$metrics$Metric$() {
+    contracts = new ArrayList/*<>*/().fabric$util$ArrayList$();
+    this.weakStats = new double[3];
+    fabric$metrics$util$AbstractSubject$();
+    return this;
+  }
+
+  private final List/*<MetricContract>*/ contracts;
+
   /** @return the estimated velocity of the {@link Metric}. */
-  public double velocity();
+  public abstract double velocity();
 
   /**
    * @return the estimated noise (the <em>variance</em> of the velocity
    *         estimate) of the {@link Metric}.
    */
-  public double noise();
+  public abstract double noise();
 
   /**
    * Used to construct and enforce {@link MetricContract}s bounding this
    * {@link Metric}s value.
+   * <p>
+   * Implementations of this method should use "weak" estimates of value,
+   * velocity, and noise to avoid contention issues. The internal
+   * implementation is expected to have refreshed these estimates recently
+   * prior to the call.
    *
    * @param bound
    *            a {@link Bound} that the returned policy enforces.
    * @return a {@link EnforcementPolicy} that enforces this {@link Metric}
    *         being above bound.
    */
-  public abstract EnforcementPolicy policy(Bound bound);
+  public EnforcementPolicy policy(Bound bound) {
+    return new DirectPolicy().fabric$metrics$contracts$enforcement$DirectPolicy$(this, bound);
+  }
+
+  /*
+   * Array of the most recently refreshed weak stats (using an Array so it's a
+   * separate object for transactions).
+   */
+  private final double[] weakStats;
+
+  /**
+   * Update the current "weak" estimates to be used by {@link #policy(Bound)}
+   */
+  public void refreshWeakEstimates() {
+    atomic {
+      weakStats[0] = computeWeakValue();
+      weakStats[1] = computeWeakVelocity();
+      weakStats[2] = computeWeakNoise();
+    }
+  }
+
+  /**
+   * @return an estimated (not necessarily consistent) estimate of the
+   *         {@link #value()} as captured in the last call to
+   *         {@link #refreshWeakEstimates()}.
+   */
+  protected double weakValue() {
+    return weakStats[0];
+  }
+
+  /**
+   * @return an estimated (not necessarily consistent) estimate of the
+   *         {@link #velocity()} as captured in the last call to
+   *         {@link #refreshWeakEstimates()}.
+   */
+  protected double weakVelocity() {
+    return weakStats[1];
+  }
+
+  /**
+   * @return an estimated (not necessarily consistent) estimate of the
+   *         {@link #noise()} as captured in the last call to
+   *         {@link #refreshWeakEstimates()}.
+   */
+  protected double weakNoise() {
+    return weakStats[2];
+  }
+
+  /** @return a freshly computed weak value for this {@link DerivedMetric}. */
+  protected abstract double computeWeakValue();
+
+  /**
+   * @return a freshly computed weak velocity for this {@link DerivedMetric}.
+   */
+  protected abstract double computeWeakVelocity();
+
+  /** @return a freshly computed weak noise for this {@link DerivedMetric}. */
+  protected abstract double computeWeakNoise();
 
   /**
    * @return true iff all the sampling and transformations on this metric are
-   *       stored on a single store.
+   *         stored on a single store.
    */
-  public boolean isSingleStore();
+  public abstract boolean isSingleStore();
 
   /**
    * @param contract
-   *        a {@link MetricContract} to store with this {@link Metric}
+   *            a {@link MetricContract} to store with this {@link Metric}
    * @throws IllegalArgumentException
    *             if the {@link MetricContract} doesn't enforce a {@link Bound}
    *             on this {@link Metric}
    */
-  public void addContract(MetricContract contract);
+  public void addContract(MetricContract contract) {
+    if (!contract.getMetric().equals(this))
+      throw new IllegalArgumentException(
+          "Adding a contract for a different metric!");
+    if (!contracts.contains(contract))
+      contracts.add(contract);
+  }
+
+  /**
+   * @param bound
+   *        the {@link Bound} that the contract will enforce on this
+   *        {@link Metric}
+   * @return a {@link MetricContract} asserting this metric satisfies the
+   *       given {@link Bound}.
+   */
+  protected MetricContract createContract(Bound bound) {
+    return new MetricContract().fabric$metrics$contracts$MetricContract$(this, bound);
+  }
+
+  /**
+   * @param time
+   *        the time we're searching for {@link MetricContract}s for this
+   *        {@link Metric}
+   * @return a {@link Set} of {@link MetricContract}s that are currently
+   *       enforced for this {@link Metric}
+   */
+  protected List/*<MetricContract>*/ getContracts(long time) {
+    for (int i = 0; i < contracts.size(); i++) {
+      MetricContract c = (MetricContract) contracts.get(i);
+      if (c.stale(time)) {
+        removeObserver(c);
+        // Contract's removed, shift the index to account (ugh)
+        i--;
+      }
+    }
+    return contracts;
+  }
+
+  /*@Override*/
+  public int compareTo(java.lang.Object that) {
+    if (!(that instanceof Metric))
+      return 0;
+    Metric other = (Metric) that;
+    int thisHash = hashCode();
+    int thatHash = other.hashCode();
+    if (thisHash == thatHash) {
+      if (other.equals(this)) {
+        return 0;
+      } else {
+        return toString().compareTo(other.toString());
+      }
+    }
+    return thisHash - thatHash;
+  }
+
+  /**
+   * Utility for removing a contract if it's no longer observing and is now
+   * stale.
+   *
+   * @param contract
+   *            a {@link MetricContract} to stop storing with this
+   *            {@link Metric} (if it is now invalid).
+   * @throws IllegalArgumentException
+   *             if contract isn't defined on this {@link Metric}
+   */
+  // TODO/XXX: I'm concerned this will cause problems if we are removing
+  // when switching between policies?
+  private void clearContract(MetricContract contract) {
+      if (!contract.getMetric().equals(this))
+          throw new IllegalArgumentException(
+                  "clearing a contract for a different metric!");
+      if (contract.stale())
+          contracts.remove(contract);
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * If the {@link Observer} is a {@link MetricContract} and is now
+   * {@link Contract#stale()}, this clears it out from the Metric's stored
+   * contract set.
+   */
+  /*@Override*/
+  public void removeObserver(Observer obs) {
+      super.removeObserver(obs);
+      if (obs instanceof MetricContract) {
+          MetricContract mc = (MetricContract) obs;
+          clearContract(mc);
+      }
+  }
+
+  /*
+   * TODO: For the static "interning" we should try to avoid creating the
+   * metric before looking it up, if possible?
+   */
+
+  /**
+   * @param s
+   *            the {@link Store} we're looking for the given {@link Metric}
+   *            on
+   * @param m
+   *        the transformed metric we're looking up
+   * @return the existing equivalent {@link DerivedMetric} tracked by this
+   *       {@link Store}, if one exists. Otherwise, starts tracking
+   *       <code>m</code> and returns it.
+   */
+  protected static DerivedMetric findDerivedMetric(final Store s,
+      DerivedMetric m) {
+    DerivedMetric orig = (DerivedMetric) s.derivedMap().get(m);
+    if (orig == null) {
+      s.derivedMap().put(m, m);
+      return m;
+    } else {
+      return orig;
+    }
+  }
 }

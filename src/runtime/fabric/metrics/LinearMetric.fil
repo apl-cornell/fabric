@@ -146,11 +146,25 @@ public class LinearMetric extends DerivedMetric {
   }
 
   /*@Override*/
-  public double computeValue() {
+  protected double computeValue() {
     fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "RECOMPUTING LINEAR METRIC AT {0}", getStore().name());
     double[] values = new double[terms.length];
     for (int i = 0; i < terms.length; i++) {
       values[i] = terms[i].value();
+    }
+    double[] results = matrix.multiply(values);
+    double result = Double.MAX_VALUE;
+    for (int i = 0; i < results.length; i++) {
+      result = Math.min(result, results[i]);
+    }
+    return result;
+  }
+
+  /*@Override*/
+  protected double computeWeakValue() {
+    double[] values = new double[terms.length];
+    for (int i = 0; i < terms.length; i++) {
+      values[i] = terms[i].weakValue();
     }
     double[] results = matrix.multiply(values);
     double result = Double.MAX_VALUE;
@@ -165,7 +179,7 @@ public class LinearMetric extends DerivedMetric {
    *            an index in the value vector
    * @return the freshly computed ith entry in the value vector
    */
-  private double computeValue(int i) {
+  protected double computeValue(int i) {
     double[] values = new double[terms.length];
     for (int j = 0; j < terms.length; j++) {
       values[j] = terms[j].value();
@@ -175,10 +189,24 @@ public class LinearMetric extends DerivedMetric {
   }
 
   /*@Override*/
-  public double computeVelocity() {
+  protected double computeVelocity() {
     double[] values = new double[terms.length];
     for (int i = 0; i < terms.length; i++) {
       values[i] = terms[i].velocity();
+    }
+    double[] results = matrix.multiply(values);
+    double result = Double.MAX_VALUE;
+    for (int i = 0; i < results.length; i++) {
+      result = Math.min(result, results[i]);
+    }
+    return result;
+  }
+
+  /*@Override*/
+  protected double computeWeakVelocity() {
+    double[] values = new double[terms.length];
+    for (int i = 0; i < terms.length; i++) {
+      values[i] = terms[i].weakVelocity();
     }
     double[] results = matrix.multiply(values);
     double result = Double.MAX_VALUE;
@@ -203,10 +231,24 @@ public class LinearMetric extends DerivedMetric {
   }
 
   /*@Override*/
-  public double computeNoise() {
+  protected double computeNoise() {
     double[] noises = new double[terms.length];
     for (int i = 0; i < terms.length; i++) {
       noises[i] = terms[i].noise();
+    }
+    double[] resultNoises = varMatrix.multiply(noises);
+    double noise = 0;
+    for (int i = 0; i < resultNoises.length; i++) {
+      noise = Math.max(noise, resultNoises[i]);
+    }
+    return noise;
+  }
+
+  /*@Override*/
+  protected double computeWeakNoise() {
+    double[] noises = new double[terms.length];
+    for (int i = 0; i < terms.length; i++) {
+      noises[i] = terms[i].weakNoise();
     }
     double[] resultNoises = varMatrix.multiply(noises);
     double noise = 0;
@@ -256,7 +298,7 @@ public class LinearMetric extends DerivedMetric {
   /*@Override*/
   public DerivedMetric times(double scalar) {
     final Store s = getStore();
-    return AbstractMetric.findDerivedMetric(s,
+    return Metric.findDerivedMetric(s,
         new LinearMetric@s().fabric$metrics$LinearMetric$(matrix.multiply(scalar), terms));
   }
 
@@ -317,7 +359,7 @@ public class LinearMetric extends DerivedMetric {
         }
       }
 
-      return AbstractMetric.findDerivedMetric(s,
+      return Metric.findDerivedMetric(s,
           new LinearMetric@s().fabric$metrics$LinearMetric$(combined, newTerms));
     } else if (Arrays.asList(terms).indexOf(other) >= 0) {
       int idx = Arrays.asList(terms).indexOf(other);
@@ -325,10 +367,10 @@ public class LinearMetric extends DerivedMetric {
       for (int i = 0; i < newCs.rows(); i++) {
         newCs.set(i, idx, newCs.get(i, idx) + 1);
       }
-      return AbstractMetric.findDerivedMetric(s,
+      return Metric.findDerivedMetric(s,
           new LinearMetric@s().fabric$metrics$LinearMetric$(newCs, terms));
     } else if (isSingleStore() && !other.$getStore().equals(s)) {
-      return AbstractMetric.findDerivedMetric(s,
+      return Metric.findDerivedMetric(s,
           new LinearMetric@s().fabric$metrics$LinearMetric$(Matrix.constant(1, 2, 1), new Metric[] { this, other }));
     }
 
@@ -343,7 +385,7 @@ public class LinearMetric extends DerivedMetric {
     }
     Matrix newCs = matrix.copy();
     newCs.insertColumn(idx, newCol);
-    return AbstractMetric.findDerivedMetric(s,
+    return Metric.findDerivedMetric(s,
         new LinearMetric@s().fabric$metrics$LinearMetric$(newCs, newTerms));
   }
 
@@ -399,7 +441,7 @@ public class LinearMetric extends DerivedMetric {
         }
       }
 
-      return AbstractMetric.findDerivedMetric(s,
+      return Metric.findDerivedMetric(s,
           new LinearMetric@s().fabric$metrics$LinearMetric$(combined, newTerms));
     } else if (Arrays.asList(terms).indexOf(other) >= 0) {
       int idx = Arrays.asList(terms).indexOf(other);
@@ -407,10 +449,10 @@ public class LinearMetric extends DerivedMetric {
       double[] newRow = new double[terms.length];
       newRow[idx] = 1;
       newCs.addRow(newRow);
-      return AbstractMetric.findDerivedMetric(s,
+      return Metric.findDerivedMetric(s,
           new LinearMetric@s().fabric$metrics$LinearMetric$(newCs, terms));
     } else if (isSingleStore() && !other.$getStore().equals(s)) {
-      return AbstractMetric.findDerivedMetric(s,
+      return Metric.findDerivedMetric(s,
           new LinearMetric@s().fabric$metrics$LinearMetric$(Matrix.identity(2), new Metric[] { this, other }));
     }
 
@@ -424,18 +466,22 @@ public class LinearMetric extends DerivedMetric {
     double[] newRow = new double[terms.length + 1];
     newRow[idx] = 1;
     newCs.addRow(newRow);
-    return AbstractMetric.findDerivedMetric(s,
+    return Metric.findDerivedMetric(s,
         new LinearMetric@s().fabric$metrics$LinearMetric$(newCs, newTerms));
   }
 
   /*@Override*/
   public DerivedMetric copyOn(final Store s) {
-    return AbstractMetric.findDerivedMetric(s,
+    return Metric.findDerivedMetric(s,
         new LinearMetric@s().fabric$metrics$LinearMetric$(matrix, terms));
   }
 
+  /**
+   * XXX/TODO: This is not appropriately "low contention" and still uses
+   * strong operations for model parameters.
+   */
   /*@Override*/
-  public EnforcementPolicy policyFor(Bound bound) {
+  public EnforcementPolicy policy(Bound bound) {
     if (isSingleStore())
       return new DirectPolicy().fabric$metrics$contracts$enforcement$DirectPolicy$(this, bound);
     Map/*<Metric, MetricContract>*/ witnesses = new LinkedHashMap/*<>*/().fabric$util$LinkedHashMap$();

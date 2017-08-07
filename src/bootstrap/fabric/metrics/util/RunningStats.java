@@ -605,30 +605,30 @@ public interface RunningStats extends fabric.lang.Object {
             private void $init() {
                 {
                     {
-                        fabric.worker.transaction.TransactionManager $tm157 =
+                        fabric.worker.transaction.TransactionManager $tm164 =
                           fabric.worker.transaction.TransactionManager.
                           getInstance();
-                        int $backoff158 = 1;
-                        boolean $doBackoff159 = true;
-                        $label153: for (boolean $commit154 = false; !$commit154;
+                        int $backoff165 = 1;
+                        boolean $doBackoff166 = true;
+                        $label160: for (boolean $commit161 = false; !$commit161;
                                         ) {
-                            if ($doBackoff159) {
-                                if ($backoff158 > 32) {
+                            if ($doBackoff166) {
+                                if ($backoff165 > 32) {
                                     while (true) {
                                         try {
-                                            java.lang.Thread.sleep($backoff158);
+                                            java.lang.Thread.sleep($backoff165);
                                             break;
                                         }
                                         catch (java.lang.
-                                                 InterruptedException $e155) {
+                                                 InterruptedException $e162) {
                                             
                                         }
                                     }
                                 }
-                                if ($backoff158 < 5000) $backoff158 *= 2;
+                                if ($backoff165 < 5000) $backoff165 *= 2;
                             }
-                            $doBackoff159 = $backoff158 <= 32 || !$doBackoff159;
-                            $commit154 = true;
+                            $doBackoff166 = $backoff165 <= 32 || !$doBackoff166;
+                            $commit161 = true;
                             fabric.worker.transaction.TransactionManager.
                               getInstance().startTransaction();
                             try {
@@ -636,59 +636,59 @@ public interface RunningStats extends fabric.lang.Object {
                                   $instance.
                                   set$ALPHA((double) 0.001);
                             }
-                            catch (final fabric.worker.RetryException $e155) {
-                                $commit154 = false;
-                                continue $label153;
+                            catch (final fabric.worker.RetryException $e162) {
+                                $commit161 = false;
+                                continue $label160;
                             }
                             catch (final fabric.worker.
-                                     TransactionRestartingException $e155) {
-                                $commit154 = false;
-                                fabric.common.TransactionID $currentTid156 =
-                                  $tm157.getCurrentTid();
-                                if ($e155.tid.isDescendantOf($currentTid156))
-                                    continue $label153;
-                                if ($currentTid156.parent != null) throw $e155;
+                                     TransactionRestartingException $e162) {
+                                $commit161 = false;
+                                fabric.common.TransactionID $currentTid163 =
+                                  $tm164.getCurrentTid();
+                                if ($e162.tid.isDescendantOf($currentTid163))
+                                    continue $label160;
+                                if ($currentTid163.parent != null) throw $e162;
                                 throw new InternalError(
                                         "Something is broken with " +
                                             "transaction management. Got a signal to restart a " +
                                             "different transaction than the one being managed.");
                             }
-                            catch (final Throwable $e155) {
-                                $commit154 = false;
-                                if ($tm157.checkForStaleObjects())
-                                    continue $label153;
-                                throw new fabric.worker.AbortException($e155);
+                            catch (final Throwable $e162) {
+                                $commit161 = false;
+                                if ($tm164.checkForStaleObjects())
+                                    continue $label160;
+                                throw new fabric.worker.AbortException($e162);
                             }
                             finally {
-                                if ($commit154) {
+                                if ($commit161) {
                                     try {
                                         fabric.worker.transaction.TransactionManager.
                                           getInstance().commitTransaction();
                                     }
                                     catch (final fabric.worker.
-                                             AbortException $e155) {
-                                        $commit154 = false;
+                                             AbortException $e162) {
+                                        $commit161 = false;
                                     }
                                     catch (final fabric.worker.
-                                             TransactionRestartingException $e155) {
-                                        $commit154 = false;
+                                             TransactionRestartingException $e162) {
+                                        $commit161 = false;
                                         fabric.common.TransactionID
-                                          $currentTid156 =
-                                          $tm157.getCurrentTid();
-                                        if ($currentTid156 != null) {
-                                            if ($e155.tid.equals(
-                                                            $currentTid156) ||
-                                                  !$e155.tid.
+                                          $currentTid163 =
+                                          $tm164.getCurrentTid();
+                                        if ($currentTid163 != null) {
+                                            if ($e162.tid.equals(
+                                                            $currentTid163) ||
+                                                  !$e162.tid.
                                                   isDescendantOf(
-                                                    $currentTid156)) {
-                                                throw $e155;
+                                                    $currentTid163)) {
+                                                throw $e162;
                                             }
                                         }
                                     }
                                 } else {
                                     fabric.worker.transaction.TransactionManager.getInstance().abortTransaction();
                                 }
-                                if (!$commit154) {  }
+                                if (!$commit161) {  }
                             }
                         }
                     }
@@ -702,7 +702,7 @@ public interface RunningStats extends fabric.lang.Object {
     44, -48, 60, -67, -48, 65, 34, -59, -120, 19, 71, -122, -6, 21, -5, -113,
     -81, -30, -102, -106, -114, -56, 34, 113, 38, 44, 59 };
     public static final java.lang.String jlc$CompilerVersion$fabil = "0.3.0";
-    public static final long jlc$SourceLastModified$fabil = 1500579653000L;
+    public static final long jlc$SourceLastModified$fabil = 1501602696000L;
     public static final java.lang.String jlc$ClassType$fabil =
       "H4sIAAAAAAAAAK1Yb2wcRxWfO9tnn+PEjh3nj+M4tnOJlMS5UwpCtC4t9jWJL7lgy3Yi1RExc7tz9tZ7u5vdOftSkhJATawWGUGd0Fapv5CKEJwGkCo+IIt+oJBShMofAQFBI6SKQsiHqoJC+VPem527vVufj1jipJk3N/Pemzdv3vvNzC7eJTWOTbrTNKXpUX7aYk70IE0lkkPUdpga16njjELvuLKmOnHp7a+pHUESTJIGhRqmoSlUHzccTtYlH6PTNGYwHjs2nOg9QcIKCg5QZ5KT4In+nE06LVM/PaGbXE6yTP/FvbH5r5xs+nYVaRwjjZoxwinXlLhpcJbjY6QhwzIpZjt9qsrUMbLeYEwdYbZGde1xYDSNMdLsaBMG5VmbOcPMMfVpZGx2shazxZz5TjTfBLPtrMJNG8xvcs3Pck2PJTWH9yZJKK0xXXVOkSdIdZLUpHU6AYwbk/lVxITG2EHsB/Z6Dcy001RheZHqKc1QOdnulyisOHIEGEC0NsP4pFmYqtqg0EGaXZN0akzERritGRPAWmNmYRZO2lZUCkx1FlWm6AQb52Szn2/IHQKusHALinDS6mcTmmDP2nx7VrRbdz/x4NynjQEjSAJgs8oUHe2vA6EOn9AwSzObGQpzBRv2JC/RjUuzQUKAudXH7PJ858w7H+/peOWmy7O1DM9g6jGm8HHlSmrdT9vju++vQjPqLNPRMBRKVi52dUiO9OYsiPaNBY04GM0PvjL8g0fPXWN3gqQ+QUKKqWczEFXrFTNjaTqzDzGD2ZQzNUHCzFDjYjxBaqGd1Azm9g6m0w7jCVKti66QKf6Di9KgAl1UC23NSJv5tkX5pGjnLEJILRQSgDII7Z1A18Lf85wMxibNDIul9CybgfCOQWHUViZjkLe2psQcW4nZWYNrwCS7IIqAOO76h7OGATGEOeVEwRTr/68yh6tomgkEwMHbFVNlKerAbsnI6R/SITkGTF1l9riizy0lSMvScyJ6whjxDkSt8E8AdrzdjxXFsvPZ/gPvvDT+uht5KCvdx0mna2dU2unubrGdYFoD5lUUkCoKSLUYyEXjC4lviPAJOSLPCtoaQNsDlk552rQzORIIiKVtEPJCM+z6FKAJAEbD7pFPHv7UbHcVBKw1U417CKwRf/p4oJOAFoWcGFcaL7z9txuXzppeInESWZbfyyUxP7v9frJNhamAf576PZ305fGls5EgYksYYI9TCEzAkA7/HCV52pvHPPRGTZKsQR9QHYfyQFXPJ21zxusR+78Oq2Y3FNBZPgMFXH5sxHrh1z/504fEQZJH1sYiCB5hvLcom1FZo8jb9Z7vR23GgO93zw49c/HuhRPC8cCxo9yEEazjkMUU0te0n7x56tabv7/yi6C3WZyErGxK15ScWMv6D+AXgPIfLJiS2IEUgDku4aCzgAcWzrzLsw2QQQd0AtOdyDEjY6paWqMpnWGk/Ktx5/6X/zLX5G63Dj2u82zS878VeP1b+sm510++1yHUBBQ8mTz/eWwu3LV4mvtsm55GO3Kf/dm2535IX4DIB7BytMeZwB8i/EHEBt4nfLFP1Pt9Yx/Gqtv1VrvoDznLof8gnqFeLI7FFi+3xR+642Z9IRZRR1eZrD9Oi9LkvmuZvwa7Q68GSe0YaRLHNzX4cQroBWEwBgewE5edSbK2ZLz0MHVPjt5CrrX786BoWn8WeGgDbeTGdr0b+G7ggCM2opP2QoE/wS5JG3C0xcJ6Qy5AROMBIbJD1Luw2i0cWYXNPRzhCC9AnIS1TCbLcf/FTHs5qelLDg30lXH4kK1lIGem5VnLZuef+iA6N+8Gm3sh2bHsTlAs415KxDxrxWQ5mKWr0ixC4uAfb5z97tWzF9wDu7n0eD1gZDPXf/nvH0efvf1aGdAOqSakHnMhA+uPFFxZj65sh9ICLnxY0n1lXDlQ3pWQ17WWrU1DkuYKSoOoNCyV9Ui6s0gpJ9UZRgXsxFe0aiuUDSB4QtLDZawadK3C6sjy6VEqIWl/yfRV09SuPHsnlFaQOyNpuszsoxVnRykm6cmS2etw8UM2m65swnY31IOXJb1QxoRHK5qAUucl/UyJCbXggIoWNKGObiibQPZ7kl4vY8HJ8oERxGYSq4fzOVUP6Wa7gOFNm1shrkSKeiElfiF5W3tS0uIlFeEkwYzattLFWmTTlc/NL6iDL+4PSrA9ABjATWufzqaZ7oPcrmUPt6PiOeEh5+072+6PT7014ebmdt/Mfu6vH1187dAu5ctBUlWAyGVvmFKh3lJgrLcZPMGM0RJ47Cz4CneeHIbSAVD3tKQl2eNtuIgctTRy6qRIQtK4383egRXwNisutDoVTrQsVvBy6HLvkBF5h4wghEWK75ARz76p0lVBLpHdhFSnJD2+ulWhyDFJB1deVbHRZyqMPYHVDBwWeLHngqVPQjqSRwDmpk1NLbeQLVBAXfWfJf3N6haCIrck/fm9LWS2wthTWH0eUGGC8aN5YC5n9mYoHyWkZlTSA6szG0UekfShezP7SxXGnsHqC3C+gdnHJaCXsxqxvB+mfE/S26uzGkXelPTWKnLh+QqmX8bqIpietVQ4O/HfuXKmt0FJwkN1jUtD76/OdBT5h6Tv3pvDv1ph7EWsFuAAA4f36dYkdRcLD7ni9MUL8dYyz1P50USJf59deetIT+sKT9PNyz5jSbmXFhrrNi0c+5V4aBU+iIThHZPO6nrxxbGoHbJsltaE9WH3GmkJco2TljJvWUhZJGL1V13O65ysK+Xk4osStor5vgm76fLhv28JR7d5lWBthZuy1IVX5ah7VRZDW/zPYaG0LWvj173Fdzf9PVQ3els8qDCizau//VFfzxsPLr3R1/3qbMuh8++3/vOLN/7w/KW5m92ndvX0/hfLlJnQdRQAAA==";
 }
