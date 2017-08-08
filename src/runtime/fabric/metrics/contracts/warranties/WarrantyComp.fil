@@ -6,6 +6,7 @@ import fabric.util.Set;
 import fabric.metrics.Metric;
 import fabric.metrics.SampledMetric;
 import fabric.metrics.util.Observer;
+import java.util.logging.Level;
 
 /**
  * A computation that uses {@link Contract}s to cache and reuse results.
@@ -41,6 +42,7 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
     // compute the same value
     if (curVal == null || !curVal.contract.isActivated()
           || curVal.contract.stale(time)) {
+      fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "Starting " + this);
       if (curVal != null) {
         atomic {
           curVal.contract.removeObserver(this);
@@ -48,10 +50,13 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
       }
       // TODO: compute and compare (without replacing) if the currently
       // stored value's Contract hasn't been activated yet.
+      fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "Updating " + this);
       curVal = updatedVal(time);
       // TODO: this could happen asynchronously after this call returns.
+      fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "Activating " + this);
       curVal.contract.activate();
       atomic {
+        fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "Observing " + this);
         curVal.contract.addObserver(this);
       }
     }

@@ -13,6 +13,8 @@ import fabric.metrics.util.AbstractSubject;
 import fabric.metrics.util.Observer;
 
 import fabric.worker.Store;
+import fabric.lang.security.LabelUtil;
+import java.util.logging.Level;
 
 /**
  * Abstract class with base implementation of some {@link Metric} methods.
@@ -98,7 +100,12 @@ public abstract class Metric extends AbstractSubject
     MetricContract mc = null;
     for (int i = 0; i < contracts.size(); i++) {
       MetricContract c = (MetricContract) contracts.get(i);
-      if (c.stale()) {
+      if (c == null) {
+        // TODO: Figure out why I'm finding null items...
+        fabric.common.Logging.METRICS_LOGGER.log(Level.FINEST, "Null contract at " + i + " of " + contracts.size());
+        contracts.remove(i);
+        i--;
+      } else if (c.stale()) {
           removeObserver(c);
           // Contract's removed, shift the index to account (ugh)
           i--;
@@ -241,7 +248,9 @@ public abstract class Metric extends AbstractSubject
    */
   protected Metric fabric$metrics$Metric$() {
     contracts = new ArrayList/*<>*/().fabric$util$ArrayList$();
-    this.weakStats = new double[3];
+    Label lbl = LabelUtil.noComponents();
+    Store s = $getStore();
+    this.weakStats = new double[3] ~lbl @s;
     fabric$metrics$util$AbstractSubject$();
     return this;
   }
@@ -372,7 +381,12 @@ public abstract class Metric extends AbstractSubject
   protected List/*<MetricContract>*/ getContracts(long time) {
     for (int i = 0; i < contracts.size(); i++) {
       MetricContract c = (MetricContract) contracts.get(i);
-      if (c.stale(time)) {
+      if (c == null) {
+        // TODO: Figure out why I'm finding null items...
+        fabric.common.Logging.METRICS_LOGGER.log(Level.FINEST, "Null contract at " + i + " of " + contracts.size());
+        contracts.remove(i);
+        i--;
+      } else if (c.stale(time)) {
         removeObserver(c);
         // Contract's removed, shift the index to account (ugh)
         i--;
