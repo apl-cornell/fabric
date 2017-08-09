@@ -67,14 +67,15 @@ public class MetricContract extends Contract {
 
   /*@Override*/
   public void activate() {
-    fabric.common.Logging.METRICS_LOGGER.fine("ASDF ACTIVATING MC " + $getOnum());
     atomic {
       if (isActivated())
         return;
     }
 
     // Refresh the stats being used
-    metric.refreshWeakEstimates();
+    // Commented out for now.  If it's run here it's going to repeat work in
+    // subcalls.
+    //metric.refreshWeakEstimates();
 
     // Determine children
     EnforcementPolicy startPol = null;
@@ -126,6 +127,9 @@ public class MetricContract extends Contract {
 
     // Otherwise find a new one.
     EnforcementPolicy oldPolicy = currentPolicy;
+    // XXX/TODO: Ugh, this should be changed so that refresh uses the most
+    // recently cached stats rather than running a refresh.
+    metric.refreshWeakEstimates();
     EnforcementPolicy newPolicy = metric.policy(bound);
 
     // Wait to unapply so that metric is still tracked if this was

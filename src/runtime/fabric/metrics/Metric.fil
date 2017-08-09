@@ -13,6 +13,9 @@ import fabric.metrics.util.AbstractSubject;
 import fabric.metrics.util.Observer;
 
 import fabric.worker.Store;
+import fabric.worker.Worker;
+import fabric.worker.remote.RemoteWorker;
+import fabric.worker.transaction.TransactionManager;
 import fabric.lang.security.LabelUtil;
 import java.util.logging.Level;
 
@@ -98,24 +101,21 @@ public abstract class Metric extends AbstractSubject
    */
   public MetricContract getContract(Bound bound) {
     MetricContract mc = null;
-    for (int i = 0; i < contracts.size(); i++) {
-      MetricContract c = (MetricContract) contracts.get(i);
-      if (c == null) {
-        // TODO: Figure out why I'm finding null items...
-        fabric.common.Logging.METRICS_LOGGER.log(Level.FINEST, "Null contract at " + i + " of " + contracts.size());
-        contracts.remove(i);
-        i--;
-      } else if (c.stale()) {
-          removeObserver(c);
-          // Contract's removed, shift the index to account (ugh)
-          i--;
-      } else if (mc == null && c.isActivated()
-          && c.enforces(this, bound)) {
-        mc = c;
+    atomic {
+      for (int i = 0; i < contracts.size(); i++) {
+        MetricContract c = (MetricContract) contracts.get(i);
+        if (c.stale()) {
+            removeObserver(c);
+            // Contract's removed, shift the index to account (ugh)
+            i--;
+        } else if (mc == null && c.isActivated()
+            && c.enforces(this, bound)) {
+          mc = c;
+        }
       }
+      if (mc == null)
+        mc = createContract(bound);
     }
-    if (mc == null)
-      mc = createContract(bound);
     return mc;
   }
 
@@ -294,12 +294,31 @@ public abstract class Metric extends AbstractSubject
    * Update the current "weak" estimates to be used by {@link #policy(Bound)}
    */
   public void refreshWeakEstimates() {
-    atomic {
-      weakStats[0] = computeWeakValue();
-      weakStats[1] = computeWeakVelocity();
-      weakStats[2] = computeWeakNoise();
+    if (TransactionManager.getInstance().getCurrentLog() == null) {
+      RemoteWorker w = Worker.getWorker().getWorker($getStore().name());
+      refreshLocally@w();
+    } else {
+      refreshLocally();
     }
   }
+
+  /**
+   * Utility to allow for running updates as close to the metric as possible.
+   *
+   * Ugh, public because we don't allow remote calls for non public methods.
+   */
+  public void refreshLocally() {
+    weakStats[0] = computeWeakValue();
+    weakStats[1] = computeWeakVelocity();
+    weakStats[2] = computeWeakNoise();
+  }
+
+  public void refreshLocally_remote(fabric.lang.security.Principal caller) {
+    atomic {
+      refreshLocally();
+    }
+  }
+
 
   /**
    * @return an estimated (not necessarily consistent) estimate of the
@@ -357,7 +376,9 @@ public abstract class Metric extends AbstractSubject
       throw new IllegalArgumentException(
           "Adding a contract for a different metric!");
     if (!contracts.contains(contract))
-      contracts.add(contract);
+      atomic {
+        contracts.add(contract);
+      }
   }
 
   /**
@@ -379,17 +400,14 @@ public abstract class Metric extends AbstractSubject
    *       enforced for this {@link Metric}
    */
   protected List/*<MetricContract>*/ getContracts(long time) {
-    for (int i = 0; i < contracts.size(); i++) {
-      MetricContract c = (MetricContract) contracts.get(i);
-      if (c == null) {
-        // TODO: Figure out why I'm finding null items...
-        fabric.common.Logging.METRICS_LOGGER.log(Level.FINEST, "Null contract at " + i + " of " + contracts.size());
-        contracts.remove(i);
-        i--;
-      } else if (c.stale(time)) {
-        removeObserver(c);
-        // Contract's removed, shift the index to account (ugh)
-        i--;
+    atomic {
+      for (int i = 0; i < contracts.size(); i++) {
+        MetricContract c = (MetricContract) contracts.get(i);
+        if (c.stale(time)) {
+          removeObserver(c);
+          // Contract's removed, shift the index to account (ugh)
+          i--;
+        }
       }
     }
     return contracts;
@@ -429,7 +447,9 @@ public abstract class Metric extends AbstractSubject
           throw new IllegalArgumentException(
                   "clearing a contract for a different metric!");
       if (contract.stale())
+        atomic {
           contracts.remove(contract);
+        }
   }
 
   /**
