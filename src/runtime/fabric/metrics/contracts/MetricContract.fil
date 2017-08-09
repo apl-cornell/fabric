@@ -80,7 +80,7 @@ public class MetricContract extends Contract {
     // Determine children
     EnforcementPolicy startPol = null;
     atomic {
-      startPol = metric.policy(bound);
+      startPol = metric.policy(bound, true);
     }
 
     // Activate new children
@@ -127,9 +127,6 @@ public class MetricContract extends Contract {
 
     // Otherwise find a new one.
     EnforcementPolicy oldPolicy = currentPolicy;
-    // XXX/TODO: Ugh, this should be changed so that refresh uses the most
-    // recently cached stats rather than running a refresh.
-    metric.refreshWeakEstimates();
     EnforcementPolicy newPolicy = metric.policy(bound);
 
     // Wait to unapply so that metric is still tracked if this was

@@ -59,18 +59,18 @@ public class SampledMetric extends Metric {
   }
 
   /*@Override*/
-  public double value() {
+  public double value(boolean useWeakCache) {
     return value[0];
   }
 
   /*@Override*/
-  public double velocity() {
+  public double velocity(boolean useWeakCache) {
     return biasStats.getMean() / updateIntervalStats.getMean();
     // return allStats.getMean();
   }
 
   /*@Override*/
-  public double noise() {
+  public double noise(boolean useWeakCache) {
     // Based on ratio estimator approach and assuming that there's 0
     // covariance between update intervals and update values
     double tSqrd = updateIntervalStats.getMean()
@@ -154,17 +154,17 @@ public class SampledMetric extends Metric {
   }
 
   /*@Override*/
-  protected double computeWeakValue() {
+  protected double computeValue(boolean useWeakCache) {
     return value();
   }
 
   /*@Override*/
-  protected double computeWeakVelocity() {
+  protected double computeVelocity(boolean useWeakCache) {
     return velocity();
   }
 
   /*@Override*/
-  protected double computeWeakNoise() {
+  protected double computeNoise(boolean useWeakCache) {
     return noise();
   }
 }

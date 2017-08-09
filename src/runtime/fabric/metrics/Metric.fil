@@ -30,7 +30,9 @@ public abstract class Metric extends AbstractSubject
   ////////////////////////////////////////////////////////////////////////////
 
   /** @return the current value of the {@link Metric}. */
-  public abstract double value();
+  public double value() {
+    return value(false);
+  }
 
   /**
    * @param scalar
@@ -257,14 +259,60 @@ public abstract class Metric extends AbstractSubject
 
   private final List/*<MetricContract>*/ contracts;
 
+  /**
+   * @param useWeakCache
+   *            Flag to indicate if a weakly consistent value should be
+   *            returned.  If false, a strongly consistent value is returned.
+   * @return the current value of the {@link Metric}.
+   */
+  public abstract double value(boolean useWeakCache);
+
   /** @return the estimated velocity of the {@link Metric}. */
-  public abstract double velocity();
+  public double velocity() {
+    return velocity(false);
+  }
 
   /**
-   * @return the estimated noise (the <em>variance</em> of the velocity
-   *         estimate) of the {@link Metric}.
+   * @param useWeakCache
+   *            Flag to indicate if a weakly consistent value should be
+   *            returned.  If false, a strongly consistent value is returned.
+   * @return the estimated velocity of the {@link Metric}.
    */
-  public abstract double noise();
+  public abstract double velocity(boolean useWeakCache);
+
+  /** @return the estimated noise of the {@link Metric}. */
+  public double noise() {
+    return noise(false);
+  }
+
+  /**
+   * @param useWeakCache
+   *            Flag to indicate if a weakly consistent value should be
+   *            returned.  If false, a strongly consistent value is returned.
+   * @return the estimated velocity of the {@link Metric}.
+   */
+  public abstract double noise(boolean useWeakCache);
+
+  /**
+   * Used to construct and enforce {@link MetricContract}s bounding this
+   * {@link Metric}s value.
+   * <p>
+   * Implementations of this method should use "weak" estimates of value,
+   * velocity, and noise to avoid contention issues. The internal
+   * implementation is expected to have refreshed these estimates recently
+   * prior to the call.
+   *
+   * @param bound
+   *            a {@link Bound} that the returned policy enforces.
+   * @param useWeakCache
+   *            flag indicating if weakly consistent cached values should be
+   *            used
+   * @return a {@link EnforcementPolicy} that enforces this {@link Metric}
+   *         being above bound.
+   */
+  public EnforcementPolicy policy(Bound bound, boolean useWeakCache) {
+    return new DirectPolicy().fabric$metrics$contracts$enforcement$DirectPolicy$(this, bound);
+  }
 
   /**
    * Used to construct and enforce {@link MetricContract}s bounding this
@@ -281,14 +329,14 @@ public abstract class Metric extends AbstractSubject
    *         being above bound.
    */
   public EnforcementPolicy policy(Bound bound) {
-    return new DirectPolicy().fabric$metrics$contracts$enforcement$DirectPolicy$(this, bound);
+    return policy(bound, false);
   }
 
   /*
    * Array of the most recently refreshed weak stats (using an Array so it's a
    * separate object for transactions).
    */
-  private final double[] weakStats;
+  protected final double[] weakStats;
 
   /**
    * Update the current "weak" estimates to be used by {@link #policy(Bound)}
@@ -308,9 +356,9 @@ public abstract class Metric extends AbstractSubject
    * Ugh, public because we don't allow remote calls for non public methods.
    */
   public void refreshLocally() {
-    weakStats[0] = computeWeakValue();
-    weakStats[1] = computeWeakVelocity();
-    weakStats[2] = computeWeakNoise();
+    weakStats[0] = computeValue(true);
+    weakStats[1] = computeVelocity(true);
+    weakStats[2] = computeNoise(true);
   }
 
   public void refreshLocally_remote(fabric.lang.security.Principal caller) {
@@ -347,16 +395,26 @@ public abstract class Metric extends AbstractSubject
     return weakStats[2];
   }
 
-  /** @return a freshly computed weak value for this {@link DerivedMetric}. */
-  protected abstract double computeWeakValue();
+  /**
+   * @param useWeakCache
+   *            Flag to indicate if weak values should be used.
+   * @return a freshly computed weak value for this {@link DerivedMetric}.
+   */
+  protected abstract double computeValue(boolean useWeakCache);
 
   /**
+   * @param useWeakCache
+   *            Flag to indicate if weak values should be used.
    * @return a freshly computed weak velocity for this {@link DerivedMetric}.
    */
-  protected abstract double computeWeakVelocity();
+  protected abstract double computeVelocity(boolean useWeakCache);
 
-  /** @return a freshly computed weak noise for this {@link DerivedMetric}. */
-  protected abstract double computeWeakNoise();
+  /**
+   * @param useWeakCache
+   *            Flag to indicate if weak values should be used.
+   * @return a freshly computed noise for this {@link DerivedMetric}.
+   */
+  protected abstract double computeNoise(boolean useWeakCache);
 
   /**
    * @return true iff all the sampling and transformations on this metric are

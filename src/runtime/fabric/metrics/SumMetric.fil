@@ -33,55 +33,28 @@ public class SumMetric extends DerivedMetric {
     }
 
     /*@Override*/
-    protected double computeValue() {
+    protected double computeValue(boolean useWeakCache) {
         double result = 0;
         for (int i = 0; i < terms.length; i++) {
-            result += terms[i].value();
+            result += terms[i].value(useWeakCache);
         }
         return result;
     }
 
     /*@Override*/
-    protected double computeWeakValue() {
+    protected double computeVelocity(boolean useWeakCache) {
         double result = 0;
         for (int i = 0; i < terms.length; i++) {
-            result += terms[i].weakValue();
+            result += terms[i].velocity(useWeakCache);
         }
         return result;
     }
 
     /*@Override*/
-    protected double computeVelocity() {
+    protected double computeNoise(boolean useWeakCache) {
         double result = 0;
         for (int i = 0; i < terms.length; i++) {
-            result += terms[i].velocity();
-        }
-        return result;
-    }
-
-    /*@Override*/
-    protected double computeWeakVelocity() {
-        double result = 0;
-        for (int i = 0; i < terms.length; i++) {
-            result += terms[i].weakVelocity();
-        }
-        return result;
-    }
-
-    /*@Override*/
-    protected double computeNoise() {
-        double result = 0;
-        for (int i = 0; i < terms.length; i++) {
-            result += terms[i].noise();
-        }
-        return result;
-    }
-
-    /*@Override*/
-    protected double computeWeakNoise() {
-        double result = 0;
-        for (int i = 0; i < terms.length; i++) {
-            result += terms[i].weakNoise();
+            result += terms[i].noise(useWeakCache);
         }
         return result;
     }
@@ -196,7 +169,7 @@ public class SumMetric extends DerivedMetric {
     }
 
     /*@Override*/
-    public EnforcementPolicy policy(Bound bound) {
+    public EnforcementPolicy policy(Bound bound, boolean useWeakCache) {
         if (isSingleStore())
             return new DirectPolicy().fabric$metrics$contracts$enforcement$DirectPolicy$(this, bound);
 
@@ -208,18 +181,18 @@ public class SumMetric extends DerivedMetric {
 
         // Defend all rows against the bound individually, using the strictest
         // bounds across the rows for each term in this sum.
-        double totalValue = weakValue();
-        double totalVelocity = weakVelocity();
-        double totalNoise = weakNoise();
+        double totalValue = value(useWeakCache);
+        double totalVelocity = velocity(useWeakCache);
+        double totalNoise = noise(useWeakCache);
         double numTerms = terms.length;
 
         // For each term, update the associated bounds to be the tightest
         // bound set across the rows
         for (int j = 0; j < numTerms; j++) {
             Metric m = term(j);
-            double scaledX = m.weakValue();
-            double scaledV = m.weakVelocity();
-            double scaledN = m.weakNoise();
+            double scaledX = m.value(useWeakCache);
+            double scaledV = m.velocity(useWeakCache);
+            double scaledN = m.noise(useWeakCache);
             // Corrected for the way this metric is shifting relative to
             // the
             // rest of the sum

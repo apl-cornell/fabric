@@ -38,55 +38,28 @@ public class MinMetric extends DerivedMetric {
     }
 
     /*@Override*/
-    protected double computeValue() {
+    protected double computeValue(boolean useWeakCache) {
         double result = Double.MAX_VALUE;
         for (int i = 0; i < terms.length; i++) {
-            result = Math.min(result, terms[i].value());
+            result = Math.min(result, terms[i].value(useWeakCache));
         }
         return result;
     }
 
     /*@Override*/
-    protected double computeWeakValue() {
+    protected double computeVelocity(boolean useWeakCache) {
         double result = Double.MAX_VALUE;
         for (int i = 0; i < terms.length; i++) {
-            result = Math.min(result, terms[i].weakValue());
+            result = Math.min(result, terms[i].velocity(useWeakCache));
         }
         return result;
     }
 
     /*@Override*/
-    protected double computeVelocity() {
-        double result = Double.MAX_VALUE;
-        for (int i = 0; i < terms.length; i++) {
-            result = Math.min(result, terms[i].velocity());
-        }
-        return result;
-    }
-
-    /*@Override*/
-    protected double computeWeakVelocity() {
-        double result = Double.MAX_VALUE;
-        for (int i = 0; i < terms.length; i++) {
-            result = Math.min(result, terms[i].weakVelocity());
-        }
-        return result;
-    }
-
-    /*@Override*/
-    protected double computeNoise() {
+    protected double computeNoise(boolean useWeakCache) {
         double noise = 0;
         for (int i = 0; i < terms.length; i++) {
-            noise = Math.max(noise, terms[i].noise());
-        }
-        return noise;
-    }
-
-    /*@Override*/
-    protected double computeWeakNoise() {
-        double noise = 0;
-        for (int i = 0; i < terms.length; i++) {
-            noise = Math.max(noise, terms[i].weakNoise());
+            noise = Math.max(noise, terms[i].noise(useWeakCache));
         }
         return noise;
     }
@@ -176,7 +149,7 @@ public class MinMetric extends DerivedMetric {
     }
 
     /*@Override*/
-    public EnforcementPolicy policy(Bound bound) {
+    public EnforcementPolicy policy(Bound bound, boolean useWeakCache) {
         if (isSingleStore())
             return new DirectPolicy().fabric$metrics$contracts$enforcement$DirectPolicy$(this, bound);
         MetricContract[] witnesses = new MetricContract[terms.length];

@@ -44,33 +44,18 @@ public class ScaledMetric extends DerivedMetric {
     }
 
     /*@Override*/
-    protected double computeValue() {
-        return scalar * terms[0].value();
+    protected double computeValue(boolean useWeakCache) {
+        return scalar * terms[0].value(useWeakCache);
     }
 
     /*@Override*/
-    protected double computeWeakValue() {
-        return scalar * terms[0].weakValue();
+    protected double computeVelocity(boolean useWeakCache) {
+        return scalar * terms[0].velocity(useWeakCache);
     }
 
     /*@Override*/
-    protected double computeVelocity() {
-        return scalar * terms[0].velocity();
-    }
-
-    /*@Override*/
-    protected double computeWeakVelocity() {
-        return scalar * terms[0].weakVelocity();
-    }
-
-    /*@Override*/
-    protected double computeNoise() {
-        return scalar * scalar * terms[0].noise();
-    }
-
-    /*@Override*/
-    protected double computeWeakNoise() {
-        return scalar * scalar * terms[0].weakNoise();
+    protected double computeNoise(boolean useWeakCache) {
+        return scalar * scalar * terms[0].noise(useWeakCache);
     }
 
     /*@Override*/
@@ -106,7 +91,7 @@ public class ScaledMetric extends DerivedMetric {
     }
 
     /*@Override*/
-    public EnforcementPolicy policy(Bound bound) {
+    public EnforcementPolicy policy(Bound bound, boolean useWeakCache) {
         if (isSingleStore())
             return new DirectPolicy().fabric$metrics$contracts$enforcement$DirectPolicy$(this, bound);
 

@@ -146,25 +146,11 @@ public class LinearMetric extends DerivedMetric {
   }
 
   /*@Override*/
-  protected double computeValue() {
+  protected double computeValue(boolean useWeakCache) {
     fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "RECOMPUTING LINEAR METRIC AT {0}", getStore().name());
     double[] values = new double[terms.length];
     for (int i = 0; i < terms.length; i++) {
-      values[i] = terms[i].value();
-    }
-    double[] results = matrix.multiply(values);
-    double result = Double.MAX_VALUE;
-    for (int i = 0; i < results.length; i++) {
-      result = Math.min(result, results[i]);
-    }
-    return result;
-  }
-
-  /*@Override*/
-  protected double computeWeakValue() {
-    double[] values = new double[terms.length];
-    for (int i = 0; i < terms.length; i++) {
-      values[i] = terms[i].weakValue();
+      values[i] = terms[i].value(useWeakCache);
     }
     double[] results = matrix.multiply(values);
     double result = Double.MAX_VALUE;
@@ -189,24 +175,10 @@ public class LinearMetric extends DerivedMetric {
   }
 
   /*@Override*/
-  protected double computeVelocity() {
+  protected double computeVelocity(boolean useWeakCache) {
     double[] values = new double[terms.length];
     for (int i = 0; i < terms.length; i++) {
-      values[i] = terms[i].velocity();
-    }
-    double[] results = matrix.multiply(values);
-    double result = Double.MAX_VALUE;
-    for (int i = 0; i < results.length; i++) {
-      result = Math.min(result, results[i]);
-    }
-    return result;
-  }
-
-  /*@Override*/
-  protected double computeWeakVelocity() {
-    double[] values = new double[terms.length];
-    for (int i = 0; i < terms.length; i++) {
-      values[i] = terms[i].weakVelocity();
+      values[i] = terms[i].velocity(useWeakCache);
     }
     double[] results = matrix.multiply(values);
     double result = Double.MAX_VALUE;
@@ -231,24 +203,10 @@ public class LinearMetric extends DerivedMetric {
   }
 
   /*@Override*/
-  protected double computeNoise() {
+  protected double computeNoise(boolean useWeakCache) {
     double[] noises = new double[terms.length];
     for (int i = 0; i < terms.length; i++) {
-      noises[i] = terms[i].noise();
-    }
-    double[] resultNoises = varMatrix.multiply(noises);
-    double noise = 0;
-    for (int i = 0; i < resultNoises.length; i++) {
-      noise = Math.max(noise, resultNoises[i]);
-    }
-    return noise;
-  }
-
-  /*@Override*/
-  protected double computeWeakNoise() {
-    double[] noises = new double[terms.length];
-    for (int i = 0; i < terms.length; i++) {
-      noises[i] = terms[i].weakNoise();
+      noises[i] = terms[i].noise(useWeakCache);
     }
     double[] resultNoises = varMatrix.multiply(noises);
     double noise = 0;
@@ -481,7 +439,7 @@ public class LinearMetric extends DerivedMetric {
    * strong operations for model parameters.
    */
   /*@Override*/
-  public EnforcementPolicy policy(Bound bound) {
+  public EnforcementPolicy policy(Bound bound, boolean useWeakCache) {
     if (isSingleStore())
       return new DirectPolicy().fabric$metrics$contracts$enforcement$DirectPolicy$(this, bound);
     Map/*<Metric, MetricContract>*/ witnesses = new LinkedHashMap/*<>*/().fabric$util$LinkedHashMap$();
