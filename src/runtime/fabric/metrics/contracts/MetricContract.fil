@@ -78,17 +78,19 @@ public class MetricContract extends Contract {
     //metric.refreshWeakEstimates();
 
     // Determine children
+    fabric.common.Logging.METRICS_LOGGER.fine("CREATING A POLICY FOR MC " + $getOnum());
     EnforcementPolicy startPol = null;
     atomic {
       startPol = metric.policy(bound, true);
     }
 
     // Activate new children
+    fabric.common.Logging.METRICS_LOGGER.fine("ACTIVATING POLICY FOR MC " + $getOnum());
     startPol.activate();
 
     // Set the expiry and free it up
     atomic {
-      fabric.common.Logging.METRICS_LOGGER.fine("ASDF DONE ACTIVATING MC " + $getOnum());
+      fabric.common.Logging.METRICS_LOGGER.fine("ACTIVATING MC " + $getOnum());
       currentPolicy = startPol;
       $expiry = currentPolicy.expiry();
       super.activate();
@@ -97,7 +99,7 @@ public class MetricContract extends Contract {
         getMetric().addContract(this);
       }
     }
-    fabric.common.Logging.METRICS_LOGGER.fine("ASDF FINISHED ACTIVATING MC " + $getOnum());
+    fabric.common.Logging.METRICS_LOGGER.fine("FINISHED ACTIVATING MC " + $getOnum());
   }
 
   /**
