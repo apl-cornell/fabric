@@ -4,6 +4,12 @@ import fabric.util.Arrays;
 
 import fabric.metrics.contracts.Contract;
 import fabric.metrics.contracts.MetricContract;
+import fabric.worker.transaction.TransactionManager;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 
 /**
  * An {@link EnforcementPolicy} which enforces a {@link MetricContract} by
@@ -45,27 +51,59 @@ public class WitnessPolicy extends EnforcementPolicy {
     refresh();
   }
 
+  private class Activator implements Callable {
+    final MetricContract w;
+
+    public Activator fabric$metrics$contracts$enforcement$WitnessPolicy$Activator$(MetricContract w) {
+      this.w = w;
+      fabric$lang$Object$();
+      return this;
+    }
+
+    public java.lang.Object call() {
+      w.activate();
+      return null;
+    }
+  }
+
   /*@Override*/
   public void refresh() {
-    int len = 0;
-    atomic {
-      len = witnesses.length;
-    }
     boolean atLeastOnce = false;
-    for (int i = 0; i < len; i++) {
-      MetricContract w = null;
-      atomic {
-        w = witnesses[i];
+    if (TransactionManager.getInstance().getCurrentLog() != null) {
+      for (int i = 0; i < witnesses.length; i++) {
+        witnesses[i].activate();
       }
-      w.activate();
-      atomic {
-        if (!atLeastOnce || w.getExpiry() < expiry) {
-          atLeastOnce = true;
-          expiry = w.getExpiry();
+    } else {
+      ExecutorService service = Executors.newFixedThreadPool(witnesses.length);
+      Future native[] futures = new Future native[witnesses.length];
+      // First, refresh the subterm stats.
+      for (int i = 0; i < futures.length; i++) {
+          // TODO: Add remote worker to call
+          final MetricContract w = witnesses[i];
+          Callable c = null;
+          atomic {
+            c = new Activator().fabric$metrics$contracts$enforcement$WitnessPolicy$Activator$(w);
+          }
+          futures[i] = service.submit(c);
+      }
+      service.shutdown();
+      for (int i = 0; i < futures.length; i++) {
+        try {
+          futures[i].get();
+        } catch (ExecutionException e) {
+          // TODO: Log this if it happens.
+        } catch (InterruptedException e) {
+          // TODO: Log this if it happens.
         }
       }
     }
     atomic {
+      for (int i = 0; i < witnesses.length; i++) {
+        if (!atLeastOnce || witnesses[i].getExpiry() < expiry) {
+          atLeastOnce = true;
+          expiry = witnesses[i].getExpiry();
+        }
+      }
       activated = true;
     }
   }
