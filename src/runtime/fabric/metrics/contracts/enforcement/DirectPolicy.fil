@@ -53,11 +53,11 @@ public class DirectPolicy extends EnforcementPolicy {
         expiry = 0;
       } else {
         long hedgedTime = hedged(currentTime);
-        if (expiry() <= trueTime) {
+        if (expiry <= trueTime) {
           // Don't hedge below current expiry if we're not stuttering
           // (shifting down the expiry due to true expiry being lower than
           // advertised time).
-          hedgedTime = Math.max(expiry(), hedgedTime);
+          hedgedTime = Math.max(expiry, hedgedTime);
         }
         expiry = hedgedTime;
       }
@@ -163,6 +163,7 @@ public class DirectPolicy extends EnforcementPolicy {
 
   /*@Override*/
   public long expiry() {
+    refresh();
     return expiry;
   }
 

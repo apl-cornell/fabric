@@ -21,9 +21,6 @@ public class WitnessPolicy extends EnforcementPolicy {
   /** The set of {@link MetricContract}s used to enforce this policy. */
   public final MetricContract[] witnesses;
 
-  /** The currently associated expiration based on the witnesses. */
-  private long expiry;
-
   /** Is this currently actively enforced? */
   private boolean activated;
 
@@ -37,7 +34,6 @@ public class WitnessPolicy extends EnforcementPolicy {
     fabric$metrics$contracts$enforcement$EnforcementPolicy$();
     this.witnesses = new MetricContract[witnesses.length];
     Arrays.arraycopy(witnesses, 0, this.witnesses, 0, witnesses.length);
-    this.expiry = -1;
     this.activated = false;
     return this;
   }
@@ -68,7 +64,6 @@ public class WitnessPolicy extends EnforcementPolicy {
 
   /*@Override*/
   public void refresh() {
-    boolean atLeastOnce = false;
     if (TransactionManager.getInstance().getCurrentLog() != null) {
       for (int i = 0; i < witnesses.length; i++) {
         witnesses[i].activate();
@@ -98,18 +93,22 @@ public class WitnessPolicy extends EnforcementPolicy {
       }
     }
     atomic {
-      for (int i = 0; i < witnesses.length; i++) {
-        if (!atLeastOnce || witnesses[i].getExpiry() < expiry) {
-          atLeastOnce = true;
-          expiry = witnesses[i].getExpiry();
-        }
-      }
       activated = true;
     }
   }
 
   /*@Override*/
   public long expiry() {
+    long expiry = -1;
+    boolean atLeastOnce = false;
+    atomic {
+      for (int i = 0; i < witnesses.length; i++) {
+        if (!atLeastOnce || witnesses[i].getExpiry() < expiry) {
+          atLeastOnce = true;
+          expiry = witnesses[i].getExpiry();
+        }
+      }
+    }
     return expiry;
   }
 
