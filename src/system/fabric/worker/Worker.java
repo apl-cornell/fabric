@@ -752,7 +752,8 @@ public final class Worker {
           }
         }
 
-        if (backoff < 5000) backoff *= 2;
+        //if (backoff < 5000) backoff *= 2;
+        if (backoff < 5000) backoff *= 1;
       }
 
       doBackoff = backoff <= 32 || !doBackoff;
