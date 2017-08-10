@@ -47,17 +47,18 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
       if (curVal != null) {
         curVal.contract.removeObserver(this);
       }
-      // TODO: compute and compare (without replacing) if the currently
-      // stored value's Contract hasn't been activated yet.
+
       fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "Updating " + this);
       curVal = updatedVal(time);
-      // TODO: this could happen asynchronously after this call returns.
-      fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "Estimating " + this);
+
       // Estimated here so that we don't repeat work on activations of sub
       // treaties.
+      fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "Estimating " + this);
       curVal.contract.getMetric().refreshWeakEstimates();
+
       fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "Activating " + this);
       curVal.contract.activate();
+
       fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "Observing " + this);
       curVal.contract.addObserver(this);
     }
