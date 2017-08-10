@@ -41,7 +41,7 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
     // TODO recompute but don't replace if current one is pending and we
     // compute the same value
     fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "Starting " + this);
-    if (curVal == null || !curVal.contract.isActivated()
+    while (curVal == null || !curVal.contract.isActivated()
           || curVal.contract.stale(time)) {
       fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "Iterating " + this);
       if (curVal != null) {
