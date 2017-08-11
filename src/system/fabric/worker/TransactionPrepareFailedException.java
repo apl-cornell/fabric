@@ -26,7 +26,10 @@ public class TransactionPrepareFailedException extends FabricException {
   public TransactionPrepareFailedException(
       LongKeyMap<SerializedObject> versionConflicts) {
     this.versionConflicts = versionConflicts;
-    this.messages = null;
+    this.messages = new ArrayList<>();
+    for (SerializedObject o : versionConflicts.values()) {
+      this.messages.add("Version conflict on " + o.getClassName() + " " + o.getOnum() + " (should be ver. " + o.getVersion() + ")");
+    }
   }
 
   public TransactionPrepareFailedException(

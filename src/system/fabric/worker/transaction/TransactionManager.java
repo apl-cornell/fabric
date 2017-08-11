@@ -1,6 +1,7 @@
 package fabric.worker.transaction;
 
 import static fabric.common.Logging.HOTOS_LOGGER;
+import static fabric.common.Logging.METRICS_LOGGER;
 import static fabric.common.Logging.WORKER_TRANSACTION_LOGGER;
 import static fabric.worker.transaction.Log.CommitState.Values.ABORTED;
 import static fabric.worker.transaction.Log.CommitState.Values.ABORTING;
@@ -10,6 +11,8 @@ import static fabric.worker.transaction.Log.CommitState.Values.PREPARED;
 import static fabric.worker.transaction.Log.CommitState.Values.PREPARE_FAILED;
 import static fabric.worker.transaction.Log.CommitState.Values.PREPARING;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -332,7 +335,20 @@ public final class TransactionManager {
     // TODO: This should probably be run somewhere else prior to this call,
     // since it's technically not part of commit.
     if (current.tid.parent == null) {
-      resolveObservations();
+      METRICS_LOGGER.log(Level.FINEST,
+          "RESOLVING OBSERVATIONS AT THE END OF {0}", current);
+      try {
+        resolveObservations();
+      } catch (Exception e) {
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        e.printStackTrace(pw);
+        METRICS_LOGGER.log(Level.FINEST,
+            "RESOLVING OBSERVATIONS " + current + " DIED WITH " + e + "\n" + sw);
+        throw e;
+      }
+      METRICS_LOGGER.log(Level.FINEST,
+          "RESOLVED OBSERVATIONS AT THE END OF {0}", current);
     }
 
     // Wait for all sub-transactions to finish.
@@ -644,6 +660,10 @@ public final class TransactionManager {
 
       for (Map.Entry<RemoteNode<?>, TransactionPrepareFailedException> entry : failures
           .entrySet()) {
+        if (WORKER_TRANSACTION_LOGGER.isLoggable(Level.FINE)) {
+          logMessage +=
+              "\n\t" + entry.getKey() + ": " + entry.getValue().getMessage();
+        }
         if (entry.getKey() instanceof RemoteStore) {
           // Remove old objects from our cache.
           RemoteStore store = (RemoteStore) entry.getKey();
@@ -651,14 +671,24 @@ public final class TransactionManager {
               entry.getValue().versionConflicts;
           if (versionConflicts != null) {
             for (SerializedObject obj : versionConflicts.values()) {
+              if (WORKER_TRANSACTION_LOGGER.isLoggable(Level.FINE)) {
+                try {
+                  long onum = obj.getOnum();
+                  long oldVersion = -1;
+                  LongKeyMap<Integer> reads =
+                      current.getReadsForStore(store, false);
+                  if (reads.containsKey(onum)) oldVersion = reads.get(onum);
+                  logMessage += "\n\t\tBad version for " + obj.getClassName()
+                      + " " + obj.getOnum() + " (should be ver. "
+                      + obj.getVersion() + " was " + oldVersion
+                      + " and currently have "
+                      + store.readObject(obj.getOnum()).getVersion() + ")";
+                } catch (Exception e) {
+                }
+              }
               store.updateCache(obj);
             }
           }
-        }
-
-        if (WORKER_TRANSACTION_LOGGER.isLoggable(Level.FINE)) {
-          logMessage +=
-              "\n\t" + entry.getKey() + ": " + entry.getValue().getMessage();
         }
       }
 
