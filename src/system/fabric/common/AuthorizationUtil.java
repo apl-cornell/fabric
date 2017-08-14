@@ -64,7 +64,8 @@ public class AuthorizationUtil {
     if (principal == Worker.getWorker().getPrincipal()) return true;
 
     if (checkAuthorizationCache(cachedReadAuthorizations, principal, store,
-        labelOnum)) return true;
+        labelOnum))
+      return true;
 
     // Call into the Jif label framework to perform the label check.
     final Label label = new Label._Proxy(store, labelOnum);
@@ -87,14 +88,15 @@ public class AuthorizationUtil {
    * the label at the given onum. This is run as a subtransaction of the current
    * transaction.
    */
-  public static boolean isWritePermitted(final Principal principal,
-      Store store, long labelOnum) {
+  public static boolean isWritePermitted(final Principal principal, Store store,
+      long labelOnum) {
     // Allow the store's worker principal to do anything. We use pointer
     // equality here to avoid having to call into the worker.
     if (principal == Worker.getWorker().getPrincipal()) return true;
 
     if (checkAuthorizationCache(cachedWriteAuthorizations, principal, store,
-        labelOnum)) return true;
+        labelOnum))
+      return true;
 
     // Call into the Jif label framework to perform the label check.
     final Label label = new Label._Proxy(store, labelOnum);
@@ -106,7 +108,8 @@ public class AuthorizationUtil {
     });
 
     if (result) {
-      cacheAuthorization(cachedWriteAuthorizations, principal, store, labelOnum);
+      cacheAuthorization(cachedWriteAuthorizations, principal, store,
+          labelOnum);
     }
     return result;
   }
