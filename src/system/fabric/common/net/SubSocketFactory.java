@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 
+import fabric.common.Logging;
 import fabric.common.net.handshake.Protocol;
 import fabric.common.net.naming.NameService;
 import fabric.common.net.naming.NameService.PortType;
@@ -80,10 +81,9 @@ public final class SubSocketFactory<Node extends RemoteNode<Node>> {
     synchronized (channels) {
       ClientChannel result = channels.get(node.name);
       if (null == result) {
-        NETWORK_CONNECTION_LOGGER.log(Level.INFO,
-            "establishing new connection from \"{0}\"", Worker.getWorkerName());
-        NETWORK_CONNECTION_LOGGER.log(Level.INFO,
-            "establishing new connection to \"{0}\"", node.name);
+        Logging.log(NETWORK_CONNECTION_LOGGER, Level.INFO,
+            "establishing new connection from \"{0}\" to \"{1}\"",
+            Worker.getWorkerName(), node.name);
         SocketAddress addr = nameService.resolve(node.name, portType);
         SocketAddress local =
             nameService.resolve(Worker.getWorkerName(), portType);
