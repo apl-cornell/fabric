@@ -266,8 +266,8 @@ public class RemoteCallManager extends MessageToWorkerHandler {
 
       // Ensure that the remote worker is allowed to write the object.
       Label label = obj.get$$updateLabel();
-      boolean authorized = AuthorizationUtil.isWritePermitted(client.principal,
-          label.$getStore(), label.$getOnum());
+      boolean authorized = AuthorizationUtil.isReadAndWritePermitted(
+          client.principal, label.$getStore(), label.$getOnum());
 
       tm.associateLog(null);
 

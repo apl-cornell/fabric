@@ -24,9 +24,9 @@ public class AuthorizationUtil {
 
   /**
    * This is the cache for authorizing writes. The keys in this map are label
-   * onums. The values are principals that are authorized to write according to
-   * the label. We're not using the caches in LabelUtil because the transaction
-   * management is too slow (!!).
+   * onums. The values are principals that are authorized to read and write
+   * according to the label. We're not using the caches in LabelUtil because the
+   * transaction management is too slow (!!).
    */
   private static final ConcurrentOidKeyHashMap<ConcurrentOidKeyHashMap<Singleton>> cachedWriteAuthorizations =
       new ConcurrentOidKeyHashMap<>();
@@ -84,12 +84,12 @@ public class AuthorizationUtil {
   }
 
   /**
-   * Determines whether the given principal is permitted to write according to
-   * the label at the given onum. This is run as a subtransaction of the current
-   * transaction.
+   * Determines whether the given principal is permitted to read and write
+   * according to the label at the given onum. This is run as a subtransaction
+   * of the current transaction.
    */
-  public static boolean isWritePermitted(final Principal principal, Store store,
-      long labelOnum) {
+  public static boolean isReadAndWritePermitted(final Principal principal,
+      Store store, long labelOnum) {
     // Allow the store's worker principal to do anything. We use pointer
     // equality here to avoid having to call into the worker.
     if (principal == Worker.getWorker().getPrincipal()) return true;
@@ -103,7 +103,8 @@ public class AuthorizationUtil {
     boolean result = Worker.runInSubTransaction(new Worker.Code<Boolean>() {
       @Override
       public Boolean run() {
-        return LabelUtil._Impl.isWritableBy(label, principal);
+        return LabelUtil._Impl.isReadableBy(label, principal)
+            && LabelUtil._Impl.isWritableBy(label, principal);
       }
     });
 
