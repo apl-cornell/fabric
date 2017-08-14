@@ -339,6 +339,12 @@ public final class TransactionManager {
           "RESOLVING OBSERVATIONS AT THE END OF {0}", current);
       try {
         resolveObservations();
+      } catch (TransactionAbortingException e) {
+        abortTransaction();
+        throw new AbortException();
+      } catch (TransactionRestartingException e) {
+        abortTransaction();
+        throw e;
       } catch (Exception e) {
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
