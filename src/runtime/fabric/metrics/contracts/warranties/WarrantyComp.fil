@@ -4,6 +4,7 @@ import fabric.util.HashSet;
 import fabric.util.Set;
 
 import fabric.metrics.Metric;
+import fabric.metrics.contracts.MetricContract;
 import fabric.metrics.SampledMetric;
 import fabric.metrics.util.Observer;
 import java.util.logging.Level;
@@ -41,15 +42,22 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
     // TODO recompute but don't replace if current one is pending and we
     // compute the same value
     fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "Starting " + this);
-    while (curVal == null || !curVal.contract.isActivated()
-          || curVal.contract.stale(time)) {
+    boolean loop = false;
+    atomic {
+      loop = curVal == null || !curVal.contract.isActivated()
+          || curVal.contract.stale(time);
+    }
+    while (loop) {
       fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "Iterating " + this);
       if (curVal != null) {
         curVal.contract.removeObserver(this);
       }
 
       fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "Updating " + this);
-      curVal = updatedVal(time);
+      WarrantyValue newVal = updatedVal(time);
+      atomic {
+        curVal = newVal;
+      }
 
       // Estimated here so that we don't repeat work on activations of sub
       // treaties.
@@ -61,6 +69,10 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
 
       fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "Observing " + this);
       curVal.contract.addObserver(this);
+      atomic {
+        loop = curVal == null || !curVal.contract.isActivated()
+            || curVal.contract.stale(time);
+      }
     }
     fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "Finished " + this);
     return curVal.value;
