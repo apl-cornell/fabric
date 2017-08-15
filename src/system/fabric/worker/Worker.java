@@ -209,7 +209,7 @@ public final class Worker {
 
   /**
    * Name for the singleton instance, kept separately so it can be accessed
-   * before the Worker's finished constructing.
+   * before the Worker is fully initialized.
    */
   protected static String instanceName;
 

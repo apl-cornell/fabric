@@ -225,8 +225,8 @@ public class TransactionManager {
           Label label = storeCopy.get$$updateLabel();
 
           // Check write permissions.
-          if (!AuthorizationUtil.isWritePermitted(worker, label.$getStore(),
-              label.$getOnum())) {
+          if (!AuthorizationUtil.isReadAndWritePermitted(worker,
+              label.$getStore(), label.$getOnum())) {
             return new AccessException("write", worker, storeCopy);
           }
         }
