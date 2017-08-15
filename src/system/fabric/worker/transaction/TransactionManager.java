@@ -1322,7 +1322,9 @@ public final class TransactionManager {
    * a warranty's value.
    */
   public void resolveObservations() {
-    current.resolveObservations();
+    if (current != null) {
+      current.resolveObservations();
+    }
   }
 
   /**

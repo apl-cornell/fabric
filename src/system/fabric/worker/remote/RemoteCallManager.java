@@ -97,7 +97,10 @@ public class RemoteCallManager extends MessageToWorkerHandler {
               args[i + 1] = arg;
             }
 
-            return remoteCallMessage.getMethod().invoke(receiver, args);
+            Object result =
+                remoteCallMessage.getMethod().invoke(receiver, args);
+            TransactionManager.getInstance().resolveObservations();
+            return result;
           } catch (IllegalArgumentException e) {
             throw new RuntimeException(e);
           } catch (SecurityException e) {
@@ -188,7 +191,7 @@ public class RemoteCallManager extends MessageToWorkerHandler {
     tm.associateAndSyncLog(log, topTid);
 
     try {
-      tm.sendPrepareMessages();
+      tm.getCurrentLog().longerContracts = tm.sendPrepareMessages();
     } catch (TransactionRestartingException e) {
       throw new TransactionPrepareFailedException(e);
     } finally {

@@ -74,6 +74,7 @@ public class RemoteWorker extends RemoteNode<RemoteWorker> {
       Class<?>[] parameterTypes, Object[] args)
       throws UnreachableNodeException, RemoteCallException {
     TransactionManager tm = TransactionManager.getInstance();
+    tm.resolveObservations();
     tm.registerRemoteCall(this);
 
     TransactionID tid = tm.getCurrentTid();
