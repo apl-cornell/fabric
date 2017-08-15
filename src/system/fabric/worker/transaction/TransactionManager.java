@@ -1332,6 +1332,27 @@ public final class TransactionManager {
     return current.tid;
   }
 
+  /**
+   * Useful for writing code that should only run at the end of a top level
+   * transaction.
+   *
+   * @return true iff the current txn context is nested within some other
+   * transaction.
+   */
+  public boolean inNestedTxn() {
+    return inTxn() && current.parent != null;
+  }
+
+  /**
+   * Useful for writing code that should only run if currently (not) in a
+   * transaction.
+   *
+   * @return true iff there is currently a transaction running.
+   */
+  public boolean inTxn() {
+    return current != null;
+  }
+
   public WriterMap getWriterMap() {
     if (current == null) return null;
     return current.writerMap;
