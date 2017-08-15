@@ -23,6 +23,7 @@ import fabric.messages.PrepareTransactionMessage;
 import fabric.messages.RemoteCallMessage;
 import fabric.messages.TakeOwnershipMessage;
 import fabric.worker.RemoteStore;
+import fabric.worker.RetryException;
 import fabric.worker.TransactionAtomicityViolationException;
 import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
@@ -102,10 +103,25 @@ public class RemoteCallManager extends MessageToWorkerHandler {
           } catch (IllegalAccessException e) {
             throw new RuntimeException(e);
           } catch (InvocationTargetException e) {
+            Throwable cause = e.getCause();
+            /* e's cause might be a specific runtime exception for
+             * restart/abort/retry signalling (eg. RetryException).  These
+             * exceptions shouldn't be wrapped as this causes the transaction
+             * loop to miss them and give up on the transaction prematurely.
+             */
+            if (cause instanceof TransactionRestartingException
+                || cause instanceof RetryException)
+              throw (RuntimeException) cause;
+            // TODO: should we remove the invocation target exception layer
+            // before wrapping?
             throw new RuntimeException(e);
           } catch (NoSuchMethodException e) {
             throw new RuntimeException(e);
           } catch (RuntimeException e) {
+            /* TODO This should probably be wrapped in an exception type that
+             * better signals it was the code setting up the reflection rather
+             * than the reflected invocation itself that was the issue.
+             */
             throw new RuntimeException(e);
           }
         }
