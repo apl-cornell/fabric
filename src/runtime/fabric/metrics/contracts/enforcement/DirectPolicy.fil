@@ -175,6 +175,7 @@ public class DirectPolicy extends EnforcementPolicy {
         activate();
       metric.addObserver(mc);
     }
+    fabric.common.Logging.METRICS_LOGGER.fine("DEFENDING " + mc + " WITH " + this);
   }
 
   /*@Override*/

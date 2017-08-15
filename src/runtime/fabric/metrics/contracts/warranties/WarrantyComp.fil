@@ -45,7 +45,7 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
     boolean loop = false;
     atomic {
       loop = curVal == null || !curVal.contract.isActivated()
-          || curVal.contract.stale(time);
+          || curVal.contract.stale(System.currentTimeMillis());
     }
     while (loop) {
       fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "Iterating " + this);
@@ -71,7 +71,7 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
       curVal.contract.addObserver(this);
       atomic {
         loop = curVal == null || !curVal.contract.isActivated()
-            || curVal.contract.stale(time);
+            || curVal.contract.stale(System.currentTimeMillis());
       }
     }
     fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "Finished " + this);

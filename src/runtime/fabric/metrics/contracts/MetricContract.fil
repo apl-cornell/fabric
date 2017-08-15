@@ -121,8 +121,9 @@ public class MetricContract extends Contract {
     // if it's long enough.
     if (currentPolicy != null) {
       if (currentPolicy.expiry() >= currentTime) {
-        fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "CONTRACT REFRESHED");
-        return update(currentPolicy.expiry());
+        boolean result = update(currentPolicy.expiry());
+        fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "DEFENDING " + this + " WITH " + currentPolicy);
+        return result;
       }
     }
 
@@ -137,10 +138,11 @@ public class MetricContract extends Contract {
     currentPolicy = newPolicy;
     currentPolicy.activate();
     // Don't apply if the new policy is already expired.
+    boolean result = update(currentPolicy.expiry());
     if (currentPolicy.expiry() >= currentTime)
       currentPolicy.apply(this);
     fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "CONTRACT TRUE");
-    return update(currentPolicy.expiry());
+    return result;
   }
 
   /**

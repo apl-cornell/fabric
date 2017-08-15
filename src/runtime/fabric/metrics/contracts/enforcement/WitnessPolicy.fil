@@ -119,6 +119,7 @@ public class WitnessPolicy extends EnforcementPolicy {
     for (int i = 0; i < witnesses.length; i++) {
       witnesses[i].addObserver((fabric.metrics.util.Observer) mc.fetch());
     }
+    fabric.common.Logging.METRICS_LOGGER.fine("DEFENDING " + mc + " WITH " + this);
   }
 
   /*@Override*/
