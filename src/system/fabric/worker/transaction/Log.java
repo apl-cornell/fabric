@@ -378,8 +378,9 @@ public final class Log {
     Log curLog = this;
     while (curLog != null) {
       if (store.isLocalStore()) {
-        Iterable<_Impl> writesToExclude = includeModified
-            ? Collections.<_Impl> emptyList() : curLog.localStoreWrites;
+        Iterable<_Impl> writesToExclude =
+            includeModified ? Collections.<_Impl> emptyList()
+                : curLog.localStoreWrites;
         Iterable<_Impl> chain =
             SysUtil.chain(writesToExclude, curLog.localStoreCreates);
         for (_Impl write : chain)
