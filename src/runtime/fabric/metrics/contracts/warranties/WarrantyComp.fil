@@ -55,6 +55,12 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
 
       fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "Updating " + this);
       WarrantyValue newVal = updatedVal(time);
+
+      // If newVal's contract is null, this indicates that the programmer
+      // doesn't want to memoize the result with a treaty.
+      if (newVal.contract == null)
+        return newVal.value;
+
       atomic {
         curVal = newVal;
       }
