@@ -43,6 +43,17 @@ public class SampledMetric extends Metric {
   }
 
   /**
+   * Update to a new value of the metric. The sample is assumed to be taken at
+   * the time of the call.
+   *
+   * @param sample
+   *        the value the metric is updating to.
+   */
+  public void takeSample(double sample) {
+    takeSample(sample, System.currentTimeMillis());
+  }
+
+  /**
    * Update to a new value of the metric.
    *
    * @param sample
