@@ -237,10 +237,12 @@ public abstract class DerivedMetric extends Metric implements Observer {
     }
   }
 
+  private static final int POOL_SIZE = 32;
+  private static final ExecutorService service = Executors.newFixedThreadPool(POOL_SIZE);
+
   /*@Override*/
   public void refreshWeakEstimates() {
       if (TransactionManager.getInstance().getCurrentLog() == null) {
-        ExecutorService service = Executors.newFixedThreadPool(terms.length);
         Future native[] futures = new Future native[terms.length];
         // First, refresh the subterm stats.
         for (int i = 0; i < terms.length; i++) {
@@ -252,7 +254,6 @@ public abstract class DerivedMetric extends Metric implements Observer {
             }
             futures[i] = service.submit(c);
         }
-        service.shutdown();
         for (int i = 0; i < terms.length; i++) {
           try {
             futures[i].get();

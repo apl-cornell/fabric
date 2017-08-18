@@ -362,9 +362,7 @@ public abstract class Metric extends AbstractSubject
   }
 
   public void refreshLocally_remote(fabric.lang.security.Principal caller) {
-    atomic {
-      refreshLocally();
-    }
+    refreshLocally();
   }
 
 
