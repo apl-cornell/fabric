@@ -99,7 +99,7 @@ public class MetricContract extends Contract {
         getMetric().addContract(this);
       }
     }
-    fabric.common.Logging.METRICS_LOGGER.fine("FINISHED ACTIVATING MC " + $getOnum());
+    fabric.common.Logging.METRICS_LOGGER.fine("ACTIVATED MC " + $getOnum());
   }
 
   /**
