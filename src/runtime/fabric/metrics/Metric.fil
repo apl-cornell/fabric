@@ -42,8 +42,11 @@ public abstract class Metric extends AbstractSubject
    */
   public DerivedMetric times(double scalar) {
     final Store s = $getStore();
-    return findDerivedMetric(s,
-        new ScaledMetric@s().fabric$metrics$ScaledMetric$(scalar, this));
+    DerivedMetric val = null;
+    atomic {
+      val = new ScaledMetric@s().fabric$metrics$ScaledMetric$(scalar, this);
+    }
+    return findDerivedMetric(s, val);
   }
 
   /**
@@ -57,8 +60,11 @@ public abstract class Metric extends AbstractSubject
     if (other instanceof SumMetric)
       return other.plus(this);
     final Store s = $getStore();
-    return findDerivedMetric(s,
-        new SumMetric@s().fabric$metrics$SumMetric$(new Metric[] { this, other }));
+    DerivedMetric val = null;
+    atomic {
+      val = new SumMetric@s().fabric$metrics$SumMetric$(new Metric[] { this, other });
+    }
+    return findDerivedMetric(s, val);
   }
 
   /**
@@ -75,9 +81,17 @@ public abstract class Metric extends AbstractSubject
     if (other instanceof MinMetric)
       return other.min(this);
     final Store s = $getStore();
-    if (this.compareTo(other) > 0)
-        return findDerivedMetric(s, new MinMetric@s().fabric$metrics$MinMetric$(new Metric[] { other, this }));
-    return findDerivedMetric(s, new MinMetric@s().fabric$metrics$MinMetric$(new Metric[] { this, other }));
+    DerivedMetric val = null;
+    if (this.compareTo(other) > 0) {
+        atomic {
+          val = new MinMetric@s().fabric$metrics$MinMetric$(new Metric[] { other, this });
+        }
+    } else {
+        atomic {
+          val = new MinMetric@s().fabric$metrics$MinMetric$(new Metric[] { this, other });
+        }
+    }
+    return findDerivedMetric(s, val);
   }
 
   /**
@@ -176,7 +190,11 @@ public abstract class Metric extends AbstractSubject
   public static Metric scaleAtStore(final Store s, double a, Metric term) {
     if (term.$getStore().equals(s))
       return findDerivedMetric(s, term.times(a));
-    return findDerivedMetric(s, new ScaledMetric@s().fabric$metrics$ScaledMetric$(a, term));
+    DerivedMetric val = null;
+    atomic {
+      val = new ScaledMetric@s().fabric$metrics$ScaledMetric$(a, term);
+    }
+    return findDerivedMetric(s, val);
   }
 
   /**
@@ -196,7 +214,11 @@ public abstract class Metric extends AbstractSubject
       throw new IllegalArgumentException("Must have at least 1 term!");
     if (terms.length == 1)
       return scaleAtStore(s, 1.0, terms[0]);
-    return findDerivedMetric(s, new SumMetric@s().fabric$metrics$SumMetric$(terms));
+    DerivedMetric val = null;
+    atomic {
+      val = new SumMetric@s().fabric$metrics$SumMetric$(terms);
+    }
+    return findDerivedMetric(s, val);
   }
 
   /**
@@ -215,7 +237,11 @@ public abstract class Metric extends AbstractSubject
       throw new IllegalArgumentException("Must have at least 1 term!");
     if (terms.length == 1)
       return scaleAtStore(s, 1.0, terms[0]);
-    return findDerivedMetric(s, new MinMetric@s().fabric$metrics$MinMetric$(terms));
+    DerivedMetric val = null;
+    atomic {
+      val = new MinMetric@s().fabric$metrics$MinMetric$(terms);
+    }
+    return findDerivedMetric(s, val);
   }
 
   /**
@@ -543,10 +569,12 @@ public abstract class Metric extends AbstractSubject
       DerivedMetric m) {
     DerivedMetric orig = (DerivedMetric) s.derivedMap().get(m);
     if (orig == null) {
-      s.derivedMap().put(m, m);
-      return m;
-    } else {
-      return orig;
+      atomic {
+        s.derivedMap().put(m, m);
+      }
+      orig = m;
     }
+    orig.refreshLocally();
+    return orig;
   }
 }

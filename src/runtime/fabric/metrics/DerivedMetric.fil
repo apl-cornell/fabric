@@ -74,9 +74,9 @@ public abstract class DerivedMetric extends Metric implements Observer {
     Label lbl = LabelUtil.noComponents();
     Store s = $getStore();
     this.terms = new Metric[terms.length] ~lbl @s;
+    Arrays.arraycopy(terms, 0, this.terms, 0, terms.length);
     this.lastStats = new double[3] ~lbl @s;
     fabric$metrics$Metric$();
-    Arrays.arraycopy(terms, 0, this.terms, 0, terms.length);
     return this;
   }
 
