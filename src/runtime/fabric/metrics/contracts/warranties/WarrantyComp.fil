@@ -36,9 +36,12 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
    *
    * @param time
    *            the current time we're applying this computation at
+   * @return A {@link WarrantyValue} which holds the return value and the
+   * contract associated with it (guaranteed active when returned) that asserts
+   * that the return value is consistent.
    */
   /*@Override*/
-  public Object/*T*/ apply(long time) {
+  public WarrantyValue/*T*/ apply(long time) {
     // TODO recompute but don't replace if current one is pending and we
     // compute the same value
     fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "Starting " + this);
@@ -59,16 +62,20 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
       // If newVal's contract is null, this indicates that the programmer
       // doesn't want to memoize the result with a treaty.
       if (newVal.contract == null)
-        return newVal.value;
+        return newVal;
 
       atomic {
         curVal = newVal;
       }
 
-      // Estimated here so that we don't repeat work on activations of sub
-      // treaties.
-      fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "Estimating " + this);
-      curVal.contract.getMetric().refreshWeakEstimates();
+      /* Commented out because API now expectes updatedVal to have run
+       * refreshWeakEstimates before returning.
+       *
+       * Estimated here so that we don't repeat work on activations of sub
+       * treaties.
+       */
+      //fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "Estimating " + this);
+      //curVal.contract.getMetric().refreshWeakEstimates();
 
       fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "Activating " + this);
       curVal.contract.activate();
@@ -81,7 +88,7 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
       }
     }
     fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "Finished " + this);
-    return curVal.value;
+    return curVal;
   }
 
   /*@Override*/
