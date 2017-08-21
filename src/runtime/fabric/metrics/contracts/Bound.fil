@@ -29,6 +29,9 @@ public class Bound {
    *        the time this bound's value is computed relative to
    */
   public Bound fabric$metrics$contracts$Bound$(double rate, double base, long startTime) {
+    if (Double.isNaN(rate) || Double.isNaN(base)) {
+      throw new RuntimeException("This shouldn't happen");
+    }
     this.rate = rate;
     this.base = base - (rate * startTime);
     fabric$lang$Object$();
