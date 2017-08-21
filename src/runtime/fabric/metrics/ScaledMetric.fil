@@ -66,11 +66,8 @@ public class ScaledMetric extends DerivedMetric {
     /*@Override*/
     public DerivedMetric times(double otherScalar) {
         final Store s = $getStore();
-        DerivedMetric val = null;
-        atomic {
-          val = new ScaledMetric@s().fabric$metrics$ScaledMetric$(otherScalar * scalar, terms[0]);
-        }
-        return Metric.findDerivedMetric(s, val);
+        return Metric.findDerivedMetric(s,
+                new ScaledMetric@s().fabric$metrics$ScaledMetric$(otherScalar * scalar, terms[0]));
     }
 
     /**
@@ -87,12 +84,8 @@ public class ScaledMetric extends DerivedMetric {
                 && ((ScaledMetric) other).terms[0].equals(terms[0])) {
             ScaledMetric that = (ScaledMetric) other;
 
-            DerivedMetric val = null;
-            atomic {
-              val = new ScaledMetric@s().fabric$metrics$ScaledMetric$(
-                  that.scalar + scalar, terms[0]);
-            }
-            return Metric.findDerivedMetric(s, val);
+            return Metric.findDerivedMetric(s, new ScaledMetric@s().fabric$metrics$ScaledMetric$(
+                    that.scalar + scalar, terms[0]));
         }
         return super.plus(other);
     }

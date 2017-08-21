@@ -80,20 +80,14 @@ public class MinMetric extends DerivedMetric {
 
     /*@Override*/
     public DerivedMetric times(double scalar) {
-        Metric[] newTerms = null;
-        atomic {
-          newTerms = new Metric[terms.length];
-        }
+        Metric[] newTerms = new Metric[terms.length];
         Arrays.arraycopy(terms, 0, newTerms, 0, terms.length);
         for (int i = 0; i < newTerms.length; i++) {
             newTerms[i] = newTerms[i].times(scalar);
         }
         final Store s = $getStore();
-        DerivedMetric val = null;
-        atomic {
-          val = new MinMetric@s().fabric$metrics$MinMetric$(newTerms);
-        }
-        return Metric.findDerivedMetric(s, val);
+        return Metric.findDerivedMetric(s,
+                new MinMetric@s().fabric$metrics$MinMetric$(terms));
     }
 
     /**
@@ -105,20 +99,14 @@ public class MinMetric extends DerivedMetric {
      */
     /*@Override*/
     public DerivedMetric plus(Metric other) {
-        Metric[] newTerms = null;
-        atomic {
-          newTerms = new Metric[terms.length];
-        }
+        Metric[] newTerms = new Metric[terms.length];
         Arrays.arraycopy(terms, 0, newTerms, 0, terms.length);
         for (int i = 0; i < newTerms.length; i++) {
             newTerms[i] = other.plus(newTerms[i]);
         }
         final Store s = $getStore();
-        DerivedMetric val = null;
-        atomic {
-          val = new MinMetric@s().fabric$metrics$MinMetric$(newTerms);
-        }
-        return Metric.findDerivedMetric(s, val);
+        return Metric.findDerivedMetric(s,
+                new MinMetric@s().fabric$metrics$MinMetric$(terms));
     }
 
     /**
@@ -131,47 +119,33 @@ public class MinMetric extends DerivedMetric {
     /*@Override*/
     public Metric min(Metric other) {
         final Store s = $getStore();
-        DerivedMetric val = null;
         if (other instanceof MinMetric && other.$getStore().equals(s)) {
             MinMetric that = (MinMetric) other;
 
             // Get the combined sorted set of terms.
-            Set/*<Metric>*/ termsBag = null;
-            atomic {
-              termsBag = new TreeSet/*<>*/();
-            }
+            Set/*<Metric>*/ termsBag = new TreeSet/*<>*/();
             termsBag.addAll(Arrays.asList(this.terms));
             termsBag.addAll(Arrays.asList(that.terms));
 
-            Metric[] newTerms = null;
-            atomic {
-              newTerms = new Metric[termsBag.size()];
-            }
+            Metric[] newTerms = new Metric[termsBag.size()];
             int aggIdx = 0;
             for (Iterator iter = termsBag.iterator(); iter.hasNext();) {
                 Metric m = (Metric) iter.next();
                 newTerms[aggIdx++] = m;
             }
 
-            atomic {
-              val = new MinMetric@s().fabric$metrics$MinMetric$(newTerms);
-            }
-            return Metric.findDerivedMetric(s, val);
+            return Metric.findDerivedMetric(s,
+                    new MinMetric@s().fabric$metrics$MinMetric$(newTerms));
         } else if (Arrays.asList(terms).indexOf(other) >= 0) {
             return this;
         }
 
-        Metric[] newTerms = null;
-        atomic {
-          newTerms = new Metric[terms.length + 1];
-        }
+        Metric[] newTerms = new Metric[terms.length + 1];
         System.arraycopy(terms, 0, newTerms, 0, terms.length);
         newTerms[terms.length] = other;
         Arrays.sort(newTerms, 0, newTerms.length);
-        atomic {
-          val = new MinMetric@s().fabric$metrics$MinMetric$(newTerms);
-        }
-        return Metric.findDerivedMetric(s, val);
+        return Metric.findDerivedMetric(s,
+                new MinMetric@s().fabric$metrics$MinMetric$(newTerms));
     }
 
     /*@Override*/

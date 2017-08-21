@@ -32,18 +32,13 @@ public class SampledMetric extends Metric {
    *        the initial value of this {@link Metric}
    */
   public SampledMetric fabric$metrics$SampledMetric$(String name, double init) {
-    Label lbl = LabelUtil.noComponents();
-    Store s = $getStore();
     this.name = name;
-    this.value = new double[1] ~lbl @s;
-    this.value[0] = init;
-    this.lastUpdate = new long[1] ~lbl @s;
-    this.lastUpdate[0] = -1l;
+    fabric$metrics$Metric$();
+    this.value = new double[] { init };
+    this.lastUpdate = new long[] { -1l };
     this.biasStats = new RunningStats().fabric$metrics$util$RunningStats$(0);
     this.updateIntervalStats = new RunningStats().fabric$metrics$util$RunningStats$(1.0);
     this.allStats = new RunningStats().fabric$metrics$util$RunningStats$(0);
-    fabric$metrics$Metric$();
-    refreshLocally();
     return this;
   }
 

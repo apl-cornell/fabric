@@ -74,20 +74,14 @@ public class SumMetric extends DerivedMetric {
 
     /*@Override*/
     public DerivedMetric times(double scalar) {
-        Metric[] newTerms = null;
-        atomic {
-          newTerms = new Metric[terms.length];
-        }
+        Metric[] newTerms = new Metric[terms.length];
         Arrays.arraycopy(terms, 0, newTerms, 0, terms.length);
         for (int i = 0; i < newTerms.length; i++) {
             newTerms[i] = newTerms[i].times(scalar);
         }
         final Store s = $getStore();
-        DerivedMetric val = null;
-        atomic {
-          val = new SumMetric@s().fabric$metrics$SumMetric$(newTerms);
-        }
-        return Metric.findDerivedMetric(s, val);
+        return Metric.findDerivedMetric(s,
+                new SumMetric@s().fabric$metrics$SumMetric$(newTerms));
     }
 
     /**
@@ -159,26 +153,19 @@ public class SumMetric extends DerivedMetric {
             }
         }
 
-        Metric[] newTerms = null;
+        Metric[] newTerms;
         if (termIdx >= 0) {
-            atomic {
-              newTerms = new Metric[terms.length];
-            }
+            newTerms = new Metric[terms.length];
             Arrays.arraycopy(terms, 0, newTerms, 0, terms.length);
             newTerms[termIdx] = newTerms[termIdx].plus(other);
         } else {
-            atomic {
-              newTerms = new Metric[terms.length + 1];
-            }
+            newTerms = new Metric[terms.length + 1];
             Arrays.arraycopy(terms, 0, newTerms, 0, terms.length);
             newTerms[terms.length] = other;
             Arrays.sort(newTerms, 0, newTerms.length);
         }
-        DerivedMetric val = null;
-        atomic {
-          val = new SumMetric@s().fabric$metrics$SumMetric$(newTerms);
-        }
-        return Metric.findDerivedMetric(s, val);
+        return Metric.findDerivedMetric(s,
+                new SumMetric@s().fabric$metrics$SumMetric$(newTerms));
     }
 
     /*@Override*/
