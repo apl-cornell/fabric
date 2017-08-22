@@ -247,14 +247,14 @@ public final class Worker {
     Protocol<RemoteStore> nonAuthenticateProtocol = new HandshakeComposite<>(
         new HandshakeUnauthenticated<RemoteStore>(config.name));
 
-    this.authToStore = new SubSocketFactory<>(authenticateToStoreProtocol,
+    this.authToStore = new SubSocketFactory<>(config,
+        authenticateToStoreProtocol, nameService, PortType.STORE);
+    this.authToWorker = new SubSocketFactory<>(config,
+        authenticateToWorkerProtocol, nameService, PortType.WORKER);
+    this.unauthToStore = new SubSocketFactory<>(config, nonAuthenticateProtocol,
         nameService, PortType.STORE);
-    this.authToWorker = new SubSocketFactory<>(authenticateToWorkerProtocol,
-        nameService, PortType.WORKER);
-    this.unauthToStore = new SubSocketFactory<>(nonAuthenticateProtocol,
-        nameService, PortType.STORE);
-    this.authFromAll = new SubServerSocketFactory(authenticateToWorkerProtocol,
-        nameService, PortType.WORKER);
+    this.authFromAll = new SubServerSocketFactory(config,
+        authenticateToWorkerProtocol, nameService, PortType.WORKER);
 
     this.inProcessRemoteWorker = new InProcessRemoteWorker(this);
     this.remoteWorkers.put(config.name, inProcessRemoteWorker);

@@ -18,6 +18,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 
+import fabric.common.ConfigProperties;
 import fabric.common.Logging;
 import fabric.common.exceptions.NotImplementedException;
 import fabric.common.net.handshake.Protocol;
@@ -45,9 +46,11 @@ public class SubServerSocketFactory {
    *          the ServerSocketFactory that will be used to create the
    *          ServerSockets used to implement SubServerSockets returned by this
    */
-  public SubServerSocketFactory(Protocol<RemoteWorker> handshake,
-      NameService nameService, PortType portType) {
-    this(handshake, nameService, portType, Channel.DEFAULT_MAX_OPEN_CONNECTIONS);
+  public SubServerSocketFactory(ConfigProperties config,
+      Protocol<RemoteWorker> handshake, NameService nameService,
+      PortType portType) {
+    this(config, handshake, nameService, portType,
+        Channel.DEFAULT_MAX_OPEN_CONNECTIONS);
   }
 
   /**
@@ -58,9 +61,10 @@ public class SubServerSocketFactory {
    *          the ServerSocketFactory that will be used to create the
    *          ServerSockets used to implement SubServerSockets returned by this
    */
-  public SubServerSocketFactory(Protocol<RemoteWorker> handshake,
-      NameService nameService, PortType portType,
-      int maxOpenConnectionsPerChannel) {
+  public SubServerSocketFactory(ConfigProperties config,
+      Protocol<RemoteWorker> handshake, NameService nameService,
+      PortType portType, int maxOpenConnectionsPerChannel) {
+    this.config = config;
     this.handshake = handshake;
     this.nameService = nameService;
     this.portType = portType;
@@ -102,6 +106,7 @@ public class SubServerSocketFactory {
   // implementation //
   // ////////////////////////////////////////////////////////////////////////////
 
+  private final ConfigProperties config;
   private final Protocol<RemoteWorker> handshake;
   private final NameService nameService;
   private final PortType portType;
@@ -180,10 +185,9 @@ public class SubServerSocketFactory {
      */
     ConnectionQueue makeQueue(String name, int size) throws IOException {
       synchronized (queues) {
-        if (queues.containsKey(name))
-          throw new IOException(
-              "attempted to bind multiple SubServerSockets to " + name + " @ "
-                  + address);
+        if (queues.containsKey(name)) throw new IOException(
+            "attempted to bind multiple SubServerSockets to " + name + " @ "
+                + address);
 
         ConnectionQueue queue = new ConnectionQueue(name, size);
         queues.put(name, queue);
@@ -242,9 +246,8 @@ public class SubServerSocketFactory {
      */
     @Override
     public void run() {
-      try (ServerSocket sock =
-          new ServerSocket(address.getPort(), 0,
-              InetAddress.getByAddress(new byte[] { 0, 0, 0, 0 }))) {
+      try (ServerSocket sock = new ServerSocket(address.getPort(), 0,
+          InetAddress.getByAddress(new byte[] { 0, 0, 0, 0 }))) {
         while (true) {
           try {
             try {
@@ -351,7 +354,7 @@ public class SubServerSocketFactory {
        */
       class ServerChannel extends Channel<RemoteWorker> {
         ServerChannel(ShakenSocket<RemoteWorker> sock) throws IOException {
-          super(sock, maxOpenConnectionsPerChannel);
+          super(config, sock, maxOpenConnectionsPerChannel);
 
           setName("demultiplexer for " + toString());
         }

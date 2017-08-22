@@ -44,6 +44,15 @@ fabric.node.password = password
 # fabric.node.fetchmanager.class = fabric.dissemination.DummyFetchManager
 
 
+# Delay to add to network traffic inbound from other nodes. Units are in
+# milliseconds. This is optional.
+#
+# The example below delays all traffic inbound from store1.example.org
+# by 100 ms.
+
+# fabric.node.netdelay.in|store1.example.org = 100
+
+
 # The port for the worker to listen on for remote-call requests. This is
 # optional.
 #
