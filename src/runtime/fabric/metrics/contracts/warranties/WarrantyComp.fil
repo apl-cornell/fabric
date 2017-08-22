@@ -101,8 +101,7 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
   public boolean handleUpdates() {
     // TODO: Is this right?
     long time = System.currentTimeMillis();
-    return (curVal != null && curVal.contract.valid(time)
-          && curVal.value != apply(time));
+    return (curVal == null || !curVal.contract.valid(time));
   }
 
   protected WarrantyComp fabric$metrics$contracts$warranties$WarrantyComp$() {
