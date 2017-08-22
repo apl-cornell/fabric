@@ -62,6 +62,9 @@ public class WitnessPolicy extends EnforcementPolicy {
     }
   }
 
+  private static final int POOL_SIZE = 32;
+  private static final ExecutorService service = Executors.newFixedThreadPool(POOL_SIZE);
+
   /*@Override*/
   public void refresh() {
     if (TransactionManager.getInstance().getCurrentLog() != null) {
@@ -69,7 +72,6 @@ public class WitnessPolicy extends EnforcementPolicy {
         witnesses[i].activate();
       }
     } else {
-      ExecutorService service = Executors.newFixedThreadPool(witnesses.length);
       Future native[] futures = new Future native[witnesses.length];
       // First, refresh the subterm stats.
       for (int i = 0; i < futures.length; i++) {
@@ -81,7 +83,6 @@ public class WitnessPolicy extends EnforcementPolicy {
           }
           futures[i] = service.submit(c);
       }
-      service.shutdown();
       for (int i = 0; i < futures.length; i++) {
         try {
           futures[i].get();

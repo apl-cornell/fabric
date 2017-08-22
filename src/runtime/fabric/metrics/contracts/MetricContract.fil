@@ -88,18 +88,33 @@ public class MetricContract extends Contract {
     fabric.common.Logging.METRICS_LOGGER.fine("ACTIVATING POLICY FOR MC " + $getOnum());
     startPol.activate();
 
+    if (TransactionManager.getInstance().getCurrentLog() == null) {
+      RemoteWorker w = Worker.getWorker().getWorker($getStore().name());
+      finishActivating@w(startPol);
+    } else {
+      finishActivating(startPol);
+    }
+
+    // Set the expiry and free it up
+    fabric.common.Logging.METRICS_LOGGER.fine("ACTIVATED MC " + $getOnum());
+  }
+
+  public void finishActivating(EnforcementPolicy p) {
     // Set the expiry and free it up
     atomic {
       fabric.common.Logging.METRICS_LOGGER.fine("ACTIVATING MC " + $getOnum());
-      currentPolicy = startPol;
+      currentPolicy = p;
       $expiry = currentPolicy.expiry();
       super.activate();
-      if (currentPolicy.expiry() >= System.currentTimeMillis()) {
+      if ($expiry >= System.currentTimeMillis()) {
         currentPolicy.apply(this);
         getMetric().addContract(this);
       }
     }
-    fabric.common.Logging.METRICS_LOGGER.fine("ACTIVATED MC " + $getOnum());
+  }
+
+  public void finishActivating_remote(fabric.lang.security.Principal caller, EnforcementPolicy p) {
+    finishActivating(p);
   }
 
   /**
