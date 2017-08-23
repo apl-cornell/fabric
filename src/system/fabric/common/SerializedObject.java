@@ -185,9 +185,6 @@ public final class SerializedObject implements FastSerializable, Serializable {
       // Version number.
       out.writeInt(0);
 
-      // Promise expiry
-      out.writeLong(0);
-
       // Update label reference.
       out.writeBoolean(false);
       out.writeLong(updateLabel);
