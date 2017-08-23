@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 
+import fabric.common.ConfigProperties;
 import fabric.common.Logging;
 import fabric.common.net.handshake.Protocol;
 import fabric.common.net.naming.NameService;
@@ -24,6 +25,7 @@ import fabric.worker.Worker;
  * @param <Node> the type of node at the remote endpoint.
  */
 public final class SubSocketFactory<Node extends RemoteNode<Node>> {
+  private final ConfigProperties config;
   private final Protocol<Node> protocol;
   private final NameService nameService;
   private final PortType portType;
@@ -36,9 +38,10 @@ public final class SubSocketFactory<Node extends RemoteNode<Node>> {
    * to share channels (as these channels may have different underlying socket
    * implementations).
    */
-  public SubSocketFactory(Protocol<Node> protocol, NameService nameService,
-      PortType portType) {
-    this(protocol, nameService, portType, Channel.DEFAULT_MAX_OPEN_CONNECTIONS);
+  public SubSocketFactory(ConfigProperties config, Protocol<Node> protocol,
+      NameService nameService, PortType portType) {
+    this(config, protocol, nameService, portType,
+        Channel.DEFAULT_MAX_OPEN_CONNECTIONS);
   }
 
   /**
@@ -47,8 +50,10 @@ public final class SubSocketFactory<Node extends RemoteNode<Node>> {
    * to share channels (as these channels may have different underlying socket
    * implementations).
    */
-  public SubSocketFactory(Protocol<Node> protocol, NameService nameService,
-      PortType portType, int maxOpenConnectionsPerChannel) {
+  public SubSocketFactory(ConfigProperties config, Protocol<Node> protocol,
+      NameService nameService, PortType portType,
+      int maxOpenConnectionsPerChannel) {
+    this.config = config;
     this.protocol = protocol;
     this.nameService = nameService;
     this.portType = portType;
@@ -125,7 +130,7 @@ public final class SubSocketFactory<Node extends RemoteNode<Node>> {
      */
     public ClientChannel(Node host, Socket s, int maxOpenConnections)
         throws IOException {
-      super(protocol.initiate(host, s), maxOpenConnections);
+      super(config, protocol.initiate(host, s), maxOpenConnections);
 
       this.name = host.name;
       nextSequenceNumber = new AtomicInteger(1);

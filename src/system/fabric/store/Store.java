@@ -154,7 +154,8 @@ class Store extends MessageToStoreHandler {
           new HandshakeUnauthenticated<RemoteWorker>(this.config.name));
       NameService nameService = new TransitionalNameService();
 
-      return new SubServerSocketFactory(handshake, nameService, PortType.STORE);
+      return new SubServerSocketFactory(config, handshake, nameService,
+          PortType.STORE);
     } catch (final Exception e) {
       throw new InternalError("Failed to initialize store", e);
     }

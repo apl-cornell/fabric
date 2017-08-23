@@ -16,6 +16,7 @@ import java.util.logging.Level;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
+import fabric.common.ConfigProperties;
 import fabric.common.Logging;
 import fabric.common.SerializationUtil;
 import fabric.common.exceptions.InternalError;
@@ -71,8 +72,8 @@ abstract class Channel<Node extends RemoteNode<Node>> extends Thread {
    * @param maxOpenConnections if zero, then an unlimited number of open
    *          connections is permitted on this channel.
    */
-  protected Channel(ShakenSocket<Node> s, int maxOpenConnections)
-      throws IOException {
+  protected Channel(ConfigProperties config, ShakenSocket<Node> s,
+      int maxOpenConnections) throws IOException {
     setDaemon(true);
 
     if (maxOpenConnections < 0) {
@@ -85,6 +86,15 @@ abstract class Channel<Node extends RemoteNode<Node>> extends Thread {
 
     OutputStream out = this.sock.getOutputStream();
     InputStream in = this.sock.getInputStream();
+
+    // Add inbound delay, if configured.
+    String remoteNodeName = s.remoteIdentity.node.name;
+    if (config.inDelays.containsKey(remoteNodeName)) {
+      short delay = config.inDelays.get(remoteNodeName);
+      if (delay > 0) {
+        in = new DelayedInputStream(remoteNodeName, in, delay);
+      }
+    }
 
     if (USE_COMPRESSION) {
       out = new GZIPOutputStream(out, true);
