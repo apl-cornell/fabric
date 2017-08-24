@@ -122,23 +122,23 @@ public final class Log {
    * Collection of {@link Subjects} in this transaction that need to be/have
    * been observed by {@link Observer}s before the transaction commits.
    */
-  protected final LinkedList<Subject> unobservedSamples;
+  protected final OidKeyHashMap<Subject> unobservedSamples;
 
   /**
    * A collection of {@link Contract}s that are extended by this transaction
    */
-  protected final List<Contract> extendedContracts;
+  protected final OidKeyHashMap<Contract> extendedContracts;
 
   /**
    * A collection of {@link Contract}s that are retracted by this transaction
    */
-  protected final List<Contract> retractedContracts;
+  protected final OidKeyHashMap<Contract> retractedContracts;
 
   /**
    * A collection of {@link Contract}s that should be extended after this
    * transaction
    */
-  protected final List<Contract> delayedExtensions;
+  protected final OidKeyHashMap<Contract> delayedExtensions;
 
   /**
    * A map from RemoteStores to maps from onums to contracts that were longer on
@@ -242,17 +242,17 @@ public final class Log {
     this.creates = new ArrayList<>();
     this.localStoreCreates = new WeakReferenceArrayList<>();
     this.writes = new ArrayList<>();
-    this.unobservedSamples = new LinkedList<>();
-    this.extendedContracts = new ArrayList<>();
-    this.retractedContracts = new ArrayList<>();
-    this.delayedExtensions = new ArrayList<>();
+    this.unobservedSamples = new OidKeyHashMap<>();
+    this.extendedContracts = new OidKeyHashMap<>();
+    this.retractedContracts = new OidKeyHashMap<>();
+    this.delayedExtensions = new OidKeyHashMap<>();
     this.localStoreWrites = new WeakReferenceArrayList<>();
     this.workersCalled = new ArrayList<>();
     this.startTime = System.currentTimeMillis();
     this.waitsFor = new HashSet<>();
 
     if (parent != null) {
-      this.unobservedSamples.addAll(parent.unobservedSamples);
+      this.unobservedSamples.putAll(parent.unobservedSamples);
       try {
         Timing.SUBTX.begin();
         this.writerMap = new WriterMap(parent.writerMap);
@@ -411,7 +411,7 @@ public final class Log {
       for (_Impl obj : localStoreWrites) {
         result.put(obj.$getOnum(),
             new Pair<>(obj, ((obj instanceof MetricContract)
-                && extendedContracts.contains(obj))));
+                && extendedContracts.containsKey(obj))));
       }
 
       for (_Impl create : localStoreCreates) {
@@ -422,7 +422,7 @@ public final class Log {
         if (obj.$getStore() == store && obj.$isOwned) {
           result.put(obj.$getOnum(),
               new Pair<>(obj, ((obj instanceof MetricContract)
-                  && extendedContracts.contains(obj))));
+                  && extendedContracts.containsKey(obj))));
         }
       }
 
@@ -559,7 +559,11 @@ public final class Log {
     Logging.METRICS_LOGGER.fine("PROCESSING SAMPLES " + unobservedSamples);
     // Skip if there's nothing to handle.
     if (!unobservedSamples.isEmpty()) {
-      AbstractSubject._Impl.processSamples(unobservedSamples);
+      LinkedList<Subject> q = new LinkedList<>();
+      for (Subject s : unobservedSamples.values()) {
+        q.add(s);
+      }
+      AbstractSubject._Impl.processSamples(q);
     }
   }
 
@@ -614,48 +618,48 @@ public final class Log {
 
     synchronized (parent.unobservedSamples) {
       parent.unobservedSamples.clear();
-      parent.unobservedSamples.addAll(unobservedSamples);
+      parent.unobservedSamples.putAll(unobservedSamples);
     }
 
-    for (Contract obs : retractedContracts) {
+    for (Contract obs : retractedContracts.values()) {
       synchronized (parent.retractedContracts) {
-        if (!parent.retractedContracts.contains(obs))
-          parent.retractedContracts.add(obs);
+        if (!parent.retractedContracts.containsKey(obs))
+          parent.retractedContracts.put(obs, obs);
       }
       synchronized (parent.extendedContracts) {
-        if (parent.extendedContracts.contains(obs))
+        if (parent.extendedContracts.containsKey(obs))
           parent.extendedContracts.remove(obs);
       }
       synchronized (parent.delayedExtensions) {
-        if (parent.delayedExtensions.contains(obs))
+        if (parent.delayedExtensions.containsKey(obs))
           parent.delayedExtensions.remove(obs);
       }
     }
 
-    for (Contract obs : extendedContracts) {
+    for (Contract obs : extendedContracts.values()) {
       synchronized (parent.delayedExtensions) {
-        if (parent.delayedExtensions.contains(obs))
+        if (parent.delayedExtensions.containsKey(obs))
           parent.delayedExtensions.remove(obs);
       }
       synchronized (parent.retractedContracts) {
-        if (parent.retractedContracts.contains(obs)) continue;
+        if (parent.retractedContracts.containsKey(obs)) continue;
       }
       synchronized (parent.extendedContracts) {
-        if (!parent.extendedContracts.contains(obs))
-          parent.extendedContracts.add(obs);
+        if (!parent.extendedContracts.containsKey(obs))
+          parent.extendedContracts.put(obs, obs);
       }
     }
 
-    for (Contract obs : delayedExtensions) {
+    for (Contract obs : delayedExtensions.values()) {
       synchronized (parent.retractedContracts) {
-        if (parent.retractedContracts.contains(obs)) continue;
+        if (parent.retractedContracts.containsKey(obs)) continue;
       }
       synchronized (parent.extendedContracts) {
-        if (parent.extendedContracts.contains(obs)) continue;
+        if (parent.extendedContracts.containsKey(obs)) continue;
       }
       synchronized (parent.delayedExtensions) {
-        if (!parent.delayedExtensions.contains(obs))
-          parent.delayedExtensions.add(obs);
+        if (!parent.delayedExtensions.containsKey(obs))
+          parent.delayedExtensions.put(obs, obs);
       }
     }
 
@@ -757,7 +761,7 @@ public final class Log {
         obj.$writeLockStackTrace = null;
         // Don't increment the version if it's an extended metric contract
         if (!((obj instanceof MetricContract)
-            && (extendedContracts.contains(obj)))) {
+            && (extendedContracts.containsKey(obj)))) {
           obj.$version++;
           obj.$readMapEntry.incrementVersion();
         }
@@ -800,15 +804,15 @@ public final class Log {
 
     // Queue up extension transactions
     Map<Store, List<DelayedExtension>> extensionsToSend = new HashMap<>();
-    for (Contract toBeExtended : delayedExtensions) {
+    for (Contract toBeExtended : delayedExtensions.values()) {
       Store store = toBeExtended.getStore();
       if (!extensionsToSend.containsKey(store))
         extensionsToSend.put(store, new ArrayList<DelayedExtension>());
-      if (!extensionsToSend.get(store).contains(toBeExtended.$getOnum()))
-        extensionsToSend.get(store)
-            .add(new DelayedExtension(
-                toBeExtended.get$$expiry() - EXTENSION_WINDOW,
-                toBeExtended.$getOnum()));
+      DelayedExtension d =
+          new DelayedExtension(toBeExtended.get$$expiry() - EXTENSION_WINDOW,
+              toBeExtended.$getOnum());
+      if (!extensionsToSend.get(store).contains(d))
+        extensionsToSend.get(store).add(d);
     }
 
     for (Map.Entry<Store, List<DelayedExtension>> entry : extensionsToSend

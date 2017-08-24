@@ -29,4 +29,13 @@ public class DelayedExtension implements Delayed {
     return (int) (getDelay(TimeUnit.MILLISECONDS)
         - o.getDelay(TimeUnit.MILLISECONDS));
   }
+
+  @Override
+  public boolean equals(Object o) {
+    if (!(o instanceof DelayedExtension)) {
+      return false;
+    }
+    DelayedExtension that = (DelayedExtension) o;
+    return this.time == that.time && this.onum == that.onum;
+  }
 }

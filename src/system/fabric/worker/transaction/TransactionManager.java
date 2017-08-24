@@ -349,8 +349,8 @@ public final class TransactionManager {
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
         e.printStackTrace(pw);
-        METRICS_LOGGER.log(Level.FINEST,
-            "RESOLVING OBSERVATIONS " + current + " DIED WITH " + e + "\n" + sw);
+        METRICS_LOGGER.log(Level.FINEST, "RESOLVING OBSERVATIONS " + current
+            + " DIED WITH " + e + "\n" + sw);
         throw e;
       }
       METRICS_LOGGER.log(Level.FINEST,
@@ -1253,8 +1253,7 @@ public final class TransactionManager {
   public void registerSample(SampledMetric sampled) {
     // Add it to the log's unobserved queue if it's not already there.
     synchronized (current.unobservedSamples) {
-      if (!current.unobservedSamples.contains(sampled))
-        current.unobservedSamples.add(sampled);
+      current.unobservedSamples.put(sampled, sampled);
     }
   }
 
@@ -1266,16 +1265,13 @@ public final class TransactionManager {
     // TODO: I'm not actually convinced this should be necessary.
     registerWrite((_Impl) retracted.fetch());
     synchronized (current.retractedContracts) {
-      if (!current.retractedContracts.contains(retracted))
-        current.retractedContracts.add(retracted);
+      current.retractedContracts.put(retracted, retracted);
     }
     synchronized (current.extendedContracts) {
-      if (current.extendedContracts.contains(retracted))
-        current.extendedContracts.remove(retracted);
+      current.extendedContracts.remove(retracted);
     }
     synchronized (current.delayedExtensions) {
-      if (current.delayedExtensions.contains(retracted))
-        current.delayedExtensions.remove(retracted);
+      current.delayedExtensions.remove(retracted);
     }
   }
 
@@ -1287,15 +1283,13 @@ public final class TransactionManager {
     // TODO: I'm not actually convinced this should be necessary.
     registerWrite((_Impl) extended.fetch());
     synchronized (current.retractedContracts) {
-      if (current.retractedContracts.contains(extended)) return;
+      if (current.retractedContracts.containsKey(extended)) return;
     }
     synchronized (current.extendedContracts) {
-      if (!current.extendedContracts.contains(extended))
-        current.extendedContracts.add(extended);
+      current.extendedContracts.put(extended, extended);
     }
     synchronized (current.delayedExtensions) {
-      if (current.delayedExtensions.contains(extended))
-        current.delayedExtensions.remove(extended);
+      current.delayedExtensions.remove(extended);
     }
   }
 
@@ -1306,14 +1300,13 @@ public final class TransactionManager {
    */
   public void registerDelayedExtension(Contract toBeExtended) {
     synchronized (current.retractedContracts) {
-      if (current.retractedContracts.contains(toBeExtended)) return;
+      if (current.retractedContracts.containsKey(toBeExtended)) return;
     }
     synchronized (current.extendedContracts) {
-      if (current.extendedContracts.contains(toBeExtended)) return;
+      if (current.extendedContracts.containsKey(toBeExtended)) return;
     }
     synchronized (current.delayedExtensions) {
-      if (!current.delayedExtensions.contains(toBeExtended))
-        current.delayedExtensions.add(toBeExtended);
+      current.delayedExtensions.put(toBeExtended, toBeExtended);
     }
   }
 
