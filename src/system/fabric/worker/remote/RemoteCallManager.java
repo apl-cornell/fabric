@@ -122,6 +122,10 @@ public class RemoteCallManager extends MessageToWorkerHandler {
             throw new RuntimeException(e);
           } catch (NoSuchMethodException e) {
             throw new RuntimeException(e);
+          } catch (TransactionRestartingException e) {
+            throw e;
+          } catch (RetryException e) {
+            throw e;
           } catch (RuntimeException e) {
             /* TODO This should probably be wrapped in an exception type that
              * better signals it was the code setting up the reflection rather
