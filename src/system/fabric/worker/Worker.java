@@ -739,6 +739,7 @@ public final class Worker {
     boolean success = false;
     boolean doBackoff = true;
     int backoff = 1;
+    T result = null;
     while (!success) {
       if (doBackoff) {
         if (backoff > 32) {
@@ -762,7 +763,7 @@ public final class Worker {
       tm.startTransaction();
 
       try {
-        return code.run();
+        result = code.run();
       } catch (RetryException e) {
         success = false;
         continue;
@@ -823,8 +824,7 @@ public final class Worker {
         }
       }
     }
-
-    throw new InternalError();
+    return result;
   }
 
   public static interface Code<T> {
