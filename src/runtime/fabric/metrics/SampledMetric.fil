@@ -40,7 +40,9 @@ public class SampledMetric extends Metric {
     this.lastUpdate = new long[1] ~lbl @s;
     this.lastUpdate[0] = -1l;
     this.biasStats = new RunningStats().fabric$metrics$util$RunningStats$(0);
-    this.updateIntervalStats = new RunningStats().fabric$metrics$util$RunningStats$(1.0);
+    // TODO: hack, to avoid initial update being very high and leading to high
+    // initial variance estimates.
+    this.updateIntervalStats = new RunningStats().fabric$metrics$util$RunningStats$(System.currentTimeMillis());
     this.allStats = new RunningStats().fabric$metrics$util$RunningStats$(0);
     fabric$metrics$Metric$();
     return this;
