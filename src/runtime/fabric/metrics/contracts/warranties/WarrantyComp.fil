@@ -78,6 +78,7 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
 
       fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "Activating " + this);
       curVal.contract.activate();
+      fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "Updated to " + curVal);
 
       fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "Observing " + this);
       curVal.contract.addObserver(this);

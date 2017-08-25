@@ -153,12 +153,18 @@ public class SampledMetric extends Metric {
     lastUpdate[0] = eventTime;
   }
 
+  // XXX: Below are commented out because we do *not* intern SampledMetrics like
+  // DerivedMetrics and so the below can cause aliasing issues for
+  // DerivedMetrics over different SampledMetrics sharing the same name.
   /*@Override*/
+  /*
   public int hashCode() {
     return getStore().hashCode() * 32 + name.hashCode();
   }
+  */
 
   /*@Override*/
+  /*
   public boolean equals(Object other) {
     if (other instanceof SampledMetric) {
       SampledMetric that = (SampledMetric) other;
@@ -167,19 +173,26 @@ public class SampledMetric extends Metric {
     }
     return false;
   }
+  */
 
   /*@Override*/
   protected double computeValue(boolean useWeakCache) {
-    return value();
+    atomic {
+      return value();
+    }
   }
 
   /*@Override*/
   protected double computeVelocity(boolean useWeakCache) {
-    return velocity();
+    atomic {
+      return velocity();
+    }
   }
 
   /*@Override*/
   protected double computeNoise(boolean useWeakCache) {
-    return noise();
+    atomic {
+      return noise();
+    }
   }
 }

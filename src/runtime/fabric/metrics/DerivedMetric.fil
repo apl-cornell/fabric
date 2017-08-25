@@ -112,10 +112,14 @@ public abstract class DerivedMetric extends Metric implements Observer {
     return false;
   }
 
+  // XXX: note that the below assumes that if we're not using weakly cached
+  // items, we're called from a transactional context!
   /*@Override*/
   public double value(boolean useWeakCache) {
     if (useWeakCache) {
-      return weakStats[0];
+      atomic {
+        return weakStats[0];
+      }
     } else if (isObserved()) {
       // Make sure any related updates are accounted for
       fabric.worker.transaction.TransactionManager.getInstance().resolveObservations();
@@ -126,10 +130,14 @@ public abstract class DerivedMetric extends Metric implements Observer {
     return lastStats[0];
   }
 
+  // XXX: note that the below assumes that if we're not using weakly cached
+  // items, we're called from a transactional context!
   /*@Override*/
   public double velocity(boolean useWeakCache) {
     if (useWeakCache) {
-      return weakStats[1];
+      atomic {
+        return weakStats[1];
+      }
     } else if (isObserved()) {
       // Make sure any related updates are accounted for
       fabric.worker.transaction.TransactionManager.getInstance().resolveObservations();
@@ -140,10 +148,14 @@ public abstract class DerivedMetric extends Metric implements Observer {
     return lastStats[1];
   }
 
+  // XXX: note that the below assumes that if we're not using weakly cached
+  // items, we're called from a transactional context!
   /*@Override*/
   public double noise(boolean useWeakCache) {
     if (useWeakCache) {
-      return weakStats[2];
+      atomic {
+        return weakStats[2];
+      }
     } else if (isObserved()) {
       // Make sure any related updates are accounted for
       fabric.worker.transaction.TransactionManager.getInstance().resolveObservations();
