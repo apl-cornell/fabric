@@ -3,6 +3,7 @@ package fabric.worker.remote;
 import java.lang.reflect.InvocationTargetException;
 import java.text.MessageFormat;
 import java.util.List;
+import java.util.Map;
 
 import fabric.common.AuthorizationUtil;
 import fabric.common.SerializedObject;
@@ -11,6 +12,8 @@ import fabric.common.net.RemoteIdentity;
 import fabric.common.net.SubServerSocket;
 import fabric.common.net.SubServerSocketFactory;
 import fabric.common.util.LongKeyHashMap;
+import fabric.common.util.LongKeyMap;
+import fabric.common.util.Pair;
 import fabric.lang.Object._Impl;
 import fabric.lang.Object._Proxy;
 import fabric.lang.security.Label;
@@ -194,15 +197,17 @@ public class RemoteCallManager extends MessageToWorkerHandler {
       topTid = topTid.parent;
     tm.associateAndSyncLog(log, topTid);
 
+    Pair<Map<RemoteStore, LongKeyMap<SerializedObject>>, Long> p = null;
     try {
-      tm.getCurrentLog().longerContracts = tm.sendPrepareMessages();
+      p = tm.sendPrepareMessages();
+      tm.getCurrentLog().longerContracts = p.first;
     } catch (TransactionRestartingException e) {
       throw new TransactionPrepareFailedException(e);
     } finally {
       tm.associateLog(null);
     }
 
-    return new PrepareTransactionMessage.Response(
+    return new PrepareTransactionMessage.Response(p.second,
         new LongKeyHashMap<SerializedObject>());
   }
 

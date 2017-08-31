@@ -9,7 +9,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.DelayQueue;
 import java.util.logging.Level;
 
@@ -62,14 +61,15 @@ public final class LocalStore implements Store, Serializable {
   private Set<Pair<Principal, Principal>> localDelegates;
 
   @Override
-  public LongKeyMap<SerializedObject> prepareTransaction(long tid,
+  public Pair<LongKeyMap<SerializedObject>, Long> prepareTransaction(long tid,
       boolean singleStore, boolean readOnly, Collection<Object._Impl> toCreate,
       LongKeyMap<Integer> reads,
       Collection<Pair<Object._Impl, Boolean>> writes) {
     // Note: since we assume local single threading we can ignore reads
     // (conflicts are impossible)
     WORKER_LOCAL_STORE_LOGGER.fine("Local transaction preparing");
-    return new LongKeyHashMap<>();
+    return new Pair<LongKeyMap<SerializedObject>, Long>(
+        new LongKeyHashMap<SerializedObject>(), System.currentTimeMillis());
   }
 
   @Override

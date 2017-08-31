@@ -62,7 +62,7 @@ public class InProcessRemoteWorker extends RemoteWorker {
   }
 
   @Override
-  public void prepareTransaction(long tid) throws UnreachableNodeException,
+  public long prepareTransaction(long tid) throws UnreachableNodeException,
       TransactionPrepareFailedException {
     // XXX Does this actually happen?
     throw new NotImplementedException();

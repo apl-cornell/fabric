@@ -446,7 +446,7 @@ public final class TransactionManager {
     // Send prepare messages to our cohorts. This will also abort our portion of
     // the transaction if the prepare fails.
     current.longerContracts =
-        sendPrepareMessages(singleStore, readOnly, stores, workers);
+        sendPrepareMessages(singleStore, readOnly, stores, workers).first;
 
     // Send commit messages to our cohorts.
     sendCommitMessagesAndCleanUp(singleStore, readOnly, stores, workers);
@@ -515,7 +515,7 @@ public final class TransactionManager {
    * @throws TransactionRestartingException
    *           if the prepare fails.
    */
-  public Map<RemoteStore, LongKeyMap<SerializedObject>> sendPrepareMessages() {
+  public Pair<Map<RemoteStore, LongKeyMap<SerializedObject>>, Long> sendPrepareMessages() {
     return sendPrepareMessages(false, false, current.storesToContact(),
         current.workersCalled);
   }
@@ -532,7 +532,7 @@ public final class TransactionManager {
    * @throws TransactionRestartingException
    *           if the prepare fails.
    */
-  private Map<RemoteStore, LongKeyMap<SerializedObject>> sendPrepareMessages(
+  private Pair<Map<RemoteStore, LongKeyMap<SerializedObject>>, Long> sendPrepareMessages(
       final boolean singleStore, final boolean readOnly, Set<Store> stores,
       List<RemoteWorker> workers) throws TransactionRestartingException {
     final Map<RemoteNode<?>, TransactionPrepareFailedException> failures =
@@ -541,6 +541,8 @@ public final class TransactionManager {
     final Map<RemoteStore, LongKeyMap<SerializedObject>> longerContracts =
         Collections.synchronizedMap(
             new HashMap<RemoteStore, LongKeyMap<SerializedObject>>());
+    // Time to use for contract comparisons at the end of prepare.
+    final long[] time = new long[] { System.currentTimeMillis() };
 
     synchronized (current.commitState) {
       switch (current.commitState.value) {
@@ -550,14 +552,14 @@ public final class TransactionManager {
 
       case PREPARING:
       case PREPARED:
-        return longerContracts;
+        return new Pair<>(longerContracts, time[0]);
 
       case COMMITTING:
       case COMMITTED:
         WORKER_TRANSACTION_LOGGER.log(Level.FINE,
             "Ignoring prepare request (transaction state = {0})",
             current.commitState.value);
-        return longerContracts;
+        return new Pair<>(longerContracts, time[0]);
 
       case PREPARE_FAILED:
         throw new InternalError();
@@ -577,7 +579,10 @@ public final class TransactionManager {
             @Override
             protected void runImpl() {
               try {
-                worker.prepareTransaction(current.tid.topTid);
+                long t = worker.prepareTransaction(current.tid.topTid);
+                synchronized (time) {
+                  time[0] = Math.max(t, time[0]);
+                }
               } catch (UnreachableNodeException e) {
                 failures.put(worker, new TransactionPrepareFailedException(
                     "Unreachable worker"));
@@ -609,9 +614,13 @@ public final class TransactionManager {
                 Collection<Pair<_Impl, Boolean>> writes =
                     current.getWritesForStore(store);
                 if (store instanceof RemoteStore) {
-                  longerContracts.put((RemoteStore) store,
+                  Pair<LongKeyMap<SerializedObject>, Long> p =
                       store.prepareTransaction(current.tid.topTid, singleStore,
-                          readOnly, creates, reads, writes));
+                          readOnly, creates, reads, writes);
+                  longerContracts.put((RemoteStore) store, p.first);
+                  synchronized (time) {
+                    time[0] = Math.max(p.second, time[0]);
+                  }
                 } else {
                   store.prepareTransaction(current.tid.topTid, singleStore,
                       readOnly, creates, reads, writes);
@@ -659,6 +668,17 @@ public final class TransactionManager {
       }
     }
 
+    // Update the contract objects locally so that we're using the latest
+    // version next time.
+    for (Map.Entry<RemoteStore, LongKeyMap<SerializedObject>> e1 : longerContracts
+        .entrySet()) {
+      RemoteStore s = e1.getKey();
+      for (SerializedObject obj : e1.getValue().values()) {
+        // Evict the old version.
+        s.updateCache(obj);
+      }
+    }
+
     // Check for conflicts and unreachable stores/workers.
     if (!failures.isEmpty()) {
       String logMessage = "Transaction tid="
@@ -698,17 +718,6 @@ public final class TransactionManager {
         }
       }
 
-      // Update the contract objects locally so that we're using the latest
-      // version next time.
-      for (Map.Entry<RemoteStore, LongKeyMap<SerializedObject>> e1 : longerContracts
-          .entrySet()) {
-        RemoteStore s = e1.getKey();
-        for (SerializedObject obj : e1.getValue().values()) {
-          // Evict the old version.
-          s.updateCache(obj);
-        }
-      }
-
       WORKER_TRANSACTION_LOGGER.fine(logMessage);
       HOTOS_LOGGER.fine("Prepare failed.");
 
@@ -737,6 +746,10 @@ public final class TransactionManager {
       abortTransaction(abortedNodes);
       throw new TransactionRestartingException(tid);
 
+    } else if (current.expiry() < time[0]) {
+      Logging.log(WORKER_TRANSACTION_LOGGER, Level.INFO,
+          "{0} error committing: prepare too late", current);
+      throw new TransactionRestartingException(current.tid);
     } else {
       synchronized (current.commitState) {
         current.commitState.value = PREPARED;
@@ -744,7 +757,7 @@ public final class TransactionManager {
       }
     }
 
-    return longerContracts;
+    return new Pair<>(longerContracts, time[0]);
   }
 
   /**
@@ -947,6 +960,10 @@ public final class TransactionManager {
   public void registerLabelsInitialized(_Impl obj) {
     current.writerMap.put(obj.$getProxy(), Worker.getWorker().getLocalWorker());
     current.writerMap.put(obj.$getProxy(), obj.get$$updateLabel());
+  }
+
+  public void registerExpiryUse(long exp) {
+    if (current != null) current.updateExpiry(exp);
   }
 
   public void registerRead(_Impl obj) {

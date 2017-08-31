@@ -229,7 +229,10 @@ class Store extends MessageToStoreHandler {
       }
     }
 
-    return new PrepareTransactionMessage.Response(longerContracts);
+    // Use the time we return, at this point we have locked all of the objects
+    // for prepare.
+    return new PrepareTransactionMessage.Response(System.currentTimeMillis(),
+        longerContracts);
   }
 
   /**

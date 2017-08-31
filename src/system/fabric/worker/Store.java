@@ -42,9 +42,9 @@ public interface Store extends Serializable {
    * @return A map from onums to contracts that were longer on the store, to
    * replace in the local cache.
    */
-  LongKeyMap<SerializedObject> prepareTransaction(long tid, boolean singleStore,
-      boolean readOnly, Collection<_Impl> toCreate, LongKeyMap<Integer> reads,
-      Collection<Pair<_Impl, Boolean>> writes)
+  Pair<LongKeyMap<SerializedObject>, Long> prepareTransaction(long tid,
+      boolean singleStore, boolean readOnly, Collection<_Impl> toCreate,
+      LongKeyMap<Integer> reads, Collection<Pair<_Impl, Boolean>> writes)
       throws UnreachableNodeException, TransactionPrepareFailedException;
 
   /**

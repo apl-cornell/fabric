@@ -103,9 +103,9 @@ public class RemoteWorker extends RemoteNode<RemoteWorker> {
     return response.result;
   }
 
-  public void prepareTransaction(long tid)
+  public long prepareTransaction(long tid)
       throws UnreachableNodeException, TransactionPrepareFailedException {
-    send(new PrepareTransactionMessage(tid));
+    return send(new PrepareTransactionMessage(tid)).time;
   }
 
   public void commitTransaction(long tid)

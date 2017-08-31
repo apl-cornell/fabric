@@ -176,7 +176,10 @@ public abstract class Contract extends AbstractSubject implements Observer {
    *       transaction context.
    */
   public boolean valid(long time) {
-    return isActivated() && getExpiry() >= time;
+    boolean rtn = isActivated() && getExpiry() >= time;
+    if (rtn)
+      TransactionManager.getInstance().registerExpiryUse(getExpiry());
+    return rtn;
   }
 
   /**
@@ -184,7 +187,10 @@ public abstract class Contract extends AbstractSubject implements Observer {
    *         transaction context.
    */
   public boolean valid() {
-    return isActivated() && getExpiry() >= System.currentTimeMillis();
+    boolean rtn = isActivated() && getExpiry() >= System.currentTimeMillis();
+    if (rtn)
+      TransactionManager.getInstance().registerExpiryUse(getExpiry());
+    return rtn;
   }
 
   /**

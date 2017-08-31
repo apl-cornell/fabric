@@ -20,8 +20,7 @@ import fabric.worker.remote.RemoteWorker;
  * A <code>PrepareTransactionMessage</code> represents a transaction request to
  * a store.
  */
-public class PrepareTransactionMessage
-    extends
+public class PrepareTransactionMessage extends
     Message<PrepareTransactionMessage.Response, TransactionPrepareFailedException> {
   // ////////////////////////////////////////////////////////////////////////////
   // message contents //
@@ -111,12 +110,16 @@ public class PrepareTransactionMessage
   // ////////////////////////////////////////////////////////////////////////////
 
   public static class Response implements Message.Response {
+    /** Time to use for the expiry check for contracts. */
+    public final long time;
+    /** Longer contracts to update cache with. */
     public final LongKeyMap<SerializedObject> longerContracts;
 
     /**
      * Creates a Response indicating a successful prepare.
      */
-    public Response(LongKeyMap<SerializedObject> longerContracts) {
+    public Response(long time, LongKeyMap<SerializedObject> longerContracts) {
+      this.time = time;
       this.longerContracts = longerContracts;
     }
   }
@@ -126,8 +129,8 @@ public class PrepareTransactionMessage
   // ////////////////////////////////////////////////////////////////////////////
 
   @Override
-  public Response dispatch(RemoteIdentity<RemoteWorker> client, MessageHandler h)
-      throws TransactionPrepareFailedException {
+  public Response dispatch(RemoteIdentity<RemoteWorker> client,
+      MessageHandler h) throws TransactionPrepareFailedException {
     return h.handle(client, this);
   }
 
@@ -231,6 +234,7 @@ public class PrepareTransactionMessage
 
   @Override
   protected void writeResponse(DataOutput out, Response r) throws IOException {
+    out.writeLong(r.time);
     out.writeInt(r.longerContracts.size());
     for (LongKeyMap.Entry<SerializedObject> e : r.longerContracts.entrySet()) {
       out.writeLong(e.getKey());
@@ -240,12 +244,13 @@ public class PrepareTransactionMessage
 
   @Override
   protected Response readResponse(DataInput in) throws IOException {
+    long time = in.readLong();
     int size = in.readInt();
     LongKeyMap<SerializedObject> longerContracts = new LongKeyHashMap<>(size);
     for (int i = 0; i < size; i++) {
       long onum = in.readLong();
       longerContracts.put(onum, new SerializedObject(in));
     }
-    return new Response(longerContracts);
+    return new Response(time, longerContracts);
   }
 }

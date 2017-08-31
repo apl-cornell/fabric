@@ -78,7 +78,7 @@ public class InProcessStore extends RemoteStore {
   }
 
   @Override
-  public LongKeyMap<SerializedObject> prepareTransaction(long tid,
+  public Pair<LongKeyMap<SerializedObject>, Long> prepareTransaction(long tid,
       boolean singleStore, boolean readOnly, Collection<_Impl> toCreate,
       LongKeyMap<Integer> reads, Collection<Pair<_Impl, Boolean>> writes)
       throws TransactionPrepareFailedException {
@@ -116,7 +116,7 @@ public class InProcessStore extends RemoteStore {
         throw new InternalError("Single-store commit failed unexpectedly.", e);
       }
     }
-    return longerContracts;
+    return new Pair<>(longerContracts, System.currentTimeMillis());
   }
 
   @Override

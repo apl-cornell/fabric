@@ -218,6 +218,11 @@ public final class Log {
   public final long startTime;
 
   /**
+   * Earliest expiry used in this transaction.
+   */
+  private long expiryToCheck = Long.MAX_VALUE;
+
+  /**
    * If a transaction T's log appears in this set, then this transaction is
    * waiting for a lock that is held by transaction T.
    */
@@ -579,6 +584,20 @@ public final class Log {
   }
 
   /**
+   * Update the earliest expiry we have to check against.
+   */
+  protected synchronized void updateExpiry(long exp) {
+    expiryToCheck = Math.min(expiryToCheck, exp);
+  }
+
+  /**
+   * @return the earliest expiry used by this transaction.
+   */
+  protected long expiry() {
+    return expiryToCheck;
+  }
+
+  /**
    * Updates logs and data structures in <code>_Impl</code>s to commit this
    * transaction. Assumes there is a parent transaction. This transaction log is
    * merged into the parent's log and any locks held are transferred to the
@@ -732,7 +751,9 @@ public final class Log {
       parent.writerMap.putAll(writerMap);
     }
 
+    // Update the expiry time and drop this child.
     synchronized (parent) {
+      parent.expiryToCheck = Math.min(expiryToCheck, parent.expiryToCheck);
       parent.child = null;
     }
   }
