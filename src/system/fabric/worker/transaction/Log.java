@@ -125,6 +125,12 @@ public final class Log {
   protected final OidKeyHashMap<Subject> unobservedSamples;
 
   /**
+   * Flag indicating if we're in the middle of resolving observations (to avoid
+   * infinite loop).
+   */
+  protected boolean resolving = false;
+
+  /**
    * A collection of {@link Contract}s that are extended by this transaction
    */
   protected final OidKeyHashMap<Contract> extendedContracts;
@@ -266,6 +272,7 @@ public final class Log {
       } finally {
         Timing.SUBTX.end();
       }
+      this.resolving = parent.resolving;
     } else {
       this.writerMap = new WriterMap(this.tid.topTid);
       commitState = new CommitState();
@@ -556,14 +563,18 @@ public final class Log {
    * level or before using a {@link Contract}.
    */
   public void resolveObservations() {
-    Logging.METRICS_LOGGER.fine("PROCESSING SAMPLES " + unobservedSamples);
-    // Skip if there's nothing to handle.
-    if (!unobservedSamples.isEmpty()) {
+    // Skip if there's nothing to handle or if this was called in the middle of
+    // an already ongoing resolve.
+    if (!resolving && !unobservedSamples.isEmpty()) {
+      Logging.METRICS_LOGGER.fine("PROCESSING SAMPLES IN " + tid);
+      resolving = true;
       LinkedList<Subject> q = new LinkedList<>();
       for (Subject s : unobservedSamples.values()) {
         q.add(s);
       }
       AbstractSubject._Impl.processSamples(q);
+      unobservedSamples.clear();
+      resolving = false;
     }
   }
 
