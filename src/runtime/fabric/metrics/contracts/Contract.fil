@@ -49,6 +49,8 @@ public abstract class Contract extends AbstractSubject implements Observer {
   // others.
   public static final long DRIFT_FACTOR = 100;
 
+  public static final long EXTENSION_WINDOW = 1000;
+
   /**
    * Extends the expiration time (queued to be extended later if the current
    * time is much earlier than the current expiration).
@@ -63,7 +65,8 @@ public abstract class Contract extends AbstractSubject implements Observer {
     // Only bother advertising if it's better than our current expiry
     // by the buffer amount or if we're close to the current expiration.
     if (newExpiry > currentTime
-            + (MIN_EXTENSION_FACTOR * (getExpiry() - currentTime))) {
+            + (MIN_EXTENSION_FACTOR * (getExpiry() - currentTime))
+                || getExpiry() - currentTime <= EXTENSION_WINDOW) {
       for (Iterator iter = getObservers().iterator(); iter.hasNext();) {
         Observer parent = (Observer) iter.next();
         if (parent instanceof MetricContract) {
