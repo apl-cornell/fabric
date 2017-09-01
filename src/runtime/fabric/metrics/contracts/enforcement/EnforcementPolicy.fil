@@ -47,10 +47,4 @@ public abstract class EnforcementPolicy {
    * Activate this policy, activating witnesses and setting the expiry.
    */
   public abstract void activate();
-
-  /**
-   * Refresh this policy, updating the expiry time to account for expiry
-   * changes in any metric contracts used.
-   */
-  public abstract void refresh();
 }

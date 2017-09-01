@@ -118,6 +118,7 @@ public abstract class Metric extends AbstractSubject
   public MetricContract getContract(Bound bound) {
     MetricContract mc = null;
     atomic {
+      /*
       for (int i = 0; i < contracts.size(); i++) {
         MetricContract c = (MetricContract) contracts.get(i);
         if (c.stale()) {
@@ -130,6 +131,7 @@ public abstract class Metric extends AbstractSubject
         }
       }
       if (mc == null)
+      */
         mc = createContract(bound);
     }
     return mc;
@@ -275,7 +277,7 @@ public abstract class Metric extends AbstractSubject
    *            the Store that holds this {@link Metric}
    */
   protected Metric fabric$metrics$Metric$() {
-    contracts = new ArrayList/*<>*/().fabric$util$ArrayList$();
+    //contracts = new ArrayList/*<>*/().fabric$util$ArrayList$();
     Label lbl = LabelUtil.noComponents();
     Store s = $getStore();
     this.weakStats = new double[3] ~lbl @s;
@@ -283,7 +285,7 @@ public abstract class Metric extends AbstractSubject
     return this;
   }
 
-  private final List/*<MetricContract>*/ contracts;
+  //private final List/*<MetricContract>*/ contracts;
 
   /**
    * @param useWeakCache
@@ -456,6 +458,7 @@ public abstract class Metric extends AbstractSubject
    *             on this {@link Metric}
    */
   public void addContract(MetricContract contract) {
+    /*
     if (!contract.getMetric().equals(this))
       throw new IllegalArgumentException(
           "Adding a contract for a different metric!");
@@ -463,6 +466,7 @@ public abstract class Metric extends AbstractSubject
       atomic {
         contracts.add(contract);
       }
+    */
   }
 
   /**
@@ -483,19 +487,19 @@ public abstract class Metric extends AbstractSubject
    * @return a {@link Set} of {@link MetricContract}s that are currently
    *       enforced for this {@link Metric}
    */
-  protected List/*<MetricContract>*/ getContracts(long time) {
-    atomic {
-      for (int i = 0; i < contracts.size(); i++) {
-        MetricContract c = (MetricContract) contracts.get(i);
-        if (c.stale(time)) {
-          removeObserver(c);
-          // Contract's removed, shift the index to account (ugh)
-          i--;
-        }
-      }
-    }
-    return contracts;
-  }
+  //protected List[><MetricContract><] getContracts(long time) {
+  //  atomic {
+  //    for (int i = 0; i < contracts.size(); i++) {
+  //      MetricContract c = (MetricContract) contracts.get(i);
+  //      if (c.stale(time)) {
+  //        removeObserver(c);
+  //        // Contract's removed, shift the index to account (ugh)
+  //        i--;
+  //      }
+  //    }
+  //  }
+  //  return contracts;
+  //}
 
   /*@Override*/
   public int compareTo(java.lang.Object that) {
@@ -527,6 +531,7 @@ public abstract class Metric extends AbstractSubject
   // TODO/XXX: I'm concerned this will cause problems if we are removing
   // when switching between policies?
   private void clearContract(MetricContract contract) {
+    /*
       if (!contract.getMetric().equals(this))
           throw new IllegalArgumentException(
                   "clearing a contract for a different metric!");
@@ -534,6 +539,7 @@ public abstract class Metric extends AbstractSubject
         atomic {
           contracts.remove(contract);
         }
+        */
   }
 
   /**

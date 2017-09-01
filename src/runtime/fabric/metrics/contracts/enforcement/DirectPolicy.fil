@@ -40,7 +40,6 @@ public class DirectPolicy extends EnforcementPolicy {
       if (activated)
         return;
     }
-    refresh();
   }
 
   /*@Override*/
@@ -49,7 +48,7 @@ public class DirectPolicy extends EnforcementPolicy {
       // First check if we actually can enforce it in the current state.
       long currentTime = System.currentTimeMillis();
       long trueTime = bound.trueExpiry(metric, currentTime);
-      if (trueTime < currentTime) {
+      if (trueTime < currentTime && currentTime <= expiry) {
         expiry = 0;
       } else {
         long hedgedTime = hedged(currentTime);

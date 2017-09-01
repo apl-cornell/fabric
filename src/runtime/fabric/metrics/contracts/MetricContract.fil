@@ -135,8 +135,9 @@ public class MetricContract extends Contract {
     // Refresh the current policy and update to the new expiration time
     // if it's long enough.
     if (currentPolicy != null) {
-      if (currentPolicy.expiry() >= currentTime) {
-        boolean result = update(currentPolicy.expiry());
+      long curExpiry = currentPolicy.expiry();
+      if (curExpiry >= currentTime) {
+        boolean result = update(curExpiry);
         fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "DEFENDING " + this + " WITH " + currentPolicy);
         return result;
       }
@@ -153,8 +154,9 @@ public class MetricContract extends Contract {
     currentPolicy = newPolicy;
     currentPolicy.activate();
     // Don't apply if the new policy is already expired.
-    boolean result = update(currentPolicy.expiry());
-    if (currentPolicy.expiry() >= currentTime)
+    long newExpiry = currentPolicy.expiry();
+    boolean result = update(newExpiry);
+    if (newExpiry >= currentTime)
       currentPolicy.apply(this);
     fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "CONTRACT TRUE");
     return result;

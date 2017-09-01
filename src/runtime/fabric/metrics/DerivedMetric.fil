@@ -123,11 +123,11 @@ public abstract class DerivedMetric extends Metric implements Observer {
     } else if (isObserved()) {
       // Make sure any related updates are accounted for
       fabric.worker.transaction.TransactionManager.getInstance().resolveObservations();
-    } else {
-      // Not getting updated proactively, so compute it
-      lastStats[0] = computeValue(false);
+      return lastStats[0];
     }
-    return lastStats[0];
+    // Not getting updated proactively, so compute it
+    //lastStats[0] = computeValue(false);
+    return computeValue(false);
   }
 
   // XXX: note that the below assumes that if we're not using weakly cached
@@ -141,11 +141,11 @@ public abstract class DerivedMetric extends Metric implements Observer {
     } else if (isObserved()) {
       // Make sure any related updates are accounted for
       fabric.worker.transaction.TransactionManager.getInstance().resolveObservations();
-    } else {
-      // Not getting updated proactively, so compute it
-      lastStats[1] = computeVelocity(false);
+      return lastStats[1];
     }
-    return lastStats[1];
+    // Not getting updated proactively, so compute it
+    //lastStats[1] = computeVelocity(false);
+    return computeVelocity(false);
   }
 
   // XXX: note that the below assumes that if we're not using weakly cached
@@ -159,11 +159,11 @@ public abstract class DerivedMetric extends Metric implements Observer {
     } else if (isObserved()) {
       // Make sure any related updates are accounted for
       fabric.worker.transaction.TransactionManager.getInstance().resolveObservations();
-    } else {
-      // Not getting updated proactively, so compute it
-      lastStats[2] = computeNoise(false);
+      return lastStats[2];
     }
-    return lastStats[2];
+    // Not getting updated proactively, so compute it
+    //lastStats[2] = computeNoise(false);
+    return computeNoise(false);
   }
 
   /*@Override*/

@@ -44,29 +44,6 @@ public class WitnessPolicy extends EnforcementPolicy {
       if (activated)
         return;
     }
-    refresh();
-  }
-
-  private class Activator implements Callable {
-    final MetricContract w;
-
-    public Activator fabric$metrics$contracts$enforcement$WitnessPolicy$Activator$(MetricContract w) {
-      this.w = w;
-      fabric$lang$Object$();
-      return this;
-    }
-
-    public java.lang.Object call() {
-      w.activate();
-      return null;
-    }
-  }
-
-  private static final int POOL_SIZE = 32;
-  private static final ExecutorService service = Executors.newFixedThreadPool(POOL_SIZE);
-
-  /*@Override*/
-  public void refresh() {
     if (TransactionManager.getInstance().getCurrentLog() != null) {
       for (int i = 0; i < witnesses.length; i++) {
         witnesses[i].activate();
@@ -97,6 +74,24 @@ public class WitnessPolicy extends EnforcementPolicy {
       activated = true;
     }
   }
+
+  private class Activator implements Callable {
+    final MetricContract w;
+
+    public Activator fabric$metrics$contracts$enforcement$WitnessPolicy$Activator$(MetricContract w) {
+      this.w = w;
+      fabric$lang$Object$();
+      return this;
+    }
+
+    public java.lang.Object call() {
+      w.activate();
+      return null;
+    }
+  }
+
+  private static final int POOL_SIZE = 32;
+  private static final ExecutorService service = Executors.newFixedThreadPool(POOL_SIZE);
 
   /*@Override*/
   public long expiry() {
