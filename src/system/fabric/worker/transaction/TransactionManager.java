@@ -668,17 +668,6 @@ public final class TransactionManager {
       }
     }
 
-    // Update the contract objects locally so that we're using the latest
-    // version next time.
-    for (Map.Entry<RemoteStore, LongKeyMap<SerializedObject>> e1 : longerContracts
-        .entrySet()) {
-      RemoteStore s = e1.getKey();
-      for (SerializedObject obj : e1.getValue().values()) {
-        // Evict the old version.
-        s.updateCache(obj);
-      }
-    }
-
     // Check for conflicts and unreachable stores/workers.
     if (!failures.isEmpty()) {
       String logMessage = "Transaction tid="
@@ -715,6 +704,17 @@ public final class TransactionManager {
               store.updateCache(obj);
             }
           }
+        }
+      }
+
+      // Update the contract objects locally so that we're using the latest
+      // version next time.
+      for (Map.Entry<RemoteStore, LongKeyMap<SerializedObject>> e1 : longerContracts
+          .entrySet()) {
+        RemoteStore s = e1.getKey();
+        for (SerializedObject obj : e1.getValue().values()) {
+          // Evict the old version.
+          s.updateCache(obj);
         }
       }
 
