@@ -283,7 +283,7 @@ public abstract class ObjectDB {
       objectLocksFor(onum).lockForRead(tid, worker);
     } catch (UnableToLockException e) {
       throw new TransactionPrepareFailedException(versionConflicts,
-          "Object " + onum + " has been locked by an uncommitted transaction.");
+          read(onum).getClassName() + " " + onum + " has been write-locked by an uncommitted transaction.");
     }
 
     // Register that the transaction has locked the object.
@@ -336,7 +336,7 @@ public abstract class ObjectDB {
       objectLocksFor(onum).lockForWrite(tid);
     } catch (UnableToLockException e) {
       throw new TransactionPrepareFailedException(versionConflicts,
-          "Object " + onum + " has been locked by an uncommitted transaction.");
+          obj.getClassName() + " " + onum + " has been locked by an uncommitted transaction.");
     }
 
     // Record the updated object. Doing so will also register that the
