@@ -139,33 +139,41 @@ public class ConfigProperties {
     String[] rawRates =
         removeProperty(p, "fabric.metrics.rates", "").split(",");
     this.rates = new HashMap<>();
-    for (int i = 0; i < rawRates.length; i++) {
-      String[] kv = rawRates[i].split(":");
-      this.rates.put(kv[0], Double.parseDouble(kv[1]));
+    if (this.usePreset) {
+      for (int i = 0; i < rawRates.length; i++) {
+        String[] kv = rawRates[i].split(":");
+        this.rates.put(kv[0], Double.parseDouble(kv[1]));
+      }
     }
 
     String[] rawBounds =
         removeProperty(p, "fabric.metrics.bounds", "").split(",");
     this.bounds = new HashMap<>();
-    for (int i = 0; i < rawBounds.length; i++) {
-      String[] kv = rawRates[i].split(":");
-      this.bounds.put(kv[0], Double.parseDouble(kv[1]));
+    if (this.usePreset) {
+      for (int i = 0; i < rawBounds.length; i++) {
+        String[] kv = rawRates[i].split(":");
+        this.bounds.put(kv[0], Double.parseDouble(kv[1]));
+      }
     }
 
     String[] rawVelocities =
         removeProperty(p, "fabric.metrics.velocities", "").split(",");
     this.velocities = new HashMap<>();
-    for (int i = 0; i < rawVelocities.length; i++) {
-      String[] kv = rawRates[i].split(":");
-      this.velocities.put(kv[0], Double.parseDouble(kv[1]));
+    if (this.usePreset) {
+      for (int i = 0; i < rawVelocities.length; i++) {
+        String[] kv = rawRates[i].split(":");
+        this.velocities.put(kv[0], Double.parseDouble(kv[1]));
+      }
     }
 
     String[] rawNoises =
         removeProperty(p, "fabric.metrics.noises", "").split(",");
     this.noises = new HashMap<>();
-    for (int i = 0; i < rawNoises.length; i++) {
-      String[] kv = rawRates[i].split(":");
-      this.noises.put(kv[0], Double.parseDouble(kv[1]));
+    if (this.usePreset) {
+      for (int i = 0; i < rawNoises.length; i++) {
+        String[] kv = rawRates[i].split(":");
+        this.noises.put(kv[0], Double.parseDouble(kv[1]));
+      }
     }
 
     /************************** Worker Properties *****************************/
