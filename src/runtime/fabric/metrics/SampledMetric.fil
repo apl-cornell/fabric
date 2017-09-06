@@ -6,6 +6,9 @@ import fabric.util.List;
 import fabric.metrics.util.Observer;
 import fabric.metrics.util.RunningStats;
 
+import fabric.common.ConfigProperties;
+import fabric.common.exceptions.InternalError;
+import fabric.worker.Worker;
 import fabric.worker.Store;
 import fabric.worker.transaction.TransactionManager;
 
@@ -44,8 +47,63 @@ public class SampledMetric extends Metric {
     // initial variance estimates.
     this.updateIntervalStats = new RunningStats().fabric$metrics$util$RunningStats$(System.currentTimeMillis());
     //this.allStats = new RunningStats().fabric$metrics$util$RunningStats$(0);
+
+    // Presets
+    ConfigProperties config = Worker.getWorker().config;
+    this.usePreset = config.usePreset;
+    if (this.usePreset) {
+      String key = name + "@" + s.name();
+      if (!config.rates.containsKey(key))
+        throw new InternalError("Unspecified preset rate for " + key);
+      this.presetR = ((Double) config.rates.get(key)).doubleValue();
+      if (!config.bounds.containsKey(key))
+        throw new InternalError("Unspecified preset bound for " + key);
+      this.presetB = ((Double) config.bounds.get(key)).doubleValue();
+      if (!config.velocities.containsKey(key))
+        throw new InternalError("Unspecified preset velocity for " + key);
+      this.presetV = ((Double) config.velocities.get(key)).doubleValue();
+      if (!config.noises.containsKey(key))
+        throw new InternalError("Unspecified preset noise for " + key);
+      this.presetN = ((Double) config.noises.get(key)).doubleValue();
+    } else {
+      this.presetR = 0.0;
+      this.presetB = 0.0;
+      this.presetV = 0.0;
+      this.presetN = 0.0;
+    }
     fabric$metrics$Metric$();
     return this;
+  }
+
+  // Stuff to allow for preset strategies.
+  public final boolean usePreset;
+  /*@Override*/
+  public boolean getUsePreset() {
+    return usePreset;
+  }
+
+  public final double presetR;
+  /*@Override*/
+  public double getPresetR() {
+    return presetR;
+  }
+
+  public final double presetB;
+  /*@Override*/
+  public double getPresetB() {
+    return presetB;
+  }
+
+  public final double presetV;
+  /*@Override*/
+  public double getPresetV() {
+    return presetV;
+  }
+
+  public final double presetN;
+  /*@Override*/
+  public double getPresetN() {
+    return presetN;
   }
 
   /**
@@ -81,12 +139,14 @@ public class SampledMetric extends Metric {
 
   /*@Override*/
   public double velocity(boolean useWeakCache) {
+    if (usePreset) return presetV;
     return biasStats.getMean() / updateIntervalStats.getMean();
     // return allStats.getMean();
   }
 
   /*@Override*/
   public double noise(boolean useWeakCache) {
+    if (usePreset) return presetN;
     // Based on ratio estimator approach and assuming that there's 0
     // covariance between update intervals and update values
     double tSqrd = updateIntervalStats.getMean()

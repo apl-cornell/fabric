@@ -38,6 +38,42 @@ public class MinMetric extends DerivedMetric {
     }
 
     /*@Override*/
+    public double computePresetR() {
+        double result = Double.MAX_VALUE;
+        for (int i = 0; i < terms.length; i++) {
+            result = Math.max(result, terms[i].getPresetR());
+        }
+        return result;
+    }
+
+    /*@Override*/
+    public double computePresetB() {
+        double result = Double.MAX_VALUE;
+        for (int i = 0; i < terms.length; i++) {
+            result = Math.max(result, terms[i].getPresetB());
+        }
+        return result;
+    }
+
+    /*@Override*/
+    public double computePresetV() {
+        double result = Double.MAX_VALUE;
+        for (int i = 0; i < terms.length; i++) {
+            result = Math.min(result, terms[i].getPresetV());
+        }
+        return result;
+    }
+
+    /*@Override*/
+    public double computePresetN() {
+        double result = Double.MAX_VALUE;
+        for (int i = 0; i < terms.length; i++) {
+            result = Math.max(result, terms[i].getPresetN());
+        }
+        return result;
+    }
+
+    /*@Override*/
     protected double computeValue(boolean useWeakCache) {
         double result = Double.MAX_VALUE;
         for (int i = 0; i < terms.length; i++) {

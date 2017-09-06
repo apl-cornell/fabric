@@ -272,6 +272,13 @@ public abstract class Metric extends AbstractSubject
   // Internal API
   ////////////////////////////////////////////////////////////////////////////
 
+  // Stuff to allow for preset strategies.
+  public abstract boolean getUsePreset();
+  public abstract double getPresetR();
+  public abstract double getPresetB();
+  public abstract double getPresetV();
+  public abstract double getPresetN();
+
   /**
    * @param store
    *            the Store that holds this {@link Metric}

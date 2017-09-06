@@ -44,6 +44,26 @@ public class ScaledMetric extends DerivedMetric {
     }
 
     /*@Override*/
+    public double computePresetR() {
+        return scalar * terms[0].getPresetR();
+    }
+
+    /*@Override*/
+    public double computePresetB() {
+        return scalar * terms[0].getPresetB();
+    }
+
+    /*@Override*/
+    public double computePresetV() {
+        return scalar * terms[0].getPresetV();
+    }
+
+    /*@Override*/
+    public double computePresetN() {
+        return scalar * scalar * terms[0].getPresetN();
+    }
+
+    /*@Override*/
     protected double computeValue(boolean useWeakCache) {
         return scalar * terms[0].value(useWeakCache);
     }

@@ -13,6 +13,7 @@ import fabric.metrics.contracts.enforcement.EnforcementPolicy;
 import fabric.metrics.contracts.enforcement.WitnessPolicy;
 import fabric.metrics.util.Observer;
 
+import fabric.common.ConfigProperties;
 import fabric.worker.Store;
 import fabric.worker.Worker;
 import fabric.worker.transaction.TransactionManager;
@@ -76,9 +77,58 @@ public abstract class DerivedMetric extends Metric implements Observer {
     this.terms = new Metric[terms.length] ~lbl @s;
     Arrays.arraycopy(terms, 0, this.terms, 0, terms.length);
     this.lastStats = new double[3] ~lbl @s;
+    // Presets
+    ConfigProperties config = Worker.getWorker().config;
+    this.usePreset = config.usePreset;
+    if (this.usePreset) {
+      this.presetR = computePresetR();
+      this.presetB = computePresetB();
+      this.presetV = computePresetV();
+      this.presetN = computePresetN();
+    } else {
+      this.presetR = 0.0;
+      this.presetB = 0.0;
+      this.presetV = 0.0;
+      this.presetN = 0.0;
+    }
     fabric$metrics$Metric$();
     return this;
   }
+
+  // Stuff to allow for preset strategies.
+  public final boolean usePreset;
+  /*@Override*/
+  public boolean getUsePreset() {
+    return usePreset;
+  }
+
+  public final double presetR;
+  /*@Override*/
+  public double getPresetR() {
+    return presetR;
+  }
+  public abstract double computePresetR();
+
+  public final double presetB;
+  /*@Override*/
+  public double getPresetB() {
+    return presetB;
+  }
+  public abstract double computePresetB();
+
+  public final double presetV;
+  /*@Override*/
+  public double getPresetV() {
+    return presetV;
+  }
+  public abstract double computePresetV();
+
+  public final double presetN;
+  /*@Override*/
+  public double getPresetN() {
+    return presetN;
+  }
+  public abstract double computePresetN();
 
   /**
    * Method to be called at the end of a constructor for any subclass of
@@ -134,6 +184,7 @@ public abstract class DerivedMetric extends Metric implements Observer {
   // items, we're called from a transactional context!
   /*@Override*/
   public double velocity(boolean useWeakCache) {
+    if (usePreset) return presetV;
     if (useWeakCache) {
       atomic {
         return weakStats[1];
@@ -152,6 +203,7 @@ public abstract class DerivedMetric extends Metric implements Observer {
   // items, we're called from a transactional context!
   /*@Override*/
   public double noise(boolean useWeakCache) {
+    if (usePreset) return presetN;
     if (useWeakCache) {
       atomic {
         return weakStats[2];

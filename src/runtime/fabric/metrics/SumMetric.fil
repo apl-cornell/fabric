@@ -33,6 +33,42 @@ public class SumMetric extends DerivedMetric {
     }
 
     /*@Override*/
+    public double computePresetR() {
+        double result = 0;
+        for (int i = 0; i < terms.length; i++) {
+            result += terms[i].getPresetR();
+        }
+        return result;
+    }
+
+    /*@Override*/
+    public double computePresetB() {
+        double result = 0;
+        for (int i = 0; i < terms.length; i++) {
+            result += terms[i].getPresetB();
+        }
+        return result;
+    }
+
+    /*@Override*/
+    public double computePresetV() {
+        double result = 0;
+        for (int i = 0; i < terms.length; i++) {
+            result += terms[i].getPresetV();
+        }
+        return result;
+    }
+
+    /*@Override*/
+    public double computePresetN() {
+        double result = 0;
+        for (int i = 0; i < terms.length; i++) {
+            result += terms[i].getPresetN();
+        }
+        return result;
+    }
+
+    /*@Override*/
     protected double computeValue(boolean useWeakCache) {
         double result = 0;
         for (int i = 0; i < terms.length; i++) {
@@ -215,6 +251,13 @@ public class SumMetric extends DerivedMetric {
             if (totalNoise != 0) {
               b = scaledX - ((scaledN / totalNoise) * (totalValue - base));
             }
+
+            // If using presets, use that instead
+            if (getUsePreset()) {
+              r = m.getPresetR();
+              b = scaledX - ((m.getPresetB() / getPresetB()) * (totalValue - base));
+            }
+
             Bound witnessBound = new Bound().fabric$metrics$contracts$Bound$(r, b, currentTime);
             if (!witnesses.containsKey(m)
                     || !((MetricContract) witnesses.get(m)).getBound().implies(witnessBound)) {

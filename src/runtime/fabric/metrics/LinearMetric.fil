@@ -68,6 +68,30 @@ public class LinearMetric extends DerivedMetric {
     return this;
   }
 
+  /*@Override*/
+  public double computePresetR() {
+    // Dummy, this is deprecated.
+    return 0.0;
+  }
+
+  /*@Override*/
+  public double computePresetB() {
+    // Dummy, this is deprecated.
+    return 0.0;
+  }
+
+  /*@Override*/
+  public double computePresetV() {
+    // Dummy, this is deprecated.
+    return 0.0;
+  }
+
+  /*@Override*/
+  public double computePresetN() {
+    // Dummy, this is deprecated.
+    return 0.0;
+  }
+
   /**
    * Utility to normalize the {@link Metric} terms and {@link Matrix}
    * associated with this {@link LinearMetric}.
