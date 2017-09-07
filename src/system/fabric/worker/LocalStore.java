@@ -63,7 +63,7 @@ public final class LocalStore implements Store, Serializable {
   @Override
   public Pair<LongKeyMap<SerializedObject>, Long> prepareTransaction(long tid,
       boolean singleStore, boolean readOnly, Collection<Object._Impl> toCreate,
-      LongKeyMap<Integer> reads,
+      LongKeyMap<Pair<Integer, Long>> reads,
       Collection<Pair<Object._Impl, Boolean>> writes) {
     // Note: since we assume local single threading we can ignore reads
     // (conflicts are impossible)
@@ -135,7 +135,7 @@ public final class LocalStore implements Store, Serializable {
   }
 
   @Override
-  public boolean checkForStaleObjects(LongKeyMap<Integer> reads) {
+  public boolean checkForStaleObjects(LongKeyMap<Pair<Integer, Long>> reads) {
     return false;
   }
 

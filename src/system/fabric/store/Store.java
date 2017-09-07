@@ -327,7 +327,7 @@ class Store extends MessageToStoreHandler {
         "Handling Staleness Check Message from {0}", nameOf(client.principal));
 
     return new StalenessCheckMessage.Response(
-        tm.checkForStaleObjects(client.principal, message.versions));
+        tm.checkForStaleObjects(client.principal, message.versionsAndExpiries));
   }
 
   /**
@@ -348,7 +348,8 @@ class Store extends MessageToStoreHandler {
   private LongKeyMap<SerializedObject> prepareTransaction(Principal p, long tid,
       Collection<SerializedObject> serializedCreates,
       Collection<Pair<SerializedObject, Boolean>> serializedWrites,
-      LongKeyMap<Integer> reads) throws TransactionPrepareFailedException {
+      LongKeyMap<Pair<Integer, Long>> reads)
+      throws TransactionPrepareFailedException {
 
     PrepareRequest req =
         new PrepareRequest(tid, serializedCreates, serializedWrites, reads);

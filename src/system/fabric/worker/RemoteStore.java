@@ -124,7 +124,8 @@ public class RemoteStore extends RemoteNode<RemoteStore>
   @Override
   public Pair<LongKeyMap<SerializedObject>, Long> prepareTransaction(long tid,
       boolean singleStore, boolean readOnly, Collection<Object._Impl> toCreate,
-      LongKeyMap<Integer> reads, Collection<Pair<Object._Impl, Boolean>> writes)
+      LongKeyMap<Pair<Integer, Long>> reads,
+      Collection<Pair<Object._Impl, Boolean>> writes)
       throws TransactionPrepareFailedException, UnreachableNodeException {
     PrepareTransactionMessage.Response r =
         send(Worker.getWorker().authToStore, new PrepareTransactionMessage(tid,
@@ -310,7 +311,7 @@ public class RemoteStore extends RemoteNode<RemoteStore>
   }
 
   @Override
-  public boolean checkForStaleObjects(LongKeyMap<Integer> reads) {
+  public boolean checkForStaleObjects(LongKeyMap<Pair<Integer, Long>> reads) {
     List<SerializedObject> staleObjects = getStaleObjects(reads);
 
     for (SerializedObject obj : staleObjects)
@@ -322,7 +323,8 @@ public class RemoteStore extends RemoteNode<RemoteStore>
   /**
    * Helper for checkForStaleObjects.
    */
-  protected List<SerializedObject> getStaleObjects(LongKeyMap<Integer> reads) {
+  protected List<SerializedObject> getStaleObjects(
+      LongKeyMap<Pair<Integer, Long>> reads) {
     try {
       return send(Worker.getWorker().authToStore,
           new StalenessCheckMessage(reads)).staleObjects;

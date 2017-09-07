@@ -12,24 +12,26 @@ import fabric.common.exceptions.ProtocolError;
 import fabric.common.net.RemoteIdentity;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.Pair;
 import fabric.worker.remote.RemoteWorker;
 
 /**
  * A <code>StalenessCheckMessage</code> represents a request to a store to check
  * whether a given set of objects is still fresh.
  */
-public final class StalenessCheckMessage extends
-    Message<StalenessCheckMessage.Response, AccessException> {
+public final class StalenessCheckMessage
+    extends Message<StalenessCheckMessage.Response, AccessException> {
 
   // ////////////////////////////////////////////////////////////////////////////
   // message contents //
   // ////////////////////////////////////////////////////////////////////////////
 
-  public final LongKeyMap<Integer> versions;
+  public final LongKeyMap<Pair<Integer, Long>> versionsAndExpiries;
 
-  public StalenessCheckMessage(LongKeyMap<Integer> versions) {
+  public StalenessCheckMessage(
+      LongKeyMap<Pair<Integer, Long>> versionsAndExpiries) {
     super(MessageType.STALENESS_CHECK, AccessException.class);
-    this.versions = versions;
+    this.versionsAndExpiries = versionsAndExpiries;
   }
 
   // ////////////////////////////////////////////////////////////////////////////
@@ -49,8 +51,8 @@ public final class StalenessCheckMessage extends
   // ////////////////////////////////////////////////////////////////////////////
 
   @Override
-  public Response dispatch(RemoteIdentity<RemoteWorker> client, MessageHandler h)
-      throws ProtocolError, AccessException {
+  public Response dispatch(RemoteIdentity<RemoteWorker> client,
+      MessageHandler h) throws ProtocolError, AccessException {
     return h.handle(client, this);
   }
 
@@ -60,10 +62,12 @@ public final class StalenessCheckMessage extends
 
   @Override
   protected void writeMessage(DataOutput out) throws IOException {
-    out.writeInt(versions.size());
-    for (LongKeyMap.Entry<Integer> entry : versions.entrySet()) {
+    out.writeInt(versionsAndExpiries.size());
+    for (LongKeyMap.Entry<Pair<Integer, Long>> entry : versionsAndExpiries
+        .entrySet()) {
       out.writeLong(entry.getKey());
-      out.writeInt(entry.getValue());
+      out.writeInt(entry.getValue().first);
+      out.writeLong(entry.getValue().second);
     }
   }
 
@@ -73,12 +77,12 @@ public final class StalenessCheckMessage extends
   }
 
   /* helper method for deserialization constructor */
-  private static LongKeyHashMap<Integer> readMap(DataInput in)
+  private static LongKeyHashMap<Pair<Integer, Long>> readMap(DataInput in)
       throws IOException {
     int size = in.readInt();
-    LongKeyHashMap<Integer> versions = new LongKeyHashMap<>(size);
+    LongKeyHashMap<Pair<Integer, Long>> versions = new LongKeyHashMap<>(size);
     for (int i = 0; i < size; i++)
-      versions.put(in.readLong(), in.readInt());
+      versions.put(in.readLong(), new Pair<>(in.readInt(), in.readLong()));
 
     return versions;
   }

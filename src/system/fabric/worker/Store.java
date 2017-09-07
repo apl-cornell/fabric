@@ -44,7 +44,8 @@ public interface Store extends Serializable {
    */
   Pair<LongKeyMap<SerializedObject>, Long> prepareTransaction(long tid,
       boolean singleStore, boolean readOnly, Collection<_Impl> toCreate,
-      LongKeyMap<Integer> reads, Collection<Pair<_Impl, Boolean>> writes)
+      LongKeyMap<Pair<Integer, Long>> reads,
+      Collection<Pair<_Impl, Boolean>> writes)
       throws UnreachableNodeException, TransactionPrepareFailedException;
 
   /**
@@ -107,7 +108,7 @@ public interface Store extends Serializable {
    *
    * @return true iff stale objects were found.
    */
-  boolean checkForStaleObjects(LongKeyMap<Integer> reads);
+  boolean checkForStaleObjects(LongKeyMap<Pair<Integer, Long>> reads);
 
   /**
    * Obtains a new, unused object number from the Store.

@@ -43,7 +43,7 @@ public class PrepareTransactionMessage extends
    */
   public final boolean readOnly;
 
-  public final LongKeyMap<Integer> reads;
+  public final LongKeyMap<Pair<Integer, Long>> reads;
 
   /**
    * The objects created during the transaction, unserialized. This will only be
@@ -90,7 +90,8 @@ public class PrepareTransactionMessage extends
    * Only used by the worker.
    */
   public PrepareTransactionMessage(long tid, boolean singleStore,
-      boolean readOnly, Collection<_Impl> toCreate, LongKeyMap<Integer> reads,
+      boolean readOnly, Collection<_Impl> toCreate,
+      LongKeyMap<Pair<Integer, Long>> reads,
       Collection<Pair<_Impl, Boolean>> writes) {
     super(MessageType.PREPARE_TRANSACTION,
         TransactionPrepareFailedException.class);
@@ -154,9 +155,10 @@ public class PrepareTransactionMessage extends
       out.writeInt(0);
     } else {
       out.writeInt(reads.size());
-      for (LongKeyMap.Entry<Integer> entry : reads.entrySet()) {
+      for (LongKeyMap.Entry<Pair<Integer, Long>> entry : reads.entrySet()) {
         out.writeLong(entry.getKey());
-        out.writeInt(entry.getValue());
+        out.writeInt(entry.getValue().first);
+        out.writeLong(entry.getValue().second);
       }
     }
 
@@ -204,7 +206,7 @@ public class PrepareTransactionMessage extends
     } else {
       reads = new LongKeyHashMap<>(size);
       for (int i = 0; i < size; i++)
-        reads.put(in.readLong(), in.readInt());
+        reads.put(in.readLong(), new Pair<>(in.readInt(), in.readLong()));
     }
 
     // Read creates.

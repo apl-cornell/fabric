@@ -161,11 +161,13 @@ public class TransactionManager {
       }
 
       // Check reads
-      for (LongKeyMap.Entry<Integer> entry : req.reads.entrySet()) {
+      for (LongKeyMap.Entry<Pair<Integer, Long>> entry : req.reads.entrySet()) {
         long onum = entry.getKey();
-        int version = entry.getValue().intValue();
+        int version = entry.getValue().first.intValue();
+        long expiry = entry.getValue().second.longValue();
 
-        database.prepareRead(tid, worker, onum, version, versionConflicts);
+        database.prepareRead(tid, worker, onum, version, expiry,
+            versionConflicts, longerContracts);
       }
 
       if (!versionConflicts.isEmpty()) {
@@ -337,22 +339,26 @@ public class TransactionManager {
    * for any stale objects found.
    */
   List<SerializedObject> checkForStaleObjects(Principal worker,
-      LongKeyMap<Integer> versions) throws AccessException {
+      LongKeyMap<Pair<Integer, Long>> versionsAndExpiries)
+      throws AccessException {
     // First, check read and write permissions.
     Store store = Worker.getWorker().getStore(database.getName());
     if (worker == null || worker.$getStore() != store
         || worker.$getOnum() != ONumConstants.STORE_PRINCIPAL) {
-      checkPerms(worker, versions.keySet(),
+      checkPerms(worker, versionsAndExpiries.keySet(),
           Collections.<Pair<SerializedObject, Boolean>> emptyList());
     }
 
     List<SerializedObject> result = new ArrayList<>();
-    for (LongKeyMap.Entry<Integer> entry : versions.entrySet()) {
+    for (LongKeyMap.Entry<Pair<Integer, Long>> entry : versionsAndExpiries
+        .entrySet()) {
       long onum = entry.getKey();
-      int version = entry.getValue();
+      int version = entry.getValue().first;
+      long expiry = entry.getValue().second;
 
       int curVersion = database.getVersion(onum);
-      if (curVersion != version) {
+      long curExpiry = database.getExpiry(onum);
+      if (curVersion != version || curExpiry > expiry) {
         result.add(database.read(onum));
       }
     }

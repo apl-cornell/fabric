@@ -276,14 +276,16 @@ public abstract class ObjectDB {
    *          to this map, binding the object's onum to its current version.
    */
   public final void prepareRead(long tid, Principal worker, long onum,
-      int version, LongKeyMap<SerializedObject> versionConflicts)
+      int version, long expiry, LongKeyMap<SerializedObject> versionConflicts,
+      LongKeyMap<SerializedObject> longerContracts)
       throws TransactionPrepareFailedException {
     // First, lock the object.
     try {
       objectLocksFor(onum).lockForRead(tid, worker);
     } catch (UnableToLockException e) {
       throw new TransactionPrepareFailedException(versionConflicts,
-          read(onum).getClassName() + " " + onum + " has been write-locked by an uncommitted transaction.");
+          read(onum).getClassName() + " " + onum
+              + " has been write-locked by an uncommitted transaction.");
     }
 
     // Register that the transaction has locked the object.
@@ -295,8 +297,10 @@ public abstract class ObjectDB {
 
     // Check version numbers.
     int curVersion;
+    long curExpiry;
     try {
       curVersion = getVersion(onum);
+      curExpiry = getExpiry(onum);
     } catch (AccessException e) {
       throw new TransactionPrepareFailedException(versionConflicts,
           e.getMessage());
@@ -304,6 +308,8 @@ public abstract class ObjectDB {
 
     if (curVersion != version) {
       versionConflicts.put(onum, read(onum));
+    } else if (curExpiry > expiry) {
+      longerContracts.put(onum, read(onum));
     }
   }
 
@@ -323,6 +329,9 @@ public abstract class ObjectDB {
    *          If the object modified was out of date, then a new entry will be
    *          added to this map, binding the object's onum to its current
    *          version.
+   * @param longerContracts
+   *          the running set of contracts to send back to the worker which have
+   *          a later expiry than the worker has.
    */
   public final void prepareUpdate(long tid, Principal worker,
       SerializedObject obj, boolean isExtension,
@@ -336,7 +345,8 @@ public abstract class ObjectDB {
       objectLocksFor(onum).lockForWrite(tid);
     } catch (UnableToLockException e) {
       throw new TransactionPrepareFailedException(versionConflicts,
-          obj.getClassName() + " " + onum + " has been locked by an uncommitted transaction.");
+          obj.getClassName() + " " + onum
+              + " has been locked by an uncommitted transaction.");
     }
 
     // Record the updated object. Doing so will also register that the
@@ -384,6 +394,13 @@ public abstract class ObjectDB {
           submap.get(worker).writes.remove(obj);
           longerContracts.put(onum, read(onum));
           objectLocksFor(onum).unlockForWrite(tid);
+          try {
+            objectLocksFor(onum).lockForRead(tid, worker);
+          } catch (UnableToLockException e) {
+            throw new TransactionPrepareFailedException(versionConflicts,
+                obj.getClassName() + " " + onum
+                    + " could not be downgraded to a read lock.");
+          }
         }
       } else {
         // Update the version number on the prepared copy of the object if it's
@@ -492,6 +509,19 @@ public abstract class ObjectDB {
     if (obj == null) throw new AccessException(name, onum);
 
     return obj.getVersion();
+  }
+
+  /**
+   * Returns the expiry on the object stored at a particular onum.
+   *
+   * @throws AccessException
+   *           if no object exists at the given onum.
+   */
+  public long getExpiry(long onum) throws AccessException {
+    SerializedObject obj = read(onum);
+    if (obj == null) throw new AccessException(name, onum);
+
+    return obj.getExpiry();
   }
 
   /**

@@ -609,7 +609,7 @@ public final class TransactionManager {
             public void runImpl() {
               try {
                 Collection<_Impl> creates = current.getCreatesForStore(store);
-                LongKeyMap<Integer> reads =
+                LongKeyMap<Pair<Integer, Long>> reads =
                     current.getReadsForStore(store, false);
                 Collection<Pair<_Impl, Boolean>> writes =
                     current.getWritesForStore(store);
@@ -690,9 +690,10 @@ public final class TransactionManager {
                 try {
                   long onum = obj.getOnum();
                   long oldVersion = -1;
-                  LongKeyMap<Integer> reads =
+                  LongKeyMap<Pair<Integer, Long>> reads =
                       current.getReadsForStore(store, false);
-                  if (reads.containsKey(onum)) oldVersion = reads.get(onum);
+                  if (reads.containsKey(onum))
+                    oldVersion = reads.get(onum).first;
                   logMessage += "\n\t\tBad version for " + obj.getClassName()
                       + " " + obj.getOnum() + " (should be ver. "
                       + obj.getVersion() + " was " + oldVersion
@@ -1374,7 +1375,8 @@ public final class TransactionManager {
           new NamedRunnable("worker freshness check to " + store.name()) {
             @Override
             public void runImpl() {
-              LongKeyMap<Integer> reads = current.getReadsForStore(store, true);
+              LongKeyMap<Pair<Integer, Long>> reads =
+                  current.getReadsForStore(store, true);
               if (store.checkForStaleObjects(reads))
                 nodesWithStaleObjects.add((RemoteNode<?>) store);
             }

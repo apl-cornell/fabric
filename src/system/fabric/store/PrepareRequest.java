@@ -24,13 +24,13 @@ public final class PrepareRequest {
    */
   public final Collection<Pair<SerializedObject, Boolean>> writes;
 
-  /** The object numbers and version numbers of the read objects */
-  public final LongKeyMap<Integer> reads;
+  /** The object numbers, version numbers, and expiries of the read objects */
+  public final LongKeyMap<Pair<Integer, Long>> reads;
 
   /** Create a PrepareRequest with the provided fields */
   public PrepareRequest(long tid, Collection<SerializedObject> creates,
       Collection<Pair<SerializedObject, Boolean>> writes,
-      LongKeyMap<Integer> reads) {
+      LongKeyMap<Pair<Integer, Long>> reads) {
     this.tid = tid;
     this.creates = creates;
     this.writes = writes;

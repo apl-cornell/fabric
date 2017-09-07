@@ -44,6 +44,11 @@ public final class ReadMap {
     private int versionNumber;
 
     /**
+     * The expiry on the object represented by this entry.
+     */
+    private long expiry;
+
+    /**
      * Number of _Impls that have a reference to this entry. This is usually 1,
      * but can be more in certain transient states.
      */
@@ -55,6 +60,7 @@ public final class ReadMap {
       this.obj = obj.$ref;
       this.readLocks = new HashSet<>();
       this.versionNumber = obj.$version;
+      this.expiry = obj.$expiry;
       this.pinCount = 1;
     }
 
@@ -74,6 +80,10 @@ public final class ReadMap {
 
     synchronized int getVersionNumber() {
       return versionNumber;
+    }
+
+    synchronized long getExpiry() {
+      return expiry;
     }
 
     public synchronized void incrementVersion() {
@@ -281,8 +291,7 @@ public final class ReadMap {
 
       if (existing.updateImpl(impl)) return existing;
 
-      if (map.replace(ref.store, ref.onum, existing, newEntry))
-        return newEntry;
+      if (map.replace(ref.store, ref.onum, existing, newEntry)) return newEntry;
     }
   }
 }

@@ -80,7 +80,8 @@ public class InProcessStore extends RemoteStore {
   @Override
   public Pair<LongKeyMap<SerializedObject>, Long> prepareTransaction(long tid,
       boolean singleStore, boolean readOnly, Collection<_Impl> toCreate,
-      LongKeyMap<Integer> reads, Collection<Pair<_Impl, Boolean>> writes)
+      LongKeyMap<Pair<Integer, Long>> reads,
+      Collection<Pair<_Impl, Boolean>> writes)
       throws TransactionPrepareFailedException {
     Collection<SerializedObject> serializedCreates =
         new ArrayList<>(toCreate.size());
@@ -135,7 +136,8 @@ public class InProcessStore extends RemoteStore {
   }
 
   @Override
-  protected List<SerializedObject> getStaleObjects(LongKeyMap<Integer> reads) {
+  protected List<SerializedObject> getStaleObjects(
+      LongKeyMap<Pair<Integer, Long>> reads) {
     try {
       return tm.checkForStaleObjects(getPrincipal(), reads);
     } catch (AccessException e) {

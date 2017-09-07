@@ -369,20 +369,23 @@ public final class Log {
    * @param includeModified
    *          whether to include reads on modified objects.
    */
-  LongKeyMap<Integer> getReadsForStore(Store store, boolean includeModified) {
-    LongKeyMap<Integer> result = new LongKeyHashMap<>();
+  LongKeyMap<Pair<Integer, Long>> getReadsForStore(Store store,
+      boolean includeModified) {
+    LongKeyMap<Pair<Integer, Long>> result = new LongKeyHashMap<>();
     LongKeyMap<ReadMap.Entry> submap = reads.get(store);
     if (submap == null) return result;
 
     for (LongKeyMap.Entry<ReadMap.Entry> entry : submap.entrySet()) {
-      result.put(entry.getKey(), entry.getValue().getVersionNumber());
+      result.put(entry.getKey(), new Pair<>(entry.getValue().getVersionNumber(),
+          entry.getValue().getExpiry()));
     }
 
     if (parent != null) {
       for (ReadMap.Entry entry : readsReadByParent) {
         FabricSoftRef entryRef = entry.getRef();
         if (store.equals(entryRef.store)) {
-          result.put(entryRef.onum, entry.getVersionNumber());
+          result.put(entryRef.onum,
+              new Pair<>(entry.getVersionNumber(), entry.getExpiry()));
         }
       }
     }
@@ -572,14 +575,17 @@ public final class Log {
     // an already ongoing resolve.
     if (!resolving && !unobservedSamples.isEmpty()) {
       Logging.METRICS_LOGGER.fine("PROCESSING SAMPLES IN " + tid);
-      resolving = true;
-      LinkedList<Subject> q = new LinkedList<>();
-      for (Subject s : unobservedSamples.values()) {
-        q.add(s);
+      try {
+        resolving = true;
+        LinkedList<Subject> q = new LinkedList<>();
+        for (Subject s : unobservedSamples.values()) {
+          q.add(s);
+        }
+        AbstractSubject._Impl.processSamples(q);
+        unobservedSamples.clear();
+      } finally {
+        resolving = false;
       }
-      AbstractSubject._Impl.processSamples(q);
-      unobservedSamples.clear();
-      resolving = false;
     }
   }
 
