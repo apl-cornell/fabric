@@ -64,9 +64,10 @@ public abstract class Contract extends AbstractSubject implements Observer {
     long currentTime = System.currentTimeMillis();
     // Only bother advertising if it's better than our current expiry
     // by the buffer amount or if we're close to the current expiration.
-    if (newExpiry > currentTime
-            + (MIN_EXTENSION_FACTOR * (getExpiry() - currentTime))
-                || getExpiry() - currentTime <= EXTENSION_WINDOW) {
+    //if (newExpiry > currentTime
+    //        + (MIN_EXTENSION_FACTOR * (getExpiry() - currentTime))
+    //            || getExpiry() - currentTime <= EXTENSION_WINDOW) {
+    if (getExpiry() - currentTime <= EXTENSION_WINDOW) {
       for (Iterator iter = getObservers().iterator(); iter.hasNext();) {
         Observer parent = (Observer) iter.next();
         if (parent instanceof MetricContract) {
@@ -260,7 +261,7 @@ public abstract class Contract extends AbstractSubject implements Observer {
    * perform asynchronous extensions close to the current expiration time).
    */
   public void attemptExtension() {
-    fabric.common.Logging.METRICS_LOGGER.log(Level.INFO, "ASYNC EXTENSION");
+    fabric.common.Logging.METRICS_LOGGER.log(Level.INFO, "ASYNC EXTENSION OF " + this + " IN " + TransactionManager.getInstance().getCurrentTid());
     refresh();
   }
 }
