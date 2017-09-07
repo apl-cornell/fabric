@@ -44,7 +44,7 @@ public abstract class Contract extends AbstractSubject implements Observer {
   // Note: larger value => less aggressive extensions => lower overhead
   // Note: smaller value => more aggressive extensions => less chance of a
   // warranty going stale unecessarily.
-  public static final double MIN_EXTENSION_FACTOR = 1;
+  public static final double MIN_EXTENSION_FACTOR = 1.05;
   // The drift tolerance factor we'll subtract from times we advertise to
   // others.
   public static final long DRIFT_FACTOR = 100;
@@ -164,7 +164,7 @@ public abstract class Contract extends AbstractSubject implements Observer {
   protected void retract(long newExpiry) {
     // Mark this as modified, which needs to be resolved in this
     // transaction.
-    fabric.common.Logging.METRICS_LOGGER.log(Level.INFO, "REVOCATION");
+    fabric.common.Logging.METRICS_LOGGER.log(Level.INFO, "RETRACTION");
     TransactionManager.getInstance().registerRetraction(this);
     $expiry = newExpiry;
   }

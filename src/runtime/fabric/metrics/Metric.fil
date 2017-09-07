@@ -395,6 +395,7 @@ public abstract class Metric extends AbstractSubject
       weakStats[0] = computeValue(true);
       weakStats[1] = computeVelocity(true);
       weakStats[2] = computeNoise(true);
+      fabric.common.Logging.METRICS_LOGGER.finest("REFRESHED " + this + " to " + weakStats[0] + ", " + weakStats[1] + ", " + weakStats[2]);
     }
   }
 

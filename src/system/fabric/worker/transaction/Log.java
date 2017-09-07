@@ -840,9 +840,9 @@ public final class Log {
       Store store = toBeExtended.getStore();
       if (!extensionsToSend.containsKey(store))
         extensionsToSend.put(store, new ArrayList<DelayedExtension>());
-      DelayedExtension d =
-          new DelayedExtension(toBeExtended.get$$expiry() - EXTENSION_WINDOW,
-              toBeExtended.$getOnum());
+      DelayedExtension d = new DelayedExtension(
+          toBeExtended.fetch().get$$expiry() - EXTENSION_WINDOW,
+          toBeExtended.$getOnum());
       if (!extensionsToSend.get(store).contains(d))
         extensionsToSend.get(store).add(d);
     }
