@@ -151,7 +151,7 @@ public class ConfigProperties {
     this.bounds = new HashMap<>();
     if (this.usePreset) {
       for (int i = 0; i < rawBounds.length; i++) {
-        String[] kv = rawRates[i].split(":");
+        String[] kv = rawBounds[i].split(":");
         this.bounds.put(kv[0], Double.parseDouble(kv[1]));
       }
     }
@@ -161,7 +161,7 @@ public class ConfigProperties {
     this.velocities = new HashMap<>();
     if (this.usePreset) {
       for (int i = 0; i < rawVelocities.length; i++) {
-        String[] kv = rawRates[i].split(":");
+        String[] kv = rawVelocities[i].split(":");
         this.velocities.put(kv[0], Double.parseDouble(kv[1]));
       }
     }
@@ -171,7 +171,7 @@ public class ConfigProperties {
     this.noises = new HashMap<>();
     if (this.usePreset) {
       for (int i = 0; i < rawNoises.length; i++) {
-        String[] kv = rawRates[i].split(":");
+        String[] kv = rawNoises[i].split(":");
         this.noises.put(kv[0], Double.parseDouble(kv[1]));
       }
     }
