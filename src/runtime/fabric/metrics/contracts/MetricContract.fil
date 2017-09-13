@@ -144,6 +144,7 @@ public class MetricContract extends Contract {
     }
 
     // Otherwise find a new one.
+    fabric.common.Logging.METRICS_LOGGER.fine("COORDINATING FOR " + this + " " + bound + " IN " + TransactionManager.getInstance().getCurrentTid());
     EnforcementPolicy oldPolicy = currentPolicy;
     EnforcementPolicy newPolicy = metric.policy(bound);
 

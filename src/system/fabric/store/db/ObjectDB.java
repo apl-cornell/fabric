@@ -393,6 +393,10 @@ public abstract class ObjectDB {
         if (storeExpiry > newExpiry) {
           submap.get(worker).writes.remove(obj);
           longerContracts.put(onum, read(onum));
+          synchronized (submap) {
+            submap.get(worker).writes.remove(obj);
+            submap.get(worker).reads.add(onum);
+          }
           objectLocksFor(onum).unlockForWrite(tid);
           try {
             objectLocksFor(onum).lockForRead(tid, worker);

@@ -366,7 +366,6 @@ public abstract class Metric extends AbstractSubject
   public EnforcementPolicy policy(Bound bound) {
     // This is only called if we're computing a new policy for a *pre-existing*
     // contract so this is when a coordination occurs in the protocol.
-    fabric.common.Logging.METRICS_LOGGER.fine("COORDINATING FOR " + this + " " + bound + " IN " + TransactionManager.getInstance().getCurrentTid());
     return policy(bound, false);
   }
 
