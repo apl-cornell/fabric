@@ -124,7 +124,7 @@ public class MetricContract extends Contract {
    * as needed.
    */
   /*@Override*/
-  protected boolean refresh() {
+  protected boolean refresh(boolean asyncExtension) {
     // If we haven't activated yet, this is a bad operation.  Stop.
     if (!isActivated()) {
       fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "CONTRACT INACTIVE");
@@ -142,6 +142,10 @@ public class MetricContract extends Contract {
         return result;
       }
     }
+    // Async extensions should only update to a new expiry using the existing
+    // policy.
+    if (asyncExtension)
+      return false;
 
     // Otherwise find a new one.
     fabric.common.Logging.METRICS_LOGGER.fine("COORDINATING FOR " + this + " " + bound + " IN " + TransactionManager.getInstance().getCurrentTid());

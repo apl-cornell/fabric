@@ -231,7 +231,7 @@ public abstract class Contract extends AbstractSubject implements Observer {
    * @return true iff the contract's expiration was retracted as a result of
    *         this operation.
    */
-  protected abstract boolean refresh();
+  protected abstract boolean refresh(boolean asyncExtension);
 
   /*@Override*/
   public boolean handleUpdates() {
@@ -239,7 +239,7 @@ public abstract class Contract extends AbstractSubject implements Observer {
     // Funny implication of this is that if something goes stale before it's
     // checked, it stays stale. Probably the right behavior?
     if (valid())
-      return refresh();
+      return refresh(false);
     fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "CONTRACT INVALID");
     return false;
   }
@@ -262,6 +262,6 @@ public abstract class Contract extends AbstractSubject implements Observer {
    */
   public void attemptExtension() {
     fabric.common.Logging.METRICS_LOGGER.log(Level.INFO, "ASYNC EXTENSION OF " + this + " IN " + TransactionManager.getInstance().getCurrentTid());
-    refresh();
+    refresh(true);
   }
 }
