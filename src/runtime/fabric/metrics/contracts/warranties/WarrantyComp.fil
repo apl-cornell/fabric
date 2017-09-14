@@ -44,18 +44,18 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
   public WarrantyValue/*T*/ apply(long time) {
     // TODO recompute but don't replace if current one is pending and we
     // compute the same value
-    fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "Starting " + this);
+    fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Starting " + this);
     boolean loop = false;
     atomic {
       loop = curVal == null || !curVal.contract.valid();
     }
     while (loop) {
-      fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "Iterating " + this);
+      fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Iterating " + this);
       if (curVal != null) {
         curVal.contract.removeObserver(this);
       }
 
-      fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "Updating " + this);
+      fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Updating " + this);
       WarrantyValue newVal = updatedVal(System.currentTimeMillis());
 
       // If newVal's contract is null, this indicates that the programmer
@@ -76,17 +76,17 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
       //fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "Estimating " + this);
       //curVal.contract.getMetric().refreshWeakEstimates();
 
-      fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "Activating " + this);
+      fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Activating " + this);
       curVal.contract.activate();
-      fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "Updated to " + curVal);
+      fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Updated to " + curVal);
 
-      fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "Observing " + this);
+      fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Observing " + this);
       curVal.contract.addObserver(this);
       atomic {
         loop = curVal == null || !curVal.contract.valid();
       }
     }
-    fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "Finished " + this);
+    fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Finished " + this);
     return curVal;
   }
 

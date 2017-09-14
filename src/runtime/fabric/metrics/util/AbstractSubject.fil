@@ -88,9 +88,7 @@ public abstract class AbstractSubject implements Subject {
       LinkedList/*<Observer>*/ delayed = new LinkedList/*<>*/();
       while (!unobserved.isEmpty()) {
         SampledMetric sm = (SampledMetric) unobserved.poll();
-        fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "HANDLING OBSERVATION OF " + sm);
-        //fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "AWAITING OBSERVATION OF " + unobserved);
-        //queue.addAll(sm.getObservers());
+        fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "HANDLING OBSERVATION OF " + sm);
         Iterator obsIter = sm.getObservers().iterator();
         while (obsIter.hasNext()) {
           queue.add(obsIter.next());
@@ -98,7 +96,6 @@ public abstract class AbstractSubject implements Subject {
 
         while (!queue.isEmpty()) {
           Observer unhandled = (Observer) queue.poll();
-          //fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "CHECKING OBSERVER " + unhandled);
           // We're handling a delayed item, mark it as not delayed for
           // now. We'll delay it again if it's still not ready.
           delayed.remove(unhandled);
@@ -113,10 +110,10 @@ public abstract class AbstractSubject implements Subject {
           }
           // If this has no other pending sampled events, process it.
           if (!needToWait) {
-            fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "HANDLING OBSERVER " + unhandled);
+            fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "HANDLING OBSERVER " + unhandled);
             boolean modified = unhandled.handleUpdates();
             if (unhandled instanceof Subject && modified) {
-              fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "QUEUING PARENTS OF OBSERVER " + unhandled);
+              fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "QUEUING PARENTS OF OBSERVER " + unhandled);
               //queue.addAll(parents);
               Iterator parentIter = ((Subject) unhandled).getObservers().iterator();
               while (parentIter.hasNext()) {
@@ -125,7 +122,7 @@ public abstract class AbstractSubject implements Subject {
             }
           } else {
             // mark as delayed for later processing
-            fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "DELAYING OBSERVER " + unhandled);
+            fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "DELAYING OBSERVER " + unhandled);
             delayed.add(unhandled);
           }
           // If there's nothing more, let's get back to delayed items that

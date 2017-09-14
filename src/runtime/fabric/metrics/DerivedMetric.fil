@@ -150,10 +150,10 @@ public abstract class DerivedMetric extends Metric implements Observer {
 
   /*@Override*/
   public boolean handleUpdates() {
-    fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "CHECKING FOR UPDATE ON DERIVED METRIC");
+    fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "CHECKING FOR UPDATE ON DERIVED METRIC");
     double newValue = computeValue(false);
     if (newValue != lastStats[0]) {
-      fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "UPDATE ON DERIVED METRIC");
+      fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "UPDATE ON DERIVED METRIC");
       lastStats[0] = newValue;
       lastStats[1] = computeVelocity(false);
       lastStats[2] = computeNoise(false);

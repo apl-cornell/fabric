@@ -574,7 +574,7 @@ public final class Log {
     // Skip if there's nothing to handle or if this was called in the middle of
     // an already ongoing resolve.
     if (!resolving && !unobservedSamples.isEmpty()) {
-      Logging.METRICS_LOGGER.fine("PROCESSING SAMPLES IN " + tid);
+      Logging.METRICS_LOGGER.finer("PROCESSING SAMPLES IN " + tid);
       try {
         resolving = true;
         LinkedList<Subject> q = new LinkedList<>();

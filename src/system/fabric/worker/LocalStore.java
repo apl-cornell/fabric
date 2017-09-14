@@ -225,7 +225,7 @@ public final class LocalStore implements Store, Serializable {
                   // done before we remove the mapping.
                   synchronized (extension) {
                     // Run a transaction handling updates
-                    Logging.METRICS_LOGGER.log(Level.INFO,
+                    Logging.METRICS_LOGGER.log(Level.FINER,
                         "RUNNING EXTENSION OF {0}", extension.onum);
                     Worker.runInTopLevelTransaction(new Code<Void>() {
                       @Override

@@ -450,10 +450,10 @@ public class TransactionManager {
                   // Don't want new extensions to walk away after this is
                   // done before we remove the mapping.
                   // Run a transaction handling updates
-                  Logging.METRICS_LOGGER.log(Level.INFO,
+                  Logging.METRICS_LOGGER.log(Level.FINER,
                       "RUNNING EXTENSION OF {0}", extension.onum);
                   synchronized (extension) {
-                    Logging.METRICS_LOGGER.log(Level.FINE,
+                    Logging.METRICS_LOGGER.log(Level.FINER,
                         "SYNCHRONIZED EXTENSION OF {0}", extension.onum);
                     Worker.runInTopLevelTransaction(new Code<Void>() {
                       @Override
@@ -468,7 +468,7 @@ public class TransactionManager {
                     }, true);
                     unresolvedExtensions.remove(extension.onum, extension);
                   }
-                  Logging.METRICS_LOGGER.log(Level.FINE,
+                  Logging.METRICS_LOGGER.log(Level.FINER,
                       "FINISHED EXTENSION OF {0}", extension.onum);
                 }
               });
