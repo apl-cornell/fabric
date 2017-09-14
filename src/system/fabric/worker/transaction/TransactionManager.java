@@ -750,6 +750,7 @@ public final class TransactionManager {
     } else if (current.expiry() < time[0]) {
       Logging.log(WORKER_TRANSACTION_LOGGER, Level.INFO,
           "{0} error committing: prepare too late", current);
+      abortTransaction(Collections.<RemoteNode<?>> emptySet());
       throw new TransactionRestartingException(current.tid);
     } else {
       synchronized (current.commitState) {
