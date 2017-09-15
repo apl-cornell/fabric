@@ -11,3 +11,4 @@
 /*.tar.gz
 /tmp
 /extra.properties
+etc/ca/ca.srl
