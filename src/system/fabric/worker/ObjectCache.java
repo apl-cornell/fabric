@@ -239,6 +239,24 @@ public final class ObjectCache {
     }
 
     /**
+     * Updates the object's expiry in place.
+     */
+    public synchronized void setExpiry(long newExpiry) {
+      if (next != null) {
+        next.setExpiry(newExpiry);
+        return;
+      }
+      if (impl != null) {
+        impl.$expiry = newExpiry;
+        return;
+      }
+      if (serialized != null) {
+        serialized.setExpiry(newExpiry);
+        return;
+      }
+    }
+
+    /**
      * Obtains a reference to the object's update label. (Returns null if this
      * entry has been evicted.)
      */
@@ -472,8 +490,14 @@ public final class ObjectCache {
       // Check if object in current entry is an older version.
       if (curEntry.getVersion() > update.getVersion()
           || (curEntry.getVersion() == update.getVersion()
-              && curEntry.getExpiry() >= update.getExpiry()))
+              && curEntry.getExpiry() == update.getExpiry()))
         return;
+
+      if (curEntry.getVersion() == update.getVersion()
+          && curEntry.getExpiry() < update.getExpiry()) {
+        curEntry.setExpiry(update.getExpiry());
+        return;
+      }
 
       curEntry.evict();
     }

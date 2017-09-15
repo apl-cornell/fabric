@@ -1280,9 +1280,6 @@ public final class TransactionManager {
    * Registers a contract that is retracted by this transaction.
    */
   public void registerRetraction(Contract retracted) {
-    // Make sure it's registered as written.
-    // TODO: I'm not actually convinced this should be necessary.
-    registerWrite((_Impl) retracted.fetch());
     synchronized (current.retractedContracts) {
       current.retractedContracts.put(retracted, retracted);
     }
@@ -1298,9 +1295,6 @@ public final class TransactionManager {
    * Registers a contract that is extended by this transaction.
    */
   public void registerExtension(Contract extended) {
-    // Make sure it's registered as written.
-    // TODO: I'm not actually convinced this should be necessary.
-    registerWrite((_Impl) extended.fetch());
     synchronized (current.retractedContracts) {
       if (current.retractedContracts.containsKey(extended)) return;
     }
