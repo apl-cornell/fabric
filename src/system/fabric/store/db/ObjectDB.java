@@ -710,10 +710,10 @@ public abstract class ObjectDB {
             (fabric.util.HashMap._Impl) new fabric.util.HashMap._Impl(store)
                 .fabric$util$HashMap$().fetch();
         map.$forceRenumber(ONumConstants.ROOT_MAP);
-        // Create the DerivedMetric map
+        // Create the DerivedMetric map with initial size of 2^16
         fabric.util.HashMap._Impl derivedMap =
             (fabric.util.HashMap._Impl) new fabric.util.HashMap._Impl(store)
-                .fabric$util$HashMap$().fetch();
+                .fabric$util$HashMap$(65536).fetch();
         derivedMap.$forceRenumber(ONumConstants.DERIVED_MAP);
 
         return null;
