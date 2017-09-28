@@ -381,7 +381,7 @@ public abstract class Metric extends AbstractSubject
   public void refreshWeakEstimates() {
     if (TransactionManager.getInstance().getCurrentLog() == null) {
       RemoteWorker w = Worker.getWorker().getWorker($getStore().name());
-      refreshLocally@w();
+      refreshLocally_remote@w(null);
     } else {
       refreshLocally();
     }

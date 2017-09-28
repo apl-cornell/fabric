@@ -65,6 +65,10 @@ public class MetricContract extends Contract {
     return (long) (time + ((m.value() - bound.value(time)) / adjustedRate));
   }
 
+  public void activate_remote(fabric.lang.security.Principal caller) {
+    activate();
+  }
+
   /*@Override*/
   public void activate() {
     atomic {
@@ -78,31 +82,26 @@ public class MetricContract extends Contract {
     //metric.refreshWeakEstimates();
 
     // Determine children
-    fabric.common.Logging.METRICS_LOGGER.finer("CREATING A POLICY FOR MC " + $getOnum());
+    fabric.common.Logging.METRICS_LOGGER.info("CREATING A POLICY FOR MC " + this);
     EnforcementPolicy startPol = null;
     atomic {
       startPol = metric.policy(bound, true);
     }
 
     // Activate new children
-    fabric.common.Logging.METRICS_LOGGER.finer("ACTIVATING POLICY FOR MC " + $getOnum());
+    fabric.common.Logging.METRICS_LOGGER.info("ACTIVATING POLICY FOR MC " + this);
     startPol.activate();
 
-    if (TransactionManager.getInstance().getCurrentLog() == null) {
-      RemoteWorker w = Worker.getWorker().getWorker($getStore().name());
-      finishActivating@w(startPol);
-    } else {
-      finishActivating(startPol);
-    }
-
     // Set the expiry and free it up
-    fabric.common.Logging.METRICS_LOGGER.finer("ACTIVATED MC " + $getOnum());
+    finishActivating(startPol);
+
+    fabric.common.Logging.METRICS_LOGGER.info("ACTIVATED MC " + this + " IN " + TransactionManager.getInstance().getCurrentLog());
   }
 
   public void finishActivating(EnforcementPolicy p) {
     // Set the expiry and free it up
     atomic {
-      fabric.common.Logging.METRICS_LOGGER.finer("ACTIVATING MC " + $getOnum());
+      fabric.common.Logging.METRICS_LOGGER.info("ACTIVATING MC " + this);
       currentPolicy = p;
       $expiry = currentPolicy.expiry();
       super.activate();
@@ -111,10 +110,6 @@ public class MetricContract extends Contract {
         getMetric().addContract(this);
       }
     }
-  }
-
-  public void finishActivating_remote(fabric.lang.security.Principal caller, EnforcementPolicy p) {
-    finishActivating(p);
   }
 
   /**
