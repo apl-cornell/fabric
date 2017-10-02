@@ -382,6 +382,11 @@ public class RemoteStore extends RemoteNode<RemoteStore>
     cache.evict(onum);
   }
 
+  @Override
+  public void evict(long onum, int version) {
+    cache.evict(onum, version);
+  }
+
   /**
    * Updates the worker's cache of objects that originate from this store. If an
    * object with the given onum exists in cache, it is evicted and replaced with

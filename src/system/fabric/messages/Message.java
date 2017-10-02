@@ -133,15 +133,15 @@ public abstract class Message<R extends Message.Response, E extends FabricExcept
    *           If a malformed message is sent, or in the case of a failure in
    *           the <code>DataInput</code> provided.
    */
-  public static Message<?, ?> receive(DataInput in) throws IOException {
+  public static Message<?, ?> receive(DataInput in, RemoteIdentity<RemoteWorker> client) throws IOException {
     Message<?, ?> m = null;
     try {
       MessageType messageType = MessageType.values()[in.readByte()];
 
       m = messageType.parse(in);
 
-      Logging.log(NETWORK_MESSAGE_RECEIVE_LOGGER, Level.FINE, "Received {0}",
-          messageType);
+      Logging.log(NETWORK_MESSAGE_RECEIVE_LOGGER, Level.FINE, "Received {0} from {1}",
+          messageType, client);
 
       return m;
 
@@ -160,7 +160,7 @@ public abstract class Message<R extends Message.Response, E extends FabricExcept
    * @throws IOException
    *           if the provided <code>DataOutput</code> fails.
    */
-  public void respond(DataOutput out, Message.Response response)
+  public void respond(DataOutput out, Message.Response response, RemoteIdentity<RemoteWorker> client)
       throws IOException {
     // Signal that no error occurred.
     out.writeBoolean(false);
@@ -171,7 +171,7 @@ public abstract class Message<R extends Message.Response, E extends FabricExcept
     writeResponse(out, r);
 
     Logging.log(NETWORK_MESSAGE_SEND_LOGGER, Level.FINE,
-        "Sent successful response to {0}", messageType);
+        "Sent successful response to {0} from {1}", messageType, client);
   }
 
   /**
@@ -184,7 +184,7 @@ public abstract class Message<R extends Message.Response, E extends FabricExcept
    * @throws IOException
    *           if the provided <code>DataOutput</code> fails.
    */
-  public void respond(DataOutput out, FabricException e) throws IOException {
+  public void respond(DataOutput out, FabricException e, RemoteIdentity<RemoteWorker> client) throws IOException {
     // Clear out the stack trace before sending an exception out.
     e.setStackTrace(new StackTraceElement[0]);
 
@@ -195,7 +195,7 @@ public abstract class Message<R extends Message.Response, E extends FabricExcept
     writeObject(out, e);
 
     Logging.log(NETWORK_MESSAGE_SEND_LOGGER, Level.FINE,
-        "Sent error response to {0}", messageType);
+        "Sent error response to {0} from {1}", messageType, client);
   }
 
   // ////////////////////////////////////////////////////////////////////////////
@@ -241,6 +241,12 @@ public abstract class Message<R extends Message.Response, E extends FabricExcept
       @Override
       DissemReadMessage parse(DataInput in) throws IOException {
         return new DissemReadMessage(in);
+      }
+    },
+    ASYNC_CALL {
+      @Override
+      AsyncCallMessage parse(DataInput in) throws IOException {
+        return new AsyncCallMessage(in);
       }
     },
     REMOTE_CALL {

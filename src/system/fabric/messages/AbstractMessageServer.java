@@ -76,14 +76,14 @@ public abstract class AbstractMessageServer implements Runnable, MessageHandler 
                       new DataOutputStream(connection.getOutputStream());
 
                   while (true) {
-                    Message<?, ?> message = Message.receive(in);
+                    Message<?, ?> message = Message.receive(in, client);
                     try {
                       Message.Response response =
                           message.dispatch(client,
                               AbstractMessageServer.this);
-                      message.respond(out, response);
+                      message.respond(out, response, client);
                     } catch (FabricException e) {
-                      message.respond(out, e);
+                      message.respond(out, e, client);
                     }
 
                     out.flush();

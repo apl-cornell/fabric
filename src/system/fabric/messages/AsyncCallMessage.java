@@ -10,24 +10,28 @@ import java.io.ObjectOutputStream;
 import java.lang.reflect.Method;
 
 import fabric.common.ClassRef;
-import fabric.common.TransactionID;
 import fabric.common.exceptions.ProtocolError;
 import fabric.common.net.RemoteIdentity;
+import fabric.common.util.LongKeyMap;
+import fabric.common.util.Oid;
+import fabric.common.util.OidKeyHashMap;
 import fabric.lang.Object._Proxy;
 import fabric.lang.security.Principal;
+import fabric.worker.Store;
+import fabric.worker.Worker;
 import fabric.worker.remote.RemoteCallException;
 import fabric.worker.remote.RemoteWorker;
-import fabric.worker.remote.WriterMap;
 
-public class RemoteCallMessage
-    extends Message<RemoteCallMessage.Response, RemoteCallException>
+/**
+ * A remote call that does not happen in a single top-level transaction.
+ */
+public class AsyncCallMessage
+    extends Message<AsyncCallMessage.Response, RemoteCallException>
     implements CallMessage {
   //////////////////////////////////////////////////////////////////////////////
   // message  contents                                                        //
   //////////////////////////////////////////////////////////////////////////////
 
-  public final TransactionID tid;
-  public final WriterMap writerMap;
   public final ClassRef receiverType;
   public final _Proxy receiver;
   public final String methodName;
@@ -35,8 +39,6 @@ public class RemoteCallMessage
   public final Object[] args;
 
   /**
-   * @param tid
-   *          The identifier for the transaction that is making the remote call.
    * @param receiver
    *          The object that is receiving the call.
    * @param methodName
@@ -44,17 +46,14 @@ public class RemoteCallMessage
    * @param args
    *          The arguments to the method.
    */
-  public RemoteCallMessage(TransactionID tid, WriterMap writerMap,
-      ClassRef receiverType, _Proxy receiver, String methodName,
-      Class<?>[] parameterTypes, Object[] args) {
-    super(MessageType.REMOTE_CALL, RemoteCallException.class);
+  public AsyncCallMessage(ClassRef receiverType, _Proxy receiver,
+      String methodName, Class<?>[] parameterTypes, Object[] args) {
+    super(MessageType.ASYNC_CALL, RemoteCallException.class);
 
     if (parameterTypes == null ? args != null
         : parameterTypes.length != args.length)
       throw new IllegalArgumentException();
 
-    this.tid = tid;
-    this.writerMap = writerMap;
     this.receiverType = receiverType;
     this.receiver = receiver;
     this.methodName = methodName;
@@ -68,11 +67,11 @@ public class RemoteCallMessage
 
   public static class Response implements Message.Response {
     public final Object result;
-    public final WriterMap writerMap;
+    public final OidKeyHashMap<Integer> modifiedObjects;
 
-    public Response(Object result, WriterMap writerMap) {
+    public Response(Object result, OidKeyHashMap<Integer> modifiedObjects) {
       this.result = result;
-      this.writerMap = writerMap;
+      this.modifiedObjects = modifiedObjects;
     }
   }
 
@@ -92,12 +91,6 @@ public class RemoteCallMessage
 
   @Override
   protected void writeMessage(DataOutput out) throws IOException {
-    out.writeBoolean(tid != null);
-    if (tid != null) tid.write(out);
-
-    out.writeBoolean(writerMap != null);
-    if (writerMap != null) writerMap.write(out);
-
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     ObjectOutputStream oos = new ObjectOutputStream(baos);
     receiverType.write(oos);
@@ -128,16 +121,8 @@ public class RemoteCallMessage
   }
 
   /* readMessage */
-  protected RemoteCallMessage(DataInput in) throws IOException {
-    super(MessageType.REMOTE_CALL, RemoteCallException.class);
-
-    if (in.readBoolean())
-      this.tid = new TransactionID(in);
-    else this.tid = null;
-
-    if (in.readBoolean())
-      this.writerMap = new WriterMap(in);
-    else this.writerMap = null;
+  protected AsyncCallMessage(DataInput in) throws IOException {
+    super(MessageType.ASYNC_CALL, RemoteCallException.class);
 
     byte[] buf = new byte[in.readInt()];
     in.readFully(buf);
@@ -197,17 +182,24 @@ public class RemoteCallMessage
   protected Response readResponse(DataInput in) throws IOException {
 
     Object result;
-    WriterMap writerMap;
+    OidKeyHashMap<Integer> modifiedObjects;
 
     if (in.readBoolean())
       result = Message.readRef(fabric.lang.Object.class, in);
     else result = readObject(in, Object.class);
 
-    if (in.readBoolean())
-      writerMap = new WriterMap(in);
-    else writerMap = null;
+    if (in.readBoolean()) {
+      int size = in.readInt();
+      modifiedObjects = new OidKeyHashMap<>();
+      for (int i = 0; i < size; i++)
+        modifiedObjects.put(
+            new Oid(Worker.getWorker().getStore(in.readUTF()), in.readLong()),
+            in.readInt());
+    } else {
+      modifiedObjects = null;
+    }
 
-    return new Response(result, writerMap);
+    return new Response(result, modifiedObjects);
   }
 
   @Override
@@ -219,8 +211,18 @@ public class RemoteCallMessage
       writeObject(out, r.result);
     }
 
-    out.writeBoolean(r.writerMap != null);
-    if (r.writerMap != null) r.writerMap.write(out);
+    out.writeBoolean(r.modifiedObjects != null);
+    if (r.modifiedObjects != null) {
+      out.writeInt(r.modifiedObjects.size());
+      for (Store s : r.modifiedObjects.storeSet()) {
+        LongKeyMap<Integer> versions = r.modifiedObjects.get(s);
+        for (LongKeyMap.Entry<Integer> e : versions.entrySet()) {
+          out.writeUTF(s.name());
+          out.writeLong(e.getKey());
+          out.writeInt(e.getValue());
+        }
+      }
+    }
   }
 
 }

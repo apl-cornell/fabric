@@ -37,13 +37,14 @@ import fabric.common.TransactionID;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
 import fabric.lang.Object._Impl;
 import fabric.lang.Object._Proxy;
 import fabric.lang.security.Label;
 import fabric.lang.security.SecurityCache;
+import fabric.messages.AsyncCallMessage;
 import fabric.metrics.SampledMetric;
-import fabric.metrics.contracts.Contract;
 import fabric.net.RemoteNode;
 import fabric.net.UnreachableNodeException;
 import fabric.store.InProcessStore;
@@ -114,6 +115,12 @@ public final class TransactionManager {
    * The innermost running transaction for the thread being managed.
    */
   private Log current;
+
+  /**
+   * If this thread is handling an {@link AsyncCallMessage}, this is the list of
+   * oids for which writes have committed.
+   */
+  protected OidKeyHashMap<Integer> committedWrites;
 
   /**
    * A debugging switch for storing a stack trace each time a write lock is
@@ -954,6 +961,14 @@ public final class TransactionManager {
       // Own the object. The call to ensureOwnership is responsible for adding
       // the object to the set of created objects.
       ensureOwnership(obj);
+
+      // The object has been written, so it's not being extended.
+      synchronized (current.extendedContracts) {
+        current.extendedContracts.remove(obj);
+      }
+      synchronized (current.delayedExtensions) {
+        current.delayedExtensions.remove(obj);
+      }
     } finally {
       Timing.TXLOG.end();
     }
@@ -1073,8 +1088,74 @@ public final class TransactionManager {
         ensureWriteLock(obj);
         ensureObjectUpToDate(obj);
         ensureOwnership(obj);
+
+        // The object has been written, so it's not being extended.
+        synchronized (current.extendedContracts) {
+          current.extendedContracts.remove(obj);
+        }
+        synchronized (current.delayedExtensions) {
+          current.delayedExtensions.remove(obj);
+        }
       } finally {
         Timing.TXLOG.end();
+      }
+    }
+
+    return needTransaction;
+
+  }
+
+  /**
+   * This should be called <i>before</i> the object's expiry is modified.
+   *
+   * @return whether a new (top-level) transaction was created.
+   */
+  public boolean registerExpiryWrite(_Impl obj, long oldExpiry,
+      long newExpiry) {
+    boolean needTransaction = (current == null);
+    if (needTransaction) startTransaction();
+
+    synchronized (obj) {
+      if (obj.$writer == current
+          && obj.writerMapVersion == current.writerMap.version && obj.$isOwned)
+        return needTransaction;
+
+      // If this is the only write, it's an extension.
+      boolean extension = oldExpiry < newExpiry;
+      synchronized (current.writes) {
+        if (current.writes.contains(obj)) extension = false;
+      }
+      synchronized (current.creates) {
+        if (current.creates.contains(obj)) extension = false;
+      }
+
+      try {
+        Timing.TXLOG.begin();
+        ensureWriteLock(obj);
+        ensureObjectUpToDate(obj);
+        ensureOwnership(obj);
+      } finally {
+        Timing.TXLOG.end();
+      }
+
+      if (extension) {
+        synchronized (current.extendedContracts) {
+          current.extendedContracts.put(obj, obj);
+        }
+      } else {
+        synchronized (current.extendedContracts) {
+          current.extendedContracts.remove(obj);
+        }
+        synchronized (current.delayedExtensions) {
+          current.delayedExtensions.remove(obj);
+        }
+      }
+
+      // Track retractions
+      if (oldExpiry >= newExpiry) {
+        synchronized (current.retractedContracts) {
+          current.retractedContracts.put(obj, obj);
+        }
       }
     }
 
@@ -1277,49 +1358,25 @@ public final class TransactionManager {
   }
 
   /**
-   * Registers a contract that is retracted by this transaction.
-   */
-  public void registerRetraction(Contract retracted) {
-    synchronized (current.retractedContracts) {
-      current.retractedContracts.put(retracted, retracted);
-    }
-    synchronized (current.extendedContracts) {
-      current.extendedContracts.remove(retracted);
-    }
-    synchronized (current.delayedExtensions) {
-      current.delayedExtensions.remove(retracted);
-    }
-  }
-
-  /**
-   * Registers a contract that is extended by this transaction.
-   */
-  public void registerExtension(Contract extended) {
-    synchronized (current.retractedContracts) {
-      if (current.retractedContracts.containsKey(extended)) return;
-    }
-    synchronized (current.extendedContracts) {
-      current.extendedContracts.put(extended, extended);
-    }
-    synchronized (current.delayedExtensions) {
-      current.delayedExtensions.remove(extended);
-    }
-  }
-
-  /**
    * Registers a contract that can and should be extended later closer to the
    * expiration.  This will be done by sending an extension message after the
    * transaction completes.
    */
-  public void registerDelayedExtension(Contract toBeExtended) {
-    synchronized (current.retractedContracts) {
-      if (current.retractedContracts.containsKey(toBeExtended)) return;
-    }
-    synchronized (current.extendedContracts) {
-      if (current.extendedContracts.containsKey(toBeExtended)) return;
-    }
-    synchronized (current.delayedExtensions) {
-      current.delayedExtensions.put(toBeExtended, toBeExtended);
+  public void registerDelayedExtension(fabric.lang.Object toBeExtended) {
+    _Impl obj = (_Impl) toBeExtended.fetch();
+    synchronized (obj) {
+      synchronized (current.writes) {
+        if (current.writes.contains(obj)) return;
+      }
+      synchronized (current.creates) {
+        if (current.creates.contains(obj)) return;
+      }
+      synchronized (current.extendedContracts) {
+        if (current.extendedContracts.containsKey(obj)) return;
+      }
+      synchronized (current.delayedExtensions) {
+        current.delayedExtensions.put(obj, obj);
+      }
     }
   }
 
@@ -1489,6 +1546,32 @@ public final class TransactionManager {
       if (!current.workersCalled.contains(worker))
         current.workersCalled.add(worker);
     }
+  }
+
+  /**
+   * Starts tracking for a new async call being handled in this thread.
+   * Initializes a new committedWrites list.
+   */
+  public void startAsyncCall() {
+    if (committedWrites == null) committedWrites = new OidKeyHashMap<>();
+  }
+
+  /**
+   * Finishes tracking for a new async call being handled in this thread.
+   * @return The list of oids for which writes have been committed.
+   */
+  public OidKeyHashMap<Integer> finishAsyncCall() {
+    OidKeyHashMap<Integer> writes = committedWrites;
+    METRICS_LOGGER.fine("SIZE OF EVICT IS " + writes.size());
+    committedWrites = null;
+    return writes;
+  }
+
+  /**
+   * Add a batch of committed writes to the running list.
+   */
+  public void addCommittedWrites(OidKeyHashMap<Integer> writes) {
+    if (committedWrites != null) committedWrites.putAll(writes);
   }
 
   /**

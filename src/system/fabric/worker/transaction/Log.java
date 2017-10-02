@@ -21,6 +21,7 @@ import fabric.common.Timing;
 import fabric.common.TransactionID;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.Oid;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
 import fabric.common.util.WeakReferenceArrayList;
@@ -133,18 +134,18 @@ public final class Log {
   /**
    * A collection of {@link Contract}s that are extended by this transaction
    */
-  protected final OidKeyHashMap<Contract> extendedContracts;
+  protected final OidKeyHashMap<_Impl> extendedContracts;
 
   /**
    * A collection of {@link Contract}s that are retracted by this transaction
    */
-  protected final OidKeyHashMap<Contract> retractedContracts;
+  protected final OidKeyHashMap<_Impl> retractedContracts;
 
   /**
    * A collection of {@link Contract}s that should be extended after this
    * transaction
    */
-  protected final OidKeyHashMap<Contract> delayedExtensions;
+  protected final OidKeyHashMap<_Impl> delayedExtensions;
 
   /**
    * A map from RemoteStores to maps from onums to contracts that were longer on
@@ -657,7 +658,7 @@ public final class Log {
       parent.unobservedSamples.putAll(unobservedSamples);
     }
 
-    for (Contract obs : retractedContracts.values()) {
+    for (_Impl obs : retractedContracts.values()) {
       synchronized (parent.retractedContracts) {
         if (!parent.retractedContracts.containsKey(obs))
           parent.retractedContracts.put(obs, obs);
@@ -672,7 +673,7 @@ public final class Log {
       }
     }
 
-    for (Contract obs : extendedContracts.values()) {
+    for (_Impl obs : extendedContracts.values()) {
       synchronized (parent.delayedExtensions) {
         if (parent.delayedExtensions.containsKey(obs))
           parent.delayedExtensions.remove(obs);
@@ -686,7 +687,7 @@ public final class Log {
       }
     }
 
-    for (Contract obs : delayedExtensions.values()) {
+    for (_Impl obs : delayedExtensions.values()) {
       synchronized (parent.retractedContracts) {
         if (parent.retractedContracts.containsKey(obs)) continue;
       }
@@ -811,6 +812,11 @@ public final class Log {
         // Signal any waiting readers/writers.
         if (obj.$numWaiting > 0) obj.notifyAll();
       }
+
+      // Note writes that committed so they can be flushed at the caller.
+      TransactionManager tm = TransactionManager.getInstance();
+      if (tm.committedWrites != null)
+        tm.committedWrites.put(new Oid(obj), obj.$version);
     }
 
     // Release write locks on created objects and set version numbers.
@@ -842,13 +848,13 @@ public final class Log {
 
     // Queue up extension transactions
     Map<Store, List<DelayedExtension>> extensionsToSend = new HashMap<>();
-    for (Contract toBeExtended : delayedExtensions.values()) {
-      Store store = toBeExtended.getStore();
+    for (_Impl toBeExtended : delayedExtensions.values()) {
+      Store store = toBeExtended.$getStore();
       if (!extensionsToSend.containsKey(store))
         extensionsToSend.put(store, new ArrayList<DelayedExtension>());
-      DelayedExtension d = new DelayedExtension(
-          toBeExtended.fetch().get$$expiry() - EXTENSION_WINDOW,
-          toBeExtended.$getOnum());
+      DelayedExtension d =
+          new DelayedExtension(toBeExtended.get$$expiry() - EXTENSION_WINDOW,
+              toBeExtended.$getOnum());
       if (!extensionsToSend.get(store).contains(d))
         extensionsToSend.get(store).add(d);
     }

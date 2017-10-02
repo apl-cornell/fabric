@@ -706,13 +706,14 @@ public interface Object {
 
     @Override
     public final long get$$expiry() {
+      TransactionManager.getInstance().registerRead(this);
       return $expiry;
     }
 
     @Override
     public final long set$$expiry(long expiry) {
       TransactionManager tm = TransactionManager.getInstance();
-      boolean transactionCreated = tm.registerWrite(this);
+      boolean transactionCreated = tm.registerExpiryWrite(this, this.$expiry, expiry);
       this.$expiry = expiry;
       if (transactionCreated) tm.commitTransaction();
       return $expiry;

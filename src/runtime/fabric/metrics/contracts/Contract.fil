@@ -71,11 +71,10 @@ public abstract class Contract extends AbstractSubject implements Observer {
       for (Iterator iter = getObservers().iterator(); iter.hasNext();) {
         Observer parent = (Observer) iter.next();
         if (parent instanceof MetricContract) {
-          tm.registerDelayedExtension((Contract) parent);
+          tm.registerDelayedExtension(parent);
         }
       }
       fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "SYNCH EXTENSION");
-      tm.registerExtension(this);
       $expiry = newExpiry;
     } else {
       // Wait until later to extend, we don't want to get too eager.
@@ -166,7 +165,6 @@ public abstract class Contract extends AbstractSubject implements Observer {
     // Mark this as modified, which needs to be resolved in this
     // transaction.
     fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "RETRACTION");
-    TransactionManager.getInstance().registerRetraction(this);
     $expiry = newExpiry;
   }
 

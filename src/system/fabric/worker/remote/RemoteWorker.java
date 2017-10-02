@@ -21,6 +21,7 @@ import fabric.lang.Object._Impl;
 import fabric.lang.Object._Proxy;
 import fabric.lang.security.Principal;
 import fabric.messages.AbortTransactionMessage;
+import fabric.messages.AsyncCallMessage;
 import fabric.messages.CommitTransactionMessage;
 import fabric.messages.DirtyReadMessage;
 import fabric.messages.InterWorkerStalenessMessage;
@@ -78,18 +79,18 @@ public class RemoteWorker extends RemoteNode<RemoteWorker> {
     tm.registerRemoteCall(this);
 
     TransactionID tid = tm.getCurrentTid();
-    WriterMap writerMap = tm.getWriterMap();
-
-    Class<? extends fabric.lang.Object> receiverClass =
-        (Class<? extends fabric.lang.Object>) receiver.fetch().$getProxy()
-            .getClass().getEnclosingClass();
-    ClassRef receiverClassRef = ClassRef.makeRef(receiverClass);
-
-    RemoteCallMessage.Response response =
-        send(new RemoteCallMessage(tid, writerMap, receiverClassRef, receiver,
-            methodName, parameterTypes, args));
-
     if (tid != null) {
+      WriterMap writerMap = tm.getWriterMap();
+
+      Class<? extends fabric.lang.Object> receiverClass =
+          (Class<? extends fabric.lang.Object>) receiver.fetch().$getProxy()
+              .getClass().getEnclosingClass();
+      ClassRef receiverClassRef = ClassRef.makeRef(receiverClass);
+
+      RemoteCallMessage.Response response =
+          send(new RemoteCallMessage(tid, writerMap, receiverClassRef, receiver,
+              methodName, parameterTypes, args));
+
       // Commit any outstanding subtransactions that occurred as a result of the
       // remote call.
       Log innermost = TransactionRegistry.getInnermostLog(tid.topTid);
@@ -98,9 +99,31 @@ public class RemoteWorker extends RemoteNode<RemoteWorker> {
       // Merge in the writer map we got.
       if (response.writerMap != null)
         tm.getWriterMap().putAll(response.writerMap);
-    }
 
-    return response.result;
+      return response.result;
+    } else {
+      Class<? extends fabric.lang.Object> receiverClass =
+          (Class<? extends fabric.lang.Object>) receiver.fetch().$getProxy()
+              .getClass().getEnclosingClass();
+      ClassRef receiverClassRef = ClassRef.makeRef(receiverClass);
+
+      AsyncCallMessage.Response response =
+          send(new AsyncCallMessage(receiverClassRef, receiver, methodName,
+              parameterTypes, args));
+
+      // Evict modified objects from the cache.
+      if (response.modifiedObjects != null) {
+        for (Store s : response.modifiedObjects.storeSet()) {
+          for (LongKeyMap.Entry<Integer> e : response.modifiedObjects.get(s)
+              .entrySet()) {
+            s.evict(e.getKey(), e.getValue());
+          }
+        }
+        tm.addCommittedWrites(response.modifiedObjects);
+      }
+
+      return response.result;
+    }
   }
 
   public long prepareTransaction(long tid)
