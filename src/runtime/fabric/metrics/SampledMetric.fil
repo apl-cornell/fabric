@@ -134,6 +134,8 @@ public class SampledMetric extends Metric {
 
   /*@Override*/
   public double value(boolean useWeakCache) {
+    // Ugh dumb hack to avoid annoying way we handle reader/writer contention
+    value[0] = value[0];
     return value[0];
   }
 
