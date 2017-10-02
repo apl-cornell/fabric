@@ -379,12 +379,11 @@ public abstract class Metric extends AbstractSubject
    * Update the current "weak" estimates to be used by {@link #policy(Bound)}
    */
   public void refreshWeakEstimates() {
-    if (TransactionManager.getInstance().getCurrentLog() == null) {
-      RemoteWorker w = Worker.getWorker().getWorker($getStore().name());
-      refreshLocally_remote@w(null);
-    } else {
-      refreshLocally();
-    }
+    refreshLocally();
+  }
+
+  public void refreshWeakEstimates_remote(fabric.lang.security.Principal caller) {
+    refreshWeakEstimates();
   }
 
   /**
@@ -394,11 +393,12 @@ public abstract class Metric extends AbstractSubject
    */
   public void refreshLocally() {
     atomic {
+      fabric.common.Logging.METRICS_LOGGER.finest("REFRESHING " + this);
       weakStats[0] = computeValue(true);
       weakStats[1] = computeVelocity(true);
       weakStats[2] = computeNoise(true);
-      fabric.common.Logging.METRICS_LOGGER.finest("REFRESHED " + this + " to " + weakStats[0] + ", " + weakStats[1] + ", " + weakStats[2]);
     }
+    fabric.common.Logging.METRICS_LOGGER.finest("REFRESHED " + this + " to " + weakStats[0] + ", " + weakStats[1] + ", " + weakStats[2]);
   }
 
   public void refreshLocally_remote(fabric.lang.security.Principal caller) {

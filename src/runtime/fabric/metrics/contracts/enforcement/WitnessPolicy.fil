@@ -85,9 +85,12 @@ public class WitnessPolicy extends EnforcementPolicy {
     }
 
     public java.lang.Object call() {
-      //RemoteWorker worker = Worker.getWorker().getWorker(w.$getStore().name());
-      //w.activate_remote@worker(null);
-      w.activate();
+      if (!(w.$getStore().name().equals(Worker.getWorkerName()))) {
+        RemoteWorker worker = Worker.getWorker().getWorker(w.$getStore().name());
+        w.activate_remote@worker(null);
+      } else {
+        w.activate();
+      }
       return null;
     }
   }

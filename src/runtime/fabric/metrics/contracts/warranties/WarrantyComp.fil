@@ -77,7 +77,8 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
       //curVal.contract.getMetric().refreshWeakEstimates();
 
       fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Activating " + this);
-      curVal.contract.activate();
+      RemoteWorker w = Worker.getWorker().getWorker(curVal.contract.$getStore().name());
+      curVal.contract.activate_remote@w(null);
       fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Updated to " + curVal);
 
       fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Observing " + this);

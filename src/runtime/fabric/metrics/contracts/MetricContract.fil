@@ -82,26 +82,24 @@ public class MetricContract extends Contract {
     //metric.refreshWeakEstimates();
 
     // Determine children
-    fabric.common.Logging.METRICS_LOGGER.info("CREATING A POLICY FOR MC " + this);
+    fabric.common.Logging.METRICS_LOGGER.finer("CREATING A POLICY FOR MC " + this);
     EnforcementPolicy startPol = null;
     atomic {
       startPol = metric.policy(bound, true);
     }
 
     // Activate new children
-    fabric.common.Logging.METRICS_LOGGER.info("ACTIVATING POLICY FOR MC " + this);
+    fabric.common.Logging.METRICS_LOGGER.finer("ACTIVATING POLICY FOR MC " + this);
     startPol.activate();
 
     // Set the expiry and free it up
     finishActivating(startPol);
-
-    fabric.common.Logging.METRICS_LOGGER.info("ACTIVATED MC " + this + " IN " + TransactionManager.getInstance().getCurrentLog());
   }
 
   public void finishActivating(EnforcementPolicy p) {
     // Set the expiry and free it up
     atomic {
-      fabric.common.Logging.METRICS_LOGGER.info("ACTIVATING MC " + this);
+      fabric.common.Logging.METRICS_LOGGER.finer("ACTIVATING MC " + this + " IN " + TransactionManager.getInstance().getCurrentLog());
       currentPolicy = p;
       $expiry = currentPolicy.expiry();
       super.activate();
@@ -110,6 +108,11 @@ public class MetricContract extends Contract {
         getMetric().addContract(this);
       }
     }
+    fabric.common.Logging.METRICS_LOGGER.finer("ACTIVATED MC " + this + " IN " + TransactionManager.getInstance().getCurrentLog());
+  }
+
+  public void finishActivating_remote(fabric.lang.security.Principal caller, EnforcementPolicy p) {
+    finishActivating(p);
   }
 
   /**

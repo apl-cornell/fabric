@@ -82,8 +82,9 @@ public class DirectPolicy extends EnforcementPolicy {
     double r = bound.rate;
     double b = bound.value(time);
     double x = metric.value();
-    double v = metric.velocity();
-    double n = metric.noise();
+    // Use weak v and n, x is the only part that needs to be exact.
+    double v = metric.velocity(true);
+    double n = metric.noise(true);
 
     // True expiry: time this would fail with no changes to the current
     // value. This is the latest time we can safely advertise as the
