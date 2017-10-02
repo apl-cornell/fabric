@@ -735,28 +735,33 @@ public final class Worker {
    */
   private static <T> T runInSubTransaction(Code<T> code, boolean autoRetry) {
     TransactionManager tm = TransactionManager.getInstance();
+    boolean backoffEnabled = getWorker().config.txRetryBackoff;
 
     boolean success = false;
+
+    // Flag for triggering backoff on alternate retries.
     boolean doBackoff = true;
+
     int backoff = 1;
     while (!success) {
-      if (doBackoff) {
-        if (backoff > 32) {
-          while (true) {
-            try {
-              Thread.sleep(backoff);
-              break;
-            } catch (InterruptedException e) {
-              Logging.logIgnoredInterruptedException(e);
+      if (backoffEnabled) {
+        if (doBackoff) {
+          if (backoff > 32) {
+            while (true) {
+              try {
+                Thread.sleep(backoff);
+                break;
+              } catch (InterruptedException e) {
+                Logging.logIgnoredInterruptedException(e);
+              }
             }
           }
+
+          if (backoff < 5000) backoff *= 2;
         }
 
-        //if (backoff < 5000) backoff *= 2;
-        if (backoff < 5000) backoff *= 1;
+        doBackoff = backoff <= 32 || !doBackoff;
       }
-
-      doBackoff = backoff <= 32 || !doBackoff;
 
       success = true;
       tm.startTransaction();

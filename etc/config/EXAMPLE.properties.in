@@ -53,6 +53,13 @@ fabric.node.password = password
 # fabric.node.netdelay.in|store1.example.org = 100
 
 
+# Whether to exponentially back off when retrying transactions.
+# By default, this is enabled. Setting this to anything besides "true" will
+# disable exponential back-off.
+
+#fabric.node.txRetryBackoff = true
+
+
 # The port for the worker to listen on for remote-call requests. This is
 # optional.
 #

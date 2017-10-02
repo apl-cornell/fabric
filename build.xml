@@ -819,7 +819,8 @@ public class VersionInfo {
         destdir="${tmp}"
         encoding="utf-8"
         includes="VersionInfo.java"
-        classpathref="jif.classpath"/>
+        classpathref="jif.classpath"
+        includeAntRuntime="false"/>
 
     <!-- Get Polyglot version. -->
     <java classname="VersionInfo" outputproperty="polyglot.version">

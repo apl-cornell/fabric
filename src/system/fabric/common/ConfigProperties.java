@@ -67,6 +67,11 @@ public class ConfigProperties {
   // Noises to use if using presets
   public final Map<String, Double> noises;
 
+  /**
+   * Whether to exponentially back off when retrying transactions.
+   */
+  public final boolean txRetryBackoff;
+
   static {
     //
     // load the default properties files
@@ -115,6 +120,9 @@ public class ConfigProperties {
         removeProperty(p, "fabric.worker.certs", name + ".keystore"));
     this.dissemClass = removeProperty(p, "fabric.node.fetchmanager.class",
         "fabric.dissemination.DummyFetchManager");
+
+    this.txRetryBackoff = Boolean
+        .parseBoolean(removeProperty(p, "fabric.node.txRetryBackoff", "true"));
 
     // Collect network-delay properties.
     Map<String, Short> inDelays = new HashMap<>();

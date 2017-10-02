@@ -69,28 +69,32 @@ public class AtomicExt_c extends FabILExt_c {
     String tm = "$tm" + (freshTid++);
     String backoff = "$backoff" + (freshTid++);
     String doBackoff = "$doBackoff" + (freshTid++);
+    String backoffEnabled = "$backoffEnabled" + (freshTid++);
 
     // @formatter:off
     String block = "{\n" + "  %LS\n"
         + "  fabric.worker.transaction.TransactionManager " + tm
         + " = fabric.worker.transaction.TransactionManager.getInstance();\n"
+        + "  boolean " + backoffEnabled
+        + " = fabric.worker.Worker.getWorker().config.txRetryBackoff;\n"
         + "  int " + backoff + " = 1;\n"
         + "  boolean " + doBackoff + " = true;\n"
         + "  " + label + ": for (boolean " + flag + " = false; !" + flag + "; ) {\n"
-        + "    if (" + doBackoff + ") {"
-        + "      if (" + backoff + " > 32) {\n"
-        + "        while (true) {\n"
-        + "          try {\n"
-        + "            java.lang.Thread.sleep(" + backoff + ");\n"
-        + "            break;\n"
-        + "          } catch (java.lang.InterruptedException " + e + ") {\n"
+        + "    if (" + backoffEnabled +") {\n"
+        + "      if (" + doBackoff + ") {"
+        + "        if (" + backoff + " > 32) {\n"
+        + "          while (true) {\n"
+        + "            try {\n"
+        + "              java.lang.Thread.sleep(" + backoff + ");\n"
+        + "              break;\n"
+        + "            } catch (java.lang.InterruptedException " + e + ") {\n"
+        + "            }\n"
         + "          }\n"
         + "        }\n"
+        + "        if (" + backoff + " < 5000) " + backoff + " *= 2;\n"
         + "      }\n"
-        //+ "      if (" + backoff + " < 5000) " + backoff + " *= 2;\n"
-        + "      if (" + backoff + " < 5000) " + backoff + " *= 1;\n"
+        + "      " + doBackoff + " = " + backoff + " <= 32 || !" + doBackoff + ";\n"
         + "    }\n"
-        + "    " + doBackoff + " = " + backoff + " <= 32 || !" + doBackoff + ";\n"
         + "    " + flag + " = true;\n"
         + "    %S\n"
         + "    try {\n"
