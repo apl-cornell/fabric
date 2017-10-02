@@ -109,6 +109,9 @@ public class SumMetric extends DerivedMetric {
     }
 
     /*@Override*/
+    // Pushing down really messes with tree structure when sharing weak
+    // estimation across subexpressions
+    /*
     public DerivedMetric times(double scalar) {
         Metric[] newTerms = null;
         atomic {
@@ -125,6 +128,7 @@ public class SumMetric extends DerivedMetric {
         }
         return Metric.findDerivedMetric(s, val);
     }
+    */
 
     /**
      * {@inheritDoc}
