@@ -379,6 +379,7 @@ public abstract class Metric extends AbstractSubject
    * Update the current "weak" estimates to be used by {@link #policy(Bound)}
    */
   public void refreshWeakEstimates() {
+    fabric.common.Logging.METRICS_LOGGER.finest("REFRESHING" + this);
     refreshLocally();
   }
 
@@ -393,7 +394,7 @@ public abstract class Metric extends AbstractSubject
    */
   public void refreshLocally() {
     atomic {
-      fabric.common.Logging.METRICS_LOGGER.finest("REFRESHING " + this);
+      fabric.common.Logging.METRICS_LOGGER.finest("REFRESHING LOCALLY " + this);
       weakStats[0] = computeValue(true);
       weakStats[1] = computeVelocity(true);
       weakStats[2] = computeNoise(true);

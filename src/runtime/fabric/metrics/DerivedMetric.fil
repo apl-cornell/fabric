@@ -311,7 +311,7 @@ public abstract class DerivedMetric extends Metric implements Observer {
 
   /*@Override*/
   public void refreshWeakEstimates() {
-      fabric.common.Logging.METRICS_LOGGER.finest("REFRESHING CHILDREN OF " + this);
+      fabric.common.Logging.METRICS_LOGGER.finest("REFRESHING" + this);
       if (TransactionManager.getInstance().getCurrentLog() == null) {
         Future native[] futures = new Future native[terms.length];
         // First, refresh the subterm stats.
@@ -342,7 +342,7 @@ public abstract class DerivedMetric extends Metric implements Observer {
         }
       }
       // Then update locally.
-      super.refreshWeakEstimates();
+      refreshLocally();
   }
 
   /*@Override*/
