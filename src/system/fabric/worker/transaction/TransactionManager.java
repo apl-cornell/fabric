@@ -1562,7 +1562,6 @@ public final class TransactionManager {
    */
   public OidKeyHashMap<Integer> finishAsyncCall() {
     OidKeyHashMap<Integer> writes = committedWrites;
-    METRICS_LOGGER.fine("SIZE OF EVICT IS " + writes.size());
     committedWrites = null;
     return writes;
   }
