@@ -16,6 +16,7 @@ public class RunningStats {
   // averages.
   public static final double ALPHA = 0.001;
 
+  private boolean stamp = true;
   private double mean = 0.0;
   private double var = 0.0;
   private double meanPrev = 0.0;
@@ -47,6 +48,7 @@ public class RunningStats {
    * @return the current estimated mean.
    */
   public double getMean() {
+    stamp = true;
     return mean;
   }
 
@@ -54,6 +56,7 @@ public class RunningStats {
    * @return the current estimated variance.
    */
   public double getVar() {
+    stamp = true;
     return var;
   }
 

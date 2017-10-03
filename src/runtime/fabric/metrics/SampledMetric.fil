@@ -136,6 +136,7 @@ public class SampledMetric extends Metric {
   protected double computeValue(boolean useWeakCache) {
     double result = 0;
     atomic {
+      value[0] = value[0];
       result = value[0];
     }
     return result;
