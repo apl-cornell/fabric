@@ -1187,6 +1187,8 @@ public final class TransactionManager {
       while (true) {
         waitsFor.clear();
 
+        // Flag indicating if we temporarily set a write lock for current
+        boolean tempWriteLock = false;
         // Make sure writer is in our ancestry.
         if (obj.$writeLockHolder != null
             && !current.isDescendantOf(obj.$writeLockHolder)) {
@@ -1197,6 +1199,9 @@ public final class TransactionManager {
           waitsFor.add(obj.$writeLockHolder);
           hadToWait = true;
         } else {
+          // Grab a write lock temporarily to avoid later readers dogpiling.
+          tempWriteLock = true;
+          obj.$writeLockHolder = current;
           // Restart any incompatible readers.
           ReadMap.Entry readMapEntry = obj.$readMapEntry;
           if (readMapEntry != null) {
@@ -1212,7 +1217,10 @@ public final class TransactionManager {
                 }
               }
 
-              if (waitsFor.isEmpty()) break;
+              if (waitsFor.isEmpty()) {
+                obj.$writeLockHolder = null;
+                break;
+              }
             }
           }
         }
@@ -1241,6 +1249,7 @@ public final class TransactionManager {
         } catch (InterruptedException e) {
           Logging.logIgnoredInterruptedException(e);
         }
+        if (tempWriteLock) obj.$writeLockHolder = null;
         obj.$numWaiting--;
 
         // Make sure we weren't aborted/retried while we were waiting.
