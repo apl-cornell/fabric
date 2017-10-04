@@ -1280,9 +1280,11 @@ public final class TransactionManager {
           waitsFor.add(obj.$writeLockHolder);
           hadToWait = true;
         } else {
-          // Grab a write lock temporarily to avoid later readers dogpiling.
-          tempWriteLock = true;
-          obj.$writeLockHolder = current;
+          if (obj.$writeLockHolder == null) {
+            // Grab a write lock temporarily to avoid later readers dogpiling.
+            tempWriteLock = true;
+            obj.$writeLockHolder = current;
+          }
           // Restart any incompatible readers.
           ReadMap.Entry readMapEntry = obj.$readMapEntry;
           if (readMapEntry != null) {
@@ -1299,7 +1301,8 @@ public final class TransactionManager {
               }
 
               if (waitsFor.isEmpty()) {
-                obj.$writeLockHolder = null;
+                // Release the temp lock and acquire it after the clone below.
+                if (tempWriteLock) obj.$writeLockHolder = null;
                 break;
               }
             }
@@ -1330,6 +1333,7 @@ public final class TransactionManager {
         } catch (InterruptedException e) {
           Logging.logIgnoredInterruptedException(e);
         }
+        // Release the temp lock and acquire it after the clone below.
         if (tempWriteLock) obj.$writeLockHolder = null;
         obj.$numWaiting--;
 
