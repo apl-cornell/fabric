@@ -1,0 +1,72 @@
+package fabric.metrics.util;
+
+import fabric.common.TransactionID;
+import fabric.worker.transaction.TransactionManager;
+import fabric.worker.TransactionRestartingException;
+
+/**
+ * Utility class acting as a lock for Contracts to help with reconfigurations.
+ */
+public class ReconfigLock {
+
+  private boolean currentlyHeld;
+
+  /**
+   * @param startValue
+   *        initial guess for the mean of the value we're keeping
+   *        statistics on.
+   */
+  public ReconfigLock fabric$metrics$util$ReconfigLock$() {
+    fabric$lang$Object$();
+    this.currentlyHeld = false;
+    return this;
+  }
+
+  /**
+   * Check if we currently own the lock.
+   */
+  public boolean held() {
+    return currentlyHeld && TransactionManager.getInstance().hasLock(this);
+  }
+
+  /**
+   * Check that this item hasn't been locked by another process.
+   */
+  public void checkForRead() {
+    TransactionManager tm = TransactionManager.getInstance();
+    if (currentlyHeld || tm.hasLock(this)) {
+      TransactionID current = tm.getCurrentTid();
+      if (current != null) {
+        while (current.parent != null) current = current.parent;
+        throw new TransactionRestartingException(
+            new TransactionID(current.topTid));
+      }
+    }
+  }
+
+  /**
+   * Acquire the lock.
+   */
+  public void acquire() {
+    TransactionManager tm = TransactionManager.getInstance();
+    if (!currentlyHeld) {
+      tm.registerLockAcquire(this);
+      currentlyHeld = true;
+    } else if (!tm.hasLock(this)) {
+      TransactionID current = tm.getCurrentTid();
+      if (current != null) {
+        while (current.parent != null) current = current.parent;
+        throw new TransactionRestartingException(
+            new TransactionID(current.topTid));
+      }
+    }
+  }
+
+  /**
+   * Release the lock.
+   */
+  public void release() {
+    TransactionManager.getInstance().registerLockRelease(this);
+    currentlyHeld = false;
+  }
+}

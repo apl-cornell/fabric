@@ -10,6 +10,7 @@ import fabric.metrics.contracts.enforcement.EnforcementPolicy;
 import fabric.metrics.util.Observer;
 import fabric.metrics.util.Subject;
 
+import fabric.common.TransactionID;
 import fabric.worker.Store;
 import fabric.worker.transaction.TransactionManager;
 import java.util.logging.Level;
@@ -145,6 +146,19 @@ public class MetricContract extends Contract {
     if (asyncExtension)
       return false;
 
+    // If we're moving to a new policy we need to be holding the reconfig locks.
+    TransactionManager tm = TransactionManager.getInstance();
+    if (!this.lock.held()) {
+      // If we're not holding it, mark this as needing to be acquired and retry.
+      tm.addContractToAcquire(this);
+      TransactionID current = tm.getCurrentTid();
+      if (current != null) {
+        while (current.parent != null) current = current.parent;
+        throw new TransactionRestartingException(
+            new TransactionID(current.topTid));
+      }
+    }
+
     // Otherwise find a new one.
     fabric.common.Logging.METRICS_LOGGER.fine("COORDINATING FOR " + this + " " + bound + " IN " + TransactionManager.getInstance().getCurrentTid());
     EnforcementPolicy oldPolicy = currentPolicy;
@@ -249,5 +263,11 @@ public class MetricContract extends Contract {
           currentPolicy.unapply(this);
       }
     }
+  }
+
+  /*@Override*/
+  public void acquireReconfigLocks() {
+    this.lock.acquire();
+    this.currentPolicy.acquireReconfigLocks();
   }
 }

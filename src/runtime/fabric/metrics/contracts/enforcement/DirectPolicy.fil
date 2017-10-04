@@ -195,4 +195,8 @@ public class DirectPolicy extends EnforcementPolicy {
     DirectPolicy that = (DirectPolicy) other;
     return this.metric.equals(that.metric) && this.bound.equals(that.bound);
   }
+
+  /*@Override*/
+  public void acquireReconfigLocks() {
+  }
 }

@@ -142,4 +142,11 @@ public class WitnessPolicy extends EnforcementPolicy {
     WitnessPolicy that = (WitnessPolicy) other;
     return this.witnesses.equals(that.witnesses);
   }
+
+  /*@Override*/
+  public void acquireReconfigLocks() {
+    for (int i = 0; i < witnesses.length; i++) {
+      witnesses[i].acquireReconfigLocks();
+    }
+  }
 }

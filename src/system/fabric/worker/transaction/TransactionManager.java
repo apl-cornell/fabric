@@ -36,6 +36,9 @@ import fabric.common.Timing;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
+import fabric.common.util.ConcurrentLongKeyMap;
+import fabric.common.util.ConcurrentOidKeyHashMap;
+import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
@@ -45,6 +48,8 @@ import fabric.lang.security.Label;
 import fabric.lang.security.SecurityCache;
 import fabric.messages.AsyncCallMessage;
 import fabric.metrics.SampledMetric;
+import fabric.metrics.contracts.Contract;
+import fabric.metrics.util.ReconfigLock;
 import fabric.net.RemoteNode;
 import fabric.net.UnreachableNodeException;
 import fabric.store.InProcessStore;
@@ -58,6 +63,7 @@ import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.TransactionRestartingException;
 import fabric.worker.Worker;
+import fabric.worker.Worker.Code;
 import fabric.worker.remote.RemoteWorker;
 import fabric.worker.remote.WriterMap;
 
@@ -121,6 +127,74 @@ public final class TransactionManager {
    * oids for which writes have committed.
    */
   protected OidKeyHashMap<Integer> committedWrites;
+
+  /**
+   * The locks currently held by this Thread's transaction manager.
+   */
+  protected ConcurrentOidKeyHashMap<Boolean> contractLocksHeld =
+      new ConcurrentOidKeyHashMap<>();
+
+  // Mark an acquired lock.
+  public void registerLockAcquire(fabric.lang.Object lock) {
+    Logging.log(METRICS_LOGGER, Level.FINEST, "ACQUIRING LOCK {0}/{1}",
+        lock.$getStore(), new Long(lock.$getOnum()));
+    contractLocksHeld.put(lock, true);
+  }
+
+  // Check that we have this lock.
+  public boolean hasLock(fabric.lang.Object lock) {
+    return contractLocksHeld.containsKey(lock);
+  }
+
+  // Unmark an acquired lock.
+  public void registerLockRelease(fabric.lang.Object lock) {
+    Logging.log(METRICS_LOGGER, Level.FINEST, "RELEASING LOCK {0}/{1}",
+        lock.$getStore(), new Long(lock.$getOnum()));
+    contractLocksHeld.remove(lock);
+  }
+
+  /**
+   * The locks to acquire before the next transaction runs.
+   */
+  protected ConcurrentOidKeyHashMap<Contract._Proxy> contractsToAcquire =
+      new ConcurrentOidKeyHashMap<>();
+
+  /**
+   * Mark a contract to be acquired before next top-level transaction.
+   */
+  public void addContractToAcquire(Contract c) {
+    contractsToAcquire.put(c, (Contract._Proxy) c.$getProxy());
+  }
+
+  protected void acquireContractLocks() {
+    for (Iterator<ConcurrentLongKeyMap<Contract._Proxy>> it =
+        contractsToAcquire.iterator(); it.hasNext();) {
+      for (Contract._Proxy c : it.next().values()) {
+        final Contract._Proxy cFinal = c;
+        Worker.runInTopLevelTransaction((new Code<Void>() {
+          @Override
+          public Void run() {
+            cFinal.acquireReconfigLocks();
+            return null;
+          }
+        }), true);
+      }
+    }
+
+    // We've acquired now.
+    contractsToAcquire.clear();
+  }
+
+  protected void releaseContractLocks() {
+    for (Store s : contractLocksHeld.storeSet()) {
+      for (LongIterator it = contractLocksHeld.get(s).keySet().iterator(); it
+          .hasNext();) {
+        long onum = it.next();
+        ReconfigLock._Proxy l = new ReconfigLock._Proxy(s, onum);
+        l.release();
+      }
+    }
+  }
 
   /**
    * A debugging switch for storing a stack trace each time a write lock is
@@ -346,6 +420,13 @@ public final class TransactionManager {
           "RESOLVING OBSERVATIONS AT THE END OF {0}", current);
       try {
         resolveObservations();
+        if (!acquiringLocks) {
+          // If we're not trying to grab up locks, we are trying to commit after
+          // using those locks.  Release them in the same transaction.
+          METRICS_LOGGER.log(Level.FINEST, "RELEASING LOCKS AT THE END OF {0}",
+              current);
+          releaseContractLocks();
+        }
       } catch (TransactionAbortingException e) {
         abortTransaction();
         throw new AbortException();
@@ -1487,8 +1568,17 @@ public final class TransactionManager {
     startTransaction(tid, false);
   }
 
+  private boolean acquiringLocks = false;
+
   private void startTransaction(TransactionID tid, boolean ignoreRetrySignal) {
     if (current != null && !ignoreRetrySignal) checkRetrySignal();
+
+    // Acquire locks before starting but also avoid bad recursion.
+    if (current == null && !acquiringLocks) {
+      acquiringLocks = true;
+      acquireContractLocks();
+      acquiringLocks = false;
+    }
 
     try {
       Timing.BEGIN.begin();

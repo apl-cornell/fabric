@@ -47,4 +47,9 @@ public abstract class EnforcementPolicy {
    * Activate this policy, activating witnesses and setting the expiry.
    */
   public abstract void activate();
+
+  /**
+   * Acquire reconfig locks for the evidence used for this policy.
+   */
+  public abstract void acquireReconfigLocks();
 }
