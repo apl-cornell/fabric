@@ -117,7 +117,8 @@ public class DeadlockDetectorThread extends Thread {
    * @return cyclesFound with any found cycles added.
    */
   private Set<Set<Log>> findCycles(Log curLog, LongKeyMap<Log> pathToTid,
-      LongSet topLevelTidsVisited, Set<Set<Log>> cyclesFound, Set<Log> requests) {
+      LongSet topLevelTidsVisited, Set<Set<Log>> cyclesFound,
+      Set<Log> requests) {
     // Remove the current TID from the set of deadlock-detection requests, since
     // we are handling it now.
     requests.remove(curLog);
@@ -133,13 +134,13 @@ public class DeadlockDetectorThread extends Thread {
     // Check for cycle.
     if (pathToTid.containsKey(curTopTid)) {
       // Cycle detected. Add to the list of cycles found and return.
+      // This computes a conservative approximation, since not all path elements
+      // are necessarily involved in the cycle.
       Set<Log> cycle = new HashSet<>();
-      cycle.add(curLog);
+      cycle.add(curLog.getOutermost());
       for (Log pathElement : pathToTid.values()) {
-        if (pathElement.getTid().topTid == curTopTid) {
-          cycle.add(curLog);
-        } else if (!cycle.isEmpty()) {
-          cycle.add(pathElement);
+        if (pathElement.getTid().topTid != curTopTid) {
+          cycle.add(pathElement.getOutermost());
         }
       }
 
@@ -219,7 +220,8 @@ public class DeadlockDetectorThread extends Thread {
       // of deadlocks.
       int curMax = 0;
       LongSet abortCandidates = new LongHashSet();
-      for (LongKeyMap.Entry<Multiset<Log>> entry : logsByTopLevelTid.entrySet()) {
+      for (LongKeyMap.Entry<Multiset<Log>> entry : logsByTopLevelTid
+          .entrySet()) {
         int curSize = entry.getValue().size();
         if (curMax > curSize) continue;
 

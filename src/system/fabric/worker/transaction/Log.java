@@ -746,6 +746,19 @@ public final class Log {
   }
 
   /**
+   * @return the log of the outermost ancestor transaction available at this
+   *     worker. This will be different from the top-level transaction if the
+   *     top-level was started at a different worker.
+   */
+  public Log getOutermost() {
+    Log result = this;
+    while (result.parent != null) {
+      result = result.parent;
+    }
+    return result;
+  }
+
+  /**
    * Changes the waitsFor set to a singleton set containing the given log.
    */
   public void setWaitsFor(Log waitsFor) {
