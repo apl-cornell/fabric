@@ -766,8 +766,18 @@ public final class TransactionManager {
       Logging.log(WORKER_TRANSACTION_LOGGER, Level.INFO,
           "{0} error committing: prepare too late", current);
 
+      Set<RemoteNode<?>> abortedNodes = new HashSet<>();
+      if (readOnly) {
+        // All remote stores should have aborted already.
+        for (Store store : stores) {
+          if (store instanceof RemoteStore) {
+            abortedNodes.add((RemoteStore) store);
+          }
+        }
+      }
+
       TransactionID tid = current.tid;
-      abortTransaction();
+      abortTransaction(abortedNodes);
       throw new TransactionRestartingException(tid);
     } else {
       synchronized (current.commitState) {
