@@ -755,10 +755,19 @@ public final class TransactionManager {
       throw new TransactionRestartingException(tid);
 
     } else if (current.expiry() < time[0]) {
-      TransactionID tid = current.tid;
+
+      HOTOS_LOGGER.fine("Prepare failed (expiry passed).");
+
+      synchronized (current.commitState) {
+        current.commitState.value = PREPARE_FAILED;
+        current.commitState.notifyAll();
+      }
+
       Logging.log(WORKER_TRANSACTION_LOGGER, Level.INFO,
           "{0} error committing: prepare too late", current);
-      abortTransaction(Collections.<RemoteNode<?>> emptySet());
+
+      TransactionID tid = current.tid;
+      abortTransaction();
       throw new TransactionRestartingException(tid);
     } else {
       synchronized (current.commitState) {
