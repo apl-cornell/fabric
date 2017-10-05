@@ -102,10 +102,14 @@ public abstract class Contract extends AbstractSubject implements Observer {
    * Activate and start enforcing this {@link Contract} in the System.
    */
   public void activate() {
+    static_activate(this);
+  }
+
+  public static void static_activate(Contract tmp) {
     atomic {
-      if (!activated) {
+      if (!tmp.activated) {
         fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "CONTRACT ACTIVATE");
-        activated = true;
+        tmp.activated = true;
       }
     }
   }
@@ -119,10 +123,14 @@ public abstract class Contract extends AbstractSubject implements Observer {
    */
   /*@Override*/
   public void removeObserver(Observer obs) {
+    static_removeObserver(this, obs);
+  }
+
+  public static void removeObserver(Contract tmp, Observer obs) {
       atomic {
-        super.removeObserver(obs);
-        if (!isObserved()) {
-            $expiry = -1;
+        AbstractSubject.static_removeObserver(tmp, obs);
+        if (!tmp.isObserved()) {
+            tmp.$expiry = -1;
         }
       }
   }
@@ -248,11 +256,9 @@ public abstract class Contract extends AbstractSubject implements Observer {
    * perform asynchronous extensions close to the current expiration time).
    */
   public void attemptExtension_remote(fabric.lang.security.Principal caller) {
-    atomic {
-      // Ugh, need to add _remote suffix because it's expected by remote call
-      // messages and is added by the fabric compiler.
-      this.attemptExtension();
-    }
+    // Ugh, need to add _remote suffix because it's expected by remote call
+    // messages and is added by the fabric compiler.
+    this.attemptExtension();
   }
 
   /**
@@ -260,7 +266,13 @@ public abstract class Contract extends AbstractSubject implements Observer {
    * perform asynchronous extensions close to the current expiration time).
    */
   public void attemptExtension() {
-    fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "ASYNC EXTENSION OF " + this + " IN " + TransactionManager.getInstance().getCurrentTid());
-    refresh(true);
+    static_attemptExtension(this);
+  }
+
+  private static void static_attemptExtension(Contract tmp) {
+    atomic {
+      fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "ASYNC EXTENSION OF " + tmp + " IN " + TransactionManager.getInstance().getCurrentTid());
+      tmp.refresh(true);
+    }
   }
 }

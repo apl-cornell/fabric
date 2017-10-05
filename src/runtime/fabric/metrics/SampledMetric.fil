@@ -134,39 +134,51 @@ public class SampledMetric extends Metric {
 
   /*@Override*/
   protected double computeValue(boolean useWeakCache) {
+    return static_computeValue(this, useWeakCache);
+  }
+
+  private static double static_computeValue(SampledMetric tmp, boolean useWeakCache) {
     double result = 0;
     atomic {
-      value[0] = value[0];
-      result = value[0];
+      tmp.value[0] = tmp.value[0];
+      result = tmp.value[0];
     }
     return result;
   }
 
   /*@Override*/
   protected double computeVelocity(boolean useWeakCache) {
+    return static_computeVelocity(this, useWeakCache);
+  }
+
+  private static double static_computeVelocity(SampledMetric tmp, boolean useWeakCache) {
     double result = 0;
     atomic {
-      if (usePreset) result = presetV;
-      else result = biasStats.getMean() / updateIntervalStats.getMean();
+      if (tmp.usePreset) result = tmp.presetV;
+      else result = tmp.biasStats.getMean() / tmp.updateIntervalStats.getMean();
     }
     return result;
   }
 
   /*@Override*/
   protected double computeNoise(boolean useWeakCache) {
+    return static_computeNoise(this, useWeakCache);
+  }
+
+  private static double static_computeNoise(SampledMetric tmp, boolean useWeakCache) {
     double result = 0;
     atomic {
-      if (usePreset) {
-        result =  presetN;
+      if (tmp.usePreset) {
+        result = tmp.presetN;
       } else {
         // Based on ratio estimator approach and assuming that there's 0
         // covariance between update intervals and update values
-        double tSqrd = updateIntervalStats.getMean()
-            * updateIntervalStats.getMean();
+        double tSqrd = tmp.updateIntervalStats.getMean()
+            * tmp.updateIntervalStats.getMean();
         // We're assuming exponential distribution of the times and here we get
         // the variance of the product of independent poisson (1/exp) and
         // normally distributed variables.
-        result = (1 / updateIntervalStats.getMean() + biasStats.getVar() / tSqrd);
+        result = (1 / tmp.updateIntervalStats.getMean() + tmp.biasStats.getVar() / tSqrd);
       }
     }
     return result;
@@ -223,30 +235,42 @@ public class SampledMetric extends Metric {
 
   /*@Override*/
   public double value(boolean useWeakCache) {
+    return static_value(this, useWeakCache);
+  }
+
+  private static double static_value(SampledMetric tmp, boolean useWeakCache) {
     double result = 0;
     atomic {
-      if (useWeakCache) result = weakStats[0];
-      else result = computeValue(false);
+      if (useWeakCache) result = tmp.weakStats[0];
+      else result = tmp.computeValue(false);
     }
     return result;
   }
 
   /*@Override*/
   public double velocity(boolean useWeakCache) {
+    return static_velocity(this, useWeakCache);
+  }
+
+  private static double static_velocity(SampledMetric tmp, boolean useWeakCache) {
     double result = 0;
     atomic {
-      if (useWeakCache) result = weakStats[1];
-      else result = computeVelocity(false);
+      if (useWeakCache) result = tmp.weakStats[1];
+      else result = tmp.computeVelocity(false);
     }
     return result;
   }
 
   /*@Override*/
   public double noise(boolean useWeakCache) {
+    return static_noise(this, useWeakCache);
+  }
+
+  private static double static_noise(SampledMetric tmp, boolean useWeakCache) {
     double result = 0;
     atomic {
-      if (useWeakCache) result = weakStats[2];
-      else result = computeNoise(false);
+      if (useWeakCache) result = tmp.weakStats[2];
+      else result = tmp.computeNoise(false);
     }
     return result;
   }

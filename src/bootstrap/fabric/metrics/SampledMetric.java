@@ -563,6 +563,13 @@ public interface SampledMetric extends fabric.metrics.Metric {
         }
         
         public double computeValue(boolean useWeakCache) {
+            return fabric.metrics.SampledMetric._Impl.
+              static_computeValue((fabric.metrics.SampledMetric)
+                                    this.$getProxy(), useWeakCache);
+        }
+        
+        private static double static_computeValue(
+          fabric.metrics.SampledMetric tmp, boolean useWeakCache) {
             double result = 0;
             {
                 double result$var244 = result;
@@ -595,9 +602,8 @@ public interface SampledMetric extends fabric.metrics.Metric {
                     fabric.worker.transaction.TransactionManager.getInstance().
                       startTransaction();
                     try {
-                        this.get$value().set(0,
-                                             (double) this.get$value().get(0));
-                        result = (double) this.get$value().get(0);
+                        tmp.get$value().set(0, (double) tmp.get$value().get(0));
+                        result = (double) tmp.get$value().get(0);
                     }
                     catch (final fabric.worker.RetryException $e247) {
                         $commit246 = false;
@@ -659,6 +665,13 @@ public interface SampledMetric extends fabric.metrics.Metric {
         }
         
         public double computeVelocity(boolean useWeakCache) {
+            return fabric.metrics.SampledMetric._Impl.
+              static_computeVelocity((fabric.metrics.SampledMetric)
+                                       this.$getProxy(), useWeakCache);
+        }
+        
+        private static double static_computeVelocity(
+          fabric.metrics.SampledMetric tmp, boolean useWeakCache) {
             double result = 0;
             {
                 double result$var253 = result;
@@ -691,11 +704,11 @@ public interface SampledMetric extends fabric.metrics.Metric {
                     fabric.worker.transaction.TransactionManager.getInstance().
                       startTransaction();
                     try {
-                        if (this.get$usePreset())
-                            result = this.get$presetV();
+                        if (tmp.get$usePreset())
+                            result = tmp.get$presetV();
                         else
-                            result = this.get$biasStats().getMean() /
-                                       this.get$updateIntervalStats().getMean();
+                            result = tmp.get$biasStats().getMean() /
+                                       tmp.get$updateIntervalStats().getMean();
                     }
                     catch (final fabric.worker.RetryException $e256) {
                         $commit255 = false;
@@ -757,6 +770,13 @@ public interface SampledMetric extends fabric.metrics.Metric {
         }
         
         public double computeNoise(boolean useWeakCache) {
+            return fabric.metrics.SampledMetric._Impl.
+              static_computeNoise((fabric.metrics.SampledMetric)
+                                    this.$getProxy(), useWeakCache);
+        }
+        
+        private static double static_computeNoise(
+          fabric.metrics.SampledMetric tmp, boolean useWeakCache) {
             double result = 0;
             {
                 double result$var262 = result;
@@ -789,16 +809,16 @@ public interface SampledMetric extends fabric.metrics.Metric {
                     fabric.worker.transaction.TransactionManager.getInstance().
                       startTransaction();
                     try {
-                        if (this.get$usePreset()) {
-                            result = this.get$presetN();
+                        if (tmp.get$usePreset()) {
+                            result = tmp.get$presetN();
                         }
                         else {
                             double tSqrd =
-                              this.get$updateIntervalStats().getMean() *
-                              this.get$updateIntervalStats().getMean();
-                            result =
-                              1 / this.get$updateIntervalStats().getMean() +
-                                this.get$biasStats().getVar() / tSqrd;
+                              tmp.get$updateIntervalStats().getMean() *
+                              tmp.get$updateIntervalStats().getMean();
+                            result = 1 /
+                                       tmp.get$updateIntervalStats().getMean() +
+                                       tmp.get$biasStats().getVar() / tSqrd;
                         }
                     }
                     catch (final fabric.worker.RetryException $e265) {
@@ -950,6 +970,13 @@ public interface SampledMetric extends fabric.metrics.Metric {
         }
         
         public double value(boolean useWeakCache) {
+            return fabric.metrics.SampledMetric._Impl.
+              static_value((fabric.metrics.SampledMetric) this.$getProxy(),
+                           useWeakCache);
+        }
+        
+        private static double static_value(fabric.metrics.SampledMetric tmp,
+                                           boolean useWeakCache) {
             double result = 0;
             {
                 double result$var271 = result;
@@ -983,8 +1010,8 @@ public interface SampledMetric extends fabric.metrics.Metric {
                       startTransaction();
                     try {
                         if (useWeakCache)
-                            result = (double) this.get$weakStats().get(0); else
-                            result = computeValue(false);
+                            result = (double) tmp.get$weakStats().get(0); else
+                            result = tmp.computeValue(false);
                     }
                     catch (final fabric.worker.RetryException $e274) {
                         $commit273 = false;
@@ -1046,6 +1073,13 @@ public interface SampledMetric extends fabric.metrics.Metric {
         }
         
         public double velocity(boolean useWeakCache) {
+            return fabric.metrics.SampledMetric._Impl.
+              static_velocity((fabric.metrics.SampledMetric) this.$getProxy(),
+                              useWeakCache);
+        }
+        
+        private static double static_velocity(fabric.metrics.SampledMetric tmp,
+                                              boolean useWeakCache) {
             double result = 0;
             {
                 double result$var280 = result;
@@ -1079,8 +1113,8 @@ public interface SampledMetric extends fabric.metrics.Metric {
                       startTransaction();
                     try {
                         if (useWeakCache)
-                            result = (double) this.get$weakStats().get(1); else
-                            result = computeVelocity(false);
+                            result = (double) tmp.get$weakStats().get(1); else
+                            result = tmp.computeVelocity(false);
                     }
                     catch (final fabric.worker.RetryException $e283) {
                         $commit282 = false;
@@ -1142,6 +1176,13 @@ public interface SampledMetric extends fabric.metrics.Metric {
         }
         
         public double noise(boolean useWeakCache) {
+            return fabric.metrics.SampledMetric._Impl.
+              static_noise((fabric.metrics.SampledMetric) this.$getProxy(),
+                           useWeakCache);
+        }
+        
+        private static double static_noise(fabric.metrics.SampledMetric tmp,
+                                           boolean useWeakCache) {
             double result = 0;
             {
                 double result$var289 = result;
@@ -1175,8 +1216,8 @@ public interface SampledMetric extends fabric.metrics.Metric {
                       startTransaction();
                     try {
                         if (useWeakCache)
-                            result = (double) this.get$weakStats().get(2); else
-                            result = computeNoise(false);
+                            result = (double) tmp.get$weakStats().get(2); else
+                            result = tmp.computeNoise(false);
                     }
                     catch (final fabric.worker.RetryException $e292) {
                         $commit291 = false;
@@ -1386,11 +1427,11 @@ public interface SampledMetric extends fabric.metrics.Metric {
         
     }
     
-    public static final byte[] $classHash = new byte[] { 52, 102, -4, 37, 93,
-    -57, 31, -86, 93, -103, 119, -91, -10, -106, -55, 68, 42, -72, 49, -52, 74,
-    57, -53, -105, 11, 32, -111, 99, 63, 35, 17, -127 };
+    public static final byte[] $classHash = new byte[] { -32, 19, 122, -25, 50,
+    -51, 81, 73, 50, -108, -69, -7, 60, -15, -79, -104, -63, 90, -69, 86, -36,
+    -88, 19, 88, -101, 69, -110, -64, -124, 26, -4, -21 };
     public static final java.lang.String jlc$CompilerVersion$fabil = "0.3.0";
-    public static final long jlc$SourceLastModified$fabil = 1507151083000L;
+    public static final long jlc$SourceLastModified$fabil = 1507234285000L;
     public static final java.lang.String jlc$ClassType$fabil =
-      "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";
+      "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";
 }

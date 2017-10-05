@@ -40,20 +40,24 @@ public class WitnessPolicy extends EnforcementPolicy {
 
   /*@Override*/
   public void activate() {
+    static_activate(this);
+  }
+
+  private static void static_activate(WitnessPolicy tmp) {
     atomic {
-      if (activated)
+      if (tmp.activated)
         return;
     }
     if (TransactionManager.getInstance().getCurrentLog() != null) {
-      for (int i = 0; i < witnesses.length; i++) {
-        witnesses[i].activate();
+      for (int i = 0; i < tmp.witnesses.length; i++) {
+        tmp.witnesses[i].activate();
       }
     } else {
-      Future native[] futures = new Future native[witnesses.length];
+      Future native[] futures = new Future native[tmp.witnesses.length];
       // First, refresh the subterm stats.
       for (int i = 0; i < futures.length; i++) {
           // TODO: Add remote worker to call
-          final MetricContract w = witnesses[i];
+          final MetricContract w = tmp.witnesses[i];
           Callable c = null;
           atomic {
             c = new Activator().fabric$metrics$contracts$enforcement$WitnessPolicy$Activator$(w);
@@ -71,11 +75,11 @@ public class WitnessPolicy extends EnforcementPolicy {
       }
     }
     atomic {
-      activated = true;
+      tmp.activated = true;
     }
   }
 
-  private class Activator implements Callable {
+  private static class Activator implements Callable {
     final MetricContract w;
 
     public Activator fabric$metrics$contracts$enforcement$WitnessPolicy$Activator$(MetricContract w) {
@@ -100,13 +104,17 @@ public class WitnessPolicy extends EnforcementPolicy {
 
   /*@Override*/
   public long expiry() {
+    return static_expiry(this);
+  }
+
+  private static long static_expiry(WitnessPolicy tmp) {
     long expiry = -1;
     boolean atLeastOnce = false;
     atomic {
-      for (int i = 0; i < witnesses.length; i++) {
-        if (!atLeastOnce || witnesses[i].getExpiry() < expiry) {
+      for (int i = 0; i < tmp.witnesses.length; i++) {
+        if (!atLeastOnce || tmp.witnesses[i].getExpiry() < expiry) {
           atLeastOnce = true;
-          expiry = witnesses[i].getExpiry();
+          expiry = tmp.witnesses[i].getExpiry();
         }
       }
     }

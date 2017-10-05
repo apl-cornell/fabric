@@ -41,10 +41,14 @@ public abstract class Metric extends AbstractSubject
    *         {@link Metric}.
    */
   public DerivedMetric times(double scalar) {
-    final Store s = $getStore();
+    return static_times(this, scalar);
+  }
+
+  private static DerivedMetric static_times(Metric tmp, double scalar) {
+    final Store s = tmp.$getStore();
     DerivedMetric val = null;
     atomic {
-      val = new ScaledMetric@s().fabric$metrics$ScaledMetric$(scalar, this);
+      val = new ScaledMetric@s().fabric$metrics$ScaledMetric$(scalar, tmp);
     }
     return findDerivedMetric(s, val);
   }
@@ -56,13 +60,17 @@ public abstract class Metric extends AbstractSubject
    *         this.
    */
   public DerivedMetric plus(Metric other) {
+    return static_plus(this, other);
+  }
+
+  public static DerivedMetric static_plus(Metric tmp, Metric other) {
     // Ugh dumb hack
     if (other instanceof SumMetric)
-      return other.plus(this);
-    final Store s = $getStore();
+      return other.plus(tmp);
+    final Store s = tmp.$getStore();
     DerivedMetric val = null;
     atomic {
-      val = new SumMetric@s().fabric$metrics$SumMetric$(new Metric[] { this, other });
+      val = new SumMetric@s().fabric$metrics$SumMetric$(new Metric[] { tmp, other });
     }
     return findDerivedMetric(s, val);
   }
@@ -75,20 +83,24 @@ public abstract class Metric extends AbstractSubject
    *         the other {@link Metric}.
    */
   public Metric min(Metric other) {
+    return static_min(this, other);
+  }
+
+  private static Metric static_min(Metric tmp, Metric other) {
     // Ugh dumb hack
-    if (this.equals(other))
-      return this;
+    if (tmp.equals(other))
+      return tmp;
     if (other instanceof MinMetric)
-      return other.min(this);
-    final Store s = $getStore();
+      return other.min(tmp);
+    final Store s = tmp.$getStore();
     DerivedMetric val = null;
-    if (this.compareTo(other) > 0) {
+    if (tmp.compareTo(other) > 0) {
         atomic {
-          val = new MinMetric@s().fabric$metrics$MinMetric$(new Metric[] { other, this });
+          val = new MinMetric@s().fabric$metrics$MinMetric$(new Metric[] { other, tmp });
         }
     } else {
         atomic {
-          val = new MinMetric@s().fabric$metrics$MinMetric$(new Metric[] { this, other });
+          val = new MinMetric@s().fabric$metrics$MinMetric$(new Metric[] { tmp, other });
         }
     }
     return findDerivedMetric(s, val);
@@ -116,23 +128,27 @@ public abstract class Metric extends AbstractSubject
    *         created and returned (unactivated).
    */
   public MetricContract getContract(Bound bound) {
+    return static_getContract(this, bound);
+  }
+
+  private static MetricContract static_getContract(Metric tmp, Bound bound) {
     MetricContract mc = null;
     atomic {
       /*
-      for (int i = 0; i < contracts.size(); i++) {
-        MetricContract c = (MetricContract) contracts.get(i);
+      for (int i = 0; i < tmp.contracts.size(); i++) {
+        MetricContract c = (MetricContract) tmp.contracts.get(i);
         if (c.stale()) {
-            removeObserver(c);
+            tmp.removeObserver(c);
             // Contract's removed, shift the index to account (ugh)
             i--;
         } else if (mc == null && c.isActivated()
-            && c.enforces(this, bound)) {
+            && c.enforces(tmp, bound)) {
           mc = c;
         }
       }
       if (mc == null)
       */
-        mc = createContract(bound);
+        mc = tmp.createContract(bound);
     }
     return mc;
   }
@@ -393,13 +409,17 @@ public abstract class Metric extends AbstractSubject
    * Ugh, public because we don't allow remote calls for non public methods.
    */
   public void refreshLocally() {
+    static_refreshLocally(this);
+  }
+
+  private static void static_refreshLocally(Metric tmp) {
     atomic {
-      fabric.common.Logging.METRICS_LOGGER.finest("REFRESHING LOCALLY " + this);
-      weakStats[0] = computeValue(true);
-      weakStats[1] = computeVelocity(true);
-      weakStats[2] = computeNoise(true);
+      fabric.common.Logging.METRICS_LOGGER.finest("REFRESHING LOCALLY " + tmp);
+      tmp.weakStats[0] = tmp.computeValue(true);
+      tmp.weakStats[1] = tmp.computeVelocity(true);
+      tmp.weakStats[2] = tmp.computeNoise(true);
     }
-    fabric.common.Logging.METRICS_LOGGER.finest("REFRESHED " + this + " to " + weakStats[0] + ", " + weakStats[1] + ", " + weakStats[2]);
+    fabric.common.Logging.METRICS_LOGGER.finest("REFRESHED " + tmp + " to " + tmp.weakStats[0] + ", " + tmp.weakStats[1] + ", " + tmp.weakStats[2]);
   }
 
   public void refreshLocally_remote(fabric.lang.security.Principal caller) {

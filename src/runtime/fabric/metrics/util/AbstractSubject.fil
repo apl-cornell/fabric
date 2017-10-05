@@ -38,15 +38,23 @@ public abstract class AbstractSubject implements Subject {
 
   /*@Override*/
   public void addObserver(Observer o) {
+    static_addObserver(this, o);
+  }
+
+  private static void static_addObserver(AbstractSubject tmp, Observer o) {
     atomic {
-      observers.add(o);
+      tmp.observers.add(o);
     }
   }
 
   /*@Override*/
   public void removeObserver(Observer o) {
+    static_removeObserver(this, o);
+  }
+
+  public static void static_removeObserver(AbstractSubject tmp, Observer o) {
     atomic {
-      observers.remove(o);
+      tmp.observers.remove(o);
     }
   }
 

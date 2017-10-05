@@ -166,56 +166,68 @@ public abstract class DerivedMetric extends Metric implements Observer {
   // items, we're called from a transactional context!
   /*@Override*/
   public double value(boolean useWeakCache) {
+    return static_value(this, useWeakCache);
+  }
+
+  private static double static_value(DerivedMetric tmp, boolean useWeakCache) {
     if (useWeakCache) {
       atomic {
-        return weakStats[0];
+        return tmp.weakStats[0];
       }
-    } else if (isObserved()) {
+    } else if (tmp.isObserved()) {
       // Make sure any related updates are accounted for
       fabric.worker.transaction.TransactionManager.getInstance().resolveObservations();
-      return lastStats[0];
+      return tmp.lastStats[0];
     }
     // Not getting updated proactively, so compute it
     //lastStats[0] = computeValue(false);
-    return computeValue(false);
+    return tmp.computeValue(false);
   }
 
   // XXX: note that the below assumes that if we're not using weakly cached
   // items, we're called from a transactional context!
   /*@Override*/
   public double velocity(boolean useWeakCache) {
-    if (usePreset) return presetV;
+    return static_velocity(this, useWeakCache);
+  }
+
+  private static double static_velocity(DerivedMetric tmp, boolean useWeakCache) {
+    if (tmp.usePreset) return tmp.presetV;
     if (useWeakCache) {
       atomic {
-        return weakStats[1];
+        return tmp.weakStats[1];
       }
-    } else if (isObserved()) {
+    } else if (tmp.isObserved()) {
       // Make sure any related updates are accounted for
       fabric.worker.transaction.TransactionManager.getInstance().resolveObservations();
-      return lastStats[1];
+      return tmp.lastStats[1];
     }
     // Not getting updated proactively, so compute it
     //lastStats[1] = computeVelocity(false);
-    return computeVelocity(false);
+    return tmp.computeVelocity(false);
   }
 
   // XXX: note that the below assumes that if we're not using weakly cached
   // items, we're called from a transactional context!
   /*@Override*/
   public double noise(boolean useWeakCache) {
-    if (usePreset) return presetN;
+    return static_noise(this, useWeakCache);
+  }
+
+  private static double static_noise(DerivedMetric tmp, boolean useWeakCache) {
+    if (tmp.usePreset) return tmp.presetN;
     if (useWeakCache) {
       atomic {
-        return weakStats[2];
+        return tmp.weakStats[2];
       }
-    } else if (isObserved()) {
+    } else if (tmp.isObserved()) {
       // Make sure any related updates are accounted for
       fabric.worker.transaction.TransactionManager.getInstance().resolveObservations();
-      return lastStats[2];
+      return tmp.lastStats[2];
     }
     // Not getting updated proactively, so compute it
     //lastStats[2] = computeNoise(false);
-    return computeNoise(false);
+    return tmp.computeNoise(false);
   }
 
   /*@Override*/
@@ -286,7 +298,7 @@ public abstract class DerivedMetric extends Metric implements Observer {
     return Collections.unmodifiableSet(Worker.getWorker().getLocalStore(), leafMetrics);
   }
 
-  private class Refresher implements Callable {
+  private static class Refresher implements Callable {
     final Metric t;
 
     public Refresher fabric$metrics$DerivedMetric$Refresher$(Metric t) {

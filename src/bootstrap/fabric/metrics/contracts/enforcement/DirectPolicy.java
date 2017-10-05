@@ -231,6 +231,14 @@ public interface DirectPolicy
         }
         
         public void activate() {
+            fabric.metrics.contracts.enforcement.DirectPolicy._Impl.
+              static_activate(
+                (fabric.metrics.contracts.enforcement.DirectPolicy)
+                  this.$getProxy());
+        }
+        
+        private static void static_activate(
+          fabric.metrics.contracts.enforcement.DirectPolicy tmp) {
             {
                 fabric.worker.transaction.TransactionManager $tm416 =
                   fabric.worker.transaction.TransactionManager.getInstance();
@@ -260,7 +268,10 @@ public interface DirectPolicy
                     $commit413 = true;
                     fabric.worker.transaction.TransactionManager.getInstance().
                       startTransaction();
-                    try { if (this.get$activated()) return; }
+                    try {
+                        if (tmp.get$activated()) return;
+                        tmp.refresh();
+                    }
                     catch (final fabric.worker.RetryException $e414) {
                         $commit413 = false;
                         continue $label412;
@@ -320,6 +331,13 @@ public interface DirectPolicy
         }
         
         public void refresh() {
+            fabric.metrics.contracts.enforcement.DirectPolicy._Impl.
+              static_refresh((fabric.metrics.contracts.enforcement.DirectPolicy)
+                               this.$getProxy());
+        }
+        
+        private static void static_refresh(
+          fabric.metrics.contracts.enforcement.DirectPolicy tmp) {
             {
                 fabric.worker.transaction.TransactionManager $tm424 =
                   fabric.worker.transaction.TransactionManager.getInstance();
@@ -352,24 +370,24 @@ public interface DirectPolicy
                     try {
                         long currentTime = java.lang.System.currentTimeMillis();
                         long trueTime =
-                          this.get$bound().trueExpiry(this.get$metric(),
-                                                      currentTime);
+                          tmp.get$bound().trueExpiry(tmp.get$metric(),
+                                                     currentTime);
                         if (trueTime < currentTime && currentTime <=
-                              this.get$expiry()) {
-                            this.set$expiry((long) 0);
+                              tmp.get$expiry()) {
+                            tmp.set$expiry((long) 0);
                         }
                         else {
                             long hedgedTime =
                               ((fabric.metrics.contracts.enforcement.DirectPolicy._Impl)
-                                 this.fetch()).hedged(currentTime);
-                            if (this.get$expiry() <= trueTime) {
+                                 tmp.fetch()).hedged(currentTime);
+                            if (tmp.get$expiry() <= trueTime) {
                                 hedgedTime =
-                                  java.lang.Math.max(this.get$expiry(),
+                                  java.lang.Math.max(tmp.get$expiry(),
                                                      hedgedTime);
                             }
-                            this.set$expiry((long) hedgedTime);
+                            tmp.set$expiry((long) hedgedTime);
                         }
-                        this.set$activated(true);
+                        tmp.set$activated(true);
                     }
                     catch (final fabric.worker.RetryException $e422) {
                         $commit421 = false;
@@ -502,6 +520,14 @@ public interface DirectPolicy
         }
         
         public void apply(fabric.metrics.contracts.MetricContract mc) {
+            fabric.metrics.contracts.enforcement.DirectPolicy._Impl.
+              static_apply((fabric.metrics.contracts.enforcement.DirectPolicy)
+                             this.$getProxy(), mc);
+        }
+        
+        private static void static_apply(
+          fabric.metrics.contracts.enforcement.DirectPolicy tmp,
+          fabric.metrics.contracts.MetricContract mc) {
             {
                 fabric.worker.transaction.TransactionManager $tm432 =
                   fabric.worker.transaction.TransactionManager.getInstance();
@@ -532,8 +558,8 @@ public interface DirectPolicy
                     fabric.worker.transaction.TransactionManager.getInstance().
                       startTransaction();
                     try {
-                        if (!this.get$activated()) activate();
-                        this.get$metric().addObserver(mc);
+                        if (!tmp.get$activated()) tmp.activate();
+                        tmp.get$metric().addObserver(mc);
                     }
                     catch (final fabric.worker.RetryException $e430) {
                         $commit429 = false;
@@ -594,15 +620,13 @@ public interface DirectPolicy
             fabric.common.Logging.METRICS_LOGGER.
               finer(
                 "DEFENDING " +
-                  java.lang.String.
-                    valueOf(fabric.lang.WrappedJavaInlineable.$unwrap(mc)) +
+                  java.lang.String.valueOf(
+                                     fabric.lang.WrappedJavaInlineable.$unwrap(
+                                                                         mc)) +
                   " WITH " +
-                  java.lang.String.
-                    valueOf(
-                      fabric.lang.WrappedJavaInlineable.
-                          $unwrap(
-                            (fabric.metrics.contracts.enforcement.DirectPolicy)
-                              this.$getProxy())));
+                  java.lang.String.valueOf(
+                                     fabric.lang.WrappedJavaInlineable.$unwrap(
+                                                                         tmp)));
         }
         
         public void unapply(fabric.metrics.contracts.MetricContract mc) {
@@ -923,11 +947,11 @@ public interface DirectPolicy
         
     }
     
-    public static final byte[] $classHash = new byte[] { 116, -72, 90, -110,
-    -21, 61, 104, 3, 68, 110, -120, -88, 9, 86, -85, 119, 61, -27, -9, 125,
-    -121, -65, -81, -115, 114, 122, 93, 36, -48, -47, -39, -118 };
+    public static final byte[] $classHash = new byte[] { 84, 94, -3, 37, 14, 98,
+    -33, -79, 76, 39, 18, 15, -47, 15, -49, 72, -126, -12, -98, 122, -40, -122,
+    80, -120, 91, -71, 19, -21, 98, -75, 57, 15 };
     public static final java.lang.String jlc$CompilerVersion$fabil = "0.3.0";
-    public static final long jlc$SourceLastModified$fabil = 1507151216000L;
+    public static final long jlc$SourceLastModified$fabil = 1507234248000L;
     public static final java.lang.String jlc$ClassType$fabil =
-      "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";
+      "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";
 }
