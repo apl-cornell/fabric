@@ -139,12 +139,16 @@ public class SumMetric extends DerivedMetric {
      */
     // TODO: Combine shared terms with different coefficients.
     public DerivedMetric plus(Metric other) {
-        final Store s = $getStore();
+      return static_plus(this, other);
+    }
+
+    private static DerivedMetric static_plus(SumMetric tmp, Metric other) {
+        final Store s = tmp.$getStore();
         // Add in all of the terms of another sum, one by one
         if (other instanceof SumMetric && other.$getStore().equals(s)) {
             SumMetric that = (SumMetric) other;
 
-            DerivedMetric result = this;
+            DerivedMetric result = tmp;
             for (int i = 0; i < that.terms.length; i++) {
                 result = result.plus(that.terms[i]);
             }
@@ -158,18 +162,18 @@ public class SumMetric extends DerivedMetric {
         int termIdx = -1;
         if (other instanceof DerivedMetric) {
             DerivedMetric derivedOther = (DerivedMetric) other;
-            for (int i = 0; i < terms.length; i++) {
-                if (!terms[i].$getStore().equals(other.$getStore()))
+            for (int i = 0; i < tmp.terms.length; i++) {
+                if (!tmp.terms[i].$getStore().equals(other.$getStore()))
                     continue;
-                if (terms[i] instanceof DerivedMetric) {
-                    DerivedMetric derivedTerm = (DerivedMetric) terms[i];
+                if (tmp.terms[i] instanceof DerivedMetric) {
+                    DerivedMetric derivedTerm = (DerivedMetric) tmp.terms[i];
                     if (derivedTerm.getLeafSubjects()
                             .containsAll(derivedOther.getLeafSubjects())) {
                         termIdx = i;
                         break;
                     }
                 } else {
-                    SampledMetric sampledTerm = (SampledMetric) terms[i];
+                    SampledMetric sampledTerm = (SampledMetric) tmp.terms[i];
                     if (derivedOther.getLeafSubjects().size() == 1
                             && derivedOther.getLeafSubjects()
                                     .contains(sampledTerm)) {
@@ -180,17 +184,17 @@ public class SumMetric extends DerivedMetric {
             }
         } else {
             SampledMetric sampledOther = (SampledMetric) other;
-            for (int i = 0; i < terms.length; i++) {
-                if (!terms[i].$getStore().equals(other.$getStore()))
+            for (int i = 0; i < tmp.terms.length; i++) {
+                if (!tmp.terms[i].$getStore().equals(other.$getStore()))
                     continue;
-                if (terms[i] instanceof DerivedMetric) {
-                    DerivedMetric derivedTerm = (DerivedMetric) terms[i];
+                if (tmp.terms[i] instanceof DerivedMetric) {
+                    DerivedMetric derivedTerm = (DerivedMetric) tmp.terms[i];
                     if (derivedTerm.getLeafSubjects().contains(sampledOther)) {
                         termIdx = i;
                         break;
                     }
                 } else {
-                    SampledMetric sampledTerm = (SampledMetric) terms[i];
+                    SampledMetric sampledTerm = (SampledMetric) tmp.terms[i];
                     if (sampledTerm.equals(sampledOther)) {
                         termIdx = i;
                         break;
@@ -202,16 +206,16 @@ public class SumMetric extends DerivedMetric {
         Metric[] newTerms = null;
         if (termIdx >= 0) {
             atomic {
-              newTerms = new Metric[terms.length];
+              newTerms = new Metric[tmp.terms.length];
             }
-            Arrays.arraycopy(terms, 0, newTerms, 0, terms.length);
+            Arrays.arraycopy(tmp.terms, 0, newTerms, 0, tmp.terms.length);
             newTerms[termIdx] = newTerms[termIdx].plus(other);
         } else {
             atomic {
-              newTerms = new Metric[terms.length + 1];
+              newTerms = new Metric[tmp.terms.length + 1];
             }
-            Arrays.arraycopy(terms, 0, newTerms, 0, terms.length);
-            newTerms[terms.length] = other;
+            Arrays.arraycopy(tmp.terms, 0, newTerms, 0, tmp.terms.length);
+            newTerms[tmp.terms.length] = other;
             Arrays.sort(newTerms, 0, newTerms.length);
         }
         DerivedMetric val = null;

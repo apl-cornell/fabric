@@ -85,10 +85,14 @@ public class ScaledMetric extends DerivedMetric {
 
     /*@Override*/
     public DerivedMetric times(double otherScalar) {
-        final Store s = $getStore();
+      return static_times(this, otherScalar);
+    }
+
+    private static DerivedMetric static_times(ScaledMetric tmp, double otherScalar) {
+        final Store s = tmp.$getStore();
         DerivedMetric val = null;
         atomic {
-          val = new ScaledMetric@s().fabric$metrics$ScaledMetric$(otherScalar * scalar, terms[0]);
+          val = new ScaledMetric@s().fabric$metrics$ScaledMetric$(otherScalar * tmp.scalar, tmp.terms[0]);
         }
         return Metric.findDerivedMetric(s, val);
     }
@@ -102,19 +106,23 @@ public class ScaledMetric extends DerivedMetric {
      */
     /*@Override*/
     public DerivedMetric plus(Metric other) {
-        final Store s = $getStore();
+      return static_plus(this, other);
+    }
+
+    private static DerivedMetric static_plus(ScaledMetric tmp, Metric other) {
+        final Store s = tmp.$getStore();
         if (other instanceof ScaledMetric && other.$getStore().equals(s)
-                && ((ScaledMetric) other).terms[0].equals(terms[0])) {
+                && ((ScaledMetric) other).terms[0].equals(tmp.terms[0])) {
             ScaledMetric that = (ScaledMetric) other;
 
             DerivedMetric val = null;
             atomic {
               val = new ScaledMetric@s().fabric$metrics$ScaledMetric$(
-                  that.scalar + scalar, terms[0]);
+                  that.scalar + tmp.scalar, tmp.terms[0]);
             }
             return Metric.findDerivedMetric(s, val);
         }
-        return super.plus(other);
+        return Metric.static_plus(tmp, other);
     }
 
     /*@Override*/

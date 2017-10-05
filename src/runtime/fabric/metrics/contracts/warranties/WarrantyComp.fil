@@ -42,20 +42,24 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
    */
   /*@Override*/
   public WarrantyValue/*T*/ apply(long time) {
+    return static_apply(this, time);
+  }
+
+  private WarrantyValue/*T*/ static_apply(WarrantyComp tmp, long time) {
     // TODO recompute but don't replace if current one is pending and we
     // compute the same value
-    fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Starting " + this);
+    fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Starting " + tmp);
     boolean loop = false;
     atomic {
-      loop = curVal == null || !curVal.contract.valid();
+      loop = tmp.curVal == null || !tmp.curVal.contract.valid();
     }
     while (loop) {
-      fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Iterating " + this);
-      if (curVal != null) {
-        curVal.contract.removeObserver(this);
+      fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Iterating " + tmp);
+      if (tmp.curVal != null) {
+        tmp.curVal.contract.removeObserver(tmp);
       }
 
-      fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Updating " + this);
+      fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Updating " + tmp);
       WarrantyValue newVal = updatedVal(System.currentTimeMillis());
 
       // If newVal's contract is null, this indicates that the programmer
@@ -64,7 +68,7 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
         return newVal;
 
       atomic {
-        curVal = newVal;
+        tmp.curVal = newVal;
       }
 
       /* Commented out because API now expectes updatedVal to have run
@@ -76,19 +80,19 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
       //fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "Estimating " + this);
       //curVal.contract.getMetric().refreshWeakEstimates();
 
-      fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Activating " + this);
-      RemoteWorker w = Worker.getWorker().getWorker(curVal.contract.$getStore().name());
-      curVal.contract.activate_remote@w(null);
-      fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Updated to " + curVal);
+      fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Activating " + tmp);
+      RemoteWorker w = Worker.getWorker().getWorker(tmp.curVal.contract.$getStore().name());
+      tmp.curVal.contract.activate_remote@w(null);
+      fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Updated to " + tmp.curVal);
 
-      fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Observing " + this);
-      curVal.contract.addObserver(this);
+      fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Observing " + tmp);
+      tmp.curVal.contract.addObserver(tmp);
       atomic {
-        loop = curVal == null || !curVal.contract.valid();
+        loop = tmp.curVal == null || !tmp.curVal.contract.valid();
       }
     }
     fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Finished " + this);
-    return curVal;
+    return tmp.curVal;
   }
 
   /*@Override*/
