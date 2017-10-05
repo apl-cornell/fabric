@@ -767,8 +767,9 @@ public final class TransactionManager {
           "{0} error committing: prepare too late", current);
 
       Set<RemoteNode<?>> abortedNodes = new HashSet<>();
-      if (readOnly) {
-        // All remote stores should have aborted already.
+      if (readOnly || singleStore) {
+        // All remote stores should have aborted already if they're read only or
+        // this is single store.
         for (Store store : stores) {
           if (store instanceof RemoteStore) {
             abortedNodes.add((RemoteStore) store);
