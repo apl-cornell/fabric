@@ -145,7 +145,7 @@ public final class Log {
    * A collection of {@link Contract}s that should be extended after this
    * transaction
    */
-  protected final OidKeyHashMap<_Impl> delayedExtensions;
+  protected final OidKeyHashMap<Long> delayedExtensions;
 
   /**
    * A map from RemoteStores to maps from onums to contracts that were longer on
@@ -687,16 +687,20 @@ public final class Log {
       }
     }
 
-    for (_Impl obs : delayedExtensions.values()) {
-      synchronized (parent.retractedContracts) {
-        if (parent.retractedContracts.containsKey(obs)) continue;
-      }
-      synchronized (parent.extendedContracts) {
-        if (parent.extendedContracts.containsKey(obs)) continue;
-      }
-      synchronized (parent.delayedExtensions) {
-        if (!parent.delayedExtensions.containsKey(obs))
-          parent.delayedExtensions.put(obs, obs);
+    for (Store s : delayedExtensions.storeSet()) {
+      for (LongKeyMap.Entry<Long> e : delayedExtensions.get(s).entrySet()) {
+        long onum = e.getKey();
+        long expiry = e.getValue();
+        synchronized (parent.retractedContracts) {
+          if (parent.retractedContracts.containsKey(s, onum)) continue;
+        }
+        synchronized (parent.extendedContracts) {
+          if (parent.extendedContracts.containsKey(s, onum)) continue;
+        }
+        synchronized (parent.delayedExtensions) {
+          if (!parent.delayedExtensions.containsKey(s, onum))
+            parent.delayedExtensions.put(s, onum, expiry);
+        }
       }
     }
 
@@ -802,7 +806,9 @@ public final class Log {
         if (!((obj instanceof MetricContract)
             && (extendedContracts.containsKey(obj)))) {
           obj.$version++;
-          obj.$readMapEntry.incrementVersion();
+          obj.$readMapEntry.incrementVersionAndUpdateExpiry(obj.$expiry);
+        } else {
+          obj.$readMapEntry.extendExpiry(obj.$expiry);
         }
         obj.$isOwned = false;
 
@@ -832,7 +838,7 @@ public final class Log {
       obj.$writeLockHolder = null;
       obj.$writeLockStackTrace = null;
       obj.$version = 1;
-      obj.$readMapEntry.incrementVersion();
+      obj.$readMapEntry.incrementVersionAndUpdateExpiry(obj.$expiry);
       obj.$isOwned = false;
     }
 
@@ -848,15 +854,15 @@ public final class Log {
 
     // Queue up extension transactions
     Map<Store, List<DelayedExtension>> extensionsToSend = new HashMap<>();
-    for (_Impl toBeExtended : delayedExtensions.values()) {
-      Store store = toBeExtended.$getStore();
-      if (!extensionsToSend.containsKey(store))
-        extensionsToSend.put(store, new ArrayList<DelayedExtension>());
-      DelayedExtension d =
-          new DelayedExtension(toBeExtended.get$$expiry() - EXTENSION_WINDOW,
-              toBeExtended.$getOnum());
-      if (!extensionsToSend.get(store).contains(d))
-        extensionsToSend.get(store).add(d);
+    for (Store s : delayedExtensions.storeSet()) {
+      List<DelayedExtension> l =
+          new ArrayList<>(delayedExtensions.get(s).size());
+      for (LongKeyMap.Entry<Long> e : delayedExtensions.get(s).entrySet()) {
+        DelayedExtension d =
+            new DelayedExtension(e.getValue() - EXTENSION_WINDOW, e.getKey());
+        if (!l.contains(d)) l.add(d);
+      }
+      extensionsToSend.put(s, l);
     }
 
     for (Map.Entry<Store, List<DelayedExtension>> entry : extensionsToSend

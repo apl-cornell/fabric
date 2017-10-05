@@ -86,8 +86,13 @@ public final class ReadMap {
       return expiry;
     }
 
-    public synchronized void incrementVersion() {
+    public synchronized void incrementVersionAndUpdateExpiry(long newExpiry) {
       versionNumber++;
+      expiry = newExpiry;
+    }
+
+    public synchronized void extendExpiry(long newExpiry) {
+      expiry = Math.max(expiry, newExpiry);
     }
 
     /**

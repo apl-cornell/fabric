@@ -1456,7 +1456,7 @@ public final class TransactionManager {
    * expiration.  This will be done by sending an extension message after the
    * transaction completes.
    */
-  public void registerDelayedExtension(fabric.lang.Object toBeExtended) {
+  public void registerDelayedExtension(fabric.lang.Object toBeExtended, long expiry) {
     _Impl obj = (_Impl) toBeExtended.fetch();
     synchronized (obj) {
       synchronized (current.writes) {
@@ -1469,7 +1469,7 @@ public final class TransactionManager {
         if (current.extendedContracts.containsKey(obj)) return;
       }
       synchronized (current.delayedExtensions) {
-        current.delayedExtensions.put(obj, obj);
+        current.delayedExtensions.put(obj, expiry);
       }
     }
   }
