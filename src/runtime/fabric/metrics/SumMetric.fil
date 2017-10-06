@@ -110,8 +110,13 @@ public class SumMetric extends DerivedMetric {
 
     /*@Override*/
     // Pushing down really messes with tree structure when sharing weak
-    // estimation across subexpressions
-    /*
+    // estimation across subexpressions but not doing so causes handling
+    // negation of multistore contracts to loop.  For now we push down. In the
+    // future, we should improve handling of negated metrics to get the best of
+    // both worlds.
+    //
+    // Note: The current design means that refreshLocally on a metric times(x)
+    // is *not* enough to update weak estimates.
     public DerivedMetric times(double scalar) {
         Metric[] newTerms = null;
         atomic {
@@ -128,7 +133,6 @@ public class SumMetric extends DerivedMetric {
         }
         return Metric.findDerivedMetric(s, val);
     }
-    */
 
     /**
      * {@inheritDoc}

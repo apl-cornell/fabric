@@ -147,6 +147,8 @@ public class ScaledMetric extends DerivedMetric {
         base = base / scalar;
 
         if (scalar < 0) {
+            // TODO: this doesn't behave well and typically will create an
+            // infinite loop.
             m = m.times(-1);
             base = -base;
             rate = -rate;
