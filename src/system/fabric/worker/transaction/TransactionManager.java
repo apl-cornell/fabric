@@ -36,8 +36,6 @@ import fabric.common.Timing;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
-import fabric.common.util.ConcurrentLongKeyMap;
-import fabric.common.util.ConcurrentOidKeyHashMap;
 import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.OidKeyHashMap;
@@ -131,8 +129,7 @@ public final class TransactionManager {
   /**
    * The locks currently held by this Thread's transaction manager.
    */
-  protected ConcurrentOidKeyHashMap<Boolean> contractLocksHeld =
-      new ConcurrentOidKeyHashMap<>();
+  protected OidKeyHashMap<Boolean> contractLocksHeld = new OidKeyHashMap<>();
 
   // Mark an acquired lock.
   public void registerLockAcquire(fabric.lang.Object lock) {
@@ -156,8 +153,8 @@ public final class TransactionManager {
   /**
    * The locks to acquire before the next transaction runs.
    */
-  protected ConcurrentOidKeyHashMap<Contract._Proxy> contractsToAcquire =
-      new ConcurrentOidKeyHashMap<>();
+  protected OidKeyHashMap<Contract._Proxy> contractsToAcquire =
+      new OidKeyHashMap<>();
 
   /**
    * Mark a contract to be acquired before next top-level transaction.
@@ -167,27 +164,28 @@ public final class TransactionManager {
   }
 
   protected void acquireContractLocks() {
-    for (Iterator<ConcurrentLongKeyMap<Contract._Proxy>> it =
-        contractsToAcquire.iterator(); it.hasNext();) {
-      for (Contract._Proxy c : it.next().values()) {
-        final Contract._Proxy cFinal = c;
-        Worker.runInTopLevelTransaction((new Code<Void>() {
-          @Override
-          public Void run() {
-            cFinal.acquireReconfigLocks();
-            return null;
+    final OidKeyHashMap<Contract._Proxy> contractsToAcquireF = contractsToAcquire;
+    Worker.runInTopLevelTransaction((new Code<Void>() {
+      @Override
+      public Void run() {
+        for (Iterator<LongKeyMap<Contract._Proxy>> it =
+            contractsToAcquireF.iterator(); it.hasNext();) {
+          for (Contract._Proxy c : it.next().values()) {
+            c.acquireReconfigLocks();
           }
-        }), true);
+        }
+        return null;
       }
-    }
+    }), true);
 
     // We've acquired now.
     contractsToAcquire.clear();
   }
 
   protected void releaseContractLocks() {
-    for (Store s : contractLocksHeld.storeSet()) {
-      for (LongIterator it = contractLocksHeld.get(s).keySet().iterator(); it
+    OidKeyHashMap<Boolean> locksCopy = new OidKeyHashMap<>(contractLocksHeld);
+    for (Store s : locksCopy.storeSet()) {
+      for (LongIterator it = locksCopy.get(s).keySet().iterator(); it
           .hasNext();) {
         long onum = it.next();
         ReconfigLock._Proxy l = new ReconfigLock._Proxy(s, onum);

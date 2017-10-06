@@ -606,7 +606,10 @@ public abstract class Metric extends AbstractSubject
    */
   protected static DerivedMetric findDerivedMetric(final Store s,
       DerivedMetric m) {
-    DerivedMetric orig = (DerivedMetric) s.derivedMap().get(m);
+    DerivedMetric orig = null;
+    atomic {
+      orig = (DerivedMetric) s.derivedMap().get(m);
+    }
     if (orig == null) {
       atomic {
         s.derivedMap().put(m, m);

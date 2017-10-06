@@ -154,6 +154,9 @@ public class MetricContract extends Contract {
     if (asyncExtension)
       return false;
 
+    // Otherwise we're finding a new policy, so we're coordinating.
+    fabric.common.Logging.METRICS_LOGGER.fine("COORDINATING FOR " + this + " " + bound + " IN " + TransactionManager.getInstance().getCurrentTid());
+
     // If we're moving to a new policy we need to be holding the reconfig locks.
     TransactionManager tm = TransactionManager.getInstance();
     if (!this.lock.held()) {
@@ -167,8 +170,7 @@ public class MetricContract extends Contract {
       }
     }
 
-    // Otherwise find a new one.
-    fabric.common.Logging.METRICS_LOGGER.fine("COORDINATING FOR " + this + " " + bound + " IN " + TransactionManager.getInstance().getCurrentTid());
+    // Find a new policy now that we have the lock.
     EnforcementPolicy oldPolicy = currentPolicy;
     EnforcementPolicy newPolicy = metric.policy(bound);
 
@@ -279,6 +281,7 @@ public class MetricContract extends Contract {
 
   /*@Override*/
   public void acquireReconfigLocks() {
+    fabric.common.Logging.METRICS_LOGGER.finer("ACQUIRING LOCK AT " + this + " IN " + TransactionManager.getInstance().getCurrentLog());
     this.lock.acquire();
     this.currentPolicy.acquireReconfigLocks();
   }
