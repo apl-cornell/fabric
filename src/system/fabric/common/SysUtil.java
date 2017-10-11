@@ -72,7 +72,7 @@ public final class SysUtil {
    */
   public static byte[] hashPlatformClass(Class<?> c) throws IOException {
     boolean hashing_Impl = false;
-    Class<?> ifaceClass = null;
+    Class<? extends fabric.lang.Object> ifaceClass = null;
 
     // There are three cases here. If the class extends fabric.lang.Object and
     // was compiled with filc/fabc, we use the compiler-generated hash.
@@ -80,30 +80,39 @@ public final class SysUtil {
     // hash its name. Otherwise, we hash the class's bytecode.
 
     if (fabric.lang.Object.class.isAssignableFrom(c)) {
+      // If we were given an _Impl class, find the corresponding Fabric class.
+      // This is the class we will search to find the hash.
+      Class<? extends fabric.lang.Object> fabricClass = null;
+      Class<? extends fabric.lang.Object._Impl> implClass = null;
+      if (fabric.lang.Object._Impl.class.isAssignableFrom(c)) {
+        implClass = (Class<? extends fabric.lang.Object._Impl>) c;
+        fabricClass = getFabricClass(implClass);
+      }
+
+      if (fabricClass == null) {
+        // Fabric class wasn't found. Just use what the caller gave us.
+        fabricClass = (Class<? extends fabric.lang.Object>) c;
+      }
+
       // We have a Fabric class. Use the filc/fabc-generated hash, if any. If we
       // get any exceptions from attempting to do this, we assume that the class
       // wasn't compiled by filc/fabc and hash the bytecode instead.
-      try {
-        @SuppressWarnings("unchecked")
-        Class<? extends fabric.lang.Object> fabricClass =
-            (Class<? extends fabric.lang.Object>) c;
-        return classHashFieldValue(fabricClass);
-      } catch (NoSuchFieldException e) {
-      } catch (SecurityException e) {
-      } catch (IllegalArgumentException e) {
-      } catch (IllegalAccessException e) {
+      {
+        byte[] hash = classHashFieldValueOrNull(fabricClass);
+        if (hash != null) return hash;
       }
 
       // Fabric class wasn't compiled by filc/fabc. Instead, we hash the
       // bytecode for the _Impl class, if any, to ensure we cover the class's
       // code.
-      for (Class<?> nested : c.getClasses()) {
-        if (nested.getSimpleName().equals("_Impl")) {
-          hashing_Impl = true;
-          ifaceClass = c;
-          c = nested;
-          break;
-        }
+      if (implClass != null) implClass = getImplClass(fabricClass);
+      if (implClass != null) {
+        hashing_Impl = true;
+        ifaceClass = fabricClass;
+        c = implClass;
+        Logging.log(CLASS_HASHING_LOGGER, Level.FINEST,
+            "Got request to hash {0}, but hashing {1} instead",
+            ifaceClass.getName(), c.getName());
       }
     }
 
@@ -116,7 +125,14 @@ public final class SysUtil {
     // Check the cache.
     byte[] result = classHashCache.get(className);
     if (result != null) {
-      CLASS_HASHING_LOGGER.finer("  Hash found in cache");
+      if (CLASS_HASHING_LOGGER.isLoggable(Level.FINEST)) {
+        String hash = new BigInteger(1, result).toString(16);
+        Logging.log(CLASS_HASHING_LOGGER, Level.FINEST,
+            "  Hash for {0} found in cache: {1}", className, hash);
+      } else {
+        CLASS_HASHING_LOGGER.log(Level.FINER, "  Hash for {0} found in cache",
+            className);
+      }
       return result;
     }
 
@@ -162,10 +178,15 @@ public final class SysUtil {
 
         byte[] buf = new byte[BUF_LEN];
         int count = classIn.read(buf);
+        int total = 0;
         while (count != -1) {
           digest.update(buf, 0, count);
+          total += count;
           count = classIn.read(buf);
         }
+
+        Logging.log(CLASS_HASHING_LOGGER, Level.FINEST,
+            "  Hashed {0} bytes from bytecode for {1}", total, className);
       }
     }
 
@@ -174,6 +195,11 @@ public final class SysUtil {
       Class<?> superClass = c.getSuperclass();
       if (superClass != null) {
         // Assume the superclass is also a platform class.
+        if (CLASS_HASHING_LOGGER.isLoggable(Level.FINEST)) {
+          Logging.log(CLASS_HASHING_LOGGER, Level.FINEST,
+              "  Including {0} in hash for {1}", superClass.getName(),
+              className);
+        }
         digest.update(hashPlatformClass(superClass));
       }
     }
@@ -183,6 +209,10 @@ public final class SysUtil {
         hashing_Impl ? ifaceClass.getInterfaces() : c.getInterfaces();
     for (Class<?> iface : interfaces) {
       // Assume the interface is also a platform class.
+      if (CLASS_HASHING_LOGGER.isLoggable(Level.FINEST)) {
+        Logging.log(CLASS_HASHING_LOGGER, Level.FINEST,
+            "  Including {0} in hash for {1}", iface.getName(), className);
+      }
       digest.update(hashPlatformClass(iface));
     }
 
@@ -210,6 +240,17 @@ public final class SysUtil {
       return classHashFieldValue(clazz);
     } catch (NoSuchFieldException e) {
       throw new InternalError(e);
+    }
+  }
+
+  /**
+   * Returns the value of the static "$classHash" field in the given class. This
+   * contains the class hash that was computed by the compiler.
+   */
+  private static byte[] classHashFieldValue(
+      Class<? extends fabric.lang.Object> clazz) throws NoSuchFieldException {
+    try {
+      return (byte[]) clazz.getField("$classHash").get(null);
     } catch (SecurityException e) {
       throw new InternalError(e);
     } catch (IllegalArgumentException e) {
@@ -220,13 +261,16 @@ public final class SysUtil {
   }
 
   /**
-   * Returns the value of the static "$classHash" field in the given class. This
-   * contains the class hash that was computed by the compiler.
+   * Returns the value of the static "$classHash" field in the given class, or
+   * null if the field doesn't exist in the class.
    */
-  private static byte[] classHashFieldValue(
-      Class<? extends fabric.lang.Object> clazz) throws NoSuchFieldException,
-      SecurityException, IllegalArgumentException, IllegalAccessException {
-    return (byte[]) clazz.getField("$classHash").get(null);
+  private static byte[] classHashFieldValueOrNull(
+      Class<? extends fabric.lang.Object> clazz) {
+    try {
+      return classHashFieldValue(clazz);
+    } catch (NoSuchFieldException e) {
+      return null;
+    }
   }
 
   /**
@@ -243,10 +287,43 @@ public final class SysUtil {
   public static Class<? extends _Impl> getImplClass(
       Class<? extends fabric.lang.Object> clazz) {
     for (Class<?> nested : clazz.getClasses()) {
-      if (nested.getSimpleName().equals("_Impl")) {
+      if (nested.getSimpleName().equals("_Impl")
+          && clazz.isAssignableFrom(nested)) {
         @SuppressWarnings("unchecked")
         Class<? extends _Impl> implClass = (Class<? extends _Impl>) nested;
         return implClass;
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Returns the interface for the given _Impl class.
+   *
+   * @param implClass
+   *          the Class object for an _Impl class.
+   *
+   * @return the Class object for the Fabric class corresponding to the given
+   *         _Impl class. If no class is found, <code>null</code> is returned.
+   */
+  public static Class<? extends fabric.lang.Object> getFabricClass(
+      Class<? extends fabric.lang.Object._Impl> implClass) {
+    // Treat the _Impl's outer class as its interface if the outer class is an
+    // interface that extends fabric.lang.Object and is directly implementd by
+    // the _Impl.
+    Class<?> outer = implClass.getDeclaringClass();
+
+    if (outer == null || !outer.isInterface()
+        || !fabric.lang.Object.class.isAssignableFrom(outer)
+        || !outer.isAssignableFrom(implClass)) {
+      return null;
+    }
+
+    // Check that the _Impl directly implements the outer class.
+    for (Class<?> iface : implClass.getInterfaces()) {
+      if (iface.equals(outer)) {
+        return (Class<? extends fabric.lang.Object>) outer;
       }
     }
 
