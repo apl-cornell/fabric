@@ -562,7 +562,8 @@ public abstract class ClassRef implements FastSerializable {
       if (className.contains("$$."))
         className = className.substring(className.indexOf("$$.") + 3);
       this.nestedClassName = className.contains("$")
-          ? className.substring(className.indexOf('$') + 1) : null;
+          ? className.substring(className.indexOf('$') + 1)
+          : null;
 
       this.codebase = null;
       this.className = null;

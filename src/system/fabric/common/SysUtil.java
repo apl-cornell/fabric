@@ -34,8 +34,8 @@ public final class SysUtil {
    * Caches hashes of platform classes that weren't compiled with fabc. Maps
    * class names to their hashes.
    */
-  private static final Map<String, byte[]> classHashCache = Collections
-      .synchronizedMap(new HashMap<String, byte[]>());
+  private static final Map<String, byte[]> classHashCache =
+      Collections.synchronizedMap(new HashMap<String, byte[]>());
 
   /**
    * Size of buffer to use for reading bytecode while hashing classes.
@@ -86,7 +86,7 @@ public final class SysUtil {
       try {
         @SuppressWarnings("unchecked")
         Class<? extends fabric.lang.Object> fabricClass =
-        (Class<? extends fabric.lang.Object>) c;
+            (Class<? extends fabric.lang.Object>) c;
         return classHashFieldValue(fabricClass);
       } catch (NoSuchFieldException e) {
       } catch (SecurityException e) {
@@ -123,7 +123,8 @@ public final class SysUtil {
     // Not found in cache. Need to compute the hash.
     MessageDigest digest = Crypto.digestInstance();
 
-    if (c.equals(java.lang.Object.class) || c.equals(java.lang.Cloneable.class)) {
+    if (c.equals(java.lang.Object.class)
+        || c.equals(java.lang.Cloneable.class)) {
       // Have java.lang.Object or java.lang.Cloneable. Hash the class's name.
       // This is a bit of a hack to get different versions of Java to play with
       // each other.
@@ -150,11 +151,12 @@ public final class SysUtil {
             classResource);
       }
 
-      try (InputStream classIn = classLoader.getResourceAsStream(classFileName)) {
+      try (InputStream classIn =
+          classLoader.getResourceAsStream(classFileName)) {
         if (classIn == null) {
           Logging.log(CLASS_HASHING_LOGGER, Level.WARNING,
-              "Unable to load {0} from {1} using {2}", className,
-              classFileName, classLoader);
+              "Unable to load {0} from {1} using {2}", className, classFileName,
+              classLoader);
           throw new InternalError("Class not found: " + className);
         }
 
@@ -179,22 +181,22 @@ public final class SysUtil {
     // Include declared interfaces, if any.
     Class<?>[] interfaces =
         hashing_Impl ? ifaceClass.getInterfaces() : c.getInterfaces();
-        for (Class<?> iface : interfaces) {
-          // Assume the interface is also a platform class.
-          digest.update(hashPlatformClass(iface));
-        }
+    for (Class<?> iface : interfaces) {
+      // Assume the interface is also a platform class.
+      digest.update(hashPlatformClass(iface));
+    }
 
-        result = digest.digest();
+    result = digest.digest();
 
-        classHashCache.put(className, result);
+    classHashCache.put(className, result);
 
-        if (CLASS_HASHING_LOGGER.isLoggable(Level.FINEST)) {
-          String hash = new BigInteger(1, result).toString(16);
-          Logging.log(CLASS_HASHING_LOGGER, Level.FINEST, "  Hash for {0} is {1}",
-              className, hash);
-        }
+    if (CLASS_HASHING_LOGGER.isLoggable(Level.FINEST)) {
+      String hash = new BigInteger(1, result).toString(16);
+      Logging.log(CLASS_HASHING_LOGGER, Level.FINEST, "  Hash for {0} is {1}",
+          className, hash);
+    }
 
-        return result;
+    return result;
   }
 
   /**
@@ -251,7 +253,8 @@ public final class SysUtil {
     return null;
   }
 
-  public static URL locateClass(String className) throws ClassNotFoundException {
+  public static URL locateClass(String className)
+      throws ClassNotFoundException {
     Class<?> c = Worker.getWorker().getClassLoader().loadClass(className);
 
     ClassLoader classLoader = c.getClassLoader();
@@ -351,8 +354,8 @@ public final class SysUtil {
   /**
    * Turns an array of bytes into an object using Java serialization.
    */
-  public static Object deserialize(byte[] bytes) throws IOException,
-  ClassNotFoundException {
+  public static Object deserialize(byte[] bytes)
+      throws IOException, ClassNotFoundException {
     ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
     ObjectInputStream ois = new ObjectInputStream(bais);
     return ois.readObject();
