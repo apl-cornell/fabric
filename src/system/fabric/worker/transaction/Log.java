@@ -230,6 +230,18 @@ public final class Log {
   private final Set<Log> waitsFor;
 
   /**
+   * Locks that will be acquired if this transaction commits successfully.
+   */
+  protected final OidKeyHashMap<Boolean> pendingAcquires =
+      new OidKeyHashMap<>();
+
+  /**
+   * Locks that will be released if this transaction commits successfully.
+   */
+  protected final OidKeyHashMap<Boolean> pendingReleases =
+      new OidKeyHashMap<>();
+
+  /**
    * Creates a new log with the given parent and the given transaction ID. The
    * TID for the parent and the given TID are assumed to be consistent. If the
    * given TID is null, a random tid is generated for the subtransaction.
@@ -552,6 +564,8 @@ public final class Log {
       workersCalled.clear();
       securityCache.reset();
       longerContracts = null;
+      pendingAcquires.clear();
+      pendingReleases.clear();
 
       if (parent != null) {
         writerMap = new WriterMap(parent.writerMap);
@@ -762,6 +776,16 @@ public final class Log {
       parent.writerMap.putAll(writerMap);
     }
 
+    // Merge pessimistic lock pending operations.
+    // Acquires
+    synchronized (parent.pendingAcquires) {
+      parent.pendingAcquires.putAll(pendingAcquires);
+    }
+    // Releases
+    synchronized (parent.pendingReleases) {
+      parent.pendingReleases.putAll(pendingReleases);
+    }
+
     // Update the expiry time and drop this child.
     synchronized (parent) {
       parent.expiryToCheck = Math.min(expiryToCheck, parent.expiryToCheck);
@@ -869,6 +893,10 @@ public final class Log {
         .entrySet()) {
       entry.getKey().sendExtensions(entry.getValue());
     }
+
+    // Update this thread's lock state in the TransactionManager.
+    TransactionManager tm = TransactionManager.getInstance();
+    tm.updateLockState(pendingAcquires, pendingReleases);
 
     // Merge the security cache into the top-level label cache.
     securityCache.mergeWithTopLevel();

@@ -133,21 +133,24 @@ public final class TransactionManager {
 
   // Mark an acquired lock.
   public void registerLockAcquire(fabric.lang.Object lock) {
-    Logging.log(METRICS_LOGGER, Level.FINEST, "ACQUIRING LOCK {0}/{1}",
-        lock.$getStore(), new Long(lock.$getOnum()));
-    contractLocksHeld.put(lock, true);
+    Logging.log(METRICS_LOGGER, Level.FINEST,
+        "ACQUIRING LOCK {0}/{1} IN {2}/{3}", lock.$getStore(),
+        new Long(lock.$getOnum()), Thread.currentThread(), getCurrentTid());
+    current.pendingAcquires.put(lock, true);
   }
 
   // Check that we have this lock.
   public boolean hasLock(fabric.lang.Object lock) {
+    // TODO: consider allowing a pending acquire to be considered held?
     return contractLocksHeld.containsKey(lock);
   }
 
   // Unmark an acquired lock.
   public void registerLockRelease(fabric.lang.Object lock) {
-    Logging.log(METRICS_LOGGER, Level.FINEST, "RELEASING LOCK {0}/{1}",
-        lock.$getStore(), new Long(lock.$getOnum()));
-    contractLocksHeld.remove(lock);
+    Logging.log(METRICS_LOGGER, Level.FINEST,
+        "RELEASING LOCK {0}/{1} IN {2}/{3}", lock.$getStore(),
+        new Long(lock.$getOnum()), Thread.currentThread(), getCurrentTid());
+    current.pendingReleases.put(lock, true);
   }
 
   /**
@@ -164,7 +167,8 @@ public final class TransactionManager {
   }
 
   protected void acquireContractLocks() {
-    final OidKeyHashMap<Contract._Proxy> contractsToAcquireF = contractsToAcquire;
+    final OidKeyHashMap<Contract._Proxy> contractsToAcquireF =
+        contractsToAcquire;
     Worker.runInTopLevelTransaction((new Code<Void>() {
       @Override
       public Void run() {
@@ -177,8 +181,6 @@ public final class TransactionManager {
         return null;
       }
     }), true);
-
-    // We've acquired now.
     contractsToAcquire.clear();
   }
 
@@ -190,6 +192,37 @@ public final class TransactionManager {
         long onum = it.next();
         ReconfigLock._Proxy l = new ReconfigLock._Proxy(s, onum);
         l.release();
+      }
+    }
+  }
+
+  /**
+   * Update lock state for this thread's transaction manager after a successful
+   * commit.
+   */
+  protected void updateLockState(OidKeyHashMap<Boolean> acquires,
+      OidKeyHashMap<Boolean> releases) {
+    // XXX: Note that if there's overlap, the lock is considered released.  This
+    // should not happen in normal operation but if things change this is worth
+    // remembering.
+    // TODO: putAll does the same thing but removes the opportunity to easily
+    // log the event.
+    for (Store s : acquires.storeSet()) {
+      for (LongIterator it = acquires.get(s).keySet().iterator(); it
+          .hasNext();) {
+        long onum = it.next();
+        contractLocksHeld.put(s, onum, true);
+        Logging.log(METRICS_LOGGER, Level.FINEST,
+            "ACQUIRED LOCK {0}/{1} IN {2}", s, onum, Thread.currentThread());
+      }
+    }
+    for (Store s : releases.storeSet()) {
+      for (LongIterator it = releases.get(s).keySet().iterator(); it
+          .hasNext();) {
+        long onum = it.next();
+        contractLocksHeld.remove(s, onum);
+        Logging.log(METRICS_LOGGER, Level.FINEST,
+            "RELEASED LOCK {0}/{1} IN {2}", s, onum, Thread.currentThread());
       }
     }
   }
@@ -1475,7 +1508,8 @@ public final class TransactionManager {
    * expiration.  This will be done by sending an extension message after the
    * transaction completes.
    */
-  public void registerDelayedExtension(fabric.lang.Object toBeExtended, long expiry) {
+  public void registerDelayedExtension(fabric.lang.Object toBeExtended,
+      long expiry) {
     _Impl obj = (_Impl) toBeExtended.fetch();
     synchronized (obj) {
       synchronized (current.writes) {
