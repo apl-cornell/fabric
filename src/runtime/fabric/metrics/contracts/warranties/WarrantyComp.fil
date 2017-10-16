@@ -45,7 +45,7 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
     return static_apply(this, time);
   }
 
-  private WarrantyValue/*T*/ static_apply(WarrantyComp tmp, long time) {
+  private static WarrantyValue/*T*/ static_apply(WarrantyComp tmp, long time) {
     // TODO recompute but don't replace if current one is pending and we
     // compute the same value
     fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Starting " + tmp);
@@ -60,7 +60,7 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
       }
 
       fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Updating " + tmp);
-      WarrantyValue newVal = updatedVal(System.currentTimeMillis());
+      WarrantyValue newVal = tmp.updatedVal(System.currentTimeMillis());
 
       // If newVal's contract is null, this indicates that the programmer
       // doesn't want to memoize the result with a treaty.
@@ -91,7 +91,7 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
         loop = tmp.curVal == null || !tmp.curVal.contract.valid();
       }
     }
-    fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Finished " + this);
+    fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Finished " + tmp);
     return tmp.curVal;
   }
 
