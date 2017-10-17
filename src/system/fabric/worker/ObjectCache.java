@@ -490,7 +490,7 @@ public final class ObjectCache {
       // Check if object in current entry is an older version.
       if (curEntry.getVersion() > update.getVersion()
           || (curEntry.getVersion() == update.getVersion()
-              && curEntry.getExpiry() == update.getExpiry()))
+              && curEntry.getExpiry() >= update.getExpiry()))
         return;
 
       if (curEntry.getVersion() == update.getVersion()

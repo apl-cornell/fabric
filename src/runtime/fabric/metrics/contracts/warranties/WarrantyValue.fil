@@ -9,11 +9,11 @@ import fabric.metrics.contracts.MetricContract;
 public class WarrantyValue/*<V>*/ {
 
   /** The result value. */
-  public /*final V*/ Object value;
+  public /*V*/ Object value;
   /**
    * A {@link MetricContract} which, when valid, implies the value is current.
    */
-  public /*final*/ MetricContract contract;
+  public MetricContract contract;
 
   /**
    * @param value
@@ -22,9 +22,9 @@ public class WarrantyValue/*<V>*/ {
    *        the value's associated {@link MetricContract}
    */
   public WarrantyValue fabric$metrics$contracts$warranties$WarrantyValue$(/*V*/ Object value, MetricContract contract) {
+    fabric$lang$Object$();
     this.value = value;
     this.contract = contract;
-    fabric$lang$Object$();
     return this;
   }
 
