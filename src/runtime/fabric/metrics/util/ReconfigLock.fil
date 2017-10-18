@@ -40,9 +40,8 @@ public class ReconfigLock {
       if (current != null) {
         while (current.parent != null) current = current.parent;
         Logging.METRICS_LOGGER.finer("ABORTING " + current + " FOR LOCK " + this);
-        // XXX: Dumb hack to avoid issues with stale lock.  I don't think this
-        // is necessary?
-        //tm.checkForStaleObjects();
+        // XXX: Dumb hack to avoid issues with stale lock.
+        tm.checkForStaleObjects();
         throw new TransactionRestartingException(
             new TransactionID(current.topTid));
       }
@@ -62,9 +61,8 @@ public class ReconfigLock {
       if (current != null) {
         while (current.parent != null) current = current.parent;
         Logging.METRICS_LOGGER.finer("ABORTING " + current + " FOR LOCK " + this);
-        // XXX: Dumb hack to avoid issues with stale lock.  I don't think this
-        // is necessary?
-        //tm.checkForStaleObjects();
+        // XXX: Dumb hack to avoid issues with stale lock.
+        tm.checkForStaleObjects();
         throw new TransactionRestartingException(
             new TransactionID(current.topTid));
       }
