@@ -77,18 +77,22 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
       RemoteWorker w = Worker.getWorker().getWorker(newVal.contract.$getStore().name());
       newVal.contract.activate_remote@w(null);
 
-      fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Observing " + newVal + " for " + tmp);
-      newVal.contract.addObserver(tmp);
-
-      fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Setting " + tmp + " to " + newVal);
+      fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Setting " + tmp + " to " + newVal + " and Observing");
       atomic {
-        tmp.curVal.value = newVal.value;
-        if (tmp.curVal.contract != null) {
-          tmp.curVal.contract.removeObserver(tmp);
+        // Need to double check we weren't scooped by another caller.  If we
+        // were, don't bother with our new value and go with the existing value.
+        if (tmp.curVal.contract == null || !tmp.curVal.contract.valid()) {
+          tmp.curVal.value = newVal.value;
+          if (tmp.curVal.contract != newVal.contract) {
+            if (tmp.curVal.contract != null) {
+              tmp.curVal.contract.removeObserver(tmp);
+            }
+            tmp.curVal.contract = newVal.contract;
+            tmp.curVal.contract.addObserver(tmp);
+          }
         }
-        tmp.curVal.contract = newVal.contract;
       }
-      fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Updated to " + newVal);
+      fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Updated to " + tmp.curVal);
 
       atomic {
         loop = tmp.curVal.contract == null || !tmp.curVal.contract.valid();
