@@ -3,10 +3,9 @@ package fabric.common;
 public final class ONumConstants {
   public static final long ROOT_MAP = 0;
   public static final long STORE_PRINCIPAL = 1;
-  public static final long DERIVED_MAP = 2;
 
   // This is the first available onum.
-  public static final long FIRST_UNRESERVED = 3;
+  public static final long FIRST_UNRESERVED = 2;
 
   // These should be longs, but they are ints so that they can be used in a
   // switch statement.

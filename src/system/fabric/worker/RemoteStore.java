@@ -358,11 +358,6 @@ public class RemoteStore extends RemoteNode<RemoteStore>
   }
 
   @Override
-  public Map derivedMap() {
-    return new Map._Proxy(this, ONumConstants.DERIVED_MAP);
-  }
-
-  @Override
   public NodePrincipal getPrincipal() {
     return new NodePrincipal._Proxy(this, ONumConstants.STORE_PRINCIPAL);
   }

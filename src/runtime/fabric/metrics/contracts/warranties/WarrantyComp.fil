@@ -42,10 +42,27 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
    */
   /*@Override*/
   public WarrantyValue/*T*/ apply(long time) {
-    return static_apply(this, time);
+    return static_apply(this, time, true);
   }
 
-  private static WarrantyValue/*T*/ static_apply(WarrantyComp tmp, long time) {
+  /**
+   * Run this warranty computation at the given time.
+   *
+   * @param time
+   *            the current time we're applying this computation at
+   * @param autoRetry
+   *            flag indicating whether the computation should automatically
+   *            retry if the contract goes stale before returning.
+   * @return A {@link WarrantyValue} which holds the return value and the
+   * contract associated with it (guaranteed active when returned) that asserts
+   * that the return value is consistent.
+   */
+  /*@Override*/
+  public WarrantyValue/*T*/ apply(long time, boolean autoRetry) {
+    return static_apply(this, time, autoRetry);
+  }
+
+  private static WarrantyValue/*T*/ static_apply(WarrantyComp tmp, long time, boolean autoRetry) {
     // TODO recompute but don't replace if current one is pending and we
     // compute the same value
     fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Starting " + tmp);
@@ -95,7 +112,9 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
       fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Updated to " + tmp.curVal);
 
       atomic {
-        loop = tmp.curVal.contract == null || !tmp.curVal.contract.valid();
+        // Only bother to retry if we're supposed to and we don't have a valid
+        // contract.
+        loop = tmp.curVal.contract == null || (autoRetry && !tmp.curVal.contract.valid());
       }
     }
     fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Finished " + tmp + " with " + tmp.curVal);

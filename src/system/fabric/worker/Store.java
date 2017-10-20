@@ -31,12 +31,6 @@ public interface Store extends Serializable {
   public boolean isLocalStore();
 
   /**
-   * Find the unique DerivedMetric that's stored for tracking the equivalent of
-   * the given DerivedMetric.
-   */
-  public fabric.util.Map derivedMap();
-
-  /**
    * Notifies the store that the transaction is entering the Prepare phase.
    *
    * @return A map from onums to contracts that were longer on the store, to

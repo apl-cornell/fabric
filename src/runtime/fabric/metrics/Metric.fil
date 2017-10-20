@@ -1,6 +1,7 @@
 package fabric.metrics;
 
 import fabric.util.ArrayList;
+import fabric.util.HashMap;
 import fabric.util.List;
 import fabric.util.Set;
 
@@ -288,6 +289,12 @@ public abstract class Metric extends AbstractSubject
   // Internal API
   ////////////////////////////////////////////////////////////////////////////
 
+  /**
+   * Cache of DerivedMetrics using this Metric as a term (helps to break up
+   * interning cache to avoid one big map.
+   */
+  private final HashMap/*<DerivedMetric, DerivedMetric>*/ transformations;
+
   // Stuff to allow for preset strategies.
   public abstract boolean getUsePreset();
   public abstract double getPresetR();
@@ -304,6 +311,9 @@ public abstract class Metric extends AbstractSubject
     Label lbl = LabelUtil.noComponents();
     Store s = $getStore();
     this.weakStats = new double[3] ~lbl @s;
+    // Use default size since we don't expect most applications to use a ton of
+    // different transformations on the same terms.
+    this.transformations = new HashMap().fabric$util$HashMap$();
     fabric$metrics$util$AbstractSubject$();
     return this;
   }
@@ -606,16 +616,18 @@ public abstract class Metric extends AbstractSubject
    */
   protected static DerivedMetric findDerivedMetric(final Store s,
       DerivedMetric m) {
-    DerivedMetric orig = null;
     atomic {
-      orig = (DerivedMetric) s.derivedMap().get(m);
-    }
-    if (orig == null) {
-      atomic {
-        s.derivedMap().put(m, m);
+      DerivedMetric orig = (DerivedMetric) m.terms[0].transformations.get(m);
+      if (orig == null) {
+        // Probably could just do the first term since AFAIK no derived metrics
+        // equate between differently ordered terms currently, but tabling that
+        // for now.
+        for (int i = 0; i < m.terms.length; i++) {
+          m.terms[i].transformations.put(m, m);
+        }
+        orig = m;
       }
-      orig = m;
+      return orig;
     }
-    return orig;
   }
 }

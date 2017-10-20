@@ -43,7 +43,6 @@ public final class LocalStore implements Store, Serializable {
   private long freshOID = ONumConstants.FIRST_UNRESERVED;
 
   private Map rootMap;
-  private Map derivedMap;
   private Principal topPrincipal;
   private ConfPolicy topConfidPolicy;
   private ConfPolicy bottomConfidPolicy;
@@ -267,11 +266,6 @@ public final class LocalStore implements Store, Serializable {
     return rootMap;
   }
 
-  @Override
-  public Map derivedMap() {
-    return derivedMap;
-  }
-
   public void addLocalDelegation(Principal p, Principal q) {
     localDelegates.add(new Pair<>(p, q));
   }
@@ -419,7 +413,6 @@ public final class LocalStore implements Store, Serializable {
 
         // Create root map.
         rootMap = new HashMap._Impl(LocalStore.this).fabric$util$HashMap$();
-        derivedMap = new HashMap._Impl(LocalStore.this).fabric$util$HashMap$();
         localDelegates = new HashSet<>();
 
         return null;
