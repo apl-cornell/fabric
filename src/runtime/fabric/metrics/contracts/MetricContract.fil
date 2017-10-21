@@ -246,10 +246,10 @@ public class MetricContract extends Contract {
   }
 
   /*@Override*/
-  public Set/*<SampledMetric>*/ getLeafSubjects() {
+  public SampledMetric[] getLeafSubjects() {
     Metric m = getMetric();
     if (m instanceof SampledMetric) {
-      return Collections.singleton((SampledMetric) m);
+      return new SampledMetric[0];
     } else if (m instanceof DerivedMetric) {
       return ((DerivedMetric) m).getLeafSubjects();
     } else {

@@ -47,7 +47,7 @@ public abstract class DerivedMetric extends Metric implements Observer {
    */
   protected final Metric[] terms;
 
-  private final Set/*<SampledMetric>*/ leafMetrics;
+  private final SampledMetric[] leafMetrics;
   private final boolean singleStore;
 
   /**
@@ -57,14 +57,13 @@ public abstract class DerivedMetric extends Metric implements Observer {
    *        the {@link Metric}s that this {@link DerivedMetric} is
    *        computed from
    */
-  public DerivedMetric fabric$metrics$DerivedMetric$(Metric[] terms) {
+  public DerivedMetric fabric$metrics$DerivedMetric$(Metric native[] terms) {
     // Removed because expensive and we're going to assume for now it's not an
     // error if it happens...
     //if (new TreeSet[><><]().fabric$util$TreeSet$(Arrays.asList(terms)).size() != terms.length)
     //  throw new IllegalArgumentException(
     //          "DerivedMetric terms must not contain duplicates: "
     //                  + Arrays.deepToString(terms));
-    this.leafMetrics = new HashSet/*<>*/().fabric$util$HashSet$();
     boolean single = true;
     for (int i = 0; i < terms.length; i++) {
       if (!terms[i].isSingleStore()
@@ -77,7 +76,8 @@ public abstract class DerivedMetric extends Metric implements Observer {
     Label lbl = LabelUtil.noComponents();
     Store s = $getStore();
     this.terms = new Metric[terms.length] ~lbl @s;
-    Arrays.arraycopy(terms, 0, this.terms, 0, terms.length);
+    for (int i = 0; i < terms.length; i++)
+      this.terms[i] = terms[i];
     this.lastStats = new double[3] ~lbl @s;
     // Presets
     ConfigProperties config = Worker.getWorker().config;
@@ -138,15 +138,24 @@ public abstract class DerivedMetric extends Metric implements Observer {
    * is precomputed after the representation has been normalized.
    */
   protected void initialize() {
+    java.util.Set leafMetricsTmp = new java.util.HashSet();
     for (int i = 0; i < terms.length; i++) {
       if (terms[i] instanceof SampledMetric) {
-        leafMetrics.add(/*(SampledMetric)*/ terms[i]);
+        leafMetricsTmp.add(/*(SampledMetric)*/ terms[i]);
       } else if (terms[i] instanceof DerivedMetric) {
-        leafMetrics.addAll(((DerivedMetric) terms[i]).getLeafSubjects());
+        DerivedMetric termI = (DerivedMetric) terms[i];
+        SampledMetric[] termILeaves = termI.getLeafSubjects();
+        for (int j = 0; j < termILeaves.length; j++)
+          leafMetricsTmp.add(termILeaves[j]);
       } else {
         throw new IllegalStateException(
             "This shouldn't happen, all metrics should either be a SampledMetric or a DerivedMetric!");
       }
+    }
+    leafMetrics = new SampledMetric[leafMetricsTmp.size()];
+    int lmIdx = 0;
+    for (java.util.Iterator it = leafMetricsTmp.iterator(); it.hasNext();) {
+      leafMetrics[lmIdx++] = (SampledMetric) it.next();
     }
   }
 
@@ -296,8 +305,8 @@ public abstract class DerivedMetric extends Metric implements Observer {
   }
 
   /*@Override*/
-  public Set/*<SampledMetric>*/ getLeafSubjects() {
-    return Collections.unmodifiableSet(Worker.getWorker().getLocalStore(), leafMetrics);
+  public SampledMetric[] getLeafSubjects() {
+    return leafMetrics;
   }
 
   private static class Refresher implements Callable {

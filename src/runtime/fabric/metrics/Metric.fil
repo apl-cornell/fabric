@@ -71,7 +71,7 @@ public abstract class Metric extends AbstractSubject
     final Store s = tmp.$getStore();
     DerivedMetric val = null;
     atomic {
-      val = new SumMetric@s().fabric$metrics$SumMetric$(new Metric[] { tmp, other });
+      val = new SumMetric@s().fabric$metrics$SumMetric$(new Metric native[] { tmp, other });
     }
     return findDerivedMetric(s, val);
   }
@@ -97,11 +97,11 @@ public abstract class Metric extends AbstractSubject
     DerivedMetric val = null;
     if (tmp.compareTo(other) > 0) {
         atomic {
-          val = new MinMetric@s().fabric$metrics$MinMetric$(new Metric[] { other, tmp });
+          val = new MinMetric@s().fabric$metrics$MinMetric$(new Metric native[] { other, tmp });
         }
     } else {
         atomic {
-          val = new MinMetric@s().fabric$metrics$MinMetric$(new Metric[] { tmp, other });
+          val = new MinMetric@s().fabric$metrics$MinMetric$(new Metric native[] { tmp, other });
         }
     }
     return findDerivedMetric(s, val);
@@ -228,7 +228,7 @@ public abstract class Metric extends AbstractSubject
    * @return the locally tracked {@link DerivedMetric} for the sum of the
    *       terms.
    */
-  public static Metric addAtStore(final Store s, Metric[] terms) {
+  public static Metric addAtStore(final Store s, Metric native[] terms) {
     if (terms.length == 0)
       throw new IllegalArgumentException("Must have at least 1 term!");
     if (terms.length == 1)
@@ -251,7 +251,7 @@ public abstract class Metric extends AbstractSubject
    *        the {@link Metric}s to take the min of
    * @return the locally tracked {@link Metric} for the minimum of the terms.
    */
-  public static Metric minAtStore(final Store s, Metric[] terms) {
+  public static Metric minAtStore(final Store s, Metric native[] terms) {
     if (terms.length == 0)
       throw new IllegalArgumentException("Must have at least 1 term!");
     if (terms.length == 1)
@@ -274,7 +274,7 @@ public abstract class Metric extends AbstractSubject
    *        the {@link Metric}s to take the max of
    * @return the locally tracked {@link Metric} for the maximum of the terms.
    */
-  public static Metric maxAtStore(final Store s, Metric[] terms) {
+  public static Metric maxAtStore(final Store s, Metric native[] terms) {
     if (terms.length == 0)
       throw new IllegalArgumentException("Must have at least 1 term!");
     if (terms.length == 1)

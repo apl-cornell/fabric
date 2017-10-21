@@ -30,10 +30,11 @@ public class WitnessPolicy extends EnforcementPolicy {
    *        policy. If any of the witnesses weren't already active, they
    *        are {@link Contract#activate() activated} here.
    */
-  public WitnessPolicy fabric$metrics$contracts$enforcement$WitnessPolicy$(MetricContract[] witnesses) {
+  public WitnessPolicy fabric$metrics$contracts$enforcement$WitnessPolicy$(MetricContract native[] witnesses) {
     fabric$metrics$contracts$enforcement$EnforcementPolicy$();
     this.witnesses = new MetricContract[witnesses.length];
-    Arrays.arraycopy(witnesses, 0, this.witnesses, 0, witnesses.length);
+    for (int i = 0; i < witnesses.length; i++)
+      this.witnesses[i] = witnesses[i];
     this.activated = false;
     return this;
   }

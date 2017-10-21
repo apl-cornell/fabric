@@ -36,5 +36,5 @@ public interface Observer {
    *         {@link Observer} is associated with (a parent of/tracking) either
    *         directly or indirectly in the System.
    */
-  public Set/*<SampledMetric>*/ getLeafSubjects();
+  public SampledMetric[] getLeafSubjects();
 }

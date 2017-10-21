@@ -129,11 +129,11 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
   }
 
   /*@Override*/
-  public Set/*<SampledMetric>*/ getLeafSubjects() {
+  public SampledMetric[] getLeafSubjects() {
     // TODO: Is this right?
     if (curVal != null)
       return curVal.contract.getLeafSubjects();
-    return new HashSet().fabric$util$HashSet$();
+    return new SampledMetric[0];
   }
 
   /*@Override*/

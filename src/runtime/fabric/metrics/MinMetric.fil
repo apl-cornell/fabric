@@ -28,11 +28,14 @@ public class MinMetric extends DerivedMetric {
      * @param terms
      *            The {@link Metric}s this applies to
      */
-    public MinMetric fabric$metrics$MinMetric$(Metric[] terms) {
+    public MinMetric fabric$metrics$MinMetric$(Metric native[] terms) {
         fabric$metrics$DerivedMetric$(terms);
-        Set/*<Metric>*/ termsBag = new TreeSet/*<Metric>*/().fabric$util$TreeSet$(Arrays.asList(terms));
-        this.terms = (Metric[]) termsBag.toArray(new Metric[termsBag.size()]);
-        Arrays.sort(this.terms);
+        java.util.Set/*<Metric>*/ termsBag = new java.util.TreeSet/*<Metric>*/(java.util.Arrays.asList(terms));
+        this.terms = new Metric[termsBag.size()];
+        int tIdx = 0;
+        for (java.util.Iterator it = termsBag.iterator(); it.hasNext();) {
+          this.terms[tIdx++] = (Metric) it.next();
+        }
         initialize();
         return this;
     }
@@ -120,13 +123,9 @@ public class MinMetric extends DerivedMetric {
     }
 
     private static DerivedMetric static_times(MinMetric tmp, double scalar) {
-        Metric[] newTerms = null;
-        atomic {
-          newTerms = new Metric[tmp.terms.length];
-        }
-        Arrays.arraycopy(tmp.terms, 0, newTerms, 0, tmp.terms.length);
-        for (int i = 0; i < newTerms.length; i++) {
-            newTerms[i] = newTerms[i].times(scalar);
+        Metric native[] newTerms = new Metric native[tmp.terms.length];
+        for (int i = 0; i < tmp.terms.length; i++) {
+          newTerms[i] = tmp.terms[i].times(scalar);
         }
         final Store s = tmp.$getStore();
         DerivedMetric val = null;
@@ -149,13 +148,9 @@ public class MinMetric extends DerivedMetric {
     }
 
     private static DerivedMetric static_plus(MinMetric tmp, Metric other) {
-        Metric[] newTerms = null;
-        atomic {
-          newTerms = new Metric[tmp.terms.length];
-        }
-        Arrays.arraycopy(tmp.terms, 0, newTerms, 0, tmp.terms.length);
+        Metric native[] newTerms = new Metric native[tmp.terms.length];
         for (int i = 0; i < newTerms.length; i++) {
-            newTerms[i] = other.plus(newTerms[i]);
+            newTerms[i] = other.plus(tmp.terms[i]);
         }
         final Store s = tmp.$getStore();
         DerivedMetric val = null;
@@ -184,19 +179,17 @@ public class MinMetric extends DerivedMetric {
             MinMetric that = (MinMetric) other;
 
             // Get the combined sorted set of terms.
-            Set/*<Metric>*/ termsBag = null;
-            atomic {
-              termsBag = new TreeSet/*<>*/();
+            java.util.Set/*<Metric>*/ termsBag = new java.util.TreeSet/*<>*/();
+            for (int i = 0; i < tmp.terms.length; i++) {
+              termsBag.add(tmp.terms[i]);
             }
-            termsBag.addAll(Arrays.asList(tmp.terms));
-            termsBag.addAll(Arrays.asList(that.terms));
+            for (int i = 0; i < that.terms.length; i++) {
+              termsBag.add(that.terms[i]);
+            }
 
-            Metric[] newTerms = null;
-            atomic {
-              newTerms = new Metric[termsBag.size()];
-            }
+            Metric native[] newTerms = new Metric native[termsBag.size()];
             int aggIdx = 0;
-            for (Iterator iter = termsBag.iterator(); iter.hasNext();) {
+            for (java.util.Iterator iter = termsBag.iterator(); iter.hasNext();) {
                 Metric m = (Metric) iter.next();
                 newTerms[aggIdx++] = m;
             }
@@ -209,13 +202,12 @@ public class MinMetric extends DerivedMetric {
             return tmp;
         }
 
-        Metric[] newTerms = null;
-        atomic {
-          newTerms = new Metric[tmp.terms.length + 1];
+        Metric native[] newTerms = new Metric native[tmp.terms.length + 1];
+        for (int i = 0; i < tmp.terms.length; i++) {
+          newTerms[i] = tmp.terms[i];
         }
-        System.arraycopy(tmp.terms, 0, newTerms, 0, tmp.terms.length);
         newTerms[tmp.terms.length] = other;
-        Arrays.sort(newTerms, 0, newTerms.length);
+        java.util.Arrays.sort(newTerms, 0, newTerms.length);
         atomic {
           val = new MinMetric@s().fabric$metrics$MinMetric$(newTerms);
         }
@@ -226,7 +218,7 @@ public class MinMetric extends DerivedMetric {
     public EnforcementPolicy policy(Bound bound, boolean useWeakCache) {
         if (isSingleStore())
             return new DirectPolicy().fabric$metrics$contracts$enforcement$DirectPolicy$(this, bound);
-        MetricContract[] witnesses = new MetricContract[terms.length];
+        MetricContract native[] witnesses = new MetricContract native[terms.length];
         // Defend all rows against the bound individually, using the strictest
         // bounds across the rows for each term in this sum.
         for (int i = 0; i < terms.length; i++) {

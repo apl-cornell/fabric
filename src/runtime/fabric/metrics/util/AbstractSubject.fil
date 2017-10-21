@@ -111,9 +111,9 @@ public abstract class AbstractSubject implements Subject {
           delayed.remove(unhandled);
 
           boolean needToWait = false;
-          Iterator leavesIter = unhandled.getLeafSubjects().iterator();
-          while (leavesIter.hasNext()) {
-            if (unobserved.contains(leavesIter.next())) {
+          SampledMetric[] leaves = unhandled.getLeafSubjects();
+          for (int i = 0; i < leaves.length; i++) {
+            if (unobserved.contains(leaves[i])) {
               needToWait = true;
               break;
             }
@@ -143,9 +143,9 @@ public abstract class AbstractSubject implements Subject {
               Observer withheld = (Observer) delayedIter.next();
 
               boolean doneWaiting = true;
-              Iterator withheldLeavesIter = withheld.getLeafSubjects().iterator();
-              while (withheldLeavesIter.hasNext()) {
-                if (unobserved.contains(withheldLeavesIter.next())) {
+              SampledMetric[] withheldLeaves = withheld.getLeafSubjects();
+              for (int i = 0; i < withheldLeaves.length; i++) {
+                if (unobserved.contains(withheldLeaves[i])) {
                   doneWaiting = false;
                   break;
                 }

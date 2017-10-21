@@ -23,11 +23,6 @@ public class ScaledMetric extends DerivedMetric {
     /** The scalar coefficient */
     protected final double scalar;
 
-    // Utility method to avoid annoying label initialization issue
-    private static Metric[] singleton(Metric term) {
-        return new Metric[] { term };
-    }
-
     /**
      * @param store
      *            the {@link Store} that holds this {@link Metric}
@@ -38,7 +33,7 @@ public class ScaledMetric extends DerivedMetric {
      */
     public ScaledMetric fabric$metrics$ScaledMetric$(double scalar, Metric term) {
         this.scalar = scalar;
-        fabric$metrics$DerivedMetric$(singleton(term));
+        fabric$metrics$DerivedMetric$(new Metric native[] { term });
         initialize();
         return this;
     }
@@ -156,7 +151,7 @@ public class ScaledMetric extends DerivedMetric {
         Bound witnessBound = new Bound().fabric$metrics$contracts$Bound$(rate, base, currentTime);
         witness = m.getContract(witnessBound);
         final Store bndStore = bound.getStore();
-        return new WitnessPolicy@bndStore().fabric$metrics$contracts$enforcement$WitnessPolicy$(new MetricContract[] { witness });
+        return new WitnessPolicy@bndStore().fabric$metrics$contracts$enforcement$WitnessPolicy$(new MetricContract native[] { witness });
     }
 
     /*@Override*/

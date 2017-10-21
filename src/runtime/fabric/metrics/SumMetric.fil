@@ -26,7 +26,7 @@ public class SumMetric extends DerivedMetric {
      * @param terms
      *            The {@link Metric}s this applies to
      */
-    public SumMetric fabric$metrics$SumMetric$(Metric[] terms) {
+    public SumMetric fabric$metrics$SumMetric$(Metric native[] terms) {
         fabric$metrics$DerivedMetric$(terms);
         initialize();
         return this;
@@ -118,14 +118,9 @@ public class SumMetric extends DerivedMetric {
     // Note: The current design means that refreshLocally on a metric times(x)
     // is *not* enough to update weak estimates.
     public DerivedMetric times(double scalar) {
-        Metric[] newTerms = null;
-        atomic {
-          newTerms = new Metric[terms.length];
-        }
-        Arrays.arraycopy(terms, 0, newTerms, 0, terms.length);
-        for (int i = 0; i < newTerms.length; i++) {
-            newTerms[i] = newTerms[i].times(scalar);
-        }
+        Metric native[] newTerms = new Metric native[terms.length];
+        for (int i = 0; i < terms.length; i++)
+          newTerms[i] = terms[i].times(scalar);
         final Store s = $getStore();
         DerivedMetric val = null;
         atomic {
@@ -171,15 +166,15 @@ public class SumMetric extends DerivedMetric {
                     continue;
                 if (tmp.terms[i] instanceof DerivedMetric) {
                     DerivedMetric derivedTerm = (DerivedMetric) tmp.terms[i];
-                    if (derivedTerm.getLeafSubjects()
-                            .containsAll(derivedOther.getLeafSubjects())) {
+                    if (Arrays.asList(derivedTerm.getLeafSubjects())
+                            .containsAll(Arrays.asList(derivedOther.getLeafSubjects()))) {
                         termIdx = i;
                         break;
                     }
                 } else {
                     SampledMetric sampledTerm = (SampledMetric) tmp.terms[i];
-                    if (derivedOther.getLeafSubjects().size() == 1
-                            && derivedOther.getLeafSubjects()
+                    if (derivedOther.getLeafSubjects().length == 1
+                            && Arrays.asList(derivedOther.getLeafSubjects())
                                     .contains(sampledTerm)) {
                         termIdx = i;
                         break;
@@ -193,7 +188,7 @@ public class SumMetric extends DerivedMetric {
                     continue;
                 if (tmp.terms[i] instanceof DerivedMetric) {
                     DerivedMetric derivedTerm = (DerivedMetric) tmp.terms[i];
-                    if (derivedTerm.getLeafSubjects().contains(sampledOther)) {
+                    if (Arrays.asList(derivedTerm.getLeafSubjects()).contains(sampledOther)) {
                         termIdx = i;
                         break;
                     }
@@ -207,20 +202,18 @@ public class SumMetric extends DerivedMetric {
             }
         }
 
-        Metric[] newTerms = null;
+        Metric native[] newTerms = null;
         if (termIdx >= 0) {
-            atomic {
-              newTerms = new Metric[tmp.terms.length];
-            }
-            Arrays.arraycopy(tmp.terms, 0, newTerms, 0, tmp.terms.length);
+            newTerms = new Metric native[tmp.terms.length];
+            for (int i = 0; i < tmp.terms.length; i++)
+              newTerms[i] = tmp.terms[i];
             newTerms[termIdx] = newTerms[termIdx].plus(other);
         } else {
-            atomic {
-              newTerms = new Metric[tmp.terms.length + 1];
-            }
-            Arrays.arraycopy(tmp.terms, 0, newTerms, 0, tmp.terms.length);
+            newTerms = new Metric native[tmp.terms.length + 1];
+            for (int i = 0; i < tmp.terms.length; i++)
+              newTerms[i] = tmp.terms[i];
             newTerms[tmp.terms.length] = other;
-            Arrays.sort(newTerms, 0, newTerms.length);
+            java.util.Arrays.sort(newTerms, 0, newTerms.length);
         }
         DerivedMetric val = null;
         atomic {
@@ -234,7 +227,7 @@ public class SumMetric extends DerivedMetric {
         if (isSingleStore())
             return new DirectPolicy().fabric$metrics$contracts$enforcement$DirectPolicy$(this, bound);
 
-        Map/*<Metric, MetricContract>*/ witnesses = new LinkedHashMap/*<>*/().fabric$util$LinkedHashMap$();
+        java.util.Map/*<Metric, MetricContract>*/ witnesses = new java.util.HashMap/*<>*/();
 
         long currentTime = System.currentTimeMillis();
         double base = bound.value(currentTime);
@@ -276,9 +269,9 @@ public class SumMetric extends DerivedMetric {
                 witnesses.put(m, m.getContract(witnessBound));
             }
         }
-        MetricContract[] finalWitnesses = new MetricContract[witnesses.size()];
+        MetricContract native[] finalWitnesses = new MetricContract native[witnesses.size()];
         int i = 0;
-        for (Iterator iter = witnesses.values().iterator(); iter.hasNext();) {
+        for (java.util.Iterator iter = witnesses.values().iterator(); iter.hasNext();) {
           finalWitnesses[i++] = (MetricContract) iter.next();
         }
         final Store bndStore = bound.getStore();
