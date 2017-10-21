@@ -58,10 +58,12 @@ public abstract class DerivedMetric extends Metric implements Observer {
    *        computed from
    */
   public DerivedMetric fabric$metrics$DerivedMetric$(Metric[] terms) {
-    if (new TreeSet/*<>*/().fabric$util$TreeSet$(Arrays.asList(terms)).size() != terms.length)
-      throw new IllegalArgumentException(
-              "DerivedMetric terms must not contain duplicates: "
-                      + Arrays.deepToString(terms));
+    // Removed because expensive and we're going to assume for now it's not an
+    // error if it happens...
+    //if (new TreeSet[><><]().fabric$util$TreeSet$(Arrays.asList(terms)).size() != terms.length)
+    //  throw new IllegalArgumentException(
+    //          "DerivedMetric terms must not contain duplicates: "
+    //                  + Arrays.deepToString(terms));
     this.leafMetrics = new HashSet/*<>*/().fabric$util$HashSet$();
     boolean single = true;
     for (int i = 0; i < terms.length; i++) {

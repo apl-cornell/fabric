@@ -8,6 +8,7 @@ import fabric.metrics.contracts.MetricContract;
 import fabric.metrics.SampledMetric;
 import fabric.metrics.util.Observer;
 import java.util.logging.Level;
+import fabric.worker.transaction.TransactionManager;
 
 /**
  * A computation that uses {@link Contract}s to cache and reuse results.
@@ -70,6 +71,8 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
     atomic {
       loop = tmp.curVal.contract == null || !tmp.curVal.contract.valid();
     }
+    if (loop)
+      fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Recomputing " + tmp);
     while (loop) {
       fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Iterating " + tmp);
 
@@ -91,8 +94,12 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
       //curVal.contract.getMetric().refreshWeakEstimates();
 
       fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Activating " + newVal + " for " + tmp);
-      RemoteWorker w = Worker.getWorker().getWorker(newVal.contract.$getStore().name());
-      newVal.contract.activate_remote@w(null);
+      if (TransactionManager.getInstance().getCurrentLog() == null && !(newVal.contract.$getStore().name().equals(Worker.getWorkerName()))) {
+        RemoteWorker w = Worker.getWorker().getWorker(newVal.contract.$getStore().name());
+        newVal.contract.activate_remote@w(null);
+      } else {
+        newVal.contract.activate();
+      }
 
       fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Setting " + tmp + " to " + newVal + " and Observing");
       atomic {
