@@ -21,7 +21,7 @@ import fabric.worker.transaction.TransactionManager;
 public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observer {
 
   /** The currently cached result. */
-  private final WarrantyValue/*<T>*/ curVal;
+  protected final WarrantyValue/*<T>*/ curVal;
 
   /**
    * Create a new updated result paired with a contract that would enforce it
@@ -43,7 +43,7 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
    */
   /*@Override*/
   public WarrantyValue/*T*/ apply(long time) {
-    return static_apply(this, time, true);
+    return apply(time, true);
   }
 
   /**
@@ -73,6 +73,8 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
     }
     if (loop)
       fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Recomputing " + tmp);
+    else
+      fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Reusing " + tmp);
     while (loop) {
       fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Iterating " + tmp);
 
@@ -143,9 +145,111 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
     return (curVal.contract == null || !curVal.contract.valid(time));
   }
 
+  /**
+   * Make a warranty comp that resides on another store that can be used locally
+   * at that store when a memoized result is available.
+   */
+  public ProxyComp makeProxy(final Store proxyStore) {
+    return static_makeProxy(this, proxyStore);
+  }
+
+  private static ProxyComp static_makeProxy(WarrantyComp tmp, final Store proxyStore) {
+    atomic {
+      return new ProxyComp@proxyStore().fabric$metrics$contracts$warranties$WarrantyComp$ProxyComp$(tmp);
+    }
+  }
+
   protected WarrantyComp fabric$metrics$contracts$warranties$WarrantyComp$() {
     fabric$lang$Object$();
     this.curVal = new WarrantyValue().fabric$metrics$contracts$warranties$WarrantyValue$(null, null);
     return this;
+  }
+
+  /**
+   * A "Proxy" computation to allow for avoiding contacting a remote store for
+   * memoized results.
+   */
+  protected static class ProxyComp extends WarrantyComp {
+    // The computation this is proxying for.
+    protected final WarrantyComp baseComputation;
+    protected MetricContract oldBaseContract;
+
+    protected ProxyComp fabric$metrics$contracts$warranties$WarrantyComp$ProxyComp$(WarrantyComp baseComputation) {
+      this.baseComputation = baseComputation;
+      fabric$metrics$contracts$warranties$WarrantyComp$();
+      return this;
+    }
+
+    /*@Override*/
+    protected WarrantyValue/*<T>*/ updatedVal(long time) {
+      // XXX: This shouldn't be called...
+      return this.baseComputation.updatedVal(time);
+    }
+
+    /*@Override*/
+    public WarrantyValue/*T*/ apply(long time, boolean autoRetry) {
+      return static_apply(this, time, autoRetry);
+    }
+
+    /*@Override?*/
+    private static WarrantyValue/*T*/ static_apply(ProxyComp tmp, long time, boolean autoRetry) {
+      fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Starting proxy " + tmp);
+      boolean loop = false;
+      atomic {
+        loop = tmp.curVal.contract == null || !tmp.curVal.contract.valid();
+      }
+      if (loop)
+        fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Recomputing proxy " + tmp);
+      else
+        fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Reusing proxy " + tmp);
+      while (loop) {
+        fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Iterating proxy " + tmp);
+
+        WarrantyValue newVal = tmp.baseComputation.apply(System.currentTimeMillis(), autoRetry);
+
+        // If newVal's contract is null, this indicates that the programmer
+        // doesn't want to memoize the result with a treaty.
+        if (newVal.contract == null)
+          return newVal;
+
+        fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Setting proxy " + tmp + " to " + newVal + " and Observing");
+        atomic {
+          // Need to double check we weren't scooped by another caller.  If we
+          // were, don't bother with our new value and go with the existing value.
+          if (tmp.curVal.contract == null || !tmp.curVal.contract.valid()) {
+            tmp.curVal.value = newVal.value;
+            if (tmp.oldBaseContract != newVal.contract) {
+              if (tmp.curVal.contract != null) {
+                tmp.curVal.contract.removeObserver(tmp);
+              }
+              tmp.oldBaseContract = newVal.contract;
+              tmp.curVal.contract = newVal.contract.getProxyContract(tmp.$getStore());
+              tmp.curVal.contract.addObserver(tmp);
+            }
+          }
+        }
+        fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Updated proxy to " + tmp.curVal);
+
+        atomic {
+          // Only bother to retry if we're supposed to and we don't have a valid
+          // contract.
+          loop = tmp.curVal.contract == null || (autoRetry && !tmp.curVal.contract.valid());
+        }
+      }
+      fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Finished proxy " + tmp + " with " + tmp.curVal);
+      return tmp.curVal;
+    }
+
+    /*@Override*/
+    public ProxyComp makeProxy(final Store proxyStore) {
+      return static_makeProxy(this, proxyStore);
+    }
+
+    private static ProxyComp static_makeProxy(ProxyComp tmp, final Store proxyStore) {
+      atomic {
+        // Avoid unnecessary indirection.
+        return new ProxyComp@proxyStore().fabric$metrics$contracts$warranties$WarrantyComp$ProxyComp$(tmp.baseComputation);
+      }
+    }
   }
 }

@@ -7,6 +7,7 @@ import fabric.metrics.DerivedMetric;
 import fabric.metrics.Metric;
 import fabric.metrics.SampledMetric;
 import fabric.metrics.contracts.enforcement.EnforcementPolicy;
+import fabric.metrics.contracts.enforcement.WitnessPolicy;
 import fabric.metrics.util.Observer;
 import fabric.metrics.util.Subject;
 
@@ -284,5 +285,127 @@ public class MetricContract extends Contract {
     fabric.common.Logging.METRICS_LOGGER.finer("ACQUIRING LOCK AT " + this + " IN " + TransactionManager.getInstance().getCurrentLog());
     this.lock.acquire();
     this.currentPolicy.acquireReconfigLocks();
+  }
+
+  /**
+   * Create a proxy for this contract on the given store.
+   */
+  public ProxyMetricContract getProxyContract(final Store proxyStore) {
+    return static_getProxyContract(this, proxyStore);
+  }
+
+  private static ProxyMetricContract static_getProxyContract(MetricContract tmp, final Store proxyStore) {
+    ProxyMetricContract proxy = null;
+    atomic {
+      proxy = new ProxyMetricContract@proxyStore().fabric$metrics$contracts$MetricContract$ProxyMetricContract$(tmp);
+    }
+    if (tmp.isActivated())
+      proxy.activate();
+    return proxy;
+  }
+
+  /**
+   * A MetricContract which basically acts as a proxy for another MetricContract
+   * to allow local access on another store while the contract is valid.
+   *
+   * Basically operates by using the original MetricContract as the only witness
+   * of this metric contract.
+   */
+  protected static class ProxyMetricContract extends MetricContract {
+
+    // The MetricContract this acts as a proxy for.
+    protected final MetricContract target;
+
+    /**
+     * @param metric
+     *        the {@link Metric} this contract asserts a bound on
+     * @param bound
+     *        the {@link Bound} this {@link MetricContract} asserts on
+     *        metric.
+     */
+    public ProxyMetricContract fabric$metrics$contracts$MetricContract$ProxyMetricContract$(MetricContract target) {
+      this.target = target;
+      fabric$metrics$contracts$MetricContract$(target.metric, target.bound);
+      return this;
+    }
+
+    /*@Override*/
+    public void activate() {
+      static_activate(this);
+    }
+
+    private static void static_activate(ProxyMetricContract tmp) {
+      atomic {
+        if (tmp.isActivated())
+          return;
+      }
+
+      // TODO: Should this watch the target or just mirror the target's policy.
+      EnforcementPolicy targetPol = null;
+      fabric.common.Logging.METRICS_LOGGER.finer("CREATING POLICY FOR MC " + tmp);
+      atomic {
+        final Store s = tmp.$getStore();
+        targetPol = new WitnessPolicy@s().fabric$metrics$contracts$enforcement$WitnessPolicy$(new MetricContract native[] { tmp.target });
+      }
+      fabric.common.Logging.METRICS_LOGGER.finer("ACTIVATING POLICY FOR MC " + tmp);
+      targetPol.activate();
+
+      atomic {
+        fabric.common.Logging.METRICS_LOGGER.finer("ACTIVATING MC " + tmp + " IN " + TransactionManager.getInstance().getCurrentLog());
+        final Store s = tmp.$getStore();
+        tmp.currentPolicy = targetPol;
+        tmp.$expiry = tmp.currentPolicy.expiry();
+        Contract.static_activate(tmp);
+        if (tmp.$expiry >= System.currentTimeMillis()) {
+          tmp.currentPolicy.apply(tmp);
+          // XXX: Do I need to do this?
+          tmp.getMetric().addContract(tmp);
+        }
+      }
+      fabric.common.Logging.METRICS_LOGGER.finer("ACTIVATED MC " + tmp + " IN " + TransactionManager.getInstance().getCurrentLog());
+    }
+
+    /*@Override*/
+    protected boolean refresh(boolean asyncExtension) {
+      // If we haven't activated yet, this is a bad operation.  Stop.
+      if (!isActivated()) {
+        fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "CONTRACT INACTIVE");
+        return false;
+      }
+
+      long currentTime = System.currentTimeMillis();
+      // Refresh the current policy and update to the new expiration time
+      // if it's long enough.
+      if (currentPolicy != null) {
+        long curExpiry = currentPolicy.expiry();
+        boolean result = update(curExpiry);
+        fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "DEFENDING " + this + " WITH " + currentPolicy);
+        return result;
+      }
+
+      // Proxy's don't switch policies if the above didn't work, it's dead and
+      // keeps the current expiration.
+      return false;
+    }
+
+    /*@Override*/
+    public String toString() {
+      return "Proxy @ " + $getStore() + " for " + target + " until " + $expiry;
+    }
+
+    /*@Override*/
+    public ProxyMetricContract getProxyContract(final Store proxyStore) {
+      return static_getProxyContract(this, proxyStore);
+    }
+
+    private static ProxyMetricContract static_getProxyContract(ProxyMetricContract tmp, final Store proxyStore) {
+      ProxyMetricContract proxy = null;
+      atomic {
+        proxy = new ProxyMetricContract@proxyStore().fabric$metrics$contracts$MetricContract$ProxyMetricContract$(tmp.target);
+      }
+      if (tmp.isActivated())
+        proxy.activate();
+      return proxy;
+    }
   }
 }
