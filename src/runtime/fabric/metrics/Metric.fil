@@ -310,7 +310,7 @@ public abstract class Metric extends AbstractSubject
     //contracts = new ArrayList/*<>*/().fabric$util$ArrayList$();
     Label lbl = LabelUtil.noComponents();
     Store s = $getStore();
-    this.weakStats = new double[3] ~lbl @s;
+    this.weakStats = new double[4] ~lbl @s;
     // Use default size since we don't expect most applications to use a ton of
     // different transformations on the same terms.
     this.transformations = new HashMap().fabric$util$HashMap$();
@@ -327,6 +327,19 @@ public abstract class Metric extends AbstractSubject
    * @return the current value of the {@link Metric}.
    */
   public abstract double value(boolean useWeakCache);
+
+  /** @return the number of samples of the {@link Metric}. */
+  public double samples() {
+    return samples(false);
+  }
+
+  /**
+   * @param useWeakCache
+   *            Flag to indicate if a weakly consistent value should be
+   *            returned.  If false, a strongly consistent value is returned.
+   * @return the number of samples of the {@link Metric}.
+   */
+  public abstract double samples(boolean useWeakCache);
 
   /** @return the estimated velocity of the {@link Metric}. */
   public double velocity() {
@@ -428,6 +441,7 @@ public abstract class Metric extends AbstractSubject
       tmp.weakStats[0] = tmp.computeValue(true);
       tmp.weakStats[1] = tmp.computeVelocity(true);
       tmp.weakStats[2] = tmp.computeNoise(true);
+      tmp.weakStats[3] = tmp.computeSamples(true);
     }
     fabric.common.Logging.METRICS_LOGGER.finest("REFRESHED " + tmp + " to " + tmp.weakStats[0] + ", " + tmp.weakStats[1] + ", " + tmp.weakStats[2]);
   }
@@ -444,6 +458,15 @@ public abstract class Metric extends AbstractSubject
    */
   protected double weakValue() {
     return weakStats[0];
+  }
+
+  /**
+   * @return an estimated (not necessarily consistent) estimate of the
+   *         {@link #samples()} as captured in the last call to
+   *         {@link #refreshWeakEstimates()}.
+   */
+  protected double weakSamples() {
+    return weakStats[3];
   }
 
   /**
@@ -470,6 +493,13 @@ public abstract class Metric extends AbstractSubject
    * @return a freshly computed weak value for this {@link DerivedMetric}.
    */
   protected abstract double computeValue(boolean useWeakCache);
+
+  /**
+   * @param useWeakCache
+   *            Flag to indicate if weak values should be used.
+   * @return a freshly computed weak value for this {@link DerivedMetric}.
+   */
+  protected abstract double computeSamples(boolean useWeakCache);
 
   /**
    * @param useWeakCache

@@ -5,6 +5,7 @@ import fabric.util.LinkedHashMap;
 import fabric.util.Map;
 import fabric.util.Iterator;
 
+import fabric.common.ConfigProperties;
 import fabric.metrics.contracts.Bound;
 import fabric.metrics.contracts.MetricContract;
 import fabric.metrics.contracts.enforcement.DirectPolicy;
@@ -235,10 +236,18 @@ public class SumMetric extends DerivedMetric {
 
         // Defend all rows against the bound individually, using the strictest
         // bounds across the rows for each term in this sum.
+        double totalSamples = weakSamples();
         double totalValue = value(useWeakCache);
         double totalVelocity = velocity(useWeakCache);
         double totalNoise = noise(useWeakCache);
         double numTerms = terms.length;
+        double baseFactor = 1.0 / Math.sqrt(totalSamples);
+        double newFactor = 1.0 - baseFactor;
+        ConfigProperties config = Worker.getWorker().config;
+        if (config.usePreset) {
+          baseFactor = 0.0;
+          newFactor = 1.0;
+        }
 
         // For each term, update the associated bounds to be the tightest
         // bound set across the rows
@@ -248,11 +257,10 @@ public class SumMetric extends DerivedMetric {
             double scaledV = m.velocity(useWeakCache);
             double scaledN = m.noise(useWeakCache);
             // Corrected for the way this metric is shifting relative to
-            // the
-            // rest of the sum
-            double r = scaledV - ((totalVelocity - rate) / numTerms);
+            // the rest of the sum
+            double r = (scaledV * newFactor) - (((totalVelocity * newFactor) - rate) / numTerms);
 
-            double b = scaledX - ((1.0 / numTerms) * (totalValue - base));
+            double b = scaledX - (((baseFactor / numTerms) + (newFactor * (scaledN / totalNoise))) * (totalValue - base));
             if (totalNoise != 0) {
               b = scaledX - ((scaledN / totalNoise) * (totalValue - base));
             }

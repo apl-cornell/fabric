@@ -40,6 +40,8 @@ public class SampledMetric extends Metric {
     this.name = name;
     this.value = new double[1] ~lbl @s;
     this.value[0] = init;
+    this.samples = new long[1] ~lbl @s;
+    this.samples[0] = 1;
     this.lastUpdate = new long[1] ~lbl @s;
     this.lastUpdate[0] = System.currentTimeMillis() - 1;
     this.biasStats = new RunningStats().fabric$metrics$util$RunningStats$(0);
@@ -147,6 +149,21 @@ public class SampledMetric extends Metric {
   }
 
   /*@Override*/
+  protected double computeSamples(boolean useWeakCache) {
+    return static_computeSamples(this, useWeakCache);
+  }
+
+  private static double static_computeSamples(SampledMetric tmp, boolean useWeakCache) {
+    atomic {
+      if (tmp.usePreset) {
+        return 0;
+      } else {
+        return tmp.samples[0];
+      }
+    }
+  }
+
+  /*@Override*/
   protected double computeVelocity(boolean useWeakCache) {
     return static_computeVelocity(this, useWeakCache);
   }
@@ -227,6 +244,12 @@ public class SampledMetric extends Metric {
   protected final double[] value;
 
   /**
+   * The current number of samples. (Stored as an array to avoid unnecessary
+   * conflicts.)
+   */
+  protected final long[] samples;
+
+  /**
    * The time of the last update to this measure, in milliseconds since the
    * UNIX epoch. (Stored as an array to avoid unnecessary conflicts.)
    */
@@ -269,6 +292,20 @@ public class SampledMetric extends Metric {
     atomic {
       if (useWeakCache) result = tmp.weakStats[0];
       else result = tmp.computeValue(false);
+    }
+    return result;
+  }
+
+  /*@Override*/
+  public double samples(boolean useWeakCache) {
+    return static_samples(this, useWeakCache);
+  }
+
+  private static double static_samples(SampledMetric tmp, boolean useWeakCache) {
+    double result = 0;
+    atomic {
+      if (useWeakCache) result = tmp.weakStats[3];
+      else result = tmp.computeSamples(false);
     }
     return result;
   }

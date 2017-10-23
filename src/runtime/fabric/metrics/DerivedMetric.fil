@@ -78,7 +78,7 @@ public abstract class DerivedMetric extends Metric implements Observer {
     this.terms = new Metric[terms.length] ~lbl @s;
     for (int i = 0; i < terms.length; i++)
       this.terms[i] = terms[i];
-    this.lastStats = new double[3] ~lbl @s;
+    this.lastStats = new double[4] ~lbl @s;
     // Presets
     ConfigProperties config = Worker.getWorker().config;
     this.usePreset = config.usePreset;
@@ -168,6 +168,7 @@ public abstract class DerivedMetric extends Metric implements Observer {
       lastStats[0] = newValue;
       lastStats[1] = computeVelocity(false);
       lastStats[2] = computeNoise(false);
+      lastStats[3] = computeSamples(false);
       return true;
     }
     return false;
@@ -193,6 +194,33 @@ public abstract class DerivedMetric extends Metric implements Observer {
     // Not getting updated proactively, so compute it
     //lastStats[0] = computeValue(false);
     return tmp.computeValue(false);
+  }
+
+  /*@Override*/
+  public double samples(boolean useWeakCache) {
+    return static_samples(this, useWeakCache);
+  }
+
+  private static double static_samples(DerivedMetric tmp, boolean useWeakCache) {
+    if (useWeakCache) {
+      atomic {
+        return tmp.weakStats[3];
+      }
+    } else if (tmp.isObserved()) {
+      // Make sure any related updates are accounted for
+      fabric.worker.transaction.TransactionManager.getInstance().resolveObservations();
+      return tmp.lastStats[3];
+    }
+    return tmp.computeSamples(false);
+  }
+
+  /*@Override*/
+  protected double computeSamples(boolean useWeakCache) {
+    double samples = 0;
+    for (int i = 0; i < terms.length; i++) {
+      samples += terms[i].samples(useWeakCache);
+    }
+    return samples;
   }
 
   // XXX: note that the below assumes that if we're not using weakly cached
