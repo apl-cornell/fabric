@@ -41,7 +41,7 @@ public class SampledMetric extends Metric {
     this.value = new double[1] ~lbl @s;
     this.value[0] = init;
     this.samples = new long[1] ~lbl @s;
-    this.samples[0] = 1;
+    this.samples[0] = 0;
     this.lastUpdate = new long[1] ~lbl @s;
     this.lastUpdate[0] = System.currentTimeMillis() - 1;
     this.biasStats = new RunningStats().fabric$metrics$util$RunningStats$(0);

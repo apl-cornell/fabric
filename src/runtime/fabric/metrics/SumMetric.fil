@@ -241,7 +241,7 @@ public class SumMetric extends DerivedMetric {
         double totalVelocity = velocity(useWeakCache);
         double totalNoise = noise(useWeakCache);
         double numTerms = terms.length;
-        double baseFactor = 1.0 / Math.sqrt(totalSamples);
+        double baseFactor = totalSamples > 0 ? 1.0 / Math.sqrt(totalSamples) : 1.0;
         double newFactor = 1.0 - baseFactor;
         ConfigProperties config = Worker.getWorker().config;
         if (config.usePreset) {
