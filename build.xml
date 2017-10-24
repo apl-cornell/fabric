@@ -126,7 +126,7 @@
 
     <!-- Check for presence of JDK. -->
     <condition property="jdk.exists" value="true">
-      <available file="${jdk.home}/lib/tools.jar" />
+      <available file="${jdk.home}/bin/javac" />
     </condition>
 
     <!-- Check for presence of Polyglot. -->
@@ -142,7 +142,7 @@
     </condition>
 
     <!-- Error handling: JDK not found and jdk.home not set. -->
-    <fail message="Failed to find tools.jar. Edit 'config.properties' and set the 'jdk.home' property.">
+    <fail message="Failed to find javac. Edit 'config.properties' and set the 'jdk.home' property.">
       <condition>
         <and>
           <isfalse value="${jdk.exists}"/>
@@ -152,7 +152,7 @@
     </fail>
 
     <!-- Error handling: JDK not found. -->
-    <fail message="Failed to find tools.jar. Ensure the 'jdk.home' property is correct in 'config.properties'.">
+    <fail message="Failed to find javac. Ensure the 'jdk.home' property is correct in 'config.properties'.">
       <condition>
         <isfalse value="${jdk.exists}"/>
       </condition>

@@ -2476,7 +2476,8 @@ public class ConcurrentLongKeyHashMap<V> extends AbstractLongKeyMap<V>
    * A padded cell for distributing counts.  Adapted from LongAdder
    * and Striped64.  See their internal docs for explanation.
    */
-  @sun.misc.Contended
+  // @Contended is in Java 9. -Jed
+  //@sun.misc.Contended
   static final class CounterCell {
     volatile long value;
 
