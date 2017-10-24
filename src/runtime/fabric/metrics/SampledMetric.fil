@@ -40,7 +40,7 @@ public class SampledMetric extends Metric {
     this.name = name;
     this.value = new double[1] ~lbl @s;
     this.value[0] = init;
-    this.samples = new long[1] ~lbl @s;
+    this.samples = new double[1] ~lbl @s;
     this.samples[0] = 0;
     this.lastUpdate = new long[1] ~lbl @s;
     this.lastUpdate[0] = System.currentTimeMillis() - 1;
@@ -247,7 +247,7 @@ public class SampledMetric extends Metric {
    * The current number of samples. (Stored as an array to avoid unnecessary
    * conflicts.)
    */
-  protected final long[] samples;
+  protected final double[] samples;
 
   /**
    * The time of the last update to this measure, in milliseconds since the
@@ -280,7 +280,7 @@ public class SampledMetric extends Metric {
     updateIntervalStats.update(eventTime - lastUpdate[0]);
     lastUpdate[0] = eventTime;
     value[0] = newVal;
-    samples[0]++;
+    samples[0] = samples[0] + 1;
   }
 
   /*@Override*/
