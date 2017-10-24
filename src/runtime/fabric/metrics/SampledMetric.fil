@@ -280,6 +280,7 @@ public class SampledMetric extends Metric {
     updateIntervalStats.update(eventTime - lastUpdate[0]);
     lastUpdate[0] = eventTime;
     value[0] = newVal;
+    samples[0]++;
   }
 
   /*@Override*/
