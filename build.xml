@@ -1478,6 +1478,8 @@ public class Version {
         <include name="jetty/core-*.jar" />
         <!-- Apache Commons -->
         <include name="jetty/commons-*.jar" />
+        <!-- Apache Xalan -->
+        <include name="xalan.jar" />
         <!-- Java Servlet API -->
         <include name="jetty/servlet-api-*.jar" />
       </tarfileset>
@@ -2002,6 +2004,7 @@ public class Version {
       <classpath>
         <path refid="jif.classpath" />
         <pathelement location="${bootstrap.classes}" />
+        <pathelement location="${lib}/xalan.jar" />
       </classpath>
     </javac>
   </target>
