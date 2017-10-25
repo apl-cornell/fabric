@@ -133,7 +133,7 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
   /*@Override*/
   public SampledMetric[] getLeafSubjects() {
     // TODO: Is this right?
-    if (curVal != null)
+    if (curVal.contract != null)
       return curVal.contract.getLeafSubjects();
     return new SampledMetric[0];
   }
