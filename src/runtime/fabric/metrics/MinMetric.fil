@@ -119,7 +119,13 @@ public class MinMetric extends DerivedMetric {
 
     /*@Override*/
     public DerivedMetric times(double scalar) {
-      return static_times(this, scalar);
+      Double s = new Double(scalar);
+      DerivedMetric result = (DerivedMetric) getTimesCache().get(s);
+      if (result == null) {
+        result = static_times(this, scalar);
+        getTimesCache().put(s, result);
+      }
+      return result;
     }
 
     private static DerivedMetric static_times(MinMetric tmp, double scalar) {
@@ -144,7 +150,13 @@ public class MinMetric extends DerivedMetric {
      */
     /*@Override*/
     public DerivedMetric plus(Metric other) {
-      return static_plus(this, other);
+      DerivedMetric result = (DerivedMetric) getPlusCache().get(other);
+      if (result == null) {
+        result = static_plus(this, other);
+        getPlusCache().put(other, result);
+        other.getPlusCache().put(this, result);
+      }
+      return result;
     }
 
     private static DerivedMetric static_plus(MinMetric tmp, Metric other) {
@@ -169,7 +181,13 @@ public class MinMetric extends DerivedMetric {
      */
     /*@Override*/
     public Metric min(Metric other) {
-      return static_min(this, other);
+      Metric result = (Metric) getMinCache().get(other);
+      if (result == null) {
+        result = static_min(this, other);
+        getMinCache().put(other, result);
+        other.getMinCache().put(this, result);
+      }
+      return result;
     }
 
     private static Metric static_min(MinMetric tmp, Metric other) {

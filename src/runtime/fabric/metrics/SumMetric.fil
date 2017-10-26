@@ -119,10 +119,20 @@ public class SumMetric extends DerivedMetric {
     // Note: The current design means that refreshLocally on a metric times(x)
     // is *not* enough to update weak estimates.
     public DerivedMetric times(double scalar) {
-        Metric native[] newTerms = new Metric native[terms.length];
-        for (int i = 0; i < terms.length; i++)
-          newTerms[i] = terms[i].times(scalar);
-        final Store s = $getStore();
+      Double s = new Double(scalar);
+      DerivedMetric result = (DerivedMetric) getTimesCache().get(s);
+      if (result == null) {
+        result = static_times(this, scalar);
+        getTimesCache().put(s, result);
+      }
+      return result;
+    }
+
+    private static DerivedMetric static_times(SumMetric tmp, double scalar) {
+        Metric native[] newTerms = new Metric native[tmp.terms.length];
+        for (int i = 0; i < tmp.terms.length; i++)
+          newTerms[i] = tmp.terms[i].times(scalar);
+        final Store s = tmp.$getStore();
         DerivedMetric val = null;
         atomic {
           val = new SumMetric@s().fabric$metrics$SumMetric$(newTerms);
@@ -139,7 +149,13 @@ public class SumMetric extends DerivedMetric {
      */
     // TODO: Combine shared terms with different coefficients.
     public DerivedMetric plus(Metric other) {
-      return static_plus(this, other);
+      DerivedMetric result = (DerivedMetric) getPlusCache().get(other);
+      if (result == null) {
+        result = static_plus(this, other);
+        getPlusCache().put(other, result);
+        other.getPlusCache().put(this, result);
+      }
+      return result;
     }
 
     private static DerivedMetric static_plus(SumMetric tmp, Metric other) {

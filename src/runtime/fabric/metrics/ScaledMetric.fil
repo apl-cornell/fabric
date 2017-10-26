@@ -80,7 +80,13 @@ public class ScaledMetric extends DerivedMetric {
 
     /*@Override*/
     public DerivedMetric times(double otherScalar) {
-      return static_times(this, otherScalar);
+      Double s = new Double(otherScalar);
+      DerivedMetric result = (DerivedMetric) getTimesCache().get(s);
+      if (result == null) {
+        result = static_times(this, otherScalar);
+        getTimesCache().put(s, result);
+      }
+      return result;
     }
 
     private static DerivedMetric static_times(ScaledMetric tmp, double otherScalar) {
@@ -101,7 +107,13 @@ public class ScaledMetric extends DerivedMetric {
      */
     /*@Override*/
     public DerivedMetric plus(Metric other) {
-      return static_plus(this, other);
+      DerivedMetric result = (DerivedMetric) getPlusCache().get(other);
+      if (result == null) {
+        result = static_plus(this, other);
+        getPlusCache().put(other, result);
+        other.getPlusCache().put(this, result);
+      }
+      return result;
     }
 
     private static DerivedMetric static_plus(ScaledMetric tmp, Metric other) {
