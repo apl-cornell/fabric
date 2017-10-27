@@ -27,7 +27,7 @@ public abstract class AbstractSubject implements Subject {
   }
 
   protected AbstractSubject fabric$metrics$util$AbstractSubject$() {
-    this.observers = new LinkedHashSet/*<>*/().fabric$util$LinkedHashSet$();
+    this.observers = new LinkedHashSet/*<>*/().fabric$util$LinkedHashSet$(64);
     fabric$lang$Object$();
     return this;
   }
