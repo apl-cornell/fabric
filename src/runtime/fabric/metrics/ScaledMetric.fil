@@ -84,7 +84,9 @@ public class ScaledMetric extends DerivedMetric {
       DerivedMetric result = (DerivedMetric) getTimesCache().get(s);
       if (result == null) {
         result = static_times(this, otherScalar);
-        getTimesCache().put(s, result);
+        atomic {
+          getTimesCache().put(s, result);
+        }
       }
       return result;
     }
@@ -110,8 +112,10 @@ public class ScaledMetric extends DerivedMetric {
       DerivedMetric result = (DerivedMetric) getPlusCache().get(other);
       if (result == null) {
         result = static_plus(this, other);
-        getPlusCache().put(other, result);
-        other.getPlusCache().put(this, result);
+        atomic {
+          getPlusCache().put(other, result);
+          other.getPlusCache().put(this, result);
+        }
       }
       return result;
     }

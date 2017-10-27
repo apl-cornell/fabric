@@ -123,7 +123,9 @@ public class MinMetric extends DerivedMetric {
       DerivedMetric result = (DerivedMetric) getTimesCache().get(s);
       if (result == null) {
         result = static_times(this, scalar);
-        getTimesCache().put(s, result);
+        atomic {
+          getTimesCache().put(s, result);
+        }
       }
       return result;
     }
@@ -153,8 +155,10 @@ public class MinMetric extends DerivedMetric {
       DerivedMetric result = (DerivedMetric) getPlusCache().get(other);
       if (result == null) {
         result = static_plus(this, other);
-        getPlusCache().put(other, result);
-        other.getPlusCache().put(this, result);
+        atomic {
+          getPlusCache().put(other, result);
+          other.getPlusCache().put(this, result);
+        }
       }
       return result;
     }
@@ -184,8 +188,10 @@ public class MinMetric extends DerivedMetric {
       Metric result = (Metric) getMinCache().get(other);
       if (result == null) {
         result = static_min(this, other);
-        getMinCache().put(other, result);
-        other.getMinCache().put(this, result);
+        atomic {
+          getMinCache().put(other, result);
+          other.getMinCache().put(this, result);
+        }
       }
       return result;
     }
