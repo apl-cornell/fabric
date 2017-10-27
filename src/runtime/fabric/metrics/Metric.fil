@@ -382,7 +382,7 @@ public abstract class Metric extends AbstractSubject
     this.weakStats = new double[4] ~lbl @s;
     // Use default size since we don't expect most applications to use a ton of
     // different transformations on the same terms.
-    this.transformations = new HashMap().fabric$util$HashMap$();
+    this.transformations = new HashMap().fabric$util$HashMap$(32);
     fabric$metrics$util$AbstractSubject$();
     return this;
   }
