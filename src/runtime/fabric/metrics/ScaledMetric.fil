@@ -80,7 +80,7 @@ public class ScaledMetric extends DerivedMetric {
 
     /*@Override*/
     public DerivedMetric times(double otherScalar) {
-      Double s = new Double(otherScalar);
+      Double s = Double.valueOf(otherScalar);
       DerivedMetric result = (DerivedMetric) getTimesCache().get(s);
       if (result == null) {
         result = static_times(this, otherScalar);

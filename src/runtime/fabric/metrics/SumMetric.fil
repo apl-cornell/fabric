@@ -119,7 +119,7 @@ public class SumMetric extends DerivedMetric {
     // Note: The current design means that refreshLocally on a metric times(x)
     // is *not* enough to update weak estimates.
     public DerivedMetric times(double scalar) {
-      Double s = new Double(scalar);
+      Double s = Double.valueOf(scalar);
       DerivedMetric result = (DerivedMetric) getTimesCache().get(s);
       if (result == null) {
         result = static_times(this, scalar);
