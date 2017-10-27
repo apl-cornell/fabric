@@ -82,7 +82,7 @@ public abstract class Options {
      *          help info.
      */
     public Flag(String id, String params, String usage, int defaultValue) {
-      this(id, params, usage, new Integer(defaultValue).toString());
+      this(id, params, usage, Integer.valueOf(defaultValue).toString());
     }
 
     /**
@@ -132,7 +132,7 @@ public abstract class Options {
      *          help info.
      */
     public Flag(String[] ids, String params, String usage, int defaultValue) {
-      this(ids, params, usage, new Integer(defaultValue).toString());
+      this(ids, params, usage, Integer.valueOf(defaultValue).toString());
     }
 
     /**
@@ -182,7 +182,7 @@ public abstract class Options {
      */
     public Flag(Kind kind, String id, String params, String usage,
         int defaultValue) {
-      this(kind, id, params, usage, new Integer(defaultValue).toString());
+      this(kind, id, params, usage, Integer.valueOf(defaultValue).toString());
     }
 
     /**
@@ -234,7 +234,7 @@ public abstract class Options {
      */
     public Flag(Kind kind, String[] ids, String params, String usage,
         int defaultValue) {
-      this(kind, ids, params, usage, new Integer(defaultValue).toString());
+      this(kind, ids, params, usage, Integer.valueOf(defaultValue).toString());
     }
 
     /**

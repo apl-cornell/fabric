@@ -43,7 +43,7 @@ public final class ConjunctivePrincipal extends Principal {
 
   public int hashCode() {
     if (hashCode == null) {
-      hashCode = new Integer(conjuncts.hashCode());
+      hashCode = Integer.valueOf(conjuncts.hashCode());
     }
     return hashCode.intValue();
   }

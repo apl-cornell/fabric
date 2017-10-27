@@ -276,7 +276,7 @@ public abstract class HTMLWriter  {
     			}
     		}
     		if (isBottom) {
-    			bottoms.add(new Integer(i));
+    			bottoms.add(Integer.valueOf(i));
     		}
     	}
     	
@@ -307,7 +307,7 @@ public abstract class HTMLWriter  {
     		int bot = bottoms.get(i).intValue();
     		Set<Integer> set = new HashSet<Integer>();
     		if (bottoms.size() > 1) {
-    			set.add(new Integer(uniqCounter++));
+    			set.add(Integer.valueOf(uniqCounter++));
     		}
     		namesMap.put(confList[bot], set);
     	}
@@ -334,9 +334,9 @@ public abstract class HTMLWriter  {
     					}
     					setPrime.addAll((HashSet<Integer>)namesMap.get(confList[bot]));
     					if (outgoing[bot] > 1 || incoming[j] == 1) {
-    						setPrime.add(new Integer(uniqCounter++));
+    						setPrime.add(Integer.valueOf(uniqCounter++));
     					}
-    					bottoms.add(new Integer(j));
+    					bottoms.add(Integer.valueOf(j));
     			}
     		}
     	}
