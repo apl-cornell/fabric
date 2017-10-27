@@ -54,6 +54,7 @@ categories['Fabric runtime support (FabIL)'] = \
     'src/runtime/fabric/runtime',
     'src/arrays' ]
 categories['FabIL port of GNU classpath'] = ['src/runtime/fabric/util']
+categories['Metrics API'] = ['src/runtime/fabric/metrics']
 
 # Stuff in src/signatures.
 categories['Fabric signatures for java.*'] = ['src/signatures/fabric/java']
