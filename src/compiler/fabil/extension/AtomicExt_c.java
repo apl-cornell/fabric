@@ -157,8 +157,11 @@ public class AtomicExt_c extends FabILExt_c {
         + "}\n";
     // @formatter:on
 
-    return ar.qq().parseStmt(block, lds, begin, atomic.statements(), commit,
+    Stmt txn = ar.qq().parseStmt(block, lds, begin, atomic.statements(), commit,
         abort, restores);
+    return ar.qq().parseStmt(
+        "if (fabric.worker.transaction.TransactionManager.getInstance().inTxn()) { %LS } else %S",
+        atomic.statements(), txn);
   }
 
   private static int freshTid = 0;
