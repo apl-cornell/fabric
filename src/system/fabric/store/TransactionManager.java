@@ -76,7 +76,8 @@ public class TransactionManager {
     } catch (final RuntimeException e) {
       throw new TransactionCommitFailedException(
           "something went wrong; store experienced a runtime exception during "
-              + "commit: " + e.getMessage(), e);
+              + "commit: " + e.getMessage(),
+          e);
     }
   }
 
@@ -208,8 +209,8 @@ public class TransactionManager {
           Label label = storeCopy.get$$updateLabel();
 
           // Check write permissions.
-          if (!AuthorizationUtil.isWritePermitted(worker, label.$getStore(),
-              label.$getOnum())) {
+          if (!AuthorizationUtil.isReadAndWritePermitted(worker,
+              label.$getStore(), label.$getOnum())) {
             return new AccessException("write", worker, storeCopy);
           }
         }
@@ -227,7 +228,8 @@ public class TransactionManager {
    * Returns a GroupContainer containing the specified object.
    */
   GroupContainer getGroupContainer(long onum) throws AccessException {
-    return getGroupContainerAndSubscribe(onum, null, false /* this argument doesn't matter */);
+    return getGroupContainerAndSubscribe(onum, null,
+        false /* this argument doesn't matter */);
   }
 
   /**
@@ -284,9 +286,8 @@ public class TransactionManager {
    */
   public ObjectGroup getGroup(Principal principal, RemoteWorker subscriber,
       long onum) throws AccessException {
-    ObjectGroup group =
-        getGroupContainerAndSubscribe(onum, subscriber, false).getGroup(
-            principal);
+    ObjectGroup group = getGroupContainerAndSubscribe(onum, subscriber, false)
+        .getGroup(principal);
     if (group == null) throw new AccessException(database.getName(), onum);
     return group;
   }

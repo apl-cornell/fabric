@@ -23,6 +23,7 @@ import fabric.messages.PrepareTransactionMessage;
 import fabric.messages.RemoteCallMessage;
 import fabric.messages.TakeOwnershipMessage;
 import fabric.worker.RemoteStore;
+import fabric.worker.RetryException;
 import fabric.worker.TransactionAtomicityViolationException;
 import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
@@ -102,10 +103,25 @@ public class RemoteCallManager extends MessageToWorkerHandler {
           } catch (IllegalAccessException e) {
             throw new RuntimeException(e);
           } catch (InvocationTargetException e) {
+            Throwable cause = e.getCause();
+            /* e's cause might be a specific runtime exception for
+             * restart/abort/retry signalling (eg. RetryException).  These
+             * exceptions shouldn't be wrapped as this causes the transaction
+             * loop to miss them and give up on the transaction prematurely.
+             */
+            if (cause instanceof TransactionRestartingException
+                || cause instanceof RetryException)
+              throw (RuntimeException) cause;
+            // TODO: should we remove the invocation target exception layer
+            // before wrapping?
             throw new RuntimeException(e);
           } catch (NoSuchMethodException e) {
             throw new RuntimeException(e);
           } catch (RuntimeException e) {
+            /* TODO This should probably be wrapped in an exception type that
+             * better signals it was the code setting up the reflection rather
+             * than the reflected invocation itself that was the issue.
+             */
             throw new RuntimeException(e);
           }
         }
@@ -155,7 +171,7 @@ public class RemoteCallManager extends MessageToWorkerHandler {
   public PrepareTransactionMessage.Response handle(
       RemoteIdentity<RemoteWorker> client,
       PrepareTransactionMessage prepareTransactionMessage)
-          throws TransactionPrepareFailedException {
+      throws TransactionPrepareFailedException {
     // XXX TODO Security checks.
     Log log =
         TransactionRegistry.getInnermostLog(prepareTransactionMessage.tid);
@@ -188,10 +204,9 @@ public class RemoteCallManager extends MessageToWorkerHandler {
   public CommitTransactionMessage.Response handle(
       RemoteIdentity<RemoteWorker> client,
       CommitTransactionMessage commitTransactionMessage)
-          throws TransactionCommitFailedException {
+      throws TransactionCommitFailedException {
     // XXX TODO Security checks.
-    Log log =
-        TransactionRegistry
+    Log log = TransactionRegistry
         .getInnermostLog(commitTransactionMessage.transactionID);
     if (log == null) {
       // If no log exists, assume that another worker in the transaction has
@@ -245,12 +260,11 @@ public class RemoteCallManager extends MessageToWorkerHandler {
   @Override
   public TakeOwnershipMessage.Response handle(
       RemoteIdentity<RemoteWorker> client, TakeOwnershipMessage msg)
-          throws TakeOwnershipFailedException {
+      throws TakeOwnershipFailedException {
     Log log = TransactionRegistry.getInnermostLog(msg.tid.topTid);
-    if (log == null)
-      throw new TakeOwnershipFailedException(MessageFormat.format(
-          "Object fab://{0}/{1} is not owned by {2} in transaction {3}",
-          msg.store.name(), msg.onum, null, msg.tid));
+    if (log == null) throw new TakeOwnershipFailedException(MessageFormat
+        .format("Object fab://{0}/{1} is not owned by {2} in transaction {3}",
+            msg.store.name(), msg.onum, null, msg.tid));
 
     _Impl obj = new _Proxy(msg.store, msg.onum).fetch();
 
@@ -268,17 +282,16 @@ public class RemoteCallManager extends MessageToWorkerHandler {
 
       // Ensure that the remote worker is allowed to write the object.
       Label label = obj.get$$updateLabel();
-      boolean authorized =
-          AuthorizationUtil.isWritePermitted(client.principal,
-              label.$getStore(), label.$getOnum());
+      boolean authorized = AuthorizationUtil.isReadAndWritePermitted(
+          client.principal, label.$getStore(), label.$getOnum());
 
       tm.associateLog(null);
 
       if (!authorized) {
         Principal p = client.principal;
         throw new TakeOwnershipFailedException(MessageFormat.format(
-            "{0} is not authorized to own fab://{1}/{2}", p.$getStore() + "/"
-                + p.$getOnum(), msg.store.name(), msg.onum));
+            "{0} is not authorized to own fab://{1}/{2}",
+            p.$getStore() + "/" + p.$getOnum(), msg.store.name(), msg.onum));
       }
 
       // Relinquish ownership.
@@ -296,14 +309,12 @@ public class RemoteCallManager extends MessageToWorkerHandler {
     final List<Long> response;
 
     if (objectUpdateMessage.groups == null) {
-      response =
-          inProcessRemoteWorker.notifyObjectUpdates(objectUpdateMessage.store,
-              objectUpdateMessage.globs);
+      response = inProcessRemoteWorker.notifyObjectUpdates(
+          objectUpdateMessage.store, objectUpdateMessage.globs);
     } else {
       RemoteStore store = worker.getStore(client.node.name);
-      response =
-          inProcessRemoteWorker.notifyObjectUpdates(store,
-              objectUpdateMessage.onums, objectUpdateMessage.groups);
+      response = inProcessRemoteWorker.notifyObjectUpdates(store,
+          objectUpdateMessage.onums, objectUpdateMessage.groups);
     }
 
     return new ObjectUpdateMessage.Response(response);

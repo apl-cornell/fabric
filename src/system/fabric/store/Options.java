@@ -69,7 +69,7 @@ public class Options extends fabric.common.Options {
       @Override
       public int handle(String[] args, int index) throws UsageError {
         try {
-          Options.this.timeout = new Integer(args[index]).intValue();
+          Options.this.timeout = Integer.valueOf(args[index]).intValue();
         } catch (NumberFormatException e) {
           throw new UsageError("Invalid argument: " + args[index]);
         }

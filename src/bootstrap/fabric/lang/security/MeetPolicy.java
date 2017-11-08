@@ -16,9 +16,7 @@ import fabric.util.*;
  * mostly copied from Jif.
  */
 public interface MeetPolicy
-  extends fabric.lang.security.Policy, fabric.lang.security.AbstractPolicy
-{
-    
+  extends fabric.lang.security.Policy, fabric.lang.security.AbstractPolicy {
     public fabric.util.Set get$components();
     
     public fabric.util.Set set$components(fabric.util.Set val);
@@ -38,9 +36,7 @@ public interface MeetPolicy
     
     public static class _Proxy
     extends fabric.lang.security.AbstractPolicy._Proxy
-      implements fabric.lang.security.MeetPolicy
-    {
-        
+      implements fabric.lang.security.MeetPolicy {
         public fabric.util.Set get$components() {
             return ((fabric.lang.security.MeetPolicy._Impl) fetch()).
               get$components();
@@ -68,14 +64,8 @@ public interface MeetPolicy
     
     public abstract static class _Impl
     extends fabric.lang.security.AbstractPolicy._Impl
-      implements fabric.lang.security.MeetPolicy
-    {
-        
-        public fabric.util.Set get$components() {
-            fabric.worker.transaction.TransactionManager.getInstance().
-              registerRead(this);
-            return this.components;
-        }
+      implements fabric.lang.security.MeetPolicy {
+        public fabric.util.Set get$components() { return this.components; }
         
         public fabric.util.Set set$components(fabric.util.Set val) {
             fabric.worker.transaction.TransactionManager tm =
@@ -119,25 +109,22 @@ public interface MeetPolicy
         }
         
         public _Impl(fabric.worker.Store store, long onum, int version,
-                     long expiry, fabric.worker.Store labelStore,
-                     long labelOnum, fabric.worker.Store accessPolicyStore,
+                     fabric.worker.Store labelStore, long labelOnum,
+                     fabric.worker.Store accessPolicyStore,
                      long accessPolicyOnum, java.io.ObjectInput in,
                      java.util.Iterator refTypes,
                      java.util.Iterator intraStoreRefs,
                      java.util.Iterator interStoreRefs)
               throws java.io.IOException,
             java.lang.ClassNotFoundException {
-            super(store, onum, version, expiry, labelStore, labelOnum,
+            super(store, onum, version, labelStore, labelOnum,
                   accessPolicyStore, accessPolicyOnum, in, refTypes,
                   intraStoreRefs, interStoreRefs);
             this.components = (fabric.util.Set)
                                 $readRef(fabric.util.Set._Proxy.class,
                                          (fabric.common.RefTypeEnum)
-                                           refTypes.next(),
-                                         in,
-                                         store,
-                                         intraStoreRefs,
-                                         interStoreRefs);
+                                           refTypes.next(), in, store,
+                                         intraStoreRefs, interStoreRefs);
         }
         
         public void $copyAppStateFrom(fabric.lang.Object._Impl other) {
@@ -150,9 +137,7 @@ public interface MeetPolicy
     
     interface _Static extends fabric.lang.Object, Cloneable {
         final class _Proxy extends fabric.lang.Object._Proxy
-          implements fabric.lang.security.MeetPolicy._Static
-        {
-            
+          implements fabric.lang.security.MeetPolicy._Static {
             public _Proxy(fabric.lang.security.MeetPolicy._Static._Impl impl) {
                 super(impl);
             }
@@ -170,7 +155,8 @@ public interface MeetPolicy
                   security.
                   MeetPolicy.
                   _Static.
-                  _Impl impl =
+                  _Impl
+                  impl =
                   (fabric.lang.security.MeetPolicy._Static._Impl)
                     fabric.lang.Object._Static._Proxy.
                     $makeStaticInstance(
@@ -182,9 +168,7 @@ public interface MeetPolicy
         }
         
         class _Impl extends fabric.lang.Object._Impl
-          implements fabric.lang.security.MeetPolicy._Static
-        {
-            
+          implements fabric.lang.security.MeetPolicy._Static {
             public void $serialize(java.io.ObjectOutput out,
                                    java.util.List refTypes,
                                    java.util.List intraStoreRefs,
@@ -194,15 +178,15 @@ public interface MeetPolicy
             }
             
             public _Impl(fabric.worker.Store store, long onum, int version,
-                         long expiry, fabric.worker.Store labelStore,
-                         long labelOnum, fabric.worker.Store accessPolicyStore,
+                         fabric.worker.Store labelStore, long labelOnum,
+                         fabric.worker.Store accessPolicyStore,
                          long accessPolicyOnum, java.io.ObjectInput in,
                          java.util.Iterator refTypes,
                          java.util.Iterator intraStoreRefs,
                          java.util.Iterator interStoreRefs)
                   throws java.io.IOException,
                 java.lang.ClassNotFoundException {
-                super(store, onum, version, expiry, labelStore, labelOnum,
+                super(store, onum, version, labelStore, labelOnum,
                       accessPolicyStore, accessPolicyOnum, in, refTypes,
                       intraStoreRefs, interStoreRefs);
             }

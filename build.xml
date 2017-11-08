@@ -126,7 +126,7 @@
 
     <!-- Check for presence of JDK. -->
     <condition property="jdk.exists" value="true">
-      <available file="${jdk.home}/lib/tools.jar" />
+      <available file="${jdk.home}/bin/javac" />
     </condition>
 
     <!-- Check for presence of Polyglot. -->
@@ -142,7 +142,7 @@
     </condition>
 
     <!-- Error handling: JDK not found and jdk.home not set. -->
-    <fail message="Failed to find tools.jar. Edit 'config.properties' and set the 'jdk.home' property.">
+    <fail message="Failed to find javac. Edit 'config.properties' and set the 'jdk.home' property.">
       <condition>
         <and>
           <isfalse value="${jdk.exists}"/>
@@ -152,7 +152,7 @@
     </fail>
 
     <!-- Error handling: JDK not found. -->
-    <fail message="Failed to find tools.jar. Ensure the 'jdk.home' property is correct in 'config.properties'.">
+    <fail message="Failed to find javac. Ensure the 'jdk.home' property is correct in 'config.properties'.">
       <condition>
         <isfalse value="${jdk.exists}"/>
       </condition>
@@ -445,7 +445,6 @@
       depends="init,bootstrap,fabil-compiler,bin,native"
       description="Compiles the FabIL signature clasess">
     <path id="fabil-signatures.bootcp">
-      <pathelement location="${bootstrap.classes}"/>
       <path refid="polyglot.classpath"/>
     </path>
     <pathconvert
@@ -820,7 +819,8 @@ public class VersionInfo {
         destdir="${tmp}"
         encoding="utf-8"
         includes="VersionInfo.java"
-        classpathref="jif.classpath"/>
+        classpathref="jif.classpath"
+        includeAntRuntime="false"/>
 
     <!-- Get Polyglot version. -->
     <java classname="VersionInfo" outputproperty="polyglot.version">
@@ -1478,6 +1478,8 @@ public class Version {
         <include name="jetty/core-*.jar" />
         <!-- Apache Commons -->
         <include name="jetty/commons-*.jar" />
+        <!-- Apache Xalan -->
+        <include name="xalan.jar" />
         <!-- Java Servlet API -->
         <include name="jetty/servlet-api-*.jar" />
       </tarfileset>
@@ -2002,6 +2004,7 @@ public class Version {
       <classpath>
         <path refid="jif.classpath" />
         <pathelement location="${bootstrap.classes}" />
+        <pathelement location="${lib}/xalan.jar" />
       </classpath>
     </javac>
   </target>

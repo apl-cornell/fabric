@@ -250,12 +250,17 @@ public abstract class ClassRef implements FastSerializable {
         URL path = SysUtil.locateClass(javaClassName());
         throw new InternalError(new InvalidClassException(javaClassName(),
             "A class of the same name was found, but its hash did not match "
-                + "the hash given in a network message" + "\n" + "hash from: "
-                + path));
+                + "the hash given in a network message\n"
+                + "  network message hash:\n    " + toHex(hash) + "\n"
+                + "  hash from " + path + ":\n    " + toHex(myHash)));
       } catch (ClassNotFoundException e) {
         throw new InternalError(e);
       }
     }
+  }
+
+  private String toHex(byte[] b) {
+    return javax.xml.bind.DatatypeConverter.printHexBinary(b);
   }
 
   /**
@@ -562,7 +567,8 @@ public abstract class ClassRef implements FastSerializable {
       if (className.contains("$$."))
         className = className.substring(className.indexOf("$$.") + 3);
       this.nestedClassName = className.contains("$")
-          ? className.substring(className.indexOf('$') + 1) : null;
+          ? className.substring(className.indexOf('$') + 1)
+          : null;
 
       this.codebase = null;
       this.className = null;

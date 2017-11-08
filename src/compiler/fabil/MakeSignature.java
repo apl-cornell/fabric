@@ -8,7 +8,10 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
-import com.sun.org.apache.xalan.internal.xsltc.cmdline.getopt.GetOpt;
+// XXX Should not be depending on Xalan just to parse command-line arguments!
+// XXX If/when this dependency is finally removed, we should revert
+// XXX git commit f3bddd01f72f64512c3551030810da8534595887.
+import org.apache.xalan.xsltc.cmdline.getopt.GetOpt;
 
 /**
  * A quick and dirty hack for generating signature templates.

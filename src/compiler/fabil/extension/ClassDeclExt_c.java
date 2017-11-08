@@ -559,13 +559,13 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
 
     ClassMember deserialize = qq.parseMember(
         "public _Impl(fabric.worker.Store store, long onum, int version, "
-            + "long expiry, fabric.worker.Store labelStore, long labelOnum, "
+            + "fabric.worker.Store labelStore, long labelOnum, "
             + "fabric.worker.Store accessPolicyStore, long accessPolicyOnum, "
             + "java.io.ObjectInput in, java.util.Iterator refTypes, "
             + "java.util.Iterator intraStoreRefs, "
             + "java.util.Iterator interStoreRefs) "
             + "throws java.io.IOException, java.lang.ClassNotFoundException {"
-            + "super(store, onum, version, expiry, labelStore, labelOnum, "
+            + "super(store, onum, version, labelStore, labelOnum, "
             + "accessPolicyStore, accessPolicyOnum, in, refTypes, "
             + "intraStoreRefs, interStoreRefs);" + in + " }",
         inSubst.toArray());
@@ -733,18 +733,16 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
           // void is also a primitive type!
           ret = nf.Eval(Position.compilerGenerated(), call);
           retLocal = nf.Eval(Position.compilerGenerated(),
-                             nf.Call(Position.compilerGenerated(),
-                                     nf.Id(Position.compilerGenerated(), realName),
-                                     locals));
+              nf.Call(Position.compilerGenerated(),
+                  nf.Id(Position.compilerGenerated(), realName), locals));
         } else if (retType.isPrimitive()) {
           // Cannot cast Object to a primitive type directly
           PrimitiveType pt = (PrimitiveType) retType;
           ret = rr.qq()
               .parseStmt(" return (" + pt.wrapperTypeString(ts) + ")%E;", call);
           retLocal = nf.Return(Position.compilerGenerated(),
-                               nf.Call(Position.compilerGenerated(),
-                                       nf.Id(Position.compilerGenerated(), realName),
-                                       locals));
+              nf.Call(Position.compilerGenerated(),
+                  nf.Id(Position.compilerGenerated(), realName), locals));
         } else {
           Expr castExpr = call;
           TypeNode returnType = md.returnType();
@@ -758,9 +756,8 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
           ret = nf.Return(Position.compilerGenerated(),
               nf.Cast(Position.compilerGenerated(), md.returnType(), castExpr));
           retLocal = nf.Return(Position.compilerGenerated(),
-                               nf.Call(Position.compilerGenerated(),
-                                       nf.Id(Position.compilerGenerated(), realName),
-                                       locals));
+              nf.Call(Position.compilerGenerated(),
+                  nf.Id(Position.compilerGenerated(), realName), locals));
         }
 
         List<Stmt> catchStmts = new ArrayList<>();
@@ -775,17 +772,14 @@ public class ClassDeclExt_c extends ClassMemberExt_c {
             "throw new fabric.common.exceptions.InternalError($e);"));
 
         Stmt tryCatch =
-            rr.qq().parseStmt("try {\n"
-                            + "  %S\n"
-                            + "}\n"
-                            + "catch (%T $e) {\n"
-                            + "  %LS\n" + "}", ret, ts.RemoteCallException(), catchStmts);
+            rr.qq().parseStmt("try {\n" + "  %S\n" + "}\n" + "catch (%T $e) {\n"
+                + "  %LS\n" + "}", ret, ts.RemoteCallException(), catchStmts);
 
         // Wrap remote call in a check for local worker.
         Stmt withLocalCheck = nf.If(Position.compilerGenerated(),
-                                    rr.qq().parseExpr("$remoteWorker == fabric.worker.Worker.getWorker().getLocalWorker()"),
-                                    retLocal,
-                                    tryCatch);
+            rr.qq().parseExpr(
+                "$remoteWorker == fabric.worker.Worker.getWorker().getLocalWorker()"),
+            retLocal, tryCatch);
 
         List<Formal> newFormals = new ArrayList<>(md.formals().size() + 1);
         newFormals.add(remoteWorker);

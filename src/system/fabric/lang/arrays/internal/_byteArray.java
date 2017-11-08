@@ -38,15 +38,14 @@ public interface _byteArray extends Object {
     /**
      * Used for deserializing.
      */
-    public _Impl(Store store, long onum, int version, long expiry,
-        Store labelStore, long labelOnum, Store accessPolicyStore,
-        long accessPolicyOnum, ObjectInput in, Iterator<RefTypeEnum> refTypes,
+    public _Impl(Store store, long onum, int version, Store labelStore,
+        long labelOnum, Store accessPolicyStore, long accessPolicyOnum,
+        ObjectInput in, Iterator<RefTypeEnum> refTypes,
         Iterator<Long> intraStoreRefs,
         Iterator<Pair<String, Long>> interStoreRefs)
-            throws IOException, ClassNotFoundException {
-      super(store, onum, version, expiry, labelStore, labelOnum,
-          accessPolicyStore, accessPolicyOnum, in, refTypes, intraStoreRefs,
-          interStoreRefs);
+        throws IOException, ClassNotFoundException {
+      super(store, onum, version, labelStore, labelOnum, accessPolicyStore,
+          accessPolicyOnum, in, refTypes, intraStoreRefs, interStoreRefs);
       value = new byte[in.readInt()];
       for (int i = 0; i < value.length; i++)
         value[i] = in.readByte();
@@ -130,7 +129,7 @@ public interface _byteArray extends Object {
     @Override
     public void $serialize(ObjectOutput out, List<RefTypeEnum> refTypes,
         List<Long> intraStoreRefs, List<Pair<String, Long>> interStoreRefs)
-            throws IOException {
+        throws IOException {
       super.$serialize(out, refTypes, intraStoreRefs, interStoreRefs);
       out.writeInt(value.length);
       for (byte element : value)

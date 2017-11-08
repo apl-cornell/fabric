@@ -12,16 +12,12 @@ import java.util.Set;
  * A Label is the runtime representation of a Fabric label. This code is mostly
  * copied from Jif.
  */
-public interface Label
-  extends fabric.lang.Object
-{
-    
+public interface Label extends fabric.lang.Object {
     /**
-     * Returns true iff this <= l. If the method returns true, then s has all of
-     * the delegations (i.e., DelegationPairs) added to it that the result
-     depends
-     * upon. If the method returns false, then s has no eleents added to it.
-     */
+   * Returns true iff this <= l. If the method returns true, then s has all of
+   * the delegations (i.e., DelegationPairs) added to it that the result depends
+   * upon. If the method returns false, then s has no eleents added to it.
+   */
     boolean relabelsTo(fabric.lang.security.Label l, java.util.Set s);
     
     fabric.lang.security.Label join(fabric.worker.Store store,
@@ -45,9 +41,7 @@ public interface Label
     fabric.lang.security.SecretKeyObject keyObject();
     
     public static class _Proxy extends fabric.lang.Object._Proxy
-      implements fabric.lang.security.Label
-    {
-        
+      implements fabric.lang.security.Label {
         public boolean relabelsTo(fabric.lang.security.Label arg1,
                                   java.util.Set arg2) {
             return ((fabric.lang.security.Label) fetch()).relabelsTo(arg1,

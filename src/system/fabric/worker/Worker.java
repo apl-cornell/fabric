@@ -171,13 +171,13 @@ public final class Worker {
       Map<String, RemoteStore> initStoreSet) throws InternalError,
       IllegalStateException, UsageError, IOException, GeneralSecurityException {
 
-    if (instance != null)
-      throw new IllegalStateException(
-          "The Fabric worker has already been initialized");
+    if (instance != null) throw new IllegalStateException(
+        "The Fabric worker has already been initialized");
 
     WORKER_LOGGER.info("Initializing Fabric worker");
     WORKER_LOGGER.config("use ssl:             " + config.useSSL);
 
+    instanceName = config.name;
     instance = new Worker(config, principalOnum, initStoreSet);
 
     Threading.getPool().execute(instance.remoteCallManager);
@@ -207,6 +207,12 @@ public final class Worker {
    */
   protected static Worker instance;
 
+  /**
+   * Name for the singleton instance, kept separately so it can be accessed
+   * before the Worker is fully initialized.
+   */
+  protected static String instanceName;
+
   public static boolean isInitialized() {
     return instance != null;
   }
@@ -217,8 +223,8 @@ public final class Worker {
   }
 
   private Worker(ConfigProperties config, Long principalOnum,
-      Map<String, RemoteStore> initStoreSet) throws InternalError, UsageError,
-      IOException, GeneralSecurityException {
+      Map<String, RemoteStore> initStoreSet)
+      throws InternalError, UsageError, IOException, GeneralSecurityException {
     // Sanitise input.
 
     this.config = config;
@@ -238,22 +244,17 @@ public final class Worker {
     final Protocol<RemoteWorker> authenticateToWorkerProtocol =
         makeAuthenticateProtocol(config.getKeyMaterial());
 
-    Protocol<RemoteStore> nonAuthenticateProtocol =
-        new HandshakeComposite<>(new HandshakeUnauthenticated<RemoteStore>(
-            config.name));
+    Protocol<RemoteStore> nonAuthenticateProtocol = new HandshakeComposite<>(
+        new HandshakeUnauthenticated<RemoteStore>(config.name));
 
-    this.authToStore =
-        new SubSocketFactory<>(authenticateToStoreProtocol, nameService,
-            PortType.STORE);
-    this.authToWorker =
-        new SubSocketFactory<>(authenticateToWorkerProtocol, nameService,
-            PortType.WORKER);
-    this.unauthToStore =
-        new SubSocketFactory<>(nonAuthenticateProtocol, nameService,
-            PortType.STORE);
-    this.authFromAll =
-        new SubServerSocketFactory(authenticateToWorkerProtocol, nameService,
-            PortType.WORKER);
+    this.authToStore = new SubSocketFactory<>(config,
+        authenticateToStoreProtocol, nameService, PortType.STORE);
+    this.authToWorker = new SubSocketFactory<>(config,
+        authenticateToWorkerProtocol, nameService, PortType.WORKER);
+    this.unauthToStore = new SubSocketFactory<>(config, nonAuthenticateProtocol,
+        nameService, PortType.STORE);
+    this.authFromAll = new SubServerSocketFactory(config,
+        authenticateToWorkerProtocol, nameService, PortType.WORKER);
 
     this.inProcessRemoteWorker = new InProcessRemoteWorker(this);
     this.remoteWorkers.put(config.name, inProcessRemoteWorker);
@@ -265,18 +266,16 @@ public final class Worker {
       Constructor<FetchManager> fetchManagerConstructor =
           (Constructor<FetchManager>) Class.forName(config.dissemClass)
               .getConstructor(Worker.class, Properties.class);
-      this.fetchManager =
-          fetchManagerConstructor.newInstance(this,
-              config.disseminationProperties);
+      this.fetchManager = fetchManagerConstructor.newInstance(this,
+          config.disseminationProperties);
     } catch (Exception e) {
       throw new InternalError("Unable to load fetch manager", e);
     }
 
     this.labelCache = new LabelCache();
 
-    this.principal =
-        initializePrincipal(config.homeStore, principalOnum,
-            this.config.getKeyMaterial());
+    this.principal = initializePrincipal(config.homeStore, principalOnum,
+        this.config.getKeyMaterial());
   }
 
   private <Node extends RemoteNode<Node>> Protocol<Node> makeAuthenticateProtocol(
@@ -327,10 +326,22 @@ public final class Worker {
    *           if the Fabric worker is uninitialized
    */
   public static Worker getWorker() throws IllegalStateException {
-    if (instance == null)
-      throw new IllegalStateException(
-          "The Fabric worker is uninitialized.  Call Worker.init(...)");
+    if (instance == null) throw new IllegalStateException(
+        "The Fabric worker is uninitialized.  Call Worker.init(...)");
     return instance;
+  }
+
+  /**
+   * Returns the Singleton Worker instance's name.
+   *
+   * @return the Worker instance's name.
+   * @throws IllegalStateException
+   *           if the Fabric worker's name is uninitialized
+   */
+  public static String getWorkerName() throws IllegalStateException {
+    if (instanceName == null) throw new IllegalStateException(
+        "The Fabric worker's name is uninitialized.  Call Worker.init(...)");
+    return instanceName;
   }
 
   /**
@@ -471,8 +482,8 @@ public final class Worker {
   }
 
   public static void initializeForStore(String name,
-      Map<String, RemoteStore> initStoreSet) throws IOException,
-      IllegalStateException, InternalError, UsageError,
+      Map<String, RemoteStore> initStoreSet)
+      throws IOException, IllegalStateException, InternalError, UsageError,
       GeneralSecurityException {
     initialize(new ConfigProperties(name), ONumConstants.STORE_PRINCIPAL,
         initStoreSet);
@@ -603,9 +614,8 @@ public final class Worker {
 
     if (main == null) {
       // Support static methods defined in static impl class.
-      mainClass =
-          getClassLoader().loadClass(
-              NSUtil.toJavaStaticProxyName(mainClassName));
+      mainClass = getClassLoader()
+          .loadClass(NSUtil.toJavaStaticProxyName(mainClassName));
       for (Method m : mainClass.getMethods()) {
         if (m.getName().equals("main") && m.getParameterTypes().length == 1
             && m.getParameterTypes()[0].equals(ObjectArray.class)) {
@@ -622,12 +632,10 @@ public final class Worker {
     Object argsProxy = runInSubTransaction(new Code<Object>() {
       @Override
       public Object run() {
-        ConfPolicy conf =
-            LabelUtil._Impl.readerPolicy(local, workerPrincipal,
-                workerPrincipal);
-        IntegPolicy integ =
-            LabelUtil._Impl.writerPolicy(local, workerPrincipal,
-                workerPrincipal);
+        ConfPolicy conf = LabelUtil._Impl.readerPolicy(local, workerPrincipal,
+            workerPrincipal);
+        IntegPolicy integ = LabelUtil._Impl.writerPolicy(local, workerPrincipal,
+            workerPrincipal);
         Label label = LabelUtil._Impl.toLabel(local, conf, integ);
         return WrappedJavaInlineable.$wrap(local, label, conf, args);
       }
@@ -661,7 +669,8 @@ public final class Worker {
    *          whether the transaction should be automatically retried if it
    *          fails during commit
    */
-  public static <T> T runInTopLevelTransaction(Code<T> code, boolean autoRetry) {
+  public static <T> T runInTopLevelTransaction(Code<T> code,
+      boolean autoRetry) {
     return runInTransaction(null, code, autoRetry);
   }
 
@@ -726,22 +735,33 @@ public final class Worker {
    */
   private static <T> T runInSubTransaction(Code<T> code, boolean autoRetry) {
     TransactionManager tm = TransactionManager.getInstance();
+    boolean backoffEnabled = getWorker().config.txRetryBackoff;
 
     boolean success = false;
+
+    // Flag for triggering backoff on alternate retries.
+    boolean doBackoff = true;
+
     int backoff = 1;
     while (!success) {
-      if (backoff > 32) {
-        while (true) {
-          try {
-            Thread.sleep(backoff);
-            break;
-          } catch (InterruptedException e) {
-            Logging.logIgnoredInterruptedException(e);
+      if (backoffEnabled) {
+        if (doBackoff) {
+          if (backoff > 32) {
+            while (true) {
+              try {
+                Thread.sleep(backoff);
+                break;
+              } catch (InterruptedException e) {
+                Logging.logIgnoredInterruptedException(e);
+              }
+            }
           }
-        }
-      }
 
-      if (backoff < 5000) backoff *= 2;
+          if (backoff < 5000) backoff *= 2;
+        }
+
+        doBackoff = backoff <= 32 || !doBackoff;
+      }
 
       success = true;
       tm.startTransaction();
@@ -756,7 +776,7 @@ public final class Worker {
 
         TransactionID currentTid = tm.getCurrentTid();
         if (e.tid.isDescendantOf(currentTid))
-        // Restart this transaction.
+          // Restart this transaction.
           continue;
 
         // Need to restart a parent transaction.
@@ -789,17 +809,25 @@ public final class Worker {
             // This is the TID for the parent of the transaction we just tried
             // to commit.
             TransactionID currentTid = tm.getCurrentTid();
-            if (currentTid == null || e.tid.isDescendantOf(currentTid)
-                && !currentTid.equals(e.tid))
-            // Restart the transaction just we tried to commit.
-              continue;
 
-            // Need to restart a parent transaction.
-            throw e;
+            // Determine whether we need to restart an ancestor of the
+            // transaction we just tried to commit.
+            if (currentTid != null) {
+              if (e.tid.equals(currentTid)
+                  || !e.tid.isDescendantOf(currentTid)) {
+                // Need to restart an ancestor of the transaction we just tried
+                // to commit.
+                throw e;
+              }
+            }
+
+            // The transaction just we tried to commit will be restarted.
           }
         } else {
           tm.abortTransaction();
         }
+
+        if (!success) continue;
       }
     }
 

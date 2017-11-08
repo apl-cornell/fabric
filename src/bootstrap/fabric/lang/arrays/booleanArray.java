@@ -29,10 +29,7 @@ import fabric.lang.arrays.internal._ObjectArray;
  * 
  * @author kvikram
  */
-public interface booleanArray
-  extends fabric.lang.Object
-{
-    
+public interface booleanArray extends fabric.lang.Object {
     public int get$CHUNK_SIZE();
     
     public int set$CHUNK_SIZE(int val);
@@ -70,13 +67,13 @@ public interface booleanArray
     public fabric.lang.Object set$root(fabric.lang.Object val);
     
     /**
-     * Creates a new object array at the given Store with the given length.
-     * 
-     * @param store
-     *                The store on which to allocate the array.
-     * @param length
-     *                The length of the array.
-     */
+   * Creates a new object array at the given Store with the given length.
+   * 
+   * @param store
+   *                The store on which to allocate the array.
+   * @param length
+   *                The length of the array.
+   */
     public fabric.lang.arrays.booleanArray fabric$lang$arrays$booleanArray$(
       fabric.lang.security.Label updateLabel,
       fabric.lang.security.ConfPolicy accessPolicy, int length);
@@ -97,9 +94,7 @@ public interface booleanArray
     public boolean set(int i, boolean data);
     
     public static class _Proxy extends fabric.lang.Object._Proxy
-      implements fabric.lang.arrays.booleanArray
-    {
-        
+      implements fabric.lang.arrays.booleanArray {
         public int get$CHUNK_SIZE() {
             return ((fabric.lang.arrays.booleanArray._Impl) fetch()).
               get$CHUNK_SIZE();
@@ -215,14 +210,8 @@ public interface booleanArray
     }
     
     public static final class _Impl extends fabric.lang.Object._Impl
-      implements fabric.lang.arrays.booleanArray
-    {
-        
-        public int get$CHUNK_SIZE() {
-            fabric.worker.transaction.TransactionManager.getInstance().
-              registerRead(this);
-            return this.CHUNK_SIZE;
-        }
+      implements fabric.lang.arrays.booleanArray {
+        public int get$CHUNK_SIZE() { return this.CHUNK_SIZE; }
         
         public int set$CHUNK_SIZE(int val) {
             fabric.worker.transaction.TransactionManager tm =
@@ -245,19 +234,9 @@ public interface booleanArray
             return tmp;
         }
         
-        /**
-         * The number of elements in each little array. Dependent on the MTU?
-         * Analogous to a block in a file system. Also directly determines the
-         fanout.
-         * We always need it to be a power of 2.
-         */
         private int CHUNK_SIZE;
         
-        public int get$CHUNK_SIZE_LOG2() {
-            fabric.worker.transaction.TransactionManager.getInstance().
-              registerRead(this);
-            return this.CHUNK_SIZE_LOG2;
-        }
+        public int get$CHUNK_SIZE_LOG2() { return this.CHUNK_SIZE_LOG2; }
         
         public int set$CHUNK_SIZE_LOG2(int val) {
             fabric.worker.transaction.TransactionManager tm =
@@ -310,11 +289,10 @@ public interface booleanArray
         }
         
         /**
-         * The height of the tree of little arrays. Depends on the chunk size
-         * (determining the branching factor) and the number of expected
-         elements in
-         * the bigger array
-         */
+   * The height of the tree of little arrays. Depends on the chunk size
+   * (determining the branching factor) and the number of expected elements in
+   * the bigger array
+   */
         private int height;
         
         public int get$length() {
@@ -345,10 +323,9 @@ public interface booleanArray
         }
         
         /**
-         * The number of expected elements in this big array Can be modified
-         even
-         * after an instance has been created
-         */
+   * The number of expected elements in this big array Can be modified even
+   * after an instance has been created
+   */
         private int length;
         
         public fabric.lang.Object get$root() {
@@ -367,22 +344,20 @@ public interface booleanArray
         }
         
         /**
-         * The root of the tree of little arrays. The runtime type of root is a
-         Fabric
-         * array of Fabric Objects. Each object in the array is either a further
-         array
-         * of objects or is an array element if this array is at the leaf level
-         */
+   * The root of the tree of little arrays. The runtime type of root is a Fabric
+   * array of Fabric Objects. Each object in the array is either a further array
+   * of objects or is an array element if this array is at the leaf level
+   */
         private fabric.lang.Object root;
         
         /**
-         * Creates a new object array at the given Store with the given length.
-         * 
-         * @param store
-         *                The store on which to allocate the array.
-         * @param length
-         *                The length of the array.
-         */
+   * Creates a new object array at the given Store with the given length.
+   * 
+   * @param store
+   *                The store on which to allocate the array.
+   * @param length
+   *                The length of the array.
+   */
         public native fabric.lang.arrays.booleanArray
           fabric$lang$arrays$booleanArray$(
           fabric.lang.security.Label updateLabel,
@@ -399,11 +374,9 @@ public interface booleanArray
         public native int getLength();
         
         /**
-         * Ceiling(log_{CHUNK_SIZE}(length)).  (Except returns 1 if length <=
-         1.)
-         * This basically returns the height of the tree for a given array
-         length.
-         */
+   * Ceiling(log_{CHUNK_SIZE}(length)).  (Except returns 1 if length <= 1.)
+   * This basically returns the height of the tree for a given array length.
+   */
         private native int getHeight(int length);
         
         private native void setZeroLength();
@@ -435,15 +408,15 @@ public interface booleanArray
         }
         
         public _Impl(fabric.worker.Store store, long onum, int version,
-                     long expiry, fabric.worker.Store labelStore,
-                     long labelOnum, fabric.worker.Store accessPolicyStore,
+                     fabric.worker.Store labelStore, long labelOnum,
+                     fabric.worker.Store accessPolicyStore,
                      long accessPolicyOnum, java.io.ObjectInput in,
                      java.util.Iterator refTypes,
                      java.util.Iterator intraStoreRefs,
                      java.util.Iterator interStoreRefs)
               throws java.io.IOException,
             java.lang.ClassNotFoundException {
-            super(store, onum, version, expiry, labelStore, labelOnum,
+            super(store, onum, version, labelStore, labelOnum,
                   accessPolicyStore, accessPolicyOnum, in, refTypes,
                   intraStoreRefs, interStoreRefs);
             this.CHUNK_SIZE = in.readInt();
@@ -469,15 +442,12 @@ public interface booleanArray
     }
     
     interface _Static extends fabric.lang.Object, Cloneable {
-        
         public boolean get$DEFAULT_VALUE();
         
         public boolean set$DEFAULT_VALUE(boolean val);
         
         final class _Proxy extends fabric.lang.Object._Proxy
-          implements fabric.lang.arrays.booleanArray._Static
-        {
-            
+          implements fabric.lang.arrays.booleanArray._Static {
             public boolean get$DEFAULT_VALUE() {
                 return ((fabric.lang.arrays.booleanArray._Static._Impl)
                           fetch()).get$DEFAULT_VALUE();
@@ -505,7 +475,8 @@ public interface booleanArray
                   arrays.
                   booleanArray.
                   _Static.
-                  _Impl impl =
+                  _Impl
+                  impl =
                   (fabric.lang.arrays.booleanArray._Static._Impl)
                     fabric.lang.Object._Static._Proxy.
                     $makeStaticInstance(
@@ -517,14 +488,8 @@ public interface booleanArray
         }
         
         class _Impl extends fabric.lang.Object._Impl
-          implements fabric.lang.arrays.booleanArray._Static
-        {
-            
-            public boolean get$DEFAULT_VALUE() {
-                fabric.worker.transaction.TransactionManager.getInstance().
-                  registerRead(this);
-                return this.DEFAULT_VALUE;
-            }
+          implements fabric.lang.arrays.booleanArray._Static {
+            public boolean get$DEFAULT_VALUE() { return this.DEFAULT_VALUE; }
             
             public boolean set$DEFAULT_VALUE(boolean val) {
                 fabric.worker.transaction.TransactionManager tm =
@@ -547,15 +512,15 @@ public interface booleanArray
             }
             
             public _Impl(fabric.worker.Store store, long onum, int version,
-                         long expiry, fabric.worker.Store labelStore,
-                         long labelOnum, fabric.worker.Store accessPolicyStore,
+                         fabric.worker.Store labelStore, long labelOnum,
+                         fabric.worker.Store accessPolicyStore,
                          long accessPolicyOnum, java.io.ObjectInput in,
                          java.util.Iterator refTypes,
                          java.util.Iterator intraStoreRefs,
                          java.util.Iterator interStoreRefs)
                   throws java.io.IOException,
                 java.lang.ClassNotFoundException {
-                super(store, onum, version, expiry, labelStore, labelOnum,
+                super(store, onum, version, labelStore, labelOnum,
                       accessPolicyStore, accessPolicyOnum, in, refTypes,
                       intraStoreRefs, interStoreRefs);
                 this.DEFAULT_VALUE = in.readBoolean();

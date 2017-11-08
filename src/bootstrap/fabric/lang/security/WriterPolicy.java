@@ -19,7 +19,6 @@ import java.util.HashSet;
 public interface WriterPolicy
   extends fabric.lang.security.IntegPolicy, fabric.lang.security.AbstractPolicy
 {
-    
     public fabric.lang.security.Principal get$owner();
     
     public fabric.lang.security.Principal set$owner(
@@ -80,9 +79,7 @@ public interface WriterPolicy
     
     public static class _Proxy
     extends fabric.lang.security.AbstractPolicy._Proxy
-      implements fabric.lang.security.WriterPolicy
-    {
-        
+      implements fabric.lang.security.WriterPolicy {
         public fabric.lang.security.Principal get$owner() {
             return ((fabric.lang.security.WriterPolicy._Impl) fetch()).
               get$owner();
@@ -155,14 +152,8 @@ public interface WriterPolicy
     }
     
     public static class _Impl extends fabric.lang.security.AbstractPolicy._Impl
-      implements fabric.lang.security.WriterPolicy
-    {
-        
-        public fabric.lang.security.Principal get$owner() {
-            fabric.worker.transaction.TransactionManager.getInstance().
-              registerRead(this);
-            return this.owner;
-        }
+      implements fabric.lang.security.WriterPolicy {
+        public fabric.lang.security.Principal get$owner() { return this.owner; }
         
         public fabric.lang.security.Principal set$owner(
           fabric.lang.security.Principal val) {
@@ -177,8 +168,6 @@ public interface WriterPolicy
         private fabric.lang.security.Principal owner;
         
         public fabric.lang.security.Principal get$writer() {
-            fabric.worker.transaction.TransactionManager.getInstance().
-              registerRead(this);
             return this.writer;
         }
         
@@ -263,15 +252,15 @@ public interface WriterPolicy
         }
         
         public _Impl(fabric.worker.Store store, long onum, int version,
-                     long expiry, fabric.worker.Store labelStore,
-                     long labelOnum, fabric.worker.Store accessPolicyStore,
+                     fabric.worker.Store labelStore, long labelOnum,
+                     fabric.worker.Store accessPolicyStore,
                      long accessPolicyOnum, java.io.ObjectInput in,
                      java.util.Iterator refTypes,
                      java.util.Iterator intraStoreRefs,
                      java.util.Iterator interStoreRefs)
               throws java.io.IOException,
             java.lang.ClassNotFoundException {
-            super(store, onum, version, expiry, labelStore, labelOnum,
+            super(store, onum, version, labelStore, labelOnum,
                   accessPolicyStore, accessPolicyOnum, in, refTypes,
                   intraStoreRefs, interStoreRefs);
             this.owner = (fabric.lang.security.Principal)
@@ -296,13 +285,9 @@ public interface WriterPolicy
     
     interface _Static extends fabric.lang.Object, Cloneable {
         final class _Proxy extends fabric.lang.Object._Proxy
-          implements fabric.lang.security.WriterPolicy._Static
-        {
-            
+          implements fabric.lang.security.WriterPolicy._Static {
             public _Proxy(fabric.lang.security.WriterPolicy._Static.
-                            _Impl impl) {
-                super(impl);
-            }
+                            _Impl impl) { super(impl); }
             
             public _Proxy(fabric.worker.Store store, long onum) {
                 super(store, onum);
@@ -317,7 +302,8 @@ public interface WriterPolicy
                   security.
                   WriterPolicy.
                   _Static.
-                  _Impl impl =
+                  _Impl
+                  impl =
                   (fabric.lang.security.WriterPolicy._Static._Impl)
                     fabric.lang.Object._Static._Proxy.
                     $makeStaticInstance(
@@ -329,9 +315,7 @@ public interface WriterPolicy
         }
         
         class _Impl extends fabric.lang.Object._Impl
-          implements fabric.lang.security.WriterPolicy._Static
-        {
-            
+          implements fabric.lang.security.WriterPolicy._Static {
             public void $serialize(java.io.ObjectOutput out,
                                    java.util.List refTypes,
                                    java.util.List intraStoreRefs,
@@ -341,15 +325,15 @@ public interface WriterPolicy
             }
             
             public _Impl(fabric.worker.Store store, long onum, int version,
-                         long expiry, fabric.worker.Store labelStore,
-                         long labelOnum, fabric.worker.Store accessPolicyStore,
+                         fabric.worker.Store labelStore, long labelOnum,
+                         fabric.worker.Store accessPolicyStore,
                          long accessPolicyOnum, java.io.ObjectInput in,
                          java.util.Iterator refTypes,
                          java.util.Iterator intraStoreRefs,
                          java.util.Iterator interStoreRefs)
                   throws java.io.IOException,
                 java.lang.ClassNotFoundException {
-                super(store, onum, version, expiry, labelStore, labelOnum,
+                super(store, onum, version, labelStore, labelOnum,
                       accessPolicyStore, accessPolicyOnum, in, refTypes,
                       intraStoreRefs, interStoreRefs);
             }
@@ -358,7 +342,7 @@ public interface WriterPolicy
             
             protected fabric.lang.Object._Proxy $makeProxy() {
                 return new fabric.lang.security.WriterPolicy._Static._Proxy(
-                  this);
+                         this);
             }
             
             private void $init() {  }

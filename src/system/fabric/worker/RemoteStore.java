@@ -52,8 +52,8 @@ import fabric.util.Map;
  * <code>Worker.getStore()</code> interface. For each remote store, there should
  * be at most one <code>RemoteStore</code> object representing that store.
  */
-public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
-    Serializable {
+public class RemoteStore extends RemoteNode<RemoteStore>
+    implements Store, Serializable {
   /**
    * A queue of fresh object identifiers.
    */
@@ -87,7 +87,7 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
   protected RemoteStore(String name) {
     super(name);
 
-    this.cache = new ObjectCache(name);
+    this.cache = new ObjectCache(this);
     this.fetchLocks = new ConcurrentLongKeyHashMap<>();
     this.fresh_ids = new LinkedList<>();
     this.publicKey = null;
@@ -123,6 +123,11 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
       throws TransactionPrepareFailedException, UnreachableNodeException {
     send(Worker.getWorker().authToStore, new PrepareTransactionMessage(tid,
         singleStore, readOnly, toCreate, reads, writes));
+  }
+
+  @Override
+  public ObjectCache.Entry newCacheEntry(_Impl impl) {
+    return cache.new Entry(impl);
   }
 
   @Override
@@ -213,7 +218,7 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
       g = readObjectFromStore(onum);
     }
 
-    return cache.put(this, g, onum);
+    return cache.put(g, onum);
   }
 
   /**
@@ -270,8 +275,8 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
    * @param num
    *          The number of objects to allocate
    */
-  protected void reserve(int num) throws AccessException,
-      UnreachableNodeException {
+  protected void reserve(int num)
+      throws AccessException, UnreachableNodeException {
     synchronized (fresh_ids) {
       while (fresh_ids.size() < num) {
         // log.info("Requesting new onums, storeid=" + storeID);
@@ -293,8 +298,8 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
   @Override
   public void commitTransaction(long transactionID)
       throws UnreachableNodeException, TransactionCommitFailedException {
-    send(Worker.getWorker().authToStore, new CommitTransactionMessage(
-        transactionID));
+    send(Worker.getWorker().authToStore,
+        new CommitTransactionMessage(transactionID));
   }
 
   @Override
@@ -312,8 +317,8 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
    */
   protected List<SerializedObject> getStaleObjects(LongKeyMap<Integer> reads) {
     try {
-      return send(Worker.getWorker().authToStore, new StalenessCheckMessage(
-          reads)).staleObjects;
+      return send(Worker.getWorker().authToStore,
+          new StalenessCheckMessage(reads)).staleObjects;
     } catch (final AccessException e) {
       throw new RuntimeFetchException(e);
     }
@@ -357,7 +362,7 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
    * updated.
    */
   public void updateCache(SerializedObject update) {
-    cache.update(this, update);
+    cache.update(update);
   }
 
   /**
@@ -366,7 +371,7 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
    * retried.
    */
   void forceCache(SerializedObject obj) {
-    cache.forcePut(this, obj);
+    cache.forcePut(obj);
   }
 
   /**
@@ -383,7 +388,7 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
    *     object.
    */
   boolean updateOrEvict(SerializedObject obj) {
-    return cache.updateOrEvict(this, obj);
+    return cache.updateOrEvict(obj);
   }
 
   @Override
@@ -397,7 +402,7 @@ public class RemoteStore extends RemoteNode<RemoteStore> implements Store,
 
   @Override
   public ObjectCache.Entry cache(SerializedObject obj) {
-    return cache.put(this, obj);
+    return cache.put(obj);
   }
 
   /**

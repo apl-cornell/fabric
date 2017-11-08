@@ -1,10 +1,12 @@
 package fabil.extension;
 
-import polyglot.ast.ArrayAccess;
-import polyglot.ast.ArrayAccessAssign;
-import polyglot.ast.Expr;
 import fabil.types.FabILTypeSystem;
 import fabil.visit.ProxyRewriter;
+
+import polyglot.ast.ArrayAccess;
+import polyglot.ast.ArrayAccessAssign;
+import polyglot.ast.Assign;
+import polyglot.ast.Expr;
 
 public class ArrayAccessAssignExt_c extends ExprExt_c {
 
@@ -17,6 +19,11 @@ public class ArrayAccessAssignExt_c extends ExprExt_c {
     // Only rewrite Fabric arrays.
     FabILTypeSystem ts = rewriter.typeSystem();
     if (!ts.isFabricType(array.type())) return null;
+
+    if (!assign.operator().equals(Assign.ASSIGN))
+      throw new UnsupportedOperationException(
+          "Oooh fancy.. Sorry but " + assign.operator() + " at "
+              + assign.position() + " is not supported yet.");
 
     array = left.visitChild(array, rewriter);
     Expr index = left.visitChild(left.index(), rewriter);

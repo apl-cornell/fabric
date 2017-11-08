@@ -38,15 +38,14 @@ public interface _floatArray extends Object {
     /**
      * Used for deserializing.
      */
-    public _Impl(Store store, long onum, int version, long expiry,
-        Store labelStore, long labelOnum, Store accessPolicyStore,
-        long accessPolicyOnum, ObjectInput in, Iterator<RefTypeEnum> refTypes,
+    public _Impl(Store store, long onum, int version, Store labelStore,
+        long labelOnum, Store accessPolicyStore, long accessPolicyOnum,
+        ObjectInput in, Iterator<RefTypeEnum> refTypes,
         Iterator<Long> intraStoreRefs,
         Iterator<Pair<String, Long>> interStoreRefs)
-            throws IOException, ClassNotFoundException {
-      super(store, onum, version, expiry, labelStore, labelOnum,
-          accessPolicyStore, accessPolicyOnum, in, refTypes, intraStoreRefs,
-          interStoreRefs);
+        throws IOException, ClassNotFoundException {
+      super(store, onum, version, labelStore, labelOnum, accessPolicyStore,
+          accessPolicyOnum, in, refTypes, intraStoreRefs, interStoreRefs);
       value = new float[in.readInt()];
       for (int i = 0; i < value.length; i++)
         value[i] = in.readFloat();
@@ -61,8 +60,8 @@ public interface _floatArray extends Object {
      *          The length of the array.
      */
     @Override
-    public _floatArray fabric$lang$arrays$internal$_floatArray$(Label updateLabel,
-        ConfPolicy accessPolicy, int length) {
+    public _floatArray fabric$lang$arrays$internal$_floatArray$(
+        Label updateLabel, ConfPolicy accessPolicy, int length) {
       fabric$lang$arrays$internal$_floatArray$(updateLabel, accessPolicy,
           new float[length]);
       return this;
@@ -78,8 +77,8 @@ public interface _floatArray extends Object {
      *          The backing array to use.
      */
     @Override
-    public _floatArray fabric$lang$arrays$internal$_floatArray$(Label updateLabel,
-        ConfPolicy accessPolicy, float[] value) {
+    public _floatArray fabric$lang$arrays$internal$_floatArray$(
+        Label updateLabel, ConfPolicy accessPolicy, float[] value) {
       set$$updateLabel(updateLabel);
       set$$accessPolicy(accessPolicy);
       fabric$lang$Object$();
@@ -130,7 +129,7 @@ public interface _floatArray extends Object {
     @Override
     public void $serialize(ObjectOutput out, List<RefTypeEnum> refTypes,
         List<Long> intraStoreRefs, List<Pair<String, Long>> interStoreRefs)
-            throws IOException {
+        throws IOException {
       super.$serialize(out, refTypes, intraStoreRefs, interStoreRefs);
       out.writeInt(value.length);
       for (float element : value)
@@ -155,15 +154,15 @@ public interface _floatArray extends Object {
     }
 
     @Override
-    public _floatArray fabric$lang$arrays$internal$_floatArray$(Label updateLabel,
-        ConfPolicy accessPolicy, int length) {
+    public _floatArray fabric$lang$arrays$internal$_floatArray$(
+        Label updateLabel, ConfPolicy accessPolicy, int length) {
       return ((_floatArray) fetch()).fabric$lang$arrays$internal$_floatArray$(
           updateLabel, accessPolicy, length);
     }
 
     @Override
-    public _floatArray fabric$lang$arrays$internal$_floatArray$(Label updateLabel,
-        ConfPolicy accessPolicy, float[] value) {
+    public _floatArray fabric$lang$arrays$internal$_floatArray$(
+        Label updateLabel, ConfPolicy accessPolicy, float[] value) {
       return ((_floatArray) fetch()).fabric$lang$arrays$internal$_floatArray$(
           updateLabel, accessPolicy, value);
     }

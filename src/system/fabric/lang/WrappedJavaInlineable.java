@@ -22,7 +22,7 @@ public class WrappedJavaInlineable<T> implements JavaInlineable {
    * Maps ordinary Java objects to their JavaInlineable wrappers.
    */
   private static final ConcurrentMap<java.lang.Object, WrappedJavaInlineable<?>> $wrappingMap =
-      new MapMaker().concurrencyLevel(16).weakKeys().makeMap();
+      new MapMaker().concurrencyLevel(16).weakKeys().weakValues().makeMap();
 
   /**
    * Given an object that, in the Fabric type system, implements

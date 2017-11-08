@@ -13,9 +13,7 @@ import fabric.util.*;
  * Jif.
  */
 public interface MeetIntegPolicy
-  extends fabric.lang.security.IntegPolicy, fabric.lang.security.MeetPolicy
-{
-    
+  extends fabric.lang.security.IntegPolicy, fabric.lang.security.MeetPolicy {
     public fabric.lang.security.MeetIntegPolicy
       fabric$lang$security$MeetIntegPolicy$(fabric.util.Set policies);
     
@@ -52,9 +50,7 @@ public interface MeetIntegPolicy
     public fabric.lang.Object $initLabels();
     
     public static class _Proxy extends fabric.lang.security.MeetPolicy._Proxy
-      implements fabric.lang.security.MeetIntegPolicy
-    {
-        
+      implements fabric.lang.security.MeetIntegPolicy {
         public native fabric.lang.security.MeetIntegPolicy
           fabric$lang$security$MeetIntegPolicy$(fabric.util.Set arg1);
         
@@ -97,9 +93,7 @@ public interface MeetIntegPolicy
     
     public static final class _Impl
     extends fabric.lang.security.MeetPolicy._Impl
-      implements fabric.lang.security.MeetIntegPolicy
-    {
-        
+      implements fabric.lang.security.MeetIntegPolicy {
         public native fabric.lang.security.MeetIntegPolicy
           fabric$lang$security$MeetIntegPolicy$(fabric.util.Set policies);
         
@@ -150,15 +144,15 @@ public interface MeetIntegPolicy
         }
         
         public _Impl(fabric.worker.Store store, long onum, int version,
-                     long expiry, fabric.worker.Store labelStore,
-                     long labelOnum, fabric.worker.Store accessPolicyStore,
+                     fabric.worker.Store labelStore, long labelOnum,
+                     fabric.worker.Store accessPolicyStore,
                      long accessPolicyOnum, java.io.ObjectInput in,
                      java.util.Iterator refTypes,
                      java.util.Iterator intraStoreRefs,
                      java.util.Iterator interStoreRefs)
               throws java.io.IOException,
             java.lang.ClassNotFoundException {
-            super(store, onum, version, expiry, labelStore, labelOnum,
+            super(store, onum, version, labelStore, labelOnum,
                   accessPolicyStore, accessPolicyOnum, in, refTypes,
                   intraStoreRefs, interStoreRefs);
         }
@@ -166,13 +160,9 @@ public interface MeetIntegPolicy
     
     interface _Static extends fabric.lang.Object, Cloneable {
         final class _Proxy extends fabric.lang.Object._Proxy
-          implements fabric.lang.security.MeetIntegPolicy._Static
-        {
-            
+          implements fabric.lang.security.MeetIntegPolicy._Static {
             public _Proxy(fabric.lang.security.MeetIntegPolicy._Static.
-                            _Impl impl) {
-                super(impl);
-            }
+                            _Impl impl) { super(impl); }
             
             public _Proxy(fabric.worker.Store store, long onum) {
                 super(store, onum);
@@ -187,7 +177,8 @@ public interface MeetIntegPolicy
                   security.
                   MeetIntegPolicy.
                   _Static.
-                  _Impl impl =
+                  _Impl
+                  impl =
                   (fabric.lang.security.MeetIntegPolicy._Static._Impl)
                     fabric.lang.Object._Static._Proxy.
                     $makeStaticInstance(
@@ -199,9 +190,7 @@ public interface MeetIntegPolicy
         }
         
         class _Impl extends fabric.lang.Object._Impl
-          implements fabric.lang.security.MeetIntegPolicy._Static
-        {
-            
+          implements fabric.lang.security.MeetIntegPolicy._Static {
             public void $serialize(java.io.ObjectOutput out,
                                    java.util.List refTypes,
                                    java.util.List intraStoreRefs,
@@ -211,15 +200,15 @@ public interface MeetIntegPolicy
             }
             
             public _Impl(fabric.worker.Store store, long onum, int version,
-                         long expiry, fabric.worker.Store labelStore,
-                         long labelOnum, fabric.worker.Store accessPolicyStore,
+                         fabric.worker.Store labelStore, long labelOnum,
+                         fabric.worker.Store accessPolicyStore,
                          long accessPolicyOnum, java.io.ObjectInput in,
                          java.util.Iterator refTypes,
                          java.util.Iterator intraStoreRefs,
                          java.util.Iterator interStoreRefs)
                   throws java.io.IOException,
                 java.lang.ClassNotFoundException {
-                super(store, onum, version, expiry, labelStore, labelOnum,
+                super(store, onum, version, labelStore, labelOnum,
                       accessPolicyStore, accessPolicyOnum, in, refTypes,
                       intraStoreRefs, interStoreRefs);
             }
@@ -228,7 +217,7 @@ public interface MeetIntegPolicy
             
             protected fabric.lang.Object._Proxy $makeProxy() {
                 return new fabric.lang.security.MeetIntegPolicy._Static._Proxy(
-                  this);
+                         this);
             }
             
             private void $init() {  }

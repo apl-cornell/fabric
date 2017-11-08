@@ -19,10 +19,7 @@ import fabric.common.exceptions.InternalError;
  * corresponding label object, we can simply apply the label to the key object
  * and be certain of the key's confidentiality.
  */
-public interface SecretKeyObject
-  extends fabric.lang.Object
-{
-    
+public interface SecretKeyObject extends fabric.lang.Object {
     public javax.crypto.SecretKey get$key();
     
     public javax.crypto.SecretKey set$key(javax.crypto.SecretKey val);
@@ -35,9 +32,7 @@ public interface SecretKeyObject
     public fabric.lang.Object $initLabels();
     
     public static class _Proxy extends fabric.lang.Object._Proxy
-      implements fabric.lang.security.SecretKeyObject
-    {
-        
+      implements fabric.lang.security.SecretKeyObject {
         public javax.crypto.SecretKey get$key() {
             return ((fabric.lang.security.SecretKeyObject._Impl) fetch()).
               get$key();
@@ -61,14 +56,8 @@ public interface SecretKeyObject
     }
     
     public static class _Impl extends fabric.lang.Object._Impl
-      implements fabric.lang.security.SecretKeyObject
-    {
-        
-        public javax.crypto.SecretKey get$key() {
-            fabric.worker.transaction.TransactionManager.getInstance().
-              registerRead(this);
-            return this.key;
-        }
+      implements fabric.lang.security.SecretKeyObject {
+        public javax.crypto.SecretKey get$key() { return this.key; }
         
         public javax.crypto.SecretKey set$key(javax.crypto.SecretKey val) {
             fabric.worker.transaction.TransactionManager tm =
@@ -104,15 +93,15 @@ public interface SecretKeyObject
         }
         
         public _Impl(fabric.worker.Store store, long onum, int version,
-                     long expiry, fabric.worker.Store labelStore,
-                     long labelOnum, fabric.worker.Store accessPolicyStore,
+                     fabric.worker.Store labelStore, long labelOnum,
+                     fabric.worker.Store accessPolicyStore,
                      long accessPolicyOnum, java.io.ObjectInput in,
                      java.util.Iterator refTypes,
                      java.util.Iterator intraStoreRefs,
                      java.util.Iterator interStoreRefs)
               throws java.io.IOException,
             java.lang.ClassNotFoundException {
-            super(store, onum, version, expiry, labelStore, labelOnum,
+            super(store, onum, version, labelStore, labelOnum,
                   accessPolicyStore, accessPolicyOnum, in, refTypes,
                   intraStoreRefs, interStoreRefs);
             this.key = (javax.crypto.SecretKey) in.readObject();
@@ -128,13 +117,9 @@ public interface SecretKeyObject
     
     interface _Static extends fabric.lang.Object, Cloneable {
         final class _Proxy extends fabric.lang.Object._Proxy
-          implements fabric.lang.security.SecretKeyObject._Static
-        {
-            
+          implements fabric.lang.security.SecretKeyObject._Static {
             public _Proxy(fabric.lang.security.SecretKeyObject._Static.
-                            _Impl impl) {
-                super(impl);
-            }
+                            _Impl impl) { super(impl); }
             
             public _Proxy(fabric.worker.Store store, long onum) {
                 super(store, onum);
@@ -149,7 +134,8 @@ public interface SecretKeyObject
                   security.
                   SecretKeyObject.
                   _Static.
-                  _Impl impl =
+                  _Impl
+                  impl =
                   (fabric.lang.security.SecretKeyObject._Static._Impl)
                     fabric.lang.Object._Static._Proxy.
                     $makeStaticInstance(
@@ -161,9 +147,7 @@ public interface SecretKeyObject
         }
         
         class _Impl extends fabric.lang.Object._Impl
-          implements fabric.lang.security.SecretKeyObject._Static
-        {
-            
+          implements fabric.lang.security.SecretKeyObject._Static {
             public void $serialize(java.io.ObjectOutput out,
                                    java.util.List refTypes,
                                    java.util.List intraStoreRefs,
@@ -173,15 +157,15 @@ public interface SecretKeyObject
             }
             
             public _Impl(fabric.worker.Store store, long onum, int version,
-                         long expiry, fabric.worker.Store labelStore,
-                         long labelOnum, fabric.worker.Store accessPolicyStore,
+                         fabric.worker.Store labelStore, long labelOnum,
+                         fabric.worker.Store accessPolicyStore,
                          long accessPolicyOnum, java.io.ObjectInput in,
                          java.util.Iterator refTypes,
                          java.util.Iterator intraStoreRefs,
                          java.util.Iterator interStoreRefs)
                   throws java.io.IOException,
                 java.lang.ClassNotFoundException {
-                super(store, onum, version, expiry, labelStore, labelOnum,
+                super(store, onum, version, labelStore, labelOnum,
                       accessPolicyStore, accessPolicyOnum, in, refTypes,
                       intraStoreRefs, interStoreRefs);
             }
@@ -190,7 +174,7 @@ public interface SecretKeyObject
             
             protected fabric.lang.Object._Proxy $makeProxy() {
                 return new fabric.lang.security.SecretKeyObject._Static._Proxy(
-                  this);
+                         this);
             }
             
             private void $init() {  }

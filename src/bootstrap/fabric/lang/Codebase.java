@@ -21,10 +21,7 @@ import fabric.util.Iterator;
  * 
  * @author Lucas Waye <lrw48@cornell.edu>
  */
-public interface Codebase
-  extends fabric.lang.Object
-{
-    
+public interface Codebase extends fabric.lang.Object {
     public fabric.util.Map get$classes();
     
     public fabric.util.Map set$classes(fabric.util.Map val);
@@ -34,11 +31,11 @@ public interface Codebase
     public fabric.util.Map set$codebases(fabric.util.Map val);
     
     /**
-     * @param  name
-     *    a fabric name
-     * @return
-     *    the associated FClass, or null if there is none
-     */
+   * @param  name
+   *    a fabric name
+   * @return
+   *    the associated FClass, or null if there is none
+   */
     public fabric.lang.FClass resolveClassName(java.lang.String name);
     
     public fabric.lang.Codebase resolveCodebaseName(java.lang.String name);
@@ -61,9 +58,7 @@ public interface Codebase
     public fabric.lang.Object $initLabels();
     
     public static class _Proxy extends fabric.lang.Object._Proxy
-      implements fabric.lang.Codebase
-    {
-        
+      implements fabric.lang.Codebase {
         public fabric.util.Map get$classes() {
             return ((fabric.lang.Codebase._Impl) fetch()).get$classes();
         }
@@ -110,9 +105,7 @@ public interface Codebase
     }
     
     public static class _Impl extends fabric.lang.Object._Impl
-      implements fabric.lang.Codebase
-    {
-        
+      implements fabric.lang.Codebase {
         public fabric.util.Map get$classes() {
             fabric.worker.transaction.TransactionManager.getInstance().
               registerRead(this);
@@ -150,11 +143,11 @@ public interface Codebase
         private fabric.util.Map codebases;
         
         /**
-         * @param  name
-         *    a fabric name
-         * @return
-         *    the associated FClass, or null if there is none
-         */
+   * @param  name
+   *    a fabric name
+   * @return
+   *    the associated FClass, or null if there is none
+   */
         public native fabric.lang.FClass resolveClassName(
           java.lang.String name);
         
@@ -199,33 +192,27 @@ public interface Codebase
         }
         
         public _Impl(fabric.worker.Store store, long onum, int version,
-                     long expiry, fabric.worker.Store labelStore,
-                     long labelOnum, fabric.worker.Store accessPolicyStore,
+                     fabric.worker.Store labelStore, long labelOnum,
+                     fabric.worker.Store accessPolicyStore,
                      long accessPolicyOnum, java.io.ObjectInput in,
                      java.util.Iterator refTypes,
                      java.util.Iterator intraStoreRefs,
                      java.util.Iterator interStoreRefs)
               throws java.io.IOException,
             java.lang.ClassNotFoundException {
-            super(store, onum, version, expiry, labelStore, labelOnum,
+            super(store, onum, version, labelStore, labelOnum,
                   accessPolicyStore, accessPolicyOnum, in, refTypes,
                   intraStoreRefs, interStoreRefs);
             this.classes = (fabric.util.Map)
                              $readRef(fabric.util.Map._Proxy.class,
                                       (fabric.common.RefTypeEnum)
-                                        refTypes.next(),
-                                      in,
-                                      store,
-                                      intraStoreRefs,
-                                      interStoreRefs);
+                                        refTypes.next(), in, store,
+                                      intraStoreRefs, interStoreRefs);
             this.codebases = (fabric.util.Map)
                                $readRef(fabric.util.Map._Proxy.class,
                                         (fabric.common.RefTypeEnum)
-                                          refTypes.next(),
-                                        in,
-                                        store,
-                                        intraStoreRefs,
-                                        interStoreRefs);
+                                          refTypes.next(), in, store,
+                                        intraStoreRefs, interStoreRefs);
         }
         
         public void $copyAppStateFrom(fabric.lang.Object._Impl other) {
@@ -238,9 +225,7 @@ public interface Codebase
     
     interface _Static extends fabric.lang.Object, Cloneable {
         final class _Proxy extends fabric.lang.Object._Proxy
-          implements fabric.lang.Codebase._Static
-        {
-            
+          implements fabric.lang.Codebase._Static {
             public _Proxy(fabric.lang.Codebase._Static._Impl impl) {
                 super(impl);
             }
@@ -256,7 +241,8 @@ public interface Codebase
                   lang.
                   Codebase.
                   _Static.
-                  _Impl impl =
+                  _Impl
+                  impl =
                   (fabric.lang.Codebase._Static._Impl)
                     fabric.lang.Object._Static._Proxy.
                     $makeStaticInstance(
@@ -267,9 +253,7 @@ public interface Codebase
         }
         
         class _Impl extends fabric.lang.Object._Impl
-          implements fabric.lang.Codebase._Static
-        {
-            
+          implements fabric.lang.Codebase._Static {
             public void $serialize(java.io.ObjectOutput out,
                                    java.util.List refTypes,
                                    java.util.List intraStoreRefs,
@@ -279,15 +263,15 @@ public interface Codebase
             }
             
             public _Impl(fabric.worker.Store store, long onum, int version,
-                         long expiry, fabric.worker.Store labelStore,
-                         long labelOnum, fabric.worker.Store accessPolicyStore,
+                         fabric.worker.Store labelStore, long labelOnum,
+                         fabric.worker.Store accessPolicyStore,
                          long accessPolicyOnum, java.io.ObjectInput in,
                          java.util.Iterator refTypes,
                          java.util.Iterator intraStoreRefs,
                          java.util.Iterator interStoreRefs)
                   throws java.io.IOException,
                 java.lang.ClassNotFoundException {
-                super(store, onum, version, expiry, labelStore, labelOnum,
+                super(store, onum, version, labelStore, labelOnum,
                       accessPolicyStore, accessPolicyOnum, in, refTypes,
                       intraStoreRefs, interStoreRefs);
             }

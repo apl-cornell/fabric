@@ -4,6 +4,9 @@ import static fabric.common.Logging.CONFIG_LOGGER;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.logging.Level;
@@ -11,6 +14,9 @@ import java.util.logging.Level;
 public class ConfigProperties {
 
   public final static Properties defaults;
+
+  private static final String INBOUND_DELAY_PROPERTY_PREFIX =
+      "fabric.node.netdelay.in|";
 
   /**
    * The name of this node.
@@ -39,6 +45,16 @@ public class ConfigProperties {
   private final String keyStoreName;
   private final String certStoreName;
   private KeyMaterial keyMaterial;
+
+  /**
+   * Added network delay on inbound traffic.
+   */
+  public final Map<String, Short> inDelays;
+
+  /**
+   * Whether to exponentially back off when retrying transactions.
+   */
+  public final boolean txRetryBackoff;
 
   static {
     //
@@ -82,15 +98,31 @@ public class ConfigProperties {
 
     this.password =
         removeProperty(p, "fabric.node.password", "password").toCharArray();
-    this.keyStoreName =
-        Resources.relpathRewrite("etc", "keys",
-            removeProperty(p, "fabric.node.keystore", name + ".keystore"));
-    this.certStoreName =
-        Resources.relpathRewrite("var", "certs",
-            removeProperty(p, "fabric.worker.certs", name + ".keystore"));
-    this.dissemClass =
-        removeProperty(p, "fabric.node.fetchmanager.class",
-            "fabric.dissemination.DummyFetchManager");
+    this.keyStoreName = Resources.relpathRewrite("etc", "keys",
+        removeProperty(p, "fabric.node.keystore", name + ".keystore"));
+    this.certStoreName = Resources.relpathRewrite("var", "certs",
+        removeProperty(p, "fabric.worker.certs", name + ".keystore"));
+    this.dissemClass = removeProperty(p, "fabric.node.fetchmanager.class",
+        "fabric.dissemination.DummyFetchManager");
+
+    this.txRetryBackoff = Boolean
+        .parseBoolean(removeProperty(p, "fabric.node.txRetryBackoff", "true"));
+
+    // Collect network-delay properties.
+    Map<String, Short> inDelays = new HashMap<>();
+    for (Object prop : p.keySet()) {
+      String key = (String) prop;
+      if (key.startsWith(INBOUND_DELAY_PROPERTY_PREFIX)) {
+        String nodeName = key.substring(INBOUND_DELAY_PROPERTY_PREFIX.length());
+        inDelays.put(nodeName, Short.parseShort(p.getProperty(key)));
+      }
+    }
+    this.inDelays = Collections.unmodifiableMap(inDelays);
+
+    // Remove the network-delay properties that we just processed.
+    for (String node : inDelays.keySet()) {
+      p.remove(INBOUND_DELAY_PROPERTY_PREFIX + node);
+    }
 
     /************************** Worker Properties *****************************/
     this.workerPort =
@@ -119,10 +151,8 @@ public class ConfigProperties {
   }
 
   public synchronized KeyMaterial getKeyMaterial() {
-    if (this.keyMaterial == null)
-      this.keyMaterial =
-      new KeyMaterial(this.name, this.certStoreName, this.keyStoreName,
-          this.password);
+    if (this.keyMaterial == null) this.keyMaterial = new KeyMaterial(this.name,
+        this.certStoreName, this.keyStoreName, this.password);
 
     return this.keyMaterial;
   }

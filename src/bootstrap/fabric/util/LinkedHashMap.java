@@ -73,10 +73,7 @@ import fabric.lang.Object;
  * @since 1.4
  * @status updated to 1.4
  */
-public interface LinkedHashMap
-  extends fabric.util.HashMap
-{
-    
+public interface LinkedHashMap extends fabric.util.HashMap {
     public fabric.util.LinkedHashMap.LinkedHashEntry get$root();
     
     public fabric.util.LinkedHashMap.LinkedHashEntry set$root(
@@ -87,13 +84,10 @@ public interface LinkedHashMap
     public boolean set$accessOrder(boolean val);
     
     /**
-     * Class to represent an entry in the hash table. Holds a single key-value
-     * pair and the doubly-linked insertion order list.
-     */
-    public static interface LinkedHashEntry
-      extends HashEntry
-    {
-        
+   * Class to represent an entry in the hash table. Holds a single key-value
+   * pair and the doubly-linked insertion order list.
+   */
+    public static interface LinkedHashEntry extends HashEntry {
         public fabric.util.LinkedHashMap get$out$();
         
         public fabric.util.LinkedHashMap.LinkedHashEntry get$pred();
@@ -107,35 +101,33 @@ public interface LinkedHashMap
           fabric.util.LinkedHashMap.LinkedHashEntry val);
         
         /**
-         * Simple constructor.
-         *
-         * @param key the key
-         * @param value the value
-         */
-        public LinkedHashEntry fabric$util$LinkedHashMap$LinkedHashEntry$(
-          fabric.lang.Object key, fabric.lang.Object value);
+     * Simple constructor.
+     *
+     * @param key the key
+     * @param value the value
+     */
+        public LinkedHashEntry
+          fabric$util$LinkedHashMap$LinkedHashEntry$(fabric.lang.Object key, fabric.lang.Object value);
         
         /**
-         * Called when this entry is accessed via put or get. This version does
-         * the necessary bookkeeping to keep the doubly-linked list in order,
-         * after moving this element to the newest position in access order.
-         */
+     * Called when this entry is accessed via put or get. This version does
+     * the necessary bookkeeping to keep the doubly-linked list in order,
+     * after moving this element to the newest position in access order.
+     */
         public void access();
         
         /**
-         * Called when this entry is removed from the map. This version does
-         * the necessary bookkeeping to keep the doubly-linked list in order.
-         *
-         * @return the value of this key as it is removed
-         */
+     * Called when this entry is removed from the map. This version does
+     * the necessary bookkeeping to keep the doubly-linked list in order.
+     *
+     * @return the value of this key as it is removed
+     */
         public fabric.lang.Object cleanup();
         
         public fabric.lang.Object $initLabels();
         
         public static class _Proxy extends fabric.util.HashMap.HashEntry._Proxy
-          implements LinkedHashEntry
-        {
-            
+          implements LinkedHashEntry {
             public fabric.util.LinkedHashMap get$out$() {
                 return ((fabric.util.LinkedHashMap.LinkedHashEntry._Impl)
                           fetch()).get$out$();
@@ -175,9 +167,7 @@ public interface LinkedHashMap
         }
         
         public static class _Impl extends fabric.util.HashMap.HashEntry._Impl
-          implements LinkedHashEntry
-        {
-            
+          implements LinkedHashEntry {
             public fabric.util.LinkedHashMap get$out$() { return this.out$; }
             
             private fabric.util.LinkedHashMap out$;
@@ -199,9 +189,9 @@ public interface LinkedHashMap
             }
             
             /**
-             * The predecessor in the iteration list. If this entry is the root
-             * (eldest), pred points to the newest entry.
-             */
+     * The predecessor in the iteration list. If this entry is the root
+     * (eldest), pred points to the newest entry.
+     */
             LinkedHashEntry pred;
             
             public fabric.util.LinkedHashMap.LinkedHashEntry get$succ() {
@@ -220,36 +210,32 @@ public interface LinkedHashMap
                 return val;
             }
             
-            /** The successor in the iteration list, null if this is the newest.
-             */
+            /** The successor in the iteration list, null if this is the newest. */
             LinkedHashEntry succ;
             
             /**
-             * Simple constructor.
-             *
-             * @param key the key
-             * @param value the value
-             */
+     * Simple constructor.
+     *
+     * @param key the key
+     * @param value the value
+     */
             public native LinkedHashEntry
-              fabric$util$LinkedHashMap$LinkedHashEntry$(
-              fabric.lang.Object key, fabric.lang.Object value);
+              fabric$util$LinkedHashMap$LinkedHashEntry$(fabric.lang.Object key,
+                                                         fabric.lang.Object value);
             
             /**
-             * Called when this entry is accessed via put or get. This version
-             does
-             * the necessary bookkeeping to keep the doubly-linked list in
-             order,
-             * after moving this element to the newest position in access order.
-             */
+     * Called when this entry is accessed via put or get. This version does
+     * the necessary bookkeeping to keep the doubly-linked list in order,
+     * after moving this element to the newest position in access order.
+     */
             public native void access();
             
             /**
-             * Called when this entry is removed from the map. This version does
-             * the necessary bookkeeping to keep the doubly-linked list in
-             order.
-             *
-             * @return the value of this key as it is removed
-             */
+     * Called when this entry is removed from the map. This version does
+     * the necessary bookkeeping to keep the doubly-linked list in order.
+     *
+     * @return the value of this key as it is removed
+     */
             public native fabric.lang.Object cleanup();
             
             public native fabric.lang.Object $initLabels();
@@ -262,7 +248,7 @@ public interface LinkedHashMap
             
             protected fabric.lang.Object._Proxy $makeProxy() {
                 return new fabric.util.LinkedHashMap.LinkedHashEntry._Proxy(
-                  this);
+                         this);
             }
             
             public void $serialize(java.io.ObjectOutput out,
@@ -280,25 +266,22 @@ public interface LinkedHashMap
             }
             
             public _Impl(fabric.worker.Store store, long onum, int version,
-                         long expiry, fabric.worker.Store labelStore,
-                         long labelOnum, fabric.worker.Store accessPolicyStore,
+                         fabric.worker.Store labelStore, long labelOnum,
+                         fabric.worker.Store accessPolicyStore,
                          long accessPolicyOnum, java.io.ObjectInput in,
                          java.util.Iterator refTypes,
                          java.util.Iterator intraStoreRefs,
                          java.util.Iterator interStoreRefs)
                   throws java.io.IOException,
                 java.lang.ClassNotFoundException {
-                super(store, onum, version, expiry, labelStore, labelOnum,
+                super(store, onum, version, labelStore, labelOnum,
                       accessPolicyStore, accessPolicyOnum, in, refTypes,
                       intraStoreRefs, interStoreRefs);
                 this.out$ = (fabric.util.LinkedHashMap)
                               $readRef(fabric.util.LinkedHashMap._Proxy.class,
                                        (fabric.common.RefTypeEnum)
-                                         refTypes.next(),
-                                       in,
-                                       store,
-                                       intraStoreRefs,
-                                       interStoreRefs);
+                                         refTypes.next(), in, store,
+                                       intraStoreRefs, interStoreRefs);
                 this.pred =
                   (fabric.util.LinkedHashMap.LinkedHashEntry)
                     $readRef(
@@ -325,21 +308,16 @@ public interface LinkedHashMap
         
         interface _Static extends fabric.lang.Object, Cloneable {
             final class _Proxy extends fabric.lang.Object._Proxy
-              implements fabric.util.LinkedHashMap.LinkedHashEntry._Static
-            {
-                
+              implements fabric.util.LinkedHashMap.LinkedHashEntry._Static {
                 public _Proxy(fabric.util.LinkedHashMap.LinkedHashEntry._Static.
-                                _Impl impl) {
-                    super(impl);
-                }
+                                _Impl impl) { super(impl); }
                 
                 public _Proxy(fabric.worker.Store store, long onum) {
                     super(store, onum);
                 }
                 
                 public static final fabric.util.LinkedHashMap.LinkedHashEntry.
-                  _Static
-                  $instance;
+                  _Static $instance;
                 
                 static {
                     fabric.
@@ -347,7 +325,8 @@ public interface LinkedHashMap
                       LinkedHashMap.
                       LinkedHashEntry.
                       _Static.
-                      _Impl impl =
+                      _Impl
+                      impl =
                       (fabric.
                         util.
                         LinkedHashMap.
@@ -366,9 +345,7 @@ public interface LinkedHashMap
             }
             
             class _Impl extends fabric.lang.Object._Impl
-              implements fabric.util.LinkedHashMap.LinkedHashEntry._Static
-            {
-                
+              implements fabric.util.LinkedHashMap.LinkedHashEntry._Static {
                 public void $serialize(java.io.ObjectOutput out,
                                        java.util.List refTypes,
                                        java.util.List intraStoreRefs,
@@ -379,8 +356,7 @@ public interface LinkedHashMap
                 }
                 
                 public _Impl(fabric.worker.Store store, long onum, int version,
-                             long expiry, fabric.worker.Store labelStore,
-                             long labelOnum,
+                             fabric.worker.Store labelStore, long labelOnum,
                              fabric.worker.Store accessPolicyStore,
                              long accessPolicyOnum, java.io.ObjectInput in,
                              java.util.Iterator refTypes,
@@ -388,7 +364,7 @@ public interface LinkedHashMap
                              java.util.Iterator interStoreRefs)
                       throws java.io.IOException,
                     java.lang.ClassNotFoundException {
-                    super(store, onum, version, expiry, labelStore, labelOnum,
+                    super(store, onum, version, labelStore, labelOnum,
                           accessPolicyStore, accessPolicyOnum, in, refTypes,
                           intraStoreRefs, interStoreRefs);
                 }
@@ -397,8 +373,7 @@ public interface LinkedHashMap
                 
                 protected fabric.lang.Object._Proxy $makeProxy() {
                     return new fabric.util.LinkedHashMap.LinkedHashEntry.
-                      _Static._Proxy(
-                      this);
+                             _Static._Proxy(this);
                 }
                 
                 private void $init() {  }
@@ -408,172 +383,167 @@ public interface LinkedHashMap
         
     }
     
-    
     /**
-     * Construct a new insertion-ordered LinkedHashMap with the default
-     * capacity (11) and the default load factor (0.75).
-     */
+   * Construct a new insertion-ordered LinkedHashMap with the default
+   * capacity (11) and the default load factor (0.75).
+   */
     public fabric.util.LinkedHashMap fabric$util$LinkedHashMap$();
     
     /**
-     * Construct a new insertion-ordered LinkedHashMap from the given Map,
-     * with initial capacity the greater of the size of <code>m</code> or
-     * the default of 11.
-     * <p>
-     *
-     * Every element in Map m will be put into this new HashMap, in the
-     * order of m's iterator.
-     *
-     * @param m a Map whose key / value pairs will be put into
-     *          the new HashMap.  <b>NOTE: key / value pairs
-     *          are not cloned in this constructor.</b>
-     * @throws NullPointerException if m is null
-     */
-    public fabric.util.LinkedHashMap fabric$util$LinkedHashMap$(
-      fabric.util.Map m);
+   * Construct a new insertion-ordered LinkedHashMap from the given Map,
+   * with initial capacity the greater of the size of <code>m</code> or
+   * the default of 11.
+   * <p>
+   *
+   * Every element in Map m will be put into this new HashMap, in the
+   * order of m's iterator.
+   *
+   * @param m a Map whose key / value pairs will be put into
+   *          the new HashMap.  <b>NOTE: key / value pairs
+   *          are not cloned in this constructor.</b>
+   * @throws NullPointerException if m is null
+   */
+    public fabric.util.LinkedHashMap fabric$util$LinkedHashMap$(fabric.util.Map m);
     
     /**
-     * Construct a new insertion-ordered LinkedHashMap with a specific
-     * inital capacity and default load factor of 0.75.
-     *
-     * @param initialCapacity the initial capacity of this HashMap (&gt;= 0)
-     * @throws IllegalArgumentException if (initialCapacity &lt; 0)
-     */
-    public fabric.util.LinkedHashMap fabric$util$LinkedHashMap$(
-      int initialCapacity);
+   * Construct a new insertion-ordered LinkedHashMap with a specific
+   * inital capacity and default load factor of 0.75.
+   *
+   * @param initialCapacity the initial capacity of this HashMap (&gt;= 0)
+   * @throws IllegalArgumentException if (initialCapacity &lt; 0)
+   */
+    public fabric.util.LinkedHashMap fabric$util$LinkedHashMap$(int initialCapacity);
     
     /**
-     * Construct a new insertion-orderd LinkedHashMap with a specific
-     * inital capacity and load factor.
-     *
-     * @param initialCapacity the initial capacity (&gt;= 0)
-     * @param loadFactor the load factor (&gt; 0, not NaN)
-     * @throws IllegalArgumentException if (initialCapacity &lt; 0) ||
-     *                                     ! (loadFactor &gt; 0.0)
-     */
+   * Construct a new insertion-orderd LinkedHashMap with a specific
+   * inital capacity and load factor.
+   *
+   * @param initialCapacity the initial capacity (&gt;= 0)
+   * @param loadFactor the load factor (&gt; 0, not NaN)
+   * @throws IllegalArgumentException if (initialCapacity &lt; 0) ||
+   *                                     ! (loadFactor &gt; 0.0)
+   */
     public fabric.util.LinkedHashMap fabric$util$LinkedHashMap$(
       int initialCapacity, float loadFactor);
     
     /**
-     * Construct a new LinkedHashMap with a specific inital capacity, load
-     * factor, and ordering mode.
-     *
-     * @param initialCapacity the initial capacity (&gt;=0)
-     * @param loadFactor the load factor (&gt;0, not NaN)
-     * @param accessOrder true for access-order, false for insertion-order
-     * @throws IllegalArgumentException if (initialCapacity &lt; 0) ||
-     *                                     ! (loadFactor &gt; 0.0)
-     */
+   * Construct a new LinkedHashMap with a specific inital capacity, load
+   * factor, and ordering mode.
+   *
+   * @param initialCapacity the initial capacity (&gt;=0)
+   * @param loadFactor the load factor (&gt;0, not NaN)
+   * @param accessOrder true for access-order, false for insertion-order
+   * @throws IllegalArgumentException if (initialCapacity &lt; 0) ||
+   *                                     ! (loadFactor &gt; 0.0)
+   */
     public fabric.util.LinkedHashMap fabric$util$LinkedHashMap$(
       int initialCapacity, float loadFactor, boolean accessOrder);
     
     /**
-     * Clears the Map so it has no keys. This is O(1).
-     */
+   * Clears the Map so it has no keys. This is O(1).
+   */
     public void clear();
     
     /**
-     * Returns <code>true</code> if this HashMap contains a value
-     * <code>o</code>, such that <code>o.equals(value)</code>.
-     *
-     * @param value the value to search for in this HashMap
-     * @return <code>true</code> if at least one key maps to the value
-     */
+   * Returns <code>true</code> if this HashMap contains a value
+   * <code>o</code>, such that <code>o.equals(value)</code>.
+   *
+   * @param value the value to search for in this HashMap
+   * @return <code>true</code> if at least one key maps to the value
+   */
     public boolean containsValue(fabric.lang.Object value);
     
     /**
-     * Return the value in this Map associated with the supplied key,
-     * or <code>null</code> if the key maps to nothing.  If this is an
-     * access-ordered Map and the key is found, this performs structural
-     * modification, moving the key to the newest end of the list. NOTE:
-     * Since the value could also be null, you must use containsKey to
-     * see if this key actually maps to something.
-     *
-     * @param key the key for which to fetch an associated value
-     * @return what the key maps to, if present
-     * @see #put(Object, Object)
-     * @see #containsKey(Object)
-     */
+   * Return the value in this Map associated with the supplied key,
+   * or <code>null</code> if the key maps to nothing.  If this is an
+   * access-ordered Map and the key is found, this performs structural
+   * modification, moving the key to the newest end of the list. NOTE:
+   * Since the value could also be null, you must use containsKey to
+   * see if this key actually maps to something.
+   *
+   * @param key the key for which to fetch an associated value
+   * @return what the key maps to, if present
+   * @see #put(Object, Object)
+   * @see #containsKey(Object)
+   */
     public fabric.lang.Object get(fabric.lang.Object key);
     
     /**
-     * Returns <code>true</code> if this map should remove the eldest entry.
-     * This method is invoked by all calls to <code>put</code> and
-     * <code>putAll</code> which place a new entry in the map, providing
-     * the implementer an opportunity to remove the eldest entry any time
-     * a new one is added.  This can be used to save memory usage of the
-     * hashtable, as well as emulating a cache, by deleting stale entries.
-     * <p>
-     *
-     * For example, to keep the Map limited to 100 entries, override as follows:
-     * <pre>
-     * private static final int MAX_ENTRIES = 100;
-     * protected boolean removeEldestEntry(Map.Entry eldest)
-     * {
-     *   return size() &gt; MAX_ENTRIES;
-     * }
-     * </pre><p>
-     *
-     * Typically, this method does not modify the map, but just uses the
-     * return value as an indication to <code>put</code> whether to proceed.
-     * However, if you override it to modify the map, you must return false
-     * (indicating that <code>put</code> should leave the modified map alone),
-     * or you face unspecified behavior.  Remember that in access-order mode,
-     * even calling <code>get</code> is a structural modification, but using
-     * the collections views (such as <code>keySet</code>) is not.
-     * <p>
-     *
-     * This method is called after the eldest entry has been inserted, so
-     * if <code>put</code> was called on a previously empty map, the eldest
-     * entry is the one you just put in! The default implementation just
-     * returns <code>false</code>, so that this map always behaves like
-     * a normal one with unbounded growth.
-     *
-     * @param eldest the eldest element which would be removed if this
-     *        returns true. For an access-order map, this is the least
-     *        recently accessed; for an insertion-order map, this is the
-     *        earliest element inserted.
-     * @return true if <code>eldest</code> should be removed
-     */
+   * Returns <code>true</code> if this map should remove the eldest entry.
+   * This method is invoked by all calls to <code>put</code> and
+   * <code>putAll</code> which place a new entry in the map, providing
+   * the implementer an opportunity to remove the eldest entry any time
+   * a new one is added.  This can be used to save memory usage of the
+   * hashtable, as well as emulating a cache, by deleting stale entries.
+   * <p>
+   *
+   * For example, to keep the Map limited to 100 entries, override as follows:
+   * <pre>
+   * private static final int MAX_ENTRIES = 100;
+   * protected boolean removeEldestEntry(Map.Entry eldest)
+   * {
+   *   return size() &gt; MAX_ENTRIES;
+   * }
+   * </pre><p>
+   *
+   * Typically, this method does not modify the map, but just uses the
+   * return value as an indication to <code>put</code> whether to proceed.
+   * However, if you override it to modify the map, you must return false
+   * (indicating that <code>put</code> should leave the modified map alone),
+   * or you face unspecified behavior.  Remember that in access-order mode,
+   * even calling <code>get</code> is a structural modification, but using
+   * the collections views (such as <code>keySet</code>) is not.
+   * <p>
+   *
+   * This method is called after the eldest entry has been inserted, so
+   * if <code>put</code> was called on a previously empty map, the eldest
+   * entry is the one you just put in! The default implementation just
+   * returns <code>false</code>, so that this map always behaves like
+   * a normal one with unbounded growth.
+   *
+   * @param eldest the eldest element which would be removed if this
+   *        returns true. For an access-order map, this is the least
+   *        recently accessed; for an insertion-order map, this is the
+   *        earliest element inserted.
+   * @return true if <code>eldest</code> should be removed
+   */
     public boolean removeEldestEntry(Entry eldest);
     
     /**
-     * Helper method called by <code>put</code>, which creates and adds a
-     * new Entry, followed by performing bookkeeping (like removeEldestEntry).
-     *
-     * @param key the key of the new Entry
-     * @param value the value
-     * @param idx the index in buckets where the new Entry belongs
-     * @param callRemove whether to call the removeEldestEntry method
-     * @see #put(Object, Object)
-     * @see #removeEldestEntry(Map.Entry)
-     * @see LinkedHashEntry#LinkedHashEntry(Object, Object)
-     */
-    public void addEntry(fabric.lang.Object key, fabric.lang.Object value,
-                         int idx, boolean callRemove);
+   * Helper method called by <code>put</code>, which creates and adds a
+   * new Entry, followed by performing bookkeeping (like removeEldestEntry).
+   *
+   * @param key the key of the new Entry
+   * @param value the value
+   * @param idx the index in buckets where the new Entry belongs
+   * @param callRemove whether to call the removeEldestEntry method
+   * @see #put(Object, Object)
+   * @see #removeEldestEntry(Map.Entry)
+   * @see LinkedHashEntry#LinkedHashEntry(Object, Object)
+   */
+    public void addEntry(
+      fabric.lang.Object key, fabric.lang.Object value, int idx, boolean callRemove);
     
     /**
-     * Helper method, called by clone() to reset the doubly-linked list.
-     *
-     * @param m the map to add entries from
-     * @see #clone()
-     */
+   * Helper method, called by clone() to reset the doubly-linked list.
+   *
+   * @param m the map to add entries from
+   * @see #clone()
+   */
     public void putAllInternal(fabric.util.Map m);
     
     /**
-     * Generates a parameterized iterator. This allows traversal to follow
-     * the doubly-linked list instead of the random bin order of HashMap.
-     *
-     * @param type {@link #KEYS}, {@link #VALUES}, or {@link #ENTRIES}
-     * @return the appropriate iterator
-     */
+   * Generates a parameterized iterator. This allows traversal to follow
+   * the doubly-linked list instead of the random bin order of HashMap.
+   *
+   * @param type {@link #KEYS}, {@link #VALUES}, or {@link #ENTRIES}
+   * @return the appropriate iterator
+   */
     public fabric.util.Iterator iterator(fabric.worker.Store store,
                                          final int type);
     
     public static interface LinkedHashIterator
-      extends fabric.util.Iterator, fabric.lang.Object
-    {
-        
+      extends fabric.util.Iterator, fabric.lang.Object {
         public fabric.util.LinkedHashMap get$out$();
         
         public fabric.util.LinkedHashMap.LinkedHashEntry get$current();
@@ -602,40 +572,37 @@ public interface LinkedHashMap
         
         public int postDec$type();
         
-        public LinkedHashIterator fabric$util$LinkedHashMap$LinkedHashIterator$(
-          int type);
+        public LinkedHashIterator fabric$util$LinkedHashMap$LinkedHashIterator$(int type);
         
         /**
-         * Returns true if the Iterator has more elements.
-         *
-         * @return true if there are more elements
-         */
+     * Returns true if the Iterator has more elements.
+     *
+     * @return true if there are more elements
+     */
         public boolean hasNext();
         
         /**
-         * Returns the next element in the Iterator's sequential view.
-         *
-         * @return the next element
-         * @throws ConcurrentModificationException if the HashMap was modified
-         * @throws NoSuchElementException if there is none
-         */
+     * Returns the next element in the Iterator's sequential view.
+     *
+     * @return the next element
+     * @throws ConcurrentModificationException if the HashMap was modified
+     * @throws NoSuchElementException if there is none
+     */
         public fabric.lang.Object next();
         
         /**
-         * Removes from the backing HashMap the last element which was fetched
-         * with the <code>next()</code> method.
-         *
-         * @throws ConcurrentModificationException if the HashMap was modified
-         * @throws IllegalStateException if called when there is no last element
-         */
+     * Removes from the backing HashMap the last element which was fetched
+     * with the <code>next()</code> method.
+     *
+     * @throws ConcurrentModificationException if the HashMap was modified
+     * @throws IllegalStateException if called when there is no last element
+     */
         public void remove();
         
         public fabric.lang.Object $initLabels();
         
         public static class _Proxy extends fabric.lang.Object._Proxy
-          implements LinkedHashIterator
-        {
-            
+          implements LinkedHashIterator {
             public fabric.util.LinkedHashMap get$out$() {
                 return ((fabric.util.LinkedHashMap.LinkedHashIterator._Impl)
                           fetch()).get$out$();
@@ -720,9 +687,7 @@ public interface LinkedHashMap
         }
         
         public static final class _Impl extends fabric.lang.Object._Impl
-          implements LinkedHashIterator
-        {
-            
+          implements LinkedHashIterator {
             public fabric.util.LinkedHashMap get$out$() { return this.out$; }
             
             private fabric.util.LinkedHashMap out$;
@@ -795,11 +760,7 @@ public interface LinkedHashMap
             /** The number of known modifications to the backing Map. */
             int knownMod;
             
-            public int get$type() {
-                fabric.worker.transaction.TransactionManager.getInstance().
-                  registerRead(this);
-                return this.type;
-            }
+            public int get$type() { return this.type; }
             
             public int set$type(int val) {
                 fabric.worker.transaction.TransactionManager tm =
@@ -828,32 +789,28 @@ public interface LinkedHashMap
               fabric$util$LinkedHashMap$LinkedHashIterator$(int type);
             
             /**
-             * Returns true if the Iterator has more elements.
-             *
-             * @return true if there are more elements
-             */
+     * Returns true if the Iterator has more elements.
+     *
+     * @return true if there are more elements
+     */
             public native boolean hasNext();
             
             /**
-             * Returns the next element in the Iterator's sequential view.
-             *
-             * @return the next element
-             * @throws ConcurrentModificationException if the HashMap was
-             modified
-             * @throws NoSuchElementException if there is none
-             */
+     * Returns the next element in the Iterator's sequential view.
+     *
+     * @return the next element
+     * @throws ConcurrentModificationException if the HashMap was modified
+     * @throws NoSuchElementException if there is none
+     */
             public native fabric.lang.Object next();
             
             /**
-             * Removes from the backing HashMap the last element which was
-             fetched
-             * with the <code>next()</code> method.
-             *
-             * @throws ConcurrentModificationException if the HashMap was
-             modified
-             * @throws IllegalStateException if called when there is no last
-             element
-             */
+     * Removes from the backing HashMap the last element which was fetched
+     * with the <code>next()</code> method.
+     *
+     * @throws ConcurrentModificationException if the HashMap was modified
+     * @throws IllegalStateException if called when there is no last element
+     */
             public native void remove();
             
             public native fabric.lang.Object $initLabels();
@@ -866,7 +823,7 @@ public interface LinkedHashMap
             
             protected fabric.lang.Object._Proxy $makeProxy() {
                 return new fabric.util.LinkedHashMap.LinkedHashIterator._Proxy(
-                  this);
+                         this);
             }
             
             public void $serialize(java.io.ObjectOutput out,
@@ -886,25 +843,22 @@ public interface LinkedHashMap
             }
             
             public _Impl(fabric.worker.Store store, long onum, int version,
-                         long expiry, fabric.worker.Store labelStore,
-                         long labelOnum, fabric.worker.Store accessPolicyStore,
+                         fabric.worker.Store labelStore, long labelOnum,
+                         fabric.worker.Store accessPolicyStore,
                          long accessPolicyOnum, java.io.ObjectInput in,
                          java.util.Iterator refTypes,
                          java.util.Iterator intraStoreRefs,
                          java.util.Iterator interStoreRefs)
                   throws java.io.IOException,
                 java.lang.ClassNotFoundException {
-                super(store, onum, version, expiry, labelStore, labelOnum,
+                super(store, onum, version, labelStore, labelOnum,
                       accessPolicyStore, accessPolicyOnum, in, refTypes,
                       intraStoreRefs, interStoreRefs);
                 this.out$ = (fabric.util.LinkedHashMap)
                               $readRef(fabric.util.LinkedHashMap._Proxy.class,
                                        (fabric.common.RefTypeEnum)
-                                         refTypes.next(),
-                                       in,
-                                       store,
-                                       intraStoreRefs,
-                                       interStoreRefs);
+                                         refTypes.next(), in, store,
+                                       intraStoreRefs, interStoreRefs);
                 this.current =
                   (fabric.util.LinkedHashMap.LinkedHashEntry)
                     $readRef(
@@ -935,21 +889,16 @@ public interface LinkedHashMap
         
         interface _Static extends fabric.lang.Object, Cloneable {
             final class _Proxy extends fabric.lang.Object._Proxy
-              implements fabric.util.LinkedHashMap.LinkedHashIterator._Static
-            {
-                
+              implements fabric.util.LinkedHashMap.LinkedHashIterator._Static {
                 public _Proxy(fabric.util.LinkedHashMap.LinkedHashIterator.
-                                _Static._Impl impl) {
-                    super(impl);
-                }
+                                _Static._Impl impl) { super(impl); }
                 
                 public _Proxy(fabric.worker.Store store, long onum) {
                     super(store, onum);
                 }
                 
                 public static final fabric.util.LinkedHashMap.
-                  LinkedHashIterator._Static
-                  $instance;
+                  LinkedHashIterator._Static $instance;
                 
                 static {
                     fabric.
@@ -957,7 +906,8 @@ public interface LinkedHashMap
                       LinkedHashMap.
                       LinkedHashIterator.
                       _Static.
-                      _Impl impl =
+                      _Impl
+                      impl =
                       (fabric.
                         util.
                         LinkedHashMap.
@@ -976,9 +926,7 @@ public interface LinkedHashMap
             }
             
             class _Impl extends fabric.lang.Object._Impl
-              implements fabric.util.LinkedHashMap.LinkedHashIterator._Static
-            {
-                
+              implements fabric.util.LinkedHashMap.LinkedHashIterator._Static {
                 public void $serialize(java.io.ObjectOutput out,
                                        java.util.List refTypes,
                                        java.util.List intraStoreRefs,
@@ -989,8 +937,7 @@ public interface LinkedHashMap
                 }
                 
                 public _Impl(fabric.worker.Store store, long onum, int version,
-                             long expiry, fabric.worker.Store labelStore,
-                             long labelOnum,
+                             fabric.worker.Store labelStore, long labelOnum,
                              fabric.worker.Store accessPolicyStore,
                              long accessPolicyOnum, java.io.ObjectInput in,
                              java.util.Iterator refTypes,
@@ -998,7 +945,7 @@ public interface LinkedHashMap
                              java.util.Iterator interStoreRefs)
                       throws java.io.IOException,
                     java.lang.ClassNotFoundException {
-                    super(store, onum, version, expiry, labelStore, labelOnum,
+                    super(store, onum, version, labelStore, labelOnum,
                           accessPolicyStore, accessPolicyOnum, in, refTypes,
                           intraStoreRefs, interStoreRefs);
                 }
@@ -1007,8 +954,7 @@ public interface LinkedHashMap
                 
                 protected fabric.lang.Object._Proxy $makeProxy() {
                     return new fabric.util.LinkedHashMap.LinkedHashIterator.
-                      _Static._Proxy(
-                      this);
+                             _Static._Proxy(this);
                 }
                 
                 private void $init() {  }
@@ -1018,13 +964,10 @@ public interface LinkedHashMap
         
     }
     
-    
     public fabric.lang.Object $initLabels();
     
     public static class _Proxy extends fabric.util.HashMap._Proxy
-      implements fabric.util.LinkedHashMap
-    {
-        
+      implements fabric.util.LinkedHashMap {
         public fabric.util.LinkedHashMap.LinkedHashEntry get$root() {
             return ((fabric.util.LinkedHashMap._Impl) fetch()).get$root();
         }
@@ -1068,9 +1011,7 @@ public interface LinkedHashMap
     }
     
     public static class _Impl extends fabric.util.HashMap._Impl
-      implements fabric.util.LinkedHashMap
-    {
-        
+      implements fabric.util.LinkedHashMap {
         public fabric.util.LinkedHashMap.LinkedHashEntry get$root() {
             fabric.worker.transaction.TransactionManager.getInstance().
               registerRead(this);
@@ -1088,15 +1029,11 @@ public interface LinkedHashMap
         }
         
         /**
-         * The oldest Entry to begin iteration at.
-         */
+   * The oldest Entry to begin iteration at.
+   */
         LinkedHashEntry root;
         
-        public boolean get$accessOrder() {
-            fabric.worker.transaction.TransactionManager.getInstance().
-              registerRead(this);
-            return this.accessOrder;
-        }
+        public boolean get$accessOrder() { return this.accessOrder; }
         
         public boolean set$accessOrder(boolean val) {
             fabric.worker.transaction.TransactionManager tm =
@@ -1107,177 +1044,164 @@ public interface LinkedHashMap
             return val;
         }
         
-        /**
-         * The iteration order of this linked hash map: <code>true</code> for
-         * access-order, <code>false</code> for insertion-order.
-         *
-         * @serial true for access order traversal
-         */
         boolean accessOrder;
         
         /**
-         * Construct a new insertion-ordered LinkedHashMap with the default
-         * capacity (11) and the default load factor (0.75).
-         */
+   * Construct a new insertion-ordered LinkedHashMap with the default
+   * capacity (11) and the default load factor (0.75).
+   */
         public native fabric.util.LinkedHashMap fabric$util$LinkedHashMap$();
         
         /**
-         * Construct a new insertion-ordered LinkedHashMap from the given Map,
-         * with initial capacity the greater of the size of <code>m</code> or
-         * the default of 11.
-         * <p>
-         *
-         * Every element in Map m will be put into this new HashMap, in the
-         * order of m's iterator.
-         *
-         * @param m a Map whose key / value pairs will be put into
-         *          the new HashMap.  <b>NOTE: key / value pairs
-         *          are not cloned in this constructor.</b>
-         * @throws NullPointerException if m is null
-         */
-        public native fabric.util.LinkedHashMap fabric$util$LinkedHashMap$(
-          fabric.util.Map m);
+   * Construct a new insertion-ordered LinkedHashMap from the given Map,
+   * with initial capacity the greater of the size of <code>m</code> or
+   * the default of 11.
+   * <p>
+   *
+   * Every element in Map m will be put into this new HashMap, in the
+   * order of m's iterator.
+   *
+   * @param m a Map whose key / value pairs will be put into
+   *          the new HashMap.  <b>NOTE: key / value pairs
+   *          are not cloned in this constructor.</b>
+   * @throws NullPointerException if m is null
+   */
+        public native fabric.util.LinkedHashMap fabric$util$LinkedHashMap$(fabric.util.Map m);
         
         /**
-         * Construct a new insertion-ordered LinkedHashMap with a specific
-         * inital capacity and default load factor of 0.75.
-         *
-         * @param initialCapacity the initial capacity of this HashMap (&gt;= 0)
-         * @throws IllegalArgumentException if (initialCapacity &lt; 0)
-         */
-        public native fabric.util.LinkedHashMap fabric$util$LinkedHashMap$(
-          int initialCapacity);
+   * Construct a new insertion-ordered LinkedHashMap with a specific
+   * inital capacity and default load factor of 0.75.
+   *
+   * @param initialCapacity the initial capacity of this HashMap (&gt;= 0)
+   * @throws IllegalArgumentException if (initialCapacity &lt; 0)
+   */
+        public native fabric.util.LinkedHashMap fabric$util$LinkedHashMap$(int initialCapacity);
         
         /**
-         * Construct a new insertion-orderd LinkedHashMap with a specific
-         * inital capacity and load factor.
-         *
-         * @param initialCapacity the initial capacity (&gt;= 0)
-         * @param loadFactor the load factor (&gt; 0, not NaN)
-         * @throws IllegalArgumentException if (initialCapacity &lt; 0) ||
-         *                                     ! (loadFactor &gt; 0.0)
-         */
+   * Construct a new insertion-orderd LinkedHashMap with a specific
+   * inital capacity and load factor.
+   *
+   * @param initialCapacity the initial capacity (&gt;= 0)
+   * @param loadFactor the load factor (&gt; 0, not NaN)
+   * @throws IllegalArgumentException if (initialCapacity &lt; 0) ||
+   *                                     ! (loadFactor &gt; 0.0)
+   */
         public native fabric.util.LinkedHashMap fabric$util$LinkedHashMap$(
           int initialCapacity, float loadFactor);
         
         /**
-         * Construct a new LinkedHashMap with a specific inital capacity, load
-         * factor, and ordering mode.
-         *
-         * @param initialCapacity the initial capacity (&gt;=0)
-         * @param loadFactor the load factor (&gt;0, not NaN)
-         * @param accessOrder true for access-order, false for insertion-order
-         * @throws IllegalArgumentException if (initialCapacity &lt; 0) ||
-         *                                     ! (loadFactor &gt; 0.0)
-         */
+   * Construct a new LinkedHashMap with a specific inital capacity, load
+   * factor, and ordering mode.
+   *
+   * @param initialCapacity the initial capacity (&gt;=0)
+   * @param loadFactor the load factor (&gt;0, not NaN)
+   * @param accessOrder true for access-order, false for insertion-order
+   * @throws IllegalArgumentException if (initialCapacity &lt; 0) ||
+   *                                     ! (loadFactor &gt; 0.0)
+   */
         public native fabric.util.LinkedHashMap fabric$util$LinkedHashMap$(
           int initialCapacity, float loadFactor, boolean accessOrder);
         
         /**
-         * Clears the Map so it has no keys. This is O(1).
-         */
+   * Clears the Map so it has no keys. This is O(1).
+   */
         public native void clear();
         
         /**
-         * Returns <code>true</code> if this HashMap contains a value
-         * <code>o</code>, such that <code>o.equals(value)</code>.
-         *
-         * @param value the value to search for in this HashMap
-         * @return <code>true</code> if at least one key maps to the value
-         */
+   * Returns <code>true</code> if this HashMap contains a value
+   * <code>o</code>, such that <code>o.equals(value)</code>.
+   *
+   * @param value the value to search for in this HashMap
+   * @return <code>true</code> if at least one key maps to the value
+   */
         public native boolean containsValue(fabric.lang.Object value);
         
         /**
-         * Return the value in this Map associated with the supplied key,
-         * or <code>null</code> if the key maps to nothing.  If this is an
-         * access-ordered Map and the key is found, this performs structural
-         * modification, moving the key to the newest end of the list. NOTE:
-         * Since the value could also be null, you must use containsKey to
-         * see if this key actually maps to something.
-         *
-         * @param key the key for which to fetch an associated value
-         * @return what the key maps to, if present
-         * @see #put(Object, Object)
-         * @see #containsKey(Object)
-         */
+   * Return the value in this Map associated with the supplied key,
+   * or <code>null</code> if the key maps to nothing.  If this is an
+   * access-ordered Map and the key is found, this performs structural
+   * modification, moving the key to the newest end of the list. NOTE:
+   * Since the value could also be null, you must use containsKey to
+   * see if this key actually maps to something.
+   *
+   * @param key the key for which to fetch an associated value
+   * @return what the key maps to, if present
+   * @see #put(Object, Object)
+   * @see #containsKey(Object)
+   */
         public native fabric.lang.Object get(fabric.lang.Object key);
         
         /**
-         * Returns <code>true</code> if this map should remove the eldest entry.
-         * This method is invoked by all calls to <code>put</code> and
-         * <code>putAll</code> which place a new entry in the map, providing
-         * the implementer an opportunity to remove the eldest entry any time
-         * a new one is added.  This can be used to save memory usage of the
-         * hashtable, as well as emulating a cache, by deleting stale entries.
-         * <p>
-         *
-         * For example, to keep the Map limited to 100 entries, override as
-         follows:
-         * <pre>
-         * private static final int MAX_ENTRIES = 100;
-         * protected boolean removeEldestEntry(Map.Entry eldest)
-         * {
-         *   return size() &gt; MAX_ENTRIES;
-         * }
-         * </pre><p>
-         *
-         * Typically, this method does not modify the map, but just uses the
-         * return value as an indication to <code>put</code> whether to proceed.
-         * However, if you override it to modify the map, you must return false
-         * (indicating that <code>put</code> should leave the modified map
-         alone),
-         * or you face unspecified behavior.  Remember that in access-order
-         mode,
-         * even calling <code>get</code> is a structural modification, but using
-         * the collections views (such as <code>keySet</code>) is not.
-         * <p>
-         *
-         * This method is called after the eldest entry has been inserted, so
-         * if <code>put</code> was called on a previously empty map, the eldest
-         * entry is the one you just put in! The default implementation just
-         * returns <code>false</code>, so that this map always behaves like
-         * a normal one with unbounded growth.
-         *
-         * @param eldest the eldest element which would be removed if this
-         *        returns true. For an access-order map, this is the least
-         *        recently accessed; for an insertion-order map, this is the
-         *        earliest element inserted.
-         * @return true if <code>eldest</code> should be removed
-         */
+   * Returns <code>true</code> if this map should remove the eldest entry.
+   * This method is invoked by all calls to <code>put</code> and
+   * <code>putAll</code> which place a new entry in the map, providing
+   * the implementer an opportunity to remove the eldest entry any time
+   * a new one is added.  This can be used to save memory usage of the
+   * hashtable, as well as emulating a cache, by deleting stale entries.
+   * <p>
+   *
+   * For example, to keep the Map limited to 100 entries, override as follows:
+   * <pre>
+   * private static final int MAX_ENTRIES = 100;
+   * protected boolean removeEldestEntry(Map.Entry eldest)
+   * {
+   *   return size() &gt; MAX_ENTRIES;
+   * }
+   * </pre><p>
+   *
+   * Typically, this method does not modify the map, but just uses the
+   * return value as an indication to <code>put</code> whether to proceed.
+   * However, if you override it to modify the map, you must return false
+   * (indicating that <code>put</code> should leave the modified map alone),
+   * or you face unspecified behavior.  Remember that in access-order mode,
+   * even calling <code>get</code> is a structural modification, but using
+   * the collections views (such as <code>keySet</code>) is not.
+   * <p>
+   *
+   * This method is called after the eldest entry has been inserted, so
+   * if <code>put</code> was called on a previously empty map, the eldest
+   * entry is the one you just put in! The default implementation just
+   * returns <code>false</code>, so that this map always behaves like
+   * a normal one with unbounded growth.
+   *
+   * @param eldest the eldest element which would be removed if this
+   *        returns true. For an access-order map, this is the least
+   *        recently accessed; for an insertion-order map, this is the
+   *        earliest element inserted.
+   * @return true if <code>eldest</code> should be removed
+   */
         public native boolean removeEldestEntry(Entry eldest);
         
         /**
-         * Helper method called by <code>put</code>, which creates and adds a
-         * new Entry, followed by performing bookkeeping (like
-         removeEldestEntry).
-         *
-         * @param key the key of the new Entry
-         * @param value the value
-         * @param idx the index in buckets where the new Entry belongs
-         * @param callRemove whether to call the removeEldestEntry method
-         * @see #put(Object, Object)
-         * @see #removeEldestEntry(Map.Entry)
-         * @see LinkedHashEntry#LinkedHashEntry(Object, Object)
-         */
-        public native void addEntry(fabric.lang.Object key,
-                                    fabric.lang.Object value, int idx,
-                                    boolean callRemove);
+   * Helper method called by <code>put</code>, which creates and adds a
+   * new Entry, followed by performing bookkeeping (like removeEldestEntry).
+   *
+   * @param key the key of the new Entry
+   * @param value the value
+   * @param idx the index in buckets where the new Entry belongs
+   * @param callRemove whether to call the removeEldestEntry method
+   * @see #put(Object, Object)
+   * @see #removeEldestEntry(Map.Entry)
+   * @see LinkedHashEntry#LinkedHashEntry(Object, Object)
+   */
+        public native void addEntry(
+          fabric.lang.Object key, fabric.lang.Object value, int idx, boolean callRemove);
         
         /**
-         * Helper method, called by clone() to reset the doubly-linked list.
-         *
-         * @param m the map to add entries from
-         * @see #clone()
-         */
+   * Helper method, called by clone() to reset the doubly-linked list.
+   *
+   * @param m the map to add entries from
+   * @see #clone()
+   */
         public native void putAllInternal(fabric.util.Map m);
         
         /**
-         * Generates a parameterized iterator. This allows traversal to follow
-         * the doubly-linked list instead of the random bin order of HashMap.
-         *
-         * @param type {@link #KEYS}, {@link #VALUES}, or {@link #ENTRIES}
-         * @return the appropriate iterator
-         */
+   * Generates a parameterized iterator. This allows traversal to follow
+   * the doubly-linked list instead of the random bin order of HashMap.
+   *
+   * @param type {@link #KEYS}, {@link #VALUES}, or {@link #ENTRIES}
+   * @return the appropriate iterator
+   */
         public native fabric.util.Iterator iterator(fabric.worker.Store store,
                                                     final int type);
         
@@ -1301,15 +1225,15 @@ public interface LinkedHashMap
         }
         
         public _Impl(fabric.worker.Store store, long onum, int version,
-                     long expiry, fabric.worker.Store labelStore,
-                     long labelOnum, fabric.worker.Store accessPolicyStore,
+                     fabric.worker.Store labelStore, long labelOnum,
+                     fabric.worker.Store accessPolicyStore,
                      long accessPolicyOnum, java.io.ObjectInput in,
                      java.util.Iterator refTypes,
                      java.util.Iterator intraStoreRefs,
                      java.util.Iterator interStoreRefs)
               throws java.io.IOException,
             java.lang.ClassNotFoundException {
-            super(store, onum, version, expiry, labelStore, labelOnum,
+            super(store, onum, version, labelStore, labelOnum,
                   accessPolicyStore, accessPolicyOnum, in, refTypes,
                   intraStoreRefs, interStoreRefs);
             this.root =
@@ -1330,7 +1254,6 @@ public interface LinkedHashMap
     }
     
     interface _Static extends fabric.lang.Object, Cloneable {
-        
         public long get$serialVersionUID();
         
         public long set$serialVersionUID(long val);
@@ -1340,9 +1263,7 @@ public interface LinkedHashMap
         public long postDec$serialVersionUID();
         
         final class _Proxy extends fabric.lang.Object._Proxy
-          implements fabric.util.LinkedHashMap._Static
-        {
-            
+          implements fabric.util.LinkedHashMap._Static {
             public long get$serialVersionUID() {
                 return ((fabric.util.LinkedHashMap._Static._Impl) fetch()).
                   get$serialVersionUID();
@@ -1378,7 +1299,8 @@ public interface LinkedHashMap
                   util.
                   LinkedHashMap.
                   _Static.
-                  _Impl impl =
+                  _Impl
+                  impl =
                   (fabric.util.LinkedHashMap._Static._Impl)
                     fabric.lang.Object._Static._Proxy.
                     $makeStaticInstance(
@@ -1390,14 +1312,8 @@ public interface LinkedHashMap
         }
         
         class _Impl extends fabric.lang.Object._Impl
-          implements fabric.util.LinkedHashMap._Static
-        {
-            
-            public long get$serialVersionUID() {
-                fabric.worker.transaction.TransactionManager.getInstance().
-                  registerRead(this);
-                return this.serialVersionUID;
-            }
+          implements fabric.util.LinkedHashMap._Static {
+            public long get$serialVersionUID() { return this.serialVersionUID; }
             
             public long set$serialVersionUID(long val) {
                 fabric.worker.transaction.TransactionManager tm =
@@ -1420,9 +1336,6 @@ public interface LinkedHashMap
                 return tmp;
             }
             
-            /**
-             * Compatible with JDK 1.4.
-             */
             private long serialVersionUID;
             
             public void $serialize(java.io.ObjectOutput out,
@@ -1435,15 +1348,15 @@ public interface LinkedHashMap
             }
             
             public _Impl(fabric.worker.Store store, long onum, int version,
-                         long expiry, fabric.worker.Store labelStore,
-                         long labelOnum, fabric.worker.Store accessPolicyStore,
+                         fabric.worker.Store labelStore, long labelOnum,
+                         fabric.worker.Store accessPolicyStore,
                          long accessPolicyOnum, java.io.ObjectInput in,
                          java.util.Iterator refTypes,
                          java.util.Iterator intraStoreRefs,
                          java.util.Iterator interStoreRefs)
                   throws java.io.IOException,
                 java.lang.ClassNotFoundException {
-                super(store, onum, version, expiry, labelStore, labelOnum,
+                super(store, onum, version, labelStore, labelOnum,
                       accessPolicyStore, accessPolicyOnum, in, refTypes,
                       intraStoreRefs, interStoreRefs);
                 this.serialVersionUID = in.readLong();

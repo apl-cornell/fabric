@@ -20,10 +20,7 @@ import fabric.lang.arrays.internal._ObjectArray;
  * 
  * @author kvikram
  */
-public interface MultiObjectArray
-  extends fabric.lang.Object
-{
-    
+public interface MultiObjectArray extends fabric.lang.Object {
     public int get$dims();
     
     public int set$dims(int val);
@@ -76,9 +73,7 @@ public interface MultiObjectArray
                                   fabric.lang.Object data);
     
     public static class _Proxy extends fabric.lang.Object._Proxy
-      implements fabric.lang.arrays.MultiObjectArray
-    {
-        
+      implements fabric.lang.arrays.MultiObjectArray {
         public int get$dims() {
             return ((fabric.lang.arrays.MultiObjectArray._Impl) fetch()).
               get$dims();
@@ -177,9 +172,7 @@ public interface MultiObjectArray
     }
     
     public static final class _Impl extends fabric.lang.Object._Impl
-      implements fabric.lang.arrays.MultiObjectArray
-    {
-        
+      implements fabric.lang.arrays.MultiObjectArray {
         public int get$dims() {
             fabric.worker.transaction.TransactionManager.getInstance().
               registerRead(this);
@@ -336,26 +329,23 @@ public interface MultiObjectArray
         }
         
         public _Impl(fabric.worker.Store store, long onum, int version,
-                     long expiry, fabric.worker.Store labelStore,
-                     long labelOnum, fabric.worker.Store accessPolicyStore,
+                     fabric.worker.Store labelStore, long labelOnum,
+                     fabric.worker.Store accessPolicyStore,
                      long accessPolicyOnum, java.io.ObjectInput in,
                      java.util.Iterator refTypes,
                      java.util.Iterator intraStoreRefs,
                      java.util.Iterator interStoreRefs)
               throws java.io.IOException,
             java.lang.ClassNotFoundException {
-            super(store, onum, version, expiry, labelStore, labelOnum,
+            super(store, onum, version, labelStore, labelOnum,
                   accessPolicyStore, accessPolicyOnum, in, refTypes,
                   intraStoreRefs, interStoreRefs);
             this.dims = in.readInt();
             this.lengths = (fabric.lang.arrays.intArray)
                              $readRef(fabric.lang.arrays.intArray._Proxy.class,
                                       (fabric.common.RefTypeEnum)
-                                        refTypes.next(),
-                                      in,
-                                      store,
-                                      intraStoreRefs,
-                                      interStoreRefs);
+                                        refTypes.next(), in, store,
+                                      intraStoreRefs, interStoreRefs);
             this.firstDim =
               (fabric.lang.arrays.ObjectArray)
                 $readRef(fabric.lang.arrays.ObjectArray._Proxy.class,
@@ -379,13 +369,9 @@ public interface MultiObjectArray
     
     interface _Static extends fabric.lang.Object, Cloneable {
         final class _Proxy extends fabric.lang.Object._Proxy
-          implements fabric.lang.arrays.MultiObjectArray._Static
-        {
-            
+          implements fabric.lang.arrays.MultiObjectArray._Static {
             public _Proxy(fabric.lang.arrays.MultiObjectArray._Static.
-                            _Impl impl) {
-                super(impl);
-            }
+                            _Impl impl) { super(impl); }
             
             public _Proxy(fabric.worker.Store store, long onum) {
                 super(store, onum);
@@ -400,7 +386,8 @@ public interface MultiObjectArray
                   arrays.
                   MultiObjectArray.
                   _Static.
-                  _Impl impl =
+                  _Impl
+                  impl =
                   (fabric.lang.arrays.MultiObjectArray._Static._Impl)
                     fabric.lang.Object._Static._Proxy.
                     $makeStaticInstance(
@@ -412,9 +399,7 @@ public interface MultiObjectArray
         }
         
         class _Impl extends fabric.lang.Object._Impl
-          implements fabric.lang.arrays.MultiObjectArray._Static
-        {
-            
+          implements fabric.lang.arrays.MultiObjectArray._Static {
             public void $serialize(java.io.ObjectOutput out,
                                    java.util.List refTypes,
                                    java.util.List intraStoreRefs,
@@ -424,15 +409,15 @@ public interface MultiObjectArray
             }
             
             public _Impl(fabric.worker.Store store, long onum, int version,
-                         long expiry, fabric.worker.Store labelStore,
-                         long labelOnum, fabric.worker.Store accessPolicyStore,
+                         fabric.worker.Store labelStore, long labelOnum,
+                         fabric.worker.Store accessPolicyStore,
                          long accessPolicyOnum, java.io.ObjectInput in,
                          java.util.Iterator refTypes,
                          java.util.Iterator intraStoreRefs,
                          java.util.Iterator interStoreRefs)
                   throws java.io.IOException,
                 java.lang.ClassNotFoundException {
-                super(store, onum, version, expiry, labelStore, labelOnum,
+                super(store, onum, version, labelStore, labelOnum,
                       accessPolicyStore, accessPolicyOnum, in, refTypes,
                       intraStoreRefs, interStoreRefs);
             }
@@ -441,7 +426,7 @@ public interface MultiObjectArray
             
             protected fabric.lang.Object._Proxy $makeProxy() {
                 return new fabric.lang.arrays.MultiObjectArray._Static._Proxy(
-                  this);
+                         this);
             }
             
             private void $init() {  }

@@ -11,10 +11,7 @@ import java.util.Set;
 /**
  * This code is mostly copied from Jif.
  */
-public interface DelegatesProof
-  extends fabric.lang.security.ActsForProof
-{
-    
+public interface DelegatesProof extends fabric.lang.security.ActsForProof {
     public fabric.lang.security.DelegatesProof
       fabric$lang$security$DelegatesProof$(
       fabric.lang.security.Principal actor,
@@ -25,9 +22,7 @@ public interface DelegatesProof
     public fabric.lang.Object $initLabels();
     
     public static class _Proxy extends fabric.lang.security.ActsForProof._Proxy
-      implements fabric.lang.security.DelegatesProof
-    {
-        
+      implements fabric.lang.security.DelegatesProof {
         public native fabric.lang.security.DelegatesProof
           fabric$lang$security$DelegatesProof$(
           fabric.lang.security.Principal arg1,
@@ -42,9 +37,7 @@ public interface DelegatesProof
     
     public static final class _Impl
     extends fabric.lang.security.ActsForProof._Impl
-      implements fabric.lang.security.DelegatesProof
-    {
-        
+      implements fabric.lang.security.DelegatesProof {
         public native fabric.lang.security.DelegatesProof
           fabric$lang$security$DelegatesProof$(
           fabric.lang.security.Principal actor,
@@ -69,15 +62,15 @@ public interface DelegatesProof
         }
         
         public _Impl(fabric.worker.Store store, long onum, int version,
-                     long expiry, fabric.worker.Store labelStore,
-                     long labelOnum, fabric.worker.Store accessPolicyStore,
+                     fabric.worker.Store labelStore, long labelOnum,
+                     fabric.worker.Store accessPolicyStore,
                      long accessPolicyOnum, java.io.ObjectInput in,
                      java.util.Iterator refTypes,
                      java.util.Iterator intraStoreRefs,
                      java.util.Iterator interStoreRefs)
               throws java.io.IOException,
             java.lang.ClassNotFoundException {
-            super(store, onum, version, expiry, labelStore, labelOnum,
+            super(store, onum, version, labelStore, labelOnum,
                   accessPolicyStore, accessPolicyOnum, in, refTypes,
                   intraStoreRefs, interStoreRefs);
         }
@@ -85,13 +78,9 @@ public interface DelegatesProof
     
     interface _Static extends fabric.lang.Object, Cloneable {
         final class _Proxy extends fabric.lang.Object._Proxy
-          implements fabric.lang.security.DelegatesProof._Static
-        {
-            
+          implements fabric.lang.security.DelegatesProof._Static {
             public _Proxy(fabric.lang.security.DelegatesProof._Static.
-                            _Impl impl) {
-                super(impl);
-            }
+                            _Impl impl) { super(impl); }
             
             public _Proxy(fabric.worker.Store store, long onum) {
                 super(store, onum);
@@ -106,7 +95,8 @@ public interface DelegatesProof
                   security.
                   DelegatesProof.
                   _Static.
-                  _Impl impl =
+                  _Impl
+                  impl =
                   (fabric.lang.security.DelegatesProof._Static._Impl)
                     fabric.lang.Object._Static._Proxy.
                     $makeStaticInstance(
@@ -118,9 +108,7 @@ public interface DelegatesProof
         }
         
         class _Impl extends fabric.lang.Object._Impl
-          implements fabric.lang.security.DelegatesProof._Static
-        {
-            
+          implements fabric.lang.security.DelegatesProof._Static {
             public void $serialize(java.io.ObjectOutput out,
                                    java.util.List refTypes,
                                    java.util.List intraStoreRefs,
@@ -130,15 +118,15 @@ public interface DelegatesProof
             }
             
             public _Impl(fabric.worker.Store store, long onum, int version,
-                         long expiry, fabric.worker.Store labelStore,
-                         long labelOnum, fabric.worker.Store accessPolicyStore,
+                         fabric.worker.Store labelStore, long labelOnum,
+                         fabric.worker.Store accessPolicyStore,
                          long accessPolicyOnum, java.io.ObjectInput in,
                          java.util.Iterator refTypes,
                          java.util.Iterator intraStoreRefs,
                          java.util.Iterator interStoreRefs)
                   throws java.io.IOException,
                 java.lang.ClassNotFoundException {
-                super(store, onum, version, expiry, labelStore, labelOnum,
+                super(store, onum, version, labelStore, labelOnum,
                       accessPolicyStore, accessPolicyOnum, in, refTypes,
                       intraStoreRefs, interStoreRefs);
             }
@@ -147,7 +135,7 @@ public interface DelegatesProof
             
             protected fabric.lang.Object._Proxy $makeProxy() {
                 return new fabric.lang.security.DelegatesProof._Static._Proxy(
-                  this);
+                         this);
             }
             
             private void $init() {  }

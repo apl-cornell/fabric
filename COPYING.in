@@ -133,6 +133,10 @@ from the GNU General Public License) are enumerated below.
       Files:
 	lib/jetty/commons-*.jar
 
+    Apache Xalan-J
+      Files:
+        lib/xalan.jar
+
     Java Servlet API
       Files:
 	lib/jetty/servlet-api-*.jar

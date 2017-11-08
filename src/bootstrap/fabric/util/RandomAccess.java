@@ -25,13 +25,9 @@ import fabric.lang.Object;
  * @since 1.4
  * @status updated to 1.4
  */
-public interface RandomAccess
-  extends fabric.lang.Object
-{
+public interface RandomAccess extends fabric.lang.Object {
     public static class _Proxy extends fabric.lang.Object._Proxy
-      implements fabric.util.RandomAccess
-    {
-        
+      implements fabric.util.RandomAccess {
         public _Proxy(fabric.worker.Store store, long onum) {
             super(store, onum);
         }

@@ -511,7 +511,7 @@ abstract class Item
 	if (OptimalCodeWriter.debug)
 	System.err.println("minwidth: item = " + it + m + ":  p1 = " + p1 + ", p2 = " + p2 + ", p3 = " + p3 + ", p4 = " + p4);
 	int result = Math.max(Math.max(p1, p3), p4);
-	it.min_widths.put(m, new Integer(result));
+	it.min_widths.put(m, Integer.valueOf(result));
 	return result;
     }
 
@@ -531,7 +531,7 @@ abstract class Item
 	    if (OptimalCodeWriter.debug)
 	    System.err.println("minpos: item = " + it + m + ":  p1 = " + p1 + ", next.minpos = " + getMinPosWidth(it.next, m));
 	}
-	it.min_pos_width.put(m, new Integer(result));
+	it.min_pos_width.put(m, Integer.valueOf(result));
 	return result;
     }
 
@@ -547,7 +547,7 @@ abstract class Item
 	    result = getMinIndent(it.next, m);
 	else 
 	    result = getMinPosWidth(it.next, m);
-	it.min_indents.put(m, new Integer(result));
+	it.min_indents.put(m, Integer.valueOf(result));
 	return result;
     }
 

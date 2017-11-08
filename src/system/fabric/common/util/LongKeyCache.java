@@ -8,8 +8,7 @@ import fabric.common.Logging;
 /**
  * A map that has soft references to its values and supports concurrent
  * accesses. When a value in the map is garbage collected by the JVM, its
- * corresponding key is removed from the map. Null values are not supported
- * because the underlying ConcurrentLongKeyMap does not support them.
+ * corresponding key is removed from the map. Null values are not supported.
  */
 public class LongKeyCache<V> {
 
@@ -42,7 +41,8 @@ public class LongKeyCache<V> {
   }
 
   public boolean containsKey(long key) {
-    return map.containsKey(key);
+    ValueSoftRef<V> ref = map.get(key);
+    return ref != null && ref.get() != null;
   }
 
   public LongSet keySet() {
@@ -52,7 +52,13 @@ public class LongKeyCache<V> {
   public V get(long key) {
     ValueSoftRef<V> ref = map.get(key);
     if (ref == null) return null;
-    return ref.get();
+
+    V result = ref.get();
+    if (result == null) {
+      map.remove(key, ref);
+    }
+
+    return result;
   }
 
   public V put(long key, V value) {
@@ -79,10 +85,16 @@ public class LongKeyCache<V> {
    *          there was no mapping for the key.
    */
   public V putIfAbsent(long key, V value) {
-    ValueSoftRef<V> ref =
-        map.putIfAbsent(key, new ValueSoftRef<>(this, key, value));
-    if (ref == null) return null;
-    return ref.get();
+    ValueSoftRef<V> newRef = new ValueSoftRef<>(this, key, value);
+    while (true) {
+      ValueSoftRef<V> oldRef = map.putIfAbsent(key, newRef);
+      if (oldRef == null) return null;
+
+      V result = oldRef.get();
+      if (result != null) return result;
+
+      if (map.replace(key, oldRef, newRef)) return result;
+    }
   }
 
   /**
@@ -103,8 +115,9 @@ public class LongKeyCache<V> {
   public V replace(long key, V value) {
     while (true) {
       ValueSoftRef<V> curRef = map.get(key);
-      V curValue = null;
-      if (curRef != null) curValue = curRef.get();
+      if (curRef == null) return null;
+
+      V curValue = curRef.get();
       if (curValue == null) return null;
 
       if (map.replace(key, curRef, new ValueSoftRef<>(this, key, value))) {
@@ -130,13 +143,12 @@ public class LongKeyCache<V> {
    * @return true iff the value was replaced.
    */
   public boolean replace(long key, V oldValue, V newValue) {
-    ValueSoftRef<V> curRef = map.get(key);
-    V curValue = curRef == null ? null : curRef.get();
-    if (oldValue == null) {
-      if (curValue != oldValue) return false;
-      return putIfAbsent(key, newValue) == null;
-    }
+    if (oldValue == null) return putIfAbsent(key, newValue) == null;
 
+    ValueSoftRef<V> curRef = map.get(key);
+    if (curRef == null) return false;
+
+    V curValue = curRef.get();
     if (oldValue != curValue && !oldValue.equals(curValue)) return false;
     return map.replace(key, curRef, new ValueSoftRef<>(this, key, newValue));
   }
@@ -163,13 +175,12 @@ public class LongKeyCache<V> {
    * @return true iff the value was removed.
    */
   public boolean remove(long key, V value) {
-    ValueSoftRef<V> curRef = map.get(key);
-    V curValue = curRef == null ? null : curRef.get();
-    if (value == null) {
-      if (curValue != value) return false;
-      return map.remove(key, null);
-    }
+    if (value == null) return false;
 
+    ValueSoftRef<V> curRef = map.get(key);
+    if (curRef == null) return false;
+
+    V curValue = curRef.get();
     if (value != curValue && !value.equals(curValue)) return false;
     return map.remove(key, curRef);
   }

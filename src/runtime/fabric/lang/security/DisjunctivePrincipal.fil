@@ -42,7 +42,7 @@ public final class DisjunctivePrincipal extends Principal {
 
   public int hashCode() {
     if (hashCode == null) {
-      hashCode = new Integer(disjuncts.hashCode());
+      hashCode = Integer.valueOf(disjuncts.hashCode());
     }
     return hashCode.intValue();
   }

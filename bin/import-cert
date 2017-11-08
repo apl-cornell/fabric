@@ -88,10 +88,31 @@ done
 [[ -n "${CA}" && ! -f "${CA}" ]] && error CA certificate file not found: "${CA}"
 
 # Extract the hostname from the certificate.
-HOSTNAME=$(openssl x509 -in "${CERT}" -subject | head -n 1 | sed 's|.*/CN=||')
-for i in C ST L O OU ; do
-  HOSTNAME=$(echo ${HOSTNAME} | sed "s|/${i}=.*||")
-done
+# Ugh. There is no standard tool for doing this, so we're rolling our own.
+# (Avoiding introducing dependencies just to be able to parse DNs.)
+{
+  # Get the distinguished name from the certificate.
+  HOSTNAME="$(openssl x509 -in "${CERT}" -noout -subject)"
+
+  # Strip off the "subject=" at the start of the string.
+  HOSTNAME="$(echo "${HOSTNAME}" | sed 's/^subject *= *//'i)"
+
+  # Remove components until we find the CN component.
+  until echo "${HOSTNAME}" | grep -i '^cn *=' &>/dev/null ; do
+    if echo "${HOSTNAME}" | grep -i '^[^=]*= *"' &>/dev/null ; then
+      # Component is quoted.
+      HOSTNAME="$(echo "${HOSTNAME}" | sed 's/^[^=]*= *".*[^\]", *//')"
+    else
+      # Component is unquoted.
+      HOSTNAME="$(echo "${HOSTNAME}" | sed 's/^[^=]*= *[^,]*, *//')"
+    fi
+  done
+
+  # Isolate the CN value.
+  # If any part of the CN is escaped, this won't work, since we'd have to
+  # unescape for things to be correct.
+  HOSTNAME="$(echo "${HOSTNAME}" | sed 's/^cn *= *\([^,]*\).*$/\1/i')"
+}
 [[ -z "${HOSTNAME}" ]] && exit 1
 
 # Assign default values to unspecified options.
