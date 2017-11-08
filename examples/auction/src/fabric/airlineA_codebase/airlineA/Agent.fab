@@ -6,31 +6,31 @@ import auction.Config;
 
 public class Agent[principal Airline, label Auction]
   implements broker.Agent[Airline, Auction]
-  where {*provider} <= {Airline<-},
-        {Airline->;Airline<-} <= Auction,
+  where {*provider} <= {Airline←},
+        {Airline→;Airline←} <= Auction,
         {*provider} equiv {*Server.provider},
         {*broker.Agent.provider} <= {*provider},
         {*broker.Agent.provider} equiv {*broker.Server.provider}
 {
-  private final Server[Airline]{Airline->;Airline<-}@{Auction;⊥←} server;
-  private int{Airline->;Airline<-}@{Auction;⊥←} lowestprice;
+  private final Server[Airline]{Airline→;Airline←}@{Auction;⊥←} server;
+  private int{Airline→;Airline←}@{Auction;⊥←} lowestprice;
 
-  public Agent{Airline->;Airline<-}(Server[Airline]{Airline->;Airline<-} server) {
+  public Agent{Airline→;Airline←}(Server[Airline]{Airline→;Airline←} server) {
     this.server = server;
     super();
   }
 
   // asking the "remote" server for the current lowest price
-  public void prepareForAuction {Airline->;Airline<-} () {
+  public void prepareForAuction {Airline→;Airline←} () {
     this.lowestprice = server.getLowestPrice();
   }
 
-  public Offer[Auction]{Auction} makeFirstOffer{Airline->;Airline<-}() {
+  public Offer[Auction]{Auction} makeFirstOffer{Airline→;Airline←}() {
     prepareForAuction();
     int price = 2 * lowestprice;
     final Store store = worker$.getStore(Config.brokerStoreName);
-    if (new label{Auction;*broker.Offer.provider} <= new label {store->}
-        &&  new label {store<-} <= Auction
+    if (new label{Auction;*broker.Offer.provider} <= new label {store→}
+        &&  new label {store←} <= Auction
         && broker.Offer.provider <= Auction) {
       return new Offer[Auction]@store(price, 0);
     } else {
@@ -48,8 +48,8 @@ public class Agent[principal Airline, label Auction]
     int price = 2 * lowestprice;  // possible read-channel???
     final Store store = worker$.getStore(Config.brokerStoreName);
 
-    if (new label {Auction;*broker.Offer.provider} <= new label {store->}
-        &&  new label {store<-} <= Auction
+    if (new label {Auction;*broker.Offer.provider} <= new label {store→}
+        &&  new label {store←} <= Auction
         &&  broker.Offer.provider <= Auction) {
       Offer[Auction] newOffer = new Offer[Auction]@store(price, 0);
 

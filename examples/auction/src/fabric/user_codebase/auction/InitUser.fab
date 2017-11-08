@@ -9,25 +9,25 @@ public class InitUser
         {*broker.User.provider} equiv {*broker.UserAgent.provider},
         {*broker.User.provider} <= {*user.User.provider}
 {
-  public static final void main{*<-}(principal{*provider} p, String[] args):{p<-;p->}
+  public static final void main{⊤←}(principal{*provider} p, String[] args):{p←;p→}
     throws SecurityException, IllegalArgumentException
     where caller(p),
           provider actsfor p,
-          {*provider} <= {p<-}
+          {*provider} <= {p←}
   {
     //already in transaction due to method constraints
     final Store store = worker$.getStore(Config.userStoreName);
     final principal w = worker$.getPrincipal();
     if (store actsfor p
         && store actsfor w
-        && user.User.provider <= new label {store<-w}) {
+        && user.User.provider <= new label {store←w}) {
       Map root = store.getRoot();
       root.put(Config.userServerName, new user.User[w]@store());
     } else if (!store actsfor p) {
       throw new Error(Config.userStoreName + " must act for principal p");
     } else if (!store actsfor w) {
       throw new Error(Config.userStoreName + " must act for worker.");
-      //throw new Error("User.provider must be <= {store<-worker}.");
+      //throw new Error("User.provider must be <= {store←worker}.");
     }
   }
 }

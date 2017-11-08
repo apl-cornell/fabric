@@ -1,5 +1,5 @@
 package broker;
 
 public interface User[principal TheUser] {
-  UserAgent[auction]{TheUser->;TheUser<-} getAgent{TheUser->;TheUser<-}(label{TheUser<-} auction);
+  UserAgent[auction]{TheUser→;TheUser←} getAgent{TheUser→;TheUser←}(label{TheUser←} auction);
 }

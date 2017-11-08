@@ -25,13 +25,13 @@ public class AirlineExample[
         {*provider} equiv {*Agent.provider},
         {*provider} equiv {*User.provider},
         {*provider} equiv {*UserAgent.provider},
-        {*provider} <= {Broker<-}
+        {*provider} <= {Broker←}
 {
-  final Server[AirlineA]{Broker<-} a;
-  final Server[AirlineB]{Broker<-} b;
-  final User[TheUser]{Broker<-} user;
+  final Server[AirlineA]{Broker←} a;
+  final Server[AirlineB]{Broker←} b;
+  final User[TheUser]{Broker←} user;
 
-  public AirlineExample {Broker←} (Server[AirlineA]{Broker<-} a, Server[AirlineB]{Broker<-} b, User[TheUser]{Broker<-} user) {
+  public AirlineExample {Broker←} (Server[AirlineA]{Broker←} a, Server[AirlineB]{Broker←} b, User[TheUser]{Broker←} user) {
     this.a = a;
     this.b = b;
     this.user = user;
@@ -42,13 +42,13 @@ public class AirlineExample[
     output.println("Starting Airline example");
 
     //final principal airlines = new principal (AirlineA & AirlineB);
-    final Store{Broker<-} store = worker$.getStore(Config.brokerStoreName);
-    final label{Broker<-} auction_lbl = new label{AirlineA<-;AirlineB<-;TheUser<-;Broker->}@store;
+    final Store{Broker←} store = worker$.getStore(Config.brokerStoreName);
+    final label{Broker←} auctionLbl = new label{AirlineA←;AirlineB←;TheUser←;Broker→}@store;
 
     if (store actsfor Broker) {
-      Agent[AirlineA, auction_lbl] agentA = a.getAgent(auction_lbl);
-      Agent[AirlineB, auction_lbl] agentB = b.getAgent(auction_lbl);
-      UserAgent[auction_lbl] userAgent = user.getAgent(auction_lbl);
+      Agent[AirlineA, auctionLbl] agentA = a.getAgent(auctionLbl);
+      Agent[AirlineB, auctionLbl] agentB = b.getAgent(auctionLbl);
+      UserAgent[auctionLbl] userAgent = user.getAgent(auctionLbl);
 
       agentA.prepareForAuction();
       agentB.prepareForAuction();
@@ -87,7 +87,7 @@ public class AirlineExample[
       }
 
       // with enough authority we can declassify anything... ;-)
-      String{Broker->;Broker<-} w0 = endorse(winner, {*auction_lbl} to {Broker->; Broker<-});
+      String{Broker→;Broker←} w0 = endorse(winner, {*auctionLbl} to {Broker→; Broker←});
 
       String {} w = declassify(w0, {});
       output.println("Ending Airline example with winner " + w);

@@ -7,8 +7,8 @@ public class User [principal TheUser] implements broker.User[TheUser]
         {*broker.UserAgent.provider} <= {*user.UserAgent.provider},
         {*broker.UserAgent.provider;⊥←} equiv {*user.UserAgent.provider;⊥←}
 {
-  public broker.UserAgent[auctionLbl]{TheUser->;TheUser<-}
-      getAgent{TheUser->;TheUser<-}(label{TheUser<-} auctionLbl)
+  public broker.UserAgent[auctionLbl]{TheUser→;TheUser←}
+      getAgent{TheUser→;TheUser←}(label{TheUser←} auctionLbl)
   {
     final Store store = worker$.getStore(Config.brokerStoreName);
     UserAgent ua = null;

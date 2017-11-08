@@ -1,9 +1,9 @@
 package broker;
 
 public interface Agent[principal Airline, label Auction] {
-  void prepareForAuction{Airline->;Airline<-}();
+  void prepareForAuction{Airline→;Airline←}();
 
-  Offer[Auction]{Auction} makeFirstOffer{Airline->;Airline<-}();
+  Offer[Auction]{Auction} makeFirstOffer{Airline→;Airline←}();
 
   Offer[Auction]{Auction} makeOffer{Auction}(
       UserAgent[Auction]{Auction} userChoice,
