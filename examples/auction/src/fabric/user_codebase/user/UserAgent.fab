@@ -1,18 +1,21 @@
 package user;
+
 import broker.Offer;
 
-public class UserAgent[label Auction] implements broker.UserAgent[Auction] 
-	where {*broker.UserAgent.provider} <= {*provider}, {*broker.UserAgent.provider;⊥←} equiv {*provider;⊥←}
+public class UserAgent[label Auction] implements broker.UserAgent[Auction]
+  where {*broker.UserAgent.provider} <= {*provider},
+        {*broker.UserAgent.provider;⊥←} equiv {*provider;⊥←}
 {
-    public int {Auction} choice{Auction}(Offer [Auction]{Auction} offer1, Offer[Auction]{Auction} offer2)  
-		where {*provider;⊥←} <= {Auction;⊥←}
-	{  // return -1 if offer1 is as good or better than offer2
-		if (offer1 == null  && offer2 == null) return 0;
-		if (offer1 == null) return 1;
-		if (offer2 == null) return -1; 
+  public int{Auction} choice{Auction}(Offer[Auction]{Auction} offer1, Offer[Auction]{Auction} offer2)
+    where {*provider;⊥←} <= {Auction;⊥←}
+  {
+    // return -1 if offer1 is as good or better than offer2
+    if (offer1 == null && offer2 == null) return 0;
+    if (offer1 == null) return 1;
+    if (offer2 == null) return -1;
 
-		if (offer1.price < offer2.price) return -1;
-		if (offer2.price > offer2.price) return 1;
-		return 0;
-    }
+    if (offer1.price < offer2.price) return -1;
+    if (offer2.price > offer2.price) return 1;
+    return 0;
+  }
 }

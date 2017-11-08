@@ -2,23 +2,28 @@ package auction;
 import fabric.util.Map;
 import fabric.runtime.Runtime;
 
-public class InitB where {*provider} equiv {*airlineB.Server.provider},
-						{*airlineB.Server.provider} equiv {*airlineB.Agent.provider}, 
-						{*broker.Server.provider} equiv {*broker.Agent.provider},
-						{*broker.Server.provider} <= {*airlineB.Server.provider}
+public class InitB
+  where {*provider} equiv {*airlineB.Server.provider},
+        {*airlineB.Server.provider} equiv {*airlineB.Agent.provider},
+        {*broker.Server.provider} equiv {*broker.Agent.provider},
+        {*broker.Server.provider} <= {*airlineB.Server.provider}
 {
-  public static final void main{* <- }  (principal{*provider} p, String[] args):{p<-;p->} throws SecurityException, IllegalArgumentException  
-		where caller(p), provider actsfor p, {*provider} <= {p<-}
+  public static final void main{* <- }(principal{*provider} p, String[] args):{p<-;p->}
+    throws SecurityException, IllegalArgumentException
+    where caller(p),
+          provider actsfor p,
+          {*provider} <= {p<-}
   {
-	  //already in transaction due to method constraints
-      final Store store = worker$.getStore(Config.airlineBStoreName);
-	  final principal w = worker$.getPrincipal();
-      if (store actsfor p 
-			&& store actsfor w
-			&& airlineB.Server.provider <= new label {store<-}) {
-        Map root = store.getRoot();
-        root.put(Config.airlineBServerName, new airlineB.Server[w]@store(13500, 100));
-      }
-	  else throw new Error(Config.airlineBStoreName + " must act for worker principal.");
+    //already in transaction due to method constraints
+    final Store store = worker$.getStore(Config.airlineBStoreName);
+    final principal w = worker$.getPrincipal();
+    if (store actsfor p
+        && store actsfor w
+        && airlineB.Server.provider <= new label {store<-}) {
+      Map root = store.getRoot();
+      root.put(Config.airlineBServerName, new airlineB.Server[w]@store(13500, 100));
+    } else {
+      throw new Error(Config.airlineBStoreName + " must act for worker principal.");
+    }
   }
 }

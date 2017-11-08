@@ -9,81 +9,91 @@ import broker.Server;
 import broker.Offer;
 import broker.Agent;
 
-public class AirlineExample [principal AirlineA, principal AirlineB,
-								principal TheUser, principal Broker] 
-    authority(Broker) where Broker actsfor AirlineA, Broker actsfor AirlineB, 
-				Broker actsfor TheUser, provider actsfor Broker, 
-				{*provider} <= {},
-				{*provider} equiv {*Server.provider},
-				{*provider} equiv {*Agent.provider}, 
-				{*provider} equiv {*User.provider},
-				{*provider} equiv {*UserAgent.provider},
-				{*provider} <= {Broker<-}
+public class AirlineExample[
+  principal AirlineA,
+  principal AirlineB,
+  principal TheUser,
+  principal Broker
+]
+  authority(Broker)
+  where Broker actsfor AirlineA,
+        Broker actsfor AirlineB,
+        Broker actsfor TheUser,
+        provider actsfor Broker,
+        {*provider} <= {},
+        {*provider} equiv {*Server.provider},
+        {*provider} equiv {*Agent.provider},
+        {*provider} equiv {*User.provider},
+        {*provider} equiv {*UserAgent.provider},
+        {*provider} <= {Broker<-}
 {
-	final Server[AirlineA]{Broker<-} a;
-	final Server[AirlineB]{Broker<-} b;
-	final User[TheUser]{Broker<-} user;
+  final Server[AirlineA]{Broker<-} a;
+  final Server[AirlineB]{Broker<-} b;
+  final User[TheUser]{Broker<-} user;
 
-    public AirlineExample {Broker←} (Server[AirlineA]{Broker<-} a, Server[AirlineB]{Broker<-} b, User[TheUser]{Broker<-} user) {
-		this.a = a;
-		this.b = b;
-		this.user = user;
-		super();
+  public AirlineExample {Broker←} (Server[AirlineA]{Broker<-} a, Server[AirlineB]{Broker<-} b, User[TheUser]{Broker<-} user) {
+    this.a = a;
+    this.b = b;
+    this.user = user;
+    super();
+  }
+
+  public void go{Broker←}(PrintStream[{}]{} output) where authority (Broker) {
+    output.println("Starting Airline example");
+
+    //final principal airlines = new principal (AirlineA & AirlineB);
+    final Store{Broker<-} store = worker$.getStore(Config.brokerStoreName);
+    final label{Broker<-} auction_lbl = new label{AirlineA<-;AirlineB<-;TheUser<-;Broker->}@store;
+
+    if (store actsfor Broker) {
+      Agent[AirlineA, auction_lbl] agentA = a.getAgent(auction_lbl);
+      Agent[AirlineB, auction_lbl] agentB = b.getAgent(auction_lbl);
+      UserAgent[auction_lbl] userAgent = user.getAgent(auction_lbl);
+
+      agentA.prepareForAuction();
+      agentB.prepareForAuction();
+
+      // this variable stores the winning agent. When winner == 0 we have no winner yet
+      String winner = null;
+      Offer offerA = null;
+      Offer offerB = null;
+      try {
+        offerB = agentB.makeFirstOffer();
+      } catch (NullPointerException e) {}
+
+      // main auction loop
+      while (winner == null) {
+        try {
+          offerA = agentA.makeOffer(userAgent, offerB); // makeOffer returns null if it can't compete anymore.
+        } catch (NullPointerException e) {}
+
+        boolean noChoice = false;
+        try {
+          noChoice = userAgent.choice(offerA, offerB) != -1;
+        } catch (NullPointerException e) {}
+
+        if (offerA == null || noChoice) {
+          winner = "Airline B"; // declare that B is the winning agent
+          break;
+        }
+        noChoice = false;
+
+        offerB = agentB.makeOffer(userAgent, offerA);
+        noChoice = userAgent.choice(offerB, offerA) != -1;
+
+        if (offerB == null || noChoice) {
+          winner = "Airline A"; // declare that A is the winning agent
+        }
+      }
+
+      // with enough authority we can declassify anything... ;-)
+      String{Broker->;Broker<-} w0 = endorse(winner, {*auction_lbl} to {Broker->; Broker<-});
+
+      String {} w = declassify(w0, {});
+      output.println("Ending Airline example with winner " + w);
+    } else {
+      throw new Error("Store does not act for broker");
     }
-
-    public void go {Broker←} (PrintStream[{}] {} output) where authority (Broker)
-    {
-		output.println ("Starting Airline example");
-
-		//final principal airlines = new principal (AirlineA & AirlineB);
-		final Store{Broker<-} store = worker$.getStore(Config.brokerStoreName);
-		final label{Broker<-} auction_lbl = new label{AirlineA<-;AirlineB<-;TheUser<-;Broker->}@store;
-		if (store actsfor Broker) {
-	
-			Agent[AirlineA, auction_lbl] agentA = a.getAgent(auction_lbl);
-			Agent[AirlineB, auction_lbl] agentB = b.getAgent(auction_lbl);
-			UserAgent[auction_lbl] userAgent = user.getAgent(auction_lbl);
-	
-			agentA.prepareForAuction();
-			agentB.prepareForAuction();
-	
-			// this variable stores the winning agent. When winner == 0 we have no winner yet
-			String winner = null;
-	
-			Offer offerA = null;
-			Offer offerB = null;
-			try { offerB = agentB.makeFirstOffer(); } catch (NullPointerException e) {}
-	
-			// main auction loop 
-			while (winner == null) {
-				try { offerA = agentA.makeOffer (userAgent, offerB); // makeOffer returns null if it can't compete anymore.
-	                        } catch (NullPointerException e) {}
-	 
-	                        boolean noChoice = false;
-	                        try { noChoice =  userAgent.choice(offerA, offerB) != -1; 
-				} catch (NullPointerException e) {} 
-				if (offerA == null || noChoice ) {
-				    winner = "Airline B"; // declare that B is the winning agent 
-				    break;
-				}
-				noChoice = false;
-				
-				offerB = agentB.makeOffer (userAgent, offerA); 
-				noChoice = userAgent.choice(offerB, offerA) != -1;
-
-				if (offerB == null || noChoice) { 
-				    winner = "Airline A"; // declare that A is the winning agent
-				}
-			}
-	
-			// with enough authority we can declassify anything... ;-) 
-			String {Broker ->; Broker <-} w0 = endorse (winner, {*auction_lbl} to {Broker ->; Broker <-} );
-		
-			String {} w = declassify ( w0, {} ); 
-			output.println ("Ending Airline example with winner " + w);
-		}
-		else
-			throw new Error("Store does not act for broker");
-    }
+  }
 }
-// vim: ts=4
+// vim: ts=2

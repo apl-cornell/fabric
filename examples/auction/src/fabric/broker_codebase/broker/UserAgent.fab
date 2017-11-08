@@ -1,6 +1,10 @@
 package broker;
-public interface UserAgent[label Auction] where {*provider;⊥←} <= {Auction;⊥←}
+
+public interface UserAgent[label Auction]
+  where {*provider;⊥←} <= {Auction;⊥←}
 {
-    int {Auction} choice{Auction}(Offer[Auction]{Auction} offer1, Offer[Auction]{Auction} offer2)
-		where {*provider;⊥←} <= {Auction;⊥←};
+  int{Auction} choice{Auction}(
+      Offer[Auction]{Auction} offer1,
+      Offer[Auction]{Auction} offer2)
+    where {*provider;⊥←} <= {Auction;⊥←};
 }
