@@ -12,66 +12,80 @@ import sif.servlet.HTMLServlet;
 import travel.Broker;
 import travel.Config;
 
-
 public class FrontPage extends CustomerAction authority (CustomerPrincipal) {
-    public FrontPage(CustomerMain{this} m) throws ServletException {
-        super();
-        initFields("frontpage", m);
-    }
-    
-   public final void invoke{*lbl}(label{*lbl} lbl, Request[CustomerPrincipal]{*lbl} req)
-   throws (ServletException{*lbl;req.session←})
+  public FrontPage(CustomerMain{this} m) throws ServletException {
+    super();
+    initFields("frontpage", m);
+  }
+
+  public final void invoke{*lbl}(label{*lbl} lbl, Request[CustomerPrincipal]{*lbl} req)
+    throws (ServletException{*lbl;req.session←})
     where caller(req.session),
           lbl <= {req.session→}
-   {
-        HTMLServlet[CustomerPrincipal] s = (HTMLServlet) getServlet();
-        if (s == null || !(s instanceof CustomerMain)) throw new ServletException("No servlet available"); 
-        if (req == null) throw new ServletException("No request available"); 
-        CustomerMain m = (CustomerMain)s;
-
-        atomic {
-            
-            if (lbl <= new label {req.session←}) {
-                loginCustomer(req.session, req);
-            }
-
-
-            final label amtLbl = new label {BankPrincipal→AirlinePrincipal,CustomerPrincipal; BankPrincipal←; CustomerPrincipal←};
-            if (lbl <= new label {CustomerPrincipal←}) {
-                InputNode amountInput = new TextInput[CustomerPrincipal, lbl, lbl]
-                                                      (m, amtLbl, 20, "");
-                Text msg = new Text[lbl,lbl]("Enter Payment Amount for Ticket");
-                SubmitButton submit = new SubmitButton[CustomerPrincipal, lbl, lbl](m, lbl, "Buy Ticket");
-                NodeList[lbl, lbl] entries = NodeList.EMPTY();
-                entries = entries==null?null:entries.append(new TRow[lbl, lbl](
-                        new NodeList[lbl,lbl](msg, amountInput)));
-                entries = entries==null?null:entries.append(new TRow[lbl, lbl](
-                        new NodeList[lbl,lbl](submit)));
-                Node[lbl, lbl] form = s.createForm(lbl, lbl, 
-                        new StartTransaction(m, amountInput.input),
-                        lbl, lbl,
-                        new Table[lbl, lbl](entries));
-                // XXX How come lbl <= ⊤→req.session is not required here?
-                s.createPage((HTMLRequest)req, "Customer Home Page", lbl, lbl,
-                        new NodeList[lbl,lbl](lbl, lbl, createBanner(lbl, "Welcome to the Acme Flight Booking System"),
-                                lbl, lbl, createBody(lbl, lbl, form)));
-            }
-        }
+  {
+    HTMLServlet[CustomerPrincipal] s = (HTMLServlet) getServlet();
+    if (s == null || !(s instanceof CustomerMain)) {
+      throw new ServletException("No servlet available");
     }
-    
-    // Automatically make req.session actsfor CustomerPrincipal, since we are on a worker that allows this
-    // i.e. The customer worker principal acts for CustomerPrincipal
-    private final void loginCustomer{session←}(principal{session←} session, Request[CustomerPrincipal]{session←} reqParam) 
-    where authority(CustomerPrincipal), endorse({CustomerPrincipal←})
-    {
-        final Request[CustomerPrincipal] req = endorse(reqParam, {session←} to {CustomerPrincipal←});
-        final DelegatingPrincipal p = (DelegatingPrincipal)CustomerPrincipal;
-        if (p == null) return;
-        final principal sessionLow = endorse(session, {session←} to {CustomerPrincipal←});
-        if (p equiv CustomerPrincipal) {
-            p.addDelegatesTo(sessionLow);
-        }
-        
+    if (req == null) {
+      throw new ServletException("No request available");
     }
-    
+    CustomerMain m = (CustomerMain)s;
+
+    atomic {
+      if (lbl <= new label {req.session←}) {
+        loginCustomer(req.session, req);
+      }
+
+      final label amtLbl = new label {BankPrincipal→AirlinePrincipal,CustomerPrincipal; BankPrincipal←; CustomerPrincipal←};
+      if (lbl <= new label {CustomerPrincipal←}) {
+        InputNode amountInput = new TextInput[CustomerPrincipal, lbl, lbl](m, amtLbl, 20, "");
+        Text msg = new Text[lbl,lbl]("Enter Payment Amount for Ticket");
+        SubmitButton submit = new SubmitButton[CustomerPrincipal, lbl, lbl](m, lbl, "Buy Ticket");
+
+        NodeList[lbl, lbl] entries = NodeList.EMPTY();
+
+        entries = entries == null ? null :
+          entries.append(
+              new TRow[lbl, lbl](
+                new NodeList[lbl,lbl](msg, amountInput)));
+
+        entries = entries == null ? null :
+          entries.append(
+              new TRow[lbl, lbl](
+                new NodeList[lbl,lbl](submit)));
+
+        Node[lbl, lbl] form = s.createForm(lbl, lbl,
+            new StartTransaction(m, amountInput.input),
+            lbl, lbl,
+            new Table[lbl, lbl](entries));
+
+        // XXX How come lbl <= ⊤→req.session is not required here?
+        s.createPage((HTMLRequest) req, "Customer Home Page", lbl, lbl,
+            new NodeList[lbl,lbl](lbl, lbl,
+              createBanner(lbl, "Welcome to the Acme Flight Booking System"),
+              lbl, lbl,
+              createBody(lbl, lbl, form)));
+      }
+    }
+  }
+
+  // Automatically make req.session actsfor CustomerPrincipal, since we are on a worker that allows this
+  // i.e. The customer worker principal acts for CustomerPrincipal
+  private final void loginCustomer{session←}(principal{session←} session, Request[CustomerPrincipal]{session←} reqParam)
+    where authority(CustomerPrincipal),
+          endorse({CustomerPrincipal←})
+  {
+    final Request[CustomerPrincipal] req = endorse(reqParam, {session←} to {CustomerPrincipal←});
+    final DelegatingPrincipal p = (DelegatingPrincipal) CustomerPrincipal;
+
+    if (p == null) {
+      return;
+    }
+
+    final principal sessionLow = endorse(session, {session←} to {CustomerPrincipal←});
+    if (p equiv CustomerPrincipal) {
+      p.addDelegatesTo(sessionLow);
+    }
+  }
 }

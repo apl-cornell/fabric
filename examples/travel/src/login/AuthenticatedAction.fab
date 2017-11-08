@@ -9,120 +9,144 @@ import sif.html.*;
  * Extend this class to create actions that are protected by login requirement
  */
 abstract public class AuthenticatedAction[principal servP] extends AbstractAction[servP] {
-    public AuthenticatedAction(Servlet[servP] m) {
-        super();
-        initFields(m);
-    }
-    public AuthenticatedAction(String name, Servlet[servP] m) {
-        super();
-        initFields(name, m);
-    }
-    
-    /**
-     * Ensure that there is a logged in user.
-     * 
-     * @param req the Request
-     * @return false if the user is not logged in, true otherwise.
-     * @throws ServletException
-     */
-    protected boolean{*lbl} ensureLoggedIn{*lbl}
-                                (label{*lbl} lbl,
-                                 Request[servP]{*lbl} req,
-                                 AuthenticatedAction[servP]{*lbl} successAction,
-                                 HTMLAuthServlet[servP]{*lbl} servlet)
+  public AuthenticatedAction(Servlet[servP] m) {
+    super();
+    initFields(m);
+  }
+
+  public AuthenticatedAction(String name, Servlet[servP] m) {
+    super();
+    initFields(name, m);
+  }
+
+  /**
+   * Ensure that there is a logged in user.
+   *
+   * @param req the Request
+   * @return false if the user is not logged in, true otherwise.
+   * @throws ServletException
+   */
+  protected boolean{*lbl} ensureLoggedIn{*lbl}(
+      label{*lbl} lbl,
+      Request[servP]{*lbl} req,
+      AuthenticatedAction[servP]{*lbl} successAction,
+      HTMLAuthServlet[servP]{*lbl} servlet)
     throws (ServletException{*lbl;req.session←})
     where caller(req.session),
-    lbl <= {req.session→}
-    {
-        if (req == null) return false;
-        ServletException{*lbl;req.session←} ex = null;
-        boolean{*lbl;req.session←} ret = true;
-        final SessionState tmp = req.getSessionState(lbl);
-        AuthSessState tmp2 = null;
-        if ( lbl <= new label {tmp.store$→} ) {
-            tmp2 = (AuthSessState)tmp;
-            final AuthSessState state = tmp2;
-            
-            if ( lbl <= new label {state.store$→} ) {
-                final LoginAction[servP] la = new LoginAction[servP](servlet, successAction, req.session);
+          lbl <= {req.session→}
+  {
+    if (req == null) {
+      return false;
+    }
 
-                if (state != null && state.currentUser() == null
-                        && new label {req.session←} <= lbl
-                        && state.sessionPrincipal equiv req.session) {
-                    // not logged in yet.
-                    try {
-                        la.invoke(lbl, req);
-                        ret = false;
-                    }
-                    catch (ServletException e) {
-                        ex = e;
-                    }
-                }
-            }
-        }
-        if (ex != null) throw ex;
-        return ret;
-    }
-    
-    public final void invoke{*lbl}(label{*lbl} lbl, Request[servP]{*lbl} req) 
-        throws (ServletException{*lbl;req.session←})
-        where caller(req.session),
-        lbl <= {req.session→} {
-        if (req == null) throw new ServletException("Error processing request");
-        Servlet[servP] servlet_ = getServlet();
-        atomic {
-            final SessionState state_ = req.getSessionState(lbl);
-            if ( lbl <= new label {state_.store$→} ) {
-                if (servlet_ == null || state_ == null ||
-                        !(servlet_ instanceof HTMLAuthServlet[servP]) ||
-                        !(state_ instanceof AuthSessState))
-                    throw new ServletException("Error processing request");
-                final HTMLAuthServlet[servP] servlet = (HTMLAuthServlet[servP])servlet_;
-                final AuthSessState state = (AuthSessState)state_;
-                if ( lbl <= new label {state.store$→} ) {
-                
-                    if (state == null || servlet == null) return;
+    ServletException{*lbl;req.session←} ex = null;
+    boolean{*lbl;req.session←} ret = true;
+    final SessionState tmp = req.getSessionState(lbl);
+    AuthSessState tmp2 = null;
 
-                    // Check if someone is logged in. If not, then the login page is created.
-                    // Simply returning will display that login page
-                    if (!ensureLoggedIn(lbl, req, this, servlet)) return;
-                    final label newLbl = new label {*lbl; req.session!:};
-                    if (req.session equiv state.sessionPrincipal)
-                    {
-                        callWrapper(newLbl, req, servlet, state);
-                    }
-                    else {
-                        throw new ServletException("req.session not equivalent to state.sessionPrincipal"); 
-                    }
-                }
-            }
+    if (lbl <= new label {tmp.store$→}) {
+      tmp2 = (AuthSessState)tmp;
+      final AuthSessState state = tmp2;
+
+      if ( lbl <= new label {state.store$→} ) {
+        final LoginAction[servP] la =
+          new LoginAction[servP](servlet, successAction, req.session);
+
+        if (state != null && state.currentUser() == null
+            && new label {req.session←} <= lbl
+            && state.sessionPrincipal equiv req.session) {
+          // not logged in yet.
+          try {
+            la.invoke(lbl, req);
+            ret = false;
+          } catch (ServletException e) {
+            ex = e;
+          }
         }
+      }
     }
-    
-    public void callWrapper{*lbl}(label{*lbl} lbl,
-            Request[servP]{*lbl} req,
-            HTMLAuthServlet[servP]{*lbl} servlet,
-            AuthSessState{*lbl} state) 
-                throws (ServletException{*lbl;req.session←})
-                where caller(req.session),
-                lbl <= {req.session→},
-                {req.session←} <= lbl,
-                req.session equiv state.sessionPrincipal,
-                lbl <= {state.store$→} {
-        if (state == null || req == null) return;
-        final principal currentUser = state.currentUser();
-        if (req.session actsfor currentUser) {
-            this.invokeImpl(lbl, req, servlet, state, currentUser);
+
+    if (ex != null) {
+      throw ex;
+    }
+    return ret;
+  }
+
+  public final void invoke{*lbl}(label{*lbl} lbl, Request[servP]{*lbl} req)
+    throws (ServletException{*lbl;req.session←})
+  where caller(req.session),
+        lbl <= {req.session→}
+  {
+    if (req == null) {
+      throw new ServletException("Error processing request");
+    }
+
+    Servlet[servP] servlet_ = getServlet();
+
+    atomic {
+      final SessionState state_ = req.getSessionState(lbl);
+      if (lbl <= new label {state_.store$→}) {
+        if (servlet_ == null
+            || state_ == null
+            || !(servlet_ instanceof HTMLAuthServlet[servP])
+            || !(state_ instanceof AuthSessState)) {
+          throw new ServletException("Error processing request");
         }
+
+        final HTMLAuthServlet[servP] servlet = (HTMLAuthServlet[servP])servlet_;
+        final AuthSessState state = (AuthSessState)state_;
+        if (lbl <= new label {state.store$→}) {
+          if (state == null || servlet == null) {
+            return;
+          }
+
+          // Check if someone is logged in. If not, then the login page is created.
+          // Simply returning will display that login page
+          if (!ensureLoggedIn(lbl, req, this, servlet)) {
+            return;
+          }
+
+          final label newLbl = new label {*lbl; req.session←};
+          if (req.session equiv state.sessionPrincipal) {
+            callWrapper(newLbl, req, servlet, state);
+          } else {
+            throw new ServletException("req.session not equivalent to state.sessionPrincipal");
+          }
+        }
+      }
     }
-          
-    public abstract void invokeImpl{*lbl}(label{*lbl} lbl,
-                                      Request[servP]{*lbl} req,
-                                      HTMLAuthServlet[servP]{*lbl} servlet,
-                                      AuthSessState{*lbl} state,
-                                      principal{*lbl} currentUser) 
-      throws (ServletException{*lbl;req.session←})
-          where caller(req.session),
+  }
+
+  public void callWrapper{*lbl}(
+      label{*lbl} lbl,
+      Request[servP]{*lbl} req,
+      HTMLAuthServlet[servP]{*lbl} servlet,
+      AuthSessState{*lbl} state)
+    throws (ServletException{*lbl;req.session←})
+    where caller(req.session),
+          lbl <= {req.session→},
+          {req.session←} <= lbl,
+          req.session equiv state.sessionPrincipal,
+          lbl <= {state.store$→}
+  {
+    if (state == null || req == null) {
+      return;
+    }
+
+    final principal currentUser = state.currentUser();
+    if (req.session actsfor currentUser) {
+      this.invokeImpl(lbl, req, servlet, state, currentUser);
+    }
+  }
+
+  public abstract void invokeImpl{*lbl}(
+      label{*lbl} lbl,
+      Request[servP]{*lbl} req,
+      HTMLAuthServlet[servP]{*lbl} servlet,
+      AuthSessState{*lbl} state,
+      principal{*lbl} currentUser)
+    throws (ServletException{*lbl;req.session←})
+    where caller(req.session),
           lbl <= {req.session→},
           req.session equiv state.sessionPrincipal,
           req.session actsfor currentUser;

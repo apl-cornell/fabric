@@ -4,29 +4,29 @@ public final class Config {
   public static final String{⊤←} brokerStoreName = "broker";
   public static final String{⊤←} bankStoreName = "bank";
   public static final String{⊤←} airlineStoreName = "airline";
-  
-  
+
+
   /**
    * The keys in the root map for finding the accounts on the bank store
    */
   public static final String{⊤←} airlineAccountKey = "theAirlineAccount";
   public static final String{⊤←} customerAccountKey = "theCustomerAccount";
-  
+
   /**
    * The keys in the airline store's root map for finding the Tickets object
    */
   public static final String{⊤←} ticketsKey = "theTickets";
-  
+
   /**
    * The key in the root map for finding the broker object.
    */
   public static final String{⊤←} brokerMapKey = "theBroker";
-  
+
   /**
    * The key in the root map for finding the bank principal.
    */
   public static final String{⊤←} bankPrincipalMapKey = "bankPrincipal";
-  
+
   /**
    * The key in the root map for finding the customer principal.
    */
@@ -36,5 +36,4 @@ public final class Config {
    * The key in the root map for finding the airline principal.
    */
   public static final String{⊤←} airlinePrincipalMapKey = "airlinePrincipal";
-  
 }

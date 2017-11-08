@@ -7,33 +7,33 @@ import sif.servlet.Action;
 import sif.servlet.Request;
 import sif.servlet.Servlet;
 
-
 public abstract class CustomerAction extends Action[CustomerPrincipal] {
-    // 2 methods copied from UAction.fab
-    /** 
-     * Utility method to create a Table with class "banner" and containing
-     * the specified text.
-     */    
-    public static Node[lbl, lbl]{lbl} createBanner{*lbl}(label{*lbl} lbl, String{*lbl} text) {
-        return new Table[lbl, lbl]("banner", 
-                lbl, lbl, lbl, lbl,
-                new TRow[lbl, lbl](lbl, lbl, 
-                        new TCell[lbl, lbl](
-                                lbl, lbl, new Header[lbl, lbl](1, lbl, lbl, new Text[lbl, lbl](text)))),
-                                null);
-    }
-    
-    /**
-     * Utility method to create a Table with class "sifbody" and containing
-     * the node
-     */
-    public static Node[cL, cE]{*cE} createBody{*cE}(label{*cE} cL, label{*cE} cE, Node[cL, cE]{*cE} body) where {*cE} <= {*cL} {
-       return new Table[cL, cE]("sifbody", 
-               cL, cE, cL, cE,
-               new TRow[cL, cE](cL, cE, 
-                       new TCell[cL, cE](cL, cE, body)),
-                       null);
-    }
-    
-    
+   // 2 methods copied from UAction.fab
+   /**
+    * Utility method to create a Table with class "banner" and containing
+    * the specified text.
+    */
+   public static Node[lbl, lbl]{lbl} createBanner{*lbl}(label{*lbl} lbl, String{*lbl} text) {
+     return new Table[lbl, lbl]("banner",
+         lbl, lbl, lbl, lbl,
+         new TRow[lbl, lbl](lbl, lbl,
+           new TCell[lbl, lbl](lbl, lbl,
+             new Header[lbl, lbl](1, lbl, lbl,
+               new Text[lbl, lbl](text)))),
+         null);
+   }
+
+   /**
+    * Utility method to create a Table with class "sifbody" and containing
+    * the node
+    */
+   public static Node[cL, cE]{*cE} createBody{*cE}(label{*cE} cL, label{*cE} cE, Node[cL, cE]{*cE} body)
+     where {*cE} <= {*cL}
+   {
+     return new Table[cL, cE]("sifbody",
+         cL, cE, cL, cE,
+         new TRow[cL, cE](cL, cE,
+           new TCell[cL, cE](cL, cE, body)),
+         null);
+   }
 }

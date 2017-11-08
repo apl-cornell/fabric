@@ -15,7 +15,7 @@ public final class CustomerMain extends HTMLServlet[CustomerPrincipal] {
   final Store{this}@{⊤→} localStore;
   final Store{this}@{⊤→} brokerstore;
   final principal{this}@{⊤→} broker;
-  
+
   public CustomerMain() throws ServletException {
     FabricWorker cl = FabricWorker.getWorker();
     Store lStore = null;
@@ -27,27 +27,26 @@ public final class CustomerMain extends HTMLServlet[CustomerPrincipal] {
 
     Map root = null;
     if (brokerstore != null) {
-        root = (Map) brokerstore.getRoot();
+      root = (Map) brokerstore.getRoot();
     }
     atomic {
-	if (root != null) {
-	    Broker[BankPrincipal, CustomerPrincipal] brokerInit = null;
-	    Object obj = root.get(Config.brokerMapKey);
-	    if (obj instanceof Broker[BankPrincipal, CustomerPrincipal]) {
-		brokerInit =
-		    (Broker[BankPrincipal, CustomerPrincipal])obj;
-	}
-	broker = brokerInit;
-	} else {
-	    broker = null;
-	}
+      // XXX: This atomic shouldn't be necessary if we require constructors to
+      // be called within transactions.
+      if (root != null) {
+        Broker[BankPrincipal, CustomerPrincipal] brokerInit = null;
+        Object obj = root.get(Config.brokerMapKey);
+        if (obj instanceof Broker[BankPrincipal, CustomerPrincipal]) {
+          brokerInit = (Broker[BankPrincipal, CustomerPrincipal]) obj;
+        }
+        broker = brokerInit;
+      } else {
+        broker = null;
+      }
     }
-    
   }
-    
-  public void initialize{CustomerPrincipal:;CustomerPrincipal!:}()
-      throws ServletException {
-      addStartAction(new FrontPage(this));
+
+  public void initialize{CustomerPrincipal→;CustomerPrincipal←}() throws ServletException {
+    addStartAction(new FrontPage(this));
   }
 
   public String getPrivateHostID() throws ServletException {
@@ -57,31 +56,30 @@ public final class CustomerMain extends HTMLServlet[CustomerPrincipal] {
   protected String defaultActionName(Request[CustomerPrincipal] req) {
     return "frontpage";
   }
-  
+
   // TODO Provide default implementations for these 2 methods in Servlet.fab:
   // This method will only be called by the runtime
-  protected SessionState{*lbl} createSessionState{*lbl}(label{*lbl} lbl,
-      String{*lbl} id, SessionPrincipal{*lbl} session) {
+  protected SessionState{*lbl} createSessionState{*lbl}(
+      label{*lbl} lbl, String{*lbl} id, SessionPrincipal{*lbl} session) {
     atomic {
-      if (localStore != null && localStore equiv worker$ &&
-	  lbl <= new label {⊤→worker$} && new label {⊤←worker$} <= lbl) {
-	return new SessionState@localStore(id, session);
+      if (localStore != null
+          && localStore equiv worker$
+          && lbl <= new label {⊤→worker$}
+          && new label {⊤←worker$} <= lbl) {
+        return new SessionState@localStore(id, session);
       }
     }
     return null;
   }
-  
+
   // This method will only be called by the runtime
   protected SessionPrincipal createSessionPrincipal(String{broker→;broker←} id) {
     SessionPrincipal toReturn = null;
     atomic {
       if (brokerstore != null && brokerstore equiv broker) {
-	toReturn = new SessionPrincipal@brokerstore(id);
+        toReturn = new SessionPrincipal@brokerstore(id);
       }
     }
     return toReturn;
   }
-  
-  
 }
-

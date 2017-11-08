@@ -2,27 +2,26 @@ package travel;
 
 import fabric.util.Map;
 
-public class Tickets[principal bank, principal airline, principal user]  { // on airline store and worker
+public class Tickets[principal bank, principal airline, principal user] { // on airline store and worker
+  int {airline←}@{airline→} numTickets;
+  int {airline←}@{airline→} totalTickets;
 
-    int {airline←}@{airline->} num_tickets;
-    int {airline←}@{airline->} total_tickets;
-    Tickets{airline←}() {
-        num_tickets = 0;
-        total_tickets = 5;
+  Tickets{airline←}() {
+    numTickets = 0;
+    totalTickets = 5;
+  }
+
+  public int{airline←} getNumTickets() {
+    return numTickets;
+  }
+
+  public boolean{airline←} incTickets{airline←}():{airline←} {
+    if (numTickets < totalTickets) {
+      numTickets++;
+      return true;
     }
-    
-    public int{airline←} getNumTickets() {
-        return num_tickets;
-    }
-    
-    public boolean{airline←} incTickets{airline←}() :{airline←} {
-        if (num_tickets < total_tickets) {
-            num_tickets++;
-            return true;
-        }
-        return false;
-    }
-    
+    return false;
+  }
 }
 
 //class PurchasingError extends Exception {

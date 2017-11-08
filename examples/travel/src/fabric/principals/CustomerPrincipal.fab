@@ -7,8 +7,8 @@ public class CustomerPrincipal extends ExternalPrincipal {
   public CustomerPrincipal() {
     super("customer");
   }
-  
-  public static CustomerPrincipal{*!:} getInstance{*!:}() {
+
+  public static CustomerPrincipal{⊤←} getInstance{⊤←}() {
     atomic {
       FabricWorker cl = FabricWorker.getWorker();
       if (cl != null) {
@@ -24,19 +24,18 @@ public class CustomerPrincipal extends ExternalPrincipal {
               customer = new CustomerPrincipal@brokerStore();
               rootMap.put(Config.customerPrincipalMapKey, customer);
             }
-            
+
             return customer;
           }
         }
       }
-      
+
       return null;
     }
   }
-  
+
   // Don't much care what store is, we're going to create it where we want
-  public static CustomerPrincipal{*!:} getInstance{*!:}(Store store) {
-      return getInstance();
+  public static CustomerPrincipal{⊤←} getInstance{⊤←}(Store store) {
+    return getInstance();
   }
-  
 }

@@ -6,26 +6,30 @@ import sif.servlet.SessionPrincipal;
  * P is the User[L] principal that will have the session principal added to its superiors.
  */
 public class LoginClosure[principal P] implements Closure[P, {P→}]  {
-    private final SessionPrincipal{P→} sessionPrincipal;
-    
-    public LoginClosure(SessionPrincipal{P→} sessionPrincipal) {
-        this.sessionPrincipal = sessionPrincipal;
-        super();
-    } 
+  private final SessionPrincipal{P→} sessionPrincipal;
 
-    // DOWNGRADE REASON: Things need to be trusted by P!: in order to
-    // delegate P's authority. However, since this stuff is coming from the 
-    // session principal (which does not yet act for P), it is untrusted by P.
-    // The auto-endorse is OK, for the same reason that this closure is a source 
-    // of P's authority.
-    public final java.lang.Object{P→} invoke{P→}() where caller(P), endorse({P→;P←}) {
-      // add the session principal as a delegate to the principal P.
-      final DelegatingPrincipal u = (DelegatingPrincipal) P;
-      if (u != null && u.store$ actsfor u ) {
-          final DelegatingPrincipal sp = endorse(sessionPrincipal, {u→} to {u→;u←});
-          if (new label {u→} <= new label {sp.store$→}) 
-            u.addDelegatesTo(sp);
+  public LoginClosure(SessionPrincipal{P→} sessionPrincipal) {
+    this.sessionPrincipal = sessionPrincipal;
+    super();
+  }
+
+  // DOWNGRADE REASON: Things need to be trusted by P!: in order to
+  // delegate P's authority. However, since this stuff is coming from the
+  // session principal (which does not yet act for P), it is untrusted by P.
+  // The auto-endorse is OK, for the same reason that this closure is a source
+  // of P's authority.
+  public final java.lang.Object{P→} invoke{P→}()
+    where caller(P),
+          endorse({P→;P←})
+  {
+    // add the session principal as a delegate to the principal P.
+    final DelegatingPrincipal u = (DelegatingPrincipal) P;
+    if (u != null && u.store$ actsfor u) {
+      final DelegatingPrincipal sp = endorse(sessionPrincipal, {u→} to {u→;u←});
+      if (new label {u→} <= new label {sp.store$→}) {
+        u.addDelegatesTo(sp);
       }
-      return null;
     }
+    return null;
+  }
 }
