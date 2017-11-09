@@ -15,7 +15,7 @@ public final class System {
     label lbl
   )
   where
-    lbl <= {*→worker$}
+    lbl <= {⊤→worker$}
   ;
 }
 

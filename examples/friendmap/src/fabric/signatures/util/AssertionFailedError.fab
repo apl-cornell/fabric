@@ -1,7 +1,7 @@
 package util;
 
 public class AssertionFailedError extends Error {
-  private final String{this}@{*->} message;
+  private final String{this}@{⊤→} message;
 
   public AssertionFailedError(String{this} message) {
     super();

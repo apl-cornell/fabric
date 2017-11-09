@@ -7,8 +7,8 @@ package mapserv;
  * @param L the update label of the object
  * @param A the access label of the object
  */
-public class Box [label L, label A] 
-where 
+public class Box [label L, label A]
+where
 	L <= A
 {
 
@@ -124,7 +124,7 @@ where
   copy
   {         // side effects:
     {*l}  ⊓ // fields of result are updated
-    {*→s} ⊓ // object is created at s
+    {⊤→s} ⊓ // object is created at s
     {A}     // fields are read
   }
   (
@@ -134,7 +134,7 @@ where
   )
   : {*provider}
   where
-    l <= {*→s}, {*←s} <= l, a <= {*→s}, // TODO: s ≽ l@a
+    l <= {⊤→s}, {⊤←s} <= l, a <= {⊤→s}, // TODO: s ≽ l@a
     l <= a,                             // access labels must bound update labels
 
     L        <= l, // because this object affects result fields
@@ -149,17 +149,19 @@ where
   //////////////////////////////////////////////////////////////////////////////
 
   private static float min (float a, float b): {*provider} {
-    if (a < b)
+    if (a < b) {
       return a;
-    else
+    } else {
       return b;
+    }
   }
 
   private static float max (float a, float b): {*provider} {
-    if (a > b)
+    if (a > b) {
       return a;
-    else
+    } else {
       return b;
+    }
   }
 }
 

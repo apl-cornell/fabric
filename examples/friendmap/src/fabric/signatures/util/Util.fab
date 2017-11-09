@@ -16,7 +16,7 @@ public class Util {
   copyArray
   {                      // side effects:
     {*res_label}       ⊓ // contents of result   are updated
-    {*arg_label;_←;*→}   // contents of argument are fetched
+    {*arg_label;⊥←;⊤→}   // contents of argument are fetched
   }
   (
     final char{*arg_label}[] data,
@@ -31,12 +31,12 @@ public class Util {
     // object creation constraints
     // TODO: s ≽ res_label@res_label
     // (arrays can only be created with same update and access label)
-    res_label <= {*→s}, {*←s} <= res_label, res_label <= {*→s},
+    res_label <= {⊤→s}, {⊤←s} <= res_label, res_label <= {⊤→s},
 
     // information flows from argument contents to result contents:
     arg_label <= res_label,
     // fetch on data reveals information about the reference to data:
-    {data} <= {*arg_label;_←;*→},
+    {data} <= {*arg_label;⊥←;⊤→},
     // the output is affected by the reference to the input
     {data} <= {*res_label};
 }

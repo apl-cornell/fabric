@@ -7,11 +7,7 @@ public class Delegator extends AbstractPrincipal {
   protected String     name;
   protected Principal  owner;
 
-  public Delegator util$Delegator$(
-    String     name,
-    Principal  owner
-  )
-  {
+  public Delegator util$Delegator$(String name, Principal owner) {
     // these endorsements are safe, because owner ≽ this,
     // and thus {owner←} ⊑ {this←}
     // we just can't convince the compiler of this fact.
@@ -21,20 +17,17 @@ public class Delegator extends AbstractPrincipal {
     this.fabric$lang$security$AbstractPrincipal$(name);
     return this;
   }
-  
-  public Delegator util$Delegator$(
-      String     name
-    )
-    {
-      // these endorsements are safe, because owner ≽ this,
-      // and thus {owner←} ⊑ {this←}
-      // we just can't convince the compiler of this fact.
 
-      this.owner = this.$getStore().getPrincipal();
-      this.name  = name;
-      this.fabric$lang$security$AbstractPrincipal$(name);
-      return this;
-    }
+  public Delegator util$Delegator$(String name) {
+    // these endorsements are safe, because owner ≽ this,
+    // and thus {owner←} ⊑ {this←}
+    // we just can't convince the compiler of this fact.
+
+    this.owner = this.$getStore().getPrincipal();
+    this.name  = name;
+    this.fabric$lang$security$AbstractPrincipal$(name);
+    return this;
+  }
 
   private void jif$init$() {}
 
@@ -42,17 +35,14 @@ public class Delegator extends AbstractPrincipal {
   // Principal methods                                                        //
   //////////////////////////////////////////////////////////////////////////////
 
-  public boolean delegatesTo(Principal p)
-  {
+  public boolean delegatesTo(Principal p) {
     return p == owner;
   }
 
-  public ActsForProof findProofUpto(Store s, Principal p, java.lang.Object
-      searchState) {
+  public ActsForProof findProofUpto(Store s, Principal p, java.lang.Object searchState) {
     if (PrincipalUtil.actsFor(owner, this)) {
 
-      ActsForProof proof =
-        PrincipalUtil.findActsForProof(s, p, owner, searchState);
+      ActsForProof proof = PrincipalUtil.findActsForProof(s, p, owner, searchState);
       if (proof != null) {
         // Create proofParam: {*→s;*←s}
         Principal storeP = s.getPrincipal();
@@ -62,15 +52,16 @@ public class Delegator extends AbstractPrincipal {
           LabelUtil.writerPolicy(s, PrincipalUtil.topPrincipal(), storeP);
         Label proofParam = LabelUtil.toLabel(s, conf, integ);
 
-        DelegatesProof dp =
-          (DelegatesProof) new DelegatesProof@s().fabric$lang$security$DelegatesProof$(owner, this);
-        return
-          (TransitiveProof)
-            new TransitiveProof@s().fabric$lang$security$TransitiveProof$(proof, owner, dp);
-      } else
+        DelegatesProof dp = (DelegatesProof)
+          new DelegatesProof@s().fabric$lang$security$DelegatesProof$(owner, this);
+        return (TransitiveProof)
+          new TransitiveProof@s().fabric$lang$security$TransitiveProof$(proof, owner, dp);
+      } else {
         return null;
-
-    } else throw new AssertionFailedError().util$AssertionFailedError$("owner acts for delegator");
+      }
+    } else {
+      throw new AssertionFailedError().util$AssertionFailedError$("owner acts for delegator");
+    }
   }
 }
 

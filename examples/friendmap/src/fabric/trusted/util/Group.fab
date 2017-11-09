@@ -15,13 +15,13 @@ package util;
 public class Group[principal groupOwner]
 extends Delegator
 where
-  provider               <= {*←groupOwner},
-  GroupIterator.provider <= {*←groupOwner}
+  provider               <= {⊤←groupOwner},
+  GroupIterator.provider <= {⊤←groupOwner}
 {
-  final Principal{*←groupOwner}[] {this} @ {*→this} members;
-  int            {*←groupOwner}          @ {*→this} size = 0;
+  final Principal{⊤←groupOwner}[] {this} @ {⊤→this} members;
+  int            {⊤←groupOwner}          @ {⊤→this} size = 0;
 
-  private final static int  {*←}         @ {*→this} SIZE = 100;
+  private final static int  {⊤←}         @ {⊤→this} SIZE = 100;
 
   //////////////////////////////////////////////////////////////////////////////
   // Group constructors                                                       //
@@ -73,7 +73,7 @@ where
   void
   add
   {              // side effects:
-    *←groupOwner // TODO
+    ⊤←groupOwner // TODO
   }
   (
     Principal{groupOwner←} p
@@ -104,10 +104,10 @@ where
   void
   remove
   {              // side effects:
-    *←groupOwner // TODO
+    ⊤←groupOwner // TODO
   }
   (
-    Principal{*←groupOwner} p
+    Principal{⊤←groupOwner} p
   )
   {
     try
@@ -203,10 +203,10 @@ where
    * See Principal.findProofUpto.
    */
   public
-  ActsForProof[{*→s;*←s}] {this; p; this←; p←;s} // TODO
+  ActsForProof[{⊤→s;⊤←s}] {this; p; this←; p←;s} // TODO
   findProofUpto
   {            // side effects:
-    *→s;*←this // TODO
+    ⊤→s;⊤←this // TODO
   }
   (
     Store s,
@@ -270,7 +270,7 @@ where
     this→;this← // TODO
   }
   (
-    principal{this:;this!:} p
+    principal{this→;this←} p
   )
   where
     caller (this)

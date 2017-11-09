@@ -11,7 +11,7 @@ public class Delegator extends AbstractPrincipal {
   Delegator
   {           // side effects
     {this}// ⊓  // fields are updated
-//    {*→store$} // TODO: object is created
+//    {⊤→store$} // TODO: object is created
   }
   (
     String    {this} name,
@@ -19,12 +19,12 @@ public class Delegator extends AbstractPrincipal {
   ){
     super(name);
   }
-  
+
   public
   Delegator
   {           // side effects
     {this} //⊓  // fields are updated
-//    {*→store$} // TODO: object is created
+//    {⊤→store$} // TODO: object is created
   }
   (
     String    {this} name

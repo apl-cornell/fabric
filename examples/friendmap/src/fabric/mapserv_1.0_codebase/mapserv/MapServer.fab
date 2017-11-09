@@ -11,13 +11,13 @@ import util.Delegator;
  * image containing the background value, scaled to the requested region.
  */
 public class MapServer
-extends Delegator 
+extends Delegator
 where
   MapImage.provider <= provider, provider <= MapImage.provider,
        Box.provider <= provider, provider <=      Box.provider
 {
 
-  private char {_→;*←this}@{*→this.store$} background;
+  private char {⊥→;⊤←this}@{⊤→this.store$} background;
 
   /**
    * Create a new map server, with the given background character.
@@ -26,11 +26,11 @@ where
   MapServer
   {               // side effects:
     {this} ⊓      // TODO
-    {_→; *←this} // TODO
+    {⊥→; ⊤←this} // TODO
   }
   (
     String {this} name,
-    char   {_→; *←this} background
+    char   {⊥→; ⊤←this} background
   )
   where
     provider <= {this}
@@ -38,7 +38,7 @@ where
     super(name);
 
     if (store$ actsfor this
-        && provider <= new label{_→;*←this})
+        && provider <= new label{⊥→;⊤←this})
       this.background = background;
     else
       throw new AssertionFailedError("49 Delegation failed");
@@ -55,14 +55,14 @@ where
    *     if boundary is null.
    */
   public
-  MapImage[l,{*→store$}] {*l}
+  MapImage[l,{⊤→store$}] {*l}
                        // resulting map will be protected at l
                        // and stored at store
   createMap
   {            // side effects:
     {*l}     ⊓ // result is updated
     {*a}     ⊓ // boundary is accessed
-    {*→store$}  // map is created
+    {⊤→store$}  // map is created
   }
   (
     label{*l} l,
@@ -75,36 +75,38 @@ where
   )
   where
     // TODO; store ≽ l@store; map is created at store
-    {*←store$} <= l, l <= {*→store$}, {*→store$} <= {*→store$},
+    {⊤←store$} <= l, l <= {⊤→store$}, {⊤→store$} <= {⊤→store$},
     l <= a, // access label for result must bound update label
 
     // result taints
-    {*provider;*←this} <= l,
+    {*provider;⊤←this} <= l,
 
     // boundary lookup taints
     {*provider;*l} <= a
   {
-    if (boundary == null) throw new NullPointerException("92 boundary is null");
-
-    if (store$ actsfor this) {
-
-    final char{*l}[]{*l} data = new char[100]/* TODO: @store */;
-    for (int i = 0; i < data.length; i++)
-      data[i] = background;
-
-    try {
-      // TODO: solver failing, had to add annotation
-      return new MapImage[l,{*→this.store$}]{*l}@store$(boundary, l, a,
-                                                      10, 10, data,
-                                                      this.store$);
-
-    } catch (final ArrayIndexOutOfBoundsException e) {
-      throw new AssertionFailedError("105 10 * 10 = 100");
-    } catch (final NullPointerException e) {
-      throw new AssertionFailedError("107 boundary and data are non-null");
+    if (boundary == null) {
+      throw new NullPointerException("92 boundary is null");
     }
 
-    } else throw new AssertionFailedError("110 delegators's store actsfor delegatee");
+    if (store$ actsfor this) {
+      final char{*l}[]{*l} data = new char[100]/* TODO: @store */;
+      for (int i = 0; i < data.length; i++) {
+        data[i] = background;
+      }
+
+      try {
+        // TODO: solver failing, had to add annotation
+        return new MapImage[l,{⊤→this.store$}]{*l}@store$(boundary, l, a,
+                                                        10, 10, data,
+                                                        this.store$);
+      } catch (final ArrayIndexOutOfBoundsException e) {
+        throw new AssertionFailedError("105 10 * 10 = 100");
+      } catch (final NullPointerException e) {
+        throw new AssertionFailedError("107 boundary and data are non-null");
+      }
+    } else {
+      throw new AssertionFailedError("110 delegators's store actsfor delegatee");
+    }
   }
 }
 

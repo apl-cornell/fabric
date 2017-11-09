@@ -14,13 +14,13 @@ where
   Location.provider <= User.provider,
 
   // trusted classes are trusted
-  util.Delegator.provider     <= {*←},
-  util.GroupIterator.provider <= {*←},
-  util.Group.provider         <= {*←}
+  util.Delegator.provider     <= {⊤←},
+  util.GroupIterator.provider <= {⊤←},
+  util.Group.provider         <= {⊤←}
 {
 
   /** This is a dummy field to set the object label. */
-  public final int {_→; _←} dummy = 0;
+  public final int {⊥→; ⊥←} dummy = 0;
 
   /**
    * Create a new Snapp, operated by owner.
@@ -29,8 +29,8 @@ where
   Snapp
   {                // side effects:
     {this}       ⊓ // supertype fields are set
-    {_→; *←this} ⊓ // fields are set
-    {*→store$}      // store is contacted
+    {⊥→; ⊤←this} ⊓ // fields are set
+    {⊤→store$}      // store is contacted
   }
   (
     final String    name,
@@ -48,11 +48,11 @@ where
   }
 
   public
-  User[owner,this] {*provider; _→; *←this; owner; this} // result is affected by code, fields, and args
+  User[owner,this] {*provider; ⊥→; ⊤←this; owner; this} // result is affected by code, fields, and args
   createUser
   {                      // side effects:
-    {_→; *←this,owner} ⊓ // new user object fields are updated
-    {*→this}             // this is accessed
+    {⊥→; ⊤←this,owner} ⊓ // new user object fields are updated
+    {⊤→this}             // this is accessed
   }
   (
     final String    name,
@@ -60,11 +60,11 @@ where
   )
   : {*provider}
   where
-    // TODO: store ≽ {_→; *←this,owner}@{*→this}
-    {_→; *←this,owner} <= {*→store$}, {*←store$} <= {_→; *←this,owner}, {*→this} <= {*→store$},
+    // TODO: store ≽ {⊥→; ⊤←this,owner}@{⊤→this}
+    {⊥→; ⊤←this,owner} <= {⊤→store$}, {⊤←store$} <= {⊥→; ⊤←this,owner}, {⊤→this} <= {⊤→store$},
 
     // code and args affect resulting User object
-    {*provider; name; owner} <= {_→; *←this,owner}
+    {*provider; name; owner} <= {⊥→; ⊤←this,owner}
   {
     if (this.store$ actsfor this)
       return new User[owner,this]@store$(name, store$);

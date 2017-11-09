@@ -4,8 +4,8 @@ package util;
  * Convenience principal class the delegates to a single owner.
  */
 public class Delegator extends AbstractPrincipal {
-  protected final String    {this}@{*→this} name;
-  protected final principal {this}@{*→this} owner;
+  protected final String    {this}@{⊤→this} name;
+  protected final principal {this}@{⊤→this} owner;
 
   public
   Delegator
@@ -21,7 +21,7 @@ public class Delegator extends AbstractPrincipal {
     this.name  = name;
     super(name);
   }
-  
+
   public
   Delegator
   {      // side effects
@@ -57,7 +57,7 @@ public class Delegator extends AbstractPrincipal {
   ActsForProof[{s→}] {this; p; this←; p←;s}
   findProofUpto
   {          // side effects:
-    _→;this← // TODO
+    ⊥→;this← // TODO
   }
   (
     Store s,
@@ -67,10 +67,10 @@ public class Delegator extends AbstractPrincipal {
   {
     if (owner actsfor this) {
 
-      ActsForProof[{*→s;*←s}] proof = PrincipalUtil.findActsForProof(s, p, owner, searchState);
+      ActsForProof[{⊤→s;⊤←s}] proof = PrincipalUtil.findActsForProof(s, p, owner, searchState);
       if (proof != null) {
-        DelegatesProof dp = new DelegatesProof[{*→s;*←s}]@s(owner, this);
-        return new TransitiveProof[{*→s;*←s}]@s(proof, owner, dp);
+        DelegatesProof dp = new DelegatesProof[{⊤→s;⊤←s}]@s(owner, this);
+        return new TransitiveProof[{⊤→s;⊤←s}]@s(proof, owner, dp);
       } else
         return null;
 

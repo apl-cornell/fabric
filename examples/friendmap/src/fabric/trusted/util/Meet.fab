@@ -2,8 +2,8 @@ package util;
 
 public class Meet extends AbstractPrincipal {
 
-  protected final Principal{this}@{this->} left;
-  protected final Principal{this}@{this->} right;
+  protected final Principal{this}@{this→} left;
+  protected final Principal{this}@{this→} right;
 
   public
   Meet

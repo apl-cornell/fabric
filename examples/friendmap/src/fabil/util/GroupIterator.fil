@@ -12,8 +12,9 @@ public class GroupIterator
    * Create a new iterator over g, which must be non-null.
    */
   public GroupIterator util$GroupIterator$(Group g) {
-    if (g == null)
+    if (g == null) {
       throw new AssertionFailedError().util$AssertionFailedError$("g must be non-null");
+    }
 
     this.g = g;
     this.i = 0;
@@ -27,29 +28,25 @@ public class GroupIterator
     this.jif$util_GroupIterator_L = L;
   }
 
-  private void jif$init() { } 
+  private void jif$init() { }
 
-  public boolean hasNext()
-  {
-    if (this.g == null)
+  public boolean hasNext() {
+    if (this.g == null) {
       throw new AssertionFailedError().util$AssertionFailedError$("g must be non-null");
+    }
 
     return this.i < this.g.size;
   }
 
-  public Principal next()
-  throws NoSuchElementException
-  {
-    if (!this.hasNext())
+  public Principal next() throws NoSuchElementException {
+    if (!this.hasNext()) {
       throw new NoSuchElementException();
+    }
 
     try {
-
       return this.g.members[this.i++];
-
     } catch (NullPointerException e) {
       throw new AssertionFailedError().util$AssertionFailedError$("g must be non-null");
-
     } catch (ArrayIndexOutOfBoundsException e) {
       throw new AssertionFailedError().util$AssertionFailedError$("this.hasNext() but index is off-the-end");
     }

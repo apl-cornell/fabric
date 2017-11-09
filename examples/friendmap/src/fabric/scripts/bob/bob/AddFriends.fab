@@ -12,49 +12,40 @@ import snapp.Snapp;
 public class AddFriends
 where
   // trusted classes are trusted
-  util.Group.provider         <= {*←},
-  util.GroupIterator.provider <= {*←},
+  util.Group.provider         <= {⊤←},
+  util.GroupIterator.provider <= {⊤←},
 
   // Code in AddFriends is completely public.
   provider                    <= {}
 {
-  public static
-  void
-  main
-  {
-    {*←}
-  }
-  (
-    String[] args
-  )
-  {
-   atomic {
-    final Store  snappStore = worker$.getStore("snapp");
-    final Map    rootMap    = snappStore.getRoot();
-    final Snapp snappP = (Snapp) snappStore.getRoot().get("snapp");
-    
-    if (snappStore actsfor snappP
-            &&  snappP.store$ equiv snappStore
-            &&  snapp.Snapp.provider <= new label {*←snappP}@snappStore
-            ) {
-    
+  public static void main{⊤←}(String[] args) {
+    atomic {
+      final Store  snappStore = worker$.getStore("snapp");
+      final Map    rootMap    = snappStore.getRoot();
+      final Snapp snappP = (Snapp) snappStore.getRoot().get("snapp");
 
-        final UserWrapper[{*→snappP}] aw = (UserWrapper[{*→snappP}]) rootMap.get("alice");
-        final UserWrapper[{*→snappP}] bw = (UserWrapper[{*→snappP}]) rootMap.get("bob");
+      if (snappStore actsfor snappP
+          && snappP.store$ equiv snappStore
+          && snapp.Snapp.provider <= new label {⊤←snappP}@snappStore) {
+          final UserWrapper[{⊤→snappP}] aw = (UserWrapper[{⊤→snappP}]) rootMap.get("alice");
+          final UserWrapper[{⊤→snappP}] bw = (UserWrapper[{⊤→snappP}]) rootMap.get("bob");
 
-        final User[aw.userOwner,aw.userNetwork] alice = aw.user;
-        final User[bw.userOwner,bw.userNetwork] userBob   = bw.user;
+          final User[aw.userOwner,aw.userNetwork] alice = aw.user;
+          final User[bw.userOwner,bw.userNetwork] userBob   = bw.user;
 
-        if (userBob.p equiv new principal (bw.userNetwork, bw.userOwner))
-          if (provider <= new label {⊤←userBob.p})
-            userBob.friends.add(aw);
-          else
-            throw new AssertionFailedError("provider ⊑ {⊤←userBob.p}");
-        else
-            throw new AssertionFailedError("User[n,o].p = (n, o)");
-    } else throw new AssertionFailedError("store actsfor snapp");
-    
-   }
+          if (userBob.p equiv new principal (bw.userNetwork, bw.userOwner)) {
+            if (provider <= new label {⊤←userBob.p}) {
+              userBob.friends.add(aw);
+            } else {
+              throw new AssertionFailedError("provider ⊑ {⊤←userBob.p}");
+            }
+          } else {
+              throw new AssertionFailedError("User[n,o].p = (n, o)");
+          }
+      } else {
+        throw new AssertionFailedError("store actsfor snapp");
+      }
+    }
   }
 }
 

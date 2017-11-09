@@ -13,7 +13,9 @@ public class Meet extends AbstractPrincipal {
     Principal right
   )
   {
-    if (left == null || right == null) throw new NullPointerException("Cannot create meet with null principal!");
+    if (left == null || right == null) {
+      throw new NullPointerException("Cannot create meet with null principal!");
+    }
     this.left  = left;
     this.right = right;
     this.store = store;
@@ -39,12 +41,12 @@ public class Meet extends AbstractPrincipal {
   // Principal methods                                                        //
   //////////////////////////////////////////////////////////////////////////////
   public
-  boolean 
+  boolean
   delegatesTo(Principal p)
   {
     return p == left || p == right;
   }
-  
+
   /**
    * See Principal.findProofUpto.
    */
@@ -62,22 +64,22 @@ public class Meet extends AbstractPrincipal {
       if (leftProof != null) {
         DelegatesProof delProof =
          (DelegatesProof) new DelegatesProof@s().fabric$lang$security$DelegatesProof$(left, this);
-        return
-          (TransitiveProof)
-            new TransitiveProof@s().fabric$lang$security$TransitiveProof$(leftProof,  left,  delProof);
+        return (TransitiveProof)
+          new TransitiveProof@s().fabric$lang$security$TransitiveProof$(leftProof, left,  delProof);
       }
 
       if (rightProof != null) {
-        DelegatesProof delProof =
-          (DelegatesProof) new DelegatesProof@s().fabric$lang$security$DelegatesProof$(right, this);
-        return
-          (TransitiveProof)
+        DelegatesProof delProof = (DelegatesProof)
+          new DelegatesProof@s().fabric$lang$security$DelegatesProof$(right, this);
+        return (TransitiveProof)
             new TransitiveProof@s().fabric$lang$security$TransitiveProof$(rightProof, right, delProof);
-      }
-      else
+      } else {
         return null;
+      }
 
-    } else throw new AssertionFailedError().util$AssertionFailedError$("left and right act for meet");
+    } else {
+      throw new AssertionFailedError().util$AssertionFailedError$("left and right act for meet");
+    }
   }
 
 }
