@@ -13,31 +13,31 @@ public class Blog {
 
   private static Blog instance;
 
-  private /*final*/ Map/*Integer, BlogPost*/ blogPosts;
+  private final Map/*Integer, BlogPost*/ blogPosts;
 
-  private /*final*/ Map/*Integer, Comment*/ comments;
+  private final Map/*Integer, Comment*/ comments;
 
   private Blog webapp$blog$Blog$() {
     blogPosts = new TreeMap/*Integer, BlogPost*/().fabric$util$TreeMap$(
-	new Comparator/*Integer*/() {
-	  public Comparator webapp$blog$Blog$1$() {
-	    fabric$lang$Object$();
-	    return this;
-	  }
+        new Comparator/*Integer*/() {
+          public Comparator webapp$blog$Blog$1$() {
+            fabric$lang$Object$();
+            return this;
+          }
 
-	  public int compare(Object o1, Object o2) {
-	    return ((Integer)o2).intValue() - ((Integer)o1).intValue();
-	  }
+          public int compare(Object o1, Object o2) {
+            return ((Integer)o2).intValue() - ((Integer)o1).intValue();
+          }
 
-	  public Object $initLabels() {
-	    // update label: {_ <-}
-	    // access policy: {_ ->}
-	    this.$updateLabel = LabelUtil.noComponents();
-	    this.$accessPolicy = LabelUtil.bottomConf();
+          public Object $initLabels() {
+            // update label: {_ <-}
+            // access policy: {_ ->}
+            this.$updateLabel = LabelUtil.noComponents();
+            this.$accessPolicy = LabelUtil.bottomConf();
 
-	    return this;
-	  }
-	}.webapp$blog$Blog$1$());
+            return this;
+          }
+        }.webapp$blog$Blog$1$());
     comments = new HashMap/*Integer, Comment*/().fabric$util$HashMap$();
     fabric$lang$Object$();
     return this;
@@ -52,13 +52,13 @@ public class Blog {
   public Collection/*BlogPost*/ getBlogPosts() {
     Statistics.getInstance().registerRead(this);
     return Collections.unmodifiableCollection(Diagnostics.getLocalStore(),
-	blogPosts.values());
+        blogPosts.values());
   }
 
   public Collection/*Comment*/ getComments() {
     Statistics.getInstance().registerRead(this);
     return Collections.unmodifiableCollection(Diagnostics.getLocalStore(),
-	comments.values());
+        comments.values());
   }
 
   public void addBlogPost(BlogPost post) {
@@ -76,13 +76,13 @@ public class Blog {
     Statistics.getInstance().registerRead(this);
     comments.remove(new Integer(c.getId()));
   }
-  
+
   public int getNumBlogPosts() {
     atomic {
       return blogPosts.size();
     }
   }
-  
+
   public int getNumComments() {
     atomic {
       return comments.size();
@@ -92,11 +92,11 @@ public class Blog {
   public static Blog getInstance() {
     return instance;
   }
-  
+
   public static void createNewInstance(Store s, Label l) {
     instance = new Blog@s().webapp$blog$Blog$();
   }
-  
+
   public static void setInstance(Blog b) {
     instance = b;
   }

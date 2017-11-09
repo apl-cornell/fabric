@@ -26,7 +26,7 @@ Host: <input type="text" value="http://" name="host" /> <input type="submit" val
 <c:choose>
     <c:when test="${client.active }">
         <B>ACTIVE</B>
-        <p>Requests Remaining: ${client.requestsRemaining }</p> 
+        <p>Requests Remaining: ${client.requestsRemaining }</p>
     </c:when>
     <c:when test="${client.idle }">
         <b>Connected to: </b> ${client.host } [<a href="?action=clearhost">Disconnect</a>]
@@ -35,7 +35,7 @@ Host: <input type="text" value="http://" name="host" /> <input type="submit" val
         <b>Error state:</b><br />
         <pre>${client.errorMessage }</pre>
     </c:when>
-    
+
     <c:otherwise>
     <em>Unknown state</em>
     </c:otherwise>
@@ -47,8 +47,8 @@ Host: <input type="text" value="http://" name="host" /> <input type="submit" val
 <c:if test="${fa:length(client.pageStats) > 0}">
 <h3>Last benchmark data</h3>
 
-<c:if test="${median != null}">  
-<img src="http://chart.apis.google.com/chart?cht=lc&chs=450x200&chtt=History+of+Page+Load+Times&chxt=x,y,x&chds=0,${client.maxLoadTime*1.3 }&chxl=2:||Request+Number|&chxr=1,0,${client.maxLoadTime*1.3},${client.maxLoadTime/4}|0,0,${fa:length(client.pageStats)},${fa:length(client.pageStats)/10}&chd=t:${client.loadTimeValues}" />  
+<c:if test="${median != null}">
+<img src="http://chart.apis.google.com/chart?cht=lc&chs=450x200&chtt=History+of+Page+Load+Times&chxt=x,y,x&chds=0,${client.maxLoadTime*1.3 }&chxl=2:||Request+Number|&chxr=1,0,${client.maxLoadTime*1.3},${client.maxLoadTime/4}|0,0,${fa:length(client.pageStats)},${fa:length(client.pageStats)/10}&chd=t:${client.loadTimeValues}" />
 
 <img src="http://chart.apis.google.com/chart?cht=p3&chtt=Median+Page+Load+Breakdown&chd=t:${median.transactionTime},${median.appTime},${median.pageLoadTime-median.appTime},${median.trasmissionTime}&chs=450x200&chl=Transaction+Time|App+Time|JSP+Time|Transmission+Time" />
 <br />

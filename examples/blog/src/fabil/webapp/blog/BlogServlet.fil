@@ -23,11 +23,11 @@ public class BlogServlet extends HttpServlet {
   private static final String PAGE_POSTS = "/jsp/posts.jsp";
   private static final String PAGE_VIEWPOST = "/jsp/viewpost.jsp";
   private static final String PAGE_CREATEPOST = "/jsp/newpost.jsp";
-  
+
   private LocalStore localStore;
   private Store store;
   private Label currentLabel;
-  
+
   public BlogServlet() {
     localStore = Diagnostics.getLocalStore();
     store = Diagnostics.getStore();
@@ -36,7 +36,7 @@ public class BlogServlet extends HttpServlet {
     atomic {
       Statistics.getInstance().newPage(localStore, currentLabel);
     }
-    
+
     try {
       Diagnostics.createDatabase();
     } catch (TransactionFailure ex) {
@@ -45,12 +45,10 @@ public class BlogServlet extends HttpServlet {
   }
 
   public void service(HttpServletRequest request, HttpServletResponse response)
-  throws ServletException, IOException {
-    
-      serviceHandler(request, response);
-
+      throws ServletException, IOException {
+    serviceHandler(request, response);
   }
-  
+
   private void serviceHandler(HttpServletRequest request, HttpServletResponse response)
       throws ServletException, IOException {
     long start = 0;
@@ -63,12 +61,12 @@ public class BlogServlet extends HttpServlet {
         handleClientAction(request, response);
         return;
       }
-  
+
       if (request.getParameter("debugaction") != null) {
         handleDebugAction(request);
         action = null;
       }
-  
+
       if (action == null) {
         jsp = showPosts(request);
       } else if (action.equals("viewpost")) {
@@ -92,7 +90,7 @@ public class BlogServlet extends HttpServlet {
         handleMassUpdate(request);
         jsp = showPosts(request);
       }
-  
+
       prepareDebugMenu(request);
       Statistics.getInstance().doneApp();
       start = System.currentTimeMillis();
@@ -123,7 +121,7 @@ public class BlogServlet extends HttpServlet {
     }
     Statistics.getInstance().addTransaction(System.currentTimeMillis() - start);
   }
-  
+
   private void handleClientAction(HttpServletRequest request,
       HttpServletResponse response) throws IOException {
     atomic {
@@ -240,9 +238,7 @@ public class BlogServlet extends HttpServlet {
     request.setAttribute("statistics", Statistics.getInstance());
   }
 
-  private void handleDeleteComment(HttpServletRequest request) {
-
-  }
+  private void handleDeleteComment(HttpServletRequest request) { }
 
   private boolean handleCreatePost(HttpServletRequest request) {
     if (request.getParameter("title") != null) {
@@ -274,7 +270,7 @@ public class BlogServlet extends HttpServlet {
       list.add(iter.next());
     }
     request.setAttribute("comments", list);
-    
+
     return PAGE_VIEWPOST;
   }
 
@@ -288,7 +284,7 @@ public class BlogServlet extends HttpServlet {
     int end = 3;
     if (request.getParameter("end") != null)
       end = Integer.parseInt(request.getParameter("end"));
-    for (int j = 0; j < start; j++) 
+    for (int j = 0; j < start; j++)
       iter.next();
     for (int i = start; i <= end && i < size && i >= 0; i++) {
       posts.add(iter.next());

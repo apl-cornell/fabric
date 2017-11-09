@@ -7,8 +7,8 @@
     <h2>${entry.title} <span class="delete">[<a href="?action=deletepost&amp;id=${entry.id}">Delete</a>]</span></h2>
     <p>Posted on ${entry.creationTime}</p>
     <div class="entry">${entry.content}</div>
-    <div class="bottom"><p>${entry.numComments} comment(s)</p></div> 
-  </div>   
+    <div class="bottom"><p>${entry.numComments} comment(s)</p></div>
+  </div>
 
 <div class="comments">
 
@@ -17,7 +17,7 @@
 <c:if test="${passmsg != null || errormsg != null}">
 <p class="msg">
     <span class="error">${errormsg}</span>
-    <span class="pass">${passmsg}</span>    
+    <span class="pass">${passmsg}</span>
 </p>
 </c:if>
 

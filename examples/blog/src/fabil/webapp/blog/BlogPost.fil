@@ -9,10 +9,10 @@ public class BlogPost {
 
   private String content;
   private String title;
-  private /*final*/ Date creationTime;
+  private final Date creationTime;
   private int views;
-  private /*final*/ int id;
-  private /*final*/ List/*Comment*/ comments;
+  private final int id;
+  private final List/*Comment*/ comments;
   private static int counter = 0;
 
   public BlogPost webapp$blog$BlogPost$(String title, String content) {
@@ -64,7 +64,7 @@ public class BlogPost {
     Statistics.getInstance().registerRead(this);
     return title;
   }
-  
+
   public int getNumComments() {
     atomic {
       return comments.size();

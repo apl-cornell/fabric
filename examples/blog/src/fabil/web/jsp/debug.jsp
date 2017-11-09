@@ -31,7 +31,7 @@
 </form>
 <!--<form action="?debugaction=addposts" method="post">
   <p>Add <input type="text" size="2" /> posts and comments
-<input type="button" value="Go"/></p> 
+<input type="button" value="Go"/></p>
 </form> -->
 </td>
 <td valign="top">
@@ -58,19 +58,19 @@
 <c:when test="${fn:length(clientslist) > 0 }">
 <form action="?" method="post">
 <input type="hidden" name="debugaction" value="benchmark"/>
-<p>Number of clients: 
+<p>Number of clients:
 <select name="numclients">
     <c:forEach var="i" begin="1" end="${fn:length(clientslist) }">
         <option value="${i }">${i }</option>
-    </c:forEach>  
+    </c:forEach>
 </select>
 </p>
-<p>Action: 
+<p>Action:
 <select name="action">
     <c:forEach var="action" items="${actions}">
         <option value="${action }">${action }</option>
     </c:forEach>
-</select> 
+</select>
 </p>
 <p>Sample size: <input type="text" value="100" name="size" /></p>
 <input type="submit" value="Run Benchmark" />
@@ -86,7 +86,7 @@
 <ul>
  <c:forEach var="entry" items="${clientslist}">
     <li><a href="http://${entry}/web">${entry}</a> [<a href="?clientaction=removeother&amp;id=${entry}">x</a>]</li>
-</c:forEach>  
+</c:forEach>
 </ul>
 </td>
 

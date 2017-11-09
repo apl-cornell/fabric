@@ -13,9 +13,9 @@ public class BlogServer {
     String jetty_home = System.getProperty("jetty.home", "./classes/fabil");
 
     LocalStore store = Diagnostics.getLocalStore();
-    
+
     Server server = null;
-    
+
     atomic {
       server = new Server(8080);
       WebAppContext webapp = new WebAppContext();
@@ -24,7 +24,7 @@ public class BlogServer {
       webapp.addServlet(BlogServlet.class, "/web");
       server.setHandler(webapp);
     }
-    
+
     System.out.println("Starting server...");
     server.start();
     System.out.println("Server started");

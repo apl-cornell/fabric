@@ -24,7 +24,7 @@ public class Statistics {
       instance = new ThreadLocal/*Statistics*/();
       busyClients = new HashSet/*String*/().fabric$util$HashSet$();
       clients = new HashSet/*String*/().fabric$util$HashSet$();
-      clientError = false; 
+      clientError = false;
     }
     Statistics s = (Statistics)instance.get();
     if (s == null) {
@@ -82,7 +82,7 @@ public class Statistics {
 
   public static Collection/*String*/ getClients() {
     return Collections.unmodifiableCollection(Diagnostics.getLocalStore(),
-	clients);
+        clients);
   }
 
   public void doneApp() {
@@ -110,7 +110,7 @@ public class Statistics {
 
   public static Collection/*String*/ getBusyClients() {
     return Collections.unmodifiableCollection(Diagnostics.getLocalStore(),
-	busyClients);
+        busyClients);
   }
 
   public static void removeAllBusyClients() {
