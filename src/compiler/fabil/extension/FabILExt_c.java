@@ -1,15 +1,17 @@
 package fabil.extension;
 
-import polyglot.ast.Ext_c;
-import polyglot.ast.Node;
-import polyglot.types.SemanticException;
 import fabil.visit.AtomicRewriter;
 import fabil.visit.LabelAssigner;
 import fabil.visit.LocationAssigner;
 import fabil.visit.ProxyRewriter;
+import fabil.visit.RemoteCallChecker;
 import fabil.visit.RemoteCallRewriter;
 import fabil.visit.StaticInitializerCollector;
 import fabil.visit.ThreadRewriter;
+
+import polyglot.ast.Ext_c;
+import polyglot.ast.Node;
+import polyglot.types.SemanticException;
 
 public class FabILExt_c extends Ext_c implements FabILExt {
 
@@ -52,6 +54,11 @@ public class FabILExt_c extends Ext_c implements FabILExt {
 
   @Override
   public Node rewriteThreads(ThreadRewriter tr) {
+    return node();
+  }
+
+  @Override
+  public Node checkRemoteCalls(RemoteCallChecker rc) throws SemanticException {
     return node();
   }
 

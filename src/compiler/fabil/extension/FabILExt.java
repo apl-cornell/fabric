@@ -3,16 +3,18 @@
  */
 package fabil.extension;
 
-import polyglot.ast.Ext;
-import polyglot.ast.Node;
-import polyglot.types.SemanticException;
 import fabil.visit.AtomicRewriter;
 import fabil.visit.LabelAssigner;
 import fabil.visit.LocationAssigner;
 import fabil.visit.ProxyRewriter;
+import fabil.visit.RemoteCallChecker;
 import fabil.visit.RemoteCallRewriter;
 import fabil.visit.StaticInitializerCollector;
 import fabil.visit.ThreadRewriter;
+
+import polyglot.ast.Ext;
+import polyglot.ast.Node;
+import polyglot.types.SemanticException;
 
 /**
  * The interface for all Fabric extension nodes.
@@ -58,6 +60,11 @@ public interface FabILExt extends Ext {
    * transaction manager.
    */
   public Node rewriteThreads(ThreadRewriter tr);
+
+  /**
+   * Used by <code>RemoteCallRewriter</code> to translate RMIs.
+   */
+  public Node checkRemoteCalls(RemoteCallChecker rc) throws SemanticException;
 
   /**
    * Used by <code>RemoteCallRewriter</code> to translate RMIs.

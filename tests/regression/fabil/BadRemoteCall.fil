@@ -1,0 +1,18 @@
+public class BadRemoteCall {
+  public BadRemoteCall BadRemoteCall$() {
+    fabric$lang$Object$();
+    return this;
+  }
+
+  public int m() {
+    return 0;
+  }
+
+  public static void main(String[] args) {
+    BadRemoteCall t = new BadRemoteCall().BadRemoteCall$();
+    t.m();
+    RemoteWorker w = null;
+    // Below should error, it's not calling a _remote method.
+    t.m@w();
+  }
+}
