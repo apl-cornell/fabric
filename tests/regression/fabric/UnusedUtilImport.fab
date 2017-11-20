@@ -1,0 +1,4 @@
+import fabric.util.*;
+
+public class UnusedUtilImport {
+}
