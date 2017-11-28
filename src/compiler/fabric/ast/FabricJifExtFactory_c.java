@@ -27,6 +27,7 @@ import fabric.translate.ClassDeclToFabilExt_c;
 import fabric.translate.CodebaseDeclToFabilExt_c;
 import fabric.translate.CodebaseNodeToFabilExt_c;
 import fabric.translate.ConstructorDeclToFabilExt_c;
+import fabric.translate.FabricArrayInitToFabilExt_c;
 import fabric.translate.FieldDeclToFabilExt_c;
 import fabric.translate.FieldToFabilExt_c;
 import fabric.translate.InstanceOfToFabilExt_c;
@@ -40,14 +41,17 @@ import fabric.translate.RemoteWorkerGetterToFabilExt_c;
 import fabric.translate.RetryToFabilExt_c;
 import fabric.translate.SourceFileToFabilExt_c;
 import fabric.translate.WorkerToFabilExt_c;
+
 import jif.ast.JifExtFactory_c;
 import jif.ast.JifExt_c;
+import jif.extension.JifArrayInitExt;
 import jif.extension.JifBinaryExt;
 import jif.extension.JifFieldDeclExt_c;
 import jif.extension.JifLabelExprExt;
 import jif.extension.JifPrincipalExprExt;
 import jif.extension.JifSourceFileExt;
 import jif.translate.ArrayAccessToJavaExt_c;
+
 import polyglot.ast.Ext;
 import polyglot.ast.ExtFactory;
 
@@ -306,7 +310,7 @@ public class FabricJifExtFactory_c extends JifExtFactory_c
   }
 
   protected Ext extFabricArrayInitImpl() {
-    return extArrayInit();
+    return new JifArrayInitExt(new FabricArrayInitToFabilExt_c());
   }
 
   protected Ext postExtFabricArrayInit(Ext e) {
