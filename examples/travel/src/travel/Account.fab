@@ -7,63 +7,73 @@ import fabric.util.Map;
 // Balance stands for an account managed by a particular "bank" for a particular "user"
 class Balance[principal bank, principal user] { // on bank store and worker
 
-    // the account balance
-    // Since the user trusts the bank to manage its account it does not specify any policy on this
-    // The bank does not allow anyone else to modify. It allows only its user to read.
-    float{bank←; bank→user}@{bank→} value = 100000;
+  // the account balance
+  // Since the user trusts the bank to manage its account it does not specify any policy on this
+  // The bank does not allow anyone else to modify. It allows only its user to read.
+  float{bank←; bank→user}@{bank→} value = 100000;
 
-    // Debits a specified amount from this account
-    // The begin label allows only the bank to influence the decision to debit.
-    // Since the success of the operation leaks information about the balance, the
-    // return value is readable only by the user. It is trusted enough to have not been
-    // influenced by any principal other than bank
-    boolean{bank←; bank→user} debit{bank←}(float{bank←; bank→user} amt) {
-        if (amt <= value & value > 0 & amt > 0) {
-            value = value - amt;
-            return true;
-        }
-        return false;
+  // Debits a specified amount from this account
+  // The begin label allows only the bank to influence the decision to debit.
+  // Since the success of the operation leaks information about the balance, the
+  // return value is readable only by the user. It is trusted enough to have not been
+  // influenced by any principal other than bank
+  boolean{bank←; bank→user} debit{bank←}(float{bank←; bank→user} amt) {
+    if (amt <= value & value > 0 & amt > 0) {
+      value = value - amt;
+      return true;
     }
-    
-    // Credits a specified amount to this account
-    // Explanation of labels: same as above
-    boolean{amt} credit{bank←}(float{bank←; bank→user} amt) {
-        if (amt > 0) {
-            value = value + amt;
-            return true;
-        }
-        return false;
+    return false;
+  }
+
+  // Credits a specified amount to this account
+  // Explanation of labels: same as above
+  boolean{amt} credit{bank←}(float{bank←; bank→user} amt) {
+    if (amt > 0) {
+      value = value + amt;
+      return true;
     }
+    return false;
+  }
 }
 
 // XXX Why do we have an Account class when Balance is good enough?
-public class Account[principal bank]  { // on bank store and worker
-    public final Principal{bank←}@{bank→} user;
-    final Balance[bank,user] {bank←}@{bank→} balance;
+public class Account[principal bank] { // on bank store and worker
+  public final Principal{bank←}@{bank→} user;
+  final Balance[bank,user] {bank←}@{bank→} balance;
 
-    Account(principal{bank←} user_) {
-        user = user_;
-        balance = new Balance(); // @ bank store
-        super();
-    }
-    
-    public String{user←;bank←} name{⊥→}() {
-        if (user == null) return "";
-        return user.name();
-    }
-    
-    public float{bank←; bank→user} balance{bank→}() {
-        if (balance == null) return 0;
-        return balance.value;
-    }
-    
-    public boolean{bank←; bank→user} debit{bank←}(float{bank←; bank→user} amt) {
-        try { return balance.debit(amt); }
-        catch (NullPointerException e) { return false; }
-    }
-    public boolean{amt; bank←} credit{bank←}(float{bank←; bank→user} amt) {
-        try { return balance.credit(amt); }
-        catch (NullPointerException e) { return false; }
-    }
+  Account(principal{bank←} user_) {
+    user = user_;
+    balance = new Balance(); // @ bank store
+    super();
+  }
 
+  public String{user←;bank←} name{⊥→}() {
+    if (user == null) {
+      return "";
+    }
+    return user.name();
+  }
+
+  public float{bank←; bank→user} balance{bank→}() {
+    if (balance == null) {
+      return 0;
+    }
+    return balance.value;
+  }
+
+  public boolean{bank←; bank→user} debit{bank←}(float{bank←; bank→user} amt) {
+    try {
+      return balance.debit(amt);
+    } catch (NullPointerException e) {
+      return false;
+    }
+  }
+
+  public boolean{amt; bank←} credit{bank←}(float{bank←; bank→user} amt) {
+    try {
+      return balance.credit(amt);
+    } catch (NullPointerException e) {
+      return false;
+    }
+  }
 }

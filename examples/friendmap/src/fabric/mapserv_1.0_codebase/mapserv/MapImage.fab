@@ -14,7 +14,7 @@ import util.AssertionFailedError;
  */
 public class MapImage[label L, label A]
 where
-  {_←} <= A, // A is a confidentiality label
+  {⊥←} <= A, // A is a confidentiality label
   L    <= A, // if L is not ⊑ C(A), then no fields can be read.
 
   Box.provider <= provider, provider <= Box.provider
@@ -51,7 +51,7 @@ where
   {                    // side effects:
     {L}              ⊓ // fields are updated
     {*bdry_access}   ⊓ // boundary is read
-    {*→s}              // boundary copy is created at s
+    {⊤→s}              // boundary copy is created at s
   }
   (
     final Box[bdry_update,bdry_access] boundary,
@@ -69,7 +69,7 @@ where
     NullPointerException
   )
   where
-    L <= {*→s}, {*←s} <= L, A <= {*→s},    // TODO: s ≽ L@A
+    L <= {⊤→s}, {⊤←s} <= L, A <= {⊤→s},    // TODO: s ≽ L@A
     bdry_update <= bdry_access,            // access labels must bound update labels
 
     {boundary;width;height;data} <= L, // fields are affected by args
@@ -82,11 +82,13 @@ where
     this.boundary = (boundary == null) ? null : boundary.copy(L,A,s);
     this.data     = (data     == null) ? null : Util.copyArray(data, L, L, s);
 
-    if (boundary == null || data == null)
+    if (boundary == null || data == null) {
       throw new NullPointerException("86");
+    }
 
-    if (width * height != data.length)
+    if (width * height != data.length) {
       throw new ArrayIndexOutOfBoundsException("89");
+    }
 
     this.width  = width;
     this.height = height;
@@ -106,7 +108,7 @@ where
   getBoundary
   {         // side effects:
     {*l}  ⊓ // fields of result are updated
-    {*→s} ⊓ // objects are created at s
+    {⊤→s} ⊓ // objects are created at s
     {A}     // this is accessed
   }
   (
@@ -116,12 +118,12 @@ where
   )
   : {*provider}
   where
-    l <= {*→s}, {*←s} <= l, a <= {*→s}, // TODO: s ≽ l@a
+    l <= {⊤→s}, {⊤←s} <= l, a <= {⊤→s}, // TODO: s ≽ l@a
     l <= a,                             // access labels must bound update labels
 
     {L;*provider;l;a;s} <= l,     // result fields are affected by fields
-    {L;*provider;l;a;s} <= {*→s}, // information leaks from fields to object creation.
-    provider            <= A      // code affects access to the boundary 
+    {L;*provider;l;a;s} <= {⊤→s}, // information leaks from fields to object creation.
+    provider            <= A      // code affects access to the boundary
   {
     if (boundary == null)
       throw new AssertionFailedError("126 boundary is non-null.");
@@ -150,12 +152,13 @@ where
   (
     ArrayIndexOutOfBoundsException{L;x;y;*provider}
   )
-  where 
+  where
     provider           <= A,  // code affects fetches
     provider           <= L  // BUG: access label of arrays is the update label.
   {
-    if (this.data == null)
+    if (this.data == null) {
       throw new AssertionFailedError("155 data must be non-null");
+    }
 
     return data[index(x,y)];
   }
@@ -183,8 +186,9 @@ where
   where
     provider <= L // code affects contents
   {
-    if (this.data == null)
+    if (this.data == null) {
       throw new AssertionFailedError("184 data must be non-null");
+    }
 
     data[index(x,y)] = value;
   }
@@ -198,9 +202,9 @@ where
   copy
   {          // side effects:
     {*l}   ⊓ // result is updated
-    {*→s}  ⊓ // object is created at s
-    {A;_←} ⊓ // fields are read
-    {L;_←}   // data is accessed - access label of an array is same as update label
+    {⊤→s}  ⊓ // object is created at s
+    {A;⊥←} ⊓ // fields are read
+    {L;⊥←}   // data is accessed - access label of an array is same as update label
   }
   (
     final label l,
@@ -210,11 +214,11 @@ where
   : {*provider}
   where
     // return object invariants
-    {_←} <= a, // a must be a confidentiality policy
+    {⊥←} <= a, // a must be a confidentiality policy
     l    <= a, // resulting access label must be bounded by resulting update label
 
     // general constraints on object creation
-    l <= {*→s}, {*←s} <= l, a <= {*→s}, // TODO: s ≽ l@a
+    l <= {⊤→s}, {⊤←s} <= l, a <= {⊤→s}, // TODO: s ≽ l@a
 
     // information flow within method
     {this;*L;*provider;l;a;s} <= l, // resulting map image fields are affected by fields, args, code
@@ -259,12 +263,15 @@ where
     {out;*provider} <= L  // output affected by arg, code
   {
     // check assertions
-    if (out == null)
+    if (out == null) {
       throw new NullPointerException("259 out is null.");
-    if (this.boundary == null)
+    }
+    if (this.boundary == null) {
       throw new AssertionFailedError("261 boundary is non-null");
-    if (this.data == null)
+    }
+    if (this.data == null) {
       throw new AssertionFailedError("263 data is non-null");
+    }
 
     // print map as follows:
     // (top left)
@@ -279,9 +286,7 @@ where
 
       for (int j = 0; j < width; j++) {
         try {
-
           out.print(data[i*width + j]);
-
         } catch (final ArrayIndexOutOfBoundsException e) {
           // claim: i*width + j < data.length
           // proof:
@@ -297,8 +302,9 @@ where
     }
 
     out.print('\t');
-    for (int j = 0; j < width; j++)
+    for (int j = 0; j < width; j++) {
       out.print(' ');
+    }
 
     out.println("(" + boundary.xmax + ", " + boundary.ymax + ")");
   }
@@ -319,7 +325,7 @@ where
     float y
   )
   : {*provider}
-  where     
+  where
     provider           <= A  // code affects fetches
   {
     // claim: if boundary.contains(x,y) then 0 <= index < data.length
@@ -328,8 +334,9 @@ where
     //        Thus xoff ∈ [0, width) and yoff ∈ [0,height)
     //        TODO: this step could have accuracy problems.
     //        thus yoff * width + xoff ∈ [0, height * width) = [0, data.length)
-    if (this.boundary == null)
+    if (this.boundary == null) {
       throw new AssertionFailedError("328 boundary must be non-null");
+    }
 
     int xoff = (int) (width  * boundary.scale_x(x));
     int yoff = (int) (height * boundary.scale_y(y));

@@ -1,38 +1,40 @@
 package airlineB;
 import auction.Config;
-public class Server[principal Airline] implements broker.Server[Airline] 
-	where  {*provider} <= {Airline<-},  
-		{*provider} equiv {*Agent.provider}, 
-		{*broker.Agent.provider} <= {*provider}, 
-		{*broker.Agent.provider} equiv {*broker.Server.provider}
+public class Server[principal Airline]
+  implements broker.Server[Airline]
+  where {*provider} <= {Airline←},
+        {*provider} equiv {*Agent.provider},
+        {*broker.Agent.provider} <= {*provider},
+        {*broker.Agent.provider} equiv {*broker.Server.provider}
 {
-    int {Airline->;Airline<-} cost;
-    int {Airline->;Airline<-} seats; 
-    int {Airline->;Airline<-} lowestprice; 
+  int{Airline→;Airline←} cost;
+  int{Airline→;Airline←} seats;
+  int{Airline→;Airline←} lowestprice;
 
-	public Server{Airline→;Airline←} (int {Airline->;Airline<-} cost, int {Airline->;Airline<-} seats) {
-		this.cost = cost;
-		this.seats = seats; 
-		this.lowestprice = cost;
-		try { 
-		    this.lowestprice = cost / seats;
-		} catch (ArithmeticException ignored) { }
-    }
-    
-    public int {Airline->;Airline<-} getLowestPrice{Airline->}() {
-		return this.lowestprice;
-    }
+  public Server{Airline→;Airline←}(int{Airline→;Airline←} cost, int{Airline→;Airline←} seats) {
+    this.cost = cost;
+    this.seats = seats;
+    this.lowestprice = cost;
+    try {
+      this.lowestprice = cost / seats;
+    } catch (ArithmeticException ignored) { }
+  }
 
-    public broker.Agent[Airline, auctionLbl]{Airline->;Airline<-} getAgent {Airline->;Airline<-} (label{Airline<-} auctionLbl) 
-		where {Airline->;Airline<-} <= {*auctionLbl}
-	{
-		final Store store = worker$.getStore(Config.brokerStoreName);
-		//if (store actsfor Airline) --- XXX: why is this insufficient?
-		if (new label{Airline->} <= new label{store->}
-			&& new label{*<-store} <= new label{Airline<-}
-			&& auctionLbl <= new label{store->})
-			return new Agent[Airline, auctionLbl]@store(this);
-		else 
-			throw new Error("Store is not trusted to store agent.");
+  public int{Airline→;Airline←} getLowestPrice{Airline→}() {
+    return this.lowestprice;
+  }
+
+  public broker.Agent[Airline, auctionLbl]{Airline→;Airline←} getAgent{Airline→;Airline←}(label{Airline←} auctionLbl)
+    where {Airline→;Airline←} <= {*auctionLbl}
+  {
+    final Store store = worker$.getStore(Config.brokerStoreName);
+    //if (store actsfor Airline) --- XXX: why is this insufficient?
+    if (new label{Airline→} <= new label{store→}
+        && new label{⊤←store} <= new label{Airline←}
+        && auctionLbl <= new label{store→}) {
+      return new Agent[Airline, auctionLbl]@store(this);
+    } else {
+      throw new Error("Store is not trusted to store agent.");
     }
+  }
 }

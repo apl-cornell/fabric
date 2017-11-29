@@ -6,28 +6,25 @@ import sif.servlet.Request;
 import javax.servlet.ServletException;
 
 
-public abstract class HTMLAuthServlet[principal servP] 
-	extends HTMLServlet[servP] { //implements AuthServlet[servP] {
+public abstract class HTMLAuthServlet[principal servP] extends HTMLServlet[servP] { //implements AuthServlet[servP] {
 
-    public HTMLAuthServlet() throws ServletException {
-        
-    }
+  public HTMLAuthServlet() throws ServletException { }
 
-    
-    public principal{p:;p!:} createUser{p:; p!:}(
-            String{p:; p!:} userID,
-            String{p:; p!:} password,
-            principal{p:; p!:} p)
-        throws ServletException
-        where caller(p) {
-        throw new ServletException("Unsupported");
-	}
+  public principal{p→;p←} createUser{p→; p←}(
+      String{p→; p←} userID,
+      String{p→; p←} password,
+      principal{p→; p←} p)
+    throws ServletException
+    where caller(p)
+  {
+    throw new ServletException("Unsupported");
+  }
 
-    public abstract principal{p:;p!:} lookupUserID{p:; p!:}(
-            String{p:; p!:} userID,
-            principal{p:; p!:} p)
-        throws ServletException
-        where caller(p);
-    
-        protected abstract String defaultActionName(Request[servP] req);
+  public abstract principal{p→;p←} lookupUserID{p→; p←}(
+      String{p→; p←} userID,
+      principal{p→; p←} p)
+    throws ServletException
+    where caller(p);
+
+  protected abstract String defaultActionName(Request[servP] req);
 }

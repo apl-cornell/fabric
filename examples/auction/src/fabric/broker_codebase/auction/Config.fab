@@ -1,28 +1,28 @@
 package auction;
 
 public final class Config {
-  public static final String{*!:} brokerStoreName = "brokerStore";
-  public static final String{*!:} airlineAStoreName = "airlineAStore";
-  public static final String{*!:} airlineBStoreName = "airlineBStore";
-  public static final String{*!:} userStoreName = "userStore";
-  
-  public static final String{*!:} brokerWorkerName = "brokerStore";
-  public static final String{*!:} airlineAWorkerName = "airlineAStore";
-  public static final String{*!:} airlineBWorkerName = "airlineBStore";
-  public static final String{*!:} userWorkerName = "userStore";
+  public static final String{⊤←} brokerStoreName = "brokerStore";
+  public static final String{⊤←} airlineAStoreName = "airlineAStore";
+  public static final String{⊤←} airlineBStoreName = "airlineBStore";
+  public static final String{⊤←} userStoreName = "userStore";
+
+  public static final String{⊤←} brokerWorkerName = "brokerStore";
+  public static final String{⊤←} airlineAWorkerName = "airlineAStore";
+  public static final String{⊤←} airlineBWorkerName = "airlineBStore";
+  public static final String{⊤←} userWorkerName = "userStore";
 
   /**
    * The key for the airlineA server object in the root map.
    */
-  public static final String{*!:} airlineAServerName = "airlineAServer";
-  
+  public static final String{⊤←} airlineAServerName = "airlineAServer";
+
   /**
    * The key for the airlineB server object in the root map.
    */
-  public static final String{*!:} airlineBServerName = "airlineBServer";
-  
+  public static final String{⊤←} airlineBServerName = "airlineBServer";
+
   /**
    * The key for the user object in the root map.
    */
-  public static final String{*!:} userServerName = "userServer";
+  public static final String{⊤←} userServerName = "userServer";
 }

@@ -15,7 +15,7 @@ public final class AirlineMain extends AbstractServlet[AirlinePrincipal] {
   final Store{this}@{⊤→} localStore;
   final Store{this}@{⊤→} brokerstore;
   final principal{this}@{⊤→} broker;
-  
+
   public AirlineMain() throws ServletException {
     FabricWorker cl = FabricWorker.getWorker();
     Store lStore = null;
@@ -27,24 +27,26 @@ public final class AirlineMain extends AbstractServlet[AirlinePrincipal] {
 
     Map root = null;
     if (brokerstore != null) {
-        root = (Map) brokerstore.getRoot();
+      root = (Map) brokerstore.getRoot();
     }
     Broker[BankPrincipal, CustomerPrincipal] brokerInit = null;
     atomic {
+      // XXX: This atomic block should be unnecessary as long as we require
+      // constructors to be invoked within transactions.
       if (root != null) {
-	  Object obj = root.get(Config.brokerMapKey);
-	  if (obj instanceof Broker[BankPrincipal, CustomerPrincipal]) {
-	      brokerInit = (Broker[BankPrincipal, CustomerPrincipal])obj;
-	  }
+        Object obj = root.get(Config.brokerMapKey);
+        if (obj instanceof Broker[BankPrincipal, CustomerPrincipal]) {
+          brokerInit = (Broker[BankPrincipal, CustomerPrincipal])obj;
+        }
       }
     }
     broker = brokerInit;
     super();
   }
-    
+
   public void initialize{AirlinePrincipal→;AirlinePrincipal←}()
-      throws ServletException {
-      addStartAction(new FrontPage(this));
+    throws ServletException {
+    addStartAction(new FrontPage(this));
   }
 
   public String getPrivateHostID() throws ServletException {
@@ -54,14 +56,16 @@ public final class AirlineMain extends AbstractServlet[AirlinePrincipal] {
   protected String defaultActionName(Request[AirlinePrincipal] req) {
     return "frontpage";
   }
-  
+
   // TODO Provide default implementations for these 2 methods in Servlet.fab:
   // This method will only be called by the runtime
-  protected SessionState{*lbl} createSessionState{*lbl}(label{*lbl} lbl,
-      String{*lbl} id, SessionPrincipal{*lbl} session) {
+  protected SessionState{*lbl} createSessionState{*lbl}(
+      label{*lbl} lbl, String{*lbl} id, SessionPrincipal{*lbl} session) {
     atomic {
-      if (localStore != null && localStore equiv worker$ &&
-	  lbl <= new label {⊤→worker$} && new label {⊤←worker$} <= lbl) {
+      if (localStore != null
+          && localStore equiv worker$
+          && lbl <= new label {⊤→worker$}
+          && new label {⊤←worker$} <= lbl) {
 	return new AuthSessState@localStore(id, session);
       }
     }
@@ -69,7 +73,7 @@ public final class AirlineMain extends AbstractServlet[AirlinePrincipal] {
   }
 
   // This method will only be called by the runtime
-  // The id can have a bottom label, since it is a random number   
+  // The id can have a bottom label, since it is a random number
   protected SessionPrincipal createSessionPrincipal(String{⊥→;⊤←} id) {
     SessionPrincipal toReturn = null;
     atomic {
@@ -84,13 +88,11 @@ public final class AirlineMain extends AbstractServlet[AirlinePrincipal] {
    * Look up a User from a given user id
    */
   public principal{p→;p←;p} lookupUserID{p→; p←}(
-          String{p→; p←} userID,
-          principal{p→; p←} p)
-          where caller(p) {
-      if (userID == null) return null;
-      if (userID.equals("airline")) return AirlinePrincipal;
-      return null;
+      String{p→; p←} userID, principal{p→; p←} p)
+    where caller(p)
+  {
+    if (userID == null) return null;
+    if (userID.equals("airline")) return AirlinePrincipal;
+    return null;
   }
-    
 }
-

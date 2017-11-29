@@ -43,7 +43,7 @@ public class Meet extends AbstractPrincipal {
   ActsForProof {this; p; this←; p←;s}
   findProofUpto
   {          // side effects:
-    _→;this← // TODO
+    ⊥→;this← // TODO
   }
   (
     Store s,

@@ -3,60 +3,66 @@ package travel;
 import fabric.util.Map;
 
 public class Broker[principal bank, principal customer] extends AbstractPrincipal { // on broker worker (and store)
-    final Account[bank]{this←}@{this.store$->} customerAcct;
-    final Account[bank]{this←}@{this.store$->} airlineAcct;
-    final principal{this←}@{this.store$->} airline;
-    final Tickets[bank, airline, customer]{this←} custTickets;
+  final Account[bank]{this←}@{this.store$->} customerAcct;
+  final Account[bank]{this←}@{this.store$->} airlineAcct;
+  final principal{this←}@{this.store$->} airline;
+  final Tickets[bank, airline, customer]{this←} custTickets;
 
-    public boolean{bank->customerAcct.user; this←; bank<-; airline<-; customer←} coordinatePurchase{}(
-      float{BankPrincipal→AirlinePrincipal,CustomerPrincipal; CustomerPrincipal←; BankPrincipal←} amountArg) 
-          : {bank->customerAcct.user; this←; bank<-; airline<-}
-//        throws PurchasingError
-        where authority(this), endorse({this←}), this actsfor bank, this actsfor airline, 
-        customerAcct.user equiv CustomerPrincipal,
-        airlineAcct.user equiv AirlinePrincipal,        
-        bank equiv BankPrincipal {
-            // The broker trusts the value of the amount enough that it can influence the bank balance
-        float amount = endorse(amountArg,
-                {BankPrincipal→AirlinePrincipal,CustomerPrincipal; BankPrincipal←; CustomerPrincipal←} to
-                {BankPrincipal→AirlinePrincipal,CustomerPrincipal; this←});
-        
-        try {
-            final principal cust1 = customerAcct.user; // bank←
-            final principal cust2 = customer;
-            final principal airline_ = airlineAcct.user;
+  public boolean{bank->customerAcct.user; this←; bank<-; airline<-; customer←} coordinatePurchase{}(
+      float{BankPrincipal→AirlinePrincipal,CustomerPrincipal; CustomerPrincipal←; BankPrincipal←} amountArg
+    ):{bank->customerAcct.user; this←; bank<-; airline<-} //throws PurchasingError
+    where authority(this),
+          endorse({this←}),
+          this actsfor bank,
+          this actsfor airline,
+          customerAcct.user equiv CustomerPrincipal,
+          airlineAcct.user equiv AirlinePrincipal,
+          bank equiv BankPrincipal
+  {
+        // The broker trusts the value of the amount enough that it can influence the bank balance
+    float amount = endorse(amountArg,
+            {BankPrincipal→AirlinePrincipal,CustomerPrincipal; BankPrincipal←; CustomerPrincipal←} to
+            {BankPrincipal→AirlinePrincipal,CustomerPrincipal; this←});
 
-            FabricWorker cl = FabricWorker.getWorker();
-            final RemoteWorker bankWorker = cl.getWorker(Config.bankStoreName);
-            final RemoteWorker airlineWorker = cl.getWorker(Config.airlineStoreName);
-            boolean success = false;
-            if (bankWorker actsfor bank && airlineWorker actsfor airline && this actsfor airline) {
-                success = true;
-                atomic {
-                    success = customerAcct.debit@bankWorker(amount) && success;   // @wBank
-                    success = airlineAcct.credit@bankWorker(amount) && success;   // @wBank
-                    success = custTickets.incTickets@airlineWorker() && success;  // @wAirline
-                }
-            }
+    try {
+      final principal cust1 = customerAcct.user; // bank←
+      final principal cust2 = customer;
+      final principal airline_ = airlineAcct.user;
 
-            // TODO Ideally when the transaction is not successful, it should be rolled back.
-            // Support for it is still in the works.
-//            if (!success) throw new PurchasingError();
-            return success;
-        } catch (NullPointerException e) {
-//            throw new PurchasingError();
-            return false;
+      FabricWorker cl = FabricWorker.getWorker();
+      final RemoteWorker bankWorker = cl.getWorker(Config.bankStoreName);
+      final RemoteWorker airlineWorker = cl.getWorker(Config.airlineStoreName);
+      boolean success = false;
+      if (bankWorker actsfor bank
+          && airlineWorker actsfor airline
+          && this actsfor airline) {
+        success = true;
+        atomic {
+          success = customerAcct.debit@bankWorker(amount) && success;   // @wBank
+          success = airlineAcct.credit@bankWorker(amount) && success;   // @wBank
+          success = custTickets.incTickets@airlineWorker() && success;  // @wAirline
         }
-    }
+      }
 
-    Broker{this←}(Account[bank]{this←} ca,
-            Account[bank]{this←} aa,
-            Tickets[bank, airline_, customer]{this←} tick,
-            principal{this←} airline_) {
-        customerAcct = ca;
-        airlineAcct = aa;
-        custTickets = tick;
-        airline = airline_;
-        super("broker");
+      // TODO Ideally when the transaction is not successful, it should be rolled back.
+      // Support for it is still in the works.
+      // if (!success) throw new PurchasingError();
+      return success;
+    } catch (NullPointerException e) {
+      // throw new PurchasingError();
+      return false;
     }
+  }
+
+  Broker{this←}(
+      Account[bank]{this←} ca,
+      Account[bank]{this←} aa,
+      Tickets[bank, airline_, customer]{this←} tick,
+      principal{this←} airline_) {
+    customerAcct = ca;
+    airlineAcct = aa;
+    custTickets = tick;
+    airline = airline_;
+    super("broker");
+  }
 }

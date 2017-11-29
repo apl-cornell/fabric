@@ -15,7 +15,7 @@ public final class BankMain extends AbstractServlet[BankPrincipal] {
   final Store{this}@{⊤→} localStore;
   final Store{this}@{⊤→} brokerstore;
   final principal{this}@{⊤→} broker;
-  
+
   public BankMain() throws ServletException {
     FabricWorker cl = FabricWorker.getWorker();
     Store lStore = null;
@@ -27,25 +27,26 @@ public final class BankMain extends AbstractServlet[BankPrincipal] {
 
     Map root = null;
     if (brokerstore != null) {
-        root = (Map) brokerstore.getRoot();
+      root = (Map) brokerstore.getRoot();
     }
+
     Broker[BankPrincipal, CustomerPrincipal] brokerInit = null;
     atomic {
       if (root != null) {
-	  Object obj = root.get(Config.brokerMapKey);
-	  if (obj instanceof Broker[BankPrincipal, CustomerPrincipal]) {
-	      brokerInit = (Broker[BankPrincipal, CustomerPrincipal])obj;
-	  }
+        Object obj = root.get(Config.brokerMapKey);
+        if (obj instanceof Broker[BankPrincipal, CustomerPrincipal]) {
+          brokerInit = (Broker[BankPrincipal, CustomerPrincipal])obj;
+        }
       }
     }
+
     broker = brokerInit;
     super();
-    
   }
-    
-  public void initialize{BankPrincipal:;BankPrincipal!:}()
-      throws ServletException {
-      addStartAction(new FrontPage(this));
+
+  public void initialize{BankPrincipal→;BankPrincipal←}()
+    throws ServletException {
+    addStartAction(new FrontPage(this));
   }
 
   public String getPrivateHostID() throws ServletException {
@@ -55,28 +56,29 @@ public final class BankMain extends AbstractServlet[BankPrincipal] {
   protected String defaultActionName(Request[BankPrincipal] req) {
     return "frontpage";
   }
-  
-  // TODO Provide default implementations for these 2 methods in Servlet.fab:
+
+  // TODO Provide default implementations for these 2 methods in Servlet.fab→
   // This method will only be called by the runtime
-  protected SessionState{*lbl} createSessionState{*lbl}(label{*lbl} lbl,
-      String{*lbl} id, SessionPrincipal{*lbl} session) {
-    AuthSessState toReturn = null;
+  protected SessionState{*lbl} createSessionState{*lbl}(
+      label{*lbl} lbl, String{*lbl} id, SessionPrincipal{*lbl} session) {
     atomic {
-      if (localStore != null && localStore equiv worker$ &&
-	  lbl <= new label {⊤→worker$} && new label {⊤←worker$} <= lbl) {
-	return new AuthSessState@localStore(id, session);
+      if (localStore != null
+          && localStore equiv worker$
+          && lbl <= new label {⊤→worker$}
+          && new label {⊤←worker$} <= lbl) {
+        return new AuthSessState@localStore(id, session);
       }
     }
     return null;
   }
-  
+
   // This method will only be called by the runtime
-  // The id can have a bottom label, since it is a random number 
-  // that was just created  
+  // The id can have a bottom label, since it is a random number
+  // that was just created
   protected SessionPrincipal createSessionPrincipal(String{⊥→;⊤←} id) {
     atomic {
       if (brokerstore != null) {
-	return new SessionPrincipal@brokerstore(id);
+        return new SessionPrincipal@brokerstore(id);
       }
     }
     return null;
@@ -85,14 +87,12 @@ public final class BankMain extends AbstractServlet[BankPrincipal] {
   /**
    * Look up a User from a given user id
    */
-  public principal{p:;p!:;p} lookupUserID{p:; p!:}(
-          String{p:; p!:} userID,
-          principal{p:; p!:} p)
-          where caller(p) {
-      if (userID == null) return null;
-      if (userID.equals("bank")) return BankPrincipal;
-      return null;
+  public principal{p→;p←;p} lookupUserID{p→; p←}(
+      String{p→; p←} userID, principal{p→; p←} p)
+    where caller(p)
+  {
+    if (userID == null) return null;
+    if (userID.equals("bank")) return BankPrincipal;
+    return null;
   }
-  
 }
-

@@ -16,32 +16,33 @@ where
   snapp.User.provider <= snapp.Location.provider,
   snapp.Location.provider <= snapp.User.provider
 {
-  public static void main {*←} (String[] args) {
+  public static void main{⊤←}(String[] args) {
     atomic {
       final Store store = worker$.getStore("snapp");
       final Snapp sn = (Snapp) store.getRoot().get("snapp");
 
       if (store actsfor sn
-      &&  sn.store$ equiv store
-      &&  snapp.Snapp.provider <= new label {*←sn}@store
-      ) {
+          && sn.store$ equiv store
+          && snapp.Snapp.provider <= new label {⊤←sn}@store) {
 
         final User[worker$,sn]  userAlice = sn.createUser("Alice", worker$);
 
-        if (userAlice.p equiv new principal@store (worker$,sn)
-        ) {
+        if (userAlice.p equiv new principal@store (worker$,sn)) {
           // We get a stack overflow error here at runtime.
-          final UserWrapper[{*→sn}] aw = new UserWrapper[{*→sn}]@store(store, worker$, sn, userAlice);
+          final UserWrapper[{⊤→sn}] aw = new UserWrapper[{⊤→sn}]@store(store, worker$, sn, userAlice);
           store.getRoot().put("alice", aw);
 
           final MapServer serv = (MapServer) store.getRoot().get("mapserv");
           userAlice.locationInfo.add(serv);
-   
-        } else throw new AssertionFailedError("userAlice.p equiv (alice worker, snapp)");
-      } else throw new AssertionFailedError("store actsfor snapp");
+
+        } else {
+          throw new AssertionFailedError("userAlice.p equiv (alice worker, snapp)");
+        }
+      } else {
+        throw new AssertionFailedError("store actsfor snapp");
+      }
     }
   }
-
 }
 
 

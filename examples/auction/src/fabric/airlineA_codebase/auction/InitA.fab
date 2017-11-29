@@ -1,17 +1,19 @@
 package auction;
+
 import fabric.util.Map;
 import fabric.runtime.Runtime;
-public class InitA where {*provider} equiv {*airlineA.Server.provider},
-                        {*airlineA.Server.provider} equiv {*airlineA.Agent.provider}, 
-                        {*broker.Server.provider} equiv {*broker.Agent.provider},
-                        {*broker.Server.provider} <= {*airlineA.Server.provider}
+
+public class InitA
+  where {*provider} equiv {*airlineA.Server.provider},
+        {*airlineA.Server.provider} equiv {*airlineA.Agent.provider},
+        {*broker.Server.provider} equiv {*broker.Agent.provider},
+        {*broker.Server.provider} <= {*airlineA.Server.provider}
 {
-  public static final void main{* <- }  (principal{*provider} p, String[] args):{p<-;p->}
-    throws SecurityException,
-           IllegalArgumentException  
+  public static final void main{⊤←}(principal{*provider} p, String[] args):{p←;p→}
+    throws SecurityException, IllegalArgumentException
     where caller(p),
           provider actsfor p,
-          {*provider} <= {p<-}
+          {*provider} <= {p←}
   {
     // already in transaction due to method constraints
 
@@ -19,15 +21,21 @@ public class InitA where {*provider} equiv {*airlineA.Server.provider},
     final principal w = worker$.getPrincipal();
     if (store actsfor p) {
       if (store actsfor w) {
-        if (airlineA.Server.provider <= new label {store<-}) {
+        if (airlineA.Server.provider <= new label {store←}) {
           Map root = store.getRoot();
           root.put(Config.airlineAServerName, new airlineA.Server[w]@store(13500, 100));
-        } else { throw new Error("provider label !<= {store<-}"); }
-      } else   { throw new Error(store.name() + " doesn't act for " + worker$.getName()); }
-    } else     { throw new Error(store.name() + " does not act for caller"); }
+        } else {
+          throw new Error("provider label !<= {store←}");
+        }
+      } else {
+        throw new Error(store.name() + " doesn't act for " + worker$.getName());
+      }
+    } else {
+      throw new Error(store.name() + " does not act for caller");
+    }
   }
 }
 
 /*
-** vim:ts=2 sw=2 et cindent cino=\:0
-*/
+ * vim:ts=2 sw=2 et cindent cino=\:0
+ */

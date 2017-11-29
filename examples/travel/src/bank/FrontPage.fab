@@ -9,91 +9,116 @@ import sif.servlet.HTMLRequest;
 import sif.servlet.Servlet;
 import fabric.util.Map;
 
-
 import travel.Broker;
 import travel.Config;
 import travel.Account;
 
 import login.*;
 
-
 public class FrontPage extends AuthenticatedAction[BankPrincipal] authority (BankPrincipal) {
-    public FrontPage(BankMain{this} m) throws ServletException {
-        super("frontpage", m);
+  public FrontPage(BankMain{this} m) throws ServletException {
+    super("frontpage", m);
+  }
+
+  public final void invokeImpl{*lbl}(
+      label{*lbl} lbl,
+      Request[BankPrincipal]{*lbl} _req,
+      HTMLAuthServlet[BankPrincipal]{*lbl} servlet,
+      AuthSessState{*lbl} state,
+      principal{*lbl} currentUser)
+    throws (ServletException{*lbl;_req.session←})
+    where caller(_req.session),
+          lbl <= {⊤→_req.session},
+          _req.session equiv state.sessionPrincipal,
+          _req.session actsfor currentUser
+  {
+    if (servlet == null || !(servlet instanceof BankMain)) {
+      throw new ServletException("No servlet available");
     }
+    if (_req == null || state == null || currentUser == null) {
+      throw new ServletException("Error processing request");
+    }
+    BankMain m = (BankMain) servlet;
+    final HTMLRequest req = (HTMLRequest) _req;
 
-    public final void invokeImpl{*lbl}(label{*lbl} lbl,
-            Request[BankPrincipal]{*lbl} _req,
-            HTMLAuthServlet[BankPrincipal]{*lbl} servlet,
-            AuthSessState{*lbl} state,
-            principal{*lbl} currentUser) 
-            throws (ServletException{*lbl;_req.session←})
-            where caller(_req.session),
-            lbl <= {⊤→_req.session},
-            _req.session equiv state.sessionPrincipal,
-            _req.session actsfor currentUser {
-
-        if (servlet == null || !(servlet instanceof BankMain)) throw new ServletException("No servlet available"); 
-        if (_req == null || state == null || currentUser == null) throw new ServletException("Error processing request"); 
-        BankMain m = (BankMain)servlet;
-        final HTMLRequest req = (HTMLRequest) _req;
-        atomic {
-            // Display the front page only for the bank principal
-            if (currentUser equiv BankPrincipal
-                && lbl <= new label {BankPrincipal->}) {
-                FabricWorker w = worker$;
-                if (w == null) throw new ServletException("Internal Error");
-                final Store store = worker$.getStore(Config.bankStoreName);
-                Map root = null;
-                if (store != null) {
-                    root = (Map) store.getRoot();
-                }
-                if (root == null) throw new ServletException("Bank Store not accessible");
-
-                Account[BankPrincipal] airlineAccount_ = null,customerAccount_ = null;
-
-                Object aobj = root.get(Config.airlineAccountKey);
-                Object cobj = root.get(Config.customerAccountKey);
-                if (aobj instanceof Account[BankPrincipal] && cobj instanceof Account[BankPrincipal]) {
-                    airlineAccount_ = (Account[BankPrincipal])aobj;
-                    customerAccount_ = (Account[BankPrincipal])cobj;
-                }
-                final Account[BankPrincipal] airlineAccount = airlineAccount_,customerAccount = customerAccount_;
-                if (airlineAccount == null || customerAccount == null)
-                    throw new ServletException("Could not fetch bank information base");
-
-                // Display the account balances of all accounts maintained by the bank
-
-                final label bp = new label {BankPrincipal←};
-                final label lblc = new label {BankPrincipal→CustomerPrincipal; BankPrincipal←};
-                final label lbla = new label {BankPrincipal→AirlinePrincipal; BankPrincipal←};
-                final label lblca = new label {BankPrincipal→AirlinePrincipal; BankPrincipal→AirlinePrincipal; BankPrincipal←};
-                if (lbl <= bp && lblc <= lblca && 
-                        lbla <= lblca && 
-                        req.session actsfor BankPrincipal &&
-                        airlineAccount.user equiv AirlinePrincipal &&
-                        customerAccount.user equiv CustomerPrincipal) {
-                    Text msg = new Text[bp,bp]("The following are the accounts maintained by the Acme Bank");
-                    // Must endorse name of principals since they only have the 
-                    // integrity of the principals themselves.
-                    String{*bp} aName = endorse(airlineAccount.name(), {*bp});
-                    String{*bp} cName = endorse(customerAccount.name(), {*bp});
-                    Text name1 = new Text(aName);
-                    Text name2 = new Text(cName);
-                    Text value1 = new Text[lbla,bp](Float.toString(airlineAccount.balance()));
-                    Text value2 = new Text[lblc,bp](Float.toString(customerAccount.balance()));
-                    NodeList[lblca, bp] entries = NodeList.EMPTY();
-                    entries = entries==null?null:entries.append(bp, bp, 
-                            new TRow[bp, bp](new TCell[bp, bp](msg)));
-                    entries = entries==null?null:entries.append(new TRow[lbla, bp](new TCell[lbla, bp]
-                                                                                              (new NodeList[lbla,bp](name1,value1))));
-                    entries = entries==null?null:entries.append(lblc, bp, new TRow[lblc, bp](new TCell[lblc, bp]
-                                                                                                         (new NodeList[lblc,bp](name2,value2))));
-                    m.createPage(req, "Bank Home Page", lblca, bp,
-                            new NodeList[lblca,bp](bp, bp, createBanner(bp, "Welcome to the Acme Bank System"),
-                                    lblca, bp, new Table[lblca, bp](entries)));
-                }
-            }
+    atomic {
+      // Display the front page only for the bank principal
+      if (currentUser equiv BankPrincipal
+          && lbl <= new label {BankPrincipal->}) {
+        FabricWorker w = worker$;
+        if (w == null) {
+          throw new ServletException("Internal Error");
         }
+
+        final Store store = worker$.getStore(Config.bankStoreName);
+        Map root = null;
+        if (store != null) {
+            root = (Map) store.getRoot();
+        }
+        if (root == null) {
+          throw new ServletException("Bank Store not accessible");
+        }
+
+        Account[BankPrincipal] airlineAccount_ = null;
+        Account[BankPrincipal] customerAccount_ = null;
+        Object aobj = root.get(Config.airlineAccountKey);
+        Object cobj = root.get(Config.customerAccountKey);
+        if (aobj instanceof Account[BankPrincipal] && cobj instanceof Account[BankPrincipal]) {
+          airlineAccount_ = (Account[BankPrincipal]) aobj;
+          customerAccount_ = (Account[BankPrincipal]) cobj;
+        }
+        final Account[BankPrincipal] airlineAccount = airlineAccount_;
+        final Account[BankPrincipal] customerAccount = customerAccount_;
+        if (airlineAccount == null || customerAccount == null) {
+            throw new ServletException("Could not fetch bank information base");
+        }
+
+        // Display the account balances of all accounts maintained by the bank
+        final label bp = new label {BankPrincipal←};
+        final label lblc = new label {BankPrincipal→CustomerPrincipal; BankPrincipal←};
+        final label lbla = new label {BankPrincipal→AirlinePrincipal; BankPrincipal←};
+        final label lblca = new label {BankPrincipal→AirlinePrincipal; BankPrincipal→AirlinePrincipal; BankPrincipal←};
+        if (lbl <= bp
+            && lblc <= lblca
+            && lbla <= lblca
+            && req.session actsfor BankPrincipal
+            && airlineAccount.user equiv AirlinePrincipal
+            && customerAccount.user equiv CustomerPrincipal) {
+          Text msg = new Text[bp, bp]("The following are the accounts maintained by the Acme Bank");
+          // Must endorse name of principals since they only have the
+          // integrity of the principals themselves.
+          String{*bp} aName = endorse(airlineAccount.name(), {*bp});
+          String{*bp} cName = endorse(customerAccount.name(), {*bp});
+          Text name1 = new Text(aName);
+          Text name2 = new Text(cName);
+          Text value1 = new Text[lbla, bp](Float.toString(airlineAccount.balance()));
+          Text value2 = new Text[lblc, bp](Float.toString(customerAccount.balance()));
+
+          NodeList[lblca, bp] entries = NodeList.EMPTY();
+
+          entries = entries == null ? null :
+            entries.append(bp, bp,
+                  new TRow[bp, bp](
+                    new TCell[bp, bp](msg)));
+
+          entries = entries == null ? null :
+            entries.append(
+                new TRow[lbla, bp](
+                  new TCell[lbla, bp](
+                    new NodeList[lbla, bp](name1, value1))));
+
+          entries = entries == null ? null :
+            entries.append(lblc, bp,
+                new TRow[lblc, bp](
+                  new TCell[lblc, bp](
+                    new NodeList[lblc, bp](name2, value2))));
+
+          m.createPage(req, "Bank Home Page", lblca, bp,
+              new NodeList[lblca, bp](bp, bp,
+                createBanner(bp, "Welcome to the Acme Bank System"),
+                lblca, bp, new Table[lblca, bp](entries)));
+        }
+      }
     }
+  }
 }

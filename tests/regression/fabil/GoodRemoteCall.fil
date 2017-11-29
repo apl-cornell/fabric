@@ -1,0 +1,25 @@
+public class GoodRemoteCall {
+  public GoodRemoteCall GoodRemoteCall$() {
+    fabric$lang$Object$();
+    return this;
+  }
+
+  public int m() {
+    return 0;
+  }
+
+  public int m_remote(fabric.lang.security.Principal p) {
+    atomic {
+      return m();
+    }
+  }
+
+  public static void main(String[] args) {
+    GoodRemoteCall t = new GoodRemoteCall().GoodRemoteCall$();
+    t.m();
+    RemoteWorker w = null;
+    // This is correct, it's calling _remote, which gets rewritten to invoke on
+    // the remote worker.
+    t.m_remote@w(null);
+  }
+}

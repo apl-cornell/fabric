@@ -11,17 +11,13 @@ public class Util {
    * @throws NullPointerException
    *         if data is null
    */
-  public static char[] copyArray(
-    final char[] data,
-    final Label l,
-    final Label m,
-    final Store s
-  ) throws NullPointerException {
+  public static char[] copyArray(final char[] data, final Label l, final Label m, final Store s) throws NullPointerException {
     final char[] result = new char[data.length]@s;
 
     try {
-      for (int i = 0; i < data.length; i++)
+      for (int i = 0; i < data.length; i++) {
         result[i] = data[i];
+      }
     } catch (final ArrayIndexOutOfBoundsException e) {
       throw new AssertionFailedError().util$AssertionFailedError$("result and data have the same length.");
     }

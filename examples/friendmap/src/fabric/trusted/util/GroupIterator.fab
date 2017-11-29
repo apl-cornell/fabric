@@ -5,8 +5,8 @@ package util;
 
 public class GroupIterator[principal owner, label L]
 where
-  {*←owner} <= L,
-  provider <= {*←owner}
+  {⊤←owner} <= L,
+  provider <= {⊤←owner}
 {
 
   private final Group[owner] {L} g;

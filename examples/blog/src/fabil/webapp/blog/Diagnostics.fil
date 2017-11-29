@@ -14,25 +14,25 @@ public class Diagnostics {
   private static LocalStore localStore;
   private static Store store;
   private static Label currentLabel;
-  
+
   public static LocalStore getLocalStore() {
     return localStore;
   }
-  
+
   public static Store getStore() {
     return store;
   }
-  
+
   public static Label getCurrentLabel() {
     return currentLabel;
   }
-  
+
   public static void initializeFabric() {
     localStore = Worker.getWorker().getLocalStore();
     store = Worker.getWorker().getStore(System.getProperty("blog.store", "blog-store"));
     currentLabel = localStore.getEmptyLabel();
   }
-  
+
   public static void createDatabase() throws TransactionFailure {
     long start = 0;
     atomic {
@@ -52,7 +52,7 @@ public class Diagnostics {
       start = System.currentTimeMillis();
     }
     Statistics.getInstance().addTransaction(System.currentTimeMillis() - start);
-    
+
   }
 
   private static String duplicateString(String msg, int n) {

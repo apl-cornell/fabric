@@ -9,10 +9,10 @@ where
   mapserv.MapServer.provider <= mapserv.Box.provider,           mapserv.Box.provider <= mapserv.MapServer.provider,
   mapserv.MapServer.provider <= mapserv.MapImage.provider, mapserv.MapImage.provider <= mapserv.MapServer.provider
 {
-  public static void main {*←} (String[] args) {
+  public static void main {⊤←} (String[] args) {
     atomic {
       final Store     store  = worker$.getStore("mapserv");
-      if (MapServer.provider <= new label {*←store}) {
+      if (MapServer.provider <= new label {⊤←store}) {
 
         final MapServer server = new MapServer@store("Map Server Object", '.');
         worker$.getStore("snapp").getRoot().put("mapserv", server);

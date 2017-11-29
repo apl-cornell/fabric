@@ -5,52 +5,47 @@ import fabric.runtime.Runtime;
 import fabric.util.Map;
 
 public class Main {
-    public Main() {
-        
-    }
-    public static boolean{BankPrincipal→CustomerPrincipal;broker←;BankPrincipal←;AirlinePrincipal←;CustomerPrincipal←}
-    startTxImpl{CustomerPrincipal←; BankPrincipal←}(
-          float{BankPrincipal→AirlinePrincipal,CustomerPrincipal; CustomerPrincipal←; BankPrincipal←} amount,
-          Broker[BankPrincipal, CustomerPrincipal]{CustomerPrincipal←; BankPrincipal←} broker,
-          RemoteWorker{CustomerPrincipal←; BankPrincipal←} bworker)
-    where broker actsfor BankPrincipal,
-          broker actsfor broker.airline,
-          broker.airlineAcct.user equiv AirlinePrincipal,
-          broker.customerAcct.user equiv CustomerPrincipal,
-          broker.airline equiv AirlinePrincipal
-    {
-      boolean returnBool = false;
+  public Main() { }
 
-      atomic {
-          if (broker != null && bworker actsfor BankPrincipal && bworker actsfor broker) {
-              returnBool = broker.coordinatePurchase@bworker(amount);
-          }
+  public static boolean{BankPrincipal→CustomerPrincipal;broker←;BankPrincipal←;AirlinePrincipal←;CustomerPrincipal←}
+  startTxImpl{CustomerPrincipal←; BankPrincipal←}(
+      float{BankPrincipal→AirlinePrincipal,CustomerPrincipal; CustomerPrincipal←; BankPrincipal←} amount,
+      Broker[BankPrincipal, CustomerPrincipal]{CustomerPrincipal←; BankPrincipal←} broker,
+      RemoteWorker{CustomerPrincipal←; BankPrincipal←} bworker)
+  where broker actsfor BankPrincipal,
+        broker actsfor broker.airline,
+        broker.airlineAcct.user equiv AirlinePrincipal,
+        broker.customerAcct.user equiv CustomerPrincipal,
+        broker.airline equiv AirlinePrincipal
+  {
+    boolean returnBool = false;
+    atomic {
+      if (broker != null && bworker actsfor BankPrincipal && bworker actsfor broker) {
+        returnBool = broker.coordinatePurchase@bworker(amount);
       }
-        
-      return returnBool;
     }
-    
-    public static boolean{BankPrincipal→CustomerPrincipal;broker←;BankPrincipal←;AirlinePrincipal←;CustomerPrincipal←}
-    startTx{CustomerPrincipal←}(
-          float{BankPrincipal→AirlinePrincipal,CustomerPrincipal; CustomerPrincipal←} amount,
-          Broker[BankPrincipal, CustomerPrincipal]{CustomerPrincipal←} broker,
-          RemoteWorker{CustomerPrincipal←} bworker) {
+    return returnBool;
+  }
 
-        boolean returnBool = false;
-        if (broker != null 
-                && broker actsfor BankPrincipal 
-                && broker actsfor broker.airline
-                && broker.airlineAcct != null
-                && broker.airlineAcct.user equiv AirlinePrincipal
-                && broker.customerAcct != null
-                && broker.customerAcct.user equiv CustomerPrincipal
-                && broker.airline equiv AirlinePrincipal
-                && broker actsfor CustomerPrincipal) {
-            returnBool = startTxImpl(amount, broker, bworker);
-        } else {
-            returnBool = false;
-        }
-        return returnBool;
+  public static boolean{BankPrincipal→CustomerPrincipal;broker←;BankPrincipal←;AirlinePrincipal←;CustomerPrincipal←}
+  startTx{CustomerPrincipal←}(
+      float{BankPrincipal→AirlinePrincipal,CustomerPrincipal; CustomerPrincipal←} amount,
+      Broker[BankPrincipal, CustomerPrincipal]{CustomerPrincipal←} broker,
+      RemoteWorker{CustomerPrincipal←} bworker) {
+    boolean returnBool = false;
+    if (broker != null
+        && broker actsfor BankPrincipal
+        && broker actsfor broker.airline
+        && broker.airlineAcct != null
+        && broker.airlineAcct.user equiv AirlinePrincipal
+        && broker.customerAcct != null
+        && broker.customerAcct.user equiv CustomerPrincipal
+        && broker.airline equiv AirlinePrincipal
+        && broker actsfor CustomerPrincipal) {
+      returnBool = startTxImpl(amount, broker, bworker);
+    } else {
+      returnBool = false;
     }
-    
+    return returnBool;
+  }
 }

@@ -9,22 +9,22 @@ where
   // Code in Init is completely public.
   provider <= {},
 
-  util.Group.provider         <= {*←},
-  util.GroupIterator.provider <= {*←},
+  util.Group.provider         <= {⊤←},
+  util.GroupIterator.provider <= {⊤←},
 
   FriendMap.provider <= {},
 
   mapserv.MapServer.provider <= mapserv.Box.provider,           mapserv.Box.provider <= mapserv.MapServer.provider,
   mapserv.MapServer.provider <= mapserv.MapImage.provider, mapserv.MapImage.provider <= mapserv.MapServer.provider
 {
-  public static void main {*←} (String[] args) {
+  public static void main {⊤←} (String[] args) {
     atomic {
       final Store     fmStore = worker$.getStore("friendmap");
       final Store     store   = worker$.getStore("snapp");
 
       final MapServer mapserver = (MapServer) store.getRoot().get("mapserv");
 
-      final FriendMap[{*→fmStore}] app = new FriendMap[{*→fmStore}]{}@fmStore (mapserver);
+      final FriendMap[{⊤→fmStore}] app = new FriendMap[{⊤→fmStore}]{}@fmStore (mapserver);
 
       store.getRoot().put("friendmap", app);
     }

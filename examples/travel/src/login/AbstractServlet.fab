@@ -5,18 +5,13 @@ import sif.servlet.Request;
 
 import javax.servlet.ServletException;
 
-
 public abstract class AbstractServlet[principal servP] extends HTMLAuthServlet[servP] {
-    
-    public AbstractServlet() throws ServletException {
-        
-    }
-    
-    public abstract principal{p:;p!:;p} lookupUserID{p:; p!:}(
-            String{p:; p!:} userID,
-            principal{p:; p!:} p)
-            where caller(p);
-    
-    protected abstract String defaultActionName(Request[servP] req);
-    
+
+  public AbstractServlet() throws ServletException { }
+
+  public abstract principal{p→;p←;p} lookupUserID{p→; p←}(
+      String{p→; p←} userID, principal{p→; p←} p)
+    where caller(p);
+
+  protected abstract String defaultActionName(Request[servP] req);
 }

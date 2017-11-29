@@ -55,18 +55,22 @@ where
     {*provider;*MapImage.provider;location;friend;map} <= map_update,
     {*provider;*MapImage.provider;location;friend;map} <= map_access
   {
-    if (map == null || friend == null || location == null)
+    if (map == null || friend == null || location == null) {
       throw new NullPointerException("59");
+    }
 
     char annotation = 'f';
 
-    if (friend instanceof snapp2.User)
-    {
+    if (friend instanceof snapp2.User) {
       final snapp2.User friend2 = (snapp2.User) friend;
       if (friendV2.moodLabel <= map_update) {
-        try { annotation = friendV2.mood.description.charAt(0); }
-        catch (final NullPointerException e)            { /* Do nothing */ }
-        catch (final StringIndexOutOfBoundsException e) { /* Do nothing */ }
+        try {
+          annotation = friendV2.mood.description.charAt(0);
+        } catch (final NullPointerException e) {
+          /* Do nothing */
+        } catch (final StringIndexOutOfBoundsException e) {
+          /* Do nothing */
+        }
       }
     }
 

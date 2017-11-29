@@ -5,28 +5,27 @@ import sif.servlet.SessionPrincipal;
 import fabricated.util.*;
 
 public class AuthSessState extends SessionState {
-    principal{sessionPrincipal←}@{⊤→this.store$} currentUser = null;
-    
-    public AuthSessState(String{this} id, SessionPrincipal{this} session) {
-    	super(id, session);
+  principal{sessionPrincipal←}@{⊤→this.store$} currentUser = null;
+
+  public AuthSessState(String{this} id, SessionPrincipal{this} session) {
+    super(id, session);
+  }
+
+  public AuthSessState{sp←}(
+      final SessionPrincipal{this} sp,
+      String{this} si,
+      principal{sp←} cu) {
+    super(si, sp);
+    if (sp equiv sessionPrincipal) {
+      this.currentUser = cu;
     }
-    
-    public AuthSessState{sp←}(final SessionPrincipal{this} sp,
-            String{this} si,
-            principal{sp←} cu) {
-    	super(si, sp);
-    	if (sp equiv sessionPrincipal) {
-    	    this.currentUser = cu;
-    	}
-    }
-    
-    public principal{this;sessionPrincipal←} currentUser{this}() {
-        return currentUser;
-    }
-    
-    void currentUser{sessionPrincipal←}(principal{sessionPrincipal!:} cu) 
-    {
-        this.currentUser = cu;
-    }
-    
+  }
+
+  public principal{this;sessionPrincipal←} currentUser{this}() {
+    return currentUser;
+  }
+
+  void currentUser{sessionPrincipal←}(principal{sessionPrincipal←} cu) {
+    this.currentUser = cu;
+  }
 }

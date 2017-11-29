@@ -17,14 +17,14 @@ package util;
 public class Group[principal groupOwner, label A]
 extends Delegator
 where
-  provider               <= {*←groupOwner},
-  GroupIterator.provider <= {*←groupOwner},
+  provider               <= {⊤←groupOwner},
+  GroupIterator.provider <= {⊤←groupOwner},
 
   // general access label invariants:
-  {*←groupOwner} <= A
+  {⊤←groupOwner} <= A
 {
 
-  private int {*←groupOwner}@{A} accessLabelKludge; 
+  private int {⊤←groupOwner}@{A} accessLabelKludge;
 
   //////////////////////////////////////////////////////////////////////////////
   // Group constructors                                                       //
@@ -51,7 +51,7 @@ where
   Group
   {           // side effects:
     {this} ⊓  // fields are updated
-    {*→store$} // objects are created at store
+    {⊤→store$} // objects are created at store
   }
   (
     final String {this} name,
@@ -75,12 +75,12 @@ where
   void
   add
   {                // side effects:
-    {*←groupOwner} // members set is updated
+    {⊤←groupOwner} // members set is updated
   }
   (
-    Principal{*←groupOwner} p
+    Principal{⊤←groupOwner} p
   )
-  :{*←groupOwner}
+  :{⊤←groupOwner}
   throws
     ArrayIndexOutOfBoundsException;
 
@@ -92,10 +92,10 @@ where
   void
   remove
   {                // side effects:
-    {*←groupOwner} // members set is updated
+    {⊤←groupOwner} // members set is updated
   }
   (
-    Principal{*←groupOwner} p
+    Principal{⊤←groupOwner} p
   );
 
   /**
@@ -136,7 +136,7 @@ where
   ActsForProof {this; p; this←; p←;s} // TODO
   findProofUpto
   {            // side effects:
-    *→s;*←this // TODO
+    ⊤→s;⊤←this // TODO
   }
   (
     Store s,
@@ -164,7 +164,7 @@ where
     this→;this← // TODO
   }
   (
-    principal{this:;this!:} p
+    principal{this→;this←} p
   )
   where
     caller (this);

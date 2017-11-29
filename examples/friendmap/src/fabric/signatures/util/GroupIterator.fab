@@ -5,8 +5,8 @@ package util;
 
 public class GroupIterator[principal owner, label L, label A]
 where
-  {*←owner} <= L,
-  provider  <= {*←owner}
+  {⊤←owner} <= L,
+  provider  <= {⊤←owner}
 {
 
   private int {} @ {A} accessLabelKludge;

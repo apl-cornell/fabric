@@ -2,6 +2,8 @@ package fabric.ast;
 
 import java.util.List;
 
+import fabric.types.FabricTypeSystem;
+
 import polyglot.ast.ArrayInit_c;
 import polyglot.ast.Expr;
 import polyglot.ast.Ext;
@@ -11,7 +13,6 @@ import polyglot.types.Type;
 import polyglot.types.TypeSystem;
 import polyglot.util.Position;
 import polyglot.visit.NodeVisitor;
-import fabric.types.FabricTypeSystem;
 
 //XXX Should be replaced with extension
 @Deprecated
@@ -40,6 +41,7 @@ public class FabricArrayInit_c extends ArrayInit_c implements FabricArrayInit {
     return (FabricArrayInit) super.elements(elements);
   }
 
+  @Override
   public Expr location() {
     return location;
   }
@@ -56,6 +58,7 @@ public class FabricArrayInit_c extends ArrayInit_c implements FabricArrayInit {
     return n;
   }
 
+  @Override
   public Expr label() {
     return label;
   }

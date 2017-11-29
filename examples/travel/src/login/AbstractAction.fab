@@ -5,57 +5,63 @@ import sif.servlet.*;
 import sif.html.*;
 
 abstract public class AbstractAction[principal servP] extends Action[servP] {
-    /**
-     * Utility method to create a Table with class "banner" and containing
-     * the specified text.
-     */
-    protected Node[lbl, lbl]{lbl} createBanner{*lbl}(label{*lbl} lbl, String{*lbl} text) {
-        return new Table[lbl, lbl]("banner", 
-                lbl, lbl, lbl, lbl,
-                new TRow[lbl, lbl](lbl, lbl, 
-                        new TCell[lbl, lbl](
-                                lbl, lbl, new Header[lbl, lbl](1, lbl, lbl, new Text[lbl, lbl](text)))),
-                                null);
-    }
-    /**
-     * Utility method to create a Table with class "sifbody" and containing
-     * the node
-     */
-    protected Node[cL, cE]{*cE} createBody{*cE}(label{*cE} cL, label{*cE} cE, Node[cL, cE]{*cE} body) where {*cE} <= {*cL} {
-       return new Table[cL, cE]("sifbody", 
-               cL, cE, cL, cE,
-               new TRow[cL, cE](cL, cE, 
-                       new TCell[cL, cE](cL, cE, body)),
-                       null);
-    }
-                          
-    /**
-     * Utility method to create a Table with class "sifbody" and containing
-     * the node
-     */
-//    protected Node[lbl, lbl]{lbl} createBody{*child}(label{*child} lbl, label{*child} child, Node[lbl, lbl]{*child} body) where child <= lbl {
-//       return new Table[lbl, lbl]("sifbody", 
-//               child,
-//               new TRow[lbl, lbl](child, 
-//                       new TCell[lbl, lbl](child, body)),
-//                       null);
-//    }
+  /**
+   * Utility method to create a Table with class "banner" and containing
+   * the specified text.
+   */
+  protected Node[lbl, lbl]{lbl} createBanner{*lbl}(label{*lbl} lbl, String{*lbl} text) {
+    return new Table[lbl, lbl]("banner",
+        lbl, lbl, lbl, lbl,
+        new TRow[lbl, lbl](lbl, lbl,
+          new TCell[lbl, lbl](
+            lbl, lbl,
+            new Header[lbl, lbl](1, lbl, lbl,
+              new Text[lbl, lbl](text)))),
+        null);
+  }
 
-    // find the default value if there is one stored in the request
-    public static String{*dataLbl;*lbl;req.session!:} defaultValue{*lbl}(label{*lbl} lbl, 
-                                                       label{*lbl} dataLbl, 
-                                                       HTMLRequest[servP]{*lbl} req, 
-                                                       String{*dataLbl;*lbl;req.session!:} dataValue, 
-                                                       Input[servP]{*dataLbl;*lbl;req.session!:} inp) 
-    {
-        if (req == null) return null;
-        String deflt = dataValue;
-        if (inp != null && inp.inputLbl <= dataLbl) {
-            String{*dataLbl;*lbl;req.session!:} s = req.getParam(inp);
-            if (s != null) {
-                deflt = s; 
-            }
-        }
-        return deflt;
+  /**
+   * Utility method to create a Table with class "sifbody" and containing
+   * the node
+   */
+  protected Node[cL, cE]{*cE} createBody{*cE}(label{*cE} cL, label{*cE} cE, Node[cL, cE]{*cE} body)
+    where {*cE} <= {*cL}
+  {
+    return new Table[cL, cE]("sifbody",
+        cL, cE, cL, cE,
+        new TRow[cL, cE](cL, cE,
+          new TCell[cL, cE](cL, cE, body)),
+        null);
+  }
+
+  /**
+   * Utility method to create a Table with class "sifbody" and containing
+   * the node
+   */
+  //protected Node[lbl, lbl]{lbl} createBody{*child}(label{*child} lbl, label{*child} child, Node[lbl, lbl]{*child} body) where child <= lbl {
+  //   return new Table[lbl, lbl]("sifbody",
+  //           child,
+  //           new TRow[lbl, lbl](child,
+  //                   new TCell[lbl, lbl](child, body)),
+  //                   null);
+  //}
+
+  // find the default value if there is one stored in the request
+  public static String{*dataLbl;*lbl;req.session←} defaultValue{*lbl}(
+      label{*lbl} lbl,
+      label{*lbl} dataLbl,
+      HTMLRequest[servP]{*lbl} req,
+      String{*dataLbl;*lbl;req.session←} dataValue,
+      Input[servP]{*dataLbl;*lbl;req.session←} inp) {
+
+    if (req == null) return null;
+    String deflt = dataValue;
+    if (inp != null && inp.inputLbl <= dataLbl) {
+      String{*dataLbl;*lbl;req.session←} s = req.getParam(inp);
+      if (s != null) {
+        deflt = s;
+      }
     }
+    return deflt;
+  }
 }

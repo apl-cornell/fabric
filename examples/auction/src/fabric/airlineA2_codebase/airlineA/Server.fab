@@ -1,42 +1,47 @@
 package airlineA;
+
 codebase cb;
+
 import cb.auction.Config;
-public class Server[principal Airline] implements cb.broker.Server[Airline] 
-	where  {*provider} <= {Airline<-},  
-		{*provider} equiv {*Agent.provider}, 
-		{*cb.broker.Agent.provider} <= {*provider}, 
-		{*cb.broker.Agent.provider} equiv {*cb.broker.Server.provider}
+
+public class Server[principal Airline] implements cb.broker.Server[Airline]
+  where {*provider} <= {Airline←},
+        {*provider} equiv {*Agent.provider},
+        {*cb.broker.Agent.provider} <= {*provider},
+        {*cb.broker.Agent.provider} equiv {*cb.broker.Server.provider}
 {
-    int {Airline->;Airline<-} cost;
-    int {Airline->;Airline<-} seats; 
-    int {Airline->;Airline<-} lowestprice; 
+  int{Airline→;Airline←} cost;
+  int{Airline→;Airline←} seats;
+  int{Airline→;Airline←} lowestprice;
 
-	public Server (int {Airline->;Airline<-} cost, int {Airline->;Airline<-} seats) {
-		this.cost = cost;
-		this.seats = seats; 
-		this.lowestprice = cost;
-		try { 
-		    this.lowestprice = cost / seats;
-		} catch (ArithmeticException ignored) { }
-    }
-    
-    public int {Airline->;Airline<-} getLowestPrice{Airline->}() {
-		return this.lowestprice;
-    }
+  public Server(int{Airline→;Airline←} cost, int{Airline→;Airline←} seats) {
+    this.cost = cost;
+    this.seats = seats;
+    this.lowestprice = cost;
+    try {
+      this.lowestprice = cost / seats;
+    } catch (ArithmeticException ignored) { }
+  }
 
-    public cb.broker.Agent[Airline, auctionLbl]{Airline->;Airline<-} getAgent {Airline->;Airline<-} (label{Airline<-} auctionLbl) 
-		where {Airline->;Airline<-} <= {*auctionLbl}
-	{
-		final Store store = worker$.getStore(Config.brokerStoreName);
-		//if (store actsfor Airline) --- XXX: why is this insufficient?
-		final label airlineConf = new label{Airline->};
-		final label airlineInteg =  new label{Airline<-};
-		final label storeConf = new label{store->};
-		final label storeInteg =  new label{*<-store};
-		if (airlineConf <= storeConf && storeInteg <= airlineInteg
-			&& auctionLbl <= storeConf)
-			return new Agent[Airline, auctionLbl]@store(this);
-		else 
-			throw new Error("Store is not trusted to store agent.");
+  public int {Airline→;Airline←} getLowestPrice{Airline→}() {
+    return this.lowestprice;
+  }
+
+  public cb.broker.Agent[Airline, auctionLbl]{Airline→;Airline←} getAgent{Airline→;Airline←}(label{Airline←} auctionLbl)
+    where {Airline→;Airline←} <= {*auctionLbl}
+  {
+    final Store store = worker$.getStore(Config.brokerStoreName);
+    //if (store actsfor Airline) --- XXX: why is this insufficient?
+    final label airlineConf = new label{Airline→};
+    final label airlineInteg = new label{Airline←};
+    final label storeConf = new label{store→};
+    final label storeInteg = new label{*←store};
+    if (airlineConf <= storeConf
+        && storeInteg <= airlineInteg
+        && auctionLbl <= storeConf) {
+      return new Agent[Airline, auctionLbl]@store(this);
+    } else {
+      throw new Error("Store is not trusted to store agent.");
     }
+  }
 }

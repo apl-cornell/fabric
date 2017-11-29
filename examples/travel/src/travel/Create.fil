@@ -5,176 +5,180 @@ import fabric.util.Map;
 
 public class Create {
 
-    /**
-     * create the setup for the travel example:
-     *
-     * brokerStore
-     * ==========
-     * broker: Broker[bank,customer]
-     *  f label        -> brokerLabel
-     *  f bank         -> bank
-     *  f customer     -> customer
-     *    customerAcct -> customerAccount
-     *    airlineAcct  -> airlineAccount
-     *    airline      -> airline
-     *    custTickets  -> tickets
-     *
-     * bank: DelegatingPrincipal
-     *  f label       -> null (gets rewritten to {bank<-; bank->_}
-     *    delegatesTo -> broker
-     *
-     * customer: DelegatingPrincipal
-     *  f label       -> null (gets rewritten to {customer<-; customer->_}
-     *    delegatesTo -> broker
-     *
-     * airline: DelegatingPrincipal
-     *  f label       -> null
-     *    delegatesTo -> broker
-     *    
-     * brokerLabel: Label
-     *  f {broker←}
-     *  
-     *  Note: All principals stored on the brokerStore delegate to broker
-     *
-     * bankStore
-     * ========
-     * airlineBalance: Balance[bank,airline]
-     *  f label   -> airlineLabel
-     *  f bank    -> bank
-     *  f user    -> airline
-     *    value   -> 0
-     *
-     * airlineAccount: Account[bank]
-     *  f label   -> {bank<-}
-     *  f bank    -> bank
-     *  f user    -> airline
-     *    balance -> airlineBalance
-     * 
-     * airlineLabel: Label
-     *  f {bank<-; bank->airline}
-     *
-     * customerBalance: Balance[bank,customer]
-     *  f label   -> customerLabel
-     *  f bank    -> bank
-     *  f user    -> customer
-     *    value   -> 0
-     *
-     * customerAccount: Account[bank]
-     *  f label   -> {bank<-}
-     *  f bank    -> bank
-     *  f user    -> customer
-     *    balance -> customerBalance
-     *
-     * customerLabel: Label
-     *  f {bank<-; bank->customer}
-     *  
-     * airlineStore
-     * ===========
-     * tickets: Tickets[bank,airline,user]
-     *  f label   -> ticketsLabel
-     *  f bank    -> bank
-     *  f airline -> airline
-     *  f user    -> customer
-     *    count   -> 0
-     *
-     * ticketsLabel: Label
-     *  f {bank<-airline}
-     */
-    
-    public static void main(String[] args) {
-        atomic {
-            RemoteWorker  brokerWorker = Worker.getWorker().getWorker(Config.brokerStoreName);
-            Store  brokerStore = Worker.getWorker().getStore(Config.brokerStoreName);
-            IntegPolicy bottomInteg = LabelUtil.bottomInteg(); 
-            ConfPolicy bottomConf = LabelUtil.bottomConf();
-            Label bottom = LabelUtil.toLabel(brokerStore, bottomConf, bottomInteg);
-            Create cr = new Create@brokerStore().travel$Create$();
-            cr.create@brokerWorker(args);
-        }
+  /**
+   * create the setup for the travel example:
+   *
+   * brokerStore
+   * ==========
+   * broker: Broker[bank,customer]
+   *  f label        -> brokerLabel
+   *  f bank         -> bank
+   *  f customer     -> customer
+   *    customerAcct -> customerAccount
+   *    airlineAcct  -> airlineAccount
+   *    airline      -> airline
+   *    custTickets  -> tickets
+   *
+   * bank: DelegatingPrincipal
+   *  f label       -> null (gets rewritten to {bank<-; bank->_}
+   *    delegatesTo -> broker
+   *
+   * customer: DelegatingPrincipal
+   *  f label       -> null (gets rewritten to {customer<-; customer->_}
+   *    delegatesTo -> broker
+   *
+   * airline: DelegatingPrincipal
+   *  f label       -> null
+   *    delegatesTo -> broker
+   *
+   * brokerLabel: Label
+   *  f {broker←}
+   *
+   *  Note: All principals stored on the brokerStore delegate to broker
+   *
+   * bankStore
+   * ========
+   * airlineBalance: Balance[bank,airline]
+   *  f label   -> airlineLabel
+   *  f bank    -> bank
+   *  f user    -> airline
+   *    value   -> 0
+   *
+   * airlineAccount: Account[bank]
+   *  f label   -> {bank<-}
+   *  f bank    -> bank
+   *  f user    -> airline
+   *    balance -> airlineBalance
+   *
+   * airlineLabel: Label
+   *  f {bank<-; bank->airline}
+   *
+   * customerBalance: Balance[bank,customer]
+   *  f label   -> customerLabel
+   *  f bank    -> bank
+   *  f user    -> customer
+   *    value   -> 0
+   *
+   * customerAccount: Account[bank]
+   *  f label   -> {bank<-}
+   *  f bank    -> bank
+   *  f user    -> customer
+   *    balance -> customerBalance
+   *
+   * customerLabel: Label
+   *  f {bank<-; bank->customer}
+   *
+   * airlineStore
+   * ===========
+   * tickets: Tickets[bank,airline,user]
+   *  f label   -> ticketsLabel
+   *  f bank    -> bank
+   *  f airline -> airline
+   *  f user    -> customer
+   *    count   -> 0
+   *
+   * ticketsLabel: Label
+   *  f {bank<-airline}
+   */
+
+  public static void main(String[] args) {
+    atomic {
+      RemoteWorker  brokerWorker = Worker.getWorker().getWorker(Config.brokerStoreName);
+      Store  brokerStore = Worker.getWorker().getStore(Config.brokerStoreName);
+      IntegPolicy bottomInteg = LabelUtil.bottomInteg();
+      ConfPolicy bottomConf = LabelUtil.bottomConf();
+      Label bottom = LabelUtil.toLabel(brokerStore, bottomConf, bottomInteg);
+      Create cr = new Create@brokerStore().travel$Create$();
+      cr.create_remote@brokerWorker(null, args);
     }
-    
-    public Create travel$Create$() {
-        fabric$lang$Object$();
-        return this;
+  }
+
+  public Create travel$Create$() {
+    fabric$lang$Object$();
+    return this;
+  }
+
+  public Object $initLabels() {
+    this.$updateLabel = LabelUtil.noComponents();
+    this.$accessPolicy = LabelUtil.bottomConf();
+    return this;
+  }
+
+  public void create_remote(Principal p, String[] args) {
+    create(args);
+  }
+
+  public void create(String[] args) {
+    atomic {
+      Store  brokerStore = Worker.getWorker().getStore(Config.brokerStoreName);
+      Store    bankStore = Worker.getWorker().getStore(Config.bankStoreName);
+      Store airlineStore = Worker.getWorker().getStore(Config.airlineStoreName);
+
+      AbstractPrincipal bank     = BankPrincipal.getInstance();
+      AbstractPrincipal customer = CustomerPrincipal.getInstance();
+      AbstractPrincipal airline  = AirlinePrincipal.getInstance();
+
+      Account  airlineAccount = new Account@bankStore(bank).travel$Account$(airline);
+      Account customerAccount = new Account@bankStore(bank).travel$Account$(customer);
+
+      Tickets tickets = new Tickets@airlineStore(bank,airline,customer).travel$Tickets$();
+
+      Broker            broker   = new Broker@brokerStore(bank,customer).travel$Broker$(customerAccount, airlineAccount, tickets, airline);
+
+      IntegPolicy brokerTrusted  = LabelUtil.writerPolicy(brokerStore,  broker, broker);   // {broker<-}
+      IntegPolicy bankTrusted    = LabelUtil.writerPolicy(brokerStore,  bank,   bank);     // {bank<-}
+      IntegPolicy airlineTrusted = LabelUtil.writerPolicy(airlineStore, bank,   airline);  // {bank<-airline}
+      ConfPolicy  airlineSecret  = LabelUtil.readerPolicy(bankStore,    bank,   airline);  // {bank->airline}
+      ConfPolicy  customerSecret = LabelUtil.readerPolicy(bankStore,    bank,   customer); // {bank->customer}
+
+      Label airlineLabel  = LabelUtil.toLabel(bankStore, airlineSecret,  bankTrusted);
+      Label customerLabel = LabelUtil.toLabel(bankStore, customerSecret, bankTrusted);
+      Label ticketsLabel  = LabelUtil.toLabel(airlineStore, airlineTrusted);
+
+      // call broker constructor
+      broker = broker.travel$Broker$(customerAccount,airlineAccount,tickets,airline);
+
+      // make broker top
+      airline.addDelegatesTo(broker);
+         bank.addDelegatesTo(broker);
+
+         // Why do we have two sets of delegations? Don't the store and colocated worker share the
+         // same principal?
+      // add store delegations
+      airline.addDelegatesTo(airlineStore.getPrincipal());
+       broker.addDelegatesTo(brokerStore.getPrincipal());
+         bank.addDelegatesTo(bankStore.getPrincipal());
+
+      // add worker delegations
+      Principal  brokerWorker = Worker.getWorker().getWorker(args[0]).getPrincipal();
+      Principal    bankWorker = Worker.getWorker().getWorker(args[1]).getPrincipal();
+      Principal airlineWorker = Worker.getWorker().getWorker(args[2]).getPrincipal();
+      Principal bankweb = Worker.getWorker().getWorker(args[3]).getPrincipal();
+      Principal airlineweb = Worker.getWorker().getWorker(args[4]).getPrincipal();
+
+      airline.addDelegatesTo(airlineWorker);
+       broker.addDelegatesTo(brokerWorker);
+         bank.addDelegatesTo(bankWorker);
+
+      // make bankweb and airlineweb act for bank and airline respectively
+      bank.addDelegatesTo(bankweb);
+      airline.addDelegatesTo(airlineweb);
+
+      Map root1 = (Map) brokerStore.getRoot();
+      root1.put(Config.brokerMapKey, broker);
+      root1.put(Config.bankPrincipalMapKey, bank);
+      root1.put(Config.customerPrincipalMapKey, customer);
+
+      Map root2 = (Map) bankStore.getRoot();
+      root2.put(Config.airlineAccountKey, airlineAccount);
+      root2.put(Config.customerAccountKey, customerAccount);
+
+      Map root3 = (Map) airlineStore.getRoot();
+      root3.put(Config.ticketsKey, tickets);
     }
-    
-    public Object $initLabels() {
-        this.$updateLabel = LabelUtil.noComponents();
-        this.$accessPolicy = LabelUtil.bottomConf();
-        return this;
-    }
-    
-    public void create(String[] args) {
-        atomic {
-            Store  brokerStore = Worker.getWorker().getStore(Config.brokerStoreName);
-            Store    bankStore = Worker.getWorker().getStore(Config.bankStoreName);
-            Store airlineStore = Worker.getWorker().getStore(Config.airlineStoreName);
-
-            AbstractPrincipal bank     = BankPrincipal.getInstance();
-            AbstractPrincipal customer = CustomerPrincipal.getInstance();
-            AbstractPrincipal airline  = AirlinePrincipal.getInstance();
-
-            Account  airlineAccount = new Account@bankStore(bank).travel$Account$(airline);
-            Account customerAccount = new Account@bankStore(bank).travel$Account$(customer);
-
-            Tickets tickets = new Tickets@airlineStore(bank,airline,customer).travel$Tickets$();
-            
-            Broker            broker   = new Broker@brokerStore(bank,customer).travel$Broker$(customerAccount, airlineAccount, tickets, airline);
-
-            IntegPolicy brokerTrusted  = LabelUtil.writerPolicy(brokerStore,  broker, broker);   // {broker<-}
-            IntegPolicy bankTrusted    = LabelUtil.writerPolicy(brokerStore,  bank,   bank);     // {bank<-}
-            IntegPolicy airlineTrusted = LabelUtil.writerPolicy(airlineStore, bank,   airline);  // {bank<-airline} 
-            ConfPolicy  airlineSecret  = LabelUtil.readerPolicy(bankStore,    bank,   airline);  // {bank->airline}
-            ConfPolicy  customerSecret = LabelUtil.readerPolicy(bankStore,    bank,   customer); // {bank->customer}
-
-            Label airlineLabel  = LabelUtil.toLabel(bankStore, airlineSecret,  bankTrusted);
-            Label customerLabel = LabelUtil.toLabel(bankStore, customerSecret, bankTrusted);
-            Label ticketsLabel  = LabelUtil.toLabel(airlineStore, airlineTrusted);
-
-            // call broker constructor
-            broker = broker.travel$Broker$(customerAccount,airlineAccount,tickets,airline);
-            
-            // make broker top
-            airline.addDelegatesTo(broker);
-               bank.addDelegatesTo(broker);
-
-               // Why do we have two sets of delegations? Don't the store and colocated worker share the
-               // same principal?
-            // add store delegations
-            airline.addDelegatesTo(airlineStore.getPrincipal());
-             broker.addDelegatesTo(brokerStore.getPrincipal());
-               bank.addDelegatesTo(bankStore.getPrincipal());
-
-            // add worker delegations
-            Principal  brokerWorker = Worker.getWorker().getWorker(args[0]).getPrincipal();
-            Principal    bankWorker = Worker.getWorker().getWorker(args[1]).getPrincipal();
-            Principal airlineWorker = Worker.getWorker().getWorker(args[2]).getPrincipal();
-            Principal bankweb = Worker.getWorker().getWorker(args[3]).getPrincipal();
-            Principal airlineweb = Worker.getWorker().getWorker(args[4]).getPrincipal();
-
-            airline.addDelegatesTo(airlineWorker);
-             broker.addDelegatesTo(brokerWorker);
-               bank.addDelegatesTo(bankWorker);
-               
-            // make bankweb and airlineweb act for bank and airline respectively
-            bank.addDelegatesTo(bankweb);
-            airline.addDelegatesTo(airlineweb);
-
-            Map root1 = (Map) brokerStore.getRoot();
-            root1.put(Config.brokerMapKey, broker);
-            root1.put(Config.bankPrincipalMapKey, bank);
-            root1.put(Config.customerPrincipalMapKey, customer);
-            
-            Map root2 = (Map) bankStore.getRoot();
-            root2.put(Config.airlineAccountKey, airlineAccount);
-            root2.put(Config.customerAccountKey, customerAccount);
-            
-            Map root3 = (Map) airlineStore.getRoot();
-            root3.put(Config.ticketsKey, tickets);
-        }
-    }
+  }
 }
 
 /*
-** vim: ts=4 sw=4 et cindent cino=\:0
+** vim: ts=2 sw=2 et cindent cino=\:0
 */

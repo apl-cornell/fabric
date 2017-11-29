@@ -40,11 +40,8 @@ public class Group extends Delegator
   /**
    * Create a new group with the given name and maximum size.
    */
-  public Group util$Group$(
-    final String  name,
-    final int     maxSize
-  ) throws NegativeArraySizeException
-  {
+  public Group util$Group$(final String name, final int maxSize)
+    throws NegativeArraySizeException {
     util$Delegator$(name, jif$util_Group_groupOwner);
     this.members = new Principal[maxSize];
     return this;
@@ -66,21 +63,16 @@ public class Group extends Delegator
   /**
    * Add a new member to the group.
    */
-  public
-  void
-  add 
-  (
-    Principal p
-  )
-  throws ArrayIndexOutOfBoundsException
-  {
+  public void add(Principal p) throws ArrayIndexOutOfBoundsException {
     // invariant check
-    if (this.members == null)
+    if (this.members == null) {
       throw new AssertionFailedError().util$AssertionFailedError$("this.members should always be non-null.");
+    }
 
     // method implementation
-    if (size >= this.members.length)
+    if (size >= this.members.length) {
       throw new ArrayIndexOutOfBoundsException();
+    }
 
     this.members[this.size++] = p;
 
@@ -91,24 +83,21 @@ public class Group extends Delegator
   /**
    * Remove a member of the group.
    */
-  public void remove (Principal p)
-  {
-    try
-    {
+  public void remove (Principal p) {
+    try {
       // method implementation
-      for (int i = 0; i < size; i++)
-        if (p == this.members[i])
-        {
+      for (int i = 0; i < size; i++) {
+        if (p == this.members[i]) {
           // put last member into current slot and then resize
           this.members[i]    = this.members[--size];
           this.members[size] = null;
         }
+      }
 
       PrincipalUtil.notifyRevokeDelegation(this,p);
 
     } catch (final ArrayIndexOutOfBoundsException e) {
       throw new AssertionFailedError().util$AssertionFailedError$("this.size <= this.members.length");
-
     } catch (final NullPointerException e) {
       throw new AssertionFailedError().util$AssertionFailedError$("this.members should always be non-null.");
     }
@@ -118,24 +107,16 @@ public class Group extends Delegator
   /**
    * Iterate over the members of the group.
    */
-  public
-  GroupIterator
-  iterator
-  (
-    final Store s,
-    final Label l
-  )
-  {
+  public GroupIterator iterator(final Store s, final Label l) {
     if (PrincipalUtil.actsFor(jif$util_Group_groupOwner, this)) {
       final Group g = this;
-      GroupIterator result =
-        (GroupIterator)
+      GroupIterator result = (GroupIterator)
           new GroupIterator@s(jif$util_Group_groupOwner, l)
             .util$GroupIterator$(g).$initLabels();
       return result;
-    }
-    else
+    } else {
       throw new AssertionFailedError().util$AssertionFailedError$("groupOwner must act for group");
+    }
   }
 
 
@@ -147,39 +128,34 @@ public class Group extends Delegator
    * Return true if p acts for either groupOwner or a member of the group.
    */
   public boolean delegatesTo(Principal p) {
-    if (PrincipalUtil.actsFor(p, jif$util_Group_groupOwner))
+    if (PrincipalUtil.actsFor(p, jif$util_Group_groupOwner)) {
       return true;
+    }
 
     if (PrincipalUtil.actsFor(jif$util_Group_groupOwner, this)) {
       try {
-        for (int i = 0; i < this.size; i++)
-          if (PrincipalUtil.actsFor(p, this.members[i]))
+        for (int i = 0; i < this.size; i++) {
+          if (PrincipalUtil.actsFor(p, this.members[i])) {
             return true;
-
+          }
+        }
         return false;
-
       } catch (final ArrayIndexOutOfBoundsException e) {
         throw new AssertionFailedError().util$AssertionFailedError$("this.size <= this.members.length");
-
       } catch (final NullPointerException e) {
         throw new AssertionFailedError().util$AssertionFailedError$("this.members should always be non-null.");
       }
-    }
-    else
+    } else {
       throw new AssertionFailedError().util$AssertionFailedError$("this.groupOwner actsfor this");
+    }
   }
 
   /**
    * See Principal.findProofUpto.
    */
-  public ActsForProof findProofUpto
-               (Store s, Principal p,
-                java.lang.Object searchState)
-  {
+  public ActsForProof findProofUpto(Store s, Principal p, java.lang.Object searchState) {
     if (PrincipalUtil.actsFor(jif$util_Group_groupOwner, this)) {
-      try
-      {
-
+      try {
         // search for a proof from any of our delegatees
         for (int i = 0; i < size; i++) {
           final Principal m = members[i];
@@ -188,16 +164,14 @@ public class Group extends Delegator
             // find a proof and extend it to include the group
             ActsForProof proof = PrincipalUtil.findActsForProof(s, p, m, searchState);
             if (proof != null) {
-              DelegatesProof delProof =
-                (DelegatesProof)
+              DelegatesProof delProof = (DelegatesProof)
                   new DelegatesProof@s().fabric$lang$security$DelegatesProof$(m, this);
-                return
-                  (TransitiveProof)
-                    new TransitiveProof@s().fabric$lang$security$TransitiveProof$(proof, m, delProof);
+              return (TransitiveProof)
+                  new TransitiveProof@s().fabric$lang$security$TransitiveProof$(proof, m, delProof);
             }
-          }
-          else
+          } else {
             throw new AssertionFailedError().util$AssertionFailedError$("this must delegate to all entries in the members array.");
+          }
         }
 
         // no proof could be found.
@@ -205,11 +179,9 @@ public class Group extends Delegator
 
       } catch (final ArrayIndexOutOfBoundsException e) {
         throw new AssertionFailedError().util$AssertionFailedError$("this.size <= this.members.length");
-
       } catch (final NullPointerException e) {
         throw new AssertionFailedError().util$AssertionFailedError$("this.members should always be non-null.");
       }
-
     } else {
       throw new AssertionFailedError().util$AssertionFailedError$("this must delegate to groupOwner");
     }

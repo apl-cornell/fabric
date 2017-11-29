@@ -1,20 +1,21 @@
 package auction;
+
 import fabric.util.Map;
 
 public class InitBrokerStore {
-    public static void main(String[] args) {
-        atomic {
-            DelegatingPrincipal storeWorker = (DelegatingPrincipal) 
-                Worker.getWorker().getPrincipal();
-            DelegatingPrincipal brokerWorker = (DelegatingPrincipal) 
-                Worker.getWorker().getWorker(Config.brokerWorkerName).getPrincipal();
+  public static void main(String[] args) {
+    atomic {
+      DelegatingPrincipal storeWorker = (DelegatingPrincipal)
+          Worker.getWorker().getPrincipal();
+      DelegatingPrincipal brokerWorker = (DelegatingPrincipal)
+          Worker.getWorker().getWorker(Config.brokerWorkerName).getPrincipal();
 
-            System.out.println("Delegating to " +Config.brokerWorkerName);
-            storeWorker.addDelegatesTo(brokerWorker);
-        }
+      System.out.println("Delegating to " +Config.brokerWorkerName);
+      storeWorker.addDelegatesTo(brokerWorker);
     }
+  }
 }
 
 /*
-** vim: ts=4 sw=4 et cindent cino=\:0
-*/
+ * vim: ts=2 sw=2 et cindent cino=\:0
+ */

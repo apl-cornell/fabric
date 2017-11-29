@@ -12,12 +12,12 @@ where
     provider <= Snapp.provider,
     User.provider <= Location.provider,
     Location.provider <= User.provider,
-    
-    
+
+
     // trusted classes are trusted
-    util.Delegator.provider     <= {*←},
-    util.GroupIterator.provider <= {*←},
-    util.Group.provider         <= {*←},
+    util.Delegator.provider     <= {⊤←},
+    util.GroupIterator.provider <= {⊤←},
+    util.Group.provider         <= {⊤←},
 
     // Code in Snapp is completely public.
     Snapp.provider              <= {}

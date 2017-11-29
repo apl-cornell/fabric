@@ -1,64 +1,69 @@
 package airlineB;
+
 import broker.Offer;
 import broker.UserAgent;
 import auction.Config;
 
-// Airline agent provides competing offers 
-
-public class Agent[principal Airline, label Auction] implements broker.Agent[Airline, Auction] 
-	where {*provider} <= {Airline<-}, {Airline->;Airline<-} <= Auction,
-			{*provider} equiv {*Server.provider}, 
-			{*broker.Agent.provider} <= {*provider}, 
-			{*broker.Agent.provider} equiv {*broker.Server.provider}
+// Airline agent provides competing offers
+public class Agent[principal Airline, label Auction]
+  implements broker.Agent[Airline, Auction]
+  where {*provider} <= {Airline←},
+        {Airline→;Airline←} <= Auction,
+        {*provider} equiv {*Server.provider},
+        {*broker.Agent.provider} <= {*provider},
+        {*broker.Agent.provider} equiv {*broker.Server.provider}
 {
-    private final Server[Airline]{Airline->;Airline<-}@{Auction;⊥←} server;
-    private int {Airline->;Airline<-}@{Auction;⊥←} lowestprice; 
+  private final Server[Airline]{Airline→;Airline←}@{Auction;⊥←} server;
+  private int{Airline→;Airline←}@{Auction;⊥←} lowestprice;
 
-    public Agent{Airline->;Airline<-}(Server[Airline]{Airline->;Airline<-} server) {
-		this.server = server;
-		super();
+  public Agent{Airline→;Airline←}(Server[Airline]{Airline→;Airline←} server) {
+    this.server = server;
+    super();
+  }
+
+  // asking the "remote" server for the current lowest price
+  public void prepareForAuction{Airline→;Airline←}() {
+    this.lowestprice = server.getLowestPrice();
+  }
+
+  public Offer[Auction]{Auction} makeFirstOffer{Airline→;Airline←}() {
+    prepareForAuction();
+    int price = 2 * lowestprice;
+    final Store store = worker$.getStore(Config.brokerStoreName);
+    if (new label{Auction;*broker.Offer.provider} <= new label {store→}
+        && new label {store←} <= Auction
+        && broker.Offer.provider <= Auction) {
+      return new Offer[Auction]@store(price, 0);
+    } else {
+      throw new Error("Invalid store");
     }
+  }
 
-	// asking the "remote" server for the current lowest price
-    public void prepareForAuction {Airline->;Airline<-} () {
-	    this.lowestprice = server.getLowestPrice(); 
+  public Offer[Auction]{Auction} makeOffer{Auction}(
+      UserAgent[Auction]{Auction} userChoice,
+      Offer[Auction]{Auction} bestOffer)
+    where {*broker.UserAgent.provider} <= Auction
+  {
+    if (userChoice == null) return null;
+
+    int price = 2 * lowestprice;  // possible read-channel???
+    final Store store = worker$.getStore(Config.brokerStoreName);
+
+    if (new label {Auction;*broker.Offer.provider} <= new label {store→}
+        && new label {store←} <= Auction
+        && broker.Offer.provider <= Auction) {
+      Offer[Auction] newOffer = new Offer[Auction]@store(price, 0);
+
+      while (userChoice.choice(newOffer, bestOffer) >= 0 && price >= lowestprice) {
+        newOffer = new Offer[Auction]@store(price--, 0);
+      }
+
+      if (price < lowestprice) {
+        return null; // give up
+      }
+      return newOffer; // return the best competing offer otherwise
+    } else {
+      throw new Error("Invalid store");
     }
-
-    public Offer[Auction] {Auction} makeFirstOffer {Airline->;Airline<-} () {
-		prepareForAuction(); 
-		int price = 2*lowestprice;
-		final Store store = worker$.getStore(Config.brokerStoreName);
-		if (new label{Auction;*broker.Offer.provider} <= new label {store->} 
-			&&  new label {store<-} <= Auction
-			&& broker.Offer.provider <= Auction) {
-				return new Offer[Auction]@store(price, 0);
-		} else
-			throw new Error("Invalid store");
-    }
-
-    public Offer[Auction] {Auction} makeOffer{Auction}(UserAgent[Auction] {Auction} userChoice,  
-														Offer[Auction] {Auction} bestOffer) 
-		where {*broker.UserAgent.provider} <= Auction
-	{
-		if (userChoice == null) return null;
-
-		int price = 2*lowestprice;  // possible read-channel??? 
-                final Store store = worker$.getStore(Config.brokerStoreName);
-
-		if (new label {Auction;*broker.Offer.provider} <= new label {store->} 
-			&&  new label {store<-} <= Auction
-			&& broker.Offer.provider <= Auction) {
-			Offer[Auction] newOffer = new Offer[Auction]@store(price, 0);
-
-			while (userChoice.choice (newOffer, bestOffer)  >= 0 && price >= lowestprice) {
-			    newOffer = new Offer [Auction]@store(price--, 0) ;
-			}
-			if (price < lowestprice) 
-			    return null; // give up 
-
-			return newOffer; // return the best competing offer otherwise
-		} 
-		else 
-			throw new Error("Invalid store");
-    }
+  }
 }

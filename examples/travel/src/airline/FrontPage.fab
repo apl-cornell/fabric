@@ -9,7 +9,6 @@ import sif.servlet.HTMLRequest;
 import sif.servlet.Servlet;
 import fabric.util.Map;
 
-
 import travel.Broker;
 import travel.Config;
 import travel.Account;
@@ -17,66 +16,86 @@ import travel.Tickets;
 
 import login.*;
 
-
 public class FrontPage extends AuthenticatedAction[AirlinePrincipal] authority (AirlinePrincipal) {
-    public FrontPage(AirlineMain{this} m) throws ServletException {
-        super("frontpage", m);
+  public FrontPage(AirlineMain{this} m) throws ServletException {
+    super("frontpage", m);
+  }
+
+  public final void invokeImpl{*lbl}(
+      label{*lbl} lbl,
+      Request[AirlinePrincipal]{*lbl} req,
+      HTMLAuthServlet[AirlinePrincipal]{*lbl} servlet,
+      AuthSessState{*lbl} state,
+      principal{*lbl} currentUser)
+    throws (ServletException{*lbl;req.session←})
+    where caller(req.session),
+          lbl <= {⊤→req.session},
+          req.session equiv state.sessionPrincipal,
+          req.session actsfor currentUser
+  {
+    if (servlet == null || !(servlet instanceof AirlineMain)) {
+      throw new ServletException("No servlet available");
     }
-    
-    public final void invokeImpl{*lbl}(label{*lbl} lbl,
-            Request[AirlinePrincipal]{*lbl} req,
-            HTMLAuthServlet[AirlinePrincipal]{*lbl} servlet,
-            AuthSessState{*lbl} state,
-            principal{*lbl} currentUser) 
-            throws (ServletException{*lbl;req.session←})
-            where caller(req.session),
-            lbl <= {⊤→req.session},
-            req.session equiv state.sessionPrincipal,
-            req.session actsfor currentUser {
+    if (req == null || state == null || currentUser == null) {
+      throw new ServletException("Error processing request");
+    }
 
-        if (servlet == null || !(servlet instanceof AirlineMain)) throw new ServletException("No servlet available"); 
-        if (req == null || state == null || currentUser == null) throw new ServletException("Error processing request"); 
-        AirlineMain m = (AirlineMain)servlet;
-        
-        atomic {
-            // Display the front page only if the logged in user is the airline principal
-            if (currentUser equiv AirlinePrincipal 
-                && lbl <= new label {AirlinePrincipal->}) {
-                FabricWorker w = worker$;
-                if (w == null) throw new ServletException("Internal Error");
-                final Store store = worker$.getStore(Config.airlineStoreName);
-                Map root = null;
-                if (store != null) {
-                    root = (Map) store.getRoot();
-                }
-                if (root == null) throw new ServletException("Airline Store not accessible");
+    AirlineMain m = (AirlineMain) servlet;
+    atomic {
+      // Display the front page only if the logged in user is the airline principal
+      if (currentUser equiv AirlinePrincipal
+          && lbl <= new label {AirlinePrincipal->}) {
 
-                Tickets[BankPrincipal,AirlinePrincipal,CustomerPrincipal] tickets = null;
-                Object obj = root.get(Config.ticketsKey);
-                if (obj instanceof Tickets[BankPrincipal,AirlinePrincipal,CustomerPrincipal]) {
-                    tickets = (Tickets[BankPrincipal,AirlinePrincipal,CustomerPrincipal])obj;
-                }
-                if (tickets == null)
-                    throw new ServletException("Could not fetch airline information base");
-
-                // Display the number of tickets sold by this airline to CustomerPrincipal
-
-                final label ap = new label {AirlinePrincipal←}; 
-                final label lblt = new label {AirlinePrincipal→CustomerPrincipal; AirlinePrincipal←BankPrincipal};
-                if (lbl <= ap  &&
-                        req.session actsfor AirlinePrincipal) {
-                    Text msg = new Text[ap,ap]("Acme Airlines has sold the following number of tickets:");
-                    Text ticks = new Text[lblt,ap](Integer.toString(tickets.getNumTickets()));
-                    NodeList[lblt, ap] entries = NodeList.EMPTY();
-                    entries = entries==null?null:entries.append(ap, ap, 
-                            new TRow[ap, ap](new TCell[ap, ap](msg)));
-                    entries = entries==null?null:entries.append(
-                            new TRow[lblt, ap](new TCell[lblt, ap](ticks)));
-                    m.createPage((HTMLRequest)req, "Airline Home Page", lblt, ap,
-                            new NodeList[lblt,ap](ap, ap, createBanner(ap, "Welcome to the Acme Airline Information System"),
-                                    lblt, ap, new Table[lblt, ap](entries)));
-                }
-            }
+        FabricWorker w = worker$;
+        if (w == null) {
+          throw new ServletException("Internal Error");
         }
+
+        final Store store = worker$.getStore(Config.airlineStoreName);
+        Map root = null;
+        if (store != null) {
+          root = (Map) store.getRoot();
+        }
+        if (root == null) {
+          throw new ServletException("Airline Store not accessible");
+        }
+
+        Tickets[BankPrincipal, AirlinePrincipal, CustomerPrincipal] tickets = null;
+        Object obj = root.get(Config.ticketsKey);
+        if (obj instanceof Tickets[BankPrincipal, AirlinePrincipal, CustomerPrincipal]) {
+          tickets = (Tickets[BankPrincipal, AirlinePrincipal, CustomerPrincipal]) obj;
+        }
+        if (tickets == null) {
+          throw new ServletException("Could not fetch airline information base");
+        }
+
+        // Display the number of tickets sold by this airline to CustomerPrincipal
+
+        final label ap = new label {AirlinePrincipal←};
+        final label lblt = new label {AirlinePrincipal→CustomerPrincipal; AirlinePrincipal←BankPrincipal};
+        if (lbl <= ap
+            && req.session actsfor AirlinePrincipal) {
+
+          Text msg = new Text[ap, ap]("Acme Airlines has sold the following number of tickets:");
+          Text ticks = new Text[lblt, ap](Integer.toString(tickets.getNumTickets()));
+          NodeList[lblt, ap] entries = NodeList.EMPTY();
+
+          entries = entries == null ? null :
+            entries.append(ap, ap,
+                new TRow[ap, ap](
+                  new TCell[ap, ap](msg)));
+
+          entries = entries == null ? null :
+            entries.append(
+                new TRow[lblt, ap](
+                  new TCell[lblt, ap](ticks)));
+
+          m.createPage((HTMLRequest) req, "Airline Home Page", lblt, ap,
+                  new NodeList[lblt, ap](ap, ap,
+                    createBanner(ap, "Welcome to the Acme Airline Information System"),
+                    lblt, ap, new Table[lblt, ap](entries)));
+        }
+      }
     }
+  }
 }
