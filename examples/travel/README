@@ -30,7 +30,15 @@ persistent application data and the workers each host a web application.
 
   I. Start all the nodes and, if necessary, initialize their state:
 
-    1. Start up the broker store, airline store, bank store, customer
+    1. If you are starting from fresh stores, you will need to
+       initialize the application state. Otherwise, skip to step 2.
+
+       Run the Create.fil program to initialize state on all stores. You
+       can do this by running the 'init-state' script:
+
+	  $ bin/init-state
+
+    2. Start up the broker store, airline store, bank store, customer
        worker, bankweb worker, and airlineweb worker. The 'start-all'
        script will start each node in a separate xterm window:
 
@@ -50,14 +58,6 @@ persistent application data and the workers each host a web application.
 	  $ bin/start-worker customer
 	  $ bin/start-worker bankweb
 	  $ bin/start-worker airlineweb
-
-    2. If you are starting from fresh stores, you will need to
-       initialize the application state. Otherwise, skip to II below.
-
-       Run the Create.fil program to initialize state on all stores. You
-       can do this by running the 'init-state' script:
-
-	  $ bin/init-state
 
   II. Start the web applications by running the 'start-webapps' script:
 
