@@ -146,6 +146,16 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
   }
 
   /**
+   * Copy result for a proxy computation to use.
+   *
+   * Default is to just copy the reference.  Implementations should override
+   * this to make and return copy on the proxyStore.
+   */
+  protected Object makeProxyResult(WarrantyValue val, final Store proxyStore) {
+    return val.value;
+  }
+
+  /**
    * Make a warranty comp that resides on another store that can be used locally
    * at that store when a memoized result is available.
    */
@@ -217,7 +227,7 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
           // Need to double check we weren't scooped by another caller.  If we
           // were, don't bother with our new value and go with the existing value.
           if (tmp.curVal.contract == null || !tmp.curVal.contract.valid()) {
-            tmp.curVal.value = newVal.value;
+            tmp.curVal.value = tmp.baseComputation.makeProxyResult(newVal, tmp.$getStore());
             if (tmp.oldBaseContract != newVal.contract) {
               if (tmp.curVal.contract != null) {
                 tmp.curVal.contract.removeObserver(tmp);
