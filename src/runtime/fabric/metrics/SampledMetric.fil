@@ -142,6 +142,7 @@ public class SampledMetric extends Metric {
   private static double static_computeValue(SampledMetric tmp, boolean useWeakCache) {
     double result = 0;
     atomic {
+      // Write lock hack to avoid being kicked out by updates.
       tmp.value[0] = tmp.value[0];
       result = tmp.value[0];
     }

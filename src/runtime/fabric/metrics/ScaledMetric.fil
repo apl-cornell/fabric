@@ -138,7 +138,15 @@ public class ScaledMetric extends DerivedMetric {
 
     /*@Override*/
     public EnforcementPolicy policy(Bound bound, boolean useWeakCache) {
-        if (isSingleStore())
+        // Don't do this if we want to avoid conflicts between local concurrent
+        // operations on different metrics in a derived metric...
+        //if (isSingleStore())
+        //    return new DirectPolicy().fabric$metrics$contracts$enforcement$DirectPolicy$(this, bound);
+
+        // However, we don't want the infinite loop referred to below, so we
+        // don't use a witness if the metric this transforms is a sampled
+        // metric.
+        if (term(0) instanceof SampledMetric)
             return new DirectPolicy().fabric$metrics$contracts$enforcement$DirectPolicy$(this, bound);
 
         MetricContract witness = null;

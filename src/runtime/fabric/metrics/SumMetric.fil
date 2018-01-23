@@ -245,8 +245,10 @@ public class SumMetric extends DerivedMetric {
 
     /*@Override*/
     public EnforcementPolicy policy(Bound bound, boolean useWeakCache) {
-        if (isSingleStore())
-            return new DirectPolicy().fabric$metrics$contracts$enforcement$DirectPolicy$(this, bound);
+        // Don't do this if we want to avoid conflicts between local concurrent
+        // operations on different metrics in a derived metric...
+        //if (isSingleStore())
+        //    return new DirectPolicy().fabric$metrics$contracts$enforcement$DirectPolicy$(this, bound);
 
         java.util.Map/*<Metric, MetricContract>*/ witnesses = new java.util.HashMap/*<>*/();
 
