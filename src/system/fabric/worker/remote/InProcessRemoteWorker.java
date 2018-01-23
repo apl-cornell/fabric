@@ -23,6 +23,7 @@ import fabric.worker.RemoteStore;
 import fabric.worker.Store;
 import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
+import fabric.worker.TransactionRestartingException;
 import fabric.worker.Worker;
 
 /**
@@ -98,7 +99,12 @@ public class InProcessRemoteWorker extends RemoteWorker {
   @Override
   public void takeOwnership(TransactionID tid, Store store, long onum) {
     // XXX Does this actually happen?
-    throw new NotImplementedException();
+    // Tom (1/23/18): Yes, due to a race condition between cache eviction and
+    // writer locking.  This has been changed to abort the transaction, since
+    // the condition in which it occurs suggests that a now evicted value was
+    // used earlier in the transaction.
+    //throw new NotImplementedException();
+    throw new TransactionRestartingException(new TransactionID(tid.topTid));
   }
 
   @Override

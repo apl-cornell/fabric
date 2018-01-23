@@ -737,7 +737,10 @@ public final class Worker {
     TransactionManager tm = TransactionManager.getInstance();
     boolean backoffEnabled = getWorker().config.txRetryBackoff;
 
+    // Indicating the transaction finished
     boolean success = false;
+    // Indicating whether to retry if unsuccessful. Retry in nearly all cases.
+    boolean retry = true;
 
     // Flag for triggering backoff on alternate retries.
     boolean doBackoff = true;
@@ -779,8 +782,11 @@ public final class Worker {
           // Restart this transaction.
           continue;
 
-        // Need to restart a parent transaction.
-        if (currentTid.parent != null) throw e;
+        if (currentTid.parent != null) {
+          // Don't retry, kicking this up to a parent that needs to retry.
+          retry = false;
+          throw e;
+        }
 
         throw new InternalError("Something is broken with transaction "
             + "management. Got a signal to restart a different transaction "
@@ -791,6 +797,8 @@ public final class Worker {
         // Retry if the exception was a result of stale objects.
         if (tm.checkForStaleObjects()) continue;
 
+        // Bad state, don't keep retrying.
+        retry = false;
         throw new AbortException(e);
       } finally {
         if (success) {
@@ -827,7 +835,9 @@ public final class Worker {
           tm.abortTransaction();
         }
 
-        if (!success) continue;
+        // If not successful and should retry, override control flow to run the
+        // loop again.
+        if (!success && retry) continue;
       }
     }
 
