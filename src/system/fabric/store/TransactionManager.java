@@ -427,8 +427,8 @@ public class TransactionManager {
       new Threading.NamedRunnable("Extensions runner") {
         @Override
         protected void runImpl() {
-          while (true) {
-            try {
+          try {
+            while (true) {
               // Get the next delayed extension item.
               // XXX: In an ideal world, the extension item isn't taken off the
               // queue until we've synchronized on it.  However, this doesn't
@@ -472,9 +472,11 @@ public class TransactionManager {
                       "FINISHED EXTENSION OF {0}", extension.onum);
                 }
               });
-            } catch (InterruptedException e) {
-              Logging.logIgnoredInterruptedException(e);
             }
+          } catch (InterruptedException e) {
+            System.err.println("Extension thread interrupted!");
+            e.printStackTrace();
+            Logging.logIgnoredInterruptedException(e);
           }
         }
       };
