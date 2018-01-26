@@ -169,19 +169,21 @@ public final class TransactionManager {
   protected void acquireContractLocks() {
     final OidKeyHashMap<Contract._Proxy> contractsToAcquireF =
         contractsToAcquire;
-    Worker.runInTopLevelTransaction((new Code<Void>() {
-      @Override
-      public Void run() {
-        for (Iterator<LongKeyMap<Contract._Proxy>> it =
-            contractsToAcquireF.iterator(); it.hasNext();) {
-          for (Contract._Proxy c : it.next().values()) {
-            c.acquireReconfigLocks();
+    if (!contractsToAcquire.isEmpty()) {
+      Worker.runInTopLevelTransaction((new Code<Void>() {
+        @Override
+        public Void run() {
+          for (Iterator<LongKeyMap<Contract._Proxy>> it =
+              contractsToAcquireF.iterator(); it.hasNext();) {
+            for (Contract._Proxy c : it.next().values()) {
+              c.acquireReconfigLocks();
+            }
           }
+          return null;
         }
-        return null;
-      }
-    }), true);
-    contractsToAcquire.clear();
+      }), true);
+      contractsToAcquire.clear();
+    }
   }
 
   protected void releaseContractLocks() {
