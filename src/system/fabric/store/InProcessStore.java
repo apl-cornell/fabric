@@ -149,4 +149,9 @@ public class InProcessStore extends RemoteStore {
     return new SerializationProxy(name);
   }
 
+  @Override
+  public void sendExtensions(List<DelayedExtension> extensions) {
+    tm.queueExtension(extensions);
+  }
+
 }
