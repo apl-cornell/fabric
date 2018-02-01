@@ -59,16 +59,24 @@ public class SampledMetric extends Metric {
       // static-equal run, let's just default for keys that don't exist.
       //if (!config.rates.containsKey(key))
       //  throw new InternalError("Unspecified preset rate for " + key);
-      this.presetR = ((Double) config.rates.getOrDefault(key, 0.0)).doubleValue();
+      this.presetR = config.rates.containsKey(key) ?
+        ((Double) config.rates.get(key)).doubleValue() :
+        0.0;
       //if (!config.bounds.containsKey(key))
       //  throw new InternalError("Unspecified preset bound for " + key);
-      this.presetB = ((Double) config.bounds.getOrDefault(key, 1.0)).doubleValue();
+      this.presetB = config.bounds.containsKey(key) ?
+        ((Double) config.bounds.get(key)).doubleValue() :
+        0.0;
       //if (!config.velocities.containsKey(key))
       //  throw new InternalError("Unspecified preset velocity for " + key);
-      this.presetV = ((Double) config.velocities.getOrDefault(key, 0.0)).doubleValue();
+      this.presetV = config.velocities.containsKey(key) ?
+        ((Double) config.velocities.get(key)).doubleValue() :
+        0.0;
       //if (!config.noises.containsKey(key))
       //  throw new InternalError("Unspecified preset noise for " + key);
-      this.presetN = ((Double) config.noises.getOrDefault(key, 0.0)).doubleValue();
+      this.presetN = config.noises.containsKey(key) ?
+        ((Double) config.noises.get(key)).doubleValue() :
+        0.0;
     } else {
       this.presetR = 0.0;
       this.presetB = 0.0;
