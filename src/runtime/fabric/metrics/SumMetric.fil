@@ -15,6 +15,7 @@ import fabric.metrics.util.Observer;
 import fabric.metrics.util.Subject;
 
 import fabric.worker.Store;
+import fabric.worker.transaction.TransactionManager;
 
 /**
  * A {@link DerivedMetric} for the sum of the given metric terms.
@@ -123,8 +124,12 @@ public class SumMetric extends DerivedMetric {
       DerivedMetric result = (DerivedMetric) getTimesCache().get(s);
       if (result == null) {
         result = static_times(this, scalar);
-        atomic {
+        if (TransactionManager.getInstance().inTxn()) {
           getTimesCache().put(s, result);
+        } else {
+          atomic {
+            getTimesCache().put(s, result);
+          }
         }
       }
       return result;
@@ -136,8 +141,12 @@ public class SumMetric extends DerivedMetric {
           newTerms[i] = tmp.terms[i].times(scalar);
         final Store s = tmp.$getStore();
         DerivedMetric val = null;
-        atomic {
+        if (TransactionManager.getInstance().inTxn()) {
           val = new SumMetric@s().fabric$metrics$SumMetric$(newTerms);
+        } else {
+          atomic {
+            val = new SumMetric@s().fabric$metrics$SumMetric$(newTerms);
+          }
         }
         return Metric.findDerivedMetric(s, val);
     }
@@ -154,9 +163,14 @@ public class SumMetric extends DerivedMetric {
       DerivedMetric result = (DerivedMetric) getPlusCache().get(other);
       if (result == null) {
         result = static_plus(this, other);
-        atomic {
+        if (TransactionManager.getInstance().inTxn()) {
           getPlusCache().put(other, result);
           other.getPlusCache().put(this, result);
+        } else {
+          atomic {
+            getPlusCache().put(other, result);
+            other.getPlusCache().put(this, result);
+          }
         }
       }
       return result;
@@ -237,8 +251,12 @@ public class SumMetric extends DerivedMetric {
             java.util.Arrays.sort(newTerms, 0, newTerms.length);
         }
         DerivedMetric val = null;
-        atomic {
+        if (TransactionManager.getInstance().inTxn()) {
           val = new SumMetric@s().fabric$metrics$SumMetric$(newTerms);
+        } else {
+          atomic {
+            val = new SumMetric@s().fabric$metrics$SumMetric$(newTerms);
+          }
         }
         return Metric.findDerivedMetric(s, val);
     }
@@ -293,10 +311,9 @@ public class SumMetric extends DerivedMetric {
               b = scaledX - ((m.getPresetB() / getPresetB()) * (totalValue - base));
             }
 
-            Bound witnessBound = new Bound().fabric$metrics$contracts$Bound$(r, b, currentTime);
             if (!witnesses.containsKey(m)
-                    || !((MetricContract) witnesses.get(m)).getBound().implies(witnessBound)) {
-                witnesses.put(m, m.getContract(witnessBound));
+                    || !((MetricContract) witnesses.get(m)).getBound().implies(r, b, currentTime)) {
+                witnesses.put(m, m.getContract(r, b, currentTime));
             }
         }
         MetricContract native[] finalWitnesses = new MetricContract native[witnesses.size()];

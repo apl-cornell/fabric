@@ -3,6 +3,7 @@ package fabric.metrics.contracts.enforcement;
 import fabric.metrics.Metric;
 import fabric.metrics.contracts.Bound;
 import fabric.metrics.contracts.MetricContract;
+import fabric.worker.transaction.TransactionManager;
 
 /**
  * An {@link EnforcementPolicy} for enforcing a {@link MetricContract}s by
@@ -40,10 +41,16 @@ public class DirectPolicy extends EnforcementPolicy {
   }
 
   private static void static_activate(DirectPolicy tmp) {
-    atomic {
+    if (TransactionManager.getInstance().inTxn()) {
       if (tmp.activated)
         return;
       tmp.refresh();
+    } else {
+      atomic {
+        if (tmp.activated)
+          return;
+        tmp.refresh();
+      }
     }
   }
 
@@ -53,7 +60,7 @@ public class DirectPolicy extends EnforcementPolicy {
   }
 
   private static void static_refresh(DirectPolicy tmp) {
-    atomic {
+    if (TransactionManager.getInstance().inTxn()) {
       // First check if we actually can enforce it in the current state.
       long currentTime = System.currentTimeMillis();
       long trueTime = tmp.bound.trueExpiry(tmp.metric, currentTime);
@@ -70,6 +77,25 @@ public class DirectPolicy extends EnforcementPolicy {
         tmp.expiry = hedgedTime;
       }
       tmp.activated = true;
+    } else {
+      atomic {
+        // First check if we actually can enforce it in the current state.
+        long currentTime = System.currentTimeMillis();
+        long trueTime = tmp.bound.trueExpiry(tmp.metric, currentTime);
+        if (trueTime < currentTime && currentTime <= tmp.expiry) {
+          tmp.expiry = 0;
+        } else {
+          long hedgedTime = tmp.hedged(currentTime);
+          if (tmp.expiry <= trueTime) {
+            // Don't hedge below current expiry if we're not stuttering
+            // (shifting down the expiry due to true expiry being lower than
+            // advertised time).
+            hedgedTime = Math.max(tmp.expiry, hedgedTime);
+          }
+          tmp.expiry = hedgedTime;
+        }
+        tmp.activated = true;
+      }
     }
   }
 
@@ -183,10 +209,16 @@ public class DirectPolicy extends EnforcementPolicy {
 
   private static void static_apply(DirectPolicy tmp, MetricContract mc) {
     // TODO: Should this be atomic?
-    atomic {
+    if (TransactionManager.getInstance().inTxn()) {
       if (!tmp.activated)
         tmp.activate();
       tmp.metric.addObserver(mc);
+    } else {
+      atomic {
+        if (!tmp.activated)
+          tmp.activate();
+        tmp.metric.addObserver(mc);
+      }
     }
     fabric.common.Logging.METRICS_LOGGER.finer("DEFENDING " + mc + " WITH " + tmp);
   }

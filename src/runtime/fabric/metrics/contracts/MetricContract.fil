@@ -77,9 +77,14 @@ public class MetricContract extends Contract {
   }
 
   private static void static_activate(MetricContract tmp) {
-    atomic {
+    if (TransactionManager.getInstance().inTxn()) {
       if (tmp.isActivated())
         return;
+    } else {
+      atomic {
+        if (tmp.isActivated())
+          return;
+      }
     }
 
     // Refresh the stats being used
@@ -90,8 +95,12 @@ public class MetricContract extends Contract {
     // Determine children
     fabric.common.Logging.METRICS_LOGGER.finer("CREATING A POLICY FOR MC " + tmp);
     EnforcementPolicy startPol = null;
-    atomic {
+    if (TransactionManager.getInstance().inTxn()) {
       startPol = tmp.metric.policy(tmp.bound, true);
+    } else {
+      atomic {
+        startPol = tmp.metric.policy(tmp.bound, true);
+      }
     }
 
     // Activate new children
@@ -108,7 +117,7 @@ public class MetricContract extends Contract {
 
   private static void static_finishActivating(MetricContract tmp, EnforcementPolicy p) {
     // Set the expiry and free it up
-    atomic {
+    if (TransactionManager.getInstance().inTxn()) {
       fabric.common.Logging.METRICS_LOGGER.finer("ACTIVATING MC " + tmp + " IN " + TransactionManager.getInstance().getCurrentLog());
       tmp.currentPolicy = p;
       tmp.$expiry = tmp.currentPolicy.expiry();
@@ -116,6 +125,17 @@ public class MetricContract extends Contract {
       if (tmp.$expiry >= System.currentTimeMillis()) {
         tmp.currentPolicy.apply(tmp);
         tmp.getMetric().addContract(tmp);
+      }
+    } else {
+      atomic {
+        fabric.common.Logging.METRICS_LOGGER.finer("ACTIVATING MC " + tmp + " IN " + TransactionManager.getInstance().getCurrentLog());
+        tmp.currentPolicy = p;
+        tmp.$expiry = tmp.currentPolicy.expiry();
+        Contract.static_activate(tmp);
+        if (tmp.$expiry >= System.currentTimeMillis()) {
+          tmp.currentPolicy.apply(tmp);
+          tmp.getMetric().addContract(tmp);
+        }
       }
     }
     fabric.common.Logging.METRICS_LOGGER.finer("ACTIVATED MC " + tmp + " IN " + TransactionManager.getInstance().getCurrentLog());
@@ -271,11 +291,19 @@ public class MetricContract extends Contract {
   }
 
   private static void static_removeObserver(MetricContract tmp, Observer obs) {
-    atomic {
+    if (TransactionManager.getInstance().inTxn()) {
       Contract.static_removeObserver(tmp, obs);
       if (!tmp.isObserved()) {
         if (tmp.currentPolicy != null)
           tmp.currentPolicy.unapply(tmp);
+      }
+    } else {
+      atomic {
+        Contract.static_removeObserver(tmp, obs);
+        if (!tmp.isObserved()) {
+          if (tmp.currentPolicy != null)
+            tmp.currentPolicy.unapply(tmp);
+        }
       }
     }
   }
@@ -296,8 +324,12 @@ public class MetricContract extends Contract {
 
   private static ProxyMetricContract static_getProxyContract(MetricContract tmp, final Store proxyStore) {
     ProxyMetricContract proxy = null;
-    atomic {
+    if (TransactionManager.getInstance().inTxn()) {
       proxy = new ProxyMetricContract@proxyStore().fabric$metrics$contracts$MetricContract$ProxyMetricContract$(tmp);
+    } else {
+      atomic {
+        proxy = new ProxyMetricContract@proxyStore().fabric$metrics$contracts$MetricContract$ProxyMetricContract$(tmp);
+      }
     }
     if (tmp.isActivated())
       proxy.activate();
@@ -335,22 +367,32 @@ public class MetricContract extends Contract {
     }
 
     private static void static_activate(ProxyMetricContract tmp) {
-      atomic {
+      if (TransactionManager.getInstance().inTxn()) {
         if (tmp.isActivated())
           return;
+      } else {
+        atomic {
+          if (tmp.isActivated())
+            return;
+        }
       }
 
       // TODO: Should this watch the target or just mirror the target's policy.
       EnforcementPolicy targetPol = null;
       fabric.common.Logging.METRICS_LOGGER.finer("CREATING POLICY FOR MC " + tmp);
-      atomic {
+      if (TransactionManager.getInstance().inTxn()) {
         final Store s = tmp.$getStore();
         targetPol = new WitnessPolicy@s().fabric$metrics$contracts$enforcement$WitnessPolicy$(new MetricContract native[] { tmp.target });
+      } else {
+        atomic {
+          final Store s = tmp.$getStore();
+          targetPol = new WitnessPolicy@s().fabric$metrics$contracts$enforcement$WitnessPolicy$(new MetricContract native[] { tmp.target });
+        }
       }
       fabric.common.Logging.METRICS_LOGGER.finer("ACTIVATING POLICY FOR MC " + tmp);
       targetPol.activate();
 
-      atomic {
+      if (TransactionManager.getInstance().inTxn()) {
         fabric.common.Logging.METRICS_LOGGER.finer("ACTIVATING MC " + tmp + " IN " + TransactionManager.getInstance().getCurrentLog());
         final Store s = tmp.$getStore();
         tmp.currentPolicy = targetPol;
@@ -360,6 +402,19 @@ public class MetricContract extends Contract {
           tmp.currentPolicy.apply(tmp);
           // XXX: Do I need to do this?
           tmp.getMetric().addContract(tmp);
+        }
+      } else {
+        atomic {
+          fabric.common.Logging.METRICS_LOGGER.finer("ACTIVATING MC " + tmp + " IN " + TransactionManager.getInstance().getCurrentLog());
+          final Store s = tmp.$getStore();
+          tmp.currentPolicy = targetPol;
+          tmp.$expiry = tmp.currentPolicy.expiry();
+          Contract.static_activate(tmp);
+          if (tmp.$expiry >= System.currentTimeMillis()) {
+            tmp.currentPolicy.apply(tmp);
+            // XXX: Do I need to do this?
+            tmp.getMetric().addContract(tmp);
+          }
         }
       }
       fabric.common.Logging.METRICS_LOGGER.finer("ACTIVATED MC " + tmp + " IN " + TransactionManager.getInstance().getCurrentLog());
@@ -400,8 +455,12 @@ public class MetricContract extends Contract {
 
     private static ProxyMetricContract static_getProxyContract(ProxyMetricContract tmp, final Store proxyStore) {
       ProxyMetricContract proxy = null;
-      atomic {
+      if (TransactionManager.getInstance().inTxn()) {
         proxy = new ProxyMetricContract@proxyStore().fabric$metrics$contracts$MetricContract$ProxyMetricContract$(tmp.target);
+      } else {
+        atomic {
+          proxy = new ProxyMetricContract@proxyStore().fabric$metrics$contracts$MetricContract$ProxyMetricContract$(tmp.target);
+        }
       }
       if (tmp.isActivated())
         proxy.activate();

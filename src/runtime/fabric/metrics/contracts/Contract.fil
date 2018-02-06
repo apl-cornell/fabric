@@ -111,10 +111,17 @@ public abstract class Contract extends AbstractSubject implements Observer {
   }
 
   public static void static_activate(Contract tmp) {
-    atomic {
+    if (TransactionManager.getInstance().inTxn()) {
       if (!tmp.activated) {
         fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "CONTRACT ACTIVATE");
         tmp.activated = true;
+      }
+    } else {
+      atomic {
+        if (!tmp.activated) {
+          fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "CONTRACT ACTIVATE");
+          tmp.activated = true;
+        }
       }
     }
   }
@@ -132,12 +139,19 @@ public abstract class Contract extends AbstractSubject implements Observer {
   }
 
   public static void removeObserver(Contract tmp, Observer obs) {
+    if (TransactionManager.getInstance().inTxn()) {
+      AbstractSubject.static_removeObserver(tmp, obs);
+      if (!tmp.isObserved()) {
+          tmp.$expiry = -1;
+      }
+    } else {
       atomic {
         AbstractSubject.static_removeObserver(tmp, obs);
         if (!tmp.isObserved()) {
             tmp.$expiry = -1;
         }
       }
+    }
   }
 
   /**
@@ -278,9 +292,14 @@ public abstract class Contract extends AbstractSubject implements Observer {
   }
 
   private static void static_attemptExtension(Contract tmp) {
-    atomic {
+    if (TransactionManager.getInstance().inTxn()) {
       fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "ASYNC EXTENSION OF " + tmp + " IN " + TransactionManager.getInstance().getCurrentTid());
       tmp.refresh(true);
+    } else {
+      atomic {
+        fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "ASYNC EXTENSION OF " + tmp + " IN " + TransactionManager.getInstance().getCurrentTid());
+        tmp.refresh(true);
+      }
     }
   }
 

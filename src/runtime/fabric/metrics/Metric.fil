@@ -63,8 +63,12 @@ public abstract class Metric extends AbstractSubject
     DerivedMetric result = (DerivedMetric) getTimesCache().get(s);
     if (result == null) {
       result = static_times(this, scalar);
-      atomic {
+      if (TransactionManager.getInstance().inTxn()) {
         getTimesCache().put(s, result);
+      } else {
+        atomic {
+          getTimesCache().put(s, result);
+        }
       }
     }
     return result;
@@ -73,8 +77,12 @@ public abstract class Metric extends AbstractSubject
   private static DerivedMetric static_times(Metric tmp, double scalar) {
     final Store s = tmp.$getStore();
     DerivedMetric val = null;
-    atomic {
+    if (TransactionManager.getInstance().inTxn()) {
       val = new ScaledMetric@s().fabric$metrics$ScaledMetric$(scalar, tmp);
+    } else {
+      atomic {
+        val = new ScaledMetric@s().fabric$metrics$ScaledMetric$(scalar, tmp);
+      }
     }
     return findDerivedMetric(s, val);
   }
@@ -106,9 +114,14 @@ public abstract class Metric extends AbstractSubject
     DerivedMetric result = (DerivedMetric) getPlusCache().get(other);
     if (result == null) {
       result = static_plus(this, other);
-      atomic {
+      if (TransactionManager.getInstance().inTxn()) {
         getPlusCache().put(other, result);
         other.getPlusCache().put(this, result);
+      } else {
+        atomic {
+          getPlusCache().put(other, result);
+          other.getPlusCache().put(this, result);
+        }
       }
     }
     return result;
@@ -120,8 +133,12 @@ public abstract class Metric extends AbstractSubject
       return other.plus(tmp);
     final Store s = tmp.$getStore();
     DerivedMetric val = null;
-    atomic {
+    if (TransactionManager.getInstance().inTxn()) {
       val = new SumMetric@s().fabric$metrics$SumMetric$(new Metric native[] { tmp, other });
+    } else {
+      atomic {
+        val = new SumMetric@s().fabric$metrics$SumMetric$(new Metric native[] { tmp, other });
+      }
     }
     return findDerivedMetric(s, val);
   }
@@ -154,9 +171,14 @@ public abstract class Metric extends AbstractSubject
     Metric result = (Metric) getMinCache().get(other);
     if (result == null) {
       result = static_min(this, other);
-      atomic {
+      if (TransactionManager.getInstance().inTxn()) {
         getMinCache().put(other, result);
         other.getMinCache().put(this, result);
+      } else {
+        atomic {
+          getMinCache().put(other, result);
+          other.getMinCache().put(this, result);
+        }
       }
     }
     return result;
@@ -171,13 +193,21 @@ public abstract class Metric extends AbstractSubject
     final Store s = tmp.$getStore();
     DerivedMetric val = null;
     if (tmp.compareTo(other) > 0) {
+      if (TransactionManager.getInstance().inTxn()) {
+        val = new MinMetric@s().fabric$metrics$MinMetric$(new Metric native[] { other, tmp });
+      } else {
         atomic {
           val = new MinMetric@s().fabric$metrics$MinMetric$(new Metric native[] { other, tmp });
         }
+      }
     } else {
+      if (TransactionManager.getInstance().inTxn()) {
+        val = new MinMetric@s().fabric$metrics$MinMetric$(new Metric native[] { tmp, other });
+      } else {
         atomic {
           val = new MinMetric@s().fabric$metrics$MinMetric$(new Metric native[] { tmp, other });
         }
+      }
     }
     return findDerivedMetric(s, val);
   }
@@ -209,7 +239,7 @@ public abstract class Metric extends AbstractSubject
 
   private static MetricContract static_getContract(Metric tmp, Bound bound) {
     MetricContract mc = null;
-    atomic {
+    if (TransactionManager.getInstance().inTxn()) {
       /*
       for (int i = 0; i < tmp.contracts.size(); i++) {
         MetricContract c = (MetricContract) tmp.contracts.get(i);
@@ -225,6 +255,24 @@ public abstract class Metric extends AbstractSubject
       if (mc == null)
       */
         mc = tmp.createContract(bound);
+    } else {
+      atomic {
+        /*
+        for (int i = 0; i < tmp.contracts.size(); i++) {
+          MetricContract c = (MetricContract) tmp.contracts.get(i);
+          if (c.stale()) {
+              tmp.removeObserver(c);
+              // Contract's removed, shift the index to account (ugh)
+              i--;
+          } else if (mc == null && c.isActivated()
+              && c.enforces(tmp, bound)) {
+            mc = c;
+          }
+        }
+        if (mc == null)
+        */
+          mc = tmp.createContract(bound);
+      }
     }
     return mc;
   }
@@ -285,8 +333,12 @@ public abstract class Metric extends AbstractSubject
     if (term.$getStore().equals(s))
       return findDerivedMetric(s, term.times(a));
     DerivedMetric val = null;
-    atomic {
+    if (TransactionManager.getInstance().inTxn()) {
       val = new ScaledMetric@s().fabric$metrics$ScaledMetric$(a, term);
+    } else {
+      atomic {
+        val = new ScaledMetric@s().fabric$metrics$ScaledMetric$(a, term);
+      }
     }
     return findDerivedMetric(s, val);
   }
@@ -309,8 +361,12 @@ public abstract class Metric extends AbstractSubject
     if (terms.length == 1)
       return scaleAtStore(s, 1.0, terms[0]);
     DerivedMetric val = null;
-    atomic {
+    if (TransactionManager.getInstance().inTxn()) {
       val = new SumMetric@s().fabric$metrics$SumMetric$(terms);
+    } else {
+      atomic {
+        val = new SumMetric@s().fabric$metrics$SumMetric$(terms);
+      }
     }
     return findDerivedMetric(s, val);
   }
@@ -332,8 +388,12 @@ public abstract class Metric extends AbstractSubject
     if (terms.length == 1)
       return scaleAtStore(s, 1.0, terms[0]);
     DerivedMetric val = null;
-    atomic {
+    if (TransactionManager.getInstance().inTxn()) {
       val = new MinMetric@s().fabric$metrics$MinMetric$(terms);
+    } else {
+      atomic {
+        val = new MinMetric@s().fabric$metrics$MinMetric$(terms);
+      }
     }
     return findDerivedMetric(s, val);
   }
@@ -511,12 +571,20 @@ public abstract class Metric extends AbstractSubject
   }
 
   private static void static_refreshLocally(Metric tmp) {
-    atomic {
+    if (TransactionManager.getInstance().inTxn()) {
       fabric.common.Logging.METRICS_LOGGER.finest("REFRESHING LOCALLY " + tmp);
       tmp.weakStats[0] = tmp.computeValue(true);
       tmp.weakStats[1] = tmp.computeVelocity(true);
       tmp.weakStats[2] = tmp.computeNoise(true);
       tmp.weakStats[3] = tmp.computeSamples(true);
+    } else {
+      atomic {
+        fabric.common.Logging.METRICS_LOGGER.finest("REFRESHING LOCALLY " + tmp);
+        tmp.weakStats[0] = tmp.computeValue(true);
+        tmp.weakStats[1] = tmp.computeVelocity(true);
+        tmp.weakStats[2] = tmp.computeNoise(true);
+        tmp.weakStats[3] = tmp.computeSamples(true);
+      }
     }
     fabric.common.Logging.METRICS_LOGGER.finest("REFRESHED " + tmp + " to " + tmp.weakStats[0] + ", " + tmp.weakStats[1] + ", " + tmp.weakStats[2]);
   }
@@ -721,7 +789,7 @@ public abstract class Metric extends AbstractSubject
    */
   protected static DerivedMetric findDerivedMetric(final Store s,
       DerivedMetric m) {
-    atomic {
+    if (TransactionManager.getInstance().inTxn()) {
       DerivedMetric orig = (DerivedMetric) m.terms[0].transformations.get(m);
       if (orig == null) {
         // Probably could just do the first term since AFAIK no derived metrics
@@ -731,6 +799,21 @@ public abstract class Metric extends AbstractSubject
           m.terms[i].transformations.put(m, m);
         }
         orig = m;
+      }
+      return orig;
+    } else {
+      DerivedMetric orig = null;
+      atomic {
+        orig = (DerivedMetric) m.terms[0].transformations.get(m);
+        if (orig == null) {
+          // Probably could just do the first term since AFAIK no derived metrics
+          // equate between differently ordered terms currently, but tabling that
+          // for now.
+          for (int i = 0; i < m.terms.length; i++) {
+            m.terms[i].transformations.put(m, m);
+          }
+          orig = m;
+        }
       }
       return orig;
     }

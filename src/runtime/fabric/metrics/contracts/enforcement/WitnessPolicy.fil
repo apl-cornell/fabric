@@ -45,9 +45,14 @@ public class WitnessPolicy extends EnforcementPolicy {
   }
 
   private static void static_activate(WitnessPolicy tmp) {
-    atomic {
+    if (TransactionManager.getInstance().inTxn()) {
       if (tmp.activated)
         return;
+    } else {
+      atomic {
+        if (tmp.activated)
+          return;
+      }
     }
     if (TransactionManager.getInstance().getCurrentLog() != null) {
       for (int i = 0; i < tmp.witnesses.length; i++) {
@@ -76,8 +81,12 @@ public class WitnessPolicy extends EnforcementPolicy {
         }
       }
     }
-    atomic {
+    if (TransactionManager.getInstance().inTxn()) {
       tmp.activated = true;
+    } else {
+      atomic {
+        tmp.activated = true;
+      }
     }
   }
 
@@ -113,11 +122,20 @@ public class WitnessPolicy extends EnforcementPolicy {
   private static long static_expiry(WitnessPolicy tmp) {
     long expiry = -1;
     boolean atLeastOnce = false;
-    atomic {
+    if (TransactionManager.getInstance().inTxn()) {
       for (int i = 0; i < tmp.witnesses.length; i++) {
         if (!atLeastOnce || tmp.witnesses[i].getExpiry() < expiry) {
           atLeastOnce = true;
           expiry = tmp.witnesses[i].getExpiry();
+        }
+      }
+    } else {
+      atomic {
+        for (int i = 0; i < tmp.witnesses.length; i++) {
+          if (!atLeastOnce || tmp.witnesses[i].getExpiry() < expiry) {
+            atLeastOnce = true;
+            expiry = tmp.witnesses[i].getExpiry();
+          }
         }
       }
     }

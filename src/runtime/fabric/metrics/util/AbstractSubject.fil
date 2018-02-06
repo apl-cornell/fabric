@@ -42,9 +42,14 @@ public abstract class AbstractSubject implements Subject {
   }
 
   private static void static_addObserver(AbstractSubject tmp, Observer o) {
-    atomic {
+    if (TransactionManager.getInstance().inTxn()) {
       fabric.common.Logging.METRICS_LOGGER.finer("ADD OBSERVER " + o + " FOR " + tmp + " IN " + TransactionManager.getInstance().getCurrentTid());
       tmp.observers.add(o);
+    } else {
+      atomic {
+        fabric.common.Logging.METRICS_LOGGER.finer("ADD OBSERVER " + o + " FOR " + tmp + " IN " + TransactionManager.getInstance().getCurrentTid());
+        tmp.observers.add(o);
+      }
     }
   }
 
@@ -54,9 +59,14 @@ public abstract class AbstractSubject implements Subject {
   }
 
   public static void static_removeObserver(AbstractSubject tmp, Observer o) {
-    atomic {
+    if (TransactionManager.getInstance().inTxn()) {
       fabric.common.Logging.METRICS_LOGGER.finer("REMOVE OBSERVER " + o + " FOR " + tmp + " IN " + TransactionManager.getInstance().getCurrentTid());
       tmp.observers.remove(o);
+    } else {
+      atomic {
+        fabric.common.Logging.METRICS_LOGGER.finer("REMOVE OBSERVER " + o + " FOR " + tmp + " IN " + TransactionManager.getInstance().getCurrentTid());
+        tmp.observers.remove(o);
+      }
     }
   }
 

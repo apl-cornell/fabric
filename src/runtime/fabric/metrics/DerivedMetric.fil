@@ -183,8 +183,14 @@ public abstract class DerivedMetric extends Metric implements Observer {
 
   private static double static_value(DerivedMetric tmp, boolean useWeakCache) {
     if (useWeakCache) {
-      atomic {
+      if (TransactionManager.getInstance().inTxn()) {
         return tmp.weakStats[0];
+      } else {
+        double rtn = 0;
+        atomic {
+          rtn = tmp.weakStats[0];
+        }
+        return rtn;
       }
     } else if (tmp.isObserved()) {
       // Make sure any related updates are accounted for
@@ -203,8 +209,14 @@ public abstract class DerivedMetric extends Metric implements Observer {
 
   private static double static_samples(DerivedMetric tmp, boolean useWeakCache) {
     if (useWeakCache) {
-      atomic {
+      if (TransactionManager.getInstance().inTxn()) {
         return tmp.weakStats[3];
+      } else {
+        double rtn = 0;
+        atomic {
+          rtn = tmp.weakStats[3];
+        }
+        return rtn;
       }
     } else if (tmp.isObserved()) {
       // Make sure any related updates are accounted for
@@ -233,8 +245,14 @@ public abstract class DerivedMetric extends Metric implements Observer {
   private static double static_velocity(DerivedMetric tmp, boolean useWeakCache) {
     if (tmp.usePreset) return tmp.presetV;
     if (useWeakCache) {
-      atomic {
+      if (TransactionManager.getInstance().inTxn()) {
         return tmp.weakStats[1];
+      } else {
+        double rtn = 0;
+        atomic {
+          rtn = tmp.weakStats[1];
+        }
+        return rtn;
       }
     } else if (tmp.isObserved()) {
       // Make sure any related updates are accounted for
@@ -256,8 +274,14 @@ public abstract class DerivedMetric extends Metric implements Observer {
   private static double static_noise(DerivedMetric tmp, boolean useWeakCache) {
     if (tmp.usePreset) return tmp.presetN;
     if (useWeakCache) {
-      atomic {
+      if (TransactionManager.getInstance().inTxn()) {
         return tmp.weakStats[2];
+      } else {
+        double rtn = 0;
+        atomic {
+          rtn = tmp.weakStats[2];
+        }
+        return rtn;
       }
     } else if (tmp.isObserved()) {
       // Make sure any related updates are accounted for
@@ -371,8 +395,12 @@ public abstract class DerivedMetric extends Metric implements Observer {
             final Metric t = terms[i];
             fabric.common.Logging.METRICS_LOGGER.finest("(PARALLEL) CHILD " + t + " OF " + this);
             Callable c = null;
-            atomic {
+            if (TransactionManager.getInstance().inTxn()) {
               c = new Refresher().fabric$metrics$DerivedMetric$Refresher$(t);
+            } else {
+              atomic {
+                c = new Refresher().fabric$metrics$DerivedMetric$Refresher$(t);
+              }
             }
             futures[i] = service.submit(c);
         }

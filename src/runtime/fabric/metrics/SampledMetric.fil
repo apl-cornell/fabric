@@ -130,6 +130,13 @@ public class SampledMetric extends Metric {
   }
 
   /**
+   * Alias for takeSample.
+   */
+  public void setValue(double value) {
+    takeSample(value);
+  }
+
+  /**
    * Update to a new value of the metric.
    *
    * @param sample
@@ -151,10 +158,16 @@ public class SampledMetric extends Metric {
 
   private static double static_computeValue(SampledMetric tmp, boolean useWeakCache) {
     double result = 0;
-    atomic {
+    if (TransactionManager.getInstance().inTxn()) {
       // Write lock hack to avoid being kicked out by updates.
       tmp.value[0] = tmp.value[0];
       result = tmp.value[0];
+    } else {
+      atomic {
+        // Write lock hack to avoid being kicked out by updates.
+        tmp.value[0] = tmp.value[0];
+        result = tmp.value[0];
+      }
     }
     return result;
   }
@@ -165,12 +178,22 @@ public class SampledMetric extends Metric {
   }
 
   private static double static_computeSamples(SampledMetric tmp, boolean useWeakCache) {
-    atomic {
+    if (TransactionManager.getInstance().inTxn()) {
       if (tmp.usePreset) {
         return 0;
       } else {
         return tmp.samples[0];
       }
+    } else {
+      double rtn = 0;
+      atomic {
+        if (tmp.usePreset) {
+          rtn = 0;
+        } else {
+          rtn = tmp.samples[0];
+        }
+      }
+      return rtn;
     }
   }
 
@@ -180,7 +203,7 @@ public class SampledMetric extends Metric {
   }
 
   private static double static_computeVelocity(SampledMetric tmp, boolean useWeakCache) {
-    atomic {
+    if (TransactionManager.getInstance().inTxn()) {
       if (tmp.usePreset) {
         return tmp.presetV;
       } else {
@@ -198,6 +221,28 @@ public class SampledMetric extends Metric {
         //return biasStats.getMean() / updateIntervalStats.getMean();
         return newBias / newInterval;
       }
+    } else {
+      double rtn = 0;
+      atomic {
+        if (tmp.usePreset) {
+          rtn = tmp.presetV;
+        } else {
+          // Account for time that's passed since last observation.
+          long intervalSince = (System.currentTimeMillis() - tmp.lastUpdate[0]);
+          double curInterval = tmp.updateIntervalStats.getMean();
+          double curBias = tmp.biasStats.getMean();
+          double newInterval = curInterval;
+          double newBias = curBias;
+          if (intervalSince > 0) {
+              newInterval = (curInterval + RunningStats.ALPHA * (intervalSince - curInterval));
+              newBias = (curBias * (1.0 - RunningStats.ALPHA));
+          }
+          // return allStats.getMean();
+          //return biasStats.getMean() / updateIntervalStats.getMean();
+          rtn = newBias / newInterval;
+        }
+      }
+      return rtn;
     }
   }
 
@@ -207,7 +252,7 @@ public class SampledMetric extends Metric {
   }
 
   private static double static_computeNoise(SampledMetric tmp, boolean useWeakCache) {
-    atomic {
+    if (TransactionManager.getInstance().inTxn()) {
       if (tmp.usePreset) {
         return tmp.presetN;
       } else {
@@ -235,6 +280,38 @@ public class SampledMetric extends Metric {
         //return (1 / updateIntervalStats.getMean() + biasStats.getVar() / tSqrd);
         return (1 / newInterval + newBiasVar / tSqrd);
       }
+    } else {
+      double rtn = 0;
+      atomic {
+        if (tmp.usePreset) {
+          rtn = tmp.presetN;
+        } else {
+          // Based on ratio estimator approach and assuming that there's 0
+          // covariance between update intervals and update values
+          // Account for time that's passed since last observation.
+          long intervalSince = (System.currentTimeMillis() - tmp.lastUpdate[0]);
+          double curInterval = tmp.updateIntervalStats.getMean();
+          double curBias = tmp.biasStats.getMean();
+          double curBiasVar = tmp.biasStats.getVar();
+          double newInterval = curInterval;
+          double newBias = curBias;
+          double newBiasVar = curBiasVar;
+          if (intervalSince > 0) {
+            newInterval = (curInterval + RunningStats.ALPHA * (intervalSince - curInterval));
+            newBias = (curBias * (1.0 - RunningStats.ALPHA));
+            newBiasVar = (1.0 - RunningStats.ALPHA) * curBiasVar + RunningStats.ALPHA * (curBias * newBias);
+          }
+          //double tSqrd = updateIntervalStats.getMean() * updateIntervalStats.getMean();
+          double tSqrd = newInterval * newInterval;
+          // We're assuming exponential distribution of the times and here we get
+          // the variance of the product of independent poisson (1/exp) and
+          // normally distributed variables.
+          // return allStats.getVar();
+          //return (1 / updateIntervalStats.getMean() + biasStats.getVar() / tSqrd);
+          rtn = (1 / newInterval + newBiasVar / tSqrd);
+        }
+      }
+      return rtn;
     }
   }
 
@@ -301,9 +378,14 @@ public class SampledMetric extends Metric {
 
   private static double static_value(SampledMetric tmp, boolean useWeakCache) {
     double result = 0;
-    atomic {
+    if (TransactionManager.getInstance().inTxn()) {
       if (useWeakCache) result = tmp.weakStats[0];
       else result = tmp.computeValue(false);
+    } else {
+      atomic {
+        if (useWeakCache) result = tmp.weakStats[0];
+        else result = tmp.computeValue(false);
+      }
     }
     return result;
   }
@@ -315,9 +397,14 @@ public class SampledMetric extends Metric {
 
   private static double static_samples(SampledMetric tmp, boolean useWeakCache) {
     double result = 0;
-    atomic {
+    if (TransactionManager.getInstance().inTxn()) {
       if (useWeakCache) result = tmp.weakStats[3];
       else result = tmp.computeSamples(false);
+    } else {
+      atomic {
+        if (useWeakCache) result = tmp.weakStats[3];
+        else result = tmp.computeSamples(false);
+      }
     }
     return result;
   }
@@ -329,9 +416,14 @@ public class SampledMetric extends Metric {
 
   private static double static_velocity(SampledMetric tmp, boolean useWeakCache) {
     double result = 0;
-    atomic {
+    if (TransactionManager.getInstance().inTxn()) {
       if (useWeakCache) result = tmp.weakStats[1];
       else result = tmp.computeVelocity(false);
+    } else {
+      atomic {
+        if (useWeakCache) result = tmp.weakStats[1];
+        else result = tmp.computeVelocity(false);
+      }
     }
     return result;
   }
@@ -343,9 +435,14 @@ public class SampledMetric extends Metric {
 
   private static double static_noise(SampledMetric tmp, boolean useWeakCache) {
     double result = 0;
-    atomic {
+    if (TransactionManager.getInstance().inTxn()) {
       if (useWeakCache) result = tmp.weakStats[2];
       else result = tmp.computeNoise(false);
+    } else {
+      atomic {
+        if (useWeakCache) result = tmp.weakStats[2];
+        else result = tmp.computeNoise(false);
+      }
     }
     return result;
   }

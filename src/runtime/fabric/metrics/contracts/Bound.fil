@@ -109,6 +109,16 @@ public class Bound {
     return rate >= other.rate && base >= other.base;
   }
 
+  /**
+   * @param other
+   *        another {@link Bound}
+   * @return true iff this is at least as strong of a bound as other (so this
+   *         bound being satisfied imples the other bound is also satisfied)
+   */
+  public boolean implies(double otherRate, double otherBase, long time) {
+    return rate >= otherRate && base >= (otherBase + (otherRate * time));
+  }
+
   /*@Override*/
   public boolean equals(Object o) {
     if (o instanceof Bound) {

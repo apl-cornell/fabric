@@ -14,6 +14,7 @@ import fabric.metrics.util.Observer;
 import fabric.metrics.util.Subject;
 
 import fabric.worker.Store;
+import fabric.worker.transaction.TransactionManager;
 
 /**
  * A {@link DerivedMetric} for the scaled value of a given metric.
@@ -84,8 +85,12 @@ public class ScaledMetric extends DerivedMetric {
       DerivedMetric result = (DerivedMetric) getTimesCache().get(s);
       if (result == null) {
         result = static_times(this, otherScalar);
-        atomic {
+        if (TransactionManager.getInstance().inTxn()) {
           getTimesCache().put(s, result);
+        } else {
+          atomic {
+            getTimesCache().put(s, result);
+          }
         }
       }
       return result;
@@ -94,8 +99,12 @@ public class ScaledMetric extends DerivedMetric {
     private static DerivedMetric static_times(ScaledMetric tmp, double otherScalar) {
         final Store s = tmp.$getStore();
         DerivedMetric val = null;
-        atomic {
+        if (TransactionManager.getInstance().inTxn()) {
           val = new ScaledMetric@s().fabric$metrics$ScaledMetric$(otherScalar * tmp.scalar, tmp.terms[0]);
+        } else {
+          atomic {
+            val = new ScaledMetric@s().fabric$metrics$ScaledMetric$(otherScalar * tmp.scalar, tmp.terms[0]);
+          }
         }
         return Metric.findDerivedMetric(s, val);
     }
@@ -112,9 +121,14 @@ public class ScaledMetric extends DerivedMetric {
       DerivedMetric result = (DerivedMetric) getPlusCache().get(other);
       if (result == null) {
         result = static_plus(this, other);
-        atomic {
+        if (TransactionManager.getInstance().inTxn()) {
           getPlusCache().put(other, result);
           other.getPlusCache().put(this, result);
+        } else {
+          atomic {
+            getPlusCache().put(other, result);
+            other.getPlusCache().put(this, result);
+          }
         }
       }
       return result;
@@ -127,9 +141,14 @@ public class ScaledMetric extends DerivedMetric {
             ScaledMetric that = (ScaledMetric) other;
 
             DerivedMetric val = null;
-            atomic {
+            if (TransactionManager.getInstance().inTxn()) {
               val = new ScaledMetric@s().fabric$metrics$ScaledMetric$(
                   that.scalar + tmp.scalar, tmp.terms[0]);
+            } else {
+              atomic {
+                val = new ScaledMetric@s().fabric$metrics$ScaledMetric$(
+                    that.scalar + tmp.scalar, tmp.terms[0]);
+              }
             }
             return Metric.findDerivedMetric(s, val);
         }

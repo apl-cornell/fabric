@@ -16,6 +16,7 @@ import fabric.metrics.util.Observer;
 import fabric.metrics.util.Subject;
 
 import fabric.worker.Store;
+import fabric.worker.transaction.TransactionManager;
 
 /**
  * A {@link DerivedMetric} for the minimum of a group of other {@link Metric}s.
@@ -123,8 +124,12 @@ public class MinMetric extends DerivedMetric {
       DerivedMetric result = (DerivedMetric) getTimesCache().get(s);
       if (result == null) {
         result = static_times(this, scalar);
-        atomic {
+        if (TransactionManager.getInstance().inTxn()) {
           getTimesCache().put(s, result);
+        } else {
+          atomic {
+            getTimesCache().put(s, result);
+          }
         }
       }
       return result;
@@ -137,8 +142,12 @@ public class MinMetric extends DerivedMetric {
         }
         final Store s = tmp.$getStore();
         DerivedMetric val = null;
-        atomic {
+        if (TransactionManager.getInstance().inTxn()) {
           val = new MinMetric@s().fabric$metrics$MinMetric$(newTerms);
+        } else {
+          atomic {
+            val = new MinMetric@s().fabric$metrics$MinMetric$(newTerms);
+          }
         }
         return Metric.findDerivedMetric(s, val);
     }
@@ -155,9 +164,14 @@ public class MinMetric extends DerivedMetric {
       DerivedMetric result = (DerivedMetric) getPlusCache().get(other);
       if (result == null) {
         result = static_plus(this, other);
-        atomic {
+        if (TransactionManager.getInstance().inTxn()) {
           getPlusCache().put(other, result);
           other.getPlusCache().put(this, result);
+        } else {
+          atomic {
+            getPlusCache().put(other, result);
+            other.getPlusCache().put(this, result);
+          }
         }
       }
       return result;
@@ -170,8 +184,12 @@ public class MinMetric extends DerivedMetric {
         }
         final Store s = tmp.$getStore();
         DerivedMetric val = null;
-        atomic {
+        if (TransactionManager.getInstance().inTxn()) {
           val = new MinMetric@s().fabric$metrics$MinMetric$(newTerms);
+        } else {
+          atomic {
+            val = new MinMetric@s().fabric$metrics$MinMetric$(newTerms);
+          }
         }
         return Metric.findDerivedMetric(s, val);
     }
@@ -188,9 +206,14 @@ public class MinMetric extends DerivedMetric {
       Metric result = (Metric) getMinCache().get(other);
       if (result == null) {
         result = static_min(this, other);
-        atomic {
+        if (TransactionManager.getInstance().inTxn()) {
           getMinCache().put(other, result);
           other.getMinCache().put(this, result);
+        } else {
+          atomic {
+            getMinCache().put(other, result);
+            other.getMinCache().put(this, result);
+          }
         }
       }
       return result;
@@ -218,8 +241,12 @@ public class MinMetric extends DerivedMetric {
                 newTerms[aggIdx++] = m;
             }
 
-            atomic {
+            if (TransactionManager.getInstance().inTxn()) {
               val = new MinMetric@s().fabric$metrics$MinMetric$(newTerms);
+            } else {
+              atomic {
+                val = new MinMetric@s().fabric$metrics$MinMetric$(newTerms);
+              }
             }
             return Metric.findDerivedMetric(s, val);
         } else if (Arrays.asList(tmp.terms).indexOf(other) >= 0) {
@@ -232,8 +259,12 @@ public class MinMetric extends DerivedMetric {
         }
         newTerms[tmp.terms.length] = other;
         java.util.Arrays.sort(newTerms, 0, newTerms.length);
-        atomic {
+        if (TransactionManager.getInstance().inTxn()) {
           val = new MinMetric@s().fabric$metrics$MinMetric$(newTerms);
+        } else {
+          atomic {
+            val = new MinMetric@s().fabric$metrics$MinMetric$(newTerms);
+          }
         }
         return Metric.findDerivedMetric(s, val);
     }

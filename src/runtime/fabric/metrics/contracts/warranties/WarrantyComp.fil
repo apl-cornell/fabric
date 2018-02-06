@@ -68,8 +68,12 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
     // compute the same value
     fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Starting " + tmp);
     boolean loop = false;
-    atomic {
+    if (TransactionManager.getInstance().inTxn()) {
       loop = tmp.curVal.contract == null || !tmp.curVal.contract.valid();
+    } else {
+      atomic {
+        loop = tmp.curVal.contract == null || !tmp.curVal.contract.valid();
+      }
     }
     if (loop)
       fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Recomputing " + tmp);
@@ -104,7 +108,7 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
       }
 
       fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Setting " + tmp + " to " + newVal + " and Observing");
-      atomic {
+      if (TransactionManager.getInstance().inTxn()) {
         // Need to double check we weren't scooped by another caller.  If we
         // were, don't bother with our new value and go with the existing value.
         if (tmp.curVal.contract == null || !tmp.curVal.contract.valid()) {
@@ -117,13 +121,34 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
             tmp.curVal.contract.addObserver(tmp);
           }
         }
+      } else {
+        atomic {
+          // Need to double check we weren't scooped by another caller.  If we
+          // were, don't bother with our new value and go with the existing value.
+          if (tmp.curVal.contract == null || !tmp.curVal.contract.valid()) {
+            tmp.curVal.value = newVal.value;
+            if (tmp.curVal.contract != newVal.contract) {
+              if (tmp.curVal.contract != null) {
+                tmp.curVal.contract.removeObserver(tmp);
+              }
+              tmp.curVal.contract = newVal.contract;
+              tmp.curVal.contract.addObserver(tmp);
+            }
+          }
+        }
       }
       fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Updated to " + tmp.curVal);
 
-      atomic {
+      if (TransactionManager.getInstance().inTxn()) {
         // Only bother to retry if we're supposed to and we don't have a valid
         // contract.
         loop = tmp.curVal.contract == null || (autoRetry && !tmp.curVal.contract.valid());
+      } else {
+        atomic {
+          // Only bother to retry if we're supposed to and we don't have a valid
+          // contract.
+          loop = tmp.curVal.contract == null || (autoRetry && !tmp.curVal.contract.valid());
+        }
       }
     }
     fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Finished " + tmp + " with " + tmp.curVal);
@@ -164,8 +189,14 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
   }
 
   private static ProxyComp static_makeProxy(WarrantyComp tmp, final Store proxyStore) {
-    atomic {
+    if (TransactionManager.getInstance().inTxn()) {
       return new ProxyComp@proxyStore().fabric$metrics$contracts$warranties$WarrantyComp$ProxyComp$(tmp);
+    } else {
+      ProxyComp rtn = null;
+      atomic {
+        rtn = new ProxyComp@proxyStore().fabric$metrics$contracts$warranties$WarrantyComp$ProxyComp$(tmp);
+      }
+      return rtn;
     }
   }
 
@@ -205,8 +236,12 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
     private static WarrantyValue/*T*/ static_apply(ProxyComp tmp, long time, boolean autoRetry) {
       fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Starting proxy " + tmp);
       boolean loop = false;
-      atomic {
+      if (TransactionManager.getInstance().inTxn()) {
         loop = tmp.curVal.contract == null || !tmp.curVal.contract.valid();
+      } else {
+        atomic {
+          loop = tmp.curVal.contract == null || !tmp.curVal.contract.valid();
+        }
       }
       if (loop)
         fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Recomputing proxy " + tmp);
@@ -223,7 +258,7 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
           return newVal;
 
         fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Setting proxy " + tmp + " to " + newVal + " and Observing");
-        atomic {
+        if (TransactionManager.getInstance().inTxn()) {
           // Need to double check we weren't scooped by another caller.  If we
           // were, don't bother with our new value and go with the existing value.
           if (tmp.curVal.contract == null || !tmp.curVal.contract.valid()) {
@@ -237,13 +272,35 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
               tmp.curVal.contract.addObserver(tmp);
             }
           }
+        } else {
+          atomic {
+            // Need to double check we weren't scooped by another caller.  If we
+            // were, don't bother with our new value and go with the existing value.
+            if (tmp.curVal.contract == null || !tmp.curVal.contract.valid()) {
+              tmp.curVal.value = tmp.baseComputation.makeProxyResult(newVal, tmp.$getStore());
+              if (tmp.oldBaseContract != newVal.contract) {
+                if (tmp.curVal.contract != null) {
+                  tmp.curVal.contract.removeObserver(tmp);
+                }
+                tmp.oldBaseContract = newVal.contract;
+                tmp.curVal.contract = newVal.contract.getProxyContract(tmp.$getStore());
+                tmp.curVal.contract.addObserver(tmp);
+              }
+            }
+          }
         }
         fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Updated proxy to " + tmp.curVal);
 
-        atomic {
+        if (TransactionManager.getInstance().inTxn()) {
           // Only bother to retry if we're supposed to and we don't have a valid
           // contract.
           loop = tmp.curVal.contract == null || (autoRetry && !tmp.curVal.contract.valid());
+        } else {
+          atomic {
+            // Only bother to retry if we're supposed to and we don't have a valid
+            // contract.
+            loop = tmp.curVal.contract == null || (autoRetry && !tmp.curVal.contract.valid());
+          }
         }
       }
       fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Finished proxy " + tmp + " with " + tmp.curVal);
@@ -256,9 +313,16 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
     }
 
     private static ProxyComp static_makeProxy(ProxyComp tmp, final Store proxyStore) {
-      atomic {
+      if (TransactionManager.getInstance().inTxn()) {
         // Avoid unnecessary indirection.
         return new ProxyComp@proxyStore().fabric$metrics$contracts$warranties$WarrantyComp$ProxyComp$(tmp.baseComputation);
+      } else {
+        ProxyComp rtn = null;
+        atomic {
+          // Avoid unnecessary indirection.
+          rtn = new ProxyComp@proxyStore().fabric$metrics$contracts$warranties$WarrantyComp$ProxyComp$(tmp.baseComputation);
+        }
+        return rtn;
       }
     }
   }
