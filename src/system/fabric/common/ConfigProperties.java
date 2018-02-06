@@ -150,6 +150,7 @@ public class ConfigProperties {
     if (this.usePreset) {
       for (int i = 0; i < rawRates.length; i++) {
         String[] kv = rawRates[i].split(":");
+        if (kv.length != 2) continue;
         this.rates.put(kv[0], Double.parseDouble(kv[1]));
       }
     }
@@ -160,6 +161,7 @@ public class ConfigProperties {
     if (this.usePreset) {
       for (int i = 0; i < rawBounds.length; i++) {
         String[] kv = rawBounds[i].split(":");
+        if (kv.length != 2) continue;
         this.bounds.put(kv[0], Double.parseDouble(kv[1]));
       }
     }
@@ -170,6 +172,7 @@ public class ConfigProperties {
     if (this.usePreset) {
       for (int i = 0; i < rawVelocities.length; i++) {
         String[] kv = rawVelocities[i].split(":");
+        if (kv.length != 2) continue;
         this.velocities.put(kv[0], Double.parseDouble(kv[1]));
       }
     }
@@ -180,6 +183,7 @@ public class ConfigProperties {
     if (this.usePreset) {
       for (int i = 0; i < rawNoises.length; i++) {
         String[] kv = rawNoises[i].split(":");
+        if (kv.length != 2) continue;
         this.noises.put(kv[0], Double.parseDouble(kv[1]));
       }
     }
