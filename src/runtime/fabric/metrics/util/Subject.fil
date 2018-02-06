@@ -1,6 +1,7 @@
 package fabric.metrics.util;
 
-import fabric.util.Set;
+//import fabric.util.Set;
+import fabric.util.Collection;
 
 /**
  * Represents an observable object that can be monitored by {@link Observer}s.
@@ -43,5 +44,5 @@ public interface Subject {
   /**
    * @return the set of the current observers of this subject.
    */
-  public Set/*<Observer>*/ getObservers();
+  public Collection/*<Observer>*/ getObservers();
 }

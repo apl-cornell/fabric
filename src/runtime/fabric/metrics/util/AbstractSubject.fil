@@ -1,10 +1,12 @@
 package fabric.metrics.util;
 
+import fabric.util.Collection;
 import fabric.util.Collections;
-import fabric.util.LinkedHashSet;
+//import fabric.util.LinkedHashSet;
 import java.util.LinkedList;
 import fabric.util.Set;
-import fabric.util.HashSet;
+//import fabric.util.HashSet;
+import fabric.util.ArrayList;
 import fabric.util.Iterator;
 
 import fabric.metrics.SampledMetric;
@@ -27,14 +29,16 @@ public abstract class AbstractSubject implements Subject {
   }
 
   protected AbstractSubject fabric$metrics$util$AbstractSubject$() {
-    this.observers = new LinkedHashSet/*<>*/().fabric$util$LinkedHashSet$(64);
+    //this.observers = new LinkedHashSet/*<>*/().fabric$util$LinkedHashSet$(64);
+    //this.observers = new HashSet/*<>*/().fabric$util$HashSet$(64);
+    this.observers = new ArrayList/*<>*/().fabric$util$ArrayList$();
     fabric$lang$Object$();
     return this;
   }
 
   // Using a weak map as the backing for this set so that observers aren't
   // pinned by their subjects.
-  private final Set/*<Observer>*/ observers;
+  private final ArrayList/*<Observer>*/ observers;
 
   /*@Override*/
   public void addObserver(Observer o) {
@@ -44,11 +48,13 @@ public abstract class AbstractSubject implements Subject {
   private static void static_addObserver(AbstractSubject tmp, Observer o) {
     if (TransactionManager.getInstance().inTxn()) {
       fabric.common.Logging.METRICS_LOGGER.finer("ADD OBSERVER " + o + " FOR " + tmp + " IN " + TransactionManager.getInstance().getCurrentTid());
-      tmp.observers.add(o);
+      if (!tmp.observers.contains(o))
+        tmp.observers.add(o);
     } else {
       atomic {
         fabric.common.Logging.METRICS_LOGGER.finer("ADD OBSERVER " + o + " FOR " + tmp + " IN " + TransactionManager.getInstance().getCurrentTid());
-        tmp.observers.add(o);
+        if (!tmp.observers.contains(o))
+          tmp.observers.add(o);
       }
     }
   }
@@ -81,7 +87,7 @@ public abstract class AbstractSubject implements Subject {
   }
 
   /*@Override*/
-  public Set/*<Observer>*/ getObservers() {
+  public Collection/*<Observer>*/ getObservers() {
     return observers;
   }
 
