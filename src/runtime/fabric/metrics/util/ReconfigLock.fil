@@ -1,9 +1,10 @@
 package fabric.metrics.util;
 
-import fabric.common.Logging;
 import fabric.common.TransactionID;
 import fabric.worker.transaction.TransactionManager;
 import fabric.worker.TransactionRestartingException;
+
+//import fabric.common.Logging;
 
 /**
  * Utility class acting as a lock for Contracts to help with reconfigurations.
@@ -39,7 +40,8 @@ public class ReconfigLock {
       TransactionID current = tm.getCurrentTid();
       if (current != null) {
         while (current.parent != null) current = current.parent;
-        Logging.METRICS_LOGGER.finer("ABORTING " + current + " FOR LOCK " + this);
+        //Logging.METRICS_LOGGER.finer("ABORTING " + current + " FOR LOCK " +
+        //    this);
         // XXX: Dumb hack to avoid issues with stale lock.
         tm.checkForStaleObjects();
         throw new TransactionRestartingException(
@@ -60,7 +62,8 @@ public class ReconfigLock {
       TransactionID current = tm.getCurrentTid();
       if (current != null) {
         while (current.parent != null) current = current.parent;
-        Logging.METRICS_LOGGER.finer("ABORTING " + current + " FOR LOCK " + this);
+        //Logging.METRICS_LOGGER.finer("ABORTING " + current + " FOR LOCK " +
+        //    this);
         // XXX: Dumb hack to avoid issues with stale lock.
         tm.checkForStaleObjects();
         throw new TransactionRestartingException(

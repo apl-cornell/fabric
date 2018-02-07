@@ -1,6 +1,5 @@
 package fabric.metrics.util;
 
-//import fabric.util.Set;
 import fabric.util.Collection;
 
 /**

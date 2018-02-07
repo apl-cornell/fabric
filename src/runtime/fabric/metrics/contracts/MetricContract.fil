@@ -14,7 +14,9 @@ import fabric.metrics.util.Subject;
 import fabric.common.TransactionID;
 import fabric.worker.Store;
 import fabric.worker.transaction.TransactionManager;
+
 import java.util.logging.Level;
+import fabric.common.Logging;
 
 /**
  * A contract asserting that a {@link Metric}'s value is above or below a
@@ -93,7 +95,7 @@ public class MetricContract extends Contract {
     //metric.refreshWeakEstimates();
 
     // Determine children
-    fabric.common.Logging.METRICS_LOGGER.finer("CREATING A POLICY FOR MC " + tmp);
+    //Logging.METRICS_LOGGER.finer("CREATING A POLICY FOR MC " + tmp);
     EnforcementPolicy startPol = null;
     if (TransactionManager.getInstance().inTxn()) {
       startPol = tmp.metric.policy(tmp.bound, true);
@@ -104,7 +106,7 @@ public class MetricContract extends Contract {
     }
 
     // Activate new children
-    fabric.common.Logging.METRICS_LOGGER.finer("ACTIVATING POLICY FOR MC " + tmp);
+    //Logging.METRICS_LOGGER.finer("ACTIVATING POLICY FOR MC " + tmp);
     startPol.activate();
 
     // Set the expiry and free it up
@@ -117,8 +119,9 @@ public class MetricContract extends Contract {
 
   private static void static_finishActivating(MetricContract tmp, EnforcementPolicy p) {
     // Set the expiry and free it up
+    //Logging.METRICS_LOGGER.finer("ACTIVATING MC " + tmp + " IN " +
+    //    TransactionManager.getInstance().getCurrentLog());
     if (TransactionManager.getInstance().inTxn()) {
-      fabric.common.Logging.METRICS_LOGGER.finer("ACTIVATING MC " + tmp + " IN " + TransactionManager.getInstance().getCurrentLog());
       tmp.currentPolicy = p;
       tmp.$expiry = tmp.currentPolicy.expiry();
       Contract.static_activate(tmp);
@@ -128,7 +131,6 @@ public class MetricContract extends Contract {
       }
     } else {
       atomic {
-        fabric.common.Logging.METRICS_LOGGER.finer("ACTIVATING MC " + tmp + " IN " + TransactionManager.getInstance().getCurrentLog());
         tmp.currentPolicy = p;
         tmp.$expiry = tmp.currentPolicy.expiry();
         Contract.static_activate(tmp);
@@ -138,7 +140,8 @@ public class MetricContract extends Contract {
         }
       }
     }
-    fabric.common.Logging.METRICS_LOGGER.finer("ACTIVATED MC " + tmp + " IN " + TransactionManager.getInstance().getCurrentLog());
+    //Logging.METRICS_LOGGER.finer("ACTIVATED MC " + tmp + " IN " +
+    //    TransactionManager.getInstance().getCurrentLog());
   }
 
   public void finishActivating_remote(fabric.lang.security.Principal caller, EnforcementPolicy p) {
@@ -155,7 +158,7 @@ public class MetricContract extends Contract {
   protected boolean refresh(boolean asyncExtension) {
     // If we haven't activated yet, this is a bad operation.  Stop.
     if (!isActivated()) {
-      fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "CONTRACT INACTIVE");
+      //Logging.METRICS_LOGGER.log(Level.FINER, "CONTRACT INACTIVE");
       return false;
     }
 
@@ -166,7 +169,8 @@ public class MetricContract extends Contract {
       long curExpiry = currentPolicy.expiry();
       if (curExpiry >= currentTime) {
         boolean result = update(curExpiry);
-        fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "DEFENDING " + this + " WITH " + currentPolicy);
+        //Logging.METRICS_LOGGER.log(Level.FINER, "DEFENDING " + this + " WITH " +
+        //    currentPolicy);
         return result;
       }
     }
@@ -176,7 +180,8 @@ public class MetricContract extends Contract {
       return false;
 
     // Otherwise we're finding a new policy, so we're coordinating.
-    fabric.common.Logging.METRICS_LOGGER.fine("COORDINATING FOR " + this + " " + bound + " IN " + TransactionManager.getInstance().getCurrentTid());
+    Logging.METRICS_LOGGER.fine("COORDINATING FOR " + this + " " + bound +
+        " IN " + TransactionManager.getInstance().getCurrentTid());
 
     // If we're moving to a new policy we need to be holding the reconfig locks.
     TransactionManager tm = TransactionManager.getInstance();
@@ -206,7 +211,7 @@ public class MetricContract extends Contract {
     boolean result = update(newExpiry);
     if (newExpiry >= currentTime)
       currentPolicy.apply(this);
-    fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "CONTRACT TRUE");
+    //Logging.METRICS_LOGGER.log(Level.FINER, "CONTRACT TRUE");
     return result;
   }
 
@@ -310,7 +315,8 @@ public class MetricContract extends Contract {
 
   /*@Override*/
   public void acquireReconfigLocks() {
-    fabric.common.Logging.METRICS_LOGGER.finer("ACQUIRING LOCK AT " + this + " IN " + TransactionManager.getInstance().getCurrentLog());
+    //Logging.METRICS_LOGGER.finer("ACQUIRING LOCK AT " + this + " IN " +
+    //    TransactionManager.getInstance().getCurrentLog());
     this.lock.acquire();
     this.currentPolicy.acquireReconfigLocks();
   }
@@ -379,7 +385,7 @@ public class MetricContract extends Contract {
 
       // TODO: Should this watch the target or just mirror the target's policy.
       EnforcementPolicy targetPol = null;
-      fabric.common.Logging.METRICS_LOGGER.finer("CREATING POLICY FOR MC " + tmp);
+      //Logging.METRICS_LOGGER.finer("CREATING POLICY FOR MC " + tmp);
       if (TransactionManager.getInstance().inTxn()) {
         final Store s = tmp.$getStore();
         targetPol = new WitnessPolicy@s().fabric$metrics$contracts$enforcement$WitnessPolicy$(new MetricContract native[] { tmp.target });
@@ -389,11 +395,12 @@ public class MetricContract extends Contract {
           targetPol = new WitnessPolicy@s().fabric$metrics$contracts$enforcement$WitnessPolicy$(new MetricContract native[] { tmp.target });
         }
       }
-      fabric.common.Logging.METRICS_LOGGER.finer("ACTIVATING POLICY FOR MC " + tmp);
+      //Logging.METRICS_LOGGER.finer("ACTIVATING POLICY FOR MC " + tmp);
       targetPol.activate();
 
+      //Logging.METRICS_LOGGER.finer("ACTIVATING MC " + tmp + " IN " +
+      //    TransactionManager.getInstance().getCurrentLog());
       if (TransactionManager.getInstance().inTxn()) {
-        fabric.common.Logging.METRICS_LOGGER.finer("ACTIVATING MC " + tmp + " IN " + TransactionManager.getInstance().getCurrentLog());
         final Store s = tmp.$getStore();
         tmp.currentPolicy = targetPol;
         tmp.$expiry = tmp.currentPolicy.expiry();
@@ -405,7 +412,6 @@ public class MetricContract extends Contract {
         }
       } else {
         atomic {
-          fabric.common.Logging.METRICS_LOGGER.finer("ACTIVATING MC " + tmp + " IN " + TransactionManager.getInstance().getCurrentLog());
           final Store s = tmp.$getStore();
           tmp.currentPolicy = targetPol;
           tmp.$expiry = tmp.currentPolicy.expiry();
@@ -417,14 +423,15 @@ public class MetricContract extends Contract {
           }
         }
       }
-      fabric.common.Logging.METRICS_LOGGER.finer("ACTIVATED MC " + tmp + " IN " + TransactionManager.getInstance().getCurrentLog());
+      //Logging.METRICS_LOGGER.finer("ACTIVATED MC " + tmp + " IN " +
+      //    TransactionManager.getInstance().getCurrentLog());
     }
 
     /*@Override*/
     protected boolean refresh(boolean asyncExtension) {
       // If we haven't activated yet, this is a bad operation.  Stop.
       if (!isActivated()) {
-        fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "CONTRACT INACTIVE");
+        //Logging.METRICS_LOGGER.log(Level.FINER, "CONTRACT INACTIVE");
         return false;
       }
 
@@ -434,7 +441,8 @@ public class MetricContract extends Contract {
       if (currentPolicy != null) {
         long curExpiry = currentPolicy.expiry();
         boolean result = update(curExpiry);
-        fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "DEFENDING " + this + " WITH " + currentPolicy);
+        //Logging.METRICS_LOGGER.log(Level.FINER, "DEFENDING " + this + " WITH " +
+        //    currentPolicy);
         return result;
       }
 

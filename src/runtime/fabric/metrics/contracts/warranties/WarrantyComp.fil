@@ -7,8 +7,10 @@ import fabric.metrics.Metric;
 import fabric.metrics.contracts.MetricContract;
 import fabric.metrics.SampledMetric;
 import fabric.metrics.util.Observer;
-import java.util.logging.Level;
 import fabric.worker.transaction.TransactionManager;
+
+//import java.util.logging.Level;
+//import fabric.common.Logging;
 
 /**
  * A computation that uses {@link Contract}s to cache and reuse results.
@@ -66,7 +68,7 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
   private static WarrantyValue/*T*/ static_apply(WarrantyComp tmp, long time, boolean autoRetry) {
     // TODO recompute but don't replace if current one is pending and we
     // compute the same value
-    fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Starting " + tmp);
+    //Logging.METRICS_LOGGER.log(Level.FINER, "Starting " + tmp);
     boolean loop = false;
     if (TransactionManager.getInstance().inTxn()) {
       loop = tmp.curVal.contract == null || !tmp.curVal.contract.valid();
@@ -75,15 +77,16 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
         loop = tmp.curVal.contract == null || !tmp.curVal.contract.valid();
       }
     }
-    if (loop)
-      fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Recomputing " + tmp);
-    else
-      fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Reusing " + tmp);
+    //if (loop)
+    //  Logging.METRICS_LOGGER.log(Level.FINER, "Recomputing " + tmp);
+    //else
+    //  Logging.METRICS_LOGGER.log(Level.FINER, "Reusing " + tmp);
     while (loop) {
-      fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Iterating " + tmp);
+      //Logging.METRICS_LOGGER.log(Level.FINER, "Iterating " + tmp);
 
       WarrantyValue newVal = tmp.updatedVal(System.currentTimeMillis());
-      fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Updating " + tmp + " to " + newVal);
+      //Logging.METRICS_LOGGER.log(Level.FINER, "Updating " + tmp + " to " +
+      //    newVal);
 
       // If newVal's contract is null, this indicates that the programmer
       // doesn't want to memoize the result with a treaty.
@@ -96,10 +99,9 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
        * Estimated here so that we don't repeat work on activations of sub
        * treaties.
        */
-      //fabric.common.Logging.METRICS_LOGGER.log(Level.FINE, "Estimating " + this);
-      //curVal.contract.getMetric().refreshWeakEstimates();
 
-      fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Activating " + newVal + " for " + tmp);
+      //Logging.METRICS_LOGGER.log(Level.FINER, "Activating " + newVal + " for " +
+      //    tmp);
       if (TransactionManager.getInstance().getCurrentLog() == null && !(newVal.contract.$getStore().name().equals(Worker.getWorkerName()))) {
         RemoteWorker w = Worker.getWorker().getWorker(newVal.contract.$getStore().name());
         newVal.contract.activate_remote@w(null);
@@ -107,7 +109,8 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
         newVal.contract.activate();
       }
 
-      fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Setting " + tmp + " to " + newVal + " and Observing");
+      //Logging.METRICS_LOGGER.log(Level.FINER, "Setting " + tmp + " to " + newVal
+      //    + " and Observing");
       if (TransactionManager.getInstance().inTxn()) {
         // Need to double check we weren't scooped by another caller.  If we
         // were, don't bother with our new value and go with the existing value.
@@ -137,7 +140,7 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
           }
         }
       }
-      fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Updated to " + tmp.curVal);
+      //Logging.METRICS_LOGGER.log(Level.FINER, "Updated to " + tmp.curVal);
 
       if (TransactionManager.getInstance().inTxn()) {
         // Only bother to retry if we're supposed to and we don't have a valid
@@ -151,7 +154,8 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
         }
       }
     }
-    fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Finished " + tmp + " with " + tmp.curVal);
+    //Logging.METRICS_LOGGER.log(Level.FINER, "Finished " + tmp + " with " +
+    //    tmp.curVal);
     return tmp.curVal;
   }
 
@@ -234,7 +238,7 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
 
     /*@Override?*/
     private static WarrantyValue/*T*/ static_apply(ProxyComp tmp, long time, boolean autoRetry) {
-      fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Starting proxy " + tmp);
+      //Logging.METRICS_LOGGER.log(Level.FINER, "Starting proxy " + tmp);
       boolean loop = false;
       if (TransactionManager.getInstance().inTxn()) {
         loop = tmp.curVal.contract == null || !tmp.curVal.contract.valid();
@@ -243,12 +247,12 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
           loop = tmp.curVal.contract == null || !tmp.curVal.contract.valid();
         }
       }
-      if (loop)
-        fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Recomputing proxy " + tmp);
-      else
-        fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Reusing proxy " + tmp);
+      //if (loop)
+      //  Logging.METRICS_LOGGER.log(Level.FINER, "Recomputing proxy " + tmp);
+      //else
+      //  Logging.METRICS_LOGGER.log(Level.FINER, "Reusing proxy " + tmp);
       while (loop) {
-        fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Iterating proxy " + tmp);
+        //Logging.METRICS_LOGGER.log(Level.FINER, "Iterating proxy " + tmp);
 
         WarrantyValue newVal = tmp.baseComputation.apply(System.currentTimeMillis(), autoRetry);
 
@@ -257,7 +261,8 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
         if (newVal.contract == null)
           return newVal;
 
-        fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Setting proxy " + tmp + " to " + newVal + " and Observing");
+        //Logging.METRICS_LOGGER.log(Level.FINER, "Setting proxy " + tmp + " to "
+        //    + newVal + " and Observing");
         if (TransactionManager.getInstance().inTxn()) {
           // Need to double check we weren't scooped by another caller.  If we
           // were, don't bother with our new value and go with the existing value.
@@ -289,7 +294,8 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
             }
           }
         }
-        fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Updated proxy to " + tmp.curVal);
+        //Logging.METRICS_LOGGER.log(Level.FINER, "Updated proxy to " +
+        //    tmp.curVal);
 
         if (TransactionManager.getInstance().inTxn()) {
           // Only bother to retry if we're supposed to and we don't have a valid
@@ -303,7 +309,8 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
           }
         }
       }
-      fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "Finished proxy " + tmp + " with " + tmp.curVal);
+      //Logging.METRICS_LOGGER.log(Level.FINER, "Finished proxy " + tmp + " with "
+      //    + tmp.curVal);
       return tmp.curVal;
     }
 

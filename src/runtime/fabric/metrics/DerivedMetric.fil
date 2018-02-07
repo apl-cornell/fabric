@@ -17,12 +17,14 @@ import fabric.common.ConfigProperties;
 import fabric.worker.Store;
 import fabric.worker.Worker;
 import fabric.worker.transaction.TransactionManager;
-import java.util.logging.Level;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+
+//import java.util.logging.Level;
+//import fabric.common.Logging;
 
 /**
  * General base class for {@link Metric}s built by computing over other
@@ -161,10 +163,11 @@ public abstract class DerivedMetric extends Metric implements Observer {
 
   /*@Override*/
   public boolean handleUpdates() {
-    fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "CHECKING FOR UPDATE ON DERIVED METRIC");
+    //Logging.METRICS_LOGGER.log(Level.FINER,
+    //    "CHECKING FOR UPDATE ON DERIVED METRIC");
     double newValue = computeValue(false);
     if (newValue != lastStats[0]) {
-      fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "UPDATE ON DERIVED METRIC");
+      //Logging.METRICS_LOGGER.log(Level.FINER, "UPDATE ON DERIVED METRIC");
       lastStats[0] = newValue;
       lastStats[1] = computeVelocity(false);
       lastStats[2] = computeNoise(false);
@@ -386,14 +389,15 @@ public abstract class DerivedMetric extends Metric implements Observer {
 
   /*@Override*/
   public void refreshWeakEstimates() {
-      fabric.common.Logging.METRICS_LOGGER.finest("REFRESHING" + this);
+      //Logging.METRICS_LOGGER.finest("REFRESHING" + this);
       if (TransactionManager.getInstance().getCurrentLog() == null) {
         Future native[] futures = new Future native[terms.length];
         // First, refresh the subterm stats.
         for (int i = 0; i < terms.length; i++) {
             // TODO: Add remote worker to call
             final Metric t = terms[i];
-            fabric.common.Logging.METRICS_LOGGER.finest("(PARALLEL) CHILD " + t + " OF " + this);
+            //Logging.METRICS_LOGGER.finest("(PARALLEL) CHILD " + t + " OF " +
+            //    this);
             Callable c = null;
             if (TransactionManager.getInstance().inTxn()) {
               c = new Refresher().fabric$metrics$DerivedMetric$Refresher$(t);
@@ -416,7 +420,8 @@ public abstract class DerivedMetric extends Metric implements Observer {
       } else {
         for (int i = 0; i < terms.length; i++) {
             // TODO: Add remote worker to call
-            fabric.common.Logging.METRICS_LOGGER.finest("(SERIAL) CHILD " + terms[i] + " OF " + this);
+            //Logging.METRICS_LOGGER.finest("(SERIAL) CHILD " + terms[i] + " OF "
+            //    + this);
             terms[i].refreshWeakEstimates();
         }
       }

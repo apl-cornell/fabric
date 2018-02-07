@@ -20,7 +20,9 @@ import fabric.metrics.util.Observer;
 import fabric.metrics.util.Subject;
 
 import fabric.worker.Store;
-import java.util.logging.Level;
+
+//import java.util.logging.Level;
+//import fabric.common.Logging;
 
 /**
  * A {@link Metric} for the entries of Cm⃗ where m⃗ is a {@link Metric} and C is
@@ -171,7 +173,8 @@ public class LinearMetric extends DerivedMetric {
 
   /*@Override*/
   protected double computeValue(boolean useWeakCache) {
-    fabric.common.Logging.METRICS_LOGGER.log(Level.FINER, "RECOMPUTING LINEAR METRIC AT {0}", getStore().name());
+    //Logging.METRICS_LOGGER.log(Level.FINER, "RECOMPUTING LINEAR METRIC AT {0}",
+    //    getStore().name());
     double[] values = new double[terms.length];
     for (int i = 0; i < terms.length; i++) {
       values[i] = terms[i].value(useWeakCache);

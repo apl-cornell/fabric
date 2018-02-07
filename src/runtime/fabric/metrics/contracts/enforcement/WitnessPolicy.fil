@@ -11,6 +11,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
+//import fabric.common.Logging;
+
 /**
  * An {@link EnforcementPolicy} which enforces a {@link MetricContract} by
  * relying on a set of <em>witnesses</em>, other {@link MetricContract}s that in
@@ -68,7 +70,8 @@ public class WitnessPolicy extends EnforcementPolicy {
           atomic {
             c = new Activator().fabric$metrics$contracts$enforcement$WitnessPolicy$Activator$(w);
           }
-          fabric.common.Logging.METRICS_LOGGER.finer("SUBMITTING CHILD " + w + " IN PARALLEL IN " + Thread.currentThread());
+          //Logging.METRICS_LOGGER.finer("SUBMITTING CHILD " + w +
+          //    " IN PARALLEL IN " + Thread.currentThread());
           futures[i] = service.submit(c);
       }
       for (int i = 0; i < futures.length; i++) {
@@ -100,7 +103,8 @@ public class WitnessPolicy extends EnforcementPolicy {
     }
 
     public java.lang.Object call() {
-      fabric.common.Logging.METRICS_LOGGER.finer("ACTIVATING CHILD " + w + " IN PARALLEL IN " + Thread.currentThread());
+      //Logging.METRICS_LOGGER.finer("ACTIVATING CHILD " + w + " IN PARALLEL IN "
+      //    + Thread.currentThread());
       if (!(w.$getStore().name().equals(Worker.getWorkerName()))) {
         RemoteWorker worker = Worker.getWorker().getWorker(w.$getStore().name());
         w.activate_remote@worker(null);
@@ -149,7 +153,7 @@ public class WitnessPolicy extends EnforcementPolicy {
     for (int i = 0; i < witnesses.length; i++) {
       witnesses[i].addObserver((fabric.metrics.util.Observer) mc.fetch());
     }
-    fabric.common.Logging.METRICS_LOGGER.finer("DEFENDING " + mc + " WITH " + this);
+    //Logging.METRICS_LOGGER.finer("DEFENDING " + mc + " WITH " + this);
   }
 
   /*@Override*/

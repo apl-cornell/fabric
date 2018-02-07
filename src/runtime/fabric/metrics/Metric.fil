@@ -18,7 +18,9 @@ import fabric.worker.Worker;
 import fabric.worker.remote.RemoteWorker;
 import fabric.worker.transaction.TransactionManager;
 import fabric.lang.security.LabelUtil;
-import java.util.logging.Level;
+
+//import java.util.logging.Level;
+//import fabric.common.Logging;
 
 /**
  * Abstract class with base implementation of some {@link Metric} methods.
@@ -553,7 +555,7 @@ public abstract class Metric extends AbstractSubject
    * Update the current "weak" estimates to be used by {@link #policy(Bound)}
    */
   public void refreshWeakEstimates() {
-    fabric.common.Logging.METRICS_LOGGER.finest("REFRESHING" + this);
+    //Logging.METRICS_LOGGER.finest("REFRESHING" + this);
     refreshLocally();
   }
 
@@ -571,22 +573,22 @@ public abstract class Metric extends AbstractSubject
   }
 
   private static void static_refreshLocally(Metric tmp) {
+    //Logging.METRICS_LOGGER.finest("REFRESHING LOCALLY " + tmp);
     if (TransactionManager.getInstance().inTxn()) {
-      fabric.common.Logging.METRICS_LOGGER.finest("REFRESHING LOCALLY " + tmp);
       tmp.weakStats[0] = tmp.computeValue(true);
       tmp.weakStats[1] = tmp.computeVelocity(true);
       tmp.weakStats[2] = tmp.computeNoise(true);
       tmp.weakStats[3] = tmp.computeSamples(true);
     } else {
       atomic {
-        fabric.common.Logging.METRICS_LOGGER.finest("REFRESHING LOCALLY " + tmp);
         tmp.weakStats[0] = tmp.computeValue(true);
         tmp.weakStats[1] = tmp.computeVelocity(true);
         tmp.weakStats[2] = tmp.computeNoise(true);
         tmp.weakStats[3] = tmp.computeSamples(true);
       }
     }
-    fabric.common.Logging.METRICS_LOGGER.finest("REFRESHED " + tmp + " to " + tmp.weakStats[0] + ", " + tmp.weakStats[1] + ", " + tmp.weakStats[2]);
+    //Logging.METRICS_LOGGER.finest("REFRESHED " + tmp + " to " + tmp.weakStats[0]
+    //    + ", " + tmp.weakStats[1] + ", " + tmp.weakStats[2]);
   }
 
   public void refreshLocally_remote(fabric.lang.security.Principal caller) {

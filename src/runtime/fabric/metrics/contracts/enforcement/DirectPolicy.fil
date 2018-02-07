@@ -5,6 +5,8 @@ import fabric.metrics.contracts.Bound;
 import fabric.metrics.contracts.MetricContract;
 import fabric.worker.transaction.TransactionManager;
 
+//import fabric.common.Logging;
+
 /**
  * An {@link EnforcementPolicy} for enforcing a {@link MetricContract}s by
  * checking every update to the associated {@link Metric}.
@@ -220,7 +222,7 @@ public class DirectPolicy extends EnforcementPolicy {
         tmp.metric.addObserver(mc);
       }
     }
-    fabric.common.Logging.METRICS_LOGGER.finer("DEFENDING " + mc + " WITH " + tmp);
+    //Logging.METRICS_LOGGER.finer("DEFENDING " + mc + " WITH " + tmp);
   }
 
   /*@Override*/
