@@ -466,10 +466,15 @@ public final class TransactionManager {
       } catch (TransactionRestartingException e) {
         abortTransaction();
         throw e;
-      } catch (Exception e) {
+      } catch (Throwable e) {
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
         e.printStackTrace(pw);
+        if (checkForStaleObjects()) {
+          // Ugh. Need to restart.
+          abortTransaction();
+          throw new AbortException(e);
+        }
         METRICS_LOGGER.log(Level.FINEST, "RESOLVING OBSERVATIONS " + current
             + " DIED WITH " + e + "\n" + sw);
         throw e;
