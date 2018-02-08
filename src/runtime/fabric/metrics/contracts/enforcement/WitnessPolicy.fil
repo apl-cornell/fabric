@@ -18,7 +18,7 @@ import java.util.concurrent.Future;
  * relying on a set of <em>witnesses</em>, other {@link MetricContract}s that in
  * conjunction imply the enforced {@link MetricContract}.
  */
-public class WitnessPolicy extends EnforcementPolicy {
+public class WitnessPolicy implements EnforcementPolicy {
 
   /** The set of {@link MetricContract}s used to enforce this policy. */
   public final MetricContract[] witnesses;
@@ -33,7 +33,7 @@ public class WitnessPolicy extends EnforcementPolicy {
    *        are {@link Contract#activate() activated} here.
    */
   public WitnessPolicy fabric$metrics$contracts$enforcement$WitnessPolicy$(MetricContract native[] witnesses) {
-    fabric$metrics$contracts$enforcement$EnforcementPolicy$();
+    fabric$lang$Object$();
     this.witnesses = new MetricContract[witnesses.length];
     for (int i = 0; i < witnesses.length; i++)
       this.witnesses[i] = witnesses[i];

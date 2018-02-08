@@ -11,7 +11,7 @@ import fabric.worker.transaction.TransactionManager;
  * An {@link EnforcementPolicy} for enforcing a {@link MetricContract}s by
  * checking every update to the associated {@link Metric}.
  */
-public class DirectPolicy extends EnforcementPolicy {
+public class DirectPolicy implements EnforcementPolicy {
 
   /** The metric the associated contract bounds. */
   public final Metric metric;
@@ -36,7 +36,7 @@ public class DirectPolicy extends EnforcementPolicy {
     this.metric = metric;
     this.rate = rate;
     this.base = base;
-    fabric$metrics$contracts$enforcement$EnforcementPolicy$();
+    fabric$lang$Object$();
     this.expiry = -1;
     this.activated = false;
     return this;

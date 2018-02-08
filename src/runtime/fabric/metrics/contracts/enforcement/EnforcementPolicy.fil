@@ -9,12 +9,7 @@ import fabric.metrics.contracts.MetricContract;
  * expiration time correctly. It effectively acts as a bundle of the currently
  * monitored information for enforcing a {@link MetricContract}.
  */
-public abstract class EnforcementPolicy {
-
-  protected EnforcementPolicy fabric$metrics$contracts$enforcement$EnforcementPolicy$() {
-    fabric$lang$Object$();
-    return this;
-  }
+public interface EnforcementPolicy {
 
   /**
    * @return the exipration time of this {@link EnforcementPolicy}.
