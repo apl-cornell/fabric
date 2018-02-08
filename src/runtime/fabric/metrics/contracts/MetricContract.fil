@@ -30,19 +30,24 @@ import fabric.common.Logging;
 public class MetricContract extends Contract {
 
   protected final Metric metric;
-  protected final Bound bound;
+  public final double rate;
+  public final double base;
   protected EnforcementPolicy currentPolicy;
 
   /**
    * @param metric
    *        the {@link Metric} this contract asserts a bound on
-   * @param bound
-   *        the {@link Bound} this {@link MetricContract} asserts on
+   * @param rate
+   *        the rate of the bound this {@link MetricContract} asserts on
+   *        metric.
+   * @param base
+   *        the base of the bound this {@link MetricContract} asserts on
    *        metric.
    */
-  public MetricContract fabric$metrics$contracts$MetricContract$(Metric metric, Bound bound) {
+  public MetricContract fabric$metrics$contracts$MetricContract$(Metric metric, double rate, double base) {
     this.metric = metric;
-    this.bound = new Bound().fabric$metrics$contracts$Bound$(bound.rate, bound.base, 0);
+    this.rate = rate;
+    this.base = base;
     fabric$metrics$contracts$Contract$();
     return this;
   }
@@ -52,11 +57,6 @@ public class MetricContract extends Contract {
     return metric;
   }
 
-  /** @return the {@link Bound} that this contract observes. */
-  public Bound getBound() {
-    return bound;
-  }
-
   /**
    * @return the expected lifetime of this {@link MetricContract} given the
    *       associated {@link Metric}s current velocity.
@@ -64,9 +64,9 @@ public class MetricContract extends Contract {
   public long getExpectedLifetime() {
     long time = System.currentTimeMillis();
     Metric m = getMetric();
-    Bound bound = getBound();
-    double adjustedRate = bound.rate - m.velocity();
-    return (long) (time + ((m.value() - bound.value(time)) / adjustedRate));
+    double adjustedRate = rate - m.velocity();
+    return (long)
+      (time + ((m.value() - Bound.value(rate, base, time)) / adjustedRate));
   }
 
   public void activate_remote(fabric.lang.security.Principal caller) {
@@ -98,10 +98,10 @@ public class MetricContract extends Contract {
     //Logging.METRICS_LOGGER.finer("CREATING A POLICY FOR MC " + tmp);
     EnforcementPolicy startPol = null;
     if (TransactionManager.getInstance().inTxn()) {
-      startPol = tmp.metric.policy(tmp.bound, true);
+      startPol = tmp.metric.policy(tmp.rate, tmp.base, true, tmp.$getStore());
     } else {
       atomic {
-        startPol = tmp.metric.policy(tmp.bound, true);
+        startPol = tmp.metric.policy(tmp.rate, tmp.base, true, tmp.$getStore());
       }
     }
 
@@ -180,7 +180,7 @@ public class MetricContract extends Contract {
       return false;
 
     // Otherwise we're finding a new policy, so we're coordinating.
-    Logging.METRICS_LOGGER.fine("COORDINATING FOR " + this + " " + bound +
+    Logging.METRICS_LOGGER.fine("COORDINATING FOR " + this +
         " IN " + TransactionManager.getInstance().getCurrentTid());
 
     // If we're moving to a new policy we need to be holding the reconfig locks.
@@ -198,7 +198,7 @@ public class MetricContract extends Contract {
 
     // Find a new policy now that we have the lock.
     EnforcementPolicy oldPolicy = currentPolicy;
-    EnforcementPolicy newPolicy = metric.policy(bound);
+    EnforcementPolicy newPolicy = metric.policy(this.rate, this.base, $getStore());
 
     // Wait to unapply so that metric is still tracked if this was
     // directly enforced previously
@@ -221,14 +221,19 @@ public class MetricContract extends Contract {
    * @param otherMetric
    *        the {@link Metric} the other {@link MetricContract} would
    *        assert a bound on
-   * @param otherBound
-   *        the {@link Bound} that would be used by the other
+   * @param otherRate
+   *        the rate of the bound that would be used by the other
+   *        {@link MetricContract}
+   * @param otherBase
+   *        the base of the bound that would be used by the other
    *        {@link MetricContract}
    * @return true iff this would imply (and therefore) can enforce another
    *       {@link MetricContract} with the given metric and bound.
    */
-  public boolean implies(Metric otherMetric, Bound otherBound) {
-    if (!getMetric().equals(otherMetric) || !bound.implies(otherBound))
+  public boolean implies(Metric otherMetric, double otherRate, double otherBase) {
+    if (!getMetric().equals(otherMetric)
+        || this.rate < otherRate
+        || this.base < otherBase)
       return false;
     return valid();
   }
@@ -243,7 +248,7 @@ public class MetricContract extends Contract {
    */
   public boolean implies(MetricContract other) {
     return valid(other.getExpiry())
-        && implies(other.getMetric(), other.getBound());
+        && implies(other.getMetric(), other.rate, other.base);
   }
 
   /**
@@ -254,21 +259,24 @@ public class MetricContract extends Contract {
    * @param otherMetric
    *        the {@link Metric} the other {@link MetricContract} would
    *        assert a bound on
-   * @param otherBound
-   *        the {@link Bound} that would be used by the other
+   * @param otherRate
+   *        the rate of the bound that would be used by the other
+   *        {@link MetricContract}
+   * @param otherBase
+   *        the base of the bound that would be used by the other
    *        {@link MetricContract}
    * @return true iff this enforces another {@link MetricContract} with the
    *       given parameters.
    */
-  public boolean enforces(Metric otherMetric, Bound otherBound) {
-    if (!getMetric().equals(otherMetric) || !bound.equals(otherBound))
+  public boolean enforces(Metric otherMetric, double otherRate, double otherBase) {
+    if (!getMetric().equals(otherMetric) || otherRate != rate || otherBase != base)
       return false;
     return valid();
   }
 
   /*@Override*/
   public String toString() {
-    return getMetric().toString() + " " + bound + " until " + getExpiry();
+    return getMetric().toString() + " >= " + rate + " * t + " + base + " until " + getExpiry();
   }
 
   /*@Override*/
@@ -355,15 +363,12 @@ public class MetricContract extends Contract {
     protected final MetricContract target;
 
     /**
-     * @param metric
-     *        the {@link Metric} this contract asserts a bound on
-     * @param bound
-     *        the {@link Bound} this {@link MetricContract} asserts on
-     *        metric.
+     * @param target
+     *        the {@link MetricContract} this proxies
      */
     public ProxyMetricContract fabric$metrics$contracts$MetricContract$ProxyMetricContract$(MetricContract target) {
       this.target = target;
-      fabric$metrics$contracts$MetricContract$(target.metric, target.bound);
+      fabric$metrics$contracts$MetricContract$(target.metric, target.rate, target.base);
       return this;
     }
 

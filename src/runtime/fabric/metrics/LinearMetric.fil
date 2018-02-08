@@ -480,14 +480,13 @@ public class LinearMetric extends DerivedMetric {
    * strong operations for model parameters.
    */
   /*@Override*/
-  public EnforcementPolicy policy(Bound bound, boolean useWeakCache) {
+  public EnforcementPolicy policy(double rate, double base, boolean useWeakCache, final Store str) {
     if (isSingleStore())
-      return new DirectPolicy().fabric$metrics$contracts$enforcement$DirectPolicy$(this, bound);
+      return new DirectPolicy@str().fabric$metrics$contracts$enforcement$DirectPolicy$(this, rate, base);
     Map/*<Metric, MetricContract>*/ witnesses = new LinkedHashMap/*<>*/().fabric$util$LinkedHashMap$();
 
     long currentTime = System.currentTimeMillis();
-    double base = bound.value(currentTime);
-    double rate = bound.rate;
+    double baseNow = Bound.value(rate, base, currentTime);
 
     // Defend all rows against the bound individually, using the strictest
     // bounds across the rows for each term in this sum.
@@ -513,7 +512,7 @@ public class LinearMetric extends DerivedMetric {
         r = r / c;
 
         double b = scaledX
-            - ((scaledN / totalNoise) * (totalValue - base));
+            - ((scaledN / totalNoise) * (totalValue - baseNow));
         // De-scaled
         b = b / c;
 
@@ -522,11 +521,10 @@ public class LinearMetric extends DerivedMetric {
           b = -b;
           r = -r;
         }
-        final Store s = m.$getStore();
-        Bound witnessBound = new Bound@s().fabric$metrics$contracts$Bound$(r, b, currentTime);
+        double native[] normalized = Bound.createBound(r, b, currentTime);
         if (!witnesses.containsKey(m)
-            || !((MetricContract) witnesses.get(m)).getBound().implies(witnessBound)) {
-          witnesses.put(m, m.getContract(witnessBound));
+            || !((MetricContract) witnesses.get(m)).implies(m, normalized[0], normalized[1])) {
+          witnesses.put(m, m.getContract(r, b, currentTime));
         }
       }
     }
@@ -535,8 +533,7 @@ public class LinearMetric extends DerivedMetric {
     for (Iterator iter = witnesses.values().iterator(); iter.hasNext();) {
       finalWitnesses[i++] = (MetricContract) iter.next();
     }
-    final Store bndStore = bound.$getStore();
-    return new WitnessPolicy@bndStore().fabric$metrics$contracts$enforcement$WitnessPolicy$(finalWitnesses);
+    return new WitnessPolicy@str().fabric$metrics$contracts$enforcement$WitnessPolicy$(finalWitnesses);
   }
 
   /*@Override*/

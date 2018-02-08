@@ -11,130 +11,54 @@ import fabric.worker.Store;
  */
 public class Bound {
 
-  /** The rate of the bound (r) */
-  public final double rate;
-  /** The base of the bound (b) */
-  public final double base;
-
-  public Store getStore() {
-    return $getStore();
+  /** Create a normalized bound. */
+  public static double native[] createBound(double rate, double base) {
+    return createBound(rate, base, 0);
   }
 
-  /**
-   * @param rate
-   *        the rate the value changes with time
-   * @param base
-   *        the value of the bound associated with startTime
-   * @param startTime
-   *        the time this bound's value is computed relative to
-   */
-  public Bound fabric$metrics$contracts$Bound$(double rate, double base, long startTime) {
+  /** Create a normalized bound. */
+  public static double native[] createBound(double rate, double base,
+      long startTime) {
     if (Double.isNaN(rate) || Double.isNaN(base)) {
       throw new RuntimeException("This shouldn't happen");
     }
-    this.rate = rate;
-    this.base = base - (rate * startTime);
-    fabric$lang$Object$();
-    return this;
+    return new double native[] { rate, base - (rate * startTime) };
   }
 
   /**
-   * @param time
-   *        the time we're computing the bound value for
-   * @return the value of the bound at the given time
+   * Compute a value given the rate, base, starting time (for base), and
+   * current time.
    */
-  public double value(long time) {
-    return rate * time + base;
+  public static double value(double rate, double base, long startTime,
+      long curTime) {
+    long dt = curTime - startTime;
+    return (rate * dt) + base;
   }
 
   /**
-   * @param m
-   *        a {@link Metric} we're testing this bound on
-   * @param time
-   *        the time this bound is being applied to m
-   * @return true iff m's current value satisfies the bound at the given time.
+   * Compute a value given the rate, base, and current time.
    */
-  public boolean test(Metric m, long time) {
-    return test(m.value(), time);
+  public static double value(double rate, double base, long time) {
+    return value(rate, base, 0, time);
   }
 
   /**
-   * @param x
-   *        a double we're testing this bound on
-   * @param time
-   *        the time this bound is being applied to m
-   * @return true iff x satisfies the bound at the given time.
+   * Compute the time at which this bound will expire given the current value
+   * and time.
    */
-  public boolean test(double x, long time) {
-    return x >= value(time);
-  }
-
-  /**
-   * @param metric
-   *        the {@link Metric} we're finding the true expiry for
-   * @param time
-   *        the time we're running this calculation relative to
-   * @return the "true expiry" of this bound for the given {@link Metric}, the
-   *       time at which point the bound would no longer be satisfied by the
-   *       {@link Metric}'s current value.
-   */
-  public long trueExpiry(Metric metric, long time) {
-    return trueExpiry(metric.value(), time);
-  }
-
-  /**
-   * @param value
-   *        the current value we're finding the true expiry for
-   * @param time
-   *        the time we're running this calculation relative to
-   * @return the "true expiry" of this bound for the given value, the time at
-   *       which point the bound would no longer be satisfied by the value.
-   */
-  public long trueExpiry(double value, long time) {
+  public static long trueExpiry(double rate, double base, double value, long time) {
     if (rate > 0) {
-      return (long) (time + (value - value(time)) / rate);
-    } else if (value < value(time)) {
+      return (long) (time + (value - value(rate, base, time)) / rate);
+    } else if (value < value(rate, base, time)) {
       return 0;
     }
     return Long.MAX_VALUE;
   }
 
   /**
-   * @param other
-   *        another {@link Bound}
-   * @return true iff this is at least as strong of a bound as other (so this
-   *         bound being satisfied imples the other bound is also satisfied)
+   * Determine if the given value x is above the bound at the given time.
    */
-  public boolean implies(Bound other) {
-    return rate >= other.rate && base >= other.base;
-  }
-
-  /**
-   * @param other
-   *        another {@link Bound}
-   * @return true iff this is at least as strong of a bound as other (so this
-   *         bound being satisfied imples the other bound is also satisfied)
-   */
-  public boolean implies(double otherRate, double otherBase, long time) {
-    return rate >= otherRate && base >= (otherBase + (otherRate * time));
-  }
-
-  /*@Override*/
-  public boolean equals(Object o) {
-    if (o instanceof Bound) {
-      Bound other = (Bound) o;
-      return rate == other.rate && base == other.base;
-    }
-    return false;
-  }
-
-  /*@Override*/
-  public int hashCode() {
-    return Double.hashCode(rate) * 32 + Double.hashCode(base);
-  }
-
-  /*@Override*/
-  public String toString() {
-    return ">= " + rate + " * t + " + base;
+  public static boolean test(double rate, double base, double x, long time) {
+    return x >= value(rate, base, time);
   }
 }

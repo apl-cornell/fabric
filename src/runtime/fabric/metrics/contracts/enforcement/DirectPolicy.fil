@@ -15,8 +15,10 @@ public class DirectPolicy extends EnforcementPolicy {
 
   /** The metric the associated contract bounds. */
   public final Metric metric;
-  /** The bound enforced by the associated contract. */
-  public final Bound bound;
+  /** The rate of the bound enforced by the associated contract. */
+  public final double rate;
+  /** The base of the bound enforced by the associated contract. */
+  public final double base;
   /** The currently calculated expiration time to use for the contract. */
   private long expiry;
   /** Is this policy active and being enforced? */
@@ -25,12 +27,15 @@ public class DirectPolicy extends EnforcementPolicy {
   /**
    * @param metric
    *            the Metric the associated contract is bounding.
-   * @param bound
-   *            the bound enforced by the associated contract.
+   * @param rate
+   *            the rate of the bound enforced by the associated contract.
+   * @param base
+   *            the base of the bound enforced by the associated contract.
    */
-  public DirectPolicy fabric$metrics$contracts$enforcement$DirectPolicy$(Metric metric, Bound bound) {
+  public DirectPolicy fabric$metrics$contracts$enforcement$DirectPolicy$(Metric metric, double rate, double base) {
     this.metric = metric;
-    this.bound = bound;
+    this.rate = rate;
+    this.base = base;
     fabric$metrics$contracts$enforcement$EnforcementPolicy$();
     this.expiry = -1;
     this.activated = false;
@@ -65,7 +70,7 @@ public class DirectPolicy extends EnforcementPolicy {
     if (TransactionManager.getInstance().inTxn()) {
       // First check if we actually can enforce it in the current state.
       long currentTime = System.currentTimeMillis();
-      long trueTime = tmp.bound.trueExpiry(tmp.metric, currentTime);
+      long trueTime = Bound.trueExpiry(tmp.rate, tmp.base, tmp.metric.value(), currentTime);
       if (trueTime < currentTime && currentTime <= tmp.expiry) {
         tmp.expiry = 0;
       } else {
@@ -83,7 +88,7 @@ public class DirectPolicy extends EnforcementPolicy {
       atomic {
         // First check if we actually can enforce it in the current state.
         long currentTime = System.currentTimeMillis();
-        long trueTime = tmp.bound.trueExpiry(tmp.metric, currentTime);
+        long trueTime = Bound.trueExpiry(tmp.rate, tmp.base, tmp.metric.value(), currentTime);
         if (trueTime < currentTime && currentTime <= tmp.expiry) {
           tmp.expiry = 0;
         } else {
@@ -116,8 +121,8 @@ public class DirectPolicy extends EnforcementPolicy {
    *         time to advertise to other nodes in the system for this contract.
    */
   private long hedged(long time) {
-    double r = bound.rate;
-    double b = bound.value(time);
+    double r = rate;
+    double b = Bound.value(rate, base, time);
     double x = metric.value();
     // Use weak v and n, x is the only part that needs to be exact.
     double v = metric.velocity(true);
@@ -126,7 +131,7 @@ public class DirectPolicy extends EnforcementPolicy {
     // True expiry: time this would fail with no changes to the current
     // value. This is the latest time we can safely advertise as the
     // expiration.
-    long hedgedResult = bound.trueExpiry(metric, time);
+    long hedgedResult = Bound.trueExpiry(rate, base, metric.value(), time);
 
     // Non-positive rate bounds don't need to be hedged, they should always
     // stay true in the absence of updates.
@@ -148,11 +153,11 @@ public class DirectPolicy extends EnforcementPolicy {
     long min = -1;
     if (v > 0) {
       minYs = x - (n / (4 * v));
-      min = bound.trueExpiry(minYs, time);
+      min = Bound.trueExpiry(rate, base, minYs, time);
 
       // If the extremal point on the hedged curve is valid and below the
       // current point, use the time for that.
-      if (minYs < x && bound.test(minYs, time)) {
+      if (minYs < x && Bound.test(rate, base, minYs, time)) {
         hedgedResult = Math.min(min, hedgedResult);
         // System.out.println("MIN HEDGE TO " + hedgedResult + " FOR " +
         // x + ", " + v + ", " + n + " AT " + time + " VS " + r + "t + "
@@ -232,7 +237,7 @@ public class DirectPolicy extends EnforcementPolicy {
 
   /*@Override*/
   public String toString() {
-    return "Directly watching " + metric + " " + bound;
+    return "Directly watching " + metric + " >= " + rate + " * t + " + base;
   }
 
   /*@Override*/
@@ -240,7 +245,8 @@ public class DirectPolicy extends EnforcementPolicy {
     if (!(other instanceof DirectPolicy))
       return false;
     DirectPolicy that = (DirectPolicy) other;
-    return this.metric.equals(that.metric) && this.bound.equals(that.bound);
+    return this.metric.equals(that.metric) && this.rate == that.rate &&
+      this.base == that.base;
   }
 
   /*@Override*/

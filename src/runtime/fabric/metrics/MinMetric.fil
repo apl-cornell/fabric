@@ -270,7 +270,7 @@ public class MinMetric extends DerivedMetric {
     }
 
     /*@Override*/
-    public EnforcementPolicy policy(Bound bound, boolean useWeakCache) {
+    public EnforcementPolicy policy(double rate, double base, boolean useWeakCache, final Store s) {
         // Don't do this if we want to avoid conflicts between local concurrent
         // operations on different metrics in a derived metric...
         //if (isSingleStore())
@@ -279,10 +279,9 @@ public class MinMetric extends DerivedMetric {
         // Defend all rows against the bound individually, using the strictest
         // bounds across the rows for each term in this sum.
         for (int i = 0; i < terms.length; i++) {
-            witnesses[i] = term(i).getContract(bound);
+            witnesses[i] = term(i).getContract(rate, base);
         }
-        final Store bndStore = bound.getStore();
-        return new WitnessPolicy@bndStore().fabric$metrics$contracts$enforcement$WitnessPolicy$(witnesses);
+        return new WitnessPolicy@s().fabric$metrics$contracts$enforcement$WitnessPolicy$(witnesses);
     }
 
     /*@Override*/

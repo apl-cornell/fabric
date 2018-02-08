@@ -227,59 +227,6 @@ public abstract class Metric extends AbstractSubject
   }
 
   /**
-   * @param bound
-   *            the {@link Bound} that the returned {@link MetricContract}
-   *            will enforce on this {@link Metric}
-   * @return a {@link MetricContract} that enforces that the {@link Metric}
-   *         satisfies the given {@link Bound}. If such a
-   *         {@link MetricContract}, it is returned, otherwise a new one is
-   *         created and returned (unactivated).
-   */
-  public MetricContract getContract(Bound bound) {
-    return static_getContract(this, bound);
-  }
-
-  private static MetricContract static_getContract(Metric tmp, Bound bound) {
-    MetricContract mc = null;
-    if (TransactionManager.getInstance().inTxn()) {
-      /*
-      for (int i = 0; i < tmp.contracts.size(); i++) {
-        MetricContract c = (MetricContract) tmp.contracts.get(i);
-        if (c.stale()) {
-            tmp.removeObserver(c);
-            // Contract's removed, shift the index to account (ugh)
-            i--;
-        } else if (mc == null && c.isActivated()
-            && c.enforces(tmp, bound)) {
-          mc = c;
-        }
-      }
-      if (mc == null)
-      */
-        mc = tmp.createContract(bound);
-    } else {
-      atomic {
-        /*
-        for (int i = 0; i < tmp.contracts.size(); i++) {
-          MetricContract c = (MetricContract) tmp.contracts.get(i);
-          if (c.stale()) {
-              tmp.removeObserver(c);
-              // Contract's removed, shift the index to account (ugh)
-              i--;
-          } else if (mc == null && c.isActivated()
-              && c.enforces(tmp, bound)) {
-            mc = c;
-          }
-        }
-        if (mc == null)
-        */
-          mc = tmp.createContract(bound);
-      }
-    }
-    return mc;
-  }
-
-  /**
    * @param rate
    *            the rate parameter for the {@link Bound} on the resuling
    *            {@link MetricContract}
@@ -297,7 +244,19 @@ public abstract class Metric extends AbstractSubject
    *
    */
   public MetricContract getContract(double rate, double base, long time) {
-    return getContract(new Bound().fabric$metrics$contracts$Bound$(rate, base, time));
+    return static_getContract(this, rate, base, time);
+  }
+
+  private static MetricContract static_getContract(Metric tmp, double rate, double base, long time) {
+    MetricContract mc = null;
+    if (TransactionManager.getInstance().inTxn()) {
+      mc = tmp.createContract(rate, base, time);
+    } else {
+      atomic {
+        mc = tmp.createContract(rate, base, time);
+      }
+    }
+    return mc;
   }
 
   /**
@@ -313,8 +272,8 @@ public abstract class Metric extends AbstractSubject
    *         is returned, otherwise a new one is created and returned
    *         (unactivated).
    */
-  public MetricContract getContract(double rate, double base) {
-    return getContract(new Bound().fabric$metrics$contracts$Bound$(rate, base, System.currentTimeMillis()));
+  protected MetricContract getContract(double rate, double base) {
+    return getContract(rate, base, 0);
   }
 
   /**
@@ -521,8 +480,8 @@ public abstract class Metric extends AbstractSubject
    * @return a {@link EnforcementPolicy} that enforces this {@link Metric}
    *         being above bound.
    */
-  public EnforcementPolicy policy(Bound bound, boolean useWeakCache) {
-    return new DirectPolicy().fabric$metrics$contracts$enforcement$DirectPolicy$(this, bound);
+  public EnforcementPolicy policy(double rate, double base, boolean useWeakCache, final Store s) {
+    return new DirectPolicy@s().fabric$metrics$contracts$enforcement$DirectPolicy$(this, rate, base);
   }
 
   /**
@@ -539,10 +498,10 @@ public abstract class Metric extends AbstractSubject
    * @return a {@link EnforcementPolicy} that enforces this {@link Metric}
    *         being above bound.
    */
-  public EnforcementPolicy policy(Bound bound) {
+  public EnforcementPolicy policy(double rate, double base, final Store s) {
     // This is only called if we're computing a new policy for a *pre-existing*
     // contract so this is when a coordination occurs in the protocol.
-    return policy(bound, false);
+    return policy(rate, base, false, s);
   }
 
   /*
@@ -692,8 +651,9 @@ public abstract class Metric extends AbstractSubject
    * @return a {@link MetricContract} asserting this metric satisfies the
    *       given {@link Bound}.
    */
-  protected MetricContract createContract(Bound bound) {
-    return new MetricContract().fabric$metrics$contracts$MetricContract$(this, bound);
+  protected MetricContract createContract(double rate, double base, long time) {
+    double native[] normalized = Bound.createBound(rate, base, time);
+    return new MetricContract().fabric$metrics$contracts$MetricContract$(this, normalized[0], normalized[1]);
   }
 
   /**

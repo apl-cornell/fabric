@@ -262,7 +262,7 @@ public class SumMetric extends DerivedMetric {
     }
 
     /*@Override*/
-    public EnforcementPolicy policy(Bound bound, boolean useWeakCache) {
+    public EnforcementPolicy policy(double rate, double base, boolean useWeakCache, final Store s) {
         // Don't do this if we want to avoid conflicts between local concurrent
         // operations on different metrics in a derived metric...
         //if (isSingleStore())
@@ -271,8 +271,7 @@ public class SumMetric extends DerivedMetric {
         java.util.Map/*<Metric, MetricContract>*/ witnesses = new java.util.HashMap/*<>*/();
 
         long currentTime = System.currentTimeMillis();
-        double base = bound.value(currentTime);
-        double rate = bound.rate;
+        double baseNow = Bound.value(rate, base, currentTime);
 
         // Defend all rows against the bound individually, using the strictest
         // bounds across the rows for each term in this sum.
@@ -301,19 +300,20 @@ public class SumMetric extends DerivedMetric {
             // the rest of the sum
             double r = (scaledV * newFactor) - (((totalVelocity * newFactor) - rate) / numTerms);
 
-            double b = scaledX - (((baseFactor / numTerms) + (newFactor * (scaledN / totalNoise))) * (totalValue - base));
+            double b = scaledX - (((baseFactor / numTerms) + (newFactor * (scaledN / totalNoise))) * (totalValue - baseNow));
             if (totalNoise != 0) {
-              b = scaledX - ((scaledN / totalNoise) * (totalValue - base));
+              b = scaledX - ((scaledN / totalNoise) * (totalValue - baseNow));
             }
 
             // If using presets, use that instead
             if (getUsePreset()) {
               r = m.getPresetR();
-              b = scaledX - ((m.getPresetB() / getPresetB()) * (totalValue - base));
+              b = scaledX - ((m.getPresetB() / getPresetB()) * (totalValue - baseNow));
             }
 
+            double native[] normalized = Bound.createBound(r, b, currentTime);
             if (!witnesses.containsKey(m)
-                    || !((MetricContract) witnesses.get(m)).getBound().implies(r, b, currentTime)) {
+                    || !((MetricContract) witnesses.get(m)).implies(m, normalized[0], normalized[1])) {
                 witnesses.put(m, m.getContract(r, b, currentTime));
             }
         }
@@ -322,8 +322,7 @@ public class SumMetric extends DerivedMetric {
         for (java.util.Iterator iter = witnesses.values().iterator(); iter.hasNext();) {
           finalWitnesses[i++] = (MetricContract) iter.next();
         }
-        final Store bndStore = bound.getStore();
-        return new WitnessPolicy@bndStore().fabric$metrics$contracts$enforcement$WitnessPolicy$(finalWitnesses);
+        return new WitnessPolicy@s().fabric$metrics$contracts$enforcement$WitnessPolicy$(finalWitnesses);
     }
 
     /*@Override*/
