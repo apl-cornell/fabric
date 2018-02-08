@@ -101,18 +101,18 @@ public abstract class Contract extends AbstractSubject implements Observer {
    * @return true iff this contract has been activated (the System is
    *         enforcing it).
    */
-  public boolean isActivated() {
+  protected boolean isActivated() {
     return activated;
   }
 
   /**
    * Activate and start enforcing this {@link Contract} in the System.
    */
-  public void activate() {
+  protected void activate() {
     static_activate(this);
   }
 
-  public static void static_activate(Contract tmp) {
+  protected static void static_activate(Contract tmp) {
     if (TransactionManager.getInstance().inTxn()) {
       if (!tmp.activated) {
         Logging.METRICS_LOGGER.log(Level.FINER, "CONTRACT ACTIVATE");
@@ -140,7 +140,7 @@ public abstract class Contract extends AbstractSubject implements Observer {
     static_removeObserver(this, obs);
   }
 
-  public static void removeObserver(Contract tmp, Observer obs) {
+  private static void static_removeObserver(Contract tmp, Observer obs) {
     if (TransactionManager.getInstance().inTxn()) {
       AbstractSubject.static_removeObserver(tmp, obs);
       if (!tmp.isObserved()) {
