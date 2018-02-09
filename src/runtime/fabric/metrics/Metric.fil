@@ -38,21 +38,21 @@ public abstract class Metric extends AbstractSubject
   }
 
   /** Local cache of times results. */
-  protected transient final HashMap/*<Double, DerivedMetric>*/ timesCache;
-
-  protected HashMap/*<Double, DerivedMetric>*/ getTimesCache() {
-    final Store ls = Worker.getWorker().getLocalStore();
-    if (timesCache == null) {
-      if (TransactionManager.getInstance().getCurrentLog() == null) {
-        atomic {
-          timesCache = new HashMap/*<>*/@ls().fabric$util$HashMap$();
-        }
-      } else {
-        timesCache = new HashMap/*<>*/@ls().fabric$util$HashMap$();
-      }
-    }
-    return timesCache;
-  }
+  //protected transient final HashMap[><Double, DerivedMetric><] timesCache;
+  //
+  //protected HashMap[><Double, DerivedMetric><] getTimesCache() {
+  //  final Store ls = Worker.getWorker().getLocalStore();
+  //  if (timesCache == null) {
+  //    if (TransactionManager.getInstance().getCurrentLog() == null) {
+  //      atomic {
+  //        timesCache = new HashMap[><><]@ls().fabric$util$HashMap$();
+  //      }
+  //    } else {
+  //      timesCache = new HashMap[><><]@ls().fabric$util$HashMap$();
+  //    }
+  //  }
+  //  return timesCache;
+  //}
 
   /**
    * @param scalar
@@ -61,19 +61,20 @@ public abstract class Metric extends AbstractSubject
    *         {@link Metric}.
    */
   public DerivedMetric times(double scalar) {
-    Double s = Double.valueOf(scalar);
-    DerivedMetric result = (DerivedMetric) getTimesCache().get(s);
-    if (result == null) {
-      result = static_times(this, scalar);
-      if (TransactionManager.getInstance().inTxn()) {
-        getTimesCache().put(s, result);
-      } else {
-        atomic {
-          getTimesCache().put(s, result);
-        }
-      }
-    }
-    return result;
+    //Double s = Double.valueOf(scalar);
+    //DerivedMetric result = (DerivedMetric) getTimesCache().get(s);
+    //if (result == null) {
+    //  result = static_times(this, scalar);
+    //  if (TransactionManager.getInstance().inTxn()) {
+    //    getTimesCache().put(s, result);
+    //  } else {
+    //    atomic {
+    //      getTimesCache().put(s, result);
+    //    }
+    //  }
+    //}
+    //return result;
+    return static_times(this, scalar);
   }
 
   private static DerivedMetric static_times(Metric tmp, double scalar) {
@@ -90,21 +91,21 @@ public abstract class Metric extends AbstractSubject
   }
 
   /** Local cache of sum results. */
-  protected transient final HashMap/*<DerivedMetric, DerivedMetric>*/ plusCache;
-
-  protected HashMap/*<DerivedMetric, DerivedMetric>*/ getPlusCache() {
-    final Store ls = Worker.getWorker().getLocalStore();
-    if (plusCache == null) {
-      if (TransactionManager.getInstance().getCurrentLog() == null) {
-        atomic {
-          plusCache = new HashMap/*<>*/@ls().fabric$util$HashMap$();
-        }
-      } else {
-        plusCache = new HashMap/*<>*/@ls().fabric$util$HashMap$();
-      }
-    }
-    return plusCache;
-  }
+  //protected transient final HashMap[><DerivedMetric, DerivedMetric><] plusCache;
+  //
+  //protected HashMap[><DerivedMetric, DerivedMetric><] getPlusCache() {
+  //  final Store ls = Worker.getWorker().getLocalStore();
+  //  if (plusCache == null) {
+  //    if (TransactionManager.getInstance().getCurrentLog() == null) {
+  //      atomic {
+  //        plusCache = new HashMap[><><]@ls().fabric$util$HashMap$();
+  //      }
+  //    } else {
+  //      plusCache = new HashMap[><><]@ls().fabric$util$HashMap$();
+  //    }
+  //  }
+  //  return plusCache;
+  //}
 
   /**
    * @param other
@@ -113,20 +114,21 @@ public abstract class Metric extends AbstractSubject
    *         this.
    */
   public DerivedMetric plus(Metric other) {
-    DerivedMetric result = (DerivedMetric) getPlusCache().get(other);
-    if (result == null) {
-      result = static_plus(this, other);
-      if (TransactionManager.getInstance().inTxn()) {
-        getPlusCache().put(other, result);
-        other.getPlusCache().put(this, result);
-      } else {
-        atomic {
-          getPlusCache().put(other, result);
-          other.getPlusCache().put(this, result);
-        }
-      }
-    }
-    return result;
+    //DerivedMetric result = (DerivedMetric) getPlusCache().get(other);
+    //if (result == null) {
+    //  result = static_plus(this, other);
+    //  if (TransactionManager.getInstance().inTxn()) {
+    //    getPlusCache().put(other, result);
+    //    other.getPlusCache().put(this, result);
+    //  } else {
+    //    atomic {
+    //      getPlusCache().put(other, result);
+    //      other.getPlusCache().put(this, result);
+    //    }
+    //  }
+    //}
+    //return result;
+    return static_plus(this, other);
   }
 
   public static DerivedMetric static_plus(Metric tmp, Metric other) {
@@ -146,21 +148,21 @@ public abstract class Metric extends AbstractSubject
   }
 
   /** Local cache of min results. */
-  protected transient final HashMap/*<DerivedMetric, DerivedMetric>*/ minCache;
-
-  protected HashMap/*<DerivedMetric, DerivedMetric>*/ getMinCache() {
-    final Store ls = Worker.getWorker().getLocalStore();
-    if (minCache == null) {
-      if (TransactionManager.getInstance().getCurrentLog() == null) {
-        atomic {
-          minCache = new HashMap/*<>*/@ls().fabric$util$HashMap$();
-        }
-      } else {
-        minCache = new HashMap/*<>*/@ls().fabric$util$HashMap$();
-      }
-    }
-    return minCache;
-  }
+  //protected transient final HashMap[><DerivedMetric, DerivedMetric><] minCache;
+  //
+  //protected HashMap[><DerivedMetric, DerivedMetric><] getMinCache() {
+  //  final Store ls = Worker.getWorker().getLocalStore();
+  //  if (minCache == null) {
+  //    if (TransactionManager.getInstance().getCurrentLog() == null) {
+  //      atomic {
+  //        minCache = new HashMap[><><]@ls().fabric$util$HashMap$();
+  //      }
+  //    } else {
+  //      minCache = new HashMap[><><]@ls().fabric$util$HashMap$();
+  //    }
+  //  }
+  //  return minCache;
+  //}
 
   /**
    * @param other
@@ -170,20 +172,21 @@ public abstract class Metric extends AbstractSubject
    *         the other {@link Metric}.
    */
   public Metric min(Metric other) {
-    Metric result = (Metric) getMinCache().get(other);
-    if (result == null) {
-      result = static_min(this, other);
-      if (TransactionManager.getInstance().inTxn()) {
-        getMinCache().put(other, result);
-        other.getMinCache().put(this, result);
-      } else {
-        atomic {
-          getMinCache().put(other, result);
-          other.getMinCache().put(this, result);
-        }
-      }
-    }
-    return result;
+    //Metric result = (Metric) getMinCache().get(other);
+    //if (result == null) {
+    //  result = static_min(this, other);
+    //  if (TransactionManager.getInstance().inTxn()) {
+    //    getMinCache().put(other, result);
+    //    other.getMinCache().put(this, result);
+    //  } else {
+    //    atomic {
+    //      getMinCache().put(other, result);
+    //      other.getMinCache().put(this, result);
+    //    }
+    //  }
+    //}
+    //return result;
+    return static_min(this, other);
   }
 
   private static Metric static_min(Metric tmp, Metric other) {
@@ -389,7 +392,7 @@ public abstract class Metric extends AbstractSubject
    * Cache of DerivedMetrics using this Metric as a term (helps to break up
    * interning cache to avoid one big map.
    */
-  private final HashMap/*<DerivedMetric, DerivedMetric>*/ transformations;
+  //private final HashMap[><DerivedMetric, DerivedMetric><] transformations;
 
   // Stuff to allow for preset strategies.
   public abstract boolean getUsePreset();
@@ -409,7 +412,7 @@ public abstract class Metric extends AbstractSubject
     this.weakStats = new double[4] ~lbl @s;
     // Use default size since we don't expect most applications to use a ton of
     // different transformations on the same terms.
-    this.transformations = new HashMap().fabric$util$HashMap$(64);
+    //this.transformations = new HashMap().fabric$util$HashMap$(64);
     fabric$metrics$util$AbstractSubject$();
     return this;
   }
@@ -751,33 +754,34 @@ public abstract class Metric extends AbstractSubject
    */
   protected static DerivedMetric findDerivedMetric(final Store s,
       DerivedMetric m) {
-    if (TransactionManager.getInstance().inTxn()) {
-      DerivedMetric orig = (DerivedMetric) m.terms[0].transformations.get(m);
-      if (orig == null) {
-        // Probably could just do the first term since AFAIK no derived metrics
-        // equate between differently ordered terms currently, but tabling that
-        // for now.
-        for (int i = 0; i < m.terms.length; i++) {
-          m.terms[i].transformations.put(m, m);
-        }
-        orig = m;
-      }
-      return orig;
-    } else {
-      DerivedMetric orig = null;
-      atomic {
-        orig = (DerivedMetric) m.terms[0].transformations.get(m);
-        if (orig == null) {
-          // Probably could just do the first term since AFAIK no derived metrics
-          // equate between differently ordered terms currently, but tabling that
-          // for now.
-          for (int i = 0; i < m.terms.length; i++) {
-            m.terms[i].transformations.put(m, m);
-          }
-          orig = m;
-        }
-      }
-      return orig;
-    }
+    return m;
+    //if (TransactionManager.getInstance().inTxn()) {
+    //  DerivedMetric orig = (DerivedMetric) m.terms[0].transformations.get(m);
+    //  if (orig == null) {
+    //    // Probably could just do the first term since AFAIK no derived metrics
+    //    // equate between differently ordered terms currently, but tabling that
+    //    // for now.
+    //    //for (int i = 0; i < m.terms.length; i++) {
+    //    //  m.terms[i].transformations.put(m, m);
+    //    //}
+    //    orig = m;
+    //  }
+    //  return orig;
+    //} else {
+    //  DerivedMetric orig = null;
+    //  atomic {
+    //    orig = (DerivedMetric) m.terms[0].transformations.get(m);
+    //    if (orig == null) {
+    //      // Probably could just do the first term since AFAIK no derived metrics
+    //      // equate between differently ordered terms currently, but tabling that
+    //      // for now.
+    //      //for (int i = 0; i < m.terms.length; i++) {
+    //      //  m.terms[i].transformations.put(m, m);
+    //      //}
+    //      orig = m;
+    //    }
+    //  }
+    //  return orig;
+    //}
   }
 }

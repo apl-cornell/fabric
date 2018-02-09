@@ -81,19 +81,20 @@ public class ScaledMetric extends DerivedMetric {
 
     /*@Override*/
     public DerivedMetric times(double otherScalar) {
-      Double s = Double.valueOf(otherScalar);
-      DerivedMetric result = (DerivedMetric) getTimesCache().get(s);
-      if (result == null) {
-        result = static_times(this, otherScalar);
-        if (TransactionManager.getInstance().inTxn()) {
-          getTimesCache().put(s, result);
-        } else {
-          atomic {
-            getTimesCache().put(s, result);
-          }
-        }
-      }
-      return result;
+      //Double s = Double.valueOf(otherScalar);
+      //DerivedMetric result = (DerivedMetric) getTimesCache().get(s);
+      //if (result == null) {
+      //  result = static_times(this, otherScalar);
+      //  if (TransactionManager.getInstance().inTxn()) {
+      //    getTimesCache().put(s, result);
+      //  } else {
+      //    atomic {
+      //      getTimesCache().put(s, result);
+      //    }
+      //  }
+      //}
+      //return result;
+      return static_times(this, otherScalar);
     }
 
     private static DerivedMetric static_times(ScaledMetric tmp, double otherScalar) {
@@ -118,20 +119,21 @@ public class ScaledMetric extends DerivedMetric {
      */
     /*@Override*/
     public DerivedMetric plus(Metric other) {
-      DerivedMetric result = (DerivedMetric) getPlusCache().get(other);
-      if (result == null) {
-        result = static_plus(this, other);
-        if (TransactionManager.getInstance().inTxn()) {
-          getPlusCache().put(other, result);
-          other.getPlusCache().put(this, result);
-        } else {
-          atomic {
-            getPlusCache().put(other, result);
-            other.getPlusCache().put(this, result);
-          }
-        }
-      }
-      return result;
+      //DerivedMetric result = (DerivedMetric) getPlusCache().get(other);
+      //if (result == null) {
+      //  result = static_plus(this, other);
+      //  if (TransactionManager.getInstance().inTxn()) {
+      //    getPlusCache().put(other, result);
+      //    other.getPlusCache().put(this, result);
+      //  } else {
+      //    atomic {
+      //      getPlusCache().put(other, result);
+      //      other.getPlusCache().put(this, result);
+      //    }
+      //  }
+      //}
+      //return result;
+      return static_plus(this, other);
     }
 
     private static DerivedMetric static_plus(ScaledMetric tmp, Metric other) {

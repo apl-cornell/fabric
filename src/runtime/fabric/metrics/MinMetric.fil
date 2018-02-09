@@ -120,19 +120,20 @@ public class MinMetric extends DerivedMetric {
 
     /*@Override*/
     public DerivedMetric times(double scalar) {
-      Double s = Double.valueOf(scalar);
-      DerivedMetric result = (DerivedMetric) getTimesCache().get(s);
-      if (result == null) {
-        result = static_times(this, scalar);
-        if (TransactionManager.getInstance().inTxn()) {
-          getTimesCache().put(s, result);
-        } else {
-          atomic {
-            getTimesCache().put(s, result);
-          }
-        }
-      }
-      return result;
+      //Double s = Double.valueOf(scalar);
+      //DerivedMetric result = (DerivedMetric) getTimesCache().get(s);
+      //if (result == null) {
+      //  result = static_times(this, scalar);
+      //  if (TransactionManager.getInstance().inTxn()) {
+      //    getTimesCache().put(s, result);
+      //  } else {
+      //    atomic {
+      //      getTimesCache().put(s, result);
+      //    }
+      //  }
+      //}
+      //return result;
+      return static_times(this, scalar);
     }
 
     private static DerivedMetric static_times(MinMetric tmp, double scalar) {
@@ -161,20 +162,21 @@ public class MinMetric extends DerivedMetric {
      */
     /*@Override*/
     public DerivedMetric plus(Metric other) {
-      DerivedMetric result = (DerivedMetric) getPlusCache().get(other);
-      if (result == null) {
-        result = static_plus(this, other);
-        if (TransactionManager.getInstance().inTxn()) {
-          getPlusCache().put(other, result);
-          other.getPlusCache().put(this, result);
-        } else {
-          atomic {
-            getPlusCache().put(other, result);
-            other.getPlusCache().put(this, result);
-          }
-        }
-      }
-      return result;
+      //DerivedMetric result = (DerivedMetric) getPlusCache().get(other);
+      //if (result == null) {
+      //  result = static_plus(this, other);
+      //  if (TransactionManager.getInstance().inTxn()) {
+      //    getPlusCache().put(other, result);
+      //    other.getPlusCache().put(this, result);
+      //  } else {
+      //    atomic {
+      //      getPlusCache().put(other, result);
+      //      other.getPlusCache().put(this, result);
+      //    }
+      //  }
+      //}
+      //return result;
+      return static_plus(this, other);
     }
 
     private static DerivedMetric static_plus(MinMetric tmp, Metric other) {
@@ -203,20 +205,21 @@ public class MinMetric extends DerivedMetric {
      */
     /*@Override*/
     public Metric min(Metric other) {
-      Metric result = (Metric) getMinCache().get(other);
-      if (result == null) {
-        result = static_min(this, other);
-        if (TransactionManager.getInstance().inTxn()) {
-          getMinCache().put(other, result);
-          other.getMinCache().put(this, result);
-        } else {
-          atomic {
-            getMinCache().put(other, result);
-            other.getMinCache().put(this, result);
-          }
-        }
-      }
-      return result;
+      //Metric result = (Metric) getMinCache().get(other);
+      //if (result == null) {
+      //  result = static_min(this, other);
+      //  if (TransactionManager.getInstance().inTxn()) {
+      //    getMinCache().put(other, result);
+      //    other.getMinCache().put(this, result);
+      //  } else {
+      //    atomic {
+      //      getMinCache().put(other, result);
+      //      other.getMinCache().put(this, result);
+      //    }
+      //  }
+      //}
+      //return result;
+      return static_min(this, other);
     }
 
     private static Metric static_min(MinMetric tmp, Metric other) {
