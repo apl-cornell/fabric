@@ -4,7 +4,7 @@ import fabric.util.ArrayList;
 import fabric.util.List;
 
 import fabric.metrics.util.Observer;
-import fabric.metrics.util.RunningStats;
+import fabric.metrics.util.RunningMetricStats;
 
 import fabric.common.ConfigProperties;
 import fabric.common.exceptions.InternalError;
@@ -38,17 +38,9 @@ public class SampledMetric extends Metric {
     Label lbl = LabelUtil.noComponents();
     Store s = $getStore();
     this.name = name;
-    this.value = new double[1] ~lbl @s;
-    this.value[0] = init;
-    this.samples = new double[1] ~lbl @s;
-    this.samples[0] = 0;
-    this.lastUpdate = new long[1] ~lbl @s;
-    this.lastUpdate[0] = System.currentTimeMillis() - 1;
-    this.biasStats = new RunningStats().fabric$metrics$util$RunningStats$(0);
-    // TODO: hack, to avoid initial update being very high and leading to high
-    // initial variance estimates.
-    this.updateIntervalStats = new RunningStats().fabric$metrics$util$RunningStats$(1);
-    //this.allStats = new RunningStats().fabric$metrics$util$RunningStats$(0);
+    // TODO: hack, using 1 for initial interval to avoid initial update being
+    // very high and leading to high initial variance estimates.
+    this.stats = new RunningMetricStats().fabric$metrics$util$RunningMetricStats$(init, 0, 1);
 
     // Presets
     ConfigProperties config = Worker.getWorker().config;
@@ -145,7 +137,7 @@ public class SampledMetric extends Metric {
    *        the time the sample occurred.
    */
   public void takeSample(double sample, long time) {
-    if (value[0] != sample) {
+    if (stats.getValue() != sample) {
       updateEstimates(sample, time);
       TransactionManager.getInstance().registerSample(this);
     }
@@ -159,14 +151,10 @@ public class SampledMetric extends Metric {
   private static double static_computeValue(SampledMetric tmp, boolean useWeakCache) {
     double result = 0;
     if (TransactionManager.getInstance().inTxn()) {
-      // Write lock hack to avoid being kicked out by updates.
-      tmp.value[0] = tmp.value[0];
-      result = tmp.value[0];
+      result = tmp.stats.getValue();
     } else {
       atomic {
-        // Write lock hack to avoid being kicked out by updates.
-        tmp.value[0] = tmp.value[0];
-        result = tmp.value[0];
+        result = tmp.stats.getValue();
       }
     }
     return result;
@@ -182,7 +170,7 @@ public class SampledMetric extends Metric {
       if (tmp.usePreset) {
         return 0;
       } else {
-        return tmp.samples[0];
+        return tmp.stats.getSamples();
       }
     } else {
       double rtn = 0;
@@ -190,7 +178,7 @@ public class SampledMetric extends Metric {
         if (tmp.usePreset) {
           rtn = 0;
         } else {
-          rtn = tmp.samples[0];
+          rtn = tmp.stats.getSamples();
         }
       }
       return rtn;
@@ -207,19 +195,7 @@ public class SampledMetric extends Metric {
       if (tmp.usePreset) {
         return tmp.presetV;
       } else {
-        // Account for time that's passed since last observation.
-        long intervalSince = (System.currentTimeMillis() - tmp.lastUpdate[0]);
-        double curInterval = tmp.updateIntervalStats.getMean();
-        double curBias = tmp.biasStats.getMean();
-        double newInterval = curInterval;
-        double newBias = curBias;
-        if (intervalSince > 0) {
-            newInterval = (curInterval + RunningStats.ALPHA * (intervalSince - curInterval));
-            newBias = (curBias * (1.0 - RunningStats.ALPHA));
-        }
-        // return allStats.getMean();
-        //return biasStats.getMean() / updateIntervalStats.getMean();
-        return newBias / newInterval;
+        return tmp.stats.getVelocityEstimate();
       }
     } else {
       double rtn = 0;
@@ -227,19 +203,7 @@ public class SampledMetric extends Metric {
         if (tmp.usePreset) {
           rtn = tmp.presetV;
         } else {
-          // Account for time that's passed since last observation.
-          long intervalSince = (System.currentTimeMillis() - tmp.lastUpdate[0]);
-          double curInterval = tmp.updateIntervalStats.getMean();
-          double curBias = tmp.biasStats.getMean();
-          double newInterval = curInterval;
-          double newBias = curBias;
-          if (intervalSince > 0) {
-              newInterval = (curInterval + RunningStats.ALPHA * (intervalSince - curInterval));
-              newBias = (curBias * (1.0 - RunningStats.ALPHA));
-          }
-          // return allStats.getMean();
-          //return biasStats.getMean() / updateIntervalStats.getMean();
-          rtn = newBias / newInterval;
+          rtn = tmp.stats.getVelocityEstimate();
         }
       }
       return rtn;
@@ -256,29 +220,7 @@ public class SampledMetric extends Metric {
       if (tmp.usePreset) {
         return tmp.presetN;
       } else {
-        // Based on ratio estimator approach and assuming that there's 0
-        // covariance between update intervals and update values
-        // Account for time that's passed since last observation.
-        long intervalSince = (System.currentTimeMillis() - tmp.lastUpdate[0]);
-        double curInterval = tmp.updateIntervalStats.getMean();
-        double curBias = tmp.biasStats.getMean();
-        double curBiasVar = tmp.biasStats.getVar();
-        double newInterval = curInterval;
-        double newBias = curBias;
-        double newBiasVar = curBiasVar;
-        if (intervalSince > 0) {
-          newInterval = (curInterval + RunningStats.ALPHA * (intervalSince - curInterval));
-          newBias = (curBias * (1.0 - RunningStats.ALPHA));
-          newBiasVar = (1.0 - RunningStats.ALPHA) * curBiasVar + RunningStats.ALPHA * (curBias * newBias);
-        }
-        //double tSqrd = updateIntervalStats.getMean() * updateIntervalStats.getMean();
-        double tSqrd = newInterval * newInterval;
-        // We're assuming exponential distribution of the times and here we get
-        // the variance of the product of independent poisson (1/exp) and
-        // normally distributed variables.
-        // return allStats.getVar();
-        //return (1 / updateIntervalStats.getMean() + biasStats.getVar() / tSqrd);
-        return (1 / newInterval + newBiasVar / tSqrd);
+        return tmp.stats.getNoiseEstimate();
       }
     } else {
       double rtn = 0;
@@ -286,29 +228,7 @@ public class SampledMetric extends Metric {
         if (tmp.usePreset) {
           rtn = tmp.presetN;
         } else {
-          // Based on ratio estimator approach and assuming that there's 0
-          // covariance between update intervals and update values
-          // Account for time that's passed since last observation.
-          long intervalSince = (System.currentTimeMillis() - tmp.lastUpdate[0]);
-          double curInterval = tmp.updateIntervalStats.getMean();
-          double curBias = tmp.biasStats.getMean();
-          double curBiasVar = tmp.biasStats.getVar();
-          double newInterval = curInterval;
-          double newBias = curBias;
-          double newBiasVar = curBiasVar;
-          if (intervalSince > 0) {
-            newInterval = (curInterval + RunningStats.ALPHA * (intervalSince - curInterval));
-            newBias = (curBias * (1.0 - RunningStats.ALPHA));
-            newBiasVar = (1.0 - RunningStats.ALPHA) * curBiasVar + RunningStats.ALPHA * (curBias * newBias);
-          }
-          //double tSqrd = updateIntervalStats.getMean() * updateIntervalStats.getMean();
-          double tSqrd = newInterval * newInterval;
-          // We're assuming exponential distribution of the times and here we get
-          // the variance of the product of independent poisson (1/exp) and
-          // normally distributed variables.
-          // return allStats.getVar();
-          //return (1 / updateIntervalStats.getMean() + biasStats.getVar() / tSqrd);
-          rtn = (1 / newInterval + newBiasVar / tSqrd);
+          rtn = tmp.stats.getNoiseEstimate();
         }
       }
       return rtn;
@@ -326,34 +246,9 @@ public class SampledMetric extends Metric {
   }
 
   /**
-   * The current measurement. (Stored as an array to avoid unnecessary
-   * conflicts.)
+   * The statistics for this metric.
    */
-  protected final double[] value;
-
-  /**
-   * The current number of samples. (Stored as an array to avoid unnecessary
-   * conflicts.)
-   */
-  protected final double[] samples;
-
-  /**
-   * The time of the last update to this measure, in milliseconds since the
-   * UNIX epoch. (Stored as an array to avoid unnecessary conflicts.)
-   */
-  protected final long[] lastUpdate;
-
-  /**
-   * The statistics of update magnitudes for this measure. This is computed as
-   * an exponentially weighted moving average.
-   */
-  protected final RunningStats biasStats;
-
-  /**
-   * The estimated time interval between updates, in milliseconds. This is
-   * computed as an exponentially weighted moving average.
-   */
-  protected final RunningStats updateIntervalStats;
+  protected final RunningMetricStats stats;
 
   /**
    * Updates the velocity and interval estimates with the given observation.
@@ -364,11 +259,7 @@ public class SampledMetric extends Metric {
    *        the time, in milliseconds, this update happened
    */
   protected void updateEstimates(double newVal, long eventTime) {
-    biasStats.update(newVal - value[0]);
-    updateIntervalStats.update(eventTime - lastUpdate[0]);
-    lastUpdate[0] = eventTime;
-    value[0] = newVal;
-    samples[0] = samples[0] + 1;
+    stats.update(newVal);
   }
 
   /*@Override*/

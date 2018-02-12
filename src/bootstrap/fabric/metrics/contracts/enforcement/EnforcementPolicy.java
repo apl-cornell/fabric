@@ -15,9 +15,6 @@ import fabric.metrics.contracts.MetricContract;
  * monitored information for enforcing a {@link MetricContract}.
  */
 public interface EnforcementPolicy extends fabric.lang.Object {
-    public fabric.metrics.contracts.enforcement.EnforcementPolicy
-      fabric$metrics$contracts$enforcement$EnforcementPolicy$();
-    
     /**
    * @return the exipration time of this {@link EnforcementPolicy}.
    */
@@ -57,13 +54,6 @@ public interface EnforcementPolicy extends fabric.lang.Object {
     
     public static class _Proxy extends fabric.lang.Object._Proxy
       implements fabric.metrics.contracts.enforcement.EnforcementPolicy {
-        public fabric.metrics.contracts.enforcement.EnforcementPolicy
-          fabric$metrics$contracts$enforcement$EnforcementPolicy$() {
-            return ((fabric.metrics.contracts.enforcement.EnforcementPolicy)
-                      fetch()).
-              fabric$metrics$contracts$enforcement$EnforcementPolicy$();
-        }
-        
         public long expiry() {
             return ((fabric.metrics.contracts.enforcement.EnforcementPolicy)
                       fetch()).expiry();
@@ -89,184 +79,16 @@ public interface EnforcementPolicy extends fabric.lang.Object {
               acquireReconfigLocks();
         }
         
-        public _Proxy(EnforcementPolicy._Impl impl) { super(impl); }
-        
         public _Proxy(fabric.worker.Store store, long onum) {
             super(store, onum);
         }
     }
     
-    public abstract static class _Impl extends fabric.lang.Object._Impl
-      implements fabric.metrics.contracts.enforcement.EnforcementPolicy {
-        public fabric.metrics.contracts.enforcement.EnforcementPolicy
-          fabric$metrics$contracts$enforcement$EnforcementPolicy$() {
-            fabric$lang$Object$();
-            return (fabric.metrics.contracts.enforcement.EnforcementPolicy)
-                     this.$getProxy();
-        }
-        
-        /**
-   * @return the exipration time of this {@link EnforcementPolicy}.
-   */
-        public abstract long expiry();
-        
-        /**
-   * Update book-keeping to use this {@link EnforcementPolicy} for the given
-   * {@link MetricContract}. This will add the given {@link MetricContract} as
-   * an {@link metrics.util.Observer Observer} of the necessary
-   * {@link metrics.util.Subject Subject}s to use the policy.
-   *
-   * @param mc
-   *        the {@link MetricContract} to apply this policy to.
-   */
-        public abstract void apply(fabric.metrics.contracts.MetricContract mc);
-        
-        /**
-   * Update book-keeping to stop using this {@link EnforcementPolicy} for the
-   * given {@link MetricContract}. This will remove the given
-   * {@link MetricContract} as an {@link metrics.util.Observer Observer} of
-   * the necessary {@link metrics.util.Subject Subject}s to use the policy.
-   *
-   * @param mc
-   *        the {@link MetricContract} to stop applying this policy to.
-   */
-        public abstract void unapply(fabric.metrics.contracts.MetricContract mc);
-        
-        /**
-   * Activate this policy, activating witnesses and setting the expiry.
-   */
-        public abstract void activate();
-        
-        /**
-   * Acquire reconfig locks for the evidence used for this policy.
-   */
-        public abstract void acquireReconfigLocks();
-        
-        public _Impl(fabric.worker.Store $location) { super($location); }
-        
-        protected fabric.lang.Object._Proxy $makeProxy() {
-            return new fabric.metrics.contracts.enforcement.EnforcementPolicy.
-                     _Proxy(this);
-        }
-        
-        public void $serialize(java.io.ObjectOutput out,
-                               java.util.List refTypes,
-                               java.util.List intraStoreRefs,
-                               java.util.List interStoreRefs)
-              throws java.io.IOException {
-            super.$serialize(out, refTypes, intraStoreRefs, interStoreRefs);
-        }
-        
-        public _Impl(fabric.worker.Store store, long onum, int version,
-                     long expiry, fabric.worker.Store labelStore,
-                     long labelOnum, fabric.worker.Store accessPolicyStore,
-                     long accessPolicyOnum, java.io.ObjectInput in,
-                     java.util.Iterator refTypes,
-                     java.util.Iterator intraStoreRefs,
-                     java.util.Iterator interStoreRefs)
-              throws java.io.IOException,
-            java.lang.ClassNotFoundException {
-            super(store, onum, version, expiry, labelStore, labelOnum,
-                  accessPolicyStore, accessPolicyOnum, in, refTypes,
-                  intraStoreRefs, interStoreRefs);
-        }
-    }
-    
-    interface _Static extends fabric.lang.Object, Cloneable {
-        final class _Proxy
-        extends fabric.
-          lang.
-          Object.
-          _Proxy
-          implements fabric.metrics.contracts.enforcement.EnforcementPolicy.
-                       _Static
-        {
-            public _Proxy(fabric.metrics.contracts.enforcement.
-                            EnforcementPolicy._Static._Impl impl) {
-                super(impl);
-            }
-            
-            public _Proxy(fabric.worker.Store store, long onum) {
-                super(store, onum);
-            }
-            
-            public static final fabric.metrics.contracts.enforcement.
-              EnforcementPolicy._Static $instance;
-            
-            static {
-                fabric.
-                  metrics.
-                  contracts.
-                  enforcement.
-                  EnforcementPolicy.
-                  _Static.
-                  _Impl
-                  impl =
-                  (fabric.
-                    metrics.
-                    contracts.
-                    enforcement.
-                    EnforcementPolicy.
-                    _Static.
-                    _Impl)
-                    fabric.lang.Object._Static._Proxy.
-                    $makeStaticInstance(
-                      fabric.metrics.contracts.enforcement.EnforcementPolicy.
-                        _Static._Impl.class);
-                $instance =
-                  (fabric.metrics.contracts.enforcement.EnforcementPolicy.
-                    _Static) impl.$getProxy();
-                impl.$init();
-            }
-        }
-        
-        class _Impl
-        extends fabric.
-          lang.
-          Object.
-          _Impl
-          implements fabric.metrics.contracts.enforcement.EnforcementPolicy.
-                       _Static
-        {
-            public void $serialize(java.io.ObjectOutput out,
-                                   java.util.List refTypes,
-                                   java.util.List intraStoreRefs,
-                                   java.util.List interStoreRefs)
-                  throws java.io.IOException {
-                super.$serialize(out, refTypes, intraStoreRefs, interStoreRefs);
-            }
-            
-            public _Impl(fabric.worker.Store store, long onum, int version,
-                         long expiry, fabric.worker.Store labelStore,
-                         long labelOnum, fabric.worker.Store accessPolicyStore,
-                         long accessPolicyOnum, java.io.ObjectInput in,
-                         java.util.Iterator refTypes,
-                         java.util.Iterator intraStoreRefs,
-                         java.util.Iterator interStoreRefs)
-                  throws java.io.IOException,
-                java.lang.ClassNotFoundException {
-                super(store, onum, version, expiry, labelStore, labelOnum,
-                      accessPolicyStore, accessPolicyOnum, in, refTypes,
-                      intraStoreRefs, interStoreRefs);
-            }
-            
-            public _Impl(fabric.worker.Store store) { super(store); }
-            
-            protected fabric.lang.Object._Proxy $makeProxy() {
-                return new fabric.metrics.contracts.enforcement.
-                         EnforcementPolicy._Static._Proxy(this);
-            }
-            
-            private void $init() {  }
-        }
-        
-    }
-    
-    public static final byte[] $classHash = new byte[] { -2, 58, -122, 118, 11,
-    116, -93, -44, -84, -105, 39, -55, -90, -107, -100, -74, -39, 11, 6, 34,
-    -95, 55, 121, -15, 16, 68, 102, 27, -118, 120, -19, 64 };
-    public static final java.lang.String jlc$CompilerVersion$fabil = "0.3.0";
-    public static final long jlc$SourceLastModified$fabil = 1508274565000L;
-    public static final java.lang.String jlc$ClassType$fabil =
-      "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";
+    public static final byte[] $classHash = new byte[] { -70, 58, -107, 98, 78,
+    -32, -64, 33, 12, -32, -38, 109, -17, -57, 126, 50, -127, 110, 97, -3, -40,
+    -29, 44, -79, -33, 80, 30, 38, -50, 46, -52, -122 };
+    java.lang.String jlc$CompilerVersion$fabil = "0.3.0";
+    long jlc$SourceLastModified$fabil = 1518448064000L;
+    java.lang.String jlc$ClassType$fabil =
+      "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";
 }

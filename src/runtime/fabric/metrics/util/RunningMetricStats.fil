@@ -1,0 +1,210 @@
+package fabric.metrics.util;
+
+/**
+ * Utility class for tracking the sample mean and sample standard deviation of a
+ * value that is updated periodically.
+ * <p>
+ * This was originally based on a post on John D. Cook's blog here:
+ * https://www.johndcook.com/blog/standard_deviation/
+ * <p>
+ * That post assumed a stable distribution. This has since been modified to use
+ * EWMA.
+ */
+public class RunningMetricStats {
+
+  // The sensitivity parameter for computing exponentially weighted moving
+  // averages.
+  public static final double ALPHA = 0.001;
+
+  private boolean stamp = true;
+  private double value;
+  private double meanDelta = 0.0;
+  private double varDelta = 0.0;
+  private double meanDeltaPrev = 0.0;
+  private double varDeltaPrev = 0.0;
+  private final double startDelta;
+  private double meanInterval = 0.0;
+  //private double varInterval = 0.0;
+  private double meanIntervalPrev = 0.0;
+  //private double varIntervalPrev = 0.0;
+  private final double startInterval;
+  private long lastUpdate;
+  private long samples = 0;
+
+  /**
+   * @param startValue
+   *        initial guess for the mean of the value we're keeping
+   *        statistics on.
+   */
+  public RunningMetricStats fabric$metrics$util$RunningMetricStats$(double startValue, double startDelta, double startInterval) {
+    this.value = startValue;
+    this.startDelta = startDelta;
+    this.startInterval = startInterval;
+    fabric$lang$Object$();
+    meanDeltaPrev = startDelta;
+    meanDelta = startDelta;
+    meanIntervalPrev = startInterval;
+    meanInterval = startInterval;
+    lastUpdate = System.currentTimeMillis() - 1;
+    return this;
+  }
+
+  /**
+   * Reset estimation to just the startValue.
+   */
+  public void reset() {
+    meanIntervalPrev = startInterval;
+    meanInterval = startInterval;
+    //varIntervalPrev = 0.0;
+    //varInterval = 0.0;
+    meanDeltaPrev = startDelta;
+    meanDelta = startDelta;
+    varDeltaPrev = 0.0;
+    varDelta = 0.0;
+    samples = 0;
+  }
+
+  /**
+   * @return the current value.
+   */
+  public double getValue() {
+    stamp = true;
+    return value;
+  }
+
+  /**
+   * Compute an estimated velocity, assuming normal distribution of values and
+   * exponential distribution of intervals.
+   *
+   * @return the current estimated velocity.
+   */
+  public double getVelocityEstimate() {
+    // Account for time that's passed since last observation.
+    long intervalSince = (System.currentTimeMillis() - lastUpdate);
+    double curInterval = getMeanInterval();
+    double curBias = getMeanDelta();
+    double newInterval = curInterval;
+    double newBias = curBias;
+    if (intervalSince > 0) {
+        newInterval = (curInterval + ALPHA * (intervalSince - curInterval));
+        newBias = (curBias * (1.0 - ALPHA));
+    }
+    return newBias / newInterval;
+  }
+
+  /**
+   * Compute an estimated noise, assuming normal distribution of values and
+   * exponential distribution of intervals.
+   *
+   * @return the current estimated noise.
+   */
+  public double getNoiseEstimate() {
+    // Assuming that there's 0 covariance between update intervals and update
+    // values.
+    // Account for time that's passed since last observation.
+    long intervalSince = (System.currentTimeMillis() - lastUpdate);
+    double curInterval = getMeanInterval();
+    double curBias = getMeanDelta();
+    double curBiasVar = getVarDelta();
+    double newInterval = curInterval;
+    double newBias = curBias;
+    double newBiasVar = curBiasVar;
+    if (intervalSince > 0) {
+      newInterval = (curInterval + ALPHA * (intervalSince - curInterval));
+      newBias = (curBias * (1.0 - ALPHA));
+      newBiasVar = (1.0 - ALPHA) * curBiasVar + ALPHA * (curBias * newBias);
+    }
+    double tSqrd = newInterval * newInterval;
+    // We're assuming exponential distribution of the times and here we get
+    // the variance of the product of independent poisson (1/exp) and
+    // normally distributed variables.
+    return (1 / newInterval + newBiasVar / tSqrd);
+  }
+
+  /**
+   * @return the last update time.
+   */
+  public long getLastUpdate() {
+    stamp = true;
+    return lastUpdate;
+  }
+
+  /**
+   * @return the number of samples taken.
+   */
+  public long getSamples() {
+    stamp = true;
+    return samples;
+  }
+
+  /**
+   * @return the current estimated meanDelta.
+   */
+  public double getMeanDelta() {
+    stamp = true;
+    return meanDelta;
+  }
+
+  /**
+   * @return the current estimated meanInterval.
+   */
+  public double getMeanInterval() {
+    stamp = true;
+    return meanInterval;
+  }
+
+  /**
+   * @return the current estimated variance of the delta.
+   */
+  public double getVarDelta() {
+    stamp = true;
+    return varDelta;
+  }
+
+  /**
+   * @return the current estimated variance of the interval.
+   */
+  //public double getVarInterval() {
+  //  stamp = true;
+  //  return varInterval;
+  //}
+
+  /**
+   * Update with a new observation.
+   *
+   * @param val
+   *        the newly observed value.
+   */
+  public void update(double newVal) {
+    // Update the time and interval stats
+    long curTime = System.currentTimeMillis();
+    double interval = curTime - lastUpdate;
+    lastUpdate = curTime;
+    meanInterval = meanIntervalPrev +
+      ALPHA * (interval - meanIntervalPrev);
+    //varInterval = (1.0 - ALPHA) * varIntervalPrev
+    //    + ALPHA * (interval - meanIntervalPrev)
+    //    * (interval - meanInterval);
+
+    meanIntervalPrev = meanInterval;
+    //varIntervalPrev = varInterval;
+
+    // Update the value and delta stats
+    double val = newVal - value;
+    value = newVal;
+    meanDelta = meanDeltaPrev + ALPHA * (val - meanDeltaPrev);
+    varDelta = (1.0 - ALPHA) * varDeltaPrev
+        + ALPHA * (val - meanDeltaPrev) * (val - meanDelta);
+
+    meanDeltaPrev = meanDelta;
+    varDeltaPrev = varDelta;
+
+    // Update samples count
+    samples++;
+  }
+
+  /** @return the ALPHA learning parameter for these statistics. */
+  public double getAlpha() {
+    return ALPHA;
+  }
+}
