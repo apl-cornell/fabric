@@ -196,35 +196,35 @@ public interface SumMetric extends fabric.metrics.DerivedMetric {
             }
             else {
                 {
-                    fabric.metrics.DerivedMetric val$var290 = val;
-                    fabric.worker.transaction.TransactionManager $tm296 =
+                    fabric.metrics.DerivedMetric val$var318 = val;
+                    fabric.worker.transaction.TransactionManager $tm324 =
                       fabric.worker.transaction.TransactionManager.getInstance(
                                                                      );
-                    boolean $backoffEnabled299 =
+                    boolean $backoffEnabled327 =
                       fabric.worker.Worker.getWorker().config.txRetryBackoff;
-                    int $backoff297 = 1;
-                    boolean $doBackoff298 = true;
-                    boolean $retry293 = true;
-                    $label291: for (boolean $commit292 = false; !$commit292; ) {
-                        if ($backoffEnabled299) {
-                            if ($doBackoff298) {
-                                if ($backoff297 > 32) {
+                    int $backoff325 = 1;
+                    boolean $doBackoff326 = true;
+                    boolean $retry321 = true;
+                    $label319: for (boolean $commit320 = false; !$commit320; ) {
+                        if ($backoffEnabled327) {
+                            if ($doBackoff326) {
+                                if ($backoff325 > 32) {
                                     while (true) {
                                         try {
-                                            java.lang.Thread.sleep($backoff297);
+                                            java.lang.Thread.sleep($backoff325);
                                             break;
                                         }
                                         catch (java.lang.
-                                                 InterruptedException $e294) {
+                                                 InterruptedException $e322) {
                                             
                                         }
                                     }
                                 }
-                                if ($backoff297 < 5000) $backoff297 *= 2;
+                                if ($backoff325 < 5000) $backoff325 *= 2;
                             }
-                            $doBackoff298 = $backoff297 <= 32 || !$doBackoff298;
+                            $doBackoff326 = $backoff325 <= 32 || !$doBackoff326;
                         }
-                        $commit292 = true;
+                        $commit320 = true;
                         fabric.worker.transaction.TransactionManager.
                           getInstance().startTransaction();
                         try {
@@ -234,53 +234,53 @@ public interface SumMetric extends fabric.metrics.DerivedMetric {
                                  $getProxy()).fabric$metrics$SumMetric$(
                                                 newTerms);
                         }
-                        catch (final fabric.worker.RetryException $e294) {
-                            $commit292 = false;
-                            continue $label291;
+                        catch (final fabric.worker.RetryException $e322) {
+                            $commit320 = false;
+                            continue $label319;
                         }
                         catch (final fabric.worker.
-                                 TransactionRestartingException $e294) {
-                            $commit292 = false;
-                            fabric.common.TransactionID $currentTid295 =
-                              $tm296.getCurrentTid();
-                            if ($e294.tid.isDescendantOf($currentTid295))
-                                continue $label291;
-                            if ($currentTid295.parent != null) {
-                                $retry293 = false;
-                                throw $e294;
+                                 TransactionRestartingException $e322) {
+                            $commit320 = false;
+                            fabric.common.TransactionID $currentTid323 =
+                              $tm324.getCurrentTid();
+                            if ($e322.tid.isDescendantOf($currentTid323))
+                                continue $label319;
+                            if ($currentTid323.parent != null) {
+                                $retry321 = false;
+                                throw $e322;
                             }
                             throw new InternalError(
                                     "Something is broken with " +
                                         "transaction management. Got a signal to restart a " +
                                         "different transaction than the one being managed.");
                         }
-                        catch (final Throwable $e294) {
-                            $commit292 = false;
-                            if ($tm296.checkForStaleObjects())
-                                continue $label291;
-                            $retry293 = false;
-                            throw new fabric.worker.AbortException($e294);
+                        catch (final Throwable $e322) {
+                            $commit320 = false;
+                            if ($tm324.checkForStaleObjects())
+                                continue $label319;
+                            $retry321 = false;
+                            throw new fabric.worker.AbortException($e322);
                         }
                         finally {
-                            if ($commit292) {
+                            if ($commit320) {
                                 try {
                                     fabric.worker.transaction.TransactionManager.
                                       getInstance().commitTransaction();
                                 }
                                 catch (final fabric.worker.
-                                         AbortException $e294) {
-                                    $commit292 = false;
+                                         AbortException $e322) {
+                                    $commit320 = false;
                                 }
                                 catch (final fabric.worker.
-                                         TransactionRestartingException $e294) {
-                                    $commit292 = false;
-                                    fabric.common.TransactionID $currentTid295 =
-                                      $tm296.getCurrentTid();
-                                    if ($currentTid295 != null) {
-                                        if ($e294.tid.equals($currentTid295) ||
-                                              !$e294.tid.isDescendantOf(
-                                                           $currentTid295)) {
-                                            throw $e294;
+                                         TransactionRestartingException $e322) {
+                                    $commit320 = false;
+                                    fabric.common.TransactionID $currentTid323 =
+                                      $tm324.getCurrentTid();
+                                    if ($currentTid323 != null) {
+                                        if ($e322.tid.equals($currentTid323) ||
+                                              !$e322.tid.isDescendantOf(
+                                                           $currentTid323)) {
+                                            throw $e322;
                                         }
                                     }
                                 }
@@ -289,9 +289,9 @@ public interface SumMetric extends fabric.metrics.DerivedMetric {
                                 fabric.worker.transaction.TransactionManager.
                                   getInstance().abortTransaction();
                             }
-                            if (!$commit292 && $retry293) {
-                                { val = val$var290; }
-                                continue $label291;
+                            if (!$commit320 && $retry321) {
+                                { val = val$var318; }
+                                continue $label319;
                             }
                         }
                     }
@@ -457,37 +457,37 @@ public interface SumMetric extends fabric.metrics.DerivedMetric {
             }
             else {
                 {
-                    fabric.metrics.DerivedMetric val$var300 = val;
-                    fabric.metrics.Metric[] newTerms$var301 = newTerms;
-                    int termIdx$var302 = termIdx;
-                    fabric.worker.transaction.TransactionManager $tm308 =
+                    fabric.metrics.DerivedMetric val$var328 = val;
+                    fabric.metrics.Metric[] newTerms$var329 = newTerms;
+                    int termIdx$var330 = termIdx;
+                    fabric.worker.transaction.TransactionManager $tm336 =
                       fabric.worker.transaction.TransactionManager.getInstance(
                                                                      );
-                    boolean $backoffEnabled311 =
+                    boolean $backoffEnabled339 =
                       fabric.worker.Worker.getWorker().config.txRetryBackoff;
-                    int $backoff309 = 1;
-                    boolean $doBackoff310 = true;
-                    boolean $retry305 = true;
-                    $label303: for (boolean $commit304 = false; !$commit304; ) {
-                        if ($backoffEnabled311) {
-                            if ($doBackoff310) {
-                                if ($backoff309 > 32) {
+                    int $backoff337 = 1;
+                    boolean $doBackoff338 = true;
+                    boolean $retry333 = true;
+                    $label331: for (boolean $commit332 = false; !$commit332; ) {
+                        if ($backoffEnabled339) {
+                            if ($doBackoff338) {
+                                if ($backoff337 > 32) {
                                     while (true) {
                                         try {
-                                            java.lang.Thread.sleep($backoff309);
+                                            java.lang.Thread.sleep($backoff337);
                                             break;
                                         }
                                         catch (java.lang.
-                                                 InterruptedException $e306) {
+                                                 InterruptedException $e334) {
                                             
                                         }
                                     }
                                 }
-                                if ($backoff309 < 5000) $backoff309 *= 2;
+                                if ($backoff337 < 5000) $backoff337 *= 2;
                             }
-                            $doBackoff310 = $backoff309 <= 32 || !$doBackoff310;
+                            $doBackoff338 = $backoff337 <= 32 || !$doBackoff338;
                         }
-                        $commit304 = true;
+                        $commit332 = true;
                         fabric.worker.transaction.TransactionManager.
                           getInstance().startTransaction();
                         try {
@@ -497,53 +497,53 @@ public interface SumMetric extends fabric.metrics.DerivedMetric {
                                  $getProxy()).fabric$metrics$SumMetric$(
                                                 newTerms);
                         }
-                        catch (final fabric.worker.RetryException $e306) {
-                            $commit304 = false;
-                            continue $label303;
+                        catch (final fabric.worker.RetryException $e334) {
+                            $commit332 = false;
+                            continue $label331;
                         }
                         catch (final fabric.worker.
-                                 TransactionRestartingException $e306) {
-                            $commit304 = false;
-                            fabric.common.TransactionID $currentTid307 =
-                              $tm308.getCurrentTid();
-                            if ($e306.tid.isDescendantOf($currentTid307))
-                                continue $label303;
-                            if ($currentTid307.parent != null) {
-                                $retry305 = false;
-                                throw $e306;
+                                 TransactionRestartingException $e334) {
+                            $commit332 = false;
+                            fabric.common.TransactionID $currentTid335 =
+                              $tm336.getCurrentTid();
+                            if ($e334.tid.isDescendantOf($currentTid335))
+                                continue $label331;
+                            if ($currentTid335.parent != null) {
+                                $retry333 = false;
+                                throw $e334;
                             }
                             throw new InternalError(
                                     "Something is broken with " +
                                         "transaction management. Got a signal to restart a " +
                                         "different transaction than the one being managed.");
                         }
-                        catch (final Throwable $e306) {
-                            $commit304 = false;
-                            if ($tm308.checkForStaleObjects())
-                                continue $label303;
-                            $retry305 = false;
-                            throw new fabric.worker.AbortException($e306);
+                        catch (final Throwable $e334) {
+                            $commit332 = false;
+                            if ($tm336.checkForStaleObjects())
+                                continue $label331;
+                            $retry333 = false;
+                            throw new fabric.worker.AbortException($e334);
                         }
                         finally {
-                            if ($commit304) {
+                            if ($commit332) {
                                 try {
                                     fabric.worker.transaction.TransactionManager.
                                       getInstance().commitTransaction();
                                 }
                                 catch (final fabric.worker.
-                                         AbortException $e306) {
-                                    $commit304 = false;
+                                         AbortException $e334) {
+                                    $commit332 = false;
                                 }
                                 catch (final fabric.worker.
-                                         TransactionRestartingException $e306) {
-                                    $commit304 = false;
-                                    fabric.common.TransactionID $currentTid307 =
-                                      $tm308.getCurrentTid();
-                                    if ($currentTid307 != null) {
-                                        if ($e306.tid.equals($currentTid307) ||
-                                              !$e306.tid.isDescendantOf(
-                                                           $currentTid307)) {
-                                            throw $e306;
+                                         TransactionRestartingException $e334) {
+                                    $commit332 = false;
+                                    fabric.common.TransactionID $currentTid335 =
+                                      $tm336.getCurrentTid();
+                                    if ($currentTid335 != null) {
+                                        if ($e334.tid.equals($currentTid335) ||
+                                              !$e334.tid.isDescendantOf(
+                                                           $currentTid335)) {
+                                            throw $e334;
                                         }
                                     }
                                 }
@@ -552,13 +552,13 @@ public interface SumMetric extends fabric.metrics.DerivedMetric {
                                 fabric.worker.transaction.TransactionManager.
                                   getInstance().abortTransaction();
                             }
-                            if (!$commit304 && $retry305) {
+                            if (!$commit332 && $retry333) {
                                 {
-                                    val = val$var300;
-                                    newTerms = newTerms$var301;
-                                    termIdx = termIdx$var302;
+                                    val = val$var328;
+                                    newTerms = newTerms$var329;
+                                    termIdx = termIdx$var330;
                                 }
-                                continue $label303;
+                                continue $label331;
                             }
                         }
                     }

@@ -179,10 +179,6 @@ public class MetricContract extends Contract {
     if (asyncExtension)
       return false;
 
-    // Otherwise we're finding a new policy, so we're coordinating.
-    Logging.METRICS_LOGGER.fine("COORDINATING FOR " + this +
-        " IN " + TransactionManager.getInstance().getCurrentTid());
-
     // If we're moving to a new policy we need to be holding the reconfig locks.
     TransactionManager tm = TransactionManager.getInstance();
     if (!this.lock.held()) {
@@ -195,6 +191,10 @@ public class MetricContract extends Contract {
             new TransactionID(current.topTid));
       }
     }
+
+    // Otherwise we're finding a new policy, so we're coordinating.
+    Logging.METRICS_LOGGER.fine("COORDINATING FOR " + this +
+        " IN " + tm.getCurrentTid());
 
     // Find a new policy now that we have the lock.
     EnforcementPolicy oldPolicy = currentPolicy;
