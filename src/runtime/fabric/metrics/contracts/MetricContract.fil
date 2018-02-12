@@ -193,8 +193,9 @@ public class MetricContract extends Contract {
     }
 
     // Otherwise we're finding a new policy, so we're coordinating.
-    Logging.METRICS_LOGGER.fine("COORDINATING FOR " + this +
-        " IN " + tm.getCurrentTid());
+    //Logging.METRICS_LOGGER.log(Level.FINER, "COORDINATING FOR {0} IN {1}",
+    //    new java.lang.Object native[] { this, tm.getCurrentTid() });
+    tm.markCoordination();
 
     // Find a new policy now that we have the lock.
     EnforcementPolicy oldPolicy = currentPolicy;

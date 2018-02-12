@@ -1820,4 +1820,12 @@ public final class TransactionManager {
     if (commonAncestor.depth != tid.depth) startTransaction(tid, true);
   }
 
+  /**
+   * Note that a coordination happened.
+   */
+  public void markCoordination() {
+    if (current != null) {
+      current.coordinated = true;
+    }
+  }
 }
