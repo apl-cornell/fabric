@@ -55,7 +55,7 @@ public class ReconfigLock {
    */
   public void acquire() {
     TransactionManager tm = TransactionManager.getInstance();
-    if (!currentlyHeld) {
+    if (!currentlyHeld && !tm.hasLock(this)) {
       tm.registerLockAcquire(this);
       currentlyHeld = true;
     } else if (!tm.hasLock(this)) {

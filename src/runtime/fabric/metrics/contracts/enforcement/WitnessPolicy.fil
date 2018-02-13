@@ -177,9 +177,10 @@ public class WitnessPolicy implements EnforcementPolicy {
   }
 
   /*@Override*/
-  public void acquireReconfigLocks() {
-    for (int i = 0; i < witnesses.length; i++) {
-      witnesses[i].acquireReconfigLocks();
-    }
-  }
+  // Don't need it, as it turns out.
+  //public void acquireReconfigLocks() {
+  //  for (int i = 0; i < witnesses.length; i++) {
+  //    witnesses[i].acquireReconfigLocks();
+  //  }
+  //}
 }

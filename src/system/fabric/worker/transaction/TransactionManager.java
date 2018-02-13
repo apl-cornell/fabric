@@ -156,27 +156,26 @@ public final class TransactionManager {
   /**
    * The locks to acquire before the next transaction runs.
    */
-  protected OidKeyHashMap<Contract._Proxy> contractsToAcquire =
+  protected OidKeyHashMap<Boolean> contractsToAcquire =
       new OidKeyHashMap<>();
 
   /**
    * Mark a contract to be acquired before next top-level transaction.
    */
   public void addContractToAcquire(Contract c) {
-    contractsToAcquire.put(c, (Contract._Proxy) c.$getProxy());
+    contractsToAcquire.put(c.get$lock(), true);
   }
 
   protected void acquireContractLocks() {
-    final OidKeyHashMap<Contract._Proxy> contractsToAcquireF =
+    final OidKeyHashMap<Boolean> contractsToAcquireF =
         contractsToAcquire;
     if (!contractsToAcquire.isEmpty()) {
       Worker.runInTopLevelTransaction((new Code<Void>() {
         @Override
         public Void run() {
-          for (Iterator<LongKeyMap<Contract._Proxy>> it =
-              contractsToAcquireF.iterator(); it.hasNext();) {
-            for (Contract._Proxy c : it.next().values()) {
-              c.acquireReconfigLocks();
+          for (Store s : contractsToAcquireF.storeSet()) {
+            for (LongIterator it = contractsToAcquireF.get(s).keySet().iterator(); it.hasNext(); ) {
+              (new ReconfigLock._Proxy(s, it.next())).acquire();
             }
           }
           return null;
@@ -458,6 +457,13 @@ public final class TransactionManager {
           // using those locks.  Release them in the same transaction.
           METRICS_LOGGER.log(Level.FINEST, "RELEASING LOCKS AT THE END OF {0}",
               current);
+          if (METRICS_LOGGER.isLoggable(Level.FINEST)) {
+            for (Store s : contractLocksHeld.storeSet()) {
+              for (LongIterator it = contractLocksHeld.get(s).keySet().iterator(); it.hasNext(); ) {
+                METRICS_LOGGER.log(Level.FINEST, "\t" + s.name() + "://" + it.next());
+              }
+            }
+          }
           releaseContractLocks();
         }
       } catch (TransactionAbortingException e) {
@@ -472,6 +478,8 @@ public final class TransactionManager {
         e.printStackTrace(pw);
         if (checkForStaleObjects()) {
           // Ugh. Need to restart.
+          METRICS_LOGGER.log(Level.FINEST, "RESOLVING OBSERVATIONS " + current
+              + " RESTARTING WITH " + e + "\n" + sw);
           abortTransaction();
           throw new AbortException(e);
         }

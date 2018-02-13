@@ -323,12 +323,14 @@ public class MetricContract extends Contract {
   }
 
   /*@Override*/
-  public void acquireReconfigLocks() {
-    //Logging.METRICS_LOGGER.finer("ACQUIRING LOCK AT " + this + " IN " +
-    //    TransactionManager.getInstance().getCurrentLog());
-    this.lock.acquire();
-    this.currentPolicy.acquireReconfigLocks();
-  }
+  // This actually isn't needed.  You walk up the tree and only lock the
+  // contracts you're trying to retract/break out from others.
+  //public void acquireReconfigLocks() {
+  //  //Logging.METRICS_LOGGER.finer("ACQUIRING LOCK AT " + this + " IN " +
+  //  //    TransactionManager.getInstance().getCurrentLog());
+  //  this.lock.acquire();
+  //  this.currentPolicy.acquireReconfigLocks();
+  //}
 
   /**
    * Create a proxy for this contract on the given store.

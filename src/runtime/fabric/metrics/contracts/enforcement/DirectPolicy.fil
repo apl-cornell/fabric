@@ -250,6 +250,7 @@ public class DirectPolicy implements EnforcementPolicy {
   }
 
   /*@Override*/
-  public void acquireReconfigLocks() {
-  }
+  // Don't need it, as it turns out.
+  //public void acquireReconfigLocks() {
+  //}
 }
