@@ -55,19 +55,21 @@ public class ReconfigLock {
    */
   public void acquire() {
     TransactionManager tm = TransactionManager.getInstance();
-    if (!currentlyHeld && !tm.hasLock(this)) {
-      tm.registerLockAcquire(this);
-      currentlyHeld = true;
-    } else if (!tm.hasLock(this)) {
-      TransactionID current = tm.getCurrentTid();
-      if (current != null) {
-        while (current.parent != null) current = current.parent;
-        //Logging.METRICS_LOGGER.finer("ABORTING " + current + " FOR LOCK " +
-        //    this);
-        // XXX: Dumb hack to avoid issues with stale lock.
-        tm.checkForStaleObjects();
-        throw new TransactionRestartingException(
-            new TransactionID(current.topTid));
+    if (!tm.hasLock(this)) {
+      if (!currentlyHeld) {
+        tm.registerLockAcquire(this);
+        currentlyHeld = true;
+      } else {
+        TransactionID current = tm.getCurrentTid();
+        if (current != null) {
+          while (current.parent != null) current = current.parent;
+          //Logging.METRICS_LOGGER.finer("ABORTING " + current + " FOR LOCK " +
+          //    this);
+          // XXX: Dumb hack to avoid issues with stale lock.
+          tm.checkForStaleObjects();
+          throw new TransactionRestartingException(
+              new TransactionID(current.topTid));
+        }
       }
     }
   }
