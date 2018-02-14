@@ -171,7 +171,14 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
   public boolean handleUpdates() {
     // TODO: Is this right?
     long time = System.currentTimeMillis();
-    return (curVal.contract == null || !curVal.contract.valid(time));
+    if (curVal.contract == null) {
+      // This shouldn't be possible
+      return false;
+    } else if (!curVal.contract.valid(time)) {
+      curVal.contract.removeObserver(this);
+      return true;
+    }
+    return false;
   }
 
   /**

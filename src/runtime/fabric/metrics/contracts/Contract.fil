@@ -195,7 +195,7 @@ public abstract class Contract extends AbstractSubject implements Observer {
     // Mark this as modified, which needs to be resolved in this
     // transaction.
     // TODO: Maybe indicate which contract's being retracted?
-    Logging.METRICS_LOGGER.log(Level.FINE, "RETRACTION IN {0}", TransactionManager.getInstance().getCurrentLog());
+    Logging.METRICS_LOGGER.log(Level.FINE, "RETRACTION OF {0} IN {1}", new java.lang.Object native[] { this, TransactionManager.getInstance().getCurrentLog() });
     $expiry = newExpiry;
   }
 
