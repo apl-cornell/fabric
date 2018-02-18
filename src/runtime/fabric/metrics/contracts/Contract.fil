@@ -82,11 +82,11 @@ public abstract class Contract extends AbstractSubject implements Observer {
               ((MetricContract) parent).$expiry);
         }
       }
-      Logging.METRICS_LOGGER.log(Level.FINER, "SYNCH EXTENSION");
+      Logging.METRICS_LOGGER.log(Level.FINE, "SYNCH EXTENSION OF {0} IN {1}", new java.lang.Object native[] { this, TransactionManager.getInstance().getCurrentLog() });
       $expiry = newExpiry;
     } else {
       // Wait until later to extend, we don't want to get too eager.
-      Logging.METRICS_LOGGER.log(Level.FINER, "DELAYED EXTENSION");
+      Logging.METRICS_LOGGER.log(Level.FINE, "DELAYED EXTENSION OF {0} IN {1}", new java.lang.Object native[] { this, TransactionManager.getInstance().getCurrentLog() });
       tm.registerDelayedExtension(this, this.$expiry);
     }
   }
@@ -115,13 +115,13 @@ public abstract class Contract extends AbstractSubject implements Observer {
   protected static void static_activate(Contract tmp) {
     if (TransactionManager.getInstance().inTxn()) {
       if (!tmp.activated) {
-        Logging.METRICS_LOGGER.log(Level.FINER, "CONTRACT ACTIVATE");
+        Logging.METRICS_LOGGER.log(Level.FINE, "ACTIVATED {0} IN {1}", new java.lang.Object native[] { tmp, TransactionManager.getInstance().getCurrentLog() });
         tmp.activated = true;
       }
     } else {
       atomic {
         if (!tmp.activated) {
-          Logging.METRICS_LOGGER.log(Level.FINER, "CONTRACT ACTIVATE");
+          Logging.METRICS_LOGGER.log(Level.FINE, "ACTIVATED {0} IN {1}", new java.lang.Object native[] { tmp, TransactionManager.getInstance().getCurrentLog() });
           tmp.activated = true;
         }
       }
@@ -265,13 +265,13 @@ public abstract class Contract extends AbstractSubject implements Observer {
   /*@Override*/
   public boolean handleUpdates() {
     //Logging.METRICS_LOGGER.log(Level.FINER, "CHECKING CONTRACT CHANGE");
-    // Check first that we aren't going to conflict with a reconfiguration.
-    this.lock.checkForRead();
-
     // Funny implication of this is that if something goes stale before it's
     // checked, it stays stale. Probably the right behavior?
-    if (valid())
+    if (valid()) {
+      // Check first that we aren't going to conflict with a reconfiguration.
+      this.lock.checkForRead();
       return refresh(false);
+    }
     //Logging.METRICS_LOGGER.log(Level.FINER, "CONTRACT INVALID");
     return false;
   }

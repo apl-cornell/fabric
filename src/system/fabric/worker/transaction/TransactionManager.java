@@ -133,7 +133,7 @@ public final class TransactionManager {
 
   // Mark an acquired lock.
   public void registerLockAcquire(fabric.lang.Object lock) {
-    Logging.log(METRICS_LOGGER, Level.FINEST,
+    Logging.log(METRICS_LOGGER, Level.FINE,
         "ACQUIRING LOCK {0}/{1} IN {2}/{3}", lock.$getStore(),
         new Long(lock.$getOnum()), Thread.currentThread(), getCurrentTid());
     current.pendingAcquires.put(lock, true);
@@ -142,12 +142,20 @@ public final class TransactionManager {
   // Check that we have this lock.
   public boolean hasLock(fabric.lang.Object lock) {
     // TODO: consider allowing a pending acquire to be considered held?
-    return contractLocksHeld.containsKey(lock);
+    Logging.log(METRICS_LOGGER, Level.FINE,
+        "CHECKING LOCK {0}/{1} IN {2}/{3}", lock.$getStore(),
+        new Long(lock.$getOnum()), Thread.currentThread(), getCurrentTid());
+    if (contractLocksHeld.containsKey(lock)) {
+      // If you're checking for it and you have it, you're 'using' it.
+      locksUsed.put(lock, true);
+      return true;
+    }
+    return false;
   }
 
   // Unmark an acquired lock.
   public void registerLockRelease(fabric.lang.Object lock) {
-    Logging.log(METRICS_LOGGER, Level.FINEST,
+    Logging.log(METRICS_LOGGER, Level.FINE,
         "RELEASING LOCK {0}/{1} IN {2}/{3}", lock.$getStore(),
         new Long(lock.$getOnum()), Thread.currentThread(), getCurrentTid());
     current.pendingReleases.put(lock, true);
@@ -160,6 +168,13 @@ public final class TransactionManager {
       new OidKeyHashMap<>();
 
   /**
+   * The locks used in the current attempt (and therefore should be reacquired
+   * on retry).
+   */
+  protected OidKeyHashMap<Boolean> locksUsed =
+    new OidKeyHashMap<>();
+
+  /**
    * Mark a contract to be acquired before next top-level transaction.
    */
   public void addContractToAcquire(Contract c) {
@@ -167,6 +182,25 @@ public final class TransactionManager {
   }
 
   protected void acquireContractLocks() {
+    // First release locks
+    if (!contractLocksHeld.isEmpty()) {
+      // Keep those we still need
+      for (Store s : locksUsed.storeSet()) {
+        for (LongIterator it = locksUsed.get(s).keySet().iterator(); it.hasNext(); ) {
+          contractsToAcquire.put(s, it.next(), true);
+        }
+      }
+      // Release everything
+      Worker.runInTopLevelTransaction((new Code<Void>() {
+        @Override
+        public Void run() {
+          releaseContractLocks();
+          return null;
+        }
+      }), true);
+    }
+
+    // Acquire locks still needed.
     final OidKeyHashMap<Boolean> contractsToAcquireF =
         contractsToAcquire;
     if (!contractsToAcquire.isEmpty()) {
@@ -181,7 +215,6 @@ public final class TransactionManager {
           return null;
         }
       }), true);
-      contractsToAcquire.clear();
     }
   }
 
@@ -212,8 +245,9 @@ public final class TransactionManager {
       for (LongIterator it = acquires.get(s).keySet().iterator(); it
           .hasNext();) {
         long onum = it.next();
+        contractsToAcquire.remove(s, onum);
         contractLocksHeld.put(s, onum, true);
-        Logging.log(METRICS_LOGGER, Level.FINEST,
+        Logging.log(METRICS_LOGGER, Level.FINE,
             "ACQUIRED LOCK {0}/{1} IN {2}", s, onum, Thread.currentThread());
       }
     }
@@ -222,10 +256,12 @@ public final class TransactionManager {
           .hasNext();) {
         long onum = it.next();
         contractLocksHeld.remove(s, onum);
-        Logging.log(METRICS_LOGGER, Level.FINEST,
+        Logging.log(METRICS_LOGGER, Level.FINE,
             "RELEASED LOCK {0}/{1} IN {2}", s, onum, Thread.currentThread());
       }
     }
+    // Clear locks used, the transaction committed.
+    locksUsed.clear();
   }
 
   /**
@@ -605,12 +641,13 @@ public final class TransactionManager {
           || !stores.contains(LOCAL_STORE)
               && !(stores.iterator().next() instanceof InProcessStore)) {
         Logging.log(HOTOS_LOGGER, Level.FINE,
-            "committed tid {0} (latency {1} ms, {2} stores, {3} retractions, {4} extensions, {5} delayed extensions)",
+            "committed tid {0} (latency {1} ms, {2} stores, {3} retractions, {4} extensions, {5} delayed extensions, locking={6})",
             HOTOS_current, commitLatency,
             stores.size() - (stores.contains(LOCAL_STORE) ? 1 : 0),
             HOTOS_current.retractedContracts.size(),
             HOTOS_current.extendedContracts.size(),
-            HOTOS_current.delayedExtensions.size());
+            HOTOS_current.delayedExtensions.size(),
+            acquiringLocks);
       }
     }
   }
@@ -1646,7 +1683,7 @@ public final class TransactionManager {
     if (current != null && !ignoreRetrySignal) checkRetrySignal();
 
     // Acquire locks before starting but also avoid bad recursion.
-    if (current == null && !acquiringLocks) {
+    if ((current == null || current.tid == null) && !acquiringLocks) {
       acquiringLocks = true;
       acquireContractLocks();
       acquiringLocks = false;

@@ -122,19 +122,19 @@ public class MetricContract extends Contract {
     //Logging.METRICS_LOGGER.finer("ACTIVATING MC " + tmp + " IN " +
     //    TransactionManager.getInstance().getCurrentLog());
     if (TransactionManager.getInstance().inTxn()) {
-      tmp.currentPolicy = p;
-      tmp.$expiry = tmp.currentPolicy.expiry();
+      tmp.$expiry = p.expiry();
       Contract.static_activate(tmp);
       if (tmp.$expiry >= System.currentTimeMillis()) {
+        tmp.currentPolicy = p;
         tmp.currentPolicy.apply(tmp);
         tmp.getMetric().addContract(tmp);
       }
     } else {
       atomic {
-        tmp.currentPolicy = p;
-        tmp.$expiry = tmp.currentPolicy.expiry();
+        tmp.$expiry = p.expiry();
         Contract.static_activate(tmp);
         if (tmp.$expiry >= System.currentTimeMillis()) {
+          tmp.currentPolicy = p;
           tmp.currentPolicy.apply(tmp);
           tmp.getMetric().addContract(tmp);
         }
@@ -146,6 +146,27 @@ public class MetricContract extends Contract {
 
   public void finishActivating_remote(fabric.lang.security.Principal caller, EnforcementPolicy p) {
     finishActivating(p);
+  }
+
+  /*@Override*/
+  public boolean handleUpdates() {
+    //Logging.METRICS_LOGGER.log(Level.FINER, "CHECKING CONTRACT CHANGE");
+    // Funny implication of this is that if something goes stale before it's
+    // checked, it stays stale. Probably the right behavior?
+    if (valid()) {
+      // Check first that we aren't going to conflict with a reconfiguration.
+      this.lock.checkForRead();
+      return refresh(false);
+    }
+
+    // Otherwise, we need to make sure we're not stuck observing anything.
+    if (currentPolicy != null) {
+      currentPolicy.unapply(this);
+      currentPolicy = null;
+    }
+
+    //Logging.METRICS_LOGGER.log(Level.FINER, "CONTRACT INVALID");
+    return false;
   }
 
   /**
@@ -205,13 +226,16 @@ public class MetricContract extends Contract {
     // directly enforced previously
     if (oldPolicy != null && !oldPolicy.equals(newPolicy))
       oldPolicy.unapply(this);
-    currentPolicy = newPolicy;
-    currentPolicy.activate();
+    newPolicy.activate();
     // Don't apply if the new policy is already expired.
-    long newExpiry = currentPolicy.expiry();
+    long newExpiry = newPolicy.expiry();
     boolean result = update(newExpiry);
-    if (newExpiry >= currentTime)
+    if (newExpiry >= currentTime) {
+      currentPolicy = newPolicy;
       currentPolicy.apply(this);
+    } else {
+      currentPolicy = null;
+    }
     //Logging.METRICS_LOGGER.log(Level.FINER, "CONTRACT TRUE");
     return result;
   }
@@ -308,15 +332,19 @@ public class MetricContract extends Contract {
     if (TransactionManager.getInstance().inTxn()) {
       Contract.static_removeObserver(tmp, obs);
       if (!tmp.isObserved()) {
-        if (tmp.currentPolicy != null)
+        if (tmp.currentPolicy != null) {
           tmp.currentPolicy.unapply(tmp);
+          tmp.currentPolicy = null;
+        }
       }
     } else {
       atomic {
         Contract.static_removeObserver(tmp, obs);
         if (!tmp.isObserved()) {
-          if (tmp.currentPolicy != null)
+          if (tmp.currentPolicy != null) {
             tmp.currentPolicy.unapply(tmp);
+            tmp.currentPolicy = null;
+          }
         }
       }
     }
@@ -409,22 +437,20 @@ public class MetricContract extends Contract {
       //Logging.METRICS_LOGGER.finer("ACTIVATING MC " + tmp + " IN " +
       //    TransactionManager.getInstance().getCurrentLog());
       if (TransactionManager.getInstance().inTxn()) {
-        final Store s = tmp.$getStore();
-        tmp.currentPolicy = targetPol;
-        tmp.$expiry = tmp.currentPolicy.expiry();
+        tmp.$expiry = targetPol.expiry();
         Contract.static_activate(tmp);
         if (tmp.$expiry >= System.currentTimeMillis()) {
+          tmp.currentPolicy = targetPol;
           tmp.currentPolicy.apply(tmp);
           // XXX: Do I need to do this?
           tmp.getMetric().addContract(tmp);
         }
       } else {
         atomic {
-          final Store s = tmp.$getStore();
-          tmp.currentPolicy = targetPol;
-          tmp.$expiry = tmp.currentPolicy.expiry();
+          tmp.$expiry = targetPol.expiry();
           Contract.static_activate(tmp);
           if (tmp.$expiry >= System.currentTimeMillis()) {
+            tmp.currentPolicy = targetPol;
             tmp.currentPolicy.apply(tmp);
             // XXX: Do I need to do this?
             tmp.getMetric().addContract(tmp);
@@ -450,6 +476,7 @@ public class MetricContract extends Contract {
         long curExpiry = currentPolicy.expiry();
         if (curExpiry < currentTime) {
           currentPolicy.unapply(this);
+          currentPolicy = null;
         }
         boolean result = update(curExpiry);
         //Logging.METRICS_LOGGER.log(Level.FINER, "DEFENDING " + this + " WITH " +
