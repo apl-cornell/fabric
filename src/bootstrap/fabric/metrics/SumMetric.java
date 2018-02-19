@@ -60,6 +60,14 @@ public interface SumMetric extends fabric.metrics.DerivedMetric {
      */
     public fabric.metrics.DerivedMetric plus(fabric.metrics.Metric other);
     
+    public long get$MIN_ADAPTIVE_EXPIRY();
+    
+    public long set$MIN_ADAPTIVE_EXPIRY(long val);
+    
+    public long postInc$MIN_ADAPTIVE_EXPIRY();
+    
+    public long postDec$MIN_ADAPTIVE_EXPIRY();
+    
     public fabric.metrics.contracts.enforcement.EnforcementPolicy policy(
       double rate, double base, boolean useWeakCache,
       final fabric.worker.Store s);
@@ -70,6 +78,26 @@ public interface SumMetric extends fabric.metrics.DerivedMetric {
     
     public static class _Proxy extends fabric.metrics.DerivedMetric._Proxy
       implements fabric.metrics.SumMetric {
+        public long get$MIN_ADAPTIVE_EXPIRY() {
+            return ((fabric.metrics.SumMetric._Impl) fetch()).
+              get$MIN_ADAPTIVE_EXPIRY();
+        }
+        
+        public long set$MIN_ADAPTIVE_EXPIRY(long val) {
+            return ((fabric.metrics.SumMetric._Impl) fetch()).
+              set$MIN_ADAPTIVE_EXPIRY(val);
+        }
+        
+        public long postInc$MIN_ADAPTIVE_EXPIRY() {
+            return ((fabric.metrics.SumMetric._Impl) fetch()).
+              postInc$MIN_ADAPTIVE_EXPIRY();
+        }
+        
+        public long postDec$MIN_ADAPTIVE_EXPIRY() {
+            return ((fabric.metrics.SumMetric._Impl) fetch()).
+              postDec$MIN_ADAPTIVE_EXPIRY();
+        }
+        
         public fabric.metrics.SumMetric fabric$metrics$SumMetric$(
           fabric.metrics.Metric[] arg1) {
             return ((fabric.metrics.SumMetric) fetch()).
@@ -564,10 +592,38 @@ public interface SumMetric extends fabric.metrics.DerivedMetric {
             return fabric.metrics.Metric._Impl.findDerivedMetric(s, val);
         }
         
+        public long get$MIN_ADAPTIVE_EXPIRY() {
+            return this.MIN_ADAPTIVE_EXPIRY;
+        }
+        
+        public long set$MIN_ADAPTIVE_EXPIRY(long val) {
+            fabric.worker.transaction.TransactionManager tm =
+              fabric.worker.transaction.TransactionManager.getInstance();
+            boolean transactionCreated = tm.registerWrite(this);
+            this.MIN_ADAPTIVE_EXPIRY = val;
+            if (transactionCreated) tm.commitTransaction();
+            return val;
+        }
+        
+        public long postInc$MIN_ADAPTIVE_EXPIRY() {
+            long tmp = this.get$MIN_ADAPTIVE_EXPIRY();
+            this.set$MIN_ADAPTIVE_EXPIRY((long) (tmp + 1));
+            return tmp;
+        }
+        
+        public long postDec$MIN_ADAPTIVE_EXPIRY() {
+            long tmp = this.get$MIN_ADAPTIVE_EXPIRY();
+            this.set$MIN_ADAPTIVE_EXPIRY((long) (tmp - 1));
+            return tmp;
+        }
+        
+        public long MIN_ADAPTIVE_EXPIRY = 1000;
+        
         public fabric.metrics.contracts.enforcement.EnforcementPolicy policy(
           double rate, double base, boolean useWeakCache,
           final fabric.worker.Store s) {
-            java.util.Map witnesses = new java.util.HashMap();
+            java.util.Map adaptiveWitnesses = new java.util.HashMap();
+            java.util.Map staticWitnesses = new java.util.HashMap();
             long currentTime = java.lang.System.currentTimeMillis();
             double baseNow =
               fabric.metrics.contracts.Bound._Impl.value(rate, base,
@@ -587,19 +643,21 @@ public interface SumMetric extends fabric.metrics.DerivedMetric {
                 baseFactor = 0.0;
                 newFactor = 1.0;
             }
+            long adaptiveTimeout = java.lang.Long.MAX_VALUE;
+            long staticTimeout = java.lang.Long.MAX_VALUE;
             for (int j = 0; j < numTerms; j++) {
                 fabric.metrics.Metric m = term(j);
                 double scaledX = m.value(useWeakCache);
                 double scaledV = m.velocity(useWeakCache);
                 double scaledN = m.noise(useWeakCache);
-                double r = scaledV * newFactor -
-                  (totalVelocity * newFactor - rate) / numTerms;
+                double r = newFactor * (scaledV - totalVelocity / numTerms) +
+                  rate / numTerms;
                 double b = scaledX -
-                  (baseFactor / numTerms + newFactor * (scaledN / totalNoise)) *
-                  (totalValue - baseNow);
-                if (totalNoise != 0) {
-                    b = scaledX - scaledN / totalNoise * (totalValue - baseNow);
-                }
+                  (totalValue - baseNow) *
+                  (totalNoise != 0
+                     ? baseFactor / numTerms + newFactor *
+                     (scaledN / totalNoise)
+                     : 1.0 / numTerms);
                 if (getUsePreset()) {
                     r = m.getPresetR();
                     b = scaledX - m.getPresetB() / getPresetB() *
@@ -608,7 +666,7 @@ public interface SumMetric extends fabric.metrics.DerivedMetric {
                 double[] normalized =
                   fabric.metrics.contracts.Bound._Impl.createBound(r, b,
                                                                    currentTime);
-                if (!witnesses.
+                if (!adaptiveWitnesses.
                       containsKey(
                         (java.lang.Object)
                           fabric.lang.WrappedJavaInlineable.$unwrap(m)) ||
@@ -617,14 +675,14 @@ public interface SumMetric extends fabric.metrics.DerivedMetric {
                           $getProxy(
                             fabric.lang.WrappedJavaInlineable.
                                 $wrap(
-                                  witnesses.
+                                  adaptiveWitnesses.
                                       get(
                                         (java.lang.Object)
                                           fabric.lang.WrappedJavaInlineable.
                                           $unwrap(m))))).implies(
                                                            m, normalized[0],
                                                            normalized[1])) {
-                    witnesses.
+                    adaptiveWitnesses.
                       put(
                         (java.lang.Object)
                           fabric.lang.WrappedJavaInlineable.$unwrap(m),
@@ -632,17 +690,90 @@ public interface SumMetric extends fabric.metrics.DerivedMetric {
                           fabric.lang.WrappedJavaInlineable.
                           $unwrap(m.getContract(r, b, currentTime)));
                 }
+                adaptiveTimeout =
+                  java.lang.Math.
+                    min(
+                      adaptiveTimeout,
+                      fabric.metrics.contracts.enforcement.DirectPolicy._Impl.
+                          hedged(m, normalized[0], normalized[1], currentTime));
+                double r2 = rate / numTerms;
+                double b2 = scaledX -
+                  (totalValue - baseNow) *
+                  (totalNoise != 0
+                     ? baseFactor / numTerms + newFactor *
+                     (scaledN / totalNoise)
+                     : 1.0 / numTerms);
+                if (getUsePreset()) {
+                    r2 = m.getPresetR();
+                    b2 = scaledX - m.getPresetB() / getPresetB() *
+                           (totalValue - baseNow);
+                }
+                double[] normalized2 =
+                  fabric.metrics.contracts.Bound._Impl.createBound(r2, b2,
+                                                                   currentTime);
+                if (!staticWitnesses.
+                      containsKey(
+                        (java.lang.Object)
+                          fabric.lang.WrappedJavaInlineable.$unwrap(m)) ||
+                      !((fabric.metrics.contracts.MetricContract)
+                          fabric.lang.Object._Proxy.
+                          $getProxy(
+                            fabric.lang.WrappedJavaInlineable.
+                                $wrap(
+                                  staticWitnesses.
+                                      get(
+                                        (java.lang.Object)
+                                          fabric.lang.WrappedJavaInlineable.
+                                          $unwrap(m))))).implies(
+                                                           m, normalized2[0],
+                                                           normalized2[1])) {
+                    staticWitnesses.
+                      put(
+                        (java.lang.Object)
+                          fabric.lang.WrappedJavaInlineable.$unwrap(m),
+                        (java.lang.Object)
+                          fabric.lang.WrappedJavaInlineable.
+                          $unwrap(m.getContract(r2, b2, currentTime)));
+                }
+                staticTimeout =
+                  java.lang.Math.
+                    min(
+                      staticTimeout,
+                      fabric.metrics.contracts.enforcement.DirectPolicy._Impl.
+                          hedged(m, normalized2[0], normalized2[1],
+                                 currentTime));
             }
-            fabric.metrics.contracts.MetricContract[] finalWitnesses =
-              new fabric.metrics.contracts.MetricContract[witnesses.size()];
-            int i = 0;
-            for (java.util.Iterator iter = witnesses.values().iterator();
-                 iter.hasNext(); ) {
-                finalWitnesses[i++] =
-                  (fabric.metrics.contracts.MetricContract)
-                    fabric.lang.Object._Proxy.
-                    $getProxy(
-                      fabric.lang.WrappedJavaInlineable.$wrap(iter.next()));
+            fabric.metrics.contracts.MetricContract[]
+              finalWitnesses =
+              new fabric.metrics.contracts.MetricContract[adaptiveWitnesses.
+                                                            size()];
+            if (adaptiveTimeout > staticTimeout || adaptiveTimeout -
+                  java.lang.System.currentTimeMillis() >
+                  this.get$MIN_ADAPTIVE_EXPIRY()) {
+                int i = 0;
+                for (java.util.Iterator iter =
+                       adaptiveWitnesses.values().iterator();
+                     iter.hasNext();
+                     ) {
+                    finalWitnesses[i++] =
+                      (fabric.metrics.contracts.MetricContract)
+                        fabric.lang.Object._Proxy.
+                        $getProxy(
+                          fabric.lang.WrappedJavaInlineable.$wrap(iter.next()));
+                }
+            }
+            else {
+                int i = 0;
+                for (java.util.Iterator iter =
+                       staticWitnesses.values().iterator();
+                     iter.hasNext();
+                     ) {
+                    finalWitnesses[i++] =
+                      (fabric.metrics.contracts.MetricContract)
+                        fabric.lang.Object._Proxy.
+                        $getProxy(
+                          fabric.lang.WrappedJavaInlineable.$wrap(iter.next()));
+                }
             }
             return ((fabric.metrics.contracts.enforcement.WitnessPolicy)
                       new fabric.metrics.contracts.enforcement.WitnessPolicy.
@@ -685,6 +816,7 @@ public interface SumMetric extends fabric.metrics.DerivedMetric {
                                java.util.List interStoreRefs)
               throws java.io.IOException {
             super.$serialize(out, refTypes, intraStoreRefs, interStoreRefs);
+            out.writeLong(this.MIN_ADAPTIVE_EXPIRY);
         }
         
         public _Impl(fabric.worker.Store store, long onum, int version,
@@ -699,6 +831,14 @@ public interface SumMetric extends fabric.metrics.DerivedMetric {
             super(store, onum, version, expiry, labelStore, labelOnum,
                   accessPolicyStore, accessPolicyOnum, in, refTypes,
                   intraStoreRefs, interStoreRefs);
+            this.MIN_ADAPTIVE_EXPIRY = in.readLong();
+        }
+        
+        public void $copyAppStateFrom(fabric.lang.Object._Impl other) {
+            super.$copyAppStateFrom(other);
+            fabric.metrics.SumMetric._Impl src =
+              (fabric.metrics.SumMetric._Impl) other;
+            this.MIN_ADAPTIVE_EXPIRY = src.MIN_ADAPTIVE_EXPIRY;
         }
     }
     
@@ -766,11 +906,11 @@ public interface SumMetric extends fabric.metrics.DerivedMetric {
         
     }
     
-    public static final byte[] $classHash = new byte[] { 50, 127, 55, -13, 30,
-    -105, 114, 80, -41, 94, -84, 122, -86, 112, -105, 72, 91, -24, -18, -84,
-    -66, 35, -69, -40, 7, 59, 58, 95, 114, 91, 108, 54 };
+    public static final byte[] $classHash = new byte[] { -23, -121, -12, -75,
+    87, 94, -27, 42, -30, -67, -93, -126, -45, -107, 126, -78, -38, 94, -113,
+    -4, 44, -62, -19, -127, 119, -66, -94, -114, -93, 9, -127, -99 };
     public static final java.lang.String jlc$CompilerVersion$fabil = "0.3.0";
-    public static final long jlc$SourceLastModified$fabil = 1519057402000L;
+    public static final long jlc$SourceLastModified$fabil = 1519058682000L;
     public static final java.lang.String jlc$ClassType$fabil =
-      "H4sIAAAAAAAAAK0Za5AUR7l3b+/JwT0IEI7j7jhOLF67QkgQTo3cymNhgSsOKD0S1tnZ3rvJzc4MM72wRzxFqxCiKdRIIBjBKGgMuYCVkqKUIkWlkgiSqFCah1UR/BElIpqIRmNF8ft6el+zu8NtlRTzfb3d/XV/7/66b/QGqbRM0hmXoorqZ8MGtfwrpGgo3CuZFo0FVcmyNkJvRB7nCx249mSszUu8YVIvS5quKbKkRjSLkQnhB6TtUkCjLLBpQ6h7C6mVkXCVZA0y4t3SkzJJh6GrwwOqzsQmBes/Ojew/+DWxmcrSEM/aVC0PiYxRQ7qGqMp1k/qEzQRpaa1LBajsX7SpFEa66OmIqnKTpioa/2k2VIGNIklTWptoJaubseJzVbSoCbfM92J7OvAtpmUmW4C+402+0mmqIGwYrHuMKmKK1SNWdvI54kvTCrjqjQAEyeH01IE+IqBFdgP0+sUYNOMSzJNk/iGFC3GSLuTIiNx1xqYAKTVCcoG9cxWPk2CDtJss6RK2kCgj5mKNgBTK/Uk7MJIS8lFYVKNIclD0gCNMHKnc16vPQSzarlakISRSc5pfCWwWYvDZjnWurHuY/se1FZpXuIBnmNUVpH/GiBqcxBtoHFqUk2mNmH9nPABafLZvV5CYPIkx2R7zunPvfvJeW3nzttzphWZsz76AJVZRD4WnXCpNTh7SQWyUWPoloKukCc5t2qvGOlOGeDtkzMr4qA/PXhuw0uf2XWcXveSuhCpknU1mQCvapL1hKGo1FxJNWpKjMZCpJZqsSAfD5FqaIcVjdq96+Nxi7IQ8am8q0rnv0FFcVgCVVQNbUWL6+m2IbFB3k4ZhJBq+IgH/n+akAUvQ3sKId6nGVkZGNQTNBBVk3QHuHcAPiqZ8mAA4tZU5IBlygEzqTEFJoku8CJAVqAvmVjLm35gwfj/LZVCrht3eDyg0HZZj9GoZIF1hKf09KoQDKt0NUbNiKzuOxsiE88e4t5Six5ugZdyfXjAwq3O3JBLuz/Zs/zdE5GLtqchrVAXWNnmzy/482f4A5bqMX78kJH8kJFGPSl/8Ejoae4mVRaPp8wq9bDKUkOVWFw3Eyni8XCR7uD03D/AukOQNSAx1M/uu3/1Z/d2VoBjGjt8aCuY2uUMk2xyCUFLAt+PyA17rr138sCIng0YRroK4riQEuOw06kfU5dpDPJcdvk5HdKpyNmRLi/mkFpIb0wCB4Rc0ebcIy8eu9O5DbVRGSbjUAeSikPphFTHBk19R7aH230CgmbbBVBZDgZ5Wvx4n3H49V+8fRc/MNIZtCEn1fZR1p0TtbhYA4/PpqzuN5qUwrw3H+v95qM39mzhiocZM4tt2IUwCNEqQZjq5u7z29648rtjv/ZmjcVIlZGMqoqc4rI03YJ/Hvj+ix+GHnYghgQcFGHfkYl7A3eeleUNMoAKWQhYt7o2aQk9psQVKapS9JQPGj604NSf9zXa5lahx1aeSebdfoFs/9Qesuvi1n+28WU8Mp5AWf1lp9lpbWJ25WWmKQ0jH6kvXp5+6GfSYfB8SEqWspPyPEO4Pgg34EKui/kcLnCMLULQaWurVfTzHzM5nIVgtq1bbM4ReiXiX5XIYMcFPoajEw2Ed+SvaZLppQ4bflAe+9L+I7H1319gHwnN+Ql8uZZMPPPqf172P3b1QpE0Uct0Y75Kt1M1Z0902xkFVc9afhZnw+rq9elLgkNvDdjbtjtYdM5+au3ohZWz5Ee8pCIT4wUFQD5Rdy6zEGwmhfpFQ7Gxp44boSOj1HGorOXwtRNS8XOBv56jVBGR3EIIFmdIuZ7rBMnXBH7IaY+sF3gy6W1arpZWg4tx57JP6q0Qqr8a/usBWz/OeiFn4jujV65fHj/9BM9PPjwquHzOQquwjsorj7h49RmZAijT3UKWnwr841x18KmToMRxnBTimMDRqc4ToIgKnDXNCuQ5a/f+wOi3W4KfuG4fb5nki+vMKHK8bZZyzoWFxxP/8HZWvegl1f2kkdelksY2S3A8Q97rB41YQdEZJuPzxvOrRLsk6s44XqvT8XK2dab9XBf0sTzn45l+TcpDuEY3FQ9+Lw9+BosqmmRXBnMh16pUG2CDRfTXayoJyPnbRU1I9+7/yi3/vv127NqF88yC2jWXxi6e+Ubj+W6YQWa47cIpVvzx5MiZH47s8Yr01s1IBXgcNldn7e61ZUr7jp1WUceQk3SNYoZOe04teo6qwz0o42p24aDo/sztJGpXfnKhZ+Hve20Fcx5yApdL5ZKZh1zGEgjg5lUpI79pxhqzcti+YjPFKVa6rMb9uIeRqXYMdYkY6spUW13ZpHNvfqrqhG8W5B5J4NXlpSokCQkcLJ2qcpkddhl7EAGD2ypW9HCT6sXSl23gc/uFFyG6H1w3pifTZi4iEySeyiUCd5YnE5LMEHja2GTa7TK2B8Eup0w92DtSivuPwsHcZOPKf5fHPZK8L/DNsXG/z2WMH10PObnf7Mr9MuD+bYEvl8c9klwS+OLYuD/oMnYIwSNO7tcV434CEi2GbzXc8V4V+JkS3BeUVpBnDFNnELI0lsoXa7xYa1Tgo6XFyk06Dnevjuq6SiWNc/E9F5GfRPA4wwcULjI/h0oKvBS+PkJqXhH4uy7mOlIoF5I8IfDB28qFP4/yVU+4CPAjBE/BPSQtAIXsrbBhV6PdR0jtCwI/Xp4MSPItgb9RhgynXWT4CYJns0ZYpytWUSPwmGmFj4L/Hxb44fJiBkm+KvDuscXMOZex5xGcYaSG6fazVpHTKWegeHHmkHA+fDtB3c8L/ER5EiLJdwQ+NCYTjfBVX3ER85cIzsMJjM8oVlrGVkcV+imoELbT2G2L0ay8E3GHNfCBSRreE/i5MeYRLwS6ATvCXZbhKwi+rzrSSbNY8qzAJ0vrw5ut/BqzSnnTRSlXEPwGJLS3jnDdYN+lYladC99RkPjLAsfLsyqSUIEjY7JqmK/6BxcBriH4PSM+Q00WZZybByuWU4RM+kDgl8ZqHmy+geC3RayCK70o8OmxW8UW6h0Xof6G4E+MjBNWKSUbN0oUdAWNrocFvrsso3CSRQL7Swvh4+z5uFdlwNF0FE0UUbRDN4eoCdlCNzP1eH7wcI7ed5H9FoK/46uQrirycHqHexxxijc6U5KZ5acaLCzTBNWYf3m23cvJkbqlmNamgsgQtB/pEXhReVpDkrsEnj+mFOypcRmrQ1ABKXhQsgaDeowfHfcV4/vDsGkvbHpB4FIFSwm+kWRU4B/cNgTTym8Wys+5qJS2rqfJRdApCOrBunRbUrLffo6moJbKXFzw0Wxakadr8QcUOfgCPfbWmnmTSjxb31nwJy1Bd+JIQ82UI5tesx870n8cqQ2TmnhSVXPv2jntKsOkcYWrtda+eRtcilYoMPP9kfFHEWyhTJ4We147CGrPw18dXNUtGXCJL9mSNPHPcaM3p/yrqmbjVf4yCtrqWPiFxTfbDpq9r20d3XncOLhqy7W/jD4388zr1d1LI+YW9Z7/AfY20JQmHAAA";
+      "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";
 }

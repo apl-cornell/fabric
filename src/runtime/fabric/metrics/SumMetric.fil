@@ -263,6 +263,8 @@ public class SumMetric extends DerivedMetric {
         return Metric.findDerivedMetric(s, val);
     }
 
+    public final long MIN_ADAPTIVE_EXPIRY = 1000;
+
     /*@Override*/
     public EnforcementPolicy policy(double rate, double base, boolean useWeakCache, final Store s) {
         // Don't do this if we want to avoid conflicts between local concurrent
@@ -270,7 +272,11 @@ public class SumMetric extends DerivedMetric {
         //if (isSingleStore())
         //    return new DirectPolicy().fabric$metrics$contracts$enforcement$DirectPolicy$(this, bound);
 
-        java.util.Map/*<Metric, MetricContract>*/ witnesses = new java.util.HashMap/*<>*/();
+        // Two alternatives: either using an adaptive strategy or a static
+        // strategy.  Don't use the adaptive strategy if the hedged timeout is
+        // sooner than 1s.
+        java.util.Map/*<Metric, MetricContract>*/ adaptiveWitnesses = new java.util.HashMap/*<>*/();
+        java.util.Map/*<Metric, MetricContract>*/ staticWitnesses = new java.util.HashMap/*<>*/();
 
         long currentTime = System.currentTimeMillis();
         double baseNow = Bound.value(rate, base, currentTime);
@@ -293,19 +299,24 @@ public class SumMetric extends DerivedMetric {
 
         // For each term, update the associated bounds to be the tightest
         // bound set across the rows
+        long adaptiveTimeout = Long.MAX_VALUE;
+        long staticTimeout = Long.MAX_VALUE;
         for (int j = 0; j < numTerms; j++) {
             Metric m = term(j);
             double scaledX = m.value(useWeakCache);
             double scaledV = m.velocity(useWeakCache);
             double scaledN = m.noise(useWeakCache);
+
+            //// Adaptive version
             // Corrected for the way this metric is shifting relative to
             // the rest of the sum
-            double r = (scaledV * newFactor) - (((totalVelocity * newFactor) - rate) / numTerms);
+            double r = (newFactor * (scaledV - (totalVelocity / numTerms))) + (rate / numTerms);
 
-            double b = scaledX - (((baseFactor / numTerms) + (newFactor * (scaledN / totalNoise))) * (totalValue - baseNow));
-            if (totalNoise != 0) {
-              b = scaledX - ((scaledN / totalNoise) * (totalValue - baseNow));
-            }
+            double b = scaledX -
+              ((totalValue - baseNow) *
+               ((totalNoise != 0) ?
+                ((baseFactor / numTerms) + (newFactor * (scaledN / totalNoise))) :
+                (1.0 / numTerms)));
 
             // If using presets, use that instead
             if (getUsePreset()) {
@@ -314,15 +325,50 @@ public class SumMetric extends DerivedMetric {
             }
 
             double native[] normalized = Bound.createBound(r, b, currentTime);
-            if (!witnesses.containsKey(m)
-                    || !((MetricContract) witnesses.get(m)).implies(m, normalized[0], normalized[1])) {
-                witnesses.put(m, m.getContract(r, b, currentTime));
+            if (!adaptiveWitnesses.containsKey(m)
+                    || !((MetricContract) adaptiveWitnesses.get(m)).implies(m, normalized[0], normalized[1])) {
+                adaptiveWitnesses.put(m, m.getContract(r, b, currentTime));
             }
+            // Update the timeout estimate.
+            adaptiveTimeout = Math.min(adaptiveTimeout,
+                DirectPolicy.hedged(m, normalized[0], normalized[1], currentTime));
+
+            //// Static version
+            double r2 = rate / numTerms;
+
+            double b2 = scaledX -
+              ((totalValue - baseNow) *
+               ((totalNoise != 0) ?
+                ((baseFactor / numTerms) + (newFactor * (scaledN / totalNoise))) :
+                (1.0 / numTerms)));
+
+            // If using presets, use that instead
+            if (getUsePreset()) {
+              r2 = m.getPresetR();
+              b2 = scaledX - ((m.getPresetB() / getPresetB()) * (totalValue - baseNow));
+            }
+
+            double native[] normalized2 = Bound.createBound(r2, b2, currentTime);
+            if (!staticWitnesses.containsKey(m)
+                    || !((MetricContract) staticWitnesses.get(m)).implies(m, normalized2[0], normalized2[1])) {
+                staticWitnesses.put(m, m.getContract(r2, b2, currentTime));
+            }
+            // Update the timeout estimate.
+            staticTimeout = Math.min(staticTimeout,
+                DirectPolicy.hedged(m, normalized2[0], normalized2[1], currentTime));
         }
-        MetricContract native[] finalWitnesses = new MetricContract native[witnesses.size()];
-        int i = 0;
-        for (java.util.Iterator iter = witnesses.values().iterator(); iter.hasNext();) {
-          finalWitnesses[i++] = (MetricContract) iter.next();
+        // Size should be the same for either option.
+        MetricContract native[] finalWitnesses = new MetricContract native[adaptiveWitnesses.size()];
+        if (adaptiveTimeout > staticTimeout || adaptiveTimeout - System.currentTimeMillis() > MIN_ADAPTIVE_EXPIRY) {
+          int i = 0;
+          for (java.util.Iterator iter = adaptiveWitnesses.values().iterator(); iter.hasNext();) {
+            finalWitnesses[i++] = (MetricContract) iter.next();
+          }
+        } else {
+          int i = 0;
+          for (java.util.Iterator iter = staticWitnesses.values().iterator(); iter.hasNext();) {
+            finalWitnesses[i++] = (MetricContract) iter.next();
+          }
         }
         return new WitnessPolicy@s().fabric$metrics$contracts$enforcement$WitnessPolicy$(finalWitnesses);
     }
