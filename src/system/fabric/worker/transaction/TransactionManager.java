@@ -131,12 +131,26 @@ public final class TransactionManager {
    */
   protected OidKeyHashMap<Boolean> contractLocksHeld = new OidKeyHashMap<>();
 
+  // Mark a created lock.
+  public void registerLockCreate(fabric.lang.Object lock) {
+    Logging.log(METRICS_LOGGER, Level.FINE,
+        "CREATING LOCK {0}/{1} IN {2}/{3}", lock.$getStore(),
+        new Long(lock.$getOnum()), Thread.currentThread(), getCurrentTid());
+    // You start out holding the lock if you created it.
+    current.locksCreated.put(lock, true);
+  }
+
   // Mark an acquired lock.
   public void registerLockAcquire(fabric.lang.Object lock) {
     Logging.log(METRICS_LOGGER, Level.FINE,
         "ACQUIRING LOCK {0}/{1} IN {2}/{3}", lock.$getStore(),
         new Long(lock.$getOnum()), Thread.currentThread(), getCurrentTid());
-    current.pendingAcquires.put(lock, true);
+    if (!acquiringLocks && !current.locksCreated.containsKey(lock)) {
+      contractsToAcquire.put(lock, true);
+      contractLocksHeld.put(lock, true);
+    } else if (acquiringLocks) {
+      current.pendingAcquires.put(lock, true);
+    }
   }
 
   // Check that we have this lock.
@@ -147,7 +161,14 @@ public final class TransactionManager {
         new Long(lock.$getOnum()), Thread.currentThread(), getCurrentTid());
     if (contractLocksHeld.containsKey(lock)) {
       // If you're checking for it and you have it, you're 'using' it.
-      locksUsed.put(lock, true);
+      if (!current.locksCreated.containsKey(lock)) {
+        // If you didn't create it, mark it as something to reacquire on retry.
+        contractsToAcquire.put(lock, true);
+      }
+      return true;
+    }
+    if ((current != null && current.locksCreated.containsKey(lock))
+        || current.pendingAcquires.containsKey(lock)) {
       return true;
     }
     return false;
@@ -162,51 +183,39 @@ public final class TransactionManager {
   }
 
   /**
-   * The locks to acquire before the next transaction runs.
+   * The locks to acquire before the next transaction attempt.
    */
   protected OidKeyHashMap<Boolean> contractsToAcquire =
       new OidKeyHashMap<>();
 
-  /**
-   * The locks used in the current attempt (and therefore should be reacquired
-   * on retry).
-   */
-  protected OidKeyHashMap<Boolean> locksUsed =
-    new OidKeyHashMap<>();
-
-  /**
-   * Mark a contract to be acquired before next top-level transaction.
-   */
-  public void addContractToAcquire(Contract c) {
-    contractsToAcquire.put(c.get$lock(), true);
-  }
-
   protected void acquireContractLocks() {
+    // Grab locks still needed.
+    final OidKeyHashMap<Boolean> contractsToAcquireF =
+      new OidKeyHashMap<>(contractsToAcquire);
+
     // First release locks
     if (!contractLocksHeld.isEmpty()) {
-      // Keep those we still need
-      for (Store s : locksUsed.storeSet()) {
-        for (LongIterator it = locksUsed.get(s).keySet().iterator(); it.hasNext(); ) {
-          contractsToAcquire.put(s, it.next(), true);
-        }
-      }
       // Release everything
       Worker.runInTopLevelTransaction((new Code<Void>() {
         @Override
         public Void run() {
+          Logging.log(METRICS_LOGGER, Level.FINER,
+              "RELEASING LOCKS IN {0}/{1}", Thread.currentThread(),
+              getCurrentTid());
           releaseContractLocks();
           return null;
         }
       }), true);
     }
 
-    // Acquire locks still needed.
-    final OidKeyHashMap<Boolean> contractsToAcquireF =
-        contractsToAcquire;
-    if (!contractsToAcquire.isEmpty()) {
+    // Acquire locks.
+    if (!contractsToAcquireF.isEmpty()) {
       Worker.runInTopLevelTransaction((new Code<Void>() {
         @Override
         public Void run() {
+          Logging.log(METRICS_LOGGER, Level.FINER,
+              "ACQUIRING LOCKS IN {0}/{1}", Thread.currentThread(),
+              getCurrentTid());
           for (Store s : contractsToAcquireF.storeSet()) {
             for (LongIterator it = contractsToAcquireF.get(s).keySet().iterator(); it.hasNext(); ) {
               (new ReconfigLock._Proxy(s, it.next())).acquire();
@@ -220,6 +229,7 @@ public final class TransactionManager {
 
   protected void releaseContractLocks() {
     OidKeyHashMap<Boolean> locksCopy = new OidKeyHashMap<>(contractLocksHeld);
+    locksCopy.putAll(current.locksCreated);
     for (Store s : locksCopy.storeSet()) {
       for (LongIterator it = locksCopy.get(s).keySet().iterator(); it
           .hasNext();) {
@@ -245,7 +255,6 @@ public final class TransactionManager {
       for (LongIterator it = acquires.get(s).keySet().iterator(); it
           .hasNext();) {
         long onum = it.next();
-        contractsToAcquire.remove(s, onum);
         contractLocksHeld.put(s, onum, true);
         Logging.log(METRICS_LOGGER, Level.FINE,
             "ACQUIRED LOCK {0}/{1} IN {2}", s, onum, Thread.currentThread());
@@ -260,8 +269,6 @@ public final class TransactionManager {
             "RELEASED LOCK {0}/{1} IN {2}", s, onum, Thread.currentThread());
       }
     }
-    // Clear locks used, the transaction committed.
-    locksUsed.clear();
   }
 
   /**
@@ -1084,6 +1091,7 @@ public final class TransactionManager {
     WORKER_TRANSACTION_LOGGER.log(Level.FINEST,
         "{0} committed at stores...updating data structures", current);
     current.commitTopLevel();
+    contractsToAcquire.clear();
     WORKER_TRANSACTION_LOGGER.log(Level.FINEST, "{0} committed", current);
 
     synchronized (current.commitState) {

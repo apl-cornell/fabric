@@ -244,6 +244,12 @@ public final class Log {
       new OidKeyHashMap<>();
 
   /**
+   * Locks that were created in this transaction.
+   */
+  protected final OidKeyHashMap<Boolean> locksCreated =
+      new OidKeyHashMap<>();
+
+  /**
    * Creates a new log with the given parent and the given transaction ID. The
    * TID for the parent and the given TID are assumed to be consistent. If the
    * given TID is null, a random tid is generated for the subtransaction.
@@ -293,6 +299,9 @@ public final class Log {
         Timing.SUBTX.end();
       }
       this.resolving = parent.resolving;
+      this.locksCreated.putAll(parent.locksCreated);
+      this.pendingAcquires.putAll(parent.pendingAcquires);
+      this.pendingReleases.putAll(parent.pendingReleases);
     } else {
       this.writerMap = new WriterMap(this.tid.topTid);
       commitState = new CommitState();
@@ -568,6 +577,7 @@ public final class Log {
       longerContracts = null;
       pendingAcquires.clear();
       pendingReleases.clear();
+      locksCreated.clear();
       coordinated = false;
 
       if (parent != null) {
@@ -787,6 +797,10 @@ public final class Log {
     // Releases
     synchronized (parent.pendingReleases) {
       parent.pendingReleases.putAll(pendingReleases);
+    }
+    // Creates
+    synchronized (parent.locksCreated) {
+      parent.locksCreated.putAll(locksCreated);
     }
 
     // Update the expiry time and drop this child.

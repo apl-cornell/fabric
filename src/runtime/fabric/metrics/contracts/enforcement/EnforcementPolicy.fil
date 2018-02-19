@@ -46,6 +46,5 @@ public interface EnforcementPolicy {
   /**
    * Acquire reconfig locks for the evidence used for this policy.
    */
-  // Don't need it, as it turns out.
-  //public abstract void acquireReconfigLocks();
+  public abstract void acquireReconfigLocks();
 }

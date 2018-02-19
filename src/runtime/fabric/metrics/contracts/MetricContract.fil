@@ -202,16 +202,8 @@ public class MetricContract extends Contract {
 
     // If we're moving to a new policy we need to be holding the reconfig locks.
     TransactionManager tm = TransactionManager.getInstance();
-    if (!this.lock.held()) {
-      // If we're not holding it, mark this as needing to be acquired and retry.
-      tm.addContractToAcquire(this);
-      TransactionID current = tm.getCurrentTid();
-      if (current != null) {
-        while (current.parent != null) current = current.parent;
-        throw new TransactionRestartingException(
-            new TransactionID(current.topTid));
-      }
-    }
+    //this.lock.acquire();
+    acquireReconfigLocks();
 
     // Otherwise we're finding a new policy, so we're coordinating.
     //Logging.METRICS_LOGGER.log(Level.FINER, "COORDINATING FOR {0} IN {1}",
@@ -351,14 +343,13 @@ public class MetricContract extends Contract {
   }
 
   /*@Override*/
-  // This actually isn't needed.  You walk up the tree and only lock the
-  // contracts you're trying to retract/break out from others.
-  //public void acquireReconfigLocks() {
-  //  //Logging.METRICS_LOGGER.finer("ACQUIRING LOCK AT " + this + " IN " +
-  //  //    TransactionManager.getInstance().getCurrentLog());
-  //  this.lock.acquire();
-  //  this.currentPolicy.acquireReconfigLocks();
-  //}
+  public void acquireReconfigLocks() {
+    //Logging.METRICS_LOGGER.finer("ACQUIRING LOCK AT " + this + " IN " +
+    //    TransactionManager.getInstance().getCurrentLog());
+    this.lock.acquire();
+    if (this.currentPolicy != null)
+      this.currentPolicy.acquireReconfigLocks();
+  }
 
   /**
    * Create a proxy for this contract on the given store.

@@ -21,7 +21,11 @@ public class ReconfigLock {
    */
   public ReconfigLock fabric$metrics$util$ReconfigLock$() {
     fabric$lang$Object$();
-    this.currentlyHeld = false;
+    // Starts out held by the creating transaction (released at the end before
+    // committing)
+    this.currentlyHeld = true;
+    TransactionManager tm = TransactionManager.getInstance();
+    tm.registerLockCreate(this);
     return this;
   }
 
