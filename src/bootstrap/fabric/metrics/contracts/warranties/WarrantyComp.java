@@ -294,6 +294,26 @@ public interface WarrantyComp
                                             "transaction management. Got a signal to restart a " +
                                             "different transaction than the one being managed.");
                             }
+                            catch (final fabric.worker.metrics.
+                                     LockConflictException $e551) {
+                                $commit549 = false;
+                                if ($tm553.checkForStaleObjects()) continue;
+                                fabric.common.TransactionID $currentTid552 =
+                                  $tm553.getCurrentTid();
+                                if ($e551.tid.isDescendantOf($currentTid552)) {
+                                    $retry550 = true;
+                                }
+                                else if ($currentTid552.parent != null) {
+                                    $retry550 = false;
+                                    throw $e551;
+                                }
+                                else {
+                                    throw new InternalError(
+                                            "Something is broken with transaction " +
+                                                "management. Got a signal for a lock conflict in a different " +
+                                                "transaction than the one being managed.");
+                                }
+                            }
                             catch (final Throwable $e551) {
                                 $commit549 = false;
                                 if ($tm553.checkForStaleObjects())
@@ -474,6 +494,27 @@ public interface WarrantyComp
                                                 "transaction management. Got a signal to restart a " +
                                                 "different transaction than the one being managed.");
                                 }
+                                catch (final fabric.worker.metrics.
+                                         LockConflictException $e561) {
+                                    $commit559 = false;
+                                    if ($tm563.checkForStaleObjects()) continue;
+                                    fabric.common.TransactionID $currentTid562 =
+                                      $tm563.getCurrentTid();
+                                    if ($e561.tid.isDescendantOf(
+                                                    $currentTid562)) {
+                                        $retry560 = true;
+                                    }
+                                    else if ($currentTid562.parent != null) {
+                                        $retry560 = false;
+                                        throw $e561;
+                                    }
+                                    else {
+                                        throw new InternalError(
+                                                "Something is broken with transaction " +
+                                                    "management. Got a signal for a lock conflict in a different " +
+                                                    "transaction than the one being managed.");
+                                    }
+                                }
                                 catch (final Throwable $e561) {
                                     $commit559 = false;
                                     if ($tm563.checkForStaleObjects())
@@ -599,6 +640,27 @@ public interface WarrantyComp
                                             "Something is broken with " +
                                                 "transaction management. Got a signal to restart a " +
                                                 "different transaction than the one being managed.");
+                                }
+                                catch (final fabric.worker.metrics.
+                                         LockConflictException $e571) {
+                                    $commit569 = false;
+                                    if ($tm573.checkForStaleObjects()) continue;
+                                    fabric.common.TransactionID $currentTid572 =
+                                      $tm573.getCurrentTid();
+                                    if ($e571.tid.isDescendantOf(
+                                                    $currentTid572)) {
+                                        $retry570 = true;
+                                    }
+                                    else if ($currentTid572.parent != null) {
+                                        $retry570 = false;
+                                        throw $e571;
+                                    }
+                                    else {
+                                        throw new InternalError(
+                                                "Something is broken with transaction " +
+                                                    "management. Got a signal for a lock conflict in a different " +
+                                                    "transaction than the one being managed.");
+                                    }
                                 }
                                 catch (final Throwable $e571) {
                                     $commit569 = false;
@@ -732,6 +794,26 @@ public interface WarrantyComp
                                         "Something is broken with " +
                                             "transaction management. Got a signal to restart a " +
                                             "different transaction than the one being managed.");
+                            }
+                            catch (final fabric.worker.metrics.
+                                     LockConflictException $e581) {
+                                $commit579 = false;
+                                if ($tm583.checkForStaleObjects()) continue;
+                                fabric.common.TransactionID $currentTid582 =
+                                  $tm583.getCurrentTid();
+                                if ($e581.tid.isDescendantOf($currentTid582)) {
+                                    $retry580 = true;
+                                }
+                                else if ($currentTid582.parent != null) {
+                                    $retry580 = false;
+                                    throw $e581;
+                                }
+                                else {
+                                    throw new InternalError(
+                                            "Something is broken with transaction " +
+                                                "management. Got a signal for a lock conflict in a different " +
+                                                "transaction than the one being managed.");
+                                }
                             }
                             catch (final Throwable $e581) {
                                 $commit579 = false;
@@ -1150,6 +1232,26 @@ public interface WarrantyComp
                                         "transaction management. Got a signal to restart a " +
                                         "different transaction than the one being managed.");
                         }
+                        catch (final fabric.worker.metrics.
+                                 LockConflictException $e591) {
+                            $commit589 = false;
+                            if ($tm593.checkForStaleObjects()) continue;
+                            fabric.common.TransactionID $currentTid592 =
+                              $tm593.getCurrentTid();
+                            if ($e591.tid.isDescendantOf($currentTid592)) {
+                                $retry590 = true;
+                            }
+                            else if ($currentTid592.parent != null) {
+                                $retry590 = false;
+                                throw $e591;
+                            }
+                            else {
+                                throw new InternalError(
+                                        "Something is broken with transaction " +
+                                            "management. Got a signal for a lock conflict in a different " +
+                                            "transaction than the one being managed.");
+                            }
+                        }
                         catch (final Throwable $e591) {
                             $commit589 = false;
                             if ($tm593.checkForStaleObjects())
@@ -1325,6 +1427,26 @@ public interface WarrantyComp
                                             "transaction management. Got a signal to restart a " +
                                             "different transaction than the one being managed.");
                             }
+                            catch (final fabric.worker.metrics.
+                                     LockConflictException $e601) {
+                                $commit599 = false;
+                                if ($tm603.checkForStaleObjects()) continue;
+                                fabric.common.TransactionID $currentTid602 =
+                                  $tm603.getCurrentTid();
+                                if ($e601.tid.isDescendantOf($currentTid602)) {
+                                    $retry600 = true;
+                                }
+                                else if ($currentTid602.parent != null) {
+                                    $retry600 = false;
+                                    throw $e601;
+                                }
+                                else {
+                                    throw new InternalError(
+                                            "Something is broken with transaction " +
+                                                "management. Got a signal for a lock conflict in a different " +
+                                                "transaction than the one being managed.");
+                                }
+                            }
                             catch (final Throwable $e601) {
                                 $commit599 = false;
                                 if ($tm603.checkForStaleObjects())
@@ -1441,6 +1563,26 @@ public interface WarrantyComp
                                         "Something is broken with " +
                                             "transaction management. Got a signal to restart a " +
                                             "different transaction than the one being managed.");
+                            }
+                            catch (final fabric.worker.metrics.
+                                     LockConflictException $e611) {
+                                $commit609 = false;
+                                if ($tm613.checkForStaleObjects()) continue;
+                                fabric.common.TransactionID $currentTid612 =
+                                  $tm613.getCurrentTid();
+                                if ($e611.tid.isDescendantOf($currentTid612)) {
+                                    $retry610 = true;
+                                }
+                                else if ($currentTid612.parent != null) {
+                                    $retry610 = false;
+                                    throw $e611;
+                                }
+                                else {
+                                    throw new InternalError(
+                                            "Something is broken with transaction " +
+                                                "management. Got a signal for a lock conflict in a different " +
+                                                "transaction than the one being managed.");
+                                }
                             }
                             catch (final Throwable $e611) {
                                 $commit609 = false;
@@ -1619,6 +1761,26 @@ public interface WarrantyComp
                                     "Something is broken with " +
                                         "transaction management. Got a signal to restart a " +
                                         "different transaction than the one being managed.");
+                        }
+                        catch (final fabric.worker.metrics.
+                                 LockConflictException $e621) {
+                            $commit619 = false;
+                            if ($tm623.checkForStaleObjects()) continue;
+                            fabric.common.TransactionID $currentTid622 =
+                              $tm623.getCurrentTid();
+                            if ($e621.tid.isDescendantOf($currentTid622)) {
+                                $retry620 = true;
+                            }
+                            else if ($currentTid622.parent != null) {
+                                $retry620 = false;
+                                throw $e621;
+                            }
+                            else {
+                                throw new InternalError(
+                                        "Something is broken with transaction " +
+                                            "management. Got a signal for a lock conflict in a different " +
+                                            "transaction than the one being managed.");
+                            }
                         }
                         catch (final Throwable $e621) {
                             $commit619 = false;

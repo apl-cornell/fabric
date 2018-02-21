@@ -288,6 +288,26 @@ public interface ScaledMetric extends fabric.metrics.DerivedMetric {
                                         "transaction management. Got a signal to restart a " +
                                         "different transaction than the one being managed.");
                         }
+                        catch (final fabric.worker.metrics.
+                                 LockConflictException $e302) {
+                            $commit300 = false;
+                            if ($tm304.checkForStaleObjects()) continue;
+                            fabric.common.TransactionID $currentTid303 =
+                              $tm304.getCurrentTid();
+                            if ($e302.tid.isDescendantOf($currentTid303)) {
+                                $retry301 = true;
+                            }
+                            else if ($currentTid303.parent != null) {
+                                $retry301 = false;
+                                throw $e302;
+                            }
+                            else {
+                                throw new InternalError(
+                                        "Something is broken with transaction " +
+                                            "management. Got a signal for a lock conflict in a different " +
+                                            "transaction than the one being managed.");
+                            }
+                        }
                         catch (final Throwable $e302) {
                             $commit300 = false;
                             if ($tm304.checkForStaleObjects())
@@ -441,6 +461,26 @@ public interface ScaledMetric extends fabric.metrics.DerivedMetric {
                                         "Something is broken with " +
                                             "transaction management. Got a signal to restart a " +
                                             "different transaction than the one being managed.");
+                            }
+                            catch (final fabric.worker.metrics.
+                                     LockConflictException $e312) {
+                                $commit310 = false;
+                                if ($tm314.checkForStaleObjects()) continue;
+                                fabric.common.TransactionID $currentTid313 =
+                                  $tm314.getCurrentTid();
+                                if ($e312.tid.isDescendantOf($currentTid313)) {
+                                    $retry311 = true;
+                                }
+                                else if ($currentTid313.parent != null) {
+                                    $retry311 = false;
+                                    throw $e312;
+                                }
+                                else {
+                                    throw new InternalError(
+                                            "Something is broken with transaction " +
+                                                "management. Got a signal for a lock conflict in a different " +
+                                                "transaction than the one being managed.");
+                                }
                             }
                             catch (final Throwable $e312) {
                                 $commit310 = false;

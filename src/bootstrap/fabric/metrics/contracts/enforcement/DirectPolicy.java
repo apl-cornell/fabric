@@ -416,6 +416,26 @@ public interface DirectPolicy
                                         "transaction management. Got a signal to restart a " +
                                         "different transaction than the one being managed.");
                         }
+                        catch (final fabric.worker.metrics.
+                                 LockConflictException $e465) {
+                            $commit463 = false;
+                            if ($tm467.checkForStaleObjects()) continue;
+                            fabric.common.TransactionID $currentTid466 =
+                              $tm467.getCurrentTid();
+                            if ($e465.tid.isDescendantOf($currentTid466)) {
+                                $retry464 = true;
+                            }
+                            else if ($currentTid466.parent != null) {
+                                $retry464 = false;
+                                throw $e465;
+                            }
+                            else {
+                                throw new InternalError(
+                                        "Something is broken with transaction " +
+                                            "management. Got a signal for a lock conflict in a different " +
+                                            "transaction than the one being managed.");
+                            }
+                        }
                         catch (final Throwable $e465) {
                             $commit463 = false;
                             if ($tm467.checkForStaleObjects())
@@ -569,6 +589,26 @@ public interface DirectPolicy
                                     "Something is broken with " +
                                         "transaction management. Got a signal to restart a " +
                                         "different transaction than the one being managed.");
+                        }
+                        catch (final fabric.worker.metrics.
+                                 LockConflictException $e474) {
+                            $commit472 = false;
+                            if ($tm476.checkForStaleObjects()) continue;
+                            fabric.common.TransactionID $currentTid475 =
+                              $tm476.getCurrentTid();
+                            if ($e474.tid.isDescendantOf($currentTid475)) {
+                                $retry473 = true;
+                            }
+                            else if ($currentTid475.parent != null) {
+                                $retry473 = false;
+                                throw $e474;
+                            }
+                            else {
+                                throw new InternalError(
+                                        "Something is broken with transaction " +
+                                            "management. Got a signal for a lock conflict in a different " +
+                                            "transaction than the one being managed.");
+                            }
                         }
                         catch (final Throwable $e474) {
                             $commit472 = false;
@@ -853,6 +893,26 @@ public interface DirectPolicy
                                     "Something is broken with " +
                                         "transaction management. Got a signal to restart a " +
                                         "different transaction than the one being managed.");
+                        }
+                        catch (final fabric.worker.metrics.
+                                 LockConflictException $e483) {
+                            $commit481 = false;
+                            if ($tm485.checkForStaleObjects()) continue;
+                            fabric.common.TransactionID $currentTid484 =
+                              $tm485.getCurrentTid();
+                            if ($e483.tid.isDescendantOf($currentTid484)) {
+                                $retry482 = true;
+                            }
+                            else if ($currentTid484.parent != null) {
+                                $retry482 = false;
+                                throw $e483;
+                            }
+                            else {
+                                throw new InternalError(
+                                        "Something is broken with transaction " +
+                                            "management. Got a signal for a lock conflict in a different " +
+                                            "transaction than the one being managed.");
+                            }
                         }
                         catch (final Throwable $e483) {
                             $commit481 = false;
@@ -1175,6 +1235,26 @@ public interface DirectPolicy
                                             "transaction management. Got a signal to restart a " +
                                             "different transaction than the one being managed.");
                             }
+                            catch (final fabric.worker.metrics.
+                                     LockConflictException $e492) {
+                                $commit490 = false;
+                                if ($tm494.checkForStaleObjects()) continue;
+                                fabric.common.TransactionID $currentTid493 =
+                                  $tm494.getCurrentTid();
+                                if ($e492.tid.isDescendantOf($currentTid493)) {
+                                    $retry491 = true;
+                                }
+                                else if ($currentTid493.parent != null) {
+                                    $retry491 = false;
+                                    throw $e492;
+                                }
+                                else {
+                                    throw new InternalError(
+                                            "Something is broken with transaction " +
+                                                "management. Got a signal for a lock conflict in a different " +
+                                                "transaction than the one being managed.");
+                                }
+                            }
                             catch (final Throwable $e492) {
                                 $commit490 = false;
                                 if ($tm494.checkForStaleObjects())
@@ -1228,7 +1308,7 @@ public interface DirectPolicy
     78, -124, -50, 0, 39, -92, 97, 42, -26, -93, 106, 75, -68, 70, -39, 4, -106,
     80, -14, 116, 36, -53, -86, -115, 38, 42, -84 };
     public static final java.lang.String jlc$CompilerVersion$fabil = "0.3.0";
-    public static final long jlc$SourceLastModified$fabil = 1519057286000L;
+    public static final long jlc$SourceLastModified$fabil = 1519071321000L;
     public static final java.lang.String jlc$ClassType$fabil =
       "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";
 }

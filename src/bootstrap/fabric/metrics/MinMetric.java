@@ -306,6 +306,26 @@ public interface MinMetric extends fabric.metrics.DerivedMetric {
                                         "transaction management. Got a signal to restart a " +
                                         "different transaction than the one being managed.");
                         }
+                        catch (final fabric.worker.metrics.
+                                 LockConflictException $e181) {
+                            $commit179 = false;
+                            if ($tm183.checkForStaleObjects()) continue;
+                            fabric.common.TransactionID $currentTid182 =
+                              $tm183.getCurrentTid();
+                            if ($e181.tid.isDescendantOf($currentTid182)) {
+                                $retry180 = true;
+                            }
+                            else if ($currentTid182.parent != null) {
+                                $retry180 = false;
+                                throw $e181;
+                            }
+                            else {
+                                throw new InternalError(
+                                        "Something is broken with transaction " +
+                                            "management. Got a signal for a lock conflict in a different " +
+                                            "transaction than the one being managed.");
+                            }
+                        }
                         catch (final Throwable $e181) {
                             $commit179 = false;
                             if ($tm183.checkForStaleObjects())
@@ -441,6 +461,26 @@ public interface MinMetric extends fabric.metrics.DerivedMetric {
                                     "Something is broken with " +
                                         "transaction management. Got a signal to restart a " +
                                         "different transaction than the one being managed.");
+                        }
+                        catch (final fabric.worker.metrics.
+                                 LockConflictException $e191) {
+                            $commit189 = false;
+                            if ($tm193.checkForStaleObjects()) continue;
+                            fabric.common.TransactionID $currentTid192 =
+                              $tm193.getCurrentTid();
+                            if ($e191.tid.isDescendantOf($currentTid192)) {
+                                $retry190 = true;
+                            }
+                            else if ($currentTid192.parent != null) {
+                                $retry190 = false;
+                                throw $e191;
+                            }
+                            else {
+                                throw new InternalError(
+                                        "Something is broken with transaction " +
+                                            "management. Got a signal for a lock conflict in a different " +
+                                            "transaction than the one being managed.");
+                            }
                         }
                         catch (final Throwable $e191) {
                             $commit189 = false;
@@ -616,6 +656,26 @@ public interface MinMetric extends fabric.metrics.DerivedMetric {
                                             "transaction management. Got a signal to restart a " +
                                             "different transaction than the one being managed.");
                             }
+                            catch (final fabric.worker.metrics.
+                                     LockConflictException $e202) {
+                                $commit200 = false;
+                                if ($tm204.checkForStaleObjects()) continue;
+                                fabric.common.TransactionID $currentTid203 =
+                                  $tm204.getCurrentTid();
+                                if ($e202.tid.isDescendantOf($currentTid203)) {
+                                    $retry201 = true;
+                                }
+                                else if ($currentTid203.parent != null) {
+                                    $retry201 = false;
+                                    throw $e202;
+                                }
+                                else {
+                                    throw new InternalError(
+                                            "Something is broken with transaction " +
+                                                "management. Got a signal for a lock conflict in a different " +
+                                                "transaction than the one being managed.");
+                                }
+                            }
                             catch (final Throwable $e202) {
                                 $commit200 = false;
                                 if ($tm204.checkForStaleObjects())
@@ -742,6 +802,26 @@ public interface MinMetric extends fabric.metrics.DerivedMetric {
                                     "Something is broken with " +
                                         "transaction management. Got a signal to restart a " +
                                         "different transaction than the one being managed.");
+                        }
+                        catch (final fabric.worker.metrics.
+                                 LockConflictException $e212) {
+                            $commit210 = false;
+                            if ($tm214.checkForStaleObjects()) continue;
+                            fabric.common.TransactionID $currentTid213 =
+                              $tm214.getCurrentTid();
+                            if ($e212.tid.isDescendantOf($currentTid213)) {
+                                $retry211 = true;
+                            }
+                            else if ($currentTid213.parent != null) {
+                                $retry211 = false;
+                                throw $e212;
+                            }
+                            else {
+                                throw new InternalError(
+                                        "Something is broken with transaction " +
+                                            "management. Got a signal for a lock conflict in a different " +
+                                            "transaction than the one being managed.");
+                            }
                         }
                         catch (final Throwable $e212) {
                             $commit210 = false;

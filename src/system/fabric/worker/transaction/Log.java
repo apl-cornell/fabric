@@ -234,7 +234,7 @@ public final class Log {
   /**
    * Locks that will be acquired if this transaction commits successfully.
    */
-  protected final OidKeyHashMap<Boolean> pendingAcquires =
+  protected final OidKeyHashMap<Boolean> acquires =
       new OidKeyHashMap<>();
 
   /**
@@ -300,7 +300,7 @@ public final class Log {
       }
       this.resolving = parent.resolving;
       this.locksCreated.putAll(parent.locksCreated);
-      this.pendingAcquires.putAll(parent.pendingAcquires);
+      this.acquires.putAll(parent.acquires);
       this.pendingReleases.putAll(parent.pendingReleases);
     } else {
       this.writerMap = new WriterMap(this.tid.topTid);
@@ -575,7 +575,7 @@ public final class Log {
       workersCalled.clear();
       securityCache.reset();
       longerContracts = null;
-      pendingAcquires.clear();
+      acquires.clear();
       pendingReleases.clear();
       locksCreated.clear();
       coordinated = false;
@@ -791,8 +791,8 @@ public final class Log {
 
     // Merge pessimistic lock pending operations.
     // Acquires
-    synchronized (parent.pendingAcquires) {
-      parent.pendingAcquires.putAll(pendingAcquires);
+    synchronized (parent.acquires) {
+      parent.acquires.putAll(acquires);
     }
     // Releases
     synchronized (parent.pendingReleases) {
@@ -920,7 +920,7 @@ public final class Log {
 
     // Update this thread's lock state in the TransactionManager.
     TransactionManager tm = TransactionManager.getInstance();
-    tm.updateLockState(pendingAcquires, pendingReleases);
+    tm.updateLockState(acquires, pendingReleases);
 
     // Merge the security cache into the top-level label cache.
     securityCache.mergeWithTopLevel();

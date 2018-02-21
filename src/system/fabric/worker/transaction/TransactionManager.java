@@ -25,6 +25,7 @@ import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.Level;
 
 import fabric.common.FabricThread;
@@ -38,6 +39,7 @@ import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.LongSet;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
 import fabric.lang.Object._Impl;
@@ -46,7 +48,6 @@ import fabric.lang.security.Label;
 import fabric.lang.security.SecurityCache;
 import fabric.messages.AsyncCallMessage;
 import fabric.metrics.SampledMetric;
-import fabric.metrics.contracts.Contract;
 import fabric.metrics.util.ReconfigLock;
 import fabric.net.RemoteNode;
 import fabric.net.UnreachableNodeException;
@@ -62,6 +63,7 @@ import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.TransactionRestartingException;
 import fabric.worker.Worker;
 import fabric.worker.Worker.Code;
+import fabric.worker.metrics.LockConflictException;
 import fabric.worker.remote.RemoteWorker;
 import fabric.worker.remote.WriterMap;
 
@@ -133,32 +135,30 @@ public final class TransactionManager {
 
   // Mark a created lock.
   public void registerLockCreate(fabric.lang.Object lock) {
-    Logging.log(METRICS_LOGGER, Level.FINE,
-        "CREATING LOCK {0}/{1} IN {2}/{3}", lock.$getStore(),
-        new Long(lock.$getOnum()), Thread.currentThread(), getCurrentTid());
+    Logging.log(METRICS_LOGGER, Level.FINE, "CREATING LOCK {0}/{1} IN {2}/{3}",
+        lock.$getStore(), new Long(lock.$getOnum()), Thread.currentThread(),
+        getCurrentTid());
     // You start out holding the lock if you created it.
     current.locksCreated.put(lock, true);
   }
 
   // Mark an acquired lock.
   public void registerLockAcquire(fabric.lang.Object lock) {
-    Logging.log(METRICS_LOGGER, Level.FINE,
-        "ACQUIRING LOCK {0}/{1} IN {2}/{3}", lock.$getStore(),
-        new Long(lock.$getOnum()), Thread.currentThread(), getCurrentTid());
+    Logging.log(METRICS_LOGGER, Level.FINE, "ACQUIRING LOCK {0}/{1} IN {2}/{3}",
+        lock.$getStore(), new Long(lock.$getOnum()), Thread.currentThread(),
+        getCurrentTid());
+    current.acquires.put(lock, true);
     if (!acquiringLocks && !current.locksCreated.containsKey(lock)) {
       contractsToAcquire.put(lock, true);
-      contractLocksHeld.put(lock, true);
-    } else if (acquiringLocks) {
-      current.pendingAcquires.put(lock, true);
     }
   }
 
   // Check that we have this lock.
   public boolean hasLock(fabric.lang.Object lock) {
     // TODO: consider allowing a pending acquire to be considered held?
-    Logging.log(METRICS_LOGGER, Level.FINE,
-        "CHECKING LOCK {0}/{1} IN {2}/{3}", lock.$getStore(),
-        new Long(lock.$getOnum()), Thread.currentThread(), getCurrentTid());
+    Logging.log(METRICS_LOGGER, Level.FINE, "CHECKING LOCK {0}/{1} IN {2}/{3}",
+        lock.$getStore(), new Long(lock.$getOnum()), Thread.currentThread(),
+        getCurrentTid());
     if (contractLocksHeld.containsKey(lock)) {
       // If you're checking for it and you have it, you're 'using' it.
       if (!current.locksCreated.containsKey(lock)) {
@@ -168,7 +168,7 @@ public final class TransactionManager {
       return true;
     }
     if ((current != null && current.locksCreated.containsKey(lock))
-        || current.pendingAcquires.containsKey(lock)) {
+        || current.acquires.containsKey(lock)) {
       return true;
     }
     return false;
@@ -176,60 +176,210 @@ public final class TransactionManager {
 
   // Unmark an acquired lock.
   public void registerLockRelease(fabric.lang.Object lock) {
-    Logging.log(METRICS_LOGGER, Level.FINE,
-        "RELEASING LOCK {0}/{1} IN {2}/{3}", lock.$getStore(),
-        new Long(lock.$getOnum()), Thread.currentThread(), getCurrentTid());
+    Logging.log(METRICS_LOGGER, Level.FINE, "RELEASING LOCK {0}/{1} IN {2}/{3}",
+        lock.$getStore(), new Long(lock.$getOnum()), Thread.currentThread(),
+        getCurrentTid());
     current.pendingReleases.put(lock, true);
+  }
+
+  // Note a lock conflict.  This means we should give up on locks we were
+  // looking at, since we'll be taking a backseat until that conflict goes away
+  // anyways.
+  public void registerLockConflict() {
+    contractsToAcquire.clear();
   }
 
   /**
    * The locks to acquire before the next transaction attempt.
    */
-  protected OidKeyHashMap<Boolean> contractsToAcquire =
-      new OidKeyHashMap<>();
+  protected OidKeyHashMap<Boolean> contractsToAcquire = new OidKeyHashMap<>();
 
   protected void acquireContractLocks() {
-    // Grab locks still needed.
-    final OidKeyHashMap<Boolean> contractsToAcquireF =
-      new OidKeyHashMap<>(contractsToAcquire);
+    // Only bother with lock dance if there's a change in locks we want.
+    if (!contractsToAcquire.equals(contractLocksHeld)) {
+      // Grab locks still needed.
+      final OidKeyHashMap<Boolean> contractsToAcquireF =
+          new OidKeyHashMap<>(contractsToAcquire);
 
-    // First release locks
-    if (!contractLocksHeld.isEmpty()) {
-      // Release everything
-      Worker.runInTopLevelTransaction((new Code<Void>() {
-        @Override
-        public Void run() {
-          Logging.log(METRICS_LOGGER, Level.FINER,
-              "RELEASING LOCKS IN {0}/{1}", Thread.currentThread(),
-              getCurrentTid());
-          releaseContractLocks();
-          return null;
-        }
-      }), true);
-    }
-
-    // Acquire locks.
-    if (!contractsToAcquireF.isEmpty()) {
-      Worker.runInTopLevelTransaction((new Code<Void>() {
-        @Override
-        public Void run() {
-          Logging.log(METRICS_LOGGER, Level.FINER,
-              "ACQUIRING LOCKS IN {0}/{1}", Thread.currentThread(),
-              getCurrentTid());
-          for (Store s : contractsToAcquireF.storeSet()) {
-            for (LongIterator it = contractsToAcquireF.get(s).keySet().iterator(); it.hasNext(); ) {
-              (new ReconfigLock._Proxy(s, it.next())).acquire();
+      boolean success = false;
+      int attempts = 0;
+      int successes = 0;
+      while (!success) {
+        // First release locks
+        if (!contractLocksHeld.isEmpty()) {
+          List<Future<?>> releaseFutures = new ArrayList<>();
+          for (final Store s : contractLocksHeld.storeSet()) {
+            final LongSet onums = contractLocksHeld.get(s).keySet();
+            releaseFutures
+                .add(Threading.getPool().submit(new Threading.NamedRunnable(
+                    "Store " + s.name() + " lock object release") {
+                  @Override
+                  public void runImpl() {
+                    boolean oldState = TransactionManager.getInstance().acquiringLocks;
+                    TransactionManager.getInstance().acquiringLocks = true;
+                    // Release everything
+                    Worker.runInTopLevelTransaction((new Code<Void>() {
+                      @Override
+                      public Void run() {
+                        Logging.log(METRICS_LOGGER, Level.FINER,
+                            "RELEASING LOCKS FROM {2} IN {0}/{1}",
+                            Thread.currentThread(), getCurrentTid(), s.name());
+                        for (LongIterator it = onums.iterator(); it
+                            .hasNext();) {
+                          long onum = it.next();
+                          ReconfigLock._Proxy l =
+                              new ReconfigLock._Proxy(s, onum);
+                          l.release();
+                        }
+                        return null;
+                      }
+                    }), true);
+                    TransactionManager.getInstance().acquiringLocks = oldState;
+                  }
+                }));
+          }
+          for (Future<?> f : releaseFutures) {
+            try {
+              f.get();
+            } catch (ExecutionException e) {
+              StringWriter sw = new StringWriter();
+              e.printStackTrace(new PrintWriter(sw));
+              Logging.log(METRICS_LOGGER, Level.SEVERE,
+                  "EXECUTION EXCEPTION DURING LOCK RELEASE ATTEMPT\n{0}\n{1}",
+                  e, sw);
+            } catch (InterruptedException e) {
+              StringWriter sw = new StringWriter();
+              e.printStackTrace(new PrintWriter(sw));
+              Logging.log(METRICS_LOGGER, Level.SEVERE,
+                  "INTERRUPTION DURING LOCK RELEASE ATTEMPT\n{0}\n{1}", e, sw);
             }
           }
-          return null;
+          if (METRICS_LOGGER.isLoggable(Level.FINE)) {
+            for (Store s : contractLocksHeld.storeSet()) {
+              for (LongIterator it =
+                  contractLocksHeld.get(s).keySet().iterator(); it.hasNext();) {
+                long onum = it.next();
+                Logging.log(METRICS_LOGGER, Level.FINE,
+                    "RELEASED LOCK {0}/{1} IN {2}", s, onum,
+                    Thread.currentThread());
+              }
+            }
+          }
+          contractLocksHeld.clear();
         }
-      }), true);
+
+        // Let's just give up and move on after an attempt didn't manage to get
+        // any locks.  Usually means someone else is coordinating and we should
+        // just wait.
+        if (attempts > 0 && successes == 0) {
+          break;
+        }
+
+        // Do an exponential backoff between attempts.
+        if (attempts > 4) {
+          try {
+            int sleepTime = Math.min(1 << attempts, 1000);
+            sleepTime += ThreadLocalRandom.current().nextInt(0, sleepTime);
+            Thread.sleep(sleepTime);
+          } catch (InterruptedException e) {
+            StringWriter sw = new StringWriter();
+            e.printStackTrace(new PrintWriter(sw));
+            Logging.log(METRICS_LOGGER, Level.SEVERE,
+                "INTERRUPTION DURING WAIT BETWEEN LOCK ATTEMPTS\n{0}\n{1}", e,
+                sw);
+          }
+        }
+
+        Logging.log(METRICS_LOGGER, Level.FINE, "LOCK ATTEMPT {0} IN {1}",
+            attempts, Thread.currentThread());
+
+        // Attempt to acquire locks.
+        success = true;
+        successes = 0;
+        if (!contractsToAcquireF.isEmpty()) {
+          List<Future<Pair<Store, Boolean>>> acquireFutures = new ArrayList<>();
+          for (final Store s : contractsToAcquireF.storeSet()) {
+            final LongSet onums = contractsToAcquireF.get(s).keySet();
+            acquireFutures.add(Threading.getPool()
+                .submit(new Threading.NamedCallable<Pair<Store, Boolean>>(
+                    "Store " + s.name() + " lock object acquire") {
+                  @Override
+                  public Pair<Store, Boolean> callImpl() {
+                    boolean result = true;
+                    boolean oldState = TransactionManager.getInstance().acquiringLocks;
+                    TransactionManager.getInstance().acquiringLocks = true;
+                    try {
+                      // acquire everything
+                      Worker.runInTopLevelTransaction((new Code<Void>() {
+                        @Override
+                        public Void run() {
+                          Logging.log(METRICS_LOGGER, Level.FINER,
+                              "ACQUIRING LOCKS FROM {2} IN {0}/{1}",
+                              Thread.currentThread(), getCurrentTid(),
+                              s.name());
+                          for (LongIterator it = onums.iterator(); it
+                              .hasNext();) {
+                            long onum = it.next();
+                            ReconfigLock._Proxy l =
+                                new ReconfigLock._Proxy(s, onum);
+                            l.acquire();
+                          }
+                          return null;
+                        }
+                      }), false);
+                    } catch (AbortException e) {
+                      result = false;
+                    } catch (LockConflictException e) {
+                      result = false;
+                    }
+                    TransactionManager.getInstance().acquiringLocks = oldState;
+                    return new Pair<>(s, result);
+                  }
+                }));
+          }
+          for (Future<Pair<Store, Boolean>> f : acquireFutures) {
+            try {
+              Pair<Store, Boolean> p = f.get();
+              success = success && p.second;
+              if (p.second) {
+                successes++;
+                for (LongIterator it =
+                    contractsToAcquireF.get(p.first).keySet().iterator(); it
+                        .hasNext();) {
+                  long onum = it.next();
+                  contractLocksHeld.put(p.first, onum, true);
+                  Logging.log(METRICS_LOGGER, Level.FINE,
+                      "ACQUIRED LOCK {0}/{1} IN {2}", p.first, onum,
+                      Thread.currentThread());
+                }
+              }
+            } catch (ExecutionException e) {
+              StringWriter sw = new StringWriter();
+              e.printStackTrace(new PrintWriter(sw));
+              Logging.log(METRICS_LOGGER, Level.SEVERE,
+                  "EXECUTION EXCEPTION DURING LOCK ACQUIRE ATTEMPT\n{0}\n{1}",
+                  e, sw);
+            } catch (InterruptedException e) {
+              StringWriter sw = new StringWriter();
+              e.printStackTrace(new PrintWriter(sw));
+              Logging.log(METRICS_LOGGER, Level.SEVERE,
+                  "INTERRUPTION DURING LOCK ACQUIRE ATTEMPT\n{0}\n{1}", e, sw);
+            }
+          }
+        }
+        attempts++;
+      }
     }
+    contractsToAcquire.clear();
   }
 
   protected void releaseContractLocks() {
     OidKeyHashMap<Boolean> locksCopy = new OidKeyHashMap<>(contractLocksHeld);
     locksCopy.putAll(current.locksCreated);
+    if (!acquiringLocks) {
+      locksCopy.putAll(current.acquires);
+      current.acquires.clear();
+    }
     for (Store s : locksCopy.storeSet()) {
       for (LongIterator it = locksCopy.get(s).keySet().iterator(); it
           .hasNext();) {
@@ -246,27 +396,30 @@ public final class TransactionManager {
    */
   protected void updateLockState(OidKeyHashMap<Boolean> acquires,
       OidKeyHashMap<Boolean> releases) {
-    // XXX: Note that if there's overlap, the lock is considered released.  This
-    // should not happen in normal operation but if things change this is worth
-    // remembering.
-    // TODO: putAll does the same thing but removes the opportunity to easily
-    // log the event.
-    for (Store s : acquires.storeSet()) {
-      for (LongIterator it = acquires.get(s).keySet().iterator(); it
-          .hasNext();) {
-        long onum = it.next();
-        contractLocksHeld.put(s, onum, true);
-        Logging.log(METRICS_LOGGER, Level.FINE,
-            "ACQUIRED LOCK {0}/{1} IN {2}", s, onum, Thread.currentThread());
+    // Only do this if we're not doing "between attempt" lock wrangling.
+    if (!acquiringLocks) {
+      // XXX: Note that if there's overlap, the lock is considered released.  This
+      // should not happen in normal operation but if things change this is worth
+      // remembering.
+      // TODO: putAll does the same thing but removes the opportunity to easily
+      // log the event.
+      for (Store s : acquires.storeSet()) {
+        for (LongIterator it = acquires.get(s).keySet().iterator(); it
+            .hasNext();) {
+          long onum = it.next();
+          contractLocksHeld.put(s, onum, true);
+          Logging.log(METRICS_LOGGER, Level.FINE,
+              "ACQUIRED LOCK {0}/{1} IN {2}", s, onum, Thread.currentThread());
+        }
       }
-    }
-    for (Store s : releases.storeSet()) {
-      for (LongIterator it = releases.get(s).keySet().iterator(); it
-          .hasNext();) {
-        long onum = it.next();
-        contractLocksHeld.remove(s, onum);
-        Logging.log(METRICS_LOGGER, Level.FINE,
-            "RELEASED LOCK {0}/{1} IN {2}", s, onum, Thread.currentThread());
+      for (Store s : releases.storeSet()) {
+        for (LongIterator it = releases.get(s).keySet().iterator(); it
+            .hasNext();) {
+          long onum = it.next();
+          contractLocksHeld.remove(s, onum);
+          Logging.log(METRICS_LOGGER, Level.FINE,
+              "RELEASED LOCK {0}/{1} IN {2}", s, onum, Thread.currentThread());
+        }
       }
     }
   }
@@ -502,8 +655,10 @@ public final class TransactionManager {
               current);
           if (METRICS_LOGGER.isLoggable(Level.FINEST)) {
             for (Store s : contractLocksHeld.storeSet()) {
-              for (LongIterator it = contractLocksHeld.get(s).keySet().iterator(); it.hasNext(); ) {
-                METRICS_LOGGER.log(Level.FINEST, "\t" + s.name() + "://" + it.next());
+              for (LongIterator it =
+                  contractLocksHeld.get(s).keySet().iterator(); it.hasNext();) {
+                METRICS_LOGGER.log(Level.FINEST,
+                    "\t" + s.name() + "://" + it.next());
               }
             }
           }
@@ -653,8 +808,7 @@ public final class TransactionManager {
             stores.size() - (stores.contains(LOCAL_STORE) ? 1 : 0),
             HOTOS_current.retractedContracts.size(),
             HOTOS_current.extendedContracts.size(),
-            HOTOS_current.delayedExtensions.size(),
-            acquiringLocks);
+            HOTOS_current.delayedExtensions.size(), acquiringLocks);
       }
     }
   }

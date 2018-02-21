@@ -59,6 +59,7 @@ import fabric.lang.security.NodePrincipal;
 import fabric.net.RemoteNode;
 import fabric.worker.admin.WorkerAdmin;
 import fabric.worker.admin.WorkerNotRunningException;
+import fabric.worker.metrics.LockConflictException;
 import fabric.worker.remote.InProcessRemoteWorker;
 import fabric.worker.remote.RemoteCallManager;
 import fabric.worker.remote.RemoteWorker;
@@ -791,6 +792,33 @@ public final class Worker {
         throw new InternalError("Something is broken with transaction "
             + "management. Got a signal to restart a different transaction "
             + "than the one being managed.");
+      } catch (LockConflictException e) {
+        // There was a conflict with a lock check.
+        success = false;
+
+        // Retry if the exception was a result of stale objects.
+        if (tm.checkForStaleObjects()) continue;
+
+        // Kick this up to the marked TID
+        TransactionID currentTid = tm.getCurrentTid();
+        if (e.tid.isDescendantOf(currentTid)) {
+          if (autoRetry) {
+            // Restart this transaction.
+            retry = true;
+            continue;
+          } else {
+            retry = false;
+            throw e;
+          }
+        } else if (currentTid.parent != null) {
+          // Don't retry, kicking this up to a parent that needs to retry.
+          retry = false;
+          throw e;
+        } else {
+          throw new InternalError("Something is broken with transaction "
+              + "management. Got a signal for a lock conflict in a different "
+              + "transaction than the one being managed.");
+        }
       } catch (Throwable e) {
         success = false;
 

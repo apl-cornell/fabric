@@ -50,8 +50,8 @@ public final class OidKeyHashMap<V> implements Iterable<LongKeyMap<V>> {
   }
 
   public boolean containsKey(Object obj) {
-    return obj == null ? hasNullEntry : containsKey(obj.$getStore(),
-        obj.$getOnum());
+    return obj == null ? hasNullEntry
+        : containsKey(obj.$getStore(), obj.$getOnum());
   }
 
   public boolean containsKey(Store store, long onum) {
@@ -172,5 +172,22 @@ public final class OidKeyHashMap<V> implements Iterable<LongKeyMap<V>> {
     }
 
     return SysUtil.chain(values);
+  }
+
+  @Override
+  public boolean equals(java.lang.Object other) {
+    if (!(other instanceof OidKeyHashMap<?>)) {
+      return false;
+    }
+    OidKeyHashMap<?> map2 = (OidKeyHashMap<?>) other;
+    if (!storeSet().equals(map2.storeSet())) {
+      return false;
+    }
+    for (Store s : storeSet()) {
+      if (!get(s).equals(map2.get(s))) {
+        return false;
+      }
+    }
+    return true;
   }
 }

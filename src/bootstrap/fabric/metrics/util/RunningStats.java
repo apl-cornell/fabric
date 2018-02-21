@@ -704,6 +704,26 @@ public interface RunningStats extends fabric.lang.Object {
                                             "transaction management. Got a signal to restart a " +
                                             "different transaction than the one being managed.");
                             }
+                            catch (final fabric.worker.metrics.
+                                     LockConflictException $e657) {
+                                $commit655 = false;
+                                if ($tm659.checkForStaleObjects()) continue;
+                                fabric.common.TransactionID $currentTid658 =
+                                  $tm659.getCurrentTid();
+                                if ($e657.tid.isDescendantOf($currentTid658)) {
+                                    $retry656 = true;
+                                }
+                                else if ($currentTid658.parent != null) {
+                                    $retry656 = false;
+                                    throw $e657;
+                                }
+                                else {
+                                    throw new InternalError(
+                                            "Something is broken with transaction " +
+                                                "management. Got a signal for a lock conflict in a different " +
+                                                "transaction than the one being managed.");
+                                }
+                            }
                             catch (final Throwable $e657) {
                                 $commit655 = false;
                                 if ($tm659.checkForStaleObjects())

@@ -2,7 +2,7 @@ package fabric.metrics.util;
 
 import fabric.common.TransactionID;
 import fabric.worker.transaction.TransactionManager;
-import fabric.worker.TransactionRestartingException;
+import fabric.worker.metrics.LockConflictException;
 
 import fabric.common.Logging;
 import java.util.logging.Level;
@@ -49,10 +49,7 @@ public class ReconfigLock {
         while (current.parent != null) current = current.parent;
         Logging.METRICS_LOGGER.fine("ABORTING READ IN " + current +
             " FOR LOCK " + this);
-        // XXX: Dumb hack to avoid issues with stale lock.
-        tm.checkForStaleObjects();
-        throw new TransactionRestartingException(
-            new TransactionID(current.topTid));
+        throw new LockConflictException(new TransactionID(current.topTid));
       }
     }
   }
@@ -74,10 +71,7 @@ public class ReconfigLock {
           while (current.parent != null) current = current.parent;
           Logging.METRICS_LOGGER.fine("ABORTING ACQUIRE " + current +
               " FOR LOCK " + this);
-          // XXX: Dumb hack to avoid issues with stale lock.
-          tm.checkForStaleObjects();
-          throw new TransactionRestartingException(
-              new TransactionID(current.topTid));
+          throw new LockConflictException(new TransactionID(current.topTid));
         }
       }
     }
