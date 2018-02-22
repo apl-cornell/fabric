@@ -6,6 +6,7 @@ import fabric.util.Set;
 import fabric.metrics.Metric;
 import fabric.metrics.contracts.MetricContract;
 import fabric.metrics.SampledMetric;
+import fabric.metrics.util.AbstractSubject;
 import fabric.metrics.util.Observer;
 import fabric.worker.transaction.TransactionManager;
 
@@ -20,7 +21,7 @@ import fabric.worker.transaction.TransactionManager;
  * result is correct doesn't get deactivated prematurely by the API
  * implementation.
  */
-public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observer {
+public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*LongFunction<T>,*/ Observer {
 
   /** The currently cached result. */
   protected final WarrantyValue/*<T>*/ curVal;
@@ -145,12 +146,12 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
       if (TransactionManager.getInstance().inTxn()) {
         // Only bother to retry if we're supposed to and we don't have a valid
         // contract.
-        loop = tmp.curVal.contract == null || (autoRetry && !tmp.curVal.contract.valid());
+        loop = autoRetry && tmp.curVal.contract != null && !tmp.curVal.contract.valid();
       } else {
         atomic {
           // Only bother to retry if we're supposed to and we don't have a valid
           // contract.
-          loop = tmp.curVal.contract == null || (autoRetry && !tmp.curVal.contract.valid());
+          loop = autoRetry && tmp.curVal.contract != null && !tmp.curVal.contract.valid();
         }
       }
     }
@@ -176,6 +177,8 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
       return false;
     } else if (!curVal.contract.valid(time)) {
       curVal.contract.removeObserver(this);
+      // try to get a new value
+      apply(System.currentTimeMillis(), false);
       return true;
     }
     return false;
@@ -212,7 +215,7 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
   }
 
   protected WarrantyComp fabric$metrics$contracts$warranties$WarrantyComp$() {
-    fabric$lang$Object$();
+    fabric$metrics$util$AbstractSubject$();
     this.curVal = new WarrantyValue().fabric$metrics$contracts$warranties$WarrantyValue$(null, null);
     return this;
   }
@@ -229,6 +232,7 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
     protected ProxyComp fabric$metrics$contracts$warranties$WarrantyComp$ProxyComp$(WarrantyComp baseComputation) {
       this.baseComputation = baseComputation;
       fabric$metrics$contracts$warranties$WarrantyComp$();
+      this.baseComputation.addObserver(this);
       return this;
     }
 
@@ -307,12 +311,12 @@ public abstract class WarrantyComp/*<T>*/ implements /*LongFunction<T>,*/ Observ
         if (TransactionManager.getInstance().inTxn()) {
           // Only bother to retry if we're supposed to and we don't have a valid
           // contract.
-          loop = tmp.curVal.contract == null || (autoRetry && !tmp.curVal.contract.valid());
+          loop = autoRetry && tmp.curVal.contract != null && !tmp.curVal.contract.valid();
         } else {
           atomic {
             // Only bother to retry if we're supposed to and we don't have a valid
             // contract.
-            loop = tmp.curVal.contract == null || (autoRetry && !tmp.curVal.contract.valid());
+            loop = autoRetry && tmp.curVal.contract != null && !tmp.curVal.contract.valid();
           }
         }
       }
