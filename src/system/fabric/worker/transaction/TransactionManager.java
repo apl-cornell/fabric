@@ -64,6 +64,7 @@ import fabric.worker.TransactionRestartingException;
 import fabric.worker.Worker;
 import fabric.worker.Worker.Code;
 import fabric.worker.metrics.LockConflictException;
+import fabric.worker.metrics.TxnStats;
 import fabric.worker.remote.RemoteWorker;
 import fabric.worker.remote.WriterMap;
 
@@ -121,6 +122,11 @@ public final class TransactionManager {
    * The innermost running transaction for the thread being managed.
    */
   private Log current;
+
+  /**
+   * Per-Thread stats for app-level transactions
+   */
+  public final TxnStats stats = new TxnStats();
 
   /**
    * If this thread is handling an {@link AsyncCallMessage}, this is the list of
@@ -215,7 +221,8 @@ public final class TransactionManager {
                     "Store " + s.name() + " lock object release") {
                   @Override
                   public void runImpl() {
-                    boolean oldState = TransactionManager.getInstance().acquiringLocks;
+                    boolean oldState =
+                        TransactionManager.getInstance().acquiringLocks;
                     TransactionManager.getInstance().acquiringLocks = true;
                     // Release everything
                     Worker.runInTopLevelTransaction((new Code<Void>() {
@@ -290,6 +297,8 @@ public final class TransactionManager {
           }
         }
 
+        stats.markLockAttempt();
+
         Logging.log(METRICS_LOGGER, Level.FINE, "LOCK ATTEMPT {0} IN {1}",
             attempts, Thread.currentThread());
 
@@ -306,7 +315,8 @@ public final class TransactionManager {
                   @Override
                   public Pair<Store, Boolean> callImpl() {
                     boolean result = true;
-                    boolean oldState = TransactionManager.getInstance().acquiringLocks;
+                    boolean oldState =
+                        TransactionManager.getInstance().acquiringLocks;
                     TransactionManager.getInstance().acquiringLocks = true;
                     try {
                       // acquire everything
@@ -664,6 +674,10 @@ public final class TransactionManager {
           }
           releaseContractLocks();
         }
+      } catch (LockConflictException e) {
+        TransactionID tid = current.tid;
+        abortTransaction();
+        throw new TransactionRestartingException(tid);
       } catch (TransactionAbortingException e) {
         abortTransaction();
         throw new AbortException();
@@ -1846,6 +1860,7 @@ public final class TransactionManager {
 
     // Acquire locks before starting but also avoid bad recursion.
     if ((current == null || current.tid == null) && !acquiringLocks) {
+      stats.markTxnAttempt();
       acquiringLocks = true;
       acquireContractLocks();
       acquiringLocks = false;

@@ -927,7 +927,7 @@ public final class Log {
 
     // Log if there was a coordination.
     if (coordinated)
-      Logging.METRICS_LOGGER.info("COORDINATED IN " + this);
+      tm.stats.markCoordination();
   }
 
   /**
