@@ -7,7 +7,7 @@ import fabric.util.Iterator;
 
 import fabric.common.ConfigProperties;
 import fabric.metrics.contracts.Bound;
-import fabric.metrics.contracts.MetricContract;
+import fabric.metrics.contracts.Contract;
 import fabric.metrics.contracts.enforcement.DirectPolicy;
 import fabric.metrics.contracts.enforcement.EnforcementPolicy;
 import fabric.metrics.contracts.enforcement.WitnessPolicy;
@@ -275,8 +275,8 @@ public class SumMetric extends DerivedMetric {
         // Two alternatives: either using an adaptive strategy or a static
         // strategy.  Don't use the adaptive strategy if the hedged timeout is
         // sooner than 1s.
-        java.util.Map/*<Metric, MetricContract>*/ adaptiveWitnesses = new java.util.HashMap/*<>*/();
-        java.util.Map/*<Metric, MetricContract>*/ staticWitnesses = new java.util.HashMap/*<>*/();
+        java.util.Map/*<Metric, Contract>*/ adaptiveWitnesses = new java.util.HashMap/*<>*/();
+        java.util.Map/*<Metric, Contract>*/ staticWitnesses = new java.util.HashMap/*<>*/();
 
         long currentTime = System.currentTimeMillis();
         double baseNow = Bound.value(rate, base, currentTime);
@@ -326,7 +326,7 @@ public class SumMetric extends DerivedMetric {
 
             double native[] normalized = Bound.createBound(r, b, currentTime);
             if (!adaptiveWitnesses.containsKey(m)
-                    || !((MetricContract) adaptiveWitnesses.get(m)).implies(m, normalized[0], normalized[1])) {
+                    || !((Contract) adaptiveWitnesses.get(m)).implies(m, normalized[0], normalized[1])) {
                 adaptiveWitnesses.put(m, m.getContract(r, b, currentTime));
             }
             // Update the timeout estimate.
@@ -350,7 +350,7 @@ public class SumMetric extends DerivedMetric {
 
             double native[] normalized2 = Bound.createBound(r2, b2, currentTime);
             if (!staticWitnesses.containsKey(m)
-                    || !((MetricContract) staticWitnesses.get(m)).implies(m, normalized2[0], normalized2[1])) {
+                    || !((Contract) staticWitnesses.get(m)).implies(m, normalized2[0], normalized2[1])) {
                 staticWitnesses.put(m, m.getContract(r2, b2, currentTime));
             }
             // Update the timeout estimate.
@@ -358,16 +358,16 @@ public class SumMetric extends DerivedMetric {
                 DirectPolicy.hedged(m, normalized2[0], normalized2[1], currentTime));
         }
         // Size should be the same for either option.
-        MetricContract native[] finalWitnesses = new MetricContract native[adaptiveWitnesses.size()];
+        Contract native[] finalWitnesses = new Contract native[adaptiveWitnesses.size()];
         if (adaptiveTimeout > staticTimeout || adaptiveTimeout - System.currentTimeMillis() > MIN_ADAPTIVE_EXPIRY) {
           int i = 0;
           for (java.util.Iterator iter = adaptiveWitnesses.values().iterator(); iter.hasNext();) {
-            finalWitnesses[i++] = (MetricContract) iter.next();
+            finalWitnesses[i++] = (Contract) iter.next();
           }
         } else {
           int i = 0;
           for (java.util.Iterator iter = staticWitnesses.values().iterator(); iter.hasNext();) {
-            finalWitnesses[i++] = (MetricContract) iter.next();
+            finalWitnesses[i++] = (Contract) iter.next();
           }
         }
         return new WitnessPolicy@s().fabric$metrics$contracts$enforcement$WitnessPolicy$(finalWitnesses);

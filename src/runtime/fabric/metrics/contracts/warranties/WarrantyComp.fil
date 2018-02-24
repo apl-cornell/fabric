@@ -4,7 +4,7 @@ import fabric.util.HashSet;
 import fabric.util.Set;
 
 import fabric.metrics.Metric;
-import fabric.metrics.contracts.MetricContract;
+import fabric.metrics.contracts.Contract;
 import fabric.metrics.SampledMetric;
 import fabric.metrics.util.AbstractSubject;
 import fabric.metrics.util.Observer;
@@ -227,7 +227,7 @@ public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*L
   protected static class ProxyComp extends WarrantyComp {
     // The computation this is proxying for.
     protected final WarrantyComp baseComputation;
-    protected MetricContract oldBaseContract;
+    protected Contract oldBaseContract;
 
     protected ProxyComp fabric$metrics$contracts$warranties$WarrantyComp$ProxyComp$(WarrantyComp baseComputation) {
       this.baseComputation = baseComputation;

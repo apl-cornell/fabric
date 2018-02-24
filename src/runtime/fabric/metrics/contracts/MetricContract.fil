@@ -69,13 +69,9 @@ public class MetricContract extends Contract {
       (time + ((m.value() - Bound.value(rate, base, time)) / adjustedRate));
   }
 
-  public void activate_remote(fabric.lang.security.Principal caller) {
-    activate();
-  }
-
   /*@Override*/
   public void activate() {
-    static_activate(this);
+    MetricContract.static_activate(this);
   }
 
   private static void static_activate(MetricContract tmp) {
@@ -98,7 +94,11 @@ public class MetricContract extends Contract {
     //Logging.METRICS_LOGGER.finer("CREATING A POLICY FOR MC " + tmp);
     EnforcementPolicy startPol = null;
     if (TransactionManager.getInstance().inTxn()) {
-      startPol = tmp.metric.policy(tmp.rate, tmp.base, true, tmp.$getStore());
+      // Don't use a weak value if we're in a transaction already, this would
+      // mean we're running a contract creation in a single transaction and at
+      // that point, we're going to contend on the strongly consistent values
+      // regardless.
+      startPol = tmp.metric.policy(tmp.rate, tmp.base, false, tmp.$getStore());
     } else {
       atomic {
         startPol = tmp.metric.policy(tmp.rate, tmp.base, true, tmp.$getStore());
@@ -232,61 +232,11 @@ public class MetricContract extends Contract {
     return result;
   }
 
-  /**
-   * Check if this implies another {@link MetricContract} being considered.
-   *
-   * @param otherMetric
-   *        the {@link Metric} the other {@link MetricContract} would
-   *        assert a bound on
-   * @param otherRate
-   *        the rate of the bound that would be used by the other
-   *        {@link MetricContract}
-   * @param otherBase
-   *        the base of the bound that would be used by the other
-   *        {@link MetricContract}
-   * @return true iff this would imply (and therefore) can enforce another
-   *       {@link MetricContract} with the given metric and bound.
-   */
+  /*@Override*/
   public boolean implies(Metric otherMetric, double otherRate, double otherBase) {
     if (!getMetric().equals(otherMetric)
         || this.rate < otherRate
         || this.base < otherBase)
-      return false;
-    return valid();
-  }
-
-  /**
-   * Check if this implies the other {@link MetricContract}.
-   *
-   * @param other
-   *        the other {@link MetricContract} this is being compared with
-   * @return true iff this would imply (and therefore) can enforce other for
-   *       the entire duration of other.
-   */
-  public boolean implies(MetricContract other) {
-    return valid(other.getExpiry())
-        && implies(other.getMetric(), other.rate, other.base);
-  }
-
-  /**
-   * Check if this enforces the <strong>same</strong> bound as another
-   * {@link MetricContract} being considered. Attempts to refresh this
-   * contract if it's gone stale and would otherwise enforce the bound.
-   *
-   * @param otherMetric
-   *        the {@link Metric} the other {@link MetricContract} would
-   *        assert a bound on
-   * @param otherRate
-   *        the rate of the bound that would be used by the other
-   *        {@link MetricContract}
-   * @param otherBase
-   *        the base of the bound that would be used by the other
-   *        {@link MetricContract}
-   * @return true iff this enforces another {@link MetricContract} with the
-   *       given parameters.
-   */
-  public boolean enforces(Metric otherMetric, double otherRate, double otherBase) {
-    if (!getMetric().equals(otherMetric) || otherRate != rate || otherBase != base)
       return false;
     return valid();
   }
@@ -300,7 +250,7 @@ public class MetricContract extends Contract {
   public SampledMetric[] getLeafSubjects() {
     Metric m = getMetric();
     if (m instanceof SampledMetric) {
-      return new SampledMetric[0];
+      return new SampledMetric[] { (SampledMetric) m };
     } else if (m instanceof DerivedMetric) {
       return ((DerivedMetric) m).getLeafSubjects();
     } else {
@@ -349,159 +299,5 @@ public class MetricContract extends Contract {
     this.lock.acquire();
     if (this.currentPolicy != null)
       this.currentPolicy.acquireReconfigLocks();
-  }
-
-  /**
-   * Create a proxy for this contract on the given store.
-   */
-  public ProxyMetricContract getProxyContract(final Store proxyStore) {
-    return static_getProxyContract(this, proxyStore);
-  }
-
-  private static ProxyMetricContract static_getProxyContract(MetricContract tmp, final Store proxyStore) {
-    ProxyMetricContract proxy = null;
-    if (TransactionManager.getInstance().inTxn()) {
-      proxy = new ProxyMetricContract@proxyStore().fabric$metrics$contracts$MetricContract$ProxyMetricContract$(tmp);
-    } else {
-      atomic {
-        proxy = new ProxyMetricContract@proxyStore().fabric$metrics$contracts$MetricContract$ProxyMetricContract$(tmp);
-      }
-    }
-    if (tmp.isActivated())
-      proxy.activate();
-    return proxy;
-  }
-
-  /**
-   * A MetricContract which basically acts as a proxy for another MetricContract
-   * to allow local access on another store while the contract is valid.
-   *
-   * Basically operates by using the original MetricContract as the only witness
-   * of this metric contract.
-   */
-  protected static class ProxyMetricContract extends MetricContract {
-
-    // The MetricContract this acts as a proxy for.
-    protected final MetricContract target;
-
-    /**
-     * @param target
-     *        the {@link MetricContract} this proxies
-     */
-    public ProxyMetricContract fabric$metrics$contracts$MetricContract$ProxyMetricContract$(MetricContract target) {
-      this.target = target;
-      fabric$metrics$contracts$MetricContract$(target.metric, target.rate, target.base);
-      return this;
-    }
-
-    /*@Override*/
-    public void activate() {
-      static_activate(this);
-    }
-
-    private static void static_activate(ProxyMetricContract tmp) {
-      if (TransactionManager.getInstance().inTxn()) {
-        if (tmp.isActivated())
-          return;
-      } else {
-        atomic {
-          if (tmp.isActivated())
-            return;
-        }
-      }
-
-      // TODO: Should this watch the target or just mirror the target's policy.
-      EnforcementPolicy targetPol = null;
-      //Logging.METRICS_LOGGER.finer("CREATING POLICY FOR MC " + tmp);
-      if (TransactionManager.getInstance().inTxn()) {
-        final Store s = tmp.$getStore();
-        targetPol = new WitnessPolicy@s().fabric$metrics$contracts$enforcement$WitnessPolicy$(new MetricContract native[] { tmp.target });
-      } else {
-        atomic {
-          final Store s = tmp.$getStore();
-          targetPol = new WitnessPolicy@s().fabric$metrics$contracts$enforcement$WitnessPolicy$(new MetricContract native[] { tmp.target });
-        }
-      }
-      //Logging.METRICS_LOGGER.finer("ACTIVATING POLICY FOR MC " + tmp);
-      targetPol.activate();
-
-      //Logging.METRICS_LOGGER.finer("ACTIVATING MC " + tmp + " IN " +
-      //    TransactionManager.getInstance().getCurrentLog());
-      if (TransactionManager.getInstance().inTxn()) {
-        tmp.$expiry = targetPol.expiry();
-        Contract.static_activate(tmp);
-        if (tmp.$expiry >= System.currentTimeMillis()) {
-          tmp.currentPolicy = targetPol;
-          tmp.currentPolicy.apply(tmp);
-          // XXX: Do I need to do this?
-          tmp.getMetric().addContract(tmp);
-        }
-      } else {
-        atomic {
-          tmp.$expiry = targetPol.expiry();
-          Contract.static_activate(tmp);
-          if (tmp.$expiry >= System.currentTimeMillis()) {
-            tmp.currentPolicy = targetPol;
-            tmp.currentPolicy.apply(tmp);
-            // XXX: Do I need to do this?
-            tmp.getMetric().addContract(tmp);
-          }
-        }
-      }
-      //Logging.METRICS_LOGGER.finer("ACTIVATED MC " + tmp + " IN " +
-      //    TransactionManager.getInstance().getCurrentLog());
-    }
-
-    /*@Override*/
-    protected boolean refresh(boolean asyncExtension) {
-      // If we haven't activated yet, this is a bad operation.  Stop.
-      if (!isActivated()) {
-        //Logging.METRICS_LOGGER.log(Level.FINER, "CONTRACT INACTIVE");
-        return false;
-      }
-
-      long currentTime = System.currentTimeMillis();
-      // Refresh the current policy and update to the new expiration time
-      // if it's long enough.
-      if (currentPolicy != null) {
-        long curExpiry = currentPolicy.expiry();
-        if (curExpiry < currentTime) {
-          currentPolicy.unapply(this);
-          currentPolicy = null;
-        }
-        boolean result = update(curExpiry);
-        //Logging.METRICS_LOGGER.log(Level.FINER, "DEFENDING " + this + " WITH " +
-        //    currentPolicy);
-        return result;
-      }
-
-      // Proxy's don't switch policies if the above didn't work, it's dead and
-      // keeps the current expiration.
-      return false;
-    }
-
-    /*@Override*/
-    public String toString() {
-      return "Proxy @ " + $getStore() + " for " + target + " until " + $expiry;
-    }
-
-    /*@Override*/
-    public ProxyMetricContract getProxyContract(final Store proxyStore) {
-      return static_getProxyContract(this, proxyStore);
-    }
-
-    private static ProxyMetricContract static_getProxyContract(ProxyMetricContract tmp, final Store proxyStore) {
-      ProxyMetricContract proxy = null;
-      if (TransactionManager.getInstance().inTxn()) {
-        proxy = new ProxyMetricContract@proxyStore().fabric$metrics$contracts$MetricContract$ProxyMetricContract$(tmp.target);
-      } else {
-        atomic {
-          proxy = new ProxyMetricContract@proxyStore().fabric$metrics$contracts$MetricContract$ProxyMetricContract$(tmp.target);
-        }
-      }
-      if (tmp.isActivated())
-        proxy.activate();
-      return proxy;
-    }
   }
 }

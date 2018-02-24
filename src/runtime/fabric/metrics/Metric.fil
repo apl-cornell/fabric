@@ -232,26 +232,26 @@ public abstract class Metric extends AbstractSubject
   /**
    * @param rate
    *            the rate parameter for the {@link Bound} on the resuling
-   *            {@link MetricContract}
+   *            {@link Contract}
    * @param base
    *            the base parameter for the {@link Bound} on the resuling
-   *            {@link MetricContract}
+   *            {@link Contract}
    * @param time
    *            the startTime parameter of the {@link Bound} on the resulting
-   *            {@link MetricContract}
-   * @return a {@link MetricContract} which enforces that the {@link Metric}
+   *            {@link Contract}
+   * @return a {@link Contract} which enforces that the {@link Metric}
    *         satisfies a {@link Bound} with the given parameters at the given
-   *         time. If such a {@link MetricContract} already exists, it is
+   *         time. If such a {@link Contract} already exists, it is
    *         returned, otherwise a new one is created and returned
    *         (unactivated).
    *
    */
-  public MetricContract getContract(double rate, double base, long time) {
+  public Contract getContract(double rate, double base, long time) {
     return static_getContract(this, rate, base, time);
   }
 
-  private static MetricContract static_getContract(Metric tmp, double rate, double base, long time) {
-    MetricContract mc = null;
+  private static Contract static_getContract(Metric tmp, double rate, double base, long time) {
+    Contract mc = null;
     if (TransactionManager.getInstance().inTxn()) {
       mc = tmp.createContract(rate, base, time);
     } else {
@@ -265,17 +265,17 @@ public abstract class Metric extends AbstractSubject
   /**
    * @param rate
    *            the rate parameter for the {@link Bound} on the resuling
-   *            {@link MetricContract}
+   *            {@link Contract}
    * @param base
    *            the base parameter for the {@link Bound} on the resuling
-   *            {@link MetricContract}
-   * @return a {@link MetricContract} which enforces that the {@link Metric}
+   *            {@link Contract}
+   * @return a {@link Contract} which enforces that the {@link Metric}
    *         satisfies a {@link Bound} with the given parameters at the
-   *         current time. If such a {@link MetricContract} already exists, it
+   *         current time. If such a {@link Contract} already exists, it
    *         is returned, otherwise a new one is created and returned
    *         (unactivated).
    */
-  protected MetricContract getContract(double rate, double base) {
+  protected Contract getContract(double rate, double base) {
     return getContract(rate, base, 0);
   }
 
@@ -417,7 +417,7 @@ public abstract class Metric extends AbstractSubject
     return this;
   }
 
-  //private final List/*<MetricContract>*/ contracts;
+  //private final List/*<Contract>*/ contracts;
 
   /**
    * @param useWeakCache
@@ -467,7 +467,7 @@ public abstract class Metric extends AbstractSubject
   public abstract double noise(boolean useWeakCache);
 
   /**
-   * Used to construct and enforce {@link MetricContract}s bounding this
+   * Used to construct and enforce {@link Contract}s bounding this
    * {@link Metric}s value.
    * <p>
    * Implementations of this method should use "weak" estimates of value,
@@ -488,7 +488,7 @@ public abstract class Metric extends AbstractSubject
   }
 
   /**
-   * Used to construct and enforce {@link MetricContract}s bounding this
+   * Used to construct and enforce {@link Contract}s bounding this
    * {@link Metric}s value.
    * <p>
    * Implementations of this method should use "weak" estimates of value,
@@ -630,12 +630,12 @@ public abstract class Metric extends AbstractSubject
 
   /**
    * @param contract
-   *            a {@link MetricContract} to store with this {@link Metric}
+   *            a {@link Contract} to store with this {@link Metric}
    * @throws IllegalArgumentException
-   *             if the {@link MetricContract} doesn't enforce a {@link Bound}
+   *             if the {@link Contract} doesn't enforce a {@link Bound}
    *             on this {@link Metric}
    */
-  public void addContract(MetricContract contract) {
+  public void addContract(Contract contract) {
     /*
     if (!contract.getMetric().equals(this))
       throw new IllegalArgumentException(
@@ -651,25 +651,25 @@ public abstract class Metric extends AbstractSubject
    * @param bound
    *        the {@link Bound} that the contract will enforce on this
    *        {@link Metric}
-   * @return a {@link MetricContract} asserting this metric satisfies the
+   * @return a {@link Contract} asserting this metric satisfies the
    *       given {@link Bound}.
    */
-  protected MetricContract createContract(double rate, double base, long time) {
+  protected Contract createContract(double rate, double base, long time) {
     double native[] normalized = Bound.createBound(rate, base, time);
     return new MetricContract().fabric$metrics$contracts$MetricContract$(this, normalized[0], normalized[1]);
   }
 
   /**
    * @param time
-   *        the time we're searching for {@link MetricContract}s for this
+   *        the time we're searching for {@link Contract}s for this
    *        {@link Metric}
-   * @return a {@link Set} of {@link MetricContract}s that are currently
+   * @return a {@link Set} of {@link Contract}s that are currently
    *       enforced for this {@link Metric}
    */
-  //protected List[><MetricContract><] getContracts(long time) {
+  //protected List[><Contract><] getContracts(long time) {
   //  atomic {
   //    for (int i = 0; i < contracts.size(); i++) {
-  //      MetricContract c = (MetricContract) contracts.get(i);
+  //      Contract c = (Contract) contracts.get(i);
   //      if (c.stale(time)) {
   //        removeObserver(c);
   //        // Contract's removed, shift the index to account (ugh)
@@ -702,14 +702,14 @@ public abstract class Metric extends AbstractSubject
    * stale.
    *
    * @param contract
-   *            a {@link MetricContract} to stop storing with this
+   *            a {@link Contract} to stop storing with this
    *            {@link Metric} (if it is now invalid).
    * @throws IllegalArgumentException
    *             if contract isn't defined on this {@link Metric}
    */
   // TODO/XXX: I'm concerned this will cause problems if we are removing
   // when switching between policies?
-  private void clearContract(MetricContract contract) {
+  private void clearContract(Contract contract) {
     /*
       if (!contract.getMetric().equals(this))
           throw new IllegalArgumentException(
@@ -724,15 +724,15 @@ public abstract class Metric extends AbstractSubject
   /**
    * {@inheritDoc}
    *
-   * If the {@link Observer} is a {@link MetricContract} and is now
+   * If the {@link Observer} is a {@link Contract} and is now
    * {@link Contract#stale()}, this clears it out from the Metric's stored
    * contract set.
    */
   /*@Override*/
   public void removeObserver(Observer obs) {
       super.removeObserver(obs);
-      if (obs instanceof MetricContract) {
-          MetricContract mc = (MetricContract) obs;
+      if (obs instanceof Contract) {
+          Contract mc = (Contract) obs;
           clearContract(mc);
       }
   }

@@ -1,13 +1,13 @@
 package fabric.metrics.contracts.enforcement;
 
-import fabric.metrics.contracts.MetricContract;
+import fabric.metrics.contracts.Contract;
 
 /**
- * A policy for enforcing a {@link MetricContract}. This class is responsible
- * for ensuring a {@link MetricContract} (and the API implementation) is
- * monitoring evidence of the {@link MetricContract}'s validity and updating the
+ * A policy for enforcing a {@link Contract}. This class is responsible
+ * for ensuring a {@link Contract} (and the API implementation) is
+ * monitoring evidence of the {@link Contract}'s validity and updating the
  * expiration time correctly. It effectively acts as a bundle of the currently
- * monitored information for enforcing a {@link MetricContract}.
+ * monitored information for enforcing a {@link Contract}.
  */
 public interface EnforcementPolicy {
 
@@ -18,25 +18,25 @@ public interface EnforcementPolicy {
 
   /**
    * Update book-keeping to use this {@link EnforcementPolicy} for the given
-   * {@link MetricContract}. This will add the given {@link MetricContract} as
+   * {@link Contract}. This will add the given {@link Contract} as
    * an {@link metrics.util.Observer Observer} of the necessary
    * {@link metrics.util.Subject Subject}s to use the policy.
    *
    * @param mc
-   *        the {@link MetricContract} to apply this policy to.
+   *        the {@link Contract} to apply this policy to.
    */
-  public abstract void apply(MetricContract mc);
+  public abstract void apply(Contract mc);
 
   /**
    * Update book-keeping to stop using this {@link EnforcementPolicy} for the
-   * given {@link MetricContract}. This will remove the given
-   * {@link MetricContract} as an {@link metrics.util.Observer Observer} of
+   * given {@link Contract}. This will remove the given
+   * {@link Contract} as an {@link metrics.util.Observer Observer} of
    * the necessary {@link metrics.util.Subject Subject}s to use the policy.
    *
    * @param mc
-   *        the {@link MetricContract} to stop applying this policy to.
+   *        the {@link Contract} to stop applying this policy to.
    */
-  public abstract void unapply(MetricContract mc);
+  public abstract void unapply(Contract mc);
 
   /**
    * Activate this policy, activating witnesses and setting the expiry.

@@ -1,40 +1,31 @@
 package fabric.metrics.contracts.warranties;
 
-import fabric.metrics.contracts.MetricContract;
+import fabric.metrics.contracts.Contract;
 
 /**
  * A utility class for tracking {@link WarrantyComp} results and associated
- * {@link MetricContract}s implying their validity.
+ * {@link Contract}s implying their validity.
  */
 public class WarrantyValue/*<V>*/ {
 
   /** The result value. */
   public /*V*/ Object value;
   /**
-   * A {@link MetricContract} which, when valid, implies the value is current.
+   * A {@link Contract} which, when valid, implies the value is current.
    */
-  public MetricContract contract;
+  public Contract contract;
 
   /**
    * @param value
    *        the return value we're bundling in this {@link WarrantyValue}
    * @param contract
-   *        the value's associated {@link MetricContract}
+   *        the value's associated {@link Contract}
    */
-  public WarrantyValue fabric$metrics$contracts$warranties$WarrantyValue$(/*V*/ Object value, MetricContract contract) {
+  public WarrantyValue fabric$metrics$contracts$warranties$WarrantyValue$(/*V*/ Object value, Contract contract) {
     fabric$lang$Object$();
     this.value = value;
     this.contract = contract;
     return this;
-  }
-
-  /**
-   * @return the time this result is expected to last (can be used to compare
-   *         potential results so the {@link WarrantyComp} can return the
-   *         longest lasting choice).
-   */
-  public long expectedLifetime() {
-    return contract.getExpectedLifetime();
   }
 
   /*@Override*/

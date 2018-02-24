@@ -8,7 +8,7 @@ import fabric.util.HashSet;
 import fabric.util.Iterator;
 
 import fabric.metrics.contracts.Bound;
-import fabric.metrics.contracts.MetricContract;
+import fabric.metrics.contracts.Contract;
 import fabric.metrics.contracts.enforcement.EnforcementPolicy;
 import fabric.metrics.contracts.enforcement.WitnessPolicy;
 import fabric.metrics.util.Observer;
@@ -34,8 +34,8 @@ import java.util.concurrent.Future;
  * <li>construct the {@link #value()}, {@link #velocity()}, and {@link #noise()}
  * from its terms</li>
  * <li>provide a {@link EnforcementPolicy} to enforce a
- * {@link DerivedMetricContract} on it given the {@link Bound}, typically using
- * a {@link WitnessPolicy} using {@link MetricContract}s on the terms it is
+ * {@link DerivedContract} on it given the {@link Bound}, typically using
+ * a {@link WitnessPolicy} using {@link Contract}s on the terms it is
  * derived from.</li>
  * </ul>
  */

@@ -11,7 +11,7 @@ import fabric.util.Iterator;
 import fabric.util.List;
 
 import fabric.metrics.contracts.Bound;
-import fabric.metrics.contracts.MetricContract;
+import fabric.metrics.contracts.Contract;
 import fabric.metrics.contracts.enforcement.DirectPolicy;
 import fabric.metrics.contracts.enforcement.EnforcementPolicy;
 import fabric.metrics.contracts.enforcement.WitnessPolicy;
@@ -483,7 +483,7 @@ public class LinearMetric extends DerivedMetric {
   public EnforcementPolicy policy(double rate, double base, boolean useWeakCache, final Store str) {
     if (isSingleStore())
       return new DirectPolicy@str().fabric$metrics$contracts$enforcement$DirectPolicy$(this, rate, base);
-    Map/*<Metric, MetricContract>*/ witnesses = new LinkedHashMap/*<>*/().fabric$util$LinkedHashMap$();
+    Map/*<Metric, Contract>*/ witnesses = new LinkedHashMap/*<>*/().fabric$util$LinkedHashMap$();
 
     long currentTime = System.currentTimeMillis();
     double baseNow = Bound.value(rate, base, currentTime);
@@ -523,15 +523,15 @@ public class LinearMetric extends DerivedMetric {
         }
         double native[] normalized = Bound.createBound(r, b, currentTime);
         if (!witnesses.containsKey(m)
-            || !((MetricContract) witnesses.get(m)).implies(m, normalized[0], normalized[1])) {
+            || !((Contract) witnesses.get(m)).implies(m, normalized[0], normalized[1])) {
           witnesses.put(m, m.getContract(r, b, currentTime));
         }
       }
     }
-    MetricContract native[] finalWitnesses = new MetricContract native[witnesses.size()];
+    Contract native[] finalWitnesses = new Contract native[witnesses.size()];
     int i = 0;
     for (Iterator iter = witnesses.values().iterator(); iter.hasNext();) {
-      finalWitnesses[i++] = (MetricContract) iter.next();
+      finalWitnesses[i++] = (Contract) iter.next();
     }
     return new WitnessPolicy@str().fabric$metrics$contracts$enforcement$WitnessPolicy$(finalWitnesses);
   }

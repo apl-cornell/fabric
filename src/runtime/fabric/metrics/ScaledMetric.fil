@@ -6,7 +6,7 @@ import fabric.util.LinkedHashMap;
 import fabric.util.Map;
 
 import fabric.metrics.contracts.Bound;
-import fabric.metrics.contracts.MetricContract;
+import fabric.metrics.contracts.Contract;
 import fabric.metrics.contracts.enforcement.DirectPolicy;
 import fabric.metrics.contracts.enforcement.EnforcementPolicy;
 import fabric.metrics.contracts.enforcement.WitnessPolicy;
@@ -170,7 +170,7 @@ public class ScaledMetric extends DerivedMetric {
         if (term(0) instanceof SampledMetric)
             return new DirectPolicy@s().fabric$metrics$contracts$enforcement$DirectPolicy$(this, rate, base);
 
-        MetricContract witness = null;
+        Contract witness = null;
 
         long currentTime = System.currentTimeMillis();
         double baseNow = Bound.value(rate, base, currentTime);
@@ -193,7 +193,7 @@ public class ScaledMetric extends DerivedMetric {
             rate = -rate;
         }
         witness = m.getContract(rate, baseNow, currentTime);
-        return new WitnessPolicy@s().fabric$metrics$contracts$enforcement$WitnessPolicy$(new MetricContract native[] { witness });
+        return new WitnessPolicy@s().fabric$metrics$contracts$enforcement$WitnessPolicy$(new Contract native[] { witness });
     }
 
     /*@Override*/

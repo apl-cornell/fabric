@@ -3,7 +3,6 @@ package fabric.metrics.contracts.enforcement;
 import fabric.util.Arrays;
 
 import fabric.metrics.contracts.Contract;
-import fabric.metrics.contracts.MetricContract;
 import fabric.worker.transaction.TransactionManager;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -14,27 +13,27 @@ import java.util.concurrent.Future;
 //import fabric.common.Logging;
 
 /**
- * An {@link EnforcementPolicy} which enforces a {@link MetricContract} by
- * relying on a set of <em>witnesses</em>, other {@link MetricContract}s that in
- * conjunction imply the enforced {@link MetricContract}.
+ * An {@link EnforcementPolicy} which enforces a {@link Contract} by
+ * relying on a set of <em>witnesses</em>, other {@link Contract}s that in
+ * conjunction imply the enforced {@link Contract}.
  */
 public class WitnessPolicy implements EnforcementPolicy {
 
-  /** The set of {@link MetricContract}s used to enforce this policy. */
-  public final MetricContract[] witnesses;
+  /** The set of {@link Contract}s used to enforce this policy. */
+  public final Contract[] witnesses;
 
   /** Is this currently actively enforced? */
   private boolean activated;
 
   /**
    * @param witnesses
-   *        the array of {@link MetricContract}s used to enforce this
+   *        the array of {@link Contract}s used to enforce this
    *        policy. If any of the witnesses weren't already active, they
    *        are {@link Contract#activate() activated} here.
    */
-  public WitnessPolicy fabric$metrics$contracts$enforcement$WitnessPolicy$(MetricContract native[] witnesses) {
+  public WitnessPolicy fabric$metrics$contracts$enforcement$WitnessPolicy$(Contract native[] witnesses) {
     fabric$lang$Object$();
-    this.witnesses = new MetricContract[witnesses.length];
+    this.witnesses = new Contract[witnesses.length];
     for (int i = 0; i < witnesses.length; i++)
       this.witnesses[i] = witnesses[i];
     this.activated = false;
@@ -65,7 +64,7 @@ public class WitnessPolicy implements EnforcementPolicy {
       // First, refresh the subterm stats.
       for (int i = 0; i < futures.length; i++) {
           // TODO: Add remote worker to call
-          final MetricContract w = tmp.witnesses[i];
+          final Contract w = tmp.witnesses[i];
           Callable c = null;
           atomic {
             c = new Activator().fabric$metrics$contracts$enforcement$WitnessPolicy$Activator$(w);
@@ -94,9 +93,9 @@ public class WitnessPolicy implements EnforcementPolicy {
   }
 
   private static class Activator implements Callable {
-    final MetricContract w;
+    final Contract w;
 
-    public Activator fabric$metrics$contracts$enforcement$WitnessPolicy$Activator$(MetricContract w) {
+    public Activator fabric$metrics$contracts$enforcement$WitnessPolicy$Activator$(Contract w) {
       this.w = w;
       fabric$lang$Object$();
       return this;
@@ -147,7 +146,7 @@ public class WitnessPolicy implements EnforcementPolicy {
   }
 
   /*@Override*/
-  public void apply(MetricContract mc) {
+  public void apply(Contract mc) {
     if (!activated)
       activate();
     for (int i = 0; i < witnesses.length; i++) {
@@ -157,7 +156,7 @@ public class WitnessPolicy implements EnforcementPolicy {
   }
 
   /*@Override*/
-  public void unapply(MetricContract mc) {
+  public void unapply(Contract mc) {
     for (int i = 0; i < witnesses.length; i++) {
       witnesses[i].removeObserver(mc);
     }

@@ -1,6 +1,7 @@
 package fabric.metrics.contracts;
 
 import fabric.metrics.Metric;
+import fabric.metrics.SampledMetric;
 import fabric.metrics.contracts.warranties.WarrantyComp;
 import fabric.metrics.util.AbstractSubject;
 import fabric.metrics.util.Observer;
@@ -108,11 +109,15 @@ public abstract class Contract extends AbstractSubject implements Observer {
   /**
    * Activate and start enforcing this {@link Contract} in the System.
    */
-  protected void activate() {
-    static_activate(this);
+  public void activate() {
+    Contract.static_activate(this);
   }
 
-  protected static void static_activate(Contract tmp) {
+  public void activate_remote(fabric.lang.security.Principal p) {
+    this.activate();
+  }
+
+  public static void static_activate(Contract tmp) {
     if (TransactionManager.getInstance().inTxn()) {
       if (!tmp.activated) {
         Logging.METRICS_LOGGER.log(Level.FINE, "ACTIVATED {0} IN {1}", new java.lang.Object native[] { tmp, TransactionManager.getInstance().getCurrentLog() });
@@ -277,6 +282,23 @@ public abstract class Contract extends AbstractSubject implements Observer {
   }
 
   /**
+   * Check if this implies another {@link Contract} being considered.
+   *
+   * @param otherMetric
+   *        the {@link Metric} the other {@link Contract} would
+   *        assert a bound on
+   * @param otherRate
+   *        the rate of the bound that would be used by the other
+   *        {@link Contract}
+   * @param otherBase
+   *        the base of the bound that would be used by the other
+   *        {@link Contract}
+   * @return true iff this would imply (and therefore) can enforce another
+   *       {@link Contract} with the given metric and bound.
+   */
+  public abstract boolean implies(Metric otherMetric, double otherRate, double otherBase);
+
+  /**
    * Attempt to extend this {@link Contract}'s expiration time. (Invoked to
    * perform asynchronous extensions close to the current expiration time).
    */
@@ -309,7 +331,199 @@ public abstract class Contract extends AbstractSubject implements Observer {
   /**
    * Acquire reconfig locks starting from this contract.
    */
-  public void acquireReconfigLocks() {
-    this.lock.acquire();
+  public abstract void acquireReconfigLocks();
+
+  /**
+   * Create a {@link ConjunctionContract} with this and another contract.
+   */
+  public Contract and(Contract other) {
+    if (other instanceof ProxyContract)
+      other = ((ProxyContract) other).target;
+    return new ConjunctionContract().fabric$metrics$contracts$ConjunctionContract$(new Contract native[] { this, other });
+  }
+
+  /**
+   * Create a proxy for this contract on the given store.
+   */
+  public ProxyContract getProxyContract(final Store proxyStore) {
+    return static_getProxyContract(this, proxyStore);
+  }
+
+  private static ProxyContract static_getProxyContract(Contract tmp, final Store proxyStore) {
+    ProxyContract proxy = null;
+    if (TransactionManager.getInstance().inTxn()) {
+      proxy = new ProxyContract@proxyStore().fabric$metrics$contracts$Contract$ProxyContract$(tmp);
+    } else {
+      atomic {
+        proxy = new ProxyContract@proxyStore().fabric$metrics$contracts$Contract$ProxyContract$(tmp);
+      }
+    }
+    if (tmp.isActivated())
+      proxy.activate();
+    return proxy;
+  }
+
+  /**
+   * A Contract which basically acts as a proxy for another Contract
+   * to allow local access on another store while the contract is valid.
+   *
+   * Basically operates by using the original Contract as the only witness
+   * of this metric contract.
+   */
+  protected static class ProxyContract extends Contract {
+
+    // The Contract this acts as a proxy for.
+    protected final Contract target;
+    protected boolean observing;
+
+    /**
+     * @param target
+     *        the {@link Contract} this proxies
+     */
+    public ProxyContract fabric$metrics$contracts$Contract$ProxyContract$(Contract target) {
+      this.target = target;
+      fabric$metrics$contracts$Contract$();
+      this.observing = false;
+      return this;
+    }
+
+    /*@Override*/
+    public void activate() {
+      ProxyContract.static_activate(this);
+    }
+
+    private static void static_activate(ProxyContract tmp) {
+      if (TransactionManager.getInstance().inTxn()) {
+        if (tmp.isActivated())
+          return;
+      } else {
+        atomic {
+          if (tmp.isActivated())
+            return;
+        }
+      }
+
+      tmp.target.activate();
+
+      //Logging.METRICS_LOGGER.finer("ACTIVATING MC " + tmp + " IN " +
+      //    TransactionManager.getInstance().getCurrentLog());
+      if (TransactionManager.getInstance().inTxn()) {
+        if (tmp.target.valid()) {
+          tmp.$expiry = tmp.target.getExpiry();
+          tmp.target.addObserver(tmp);
+          tmp.observing = true;
+        }
+        Contract.static_activate(tmp);
+      } else {
+        atomic {
+          if (tmp.target.valid()) {
+            tmp.$expiry = tmp.target.getExpiry();
+            tmp.target.addObserver(tmp);
+            tmp.observing = true;
+          }
+          Contract.static_activate(tmp);
+        }
+      }
+    }
+
+    /*@Override*/
+    protected boolean refresh(boolean asyncExtension) {
+      // If we haven't activated yet, this is a bad operation.  Stop.
+      if (!isActivated()) {
+        //Logging.METRICS_LOGGER.log(Level.FINER, "CONTRACT INACTIVE");
+        return false;
+      }
+
+      long currentTime = System.currentTimeMillis();
+      if (observing) {
+        long curExpiry = target.getExpiry();
+        if (curExpiry < currentTime) {
+          target.removeObserver(this);
+          observing = false;
+        }
+        boolean result = update(curExpiry);
+        return result;
+      }
+
+      // If we're not observing, the contract is dead.
+      return false;
+    }
+
+    /*@Override*/
+    public boolean implies(Metric otherMetric, double otherRate, double otherBase) {
+      return target.implies(otherMetric, otherRate, otherBase);
+    }
+
+    /*@Override*/
+    public SampledMetric[] getLeafSubjects() {
+      if (!observing)
+        return new SampledMetric[0];
+      return target.getLeafSubjects();
+    }
+
+    /*@Override*/
+    public Contract and(Contract other) {
+      return target.and(other);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * Stops observing any evidence used by the current enforcement policy (by
+     * unapplying the policy).
+     */
+    /*@Override*/
+    public void removeObserver(Observer obs) {
+      static_removeObserver(this, obs);
+    }
+
+    private static void static_removeObserver(ProxyContract tmp, Observer obs) {
+      if (TransactionManager.getInstance().inTxn()) {
+        Contract.static_removeObserver(tmp, obs);
+        if (!tmp.isObserved() && tmp.observing) {
+          tmp.target.removeObserver(tmp);
+          tmp.observing = false;
+        }
+      } else {
+        atomic {
+          Contract.static_removeObserver(tmp, obs);
+          if (!tmp.isObserved() && tmp.observing) {
+            tmp.target.removeObserver(tmp);
+            tmp.observing = false;
+          }
+        }
+      }
+    }
+
+    /*@Override*/
+    public void acquireReconfigLocks() {
+      this.lock.acquire();
+      if (observing)
+        this.target.acquireReconfigLocks();
+    }
+
+    /*@Override*/
+    public String toString() {
+      return "Proxy @ " + $getStore() + " for " + target + " until " + $expiry;
+    }
+
+    /*@Override*/
+    public ProxyContract getProxyContract(final Store proxyStore) {
+      return static_getProxyContract(this, proxyStore);
+    }
+
+    private static ProxyContract static_getProxyContract(ProxyContract tmp, final Store proxyStore) {
+      ProxyContract proxy = null;
+      if (TransactionManager.getInstance().inTxn()) {
+        proxy = new ProxyContract@proxyStore().fabric$metrics$contracts$Contract$ProxyContract$(tmp.target);
+      } else {
+        atomic {
+          proxy = new ProxyContract@proxyStore().fabric$metrics$contracts$Contract$ProxyContract$(tmp.target);
+        }
+      }
+      if (tmp.isActivated())
+        proxy.activate();
+      return proxy;
+    }
   }
 }

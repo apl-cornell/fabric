@@ -1,0 +1,253 @@
+package fabric.metrics.contracts;
+
+import fabric.util.Collections;
+import fabric.util.Set;
+
+import fabric.metrics.contracts.enforcement.EnforcementPolicy;
+import fabric.metrics.contracts.enforcement.WitnessPolicy;
+import fabric.metrics.util.Observer;
+import fabric.metrics.util.Subject;
+import fabric.metrics.Metric;
+import fabric.metrics.SampledMetric;
+
+import fabric.common.TransactionID;
+import fabric.worker.Store;
+import fabric.worker.transaction.TransactionManager;
+
+import java.util.logging.Level;
+import fabric.common.Logging;
+
+/**
+ * A contract asserting that a {@link Metric}'s value is above or below a
+ * vectorized boundary expression <code>r⃗ * (t - startTime) + b⃗</code> until
+ * the associated expriation time.
+ * <p>
+ * This class follows the subject-observer pattern. An instance is an observer
+ * of either a {@link Metric} or a set of {@link ConjunctionContract}s and can be
+ * observed by other {@link Contract}s.
+ */
+public class ConjunctionContract extends Contract {
+
+  protected final Contract[] conjuncts;
+  private boolean observing;
+
+  /**
+   * @param metric
+   *        the {@link Metric} this contract asserts a bound on
+   * @param rate
+   *        the rate of the bound this {@link ConjunctionContract} asserts on
+   *        metric.
+   * @param base
+   *        the base of the bound this {@link ConjunctionContract} asserts on
+   *        metric.
+   */
+  public ConjunctionContract fabric$metrics$contracts$ConjunctionContract$(Contract native[] conjuncts) {
+    // Try to compact the tree a bit.
+    java.util.HashSet/*<Contract>*/ conjunctsBag = new java.util.HashSet/*<>*/();
+    for (int i = 0; i < conjuncts.length; i++) {
+      if (conjuncts[i] instanceof ConjunctionContract) {
+        ConjunctionContract other = (ConjunctionContract) conjuncts[i];
+        for (int j = 0; j < other.conjuncts.length; j++) {
+          conjunctsBag.add(other.conjuncts[j]);
+        }
+      } else {
+        conjunctsBag.add(conjuncts[i]);
+      }
+    }
+    final Store s = this.$getStore();
+    final Label lbl = LabelUtil.noComponents();
+    this.conjuncts = new Contract[conjunctsBag.size()] ~lbl @s;
+    int idx = 0;
+    for (java.util.Iterator it = conjunctsBag.iterator(); it.hasNext(); ) {
+      this.conjuncts[idx++] = (Contract) it.next();
+    }
+    fabric$metrics$contracts$Contract$();
+    observing = false;
+    return this;
+  }
+
+  /*@Override*/
+  public void activate() {
+    ConjunctionContract.static_activate(this);
+  }
+
+  private static void static_activate(ConjunctionContract tmp) {
+    if (TransactionManager.getInstance().inTxn()) {
+      if (tmp.isActivated())
+        return;
+    } else {
+      atomic {
+        if (tmp.isActivated())
+          return;
+      }
+    }
+
+    // activate the conjuncts
+    long minExpiry = Long.MAX_VALUE;
+    for (int i = 0; i < tmp.conjuncts.length; i++) {
+      tmp.conjuncts[i].activate();
+      minExpiry = Math.min(minExpiry, tmp.conjuncts[i].getExpiry());
+    }
+
+    // Set the expiry and free it up
+    if (TransactionManager.getInstance().inTxn()) {
+      tmp.$expiry = minExpiry;
+      Contract.static_activate(tmp);
+      if (tmp.$expiry >= System.currentTimeMillis()) {
+        for (int j = 0; j < tmp.conjuncts.length; j++) {
+          tmp.conjuncts[j].addObserver(tmp);
+        }
+        tmp.observing = true;
+      }
+    } else {
+      atomic {
+        tmp.$expiry = minExpiry;
+        Contract.static_activate(tmp);
+        if (tmp.$expiry >= System.currentTimeMillis()) {
+          for (int j = 0; j < tmp.conjuncts.length; j++) {
+            tmp.conjuncts[j].addObserver(tmp);
+          }
+          tmp.observing = true;
+        }
+      }
+    }
+  }
+
+  /*@Override*/
+  public boolean handleUpdates() {
+    //Logging.METRICS_LOGGER.log(Level.FINER, "CHECKING CONTRACT CHANGE");
+    // Funny implication of this is that if something goes stale before it's
+    // checked, it stays stale. Probably the right behavior?
+    if (valid()) {
+      // Check first that we aren't going to conflict with a reconfiguration.
+      this.lock.checkForRead();
+      return refresh(false);
+    }
+
+    // Otherwise, we need to make sure we're not stuck observing anything.
+    if (this.observing) {
+      for (int j = 0; j < this.conjuncts.length; j++) {
+        this.conjuncts[j].removeObserver(this);
+      }
+      this.observing = false;
+    }
+
+    //Logging.METRICS_LOGGER.log(Level.FINER, "CONTRACT INVALID");
+    return false;
+  }
+
+  /**
+   * Update this contract's expiration time to stay valid in response to a
+   * change in the value of the {@link Subject}s used for enforcing this
+   * {@link Contract}. Revokes, extends, and updates the enforcement strategy
+   * as needed.
+   */
+  /*@Override*/
+  protected boolean refresh(boolean asyncExtension) {
+    // If we haven't activated yet, this is a bad operation.  Stop.
+    if (!isActivated()) {
+      //Logging.METRICS_LOGGER.log(Level.FINER, "CONTRACT INACTIVE");
+      return false;
+    }
+
+    long currentTime = System.currentTimeMillis();
+    if (observing) {
+      long curExpiry = Long.MAX_VALUE;
+      for (int i = 0; i < conjuncts.length; i++) {
+        curExpiry = Math.min(curExpiry, conjuncts[i].getExpiry());
+      }
+      if (curExpiry < currentTime) {
+        for (int j = 0; j < conjuncts.length; j++) {
+          conjuncts[j].removeObserver(this);
+        }
+        observing = false;
+      }
+      boolean result = update(curExpiry);
+      return result;
+    }
+
+    // If we're not observing, the contract is dead.
+    return false;
+  }
+
+  /*@Override*/
+  public boolean implies(Metric otherMetric, double otherRate, double otherBase) {
+    // TODO
+    return false;
+  }
+
+  /*@Override*/
+  public String toString() {
+    String result = "(";
+    for (int i = 0; i < this.conjuncts.length; i++) {
+      if (i != 0)
+        result += " ^ ";
+      result += this.conjuncts[i].toString();
+    }
+    return result + ")";
+  }
+
+  /*@Override*/
+  public SampledMetric[] getLeafSubjects() {
+    if (!observing)
+      return new SampledMetric[0];
+    java.util.HashSet/*<SampledMetric>*/ leavesBag = new java.util.HashSet/*<>*/();
+    for (int i = 0; i < this.conjuncts.length; i++) {
+      SampledMetric[] leaves = this.conjuncts[i].getLeafSubjects();
+      for (int j = 0; j < leaves.length; j++) {
+        leavesBag.add(leaves[j]);
+      }
+    }
+    SampledMetric[] result = new SampledMetric[leavesBag.size()];
+    int idx = 0;
+    for (java.util.Iterator it = leavesBag.iterator(); it.hasNext(); ) {
+      result[idx++] = (SampledMetric) it.next();
+    }
+    return result;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * Stops observing any evidence used by the current enforcement policy (by
+   * unapplying the policy).
+   */
+  /*@Override*/
+  public void removeObserver(Observer obs) {
+    static_removeObserver(this, obs);
+  }
+
+  private static void static_removeObserver(ConjunctionContract tmp, Observer obs) {
+    if (TransactionManager.getInstance().inTxn()) {
+      Contract.static_removeObserver(tmp, obs);
+      if (!tmp.isObserved() && tmp.observing) {
+        for (int i = 0; i < tmp.conjuncts.length; i++) {
+          tmp.conjuncts[i].removeObserver(tmp);
+        }
+        tmp.observing = false;
+      }
+    } else {
+      atomic {
+        Contract.static_removeObserver(tmp, obs);
+        if (!tmp.isObserved() && tmp.observing) {
+          for (int i = 0; i < tmp.conjuncts.length; i++) {
+            tmp.conjuncts[i].removeObserver(tmp);
+          }
+          tmp.observing = false;
+        }
+      }
+    }
+  }
+
+  /*@Override*/
+  public void acquireReconfigLocks() {
+    //Logging.METRICS_LOGGER.finer("ACQUIRING LOCK AT " + this + " IN " +
+    //    TransactionManager.getInstance().getCurrentLog());
+    this.lock.acquire();
+    if (observing) {
+      for (int i = 0; i < this.conjuncts.length; i++) {
+        this.conjuncts[i].acquireReconfigLocks();
+      }
+    }
+  }
+}

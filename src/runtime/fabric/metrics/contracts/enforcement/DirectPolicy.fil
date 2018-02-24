@@ -2,13 +2,13 @@ package fabric.metrics.contracts.enforcement;
 
 import fabric.metrics.Metric;
 import fabric.metrics.contracts.Bound;
-import fabric.metrics.contracts.MetricContract;
+import fabric.metrics.contracts.Contract;
 import fabric.worker.transaction.TransactionManager;
 
 //import fabric.common.Logging;
 
 /**
- * An {@link EnforcementPolicy} for enforcing a {@link MetricContract}s by
+ * An {@link EnforcementPolicy} for enforcing a {@link Contract}s by
  * checking every update to the associated {@link Metric}.
  */
 public class DirectPolicy implements EnforcementPolicy {
@@ -308,11 +308,11 @@ public class DirectPolicy implements EnforcementPolicy {
   }
 
   /*@Override*/
-  public void apply(MetricContract mc) {
+  public void apply(Contract mc) {
     static_apply(this, mc);
   }
 
-  private static void static_apply(DirectPolicy tmp, MetricContract mc) {
+  private static void static_apply(DirectPolicy tmp, Contract mc) {
     // TODO: Should this be atomic?
     if (TransactionManager.getInstance().inTxn()) {
       if (!tmp.activated)
@@ -329,7 +329,7 @@ public class DirectPolicy implements EnforcementPolicy {
   }
 
   /*@Override*/
-  public void unapply(MetricContract mc) {
+  public void unapply(Contract mc) {
     metric.removeObserver(mc);
   }
 
