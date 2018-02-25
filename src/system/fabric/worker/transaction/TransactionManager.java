@@ -40,6 +40,7 @@ import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
+import fabric.common.util.Oid;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
 import fabric.lang.Object._Impl;
@@ -139,6 +140,16 @@ public final class TransactionManager {
    */
   protected OidKeyHashMap<Boolean> contractLocksHeld = new OidKeyHashMap<>();
 
+  /**
+   * The locks to acquire before the next transaction attempt.
+   */
+  protected OidKeyHashMap<Boolean> contractsToAcquire = new OidKeyHashMap<>();
+
+  /**
+   * The locks that some other transaction acquired that we're waiting on.
+   */
+  protected Oid waitingOn = null;
+
   // Mark a created lock.
   public void registerLockCreate(fabric.lang.Object lock) {
     Logging.log(METRICS_LOGGER, Level.FINE, "CREATING LOCK {0}/{1} IN {2}/{3}",
@@ -191,16 +202,39 @@ public final class TransactionManager {
   // Note a lock conflict.  This means we should give up on locks we were
   // looking at, since we'll be taking a backseat until that conflict goes away
   // anyways.
-  public void registerLockConflict() {
+  public void registerLockConflict(fabric.lang.Object lock) {
+    // Don't get locks on retry
     contractsToAcquire.clear();
+    // Mark the lock as being waited on.
+    waitingOn = new Oid(lock);
+    TransactionID curTID = current.tid;
+    while (curTID.parent != null) curTID = curTID.parent;
+    Logging.METRICS_LOGGER.fine("ABORTING READ IN " + current +
+        " FOR LOCK " + lock);
+    throw new LockConflictException(new TransactionID(curTID.topTid));
   }
 
-  /**
-   * The locks to acquire before the next transaction attempt.
-   */
-  protected OidKeyHashMap<Boolean> contractsToAcquire = new OidKeyHashMap<>();
-
   protected void acquireContractLocks() {
+    // If we're waiting on some locks someone else holds, let's wait until those
+    // are free
+    if (waitingOn != null) {
+      boolean waiting = true;
+      while (waiting) {
+        waiting = Worker.runInTopLevelTransaction((new Code<Boolean>() {
+          @Override
+          public Boolean run() {
+            Logging.log(METRICS_LOGGER, Level.FINER,
+                "WAITING ON LOCK {3} FROM {2} IN {0}/{1}",
+                Thread.currentThread(), getCurrentTid(), waitingOn.store.name(),
+                waitingOn);
+            ReconfigLock._Proxy l =
+                new ReconfigLock._Proxy(waitingOn.store, waitingOn.onum);
+            return Boolean.valueOf(l.get$currentlyHeld());
+          }
+        }), true).booleanValue();
+      }
+      waitingOn = null;
+    }
     // Only bother with lock dance if there's a change in locks we want.
     if (!contractsToAcquire.equals(contractLocksHeld)) {
       // Grab locks still needed.

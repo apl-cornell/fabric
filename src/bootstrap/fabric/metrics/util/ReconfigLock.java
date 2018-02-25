@@ -150,25 +150,9 @@ public interface ReconfigLock extends fabric.lang.Object {
                     getCurrentTid() });
             if (this.get$currentlyHeld() &&
                   !tm.hasLock((fabric.metrics.util.ReconfigLock)
-                                this.$getProxy())) {
-                fabric.common.TransactionID current = tm.getCurrentTid();
-                if (!fabric.lang.Object._Proxy.idEquals(current, null)) {
-                    while (!fabric.lang.Object._Proxy.idEquals(current.parent,
-                                                               null))
-                        current = current.parent;
-                    fabric.common.Logging.METRICS_LOGGER.
-                      fine(
-                        "ABORTING READ IN " +
-                          current +
-                          " FOR LOCK " +
-                          java.lang.String.
-                            valueOf(
-                              fabric.lang.WrappedJavaInlineable.
-                                  $unwrap((fabric.metrics.util.ReconfigLock)
-                                            this.$getProxy())));
-                    throw new fabric.worker.metrics.LockConflictException(
-                            new fabric.common.TransactionID(current.topTid));
-                }
+                                this.$getProxy()) && tm.inTxn()) {
+                tm.registerLockConflict((fabric.metrics.util.ReconfigLock)
+                                          this.$getProxy());
             }
         }
         
@@ -195,30 +179,9 @@ public interface ReconfigLock extends fabric.lang.Object {
                     tm.registerLockAcquire((fabric.metrics.util.ReconfigLock)
                                              this.$getProxy());
                     this.set$currentlyHeld(true);
-                }
-                else {
-                    fabric.common.TransactionID current =
-                      tm.getCurrentTid();
-                    if (!fabric.lang.Object._Proxy.idEquals(
-                                                     current, null)) {
-                        while (!fabric.lang.Object._Proxy.idEquals(
-                                                            current.parent,
-                                                            null))
-                            current = current.parent;
-                        fabric.common.Logging.METRICS_LOGGER.
-                          fine(
-                            "ABORTING ACQUIRE " +
-                              current +
-                              " FOR LOCK " +
-                              java.lang.String.
-                                valueOf(
-                                  fabric.lang.WrappedJavaInlineable.
-                                      $unwrap((fabric.metrics.util.ReconfigLock)
-                                                this.$getProxy())));
-                        throw new fabric.worker.metrics.LockConflictException(
-                                new fabric.common.TransactionID(
-                                  current.topTid));
-                    }
+                } else {
+                    tm.registerLockConflict((fabric.metrics.util.ReconfigLock)
+                                              this.$getProxy());
                 }
             }
         }
@@ -339,11 +302,11 @@ public interface ReconfigLock extends fabric.lang.Object {
         
     }
     
-    public static final byte[] $classHash = new byte[] { 27, 87, 8, -6, 45, 47,
-    -68, 96, -8, -54, 111, -120, -27, 56, -117, 86, -51, 68, 116, 61, 18, -87,
-    95, -36, 126, -95, 109, 41, 76, -88, -67, -37 };
+    public static final byte[] $classHash = new byte[] { -8, -98, 21, 31, 28,
+    -7, -33, 12, 125, 123, -48, 19, 41, 84, 18, 3, 23, -13, 62, 25, 16, 71, 115,
+    108, 16, -50, 111, -47, 83, 21, 113, 36 };
     public static final java.lang.String jlc$CompilerVersion$fabil = "0.3.0";
-    public static final long jlc$SourceLastModified$fabil = 1519228622000L;
+    public static final long jlc$SourceLastModified$fabil = 1519598106000L;
     public static final java.lang.String jlc$ClassType$fabil =
-      "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";
+      "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";
 }

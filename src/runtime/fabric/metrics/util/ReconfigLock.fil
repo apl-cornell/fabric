@@ -43,14 +43,9 @@ public class ReconfigLock {
     TransactionManager tm = TransactionManager.getInstance();
     Logging.METRICS_LOGGER.log(Level.FINE, "CHECKING READ OF {0} IN {1}",
         new java.lang.Object native[] { this, tm.getCurrentTid() });
-    if (currentlyHeld && !tm.hasLock(this)) {
-      TransactionID current = tm.getCurrentTid();
-      if (current != null) {
-        while (current.parent != null) current = current.parent;
-        Logging.METRICS_LOGGER.fine("ABORTING READ IN " + current +
-            " FOR LOCK " + this);
-        throw new LockConflictException(new TransactionID(current.topTid));
-      }
+    if (currentlyHeld && !tm.hasLock(this) && tm.inTxn()) {
+      // TODO Should this ever be called outside a transaction?
+      tm.registerLockConflict(this);
     }
   }
 
@@ -66,13 +61,7 @@ public class ReconfigLock {
         tm.registerLockAcquire(this);
         currentlyHeld = true;
       } else {
-        TransactionID current = tm.getCurrentTid();
-        if (current != null) {
-          while (current.parent != null) current = current.parent;
-          Logging.METRICS_LOGGER.fine("ABORTING ACQUIRE " + current +
-              " FOR LOCK " + this);
-          throw new LockConflictException(new TransactionID(current.topTid));
-        }
+        tm.registerLockConflict(this);
       }
     }
   }
