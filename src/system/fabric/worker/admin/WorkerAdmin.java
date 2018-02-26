@@ -11,6 +11,7 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.net.ConnectException;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
@@ -30,10 +31,9 @@ public class WorkerAdmin {
    * Connects to a remote worker and executes commands via its admin port.
    *
    * @throws WorkerNotRunningException
-   *           if no worker is listening on the admin port.
    */
-  public static void connect(int adminPort, String[] cmd) throws UsageError,
-  WorkerNotRunningException {
+  public static void connect(int adminPort, String[] cmd)
+      throws UsageError, WorkerNotRunningException {
     try (Socket socket = new Socket((String) null, adminPort)) {
       // Successfully connected. Ensure we have commands to run.
       if (cmd == null) {
@@ -42,9 +42,8 @@ public class WorkerAdmin {
       }
 
       // Send our commands over.
-      DataOutputStream out =
-          new DataOutputStream(new BufferedOutputStream(
-              socket.getOutputStream()));
+      DataOutputStream out = new DataOutputStream(
+          new BufferedOutputStream(socket.getOutputStream()));
       out.writeInt(cmd.length);
       for (String arg : cmd) {
         out.writeUTF(arg);
@@ -64,39 +63,40 @@ public class WorkerAdmin {
    * Listens on the admin port for commands.
    */
   public static void listen(int adminPort, Worker worker) {
-    // Bind to the admin port.
-    ServerSocket server;
-    try {
-      server = new ServerSocket(adminPort, 50, InetAddress.getByName(null));
-    } catch (IOException e) {
-      throw new InternalError(e);
-    }
-
     // Spawn off a new thread to receive admin connections.
-    new Acceptor(server, worker);
+    new Acceptor(adminPort, worker);
   }
 
   private static class Acceptor extends Thread {
-    private final ServerSocket server;
+    private final int adminPort;
     private final Worker worker;
 
-    Acceptor(ServerSocket server, Worker worker) {
+    Acceptor(int adminPort, Worker worker) {
       super("connection handler for worker admin port");
       setDaemon(true);
-      this.server = server;
+      this.adminPort = adminPort;
       this.worker = worker;
       start();
     }
 
     @Override
     public void run() {
-      while (true) {
-        try {
-          handleConnection(server.accept());
-        } catch (IOException e) {
-          throw new InternalError(e);
+      try (ServerSocket server = new ServerSocket()) {
+        server.setReuseAddress(true);
+        server.bind(new InetSocketAddress(InetAddress.getByName(null), adminPort),
+            50);
+        while (true) {
+          try {
+            handleConnection(server.accept());
+          } catch (IOException e) {
+            throw new InternalError(e);
+          }
         }
+      } catch (IOException e) {
+        System.err.println("WorkerAdmin had an IOException:");
+        e.printStackTrace();
       }
+      System.exit(1);
     }
 
     private void handleConnection(final Socket socket) {
@@ -105,9 +105,8 @@ public class WorkerAdmin {
             @Override
             protected void runImpl() {
               try {
-                DataInput in =
-                    new DataInputStream(new BufferedInputStream(socket
-                        .getInputStream()));
+                DataInput in = new DataInputStream(
+                    new BufferedInputStream(socket.getInputStream()));
                 // Read commands from network.
                 String[] cmd = new String[in.readInt()];
                 for (int i = 0; i < cmd.length; i++) {
