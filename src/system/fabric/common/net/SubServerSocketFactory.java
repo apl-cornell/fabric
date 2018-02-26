@@ -6,6 +6,7 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.net.BindException;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
@@ -246,8 +247,12 @@ public class SubServerSocketFactory {
      */
     @Override
     public void run() {
-      try (ServerSocket sock = new ServerSocket(address.getPort(), 0,
-          InetAddress.getByAddress(new byte[] { 0, 0, 0, 0 }))) {
+      try (ServerSocket sock = new ServerSocket()) {
+        sock.setReuseAddress(true);
+        sock.bind(new InetSocketAddress(
+              InetAddress.getByAddress(new byte[] { 0, 0, 0, 0 }),
+              address.getPort()),
+            0);
         while (true) {
           try {
             try {
