@@ -143,4 +143,10 @@ public interface Store extends Serializable {
    * Send extensions to handle.
    */
   public void sendExtensions(List<DelayedExtension> extensions);
+
+  /**
+   * Wait for an update past the given version for the given onum.
+   */
+  public void waitForUpdate(LongKeyMap<Integer> onumsAndVersions)
+      throws AccessException;
 }

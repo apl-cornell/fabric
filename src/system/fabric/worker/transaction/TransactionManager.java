@@ -40,9 +40,9 @@ import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
-import fabric.common.util.Oid;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
+import fabric.common.util.Triple;
 import fabric.lang.Object._Impl;
 import fabric.lang.Object._Proxy;
 import fabric.lang.security.Label;
@@ -148,7 +148,7 @@ public final class TransactionManager {
   /**
    * The locks that some other transaction acquired that we're waiting on.
    */
-  protected Oid waitingOn = null;
+  protected OidKeyHashMap<Integer> waitingOn = new OidKeyHashMap<>();
 
   // Mark a created lock.
   public void registerLockCreate(fabric.lang.Object lock) {
@@ -206,7 +206,7 @@ public final class TransactionManager {
     // Don't get locks on retry
     contractsToAcquire.clear();
     // Mark the lock as being waited on.
-    waitingOn = new Oid(lock);
+    waitingOn.put(lock, ((_Impl) lock.fetch()).$version);
     TransactionID curTID = current.tid;
     while (curTID.parent != null)
       curTID = curTID.parent;
@@ -278,6 +278,49 @@ public final class TransactionManager {
     }
   }
 
+  protected void waitForOutstandingLocks() {
+    // If we're waiting on some locks someone else holds, let's wait until those
+    // are free
+    if (!waitingOn.isEmpty()) {
+      List<Future<?>> waitFutures = new ArrayList<>();
+      for (final Store s : waitingOn.storeSet()) {
+        waitFutures
+            .add(Threading.getPool().submit(new Threading.NamedCallable<Void>(
+                "Store " + s.name() + " lock object wait") {
+              @Override
+              public Void callImpl() {
+                try {
+                  s.waitForUpdate(waitingOn.get(s));
+                } catch (AccessException e) {
+                  Logging.log(METRICS_LOGGER, Level.SEVERE,
+                      "WAITING FOR LOCK FAILED: {0}", e);
+                  throw new InternalError(e);
+                }
+                return null;
+              }
+            }));
+      }
+      for (Future<?> f : waitFutures) {
+        try {
+          f.get();
+        } catch (ExecutionException e) {
+          StringWriter sw = new StringWriter();
+          e.printStackTrace(new PrintWriter(sw));
+          Logging.log(METRICS_LOGGER, Level.SEVERE,
+              "EXECUTION EXCEPTION DURING WAIT FOR LOCKS\n{0}\n{1}", e, sw);
+          throw new InternalError(e);
+        } catch (InterruptedException e) {
+          StringWriter sw = new StringWriter();
+          e.printStackTrace(new PrintWriter(sw));
+          Logging.log(METRICS_LOGGER, Level.SEVERE,
+              "INTERRUPTION DURING LOCK ACQUIRE ATTEMPT\n{0}\n{1}", e, sw);
+          throw new InternalError(e);
+        }
+      }
+    }
+    waitingOn.clear();
+  }
+
   protected void acquireContractLocks() {
     // Grab locks still needed.
     final OidKeyHashMap<Boolean> contractsToAcquireF =
@@ -286,26 +329,8 @@ public final class TransactionManager {
     // First release any held locks.
     releaseHeldLocks();
 
-    // If we're waiting on some locks someone else holds, let's wait until those
-    // are free
-    if (waitingOn != null) {
-      boolean waiting = true;
-      while (waiting) {
-        waiting = Worker.runInTopLevelTransaction((new Code<Boolean>() {
-          @Override
-          public Boolean run() {
-            Logging.log(METRICS_LOGGER, Level.FINER,
-                "WAITING ON LOCK {3} FROM {2} IN {0}/{1}",
-                Thread.currentThread(), getCurrentTid(), waitingOn.store.name(),
-                waitingOn);
-            ReconfigLock._Proxy l =
-                new ReconfigLock._Proxy(waitingOn.store, waitingOn.onum);
-            return Boolean.valueOf(l.get$currentlyHeld());
-          }
-        }), true).booleanValue();
-      }
-      waitingOn = null;
-    }
+    // Then wait for any locks we bounced on.
+    waitForOutstandingLocks();
 
     // Only bother with lock dance if there's a change in locks we want.
     if (!contractsToAcquireF.equals(contractLocksHeld)) {
@@ -320,6 +345,9 @@ public final class TransactionManager {
           break;
         }
 
+        // Clear out the waiting set, we'll update it below.
+        waitingOn.clear();
+
         // Do an exponential backoff between attempts.
         if (attempts > 4) {
           try {
@@ -332,6 +360,7 @@ public final class TransactionManager {
             Logging.log(METRICS_LOGGER, Level.SEVERE,
                 "INTERRUPTION DURING WAIT BETWEEN LOCK ATTEMPTS\n{0}\n{1}", e,
                 sw);
+            throw new InternalError(e);
           }
         }
 
@@ -344,14 +373,15 @@ public final class TransactionManager {
         success = true;
         successes = 0;
         if (!contractsToAcquireF.isEmpty()) {
-          List<Future<Pair<Store, Boolean>>> acquireFutures = new ArrayList<>();
+          List<Future<Triple<Store, Boolean, OidKeyHashMap<Integer>>>> acquireFutures =
+              new ArrayList<>();
           for (final Store s : contractsToAcquireF.storeSet()) {
             final LongSet onums = contractsToAcquireF.get(s).keySet();
-            acquireFutures.add(Threading.getPool()
-                .submit(new Threading.NamedCallable<Pair<Store, Boolean>>(
+            acquireFutures.add(Threading.getPool().submit(
+                new Threading.NamedCallable<Triple<Store, Boolean, OidKeyHashMap<Integer>>>(
                     "Store " + s.name() + " lock object acquire") {
                   @Override
-                  public Pair<Store, Boolean> callImpl() {
+                  public Triple<Store, Boolean, OidKeyHashMap<Integer>> callImpl() {
                     boolean result = true;
                     boolean oldState =
                         TransactionManager.getInstance().acquiringLocks;
@@ -381,13 +411,16 @@ public final class TransactionManager {
                       result = false;
                     }
                     TransactionManager.getInstance().acquiringLocks = oldState;
-                    return new Pair<>(s, result);
+                    OidKeyHashMap<Integer> waitingOnCopy =
+                        new OidKeyHashMap<>(waitingOn);
+                    waitingOn.clear();
+                    return new Triple<>(s, result, waitingOnCopy);
                   }
                 }));
           }
-          for (Future<Pair<Store, Boolean>> f : acquireFutures) {
+          for (Future<Triple<Store, Boolean, OidKeyHashMap<Integer>>> f : acquireFutures) {
             try {
-              Pair<Store, Boolean> p = f.get();
+              Triple<Store, Boolean, OidKeyHashMap<Integer>> p = f.get();
               success = success && p.second;
               if (p.second) {
                 successes++;
@@ -401,17 +434,20 @@ public final class TransactionManager {
                       Thread.currentThread());
                 }
               }
+              waitingOn.putAll(p.third);
             } catch (ExecutionException e) {
               StringWriter sw = new StringWriter();
               e.printStackTrace(new PrintWriter(sw));
               Logging.log(METRICS_LOGGER, Level.SEVERE,
                   "EXECUTION EXCEPTION DURING LOCK ACQUIRE ATTEMPT\n{0}\n{1}",
                   e, sw);
+              throw new InternalError(e);
             } catch (InterruptedException e) {
               StringWriter sw = new StringWriter();
               e.printStackTrace(new PrintWriter(sw));
               Logging.log(METRICS_LOGGER, Level.SEVERE,
                   "INTERRUPTION DURING LOCK ACQUIRE ATTEMPT\n{0}\n{1}", e, sw);
+              throw new InternalError(e);
             }
           }
         }
@@ -422,6 +458,8 @@ public final class TransactionManager {
         }
       }
     }
+    // Again, check if there are more locks to wait for after the "lock dance"
+    waitForOutstandingLocks();
     contractsToAcquire.clear();
   }
 

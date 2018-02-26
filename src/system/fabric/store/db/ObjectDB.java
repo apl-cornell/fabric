@@ -1,5 +1,7 @@
 package fabric.store.db;
 
+import static fabric.common.Logging.STORE_TRANSACTION_LOGGER;
+
 import java.io.DataOutput;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -7,6 +9,7 @@ import java.security.PrivateKey;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.logging.Level;
 
 import javax.security.auth.x500.X500Principal;
 
@@ -531,7 +534,7 @@ public abstract class ObjectDB {
   /**
    * Performs operations in response to a committed object update. Removes from
    * cache the glob associated with the onum and notifies the subscription
-   * manager of the update.
+   * manager, as well as any waiting clients, of the update.
    *
    * @param onum
    *          the onum of the object that was updated.
@@ -542,6 +545,10 @@ public abstract class ObjectDB {
       RemoteWorker worker) {
     // Remove from the glob table the glob associated with the onum.
     LongSet groupOnums = objectGrouper.removeGroup(onum);
+
+    synchronized (objectLocksFor(onum)) {
+      objectLocksFor(onum).notifyAll();
+    }
 
     if (SubscriptionManager.ENABLE_OBJECT_UPDATES) {
       // Notify the subscription manager that the group has been updated.
@@ -718,4 +725,18 @@ public abstract class ObjectDB {
     setInitialized();
   }
 
+  public final SerializedObject waitForUpdate(long onum, int version)
+      throws AccessException {
+    synchronized (objectLocksFor(onum)) {
+      while (getVersion(onum) <= version) {
+        try {
+          objectLocksFor(onum).wait();
+        } catch (InterruptedException e) {
+          STORE_TRANSACTION_LOGGER.log(Level.SEVERE,
+              "Handling Wait For Update Message interrupted! {0}", e);
+        }
+      }
+    }
+    return read(onum);
+  }
 }

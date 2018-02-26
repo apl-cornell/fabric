@@ -480,4 +480,17 @@ public class TransactionManager {
           }
         }
       };
+
+  /**
+   * Wait for an update to occur to push the version for the given onum past the
+   * given version.
+   */
+  public List<SerializedObject> waitForUpdates(
+      LongKeyMap<Integer> onumsAndVersions) throws AccessException {
+    List<SerializedObject> updates = new ArrayList<>(onumsAndVersions.size());
+    for (LongKeyMap.Entry<Integer> e : onumsAndVersions.entrySet()) {
+      updates.add(database.waitForUpdate(e.getKey(), e.getValue()));
+    }
+    return updates;
+  }
 }

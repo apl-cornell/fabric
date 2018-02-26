@@ -49,6 +49,7 @@ import fabric.messages.MessageToStoreHandler;
 import fabric.messages.PrepareTransactionMessage;
 import fabric.messages.ReadMessage;
 import fabric.messages.StalenessCheckMessage;
+import fabric.messages.WaitForUpdateMessage;
 import fabric.store.db.ObjectDB;
 import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
@@ -343,6 +344,21 @@ class Store extends MessageToStoreHandler {
     // TODO
     tm.queueExtension(message.extensions);
     return new ContractExtensionMessage.Response();
+  }
+
+  /**
+   * Processes the contract extension request.
+   */
+  @Override
+  public WaitForUpdateMessage.Response handle(
+      RemoteIdentity<RemoteWorker> client, WaitForUpdateMessage message)
+      throws AccessException {
+    STORE_REQUEST_LOGGER.log(Level.FINER,
+        "Handling Wait For Update Message from {0}", nameOf(client.principal));
+
+    // TODO
+    return new WaitForUpdateMessage.Response(
+        tm.waitForUpdates(message.onumsAndVersions));
   }
 
   private LongKeyMap<SerializedObject> prepareTransaction(Principal p, long tid,

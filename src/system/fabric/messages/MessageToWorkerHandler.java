@@ -120,6 +120,13 @@ public abstract class MessageToWorkerHandler extends AbstractMessageServer {
     throw error(msg);
   }
 
+  @Override
+  public fabric.messages.WaitForUpdateMessage.Response handle(
+      RemoteIdentity<RemoteWorker> client, WaitForUpdateMessage msg)
+      throws ProtocolError {
+    throw error(msg);
+  }
+
   private final ProtocolError error(Message<?, ?> msg) {
     return new ProtocolError("Invalid message to worker: " + msg);
   }

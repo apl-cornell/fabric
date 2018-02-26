@@ -302,6 +302,12 @@ public abstract class Message<R extends Message.Response, E extends FabricExcept
       ContractExtensionMessage parse(DataInput in) throws IOException {
         return new ContractExtensionMessage(in);
       }
+    },
+    WAIT_FOR_UPDATE {
+      @Override
+      WaitForUpdateMessage parse(DataInput in) throws IOException {
+        return new WaitForUpdateMessage(in);
+      }
     },;
 
     /** Read a message of the appropriate type from the given DataInput. */

@@ -44,6 +44,7 @@ import fabric.messages.Message.NoException;
 import fabric.messages.PrepareTransactionMessage;
 import fabric.messages.ReadMessage;
 import fabric.messages.StalenessCheckMessage;
+import fabric.messages.WaitForUpdateMessage;
 import fabric.net.RemoteNode;
 import fabric.net.UnreachableNodeException;
 import fabric.store.DelayedExtension;
@@ -79,6 +80,16 @@ public class RemoteStore extends RemoteNode<RemoteStore>
    * This is null until getPublicKey() is called.
    */
   private transient PublicKey publicKey;
+
+  @Override
+  public void waitForUpdate(LongKeyMap<Integer> onumsAndVersions)
+      throws AccessException {
+    List<SerializedObject> updates = send(Worker.getWorker().authToStore,
+        new WaitForUpdateMessage(onumsAndVersions)).updates;
+    for (SerializedObject o : updates) {
+      updateCache(o);
+    }
+  }
 
   private static class FetchLock {
     private volatile ObjectCache.Entry object;

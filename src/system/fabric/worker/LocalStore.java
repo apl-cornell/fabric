@@ -17,7 +17,9 @@ import fabric.common.ONumConstants;
 import fabric.common.SerializedObject;
 import fabric.common.Threading;
 import fabric.common.TransactionID;
+import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
+import fabric.common.exceptions.NotImplementedException;
 import fabric.common.util.ConcurrentLongKeyHashMap;
 import fabric.common.util.ConcurrentLongKeyMap;
 import fabric.common.util.LongKeyHashMap;
@@ -438,5 +440,12 @@ public final class LocalStore implements Store, Serializable {
 
   private java.lang.Object writeReplace() throws ObjectStreamException {
     throw new NotSerializableException();
+  }
+
+  @Override
+  public void waitForUpdate(LongKeyMap<Integer> onumsAndVersions)
+      throws AccessException {
+    throw new NotImplementedException(
+        "Local stores do not support waiting for an update");
   }
 }

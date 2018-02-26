@@ -79,4 +79,8 @@ public interface MessageHandler {
   public ContractExtensionMessage.Response handle(
       RemoteIdentity<RemoteWorker> client, ContractExtensionMessage msg)
       throws ProtocolError;
+
+  public WaitForUpdateMessage.Response handle(
+      RemoteIdentity<RemoteWorker> client, WaitForUpdateMessage msg)
+      throws ProtocolError, AccessException;
 }
