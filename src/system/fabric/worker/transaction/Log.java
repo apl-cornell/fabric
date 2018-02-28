@@ -170,8 +170,6 @@ public final class Log {
    */
   public final CommitState commitState;
 
-  protected boolean coordinated = false;
-
   public static class CommitState {
     public static enum Values {
       /**
@@ -578,7 +576,6 @@ public final class Log {
       acquires.clear();
       pendingReleases.clear();
       locksCreated.clear();
-      coordinated = false;
 
       if (parent != null) {
         writerMap = new WriterMap(parent.writerMap);
@@ -808,13 +805,6 @@ public final class Log {
       parent.expiryToCheck = Math.min(expiryToCheck, parent.expiryToCheck);
       parent.child = null;
     }
-
-    // Update the coordination flag.
-    if (coordinated) {
-      synchronized (parent) {
-        parent.coordinated = true;
-      }
-    }
   }
 
   // Time before expiration runs out to process pending extensions
@@ -924,10 +914,6 @@ public final class Log {
 
     // Merge the security cache into the top-level label cache.
     securityCache.mergeWithTopLevel();
-
-    // Log if there was a coordination.
-    if (coordinated)
-      tm.stats.markCoordination();
   }
 
   /**

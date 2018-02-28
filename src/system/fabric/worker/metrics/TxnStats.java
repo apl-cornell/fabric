@@ -7,6 +7,7 @@ public class TxnStats {
   private int txnAttempts = 0;
   private int lockAttempts = 0;
   private boolean coordinated = false;
+  private boolean locksUsed = false;
 
   public TxnStats() {
   }
@@ -15,6 +16,7 @@ public class TxnStats {
     txnAttempts = 0;
     lockAttempts = 0;
     coordinated = false;
+    locksUsed = false;
   }
 
   /**
@@ -39,10 +41,24 @@ public class TxnStats {
   }
 
   /**
+   * @return the locksUsed flag
+   */
+  public boolean isLocksUsed() {
+    return locksUsed;
+  }
+
+  /**
    * Mark the final attempt as a coordination.
    */
   public void markCoordination() {
     coordinated = true;
+  }
+
+  /**
+   * Mark the final attempt as using locks.
+   */
+  public void markLocksUsed() {
+    locksUsed = true;
   }
 
   /**
@@ -63,6 +79,7 @@ public class TxnStats {
   public String toString() {
     return "[COORDINATED: " + coordinated +
       " WITH " + txnAttempts + " TXN ATTEMPTS" +
-      " AND " + lockAttempts + " LOCK ATTEMPTS]";
+      " AND " + lockAttempts + " LOCK ATTEMPTS AND LOCKS USED: " + locksUsed +
+      "]";
   }
 }

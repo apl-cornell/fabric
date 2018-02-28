@@ -152,7 +152,7 @@ public final class TransactionManager {
 
   // Mark a created lock.
   public void registerLockCreate(fabric.lang.Object lock) {
-    Logging.log(METRICS_LOGGER, Level.FINE, "CREATING LOCK {0}/{1} IN {2}/{3}",
+    Logging.log(METRICS_LOGGER, Level.FINER, "CREATING LOCK {0}/{1} IN {2}/{3}",
         lock.$getStore(), new Long(lock.$getOnum()), Thread.currentThread(),
         getCurrentTid());
     // You start out holding the lock if you created it.
@@ -161,7 +161,7 @@ public final class TransactionManager {
 
   // Mark an acquired lock.
   public void registerLockAcquire(fabric.lang.Object lock) {
-    Logging.log(METRICS_LOGGER, Level.FINE, "ACQUIRING LOCK {0}/{1} IN {2}/{3}",
+    Logging.log(METRICS_LOGGER, Level.FINER, "ACQUIRING LOCK {0}/{1} IN {2}/{3}",
         lock.$getStore(), new Long(lock.$getOnum()), Thread.currentThread(),
         getCurrentTid());
     current.acquires.put(lock, true);
@@ -173,7 +173,7 @@ public final class TransactionManager {
   // Check that we have this lock.
   public boolean hasLock(fabric.lang.Object lock) {
     // TODO: consider allowing a pending acquire to be considered held?
-    Logging.log(METRICS_LOGGER, Level.FINE, "CHECKING LOCK {0}/{1} IN {2}/{3}",
+    Logging.log(METRICS_LOGGER, Level.FINER, "CHECKING LOCK {0}/{1} IN {2}/{3}",
         lock.$getStore(), new Long(lock.$getOnum()), Thread.currentThread(),
         getCurrentTid());
     if (contractLocksHeld.containsKey(lock)) {
@@ -193,7 +193,7 @@ public final class TransactionManager {
 
   // Unmark an acquired lock.
   public void registerLockRelease(fabric.lang.Object lock) {
-    Logging.log(METRICS_LOGGER, Level.FINE, "RELEASING LOCK {0}/{1} IN {2}/{3}",
+    Logging.log(METRICS_LOGGER, Level.FINER, "RELEASING LOCK {0}/{1} IN {2}/{3}",
         lock.$getStore(), new Long(lock.$getOnum()), Thread.currentThread(),
         getCurrentTid());
     current.pendingReleases.put(lock, true);
@@ -263,12 +263,12 @@ public final class TransactionManager {
               "INTERRUPTION DURING LOCK RELEASE ATTEMPT\n{0}\n{1}", e, sw);
         }
       }
-      if (METRICS_LOGGER.isLoggable(Level.FINE)) {
+      if (METRICS_LOGGER.isLoggable(Level.FINER)) {
         for (Store s : contractLocksHeld.storeSet()) {
           for (LongIterator it =
               contractLocksHeld.get(s).keySet().iterator(); it.hasNext();) {
             long onum = it.next();
-            Logging.log(METRICS_LOGGER, Level.FINE,
+            Logging.log(METRICS_LOGGER, Level.FINER,
                 "RELEASED LOCK {0}/{1} IN {2}", s, onum,
                 Thread.currentThread());
           }
@@ -324,8 +324,7 @@ public final class TransactionManager {
   protected void acquireContractLocks() {
     // Nothing needed if we have all the locks we need and aren't waiting on
     // other locks.
-    if (!contractsToAcquire.equals(contractLocksHeld)
-        || !waitingOn.isEmpty()) {
+    if (!contractsToAcquire.equals(contractLocksHeld) || !waitingOn.isEmpty()) {
       // Grab locks still needed.
       final OidKeyHashMap<Boolean> contractsToAcquireF =
           new OidKeyHashMap<>(contractsToAcquire);
@@ -370,7 +369,7 @@ public final class TransactionManager {
 
           stats.markLockAttempt();
 
-          Logging.log(METRICS_LOGGER, Level.FINE, "LOCK ATTEMPT {0} IN {1}",
+          Logging.log(METRICS_LOGGER, Level.FINER, "LOCK ATTEMPT {0} IN {1}",
               attempts, Thread.currentThread());
 
           // Attempt to acquire locks.
@@ -434,7 +433,7 @@ public final class TransactionManager {
                           .hasNext();) {
                     long onum = it.next();
                     contractLocksHeld.put(p.first, onum, true);
-                    Logging.log(METRICS_LOGGER, Level.FINE,
+                    Logging.log(METRICS_LOGGER, Level.FINER,
                         "ACQUIRED LOCK {0}/{1} IN {2}", p.first, onum,
                         Thread.currentThread());
                   }
@@ -505,16 +504,17 @@ public final class TransactionManager {
             .hasNext();) {
           long onum = it.next();
           contractLocksHeld.put(s, onum, true);
-          Logging.log(METRICS_LOGGER, Level.FINE,
+          Logging.log(METRICS_LOGGER, Level.FINER,
               "ACQUIRED LOCK {0}/{1} IN {2}", s, onum, Thread.currentThread());
         }
       }
       for (Store s : releases.storeSet()) {
         for (LongIterator it = releases.get(s).keySet().iterator(); it
             .hasNext();) {
+          stats.markLocksUsed();
           long onum = it.next();
           contractLocksHeld.remove(s, onum);
-          Logging.log(METRICS_LOGGER, Level.FINE,
+          Logging.log(METRICS_LOGGER, Level.FINER,
               "RELEASED LOCK {0}/{1} IN {2}", s, onum, Thread.currentThread());
         }
       }
@@ -897,6 +897,11 @@ public final class TransactionManager {
 
     final long commitTime = System.currentTimeMillis();
     COMMIT_TIME.set(commitTime);
+    // Coordinated if we had to commit at more than 1 store.
+    if ((stores.size() - (stores.contains(LOCAL_STORE) ? 1 : 0)) > 1
+        && !acquiringLocks) {
+      stats.markCoordination();
+    }
     if (HOTOS_LOGGER.isLoggable(Level.FINE)) {
       final long commitLatency = commitTime - prepareStart;
       if (LOCAL_STORE == null) LOCAL_STORE = Worker.getWorker().getLocalStore();
@@ -2133,8 +2138,6 @@ public final class TransactionManager {
    * Note that a coordination happened.
    */
   public void markCoordination() {
-    if (current != null) {
-      current.coordinated = true;
-    }
+    // TODO: This is deprecated.
   }
 }
