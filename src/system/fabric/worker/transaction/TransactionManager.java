@@ -897,10 +897,13 @@ public final class TransactionManager {
 
     final long commitTime = System.currentTimeMillis();
     COMMIT_TIME.set(commitTime);
-    // Coordinated if we had to commit at more than 1 store.
-    if ((stores.size() - (stores.contains(LOCAL_STORE) ? 1 : 0)) > 1
-        && !acquiringLocks) {
-      stats.markCoordination();
+    if (!acquiringLocks) {
+      // Coordinated if we had to commit at more than 1 store.
+      if ((stores.size() - (stores.contains(LOCAL_STORE) ? 1 : 0)) > 1) {
+        stats.markCoordination();
+      }
+      // Record the Tid
+      stats.recordTid(HOTOS_current.tid.tid);
     }
     if (HOTOS_LOGGER.isLoggable(Level.FINE)) {
       final long commitLatency = commitTime - prepareStart;

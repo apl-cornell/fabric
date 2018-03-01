@@ -125,8 +125,8 @@ public class DirectPolicy implements EnforcementPolicy {
     double b = Bound.value(rate, base, time);
     double x = metric.value();
     // Use weak v and n, x is the only part that needs to be exact.
-    double v = metric.velocity(true);
-    double n = metric.noise(true);
+    double v = metric.velocity();
+    double n = metric.noise();
 
     // True expiry: time this would fail with no changes to the current
     // value. This is the latest time we can safely advertise as the
@@ -218,24 +218,18 @@ public class DirectPolicy implements EnforcementPolicy {
    * @return an appropriately conservative (unlikely to be retracted again)
    *         time to advertise to other nodes in the system for this contract.
    */
-  public static long hedged(Metric metric, double rate, double base, long time) {
+  public static long hedgedEstimate(Metric metric, double rate, double base, long time, boolean useWeakValues) {
     double r = rate;
     double b = Bound.value(rate, base, time);
-    double x = metric.value();
+    double x = metric.value(useWeakValues);
     // Use weak v and n, x is the only part that needs to be exact.
-    double v = metric.velocity(true);
-    double n = metric.noise(true);
+    double v = metric.velocity(useWeakValues);
+    double n = metric.noise(useWeakValues);
 
     // True expiry: time this would fail with no changes to the current
     // value. This is the latest time we can safely advertise as the
     // expiration.
-    long hedgedResult = Bound.trueExpiry(rate, base, metric.value(), time);
-
-    // Non-positive rate bounds don't need to be hedged, they should always
-    // stay true in the absence of updates.
-    if (r <= 0) {
-      return hedgedResult;
-    }
+    long hedgedResult = Bound.trueExpiry(rate, base, metric.value(useWeakValues), time);
 
     // Account for the desired number of standard deviations and scale based
     // on how long trueExpiry is from here.

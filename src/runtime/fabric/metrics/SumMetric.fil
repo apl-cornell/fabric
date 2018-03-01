@@ -283,13 +283,14 @@ public class SumMetric extends DerivedMetric {
 
         // Defend all rows against the bound individually, using the strictest
         // bounds across the rows for each term in this sum.
-        double totalSamples = weakSamples();
+        double totalSamples = samples(useWeakCache);
         double totalValue = value(useWeakCache);
         double totalVelocity = velocity(useWeakCache);
         double totalNoise = noise(useWeakCache);
         double numTerms = terms.length;
         // TODO: Make the samples cutoff configurable.
-        double baseFactor = totalSamples > 10 ? 1.0 / Math.sqrt(totalSamples) : 1.0;
+        //double baseFactor = totalSamples > 10 ? 1.0 / Math.sqrt(totalSamples) : 1.0;
+        double baseFactor = totalSamples > 10 ? 0.0 / Math.sqrt(totalSamples) : 1.0;
         double newFactor = 1.0 - baseFactor;
         ConfigProperties config = Worker.getWorker().config;
         if (config.usePreset) {
@@ -331,7 +332,7 @@ public class SumMetric extends DerivedMetric {
             }
             // Update the timeout estimate.
             adaptiveTimeout = Math.min(adaptiveTimeout,
-                DirectPolicy.hedged(m, normalized[0], normalized[1], currentTime));
+                DirectPolicy.hedgedEstimate(m, normalized[0], normalized[1], currentTime, useWeakCache));
 
             //// Static version
             double r2 = rate / numTerms;
@@ -355,11 +356,11 @@ public class SumMetric extends DerivedMetric {
             }
             // Update the timeout estimate.
             staticTimeout = Math.min(staticTimeout,
-                DirectPolicy.hedged(m, normalized2[0], normalized2[1], currentTime));
+                DirectPolicy.hedgedEstimate(m, normalized2[0], normalized2[1], currentTime, useWeakCache));
         }
         // Size should be the same for either option.
         Contract native[] finalWitnesses = new Contract native[adaptiveWitnesses.size()];
-        if (adaptiveTimeout > staticTimeout || adaptiveTimeout - System.currentTimeMillis() > MIN_ADAPTIVE_EXPIRY) {
+        if (adaptiveTimeout >= staticTimeout && adaptiveTimeout - System.currentTimeMillis() > MIN_ADAPTIVE_EXPIRY) {
           int i = 0;
           for (java.util.Iterator iter = adaptiveWitnesses.values().iterator(); iter.hasNext();) {
             finalWitnesses[i++] = (Contract) iter.next();

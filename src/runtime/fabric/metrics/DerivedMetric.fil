@@ -233,7 +233,7 @@ public abstract class DerivedMetric extends Metric implements Observer {
   protected double computeSamples(boolean useWeakCache) {
     double samples = 0;
     for (int i = 0; i < terms.length; i++) {
-      samples += terms[i].samples(useWeakCache);
+      samples = Math.max(samples, terms[i].samples(useWeakCache));
     }
     return samples;
   }

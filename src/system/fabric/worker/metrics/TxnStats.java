@@ -6,6 +6,7 @@ package fabric.worker.metrics;
 public class TxnStats {
   private int txnAttempts = 0;
   private int lockAttempts = 0;
+  private long tid = 0;
   private boolean coordinated = false;
   private boolean locksUsed = false;
 
@@ -15,6 +16,7 @@ public class TxnStats {
   public void reset() {
     txnAttempts = 0;
     lockAttempts = 0;
+    tid = 0;
     coordinated = false;
     locksUsed = false;
   }
@@ -31,6 +33,13 @@ public class TxnStats {
    */
   public int getLockAttempts() {
     return lockAttempts;
+  }
+
+  /**
+   * @return the lockAttempts count
+   */
+  public long getTid() {
+    return tid;
   }
 
   /**
@@ -75,11 +84,18 @@ public class TxnStats {
     lockAttempts++;
   }
 
+  /**
+   * Record the final tid.
+   */
+  public void recordTid(long tid) {
+    this.tid = tid;
+  }
+
   @Override
   public String toString() {
     return "[COORDINATED: " + coordinated +
       " WITH " + txnAttempts + " TXN ATTEMPTS" +
       " AND " + lockAttempts + " LOCK ATTEMPTS AND LOCKS USED: " + locksUsed +
-      "]";
+      " IN " + Long.toHexString(tid) + "]";
   }
 }

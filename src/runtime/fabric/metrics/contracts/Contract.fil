@@ -78,9 +78,8 @@ public abstract class Contract extends AbstractSubject implements Observer {
     if (getExpiry() - currentTime <= EXTENSION_WINDOW) {
       for (Iterator iter = getObservers().iterator(); iter.hasNext();) {
         Observer parent = (Observer) iter.next();
-        if (parent instanceof MetricContract) {
-          tm.registerDelayedExtension(parent,
-              ((MetricContract) parent).$expiry);
+        if (parent instanceof Contract) {
+          tm.registerDelayedExtension(parent, ((Contract) parent).$expiry);
         }
       }
       Logging.METRICS_LOGGER.log(Level.FINE, "SYNCH EXTENSION OF {0} IN {1}", new java.lang.Object native[] { this, TransactionManager.getInstance().getCurrentLog() });
@@ -317,7 +316,7 @@ public abstract class Contract extends AbstractSubject implements Observer {
   }
 
   private static void static_attemptExtension(Contract tmp) {
-    Logging.METRICS_LOGGER.log(Level.FINER, "ASYNC EXTENSION OF " + tmp + " IN "
+    Logging.METRICS_LOGGER.log(Level.FINE, "ASYNC EXTENSION OF " + tmp + " IN "
         + TransactionManager.getInstance().getCurrentTid());
     if (TransactionManager.getInstance().inTxn()) {
       tmp.refresh(true);
