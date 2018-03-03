@@ -899,6 +899,7 @@ public final class TransactionManager {
     COMMIT_TIME.set(commitTime);
     if (!acquiringLocks) {
       // Coordinated if we had to commit at more than 1 store.
+      if (LOCAL_STORE == null) LOCAL_STORE = Worker.getWorker().getLocalStore();
       if ((stores.size() - (stores.contains(LOCAL_STORE) ? 1 : 0)) > 1) {
         stats.markCoordination();
       }
