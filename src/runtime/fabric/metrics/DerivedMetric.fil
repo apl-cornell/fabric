@@ -345,7 +345,8 @@ public abstract class DerivedMetric extends Metric implements Observer {
    * @return the terms this {@link DerivedMetric} is defined over
    */
   protected Metric[] terms() {
-    Metric[] copy = new Metric[terms.length];
+    final Store local = Worker.getWorker().getLocalStore();
+    Metric[] copy = new Metric[terms.length] @local;
     Arrays.arraycopy(terms, 0, copy, 0, terms.length);
     return copy;
   }

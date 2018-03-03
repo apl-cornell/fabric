@@ -455,8 +455,9 @@ public abstract class Contract extends AbstractSubject implements Observer {
 
     /*@Override*/
     public SampledMetric[] getLeafSubjects() {
+      final Store local = Worker.getWorker().getLocalStore();
       if (!observing)
-        return new SampledMetric[0];
+        return new SampledMetric[0] @local;
       return target.getLeafSubjects();
     }
 
@@ -496,7 +497,7 @@ public abstract class Contract extends AbstractSubject implements Observer {
 
     /*@Override*/
     public void acquireReconfigLocks() {
-      this.lock.acquire();
+      this.lock.acquireOptimistic();
       if (observing)
         this.target.acquireReconfigLocks();
     }

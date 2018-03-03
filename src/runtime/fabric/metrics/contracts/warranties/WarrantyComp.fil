@@ -1,7 +1,6 @@
 package fabric.metrics.contracts.warranties;
 
-import fabric.util.HashSet;
-import fabric.util.Set;
+import fabric.util.ArrayList;
 
 import fabric.metrics.Metric;
 import fabric.metrics.contracts.Contract;
@@ -9,9 +8,6 @@ import fabric.metrics.SampledMetric;
 import fabric.metrics.util.AbstractSubject;
 import fabric.metrics.util.Observer;
 import fabric.worker.transaction.TransactionManager;
-
-//import java.util.logging.Level;
-//import fabric.common.Logging;
 
 /**
  * A computation that uses {@link Contract}s to cache and reuse results.
@@ -25,6 +21,10 @@ public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*L
 
   /** The currently cached result. */
   protected final WarrantyValue/*<T>*/ curVal;
+
+  // TODO: Consider keeping a cache of per-store proxies?
+  /** The set of proxy computations for this computation. */
+  protected final ArrayList/*<ProxyComp>*/ proxies;
 
   /**
    * Create a new updated result paired with a contract that would enforce it
@@ -123,6 +123,14 @@ public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*L
             }
             tmp.curVal.contract = newVal.contract;
             tmp.curVal.contract.addObserver(tmp);
+            // New contract, so update proxies too.
+            int size = tmp.proxies.size();
+            for (int i = 0; i < size; i++) {
+              ProxyComp p = (ProxyComp) tmp.proxies.get(i);
+              p.curVal.value = newVal.value;
+              p.curVal.contract = newVal.contract.getProxyContract(p.$getStore());
+              p.curVal.contract.addObserver(p);
+            }
           }
         }
       } else {
@@ -137,6 +145,14 @@ public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*L
               }
               tmp.curVal.contract = newVal.contract;
               tmp.curVal.contract.addObserver(tmp);
+              // New contract, so update proxies too.
+              int size = tmp.proxies.size();
+              for (int i = 0; i < size; i++) {
+                ProxyComp p = (ProxyComp) tmp.proxies.get(i);
+                p.curVal.value = tmp.makeProxyResult(newVal, p.$getStore());
+                p.curVal.contract = newVal.contract.getProxyContract(p.$getStore());
+                p.curVal.contract.addObserver(p);
+              }
             }
           }
         }
@@ -165,7 +181,8 @@ public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*L
     // TODO: Is this right?
     if (curVal.contract != null)
       return curVal.contract.getLeafSubjects();
-    return new SampledMetric[0];
+    final Store local = Worker.getWorker().getLocalStore();
+    return new SampledMetric[0] @local;
   }
 
   /*@Override*/
@@ -204,19 +221,24 @@ public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*L
 
   private static ProxyComp static_makeProxy(WarrantyComp tmp, final Store proxyStore) {
     if (TransactionManager.getInstance().inTxn()) {
-      return new ProxyComp@proxyStore().fabric$metrics$contracts$warranties$WarrantyComp$ProxyComp$(tmp);
+      ProxyComp p = new ProxyComp@proxyStore().fabric$metrics$contracts$warranties$WarrantyComp$ProxyComp$(tmp);
+      tmp.proxies.add(p);
+      return p;
     } else {
       ProxyComp rtn = null;
       atomic {
         rtn = new ProxyComp@proxyStore().fabric$metrics$contracts$warranties$WarrantyComp$ProxyComp$(tmp);
+        tmp.proxies.add(rtn);
       }
       return rtn;
     }
   }
 
   protected WarrantyComp fabric$metrics$contracts$warranties$WarrantyComp$() {
-    fabric$metrics$util$AbstractSubject$();
+    // Default to assuming up to 4 proxies
     this.curVal = new WarrantyValue().fabric$metrics$contracts$warranties$WarrantyValue$(null, null);
+    this.proxies = new ArrayList/*<>*/().fabric$util$ArrayList$(4);
+    fabric$metrics$util$AbstractSubject$();
     return this;
   }
 
@@ -227,7 +249,6 @@ public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*L
   protected static class ProxyComp extends WarrantyComp {
     // The computation this is proxying for.
     protected final WarrantyComp baseComputation;
-    protected Contract oldBaseContract;
 
     protected ProxyComp fabric$metrics$contracts$warranties$WarrantyComp$ProxyComp$(WarrantyComp baseComputation) {
       this.baseComputation = baseComputation;
@@ -238,7 +259,8 @@ public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*L
 
     /*@Override*/
     protected WarrantyValue/*<T>*/ updatedVal(long time) {
-      // XXX: This shouldn't be called...
+      // XXX: This should never be called, proxy always reverts back to the
+      // primary.
       return this.baseComputation.updatedVal(time);
     }
 
@@ -249,80 +271,12 @@ public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*L
 
     /*@Override?*/
     private static WarrantyValue/*T*/ static_apply(ProxyComp tmp, long time, boolean autoRetry) {
-      //Logging.METRICS_LOGGER.log(Level.FINER, "Starting proxy " + tmp);
-      boolean loop = false;
-      if (TransactionManager.getInstance().inTxn()) {
-        loop = tmp.curVal.contract == null || !tmp.curVal.contract.valid();
-      } else {
-        atomic {
-          loop = tmp.curVal.contract == null || !tmp.curVal.contract.valid();
-        }
+      // Proxy either has a cached result or it should return a new result from
+      // the primary (which will update the proxy's cached result.
+      if (tmp.curVal.contract != null && tmp.curVal.contract.valid()) {
+        return tmp.curVal;
       }
-      //if (loop)
-      //  Logging.METRICS_LOGGER.log(Level.FINER, "Recomputing proxy " + tmp);
-      //else
-      //  Logging.METRICS_LOGGER.log(Level.FINER, "Reusing proxy " + tmp);
-      while (loop) {
-        //Logging.METRICS_LOGGER.log(Level.FINER, "Iterating proxy " + tmp);
-
-        WarrantyValue newVal = tmp.baseComputation.apply(System.currentTimeMillis(), autoRetry);
-
-        // If newVal's contract is null, this indicates that the programmer
-        // doesn't want to memoize the result with a treaty.
-        if (newVal.contract == null)
-          return newVal;
-
-        //Logging.METRICS_LOGGER.log(Level.FINER, "Setting proxy " + tmp + " to "
-        //    + newVal + " and Observing");
-        if (TransactionManager.getInstance().inTxn()) {
-          // Need to double check we weren't scooped by another caller.  If we
-          // were, don't bother with our new value and go with the existing value.
-          if (tmp.curVal.contract == null || !tmp.curVal.contract.valid()) {
-            tmp.curVal.value = tmp.baseComputation.makeProxyResult(newVal, tmp.$getStore());
-            if (tmp.oldBaseContract != newVal.contract) {
-              if (tmp.curVal.contract != null) {
-                tmp.curVal.contract.removeObserver(tmp);
-              }
-              tmp.oldBaseContract = newVal.contract;
-              tmp.curVal.contract = newVal.contract.getProxyContract(tmp.$getStore());
-              tmp.curVal.contract.addObserver(tmp);
-            }
-          }
-        } else {
-          atomic {
-            // Need to double check we weren't scooped by another caller.  If we
-            // were, don't bother with our new value and go with the existing value.
-            if (tmp.curVal.contract == null || !tmp.curVal.contract.valid()) {
-              tmp.curVal.value = tmp.baseComputation.makeProxyResult(newVal, tmp.$getStore());
-              if (tmp.oldBaseContract != newVal.contract) {
-                if (tmp.curVal.contract != null) {
-                  tmp.curVal.contract.removeObserver(tmp);
-                }
-                tmp.oldBaseContract = newVal.contract;
-                tmp.curVal.contract = newVal.contract.getProxyContract(tmp.$getStore());
-                tmp.curVal.contract.addObserver(tmp);
-              }
-            }
-          }
-        }
-        //Logging.METRICS_LOGGER.log(Level.FINER, "Updated proxy to " +
-        //    tmp.curVal);
-
-        if (TransactionManager.getInstance().inTxn()) {
-          // Only bother to retry if we're supposed to and we don't have a valid
-          // contract.
-          loop = autoRetry && tmp.curVal.contract != null && !tmp.curVal.contract.valid();
-        } else {
-          atomic {
-            // Only bother to retry if we're supposed to and we don't have a valid
-            // contract.
-            loop = autoRetry && tmp.curVal.contract != null && !tmp.curVal.contract.valid();
-          }
-        }
-      }
-      //Logging.METRICS_LOGGER.log(Level.FINER, "Finished proxy " + tmp + " with "
-      //    + tmp.curVal);
-      return tmp.curVal;
+      return tmp.baseComputation.apply(time, autoRetry);
     }
 
     /*@Override*/
@@ -333,12 +287,12 @@ public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*L
     private static ProxyComp static_makeProxy(ProxyComp tmp, final Store proxyStore) {
       if (TransactionManager.getInstance().inTxn()) {
         // Avoid unnecessary indirection.
-        return new ProxyComp@proxyStore().fabric$metrics$contracts$warranties$WarrantyComp$ProxyComp$(tmp.baseComputation);
+        return tmp.baseComputation.makeProxy(proxyStore);
       } else {
         ProxyComp rtn = null;
         atomic {
           // Avoid unnecessary indirection.
-          rtn = new ProxyComp@proxyStore().fabric$metrics$contracts$warranties$WarrantyComp$ProxyComp$(tmp.baseComputation);
+          rtn = tmp.baseComputation.makeProxy(proxyStore);
         }
         return rtn;
       }

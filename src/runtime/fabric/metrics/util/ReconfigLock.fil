@@ -21,9 +21,7 @@ public class ReconfigLock {
    */
   public ReconfigLock fabric$metrics$util$ReconfigLock$() {
     fabric$lang$Object$();
-    // Starts out held by the creating transaction (released at the end before
-    // committing)
-    this.currentlyHeld = true;
+    this.currentlyHeld = false;
     TransactionManager tm = TransactionManager.getInstance();
     tm.registerLockCreate(this);
     return this;
@@ -33,7 +31,7 @@ public class ReconfigLock {
    * Check if we currently own the lock.
    */
   public boolean held() {
-    return currentlyHeld && TransactionManager.getInstance().hasLock(this);
+    return TransactionManager.getInstance().hasLock(this);
   }
 
   /**
@@ -46,6 +44,24 @@ public class ReconfigLock {
     if (currentlyHeld && !tm.hasLock(this) && tm.inTxn()) {
       // TODO Should this ever be called outside a transaction?
       tm.registerLockConflict(this);
+    }
+  }
+
+  /**
+   * Optimistic acquire the lock.
+   */
+  public void acquireOptimistic() {
+    TransactionManager tm = TransactionManager.getInstance();
+    Logging.METRICS_LOGGER.log(Level.FINE,
+        "ATTEMPTING OPTIMISTIC ACQUIRE OF {0} IN {1}",
+        new java.lang.Object native[] { this, tm.getCurrentTid() });
+    if (!tm.hasLock(this)) {
+      if (!currentlyHeld) {
+        tm.registerLockAcquire(this);
+        // Optimistic, don't write it.  If we retry, we'll acquire it then.
+      } else {
+        tm.registerLockConflict(this);
+      }
     }
   }
 
@@ -70,7 +86,9 @@ public class ReconfigLock {
    * Release the lock.
    */
   public void release() {
-    currentlyHeld = false;
-    TransactionManager.getInstance().registerLockRelease(this);
+    if (currentlyHeld) {
+      currentlyHeld = false;
+      TransactionManager.getInstance().registerLockRelease(this);
+    }
   }
 }

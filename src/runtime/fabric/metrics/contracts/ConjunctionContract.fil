@@ -189,8 +189,9 @@ public class ConjunctionContract extends Contract {
 
   /*@Override*/
   public SampledMetric[] getLeafSubjects() {
+    final Store local = Worker.getWorker().getLocalStore();
     if (!observing)
-      return new SampledMetric[0];
+      return new SampledMetric[0] @local;
     java.util.HashSet/*<SampledMetric>*/ leavesBag = new java.util.HashSet/*<>*/();
     for (int i = 0; i < this.conjuncts.length; i++) {
       SampledMetric[] leaves = this.conjuncts[i].getLeafSubjects();
@@ -198,7 +199,7 @@ public class ConjunctionContract extends Contract {
         leavesBag.add(leaves[j]);
       }
     }
-    SampledMetric[] result = new SampledMetric[leavesBag.size()];
+    SampledMetric[] result = new SampledMetric[leavesBag.size()] @local;
     int idx = 0;
     for (java.util.Iterator it = leavesBag.iterator(); it.hasNext(); ) {
       result[idx++] = (SampledMetric) it.next();
@@ -243,7 +244,7 @@ public class ConjunctionContract extends Contract {
   public void acquireReconfigLocks() {
     //Logging.METRICS_LOGGER.finer("ACQUIRING LOCK AT " + this + " IN " +
     //    TransactionManager.getInstance().getCurrentLog());
-    this.lock.acquire();
+    this.lock.acquireOptimistic();
     if (observing) {
       for (int i = 0; i < this.conjuncts.length; i++) {
         this.conjuncts[i].acquireReconfigLocks();
