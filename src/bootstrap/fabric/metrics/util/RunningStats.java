@@ -645,38 +645,38 @@ public interface RunningStats extends fabric.lang.Object {
             private void $init() {
                 {
                     {
-                        fabric.worker.transaction.TransactionManager $tm655 =
+                        fabric.worker.transaction.TransactionManager $tm627 =
                           fabric.worker.transaction.TransactionManager.
                           getInstance();
-                        boolean $backoffEnabled658 =
+                        boolean $backoffEnabled630 =
                           fabric.worker.Worker.getWorker(
                                                  ).config.txRetryBackoff;
-                        int $backoff656 = 1;
-                        boolean $doBackoff657 = true;
-                        boolean $retry652 = true;
-                        $label650: for (boolean $commit651 = false; !$commit651;
+                        int $backoff628 = 1;
+                        boolean $doBackoff629 = true;
+                        boolean $retry624 = true;
+                        $label622: for (boolean $commit623 = false; !$commit623;
                                         ) {
-                            if ($backoffEnabled658) {
-                                if ($doBackoff657) {
-                                    if ($backoff656 > 32) {
+                            if ($backoffEnabled630) {
+                                if ($doBackoff629) {
+                                    if ($backoff628 > 32) {
                                         while (true) {
                                             try {
                                                 java.lang.Thread.sleep(
-                                                                   $backoff656);
+                                                                   $backoff628);
                                                 break;
                                             }
                                             catch (java.lang.
-                                                     InterruptedException $e653) {
+                                                     InterruptedException $e625) {
                                                 
                                             }
                                         }
                                     }
-                                    if ($backoff656 < 5000) $backoff656 *= 2;
+                                    if ($backoff628 < 5000) $backoff628 *= 2;
                                 }
-                                $doBackoff657 = $backoff656 <= 32 ||
-                                                  !$doBackoff657;
+                                $doBackoff629 = $backoff628 <= 32 ||
+                                                  !$doBackoff629;
                             }
-                            $commit651 = true;
+                            $commit623 = true;
                             fabric.worker.transaction.TransactionManager.
                               getInstance().startTransaction();
                             try {
@@ -684,20 +684,20 @@ public interface RunningStats extends fabric.lang.Object {
                                   $instance.
                                   set$ALPHA((double) 0.001);
                             }
-                            catch (final fabric.worker.RetryException $e653) {
-                                $commit651 = false;
-                                continue $label650;
+                            catch (final fabric.worker.RetryException $e625) {
+                                $commit623 = false;
+                                continue $label622;
                             }
                             catch (final fabric.worker.
-                                     TransactionRestartingException $e653) {
-                                $commit651 = false;
-                                fabric.common.TransactionID $currentTid654 =
-                                  $tm655.getCurrentTid();
-                                if ($e653.tid.isDescendantOf($currentTid654))
-                                    continue $label650;
-                                if ($currentTid654.parent != null) {
-                                    $retry652 = false;
-                                    throw $e653;
+                                     TransactionRestartingException $e625) {
+                                $commit623 = false;
+                                fabric.common.TransactionID $currentTid626 =
+                                  $tm627.getCurrentTid();
+                                if ($e625.tid.isDescendantOf($currentTid626))
+                                    continue $label622;
+                                if ($currentTid626.parent != null) {
+                                    $retry624 = false;
+                                    throw $e625;
                                 }
                                 throw new InternalError(
                                         "Something is broken with " +
@@ -705,17 +705,17 @@ public interface RunningStats extends fabric.lang.Object {
                                             "different transaction than the one being managed.");
                             }
                             catch (final fabric.worker.metrics.
-                                     LockConflictException $e653) {
-                                $commit651 = false;
-                                if ($tm655.checkForStaleObjects()) continue;
-                                fabric.common.TransactionID $currentTid654 =
-                                  $tm655.getCurrentTid();
-                                if ($e653.tid.isDescendantOf($currentTid654)) {
-                                    $retry652 = true;
+                                     LockConflictException $e625) {
+                                $commit623 = false;
+                                if ($tm627.checkForStaleObjects()) continue;
+                                fabric.common.TransactionID $currentTid626 =
+                                  $tm627.getCurrentTid();
+                                if ($e625.tid.isDescendantOf($currentTid626)) {
+                                    $retry624 = true;
                                 }
-                                else if ($currentTid654.parent != null) {
-                                    $retry652 = false;
-                                    throw $e653;
+                                else if ($currentTid626.parent != null) {
+                                    $retry624 = false;
+                                    throw $e625;
                                 }
                                 else {
                                     throw new InternalError(
@@ -724,45 +724,45 @@ public interface RunningStats extends fabric.lang.Object {
                                                 "transaction than the one being managed.");
                                 }
                             }
-                            catch (final Throwable $e653) {
-                                $commit651 = false;
-                                if ($tm655.checkForStaleObjects())
-                                    continue $label650;
-                                $retry652 = false;
-                                throw new fabric.worker.AbortException($e653);
+                            catch (final Throwable $e625) {
+                                $commit623 = false;
+                                if ($tm627.checkForStaleObjects())
+                                    continue $label622;
+                                $retry624 = false;
+                                throw new fabric.worker.AbortException($e625);
                             }
                             finally {
-                                if ($commit651) {
+                                if ($commit623) {
                                     try {
                                         fabric.worker.transaction.TransactionManager.
                                           getInstance().commitTransaction();
                                     }
                                     catch (final fabric.worker.
-                                             AbortException $e653) {
-                                        $commit651 = false;
+                                             AbortException $e625) {
+                                        $commit623 = false;
                                     }
                                     catch (final fabric.worker.
-                                             TransactionRestartingException $e653) {
-                                        $commit651 = false;
+                                             TransactionRestartingException $e625) {
+                                        $commit623 = false;
                                         fabric.common.TransactionID
-                                          $currentTid654 =
-                                          $tm655.getCurrentTid();
-                                        if ($currentTid654 != null) {
-                                            if ($e653.tid.equals(
-                                                            $currentTid654) ||
-                                                  !$e653.tid.
+                                          $currentTid626 =
+                                          $tm627.getCurrentTid();
+                                        if ($currentTid626 != null) {
+                                            if ($e625.tid.equals(
+                                                            $currentTid626) ||
+                                                  !$e625.tid.
                                                   isDescendantOf(
-                                                    $currentTid654)) {
-                                                throw $e653;
+                                                    $currentTid626)) {
+                                                throw $e625;
                                             }
                                         }
                                     }
                                 } else {
                                     fabric.worker.transaction.TransactionManager.getInstance().abortTransaction();
                                 }
-                                if (!$commit651 && $retry652) {
+                                if (!$commit623 && $retry624) {
                                     {  }
-                                    continue $label650;
+                                    continue $label622;
                                 }
                             }
                         }
@@ -777,7 +777,7 @@ public interface RunningStats extends fabric.lang.Object {
     40, -103, 63, -11, 18, 25, -27, -26, 90, -48, 92, -100, -107, 28, -12, 122,
     -108, -68, 125, 43, -51, -61, 81, 125, -115, -5, -40 };
     public static final java.lang.String jlc$CompilerVersion$fabil = "0.3.0";
-    public static final long jlc$SourceLastModified$fabil = 1520096235000L;
+    public static final long jlc$SourceLastModified$fabil = 1520116324000L;
     public static final java.lang.String jlc$ClassType$fabil =
       "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";
 }
