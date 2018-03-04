@@ -266,7 +266,7 @@ public class SumMetric extends DerivedMetric {
     public final long MIN_ADAPTIVE_EXPIRY = 1000;
 
     /*@Override*/
-    public EnforcementPolicy policy(double rate, double base, boolean useWeakCache, final Store s) {
+    public EnforcementPolicy thresholdPolicy(double rate, double base, boolean useWeakCache, final Store s) {
         // Don't do this if we want to avoid conflicts between local concurrent
         // operations on different metrics in a derived metric...
         //if (isSingleStore())
@@ -328,7 +328,7 @@ public class SumMetric extends DerivedMetric {
             double native[] normalized = Bound.createBound(r, b, currentTime);
             if (!adaptiveWitnesses.containsKey(m)
                     || !((Contract) adaptiveWitnesses.get(m)).implies(m, normalized[0], normalized[1])) {
-                adaptiveWitnesses.put(m, m.getContract(r, b, currentTime));
+                adaptiveWitnesses.put(m, m.getThresholdContract(r, b, currentTime));
             }
             // Update the timeout estimate.
             adaptiveTimeout = Math.min(adaptiveTimeout,
@@ -352,7 +352,7 @@ public class SumMetric extends DerivedMetric {
             double native[] normalized2 = Bound.createBound(r2, b2, currentTime);
             if (!staticWitnesses.containsKey(m)
                     || !((Contract) staticWitnesses.get(m)).implies(m, normalized2[0], normalized2[1])) {
-                staticWitnesses.put(m, m.getContract(r2, b2, currentTime));
+                staticWitnesses.put(m, m.getThresholdContract(r2, b2, currentTime));
             }
             // Update the timeout estimate.
             staticTimeout = Math.min(staticTimeout,

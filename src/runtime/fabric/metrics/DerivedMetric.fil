@@ -9,6 +9,8 @@ import fabric.util.Iterator;
 
 import fabric.metrics.contracts.Bound;
 import fabric.metrics.contracts.Contract;
+import fabric.metrics.contracts.enforcement.DeadPolicy;
+import fabric.metrics.contracts.enforcement.DirectEqualityPolicy;
 import fabric.metrics.contracts.enforcement.EnforcementPolicy;
 import fabric.metrics.contracts.enforcement.WitnessPolicy;
 import fabric.metrics.util.Observer;
@@ -433,5 +435,24 @@ public abstract class DerivedMetric extends Metric implements Observer {
   /*@Override*/
   public void refreshWeakEstimates_remote(fabric.lang.security.Principal caller) {
     refreshWeakEstimates();
+  }
+
+  /*@Override*/
+  public EnforcementPolicy equalityPolicy(double value, boolean useWeakCache, final Store s) {
+    // TODO: There's a better policy to override this with in MinMetric.
+    if (value() == value) {
+      if (isSingleStore()) {
+          return new DirectEqualityPolicy@s().fabric$metrics$contracts$enforcement$DirectEqualityPolicy$(this, value);
+      }
+      Contract native[] witnesses = new Contract native[terms.length];
+      // Defend all rows against the bound individually, using the strictest
+      // bounds across the rows for each term in this sum.
+      for (int i = 0; i < terms.length; i++) {
+        witnesses[i] = term(i).getEqualityContract(term(i).value());
+      }
+      return new WitnessPolicy@s().fabric$metrics$contracts$enforcement$WitnessPolicy$(witnesses);
+    } else {
+      return new DeadPolicy@s().fabric$metrics$contracts$enforcement$DeadPolicy$();
+    }
   }
 }

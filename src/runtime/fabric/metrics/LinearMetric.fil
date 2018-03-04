@@ -480,7 +480,7 @@ public class LinearMetric extends DerivedMetric {
    * strong operations for model parameters.
    */
   /*@Override*/
-  public EnforcementPolicy policy(double rate, double base, boolean useWeakCache, final Store str) {
+  public EnforcementPolicy thresholdPolicy(double rate, double base, boolean useWeakCache, final Store str) {
     if (isSingleStore())
       return new DirectPolicy@str().fabric$metrics$contracts$enforcement$DirectPolicy$(this, rate, base);
     Map/*<Metric, Contract>*/ witnesses = new LinkedHashMap/*<>*/().fabric$util$LinkedHashMap$();
@@ -524,7 +524,7 @@ public class LinearMetric extends DerivedMetric {
         double native[] normalized = Bound.createBound(r, b, currentTime);
         if (!witnesses.containsKey(m)
             || !((Contract) witnesses.get(m)).implies(m, normalized[0], normalized[1])) {
-          witnesses.put(m, m.getContract(r, b, currentTime));
+          witnesses.put(m, m.getThresholdContract(r, b, currentTime));
         }
       }
     }

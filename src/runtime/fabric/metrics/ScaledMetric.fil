@@ -158,7 +158,7 @@ public class ScaledMetric extends DerivedMetric {
     }
 
     /*@Override*/
-    public EnforcementPolicy policy(double rate, double base, boolean useWeakCache, final Store s) {
+    public EnforcementPolicy thresholdPolicy(double rate, double base, boolean useWeakCache, final Store s) {
         // Don't do this if we want to avoid conflicts between local concurrent
         // operations on different metrics in a derived metric...
         //if (isSingleStore())
@@ -192,7 +192,7 @@ public class ScaledMetric extends DerivedMetric {
             baseNow = -baseNow;
             rate = -rate;
         }
-        witness = m.getContract(rate, baseNow, currentTime);
+        witness = m.getThresholdContract(rate, baseNow, currentTime);
         return new WitnessPolicy@s().fabric$metrics$contracts$enforcement$WitnessPolicy$(new Contract native[] { witness });
     }
 

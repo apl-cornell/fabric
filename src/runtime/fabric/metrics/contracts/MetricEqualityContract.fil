@@ -24,30 +24,27 @@ import fabric.common.Logging;
  * the associated expriation time.
  * <p>
  * This class follows the subject-observer pattern. An instance is an observer
- * of either a {@link Metric} or a set of {@link MetricContract}s and can be
+ * of either a {@link Metric} or a set of {@link MetricEqualityContract}s and can be
  * observed by other {@link Contract}s.
  */
-public class MetricContract extends Contract {
+public class MetricEqualityContract extends Contract {
 
   protected final Metric metric;
-  public final double rate;
-  public final double base;
+  public final double value;
   protected EnforcementPolicy currentPolicy;
 
   /**
    * @param metric
    *        the {@link Metric} this contract asserts a bound on
-   * @param rate
-   *        the rate of the bound this {@link MetricContract} asserts on
-   *        metric.
+   * @param value
+   *        the value of the equality
    * @param base
-   *        the base of the bound this {@link MetricContract} asserts on
+   *        the base of the bound this {@link MetricEqualityContract} asserts on
    *        metric.
    */
-  public MetricContract fabric$metrics$contracts$MetricContract$(Metric metric, double rate, double base) {
+  public MetricEqualityContract fabric$metrics$contracts$MetricEqualityContract$(Metric metric, double value) {
     this.metric = metric;
-    this.rate = rate;
-    this.base = base;
+    this.value = value;
     fabric$metrics$contracts$Contract$();
     return this;
   }
@@ -57,24 +54,12 @@ public class MetricContract extends Contract {
     return metric;
   }
 
-  /**
-   * @return the expected lifetime of this {@link MetricContract} given the
-   *       associated {@link Metric}s current velocity.
-   */
-  public long getExpectedLifetime() {
-    long time = System.currentTimeMillis();
-    Metric m = getMetric();
-    double adjustedRate = rate - m.velocity();
-    return (long)
-      (time + ((m.value() - Bound.value(rate, base, time)) / adjustedRate));
-  }
-
   /*@Override*/
   public void activate() {
-    MetricContract.static_activate(this);
+    MetricEqualityContract.static_activate(this);
   }
 
-  private static void static_activate(MetricContract tmp) {
+  private static void static_activate(MetricEqualityContract tmp) {
     if (TransactionManager.getInstance().inTxn()) {
       if (tmp.isActivated())
         return;
@@ -98,10 +83,10 @@ public class MetricContract extends Contract {
       // mean we're running a contract creation in a single transaction and at
       // that point, we're going to contend on the strongly consistent values
       // regardless.
-      startPol = tmp.metric.thresholdPolicy(tmp.rate, tmp.base, false, tmp.$getStore());
+      startPol = tmp.metric.equalityPolicy(tmp.value, false, tmp.$getStore());
     } else {
       atomic {
-        startPol = tmp.metric.thresholdPolicy(tmp.rate, tmp.base, true, tmp.$getStore());
+        startPol = tmp.metric.equalityPolicy(tmp.value, true, tmp.$getStore());
       }
     }
 
@@ -117,7 +102,7 @@ public class MetricContract extends Contract {
     static_finishActivating(this, p);
   }
 
-  private static void static_finishActivating(MetricContract tmp, EnforcementPolicy p) {
+  private static void static_finishActivating(MetricEqualityContract tmp, EnforcementPolicy p) {
     // Set the expiry and free it up
     //Logging.METRICS_LOGGER.finer("ACTIVATING MC " + tmp + " IN " +
     //    TransactionManager.getInstance().getCurrentLog());
@@ -212,7 +197,7 @@ public class MetricContract extends Contract {
 
     // Find a new policy now that we have the lock.
     EnforcementPolicy oldPolicy = currentPolicy;
-    EnforcementPolicy newPolicy = metric.thresholdPolicy(this.rate, this.base, $getStore());
+    EnforcementPolicy newPolicy = metric.equalityPolicy(this.value, $getStore());
 
     // Wait to unapply so that metric is still tracked if this was
     // directly enforced previously
@@ -234,16 +219,15 @@ public class MetricContract extends Contract {
 
   /*@Override*/
   public boolean implies(Metric otherMetric, double otherRate, double otherBase) {
-    if (!getMetric().equals(otherMetric)
-        || this.rate < otherRate
-        || this.base < otherBase)
+    if (!getMetric().equals(otherMetric) || !Bound.test(otherRate, otherBase,
+          this.value, System.currentTimeMillis()))
       return false;
     return valid();
   }
 
   /*@Override*/
   public String toString() {
-    return getMetric().toString() + " >= " + rate + " * t + " + base + " until " + getExpiry();
+    return getMetric().toString() + " == " + value + " until " + getExpiry();
   }
 
   /*@Override*/
@@ -271,7 +255,7 @@ public class MetricContract extends Contract {
     static_removeObserver(this, obs);
   }
 
-  private static void static_removeObserver(MetricContract tmp, Observer obs) {
+  private static void static_removeObserver(MetricEqualityContract tmp, Observer obs) {
     if (TransactionManager.getInstance().inTxn()) {
       Contract.static_removeObserver(tmp, obs);
       if (!tmp.isObserved()) {
