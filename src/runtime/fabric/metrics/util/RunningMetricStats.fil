@@ -16,7 +16,7 @@ public class RunningMetricStats {
   // averages.
   public static final double ALPHA = 0.001;
 
-  private boolean stamp = true;
+  //private boolean stamp = true;
   private double value;
   private double meanDelta = 0.0;
   private double varDelta = 0.0;
@@ -68,7 +68,7 @@ public class RunningMetricStats {
    * @return the current value.
    */
   public double getValue() {
-    stamp = true;
+    //stamp = true;
     return value;
   }
 
@@ -125,7 +125,7 @@ public class RunningMetricStats {
    * @return the last update time.
    */
   public long getLastUpdate() {
-    stamp = true;
+    //stamp = true;
     return lastUpdate;
   }
 
@@ -133,7 +133,7 @@ public class RunningMetricStats {
    * @return the number of samples taken.
    */
   public long getSamples() {
-    stamp = true;
+    //stamp = true;
     return samples;
   }
 
@@ -141,7 +141,7 @@ public class RunningMetricStats {
    * @return the current estimated meanDelta.
    */
   public double getMeanDelta() {
-    stamp = true;
+    //stamp = true;
     return meanDelta;
   }
 
@@ -149,7 +149,7 @@ public class RunningMetricStats {
    * @return the current estimated meanInterval.
    */
   public double getMeanInterval() {
-    stamp = true;
+    //stamp = true;
     return meanInterval;
   }
 
@@ -157,7 +157,7 @@ public class RunningMetricStats {
    * @return the current estimated variance of the delta.
    */
   public double getVarDelta() {
-    stamp = true;
+    //stamp = true;
     return varDelta;
   }
 
