@@ -299,7 +299,6 @@ public final class Log {
       this.resolving = parent.resolving;
       this.locksCreated.putAll(parent.locksCreated);
       this.acquires.putAll(parent.acquires);
-      this.pendingReleases.putAll(parent.pendingReleases);
     } else {
       this.writerMap = new WriterMap(this.tid.topTid);
       commitState = new CommitState();
@@ -551,6 +550,8 @@ public final class Log {
         if (write.$numWaiting > 0) write.notifyAll();
       }
     }
+    // Reset the expiry to check.
+    expiryToCheck = Long.MAX_VALUE;
 
     if (parent != null && parent.tid.equals(tid.parent)) {
       // The parent frame represents the parent transaction. Null out its child.
@@ -579,6 +580,10 @@ public final class Log {
 
       if (parent != null) {
         writerMap = new WriterMap(parent.writerMap);
+        unobservedSamples.putAll(parent.unobservedSamples);
+        resolving = parent.resolving;
+        locksCreated.putAll(parent.locksCreated);
+        acquires.putAll(parent.acquires);
       } else {
         writerMap = new WriterMap(tid.topTid);
       }
