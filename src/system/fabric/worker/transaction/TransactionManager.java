@@ -1484,7 +1484,7 @@ public final class TransactionManager {
               obj.$writeLockHolder);
           hadToWait = true;
           obj.$numWaiting++;
-          current.setWaitsFor(obj.$writeLockHolder);
+          current.setWaitsFor(obj.$writeLockHolder, obj);
 
           if (firstWait) {
             // This is the first time we're waiting. Wait with a 10 ms timeout.
@@ -1501,7 +1501,7 @@ public final class TransactionManager {
             // Should be waiting indefinitely, but this requires proper handling
             // of InterruptedExceptions in the entire system. Instead, we spin
             // once a second so that we periodically check the retry signal.
-            obj.wait(1000);
+            obj.wait();
           }
         } catch (InterruptedException e) {
           Logging.logIgnoredInterruptedException(e);
@@ -1635,6 +1635,9 @@ public final class TransactionManager {
     // Check write condition: wait until writer is in our ancestry and all
     // readers are in our ancestry.
     boolean hadToWait = false;
+    // Flag indicating if we temporarily set a write lock for current, which
+    // should be released once acquired and set on the cloned value below.
+    boolean tempWriteLock = false;
     try {
       // This is the set of logs for those transactions we're waiting for.
       Set<Log> waitsFor = new HashSet<>();
@@ -1644,8 +1647,6 @@ public final class TransactionManager {
       while (true) {
         waitsFor.clear();
 
-        // Flag indicating if we temporarily set a write lock for current
-        boolean tempWriteLock = false;
         // Make sure writer is in our ancestry.
         if (obj.$writeLockHolder != null
             && !current.isDescendantOf(obj.$writeLockHolder)) {
@@ -1661,7 +1662,7 @@ public final class TransactionManager {
             tempWriteLock = true;
             obj.$writeLockHolder = current;
           }
-          // Restart any incompatible readers.
+          // Wait on any incompatible readers.
           ReadMap.Entry readMapEntry = obj.$readMapEntry;
           if (readMapEntry != null) {
             synchronized (readMapEntry) {
@@ -1672,7 +1673,8 @@ public final class TransactionManager {
                       current, obj.$getStore(), obj.$getOnum(), obj.getClass(),
                       lock);
                   waitsFor.add(lock);
-                  lock.flagRetry();
+                  // Uncomment to eagerly kill readers of the object.
+                  //lock.flagRetry();
                 }
               }
 
@@ -1687,7 +1689,7 @@ public final class TransactionManager {
 
         try {
           obj.$numWaiting++;
-          current.setWaitsFor(waitsFor);
+          current.setWaitsFor(waitsFor, obj);
 
           if (firstWait) {
             // This is the first time we're waiting. Wait with a 10 ms timeout.
@@ -1704,13 +1706,11 @@ public final class TransactionManager {
             // Should be waiting indefinitely, but this requires proper handling
             // of InterruptedExceptions in the entire system. Instead, we spin
             // once a second so that we periodically check the retry signal.
-            obj.wait(1000);
+            obj.wait();
           }
         } catch (InterruptedException e) {
           Logging.logIgnoredInterruptedException(e);
         }
-        // Release the temp lock and acquire it after the clone below.
-        if (tempWriteLock) obj.$writeLockHolder = null;
         obj.$numWaiting--;
 
         // Make sure we weren't aborted/retried while we were waiting.
@@ -1718,6 +1718,8 @@ public final class TransactionManager {
       }
     } finally {
       current.clearWaitsFor();
+      // Release the temp lock
+      if (tempWriteLock) obj.$writeLockHolder = null;
     }
 
     // Set the write stamp.

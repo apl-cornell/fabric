@@ -230,6 +230,11 @@ public final class Log {
   private final Set<Log> waitsFor;
 
   /**
+   * The lock, if any, this transaction is waiting on.
+   */
+  private Object waitsOn;
+
+  /**
    * Locks that will be acquired if this transaction commits successfully.
    */
   protected final OidKeyHashMap<Boolean> acquires =
@@ -280,6 +285,7 @@ public final class Log {
     this.workersCalled = new ArrayList<>();
     this.startTime = System.currentTimeMillis();
     this.waitsFor = new HashSet<>();
+    this.waitsOn = null;
 
     if (parent != null) {
       this.unobservedSamples.putAll(parent.unobservedSamples);
@@ -512,6 +518,11 @@ public final class Log {
           // XXX spin once a second to check the retry signal.
 
           // log.thread.interrupt();
+          if (log.waitsOn != null) {
+            synchronized (log.waitsOn) {
+              log.waitsOn.notifyAll();
+            }
+          }
         }
       }
     }
@@ -1023,20 +1034,22 @@ public final class Log {
   /**
    * Changes the waitsFor set to a singleton set containing the given log.
    */
-  public void setWaitsFor(Log waitsFor) {
+  public void setWaitsFor(Log waitsFor, Object obj) {
     synchronized (this.waitsFor) {
       this.waitsFor.clear();
       this.waitsFor.add(waitsFor);
+      this.waitsOn = obj;
     }
   }
 
   /**
    * Changes the waitsFor set to contain exactly the elements of the given set.
    */
-  public void setWaitsFor(Set<Log> waitsFor) {
+  public void setWaitsFor(Set<Log> waitsFor, Object obj) {
     synchronized (this.waitsFor) {
       this.waitsFor.clear();
       this.waitsFor.addAll(waitsFor);
+      this.waitsOn = obj;
     }
   }
 
@@ -1046,6 +1059,7 @@ public final class Log {
   public void clearWaitsFor() {
     synchronized (this.waitsFor) {
       this.waitsFor.clear();
+      this.waitsOn = null;
     }
   }
 
