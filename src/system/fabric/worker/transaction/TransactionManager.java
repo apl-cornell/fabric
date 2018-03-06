@@ -354,7 +354,7 @@ public final class TransactionManager {
           // Do an exponential backoff between attempts.
           if (attempts > 4) {
             try {
-              int sleepTime = Math.min(1 << attempts, 1000);
+              int sleepTime = Math.min(1 << Math.min(attempts, 8), 250);
               sleepTime += ThreadLocalRandom.current().nextInt(0, sleepTime);
               Thread.sleep(sleepTime);
             } catch (InterruptedException e) {
