@@ -41,6 +41,7 @@ public class DeadlockDetectorThread extends Thread {
   public DeadlockDetectorThread() {
     super("Deadlock detector");
     setDaemon(true);
+    setPriority(getPriority() + 1);
     this.detectRequests = new LinkedBlockingQueue<>();
     start();
   }
