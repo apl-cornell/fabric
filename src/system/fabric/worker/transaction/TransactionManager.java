@@ -1,6 +1,7 @@
 package fabric.worker.transaction;
 
 import static fabric.common.Logging.HOTOS_LOGGER;
+import static fabric.common.Logging.WORKER_DEADLOCK_LOGGER;
 import static fabric.common.Logging.WORKER_TRANSACTION_LOGGER;
 import static fabric.worker.transaction.Log.CommitState.Values.ABORTED;
 import static fabric.worker.transaction.Log.CommitState.Values.ABORTING;
@@ -900,10 +901,11 @@ public final class TransactionManager {
       while (obj.$writeLockHolder != null
           && !current.isDescendantOf(obj.$writeLockHolder)) {
         try {
-          Logging.log(WORKER_TRANSACTION_LOGGER, Level.FINEST,
-              "{0} wants to read {1}/{2} ({3}); waiting on writer {4}", current,
-              obj.$getStore(), obj.$getOnum(), obj.getClass(),
-              obj.$writeLockHolder);
+          Logging.log(WORKER_DEADLOCK_LOGGER, Level.FINEST,
+              "{0} in {6} wants to read {1}/{2} ({3}) ({5}); waiting on writer {4}",
+              current, obj.$getStore(), obj.$getOnum(), obj.getClass(),
+              obj.$writeLockHolder, System.identityHashCode(obj),
+              Thread.currentThread());
           hadToWait = true;
           obj.$numWaiting++;
           current.setWaitsFor(obj.$writeLockHolder, obj);
@@ -991,9 +993,6 @@ public final class TransactionManager {
     // Check write condition: wait until writer is in our ancestry and all
     // readers are in our ancestry.
     boolean hadToWait = false;
-    // Flag indicating if we temporarily set a write lock for current, which
-    // should be released once acquired and set on the cloned value below.
-    boolean tempWriteLock = false;
     try {
       // This is the set of logs for those transactions we're waiting for.
       Set<Log> waitsFor = new HashSet<>();
@@ -1006,37 +1005,32 @@ public final class TransactionManager {
         // Make sure writer is in our ancestry.
         if (obj.$writeLockHolder != null
             && !current.isDescendantOf(obj.$writeLockHolder)) {
-          Logging.log(WORKER_TRANSACTION_LOGGER, Level.FINEST,
-              "{0} wants to write {1}/{2} ({3}); waiting on writer {4}",
+          Logging.log(WORKER_DEADLOCK_LOGGER, Level.FINEST,
+              "{0} in {6} wants to write {1}/{2} ({3}) ({5}); waiting on writer {4}",
               current, obj.$getStore(), obj.$getOnum(), obj.getClass(),
-              obj.$writeLockHolder);
+              obj.$writeLockHolder, System.identityHashCode(obj),
+              Thread.currentThread());
           waitsFor.add(obj.$writeLockHolder);
           hadToWait = true;
         } else {
-          if (obj.$writeLockHolder == null) {
-            // Grab a write lock temporarily to avoid later readers dogpiling.
-            tempWriteLock = true;
-            obj.$writeLockHolder = current;
-          }
           // Wait on any incompatible readers.
           ReadMap.Entry readMapEntry = obj.$readMapEntry;
           if (readMapEntry != null) {
             synchronized (readMapEntry) {
               for (Log lock : readMapEntry.getReaders()) {
                 if (!current.isDescendantOf(lock)) {
-                  Logging.log(WORKER_TRANSACTION_LOGGER, Level.FINEST,
-                      "{0} wants to write {1}/{2} ({3}); aborting reader {4}",
+                  Logging.log(WORKER_DEADLOCK_LOGGER, Level.FINEST,
+                      "{0} in {6} wants to write {1}/{2} ({3}) ({5}); waiting on reader {4}",
                       current, obj.$getStore(), obj.$getOnum(), obj.getClass(),
-                      lock);
+                      lock, System.identityHashCode(obj),
+                      Thread.currentThread());
                   waitsFor.add(lock);
                   // Uncomment to eagerly kill readers of the object.
-                  //lock.flagRetry();
+                  lock.flagRetry();
                 }
               }
 
               if (waitsFor.isEmpty()) {
-                // Release the temp lock and acquire it after the clone below.
-                if (tempWriteLock) obj.$writeLockHolder = null;
                 break;
               }
             }
@@ -1074,8 +1068,6 @@ public final class TransactionManager {
       }
     } finally {
       current.clearWaitsFor();
-      // Release the temp lock
-      if (tempWriteLock) obj.$writeLockHolder = null;
     }
 
     // Set the write stamp.
