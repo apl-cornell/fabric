@@ -850,6 +850,11 @@ public final class TransactionManager {
       if (TRACE_WRITE_LOCKS)
         obj.$writeLockStackTrace = Thread.currentThread().getStackTrace();
 
+      Logging.log(WORKER_DEADLOCK_LOGGER, Level.FINEST,
+          "{0} in {5} got write lock (via create) on {1}/{2} ({3}) ({4})",
+          current, obj.$getStore(), obj.$getOnum(), obj.getClass(),
+          System.identityHashCode(obj), Thread.currentThread());
+
       // Own the object. The call to ensureOwnership is responsible for adding
       // the object to the set of created objects.
       ensureOwnership(obj);
@@ -896,37 +901,21 @@ public final class TransactionManager {
     // Check read condition: wait until all writers are in our ancestry.
     boolean hadToWait = false;
     try {
-      boolean firstWait = true;
-      boolean deadlockDetectRequested = false;
       while (obj.$writeLockHolder != null
           && !current.isDescendantOf(obj.$writeLockHolder)) {
+        Logging.log(WORKER_DEADLOCK_LOGGER, Level.FINER,
+            "{0} in {6} wants to read {1}/{2} ({3}) ({5}); waiting on writer {4}",
+            current, obj.$getStore(), obj.$getOnum(), obj.getClass(),
+            obj.$writeLockHolder, System.identityHashCode(obj),
+            Thread.currentThread());
+        hadToWait = true;
+        obj.$numWaiting++;
         try {
-          Logging.log(WORKER_DEADLOCK_LOGGER, Level.FINEST,
-              "{0} in {6} wants to read {1}/{2} ({3}) ({5}); waiting on writer {4}",
-              current, obj.$getStore(), obj.$getOnum(), obj.getClass(),
-              obj.$writeLockHolder, System.identityHashCode(obj),
-              Thread.currentThread());
-          hadToWait = true;
-          obj.$numWaiting++;
           current.setWaitsFor(obj.$writeLockHolder, obj);
 
-          if (firstWait) {
-            // This is the first time we're waiting. Wait with a 10 ms timeout.
-            firstWait = false;
-            obj.wait(10);
-          } else {
-            // Not the first time through the loop. Ask for deadlock detection
-            // if we haven't already.
-            if (!deadlockDetectRequested) {
-              deadlockDetector.requestDetect(current);
-              deadlockDetectRequested = true;
-            }
-
-            // Should be waiting indefinitely, but this requires proper handling
-            // of InterruptedExceptions in the entire system. Instead, we spin
-            // once a second so that we periodically check the retry signal.
-            obj.wait();
-          }
+          // Ask for deadlock detection while we wait.
+          deadlockDetector.requestDetect(current);
+          obj.wait();
         } catch (InterruptedException e) {
           Logging.logIgnoredInterruptedException(e);
         }
@@ -946,6 +935,10 @@ public final class TransactionManager {
     obj.writerMapVersion = -1;
 
     current.acquireReadLock(obj);
+    Logging.log(WORKER_DEADLOCK_LOGGER, Level.FINEST,
+        "{0} in {5} got read lock on {1}/{2} ({3}) ({4})", current,
+        obj.$getStore(), obj.$getOnum(), obj.getClass(),
+        System.identityHashCode(obj), Thread.currentThread());
     if (hadToWait)
       WORKER_TRANSACTION_LOGGER.log(Level.FINEST, "{0} got read lock", current);
   }
@@ -997,15 +990,13 @@ public final class TransactionManager {
       // This is the set of logs for those transactions we're waiting for.
       Set<Log> waitsFor = new HashSet<>();
 
-      boolean firstWait = true;
-      boolean deadlockDetectRequested = false;
       while (true) {
         waitsFor.clear();
 
         // Make sure writer is in our ancestry.
         if (obj.$writeLockHolder != null
             && !current.isDescendantOf(obj.$writeLockHolder)) {
-          Logging.log(WORKER_DEADLOCK_LOGGER, Level.FINEST,
+          Logging.log(WORKER_DEADLOCK_LOGGER, Level.FINER,
               "{0} in {6} wants to write {1}/{2} ({3}) ({5}); waiting on writer {4}",
               current, obj.$getStore(), obj.$getOnum(), obj.getClass(),
               obj.$writeLockHolder, System.identityHashCode(obj),
@@ -1019,13 +1010,12 @@ public final class TransactionManager {
             synchronized (readMapEntry) {
               for (Log lock : readMapEntry.getReaders()) {
                 if (!current.isDescendantOf(lock)) {
-                  Logging.log(WORKER_DEADLOCK_LOGGER, Level.FINEST,
-                      "{0} in {6} wants to write {1}/{2} ({3}) ({5}); waiting on reader {4}",
+                  Logging.log(WORKER_DEADLOCK_LOGGER, Level.FINER,
+                      "{0} in {6} wants to write {1}/{2} ({3}) ({5}); aborting reader {4}",
                       current, obj.$getStore(), obj.$getOnum(), obj.getClass(),
                       lock, System.identityHashCode(obj),
                       Thread.currentThread());
                   waitsFor.add(lock);
-                  // Uncomment to eagerly kill readers of the object.
                   lock.flagRetry();
                 }
               }
@@ -1033,31 +1023,18 @@ public final class TransactionManager {
               if (waitsFor.isEmpty()) {
                 break;
               }
+              hadToWait = true;
             }
           }
         }
 
+        obj.$numWaiting++;
         try {
-          obj.$numWaiting++;
           current.setWaitsFor(waitsFor, obj);
 
-          if (firstWait) {
-            // This is the first time we're waiting. Wait with a 10 ms timeout.
-            firstWait = false;
-            obj.wait(10);
-          } else {
-            // Not the first time through the loop. Ask for deadlock detection
-            // if we haven't already.
-            if (!deadlockDetectRequested) {
-              deadlockDetector.requestDetect(current);
-              deadlockDetectRequested = true;
-            }
-
-            // Should be waiting indefinitely, but this requires proper handling
-            // of InterruptedExceptions in the entire system. Instead, we spin
-            // once a second so that we periodically check the retry signal.
-            obj.wait();
-          }
+          // Ask for deadlock detection while we wait.
+          deadlockDetector.requestDetect(current);
+          obj.wait();
         } catch (InterruptedException e) {
           Logging.logIgnoredInterruptedException(e);
         }
@@ -1094,6 +1071,11 @@ public final class TransactionManager {
         current.writes.add(obj);
       }
     }
+
+    Logging.log(WORKER_DEADLOCK_LOGGER, Level.FINEST,
+        "{0} in {5} got write lock on {1}/{2} ({3}) ({4})", current,
+        obj.$getStore(), obj.$getOnum(), obj.getClass(),
+        System.identityHashCode(obj), Thread.currentThread());
 
     if (obj.$reader != current) {
       // Clear the read stamp -- the reader's read condition no longer holds.

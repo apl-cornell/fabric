@@ -1,5 +1,7 @@
 package fabric.worker.transaction;
 
+import static fabric.common.Logging.WORKER_DEADLOCK_LOGGER;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -8,7 +10,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 import java.util.Set;
+import java.util.logging.Level;
 
+import fabric.common.Logging;
 import fabric.common.SysUtil;
 import fabric.common.Timing;
 import fabric.common.TransactionID;
@@ -260,7 +264,7 @@ public final class Log {
    * this log.
    */
   boolean isDescendantOf(Log log) {
-    return tid.isDescendantOf(log.tid);
+    return log != null && tid.isDescendantOf(log.tid);
   }
 
   /**
@@ -457,10 +461,17 @@ public final class Log {
     Iterable<_Impl> chain = SysUtil.chain(writes, localStoreWrites);
     for (_Impl write : chain) {
       synchronized (write) {
+        if (WORKER_DEADLOCK_LOGGER.isLoggable(Level.FINEST)) {
+          Logging.log(WORKER_DEADLOCK_LOGGER, Level.FINEST,
+              "{0} in {5} aborted and released write lock on {1}/{2} ({3}) ({4})",
+              this, write.$getStore(), write.$getOnum(), write.getClass(),
+              System.identityHashCode(write), Thread.currentThread());
+        }
         write.$copyStateFrom(write.$history);
 
         // Signal any waiting readers/writers.
-        if (write.$numWaiting > 0) write.notifyAll();
+        if (write.$numWaiting > 0 && !isDescendantOf(write.$writeLockHolder))
+          write.notifyAll();
       }
     }
 
@@ -540,7 +551,7 @@ public final class Log {
         obj.$writeLockHolder = parent;
 
         // Signal any readers/writers.
-        if (obj.$numWaiting > 0) obj.notifyAll();
+        //if (obj.$numWaiting > 0) obj.notifyAll();
       }
     }
 
@@ -564,7 +575,7 @@ public final class Log {
         obj.$writeLockHolder = parent;
 
         // Signal any readers/writers.
-        if (obj.$numWaiting > 0) obj.notifyAll();
+        //if (obj.$numWaiting > 0) obj.notifyAll();
       }
     }
 
@@ -613,6 +624,34 @@ public final class Log {
    * this transaction are released.
    */
   void commitTopLevel() {
+    // Release write locks on created objects and set version numbers.
+    // XXX TRM 3/9/18: Do this before reads and writes so that nobody gets a
+    // reference to the creates before we've released the writer locks on
+    // creates.
+    Iterable<_Impl> chain2 = SysUtil.chain(creates, localStoreCreates);
+    for (_Impl obj : chain2) {
+      if (WORKER_DEADLOCK_LOGGER.isLoggable(Level.FINEST)) {
+        Logging.log(WORKER_DEADLOCK_LOGGER, Level.FINEST,
+            "{0} in {5} committed and released (created) write lock on {1}/{2} ({3}) ({4})",
+            this, obj.$getStore(), obj.$getOnum(), obj.getClass(),
+            System.identityHashCode(obj), Thread.currentThread());
+      }
+      if (!obj.$isOwned) {
+        // The cached object is out-of-date. Evict it.
+        obj.$ref.evict();
+        continue;
+      }
+
+      // XXX: Should we notify here in case somehow a reference is found in
+      // another transaction in another thread still?
+      obj.$writer = null;
+      obj.$writeLockHolder = null;
+      obj.$writeLockStackTrace = null;
+      obj.$version = 1;
+      obj.$readMapEntry.incrementVersion();
+      obj.$isOwned = false;
+    }
+
     // Release read locks.
     for (LongKeyMap<ReadMap.Entry> submap : reads) {
       for (ReadMap.Entry entry : submap.values()) {
@@ -634,6 +673,12 @@ public final class Log {
       }
 
       synchronized (obj) {
+        if (WORKER_DEADLOCK_LOGGER.isLoggable(Level.FINEST)) {
+          Logging.log(WORKER_DEADLOCK_LOGGER, Level.FINEST,
+              "{0} in {5} committed and released write lock on {1}/{2} ({3}) ({4})",
+              this, obj.$getStore(), obj.$getOnum(), obj.getClass(),
+              System.identityHashCode(obj), Thread.currentThread());
+        }
         obj.$writer = null;
         obj.$writeLockHolder = null;
         obj.$writeLockStackTrace = null;
@@ -647,23 +692,6 @@ public final class Log {
         // Signal any waiting readers/writers.
         if (obj.$numWaiting > 0) obj.notifyAll();
       }
-    }
-
-    // Release write locks on created objects and set version numbers.
-    Iterable<_Impl> chain2 = SysUtil.chain(creates, localStoreCreates);
-    for (_Impl obj : chain2) {
-      if (!obj.$isOwned) {
-        // The cached object is out-of-date. Evict it.
-        obj.$ref.evict();
-        continue;
-      }
-
-      obj.$writer = null;
-      obj.$writeLockHolder = null;
-      obj.$writeLockStackTrace = null;
-      obj.$version = 1;
-      obj.$readMapEntry.incrementVersion();
-      obj.$isOwned = false;
     }
 
     // Merge the security cache into the top-level label cache.
