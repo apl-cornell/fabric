@@ -1,9 +1,13 @@
 package fabric.worker.transaction;
 
+import static fabric.common.Logging.WORKER_DEADLOCK_LOGGER;
+
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.logging.Level;
 
+import fabric.common.Logging;
 import fabric.common.util.ConcurrentOidKeyHashMap;
 import fabric.lang.Object._Impl;
 import fabric.worker.FabricSoftRef;
@@ -119,6 +123,15 @@ public final class ReadMap {
      */
     void releaseLock(Log reader) {
       synchronized (this) {
+        if (WORKER_DEADLOCK_LOGGER.isLoggable(Level.FINEST)) {
+          _Impl raw = this.obj.get();
+          if (raw != null) {
+            Logging.log(WORKER_DEADLOCK_LOGGER, Level.FINEST,
+                "{0} in {5} released read lock on {1}/{2} ({3}) ({4})", reader,
+                raw.$getStore(), raw.$getOnum(), raw.getClass(),
+                System.identityHashCode(raw), Thread.currentThread());
+          }
+        }
         readLocks.remove(reader);
         attemptGC();
       }

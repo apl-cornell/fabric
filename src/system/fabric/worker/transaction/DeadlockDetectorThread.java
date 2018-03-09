@@ -52,7 +52,7 @@ public class DeadlockDetectorThread extends Thread {
    */
   void requestDetect(Log log) {
     detectRequests.add(log);
-    WORKER_DEADLOCK_LOGGER.log(Level.FINEST,
+    WORKER_DEADLOCK_LOGGER.log(Level.FINE,
         "Deadlock detection requested for {0}", log);
   }
 
@@ -161,8 +161,15 @@ public class DeadlockDetectorThread extends Thread {
     topLevelTidsVisited.add(curTopTid);
     try {
       for (Log waitsForLog : waitsFor) {
+        // Look for cycles continuing this path
         findCycles(waitsForLog, pathToTid, topLevelTidsVisited, cyclesFound,
             requests);
+        if (!topLevelTidsVisited.contains(waitsForLog.tid.topTid)) {
+          // Look for cycles starting from here, in case there's a deadlock not
+          // involving the path so far.
+          findCycles(waitsForLog, new LongKeyHashMap<Log>(), new LongHashSet(),
+              cyclesFound, requests);
+        }
       }
     } finally {
       pathToTid.remove(curTopTid);
