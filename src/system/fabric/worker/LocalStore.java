@@ -63,8 +63,8 @@ public final class LocalStore implements Store, Serializable {
 
   @Override
   public Pair<LongKeyMap<SerializedObject>, Long> prepareTransaction(long tid,
-      boolean singleStore, boolean readOnly, Collection<Object._Impl> toCreate,
-      LongKeyMap<Pair<Integer, Long>> reads,
+      boolean singleStore, boolean readOnly, long expiryToCheck,
+      Collection<Object._Impl> toCreate, LongKeyMap<Pair<Integer, Long>> reads,
       Collection<Pair<Object._Impl, Boolean>> writes) {
     // Note: since we assume local single threading we can ignore reads
     // (conflicts are impossible)

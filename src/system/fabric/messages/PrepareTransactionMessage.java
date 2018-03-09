@@ -43,6 +43,11 @@ public class PrepareTransactionMessage extends
    */
   public final boolean readOnly;
 
+  /**
+   * Time stamp to check for expiration if the transaction is single store.
+   */
+  public final long expiryToCheck;
+
   public final LongKeyMap<Pair<Integer, Long>> reads;
 
   /**
@@ -83,14 +88,14 @@ public class PrepareTransactionMessage extends
    * Used to prepare transactions at remote workers.
    */
   public PrepareTransactionMessage(long tid) {
-    this(tid, false, false, null, null, null);
+    this(tid, false, false, 0, null, null, null);
   }
 
   /**
    * Only used by the worker.
    */
   public PrepareTransactionMessage(long tid, boolean singleStore,
-      boolean readOnly, Collection<_Impl> toCreate,
+      boolean readOnly, long expiryToCheck, Collection<_Impl> toCreate,
       LongKeyMap<Pair<Integer, Long>> reads,
       Collection<Pair<_Impl, Boolean>> writes) {
     super(MessageType.PREPARE_TRANSACTION,
@@ -99,6 +104,7 @@ public class PrepareTransactionMessage extends
     this.tid = tid;
     this.singleStore = singleStore;
     this.readOnly = readOnly;
+    this.expiryToCheck = expiryToCheck;
     this.creates = toCreate;
     this.reads = reads;
     this.writes = writes;
@@ -150,6 +156,9 @@ public class PrepareTransactionMessage extends
     // Serialize read-only flag.
     out.writeBoolean(readOnly);
 
+    // Serialize the expiry to check.
+    out.writeLong(expiryToCheck);
+
     // Serialize reads.
     if (reads == null) {
       out.writeInt(0);
@@ -198,6 +207,9 @@ public class PrepareTransactionMessage extends
 
     // Read the read-only flag.
     this.readOnly = in.readBoolean();
+
+    // Read the expriy to check
+    this.expiryToCheck = in.readLong();
 
     // Read reads.
     int size = in.readInt();

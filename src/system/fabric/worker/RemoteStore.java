@@ -134,13 +134,13 @@ public class RemoteStore extends RemoteNode<RemoteStore>
    */
   @Override
   public Pair<LongKeyMap<SerializedObject>, Long> prepareTransaction(long tid,
-      boolean singleStore, boolean readOnly, Collection<Object._Impl> toCreate,
-      LongKeyMap<Pair<Integer, Long>> reads,
+      boolean singleStore, boolean readOnly, long expiryToCheck,
+      Collection<Object._Impl> toCreate, LongKeyMap<Pair<Integer, Long>> reads,
       Collection<Pair<Object._Impl, Boolean>> writes)
       throws TransactionPrepareFailedException, UnreachableNodeException {
     PrepareTransactionMessage.Response r =
         send(Worker.getWorker().authToStore, new PrepareTransactionMessage(tid,
-            singleStore, readOnly, toCreate, reads, writes));
+            singleStore, readOnly, expiryToCheck, toCreate, reads, writes));
     return new Pair<>(r.longerContracts, r.time);
   }
 

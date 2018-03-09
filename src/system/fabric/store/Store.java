@@ -221,7 +221,19 @@ class Store extends MessageToStoreHandler {
         prepareTransaction(client.principal, msg.tid, msg.serializedCreates,
             msg.serializedWrites, msg.reads);
 
+    long prepareTime = System.currentTimeMillis();
+
     if (msg.singleStore || msg.readOnly) {
+      if (msg.singleStore && prepareTime > msg.expiryToCheck) {
+        try {
+          tm.abortTransaction(client.principal, msg.tid);
+        } catch (AccessException e) {
+          // This should never happen.
+          throw new InternalError("AccessException on abort but not prepare?");
+        }
+        throw new TransactionPrepareFailedException(
+            "Single store prepare too late");
+      }
       try {
         tm.commitTransaction(client, msg.tid);
       } catch (TransactionCommitFailedException e) {
@@ -232,8 +244,7 @@ class Store extends MessageToStoreHandler {
 
     // Use the time we return, at this point we have locked all of the objects
     // for prepare.
-    return new PrepareTransactionMessage.Response(System.currentTimeMillis(),
-        longerContracts);
+    return new PrepareTransactionMessage.Response(prepareTime, longerContracts);
   }
 
   /**

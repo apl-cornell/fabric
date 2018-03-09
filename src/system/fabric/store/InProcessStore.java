@@ -79,8 +79,8 @@ public class InProcessStore extends RemoteStore {
 
   @Override
   public Pair<LongKeyMap<SerializedObject>, Long> prepareTransaction(long tid,
-      boolean singleStore, boolean readOnly, Collection<_Impl> toCreate,
-      LongKeyMap<Pair<Integer, Long>> reads,
+      boolean singleStore, boolean readOnly, long expiryToCheck,
+      Collection<_Impl> toCreate, LongKeyMap<Pair<Integer, Long>> reads,
       Collection<Pair<_Impl, Boolean>> writes)
       throws TransactionPrepareFailedException {
     Collection<SerializedObject> serializedCreates =
@@ -109,7 +109,19 @@ public class InProcessStore extends RemoteStore {
     LongKeyMap<SerializedObject> longerContracts =
         tm.prepare(Worker.getWorker().getPrincipal(), req);
 
+    long prepareTime = System.currentTimeMillis();
+
     if (singleStore || readOnly) {
+      if (singleStore && prepareTime > expiryToCheck) {
+        try {
+          tm.abortTransaction(Worker.getWorker().getPrincipal(), tid);
+        } catch (AccessException e) {
+          // This should never happen.
+          throw new InternalError("AccessException on abort but not prepare?");
+        }
+        throw new TransactionPrepareFailedException(
+            "Single store prepare too late");
+      }
       try {
         commitTransaction(tid);
       } catch (TransactionCommitFailedException e) {
@@ -117,7 +129,7 @@ public class InProcessStore extends RemoteStore {
         throw new InternalError("Single-store commit failed unexpectedly.", e);
       }
     }
-    return new Pair<>(longerContracts, System.currentTimeMillis());
+    return new Pair<>(longerContracts, prepareTime);
   }
 
   @Override

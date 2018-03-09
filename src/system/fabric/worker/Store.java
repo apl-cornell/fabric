@@ -37,8 +37,8 @@ public interface Store extends Serializable {
    * replace in the local cache.
    */
   Pair<LongKeyMap<SerializedObject>, Long> prepareTransaction(long tid,
-      boolean singleStore, boolean readOnly, Collection<_Impl> toCreate,
-      LongKeyMap<Pair<Integer, Long>> reads,
+      boolean singleStore, boolean readOnly, long expiryToCheck,
+      Collection<_Impl> toCreate, LongKeyMap<Pair<Integer, Long>> reads,
       Collection<Pair<_Impl, Boolean>> writes)
       throws UnreachableNodeException, TransactionPrepareFailedException;
 

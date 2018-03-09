@@ -991,6 +991,7 @@ public final class TransactionManager {
             new HashMap<RemoteStore, LongKeyMap<SerializedObject>>());
     // Time to use for contract comparisons at the end of prepare.
     final long[] time = new long[] { System.currentTimeMillis() };
+    final long expiryToCheck = current.expiry();
 
     synchronized (current.commitState) {
       switch (current.commitState.value) {
@@ -1064,14 +1065,14 @@ public final class TransactionManager {
                 if (store instanceof RemoteStore) {
                   Pair<LongKeyMap<SerializedObject>, Long> p =
                       store.prepareTransaction(current.tid.topTid, singleStore,
-                          readOnly, creates, reads, writes);
+                          readOnly, expiryToCheck, creates, reads, writes);
                   longerContracts.put((RemoteStore) store, p.first);
                   synchronized (time) {
                     time[0] = Math.max(p.second, time[0]);
                   }
                 } else {
                   store.prepareTransaction(current.tid.topTid, singleStore,
-                      readOnly, creates, reads, writes);
+                      readOnly, expiryToCheck, creates, reads, writes);
                 }
               } catch (TransactionPrepareFailedException e) {
                 failures.put((RemoteNode<?>) store, e);
@@ -1195,7 +1196,9 @@ public final class TransactionManager {
       abortTransaction(abortedNodes);
       throw new TransactionRestartingException(tid);
 
-    } else if (current.expiry() < time[0]) {
+    } else if (!singleStore && current.expiry() < time[0]) {
+      // Don't check the time locally if it's single store, the time was already
+      // checked on the store.
 
       HOTOS_LOGGER.fine("Prepare failed (expiry passed).");
 
