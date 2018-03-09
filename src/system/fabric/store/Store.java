@@ -231,7 +231,7 @@ class Store extends MessageToStoreHandler {
           // This should never happen.
           throw new InternalError("AccessException on abort but not prepare?");
         }
-        throw new TransactionPrepareFailedException(
+        throw new TransactionPrepareFailedException(longerContracts,
             "Single store prepare too late");
       }
       try {
