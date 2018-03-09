@@ -882,6 +882,14 @@ public final class TransactionManager {
     // Set number of round trips to 0
     ROUND_TRIPS.set(0);
 
+    // First check if the commit's already doomed.  If so, abort without talking
+    // to stores.
+    if (current.expiry() < System.currentTimeMillis()) {
+      TransactionID tid = current.tid;
+      abortTransaction();
+      throw new TransactionRestartingException(tid);
+    }
+
     // Send prepare messages to our cohorts. This will also abort our portion of
     // the transaction if the prepare fails.
     current.longerContracts =
