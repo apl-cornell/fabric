@@ -507,19 +507,17 @@ public final class Log {
         if (log.child != null) toFlag.add(log.child);
         if (log.retrySignal == null || log.retrySignal.isDescendantOf(tid)) {
           log.retrySignal = tid;
-          // XXX This was here to unblock a thread that may have been waiting on
-          // XXX a lock. Commented out because it was causing a bunch of
-          // XXX InterruptedExceptions and ClosedByInterruptExceptions that
-          // XXX weren't being handled properly. This includes improper or
-          // XXX insufficient handling by Java code in the examples (e.g.,
-          // XXX Jetty).
-          // XXX Instead, when a thread is blocked waiting on an object lock, we
-          // XXX spin once a second to check the retry signal.
 
-          // log.thread.interrupt();
-          if (log.waitsOn != null) {
-            synchronized (log.waitsOn) {
-              log.waitsOn.notifyAll();
+          // Grab the currently marked blocking dependency, and synchronize on
+          // it.
+          Object curWaitingOn = log.waitsOn;
+          if (curWaitingOn != null) {
+            synchronized (curWaitingOn) {
+              // If still blocked on the object after synchronizing, wake the
+              // transaction thread so it sees retry signal.
+              if (log.waitsOn == curWaitingOn) {
+                log.waitsOn.notifyAll();
+              }
             }
           }
         }
