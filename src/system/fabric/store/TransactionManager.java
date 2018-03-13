@@ -467,6 +467,11 @@ public class TransactionManager {
                         if (target.getExpiry() - curTime < 1000
                             && target.getExpiry() > curTime) {
                           target.attemptExtension();
+                        } else {
+                          // Requeue the extension for a later time.
+                          fabric.worker.transaction.TransactionManager
+                              .getInstance().registerDelayedExtension(target,
+                                  target.get$$expiry());
                         }
                         return null;
                       }
