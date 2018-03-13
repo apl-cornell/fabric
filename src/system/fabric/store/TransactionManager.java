@@ -29,7 +29,7 @@ import fabric.common.util.Pair;
 import fabric.dissemination.ObjectGlob;
 import fabric.lang.security.Label;
 import fabric.lang.security.Principal;
-import fabric.metrics.contracts.MetricContract;
+import fabric.metrics.contracts.Contract;
 import fabric.store.db.GroupContainer;
 import fabric.store.db.ObjectDB;
 import fabric.worker.Store;
@@ -460,9 +460,14 @@ public class TransactionManager {
                       public Void run() {
                         Store store =
                             Worker.getWorker().getStore(database.getName());
-                        final MetricContract._Proxy target =
-                            new MetricContract._Proxy(store, extension.onum);
-                        target.attemptExtension();
+                        final Contract._Proxy target =
+                            new Contract._Proxy(store, extension.onum);
+                        long curTime = System.currentTimeMillis();
+                        // Don't bother if we're too early or too late, somehow.
+                        if (target.getExpiry() - curTime < 1000
+                            && target.getExpiry() > curTime) {
+                          target.attemptExtension();
+                        }
                         return null;
                       }
                     }, true);

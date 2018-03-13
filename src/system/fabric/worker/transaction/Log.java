@@ -30,7 +30,6 @@ import fabric.lang.Object._Impl;
 import fabric.lang.security.LabelCache;
 import fabric.lang.security.SecurityCache;
 import fabric.metrics.contracts.Contract;
-import fabric.metrics.contracts.MetricContract;
 import fabric.metrics.util.AbstractSubject;
 import fabric.metrics.util.Observer;
 import fabric.metrics.util.Subject;
@@ -450,9 +449,8 @@ public final class Log {
 
     if (store.isLocalStore()) {
       for (_Impl obj : localStoreWrites) {
-        result.put(obj.$getOnum(),
-            new Pair<>(obj, ((obj instanceof MetricContract)
-                && extendedContracts.containsKey(obj))));
+        result.put(obj.$getOnum(), new Pair<>(obj,
+            ((obj instanceof Contract) && extendedContracts.containsKey(obj))));
       }
 
       for (_Impl create : localStoreCreates) {
@@ -461,9 +459,8 @@ public final class Log {
     } else {
       for (_Impl obj : writes) {
         if (obj.$getStore() == store && obj.$isOwned) {
-          result.put(obj.$getOnum(),
-              new Pair<>(obj, ((obj instanceof MetricContract)
-                  && extendedContracts.containsKey(obj))));
+          result.put(obj.$getOnum(), new Pair<>(obj, ((obj instanceof Contract)
+              && extendedContracts.containsKey(obj))));
         }
       }
 
@@ -904,7 +901,7 @@ public final class Log {
         obj.$writeLockHolder = null;
         obj.$writeLockStackTrace = null;
         // Don't increment the version if it's an extended metric contract
-        if (!((obj instanceof MetricContract)
+        if (!((obj instanceof Contract)
             && (extendedContracts.containsKey(obj)))) {
           obj.$version++;
           obj.$readMapEntry.incrementVersionAndUpdateExpiry(obj.$expiry);
