@@ -418,22 +418,31 @@ public final class Log {
     toFlag.add(this);
     while (!toFlag.isEmpty()) {
       Log log = toFlag.remove();
+      boolean retrying = false;
+      Object curWaitingOn = null;
       synchronized (log) {
         if (log.child != null) toFlag.add(log.child);
         if (log.retrySignal == null || log.retrySignal.isDescendantOf(tid)) {
           log.retrySignal = tid;
+          retrying = true;
 
-          // Grab the currently marked blocking dependency, and synchronize on
-          // it.
-          Object curWaitingOn = log.waitsOn;
-          if (curWaitingOn != null) {
-            synchronized (curWaitingOn) {
-              // If still blocked on the object after synchronizing, wake the
-              // transaction thread so it sees retry signal.
-              if (log.waitsOn == curWaitingOn) {
-                log.waitsOn.notifyAll();
-              }
-            }
+          // Grab the currently marked blocking dependency
+          curWaitingOn = log.waitsOn;
+        }
+      }
+      // Running this outside the synchronized log block since other threads
+      // will synchronize on object prior to log, which would deadlock with this
+      // if we nested.
+      //
+      // What happens in another thread when grabbing lock on object:
+      // synchronizes on object
+      // synchronizes on log to check retry signal in the wait loop.
+      if (retrying && curWaitingOn != null) {
+        synchronized (curWaitingOn) {
+          // If still blocked on the object after synchronizing, wake the
+          // transaction thread so it sees retry signal.
+          if (log.waitsOn == curWaitingOn) {
+            log.waitsOn.notifyAll();
           }
         }
       }
