@@ -372,29 +372,44 @@ public class TransactionManager {
    * a later time than the new request, the new {@link DelayedExtension} is
    * added to the queue, and the onum-request mapping is updated.
    */
-  public void queueExtension(List<DelayedExtension> extensions) {
-    for (DelayedExtension de : extensions) {
-      synchronized (de) {
-        // Keep trying until we're sure we've consistently updated the extension
-        // for this onum.
-        while (true) {
-          DelayedExtension existing =
-              unresolvedExtensions.putIfAbsent(de.onum, de);
-          if (existing == null) {
-            waitingExtensions.add(de);
-            break;
-          } else {
-            synchronized (existing) {
-              // Don't do anything if there's an earlier extension queued.
-              if (existing.compareTo(de) <= 0) {
-                break;
-              }
-              // Update to this event if it's earlier than the queued one.
-              if (unresolvedExtensions.replace(de.onum, existing, de)) {
-                waitingExtensions.remove(existing);
-                waitingExtensions.add(de);
-                break;
-              }
+  public void queueExtension(LongSet extensions) {
+    for (LongIterator it = extensions.iterator(); it.hasNext();) {
+      long onum = it.next();
+      queueExtension(onum);
+    }
+  }
+
+  public void queueExtension(long onum) {
+    long expiry = 0;
+    try {
+      expiry = database.getExpiry(onum);
+    } catch (AccessException e) {
+      // This shouldn't happen.
+      throw new InternalError("Tried to extend a nonexistent onum!");
+    }
+    DelayedExtension de = new DelayedExtension(onum, expiry - 1000);
+    synchronized (de) {
+      // Keep trying until we're sure we've consistently updated the extension
+      // for this onum.
+      while (true) {
+        DelayedExtension existing =
+            unresolvedExtensions.putIfAbsent(de.onum, de);
+        if (existing == null) {
+          waitingExtensions.add(de);
+          break;
+        } else {
+          synchronized (existing) {
+            // Don't do anything if there's an equivalent extension queued
+            // already
+            if (existing.compareTo(de) == 0) {
+              break;
+            }
+            // Update to this event.  This would mean the old extension was
+            // using an outdated expiration time.
+            if (unresolvedExtensions.replace(de.onum, existing, de)) {
+              waitingExtensions.remove(existing);
+              waitingExtensions.add(de);
+              break;
             }
           }
         }
@@ -443,45 +458,59 @@ public class TransactionManager {
               // have been sufficient and that second request is unlikely to be
               // very expensive to process.
               final DelayedExtension extension = waitingExtensions.take();
-              Threading.getPool().submit(new Threading.NamedRunnable(
-                  "Extension of " + extension.onum) {
-                @Override
-                protected void runImpl() {
-                  // Don't want new extensions to walk away after this is
-                  // done before we remove the mapping.
-                  // Run a transaction handling updates
-                  Logging.METRICS_LOGGER.log(Level.FINER,
-                      "RUNNING EXTENSION OF {0}", extension.onum);
-                  synchronized (extension) {
-                    Logging.METRICS_LOGGER.log(Level.FINER,
-                        "SYNCHRONIZED EXTENSION OF {0}", extension.onum);
-                    Worker.runInTopLevelTransaction(new Code<Void>() {
-                      @Override
-                      public Void run() {
-                        Store store =
-                            Worker.getWorker().getStore(database.getName());
-                        final Contract._Proxy target =
-                            new Contract._Proxy(store, extension.onum);
-                        long curTime = System.currentTimeMillis();
-                        // Don't bother if we're too early or too late, somehow.
-                        if (target.getExpiry() - curTime < 1000
-                            && target.getExpiry() > curTime) {
-                          target.attemptExtension();
-                        } else {
-                          // Requeue the extension for a later time.
-                          fabric.worker.transaction.TransactionManager
-                              .getInstance().registerDelayedExtension(target,
-                                  target.get$$expiry());
-                        }
-                        return null;
-                      }
-                    }, true);
-                    unresolvedExtensions.remove(extension.onum, extension);
-                  }
-                  Logging.METRICS_LOGGER.log(Level.FINER,
-                      "FINISHED EXTENSION OF {0}", extension.onum);
+              long curTime = System.currentTimeMillis();
+              long exp = extension.time + 1000;
+              try {
+                // Change to the actual expiry
+                exp = database.getExpiry(extension.onum);
+              } catch (AccessException ae) {
+                // If this happens, it suggests we're trying to extend a
+                // nonexistent value.
+                System.err.println("Bad onum for extension! " + extension.onum);
+                ae.printStackTrace();
+                synchronized (extension) {
+                  unresolvedExtensions.remove(extension.onum, extension);
                 }
-              });
+                continue;
+              }
+              if (exp - curTime < 1000 && exp > curTime) {
+                Threading.getPool().submit(new Threading.NamedRunnable(
+                    "Extension of " + extension.onum) {
+                  @Override
+                  protected void runImpl() {
+                    // Don't want new extensions to walk away after this is
+                    // done before we remove the mapping.
+                    // Run a transaction handling updates
+                    Logging.METRICS_LOGGER.log(Level.FINER,
+                        "RUNNING EXTENSION OF {0}", extension.onum);
+                    synchronized (extension) {
+                      Logging.METRICS_LOGGER.log(Level.FINER,
+                          "SYNCHRONIZED EXTENSION OF {0}", extension.onum);
+                      Worker.runInTopLevelTransaction(new Code<Void>() {
+                        @Override
+                        public Void run() {
+                          Store store =
+                              Worker.getWorker().getStore(database.getName());
+                          final Contract._Proxy target =
+                              new Contract._Proxy(store, extension.onum);
+                          target.attemptExtension();
+                          return null;
+                        }
+                      }, true);
+                      unresolvedExtensions.remove(extension.onum, extension);
+                    }
+                    Logging.METRICS_LOGGER.log(Level.FINER,
+                        "FINISHED EXTENSION OF {0}", extension.onum);
+                  }
+                });
+              } else {
+                synchronized (extension) {
+                  unresolvedExtensions.remove(extension.onum, extension);
+                }
+                // If too early, requeue it.
+                if (exp > curTime)
+                  queueExtension(extension.onum);
+              }
             }
           } catch (InterruptedException e) {
             System.err.println("Extension thread interrupted!");

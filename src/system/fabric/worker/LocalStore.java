@@ -7,7 +7,6 @@ import java.io.ObjectStreamException;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.DelayQueue;
 import java.util.logging.Level;
@@ -24,6 +23,7 @@ import fabric.common.util.ConcurrentLongKeyHashMap;
 import fabric.common.util.ConcurrentLongKeyMap;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.LongSet;
 import fabric.common.util.Pair;
 import fabric.lang.Object;
 import fabric.lang.Object._Impl;
@@ -147,34 +147,37 @@ public final class LocalStore implements Store, Serializable {
    * added to the queue, and the onum-request mapping is updated.
    */
   @Override
-  public void sendExtensions(List<DelayedExtension> extensions) {
-    for (DelayedExtension de : extensions) {
-      synchronized (de) {
-        // Keep trying until we're sure we've consistently updated the extension
-        // for this onum.
-        while (true) {
-          DelayedExtension existing =
-              unresolvedExtensions.putIfAbsent(de.onum, de);
-          if (existing == null) {
-            waitingExtensions.add(de);
-            break;
-          } else {
-            synchronized (existing) {
-              // Don't do anything if there's an earlier extension queued.
-              if (existing.compareTo(de) <= 0) {
-                break;
-              }
-              // Update to this event if it's earlier than the queued one.
-              if (unresolvedExtensions.replace(de.onum, existing, de)) {
-                waitingExtensions.remove(existing);
-                waitingExtensions.add(de);
-                break;
-              }
-            }
-          }
-        }
-      }
-    }
+  public void sendExtensions(LongSet extensions) {
+    throw new NotImplementedException(
+        "Local stores do not currently support handling extensions");
+    // TODO: Do we ever want this?
+    //for (LongIterator it = extensions.iterator(); de : extensions) {
+    //  synchronized (de) {
+    //    // Keep trying until we're sure we've consistently updated the extension
+    //    // for this onum.
+    //    while (true) {
+    //      DelayedExtension existing =
+    //          unresolvedExtensions.putIfAbsent(de.onum, de);
+    //      if (existing == null) {
+    //        waitingExtensions.add(de);
+    //        break;
+    //      } else {
+    //        synchronized (existing) {
+    //          // Don't do anything if there's an earlier extension queued.
+    //          if (existing.compareTo(de) <= 0) {
+    //            break;
+    //          }
+    //          // Update to this event if it's earlier than the queued one.
+    //          if (unresolvedExtensions.replace(de.onum, existing, de)) {
+    //            waitingExtensions.remove(existing);
+    //            waitingExtensions.add(de);
+    //            break;
+    //          }
+    //        }
+    //      }
+    //    }
+    //  }
+    //}
   }
 
   /**

@@ -79,7 +79,7 @@ public abstract class Contract extends AbstractSubject implements Observer {
       for (Iterator iter = getObservers().iterator(); iter.hasNext();) {
         Observer parent = (Observer) iter.next();
         if (parent instanceof Contract) {
-          tm.registerDelayedExtension(parent, ((Contract) parent).$expiry);
+          tm.registerDelayedExtension(parent);
         }
       }
       Logging.METRICS_LOGGER.log(Level.FINE, "SYNCH EXTENSION OF {0} IN {1}", new java.lang.Object native[] { this, TransactionManager.getInstance().getCurrentLog() });
@@ -87,7 +87,7 @@ public abstract class Contract extends AbstractSubject implements Observer {
     } else {
       // Wait until later to extend, we don't want to get too eager.
       Logging.METRICS_LOGGER.log(Level.FINE, "DELAYED EXTENSION OF {0} IN {1}", new java.lang.Object native[] { this, TransactionManager.getInstance().getCurrentLog() });
-      tm.registerDelayedExtension(this, this.$expiry);
+      tm.registerDelayedExtension(this);
     }
   }
 

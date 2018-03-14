@@ -2,17 +2,16 @@ package fabric.worker;
 
 import java.io.Serializable;
 import java.util.Collection;
-import java.util.List;
 
 import fabric.common.SerializedObject;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.AccessException;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.LongSet;
 import fabric.common.util.Pair;
 import fabric.lang.Object._Impl;
 import fabric.lang.security.NodePrincipal;
 import fabric.net.UnreachableNodeException;
-import fabric.store.DelayedExtension;
 
 public interface Store extends Serializable {
   /**
@@ -142,7 +141,7 @@ public interface Store extends Serializable {
   /**
    * Send extensions to handle.
    */
-  public void sendExtensions(List<DelayedExtension> extensions);
+  public void sendExtensions(LongSet extensions);
 
   /**
    * Wait for an update past the given version for the given onum.

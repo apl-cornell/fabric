@@ -1607,6 +1607,10 @@ public final class TransactionManager {
       }
 
       if (extension) {
+        Logging.log(METRICS_LOGGER, Level.FINE,
+            "ATTEMPTING EXTENSION OF {0}/{1} IN {2}/{3} FROM {4} to {5}",
+            obj.$getStore(), new Long(obj.$getOnum()), Thread.currentThread(),
+            getCurrentTid(), oldExpiry, newExpiry);
         synchronized (current.extendedContracts) {
           current.extendedContracts.put(obj, obj);
         }
@@ -1824,8 +1828,7 @@ public final class TransactionManager {
    * expiration.  This will be done by sending an extension message after the
    * transaction completes.
    */
-  public void registerDelayedExtension(fabric.lang.Object toBeExtended,
-      long expiry) {
+  public void registerDelayedExtension(fabric.lang.Object toBeExtended) {
     _Impl obj = (_Impl) toBeExtended.fetch();
     synchronized (obj) {
       synchronized (current.writes) {
@@ -1838,7 +1841,7 @@ public final class TransactionManager {
         if (current.extendedContracts.containsKey(obj)) return;
       }
       synchronized (current.delayedExtensions) {
-        current.delayedExtensions.put(obj, expiry);
+        current.delayedExtensions.put(obj, obj.$getOnum());
       }
     }
   }

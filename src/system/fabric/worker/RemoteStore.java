@@ -28,6 +28,7 @@ import fabric.common.exceptions.RuntimeFetchException;
 import fabric.common.util.ConcurrentLongKeyHashMap;
 import fabric.common.util.ConcurrentLongKeyMap;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.LongSet;
 import fabric.common.util.Pair;
 import fabric.dissemination.ObjectGlob;
 import fabric.lang.Object;
@@ -47,7 +48,6 @@ import fabric.messages.StalenessCheckMessage;
 import fabric.messages.WaitForUpdateMessage;
 import fabric.net.RemoteNode;
 import fabric.net.UnreachableNodeException;
-import fabric.store.DelayedExtension;
 import fabric.util.Map;
 
 /**
@@ -345,7 +345,7 @@ public class RemoteStore extends RemoteNode<RemoteStore>
   }
 
   @Override
-  public void sendExtensions(final List<DelayedExtension> extensions) {
+  public void sendExtensions(final LongSet extensions) {
     Threading.getPool().submit(new Runnable() {
       @Override
       public void run() {

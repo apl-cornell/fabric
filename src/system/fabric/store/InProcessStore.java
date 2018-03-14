@@ -12,6 +12,7 @@ import fabric.common.exceptions.InternalError;
 import fabric.common.net.RemoteIdentity;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.LongSet;
 import fabric.common.util.Pair;
 import fabric.dissemination.ObjectGlob;
 import fabric.lang.Object._Impl;
@@ -162,7 +163,7 @@ public class InProcessStore extends RemoteStore {
   }
 
   @Override
-  public void sendExtensions(List<DelayedExtension> extensions) {
+  public void sendExtensions(LongSet extensions) {
     tm.queueExtension(extensions);
   }
 

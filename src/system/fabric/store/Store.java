@@ -352,7 +352,6 @@ class Store extends MessageToStoreHandler {
         "Handling Contract Extension Message from {0}",
         nameOf(client.principal));
 
-    // TODO
     tm.queueExtension(message.extensions);
     return new ContractExtensionMessage.Response();
   }

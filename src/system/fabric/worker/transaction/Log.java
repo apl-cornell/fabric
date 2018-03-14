@@ -23,6 +23,7 @@ import fabric.common.Timing;
 import fabric.common.TransactionID;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.LongSet;
 import fabric.common.util.Oid;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
@@ -740,7 +741,6 @@ public final class Log {
     for (Store s : delayedExtensions.storeSet()) {
       for (LongKeyMap.Entry<Long> e : delayedExtensions.get(s).entrySet()) {
         long onum = e.getKey();
-        long expiry = e.getValue();
         synchronized (parent.retractedContracts) {
           if (parent.retractedContracts.containsKey(s, onum)) continue;
         }
@@ -749,7 +749,7 @@ public final class Log {
         }
         synchronized (parent.delayedExtensions) {
           if (!parent.delayedExtensions.containsKey(s, onum))
-            parent.delayedExtensions.put(s, onum, expiry);
+            parent.delayedExtensions.put(s, onum, onum);
         }
       }
     }
@@ -934,20 +934,12 @@ public final class Log {
     }
 
     // Queue up extension transactions
-    Map<Store, List<DelayedExtension>> extensionsToSend = new HashMap<>();
+    Map<Store, LongSet> extensionsToSend = new HashMap<>();
     for (Store s : delayedExtensions.storeSet()) {
-      List<DelayedExtension> l =
-          new ArrayList<>(delayedExtensions.get(s).size());
-      for (LongKeyMap.Entry<Long> e : delayedExtensions.get(s).entrySet()) {
-        DelayedExtension d =
-            new DelayedExtension(e.getValue() - EXTENSION_WINDOW, e.getKey());
-        if (!l.contains(d)) l.add(d);
-      }
-      extensionsToSend.put(s, l);
+      extensionsToSend.put(s, delayedExtensions.get(s).keySet());
     }
 
-    for (Map.Entry<Store, List<DelayedExtension>> entry : extensionsToSend
-        .entrySet()) {
+    for (Map.Entry<Store, LongSet> entry : extensionsToSend.entrySet()) {
       entry.getKey().sendExtensions(entry.getValue());
     }
 

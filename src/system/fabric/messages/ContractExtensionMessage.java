@@ -3,13 +3,13 @@ package fabric.messages;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 import fabric.common.exceptions.ProtocolError;
 import fabric.common.net.RemoteIdentity;
+import fabric.common.util.LongHashSet;
+import fabric.common.util.LongIterator;
+import fabric.common.util.LongSet;
 import fabric.messages.Message.NoException;
-import fabric.store.DelayedExtension;
 import fabric.worker.remote.RemoteWorker;
 
 /**
@@ -21,12 +21,12 @@ public class ContractExtensionMessage
   /* message contents */
 
   /** The extensions to be run. */
-  public final List<DelayedExtension> extensions;
+  public final LongSet extensions;
 
   /**
    * Used to refresh expiries of contracts.
    */
-  public ContractExtensionMessage(List<DelayedExtension> extensions) {
+  public ContractExtensionMessage(LongSet extensions) {
     super(MessageType.CONTRACT_EXTENSION, NoException.class);
     this.extensions = extensions;
   }
@@ -50,9 +50,8 @@ public class ContractExtensionMessage
   protected void writeMessage(DataOutput out) throws IOException {
     // Serialize onum.
     out.writeInt(extensions.size());
-    for (DelayedExtension extension : extensions) {
-      out.writeLong(extension.time);
-      out.writeLong(extension.onum);
+    for (LongIterator it = extensions.iterator(); it.hasNext();) {
+      out.writeLong(it.next());
     }
   }
 
@@ -60,11 +59,10 @@ public class ContractExtensionMessage
   protected ContractExtensionMessage(DataInput in) throws IOException {
     super(MessageType.CONTRACT_EXTENSION, NoException.class);
     int size = in.readInt();
-    extensions = new ArrayList<>(size);
+    extensions = new LongHashSet(size);
     for (int i = 0; i < size; i++) {
-      long time = in.readLong();
       long onum = in.readLong();
-      extensions.add(new DelayedExtension(time, onum));
+      extensions.add(onum);
     }
   }
 
