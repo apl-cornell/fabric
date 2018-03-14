@@ -387,7 +387,7 @@ public class TransactionManager {
       // This shouldn't happen.
       throw new InternalError("Tried to extend a nonexistent onum!");
     }
-    DelayedExtension de = new DelayedExtension(onum, expiry - 1000);
+    DelayedExtension de = new DelayedExtension(expiry - 1000, onum);
     synchronized (de) {
       // Keep trying until we're sure we've consistently updated the extension
       // for this onum.
