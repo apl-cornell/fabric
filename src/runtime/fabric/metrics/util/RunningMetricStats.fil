@@ -31,6 +31,19 @@ public class RunningMetricStats {
   private long lastUpdate;
   private long samples = 0;
 
+  /*@Override*/
+  public String toString() {
+    return "[" +
+      " value " + value +
+      " samples " + samples +
+      " meanDelta " + meanDelta +
+      " varDelta " + varDelta +
+      " meanInterval " + meanInterval +
+      " velocity " + getVelocityEstimate() +
+      " noise " + getNoiseEstimate() +
+    " ]";
+  }
+
   /**
    * @param startValue
    *        initial guess for the mean of the value we're keeping

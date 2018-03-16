@@ -12,6 +12,9 @@ import fabric.worker.Worker;
 import fabric.worker.Store;
 import fabric.worker.transaction.TransactionManager;
 
+import java.util.logging.Level;
+import fabric.common.Logging;
+
 /**
  * A {@link Metric} that is directly updated by applications with new sample
  * values to use for its value.
@@ -260,6 +263,14 @@ public class SampledMetric extends Metric {
    */
   protected void updateEstimates(double newVal, long eventTime) {
     stats.update(newVal);
+    // Every 1000 samples, print stats in log.
+    if (stats.getSamples() % Worker.getWorker().config.metricStatsLogInterval == 0) {
+      Logging.METRICS_LOGGER.log(Level.INFO, "STATS {0} {1}",
+        new java.lang.Object native[] {
+          this,
+          this.stats
+        });
+    }
   }
 
   /*@Override*/

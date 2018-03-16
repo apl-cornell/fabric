@@ -58,6 +58,8 @@ public class ConfigProperties {
   // Flag to indicate if the strategy should be a preset (instead of the
   // default)
   public final boolean usePreset;
+  // How many updates between logging a sampled metric's stats.
+  public final int metricStatsLogInterval;
   // Rates to assign if using presets
   public final Map<String, Double> rates;
   // Bounds to assign if using presets
@@ -143,6 +145,9 @@ public class ConfigProperties {
     /************************** Contract Properties ***************************/
     this.usePreset = Boolean
         .parseBoolean(removeProperty(p, "fabric.metrics.usePreset", "false"));
+
+    this.metricStatsLogInterval = Integer
+        .parseInt(removeProperty(p, "fabric.metrics.statsLogInterval", "1000"));
 
     String[] rawRates =
         removeProperty(p, "fabric.metrics.rates", "").split(",");
