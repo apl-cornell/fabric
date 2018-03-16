@@ -421,17 +421,11 @@ public final class Worker {
    *     of the group.
    */
   public boolean updateCache(RemoteStore store, ObjectGroup group) {
-    // XXX FIXME
     boolean result = false;
     for (SerializedObject obj : group.objects().values()) {
-      if (TransactionManager.haveReaders(store, obj.getOnum())) {
-        store.forceCache(obj);
-        result = true;
-      } else if (store.updateOrEvict(obj)) {
-        result = true;
-      }
+      store.updateCache(obj);
+      result = result || store.readFromCache(obj.getOnum()) != null;
     }
-
     return result;
   }
 
