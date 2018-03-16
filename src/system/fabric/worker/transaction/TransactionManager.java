@@ -151,6 +151,16 @@ public final class TransactionManager {
    */
   protected OidKeyHashMap<Integer> waitingOn = new OidKeyHashMap<>();
 
+  /**
+   * Clear out locking state for lock objects.  Primarily intended for use after
+   * a "single attempt" transaction in the system code.
+   */
+  public void clearLockObjectState() {
+    contractsToAcquire.clear();
+    waitingOn.clear();
+    // Don't clear out locks held, that would cause issues.
+  }
+
   // Mark a created lock.
   public void registerLockCreate(fabric.lang.Object lock) {
     Logging.log(METRICS_LOGGER, Level.FINER, "CREATING LOCK {0}/{1} IN {2}/{3}",

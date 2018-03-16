@@ -394,7 +394,6 @@ public abstract class ObjectDB {
         // Don't bother replacing if it's an extension and we have a longer
         // expiry already.
         if (storeExpiry > newExpiry) {
-          submap.get(worker).writes.remove(obj);
           longerContracts.put(onum, read(onum));
           synchronized (submap) {
             submap.get(worker).writes.remove(obj);

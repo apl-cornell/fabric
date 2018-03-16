@@ -32,11 +32,13 @@ import fabric.lang.security.Principal;
 import fabric.metrics.contracts.Contract;
 import fabric.store.db.GroupContainer;
 import fabric.store.db.ObjectDB;
+import fabric.worker.AbortException;
 import fabric.worker.Store;
 import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.Worker;
 import fabric.worker.Worker.Code;
+import fabric.worker.metrics.LockConflictException;
 import fabric.worker.remote.RemoteWorker;
 
 public class TransactionManager {
@@ -481,29 +483,47 @@ public class TransactionManager {
                     // Don't want new extensions to walk away after this is
                     // done before we remove the mapping.
                     // Run a transaction handling updates
+                    boolean success = true;
                     long start = System.currentTimeMillis();
                     Logging.METRICS_LOGGER.log(Level.INFO,
                         "STARTED EXTENSION OF {0}", extension.onum);
                     synchronized (extension) {
                       Logging.METRICS_LOGGER.log(Level.FINER,
                           "SYNCHRONIZED EXTENSION OF {0}", extension.onum);
-                      Worker.runInTopLevelTransaction(new Code<Void>() {
-                        @Override
-                        public Void run() {
-                          Store store =
-                              Worker.getWorker().getStore(database.getName());
-                          final Contract._Proxy target =
-                              new Contract._Proxy(store, extension.onum);
-                          target.attemptExtension();
-                          return null;
-                        }
-                      }, true);
+                      try {
+                        fabric.worker.transaction.TransactionManager
+                            .getInstance().stats.reset();
+                        Worker.runInTopLevelTransaction(new Code<Void>() {
+                          @Override
+                          public Void run() {
+                            Store store =
+                                Worker.getWorker().getStore(database.getName());
+                            final Contract._Proxy target =
+                                new Contract._Proxy(store, extension.onum);
+                            target.attemptExtension();
+                            return null;
+                          }
+                        }, false);
+                      } catch (AbortException e) {
+                        success = false;
+                        // Clear out any leftover locking state
+                        fabric.worker.transaction.TransactionManager
+                            .getInstance().clearLockObjectState();
+                      } catch (LockConflictException e) {
+                        success = false;
+                        // Clear out any leftover locking state
+                        fabric.worker.transaction.TransactionManager
+                            .getInstance().clearLockObjectState();
+                      }
                       unresolvedExtensions.remove(extension.onum, extension);
                     }
                     Logging.METRICS_LOGGER.log(Level.INFO,
-                        "FINISHED EXTENSION OF {0} IN {1}ms",
+                        "FINISHED EXTENSION OF {0} IN {1}ms (succcess {2}) STATS: {3}",
                         new Object[] { Long.valueOf(extension.onum),
-                            Long.valueOf(System.currentTimeMillis() - start) });
+                            Long.valueOf(System.currentTimeMillis() - start),
+                            success,
+                            fabric.worker.transaction.TransactionManager
+                                .getInstance().stats, });
                   }
                 });
               } else {
