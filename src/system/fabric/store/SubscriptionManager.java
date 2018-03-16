@@ -33,8 +33,8 @@ import fabric.worker.remote.RemoteWorker;
  * single store.
  */
 public class SubscriptionManager extends FabricThread.Impl {
-  private static abstract class NotificationEvent extends
-      Threading.NamedRunnable {
+  private static abstract class NotificationEvent
+      extends Threading.NamedRunnable {
     public NotificationEvent(String name) {
       super(name);
     }
@@ -153,37 +153,47 @@ public class SubscriptionManager extends FabricThread.Impl {
       }
 
       // Notify the workers and resubscribe them.
-      for (Entry<RemoteWorker, List<ObjectGroup>> entry : workerNotificationMap
+      for (final Entry<RemoteWorker, List<ObjectGroup>> entry : workerNotificationMap
           .entrySet()) {
-        RemoteWorker worker = entry.getKey();
-        List<ObjectGroup> updates = entry.getValue();
+        final RemoteWorker worker = entry.getKey();
+        final List<ObjectGroup> updates = entry.getValue();
+        final List<Long> updatedOnums = onumsToNotify.get(worker);
+        Threading.getPool().submit(new Runnable() {
+          @Override
+          public void run() {
+            // Notify.
+            List<Long> resubscriptions =
+                worker.notifyObjectUpdates(updatedOnums, updates);
+            resubscriptions.retainAll(new HashSet<>(updatedOnums));
 
-        List<Long> updatedOnums = onumsToNotify.get(worker);
-        List<Long> resubscriptions =
-            worker.notifyObjectUpdates(updatedOnums, updates);
-        resubscriptions.retainAll(new HashSet<>(updatedOnums));
-
-        // Resubscribe.
-        for (long onum : resubscriptions) {
-          subscribe(onum, worker, false);
-        }
+            // Resubscribe.
+            for (long onum : resubscriptions) {
+              subscribe(onum, worker, false);
+            }
+          }
+        });
       }
 
       // Notify the dissemination nodes and resubscribe them.
-      for (Entry<RemoteWorker, LongKeyMap<ObjectGlob>> entry : dissemNotificationMap
+      for (final Entry<RemoteWorker, LongKeyMap<ObjectGlob>> entry : dissemNotificationMap
           .entrySet()) {
-        RemoteWorker dissemNode = entry.getKey();
-        LongKeyMap<ObjectGlob> updates = entry.getValue();
+        final RemoteWorker dissemNode = entry.getKey();
+        final LongKeyMap<ObjectGlob> updates = entry.getValue();
+        Threading.getPool().submit(new Runnable() {
+          @Override
+          public void run() {
+            // Notify.
+            List<Long> resubscriptions =
+                dissemNode.notifyObjectUpdates(store, updates);
 
-        List<Long> resubscriptions =
-            dissemNode.notifyObjectUpdates(store, updates);
-
-        // Resubscribe.
-        for (long onum : resubscriptions) {
-          if (updates.containsKey(onum)) {
-            subscribe(onum, dissemNode, true);
+            // Resubscribe.
+            for (long onum : resubscriptions) {
+              if (updates.containsKey(onum)) {
+                subscribe(onum, dissemNode, true);
+              }
+            }
           }
-        }
+        });
       }
     }
   }
@@ -243,7 +253,8 @@ public class SubscriptionManager extends FabricThread.Impl {
    *          If true, then the given subscriber will be subscribed as a
    *          dissemination node; otherwise it will be subscribed as a worker.
    */
-  public void subscribe(long onum, RemoteWorker worker, boolean dissemSubscribe) {
+  public void subscribe(long onum, RemoteWorker worker,
+      boolean dissemSubscribe) {
     Set<Pair<RemoteWorker, Boolean>> subscribers = subscriptions.get(onum);
     if (subscribers == null) {
       subscribers = new HashSet<>();
