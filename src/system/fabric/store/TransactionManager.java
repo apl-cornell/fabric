@@ -503,7 +503,7 @@ public class TransactionManager {
                             target.attemptExtension();
                             return null;
                           }
-                        }, false);
+                        }, true);
                       } catch (AbortException e) {
                         success = false;
                         // Clear out any leftover locking state
