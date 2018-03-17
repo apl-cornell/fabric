@@ -569,9 +569,8 @@ public final class TransactionManager {
           };
 
       // Optimization: only start in a new thread if there are more stores to
-      // contact and if it's a truly remote store (i.e., not in-process).
-      if (!(store instanceof InProcessStore || store.isLocalStore())
-          && storeIt.hasNext()) {
+      // contact
+      if (storeIt.hasNext()) {
         futures.add(Threading.getPool().submit(runnable));
       } else {
         runnable.run();
@@ -744,9 +743,8 @@ public final class TransactionManager {
             };
 
         // Optimization: only start in a new thread if there are more stores to
-        // contact and if it's a truly remote store (i.e., not in-process).
-        if (!(store instanceof InProcessStore || store.isLocalStore())
-            && storeIt.hasNext()) {
+        // contact
+        if (storeIt.hasNext()) {
           futures.add(Threading.getPool().submit(runnable));
         } else {
           runnable.run();
@@ -1192,9 +1190,8 @@ public final class TransactionManager {
           };
 
       // Optimization: only start a new thread if there are more stores to
-      // contact and if it's truly a remote store (i.e., not in-process).
-      if (!(store instanceof InProcessStore || store.isLocalStore())
-          && storeIt.hasNext()) {
+      // contact
+      if (storeIt.hasNext()) {
         futures.add(Threading.getPool().submit(runnable));
       } else {
         runnable.run();
