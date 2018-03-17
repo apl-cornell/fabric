@@ -247,7 +247,13 @@ public final class ObjectCache {
         return;
       }
       if (impl != null) {
-        impl.$expiry = newExpiry;
+        int ver = impl.$version;
+        _Impl curImpl = impl;
+        // Run through history and update as well.
+        while (curImpl != null && curImpl.$version == ver) {
+          curImpl.$expiry = newExpiry;
+          curImpl = curImpl.$history;
+        }
         return;
       }
       if (serialized != null) {
