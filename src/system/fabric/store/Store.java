@@ -33,6 +33,7 @@ import fabric.common.net.handshake.Protocol;
 import fabric.common.net.naming.NameService;
 import fabric.common.net.naming.NameService.PortType;
 import fabric.common.net.naming.TransitionalNameService;
+import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.Pair;
 import fabric.dissemination.ObjectGlob;
@@ -55,6 +56,7 @@ import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.Worker;
 import fabric.worker.Worker.Code;
+import fabric.worker.metrics.ExpiryExtension;
 import fabric.worker.remote.RemoteWorker;
 
 class Store extends MessageToStoreHandler {
@@ -217,9 +219,9 @@ class Store extends MessageToStoreHandler {
         "Handling Prepare Message, worker={0}, tid={1}",
         nameOf(client.principal), msg.tid);
 
-    LongKeyMap<SerializedObject> longerContracts =
+    LongKeyMap<Long> longerContracts =
         prepareTransaction(client.principal, msg.tid, msg.serializedCreates,
-            msg.serializedWrites, msg.reads);
+            msg.serializedWrites, msg.reads, msg.extensions);
 
     long prepareTime = System.currentTimeMillis();
 
@@ -231,7 +233,8 @@ class Store extends MessageToStoreHandler {
           // This should never happen.
           throw new InternalError("AccessException on abort but not prepare?");
         }
-        throw new TransactionPrepareFailedException(longerContracts,
+        throw new TransactionPrepareFailedException(
+            new LongKeyHashMap<SerializedObject>(), longerContracts,
             "Single store prepare too late");
       }
       try {
@@ -378,14 +381,15 @@ class Store extends MessageToStoreHandler {
         tm.waitForUpdates(message.onumsAndVersions));
   }
 
-  private LongKeyMap<SerializedObject> prepareTransaction(Principal p, long tid,
+  private LongKeyMap<Long> prepareTransaction(Principal p, long tid,
       Collection<SerializedObject> serializedCreates,
-      Collection<Pair<SerializedObject, Boolean>> serializedWrites,
-      LongKeyMap<Pair<Integer, Long>> reads)
+      Collection<SerializedObject> serializedWrites,
+      LongKeyMap<Pair<Integer, Long>> reads,
+      Collection<ExpiryExtension> extensions)
       throws TransactionPrepareFailedException {
 
-    PrepareRequest req =
-        new PrepareRequest(tid, serializedCreates, serializedWrites, reads);
+    PrepareRequest req = new PrepareRequest(tid, serializedCreates,
+        serializedWrites, reads, extensions);
 
     sm.createSurrogates(req);
 

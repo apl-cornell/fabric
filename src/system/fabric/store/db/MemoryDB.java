@@ -20,6 +20,7 @@ import fabric.common.util.MutableLong;
 import fabric.common.util.OidKeyHashMap;
 import fabric.lang.security.Principal;
 import fabric.store.SubscriptionManager;
+import fabric.worker.metrics.ExpiryExtension;
 import fabric.worker.remote.RemoteWorker;
 
 /**
@@ -102,6 +103,11 @@ public class MemoryDB extends ObjectDB {
       notifyCommittedUpdate(sm, o.getOnum(), workerIdentity.node);
     }
 
+    // Update extended objects.
+    for (ExpiryExtension extension : tx.extensions) {
+      objectTable.get(extension.onum).setExpiry(extension.expiry);
+    }
+
     remove(workerIdentity.principal, tid);
   }
 
@@ -171,8 +177,7 @@ public class MemoryDB extends ObjectDB {
       if (submap.isEmpty()) pendingByTid.remove(tid, submap);
     }
 
-    if (tx == null)
-      throw new AccessException("Invalid transaction id: " + tid);
+    if (tx == null) throw new AccessException("Invalid transaction id: " + tid);
 
     // XXX Check if the worker acts for the owner.
 

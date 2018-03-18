@@ -39,6 +39,7 @@ import fabric.store.DelayedExtension;
 import fabric.util.HashMap;
 import fabric.util.Map;
 import fabric.worker.Worker.Code;
+import fabric.worker.metrics.ExpiryExtension;
 
 public final class LocalStore implements Store, Serializable {
 
@@ -62,15 +63,15 @@ public final class LocalStore implements Store, Serializable {
   private Set<Pair<Principal, Principal>> localDelegates;
 
   @Override
-  public Pair<LongKeyMap<SerializedObject>, Long> prepareTransaction(long tid,
+  public Pair<LongKeyMap<Long>, Long> prepareTransaction(long tid,
       boolean singleStore, boolean readOnly, long expiryToCheck,
       Collection<Object._Impl> toCreate, LongKeyMap<Pair<Integer, Long>> reads,
-      Collection<Pair<Object._Impl, Boolean>> writes) {
+      Collection<Object._Impl> writes, Collection<ExpiryExtension> extensions) {
     // Note: since we assume local single threading we can ignore reads
     // (conflicts are impossible)
     WORKER_LOCAL_STORE_LOGGER.fine("Local transaction preparing");
-    return new Pair<LongKeyMap<SerializedObject>, Long>(
-        new LongKeyHashMap<SerializedObject>(), System.currentTimeMillis());
+    return new Pair<LongKeyMap<Long>, Long>(new LongKeyHashMap<Long>(),
+        System.currentTimeMillis());
   }
 
   @Override

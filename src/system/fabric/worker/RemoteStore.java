@@ -52,6 +52,7 @@ import fabric.messages.WaitForUpdateMessage;
 import fabric.net.RemoteNode;
 import fabric.net.UnreachableNodeException;
 import fabric.util.Map;
+import fabric.worker.metrics.ExpiryExtension;
 
 /**
  * Encapsulates a Store. This class maintains two connections to the store (one
@@ -136,14 +137,14 @@ public class RemoteStore extends RemoteNode<RemoteStore>
    * Sends a PREPARE message to the store.
    */
   @Override
-  public Pair<LongKeyMap<SerializedObject>, Long> prepareTransaction(long tid,
+  public Pair<LongKeyMap<Long>, Long> prepareTransaction(long tid,
       boolean singleStore, boolean readOnly, long expiryToCheck,
       Collection<Object._Impl> toCreate, LongKeyMap<Pair<Integer, Long>> reads,
-      Collection<Pair<Object._Impl, Boolean>> writes)
+      Collection<Object._Impl> writes, Collection<ExpiryExtension> extensions)
       throws TransactionPrepareFailedException, UnreachableNodeException {
-    PrepareTransactionMessage.Response r =
-        send(Worker.getWorker().authToStore, new PrepareTransactionMessage(tid,
-            singleStore, readOnly, expiryToCheck, toCreate, reads, writes));
+    PrepareTransactionMessage.Response r = send(Worker.getWorker().authToStore,
+        new PrepareTransactionMessage(tid, singleStore, readOnly, expiryToCheck,
+            toCreate, reads, writes, extensions));
     return new Pair<>(r.longerContracts, r.time);
   }
 

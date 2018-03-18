@@ -33,8 +33,8 @@ public class SimpleSurrogateManager implements SurrogateManager {
     Collection<SerializedObject> surrogates = new ArrayList<>();
 
     ArrayList<SerializedObject> writtenObjects = new ArrayList<>();
-    for (Pair<SerializedObject, Boolean> w : req.writes) {
-      writtenObjects.add(w.first);
+    for (SerializedObject w : req.writes) {
+      writtenObjects.add(w);
     }
     Iterable<SerializedObject> chain =
         SysUtil.chain(req.creates, writtenObjects);

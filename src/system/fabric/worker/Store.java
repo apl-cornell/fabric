@@ -13,6 +13,7 @@ import fabric.common.util.Pair;
 import fabric.lang.Object._Impl;
 import fabric.lang.security.NodePrincipal;
 import fabric.net.UnreachableNodeException;
+import fabric.worker.metrics.ExpiryExtension;
 
 public interface Store extends Serializable {
   /**
@@ -36,10 +37,10 @@ public interface Store extends Serializable {
    * @return A map from onums to contracts that were longer on the store, to
    * replace in the local cache.
    */
-  Pair<LongKeyMap<SerializedObject>, Long> prepareTransaction(long tid,
-      boolean singleStore, boolean readOnly, long expiryToCheck,
-      Collection<_Impl> toCreate, LongKeyMap<Pair<Integer, Long>> reads,
-      Collection<Pair<_Impl, Boolean>> writes)
+  Pair<LongKeyMap<Long>, Long> prepareTransaction(long tid, boolean singleStore,
+      boolean readOnly, long expiryToCheck, Collection<_Impl> toCreate,
+      LongKeyMap<Pair<Integer, Long>> reads, Collection<_Impl> writes,
+      Collection<ExpiryExtension> extensions)
       throws UnreachableNodeException, TransactionPrepareFailedException;
 
   /**

@@ -38,6 +38,7 @@ import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.Worker;
 import fabric.worker.Worker.Code;
+import fabric.worker.metrics.ExpiryExtension;
 import fabric.worker.metrics.LockConflictException;
 import fabric.worker.remote.RemoteWorker;
 
@@ -116,15 +117,16 @@ public class TransactionManager {
    *
    * @param worker
    *          The worker requesting the prepare
-   * @return a collection of serialized contracts that were write prepared that
-   *         were already longer lasting on the store.
+   * @return a collection of onums and expiries for contracts that were prepared
+   *         for extension or reading that were already longer lasting on the
+   *         store.
    * @throws TransactionPrepareFailedException
    *           If the transaction would cause a conflict or if the worker is
    *           insufficiently privileged to execute the transaction.
    */
-  public LongKeyMap<SerializedObject> prepare(Principal worker,
-      PrepareRequest req) throws TransactionPrepareFailedException {
-    LongKeyMap<SerializedObject> longerContracts = new LongKeyHashMap<>();
+  public LongKeyMap<Long> prepare(Principal worker, PrepareRequest req)
+      throws TransactionPrepareFailedException {
+    LongKeyMap<Long> longerContracts = new LongKeyHashMap<>();
     final long tid = req.tid;
 
     // First, check read and write permissions. We do this before we attempt to
@@ -134,7 +136,7 @@ public class TransactionManager {
     if (worker == null || worker.$getStore() != store
         || worker.$getOnum() != ONumConstants.STORE_PRINCIPAL) {
       try {
-        checkPerms(worker, req.reads.keySet(), req.writes);
+        checkPerms(worker, req.reads.keySet(), req.writes, req.extensions);
       } catch (AccessException e) {
         throw new TransactionPrepareFailedException(e.getMessage());
       }
@@ -151,15 +153,21 @@ public class TransactionManager {
       LongKeyMap<SerializedObject> versionConflicts = new LongKeyHashMap<>();
 
       // Prepare writes.
-      for (Pair<SerializedObject, Boolean> o : req.writes) {
-        database.prepareUpdate(tid, worker, o.first, o.second, versionConflicts,
+      for (SerializedObject o : req.writes) {
+        database.prepareUpdate(tid, worker, o, versionConflicts,
             longerContracts, WRITE);
       }
 
       // Prepare creates.
       for (SerializedObject o : req.creates) {
-        database.prepareUpdate(tid, worker, o, false, versionConflicts,
+        database.prepareUpdate(tid, worker, o, versionConflicts,
             longerContracts, CREATE);
+      }
+
+      // Prepare extensions.
+      for (ExpiryExtension e : req.extensions) {
+        database.prepareExtension(tid, worker, e, versionConflicts,
+            longerContracts);
       }
 
       // Check reads
@@ -173,7 +181,8 @@ public class TransactionManager {
       }
 
       if (!versionConflicts.isEmpty()) {
-        throw new TransactionPrepareFailedException(versionConflicts);
+        throw new TransactionPrepareFailedException(versionConflicts,
+            longerContracts);
       }
 
       // readHistory.record(req);
@@ -182,7 +191,6 @@ public class TransactionManager {
       STORE_TRANSACTION_LOGGER.log(Level.FINE, "Prepared transaction {0}", tid);
     } catch (TransactionPrepareFailedException e) {
       database.abortPrepare(tid, worker);
-      e.versionConflicts.putAll(longerContracts);
       throw e;
     } catch (RuntimeException e) {
       e.printStackTrace();
@@ -197,8 +205,8 @@ public class TransactionManager {
    * objects. If it doesn't, an AccessException is thrown.
    */
   private void checkPerms(final Principal worker, final LongSet reads,
-      final Collection<Pair<SerializedObject, Boolean>> writes)
-      throws AccessException {
+      final Collection<SerializedObject> writes,
+      final Collection<ExpiryExtension> extensions) throws AccessException {
     // The code that does the actual checking.
     Code<AccessException> checker = new Code<AccessException>() {
       @Override
@@ -220,8 +228,23 @@ public class TransactionManager {
           }
         }
 
-        for (Pair<SerializedObject, Boolean> o : writes) {
-          long onum = o.first.getOnum();
+        for (ExpiryExtension e : extensions) {
+          long onum = e.onum;
+
+          fabric.lang.Object storeCopy =
+              new fabric.lang.Object._Proxy(store, onum);
+
+          Label label = storeCopy.get$$updateLabel();
+
+          // Check write permissions.
+          if (!AuthorizationUtil.isReadAndWritePermitted(worker,
+              label.$getStore(), label.$getOnum())) {
+            return new AccessException("expiry extension", worker, storeCopy);
+          }
+        }
+
+        for (SerializedObject o : writes) {
+          long onum = o.getOnum();
 
           fabric.lang.Object storeCopy =
               new fabric.lang.Object._Proxy(store, onum);
@@ -348,7 +371,8 @@ public class TransactionManager {
     if (worker == null || worker.$getStore() != store
         || worker.$getOnum() != ONumConstants.STORE_PRINCIPAL) {
       checkPerms(worker, versionsAndExpiries.keySet(),
-          Collections.<Pair<SerializedObject, Boolean>> emptyList());
+          Collections.<SerializedObject> emptyList(),
+          Collections.<ExpiryExtension> emptyList());
     }
 
     List<SerializedObject> result = new ArrayList<>();

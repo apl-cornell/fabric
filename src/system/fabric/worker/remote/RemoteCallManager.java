@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 
 import fabric.common.AuthorizationUtil;
-import fabric.common.SerializedObject;
 import fabric.common.TransactionID;
 import fabric.common.net.RemoteIdentity;
 import fabric.common.net.SubServerSocket;
@@ -241,7 +240,7 @@ public class RemoteCallManager extends MessageToWorkerHandler {
       topTid = topTid.parent;
     tm.associateAndSyncLog(log, topTid);
 
-    Pair<Map<RemoteStore, LongKeyMap<SerializedObject>>, Long> p = null;
+    Pair<Map<RemoteStore, LongKeyMap<Long>>, Long> p = null;
     try {
       p = tm.sendPrepareMessages();
       tm.getCurrentLog().longerContracts = p.first;
@@ -252,7 +251,7 @@ public class RemoteCallManager extends MessageToWorkerHandler {
     }
 
     return new PrepareTransactionMessage.Response(p.second,
-        new LongKeyHashMap<SerializedObject>());
+        new LongKeyHashMap<Long>());
   }
 
   /**

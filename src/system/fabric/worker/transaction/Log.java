@@ -16,7 +16,6 @@ import java.util.Set;
 import java.util.logging.Level;
 
 import fabric.common.Logging;
-import fabric.common.SerializedObject;
 import fabric.common.SysUtil;
 import fabric.common.Threading;
 import fabric.common.Timing;
@@ -38,6 +37,7 @@ import fabric.worker.FabricSoftRef;
 import fabric.worker.RemoteStore;
 import fabric.worker.Store;
 import fabric.worker.Worker;
+import fabric.worker.metrics.ExpiryExtension;
 import fabric.worker.remote.RemoteWorker;
 import fabric.worker.remote.WriterMap;
 
@@ -151,7 +151,7 @@ public final class Log {
    * A map from RemoteStores to maps from onums to contracts that were longer on
    * the store, to update after we commit this transaction.
    */
-  public Map<RemoteStore, LongKeyMap<SerializedObject>> longerContracts;
+  public Map<RemoteStore, LongKeyMap<Long>> longerContracts;
 
   /**
    * Tracks objects on local store that have been modified. See
@@ -442,15 +442,16 @@ public final class Log {
    * Returns a collection of objects modified at the given store. Writes on
    * created objects are not included.
    */
-  Collection<Pair<_Impl, Boolean>> getWritesForStore(Store store) {
+  Collection<_Impl> getWritesForStore(Store store) {
     // This should be a Set of _Impl, but we have a map indexed by OID to
     // avoid calling hashCode and equals on the _Impls.
-    LongKeyMap<Pair<_Impl, Boolean>> result = new LongKeyHashMap<>();
+    LongKeyMap<_Impl> result = new LongKeyHashMap<>();
 
     if (store.isLocalStore()) {
       for (_Impl obj : localStoreWrites) {
-        result.put(obj.$getOnum(), new Pair<>(obj,
-            ((obj instanceof Contract) && extendedContracts.containsKey(obj))));
+        if (!(obj instanceof Contract) || !extendedContracts.containsKey(obj)) {
+          result.put(obj.$getOnum(), obj);
+        }
       }
 
       for (_Impl create : localStoreCreates) {
@@ -458,9 +459,10 @@ public final class Log {
       }
     } else {
       for (_Impl obj : writes) {
-        if (obj.$getStore() == store && obj.$isOwned) {
-          result.put(obj.$getOnum(), new Pair<>(obj, ((obj instanceof Contract)
-              && extendedContracts.containsKey(obj))));
+        if (obj.$getStore() == store && obj.$isOwned
+            && !((obj instanceof Contract)
+                && extendedContracts.containsKey(obj))) {
+          result.put(obj.$getOnum(), obj);
         }
       }
 
@@ -469,6 +471,18 @@ public final class Log {
     }
 
     return result.values();
+  }
+
+  Collection<ExpiryExtension> getExtensionsForStore(Store store) {
+    if (!extendedContracts.storeSet().contains(store)) {
+      return Collections.emptyList();
+    }
+    List<ExpiryExtension> extensions =
+        new ArrayList<>(extendedContracts.get(store).size());
+    for (_Impl obj : extendedContracts.get(store).values()) {
+      extensions.add(new ExpiryExtension(obj));
+    }
+    return extensions;
   }
 
   /**
@@ -840,6 +854,18 @@ public final class Log {
    * this transaction are released.
    */
   void commitTopLevel() {
+    // Update the local copies of contracts now before we've released the lock
+    // and risk writing an in-flight value.
+    for (Map.Entry<RemoteStore, LongKeyMap<Long>> e : longerContracts
+        .entrySet()) {
+      RemoteStore s = e.getKey();
+      for (LongKeyMap.Entry<Long> entry : e.getValue().entrySet()) {
+        long onum = entry.getKey();
+        long expiry = entry.getValue();
+        s.readFromCache(onum).setExpiry(expiry);
+      }
+    }
+
     // Release write locks on created objects and set version numbers.
     // XXX TRM 3/9/18: Do this before reads and writes so that nobody gets a
     // reference to the creates before we've released the writer locks on
@@ -919,16 +945,6 @@ public final class Log {
       TransactionManager tm = TransactionManager.getInstance();
       if (tm.committedWrites != null)
         tm.committedWrites.put(new Oid(obj), obj.$version);
-    }
-
-    // Update the local copies of contracts now that we've released the lock and
-    // won't be aborted by this.
-    for (Map.Entry<RemoteStore, LongKeyMap<SerializedObject>> e : longerContracts
-        .entrySet()) {
-      RemoteStore s = e.getKey();
-      for (SerializedObject obj : e.getValue().values()) {
-        s.updateCache(obj);
-      }
     }
 
     // Queue up extension transactions

@@ -1,6 +1,7 @@
 package fabric.store.db;
 
 import static com.sleepycat.je.OperationStatus.SUCCESS;
+
 import static fabric.common.Logging.STORE_DB_LOGGER;
 
 import java.io.ByteArrayInputStream;
@@ -50,6 +51,7 @@ import fabric.common.util.OidKeyHashMap;
 import fabric.lang.FClass;
 import fabric.lang.security.Principal;
 import fabric.store.SubscriptionManager;
+import fabric.worker.metrics.ExpiryExtension;
 import fabric.worker.remote.RemoteWorker;
 
 /**
@@ -79,6 +81,11 @@ public class BdbDB extends ObjectDB {
    * Database containing objects modified by prepared transactions.
    */
   private Database preparedWrites;
+
+  /**
+   * Database containing objects extended by prepared transactions.
+   */
+  private Database preparedExtensions;
 
   private final DatabaseEntry initializationStatus;
   private final DatabaseEntry onumCounter;
@@ -137,6 +144,7 @@ public class BdbDB extends ObjectDB {
       dbconf.setSortedDuplicates(true);
       preparedCreates = env.openDatabase(null, "preparedCreates", dbconf);
       preparedWrites = env.openDatabase(null, "preparedWrites", dbconf);
+      preparedExtensions = env.openDatabase(null, "preparedExtensions", dbconf);
 
       initRwCount();
 
@@ -187,6 +195,11 @@ public class BdbDB extends ObjectDB {
           data.setData(serializer.toBytes(obj));
           preparedWrites.put(txn, key, data);
         }
+        Serializer<ExpiryExtension> serializer2 = new Serializer<>();
+        for (ExpiryExtension extension : pending.extensions) {
+          data.setData(serializer2.toBytes(extension));
+          preparedExtensions.put(txn, key, data);
+        }
         return null;
       }
     });
@@ -226,10 +239,29 @@ public class BdbDB extends ObjectDB {
                 db.put(txn, onumData, objData);
               }
 
+              // Apply extensions
+              for (ExpiryExtension e : pending.extensions) {
+                long onum = e.onum;
+                STORE_DB_LOGGER.log(Level.FINEST, "Bdb committing onum {0}",
+                    onum);
+
+                DatabaseEntry onumData = new DatabaseEntry();
+                LongBinding.longToEntry(onum, onumData);
+
+                // Grab and update the object's expiry.
+                SerializedObject o = read(onum);
+                o.setExpiry(e.expiry);
+
+                DatabaseEntry objData =
+                    new DatabaseEntry(serializer.toBytes(o));
+
+                db.put(txn, onumData, objData);
+              }
+
               return pending;
             } else {
-              STORE_DB_LOGGER.log(Level.WARNING,
-                  "Bdb commit not found tid {0}", tid);
+              STORE_DB_LOGGER.log(Level.WARNING, "Bdb commit not found tid {0}",
+                  tid);
               throw new InternalError("Unknown transaction id " + tid);
             }
           }
@@ -244,6 +276,17 @@ public class BdbDB extends ObjectDB {
 
       // Update the version-number cache.
       cacheVersionNumber(onum, o.getVersion());
+
+    }
+
+    for (ExpiryExtension e : pending.extensions) {
+      long onum = e.onum;
+
+      // Remove any cached globs containing the old version of this object.
+      notifyCommittedUpdate(sm, onum, workerIdentity.node);
+
+      // Update the version-number cache.
+      cacheVersionNumber(onum, e.version);
 
     }
 
@@ -339,7 +382,8 @@ public class BdbDB extends ObjectDB {
                 DatabaseEntry data = new DatabaseEntry();
                 nextOnum.value = ONumConstants.FIRST_UNRESERVED;
 
-                if (meta.get(txn, onumCounter, data, LockMode.DEFAULT) == SUCCESS) {
+                if (meta.get(txn, onumCounter, data,
+                    LockMode.DEFAULT) == SUCCESS) {
                   nextOnum.value = LongBinding.entryToLong(data);
                 }
 
@@ -375,6 +419,7 @@ public class BdbDB extends ObjectDB {
       if (prepared != null) prepared.close();
       if (preparedCreates != null) preparedCreates.close();
       if (preparedWrites != null) preparedWrites.close();
+      if (preparedExtensions != null) preparedExtensions.close();
       if (meta != null) meta.close();
       if (env != null) env.close();
     } catch (DatabaseException e) {
@@ -391,7 +436,8 @@ public class BdbDB extends ObjectDB {
       public Boolean run(Transaction txn) throws RuntimeException {
         DatabaseEntry data = new DatabaseEntry();
 
-        if (meta.get(txn, initializationStatus, data, LockMode.DEFAULT) == SUCCESS) {
+        if (meta.get(txn, initializationStatus, data,
+            LockMode.DEFAULT) == SUCCESS) {
           return BooleanBinding.entryToBoolean(data);
         }
 
@@ -448,16 +494,26 @@ public class BdbDB extends ObjectDB {
       pending = toPendingTransaction(data.getData());
 
       Cursor cursor = preparedCreates.openCursor(txn, null);
-      for (OperationStatus result = cursor.getSearchKey(bdbKey, data, null); result == SUCCESS; result =
-          cursor.getNextDup(bdbKey, data, null)) {
+      for (OperationStatus result =
+          cursor.getSearchKey(bdbKey, data, null); result == SUCCESS; result =
+              cursor.getNextDup(bdbKey, data, null)) {
         pending.creates.add(toSerializedObject(data.getData()));
       }
       cursor.close();
 
       cursor = preparedWrites.openCursor(txn, null);
-      for (OperationStatus result = cursor.getSearchKey(bdbKey, data, null); result == SUCCESS; result =
-          cursor.getNextDup(bdbKey, data, null)) {
+      for (OperationStatus result =
+          cursor.getSearchKey(bdbKey, data, null); result == SUCCESS; result =
+              cursor.getNextDup(bdbKey, data, null)) {
         pending.writes.add(toSerializedObject(data.getData()));
+      }
+      cursor.close();
+
+      cursor = preparedExtensions.openCursor(txn, null);
+      for (OperationStatus result =
+          cursor.getSearchKey(bdbKey, data, null); result == SUCCESS; result =
+              cursor.getNextDup(bdbKey, data, null)) {
+        pending.extensions.add(toExpiryExtension(data.getData()));
       }
       cursor.close();
     }
@@ -466,6 +522,7 @@ public class BdbDB extends ObjectDB {
     prepared.delete(txn, bdbKey);
     preparedCreates.delete(txn, bdbKey);
     preparedWrites.delete(txn, bdbKey);
+    preparedExtensions.delete(txn, bdbKey);
 
     unpin(pending);
     return pending;
@@ -590,6 +647,16 @@ public class BdbDB extends ObjectDB {
       ByteArrayInputStream bis = new ByteArrayInputStream(data);
       ObjectInputStream ois = new ObjectInputStream(bis);
       return new SerializedObject(ois);
+    } catch (IOException e) {
+      throw new InternalError(e);
+    }
+  }
+
+  private static ExpiryExtension toExpiryExtension(byte[] data) {
+    try {
+      ByteArrayInputStream bis = new ByteArrayInputStream(data);
+      ObjectInputStream ois = new ObjectInputStream(bis);
+      return new ExpiryExtension(ois);
     } catch (IOException e) {
       throw new InternalError(e);
     }

@@ -21,6 +21,7 @@ import fabric.worker.RemoteStore;
 import fabric.worker.TransactionCommitFailedException;
 import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.Worker;
+import fabric.worker.metrics.ExpiryExtension;
 import fabric.worker.remote.RemoteWorker;
 
 /**
@@ -80,14 +81,14 @@ public class InProcessStore extends RemoteStore {
   }
 
   @Override
-  public Pair<LongKeyMap<SerializedObject>, Long> prepareTransaction(long tid,
+  public Pair<LongKeyMap<Long>, Long> prepareTransaction(long tid,
       boolean singleStore, boolean readOnly, long expiryToCheck,
       Collection<_Impl> toCreate, LongKeyMap<Pair<Integer, Long>> reads,
-      Collection<Pair<_Impl, Boolean>> writes)
+      Collection<_Impl> writes, Collection<ExpiryExtension> extensions)
       throws TransactionPrepareFailedException {
     Collection<SerializedObject> serializedCreates =
         new ArrayList<>(toCreate.size());
-    Collection<Pair<SerializedObject, Boolean>> serializedWrites =
+    Collection<SerializedObject> serializedWrites =
         new ArrayList<>(writes.size());
 
     for (_Impl o : toCreate) {
@@ -96,19 +97,17 @@ public class InProcessStore extends RemoteStore {
       serializedCreates.add(serialized);
     }
 
-    for (Pair<_Impl, Boolean> o : writes) {
-      @SuppressWarnings("deprecation")
-      SerializedObject serialized = new SerializedObject(o.first);
-      serializedWrites.add(new Pair<>(serialized, o.second));
+    for (_Impl o : writes) {
+      serializedWrites.add(new SerializedObject(o));
     }
 
-    PrepareRequest req =
-        new PrepareRequest(tid, serializedCreates, serializedWrites, reads);
+    PrepareRequest req = new PrepareRequest(tid, serializedCreates,
+        serializedWrites, reads, extensions);
 
     // Swizzle remote pointers.
     sm.createSurrogates(req);
 
-    LongKeyMap<SerializedObject> longerContracts =
+    LongKeyMap<Long> longerContracts =
         tm.prepare(Worker.getWorker().getPrincipal(), req);
 
     long prepareTime = System.currentTimeMillis();
@@ -121,7 +120,8 @@ public class InProcessStore extends RemoteStore {
           // This should never happen.
           throw new InternalError("AccessException on abort but not prepare?");
         }
-        throw new TransactionPrepareFailedException(longerContracts,
+        throw new TransactionPrepareFailedException(
+            new LongKeyHashMap<SerializedObject>(), longerContracts,
             "Single store prepare too late");
       }
       try {

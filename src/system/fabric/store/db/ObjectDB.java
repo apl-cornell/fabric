@@ -32,6 +32,7 @@ import fabric.store.SubscriptionManager;
 import fabric.worker.Store;
 import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.Worker;
+import fabric.worker.metrics.ExpiryExtension;
 import fabric.worker.remote.RemoteWorker;
 
 /**
@@ -92,12 +93,18 @@ public abstract class ObjectDB {
      */
     public final Collection<SerializedObject> writes;
 
+    /**
+     * Extensions to apply
+     */
+    public final Collection<ExpiryExtension> extensions;
+
     PendingTransaction(long tid, Principal owner) {
       this.tid = tid;
       this.owner = owner;
       this.reads = new ArrayList<>();
       this.creates = new ArrayList<>();
       this.writes = new ArrayList<>();
+      this.extensions = new ArrayList<>();
     }
 
     /**
@@ -124,12 +131,22 @@ public abstract class ObjectDB {
       int writesSize = in.readInt();
       this.writes = new ArrayList<>(writesSize);
 
+      int extensionsSize = in.readInt();
+      this.extensions = new ArrayList<>(extensionsSize);
+
       if (in.readBoolean()) {
         for (int i = 0; i < createsSize; i++)
           creates.add(new SerializedObject(in));
 
         for (int i = 0; i < writesSize; i++)
           writes.add(new SerializedObject(in));
+
+        for (int i = 0; i < extensionsSize; i++) {
+          long onum = in.readLong();
+          int ver = in.readInt();
+          long expiry = in.readLong();
+          extensions.add(new ExpiryExtension(onum, ver, expiry));
+        }
       }
     }
 
@@ -142,17 +159,20 @@ public abstract class ObjectDB {
         private Iterator<Long> readIt = reads.iterator();
         private Iterator<SerializedObject> createIt = creates.iterator();
         private Iterator<SerializedObject> writeIt = writes.iterator();
+        private Iterator<ExpiryExtension> extensionsIt = extensions.iterator();
 
         @Override
         public boolean hasNext() {
-          return readIt.hasNext() || createIt.hasNext() || writeIt.hasNext();
+          return readIt.hasNext() || createIt.hasNext() || writeIt.hasNext()
+              || extensionsIt.hasNext();
         }
 
         @Override
         public Long next() {
           if (readIt.hasNext()) return readIt.next();
           if (createIt.hasNext()) return createIt.next().getOnum();
-          return writeIt.next().getOnum();
+          if (writeIt.hasNext()) return writeIt.next().getOnum();
+          return extensionsIt.next().onum;
         }
 
         @Override
@@ -177,6 +197,12 @@ public abstract class ObjectDB {
 
       for (SerializedObject obj : writes)
         obj.write(out);
+
+      for (ExpiryExtension extension : extensions) {
+        out.writeLong(extension.onum);
+        out.writeInt(extension.version);
+        out.writeLong(extension.expiry);
+      }
     }
 
     /**
@@ -208,6 +234,7 @@ public abstract class ObjectDB {
 
       out.writeInt(creates.size());
       out.writeInt(writes.size());
+      out.writeInt(extensions.size());
     }
   }
 
@@ -280,14 +307,14 @@ public abstract class ObjectDB {
    */
   public final void prepareRead(long tid, Principal worker, long onum,
       int version, long expiry, LongKeyMap<SerializedObject> versionConflicts,
-      LongKeyMap<SerializedObject> longerContracts)
+      LongKeyMap<Long> longerContracts)
       throws TransactionPrepareFailedException {
     // First, lock the object.
     try {
       objectLocksFor(onum).lockForRead(tid, worker);
     } catch (UnableToLockException e) {
       throw new TransactionPrepareFailedException(versionConflicts,
-          read(onum).getClassName() + " " + onum
+          longerContracts, read(onum).getClassName() + " " + onum
               + " has been write-locked by an uncommitted transaction.");
     }
 
@@ -306,13 +333,13 @@ public abstract class ObjectDB {
       curExpiry = getExpiry(onum);
     } catch (AccessException e) {
       throw new TransactionPrepareFailedException(versionConflicts,
-          e.getMessage());
+          longerContracts, e.getMessage());
     }
 
     if (curVersion != version) {
       versionConflicts.put(onum, read(onum));
     } else if (curExpiry > expiry) {
-      longerContracts.put(onum, read(onum));
+      longerContracts.put(onum, curExpiry);
     }
   }
 
@@ -325,21 +352,15 @@ public abstract class ObjectDB {
    *          the worker preparing the create/write.
    * @param obj
    *          the modified object.
-   * @param isExtension
-   *          is this update intended as an extension for a contract?
    * @param versionConflicts
    *          a map containing the transaction's version-conflict information.
    *          If the object modified was out of date, then a new entry will be
    *          added to this map, binding the object's onum to its current
    *          version.
-   * @param longerContracts
-   *          the running set of contracts to send back to the worker which have
-   *          a later expiry than the worker has.
    */
   public final void prepareUpdate(long tid, Principal worker,
-      SerializedObject obj, boolean isExtension,
-      LongKeyMap<SerializedObject> versionConflicts,
-      LongKeyMap<SerializedObject> longerContracts, UpdateMode mode)
+      SerializedObject obj, LongKeyMap<SerializedObject> versionConflicts,
+      LongKeyMap<Long> longerContracts, UpdateMode mode)
       throws TransactionPrepareFailedException {
     long onum = obj.getOnum();
 
@@ -348,7 +369,7 @@ public abstract class ObjectDB {
       objectLocksFor(onum).lockForWrite(tid);
     } catch (UnableToLockException e) {
       throw new TransactionPrepareFailedException(versionConflicts,
-          obj.getClassName() + " " + onum
+          longerContracts, obj.getClassName() + " " + onum
               + " has been locked by an uncommitted transaction.");
     }
 
@@ -365,7 +386,7 @@ public abstract class ObjectDB {
       // Make sure the onum doesn't already exist in the database.
       if (exists(onum)) {
         throw new TransactionPrepareFailedException(versionConflicts,
-            "Object " + onum + " already exists.");
+            longerContracts, "Object " + onum + " already exists.");
       }
 
       // Set the object's initial version number.
@@ -388,35 +409,88 @@ public abstract class ObjectDB {
         return;
       }
 
-      if (isExtension) {
-        long storeExpiry = storeCopy.getExpiry();
-        long newExpiry = obj.getExpiry();
-        // Don't bother replacing if it's an extension and we have a longer
-        // expiry already.
-        if (storeExpiry > newExpiry) {
-          longerContracts.put(onum, read(onum));
-          synchronized (submap) {
-            submap.get(worker).writes.remove(obj);
-            submap.get(worker).reads.add(onum);
-          }
-          objectLocksFor(onum).unlockForWrite(tid);
-          try {
-            objectLocksFor(onum).lockForRead(tid, worker);
-          } catch (UnableToLockException e) {
-            throw new TransactionPrepareFailedException(versionConflicts,
-                obj.getClassName() + " " + onum
-                    + " could not be downgraded to a read lock.");
-          }
-        }
-      } else {
-        // Update the version number on the prepared copy of the object if it's
-        // not an extended metric contract.
-        obj.setVersion(storeVersion + 1);
-      }
+      // Update the version number on the prepared copy of the object
+      obj.setVersion(storeVersion + 1);
       return;
     }
 
     throw new InternalError("Unknown update mode.");
+  }
+
+  /**
+   * Prepares an extension against the database.
+   *
+   * @param tid
+   *          the identifier for the transaction preparing the create/write.
+   * @param worker
+   *          the worker preparing the create/write.
+   * @param extension
+   *          the modified object.
+   * @param versionConflicts
+   *          a map containing the transaction's version-conflict information.
+   *          If the object modified was out of date, then a new entry will be
+   *          added to this map, binding the object's onum to its current
+   *          version.
+   * @param longerContracts
+   *          the running set of contracts to send back to the worker which have
+   *          a later expiry than the worker has.
+   */
+  public final void prepareExtension(long tid, Principal worker,
+      ExpiryExtension extension, LongKeyMap<SerializedObject> versionConflicts,
+      LongKeyMap<Long> longerContracts)
+      throws TransactionPrepareFailedException {
+    long onum = extension.onum;
+
+    // First, read lock the object
+    try {
+      objectLocksFor(onum).lockForRead(tid, worker);
+    } catch (UnableToLockException e) {
+      throw new TransactionPrepareFailedException(versionConflicts,
+          longerContracts,
+          "Object " + onum + " has been locked by an uncommitted transaction.");
+    }
+
+    try {
+      // Check if this is a "real" extension, otherwise we skip it.
+      SerializedObject storeCopy = read(onum);
+      long curExpiry = storeCopy.getExpiry();
+      if (curExpiry >= extension.expiry) {
+        if (curExpiry > extension.expiry) {
+          longerContracts.put(onum, curExpiry);
+        }
+        return;
+      }
+    } finally {
+      objectLocksFor(onum).unlockForRead(tid, worker);
+    }
+
+    // It's a real extension, lock it for a write.
+    try {
+      objectLocksFor(onum).lockForWrite(tid);
+    } catch (UnableToLockException e) {
+      throw new TransactionPrepareFailedException(versionConflicts,
+          longerContracts,
+          "Object " + onum + " has been locked by an uncommitted transaction.");
+    }
+
+    // Record the updated object. Doing so will also register that the
+    // transaction has locked the object.
+    OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
+
+    synchronized (submap) {
+      submap.get(worker).extensions.add(extension);
+    }
+
+    // Read the old copy from the database.
+    SerializedObject storeCopy = read(onum);
+
+    // Check version numbers.
+    int storeVersion = storeCopy.getVersion();
+    int workerVersion = extension.version;
+    if (storeVersion != workerVersion) {
+      versionConflicts.put(onum, storeCopy);
+      return;
+    }
   }
 
   /**
@@ -625,6 +699,18 @@ public abstract class ObjectDB {
 
     for (SerializedObject update : SysUtil.chain(tx.creates, tx.writes)) {
       long onum = update.getOnum();
+      ObjectLocks locks = rwLocks.get(onum);
+      if (locks != null) {
+        synchronized (locks) {
+          locks.unlockForWrite(tx.tid);
+
+          if (!locks.isLocked()) rwLocks.remove(onum, locks);
+        }
+      }
+    }
+
+    for (ExpiryExtension extension : tx.extensions) {
+      long onum = extension.onum;
       ObjectLocks locks = rwLocks.get(onum);
       if (locks != null) {
         synchronized (locks) {

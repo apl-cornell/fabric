@@ -14,6 +14,7 @@ import fabric.common.util.LongKeyMap;
 import fabric.common.util.Pair;
 import fabric.lang.Object._Impl;
 import fabric.worker.TransactionPrepareFailedException;
+import fabric.worker.metrics.ExpiryExtension;
 import fabric.worker.remote.RemoteWorker;
 
 /**
@@ -68,27 +69,26 @@ public class PrepareTransactionMessage extends
    * The objects modified during the transaction, unserialized. This will only
    * be non-null on the worker. The store should use the
    * <code>serializedWrites</code> field instead.
-   *
-   * Each item is paired with a boolean flag indicating if the write is intended
-   * as an extension (for a contract) and false otherwise.
    */
-  public final Collection<Pair<_Impl, Boolean>> writes;
+  public final Collection<_Impl> writes;
 
   /**
    * The objects modified during the transaction, serialized. This will only be
    * non-null on the store. The worker should use the <code>writes</code> field
    * instead.
-   *
-   * Each item is paired with a boolean flag indicating if the write is intended
-   * as an extension (for a contract) and false otherwise.
    */
-  public final Collection<Pair<SerializedObject, Boolean>> serializedWrites;
+  public final Collection<SerializedObject> serializedWrites;
+
+  /**
+   * The extensions performed during this transaction.
+   */
+  public final Collection<ExpiryExtension> extensions;
 
   /**
    * Used to prepare transactions at remote workers.
    */
   public PrepareTransactionMessage(long tid) {
-    this(tid, false, false, 0, null, null, null);
+    this(tid, false, false, 0, null, null, null, null);
   }
 
   /**
@@ -96,8 +96,8 @@ public class PrepareTransactionMessage extends
    */
   public PrepareTransactionMessage(long tid, boolean singleStore,
       boolean readOnly, long expiryToCheck, Collection<_Impl> toCreate,
-      LongKeyMap<Pair<Integer, Long>> reads,
-      Collection<Pair<_Impl, Boolean>> writes) {
+      LongKeyMap<Pair<Integer, Long>> reads, Collection<_Impl> writes,
+      Collection<ExpiryExtension> extensions) {
     super(MessageType.PREPARE_TRANSACTION,
         TransactionPrepareFailedException.class);
 
@@ -108,6 +108,7 @@ public class PrepareTransactionMessage extends
     this.creates = toCreate;
     this.reads = reads;
     this.writes = writes;
+    this.extensions = extensions;
     this.serializedCreates = null;
     this.serializedWrites = null;
   }
@@ -120,12 +121,12 @@ public class PrepareTransactionMessage extends
     /** Time to use for the expiry check for contracts. */
     public final long time;
     /** Longer contracts to update cache with. */
-    public final LongKeyMap<SerializedObject> longerContracts;
+    public final LongKeyMap<Long> longerContracts;
 
     /**
      * Creates a Response indicating a successful prepare.
      */
-    public Response(long time, LongKeyMap<SerializedObject> longerContracts) {
+    public Response(long time, LongKeyMap<Long> longerContracts) {
       this.time = time;
       this.longerContracts = longerContracts;
     }
@@ -185,9 +186,18 @@ public class PrepareTransactionMessage extends
       out.writeInt(0);
     } else {
       out.writeInt(writes.size());
-      for (Pair<_Impl, Boolean> p : writes) {
-        SerializedObject.write(p.first, out);
-        out.writeBoolean(p.second);
+      for (_Impl o : writes) {
+        SerializedObject.write(o, out);
+      }
+    }
+
+    // Serialize extensions.
+    if (extensions == null) {
+      out.writeInt(0);
+    } else {
+      out.writeInt(extensions.size());
+      for (ExpiryExtension e : extensions) {
+        e.write(out);
       }
     }
   }
@@ -240,8 +250,18 @@ public class PrepareTransactionMessage extends
     } else {
       serializedWrites = new ArrayList<>(size);
       for (int i = 0; i < size; i++) {
-        SerializedObject obj = new SerializedObject(in);
-        serializedWrites.add(new Pair<>(obj, in.readBoolean()));
+        serializedWrites.add(new SerializedObject(in));
+      }
+    }
+
+    // Read extensions
+    size = in.readInt();
+    if (size == 0) {
+      extensions = Collections.emptyList();
+    } else {
+      extensions = new ArrayList<>(size);
+      for (int i = 0; i < size; i++) {
+        extensions.add(new ExpiryExtension(in));
       }
     }
   }
@@ -250,9 +270,9 @@ public class PrepareTransactionMessage extends
   protected void writeResponse(DataOutput out, Response r) throws IOException {
     out.writeLong(r.time);
     out.writeInt(r.longerContracts.size());
-    for (LongKeyMap.Entry<SerializedObject> e : r.longerContracts.entrySet()) {
+    for (LongKeyMap.Entry<Long> e : r.longerContracts.entrySet()) {
       out.writeLong(e.getKey());
-      e.getValue().write(out);
+      out.writeLong(e.getValue());
     }
   }
 
@@ -260,10 +280,11 @@ public class PrepareTransactionMessage extends
   protected Response readResponse(DataInput in) throws IOException {
     long time = in.readLong();
     int size = in.readInt();
-    LongKeyMap<SerializedObject> longerContracts = new LongKeyHashMap<>(size);
+    LongKeyMap<Long> longerContracts = new LongKeyHashMap<>(size);
     for (int i = 0; i < size; i++) {
       long onum = in.readLong();
-      longerContracts.put(onum, new SerializedObject(in));
+      long expiry = in.readLong();
+      longerContracts.put(onum, expiry);
     }
     return new Response(time, longerContracts);
   }

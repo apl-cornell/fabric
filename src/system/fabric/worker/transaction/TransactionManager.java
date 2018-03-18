@@ -66,6 +66,7 @@ import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.TransactionRestartingException;
 import fabric.worker.Worker;
 import fabric.worker.Worker.Code;
+import fabric.worker.metrics.ExpiryExtension;
 import fabric.worker.metrics.LockConflictException;
 import fabric.worker.metrics.TxnStats;
 import fabric.worker.remote.RemoteWorker;
@@ -982,7 +983,7 @@ public final class TransactionManager {
    * @throws TransactionRestartingException
    *           if the prepare fails.
    */
-  public Pair<Map<RemoteStore, LongKeyMap<SerializedObject>>, Long> sendPrepareMessages() {
+  public Pair<Map<RemoteStore, LongKeyMap<Long>>, Long> sendPrepareMessages() {
     return sendPrepareMessages(false, false, current.storesToContact(),
         current.workersCalled);
   }
@@ -999,15 +1000,14 @@ public final class TransactionManager {
    * @throws TransactionRestartingException
    *           if the prepare fails.
    */
-  private Pair<Map<RemoteStore, LongKeyMap<SerializedObject>>, Long> sendPrepareMessages(
+  private Pair<Map<RemoteStore, LongKeyMap<Long>>, Long> sendPrepareMessages(
       final boolean singleStore, final boolean readOnly, Set<Store> stores,
       List<RemoteWorker> workers) throws TransactionRestartingException {
     final Map<RemoteNode<?>, TransactionPrepareFailedException> failures =
         Collections.synchronizedMap(
             new HashMap<RemoteNode<?>, TransactionPrepareFailedException>());
-    final Map<RemoteStore, LongKeyMap<SerializedObject>> longerContracts =
-        Collections.synchronizedMap(
-            new HashMap<RemoteStore, LongKeyMap<SerializedObject>>());
+    final Map<RemoteStore, LongKeyMap<Long>> longerContracts = Collections
+        .synchronizedMap(new HashMap<RemoteStore, LongKeyMap<Long>>());
     // Time to use for contract comparisons at the end of prepare.
     final long[] time = new long[] { System.currentTimeMillis() };
     final long expiryToCheck = current.expiry();
@@ -1079,19 +1079,21 @@ public final class TransactionManager {
                 Collection<_Impl> creates = current.getCreatesForStore(store);
                 LongKeyMap<Pair<Integer, Long>> reads =
                     current.getReadsForStore(store, false);
-                Collection<Pair<_Impl, Boolean>> writes =
-                    current.getWritesForStore(store);
+                Collection<_Impl> writes = current.getWritesForStore(store);
+                Collection<ExpiryExtension> extensions =
+                    current.getExtensionsForStore(store);
                 if (store instanceof RemoteStore) {
-                  Pair<LongKeyMap<SerializedObject>, Long> p =
-                      store.prepareTransaction(current.tid.topTid, singleStore,
-                          readOnly, expiryToCheck, creates, reads, writes);
+                  Pair<LongKeyMap<Long>, Long> p = store.prepareTransaction(
+                      current.tid.topTid, singleStore, readOnly, expiryToCheck,
+                      creates, reads, writes, extensions);
                   longerContracts.put((RemoteStore) store, p.first);
                   synchronized (time) {
                     time[0] = Math.max(p.second, time[0]);
                   }
                 } else {
                   store.prepareTransaction(current.tid.topTid, singleStore,
-                      readOnly, expiryToCheck, creates, reads, writes);
+                      readOnly, expiryToCheck, creates, reads, writes,
+                      extensions);
                 }
               } catch (TransactionPrepareFailedException e) {
                 failures.put((RemoteNode<?>) store, e);
@@ -1172,17 +1174,32 @@ public final class TransactionManager {
               store.updateCache(obj);
             }
           }
+          // Update extensions which weren't version conflicts.
+          LongKeyMap<Long> failedLongerContracts =
+              entry.getValue().longerContracts;
+          if (failedLongerContracts != null) {
+            for (LongKeyMap.Entry<Long> e : failedLongerContracts.entrySet()) {
+              long onum = e.getKey();
+              long expiry = e.getValue();
+              if (!versionConflicts.containsKey(onum)) {
+                // Only bother if it wasn't also a conflict.
+                store.readFromCache(onum).setExpiry(expiry);
+              }
+            }
+          }
         }
       }
 
       // Update the contract objects locally so that we're using the latest
       // version next time.
-      for (Map.Entry<RemoteStore, LongKeyMap<SerializedObject>> e1 : longerContracts
+      for (Map.Entry<RemoteStore, LongKeyMap<Long>> e1 : longerContracts
           .entrySet()) {
         RemoteStore s = e1.getKey();
-        for (SerializedObject obj : e1.getValue().values()) {
-          // Evict the old version.
-          s.updateCache(obj);
+        for (LongKeyMap.Entry<Long> entry : e1.getValue().entrySet()) {
+          // Update the expiry time.
+          long onum = entry.getKey();
+          long expiry = entry.getValue();
+          s.readFromCache(onum).setExpiry(expiry);
         }
       }
 
@@ -1597,10 +1614,16 @@ public final class TransactionManager {
           && obj.writerMapVersion == current.writerMap.version && obj.$isOwned)
         return needTransaction;
 
-      // If this is the only write, it's an extension.
+      // If this wasn't written (outside of other extensions) prior to now, it's
+      // an extension.
       boolean extension = oldExpiry < newExpiry;
+      boolean previouslyExtended = false;
+      synchronized (current.extendedContracts) {
+        previouslyExtended = current.extendedContracts.containsKey(obj);
+      }
       synchronized (current.writes) {
-        if (current.writes.contains(obj)) extension = false;
+        if (current.writes.contains(obj) && !previouslyExtended)
+          extension = false;
       }
       synchronized (current.creates) {
         if (current.creates.contains(obj)) extension = false;
