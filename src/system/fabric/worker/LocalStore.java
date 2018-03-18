@@ -23,7 +23,7 @@ import fabric.common.util.ConcurrentLongKeyHashMap;
 import fabric.common.util.ConcurrentLongKeyMap;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
-import fabric.common.util.LongSet;
+import fabric.common.util.Oid;
 import fabric.common.util.Pair;
 import fabric.lang.Object;
 import fabric.lang.Object._Impl;
@@ -147,7 +147,7 @@ public final class LocalStore implements Store, Serializable {
    * added to the queue, and the onum-request mapping is updated.
    */
   @Override
-  public void sendExtensions(LongSet extensions) {
+  public void sendExtensions(LongKeyMap<Set<Oid>> extensions) {
     throw new NotImplementedException(
         "Local stores do not currently support handling extensions");
     // TODO: Do we ever want this?

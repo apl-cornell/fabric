@@ -2,12 +2,13 @@ package fabric.worker;
 
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.Set;
 
 import fabric.common.SerializedObject;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.AccessException;
 import fabric.common.util.LongKeyMap;
-import fabric.common.util.LongSet;
+import fabric.common.util.Oid;
 import fabric.common.util.Pair;
 import fabric.lang.Object._Impl;
 import fabric.lang.security.NodePrincipal;
@@ -141,7 +142,7 @@ public interface Store extends Serializable {
   /**
    * Send extensions to handle.
    */
-  public void sendExtensions(LongSet extensions);
+  public void sendExtensions(LongKeyMap<Set<Oid>> extensions);
 
   /**
    * Wait for an update past the given version for the given onum.

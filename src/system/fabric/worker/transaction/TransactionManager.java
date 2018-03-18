@@ -41,6 +41,7 @@ import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
+import fabric.common.util.Oid;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
 import fabric.common.util.Triple;
@@ -1835,6 +1836,35 @@ public final class TransactionManager {
    * Registers a contract that can and should be extended later closer to the
    * expiration.  This will be done by sending an extension message after the
    * transaction completes.
+   *
+   * This version includes an argument to indicate the object updated that
+   * enables this extension.
+   */
+  public void registerDelayedExtension(fabric.lang.Object toBeExtended,
+      fabric.lang.Object extendingObject) {
+    _Impl obj = (_Impl) toBeExtended.fetch();
+    synchronized (obj) {
+      synchronized (current.writes) {
+        if (current.writes.contains(obj)) return;
+      }
+      synchronized (current.creates) {
+        if (current.creates.contains(obj)) return;
+      }
+      synchronized (current.extendedContracts) {
+        if (current.extendedContracts.containsKey(obj)) return;
+      }
+      synchronized (current.delayedExtensions) {
+        if (!current.delayedExtensions.containsKey(obj))
+          current.delayedExtensions.put(obj, new HashSet<Oid>());
+        current.delayedExtensions.get(obj).add(new Oid(extendingObject));
+      }
+    }
+  }
+
+  /**
+   * Registers a contract that can and should be extended later closer to the
+   * expiration.  This will be done by sending an extension message after the
+   * transaction completes.
    */
   public void registerDelayedExtension(fabric.lang.Object toBeExtended) {
     _Impl obj = (_Impl) toBeExtended.fetch();
@@ -1849,7 +1879,8 @@ public final class TransactionManager {
         if (current.extendedContracts.containsKey(obj)) return;
       }
       synchronized (current.delayedExtensions) {
-        current.delayedExtensions.put(obj, obj.$getOnum());
+        if (!current.delayedExtensions.containsKey(obj))
+          current.delayedExtensions.put(obj, new HashSet<Oid>());
       }
     }
   }

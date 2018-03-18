@@ -23,7 +23,6 @@ import fabric.common.Timing;
 import fabric.common.TransactionID;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
-import fabric.common.util.LongSet;
 import fabric.common.util.Oid;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
@@ -35,7 +34,6 @@ import fabric.metrics.contracts.Contract;
 import fabric.metrics.util.AbstractSubject;
 import fabric.metrics.util.Observer;
 import fabric.metrics.util.Subject;
-import fabric.store.DelayedExtension;
 import fabric.worker.FabricSoftRef;
 import fabric.worker.RemoteStore;
 import fabric.worker.Store;
@@ -147,7 +145,7 @@ public final class Log {
    * A collection of {@link Contract}s that should be extended after this
    * transaction
    */
-  protected final OidKeyHashMap<Long> delayedExtensions;
+  protected final OidKeyHashMap<Set<Oid>> delayedExtensions;
 
   /**
    * A map from RemoteStores to maps from onums to contracts that were longer on
@@ -739,7 +737,7 @@ public final class Log {
     }
 
     for (Store s : delayedExtensions.storeSet()) {
-      for (LongKeyMap.Entry<Long> e : delayedExtensions.get(s).entrySet()) {
+      for (LongKeyMap.Entry<Set<Oid>> e : delayedExtensions.get(s).entrySet()) {
         long onum = e.getKey();
         synchronized (parent.retractedContracts) {
           if (parent.retractedContracts.containsKey(s, onum)) continue;
@@ -749,7 +747,7 @@ public final class Log {
         }
         synchronized (parent.delayedExtensions) {
           if (!parent.delayedExtensions.containsKey(s, onum))
-            parent.delayedExtensions.put(s, onum, onum);
+            parent.delayedExtensions.put(s, onum, e.getValue());
         }
       }
     }
@@ -934,12 +932,13 @@ public final class Log {
     }
 
     // Queue up extension transactions
-    Map<Store, LongSet> extensionsToSend = new HashMap<>();
+    Map<Store, LongKeyMap<Set<Oid>>> extensionsToSend = new HashMap<>();
     for (Store s : delayedExtensions.storeSet()) {
-      extensionsToSend.put(s, delayedExtensions.get(s).keySet());
+      extensionsToSend.put(s, delayedExtensions.get(s));
     }
 
-    for (Map.Entry<Store, LongSet> entry : extensionsToSend.entrySet()) {
+    for (Map.Entry<Store, LongKeyMap<Set<Oid>>> entry : extensionsToSend
+        .entrySet()) {
       entry.getKey().sendExtensions(entry.getValue());
     }
 

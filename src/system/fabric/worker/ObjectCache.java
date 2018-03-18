@@ -217,6 +217,18 @@ public final class ObjectCache {
     }
 
     /**
+     * @return A serialized value for the Impl for this entry. If the current
+     * value is deserialized, a freshly serialized value is created.
+     *
+     * TODO: Unclear this works as intended...
+     */
+    public synchronized SerializedObject getSerialized() {
+      if (next != null) return next.getSerialized();
+      if (serialized != null) return serialized;
+      return new SerializedObject(impl);
+    }
+
+    /**
      * Obtains the object's version number. (Returns null if this entry has been
      * evicted.)
      */

@@ -8,9 +8,12 @@ import java.security.PublicKey;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
+import java.util.Set;
 
 import fabric.common.Crypto;
 import fabric.common.Logging;
@@ -28,7 +31,7 @@ import fabric.common.exceptions.RuntimeFetchException;
 import fabric.common.util.ConcurrentLongKeyHashMap;
 import fabric.common.util.ConcurrentLongKeyMap;
 import fabric.common.util.LongKeyMap;
-import fabric.common.util.LongSet;
+import fabric.common.util.Oid;
 import fabric.common.util.Pair;
 import fabric.dissemination.ObjectGlob;
 import fabric.lang.Object;
@@ -345,13 +348,25 @@ public class RemoteStore extends RemoteNode<RemoteStore>
   }
 
   @Override
-  public void sendExtensions(final LongSet extensions) {
+  public void sendExtensions(final LongKeyMap<Set<Oid>> extensions) {
     Threading.getPool().submit(new Runnable() {
       @Override
       public void run() {
         try {
+          java.util.Map<RemoteStore, Collection<SerializedObject>> updates =
+              new HashMap<>();
+          for (Set<Oid> so : extensions.values()) {
+            for (Oid o : so) {
+              if (o.store instanceof RemoteStore) {
+                RemoteStore rs = (RemoteStore) o.store;
+                SerializedObject obj = rs.readFromCache(o.onum).getSerialized();
+                updates.putIfAbsent(rs, new HashSet<SerializedObject>());
+                ((Set<SerializedObject>) updates.get(rs)).add(obj);
+              }
+            }
+          }
           send(Worker.getWorker().authToStore,
-              new ContractExtensionMessage(extensions));
+              new ContractExtensionMessage(extensions.keySet(), updates));
         } catch (NoException e) {
         }
       }

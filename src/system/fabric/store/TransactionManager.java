@@ -374,7 +374,7 @@ public class TransactionManager {
    * a later time than the new request, the new {@link DelayedExtension} is
    * added to the queue, and the onum-request mapping is updated.
    */
-  public void queueExtension(LongSet extensions) {
+  public void queueExtensions(LongSet extensions) {
     for (LongIterator it = extensions.iterator(); it.hasNext();) {
       long onum = it.next();
       queueExtension(onum);

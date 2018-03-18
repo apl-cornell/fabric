@@ -347,12 +347,19 @@ class Store extends MessageToStoreHandler {
    */
   @Override
   public ContractExtensionMessage.Response handle(
-      RemoteIdentity<RemoteWorker> client, ContractExtensionMessage message) {
+      RemoteIdentity<RemoteWorker> client,
+      final ContractExtensionMessage message) {
     STORE_REQUEST_LOGGER.log(Level.FINER,
         "Handling Contract Extension Message from {0}",
         nameOf(client.principal));
 
-    tm.queueExtension(message.extensions);
+    for (fabric.worker.RemoteStore s : message.updates.keySet()) {
+      for (SerializedObject obj : message.updates.get(s)) {
+        s.updateCache(obj);
+      }
+    }
+
+    tm.queueExtensions(message.extensions);
     return new ContractExtensionMessage.Response();
   }
 

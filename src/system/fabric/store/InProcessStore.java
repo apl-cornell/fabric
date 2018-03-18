@@ -3,6 +3,7 @@ package fabric.store;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 import fabric.common.ObjectGroup;
 import fabric.common.SerializedObject;
@@ -12,7 +13,7 @@ import fabric.common.exceptions.InternalError;
 import fabric.common.net.RemoteIdentity;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
-import fabric.common.util.LongSet;
+import fabric.common.util.Oid;
 import fabric.common.util.Pair;
 import fabric.dissemination.ObjectGlob;
 import fabric.lang.Object._Impl;
@@ -163,8 +164,8 @@ public class InProcessStore extends RemoteStore {
   }
 
   @Override
-  public void sendExtensions(LongSet extensions) {
-    tm.queueExtension(extensions);
+  public void sendExtensions(LongKeyMap<Set<Oid>> extensions) {
+    tm.queueExtensions(extensions.keySet());
   }
 
 }
