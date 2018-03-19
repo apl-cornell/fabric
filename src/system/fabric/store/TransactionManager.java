@@ -170,6 +170,9 @@ public class TransactionManager {
             longerContracts);
       }
 
+      database.prepareDelayedExtensions(tid, worker, req.extensionsTriggered,
+          req.delayedExtensions);
+
       // Check reads
       for (LongKeyMap.Entry<Pair<Integer, Long>> entry : req.reads.entrySet()) {
         long onum = entry.getKey();
@@ -527,7 +530,7 @@ public class TransactionManager {
                             target.attemptExtension();
                             return null;
                           }
-                        }, true);
+                        }, false);
                       } catch (AbortException e) {
                         success = false;
                         // Clear out any leftover locking state

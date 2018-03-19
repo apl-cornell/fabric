@@ -16,12 +16,15 @@ import java.util.Set;
 import java.util.logging.Level;
 
 import fabric.common.Logging;
+import fabric.common.SerializedObject;
 import fabric.common.SysUtil;
 import fabric.common.Threading;
 import fabric.common.Timing;
 import fabric.common.TransactionID;
+import fabric.common.util.LongHashSet;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.LongSet;
 import fabric.common.util.Oid;
 import fabric.common.util.OidKeyHashMap;
 import fabric.common.util.Pair;
@@ -143,9 +146,16 @@ public final class Log {
 
   /**
    * A collection of {@link Contract}s that should be extended after this
-   * transaction
+   * transaction, mapping to the objects that trigger this possible extension.
    */
   protected final OidKeyHashMap<Set<Oid>> delayedExtensions;
+
+  /**
+   * A collection of Oids that trigger delayedExtensions to run after this
+   * transaction. (Acts as the reverse map for delayedExtensions.) Null key used
+   * for those extensions which have no trigger.
+   */
+  protected final OidKeyHashMap<Set<Oid>> extensionTriggers;
 
   /**
    * A map from RemoteStores to maps from onums to contracts that were longer on
@@ -279,6 +289,7 @@ public final class Log {
     this.extendedContracts = new OidKeyHashMap<>();
     this.retractedContracts = new OidKeyHashMap<>();
     this.delayedExtensions = new OidKeyHashMap<>();
+    this.extensionTriggers = new OidKeyHashMap<>();
     this.localStoreWrites = new WeakReferenceArrayList<>();
     this.workersCalled = new ArrayList<>();
     this.startTime = System.currentTimeMillis();
@@ -485,6 +496,25 @@ public final class Log {
     return extensions;
   }
 
+  LongKeyMap<Set<Oid>> getTriggeredExtensionsForStore(Store store) {
+    if (!extensionTriggers.storeSet().contains(store)) {
+      return new LongKeyHashMap<>();
+    }
+    return extensionTriggers.get(store);
+  }
+
+  LongSet getDelayedExtensionsForStore(Store store) {
+    LongSet rtn = new LongHashSet();
+    if (extensionTriggers.containsKey((fabric.lang.Object) null)) {
+      for (Oid o : extensionTriggers.get((fabric.lang.Object) null)) {
+        if (o.store == store) {
+          rtn.add(o.onum);
+        }
+      }
+    }
+    return rtn;
+  }
+
   /**
    * Returns a collection of objects created at the given store.
    */
@@ -604,6 +634,7 @@ public final class Log {
       extendedContracts.clear();
       retractedContracts.clear();
       delayedExtensions.clear();
+      extensionTriggers.clear();
       localStoreWrites.clear();
       workersCalled.clear();
       securityCache.reset();
@@ -731,15 +762,15 @@ public final class Log {
           parent.extendedContracts.remove(obs);
       }
       synchronized (parent.delayedExtensions) {
-        if (parent.delayedExtensions.containsKey(obs))
-          parent.delayedExtensions.remove(obs);
+        if (parent.markedForDelayedExtension(obs))
+          parent.cancelDelayedExtension(obs);
       }
     }
 
     for (_Impl obs : extendedContracts.values()) {
       synchronized (parent.delayedExtensions) {
-        if (parent.delayedExtensions.containsKey(obs))
-          parent.delayedExtensions.remove(obs);
+        if (parent.markedForDelayedExtension(obs))
+          parent.cancelDelayedExtension(obs);
       }
       synchronized (parent.retractedContracts) {
         if (parent.retractedContracts.containsKey(obs)) continue;
@@ -753,6 +784,7 @@ public final class Log {
     for (Store s : delayedExtensions.storeSet()) {
       for (LongKeyMap.Entry<Set<Oid>> e : delayedExtensions.get(s).entrySet()) {
         long onum = e.getKey();
+        Oid oid = new Oid(s, onum);
         synchronized (parent.retractedContracts) {
           if (parent.retractedContracts.containsKey(s, onum)) continue;
         }
@@ -760,8 +792,14 @@ public final class Log {
           if (parent.extendedContracts.containsKey(s, onum)) continue;
         }
         synchronized (parent.delayedExtensions) {
-          if (!parent.delayedExtensions.containsKey(s, onum))
-            parent.delayedExtensions.put(s, onum, e.getValue());
+          if (e.getValue().isEmpty()) {
+            if (parent.markedForDelayedExtension(oid)) continue;
+            parent.addDelayedExtension(oid);
+          } else {
+            for (Oid trigger : e.getValue()) {
+              parent.addDelayedExtension(new Oid(s, onum), trigger);
+            }
+          }
         }
       }
     }
@@ -854,6 +892,9 @@ public final class Log {
    * this transaction are released.
    */
   void commitTopLevel() {
+    // Grab the stores already contacted to be checked against below.
+    Set<Store> alreadyContacted = storesToContact();
+
     // Update the local copies of contracts now before we've released the lock
     // and risk writing an in-flight value.
     for (Map.Entry<RemoteStore, LongKeyMap<Long>> e : longerContracts
@@ -947,15 +988,23 @@ public final class Log {
         tm.committedWrites.put(new Oid(obj), obj.$version);
     }
 
-    // Queue up extension transactions
-    Map<Store, LongKeyMap<Set<Oid>>> extensionsToSend = new HashMap<>();
-    for (Store s : delayedExtensions.storeSet()) {
-      extensionsToSend.put(s, delayedExtensions.get(s));
+    // Queue up extension transactions not triggered by an update and not sent
+    // in the commit message already.
+    Map<Store, LongSet> extensionsToSend = new HashMap<>();
+    Set<Oid> noTriggerExtensions =
+        extensionTriggers.get((fabric.lang.Object) null);
+    if (noTriggerExtensions != null) {
+      for (Oid o : noTriggerExtensions) {
+        if (alreadyContacted.contains(o.store)) continue;
+        if (!extensionsToSend.containsKey(o.store))
+          extensionsToSend.put(o.store, new LongHashSet());
+        extensionsToSend.get(o.store).add(o.onum);
+      }
     }
 
-    for (Map.Entry<Store, LongKeyMap<Set<Oid>>> entry : extensionsToSend
-        .entrySet()) {
-      entry.getKey().sendExtensions(entry.getValue());
+    for (Map.Entry<Store, LongSet> entry : extensionsToSend.entrySet()) {
+      entry.getKey().sendExtensions(entry.getValue(),
+          new HashMap<RemoteStore, Collection<SerializedObject>>());
     }
 
     // Update this thread's lock state in the TransactionManager.
@@ -1126,5 +1175,132 @@ public final class Log {
   @Override
   public String toString() {
     return "[" + tid + "]";
+  }
+
+  // Delayed Extension Management
+
+  /**
+   * Update data structures for a new delayed extension, given the triggering
+   * dependency.
+   */
+  public void addDelayedExtension(fabric.lang.Object toBeExtended,
+      fabric.lang.Object trigger) {
+    addDelayedExtension(new Oid(toBeExtended), new Oid(trigger));
+  }
+
+  /**
+   * Update data structures for a new delayed extension, given the triggering
+   * dependency.
+   */
+  public void addDelayedExtension(Oid toBeExtended,
+      fabric.lang.Object trigger) {
+    addDelayedExtension(toBeExtended, new Oid(trigger));
+  }
+
+  /**
+   * Update data structures for a new delayed extension, given the triggering
+   * dependency.
+   */
+  public void addDelayedExtension(fabric.lang.Object toBeExtended,
+      Oid trigger) {
+    addDelayedExtension(new Oid(toBeExtended), trigger);
+  }
+
+  /**
+   * Update data structures for a new delayed extension, given the triggering
+   * dependency.
+   */
+  public void addDelayedExtension(Oid toBeExtended, Oid trigger) {
+    synchronized (delayedExtensions) {
+      // Forward
+      if (!delayedExtensions.containsKey(toBeExtended)) {
+        delayedExtensions.put(toBeExtended, new HashSet<Oid>());
+      }
+      delayedExtensions.get(toBeExtended).add(trigger);
+
+      // Backward
+      if (!extensionTriggers.containsKey(trigger)) {
+        extensionTriggers.put(trigger, new HashSet<Oid>());
+      }
+      extensionTriggers.get(trigger).add(toBeExtended);
+
+      // Remove null trigger.
+      if (extensionTriggers.containsKey((fabric.lang.Object) null)) {
+        extensionTriggers.get((fabric.lang.Object) null).remove(toBeExtended);
+      }
+    }
+  }
+
+  /**
+   * Update data structures for a new delayed extension, given no trigger.
+   */
+  public void addDelayedExtension(fabric.lang.Object toBeExtended) {
+    addDelayedExtension(new Oid(toBeExtended));
+  }
+
+  /**
+   * Update data structures for a new delayed extension, given no trigger.
+   */
+  public void addDelayedExtension(Oid toBeExtended) {
+    synchronized (delayedExtensions) {
+      // Forward
+      if (!delayedExtensions.containsKey(toBeExtended)) {
+        delayedExtensions.put(toBeExtended, new HashSet<Oid>());
+      }
+
+      // Backward
+      if (!extensionTriggers.containsKey((fabric.lang.Object) null)) {
+        extensionTriggers.put((fabric.lang.Object) null, new HashSet<Oid>());
+      }
+      extensionTriggers.get((fabric.lang.Object) null).add(toBeExtended);
+    }
+  }
+
+  /**
+   * @return true iff the transaction is going to trigger a delayed extension
+   * after committing.
+   */
+  public boolean markedForDelayedExtension(fabric.lang.Object obj) {
+    synchronized (delayedExtensions) {
+      return delayedExtensions.containsKey(obj);
+    }
+  }
+
+  /**
+   * @return true iff the transaction is going to trigger a delayed extension
+   * after committing.
+   */
+  public boolean markedForDelayedExtension(Oid obj) {
+    synchronized (delayedExtensions) {
+      return delayedExtensions.containsKey(obj);
+    }
+  }
+
+  /**
+   * Cancel a delayed extension.
+   */
+  public void cancelDelayedExtension(fabric.lang.Object obj) {
+    cancelDelayedExtension(new Oid(obj));
+  }
+
+  /**
+   * Cancel a delayed extension.
+   */
+  public void cancelDelayedExtension(Oid obj) {
+    synchronized (delayedExtensions) {
+      Set<Oid> triggers = delayedExtensions.remove(obj);
+      if (triggers != null) {
+        if (triggers.isEmpty()) {
+          // Remove null trigger.
+          if (extensionTriggers.containsKey((fabric.lang.Object) null)) {
+            extensionTriggers.get((fabric.lang.Object) null).remove(obj);
+          }
+        } else {
+          for (Oid trigger : triggers) {
+            extensionTriggers.get(trigger).remove(obj);
+          }
+        }
+      }
+    }
   }
 }

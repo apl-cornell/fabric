@@ -108,6 +108,8 @@ public class MemoryDB extends ObjectDB {
       objectTable.get(extension.onum).setExpiry(extension.expiry);
     }
 
+    sendTriggeredExtensions(tid);
+
     remove(workerIdentity.principal, tid);
   }
 

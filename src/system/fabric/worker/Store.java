@@ -2,12 +2,14 @@ package fabric.worker;
 
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.Map;
 import java.util.Set;
 
 import fabric.common.SerializedObject;
 import fabric.common.TransactionID;
 import fabric.common.exceptions.AccessException;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.LongSet;
 import fabric.common.util.Oid;
 import fabric.common.util.Pair;
 import fabric.lang.Object._Impl;
@@ -33,6 +35,9 @@ public interface Store extends Serializable {
 
   /**
    * Notifies the store that the transaction is entering the Prepare phase.
+   * @param extensionsTriggered
+   *          map from onums on this store to sets of oids that should be
+   *          extended after this commits.
    *
    * @return A map from onums to contracts that were longer on the store, to
    * replace in the local cache.
@@ -40,7 +45,8 @@ public interface Store extends Serializable {
   Pair<LongKeyMap<Long>, Long> prepareTransaction(long tid, boolean singleStore,
       boolean readOnly, long expiryToCheck, Collection<_Impl> toCreate,
       LongKeyMap<Pair<Integer, Long>> reads, Collection<_Impl> writes,
-      Collection<ExpiryExtension> extensions)
+      Collection<ExpiryExtension> extensions,
+      LongKeyMap<Set<Oid>> extensionsTriggered, LongSet delayedExtensions)
       throws UnreachableNodeException, TransactionPrepareFailedException;
 
   /**
@@ -143,7 +149,8 @@ public interface Store extends Serializable {
   /**
    * Send extensions to handle.
    */
-  public void sendExtensions(LongKeyMap<Set<Oid>> extensions);
+  public void sendExtensions(LongSet extensions,
+      Map<RemoteStore, Collection<SerializedObject>> updates);
 
   /**
    * Wait for an update past the given version for the given onum.

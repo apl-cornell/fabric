@@ -1082,10 +1082,15 @@ public final class TransactionManager {
                 Collection<_Impl> writes = current.getWritesForStore(store);
                 Collection<ExpiryExtension> extensions =
                     current.getExtensionsForStore(store);
+                LongKeyMap<Set<Oid>> extensionsTriggered =
+                    current.getTriggeredExtensionsForStore(store);
+                LongSet delayedExtensions =
+                    current.getDelayedExtensionsForStore(store);
                 if (store instanceof RemoteStore) {
-                  Pair<LongKeyMap<Long>, Long> p = store.prepareTransaction(
-                      current.tid.topTid, singleStore, readOnly, expiryToCheck,
-                      creates, reads, writes, extensions);
+                  Pair<LongKeyMap<Long>, Long> p =
+                      store.prepareTransaction(current.tid.topTid, singleStore,
+                          readOnly, expiryToCheck, creates, reads, writes,
+                          extensions, extensionsTriggered, delayedExtensions);
                   longerContracts.put((RemoteStore) store, p.first);
                   synchronized (time) {
                     time[0] = Math.max(p.second, time[0]);
@@ -1093,7 +1098,7 @@ public final class TransactionManager {
                 } else {
                   store.prepareTransaction(current.tid.topTid, singleStore,
                       readOnly, expiryToCheck, creates, reads, writes,
-                      extensions);
+                      extensions, extensionsTriggered, delayedExtensions);
                 }
               } catch (TransactionPrepareFailedException e) {
                 failures.put((RemoteNode<?>) store, e);
@@ -1471,9 +1476,7 @@ public final class TransactionManager {
       synchronized (current.extendedContracts) {
         current.extendedContracts.remove(obj);
       }
-      synchronized (current.delayedExtensions) {
-        current.delayedExtensions.remove(obj);
-      }
+      current.cancelDelayedExtension(obj);
     } finally {
       Timing.TXLOG.end();
     }
@@ -1587,9 +1590,7 @@ public final class TransactionManager {
         synchronized (current.extendedContracts) {
           current.extendedContracts.remove(obj);
         }
-        synchronized (current.delayedExtensions) {
-          current.delayedExtensions.remove(obj);
-        }
+        current.cancelDelayedExtension(obj);
       } finally {
         Timing.TXLOG.end();
       }
@@ -1650,9 +1651,7 @@ public final class TransactionManager {
         synchronized (current.extendedContracts) {
           current.extendedContracts.remove(obj);
         }
-        synchronized (current.delayedExtensions) {
-          current.delayedExtensions.remove(obj);
-        }
+        current.cancelDelayedExtension(obj);
       }
 
       // Track retractions
@@ -1877,9 +1876,7 @@ public final class TransactionManager {
         if (current.extendedContracts.containsKey(obj)) return;
       }
       synchronized (current.delayedExtensions) {
-        if (!current.delayedExtensions.containsKey(obj))
-          current.delayedExtensions.put(obj, new HashSet<Oid>());
-        current.delayedExtensions.get(obj).add(new Oid(extendingObject));
+        current.addDelayedExtension(toBeExtended, extendingObject);
       }
     }
   }
@@ -1902,8 +1899,7 @@ public final class TransactionManager {
         if (current.extendedContracts.containsKey(obj)) return;
       }
       synchronized (current.delayedExtensions) {
-        if (!current.delayedExtensions.containsKey(obj))
-          current.delayedExtensions.put(obj, new HashSet<Oid>());
+        current.addDelayedExtension(toBeExtended);
       }
     }
   }

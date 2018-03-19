@@ -23,6 +23,7 @@ import fabric.common.util.ConcurrentLongKeyHashMap;
 import fabric.common.util.ConcurrentLongKeyMap;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.LongSet;
 import fabric.common.util.Oid;
 import fabric.common.util.Pair;
 import fabric.lang.Object;
@@ -66,9 +67,11 @@ public final class LocalStore implements Store, Serializable {
   public Pair<LongKeyMap<Long>, Long> prepareTransaction(long tid,
       boolean singleStore, boolean readOnly, long expiryToCheck,
       Collection<Object._Impl> toCreate, LongKeyMap<Pair<Integer, Long>> reads,
-      Collection<Object._Impl> writes, Collection<ExpiryExtension> extensions) {
+      Collection<Object._Impl> writes, Collection<ExpiryExtension> extensions,
+      LongKeyMap<Set<Oid>> extensionsTriggered, LongSet delayedExtensions) {
     // Note: since we assume local single threading we can ignore reads
     // (conflicts are impossible)
+    // XXX: There should never be a locally triggered extension...
     WORKER_LOCAL_STORE_LOGGER.fine("Local transaction preparing");
     return new Pair<LongKeyMap<Long>, Long>(new LongKeyHashMap<Long>(),
         System.currentTimeMillis());
@@ -82,6 +85,7 @@ public final class LocalStore implements Store, Serializable {
   @Override
   public void commitTransaction(long transactionID) {
     WORKER_LOCAL_STORE_LOGGER.fine("Local transaction committing");
+    // TODO: Send extensions?  This shouldn't be possible...
   }
 
   @Override
@@ -148,7 +152,8 @@ public final class LocalStore implements Store, Serializable {
    * added to the queue, and the onum-request mapping is updated.
    */
   @Override
-  public void sendExtensions(LongKeyMap<Set<Oid>> extensions) {
+  public void sendExtensions(LongSet extensions,
+      java.util.Map<RemoteStore, Collection<SerializedObject>> updates) {
     throw new NotImplementedException(
         "Local stores do not currently support handling extensions");
     // TODO: Do we ever want this?

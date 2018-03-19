@@ -290,6 +290,8 @@ public class BdbDB extends ObjectDB {
 
     }
 
+    sendTriggeredExtensions(tid);
+
     STORE_DB_LOGGER.log(Level.FINER, "Bdb commit success tid {0}", tid);
   }
 

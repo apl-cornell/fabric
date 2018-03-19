@@ -8,8 +8,6 @@ import java.security.PublicKey;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
@@ -31,6 +29,7 @@ import fabric.common.exceptions.RuntimeFetchException;
 import fabric.common.util.ConcurrentLongKeyHashMap;
 import fabric.common.util.ConcurrentLongKeyMap;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.LongSet;
 import fabric.common.util.Oid;
 import fabric.common.util.Pair;
 import fabric.dissemination.ObjectGlob;
@@ -140,11 +139,13 @@ public class RemoteStore extends RemoteNode<RemoteStore>
   public Pair<LongKeyMap<Long>, Long> prepareTransaction(long tid,
       boolean singleStore, boolean readOnly, long expiryToCheck,
       Collection<Object._Impl> toCreate, LongKeyMap<Pair<Integer, Long>> reads,
-      Collection<Object._Impl> writes, Collection<ExpiryExtension> extensions)
+      Collection<Object._Impl> writes, Collection<ExpiryExtension> extensions,
+      LongKeyMap<Set<Oid>> extensionsTriggered, LongSet delayedExtensions)
       throws TransactionPrepareFailedException, UnreachableNodeException {
     PrepareTransactionMessage.Response r = send(Worker.getWorker().authToStore,
         new PrepareTransactionMessage(tid, singleStore, readOnly, expiryToCheck,
-            toCreate, reads, writes, extensions));
+            toCreate, reads, writes, extensions, extensionsTriggered,
+            delayedExtensions));
     return new Pair<>(r.longerContracts, r.time);
   }
 
@@ -349,29 +350,19 @@ public class RemoteStore extends RemoteNode<RemoteStore>
   }
 
   @Override
-  public void sendExtensions(final LongKeyMap<Set<Oid>> extensions) {
+  public void sendExtensions(final LongSet extensions,
+      final java.util.Map<RemoteStore, Collection<SerializedObject>> updates) {
     Threading.getPool().submit(new Runnable() {
       @Override
       public void run() {
         try {
-          java.util.Map<RemoteStore, Collection<SerializedObject>> updates =
-              new HashMap<>();
-          for (Set<Oid> so : extensions.values()) {
-            for (Oid o : so) {
-              if (o.store instanceof RemoteStore) {
-                RemoteStore rs = (RemoteStore) o.store;
-                SerializedObject obj = rs.readFromCache(o.onum).getSerialized();
-                updates.putIfAbsent(rs, new HashSet<SerializedObject>());
-                ((Set<SerializedObject>) updates.get(rs)).add(obj);
-              }
-            }
-          }
           send(Worker.getWorker().authToStore,
-              new ContractExtensionMessage(extensions.keySet(), updates));
+              new ContractExtensionMessage(extensions, updates));
         } catch (NoException e) {
         }
       }
     });
+
   }
 
   @Override

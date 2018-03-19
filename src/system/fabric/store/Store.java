@@ -10,6 +10,7 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.cert.X509Certificate;
 import java.util.Collection;
+import java.util.Set;
 import java.util.logging.Level;
 
 import fabric.common.ConfigProperties;
@@ -35,6 +36,8 @@ import fabric.common.net.naming.NameService.PortType;
 import fabric.common.net.naming.TransitionalNameService;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.LongSet;
+import fabric.common.util.Oid;
 import fabric.common.util.Pair;
 import fabric.dissemination.ObjectGlob;
 import fabric.lang.security.NodePrincipal;
@@ -219,9 +222,9 @@ class Store extends MessageToStoreHandler {
         "Handling Prepare Message, worker={0}, tid={1}",
         nameOf(client.principal), msg.tid);
 
-    LongKeyMap<Long> longerContracts =
-        prepareTransaction(client.principal, msg.tid, msg.serializedCreates,
-            msg.serializedWrites, msg.reads, msg.extensions);
+    LongKeyMap<Long> longerContracts = prepareTransaction(client.principal,
+        msg.tid, msg.serializedCreates, msg.serializedWrites, msg.reads,
+        msg.extensions, msg.extensionsTriggered, msg.delayedExtensions);
 
     long prepareTime = System.currentTimeMillis();
 
@@ -385,11 +388,13 @@ class Store extends MessageToStoreHandler {
       Collection<SerializedObject> serializedCreates,
       Collection<SerializedObject> serializedWrites,
       LongKeyMap<Pair<Integer, Long>> reads,
-      Collection<ExpiryExtension> extensions)
+      Collection<ExpiryExtension> extensions,
+      LongKeyMap<Set<Oid>> extensionsTriggered, LongSet delayedExtensions)
       throws TransactionPrepareFailedException {
 
-    PrepareRequest req = new PrepareRequest(tid, serializedCreates,
-        serializedWrites, reads, extensions);
+    PrepareRequest req =
+        new PrepareRequest(tid, serializedCreates, serializedWrites, reads,
+            extensions, extensionsTriggered, delayedExtensions);
 
     sm.createSurrogates(req);
 

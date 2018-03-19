@@ -6,14 +6,22 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 import fabric.common.SerializedObject;
 import fabric.common.net.RemoteIdentity;
+import fabric.common.util.LongHashSet;
+import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.LongSet;
+import fabric.common.util.Oid;
 import fabric.common.util.Pair;
 import fabric.lang.Object._Impl;
+import fabric.worker.Store;
 import fabric.worker.TransactionPrepareFailedException;
+import fabric.worker.Worker;
 import fabric.worker.metrics.ExpiryExtension;
 import fabric.worker.remote.RemoteWorker;
 
@@ -85,10 +93,20 @@ public class PrepareTransactionMessage extends
   public final Collection<ExpiryExtension> extensions;
 
   /**
+   * The extensions that will be triggered if the updates commit.
+   */
+  public final LongKeyMap<Set<Oid>> extensionsTriggered;
+
+  /**
+   * Triggerless extensions.
+   */
+  public final LongSet delayedExtensions;
+
+  /**
    * Used to prepare transactions at remote workers.
    */
   public PrepareTransactionMessage(long tid) {
-    this(tid, false, false, 0, null, null, null, null);
+    this(tid, false, false, 0, null, null, null, null, null, null);
   }
 
   /**
@@ -97,7 +115,8 @@ public class PrepareTransactionMessage extends
   public PrepareTransactionMessage(long tid, boolean singleStore,
       boolean readOnly, long expiryToCheck, Collection<_Impl> toCreate,
       LongKeyMap<Pair<Integer, Long>> reads, Collection<_Impl> writes,
-      Collection<ExpiryExtension> extensions) {
+      Collection<ExpiryExtension> extensions,
+      LongKeyMap<Set<Oid>> extensionsTriggered, LongSet delayedExtensions) {
     super(MessageType.PREPARE_TRANSACTION,
         TransactionPrepareFailedException.class);
 
@@ -109,6 +128,8 @@ public class PrepareTransactionMessage extends
     this.reads = reads;
     this.writes = writes;
     this.extensions = extensions;
+    this.extensionsTriggered = extensionsTriggered;
+    this.delayedExtensions = delayedExtensions;
     this.serializedCreates = null;
     this.serializedWrites = null;
   }
@@ -200,6 +221,31 @@ public class PrepareTransactionMessage extends
         e.write(out);
       }
     }
+
+    // Serialize extensions triggered.
+    if (extensionsTriggered == null) {
+      out.writeInt(0);
+    } else {
+      out.writeInt(extensionsTriggered.size());
+      for (LongKeyMap.Entry<Set<Oid>> e : extensionsTriggered.entrySet()) {
+        out.writeLong(e.getKey());
+        out.writeInt(e.getValue().size());
+        for (Oid o : e.getValue()) {
+          out.writeUTF(o.store.name());
+          out.writeLong(o.onum);
+        }
+      }
+    }
+
+    // Other extensions
+    if (delayedExtensions == null) {
+      out.writeInt(0);
+    } else {
+      out.writeInt(delayedExtensions.size());
+      for (LongIterator it = delayedExtensions.iterator(); it.hasNext();) {
+        out.writeLong(it.next());
+      }
+    }
   }
 
   /* readMessage */
@@ -263,6 +309,28 @@ public class PrepareTransactionMessage extends
       for (int i = 0; i < size; i++) {
         extensions.add(new ExpiryExtension(in));
       }
+    }
+
+    // Read extensions triggered
+    size = in.readInt();
+    this.extensionsTriggered = new LongKeyHashMap<>(size);
+    for (int i = 0; i < size; i++) {
+      long key = in.readLong();
+      int size2 = in.readInt();
+      Set<Oid> value = new HashSet<>(size2);
+      for (int j = 0; j < size2; j++) {
+        Store s = Worker.getWorker().getStore(in.readUTF());
+        long onum = in.readLong();
+        value.add(new Oid(s, onum));
+      }
+      extensionsTriggered.put(key, value);
+    }
+
+    // Read other extensions
+    size = in.readInt();
+    this.delayedExtensions = new LongHashSet(size);
+    for (int i = 0; i < size; i++) {
+      delayedExtensions.add(in.readLong());
     }
   }
 

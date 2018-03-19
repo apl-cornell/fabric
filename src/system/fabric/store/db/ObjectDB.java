@@ -8,7 +8,11 @@ import java.io.ObjectInputStream;
 import java.security.PrivateKey;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 
 import javax.security.auth.x500.X500Principal;
@@ -17,6 +21,7 @@ import fabric.common.FastSerializable;
 import fabric.common.ONumConstants;
 import fabric.common.SerializedObject;
 import fabric.common.SysUtil;
+import fabric.common.Threading;
 import fabric.common.exceptions.AccessException;
 import fabric.common.net.RemoteIdentity;
 import fabric.common.util.ConcurrentLongKeyHashMap;
@@ -25,10 +30,15 @@ import fabric.common.util.LongHashSet;
 import fabric.common.util.LongIterator;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
+import fabric.common.util.Oid;
 import fabric.common.util.OidKeyHashMap;
+import fabric.common.util.Pair;
 import fabric.lang.security.NodePrincipal;
 import fabric.lang.security.Principal;
+import fabric.store.InProcessStore;
 import fabric.store.SubscriptionManager;
+import fabric.worker.LocalStore;
+import fabric.worker.RemoteStore;
 import fabric.worker.Store;
 import fabric.worker.TransactionPrepareFailedException;
 import fabric.worker.Worker;
@@ -98,6 +108,13 @@ public abstract class ObjectDB {
      */
     public final Collection<ExpiryExtension> extensions;
 
+    /**
+     * Extensions that this will trigger.
+     * Pair is first onums on the store to be extended, second the onums for
+     * values here that should be shipped with the extension message.
+     */
+    public final Map<Store, Pair<LongSet, LongSet>> extensionsTriggered;
+
     PendingTransaction(long tid, Principal owner) {
       this.tid = tid;
       this.owner = owner;
@@ -105,6 +122,7 @@ public abstract class ObjectDB {
       this.creates = new ArrayList<>();
       this.writes = new ArrayList<>();
       this.extensions = new ArrayList<>();
+      this.extensionsTriggered = new HashMap<>();
     }
 
     /**
@@ -134,6 +152,9 @@ public abstract class ObjectDB {
       int extensionsSize = in.readInt();
       this.extensions = new ArrayList<>(extensionsSize);
 
+      int extensionsTriggeredSize = in.readInt();
+      this.extensionsTriggered = new HashMap<>();
+
       if (in.readBoolean()) {
         for (int i = 0; i < createsSize; i++)
           creates.add(new SerializedObject(in));
@@ -142,10 +163,21 @@ public abstract class ObjectDB {
           writes.add(new SerializedObject(in));
 
         for (int i = 0; i < extensionsSize; i++) {
-          long onum = in.readLong();
-          int ver = in.readInt();
-          long expiry = in.readLong();
-          extensions.add(new ExpiryExtension(onum, ver, expiry));
+          extensions.add(new ExpiryExtension(in));
+        }
+
+        for (int i = 0; i < extensionsTriggeredSize; i++) {
+          Store s = Worker.getWorker().getStore(in.readUTF());
+          int onumsSize = in.readInt();
+          int updatesSize = in.readInt();
+          extensionsTriggered.put(s, new Pair<LongSet, LongSet>(
+              new LongHashSet(onumsSize), new LongHashSet(updatesSize)));
+          for (int j = 0; j < onumsSize; j++) {
+            extensionsTriggered.get(s).first.add(in.readLong());
+          }
+          for (int j = 0; j < updatesSize; j++) {
+            extensionsTriggered.get(s).second.add(in.readLong());
+          }
         }
       }
     }
@@ -199,9 +231,20 @@ public abstract class ObjectDB {
         obj.write(out);
 
       for (ExpiryExtension extension : extensions) {
-        out.writeLong(extension.onum);
-        out.writeInt(extension.version);
-        out.writeLong(extension.expiry);
+        extension.write(out);
+      }
+
+      for (Store s : extensionsTriggered.keySet()) {
+        out.writeUTF(s.name());
+        Pair<LongSet, LongSet> sub = extensionsTriggered.get(s);
+        out.writeInt(sub.first.size());
+        out.writeInt(sub.second.size());
+        for (LongIterator it = sub.first.iterator(); it.hasNext();) {
+          out.writeLong(it.next());
+        }
+        for (LongIterator it = sub.second.iterator(); it.hasNext();) {
+          out.writeLong(it.next());
+        }
       }
     }
 
@@ -235,6 +278,7 @@ public abstract class ObjectDB {
       out.writeInt(creates.size());
       out.writeInt(writes.size());
       out.writeInt(extensions.size());
+      out.writeInt(extensionsTriggered.size());
     }
   }
 
@@ -494,6 +538,46 @@ public abstract class ObjectDB {
   }
 
   /**
+   * Prepares an extension against the database.
+   *
+   * @param tid
+   *          the identifier for the transaction preparing the create/write.
+   * @param worker
+   *          the worker preparing the create/write.
+   */
+  public final void prepareDelayedExtensions(long tid, Principal worker,
+      LongKeyMap<Set<Oid>> extensionsTriggered, LongSet delayedExtensions) {
+    // Record the extension triggering object, updating maps of triggered values
+    // to updates. Doing so will also register that the transaction has locked
+    // the object.
+    OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
+    for (LongIterator it = extensionsTriggered.keySet().iterator(); it
+        .hasNext();) {
+      long onum = it.next();
+      for (Oid o : extensionsTriggered.get(onum)) {
+        synchronized (submap) {
+          if (!submap.get(worker).extensionsTriggered.containsKey(o.store)) {
+            submap.get(worker).extensionsTriggered.put(o.store,
+                new Pair<LongSet, LongSet>(new LongHashSet(),
+                    new LongHashSet()));
+          }
+          submap.get(worker).extensionsTriggered.get(o.store).first.add(o.onum);
+          submap.get(worker).extensionsTriggered.get(o.store).second.add(onum);
+        }
+      }
+    }
+    // Add the extensions to trigger on this store with no trigger objects.
+    for (LongIterator it = delayedExtensions.iterator(); it.hasNext();) {
+      Store curStore = Worker.getWorker().getStore(Worker.getWorkerName());
+      if (!submap.get(worker).extensionsTriggered.containsKey(curStore)) {
+        submap.get(worker).extensionsTriggered.put(curStore,
+            new Pair<LongSet, LongSet>(new LongHashSet(), new LongHashSet()));
+      }
+      submap.get(worker).extensionsTriggered.get(curStore).first.add(it.next());
+    }
+  }
+
+  /**
    * Obtains the ObjectLocks for a given onum, creating one if it doesn't
    * already exist.
    */
@@ -637,6 +721,46 @@ public abstract class ObjectDB {
       }
 
       sm.notifyUpdate(updatedOnums, worker);
+    }
+  }
+
+  /**
+   * Sends extension messages that were triggered by a successful commit.
+   *
+   * @param tid
+   *    tid to send triggered extensions for.
+   */
+  protected final void sendTriggeredExtensions(long tid) {
+    OidKeyHashMap<PendingTransaction> submap = pendingByTid.get(tid);
+    synchronized (submap) {
+      for (PendingTransaction p : submap.values()) {
+        for (final Map.Entry<Store, Pair<LongSet, LongSet>> e : p.extensionsTriggered
+            .entrySet()) {
+          final Store s = e.getKey();
+          final LongSet delayedOnums = e.getValue().first;
+          final LongSet updatedOnums = e.getValue().second;
+          Threading.getPool().submit(new Runnable() {
+            @Override
+            public void run() {
+              Map<RemoteStore, Collection<SerializedObject>> updates =
+                  new HashMap<>();
+              if (!(s instanceof InProcessStore)
+                  && !(s instanceof LocalStore)) {
+                // Only bother to package things up when it's going to a
+                // distinct node.
+                List<SerializedObject> updateVals =
+                    new ArrayList<>(updatedOnums.size());
+                for (LongIterator it = updatedOnums.iterator(); it.hasNext();) {
+                  updateVals.add(read(it.next()));
+                }
+                updates.put(Worker.getWorker().getStore(Worker.getWorkerName()),
+                    updateVals);
+              }
+              s.sendExtensions(delayedOnums, updates);
+            }
+          });
+        }
+      }
     }
   }
 

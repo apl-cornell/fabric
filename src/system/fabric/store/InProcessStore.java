@@ -3,6 +3,7 @@ package fabric.store;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import fabric.common.ObjectGroup;
@@ -13,6 +14,7 @@ import fabric.common.exceptions.InternalError;
 import fabric.common.net.RemoteIdentity;
 import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.LongSet;
 import fabric.common.util.Oid;
 import fabric.common.util.Pair;
 import fabric.dissemination.ObjectGlob;
@@ -69,6 +71,7 @@ public class InProcessStore extends RemoteStore {
   public void commitTransaction(long transactionID)
       throws TransactionCommitFailedException {
     tm.commitTransaction(getLocalWorkerIdentity(), transactionID);
+    // TODO Extensions
   }
 
   @Override
@@ -84,7 +87,8 @@ public class InProcessStore extends RemoteStore {
   public Pair<LongKeyMap<Long>, Long> prepareTransaction(long tid,
       boolean singleStore, boolean readOnly, long expiryToCheck,
       Collection<_Impl> toCreate, LongKeyMap<Pair<Integer, Long>> reads,
-      Collection<_Impl> writes, Collection<ExpiryExtension> extensions)
+      Collection<_Impl> writes, Collection<ExpiryExtension> extensions,
+      LongKeyMap<Set<Oid>> extensionsTriggered, LongSet delayedExtensions)
       throws TransactionPrepareFailedException {
     Collection<SerializedObject> serializedCreates =
         new ArrayList<>(toCreate.size());
@@ -101,8 +105,9 @@ public class InProcessStore extends RemoteStore {
       serializedWrites.add(new SerializedObject(o));
     }
 
-    PrepareRequest req = new PrepareRequest(tid, serializedCreates,
-        serializedWrites, reads, extensions);
+    PrepareRequest req =
+        new PrepareRequest(tid, serializedCreates, serializedWrites, reads,
+            extensions, extensionsTriggered, delayedExtensions);
 
     // Swizzle remote pointers.
     sm.createSurrogates(req);
@@ -164,8 +169,9 @@ public class InProcessStore extends RemoteStore {
   }
 
   @Override
-  public void sendExtensions(LongKeyMap<Set<Oid>> extensions) {
-    tm.queueExtensions(extensions.keySet());
+  public void sendExtensions(LongSet extensions,
+      Map<RemoteStore, Collection<SerializedObject>> updates) {
+    tm.queueExtensions(extensions);
   }
 
 }
