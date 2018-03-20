@@ -26,8 +26,8 @@ public class DelayedExtension implements Delayed {
 
   @Override
   public int compareTo(Delayed o) {
-    return (int) (getDelay(TimeUnit.MILLISECONDS)
-        - o.getDelay(TimeUnit.MILLISECONDS));
+    return Long.compare(getDelay(TimeUnit.MILLISECONDS),
+        o.getDelay(TimeUnit.MILLISECONDS));
   }
 
   @Override
