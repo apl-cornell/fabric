@@ -32,20 +32,16 @@ public class SimpleSurrogateManager implements SurrogateManager {
     Map<Pair<String, Long>, Long> cache = new HashMap<>();
     Collection<SerializedObject> surrogates = new ArrayList<>();
 
-    ArrayList<SerializedObject> writtenObjects = new ArrayList<>();
-    for (SerializedObject w : req.writes) {
-      writtenObjects.add(w);
-    }
-    Iterable<SerializedObject> chain =
-        SysUtil.chain(req.creates, writtenObjects);
+    Iterable<SerializedObject> chain = SysUtil.chain(req.creates, req.writes);
     for (SerializedObject obj : chain) {
       Iterator<Long> intraStore = obj.getIntraStoreRefIterator();
       Iterator<ComparablePair<String, Long>> interStore =
           obj.getInterStoreRefIterator();
 
       boolean hadRemotes = false;
-      List<Long> newrefs = new ArrayList<>(
-          obj.getNumIntraStoreRefs() + obj.getNumInterStoreRefs() + 1);
+      List<Long> newrefs =
+          new ArrayList<>(obj.getNumIntraStoreRefs()
+              + obj.getNumInterStoreRefs() + 1);
 
       long updateLabelOnum;
       if (obj.updateLabelRefIsInterStore()) {

@@ -71,7 +71,6 @@ public class InProcessStore extends RemoteStore {
   public void commitTransaction(long transactionID)
       throws TransactionCommitFailedException {
     tm.commitTransaction(getLocalWorkerIdentity(), transactionID);
-    // TODO Extensions
   }
 
   @Override
