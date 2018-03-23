@@ -2,12 +2,16 @@ package fabric.metrics.contracts;
 
 import fabric.metrics.Metric;
 import fabric.metrics.SampledMetric;
+import fabric.metrics.contracts.enforcement.EnforcementPolicy;
+import fabric.metrics.contracts.enforcement.WitnessPolicy;
 import fabric.metrics.contracts.warranties.WarrantyComp;
 import fabric.metrics.util.AbstractSubject;
 import fabric.metrics.util.Observer;
 import fabric.metrics.util.ReconfigLock;
 import fabric.metrics.util.Subject;
+import fabric.util.ArrayList;
 import fabric.util.Iterator;
+import fabric.util.List;
 
 import fabric.worker.Store;
 import fabric.worker.Worker;
@@ -35,6 +39,9 @@ public abstract class Contract extends AbstractSubject implements Observer {
 
   // Lock to be acquired for reconfiguring after being activated.
   protected final ReconfigLock lock;
+
+  // Currently used enforcement policy.
+  protected EnforcementPolicy currentPolicy;
 
   /**
    * @param store
@@ -82,7 +89,7 @@ public abstract class Contract extends AbstractSubject implements Observer {
           tm.registerDelayedExtension(parent, this);
         }
       }
-      Logging.METRICS_LOGGER.log(Level.FINE, "SYNCH EXTENSION OF {0} IN {1}", new java.lang.Object native[] { this, TransactionManager.getInstance().getCurrentLog() });
+      Logging.METRICS_LOGGER.log(Level.FINE, "SYNCH EXTENSION OF {0} TO {2} IN {1}", new java.lang.Object native[] { this, TransactionManager.getInstance().getCurrentLog(), Long.valueOf(newExpiry) });
       $expiry = newExpiry;
     } else {
       // Wait until later to extend, we don't want to get too eager.
@@ -119,14 +126,36 @@ public abstract class Contract extends AbstractSubject implements Observer {
   public static void static_activate(Contract tmp) {
     if (TransactionManager.getInstance().inTxn()) {
       if (!tmp.activated) {
+        if (tmp.currentPolicy != null) {
+          tmp.currentPolicy.activate();
+        }
         Logging.METRICS_LOGGER.log(Level.FINE, "ACTIVATED {0} IN {1}", new java.lang.Object native[] { tmp, TransactionManager.getInstance().getCurrentLog() });
         tmp.activated = true;
+        if (tmp.currentPolicy != null && tmp.currentPolicy.expiry() > System.currentTimeMillis()) {
+          tmp.$expiry = tmp.currentPolicy.expiry();
+          tmp.currentPolicy.apply(tmp);
+        } else {
+          tmp.currentPolicy = null;
+        }
       }
     } else {
+      boolean unactivated = false;
       atomic {
-        if (!tmp.activated) {
+        unactivated = !tmp.activated;
+      }
+      if (unactivated) {
+        if (tmp.currentPolicy != null) {
+          tmp.currentPolicy.activate();
+        }
+        atomic {
           Logging.METRICS_LOGGER.log(Level.FINE, "ACTIVATED {0} IN {1}", new java.lang.Object native[] { tmp, TransactionManager.getInstance().getCurrentLog() });
           tmp.activated = true;
+          if (tmp.currentPolicy != null && tmp.currentPolicy.expiry() > System.currentTimeMillis()) {
+            tmp.$expiry = tmp.currentPolicy.expiry();
+            tmp.currentPolicy.apply(tmp);
+          } else {
+            tmp.currentPolicy = null;
+          }
         }
       }
     }
@@ -148,13 +177,21 @@ public abstract class Contract extends AbstractSubject implements Observer {
     if (TransactionManager.getInstance().inTxn()) {
       AbstractSubject.static_removeObserver(tmp, obs);
       if (!tmp.isObserved()) {
-          tmp.$expiry = -1;
+        tmp.$expiry = -1;
+        if (tmp.currentPolicy != null) {
+          tmp.currentPolicy.unapply(tmp);
+          tmp.currentPolicy = null;
+        }
       }
     } else {
       atomic {
         AbstractSubject.static_removeObserver(tmp, obs);
         if (!tmp.isObserved()) {
-            tmp.$expiry = -1;
+          tmp.$expiry = -1;
+          if (tmp.currentPolicy != null) {
+            tmp.currentPolicy.unapply(tmp);
+            tmp.currentPolicy = null;
+          }
         }
       }
     }
@@ -199,7 +236,7 @@ public abstract class Contract extends AbstractSubject implements Observer {
     // Mark this as modified, which needs to be resolved in this
     // transaction.
     // TODO: Maybe indicate which contract's being retracted?
-    Logging.METRICS_LOGGER.log(Level.FINE, "RETRACTION OF {0} IN {1}", new java.lang.Object native[] { this, TransactionManager.getInstance().getCurrentLog() });
+    Logging.METRICS_LOGGER.log(Level.FINE, "RETRACTION OF {0} TO {2} IN {1}", new java.lang.Object native[] { this, TransactionManager.getInstance().getCurrentLog(), Long.valueOf(newExpiry) });
     $expiry = newExpiry;
   }
 
@@ -255,6 +292,16 @@ public abstract class Contract extends AbstractSubject implements Observer {
   }
 
   /**
+   * @return The expiration time for this {@link Contract} (shifted to account
+   *         for a constant "max" clock drift between the node that last set
+   *         the expiration time and other nodes checking it.)
+   * NOTE: Purely intended for proxy contracts.
+   */
+  //protected long getRawExpiry() {
+  //  return $expiry;
+  //}
+
+  /**
    * Update the state used to enforce this contract's expiration time (and
    * possibly update the expiration time) in response to a change in the value
    * of the current evidence ({@link Subject}s) used to enforce this
@@ -276,6 +323,13 @@ public abstract class Contract extends AbstractSubject implements Observer {
       this.lock.checkForRead();
       return refresh(false);
     }
+
+    // Otherwise, we need to make sure we're not stuck observing anything.
+    if (currentPolicy != null) {
+      currentPolicy.unapply(this);
+      currentPolicy = null;
+    }
+
     //Logging.METRICS_LOGGER.log(Level.FINER, "CONTRACT INVALID");
     return false;
   }
@@ -319,10 +373,32 @@ public abstract class Contract extends AbstractSubject implements Observer {
     Logging.METRICS_LOGGER.log(Level.FINE, "ASYNC EXTENSION OF " + tmp + " IN "
         + TransactionManager.getInstance().getCurrentTid());
     if (TransactionManager.getInstance().inTxn()) {
-      tmp.refresh(true);
+      if (tmp.valid()) {
+        // Check first that we aren't going to conflict with a
+        // reconfiguration.
+        tmp.lock.checkForRead();
+        tmp.refresh(true);
+      }
+
+      // Otherwise, we need to make sure we're not stuck observing anything.
+      if (tmp.currentPolicy != null) {
+        tmp.currentPolicy.unapply(tmp);
+        tmp.currentPolicy = null;
+      }
     } else {
       atomic {
-        tmp.refresh(true);
+        if (tmp.valid()) {
+          // Check first that we aren't going to conflict with a
+          // reconfiguration.
+          tmp.lock.checkForRead();
+          tmp.refresh(true);
+        }
+
+        // Otherwise, we need to make sure we're not stuck observing anything.
+        if (tmp.currentPolicy != null) {
+          tmp.currentPolicy.unapply(tmp);
+          tmp.currentPolicy = null;
+        }
       }
     }
   }
@@ -330,7 +406,13 @@ public abstract class Contract extends AbstractSubject implements Observer {
   /**
    * Acquire reconfig locks starting from this contract.
    */
-  public abstract void acquireReconfigLocks();
+  public void acquireReconfigLocks() {
+    //Logging.METRICS_LOGGER.finer("ACQUIRING LOCK AT " + this + " IN " +
+    //    TransactionManager.getInstance().getCurrentLog());
+    this.lock.acquireOptimistic();
+    if (this.currentPolicy != null)
+      this.currentPolicy.acquireReconfigLocks();
+  }
 
   /**
    * Create a {@link ConjunctionContract} with this and another contract.
@@ -373,7 +455,6 @@ public abstract class Contract extends AbstractSubject implements Observer {
 
     // The Contract this acts as a proxy for.
     protected final Contract target;
-    protected boolean observing;
 
     /**
      * @param target
@@ -382,47 +463,8 @@ public abstract class Contract extends AbstractSubject implements Observer {
     public ProxyContract fabric$metrics$contracts$Contract$ProxyContract$(Contract target) {
       this.target = target;
       fabric$metrics$contracts$Contract$();
-      this.observing = false;
+      this.currentPolicy = new WitnessPolicy().fabric$metrics$contracts$enforcement$WitnessPolicy$(new Contract native[] { target });
       return this;
-    }
-
-    /*@Override*/
-    public void activate() {
-      ProxyContract.static_activate(this);
-    }
-
-    private static void static_activate(ProxyContract tmp) {
-      if (TransactionManager.getInstance().inTxn()) {
-        if (tmp.isActivated())
-          return;
-      } else {
-        atomic {
-          if (tmp.isActivated())
-            return;
-        }
-      }
-
-      tmp.target.activate();
-
-      //Logging.METRICS_LOGGER.finer("ACTIVATING MC " + tmp + " IN " +
-      //    TransactionManager.getInstance().getCurrentLog());
-      if (TransactionManager.getInstance().inTxn()) {
-        if (tmp.target.valid()) {
-          tmp.$expiry = tmp.target.getExpiry();
-          tmp.target.addObserver(tmp);
-          tmp.observing = true;
-        }
-        Contract.static_activate(tmp);
-      } else {
-        atomic {
-          if (tmp.target.valid()) {
-            tmp.$expiry = tmp.target.getExpiry();
-            tmp.target.addObserver(tmp);
-            tmp.observing = true;
-          }
-          Contract.static_activate(tmp);
-        }
-      }
     }
 
     /*@Override*/
@@ -434,14 +476,13 @@ public abstract class Contract extends AbstractSubject implements Observer {
       }
 
       long currentTime = System.currentTimeMillis();
-      if (observing) {
-        long curExpiry = target.getExpiry();
+      if (currentPolicy != null) {
+        long curExpiry = currentPolicy.expiry();
         if (curExpiry < currentTime) {
-          target.removeObserver(this);
-          observing = false;
+          currentPolicy.unapply(this);
+          currentPolicy = null;
         }
-        boolean result = update(curExpiry);
-        return result;
+        return update(curExpiry);
       }
 
       // If we're not observing, the contract is dead.
@@ -456,7 +497,7 @@ public abstract class Contract extends AbstractSubject implements Observer {
     /*@Override*/
     public SampledMetric[] getLeafSubjects() {
       final Store local = Worker.getWorker().getLocalStore();
-      if (!observing)
+      if (currentPolicy == null)
         return new SampledMetric[0] @local;
       return target.getLeafSubjects();
     }
@@ -464,42 +505,6 @@ public abstract class Contract extends AbstractSubject implements Observer {
     /*@Override*/
     public Contract and(Contract other) {
       return target.and(other);
-    }
-
-    /**
-     * {@inheritDoc}
-     *
-     * Stops observing any evidence used by the current enforcement policy (by
-     * unapplying the policy).
-     */
-    /*@Override*/
-    public void removeObserver(Observer obs) {
-      static_removeObserver(this, obs);
-    }
-
-    private static void static_removeObserver(ProxyContract tmp, Observer obs) {
-      if (TransactionManager.getInstance().inTxn()) {
-        Contract.static_removeObserver(tmp, obs);
-        if (!tmp.isObserved() && tmp.observing) {
-          tmp.target.removeObserver(tmp);
-          tmp.observing = false;
-        }
-      } else {
-        atomic {
-          Contract.static_removeObserver(tmp, obs);
-          if (!tmp.isObserved() && tmp.observing) {
-            tmp.target.removeObserver(tmp);
-            tmp.observing = false;
-          }
-        }
-      }
-    }
-
-    /*@Override*/
-    public void acquireReconfigLocks() {
-      this.lock.acquireOptimistic();
-      if (observing)
-        this.target.acquireReconfigLocks();
     }
 
     /*@Override*/

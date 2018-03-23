@@ -313,6 +313,9 @@ public class SumMetric extends DerivedMetric {
             // the rest of the sum
             double r = (newFactor * (scaledV - (totalVelocity / numTerms))) + (rate / numTerms);
 
+            // TODO: Change to account for update frequency in addition to
+            // noise, we don't need to be aggressive if a high noise value is
+            // updated much less frequently than the other values in the sum.
             double b = scaledX -
               ((totalValue - baseNow) *
                ((totalNoise != 0) ?
@@ -337,6 +340,9 @@ public class SumMetric extends DerivedMetric {
             //// Static version
             double r2 = rate / numTerms;
 
+            // TODO: Change to account for update frequency in addition to
+            // noise, we don't need to be aggressive if a high noise value is
+            // updated much less frequently than the other values in the sum.
             double b2 = scaledX -
               ((totalValue - baseNow) *
                ((totalNoise != 0) ?

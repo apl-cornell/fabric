@@ -26,6 +26,7 @@ import fabric.common.util.LongKeyHashMap;
 import fabric.common.util.LongKeyMap;
 import fabric.common.util.LongSet;
 import fabric.common.util.Pair;
+import fabric.common.util.Triple;
 import fabric.dissemination.ObjectGlob;
 import fabric.lang.security.Label;
 import fabric.lang.security.Principal;
@@ -416,7 +417,7 @@ public class TransactionManager {
       // This shouldn't happen.
       throw new InternalError("Tried to extend a nonexistent onum!");
     }
-    DelayedExtension de = new DelayedExtension(expiry - 1000, onum);
+    DelayedExtension de = new DelayedExtension(expiry - EXTENSION_WINDOW, onum);
     synchronized (de) {
       // Keep trying until we're sure we've consistently updated the extension
       // for this onum.
@@ -460,6 +461,8 @@ public class TransactionManager {
   private final DelayQueue<DelayedExtension> waitingExtensions =
       new DelayQueue<>();
 
+  private final int EXTENSION_WINDOW = 1000;
+
   /**
    * A thread that goes through the extensions queue, waiting until the next
    * DelayedExtension's delay is 0, and updates the expiration time of the
@@ -488,7 +491,7 @@ public class TransactionManager {
               // very expensive to process.
               final DelayedExtension extension = waitingExtensions.take();
               long curTime = System.currentTimeMillis();
-              long exp = extension.time + 1000;
+              long exp = extension.time + EXTENSION_WINDOW;
               try {
                 // Change to the actual expiry
                 exp = database.getExpiry(extension.onum);
@@ -502,7 +505,7 @@ public class TransactionManager {
                 }
                 continue;
               }
-              if (exp - curTime < 1000 && exp > curTime) {
+              if (exp - curTime < EXTENSION_WINDOW && exp > curTime) {
                 Threading.getPool().submit(new Threading.NamedRunnable(
                     "Extension of " + extension.onum) {
                   @Override
@@ -514,23 +517,27 @@ public class TransactionManager {
                     long start = System.currentTimeMillis();
                     Logging.METRICS_LOGGER.log(Level.INFO,
                         "STARTED EXTENSION OF {0}", extension.onum);
+                    Triple<String, Long, Long> nameAndNewExpiry = null;
                     synchronized (extension) {
                       Logging.METRICS_LOGGER.log(Level.FINER,
                           "SYNCHRONIZED EXTENSION OF {0}", extension.onum);
                       try {
                         fabric.worker.transaction.TransactionManager
                             .getInstance().stats.reset();
-                        Worker.runInTopLevelTransaction(new Code<Void>() {
-                          @Override
-                          public Void run() {
-                            Store store =
-                                Worker.getWorker().getStore(database.getName());
-                            final Contract._Proxy target =
-                                new Contract._Proxy(store, extension.onum);
-                            target.attemptExtension();
-                            return null;
-                          }
-                        }, false);
+                        nameAndNewExpiry = Worker.runInTopLevelTransaction(
+                            new Code<Triple<String, Long, Long>>() {
+                              @Override
+                              public Triple<String, Long, Long> run() {
+                                Store store = Worker.getWorker()
+                                    .getStore(database.getName());
+                                final Contract._Proxy target =
+                                    new Contract._Proxy(store, extension.onum);
+                                long oldExpiry = target.get$$expiry();
+                                target.attemptExtension();
+                                return new Triple<>(target.toString(),
+                                    oldExpiry, target.get$$expiry());
+                              }
+                            }, false);
                       } catch (AbortException e) {
                         success = false;
                         // Clear out any leftover locking state
@@ -544,13 +551,25 @@ public class TransactionManager {
                       }
                       unresolvedExtensions.remove(extension.onum, extension);
                     }
-                    Logging.METRICS_LOGGER.log(Level.INFO,
-                        "FINISHED EXTENSION OF {0} IN {1}ms (succcess {2}) STATS: {3}",
-                        new Object[] { Long.valueOf(extension.onum),
-                            Long.valueOf(System.currentTimeMillis() - start),
-                            success,
-                            fabric.worker.transaction.TransactionManager
-                                .getInstance().stats, });
+                    if (nameAndNewExpiry != null) {
+                      Logging.METRICS_LOGGER.log(Level.INFO,
+                          "FINISHED EXTENSION OF {0} IN {1}ms from {4} to {5} {6} (success {2}) STATS: {3}",
+                          new Object[] { Long.valueOf(extension.onum),
+                              Long.valueOf(System.currentTimeMillis() - start),
+                              success,
+                              fabric.worker.transaction.TransactionManager
+                                  .getInstance().stats,
+                              nameAndNewExpiry.second, nameAndNewExpiry.third,
+                              nameAndNewExpiry.first });
+                    } else {
+                      Logging.METRICS_LOGGER.log(Level.INFO,
+                          "FINISHED EXTENSION OF {0} IN {1}ms (success {2}) STATS: {3}",
+                          new Object[] { Long.valueOf(extension.onum),
+                              Long.valueOf(System.currentTimeMillis() - start),
+                              success,
+                              fabric.worker.transaction.TransactionManager
+                                  .getInstance().stats, });
+                    }
                   }
                 });
               } else {

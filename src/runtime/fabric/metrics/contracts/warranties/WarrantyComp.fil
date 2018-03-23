@@ -127,6 +127,10 @@ public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*L
             int size = tmp.proxies.size();
             for (int i = 0; i < size; i++) {
               ProxyComp p = (ProxyComp) tmp.proxies.get(i);
+              // Stop monitoring the old value.
+              if (p.curVal.contract != null) {
+                p.curVal.contract.removeObserver(p);
+              }
               p.curVal.value = newVal.value;
               p.curVal.contract = newVal.contract.getProxyContract(p.$getStore());
               p.curVal.contract.addObserver(p);
@@ -149,6 +153,10 @@ public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*L
               int size = tmp.proxies.size();
               for (int i = 0; i < size; i++) {
                 ProxyComp p = (ProxyComp) tmp.proxies.get(i);
+                // Stop monitoring the old value.
+                if (p.curVal.contract != null) {
+                  p.curVal.contract.removeObserver(p);
+                }
                 p.curVal.value = tmp.makeProxyResult(newVal, p.$getStore());
                 p.curVal.contract = newVal.contract.getProxyContract(p.$getStore());
                 p.curVal.contract.addObserver(p);
