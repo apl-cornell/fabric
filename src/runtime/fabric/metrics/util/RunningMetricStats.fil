@@ -95,8 +95,9 @@ public class RunningMetricStats {
     double newInterval = curInterval;
     double newBias = curBias;
     if (intervalSince > 0) {
-        newInterval = (curInterval + ALPHA * (intervalSince - curInterval));
-        newBias = (curBias * (1.0 - ALPHA));
+        double nextAlpha = getNextAlpha();
+        newInterval = (curInterval + nextAlpha * (intervalSince - curInterval));
+        newBias = (curBias * (1.0 - nextAlpha));
     }
     return newBias / newInterval;
   }
@@ -111,7 +112,7 @@ public class RunningMetricStats {
     // Assuming that there's 0 covariance between update intervals and update
     // values.
     // Account for time that's passed since last observation.
-    if (samples == 0)
+    if (samples <= 1)
       return 0.0;
     long intervalSince = (System.currentTimeMillis() - lastUpdate);
     double curInterval = getMeanInterval();
@@ -121,9 +122,10 @@ public class RunningMetricStats {
     double newBias = curBias;
     double newBiasVar = curBiasVar;
     if (intervalSince > 0) {
-      newInterval = (curInterval + ALPHA * (intervalSince - curInterval));
-      newBias = (curBias * (1.0 - ALPHA));
-      newBiasVar = (1.0 - ALPHA) * curBiasVar + ALPHA * (curBias * newBias);
+      double nextAlpha = getNextAlpha();
+      newInterval = (curInterval + nextAlpha * (intervalSince - curInterval));
+      newBias = (curBias * (1.0 - nextAlpha));
+      newBiasVar = (1.0 - nextAlpha) * curBiasVar + nextAlpha * (curBias * newBias);
     }
     double tSqrd = newInterval * newInterval;
     // We're assuming exponential distribution of the times and here we get
@@ -150,21 +152,21 @@ public class RunningMetricStats {
    * @return the current estimated meanDelta.
    */
   public double getMeanDelta() {
-    return meanDelta;
+    return (samples > 0) ? meanDelta : startDelta;
   }
 
   /**
    * @return the current estimated meanInterval.
    */
   public double getMeanInterval() {
-    return meanInterval;
+    return (samples > 0) ? meanInterval : startInterval;
   }
 
   /**
    * @return the current estimated variance of the delta.
    */
   public double getVarDelta() {
-    return varDelta;
+    return (samples > 1) ?  varDelta : 0.0;
   }
 
   /**
@@ -176,31 +178,46 @@ public class RunningMetricStats {
   public void update(double newVal) {
     // TODO: Use later of creation and boot time for lastUpdate if this is the
     // first sample.
-    // Update the time and interval stats
-    long curTime = System.currentTimeMillis();
-    double interval = curTime - lastUpdate;
-    lastUpdate = curTime;
-    meanInterval = meanIntervalPrev +
-      ALPHA * (interval - meanIntervalPrev);
-
-    meanIntervalPrev = meanInterval;
-
-    // Update the value and delta stats
-    double val = newVal - value;
-    value = newVal;
-    meanDelta = meanDeltaPrev + ALPHA * (val - meanDeltaPrev);
-    varDelta = (1.0 - ALPHA) * varDeltaPrev
-        + ALPHA * (val - meanDeltaPrev) * (val - meanDelta);
-
-    meanDeltaPrev = meanDelta;
-    varDeltaPrev = varDelta;
-
     // Update samples count
     samples++;
+    long curTime = System.currentTimeMillis();
+    double interval = curTime - lastUpdate;
+    double val = newVal - value;
+    lastUpdate = curTime;
+    value = newVal;
+
+    if (samples == 1) {
+      // Update interval stats
+      meanInterval = interval;
+      meanIntervalPrev = interval;
+
+      // Update delta stats
+      meanDelta = val;
+      meanDeltaPrev = val;
+      varDeltaPrev = 0.0;
+    } else {
+      double curAlpha = getCurAlpha();
+      // Update interval stats
+      meanInterval = meanIntervalPrev +
+        curAlpha * (interval - meanIntervalPrev);
+      meanIntervalPrev = meanInterval;
+
+      // Update delta stats
+      meanDelta = meanDeltaPrev +
+        curAlpha * (val - meanDeltaPrev);
+      varDelta = (1.0 - curAlpha) * varDeltaPrev
+          + curAlpha * (val - meanDeltaPrev) * (val - meanDelta);
+
+      meanDeltaPrev = meanDelta;
+      varDeltaPrev = varDelta;
+    }
   }
 
-  /** @return the ALPHA learning parameter for these statistics. */
-  public double getAlpha() {
-    return ALPHA;
+  private double getCurAlpha() {
+    return Math.max(ALPHA, 1 / samples);
+  }
+
+  private double getNextAlpha() {
+    return Math.max(ALPHA, 1 / samples);
   }
 }
