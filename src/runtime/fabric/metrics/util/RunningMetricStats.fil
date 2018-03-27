@@ -214,7 +214,7 @@ public class RunningMetricStats {
   }
 
   private double getCurAlpha() {
-    return Math.max(ALPHA, 1 / samples);
+    return Math.max(ALPHA, 1 / (samples - 1));
   }
 
   private double getNextAlpha() {
