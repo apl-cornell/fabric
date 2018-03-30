@@ -11,6 +11,9 @@ import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.logging.Level;
 
+import fabric.common.util.RegexMapping;
+import fabric.worker.metrics.PresetMetricStatistics;
+
 public class ConfigProperties {
 
   public final static Properties defaults;
@@ -68,6 +71,13 @@ public class ConfigProperties {
   public final Map<String, Double> velocities;
   // Noises to use if using presets
   public final Map<String, Double> noises;
+  // Mapping regexes to preset values for statistics
+  public final RegexMapping<PresetMetricStatistics> presets;
+  // Statistics estimation parameters
+  // exponential weight for updates
+  public final double alpha;
+  // Window for binning observations for estimating poisson events.
+  public final long window;
 
   /**
    * Whether to exponentially back off when retrying transactions.
@@ -192,6 +202,31 @@ public class ConfigProperties {
         this.noises.put(kv[0], Double.parseDouble(kv[1]));
       }
     }
+
+    String[] rawPresets =
+        removeProperty(p, "fabric.metrics.presets", "").split(";");
+    this.presets = new RegexMapping<>();
+    if (this.usePreset) {
+      for (int i = 0; i < rawPresets.length; i++) {
+        String[] kv = rawNoises[i].split(":");
+        if (kv.length != 2) continue;
+        String[] values = kv[1].split(",");
+        // TODO: note the bad mapping?
+        if (values.length != 4) continue;
+        PresetMetricStatistics val = new PresetMetricStatistics(
+            Integer.parseInt(values[0]),
+            Double.parseDouble(values[1]),
+            Double.parseDouble(values[2]),
+            Double.parseDouble(values[3]));
+        this.presets.put(kv[0], val);
+      }
+    }
+
+    this.alpha = Double
+        .parseDouble(removeProperty(p, "fabric.metrics.alpha", "0.001"));
+
+    this.window = Long
+        .parseLong(removeProperty(p, "fabric.metrics.window", "100"));
 
     /************************** Worker Properties *****************************/
     this.workerPort =

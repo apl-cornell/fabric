@@ -262,6 +262,7 @@ public class SampledMetric extends Metric {
    *        the time, in milliseconds, this update happened
    */
   protected void updateEstimates(double newVal, long eventTime) {
+    stats.preload(name);
     stats.update(newVal);
     // Every 1000 samples, print stats in log.
     if (stats.getSamples() % Worker.getWorker().config.metricStatsLogInterval == 0) {

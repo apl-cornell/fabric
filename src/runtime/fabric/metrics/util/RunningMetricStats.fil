@@ -1,5 +1,7 @@
 package fabric.metrics.util;
 
+import fabric.worker.metrics.PresetMetricStatistics;
+
 /**
  * Utility class for tracking the sample mean and sample standard deviation of a
  * value that is updated periodically.
@@ -14,19 +16,22 @@ public class RunningMetricStats {
 
   // The sensitivity parameter for computing exponentially weighted moving
   // averages.
-  public static final double ALPHA = 0.001;
+  public static final double ALPHA = Worker.getWorker().config.alpha;
+  // Window for binning poisson observations.
+  public static final long POISSON_WINDOW = Worker.getWorker().config.window;
 
   private double value;
   private double meanDelta = 0.0;
   private double varDelta = 0.0;
-  private double meanDeltaPrev = 0.0;
-  private double varDeltaPrev = 0.0;
   private final double startDelta;
-  private double meanInterval = 0.0;
-  private double meanIntervalPrev = 0.0;
+  private double meanFreq = 0.0;
+  private double varFreq = 0.0;
   private final double startInterval;
   private long lastUpdate;
+  private long firstUpdate;
   private long samples = 0;
+  // Samples that don't fall into the window of the last update or later.
+  private long samplesPrior = 0;
 
   /*@Override*/
   public String toString() {
@@ -35,7 +40,7 @@ public class RunningMetricStats {
       " samples " + samples +
       " meanDelta " + meanDelta +
       " varDelta " + varDelta +
-      " meanInterval " + meanInterval +
+      " meanFreq " + getMeanFreq(System.currentTimeMillis()) +
       " velocity " + getVelocityEstimate() +
       " noise " + getNoiseEstimate() +
     " ]";
@@ -51,11 +56,10 @@ public class RunningMetricStats {
     this.startDelta = startDelta;
     this.startInterval = startInterval;
     fabric$lang$Object$();
-    meanDeltaPrev = startDelta;
     meanDelta = startDelta;
-    meanIntervalPrev = startInterval;
-    meanInterval = startInterval;
+    meanFreq = 1.0 / startInterval;
     lastUpdate = System.currentTimeMillis() - 1;
+    firstUpdate = lastUpdate;
     return this;
   }
 
@@ -63,12 +67,10 @@ public class RunningMetricStats {
    * Reset estimation to just the startValue.
    */
   public void reset() {
-    meanIntervalPrev = startInterval;
-    meanInterval = startInterval;
-    meanDeltaPrev = startDelta;
+    meanFreq = 1.0 / startInterval;
     meanDelta = startDelta;
-    varDeltaPrev = 0.0;
     varDelta = 0.0;
+    varFreq = 0.0;
     samples = 0;
   }
 
@@ -89,17 +91,9 @@ public class RunningMetricStats {
     // Account for time that's passed since last observation.
     if (samples == 0)
       return 0.0;
-    long intervalSince = (System.currentTimeMillis() - lastUpdate);
-    double curInterval = getMeanInterval();
-    double curBias = getMeanDelta();
-    double newInterval = curInterval;
-    double newBias = curBias;
-    if (intervalSince > 0) {
-        double nextAlpha = getNextAlpha();
-        newInterval = (curInterval + nextAlpha * (intervalSince - curInterval));
-        newBias = (curBias * (1.0 - nextAlpha));
-    }
-    return newBias / newInterval;
+    double delta = getMeanDelta();
+    double freq = getMeanFreq(System.currentTimeMillis());
+    return delta * freq;
   }
 
   /**
@@ -111,27 +105,15 @@ public class RunningMetricStats {
   public double getNoiseEstimate() {
     // Assuming that there's 0 covariance between update intervals and update
     // values.
-    // Account for time that's passed since last observation.
     if (samples <= 1)
       return 0.0;
-    long intervalSince = (System.currentTimeMillis() - lastUpdate);
-    double curInterval = getMeanInterval();
-    double curBias = getMeanDelta();
-    double curBiasVar = getVarDelta();
-    double newInterval = curInterval;
-    double newBias = curBias;
-    double newBiasVar = curBiasVar;
-    if (intervalSince > 0) {
-      double nextAlpha = getNextAlpha();
-      newInterval = (curInterval + nextAlpha * (intervalSince - curInterval));
-      newBias = (curBias * (1.0 - nextAlpha));
-      newBiasVar = (1.0 - nextAlpha) * curBiasVar + nextAlpha * (curBias * newBias);
-    }
-    double tSqrd = newInterval * newInterval;
-    // We're assuming exponential distribution of the times and here we get
-    // the variance of the product of independent poisson (1/exp) and
-    // normally distributed variables.
-    return (1 / newInterval + newBiasVar / tSqrd);
+    double meanDelta = getMeanDelta();
+    double varDelta = getVarDelta();
+    long curTime = System.currentTimeMillis();
+    double meanFreq = getMeanFreq(curTime);
+    // Assuming poisson, variance _should_ be the same as the frequency
+    double varFreq = getVarFreq(curTime);
+    return (varFreq * varDelta + meanFreq * varDelta + varFreq * meanDelta);
   }
 
   /**
@@ -156,13 +138,6 @@ public class RunningMetricStats {
   }
 
   /**
-   * @return the current estimated meanInterval.
-   */
-  public double getMeanInterval() {
-    return (samples > 0) ? meanInterval : startInterval;
-  }
-
-  /**
    * @return the current estimated variance of the delta.
    */
   public double getVarDelta() {
@@ -179,45 +154,143 @@ public class RunningMetricStats {
     // TODO: Use later of creation and boot time for lastUpdate if this is the
     // first sample.
     // Update samples count
-    samples++;
     long curTime = System.currentTimeMillis();
-    double interval = curTime - lastUpdate;
     double val = newVal - value;
-    lastUpdate = curTime;
     value = newVal;
 
-    if (samples == 1) {
-      // Update interval stats
-      meanInterval = interval;
-      meanIntervalPrev = interval;
-
+    if (samples == 0) {
       // Update delta stats
       meanDelta = val;
-      meanDeltaPrev = val;
-      varDeltaPrev = 0.0;
-    } else {
-      double curAlpha = getCurAlpha();
+
       // Update interval stats
-      meanInterval = meanIntervalPrev +
-        curAlpha * (interval - meanIntervalPrev);
-      meanIntervalPrev = meanInterval;
-
+      // XXX: Don't do much here, we haven't seen any updates beyond the
+      // starting value.
+      firstUpdate = curTime;
+      lastUpdate = curTime;
+    } else {
       // Update delta stats
-      meanDelta = meanDeltaPrev +
-        curAlpha * (val - meanDeltaPrev);
-      varDelta = (1.0 - curAlpha) * varDeltaPrev
-          + curAlpha * (val - meanDeltaPrev) * (val - meanDelta);
+      double curAlphaDelta = getCurAlphaDelta();
+      double meanDeltaPrev = meanDelta;
+      meanDelta = meanDeltaPrev + curAlphaDelta * (val - meanDeltaPrev);
+      varDelta = (1.0 - curAlphaDelta) * varDelta +
+        curAlphaDelta * (val - meanDeltaPrev) * (val - meanDelta);
 
-      meanDeltaPrev = meanDelta;
-      varDeltaPrev = varDelta;
+      // Update freq stats
+      updateFreq(curTime);
     }
+    samples++;
   }
 
-  private double getCurAlpha() {
-    return Math.max(ALPHA, 1 / (samples - 1));
+  private void updateFreq(long time) {
+    if (samples == 0) {
+      // Don't bother, we don't have enough data.
+      return;
+    }
+    long oldWindows = (lastUpdate - firstUpdate) / POISSON_WINDOW;
+    long windowsUnprocessed = getRecentWindows(time);
+    for (long windowSince = 1; windowSince < windowsUnprocessed; windowSince++) {
+      // At least alpha, at most 1.  Use 1 if this is the first ever window
+      double alpha = Math.max(ALPHA, 1.0 / (oldWindows + windowSince));
+      double meanFreqPrev = meanFreq;
+      double varFreqPrev = varFreq;
+      // Account for the unfinished data in the current window.
+      double unfinishedWindow =
+          (samples - samplesPrior) / ((double) POISSON_WINDOW);
+      // Mark those samples as processed
+      samplesPrior = samples;
+      if (alpha == ALPHA) {
+        // Speed up now that we're at steady state.  This runs the rest of the
+        // remaining windows, since there are no samples past the first window.
+        long windowsLeft = (windowsUnprocessed - windowSince) - 1;
+
+        meanFreq = Math.pow(1.0 - alpha, windowsLeft) *
+          ((1.0 - alpha) * meanFreqPrev + alpha * unfinishedWindow);
+
+        varFreq = Math.pow(1.0 - alpha, windowsLeft) *
+          (((1.0 - alpha) *
+            (varFreqPrev +
+             (alpha *
+              ((unfinishedWindow - meanFreqPrev) *
+               (unfinishedWindow - meanFreqPrev))))) +
+           ((1.0 - Math.pow(1.0 - alpha, windowsLeft)) *
+            (((1.0 - alpha) * meanFreqPrev - alpha * unfinishedWindow) *
+             ((1.0 - alpha) * meanFreqPrev - alpha * unfinishedWindow))));
+        // We just sped through the rest, let's stop.
+        break;
+      } else {
+        // Slow path, we are changing alpha in this case and haven't solved this
+        // version closed form...
+        meanFreq = meanFreq + alpha * (unfinishedWindow - meanFreq);
+
+        varFreq = (1.0 - alpha) * varFreq +
+          alpha *
+          (unfinishedWindow - meanFreqPrev) * (unfinishedWindow - meanFreq);
+      }
+    }
+    lastUpdate = time;
   }
 
-  private double getNextAlpha() {
-    return Math.max(ALPHA, 1 / samples);
+  /**
+   * Calculate the mean frequency, accounting for empty windows since the last
+   * update.
+   */
+  private double getVarFreq(long time) {
+    // Use 0 frequency if we haven't seen an update.
+    long totalWindows = (time - firstUpdate) / POISSON_WINDOW;
+    if (totalWindows <= 1)
+      return 0.0;
+    updateFreq(time);
+    return varFreq;
+  }
+
+  /**
+   * Calculate the mean frequency, accounting for empty windows since the last
+   * update.
+   */
+  private double getMeanFreq(long time) {
+    // Use 0 frequency if we haven't seen an update.
+    long totalWindows = (time - firstUpdate) / POISSON_WINDOW;
+    if (totalWindows == 0)
+      return 0.0;
+    updateFreq(time);
+    return meanFreq;
+  }
+
+  /**
+   * Return the total number of windows we've seen since the last update.
+   */
+  private long getRecentWindows(long time) {
+    if (samples == 0) return 0;
+    return Math.max(0, (time / POISSON_WINDOW) - (lastUpdate / POISSON_WINDOW));
+  }
+
+  private double getCurAlphaDelta() {
+    return Math.max(ALPHA, 1.0 / samples);
+  }
+
+  private double getNextAlphaDelta() {
+    return Math.max(ALPHA, 1.0 / (samples + 1));
+  }
+
+  /**
+   * Support preloading based on a string key.
+   *
+   * Should be called right before the next update to ensure the lastUpdate
+   * configuration is roughly accurate.
+   */
+  public void preload(String key) {
+    // Only bother if this is a fresh slate
+    if (samples == 0) {
+      PresetMetricStatistics p = (PresetMetricStatistics) Worker.getWorker().config.presets.get(key);
+      // If there's a preset, load it in.
+      if (p != null) {
+        samples = p.getSamples();
+        meanDelta = p.getMeanDelta();
+        varDelta = p.getVarDelta();
+        meanFreq = p.getMeanFreq();
+        lastUpdate = p.getLastUpdate();
+        // TODO: FIRST UPDATE TIME
+      }
+    }
   }
 }
