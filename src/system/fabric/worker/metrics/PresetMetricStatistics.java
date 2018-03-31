@@ -8,13 +8,15 @@ public class PresetMetricStatistics {
   private final double meanDelta;
   private final double varDelta;
   private final double meanFreq;
+  private final double varFreq;
 
   public PresetMetricStatistics(int samples, double meanDelta, double varDelta,
-      double meanFreq) {
+      double meanFreq, double varFreq) {
     this.samples = samples;
     this.meanDelta = meanDelta;
     this.varDelta = varDelta;
     this.meanFreq = meanFreq;
+    this.varFreq = varFreq;
   }
 
   /**
@@ -29,6 +31,13 @@ public class PresetMetricStatistics {
    */
   public long getLastUpdate() {
     return System.currentTimeMillis() - Math.round(1.0 / meanFreq);
+  }
+
+  /**
+   * @return the lastUpdate value that should be used given the current time.
+   */
+  public long getFirstUpdate() {
+    return System.currentTimeMillis() - Math.round(samples / meanFreq);
   }
 
   /**
@@ -49,6 +58,13 @@ public class PresetMetricStatistics {
    * @return the meanFreq
    */
   public double getMeanFreq() {
+    return meanFreq;
+  }
+
+  /**
+   * @return the meanFreq
+   */
+  public double getVarFreq() {
     return meanFreq;
   }
 }

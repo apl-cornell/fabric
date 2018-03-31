@@ -289,8 +289,9 @@ public class SumMetric extends DerivedMetric {
         double totalNoise = noise(useWeakCache);
         double numTerms = terms.length;
         // TODO: Make the samples cutoff configurable.
-        //double baseFactor = totalSamples > 10 ? 1.0 / Math.sqrt(totalSamples) : 1.0;
-        double baseFactor = totalSamples > 10 ? 0.0 / Math.sqrt(totalSamples) : 1.0;
+        //double baseFactor = totalSamples > 10 ? 0.0 / Math.sqrt(totalSamples) : 1.0;
+        //double baseFactor = totalSamples > 1 ? 1.0 / totalSamples : 1.0;
+        double baseFactor = 0.0;
         double newFactor = 1.0 - baseFactor;
         ConfigProperties config = Worker.getWorker().config;
         if (config.usePreset) {

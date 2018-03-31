@@ -206,20 +206,19 @@ public class ConfigProperties {
     String[] rawPresets =
         removeProperty(p, "fabric.metrics.presets", "").split(";");
     this.presets = new RegexMapping<>();
-    if (this.usePreset) {
-      for (int i = 0; i < rawPresets.length; i++) {
-        String[] kv = rawNoises[i].split(":");
-        if (kv.length != 2) continue;
-        String[] values = kv[1].split(",");
-        // TODO: note the bad mapping?
-        if (values.length != 4) continue;
-        PresetMetricStatistics val = new PresetMetricStatistics(
-            Integer.parseInt(values[0]),
-            Double.parseDouble(values[1]),
-            Double.parseDouble(values[2]),
-            Double.parseDouble(values[3]));
-        this.presets.put(kv[0], val);
-      }
+    for (int i = 0; i < rawPresets.length; i++) {
+      String[] kv = rawPresets[i].split(":");
+      if (kv.length != 2) continue;
+      String[] values = kv[1].split(",");
+      // TODO: note the bad mapping?
+      if (values.length != 5) continue;
+      PresetMetricStatistics val = new PresetMetricStatistics(
+          Integer.parseInt(values[0]),
+          Double.parseDouble(values[1]),
+          Double.parseDouble(values[2]),
+          Double.parseDouble(values[3]),
+          Double.parseDouble(values[4]));
+      this.presets.put(kv[0], val);
     }
 
     this.alpha = Double

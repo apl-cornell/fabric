@@ -154,9 +154,11 @@ public class SampledMetric extends Metric {
   private static double static_computeValue(SampledMetric tmp, boolean useWeakCache) {
     double result = 0;
     if (TransactionManager.getInstance().inTxn()) {
+      tmp.stats.preload(tmp.name);
       result = tmp.stats.getValue();
     } else {
       atomic {
+        tmp.stats.preload(tmp.name);
         result = tmp.stats.getValue();
       }
     }
@@ -173,6 +175,7 @@ public class SampledMetric extends Metric {
       if (tmp.usePreset) {
         return 0;
       } else {
+        tmp.stats.preload(tmp.name);
         return tmp.stats.getSamples();
       }
     } else {
@@ -181,6 +184,7 @@ public class SampledMetric extends Metric {
         if (tmp.usePreset) {
           rtn = 0;
         } else {
+          tmp.stats.preload(tmp.name);
           rtn = tmp.stats.getSamples();
         }
       }
@@ -198,6 +202,7 @@ public class SampledMetric extends Metric {
       if (tmp.usePreset) {
         return tmp.presetV;
       } else {
+        tmp.stats.preload(tmp.name);
         return tmp.stats.getVelocityEstimate();
       }
     } else {
@@ -206,6 +211,7 @@ public class SampledMetric extends Metric {
         if (tmp.usePreset) {
           rtn = tmp.presetV;
         } else {
+          tmp.stats.preload(tmp.name);
           rtn = tmp.stats.getVelocityEstimate();
         }
       }
@@ -223,6 +229,7 @@ public class SampledMetric extends Metric {
       if (tmp.usePreset) {
         return tmp.presetN;
       } else {
+        tmp.stats.preload(tmp.name);
         return tmp.stats.getNoiseEstimate();
       }
     } else {
@@ -231,6 +238,7 @@ public class SampledMetric extends Metric {
         if (tmp.usePreset) {
           rtn = tmp.presetN;
         } else {
+          tmp.stats.preload(tmp.name);
           rtn = tmp.stats.getNoiseEstimate();
         }
       }

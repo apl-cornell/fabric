@@ -41,6 +41,7 @@ public class RunningMetricStats {
       " meanDelta " + meanDelta +
       " varDelta " + varDelta +
       " meanFreq " + getMeanFreq(System.currentTimeMillis()) +
+      " varFreq " + getVarFreq(System.currentTimeMillis()) +
       " velocity " + getVelocityEstimate() +
       " noise " + getNoiseEstimate() +
     " ]";
@@ -57,7 +58,7 @@ public class RunningMetricStats {
     this.startInterval = startInterval;
     fabric$lang$Object$();
     meanDelta = startDelta;
-    meanFreq = 1.0 / startInterval;
+    meanFreq = 0.0;
     lastUpdate = System.currentTimeMillis() - 1;
     firstUpdate = lastUpdate;
     return this;
@@ -67,11 +68,14 @@ public class RunningMetricStats {
    * Reset estimation to just the startValue.
    */
   public void reset() {
-    meanFreq = 1.0 / startInterval;
+    meanFreq = 0.0;
+    varFreq = 0.0;
     meanDelta = startDelta;
     varDelta = 0.0;
-    varFreq = 0.0;
     samples = 0;
+    samplesPrior = 0;
+    lastUpdate = System.currentTimeMillis() - 1;
+    firstUpdate = lastUpdate;
   }
 
   /**
@@ -240,7 +244,18 @@ public class RunningMetricStats {
     if (totalWindows <= 1)
       return 0.0;
     updateFreq(time);
-    return varFreq;
+    // Now interpolate for the current window.
+    long oldWindows = (lastUpdate - firstUpdate) / POISSON_WINDOW;
+    double alpha = Math.max(ALPHA, 1.0 / (oldWindows + 1));
+    long timeInCurWindow = time -
+      (((long) (time / POISSON_WINDOW)) * POISSON_WINDOW);
+    long timeLeftInCurWindow = POISSON_WINDOW - timeInCurWindow;
+    double interpolatedWindow =
+      (meanFreq * timeLeftInCurWindow + (samples - samplesPrior))
+      / POISSON_WINDOW;
+    double meanFreqNext = meanFreq + alpha * (interpolatedWindow - meanFreq);
+    return (1.0 - alpha) * varFreq + alpha * (interpolatedWindow - meanFreq) *
+      (interpolatedWindow - meanFreqNext);
   }
 
   /**
@@ -253,7 +268,16 @@ public class RunningMetricStats {
     if (totalWindows == 0)
       return 0.0;
     updateFreq(time);
-    return meanFreq;
+    // Now interpolate for the current window.
+    long oldWindows = (lastUpdate - firstUpdate) / POISSON_WINDOW;
+    double alpha = Math.max(ALPHA, 1.0 / (oldWindows + 1));
+    long timeInCurWindow = time -
+      (((long) (time / POISSON_WINDOW)) * POISSON_WINDOW);
+    long timeLeftInCurWindow = POISSON_WINDOW - timeInCurWindow;
+    double interpolatedWindow =
+      (meanFreq * timeLeftInCurWindow + (samples - samplesPrior))
+      / POISSON_WINDOW;
+    return meanFreq + alpha * (interpolatedWindow - meanFreq);
   }
 
   /**
@@ -285,11 +309,13 @@ public class RunningMetricStats {
       // If there's a preset, load it in.
       if (p != null) {
         samples = p.getSamples();
+        samplesPrior = samples;
         meanDelta = p.getMeanDelta();
         varDelta = p.getVarDelta();
         meanFreq = p.getMeanFreq();
+        varFreq = p.getVarFreq();
         lastUpdate = p.getLastUpdate();
-        // TODO: FIRST UPDATE TIME
+        firstUpdate = p.getFirstUpdate();
       }
     }
   }
