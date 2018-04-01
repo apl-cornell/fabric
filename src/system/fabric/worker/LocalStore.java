@@ -209,6 +209,11 @@ public final class LocalStore implements Store, Serializable {
   }
 
   @Override
+  public void evict(long onum, int version) {
+    // nothing to do
+  }
+
+  @Override
   public void cache(_Impl impl) {
     // nothing to do
   }

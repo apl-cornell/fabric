@@ -243,6 +243,12 @@ public abstract class Message<R extends Message.Response, E extends FabricExcept
         return new DissemReadMessage(in);
       }
     },
+    ASYNC_CALL {
+      @Override
+      AsyncCallMessage parse(DataInput in) throws IOException {
+        return new AsyncCallMessage(in);
+      }
+    },
     REMOTE_CALL {
       @Override
       RemoteCallMessage parse(DataInput in) throws IOException {

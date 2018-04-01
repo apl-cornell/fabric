@@ -59,6 +59,11 @@ public abstract class MessageToWorkerHandler extends AbstractMessageServer {
           throws RemoteCallException;
 
   @Override
+  public abstract AsyncCallMessage.Response handle(
+      RemoteIdentity<RemoteWorker> client, AsyncCallMessage msg)
+          throws RemoteCallException;
+
+  @Override
   public abstract TakeOwnershipMessage.Response handle(
       RemoteIdentity<RemoteWorker> client, TakeOwnershipMessage msg)
           throws TakeOwnershipFailedException;

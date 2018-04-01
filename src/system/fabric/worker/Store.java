@@ -115,6 +115,12 @@ public interface Store extends Serializable {
   public void evict(long onum);
 
   /**
+   * Evicts the object with the given onum from cache unless the version in
+   * cache is greater than or equal to the version given.
+   */
+  public void evict(long onum, int version);
+
+  /**
    * Adds the given object to the cache.
    */
   public void cache(_Impl impl);

@@ -509,6 +509,20 @@ public final class ObjectCache {
     entries.remove(onum, entry);
   }
 
+  /**
+   * Evicts the entry with the given onum from cache if the version number given
+   * is greater than the current version in cache.
+   *
+   * @return true iff an entry for the onum was found in cache.
+   */
+  void evict(long onum, int version) {
+    Entry entry = entries.get(onum);
+    if (entry == null) return;
+    if (entry.getVersion() >= version) return;
+    entry.evict();
+    entries.remove(onum, entry);
+  }
+
   void clear() {
     LongSet onums = new LongHashSet(entries.keySet());
     for (LongIterator it = onums.iterator(); it.hasNext();) {

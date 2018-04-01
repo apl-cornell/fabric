@@ -35,6 +35,7 @@ import fabric.common.TransactionID;
 import fabric.common.exceptions.AccessException;
 import fabric.common.exceptions.InternalError;
 import fabric.common.util.LongKeyMap;
+import fabric.common.util.OidKeyHashMap;
 import fabric.lang.Object._Impl;
 import fabric.lang.Object._Proxy;
 import fabric.lang.security.Label;
@@ -109,6 +110,17 @@ public final class TransactionManager {
    * The innermost running transaction for the thread being managed.
    */
   private Log current;
+
+  /**
+   * Per-Thread stats for app-level transactions
+   */
+  public final TxnStats stats = new TxnStats();
+
+  /**
+   * If this thread is handling an {@link AsyncCallMessage}, this is the list of
+   * oids for which writes have committed.
+   */
+  protected OidKeyHashMap<Integer> committedWrites;
 
   /**
    * A debugging switch for storing a stack trace each time a write lock is
@@ -431,6 +443,13 @@ public final class TransactionManager {
 
     final long commitTime = System.currentTimeMillis();
     COMMIT_TIME.set(commitTime);
+    // Coordinated if we had to commit at more than 1 store.
+    if (LOCAL_STORE == null) LOCAL_STORE = Worker.getWorker().getLocalStore();
+    if ((stores.size() - (stores.contains(LOCAL_STORE) ? 1 : 0)) > 1) {
+      stats.markCoordination();
+    }
+    // Record the Tid
+    stats.recordTid(HOTOS_current.tid.tid);
     if (HOTOS_LOGGER.isLoggable(Level.FINE)) {
       final long commitLatency = commitTime - prepareStart;
       if (LOCAL_STORE == null) LOCAL_STORE = Worker.getWorker().getLocalStore();
@@ -1235,6 +1254,9 @@ public final class TransactionManager {
   private void startTransaction(TransactionID tid, boolean ignoreRetrySignal) {
     if (current != null && !ignoreRetrySignal) checkRetrySignal();
 
+    if (current == null || current.tid == null) {
+      stats.markTxnAttempt();
+    }
     try {
       Timing.BEGIN.begin();
       current = new Log(current, tid);
@@ -1300,6 +1322,31 @@ public final class TransactionManager {
       if (!current.workersCalled.contains(worker))
         current.workersCalled.add(worker);
     }
+  }
+
+  /**
+   * Starts tracking for a new async call being handled in this thread.
+   * Initializes a new committedWrites list.
+   */
+  public void startAsyncCall() {
+    if (committedWrites == null) committedWrites = new OidKeyHashMap<>();
+  }
+
+  /**
+   * Finishes tracking for a new async call being handled in this thread.
+   * @return The list of oids for which writes have been committed.
+   */
+  public OidKeyHashMap<Integer> finishAsyncCall() {
+    OidKeyHashMap<Integer> writes = committedWrites;
+    committedWrites = null;
+    return writes;
+  }
+
+  /**
+   * Add a batch of committed writes to the running list.
+   */
+  public void addCommittedWrites(OidKeyHashMap<Integer> writes) {
+    if (committedWrites != null) committedWrites.putAll(writes);
   }
 
   /**
