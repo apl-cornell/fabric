@@ -1,7 +1,8 @@
-package fabric.worker.metrics;
+package fabric.worker.transaction;
 
 /**
- * Class for easily tracking stats about metrics transactions.
+ * Class for easily tracking stats about app level transactions (as opposed to
+ * individual attempts).
  */
 public class TxnStats {
   private int txnAttempts = 0;
