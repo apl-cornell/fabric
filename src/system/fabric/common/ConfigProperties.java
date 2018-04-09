@@ -225,7 +225,7 @@ public class ConfigProperties {
         .parseDouble(removeProperty(p, "fabric.metrics.alpha", "0.001"));
 
     this.window = Long
-        .parseLong(removeProperty(p, "fabric.metrics.window", "100"));
+        .parseLong(removeProperty(p, "fabric.metrics.window", "1000"));
 
     /************************** Worker Properties *****************************/
     this.workerPort =

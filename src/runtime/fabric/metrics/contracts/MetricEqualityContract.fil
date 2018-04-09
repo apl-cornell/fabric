@@ -125,7 +125,7 @@ public class MetricEqualityContract extends Contract {
       if (curExpiry >= currentTime) {
         //Logging.METRICS_LOGGER.log(Level.FINER, "DEFENDING " + this + " WITH " +
         //    currentPolicy);
-        return update(curExpiry);
+        return update(curExpiry, asyncExtension);
       }
     }
     // Async extensions should only update to a new expiry using the existing
@@ -154,7 +154,7 @@ public class MetricEqualityContract extends Contract {
     newPolicy.activate();
     // Don't apply if the new policy is already expired.
     long newExpiry = newPolicy.expiry();
-    boolean result = update(newExpiry);
+    boolean result = update(newExpiry, asyncExtension);
     if (newExpiry >= currentTime) {
       currentPolicy = newPolicy;
       currentPolicy.apply(this);

@@ -166,11 +166,11 @@ public class SampledMetric extends Metric {
   }
 
   /*@Override*/
-  protected double computeSamples(boolean useWeakCache) {
+  protected long computeSamples(boolean useWeakCache) {
     return static_computeSamples(this, useWeakCache);
   }
 
-  private static double static_computeSamples(SampledMetric tmp, boolean useWeakCache) {
+  private static long static_computeSamples(SampledMetric tmp, boolean useWeakCache) {
     if (TransactionManager.getInstance().inTxn()) {
       if (tmp.usePreset) {
         return 0;
@@ -179,13 +179,67 @@ public class SampledMetric extends Metric {
         return tmp.stats.getSamples();
       }
     } else {
-      double rtn = 0;
+      long rtn = 0;
       atomic {
         if (tmp.usePreset) {
           rtn = 0;
         } else {
           tmp.stats.preload(tmp.name);
           rtn = tmp.stats.getSamples();
+        }
+      }
+      return rtn;
+    }
+  }
+
+  /*@Override*/
+  protected long computeLastUpdate(boolean useWeakCache) {
+    return static_computeLastUpdate(this, useWeakCache);
+  }
+
+  private static long static_computeLastUpdate(SampledMetric tmp, boolean useWeakCache) {
+    if (TransactionManager.getInstance().inTxn()) {
+      if (tmp.usePreset) {
+        return 0;
+      } else {
+        tmp.stats.preload(tmp.name);
+        return tmp.stats.getLastUpdate();
+      }
+    } else {
+      long rtn = 0;
+      atomic {
+        if (tmp.usePreset) {
+          rtn = 0;
+        } else {
+          tmp.stats.preload(tmp.name);
+          rtn = tmp.stats.getLastUpdate();
+        }
+      }
+      return rtn;
+    }
+  }
+
+  /*@Override*/
+  protected double computeUpdateInterval(boolean useWeakCache) {
+    return static_computeUpdateInterval(this, useWeakCache);
+  }
+
+  private static double static_computeUpdateInterval(SampledMetric tmp, boolean useWeakCache) {
+    if (TransactionManager.getInstance().inTxn()) {
+      if (tmp.usePreset) {
+        return 0;
+      } else {
+        tmp.stats.preload(tmp.name);
+        return tmp.stats.getIntervalEstimate();
+      }
+    } else {
+      double rtn = 0;
+      atomic {
+        if (tmp.usePreset) {
+          rtn = 0;
+        } else {
+          tmp.stats.preload(tmp.name);
+          rtn = tmp.stats.getIntervalEstimate();
         }
       }
       return rtn;
@@ -302,19 +356,57 @@ public class SampledMetric extends Metric {
   }
 
   /*@Override*/
-  public double samples(boolean useWeakCache) {
+  public long samples(boolean useWeakCache) {
     return static_samples(this, useWeakCache);
   }
 
-  private static double static_samples(SampledMetric tmp, boolean useWeakCache) {
-    double result = 0;
+  private static long static_samples(SampledMetric tmp, boolean useWeakCache) {
+    long result = 0;
     if (TransactionManager.getInstance().inTxn()) {
-      if (useWeakCache) result = tmp.weakStats[3];
+      if (useWeakCache) result = (long) tmp.weakStats[3];
       else result = tmp.computeSamples(false);
     } else {
       atomic {
-        if (useWeakCache) result = tmp.weakStats[3];
+        if (useWeakCache) result = (long) tmp.weakStats[3];
         else result = tmp.computeSamples(false);
+      }
+    }
+    return result;
+  }
+
+  /*@Override*/
+  public long lastUpdate(boolean useWeakCache) {
+    return static_lastUpdate(this, useWeakCache);
+  }
+
+  private static long static_lastUpdate(SampledMetric tmp, boolean useWeakCache) {
+    long result = 0;
+    if (TransactionManager.getInstance().inTxn()) {
+      if (useWeakCache) result = (long) tmp.weakStats[4];
+      else result = tmp.computeLastUpdate(false);
+    } else {
+      atomic {
+        if (useWeakCache) result = (long) tmp.weakStats[4];
+        else result = tmp.computeLastUpdate(false);
+      }
+    }
+    return result;
+  }
+
+  /*@Override*/
+  public double updateInterval(boolean useWeakCache) {
+    return static_updateInterval(this, useWeakCache);
+  }
+
+  private static double static_updateInterval(SampledMetric tmp, boolean useWeakCache) {
+    double result = 0;
+    if (TransactionManager.getInstance().inTxn()) {
+      if (useWeakCache) result = tmp.weakStats[5];
+      else result = tmp.computeLastUpdate(false);
+    } else {
+      atomic {
+        if (useWeakCache) result = tmp.weakStats[5];
+        else result = tmp.computeUpdateInterval(false);
       }
     }
     return result;

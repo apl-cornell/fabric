@@ -111,6 +111,10 @@ COMMON_FABRIC_CP="${COMMON_FABRIC_CP}:${JIF}/classes"
 COMMON_FABRIC_CP="${COMMON_FABRIC_CP}:${JIF}/lib/jif.jar"
 # Pastry
 COMMON_FABRIC_CP="${COMMON_FABRIC_CP}:${TOP}/lib/FreePastry-2.1.jar"
+# Commons Math
+COMMON_FABRIC_CP="${COMMON_FABRIC_CP}:${TOP}/lib/commons-math3-3.6.1-javadoc.jar"
+COMMON_FABRIC_CP="${COMMON_FABRIC_CP}:${TOP}/lib/commons-math3-3.6.1-sources.jar"
+COMMON_FABRIC_CP="${COMMON_FABRIC_CP}:${TOP}/lib/commons-math3-3.6.1.jar"
 # BouncyCastle
 for i in "${TOP}"/lib/bcprov-*.jar ; do
 COMMON_FABRIC_CP="${COMMON_FABRIC_CP}:$i"

@@ -461,7 +461,7 @@ public class TransactionManager {
   private final DelayQueue<DelayedExtension> waitingExtensions =
       new DelayQueue<>();
 
-  private final int EXTENSION_WINDOW = 1000;
+  private final int EXTENSION_WINDOW = 1500;
 
   /**
    * A thread that goes through the extensions queue, waiting until the next
@@ -490,6 +490,9 @@ public class TransactionManager {
               // have been sufficient and that second request is unlikely to be
               // very expensive to process.
               final DelayedExtension extension = waitingExtensions.take();
+              synchronized (extension) {
+                unresolvedExtensions.remove(extension.onum, extension);
+              }
               long curTime = System.currentTimeMillis();
               long exp = extension.time + EXTENSION_WINDOW;
               try {
@@ -500,12 +503,9 @@ public class TransactionManager {
                 // nonexistent value.
                 System.err.println("Bad onum for extension! " + extension.onum);
                 ae.printStackTrace();
-                synchronized (extension) {
-                  unresolvedExtensions.remove(extension.onum, extension);
-                }
                 continue;
               }
-              if (exp - curTime < EXTENSION_WINDOW && exp > curTime) {
+              if (exp - curTime <= EXTENSION_WINDOW && exp >= curTime - EXTENSION_WINDOW) {
                 Threading.getPool().submit(new Threading.NamedRunnable(
                     "Extension of " + extension.onum) {
                   @Override
@@ -518,38 +518,35 @@ public class TransactionManager {
                     Logging.METRICS_LOGGER.log(Level.INFO,
                         "STARTED EXTENSION OF {0}", extension.onum);
                     Triple<String, Long, Long> nameAndNewExpiry = null;
-                    synchronized (extension) {
-                      Logging.METRICS_LOGGER.log(Level.FINER,
-                          "SYNCHRONIZED EXTENSION OF {0}", extension.onum);
-                      try {
-                        fabric.worker.transaction.TransactionManager
-                            .getInstance().stats.reset();
-                        nameAndNewExpiry = Worker.runInTopLevelTransaction(
-                            new Code<Triple<String, Long, Long>>() {
-                              @Override
-                              public Triple<String, Long, Long> run() {
-                                Store store = Worker.getWorker()
-                                    .getStore(database.getName());
-                                final Contract._Proxy target =
-                                    new Contract._Proxy(store, extension.onum);
-                                long oldExpiry = target.get$$expiry();
-                                target.attemptExtension();
-                                return new Triple<>(target.toString(),
-                                    oldExpiry, target.get$$expiry());
-                              }
-                            }, false);
-                      } catch (AbortException e) {
-                        success = false;
-                        // Clear out any leftover locking state
-                        fabric.worker.transaction.TransactionManager
-                            .getInstance().clearLockObjectState();
-                      } catch (LockConflictException e) {
-                        success = false;
-                        // Clear out any leftover locking state
-                        fabric.worker.transaction.TransactionManager
-                            .getInstance().clearLockObjectState();
-                      }
-                      unresolvedExtensions.remove(extension.onum, extension);
+                    Logging.METRICS_LOGGER.log(Level.FINER,
+                        "SYNCHRONIZED EXTENSION OF {0}", extension.onum);
+                    try {
+                      fabric.worker.transaction.TransactionManager
+                          .getInstance().stats.reset();
+                      nameAndNewExpiry = Worker.runInTopLevelTransaction(
+                          new Code<Triple<String, Long, Long>>() {
+                            @Override
+                            public Triple<String, Long, Long> run() {
+                              Store store = Worker.getWorker()
+                                  .getStore(database.getName());
+                              final Contract._Proxy target =
+                                  new Contract._Proxy(store, extension.onum);
+                              long oldExpiry = target.get$$expiry();
+                              target.attemptExtension();
+                              return new Triple<>(target.toString(),
+                                  oldExpiry, target.get$$expiry());
+                            }
+                          }, true);
+                    } catch (AbortException e) {
+                      success = false;
+                      // Clear out any leftover locking state
+                      fabric.worker.transaction.TransactionManager
+                          .getInstance().clearLockObjectState();
+                    } catch (LockConflictException e) {
+                      success = false;
+                      // Clear out any leftover locking state
+                      fabric.worker.transaction.TransactionManager
+                          .getInstance().clearLockObjectState();
                     }
                     if (nameAndNewExpiry != null) {
                       Logging.METRICS_LOGGER.log(Level.INFO,
@@ -573,11 +570,9 @@ public class TransactionManager {
                   }
                 });
               } else {
-                synchronized (extension) {
-                  unresolvedExtensions.remove(extension.onum, extension);
-                }
                 // If too early, requeue it.
                 if (exp > curTime) queueExtension(extension.onum);
+                else Logging.METRICS_LOGGER.log(Level.INFO, "SKIPPED EXTENSION OF {0}", Long.valueOf(extension.onum));
               }
             }
           } catch (InterruptedException e) {

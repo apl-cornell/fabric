@@ -17,6 +17,11 @@ import fabric.metrics.util.Subject;
 import fabric.worker.Store;
 import fabric.worker.transaction.TransactionManager;
 
+import fabric.worker.metrics.SumStrategy;
+
+import java.util.logging.Level;
+import fabric.common.Logging;
+
 /**
  * A {@link DerivedMetric} for the sum of the given metric terms.
  */
@@ -267,10 +272,64 @@ public class SumMetric extends DerivedMetric {
 
     /*@Override*/
     public EnforcementPolicy thresholdPolicy(double rate, double base, boolean useWeakCache, final Store s) {
-        // Don't do this if we want to avoid conflicts between local concurrent
-        // operations on different metrics in a derived metric...
-        //if (isSingleStore())
-        //    return new DirectPolicy().fabric$metrics$contracts$enforcement$DirectPolicy$(this, bound);
+      // Don't do this if we want to avoid conflicts between local concurrent
+      // operations on different metrics in a derived metric...
+      //if (isSingleStore())
+      //    return new DirectPolicy().fabric$metrics$contracts$enforcement$DirectPolicy$(this, bound);
+
+      long currentTime = System.currentTimeMillis();
+      double baseNow = Bound.value(rate, base, currentTime);
+
+      // Defend all rows against the bound individually, using the strictest
+      // bounds across the rows for each term in this sum.
+      double totalSamples = samples(useWeakCache);
+      double totalValue = value(useWeakCache);
+      double totalVelocity = velocity(useWeakCache);
+      double totalNoise = noise(useWeakCache);
+      int numTerms = terms.length;
+      ConfigProperties config = Worker.getWorker().config;
+
+      if (config.usePreset) {
+
+        java.util.Map/*<Metric, Contract>*/ witnesses = new java.util.HashMap/*<>*/();
+
+        // For each term, update the associated bounds to be the tightest
+        // bound set across the rows
+        for (int j = 0; j < numTerms; j++) {
+          Metric m = term(j);
+          double scaledX = m.value(useWeakCache);
+          double scaledV = m.velocity(useWeakCache);
+          double scaledN = m.noise(useWeakCache);
+
+          //// Adaptive version
+          // Corrected for the way this metric is shifting relative to
+          // the rest of the sum
+          double r = m.getPresetR();
+
+          // TODO: Change to account for update frequency in addition to
+          // noise, we don't need to be aggressive if a high noise value is
+          // updated much less frequently than the other values in the sum.
+          double b = scaledX - ((m.getPresetB() / getPresetB()) * (totalValue - baseNow));
+
+          double native[] normalized = Bound.createBound(r, b, currentTime);
+          if (!witnesses.containsKey(m) || !((Contract) witnesses.get(m)).implies(m, normalized[0], normalized[1])) {
+            witnesses.put(m, m.getThresholdContract(r, b, currentTime));
+          }
+        }
+
+        Contract native[] finalWitnesses = new Contract native[witnesses.size()];
+        int i = 0;
+        for (java.util.Iterator iter = witnesses.values().iterator(); iter.hasNext();) {
+          finalWitnesses[i++] = (Contract) iter.next();
+        }
+
+        return new WitnessPolicy@s().fabric$metrics$contracts$enforcement$WitnessPolicy$(finalWitnesses);
+      } else {
+        // TODO: Make the samples cutoff configurable.
+        //double baseFactor = totalSamples > 10 ? 0.0 / Math.sqrt(totalSamples) : 1.0;
+        //double baseFactor = totalSamples > 1 ? 1.0 / totalSamples : 1.0;
+        double baseFactor = 0.0;
+        double newFactor = 1.0 - baseFactor;
 
         // Two alternatives: either using an adaptive strategy or a static
         // strategy.  Don't use the adaptive strategy if the hedged timeout is
@@ -278,93 +337,77 @@ public class SumMetric extends DerivedMetric {
         java.util.Map/*<Metric, Contract>*/ adaptiveWitnesses = new java.util.HashMap/*<>*/();
         java.util.Map/*<Metric, Contract>*/ staticWitnesses = new java.util.HashMap/*<>*/();
 
-        long currentTime = System.currentTimeMillis();
-        double baseNow = Bound.value(rate, base, currentTime);
+        double native [] velocities = new double native [numTerms];
+        double native [] adaptiveRates = new double native [numTerms];
+        double native [] staticRates = new double native [numTerms];
+        double native [] noises = new double native [numTerms];
+        for (int j = 0; j < numTerms; j++) {
+          Metric m = term(j);
+          velocities[j] = m.velocity(useWeakCache);
+          noises[j] = m.noise(useWeakCache);
 
-        // Defend all rows against the bound individually, using the strictest
-        // bounds across the rows for each term in this sum.
-        double totalSamples = samples(useWeakCache);
-        double totalValue = value(useWeakCache);
-        double totalVelocity = velocity(useWeakCache);
-        double totalNoise = noise(useWeakCache);
-        double numTerms = terms.length;
-        // TODO: Make the samples cutoff configurable.
-        //double baseFactor = totalSamples > 10 ? 0.0 / Math.sqrt(totalSamples) : 1.0;
-        //double baseFactor = totalSamples > 1 ? 1.0 / totalSamples : 1.0;
-        double baseFactor = 0.0;
-        double newFactor = 1.0 - baseFactor;
-        ConfigProperties config = Worker.getWorker().config;
-        if (config.usePreset) {
-          baseFactor = 0.0;
-          newFactor = 1.0;
+          //// Adaptive version
+          // Corrected for the way this metric is shifting relative to
+          // the rest of the sum
+          adaptiveRates[j] = (newFactor * (velocities[j] - (totalVelocity / numTerms))) + (rate / numTerms);
+          staticRates[j] = (rate / numTerms);
         }
+
+        if (Logging.METRICS_LOGGER.isLoggable(Level.FINE)) {
+          Logging.METRICS_LOGGER.log(Level.FINE,
+              "Running strategy for {0} with velocities {1} and noises {2}",
+              new java.lang.Object native[] {
+                this,
+                java.util.Arrays.toString(velocities),
+                java.util.Arrays.toString(noises)
+              });
+        }
+        double native [] adaptiveSlacks = SumStrategy.getSplitEqualVelocity(velocities, noises, adaptiveRates, (totalValue - baseNow));
+        double native [] staticSlacks = SumStrategy.getSplit(velocities, noises, staticRates, (totalValue - baseNow));
 
         // For each term, update the associated bounds to be the tightest
         // bound set across the rows
         long adaptiveTimeout = Long.MAX_VALUE;
         long staticTimeout = Long.MAX_VALUE;
         for (int j = 0; j < numTerms; j++) {
-            Metric m = term(j);
-            double scaledX = m.value(useWeakCache);
-            double scaledV = m.velocity(useWeakCache);
-            double scaledN = m.noise(useWeakCache);
+          Metric m = term(j);
+          double scaledX = m.value(useWeakCache);
+          double scaledV = m.velocity(useWeakCache);
+          double scaledN = m.noise(useWeakCache);
 
-            //// Adaptive version
-            // Corrected for the way this metric is shifting relative to
-            // the rest of the sum
-            double r = (newFactor * (scaledV - (totalVelocity / numTerms))) + (rate / numTerms);
+          //// Adaptive version
+          // Corrected for the way this metric is shifting relative to
+          // the rest of the sum
+          double r = adaptiveRates[j];
 
-            // TODO: Change to account for update frequency in addition to
-            // noise, we don't need to be aggressive if a high noise value is
-            // updated much less frequently than the other values in the sum.
-            double b = scaledX -
-              ((totalValue - baseNow) *
-               ((totalNoise != 0) ?
-                ((baseFactor / numTerms) + (newFactor * (scaledN / totalNoise))) :
-                (1.0 / numTerms)));
+          // TODO: Change to account for update frequency in addition to
+          // noise, we don't need to be aggressive if a high noise value is
+          // updated much less frequently than the other values in the sum.
+          double b = scaledX - adaptiveSlacks[j];
 
-            // If using presets, use that instead
-            if (getUsePreset()) {
-              r = m.getPresetR();
-              b = scaledX - ((m.getPresetB() / getPresetB()) * (totalValue - baseNow));
-            }
+          double native[] normalized = Bound.createBound(r, b, currentTime);
+          if (!adaptiveWitnesses.containsKey(m) || !((Contract) adaptiveWitnesses.get(m)).implies(m, normalized[0], normalized[1])) {
+            adaptiveWitnesses.put(m, m.getThresholdContract(r, b, currentTime));
+          }
+          // Update the timeout estimate.
+          adaptiveTimeout = Math.min(adaptiveTimeout, DirectPolicy.hedgedEstimate(m, normalized[0], normalized[1], currentTime, useWeakCache));
 
-            double native[] normalized = Bound.createBound(r, b, currentTime);
-            if (!adaptiveWitnesses.containsKey(m)
-                    || !((Contract) adaptiveWitnesses.get(m)).implies(m, normalized[0], normalized[1])) {
-                adaptiveWitnesses.put(m, m.getThresholdContract(r, b, currentTime));
-            }
-            // Update the timeout estimate.
-            adaptiveTimeout = Math.min(adaptiveTimeout,
-                DirectPolicy.hedgedEstimate(m, normalized[0], normalized[1], currentTime, useWeakCache));
+          //// Static version
+          double r2 = staticRates[j];
 
-            //// Static version
-            double r2 = rate / numTerms;
+          // TODO: Change to account for update frequency in addition to
+          // noise, we don't need to be aggressive if a high noise value is
+          // updated much less frequently than the other values in the sum.
+          double b2 = scaledX - staticSlacks[j];
 
-            // TODO: Change to account for update frequency in addition to
-            // noise, we don't need to be aggressive if a high noise value is
-            // updated much less frequently than the other values in the sum.
-            double b2 = scaledX -
-              ((totalValue - baseNow) *
-               ((totalNoise != 0) ?
-                ((baseFactor / numTerms) + (newFactor * (scaledN / totalNoise))) :
-                (1.0 / numTerms)));
-
-            // If using presets, use that instead
-            if (getUsePreset()) {
-              r2 = m.getPresetR();
-              b2 = scaledX - ((m.getPresetB() / getPresetB()) * (totalValue - baseNow));
-            }
-
-            double native[] normalized2 = Bound.createBound(r2, b2, currentTime);
-            if (!staticWitnesses.containsKey(m)
-                    || !((Contract) staticWitnesses.get(m)).implies(m, normalized2[0], normalized2[1])) {
-                staticWitnesses.put(m, m.getThresholdContract(r2, b2, currentTime));
-            }
-            // Update the timeout estimate.
-            staticTimeout = Math.min(staticTimeout,
-                DirectPolicy.hedgedEstimate(m, normalized2[0], normalized2[1], currentTime, useWeakCache));
+          double native[] normalized2 = Bound.createBound(r2, b2, currentTime);
+          if (!staticWitnesses.containsKey(m) || !((Contract) staticWitnesses.get(m)).implies(m, normalized2[0], normalized2[1])) {
+            staticWitnesses.put(m, m.getThresholdContract(r2, b2, currentTime));
+          }
+          // Update the timeout estimate.
+          staticTimeout = Math.min(staticTimeout, DirectPolicy.hedgedEstimate(m, normalized2[0], normalized2[1], currentTime, useWeakCache));
         }
+
         // Size should be the same for either option.
         Contract native[] finalWitnesses = new Contract native[adaptiveWitnesses.size()];
         if (adaptiveTimeout >= staticTimeout && adaptiveTimeout - System.currentTimeMillis() > MIN_ADAPTIVE_EXPIRY) {
@@ -378,7 +421,9 @@ public class SumMetric extends DerivedMetric {
             finalWitnesses[i++] = (Contract) iter.next();
           }
         }
+
         return new WitnessPolicy@s().fabric$metrics$contracts$enforcement$WitnessPolicy$(finalWitnesses);
+      }
     }
 
     /*@Override*/

@@ -14,6 +14,7 @@ import fabric.metrics.contracts.enforcement.DirectEqualityPolicy;
 import fabric.metrics.contracts.enforcement.EnforcementPolicy;
 import fabric.metrics.contracts.enforcement.WitnessPolicy;
 import fabric.metrics.util.Observer;
+import fabric.metrics.util.RunningMetricStats;
 
 import fabric.common.ConfigProperties;
 import fabric.worker.Store;
@@ -82,7 +83,7 @@ public abstract class DerivedMetric extends Metric implements Observer {
     this.terms = new Metric[terms.length] ~lbl @s;
     for (int i = 0; i < terms.length; i++)
       this.terms[i] = terms[i];
-    this.lastStats = new double[4] ~lbl @s;
+    this.lastStats = new double[6] ~lbl @s;
     // Presets
     ConfigProperties config = Worker.getWorker().config;
     this.usePreset = config.usePreset;
@@ -174,6 +175,8 @@ public abstract class DerivedMetric extends Metric implements Observer {
       lastStats[1] = computeVelocity(false);
       lastStats[2] = computeNoise(false);
       lastStats[3] = computeSamples(false);
+      lastStats[4] = System.currentTimeMillis();
+      lastStats[5] = computeUpdateInterval(false);
       return true;
     }
     return false;
@@ -208,36 +211,104 @@ public abstract class DerivedMetric extends Metric implements Observer {
   }
 
   /*@Override*/
-  public double samples(boolean useWeakCache) {
+  public long samples(boolean useWeakCache) {
     return static_samples(this, useWeakCache);
   }
 
-  private static double static_samples(DerivedMetric tmp, boolean useWeakCache) {
+  private static long static_samples(DerivedMetric tmp, boolean useWeakCache) {
     if (useWeakCache) {
       if (TransactionManager.getInstance().inTxn()) {
-        return tmp.weakStats[3];
+        return (long) tmp.weakStats[3];
       } else {
-        double rtn = 0;
+        long rtn = 0;
         atomic {
-          rtn = tmp.weakStats[3];
+          rtn = (long) tmp.weakStats[3];
         }
         return rtn;
       }
     } else if (tmp.isObserved()) {
       // Make sure any related updates are accounted for
       fabric.worker.transaction.TransactionManager.getInstance().resolveObservations();
-      return tmp.lastStats[3];
+      return (long) tmp.lastStats[3];
     }
     return tmp.computeSamples(false);
   }
 
   /*@Override*/
-  protected double computeSamples(boolean useWeakCache) {
-    double samples = 0;
+  protected long computeSamples(boolean useWeakCache) {
+    long samples = 0;
     for (int i = 0; i < terms.length; i++) {
-      samples = Math.max(samples, terms[i].samples(useWeakCache));
+      samples = samples + terms[i].samples(useWeakCache);
     }
     return samples;
+  }
+
+  /*@Override*/
+  public long lastUpdate(boolean useWeakCache) {
+    return static_lastUpdate(this, useWeakCache);
+  }
+
+  private static long static_lastUpdate(DerivedMetric tmp, boolean useWeakCache) {
+    if (useWeakCache) {
+      if (TransactionManager.getInstance().inTxn()) {
+        return (long) tmp.weakStats[4];
+      } else {
+        long rtn = 0;
+        atomic {
+          rtn = (long) tmp.weakStats[4];
+        }
+        return rtn;
+      }
+    } else if (tmp.isObserved()) {
+      // Make sure any related updates are accounted for
+      fabric.worker.transaction.TransactionManager.getInstance().resolveObservations();
+      return (long) tmp.lastStats[4];
+    }
+    return tmp.computeLastUpdate(false);
+  }
+
+  /*@Override*/
+  protected long computeLastUpdate(boolean useWeakCache) {
+    long lastUpdate = 0;
+    for (int i = 0; i < terms.length; i++) {
+      lastUpdate = Math.max(lastUpdate, terms[i].lastUpdate(useWeakCache));
+    }
+    return lastUpdate;
+  }
+
+  /*@Override*/
+  public double updateInterval(boolean useWeakCache) {
+    return static_updateInterval(this, useWeakCache);
+  }
+
+  private static double static_updateInterval(DerivedMetric tmp, boolean useWeakCache) {
+    if (useWeakCache) {
+      if (TransactionManager.getInstance().inTxn()) {
+        return tmp.weakStats[5];
+      } else {
+        double rtn = 0;
+        atomic {
+          rtn = tmp.weakStats[5];
+        }
+        return rtn;
+      }
+    } else if (tmp.isObserved()) {
+      // Make sure any related updates are accounted for
+      fabric.worker.transaction.TransactionManager.getInstance().resolveObservations();
+      return tmp.lastStats[5];
+    }
+    return tmp.computeUpdateInterval(false);
+  }
+
+  /*@Override*/
+  protected double computeUpdateInterval(boolean useWeakCache) {
+    double updateInterval = Double.MAX_VALUE;
+    // For now, assume update interval is min of update intervals of terms.
+    for (int i = 0; i < terms.length; i++) {
+      double termInterval = terms[i].updateInterval(useWeakCache);
+      updateInterval = Math.min(updateInterval, termInterval);
+    }
+    return updateInterval;
   }
 
   // XXX: note that the below assumes that if we're not using weakly cached
@@ -262,7 +333,9 @@ public abstract class DerivedMetric extends Metric implements Observer {
     } else if (tmp.isObserved()) {
       // Make sure any related updates are accounted for
       fabric.worker.transaction.TransactionManager.getInstance().resolveObservations();
-      return tmp.lastStats[1];
+      return RunningMetricStats.updatedVelocity(tmp.lastStats[1],
+          tmp.lastStats[5], (long) tmp.lastStats[3], (long) tmp.lastStats[4],
+          System.currentTimeMillis());
     }
     // Not getting updated proactively, so compute it
     //lastStats[1] = computeVelocity(false);
@@ -291,7 +364,9 @@ public abstract class DerivedMetric extends Metric implements Observer {
     } else if (tmp.isObserved()) {
       // Make sure any related updates are accounted for
       fabric.worker.transaction.TransactionManager.getInstance().resolveObservations();
-      return tmp.lastStats[2];
+      return RunningMetricStats.updatedNoise(tmp.lastStats[1],
+          tmp.lastStats[2], tmp.lastStats[5], (long) tmp.lastStats[3],
+          (long) tmp.lastStats[4], System.currentTimeMillis());
     }
     // Not getting updated proactively, so compute it
     //lastStats[2] = computeNoise(false);
@@ -321,6 +396,9 @@ public abstract class DerivedMetric extends Metric implements Observer {
       lastStats[0] = computeValue(false);
       lastStats[1] = computeVelocity(false);
       lastStats[2] = computeNoise(false);
+      lastStats[3] = computeSamples(false);
+      lastStats[4] = System.currentTimeMillis();
+      lastStats[5] = computeUpdateInterval(false);
     }
     super.addObserver(obs);
   }

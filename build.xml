@@ -693,6 +693,7 @@
       depends="init,bootstrap,fabil-compiler,fabil-signatures,fabric-arrays">
     <path id="fabil-runtime.bootcp">
       <path refid="polyglot.classpath"/>
+      <path refid="lib.classpath"/>
       <pathelement location="${bootstrap.classes}"/>
     </path>
     <pathconvert

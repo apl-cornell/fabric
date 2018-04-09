@@ -127,7 +127,7 @@ public class ConjunctionContract extends Contract {
         currentPolicy = null;
         observing = false;
       }
-      return update(curExpiry);
+      return update(curExpiry, asyncExtension);
     }
 
     // If we're not observing, the contract is dead.

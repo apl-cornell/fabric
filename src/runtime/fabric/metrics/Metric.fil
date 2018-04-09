@@ -14,6 +14,7 @@ import fabric.metrics.contracts.enforcement.DirectPolicy;
 import fabric.metrics.contracts.enforcement.EnforcementPolicy;
 import fabric.metrics.util.AbstractSubject;
 import fabric.metrics.util.Observer;
+import fabric.metrics.util.RunningMetricStats;
 
 import fabric.worker.Store;
 import fabric.worker.Worker;
@@ -444,7 +445,7 @@ public abstract class Metric extends AbstractSubject
     //contracts = new ArrayList/*<>*/().fabric$util$ArrayList$();
     Label lbl = LabelUtil.noComponents();
     Store s = $getStore();
-    this.weakStats = new double[4] ~lbl @s;
+    this.weakStats = new double[6] ~lbl @s;
     // Use default size since we don't expect most applications to use a ton of
     // different transformations on the same terms.
     //this.transformations = new HashMap().fabric$util$HashMap$(64);
@@ -463,7 +464,7 @@ public abstract class Metric extends AbstractSubject
   public abstract double value(boolean useWeakCache);
 
   /** @return the number of samples of the {@link Metric}. */
-  public double samples() {
+  public long samples() {
     return samples(false);
   }
 
@@ -473,7 +474,33 @@ public abstract class Metric extends AbstractSubject
    *            returned.  If false, a strongly consistent value is returned.
    * @return the number of samples of the {@link Metric}.
    */
-  public abstract double samples(boolean useWeakCache);
+  public abstract long samples(boolean useWeakCache);
+
+  /** @return the time of the last update of the {@link Metric}. */
+  public long lastUpdate() {
+    return lastUpdate(false);
+  }
+
+  /**
+   * @param useWeakCache
+   *            Flag to indicate if a weakly consistent value should be
+   *            returned.  If false, a strongly consistent value is returned.
+   * @return the time of the last update of the {@link Metric}.
+   */
+  public abstract long lastUpdate(boolean useWeakCache);
+
+  /** @return the current updateInterval estimate for updates of {@link Metric}. */
+  public double updateInterval() {
+    return updateInterval(false);
+  }
+
+  /**
+   * @param useWeakCache
+   *            Flag to indicate if a weakly consistent value should be
+   *            returned.  If false, a strongly consistent value is returned.
+   * @return the updateInterval estimated for updates of the {@link Metric}.
+   */
+  public abstract double updateInterval(boolean useWeakCache);
 
   /** @return the estimated velocity of the {@link Metric}. */
   public double velocity() {
@@ -617,12 +644,16 @@ public abstract class Metric extends AbstractSubject
       tmp.weakStats[1] = tmp.computeVelocity(true);
       tmp.weakStats[2] = tmp.computeNoise(true);
       tmp.weakStats[3] = tmp.computeSamples(true);
+      tmp.weakStats[4] = System.currentTimeMillis();
+      tmp.weakStats[5] = tmp.computeUpdateInterval(true);
     } else {
       atomic {
         tmp.weakStats[0] = tmp.computeValue(true);
         tmp.weakStats[1] = tmp.computeVelocity(true);
         tmp.weakStats[2] = tmp.computeNoise(true);
         tmp.weakStats[3] = tmp.computeSamples(true);
+        tmp.weakStats[4] = System.currentTimeMillis();
+        tmp.weakStats[5] = tmp.computeUpdateInterval(true);
       }
     }
     //Logging.METRICS_LOGGER.finest("REFRESHED " + tmp + " to " + tmp.weakStats[0]
@@ -648,8 +679,26 @@ public abstract class Metric extends AbstractSubject
    *         {@link #samples()} as captured in the last call to
    *         {@link #refreshWeakEstimates()}.
    */
-  protected double weakSamples() {
-    return weakStats[3];
+  protected long weakSamples() {
+    return (long) weakStats[3];
+  }
+
+  /**
+   * @return an estimated (not necessarily consistent) estimate of the
+   *         {@link #lastUpdate()} as captured in the last call to
+   *         {@link #refreshWeakEstimates()}.
+   */
+  protected long weakLastUpdate() {
+    return (long) weakStats[4];
+  }
+
+  /**
+   * @return an estimated (not necessarily consistent) estimate of the
+   *         {@link #updateInterval()} as captured in the last call to
+   *         {@link #refreshWeakEstimates()}.
+   */
+  protected double weakUpdateInterval() {
+    return weakStats[5];
   }
 
   /**
@@ -658,7 +707,8 @@ public abstract class Metric extends AbstractSubject
    *         {@link #refreshWeakEstimates()}.
    */
   protected double weakVelocity() {
-    return weakStats[1];
+    return RunningMetricStats.updatedVelocity(weakStats[1], weakStats[5],
+        (long) weakStats[3], (long) weakStats[4], System.currentTimeMillis());
   }
 
   /**
@@ -667,7 +717,9 @@ public abstract class Metric extends AbstractSubject
    *         {@link #refreshWeakEstimates()}.
    */
   protected double weakNoise() {
-    return weakStats[2];
+    return RunningMetricStats.updatedNoise(weakStats[1], weakStats[2],
+        weakStats[5], (long) weakStats[3], (long) weakStats[4],
+        System.currentTimeMillis());
   }
 
   /**
@@ -682,7 +734,21 @@ public abstract class Metric extends AbstractSubject
    *            Flag to indicate if weak values should be used.
    * @return a freshly computed weak value for this {@link DerivedMetric}.
    */
-  protected abstract double computeSamples(boolean useWeakCache);
+  protected abstract long computeSamples(boolean useWeakCache);
+
+  /**
+   * @param useWeakCache
+   *            Flag to indicate if weak values should be used.
+   * @return a freshly computed weak value for this {@link DerivedMetric}.
+   */
+  protected abstract long computeLastUpdate(boolean useWeakCache);
+
+  /**
+   * @param useWeakCache
+   *            Flag to indicate if weak values should be used.
+   * @return a freshly computed weak value for this {@link DerivedMetric}.
+   */
+  protected abstract double computeUpdateInterval(boolean useWeakCache);
 
   /**
    * @param useWeakCache
