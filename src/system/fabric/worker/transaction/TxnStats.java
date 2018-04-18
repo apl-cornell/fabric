@@ -8,6 +8,7 @@ public class TxnStats {
   private int txnAttempts = 0;
   private long tid = 0;
   private boolean coordinated = false;
+  private int fetches = 0;
 
   public TxnStats() {
   }
@@ -16,6 +17,7 @@ public class TxnStats {
     txnAttempts = 0;
     tid = 0;
     coordinated = false;
+    fetches = 0;
   }
 
   /**
@@ -26,7 +28,7 @@ public class TxnStats {
   }
 
   /**
-   * @return the lockAttempts count
+   * @return the last tid
    */
   public long getTid() {
     return tid;
@@ -37,6 +39,13 @@ public class TxnStats {
    */
   public boolean isCoordinated() {
     return coordinated;
+  }
+
+  /**
+   * @return the fetches
+   */
+  public int getFetches() {
+    return fetches;
   }
 
   /**
@@ -60,10 +69,18 @@ public class TxnStats {
     this.tid = tid;
   }
 
+  /**
+   * Record a fetch.
+   */
+  public void markFetch() {
+    fetches++;
+  }
+
   @Override
   public String toString() {
     return "[COORDINATED: " + coordinated +
       " WITH " + txnAttempts + " TXN ATTEMPTS" +
+      " USING " + fetches + " FETCHES" +
       " IN " + Long.toHexString(tid) + "]";
   }
 }

@@ -867,10 +867,12 @@ public final class TransactionManager {
       if (TRACE_WRITE_LOCKS)
         obj.$writeLockStackTrace = Thread.currentThread().getStackTrace();
 
-      Logging.log(WORKER_DEADLOCK_LOGGER, Level.FINEST,
-          "{0} in {5} got write lock (via create) on {1}/{2} ({3}) ({4})",
-          current, obj.$getStore(), obj.$getOnum(), obj.getClass(),
-          System.identityHashCode(obj), Thread.currentThread());
+      if (WORKER_DEADLOCK_LOGGER.isLoggable(Level.FINEST)) {
+        Logging.log(WORKER_DEADLOCK_LOGGER, Level.FINEST,
+            "{0} in {5} got write lock (via create) on {1}/{2} ({3}) ({4})",
+            current, obj.$getStore(), obj.$getOnum(), obj.getClass(),
+            System.identityHashCode(obj), Thread.currentThread());
+      }
 
       // Own the object. The call to ensureOwnership is responsible for adding
       // the object to the set of created objects.
@@ -920,11 +922,13 @@ public final class TransactionManager {
     try {
       while (obj.$writeLockHolder != null
           && !current.isDescendantOf(obj.$writeLockHolder)) {
-        Logging.log(WORKER_DEADLOCK_LOGGER, Level.FINER,
-            "{0} in {6} wants to read {1}/{2} ({3}) ({5}); waiting on writer {4}",
-            current, obj.$getStore(), obj.$getOnum(), obj.getClass(),
-            obj.$writeLockHolder, System.identityHashCode(obj),
-            Thread.currentThread());
+        if (WORKER_DEADLOCK_LOGGER.isLoggable(Level.FINEST)) {
+          Logging.log(WORKER_DEADLOCK_LOGGER, Level.FINER,
+              "{0} in {6} wants to read {1}/{2} ({3}) ({5}); waiting on writer {4}",
+              current, obj.$getStore(), obj.$getOnum(), obj.getClass(),
+              obj.$writeLockHolder, System.identityHashCode(obj),
+              Thread.currentThread());
+        }
         hadToWait = true;
         obj.$numWaiting++;
         try {
@@ -952,10 +956,12 @@ public final class TransactionManager {
     obj.writerMapVersion = -1;
 
     current.acquireReadLock(obj);
-    Logging.log(WORKER_DEADLOCK_LOGGER, Level.FINEST,
-        "{0} in {5} got read lock on {1}/{2} ({3}) ({4})", current,
-        obj.$getStore(), obj.$getOnum(), obj.getClass(),
-        System.identityHashCode(obj), Thread.currentThread());
+    if (WORKER_DEADLOCK_LOGGER.isLoggable(Level.FINEST)) {
+      Logging.log(WORKER_DEADLOCK_LOGGER, Level.FINEST,
+          "{0} in {5} got read lock on {1}/{2} ({3}) ({4})", current,
+          obj.$getStore(), obj.$getOnum(), obj.getClass(),
+          System.identityHashCode(obj), Thread.currentThread());
+    }
     if (hadToWait)
       WORKER_TRANSACTION_LOGGER.log(Level.FINEST, "{0} got read lock", current);
   }
@@ -1013,11 +1019,13 @@ public final class TransactionManager {
         // Make sure writer is in our ancestry.
         if (obj.$writeLockHolder != null
             && !current.isDescendantOf(obj.$writeLockHolder)) {
-          Logging.log(WORKER_DEADLOCK_LOGGER, Level.FINER,
-              "{0} in {6} wants to write {1}/{2} ({3}) ({5}); waiting on writer {4}",
-              current, obj.$getStore(), obj.$getOnum(), obj.getClass(),
-              obj.$writeLockHolder, System.identityHashCode(obj),
-              Thread.currentThread());
+          if (WORKER_DEADLOCK_LOGGER.isLoggable(Level.FINEST)) {
+            Logging.log(WORKER_DEADLOCK_LOGGER, Level.FINER,
+                "{0} in {6} wants to write {1}/{2} ({3}) ({5}); waiting on writer {4}",
+                current, obj.$getStore(), obj.$getOnum(), obj.getClass(),
+                obj.$writeLockHolder, System.identityHashCode(obj),
+                Thread.currentThread());
+          }
           waitsFor.add(obj.$writeLockHolder);
           hadToWait = true;
         } else {
@@ -1027,11 +1035,13 @@ public final class TransactionManager {
             synchronized (readMapEntry) {
               for (Log lock : readMapEntry.getReaders()) {
                 if (!current.isDescendantOf(lock)) {
-                  Logging.log(WORKER_DEADLOCK_LOGGER, Level.FINER,
-                      "{0} in {6} wants to write {1}/{2} ({3}) ({5}); aborting reader {4}",
-                      current, obj.$getStore(), obj.$getOnum(), obj.getClass(),
-                      lock, System.identityHashCode(obj),
-                      Thread.currentThread());
+                  if (WORKER_DEADLOCK_LOGGER.isLoggable(Level.FINEST)) {
+                    Logging.log(WORKER_DEADLOCK_LOGGER, Level.FINER,
+                        "{0} in {6} wants to write {1}/{2} ({3}) ({5}); aborting reader {4}",
+                        current, obj.$getStore(), obj.$getOnum(), obj.getClass(),
+                        lock, System.identityHashCode(obj),
+                        Thread.currentThread());
+                  }
                   waitsFor.add(lock);
                   lock.flagRetry();
                 }
@@ -1089,10 +1099,12 @@ public final class TransactionManager {
       }
     }
 
-    Logging.log(WORKER_DEADLOCK_LOGGER, Level.FINEST,
-        "{0} in {5} got write lock on {1}/{2} ({3}) ({4})", current,
-        obj.$getStore(), obj.$getOnum(), obj.getClass(),
-        System.identityHashCode(obj), Thread.currentThread());
+    if (WORKER_DEADLOCK_LOGGER.isLoggable(Level.FINEST)) {
+      Logging.log(WORKER_DEADLOCK_LOGGER, Level.FINEST,
+          "{0} in {5} got write lock on {1}/{2} ({3}) ({4})", current,
+          obj.$getStore(), obj.$getOnum(), obj.getClass(),
+          System.identityHashCode(obj), Thread.currentThread());
+    }
 
     if (obj.$reader != current) {
       // Clear the read stamp -- the reader's read condition no longer holds.

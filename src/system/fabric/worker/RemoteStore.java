@@ -44,6 +44,7 @@ import fabric.messages.StalenessCheckMessage;
 import fabric.net.RemoteNode;
 import fabric.net.UnreachableNodeException;
 import fabric.util.Map;
+import fabric.worker.transaction.TransactionManager;
 
 /**
  * Encapsulates a Store. This class maintains two connections to the store (one
@@ -210,6 +211,9 @@ public class RemoteStore extends RemoteNode<RemoteStore>
    */
   private ObjectCache.Entry fetchObject(boolean useDissem, long onum)
       throws AccessException {
+    TransactionManager tm = TransactionManager.getInstance();
+    if (tm != null)
+      tm.stats.markFetch();
     ObjectGroup g;
     if (useDissem) {
       g = Worker.getWorker().fetchManager().fetch(this, onum);
