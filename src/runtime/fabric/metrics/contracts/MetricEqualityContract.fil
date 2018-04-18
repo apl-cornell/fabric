@@ -30,6 +30,7 @@ import fabric.common.Logging;
 public class MetricEqualityContract extends Contract {
 
   protected final Metric metric;
+  private final SampledMetric[] leafMetrics;
   public final double value;
 
   /**
@@ -44,6 +45,16 @@ public class MetricEqualityContract extends Contract {
   public MetricEqualityContract fabric$metrics$contracts$MetricEqualityContract$(Metric metric, double value) {
     this.metric = metric;
     this.value = value;
+    Label lbl = LabelUtil.noComponents();
+    if (metric instanceof SampledMetric) {
+      leafMetrics = new SampledMetric[1] ~lbl;
+      leafMetrics[0] = (SampledMetric) metric;
+    } else if (metric instanceof DerivedMetric) {
+      leafMetrics = ((DerivedMetric) metric).getLeafSubjects();
+    } else {
+      throw new IllegalStateException(
+          "All metrics should be either sampled or derived!");
+    }
     fabric$metrics$contracts$Contract$();
     return this;
   }
@@ -179,15 +190,6 @@ public class MetricEqualityContract extends Contract {
 
   /*@Override*/
   public SampledMetric[] getLeafSubjects() {
-    Metric m = getMetric();
-    if (m instanceof SampledMetric) {
-      final Store local = Worker.getWorker().getLocalStore();
-      return new SampledMetric[] @local { (SampledMetric) m };
-    } else if (m instanceof DerivedMetric) {
-      return ((DerivedMetric) m).getLeafSubjects();
-    } else {
-      throw new IllegalStateException(
-          "All metrics should be either sampled or derived!");
-    }
+    return leafMetrics;
   }
 }

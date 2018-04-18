@@ -33,11 +33,13 @@ public class SumStrategy {
       final double r1, final double s1, final double v2, final double r2,
       final double s2, final double slack, final double n) {
 
+    // XXX TODO: This is currently incorrect. XXX
+
     if ((v1 - r1) <= 0) {
       // Function to minimize
       return new UnivariateFunction() {
 
-        // Full ln(E[1/T]) for node 1
+        // E[1/T] for node 1
         private double term1(double a) {
           // Effective boundary for node 2
           double a1 = a;
@@ -45,7 +47,7 @@ public class SumStrategy {
           return (s1 / (a1 * a1)) - ((v1 - r1) / a1);
         }
 
-        // Full ln(E[1/T]) for node 2
+        // Full E[1/T] for node 2
         private double term2(double a) {
           // Effective boundary for node 2
           double a2 = slack - a;
@@ -61,8 +63,8 @@ public class SumStrategy {
           // Full E[1/T] for node 2
           double term2 = term2(a);
 
-          // Difference between the log of each, squared
-          return (term1 - term2) * (term1 - term2);
+          // Difference between the two
+          return term1 - term2;
         }
       };
     } else {
@@ -262,28 +264,16 @@ public class SumStrategy {
         totalRate -= r1;
 
         // Use relative tol of 1e-6 and absolute of 1e-6
-        if (v1 - r1 <= 0) {
-          BrentOptimizer optimizer = new BrentOptimizer(1e-6, 1e-6);
-          result[i] = optimizer.optimize(
-              new UnivariateObjectiveFunction(createEqualityVAverage(v1, r1, s1,
-                  totalVelocity, totalRate, totalNoise, slackRemaining,
-                  itemsLeft)),
-              new MaxEval(Integer.MAX_VALUE), GoalType.MINIMIZE,
-              new SearchInterval(0, slackRemaining),
-              new InitialGuess(
-                new double[] { slackRemaining / itemsLeft }
-                )).getPoint();
-          slackRemaining -= result[i];
-        } else {
-          BrentSolver solver = new BrentSolver(1e-6, 1e-6);
-          result[i] =
-              solver.solve(
-                  Integer.MAX_VALUE, createEqualityVAverage(v1, r1, s1,
-                    totalVelocity, totalRate, totalNoise, slackRemaining,
-                    itemsLeft),
-                  0, slackRemaining, slackRemaining * (s1 / (s1 + totalNoise)));
-          slackRemaining -= result[i];
-        }
+        BrentOptimizer optimizer = new BrentOptimizer(1e-6, 1e-6);
+        result[i] = optimizer.optimize(
+            new UnivariateObjectiveFunction(createEquality(v1, r1, s1,
+                totalVelocity, totalRate, totalNoise, slackRemaining)),
+            new MaxEval(Integer.MAX_VALUE), GoalType.MINIMIZE,
+            new SearchInterval(0, slackRemaining),
+            new InitialGuess(
+              new double[] { slackRemaining / itemsLeft }
+              )).getPoint();
+        slackRemaining -= result[i];
         itemsLeft--;
       }
       result[result.length - 1] = slackRemaining;

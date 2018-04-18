@@ -443,9 +443,6 @@ public abstract class Metric extends AbstractSubject
    */
   protected Metric fabric$metrics$Metric$() {
     //contracts = new ArrayList/*<>*/().fabric$util$ArrayList$();
-    Label lbl = LabelUtil.noComponents();
-    Store s = $getStore();
-    this.weakStats = new double[6] ~lbl @s;
     // Use default size since we don't expect most applications to use a ton of
     // different transformations on the same terms.
     //this.transformations = new HashMap().fabric$util$HashMap$(64);
@@ -611,10 +608,14 @@ public abstract class Metric extends AbstractSubject
   }
 
   /*
-   * Array of the most recently refreshed weak stats (using an Array so it's a
-   * separate object for transactions).
+   * Cached update stats.
    */
-  protected final double[] weakStats;
+  protected double cachedValue;
+  protected double cachedVelocity;
+  protected double cachedNoise;
+  protected long cachedSamples;
+  protected long cachedLastUpdate;
+  protected double cachedUpdateInterval;
 
   /**
    * Update the current "weak" estimates to be used by {@link #policy(Bound)}
@@ -640,24 +641,22 @@ public abstract class Metric extends AbstractSubject
   private static void static_refreshLocally(Metric tmp) {
     //Logging.METRICS_LOGGER.finest("REFRESHING LOCALLY " + tmp);
     if (TransactionManager.getInstance().inTxn()) {
-      tmp.weakStats[0] = tmp.computeValue(true);
-      tmp.weakStats[1] = tmp.computeVelocity(true);
-      tmp.weakStats[2] = tmp.computeNoise(true);
-      tmp.weakStats[3] = tmp.computeSamples(true);
-      tmp.weakStats[4] = System.currentTimeMillis();
-      tmp.weakStats[5] = tmp.computeUpdateInterval(true);
+      tmp.cachedValue = tmp.computeValue(true);
+      tmp.cachedVelocity = tmp.computeVelocity(true);
+      tmp.cachedNoise = tmp.computeNoise(true);
+      tmp.cachedSamples = tmp.computeSamples(true);
+      tmp.cachedLastUpdate = System.currentTimeMillis();
+      tmp.cachedUpdateInterval = tmp.computeUpdateInterval(true);
     } else {
       atomic {
-        tmp.weakStats[0] = tmp.computeValue(true);
-        tmp.weakStats[1] = tmp.computeVelocity(true);
-        tmp.weakStats[2] = tmp.computeNoise(true);
-        tmp.weakStats[3] = tmp.computeSamples(true);
-        tmp.weakStats[4] = System.currentTimeMillis();
-        tmp.weakStats[5] = tmp.computeUpdateInterval(true);
+        tmp.cachedValue = tmp.computeValue(true);
+        tmp.cachedVelocity = tmp.computeVelocity(true);
+        tmp.cachedNoise = tmp.computeNoise(true);
+        tmp.cachedSamples = tmp.computeSamples(true);
+        tmp.cachedLastUpdate = System.currentTimeMillis();
+        tmp.cachedUpdateInterval = tmp.computeUpdateInterval(true);
       }
     }
-    //Logging.METRICS_LOGGER.finest("REFRESHED " + tmp + " to " + tmp.weakStats[0]
-    //    + ", " + tmp.weakStats[1] + ", " + tmp.weakStats[2]);
   }
 
   public void refreshLocally_remote(fabric.lang.security.Principal caller) {
@@ -671,7 +670,7 @@ public abstract class Metric extends AbstractSubject
    *         {@link #refreshWeakEstimates()}.
    */
   protected double weakValue() {
-    return weakStats[0];
+    return cachedValue;
   }
 
   /**
@@ -680,7 +679,7 @@ public abstract class Metric extends AbstractSubject
    *         {@link #refreshWeakEstimates()}.
    */
   protected long weakSamples() {
-    return (long) weakStats[3];
+    return cachedSamples;
   }
 
   /**
@@ -689,7 +688,7 @@ public abstract class Metric extends AbstractSubject
    *         {@link #refreshWeakEstimates()}.
    */
   protected long weakLastUpdate() {
-    return (long) weakStats[4];
+    return cachedLastUpdate;
   }
 
   /**
@@ -698,7 +697,7 @@ public abstract class Metric extends AbstractSubject
    *         {@link #refreshWeakEstimates()}.
    */
   protected double weakUpdateInterval() {
-    return weakStats[5];
+    return cachedUpdateInterval;
   }
 
   /**
@@ -707,8 +706,8 @@ public abstract class Metric extends AbstractSubject
    *         {@link #refreshWeakEstimates()}.
    */
   protected double weakVelocity() {
-    return RunningMetricStats.updatedVelocity(weakStats[1], weakStats[5],
-        (long) weakStats[3], (long) weakStats[4], System.currentTimeMillis());
+    return RunningMetricStats.updatedVelocity(cachedVelocity, cachedUpdateInterval,
+        cachedSamples, cachedLastUpdate, System.currentTimeMillis());
   }
 
   /**
@@ -717,8 +716,8 @@ public abstract class Metric extends AbstractSubject
    *         {@link #refreshWeakEstimates()}.
    */
   protected double weakNoise() {
-    return RunningMetricStats.updatedNoise(weakStats[1], weakStats[2],
-        weakStats[5], (long) weakStats[3], (long) weakStats[4],
+    return RunningMetricStats.updatedNoise(cachedVelocity, cachedNoise,
+        cachedUpdateInterval, cachedSamples, cachedLastUpdate,
         System.currentTimeMillis());
   }
 

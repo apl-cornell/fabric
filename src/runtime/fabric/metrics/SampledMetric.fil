@@ -344,12 +344,18 @@ public class SampledMetric extends Metric {
   private static double static_value(SampledMetric tmp, boolean useWeakCache) {
     double result = 0;
     if (TransactionManager.getInstance().inTxn()) {
-      if (useWeakCache) result = tmp.weakStats[0];
-      else result = tmp.computeValue(false);
+      if (useWeakCache) {
+        result = tmp.cachedValue;
+      } else {
+        result = tmp.computeValue(false);
+      }
     } else {
       atomic {
-        if (useWeakCache) result = tmp.weakStats[0];
-        else result = tmp.computeValue(false);
+        if (useWeakCache) {
+          result = tmp.cachedValue;
+        } else {
+          result = tmp.computeValue(false);
+        }
       }
     }
     return result;
@@ -363,12 +369,18 @@ public class SampledMetric extends Metric {
   private static long static_samples(SampledMetric tmp, boolean useWeakCache) {
     long result = 0;
     if (TransactionManager.getInstance().inTxn()) {
-      if (useWeakCache) result = (long) tmp.weakStats[3];
-      else result = tmp.computeSamples(false);
+      if (useWeakCache) {
+        result = tmp.cachedSamples;
+      } else {
+        result = tmp.computeSamples(false);
+      }
     } else {
       atomic {
-        if (useWeakCache) result = (long) tmp.weakStats[3];
-        else result = tmp.computeSamples(false);
+        if (useWeakCache) {
+          result = tmp.cachedSamples;
+        } else {
+          result = tmp.computeSamples(false);
+        }
       }
     }
     return result;
@@ -382,12 +394,18 @@ public class SampledMetric extends Metric {
   private static long static_lastUpdate(SampledMetric tmp, boolean useWeakCache) {
     long result = 0;
     if (TransactionManager.getInstance().inTxn()) {
-      if (useWeakCache) result = (long) tmp.weakStats[4];
-      else result = tmp.computeLastUpdate(false);
+      if (useWeakCache) {
+        result = tmp.cachedLastUpdate;
+      } else {
+        result = tmp.computeLastUpdate(false);
+      }
     } else {
       atomic {
-        if (useWeakCache) result = (long) tmp.weakStats[4];
-        else result = tmp.computeLastUpdate(false);
+        if (useWeakCache) {
+          result = tmp.cachedLastUpdate;
+        } else {
+          result = tmp.computeLastUpdate(false);
+        }
       }
     }
     return result;
@@ -401,12 +419,18 @@ public class SampledMetric extends Metric {
   private static double static_updateInterval(SampledMetric tmp, boolean useWeakCache) {
     double result = 0;
     if (TransactionManager.getInstance().inTxn()) {
-      if (useWeakCache) result = tmp.weakStats[5];
-      else result = tmp.computeLastUpdate(false);
+      if (useWeakCache) {
+        result = tmp.cachedUpdateInterval;
+      } else {
+        result = tmp.computeUpdateInterval(false);
+      }
     } else {
       atomic {
-        if (useWeakCache) result = tmp.weakStats[5];
-        else result = tmp.computeUpdateInterval(false);
+        if (useWeakCache) {
+          result = tmp.cachedUpdateInterval;
+        } else {
+          result = tmp.computeUpdateInterval(false);
+        }
       }
     }
     return result;
@@ -420,12 +444,18 @@ public class SampledMetric extends Metric {
   private static double static_velocity(SampledMetric tmp, boolean useWeakCache) {
     double result = 0;
     if (TransactionManager.getInstance().inTxn()) {
-      if (useWeakCache) result = tmp.weakStats[1];
-      else result = tmp.computeVelocity(false);
+      if (useWeakCache) {
+        result = tmp.cachedVelocity;
+      } else {
+        result = tmp.computeVelocity(false);
+      }
     } else {
       atomic {
-        if (useWeakCache) result = tmp.weakStats[1];
-        else result = tmp.computeVelocity(false);
+        if (useWeakCache) {
+          result = tmp.cachedVelocity;
+        } else {
+          result = tmp.computeVelocity(false);
+        }
       }
     }
     return result;
@@ -439,12 +469,18 @@ public class SampledMetric extends Metric {
   private static double static_noise(SampledMetric tmp, boolean useWeakCache) {
     double result = 0;
     if (TransactionManager.getInstance().inTxn()) {
-      if (useWeakCache) result = tmp.weakStats[2];
-      else result = tmp.computeNoise(false);
+      if (useWeakCache) {
+        result = tmp.cachedNoise;
+      } else {
+        result = tmp.computeNoise(false);
+      }
     } else {
       atomic {
-        if (useWeakCache) result = tmp.weakStats[2];
-        else result = tmp.computeNoise(false);
+        if (useWeakCache) {
+          result = tmp.cachedNoise;
+        } else {
+          result = tmp.computeNoise(false);
+        }
       }
     }
     return result;
