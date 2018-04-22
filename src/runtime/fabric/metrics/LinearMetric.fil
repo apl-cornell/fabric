@@ -1,14 +1,12 @@
 package fabric.metrics;
 
-import fabric.util.Arrays;
-import fabric.util.LinkedHashMap;
-import fabric.util.Map;
-import fabric.util.Set;
-import fabric.util.TreeSet;
-import fabric.util.ArrayList;
-import fabric.util.HashMap;
-import fabric.util.Iterator;
-import fabric.util.List;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.HashMap;
+import java.util.Iterator;
 
 import fabric.metrics.contracts.Bound;
 import fabric.metrics.contracts.Contract;
@@ -20,6 +18,7 @@ import fabric.metrics.util.Observer;
 import fabric.metrics.util.Subject;
 
 import fabric.worker.Store;
+import fabric.worker.metrics.ImmutableMetricsVector;
 
 //import java.util.logging.Level;
 //import fabric.common.Logging;
@@ -104,15 +103,15 @@ public class LinearMetric extends DerivedMetric {
    *       deduplication of rows.
    */
   private Matrix normalize(Matrix matrix) {
-    Metric[] normTerms = new Metric[terms.length];
-    Arrays.arraycopy(terms, 0, normTerms, 0, terms.length);
+    Metric native [] normTerms = new Metric native [terms.length()];
+    System.arraycopy(terms.array(), 0, normTerms, 0, terms.length());
     Arrays.sort(normTerms);
-    Matrix colNormed = new Matrix().fabric$metrics$util$Matrix$(matrix.rows(), terms.length);
-    for (int i = 0; i < terms.length; i++) {
-      int oldIdx = Arrays.asList(terms).indexOf(normTerms[i]);
+    Matrix colNormed = new Matrix().fabric$metrics$util$Matrix$(matrix.rows(), terms.length());
+    for (int i = 0; i < terms.length(); i++) {
+      int oldIdx = Arrays.asList(terms.array()).indexOf(normTerms[i]);
       colNormed.setColumn(i, matrix.getColumn(oldIdx));
     }
-    this.terms = normTerms;
+    this.terms = ImmutableMetricsVector.createVector(normTerms);
     return normalizeRows(colNormed, 0, colNormed.rows());
   }
 
@@ -175,9 +174,9 @@ public class LinearMetric extends DerivedMetric {
   protected double computeValue(boolean useWeakCache) {
     //Logging.METRICS_LOGGER.log(Level.FINER, "RECOMPUTING LINEAR METRIC AT {0}",
     //    getStore().name());
-    double[] values = new double[terms.length];
-    for (int i = 0; i < terms.length; i++) {
-      values[i] = terms[i].value(useWeakCache);
+    double[] values = new double[terms.length()];
+    for (int i = 0; i < terms.length(); i++) {
+      values[i] = term(i).value(useWeakCache);
     }
     double[] results = matrix.multiply(values);
     double result = Double.MAX_VALUE;
@@ -193,9 +192,9 @@ public class LinearMetric extends DerivedMetric {
    * @return the freshly computed ith entry in the value vector
    */
   protected double computeValue(int i) {
-    double[] values = new double[terms.length];
-    for (int j = 0; j < terms.length; j++) {
-      values[j] = terms[j].value();
+    double[] values = new double[terms.length()];
+    for (int j = 0; j < terms.length(); j++) {
+      values[j] = term(j).value();
     }
     double[] results = matrix.multiply(values);
     return results[i];
@@ -203,9 +202,9 @@ public class LinearMetric extends DerivedMetric {
 
   /*@Override*/
   protected double computeVelocity(boolean useWeakCache) {
-    double[] values = new double[terms.length];
-    for (int i = 0; i < terms.length; i++) {
-      values[i] = terms[i].velocity(useWeakCache);
+    double[] values = new double[terms.length()];
+    for (int i = 0; i < terms.length(); i++) {
+      values[i] = term(i).velocity(useWeakCache);
     }
     double[] results = matrix.multiply(values);
     double result = Double.MAX_VALUE;
@@ -221,9 +220,9 @@ public class LinearMetric extends DerivedMetric {
    * @return the freshly estimated ith entry in the velocity vector
    */
   private double computeVelocity(int i) {
-    double[] values = new double[terms.length];
-    for (int j = 0; j < terms.length; j++) {
-      values[j] = terms[j].velocity();
+    double[] values = new double[terms.length()];
+    for (int j = 0; j < terms.length(); j++) {
+      values[j] = term(j).velocity();
     }
     double[] results = matrix.multiply(values);
     return results[i];
@@ -231,9 +230,9 @@ public class LinearMetric extends DerivedMetric {
 
   /*@Override*/
   protected double computeNoise(boolean useWeakCache) {
-    double[] noises = new double[terms.length];
-    for (int i = 0; i < terms.length; i++) {
-      noises[i] = terms[i].noise(useWeakCache);
+    double[] noises = new double[terms.length()];
+    for (int i = 0; i < terms.length(); i++) {
+      noises[i] = term(i).noise(useWeakCache);
     }
     double[] resultNoises = varMatrix.multiply(noises);
     double noise = 0;
@@ -249,9 +248,9 @@ public class LinearMetric extends DerivedMetric {
    * @return the freshly estimated ith entry in the noise vector
    */
   private double computeNoise(int i) {
-    double[] noises = new double[terms.length];
-    for (int j = 0; j < terms.length; j++) {
-      noises[j] = terms[j].noise();
+    double[] noises = new double[terms.length()];
+    for (int j = 0; j < terms.length(); j++) {
+      noises[j] = term(j).noise();
     }
     double[] resultNoises = varMatrix.multiply(noises);
     return resultNoises[i];
@@ -263,7 +262,7 @@ public class LinearMetric extends DerivedMetric {
     boolean nonEmpty = false;
     for (int i = 0; i < matrix.rows(); i++) {
       boolean nonEmptyRow = false;
-      for (int j = 0; j < terms.length; j++) {
+      for (int j = 0; j < terms.length(); j++) {
         if (matrix.get(i, j) == 0)
           continue;
         if (nonEmptyRow) {
@@ -272,7 +271,7 @@ public class LinearMetric extends DerivedMetric {
           str += ", ";
         }
         nonEmptyRow = true;
-        str += "(" + terms[j] + " * " + matrix.get(i, j) + ")";
+        str += "(" + term(j) + " * " + matrix.get(i, j) + ")";
       }
       if (nonEmptyRow)
         nonEmpty = true;
@@ -282,9 +281,9 @@ public class LinearMetric extends DerivedMetric {
 
   /*@Override*/
   public DerivedMetric times(double scalar) {
-    Metric native[] termsCopy = new Metric native[terms.length];
-    for (int i = 0; i < terms.length; i++)
-      termsCopy[i] = terms[i];
+    Metric native[] termsCopy = new Metric native[terms.length()];
+    for (int i = 0; i < terms.length(); i++)
+      termsCopy[i] = term(i);
     final Store s = getStore();
     return Metric.findDerivedMetric(s,
         new LinearMetric@s().fabric$metrics$LinearMetric$(matrix.multiply(scalar), termsCopy));
@@ -305,9 +304,9 @@ public class LinearMetric extends DerivedMetric {
       LinearMetric that = (LinearMetric) other;
 
       // Get the combined sorted set of terms.
-      Set/*<Metric>*/ termsBag = new TreeSet/*<>*/().fabric$util$TreeSet$();
-      termsBag.addAll(Arrays.asList(this.terms));
-      termsBag.addAll(Arrays.asList(that.terms));
+      Set/*<Metric>*/ termsBag = new TreeSet/*<>*/();
+      termsBag.addAll(Arrays.asList(this.terms.array()));
+      termsBag.addAll(Arrays.asList(that.terms.array()));
 
       // Expand both matrices to account for terms that metric didn't
       // include.
@@ -322,11 +321,11 @@ public class LinearMetric extends DerivedMetric {
       Iterator mIter = termsBag.iterator();
       while (mIter.hasNext()) {
         Metric m = (Metric) mIter.next();
-        if (this.terms[thisIdx].equals(m)) {
+        if (this.term(thisIdx).equals(m)) {
           thisExpanded.setColumn(aggIdx,
               this.matrix.getColumn(thisIdx++));
         }
-        if (that.terms[thatIdx].equals(m)) {
+        if (that.term(thatIdx).equals(m)) {
           thatExpanded.setColumn(aggIdx,
               that.matrix.getColumn(thatIdx++));
         }
@@ -349,15 +348,15 @@ public class LinearMetric extends DerivedMetric {
 
       return Metric.findDerivedMetric(s,
           new LinearMetric@s().fabric$metrics$LinearMetric$(combined, newTerms));
-    } else if (Arrays.asList(terms).indexOf(other) >= 0) {
-      int idx = Arrays.asList(terms).indexOf(other);
+    } else if (Arrays.asList(terms.array()).indexOf(other) >= 0) {
+      int idx = Arrays.asList(terms.array()).indexOf(other);
       Matrix newCs = matrix.copy();
       for (int i = 0; i < newCs.rows(); i++) {
         newCs.set(i, idx, newCs.get(i, idx) + 1);
       }
-      Metric native[] termsCopy = new Metric native[terms.length];
-      for (int i = 0; i < terms.length; i++)
-        termsCopy[i] = terms[i];
+      Metric native[] termsCopy = new Metric native[terms.length()];
+      for (int i = 0; i < terms.length(); i++)
+        termsCopy[i] = term(i);
       return Metric.findDerivedMetric(s,
           new LinearMetric@s().fabric$metrics$LinearMetric$(newCs, termsCopy));
     } else if (isSingleStore() && !other.$getStore().equals(s)) {
@@ -365,10 +364,10 @@ public class LinearMetric extends DerivedMetric {
           new LinearMetric@s().fabric$metrics$LinearMetric$(Matrix.constant(1, 2, 1), new Metric native[] { this, other }));
     }
 
-    Metric native[] newTerms = new Metric native[terms.length + 1];
-    for (int i = 0; i < terms.length; i++)
-      newTerms[i] = terms[i];
-    newTerms[terms.length] = other;
+    Metric native[] newTerms = new Metric native[terms.length() + 1];
+    for (int i = 0; i < terms.length(); i++)
+      newTerms[i] = term(i);
+    newTerms[terms.length()] = other;
     java.util.Arrays.sort(newTerms, 0, newTerms.length);
     int idx = java.util.Arrays.asList(newTerms).indexOf(other);
     double[] newCol = new double[matrix.rows()];
@@ -396,9 +395,9 @@ public class LinearMetric extends DerivedMetric {
       LinearMetric that = (LinearMetric) other;
 
       // Get the combined sorted set of terms.
-      Set/*<Metric>*/ termsBag = new TreeSet/*<>*/().fabric$util$TreeSet$();
-      termsBag.addAll(Arrays.asList(this.terms));
-      termsBag.addAll(Arrays.asList(that.terms));
+      Set/*<Metric>*/ termsBag = new TreeSet/*<>*/();
+      termsBag.addAll(Arrays.asList(this.terms.array()));
+      termsBag.addAll(Arrays.asList(that.terms.array()));
 
       // Expand both matrices to account for terms that metric didn't
       // include.
@@ -411,11 +410,11 @@ public class LinearMetric extends DerivedMetric {
       Iterator mIter = termsBag.iterator();
       while (mIter.hasNext()) {
         Metric m = (Metric) mIter.next();
-        if (this.terms[thisIdx].equals(m)) {
+        if (this.term(thisIdx).equals(m)) {
           thisExpanded.setColumn(aggIdx,
               this.matrix.getColumn(thisIdx++));
         }
-        if (that.terms[thatIdx].equals(m)) {
+        if (that.term(thatIdx).equals(m)) {
           thatExpanded.setColumn(aggIdx,
               that.matrix.getColumn(thatIdx++));
         }
@@ -435,15 +434,15 @@ public class LinearMetric extends DerivedMetric {
 
       return Metric.findDerivedMetric(s,
           new LinearMetric@s().fabric$metrics$LinearMetric$(combined, newTerms));
-    } else if (Arrays.asList(terms).indexOf(other) >= 0) {
-      int idx = Arrays.asList(terms).indexOf(other);
+    } else if (Arrays.asList(terms.array()).indexOf(other) >= 0) {
+      int idx = Arrays.asList(terms.array()).indexOf(other);
       Matrix newCs = matrix.copy();
-      double[] newRow = new double[terms.length];
+      double[] newRow = new double[terms.length()];
       newRow[idx] = 1;
       newCs.addRow(newRow);
-      Metric native[] termsCopy = new Metric native[terms.length];
-      for (int i = 0; i < terms.length; i++)
-        termsCopy[i] = terms[i];
+      Metric native[] termsCopy = new Metric native[terms.length()];
+      for (int i = 0; i < terms.length(); i++)
+        termsCopy[i] = term(i);
       return Metric.findDerivedMetric(s,
           new LinearMetric@s().fabric$metrics$LinearMetric$(newCs, termsCopy));
     } else if (isSingleStore() && !other.$getStore().equals(s)) {
@@ -451,15 +450,15 @@ public class LinearMetric extends DerivedMetric {
           new LinearMetric@s().fabric$metrics$LinearMetric$(Matrix.identity(2), new Metric native[] { this, other }));
     }
 
-    Metric native[] newTerms = new Metric native[terms.length + 1];
-    for (int i = 0; i < terms.length; i++)
-      newTerms[i] = terms[i];
-    newTerms[terms.length] = other;
+    Metric native[] newTerms = new Metric native[terms.length() + 1];
+    for (int i = 0; i < terms.length(); i++)
+      newTerms[i] = term(i);
+    newTerms[terms.length()] = other;
     java.util.Arrays.sort(newTerms, 0, newTerms.length);
     int idx = java.util.Arrays.asList(newTerms).indexOf(other);
     Matrix newCs = matrix.copy();
     newCs.addColumn(new double[matrix.rows()]);
-    double[] newRow = new double[terms.length + 1];
+    double[] newRow = new double[terms.length() + 1];
     newRow[idx] = 1;
     newCs.addRow(newRow);
     return Metric.findDerivedMetric(s,
@@ -468,9 +467,9 @@ public class LinearMetric extends DerivedMetric {
 
   /*@Override*/
   public DerivedMetric copyOn(final Store s) {
-    Metric native[] termsCopy = new Metric native[terms.length];
-    for (int i = 0; i < terms.length; i++)
-      termsCopy[i] = terms[i];
+    Metric native[] termsCopy = new Metric native[terms.length()];
+    for (int i = 0; i < terms.length(); i++)
+      termsCopy[i] = term(i);
     return Metric.findDerivedMetric(s,
         new LinearMetric@s().fabric$metrics$LinearMetric$(matrix, termsCopy));
   }
@@ -483,7 +482,7 @@ public class LinearMetric extends DerivedMetric {
   public EnforcementPolicy thresholdPolicy(double rate, double base, boolean useWeakCache, final Store str) {
     if (isSingleStore())
       return new DirectPolicy@str().fabric$metrics$contracts$enforcement$DirectPolicy$(this, rate, base);
-    Map/*<Metric, Contract>*/ witnesses = new LinkedHashMap/*<>*/().fabric$util$LinkedHashMap$();
+    Map/*<Metric, Contract>*/ witnesses = new LinkedHashMap/*<>*/();
 
     long currentTime = System.currentTimeMillis();
     double baseNow = Bound.value(rate, base, currentTime);
@@ -494,7 +493,7 @@ public class LinearMetric extends DerivedMetric {
       double totalValue = computeValue(i);
       double totalVelocity = computeVelocity(i);
       double totalNoise = computeNoise(i);
-      double numTerms = terms.length;
+      double numTerms = terms.length();
 
       // For each term, update the associated bounds to be the tightest
       // bound set across the rows
@@ -538,7 +537,7 @@ public class LinearMetric extends DerivedMetric {
 
   /*@Override*/
   public int hashCode() {
-    int hash = Arrays.hashCode(terms) * 32 + matrix.hashCode();
+    int hash = Arrays.hashCode(terms.array()) * 32 + matrix.hashCode();
     return hash * 32 + $getStore().hashCode();
   }
 
@@ -547,7 +546,7 @@ public class LinearMetric extends DerivedMetric {
     if (other instanceof LinearMetric) {
       LinearMetric that = (LinearMetric) other;
       return this.matrix.equals(that.matrix)
-          && Arrays.deepEquals(this.terms, that.terms)
+          && Arrays.deepEquals(this.terms.array(), that.terms.array())
           && this.$getStore().equals(that.$getStore());
     }
     return false;

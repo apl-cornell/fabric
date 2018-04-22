@@ -15,6 +15,8 @@ import fabric.metrics.Metric;
 import fabric.metrics.SampledMetric;
 import fabric.common.TransactionID;
 import fabric.worker.Store;
+import fabric.worker.metrics.ImmutableMetricsVector;
+import fabric.worker.metrics.ImmutableContractsVector;
 import fabric.worker.transaction.TransactionManager;
 import java.util.logging.Level;
 import fabric.common.Logging;
@@ -33,9 +35,14 @@ public interface ConjunctionContract extends fabric.metrics.contracts.Contract {
     
     public boolean set$observing(boolean val);
     
-    public fabric.lang.arrays.ObjectArray get$conjuncts();
+    public fabric.worker.metrics.ImmutableMetricsVector get$leafMetrics();
     
-    public fabric.lang.arrays.ObjectArray set$conjuncts(fabric.lang.arrays.ObjectArray val);
+    public fabric.worker.metrics.ImmutableMetricsVector set$leafMetrics(
+      fabric.worker.metrics.ImmutableMetricsVector val);
+    
+    public fabric.worker.metrics.ImmutableContractsVector get$conjuncts();
+    
+    public fabric.worker.metrics.ImmutableContractsVector set$conjuncts(fabric.worker.metrics.ImmutableContractsVector val);
     
     /**
    * @param metric
@@ -66,7 +73,7 @@ public interface ConjunctionContract extends fabric.metrics.contracts.Contract {
     
     public java.lang.String toString();
     
-    public fabric.lang.arrays.ObjectArray getLeafSubjects();
+    public fabric.worker.metrics.ImmutableMetricsVector getLeafSubjects();
     
     /**
    * {@inheritDoc}
@@ -88,13 +95,24 @@ public interface ConjunctionContract extends fabric.metrics.contracts.Contract {
                       fetch()).set$observing(val);
         }
         
-        public fabric.lang.arrays.ObjectArray get$conjuncts() {
+        public fabric.worker.metrics.ImmutableMetricsVector get$leafMetrics() {
+            return ((fabric.metrics.contracts.ConjunctionContract._Impl)
+                      fetch()).get$leafMetrics();
+        }
+        
+        public fabric.worker.metrics.ImmutableMetricsVector set$leafMetrics(
+          fabric.worker.metrics.ImmutableMetricsVector val) {
+            return ((fabric.metrics.contracts.ConjunctionContract._Impl)
+                      fetch()).set$leafMetrics(val);
+        }
+        
+        public fabric.worker.metrics.ImmutableContractsVector get$conjuncts() {
             return ((fabric.metrics.contracts.ConjunctionContract._Impl)
                       fetch()).get$conjuncts();
         }
         
-        public fabric.lang.arrays.ObjectArray set$conjuncts(
-          fabric.lang.arrays.ObjectArray val) {
+        public fabric.worker.metrics.ImmutableContractsVector set$conjuncts(
+          fabric.worker.metrics.ImmutableContractsVector val) {
             return ((fabric.metrics.contracts.ConjunctionContract._Impl)
                       fetch()).set$conjuncts(val);
         }
@@ -106,7 +124,7 @@ public interface ConjunctionContract extends fabric.metrics.contracts.Contract {
               fabric$metrics$contracts$ConjunctionContract$(arg1);
         }
         
-        public fabric.lang.arrays.ObjectArray getLeafSubjects() {
+        public fabric.worker.metrics.ImmutableMetricsVector getLeafSubjects() {
             return ((fabric.metrics.contracts.ConjunctionContract) fetch()).
               getLeafSubjects();
         }
@@ -137,12 +155,28 @@ public interface ConjunctionContract extends fabric.metrics.contracts.Contract {
         
         private boolean observing;
         
-        public fabric.lang.arrays.ObjectArray get$conjuncts() {
+        public fabric.worker.metrics.ImmutableMetricsVector get$leafMetrics() {
+            return this.leafMetrics;
+        }
+        
+        public fabric.worker.metrics.ImmutableMetricsVector set$leafMetrics(
+          fabric.worker.metrics.ImmutableMetricsVector val) {
+            fabric.worker.transaction.TransactionManager tm =
+              fabric.worker.transaction.TransactionManager.getInstance();
+            boolean transactionCreated = tm.registerWrite(this);
+            this.leafMetrics = val;
+            if (transactionCreated) tm.commitTransaction();
+            return val;
+        }
+        
+        private fabric.worker.metrics.ImmutableMetricsVector leafMetrics;
+        
+        public fabric.worker.metrics.ImmutableContractsVector get$conjuncts() {
             return this.conjuncts;
         }
         
-        public fabric.lang.arrays.ObjectArray set$conjuncts(
-          fabric.lang.arrays.ObjectArray val) {
+        public fabric.worker.metrics.ImmutableContractsVector set$conjuncts(
+          fabric.worker.metrics.ImmutableContractsVector val) {
             fabric.worker.transaction.TransactionManager tm =
               fabric.worker.transaction.TransactionManager.getInstance();
             boolean transactionCreated = tm.registerWrite(this);
@@ -151,7 +185,7 @@ public interface ConjunctionContract extends fabric.metrics.contracts.Contract {
             return val;
         }
         
-        private fabric.lang.arrays.ObjectArray conjuncts;
+        private fabric.worker.metrics.ImmutableContractsVector conjuncts;
         
         /**
    * @param metric
@@ -175,14 +209,12 @@ public interface ConjunctionContract extends fabric.metrics.contracts.Contract {
                     fabric.metrics.contracts.ConjunctionContract other =
                       (fabric.metrics.contracts.ConjunctionContract)
                         fabric.lang.Object._Proxy.$getProxy(conjuncts[i]);
-                    for (int j = 0; j < other.get$conjuncts().get$length();
-                         j++) {
+                    for (int j = 0; j < other.get$conjuncts().length(); j++) {
                         conjunctsBag.
                           add(
                             (java.lang.Object)
                               fabric.lang.WrappedJavaInlineable.
-                              $unwrap((fabric.metrics.contracts.Contract)
-                                        other.get$conjuncts().get(j)));
+                              $unwrap(other.get$conjuncts().get(j)));
                     }
                 }
                 else {
@@ -198,13 +230,6 @@ public interface ConjunctionContract extends fabric.metrics.contracts.Contract {
               fabric.lang.security.LabelUtil._Impl.noComponents();
             fabric.metrics.contracts.Contract[] conjuncts1 =
               new fabric.metrics.contracts.Contract[conjunctsBag.size()];
-            this.set$conjuncts(
-                   (fabric.lang.arrays.ObjectArray)
-                     new fabric.lang.arrays.ObjectArray._Impl(
-                       s).fabric$lang$arrays$ObjectArray$(
-                            lbl, lbl.confPolicy(),
-                            fabric.metrics.contracts.Contract._Proxy.class,
-                            conjunctsBag.size()).$getProxy());
             int idx = 0;
             for (java.util.Iterator it = conjunctsBag.iterator(); it.hasNext();
                  ) {
@@ -214,9 +239,38 @@ public interface ConjunctionContract extends fabric.metrics.contracts.Contract {
                     fabric.lang.Object._Proxy.
                     $getProxy(
                       fabric.lang.WrappedJavaInlineable.$wrap(it.next()));
-                this.get$conjuncts().set(idx, c);
                 conjuncts1[idx++] = c;
             }
+            this.
+              set$conjuncts(
+                fabric.worker.metrics.ImmutableContractsVector.createVector(
+                                                                 conjuncts1));
+            java.util.HashSet leavesBag = new java.util.HashSet();
+            for (int i = 0; i < this.get$conjuncts().length(); i++) {
+                fabric.worker.metrics.ImmutableMetricsVector leaves =
+                  this.get$conjuncts().get(i).getLeafSubjects();
+                for (int j = 0; j < leaves.length(); j++) {
+                    leavesBag.
+                      add(
+                        (java.lang.Object)
+                          fabric.lang.WrappedJavaInlineable.$unwrap(
+                                                              leaves.get(j)));
+                }
+            }
+            fabric.metrics.Metric[] leaves =
+              new fabric.metrics.Metric[leavesBag.size()];
+            idx = 0;
+            for (java.util.Iterator iter = leavesBag.iterator(); iter.hasNext();
+                 ) {
+                leaves[idx++] =
+                  (fabric.metrics.Metric)
+                    fabric.lang.Object._Proxy.
+                    $getProxy(
+                      fabric.lang.WrappedJavaInlineable.$wrap(iter.next()));
+            }
+            this.set$leafMetrics(
+                   fabric.worker.metrics.ImmutableMetricsVector.createVector(
+                                                                  leaves));
             fabric$metrics$contracts$Contract$();
             this.set$observing(false);
             this.
@@ -521,58 +575,15 @@ public interface ConjunctionContract extends fabric.metrics.contracts.Contract {
         
         public java.lang.String toString() {
             java.lang.String result = "(";
-            for (int i = 0; i < this.get$conjuncts().get$length(); i++) {
+            for (int i = 0; i < this.get$conjuncts().length(); i++) {
                 if (i != 0) result += " ^ ";
-                result += ((fabric.metrics.contracts.Contract)
-                             this.get$conjuncts().get(i)).toString();
+                result += this.get$conjuncts().get(i).toString();
             }
             return result + ")";
         }
         
-        public fabric.lang.arrays.ObjectArray getLeafSubjects() {
-            final fabric.worker.Store local =
-              fabric.worker.Worker.getWorker().getLocalStore();
-            if (!this.get$observing())
-                return (fabric.lang.arrays.ObjectArray)
-                         new fabric.lang.arrays.ObjectArray._Impl(local).
-                         fabric$lang$arrays$ObjectArray$(
-                           this.get$$updateLabel(),
-                           this.get$$updateLabel().confPolicy(),
-                           fabric.metrics.SampledMetric._Proxy.class, 0).
-                         $getProxy();
-            java.util.HashSet leavesBag = new java.util.HashSet();
-            for (int i = 0; i < this.get$conjuncts().get$length(); i++) {
-                fabric.lang.arrays.ObjectArray leaves =
-                  ((fabric.metrics.contracts.Contract)
-                     this.get$conjuncts().get(i)).getLeafSubjects();
-                for (int j = 0; j < leaves.get$length(); j++) {
-                    leavesBag.
-                      add(
-                        (java.lang.Object)
-                          fabric.lang.WrappedJavaInlineable.
-                          $unwrap((fabric.metrics.SampledMetric)
-                                    leaves.get(j)));
-                }
-            }
-            fabric.lang.arrays.ObjectArray result =
-              (fabric.lang.arrays.ObjectArray)
-                new fabric.lang.arrays.ObjectArray._Impl(
-                  local).fabric$lang$arrays$ObjectArray$(
-                           this.get$$updateLabel(),
-                           this.get$$updateLabel().confPolicy(),
-                           fabric.metrics.SampledMetric._Proxy.class,
-                           leavesBag.size()).$getProxy();
-            int idx = 0;
-            for (java.util.Iterator it = leavesBag.iterator(); it.hasNext(); ) {
-                result.
-                  set(
-                    idx++,
-                    (fabric.metrics.SampledMetric)
-                      fabric.lang.Object._Proxy.
-                      $getProxy(
-                        fabric.lang.WrappedJavaInlineable.$wrap(it.next())));
-            }
-            return result;
+        public fabric.worker.metrics.ImmutableMetricsVector getLeafSubjects() {
+            return this.get$leafMetrics();
         }
         
         /**
@@ -737,8 +748,8 @@ public interface ConjunctionContract extends fabric.metrics.contracts.Contract {
               throws java.io.IOException {
             super.$serialize(out, refTypes, intraStoreRefs, interStoreRefs);
             out.writeBoolean(this.observing);
-            $writeRef($getStore(), this.conjuncts, refTypes, out,
-                      intraStoreRefs, interStoreRefs);
+            $writeInline(out, this.leafMetrics);
+            $writeInline(out, this.conjuncts);
         }
         
         public _Impl(fabric.worker.Store store, long onum, int version,
@@ -754,11 +765,10 @@ public interface ConjunctionContract extends fabric.metrics.contracts.Contract {
                   accessPolicyStore, accessPolicyOnum, in, refTypes,
                   intraStoreRefs, interStoreRefs);
             this.observing = in.readBoolean();
-            this.conjuncts =
-              (fabric.lang.arrays.ObjectArray)
-                $readRef(fabric.lang.arrays.ObjectArray._Proxy.class,
-                         (fabric.common.RefTypeEnum) refTypes.next(), in, store,
-                         intraStoreRefs, interStoreRefs);
+            this.leafMetrics = (fabric.worker.metrics.ImmutableMetricsVector)
+                                 in.readObject();
+            this.conjuncts = (fabric.worker.metrics.ImmutableContractsVector)
+                               in.readObject();
         }
         
         public void $copyAppStateFrom(fabric.lang.Object._Impl other) {
@@ -766,6 +776,7 @@ public interface ConjunctionContract extends fabric.metrics.contracts.Contract {
             fabric.metrics.contracts.ConjunctionContract._Impl src =
               (fabric.metrics.contracts.ConjunctionContract._Impl) other;
             this.observing = src.observing;
+            this.leafMetrics = src.leafMetrics;
             this.conjuncts = src.conjuncts;
         }
     }
@@ -844,11 +855,11 @@ public interface ConjunctionContract extends fabric.metrics.contracts.Contract {
         
     }
     
-    public static final byte[] $classHash = new byte[] { 121, 109, 52, -44,
-    -124, 14, 26, 35, 53, 45, -91, -18, -2, 9, 64, -26, -25, 113, 55, 124, -107,
-    -123, -85, 110, 19, -14, 42, 35, 69, -90, 126, 82 };
+    public static final byte[] $classHash = new byte[] { -63, 22, -86, 88, 76,
+    30, 116, -93, 103, -86, -18, -111, -105, -86, -26, 44, -126, -70, -4, 80,
+    -122, -111, -52, 6, 103, -7, 3, 89, 88, 71, -31, -13 };
     public static final java.lang.String jlc$CompilerVersion$fabil = "0.3.0";
-    public static final long jlc$SourceLastModified$fabil = 1524151511000L;
+    public static final long jlc$SourceLastModified$fabil = 1524349472000L;
     public static final java.lang.String jlc$ClassType$fabil =
-      "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";
+      "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";
 }

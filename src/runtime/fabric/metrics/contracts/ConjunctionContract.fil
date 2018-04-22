@@ -12,6 +12,8 @@ import fabric.metrics.SampledMetric;
 
 import fabric.common.TransactionID;
 import fabric.worker.Store;
+import fabric.worker.metrics.ImmutableMetricsVector;
+import fabric.worker.metrics.ImmutableContractsVector;
 import fabric.worker.transaction.TransactionManager;
 
 import java.util.logging.Level;
@@ -29,7 +31,8 @@ import fabric.common.Logging;
 public class ConjunctionContract extends Contract {
 
   private boolean observing;
-  private final Contract[] conjuncts;
+  private final ImmutableMetricsVector leafMetrics;
+  private final ImmutableContractsVector conjuncts;
 
   /**
    * @param metric
@@ -47,8 +50,8 @@ public class ConjunctionContract extends Contract {
     for (int i = 0; i < conjuncts.length; i++) {
       if (conjuncts[i] instanceof ConjunctionContract) {
         ConjunctionContract other = (ConjunctionContract) conjuncts[i];
-        for (int j = 0; j < other.conjuncts.length; j++) {
-          conjunctsBag.add(other.conjuncts[j]);
+        for (int j = 0; j < other.conjuncts.length(); j++) {
+          conjunctsBag.add(other.conjuncts.get(j));
         }
       } else {
         conjunctsBag.add(conjuncts[i]);
@@ -57,13 +60,25 @@ public class ConjunctionContract extends Contract {
     final Store s = this.$getStore();
     final Label lbl = LabelUtil.noComponents();
     Contract native[] conjuncts1 = new Contract native[conjunctsBag.size()];
-    this.conjuncts = new Contract[conjunctsBag.size()] ~lbl @s;
     int idx = 0;
     for (java.util.Iterator it = conjunctsBag.iterator(); it.hasNext(); ) {
       Contract c = (Contract) it.next();
-      this.conjuncts[idx] = c;
       conjuncts1[idx++] = c;
     }
+    this.conjuncts = ImmutableContractsVector.createVector(conjuncts1);
+    java.util.HashSet/*<SampledMetric>*/ leavesBag = new java.util.HashSet/*<>*/();
+    for (int i = 0; i < this.conjuncts.length(); i++) {
+      ImmutableMetricsVector/*<SampledMetric>*/ leaves = this.conjuncts.get(i).getLeafSubjects();
+      for (int j = 0; j < leaves.length(); j++) {
+        leavesBag.add(leaves.get(j));
+      }
+    }
+    Metric native[] leaves = new Metric native[leavesBag.size()];
+    idx = 0;
+    for (java.util.Iterator iter = leavesBag.iterator(); iter.hasNext();) {
+      leaves[idx++] = (Metric) iter.next();
+    }
+    leafMetrics = ImmutableMetricsVector.createVector(leaves);
     fabric$metrics$contracts$Contract$();
     observing = false;
     this.currentPolicy = new WitnessPolicy().fabric$metrics$contracts$enforcement$WitnessPolicy$(conjuncts1);
@@ -143,32 +158,17 @@ public class ConjunctionContract extends Contract {
   /*@Override*/
   public String toString() {
     String result = "(";
-    for (int i = 0; i < this.conjuncts.length; i++) {
+    for (int i = 0; i < this.conjuncts.length(); i++) {
       if (i != 0)
         result += " ^ ";
-      result += this.conjuncts[i].toString();
+      result += this.conjuncts.get(i).toString();
     }
     return result + ")";
   }
 
   /*@Override*/
-  public SampledMetric[] getLeafSubjects() {
-    final Store local = Worker.getWorker().getLocalStore();
-    if (!observing)
-      return new SampledMetric[0] @local;
-    java.util.HashSet/*<SampledMetric>*/ leavesBag = new java.util.HashSet/*<>*/();
-    for (int i = 0; i < this.conjuncts.length; i++) {
-      SampledMetric[] leaves = this.conjuncts[i].getLeafSubjects();
-      for (int j = 0; j < leaves.length; j++) {
-        leavesBag.add(leaves[j]);
-      }
-    }
-    SampledMetric[] result = new SampledMetric[leavesBag.size()] @local;
-    int idx = 0;
-    for (java.util.Iterator it = leavesBag.iterator(); it.hasNext(); ) {
-      result[idx++] = (SampledMetric) it.next();
-    }
-    return result;
+  public ImmutableMetricsVector/*<SampledMetric>*/ getLeafSubjects() {
+    return leafMetrics;
   }
 
   /**

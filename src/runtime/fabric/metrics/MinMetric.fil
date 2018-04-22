@@ -1,6 +1,6 @@
 package fabric.metrics;
 
-import fabric.util.Arrays;
+import java.util.Arrays;
 import fabric.util.Set;
 import fabric.util.TreeSet;
 import fabric.util.Iterator;
@@ -16,6 +16,7 @@ import fabric.metrics.util.Observer;
 import fabric.metrics.util.Subject;
 
 import fabric.worker.Store;
+import fabric.worker.metrics.ImmutableMetricsVector;
 import fabric.worker.transaction.TransactionManager;
 
 /**
@@ -31,12 +32,13 @@ public class MinMetric extends DerivedMetric {
      */
     public MinMetric fabric$metrics$MinMetric$(Metric native[] terms) {
         fabric$metrics$DerivedMetric$(terms);
-        java.util.Set/*<Metric>*/ termsBag = new java.util.TreeSet/*<Metric>*/(java.util.Arrays.asList(terms));
-        this.terms = new Metric[termsBag.size()];
+        java.util.Set/*<Metric>*/ termsBag = new java.util.TreeSet/*<Metric>*/(Arrays.asList(terms));
+        Metric native [] termsA = new Metric native [termsBag.size()];
         int tIdx = 0;
         for (java.util.Iterator it = termsBag.iterator(); it.hasNext();) {
-          this.terms[tIdx++] = (Metric) it.next();
+          termsA[tIdx++] = (Metric) it.next();
         }
+        this.terms = ImmutableMetricsVector.createVector(termsA);
         initialize();
         return this;
     }
@@ -44,8 +46,8 @@ public class MinMetric extends DerivedMetric {
     /*@Override*/
     public double computePresetR() {
         double result = Double.MAX_VALUE;
-        for (int i = 0; i < terms.length; i++) {
-            result = Math.max(result, terms[i].getPresetR());
+        for (int i = 0; i < terms.length(); i++) {
+            result = Math.max(result, term(i).getPresetR());
         }
         return result;
     }
@@ -53,8 +55,8 @@ public class MinMetric extends DerivedMetric {
     /*@Override*/
     public double computePresetB() {
         double result = Double.MAX_VALUE;
-        for (int i = 0; i < terms.length; i++) {
-            result = Math.max(result, terms[i].getPresetB());
+        for (int i = 0; i < terms.length(); i++) {
+            result = Math.max(result, term(i).getPresetB());
         }
         return result;
     }
@@ -62,8 +64,8 @@ public class MinMetric extends DerivedMetric {
     /*@Override*/
     public double computePresetV() {
         double result = Double.MAX_VALUE;
-        for (int i = 0; i < terms.length; i++) {
-            result = Math.min(result, terms[i].getPresetV());
+        for (int i = 0; i < terms.length(); i++) {
+            result = Math.min(result, term(i).getPresetV());
         }
         return result;
     }
@@ -71,8 +73,8 @@ public class MinMetric extends DerivedMetric {
     /*@Override*/
     public double computePresetN() {
         double result = Double.MAX_VALUE;
-        for (int i = 0; i < terms.length; i++) {
-            result = Math.max(result, terms[i].getPresetN());
+        for (int i = 0; i < terms.length(); i++) {
+            result = Math.max(result, term(i).getPresetN());
         }
         return result;
     }
@@ -80,8 +82,8 @@ public class MinMetric extends DerivedMetric {
     /*@Override*/
     protected double computeValue(boolean useWeakCache) {
         double result = Double.MAX_VALUE;
-        for (int i = 0; i < terms.length; i++) {
-            result = Math.min(result, terms[i].value(useWeakCache));
+        for (int i = 0; i < terms.length(); i++) {
+            result = Math.min(result, term(i).value(useWeakCache));
         }
         return result;
     }
@@ -89,8 +91,8 @@ public class MinMetric extends DerivedMetric {
     /*@Override*/
     protected double computeVelocity(boolean useWeakCache) {
         double result = Double.MAX_VALUE;
-        for (int i = 0; i < terms.length; i++) {
-            result = Math.min(result, terms[i].velocity(useWeakCache));
+        for (int i = 0; i < terms.length(); i++) {
+            result = Math.min(result, term(i).velocity(useWeakCache));
         }
         return result;
     }
@@ -98,8 +100,8 @@ public class MinMetric extends DerivedMetric {
     /*@Override*/
     protected double computeNoise(boolean useWeakCache) {
         double noise = 0;
-        for (int i = 0; i < terms.length; i++) {
-            noise = Math.max(noise, terms[i].noise(useWeakCache));
+        for (int i = 0; i < terms.length(); i++) {
+            noise = Math.max(noise, term(i).noise(useWeakCache));
         }
         return noise;
     }
@@ -108,12 +110,12 @@ public class MinMetric extends DerivedMetric {
     public String toString() {
       String str = "min(";
       boolean nonEmpty = false;
-      for (int i = 0; i < terms.length; i++) {
+      for (int i = 0; i < terms.length(); i++) {
         if (nonEmpty) {
             str += ", ";
         }
         nonEmpty = true;
-        str += terms[i];
+        str += term(i);
       }
       return str + ")@" + $getStore();
     }
@@ -137,9 +139,9 @@ public class MinMetric extends DerivedMetric {
     }
 
     private static DerivedMetric static_times(MinMetric tmp, double scalar) {
-        Metric native[] newTerms = new Metric native[tmp.terms.length];
-        for (int i = 0; i < tmp.terms.length; i++) {
-          newTerms[i] = tmp.terms[i].times(scalar);
+        Metric native[] newTerms = new Metric native[tmp.terms.length()];
+        for (int i = 0; i < tmp.terms.length(); i++) {
+          newTerms[i] = tmp.term(i).times(scalar);
         }
         final Store s = tmp.$getStore();
         DerivedMetric val = null;
@@ -180,9 +182,9 @@ public class MinMetric extends DerivedMetric {
     }
 
     private static DerivedMetric static_plus(MinMetric tmp, Metric other) {
-        Metric native[] newTerms = new Metric native[tmp.terms.length];
+        Metric native[] newTerms = new Metric native[tmp.terms.length()];
         for (int i = 0; i < newTerms.length; i++) {
-            newTerms[i] = other.plus(tmp.terms[i]);
+            newTerms[i] = other.plus(tmp.term(i));
         }
         final Store s = tmp.$getStore();
         DerivedMetric val = null;
@@ -230,11 +232,11 @@ public class MinMetric extends DerivedMetric {
 
             // Get the combined sorted set of terms.
             java.util.Set/*<Metric>*/ termsBag = new java.util.TreeSet/*<>*/();
-            for (int i = 0; i < tmp.terms.length; i++) {
-              termsBag.add(tmp.terms[i]);
+            for (int i = 0; i < tmp.terms.length(); i++) {
+              termsBag.add(tmp.term(i));
             }
-            for (int i = 0; i < that.terms.length; i++) {
-              termsBag.add(that.terms[i]);
+            for (int i = 0; i < that.terms.length(); i++) {
+              termsBag.add(that.term(i));
             }
 
             Metric native[] newTerms = new Metric native[termsBag.size()];
@@ -252,16 +254,16 @@ public class MinMetric extends DerivedMetric {
               }
             }
             return Metric.findDerivedMetric(s, val);
-        } else if (Arrays.asList(tmp.terms).indexOf(other) >= 0) {
+        } else if (Arrays.asList(tmp.terms.array()).indexOf(other) >= 0) {
             return tmp;
         }
 
-        Metric native[] newTerms = new Metric native[tmp.terms.length + 1];
-        for (int i = 0; i < tmp.terms.length; i++) {
-          newTerms[i] = tmp.terms[i];
+        Metric native[] newTerms = new Metric native[tmp.terms.length() + 1];
+        for (int i = 0; i < tmp.terms.length(); i++) {
+          newTerms[i] = tmp.term(i);
         }
-        newTerms[tmp.terms.length] = other;
-        java.util.Arrays.sort(newTerms, 0, newTerms.length);
+        newTerms[tmp.terms.length()] = other;
+        Arrays.sort(newTerms, 0, newTerms.length);
         if (TransactionManager.getInstance().inTxn()) {
           val = new MinMetric@s().fabric$metrics$MinMetric$(newTerms);
         } else {
@@ -278,10 +280,10 @@ public class MinMetric extends DerivedMetric {
         // operations on different metrics in a derived metric...
         //if (isSingleStore())
         //    return new DirectPolicy().fabric$metrics$contracts$enforcement$DirectPolicy$(this, bound);
-        Contract native[] witnesses = new Contract native[terms.length];
+        Contract native[] witnesses = new Contract native[terms.length()];
         // Defend all rows against the bound individually, using the strictest
         // bounds across the rows for each term in this sum.
-        for (int i = 0; i < terms.length; i++) {
+        for (int i = 0; i < terms.length(); i++) {
             witnesses[i] = term(i).getThresholdContract(rate, base);
         }
         return new WitnessPolicy@s().fabric$metrics$contracts$enforcement$WitnessPolicy$(witnesses);
@@ -289,14 +291,14 @@ public class MinMetric extends DerivedMetric {
 
     /*@Override*/
     public int hashCode() {
-        return Arrays.hashCode(terms) * 32 + $getStore().hashCode();
+        return Arrays.hashCode(terms.array()) * 32 + $getStore().hashCode();
     }
 
     /*@Override*/
     public boolean equals(Object other) {
         if (other instanceof MinMetric) {
             MinMetric that = (MinMetric) other;
-            return Arrays.deepEquals(this.terms, that.terms)
+            return Arrays.deepEquals(this.terms.array(), that.terms.array())
                     && this.$getStore().equals(that.$getStore());
         }
         return false;

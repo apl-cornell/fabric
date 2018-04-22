@@ -1,0 +1,32 @@
+package fabric.worker.metrics;
+
+import java.io.Serializable;
+import java.util.Arrays;
+import fabric.metrics.Metric;
+
+/**
+ * Utility class to easily express an immutable vector of items.
+ */
+public class ImmutableMetricsVector/*<V>*/ implements Serializable, JavaInlineable {
+
+  /** Provided since you can't mark constructors as native for the fabil
+   * signatures
+   */
+  public static native /*<V>*/ ImmutableMetricsVector/*<V>*/
+    createVector(/*V*/Metric native[] items);
+
+  /** @return the <code>i</code>th item. */
+  public native /*V*/ Metric get(int i);
+
+  /** @return the length. */
+  public native int length();
+
+  /** @return a copy of this vector. */
+  public native ImmutableMetricsVector/*<V>*/ copy();
+
+  /** @return a value to use for an empty vector */
+  public static native ImmutableMetricsVector/*<Metric>*/ emptyVector();
+
+  /** @return a copy of the underlying array. */
+  public native Metric native [] array();
+}

@@ -13,6 +13,7 @@ import fabric.metrics.util.Subject;
 
 import fabric.common.TransactionID;
 import fabric.worker.Store;
+import fabric.worker.metrics.ImmutableMetricsVector;
 import fabric.worker.transaction.TransactionManager;
 
 import java.util.logging.Level;
@@ -30,7 +31,7 @@ import fabric.common.Logging;
 public class MetricContract extends Contract {
 
   protected final Metric metric;
-  private final SampledMetric[] leafMetrics;
+  private final ImmutableMetricsVector leafMetrics;
   public final double rate;
   public final double base;
 
@@ -48,10 +49,8 @@ public class MetricContract extends Contract {
     this.metric = metric;
     this.rate = rate;
     this.base = base;
-    Label lbl = LabelUtil.noComponents();
     if (metric instanceof SampledMetric) {
-      leafMetrics = new SampledMetric[1] ~lbl;
-      leafMetrics[0] = (SampledMetric) metric;
+      leafMetrics = ImmutableMetricsVector.createVector(new SampledMetric native[] { (SampledMetric) metric });
     } else if (metric instanceof DerivedMetric) {
       leafMetrics = ((DerivedMetric) metric).getLeafSubjects();
     } else {
@@ -206,7 +205,7 @@ public class MetricContract extends Contract {
   }
 
   /*@Override*/
-  public SampledMetric[] getLeafSubjects() {
+  public ImmutableMetricsVector/*<SampledMetric>*/ getLeafSubjects() {
     return leafMetrics;
   }
 }

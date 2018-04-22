@@ -446,6 +446,8 @@
       description="Compiles the FabIL signature clasess">
     <path id="fabil-signatures.bootcp">
       <path refid="polyglot.classpath"/>
+      <path refid="lib.classpath"/>
+      <pathelement location="${bootstrap.classes}"/>
     </path>
     <pathconvert
         property="fabil-signatures.bootcp"

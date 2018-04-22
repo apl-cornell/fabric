@@ -16,6 +16,7 @@ import fabric.metrics.util.Observer;
 import fabric.metrics.util.Subject;
 import fabric.common.TransactionID;
 import fabric.worker.Store;
+import fabric.worker.metrics.ImmutableMetricsVector;
 import fabric.worker.transaction.TransactionManager;
 import java.util.logging.Level;
 import fabric.common.Logging;
@@ -34,10 +35,10 @@ public interface MetricContract extends fabric.metrics.contracts.Contract {
     
     public fabric.metrics.Metric set$metric(fabric.metrics.Metric val);
     
-    public fabric.lang.arrays.ObjectArray get$leafMetrics();
+    public fabric.worker.metrics.ImmutableMetricsVector get$leafMetrics();
     
-    public fabric.lang.arrays.ObjectArray set$leafMetrics(
-      fabric.lang.arrays.ObjectArray val);
+    public fabric.worker.metrics.ImmutableMetricsVector set$leafMetrics(
+      fabric.worker.metrics.ImmutableMetricsVector val);
     
     public double get$rate();
     
@@ -93,7 +94,7 @@ public interface MetricContract extends fabric.metrics.contracts.Contract {
     
     public java.lang.String toString();
     
-    public fabric.lang.arrays.ObjectArray getLeafSubjects();
+    public fabric.worker.metrics.ImmutableMetricsVector getLeafSubjects();
     
     public static class _Proxy extends fabric.metrics.contracts.Contract._Proxy
       implements fabric.metrics.contracts.MetricContract {
@@ -107,13 +108,13 @@ public interface MetricContract extends fabric.metrics.contracts.Contract {
               set$metric(val);
         }
         
-        public fabric.lang.arrays.ObjectArray get$leafMetrics() {
+        public fabric.worker.metrics.ImmutableMetricsVector get$leafMetrics() {
             return ((fabric.metrics.contracts.MetricContract._Impl) fetch()).
               get$leafMetrics();
         }
         
-        public fabric.lang.arrays.ObjectArray set$leafMetrics(
-          fabric.lang.arrays.ObjectArray val) {
+        public fabric.worker.metrics.ImmutableMetricsVector set$leafMetrics(
+          fabric.worker.metrics.ImmutableMetricsVector val) {
             return ((fabric.metrics.contracts.MetricContract._Impl) fetch()).
               set$leafMetrics(val);
         }
@@ -175,7 +176,7 @@ public interface MetricContract extends fabric.metrics.contracts.Contract {
               getExpectedLifetime();
         }
         
-        public fabric.lang.arrays.ObjectArray getLeafSubjects() {
+        public fabric.worker.metrics.ImmutableMetricsVector getLeafSubjects() {
             return ((fabric.metrics.contracts.MetricContract) fetch()).
               getLeafSubjects();
         }
@@ -202,12 +203,12 @@ public interface MetricContract extends fabric.metrics.contracts.Contract {
         
         protected fabric.metrics.Metric metric;
         
-        public fabric.lang.arrays.ObjectArray get$leafMetrics() {
+        public fabric.worker.metrics.ImmutableMetricsVector get$leafMetrics() {
             return this.leafMetrics;
         }
         
-        public fabric.lang.arrays.ObjectArray set$leafMetrics(
-          fabric.lang.arrays.ObjectArray val) {
+        public fabric.worker.metrics.ImmutableMetricsVector set$leafMetrics(
+          fabric.worker.metrics.ImmutableMetricsVector val) {
             fabric.worker.transaction.TransactionManager tm =
               fabric.worker.transaction.TransactionManager.getInstance();
             boolean transactionCreated = tm.registerWrite(this);
@@ -216,7 +217,7 @@ public interface MetricContract extends fabric.metrics.contracts.Contract {
             return val;
         }
         
-        private fabric.lang.arrays.ObjectArray leafMetrics;
+        private fabric.worker.metrics.ImmutableMetricsVector leafMetrics;
         
         public double get$rate() { return this.rate; }
         
@@ -284,8 +285,6 @@ public interface MetricContract extends fabric.metrics.contracts.Contract {
             this.set$metric(metric);
             this.set$rate((double) rate);
             this.set$base((double) base);
-            fabric.lang.security.Label lbl =
-              fabric.lang.security.LabelUtil._Impl.noComponents();
             if (fabric.lang.Object._Proxy.
                   $getProxy(
                     (java.lang.Object)
@@ -294,18 +293,12 @@ public interface MetricContract extends fabric.metrics.contracts.Contract {
                         metric)) instanceof fabric.metrics.SampledMetric) {
                 this.
                   set$leafMetrics(
-                    (fabric.lang.arrays.ObjectArray)
-                      new fabric.lang.arrays.ObjectArray._Impl(
-                        this.$getStore()).
-                      fabric$lang$arrays$ObjectArray$(
-                        lbl, lbl.confPolicy(),
-                        fabric.metrics.SampledMetric._Proxy.class, 1).$getProxy(
-                                                                        ));
-                this.get$leafMetrics().set(
-                                         0,
-                                         (fabric.metrics.SampledMetric)
-                                           fabric.lang.Object._Proxy.$getProxy(
-                                                                       metric));
+                    fabric.worker.metrics.ImmutableMetricsVector.
+                        createVector(
+                          new fabric.metrics.SampledMetric[] { (fabric.metrics.SampledMetric)
+                                                                 fabric.lang.Object._Proxy.
+                                                                 $getProxy(
+                                                                   metric) }));
             }
             else if (fabric.lang.Object._Proxy.
                        $getProxy(
@@ -800,7 +793,7 @@ public interface MetricContract extends fabric.metrics.contracts.Contract {
             getExpiry();
         }
         
-        public fabric.lang.arrays.ObjectArray getLeafSubjects() {
+        public fabric.worker.metrics.ImmutableMetricsVector getLeafSubjects() {
             return this.get$leafMetrics();
         }
         
@@ -818,8 +811,7 @@ public interface MetricContract extends fabric.metrics.contracts.Contract {
             super.$serialize(out, refTypes, intraStoreRefs, interStoreRefs);
             $writeRef($getStore(), this.metric, refTypes, out, intraStoreRefs,
                       interStoreRefs);
-            $writeRef($getStore(), this.leafMetrics, refTypes, out,
-                      intraStoreRefs, interStoreRefs);
+            $writeInline(out, this.leafMetrics);
             out.writeDouble(this.rate);
             out.writeDouble(this.base);
         }
@@ -841,11 +833,8 @@ public interface MetricContract extends fabric.metrics.contracts.Contract {
                                      (fabric.common.RefTypeEnum)
                                        refTypes.next(), in, store,
                                      intraStoreRefs, interStoreRefs);
-            this.leafMetrics =
-              (fabric.lang.arrays.ObjectArray)
-                $readRef(fabric.lang.arrays.ObjectArray._Proxy.class,
-                         (fabric.common.RefTypeEnum) refTypes.next(), in, store,
-                         intraStoreRefs, interStoreRefs);
+            this.leafMetrics = (fabric.worker.metrics.ImmutableMetricsVector)
+                                 in.readObject();
             this.rate = in.readDouble();
             this.base = in.readDouble();
         }
@@ -934,11 +923,11 @@ public interface MetricContract extends fabric.metrics.contracts.Contract {
         
     }
     
-    public static final byte[] $classHash = new byte[] { -63, 78, -90, -95, 53,
-    45, -101, -32, 9, -118, -85, 125, -88, 76, -72, 122, 3, -51, -85, 125, 71,
-    -71, -75, -35, 67, 28, 75, -122, 47, 5, -84, -78 };
+    public static final byte[] $classHash = new byte[] { 61, -59, -113, -13,
+    -25, 57, 60, -55, -79, -118, 30, -110, 41, -101, -52, -39, -25, 117, 61, 50,
+    -88, -40, -100, 0, 78, -2, 47, 101, 89, 81, 96, 59 };
     public static final java.lang.String jlc$CompilerVersion$fabil = "0.3.0";
-    public static final long jlc$SourceLastModified$fabil = 1524151511000L;
+    public static final long jlc$SourceLastModified$fabil = 1524349478000L;
     public static final java.lang.String jlc$ClassType$fabil =
-      "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";
+      "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";
 }

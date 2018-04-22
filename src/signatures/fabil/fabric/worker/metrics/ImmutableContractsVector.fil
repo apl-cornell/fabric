@@ -1,0 +1,32 @@
+package fabric.worker.metrics;
+
+import java.io.Serializable;
+import java.util.Arrays;
+import fabric.metrics.contracts.Contract;
+
+/**
+ * Utility class to easily express an immutable vector of items.
+ */
+public class ImmutableContractsVector/*<V>*/ implements Serializable, JavaInlineable {
+
+  /** Provided since you can't mark constructors as native for the fabil
+   * signatures
+   */
+  public static native /*<V>*/ ImmutableContractsVector/*<V>*/
+    createVector(/*V*/Contract native[] items);
+
+  /** @return the <code>i</code>th item. */
+  public native /*V*/ Contract get(int i);
+
+  /** @return the length. */
+  public native int length();
+
+  /** @return a copy of this vector. */
+  public native ImmutableContractsVector/*<V>*/ copy();
+
+  /** @return a value to use for an empty vector */
+  public static native ImmutableContractsVector/*<Contract>*/ emptyVector();
+
+  /** @return a copy of the underlying array. */
+  public native Contract native [] array();
+}

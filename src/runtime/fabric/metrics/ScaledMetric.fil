@@ -1,6 +1,6 @@
 package fabric.metrics;
 
-import fabric.util.Arrays;
+import java.util.Arrays;
 import fabric.util.Iterator;
 import fabric.util.LinkedHashMap;
 import fabric.util.Map;
@@ -41,42 +41,42 @@ public class ScaledMetric extends DerivedMetric {
 
     /*@Override*/
     public double computePresetR() {
-        return scalar * terms[0].getPresetR();
+        return scalar * term(0).getPresetR();
     }
 
     /*@Override*/
     public double computePresetB() {
-        return scalar * terms[0].getPresetB();
+        return scalar * term(0).getPresetB();
     }
 
     /*@Override*/
     public double computePresetV() {
-        return scalar * terms[0].getPresetV();
+        return scalar * term(0).getPresetV();
     }
 
     /*@Override*/
     public double computePresetN() {
-        return scalar * scalar * terms[0].getPresetN();
+        return scalar * scalar * term(0).getPresetN();
     }
 
     /*@Override*/
     protected double computeValue(boolean useWeakCache) {
-        return scalar * terms[0].value(useWeakCache);
+        return scalar * term(0).value(useWeakCache);
     }
 
     /*@Override*/
     protected double computeVelocity(boolean useWeakCache) {
-        return scalar * terms[0].velocity(useWeakCache);
+        return scalar * term(0).velocity(useWeakCache);
     }
 
     /*@Override*/
     protected double computeNoise(boolean useWeakCache) {
-        return scalar * scalar * terms[0].noise(useWeakCache);
+        return scalar * scalar * term(0).noise(useWeakCache);
     }
 
     /*@Override*/
     public String toString() {
-        return "(" + scalar + "*" + terms[0] + ")@" + getStore();
+        return "(" + scalar + "*" + term(0) + ")@" + getStore();
     }
 
     /*@Override*/
@@ -101,10 +101,10 @@ public class ScaledMetric extends DerivedMetric {
         final Store s = tmp.$getStore();
         DerivedMetric val = null;
         if (TransactionManager.getInstance().inTxn()) {
-          val = new ScaledMetric@s().fabric$metrics$ScaledMetric$(otherScalar * tmp.scalar, tmp.terms[0]);
+          val = new ScaledMetric@s().fabric$metrics$ScaledMetric$(otherScalar * tmp.scalar, tmp.term(0));
         } else {
           atomic {
-            val = new ScaledMetric@s().fabric$metrics$ScaledMetric$(otherScalar * tmp.scalar, tmp.terms[0]);
+            val = new ScaledMetric@s().fabric$metrics$ScaledMetric$(otherScalar * tmp.scalar, tmp.term(0));
           }
         }
         return Metric.findDerivedMetric(s, val);
@@ -139,17 +139,17 @@ public class ScaledMetric extends DerivedMetric {
     private static DerivedMetric static_plus(ScaledMetric tmp, Metric other) {
         final Store s = tmp.$getStore();
         if (other instanceof ScaledMetric && other.$getStore().equals(s)
-                && ((ScaledMetric) other).terms[0].equals(tmp.terms[0])) {
+                && ((ScaledMetric) other).term(0).equals(tmp.term(0))) {
             ScaledMetric that = (ScaledMetric) other;
 
             DerivedMetric val = null;
             if (TransactionManager.getInstance().inTxn()) {
               val = new ScaledMetric@s().fabric$metrics$ScaledMetric$(
-                  that.scalar + tmp.scalar, tmp.terms[0]);
+                  that.scalar + tmp.scalar, tmp.term(0));
             } else {
               atomic {
                 val = new ScaledMetric@s().fabric$metrics$ScaledMetric$(
-                    that.scalar + tmp.scalar, tmp.terms[0]);
+                    that.scalar + tmp.scalar, tmp.term(0));
               }
             }
             return Metric.findDerivedMetric(s, val);
@@ -198,7 +198,7 @@ public class ScaledMetric extends DerivedMetric {
 
     /*@Override*/
     public int hashCode() {
-        return Arrays.hashCode(terms) * 32 + Double.hashCode(scalar);
+        return Arrays.hashCode(terms.array()) * 32 + Double.hashCode(scalar);
     }
 
     /*@Override*/
@@ -206,7 +206,7 @@ public class ScaledMetric extends DerivedMetric {
         if (other instanceof ScaledMetric) {
             ScaledMetric that = (ScaledMetric) other;
             return this.scalar == that.scalar
-                    && Arrays.deepEquals(this.terms, that.terms)
+                    && Arrays.deepEquals(this.terms.array(), that.terms.array())
                     && this.$getStore().equals(that.$getStore());
         }
         return false;

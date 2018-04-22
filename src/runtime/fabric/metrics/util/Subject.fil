@@ -2,6 +2,7 @@ package fabric.metrics.util;
 
 import fabric.util.Collection;
 import fabric.util.List;
+import fabric.worker.metrics.ImmutableObserverSet;
 
 /**
  * Represents an observable object that can be monitored by {@link Observer}s.
@@ -44,5 +45,5 @@ public interface Subject {
   /**
    * @return the set of the current observers of this subject.
    */
-  public List/*<Observer>*/ getObservers();
+  public ImmutableObserverSet getObservers();
 }

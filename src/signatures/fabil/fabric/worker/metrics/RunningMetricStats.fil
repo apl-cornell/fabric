@@ -1,0 +1,101 @@
+package fabric.worker.metrics;
+
+import java.io.Serializable;
+import fabric.lang.JavaInlineable;
+
+import fabric.worker.Worker;
+
+/**
+ * Utility class for tracking the sample mean and sample standard deviation of a
+ * value that is updated periodically.
+ * <p>
+ * This was originally based on a post on John D. Cook's blog here:
+ * https://www.johndcook.com/blog/standard_deviation/
+ * <p>
+ * That post assumed a stable distribution. This has since been modified to use
+ * EWMA.
+ */
+public class RunningMetricStats implements Serializable, JavaInlineable {
+
+  /**
+   * @param startValue
+   *        initial guess for the mean of the value we're keeping
+   *        statistics on.
+   */
+  public static native RunningMetricStats createRunningMetricStats(double
+      startValue, double startDelta, double startInterval);
+
+  /**
+   * Reset estimation to just the startValue.
+   */
+  public native RunningMetricStats reset();
+
+  /**
+   * @return the current value.
+   */
+  public native double getValue();
+
+  /**
+   * Compute an estimated velocity, assuming normal distribution of values and
+   * exponential distribution of intervals.
+   *
+   * @return the current estimated velocity.
+   */
+  public native double getVelocityEstimate();
+
+  /**
+   * Compute an estimated noise, assuming normal distribution of values and
+   * exponential distribution of intervals.
+   *
+   * @return the current estimated noise.
+   */
+  public native double getNoiseEstimate();
+
+  /**
+   * @return the last update time.
+   */
+  public native long getLastUpdate();
+
+  /**
+   * @return the last update time.
+   */
+  public native double getIntervalEstimate();
+
+  /**
+   * @return the number of samples taken.
+   */
+  public native long getSamples();
+
+  /**
+   * Update with a new observation.
+   *
+   * @param val
+   *        the newly observed value.
+   */
+  public native RunningMetricStats update(double newVal);
+
+  private static native double getAlpha(long samples);
+
+  /**
+   * Support preloading based on a string key.
+   *
+   * Should be called right before the next update to ensure the lastUpdate
+   * configuration is roughly accurate.
+   * TODO
+   */
+  public native void preload(String key);
+
+  /**
+   * Utility for converting a stale velocity estimate to a properly "decayed"
+   * estimate.
+   */
+  public static native double updatedVelocity(double velocityEst, double
+      intervalEst, long samples, long lastUpdate, long curTime);
+
+  /**
+   * Utility for converting a stale noise estimate to a properly "decayed"
+   * estimate.
+   */
+  public static native double updatedNoise(double velocityEst, double noiseEst,
+      double intervalEst, long samples, long lastUpdate, long curTime);
+}

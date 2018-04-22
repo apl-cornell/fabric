@@ -6,11 +6,13 @@ import java.util.LinkedList;
 import fabric.util.Set;
 import fabric.util.ArrayList;
 import fabric.util.List;
-import fabric.util.Iterator;
+import java.util.Iterator;
 
 import fabric.metrics.SampledMetric;
 import fabric.metrics.contracts.Contract;
 
+import fabric.worker.metrics.ImmutableMetricsVector;
+import fabric.worker.metrics.ImmutableObserverSet;
 import fabric.worker.transaction.TransactionManager;
 import fabric.worker.Store;
 
@@ -29,14 +31,14 @@ public abstract class AbstractSubject implements Subject {
   }
 
   protected AbstractSubject fabric$metrics$util$AbstractSubject$() {
-    this.observers = new ArrayList/*<>*/().fabric$util$ArrayList$();
+    this.observers = ImmutableObserverSet.emptySet();
     fabric$lang$Object$();
     return this;
   }
 
   // Using a weak map as the backing for this set so that observers aren't
   // pinned by their subjects.
-  private final ArrayList/*<Observer>*/ observers;
+  private ImmutableObserverSet observers;
 
   /*@Override*/
   public void addObserver(Observer o) {
@@ -48,11 +50,11 @@ public abstract class AbstractSubject implements Subject {
     //    TransactionManager.getInstance().getCurrentTid());
     if (TransactionManager.getInstance().inTxn()) {
       if (!tmp.observers.contains(o))
-        tmp.observers.add(o);
+        tmp.observers = tmp.observers.add(o);
     } else {
       atomic {
         if (!tmp.observers.contains(o))
-          tmp.observers.add(o);
+          tmp.observers = tmp.observers.add(o);
       }
     }
   }
@@ -66,10 +68,12 @@ public abstract class AbstractSubject implements Subject {
     //Logging.METRICS_LOGGER.finer("REMOVE OBSERVER " + o + " FOR " + tmp + " IN "
     //    + TransactionManager.getInstance().getCurrentTid());
     if (TransactionManager.getInstance().inTxn()) {
-      tmp.observers.remove(o);
+      if (tmp.observers.contains(o))
+        tmp.observers = tmp.observers.remove(o);
     } else {
       atomic {
-        tmp.observers.remove(o);
+        if (tmp.observers.contains(o))
+          tmp.observers = tmp.observers.remove(o);
       }
     }
   }
@@ -85,7 +89,7 @@ public abstract class AbstractSubject implements Subject {
   }
 
   /*@Override*/
-  public List/*<Observer>*/ getObservers() {
+  public ImmutableObserverSet getObservers() {
     return observers;
   }
 
@@ -105,10 +109,9 @@ public abstract class AbstractSubject implements Subject {
     while (!unobserved.isEmpty()) {
       SampledMetric sm = (SampledMetric) unobserved.poll();
       //Logging.METRICS_LOGGER.log(Level.FINER, "HANDLING OBSERVATION OF " + sm);
-      List obs = sm.getObservers();
-      int size = obs.size();
-      for (int i = 0; i < size; i++) {
-        queue.add(obs.get(i));
+      ImmutableObserverSet obs = sm.getObservers();
+      for (Iterator iter = obs.iterator(); iter.hasNext();) {
+        queue.add(iter.next());
       }
 
       while (!queue.isEmpty()) {
@@ -118,9 +121,9 @@ public abstract class AbstractSubject implements Subject {
         delayed.remove(unhandled);
 
         boolean needToWait = false;
-        SampledMetric[] leaves = unhandled.getLeafSubjects();
-        for (int i = 0; i < leaves.length; i++) {
-          if (unobserved.contains(leaves[i])) {
+        ImmutableMetricsVector/*<SampledMetric>*/ leaves = unhandled.getLeafSubjects();
+        for (int i = 0; i < leaves.length(); i++) {
+          if (unobserved.contains(leaves.get(i))) {
             needToWait = true;
             break;
           }
@@ -133,10 +136,9 @@ public abstract class AbstractSubject implements Subject {
           if (unhandled instanceof Subject && modified) {
             //Logging.METRICS_LOGGER.log(Level.FINER,
             //    "QUEUING PARENTS OF OBSERVER " + unhandled);
-            List parents = ((Subject) unhandled).getObservers();
-            int pSize = parents.size();
-            for (int i = 0; i < pSize; i++) {
-              queue.add(parents.get(i));
+            ImmutableObserverSet parents = ((Subject) unhandled).getObservers();
+            for (Iterator iter = parents.iterator(); iter.hasNext();) {
+              queue.add(iter.next());
             }
           }
         } else {
@@ -148,14 +150,14 @@ public abstract class AbstractSubject implements Subject {
         // If there's nothing more, let's get back to delayed items that
         // are now worth looking at before moving on.
         if (queue.isEmpty()) {
-          java.util.Iterator delayedIter = delayed.iterator();
+          Iterator delayedIter = delayed.iterator();
           while (delayedIter.hasNext()) {
             Observer withheld = (Observer) delayedIter.next();
 
             boolean doneWaiting = true;
-            SampledMetric[] withheldLeaves = withheld.getLeafSubjects();
-            for (int i = 0; i < withheldLeaves.length; i++) {
-              if (unobserved.contains(withheldLeaves[i])) {
+            ImmutableMetricsVector/*<SampledMetric>*/ withheldLeaves = withheld.getLeafSubjects();
+            for (int i = 0; i < withheldLeaves.length(); i++) {
+              if (unobserved.contains(withheldLeaves.get(i))) {
                 doneWaiting = false;
                 break;
               }

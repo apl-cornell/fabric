@@ -10,11 +10,12 @@ import fabric.metrics.util.Observer;
 import fabric.metrics.util.ReconfigLock;
 import fabric.metrics.util.Subject;
 import fabric.util.ArrayList;
-import fabric.util.Iterator;
+import java.util.Iterator;
 import fabric.util.List;
 
 import fabric.worker.Store;
 import fabric.worker.Worker;
+import fabric.worker.metrics.ImmutableMetricsVector;
 import fabric.worker.transaction.TransactionManager;
 
 import java.util.logging.Level;
@@ -495,10 +496,10 @@ public abstract class Contract extends AbstractSubject implements Observer {
     }
 
     /*@Override*/
-    public SampledMetric[] getLeafSubjects() {
+    public ImmutableMetricsVector/*<SampledMetric>*/ getLeafSubjects() {
       final Store local = Worker.getWorker().getLocalStore();
       if (currentPolicy == null)
-        return new SampledMetric[0] @local;
+        return ImmutableMetricsVector.emptyVector();
       return target.getLeafSubjects();
     }
 

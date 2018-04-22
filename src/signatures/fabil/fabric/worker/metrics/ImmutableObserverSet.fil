@@ -1,0 +1,36 @@
+package fabric.worker.metrics;
+
+import fabric.metrics.util.Observer;
+import java.util.Iterator;
+
+/**
+ * Utility class to easily express an immutable vector of items.
+ */
+public class ImmutableObserverSet implements JavaInlineable, Iterable/*<Observer>*/ {
+
+  /** Provided since you can't mark constructors as native for the fabil
+   * signatures
+   */
+  public static native ImmutableObserverSet createSet(Observer native[] items);
+
+  /** @return the length. */
+  public native int size();
+
+  /** @return a new set with the given item added. */
+  public native ImmutableObserverSet add(Observer obs);
+
+  /** @return a new set with the given item removed. */
+  public native ImmutableObserverSet remove(Observer obs);
+
+  /** @return true iff the given observer is in the set */
+  public native boolean contains(Observer obs);
+
+  /** @return true iff the set is empty */
+  public native boolean isEmpty();
+
+  /** @return a value to use for an empty vector */
+  public static native ImmutableObserverSet emptySet();
+
+  /*@Override*/
+  public native Iterator/*<Observer>*/ iterator();
+}

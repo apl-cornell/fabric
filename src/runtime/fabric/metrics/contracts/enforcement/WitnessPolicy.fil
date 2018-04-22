@@ -1,9 +1,10 @@
 package fabric.metrics.contracts.enforcement;
 
-import fabric.util.Arrays;
+import java.util.Arrays;
 
 import fabric.metrics.contracts.Contract;
 import fabric.worker.transaction.TransactionManager;
+import fabric.worker.metrics.ImmutableContractsVector;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
@@ -20,7 +21,7 @@ import java.util.concurrent.Future;
 public class WitnessPolicy implements EnforcementPolicy {
 
   /** The set of {@link Contract}s used to enforce this policy. */
-  public final Contract[] witnesses;
+  public final ImmutableContractsVector witnesses;
 
   /** Is this currently actively enforced? */
   private boolean activated;
@@ -32,10 +33,8 @@ public class WitnessPolicy implements EnforcementPolicy {
    *        are {@link Contract#activate() activated} here.
    */
   public WitnessPolicy fabric$metrics$contracts$enforcement$WitnessPolicy$(Contract native[] witnesses) {
+    this.witnesses = ImmutableContractsVector.createVector(witnesses);
     fabric$lang$Object$();
-    this.witnesses = new Contract[witnesses.length];
-    for (int i = 0; i < witnesses.length; i++)
-      this.witnesses[i] = witnesses[i];
     this.activated = false;
     return this;
   }
@@ -56,15 +55,15 @@ public class WitnessPolicy implements EnforcementPolicy {
       }
     }
     if (TransactionManager.getInstance().getCurrentLog() != null) {
-      for (int i = 0; i < tmp.witnesses.length; i++) {
-        tmp.witnesses[i].activate();
+      for (int i = 0; i < tmp.witnesses.length(); i++) {
+        tmp.witnesses.get(i).activate();
       }
     } else {
-      Future native[] futures = new Future native[tmp.witnesses.length];
+      Future native[] futures = new Future native[tmp.witnesses.length()];
       // First, refresh the subterm stats.
       for (int i = 0; i < futures.length; i++) {
           // TODO: Add remote worker to call
-          final Contract w = tmp.witnesses[i];
+          final Contract w = tmp.witnesses.get(i);
           Callable c = null;
           atomic {
             c = new Activator().fabric$metrics$contracts$enforcement$WitnessPolicy$Activator$(w);
@@ -126,18 +125,18 @@ public class WitnessPolicy implements EnforcementPolicy {
     long expiry = -1;
     boolean atLeastOnce = false;
     if (TransactionManager.getInstance().inTxn()) {
-      for (int i = 0; i < tmp.witnesses.length; i++) {
-        if (!atLeastOnce || tmp.witnesses[i].getExpiry() < expiry) {
+      for (int i = 0; i < tmp.witnesses.length(); i++) {
+        if (!atLeastOnce || tmp.witnesses.get(i).getExpiry() < expiry) {
           atLeastOnce = true;
-          expiry = tmp.witnesses[i].getExpiry();
+          expiry = tmp.witnesses.get(i).getExpiry();
         }
       }
     } else {
       atomic {
-        for (int i = 0; i < tmp.witnesses.length; i++) {
-          if (!atLeastOnce || tmp.witnesses[i].getExpiry() < expiry) {
+        for (int i = 0; i < tmp.witnesses.length(); i++) {
+          if (!atLeastOnce || tmp.witnesses.get(i).getExpiry() < expiry) {
             atLeastOnce = true;
-            expiry = tmp.witnesses[i].getExpiry();
+            expiry = tmp.witnesses.get(i).getExpiry();
           }
         }
       }
@@ -149,22 +148,22 @@ public class WitnessPolicy implements EnforcementPolicy {
   public void apply(Contract mc) {
     if (!activated)
       activate();
-    for (int i = 0; i < witnesses.length; i++) {
-      witnesses[i].addObserver((fabric.metrics.util.Observer) mc.fetch());
+    for (int i = 0; i < witnesses.length(); i++) {
+      witnesses.get(i).addObserver((fabric.metrics.util.Observer) mc.fetch());
     }
     //Logging.METRICS_LOGGER.finer("DEFENDING " + mc + " WITH " + this);
   }
 
   /*@Override*/
   public void unapply(Contract mc) {
-    for (int i = 0; i < witnesses.length; i++) {
-      witnesses[i].removeObserver(mc);
+    for (int i = 0; i < witnesses.length(); i++) {
+      witnesses.get(i).removeObserver(mc);
     }
   }
 
   /*@Override*/
   public String toString() {
-    return Arrays.deepToString(witnesses);
+    return Arrays.deepToString(witnesses.array());
   }
 
   /*@Override*/
@@ -177,8 +176,8 @@ public class WitnessPolicy implements EnforcementPolicy {
 
   /*@Override*/
   public void acquireReconfigLocks() {
-    for (int i = 0; i < witnesses.length; i++) {
-      witnesses[i].acquireReconfigLocks();
+    for (int i = 0; i < witnesses.length(); i++) {
+      witnesses.get(i).acquireReconfigLocks();
     }
   }
 }

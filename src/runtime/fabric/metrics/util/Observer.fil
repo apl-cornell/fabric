@@ -5,6 +5,7 @@ import fabric.util.Set;
 import fabric.metrics.Metric;
 import fabric.metrics.SampledMetric;
 import fabric.metrics.contracts.Contract;
+import fabric.worker.metrics.ImmutableMetricsVector;
 
 /**
  * Abstraction for tracking trees of observers/subjects. Unifies tracking
@@ -36,5 +37,5 @@ public interface Observer {
    *         {@link Observer} is associated with (a parent of/tracking) either
    *         directly or indirectly in the System.
    */
-  public SampledMetric[] getLeafSubjects();
+  public ImmutableMetricsVector/*<SampledMetric>*/ getLeafSubjects();
 }

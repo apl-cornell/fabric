@@ -22,6 +22,7 @@ import fabric.metrics.util.RunningMetricStats;
 import fabric.common.ConfigProperties;
 import fabric.worker.Store;
 import fabric.worker.Worker;
+import fabric.worker.metrics.ImmutableMetricsVector;
 import fabric.worker.transaction.TransactionManager;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -44,15 +45,15 @@ import java.util.concurrent.Future;
  */
 public interface DerivedMetric
   extends fabric.metrics.util.Observer, fabric.metrics.Metric {
-    public fabric.lang.arrays.ObjectArray get$terms();
+    public fabric.worker.metrics.ImmutableMetricsVector get$terms();
     
-    public fabric.lang.arrays.ObjectArray set$terms(
-      fabric.lang.arrays.ObjectArray val);
+    public fabric.worker.metrics.ImmutableMetricsVector set$terms(
+      fabric.worker.metrics.ImmutableMetricsVector val);
     
-    public fabric.lang.arrays.ObjectArray get$leafMetrics();
+    public fabric.worker.metrics.ImmutableMetricsVector get$leafMetrics();
     
-    public fabric.lang.arrays.ObjectArray set$leafMetrics(
-      fabric.lang.arrays.ObjectArray val);
+    public fabric.worker.metrics.ImmutableMetricsVector set$leafMetrics(
+      fabric.worker.metrics.ImmutableMetricsVector val);
     
     public boolean get$singleStore();
     
@@ -171,18 +172,13 @@ public interface DerivedMetric
     public void removeObserver(fabric.metrics.util.Observer obs);
     
     /**
-   * @return the terms this {@link DerivedMetric} is defined over
-   */
-    public fabric.lang.arrays.ObjectArray terms();
-    
-    /**
    * @param i
    *        an index into the terms array
    * @return the ith term this {@link DerivedMetric} is defined over
    */
     public fabric.metrics.Metric term(int i);
     
-    public fabric.lang.arrays.ObjectArray getLeafSubjects();
+    public fabric.worker.metrics.ImmutableMetricsVector getLeafSubjects();
     
     public static interface Refresher
       extends java.util.concurrent.Callable, fabric.lang.Object {
@@ -382,14 +378,14 @@ public interface DerivedMetric
             
         }
         
-        public static final byte[] $classHash = new byte[] { 53, -116, -34,
-        -111, -125, 126, 110, -126, 48, 82, -127, 121, 98, -98, 6, 61, 77, 14,
-        -70, 60, 68, 51, -127, -63, 101, 126, 67, 79, 96, -81, 21, 38 };
+        public static final byte[] $classHash = new byte[] { -38, 95, -75, 35,
+        127, -25, -55, -81, -119, 87, 40, 32, 4, -16, -25, -8, -114, -71, -118,
+        51, 91, 89, -7, 122, -104, 72, -25, -93, 125, -128, 25, 22 };
         public static final java.lang.String jlc$CompilerVersion$fabil =
           "0.3.0";
-        public static final long jlc$SourceLastModified$fabil = 1524081841000L;
+        public static final long jlc$SourceLastModified$fabil = 1524349493000L;
         public static final java.lang.String jlc$ClassType$fabil =
-          "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";
+          "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";
     }
     
     public void refreshWeakEstimates();
@@ -411,23 +407,23 @@ public interface DerivedMetric
     
     public static class _Proxy extends fabric.metrics.Metric._Proxy
       implements fabric.metrics.DerivedMetric {
-        public fabric.lang.arrays.ObjectArray get$terms() {
+        public fabric.worker.metrics.ImmutableMetricsVector get$terms() {
             return ((fabric.metrics.DerivedMetric._Impl) fetch()).get$terms();
         }
         
-        public fabric.lang.arrays.ObjectArray set$terms(
-          fabric.lang.arrays.ObjectArray val) {
+        public fabric.worker.metrics.ImmutableMetricsVector set$terms(
+          fabric.worker.metrics.ImmutableMetricsVector val) {
             return ((fabric.metrics.DerivedMetric._Impl) fetch()).set$terms(
                                                                     val);
         }
         
-        public fabric.lang.arrays.ObjectArray get$leafMetrics() {
+        public fabric.worker.metrics.ImmutableMetricsVector get$leafMetrics() {
             return ((fabric.metrics.DerivedMetric._Impl) fetch()).
               get$leafMetrics();
         }
         
-        public fabric.lang.arrays.ObjectArray set$leafMetrics(
-          fabric.lang.arrays.ObjectArray val) {
+        public fabric.worker.metrics.ImmutableMetricsVector set$leafMetrics(
+          fabric.worker.metrics.ImmutableMetricsVector val) {
             return ((fabric.metrics.DerivedMetric._Impl) fetch()).
               set$leafMetrics(val);
         }
@@ -558,15 +554,11 @@ public interface DerivedMetric
             return ((fabric.metrics.DerivedMetric) fetch()).handleUpdates();
         }
         
-        public fabric.lang.arrays.ObjectArray terms() {
-            return ((fabric.metrics.DerivedMetric) fetch()).terms();
-        }
-        
         public fabric.metrics.Metric term(int arg1) {
             return ((fabric.metrics.DerivedMetric) fetch()).term(arg1);
         }
         
-        public fabric.lang.arrays.ObjectArray getLeafSubjects() {
+        public fabric.worker.metrics.ImmutableMetricsVector getLeafSubjects() {
             return ((fabric.metrics.DerivedMetric) fetch()).getLeafSubjects();
         }
         
@@ -579,10 +571,12 @@ public interface DerivedMetric
     
     public abstract static class _Impl extends fabric.metrics.Metric._Impl
       implements fabric.metrics.DerivedMetric {
-        public fabric.lang.arrays.ObjectArray get$terms() { return this.terms; }
+        public fabric.worker.metrics.ImmutableMetricsVector get$terms() {
+            return this.terms;
+        }
         
-        public fabric.lang.arrays.ObjectArray set$terms(
-          fabric.lang.arrays.ObjectArray val) {
+        public fabric.worker.metrics.ImmutableMetricsVector set$terms(
+          fabric.worker.metrics.ImmutableMetricsVector val) {
             fabric.worker.transaction.TransactionManager tm =
               fabric.worker.transaction.TransactionManager.getInstance();
             boolean transactionCreated = tm.registerWrite(this);
@@ -591,14 +585,14 @@ public interface DerivedMetric
             return val;
         }
         
-        protected fabric.lang.arrays.ObjectArray terms;
+        protected fabric.worker.metrics.ImmutableMetricsVector terms;
         
-        public fabric.lang.arrays.ObjectArray get$leafMetrics() {
+        public fabric.worker.metrics.ImmutableMetricsVector get$leafMetrics() {
             return this.leafMetrics;
         }
         
-        public fabric.lang.arrays.ObjectArray set$leafMetrics(
-          fabric.lang.arrays.ObjectArray val) {
+        public fabric.worker.metrics.ImmutableMetricsVector set$leafMetrics(
+          fabric.worker.metrics.ImmutableMetricsVector val) {
             fabric.worker.transaction.TransactionManager tm =
               fabric.worker.transaction.TransactionManager.getInstance();
             boolean transactionCreated = tm.registerWrite(this);
@@ -607,7 +601,7 @@ public interface DerivedMetric
             return val;
         }
         
-        private fabric.lang.arrays.ObjectArray leafMetrics;
+        private fabric.worker.metrics.ImmutableMetricsVector leafMetrics;
         
         public boolean get$singleStore() { return this.singleStore; }
         
@@ -640,18 +634,9 @@ public interface DerivedMetric
                 }
             }
             this.set$singleStore(single);
-            fabric.lang.security.Label lbl =
-              fabric.lang.security.LabelUtil._Impl.noComponents();
-            fabric.worker.Store s = $getStore();
             this.set$terms(
-                   (fabric.lang.arrays.ObjectArray)
-                     new fabric.lang.arrays.ObjectArray._Impl(
-                       s).fabric$lang$arrays$ObjectArray$(
-                            lbl, lbl.confPolicy(),
-                            fabric.metrics.Metric._Proxy.class,
-                            terms.length).$getProxy());
-            for (int i = 0; i < terms.length; i++)
-                this.get$terms().set(i, terms[i]);
+                   fabric.worker.metrics.ImmutableMetricsVector.createVector(
+                                                                  terms));
             fabric.common.ConfigProperties config =
               fabric.worker.Worker.getWorker().config;
             this.set$usePreset(config.usePreset);
@@ -808,70 +793,63 @@ public interface DerivedMetric
    */
         public void initialize() {
             java.util.Set leafMetricsTmp = new java.util.HashSet();
-            for (int i = 0; i < this.get$terms().get$length(); i++) {
+            for (int i = 0; i < this.get$terms().length(); i++) {
                 if (fabric.lang.Object._Proxy.
                       $getProxy(
                         (java.lang.Object)
                           fabric.lang.WrappedJavaInlineable.
                           $unwrap(
-                            (fabric.metrics.Metric)
-                              this.get$terms().
-                              get(
-                                i))) instanceof fabric.metrics.SampledMetric) {
+                            this.get$terms().
+                                get(
+                                  i))) instanceof fabric.metrics.SampledMetric) {
                     leafMetricsTmp.
                       add(
                         (java.lang.Object)
-                          fabric.lang.WrappedJavaInlineable.
-                          $unwrap((fabric.metrics.Metric)
-                                    this.get$terms().get(i)));
+                          fabric.lang.WrappedJavaInlineable.$unwrap(
+                                                              this.get$terms(
+                                                                     ).get(i)));
                 }
                 else if (fabric.lang.Object._Proxy.
                            $getProxy(
                              (java.lang.Object)
                                fabric.lang.WrappedJavaInlineable.
                                $unwrap(
-                                 (fabric.metrics.Metric) this.get$terms().get(i))) instanceof fabric.metrics.DerivedMetric) {
+                                 this.get$terms().
+                                     get(
+                                       i))) instanceof fabric.metrics.DerivedMetric) {
                     fabric.metrics.DerivedMetric termI =
                       (fabric.metrics.DerivedMetric)
                         fabric.lang.Object._Proxy.$getProxy(
-                                                    (fabric.metrics.Metric)
-                                                      this.get$terms().get(i));
-                    fabric.lang.arrays.ObjectArray termILeaves =
+                                                    this.get$terms().get(i));
+                    fabric.worker.metrics.ImmutableMetricsVector termILeaves =
                       termI.getLeafSubjects();
-                    for (int j = 0; j < termILeaves.get$length(); j++)
+                    for (int j = 0; j < termILeaves.length(); j++)
                         leafMetricsTmp.
                           add(
                             (java.lang.Object)
                               fabric.lang.WrappedJavaInlineable.
-                              $unwrap((fabric.metrics.SampledMetric)
-                                        termILeaves.get(j)));
+                              $unwrap(termILeaves.get(j)));
                 }
                 else {
                     throw new java.lang.IllegalStateException(
                             "This shouldn\'t happen, all metrics should either be a SampledMetric or a DerivedMetric!");
                 }
             }
-            this.set$leafMetrics(
-                   (fabric.lang.arrays.ObjectArray)
-                     new fabric.lang.arrays.ObjectArray._Impl(
-                       this.$getStore(
-                              )).fabric$lang$arrays$ObjectArray$(
-                                   this.get$$updateLabel(),
-                                   this.get$$updateLabel().confPolicy(),
-                                   fabric.metrics.SampledMetric._Proxy.class,
-                                   leafMetricsTmp.size()).$getProxy());
+            fabric.metrics.Metric[] leafMetricsArr =
+              new fabric.metrics.Metric[leafMetricsTmp.size()];
             int lmIdx = 0;
             for (java.util.Iterator it = leafMetricsTmp.iterator();
                  it.hasNext(); ) {
-                this.
-                  get$leafMetrics().
-                  set(
-                    lmIdx++,
-                    (fabric.metrics.SampledMetric)
-                      fabric.lang.Object._Proxy.
-                      $getProxy(
-                        fabric.lang.WrappedJavaInlineable.$wrap(it.next())));
+                leafMetricsArr[lmIdx++] =
+                  (fabric.metrics.SampledMetric)
+                    fabric.lang.Object._Proxy.
+                    $getProxy(
+                      fabric.lang.WrappedJavaInlineable.$wrap(it.next()));
             }
+            this.
+              set$leafMetrics(
+                fabric.worker.metrics.ImmutableMetricsVector.createVector(
+                                                               leafMetricsArr));
         }
         
         public boolean handleUpdates() {
@@ -1174,10 +1152,8 @@ public interface DerivedMetric
         
         public long computeSamples(boolean useWeakCache) {
             long samples = 0;
-            for (int i = 0; i < this.get$terms().get$length(); i++) {
-                samples = samples +
-                            ((fabric.metrics.Metric)
-                               this.get$terms().get(i)).samples(useWeakCache);
+            for (int i = 0; i < this.get$terms().length(); i++) {
+                samples = samples + term(i).samples(useWeakCache);
             }
             return samples;
         }
@@ -1325,13 +1301,10 @@ public interface DerivedMetric
         
         public long computeLastUpdate(boolean useWeakCache) {
             long lastUpdate = 0;
-            for (int i = 0; i < this.get$terms().get$length(); i++) {
+            for (int i = 0; i < this.get$terms().length(); i++) {
                 lastUpdate =
-                  java.lang.Math.max(
-                                   lastUpdate,
-                                   ((fabric.metrics.Metric)
-                                      this.get$terms().get(i)).lastUpdate(
-                                                                 useWeakCache));
+                  java.lang.Math.max(lastUpdate,
+                                     term(i).lastUpdate(useWeakCache));
             }
             return lastUpdate;
         }
@@ -1479,10 +1452,8 @@ public interface DerivedMetric
         
         public double computeUpdateInterval(boolean useWeakCache) {
             double updateInterval = java.lang.Double.MAX_VALUE;
-            for (int i = 0; i < this.get$terms().get$length(); i++) {
-                double termInterval =
-                  ((fabric.metrics.Metric) this.get$terms().get(i)).
-                  updateInterval(useWeakCache);
+            for (int i = 0; i < this.get$terms().length(); i++) {
+                double termInterval = term(i).updateInterval(useWeakCache);
                 updateInterval = java.lang.Math.min(updateInterval,
                                                     termInterval);
             }
@@ -1801,10 +1772,9 @@ public interface DerivedMetric
    */
         public void addObserver(fabric.metrics.util.Observer obs) {
             if (!isObserved()) {
-                for (int i = 0; i < this.get$terms().get$length(); i++) {
-                    ((fabric.metrics.Metric) this.get$terms().get(i)).
-                      addObserver((fabric.metrics.DerivedMetric)
-                                    this.$getProxy());
+                for (int i = 0; i < this.get$terms().length(); i++) {
+                    term(i).addObserver((fabric.metrics.DerivedMetric)
+                                          this.$getProxy());
                 }
                 this.set$cachedValue((double) computeValue(false));
                 this.set$cachedVelocity((double) computeVelocity(false));
@@ -1828,31 +1798,11 @@ public interface DerivedMetric
         public void removeObserver(fabric.metrics.util.Observer obs) {
             super.removeObserver(obs);
             if (!isObserved()) {
-                for (int i = 0; i < this.get$terms().get$length(); i++) {
-                    ((fabric.metrics.Metric) this.get$terms().get(i)).
-                      removeObserver((fabric.metrics.DerivedMetric)
-                                       this.$getProxy());
+                for (int i = 0; i < this.get$terms().length(); i++) {
+                    term(i).removeObserver((fabric.metrics.DerivedMetric)
+                                             this.$getProxy());
                 }
             }
-        }
-        
-        /**
-   * @return the terms this {@link DerivedMetric} is defined over
-   */
-        public fabric.lang.arrays.ObjectArray terms() {
-            final fabric.worker.Store local =
-              fabric.worker.Worker.getWorker().getLocalStore();
-            fabric.lang.arrays.ObjectArray copy =
-              (fabric.lang.arrays.ObjectArray)
-                new fabric.lang.arrays.ObjectArray._Impl(
-                  local).fabric$lang$arrays$ObjectArray$(
-                           this.get$$updateLabel(),
-                           this.get$$updateLabel().confPolicy(),
-                           fabric.metrics.Metric._Proxy.class,
-                           this.get$terms().get$length()).$getProxy();
-            fabric.util.Arrays._Impl.arraycopy(this.get$terms(), 0, copy, 0,
-                                               this.get$terms().get$length());
-            return copy;
         }
         
         /**
@@ -1861,10 +1811,10 @@ public interface DerivedMetric
    * @return the ith term this {@link DerivedMetric} is defined over
    */
         public fabric.metrics.Metric term(int i) {
-            return (fabric.metrics.Metric) this.get$terms().get(i);
+            return this.get$terms().get(i);
         }
         
-        public fabric.lang.arrays.ObjectArray getLeafSubjects() {
+        public fabric.worker.metrics.ImmutableMetricsVector getLeafSubjects() {
             return this.get$leafMetrics();
         }
         
@@ -1988,11 +1938,9 @@ public interface DerivedMetric
                     }
                 }
                 java.util.concurrent.Future[] futures =
-                  new java.util.concurrent.Future[this.get$terms().get$length(
-                                                                     )];
-                for (int i = 0; i < this.get$terms().get$length(); i++) {
-                    final fabric.metrics.Metric t = (fabric.metrics.Metric)
-                                                      this.get$terms().get(i);
+                  new java.util.concurrent.Future[this.get$terms().length()];
+                for (int i = 0; i < this.get$terms().length(); i++) {
+                    final fabric.metrics.Metric t = term(i);
                     java.util.concurrent.Callable c = null;
                     {
                         java.util.concurrent.Callable c$var97 = c;
@@ -2133,7 +2081,7 @@ public interface DerivedMetric
                       fabric.metrics.DerivedMetric._Static._Proxy.$instance.
                         get$service().submit(c);
                 }
-                for (int i = 0; i < this.get$terms().get$length(); i++) {
+                for (int i = 0; i < this.get$terms().length(); i++) {
                     try { futures[i].get(); }
                     catch (java.util.concurrent.ExecutionException e) {  }
                     catch (java.lang.InterruptedException e) {  }
@@ -2141,9 +2089,8 @@ public interface DerivedMetric
             }
             else {
                 if (isObserved()) return;
-                for (int i = 0; i < this.get$terms().get$length(); i++) {
-                    ((fabric.metrics.Metric) this.get$terms().get(i)).
-                      refreshWeakEstimates();
+                for (int i = 0; i < this.get$terms().length(); i++) {
+                    term(i).refreshWeakEstimates();
                 }
             }
             refreshLocally();
@@ -2332,9 +2279,9 @@ public interface DerivedMetric
                         (fabric.metrics.DerivedMetric) this.$getProxy(), value);
                 }
                 fabric.metrics.contracts.Contract[] witnesses =
-                  new fabric.metrics.contracts.Contract[this.get$terms(
-                                                               ).get$length()];
-                for (int i = 0; i < this.get$terms().get$length(); i++) {
+                  new fabric.metrics.contracts.Contract[this.get$terms().length(
+                                                                           )];
+                for (int i = 0; i < this.get$terms().length(); i++) {
                     witnesses[i] = term(i).getEqualityContract(term(i).value());
                 }
                 return ((fabric.metrics.contracts.enforcement.WitnessPolicy)
@@ -2365,10 +2312,8 @@ public interface DerivedMetric
                                java.util.List interStoreRefs)
               throws java.io.IOException {
             super.$serialize(out, refTypes, intraStoreRefs, interStoreRefs);
-            $writeRef($getStore(), this.terms, refTypes, out, intraStoreRefs,
-                      interStoreRefs);
-            $writeRef($getStore(), this.leafMetrics, refTypes, out,
-                      intraStoreRefs, interStoreRefs);
+            $writeInline(out, this.terms);
+            $writeInline(out, this.leafMetrics);
             out.writeBoolean(this.singleStore);
             out.writeBoolean(this.usePreset);
             out.writeDouble(this.presetR);
@@ -2389,15 +2334,10 @@ public interface DerivedMetric
             super(store, onum, version, expiry, labelStore, labelOnum,
                   accessPolicyStore, accessPolicyOnum, in, refTypes,
                   intraStoreRefs, interStoreRefs);
-            this.terms = (fabric.lang.arrays.ObjectArray)
-                           $readRef(fabric.lang.arrays.ObjectArray._Proxy.class,
-                                    (fabric.common.RefTypeEnum) refTypes.next(),
-                                    in, store, intraStoreRefs, interStoreRefs);
-            this.leafMetrics =
-              (fabric.lang.arrays.ObjectArray)
-                $readRef(fabric.lang.arrays.ObjectArray._Proxy.class,
-                         (fabric.common.RefTypeEnum) refTypes.next(), in, store,
-                         intraStoreRefs, interStoreRefs);
+            this.terms = (fabric.worker.metrics.ImmutableMetricsVector)
+                           in.readObject();
+            this.leafMetrics = (fabric.worker.metrics.ImmutableMetricsVector)
+                                 in.readObject();
             this.singleStore = in.readBoolean();
             this.usePreset = in.readBoolean();
             this.presetR = in.readDouble();
@@ -2706,11 +2646,11 @@ public interface DerivedMetric
         
     }
     
-    public static final byte[] $classHash = new byte[] { -46, -69, 1, -90, 69,
-    44, -36, 14, -43, -22, 18, 64, 60, 19, -107, -40, -53, 47, -27, 85, -52,
-    127, -109, 112, -110, -56, -104, 101, 45, -102, 18, 81 };
+    public static final byte[] $classHash = new byte[] { 20, -99, -17, 69, -65,
+    51, 100, -12, -109, -126, 28, 72, -103, -58, -119, -12, 40, -124, -106, 49,
+    -6, 121, 40, -118, 66, -28, -87, 104, 119, -86, 4, 95 };
     public static final java.lang.String jlc$CompilerVersion$fabil = "0.3.0";
-    public static final long jlc$SourceLastModified$fabil = 1524081841000L;
+    public static final long jlc$SourceLastModified$fabil = 1524349493000L;
     public static final java.lang.String jlc$ClassType$fabil =
-      "H4sIAAAAAAAAAK0bCZQUxbV6WJZdWPbgEFiW5VpBOWaCBwoowq4LLgywsoK6Gteenprdlp7usbtmmdXg7UN9PpIooCaRJA+8CPGKSBKDmjwVjMaDaDxiFE2IB/KM0RhMJOb/6pqrp6d32se+1/93d9Wv+nf96qndcYgMtEwyKSZHVC3I+hLUCi6SI23hdtm0aLRFky3rHHjbpQwpa9v8wT3RxgAJhEmVIuuGriqy1qVbjFSHL5F75ZBOWWjVyrZ5F5BKBQnPkq0eRgIXNKdMMiFhaH3dmsHEJAXjb5oe2njbRbUPDyA1naRG1TuYzFSlxdAZTbFOUhWn8Qg1rYXRKI12kjqd0mgHNVVZUy+DjobeSYZZarcus6RJrZXUMrRe7DjMSiaoyedMv0T2DWDbTCrMMIH9Wpv9JFO1UFi12LwwKY+pVItal5IrSFmYDIxpcjd0PCacliLERwwtwvfQfbAKbJoxWaFpkrI1qh5lZLyTIiNx01LoAKSD4pT1GJmpynQZXpBhNkuarHeHOpip6t3QdaCRhFkYqS86KHSqSMjKGrmbdjEy2tmv3W6CXpVcLUjCyEhnNz4S2KzeYbMcax1aftqGy/Wz9ACRgOcoVTTkvwKIGh1EK2mMmlRXqE1YNS28WT5m9w0BQqDzSEdnu8+u73y6YEbjk3vtPmNd+qyIXEIV1qVsi1S/3NBy/JwByEZFwrBUdIU8yblV20XLvFQCvP2YzIjYGEw3PrnymfOv2k4PBsjgNlKuGFoyDl5VpxjxhKpRczHVqSkzGm0jlVSPtvD2NjII7sOqTu23K2Ixi7I2UqbxV+UGfwYVxWAIVNEguFf1mJG+T8ish9+nEoSQWriIREjgNEKW/ATuZxJS3sjI0lCPEaehiJaka8G9Q3BR2VR6QhC3pqqELFMJmUmdqdBJvAIvAmSFzoQgAadfxh+DwEbi6A6XQu5r10oSKHa8YkRpRLbASsJjmts1CIqzDC1KzS5F27C7jQzffQf3mkr0dAu8letFAks3OHNELu3GZHPrp/d3PWd7HNIKtTHSYPMYFDwG83gEtqowloKQnYKQnXZIqWDLlrafcZcpt3hsZUaqgpHmJjSZxQwzniKSxMUawem5r4Cl10AGgSRRdXzHt5dcfMOkAeCkibVlaDfo2uQMmWyiaYM7GeKgS6lZ/8EXD2xeZ2SDh5GmgpgupMSYnOTUkWkoNAo5Lzv8tAnyzq7d65oCmE8qIdUxGZwR8kajc4682JyXznOojYFhMgR1IGvYlE5Og1mPaazNvuG2r0YwzHYDVJaDQZ4iT+9I3Pn6Cx+eyBePdDatyUm7HZTNy4lgHKyGx2pdVvfnmJRCv7/c3n7rpkPrL+CKhx6T3SZsQtgCkStDyBrm9XsvfeOdt7e9Esgai5HyRDKiqUqKy1L3NfxJcP0PLwxDfIEYknGLSAETMjkggTNPyfIG2UCDjASsW02r9LgRVWOqHNEoespXNcfO2vnxhlrb3Bq8sZVnkhn9D5B9P6aZXPXcRf9u5MNICq5GWf1lu9kpbnh25IWmKfchH6mr9427Y498J3g+JChLvYzynEO4Pgg34AlcFzM5nOVoOwnBJFtbDfz9YKsw3S/CdTPri52hHT+qb5l/0I74jC/iGBNdIn61nBMmJ2yP/yswqfzpABnUSWr5ki3rbLUMWQvcoBMWXatFvAyToXnt+QuovVrMy8RagzMOcqZ1RkE208A99sb7wbbj244DihiGSpoI14mQrt8U+DlsHZ5AOCIlEX4zl5NM5nAKguO5IgOMVCZMgwGXFIqGSjUeTzK0Pp9nOiMDYd2PW6DucY5CDRIct6+9cL5wz+Exu5s+PGwvnM7lO6fjP3a8c3Df0HH38xRRhhmbi+WsewrLmrxqhXNXla+F0UL6l920wLuOhIrDkbDtTI2N9RnXk0ROxefZCM5EJToe8aatiE7xdhqoLqbqspZWZLlG9W7W4+K47aYah9zTK+oUesPGm74ObthoB61dzE0uqKdyaeyCjk80lM+Wglkmes3CKRa9/8C6x+5dt9622bD80qRVT8Z//qcjzwdv3/+sy8I3AOyDDy3uKpC4CmzRESxD0M4JUhk9B2xtpU1jJw4MGyj3DJ2iF/K2MeCXuDpqBlT9GUvaS6NqBDO1eMSuczpTBZYEbRRsM5Zxd8rG/P6D4+a0rDnQbWtjvEN7zt73Ldvx7OIpyi0BMiAT3AUVdz7RvPyQHmxS2DDo5+QF9gTbv0rUrEfKjHm08aovAv6poJrT+qzNqt/OWrYu7cWV+34m3HitOAOukwkZVGHj8o9dko5WNOkMSkChBMsZvjwjHSJDNCrHRO3EaRbmTzlOTPWl25RpOZwlWYccT2jpkqyfQLfyA91Ky5HyCnQEYTdXN/3GhlkQG/h4HoILC50an7tsNjkxAsXD7Fd7tF2L4EoEKoJLipu9Ca7ZYPaZAo9xMft1HupK5FvcghpYox1QKNmOuFzkL0Rng5tEDAOcQndjpya99HUTMvQugW91Yefm/qyXYacyadF23JJw57+x6KyNcMUJqa4TOOAy6/dLnhViAadc6aaA8qiRFHmtKCcMONgq8EYXTu7wy0kzPm72nPNyuD9Z4Ckuc27xO+fq/ue8Bu73CPxLlzm3+p1zedE5R+Gc0yDKnidkzgGB97nMea/7nAO4qzPc5eG3pHwna1+xItzV0dbZmgl81+nPh2n/QMjcM2w854jL9Pd7TY9gR77cFjV7VSWT85uytToUsUrShC0ZC7amqJKEiOywO2PfTs6lZxpkpEKOwL5RVlgqIwj/qxFfE8YJXJ0jSE5NLxXL4Jy/FRHk3a7f67G+GVfsExGvbbZds3FLdMVdswIiwa0EvTMjMVOjvVTLmXSqnUYzDFciw0vhAq1XLBe4KlfzWXtNRhDNkAaQtEKQDBF4oFPWbP7NFidjc4uTJWCSnHr5ItiGvtT3yea0IM2Z+TD8yDwxz3yBT3Wy2lp8tdub9qLff6Plbc83W6328rH2IPBarV72aPsjghcRiNWKv33ag+JVBE8yvokBn2oSrtWU972mKWtah0OMh0uF1eVVgZ/w5xBI8rjAuYnLg+G3PNreRvAaI1XdlK3KW7DceG+Ay4CVYb7A0/3xjiTTBG4qjfcDHm3vI9jPyGDg3WZ8Jb7Z7OCcb+iOh8uEaa8ReE0Rzov77a5UvkB1YqRLBL6gNIE+8Wj7FMGHjFTjx9okox5CZczRC1O/JPBuf+ZAkt8I/Ghp3B/2aPsPgs9yzdHsaY4+yOYjbFx9pAjn/syBI30l8KGSBJICHm1l+PIrpzlchcqYYx0IFRF4hT9zIMlygc8qjfshHm24e5fKc82x2tMcV8G0dwv83aNiDhxpg8BXlibQSI+2UQhqnOZwFSpjjutg6s8FftefOZBkv8BvlsZ9o0cb7salMbnmWO5pjvWwRzpV4IlHxRw40gSB60oT6DiPNpxHmuQ0h6tQVUiEFRt4Q93pAs8oUSi+xZ3vkGeIGGS6wJNKk8fjw7CEH4alGQy/FqqMfwRy3UWW9Rpq1M3dULWwcxzxjsB7/bkbkuwR+LelSTPfo20BgjmMDO2R9ahGVyWiMrPlcV3YUY+/gr3CfoEf98c8kuwWeFdx5qWsQW/kXC72kKANQTMjA3vxU7ibW/FNwTK4YOrREYGnFOHcNVbsbY3Dt2rFSMcKPKq4QDm1am1WqrM9pOpAsBTqLXsz11VUuIxZYHGv/6HAff7MgiQpgU0fZun0EOBCBKtw+8e/hVmuMaIZencxY71CyNjxNq7/61ExFo70nsCv+DVWt4esuCOQZEhxwlhCZHx7kVuKw13U3yHTfUvgQcXNJYUKExqSlNu44UhxOQrMlfAQAc0urclm6Y7iInCPC8L1CSGNQ2087gN/Hock7wv8rg8R+jxEuBwBg8QMm3JmJzI39rmDtcP1GbB/m8DnHRUHw5HOFbjNr4Nd6yHa9QjWMVInHMxbQu5jUBNIA2G1eUTgG3z5GCdZL/AVPgx0s4cUGxCsZ/YZE/CxsKcU3M1OgsGrCZn4gMDX+XIzTnKtwOt8SLHJQ4rbEHwPIiXJWW/D3wwhO1/qkpu5q62GkaFam9Ri44n/Oxquxkc6IvAnfl3txx7i/RTBHYyMFK7Wv5Tc3WCnLzUR0sQEbvbnbkiyUOBTi4tTYKh7PSTZjmArSCLcbVW/kqQzmwRDTVkvcMSfyyGJLLDHVr9Akoc8JPkFgh2MVPRSzVBU1lfU2SCvSbC6TK2x8ZSXjoqz4UgvCuxRc7o722MeguGHCGknIzXpKsdDvnShI60EZAi8zJ9xkCQs8CIfxnnKQ4ZnEDwB9aduqJZn/SlBKpj+qcA7j4plcKRHBL7br2Ve8JAKHUfam60/iwqX3tOAtkhor8AP+TMLkjwo8PbiUuTy95pH2xsI9sGeRrU6sj/1cbndmJ8KM19ByKzTBR7vj3kkaRR4dEk+9WvO5X4PCd5D8GdGhsjRaM6PENJsN/7xJ6PNsFQmBPb3OYmTLBfY43NSAf8fevB/EMHfYI00adzopV4i8NWjAUbeCnXx7wR+uLgIbqsHkjwk8L2l+c8/Pdo+R3AofQwJe7S4MY1Gh7rklGkCj/bHNJKMErjg1ylXvbdz7v7rwTnuBqQvYGOFnGOH1mIOA0njlKsFvtifwyBJl8Dnl6TtQJlHWzny/DWsAd2Uhakc60jykyC8r+nGPtQIEuxU5yYF7vTHPpKcL3BHaewP9WirQVDByAiTxkxq9ZxL5TWtFlPj4juKe8ziOv0VIQteFvgmfzIgyY0CX9uv7/DnkYw0it84+XkbiypJE5ZaPKOlK2pCtn+hHOM8FcyFPMZDAQ0I6hgZ66aALkwAdn3vqgeIoQBsMRY+IfB2X3rgJPcJvLU0W072aDsWQSNPW1yUMB7+0vrcuOdrOhS9ARCjeYqNF35ZhHtfazof6bDAH5WUGGo59zM9JAshmJqt6vsXkJtnCbABwi06LPCuIgIWMQ+SPCrwg6VIEhjFuZ3tIQnuDgKzQJJ8EfpztAuBDSgeF18jcMifJEgSFPi44pIMyJ6E4Ec8bkyH3nARemsNcw01g9mzR+7xdoaHAvAER2AuOCm9NClrEMHthqYqfemZZjsOMuAhZDwfYQWpDhMoNM6PW2TvbXKkrk9BzZT36zSerR7r8l8O4n9ulJan6LYDS2eMLPIfDqML/gtK0N2/paZi1JZVr9kHctP/T1MZJhWxpKblnkHOuS9PgMlVbqxKDqsTXCFh0EW+0Iwf3E2f6AsssfutYKTc7odP7dyA9RnQyoesT5r4H1w7Pht1uLzinP38AD0ofsK+x6S7W2e8Vf3qR8MWnDZ80+vPhQ6sev7KWxO37L2dzvzBsLP/D5zErjpZNgAA";
+      "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";
 }

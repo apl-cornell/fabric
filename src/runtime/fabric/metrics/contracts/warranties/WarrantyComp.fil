@@ -7,6 +7,8 @@ import fabric.metrics.contracts.Contract;
 import fabric.metrics.SampledMetric;
 import fabric.metrics.util.AbstractSubject;
 import fabric.metrics.util.Observer;
+import fabric.worker.metrics.ImmutableMetricsVector;
+import fabric.worker.metrics.ImmutableSet;
 import fabric.worker.transaction.TransactionManager;
 
 /**
@@ -24,7 +26,7 @@ public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*L
 
   // TODO: Consider keeping a cache of per-store proxies?
   /** The set of proxy computations for this computation. */
-  protected final ArrayList/*<ProxyComp>*/ proxies;
+  protected ImmutableSet/*<ProxyComp>*/ proxies;
 
   /**
    * Create a new updated result paired with a contract that would enforce it
@@ -124,9 +126,8 @@ public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*L
             tmp.curVal.contract = newVal.contract;
             tmp.curVal.contract.addObserver(tmp);
             // New contract, so update proxies too.
-            int size = tmp.proxies.size();
-            for (int i = 0; i < size; i++) {
-              ProxyComp p = (ProxyComp) tmp.proxies.get(i);
+            for (java.util.Iterator iter = tmp.proxies.iterator(); iter.hasNext();) {
+              ProxyComp p = (ProxyComp) iter.next();
               // Stop monitoring the old value.
               if (p.curVal.contract != null) {
                 p.curVal.contract.removeObserver(p);
@@ -150,14 +151,13 @@ public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*L
               tmp.curVal.contract = newVal.contract;
               tmp.curVal.contract.addObserver(tmp);
               // New contract, so update proxies too.
-              int size = tmp.proxies.size();
-              for (int i = 0; i < size; i++) {
-                ProxyComp p = (ProxyComp) tmp.proxies.get(i);
+              for (java.util.Iterator iter = tmp.proxies.iterator(); iter.hasNext();) {
+                ProxyComp p = (ProxyComp) iter.next();
                 // Stop monitoring the old value.
                 if (p.curVal.contract != null) {
                   p.curVal.contract.removeObserver(p);
                 }
-                p.curVal.value = tmp.makeProxyResult(newVal, p.$getStore());
+                p.curVal.value = newVal.value;
                 p.curVal.contract = newVal.contract.getProxyContract(p.$getStore());
                 p.curVal.contract.addObserver(p);
               }
@@ -185,12 +185,11 @@ public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*L
   }
 
   /*@Override*/
-  public SampledMetric[] getLeafSubjects() {
+  public ImmutableMetricsVector/*<SampledMetric>*/ getLeafSubjects() {
     // TODO: Is this right?
     if (curVal.contract != null)
       return curVal.contract.getLeafSubjects();
-    final Store local = Worker.getWorker().getLocalStore();
-    return new SampledMetric[0] @local;
+    return ImmutableMetricsVector.emptyVector();
   }
 
   /*@Override*/
@@ -230,13 +229,13 @@ public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*L
   private static ProxyComp static_makeProxy(WarrantyComp tmp, final Store proxyStore) {
     if (TransactionManager.getInstance().inTxn()) {
       ProxyComp p = new ProxyComp@proxyStore().fabric$metrics$contracts$warranties$WarrantyComp$ProxyComp$(tmp);
-      tmp.proxies.add(p);
+      tmp.proxies = tmp.proxies.add(p);
       return p;
     } else {
       ProxyComp rtn = null;
       atomic {
         rtn = new ProxyComp@proxyStore().fabric$metrics$contracts$warranties$WarrantyComp$ProxyComp$(tmp);
-        tmp.proxies.add(rtn);
+        tmp.proxies = tmp.proxies.add(rtn);
       }
       return rtn;
     }
@@ -245,7 +244,7 @@ public abstract class WarrantyComp/*<T>*/ extends AbstractSubject implements /*L
   protected WarrantyComp fabric$metrics$contracts$warranties$WarrantyComp$() {
     // Default to assuming up to 4 proxies
     this.curVal = new WarrantyValue().fabric$metrics$contracts$warranties$WarrantyValue$(null, null);
-    this.proxies = new ArrayList/*<>*/().fabric$util$ArrayList$(4);
+    this.proxies = ImmutableSet.emptySet();
     fabric$metrics$util$AbstractSubject$();
     return this;
   }
