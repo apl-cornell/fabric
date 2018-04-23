@@ -1,6 +1,7 @@
 package fabric.store.db;
 
 import static com.sleepycat.je.OperationStatus.SUCCESS;
+
 import static fabric.common.Logging.STORE_DB_LOGGER;
 
 import java.io.ByteArrayInputStream;
@@ -50,6 +51,7 @@ import fabric.common.util.OidKeyHashMap;
 import fabric.lang.FClass;
 import fabric.lang.security.Principal;
 import fabric.store.SubscriptionManager;
+import fabric.worker.Worker;
 import fabric.worker.remote.RemoteWorker;
 
 /**
@@ -211,8 +213,7 @@ public class BdbDB extends ObjectDB {
 
             if (pending != null) {
               Serializer<SerializedObject> serializer = new Serializer<>();
-              for (SerializedObject o : SysUtil.chain(pending.creates,
-                  pending.writes)) {
+              for (SerializedObject o : pending.creates) {
                 long onum = o.getOnum();
                 STORE_DB_LOGGER.log(Level.FINEST, "Bdb committing onum {0}",
                     onum);
@@ -224,6 +225,28 @@ public class BdbDB extends ObjectDB {
                     new DatabaseEntry(serializer.toBytes(o));
 
                 db.put(txn, onumData, objData);
+              }
+              for (SerializedObject o : pending.writes) {
+                long onum = o.getOnum();
+                STORE_DB_LOGGER.log(Level.FINEST, "Bdb committing onum {0}",
+                    onum);
+
+                DatabaseEntry onumData = new DatabaseEntry();
+                LongBinding.longToEntry(onum, onumData);
+
+                DatabaseEntry objData =
+                    new DatabaseEntry(serializer.toBytes(o));
+
+                db.put(txn, onumData, objData);
+
+                // Update the local worker cache if this is a remote worker
+                // updating the value.
+                // If the update is from the local worker, the already
+                // deserialized version in the worker transaction will be in the
+                // cache after 2PC.
+                if (!workerIdentity.node.equals(
+                      Worker.getWorker().inProcessRemoteWorker))
+                  Worker.getWorker().getStore(getName()).updateCache(o);
               }
 
               return pending;
