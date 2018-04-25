@@ -934,8 +934,7 @@ public final class SerializedObject implements FastSerializable, Serializable {
     // Write out the object header.
     int headerSize = 0;
     if (writeHeader) {
-      out.writeLong(impl.$getOnum());
-      out.writeInt(impl.$version);
+      new Header(impl).write(out);
       headerSize = cdo.getBytes();
     }
 
