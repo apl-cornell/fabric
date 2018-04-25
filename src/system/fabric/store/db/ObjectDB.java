@@ -487,9 +487,7 @@ public abstract class ObjectDB {
 
     // First, read lock the object
     try {
-      // TODO: Want a "weak" write lock to allow for concurrent readers without
-      // risking out of order updates.
-      objectLocksFor(onum).lockForWrite(tid);
+      objectLocksFor(onum).lockForSoftWrite(tid);
     } catch (UnableToLockException e) {
       throw new TransactionPrepareFailedException(versionConflicts,
           longerContracts,
@@ -503,7 +501,7 @@ public abstract class ObjectDB {
       if (curExpiry > extension.expiry) {
         longerContracts.put(onum, curExpiry);
       }
-      objectLocksFor(onum).unlockForWrite(tid);
+      objectLocksFor(onum).unlockForSoftWrite(tid);
       return;
     }
 
@@ -825,7 +823,7 @@ public abstract class ObjectDB {
       ObjectLocks locks = rwLocks.get(onum);
       if (locks != null) {
         synchronized (locks) {
-          locks.unlockForWrite(tx.tid);
+          locks.unlockForSoftWrite(tx.tid);
 
           if (!locks.isLocked()) rwLocks.remove(onum, locks);
         }
