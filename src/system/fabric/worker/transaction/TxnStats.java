@@ -1,5 +1,8 @@
 package fabric.worker.transaction;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Class for easily tracking stats about app level transactions (as opposed to
  * individual attempts).
@@ -11,6 +14,8 @@ public class TxnStats {
   private boolean coordinated = false;
   private boolean locksUsed = false;
   private int fetches = 0;
+  private List<String> msgs = new ArrayList<>();
+  private List<String> versionConflicts = new ArrayList<>();
 
   public TxnStats() {
   }
@@ -22,6 +27,8 @@ public class TxnStats {
     coordinated = false;
     locksUsed = false;
     fetches = 0;
+    msgs.clear();
+    versionConflicts.clear();
   }
 
   /**
@@ -108,12 +115,28 @@ public class TxnStats {
     fetches++;
   }
 
+  /**
+   * Add a custom message.
+   */
+  public void addMsg(String msg) {
+    this.msgs.add(msg);
+  }
+
+  /**
+   * Mark the version conflicts that occurred.
+   */
+  public void addConflicts(String conflicts) {
+    versionConflicts.add(conflicts);
+  }
+
   @Override
   public String toString() {
     return "[COORDINATED: " + coordinated +
       " WITH " + txnAttempts + " TXN ATTEMPTS" +
       " AND " + lockAttempts + " LOCK ATTEMPTS AND LOCKS USED: " + locksUsed +
       " USING " + fetches + " FETCHES" +
+      " MSGS: " + msgs +
+      " CONFLICTS: " + versionConflicts +
       " IN " + Long.toHexString(tid) + "]";
   }
 }

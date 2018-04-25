@@ -1143,6 +1143,7 @@ public final class TransactionManager {
 
     // Check for conflicts and unreachable stores/workers.
     if (!failures.isEmpty()) {
+      String conflictsString = "";
       String logMessage = "Transaction tid="
           + Long.toHexString(current.tid.topTid) + ":  prepare failed.";
 
@@ -1176,6 +1177,11 @@ public final class TransactionManager {
                 }
               }
               store.updateCache(obj);
+              if (!conflictsString.equals("")) {
+                conflictsString += " ";
+              }
+              conflictsString +=
+                  obj.getClassName() + "@" + store.name() + "#" + obj.getOnum();
             }
           }
           // Update extensions which weren't version conflicts.
@@ -1205,6 +1211,7 @@ public final class TransactionManager {
           long expiry = entry.getValue();
           s.readFromCache(onum).setExpiry(expiry);
         }
+        stats.addConflicts(conflictsString);
       }
 
       WORKER_TRANSACTION_LOGGER.fine(logMessage);
@@ -1715,8 +1722,8 @@ public final class TransactionManager {
                   if (WORKER_DEADLOCK_LOGGER.isLoggable(Level.FINEST)) {
                     Logging.log(WORKER_DEADLOCK_LOGGER, Level.FINER,
                         "{0} in {6} wants to write {1}/{2} ({3}) ({5}); aborting reader {4}",
-                        current, obj.$getStore(), obj.$getOnum(), obj.getClass(),
-                        lock, System.identityHashCode(obj),
+                        current, obj.$getStore(), obj.$getOnum(),
+                        obj.getClass(), lock, System.identityHashCode(obj),
                         Thread.currentThread());
                   }
                   waitsFor.add(lock);

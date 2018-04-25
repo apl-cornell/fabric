@@ -10,12 +10,22 @@ import fabric.lang.security.Principal;
 
 /**
  * Read/write lock information for a single object.
+ *
+ * Supports a "soft" write lock, for updates that should exclude writers but not
+ * readers.  This kind of lock is intended to support updates of information
+ * which does not invalidate readers, like an extension of an expiry in the
+ * warranties work.
  */
 final class ObjectLocks {
   /**
-   * The TID for the holder of the write lock.
+   * The TID for the holder of the "hard" write lock.
    */
   Long writeLock;
+
+  /**
+   * The TID for the holder of the "soft" write lock.
+   */
+  Long softWriteLock;
 
   /**
    * Maps TIDs for the holders of read locks to the principal OIDs of the
@@ -25,6 +35,7 @@ final class ObjectLocks {
 
   ObjectLocks() {
     this.writeLock = null;
+    this.softWriteLock = null;
     this.readLocks = new LongKeyHashMap<>();
   }
 
@@ -32,7 +43,7 @@ final class ObjectLocks {
    * @return true iff the object is locked (whether for a read or for a write).
    */
   synchronized boolean isLocked() {
-    return writeLock != null || !readLocks.isEmpty();
+    return writeLock != null || softWriteLock != null || !readLocks.isEmpty();
   }
 
   /**
@@ -45,8 +56,16 @@ final class ObjectLocks {
    *          requesting the lock.
    */
   synchronized void lockForWrite(long tid) throws UnableToLockException {
-    if (writeLock != null) {
+    if (writeLock != null && writeLock != tid) {
       // Conflicting write lock.
+      throw new UnableToLockException();
+    }
+
+    // We already have the write lock, don't bother with anything.
+    if (writeLock != null && writeLock == tid) return;
+
+    if (softWriteLock != null && softWriteLock != tid) {
+      // Conflicting with a softWriteLock
       throw new UnableToLockException();
     }
 
@@ -74,6 +93,41 @@ final class ObjectLocks {
   }
 
   /**
+   * Registers a soft write lock for the given TID.
+   *
+   * @throws UnableToLockException
+   *          when a conflicting lock is held. Soft write locks are always
+   *          considered conflicting with other write locks (hard or soft).
+   */
+  synchronized void lockForSoftWrite(long tid) throws UnableToLockException {
+    if (writeLock != null && writeLock != tid) {
+      // Conflicting write lock.
+      throw new UnableToLockException();
+    }
+
+    if (softWriteLock != null && softWriteLock != tid) {
+      // Conflicting with a softWriteLock
+      throw new UnableToLockException();
+    }
+
+    softWriteLock = tid;
+  }
+
+  /**
+   * Removes a soft write lock for the given TID.
+   *
+   * @return true iff a lock was found for the given TID.
+   */
+  synchronized boolean unlockForSoftWrite(long tid) {
+    if (softWriteLock != null && softWriteLock == tid) {
+      softWriteLock = null;
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
    * Registers a read lock for the given TID and worker.
    *
    * @throws UnableToLockException
@@ -82,10 +136,13 @@ final class ObjectLocks {
    */
   synchronized void lockForRead(long tid, Principal worker)
       throws UnableToLockException {
-    if (writeLock != null) {
+    if (writeLock != null && writeLock != tid) {
       // Conflicting write lock.
       throw new UnableToLockException();
     }
+
+    // We already have the write lock, don't bother with a read lock.
+    if (writeLock != null && writeLock == tid) return;
 
     List<Oid> pins = readLocks.get(tid);
     if (pins == null) {
