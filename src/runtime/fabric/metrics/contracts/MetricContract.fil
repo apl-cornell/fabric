@@ -84,15 +84,15 @@ public class MetricContract extends Contract {
   }
 
   private static void static_activate(MetricContract tmp) {
-    if (TransactionManager.getInstance().inTxn()) {
-      if (tmp.isActivated())
-        return;
-    } else {
-      atomic {
-        if (tmp.isActivated())
-          return;
-      }
-    }
+    //if (TransactionManager.getInstance().inTxn()) {
+    //  if (tmp.isActivated())
+    //    return;
+    //} else {
+    //  atomic {
+    //    if (tmp.isActivated())
+    //      return;
+    //  }
+    //}
 
     // Refresh the stats being used
     // Commented out for now.  If it's run here it's going to repeat work in
@@ -135,12 +135,12 @@ public class MetricContract extends Contract {
    * as needed.
    */
   /*@Override*/
-  protected boolean refresh(boolean asyncExtension) {
+  public boolean refresh(boolean asyncExtension) {
     // If we haven't activated yet, this is a bad operation.  Stop.
-    if (!isActivated()) {
-      //Logging.METRICS_LOGGER.log(Level.FINER, "CONTRACT INACTIVE");
-      return false;
-    }
+    //if (!isActivated()) {
+    //  //Logging.METRICS_LOGGER.log(Level.FINER, "CONTRACT INACTIVE");
+    //  return false;
+    //}
 
     long currentTime = System.currentTimeMillis();
     // Refresh the current policy and update to the new expiration time
@@ -150,6 +150,7 @@ public class MetricContract extends Contract {
       if (curExpiry >= currentTime) {
         //Logging.METRICS_LOGGER.log(Level.FINER, "DEFENDING " + this + " WITH " +
         //    currentPolicy);
+        currentPolicy.apply(this);
         return update(curExpiry, asyncExtension);
       }
     }
@@ -160,8 +161,7 @@ public class MetricContract extends Contract {
 
     // If we're moving to a new policy we need to be holding the reconfig locks.
     TransactionManager tm = TransactionManager.getInstance();
-    //this.lock.acquire();
-    acquireReconfigLocks();
+    //acquireReconfigLocks();
 
     // Otherwise we're finding a new policy, so we're coordinating.
     //Logging.METRICS_LOGGER.log(Level.FINER, "COORDINATING FOR {0} IN {1}",
@@ -172,13 +172,14 @@ public class MetricContract extends Contract {
     EnforcementPolicy oldPolicy = currentPolicy;
     EnforcementPolicy newPolicy = metric.thresholdPolicy(this.rate, this.base, $getStore());
 
-    // Wait to unapply so that metric is still tracked if this was
-    // directly enforced previously
-    if (oldPolicy != null && !oldPolicy.equals(newPolicy))
-      oldPolicy.unapply(this);
     newPolicy.activate();
     // Don't apply if the new policy is already expired.
     long newExpiry = newPolicy.expiry();
+
+    // Wait to unapply so that metric is still tracked if this was
+    // directly enforced previously
+    if (oldPolicy != null)
+      oldPolicy.unapply(this);
     boolean result = update(newExpiry, asyncExtension);
     if (newExpiry >= currentTime) {
       currentPolicy = newPolicy;

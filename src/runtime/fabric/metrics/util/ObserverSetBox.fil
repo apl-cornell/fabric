@@ -1,0 +1,45 @@
+package fabric.metrics.util;
+
+import fabric.worker.metrics.ImmutableObserverSet;
+
+
+/**
+ * Allows for a separate object to hold the observer set, if we want.
+ */
+public class ObserverSetBox {
+
+  public ImmutableObserverSet value;
+
+  public ObserverSetBox fabric$metrics$util$ObserverSetBox$() {
+    fabric$lang$Object$();
+    this.value = ImmutableObserverSet.emptySet();
+    return this;
+  }
+
+  /*@Override*/
+  public void addObserver(Observer o) {
+    if (!value.contains(o))
+      value = value.add(o);
+  }
+
+  /*@Override*/
+  public void removeObserver(Observer o) {
+    if (value.contains(o))
+      value = value.remove(o);
+  }
+
+  /*@Override*/
+  public boolean observedBy(Observer o) {
+    return value.contains(o);
+  }
+
+  /*@Override*/
+  public boolean isObserved() {
+    return !value.isEmpty();
+  }
+
+  /*@Override*/
+  public ImmutableObserverSet getObservers() {
+    return value;
+  }
+}

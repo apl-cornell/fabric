@@ -39,7 +39,7 @@ import fabric.common.Logging;
 public abstract class Contract extends AbstractSubject implements Observer {
 
   // Lock to be acquired for reconfiguring after being activated.
-  protected final ReconfigLock lock;
+  //protected final ReconfigLock lock;
 
   // Currently used enforcement policy.
   protected EnforcementPolicy currentPolicy;
@@ -49,7 +49,7 @@ public abstract class Contract extends AbstractSubject implements Observer {
    *            the {@link Store} this {@link Contract} is stored at
    */
   protected Contract fabric$metrics$contracts$Contract$() {
-    this.lock = new ReconfigLock().fabric$metrics$util$ReconfigLock$();
+    //this.lock = new ReconfigLock().fabric$metrics$util$ReconfigLock$();
     fabric$metrics$util$AbstractSubject$();
     this.$expiry = -1;
     return this;
@@ -103,15 +103,15 @@ public abstract class Contract extends AbstractSubject implements Observer {
    * Has the {@link Contract} been activated (the System has started enforcing
    * and maintaining the expiration time)?
    */
-  private boolean activated = false;
+  //private boolean activated = false;
 
   /**
    * @return true iff this contract has been activated (the System is
    *         enforcing it).
    */
-  protected boolean isActivated() {
-    return activated;
-  }
+  //protected boolean isActivated() {
+  //  return activated;
+  //}
 
   /**
    * Activate and start enforcing this {@link Contract} in the System.
@@ -121,16 +121,21 @@ public abstract class Contract extends AbstractSubject implements Observer {
   }
 
   public void activate_remote(fabric.lang.security.Principal p) {
-    this.activate();
+    // Changed to avoid using deprecated activation procedure.
+    this.refresh(false);
+  }
+
+  public void refresh_remote(fabric.lang.security.Principal p, boolean asyncExtension) {
+    this.refresh(asyncExtension);
   }
 
   public static void static_activate(Contract tmp) {
     if (TransactionManager.getInstance().inTxn()) {
-      if (!tmp.activated) {
+      //if (!tmp.activated) {
         if (tmp.currentPolicy != null) {
           tmp.currentPolicy.activate();
         }
-        tmp.activated = true;
+        //tmp.activated = true;
         if (tmp.currentPolicy != null && tmp.currentPolicy.expiry() > System.currentTimeMillis()) {
           tmp.$expiry = tmp.currentPolicy.expiry();
           tmp.currentPolicy.apply(tmp);
@@ -138,18 +143,18 @@ public abstract class Contract extends AbstractSubject implements Observer {
           tmp.currentPolicy = null;
         }
         Logging.METRICS_LOGGER.log(Level.FINE, "ACTIVATED {0} IN {1}", new java.lang.Object native[] { tmp, TransactionManager.getInstance().getCurrentLog() });
-      }
+      //}
     } else {
-      boolean unactivated = false;
-      atomic {
-        unactivated = !tmp.activated;
-      }
-      if (unactivated) {
+      //boolean unactivated = false;
+      //atomic {
+      //  unactivated = !tmp.activated;
+      //}
+      //if (unactivated) {
         if (tmp.currentPolicy != null) {
           tmp.currentPolicy.activate();
         }
         atomic {
-          tmp.activated = true;
+          //tmp.activated = true;
           if (tmp.currentPolicy != null && tmp.currentPolicy.expiry() > System.currentTimeMillis()) {
             tmp.$expiry = tmp.currentPolicy.expiry();
             tmp.currentPolicy.apply(tmp);
@@ -158,7 +163,7 @@ public abstract class Contract extends AbstractSubject implements Observer {
           }
           Logging.METRICS_LOGGER.log(Level.FINE, "ACTIVATED {0} IN {1}", new java.lang.Object native[] { tmp, TransactionManager.getInstance().getCurrentLog() });
         }
-      }
+      //}
     }
   }
 
@@ -248,7 +253,7 @@ public abstract class Contract extends AbstractSubject implements Observer {
    *       transaction context.
    */
   public boolean valid(long time) {
-    boolean rtn = isActivated() && getExpiry() >= time;
+    boolean rtn = /*isActivated() &&*/ getExpiry() >= time;
     if (rtn)
       TransactionManager.getInstance().registerExpiryUse(getExpiry());
     return rtn;
@@ -259,7 +264,7 @@ public abstract class Contract extends AbstractSubject implements Observer {
    *         transaction context.
    */
   public boolean valid() {
-    boolean rtn = isActivated() && getExpiry() >= System.currentTimeMillis();
+    boolean rtn = /*isActivated() && */getExpiry() >= System.currentTimeMillis();
     if (rtn)
       TransactionManager.getInstance().registerExpiryUse(getExpiry());
     return rtn;
@@ -272,7 +277,7 @@ public abstract class Contract extends AbstractSubject implements Observer {
    *         the local time.
    */
   public boolean stale(long time) {
-    return isActivated() && getExpiry() < time;
+    return /*isActivated() && */getExpiry() < time;
   }
 
   /**
@@ -280,7 +285,7 @@ public abstract class Contract extends AbstractSubject implements Observer {
    *         the local time.
    */
   public boolean stale() {
-    return isActivated() && getExpiry() < System.currentTimeMillis();
+    return /*isActivated() && */getExpiry() < System.currentTimeMillis();
   }
 
   /**
@@ -312,7 +317,7 @@ public abstract class Contract extends AbstractSubject implements Observer {
    * @return true iff the contract's expiration was retracted as a result of
    *         this operation.
    */
-  protected abstract boolean refresh(boolean asyncExtension);
+  public abstract boolean refresh(boolean asyncExtension);
 
   /*@Override*/
   public boolean handleUpdates() {
@@ -321,7 +326,7 @@ public abstract class Contract extends AbstractSubject implements Observer {
     // checked, it stays stale. Probably the right behavior?
     if (valid()) {
       // Check first that we aren't going to conflict with a reconfiguration.
-      this.lock.checkForRead();
+      //this.lock.checkForRead();
       return refresh(false);
     }
 
@@ -377,7 +382,7 @@ public abstract class Contract extends AbstractSubject implements Observer {
       if (tmp.valid()) {
         // Check first that we aren't going to conflict with a
         // reconfiguration.
-        tmp.lock.checkForRead();
+        //tmp.lock.checkForRead();
         tmp.refresh(true);
       }
 
@@ -391,7 +396,7 @@ public abstract class Contract extends AbstractSubject implements Observer {
         if (tmp.valid()) {
           // Check first that we aren't going to conflict with a
           // reconfiguration.
-          tmp.lock.checkForRead();
+          //tmp.lock.checkForRead();
           tmp.refresh(true);
         }
 
@@ -410,9 +415,9 @@ public abstract class Contract extends AbstractSubject implements Observer {
   public void acquireReconfigLocks() {
     //Logging.METRICS_LOGGER.finer("ACQUIRING LOCK AT " + this + " IN " +
     //    TransactionManager.getInstance().getCurrentLog());
-    this.lock.acquireOptimistic();
-    if (this.currentPolicy != null)
-      this.currentPolicy.acquireReconfigLocks();
+    //this.lock.acquireOptimistic();
+    //if (this.currentPolicy != null)
+    //  this.currentPolicy.acquireReconfigLocks();
   }
 
   /**
@@ -440,8 +445,9 @@ public abstract class Contract extends AbstractSubject implements Observer {
         proxy = new ProxyContract@proxyStore().fabric$metrics$contracts$Contract$ProxyContract$(tmp);
       }
     }
-    if (tmp.isActivated())
-      proxy.activate();
+    //if (tmp.isActivated())
+      //proxy.activate();
+    proxy.refresh(false);
     return proxy;
   }
 
@@ -469,12 +475,12 @@ public abstract class Contract extends AbstractSubject implements Observer {
     }
 
     /*@Override*/
-    protected boolean refresh(boolean asyncExtension) {
+    public boolean refresh(boolean asyncExtension) {
       // If we haven't activated yet, this is a bad operation.  Stop.
-      if (!isActivated()) {
-        //Logging.METRICS_LOGGER.log(Level.FINER, "CONTRACT INACTIVE");
-        return false;
-      }
+      //if (!isActivated()) {
+      //  //Logging.METRICS_LOGGER.log(Level.FINER, "CONTRACT INACTIVE");
+      //  return false;
+      //}
 
       long currentTime = System.currentTimeMillis();
       if (currentPolicy != null) {
@@ -482,6 +488,8 @@ public abstract class Contract extends AbstractSubject implements Observer {
         if (curExpiry < currentTime) {
           currentPolicy.unapply(this);
           currentPolicy = null;
+        } else {
+          currentPolicy.apply(this);
         }
         return update(curExpiry, asyncExtension);
       }
@@ -527,8 +535,9 @@ public abstract class Contract extends AbstractSubject implements Observer {
           proxy = new ProxyContract@proxyStore().fabric$metrics$contracts$Contract$ProxyContract$(tmp.target);
         }
       }
-      if (tmp.isActivated())
-        proxy.activate();
+      //if (tmp.isActivated())
+        //proxy.activate();
+      proxy.refresh(false);
       return proxy;
     }
   }

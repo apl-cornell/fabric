@@ -487,34 +487,24 @@ public abstract class ObjectDB {
 
     // First, read lock the object
     try {
-      objectLocksFor(onum).lockForRead(tid, worker);
-    } catch (UnableToLockException e) {
-      throw new TransactionPrepareFailedException(versionConflicts,
-          longerContracts,
-          "Object " + onum + " has been locked by an uncommitted transaction.");
-    }
-
-    try {
-      // Check if this is a "real" extension, otherwise we skip it.
-      SerializedObject storeCopy = read(onum);
-      long curExpiry = storeCopy.getExpiry();
-      if (curExpiry >= extension.expiry) {
-        if (curExpiry > extension.expiry) {
-          longerContracts.put(onum, curExpiry);
-        }
-        return;
-      }
-    } finally {
-      objectLocksFor(onum).unlockForRead(tid, worker);
-    }
-
-    // It's a real extension, lock it for a write.
-    try {
+      // TODO: Want a "weak" write lock to allow for concurrent readers without
+      // risking out of order updates.
       objectLocksFor(onum).lockForWrite(tid);
     } catch (UnableToLockException e) {
       throw new TransactionPrepareFailedException(versionConflicts,
           longerContracts,
           "Object " + onum + " has been locked by an uncommitted transaction.");
+    }
+
+    // Check if this is a "real" extension, otherwise we skip it.
+    SerializedObject storeCopy = read(onum);
+    long curExpiry = storeCopy.getExpiry();
+    if (curExpiry >= extension.expiry) {
+      if (curExpiry > extension.expiry) {
+        longerContracts.put(onum, curExpiry);
+      }
+      objectLocksFor(onum).unlockForWrite(tid);
+      return;
     }
 
     // Record the updated object. Doing so will also register that the
@@ -524,9 +514,6 @@ public abstract class ObjectDB {
     synchronized (submap) {
       submap.get(worker).extensions.add(extension);
     }
-
-    // Read the old copy from the database.
-    SerializedObject storeCopy = read(onum);
 
     // Check version numbers.
     int storeVersion = storeCopy.getVersion();

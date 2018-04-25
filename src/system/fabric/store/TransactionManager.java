@@ -152,27 +152,37 @@ public class TransactionManager {
     try {
       // This will store the set of onums of objects that were out of date.
       LongKeyMap<SerializedObject> versionConflicts = new LongKeyHashMap<>();
+      List<TransactionPrepareFailedException> failures = new ArrayList<>();
 
       // Prepare writes.
       for (SerializedObject o : req.writes) {
-        database.prepareUpdate(tid, worker, o, versionConflicts,
-            longerContracts, WRITE);
+        try {
+          database.prepareUpdate(tid, worker, o, versionConflicts,
+              longerContracts, WRITE);
+        } catch (TransactionPrepareFailedException e) {
+          failures.add(e);
+        }
       }
 
       // Prepare creates.
       for (SerializedObject o : req.creates) {
-        database.prepareUpdate(tid, worker, o, versionConflicts,
-            longerContracts, CREATE);
+        try {
+          database.prepareUpdate(tid, worker, o, versionConflicts,
+              longerContracts, CREATE);
+        } catch (TransactionPrepareFailedException e) {
+          failures.add(e);
+        }
       }
 
       // Prepare extensions.
       for (ExpiryExtension e : req.extensions) {
-        database.prepareExtension(tid, worker, e, versionConflicts,
-            longerContracts);
+        try {
+          database.prepareExtension(tid, worker, e, versionConflicts,
+              longerContracts);
+        } catch (TransactionPrepareFailedException err) {
+          failures.add(err);
+        }
       }
-
-      database.prepareDelayedExtensions(tid, worker, req.extensionsTriggered,
-          req.delayedExtensions);
 
       // Check reads
       for (LongKeyMap.Entry<Pair<Integer, Long>> entry : req.reads.entrySet()) {
@@ -180,22 +190,31 @@ public class TransactionManager {
         int version = entry.getValue().first.intValue();
         long expiry = entry.getValue().second.longValue();
 
-        database.prepareRead(tid, worker, onum, version, expiry,
-            versionConflicts, longerContracts);
+        try {
+          database.prepareRead(tid, worker, onum, version, expiry,
+              versionConflicts, longerContracts);
+        } catch (TransactionPrepareFailedException e) {
+          failures.add(e);
+        }
       }
 
-      if (!versionConflicts.isEmpty()) {
-        throw new TransactionPrepareFailedException(versionConflicts,
-            longerContracts);
+      if (!versionConflicts.isEmpty() || !failures.isEmpty()) {
+        TransactionPrepareFailedException fail =
+            new TransactionPrepareFailedException(failures);
+        fail.versionConflicts.putAll(versionConflicts);
+        fail.longerContracts.putAll(longerContracts);
+        database.abortPrepare(tid, worker);
+        throw fail;
       }
+
+      // Dont' bother with these if there's already a failure.
+      database.prepareDelayedExtensions(tid, worker, req.extensionsTriggered,
+          req.delayedExtensions);
 
       // readHistory.record(req);
       database.finishPrepare(tid, worker);
 
       STORE_TRANSACTION_LOGGER.log(Level.FINE, "Prepared transaction {0}", tid);
-    } catch (TransactionPrepareFailedException e) {
-      database.abortPrepare(tid, worker);
-      throw e;
     } catch (RuntimeException e) {
       e.printStackTrace();
       database.abortPrepare(tid, worker);
@@ -505,7 +524,8 @@ public class TransactionManager {
                 ae.printStackTrace();
                 continue;
               }
-              if (exp - curTime <= EXTENSION_WINDOW && exp >= curTime - EXTENSION_WINDOW) {
+              if (exp - curTime <= EXTENSION_WINDOW
+                  && exp >= curTime - EXTENSION_WINDOW) {
                 Threading.getPool().submit(new Threading.NamedRunnable(
                     "Extension of " + extension.onum) {
                   @Override
@@ -533,20 +553,20 @@ public class TransactionManager {
                                   new Contract._Proxy(store, extension.onum);
                               long oldExpiry = target.get$$expiry();
                               target.attemptExtension();
-                              return new Triple<>(target.toString(),
-                                  oldExpiry, target.get$$expiry());
+                              return new Triple<>(target.toString(), oldExpiry,
+                                  target.get$$expiry());
                             }
                           }, true);
                     } catch (AbortException e) {
                       success = false;
                       // Clear out any leftover locking state
-                      fabric.worker.transaction.TransactionManager
-                          .getInstance().clearLockObjectState();
+                      fabric.worker.transaction.TransactionManager.getInstance()
+                          .clearLockObjectState();
                     } catch (LockConflictException e) {
                       success = false;
                       // Clear out any leftover locking state
-                      fabric.worker.transaction.TransactionManager
-                          .getInstance().clearLockObjectState();
+                      fabric.worker.transaction.TransactionManager.getInstance()
+                          .clearLockObjectState();
                     }
                     if (nameAndNewExpiry != null) {
                       Logging.METRICS_LOGGER.log(Level.INFO,
@@ -571,8 +591,10 @@ public class TransactionManager {
                 });
               } else {
                 // If too early, requeue it.
-                if (exp > curTime) queueExtension(extension.onum);
-                else Logging.METRICS_LOGGER.log(Level.INFO, "SKIPPED EXTENSION OF {0}", Long.valueOf(extension.onum));
+                if (exp > curTime)
+                  queueExtension(extension.onum);
+                else Logging.METRICS_LOGGER.log(Level.INFO,
+                    "SKIPPED EXTENSION OF {0}", Long.valueOf(extension.onum));
               }
             }
           } catch (InterruptedException e) {

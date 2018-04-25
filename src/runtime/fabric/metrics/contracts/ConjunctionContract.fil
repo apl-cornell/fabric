@@ -91,15 +91,15 @@ public class ConjunctionContract extends Contract {
   }
 
   private static void static_activate(ConjunctionContract tmp) {
-    if (TransactionManager.getInstance().inTxn()) {
-      if (tmp.isActivated())
-        return;
-    } else {
-      atomic {
-        if (tmp.isActivated())
-          return;
-      }
-    }
+    //if (TransactionManager.getInstance().inTxn()) {
+    //  if (tmp.isActivated())
+    //    return;
+    //} else {
+    //  atomic {
+    //    if (tmp.isActivated())
+    //      return;
+    //  }
+    //}
 
     // activate the policy here to avoid accidentally making it atomic below.
     tmp.currentPolicy.activate();
@@ -127,12 +127,12 @@ public class ConjunctionContract extends Contract {
    * as needed.
    */
   /*@Override*/
-  protected boolean refresh(boolean asyncExtension) {
+  public boolean refresh(boolean asyncExtension) {
     // If we haven't activated yet, this is a bad operation.  Stop.
-    if (!isActivated()) {
-      //Logging.METRICS_LOGGER.log(Level.FINER, "CONTRACT INACTIVE");
-      return false;
-    }
+    //if (!isActivated()) {
+    //  //Logging.METRICS_LOGGER.log(Level.FINER, "CONTRACT INACTIVE");
+    //  return false;
+    //}
 
     long currentTime = System.currentTimeMillis();
     if (observing) {
@@ -141,6 +141,8 @@ public class ConjunctionContract extends Contract {
         currentPolicy.unapply(this);
         currentPolicy = null;
         observing = false;
+      } else {
+        currentPolicy.apply(this);
       }
       return update(curExpiry, asyncExtension);
     }

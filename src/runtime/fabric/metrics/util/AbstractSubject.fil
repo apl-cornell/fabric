@@ -130,7 +130,7 @@ public abstract class AbstractSubject implements Subject {
         }
         // If this has no other pending sampled events, process it.
         if (!needToWait) {
-          //Logging.METRICS_LOGGER.log(Level.FINER, "HANDLING OBSERVER " +
+          //Logging.METRICS_LOGGER.log(Level.FINE, "HANDLING OBSERVER {0}",
           //    unhandled);
           boolean modified = unhandled.handleUpdates();
           if (unhandled instanceof Subject && modified) {
