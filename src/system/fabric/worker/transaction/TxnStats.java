@@ -123,6 +123,13 @@ public class TxnStats {
   }
 
   /**
+   * Reset custom messages.
+   */
+  public void clearMsgs() {
+    this.msgs.clear();
+  }
+
+  /**
    * Mark the version conflicts that occurred.
    */
   public void addConflicts(String conflicts) {
@@ -131,12 +138,10 @@ public class TxnStats {
 
   @Override
   public String toString() {
-    return "[COORDINATED: " + coordinated +
-      " WITH " + txnAttempts + " TXN ATTEMPTS" +
-      " AND " + lockAttempts + " LOCK ATTEMPTS AND LOCKS USED: " + locksUsed +
-      " USING " + fetches + " FETCHES" +
-      " MSGS: " + msgs +
-      " CONFLICTS: " + versionConflicts +
-      " IN " + Long.toHexString(tid) + "]";
+    return "[COORDINATED: " + coordinated + " WITH " + txnAttempts
+        + " TXN ATTEMPTS" + " AND " + lockAttempts
+        + " LOCK ATTEMPTS AND LOCKS USED: " + locksUsed + " USING " + fetches
+        + " FETCHES" + " MSGS: " + msgs + " CONFLICTS: " + versionConflicts
+        + " IN " + Long.toHexString(tid) + "]";
   }
 }
