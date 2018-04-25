@@ -269,9 +269,6 @@ public final class SerializedObject implements FastSerializable, Serializable {
       // header.
       this.header = new Header(onum);
 
-      // Promise expiry
-      out.writeLong(0);
-
       // Update label reference.
       out.writeBoolean(false);
       out.writeLong(updateLabel);
