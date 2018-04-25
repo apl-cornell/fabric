@@ -40,6 +40,7 @@ import fabric.lang.Object._Impl;
 import fabric.lang.Object._Proxy;
 import fabric.lang.security.Label;
 import fabric.lang.security.SecurityCache;
+import fabric.messages.AsyncCallMessage;
 import fabric.net.RemoteNode;
 import fabric.net.UnreachableNodeException;
 import fabric.store.InProcessStore;
@@ -622,6 +623,7 @@ public final class TransactionManager {
 
     // Check for conflicts and unreachable stores/workers.
     if (!failures.isEmpty()) {
+      String conflictsString = "";
       String logMessage = "Transaction tid="
           + Long.toHexString(current.tid.topTid) + ":  prepare failed.";
 
@@ -633,8 +635,14 @@ public final class TransactionManager {
           LongKeyMap<SerializedObject> versionConflicts =
               entry.getValue().versionConflicts;
           if (versionConflicts != null) {
-            for (SerializedObject obj : versionConflicts.values())
+            for (SerializedObject obj : versionConflicts.values()) {
               store.updateCache(obj);
+              if (!conflictsString.equals("")) {
+                conflictsString += " ";
+              }
+              conflictsString +=
+                  obj.getClassName() + "@" + store.name() + "#" + obj.getOnum();
+            }
           }
         }
 
@@ -642,6 +650,7 @@ public final class TransactionManager {
           logMessage +=
               "\n\t" + entry.getKey() + ": " + entry.getValue().getMessage();
         }
+        stats.addConflicts(conflictsString);
       }
       WORKER_TRANSACTION_LOGGER.fine(logMessage);
       HOTOS_LOGGER.fine("Prepare failed.");
@@ -1038,8 +1047,8 @@ public final class TransactionManager {
                   if (WORKER_DEADLOCK_LOGGER.isLoggable(Level.FINEST)) {
                     Logging.log(WORKER_DEADLOCK_LOGGER, Level.FINER,
                         "{0} in {6} wants to write {1}/{2} ({3}) ({5}); aborting reader {4}",
-                        current, obj.$getStore(), obj.$getOnum(), obj.getClass(),
-                        lock, System.identityHashCode(obj),
+                        current, obj.$getStore(), obj.$getOnum(),
+                        obj.getClass(), lock, System.identityHashCode(obj),
                         Thread.currentThread());
                   }
                   waitsFor.add(lock);
