@@ -45,10 +45,14 @@ final class ObjectLocks {
    *          requesting the lock.
    */
   synchronized void lockForWrite(long tid) throws UnableToLockException {
-    if (writeLock != null) {
+    if (writeLock != null && writeLock != tid) {
       // Conflicting write lock.
       throw new UnableToLockException();
     }
+
+    // We already have the write lock, don't bother with anything.
+    if (writeLock != null && writeLock == tid)
+      return;
 
     int numReadLocks = readLocks.size();
     if (numReadLocks > 1 || numReadLocks == 1 && !readLocks.containsKey(tid)) {
@@ -82,10 +86,14 @@ final class ObjectLocks {
    */
   synchronized void lockForRead(long tid, Principal worker)
       throws UnableToLockException {
-    if (writeLock != null) {
+    if (writeLock != null && writeLock != tid) {
       // Conflicting write lock.
       throw new UnableToLockException();
     }
+
+    // We already have the write lock, don't bother with a read lock.
+    if (writeLock != null && writeLock == tid)
+      return;
 
     List<Oid> pins = readLocks.get(tid);
     if (pins == null) {
